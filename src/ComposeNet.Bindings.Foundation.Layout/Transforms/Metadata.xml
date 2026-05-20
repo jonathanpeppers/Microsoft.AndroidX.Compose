@@ -1,0 +1,6 @@
+<metadata>
+  <!-- PaddingValues.Absolute is a Kotlin object that implements PaddingValues
+       at compile time but the JVM signatures the generator sees don't include
+       the calculate*Padding() impls, so the auto-generated C# class is broken. -->
+  <remove-node path="/api/package[@name='androidx.compose.foundation.layout']/class[@name='PaddingValues.Absolute']" />
+</metadata>
