@@ -8,19 +8,14 @@
     <ApplicationId>com.companyname.ComposeNet.Sample</ApplicationId>
     <ApplicationVersion>1</ApplicationVersion>
     <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
-    <!--
-      Enables trim analyzers and full trimming during Release mode.
-      To learn more, see: https://learn.microsoft.com/dotnet/core/deploying/trimming/trimming-options#trimming-granularity
-    -->
-    <TrimMode>full</TrimMode>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Xamarin.AndroidX.Activity.Compose" Version="1.13.0" />
-    <PackageReference Include="Xamarin.AndroidX.Compose.Runtime" Version="1.11.1" />
-    <PackageReference Include="Xamarin.AndroidX.Compose.UI" Version="1.11.1" />
-    <PackageReference Include="Xamarin.AndroidX.Compose.UI.Graphics" Version="1.11.1" />
-    <PackageReference Include="Xamarin.AndroidX.Compose.Foundation" Version="1.11.1" />
-    <PackageReference Include="Xamarin.AndroidX.Compose.Foundation.Layout" Version="1.11.1" />
-    <PackageReference Include="Xamarin.AndroidX.Compose.Material3" Version="1.4.0.2" />
+    <ProjectReference Include="..\ComposeNet.Bindings.Runtime\ComposeNet.Bindings.Runtime.csproj" />
+    <ProjectReference Include="..\ComposeNet.Bindings.UI\ComposeNet.Bindings.UI.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- The Compose 1.9.x KMP split ships duplicate classes in *-jvm and *-android variants.
+         Exclude the jvm carriers; only the -android variant should reach R8. -->
+    <PackageReference Include="Xamarin.AndroidX.Compose.Runtime.Annotation.Jvm" Version="1.9.4" ExcludeAssets="all" />
   </ItemGroup>
 </Project>

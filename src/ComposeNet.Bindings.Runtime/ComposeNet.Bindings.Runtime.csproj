@@ -18,7 +18,6 @@
          APK - the existing Xamarin.AndroidX.Compose.Runtime NuGet (referenced
          by the app) already ships the same AAR. -->
     <AndroidMavenLibrary Include="androidx.compose.runtime:runtime-android" Version="1.9.4" Repository="Google" Pack="false" />
-    <AndroidMavenLibrary Include="androidx.compose.runtime:runtime-annotation-android" Version="1.9.4" Repository="Google" Bind="false" Pack="false" />
   </ItemGroup>
   <ItemGroup>
     <!-- Transitive Java deps consumed by Compose; already well-bound by dotnet/android-libraries. -->
@@ -28,6 +27,7 @@
     <PackageReference Include="Xamarin.KotlinX.Coroutines.Core" Version="1.11.0" />
     <PackageReference Include="Xamarin.AndroidX.Annotation.Experimental" Version="1.6.0" />
     <PackageReference Include="Xamarin.AndroidX.Collection" Version="1.6.0" />
+    <PackageReference Include="Xamarin.AndroidX.Compose.Runtime.Annotation.Android" Version="1.9.4" />
   </ItemGroup>
   <ItemGroup>
     <!-- collection-jvm is the KMP JVM target of androidx.collection; the -android

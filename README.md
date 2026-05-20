@@ -152,6 +152,54 @@ A minimal **.NET for Android** sample app that:
 
 The goal isn't beauty — it's to find the **smallest possible "Hello, Compose" from C# without any Kotlin file in the project**, and to enumerate every rough edge so we can decide what tooling, if any, is worth investing in.
 
+## Status
+
+The sample (`src/ComposeNet.Sample`) **builds** with `dotnet build` and
+produces a signed APK whose dex contains `androidx/compose/runtime/Composer`,
+`androidx/compose/ui/platform/ComposeView`, and our C#-only
+`composenet/sample/HelloComposable` (a `Function2<Composer, Int, Unit>` ACW).
+
+`MainActivity.OnCreate` does, in pure C#:
+
+1. `new ComposeView(this)`
+2. `ComposableLambdaKt.ComposableLambdaInstance(0, false, new HelloComposable())`
+3. `composeView.SetContent(lambda)`
+4. `SetContentView(composeView)`
+
+The `HelloComposable.Invoke(Composer, Integer)` body is currently empty — it
+proves the C# → `ComposableLambda` → `setContent` wiring links and gets into
+the APK. To actually render `Text("Hello from .NET")` + a counter `Button` we
+still need the `androidx.compose.ui.text` / `material3` `@Composable` functions
+callable from C#; see `NOTES.md` "Open issues" for what's blocking that and
+why we backed off rather than hack around it.
+
+The bindings — built via `<AndroidMavenLibrary>` because the existing
+`Xamarin.AndroidX.Compose.*` NuGets strip every Compose API with
+`<remove-node path="/api/package" />` — live in
+`src/ComposeNet.Bindings.{Runtime,UI,Foundation,Foundation.Layout,Material3}`.
+Read `NOTES.md` for the catalog of binding-generator errors and the
+Metadata.xml / `ExcludeAssets` / `AndroidIgnoredJavaDependency` patterns used
+to defeat them.
+
+## Known issues
+
+- **The composable body is empty.** Tier 1 proves the Compose runtime is
+  reachable from C#; it does not yet paint pixels. See `NOTES.md` open issue
+  #1 (Material3 XA4215 dual-emission).
+- **`ComposableLambdaInstance` is itself `@Composable`** — its compiled JVM
+  signature has the extra `Composer, Int` parameters. The C# call site
+  passes `null` for the composer because we're called from `OnCreate`. This
+  probably works because `setContent` re-evaluates the lambda inside an
+  active composition, but it is not validated on a device.
+- **`$changed` bitmasks** — once we start calling
+  `TextKt.Text(text, composer, $changed)` directly from C#, the caller is
+  responsible for the compose-compiler invariant `$changed` bitmask that
+  drives skipping/recomposition. Doing that by hand from C# will not give
+  correct recomposition behaviour; that's what Tier 2 (a Roslyn generator)
+  would handle.
+- **Not deployed.** No device/emulator in this environment — verification is
+  build-only.
+
 ## Key references
 
 - Blog: <https://android-developers.googleblog.com/2026/05/android-ui-development-is-compose-first.html>

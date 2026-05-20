@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<metadata>
+  <!-- Inline-class hash mangled overload colliding with non-mangled version -->
+  <remove-node path="/api/package[@name='androidx.compose.foundation.shape']/class[@name='CornerSizeKt']/method[starts-with(@name,'CornerSize-')]" />
+  <remove-node path="/api/package[@name='androidx.compose.foundation.lazy.layout']/class[@name='LazyLayoutCacheWindowKt']/method[starts-with(@name,'LazyLayoutCacheWindow-')]" />
+
+  <!-- Kotlin MutableList that re-declares java.util.List operations: full set of MutableList method clashes -->
+  <remove-node path="/api/package[@name='androidx.compose.foundation.lazy.layout']/class[@name='LazyLayoutPinnedItemList']" />
+
+  <!-- KeyMapping interface returns java.lang.Enum<KeyCommand> which doesn't project; drop it and its helpers -->
+  <remove-node path="/api/package[@name='androidx.compose.foundation.text']/interface[@name='KeyMapping']" />
+  <remove-node path="/api/package[@name='androidx.compose.foundation.text']/class[@name='KeyMappingKt']" />
+  <remove-node path="/api/package[@name='androidx.compose.foundation.text']/class[@name='KeyMapping_androidKt']" />
+</metadata>

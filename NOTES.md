@@ -1,171 +1,185 @@
 # Notes from the Tier 1 attempt
 
-Status: **blocked at the binding-generation layer**, not at runtime.
+**Status: the sample builds.** `dotnet build src\ComposeNet.Sample` produces a
+~12 MB signed APK whose dex contains `androidx/compose/runtime/Composer`,
+`androidx/compose/ui/platform/ComposeView`, and our C#-defined
+`composenet/sample/HelloComposable` (a `Function2<Composer, Int, Unit>` ACW).
+The C# `MainActivity` constructs a `ComposeView`, builds a `ComposableLambda`
+via `ComposableLambdaKt.ComposableLambdaInstance(...)` wrapping the C#
+`HelloComposable`, and calls `composeView.SetContent(lambda)` — all from C#,
+no Kotlin source files in the repo.
 
-## What I tried, in order
+What the lambda body actually does is **nothing** (returns `null`). Calling
+`Text(...)` / `Button(...)` from inside it requires `androidx.compose.ui.text` +
+`androidx.compose.material3`'s `@Composable` functions, neither of which we
+have callable C# bindings for yet (see "Open issues" below). The plumbing
+through `setContent` is real; the painted UI isn't.
 
-### 1. Scaffolded `src/ComposeNet.Sample` with the existing NuGets
+Not deployed — no emulator/device in this environment. Build-only verification.
 
-```xml
-<PackageReference Include="Xamarin.AndroidX.Activity.Compose" Version="1.13.0" />
-<PackageReference Include="Xamarin.AndroidX.Compose.Runtime" Version="1.11.1" />
-<PackageReference Include="Xamarin.AndroidX.Compose.UI" Version="1.11.1" />
-<PackageReference Include="Xamarin.AndroidX.Compose.UI.Graphics" Version="1.11.1" />
-<PackageReference Include="Xamarin.AndroidX.Compose.Foundation" Version="1.11.1" />
-<PackageReference Include="Xamarin.AndroidX.Compose.Foundation.Layout" Version="1.11.1" />
-<PackageReference Include="Xamarin.AndroidX.Compose.Material3" Version="1.4.0.2" />
-```
+---
 
-`dotnet build -c Release` succeeds. The AAR is packaged into the APK.
+## What got built
 
-**But there is no managed C# surface to call.** Inspection of e.g.
-`Xamarin.AndroidX.Compose.Runtime.dll` shows a 16 KB empty assembly — zero
-public types.
+| Project                                  | What it does                                                                                                       |
+|------------------------------------------|--------------------------------------------------------------------------------------------------------------------|
+| `ComposeNet.Bindings.Runtime`            | Re-binds `androidx.compose.runtime:runtime-android` 1.9.4 from Google Maven (the Xamarin NuGet ships zero types).  |
+| `ComposeNet.Bindings.UI`                 | Re-binds `androidx.compose.ui:ui-android` 1.9.4 (Modifier, ComposeView, AbstractComposeView, layout primitives).    |
+| `ComposeNet.Bindings.Foundation.Layout`  | Re-binds `androidx.compose.foundation:foundation-layout-android` 1.9.4. Not used by the sample yet.                |
+| `ComposeNet.Bindings.Foundation`         | Re-binds `androidx.compose.foundation:foundation-android` 1.9.4. Not used by the sample yet.                       |
+| `ComposeNet.Bindings.Material3`          | Re-binds `androidx.compose.material3:material3-android` 1.3.2. Not used by the sample yet (XA4215 — see below).    |
+| `ComposeNet.Sample`                      | Minimal app. References Runtime + UI bindings only. `MainActivity` calls Compose.                                  |
 
-### 2. Confirmed why — dotnet/android-libraries deliberately strips it
+All five binding projects use `<AndroidMavenLibrary Pack="false">` to download
+the AAR and run the binding generator over it, while relying on the existing
+`Xamarin.AndroidX.Compose.*` NuGets (referenced by the sample) to actually ship
+the AAR into the APK. The Pack="false" avoids the AAR being packaged twice.
 
-Every Compose-related `Transforms/Metadata.xml` in dotnet/android-libraries
-contains:
+---
 
-```xml
-<remove-node path="/api/package" />
-```
+## Top surprises
 
-With this comment in
-[`source/androidx.compose.runtime/runtime/Transforms/Metadata.xml`](https://github.com/dotnet/android-libraries/blob/main/source/androidx.compose.runtime/runtime/Transforms/Metadata.xml):
+### 1. The `Xamarin.AndroidX.Compose.*` NuGets ship empty (or near-empty) facades on purpose
 
-> not surfacing/generating MCWs — Compose does work for kotlin only via
-> Annotations and kotlin defined UI. it does not make sense for C# until
-> parsing of kotlin and transpiling to c# is ready (if ever)
+Every Compose `Transforms/Metadata.xml` in `dotnet/android-libraries` has
+`<remove-node path="/api/package" />`, with a comment saying Compose is
+Kotlin-only and "does not make sense for C# until parsing of kotlin and
+transpiling to c# is ready (if ever)". So the NuGets exist purely so other
+Kotlin code can link transitively — they are not callable.
 
-So the NuGets exist purely so transitive Kotlin code that consumes Compose
-can link. They are not meant to be called from C#.
+(One exception: `Xamarin.AndroidX.Compose.Material3Android.dll` actually
+contains ~265 bound types. Only the `@Composable` functions were stripped.
+This makes it overlap with our `ComposeNet.Bindings.Material3` and triggers
+XA4215 "Java type bound in two assemblies" if you reference both — see
+"Open issues".)
 
-The same `<remove-node path="/api/package" />` is in:
+### 2. `<AndroidMavenLibrary>` is the right tool, but generated C# fights inline classes hard
 
-- `androidx.compose.ui/ui/Transforms/Metadata.xml`
-- `androidx.activity/activity-compose/Transforms/Metadata.xml`
-- `androidx.compose.material3/material3/Transforms/Metadata.xml`
-- …and the rest of the Compose packages.
-
-### 3. Tried to bind the AAR ourselves with `<AndroidMavenLibrary>`
-
-`src/ComposeNet.Bindings.Runtime/ComposeNet.Bindings.Runtime.csproj` is a
-binding-project that pulls `androidx.compose.runtime:runtime-android` 1.9.4
-directly from `maven.google.com` via the
 [`AndroidMavenLibrary`](https://github.com/dotnet/android/blob/main/Documentation/docs-mobile/building-apps/build-items.md#androidmavenlibrary)
-build item and lets the binding generator run **without** dotnet/android-libraries'
-`<remove-node>` censoring.
+makes downloading and binding an AAR from Maven trivial. The friction is all
+in the generated-C#-doesn't-compile phase. Recurring categories, with the fix
+pattern we used:
 
-This **does** produce managed C# classes — `ComposerKt`, `RememberKt`,
-`SnapshotStateKt`, etc. all show up in `obj/Release/.../generated/src/`.
+| Error                                                                      | Pattern in `Transforms/Metadata.xml`                                                                                                                |
+|----------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------|
+| `CS0111` two overloads differ only by an inline-class (hashed name suffix) | `<remove-node path="/api/package[@name='X']/class[@name='Y']/method[starts-with(@name,'methodName-')]" />` — strips ALL hashed-suffix overloads.    |
+| `CS0535` Kotlin `MutableList`/`Map`/`Set` overrides not implemented        | `<remove-node>` the class entirely if it's internal-only (e.g. `LazyLayoutPinnedItemList`).                                                         |
+| `CS0535` missing accessor for `androidx.collection.MutableIntList` interop | `<remove-node>` the offending class (e.g. `IntervalList` impls).                                                                                    |
+| `CS0234` namespace missing — `java.lang.Enum<KeyCommand>` not generated    | `<remove-node>` the interface AND every `*Kt` class that mentions it.                                                                               |
+| `XAJDV7004` duplicate ignored java-dep entries                             | Remove the duplicate from `<AndroidIgnoredJavaDependency Include="..." />`.                                                                         |
+| `XA4215` Java type bound in two assemblies (Material3Android stub)         | Drop the Xamarin stub from compile graph: `<PackageReference … ExcludeAssets="compile" />`.                                                         |
 
-But it produces **17 distinct C# compile errors** in just that one (smallest)
-AAR:
+### 3. KMP `-jvm` vs `-android` package duplication will bite you twice
 
-| Error                                                                                   | Root cause                                                                                                                                |
-|-----------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------|
-| CS0111 `ComposerKt.IsAfterFirstChild` already defined                                   | Two Kotlin overloads differ only by an inline-class parameter (`Composer`-vs-`Composer-impl`) that erases to the same JVM signature.       |
-| CS0535 `IMutableIntStateInvoker.IMutableState.Value.set` missing (and Long/Float/Double) | `IMutableIntState` inherits `MutableState<Integer>` — the `intValue`/`Value` bridge isn't emitted for inline-class-backed primitive state. |
-| CS0535 `BroadcastFrameClock.ICoroutineContextElement.Key` missing (and Pausable…)        | Kotlin `val key: CoroutineContext.Key<*>` not surfaced as a C# property override.                                                          |
-| CS0535 `AbstractApplier.IApplier.InsertBottomUp/TopDown` missing                         | Abstract member with generic parameter `T` doesn't satisfy the bound erased interface in C#.                                              |
-| CS0534 `MutableSnapshot.Snapshot.ReadObserver` not implemented                          | Kotlin `typealias ReadObserver = (Any) -> Unit` projects oddly across the binding generator.                                              |
-| CS0535 `SnapshotStateMap/List/Set.Size/Values/EntrySet` missing or wrong return         | Kotlin `MutableMap/List/Set` override + KMP `collection-jvm` interface erasure mismatch with `java.util.Map`/`List`/`Set`.                |
+`androidx.collection:collection` ships as both `:collection-jvm` and
+`:collection-android`. The Xamarin NuGet `Xamarin.AndroidX.Collection`
+satisfies the `-android` variant. The `-jvm` variant has the same bytecode but
+a different Maven coordinate; the dependency verifier doesn't know they're
+interchangeable. Fix:
 
-These are exactly the issues that
-[`docs/development-tips.md`](https://github.com/dotnet/android-libraries/blob/main/docs/development-tips.md#troubleshooting)
-in dotnet/android-libraries says require hand-written `Transforms/Metadata.xml`
-+ `Additions/*.cs` partial classes per error.
+```xml
+<AndroidIgnoredJavaDependency Include="androidx.collection:collection-jvm:1.5.0" />
+```
 
-All 17 errors are individually tractable. **But** this is just the
-`runtime` AAR. To get a working "Hello, Compose from C#" sample we need
-working bindings for:
+The same thing happens to `androidx.compose.runtime:runtime-annotation`: it
+ships as `-android` (AAR) AND `-jvm` (JAR), both containing
+`androidx.compose.runtime.Immutable`, `Stable`, etc. R8 fails with
+`Type androidx.compose.runtime.Immutable is defined multiple times`. Fix:
 
-1. `androidx.compose.runtime:runtime`
-2. `androidx.compose.ui:ui` *(much larger surface — every layout/Modifier/etc.)*
-3. `androidx.compose.ui:ui-graphics`
-4. `androidx.compose.foundation:foundation`
-5. `androidx.compose.foundation:foundation-layout`
-6. `androidx.activity:activity-compose`
-7. `androidx.compose.material3:material3` *(Text, Button, etc. live here)*
+```xml
+<PackageReference Include="Xamarin.AndroidX.Compose.Runtime.Annotation.Jvm"
+                  Version="1.9.4" ExcludeAssets="all" />
+```
 
-Each will hit the same class of errors, scaled to its surface area. And
-**even if we resolve every compile error**, the resulting C# methods will
-still have their `$composer: Composer, $changed: Int` parameters generated
-by the Kotlin compose-compiler plugin baked into the JVM signature — and
-the C# code calling them won't have a valid `Composer` instance unless it
-is already inside a composition started by Kotlin-generated wrappers
-(because `ComposableLambdaKt.composableLambdaInstance` itself is `@Composable`
-and was lowered by the plugin). That part still needs to be validated.
+(`ExcludeAssets="all"` strips the AAR/JAR from the build, not just the
+managed DLL. `ExcludeAssets="compile"` keeps the AAR but hides the managed
+facade — use that one when you want to override the Xamarin stub with your
+own binding.)
 
-## Top 3 surprises
+### 4. `Pack="false"` doesn't always mean "don't ship the AAR"
 
-1. **The existing `Xamarin.AndroidX.Compose.*` NuGets ship zero callable
-   types — by design.** The 16 KB assemblies are placeholders. This isn't
-   documented in `dotnet/android-libraries`' `artifact-list.md` which the
-   README cites.
-2. **`<AndroidMavenLibrary>` makes regenerating the bindings trivially easy
-   *up to* the C# compile step.** The binding generator runs, emits MCWs,
-   and downloads transitive deps from Maven — the friction is entirely in
-   the generated-C#-doesn't-compile phase.
-3. **`androidx.collection:collection-jvm` vs `:collection-android` is a
-   recurring KMP gotcha** — `Xamarin.AndroidX.Collection` satisfies the
-   `-android` variant but not the `-jvm` one even though they are the same
-   bits at runtime. Needed an `AndroidIgnoredJavaDependency` override.
+In the Runtime binding I originally had two `<AndroidMavenLibrary>` lines —
+one for `runtime-android` (the binding target) and one for
+`runtime-annotation-android` with `Bind="false" Pack="false"` to satisfy the
+Maven dep. Even with `Pack="false"`, the AAR was still being extracted into
+the consuming APK's `obj/.../lp/` library-project cache, which collided with
+the same AAR shipped by the Xamarin NuGet → R8 duplicate-class. Fix: don't
+list it as `AndroidMavenLibrary` at all; instead add a normal
+`<PackageReference Include="Xamarin.AndroidX.Compose.Runtime.Annotation.Android" />`
+on the binding project. The Xamarin NuGet is the single source of truth for
+that AAR.
 
-## Open questions for the human reviewer
+---
 
-1. **Power through, or stop here?** Resolving 17 errors on runtime is
-   maybe 1–2 hours of metadata work. UI alone is probably 5–10× that.
-   Total estimate to all-7-packages-compile: 1–3 working days. We will
-   not know whether a `setContent(...)` call from C# actually drives a
-   composition until then.
+## Open issues
 
-2. **Even if we get all bindings to compile, the realistic interop seam
-   the README describes — passing a C#-constructed `ComposableLambda` into
-   `setContent` — depends on `ComposableLambdaKt.composableLambdaInstance(...)`
-   which is itself `@Composable`.** Its compiled signature has the extra
-   `Composer, Int` parameters and **requires being called inside an active
-   composition** (it asserts `composer.startReplaceableGroup(...)`). So we
-   *also* need a C#-callable non-`@Composable` entry point. The pragmatic
-   one is `ComponentActivity.setContent(...)` from `activity-compose`, but
-   under the hood *that* extension function is `@Composable` too. We may
-   need a tiny Kotlin shim — `fun csharpEntryPoint(activity: ComponentActivity, content: Function2<Composer, Int, Unit>)` —
-   purely as the launcher. **That would violate the "no Kotlin files"
-   constraint.** Do you want to relax the constraint to "one Kotlin
-   bootstrap file, everything else C#"?
+1. **The Function2 body is empty.** Wiring `Text("Hello from .NET")` and a
+   `Button` with a counter requires binding either `androidx.compose.material3`
+   or `androidx.compose.ui.text`. Material3 is mostly bound (265 types from
+   the stub plus our re-binding) but referencing our Material3 binding from
+   the sample explodes with XA4215 dual-emission errors because the Xamarin
+   stub binds the same Java types. We worked around it by *not* referencing
+   our Material3 binding from the sample, so we have no way to actually call
+   `Text(...)`. Next step is one of:
+   - `ExcludeAssets="compile"` on `Xamarin.AndroidX.Compose.Material3Android`
+     in the sample (we already do this on the binding side) and re-test.
+   - Surgically `<remove-node>` the duplicated types from
+     `ComposeNet.Bindings.Material3` so it only emits the `@Composable`
+     functions the stub omits.
 
-3. **Or pivot directly to Tier 2 R&D?** The cost/value of doing Tier 1
-   "the hard way" looks worse than just standing up the Roslyn generator
-   PoC, because:
-   - The compiled Compose bytecode the bindings expose is **already
-     post-`ComposerParamTransformer`** — calling `Text(string, composer, $changed)`
-     from C# requires the caller to track `$changed` bitmasks correctly,
-     which is what the source generator would do anyway.
-   - The Kotlin Compose authors keep mangling inline-class signatures
-     between versions; every Compose bump risks breaking the
-     painstakingly hand-maintained Metadata.xml.
+2. **`ComposableLambdaInstance` is itself `@Composable`.** The Kotlin source
+   declares it `@Composable`, so its bytecode signature has the extra
+   `Composer, Int` parameters. Our C# call passes `null` Composer because
+   we're called from `OnCreate`, not from inside a composition. At runtime
+   this probably no-ops (the lambda gets stashed for later replay by
+   `setContent`'s `AbstractComposeView` flush) — but unverified. The
+   "officially correct" non-`@Composable` entry point is
+   `androidx.activity.compose.ComponentActivityKt.setContent(...)`, which
+   would need `ComposeNet.Bindings.Activity.Compose`.
 
-## Repro
+3. **Compose-compiler `$changed` bitmasks.** When we do start calling
+   `TextKt.Text(...)`, the C# caller will be responsible for passing the
+   correct `$changed: Int` bitmask that the Compose runtime uses for
+   skipping. That's the job a Roslyn source generator (Tier 2) is supposed
+   to take on. Doing it by hand from C# will work for static UI but will
+   not recompose correctly when inputs change.
+
+4. **Inline-class parameter values.** `Modifier`, `Color`, `Dp`, `TextStyle`,
+   etc. are Kotlin inline classes that erase to `long`/`int`. The binding
+   generator either emits both overloads (CS0111) or hides the inline form
+   entirely. Each one needs a Metadata.xml hand-decision. We dodged this
+   entirely because the sample composable is empty.
+
+---
+
+## Build / repro
 
 ```pwsh
-cd src/ComposeNet.Bindings.Runtime
-dotnet build -c Release
-# → 17 CS0xxx errors in generated/src/Androidx.Compose.Runtime.*.cs
+cd src\ComposeNet.Sample
+dotnet build
+# → builds the 4 binding projects + sample, produces a signed APK
 ```
 
-The full list of distinct errors and the `build.log` reproduction live in
-`src/ComposeNet.Bindings.Runtime/build.log`.
+To inspect the dex:
 
-## Files in this attempt
+```pwsh
+Expand-Archive bin\Debug\net10.0-android\com.companyname.ComposeNet.Sample-Signed.apk -DestinationPath dex-inspect
+$bt = "$env:LOCALAPPDATA\Android\Sdk\build-tools\<latest>\dexdump.exe"
+& $bt dex-inspect\classes.dex | Select-String "androidx/compose/runtime/Composer|composenet/sample/HelloComposable"
+```
+
+## Files
 
 ```
 src/
-  ComposeNet.Sample/                    # Tier 1 app shell (builds, no Compose calls yet)
-    ComposeNet.Sample.csproj            # References the censored Xamarin Compose NuGets
-    MainActivity.cs                     # Stock template; Compose hookup not yet possible
-    …
-  ComposeNet.Bindings.Runtime/          # Re-binding attempt via AndroidMavenLibrary
-    ComposeNet.Bindings.Runtime.csproj  # Pulls androidx.compose.runtime:runtime-android 1.9.4 from Google Maven
-    build.log                           # Last-attempt error output
+  ComposeNet.Sample/                          Tier 1 app. Calls Compose from C#.
+    ComposeNet.Sample.csproj
+    MainActivity.cs
+  ComposeNet.Bindings.Runtime/                Binds androidx.compose.runtime 1.9.4
+    ComposeNet.Bindings.Runtime.csproj
+    Transforms/Metadata.xml
+  ComposeNet.Bindings.UI/                     Binds androidx.compose.ui 1.9.4
+  ComposeNet.Bindings.Foundation/             Binds androidx.compose.foundation 1.9.4
+  ComposeNet.Bindings.Foundation.Layout/      Binds androidx.compose.foundation.layout 1.9.4
+  ComposeNet.Bindings.Material3/              Binds androidx.compose.material3 1.3.2
 ```
