@@ -1,21 +1,21 @@
 # Notes from the Tier 1 attempt
 
-**Status: the sample builds.** `dotnet build src\ComposeNet.Sample` produces a
-~12 MB signed APK whose dex contains `androidx/compose/runtime/Composer`,
-`androidx/compose/ui/platform/ComposeView`, and our C#-defined
+**Status: the sample builds AND calls a real composable.**
+`dotnet build src\ComposeNet.Sample` produces a ~12.7 MB signed APK whose
+dex contains `androidx/compose/runtime/Composer`,
+`androidx/compose/foundation/layout/BoxKt`,
+`androidx/compose/ui/Modifier$Companion`, and our C#-defined
 `composenet/sample/HelloComposable` (a `Function2<Composer, Int, Unit>` ACW).
-The C# `MainActivity` constructs a `ComposeView`, builds a `ComposableLambda`
-via `ComposableLambdaKt.ComposableLambdaInstance(...)` wrapping the C#
-`HelloComposable`, and calls `composeView.SetContent(lambda)` — all from C#,
-no Kotlin source files in the repo.
 
-What the lambda body actually does is **nothing** (returns `null`). Calling
-`Text(...)` / `Button(...)` from inside it requires `androidx.compose.ui.text` +
-`androidx.compose.material3`'s `@Composable` functions, neither of which we
-have callable C# bindings for yet (see "Open issues" below). The plumbing
-through `setContent` is real; the painted UI isn't.
+`MainActivity.OnCreate` constructs a `ComposeView` and a `ComposableLambda`
+that calls `BoxKt.Box(Modifier.Companion, composer, $changed)` — all from
+C#, no Kotlin source files in the repo. `Modifier.Companion` is fetched
+via raw JNI because the Kotlin Companion object isn't bound (see "Open
+issues" below).
 
-Not deployed — no emulator/device in this environment. Build-only verification.
+Not deployed — no emulator/device in this environment. Build + dex
+inspection verification only. Whether the Box actually paints when the
+APK is launched is an open question we can't answer without hardware.
 
 ---
 
@@ -25,15 +25,22 @@ Not deployed — no emulator/device in this environment. Build-only verification
 |------------------------------------------|--------------------------------------------------------------------------------------------------------------------|
 | `ComposeNet.Bindings.Runtime`            | Re-binds `androidx.compose.runtime:runtime-android` 1.9.4 from Google Maven (the Xamarin NuGet ships zero types).  |
 | `ComposeNet.Bindings.UI`                 | Re-binds `androidx.compose.ui:ui-android` 1.9.4 (Modifier, ComposeView, AbstractComposeView, layout primitives).    |
-| `ComposeNet.Bindings.Foundation.Layout`  | Re-binds `androidx.compose.foundation:foundation-layout-android` 1.9.4. Not used by the sample yet.                |
-| `ComposeNet.Bindings.Foundation`         | Re-binds `androidx.compose.foundation:foundation-android` 1.9.4. Not used by the sample yet.                       |
-| `ComposeNet.Bindings.Material3`          | Re-binds `androidx.compose.material3:material3-android` 1.3.2. Not used by the sample yet (XA4215 — see below).    |
-| `ComposeNet.Sample`                      | Minimal app. References Runtime + UI bindings only. `MainActivity` calls Compose.                                  |
+| `ComposeNet.Bindings.Foundation.Layout`  | Re-binds `androidx.compose.foundation:foundation-layout-android` 1.9.4 (Box, Column, Row, …). Used by the sample.  |
+| `ComposeNet.Bindings.Foundation`         | Re-binds `androidx.compose.foundation:foundation-android` 1.9.4. Not referenced by sample yet.                     |
+| `ComposeNet.Bindings.Material3`          | Re-binds `androidx.compose.material3:material3-android` 1.3.2. Not used by the sample (XA4215 — see below).        |
+| `ComposeNet.Sample`                      | Minimal app. References Runtime + UI + Foundation.Layout. `MainActivity` calls `BoxKt.Box` from C#.                |
 
 All five binding projects use `<AndroidMavenLibrary Pack="false">` to download
 the AAR and run the binding generator over it, while relying on the existing
 `Xamarin.AndroidX.Compose.*` NuGets (referenced by the sample) to actually ship
 the AAR into the APK. The Pack="false" avoids the AAR being packaged twice.
+
+The sample's `HelloComposable.Invoke` reads its `Composer`/`$changed` params
+and calls `BoxKt.Box(modifier, composer, changed)`. The dex contains
+`androidx/compose/foundation/layout/BoxKt`,
+`androidx/compose/ui/Modifier$Companion`,
+`androidx/compose/runtime/Composer`, and our
+`composenet/sample/HelloComposable` ACW.
 
 ---
 
@@ -113,42 +120,72 @@ that AAR.
 
 ## Open issues
 
-1. **The Function2 body is empty.** Wiring `Text("Hello from .NET")` and a
-   `Button` with a counter requires binding either `androidx.compose.material3`
-   or `androidx.compose.ui.text`. Material3 is mostly bound (265 types from
-   the stub plus our re-binding) but referencing our Material3 binding from
-   the sample explodes with XA4215 dual-emission errors because the Xamarin
-   stub binds the same Java types. We worked around it by *not* referencing
-   our Material3 binding from the sample, so we have no way to actually call
-   `Text(...)`. Next step is one of:
-   - `ExcludeAssets="compile"` on `Xamarin.AndroidX.Compose.Material3Android`
-     in the sample (we already do this on the binding side) and re-test.
-   - Surgically `<remove-node>` the duplicated types from
-     `ComposeNet.Bindings.Material3` so it only emits the `@Composable`
-     functions the stub omits.
+1. **`Modifier.Companion` isn't bound in C#.** The binding generator emits a
+   nested `Modifier.Companion` class that conflicts with the C# interface
+   `IModifier` in the same namespace (CS0542 — member-same-as-enclosing).
+   We `<remove-node>`'d it. The sample fetches the Companion instance via
+   raw JNI:
 
-2. **`ComposableLambdaInstance` is itself `@Composable`.** The Kotlin source
-   declares it `@Composable`, so its bytecode signature has the extra
-   `Composer, Int` parameters. Our C# call passes `null` Composer because
-   we're called from `OnCreate`, not from inside a composition. At runtime
-   this probably no-ops (the lambda gets stashed for later replay by
-   `setContent`'s `AbstractComposeView` flush) — but unverified. The
-   "officially correct" non-`@Composable` entry point is
-   `androidx.activity.compose.ComponentActivityKt.setContent(...)`, which
-   would need `ComposeNet.Bindings.Activity.Compose`.
+   ```csharp
+   IntPtr cls = JNIEnv.FindClass("androidx/compose/ui/Modifier$Companion");
+   IntPtr fld = JNIEnv.GetStaticFieldID(cls, "$$INSTANCE", "Landroidx/compose/ui/Modifier$Companion;");
+   IntPtr ref_ = JNIEnv.GetStaticObjectField(cls, fld);
+   IModifier modifier = Java.Lang.Object.GetObject<IModifier>(ref_, JniHandleOwnership.TransferLocalRef)!;
+   ```
 
-3. **Compose-compiler `$changed` bitmasks.** When we do start calling
-   `TextKt.Text(...)`, the C# caller will be responsible for passing the
-   correct `$changed: Int` bitmask that the Compose runtime uses for
-   skipping. That's the job a Roslyn source generator (Tier 2) is supposed
-   to take on. Doing it by hand from C# will work for static UI but will
-   not recompose correctly when inputs change.
+   A cleaner fix would be `<attr name="managedName">ModifierCompanion</attr>`
+   or moving the companion to a sibling namespace — try those first if you
+   want to upstream this.
 
-4. **Inline-class parameter values.** `Modifier`, `Color`, `Dp`, `TextStyle`,
-   etc. are Kotlin inline classes that erase to `long`/`int`. The binding
-   generator either emits both overloads (CS0111) or hides the inline form
-   entirely. Each one needs a Metadata.xml hand-decision. We dodged this
-   entirely because the sample composable is empty.
+2. **No styled `Text` / `Button` yet.** Tier 1 paints via the simplest
+   composable in the foundation suite: `BoxKt.Box(Modifier, Composer, int)`.
+   `BasicText`, `Box(modifier, alignment, propagateMinConstraints, content,
+   composer, $changed, $default)` and friends have hashed inline-class
+   names (`BasicText-BpD7jsM`, `BasicText-RWo7tUw`, …) that the binding
+   generator either drops or surfaces with mangled C# names; every
+   per-signature inline-class param needs Metadata.xml triage. Material3
+   is mostly bound (Xamarin's stub has 265 types) but referencing our
+   Material3 binding alongside the stub explodes with XA4215 dual-emission.
+
+3. **`ComposableLambdaInstance` is `@Composable` in source but NOT in
+   bytecode.** This was the big worry. Verified via
+   `javap -p -s` on the runtime AAR's `classes.jar`:
+
+   ```
+   public static final ComposableLambda composableLambdaInstance(int, boolean, Object);
+     descriptor: (IZLjava/lang/Object;)Landroidx/compose/runtime/internal/ComposableLambda;
+
+   public static final ComposableLambda composableLambda(Composer, int, boolean, Object);
+     descriptor: (Landroidx/compose/runtime/Composer;IZLjava/lang/Object;)Landroidx/compose/runtime/internal/ComposableLambda;
+
+   public static final ComposableLambda rememberComposableLambda(int, boolean, Object, Composer, int);
+     descriptor: (IZLjava/lang/Object;Landroidx/compose/runtime/Composer;I)Landroidx/compose/runtime/internal/ComposableLambda;
+   ```
+
+   So `composableLambdaInstance` is the call-from-anywhere factory — the
+   compose-compiler lowering uses it for top-level `ComposableSingletons$*`
+   constants and it does not require an active composition. Our C# call
+   from `OnCreate(...)` is safe. `composableLambda` (no `Instance` suffix)
+   takes a `Composer` so it must be inside an active composition;
+   `rememberComposableLambda` has the post-lowering tail and is therefore
+   the version with `@Composable` semantics.
+
+4. **`$changed` bitmask from C# is best-effort.** The sample's
+   `HelloComposable.Invoke` forwards the `$changed` int it receives
+   straight into `BoxKt.Box(..., changed)`. For nested composables we'd
+   have to compute the bitmask correctly per-arg to get skipping right,
+   which is exactly the role of the Tier 2 Roslyn generator. For
+   single-call hello-world the forward-through-as-is approach recomposes
+   the whole tree on every change, which is correct, just unoptimised.
+
+5. **Material3 XA4215 still open.** Referencing our Material3 binding +
+   the Xamarin Material3Android stub triggers dual-emission. Fix is
+   either `ExcludeAssets="compile"` on the stub from the sample or
+   `<remove-node>` every type my binding duplicates with the stub. Not
+   tackled yet — `Box` is enough for tier 1.
+
+6. **Not deployed.** No device/emulator in this environment —
+   verification is build + dex inspection only.
 
 ---
 

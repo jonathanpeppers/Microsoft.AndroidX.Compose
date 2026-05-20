@@ -155,8 +155,10 @@ The goal isn't beauty — it's to find the **smallest possible "Hello, Compose" 
 ## Status
 
 The sample (`src/ComposeNet.Sample`) **builds** with `dotnet build` and
-produces a signed APK whose dex contains `androidx/compose/runtime/Composer`,
-`androidx/compose/ui/platform/ComposeView`, and our C#-only
+produces a signed APK whose dex contains
+`androidx/compose/runtime/Composer`,
+`androidx/compose/foundation/layout/BoxKt`,
+`androidx/compose/ui/Modifier$Companion`, and our C#-only
 `composenet/sample/HelloComposable` (a `Function2<Composer, Int, Unit>` ACW).
 
 `MainActivity.OnCreate` does, in pure C#:
@@ -166,12 +168,11 @@ produces a signed APK whose dex contains `androidx/compose/runtime/Composer`,
 3. `composeView.SetContent(lambda)`
 4. `SetContentView(composeView)`
 
-The `HelloComposable.Invoke(Composer, Integer)` body is currently empty — it
-proves the C# → `ComposableLambda` → `setContent` wiring links and gets into
-the APK. To actually render `Text("Hello from .NET")` + a counter `Button` we
-still need the `androidx.compose.ui.text` / `material3` `@Composable` functions
-callable from C#; see `NOTES.md` "Open issues" for what's blocking that and
-why we backed off rather than hack around it.
+`HelloComposable.Invoke(Composer, Integer)` calls
+`BoxKt.Box(Modifier.Companion, composer, $changed)` — the smallest
+real composable in `foundation.layout`. `Modifier.Companion` is fetched
+via raw JNI because the Kotlin Companion object isn't bound (see
+`NOTES.md` open issue #1 for why and the cleaner fix).
 
 The bindings — built via `<AndroidMavenLibrary>` because the existing
 `Xamarin.AndroidX.Compose.*` NuGets strip every Compose API with
@@ -183,22 +184,25 @@ to defeat them.
 
 ## Known issues
 
-- **The composable body is empty.** Tier 1 proves the Compose runtime is
-  reachable from C#; it does not yet paint pixels. See `NOTES.md` open issue
-  #1 (Material3 XA4215 dual-emission).
-- **`ComposableLambdaInstance` is itself `@Composable`** — its compiled JVM
-  signature has the extra `Composer, Int` parameters. The C# call site
-  passes `null` for the composer because we're called from `OnCreate`. This
-  probably works because `setContent` re-evaluates the lambda inside an
-  active composition, but it is not validated on a device.
-- **`$changed` bitmasks** — once we start calling
-  `TextKt.Text(text, composer, $changed)` directly from C#, the caller is
-  responsible for the compose-compiler invariant `$changed` bitmask that
-  drives skipping/recomposition. Doing that by hand from C# will not give
-  correct recomposition behaviour; that's what Tier 2 (a Roslyn generator)
-  would handle.
-- **Not deployed.** No device/emulator in this environment — verification is
-  build-only.
+- **Not deployed.** No device/emulator in this environment. Whether the
+  `Box` we wired actually paints when the APK is launched is unverified.
+- **Hashed inline-class composables are still painful.** `BasicText`,
+  `Button`, `Text`, anything with `Modifier`/`Color`/`Dp`/`TextStyle` etc.
+  has Kotlin-compiler-mangled JVM names (`BasicText-BpD7jsM`) that the
+  binding generator either drops or surfaces partially. Each needs
+  Metadata.xml triage. We dodged this by using `Box(Modifier, Composer, int)`
+  which has no inline-class params.
+- **`$changed` bitmasks** — once we nest composables, the C# caller would
+  have to maintain the compose-compiler invariant `$changed` bitmask per
+  arg to get skipping right. Doing that by hand from C# won't give correct
+  recomposition behaviour; that's Tier 2 (Roslyn generator) territory. For
+  tier 1 hello-world we forward `$changed` through unchanged — correct,
+  unoptimised.
+- **`Modifier.Companion` not bound.** Workaround: raw JNI fetch.
+  See `NOTES.md` open issue #1 for the upstream-friendly fix.
+- **Material3 XA4215 collision.** Our Material3 binding can't currently be
+  referenced from the sample alongside the Xamarin stub. Not needed for
+  tier 1; will need to be solved before we can bind/render `Text` / `Button`.
 
 ## Key references
 

@@ -12,6 +12,7 @@
   <ItemGroup>
     <ProjectReference Include="..\ComposeNet.Bindings.Runtime\ComposeNet.Bindings.Runtime.csproj" />
     <ProjectReference Include="..\ComposeNet.Bindings.UI\ComposeNet.Bindings.UI.csproj" />
+    <ProjectReference Include="..\ComposeNet.Bindings.Foundation.Layout\ComposeNet.Bindings.Foundation.Layout.csproj" />
   </ItemGroup>
   <ItemGroup>
     <!-- The Compose 1.9.x KMP split ships duplicate classes in *-jvm and *-android variants.
