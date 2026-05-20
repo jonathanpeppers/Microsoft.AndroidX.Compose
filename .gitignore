@@ -399,3 +399,8 @@ FodyWeavers.xsd
 
 # JetBrains Rider
 *.sln.iml
+src/ComposeNet.Bindings.Runtime/build.log
+src/ComposeNet.Sample/bin/
+src/ComposeNet.Sample/obj/
+src/ComposeNet.Bindings.Runtime/bin/
+src/ComposeNet.Bindings.Runtime/obj/

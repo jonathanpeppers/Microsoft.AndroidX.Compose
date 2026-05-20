@@ -1,0 +1,37 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0-android</TargetFramework>
+    <SupportedOSPlatformVersion>24</SupportedOSPlatformVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <!--
+      Enable trim analyzers for Android class libraries.
+      To learn more, see: https://learn.microsoft.com/dotnet/core/deploying/trimming/prepare-libraries-for-trimming
+    -->
+    <IsTrimmable>true</IsTrimmable>
+    <IsBindingProject>true</IsBindingProject>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- Pull the Compose runtime AAR from Google Maven and generate C# bindings
+         for it. Pack="false" so the AAR is not repackaged into the consuming
+         APK - the existing Xamarin.AndroidX.Compose.Runtime NuGet (referenced
+         by the app) already ships the same AAR. -->
+    <AndroidMavenLibrary Include="androidx.compose.runtime:runtime-android" Version="1.9.4" Repository="Google" Pack="false" />
+    <AndroidMavenLibrary Include="androidx.compose.runtime:runtime-annotation-android" Version="1.9.4" Repository="Google" Bind="false" Pack="false" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Transitive Java deps consumed by Compose; already well-bound by dotnet/android-libraries. -->
+    <PackageReference Include="Xamarin.Kotlin.StdLib" Version="2.3.21" />
+    <PackageReference Include="Xamarin.Kotlin.StdLib.Common" Version="2.0.21.7" />
+    <PackageReference Include="Xamarin.KotlinX.Coroutines.Android" Version="1.11.0" />
+    <PackageReference Include="Xamarin.KotlinX.Coroutines.Core" Version="1.11.0" />
+    <PackageReference Include="Xamarin.AndroidX.Annotation.Experimental" Version="1.6.0" />
+    <PackageReference Include="Xamarin.AndroidX.Collection" Version="1.6.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <!-- collection-jvm is the KMP JVM target of androidx.collection; the -android
+         variant shipped via Xamarin.AndroidX.Collection satisfies it at runtime. -->
+    <AndroidIgnoredJavaDependency Include="androidx.collection:collection-jvm:1.5.0" />
+  </ItemGroup>
+</Project>
