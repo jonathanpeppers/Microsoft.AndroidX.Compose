@@ -40,13 +40,17 @@ public class MainActivity : ComponentActivity
 
         SetContentView(composeView);
 
-        // After SetContentView the DecorView is realized. We want dark
-        // status-bar icons so the clock / battery / etc. are readable
-        // against the light Material theme background.
+        // After SetContentView the DecorView is realized, so Window is
+        // guaranteed non-null below.
+        var window = Window;
+        System.Diagnostics.Debug.Assert(window != null, "Window should be non-null after SetContentView");
+
+        // We want dark status-bar icons so the clock / battery / etc. are
+        // readable against the light Material theme background.
         if (OperatingSystem.IsAndroidVersionAtLeast(30))
         {
             // API 30+: WindowInsetsController is the modern API.
-            var insetsController = Window!.InsetsController;
+            var insetsController = window.InsetsController;
             if (insetsController != null)
             {
                 insetsController.SetSystemBarsAppearance(
@@ -60,7 +64,7 @@ public class MainActivity : ComponentActivity
             // the SystemUiVisibility flag on the DecorView. The API was
             // deprecated in API 30 in favor of WindowInsetsController, but
             // remains the correct call below it.
-            var decor = Window!.DecorView;
+            var decor = window.DecorView;
 #pragma warning disable CA1422 // Validate platform compatibility
             decor.SystemUiFlags |= Android.Views.SystemUiFlags.LightStatusBar;
 #pragma warning restore CA1422
