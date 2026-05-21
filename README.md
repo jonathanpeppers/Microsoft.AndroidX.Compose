@@ -2,9 +2,28 @@
 
 Experiment: can we host **Jetpack Compose** UI from a .NET for Android app using only the existing `Xamarin.AndroidX.Compose.*` bindings — no new compiler, no source generator?
 
-![Hello from .NET running Jetpack Compose UI on Android](docs/images/hello-compose-csharp.png)
+<p align="center">
+  <img src="docs/images/hello-compose-csharp.png" alt="Hello from .NET running Jetpack Compose UI on Android" width="380" />
+</p>
 
-*The Tier 1 sample running on an Android emulator: title bar, `Text("Hello from .NET")`, a Material 3 `Button`, and a `Count:` driven by `mutableStateOf` — all authored from C# only, no Kotlin sources in the project.*
+*The Tier 1 sample on an Android emulator: title bar, `Text("Hello from .NET")`, a Material 3 `Button`, and a `Count:` driven by `mutableStateOf` — all authored from C#, no Kotlin in the project.*
+
+## Build &amp; run
+
+Requires the .NET 10 SDK with the `android` workload installed and an Android API 34+ emulator or device.
+
+```pwsh
+# from the repo root
+dotnet workload restore
+dotnet build src/ComposeNet.Sample -c Release
+dotnet build src/ComposeNet.Sample -t:Run    # deploys to the connected device/emulator
+```
+
+The generator's xUnit tests run without an Android SDK:
+
+```pwsh
+dotnet test src/ComposeNet.SourceGenerators.Tests
+```
 
 ## Why this exists
 
@@ -299,6 +318,34 @@ mutableStateOf(0) } ; count++` becomes
 `var count = Remember(() => new MutableIntState(0)) ; count++` —
 character-for-character equivalent after substituting Kotlin keywords
 for C# ones.
+
+### The `$default` bitmask source generator
+
+Every `@Composable` JVM method takes a trailing `int $default` bitmask
+where bit N == 1 means "argument N was not provided; use Kotlin's
+default." Hand-writing those bitmasks at every call site is illegible
+(`_changed: 0b0111`); writing the `[Flags]` enum by hand is tedious
+and bit-rots when the Kotlin signature changes.
+
+[`ComposeNet.SourceGenerators`](src/ComposeNet.SourceGenerators) is a
+small Roslyn incremental generator triggered by an assembly-level
+attribute:
+
+```csharp
+[assembly: ComposeDefaults<ColumnKt>("Column", "ColumnDefault")]
+[assembly: ComposeDefaults<MaterialThemeKt>("MaterialTheme", "MaterialThemeDefault")]
+```
+
+At build time it reads the longest overload of the named method,
+emits a `[Flags] enum` with one bit per real parameter (skipping
+Compose `content: () -> Unit` lambdas, which are always supplied),
+and adds an `All` constant. Call sites collapse to
+`(int)ColumnDefault.All`. Unit tests in
+[`ComposeNet.SourceGenerators.Tests`](src/ComposeNet.SourceGenerators.Tests)
+pin the emitted output. `ButtonDefault` and `TextDefault` stay
+hand-rolled because `ButtonKt.Button` and `TextKt.Text--4IGK_g` are
+stripped from the managed binding (we call them via raw JNI), so the
+generator has no `IMethodSymbol` to introspect.
 
 ### What's missing on the C# side (and why)
 
