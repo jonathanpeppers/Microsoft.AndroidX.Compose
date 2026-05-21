@@ -56,7 +56,6 @@ public sealed class Column : ComposableContainer
     internal override void Render(IComposer composer)
     {
         var content = new ComposableLambda3(c => RenderChildren(c));
-        // bits 0..2 (modifier, vertArr, horizAlign) default; bit 3 content provided.
         ColumnKt.Column(
             modifier:            null,
             verticalArrangement: null,
@@ -64,7 +63,9 @@ public sealed class Column : ComposableContainer
             content:             content,
             _composer:           composer,
             p5:                  0,
-            _changed:            0b0111);
+            _changed:            (int)(ColumnDefault.Modifier
+                                     | ColumnDefault.VerticalArrangement
+                                     | ColumnDefault.HorizontalAlignment));
     }
 }
 
@@ -82,8 +83,6 @@ public sealed class MaterialTheme : ComposableContainer
     {
         var scheme  = DynamicTonalPaletteKt.DynamicLightColorScheme(Android.App.Application.Context);
         var content = new ComposableLambda2(c => RenderChildren(c));
-        // bit 0 colorScheme provided, bits 1..2 (shapes, typography) default,
-        // bit 3 content provided.
         MaterialThemeKt.MaterialTheme(
             colorScheme: scheme,
             shapes:      null,
@@ -91,7 +90,7 @@ public sealed class MaterialTheme : ComposableContainer
             content:     content,
             _composer:   composer,
             p5:          0,
-            _changed:    0b0110);
+            _changed:    (int)(MaterialThemeDefault.Shapes | MaterialThemeDefault.Typography));
     }
 }
 
