@@ -21,18 +21,18 @@
     <!-- ComponentActivity wires up ViewTreeLifecycleOwner / SavedStateRegistryOwner
          on the decor view, which Compose's AbstractComposeView requires when it
          attaches and tries to create a window recomposer. -->
-    <PackageReference Include="Xamarin.AndroidX.Activity" Version="1.11.0" />
+    <PackageReference Include="Xamarin.AndroidX.Activity" />
   </ItemGroup>
   <ItemGroup>
     <!-- The Compose 1.9.x KMP split ships duplicate classes in *-jvm and *-android variants.
          Exclude the jvm carriers; only the -android variant should reach R8. -->
-    <PackageReference Include="Xamarin.AndroidX.Compose.Runtime.Annotation.Jvm" Version="1.9.4" ExcludeAssets="all" />
+    <PackageReference Include="Xamarin.AndroidX.Compose.Runtime.Annotation.Jvm" ExcludeAssets="all" />
     <!-- The Xamarin.AndroidX.Compose.Material3 NuGet ships an empty stub assembly
          that *still* emits [Register] attributes for every Material3 type, which
          collides with our ComposeNet.Bindings.Material3 binding (XA4215).
          ExcludeAssets="all" so the stub is completely off the build pipeline;
          we're shipping our own binding. -->
-    <PackageReference Include="Xamarin.AndroidX.Compose.Material3" Version="1.3.2.3" ExcludeAssets="all" />
-    <PackageReference Include="Xamarin.AndroidX.Compose.Material3Android" Version="1.3.2.3" ExcludeAssets="all" />
+    <PackageReference Include="Xamarin.AndroidX.Compose.Material3" ExcludeAssets="all" />
+    <PackageReference Include="Xamarin.AndroidX.Compose.Material3Android" ExcludeAssets="all" />
   </ItemGroup>
 </Project>

@@ -17,12 +17,12 @@
     <ProjectReference Include="..\ComposeNet.Bindings.Foundation.Layout\ComposeNet.Bindings.Foundation.Layout.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Xamarin.AndroidX.Compose.Foundation" Version="1.9.4" ExcludeAssets="compile" />
-    <PackageReference Include="Xamarin.AndroidX.Core" Version="1.17.0" />
-    <PackageReference Include="Xamarin.AndroidX.Collection" Version="1.6.0" />
-    <PackageReference Include="Xamarin.AndroidX.Annotation.Experimental" Version="1.6.0" />
-    <PackageReference Include="Xamarin.Kotlin.StdLib" Version="2.3.21" />
-    <PackageReference Include="Xamarin.Kotlin.StdLib.Common" Version="2.0.21.7" />
+    <PackageReference Include="Xamarin.AndroidX.Compose.Foundation" ExcludeAssets="compile" />
+    <PackageReference Include="Xamarin.AndroidX.Core" />
+    <PackageReference Include="Xamarin.AndroidX.Collection" />
+    <PackageReference Include="Xamarin.AndroidX.Annotation.Experimental" />
+    <PackageReference Include="Xamarin.Kotlin.StdLib" />
+    <PackageReference Include="Xamarin.Kotlin.StdLib.Common" />
   </ItemGroup>
   <ItemGroup>
     <AndroidIgnoredJavaDependency Include="androidx.annotation:annotation-jvm:1.9.1" />

@@ -21,21 +21,21 @@
     <ProjectReference Include="..\ComposeNet.Bindings.Foundation.Layout\ComposeNet.Bindings.Foundation.Layout.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Xamarin.AndroidX.Compose.Material3" Version="1.3.2.3" ExcludeAssets="compile" />
+    <PackageReference Include="Xamarin.AndroidX.Compose.Material3" ExcludeAssets="compile" />
     <!-- Material3 1.3.2.3 transitively pins Compose 1.8.x / Activity.Compose 1.10.x / Lifecycle.Common.Java8 2.9.2,
          but the rest of the solution resolves to 1.9.4 / 1.11.0 / 2.9.4. Pin the newer versions here to
          satisfy NU1608 constraints. -->
-    <PackageReference Include="Xamarin.AndroidX.Compose.Animation" Version="1.9.4" />
-    <PackageReference Include="Xamarin.AndroidX.Compose.Animation.Android" Version="1.9.4" />
-    <PackageReference Include="Xamarin.AndroidX.Compose.Foundation" Version="1.9.4" />
-    <PackageReference Include="Xamarin.AndroidX.Compose.Foundation.Android" Version="1.9.4" />
-    <PackageReference Include="Xamarin.AndroidX.Activity.Compose" Version="1.11.0" />
-    <PackageReference Include="Xamarin.AndroidX.Lifecycle.Common.Java8" Version="2.9.4" />
-    <PackageReference Include="Xamarin.AndroidX.Core" Version="1.17.0" />
-    <PackageReference Include="Xamarin.AndroidX.Collection" Version="1.6.0" />
-    <PackageReference Include="Xamarin.AndroidX.Annotation.Experimental" Version="1.6.0" />
-    <PackageReference Include="Xamarin.Kotlin.StdLib" Version="2.3.21" />
-    <PackageReference Include="Xamarin.Kotlin.StdLib.Common" Version="2.0.21.7" />
+    <PackageReference Include="Xamarin.AndroidX.Compose.Animation" />
+    <PackageReference Include="Xamarin.AndroidX.Compose.Animation.Android" />
+    <PackageReference Include="Xamarin.AndroidX.Compose.Foundation" />
+    <PackageReference Include="Xamarin.AndroidX.Compose.Foundation.Android" />
+    <PackageReference Include="Xamarin.AndroidX.Activity.Compose" />
+    <PackageReference Include="Xamarin.AndroidX.Lifecycle.Common.Java8" />
+    <PackageReference Include="Xamarin.AndroidX.Core" />
+    <PackageReference Include="Xamarin.AndroidX.Collection" />
+    <PackageReference Include="Xamarin.AndroidX.Annotation.Experimental" />
+    <PackageReference Include="Xamarin.Kotlin.StdLib" />
+    <PackageReference Include="Xamarin.Kotlin.StdLib.Common" />
   </ItemGroup>
   <ItemGroup>
     <AndroidIgnoredJavaDependency Include="androidx.collection:collection-jvm:1.5.0" />

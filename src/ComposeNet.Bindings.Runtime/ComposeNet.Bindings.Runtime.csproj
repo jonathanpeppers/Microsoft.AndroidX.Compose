@@ -21,13 +21,13 @@
   </ItemGroup>
   <ItemGroup>
     <!-- Transitive Java deps consumed by Compose; already well-bound by dotnet/android-libraries. -->
-    <PackageReference Include="Xamarin.Kotlin.StdLib" Version="2.3.21" />
-    <PackageReference Include="Xamarin.Kotlin.StdLib.Common" Version="2.0.21.7" />
-    <PackageReference Include="Xamarin.KotlinX.Coroutines.Android" Version="1.11.0" />
-    <PackageReference Include="Xamarin.KotlinX.Coroutines.Core" Version="1.11.0" />
-    <PackageReference Include="Xamarin.AndroidX.Annotation.Experimental" Version="1.6.0" />
-    <PackageReference Include="Xamarin.AndroidX.Collection" Version="1.6.0" />
-    <PackageReference Include="Xamarin.AndroidX.Compose.Runtime.Annotation.Android" Version="1.9.4" />
+    <PackageReference Include="Xamarin.Kotlin.StdLib" />
+    <PackageReference Include="Xamarin.Kotlin.StdLib.Common" />
+    <PackageReference Include="Xamarin.KotlinX.Coroutines.Android" />
+    <PackageReference Include="Xamarin.KotlinX.Coroutines.Core" />
+    <PackageReference Include="Xamarin.AndroidX.Annotation.Experimental" />
+    <PackageReference Include="Xamarin.AndroidX.Collection" />
+    <PackageReference Include="Xamarin.AndroidX.Compose.Runtime.Annotation.Android" />
   </ItemGroup>
   <ItemGroup>
     <!-- collection-jvm is the KMP JVM target of androidx.collection; the -android
