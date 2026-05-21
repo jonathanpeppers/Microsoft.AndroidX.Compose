@@ -1,8 +1,8 @@
 using Android.OS;
 using Android.Runtime;
 using AndroidX.Activity;
-using Androidx.Compose.Foundation;
 using Androidx.Compose.Foundation.Layout;
+using Androidx.Compose.Material3;
 using Androidx.Compose.Runtime;
 using Androidx.Compose.Runtime.Internal;
 using Androidx.Compose.UI;
@@ -11,7 +11,7 @@ using Kotlin.Jvm.Functions;
 
 namespace ComposeNet.Sample;
 
-[Activity(Label = "@string/app_name", MainLauncher = true, Theme = "@android:style/Theme.Material.Light.NoActionBar")]
+[Activity(Label = "@string/app_name", MainLauncher = true, Theme = "@android:style/Theme.Material.Light")]
 public class MainActivity : ComponentActivity
 {
     const string TAG = "ComposeNet";
@@ -26,21 +26,28 @@ public class MainActivity : ComponentActivity
 
         var composeView = new ComposeView(this);
         composeView.SetContent(ComposableLambdaKt.ComposableLambdaInstance(
-            key: -1, tracked: false, block: new AppContent(count)));
+            key: -1, tracked: false, block: new ThemedRoot(count)));
 
-        // We target API 36 (forced edge-to-edge). We don't yet have a managed binding
-        // for Modifier.systemBarsPadding (it's an inline-extension stripped by the
-        // generator). Read the status/nav bar heights from system resources and apply
-        // them as plain Android View padding around the ComposeView. Compose lays out
-        // inside the padded area.
+        // On API 36 / Theme.Material.Light, the ActionBar is drawn ON TOP of
+        // android.R.id.content (overlay decor), so we need to push the
+        // ComposeView down by the action bar height. The bottom system nav
+        // bar still overlaps in edge-to-edge mode. Side padding is cosmetic.
         composeView.SetPadding(
             left:   Dp(16),
-            top:    SystemBarHeight("status_bar_height")     + Dp(16),
+            top:    SystemBarHeight("status_bar_height") + ActionBarHeight() + Dp(16),
             right:  Dp(16),
             bottom: SystemBarHeight("navigation_bar_height") + Dp(16));
 
         SetContentView(composeView);
         Android.Util.Log.Debug(TAG, "OnCreate complete");
+    }
+
+    int ActionBarHeight()
+    {
+        var tv = new Android.Util.TypedValue();
+        if (Theme!.ResolveAttribute(Android.Resource.Attribute.ActionBarSize, tv, true))
+            return Android.Util.TypedValue.ComplexToDimensionPixelSize(tv.Data, Resources!.DisplayMetrics);
+        return 0;
     }
 
     int Dp(int dp) => (int)(dp * Resources!.DisplayMetrics!.Density);
@@ -49,6 +56,33 @@ public class MainActivity : ComponentActivity
     {
         int id = Resources!.GetIdentifier(resName, "dimen", "android");
         return id > 0 ? Resources.GetDimensionPixelSize(id) : 0;
+    }
+}
+
+// Top-level content: wrap the actual UI in MaterialTheme so child composables
+// (Button, etc.) read Material color/typography/shape defaults from the
+// CompositionLocal stack.
+[Register("composenet/sample/ThemedRoot")]
+public sealed class ThemedRoot : Java.Lang.Object, IFunction2
+{
+    readonly AppContent _body;
+    public ThemedRoot(IMutableState count) => _body = new AppContent(count);
+
+    public Java.Lang.Object? Invoke(Java.Lang.Object? p0, Java.Lang.Object? p1)
+    {
+        var composer = Android.Runtime.Extensions.JavaCast<IComposer>(p0!);
+
+        // MaterialTheme(colorScheme, shapes, typography, content, composer, $changed, $default)
+        // $default = 0b0111 → use defaults for colorScheme/shapes/typography; provide content.
+        MaterialThemeKt.MaterialTheme(
+            colorScheme: null,
+            shapes:      null,
+            typography:  null,
+            content:     _body,
+            _composer:   composer,
+            p5:          0,
+            _changed:    0b0111);
+        return null;
     }
 }
 
@@ -69,8 +103,6 @@ public sealed class AppContent : Java.Lang.Object, IFunction2
         var composer = Android.Runtime.Extensions.JavaCast<IComposer>(p0!);
 
         // Column(Modifier, Arrangement.Vertical, Alignment.Horizontal, content, composer, $changed, $default)
-        // $default = 0b0111 → defaults for modifier (bit 0), verticalArrangement (bit 1),
-        // horizontalAlignment (bit 2); content (bit 3) is provided.
         ColumnKt.Column(
             modifier: null,
             verticalArrangement: null,
@@ -87,36 +119,42 @@ public sealed class AppContent : Java.Lang.Object, IFunction2
 public sealed class ColumnContent : Java.Lang.Object, IFunction3
 {
     readonly IMutableState _count;
+    readonly ButtonLabel  _buttonLabel;
     readonly ClickHandler _click;
 
     public ColumnContent(IMutableState count)
     {
-        _count = count;
-        _click = new ClickHandler(count);
+        _count       = count;
+        _buttonLabel = new ButtonLabel();
+        _click       = new ClickHandler(count);
     }
 
     public Java.Lang.Object? Invoke(Java.Lang.Object? p0, Java.Lang.Object? p1, Java.Lang.Object? p2)
     {
         var composer = Android.Runtime.Extensions.JavaCast<IComposer>(p1!);
 
-        // BasicText("Hello from .NET")
         ComposeApi.BasicText("Hello from .NET", modifier: null, composer);
 
-        // BasicText("Count: N") — re-reads MutableState.value, so Compose
-        // recomposes this lambda when the count changes.
         int n = ((Java.Lang.Integer)_count.Value!).IntValue();
         ComposeApi.BasicText("Count: " + n, modifier: null, composer);
 
-        // BasicText("Tap to increment") wrapped in a clickable Modifier.
-        var clickable = ClickableKt.Clickable(
-            obj: ComposeApi.ModifierCompanion,
-            enabled: true,
-            onClickLabel: null,
-            role: null,
-            interactionSource: null,
-            onClick: _click);
-        ComposeApi.BasicText("Tap to increment", modifier: clickable, composer);
+        // Material 3 filled Button — colors, shape, ripple, elevation all come
+        // from MaterialTheme defaults higher up the composition.
+        ComposeApi.Button(_click, _buttonLabel, composer);
 
+        return null;
+    }
+}
+
+// Content lambda of the Material Button. The receiver is RowScope, which we
+// don't use — just emit a label.
+[Register("composenet/sample/ButtonLabel")]
+public sealed class ButtonLabel : Java.Lang.Object, IFunction3
+{
+    public Java.Lang.Object? Invoke(Java.Lang.Object? rowScope, Java.Lang.Object? p1, Java.Lang.Object? p2)
+    {
+        var composer = Android.Runtime.Extensions.JavaCast<IComposer>(p1!);
+        ComposeApi.BasicText("Tap to increment", modifier: null, composer);
         return null;
     }
 }

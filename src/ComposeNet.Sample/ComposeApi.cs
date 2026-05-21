@@ -2,6 +2,7 @@ using Android.Runtime;
 using Androidx.Compose.Runtime;
 using Androidx.Compose.UI;
 using Java.Interop;
+using Kotlin.Jvm.Functions;
 
 namespace ComposeNet.Sample;
 
@@ -45,6 +46,54 @@ internal static class ComposeApi
 
     static IntPtr s_basicTextClass;
     static IntPtr s_basicTextMethod;
+
+    // androidx.compose.material3.ButtonKt.Button(
+    //     Function0 onClick, Modifier modifier, boolean enabled, Shape shape,
+    //     ButtonColors colors, ButtonElevation elevation, BorderStroke border,
+    //     PaddingValues contentPadding, MutableInteractionSource interactionSource,
+    //     Function3<RowScope,Composer,Integer,Unit> content,
+    //     Composer $composer, int $changed, int $default)
+    //   $default bits 0..9 ↔ the 10 user-facing parameters.
+    //   bit 0 onClick, bit 9 content → both provided, others defaulted ⇒
+    //   $default = 0b1111111110 (everything except onClick=bit0 and content=bit9).
+    const string ButtonSig =
+        "(Lkotlin/jvm/functions/Function0;Landroidx/compose/ui/Modifier;Z" +
+        "Landroidx/compose/ui/graphics/Shape;Landroidx/compose/material3/ButtonColors;" +
+        "Landroidx/compose/material3/ButtonElevation;Landroidx/compose/foundation/BorderStroke;" +
+        "Landroidx/compose/foundation/layout/PaddingValues;" +
+        "Landroidx/compose/foundation/interaction/MutableInteractionSource;" +
+        "Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;II)V";
+
+    static IntPtr s_buttonClass;
+    static IntPtr s_buttonMethod;
+
+    public static unsafe void Button(IFunction0 onClick, IFunction3 content, IComposer composer)
+    {
+        if (s_buttonClass == IntPtr.Zero)
+        {
+            s_buttonClass  = JNIEnv.FindClass("androidx/compose/material3/ButtonKt");
+            s_buttonMethod = JNIEnv.GetStaticMethodID(s_buttonClass, "Button", ButtonSig);
+        }
+
+        // bit 0 onClick (provided), bit 9 content (provided) → mask off bits 0 and 9.
+        int defaults = 0b0111111110;
+
+        JValue* args = stackalloc JValue[13];
+        args[0]  = new JValue(((Java.Lang.Object)onClick).Handle);
+        args[1]  = new JValue(IntPtr.Zero); // modifier
+        args[2]  = new JValue(true);        // enabled
+        args[3]  = new JValue(IntPtr.Zero); // shape
+        args[4]  = new JValue(IntPtr.Zero); // colors
+        args[5]  = new JValue(IntPtr.Zero); // elevation
+        args[6]  = new JValue(IntPtr.Zero); // border
+        args[7]  = new JValue(IntPtr.Zero); // contentPadding
+        args[8]  = new JValue(IntPtr.Zero); // interactionSource
+        args[9]  = new JValue(((Java.Lang.Object)content).Handle);
+        args[10] = new JValue(((Java.Lang.Object)composer).Handle);
+        args[11] = new JValue(0);           // $changed
+        args[12] = new JValue(defaults);
+        JNIEnv.CallStaticVoidMethod(s_buttonClass, s_buttonMethod, args);
+    }
 
     public static unsafe void BasicText(string text, IModifier? modifier, IComposer composer)
     {

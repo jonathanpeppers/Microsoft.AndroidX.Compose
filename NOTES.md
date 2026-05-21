@@ -13,13 +13,72 @@ authored entirely in C# with no Kotlin source files in the repo.**
 
 ## What got built
 
+The sample now renders a **Material 3 themed UI** entirely from C#:
+
+* Android `Theme.Material.Light` ActionBar at the top showing the app name
+  ("ComposeNet.Sample") — the title bar is the native Material ActionBar,
+  not a Compose `TopAppBar` (see issue #13).
+* A Compose `MaterialTheme { Column { … } }` body inside a `ComposeView`,
+  with proper safe-area padding for the status bar / nav bar.
+* Two `BasicText` labels ("Hello from .NET", "Count: N").
+* A real Material 3 **`Button`** — purple FilledButton with rounded
+  corners, ripple, and elevation, all from the MaterialTheme defaults.
+* Tapping the Button increments a `MutableState<Int>` and the second
+  label recomposes.
+
+13. **Material3 `Text` and `Button` are stripped from managed bindings,
+    even after the AAR binds cleanly.** The generated `TextKt.cs` and
+    `ButtonKt.cs` are *empty wrapper classes* with no `static void Text(…)`
+    or `static void Button(…)` at all — every overload had at least one
+    inline-class parameter (Color → long, TextStyle, ButtonColors,
+    PaddingValues with inline Dp insets, etc.) that the binding generator
+    couldn't map.
+
+    Workaround: call them via **raw JNI** (same pattern as `BasicText`).
+    `androidx.compose.material3.ButtonKt.Button` happens to use only
+    reference types and primitives, so its descriptor is straightforward:
+
+    ```
+    (Lkotlin/jvm/functions/Function0;Landroidx/compose/ui/Modifier;Z
+     Landroidx/compose/ui/graphics/Shape;Landroidx/compose/material3/ButtonColors;
+     Landroidx/compose/material3/ButtonElevation;Landroidx/compose/foundation/BorderStroke;
+     Landroidx/compose/foundation/layout/PaddingValues;
+     Landroidx/compose/foundation/interaction/MutableInteractionSource;
+     Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;II)V
+    ```
+
+    Pass `null` for everything except `onClick` and `content`, then set
+    `$default = 0b0111111110` (all 8 middle bits set ⇒ "use defaults").
+    Bonus: because the params are reference types, this is *not* a
+    `Button-XXXXX` mangled name — it's literally `"Button"`.
+
+    `MaterialThemeKt.MaterialTheme(colorScheme, shapes, typography,
+    content, composer, 0, $default = 0b0111)` *did* survive the binding
+    generator and can be called from C# directly.
+
+14. **`Theme.Material.Light` ActionBar overlays the content area on API 36.**
+    Even though the theme is not `…ActionBarOverlay`, the
+    `decor_content_parent` puts the action_bar_container and the content
+    `FrameLayout` as siblings starting at `y=0`. The ActionBar visually
+    paints on top of any Compose content from y=0 to roughly
+    `statusBarHeight + actionBarSize` (≈327px on a Pixel-class density).
+
+    Workaround: read `?attr/actionBarSize` and the
+    `android:dimen/status_bar_height` resource and apply both as top
+    `View.SetPadding` on the `ComposeView` before `SetContentView`. The
+    bottom navigation bar still needs `navigation_bar_height` padding
+    too in edge-to-edge mode.
+
+
+---
+
 | Project                                  | What it does                                                                                                       |
 |------------------------------------------|--------------------------------------------------------------------------------------------------------------------|
 | `ComposeNet.Bindings.Runtime`            | Re-binds `androidx.compose.runtime:runtime-android` 1.9.4 from Google Maven (the Xamarin NuGet ships zero types).  |
 | `ComposeNet.Bindings.UI`                 | Re-binds `androidx.compose.ui:ui-android` 1.9.4 (Modifier, ComposeView, AbstractComposeView, layout primitives).    |
 | `ComposeNet.Bindings.Foundation.Layout`  | Re-binds `androidx.compose.foundation:foundation-layout-android` 1.9.4 (Box, Column, Row, …). Used by the sample.  |
 | `ComposeNet.Bindings.Foundation`         | Re-binds `androidx.compose.foundation:foundation-android` 1.9.4. Not referenced by sample yet.                     |
-| `ComposeNet.Bindings.Material3`          | Re-binds `androidx.compose.material3:material3-android` 1.3.2. Not used by the sample (XA4215 — see below).        |
+| `ComposeNet.Bindings.Material3`          | Re-binds `androidx.compose.material3:material3-android` 1.3.2. **Used by the sample** (MaterialTheme + Button). |
 | `ComposeNet.Sample`                      | Minimal app. References Runtime + UI + Foundation.Layout. `MainActivity` calls `BoxKt.Box` from C#.                |
 
 All five binding projects use `<AndroidMavenLibrary Pack="false">` to download
