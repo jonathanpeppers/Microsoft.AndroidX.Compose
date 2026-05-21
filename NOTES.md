@@ -197,6 +197,36 @@ that AAR.
    from a background view attach the first time the activity becomes
    visible.
 
+8. **`JNIEnv.FindClass` returns a *global* ref in .NET-for-Android.**
+   Calling `JNIEnv.DeleteLocalRef` on the result trips ART's CheckJNI
+   with `JNI DETECTED ERROR IN APPLICATION: expected reference of kind
+   Local but found Global` (SIGABRT). Don't free it.
+   `GetStaticObjectField` *does* return a real local ref — wrap it in
+   `JniHandleOwnership.TransferLocalRef` when handing to
+   `Java.Lang.Object.GetObject<T>`.
+
+9. **Compose `@Composable` functions don't get `$default` overloads.**
+   Plain Kotlin functions with default args get a synthetic `foo$default`
+   sibling. The Compose compiler plugin handles defaults differently:
+   the *regular* method has a trailing `int $default` mask parameter
+   (after the synthetic `Composer $composer, int $changed` tail). The
+   .NET-for-Android binding generator doesn't know about this convention,
+   so it surfaces only the full-arg signature and you must pass every
+   inline-class argument yourself — or skip the binding entirely and
+   call via raw JNI with `$default = 0b...` to opt into defaults
+   server-side. The sample's `ComposeApi.BasicText` does exactly this:
+
+   ```csharp
+   // androidx.compose.foundation.text.BasicTextKt.BasicText-BpD7jsM
+   // descriptor: (Ljava/lang/String;Landroidx/compose/ui/Modifier;
+   //              Landroidx/compose/ui/text/TextStyle;
+   //              Lkotlin/jvm/functions/Function1;IZI
+   //              Landroidx/compose/runtime/Composer;II)V
+   // Pass null/0 for params 1..6 and set bits 1..6 in $default to
+   // make the impl substitute the real defaults internally.
+   ```
+
+
 ---
 
 ## Build / repro

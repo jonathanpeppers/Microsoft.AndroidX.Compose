@@ -8,10 +8,12 @@
     <ApplicationId>com.companyname.ComposeNet.Sample</ApplicationId>
     <ApplicationVersion>1</ApplicationVersion>
     <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\ComposeNet.Bindings.Runtime\ComposeNet.Bindings.Runtime.csproj" />
     <ProjectReference Include="..\ComposeNet.Bindings.UI\ComposeNet.Bindings.UI.csproj" />
+    <ProjectReference Include="..\ComposeNet.Bindings.Foundation\ComposeNet.Bindings.Foundation.csproj" />
     <ProjectReference Include="..\ComposeNet.Bindings.Foundation.Layout\ComposeNet.Bindings.Foundation.Layout.csproj" />
   </ItemGroup>
   <ItemGroup>
