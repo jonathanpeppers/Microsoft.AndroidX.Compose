@@ -63,9 +63,7 @@ public sealed class Column : ComposableContainer
             content:             content,
             _composer:           composer,
             p5:                  0,
-            _changed:            (int)(ColumnDefault.Modifier
-                                     | ColumnDefault.VerticalArrangement
-                                     | ColumnDefault.HorizontalAlignment));
+            _changed:            (int)ColumnDefault.All);
     }
 }
 
@@ -90,7 +88,7 @@ public sealed class MaterialTheme : ComposableContainer
             content:     content,
             _composer:   composer,
             p5:          0,
-            _changed:    (int)(MaterialThemeDefault.Shapes | MaterialThemeDefault.Typography));
+            _changed:    (int)(MaterialThemeDefault.All & ~MaterialThemeDefault.ColorScheme));
     }
 }
 

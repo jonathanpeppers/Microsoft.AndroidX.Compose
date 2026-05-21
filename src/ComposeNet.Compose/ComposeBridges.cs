@@ -38,12 +38,7 @@ internal static class ComposeBridges
         }
 
         // Everything but `text` is defaulted.
-        int defaults = (int)(TextDefault.Modifier | TextDefault.Color | TextDefault.FontSize
-                           | TextDefault.FontStyle | TextDefault.FontWeight | TextDefault.FontFamily
-                           | TextDefault.LetterSpacing | TextDefault.Decoration | TextDefault.Align
-                           | TextDefault.LineHeight | TextDefault.Overflow | TextDefault.SoftWrap
-                           | TextDefault.MaxLines | TextDefault.MinLines | TextDefault.OnTextLayout
-                           | TextDefault.Style);
+        int defaults = (int)TextDefault.All;
 
         IntPtr textRef = JNIEnv.NewString(text);
         try
@@ -101,10 +96,7 @@ internal static class ComposeBridges
         }
 
         // onClick (bit 0) and content (bit 9) are provided; default everything else.
-        int defaults = (int)(ButtonDefault.Modifier | ButtonDefault.Enabled
-                           | ButtonDefault.Shape | ButtonDefault.Colors
-                           | ButtonDefault.Elevation | ButtonDefault.Border
-                           | ButtonDefault.ContentPadding | ButtonDefault.InteractionSource);
+        int defaults = (int)ButtonDefault.All;
 
         JValue* args = stackalloc JValue[13];
         args[0]  = new JValue(((Java.Lang.Object)onClick).Handle);
