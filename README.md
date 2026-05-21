@@ -25,6 +25,28 @@ The generator's xUnit tests run without an Android SDK:
 dotnet test src/ComposeNet.SourceGenerators.Tests
 ```
 
+## Progress
+
+Upstream work to remove the bindings from this repo and consume the
+official `Xamarin.AndroidX.Compose.*` NuGets directly:
+
+- [dotnet/android-libraries#1418][pr-1418] — PR: ship real bindings for
+  `Xamarin.AndroidX.Compose.Runtime` (tracking issue:
+  [#1415][issue-1415]).
+- [dotnet/android-libraries#1416][issue-1416] — stop stripping
+  `Xamarin.AndroidX.Compose.UI` / `Foundation` / `Foundation.Layout`.
+- [dotnet/android-libraries#1417][issue-1417] — stop stripping
+  `@Composable` functions in `Xamarin.AndroidX.Compose.Material3`.
+
+Once #1418/#1416/#1417 are merged and released on nuget.org, **every
+`src/ComposeNet.Bindings.*` project in this repo can be deleted** and
+the sample + facade can reference the official NuGets directly.
+
+[pr-1418]: https://github.com/dotnet/android-libraries/pull/1418
+[issue-1415]: https://github.com/dotnet/android-libraries/issues/1415
+[issue-1416]: https://github.com/dotnet/android-libraries/issues/1416
+[issue-1417]: https://github.com/dotnet/android-libraries/issues/1417
+
 ## Why this exists
 
 [*Android UI Development is Compose First*](https://android-developers.googleblog.com/2026/05/android-ui-development-is-compose-first.html) (Nick Butcher, May 2026) puts `android.widget.*`, Fragments, RecyclerView, ViewPager and the View-based tooling into **maintenance mode**. All new APIs, libraries, samples, and tools target Compose. For dotnet/android this is roughly equivalent to Apple's UIKit→SwiftUI shift in 2019 — we need a story.
