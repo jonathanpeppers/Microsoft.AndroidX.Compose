@@ -21,7 +21,7 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Xamarin.AndroidX.Compose.Foundation.Layout" Version="1.9.4" ExcludeAssets="compile" />
-    <PackageReference Include="Xamarin.AndroidX.Core" Version="1.18.0" />
+    <PackageReference Include="Xamarin.AndroidX.Core" Version="1.17.0" />
     <PackageReference Include="Xamarin.AndroidX.Collection" Version="1.6.0" />
     <PackageReference Include="Xamarin.AndroidX.Annotation.Experimental" Version="1.6.0" />
     <PackageReference Include="Xamarin.Kotlin.StdLib" Version="2.3.21" />
