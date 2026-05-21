@@ -39,6 +39,18 @@ public class MainActivity : ComponentActivity
             bottom: SystemBarHeight("navigation_bar_height") + Dp(16));
 
         SetContentView(composeView);
+
+        // After SetContentView the DecorView is realized, so
+        // Window.InsetsController is non-null. Light status-bar icons
+        // (dark icons on light status-bar background) makes the clock /
+        // battery / etc. readable against the light Material theme.
+        var insetsController = Window!.InsetsController;
+        if (insetsController != null)
+        {
+            insetsController.SetSystemBarsAppearance(
+                (int)Android.Views.WindowInsetsControllerAppearance.LightStatusBars,
+                (int)Android.Views.WindowInsetsControllerAppearance.LightStatusBars);
+        }
         Android.Util.Log.Debug(TAG, "OnCreate complete");
     }
 
@@ -139,10 +151,13 @@ public sealed class ColumnContent : Java.Lang.Object, IFunction3
     {
         var composer = Android.Runtime.Extensions.JavaCast<IComposer>(p1!);
 
-        ComposeApi.BasicText("Hello from .NET", modifier: null, composer);
-
         int n = ((Java.Lang.Integer)_count.Value!).IntValue();
-        ComposeApi.BasicText("Count: " + n, modifier: null, composer);
+
+        // Use Material `Text` for the body — it picks up MaterialTheme's
+        // typography and reads LocalContentColor from the composition
+        // (so themed/colored properly).
+        ComposeApi.Text("Hello from .NET", composer);
+        ComposeApi.Text("Count: " + n, composer);
 
         // Material 3 filled Button — colors, shape, ripple, elevation all come
         // from MaterialTheme defaults higher up the composition.
@@ -160,7 +175,9 @@ public sealed class ButtonLabel : Java.Lang.Object, IFunction3
     public Java.Lang.Object? Invoke(Java.Lang.Object? rowScope, Java.Lang.Object? p1, Java.Lang.Object? p2)
     {
         var composer = Android.Runtime.Extensions.JavaCast<IComposer>(p1!);
-        ComposeApi.BasicText("Tap to increment", modifier: null, composer);
+        // Material `Text` here picks up LocalContentColor from the Button,
+        // which is `onPrimary` (white on the default blue primary).
+        ComposeApi.Text("Tap to increment", composer);
         return null;
     }
 }
