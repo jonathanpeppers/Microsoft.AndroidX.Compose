@@ -54,16 +54,12 @@ public sealed class HelloComposable : Java.Lang.Object, IFunction2
     static IModifier FetchModifierCompanion()
     {
         // androidx.compose.ui.Modifier.Companion.$$INSTANCE
+        // NB: JNIEnv.FindClass returns a GLOBAL reference in .NET for Android
+        // (classes are cached), so do NOT DeleteLocalRef it. GetStaticObjectField
+        // returns a local ref which TransferLocalRef cleans up.
         IntPtr classRef = JNIEnv.FindClass("androidx/compose/ui/Modifier$Companion");
-        try
-        {
-            IntPtr fieldId = JNIEnv.GetStaticFieldID(classRef, "$$INSTANCE", "Landroidx/compose/ui/Modifier$Companion;");
-            IntPtr instanceRef = JNIEnv.GetStaticObjectField(classRef, fieldId);
-            return Java.Lang.Object.GetObject<IModifier>(instanceRef, JniHandleOwnership.TransferLocalRef)!;
-        }
-        finally
-        {
-            JNIEnv.DeleteLocalRef(classRef);
-        }
+        IntPtr fieldId = JNIEnv.GetStaticFieldID(classRef, "$$INSTANCE", "Landroidx/compose/ui/Modifier$Companion;");
+        IntPtr instanceRef = JNIEnv.GetStaticObjectField(classRef, fieldId);
+        return Java.Lang.Object.GetObject<IModifier>(instanceRef, JniHandleOwnership.TransferLocalRef)!;
     }
 }
