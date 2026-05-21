@@ -1,18 +1,17 @@
-using Android.Content;
 using Android.OS;
 using Android.Runtime;
+using AndroidX.Activity;
 using Androidx.Compose.Foundation.Layout;
 using Androidx.Compose.Runtime;
 using Androidx.Compose.Runtime.Internal;
 using Androidx.Compose.UI;
 using Androidx.Compose.UI.Platform;
-using Java.Interop;
 using Kotlin.Jvm.Functions;
 
 namespace ComposeNet.Sample;
 
 [Activity(Label = "@string/app_name", MainLauncher = true)]
-public class MainActivity : Activity
+public class MainActivity : ComponentActivity
 {
     protected override void OnCreate(Bundle? savedInstanceState)
     {

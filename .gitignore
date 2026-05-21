@@ -404,3 +404,5 @@ src/ComposeNet.Sample/bin/
 src/ComposeNet.Sample/obj/
 src/ComposeNet.Bindings.Runtime/bin/
 src/ComposeNet.Bindings.Runtime/obj/
+
+src/ComposeNet.Sample/log.txt

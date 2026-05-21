@@ -184,8 +184,18 @@ that AAR.
    `<remove-node>` every type my binding duplicates with the stub. Not
    tackled yet — `Box` is enough for tier 1.
 
-6. **Not deployed.** No device/emulator in this environment —
-   verification is build + dex inspection only.
+7. **`AbstractComposeView` requires a `ComponentActivity` host.** When
+   `ComposeView` attaches to the window it calls
+   `WindowRecomposer.createLifecycleAwareWindowRecomposer`, which does
+   `ViewTreeLifecycleOwner.get(this) ?: error("ViewTreeLifecycleOwner not found")`.
+   Plain `android.app.Activity` doesn't install the
+   `ViewTreeLifecycleOwner` / `ViewTreeSavedStateRegistryOwner` tags on
+   the decor view; `androidx.activity.ComponentActivity` does. Fix:
+   derive `MainActivity : ComponentActivity` (via
+   `Xamarin.AndroidX.Activity` 1.11.0). Without this you get
+   `java.lang.IllegalStateException: ViewTreeLifecycleOwner not found`
+   from a background view attach the first time the activity becomes
+   visible.
 
 ---
 
