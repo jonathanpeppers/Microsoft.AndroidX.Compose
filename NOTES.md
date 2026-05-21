@@ -343,9 +343,21 @@ $bt = "$env:LOCALAPPDATA\Android\Sdk\build-tools\<latest>\dexdump.exe"
 
 ```
 src/
-  ComposeNet.Sample/                          Tier 1 app. Calls Compose from C#.
+  ComposeNet.Sample/                          Tier 1.5 app. Uses ComposeNet.Compose facade.
     ComposeNet.Sample.csproj
-    MainActivity.cs
+    MainActivity.cs                           ~27 lines total, mirrors Kotlin line-for-line.
+  ComposeNet.Compose/                         Tier 1.5 runtime facade (no codegen).
+    ComposeNet.Compose.csproj
+    ComposableNode.cs                         Abstract AST base.
+    Composables.cs                            Text / Column / Button / MaterialTheme nodes
+                                                + ComposableContainer base with Add/IEnumerable.
+    ComposableLambdas.cs                      [Register]'d ACW adapters
+                                                (ComposableLambda0 / 2 / 3).
+    ComposeBridges.cs                         Raw-JNI bridges to Material3 Text / Button.
+    MutableState.cs                           MutableState<T> + MutableIntState
+                                                (with implicit int + operator ++/--).
+    ComposeActivity.cs                        ComponentActivity base providing SetContent +
+                                                Remember + safe-area padding + light status bar.
   ComposeNet.Bindings.Runtime/                Binds androidx.compose.runtime 1.9.4
     ComposeNet.Bindings.Runtime.csproj
     Transforms/Metadata.xml
@@ -354,3 +366,161 @@ src/
   ComposeNet.Bindings.Foundation.Layout/      Binds androidx.compose.foundation.layout 1.9.4
   ComposeNet.Bindings.Material3/              Binds androidx.compose.material3 1.3.2
 ```
+
+## Tier 1.5 facade: lessons from making the C# look like Kotlin
+
+After getting the raw bindings working (Tier 1, ~200-line
+`MainActivity.cs` with five hand-written `IFunctionN` ACWs), we built
+a thin runtime facade (`ComposeNet.Compose`) to make the user-facing
+code mirror Kotlin. Notes from that work:
+
+### 5. Composables as types + collection-initializers gets us trailing-lambda-free nesting
+
+C# doesn't have Kotlin trailing-lambda syntax, but it *does* have
+collection-initializer syntax. By making every composable a
+`ComposableNode` subclass and giving containers `IEnumerable` +
+`Add(ComposableNode)`, the user gets:
+
+```csharp
+new MaterialTheme {
+    new Column {
+        new Text("Hi"),
+        new Button(onClick: () => x++) { new Text("Tap") }
+    }
+}
+```
+
+…which is character-for-character the closest C# can get to:
+
+```kotlin
+MaterialTheme { Column { Text("Hi"); Button(onClick = { x++ }) { Text("Tap") } } }
+```
+
+The cost is one `ComposableNode` allocation per call site per
+recomposition — fine for hello-world, not for production. A Tier 2
+source generator would lower `[Composable]` C# methods to direct
+composer-threading calls (no AST allocation).
+
+### 6. The composer is *explicit* at the implementation layer, just like Kotlin
+
+The temptation was to stash the composer in a `[ThreadStatic]` so user
+code never sees it. This silently breaks `SubcomposeLayout`,
+`MovableContent`, parallel composition, and snapshot isolation — all
+of which depend on the composer being a passed parameter, not ambient
+state.
+
+Kotlin's Compose compiler plugin (`ComposerParamTransformer`) rewrites
+every `@Composable fun Foo(x)` to `fun Foo(x, $composer, $changed)`.
+The composer is **always** an explicit parameter. Our facade mirrors
+this honestly: `internal abstract void Render(IComposer composer)` on
+`ComposableNode`, with each container threading its received composer
+into child renders. User code never sees `IComposer`; the
+implementation layer always does.
+
+### 7. Nested content lambdas can reuse the outer composer reference
+
+Inside a single composition pass, Compose threads the *same `Composer`
+reference* through every nested content lambda — it's a mutable cursor
+through the slot table, not a fork. That means container nodes can do:
+
+```csharp
+internal override void Render(IComposer composer)
+{
+    var content = new ComposableLambda3(c => RenderChildren(c));
+    ColumnKt.Column(..., content: content, _composer: composer, ...);
+}
+```
+
+…and `RenderChildren(c)` works correctly: `c` (the composer the runtime
+hands the content lambda) is the same physical object as the outer
+`composer` we passed into `ColumnKt.Column`. This lets each container's
+`Render` be a few lines.
+
+The exception is real subcomposition (`SubcomposeLayout`, `MovableContent`)
+which *do* hand you a different composer — those would need an
+explicit-composer overload. Tier 2 problem.
+
+### 8. `MutableIntState` with `implicit operator int` + `operator ++/--` is the killer feature for Kotlin parity
+
+The Kotlin idiom is:
+
+```kotlin
+var count by remember { mutableStateOf(0) }
+Text("Count: $count")
+Button(onClick = { count++ }) { ... }
+```
+
+C# can't do `by` (delegated properties) or trailing lambdas, but
+**operator overloading** carries enough of the load:
+
+```csharp
+public sealed class MutableIntState : MutableState<int>
+{
+    public static implicit operator int(MutableIntState s) => s.Value;
+    public static MutableIntState operator ++(MutableIntState s) { s.Value++; return s; }
+    public override string ToString() => Value.ToString();
+}
+```
+
+Result:
+- `$"Count: {count}"` interpolates via implicit `int`
+- `count++` mutates via overloaded operator
+- `count.Value` is still available for explicit `set` (e.g. `count.Value = 42`)
+
+This single class single-handedly closes the largest readability gap
+between Kotlin Compose state usage and C# Compose state usage.
+
+### 9. `[CallerLineNumber]` is a usable shim for `remember`
+
+The real `remember { … }` in Kotlin uses Compose's slot table to cache
+values across recompositions, keyed by call-site position in the
+group hierarchy. A Tier 1.5 facade doesn't have access to the slot
+table from C#, so we use:
+
+```csharp
+protected T Remember<T>(Func<T> factory, [CallerLineNumber] int key = 0)
+{
+    if (!_remembered.TryGetValue(key, out var v))
+        _remembered[key] = v = factory()!;
+    return (T)v!;
+}
+```
+
+…with an activity-scoped `Dictionary<int, object>`. Limitations:
+- Only works at the top of `SetContent`'s lambda, not inside nested
+  composables (no positional context across container boundaries).
+- Survives recompositions but **not** activity recreation
+  (rotate-the-device loses state — real fix is `rememberSaveable` +
+  `Composer.cache` integration).
+
+Good enough for tier 1.5; tier 2 codegen should map `[Composable]`
+locals to real slot-table reads.
+
+### 10. `ComposeActivity` keeps user `OnCreate` looking like Kotlin `onCreate`
+
+The user override is:
+
+```csharp
+protected override void OnCreate(Bundle? state)
+{
+    base.OnCreate(state);
+    SetContent(() => /* composition */);
+}
+```
+
+…which mirrors:
+
+```kotlin
+override fun onCreate(state: Bundle?) {
+    super.onCreate(state)
+    setContent { /* composition */ }
+}
+```
+
+…almost verbatim. `OnCreate` is *not* sealed — the user can do any
+pre/post Android setup just like Kotlin. `SetContent` is an
+`internal-ly-magic` instance method on `ComposeActivity` that handles
+ComposeView creation, safe-area padding, light status-bar config, and
+the `ComposableLambdaKt.ComposableLambdaInstance` wrapping that
+invokes the user lambda on every recomposition.
+

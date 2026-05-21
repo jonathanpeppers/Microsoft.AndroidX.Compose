@@ -220,163 +220,91 @@ pass `(Composer, $changed)`, every lambda gets wrapped in a
 gets a `$default` bitmask, `remember`/`mutableStateOf` become slot-table
 intrinsics, and `by` desugars to `MutableState.value` access.
 
-### What we have to write in C# today
+### What we write in C# today
 
-There is no `@Composable` annotation that means anything to C#,
-no `setContent { … }` trailing lambda, and the binding generator
-strips every Kotlin-mangled overload of `Text`/`Button`. So we hand-write
-each piece of the plugin's lowering by hand. The full
-[`MainActivity.cs`](src/ComposeNet.Sample/MainActivity.cs) is ~200
-lines; the highlights:
-
-**The activity** — equivalent of `setContent { … }`:
+We ship a small Tier 1.5 **runtime facade**
+([`ComposeNet.Compose`](src/ComposeNet.Compose)) that wraps the raw
+bindings. The user-facing C# is now structurally identical to Kotlin —
+the only differences are `new`, commas, `() =>`, and `$"…"`:
 
 ```csharp
 [Activity(Label = "@string/app_name", MainLauncher = true,
           Theme = "@android:style/Theme.Material.Light")]
-public class MainActivity : ComponentActivity
+public class MainActivity : ComposeActivity
 {
     protected override void OnCreate(Bundle? savedInstanceState)
     {
         base.OnCreate(savedInstanceState);
-
-        // remember { mutableStateOf(0) } — except `remember` needs to
-        // be inside a composition, so we hold the state on the activity.
-        var count = SnapshotStateKt.MutableStateOf(
-            Java.Lang.Integer.ValueOf(0),
-            SnapshotStateKt.StructuralEqualityPolicy());
-
-        var composeView = new ComposeView(this);
-        // The trailing-lambda `setContent { … }` from Kotlin is
-        // ComposableLambdaInstance(key, tracked, Function2) under the
-        // hood — we build that Function2 ourselves as a Java ACW.
-        composeView.SetContent(ComposableLambdaKt.ComposableLambdaInstance(
-            key: -1, tracked: false, block: new ThemedRoot(count)));
-
-        SetContentView(composeView);
+        SetContent(() =>
+        {
+            var count = Remember(() => new MutableIntState(0));
+            return new MaterialTheme
+            {
+                new Column
+                {
+                    new Text("Hello from .NET"),
+                    new Text($"Count: {count}"),
+                    new Button(onClick: () => count++)
+                    {
+                        new Text("Tap to increment"),
+                    },
+                },
+            };
+        });
     }
 }
 ```
 
-**Every `{ … }` block in the Kotlin becomes a named C# class** —
-because Compose lambdas have to be `Java.Lang.Object`-derived
-`Function2`/`Function3` so they can be passed across the JNI boundary
-as `ComposableLambda` payloads.
+That's the *entire* [`MainActivity.cs`](src/ComposeNet.Sample/MainActivity.cs).
+~27 lines including ceremony, 13 lines for the composition itself.
 
-```csharp
-// MaterialTheme { … }
-public sealed class ThemedRoot : Java.Lang.Object, IFunction2
-{
-    readonly AppContent _body;
-    public ThemedRoot(IMutableState count) => _body = new AppContent(count);
+| Kotlin                                 | C# (this repo)                                      |
+| -------------------------------------- | --------------------------------------------------- |
+| `override fun onCreate(…)`             | `protected override void OnCreate(…)`               |
+| `super.onCreate(…)`                    | `base.OnCreate(…)`                                  |
+| `setContent { … }`                     | `SetContent(() => { … })` on `ComposeActivity`      |
+| `Text("Hi")`                           | `new Text("Hi")`                                    |
+| `Column { … }`                         | `new Column { … }` (collection-initializer)         |
+| `Button(onClick = { x++ }) { … }`      | `new Button(onClick: () => x++) { … }`              |
+| `MaterialTheme { … }`                  | `new MaterialTheme { … }`                           |
+| `var count by remember { mutableStateOf(0) }` | `var count = Remember(() => new MutableIntState(0))` |
+| `count++`                              | `count++` (operator on `MutableIntState`)           |
+| `"Count: $count"`                      | `$"Count: {count}"` (implicit `int` conversion)     |
 
-    public Java.Lang.Object? Invoke(Java.Lang.Object? p0, Java.Lang.Object? p1)
-    {
-        var composer = Android.Runtime.Extensions.JavaCast<IComposer>(p0!);
-        var scheme = DynamicTonalPaletteKt.DynamicLightColorScheme(
-            Android.App.Application.Context);
+### How the facade works
 
-        // MaterialTheme(colorScheme, shapes, typography, content,
-        //               $composer, $changed, $default)
-        // $default = 0b0110 — provide colorScheme (bit 0) + content (bit 3),
-        //                    let Compose default shapes (bit 1) + typography (bit 2).
-        MaterialThemeKt.MaterialTheme(
-            colorScheme: scheme, shapes: null, typography: null,
-            content: _body, _composer: composer, p5: 0, _changed: 0b0110);
-        return null;
-    }
-}
+Composables are **types**, not method calls. Each is a
+`ComposableNode` subclass; containers (`Column`, `MaterialTheme`,
+`Button`) implement `IEnumerable` + `Add(ComposableNode)` so C#
+collection-initializer syntax compiles. The tree built by `SetContent`'s
+lambda is a pure value; `ComposeActivity` walks it and calls
+`Render(IComposer)` on each node, threading the composer at the
+implementation layer — invisible to user code, but explicit (no
+`ThreadStatic`!) the same way Kotlin's compiler plugin makes
+`$composer` an explicit IR parameter.
 
-// Column { … }
-public sealed class AppContent : Java.Lang.Object, IFunction2 { … }
+Inside each container's `Render`, the existing raw-JNI bridges (`Text`,
+`Button`, `Column`, `MaterialTheme`) call the Kotlin-mangled Compose
+functions with their `$default` bitmasks. The user never sees that.
 
-// the body of the Column lambda — IFunction3 because Column's content
-// is a (ColumnScope, Composer, Int) -> Unit
-public sealed class ColumnContent : Java.Lang.Object, IFunction3
-{
-    public Java.Lang.Object? Invoke(Java.Lang.Object? p0, Java.Lang.Object? p1, Java.Lang.Object? p2)
-    {
-        var composer = Android.Runtime.Extensions.JavaCast<IComposer>(p1!);
-        int n = ((Java.Lang.Integer)_count.Value!).IntValue();
-
-        ComposeApi.Text("Hello from .NET", composer);
-        ComposeApi.Text("Count: " + n, composer);
-        ComposeApi.Button(_click, _buttonLabel, composer);
-        return null;
-    }
-}
-
-// onClick = { count++ }
-public sealed class ClickHandler : Java.Lang.Object, IFunction0
-{
-    readonly IMutableState _count;
-    public ClickHandler(IMutableState count) => _count = count;
-
-    public Java.Lang.Object? Invoke()
-    {
-        int current = ((Java.Lang.Integer)_count.Value!).IntValue();
-        _count.Value = Java.Lang.Integer.ValueOf(current + 1);
-        return null;
-    }
-}
-```
-
-**Material 3 `Text` and `Button` aren't in the generated bindings at all** —
-every overload's JVM name is Kotlin-mangled (`Text--4IGK_g`, `Button-LP…`)
-because of inline-class params (`Modifier`, `Color`, `TextStyle`, `PaddingValues`),
-so the binding generator either skips them or emits empty wrapper classes.
-We call them by raw JNI from
-[`ComposeApi.cs`](src/ComposeNet.Sample/ComposeApi.cs):
-
-```csharp
-// material3.TextKt.Text--4IGK_g(text, modifier, color, fontSize,
-//   fontStyle, fontWeight, fontFamily, letterSpacing, decoration,
-//   textAlign, lineHeight, overflow, softWrap, maxLines, minLines,
-//   onTextLayout, style, $composer, $changed, $changed1, $default)
-// 17 user params; pass text only, defaults bitmask = 0x1FFFE.
-// color = 0L (Color.Unspecified) → reads LocalContentColor from the
-// composition — onPrimary (white) inside a Button, onBackground (dark)
-// at the top level.
-public static unsafe void Text(string text, IComposer composer)
-{
-    var cls = JNIEnv.FindClass("androidx/compose/material3/TextKt");
-    var mid = JNIEnv.GetStaticMethodID(cls, "Text--4IGK_g",
-        "(Ljava/lang/String;Landroidx/compose/ui/Modifier;JJ" +
-        "Landroidx/compose/ui/text/font/FontStyle;" +
-        "Landroidx/compose/ui/text/font/FontWeight;" +
-        "Landroidx/compose/ui/text/font/FontFamily;J" +
-        "Landroidx/compose/ui/text/style/TextDecoration;" +
-        "Landroidx/compose/ui/text/style/TextAlign;JIZII" +
-        "Lkotlin/jvm/functions/Function1;Landroidx/compose/ui/text/TextStyle;" +
-        "Landroidx/compose/runtime/Composer;III)V");
-
-    var textRef = JNIEnv.NewString(text);
-    JValue* args = stackalloc JValue[21];
-    args[0]  = new JValue(textRef);
-    args[1]  = new JValue(IntPtr.Zero); // modifier
-    args[2]  = new JValue(0L);          // color = Unspecified → LocalContentColor
-    /* … 14 more nulls/zeros … */
-    args[17] = new JValue(composer.Handle);
-    args[18] = new JValue(0);           // $changed
-    args[19] = new JValue(0);           // $changed1
-    args[20] = new JValue(0x1FFFE);     // $default — every param defaulted except text
-    JNIEnv.CallStaticVoidMethod(cls, mid, args);
-    JNIEnv.DeleteLocalRef(textRef);
-}
-```
+`MutableIntState` is the killer feature for Kotlin parity — `implicit
+operator int` lets `$"Count: {count}"` interpolate without `.Value`,
+and `operator ++/--` lets `count++` mutate the underlying
+`IMutableState` directly. So the Kotlin idiom `var count by remember {
+mutableStateOf(0) } ; count++` becomes
+`var count = Remember(() => new MutableIntState(0)) ; count++` —
+character-for-character equivalent after substituting Kotlin keywords
+for C# ones.
 
 ### What's missing on the C# side (and why)
 
-| Kotlin                                | C# today                                                     | Cost |
-| ------------------------------------- | ------------------------------------------------------------ | ---- |
-| `setContent { … }` trailing lambda    | Dedicated `Function2` subclass passed to `ComposableLambdaInstance` | Per-lambda boilerplate class |
-| `MaterialTheme { Column { … } }` nesting | Each `{ … }` is a separate `IFunctionN` ACW                  | N classes for N composable lambdas |
-| `var count by remember { mutableStateOf(0) }` | `IMutableState` field on the activity + manual `(Java.Lang.Integer)Value` boxing | No `by` delegation; no `remember`; counter survives recomposition only because it lives on the activity instance, not because Compose remembered it |
-| `Text("Hi")` (auto-themed)            | `ComposeApi.Text(string, composer)` raw-JNI bridge with hard-coded JNI descriptor + `$default = 0x1FFFE` | One bridge per composable, per arity |
-| `Button(onClick = { … }) { … }`       | `ComposeApi.Button(IFunction0, IFunction3, composer)` raw-JNI bridge | Same |
-| `Modifier.padding(16.dp)`             | `composeView.SetPadding(left, top, right, bottom)` on the host view; no `Modifier` chain | Can't compose modifiers from C# at all (inline-class param chain) |
-| Skipping / recomposition optimization | `$changed = 0` everywhere → no skipping, full subtree recomposes on every state change | Correctness ✅, perf 🙁 |
-| `@Composable` type-system enforcement | None — calling a non-composable from a composable context fails at runtime, not compile-time | Footgun |
+| Kotlin                                  | C# today                                                       | Cost |
+| --------------------------------------- | -------------------------------------------------------------- | ---- |
+| `Modifier.padding(16.dp).fillMaxWidth()` | Host-view padding via `ApplySafeAreaPadding`; no `Modifier` chain | Can't compose modifiers from C# yet (inline-class param chain) |
+| Skipping / recomposition optimization   | `$changed = 0` everywhere → full subtree recomposes on every state change | Correctness ✅, perf 🙁 |
+| Slot-table-backed `remember`            | Activity-scoped `Dictionary<int,object>` keyed off `[CallerLineNumber]` | Works for top-level `Remember` only; nested-scope `remember` is Tier 2 |
+| `@Composable` type-system enforcement   | None — calling a non-composable from a composable context fails at runtime, not compile-time | Footgun |
+| Per-call-site allocation                | Every recomposition allocates fresh `ComposableNode` objects (no slot-table reuse on the C# side) | Tier 2 codegen fixes |
 
 ### Why it's like this
 
@@ -384,17 +312,31 @@ The Compose compiler plugin (see top of this README) rewrites Kotlin
 IR to inject `$composer`, `$changed`, `$default`, slot-table keys,
 restart groups, and skip logic. None of that exists in our C#
 pipeline, so we either pay it by hand (per call site) or skip the
-optimization (recompose the whole tree). The takeaway from this
-tier-1 experiment:
+optimization (recompose the whole tree). The takeaways from this
+tier-1.5 experiment:
 
-- **Pure C# Compose hosting is feasible.** A real Material 3 UI runs
-  end-to-end on device with zero Kotlin in the project.
-- **It's unusably tedious by hand.** Even three composables and a
-  click handler explodes into ~7 classes and ~200 lines.
-- **A Roslyn source generator (tier 2) is the only path** to make this
-  developer-grade. The C# above is essentially the *output* of what
-  the Compose compiler plugin does for Kotlin — a generator would
-  produce it from `[Composable]` C# methods.
+- **Pure C# Compose hosting is feasible *and* ergonomic.** A real
+  Material 3 UI runs end-to-end on device with zero Kotlin in the
+  project, in a syntax that mirrors Kotlin almost line-for-line.
+- **The facade trades perf for ergonomics.** Tree allocation per
+  recomposition is acceptable for hello-world; for real apps a
+  Roslyn source generator (Tier 2) that lowers `[Composable]` C#
+  methods to direct composer-threading calls is the next step.
+- **Explicitness matches Kotlin.** The composer is an explicit
+  parameter at the implementation layer (`Render(IComposer)`), same
+  honest mirror of `ComposerParamTransformer` that Kotlin uses —
+  not a `[ThreadStatic]` which would silently break
+  `SubcomposeLayout` / `MovableContent` / parallel composition.
+
+### What it looked like before the facade
+
+For reference, the pre-facade Tier 1 sample was ~200 lines and required
+**five** named ACW classes (`ThemedRoot`, `AppContent`, `ColumnContent`,
+`ButtonLabel`, `ClickHandler`) just for one screen. The before/after is
+preserved in git history at the commit that introduced
+`ComposeNet.Compose` — every `{ … }` block from the Kotlin version had
+to be its own `Java.Lang.Object`-derived `IFunction2`/`IFunction3`
+class.
 
 ## Known issues
 
