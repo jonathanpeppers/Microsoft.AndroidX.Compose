@@ -2,6 +2,10 @@
 
 Experiment: can we host **Jetpack Compose** UI from a .NET for Android app using only the existing `Xamarin.AndroidX.Compose.*` bindings — no new compiler, no source generator?
 
+![Hello from .NET running Jetpack Compose UI on Android](docs/images/hello-compose-csharp.png)
+
+*The Tier 1 sample running on an Android emulator: title bar, `Text("Hello from .NET")`, a Material 3 `Button`, and a `Count:` driven by `mutableStateOf` — all authored from C# only, no Kotlin sources in the project.*
+
 ## Why this exists
 
 [*Android UI Development is Compose First*](https://android-developers.googleblog.com/2026/05/android-ui-development-is-compose-first.html) (Nick Butcher, May 2026) puts `android.widget.*`, Fragments, RecyclerView, ViewPager and the View-based tooling into **maintenance mode**. All new APIs, libraries, samples, and tools target Compose. For dotnet/android this is roughly equivalent to Apple's UIKit→SwiftUI shift in 2019 — we need a story.
