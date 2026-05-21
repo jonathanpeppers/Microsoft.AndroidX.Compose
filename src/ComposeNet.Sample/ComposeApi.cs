@@ -54,9 +54,8 @@ internal static class ComposeApi
             s_basicTextMethod = JNIEnv.GetStaticMethodID(s_basicTextClass, "BasicText-BpD7jsM", BasicTextSig);
         }
 
-        // $default mask: text (bit 0) provided; if `modifier` provided then bit 1 clear, else set.
         int defaults = 0b1111110;  // bits 1..6 set
-        if (modifier != null) defaults &= ~0b10;  // clear bit 1, we're passing modifier
+        if (modifier != null) defaults &= ~0b10;
 
         IntPtr textRef = JNIEnv.NewString(text);
         try

@@ -11,25 +11,44 @@ using Kotlin.Jvm.Functions;
 
 namespace ComposeNet.Sample;
 
-[Activity(Label = "@string/app_name", MainLauncher = true)]
+[Activity(Label = "@string/app_name", MainLauncher = true, Theme = "@android:style/Theme.Material.Light.NoActionBar")]
 public class MainActivity : ComponentActivity
 {
+    const string TAG = "ComposeNet";
+
     protected override void OnCreate(Bundle? savedInstanceState)
     {
         base.OnCreate(savedInstanceState);
 
-        // Persist counter state across recompositions by holding it on the host:
-        // we don't have a C#-callable `remember`, so the activity IS the remember slot.
         var count = SnapshotStateKt.MutableStateOf(
             Java.Lang.Integer.ValueOf(0),
             SnapshotStateKt.StructuralEqualityPolicy());
 
         var composeView = new ComposeView(this);
         composeView.SetContent(ComposableLambdaKt.ComposableLambdaInstance(
-            key: -1,
-            tracked: false,
-            block: new AppContent(count)));
+            key: -1, tracked: false, block: new AppContent(count)));
+
+        // We target API 36 (forced edge-to-edge). We don't yet have a managed binding
+        // for Modifier.systemBarsPadding (it's an inline-extension stripped by the
+        // generator). Read the status/nav bar heights from system resources and apply
+        // them as plain Android View padding around the ComposeView. Compose lays out
+        // inside the padded area.
+        composeView.SetPadding(
+            left:   Dp(16),
+            top:    SystemBarHeight("status_bar_height")     + Dp(16),
+            right:  Dp(16),
+            bottom: SystemBarHeight("navigation_bar_height") + Dp(16));
+
         SetContentView(composeView);
+        Android.Util.Log.Debug(TAG, "OnCreate complete");
+    }
+
+    int Dp(int dp) => (int)(dp * Resources!.DisplayMetrics!.Density);
+
+    int SystemBarHeight(string resName)
+    {
+        int id = Resources!.GetIdentifier(resName, "dimen", "android");
+        return id > 0 ? Resources.GetDimensionPixelSize(id) : 0;
     }
 }
 
@@ -78,7 +97,6 @@ public sealed class ColumnContent : Java.Lang.Object, IFunction3
 
     public Java.Lang.Object? Invoke(Java.Lang.Object? p0, Java.Lang.Object? p1, Java.Lang.Object? p2)
     {
-        // p0 = ColumnScope receiver (unused for now)
         var composer = Android.Runtime.Extensions.JavaCast<IComposer>(p1!);
 
         // BasicText("Hello from .NET")

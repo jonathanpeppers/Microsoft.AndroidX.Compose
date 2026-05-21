@@ -1,21 +1,13 @@
 # Notes from the Tier 1 attempt
 
-**Status: the sample builds AND calls a real composable.**
-`dotnet build src\ComposeNet.Sample` produces a ~12.7 MB signed APK whose
-dex contains `androidx/compose/runtime/Composer`,
-`androidx/compose/foundation/layout/BoxKt`,
-`androidx/compose/ui/Modifier$Companion`, and our C#-defined
-`composenet/sample/HelloComposable` (a `Function2<Composer, Int, Unit>` ACW).
-
-`MainActivity.OnCreate` constructs a `ComposeView` and a `ComposableLambda`
-that calls `BoxKt.Box(Modifier.Companion, composer, $changed)` — all from
-C#, no Kotlin source files in the repo. `Modifier.Companion` is fetched
-via raw JNI because the Kotlin Companion object isn't bound (see "Open
-issues" below).
-
-Not deployed — no emulator/device in this environment. Build + dex
-inspection verification only. Whether the Box actually paints when the
-APK is launched is an open question we can't answer without hardware.
+**Status: the sample builds, renders, and is interactive on device.**
+`dotnet build src\ComposeNet.Sample` produces a signed APK that on launch
+displays a `Column` of three `BasicText` composables ("Hello from .NET",
+"Count: N", "Tap to increment") wired to a `MutableState<Int>`. Tapping
+the third text invokes a C# `Function0` click handler that mutates the
+state; Compose then recomposes the second `BasicText` showing the new
+counter value. **End-to-end Compose + state + recomposition + input,
+authored entirely in C# with no Kotlin source files in the repo.**
 
 ---
 
@@ -225,6 +217,49 @@ that AAR.
    // Pass null/0 for params 1..6 and set bits 1..6 in $default to
    // make the impl substitute the real defaults internally.
    ```
+
+10. **`$default` mask convention: bit set = "use the DEFAULT".** Easy to
+    invert mentally. Bit `i` set means "I didn't pass param `i`,
+    substitute the default in the body"; bit `i` clear means "use what I
+    passed". For `Column(modifier, vertArr, horizAlign, content)` to
+    default the first three slots and accept the caller's content, mask
+    is `0b0111`. Original `0b1110` (provided modifier/defaulted everything
+    else) bypassed Compose's default-substitution for the null modifier
+    we passed and tripped an NPE inside `ComposedModifierKt.materializeImpl`.
+
+11. **No managed `Modifier.systemBarsPadding` / `Modifier.padding`.** The
+    `androidx.compose.foundation.layout.PaddingKt.padding-*` overloads
+    take inline-class `Dp` (= `value class Dp(val value: Float)`) so the
+    binding generator strips them. Until we bind those (or ship a
+    pre-baked padding modifier), the cheap workaround for safe areas is
+    to set Android-level padding on the `ComposeView` itself:
+
+    ```csharp
+    composeView.SetPadding(left, statusBarHeight + dp16,
+                           right, navBarHeight + dp16);
+    ```
+
+    Compose lays out inside the padded area like any other Android View.
+    Status / navigation bar heights are readable from
+    `android:dimen/status_bar_height` and `navigation_bar_height` via
+    `Resources.GetIdentifier`. NOTE: `WindowInsetsCompat` listeners
+    didn't fire reliably when registered after `SetContentView` on
+    `ComponentActivity` (it appears to consume insets first); the
+    System-resource lookup approach is uglier but works.
+
+12. **No Material styling reachable from C# yet.** `BasicText` is the
+    foundation primitive — it draws raw glyphs at `TextStyle.Default`
+    (system default font, ~14sp, black). `androidx.compose.material3.Text`
+    is the styled wrapper, but the `Xamarin.AndroidX.Compose.Material3`
+    NuGet ships an empty stub (no managed types), and our local
+    `ComposeNet.Bindings.Material3` binding still hits XA4215
+    dual-emission against that stub. The cleanest paths forward are
+    (a) finish the Metadata.xml `<remove-node>`s on our Material3
+    binding so it can coexist with the stub, (b) `ExcludeAssets="compile"`
+    the stub from the sample, or (c) construct an explicit
+    `TextStyle(fontSize = …, color = …)` via raw JNI and pass it to
+    `BasicText` — TextStyle has ~25 inline-class params, so this is
+    proportionally more JNI than I wanted to write for hello-world.
 
 
 ---

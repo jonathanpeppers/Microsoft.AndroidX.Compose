@@ -406,3 +406,5 @@ src/ComposeNet.Bindings.Runtime/bin/
 src/ComposeNet.Bindings.Runtime/obj/
 
 src/ComposeNet.Sample/log.txt
+
+src/ComposeNet.Sample/screen.png
