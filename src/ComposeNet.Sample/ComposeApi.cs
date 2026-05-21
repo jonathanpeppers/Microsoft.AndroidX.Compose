@@ -29,7 +29,9 @@ internal static class ComposeApi
         IntPtr classRef = JNIEnv.FindClass("androidx/compose/ui/Modifier$Companion");
         IntPtr fieldId  = JNIEnv.GetStaticFieldID(classRef, "$$INSTANCE", "Landroidx/compose/ui/Modifier$Companion;");
         IntPtr instance = JNIEnv.GetStaticObjectField(classRef, fieldId);
-        return Java.Lang.Object.GetObject<IModifier>(instance, JniHandleOwnership.TransferLocalRef)!;
+        var modifier = Java.Lang.Object.GetObject<IModifier>(instance, JniHandleOwnership.TransferLocalRef);
+        System.Diagnostics.Debug.Assert(modifier != null, "Modifier.Companion.$$INSTANCE should always resolve");
+        return modifier;
     }
 
     // androidx.compose.foundation.text.BasicTextKt.BasicText-BpD7jsM(

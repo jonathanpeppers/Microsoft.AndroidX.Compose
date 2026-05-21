@@ -74,18 +74,32 @@ public class MainActivity : ComponentActivity
 
     int ActionBarHeight()
     {
+        var theme = Theme;
+        var resources = Resources;
+        System.Diagnostics.Debug.Assert(theme != null, "Activity theme should be non-null after OnCreate");
+        System.Diagnostics.Debug.Assert(resources != null, "Activity resources should be non-null after OnCreate");
+
         var tv = new Android.Util.TypedValue();
-        if (Theme!.ResolveAttribute(Android.Resource.Attribute.ActionBarSize, tv, true))
-            return Android.Util.TypedValue.ComplexToDimensionPixelSize(tv.Data, Resources!.DisplayMetrics);
+        if (theme.ResolveAttribute(Android.Resource.Attribute.ActionBarSize, tv, true))
+            return Android.Util.TypedValue.ComplexToDimensionPixelSize(tv.Data, resources.DisplayMetrics);
         return 0;
     }
 
-    int Dp(int dp) => (int)(dp * Resources!.DisplayMetrics!.Density);
+    int Dp(int dp)
+    {
+        var resources = Resources;
+        System.Diagnostics.Debug.Assert(resources != null, "Activity resources should be non-null after OnCreate");
+        var metrics = resources.DisplayMetrics;
+        System.Diagnostics.Debug.Assert(metrics != null, "Resources.DisplayMetrics should be non-null");
+        return (int)(dp * metrics.Density);
+    }
 
     int SystemBarHeight(string resName)
     {
-        int id = Resources!.GetIdentifier(resName, "dimen", "android");
-        return id > 0 ? Resources.GetDimensionPixelSize(id) : 0;
+        var resources = Resources;
+        System.Diagnostics.Debug.Assert(resources != null, "Activity resources should be non-null after OnCreate");
+        int id = resources.GetIdentifier(resName, "dimen", "android");
+        return id > 0 ? resources.GetDimensionPixelSize(id) : 0;
     }
 }
 
@@ -100,7 +114,8 @@ public sealed class ThemedRoot : Java.Lang.Object, IFunction2
 
     public Java.Lang.Object? Invoke(Java.Lang.Object? p0, Java.Lang.Object? p1)
     {
-        var composer = Android.Runtime.Extensions.JavaCast<IComposer>(p0!);
+        ArgumentNullException.ThrowIfNull(p0);
+        var composer = Android.Runtime.Extensions.JavaCast<IComposer>(p0);
 
         // Use Android 12+ dynamic colors derived from the system wallpaper
         // (Material You). On a stock emulator this gives the Google
@@ -136,7 +151,8 @@ public sealed class AppContent : Java.Lang.Object, IFunction2
 
     public Java.Lang.Object? Invoke(Java.Lang.Object? p0, Java.Lang.Object? p1)
     {
-        var composer = Android.Runtime.Extensions.JavaCast<IComposer>(p0!);
+        ArgumentNullException.ThrowIfNull(p0);
+        var composer = Android.Runtime.Extensions.JavaCast<IComposer>(p0);
 
         // Column(Modifier, Arrangement.Vertical, Alignment.Horizontal, content, composer, $changed, $default)
         ColumnKt.Column(
@@ -167,9 +183,12 @@ public sealed class ColumnContent : Java.Lang.Object, IFunction3
 
     public Java.Lang.Object? Invoke(Java.Lang.Object? p0, Java.Lang.Object? p1, Java.Lang.Object? p2)
     {
-        var composer = Android.Runtime.Extensions.JavaCast<IComposer>(p1!);
+        ArgumentNullException.ThrowIfNull(p1);
+        var composer = Android.Runtime.Extensions.JavaCast<IComposer>(p1);
 
-        int n = ((Java.Lang.Integer)_count.Value!).IntValue();
+        var countValue = _count.Value;
+        System.Diagnostics.Debug.Assert(countValue != null, "Counter MutableState is never set to null");
+        int n = ((Java.Lang.Integer)countValue).IntValue();
 
         // Use Material `Text` for the body — it picks up MaterialTheme's
         // typography and reads LocalContentColor from the composition
@@ -192,7 +211,8 @@ public sealed class ButtonLabel : Java.Lang.Object, IFunction3
 {
     public Java.Lang.Object? Invoke(Java.Lang.Object? rowScope, Java.Lang.Object? p1, Java.Lang.Object? p2)
     {
-        var composer = Android.Runtime.Extensions.JavaCast<IComposer>(p1!);
+        ArgumentNullException.ThrowIfNull(p1);
+        var composer = Android.Runtime.Extensions.JavaCast<IComposer>(p1);
         // Material `Text` here picks up LocalContentColor from the Button,
         // which is `onPrimary` (white on the default blue primary).
         ComposeApi.Text("Tap to increment", composer);
@@ -208,7 +228,9 @@ public sealed class ClickHandler : Java.Lang.Object, IFunction0
 
     public Java.Lang.Object? Invoke()
     {
-        int current = ((Java.Lang.Integer)_count.Value!).IntValue();
+        var countValue = _count.Value;
+        System.Diagnostics.Debug.Assert(countValue != null, "Counter MutableState is never set to null");
+        int current = ((Java.Lang.Integer)countValue).IntValue();
         _count.Value = Java.Lang.Integer.ValueOf(current + 1);
         return null;
     }
