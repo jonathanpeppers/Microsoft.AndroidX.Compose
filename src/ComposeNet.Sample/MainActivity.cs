@@ -44,12 +44,16 @@ public class MainActivity : ComponentActivity
         // Window.InsetsController is non-null. Light status-bar icons
         // (dark icons on light status-bar background) makes the clock /
         // battery / etc. readable against the light Material theme.
-        var insetsController = Window!.InsetsController;
-        if (insetsController != null)
+        // WindowInsetsController is API 30+; project minSdk is 24.
+        if (OperatingSystem.IsAndroidVersionAtLeast(30))
         {
-            insetsController.SetSystemBarsAppearance(
-                (int)Android.Views.WindowInsetsControllerAppearance.LightStatusBars,
-                (int)Android.Views.WindowInsetsControllerAppearance.LightStatusBars);
+            var insetsController = Window!.InsetsController;
+            if (insetsController != null)
+            {
+                insetsController.SetSystemBarsAppearance(
+                    (int)Android.Views.WindowInsetsControllerAppearance.LightStatusBars,
+                    (int)Android.Views.WindowInsetsControllerAppearance.LightStatusBars);
+            }
         }
         Android.Util.Log.Debug(TAG, "OnCreate complete");
     }
