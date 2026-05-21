@@ -50,8 +50,8 @@ public sealed class AppContent : Java.Lang.Object, IFunction2
         var composer = Android.Runtime.Extensions.JavaCast<IComposer>(p0!);
 
         // Column(Modifier, Arrangement.Vertical, Alignment.Horizontal, content, composer, $changed, $default)
-        // $default = 0b1110 means: use defaults for modifier (bit 1), verticalArrangement (bit 2),
-        // horizontalAlignment (bit 3); content (bit 0) is provided.
+        // $default = 0b0111 → defaults for modifier (bit 0), verticalArrangement (bit 1),
+        // horizontalAlignment (bit 2); content (bit 3) is provided.
         ColumnKt.Column(
             modifier: null,
             verticalArrangement: null,
@@ -59,7 +59,7 @@ public sealed class AppContent : Java.Lang.Object, IFunction2
             content: _content,
             _composer: composer,
             p5: 0,
-            _changed: 0b1110);
+            _changed: 0b0111);
         return null;
     }
 }
