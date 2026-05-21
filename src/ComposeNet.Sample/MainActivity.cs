@@ -72,16 +72,22 @@ public sealed class ThemedRoot : Java.Lang.Object, IFunction2
     {
         var composer = Android.Runtime.Extensions.JavaCast<IComposer>(p0!);
 
+        // Use Android 12+ dynamic colors derived from the system wallpaper
+        // (Material You). On a stock emulator this gives the Google
+        // baseline blue/teal palette instead of the Compose-default purple.
+        var scheme = DynamicTonalPaletteKt.DynamicLightColorScheme(Android.App.Application.Context);
+
         // MaterialTheme(colorScheme, shapes, typography, content, composer, $changed, $default)
-        // $default = 0b0111 → use defaults for colorScheme/shapes/typography; provide content.
+        // $default = 0b0110 → defaults for shapes and typography; provide
+        // colorScheme (bit 0) and content (bit 3).
         MaterialThemeKt.MaterialTheme(
-            colorScheme: null,
+            colorScheme: scheme,
             shapes:      null,
             typography:  null,
             content:     _body,
             _composer:   composer,
             p5:          0,
-            _changed:    0b0111);
+            _changed:    0b0110);
         return null;
     }
 }
