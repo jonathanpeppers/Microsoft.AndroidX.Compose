@@ -111,3 +111,88 @@ public sealed class Button : ComposableContainer
         ComposeBridges.Button(click, content, composer);
     }
 }
+
+// ---- IconButton ----
+
+/// <summary>
+/// Material 3 <c>IconButton</c>. Children render into a Function2 content
+/// slot (no RowScope). Typical use: <c>new IconButton(...) { new Text("☆") }</c>.
+/// </summary>
+public sealed class IconButton : ComposableContainer
+{
+    readonly System.Action _onClick;
+    public IconButton(System.Action onClick) => _onClick = onClick;
+
+    internal override void Render(IComposer composer)
+    {
+        var click   = new ComposableLambda0(_onClick);
+        var content = new ComposableLambda2(c => RenderChildren(c));
+        ComposeBridges.IconButton(click, content, composer);
+    }
+}
+
+// ---- FloatingActionButton ----
+
+/// <summary>Material 3 <c>FloatingActionButton</c>.</summary>
+public sealed class FloatingActionButton : ComposableContainer
+{
+    readonly System.Action _onClick;
+    public FloatingActionButton(System.Action onClick) => _onClick = onClick;
+
+    internal override void Render(IComposer composer)
+    {
+        var click   = new ComposableLambda0(_onClick);
+        var content = new ComposableLambda2(c => RenderChildren(c));
+        ComposeBridges.FloatingActionButton(click, content, composer);
+    }
+}
+
+// ---- Surface ----
+
+/// <summary>
+/// Material 3 non-interactive <c>Surface</c> — applies background color,
+/// elevation, and clipping to its content.
+/// </summary>
+public sealed class Surface : ComposableContainer
+{
+    internal override void Render(IComposer composer)
+    {
+        var content = new ComposableLambda2(c => RenderChildren(c));
+        ComposeBridges.Surface(content, composer);
+    }
+}
+
+// ---- TextField / OutlinedTextField ----
+
+/// <summary>
+/// Material 3 <c>TextField</c> (filled variant). Bound to a
+/// <see cref="MutableState{T}"/> of <see cref="string"/> so user edits
+/// trigger recomposition.
+/// </summary>
+public sealed class TextField : ComposableNode
+{
+    readonly MutableState<string> _state;
+    public TextField(MutableState<string> state) => _state = state;
+
+    internal override void Render(IComposer composer)
+    {
+        var onChange = new ComposableLambda1(v => _state.Value = v?.ToString() ?? string.Empty);
+        ComposeBridges.TextField(_state.Value ?? string.Empty, onChange, composer);
+    }
+}
+
+/// <summary>
+/// Material 3 <c>OutlinedTextField</c>. Same binding contract as
+/// <see cref="TextField"/>.
+/// </summary>
+public sealed class OutlinedTextField : ComposableNode
+{
+    readonly MutableState<string> _state;
+    public OutlinedTextField(MutableState<string> state) => _state = state;
+
+    internal override void Render(IComposer composer)
+    {
+        var onChange = new ComposableLambda1(v => _state.Value = v?.ToString() ?? string.Empty);
+        ComposeBridges.OutlinedTextField(_state.Value ?? string.Empty, onChange, composer);
+    }
+}

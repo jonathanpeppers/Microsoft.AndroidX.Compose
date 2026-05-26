@@ -12,15 +12,29 @@ public class MainActivity : ComposeActivity
         SetContent(() =>
         {
             var count = Remember(() => new MutableIntState(0));
+            var name  = Remember(() => new MutableState<string>(""));
             return new MaterialTheme
             {
-                new Column
+                new Surface
                 {
-                    new Text("Hello from .NET"),
-                    new Text($"Count: {count}"),
-                    new Button(onClick: () => count++)
+                    new Column
                     {
-                        new Text("Tap to increment"),
+                        new Text("Hello from .NET"),
+                        new Text($"Count: {count}"),
+                        new Button(onClick: () => count++)
+                        {
+                            new Text("Tap to increment"),
+                        },
+                        new IconButton(onClick: () => count--)
+                        {
+                            new Text("−"),
+                        },
+                        new OutlinedTextField(name),
+                        new Text($"Hi {(string.IsNullOrEmpty(name.Value) ? "stranger" : name.Value)}"),
+                        new FloatingActionButton(onClick: () => count.Value = 0)
+                        {
+                            new Text("✕"),
+                        },
                     },
                 },
             };

@@ -67,3 +67,81 @@ internal enum TextDefault
         | Decoration | Align | LineHeight | Overflow | SoftWrap | MaxLines | MinLines
         | OnTextLayout | Style,
 }
+
+// androidx.compose.material3.IconButtonKt.IconButton: 6 user params,
+// bit 0 = onClick, bit 5 = content (both provided).
+[System.Flags]
+internal enum IconButtonDefault
+{
+    None              = 0,
+    Modifier          = 1 << 1,
+    Enabled           = 1 << 2,
+    Colors            = 1 << 3,
+    InteractionSource = 1 << 4,
+    All = Modifier | Enabled | Colors | InteractionSource,
+}
+
+// androidx.compose.material3.FloatingActionButtonKt.FloatingActionButton-X-z6DiA:
+// 8 user params, bit 0 = onClick, bit 7 = content (both provided).
+[System.Flags]
+internal enum FloatingActionButtonDefault
+{
+    None              = 0,
+    Modifier          = 1 << 1,
+    Shape             = 1 << 2,
+    ContainerColor    = 1 << 3,
+    ContentColor      = 1 << 4,
+    Elevation         = 1 << 5,
+    InteractionSource = 1 << 6,
+    All = Modifier | Shape | ContainerColor | ContentColor | Elevation | InteractionSource,
+}
+
+// androidx.compose.material3.SurfaceKt.Surface-T9BRK9s (non-interactive):
+// 8 user params, only bit 7 = content provided.
+[System.Flags]
+internal enum SurfaceDefault
+{
+    None             = 0,
+    Modifier         = 1 << 0,
+    Shape            = 1 << 1,
+    Color            = 1 << 2,
+    ContentColor     = 1 << 3,
+    TonalElevation   = 1 << 4,
+    ShadowElevation  = 1 << 5,
+    Border           = 1 << 6,
+    All = Modifier | Shape | Color | ContentColor | TonalElevation | ShadowElevation | Border,
+}
+
+// androidx.compose.material3.TextFieldKt.TextField (String overload) AND
+// OutlinedTextFieldKt.OutlinedTextField (String overload): 23 user params,
+// bit 0 = value, bit 1 = onValueChange (both provided).
+[System.Flags]
+internal enum TextFieldDefault
+{
+    None                 = 0,
+    Modifier             = 1 << 2,
+    Enabled              = 1 << 3,
+    ReadOnly             = 1 << 4,
+    TextStyle            = 1 << 5,
+    Label                = 1 << 6,
+    Placeholder          = 1 << 7,
+    LeadingIcon          = 1 << 8,
+    TrailingIcon         = 1 << 9,
+    Prefix               = 1 << 10,
+    Suffix               = 1 << 11,
+    SupportingText       = 1 << 12,
+    IsError              = 1 << 13,
+    VisualTransformation = 1 << 14,
+    KeyboardOptions      = 1 << 15,
+    KeyboardActions      = 1 << 16,
+    SingleLine           = 1 << 17,
+    MaxLines             = 1 << 18,
+    MinLines             = 1 << 19,
+    InteractionSource    = 1 << 20,
+    Shape                = 1 << 21,
+    Colors               = 1 << 22,
+    All = Modifier | Enabled | ReadOnly | TextStyle | Label | Placeholder | LeadingIcon
+        | TrailingIcon | Prefix | Suffix | SupportingText | IsError | VisualTransformation
+        | KeyboardOptions | KeyboardActions | SingleLine | MaxLines | MinLines
+        | InteractionSource | Shape | Colors,
+}

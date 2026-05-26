@@ -22,6 +22,23 @@ internal sealed class ComposableLambda0 : Java.Lang.Object, IFunction0
     public Java.Lang.Object? Invoke() { _body(); return null; }
 }
 
+// Function1<T, Unit> — single-arg callbacks (TextField's onValueChange,
+// onCheckedChange, etc.). The body receives the raw Java arg and is
+// responsible for unboxing it; ComposableLambda1String below covers the
+// common String case.
+[Register("composenet/compose/ComposableLambda1")]
+internal sealed class ComposableLambda1 : Java.Lang.Object, IFunction1
+{
+    readonly System.Action<Java.Lang.Object?> _body;
+    public ComposableLambda1(System.Action<Java.Lang.Object?> body) => _body = body;
+
+    public Java.Lang.Object? Invoke(Java.Lang.Object? p0)
+    {
+        _body(p0);
+        return null;
+    }
+}
+
 // Function2<Composer, Integer, Unit> — top-level composition + theme/scope
 // content. p0 = composer, p1 = $changed.
 [Register("composenet/compose/ComposableLambda2")]
