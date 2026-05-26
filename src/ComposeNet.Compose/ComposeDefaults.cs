@@ -15,8 +15,8 @@
 // `TextKt.Text--4IGK_g` (we call them via raw JNI in `ComposeBridges`),
 // so there's no C# `IMethodSymbol` for the generator to introspect.
 
-using Androidx.Compose.Foundation.Layout;
-using Androidx.Compose.Material3;
+using AndroidX.Compose.Foundation.Layout;
+using AndroidX.Compose.Material3;
 using ComposeNet;
 
 [assembly: ComposeDefaults<ColumnKt>("Column", "ColumnDefault")]

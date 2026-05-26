@@ -16,7 +16,7 @@ namespace ComposeNet.SourceGenerators.Tests;
 public class GeneratorTests
 {
     const string SharedHeader = """
-        namespace Androidx.Compose.Runtime { public interface IComposer { } }
+        namespace AndroidX.Compose.Runtime { public interface IComposer { } }
         namespace Kotlin.Jvm.Functions
         {
             public interface IFunction0 { }
@@ -63,7 +63,7 @@ public class GeneratorTests
                 public static class FooKt
                 {
                     public static void Foo(int alpha, string beta,
-                        Androidx.Compose.Runtime.IComposer _composer, int _changed, int _default) { }
+                        AndroidX.Compose.Runtime.IComposer _composer, int _changed, int _default) { }
                 }
             }
             """;
@@ -93,7 +93,7 @@ public class GeneratorTests
                         Kotlin.Jvm.Functions.IFunction0 onClick,
                         int alpha, int beta, int gamma, int delta,
                         Kotlin.Jvm.Functions.IFunction3 content,
-                        Androidx.Compose.Runtime.IComposer _composer, int _changed, int _default) { }
+                        AndroidX.Compose.Runtime.IComposer _composer, int _changed, int _default) { }
                 }
             }
             """;
@@ -123,7 +123,7 @@ public class GeneratorTests
                 public static class TextKt
                 {
                     public static void TextDashDashFoo(string text, int alpha,
-                        Androidx.Compose.Runtime.IComposer _composer, int _changed) { }
+                        AndroidX.Compose.Runtime.IComposer _composer, int _changed) { }
                 }
             }
             """;
@@ -147,9 +147,9 @@ public class GeneratorTests
                 public static class FooKt
                 {
                     public static void Foo(int a,
-                        Androidx.Compose.Runtime.IComposer _composer, int _changed) { }
+                        AndroidX.Compose.Runtime.IComposer _composer, int _changed) { }
                     public static void Foo(int a, int b, int c, int d,
-                        Androidx.Compose.Runtime.IComposer _composer, int _changed, int _default) { }
+                        AndroidX.Compose.Runtime.IComposer _composer, int _changed, int _default) { }
                 }
             }
             """;
@@ -173,7 +173,7 @@ public class GeneratorTests
                 public static class FooKt
                 {
                     public static void Bar(int x,
-                        Androidx.Compose.Runtime.IComposer _composer, int _changed) { }
+                        AndroidX.Compose.Runtime.IComposer _composer, int _changed) { }
                 }
             }
             """;
@@ -214,7 +214,7 @@ public class GeneratorTests
                 public static class FooKt
                 {
                     public static void Foo(int alpha, int p1, int gamma,
-                        Androidx.Compose.Runtime.IComposer _composer, int _changed, int _default) { }
+                        AndroidX.Compose.Runtime.IComposer _composer, int _changed, int _default) { }
                 }
             }
             """;

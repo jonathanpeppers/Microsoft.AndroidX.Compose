@@ -1,8 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
-using Androidx.Compose.Foundation.Layout;
-using Androidx.Compose.Material3;
-using Androidx.Compose.Runtime;
+using AndroidX.Compose.Foundation.Layout;
+using AndroidX.Compose.Material3;
+using AndroidX.Compose.Runtime;
 
 namespace ComposeNet;
 

@@ -12,18 +12,19 @@
     <ProjectReference Include="..\ComposeNet.SourceGenerators\ComposeNet.SourceGenerators.csproj"
                       OutputItemType="Analyzer"
                       ReferenceOutputAssembly="false" />
-    <ProjectReference Include="..\ComposeNet.Bindings.Runtime\ComposeNet.Bindings.Runtime.csproj" />
-    <ProjectReference Include="..\ComposeNet.Bindings.UI\ComposeNet.Bindings.UI.csproj" />
-    <ProjectReference Include="..\ComposeNet.Bindings.Foundation\ComposeNet.Bindings.Foundation.csproj" />
-    <ProjectReference Include="..\ComposeNet.Bindings.Foundation.Layout\ComposeNet.Bindings.Foundation.Layout.csproj" />
-    <ProjectReference Include="..\ComposeNet.Bindings.Material3\ComposeNet.Bindings.Material3.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Xamarin.AndroidX.Activity" />
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="Xamarin.AndroidX.Compose.Runtime.Annotation.Jvm" ExcludeAssets="all" />
-    <PackageReference Include="Xamarin.AndroidX.Compose.Material3" ExcludeAssets="all" />
-    <PackageReference Include="Xamarin.AndroidX.Compose.Material3Android" ExcludeAssets="all" />
+    <PackageReference Include="Xamarin.AndroidX.Activity.Compose" />
+    <PackageReference Include="Xamarin.AndroidX.Compose.Runtime" />
+    <PackageReference Include="Xamarin.AndroidX.Compose.Runtime.Android" />
+    <PackageReference Include="Xamarin.AndroidX.Compose.UI" />
+    <PackageReference Include="Xamarin.AndroidX.Compose.UI.Android" />
+    <PackageReference Include="Xamarin.AndroidX.Compose.Foundation" />
+    <PackageReference Include="Xamarin.AndroidX.Compose.Foundation.Android" />
+    <PackageReference Include="Xamarin.AndroidX.Compose.Foundation.Layout" />
+    <PackageReference Include="Xamarin.AndroidX.Compose.Foundation.Layout.Android" />
+    <PackageReference Include="Xamarin.AndroidX.Compose.Material3" />
+    <PackageReference Include="Xamarin.AndroidX.Compose.Material3Android" />
   </ItemGroup>
 </Project>

@@ -18,7 +18,7 @@ namespace ComposeNet.SourceGenerators;
 public sealed class ComposeDefaultsGenerator : IIncrementalGenerator
 {
     const string AttributeMetadataName = "ComposeNet.ComposeDefaultsAttribute`1";
-    const string ComposerNamespace = "Androidx.Compose.Runtime";
+    const string ComposerNamespace = "AndroidX.Compose.Runtime";
     const string ComposerName = "IComposer";
     const string KotlinFunctionNamespace = "Kotlin.Jvm.Functions";
 

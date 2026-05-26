@@ -1,5 +1,5 @@
 using Android.Runtime;
-using Androidx.Compose.Runtime;
+using AndroidX.Compose.Runtime;
 using Kotlin.Jvm.Functions;
 
 namespace ComposeNet;

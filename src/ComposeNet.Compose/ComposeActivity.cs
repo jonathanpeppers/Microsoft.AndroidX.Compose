@@ -3,8 +3,8 @@ using System.Runtime.CompilerServices;
 using Android.OS;
 using Android.Util;
 using AndroidX.Activity;
-using Androidx.Compose.Runtime.Internal;
-using Androidx.Compose.UI.Platform;
+using AndroidX.Compose.Runtime.Internal;
+using AndroidX.Compose.UI.Platform;
 
 namespace ComposeNet;
 

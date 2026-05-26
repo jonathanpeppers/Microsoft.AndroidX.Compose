@@ -27,8 +27,11 @@ dotnet test src/ComposeNet.SourceGenerators.Tests
 
 ## Progress
 
-Upstream work to remove the bindings from this repo and consume the
-official `Xamarin.AndroidX.Compose.*` NuGets directly:
+Upstream `Xamarin.AndroidX.Compose.*` 1.11.1.1 (and `Material3` 1.4.0.x) now
+ship real bindings, so the per-binding projects this repo originally needed
+have been deleted. The sample and facade reference the official NuGets
+directly. The historical context behind the in-repo bindings is preserved in
+[NOTES.md](NOTES.md).
 
 - [dotnet/android-libraries#1418][pr-1418] — PR: ship real bindings for
   `Xamarin.AndroidX.Compose.Runtime` (tracking issue:
@@ -37,10 +40,6 @@ official `Xamarin.AndroidX.Compose.*` NuGets directly:
   `Xamarin.AndroidX.Compose.UI` / `Foundation` / `Foundation.Layout`.
 - [dotnet/android-libraries#1417][issue-1417] — stop stripping
   `@Composable` functions in `Xamarin.AndroidX.Compose.Material3`.
-
-Once #1418/#1416/#1417 are merged and released on nuget.org, **every
-`src/ComposeNet.Bindings.*` project in this repo can be deleted** and
-the sample + facade can reference the official NuGets directly.
 
 [pr-1418]: https://github.com/dotnet/android-libraries/pull/1418
 [issue-1415]: https://github.com/dotnet/android-libraries/issues/1415
