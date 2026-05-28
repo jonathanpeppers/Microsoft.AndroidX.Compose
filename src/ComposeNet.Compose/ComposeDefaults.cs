@@ -112,6 +112,30 @@ internal enum SurfaceDefault
     All = Modifier | Shape | Color | ContentColor | TonalElevation | ShadowElevation | Border,
 }
 
+// androidx.compose.material3.AndroidAlertDialog_androidKt.AlertDialog-Oix01E0:
+// 14 user params, bit 0 = onDismissRequest, bit 1 = confirmButton
+// (both always provided). The four slot Function2 params (dismissButton,
+// icon, title, text) are optional and toggled per-call by AlertDialog.Render.
+[System.Flags]
+internal enum AlertDialogDefault
+{
+    None              = 0,
+    Modifier          = 1 << 2,
+    DismissButton     = 1 << 3,
+    Icon              = 1 << 4,
+    Title             = 1 << 5,
+    Text              = 1 << 6,
+    Shape             = 1 << 7,
+    ContainerColor    = 1 << 8,
+    IconContentColor  = 1 << 9,
+    TitleContentColor = 1 << 10,
+    TextContentColor  = 1 << 11,
+    TonalElevation    = 1 << 12,
+    Properties        = 1 << 13,
+    All = Modifier | DismissButton | Icon | Title | Text | Shape | ContainerColor
+        | IconContentColor | TitleContentColor | TextContentColor | TonalElevation | Properties,
+}
+
 // androidx.compose.material3.TextFieldKt.TextField (String overload) AND
 // OutlinedTextFieldKt.OutlinedTextField (String overload): 23 user params,
 // bit 0 = value, bit 1 = onValueChange (both provided).
