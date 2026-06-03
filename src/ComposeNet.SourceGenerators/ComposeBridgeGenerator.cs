@@ -349,8 +349,15 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
 
         // Call.
         var callTarget = instanceField is null ? $"s_{sym}_class" : $"s_{sym}_instance";
-        var callMethod = instanceField is null ? "CallStaticVoidMethod" : "CallVoidMethod";
-        sb.Append("                global::Android.Runtime.JNIEnv.").Append(callMethod).Append('(').Append(callTarget)
+        bool returnsValue = !method.ReturnsVoid;
+        string callMethod;
+        if (returnsValue)
+            callMethod = instanceField is null ? "CallStaticObjectMethod" : "CallObjectMethod";
+        else
+            callMethod = instanceField is null ? "CallStaticVoidMethod" : "CallVoidMethod";
+        sb.Append("                ");
+        if (returnsValue) sb.Append("return ");
+        sb.Append("global::Android.Runtime.JNIEnv.").Append(callMethod).Append('(').Append(callTarget)
           .Append(", s_").Append(sym).AppendLine("_method, args);");
         sb.AppendLine("            }");
         sb.AppendLine("        }");

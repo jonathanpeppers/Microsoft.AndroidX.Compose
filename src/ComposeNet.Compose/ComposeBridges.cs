@@ -8,9 +8,14 @@ namespace ComposeNet;
 
 // Raw-JNI bridges to Compose functions the .NET-for-Android binding generator
 // can't see (Compose @Composable functions don't get $default sibling overloads
-// — the trailing $default bitmask lives on the regular method). Same machinery
-// the sample used in ComposeApi.cs, just moved into the facade and made
-// internal — user code never touches these directly.
+// — the trailing $default bitmask lives on the regular method). The bodies
+// for every method tagged with [ComposeBridge] are emitted by
+// ComposeNet.SourceGenerators.ComposeBridgeGenerator from the attribute
+// metadata + the matching [ComposeDefaults] enum names.
+//
+// A few helpers stay hand-written: the Modifier-chain helpers (no $default,
+// they wrap plain Kotlin static functions, not @Composable), and the
+// Modifier.Companion.$$INSTANCE field lookup used by Modifier.Build().
 internal static partial class ComposeBridges
 {
     // Convert a managed Modifier wrapper (from `Modifier.Build()`) to a
@@ -146,72 +151,29 @@ internal static partial class ComposeBridges
         return JNIEnv.CallStaticObjectMethod(s_sizeKtClass, s_fillMaxSizeMethod, args);
     }
 
-    // androidx.compose.material3.TextKt.Text--4IGK_g(text, modifier, color,
-    //   fontSize, fontStyle, fontWeight, fontFamily, letterSpacing, decoration,
-    //   align, lineHeight, overflow, softWrap, maxLines, minLines, onTextLayout,
-    //   style, composer, $changed, $changed1, $default)
-    const string MaterialTextSig =
-        "(Ljava/lang/String;Landroidx/compose/ui/Modifier;JJ" +
-        "Landroidx/compose/ui/text/font/FontStyle;" +
-        "Landroidx/compose/ui/text/font/FontWeight;" +
-        "Landroidx/compose/ui/text/font/FontFamily;J" +
-        "Landroidx/compose/ui/text/style/TextDecoration;" +
-        "Landroidx/compose/ui/text/style/TextAlign;JIZII" +
-        "Lkotlin/jvm/functions/Function1;Landroidx/compose/ui/text/TextStyle;" +
-        "Landroidx/compose/runtime/Composer;III)V";
+    // ---- Source-generated bridges below. Each [ComposeBridge] partial
+    // declaration is paired with a matching [ComposeDefaults] in
+    // ComposeDefaults.cs; the generator reads bit positions and parameter
+    // names from the enum and emits the cache fields, lazy class/method
+    // ID resolution, JValue array fill, $default bitmask, and try/finally
+    // with GC.KeepAlive. ----
 
-    static IntPtr s_textClass;
-    static IntPtr s_textMethod;
+    // androidx.compose.material3.TextKt.Text--4IGK_g
+    [ComposeBridge(
+        Class     = "androidx/compose/material3/TextKt",
+        JvmName   = "Text--4IGK_g",
+        Signature = "(Ljava/lang/String;Landroidx/compose/ui/Modifier;JJ" +
+                    "Landroidx/compose/ui/text/font/FontStyle;" +
+                    "Landroidx/compose/ui/text/font/FontWeight;" +
+                    "Landroidx/compose/ui/text/font/FontFamily;J" +
+                    "Landroidx/compose/ui/text/style/TextDecoration;" +
+                    "Landroidx/compose/ui/text/style/TextAlign;JIZII" +
+                    "Lkotlin/jvm/functions/Function1;Landroidx/compose/ui/text/TextStyle;" +
+                    "Landroidx/compose/runtime/Composer;III)V",
+        Defaults  = typeof(TextDefault))]
+    public static partial void Text(string text, IModifier? modifier, IComposer composer);
 
-    public static unsafe void Text(string text, IModifier? modifier, IComposer composer)
-    {
-        if (s_textClass == IntPtr.Zero)
-        {
-            s_textClass  = JNIEnv.FindClass("androidx/compose/material3/TextKt");
-            s_textMethod = JNIEnv.GetStaticMethodID(s_textClass, "Text--4IGK_g", MaterialTextSig);
-        }
-
-        // Everything but `text` (and optionally `modifier`) is defaulted.
-        int defaults = (int)TextDefault.All;
-        if (modifier is not null) defaults &= ~(int)TextDefault.Modifier;
-
-        IntPtr textRef = JNIEnv.NewString(text);
-        try
-        {
-            JValue* args = stackalloc JValue[21];
-            args[0]  = new JValue(textRef);
-            args[1]  = new JValue(ModifierHandle(modifier));
-            args[2]  = new JValue(0L);          // color = Unspecified
-            args[3]  = new JValue(0L);          // fontSize
-            args[4]  = new JValue(IntPtr.Zero); // fontStyle
-            args[5]  = new JValue(IntPtr.Zero); // fontWeight
-            args[6]  = new JValue(IntPtr.Zero); // fontFamily
-            args[7]  = new JValue(0L);          // letterSpacing
-            args[8]  = new JValue(IntPtr.Zero); // decoration
-            args[9]  = new JValue(IntPtr.Zero); // align
-            args[10] = new JValue(0L);          // lineHeight
-            args[11] = new JValue(0);           // overflow
-            args[12] = new JValue(true);        // softWrap
-            args[13] = new JValue(0);           // maxLines
-            args[14] = new JValue(0);           // minLines
-            args[15] = new JValue(IntPtr.Zero); // onTextLayout
-            args[16] = new JValue(IntPtr.Zero); // style
-            args[17] = new JValue(((Java.Lang.Object)composer).Handle);
-            args[18] = new JValue(0);           // $changed
-            args[19] = new JValue(0);           // $changed1
-            args[20] = new JValue(defaults);    // $default
-            JNIEnv.CallStaticVoidMethod(s_textClass, s_textMethod, args);
-        }
-        finally
-        {
-            JNIEnv.DeleteLocalRef(textRef);
-            GC.KeepAlive(modifier);
-            GC.KeepAlive(composer);
-        }
-    }
-
-    // androidx.compose.material3.ButtonKt.Button — generated by
-    // ComposeBridgeGenerator from the [ComposeBridge] declaration below.
+    // androidx.compose.material3.ButtonKt.Button
     [ComposeBridge(
         Class     = "androidx/compose/material3/ButtonKt",
         JvmName   = "Button",
@@ -225,153 +187,42 @@ internal static partial class ComposeBridges
     public static partial void Button(IFunction0 onClick, IModifier? modifier,
                                       IFunction3 content, IComposer composer);
 
-    // androidx.compose.material3.IconButtonKt.IconButton(onClick, modifier,
-    //   enabled, colors, interactionSource, content, composer, $changed, $default)
-    const string IconButtonSig =
-        "(Lkotlin/jvm/functions/Function0;Landroidx/compose/ui/Modifier;Z" +
-        "Landroidx/compose/material3/IconButtonColors;" +
-        "Landroidx/compose/foundation/interaction/MutableInteractionSource;" +
-        "Lkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;II)V";
+    // androidx.compose.material3.IconButtonKt.IconButton
+    [ComposeBridge(
+        Class     = "androidx/compose/material3/IconButtonKt",
+        JvmName   = "IconButton",
+        Signature = "(Lkotlin/jvm/functions/Function0;Landroidx/compose/ui/Modifier;Z" +
+                    "Landroidx/compose/material3/IconButtonColors;" +
+                    "Landroidx/compose/foundation/interaction/MutableInteractionSource;" +
+                    "Lkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;II)V",
+        Defaults  = typeof(IconButtonDefault))]
+    public static partial void IconButton(IFunction0 onClick, IModifier? modifier,
+                                          IFunction2 content, IComposer composer);
 
-    static IntPtr s_iconButtonClass;
-    static IntPtr s_iconButtonMethod;
+    // androidx.compose.material3.FloatingActionButtonKt.FloatingActionButton-X-z6DiA
+    [ComposeBridge(
+        Class     = "androidx/compose/material3/FloatingActionButtonKt",
+        JvmName   = "FloatingActionButton-X-z6DiA",
+        Signature = "(Lkotlin/jvm/functions/Function0;Landroidx/compose/ui/Modifier;" +
+                    "Landroidx/compose/ui/graphics/Shape;JJ" +
+                    "Landroidx/compose/material3/FloatingActionButtonElevation;" +
+                    "Landroidx/compose/foundation/interaction/MutableInteractionSource;" +
+                    "Lkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;II)V",
+        Defaults  = typeof(FloatingActionButtonDefault))]
+    public static partial void FloatingActionButton(IFunction0 onClick, IModifier? modifier,
+                                                    IFunction2 content, IComposer composer);
 
-    public static unsafe void IconButton(IFunction0 onClick, IModifier? modifier, IFunction2 content, IComposer composer)
-    {
-        if (s_iconButtonClass == IntPtr.Zero)
-        {
-            s_iconButtonClass  = JNIEnv.FindClass("androidx/compose/material3/IconButtonKt");
-            s_iconButtonMethod = JNIEnv.GetStaticMethodID(s_iconButtonClass, "IconButton", IconButtonSig);
-        }
+    // androidx.compose.material3.SurfaceKt.Surface-T9BRK9s (non-interactive)
+    [ComposeBridge(
+        Class     = "androidx/compose/material3/SurfaceKt",
+        JvmName   = "Surface-T9BRK9s",
+        Signature = "(Landroidx/compose/ui/Modifier;Landroidx/compose/ui/graphics/Shape;JJFF" +
+                    "Landroidx/compose/foundation/BorderStroke;" +
+                    "Lkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;II)V",
+        Defaults  = typeof(SurfaceDefault))]
+    public static partial void Surface(IModifier? modifier, IFunction2 content, IComposer composer);
 
-        int defaults = (int)IconButtonDefault.All;
-        if (modifier is not null) defaults &= ~(int)IconButtonDefault.Modifier;
-
-        JValue* args = stackalloc JValue[9];
-        args[0] = new JValue(((Java.Lang.Object)onClick).Handle);
-        args[1] = new JValue(ModifierHandle(modifier));
-        args[2] = new JValue(true);
-        args[3] = new JValue(IntPtr.Zero);
-        args[4] = new JValue(IntPtr.Zero);
-        args[5] = new JValue(((Java.Lang.Object)content).Handle);
-        args[6] = new JValue(((Java.Lang.Object)composer).Handle);
-        args[7] = new JValue(0);
-        args[8] = new JValue(defaults);
-        try
-        {
-            JNIEnv.CallStaticVoidMethod(s_iconButtonClass, s_iconButtonMethod, args);
-        }
-        finally
-        {
-            GC.KeepAlive(onClick);
-            GC.KeepAlive(modifier);
-            GC.KeepAlive(content);
-            GC.KeepAlive(composer);
-        }
-    }
-
-    // androidx.compose.material3.FloatingActionButtonKt.FloatingActionButton-X-z6DiA(
-    //   onClick, modifier, shape, containerColor, contentColor, elevation,
-    //   interactionSource, content, composer, $changed, $default)
-    const string FabSig =
-        "(Lkotlin/jvm/functions/Function0;Landroidx/compose/ui/Modifier;" +
-        "Landroidx/compose/ui/graphics/Shape;JJ" +
-        "Landroidx/compose/material3/FloatingActionButtonElevation;" +
-        "Landroidx/compose/foundation/interaction/MutableInteractionSource;" +
-        "Lkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;II)V";
-
-    static IntPtr s_fabClass;
-    static IntPtr s_fabMethod;
-
-    public static unsafe void FloatingActionButton(IFunction0 onClick, IModifier? modifier, IFunction2 content, IComposer composer)
-    {
-        if (s_fabClass == IntPtr.Zero)
-        {
-            s_fabClass  = JNIEnv.FindClass("androidx/compose/material3/FloatingActionButtonKt");
-            s_fabMethod = JNIEnv.GetStaticMethodID(s_fabClass, "FloatingActionButton-X-z6DiA", FabSig);
-        }
-
-        int defaults = (int)FloatingActionButtonDefault.All;
-        if (modifier is not null) defaults &= ~(int)FloatingActionButtonDefault.Modifier;
-
-        JValue* args = stackalloc JValue[11];
-        args[0]  = new JValue(((Java.Lang.Object)onClick).Handle);
-        args[1]  = new JValue(ModifierHandle(modifier)); // modifier
-        args[2]  = new JValue(IntPtr.Zero); // shape
-        args[3]  = new JValue(0L);          // containerColor
-        args[4]  = new JValue(0L);          // contentColor
-        args[5]  = new JValue(IntPtr.Zero); // elevation
-        args[6]  = new JValue(IntPtr.Zero); // interactionSource
-        args[7]  = new JValue(((Java.Lang.Object)content).Handle);
-        args[8]  = new JValue(((Java.Lang.Object)composer).Handle);
-        args[9]  = new JValue(0);
-        args[10] = new JValue(defaults);
-        try
-        {
-            JNIEnv.CallStaticVoidMethod(s_fabClass, s_fabMethod, args);
-        }
-        finally
-        {
-            GC.KeepAlive(onClick);
-            GC.KeepAlive(modifier);
-            GC.KeepAlive(content);
-            GC.KeepAlive(composer);
-        }
-    }
-
-    // androidx.compose.material3.SurfaceKt.Surface-T9BRK9s (non-interactive):
-    //   (modifier, shape, color, contentColor, tonalElevation, shadowElevation,
-    //    border, content, composer, $changed, $default)
-    const string SurfaceSig =
-        "(Landroidx/compose/ui/Modifier;Landroidx/compose/ui/graphics/Shape;JJFF" +
-        "Landroidx/compose/foundation/BorderStroke;" +
-        "Lkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;II)V";
-
-    static IntPtr s_surfaceClass;
-    static IntPtr s_surfaceMethod;
-
-    public static unsafe void Surface(IModifier? modifier, IFunction2 content, IComposer composer)
-    {
-        if (s_surfaceClass == IntPtr.Zero)
-        {
-            s_surfaceClass  = JNIEnv.FindClass("androidx/compose/material3/SurfaceKt");
-            s_surfaceMethod = JNIEnv.GetStaticMethodID(s_surfaceClass, "Surface-T9BRK9s", SurfaceSig);
-        }
-
-        int defaults = (int)SurfaceDefault.All;
-        if (modifier is not null) defaults &= ~(int)SurfaceDefault.Modifier;
-
-        JValue* args = stackalloc JValue[11];
-        args[0]  = new JValue(ModifierHandle(modifier)); // modifier
-        args[1]  = new JValue(IntPtr.Zero); // shape
-        args[2]  = new JValue(0L);          // color
-        args[3]  = new JValue(0L);          // contentColor
-        args[4]  = new JValue(0f);          // tonalElevation
-        args[5]  = new JValue(0f);          // shadowElevation
-        args[6]  = new JValue(IntPtr.Zero); // border
-        args[7]  = new JValue(((Java.Lang.Object)content).Handle);
-        args[8]  = new JValue(((Java.Lang.Object)composer).Handle);
-        args[9]  = new JValue(0);
-        args[10] = new JValue(defaults);
-        try
-        {
-            JNIEnv.CallStaticVoidMethod(s_surfaceClass, s_surfaceMethod, args);
-        }
-        finally
-        {
-            GC.KeepAlive(modifier);
-            GC.KeepAlive(content);
-            GC.KeepAlive(composer);
-        }
-    }
-
-    // androidx.compose.material3.TextFieldKt.TextField (String overload):
-    //   (value, onValueChange, modifier, enabled, readOnly, textStyle, label,
-    //    placeholder, leadingIcon, trailingIcon, prefix, suffix, supportingText,
-    //    isError, visualTransformation, keyboardOptions, keyboardActions,
-    //    singleLine, maxLines, minLines, interactionSource, shape, colors,
-    //    composer, $changed, $changed1, $changed2, $default) — 23 user params,
-    //    3x $changed, 1x $default.
+    // androidx.compose.material3.TextFieldKt.TextField (String overload)
     const string TextFieldStringSig =
         "(Ljava/lang/String;Lkotlin/jvm/functions/Function1;Landroidx/compose/ui/Modifier;ZZ" +
         "Landroidx/compose/ui/text/TextStyle;" +
@@ -387,58 +238,35 @@ internal static partial class ComposeBridges
         "Landroidx/compose/material3/TextFieldColors;" +
         "Landroidx/compose/runtime/Composer;IIII)V";
 
-    static IntPtr s_textFieldClass;
-    static IntPtr s_textFieldMethod;
-    static IntPtr s_outlinedTextFieldClass;
-    static IntPtr s_outlinedTextFieldMethod;
+    [ComposeBridge(
+        Class     = "androidx/compose/material3/TextFieldKt",
+        JvmName   = "TextField",
+        Signature = TextFieldStringSig,
+        Defaults  = typeof(TextFieldDefault))]
+    public static partial void TextField(string value, IFunction1 onValueChange,
+                                         IModifier? modifier, IComposer composer);
 
-    public static unsafe void TextField(string value, IFunction1 onValueChange, IModifier? modifier, IComposer composer)
-    {
-        if (s_textFieldClass == IntPtr.Zero)
-        {
-            s_textFieldClass  = JNIEnv.FindClass("androidx/compose/material3/TextFieldKt");
-            s_textFieldMethod = JNIEnv.GetStaticMethodID(s_textFieldClass, "TextField", TextFieldStringSig);
-        }
-        int defaults = (int)TextFieldDefault.All;
-        if (modifier is not null) defaults &= ~(int)TextFieldDefault.Modifier;
-        InvokeTextField(s_textFieldClass, s_textFieldMethod, value, onValueChange, modifier, composer, defaults);
-    }
+    [ComposeBridge(
+        Class     = "androidx/compose/material3/OutlinedTextFieldKt",
+        JvmName   = "OutlinedTextField",
+        Signature = TextFieldStringSig,
+        Defaults  = typeof(TextFieldDefault))]
+    public static partial void OutlinedTextField(string value, IFunction1 onValueChange,
+                                                 IModifier? modifier, IComposer composer);
 
-    public static unsafe void OutlinedTextField(string value, IFunction1 onValueChange, IModifier? modifier, IComposer composer)
-    {
-        if (s_outlinedTextFieldClass == IntPtr.Zero)
-        {
-            s_outlinedTextFieldClass  = JNIEnv.FindClass("androidx/compose/material3/OutlinedTextFieldKt");
-            s_outlinedTextFieldMethod = JNIEnv.GetStaticMethodID(s_outlinedTextFieldClass, "OutlinedTextField", TextFieldStringSig);
-        }
-        int defaults = (int)TextFieldDefault.All;
-        if (modifier is not null) defaults &= ~(int)TextFieldDefault.Modifier;
-        InvokeTextField(s_outlinedTextFieldClass, s_outlinedTextFieldMethod, value, onValueChange, modifier, composer, defaults);
-    }
-
-    // androidx.compose.material3.AndroidAlertDialog_androidKt.AlertDialog-Oix01E0(
-    //   onDismissRequest, confirmButton, modifier, dismissButton, icon, title,
-    //   text, shape, containerColor, iconContentColor, titleContentColor,
-    //   textContentColor, tonalElevation, properties,
-    //   composer, $changed, $changed1, $default)
-    //
-    // 14 user params, bit 0 = onDismissRequest, bit 1 = confirmButton
-    // (both always provided); the four slot Function2s (dismissButton, icon,
-    // title, text) are user-supplied — if any is null, set its $default bit
-    // so Compose substitutes the real Kotlin default (also null).
-    const string AlertDialogSig =
-        "(Lkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function2;" +
-        "Landroidx/compose/ui/Modifier;" +
-        "Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;" +
-        "Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;" +
-        "Landroidx/compose/ui/graphics/Shape;JJJJF" +
-        "Landroidx/compose/ui/window/DialogProperties;" +
-        "Landroidx/compose/runtime/Composer;III)V";
-
-    static IntPtr s_alertDialogClass;
-    static IntPtr s_alertDialogMethod;
-
-    public static unsafe void AlertDialog(
+    // androidx.compose.material3.AndroidAlertDialog_androidKt.AlertDialog-Oix01E0
+    [ComposeBridge(
+        Class     = "androidx/compose/material3/AndroidAlertDialog_androidKt",
+        JvmName   = "AlertDialog-Oix01E0",
+        Signature = "(Lkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function2;" +
+                    "Landroidx/compose/ui/Modifier;" +
+                    "Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;" +
+                    "Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;" +
+                    "Landroidx/compose/ui/graphics/Shape;JJJJF" +
+                    "Landroidx/compose/ui/window/DialogProperties;" +
+                    "Landroidx/compose/runtime/Composer;III)V",
+        Defaults  = typeof(AlertDialogDefault))]
+    public static partial void AlertDialog(
         IFunction0  onDismissRequest,
         IFunction2  confirmButton,
         IModifier?  modifier,
@@ -447,136 +275,39 @@ internal static partial class ComposeBridges
         IFunction2? title,
         IFunction2? text,
         int         defaults,
-        IComposer   composer)
-    {
-        if (s_alertDialogClass == IntPtr.Zero)
-        {
-            s_alertDialogClass  = JNIEnv.FindClass("androidx/compose/material3/AndroidAlertDialog_androidKt");
-            s_alertDialogMethod = JNIEnv.GetStaticMethodID(s_alertDialogClass, "AlertDialog-Oix01E0", AlertDialogSig);
-        }
+        IComposer   composer);
 
-        JValue* args = stackalloc JValue[18];
-        args[0]  = new JValue(((Java.Lang.Object)onDismissRequest).Handle);
-        args[1]  = new JValue(((Java.Lang.Object)confirmButton).Handle);
-        args[2]  = new JValue(ModifierHandle(modifier)); // modifier
-        args[3]  = new JValue(dismissButton is null ? IntPtr.Zero : ((Java.Lang.Object)dismissButton).Handle);
-        args[4]  = new JValue(icon          is null ? IntPtr.Zero : ((Java.Lang.Object)icon).Handle);
-        args[5]  = new JValue(title         is null ? IntPtr.Zero : ((Java.Lang.Object)title).Handle);
-        args[6]  = new JValue(text          is null ? IntPtr.Zero : ((Java.Lang.Object)text).Handle);
-        args[7]  = new JValue(IntPtr.Zero); // shape
-        args[8]  = new JValue(0L);          // containerColor
-        args[9]  = new JValue(0L);          // iconContentColor
-        args[10] = new JValue(0L);          // titleContentColor
-        args[11] = new JValue(0L);          // textContentColor
-        args[12] = new JValue(0f);          // tonalElevation
-        args[13] = new JValue(IntPtr.Zero); // properties
-        args[14] = new JValue(((Java.Lang.Object)composer).Handle);
-        args[15] = new JValue(0);           // $changed
-        args[16] = new JValue(0);           // $changed1
-        args[17] = new JValue(defaults);    // $default
-        try
-        {
-            JNIEnv.CallStaticVoidMethod(s_alertDialogClass, s_alertDialogMethod, args);
-        }
-        finally
-        {
-            GC.KeepAlive(onDismissRequest);
-            GC.KeepAlive(confirmButton);
-            GC.KeepAlive(modifier);
-            GC.KeepAlive(dismissButton);
-            GC.KeepAlive(icon);
-            GC.KeepAlive(title);
-            GC.KeepAlive(text);
-            GC.KeepAlive(composer);
-        }
-    }
-
-    // androidx.compose.material3.ModalBottomSheet_androidKt.ModalBottomSheet-dYc4hso(
-    //   onDismissRequest, modifier, sheetState, sheetMaxWidth, shape,
-    //   containerColor, contentColor, tonalElevation, scrimColor, dragHandle,
-    //   windowInsets, properties, content, composer, $changed, $changed1, $default)
-    //
-    // 13 user params; bits 0 (onDismissRequest), 2 (sheetState), 12 (content)
-    // are always provided. dragHandle (bit 9) is the only optional slot.
-    const string ModalBottomSheetSig =
-        "(Lkotlin/jvm/functions/Function0;Landroidx/compose/ui/Modifier;" +
-        "Landroidx/compose/material3/SheetState;FLandroidx/compose/ui/graphics/Shape;JJFJ" +
-        "Lkotlin/jvm/functions/Function2;Landroidx/compose/foundation/layout/WindowInsets;" +
-        "Landroidx/compose/material3/ModalBottomSheetProperties;" +
-        "Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;III)V";
-
-    static IntPtr s_modalBottomSheetClass;
-    static IntPtr s_modalBottomSheetMethod;
-
-    public static unsafe void ModalBottomSheet(
+    // androidx.compose.material3.ModalBottomSheet_androidKt.ModalBottomSheet-dYc4hso
+    [ComposeBridge(
+        Class     = "androidx/compose/material3/ModalBottomSheet_androidKt",
+        JvmName   = "ModalBottomSheet-dYc4hso",
+        Signature = "(Lkotlin/jvm/functions/Function0;Landroidx/compose/ui/Modifier;" +
+                    "Landroidx/compose/material3/SheetState;FLandroidx/compose/ui/graphics/Shape;JJFJ" +
+                    "Lkotlin/jvm/functions/Function2;Landroidx/compose/foundation/layout/WindowInsets;" +
+                    "Landroidx/compose/material3/ModalBottomSheetProperties;" +
+                    "Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;III)V",
+        Defaults  = typeof(ModalBottomSheetDefault))]
+    public static partial void ModalBottomSheet(
         IFunction0  onDismissRequest,
         IModifier?  modifier,
         IntPtr      sheetState,
         IFunction2? dragHandle,
         IFunction3  content,
         int         defaults,
-        IComposer   composer)
-    {
-        if (s_modalBottomSheetClass == IntPtr.Zero)
-        {
-            s_modalBottomSheetClass  = JNIEnv.FindClass("androidx/compose/material3/ModalBottomSheet_androidKt");
-            s_modalBottomSheetMethod = JNIEnv.GetStaticMethodID(s_modalBottomSheetClass, "ModalBottomSheet-dYc4hso", ModalBottomSheetSig);
-        }
+        IComposer   composer);
 
-        JValue* args = stackalloc JValue[17];
-        args[0]  = new JValue(((Java.Lang.Object)onDismissRequest).Handle);
-        args[1]  = new JValue(ModifierHandle(modifier)); // modifier
-        args[2]  = new JValue(sheetState);
-        args[3]  = new JValue(0f);          // sheetMaxWidth
-        args[4]  = new JValue(IntPtr.Zero); // shape
-        args[5]  = new JValue(0L);          // containerColor
-        args[6]  = new JValue(0L);          // contentColor
-        args[7]  = new JValue(0f);          // tonalElevation
-        args[8]  = new JValue(0L);          // scrimColor
-        args[9]  = new JValue(dragHandle is null ? IntPtr.Zero : ((Java.Lang.Object)dragHandle).Handle);
-        args[10] = new JValue(IntPtr.Zero); // windowInsets
-        args[11] = new JValue(IntPtr.Zero); // properties
-        args[12] = new JValue(((Java.Lang.Object)content).Handle);
-        args[13] = new JValue(((Java.Lang.Object)composer).Handle);
-        args[14] = new JValue(0);           // $changed
-        args[15] = new JValue(0);           // $changed1
-        args[16] = new JValue(defaults);    // $default
-        try
-        {
-            JNIEnv.CallStaticVoidMethod(s_modalBottomSheetClass, s_modalBottomSheetMethod, args);
-        }
-        finally
-        {
-            GC.KeepAlive(onDismissRequest);
-            GC.KeepAlive(modifier);
-            GC.KeepAlive(dragHandle);
-            GC.KeepAlive(content);
-            GC.KeepAlive(composer);
-        }
-    }
-
-    // androidx.compose.material3.BottomSheetScaffoldKt.BottomSheetScaffold-sdMYb0k(
-    //   sheetContent, modifier, scaffoldState, sheetPeekHeight, sheetMaxWidth,
-    //   sheetShape, sheetContainerColor, sheetContentColor, sheetTonalElevation,
-    //   sheetShadowElevation, sheetDragHandle, sheetSwipeEnabled, topBar,
-    //   snackbarHost, containerColor, contentColor, content, composer,
-    //   $changed, $changed1, $default)
-    //
-    // 17 user params; provided bits: 0 (sheetContent), 2 (scaffoldState),
-    // 16 (content). Optional slots: 10 (sheetDragHandle), 12 (topBar),
-    // 13 (snackbarHost).
-    const string BottomSheetScaffoldSig =
-        "(Lkotlin/jvm/functions/Function3;Landroidx/compose/ui/Modifier;" +
-        "Landroidx/compose/material3/BottomSheetScaffoldState;FF" +
-        "Landroidx/compose/ui/graphics/Shape;JJFF" +
-        "Lkotlin/jvm/functions/Function2;Z" +
-        "Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function3;JJ" +
-        "Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;III)V";
-
-    static IntPtr s_bottomSheetScaffoldClass;
-    static IntPtr s_bottomSheetScaffoldMethod;
-
-    public static unsafe void BottomSheetScaffold(
+    // androidx.compose.material3.BottomSheetScaffoldKt.BottomSheetScaffold-sdMYb0k
+    [ComposeBridge(
+        Class     = "androidx/compose/material3/BottomSheetScaffoldKt",
+        JvmName   = "BottomSheetScaffold-sdMYb0k",
+        Signature = "(Lkotlin/jvm/functions/Function3;Landroidx/compose/ui/Modifier;" +
+                    "Landroidx/compose/material3/BottomSheetScaffoldState;FF" +
+                    "Landroidx/compose/ui/graphics/Shape;JJFF" +
+                    "Lkotlin/jvm/functions/Function2;Z" +
+                    "Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function3;JJ" +
+                    "Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;III)V",
+        Defaults  = typeof(BottomSheetScaffoldDefault))]
+    public static partial void BottomSheetScaffold(
         IFunction3  sheetContent,
         IModifier?  modifier,
         IntPtr      scaffoldState,
@@ -585,73 +316,21 @@ internal static partial class ComposeBridges
         IFunction3? snackbarHost,
         IFunction3  content,
         int         defaults,
-        IComposer   composer)
-    {
-        if (s_bottomSheetScaffoldClass == IntPtr.Zero)
-        {
-            s_bottomSheetScaffoldClass  = JNIEnv.FindClass("androidx/compose/material3/BottomSheetScaffoldKt");
-            s_bottomSheetScaffoldMethod = JNIEnv.GetStaticMethodID(s_bottomSheetScaffoldClass, "BottomSheetScaffold-sdMYb0k", BottomSheetScaffoldSig);
-        }
+        IComposer   composer);
 
-        JValue* args = stackalloc JValue[21];
-        args[0]  = new JValue(((Java.Lang.Object)sheetContent).Handle);
-        args[1]  = new JValue(ModifierHandle(modifier)); // modifier
-        args[2]  = new JValue(scaffoldState);
-        args[3]  = new JValue(0f);          // sheetPeekHeight
-        args[4]  = new JValue(0f);          // sheetMaxWidth
-        args[5]  = new JValue(IntPtr.Zero); // sheetShape
-        args[6]  = new JValue(0L);          // sheetContainerColor
-        args[7]  = new JValue(0L);          // sheetContentColor
-        args[8]  = new JValue(0f);          // sheetTonalElevation
-        args[9]  = new JValue(0f);          // sheetShadowElevation
-        args[10] = new JValue(sheetDragHandle is null ? IntPtr.Zero : ((Java.Lang.Object)sheetDragHandle).Handle);
-        args[11] = new JValue(true);        // sheetSwipeEnabled
-        args[12] = new JValue(topBar       is null ? IntPtr.Zero : ((Java.Lang.Object)topBar).Handle);
-        args[13] = new JValue(snackbarHost is null ? IntPtr.Zero : ((Java.Lang.Object)snackbarHost).Handle);
-        args[14] = new JValue(0L);          // containerColor
-        args[15] = new JValue(0L);          // contentColor
-        args[16] = new JValue(((Java.Lang.Object)content).Handle);
-        args[17] = new JValue(((Java.Lang.Object)composer).Handle);
-        args[18] = new JValue(0);           // $changed
-        args[19] = new JValue(0);           // $changed1
-        args[20] = new JValue(defaults);    // $default
-        try
-        {
-            JNIEnv.CallStaticVoidMethod(s_bottomSheetScaffoldClass, s_bottomSheetScaffoldMethod, args);
-        }
-        finally
-        {
-            GC.KeepAlive(sheetContent);
-            GC.KeepAlive(modifier);
-            GC.KeepAlive(sheetDragHandle);
-            GC.KeepAlive(topBar);
-            GC.KeepAlive(snackbarHost);
-            GC.KeepAlive(content);
-            GC.KeepAlive(composer);
-        }
-    }
-
-    // androidx.compose.material3.ScaffoldKt.Scaffold-TvnljyQ(
-    //   modifier, topBar, bottomBar, snackbarHost, floatingActionButton,
-    //   floatingActionButtonPosition, containerColor, contentColor,
-    //   contentWindowInsets, content, composer, $changed, $default)
-    //
-    // 10 user params; only bit 9 (content) is always provided. The four
-    // optional Function2 slots (topBar, bottomBar, snackbarHost,
-    // floatingActionButton) are toggled per-call by Scaffold.Render.
-    const string ScaffoldSig =
-        "(Landroidx/compose/ui/Modifier;" +
-        "Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;" +
-        "Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;" +
-        "IJJ" +
-        "Landroidx/compose/foundation/layout/WindowInsets;" +
-        "Lkotlin/jvm/functions/Function3;" +
-        "Landroidx/compose/runtime/Composer;II)V";
-
-    static IntPtr s_scaffoldClass;
-    static IntPtr s_scaffoldMethod;
-
-    public static unsafe void Scaffold(
+    // androidx.compose.material3.ScaffoldKt.Scaffold-TvnljyQ
+    [ComposeBridge(
+        Class     = "androidx/compose/material3/ScaffoldKt",
+        JvmName   = "Scaffold-TvnljyQ",
+        Signature = "(Landroidx/compose/ui/Modifier;" +
+                    "Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;" +
+                    "Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;" +
+                    "IJJ" +
+                    "Landroidx/compose/foundation/layout/WindowInsets;" +
+                    "Lkotlin/jvm/functions/Function3;" +
+                    "Landroidx/compose/runtime/Composer;II)V",
+        Defaults  = typeof(ScaffoldDefault))]
+    public static partial void Scaffold(
         IModifier?  modifier,
         IFunction2? topBar,
         IFunction2? bottomBar,
@@ -659,163 +338,50 @@ internal static partial class ComposeBridges
         IFunction2? floatingActionButton,
         IFunction3  content,
         int         defaults,
-        IComposer   composer)
-    {
-        if (s_scaffoldClass == IntPtr.Zero)
-        {
-            s_scaffoldClass  = JNIEnv.FindClass("androidx/compose/material3/ScaffoldKt");
-            s_scaffoldMethod = JNIEnv.GetStaticMethodID(s_scaffoldClass, "Scaffold-TvnljyQ", ScaffoldSig);
-        }
+        IComposer   composer);
 
-        JValue* args = stackalloc JValue[13];
-        args[0]  = new JValue(ModifierHandle(modifier)); // modifier
-        args[1]  = new JValue(topBar               is null ? IntPtr.Zero : ((Java.Lang.Object)topBar).Handle);
-        args[2]  = new JValue(bottomBar            is null ? IntPtr.Zero : ((Java.Lang.Object)bottomBar).Handle);
-        args[3]  = new JValue(snackbarHost         is null ? IntPtr.Zero : ((Java.Lang.Object)snackbarHost).Handle);
-        args[4]  = new JValue(floatingActionButton is null ? IntPtr.Zero : ((Java.Lang.Object)floatingActionButton).Handle);
-        args[5]  = new JValue(0);           // floatingActionButtonPosition (FabPosition is an inline value class wrapping Int)
-        args[6]  = new JValue(0L);          // containerColor
-        args[7]  = new JValue(0L);          // contentColor
-        args[8]  = new JValue(IntPtr.Zero); // contentWindowInsets
-        args[9]  = new JValue(((Java.Lang.Object)content).Handle);
-        args[10] = new JValue(((Java.Lang.Object)composer).Handle);
-        args[11] = new JValue(0);           // $changed
-        args[12] = new JValue(defaults);    // $default
-        try
-        {
-            JNIEnv.CallStaticVoidMethod(s_scaffoldClass, s_scaffoldMethod, args);
-        }
-        finally
-        {
-            GC.KeepAlive(modifier);
-            GC.KeepAlive(topBar);
-            GC.KeepAlive(bottomBar);
-            GC.KeepAlive(snackbarHost);
-            GC.KeepAlive(floatingActionButton);
-            GC.KeepAlive(content);
-            GC.KeepAlive(composer);
-        }
-    }
-
-    // androidx.compose.material3.DatePickerDialog_androidKt.DatePickerDialog-GmEhDVc(
-    //   onDismissRequest, confirmButton, modifier, dismissButton, shape,
-    //   tonalElevation, colors, properties, content, composer, $changed, $default)
-    //
-    // 9 user params; bits 0 (onDismissRequest), 1 (confirmButton),
-    // 8 (content) always provided. dismissButton (bit 3) is the only
-    // optional Function2 slot.
-    const string DatePickerDialogSig =
-        "(Lkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function2;" +
-        "Landroidx/compose/ui/Modifier;Lkotlin/jvm/functions/Function2;" +
-        "Landroidx/compose/ui/graphics/Shape;F" +
-        "Landroidx/compose/material3/DatePickerColors;" +
-        "Landroidx/compose/ui/window/DialogProperties;" +
-        "Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;II)V";
-
-    static IntPtr s_datePickerDialogClass;
-    static IntPtr s_datePickerDialogMethod;
-
-    public static unsafe void DatePickerDialog(
+    // androidx.compose.material3.DatePickerDialog_androidKt.DatePickerDialog-GmEhDVc
+    [ComposeBridge(
+        Class     = "androidx/compose/material3/DatePickerDialog_androidKt",
+        JvmName   = "DatePickerDialog-GmEhDVc",
+        Signature = "(Lkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function2;" +
+                    "Landroidx/compose/ui/Modifier;Lkotlin/jvm/functions/Function2;" +
+                    "Landroidx/compose/ui/graphics/Shape;F" +
+                    "Landroidx/compose/material3/DatePickerColors;" +
+                    "Landroidx/compose/ui/window/DialogProperties;" +
+                    "Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;II)V",
+        Defaults  = typeof(DatePickerDialogDefault))]
+    public static partial void DatePickerDialog(
         IFunction0  onDismissRequest,
         IFunction2  confirmButton,
         IModifier?  modifier,
         IFunction2? dismissButton,
         IFunction3  content,
         int         defaults,
-        IComposer   composer)
-    {
-        if (s_datePickerDialogClass == IntPtr.Zero)
-        {
-            s_datePickerDialogClass  = JNIEnv.FindClass("androidx/compose/material3/DatePickerDialog_androidKt");
-            s_datePickerDialogMethod = JNIEnv.GetStaticMethodID(s_datePickerDialogClass, "DatePickerDialog-GmEhDVc", DatePickerDialogSig);
-        }
+        IComposer   composer);
 
-        JValue* args = stackalloc JValue[12];
-        args[0]  = new JValue(((Java.Lang.Object)onDismissRequest).Handle);
-        args[1]  = new JValue(((Java.Lang.Object)confirmButton).Handle);
-        args[2]  = new JValue(ModifierHandle(modifier)); // modifier
-        args[3]  = new JValue(dismissButton is null ? IntPtr.Zero : ((Java.Lang.Object)dismissButton).Handle);
-        args[4]  = new JValue(IntPtr.Zero); // shape
-        args[5]  = new JValue(0f);          // tonalElevation
-        args[6]  = new JValue(IntPtr.Zero); // colors
-        args[7]  = new JValue(IntPtr.Zero); // properties
-        args[8]  = new JValue(((Java.Lang.Object)content).Handle);
-        args[9]  = new JValue(((Java.Lang.Object)composer).Handle);
-        args[10] = new JValue(0);           // $changed
-        args[11] = new JValue(defaults);    // $default
-        try
-        {
-            JNIEnv.CallStaticVoidMethod(s_datePickerDialogClass, s_datePickerDialogMethod, args);
-        }
-        finally
-        {
-            GC.KeepAlive(onDismissRequest);
-            GC.KeepAlive(confirmButton);
-            GC.KeepAlive(modifier);
-            GC.KeepAlive(dismissButton);
-            GC.KeepAlive(content);
-            GC.KeepAlive(composer);
-        }
-    }
+    // androidx.compose.material3.TimePickerKt.TimePicker-mT9BvqQ
+    [ComposeBridge(
+        Class     = "androidx/compose/material3/TimePickerKt",
+        JvmName   = "TimePicker-mT9BvqQ",
+        Signature = "(Landroidx/compose/material3/TimePickerState;Landroidx/compose/ui/Modifier;" +
+                    "Landroidx/compose/material3/TimePickerColors;ILandroidx/compose/runtime/Composer;II)V",
+        Defaults  = typeof(TimePickerDefault))]
+    public static partial void TimePicker(IntPtr state, IModifier? modifier,
+                                          int defaults, IComposer composer);
 
-    // androidx.compose.material3.TimePickerKt.TimePicker-mT9BvqQ(
-    //   state, modifier, colors, layoutType, composer, $changed, $default)
-    //
-    // 4 user params; bit 0 (state) always provided.
-    const string TimePickerSig =
-        "(Landroidx/compose/material3/TimePickerState;Landroidx/compose/ui/Modifier;" +
-        "Landroidx/compose/material3/TimePickerColors;ILandroidx/compose/runtime/Composer;II)V";
-
-    static IntPtr s_timePickerClass;
-    static IntPtr s_timePickerMethod;
-
-    public static unsafe void TimePicker(IntPtr state, IModifier? modifier, int defaults, IComposer composer)
-    {
-        if (s_timePickerClass == IntPtr.Zero)
-        {
-            s_timePickerClass  = JNIEnv.FindClass("androidx/compose/material3/TimePickerKt");
-            s_timePickerMethod = JNIEnv.GetStaticMethodID(s_timePickerClass, "TimePicker-mT9BvqQ", TimePickerSig);
-        }
-
-        JValue* args = stackalloc JValue[7];
-        args[0] = new JValue(state);
-        args[1] = new JValue(ModifierHandle(modifier)); // modifier
-        args[2] = new JValue(IntPtr.Zero); // colors
-        args[3] = new JValue(0);           // layoutType
-        args[4] = new JValue(((Java.Lang.Object)composer).Handle);
-        args[5] = new JValue(0);           // $changed
-        args[6] = new JValue(defaults);    // $default
-        try
-        {
-            JNIEnv.CallStaticVoidMethod(s_timePickerClass, s_timePickerMethod, args);
-        }
-        finally
-        {
-            GC.KeepAlive(modifier);
-            GC.KeepAlive(composer);
-        }
-    }
-
-    // androidx.compose.material3.TimePickerDialogKt.TimePickerDialog-FItCLgY(
-    //   onDismissRequest, confirmButton, dismissButton, modifier, properties,
-    //   title, modeToggleButton, shape, containerColor, content, composer,
-    //   $changed, $default)
-    //
-    // 10 user params. confirmButton (bit 1), dismissButton (bit 2), and
-    // content (bit 9) are required slots. title (bit 5) and
-    // modeToggleButton (bit 6) are optional.
-    const string TimePickerDialogSig =
-        "(Lkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function2;" +
-        "Lkotlin/jvm/functions/Function2;Landroidx/compose/ui/Modifier;" +
-        "Landroidx/compose/ui/window/DialogProperties;" +
-        "Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;" +
-        "Landroidx/compose/ui/graphics/Shape;J" +
-        "Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;II)V";
-
-    static IntPtr s_timePickerDialogClass;
-    static IntPtr s_timePickerDialogMethod;
-
-    public static unsafe void TimePickerDialog(
+    // androidx.compose.material3.TimePickerDialogKt.TimePickerDialog-FItCLgY
+    [ComposeBridge(
+        Class     = "androidx/compose/material3/TimePickerDialogKt",
+        JvmName   = "TimePickerDialog-FItCLgY",
+        Signature = "(Lkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function2;" +
+                    "Lkotlin/jvm/functions/Function2;Landroidx/compose/ui/Modifier;" +
+                    "Landroidx/compose/ui/window/DialogProperties;" +
+                    "Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;" +
+                    "Landroidx/compose/ui/graphics/Shape;J" +
+                    "Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;II)V",
+        Defaults  = typeof(TimePickerDialogDefault))]
+    public static partial void TimePickerDialog(
         IFunction0  onDismissRequest,
         IFunction2  confirmButton,
         IFunction2  dismissButton,
@@ -824,393 +390,114 @@ internal static partial class ComposeBridges
         IFunction2? modeToggleButton,
         IFunction3  content,
         int         defaults,
-        IComposer   composer)
-    {
-        if (s_timePickerDialogClass == IntPtr.Zero)
-        {
-            s_timePickerDialogClass  = JNIEnv.FindClass("androidx/compose/material3/TimePickerDialogKt");
-            s_timePickerDialogMethod = JNIEnv.GetStaticMethodID(s_timePickerDialogClass, "TimePickerDialog-FItCLgY", TimePickerDialogSig);
-        }
+        IComposer   composer);
 
-        JValue* args = stackalloc JValue[13];
-        args[0]  = new JValue(((Java.Lang.Object)onDismissRequest).Handle);
-        args[1]  = new JValue(((Java.Lang.Object)confirmButton).Handle);
-        args[2]  = new JValue(((Java.Lang.Object)dismissButton).Handle);
-        args[3]  = new JValue(ModifierHandle(modifier)); // modifier
-        args[4]  = new JValue(IntPtr.Zero); // properties
-        args[5]  = new JValue(title            is null ? IntPtr.Zero : ((Java.Lang.Object)title).Handle);
-        args[6]  = new JValue(modeToggleButton is null ? IntPtr.Zero : ((Java.Lang.Object)modeToggleButton).Handle);
-        args[7]  = new JValue(IntPtr.Zero); // shape
-        args[8]  = new JValue(0L);          // containerColor
-        args[9]  = new JValue(((Java.Lang.Object)content).Handle);
-        args[10] = new JValue(((Java.Lang.Object)composer).Handle);
-        args[11] = new JValue(0);           // $changed
-        args[12] = new JValue(defaults);    // $default
-        try
-        {
-            JNIEnv.CallStaticVoidMethod(s_timePickerDialogClass, s_timePickerDialogMethod, args);
-        }
-        finally
-        {
-            GC.KeepAlive(onDismissRequest);
-            GC.KeepAlive(confirmButton);
-            GC.KeepAlive(dismissButton);
-            GC.KeepAlive(modifier);
-            GC.KeepAlive(title);
-            GC.KeepAlive(modeToggleButton);
-            GC.KeepAlive(content);
-            GC.KeepAlive(composer);
-        }
-    }
-
-    // androidx.compose.material3.TooltipKt.TooltipBox (7-user-param overload):
-    //   (positionProvider, tooltip, state, modifier, focusable, enableUserInput,
-    //    content, composer, $changed, $default)
-    //
-    // Bits 0 (positionProvider), 1 (tooltip), 2 (state), 6 (content) provided.
-    const string TooltipBoxSig =
-        "(Landroidx/compose/ui/window/PopupPositionProvider;" +
-        "Lkotlin/jvm/functions/Function3;" +
-        "Landroidx/compose/material3/TooltipState;" +
-        "Landroidx/compose/ui/Modifier;ZZ" +
-        "Lkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;II)V";
-
-    static IntPtr s_tooltipBoxClass;
-    static IntPtr s_tooltipBoxMethod;
-
-    public static unsafe void TooltipBox(
+    // androidx.compose.material3.TooltipKt.TooltipBox (7-user-param overload)
+    [ComposeBridge(
+        Class     = "androidx/compose/material3/TooltipKt",
+        JvmName   = "TooltipBox",
+        Signature = "(Landroidx/compose/ui/window/PopupPositionProvider;" +
+                    "Lkotlin/jvm/functions/Function3;" +
+                    "Landroidx/compose/material3/TooltipState;" +
+                    "Landroidx/compose/ui/Modifier;ZZ" +
+                    "Lkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;II)V",
+        Defaults  = typeof(TooltipBoxDefault))]
+    public static partial void TooltipBox(
         IntPtr     positionProvider,
         IFunction3 tooltip,
         IntPtr     state,
         IModifier? modifier,
         IFunction2 content,
         int        defaults,
-        IComposer  composer)
-    {
-        if (s_tooltipBoxClass == IntPtr.Zero)
-        {
-            s_tooltipBoxClass  = JNIEnv.FindClass("androidx/compose/material3/TooltipKt");
-            s_tooltipBoxMethod = JNIEnv.GetStaticMethodID(s_tooltipBoxClass, "TooltipBox", TooltipBoxSig);
-        }
+        IComposer  composer);
 
-        JValue* args = stackalloc JValue[10];
-        args[0] = new JValue(positionProvider);
-        args[1] = new JValue(((Java.Lang.Object)tooltip).Handle);
-        args[2] = new JValue(state);
-        args[3] = new JValue(ModifierHandle(modifier)); // modifier
-        args[4] = new JValue(true);        // focusable
-        args[5] = new JValue(true);        // enableUserInput
-        args[6] = new JValue(((Java.Lang.Object)content).Handle);
-        args[7] = new JValue(((Java.Lang.Object)composer).Handle);
-        args[8] = new JValue(0);           // $changed
-        args[9] = new JValue(defaults);    // $default
-        try
-        {
-            JNIEnv.CallStaticVoidMethod(s_tooltipBoxClass, s_tooltipBoxMethod, args);
-        }
-        finally
-        {
-            GC.KeepAlive(tooltip);
-            GC.KeepAlive(modifier);
-            GC.KeepAlive(content);
-            GC.KeepAlive(composer);
-        }
-    }
+    // androidx.compose.material3.DatePickerKt.DatePicker
+    [ComposeBridge(
+        Class     = "androidx/compose/material3/DatePickerKt",
+        JvmName   = "DatePicker",
+        Signature = "(Landroidx/compose/material3/DatePickerState;Landroidx/compose/ui/Modifier;" +
+                    "Landroidx/compose/material3/DatePickerFormatter;" +
+                    "Landroidx/compose/material3/DatePickerColors;" +
+                    "Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;Z" +
+                    "Landroidx/compose/ui/focus/FocusRequester;" +
+                    "Landroidx/compose/runtime/Composer;II)V",
+        Defaults  = typeof(DatePickerDefault))]
+    public static partial void DatePicker(IntPtr state, IModifier? modifier,
+                                          int defaults, IComposer composer);
 
-    // androidx.compose.material3.DatePickerKt.DatePicker(
-    //   state, modifier, dateFormatter, colors, title, headline,
-    //   showModeToggle, requestFocus, composer, $changed, $default)
-    //
-    // 8 user params; bit 0 (state) provided. requestFocus is the
-    // optional focus requester (defaultable).
-    const string DatePickerSig =
-        "(Landroidx/compose/material3/DatePickerState;Landroidx/compose/ui/Modifier;" +
-        "Landroidx/compose/material3/DatePickerFormatter;" +
-        "Landroidx/compose/material3/DatePickerColors;" +
-        "Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;Z" +
-        "Landroidx/compose/ui/focus/FocusRequester;" +
-        "Landroidx/compose/runtime/Composer;II)V";
+    // ---- State-holder bridges (non-void, return IntPtr) ----
 
-    static IntPtr s_datePickerClass;
-    static IntPtr s_datePickerMethod;
+    // androidx.compose.material3.DatePickerKt.rememberDatePickerState-EU0dCGE
+    [ComposeBridge(
+        Class     = "androidx/compose/material3/DatePickerKt",
+        JvmName   = "rememberDatePickerState-EU0dCGE",
+        Signature = "(Ljava/lang/Long;Ljava/lang/Long;Lkotlin/ranges/IntRange;I" +
+                    "Landroidx/compose/material3/SelectableDates;" +
+                    "Landroidx/compose/runtime/Composer;II)Landroidx/compose/material3/DatePickerState;",
+        Defaults  = typeof(RememberDatePickerStateDefault))]
+    public static partial IntPtr RememberDatePickerState(IComposer composer);
 
-    public static unsafe void DatePicker(IntPtr state, IModifier? modifier, int defaults, IComposer composer)
-    {
-        if (s_datePickerClass == IntPtr.Zero)
-        {
-            s_datePickerClass  = JNIEnv.FindClass("androidx/compose/material3/DatePickerKt");
-            s_datePickerMethod = JNIEnv.GetStaticMethodID(s_datePickerClass, "DatePicker", DatePickerSig);
-        }
+    // androidx.compose.material3.TimePickerKt.rememberTimePickerState
+    [ComposeBridge(
+        Class     = "androidx/compose/material3/TimePickerKt",
+        JvmName   = "rememberTimePickerState",
+        Signature = "(IIZLandroidx/compose/runtime/Composer;II)Landroidx/compose/material3/TimePickerState;",
+        Defaults  = typeof(RememberTimePickerStateDefault))]
+    public static partial IntPtr RememberTimePickerState(int initialHour, int initialMinute,
+                                                         bool is24Hour, IComposer composer);
 
-        JValue* args = stackalloc JValue[11];
-        args[0]  = new JValue(state);
-        args[1]  = new JValue(ModifierHandle(modifier)); // modifier
-        args[2]  = new JValue(IntPtr.Zero); // dateFormatter
-        args[3]  = new JValue(IntPtr.Zero); // colors
-        args[4]  = new JValue(IntPtr.Zero); // title
-        args[5]  = new JValue(IntPtr.Zero); // headline
-        args[6]  = new JValue(true);        // showModeToggle
-        args[7]  = new JValue(IntPtr.Zero); // requestFocus
-        args[8]  = new JValue(((Java.Lang.Object)composer).Handle);
-        args[9]  = new JValue(0);           // $changed
-        args[10] = new JValue(defaults);    // $default
-        try
-        {
-            JNIEnv.CallStaticVoidMethod(s_datePickerClass, s_datePickerMethod, args);
-        }
-        finally
-        {
-            GC.KeepAlive(modifier);
-            GC.KeepAlive(composer);
-        }
-    }
+    // androidx.compose.material3.TooltipKt.rememberTooltipState
+    [ComposeBridge(
+        Class     = "androidx/compose/material3/TooltipKt",
+        JvmName   = "rememberTooltipState",
+        Signature = "(ZZLandroidx/compose/foundation/MutatorMutex;Landroidx/compose/runtime/Composer;II)Landroidx/compose/material3/TooltipState;",
+        Defaults  = typeof(RememberTooltipStateDefault))]
+    public static partial IntPtr RememberTooltipState(bool isPersistent, IComposer composer);
 
-    // ---- State-holder bridges ----
-    //
-    // Every `remember*State` builder is itself @Composable so it takes a
-    // trailing Composer + $changed + $default. The dotnet/android-libraries
-    // binding generator strips the mangled overloads (DatePickerState's
-    // `-EU0dCGE`), so we go through raw JNI for those. We always return
-    // the IntPtr — the caller threads it back into a composable bridge
-    // as a JValue argument without ever materialising a managed wrapper.
+    // androidx.compose.material3.TooltipDefaults.INSTANCE.rememberPlainTooltipPositionProvider-kHDZbjc
+    // Instance method on a Kotlin object singleton.
+    [ComposeBridge(
+        Class         = "androidx/compose/material3/TooltipDefaults",
+        JvmName       = "rememberPlainTooltipPositionProvider-kHDZbjc",
+        Signature     = "(FLandroidx/compose/runtime/Composer;II)Landroidx/compose/ui/window/PopupPositionProvider;",
+        Defaults      = typeof(RememberPlainTooltipPositionProviderDefault),
+        InstanceField = "INSTANCE")]
+    public static partial IntPtr RememberPlainTooltipPositionProvider(IComposer composer);
 
-    // androidx.compose.material3.DatePickerKt.rememberDatePickerState-EU0dCGE(
-    //   initialSelectedDateMillis, initialDisplayedMonthMillis, yearRange,
-    //   initialDisplayMode, selectableDates, composer, $changed, $default)
-    const string RememberDatePickerStateSig =
-        "(Ljava/lang/Long;Ljava/lang/Long;Lkotlin/ranges/IntRange;I" +
-        "Landroidx/compose/material3/SelectableDates;" +
-        "Landroidx/compose/runtime/Composer;II)Landroidx/compose/material3/DatePickerState;";
-
-    static IntPtr s_rememberDatePickerStateClass;
-    static IntPtr s_rememberDatePickerStateMethod;
-
-    public static unsafe IntPtr RememberDatePickerState(IComposer composer)
-    {
-        if (s_rememberDatePickerStateClass == IntPtr.Zero)
-        {
-            s_rememberDatePickerStateClass  = JNIEnv.FindClass("androidx/compose/material3/DatePickerKt");
-            s_rememberDatePickerStateMethod = JNIEnv.GetStaticMethodID(s_rememberDatePickerStateClass, "rememberDatePickerState-EU0dCGE", RememberDatePickerStateSig);
-        }
-
-        JValue* args = stackalloc JValue[8];
-        args[0] = new JValue(IntPtr.Zero); // initialSelectedDateMillis
-        args[1] = new JValue(IntPtr.Zero); // initialDisplayedMonthMillis
-        args[2] = new JValue(IntPtr.Zero); // yearRange
-        args[3] = new JValue(0);           // initialDisplayMode
-        args[4] = new JValue(IntPtr.Zero); // selectableDates
-        args[5] = new JValue(((Java.Lang.Object)composer).Handle);
-        args[6] = new JValue(0);           // $changed
-        args[7] = new JValue(0b11111);     // $default — all 5 user params defaulted
-        try
-        {
-            return JNIEnv.CallStaticObjectMethod(s_rememberDatePickerStateClass, s_rememberDatePickerStateMethod, args);
-        }
-        finally
-        {
-            GC.KeepAlive(composer);
-        }
-    }
-
-    // androidx.compose.material3.TimePickerKt.rememberTimePickerState(
-    //   initialHour, initialMinute, is24Hour, composer, $changed, $default)
-    const string RememberTimePickerStateSig =
-        "(IIZLandroidx/compose/runtime/Composer;II)Landroidx/compose/material3/TimePickerState;";
-
-    static IntPtr s_rememberTimePickerStateClass;
-    static IntPtr s_rememberTimePickerStateMethod;
-
-    public static unsafe IntPtr RememberTimePickerState(int initialHour, int initialMinute, bool is24Hour, IComposer composer)
-    {
-        if (s_rememberTimePickerStateClass == IntPtr.Zero)
-        {
-            s_rememberTimePickerStateClass  = JNIEnv.FindClass("androidx/compose/material3/TimePickerKt");
-            s_rememberTimePickerStateMethod = JNIEnv.GetStaticMethodID(s_rememberTimePickerStateClass, "rememberTimePickerState", RememberTimePickerStateSig);
-        }
-
-        JValue* args = stackalloc JValue[6];
-        args[0] = new JValue(initialHour);
-        args[1] = new JValue(initialMinute);
-        args[2] = new JValue(is24Hour);
-        args[3] = new JValue(((Java.Lang.Object)composer).Handle);
-        args[4] = new JValue(0);           // $changed
-        args[5] = new JValue(0);           // $default — all 3 provided
-        try
-        {
-            return JNIEnv.CallStaticObjectMethod(s_rememberTimePickerStateClass, s_rememberTimePickerStateMethod, args);
-        }
-        finally
-        {
-            GC.KeepAlive(composer);
-        }
-    }
-
-    // androidx.compose.material3.TooltipKt.rememberTooltipState(
-    //   initialIsVisible, isPersistent, mutatorMutex, composer, $changed, $default)
-    const string RememberTooltipStateSig =
-        "(ZZLandroidx/compose/foundation/MutatorMutex;Landroidx/compose/runtime/Composer;II)Landroidx/compose/material3/TooltipState;";
-
-    static IntPtr s_rememberTooltipStateClass;
-    static IntPtr s_rememberTooltipStateMethod;
-
-    public static unsafe IntPtr RememberTooltipState(bool isPersistent, IComposer composer)
-    {
-        if (s_rememberTooltipStateClass == IntPtr.Zero)
-        {
-            s_rememberTooltipStateClass  = JNIEnv.FindClass("androidx/compose/material3/TooltipKt");
-            s_rememberTooltipStateMethod = JNIEnv.GetStaticMethodID(s_rememberTooltipStateClass, "rememberTooltipState", RememberTooltipStateSig);
-        }
-
-        JValue* args = stackalloc JValue[6];
-        args[0] = new JValue(false);       // initialIsVisible
-        args[1] = new JValue(isPersistent);
-        args[2] = new JValue(IntPtr.Zero); // mutatorMutex
-        args[3] = new JValue(((Java.Lang.Object)composer).Handle);
-        args[4] = new JValue(0);           // $changed
-        args[5] = new JValue(0b101);       // $default — bits 0 and 2 (initialIsVisible, mutatorMutex)
-        try
-        {
-            return JNIEnv.CallStaticObjectMethod(s_rememberTooltipStateClass, s_rememberTooltipStateMethod, args);
-        }
-        finally
-        {
-            GC.KeepAlive(composer);
-        }
-    }
-
-    // androidx.compose.material3.TooltipDefaults.INSTANCE.rememberPlainTooltipPositionProvider-kHDZbjc(
-    //   spacingBetweenTooltipAndAnchor, composer, $changed, $default)
-    //
-    // Instance method on the Kotlin object singleton. We resolve INSTANCE
-    // once and reuse it across calls.
-    const string RememberPlainTooltipPositionProviderSig =
-        "(FLandroidx/compose/runtime/Composer;II)Landroidx/compose/ui/window/PopupPositionProvider;";
-
-    static IntPtr s_tooltipDefaultsInstance;
-    static IntPtr s_rememberPlainTooltipPositionProviderMethod;
-
-    public static unsafe IntPtr RememberPlainTooltipPositionProvider(IComposer composer)
-    {
-        if (s_tooltipDefaultsInstance == IntPtr.Zero)
-        {
-            IntPtr cls         = JNIEnv.FindClass("androidx/compose/material3/TooltipDefaults");
-            IntPtr instanceFid = JNIEnv.GetStaticFieldID(cls, "INSTANCE", "Landroidx/compose/material3/TooltipDefaults;");
-            s_tooltipDefaultsInstance = JNIEnv.NewGlobalRef(JNIEnv.GetStaticObjectField(cls, instanceFid));
-            s_rememberPlainTooltipPositionProviderMethod = JNIEnv.GetMethodID(cls, "rememberPlainTooltipPositionProvider-kHDZbjc", RememberPlainTooltipPositionProviderSig);
-        }
-
-        JValue* args = stackalloc JValue[4];
-        args[0] = new JValue(0f);          // spacing
-        args[1] = new JValue(((Java.Lang.Object)composer).Handle);
-        args[2] = new JValue(0);
-        args[3] = new JValue(1);           // $default — spacing defaulted
-        try
-        {
-            return JNIEnv.CallObjectMethod(s_tooltipDefaultsInstance, s_rememberPlainTooltipPositionProviderMethod, args);
-        }
-        finally
-        {
-            GC.KeepAlive(composer);
-        }
-    }
-
-    static unsafe void InvokeTextField(IntPtr cls, IntPtr method, string value, IFunction1 onValueChange, IModifier? modifier, IComposer composer, int defaults)
-    {
-        IntPtr valueRef = JNIEnv.NewString(value);
-        try
-        {
-            JValue* args = stackalloc JValue[28];
-            args[0]  = new JValue(valueRef);
-            args[1]  = new JValue(((Java.Lang.Object)onValueChange).Handle);
-            args[2]  = new JValue(ModifierHandle(modifier)); // modifier
-            args[3]  = new JValue(true);        // enabled
-            args[4]  = new JValue(false);       // readOnly
-            args[5]  = new JValue(IntPtr.Zero); // textStyle
-            args[6]  = new JValue(IntPtr.Zero); // label
-            args[7]  = new JValue(IntPtr.Zero); // placeholder
-            args[8]  = new JValue(IntPtr.Zero); // leadingIcon
-            args[9]  = new JValue(IntPtr.Zero); // trailingIcon
-            args[10] = new JValue(IntPtr.Zero); // prefix
-            args[11] = new JValue(IntPtr.Zero); // suffix
-            args[12] = new JValue(IntPtr.Zero); // supportingText
-            args[13] = new JValue(false);       // isError
-            args[14] = new JValue(IntPtr.Zero); // visualTransformation
-            args[15] = new JValue(IntPtr.Zero); // keyboardOptions
-            args[16] = new JValue(IntPtr.Zero); // keyboardActions
-            args[17] = new JValue(false);       // singleLine
-            args[18] = new JValue(0);           // maxLines
-            args[19] = new JValue(0);           // minLines
-            args[20] = new JValue(IntPtr.Zero); // interactionSource
-            args[21] = new JValue(IntPtr.Zero); // shape
-            args[22] = new JValue(IntPtr.Zero); // colors
-            args[23] = new JValue(((Java.Lang.Object)composer).Handle);
-            args[24] = new JValue(0);           // $changed
-            args[25] = new JValue(0);           // $changed1
-            args[26] = new JValue(0);           // $changed2
-            args[27] = new JValue(defaults);
-            JNIEnv.CallStaticVoidMethod(cls, method, args);
-        }
-        finally
-        {
-            JNIEnv.DeleteLocalRef(valueRef);
-            GC.KeepAlive(onValueChange);
-            GC.KeepAlive(modifier);
-            GC.KeepAlive(composer);
-        }
-    }
-
-    // androidx.compose.material3.CardKt.Card (non-clickable):
-    //   (modifier, shape, colors, elevation, border, content,
-    //    composer, $changed, $default)
-    // 6 user params, only bit 5 (content) provided.
+    // androidx.compose.material3.CardKt.Card (non-clickable)
     const string CardSig =
         "(Landroidx/compose/ui/Modifier;Landroidx/compose/ui/graphics/Shape;" +
         "Landroidx/compose/material3/CardColors;Landroidx/compose/material3/CardElevation;" +
         "Landroidx/compose/foundation/BorderStroke;" +
         "Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;II)V";
 
-    static IntPtr s_cardClass;
-    static IntPtr s_cardMethod;
+    [ComposeBridge(
+        Class     = "androidx/compose/material3/CardKt",
+        JvmName   = "Card",
+        Signature = CardSig,
+        Defaults  = typeof(CardDefault))]
+    public static partial void Card(IModifier? modifier, IFunction3 content, IComposer composer);
 
-    public static unsafe void Card(IModifier? modifier, IFunction3 content, IComposer composer)
-    {
-        if (s_cardClass == IntPtr.Zero)
-        {
-            s_cardClass  = JNIEnv.FindClass("androidx/compose/material3/CardKt");
-            s_cardMethod = JNIEnv.GetStaticMethodID(s_cardClass, "Card", CardSig);
-        }
+    // androidx.compose.material3.CardKt.OutlinedCard (same shape as Card)
+    [ComposeBridge(
+        Class     = "androidx/compose/material3/CardKt",
+        JvmName   = "OutlinedCard",
+        Signature = CardSig,
+        Defaults  = typeof(CardDefault))]
+    public static partial void OutlinedCard(IFunction3 content, IComposer composer);
 
-        int defaults = (int)CardDefault.All;
-        if (modifier is not null) defaults &= ~(int)CardDefault.Modifier;
+    // androidx.compose.material3.CardKt.ElevatedCard (no border)
+    [ComposeBridge(
+        Class     = "androidx/compose/material3/CardKt",
+        JvmName   = "ElevatedCard",
+        Signature = "(Landroidx/compose/ui/Modifier;Landroidx/compose/ui/graphics/Shape;" +
+                    "Landroidx/compose/material3/CardColors;Landroidx/compose/material3/CardElevation;" +
+                    "Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;II)V",
+        Defaults  = typeof(ElevatedCardDefault))]
+    public static partial void ElevatedCard(IFunction3 content, IComposer composer);
 
-        JValue* args = stackalloc JValue[9];
-        args[0] = new JValue(ModifierHandle(modifier)); // modifier
-        args[1] = new JValue(IntPtr.Zero); // shape
-        args[2] = new JValue(IntPtr.Zero); // colors
-        args[3] = new JValue(IntPtr.Zero); // elevation
-        args[4] = new JValue(IntPtr.Zero); // border
-        args[5] = new JValue(((Java.Lang.Object)content).Handle);
-        args[6] = new JValue(((Java.Lang.Object)composer).Handle);
-        args[7] = new JValue(0);
-        args[8] = new JValue(defaults);
-        try
-        {
-            JNIEnv.CallStaticVoidMethod(s_cardClass, s_cardMethod, args);
-        }
-        finally
-        {
-            GC.KeepAlive(modifier);
-            GC.KeepAlive(content);
-            GC.KeepAlive(composer);
-        }
-    }
+    // ---- Chips ----
 
-    // androidx.compose.material3.ChipKt.AssistChip:
-    //   (onClick, label, modifier, enabled, leadingIcon, trailingIcon,
-    //    shape, colors, elevation, border, interactionSource,
-    //    composer, $changed, $changed1, $default)
-    // 11 user params; bit 0 (onClick), bit 1 (label) always provided.
-    // bits 4 (leadingIcon) + 5 (trailingIcon) toggled per-call.
     const string AssistChipSig =
         "(Lkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function2;" +
         "Landroidx/compose/ui/Modifier;Z" +
@@ -1221,60 +508,33 @@ internal static partial class ComposeBridges
         "Landroidx/compose/foundation/interaction/MutableInteractionSource;" +
         "Landroidx/compose/runtime/Composer;III)V";
 
-    static IntPtr s_assistChipClass;
-    static IntPtr s_assistChipMethod;
-
-    public static unsafe void AssistChip(
+    [ComposeBridge(
+        Class     = "androidx/compose/material3/ChipKt",
+        JvmName   = "AssistChip",
+        Signature = AssistChipSig,
+        Defaults  = typeof(AssistChipDefault))]
+    public static partial void AssistChip(
         IFunction0  onClick,
         IFunction2  label,
         IModifier?  modifier,
         IFunction2? leadingIcon,
         IFunction2? trailingIcon,
         int         defaults,
-        IComposer   composer)
-    {
-        if (s_assistChipClass == IntPtr.Zero)
-        {
-            s_assistChipClass  = JNIEnv.FindClass("androidx/compose/material3/ChipKt");
-            s_assistChipMethod = JNIEnv.GetStaticMethodID(s_assistChipClass, "AssistChip", AssistChipSig);
-        }
+        IComposer   composer);
 
-        JValue* args = stackalloc JValue[15];
-        args[0]  = new JValue(((Java.Lang.Object)onClick).Handle);
-        args[1]  = new JValue(((Java.Lang.Object)label).Handle);
-        args[2]  = new JValue(ModifierHandle(modifier)); // modifier
-        args[3]  = new JValue(true);        // enabled
-        args[4]  = new JValue(leadingIcon  is null ? IntPtr.Zero : ((Java.Lang.Object)leadingIcon).Handle);
-        args[5]  = new JValue(trailingIcon is null ? IntPtr.Zero : ((Java.Lang.Object)trailingIcon).Handle);
-        args[6]  = new JValue(IntPtr.Zero); // shape
-        args[7]  = new JValue(IntPtr.Zero); // colors
-        args[8]  = new JValue(IntPtr.Zero); // elevation
-        args[9]  = new JValue(IntPtr.Zero); // border
-        args[10] = new JValue(IntPtr.Zero); // interactionSource
-        args[11] = new JValue(((Java.Lang.Object)composer).Handle);
-        args[12] = new JValue(0);           // $changed
-        args[13] = new JValue(0);           // $changed1
-        args[14] = new JValue(defaults);    // $default
-        try
-        {
-            JNIEnv.CallStaticVoidMethod(s_assistChipClass, s_assistChipMethod, args);
-        }
-        finally
-        {
-            GC.KeepAlive(onClick);
-            GC.KeepAlive(label);
-            GC.KeepAlive(modifier);
-            GC.KeepAlive(leadingIcon);
-            GC.KeepAlive(trailingIcon);
-            GC.KeepAlive(composer);
-        }
-    }
+    [ComposeBridge(
+        Class     = "androidx/compose/material3/ChipKt",
+        JvmName   = "ElevatedAssistChip",
+        Signature = AssistChipSig,
+        Defaults  = typeof(AssistChipDefault))]
+    public static partial void ElevatedAssistChip(
+        IFunction0  onClick,
+        IFunction2  label,
+        IFunction2? leadingIcon,
+        IFunction2? trailingIcon,
+        int         defaults,
+        IComposer   composer);
 
-    // androidx.compose.material3.ChipKt.FilterChip:
-    //   (selected, onClick, label, modifier, enabled, leadingIcon, trailingIcon,
-    //    shape, colors, elevation, border, interactionSource,
-    //    composer, $changed, $changed1, $default)
-    // 12 user params; bits 0 (selected), 1 (onClick), 2 (label) always provided.
     const string FilterChipSig =
         "(ZLkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function2;" +
         "Landroidx/compose/ui/Modifier;Z" +
@@ -1286,10 +546,12 @@ internal static partial class ComposeBridges
         "Landroidx/compose/foundation/interaction/MutableInteractionSource;" +
         "Landroidx/compose/runtime/Composer;III)V";
 
-    static IntPtr s_filterChipClass;
-    static IntPtr s_filterChipMethod;
-
-    public static unsafe void FilterChip(
+    [ComposeBridge(
+        Class     = "androidx/compose/material3/ChipKt",
+        JvmName   = "FilterChip",
+        Signature = FilterChipSig,
+        Defaults  = typeof(FilterChipDefault))]
+    public static partial void FilterChip(
         bool        selected,
         IFunction0  onClick,
         IFunction2  label,
@@ -1297,66 +559,37 @@ internal static partial class ComposeBridges
         IFunction2? leadingIcon,
         IFunction2? trailingIcon,
         int         defaults,
-        IComposer   composer)
-    {
-        if (s_filterChipClass == IntPtr.Zero)
-        {
-            s_filterChipClass  = JNIEnv.FindClass("androidx/compose/material3/ChipKt");
-            s_filterChipMethod = JNIEnv.GetStaticMethodID(s_filterChipClass, "FilterChip", FilterChipSig);
-        }
+        IComposer   composer);
 
-        JValue* args = stackalloc JValue[16];
-        args[0]  = new JValue(selected);
-        args[1]  = new JValue(((Java.Lang.Object)onClick).Handle);
-        args[2]  = new JValue(((Java.Lang.Object)label).Handle);
-        args[3]  = new JValue(ModifierHandle(modifier)); // modifier
-        args[4]  = new JValue(true);        // enabled
-        args[5]  = new JValue(leadingIcon  is null ? IntPtr.Zero : ((Java.Lang.Object)leadingIcon).Handle);
-        args[6]  = new JValue(trailingIcon is null ? IntPtr.Zero : ((Java.Lang.Object)trailingIcon).Handle);
-        args[7]  = new JValue(IntPtr.Zero); // shape
-        args[8]  = new JValue(IntPtr.Zero); // colors
-        args[9]  = new JValue(IntPtr.Zero); // elevation
-        args[10] = new JValue(IntPtr.Zero); // border
-        args[11] = new JValue(IntPtr.Zero); // interactionSource
-        args[12] = new JValue(((Java.Lang.Object)composer).Handle);
-        args[13] = new JValue(0);
-        args[14] = new JValue(0);
-        args[15] = new JValue(defaults);
-        try
-        {
-            JNIEnv.CallStaticVoidMethod(s_filterChipClass, s_filterChipMethod, args);
-        }
-        finally
-        {
-            GC.KeepAlive(onClick);
-            GC.KeepAlive(label);
-            GC.KeepAlive(modifier);
-            GC.KeepAlive(leadingIcon);
-            GC.KeepAlive(trailingIcon);
-            GC.KeepAlive(composer);
-        }
-    }
+    [ComposeBridge(
+        Class     = "androidx/compose/material3/ChipKt",
+        JvmName   = "ElevatedFilterChip",
+        Signature = FilterChipSig,
+        Defaults  = typeof(FilterChipDefault))]
+    public static partial void ElevatedFilterChip(
+        bool        selected,
+        IFunction0  onClick,
+        IFunction2  label,
+        IFunction2? leadingIcon,
+        IFunction2? trailingIcon,
+        int         defaults,
+        IComposer   composer);
 
-    // androidx.compose.material3.ChipKt.InputChip:
-    //   (selected, onClick, label, modifier, enabled, leadingIcon, avatar,
-    //    trailingIcon, shape, colors, elevation, border, interactionSource,
-    //    composer, $changed, $changed1, $default)
-    // 13 user params; bits 0/1/2 always provided.
-    const string InputChipSig =
-        "(ZLkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function2;" +
-        "Landroidx/compose/ui/Modifier;Z" +
-        "Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;" +
-        "Lkotlin/jvm/functions/Function2;Landroidx/compose/ui/graphics/Shape;" +
-        "Landroidx/compose/material3/SelectableChipColors;" +
-        "Landroidx/compose/material3/SelectableChipElevation;" +
-        "Landroidx/compose/foundation/BorderStroke;" +
-        "Landroidx/compose/foundation/interaction/MutableInteractionSource;" +
-        "Landroidx/compose/runtime/Composer;III)V";
-
-    static IntPtr s_inputChipClass;
-    static IntPtr s_inputChipMethod;
-
-    public static unsafe void InputChip(
+    // androidx.compose.material3.ChipKt.InputChip
+    [ComposeBridge(
+        Class     = "androidx/compose/material3/ChipKt",
+        JvmName   = "InputChip",
+        Signature = "(ZLkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function2;" +
+                    "Landroidx/compose/ui/Modifier;Z" +
+                    "Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;" +
+                    "Lkotlin/jvm/functions/Function2;Landroidx/compose/ui/graphics/Shape;" +
+                    "Landroidx/compose/material3/SelectableChipColors;" +
+                    "Landroidx/compose/material3/SelectableChipElevation;" +
+                    "Landroidx/compose/foundation/BorderStroke;" +
+                    "Landroidx/compose/foundation/interaction/MutableInteractionSource;" +
+                    "Landroidx/compose/runtime/Composer;III)V",
+        Defaults  = typeof(InputChipDefault))]
+    public static partial void InputChip(
         bool        selected,
         IFunction0  onClick,
         IFunction2  label,
@@ -1365,52 +598,8 @@ internal static partial class ComposeBridges
         IFunction2? avatar,
         IFunction2? trailingIcon,
         int         defaults,
-        IComposer   composer)
-    {
-        if (s_inputChipClass == IntPtr.Zero)
-        {
-            s_inputChipClass  = JNIEnv.FindClass("androidx/compose/material3/ChipKt");
-            s_inputChipMethod = JNIEnv.GetStaticMethodID(s_inputChipClass, "InputChip", InputChipSig);
-        }
+        IComposer   composer);
 
-        JValue* args = stackalloc JValue[17];
-        args[0]  = new JValue(selected);
-        args[1]  = new JValue(((Java.Lang.Object)onClick).Handle);
-        args[2]  = new JValue(((Java.Lang.Object)label).Handle);
-        args[3]  = new JValue(ModifierHandle(modifier)); // modifier
-        args[4]  = new JValue(true);        // enabled
-        args[5]  = new JValue(leadingIcon  is null ? IntPtr.Zero : ((Java.Lang.Object)leadingIcon).Handle);
-        args[6]  = new JValue(avatar       is null ? IntPtr.Zero : ((Java.Lang.Object)avatar).Handle);
-        args[7]  = new JValue(trailingIcon is null ? IntPtr.Zero : ((Java.Lang.Object)trailingIcon).Handle);
-        args[8]  = new JValue(IntPtr.Zero); // shape
-        args[9]  = new JValue(IntPtr.Zero); // colors
-        args[10] = new JValue(IntPtr.Zero); // elevation
-        args[11] = new JValue(IntPtr.Zero); // border
-        args[12] = new JValue(IntPtr.Zero); // interactionSource
-        args[13] = new JValue(((Java.Lang.Object)composer).Handle);
-        args[14] = new JValue(0);
-        args[15] = new JValue(0);
-        args[16] = new JValue(defaults);
-        try
-        {
-            JNIEnv.CallStaticVoidMethod(s_inputChipClass, s_inputChipMethod, args);
-        }
-        finally
-        {
-            GC.KeepAlive(onClick);
-            GC.KeepAlive(label);
-            GC.KeepAlive(modifier);
-            GC.KeepAlive(leadingIcon);
-            GC.KeepAlive(avatar);
-            GC.KeepAlive(trailingIcon);
-            GC.KeepAlive(composer);
-        }
-    }
-
-    // androidx.compose.material3.ChipKt.SuggestionChip:
-    //   (onClick, label, modifier, enabled, icon, shape, colors, elevation,
-    //    border, interactionSource, composer, $changed, $default)
-    // 10 user params; bits 0 (onClick), 1 (label) always provided.
     const string SuggestionChipSig =
         "(Lkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function2;" +
         "Landroidx/compose/ui/Modifier;Z" +
@@ -1420,114 +609,56 @@ internal static partial class ComposeBridges
         "Landroidx/compose/foundation/interaction/MutableInteractionSource;" +
         "Landroidx/compose/runtime/Composer;II)V";
 
-    static IntPtr s_suggestionChipClass;
-    static IntPtr s_suggestionChipMethod;
-
-    public static unsafe void SuggestionChip(
+    [ComposeBridge(
+        Class     = "androidx/compose/material3/ChipKt",
+        JvmName   = "SuggestionChip",
+        Signature = SuggestionChipSig,
+        Defaults  = typeof(SuggestionChipDefault))]
+    public static partial void SuggestionChip(
         IFunction0  onClick,
         IFunction2  label,
         IModifier?  modifier,
         IFunction2? icon,
         int         defaults,
-        IComposer   composer)
-    {
-        if (s_suggestionChipClass == IntPtr.Zero)
-        {
-            s_suggestionChipClass  = JNIEnv.FindClass("androidx/compose/material3/ChipKt");
-            s_suggestionChipMethod = JNIEnv.GetStaticMethodID(s_suggestionChipClass, "SuggestionChip", SuggestionChipSig);
-        }
+        IComposer   composer);
 
-        JValue* args = stackalloc JValue[13];
-        args[0]  = new JValue(((Java.Lang.Object)onClick).Handle);
-        args[1]  = new JValue(((Java.Lang.Object)label).Handle);
-        args[2]  = new JValue(ModifierHandle(modifier)); // modifier
-        args[3]  = new JValue(true);        // enabled
-        args[4]  = new JValue(icon is null ? IntPtr.Zero : ((Java.Lang.Object)icon).Handle);
-        args[5]  = new JValue(IntPtr.Zero); // shape
-        args[6]  = new JValue(IntPtr.Zero); // colors
-        args[7]  = new JValue(IntPtr.Zero); // elevation
-        args[8]  = new JValue(IntPtr.Zero); // border
-        args[9]  = new JValue(IntPtr.Zero); // interactionSource
-        args[10] = new JValue(((Java.Lang.Object)composer).Handle);
-        args[11] = new JValue(0);
-        args[12] = new JValue(defaults);
-        try
-        {
-            JNIEnv.CallStaticVoidMethod(s_suggestionChipClass, s_suggestionChipMethod, args);
-        }
-        finally
-        {
-            GC.KeepAlive(onClick);
-            GC.KeepAlive(label);
-            GC.KeepAlive(modifier);
-            GC.KeepAlive(icon);
-            GC.KeepAlive(composer);
-        }
-    }
+    [ComposeBridge(
+        Class     = "androidx/compose/material3/ChipKt",
+        JvmName   = "ElevatedSuggestionChip",
+        Signature = SuggestionChipSig,
+        Defaults  = typeof(SuggestionChipDefault))]
+    public static partial void ElevatedSuggestionChip(
+        IFunction0  onClick,
+        IFunction2  label,
+        IFunction2? icon,
+        int         defaults,
+        IComposer   composer);
 
-    // androidx.compose.material3.NavigationBarKt.NavigationBar-HsRjFd4:
-    //   (modifier, containerColor, contentColor, tonalElevation, windowInsets,
-    //    content, composer, $changed, $default)
-    // 6 user params; only bit 5 (content) provided.
-    const string NavigationBarSig =
-        "(Landroidx/compose/ui/Modifier;JJF" +
-        "Landroidx/compose/foundation/layout/WindowInsets;" +
-        "Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;II)V";
+    // ---- Navigation ----
 
-    static IntPtr s_navBarClass;
-    static IntPtr s_navBarMethod;
+    // androidx.compose.material3.NavigationBarKt.NavigationBar-HsRjFd4
+    [ComposeBridge(
+        Class     = "androidx/compose/material3/NavigationBarKt",
+        JvmName   = "NavigationBar-HsRjFd4",
+        Signature = "(Landroidx/compose/ui/Modifier;JJF" +
+                    "Landroidx/compose/foundation/layout/WindowInsets;" +
+                    "Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;II)V",
+        Defaults  = typeof(NavigationBarDefault))]
+    public static partial void NavigationBar(IModifier? modifier, IFunction3 content, IComposer composer);
 
-    public static unsafe void NavigationBar(IModifier? modifier, IFunction3 content, IComposer composer)
-    {
-        if (s_navBarClass == IntPtr.Zero)
-        {
-            s_navBarClass  = JNIEnv.FindClass("androidx/compose/material3/NavigationBarKt");
-            s_navBarMethod = JNIEnv.GetStaticMethodID(s_navBarClass, "NavigationBar-HsRjFd4", NavigationBarSig);
-        }
-
-        int defaults = (int)NavigationBarDefault.All;
-        if (modifier is not null) defaults &= ~(int)NavigationBarDefault.Modifier;
-
-        JValue* args = stackalloc JValue[9];
-        args[0] = new JValue(ModifierHandle(modifier)); // modifier
-        args[1] = new JValue(0L);          // containerColor
-        args[2] = new JValue(0L);          // contentColor
-        args[3] = new JValue(0f);          // tonalElevation
-        args[4] = new JValue(IntPtr.Zero); // windowInsets
-        args[5] = new JValue(((Java.Lang.Object)content).Handle);
-        args[6] = new JValue(((Java.Lang.Object)composer).Handle);
-        args[7] = new JValue(0);
-        args[8] = new JValue(defaults);
-        try
-        {
-            JNIEnv.CallStaticVoidMethod(s_navBarClass, s_navBarMethod, args);
-        }
-        finally
-        {
-            GC.KeepAlive(modifier);
-            GC.KeepAlive(content);
-            GC.KeepAlive(composer);
-        }
-    }
-
-    // androidx.compose.material3.NavigationBarKt.NavigationBarItem:
-    //   (RowScope, selected, onClick, icon, modifier, enabled, label,
-    //    alwaysShowLabel, colors, interactionSource, composer, $changed, $default)
-    // RowScope is the Kotlin extension receiver (first param). 9 user params
-    // (after the receiver); bits 0 (selected), 1 (onClick), 2 (icon) provided.
-    const string NavigationBarItemSig =
-        "(Landroidx/compose/foundation/layout/RowScope;Z" +
-        "Lkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function2;" +
-        "Landroidx/compose/ui/Modifier;Z" +
-        "Lkotlin/jvm/functions/Function2;Z" +
-        "Landroidx/compose/material3/NavigationBarItemColors;" +
-        "Landroidx/compose/foundation/interaction/MutableInteractionSource;" +
-        "Landroidx/compose/runtime/Composer;II)V";
-
-    static IntPtr s_navBarItemClass;
-    static IntPtr s_navBarItemMethod;
-
-    public static unsafe void NavigationBarItem(
+    // androidx.compose.material3.NavigationBarKt.NavigationBarItem (RowScope receiver)
+    [ComposeBridge(
+        Class     = "androidx/compose/material3/NavigationBarKt",
+        JvmName   = "NavigationBarItem",
+        Signature = "(Landroidx/compose/foundation/layout/RowScope;Z" +
+                    "Lkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function2;" +
+                    "Landroidx/compose/ui/Modifier;Z" +
+                    "Lkotlin/jvm/functions/Function2;Z" +
+                    "Landroidx/compose/material3/NavigationBarItemColors;" +
+                    "Landroidx/compose/foundation/interaction/MutableInteractionSource;" +
+                    "Landroidx/compose/runtime/Composer;II)V",
+        Defaults  = typeof(NavigationBarItemDefault))]
+    public static partial void NavigationBarItem(
         IntPtr      rowScope,
         bool        selected,
         IFunction0  onClick,
@@ -1535,456 +666,63 @@ internal static partial class ComposeBridges
         IModifier?  modifier,
         IFunction2? label,
         int         defaults,
-        IComposer   composer)
-    {
-        if (s_navBarItemClass == IntPtr.Zero)
-        {
-            s_navBarItemClass  = JNIEnv.FindClass("androidx/compose/material3/NavigationBarKt");
-            s_navBarItemMethod = JNIEnv.GetStaticMethodID(s_navBarItemClass, "NavigationBarItem", NavigationBarItemSig);
-        }
+        IComposer   composer);
 
-        if (rowScope == IntPtr.Zero)
-            throw new System.InvalidOperationException(
-                "NavigationBarItem must be a child of NavigationBar (no RowScope receiver in scope).");
+    // androidx.compose.material3.NavigationRailKt.NavigationRail-qi6gXK8
+    [ComposeBridge(
+        Class     = "androidx/compose/material3/NavigationRailKt",
+        JvmName   = "NavigationRail-qi6gXK8",
+        Signature = "(Landroidx/compose/ui/Modifier;JJ" +
+                    "Lkotlin/jvm/functions/Function3;" +
+                    "Landroidx/compose/foundation/layout/WindowInsets;" +
+                    "Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;II)V",
+        Defaults  = typeof(NavigationRailDefault))]
+    public static partial void NavigationRail(IModifier? modifier, IFunction3 content, IComposer composer);
 
-        JValue* args = stackalloc JValue[13];
-        args[0]  = new JValue(rowScope);
-        args[1]  = new JValue(selected);
-        args[2]  = new JValue(((Java.Lang.Object)onClick).Handle);
-        args[3]  = new JValue(((Java.Lang.Object)icon).Handle);
-        args[4]  = new JValue(ModifierHandle(modifier)); // modifier
-        args[5]  = new JValue(true);        // enabled
-        args[6]  = new JValue(label is null ? IntPtr.Zero : ((Java.Lang.Object)label).Handle);
-        args[7]  = new JValue(true);        // alwaysShowLabel
-        args[8]  = new JValue(IntPtr.Zero); // colors
-        args[9]  = new JValue(IntPtr.Zero); // interactionSource
-        args[10] = new JValue(((Java.Lang.Object)composer).Handle);
-        args[11] = new JValue(0);
-        args[12] = new JValue(defaults);
-        try
-        {
-            JNIEnv.CallStaticVoidMethod(s_navBarItemClass, s_navBarItemMethod, args);
-        }
-        finally
-        {
-            GC.KeepAlive(onClick);
-            GC.KeepAlive(icon);
-            GC.KeepAlive(modifier);
-            GC.KeepAlive(label);
-            GC.KeepAlive(composer);
-        }
-    }
-
-    // androidx.compose.material3.NavigationRailKt.NavigationRail-qi6gXK8:
-    //   (modifier, containerColor, contentColor, header, windowInsets,
-    //    content, composer, $changed, $default)
-    // 6 user params; only bit 5 (content) provided. (`header` is a slot we
-    // don't surface — defaulted via bit 3.)
-    const string NavigationRailSig =
-        "(Landroidx/compose/ui/Modifier;JJ" +
-        "Lkotlin/jvm/functions/Function3;" +
-        "Landroidx/compose/foundation/layout/WindowInsets;" +
-        "Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;II)V";
-
-    static IntPtr s_navRailClass;
-    static IntPtr s_navRailMethod;
-
-    public static unsafe void NavigationRail(IModifier? modifier, IFunction3 content, IComposer composer)
-    {
-        if (s_navRailClass == IntPtr.Zero)
-        {
-            s_navRailClass  = JNIEnv.FindClass("androidx/compose/material3/NavigationRailKt");
-            s_navRailMethod = JNIEnv.GetStaticMethodID(s_navRailClass, "NavigationRail-qi6gXK8", NavigationRailSig);
-        }
-
-        int defaults = (int)NavigationRailDefault.All;
-        if (modifier is not null) defaults &= ~(int)NavigationRailDefault.Modifier;
-
-        JValue* args = stackalloc JValue[9];
-        args[0] = new JValue(ModifierHandle(modifier)); // modifier
-        args[1] = new JValue(0L);          // containerColor
-        args[2] = new JValue(0L);          // contentColor
-        args[3] = new JValue(IntPtr.Zero); // header
-        args[4] = new JValue(IntPtr.Zero); // windowInsets
-        args[5] = new JValue(((Java.Lang.Object)content).Handle);
-        args[6] = new JValue(((Java.Lang.Object)composer).Handle);
-        args[7] = new JValue(0);
-        args[8] = new JValue(defaults);
-        try
-        {
-            JNIEnv.CallStaticVoidMethod(s_navRailClass, s_navRailMethod, args);
-        }
-        finally
-        {
-            GC.KeepAlive(modifier);
-            GC.KeepAlive(content);
-            GC.KeepAlive(composer);
-        }
-    }
-
-    // androidx.compose.material3.CardKt.ElevatedCard (non-clickable):
-    //   (modifier, shape, colors, elevation, content,
-    //    composer, $changed, $default)
-    // 5 user params; bit 4 (content) provided.
-    const string ElevatedCardSig =
-        "(Landroidx/compose/ui/Modifier;Landroidx/compose/ui/graphics/Shape;" +
-        "Landroidx/compose/material3/CardColors;Landroidx/compose/material3/CardElevation;" +
-        "Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;II)V";
-
-    static IntPtr s_elevatedCardClass;
-    static IntPtr s_elevatedCardMethod;
-
-    public static unsafe void ElevatedCard(IFunction3 content, IComposer composer)
-    {
-        if (s_elevatedCardClass == IntPtr.Zero)
-        {
-            s_elevatedCardClass  = JNIEnv.FindClass("androidx/compose/material3/CardKt");
-            s_elevatedCardMethod = JNIEnv.GetStaticMethodID(s_elevatedCardClass, "ElevatedCard", ElevatedCardSig);
-        }
-
-        JValue* args = stackalloc JValue[8];
-        args[0] = new JValue(IntPtr.Zero); // modifier
-        args[1] = new JValue(IntPtr.Zero); // shape
-        args[2] = new JValue(IntPtr.Zero); // colors
-        args[3] = new JValue(IntPtr.Zero); // elevation
-        args[4] = new JValue(((Java.Lang.Object)content).Handle);
-        args[5] = new JValue(((Java.Lang.Object)composer).Handle);
-        args[6] = new JValue(0);
-        args[7] = new JValue((int)ElevatedCardDefault.All);
-        try
-        {
-            JNIEnv.CallStaticVoidMethod(s_elevatedCardClass, s_elevatedCardMethod, args);
-        }
-        finally
-        {
-            GC.KeepAlive(content);
-            GC.KeepAlive(composer);
-        }
-    }
-
-    // androidx.compose.material3.CardKt.OutlinedCard (non-clickable):
-    //   (modifier, shape, colors, elevation, border, content,
-    //    composer, $changed, $default)
-    // 6 user params; bit 5 (content) provided. Same shape as Card.
-    const string OutlinedCardSig =
-        "(Landroidx/compose/ui/Modifier;Landroidx/compose/ui/graphics/Shape;" +
-        "Landroidx/compose/material3/CardColors;Landroidx/compose/material3/CardElevation;" +
-        "Landroidx/compose/foundation/BorderStroke;" +
-        "Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;II)V";
-
-    static IntPtr s_outlinedCardClass;
-    static IntPtr s_outlinedCardMethod;
-
-    public static unsafe void OutlinedCard(IFunction3 content, IComposer composer)
-    {
-        if (s_outlinedCardClass == IntPtr.Zero)
-        {
-            s_outlinedCardClass  = JNIEnv.FindClass("androidx/compose/material3/CardKt");
-            s_outlinedCardMethod = JNIEnv.GetStaticMethodID(s_outlinedCardClass, "OutlinedCard", OutlinedCardSig);
-        }
-
-        JValue* args = stackalloc JValue[9];
-        args[0] = new JValue(IntPtr.Zero); // modifier
-        args[1] = new JValue(IntPtr.Zero); // shape
-        args[2] = new JValue(IntPtr.Zero); // colors
-        args[3] = new JValue(IntPtr.Zero); // elevation
-        args[4] = new JValue(IntPtr.Zero); // border
-        args[5] = new JValue(((Java.Lang.Object)content).Handle);
-        args[6] = new JValue(((Java.Lang.Object)composer).Handle);
-        args[7] = new JValue(0);
-        args[8] = new JValue((int)CardDefault.All);
-        try
-        {
-            JNIEnv.CallStaticVoidMethod(s_outlinedCardClass, s_outlinedCardMethod, args);
-        }
-        finally
-        {
-            GC.KeepAlive(content);
-            GC.KeepAlive(composer);
-        }
-    }
-
-    // androidx.compose.material3.ChipKt.ElevatedAssistChip: same parameter
-    // shape as AssistChip — 11 user params, bits 0/1 always provided.
-    const string ElevatedAssistChipSig = AssistChipSig;
-
-    static IntPtr s_elevatedAssistChipClass;
-    static IntPtr s_elevatedAssistChipMethod;
-
-    public static unsafe void ElevatedAssistChip(
-        IFunction0  onClick,
-        IFunction2  label,
-        IFunction2? leadingIcon,
-        IFunction2? trailingIcon,
-        int         defaults,
-        IComposer   composer)
-    {
-        if (s_elevatedAssistChipClass == IntPtr.Zero)
-        {
-            s_elevatedAssistChipClass  = JNIEnv.FindClass("androidx/compose/material3/ChipKt");
-            s_elevatedAssistChipMethod = JNIEnv.GetStaticMethodID(s_elevatedAssistChipClass, "ElevatedAssistChip", ElevatedAssistChipSig);
-        }
-
-        JValue* args = stackalloc JValue[15];
-        args[0]  = new JValue(((Java.Lang.Object)onClick).Handle);
-        args[1]  = new JValue(((Java.Lang.Object)label).Handle);
-        args[2]  = new JValue(IntPtr.Zero); // modifier
-        args[3]  = new JValue(true);        // enabled
-        args[4]  = new JValue(leadingIcon  is null ? IntPtr.Zero : ((Java.Lang.Object)leadingIcon).Handle);
-        args[5]  = new JValue(trailingIcon is null ? IntPtr.Zero : ((Java.Lang.Object)trailingIcon).Handle);
-        args[6]  = new JValue(IntPtr.Zero); // shape
-        args[7]  = new JValue(IntPtr.Zero); // colors
-        args[8]  = new JValue(IntPtr.Zero); // elevation
-        args[9]  = new JValue(IntPtr.Zero); // border
-        args[10] = new JValue(IntPtr.Zero); // interactionSource
-        args[11] = new JValue(((Java.Lang.Object)composer).Handle);
-        args[12] = new JValue(0);
-        args[13] = new JValue(0);
-        args[14] = new JValue(defaults);
-        try
-        {
-            JNIEnv.CallStaticVoidMethod(s_elevatedAssistChipClass, s_elevatedAssistChipMethod, args);
-        }
-        finally
-        {
-            GC.KeepAlive(onClick);
-            GC.KeepAlive(label);
-            GC.KeepAlive(leadingIcon);
-            GC.KeepAlive(trailingIcon);
-            GC.KeepAlive(composer);
-        }
-    }
-
-    // androidx.compose.material3.ChipKt.ElevatedFilterChip: same parameter
-    // shape as FilterChip — 12 user params, bits 0/1/2 always provided.
-    const string ElevatedFilterChipSig = FilterChipSig;
-
-    static IntPtr s_elevatedFilterChipClass;
-    static IntPtr s_elevatedFilterChipMethod;
-
-    public static unsafe void ElevatedFilterChip(
-        bool        selected,
-        IFunction0  onClick,
-        IFunction2  label,
-        IFunction2? leadingIcon,
-        IFunction2? trailingIcon,
-        int         defaults,
-        IComposer   composer)
-    {
-        if (s_elevatedFilterChipClass == IntPtr.Zero)
-        {
-            s_elevatedFilterChipClass  = JNIEnv.FindClass("androidx/compose/material3/ChipKt");
-            s_elevatedFilterChipMethod = JNIEnv.GetStaticMethodID(s_elevatedFilterChipClass, "ElevatedFilterChip", ElevatedFilterChipSig);
-        }
-
-        JValue* args = stackalloc JValue[16];
-        args[0]  = new JValue(selected);
-        args[1]  = new JValue(((Java.Lang.Object)onClick).Handle);
-        args[2]  = new JValue(((Java.Lang.Object)label).Handle);
-        args[3]  = new JValue(IntPtr.Zero); // modifier
-        args[4]  = new JValue(true);        // enabled
-        args[5]  = new JValue(leadingIcon  is null ? IntPtr.Zero : ((Java.Lang.Object)leadingIcon).Handle);
-        args[6]  = new JValue(trailingIcon is null ? IntPtr.Zero : ((Java.Lang.Object)trailingIcon).Handle);
-        args[7]  = new JValue(IntPtr.Zero); // shape
-        args[8]  = new JValue(IntPtr.Zero); // colors
-        args[9]  = new JValue(IntPtr.Zero); // elevation
-        args[10] = new JValue(IntPtr.Zero); // border
-        args[11] = new JValue(IntPtr.Zero); // interactionSource
-        args[12] = new JValue(((Java.Lang.Object)composer).Handle);
-        args[13] = new JValue(0);
-        args[14] = new JValue(0);
-        args[15] = new JValue(defaults);
-        try
-        {
-            JNIEnv.CallStaticVoidMethod(s_elevatedFilterChipClass, s_elevatedFilterChipMethod, args);
-        }
-        finally
-        {
-            GC.KeepAlive(onClick);
-            GC.KeepAlive(label);
-            GC.KeepAlive(leadingIcon);
-            GC.KeepAlive(trailingIcon);
-            GC.KeepAlive(composer);
-        }
-    }
-
-    // androidx.compose.material3.ChipKt.ElevatedSuggestionChip: same shape
-    // as SuggestionChip — 10 user params, bits 0/1 always provided.
-    const string ElevatedSuggestionChipSig = SuggestionChipSig;
-
-    static IntPtr s_elevatedSuggestionChipClass;
-    static IntPtr s_elevatedSuggestionChipMethod;
-
-    public static unsafe void ElevatedSuggestionChip(
-        IFunction0  onClick,
-        IFunction2  label,
-        IFunction2? icon,
-        int         defaults,
-        IComposer   composer)
-    {
-        if (s_elevatedSuggestionChipClass == IntPtr.Zero)
-        {
-            s_elevatedSuggestionChipClass  = JNIEnv.FindClass("androidx/compose/material3/ChipKt");
-            s_elevatedSuggestionChipMethod = JNIEnv.GetStaticMethodID(s_elevatedSuggestionChipClass, "ElevatedSuggestionChip", ElevatedSuggestionChipSig);
-        }
-
-        JValue* args = stackalloc JValue[13];
-        args[0]  = new JValue(((Java.Lang.Object)onClick).Handle);
-        args[1]  = new JValue(((Java.Lang.Object)label).Handle);
-        args[2]  = new JValue(IntPtr.Zero); // modifier
-        args[3]  = new JValue(true);        // enabled
-        args[4]  = new JValue(icon is null ? IntPtr.Zero : ((Java.Lang.Object)icon).Handle);
-        args[5]  = new JValue(IntPtr.Zero); // shape
-        args[6]  = new JValue(IntPtr.Zero); // colors
-        args[7]  = new JValue(IntPtr.Zero); // elevation
-        args[8]  = new JValue(IntPtr.Zero); // border
-        args[9]  = new JValue(IntPtr.Zero); // interactionSource
-        args[10] = new JValue(((Java.Lang.Object)composer).Handle);
-        args[11] = new JValue(0);
-        args[12] = new JValue(defaults);
-        try
-        {
-            JNIEnv.CallStaticVoidMethod(s_elevatedSuggestionChipClass, s_elevatedSuggestionChipMethod, args);
-        }
-        finally
-        {
-            GC.KeepAlive(onClick);
-            GC.KeepAlive(label);
-            GC.KeepAlive(icon);
-            GC.KeepAlive(composer);
-        }
-    }
-
-    // androidx.compose.material3.NavigationDrawerKt.{Modal,Dismissible,Permanent}DrawerSheet-afqeVBk:
-    //   (modifier, shape, drawerContainerColor, drawerContentColor,
-    //    tonalElevation, windowInsets, content, composer, $changed, $default)
-    // 7 user params; bit 6 (content) provided. All three sheets share the
-    // identical signature — only the JNI method name differs.
-    const string DrawerSheetSig =
-        "(Landroidx/compose/ui/Modifier;Landroidx/compose/ui/graphics/Shape;JJF" +
-        "Landroidx/compose/foundation/layout/WindowInsets;" +
-        "Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;II)V";
-
-    static IntPtr s_drawerSheetClass;
-    static IntPtr s_modalDrawerSheetMethod;
-    static IntPtr s_dismissibleDrawerSheetMethod;
-    static IntPtr s_permanentDrawerSheetMethod;
-
-    static IntPtr GetDrawerSheetClass()
-    {
-        if (s_drawerSheetClass == IntPtr.Zero)
-            s_drawerSheetClass = JNIEnv.FindClass("androidx/compose/material3/NavigationDrawerKt");
-        return s_drawerSheetClass;
-    }
-
-    static unsafe void CallDrawerSheet(IntPtr method, IFunction3 content, IComposer composer, long containerColor = 0L)
-    {
-        // When containerColor is non-zero, pass it explicitly and clear
-        // bit 2 so Kotlin doesn't substitute its $default. Bit numbering
-        // matches DrawerSheetDefault (modifier=0, shape=1, drawerContainerColor=2).
-        int defaults = (int)DrawerSheetDefault.All;
-        if (containerColor != 0L)
-            defaults &= ~(1 << 2);
-
-        JValue* args = stackalloc JValue[10];
-        args[0] = new JValue(IntPtr.Zero);     // modifier
-        args[1] = new JValue(IntPtr.Zero);     // shape
-        args[2] = new JValue(containerColor);  // drawerContainerColor
-        args[3] = new JValue(0L);              // drawerContentColor
-        args[4] = new JValue(0f);              // tonalElevation
-        args[5] = new JValue(IntPtr.Zero);     // windowInsets
-        args[6] = new JValue(((Java.Lang.Object)content).Handle);
-        args[7] = new JValue(((Java.Lang.Object)composer).Handle);
-        args[8] = new JValue(0);
-        args[9] = new JValue(defaults);
-        try
-        {
-            JNIEnv.CallStaticVoidMethod(GetDrawerSheetClass(), method, args);
-        }
-        finally
-        {
-            GC.KeepAlive(content);
-            GC.KeepAlive(composer);
-        }
-    }
-
-    public static unsafe void ModalDrawerSheet(IFunction3 content, IComposer composer, long containerColor = 0L)
-    {
-        if (s_modalDrawerSheetMethod == IntPtr.Zero)
-            s_modalDrawerSheetMethod = JNIEnv.GetStaticMethodID(GetDrawerSheetClass(), "ModalDrawerSheet-afqeVBk", DrawerSheetSig);
-        CallDrawerSheet(s_modalDrawerSheetMethod, content, composer, containerColor);
-    }
-
-    public static unsafe void DismissibleDrawerSheet(IFunction3 content, IComposer composer, long containerColor = 0L)
-    {
-        if (s_dismissibleDrawerSheetMethod == IntPtr.Zero)
-            s_dismissibleDrawerSheetMethod = JNIEnv.GetStaticMethodID(GetDrawerSheetClass(), "DismissibleDrawerSheet-afqeVBk", DrawerSheetSig);
-        CallDrawerSheet(s_dismissibleDrawerSheetMethod, content, composer, containerColor);
-    }
-
-    public static unsafe void PermanentDrawerSheet(IFunction3 content, IComposer composer, long containerColor = 0L)
-    {
-        if (s_permanentDrawerSheetMethod == IntPtr.Zero)
-            s_permanentDrawerSheetMethod = JNIEnv.GetStaticMethodID(GetDrawerSheetClass(), "PermanentDrawerSheet-afqeVBk", DrawerSheetSig);
-        CallDrawerSheet(s_permanentDrawerSheetMethod, content, composer, containerColor);
-    }
-
-    // androidx.compose.material3.NavigationRailKt.NavigationRailItem:
-    //   (selected, onClick, icon, modifier, enabled, label, alwaysShowLabel,
-    //    colors, interactionSource, composer, $changed, $default)
-    // 9 user params (no scope receiver despite parent NavigationRail
-    // exposing a ColumnScope content lambda — NavigationRailItem is a
-    // top-level static, not a ColumnScope extension).
-    const string NavigationRailItemSig =
-        "(ZLkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function2;" +
-        "Landroidx/compose/ui/Modifier;Z" +
-        "Lkotlin/jvm/functions/Function2;Z" +
-        "Landroidx/compose/material3/NavigationRailItemColors;" +
-        "Landroidx/compose/foundation/interaction/MutableInteractionSource;" +
-        "Landroidx/compose/runtime/Composer;II)V";
-
-    static IntPtr s_navRailItemClass;
-    static IntPtr s_navRailItemMethod;
-
-    public static unsafe void NavigationRailItem(
+    // androidx.compose.material3.NavigationRailKt.NavigationRailItem
+    [ComposeBridge(
+        Class     = "androidx/compose/material3/NavigationRailKt",
+        JvmName   = "NavigationRailItem",
+        Signature = "(ZLkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function2;" +
+                    "Landroidx/compose/ui/Modifier;Z" +
+                    "Lkotlin/jvm/functions/Function2;Z" +
+                    "Landroidx/compose/material3/NavigationRailItemColors;" +
+                    "Landroidx/compose/foundation/interaction/MutableInteractionSource;" +
+                    "Landroidx/compose/runtime/Composer;II)V",
+        Defaults  = typeof(NavigationRailItemDefault))]
+    public static partial void NavigationRailItem(
         bool        selected,
         IFunction0  onClick,
         IFunction2  icon,
         IModifier?  modifier,
         IFunction2? label,
         int         defaults,
-        IComposer   composer)
-    {
-        if (s_navRailItemClass == IntPtr.Zero)
-        {
-            s_navRailItemClass  = JNIEnv.FindClass("androidx/compose/material3/NavigationRailKt");
-            s_navRailItemMethod = JNIEnv.GetStaticMethodID(s_navRailItemClass, "NavigationRailItem", NavigationRailItemSig);
-        }
+        IComposer   composer);
 
-        JValue* args = stackalloc JValue[12];
-        args[0]  = new JValue(selected);
-        args[1]  = new JValue(((Java.Lang.Object)onClick).Handle);
-        args[2]  = new JValue(((Java.Lang.Object)icon).Handle);
-        args[3]  = new JValue(ModifierHandle(modifier)); // modifier
-        args[4]  = new JValue(true);        // enabled
-        args[5]  = new JValue(label is null ? IntPtr.Zero : ((Java.Lang.Object)label).Handle);
-        args[6]  = new JValue(true);        // alwaysShowLabel
-        args[7]  = new JValue(IntPtr.Zero); // colors
-        args[8]  = new JValue(IntPtr.Zero); // interactionSource
-        args[9]  = new JValue(((Java.Lang.Object)composer).Handle);
-        args[10] = new JValue(0);
-        args[11] = new JValue(defaults);
-        try
-        {
-            JNIEnv.CallStaticVoidMethod(s_navRailItemClass, s_navRailItemMethod, args);
-        }
-        finally
-        {
-            GC.KeepAlive(onClick);
-            GC.KeepAlive(icon);
-            GC.KeepAlive(modifier);
-            GC.KeepAlive(label);
-            GC.KeepAlive(composer);
-        }
-    }
+    // ---- Drawer sheets (3 variants share the same DrawerSheetDefault enum + signature) ----
+    const string DrawerSheetSig =
+        "(Landroidx/compose/ui/Modifier;Landroidx/compose/ui/graphics/Shape;JJF" +
+        "Landroidx/compose/foundation/layout/WindowInsets;" +
+        "Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;II)V";
+
+    [ComposeBridge(
+        Class     = "androidx/compose/material3/NavigationDrawerKt",
+        JvmName   = "ModalDrawerSheet-afqeVBk",
+        Signature = DrawerSheetSig,
+        Defaults  = typeof(DrawerSheetDefault))]
+    public static partial void ModalDrawerSheet(IFunction3 content, long drawerContainerColor, IComposer composer);
+
+    [ComposeBridge(
+        Class     = "androidx/compose/material3/NavigationDrawerKt",
+        JvmName   = "DismissibleDrawerSheet-afqeVBk",
+        Signature = DrawerSheetSig,
+        Defaults  = typeof(DrawerSheetDefault))]
+    public static partial void DismissibleDrawerSheet(IFunction3 content, long drawerContainerColor, IComposer composer);
+
+    [ComposeBridge(
+        Class     = "androidx/compose/material3/NavigationDrawerKt",
+        JvmName   = "PermanentDrawerSheet-afqeVBk",
+        Signature = DrawerSheetSig,
+        Defaults  = typeof(DrawerSheetDefault))]
+    public static partial void PermanentDrawerSheet(IFunction3 content, long drawerContainerColor, IComposer composer);
 }

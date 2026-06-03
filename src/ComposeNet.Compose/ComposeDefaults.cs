@@ -213,3 +213,29 @@ using ComposeNet;
 [assembly: ComposeDefaults("NavigationRailItemDefault",
     "!selected", "!onClick", "!icon", "modifier", "enabled", "label",
     "alwaysShowLabel", "colors", "interactionSource")]
+
+// ---- State-holder bridges ----
+// These return IntPtr (the cached state object) instead of Unit. The
+// $default bitmask encodes which optional params the C# wrapper omits.
+
+// androidx.compose.material3.DatePickerKt.rememberDatePickerState-EU0dCGE:
+// 5 user params, all defaulted by the wrapper (which exposes none).
+[assembly: ComposeDefaults("RememberDatePickerStateDefault",
+    "initialSelectedDateMillis", "initialDisplayedMonthMillis", "yearRange",
+    "initialDisplayMode", "selectableDates")]
+
+// androidx.compose.material3.TimePickerKt.rememberTimePickerState:
+// 3 user params, all always provided by the wrapper.
+[assembly: ComposeDefaults("RememberTimePickerStateDefault",
+    "!initialHour", "!initialMinute", "!is24Hour")]
+
+// androidx.compose.material3.TooltipKt.rememberTooltipState:
+// 3 user params; `isPersistent` always provided, the other two
+// (`initialIsVisible`, `mutatorMutex`) are defaulted.
+[assembly: ComposeDefaults("RememberTooltipStateDefault",
+    "initialIsVisible", "!isPersistent", "mutatorMutex")]
+
+// androidx.compose.material3.TooltipDefaults.rememberPlainTooltipPositionProvider-kHDZbjc:
+// 1 user param (`spacing`), defaulted by the wrapper.
+[assembly: ComposeDefaults("RememberPlainTooltipPositionProviderDefault",
+    "spacing")]
