@@ -1,3 +1,4 @@
+using System.Numerics;
 using AndroidX.Compose.Runtime;
 
 namespace ComposeNet;
@@ -23,6 +24,12 @@ public class MutableState<T>
         get => FromJava(_state.Value);
         set => _state.Value = ToJava(value);
     }
+
+    /// <summary>
+    /// Returns the underlying value's string representation so
+    /// <c>$"...{state}..."</c> interpolation reads as Kotlin would.
+    /// </summary>
+    public override string ToString() => Value?.ToString() ?? string.Empty;
 
     static Java.Lang.Object? ToJava(T value) => value switch
     {
@@ -55,22 +62,20 @@ public class MutableState<T>
 }
 
 /// <summary>
-/// Int-specialized mutable state. Adds <c>implicit operator int</c> and
-/// <c>operator ++/--</c> so user code reads almost identically to Kotlin:
+/// Numeric-specialized mutable state. Adds <c>operator ++/--</c> so user
+/// code reads almost identically to Kotlin:
 /// <code>
-/// var count = Remember(() => new MutableIntState(0));
-/// count++;                  // mutates
-/// Text($"Count: {count}");  // implicitly converts to int
+/// var count = Remember(() => new MutableNumberState&lt;int&gt;(0));
+/// count++;                  // mutates the underlying value
+/// Text($"Count: {count}");  // ToString() forwards to Value
 /// </code>
+/// Works for any <see cref="INumber{TSelf}"/> — <c>int</c>, <c>long</c>,
+/// <c>float</c>, <c>double</c>, etc.
 /// </summary>
-public sealed class MutableIntState : MutableState<int>
+public class MutableNumberState<T> : MutableState<T> where T : INumber<T>
 {
-    public MutableIntState(int initial) : base(initial) { }
+    public MutableNumberState(T initial) : base(initial) { }
 
-    public static implicit operator int(MutableIntState s) => s.Value;
-
-    public static MutableIntState operator ++(MutableIntState s) { s.Value++; return s; }
-    public static MutableIntState operator --(MutableIntState s) { s.Value--; return s; }
-
-    public override string ToString() => Value.ToString();
+    public static MutableNumberState<T> operator ++(MutableNumberState<T> s) { s.Value++; return s; }
+    public static MutableNumberState<T> operator --(MutableNumberState<T> s) { s.Value--; return s; }
 }

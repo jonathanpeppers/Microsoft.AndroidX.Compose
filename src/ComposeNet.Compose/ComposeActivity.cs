@@ -19,7 +19,7 @@ namespace ComposeNet;
 /// {
 ///     base.OnCreate(state);
 ///     SetContent(() => {
-///         var count = Remember(() => new MutableIntState(0));
+///         var count = Remember(() => new MutableNumberState&lt;int&gt;(0));
 ///         return new MaterialTheme {
 ///             new Column {
 ///                 new Text($"Count: {count}"),
@@ -48,7 +48,7 @@ public abstract class ComposeActivity : ComponentActivity
     /// Returns the value of <paramref name="factory"/> the first time
     /// this call-site is reached, then the cached value on subsequent
     /// recompositions. Use to create <see cref="MutableState{T}"/> /
-    /// <see cref="MutableIntState"/> instances at the top of a
+    /// <see cref="MutableNumberState{T}"/> instances at the top of a
     /// <see cref="SetContent"/> lambda.
     /// </summary>
     protected T Remember<T>(System.Func<T> factory, [CallerLineNumber] int key = 0)
