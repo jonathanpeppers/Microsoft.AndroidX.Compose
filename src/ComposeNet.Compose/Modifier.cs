@@ -1,3 +1,4 @@
+using Android.Graphics;
 using Android.Runtime;
 using AndroidX.Compose.UI;
 using Java.Interop;
@@ -42,9 +43,10 @@ namespace ComposeNet;
 ///
 /// Phase 1 ships <see cref="Padding(int)"/>, the horizontal/vertical
 /// + per-edge overloads, and <see cref="FillMaxWidth"/> /
-/// <see cref="FillMaxHeight"/> / <see cref="FillMaxSize"/>. Background,
-/// border, clip, clickable, and gesture modifiers land in later
-/// phases (issue #21).
+/// <see cref="FillMaxHeight"/> / <see cref="FillMaxSize"/>. Phase 2
+/// adds <see cref="Background"/>, <see cref="Border"/>,
+/// <see cref="Clip"/>, and <see cref="Clickable"/>. Gesture and
+/// size-constraint modifiers land in later phases (issue #21).
 /// </summary>
 public sealed class Modifier
 {
@@ -167,6 +169,85 @@ public sealed class Modifier
     /// </summary>
     public Modifier SystemBarsPadding() =>
         Append(h => ComposeBridges.ModifierSystemBarsPadding(h));
+
+    /// <summary>
+    /// <c>Modifier.background(color)</c> — paints a flat fill behind the
+    /// composable using a <c>RectangleShape</c>. Takes an
+    /// <see cref="Android.Graphics.Color"/>; use one of the named
+    /// constants (<c>Color.Blue</c>, <c>Color.Transparent</c>, …) or
+    /// <c>Color.Argb(a, r, g, b)</c> / <c>Color.ParseColor("#…")</c>.
+    /// (Temporary: should be <c>androidx.compose.ui.graphics.Color</c>
+    /// once dotnet/android-libraries#1437 lands.)
+    /// </summary>
+    public Modifier Background(Color color)
+    {
+        long packed = PackComposeColor(color);
+        return Append(curr => ComposeBridges.ModifierBackground(curr, packed));
+    }
+
+    /// <summary>
+    /// <c>Modifier.border(width, color, shape)</c> — draws a stroke
+    /// around the composable. <paramref name="widthDp"/> is the stroke
+    /// width in density-independent pixels.
+    /// <paramref name="cornerRadiusDp"/> defaults to <c>0</c> for a
+    /// rectangular stroke; pass a positive value to match a
+    /// <see cref="Clip(int)"/> earlier in the chain so the corners
+    /// align (otherwise the rectangular stroke gets sliced by a rounded
+    /// clip and you see jagged corner stubs).
+    /// </summary>
+    public Modifier Border(int widthDp, Color color, int cornerRadiusDp = 0)
+    {
+        var width   = (float)widthDp;
+        long packed = PackComposeColor(color);
+        if (cornerRadiusDp <= 0)
+            return Append(curr => ComposeBridges.ModifierBorder(curr, width, packed, null));
+
+        var radius = (float)cornerRadiusDp;
+        return Append(curr =>
+        {
+            IntPtr shape = ComposeBridges.RoundedCornerShape(radius);
+            try
+            {
+                return ComposeBridges.ModifierBorder(curr, width, packed, shape);
+            }
+            finally
+            {
+                if (shape != IntPtr.Zero)
+                    JNIEnv.DeleteLocalRef(shape);
+            }
+        });
+    }
+
+    // Pack an Android.Graphics.Color into the 64-bit value Kotlin's
+    // @JvmInline value class Color(val value: ULong) uses: ARGB int in
+    // the upper 32 bits, sRGB color-space id (0) in the lower 32 bits.
+    static long PackComposeColor(Color color) =>
+        unchecked((long)((ulong)(uint)color.ToArgb() << 32));
+
+    /// <summary>
+    /// <c>Modifier.clip(RoundedCornerShape(<paramref name="cornerRadiusDp"/>))</c> —
+    /// rounds the four corners by the same radius and clips drawing to the
+    /// resulting shape. Pass <c>0</c> for no rounding (rectangle clip).
+    /// </summary>
+    public Modifier Clip(int cornerRadiusDp)
+    {
+        var dp = (float)cornerRadiusDp;
+        return Append(curr => ComposeBridges.ModifierClipRoundedCorners(curr, dp));
+    }
+
+    /// <summary>
+    /// <c>Modifier.clickable { onClick() }</c> — handles taps with the
+    /// default Material indication / ripple. The click handler runs on
+    /// the UI thread.
+    /// </summary>
+    public Modifier Clickable(System.Action onClick)
+    {
+        if (onClick is null)
+            throw new System.ArgumentNullException(nameof(onClick));
+
+        var lambda = new ComposableLambda0(onClick);
+        return Append(curr => ComposeBridges.ModifierClickable(curr, lambda));
+    }
 
     /// <summary>
     /// Materialize the chain into a managed <c>IModifier</c> wrapper.

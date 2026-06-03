@@ -1,3 +1,4 @@
+using Android.Graphics;
 using Android.OS;
 using AndroidX.Compose.Material3;
 using ComposeNet;
@@ -93,6 +94,17 @@ public class MainActivity : ComposeActivity
                             new Text("Hello from .NET"),
                             new OutlinedTextField(name),
                             new Text($"Hi {(string.IsNullOrEmpty(name.Value) ? "stranger" : name.Value)}"),
+                            // Phase 2 modifier demo — clickable rounded chip painted with
+                            // Background + Border + Clip; tapping it increments the counter.
+                            new Text($"Phase 2 modifiers (tap me): {count}")
+                            {
+                                Modifier = Modifier.Companion
+                                    .Clip(12)
+                                    .Background(Color.Argb(0xFF, 0x19, 0x76, 0xD2))
+                                    .Border(2, Color.Argb(0xFF, 0x0D, 0x47, 0xA1), cornerRadiusDp: 12)
+                                    .Clickable(() => count++)
+                                    .Padding(horizontalDp: 16, verticalDp: 8),
+                            },
                         },
                         1 => new Column
                         {
