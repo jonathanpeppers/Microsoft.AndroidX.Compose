@@ -27,35 +27,50 @@ public class MutableState<T>
 
     /// <summary>
     /// Returns the underlying value's string representation so
-    /// <c>$"...{state}..."</c> interpolation reads as Kotlin would.
+    /// <c>$"...{state}..."</c> interpolation reads as Kotlin would
+    /// (a null value renders as <c>"null"</c>).
     /// </summary>
-    public override string ToString() => Value?.ToString() ?? string.Empty;
+    public override string ToString() => Value?.ToString() ?? "null";
 
     static Java.Lang.Object? ToJava(T value) => value switch
     {
         null                  => null,
         Java.Lang.Object o    => o,
         string s              => new Java.Lang.String(s),
-        int i                 => Java.Lang.Integer.ValueOf(i),
-        long l                => Java.Lang.Long.ValueOf(l),
         bool b                => Java.Lang.Boolean.ValueOf(b),
-        double d              => Java.Lang.Double.ValueOf(d),
+        char c                => Java.Lang.Character.ValueOf(c),
+        sbyte sb              => Java.Lang.Byte.ValueOf(sb),
+        byte by               => Java.Lang.Short.ValueOf((short)by),                  // widen 8u -> 16s
+        short sh              => Java.Lang.Short.ValueOf(sh),
+        ushort us             => Java.Lang.Integer.ValueOf(us),                       // widen 16u -> 32s
+        int i                 => Java.Lang.Integer.ValueOf(i),
+        uint ui               => Java.Lang.Long.ValueOf(ui),                          // widen 32u -> 64s
+        long l                => Java.Lang.Long.ValueOf(l),
+        ulong ul              => Java.Lang.Long.ValueOf(unchecked((long)ul)),         // bit-exact round-trip
         float f               => Java.Lang.Float.ValueOf(f),
+        double d              => Java.Lang.Double.ValueOf(d),
         _                     => throw new System.NotSupportedException(
-                                    $"MutableState<{typeof(T).Name}>: provide a Java.Lang.Object-derived T or use a primitive overload.")
+                                    $"MutableState<{typeof(T).Name}>: T must be a Java.Lang.Object subclass, string, bool, char, or a built-in numeric primitive (sbyte/byte/short/ushort/int/uint/long/ulong/float/double). Types like decimal, Half, BigInteger, and IntPtr have no clean Java box and are not supported.")
     };
 
     static T FromJava(Java.Lang.Object? value)
     {
         if (value is null) return default!;
         if (value is T t) return t;
-        // common boxed-primitive unwraps
-        if (typeof(T) == typeof(int))    return (T)(object)((Java.Lang.Integer)value).IntValue();
-        if (typeof(T) == typeof(long))   return (T)(object)((Java.Lang.Long)value).LongValue();
-        if (typeof(T) == typeof(bool))   return (T)(object)((Java.Lang.Boolean)value).BooleanValue();
-        if (typeof(T) == typeof(double)) return (T)(object)((Java.Lang.Double)value).DoubleValue();
-        if (typeof(T) == typeof(float))  return (T)(object)((Java.Lang.Float)value).FloatValue();
-        if (typeof(T) == typeof(string)) return (T)(object)value.ToString()!;
+        var type = typeof(T);
+        if (type == typeof(string))  return (T)(object)value.ToString()!;
+        if (type == typeof(bool))    return (T)(object)((Java.Lang.Boolean)value).BooleanValue();
+        if (type == typeof(char))    return (T)(object)((Java.Lang.Character)value).CharValue();
+        if (type == typeof(sbyte))   return (T)(object)((Java.Lang.Byte)value).ByteValue();
+        if (type == typeof(byte))    return (T)(object)(byte)((Java.Lang.Short)value).ShortValue();
+        if (type == typeof(short))   return (T)(object)((Java.Lang.Short)value).ShortValue();
+        if (type == typeof(ushort))  return (T)(object)(ushort)((Java.Lang.Integer)value).IntValue();
+        if (type == typeof(int))     return (T)(object)((Java.Lang.Integer)value).IntValue();
+        if (type == typeof(uint))    return (T)(object)(uint)((Java.Lang.Long)value).LongValue();
+        if (type == typeof(long))    return (T)(object)((Java.Lang.Long)value).LongValue();
+        if (type == typeof(ulong))   return (T)(object)unchecked((ulong)((Java.Lang.Long)value).LongValue());
+        if (type == typeof(float))   return (T)(object)((Java.Lang.Float)value).FloatValue();
+        if (type == typeof(double))  return (T)(object)((Java.Lang.Double)value).DoubleValue();
         throw new System.NotSupportedException(
             $"MutableState<{typeof(T).Name}>: don't know how to unwrap {value.GetType().Name}");
     }
@@ -69,8 +84,14 @@ public class MutableState<T>
 /// count++;                  // mutates the underlying value
 /// Text($"Count: {count}");  // ToString() forwards to Value
 /// </code>
-/// Works for any <see cref="INumber{TSelf}"/> — <c>int</c>, <c>long</c>,
-/// <c>float</c>, <c>double</c>, etc.
+/// The class constraint is <see cref="INumber{TSelf}"/>, but <typeparamref name="T"/>
+/// must also be a built-in numeric primitive that <see cref="MutableState{T}"/>
+/// knows how to box for the JVM: <c>sbyte</c>, <c>byte</c>, <c>short</c>,
+/// <c>ushort</c>, <c>int</c>, <c>uint</c>, <c>long</c>, <c>ulong</c>,
+/// <c>float</c>, or <c>double</c>. Other <see cref="INumber{TSelf}"/>
+/// implementations (<c>decimal</c>, <c>Half</c>, <c>BigInteger</c>,
+/// <c>nint</c>, <c>nuint</c>) compile but throw at construction because
+/// they have no clean Java box.
 /// </summary>
 public class MutableNumberState<T> : MutableState<T> where T : INumber<T>
 {

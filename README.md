@@ -339,8 +339,11 @@ directly. So the Kotlin idiom `var count by remember {
 mutableStateOf(0) } ; count++` becomes
 `var count = Remember(() => new MutableNumberState<int>(0)) ; count++` —
 character-for-character equivalent after substituting Kotlin keywords
-for C# ones, and it generalizes to `long`, `float`, `double`, … for
-free.
+for C# ones. It works for any built-in numeric primitive
+(`sbyte`/`byte`/`short`/`ushort`/`int`/`uint`/`long`/`ulong`/`float`/`double`).
+Other `INumber<T>` implementations (`decimal`, `Half`, `BigInteger`,
+`nint`, `nuint`) compile but throw at construction since they have no
+clean Java box.
 
 ### The `$default` bitmask source generator
 

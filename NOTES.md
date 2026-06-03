@@ -470,8 +470,13 @@ public class MutableNumberState<T> : MutableState<T> where T : INumber<T>
 
 Result:
 - `$"Count: {count}"` interpolates via the base `ToString()` override
-- `count++` mutates via the overloaded operator (works for any
-  `INumber<T>` — `int`, `long`, `float`, `double`, …)
+  (which renders `null` as the literal `"null"`, matching Kotlin)
+- `count++` mutates via the overloaded operator. The class is
+  constrained to `INumber<T>`, but `MutableState<T>` only boxes the
+  built-in numeric primitives
+  (`sbyte`/`byte`/`short`/`ushort`/`int`/`uint`/`long`/`ulong`/`float`/`double`);
+  `decimal`, `Half`, `BigInteger`, `nint`, and `nuint` compile but
+  throw at construction since they have no clean Java box.
 - `count.Value` is still available for explicit `set` (e.g.
   `count.Value = 42`)
 
@@ -479,7 +484,7 @@ C# *cannot* express `implicit operator T` on `MutableState<T>` (CS0553
 forbids user-defined conversions involving an enclosing type's own
 type parameter), but the `ToString()` route is good enough — string
 interpolation and `Text(...)` callsites both go through it. The only
-thing you give up vs. a hand-rolled `MutableIntState` is using `count`
+thing you give up vs. an int-only specialization is using `count`
 directly in arithmetic without `.Value`, which is rare in idiomatic
 Compose code.
 
