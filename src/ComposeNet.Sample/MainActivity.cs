@@ -38,11 +38,6 @@ public class MainActivity : ComposeActivity
                     new IconButton(onClick: () => count--) { new Text("−") },
                     new OutlinedTextField(name),
                     new Text($"Hi {(string.IsNullOrEmpty(name.Value) ? "stranger" : name.Value)}"),
-                    new Card
-                    {
-                        new Text("Inside a Card"),
-                        new Text($"Counter snapshot: {count}"),
-                    },
                 },
                 1 => new Column
                 {
@@ -51,13 +46,25 @@ public class MainActivity : ComposeActivity
                     {
                         Label = new Text("Assist (+1)"),
                     },
+                    new ElevatedAssistChip(onClick: () => count++)
+                    {
+                        Label = new Text("Elevated assist (+1)"),
+                    },
                     new FilterChip(selected: liked.Value, onClick: () => liked.Value = !liked.Value)
                     {
                         Label = new Text(liked.Value ? "Liked" : "Like"),
                     },
+                    new ElevatedFilterChip(selected: liked.Value, onClick: () => liked.Value = !liked.Value)
+                    {
+                        Label = new Text(liked.Value ? "Elevated liked" : "Elevated like"),
+                    },
                     new SuggestionChip(onClick: () => count.Value = 0)
                     {
                         Label = new Text("Reset"),
+                    },
+                    new ElevatedSuggestionChip(onClick: () => count.Value = 0)
+                    {
+                        Label = new Text("Elevated reset"),
                     },
                     new Tooltip
                     {
@@ -67,6 +74,56 @@ public class MainActivity : ComposeActivity
                     new FloatingActionButton(onClick: () => showAlert.Value = true)
                     {
                         new Text("✕"),
+                    },
+                },
+                2 => new Column
+                {
+                    new Text("Card variants"),
+                    new Card
+                    {
+                        new Text("Card (tonal)"),
+                        new Text($"Counter snapshot: {count}"),
+                    },
+                    new ElevatedCard
+                    {
+                        new Text("ElevatedCard (shadow)"),
+                        new Text($"Counter snapshot: {count}"),
+                    },
+                    new OutlinedCard
+                    {
+                        new Text("OutlinedCard (border)"),
+                        new Text($"Counter snapshot: {count}"),
+                    },
+                },
+                3 => new Column
+                {
+                    new Text("Navigation drawer sheets"),
+                    new PermanentNavigationDrawer
+                    {
+                        Drawer = new PermanentDrawerSheet
+                        {
+                            new Text("Permanent drawer"),
+                            new Text("• Inbox"),
+                            new Text("• Sent"),
+                            new Text("• Drafts"),
+                        },
+                        Content = new Column
+                        {
+                            new Text("Main content"),
+                            new Text($"Count: {count}"),
+                            new Button(onClick: () => count++) { new Text("+1") },
+                        },
+                    },
+                    new Text("Standalone drawer sheets:"),
+                    new ModalDrawerSheet
+                    {
+                        new Text("ModalDrawerSheet"),
+                        new Text("(usually inside ModalNavigationDrawer)"),
+                    },
+                    new DismissibleDrawerSheet
+                    {
+                        new Text("DismissibleDrawerSheet"),
+                        new Text("(usually inside DismissibleNavigationDrawer)"),
                     },
                 },
                 _ => new Column
@@ -102,6 +159,16 @@ public class MainActivity : ComposeActivity
                                 Label = new Text("Buttons"),
                             },
                             new NavigationBarItem(selected: tab.Value == 2, onClick: () => tab.Value = 2)
+                            {
+                                Icon  = new Text("🃏"),
+                                Label = new Text("Cards"),
+                            },
+                            new NavigationBarItem(selected: tab.Value == 3, onClick: () => tab.Value = 3)
+                            {
+                                Icon  = new Text("📂"),
+                                Label = new Text("Drawer"),
+                            },
+                            new NavigationBarItem(selected: tab.Value == 4, onClick: () => tab.Value = 4)
                             {
                                 Icon  = new Text("📅"),
                                 Label = new Text("Pickers"),

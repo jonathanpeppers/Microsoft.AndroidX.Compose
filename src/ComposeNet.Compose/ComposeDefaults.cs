@@ -140,9 +140,23 @@ using ComposeNet;
     "interactionSource", "shape", "colors")]
 
 // androidx.compose.material3.CardKt.Card (non-clickable): 6 user params,
-// bit 5 = content provided.
+// bit 5 = content provided. Also reused by OutlinedCard — it takes the
+// same 6 params in the same order.
 [assembly: ComposeDefaults("CardDefault",
     "modifier", "shape", "colors", "elevation", "border", "!content")]
+
+// androidx.compose.material3.CardKt.ElevatedCard (non-clickable): 5 user
+// params (no border) — bit 4 = content provided.
+[assembly: ComposeDefaults("ElevatedCardDefault",
+    "modifier", "shape", "colors", "elevation", "!content")]
+
+// androidx.compose.material3.NavigationDrawerKt.{Modal,Dismissible,Permanent}DrawerSheet-afqeVBk:
+// all three have identical 7-param signatures (modifier, shape,
+// drawerContainerColor, drawerContentColor, tonalElevation, windowInsets,
+// content). Bit 6 (content) always provided.
+[assembly: ComposeDefaults("DrawerSheetDefault",
+    "modifier", "shape", "drawerContainerColor", "drawerContentColor",
+    "tonalElevation", "windowInsets", "!content")]
 
 // androidx.compose.material3.ChipKt.AssistChip: 11 user params,
 // bit 0 = onClick, bit 1 = label (both always provided).
