@@ -509,6 +509,70 @@ internal static class ComposeBridges
         }
     }
 
+    // androidx.compose.material3.ScaffoldKt.Scaffold-TvnljyQ(
+    //   modifier, topBar, bottomBar, snackbarHost, floatingActionButton,
+    //   floatingActionButtonPosition, containerColor, contentColor,
+    //   contentWindowInsets, content, composer, $changed, $default)
+    //
+    // 10 user params; only bit 9 (content) is always provided. The four
+    // optional Function2 slots (topBar, bottomBar, snackbarHost,
+    // floatingActionButton) are toggled per-call by Scaffold.Render.
+    const string ScaffoldSig =
+        "(Landroidx/compose/ui/Modifier;" +
+        "Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;" +
+        "Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;" +
+        "IJJ" +
+        "Landroidx/compose/foundation/layout/WindowInsets;" +
+        "Lkotlin/jvm/functions/Function3;" +
+        "Landroidx/compose/runtime/Composer;II)V";
+
+    static IntPtr s_scaffoldClass;
+    static IntPtr s_scaffoldMethod;
+
+    public static unsafe void Scaffold(
+        IFunction2? topBar,
+        IFunction2? bottomBar,
+        IFunction2? snackbarHost,
+        IFunction2? floatingActionButton,
+        IFunction3  content,
+        int         defaults,
+        IComposer   composer)
+    {
+        if (s_scaffoldClass == IntPtr.Zero)
+        {
+            s_scaffoldClass  = JNIEnv.FindClass("androidx/compose/material3/ScaffoldKt");
+            s_scaffoldMethod = JNIEnv.GetStaticMethodID(s_scaffoldClass, "Scaffold-TvnljyQ", ScaffoldSig);
+        }
+
+        JValue* args = stackalloc JValue[13];
+        args[0]  = new JValue(IntPtr.Zero); // modifier
+        args[1]  = new JValue(topBar               is null ? IntPtr.Zero : ((Java.Lang.Object)topBar).Handle);
+        args[2]  = new JValue(bottomBar            is null ? IntPtr.Zero : ((Java.Lang.Object)bottomBar).Handle);
+        args[3]  = new JValue(snackbarHost         is null ? IntPtr.Zero : ((Java.Lang.Object)snackbarHost).Handle);
+        args[4]  = new JValue(floatingActionButton is null ? IntPtr.Zero : ((Java.Lang.Object)floatingActionButton).Handle);
+        args[5]  = new JValue(0);           // floatingActionButtonPosition (FabPosition is an inline value class wrapping Int)
+        args[6]  = new JValue(0L);          // containerColor
+        args[7]  = new JValue(0L);          // contentColor
+        args[8]  = new JValue(IntPtr.Zero); // contentWindowInsets
+        args[9]  = new JValue(((Java.Lang.Object)content).Handle);
+        args[10] = new JValue(((Java.Lang.Object)composer).Handle);
+        args[11] = new JValue(0);           // $changed
+        args[12] = new JValue(defaults);    // $default
+        try
+        {
+            JNIEnv.CallStaticVoidMethod(s_scaffoldClass, s_scaffoldMethod, args);
+        }
+        finally
+        {
+            GC.KeepAlive(topBar);
+            GC.KeepAlive(bottomBar);
+            GC.KeepAlive(snackbarHost);
+            GC.KeepAlive(floatingActionButton);
+            GC.KeepAlive(content);
+            GC.KeepAlive(composer);
+        }
+    }
+
     // androidx.compose.material3.DatePickerDialog_androidKt.DatePickerDialog-GmEhDVc(
     //   onDismissRequest, confirmButton, modifier, dismissButton, shape,
     //   tonalElevation, colors, properties, content, composer, $changed, $default)

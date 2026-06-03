@@ -81,6 +81,15 @@ using ComposeNet;
     "containerColor", "contentColor", "tonalElevation", "scrimColor", "dragHandle",
     "windowInsets", "properties", "!content")]
 
+// androidx.compose.material3.ScaffoldKt.Scaffold-TvnljyQ:
+// 10 user params; bit 9 (content) always provided. Optional slot bits
+// 1 (topBar), 2 (bottomBar), 3 (snackbarHost), 4 (floatingActionButton)
+// are toggled per-call by Scaffold.Render.
+[assembly: ComposeDefaults("ScaffoldDefault",
+    "modifier", "topBar", "bottomBar", "snackbarHost", "floatingActionButton",
+    "floatingActionButtonPosition", "containerColor", "contentColor",
+    "contentWindowInsets", "!content")]
+
 // androidx.compose.material3.BottomSheetScaffoldKt.BottomSheetScaffold-sdMYb0k:
 // 17 user params; bits 0 (sheetContent), 2 (scaffoldState), 16 (content) always provided.
 [assembly: ComposeDefaults("BottomSheetScaffoldDefault",
