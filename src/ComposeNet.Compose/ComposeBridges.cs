@@ -70,6 +70,7 @@ internal static class ComposeBridges
         finally
         {
             JNIEnv.DeleteLocalRef(textRef);
+            GC.KeepAlive(composer);
         }
     }
 
@@ -112,7 +113,16 @@ internal static class ComposeBridges
         args[10] = new JValue(((Java.Lang.Object)composer).Handle);
         args[11] = new JValue(0);
         args[12] = new JValue(defaults);
-        JNIEnv.CallStaticVoidMethod(s_buttonClass, s_buttonMethod, args);
+        try
+        {
+            JNIEnv.CallStaticVoidMethod(s_buttonClass, s_buttonMethod, args);
+        }
+        finally
+        {
+            GC.KeepAlive(onClick);
+            GC.KeepAlive(content);
+            GC.KeepAlive(composer);
+        }
     }
 
     // androidx.compose.material3.IconButtonKt.IconButton(onClick, modifier,
@@ -144,7 +154,16 @@ internal static class ComposeBridges
         args[6] = new JValue(((Java.Lang.Object)composer).Handle);
         args[7] = new JValue(0);
         args[8] = new JValue((int)IconButtonDefault.All);
-        JNIEnv.CallStaticVoidMethod(s_iconButtonClass, s_iconButtonMethod, args);
+        try
+        {
+            JNIEnv.CallStaticVoidMethod(s_iconButtonClass, s_iconButtonMethod, args);
+        }
+        finally
+        {
+            GC.KeepAlive(onClick);
+            GC.KeepAlive(content);
+            GC.KeepAlive(composer);
+        }
     }
 
     // androidx.compose.material3.FloatingActionButtonKt.FloatingActionButton-X-z6DiA(
@@ -180,7 +199,16 @@ internal static class ComposeBridges
         args[8]  = new JValue(((Java.Lang.Object)composer).Handle);
         args[9]  = new JValue(0);
         args[10] = new JValue((int)FloatingActionButtonDefault.All);
-        JNIEnv.CallStaticVoidMethod(s_fabClass, s_fabMethod, args);
+        try
+        {
+            JNIEnv.CallStaticVoidMethod(s_fabClass, s_fabMethod, args);
+        }
+        finally
+        {
+            GC.KeepAlive(onClick);
+            GC.KeepAlive(content);
+            GC.KeepAlive(composer);
+        }
     }
 
     // androidx.compose.material3.SurfaceKt.Surface-T9BRK9s (non-interactive):
@@ -214,7 +242,15 @@ internal static class ComposeBridges
         args[8]  = new JValue(((Java.Lang.Object)composer).Handle);
         args[9]  = new JValue(0);
         args[10] = new JValue((int)SurfaceDefault.All);
-        JNIEnv.CallStaticVoidMethod(s_surfaceClass, s_surfaceMethod, args);
+        try
+        {
+            JNIEnv.CallStaticVoidMethod(s_surfaceClass, s_surfaceMethod, args);
+        }
+        finally
+        {
+            GC.KeepAlive(content);
+            GC.KeepAlive(composer);
+        }
     }
 
     // androidx.compose.material3.TextFieldKt.TextField (String overload):
@@ -321,7 +357,20 @@ internal static class ComposeBridges
         args[15] = new JValue(0);           // $changed
         args[16] = new JValue(0);           // $changed1
         args[17] = new JValue(defaults);    // $default
-        JNIEnv.CallStaticVoidMethod(s_alertDialogClass, s_alertDialogMethod, args);
+        try
+        {
+            JNIEnv.CallStaticVoidMethod(s_alertDialogClass, s_alertDialogMethod, args);
+        }
+        finally
+        {
+            GC.KeepAlive(onDismissRequest);
+            GC.KeepAlive(confirmButton);
+            GC.KeepAlive(dismissButton);
+            GC.KeepAlive(icon);
+            GC.KeepAlive(title);
+            GC.KeepAlive(text);
+            GC.KeepAlive(composer);
+        }
     }
 
     static unsafe void InvokeTextField(IntPtr cls, IntPtr method, string value, IFunction1 onValueChange, IComposer composer, int defaults)
@@ -363,6 +412,8 @@ internal static class ComposeBridges
         finally
         {
             JNIEnv.DeleteLocalRef(valueRef);
+            GC.KeepAlive(onValueChange);
+            GC.KeepAlive(composer);
         }
     }
 
@@ -397,7 +448,15 @@ internal static class ComposeBridges
         args[6] = new JValue(((Java.Lang.Object)composer).Handle);
         args[7] = new JValue(0);
         args[8] = new JValue((int)CardDefault.All);
-        JNIEnv.CallStaticVoidMethod(s_cardClass, s_cardMethod, args);
+        try
+        {
+            JNIEnv.CallStaticVoidMethod(s_cardClass, s_cardMethod, args);
+        }
+        finally
+        {
+            GC.KeepAlive(content);
+            GC.KeepAlive(composer);
+        }
     }
 
     // androidx.compose.material3.ChipKt.AssistChip:
@@ -449,7 +508,18 @@ internal static class ComposeBridges
         args[12] = new JValue(0);           // $changed
         args[13] = new JValue(0);           // $changed1
         args[14] = new JValue(defaults);    // $default
-        JNIEnv.CallStaticVoidMethod(s_assistChipClass, s_assistChipMethod, args);
+        try
+        {
+            JNIEnv.CallStaticVoidMethod(s_assistChipClass, s_assistChipMethod, args);
+        }
+        finally
+        {
+            GC.KeepAlive(onClick);
+            GC.KeepAlive(label);
+            GC.KeepAlive(leadingIcon);
+            GC.KeepAlive(trailingIcon);
+            GC.KeepAlive(composer);
+        }
     }
 
     // androidx.compose.material3.ChipKt.FilterChip:
@@ -503,7 +573,18 @@ internal static class ComposeBridges
         args[13] = new JValue(0);
         args[14] = new JValue(0);
         args[15] = new JValue(defaults);
-        JNIEnv.CallStaticVoidMethod(s_filterChipClass, s_filterChipMethod, args);
+        try
+        {
+            JNIEnv.CallStaticVoidMethod(s_filterChipClass, s_filterChipMethod, args);
+        }
+        finally
+        {
+            GC.KeepAlive(onClick);
+            GC.KeepAlive(label);
+            GC.KeepAlive(leadingIcon);
+            GC.KeepAlive(trailingIcon);
+            GC.KeepAlive(composer);
+        }
     }
 
     // androidx.compose.material3.ChipKt.InputChip:
@@ -559,7 +640,19 @@ internal static class ComposeBridges
         args[14] = new JValue(0);
         args[15] = new JValue(0);
         args[16] = new JValue(defaults);
-        JNIEnv.CallStaticVoidMethod(s_inputChipClass, s_inputChipMethod, args);
+        try
+        {
+            JNIEnv.CallStaticVoidMethod(s_inputChipClass, s_inputChipMethod, args);
+        }
+        finally
+        {
+            GC.KeepAlive(onClick);
+            GC.KeepAlive(label);
+            GC.KeepAlive(leadingIcon);
+            GC.KeepAlive(avatar);
+            GC.KeepAlive(trailingIcon);
+            GC.KeepAlive(composer);
+        }
     }
 
     // androidx.compose.material3.ChipKt.SuggestionChip:
@@ -605,7 +698,17 @@ internal static class ComposeBridges
         args[10] = new JValue(((Java.Lang.Object)composer).Handle);
         args[11] = new JValue(0);
         args[12] = new JValue(defaults);
-        JNIEnv.CallStaticVoidMethod(s_suggestionChipClass, s_suggestionChipMethod, args);
+        try
+        {
+            JNIEnv.CallStaticVoidMethod(s_suggestionChipClass, s_suggestionChipMethod, args);
+        }
+        finally
+        {
+            GC.KeepAlive(onClick);
+            GC.KeepAlive(label);
+            GC.KeepAlive(icon);
+            GC.KeepAlive(composer);
+        }
     }
 
     // androidx.compose.material3.NavigationBarKt.NavigationBar-HsRjFd4:
@@ -638,7 +741,15 @@ internal static class ComposeBridges
         args[6] = new JValue(((Java.Lang.Object)composer).Handle);
         args[7] = new JValue(0);
         args[8] = new JValue((int)NavigationBarDefault.All);
-        JNIEnv.CallStaticVoidMethod(s_navBarClass, s_navBarMethod, args);
+        try
+        {
+            JNIEnv.CallStaticVoidMethod(s_navBarClass, s_navBarMethod, args);
+        }
+        finally
+        {
+            GC.KeepAlive(content);
+            GC.KeepAlive(composer);
+        }
     }
 
     // androidx.compose.material3.NavigationBarKt.NavigationBarItem:
@@ -691,7 +802,17 @@ internal static class ComposeBridges
         args[10] = new JValue(((Java.Lang.Object)composer).Handle);
         args[11] = new JValue(0);
         args[12] = new JValue(defaults);
-        JNIEnv.CallStaticVoidMethod(s_navBarItemClass, s_navBarItemMethod, args);
+        try
+        {
+            JNIEnv.CallStaticVoidMethod(s_navBarItemClass, s_navBarItemMethod, args);
+        }
+        finally
+        {
+            GC.KeepAlive(onClick);
+            GC.KeepAlive(icon);
+            GC.KeepAlive(label);
+            GC.KeepAlive(composer);
+        }
     }
 
     // androidx.compose.material3.NavigationRailKt.NavigationRail-qi6gXK8:
@@ -726,7 +847,15 @@ internal static class ComposeBridges
         args[6] = new JValue(((Java.Lang.Object)composer).Handle);
         args[7] = new JValue(0);
         args[8] = new JValue((int)NavigationRailDefault.All);
-        JNIEnv.CallStaticVoidMethod(s_navRailClass, s_navRailMethod, args);
+        try
+        {
+            JNIEnv.CallStaticVoidMethod(s_navRailClass, s_navRailMethod, args);
+        }
+        finally
+        {
+            GC.KeepAlive(content);
+            GC.KeepAlive(composer);
+        }
     }
 
     // androidx.compose.material3.NavigationRailKt.NavigationRailItem:
@@ -773,6 +902,16 @@ internal static class ComposeBridges
         args[9]  = new JValue(((Java.Lang.Object)composer).Handle);
         args[10] = new JValue(0);
         args[11] = new JValue(defaults);
-        JNIEnv.CallStaticVoidMethod(s_navRailItemClass, s_navRailItemMethod, args);
+        try
+        {
+            JNIEnv.CallStaticVoidMethod(s_navRailItemClass, s_navRailItemMethod, args);
+        }
+        finally
+        {
+            GC.KeepAlive(onClick);
+            GC.KeepAlive(icon);
+            GC.KeepAlive(label);
+            GC.KeepAlive(composer);
+        }
     }
 }

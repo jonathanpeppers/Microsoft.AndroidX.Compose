@@ -122,6 +122,33 @@ Pattern, copied throughout the file:
    `try`/`finally` that calls `DeleteLocalRef`.
 6. Pass managed objects as `((Java.Lang.Object)obj).Handle`. Use
    `IntPtr.Zero` for `null`.
+7. **Always wrap `JNIEnv.CallStatic*Method` in `try { … } finally { … }`
+   and call `GC.KeepAlive(...)` on every managed parameter whose
+   `.Handle` was read into a `JValue` (lambdas, the composer, optional
+   slot wrappers — `null` is a no-op so unconditional `KeepAlive` on
+   nullable params is fine).** This matches what
+   `dotnet/java-interop` generates for bound members. Without it, the
+   JIT considers each managed wrapper dead the instant `.Handle` is
+   read, and a GC during the JNI call can finalize the wrapper and
+   invalidate the underlying handle. Combine with the `DeleteLocalRef`
+   `finally` for string args — one `try`/`finally` doing both is the
+   normal shape.
+
+Pattern:
+```csharp
+JValue* args = stackalloc JValue[N];
+// fill args ...
+try
+{
+    JNIEnv.CallStaticVoidMethod(s_cls, s_method, args);
+}
+finally
+{
+    GC.KeepAlive(onClick);
+    GC.KeepAlive(content);
+    GC.KeepAlive(composer);
+}
+```
 
 Keep these methods `internal` — user code never touches JNI directly.
 **Do not add new JNI bridges if the binding already exposes the
