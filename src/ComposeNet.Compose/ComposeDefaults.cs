@@ -74,6 +74,46 @@ using ComposeNet;
     "icon", "title", "text", "shape", "containerColor", "iconContentColor",
     "titleContentColor", "textContentColor", "tonalElevation", "properties")]
 
+// androidx.compose.material3.ModalBottomSheet_androidKt.ModalBottomSheet-dYc4hso:
+// 13 user params; bits 0 (onDismissRequest), 2 (sheetState), 12 (content) always provided.
+[assembly: ComposeDefaults("ModalBottomSheetDefault",
+    "!onDismissRequest", "modifier", "!sheetState", "sheetMaxWidth", "shape",
+    "containerColor", "contentColor", "tonalElevation", "scrimColor", "dragHandle",
+    "windowInsets", "properties", "!content")]
+
+// androidx.compose.material3.BottomSheetScaffoldKt.BottomSheetScaffold-sdMYb0k:
+// 17 user params; bits 0 (sheetContent), 2 (scaffoldState), 16 (content) always provided.
+[assembly: ComposeDefaults("BottomSheetScaffoldDefault",
+    "!sheetContent", "modifier", "!scaffoldState", "sheetPeekHeight", "sheetMaxWidth",
+    "sheetShape", "sheetContainerColor", "sheetContentColor", "sheetTonalElevation",
+    "sheetShadowElevation", "sheetDragHandle", "sheetSwipeEnabled", "topBar",
+    "snackbarHost", "containerColor", "contentColor", "!content")]
+
+// androidx.compose.material3.DatePickerDialog_androidKt.DatePickerDialog-GmEhDVc:
+// 9 user params; bits 0 (onDismissRequest), 1 (confirmButton), 8 (content) always provided.
+[assembly: ComposeDefaults("DatePickerDialogDefault",
+    "!onDismissRequest", "!confirmButton", "modifier", "dismissButton", "shape",
+    "tonalElevation", "colors", "properties", "!content")]
+
+// androidx.compose.material3.TimePickerKt.TimePicker-mT9BvqQ:
+// 4 user params; bit 0 (state) always provided.
+[assembly: ComposeDefaults("TimePickerDefault",
+    "!state", "modifier", "colors", "layoutType")]
+
+// androidx.compose.material3.TimePickerDialogKt.TimePickerDialog-FItCLgY:
+// 10 user params; bits 0 (onDismissRequest), 1 (confirmButton),
+// 2 (dismissButton), 9 (content) always provided.
+[assembly: ComposeDefaults("TimePickerDialogDefault",
+    "!onDismissRequest", "!confirmButton", "!dismissButton", "modifier", "properties",
+    "title", "modeToggleButton", "shape", "containerColor", "!content")]
+
+// androidx.compose.material3.TooltipKt.TooltipBox (7-param overload):
+// 7 user params; bits 0 (positionProvider), 1 (tooltip), 2 (state),
+// 6 (content) always provided.
+[assembly: ComposeDefaults("TooltipBoxDefault",
+    "!positionProvider", "!tooltip", "!state", "modifier", "focusable",
+    "enableUserInput", "!content")]
+
 // androidx.compose.material3.TextFieldKt.TextField (String overload) AND
 // OutlinedTextFieldKt.OutlinedTextField (String overload): 23 user params,
 // bit 0 = value, bit 1 = onValueChange (both provided).

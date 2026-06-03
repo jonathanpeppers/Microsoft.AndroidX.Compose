@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using AndroidX.Compose.Foundation.Layout;
 using AndroidX.Compose.Material3;
 using AndroidX.Compose.Runtime;
-
 namespace ComposeNet;
 
 // ---- Leaf: Text ----
@@ -609,3 +608,336 @@ public sealed class NavigationRailItem : ComposableNode
         ComposeBridges.NavigationRailItem(_selected, click, icon, label, defaults, composer);
     }
 }
+// ---- ModalBottomSheet ----
+
+/// <summary>
+/// Material 3 <c>ModalBottomSheet</c>. Opens a modal sheet anchored to
+/// the bottom of the screen.
+///
+/// The <c>SheetState</c> is created inside <see cref="Render"/> via
+/// <see cref="ModalBottomSheetKt.RememberModalBottomSheetState"/> — that
+/// builder is NOT stripped from the binding, so we call it directly on
+/// the bound C# method instead of going through JNI. Use the visibility
+/// pattern from <see cref="AlertDialog"/>: gate the entire instance on
+/// a <see cref="MutableState{T}"/> of <see cref="bool"/>.
+///
+/// <code>
+/// var show = Remember(() => new MutableState&lt;bool&gt;(false));
+/// show.Value
+///     ? new ModalBottomSheet(onDismissRequest: () =&gt; show.Value = false)
+///       {
+///           new Column { new Text("Sheet contents") },
+///       }
+///     : null
+/// </code>
+/// </summary>
+public sealed class ModalBottomSheet : ComposableContainer
+{
+    readonly System.Action _onDismissRequest;
+    public ModalBottomSheet(System.Action onDismissRequest) => _onDismissRequest = onDismissRequest;
+
+    /// <summary>Optional drag handle drawn at the top of the sheet.</summary>
+    public ComposableNode? DragHandle { get; set; }
+
+    internal override void Render(IComposer composer)
+    {
+        // Bound C# call — RememberModalBottomSheetState is NOT stripped.
+        // p3 is the (renamed) Composer parameter; _changed = 3 means bits
+        // 0 and 1 (skipPartiallyExpanded, confirmValueChange) are
+        // defaulted by Compose.
+        var sheetState = ModalBottomSheetKt.RememberModalBottomSheetState(
+            skipPartiallyExpanded: false,
+            confirmValueChange:    null,
+            _composer:             composer,
+            p3:                    0,
+            _changed:              3);
+
+        var onDismiss = new ComposableLambda0(_onDismissRequest);
+        var content   = new ComposableLambda3(c => RenderChildren(c));
+        ComposableLambda2? dragHandle = DragHandle is null ? null
+            : new ComposableLambda2(c => DragHandle.Render(c));
+
+        int defaults = (int)ModalBottomSheetDefault.All;
+        if (dragHandle is not null) defaults &= ~(int)ModalBottomSheetDefault.DragHandle;
+
+        ComposeBridges.ModalBottomSheet(
+            onDismissRequest: onDismiss,
+            sheetState:       ((Java.Lang.Object)sheetState).Handle,
+            dragHandle:       dragHandle,
+            content:          content,
+            defaults:         defaults,
+            composer:         composer);
+    }
+}
+
+// ---- BottomSheetScaffold ----
+
+/// <summary>
+/// Material 3 <c>BottomSheetScaffold</c>. Hosts a persistent bottom
+/// sheet alongside a primary content area, plus optional top bar and
+/// snackbar slots.
+///
+/// <see cref="BottomSheetScaffoldKt.RememberBottomSheetScaffoldState"/>
+/// is called directly on the C# binding (NOT stripped), threading the
+/// composer through.
+/// </summary>
+public sealed class BottomSheetScaffold : ComposableContainer
+{
+    /// <summary>Required: the persistent bottom-sheet content.</summary>
+    public ComposableNode? SheetContent { get; set; }
+
+    /// <summary>Optional: the sheet's drag handle.</summary>
+    public ComposableNode? SheetDragHandle { get; set; }
+
+    /// <summary>Optional: persistent top bar above the main content.</summary>
+    public ComposableNode? TopBar { get; set; }
+
+    internal override void Render(IComposer composer)
+    {
+        if (SheetContent is null)
+            throw new System.InvalidOperationException(
+                "BottomSheetScaffold.SheetContent is required.");
+
+        // Bound C# call — RememberBottomSheetScaffoldState is NOT stripped.
+        var scaffoldState = BottomSheetScaffoldKt.RememberBottomSheetScaffoldState(
+            bottomSheetState:   null,
+            snackbarHostState:  null,
+            _composer:          composer,
+            p3:                 0,
+            _changed:           3);
+
+        var sheet   = new ComposableLambda3(c => SheetContent.Render(c));
+        var content = new ComposableLambda3(c => RenderChildren(c));
+
+        ComposableLambda2? dragHandle = SheetDragHandle is null ? null
+            : new ComposableLambda2(c => SheetDragHandle.Render(c));
+        ComposableLambda2? topBar = TopBar is null ? null
+            : new ComposableLambda2(c => TopBar.Render(c));
+
+        int defaults = (int)BottomSheetScaffoldDefault.All;
+        if (dragHandle is not null) defaults &= ~(int)BottomSheetScaffoldDefault.SheetDragHandle;
+        if (topBar     is not null) defaults &= ~(int)BottomSheetScaffoldDefault.TopBar;
+
+        ComposeBridges.BottomSheetScaffold(
+            sheetContent:    sheet,
+            scaffoldState:   ((Java.Lang.Object)scaffoldState).Handle,
+            sheetDragHandle: dragHandle,
+            topBar:          topBar,
+            snackbarHost:    null,
+            content:         content,
+            defaults:        defaults,
+            composer:        composer);
+    }
+}
+
+// ---- DatePickerDialog ----
+
+/// <summary>
+/// Material 3 <c>DatePickerDialog</c>. The <c>DatePickerState</c>
+/// builder (<c>rememberDatePickerState-EU0dCGE</c>) is mangled and
+/// stripped from the binding, so we resolve it through JNI inside the
+/// <see cref="DatePicker"/> facade. Place a <see cref="DatePicker"/>
+/// (or any composable) inside <see cref="Body"/>.
+/// </summary>
+public sealed class DatePickerDialog : ComposableNode
+{
+    readonly System.Action _onDismissRequest;
+    public DatePickerDialog(System.Action onDismissRequest) => _onDismissRequest = onDismissRequest;
+
+    /// <summary>Required: the affirmative button (no Kotlin default).</summary>
+    public ComposableNode? ConfirmButton { get; set; }
+
+    /// <summary>Optional: secondary button.</summary>
+    public ComposableNode? DismissButton { get; set; }
+
+    /// <summary>Required: dialog body — typically a <see cref="DatePicker"/>.</summary>
+    public ComposableNode? Body { get; set; }
+
+    internal override void Render(IComposer composer)
+    {
+        if (ConfirmButton is null)
+            throw new System.InvalidOperationException(
+                "DatePickerDialog.ConfirmButton is required.");
+        if (Body is null)
+            throw new System.InvalidOperationException(
+                "DatePickerDialog.Body is required (the dialog's content slot).");
+
+        var onDismiss = new ComposableLambda0(_onDismissRequest);
+        var confirm   = new ComposableLambda2(c => ConfirmButton.Render(c));
+        var content   = new ComposableLambda3(c => Body.Render(c));
+        ComposableLambda2? dismiss = DismissButton is null ? null
+            : new ComposableLambda2(c => DismissButton.Render(c));
+
+        int defaults = (int)DatePickerDialogDefault.All;
+        if (dismiss is not null) defaults &= ~(int)DatePickerDialogDefault.DismissButton;
+
+        ComposeBridges.DatePickerDialog(
+            onDismissRequest: onDismiss,
+            confirmButton:    confirm,
+            dismissButton:    dismiss,
+            content:          content,
+            defaults:         defaults,
+            composer:         composer);
+    }
+}
+
+// ---- DatePicker (the inline picker control used inside DatePickerDialog) ----
+
+/// <summary>
+/// Material 3 <c>DatePicker</c>. The Kotlin <c>DatePickerKt.DatePicker</c>
+/// composable IS exposed by the binding, but its <c>$default</c> bitmask
+/// param isn't user-visible (the binding drops the trailing
+/// <c>$default</c> parameter on @Composable functions), so we go through
+/// raw JNI to set it. Place inside <see cref="DatePickerDialog"/>'s body.
+/// </summary>
+public sealed class DatePicker : ComposableNode
+{
+    internal override void Render(IComposer composer)
+    {
+        var stateHandle = ComposeBridges.RememberDatePickerState(composer);
+        ComposeBridges.DatePicker(stateHandle, composer);
+    }
+}
+
+// ---- TimePicker ----
+
+/// <summary>
+/// Material 3 <c>TimePicker</c>. Resolves <c>TimePickerState</c> via
+/// raw JNI (<c>rememberTimePickerState</c> takes a <see cref="IComposer"/>
+/// so it requires the composer-aware bridge).
+/// </summary>
+public sealed class TimePicker : ComposableNode
+{
+    readonly int  _initialHour;
+    readonly int  _initialMinute;
+    readonly bool _is24Hour;
+    public TimePicker(int initialHour = 12, int initialMinute = 0, bool is24Hour = true)
+    {
+        _initialHour   = initialHour;
+        _initialMinute = initialMinute;
+        _is24Hour      = is24Hour;
+    }
+
+    internal override void Render(IComposer composer)
+    {
+        var stateHandle = ComposeBridges.RememberTimePickerState(_initialHour, _initialMinute, _is24Hour, composer);
+        ComposeBridges.TimePicker(stateHandle, (int)TimePickerDefault.All, composer);
+    }
+}
+
+// ---- TimePickerDialog ----
+
+/// <summary>
+/// Material 3 <c>TimePickerDialog</c>. Both <c>ConfirmButton</c> and
+/// <c>DismissButton</c> are required by Compose; <see cref="Title"/>
+/// and <see cref="ModeToggleButton"/> are optional. Place a
+/// <see cref="TimePicker"/> in the body.
+/// </summary>
+public sealed class TimePickerDialog : ComposableNode
+{
+    readonly System.Action _onDismissRequest;
+    public TimePickerDialog(System.Action onDismissRequest) => _onDismissRequest = onDismissRequest;
+
+    public ComposableNode? ConfirmButton    { get; set; }
+    public ComposableNode? DismissButton    { get; set; }
+    public ComposableNode? Title            { get; set; }
+    public ComposableNode? ModeToggleButton { get; set; }
+    /// <summary>Required: dialog body — typically a <see cref="TimePicker"/>.</summary>
+    public ComposableNode? Body             { get; set; }
+
+    internal override void Render(IComposer composer)
+    {
+        if (ConfirmButton is null || DismissButton is null)
+            throw new System.InvalidOperationException(
+                "TimePickerDialog.ConfirmButton and DismissButton are both required.");
+        if (Body is null)
+            throw new System.InvalidOperationException(
+                "TimePickerDialog.Body is required (the dialog's content slot).");
+
+        var onDismiss = new ComposableLambda0(_onDismissRequest);
+        var confirm   = new ComposableLambda2(c => ConfirmButton.Render(c));
+        var dismiss   = new ComposableLambda2(c => DismissButton.Render(c));
+        var content   = new ComposableLambda3(c => Body.Render(c));
+        ComposableLambda2? title = Title is null ? null
+            : new ComposableLambda2(c => Title.Render(c));
+        ComposableLambda2? toggle = ModeToggleButton is null ? null
+            : new ComposableLambda2(c => ModeToggleButton.Render(c));
+
+        int defaults = (int)TimePickerDialogDefault.All;
+        if (title  is not null) defaults &= ~(int)TimePickerDialogDefault.Title;
+        if (toggle is not null) defaults &= ~(int)TimePickerDialogDefault.ModeToggleButton;
+
+        ComposeBridges.TimePickerDialog(
+            onDismissRequest: onDismiss,
+            confirmButton:    confirm,
+            dismissButton:    dismiss,
+            title:            title,
+            modeToggleButton: toggle,
+            content:          content,
+            defaults:         defaults,
+            composer:         composer);
+    }
+}
+
+// ---- Tooltip (TooltipBox + plain styled tooltip) ----
+
+/// <summary>
+/// Material 3 <c>TooltipBox</c> with a plain tooltip popup. The popup
+/// position provider comes from <c>TooltipDefaults.rememberPlainTooltipPositionProvider</c>;
+/// <c>TooltipState</c> from <c>rememberTooltipState</c>. Both are
+/// resolved via JNI inside <see cref="ComposeBridges"/>.
+///
+/// Use named-property syntax: <see cref="Tip"/> is the popup body shown
+/// on long-press / hover, <see cref="Anchor"/> is the always-visible
+/// content the popup attaches to.
+/// </summary>
+public sealed class Tooltip : ComposableNode
+{
+    readonly bool _isPersistent;
+    public Tooltip(bool isPersistent = false) => _isPersistent = isPersistent;
+
+    /// <summary>Required: the popup body shown on long-press / hover.</summary>
+    public ComposableNode? Tip { get; set; }
+
+    /// <summary>Required: the always-visible anchor the tooltip attaches to.</summary>
+    public ComposableNode? Anchor { get; set; }
+
+    internal override void Render(IComposer composer)
+    {
+        if (Tip is null || Anchor is null)
+            throw new System.InvalidOperationException(
+                "Tooltip requires both Tip (popup body) and Anchor (visible content).");
+
+        var positionProvider = ComposeBridges.RememberPlainTooltipPositionProvider(composer);
+        var stateHandle      = ComposeBridges.RememberTooltipState(_isPersistent, composer);
+
+        var tooltip = new ComposableLambda3(c => Tip.Render(c));
+        var anchor  = new ComposableLambda2(c => Anchor.Render(c));
+
+        ComposeBridges.TooltipBox(
+            positionProvider: positionProvider,
+            tooltip:          tooltip,
+            state:            stateHandle,
+            content:          anchor,
+            defaults:         (int)TooltipBoxDefault.All,
+            composer:         composer);
+    }
+}
+
+// ---- (BasicTooltip intentionally not bound) ----
+//
+// `androidx.compose.material3.internal.BasicTooltipKt.BasicTooltipBox`
+// is the foundation primitive that the public `TooltipBox` is built on
+// top of. There's no user-facing scenario where it's preferable to
+// `Tooltip` (the public wrapper we already bind), so it's skipped on
+// purpose for the same reason as `BasicEdgeToEdgeDialog`.
+
+// ---- (BasicEdgeToEdgeDialog intentionally not bound) ----
+//
+// `androidx.compose.material3.internal.BasicEdgeToEdgeDialog` is an
+// internal implementation primitive that upstream `Dialog`,
+// `AlertDialog`, `DatePickerDialog`, and `TimePickerDialog` are built
+// on top of. It draws content edge-to-edge with no scrim, no insets,
+// and no built-in dismiss handling — there is no user-facing scenario
+// where it's preferable to one of the public dialog wrappers we
+// already bind. Skipped on purpose.

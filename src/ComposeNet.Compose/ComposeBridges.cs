@@ -373,6 +373,519 @@ internal static class ComposeBridges
         }
     }
 
+    // androidx.compose.material3.ModalBottomSheet_androidKt.ModalBottomSheet-dYc4hso(
+    //   onDismissRequest, modifier, sheetState, sheetMaxWidth, shape,
+    //   containerColor, contentColor, tonalElevation, scrimColor, dragHandle,
+    //   windowInsets, properties, content, composer, $changed, $changed1, $default)
+    //
+    // 13 user params; bits 0 (onDismissRequest), 2 (sheetState), 12 (content)
+    // are always provided. dragHandle (bit 9) is the only optional slot.
+    const string ModalBottomSheetSig =
+        "(Lkotlin/jvm/functions/Function0;Landroidx/compose/ui/Modifier;" +
+        "Landroidx/compose/material3/SheetState;FLandroidx/compose/ui/graphics/Shape;JJFJ" +
+        "Lkotlin/jvm/functions/Function2;Landroidx/compose/foundation/layout/WindowInsets;" +
+        "Landroidx/compose/material3/ModalBottomSheetProperties;" +
+        "Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;III)V";
+
+    static IntPtr s_modalBottomSheetClass;
+    static IntPtr s_modalBottomSheetMethod;
+
+    public static unsafe void ModalBottomSheet(
+        IFunction0  onDismissRequest,
+        IntPtr      sheetState,
+        IFunction2? dragHandle,
+        IFunction3  content,
+        int         defaults,
+        IComposer   composer)
+    {
+        if (s_modalBottomSheetClass == IntPtr.Zero)
+        {
+            s_modalBottomSheetClass  = JNIEnv.FindClass("androidx/compose/material3/ModalBottomSheet_androidKt");
+            s_modalBottomSheetMethod = JNIEnv.GetStaticMethodID(s_modalBottomSheetClass, "ModalBottomSheet-dYc4hso", ModalBottomSheetSig);
+        }
+
+        JValue* args = stackalloc JValue[17];
+        args[0]  = new JValue(((Java.Lang.Object)onDismissRequest).Handle);
+        args[1]  = new JValue(IntPtr.Zero); // modifier
+        args[2]  = new JValue(sheetState);
+        args[3]  = new JValue(0f);          // sheetMaxWidth
+        args[4]  = new JValue(IntPtr.Zero); // shape
+        args[5]  = new JValue(0L);          // containerColor
+        args[6]  = new JValue(0L);          // contentColor
+        args[7]  = new JValue(0f);          // tonalElevation
+        args[8]  = new JValue(0L);          // scrimColor
+        args[9]  = new JValue(dragHandle is null ? IntPtr.Zero : ((Java.Lang.Object)dragHandle).Handle);
+        args[10] = new JValue(IntPtr.Zero); // windowInsets
+        args[11] = new JValue(IntPtr.Zero); // properties
+        args[12] = new JValue(((Java.Lang.Object)content).Handle);
+        args[13] = new JValue(((Java.Lang.Object)composer).Handle);
+        args[14] = new JValue(0);           // $changed
+        args[15] = new JValue(0);           // $changed1
+        args[16] = new JValue(defaults);    // $default
+        try
+        {
+            JNIEnv.CallStaticVoidMethod(s_modalBottomSheetClass, s_modalBottomSheetMethod, args);
+        }
+        finally
+        {
+            GC.KeepAlive(onDismissRequest);
+            GC.KeepAlive(dragHandle);
+            GC.KeepAlive(content);
+            GC.KeepAlive(composer);
+        }
+    }
+
+    // androidx.compose.material3.BottomSheetScaffoldKt.BottomSheetScaffold-sdMYb0k(
+    //   sheetContent, modifier, scaffoldState, sheetPeekHeight, sheetMaxWidth,
+    //   sheetShape, sheetContainerColor, sheetContentColor, sheetTonalElevation,
+    //   sheetShadowElevation, sheetDragHandle, sheetSwipeEnabled, topBar,
+    //   snackbarHost, containerColor, contentColor, content, composer,
+    //   $changed, $changed1, $default)
+    //
+    // 17 user params; provided bits: 0 (sheetContent), 2 (scaffoldState),
+    // 16 (content). Optional slots: 10 (sheetDragHandle), 12 (topBar),
+    // 13 (snackbarHost).
+    const string BottomSheetScaffoldSig =
+        "(Lkotlin/jvm/functions/Function3;Landroidx/compose/ui/Modifier;" +
+        "Landroidx/compose/material3/BottomSheetScaffoldState;FF" +
+        "Landroidx/compose/ui/graphics/Shape;JJFF" +
+        "Lkotlin/jvm/functions/Function2;Z" +
+        "Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function3;JJ" +
+        "Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;III)V";
+
+    static IntPtr s_bottomSheetScaffoldClass;
+    static IntPtr s_bottomSheetScaffoldMethod;
+
+    public static unsafe void BottomSheetScaffold(
+        IFunction3  sheetContent,
+        IntPtr      scaffoldState,
+        IFunction2? sheetDragHandle,
+        IFunction2? topBar,
+        IFunction3? snackbarHost,
+        IFunction3  content,
+        int         defaults,
+        IComposer   composer)
+    {
+        if (s_bottomSheetScaffoldClass == IntPtr.Zero)
+        {
+            s_bottomSheetScaffoldClass  = JNIEnv.FindClass("androidx/compose/material3/BottomSheetScaffoldKt");
+            s_bottomSheetScaffoldMethod = JNIEnv.GetStaticMethodID(s_bottomSheetScaffoldClass, "BottomSheetScaffold-sdMYb0k", BottomSheetScaffoldSig);
+        }
+
+        JValue* args = stackalloc JValue[21];
+        args[0]  = new JValue(((Java.Lang.Object)sheetContent).Handle);
+        args[1]  = new JValue(IntPtr.Zero); // modifier
+        args[2]  = new JValue(scaffoldState);
+        args[3]  = new JValue(0f);          // sheetPeekHeight
+        args[4]  = new JValue(0f);          // sheetMaxWidth
+        args[5]  = new JValue(IntPtr.Zero); // sheetShape
+        args[6]  = new JValue(0L);          // sheetContainerColor
+        args[7]  = new JValue(0L);          // sheetContentColor
+        args[8]  = new JValue(0f);          // sheetTonalElevation
+        args[9]  = new JValue(0f);          // sheetShadowElevation
+        args[10] = new JValue(sheetDragHandle is null ? IntPtr.Zero : ((Java.Lang.Object)sheetDragHandle).Handle);
+        args[11] = new JValue(true);        // sheetSwipeEnabled
+        args[12] = new JValue(topBar       is null ? IntPtr.Zero : ((Java.Lang.Object)topBar).Handle);
+        args[13] = new JValue(snackbarHost is null ? IntPtr.Zero : ((Java.Lang.Object)snackbarHost).Handle);
+        args[14] = new JValue(0L);          // containerColor
+        args[15] = new JValue(0L);          // contentColor
+        args[16] = new JValue(((Java.Lang.Object)content).Handle);
+        args[17] = new JValue(((Java.Lang.Object)composer).Handle);
+        args[18] = new JValue(0);           // $changed
+        args[19] = new JValue(0);           // $changed1
+        args[20] = new JValue(defaults);    // $default
+        try
+        {
+            JNIEnv.CallStaticVoidMethod(s_bottomSheetScaffoldClass, s_bottomSheetScaffoldMethod, args);
+        }
+        finally
+        {
+            GC.KeepAlive(sheetContent);
+            GC.KeepAlive(sheetDragHandle);
+            GC.KeepAlive(topBar);
+            GC.KeepAlive(snackbarHost);
+            GC.KeepAlive(content);
+            GC.KeepAlive(composer);
+        }
+    }
+
+    // androidx.compose.material3.DatePickerDialog_androidKt.DatePickerDialog-GmEhDVc(
+    //   onDismissRequest, confirmButton, modifier, dismissButton, shape,
+    //   tonalElevation, colors, properties, content, composer, $changed, $default)
+    //
+    // 9 user params; bits 0 (onDismissRequest), 1 (confirmButton),
+    // 8 (content) always provided. dismissButton (bit 3) is the only
+    // optional Function2 slot.
+    const string DatePickerDialogSig =
+        "(Lkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function2;" +
+        "Landroidx/compose/ui/Modifier;Lkotlin/jvm/functions/Function2;" +
+        "Landroidx/compose/ui/graphics/Shape;F" +
+        "Landroidx/compose/material3/DatePickerColors;" +
+        "Landroidx/compose/ui/window/DialogProperties;" +
+        "Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;II)V";
+
+    static IntPtr s_datePickerDialogClass;
+    static IntPtr s_datePickerDialogMethod;
+
+    public static unsafe void DatePickerDialog(
+        IFunction0  onDismissRequest,
+        IFunction2  confirmButton,
+        IFunction2? dismissButton,
+        IFunction3  content,
+        int         defaults,
+        IComposer   composer)
+    {
+        if (s_datePickerDialogClass == IntPtr.Zero)
+        {
+            s_datePickerDialogClass  = JNIEnv.FindClass("androidx/compose/material3/DatePickerDialog_androidKt");
+            s_datePickerDialogMethod = JNIEnv.GetStaticMethodID(s_datePickerDialogClass, "DatePickerDialog-GmEhDVc", DatePickerDialogSig);
+        }
+
+        JValue* args = stackalloc JValue[12];
+        args[0]  = new JValue(((Java.Lang.Object)onDismissRequest).Handle);
+        args[1]  = new JValue(((Java.Lang.Object)confirmButton).Handle);
+        args[2]  = new JValue(IntPtr.Zero); // modifier
+        args[3]  = new JValue(dismissButton is null ? IntPtr.Zero : ((Java.Lang.Object)dismissButton).Handle);
+        args[4]  = new JValue(IntPtr.Zero); // shape
+        args[5]  = new JValue(0f);          // tonalElevation
+        args[6]  = new JValue(IntPtr.Zero); // colors
+        args[7]  = new JValue(IntPtr.Zero); // properties
+        args[8]  = new JValue(((Java.Lang.Object)content).Handle);
+        args[9]  = new JValue(((Java.Lang.Object)composer).Handle);
+        args[10] = new JValue(0);           // $changed
+        args[11] = new JValue(defaults);    // $default
+        try
+        {
+            JNIEnv.CallStaticVoidMethod(s_datePickerDialogClass, s_datePickerDialogMethod, args);
+        }
+        finally
+        {
+            GC.KeepAlive(onDismissRequest);
+            GC.KeepAlive(confirmButton);
+            GC.KeepAlive(dismissButton);
+            GC.KeepAlive(content);
+            GC.KeepAlive(composer);
+        }
+    }
+
+    // androidx.compose.material3.TimePickerKt.TimePicker-mT9BvqQ(
+    //   state, modifier, colors, layoutType, composer, $changed, $default)
+    //
+    // 4 user params; bit 0 (state) always provided.
+    const string TimePickerSig =
+        "(Landroidx/compose/material3/TimePickerState;Landroidx/compose/ui/Modifier;" +
+        "Landroidx/compose/material3/TimePickerColors;ILandroidx/compose/runtime/Composer;II)V";
+
+    static IntPtr s_timePickerClass;
+    static IntPtr s_timePickerMethod;
+
+    public static unsafe void TimePicker(IntPtr state, int defaults, IComposer composer)
+    {
+        if (s_timePickerClass == IntPtr.Zero)
+        {
+            s_timePickerClass  = JNIEnv.FindClass("androidx/compose/material3/TimePickerKt");
+            s_timePickerMethod = JNIEnv.GetStaticMethodID(s_timePickerClass, "TimePicker-mT9BvqQ", TimePickerSig);
+        }
+
+        JValue* args = stackalloc JValue[7];
+        args[0] = new JValue(state);
+        args[1] = new JValue(IntPtr.Zero); // modifier
+        args[2] = new JValue(IntPtr.Zero); // colors
+        args[3] = new JValue(0);           // layoutType
+        args[4] = new JValue(((Java.Lang.Object)composer).Handle);
+        args[5] = new JValue(0);           // $changed
+        args[6] = new JValue(defaults);    // $default
+        try
+        {
+            JNIEnv.CallStaticVoidMethod(s_timePickerClass, s_timePickerMethod, args);
+        }
+        finally
+        {
+            GC.KeepAlive(composer);
+        }
+    }
+
+    // androidx.compose.material3.TimePickerDialogKt.TimePickerDialog-FItCLgY(
+    //   onDismissRequest, confirmButton, dismissButton, modifier, properties,
+    //   title, modeToggleButton, shape, containerColor, content, composer,
+    //   $changed, $default)
+    //
+    // 10 user params. confirmButton (bit 1), dismissButton (bit 2), and
+    // content (bit 9) are required slots. title (bit 5) and
+    // modeToggleButton (bit 6) are optional.
+    const string TimePickerDialogSig =
+        "(Lkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function2;" +
+        "Lkotlin/jvm/functions/Function2;Landroidx/compose/ui/Modifier;" +
+        "Landroidx/compose/ui/window/DialogProperties;" +
+        "Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;" +
+        "Landroidx/compose/ui/graphics/Shape;J" +
+        "Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;II)V";
+
+    static IntPtr s_timePickerDialogClass;
+    static IntPtr s_timePickerDialogMethod;
+
+    public static unsafe void TimePickerDialog(
+        IFunction0  onDismissRequest,
+        IFunction2  confirmButton,
+        IFunction2  dismissButton,
+        IFunction2? title,
+        IFunction2? modeToggleButton,
+        IFunction3  content,
+        int         defaults,
+        IComposer   composer)
+    {
+        if (s_timePickerDialogClass == IntPtr.Zero)
+        {
+            s_timePickerDialogClass  = JNIEnv.FindClass("androidx/compose/material3/TimePickerDialogKt");
+            s_timePickerDialogMethod = JNIEnv.GetStaticMethodID(s_timePickerDialogClass, "TimePickerDialog-FItCLgY", TimePickerDialogSig);
+        }
+
+        JValue* args = stackalloc JValue[13];
+        args[0]  = new JValue(((Java.Lang.Object)onDismissRequest).Handle);
+        args[1]  = new JValue(((Java.Lang.Object)confirmButton).Handle);
+        args[2]  = new JValue(((Java.Lang.Object)dismissButton).Handle);
+        args[3]  = new JValue(IntPtr.Zero); // modifier
+        args[4]  = new JValue(IntPtr.Zero); // properties
+        args[5]  = new JValue(title            is null ? IntPtr.Zero : ((Java.Lang.Object)title).Handle);
+        args[6]  = new JValue(modeToggleButton is null ? IntPtr.Zero : ((Java.Lang.Object)modeToggleButton).Handle);
+        args[7]  = new JValue(IntPtr.Zero); // shape
+        args[8]  = new JValue(0L);          // containerColor
+        args[9]  = new JValue(((Java.Lang.Object)content).Handle);
+        args[10] = new JValue(((Java.Lang.Object)composer).Handle);
+        args[11] = new JValue(0);           // $changed
+        args[12] = new JValue(defaults);    // $default
+        try
+        {
+            JNIEnv.CallStaticVoidMethod(s_timePickerDialogClass, s_timePickerDialogMethod, args);
+        }
+        finally
+        {
+            GC.KeepAlive(onDismissRequest);
+            GC.KeepAlive(confirmButton);
+            GC.KeepAlive(dismissButton);
+            GC.KeepAlive(title);
+            GC.KeepAlive(modeToggleButton);
+            GC.KeepAlive(content);
+            GC.KeepAlive(composer);
+        }
+    }
+
+    // androidx.compose.material3.TooltipKt.TooltipBox (7-user-param overload):
+    //   (positionProvider, tooltip, state, modifier, focusable, enableUserInput,
+    //    content, composer, $changed, $default)
+    //
+    // Bits 0 (positionProvider), 1 (tooltip), 2 (state), 6 (content) provided.
+    const string TooltipBoxSig =
+        "(Landroidx/compose/ui/window/PopupPositionProvider;" +
+        "Lkotlin/jvm/functions/Function3;" +
+        "Landroidx/compose/material3/TooltipState;" +
+        "Landroidx/compose/ui/Modifier;ZZ" +
+        "Lkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;II)V";
+
+    static IntPtr s_tooltipBoxClass;
+    static IntPtr s_tooltipBoxMethod;
+
+    public static unsafe void TooltipBox(
+        IntPtr     positionProvider,
+        IFunction3 tooltip,
+        IntPtr     state,
+        IFunction2 content,
+        int        defaults,
+        IComposer  composer)
+    {
+        if (s_tooltipBoxClass == IntPtr.Zero)
+        {
+            s_tooltipBoxClass  = JNIEnv.FindClass("androidx/compose/material3/TooltipKt");
+            s_tooltipBoxMethod = JNIEnv.GetStaticMethodID(s_tooltipBoxClass, "TooltipBox", TooltipBoxSig);
+        }
+
+        JValue* args = stackalloc JValue[10];
+        args[0] = new JValue(positionProvider);
+        args[1] = new JValue(((Java.Lang.Object)tooltip).Handle);
+        args[2] = new JValue(state);
+        args[3] = new JValue(IntPtr.Zero); // modifier
+        args[4] = new JValue(true);        // focusable
+        args[5] = new JValue(true);        // enableUserInput
+        args[6] = new JValue(((Java.Lang.Object)content).Handle);
+        args[7] = new JValue(((Java.Lang.Object)composer).Handle);
+        args[8] = new JValue(0);           // $changed
+        args[9] = new JValue(defaults);    // $default
+        try
+        {
+            JNIEnv.CallStaticVoidMethod(s_tooltipBoxClass, s_tooltipBoxMethod, args);
+        }
+        finally
+        {
+            GC.KeepAlive(tooltip);
+            GC.KeepAlive(content);
+            GC.KeepAlive(composer);
+        }
+    }
+
+    // androidx.compose.material3.DatePickerKt.DatePicker(
+    //   state, modifier, dateFormatter, colors, title, headline,
+    //   showModeToggle, requestFocus, composer, $changed, $default)
+    //
+    // 8 user params; bit 0 (state) provided. requestFocus is the
+    // optional focus requester (defaultable).
+    const string DatePickerSig =
+        "(Landroidx/compose/material3/DatePickerState;Landroidx/compose/ui/Modifier;" +
+        "Landroidx/compose/material3/DatePickerFormatter;" +
+        "Landroidx/compose/material3/DatePickerColors;" +
+        "Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;Z" +
+        "Landroidx/compose/ui/focus/FocusRequester;" +
+        "Landroidx/compose/runtime/Composer;II)V";
+
+    static IntPtr s_datePickerClass;
+    static IntPtr s_datePickerMethod;
+
+    public static unsafe void DatePicker(IntPtr state, IComposer composer)
+    {
+        if (s_datePickerClass == IntPtr.Zero)
+        {
+            s_datePickerClass  = JNIEnv.FindClass("androidx/compose/material3/DatePickerKt");
+            s_datePickerMethod = JNIEnv.GetStaticMethodID(s_datePickerClass, "DatePicker", DatePickerSig);
+        }
+
+        // Bits 1..7 defaulted (modifier..requestFocus); bit 0 (state) provided.
+        const int defaults = 0b11111110;
+
+        JValue* args = stackalloc JValue[11];
+        args[0]  = new JValue(state);
+        args[1]  = new JValue(IntPtr.Zero); // modifier
+        args[2]  = new JValue(IntPtr.Zero); // dateFormatter
+        args[3]  = new JValue(IntPtr.Zero); // colors
+        args[4]  = new JValue(IntPtr.Zero); // title
+        args[5]  = new JValue(IntPtr.Zero); // headline
+        args[6]  = new JValue(true);        // showModeToggle
+        args[7]  = new JValue(IntPtr.Zero); // requestFocus
+        args[8]  = new JValue(((Java.Lang.Object)composer).Handle);
+        args[9]  = new JValue(0);           // $changed
+        args[10] = new JValue(defaults);    // $default
+        JNIEnv.CallStaticVoidMethod(s_datePickerClass, s_datePickerMethod, args);
+    }
+
+    // ---- State-holder bridges ----
+    //
+    // Every `remember*State` builder is itself @Composable so it takes a
+    // trailing Composer + $changed + $default. The dotnet/android-libraries
+    // binding generator strips the mangled overloads (DatePickerState's
+    // `-EU0dCGE`), so we go through raw JNI for those. We always return
+    // the IntPtr — the caller threads it back into a composable bridge
+    // as a JValue argument without ever materialising a managed wrapper.
+
+    // androidx.compose.material3.DatePickerKt.rememberDatePickerState-EU0dCGE(
+    //   initialSelectedDateMillis, initialDisplayedMonthMillis, yearRange,
+    //   initialDisplayMode, selectableDates, composer, $changed, $default)
+    const string RememberDatePickerStateSig =
+        "(Ljava/lang/Long;Ljava/lang/Long;Lkotlin/ranges/IntRange;I" +
+        "Landroidx/compose/material3/SelectableDates;" +
+        "Landroidx/compose/runtime/Composer;II)Landroidx/compose/material3/DatePickerState;";
+
+    static IntPtr s_rememberDatePickerStateClass;
+    static IntPtr s_rememberDatePickerStateMethod;
+
+    public static unsafe IntPtr RememberDatePickerState(IComposer composer)
+    {
+        if (s_rememberDatePickerStateClass == IntPtr.Zero)
+        {
+            s_rememberDatePickerStateClass  = JNIEnv.FindClass("androidx/compose/material3/DatePickerKt");
+            s_rememberDatePickerStateMethod = JNIEnv.GetStaticMethodID(s_rememberDatePickerStateClass, "rememberDatePickerState-EU0dCGE", RememberDatePickerStateSig);
+        }
+
+        JValue* args = stackalloc JValue[8];
+        args[0] = new JValue(IntPtr.Zero); // initialSelectedDateMillis
+        args[1] = new JValue(IntPtr.Zero); // initialDisplayedMonthMillis
+        args[2] = new JValue(IntPtr.Zero); // yearRange
+        args[3] = new JValue(0);           // initialDisplayMode
+        args[4] = new JValue(IntPtr.Zero); // selectableDates
+        args[5] = new JValue(((Java.Lang.Object)composer).Handle);
+        args[6] = new JValue(0);           // $changed
+        args[7] = new JValue(0b11111);     // $default — all 5 user params defaulted
+        return JNIEnv.CallStaticObjectMethod(s_rememberDatePickerStateClass, s_rememberDatePickerStateMethod, args);
+    }
+
+    // androidx.compose.material3.TimePickerKt.rememberTimePickerState(
+    //   initialHour, initialMinute, is24Hour, composer, $changed, $default)
+    const string RememberTimePickerStateSig =
+        "(IIZLandroidx/compose/runtime/Composer;II)Landroidx/compose/material3/TimePickerState;";
+
+    static IntPtr s_rememberTimePickerStateClass;
+    static IntPtr s_rememberTimePickerStateMethod;
+
+    public static unsafe IntPtr RememberTimePickerState(int initialHour, int initialMinute, bool is24Hour, IComposer composer)
+    {
+        if (s_rememberTimePickerStateClass == IntPtr.Zero)
+        {
+            s_rememberTimePickerStateClass  = JNIEnv.FindClass("androidx/compose/material3/TimePickerKt");
+            s_rememberTimePickerStateMethod = JNIEnv.GetStaticMethodID(s_rememberTimePickerStateClass, "rememberTimePickerState", RememberTimePickerStateSig);
+        }
+
+        JValue* args = stackalloc JValue[6];
+        args[0] = new JValue(initialHour);
+        args[1] = new JValue(initialMinute);
+        args[2] = new JValue(is24Hour);
+        args[3] = new JValue(((Java.Lang.Object)composer).Handle);
+        args[4] = new JValue(0);           // $changed
+        args[5] = new JValue(0);           // $default — all 3 provided
+        return JNIEnv.CallStaticObjectMethod(s_rememberTimePickerStateClass, s_rememberTimePickerStateMethod, args);
+    }
+
+    // androidx.compose.material3.TooltipKt.rememberTooltipState(
+    //   initialIsVisible, isPersistent, mutatorMutex, composer, $changed, $default)
+    const string RememberTooltipStateSig =
+        "(ZZLandroidx/compose/foundation/MutatorMutex;Landroidx/compose/runtime/Composer;II)Landroidx/compose/material3/TooltipState;";
+
+    static IntPtr s_rememberTooltipStateClass;
+    static IntPtr s_rememberTooltipStateMethod;
+
+    public static unsafe IntPtr RememberTooltipState(bool isPersistent, IComposer composer)
+    {
+        if (s_rememberTooltipStateClass == IntPtr.Zero)
+        {
+            s_rememberTooltipStateClass  = JNIEnv.FindClass("androidx/compose/material3/TooltipKt");
+            s_rememberTooltipStateMethod = JNIEnv.GetStaticMethodID(s_rememberTooltipStateClass, "rememberTooltipState", RememberTooltipStateSig);
+        }
+
+        JValue* args = stackalloc JValue[6];
+        args[0] = new JValue(false);       // initialIsVisible
+        args[1] = new JValue(isPersistent);
+        args[2] = new JValue(IntPtr.Zero); // mutatorMutex
+        args[3] = new JValue(((Java.Lang.Object)composer).Handle);
+        args[4] = new JValue(0);           // $changed
+        args[5] = new JValue(0b101);       // $default — bits 0 and 2 (initialIsVisible, mutatorMutex)
+        return JNIEnv.CallStaticObjectMethod(s_rememberTooltipStateClass, s_rememberTooltipStateMethod, args);
+    }
+
+    // androidx.compose.material3.TooltipDefaults.INSTANCE.rememberPlainTooltipPositionProvider-kHDZbjc(
+    //   spacingBetweenTooltipAndAnchor, composer, $changed, $default)
+    //
+    // Instance method on the Kotlin object singleton. We resolve INSTANCE
+    // once and reuse it across calls.
+    const string RememberPlainTooltipPositionProviderSig =
+        "(FLandroidx/compose/runtime/Composer;II)Landroidx/compose/ui/window/PopupPositionProvider;";
+
+    static IntPtr s_tooltipDefaultsInstance;
+    static IntPtr s_rememberPlainTooltipPositionProviderMethod;
+
+    public static unsafe IntPtr RememberPlainTooltipPositionProvider(IComposer composer)
+    {
+        if (s_tooltipDefaultsInstance == IntPtr.Zero)
+        {
+            IntPtr cls         = JNIEnv.FindClass("androidx/compose/material3/TooltipDefaults");
+            IntPtr instanceFid = JNIEnv.GetStaticFieldID(cls, "INSTANCE", "Landroidx/compose/material3/TooltipDefaults;");
+            s_tooltipDefaultsInstance = JNIEnv.NewGlobalRef(JNIEnv.GetStaticObjectField(cls, instanceFid));
+            s_rememberPlainTooltipPositionProviderMethod = JNIEnv.GetMethodID(cls, "rememberPlainTooltipPositionProvider-kHDZbjc", RememberPlainTooltipPositionProviderSig);
+        }
+
+        JValue* args = stackalloc JValue[4];
+        args[0] = new JValue(0f);          // spacing
+        args[1] = new JValue(((Java.Lang.Object)composer).Handle);
+        args[2] = new JValue(0);
+        args[3] = new JValue(1);           // $default — spacing defaulted
+        return JNIEnv.CallObjectMethod(s_tooltipDefaultsInstance, s_rememberPlainTooltipPositionProviderMethod, args);
+    }
+
     static unsafe void InvokeTextField(IntPtr cls, IntPtr method, string value, IFunction1 onValueChange, IComposer composer, int defaults)
     {
         IntPtr valueRef = JNIEnv.NewString(value);
