@@ -30,6 +30,29 @@ namespace ComposeNet;
 /// }
 /// </code>
 ///
+/// The activity opts the window into edge-to-edge in
+/// <see cref="OnCreate(Bundle?)"/> via <see cref="EdgeToEdge.Enable(ComponentActivity)"/>
+/// — system bars become transparent overlays, and Compose's
+/// <c>WindowInsets</c> propagation handles inset padding. Pair this with a
+/// <c>NoActionBar</c> framework / Material theme on the activity (e.g.
+/// <c>@android:style/Theme.Material.Light.NoActionBar</c>) so no
+/// framework <c>ActionBar</c> overlays the content.
+///
+/// Inset handling at the composition level:
+/// <list type="bullet">
+///   <item><description>
+///     Inside a <see cref="Scaffold"/>, the top app bar / bottom bar slots
+///     pad themselves; pad the body root with
+///     <c>Modifier.Companion.SafeDrawingPadding()</c> when no top bar is
+///     supplied so content doesn't draw under the status bar.
+///   </description></item>
+///   <item><description>
+///     Outside a <see cref="Scaffold"/>, wrap the root composable in
+///     <c>Modifier.Companion.SafeDrawingPadding()</c> (or
+///     <c>SystemBarsPadding()</c>) so it stays inside the safe area.
+///   </description></item>
+/// </list>
+///
 /// The <c>content</c> lambda runs on every recomposition; tree allocation
 /// is the per-recomposition cost of the Tier 1.5 facade (Tier 2 codegen
 /// would skip it).
@@ -59,6 +82,19 @@ public abstract class ComposeActivity : ComponentActivity
     }
 
     /// <summary>
+    /// Opts the window into edge-to-edge. Call <c>base.OnCreate</c>
+    /// first thing in your subclass override — that runs
+    /// <see cref="EdgeToEdge.Enable(ComponentActivity)"/> before
+    /// <c>ComponentActivity.OnCreate</c>, which is the order the AndroidX
+    /// API expects.
+    /// </summary>
+    protected override void OnCreate(Bundle? savedInstanceState)
+    {
+        EdgeToEdge.Enable(this);
+        base.OnCreate(savedInstanceState);
+    }
+
+    /// <summary>
     /// Sets the activity's content view to a Compose composition that
     /// runs <paramref name="content"/> on each composition pass and
     /// renders the returned tree.
@@ -67,84 +103,13 @@ public abstract class ComposeActivity : ComponentActivity
     {
         var view = new ComposeView(this);
 
-        ApplySafeAreaPadding(view);
-
         view.SetContent(ComposableLambdaKt.ComposableLambdaInstance(
             key:     -1,
             tracked: false,
             block:   new ComposableLambda2(composer => content().Render(composer))));
 
         SetContentView(view);
-        ApplyLightStatusBar();
 
         Log.Debug(TAG, "ComposeActivity content set");
-    }
-
-    void ApplySafeAreaPadding(Android.Views.View view)
-    {
-        // On API 36 / Theme.Material.Light the ActionBar is overlay-decor
-        // and draws on top of android.R.id.content, so we still need to
-        // push content down by status + action bar height. We deliberately
-        // do NOT pad left / right / bottom here: a root-level Scaffold
-        // already handles those edges via its own WindowInsets (the
-        // bottom NavigationBar pads itself above the gesture bar, and
-        // the body lambda receives PaddingValues for cutouts). See
-        // issue #20 for the long-term plan to drop this shim entirely
-        // once the activity goes edge-to-edge under a Material 3 theme.
-        view.SetPadding(
-            left:   0,
-            top:    SystemBarHeight("status_bar_height") + ActionBarHeight() + Dp(16),
-            right:  0,
-            bottom: 0);
-    }
-
-    void ApplyLightStatusBar()
-    {
-        var window = Window;
-        System.Diagnostics.Debug.Assert(window != null, "Window non-null after SetContentView");
-
-        if (OperatingSystem.IsAndroidVersionAtLeast(30))
-        {
-            var insetsController = window.InsetsController;
-            if (insetsController != null)
-            {
-                insetsController.SetSystemBarsAppearance(
-                    (int)Android.Views.WindowInsetsControllerAppearance.LightStatusBars,
-                    (int)Android.Views.WindowInsetsControllerAppearance.LightStatusBars);
-            }
-        }
-        else
-        {
-            var decor = window.DecorView;
-#pragma warning disable CA1422 // Validate platform compatibility
-            decor.SystemUiFlags |= Android.Views.SystemUiFlags.LightStatusBar;
-#pragma warning restore CA1422
-        }
-    }
-
-    int ActionBarHeight()
-    {
-        var theme = Theme;
-        var resources = Resources;
-        System.Diagnostics.Debug.Assert(theme != null && resources != null);
-        var tv = new TypedValue();
-        if (theme.ResolveAttribute(Android.Resource.Attribute.ActionBarSize, tv, true))
-            return TypedValue.ComplexToDimensionPixelSize(tv.Data, resources.DisplayMetrics);
-        return 0;
-    }
-
-    int Dp(int dp)
-    {
-        var resources = Resources;
-        System.Diagnostics.Debug.Assert(resources != null);
-        return (int)(dp * resources.DisplayMetrics!.Density);
-    }
-
-    int SystemBarHeight(string resName)
-    {
-        var resources = Resources;
-        System.Diagnostics.Debug.Assert(resources != null);
-        int id = resources.GetIdentifier(resName, "dimen", "android");
-        return id > 0 ? resources.GetDimensionPixelSize(id) : 0;
     }
 }
