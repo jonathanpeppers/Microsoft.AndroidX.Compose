@@ -151,6 +151,41 @@ internal static partial class ComposeBridges
         return JNIEnv.CallStaticObjectMethod(s_sizeKtClass, s_fillMaxSizeMethod, args);
     }
 
+    // androidx.compose.foundation.layout.WindowInsetsPadding_androidKt —
+    // Modifier extensions that read WindowInsets from CompositionLocals
+    // and apply them as padding. Take only Modifier (no Dp), so JVM
+    // names are unmangled.
+    const string ModifierToModifierSig =
+        "(Landroidx/compose/ui/Modifier;)Landroidx/compose/ui/Modifier;";
+
+    static IntPtr s_windowInsetsPaddingAndroidKtClass;
+    static IntPtr s_safeDrawingPaddingMethod;
+    static IntPtr s_systemBarsPaddingMethod;
+
+    internal static unsafe IntPtr ModifierSafeDrawingPadding(IntPtr modifier)
+    {
+        if (s_windowInsetsPaddingAndroidKtClass == IntPtr.Zero)
+            s_windowInsetsPaddingAndroidKtClass = JNIEnv.FindClass("androidx/compose/foundation/layout/WindowInsetsPadding_androidKt");
+        if (s_safeDrawingPaddingMethod == IntPtr.Zero)
+            s_safeDrawingPaddingMethod = JNIEnv.GetStaticMethodID(s_windowInsetsPaddingAndroidKtClass, "safeDrawingPadding", ModifierToModifierSig);
+
+        JValue* args = stackalloc JValue[1];
+        args[0] = new JValue(modifier);
+        return JNIEnv.CallStaticObjectMethod(s_windowInsetsPaddingAndroidKtClass, s_safeDrawingPaddingMethod, args);
+    }
+
+    internal static unsafe IntPtr ModifierSystemBarsPadding(IntPtr modifier)
+    {
+        if (s_windowInsetsPaddingAndroidKtClass == IntPtr.Zero)
+            s_windowInsetsPaddingAndroidKtClass = JNIEnv.FindClass("androidx/compose/foundation/layout/WindowInsetsPadding_androidKt");
+        if (s_systemBarsPaddingMethod == IntPtr.Zero)
+            s_systemBarsPaddingMethod = JNIEnv.GetStaticMethodID(s_windowInsetsPaddingAndroidKtClass, "systemBarsPadding", ModifierToModifierSig);
+
+        JValue* args = stackalloc JValue[1];
+        args[0] = new JValue(modifier);
+        return JNIEnv.CallStaticObjectMethod(s_windowInsetsPaddingAndroidKtClass, s_systemBarsPaddingMethod, args);
+    }
+
     // Source-generated bridges below. Each [ComposeBridge] partial
     // declaration is paired with a matching [ComposeDefaults] in
     // ComposeDefaults.cs; the generator reads bit positions and parameter

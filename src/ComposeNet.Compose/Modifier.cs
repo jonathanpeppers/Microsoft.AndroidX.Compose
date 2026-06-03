@@ -125,6 +125,24 @@ public sealed class Modifier
         Append(h => ComposeBridges.ModifierFillMaxSize(h, fraction));
 
     /// <summary>
+    /// <c>Modifier.safeDrawingPadding()</c> — pads for the union of
+    /// system bars, IME, and display cutouts. Use as the outer modifier
+    /// on a root composable (or inside a <see cref="Scaffold"/>'s body
+    /// when no <see cref="Scaffold.TopBar"/> is supplied) to keep
+    /// content out of inset regions under edge-to-edge.
+    /// </summary>
+    public Modifier SafeDrawingPadding() =>
+        Append(h => ComposeBridges.ModifierSafeDrawingPadding(h));
+
+    /// <summary>
+    /// <c>Modifier.systemBarsPadding()</c> — pads for status + nav bars
+    /// only (ignoring IME and cutouts). Prefer
+    /// <see cref="SafeDrawingPadding"/> in most apps.
+    /// </summary>
+    public Modifier SystemBarsPadding() =>
+        Append(h => ComposeBridges.ModifierSystemBarsPadding(h));
+
+    /// <summary>
     /// Materialize the chain into a managed <c>IModifier</c> wrapper.
     /// Returns <c>null</c> when the chain is empty (no ops appended) so
     /// callers can keep the Kotlin <c>$default</c> bit set and let
