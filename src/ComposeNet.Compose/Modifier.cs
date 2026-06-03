@@ -8,22 +8,37 @@ namespace ComposeNet;
 /// C# mirror of Kotlin's <c>androidx.compose.ui.Modifier</c> chain.
 /// Build a chain by calling fluent methods on
 /// <see cref="Companion"/> — each call returns a NEW immutable
-/// <see cref="Modifier"/> with the op appended:
+/// <see cref="Modifier"/> with the op appended.
+///
+/// On a container (anything deriving from
+/// <see cref="ComposableContainer"/>) the chain is added as a
+/// collection-initializer item — C# doesn't allow mixing object- and
+/// collection-initializers in the same braces, so
+/// <see cref="ComposableContainer.Add(Modifier)"/> sets the
+/// <see cref="ComposableNode.Modifier"/> property for you:
 ///
 /// <code>
 /// new Column
 /// {
-///     Modifier = Modifier.Companion.Padding(16).FillMaxWidth(),
-///     // ...
+///     Modifier.Companion.Padding(16).FillMaxWidth(),
+///     new Text("Hello"),
 /// }
+/// </code>
+///
+/// On a leaf composable use object-initializer syntax:
+///
+/// <code>
+/// new Text("Hello") { Modifier = Modifier.Companion.Padding(8) }
 /// </code>
 ///
 /// At <c>Render</c> time the chain is materialized into an
 /// <c>IModifier</c> by replaying each op against
-/// <c>androidx.compose.ui.Modifier.Companion.INSTANCE</c> via JNI
-/// (see <see cref="ComposeBridges"/>). Building cheap modifier
-/// chains every recomposition is the per-composition cost the
-/// Tier 1.5 facade pays — Tier 2 codegen would skip it.
+/// <c>androidx.compose.ui.Modifier.Companion</c> (resolved via the
+/// <c>$$INSTANCE</c> static field Kotlin emits for <c>object</c>
+/// declarations) via JNI — see
+/// <see cref="ComposeBridges.ModifierCompanionInstance"/>. Building
+/// cheap modifier chains every recomposition is the per-composition
+/// cost the Tier 1.5 facade pays — Tier 2 codegen would skip it.
 ///
 /// Phase 1 ships <see cref="Padding(int)"/>, the horizontal/vertical
 /// + per-edge overloads, and <see cref="FillMaxWidth"/> /
