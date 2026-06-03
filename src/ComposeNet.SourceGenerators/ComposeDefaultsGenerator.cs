@@ -167,17 +167,3 @@ public sealed class ComposeDefaultsGenerator : IIncrementalGenerator
         return ns == KotlinFunctionNamespace && n.Name.StartsWith("IFunction", StringComparison.Ordinal);
     }
 }
-
-internal sealed class GenerationResult
-{
-    public GenerationResult(string? source, string? hintName, IReadOnlyList<Diagnostic> diagnostics)
-    {
-        Source = source;
-        HintName = hintName;
-        Diagnostics = diagnostics;
-    }
-
-    public string? Source { get; }
-    public string? HintName { get; }
-    public IReadOnlyList<Diagnostic> Diagnostics { get; }
-}

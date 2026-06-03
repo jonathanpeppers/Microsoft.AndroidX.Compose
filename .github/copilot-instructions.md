@@ -12,10 +12,10 @@ conventions an agent **must** follow when changing code.
 ## Layout
 
 - `src/ComposeNet.Compose/` — the public C# facade (`Text`, `Column`,
-  `Button`, `MaterialTheme`, `AlertDialog`, …). One file per concept;
-  `Composables.cs` holds the user-facing types, `ComposeBridges.cs`
-  holds raw-JNI bridges, `ComposeDefaults.cs` holds *only* assembly
-  attributes that drive the source generator.
+  `Button`, `MaterialTheme`, `AlertDialog`, …). **One class per file**,
+  named after the class (`Text.cs`, `Column.cs`, `AlertDialog.cs`, …).
+  `ComposeBridges.cs` holds raw-JNI bridges, `ComposeDefaults.cs` holds
+  *only* assembly attributes that drive the source generator.
 - `src/ComposeNet.SourceGenerators/` — Roslyn incremental generator
   (`ComposeDefaultsGenerator`) that emits `[Flags]` enums for Kotlin's
   `$default` bitmask.
@@ -200,6 +200,17 @@ If a needed Compose API isn't bound, the workflow is:
   `netstandard2.0` for the source generator (Roslyn requirement);
   `net10.0` for the generator tests.
 - C# 12+, nullable reference types enabled, file-scoped namespaces.
+- **One class per `.cs` file.** The file name matches the type name
+  (`Button.cs` for `class Button`). This applies to every project in
+  the repo — facade, source generator, generator tests, sample. No
+  multi-class "kitchen sink" files; if you add a new type, add a new
+  file. The only exception is a tiny private nested helper struct
+  (e.g. `ScopeFrame` inside `RenderContext`) that exists solely as an
+  implementation detail of its enclosing type.
+- **No `// ---- Section ----` banners or other "stupid" section
+  separator comments.** With one type per file, the file itself is the
+  section. Comment code only when a specific bit of logic needs
+  clarification; never use comments to label or group classes.
 - Public API gets XML doc comments. Internal helpers get a one-line
   `//` comment when they're non-obvious; otherwise leave them bare.
 - Don't add markdown planning docs to the repo — use the session
