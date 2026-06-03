@@ -1467,6 +1467,313 @@ internal static class ComposeBridges
         }
     }
 
+    // androidx.compose.material3.CardKt.ElevatedCard (non-clickable):
+    //   (modifier, shape, colors, elevation, content,
+    //    composer, $changed, $default)
+    // 5 user params; bit 4 (content) provided.
+    const string ElevatedCardSig =
+        "(Landroidx/compose/ui/Modifier;Landroidx/compose/ui/graphics/Shape;" +
+        "Landroidx/compose/material3/CardColors;Landroidx/compose/material3/CardElevation;" +
+        "Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;II)V";
+
+    static IntPtr s_elevatedCardClass;
+    static IntPtr s_elevatedCardMethod;
+
+    public static unsafe void ElevatedCard(IFunction3 content, IComposer composer)
+    {
+        if (s_elevatedCardClass == IntPtr.Zero)
+        {
+            s_elevatedCardClass  = JNIEnv.FindClass("androidx/compose/material3/CardKt");
+            s_elevatedCardMethod = JNIEnv.GetStaticMethodID(s_elevatedCardClass, "ElevatedCard", ElevatedCardSig);
+        }
+
+        JValue* args = stackalloc JValue[8];
+        args[0] = new JValue(IntPtr.Zero); // modifier
+        args[1] = new JValue(IntPtr.Zero); // shape
+        args[2] = new JValue(IntPtr.Zero); // colors
+        args[3] = new JValue(IntPtr.Zero); // elevation
+        args[4] = new JValue(((Java.Lang.Object)content).Handle);
+        args[5] = new JValue(((Java.Lang.Object)composer).Handle);
+        args[6] = new JValue(0);
+        args[7] = new JValue((int)ElevatedCardDefault.All);
+        try
+        {
+            JNIEnv.CallStaticVoidMethod(s_elevatedCardClass, s_elevatedCardMethod, args);
+        }
+        finally
+        {
+            GC.KeepAlive(content);
+            GC.KeepAlive(composer);
+        }
+    }
+
+    // androidx.compose.material3.CardKt.OutlinedCard (non-clickable):
+    //   (modifier, shape, colors, elevation, border, content,
+    //    composer, $changed, $default)
+    // 6 user params; bit 5 (content) provided. Same shape as Card.
+    const string OutlinedCardSig =
+        "(Landroidx/compose/ui/Modifier;Landroidx/compose/ui/graphics/Shape;" +
+        "Landroidx/compose/material3/CardColors;Landroidx/compose/material3/CardElevation;" +
+        "Landroidx/compose/foundation/BorderStroke;" +
+        "Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;II)V";
+
+    static IntPtr s_outlinedCardClass;
+    static IntPtr s_outlinedCardMethod;
+
+    public static unsafe void OutlinedCard(IFunction3 content, IComposer composer)
+    {
+        if (s_outlinedCardClass == IntPtr.Zero)
+        {
+            s_outlinedCardClass  = JNIEnv.FindClass("androidx/compose/material3/CardKt");
+            s_outlinedCardMethod = JNIEnv.GetStaticMethodID(s_outlinedCardClass, "OutlinedCard", OutlinedCardSig);
+        }
+
+        JValue* args = stackalloc JValue[9];
+        args[0] = new JValue(IntPtr.Zero); // modifier
+        args[1] = new JValue(IntPtr.Zero); // shape
+        args[2] = new JValue(IntPtr.Zero); // colors
+        args[3] = new JValue(IntPtr.Zero); // elevation
+        args[4] = new JValue(IntPtr.Zero); // border
+        args[5] = new JValue(((Java.Lang.Object)content).Handle);
+        args[6] = new JValue(((Java.Lang.Object)composer).Handle);
+        args[7] = new JValue(0);
+        args[8] = new JValue((int)CardDefault.All);
+        try
+        {
+            JNIEnv.CallStaticVoidMethod(s_outlinedCardClass, s_outlinedCardMethod, args);
+        }
+        finally
+        {
+            GC.KeepAlive(content);
+            GC.KeepAlive(composer);
+        }
+    }
+
+    // androidx.compose.material3.ChipKt.ElevatedAssistChip: same parameter
+    // shape as AssistChip — 11 user params, bits 0/1 always provided.
+    const string ElevatedAssistChipSig = AssistChipSig;
+
+    static IntPtr s_elevatedAssistChipClass;
+    static IntPtr s_elevatedAssistChipMethod;
+
+    public static unsafe void ElevatedAssistChip(
+        IFunction0  onClick,
+        IFunction2  label,
+        IFunction2? leadingIcon,
+        IFunction2? trailingIcon,
+        int         defaults,
+        IComposer   composer)
+    {
+        if (s_elevatedAssistChipClass == IntPtr.Zero)
+        {
+            s_elevatedAssistChipClass  = JNIEnv.FindClass("androidx/compose/material3/ChipKt");
+            s_elevatedAssistChipMethod = JNIEnv.GetStaticMethodID(s_elevatedAssistChipClass, "ElevatedAssistChip", ElevatedAssistChipSig);
+        }
+
+        JValue* args = stackalloc JValue[15];
+        args[0]  = new JValue(((Java.Lang.Object)onClick).Handle);
+        args[1]  = new JValue(((Java.Lang.Object)label).Handle);
+        args[2]  = new JValue(IntPtr.Zero); // modifier
+        args[3]  = new JValue(true);        // enabled
+        args[4]  = new JValue(leadingIcon  is null ? IntPtr.Zero : ((Java.Lang.Object)leadingIcon).Handle);
+        args[5]  = new JValue(trailingIcon is null ? IntPtr.Zero : ((Java.Lang.Object)trailingIcon).Handle);
+        args[6]  = new JValue(IntPtr.Zero); // shape
+        args[7]  = new JValue(IntPtr.Zero); // colors
+        args[8]  = new JValue(IntPtr.Zero); // elevation
+        args[9]  = new JValue(IntPtr.Zero); // border
+        args[10] = new JValue(IntPtr.Zero); // interactionSource
+        args[11] = new JValue(((Java.Lang.Object)composer).Handle);
+        args[12] = new JValue(0);
+        args[13] = new JValue(0);
+        args[14] = new JValue(defaults);
+        try
+        {
+            JNIEnv.CallStaticVoidMethod(s_elevatedAssistChipClass, s_elevatedAssistChipMethod, args);
+        }
+        finally
+        {
+            GC.KeepAlive(onClick);
+            GC.KeepAlive(label);
+            GC.KeepAlive(leadingIcon);
+            GC.KeepAlive(trailingIcon);
+            GC.KeepAlive(composer);
+        }
+    }
+
+    // androidx.compose.material3.ChipKt.ElevatedFilterChip: same parameter
+    // shape as FilterChip — 12 user params, bits 0/1/2 always provided.
+    const string ElevatedFilterChipSig = FilterChipSig;
+
+    static IntPtr s_elevatedFilterChipClass;
+    static IntPtr s_elevatedFilterChipMethod;
+
+    public static unsafe void ElevatedFilterChip(
+        bool        selected,
+        IFunction0  onClick,
+        IFunction2  label,
+        IFunction2? leadingIcon,
+        IFunction2? trailingIcon,
+        int         defaults,
+        IComposer   composer)
+    {
+        if (s_elevatedFilterChipClass == IntPtr.Zero)
+        {
+            s_elevatedFilterChipClass  = JNIEnv.FindClass("androidx/compose/material3/ChipKt");
+            s_elevatedFilterChipMethod = JNIEnv.GetStaticMethodID(s_elevatedFilterChipClass, "ElevatedFilterChip", ElevatedFilterChipSig);
+        }
+
+        JValue* args = stackalloc JValue[16];
+        args[0]  = new JValue(selected);
+        args[1]  = new JValue(((Java.Lang.Object)onClick).Handle);
+        args[2]  = new JValue(((Java.Lang.Object)label).Handle);
+        args[3]  = new JValue(IntPtr.Zero); // modifier
+        args[4]  = new JValue(true);        // enabled
+        args[5]  = new JValue(leadingIcon  is null ? IntPtr.Zero : ((Java.Lang.Object)leadingIcon).Handle);
+        args[6]  = new JValue(trailingIcon is null ? IntPtr.Zero : ((Java.Lang.Object)trailingIcon).Handle);
+        args[7]  = new JValue(IntPtr.Zero); // shape
+        args[8]  = new JValue(IntPtr.Zero); // colors
+        args[9]  = new JValue(IntPtr.Zero); // elevation
+        args[10] = new JValue(IntPtr.Zero); // border
+        args[11] = new JValue(IntPtr.Zero); // interactionSource
+        args[12] = new JValue(((Java.Lang.Object)composer).Handle);
+        args[13] = new JValue(0);
+        args[14] = new JValue(0);
+        args[15] = new JValue(defaults);
+        try
+        {
+            JNIEnv.CallStaticVoidMethod(s_elevatedFilterChipClass, s_elevatedFilterChipMethod, args);
+        }
+        finally
+        {
+            GC.KeepAlive(onClick);
+            GC.KeepAlive(label);
+            GC.KeepAlive(leadingIcon);
+            GC.KeepAlive(trailingIcon);
+            GC.KeepAlive(composer);
+        }
+    }
+
+    // androidx.compose.material3.ChipKt.ElevatedSuggestionChip: same shape
+    // as SuggestionChip — 10 user params, bits 0/1 always provided.
+    const string ElevatedSuggestionChipSig = SuggestionChipSig;
+
+    static IntPtr s_elevatedSuggestionChipClass;
+    static IntPtr s_elevatedSuggestionChipMethod;
+
+    public static unsafe void ElevatedSuggestionChip(
+        IFunction0  onClick,
+        IFunction2  label,
+        IFunction2? icon,
+        int         defaults,
+        IComposer   composer)
+    {
+        if (s_elevatedSuggestionChipClass == IntPtr.Zero)
+        {
+            s_elevatedSuggestionChipClass  = JNIEnv.FindClass("androidx/compose/material3/ChipKt");
+            s_elevatedSuggestionChipMethod = JNIEnv.GetStaticMethodID(s_elevatedSuggestionChipClass, "ElevatedSuggestionChip", ElevatedSuggestionChipSig);
+        }
+
+        JValue* args = stackalloc JValue[13];
+        args[0]  = new JValue(((Java.Lang.Object)onClick).Handle);
+        args[1]  = new JValue(((Java.Lang.Object)label).Handle);
+        args[2]  = new JValue(IntPtr.Zero); // modifier
+        args[3]  = new JValue(true);        // enabled
+        args[4]  = new JValue(icon is null ? IntPtr.Zero : ((Java.Lang.Object)icon).Handle);
+        args[5]  = new JValue(IntPtr.Zero); // shape
+        args[6]  = new JValue(IntPtr.Zero); // colors
+        args[7]  = new JValue(IntPtr.Zero); // elevation
+        args[8]  = new JValue(IntPtr.Zero); // border
+        args[9]  = new JValue(IntPtr.Zero); // interactionSource
+        args[10] = new JValue(((Java.Lang.Object)composer).Handle);
+        args[11] = new JValue(0);
+        args[12] = new JValue(defaults);
+        try
+        {
+            JNIEnv.CallStaticVoidMethod(s_elevatedSuggestionChipClass, s_elevatedSuggestionChipMethod, args);
+        }
+        finally
+        {
+            GC.KeepAlive(onClick);
+            GC.KeepAlive(label);
+            GC.KeepAlive(icon);
+            GC.KeepAlive(composer);
+        }
+    }
+
+    // androidx.compose.material3.NavigationDrawerKt.{Modal,Dismissible,Permanent}DrawerSheet-afqeVBk:
+    //   (modifier, shape, drawerContainerColor, drawerContentColor,
+    //    tonalElevation, windowInsets, content, composer, $changed, $default)
+    // 7 user params; bit 6 (content) provided. All three sheets share the
+    // identical signature — only the JNI method name differs.
+    const string DrawerSheetSig =
+        "(Landroidx/compose/ui/Modifier;Landroidx/compose/ui/graphics/Shape;JJF" +
+        "Landroidx/compose/foundation/layout/WindowInsets;" +
+        "Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;II)V";
+
+    static IntPtr s_drawerSheetClass;
+    static IntPtr s_modalDrawerSheetMethod;
+    static IntPtr s_dismissibleDrawerSheetMethod;
+    static IntPtr s_permanentDrawerSheetMethod;
+
+    static IntPtr GetDrawerSheetClass()
+    {
+        if (s_drawerSheetClass == IntPtr.Zero)
+            s_drawerSheetClass = JNIEnv.FindClass("androidx/compose/material3/NavigationDrawerKt");
+        return s_drawerSheetClass;
+    }
+
+    static unsafe void CallDrawerSheet(IntPtr method, IFunction3 content, IComposer composer, long containerColor = 0L)
+    {
+        // When containerColor is non-zero, pass it explicitly and clear
+        // bit 2 so Kotlin doesn't substitute its $default. Bit numbering
+        // matches DrawerSheetDefault (modifier=0, shape=1, drawerContainerColor=2).
+        int defaults = (int)DrawerSheetDefault.All;
+        if (containerColor != 0L)
+            defaults &= ~(1 << 2);
+
+        JValue* args = stackalloc JValue[10];
+        args[0] = new JValue(IntPtr.Zero);     // modifier
+        args[1] = new JValue(IntPtr.Zero);     // shape
+        args[2] = new JValue(containerColor);  // drawerContainerColor
+        args[3] = new JValue(0L);              // drawerContentColor
+        args[4] = new JValue(0f);              // tonalElevation
+        args[5] = new JValue(IntPtr.Zero);     // windowInsets
+        args[6] = new JValue(((Java.Lang.Object)content).Handle);
+        args[7] = new JValue(((Java.Lang.Object)composer).Handle);
+        args[8] = new JValue(0);
+        args[9] = new JValue(defaults);
+        try
+        {
+            JNIEnv.CallStaticVoidMethod(GetDrawerSheetClass(), method, args);
+        }
+        finally
+        {
+            GC.KeepAlive(content);
+            GC.KeepAlive(composer);
+        }
+    }
+
+    public static unsafe void ModalDrawerSheet(IFunction3 content, IComposer composer, long containerColor = 0L)
+    {
+        if (s_modalDrawerSheetMethod == IntPtr.Zero)
+            s_modalDrawerSheetMethod = JNIEnv.GetStaticMethodID(GetDrawerSheetClass(), "ModalDrawerSheet-afqeVBk", DrawerSheetSig);
+        CallDrawerSheet(s_modalDrawerSheetMethod, content, composer, containerColor);
+    }
+
+    public static unsafe void DismissibleDrawerSheet(IFunction3 content, IComposer composer, long containerColor = 0L)
+    {
+        if (s_dismissibleDrawerSheetMethod == IntPtr.Zero)
+            s_dismissibleDrawerSheetMethod = JNIEnv.GetStaticMethodID(GetDrawerSheetClass(), "DismissibleDrawerSheet-afqeVBk", DrawerSheetSig);
+        CallDrawerSheet(s_dismissibleDrawerSheetMethod, content, composer, containerColor);
+    }
+
+    public static unsafe void PermanentDrawerSheet(IFunction3 content, IComposer composer, long containerColor = 0L)
+    {
+        if (s_permanentDrawerSheetMethod == IntPtr.Zero)
+            s_permanentDrawerSheetMethod = JNIEnv.GetStaticMethodID(GetDrawerSheetClass(), "PermanentDrawerSheet-afqeVBk", DrawerSheetSig);
+        CallDrawerSheet(s_permanentDrawerSheetMethod, content, composer, containerColor);
+    }
+
     // androidx.compose.material3.NavigationRailKt.NavigationRailItem:
     //   (selected, onClick, icon, modifier, enabled, label, alwaysShowLabel,
     //    colors, interactionSource, composer, $changed, $default)

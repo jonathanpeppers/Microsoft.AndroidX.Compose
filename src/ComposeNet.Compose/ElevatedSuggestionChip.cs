@@ -1,0 +1,35 @@
+using AndroidX.Compose.Runtime;
+
+namespace ComposeNet;
+
+/// <summary>
+/// Material 3 <c>ElevatedSuggestionChip</c> — like
+/// <see cref="SuggestionChip"/> but uses shadow elevation for emphasis.
+/// </summary>
+public sealed class ElevatedSuggestionChip : ComposableNode
+{
+    readonly System.Action _onClick;
+    public ElevatedSuggestionChip(System.Action onClick) => _onClick = onClick;
+
+    /// <summary>Required: chip text.</summary>
+    public ComposableNode? Label { get; set; }
+
+    /// <summary>Optional: leading slot.</summary>
+    public ComposableNode? Icon { get; set; }
+
+    internal override void Render(IComposer composer)
+    {
+        if (Label is null)
+            throw new System.InvalidOperationException(
+                "ElevatedSuggestionChip.Label is required (the Kotlin parameter has no default).");
+
+        var click = new ComposableLambda0(_onClick);
+        var label = new ComposableLambda2(c => Label.Render(c));
+        ComposableLambda2? icon = Icon is null ? null : new ComposableLambda2(c => Icon.Render(c));
+
+        int defaults = (int)SuggestionChipDefault.All;
+        if (icon is not null) defaults &= ~(int)SuggestionChipDefault.Icon;
+
+        ComposeBridges.ElevatedSuggestionChip(click, label, icon, defaults, composer);
+    }
+}
