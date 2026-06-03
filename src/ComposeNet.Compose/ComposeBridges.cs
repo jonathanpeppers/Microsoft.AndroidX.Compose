@@ -739,16 +739,13 @@ internal static class ComposeBridges
     static IntPtr s_datePickerClass;
     static IntPtr s_datePickerMethod;
 
-    public static unsafe void DatePicker(IntPtr state, IComposer composer)
+    public static unsafe void DatePicker(IntPtr state, int defaults, IComposer composer)
     {
         if (s_datePickerClass == IntPtr.Zero)
         {
             s_datePickerClass  = JNIEnv.FindClass("androidx/compose/material3/DatePickerKt");
             s_datePickerMethod = JNIEnv.GetStaticMethodID(s_datePickerClass, "DatePicker", DatePickerSig);
         }
-
-        // Bits 1..7 defaulted (modifier..requestFocus); bit 0 (state) provided.
-        const int defaults = 0b11111110;
 
         JValue* args = stackalloc JValue[11];
         args[0]  = new JValue(state);

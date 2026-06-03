@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Android.Runtime;
 using AndroidX.Compose.Foundation.Layout;
 using AndroidX.Compose.Material3;
 using AndroidX.Compose.Runtime;
@@ -789,13 +790,21 @@ public sealed class DatePickerDialog : ComposableNode
 /// param isn't user-visible (the binding drops the trailing
 /// <c>$default</c> parameter on @Composable functions), so we go through
 /// raw JNI to set it. Place inside <see cref="DatePickerDialog"/>'s body.
+/// Pass an explicit <see cref="ComposeNet.DatePickerState"/> to read the
+/// selection from a button callback; if none is supplied a fresh state
+/// is created internally and the selection is unobservable.
 /// </summary>
 public sealed class DatePicker : ComposableNode
 {
+    readonly DatePickerState? _state;
+    public DatePicker(DatePickerState? state = null) => _state = state;
+
     internal override void Render(IComposer composer)
     {
         var stateHandle = ComposeBridges.RememberDatePickerState(composer);
-        ComposeBridges.DatePicker(stateHandle, composer);
+        if (_state is not null && _state.Jvm is null)
+            _state.Jvm = Java.Lang.Object.GetObject<IDatePickerState>(stateHandle, JniHandleOwnership.DoNotTransfer)!;
+        ComposeBridges.DatePicker(stateHandle, (int)DatePickerDefault.All, composer);
     }
 }
 
@@ -804,23 +813,20 @@ public sealed class DatePicker : ComposableNode
 /// <summary>
 /// Material 3 <c>TimePicker</c>. Resolves <c>TimePickerState</c> via
 /// raw JNI (<c>rememberTimePickerState</c> takes a <see cref="IComposer"/>
-/// so it requires the composer-aware bridge).
+/// so it requires the composer-aware bridge). Pass an explicit
+/// <see cref="ComposeNet.TimePickerState"/> to read the picked
+/// hour/minute from a button callback.
 /// </summary>
 public sealed class TimePicker : ComposableNode
 {
-    readonly int  _initialHour;
-    readonly int  _initialMinute;
-    readonly bool _is24Hour;
-    public TimePicker(int initialHour = 12, int initialMinute = 0, bool is24Hour = true)
-    {
-        _initialHour   = initialHour;
-        _initialMinute = initialMinute;
-        _is24Hour      = is24Hour;
-    }
+    readonly TimePickerState _state;
+    public TimePicker(TimePickerState? state = null) => _state = state ?? new TimePickerState();
 
     internal override void Render(IComposer composer)
     {
-        var stateHandle = ComposeBridges.RememberTimePickerState(_initialHour, _initialMinute, _is24Hour, composer);
+        var stateHandle = ComposeBridges.RememberTimePickerState(_state.InitialHour, _state.InitialMinute, _state.InitialIs24Hour, composer);
+        if (_state.Jvm is null)
+            _state.Jvm = Java.Lang.Object.GetObject<ITimePickerState>(stateHandle, JniHandleOwnership.DoNotTransfer)!;
         ComposeBridges.TimePicker(stateHandle, (int)TimePickerDefault.All, composer);
     }
 }

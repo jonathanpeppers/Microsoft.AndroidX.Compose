@@ -124,6 +124,9 @@ public class MainActivity : ComposeActivity
                               }
                             : null,
 
+                        new Text($"Picked date: {pickedDate}"),
+                        new Text($"Picked time: {pickedTime}"),
+
                         showDate.Value
                             ? new DatePickerDialog(onDismissRequest: () => showDate.Value = false)
                             {

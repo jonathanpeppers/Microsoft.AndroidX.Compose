@@ -95,6 +95,12 @@ using ComposeNet;
     "!onDismissRequest", "!confirmButton", "modifier", "dismissButton", "shape",
     "tonalElevation", "colors", "properties", "!content")]
 
+// androidx.compose.material3.DatePickerKt.DatePicker:
+// 8 user params; bit 0 (state) always provided.
+[assembly: ComposeDefaults("DatePickerDefault",
+    "!state", "modifier", "dateFormatter", "colors", "title",
+    "headline", "showModeToggle", "requestFocus")]
+
 // androidx.compose.material3.TimePickerKt.TimePicker-mT9BvqQ:
 // 4 user params; bit 0 (state) always provided.
 [assembly: ComposeDefaults("TimePickerDefault",
