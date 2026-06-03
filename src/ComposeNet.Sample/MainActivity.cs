@@ -249,7 +249,9 @@ public class MainActivity : ComposeActivity
                                 {
                                     ConfirmButton = new Button(onClick: () =>
                                     {
-                                        pickedDate.Value = dateState.SelectedDateMillis is long ms ? ms.ToString() : "(none)";
+                                        pickedDate.Value = dateState.SelectedDateMillis is long ms
+                                            ? System.DateTimeOffset.FromUnixTimeMilliseconds(ms).UtcDateTime.ToString("yyyy-MM-dd")
+                                            : "(none)";
                                         showDate.Value = false;
                                     })
                                     { new Text("OK") },
