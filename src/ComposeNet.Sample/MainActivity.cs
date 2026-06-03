@@ -25,75 +25,91 @@ public class MainActivity : ComposeActivity
             var dateState   = Remember(() => new DatePickerState());
             var timeState   = Remember(() => new TimePickerState(initialHour: 9, initialMinute: 30));
 
+            // Per-tab content. Only the current tab's column is added to
+            // the screen — keeps the sample short enough to fit on one
+            // phone-sized scroll area.
+            ComposableNode tabContent = tab.Value switch
+            {
+                0 => new Column
+                {
+                    new Text("Hello from .NET"),
+                    new Text($"Count: {count}"),
+                    new Button(onClick: () => count++) { new Text("Tap to increment") },
+                    new IconButton(onClick: () => count--) { new Text("−") },
+                    new OutlinedTextField(name),
+                    new Text($"Hi {(string.IsNullOrEmpty(name.Value) ? "stranger" : name.Value)}"),
+                    new Card
+                    {
+                        new Text("Inside a Card"),
+                        new Text($"Counter snapshot: {count}"),
+                    },
+                },
+                1 => new Column
+                {
+                    new Text("Chips, FAB, tooltip"),
+                    new AssistChip(onClick: () => count++)
+                    {
+                        Label = new Text("Assist (+1)"),
+                    },
+                    new FilterChip(selected: liked.Value, onClick: () => liked.Value = !liked.Value)
+                    {
+                        Label = new Text(liked.Value ? "Liked" : "Like"),
+                    },
+                    new SuggestionChip(onClick: () => count.Value = 0)
+                    {
+                        Label = new Text("Reset"),
+                    },
+                    new Tooltip
+                    {
+                        Tip    = new Surface { new Text("Helpful hint") },
+                        Anchor = new Button(onClick: () => count++) { new Text("Long-press me") },
+                    },
+                    new FloatingActionButton(onClick: () => showAlert.Value = true)
+                    {
+                        new Text("✕"),
+                    },
+                },
+                _ => new Column
+                {
+                    new Text("Dialogs and sheets"),
+                    new Button(onClick: () => showSheet.Value = true) { new Text("Modal bottom sheet") },
+                    new Button(onClick: () => showDate.Value  = true) { new Text("Date picker dialog") },
+                    new Button(onClick: () => showTime.Value  = true) { new Text("Time picker dialog") },
+                    new Text($"Picked date: {pickedDate}"),
+                    new Text($"Picked time: {pickedTime}"),
+                },
+            };
+
             return new MaterialTheme
             {
                 new Surface
                 {
                     new Column
                     {
-                        new Text("Hello from .NET"),
-                        new Text($"Count: {count}"),
-                        new Button(onClick: () => count++)
-                        {
-                            new Text("Tap to increment"),
-                        },
-                        new IconButton(onClick: () => count--)
-                        {
-                            new Text("−"),
-                        },
-                        new OutlinedTextField(name),
-                        new Text($"Hi {(string.IsNullOrEmpty(name.Value) ? "stranger" : name.Value)}"),
-                        new Card
-                        {
-                            new Text("Inside a Card"),
-                            new Text($"Counter snapshot: {count}"),
-                        },
-                        new AssistChip(onClick: () => count++)
-                        {
-                            Label = new Text("Assist (+1)"),
-                        },
-                        new FilterChip(selected: liked.Value, onClick: () => liked.Value = !liked.Value)
-                        {
-                            Label = new Text(liked.Value ? "Liked" : "Like"),
-                        },
-                        new SuggestionChip(onClick: () => count.Value = 0)
-                        {
-                            Label = new Text("Reset"),
-                        },
+                        tabContent,
+
+                        // Bottom navigation switches between the three tabs above.
                         new NavigationBar
                         {
                             new NavigationBarItem(selected: tab.Value == 0, onClick: () => tab.Value = 0)
                             {
-                                Icon  = new Text("🏠"),
-                                Label = new Text("Home"),
+                                Icon  = new Text("🔢"),
+                                Label = new Text("Basics"),
                             },
                             new NavigationBarItem(selected: tab.Value == 1, onClick: () => tab.Value = 1)
                             {
-                                Icon  = new Text("⚙"),
-                                Label = new Text("Settings"),
+                                Icon  = new Text("👍"),
+                                Label = new Text("Buttons"),
+                            },
+                            new NavigationBarItem(selected: tab.Value == 2, onClick: () => tab.Value = 2)
+                            {
+                                Icon  = new Text("📅"),
+                                Label = new Text("Pickers"),
                             },
                         },
 
-                        // --- Trigger row: one button per follow-up composable. ---
-                        new Button(onClick: () => showSheet.Value = true) { new Text("Modal bottom sheet") },
-                        new Button(onClick: () => showDate.Value  = true) { new Text("Date picker dialog") },
-                        new Button(onClick: () => showTime.Value  = true) { new Text("Time picker dialog") },
-
-                        // Tooltip wrapping a button — long-press to show the popup.
-                        new Tooltip
-                        {
-                            Tip    = new Surface { new Text("Helpful hint") },
-                            Anchor = new Button(onClick: () => count++) { new Text("Long-press me") },
-                        },
-
-                        new Text($"Picked date: {pickedDate}"),
-                        new Text($"Picked time: {pickedTime}"),
-
-                        new FloatingActionButton(onClick: () => showAlert.Value = true)
-                        {
-                            new Text("✕"),
-                        },
-
+                        // --- Overlays: rendered at the root regardless of tab,
+                        // so a dialog opened on Tab 1 still works after switching. ---
                         showAlert.Value
                             ? new AlertDialog(onDismissRequest: () => showAlert.Value = false)
                             {
@@ -123,9 +139,6 @@ public class MainActivity : ComposeActivity
                                   },
                               }
                             : null,
-
-                        new Text($"Picked date: {pickedDate}"),
-                        new Text($"Picked time: {pickedTime}"),
 
                         showDate.Value
                             ? new DatePickerDialog(onDismissRequest: () => showDate.Value = false)
