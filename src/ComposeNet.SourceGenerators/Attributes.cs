@@ -25,6 +25,24 @@ internal static class Attributes
             {
                 public ComposeDefaultsAttribute(string methodName, string enumName) { }
             }
+
+            /// <summary>
+            /// Apply at assembly scope to generate a named-bit
+            /// <c>[Flags] internal enum &lt;EnumName&gt;</c> from an
+            /// explicit positional parameter list. Use this overload
+            /// when the Kotlin <c>$default</c>-bearing overload was
+            /// stripped from the binding (mangled JVM name, inline-class
+            /// param, etc.) and there is no <c>IMethodSymbol</c> to read.
+            /// Each name occupies one bit at its index; prefix a name
+            /// with <c>!</c> to consume the bit without emitting an
+            /// enum member (e.g. params the caller always provides).
+            /// </summary>
+            [global::System.AttributeUsage(global::System.AttributeTargets.Assembly,
+                                           AllowMultiple = true)]
+            internal sealed class ComposeDefaultsAttribute : global::System.Attribute
+            {
+                public ComposeDefaultsAttribute(string enumName, params string[] parameterNames) { }
+            }
         }
         """;
 }

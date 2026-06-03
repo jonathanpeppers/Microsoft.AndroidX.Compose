@@ -232,6 +232,47 @@ public class GeneratorTests
     }
 
     [Fact]
+    public void DeclarativeAttribute_EmitsBitsFromNamesList()
+    {
+        var attr = """
+            [assembly: ComposeNet.ComposeDefaults("ButtonDefault",
+                "!onClick", "modifier", "enabled", "shape", "!content")]
+            """;
+
+        var (_, diags, emitted) = RunGenerator(attr, "// nothing");
+        Assert.Empty(diags);
+        Assert.NotNull(emitted);
+        Assert.Contains("internal enum ButtonDefault", emitted);
+        // !onClick at bit 0 is consumed but no member emitted.
+        Assert.DoesNotContain("OnClick =", emitted);
+        Assert.Contains("// bit 0: onClick", emitted);
+        Assert.Contains("Modifier = 1 << 1,", emitted);
+        Assert.Contains("Enabled  = 1 << 2,", emitted);
+        Assert.Contains("Shape    = 1 << 3,", emitted);
+        // !content at bit 4 is consumed but no member emitted.
+        Assert.DoesNotContain("Content =", emitted);
+        Assert.Contains("// bit 4: content", emitted);
+        Assert.Contains("All = Modifier | Enabled | Shape,", emitted);
+    }
+
+    [Fact]
+    public void DeclarativeAttribute_RequiresNoBindingSymbols()
+    {
+        // No synthetic Kt class — proves the declarative path doesn't need IMethodSymbol.
+        var attr = """
+            [assembly: ComposeNet.ComposeDefaults("FooDefault", "alpha", "beta", "gamma")]
+            """;
+
+        var (_, diags, emitted) = RunGenerator(attr, "// nothing");
+        Assert.Empty(diags);
+        Assert.NotNull(emitted);
+        Assert.Contains("Alpha = 1 << 0,", emitted);
+        Assert.Contains("Beta  = 1 << 1,", emitted);
+        Assert.Contains("Gamma = 1 << 2,", emitted);
+        Assert.Contains("All = Alpha | Beta | Gamma,", emitted);
+    }
+
+    [Fact]
     public void AttributeIsAddedViaPostInit()
     {
         var (output, _, _) = RunGenerator("// nothing", "// nothing");

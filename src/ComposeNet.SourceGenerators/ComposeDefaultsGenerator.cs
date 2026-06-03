@@ -17,7 +17,8 @@ namespace ComposeNet.SourceGenerators;
 [Generator(LanguageNames.CSharp)]
 public sealed class ComposeDefaultsGenerator : IIncrementalGenerator
 {
-    const string AttributeMetadataName = "ComposeNet.ComposeDefaultsAttribute`1";
+    const string GenericAttributeMetadataName = "ComposeNet.ComposeDefaultsAttribute`1";
+    const string DeclarativeAttributeMetadataName = "ComposeNet.ComposeDefaultsAttribute";
     const string ComposerNamespace = "AndroidX.Compose.Runtime";
     const string ComposerName = "IComposer";
     const string KotlinFunctionNamespace = "Kotlin.Jvm.Functions";
@@ -45,8 +46,9 @@ public sealed class ComposeDefaultsGenerator : IIncrementalGenerator
 
     static ImmutableArray<GenerationResult> BuildAll(Compilation compilation)
     {
-        var attrSymbol = compilation.GetTypeByMetadataName(AttributeMetadataName);
-        if (attrSymbol is null)
+        var genericAttr = compilation.GetTypeByMetadataName(GenericAttributeMetadataName);
+        var declarativeAttr = compilation.GetTypeByMetadataName(DeclarativeAttributeMetadataName);
+        if (genericAttr is null && declarativeAttr is null)
             return ImmutableArray<GenerationResult>.Empty;
 
         var assemblyAttributes = compilation.Assembly.GetAttributes();
@@ -55,14 +57,26 @@ public sealed class ComposeDefaultsGenerator : IIncrementalGenerator
         foreach (var attr in assemblyAttributes)
         {
             if (attr.AttributeClass is not { } attrClass) continue;
-            if (!SymbolEqualityComparer.Default.Equals(attrClass.ConstructedFrom, attrSymbol)) continue;
-            builder.Add(Build(attr));
+
+            if (genericAttr is not null &&
+                SymbolEqualityComparer.Default.Equals(attrClass.ConstructedFrom, genericAttr))
+            {
+                builder.Add(BuildFromSymbol(attr));
+                continue;
+            }
+
+            if (declarativeAttr is not null &&
+                SymbolEqualityComparer.Default.Equals(attrClass, declarativeAttr))
+            {
+                builder.Add(BuildFromNames(attr));
+                continue;
+            }
         }
 
         return builder.ToImmutable();
     }
 
-    static GenerationResult Build(AttributeData attr)
+    static GenerationResult BuildFromSymbol(AttributeData attr)
     {
         var loc = attr.ApplicationSyntaxReference?.GetSyntax().GetLocation() ?? Location.None;
 
@@ -106,7 +120,38 @@ public sealed class ComposeDefaultsGenerator : IIncrementalGenerator
                 new[] { Diagnostic.Create(Diagnostics.NotComposable, loc, method.ToDisplayString()) });
         }
 
-        var source = ComposeDefaultsEmitter.Emit(enumName, containingType, method, composerIndex);
+        var slots = ComposeDefaultsEmitter.SlotsFromSymbol(method, composerIndex);
+        var sourceComment = $"{containingType.ToDisplayString()}.{method.Name}";
+        var source = ComposeDefaultsEmitter.Emit(enumName, sourceComment, slots);
+        return new GenerationResult(source, $"ComposeNet.{enumName}.g.cs", Array.Empty<Diagnostic>());
+    }
+
+    static GenerationResult BuildFromNames(AttributeData attr)
+    {
+        var loc = attr.ApplicationSyntaxReference?.GetSyntax().GetLocation() ?? Location.None;
+
+        if (attr.ConstructorArguments.Length < 2 ||
+            attr.ConstructorArguments[0].Value is not string enumName ||
+            string.IsNullOrWhiteSpace(enumName))
+        {
+            return new GenerationResult(null, null,
+                new[] { Diagnostic.Create(Diagnostics.MalformedAttribute, loc, "<unknown>") });
+        }
+
+        // params string[] arrives as a single TypedConstant of Kind=Array.
+        var arr = attr.ConstructorArguments[1];
+        if (arr.Kind != TypedConstantKind.Array)
+        {
+            return new GenerationResult(null, null,
+                new[] { Diagnostic.Create(Diagnostics.MalformedAttribute, loc, enumName) });
+        }
+
+        var names = arr.Values
+            .Select(v => v.Value as string ?? string.Empty)
+            .ToArray();
+
+        var slots = ComposeDefaultsEmitter.SlotsFromNames(names);
+        var source = ComposeDefaultsEmitter.Emit(enumName, $"declarative names for '{enumName}'", slots);
         return new GenerationResult(source, $"ComposeNet.{enumName}.g.cs", Array.Empty<Diagnostic>());
     }
 
