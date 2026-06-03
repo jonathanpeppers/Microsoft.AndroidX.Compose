@@ -365,4 +365,414 @@ internal static class ComposeBridges
             JNIEnv.DeleteLocalRef(valueRef);
         }
     }
+
+    // androidx.compose.material3.CardKt.Card (non-clickable):
+    //   (modifier, shape, colors, elevation, border, content,
+    //    composer, $changed, $default)
+    // 6 user params, only bit 5 (content) provided.
+    const string CardSig =
+        "(Landroidx/compose/ui/Modifier;Landroidx/compose/ui/graphics/Shape;" +
+        "Landroidx/compose/material3/CardColors;Landroidx/compose/material3/CardElevation;" +
+        "Landroidx/compose/foundation/BorderStroke;" +
+        "Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;II)V";
+
+    static IntPtr s_cardClass;
+    static IntPtr s_cardMethod;
+
+    public static unsafe void Card(IFunction3 content, IComposer composer)
+    {
+        if (s_cardClass == IntPtr.Zero)
+        {
+            s_cardClass  = JNIEnv.FindClass("androidx/compose/material3/CardKt");
+            s_cardMethod = JNIEnv.GetStaticMethodID(s_cardClass, "Card", CardSig);
+        }
+
+        JValue* args = stackalloc JValue[9];
+        args[0] = new JValue(IntPtr.Zero); // modifier
+        args[1] = new JValue(IntPtr.Zero); // shape
+        args[2] = new JValue(IntPtr.Zero); // colors
+        args[3] = new JValue(IntPtr.Zero); // elevation
+        args[4] = new JValue(IntPtr.Zero); // border
+        args[5] = new JValue(((Java.Lang.Object)content).Handle);
+        args[6] = new JValue(((Java.Lang.Object)composer).Handle);
+        args[7] = new JValue(0);
+        args[8] = new JValue((int)CardDefault.All);
+        JNIEnv.CallStaticVoidMethod(s_cardClass, s_cardMethod, args);
+    }
+
+    // androidx.compose.material3.ChipKt.AssistChip:
+    //   (onClick, label, modifier, enabled, leadingIcon, trailingIcon,
+    //    shape, colors, elevation, border, interactionSource,
+    //    composer, $changed, $changed1, $default)
+    // 11 user params; bit 0 (onClick), bit 1 (label) always provided.
+    // bits 4 (leadingIcon) + 5 (trailingIcon) toggled per-call.
+    const string AssistChipSig =
+        "(Lkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function2;" +
+        "Landroidx/compose/ui/Modifier;Z" +
+        "Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;" +
+        "Landroidx/compose/ui/graphics/Shape;" +
+        "Landroidx/compose/material3/ChipColors;Landroidx/compose/material3/ChipElevation;" +
+        "Landroidx/compose/foundation/BorderStroke;" +
+        "Landroidx/compose/foundation/interaction/MutableInteractionSource;" +
+        "Landroidx/compose/runtime/Composer;III)V";
+
+    static IntPtr s_assistChipClass;
+    static IntPtr s_assistChipMethod;
+
+    public static unsafe void AssistChip(
+        IFunction0  onClick,
+        IFunction2  label,
+        IFunction2? leadingIcon,
+        IFunction2? trailingIcon,
+        int         defaults,
+        IComposer   composer)
+    {
+        if (s_assistChipClass == IntPtr.Zero)
+        {
+            s_assistChipClass  = JNIEnv.FindClass("androidx/compose/material3/ChipKt");
+            s_assistChipMethod = JNIEnv.GetStaticMethodID(s_assistChipClass, "AssistChip", AssistChipSig);
+        }
+
+        JValue* args = stackalloc JValue[15];
+        args[0]  = new JValue(((Java.Lang.Object)onClick).Handle);
+        args[1]  = new JValue(((Java.Lang.Object)label).Handle);
+        args[2]  = new JValue(IntPtr.Zero); // modifier
+        args[3]  = new JValue(true);        // enabled
+        args[4]  = new JValue(leadingIcon  is null ? IntPtr.Zero : ((Java.Lang.Object)leadingIcon).Handle);
+        args[5]  = new JValue(trailingIcon is null ? IntPtr.Zero : ((Java.Lang.Object)trailingIcon).Handle);
+        args[6]  = new JValue(IntPtr.Zero); // shape
+        args[7]  = new JValue(IntPtr.Zero); // colors
+        args[8]  = new JValue(IntPtr.Zero); // elevation
+        args[9]  = new JValue(IntPtr.Zero); // border
+        args[10] = new JValue(IntPtr.Zero); // interactionSource
+        args[11] = new JValue(((Java.Lang.Object)composer).Handle);
+        args[12] = new JValue(0);           // $changed
+        args[13] = new JValue(0);           // $changed1
+        args[14] = new JValue(defaults);    // $default
+        JNIEnv.CallStaticVoidMethod(s_assistChipClass, s_assistChipMethod, args);
+    }
+
+    // androidx.compose.material3.ChipKt.FilterChip:
+    //   (selected, onClick, label, modifier, enabled, leadingIcon, trailingIcon,
+    //    shape, colors, elevation, border, interactionSource,
+    //    composer, $changed, $changed1, $default)
+    // 12 user params; bits 0 (selected), 1 (onClick), 2 (label) always provided.
+    const string FilterChipSig =
+        "(ZLkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function2;" +
+        "Landroidx/compose/ui/Modifier;Z" +
+        "Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;" +
+        "Landroidx/compose/ui/graphics/Shape;" +
+        "Landroidx/compose/material3/SelectableChipColors;" +
+        "Landroidx/compose/material3/SelectableChipElevation;" +
+        "Landroidx/compose/foundation/BorderStroke;" +
+        "Landroidx/compose/foundation/interaction/MutableInteractionSource;" +
+        "Landroidx/compose/runtime/Composer;III)V";
+
+    static IntPtr s_filterChipClass;
+    static IntPtr s_filterChipMethod;
+
+    public static unsafe void FilterChip(
+        bool        selected,
+        IFunction0  onClick,
+        IFunction2  label,
+        IFunction2? leadingIcon,
+        IFunction2? trailingIcon,
+        int         defaults,
+        IComposer   composer)
+    {
+        if (s_filterChipClass == IntPtr.Zero)
+        {
+            s_filterChipClass  = JNIEnv.FindClass("androidx/compose/material3/ChipKt");
+            s_filterChipMethod = JNIEnv.GetStaticMethodID(s_filterChipClass, "FilterChip", FilterChipSig);
+        }
+
+        JValue* args = stackalloc JValue[16];
+        args[0]  = new JValue(selected);
+        args[1]  = new JValue(((Java.Lang.Object)onClick).Handle);
+        args[2]  = new JValue(((Java.Lang.Object)label).Handle);
+        args[3]  = new JValue(IntPtr.Zero); // modifier
+        args[4]  = new JValue(true);        // enabled
+        args[5]  = new JValue(leadingIcon  is null ? IntPtr.Zero : ((Java.Lang.Object)leadingIcon).Handle);
+        args[6]  = new JValue(trailingIcon is null ? IntPtr.Zero : ((Java.Lang.Object)trailingIcon).Handle);
+        args[7]  = new JValue(IntPtr.Zero); // shape
+        args[8]  = new JValue(IntPtr.Zero); // colors
+        args[9]  = new JValue(IntPtr.Zero); // elevation
+        args[10] = new JValue(IntPtr.Zero); // border
+        args[11] = new JValue(IntPtr.Zero); // interactionSource
+        args[12] = new JValue(((Java.Lang.Object)composer).Handle);
+        args[13] = new JValue(0);
+        args[14] = new JValue(0);
+        args[15] = new JValue(defaults);
+        JNIEnv.CallStaticVoidMethod(s_filterChipClass, s_filterChipMethod, args);
+    }
+
+    // androidx.compose.material3.ChipKt.InputChip:
+    //   (selected, onClick, label, modifier, enabled, leadingIcon, avatar,
+    //    trailingIcon, shape, colors, elevation, border, interactionSource,
+    //    composer, $changed, $changed1, $default)
+    // 13 user params; bits 0/1/2 always provided.
+    const string InputChipSig =
+        "(ZLkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function2;" +
+        "Landroidx/compose/ui/Modifier;Z" +
+        "Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;" +
+        "Lkotlin/jvm/functions/Function2;Landroidx/compose/ui/graphics/Shape;" +
+        "Landroidx/compose/material3/SelectableChipColors;" +
+        "Landroidx/compose/material3/SelectableChipElevation;" +
+        "Landroidx/compose/foundation/BorderStroke;" +
+        "Landroidx/compose/foundation/interaction/MutableInteractionSource;" +
+        "Landroidx/compose/runtime/Composer;III)V";
+
+    static IntPtr s_inputChipClass;
+    static IntPtr s_inputChipMethod;
+
+    public static unsafe void InputChip(
+        bool        selected,
+        IFunction0  onClick,
+        IFunction2  label,
+        IFunction2? leadingIcon,
+        IFunction2? avatar,
+        IFunction2? trailingIcon,
+        int         defaults,
+        IComposer   composer)
+    {
+        if (s_inputChipClass == IntPtr.Zero)
+        {
+            s_inputChipClass  = JNIEnv.FindClass("androidx/compose/material3/ChipKt");
+            s_inputChipMethod = JNIEnv.GetStaticMethodID(s_inputChipClass, "InputChip", InputChipSig);
+        }
+
+        JValue* args = stackalloc JValue[17];
+        args[0]  = new JValue(selected);
+        args[1]  = new JValue(((Java.Lang.Object)onClick).Handle);
+        args[2]  = new JValue(((Java.Lang.Object)label).Handle);
+        args[3]  = new JValue(IntPtr.Zero); // modifier
+        args[4]  = new JValue(true);        // enabled
+        args[5]  = new JValue(leadingIcon  is null ? IntPtr.Zero : ((Java.Lang.Object)leadingIcon).Handle);
+        args[6]  = new JValue(avatar       is null ? IntPtr.Zero : ((Java.Lang.Object)avatar).Handle);
+        args[7]  = new JValue(trailingIcon is null ? IntPtr.Zero : ((Java.Lang.Object)trailingIcon).Handle);
+        args[8]  = new JValue(IntPtr.Zero); // shape
+        args[9]  = new JValue(IntPtr.Zero); // colors
+        args[10] = new JValue(IntPtr.Zero); // elevation
+        args[11] = new JValue(IntPtr.Zero); // border
+        args[12] = new JValue(IntPtr.Zero); // interactionSource
+        args[13] = new JValue(((Java.Lang.Object)composer).Handle);
+        args[14] = new JValue(0);
+        args[15] = new JValue(0);
+        args[16] = new JValue(defaults);
+        JNIEnv.CallStaticVoidMethod(s_inputChipClass, s_inputChipMethod, args);
+    }
+
+    // androidx.compose.material3.ChipKt.SuggestionChip:
+    //   (onClick, label, modifier, enabled, icon, shape, colors, elevation,
+    //    border, interactionSource, composer, $changed, $default)
+    // 10 user params; bits 0 (onClick), 1 (label) always provided.
+    const string SuggestionChipSig =
+        "(Lkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function2;" +
+        "Landroidx/compose/ui/Modifier;Z" +
+        "Lkotlin/jvm/functions/Function2;Landroidx/compose/ui/graphics/Shape;" +
+        "Landroidx/compose/material3/ChipColors;Landroidx/compose/material3/ChipElevation;" +
+        "Landroidx/compose/foundation/BorderStroke;" +
+        "Landroidx/compose/foundation/interaction/MutableInteractionSource;" +
+        "Landroidx/compose/runtime/Composer;II)V";
+
+    static IntPtr s_suggestionChipClass;
+    static IntPtr s_suggestionChipMethod;
+
+    public static unsafe void SuggestionChip(
+        IFunction0  onClick,
+        IFunction2  label,
+        IFunction2? icon,
+        int         defaults,
+        IComposer   composer)
+    {
+        if (s_suggestionChipClass == IntPtr.Zero)
+        {
+            s_suggestionChipClass  = JNIEnv.FindClass("androidx/compose/material3/ChipKt");
+            s_suggestionChipMethod = JNIEnv.GetStaticMethodID(s_suggestionChipClass, "SuggestionChip", SuggestionChipSig);
+        }
+
+        JValue* args = stackalloc JValue[13];
+        args[0]  = new JValue(((Java.Lang.Object)onClick).Handle);
+        args[1]  = new JValue(((Java.Lang.Object)label).Handle);
+        args[2]  = new JValue(IntPtr.Zero); // modifier
+        args[3]  = new JValue(true);        // enabled
+        args[4]  = new JValue(icon is null ? IntPtr.Zero : ((Java.Lang.Object)icon).Handle);
+        args[5]  = new JValue(IntPtr.Zero); // shape
+        args[6]  = new JValue(IntPtr.Zero); // colors
+        args[7]  = new JValue(IntPtr.Zero); // elevation
+        args[8]  = new JValue(IntPtr.Zero); // border
+        args[9]  = new JValue(IntPtr.Zero); // interactionSource
+        args[10] = new JValue(((Java.Lang.Object)composer).Handle);
+        args[11] = new JValue(0);
+        args[12] = new JValue(defaults);
+        JNIEnv.CallStaticVoidMethod(s_suggestionChipClass, s_suggestionChipMethod, args);
+    }
+
+    // androidx.compose.material3.NavigationBarKt.NavigationBar-HsRjFd4:
+    //   (modifier, containerColor, contentColor, tonalElevation, windowInsets,
+    //    content, composer, $changed, $default)
+    // 6 user params; only bit 5 (content) provided.
+    const string NavigationBarSig =
+        "(Landroidx/compose/ui/Modifier;JJF" +
+        "Landroidx/compose/foundation/layout/WindowInsets;" +
+        "Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;II)V";
+
+    static IntPtr s_navBarClass;
+    static IntPtr s_navBarMethod;
+
+    public static unsafe void NavigationBar(IFunction3 content, IComposer composer)
+    {
+        if (s_navBarClass == IntPtr.Zero)
+        {
+            s_navBarClass  = JNIEnv.FindClass("androidx/compose/material3/NavigationBarKt");
+            s_navBarMethod = JNIEnv.GetStaticMethodID(s_navBarClass, "NavigationBar-HsRjFd4", NavigationBarSig);
+        }
+
+        JValue* args = stackalloc JValue[9];
+        args[0] = new JValue(IntPtr.Zero); // modifier
+        args[1] = new JValue(0L);          // containerColor
+        args[2] = new JValue(0L);          // contentColor
+        args[3] = new JValue(0f);          // tonalElevation
+        args[4] = new JValue(IntPtr.Zero); // windowInsets
+        args[5] = new JValue(((Java.Lang.Object)content).Handle);
+        args[6] = new JValue(((Java.Lang.Object)composer).Handle);
+        args[7] = new JValue(0);
+        args[8] = new JValue((int)NavigationBarDefault.All);
+        JNIEnv.CallStaticVoidMethod(s_navBarClass, s_navBarMethod, args);
+    }
+
+    // androidx.compose.material3.NavigationBarKt.NavigationBarItem:
+    //   (RowScope, selected, onClick, icon, modifier, enabled, label,
+    //    alwaysShowLabel, colors, interactionSource, composer, $changed, $default)
+    // RowScope is the Kotlin extension receiver (first param). 9 user params
+    // (after the receiver); bits 0 (selected), 1 (onClick), 2 (icon) provided.
+    const string NavigationBarItemSig =
+        "(Landroidx/compose/foundation/layout/RowScope;Z" +
+        "Lkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function2;" +
+        "Landroidx/compose/ui/Modifier;Z" +
+        "Lkotlin/jvm/functions/Function2;Z" +
+        "Landroidx/compose/material3/NavigationBarItemColors;" +
+        "Landroidx/compose/foundation/interaction/MutableInteractionSource;" +
+        "Landroidx/compose/runtime/Composer;II)V";
+
+    static IntPtr s_navBarItemClass;
+    static IntPtr s_navBarItemMethod;
+
+    public static unsafe void NavigationBarItem(
+        IntPtr      rowScope,
+        bool        selected,
+        IFunction0  onClick,
+        IFunction2  icon,
+        IFunction2? label,
+        int         defaults,
+        IComposer   composer)
+    {
+        if (s_navBarItemClass == IntPtr.Zero)
+        {
+            s_navBarItemClass  = JNIEnv.FindClass("androidx/compose/material3/NavigationBarKt");
+            s_navBarItemMethod = JNIEnv.GetStaticMethodID(s_navBarItemClass, "NavigationBarItem", NavigationBarItemSig);
+        }
+
+        if (rowScope == IntPtr.Zero)
+            throw new System.InvalidOperationException(
+                "NavigationBarItem must be a child of NavigationBar (no RowScope receiver in scope).");
+
+        JValue* args = stackalloc JValue[13];
+        args[0]  = new JValue(rowScope);
+        args[1]  = new JValue(selected);
+        args[2]  = new JValue(((Java.Lang.Object)onClick).Handle);
+        args[3]  = new JValue(((Java.Lang.Object)icon).Handle);
+        args[4]  = new JValue(IntPtr.Zero); // modifier
+        args[5]  = new JValue(true);        // enabled
+        args[6]  = new JValue(label is null ? IntPtr.Zero : ((Java.Lang.Object)label).Handle);
+        args[7]  = new JValue(true);        // alwaysShowLabel
+        args[8]  = new JValue(IntPtr.Zero); // colors
+        args[9]  = new JValue(IntPtr.Zero); // interactionSource
+        args[10] = new JValue(((Java.Lang.Object)composer).Handle);
+        args[11] = new JValue(0);
+        args[12] = new JValue(defaults);
+        JNIEnv.CallStaticVoidMethod(s_navBarItemClass, s_navBarItemMethod, args);
+    }
+
+    // androidx.compose.material3.NavigationRailKt.NavigationRail-qi6gXK8:
+    //   (modifier, containerColor, contentColor, header, windowInsets,
+    //    content, composer, $changed, $default)
+    // 6 user params; only bit 5 (content) provided. (`header` is a slot we
+    // don't surface — defaulted via bit 3.)
+    const string NavigationRailSig =
+        "(Landroidx/compose/ui/Modifier;JJ" +
+        "Lkotlin/jvm/functions/Function3;" +
+        "Landroidx/compose/foundation/layout/WindowInsets;" +
+        "Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;II)V";
+
+    static IntPtr s_navRailClass;
+    static IntPtr s_navRailMethod;
+
+    public static unsafe void NavigationRail(IFunction3 content, IComposer composer)
+    {
+        if (s_navRailClass == IntPtr.Zero)
+        {
+            s_navRailClass  = JNIEnv.FindClass("androidx/compose/material3/NavigationRailKt");
+            s_navRailMethod = JNIEnv.GetStaticMethodID(s_navRailClass, "NavigationRail-qi6gXK8", NavigationRailSig);
+        }
+
+        JValue* args = stackalloc JValue[9];
+        args[0] = new JValue(IntPtr.Zero); // modifier
+        args[1] = new JValue(0L);          // containerColor
+        args[2] = new JValue(0L);          // contentColor
+        args[3] = new JValue(IntPtr.Zero); // header
+        args[4] = new JValue(IntPtr.Zero); // windowInsets
+        args[5] = new JValue(((Java.Lang.Object)content).Handle);
+        args[6] = new JValue(((Java.Lang.Object)composer).Handle);
+        args[7] = new JValue(0);
+        args[8] = new JValue((int)NavigationRailDefault.All);
+        JNIEnv.CallStaticVoidMethod(s_navRailClass, s_navRailMethod, args);
+    }
+
+    // androidx.compose.material3.NavigationRailKt.NavigationRailItem:
+    //   (selected, onClick, icon, modifier, enabled, label, alwaysShowLabel,
+    //    colors, interactionSource, composer, $changed, $default)
+    // 9 user params (no scope receiver despite parent NavigationRail
+    // exposing a ColumnScope content lambda — NavigationRailItem is a
+    // top-level static, not a ColumnScope extension).
+    const string NavigationRailItemSig =
+        "(ZLkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function2;" +
+        "Landroidx/compose/ui/Modifier;Z" +
+        "Lkotlin/jvm/functions/Function2;Z" +
+        "Landroidx/compose/material3/NavigationRailItemColors;" +
+        "Landroidx/compose/foundation/interaction/MutableInteractionSource;" +
+        "Landroidx/compose/runtime/Composer;II)V";
+
+    static IntPtr s_navRailItemClass;
+    static IntPtr s_navRailItemMethod;
+
+    public static unsafe void NavigationRailItem(
+        bool        selected,
+        IFunction0  onClick,
+        IFunction2  icon,
+        IFunction2? label,
+        int         defaults,
+        IComposer   composer)
+    {
+        if (s_navRailItemClass == IntPtr.Zero)
+        {
+            s_navRailItemClass  = JNIEnv.FindClass("androidx/compose/material3/NavigationRailKt");
+            s_navRailItemMethod = JNIEnv.GetStaticMethodID(s_navRailItemClass, "NavigationRailItem", NavigationRailItemSig);
+        }
+
+        JValue* args = stackalloc JValue[12];
+        args[0]  = new JValue(selected);
+        args[1]  = new JValue(((Java.Lang.Object)onClick).Handle);
+        args[2]  = new JValue(((Java.Lang.Object)icon).Handle);
+        args[3]  = new JValue(IntPtr.Zero); // modifier
+        args[4]  = new JValue(true);        // enabled
+        args[5]  = new JValue(label is null ? IntPtr.Zero : ((Java.Lang.Object)label).Handle);
+        args[6]  = new JValue(true);        // alwaysShowLabel
+        args[7]  = new JValue(IntPtr.Zero); // colors
+        args[8]  = new JValue(IntPtr.Zero); // interactionSource
+        args[9]  = new JValue(((Java.Lang.Object)composer).Handle);
+        args[10] = new JValue(0);
+        args[11] = new JValue(defaults);
+        JNIEnv.CallStaticVoidMethod(s_navRailItemClass, s_navRailItemMethod, args);
+    }
 }

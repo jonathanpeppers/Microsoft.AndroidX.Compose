@@ -14,6 +14,8 @@ public class MainActivity : ComposeActivity
             var count    = Remember(() => new MutableNumberState<int>(0));
             var name     = Remember(() => new MutableState<string>(""));
             var showDlg  = Remember(() => new MutableState<bool>(false));
+            var liked    = Remember(() => new MutableState<bool>(false));
+            var tab      = Remember(() => new MutableNumberState<int>(0));
             return new MaterialTheme
             {
                 new Surface
@@ -32,6 +34,36 @@ public class MainActivity : ComposeActivity
                         },
                         new OutlinedTextField(name),
                         new Text($"Hi {(string.IsNullOrEmpty(name.Value) ? "stranger" : name.Value)}"),
+                        new Card
+                        {
+                            new Text("Inside a Card"),
+                            new Text($"Counter snapshot: {count}"),
+                        },
+                        new AssistChip(onClick: () => count++)
+                        {
+                            Label = new Text("Assist (+1)"),
+                        },
+                        new FilterChip(selected: liked.Value, onClick: () => liked.Value = !liked.Value)
+                        {
+                            Label = new Text(liked.Value ? "Liked" : "Like"),
+                        },
+                        new SuggestionChip(onClick: () => count.Value = 0)
+                        {
+                            Label = new Text("Reset"),
+                        },
+                        new NavigationBar
+                        {
+                            new NavigationBarItem(selected: tab.Value == 0, onClick: () => tab.Value = 0)
+                            {
+                                Icon  = new Text("🏠"),
+                                Label = new Text("Home"),
+                            },
+                            new NavigationBarItem(selected: tab.Value == 1, onClick: () => tab.Value = 1)
+                            {
+                                Icon  = new Text("⚙"),
+                                Label = new Text("Settings"),
+                            },
+                        },
                         new FloatingActionButton(onClick: () => showDlg.Value = true)
                         {
                             new Text("✕"),

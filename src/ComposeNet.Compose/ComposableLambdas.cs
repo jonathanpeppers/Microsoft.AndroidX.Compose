@@ -58,20 +58,59 @@ internal sealed class ComposableLambda2 : Java.Lang.Object, IFunction2
 
 // Function3<Scope, Composer, Integer, Unit> — Column/Row/Box/Button content.
 // p0 = scope (RowScope/ColumnScope), p1 = composer, p2 = $changed.
-// The scope receiver is ignored here; users can't access it from the
-// tree-style API anyway (modifiers like .weight live on Modifier
-// extensions, which are a Tier 2 problem).
+//
+// Two ctors:
+// * <c>Action&lt;IComposer&gt;</c> (the original): scope is discarded —
+//   used everywhere children don't need to know it (Column, Box, Button).
+// * <c>Action&lt;IntPtr, IComposer&gt;</c>: receives the raw scope handle,
+//   used by container composables whose children are extension-receiver
+//   composables (<c>RowScope.NavigationBarItem</c>). The scope is
+//   published via <see cref="RenderContext"/> so the child <c>Render</c>
+//   can read it.
 [Register("composenet/compose/ComposableLambda3")]
 internal sealed class ComposableLambda3 : Java.Lang.Object, IFunction3
 {
-    readonly System.Action<IComposer> _body;
-    public ComposableLambda3(System.Action<IComposer> body) => _body = body;
+    readonly System.Action<IntPtr, IComposer> _body;
+
+    public ComposableLambda3(System.Action<IComposer> body)
+        : this((_, c) => body(c)) { }
+
+    public ComposableLambda3(System.Action<IntPtr, IComposer> body) => _body = body;
 
     public Java.Lang.Object? Invoke(Java.Lang.Object? p0, Java.Lang.Object? p1, Java.Lang.Object? p2)
     {
         System.ArgumentNullException.ThrowIfNull(p1);
         var composer = Android.Runtime.Extensions.JavaCast<IComposer>(p1);
-        _body(composer);
+        _body(p0?.Handle ?? IntPtr.Zero, composer);
         return null;
+    }
+}
+
+// Thread-static stash of the current Compose receiver scope (RowScope /
+// ColumnScope) handle. Set by container composables that consume a
+// scope-receiver Function3 content lambda; read by *Item composables
+// whose underlying Kotlin static method takes the scope as its first
+// argument. Composition runs synchronously on a single thread, so a
+// [ThreadStatic] is sufficient — and a struct-disposable scope guard
+// keeps push/pop balanced even when child Render throws.
+internal static class RenderContext
+{
+    [System.ThreadStatic]
+    static IntPtr s_scope;
+
+    public static IntPtr CurrentScope => s_scope;
+
+    public static ScopeFrame PushScope(IntPtr scope)
+    {
+        var prev = s_scope;
+        s_scope = scope;
+        return new ScopeFrame(prev);
+    }
+
+    internal readonly struct ScopeFrame : System.IDisposable
+    {
+        readonly IntPtr _previous;
+        public ScopeFrame(IntPtr previous) => _previous = previous;
+        public void Dispose() => s_scope = _previous;
     }
 }
