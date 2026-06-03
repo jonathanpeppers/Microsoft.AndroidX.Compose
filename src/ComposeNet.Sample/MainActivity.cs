@@ -20,6 +20,7 @@ public class MainActivity : ComposeActivity
             var showSheet   = Remember(() => new MutableState<bool>(false));
             var showDate    = Remember(() => new MutableState<bool>(false));
             var showTime    = Remember(() => new MutableState<bool>(false));
+            var drawerKind  = Remember(() => new MutableNumberState<int>(0));
             var pickedDate  = Remember(() => new MutableState<string>("(none)"));
             var pickedTime  = Remember(() => new MutableState<string>("(none)"));
             var dateState   = Remember(() => new DatePickerState());
@@ -97,33 +98,65 @@ public class MainActivity : ComposeActivity
                 },
                 3 => new Column
                 {
-                    new Text("Navigation drawer sheets"),
-                    new PermanentNavigationDrawer
+                    new Text("Navigation drawers"),
+                    new Text("Tap a button to switch demo. Swipe from the"),
+                    new Text("left edge of the demo area to open Modal /"),
+                    new Text("Dismissible drawers (no coroutine plumbing)."),
+                    new Button(onClick: () => drawerKind.Value = 0) { new Text("Modal") },
+                    new Button(onClick: () => drawerKind.Value = 1) { new Text("Dismissible") },
+                    new Button(onClick: () => drawerKind.Value = 2) { new Text("Permanent") },
+                    drawerKind.Value switch
                     {
-                        Drawer = new PermanentDrawerSheet
+                        0 => (ComposableNode)new ModalNavigationDrawer
                         {
-                            new Text("Permanent drawer"),
-                            new Text("• Inbox"),
-                            new Text("• Sent"),
-                            new Text("• Drafts"),
+                            Drawer = new ModalDrawerSheet
+                            {
+                                new Text("Modal drawer"),
+                                new Text("• Inbox"),
+                                new Text("• Sent"),
+                                new Text("• Drafts"),
+                            },
+                            Content = new Column
+                            {
+                                new Text("Main content"),
+                                new Text("Swipe right from edge →"),
+                                new Text($"Count: {count}"),
+                                new Button(onClick: () => count++) { new Text("+1") },
+                            },
                         },
-                        Content = new Column
+                        1 => new DismissibleNavigationDrawer
                         {
-                            new Text("Main content"),
-                            new Text($"Count: {count}"),
-                            new Button(onClick: () => count++) { new Text("+1") },
+                            Drawer = new DismissibleDrawerSheet
+                            {
+                                new Text("Dismissible drawer"),
+                                new Text("• Inbox"),
+                                new Text("• Sent"),
+                                new Text("• Drafts"),
+                            },
+                            Content = new Column
+                            {
+                                new Text("Main content"),
+                                new Text("Swipe right to open →"),
+                                new Text($"Count: {count}"),
+                                new Button(onClick: () => count++) { new Text("+1") },
+                            },
                         },
-                    },
-                    new Text("Standalone drawer sheets:"),
-                    new ModalDrawerSheet
-                    {
-                        new Text("ModalDrawerSheet"),
-                        new Text("(usually inside ModalNavigationDrawer)"),
-                    },
-                    new DismissibleDrawerSheet
-                    {
-                        new Text("DismissibleDrawerSheet"),
-                        new Text("(usually inside DismissibleNavigationDrawer)"),
+                        _ => new PermanentNavigationDrawer
+                        {
+                            Drawer = new PermanentDrawerSheet
+                            {
+                                new Text("Permanent drawer"),
+                                new Text("• Inbox"),
+                                new Text("• Sent"),
+                                new Text("• Drafts"),
+                            },
+                            Content = new Column
+                            {
+                                new Text("Main content"),
+                                new Text($"Count: {count}"),
+                                new Button(onClick: () => count++) { new Text("+1") },
+                            },
+                        },
                     },
                 },
                 _ => new Column
