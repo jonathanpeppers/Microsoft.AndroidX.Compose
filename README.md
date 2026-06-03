@@ -201,7 +201,7 @@ The goal isn't beauty — it's to find the **smallest possible "Hello, Compose" 
 The sample (`src/ComposeNet.Sample`) **builds** with `dotnet build`,
 deploys to an Android 16 (API 36) emulator, **renders a real Material
 3 UI**, and the counter button is **interactive** (tapping increments
-`MutableState<Int>` and recomposes the `Text`).
+`MutableNumberState<int>` and recomposes the `Text`).
 
 Confirmed on device:
 
@@ -216,16 +216,30 @@ Confirmed on device:
   (`"Hello from .NET"`, `"Count: N"`) and a **Material 3 `Button`**
   whose label `"Tap to increment"` correctly inherits
   `LocalContentColor = onPrimary` (white on blue).
-- Click → `MutableState.Value = current + 1` → recomposition →
-  visible count update.
+- Click → `count++` → recomposition → visible count update.
 
-The bindings — built via `<AndroidMavenLibrary>` because the existing
-`Xamarin.AndroidX.Compose.*` NuGets strip every Compose API with
-`<remove-node path="/api/package" />` — live in
-`src/ComposeNet.Bindings.{Runtime,UI,Foundation,Foundation.Layout,Material3}`.
-Read `NOTES.md` for the catalog of binding-generator errors and the
-Metadata.xml / `ExcludeAssets` / `AndroidIgnoredJavaDependency` patterns used
-to defeat them.
+The facade ([`ComposeNet.Compose`](src/ComposeNet.Compose)) and sample
+reference the official `Xamarin.AndroidX.Compose.*` 1.11.1.1 and
+`Xamarin.AndroidX.Compose.Material3` 1.4.0.x NuGets directly. The
+historical context behind the previously in-repo `<AndroidMavenLibrary>`
+binding projects (now deleted) is preserved in [NOTES.md](NOTES.md).
+
+### Composables shipped today
+
+The facade currently wraps these Material 3 / Foundation composables
+as C# types:
+
+| Category    | Composables                                                                                       |
+| ----------- | ------------------------------------------------------------------------------------------------- |
+| Layout      | `Column`, `MaterialTheme`, `Surface`, `Card`                                                      |
+| Buttons     | `Button`, `IconButton`, `FloatingActionButton`                                                    |
+| Text        | `Text`, `TextField`, `OutlinedTextField`                                                          |
+| Chips       | `AssistChip`, `FilterChip`, `InputChip`, `SuggestionChip`                                         |
+| Navigation  | `NavigationBar` + `NavigationBarItem`, `NavigationRail` + `NavigationRailItem`                    |
+| Sheets      | `ModalBottomSheet`, `BottomSheetScaffold`                                                         |
+| Pickers     | `DatePicker`, `DatePickerDialog`, `TimePicker`, `TimePickerDialog`                                |
+| Overlays    | `AlertDialog`, `Tooltip`                                                                          |
+| State       | `Remember`, `MutableState<T>`, `MutableNumberState<T>` (with `++/--`/`ToString` for Kotlin parity)|
 
 ---
 
@@ -327,9 +341,19 @@ implementation layer — invisible to user code, but explicit (no
 `ThreadStatic`!) the same way Kotlin's compiler plugin makes
 `$composer` an explicit IR parameter.
 
-Inside each container's `Render`, the existing raw-JNI bridges (`Text`,
-`Button`, `Column`, `MaterialTheme`) call the Kotlin-mangled Compose
-functions with their `$default` bitmasks. The user never sees that.
+Inside each container's `Render`, raw-JNI bridges in
+[`ComposeBridges.cs`](src/ComposeNet.Compose/ComposeBridges.cs) call the
+Kotlin-mangled Compose functions (`Text--4IGK_g`, `Button-LP…`,
+`AlertDialog-Oix01E0`, etc.) with their `$default` bitmasks. The bridges
+follow a strict pattern — cached `IntPtr` class/method handles, JNI
+signature constants, `try { Call… } finally { GC.KeepAlive(…) }` around
+every managed wrapper whose `.Handle` was read into a `JValue`, and
+`DeleteLocalRef` for any local string refs. The user never sees that;
+when [dotnet/java-interop#1440] lands and the binder stops dropping
+inline-class overloads, each bridge collapses to a direct generated
+binding call.
+
+[dotnet/java-interop#1440]: https://github.com/dotnet/java-interop/pull/1440
 
 `MutableNumberState<T>` is the killer feature for Kotlin parity —
 `MutableState<T>.ToString()` lets `$"Count: {count}"` interpolate
@@ -355,23 +379,51 @@ and bit-rots when the Kotlin signature changes.
 
 [`ComposeNet.SourceGenerators`](src/ComposeNet.SourceGenerators) is a
 small Roslyn incremental generator triggered by an assembly-level
-attribute:
+attribute. It supports two forms.
+
+**Generic form** — when the binder exposes the Kt method:
 
 ```csharp
 [assembly: ComposeDefaults<ColumnKt>("Column", "ColumnDefault")]
 [assembly: ComposeDefaults<MaterialThemeKt>("MaterialTheme", "MaterialThemeDefault")]
 ```
 
-At build time it reads the longest overload of the named method,
-emits a `[Flags] enum` with one bit per real parameter (skipping
-Compose `content: () -> Unit` lambdas, which are always supplied),
-and adds an `All` constant. Call sites collapse to
-`(int)ColumnDefault.All`. Unit tests in
+The generator reads the longest overload of the named method, emits a
+`[Flags] enum` with one bit per real parameter (skipping Compose
+`content: () -> Unit` lambdas, which are always supplied), and adds an
+`All` constant.
+
+**Declarative form** — for overloads the binder strips. Anything taking
+a Kotlin `@JvmInline value class` (`Color`, `Dp`, `TextUnit`,
+`FontWeight`, …) gets a mangled JVM name like `Text--4IGK_g`,
+`Button-LP…`, `AlertDialog-Oix01E0`, `NavigationBar-HsRjFd4`, and is
+dropped from the managed binding. Until [dotnet/java-interop#1440]
+exposes them we hand the generator the Kotlin parameter names directly:
+
+```csharp
+[assembly: ComposeDefaults("ButtonDefault",
+    "!onClick", "modifier", "enabled", "shape", "colors",
+    "elevation", "border", "contentPadding", "interactionSource", "!content")]
+```
+
+Names prefixed with `!` consume a bit position but emit no enum member
+(parameters the caller always provides — `onClick`, `text`, `content`).
+Optional slot lambdas the caller toggles per-call (e.g. `AlertDialog`'s
+`dismissButton`/`icon`/`title`/`text`, `NavigationBarItem.label`) stay
+as enum members so the call site can OR them in. Call sites collapse to
+`(int)ButtonDefault.All`.
+
+[`ComposeDefaults.cs`](src/ComposeNet.Compose/ComposeDefaults.cs) holds
+all of these declarations — every composable shipped today (Button,
+Text, IconButton, FloatingActionButton, Surface, AlertDialog, TextField,
+OutlinedTextField, Card, AssistChip, FilterChip, InputChip,
+SuggestionChip, NavigationBar(Item), NavigationRail(Item),
+ModalBottomSheet, BottomSheetScaffold, DatePicker(Dialog),
+TimePicker(Dialog), TooltipBox) gets its `$default` enum from this one
+file. Unit tests in
 [`ComposeNet.SourceGenerators.Tests`](src/ComposeNet.SourceGenerators.Tests)
-pin the emitted output. `ButtonDefault` and `TextDefault` stay
-hand-rolled because `ButtonKt.Button` and `TextKt.Text--4IGK_g` are
-stripped from the managed binding (we call them via raw JNI), so the
-generator has no `IMethodSymbol` to introspect.
+pin the emitted output. When the upstream binder fix lands, each
+declarative attribute can be swapped one-for-one to the generic form.
 
 ### What's missing on the C# side (and why)
 
@@ -379,7 +431,7 @@ generator has no `IMethodSymbol` to introspect.
 | --------------------------------------- | -------------------------------------------------------------- | ---- |
 | `Modifier.padding(16.dp).fillMaxWidth()` | Host-view padding via `ApplySafeAreaPadding`; no `Modifier` chain | Can't compose modifiers from C# yet (inline-class param chain) |
 | Skipping / recomposition optimization   | `$changed = 0` everywhere → full subtree recomposes on every state change | Correctness ✅, perf 🙁 |
-| Slot-table-backed `remember`            | Activity-scoped `Dictionary<int,object>` keyed off `[CallerLineNumber]` | Works for top-level `Remember` only; nested-scope `remember` is Tier 2 |
+| Slot-table-backed `remember`            | `Remember(() => …)` with `[CallerLineNumber]` keying into an activity-scoped cache | Works for top-level state; nested-scope / keyed `remember(key1, key2)` is Tier 2 |
 | `@Composable` type-system enforcement   | None — calling a non-composable from a composable context fails at runtime, not compile-time | Footgun |
 | Per-call-site allocation                | Every recomposition allocates fresh `ComposableNode` objects (no slot-table reuse on the C# side) | Tier 2 codegen fixes |
 
@@ -420,20 +472,23 @@ class.
 - **Hashed inline-class composables aren't in the bindings.** Anything
   with `Modifier`/`Color`/`Dp`/`TextStyle`/`PaddingValues` parameters
   has a Kotlin-compiler-mangled JVM name (`Text--4IGK_g`, `Button-LP…`,
-  `BasicText-BpD7jsM`) that the binding generator drops or surfaces as
-  an empty wrapper. Each one we use is a hand-written raw-JNI bridge in
-  `ComposeApi.cs`. Catalogued in `NOTES.md`.
+  `AlertDialog-Oix01E0`, `NavigationBar-HsRjFd4`,
+  `FloatingActionButton-X-z6DiA`, `ModalBottomSheet-dYc4hso`) that the
+  binding generator drops. Each one we use is a hand-written raw-JNI
+  bridge in [`ComposeBridges.cs`](src/ComposeNet.Compose/ComposeBridges.cs).
+  Tracked upstream in [dotnet/java-interop#1440] — when it lands every
+  bridge in this repo can be deleted in favour of a direct generated
+  binding call.
 - **`$changed` bitmasks** — we pass `0` everywhere, so the runtime
   recomposes the whole subtree on every state change. Correct, not
   optimal. Proper bitmask computation per arg is Tier 2 territory.
 - **`Modifier.Companion` not bound.** Workaround: raw JNI fetch.
   See `NOTES.md` open issue #1 for the upstream-friendly fix.
-- **Material3 XA4215 collision** with the empty stub `Xamarin.AndroidX.Compose.Material3*`
-  NuGets. We work around it with `ExcludeAssets="all"` on the stub
-  packages in `ComposeNet.Sample.csproj`. Catalogued in `NOTES.md`.
-- **No `remember { }` from C#.** State that should survive recomposition
-  is stored as fields on the host activity / lambda ACW instead. Fine
-  for hello-world; broken for any real lifecycle.
+- **`remember(keys, …)` not yet supported.** Top-level `Remember(() =>
+  state)` works (state is keyed by `[CallerLineNumber]` into an
+  activity-scoped cache), but Compose's keyed/nested `remember` —
+  reset-on-key-change semantics, slot-table-scoped lifetime — needs a
+  real slot table on the C# side and is parked for Tier 2.
 
 ## Key references
 
