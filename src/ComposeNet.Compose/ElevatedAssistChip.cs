@@ -14,7 +14,10 @@ public sealed class ElevatedAssistChip : ComposableNode
     /// <summary>Required: chip text.</summary>
     public ComposableNode? Label { get; set; }
 
+    /// <summary>Optional: leading slot (e.g. icon).</summary>
     public ComposableNode? LeadingIcon  { get; set; }
+
+    /// <summary>Optional: trailing slot.</summary>
     public ComposableNode? TrailingIcon { get; set; }
 
     internal override void Render(IComposer composer)
