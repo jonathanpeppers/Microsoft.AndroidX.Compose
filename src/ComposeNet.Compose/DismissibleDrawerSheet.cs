@@ -21,6 +21,6 @@ public sealed class DismissibleDrawerSheet : ComposableContainer
         var color = ContainerColor != 0L
             ? ContainerColor
             : AndroidX.Compose.Material3.MaterialTheme.Instance.GetColorScheme(composer, 0).SecondaryContainer;
-        ComposeBridges.DismissibleDrawerSheet(content, composer, color);
+        ComposeBridges.DismissibleDrawerSheet(content, color, composer);
     }
 }

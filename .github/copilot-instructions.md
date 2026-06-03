@@ -103,57 +103,78 @@ Tests live in `GeneratorTests.cs` and run against synthetic
 compilations — no Android references. **Add a test for any new
 generator behaviour.**
 
-## `ComposeBridges.cs` — raw JNI bridges
+## `ComposeBridges.cs` — source-generated JNI bridges
 
-When an overload is stripped from the binding we call it via
-`JNIEnv.FindClass` + `GetStaticMethodID` + `CallStaticVoidMethod`.
-Pattern, copied throughout the file:
+When an overload is stripped from the binding we call it via JNI. The
+boilerplate (cache fields, lazy `FindClass` + `GetStaticMethodID`,
+`JValue` array fill, `$default` mask, `try`/`finally` with
+`GC.KeepAlive`, `NewString`/`DeleteLocalRef` for string params) is
+emitted by `ComposeBridgeGenerator` from a one-line declaration.
+**Do not hand-write the body.** Add a `partial` method and let the
+generator fill it in.
 
-1. Cache the JNI class + method handles in `static IntPtr` fields
-   (initialise lazily on first call — Android's class loader is slow).
-2. Build the full JNI signature string as a `const string` next to the
-   bridge method, with a comment showing the Kotlin parameter list in
-   source order.
-3. Allocate `JValue* args = stackalloc JValue[N]`; fill positionally.
-4. The `$default` bitmask is the **last** `int` arg (after any
-   `$changed`/`$changed1`/… and `composer`). Compute it from the
-   matching `XxxDefault.All` constant.
-5. For string params: `IntPtr ref = JNIEnv.NewString(s);` inside a
-   `try`/`finally` that calls `DeleteLocalRef`.
-6. Pass managed objects as `((Java.Lang.Object)obj).Handle`. Use
-   `IntPtr.Zero` for `null`.
-7. **Always wrap `JNIEnv.CallStatic*Method` in `try { … } finally { … }`
-   and call `GC.KeepAlive(...)` on every managed parameter whose
-   `.Handle` was read into a `JValue` (lambdas, the composer, optional
-   slot wrappers — `null` is a no-op so unconditional `KeepAlive` on
-   nullable params is fine).** This matches what
-   `dotnet/java-interop` generates for bound members. Without it, the
-   JIT considers each managed wrapper dead the instant `.Handle` is
-   read, and a GC during the JNI call can finalize the wrapper and
-   invalidate the underlying handle. Combine with the `DeleteLocalRef`
-   `finally` for string args — one `try`/`finally` doing both is the
-   normal shape.
+### Adding a bridge
 
-Pattern:
+1. Add `[ComposeBridge(...)]` + a `public static partial` method
+   declaration to `ComposeBridges.cs`. `composer` **must** be the last
+   C# parameter — the generator detects the composer slot by
+   inspecting the trailing param.
+2. Add a matching `[assembly: ComposeDefaults(...)]` to
+   `ComposeDefaults.cs` naming each `$default` bit. Prefix with `!` to
+   consume a bit but suppress the enum member (params the caller
+   always provides).
+3. The generator parses the JNI signature, walks the C# parameters,
+   and emits everything else.
+
+Example:
 ```csharp
-JValue* args = stackalloc JValue[N];
-// fill args ...
-try
-{
-    JNIEnv.CallStaticVoidMethod(s_cls, s_method, args);
-}
-finally
-{
-    GC.KeepAlive(onClick);
-    GC.KeepAlive(content);
-    GC.KeepAlive(composer);
-}
+[ComposeBridge(
+    Class     = "androidx/compose/material3/ButtonKt",
+    JvmName   = "Button-bWB7cM8",
+    Signature = "(Lkotlin/jvm/functions/Function0;...)V",
+    Defaults  = typeof(ButtonDefault))]
+public static partial void Button(
+    IFunction0 onClick, IModifier? modifier, bool enabled,
+    /* ...other Kotlin params... */
+    IFunction3 content, IComposer composer);
 ```
 
-Keep these methods `internal` — user code never touches JNI directly.
-**Do not add new JNI bridges if the binding already exposes the
+### Conventions the generator relies on
+
+- `composer` is the **last** C# parameter (always).
+- Add a `int defaults` parameter immediately before `composer` only
+  when the caller controls the bitmask (state-holders, multi-slot
+  composables that toggle bits per call). Otherwise omit it and the
+  generator builds the mask automatically: one bit per nullable /
+  optional C# param the caller passed `null` for.
+- Kotlin extension receivers: declare as `IntPtr` with a name ending
+  in `Scope` (e.g. `IntPtr rowScope`); the generator places it at
+  `args[0]` and excludes it from the `$default` count.
+- `IModifier?` is special-cased to call `ComposeBridges.ModifierHandle`
+  (handles `null` → `IntPtr.Zero`).
+- String params are hoisted into a `IntPtr __ref_<name>` and freed in
+  the generated `finally`.
+- Non-void return (state holders): the generator emits
+  `return CallStaticObjectMethod(...)` inside the `try`/`finally`.
+
+### What still lives hand-written
+
+`ModifierHandle` and the modifier-chain helpers (`PaddingAll`,
+`FillMaxWidth`, etc.) — these don't follow the
+`@Composable + $default` shape, so they remain plain JNI calls.
+
+### Generator diagnostics
+
+| ID      | Meaning                                                     |
+|---------|-------------------------------------------------------------|
+| CN2001  | `[ComposeBridge]` is missing required metadata.             |
+| CN2002  | Could not parse the JNI signature.                          |
+| CN2003  | `[ComposeBridge]` and `[ComposeDefaults]` parameter count disagree. |
+| CN2004  | `composer` is not the last C# parameter.                    |
+
+**Do not add a `[ComposeBridge]` if the binding already exposes the
 method**; call the generated C# entry point instead (see
-`Composables.cs::Column.Render` for the canonical example).
+`Column.cs::Column.Render` for the canonical example).
 
 ## Facade conventions (`Composables.cs`)
 
@@ -188,11 +209,12 @@ If a needed Compose API isn't bound, the workflow is:
 
 1. File / link a tracking issue against `dotnet/android-libraries` (see
    the existing #1415–#1418 references in `README.md`).
-2. Add a JNI bridge in `ComposeBridges.cs` as a temporary measure.
-3. Generate the matching `$default` enum via the declarative attribute
-   form above.
-4. When the upstream binding fix ships, delete the bridge and switch
-   to the generic attribute form.
+2. Add a `[ComposeBridge]` partial method in `ComposeBridges.cs` (see
+   above) — the generator handles all the JNI plumbing.
+3. Add the matching `[ComposeDefaults]` declaration.
+4. When the upstream binding fix ships, delete the bridge declaration
+   and switch the facade to call the generated binding method
+   directly.
 
 ## Style
 

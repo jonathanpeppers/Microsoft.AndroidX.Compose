@@ -43,6 +43,48 @@ internal static class Attributes
             {
                 public ComposeDefaultsAttribute(string enumName, params string[] parameterNames) { }
             }
+
+            /// <summary>
+            /// Apply to a <c>partial</c> static method on
+            /// <c>ComposeBridges</c> to have ComposeNet.SourceGenerators
+            /// emit its JNI-bridge body. The partial method declares the
+            /// user-facing C# signature; the generator fills in cache
+            /// fields, lazy class/method ID resolution, the JValue array,
+            /// the <c>$default</c> bitmask, and the
+            /// <c>try</c>/<c>finally</c> + <c>GC.KeepAlive</c> block.
+            /// </summary>
+            /// <remarks>
+            /// <para><b>Class</b>: JNI-internal class name, e.g.
+            /// <c>androidx/compose/material3/ButtonKt</c>.</para>
+            /// <para><b>JvmName</b>: the (often mangled) Kotlin-emitted
+            /// method name, e.g. <c>Button</c> or <c>Surface-T9BRK9s</c>.</para>
+            /// <para><b>Signature</b>: full JNI signature string for the
+            /// underlying static method, ending in
+            /// <c>...Composer;I*I)V</c> (one trailing <c>I</c> per
+            /// <c>$changed</c> slot, then one for <c>$default</c>).</para>
+            /// <para><b>Defaults</b>: <c>typeof(XxxDefault)</c> — the
+            /// <c>$default</c> bitmask enum produced by
+            /// <see cref="ComposeDefaultsAttribute"/>. The generator reads
+            /// the matching declarative <c>[ComposeDefaults(...)]</c>
+            /// attribute to learn the Kotlin parameter names + bit
+            /// positions.</para>
+            /// <para><b>InstanceField</b>: when set, the bridge calls an
+            /// instance method on a Kotlin <c>object</c> singleton — name
+            /// the <c>$$INSTANCE</c>-style static field
+            /// (e.g. <c>INSTANCE</c>) and the generator emits
+            /// <c>GetMethodID</c> + <c>CallObjectMethod</c> instead.</para>
+            /// </remarks>
+            [global::System.AttributeUsage(global::System.AttributeTargets.Method,
+                                           AllowMultiple = false)]
+            internal sealed class ComposeBridgeAttribute : global::System.Attribute
+            {
+                public ComposeBridgeAttribute() { }
+                public string Class { get; set; } = "";
+                public string JvmName { get; set; } = "";
+                public string Signature { get; set; } = "";
+                public global::System.Type? Defaults { get; set; }
+                public string? InstanceField { get; set; }
+            }
         }
         """;
 }

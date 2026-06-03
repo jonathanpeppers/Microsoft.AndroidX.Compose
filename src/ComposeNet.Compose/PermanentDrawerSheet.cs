@@ -21,6 +21,6 @@ public sealed class PermanentDrawerSheet : ComposableContainer
         var color = ContainerColor != 0L
             ? ContainerColor
             : AndroidX.Compose.Material3.MaterialTheme.Instance.GetColorScheme(composer, 0).SecondaryContainer;
-        ComposeBridges.PermanentDrawerSheet(content, composer, color);
+        ComposeBridges.PermanentDrawerSheet(content, color, composer);
     }
 }

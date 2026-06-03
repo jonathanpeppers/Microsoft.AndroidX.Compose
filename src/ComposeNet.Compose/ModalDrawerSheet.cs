@@ -26,6 +26,6 @@ public sealed class ModalDrawerSheet : ComposableContainer
         var color = ContainerColor != 0L
             ? ContainerColor
             : AndroidX.Compose.Material3.MaterialTheme.Instance.GetColorScheme(composer, 0).SecondaryContainer;
-        ComposeBridges.ModalDrawerSheet(content, composer, color);
+        ComposeBridges.ModalDrawerSheet(content, color, composer);
     }
 }
