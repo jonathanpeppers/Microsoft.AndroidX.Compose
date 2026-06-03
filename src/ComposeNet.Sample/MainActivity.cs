@@ -4,7 +4,7 @@ using ComposeNet;
 
 namespace ComposeNet.Sample;
 
-[Activity(Label = "@string/app_name", MainLauncher = true, Theme = "@android:style/Theme.Material.Light")]
+[Activity(Label = "@string/app_name", MainLauncher = true, Theme = "@android:style/Theme.Material.Light.NoActionBar")]
 public class MainActivity : ComposeActivity
 {
     protected override void OnCreate(Bundle? savedInstanceState)
@@ -209,7 +209,7 @@ public class MainActivity : ComposeActivity
                         },
                         Body = new Column
                         {
-                            Modifier.Companion.Padding(16),
+                            Modifier.Companion.SafeDrawingPadding().Padding(16),
                             tabContent,
 
                             // Overlays: rendered in the body so they participate in the

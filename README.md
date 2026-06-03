@@ -208,10 +208,15 @@ Confirmed on device:
 - **MaterialTheme** with Android 12+ dynamic colors (Material You) —
   the blue/teal scheme on a stock emulator, not the Compose-default
   purple.
-- A native Android **ActionBar** with the app name as the title
-  (`Theme.Material.Light`), with the status-bar icons forced dark
-  via `WindowInsetsController.SetSystemBarsAppearance(LightStatusBars, …)`
-  so the clock/battery/wifi are readable.
+- The activity is rendered **edge-to-edge** via
+  `EdgeToEdge.Enable(this)` in `ComposeActivity.OnCreate`, hosted under
+  a `Theme.Material.Light.NoActionBar` framework theme — no framework
+  `ActionBar` overlays the content, status / nav bars are transparent,
+  and Compose's `WindowInsets` plumbing handles the safe area. Inside a
+  `Scaffold` body without a `TopBar`, pad the body with
+  `Modifier.Companion.SafeDrawingPadding()` so content doesn't draw
+  under the status bar; bare-`Column` roots use the same modifier on
+  the root.
 - A `Column` containing two **Material 3 `Text`** composables
   (`"Hello from .NET"`, `"Count: N"`) and a **Material 3 `Button`**
   whose label `"Tap to increment"` correctly inherits
@@ -287,7 +292,7 @@ the only differences are `new`, commas, `() =>`, and `$"…"`:
 
 ```csharp
 [Activity(Label = "@string/app_name", MainLauncher = true,
-          Theme = "@android:style/Theme.Material.Light")]
+          Theme = "@android:style/Theme.Material.Light.NoActionBar")]
 public class MainActivity : ComposeActivity
 {
     protected override void OnCreate(Bundle? savedInstanceState)
@@ -300,6 +305,7 @@ public class MainActivity : ComposeActivity
             {
                 new Column
                 {
+                    Modifier.Companion.SafeDrawingPadding(),
                     new Text("Hello from .NET"),
                     new Text($"Count: {count}"),
                     new Button(onClick: () => count++)
