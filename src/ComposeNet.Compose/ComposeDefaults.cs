@@ -9,15 +9,17 @@
 // attribute below — the binder exposes those Kt classes, so the
 // generator can read parameter names off the longest overload.
 //
-// The other seven (Button, Text, IconButton, FloatingActionButton,
-// Surface, AlertDialog, TextField/OutlinedTextField) are *also*
-// generated, but from the declarative `[ComposeDefaults]` overload.
-// Their Kotlin overloads with the trailing $default param are stripped
-// from the binding (mangled JVM names like `Text--4IGK_g` from inline
-// classes such as `Color`/`TextUnit`/`Dp`), so there is no IMethodSymbol
-// for the generator to introspect — we hand it the Kotlin parameter
-// names instead. Names prefixed with `!` consume a bit position but
-// don't emit an enum member (e.g. params the caller always provides).
+// The other enums are *also* generated, but from the declarative
+// `[ComposeDefaults]` overload. Their Kotlin overloads with the trailing
+// $default param are stripped from the binding (mangled JVM names like
+// `Text--4IGK_g` from inline classes such as `Color`/`TextUnit`/`Dp`),
+// so there is no IMethodSymbol for the generator to introspect — we
+// hand it the Kotlin parameter names instead. Names prefixed with `!`
+// consume a bit position but don't emit an enum member (e.g. params
+// the caller always provides). For extension-receiver functions
+// (NavigationBarItem takes a RowScope receiver), the receiver is NOT
+// part of the $default bitmask — start the name list at the first
+// user-facing parameter.
 //
 // When dotnet/java-interop#1440 lands and exposes the inline-class
 // overloads, the declarative attributes can be replaced with
@@ -82,3 +84,63 @@ using ComposeNet;
     "keyboardOptions", "keyboardActions", "singleLine", "maxLines", "minLines",
     "interactionSource", "shape", "colors")]
 
+// androidx.compose.material3.CardKt.Card (non-clickable): 6 user params,
+// bit 5 = content provided.
+[assembly: ComposeDefaults("CardDefault",
+    "modifier", "shape", "colors", "elevation", "border", "!content")]
+
+// androidx.compose.material3.ChipKt.AssistChip: 11 user params,
+// bit 0 = onClick, bit 1 = label (both always provided).
+// Optional slot bits 4 (LeadingIcon) and 5 (TrailingIcon) are toggled
+// per-call by AssistChip.Render.
+[assembly: ComposeDefaults("AssistChipDefault",
+    "!onClick", "!label", "modifier", "enabled", "leadingIcon", "trailingIcon",
+    "shape", "colors", "elevation", "border", "interactionSource")]
+
+// androidx.compose.material3.ChipKt.FilterChip: 12 user params,
+// bits 0 = selected, 1 = onClick, 2 = label (all always provided).
+[assembly: ComposeDefaults("FilterChipDefault",
+    "!selected", "!onClick", "!label", "modifier", "enabled",
+    "leadingIcon", "trailingIcon", "shape", "colors", "elevation",
+    "border", "interactionSource")]
+
+// androidx.compose.material3.ChipKt.InputChip: 13 user params,
+// bits 0 = selected, 1 = onClick, 2 = label (all always provided).
+[assembly: ComposeDefaults("InputChipDefault",
+    "!selected", "!onClick", "!label", "modifier", "enabled",
+    "leadingIcon", "avatar", "trailingIcon", "shape", "colors",
+    "elevation", "border", "interactionSource")]
+
+// androidx.compose.material3.ChipKt.SuggestionChip: 10 user params,
+// bit 0 = onClick, bit 1 = label (both always provided).
+[assembly: ComposeDefaults("SuggestionChipDefault",
+    "!onClick", "!label", "modifier", "enabled", "icon",
+    "shape", "colors", "elevation", "border", "interactionSource")]
+
+// androidx.compose.material3.NavigationBarKt.NavigationBar-HsRjFd4:
+// 6 user params, bit 5 = content provided.
+[assembly: ComposeDefaults("NavigationBarDefault",
+    "modifier", "containerColor", "contentColor", "tonalElevation",
+    "windowInsets", "!content")]
+
+// androidx.compose.material3.NavigationBarKt.NavigationBarItem: 9 user
+// params after the RowScope receiver (the receiver is not part of the
+// $default bitmask). Bits 0 = selected, 1 = onClick, 2 = icon (all
+// always provided). The optional Label slot is toggled by
+// NavigationBarItem.Render.
+[assembly: ComposeDefaults("NavigationBarItemDefault",
+    "!selected", "!onClick", "!icon", "modifier", "enabled", "label",
+    "alwaysShowLabel", "colors", "interactionSource")]
+
+// androidx.compose.material3.NavigationRailKt.NavigationRail-qi6gXK8:
+// 6 user params, bit 5 = content provided.
+[assembly: ComposeDefaults("NavigationRailDefault",
+    "modifier", "containerColor", "contentColor", "header",
+    "windowInsets", "!content")]
+
+// androidx.compose.material3.NavigationRailKt.NavigationRailItem:
+// 9 user params; bits 0 = selected, 1 = onClick, 2 = icon
+// (all always provided).
+[assembly: ComposeDefaults("NavigationRailItemDefault",
+    "!selected", "!onClick", "!icon", "modifier", "enabled", "label",
+    "alwaysShowLabel", "colors", "interactionSource")]

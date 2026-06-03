@@ -283,3 +283,329 @@ public sealed class AlertDialog : ComposableNode
             composer:         composer);
     }
 }
+
+// ---- Card ----
+
+/// <summary>
+/// Material 3 non-clickable <c>Card</c> — a tonal surface with rounded
+/// corners that lays its children out as a Column. Children are added
+/// via collection-initializer syntax:
+/// <code>
+/// new Card { new Text("Title"), new Text("Subtitle") }
+/// </code>
+/// </summary>
+public sealed class Card : ComposableContainer
+{
+    internal override void Render(IComposer composer)
+    {
+        var content = new ComposableLambda3(c => RenderChildren(c));
+        ComposeBridges.Card(content, composer);
+    }
+}
+
+// ---- Chip family ----
+
+/// <summary>
+/// Material 3 <c>AssistChip</c>. <see cref="Label"/> is required;
+/// <see cref="LeadingIcon"/> and <see cref="TrailingIcon"/> are optional
+/// slots:
+/// <code>
+/// new AssistChip(onClick: ...) { Label = new Text("Filter") }
+/// </code>
+/// </summary>
+public sealed class AssistChip : ComposableNode
+{
+    readonly System.Action _onClick;
+    public AssistChip(System.Action onClick) => _onClick = onClick;
+
+    /// <summary>Required: chip text.</summary>
+    public ComposableNode? Label { get; set; }
+
+    /// <summary>Optional: leading slot (e.g. icon).</summary>
+    public ComposableNode? LeadingIcon { get; set; }
+
+    /// <summary>Optional: trailing slot.</summary>
+    public ComposableNode? TrailingIcon { get; set; }
+
+    internal override void Render(IComposer composer)
+    {
+        if (Label is null)
+            throw new System.InvalidOperationException(
+                "AssistChip.Label is required (the Kotlin parameter has no default).");
+
+        var click = new ComposableLambda0(_onClick);
+        var label = new ComposableLambda2(c => Label.Render(c));
+        ComposableLambda2? leading  = LeadingIcon  is null ? null : new ComposableLambda2(c => LeadingIcon.Render(c));
+        ComposableLambda2? trailing = TrailingIcon is null ? null : new ComposableLambda2(c => TrailingIcon.Render(c));
+
+        int defaults = (int)AssistChipDefault.All;
+        if (leading  is not null) defaults &= ~(int)AssistChipDefault.LeadingIcon;
+        if (trailing is not null) defaults &= ~(int)AssistChipDefault.TrailingIcon;
+
+        ComposeBridges.AssistChip(click, label, leading, trailing, defaults, composer);
+    }
+}
+
+/// <summary>
+/// Material 3 <c>FilterChip</c>. Renders as either selected or unselected;
+/// the <c>onClick</c> handler typically toggles the bound boolean state.
+/// </summary>
+public sealed class FilterChip : ComposableNode
+{
+    readonly bool _selected;
+    readonly System.Action _onClick;
+
+    public FilterChip(bool selected, System.Action onClick)
+    {
+        _selected = selected;
+        _onClick  = onClick;
+    }
+
+    /// <summary>Required: chip text.</summary>
+    public ComposableNode? Label { get; set; }
+
+    /// <summary>Optional: leading slot (typically the check / unselected icon).</summary>
+    public ComposableNode? LeadingIcon { get; set; }
+
+    /// <summary>Optional: trailing slot.</summary>
+    public ComposableNode? TrailingIcon { get; set; }
+
+    internal override void Render(IComposer composer)
+    {
+        if (Label is null)
+            throw new System.InvalidOperationException(
+                "FilterChip.Label is required (the Kotlin parameter has no default).");
+
+        var click = new ComposableLambda0(_onClick);
+        var label = new ComposableLambda2(c => Label.Render(c));
+        ComposableLambda2? leading  = LeadingIcon  is null ? null : new ComposableLambda2(c => LeadingIcon.Render(c));
+        ComposableLambda2? trailing = TrailingIcon is null ? null : new ComposableLambda2(c => TrailingIcon.Render(c));
+
+        int defaults = (int)FilterChipDefault.All;
+        if (leading  is not null) defaults &= ~(int)FilterChipDefault.LeadingIcon;
+        if (trailing is not null) defaults &= ~(int)FilterChipDefault.TrailingIcon;
+
+        ComposeBridges.FilterChip(_selected, click, label, leading, trailing, defaults, composer);
+    }
+}
+
+/// <summary>
+/// Material 3 <c>InputChip</c>. Adds an <see cref="Avatar"/> slot in
+/// addition to the leading/trailing slots common to the chip family.
+/// </summary>
+public sealed class InputChip : ComposableNode
+{
+    readonly bool _selected;
+    readonly System.Action _onClick;
+
+    public InputChip(bool selected, System.Action onClick)
+    {
+        _selected = selected;
+        _onClick  = onClick;
+    }
+
+    /// <summary>Required: chip text.</summary>
+    public ComposableNode? Label { get; set; }
+
+    public ComposableNode? LeadingIcon  { get; set; }
+    public ComposableNode? Avatar       { get; set; }
+    public ComposableNode? TrailingIcon { get; set; }
+
+    internal override void Render(IComposer composer)
+    {
+        if (Label is null)
+            throw new System.InvalidOperationException(
+                "InputChip.Label is required (the Kotlin parameter has no default).");
+
+        var click = new ComposableLambda0(_onClick);
+        var label = new ComposableLambda2(c => Label.Render(c));
+        ComposableLambda2? leading  = LeadingIcon  is null ? null : new ComposableLambda2(c => LeadingIcon.Render(c));
+        ComposableLambda2? avatar   = Avatar       is null ? null : new ComposableLambda2(c => Avatar.Render(c));
+        ComposableLambda2? trailing = TrailingIcon is null ? null : new ComposableLambda2(c => TrailingIcon.Render(c));
+
+        int defaults = (int)InputChipDefault.All;
+        if (leading  is not null) defaults &= ~(int)InputChipDefault.LeadingIcon;
+        if (avatar   is not null) defaults &= ~(int)InputChipDefault.Avatar;
+        if (trailing is not null) defaults &= ~(int)InputChipDefault.TrailingIcon;
+
+        ComposeBridges.InputChip(_selected, click, label, leading, avatar, trailing, defaults, composer);
+    }
+}
+
+/// <summary>
+/// Material 3 <c>SuggestionChip</c>. Single-icon variant — only an
+/// <see cref="Icon"/> slot is exposed (vs. AssistChip's leading + trailing).
+/// </summary>
+public sealed class SuggestionChip : ComposableNode
+{
+    readonly System.Action _onClick;
+    public SuggestionChip(System.Action onClick) => _onClick = onClick;
+
+    /// <summary>Required: chip text.</summary>
+    public ComposableNode? Label { get; set; }
+
+    /// <summary>Optional: leading slot.</summary>
+    public ComposableNode? Icon { get; set; }
+
+    internal override void Render(IComposer composer)
+    {
+        if (Label is null)
+            throw new System.InvalidOperationException(
+                "SuggestionChip.Label is required (the Kotlin parameter has no default).");
+
+        var click = new ComposableLambda0(_onClick);
+        var label = new ComposableLambda2(c => Label.Render(c));
+        ComposableLambda2? icon = Icon is null ? null : new ComposableLambda2(c => Icon.Render(c));
+
+        int defaults = (int)SuggestionChipDefault.All;
+        if (icon is not null) defaults &= ~(int)SuggestionChipDefault.Icon;
+
+        ComposeBridges.SuggestionChip(click, label, icon, defaults, composer);
+    }
+}
+
+// ---- NavigationBar / NavigationBarItem ----
+
+/// <summary>
+/// Material 3 <c>NavigationBar</c>. Container for
+/// <see cref="NavigationBarItem"/> children laid out horizontally:
+/// <code>
+/// new NavigationBar
+/// {
+///     new NavigationBarItem(selected: tab == 0, onClick: () =&gt; tab.Value = 0)
+///     {
+///         Icon = new Text("🏠"), Label = new Text("Home"),
+///     },
+///     new NavigationBarItem(selected: tab == 1, onClick: () =&gt; tab.Value = 1)
+///     {
+///         Icon = new Text("⚙"), Label = new Text("Settings"),
+///     },
+/// }
+/// </code>
+/// </summary>
+public sealed class NavigationBar : ComposableContainer
+{
+    internal override void Render(IComposer composer)
+    {
+        // Capture the RowScope receiver (p0 of the Function3) and publish
+        // it so child NavigationBarItems can pass it to their underlying
+        // RowScope-extension static.
+        var content = new ComposableLambda3((scope, c) =>
+        {
+            using var _ = RenderContext.PushScope(scope);
+            RenderChildren(c);
+        });
+        ComposeBridges.NavigationBar(content, composer);
+    }
+}
+
+/// <summary>
+/// Material 3 <c>NavigationBarItem</c>. Must be a child of
+/// <see cref="NavigationBar"/> — the Kotlin static method takes a
+/// <c>RowScope</c> extension receiver, which the parent
+/// <see cref="NavigationBar"/> publishes via <c>RenderContext</c>.
+/// <see cref="Icon"/> is required; <see cref="Label"/> is optional.
+/// </summary>
+public sealed class NavigationBarItem : ComposableNode
+{
+    readonly bool _selected;
+    readonly System.Action _onClick;
+
+    public NavigationBarItem(bool selected, System.Action onClick)
+    {
+        _selected = selected;
+        _onClick  = onClick;
+    }
+
+    /// <summary>Required: item icon.</summary>
+    public ComposableNode? Icon { get; set; }
+
+    /// <summary>Optional: item label.</summary>
+    public ComposableNode? Label { get; set; }
+
+    internal override void Render(IComposer composer)
+    {
+        if (Icon is null)
+            throw new System.InvalidOperationException(
+                "NavigationBarItem.Icon is required (the Kotlin parameter has no default).");
+
+        var click = new ComposableLambda0(_onClick);
+        var icon  = new ComposableLambda2(c => Icon.Render(c));
+        ComposableLambda2? label = Label is null ? null : new ComposableLambda2(c => Label.Render(c));
+
+        int defaults = (int)NavigationBarItemDefault.All;
+        if (label is not null) defaults &= ~(int)NavigationBarItemDefault.Label;
+
+        ComposeBridges.NavigationBarItem(
+            rowScope: RenderContext.CurrentScope,
+            selected: _selected,
+            onClick:  click,
+            icon:     icon,
+            label:    label,
+            defaults: defaults,
+            composer: composer);
+    }
+}
+
+// ---- NavigationRail / NavigationRailItem ----
+
+/// <summary>
+/// Material 3 <c>NavigationRail</c>. Vertical analog of
+/// <see cref="NavigationBar"/>. Children are <see cref="NavigationRailItem"/>s:
+/// <code>
+/// new NavigationRail
+/// {
+///     new NavigationRailItem(selected: tab == 0, onClick: ...) { Icon = ..., Label = ... },
+///     new NavigationRailItem(selected: tab == 1, onClick: ...) { Icon = ..., Label = ... },
+/// }
+/// </code>
+/// </summary>
+public sealed class NavigationRail : ComposableContainer
+{
+    internal override void Render(IComposer composer)
+    {
+        // NavigationRailItem (unlike NavigationBarItem) is a top-level
+        // static, not a ColumnScope extension — so we don't need to
+        // publish the scope. Children can render directly.
+        var content = new ComposableLambda3(c => RenderChildren(c));
+        ComposeBridges.NavigationRail(content, composer);
+    }
+}
+
+/// <summary>
+/// Material 3 <c>NavigationRailItem</c>. Used inside
+/// <see cref="NavigationRail"/>.
+/// </summary>
+public sealed class NavigationRailItem : ComposableNode
+{
+    readonly bool _selected;
+    readonly System.Action _onClick;
+
+    public NavigationRailItem(bool selected, System.Action onClick)
+    {
+        _selected = selected;
+        _onClick  = onClick;
+    }
+
+    /// <summary>Required: item icon.</summary>
+    public ComposableNode? Icon { get; set; }
+
+    /// <summary>Optional: item label.</summary>
+    public ComposableNode? Label { get; set; }
+
+    internal override void Render(IComposer composer)
+    {
+        if (Icon is null)
+            throw new System.InvalidOperationException(
+                "NavigationRailItem.Icon is required (the Kotlin parameter has no default).");
+
+        var click = new ComposableLambda0(_onClick);
+        var icon  = new ComposableLambda2(c => Icon.Render(c));
+        ComposableLambda2? label = Label is null ? null : new ComposableLambda2(c => Label.Render(c));
+
+        int defaults = (int)NavigationRailItemDefault.All;
+        if (label is not null) defaults &= ~(int)NavigationRailItemDefault.Label;
+
+        ComposeBridges.NavigationRailItem(_selected, click, icon, label, defaults, composer);
+    }
+}
