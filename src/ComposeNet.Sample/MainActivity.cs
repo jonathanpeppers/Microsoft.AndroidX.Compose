@@ -35,8 +35,17 @@ public class MainActivity : ComposeActivity
                 {
                     new Text("Hello from .NET"),
                     new Text($"Count: {count}"),
-                    new Button(onClick: () => count++) { new Text("Tap to increment") },
-                    new IconButton(onClick: () => count--) { new Text("−") },
+                    new Row
+                    {
+                        new Image(Resource.Mipmap.appicon, "App icon"),
+                        new Spacer { Modifier = Modifier.Companion.FillMaxWidth(0.05f) },
+                        new Column
+                        {
+                            new Button(onClick: () => count++) { new Text("Tap to increment") },
+                            new IconButton(onClick: () => count--) { new Text("−") },
+                        },
+                    },
+                    new HorizontalDivider { Modifier = Modifier.Companion.Padding(0, 8) },
                     new OutlinedTextField(name),
                     new Text($"Hi {(string.IsNullOrEmpty(name.Value) ? "stranger" : name.Value)}"),
                 },
@@ -102,9 +111,15 @@ public class MainActivity : ComposeActivity
                     new Text("Tap a button to switch demo. Swipe from the"),
                     new Text("left edge of the demo area to open Modal /"),
                     new Text("Dismissible drawers (no coroutine plumbing)."),
-                    new Button(onClick: () => drawerKind.Value = 0) { new Text("Modal") },
-                    new Button(onClick: () => drawerKind.Value = 1) { new Text("Dismissible") },
-                    new Button(onClick: () => drawerKind.Value = 2) { new Text("Permanent") },
+                    new Row
+                    {
+                        new Button(onClick: () => drawerKind.Value = 0) { new Text("Modal") },
+                        new Spacer { Modifier = Modifier.Companion.FillMaxWidth(0.03f) },
+                        new Button(onClick: () => drawerKind.Value = 1) { new Text("Dismissible") },
+                        new Spacer { Modifier = Modifier.Companion.FillMaxWidth(0.03f) },
+                        new Button(onClick: () => drawerKind.Value = 2) { new Text("Permanent") },
+                    },
+                    new HorizontalDivider { Modifier = Modifier.Companion.Padding(0, 8) },
                     drawerKind.Value switch
                     {
                         0 => (ComposableNode)new ModalNavigationDrawer
@@ -162,9 +177,15 @@ public class MainActivity : ComposeActivity
                 _ => new Column
                 {
                     new Text("Dialogs and sheets"),
-                    new Button(onClick: () => showSheet.Value = true) { new Text("Modal bottom sheet") },
-                    new Button(onClick: () => showDate.Value  = true) { new Text("Date picker dialog") },
-                    new Button(onClick: () => showTime.Value  = true) { new Text("Time picker dialog") },
+                    new Row
+                    {
+                        new Button(onClick: () => showSheet.Value = true) { new Text("Sheet") },
+                        new Spacer { Modifier = Modifier.Companion.FillMaxWidth(0.03f) },
+                        new Button(onClick: () => showDate.Value  = true) { new Text("Date") },
+                        new Spacer { Modifier = Modifier.Companion.FillMaxWidth(0.03f) },
+                        new Button(onClick: () => showTime.Value  = true) { new Text("Time") },
+                    },
+                    new HorizontalDivider { Modifier = Modifier.Companion.Padding(0, 8) },
                     new Text($"Picked date: {pickedDate}"),
                     new Text($"Picked time: {pickedTime}"),
                 },
@@ -183,7 +204,7 @@ public class MainActivity : ComposeActivity
                         {
                             new NavigationBarItem(selected: tab.Value == 0, onClick: () => tab.Value = 0)
                             {
-                                Icon  = new Text("🔢"),
+                                Icon  = new Icon(Android.Resource.Drawable.IcMenuPreferences, "Basics"),
                                 Label = new Text("Basics"),
                             },
                             new NavigationBarItem(selected: tab.Value == 1, onClick: () => tab.Value = 1)
