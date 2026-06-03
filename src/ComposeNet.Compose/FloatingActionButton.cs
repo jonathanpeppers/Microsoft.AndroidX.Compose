@@ -12,6 +12,6 @@ public sealed class FloatingActionButton : ComposableContainer
     {
         var click   = new ComposableLambda0(_onClick);
         var content = new ComposableLambda2(c => RenderChildren(c));
-        ComposeBridges.FloatingActionButton(click, content, composer);
+        ComposeBridges.FloatingActionButton(click, BuildModifier(), content, composer);
     }
 }

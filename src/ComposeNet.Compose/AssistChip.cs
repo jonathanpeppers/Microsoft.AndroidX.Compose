@@ -36,9 +36,11 @@ public sealed class AssistChip : ComposableNode
         ComposableLambda2? trailing = TrailingIcon is null ? null : new ComposableLambda2(c => TrailingIcon.Render(c));
 
         int defaults = (int)AssistChipDefault.All;
+        var modifier = BuildModifier();
+        if (modifier is not null) defaults &= ~(int)AssistChipDefault.Modifier;
         if (leading  is not null) defaults &= ~(int)AssistChipDefault.LeadingIcon;
         if (trailing is not null) defaults &= ~(int)AssistChipDefault.TrailingIcon;
 
-        ComposeBridges.AssistChip(click, label, leading, trailing, defaults, composer);
+        ComposeBridges.AssistChip(click, label, modifier, leading, trailing, defaults, composer);
     }
 }

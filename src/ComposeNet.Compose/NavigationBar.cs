@@ -31,6 +31,6 @@ public sealed class NavigationBar : ComposableContainer
             using var _ = RenderContext.PushScope(scope);
             RenderChildren(c);
         });
-        ComposeBridges.NavigationBar(content, composer);
+        ComposeBridges.NavigationBar(BuildModifier(), content, composer);
     }
 }

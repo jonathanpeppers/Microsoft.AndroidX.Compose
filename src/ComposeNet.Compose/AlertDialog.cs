@@ -66,6 +66,8 @@ public sealed class AlertDialog : ComposableNode
         // Start from "default everything" and clear the bit for each
         // optional slot the user actually supplied.
         int defaults = (int)AlertDialogDefault.All;
+        var modifier = BuildModifier();
+        if (modifier   is not null) defaults &= ~(int)AlertDialogDefault.Modifier;
         if (dismissBtn is not null) defaults &= ~(int)AlertDialogDefault.DismissButton;
         if (icon       is not null) defaults &= ~(int)AlertDialogDefault.Icon;
         if (title      is not null) defaults &= ~(int)AlertDialogDefault.Title;
@@ -74,6 +76,7 @@ public sealed class AlertDialog : ComposableNode
         ComposeBridges.AlertDialog(
             onDismissRequest: onDismiss,
             confirmButton:    confirm,
+            modifier:         modifier,
             dismissButton:    dismissBtn,
             icon:             icon,
             title:            title,

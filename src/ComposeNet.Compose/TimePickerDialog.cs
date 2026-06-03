@@ -39,13 +39,16 @@ public sealed class TimePickerDialog : ComposableNode
             : new ComposableLambda2(c => ModeToggleButton.Render(c));
 
         int defaults = (int)TimePickerDialogDefault.All;
-        if (title  is not null) defaults &= ~(int)TimePickerDialogDefault.Title;
-        if (toggle is not null) defaults &= ~(int)TimePickerDialogDefault.ModeToggleButton;
+        var modifier = BuildModifier();
+        if (modifier is not null) defaults &= ~(int)TimePickerDialogDefault.Modifier;
+        if (title    is not null) defaults &= ~(int)TimePickerDialogDefault.Title;
+        if (toggle   is not null) defaults &= ~(int)TimePickerDialogDefault.ModeToggleButton;
 
         ComposeBridges.TimePickerDialog(
             onDismissRequest: onDismiss,
             confirmButton:    confirm,
             dismissButton:    dismiss,
+            modifier:         modifier,
             title:            title,
             modeToggleButton: toggle,
             content:          content,

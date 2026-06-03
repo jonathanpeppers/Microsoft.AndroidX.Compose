@@ -28,8 +28,10 @@ public sealed class SuggestionChip : ComposableNode
         ComposableLambda2? icon = Icon is null ? null : new ComposableLambda2(c => Icon.Render(c));
 
         int defaults = (int)SuggestionChipDefault.All;
-        if (icon is not null) defaults &= ~(int)SuggestionChipDefault.Icon;
+        var modifier = BuildModifier();
+        if (modifier is not null) defaults &= ~(int)SuggestionChipDefault.Modifier;
+        if (icon     is not null) defaults &= ~(int)SuggestionChipDefault.Icon;
 
-        ComposeBridges.SuggestionChip(click, label, icon, defaults, composer);
+        ComposeBridges.SuggestionChip(click, label, modifier, icon, defaults, composer);
     }
 }

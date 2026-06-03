@@ -20,6 +20,16 @@ public abstract class ComposableContainer : ComposableNode, IEnumerable
         if (child is not null)
             _children.Add(child);
     }
+
+    /// <summary>
+    /// Collection-initializer overload that lets callers set
+    /// <see cref="ComposableNode.Modifier"/> inline alongside children:
+    /// <code>new Column { Modifier.Companion.Padding(16), new Text("Hi") }</code>
+    /// (C# disallows mixing object-initializer assignments with
+    /// collection-initializer items in the same braces, so the modifier
+    /// is set via <c>Add</c> instead.)
+    /// </summary>
+    public void Add(Modifier modifier) => Modifier = modifier;
     IEnumerator IEnumerable.GetEnumerator() => _children.GetEnumerator();
 
     /// <summary>Internal accessor for <see cref="Render"/> impls.</summary>

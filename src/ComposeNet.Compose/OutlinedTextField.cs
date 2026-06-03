@@ -14,6 +14,6 @@ public sealed class OutlinedTextField : ComposableNode
     internal override void Render(IComposer composer)
     {
         var onChange = new ComposableLambda1(v => _state.Value = v?.ToString() ?? string.Empty);
-        ComposeBridges.OutlinedTextField(_state.Value ?? string.Empty, onChange, composer);
+        ComposeBridges.OutlinedTextField(_state.Value ?? string.Empty, onChange, BuildModifier(), composer);
     }
 }

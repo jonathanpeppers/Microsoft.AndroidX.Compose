@@ -51,10 +51,13 @@ public sealed class ModalBottomSheet : ComposableContainer
             : new ComposableLambda2(c => DragHandle.Render(c));
 
         int defaults = (int)ModalBottomSheetDefault.All;
+        var modifier = BuildModifier();
+        if (modifier   is not null) defaults &= ~(int)ModalBottomSheetDefault.Modifier;
         if (dragHandle is not null) defaults &= ~(int)ModalBottomSheetDefault.DragHandle;
 
         ComposeBridges.ModalBottomSheet(
             onDismissRequest: onDismiss,
+            modifier:         modifier,
             sheetState:       ((Java.Lang.Object)sheetState).Handle,
             dragHandle:       dragHandle,
             content:          content,

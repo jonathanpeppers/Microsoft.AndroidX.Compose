@@ -46,11 +46,14 @@ public sealed class BottomSheetScaffold : ComposableContainer
             : new ComposableLambda2(c => TopBar.Render(c));
 
         int defaults = (int)BottomSheetScaffoldDefault.All;
+        var modifier = BuildModifier();
+        if (modifier   is not null) defaults &= ~(int)BottomSheetScaffoldDefault.Modifier;
         if (dragHandle is not null) defaults &= ~(int)BottomSheetScaffoldDefault.SheetDragHandle;
         if (topBar     is not null) defaults &= ~(int)BottomSheetScaffoldDefault.TopBar;
 
         ComposeBridges.BottomSheetScaffold(
             sheetContent:    sheet,
+            modifier:        modifier,
             scaffoldState:   ((Java.Lang.Object)scaffoldState).Handle,
             sheetDragHandle: dragHandle,
             topBar:          topBar,

@@ -37,13 +37,16 @@ public sealed class NavigationBarItem : ComposableNode
         ComposableLambda2? label = Label is null ? null : new ComposableLambda2(c => Label.Render(c));
 
         int defaults = (int)NavigationBarItemDefault.All;
-        if (label is not null) defaults &= ~(int)NavigationBarItemDefault.Label;
+        var modifier = BuildModifier();
+        if (modifier is not null) defaults &= ~(int)NavigationBarItemDefault.Modifier;
+        if (label    is not null) defaults &= ~(int)NavigationBarItemDefault.Label;
 
         ComposeBridges.NavigationBarItem(
             rowScope: RenderContext.CurrentScope,
             selected: _selected,
             onClick:  click,
             icon:     icon,
+            modifier: modifier,
             label:    label,
             defaults: defaults,
             composer: composer);

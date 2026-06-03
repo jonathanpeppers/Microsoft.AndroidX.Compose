@@ -34,8 +34,10 @@ public sealed class NavigationRailItem : ComposableNode
         ComposableLambda2? label = Label is null ? null : new ComposableLambda2(c => Label.Render(c));
 
         int defaults = (int)NavigationRailItemDefault.All;
-        if (label is not null) defaults &= ~(int)NavigationRailItemDefault.Label;
+        var modifier = BuildModifier();
+        if (modifier is not null) defaults &= ~(int)NavigationRailItemDefault.Modifier;
+        if (label    is not null) defaults &= ~(int)NavigationRailItemDefault.Label;
 
-        ComposeBridges.NavigationRailItem(_selected, click, icon, label, defaults, composer);
+        ComposeBridges.NavigationRailItem(_selected, click, icon, modifier, label, defaults, composer);
     }
 }

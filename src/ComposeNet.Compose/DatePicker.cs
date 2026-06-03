@@ -24,6 +24,9 @@ public sealed class DatePicker : ComposableNode
         var stateHandle = ComposeBridges.RememberDatePickerState(composer);
         if (_state is not null && _state.Jvm is null)
             _state.Jvm = Java.Lang.Object.GetObject<IDatePickerState>(stateHandle, JniHandleOwnership.DoNotTransfer)!;
-        ComposeBridges.DatePicker(stateHandle, (int)DatePickerDefault.All, composer);
+        var modifier = BuildModifier();
+        int defaults = (int)DatePickerDefault.All;
+        if (modifier is not null) defaults &= ~(int)DatePickerDefault.Modifier;
+        ComposeBridges.DatePicker(stateHandle, modifier, defaults, composer);
     }
 }

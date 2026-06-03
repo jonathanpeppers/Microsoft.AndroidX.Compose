@@ -15,6 +15,6 @@ public sealed class IconButton : ComposableContainer
     {
         var click   = new ComposableLambda0(_onClick);
         var content = new ComposableLambda2(c => RenderChildren(c));
-        ComposeBridges.IconButton(click, content, composer);
+        ComposeBridges.IconButton(click, BuildModifier(), content, composer);
     }
 }
