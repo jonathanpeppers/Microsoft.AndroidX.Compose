@@ -264,6 +264,66 @@ internal static class ComposeBridges
         InvokeTextField(s_outlinedTextFieldClass, s_outlinedTextFieldMethod, value, onValueChange, composer, (int)TextFieldDefault.All);
     }
 
+    // androidx.compose.material3.AndroidAlertDialog_androidKt.AlertDialog-Oix01E0(
+    //   onDismissRequest, confirmButton, modifier, dismissButton, icon, title,
+    //   text, shape, containerColor, iconContentColor, titleContentColor,
+    //   textContentColor, tonalElevation, properties,
+    //   composer, $changed, $changed1, $default)
+    //
+    // 14 user params, bit 0 = onDismissRequest, bit 1 = confirmButton
+    // (both always provided); the four slot Function2s (dismissButton, icon,
+    // title, text) are user-supplied — if any is null, set its $default bit
+    // so Compose substitutes the real Kotlin default (also null).
+    const string AlertDialogSig =
+        "(Lkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function2;" +
+        "Landroidx/compose/ui/Modifier;" +
+        "Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;" +
+        "Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;" +
+        "Landroidx/compose/ui/graphics/Shape;JJJJF" +
+        "Landroidx/compose/ui/window/DialogProperties;" +
+        "Landroidx/compose/runtime/Composer;III)V";
+
+    static IntPtr s_alertDialogClass;
+    static IntPtr s_alertDialogMethod;
+
+    public static unsafe void AlertDialog(
+        IFunction0  onDismissRequest,
+        IFunction2  confirmButton,
+        IFunction2? dismissButton,
+        IFunction2? icon,
+        IFunction2? title,
+        IFunction2? text,
+        int         defaults,
+        IComposer   composer)
+    {
+        if (s_alertDialogClass == IntPtr.Zero)
+        {
+            s_alertDialogClass  = JNIEnv.FindClass("androidx/compose/material3/AndroidAlertDialog_androidKt");
+            s_alertDialogMethod = JNIEnv.GetStaticMethodID(s_alertDialogClass, "AlertDialog-Oix01E0", AlertDialogSig);
+        }
+
+        JValue* args = stackalloc JValue[18];
+        args[0]  = new JValue(((Java.Lang.Object)onDismissRequest).Handle);
+        args[1]  = new JValue(((Java.Lang.Object)confirmButton).Handle);
+        args[2]  = new JValue(IntPtr.Zero); // modifier
+        args[3]  = new JValue(dismissButton is null ? IntPtr.Zero : ((Java.Lang.Object)dismissButton).Handle);
+        args[4]  = new JValue(icon          is null ? IntPtr.Zero : ((Java.Lang.Object)icon).Handle);
+        args[5]  = new JValue(title         is null ? IntPtr.Zero : ((Java.Lang.Object)title).Handle);
+        args[6]  = new JValue(text          is null ? IntPtr.Zero : ((Java.Lang.Object)text).Handle);
+        args[7]  = new JValue(IntPtr.Zero); // shape
+        args[8]  = new JValue(0L);          // containerColor
+        args[9]  = new JValue(0L);          // iconContentColor
+        args[10] = new JValue(0L);          // titleContentColor
+        args[11] = new JValue(0L);          // textContentColor
+        args[12] = new JValue(0f);          // tonalElevation
+        args[13] = new JValue(IntPtr.Zero); // properties
+        args[14] = new JValue(((Java.Lang.Object)composer).Handle);
+        args[15] = new JValue(0);           // $changed
+        args[16] = new JValue(0);           // $changed1
+        args[17] = new JValue(defaults);    // $default
+        JNIEnv.CallStaticVoidMethod(s_alertDialogClass, s_alertDialogMethod, args);
+    }
+
     static unsafe void InvokeTextField(IntPtr cls, IntPtr method, string value, IFunction1 onValueChange, IComposer composer, int defaults)
     {
         IntPtr valueRef = JNIEnv.NewString(value);

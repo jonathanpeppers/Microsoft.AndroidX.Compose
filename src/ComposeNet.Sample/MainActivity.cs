@@ -11,8 +11,9 @@ public class MainActivity : ComposeActivity
         base.OnCreate(savedInstanceState);
         SetContent(() =>
         {
-            var count = Remember(() => new MutableIntState(0));
-            var name  = Remember(() => new MutableState<string>(""));
+            var count    = Remember(() => new MutableIntState(0));
+            var name     = Remember(() => new MutableState<string>(""));
+            var showDlg  = Remember(() => new MutableState<bool>(false));
             return new MaterialTheme
             {
                 new Surface
@@ -31,10 +32,25 @@ public class MainActivity : ComposeActivity
                         },
                         new OutlinedTextField(name),
                         new Text($"Hi {(string.IsNullOrEmpty(name.Value) ? "stranger" : name.Value)}"),
-                        new FloatingActionButton(onClick: () => count.Value = 0)
+                        new FloatingActionButton(onClick: () => showDlg.Value = true)
                         {
                             new Text("✕"),
                         },
+                        showDlg.Value
+                            ? new AlertDialog(onDismissRequest: () => showDlg.Value = false)
+                            {
+                                Title         = new Text("Reset counter?"),
+                                Text          = new Text("This will set the counter back to zero."),
+                                ConfirmButton = new Button(onClick: () => { count.Value = 0; showDlg.Value = false; })
+                                {
+                                    new Text("Reset"),
+                                },
+                                DismissButton = new Button(onClick: () => showDlg.Value = false)
+                                {
+                                    new Text("Cancel"),
+                                },
+                            }
+                            : null,
                     },
                 },
             };
