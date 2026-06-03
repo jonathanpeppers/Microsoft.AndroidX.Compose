@@ -1722,19 +1722,26 @@ internal static class ComposeBridges
         return s_drawerSheetClass;
     }
 
-    static unsafe void CallDrawerSheet(IntPtr method, IFunction3 content, IComposer composer)
+    static unsafe void CallDrawerSheet(IntPtr method, IFunction3 content, IComposer composer, long containerColor = 0L)
     {
+        // When containerColor is non-zero, pass it explicitly and clear
+        // bit 2 so Kotlin doesn't substitute its $default. Bit numbering
+        // matches DrawerSheetDefault (modifier=0, shape=1, drawerContainerColor=2).
+        int defaults = (int)DrawerSheetDefault.All;
+        if (containerColor != 0L)
+            defaults &= ~(1 << 2);
+
         JValue* args = stackalloc JValue[10];
-        args[0] = new JValue(IntPtr.Zero); // modifier
-        args[1] = new JValue(IntPtr.Zero); // shape
-        args[2] = new JValue(0L);          // drawerContainerColor
-        args[3] = new JValue(0L);          // drawerContentColor
-        args[4] = new JValue(0f);          // tonalElevation
-        args[5] = new JValue(IntPtr.Zero); // windowInsets
+        args[0] = new JValue(IntPtr.Zero);     // modifier
+        args[1] = new JValue(IntPtr.Zero);     // shape
+        args[2] = new JValue(containerColor);  // drawerContainerColor
+        args[3] = new JValue(0L);              // drawerContentColor
+        args[4] = new JValue(0f);              // tonalElevation
+        args[5] = new JValue(IntPtr.Zero);     // windowInsets
         args[6] = new JValue(((Java.Lang.Object)content).Handle);
         args[7] = new JValue(((Java.Lang.Object)composer).Handle);
         args[8] = new JValue(0);
-        args[9] = new JValue((int)DrawerSheetDefault.All);
+        args[9] = new JValue(defaults);
         try
         {
             JNIEnv.CallStaticVoidMethod(GetDrawerSheetClass(), method, args);
@@ -1746,25 +1753,25 @@ internal static class ComposeBridges
         }
     }
 
-    public static unsafe void ModalDrawerSheet(IFunction3 content, IComposer composer)
+    public static unsafe void ModalDrawerSheet(IFunction3 content, IComposer composer, long containerColor = 0L)
     {
         if (s_modalDrawerSheetMethod == IntPtr.Zero)
             s_modalDrawerSheetMethod = JNIEnv.GetStaticMethodID(GetDrawerSheetClass(), "ModalDrawerSheet-afqeVBk", DrawerSheetSig);
-        CallDrawerSheet(s_modalDrawerSheetMethod, content, composer);
+        CallDrawerSheet(s_modalDrawerSheetMethod, content, composer, containerColor);
     }
 
-    public static unsafe void DismissibleDrawerSheet(IFunction3 content, IComposer composer)
+    public static unsafe void DismissibleDrawerSheet(IFunction3 content, IComposer composer, long containerColor = 0L)
     {
         if (s_dismissibleDrawerSheetMethod == IntPtr.Zero)
             s_dismissibleDrawerSheetMethod = JNIEnv.GetStaticMethodID(GetDrawerSheetClass(), "DismissibleDrawerSheet-afqeVBk", DrawerSheetSig);
-        CallDrawerSheet(s_dismissibleDrawerSheetMethod, content, composer);
+        CallDrawerSheet(s_dismissibleDrawerSheetMethod, content, composer, containerColor);
     }
 
-    public static unsafe void PermanentDrawerSheet(IFunction3 content, IComposer composer)
+    public static unsafe void PermanentDrawerSheet(IFunction3 content, IComposer composer, long containerColor = 0L)
     {
         if (s_permanentDrawerSheetMethod == IntPtr.Zero)
             s_permanentDrawerSheetMethod = JNIEnv.GetStaticMethodID(GetDrawerSheetClass(), "PermanentDrawerSheet-afqeVBk", DrawerSheetSig);
-        CallDrawerSheet(s_permanentDrawerSheetMethod, content, composer);
+        CallDrawerSheet(s_permanentDrawerSheetMethod, content, composer, containerColor);
     }
 
     // androidx.compose.material3.NavigationRailKt.NavigationRailItem:
