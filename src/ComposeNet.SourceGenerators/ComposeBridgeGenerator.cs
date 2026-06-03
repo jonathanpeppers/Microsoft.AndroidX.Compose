@@ -179,12 +179,14 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
         if (diags.Count > 0)
             return new GenerationResult(null, null, diags.ToArray());
 
-        if (sigParams.Count != kotlinNames.Count + (receiverParam is null ? 0 : 1) + 1 /*composer*/ + ChangedSlotCount(sigParams) + 1 /*default*/)
+        var changedSlots = ChangedSlotCount(sigParams);
+        var actualUserSlots = sigParams.Count - (receiverParam is null ? 0 : 1) - 1 /*composer*/ - changedSlots - 1 /*default*/;
+        if (actualUserSlots != kotlinNames.Count)
         {
             // Sanity check: sig param count = receiver? + kotlin params + composer + $changed* + $default.
             // We expose the mismatch via diagnostic — common cause is wrong Defaults enum.
             diags.Add(Diagnostic.Create(Diagnostics.BridgeSignatureMismatch, loc,
-                method.Name, sigParams.Count, defaultsEnumName ?? "?", kotlinNames.Count));
+                method.Name, actualUserSlots, defaultsEnumName ?? "?", kotlinNames.Count));
             return new GenerationResult(null, null, diags.ToArray());
         }
 
@@ -260,8 +262,9 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
         {
             sb.Append("            var __fid = global::Android.Runtime.JNIEnv.GetStaticFieldID(s_").Append(sym)
               .Append("_class, \"").Append(instanceField).Append("\", \"L").Append(className).AppendLine(";\");");
-            sb.Append("            s_").Append(sym).Append("_instance = global::Android.Runtime.JNIEnv.NewGlobalRef(global::Android.Runtime.JNIEnv.GetStaticObjectField(s_")
-              .Append(sym).AppendLine("_class, __fid));");
+            sb.Append("            var __local = global::Android.Runtime.JNIEnv.GetStaticObjectField(s_").Append(sym).AppendLine("_class, __fid);");
+            sb.Append("            s_").Append(sym).AppendLine("_instance = global::Android.Runtime.JNIEnv.NewGlobalRef(__local);");
+            sb.AppendLine("            global::Android.Runtime.JNIEnv.DeleteLocalRef(__local);");
             sb.Append("            s_").Append(sym).Append("_method = global::Android.Runtime.JNIEnv.GetMethodID(s_")
               .Append(sym).Append("_class, \"").Append(jvmName).Append("\", \"").Append(signature).AppendLine("\");");
         }

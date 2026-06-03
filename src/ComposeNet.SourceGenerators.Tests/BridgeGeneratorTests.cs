@@ -24,6 +24,8 @@ public class BridgeGeneratorTests
                 public static void DeleteLocalRef(System.IntPtr h) { }
                 public static unsafe void CallStaticVoidMethod(System.IntPtr cls, System.IntPtr m, Android.Runtime.JValue* args) { }
                 public static unsafe void CallVoidMethod(System.IntPtr inst, System.IntPtr m, Android.Runtime.JValue* args) { }
+                public static unsafe System.IntPtr CallStaticObjectMethod(System.IntPtr cls, System.IntPtr m, Android.Runtime.JValue* args) => default;
+                public static unsafe System.IntPtr CallObjectMethod(System.IntPtr inst, System.IntPtr m, Android.Runtime.JValue* args) => default;
             }
             public readonly struct JValue
             {
@@ -330,5 +332,78 @@ public class BridgeGeneratorTests
 
         var (_, diags, _) = Run(code);
         Assert.Contains(diags, d => d.Id == "CN2003");
+    }
+
+    [Fact]
+    public void NonVoidReturn_EmitsCallStaticObjectMethodReturn()
+    {
+        var code = """
+            using AndroidX.Compose.Runtime;
+            using ComposeNet;
+            using Kotlin.Jvm.Functions;
+
+            [assembly: ComposeDefaults("RememberDatePickerStateDefault",
+                "initialSelectedDateMillis", "initialDisplayedMonthMillis", "yearRange",
+                "initialDisplayMode", "selectableDates")]
+
+            namespace ComposeNet
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(
+                        Class = "androidx/compose/material3/DatePickerKt",
+                        JvmName = "rememberDatePickerState-EU0dCGE",
+                        Signature = "(Ljava/lang/Long;Ljava/lang/Long;Lkotlin/ranges/IntRange;ILandroidx/compose/material3/SelectableDates;Landroidx/compose/runtime/Composer;II)Landroidx/compose/material3/DatePickerState;",
+                        Defaults = typeof(RememberDatePickerStateDefault))]
+                    public static partial System.IntPtr RememberDatePickerState(int defaults, IComposer composer);
+                }
+            }
+            """;
+
+        var (output, diags, emitted) = Run(code);
+        Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+        Assert.Contains("return global::Android.Runtime.JNIEnv.CallStaticObjectMethod(", emitted);
+
+        var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
+        Assert.Empty(errors);
+    }
+
+    [Fact]
+    public void InstanceField_EmitsGlobalRefAndCallObjectMethod()
+    {
+        var code = """
+            using AndroidX.Compose.Runtime;
+            using ComposeNet;
+            using Kotlin.Jvm.Functions;
+
+            [assembly: ComposeDefaults("RememberPlainTooltipPositionProviderDefault", "spacing")]
+
+            namespace ComposeNet
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(
+                        Class = "androidx/compose/material3/TooltipDefaults",
+                        InstanceField = "INSTANCE",
+                        JvmName = "rememberPlainTooltipPositionProvider-kHDZbjc",
+                        Signature = "(FLandroidx/compose/runtime/Composer;II)Landroidx/compose/ui/window/PopupPositionProvider;",
+                        Defaults = typeof(RememberPlainTooltipPositionProviderDefault))]
+                    public static partial System.IntPtr RememberPlainTooltipPositionProvider(int defaults, IComposer composer);
+                }
+            }
+            """;
+
+        var (output, diags, emitted) = Run(code);
+        Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+        Assert.Contains("GetStaticFieldID(", emitted);
+        Assert.Contains("NewGlobalRef(__local)", emitted);
+        Assert.Contains("DeleteLocalRef(__local)", emitted);
+        Assert.Contains("GetMethodID(", emitted);
+        Assert.Contains("return global::Android.Runtime.JNIEnv.CallObjectMethod(s_RememberPlainTooltipPositionProvider_instance,", emitted);
+
+        var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
+        Assert.Empty(errors);
     }
 }
