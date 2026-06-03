@@ -759,7 +759,14 @@ internal static class ComposeBridges
         args[8]  = new JValue(((Java.Lang.Object)composer).Handle);
         args[9]  = new JValue(0);           // $changed
         args[10] = new JValue(defaults);    // $default
-        JNIEnv.CallStaticVoidMethod(s_datePickerClass, s_datePickerMethod, args);
+        try
+        {
+            JNIEnv.CallStaticVoidMethod(s_datePickerClass, s_datePickerMethod, args);
+        }
+        finally
+        {
+            GC.KeepAlive(composer);
+        }
     }
 
     // ---- State-holder bridges ----
@@ -799,7 +806,14 @@ internal static class ComposeBridges
         args[5] = new JValue(((Java.Lang.Object)composer).Handle);
         args[6] = new JValue(0);           // $changed
         args[7] = new JValue(0b11111);     // $default — all 5 user params defaulted
-        return JNIEnv.CallStaticObjectMethod(s_rememberDatePickerStateClass, s_rememberDatePickerStateMethod, args);
+        try
+        {
+            return JNIEnv.CallStaticObjectMethod(s_rememberDatePickerStateClass, s_rememberDatePickerStateMethod, args);
+        }
+        finally
+        {
+            GC.KeepAlive(composer);
+        }
     }
 
     // androidx.compose.material3.TimePickerKt.rememberTimePickerState(
@@ -825,7 +839,14 @@ internal static class ComposeBridges
         args[3] = new JValue(((Java.Lang.Object)composer).Handle);
         args[4] = new JValue(0);           // $changed
         args[5] = new JValue(0);           // $default — all 3 provided
-        return JNIEnv.CallStaticObjectMethod(s_rememberTimePickerStateClass, s_rememberTimePickerStateMethod, args);
+        try
+        {
+            return JNIEnv.CallStaticObjectMethod(s_rememberTimePickerStateClass, s_rememberTimePickerStateMethod, args);
+        }
+        finally
+        {
+            GC.KeepAlive(composer);
+        }
     }
 
     // androidx.compose.material3.TooltipKt.rememberTooltipState(
@@ -851,7 +872,14 @@ internal static class ComposeBridges
         args[3] = new JValue(((Java.Lang.Object)composer).Handle);
         args[4] = new JValue(0);           // $changed
         args[5] = new JValue(0b101);       // $default — bits 0 and 2 (initialIsVisible, mutatorMutex)
-        return JNIEnv.CallStaticObjectMethod(s_rememberTooltipStateClass, s_rememberTooltipStateMethod, args);
+        try
+        {
+            return JNIEnv.CallStaticObjectMethod(s_rememberTooltipStateClass, s_rememberTooltipStateMethod, args);
+        }
+        finally
+        {
+            GC.KeepAlive(composer);
+        }
     }
 
     // androidx.compose.material3.TooltipDefaults.INSTANCE.rememberPlainTooltipPositionProvider-kHDZbjc(
@@ -880,7 +908,14 @@ internal static class ComposeBridges
         args[1] = new JValue(((Java.Lang.Object)composer).Handle);
         args[2] = new JValue(0);
         args[3] = new JValue(1);           // $default — spacing defaulted
-        return JNIEnv.CallObjectMethod(s_tooltipDefaultsInstance, s_rememberPlainTooltipPositionProviderMethod, args);
+        try
+        {
+            return JNIEnv.CallObjectMethod(s_tooltipDefaultsInstance, s_rememberPlainTooltipPositionProviderMethod, args);
+        }
+        finally
+        {
+            GC.KeepAlive(composer);
+        }
     }
 
     static unsafe void InvokeTextField(IntPtr cls, IntPtr method, string value, IFunction1 onValueChange, IComposer composer, int defaults)
