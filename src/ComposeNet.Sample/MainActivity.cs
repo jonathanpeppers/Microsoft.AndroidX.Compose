@@ -84,12 +84,12 @@ public class MainActivity : ComposeActivity
             {
                 new Surface
                 {
-                    new Column
+                    new Scaffold
                     {
-                        tabContent,
-
-                        // Bottom navigation switches between the three tabs above.
-                        new NavigationBar
+                        // Bottom navigation switches between the three tabs above —
+                        // pinned to the bottom edge by Scaffold instead of flowing
+                        // inline at the end of a Column.
+                        BottomBar = new NavigationBar
                         {
                             new NavigationBarItem(selected: tab.Value == 0, onClick: () => tab.Value = 0)
                             {
@@ -107,67 +107,72 @@ public class MainActivity : ComposeActivity
                                 Label = new Text("Pickers"),
                             },
                         },
+                        Body = new Column
+                        {
+                            tabContent,
 
-                        // --- Overlays: rendered at the root regardless of tab,
-                        // so a dialog opened on Tab 1 still works after switching. ---
-                        showAlert.Value
-                            ? new AlertDialog(onDismissRequest: () => showAlert.Value = false)
-                            {
-                                Title         = new Text("Reset counter?"),
-                                Text          = new Text("This will set the counter back to zero."),
-                                ConfirmButton = new Button(onClick: () => { count.Value = 0; showAlert.Value = false; })
+                            // Overlays: rendered in the body so they participate in the
+                            // same composition as the tab content. A dialog opened on
+                            // Tab 1 still works after switching tabs.
+                            showAlert.Value
+                                ? new AlertDialog(onDismissRequest: () => showAlert.Value = false)
                                 {
-                                    new Text("Reset"),
-                                },
-                                DismissButton = new Button(onClick: () => showAlert.Value = false)
-                                {
-                                    new Text("Cancel"),
-                                },
-                            }
-                            : null,
+                                    Title         = new Text("Reset counter?"),
+                                    Text          = new Text("This will set the counter back to zero."),
+                                    ConfirmButton = new Button(onClick: () => { count.Value = 0; showAlert.Value = false; })
+                                    {
+                                        new Text("Reset"),
+                                    },
+                                    DismissButton = new Button(onClick: () => showAlert.Value = false)
+                                    {
+                                        new Text("Cancel"),
+                                    },
+                                }
+                                : null,
 
-                        // ModalBottomSheet — SheetState comes from the bound C#
-                        // RememberModalBottomSheetState (NOT stripped, no JNI).
-                        showSheet.Value
-                            ? new ModalBottomSheet(onDismissRequest: () => showSheet.Value = false)
-                              {
-                                  new Column
+                            // ModalBottomSheet — SheetState comes from the bound C#
+                            // RememberModalBottomSheetState (NOT stripped, no JNI).
+                            showSheet.Value
+                                ? new ModalBottomSheet(onDismissRequest: () => showSheet.Value = false)
                                   {
-                                      new Text("Modal bottom sheet"),
-                                      new Text("Drag down or tap outside to dismiss."),
-                                      new Button(onClick: () => showSheet.Value = false) { new Text("Hide") },
-                                  },
-                              }
-                            : null,
+                                      new Column
+                                      {
+                                          new Text("Modal bottom sheet"),
+                                          new Text("Drag down or tap outside to dismiss."),
+                                          new Button(onClick: () => showSheet.Value = false) { new Text("Hide") },
+                                      },
+                                  }
+                                : null,
 
-                        showDate.Value
-                            ? new DatePickerDialog(onDismissRequest: () => showDate.Value = false)
-                            {
-                                ConfirmButton = new Button(onClick: () =>
+                            showDate.Value
+                                ? new DatePickerDialog(onDismissRequest: () => showDate.Value = false)
                                 {
-                                    pickedDate.Value = dateState.SelectedDateMillis is long ms ? ms.ToString() : "(none)";
-                                    showDate.Value = false;
-                                })
-                                { new Text("OK") },
-                                DismissButton = new Button(onClick: () => showDate.Value = false) { new Text("Cancel") },
-                                Body          = new DatePicker(dateState),
-                            }
-                            : null,
+                                    ConfirmButton = new Button(onClick: () =>
+                                    {
+                                        pickedDate.Value = dateState.SelectedDateMillis is long ms ? ms.ToString() : "(none)";
+                                        showDate.Value = false;
+                                    })
+                                    { new Text("OK") },
+                                    DismissButton = new Button(onClick: () => showDate.Value = false) { new Text("Cancel") },
+                                    Body          = new DatePicker(dateState),
+                                }
+                                : null,
 
-                        showTime.Value
-                            ? new TimePickerDialog(onDismissRequest: () => showTime.Value = false)
-                            {
-                                Title         = new Text("Pick a time"),
-                                ConfirmButton = new Button(onClick: () =>
+                            showTime.Value
+                                ? new TimePickerDialog(onDismissRequest: () => showTime.Value = false)
                                 {
-                                    pickedTime.Value = $"{timeState.Hour:D2}:{timeState.Minute:D2}";
-                                    showTime.Value = false;
-                                })
-                                { new Text("OK") },
-                                DismissButton = new Button(onClick: () => showTime.Value = false) { new Text("Cancel") },
-                                Body          = new TimePicker(timeState),
-                            }
-                            : null,
+                                    Title         = new Text("Pick a time"),
+                                    ConfirmButton = new Button(onClick: () =>
+                                    {
+                                        pickedTime.Value = $"{timeState.Hour:D2}:{timeState.Minute:D2}";
+                                        showTime.Value = false;
+                                    })
+                                    { new Text("OK") },
+                                    DismissButton = new Button(onClick: () => showTime.Value = false) { new Text("Cancel") },
+                                    Body          = new TimePicker(timeState),
+                                }
+                                : null,
+                        },
                     },
                 },
             };

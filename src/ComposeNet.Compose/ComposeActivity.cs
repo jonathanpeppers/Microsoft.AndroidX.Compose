@@ -83,13 +83,19 @@ public abstract class ComposeActivity : ComponentActivity
     void ApplySafeAreaPadding(Android.Views.View view)
     {
         // On API 36 / Theme.Material.Light the ActionBar is overlay-decor
-        // and draws on top of android.R.id.content. Push the ComposeView
-        // down by status + action bar height; pad the nav bar at bottom.
+        // and draws on top of android.R.id.content, so we still need to
+        // push content down by status + action bar height. We deliberately
+        // do NOT pad left / right / bottom here: a root-level Scaffold
+        // already handles those edges via its own WindowInsets (the
+        // bottom NavigationBar pads itself above the gesture bar, and
+        // the body lambda receives PaddingValues for cutouts). See
+        // issue #20 for the long-term plan to drop this shim entirely
+        // once the activity goes edge-to-edge under a Material 3 theme.
         view.SetPadding(
-            left:   Dp(16),
+            left:   0,
             top:    SystemBarHeight("status_bar_height") + ActionBarHeight() + Dp(16),
-            right:  Dp(16),
-            bottom: SystemBarHeight("navigation_bar_height") + Dp(16));
+            right:  0,
+            bottom: 0);
     }
 
     void ApplyLightStatusBar()
