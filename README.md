@@ -281,7 +281,7 @@ public class MainActivity : ComposeActivity
         base.OnCreate(savedInstanceState);
         SetContent(() =>
         {
-            var count = Remember(() => new MutableIntState(0));
+            var count = Remember(() => new MutableNumberState<int>(0));
             return new MaterialTheme
             {
                 new Column
@@ -311,9 +311,9 @@ That's the *entire* [`MainActivity.cs`](src/ComposeNet.Sample/MainActivity.cs).
 | `Column { … }`                         | `new Column { … }` (collection-initializer)         |
 | `Button(onClick = { x++ }) { … }`      | `new Button(onClick: () => x++) { … }`              |
 | `MaterialTheme { … }`                  | `new MaterialTheme { … }`                           |
-| `var count by remember { mutableStateOf(0) }` | `var count = Remember(() => new MutableIntState(0))` |
-| `count++`                              | `count++` (operator on `MutableIntState`)           |
-| `"Count: $count"`                      | `$"Count: {count}"` (implicit `int` conversion)     |
+| `var count by remember { mutableStateOf(0) }` | `var count = Remember(() => new MutableNumberState<int>(0))` |
+| `count++`                              | `count++` (operator on `MutableNumberState<T>`)     |
+| `"Count: $count"`                      | `$"Count: {count}"` (via `MutableState<T>.ToString`)|
 
 ### How the facade works
 
@@ -331,14 +331,19 @@ Inside each container's `Render`, the existing raw-JNI bridges (`Text`,
 `Button`, `Column`, `MaterialTheme`) call the Kotlin-mangled Compose
 functions with their `$default` bitmasks. The user never sees that.
 
-`MutableIntState` is the killer feature for Kotlin parity — `implicit
-operator int` lets `$"Count: {count}"` interpolate without `.Value`,
-and `operator ++/--` lets `count++` mutate the underlying
-`IMutableState` directly. So the Kotlin idiom `var count by remember {
+`MutableNumberState<T>` is the killer feature for Kotlin parity —
+`MutableState<T>.ToString()` lets `$"Count: {count}"` interpolate
+without `.Value`, and `operator ++/--` (constrained to
+`INumber<T>`) lets `count++` mutate the underlying `IMutableState`
+directly. So the Kotlin idiom `var count by remember {
 mutableStateOf(0) } ; count++` becomes
-`var count = Remember(() => new MutableIntState(0)) ; count++` —
+`var count = Remember(() => new MutableNumberState<int>(0)) ; count++` —
 character-for-character equivalent after substituting Kotlin keywords
-for C# ones.
+for C# ones. It works for any built-in numeric primitive
+(`sbyte`/`byte`/`short`/`ushort`/`int`/`uint`/`long`/`ulong`/`float`/`double`).
+Other `INumber<T>` implementations (`decimal`, `Half`, `BigInteger`,
+`nint`, `nuint`) compile but throw at construction since they have no
+clean Java box.
 
 ### The `$default` bitmask source generator
 

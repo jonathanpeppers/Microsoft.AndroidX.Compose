@@ -354,8 +354,8 @@ src/
     ComposableLambdas.cs                      [Register]'d ACW adapters
                                                 (ComposableLambda0 / 2 / 3).
     ComposeBridges.cs                         Raw-JNI bridges to Material3 Text / Button.
-    MutableState.cs                           MutableState<T> + MutableIntState
-                                                (with implicit int + operator ++/--).
+    MutableState.cs                           MutableState<T> + MutableNumberState<T>
+                                                (with operator ++/-- via INumber&lt;T&gt;).
     ComposeActivity.cs                        ComponentActivity base providing SetContent +
                                                 Remember + safe-area padding + light status bar.
   ComposeNet.Bindings.Runtime/                Binds androidx.compose.runtime 1.9.4
@@ -440,7 +440,7 @@ The exception is real subcomposition (`SubcomposeLayout`, `MovableContent`)
 which *do* hand you a different composer — those would need an
 explicit-composer overload. Tier 2 problem.
 
-### 8. `MutableIntState` with `implicit operator int` + `operator ++/--` is the killer feature for Kotlin parity
+### 8. `MutableNumberState<T>` with `operator ++/--` is the killer feature for Kotlin parity
 
 The Kotlin idiom is:
 
@@ -451,24 +451,42 @@ Button(onClick = { count++ }) { ... }
 ```
 
 C# can't do `by` (delegated properties) or trailing lambdas, but
-**operator overloading** carries enough of the load:
+**operator overloading** plus a sensible `ToString()` carries enough
+of the load:
 
 ```csharp
-public sealed class MutableIntState : MutableState<int>
+public class MutableState<T>
 {
-    public static implicit operator int(MutableIntState s) => s.Value;
-    public static MutableIntState operator ++(MutableIntState s) { s.Value++; return s; }
-    public override string ToString() => Value.ToString();
+    public override string ToString() => Value?.ToString() ?? string.Empty;
+    // ...
+}
+
+public class MutableNumberState<T> : MutableState<T> where T : INumber<T>
+{
+    public static MutableNumberState<T> operator ++(MutableNumberState<T> s) { s.Value++; return s; }
+    public static MutableNumberState<T> operator --(MutableNumberState<T> s) { s.Value--; return s; }
 }
 ```
 
 Result:
-- `$"Count: {count}"` interpolates via implicit `int`
-- `count++` mutates via overloaded operator
-- `count.Value` is still available for explicit `set` (e.g. `count.Value = 42`)
+- `$"Count: {count}"` interpolates via the base `ToString()` override
+  (which renders `null` as the literal `"null"`, matching Kotlin)
+- `count++` mutates via the overloaded operator. The class is
+  constrained to `INumber<T>`, but `MutableState<T>` only boxes the
+  built-in numeric primitives
+  (`sbyte`/`byte`/`short`/`ushort`/`int`/`uint`/`long`/`ulong`/`float`/`double`);
+  `decimal`, `Half`, `BigInteger`, `nint`, and `nuint` compile but
+  throw at construction since they have no clean Java box.
+- `count.Value` is still available for explicit `set` (e.g.
+  `count.Value = 42`)
 
-This single class single-handedly closes the largest readability gap
-between Kotlin Compose state usage and C# Compose state usage.
+C# *cannot* express `implicit operator T` on `MutableState<T>` (CS0553
+forbids user-defined conversions involving an enclosing type's own
+type parameter), but the `ToString()` route is good enough — string
+interpolation and `Text(...)` callsites both go through it. The only
+thing you give up vs. an int-only specialization is using `count`
+directly in arithmetic without `.Value`, which is rare in idiomatic
+Compose code.
 
 ### 9. `[CallerLineNumber]` is a usable shim for `remember`
 

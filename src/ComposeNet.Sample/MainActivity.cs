@@ -11,7 +11,7 @@ public class MainActivity : ComposeActivity
         base.OnCreate(savedInstanceState);
         SetContent(() =>
         {
-            var count    = Remember(() => new MutableIntState(0));
+            var count    = Remember(() => new MutableNumberState<int>(0));
             var name     = Remember(() => new MutableState<string>(""));
             var showDlg  = Remember(() => new MutableState<bool>(false));
             return new MaterialTheme
