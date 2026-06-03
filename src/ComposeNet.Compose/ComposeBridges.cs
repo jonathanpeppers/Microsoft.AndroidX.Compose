@@ -151,12 +151,12 @@ internal static partial class ComposeBridges
         return JNIEnv.CallStaticObjectMethod(s_sizeKtClass, s_fillMaxSizeMethod, args);
     }
 
-    // ---- Source-generated bridges below. Each [ComposeBridge] partial
+    // Source-generated bridges below. Each [ComposeBridge] partial
     // declaration is paired with a matching [ComposeDefaults] in
     // ComposeDefaults.cs; the generator reads bit positions and parameter
     // names from the enum and emits the cache fields, lazy class/method
     // ID resolution, JValue array fill, $default bitmask, and try/finally
-    // with GC.KeepAlive. ----
+    // with GC.KeepAlive.
 
     // androidx.compose.material3.TextKt.Text--4IGK_g
     [ComposeBridge(
@@ -425,8 +425,6 @@ internal static partial class ComposeBridges
     public static partial void DatePicker(IntPtr state, IModifier? modifier,
                                           int defaults, IComposer composer);
 
-    // ---- State-holder bridges (non-void, return IntPtr) ----
-
     // androidx.compose.material3.DatePickerKt.rememberDatePickerState-EU0dCGE
     [ComposeBridge(
         Class     = "androidx/compose/material3/DatePickerKt",
@@ -495,8 +493,6 @@ internal static partial class ComposeBridges
                     "Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;II)V",
         Defaults  = typeof(ElevatedCardDefault))]
     public static partial void ElevatedCard(IFunction3 content, IComposer composer);
-
-    // ---- Chips ----
 
     const string AssistChipSig =
         "(Lkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function2;" +
@@ -634,8 +630,6 @@ internal static partial class ComposeBridges
         int         defaults,
         IComposer   composer);
 
-    // ---- Navigation ----
-
     // androidx.compose.material3.NavigationBarKt.NavigationBar-HsRjFd4
     [ComposeBridge(
         Class     = "androidx/compose/material3/NavigationBarKt",
@@ -699,7 +693,7 @@ internal static partial class ComposeBridges
         int         defaults,
         IComposer   composer);
 
-    // ---- Drawer sheets (3 variants share the same DrawerSheetDefault enum + signature) ----
+    // 3 drawer-sheet variants share the same DrawerSheetDefault enum + signature.
     const string DrawerSheetSig =
         "(Landroidx/compose/ui/Modifier;Landroidx/compose/ui/graphics/Shape;JJF" +
         "Landroidx/compose/foundation/layout/WindowInsets;" +
