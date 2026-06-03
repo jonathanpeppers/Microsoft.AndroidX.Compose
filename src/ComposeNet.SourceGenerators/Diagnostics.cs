@@ -23,7 +23,7 @@ internal static class Diagnostics
     public static readonly DiagnosticDescriptor MalformedAttribute = new(
         id: "CN1003",
         title: "Malformed [ComposeDefaults] attribute",
-        messageFormat: "Could not read [ComposeDefaults<T>(string)] on enum '{0}'",
+        messageFormat: "Could not read [ComposeDefaults] attribute arguments for enum '{0}'",
         category: "ComposeNet",
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);
