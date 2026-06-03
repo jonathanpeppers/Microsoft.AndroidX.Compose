@@ -49,7 +49,7 @@ namespace ComposeNet;
 ///   <item><description>
 ///     Outside a <see cref="Scaffold"/>, wrap the root composable in
 ///     <c>Modifier.Companion.SafeDrawingPadding()</c> (or
-///     <c>SystemBarsPadding()</c>) so it stays inside the safe area.
+///     <c>Modifier.Companion.SystemBarsPadding()</c>) so it stays inside the safe area.
 ///   </description></item>
 /// </list>
 ///
