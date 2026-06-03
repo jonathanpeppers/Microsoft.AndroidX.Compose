@@ -1,4 +1,5 @@
 using AndroidX.Compose.Runtime;
+using AndroidX.Compose.UI;
 
 namespace ComposeNet;
 
@@ -17,5 +18,26 @@ namespace ComposeNet;
 /// </summary>
 public abstract class ComposableNode
 {
+    /// <summary>
+    /// Optional <see cref="ComposeNet.Modifier"/> chain applied to this
+    /// composable. For leaf composables, set via object-initializer:
+    /// <code>new Text("Hi") { Modifier = Modifier.Companion.Padding(8) }</code>
+    /// For container composables (which use collection-initializer syntax),
+    /// add the modifier inline alongside the children:
+    /// <code>new Column { Modifier.Companion.Padding(16), new Text("Hi") }</code>
+    /// Composables without a Kotlin <c>modifier</c> parameter
+    /// (e.g. <see cref="MaterialTheme"/>) ignore this property.
+    /// </summary>
+    public Modifier? Modifier { get; set; }
+
+    /// <summary>
+    /// Materialize <see cref="Modifier"/> for the JNI call. Returns
+    /// <c>null</c> when the user did not supply a modifier OR supplied
+    /// the empty <see cref="ComposeNet.Modifier.Companion"/> — in both
+    /// cases callers should leave the Kotlin <c>$default</c> bit set so
+    /// Compose substitutes its real default.
+    /// </summary>
+    internal IModifier? BuildModifier() => Modifier?.Build();
+
     internal abstract void Render(IComposer composer);
 }

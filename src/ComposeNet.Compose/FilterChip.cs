@@ -38,9 +38,11 @@ public sealed class FilterChip : ComposableNode
         ComposableLambda2? trailing = TrailingIcon is null ? null : new ComposableLambda2(c => TrailingIcon.Render(c));
 
         int defaults = (int)FilterChipDefault.All;
+        var modifier = BuildModifier();
+        if (modifier is not null) defaults &= ~(int)FilterChipDefault.Modifier;
         if (leading  is not null) defaults &= ~(int)FilterChipDefault.LeadingIcon;
         if (trailing is not null) defaults &= ~(int)FilterChipDefault.TrailingIcon;
 
-        ComposeBridges.FilterChip(_selected, click, label, leading, trailing, defaults, composer);
+        ComposeBridges.FilterChip(_selected, click, label, modifier, leading, trailing, defaults, composer);
     }
 }

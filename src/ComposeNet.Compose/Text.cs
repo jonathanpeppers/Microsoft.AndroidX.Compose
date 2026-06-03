@@ -8,5 +8,5 @@ public sealed class Text : ComposableNode
     readonly string _text;
     public Text(string text) => _text = text;
     internal override void Render(IComposer composer) =>
-        ComposeBridges.Text(_text, composer);
+        ComposeBridges.Text(_text, BuildModifier(), composer);
 }

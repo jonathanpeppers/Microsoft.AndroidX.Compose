@@ -1,5 +1,6 @@
 using Android.Runtime;
 using AndroidX.Compose.Runtime;
+using AndroidX.Compose.UI;
 using Java.Interop;
 using Kotlin.Jvm.Functions;
 
@@ -12,6 +13,139 @@ namespace ComposeNet;
 // internal — user code never touches these directly.
 internal static class ComposeBridges
 {
+    // Convert a managed Modifier wrapper (from `Modifier.Build()`) to a
+    // raw JNI handle, or IntPtr.Zero when null. Each bridge that takes
+    // a modifier param uses this + KeepAlive's the wrapper across the
+    // JNI call so its handle stays alive.
+    internal static IntPtr ModifierHandle(IModifier? modifier) =>
+        modifier is null ? IntPtr.Zero : ((Java.Lang.Object)modifier).Handle;
+
+    // androidx.compose.ui.Modifier$Companion.$$INSTANCE — the empty
+    // Modifier that every chain builds on top of. Cached as a global
+    // ref so the chain builder doesn't pay the FindClass +
+    // GetStaticObjectField cost on every recomposition.
+    static IntPtr s_modifierCompanionInstance;
+
+    internal static unsafe IntPtr ModifierCompanionInstance()
+    {
+        if (s_modifierCompanionInstance == IntPtr.Zero)
+        {
+            IntPtr cls = JNIEnv.FindClass("androidx/compose/ui/Modifier$Companion");
+            IntPtr fid = JNIEnv.GetStaticFieldID(cls, "$$INSTANCE", "Landroidx/compose/ui/Modifier$Companion;");
+            IntPtr local = JNIEnv.GetStaticObjectField(cls, fid);
+            s_modifierCompanionInstance = JNIEnv.NewGlobalRef(local);
+            JNIEnv.DeleteLocalRef(local);
+        }
+        // Returning a NEW local ref each call so callers can DeleteLocalRef
+        // it uniformly while walking the op chain.
+        return JNIEnv.NewLocalRef(s_modifierCompanionInstance);
+    }
+
+    // androidx.compose.foundation.layout.PaddingKt — the Dp-taking
+    // overloads have hashed JVM names from the inline-class compiler
+    // mangling (`@JvmInline value class Dp(val value: Float)`).
+    // The signatures below are stable across Compose UI 1.x.
+    const string ModifierDpSig =
+        "(Landroidx/compose/ui/Modifier;F)Landroidx/compose/ui/Modifier;";
+    const string ModifierDp2Sig =
+        "(Landroidx/compose/ui/Modifier;FF)Landroidx/compose/ui/Modifier;";
+    const string ModifierDp4Sig =
+        "(Landroidx/compose/ui/Modifier;FFFF)Landroidx/compose/ui/Modifier;";
+
+    static IntPtr s_paddingKtClass;
+    static IntPtr s_paddingAllMethod;
+    static IntPtr s_paddingHVMethod;
+    static IntPtr s_paddingLTRBMethod;
+
+    internal static unsafe IntPtr ModifierPaddingAll(IntPtr modifier, float dp)
+    {
+        if (s_paddingKtClass == IntPtr.Zero)
+            s_paddingKtClass = JNIEnv.FindClass("androidx/compose/foundation/layout/PaddingKt");
+        if (s_paddingAllMethod == IntPtr.Zero)
+            s_paddingAllMethod = JNIEnv.GetStaticMethodID(s_paddingKtClass, "padding-3ABfNKs", ModifierDpSig);
+
+        JValue* args = stackalloc JValue[2];
+        args[0] = new JValue(modifier);
+        args[1] = new JValue(dp);
+        return JNIEnv.CallStaticObjectMethod(s_paddingKtClass, s_paddingAllMethod, args);
+    }
+
+    internal static unsafe IntPtr ModifierPaddingHV(IntPtr modifier, float horizontal, float vertical)
+    {
+        if (s_paddingKtClass == IntPtr.Zero)
+            s_paddingKtClass = JNIEnv.FindClass("androidx/compose/foundation/layout/PaddingKt");
+        if (s_paddingHVMethod == IntPtr.Zero)
+            s_paddingHVMethod = JNIEnv.GetStaticMethodID(s_paddingKtClass, "padding-VpY3zN4", ModifierDp2Sig);
+
+        JValue* args = stackalloc JValue[3];
+        args[0] = new JValue(modifier);
+        args[1] = new JValue(horizontal);
+        args[2] = new JValue(vertical);
+        return JNIEnv.CallStaticObjectMethod(s_paddingKtClass, s_paddingHVMethod, args);
+    }
+
+    internal static unsafe IntPtr ModifierPaddingLTRB(IntPtr modifier, float start, float top, float end, float bottom)
+    {
+        if (s_paddingKtClass == IntPtr.Zero)
+            s_paddingKtClass = JNIEnv.FindClass("androidx/compose/foundation/layout/PaddingKt");
+        if (s_paddingLTRBMethod == IntPtr.Zero)
+            s_paddingLTRBMethod = JNIEnv.GetStaticMethodID(s_paddingKtClass, "padding-qDBjuR0", ModifierDp4Sig);
+
+        JValue* args = stackalloc JValue[5];
+        args[0] = new JValue(modifier);
+        args[1] = new JValue(start);
+        args[2] = new JValue(top);
+        args[3] = new JValue(end);
+        args[4] = new JValue(bottom);
+        return JNIEnv.CallStaticObjectMethod(s_paddingKtClass, s_paddingLTRBMethod, args);
+    }
+
+    // androidx.compose.foundation.layout.SizeKt — fillMax* take a plain
+    // Float fraction, not Dp, so the JVM names are NOT mangled.
+    static IntPtr s_sizeKtClass;
+    static IntPtr s_fillMaxWidthMethod;
+    static IntPtr s_fillMaxHeightMethod;
+    static IntPtr s_fillMaxSizeMethod;
+
+    internal static unsafe IntPtr ModifierFillMaxWidth(IntPtr modifier, float fraction)
+    {
+        if (s_sizeKtClass == IntPtr.Zero)
+            s_sizeKtClass = JNIEnv.FindClass("androidx/compose/foundation/layout/SizeKt");
+        if (s_fillMaxWidthMethod == IntPtr.Zero)
+            s_fillMaxWidthMethod = JNIEnv.GetStaticMethodID(s_sizeKtClass, "fillMaxWidth", ModifierDpSig);
+
+        JValue* args = stackalloc JValue[2];
+        args[0] = new JValue(modifier);
+        args[1] = new JValue(fraction);
+        return JNIEnv.CallStaticObjectMethod(s_sizeKtClass, s_fillMaxWidthMethod, args);
+    }
+
+    internal static unsafe IntPtr ModifierFillMaxHeight(IntPtr modifier, float fraction)
+    {
+        if (s_sizeKtClass == IntPtr.Zero)
+            s_sizeKtClass = JNIEnv.FindClass("androidx/compose/foundation/layout/SizeKt");
+        if (s_fillMaxHeightMethod == IntPtr.Zero)
+            s_fillMaxHeightMethod = JNIEnv.GetStaticMethodID(s_sizeKtClass, "fillMaxHeight", ModifierDpSig);
+
+        JValue* args = stackalloc JValue[2];
+        args[0] = new JValue(modifier);
+        args[1] = new JValue(fraction);
+        return JNIEnv.CallStaticObjectMethod(s_sizeKtClass, s_fillMaxHeightMethod, args);
+    }
+
+    internal static unsafe IntPtr ModifierFillMaxSize(IntPtr modifier, float fraction)
+    {
+        if (s_sizeKtClass == IntPtr.Zero)
+            s_sizeKtClass = JNIEnv.FindClass("androidx/compose/foundation/layout/SizeKt");
+        if (s_fillMaxSizeMethod == IntPtr.Zero)
+            s_fillMaxSizeMethod = JNIEnv.GetStaticMethodID(s_sizeKtClass, "fillMaxSize", ModifierDpSig);
+
+        JValue* args = stackalloc JValue[2];
+        args[0] = new JValue(modifier);
+        args[1] = new JValue(fraction);
+        return JNIEnv.CallStaticObjectMethod(s_sizeKtClass, s_fillMaxSizeMethod, args);
+    }
+
     // androidx.compose.material3.TextKt.Text--4IGK_g(text, modifier, color,
     //   fontSize, fontStyle, fontWeight, fontFamily, letterSpacing, decoration,
     //   align, lineHeight, overflow, softWrap, maxLines, minLines, onTextLayout,
@@ -29,7 +163,7 @@ internal static class ComposeBridges
     static IntPtr s_textClass;
     static IntPtr s_textMethod;
 
-    public static unsafe void Text(string text, IComposer composer)
+    public static unsafe void Text(string text, IModifier? modifier, IComposer composer)
     {
         if (s_textClass == IntPtr.Zero)
         {
@@ -37,15 +171,16 @@ internal static class ComposeBridges
             s_textMethod = JNIEnv.GetStaticMethodID(s_textClass, "Text--4IGK_g", MaterialTextSig);
         }
 
-        // Everything but `text` is defaulted.
+        // Everything but `text` (and optionally `modifier`) is defaulted.
         int defaults = (int)TextDefault.All;
+        if (modifier is not null) defaults &= ~(int)TextDefault.Modifier;
 
         IntPtr textRef = JNIEnv.NewString(text);
         try
         {
             JValue* args = stackalloc JValue[21];
             args[0]  = new JValue(textRef);
-            args[1]  = new JValue(IntPtr.Zero); // modifier
+            args[1]  = new JValue(ModifierHandle(modifier));
             args[2]  = new JValue(0L);          // color = Unspecified
             args[3]  = new JValue(0L);          // fontSize
             args[4]  = new JValue(IntPtr.Zero); // fontStyle
@@ -70,6 +205,7 @@ internal static class ComposeBridges
         finally
         {
             JNIEnv.DeleteLocalRef(textRef);
+            GC.KeepAlive(modifier);
             GC.KeepAlive(composer);
         }
     }
@@ -88,7 +224,7 @@ internal static class ComposeBridges
     static IntPtr s_buttonClass;
     static IntPtr s_buttonMethod;
 
-    public static unsafe void Button(IFunction0 onClick, IFunction3 content, IComposer composer)
+    public static unsafe void Button(IFunction0 onClick, IModifier? modifier, IFunction3 content, IComposer composer)
     {
         if (s_buttonClass == IntPtr.Zero)
         {
@@ -98,10 +234,11 @@ internal static class ComposeBridges
 
         // onClick (bit 0) and content (bit 9) are provided; default everything else.
         int defaults = (int)ButtonDefault.All;
+        if (modifier is not null) defaults &= ~(int)ButtonDefault.Modifier;
 
         JValue* args = stackalloc JValue[13];
         args[0]  = new JValue(((Java.Lang.Object)onClick).Handle);
-        args[1]  = new JValue(IntPtr.Zero);
+        args[1]  = new JValue(ModifierHandle(modifier));
         args[2]  = new JValue(true);
         args[3]  = new JValue(IntPtr.Zero);
         args[4]  = new JValue(IntPtr.Zero);
@@ -120,6 +257,7 @@ internal static class ComposeBridges
         finally
         {
             GC.KeepAlive(onClick);
+            GC.KeepAlive(modifier);
             GC.KeepAlive(content);
             GC.KeepAlive(composer);
         }
@@ -136,7 +274,7 @@ internal static class ComposeBridges
     static IntPtr s_iconButtonClass;
     static IntPtr s_iconButtonMethod;
 
-    public static unsafe void IconButton(IFunction0 onClick, IFunction2 content, IComposer composer)
+    public static unsafe void IconButton(IFunction0 onClick, IModifier? modifier, IFunction2 content, IComposer composer)
     {
         if (s_iconButtonClass == IntPtr.Zero)
         {
@@ -144,16 +282,19 @@ internal static class ComposeBridges
             s_iconButtonMethod = JNIEnv.GetStaticMethodID(s_iconButtonClass, "IconButton", IconButtonSig);
         }
 
+        int defaults = (int)IconButtonDefault.All;
+        if (modifier is not null) defaults &= ~(int)IconButtonDefault.Modifier;
+
         JValue* args = stackalloc JValue[9];
         args[0] = new JValue(((Java.Lang.Object)onClick).Handle);
-        args[1] = new JValue(IntPtr.Zero);
+        args[1] = new JValue(ModifierHandle(modifier));
         args[2] = new JValue(true);
         args[3] = new JValue(IntPtr.Zero);
         args[4] = new JValue(IntPtr.Zero);
         args[5] = new JValue(((Java.Lang.Object)content).Handle);
         args[6] = new JValue(((Java.Lang.Object)composer).Handle);
         args[7] = new JValue(0);
-        args[8] = new JValue((int)IconButtonDefault.All);
+        args[8] = new JValue(defaults);
         try
         {
             JNIEnv.CallStaticVoidMethod(s_iconButtonClass, s_iconButtonMethod, args);
@@ -161,6 +302,7 @@ internal static class ComposeBridges
         finally
         {
             GC.KeepAlive(onClick);
+            GC.KeepAlive(modifier);
             GC.KeepAlive(content);
             GC.KeepAlive(composer);
         }
@@ -179,7 +321,7 @@ internal static class ComposeBridges
     static IntPtr s_fabClass;
     static IntPtr s_fabMethod;
 
-    public static unsafe void FloatingActionButton(IFunction0 onClick, IFunction2 content, IComposer composer)
+    public static unsafe void FloatingActionButton(IFunction0 onClick, IModifier? modifier, IFunction2 content, IComposer composer)
     {
         if (s_fabClass == IntPtr.Zero)
         {
@@ -187,9 +329,12 @@ internal static class ComposeBridges
             s_fabMethod = JNIEnv.GetStaticMethodID(s_fabClass, "FloatingActionButton-X-z6DiA", FabSig);
         }
 
+        int defaults = (int)FloatingActionButtonDefault.All;
+        if (modifier is not null) defaults &= ~(int)FloatingActionButtonDefault.Modifier;
+
         JValue* args = stackalloc JValue[11];
         args[0]  = new JValue(((Java.Lang.Object)onClick).Handle);
-        args[1]  = new JValue(IntPtr.Zero); // modifier
+        args[1]  = new JValue(ModifierHandle(modifier)); // modifier
         args[2]  = new JValue(IntPtr.Zero); // shape
         args[3]  = new JValue(0L);          // containerColor
         args[4]  = new JValue(0L);          // contentColor
@@ -198,7 +343,7 @@ internal static class ComposeBridges
         args[7]  = new JValue(((Java.Lang.Object)content).Handle);
         args[8]  = new JValue(((Java.Lang.Object)composer).Handle);
         args[9]  = new JValue(0);
-        args[10] = new JValue((int)FloatingActionButtonDefault.All);
+        args[10] = new JValue(defaults);
         try
         {
             JNIEnv.CallStaticVoidMethod(s_fabClass, s_fabMethod, args);
@@ -206,6 +351,7 @@ internal static class ComposeBridges
         finally
         {
             GC.KeepAlive(onClick);
+            GC.KeepAlive(modifier);
             GC.KeepAlive(content);
             GC.KeepAlive(composer);
         }
@@ -222,7 +368,7 @@ internal static class ComposeBridges
     static IntPtr s_surfaceClass;
     static IntPtr s_surfaceMethod;
 
-    public static unsafe void Surface(IFunction2 content, IComposer composer)
+    public static unsafe void Surface(IModifier? modifier, IFunction2 content, IComposer composer)
     {
         if (s_surfaceClass == IntPtr.Zero)
         {
@@ -230,8 +376,11 @@ internal static class ComposeBridges
             s_surfaceMethod = JNIEnv.GetStaticMethodID(s_surfaceClass, "Surface-T9BRK9s", SurfaceSig);
         }
 
+        int defaults = (int)SurfaceDefault.All;
+        if (modifier is not null) defaults &= ~(int)SurfaceDefault.Modifier;
+
         JValue* args = stackalloc JValue[11];
-        args[0]  = new JValue(IntPtr.Zero); // modifier
+        args[0]  = new JValue(ModifierHandle(modifier)); // modifier
         args[1]  = new JValue(IntPtr.Zero); // shape
         args[2]  = new JValue(0L);          // color
         args[3]  = new JValue(0L);          // contentColor
@@ -241,13 +390,14 @@ internal static class ComposeBridges
         args[7]  = new JValue(((Java.Lang.Object)content).Handle);
         args[8]  = new JValue(((Java.Lang.Object)composer).Handle);
         args[9]  = new JValue(0);
-        args[10] = new JValue((int)SurfaceDefault.All);
+        args[10] = new JValue(defaults);
         try
         {
             JNIEnv.CallStaticVoidMethod(s_surfaceClass, s_surfaceMethod, args);
         }
         finally
         {
+            GC.KeepAlive(modifier);
             GC.KeepAlive(content);
             GC.KeepAlive(composer);
         }
@@ -280,24 +430,28 @@ internal static class ComposeBridges
     static IntPtr s_outlinedTextFieldClass;
     static IntPtr s_outlinedTextFieldMethod;
 
-    public static unsafe void TextField(string value, IFunction1 onValueChange, IComposer composer)
+    public static unsafe void TextField(string value, IFunction1 onValueChange, IModifier? modifier, IComposer composer)
     {
         if (s_textFieldClass == IntPtr.Zero)
         {
             s_textFieldClass  = JNIEnv.FindClass("androidx/compose/material3/TextFieldKt");
             s_textFieldMethod = JNIEnv.GetStaticMethodID(s_textFieldClass, "TextField", TextFieldStringSig);
         }
-        InvokeTextField(s_textFieldClass, s_textFieldMethod, value, onValueChange, composer, (int)TextFieldDefault.All);
+        int defaults = (int)TextFieldDefault.All;
+        if (modifier is not null) defaults &= ~(int)TextFieldDefault.Modifier;
+        InvokeTextField(s_textFieldClass, s_textFieldMethod, value, onValueChange, modifier, composer, defaults);
     }
 
-    public static unsafe void OutlinedTextField(string value, IFunction1 onValueChange, IComposer composer)
+    public static unsafe void OutlinedTextField(string value, IFunction1 onValueChange, IModifier? modifier, IComposer composer)
     {
         if (s_outlinedTextFieldClass == IntPtr.Zero)
         {
             s_outlinedTextFieldClass  = JNIEnv.FindClass("androidx/compose/material3/OutlinedTextFieldKt");
             s_outlinedTextFieldMethod = JNIEnv.GetStaticMethodID(s_outlinedTextFieldClass, "OutlinedTextField", TextFieldStringSig);
         }
-        InvokeTextField(s_outlinedTextFieldClass, s_outlinedTextFieldMethod, value, onValueChange, composer, (int)TextFieldDefault.All);
+        int defaults = (int)TextFieldDefault.All;
+        if (modifier is not null) defaults &= ~(int)TextFieldDefault.Modifier;
+        InvokeTextField(s_outlinedTextFieldClass, s_outlinedTextFieldMethod, value, onValueChange, modifier, composer, defaults);
     }
 
     // androidx.compose.material3.AndroidAlertDialog_androidKt.AlertDialog-Oix01E0(
@@ -325,6 +479,7 @@ internal static class ComposeBridges
     public static unsafe void AlertDialog(
         IFunction0  onDismissRequest,
         IFunction2  confirmButton,
+        IModifier?  modifier,
         IFunction2? dismissButton,
         IFunction2? icon,
         IFunction2? title,
@@ -341,7 +496,7 @@ internal static class ComposeBridges
         JValue* args = stackalloc JValue[18];
         args[0]  = new JValue(((Java.Lang.Object)onDismissRequest).Handle);
         args[1]  = new JValue(((Java.Lang.Object)confirmButton).Handle);
-        args[2]  = new JValue(IntPtr.Zero); // modifier
+        args[2]  = new JValue(ModifierHandle(modifier)); // modifier
         args[3]  = new JValue(dismissButton is null ? IntPtr.Zero : ((Java.Lang.Object)dismissButton).Handle);
         args[4]  = new JValue(icon          is null ? IntPtr.Zero : ((Java.Lang.Object)icon).Handle);
         args[5]  = new JValue(title         is null ? IntPtr.Zero : ((Java.Lang.Object)title).Handle);
@@ -365,6 +520,7 @@ internal static class ComposeBridges
         {
             GC.KeepAlive(onDismissRequest);
             GC.KeepAlive(confirmButton);
+            GC.KeepAlive(modifier);
             GC.KeepAlive(dismissButton);
             GC.KeepAlive(icon);
             GC.KeepAlive(title);
@@ -392,6 +548,7 @@ internal static class ComposeBridges
 
     public static unsafe void ModalBottomSheet(
         IFunction0  onDismissRequest,
+        IModifier?  modifier,
         IntPtr      sheetState,
         IFunction2? dragHandle,
         IFunction3  content,
@@ -406,7 +563,7 @@ internal static class ComposeBridges
 
         JValue* args = stackalloc JValue[17];
         args[0]  = new JValue(((Java.Lang.Object)onDismissRequest).Handle);
-        args[1]  = new JValue(IntPtr.Zero); // modifier
+        args[1]  = new JValue(ModifierHandle(modifier)); // modifier
         args[2]  = new JValue(sheetState);
         args[3]  = new JValue(0f);          // sheetMaxWidth
         args[4]  = new JValue(IntPtr.Zero); // shape
@@ -429,6 +586,7 @@ internal static class ComposeBridges
         finally
         {
             GC.KeepAlive(onDismissRequest);
+            GC.KeepAlive(modifier);
             GC.KeepAlive(dragHandle);
             GC.KeepAlive(content);
             GC.KeepAlive(composer);
@@ -458,6 +616,7 @@ internal static class ComposeBridges
 
     public static unsafe void BottomSheetScaffold(
         IFunction3  sheetContent,
+        IModifier?  modifier,
         IntPtr      scaffoldState,
         IFunction2? sheetDragHandle,
         IFunction2? topBar,
@@ -474,7 +633,7 @@ internal static class ComposeBridges
 
         JValue* args = stackalloc JValue[21];
         args[0]  = new JValue(((Java.Lang.Object)sheetContent).Handle);
-        args[1]  = new JValue(IntPtr.Zero); // modifier
+        args[1]  = new JValue(ModifierHandle(modifier)); // modifier
         args[2]  = new JValue(scaffoldState);
         args[3]  = new JValue(0f);          // sheetPeekHeight
         args[4]  = new JValue(0f);          // sheetMaxWidth
@@ -501,6 +660,7 @@ internal static class ComposeBridges
         finally
         {
             GC.KeepAlive(sheetContent);
+            GC.KeepAlive(modifier);
             GC.KeepAlive(sheetDragHandle);
             GC.KeepAlive(topBar);
             GC.KeepAlive(snackbarHost);
@@ -530,6 +690,7 @@ internal static class ComposeBridges
     static IntPtr s_scaffoldMethod;
 
     public static unsafe void Scaffold(
+        IModifier?  modifier,
         IFunction2? topBar,
         IFunction2? bottomBar,
         IFunction2? snackbarHost,
@@ -545,7 +706,7 @@ internal static class ComposeBridges
         }
 
         JValue* args = stackalloc JValue[13];
-        args[0]  = new JValue(IntPtr.Zero); // modifier
+        args[0]  = new JValue(ModifierHandle(modifier)); // modifier
         args[1]  = new JValue(topBar               is null ? IntPtr.Zero : ((Java.Lang.Object)topBar).Handle);
         args[2]  = new JValue(bottomBar            is null ? IntPtr.Zero : ((Java.Lang.Object)bottomBar).Handle);
         args[3]  = new JValue(snackbarHost         is null ? IntPtr.Zero : ((Java.Lang.Object)snackbarHost).Handle);
@@ -564,6 +725,7 @@ internal static class ComposeBridges
         }
         finally
         {
+            GC.KeepAlive(modifier);
             GC.KeepAlive(topBar);
             GC.KeepAlive(bottomBar);
             GC.KeepAlive(snackbarHost);
@@ -594,6 +756,7 @@ internal static class ComposeBridges
     public static unsafe void DatePickerDialog(
         IFunction0  onDismissRequest,
         IFunction2  confirmButton,
+        IModifier?  modifier,
         IFunction2? dismissButton,
         IFunction3  content,
         int         defaults,
@@ -608,7 +771,7 @@ internal static class ComposeBridges
         JValue* args = stackalloc JValue[12];
         args[0]  = new JValue(((Java.Lang.Object)onDismissRequest).Handle);
         args[1]  = new JValue(((Java.Lang.Object)confirmButton).Handle);
-        args[2]  = new JValue(IntPtr.Zero); // modifier
+        args[2]  = new JValue(ModifierHandle(modifier)); // modifier
         args[3]  = new JValue(dismissButton is null ? IntPtr.Zero : ((Java.Lang.Object)dismissButton).Handle);
         args[4]  = new JValue(IntPtr.Zero); // shape
         args[5]  = new JValue(0f);          // tonalElevation
@@ -626,6 +789,7 @@ internal static class ComposeBridges
         {
             GC.KeepAlive(onDismissRequest);
             GC.KeepAlive(confirmButton);
+            GC.KeepAlive(modifier);
             GC.KeepAlive(dismissButton);
             GC.KeepAlive(content);
             GC.KeepAlive(composer);
@@ -643,7 +807,7 @@ internal static class ComposeBridges
     static IntPtr s_timePickerClass;
     static IntPtr s_timePickerMethod;
 
-    public static unsafe void TimePicker(IntPtr state, int defaults, IComposer composer)
+    public static unsafe void TimePicker(IntPtr state, IModifier? modifier, int defaults, IComposer composer)
     {
         if (s_timePickerClass == IntPtr.Zero)
         {
@@ -653,7 +817,7 @@ internal static class ComposeBridges
 
         JValue* args = stackalloc JValue[7];
         args[0] = new JValue(state);
-        args[1] = new JValue(IntPtr.Zero); // modifier
+        args[1] = new JValue(ModifierHandle(modifier)); // modifier
         args[2] = new JValue(IntPtr.Zero); // colors
         args[3] = new JValue(0);           // layoutType
         args[4] = new JValue(((Java.Lang.Object)composer).Handle);
@@ -665,6 +829,7 @@ internal static class ComposeBridges
         }
         finally
         {
+            GC.KeepAlive(modifier);
             GC.KeepAlive(composer);
         }
     }
@@ -692,6 +857,7 @@ internal static class ComposeBridges
         IFunction0  onDismissRequest,
         IFunction2  confirmButton,
         IFunction2  dismissButton,
+        IModifier?  modifier,
         IFunction2? title,
         IFunction2? modeToggleButton,
         IFunction3  content,
@@ -708,7 +874,7 @@ internal static class ComposeBridges
         args[0]  = new JValue(((Java.Lang.Object)onDismissRequest).Handle);
         args[1]  = new JValue(((Java.Lang.Object)confirmButton).Handle);
         args[2]  = new JValue(((Java.Lang.Object)dismissButton).Handle);
-        args[3]  = new JValue(IntPtr.Zero); // modifier
+        args[3]  = new JValue(ModifierHandle(modifier)); // modifier
         args[4]  = new JValue(IntPtr.Zero); // properties
         args[5]  = new JValue(title            is null ? IntPtr.Zero : ((Java.Lang.Object)title).Handle);
         args[6]  = new JValue(modeToggleButton is null ? IntPtr.Zero : ((Java.Lang.Object)modeToggleButton).Handle);
@@ -727,6 +893,7 @@ internal static class ComposeBridges
             GC.KeepAlive(onDismissRequest);
             GC.KeepAlive(confirmButton);
             GC.KeepAlive(dismissButton);
+            GC.KeepAlive(modifier);
             GC.KeepAlive(title);
             GC.KeepAlive(modeToggleButton);
             GC.KeepAlive(content);
@@ -753,6 +920,7 @@ internal static class ComposeBridges
         IntPtr     positionProvider,
         IFunction3 tooltip,
         IntPtr     state,
+        IModifier? modifier,
         IFunction2 content,
         int        defaults,
         IComposer  composer)
@@ -767,7 +935,7 @@ internal static class ComposeBridges
         args[0] = new JValue(positionProvider);
         args[1] = new JValue(((Java.Lang.Object)tooltip).Handle);
         args[2] = new JValue(state);
-        args[3] = new JValue(IntPtr.Zero); // modifier
+        args[3] = new JValue(ModifierHandle(modifier)); // modifier
         args[4] = new JValue(true);        // focusable
         args[5] = new JValue(true);        // enableUserInput
         args[6] = new JValue(((Java.Lang.Object)content).Handle);
@@ -781,6 +949,7 @@ internal static class ComposeBridges
         finally
         {
             GC.KeepAlive(tooltip);
+            GC.KeepAlive(modifier);
             GC.KeepAlive(content);
             GC.KeepAlive(composer);
         }
@@ -803,7 +972,7 @@ internal static class ComposeBridges
     static IntPtr s_datePickerClass;
     static IntPtr s_datePickerMethod;
 
-    public static unsafe void DatePicker(IntPtr state, int defaults, IComposer composer)
+    public static unsafe void DatePicker(IntPtr state, IModifier? modifier, int defaults, IComposer composer)
     {
         if (s_datePickerClass == IntPtr.Zero)
         {
@@ -813,7 +982,7 @@ internal static class ComposeBridges
 
         JValue* args = stackalloc JValue[11];
         args[0]  = new JValue(state);
-        args[1]  = new JValue(IntPtr.Zero); // modifier
+        args[1]  = new JValue(ModifierHandle(modifier)); // modifier
         args[2]  = new JValue(IntPtr.Zero); // dateFormatter
         args[3]  = new JValue(IntPtr.Zero); // colors
         args[4]  = new JValue(IntPtr.Zero); // title
@@ -829,6 +998,7 @@ internal static class ComposeBridges
         }
         finally
         {
+            GC.KeepAlive(modifier);
             GC.KeepAlive(composer);
         }
     }
@@ -982,7 +1152,7 @@ internal static class ComposeBridges
         }
     }
 
-    static unsafe void InvokeTextField(IntPtr cls, IntPtr method, string value, IFunction1 onValueChange, IComposer composer, int defaults)
+    static unsafe void InvokeTextField(IntPtr cls, IntPtr method, string value, IFunction1 onValueChange, IModifier? modifier, IComposer composer, int defaults)
     {
         IntPtr valueRef = JNIEnv.NewString(value);
         try
@@ -990,7 +1160,7 @@ internal static class ComposeBridges
             JValue* args = stackalloc JValue[28];
             args[0]  = new JValue(valueRef);
             args[1]  = new JValue(((Java.Lang.Object)onValueChange).Handle);
-            args[2]  = new JValue(IntPtr.Zero); // modifier
+            args[2]  = new JValue(ModifierHandle(modifier)); // modifier
             args[3]  = new JValue(true);        // enabled
             args[4]  = new JValue(false);       // readOnly
             args[5]  = new JValue(IntPtr.Zero); // textStyle
@@ -1022,6 +1192,7 @@ internal static class ComposeBridges
         {
             JNIEnv.DeleteLocalRef(valueRef);
             GC.KeepAlive(onValueChange);
+            GC.KeepAlive(modifier);
             GC.KeepAlive(composer);
         }
     }
@@ -1039,7 +1210,7 @@ internal static class ComposeBridges
     static IntPtr s_cardClass;
     static IntPtr s_cardMethod;
 
-    public static unsafe void Card(IFunction3 content, IComposer composer)
+    public static unsafe void Card(IModifier? modifier, IFunction3 content, IComposer composer)
     {
         if (s_cardClass == IntPtr.Zero)
         {
@@ -1047,8 +1218,11 @@ internal static class ComposeBridges
             s_cardMethod = JNIEnv.GetStaticMethodID(s_cardClass, "Card", CardSig);
         }
 
+        int defaults = (int)CardDefault.All;
+        if (modifier is not null) defaults &= ~(int)CardDefault.Modifier;
+
         JValue* args = stackalloc JValue[9];
-        args[0] = new JValue(IntPtr.Zero); // modifier
+        args[0] = new JValue(ModifierHandle(modifier)); // modifier
         args[1] = new JValue(IntPtr.Zero); // shape
         args[2] = new JValue(IntPtr.Zero); // colors
         args[3] = new JValue(IntPtr.Zero); // elevation
@@ -1056,13 +1230,14 @@ internal static class ComposeBridges
         args[5] = new JValue(((Java.Lang.Object)content).Handle);
         args[6] = new JValue(((Java.Lang.Object)composer).Handle);
         args[7] = new JValue(0);
-        args[8] = new JValue((int)CardDefault.All);
+        args[8] = new JValue(defaults);
         try
         {
             JNIEnv.CallStaticVoidMethod(s_cardClass, s_cardMethod, args);
         }
         finally
         {
+            GC.KeepAlive(modifier);
             GC.KeepAlive(content);
             GC.KeepAlive(composer);
         }
@@ -1090,6 +1265,7 @@ internal static class ComposeBridges
     public static unsafe void AssistChip(
         IFunction0  onClick,
         IFunction2  label,
+        IModifier?  modifier,
         IFunction2? leadingIcon,
         IFunction2? trailingIcon,
         int         defaults,
@@ -1104,7 +1280,7 @@ internal static class ComposeBridges
         JValue* args = stackalloc JValue[15];
         args[0]  = new JValue(((Java.Lang.Object)onClick).Handle);
         args[1]  = new JValue(((Java.Lang.Object)label).Handle);
-        args[2]  = new JValue(IntPtr.Zero); // modifier
+        args[2]  = new JValue(ModifierHandle(modifier)); // modifier
         args[3]  = new JValue(true);        // enabled
         args[4]  = new JValue(leadingIcon  is null ? IntPtr.Zero : ((Java.Lang.Object)leadingIcon).Handle);
         args[5]  = new JValue(trailingIcon is null ? IntPtr.Zero : ((Java.Lang.Object)trailingIcon).Handle);
@@ -1125,6 +1301,7 @@ internal static class ComposeBridges
         {
             GC.KeepAlive(onClick);
             GC.KeepAlive(label);
+            GC.KeepAlive(modifier);
             GC.KeepAlive(leadingIcon);
             GC.KeepAlive(trailingIcon);
             GC.KeepAlive(composer);
@@ -1154,6 +1331,7 @@ internal static class ComposeBridges
         bool        selected,
         IFunction0  onClick,
         IFunction2  label,
+        IModifier?  modifier,
         IFunction2? leadingIcon,
         IFunction2? trailingIcon,
         int         defaults,
@@ -1169,7 +1347,7 @@ internal static class ComposeBridges
         args[0]  = new JValue(selected);
         args[1]  = new JValue(((Java.Lang.Object)onClick).Handle);
         args[2]  = new JValue(((Java.Lang.Object)label).Handle);
-        args[3]  = new JValue(IntPtr.Zero); // modifier
+        args[3]  = new JValue(ModifierHandle(modifier)); // modifier
         args[4]  = new JValue(true);        // enabled
         args[5]  = new JValue(leadingIcon  is null ? IntPtr.Zero : ((Java.Lang.Object)leadingIcon).Handle);
         args[6]  = new JValue(trailingIcon is null ? IntPtr.Zero : ((Java.Lang.Object)trailingIcon).Handle);
@@ -1190,6 +1368,7 @@ internal static class ComposeBridges
         {
             GC.KeepAlive(onClick);
             GC.KeepAlive(label);
+            GC.KeepAlive(modifier);
             GC.KeepAlive(leadingIcon);
             GC.KeepAlive(trailingIcon);
             GC.KeepAlive(composer);
@@ -1219,6 +1398,7 @@ internal static class ComposeBridges
         bool        selected,
         IFunction0  onClick,
         IFunction2  label,
+        IModifier?  modifier,
         IFunction2? leadingIcon,
         IFunction2? avatar,
         IFunction2? trailingIcon,
@@ -1235,7 +1415,7 @@ internal static class ComposeBridges
         args[0]  = new JValue(selected);
         args[1]  = new JValue(((Java.Lang.Object)onClick).Handle);
         args[2]  = new JValue(((Java.Lang.Object)label).Handle);
-        args[3]  = new JValue(IntPtr.Zero); // modifier
+        args[3]  = new JValue(ModifierHandle(modifier)); // modifier
         args[4]  = new JValue(true);        // enabled
         args[5]  = new JValue(leadingIcon  is null ? IntPtr.Zero : ((Java.Lang.Object)leadingIcon).Handle);
         args[6]  = new JValue(avatar       is null ? IntPtr.Zero : ((Java.Lang.Object)avatar).Handle);
@@ -1257,6 +1437,7 @@ internal static class ComposeBridges
         {
             GC.KeepAlive(onClick);
             GC.KeepAlive(label);
+            GC.KeepAlive(modifier);
             GC.KeepAlive(leadingIcon);
             GC.KeepAlive(avatar);
             GC.KeepAlive(trailingIcon);
@@ -1283,6 +1464,7 @@ internal static class ComposeBridges
     public static unsafe void SuggestionChip(
         IFunction0  onClick,
         IFunction2  label,
+        IModifier?  modifier,
         IFunction2? icon,
         int         defaults,
         IComposer   composer)
@@ -1296,7 +1478,7 @@ internal static class ComposeBridges
         JValue* args = stackalloc JValue[13];
         args[0]  = new JValue(((Java.Lang.Object)onClick).Handle);
         args[1]  = new JValue(((Java.Lang.Object)label).Handle);
-        args[2]  = new JValue(IntPtr.Zero); // modifier
+        args[2]  = new JValue(ModifierHandle(modifier)); // modifier
         args[3]  = new JValue(true);        // enabled
         args[4]  = new JValue(icon is null ? IntPtr.Zero : ((Java.Lang.Object)icon).Handle);
         args[5]  = new JValue(IntPtr.Zero); // shape
@@ -1315,6 +1497,7 @@ internal static class ComposeBridges
         {
             GC.KeepAlive(onClick);
             GC.KeepAlive(label);
+            GC.KeepAlive(modifier);
             GC.KeepAlive(icon);
             GC.KeepAlive(composer);
         }
@@ -1332,7 +1515,7 @@ internal static class ComposeBridges
     static IntPtr s_navBarClass;
     static IntPtr s_navBarMethod;
 
-    public static unsafe void NavigationBar(IFunction3 content, IComposer composer)
+    public static unsafe void NavigationBar(IModifier? modifier, IFunction3 content, IComposer composer)
     {
         if (s_navBarClass == IntPtr.Zero)
         {
@@ -1340,8 +1523,11 @@ internal static class ComposeBridges
             s_navBarMethod = JNIEnv.GetStaticMethodID(s_navBarClass, "NavigationBar-HsRjFd4", NavigationBarSig);
         }
 
+        int defaults = (int)NavigationBarDefault.All;
+        if (modifier is not null) defaults &= ~(int)NavigationBarDefault.Modifier;
+
         JValue* args = stackalloc JValue[9];
-        args[0] = new JValue(IntPtr.Zero); // modifier
+        args[0] = new JValue(ModifierHandle(modifier)); // modifier
         args[1] = new JValue(0L);          // containerColor
         args[2] = new JValue(0L);          // contentColor
         args[3] = new JValue(0f);          // tonalElevation
@@ -1349,13 +1535,14 @@ internal static class ComposeBridges
         args[5] = new JValue(((Java.Lang.Object)content).Handle);
         args[6] = new JValue(((Java.Lang.Object)composer).Handle);
         args[7] = new JValue(0);
-        args[8] = new JValue((int)NavigationBarDefault.All);
+        args[8] = new JValue(defaults);
         try
         {
             JNIEnv.CallStaticVoidMethod(s_navBarClass, s_navBarMethod, args);
         }
         finally
         {
+            GC.KeepAlive(modifier);
             GC.KeepAlive(content);
             GC.KeepAlive(composer);
         }
@@ -1383,6 +1570,7 @@ internal static class ComposeBridges
         bool        selected,
         IFunction0  onClick,
         IFunction2  icon,
+        IModifier?  modifier,
         IFunction2? label,
         int         defaults,
         IComposer   composer)
@@ -1402,7 +1590,7 @@ internal static class ComposeBridges
         args[1]  = new JValue(selected);
         args[2]  = new JValue(((Java.Lang.Object)onClick).Handle);
         args[3]  = new JValue(((Java.Lang.Object)icon).Handle);
-        args[4]  = new JValue(IntPtr.Zero); // modifier
+        args[4]  = new JValue(ModifierHandle(modifier)); // modifier
         args[5]  = new JValue(true);        // enabled
         args[6]  = new JValue(label is null ? IntPtr.Zero : ((Java.Lang.Object)label).Handle);
         args[7]  = new JValue(true);        // alwaysShowLabel
@@ -1419,6 +1607,7 @@ internal static class ComposeBridges
         {
             GC.KeepAlive(onClick);
             GC.KeepAlive(icon);
+            GC.KeepAlive(modifier);
             GC.KeepAlive(label);
             GC.KeepAlive(composer);
         }
@@ -1438,7 +1627,7 @@ internal static class ComposeBridges
     static IntPtr s_navRailClass;
     static IntPtr s_navRailMethod;
 
-    public static unsafe void NavigationRail(IFunction3 content, IComposer composer)
+    public static unsafe void NavigationRail(IModifier? modifier, IFunction3 content, IComposer composer)
     {
         if (s_navRailClass == IntPtr.Zero)
         {
@@ -1446,8 +1635,11 @@ internal static class ComposeBridges
             s_navRailMethod = JNIEnv.GetStaticMethodID(s_navRailClass, "NavigationRail-qi6gXK8", NavigationRailSig);
         }
 
+        int defaults = (int)NavigationRailDefault.All;
+        if (modifier is not null) defaults &= ~(int)NavigationRailDefault.Modifier;
+
         JValue* args = stackalloc JValue[9];
-        args[0] = new JValue(IntPtr.Zero); // modifier
+        args[0] = new JValue(ModifierHandle(modifier)); // modifier
         args[1] = new JValue(0L);          // containerColor
         args[2] = new JValue(0L);          // contentColor
         args[3] = new JValue(IntPtr.Zero); // header
@@ -1455,13 +1647,14 @@ internal static class ComposeBridges
         args[5] = new JValue(((Java.Lang.Object)content).Handle);
         args[6] = new JValue(((Java.Lang.Object)composer).Handle);
         args[7] = new JValue(0);
-        args[8] = new JValue((int)NavigationRailDefault.All);
+        args[8] = new JValue(defaults);
         try
         {
             JNIEnv.CallStaticVoidMethod(s_navRailClass, s_navRailMethod, args);
         }
         finally
         {
+            GC.KeepAlive(modifier);
             GC.KeepAlive(content);
             GC.KeepAlive(composer);
         }
@@ -1795,6 +1988,7 @@ internal static class ComposeBridges
         bool        selected,
         IFunction0  onClick,
         IFunction2  icon,
+        IModifier?  modifier,
         IFunction2? label,
         int         defaults,
         IComposer   composer)
@@ -1809,7 +2003,7 @@ internal static class ComposeBridges
         args[0]  = new JValue(selected);
         args[1]  = new JValue(((Java.Lang.Object)onClick).Handle);
         args[2]  = new JValue(((Java.Lang.Object)icon).Handle);
-        args[3]  = new JValue(IntPtr.Zero); // modifier
+        args[3]  = new JValue(ModifierHandle(modifier)); // modifier
         args[4]  = new JValue(true);        // enabled
         args[5]  = new JValue(label is null ? IntPtr.Zero : ((Java.Lang.Object)label).Handle);
         args[6]  = new JValue(true);        // alwaysShowLabel
@@ -1826,6 +2020,7 @@ internal static class ComposeBridges
         {
             GC.KeepAlive(onClick);
             GC.KeepAlive(icon);
+            GC.KeepAlive(modifier);
             GC.KeepAlive(label);
             GC.KeepAlive(composer);
         }

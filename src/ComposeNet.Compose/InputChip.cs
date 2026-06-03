@@ -37,10 +37,12 @@ public sealed class InputChip : ComposableNode
         ComposableLambda2? trailing = TrailingIcon is null ? null : new ComposableLambda2(c => TrailingIcon.Render(c));
 
         int defaults = (int)InputChipDefault.All;
+        var modifier = BuildModifier();
+        if (modifier is not null) defaults &= ~(int)InputChipDefault.Modifier;
         if (leading  is not null) defaults &= ~(int)InputChipDefault.LeadingIcon;
         if (avatar   is not null) defaults &= ~(int)InputChipDefault.Avatar;
         if (trailing is not null) defaults &= ~(int)InputChipDefault.TrailingIcon;
 
-        ComposeBridges.InputChip(_selected, click, label, leading, avatar, trailing, defaults, composer);
+        ComposeBridges.InputChip(_selected, click, label, modifier, leading, avatar, trailing, defaults, composer);
     }
 }

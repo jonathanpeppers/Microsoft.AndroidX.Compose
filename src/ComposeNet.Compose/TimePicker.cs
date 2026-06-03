@@ -21,6 +21,9 @@ public sealed class TimePicker : ComposableNode
         var stateHandle = ComposeBridges.RememberTimePickerState(_state.InitialHour, _state.InitialMinute, _state.InitialIs24Hour, composer);
         if (_state.Jvm is null)
             _state.Jvm = Java.Lang.Object.GetObject<ITimePickerState>(stateHandle, JniHandleOwnership.DoNotTransfer)!;
-        ComposeBridges.TimePicker(stateHandle, (int)TimePickerDefault.All, composer);
+        var modifier = BuildModifier();
+        int defaults = (int)TimePickerDefault.All;
+        if (modifier is not null) defaults &= ~(int)TimePickerDefault.Modifier;
+        ComposeBridges.TimePicker(stateHandle, modifier, defaults, composer);
     }
 }

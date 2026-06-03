@@ -21,6 +21,6 @@ public sealed class NavigationRail : ComposableContainer
         // static, not a ColumnScope extension — so we don't need to
         // publish the scope. Children can render directly.
         var content = new ComposableLambda3(c => RenderChildren(c));
-        ComposeBridges.NavigationRail(content, composer);
+        ComposeBridges.NavigationRail(BuildModifier(), content, composer);
     }
 }

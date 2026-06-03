@@ -35,12 +35,17 @@ public sealed class Tooltip : ComposableNode
         var tooltip = new ComposableLambda3(c => Tip.Render(c));
         var anchor  = new ComposableLambda2(c => Anchor.Render(c));
 
+        var modifier = BuildModifier();
+        int defaults = (int)TooltipBoxDefault.All;
+        if (modifier is not null) defaults &= ~(int)TooltipBoxDefault.Modifier;
+
         ComposeBridges.TooltipBox(
             positionProvider: positionProvider,
             tooltip:          tooltip,
             state:            stateHandle,
+            modifier:         modifier,
             content:          anchor,
-            defaults:         (int)TooltipBoxDefault.All,
+            defaults:         defaults,
             composer:         composer);
     }
 }

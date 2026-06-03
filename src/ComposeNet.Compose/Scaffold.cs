@@ -59,12 +59,15 @@ public sealed class Scaffold : ComposableNode
             : new ComposableLambda2(c => FloatingActionButton.Render(c));
 
         int defaults = (int)ScaffoldDefault.All;
+        var modifier = BuildModifier();
+        if (modifier     is not null) defaults &= ~(int)ScaffoldDefault.Modifier;
         if (topBar       is not null) defaults &= ~(int)ScaffoldDefault.TopBar;
         if (bottomBar    is not null) defaults &= ~(int)ScaffoldDefault.BottomBar;
         if (snackbarHost is not null) defaults &= ~(int)ScaffoldDefault.SnackbarHost;
         if (fab          is not null) defaults &= ~(int)ScaffoldDefault.FloatingActionButton;
 
         ComposeBridges.Scaffold(
+            modifier:             modifier,
             topBar:               topBar,
             bottomBar:            bottomBar,
             snackbarHost:         snackbarHost,

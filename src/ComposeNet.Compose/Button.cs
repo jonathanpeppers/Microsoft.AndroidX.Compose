@@ -16,6 +16,6 @@ public sealed class Button : ComposableContainer
     {
         var click   = new ComposableLambda0(_onClick);
         var content = new ComposableLambda3(c => RenderChildren(c));
-        ComposeBridges.Button(click, content, composer);
+        ComposeBridges.Button(click, BuildModifier(), content, composer);
     }
 }

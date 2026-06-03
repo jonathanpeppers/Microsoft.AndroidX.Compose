@@ -39,11 +39,14 @@ public sealed class DatePickerDialog : ComposableNode
             : new ComposableLambda2(c => DismissButton.Render(c));
 
         int defaults = (int)DatePickerDialogDefault.All;
-        if (dismiss is not null) defaults &= ~(int)DatePickerDialogDefault.DismissButton;
+        var modifier = BuildModifier();
+        if (modifier is not null) defaults &= ~(int)DatePickerDialogDefault.Modifier;
+        if (dismiss  is not null) defaults &= ~(int)DatePickerDialogDefault.DismissButton;
 
         ComposeBridges.DatePickerDialog(
             onDismissRequest: onDismiss,
             confirmButton:    confirm,
+            modifier:         modifier,
             dismissButton:    dismiss,
             content:          content,
             defaults:         defaults,
