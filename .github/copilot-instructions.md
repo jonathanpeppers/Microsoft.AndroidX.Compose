@@ -127,7 +127,12 @@ generator fill it in.
    (e.g. `Modifier.padding`, `RoundedCornerShape`), declare the params
    positionally — the generator treats the first user param as an
    extension receiver only when both it's `IntPtr` and the first JNI
-   sigParam is an object (`L`).
+   sigParam is an object (`L`). For stripped Kotlin constructors whose
+   parameters were mangled by inline-class compilation
+   (e.g. `GridCells.Adaptive(Dp)`), set `JvmName = "<init>"`; the
+   generator emits `GetMethodID` + `NewObject` and wraps the returned
+   handle with `Java.Lang.Object.GetObject<TReturn>(.., TransferLocalRef)`
+   so the declared C# return type is the constructed object, not `void`.
 2. **If** the underlying `@Composable` has at least one defaultable
    Kotlin parameter (i.e. the JNI signature has a trailing `$default`
    `I` slot after `$changed`), set `Defaults = typeof(XxxDefault)` and
@@ -190,6 +195,22 @@ receiver slot because the first sigParam is `L`. For a non-extension
 plain static (e.g. `RoundedCornerShape(Dp)` whose signature starts
 with `F`, not `L`), the first user param is just a regular argument.
 
+Example (Kotlin constructor — `JvmName = "<init>"`):
+```csharp
+[ComposeBridge(
+    Class     = "androidx/compose/foundation/lazy/grid/GridCells$Adaptive",
+    JvmName   = "<init>",
+    Signature = "(F)V")]
+internal static partial IGridCells GridCellsAdaptive(float minSizeDp);
+```
+The signature must end with `V` (JVM constructors return void at the
+bytecode level even though the call hands back a handle), and the C#
+return type must be non-`void` — that's the type the generator passes
+to `Java.Lang.Object.GetObject<T>(.., TransferLocalRef)`. Ctor bridges
+cannot declare a Composer parameter, `Defaults`, or `InstanceField`
+(the generator rejects each with CN2006). All user params map
+positionally to ctor argument slots; there is no extension receiver.
+
 ### Conventions the generator relies on
 
 - For `@Composable` bridges, `composer` is the **last** C# parameter.
@@ -231,7 +252,7 @@ with `F`, not `L`), the first user param is just a regular argument.
 
 `ModifierHandle` (a managed-side `IModifier? → IntPtr` conversion) and
 `ModifierCompanionInstance` (a static field lookup, not a method
-invocation) don't fit any of the four `[ComposeBridge]` shapes and
+invocation) don't fit any of the five `[ComposeBridge]` shapes and
 remain raw JNI. Two-step bridges like `ModifierClipRoundedCorners`
 (which composes `RoundedCornerShape` + `ClipKt.clip` and manages an
 intermediate `Shape` local ref) also stay hand-written — their shape
@@ -246,6 +267,7 @@ isn't a single Kotlin call.
 | CN2003  | Bridge partial-method param doesn't match any Kotlin name.  |
 | CN2004  | `[ComposeBridge]` has a malformed JNI signature.            |
 | CN2005  | `Defaults` disagrees with the JNI `$default` slot.          |
+| CN2006  | Constructor bridge shape requirements not met.              |
 
 **When you add a new generator diagnostic, also update this table in
 `.github/copilot-instructions.md` (and the matching table for the
@@ -266,12 +288,12 @@ method**; call the generated C# entry point instead (see
   ```csharp
   new Column { new Text("Hi"), new Button(onClick: …) { new Text("Tap") } }
   ```
-- Wrap Kotlin lambdas with `ComposableLambda0/1/2/3` (existing
+- Wrap Kotlin lambdas with `ComposableLambda0/1/2/3/4` (existing
   helpers — don't hand-roll new lambda adapters).
-- **Never construct `ComposableLambda2` / `ComposableLambda3` directly
-  inside a `Render(IComposer composer)` body.** Route every
-  `@Composable` slot lambda through `ComposableLambdas.Wrap2` /
-  `ComposableLambdas.Wrap3` so Compose's own `composableLambda` factory
+- **Never construct `ComposableLambda2` / `ComposableLambda3` /
+  `ComposableLambda4` directly inside a `Render(IComposer composer)`
+  body.** Route every `@Composable` slot lambda through the
+  appropriate helper in `ComposableLambdas` so Compose's own factory
   owns identity across recompositions. `SubcomposeLayout`-backed
   composables (`Scaffold`, `BottomSheetScaffold`, `ModalNavigationDrawer`,
   …) cache subcomposed content keyed by lambda identity; a fresh
@@ -280,17 +302,33 @@ method**; call the generated C# entry point instead (see
   (see #42). The helpers derive a unique slot-table key from
   `[CallerLineNumber]` + `[CallerFilePath]` automatically — no key
   argument needed.
+
+  Two helper families exist because Compose has two factory functions
+  that are not interchangeable:
+
+  | Helper | Factory it calls | When to use |
+  |--------|------------------|-------------|
+  | `Wrap2(composer, …)` / `Wrap3(composer, …)` | `composableLambda(composer, key, tracked, block)` | The lambda is built and invoked **synchronously inside the same composition pass** as `Render` — content slots like `topBar`, `title`, button content, `Column`/`Row`/`Box` children. The factory writes the wrapper into the active composer's slot table. |
+  | `Instantiate4(…)` (no composer param) | `composableLambdaInstance(key, tracked, block)` | The lambda is built during `Render` but **invoked later, outside the current composition** — `LazyListScope.items` / `LazyGridScope.items` `itemContent`, which Compose realizes at measure time inside the lazy list's `rememberLazyListItemProviderLambda`. The composer captured by the closure is no longer active by then, so calling `composableLambda(composer, …)` crashes with "Expected applyChanges() to have been called". `Instantiate4` skips the slot table and just allocates — exactly what Kotlin's inline `LazyListScope.items(…)` expands to. |
+
   ```csharp
   // Wrong — fresh identity every recomposition:
   var content = new ComposableLambda3(c => RenderChildren(c));
   // Right — stable identity owned by the runtime:
   var content = ComposableLambdas.Wrap3(composer, c => RenderChildren(c));
+
+  // Wrong — Wrap4 would need a composer, but the call site (inside
+  // scope.Items) runs at measure time, after the outer composer is stale:
+  itemContent: new ComposableLambda4((_, idx, c) => …)
+  // Right — composer-less factory, safe to call from a DSL builder:
+  itemContent: ComposableLambdas.Instantiate4((_, idx, c) => …)
   ```
-  `ComposableLambda0` (onClick) and `ComposableLambda1`
-  (onValueChange / onCheckedChange) callbacks are **not** `@Composable`
-  and must stay raw — wrapping them would inject
-  `startRestartGroup`/`endRestartGroup` machinery into code that runs
-  outside composition.
+
+  `ComposableLambda0` (onClick), `ComposableLambda1` (onValueChange /
+  onCheckedChange / LazyListScope / LazyGridScope DSL builders) callbacks
+  are **not** `@Composable` and must stay raw — wrapping them would
+  inject `startRestartGroup`/`endRestartGroup` machinery into code that
+  runs outside composition.
 - **Sibling `Render()` calls inside a loop need per-position slot
   keys.** `ComposableContainer.RenderChildren` already wraps each child
   in `composer.StartReplaceableGroup(i)` / `EndReplaceableGroup()`. Any

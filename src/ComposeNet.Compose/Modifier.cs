@@ -142,6 +142,47 @@ public sealed class Modifier
         Append(h => ComposeBridges.ModifierFillMaxSize(h, fraction));
 
     /// <summary>
+    /// <c>Modifier.height(dp)</c> — sets a fixed height in dp.
+    /// Required to give vertically-scrolling content (e.g.
+    /// <see cref="LazyColumn{T}"/>) a bounded viewport when it lives
+    /// inside an unbounded parent like a regular <see cref="Column"/>.
+    /// </summary>
+    public Modifier Height(int dp)
+    {
+        var f = (float)dp;
+        return Append(h => ComposeBridges.ModifierHeight(h, f));
+    }
+
+    /// <summary>
+    /// <c>Modifier.width(dp)</c> — sets a fixed width in dp.
+    /// </summary>
+    public Modifier Width(int dp)
+    {
+        var f = (float)dp;
+        return Append(h => ComposeBridges.ModifierWidth(h, f));
+    }
+
+    /// <summary>
+    /// <c>Modifier.size(dp)</c> — sets both width and height to the
+    /// same value in dp.
+    /// </summary>
+    public Modifier Size(int dp)
+    {
+        var f = (float)dp;
+        return Append(h => ComposeBridges.ModifierSizeAll(h, f));
+    }
+
+    /// <summary>
+    /// <c>Modifier.size(width, height)</c> in dp.
+    /// </summary>
+    public Modifier Size(int widthDp, int heightDp)
+    {
+        var w = (float)widthDp;
+        var h = (float)heightDp;
+        return Append(curr => ComposeBridges.ModifierSizeWH(curr, w, h));
+    }
+
+    /// <summary>
     /// <c>Modifier.padding(paddingValues)</c> — pads using the
     /// <c>PaddingValues</c> handle a layout (e.g. <see cref="Scaffold"/>)
     /// passes to its content lambda. Internal: only Scaffold-shaped

@@ -1,7 +1,7 @@
 using Android.Runtime;
+using AndroidX.Compose.Foundation.Lazy.Grid;
 using AndroidX.Compose.Runtime;
 using AndroidX.Compose.UI;
-using Java.Interop;
 using Kotlin.Jvm.Functions;
 
 namespace ComposeNet;
@@ -47,6 +47,20 @@ internal static partial class ComposeBridges
         // it uniformly while walking the op chain.
         return JNIEnv.NewLocalRef(s_modifierCompanionInstance);
     }
+
+    // androidx.compose.foundation.lazy.grid.GridCells$Adaptive — the
+    // only constructor takes a Dp (`@JvmInline value class Dp(val value: Float)`),
+    // mangled to `<init>(F)V` in bytecode, and the binder strips it.
+    // The source generator's constructor shape emits FindClass +
+    // GetMethodID("<init>") + NewObject + Java.Lang.Object.GetObject<T>
+    // with TransferLocalRef. `GridCells.Fixed(int)` doesn't need a
+    // bridge (no inline-class mangling); the binder exposes its ctor
+    // directly.
+    [ComposeBridge(
+        Class     = "androidx/compose/foundation/lazy/grid/GridCells$Adaptive",
+        JvmName   = "<init>",
+        Signature = "(F)V")]
+    internal static partial IGridCells GridCellsAdaptive(float minSizeDp);
 
     // androidx.compose.foundation.layout.PaddingKt — the Dp-taking
     // overloads have hashed JVM names from the inline-class compiler
@@ -97,6 +111,33 @@ internal static partial class ComposeBridges
         JvmName   = "fillMaxSize",
         Signature = "(Landroidx/compose/ui/Modifier;F)Landroidx/compose/ui/Modifier;")]
     internal static partial IntPtr ModifierFillMaxSize(IntPtr modifier, float fraction);
+
+    // androidx.compose.foundation.layout.SizeKt — Dp-taking sizing
+    // modifiers. The JVM names are mangled like padding's because
+    // `Dp` is an inline class (`@JvmInline value class Dp(val value: Float)`).
+    [ComposeBridge(
+        Class     = "androidx/compose/foundation/layout/SizeKt",
+        JvmName   = "height-3ABfNKs",
+        Signature = "(Landroidx/compose/ui/Modifier;F)Landroidx/compose/ui/Modifier;")]
+    internal static partial IntPtr ModifierHeight(IntPtr modifier, float dp);
+
+    [ComposeBridge(
+        Class     = "androidx/compose/foundation/layout/SizeKt",
+        JvmName   = "width-3ABfNKs",
+        Signature = "(Landroidx/compose/ui/Modifier;F)Landroidx/compose/ui/Modifier;")]
+    internal static partial IntPtr ModifierWidth(IntPtr modifier, float dp);
+
+    [ComposeBridge(
+        Class     = "androidx/compose/foundation/layout/SizeKt",
+        JvmName   = "size-3ABfNKs",
+        Signature = "(Landroidx/compose/ui/Modifier;F)Landroidx/compose/ui/Modifier;")]
+    internal static partial IntPtr ModifierSizeAll(IntPtr modifier, float dp);
+
+    [ComposeBridge(
+        Class     = "androidx/compose/foundation/layout/SizeKt",
+        JvmName   = "size-VpY3zN4",
+        Signature = "(Landroidx/compose/ui/Modifier;FF)Landroidx/compose/ui/Modifier;")]
+    internal static partial IntPtr ModifierSizeWH(IntPtr modifier, float width, float height);
 
     // androidx.compose.foundation.layout.WindowInsetsPadding_androidKt —
     // Modifier extensions that read WindowInsets from CompositionLocals

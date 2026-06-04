@@ -1,0 +1,71 @@
+using System;
+using System.Collections.Generic;
+using Android.Runtime;
+using AndroidX.Compose.Foundation.Lazy;
+using AndroidX.Compose.Runtime;
+
+namespace ComposeNet;
+
+/// <summary>
+/// Foundation <c>LazyRow</c> — horizontal mirror of <see cref="LazyColumn{T}"/>.
+/// Use when the item count along the horizontal axis exceeds the screen
+/// width (chip rows, image carousels, etc.).
+///
+/// <code>
+/// new LazyRow&lt;Photo&gt;(items: photos, itemContent: p =&gt; new Image(p.Url))
+/// </code>
+/// </summary>
+public sealed class LazyRow<T> : ComposableNode
+{
+    readonly IReadOnlyList<T> _items;
+    readonly Func<T, ComposableNode> _itemContent;
+
+    public LazyRow(IReadOnlyList<T> items, Func<T, ComposableNode> itemContent)
+    {
+        _items       = items       ?? throw new ArgumentNullException(nameof(items));
+        _itemContent = itemContent ?? throw new ArgumentNullException(nameof(itemContent));
+    }
+
+    /// <summary>
+    /// Optional scroll state. Leave null to let Compose substitute its
+    /// own remembered state.
+    /// </summary>
+    public LazyListState? State { get; set; }
+
+    internal override void Render(IComposer composer)
+    {
+        var modifier = BuildModifier();
+        var content  = new ComposableLambda1(scopeObj =>
+        {
+            var scope = Android.Runtime.Extensions.JavaCast<ILazyListScope>(scopeObj!);
+            scope.Items(
+                _items.Count,
+                key:         null,
+                contentType: new ComposableLambda1(_ => { }),
+                itemContent: ComposableLambdas.Instantiate4((_, indexBoxed, comp) =>
+                {
+                    var i = ((Java.Lang.Integer)indexBoxed!).IntValue();
+                    _itemContent(_items[i]).Render(comp);
+                }));
+        });
+
+        int defaults = (int)LazyRowDefault.All;
+        if (modifier is not null) defaults &= ~(int)LazyRowDefault.Modifier;
+        if (State    is not null) defaults &= ~(int)LazyRowDefault.State;
+
+        LazyDslKt.LazyRow(
+            modifier:              modifier,
+            state:                 State,
+            contentPadding:        null,
+            reverseLayout:         false,
+            horizontalArrangement: null,
+            verticalAlignment:     null,
+            flingBehavior:         null,
+            userScrollEnabled:     true,
+            overscrollEffect:      null,
+            content:               content,
+            _composer:             composer,
+            p11:                   0,
+            _changed:              defaults);
+    }
+}

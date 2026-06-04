@@ -208,6 +208,7 @@ as C# types:
 | Category                | Composables                                                                                       |
 | ----------------------- | ------------------------------------------------------------------------------------------------- |
 | Theme & layout          | `MaterialTheme`, `Column`, `Row`, `Box`, `Spacer`, `Scaffold`, `HorizontalDivider`, `VerticalDivider` |
+| Lazy lists              | `LazyColumn<T>`, `LazyRow<T>`, `LazyVerticalGrid<T>`, `LazyHorizontalGrid<T>` (+ `GridCells`)      |
 | Surfaces                | `Surface`, `Card`, `ElevatedCard`, `OutlinedCard`                                                  |
 | App bars                | TopAppBar family (`TopAppBar`, `CenterAlignedTopAppBar`, `Medium`/`Large`/`MediumFlexible`/`LargeFlexibleTopAppBar`), `BottomAppBar`, `FlexibleBottomAppBar` |
 | Tabs                    | TabRow family (`TabRow`, `Primary`/`SecondaryTabRow`, `Primary`/`SecondaryScrollableTabRow`), `Tab`, `LeadingIconTab`, `CustomTab` |

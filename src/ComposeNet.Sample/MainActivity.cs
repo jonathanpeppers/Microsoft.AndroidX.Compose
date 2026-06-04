@@ -55,7 +55,7 @@ public class MainActivity : ComposeActivity
             // filter without binding InputTransformation.
             var searchQuery   = Remember(() => new MutableState<string>(""));
 
-            string[] tabNames = { "Basics", "Buttons", "Cards", "Drawer", "Selection", "Pickers", "Misc", "App bars" };
+            string[] tabNames = { "Basics", "Buttons", "Cards", "Drawer", "Selection", "Pickers", "Misc", "App bars", "Lazy" };
 
             // Per-tab content. Only the current tab's column is added to
             // the screen — keeps the sample short enough to fit on one
@@ -418,7 +418,7 @@ public class MainActivity : ComposeActivity
                         }
                         : (ComposableNode?)null,
                 },
-                _ => new Column
+                7 => new Column
                 {
                     // Inline samples of the M3 app-bar family bound by
                     // ComposeNet — normally these live in Scaffold.TopBar /
@@ -472,6 +472,59 @@ public class MainActivity : ComposeActivity
                     {
                         new IconButton(onClick: () => count++) { new Text("+") },
                         new IconButton(onClick: () => count--) { new Text("−") },
+                    },
+                },
+                _ => new Column
+                {
+                    // Lazy lists — bound through LazyDslKt / LazyGridDslKt.
+                    // Each LazyColumn / LazyVerticalGrid takes the items
+                    // list + a per-item callback. Compose lazily composes
+                    // only the visible window, so 1000 rows costs about
+                    // the same as 20.
+                    new Text("LazyColumn (1000 rows)"),
+                    new LazyColumn<int>(
+                        items:       System.Linq.Enumerable.Range(0, 1000).ToList(),
+                        itemContent: i => new Text($"Row {i:D4}"))
+                    {
+                        Modifier = Modifier.Companion.FillMaxWidth().Height(220),
+                    },
+                    new HorizontalDivider { Modifier = Modifier.Companion.Padding(0, 8) },
+                    new Text("LazyRow (carousel)"),
+                    new LazyRow<int>(
+                        items:       System.Linq.Enumerable.Range(0, 50).ToList(),
+                        itemContent: i => new Card
+                        {
+                            Modifier.Companion.Padding(4).Size(80),
+                            new Text($"#{i}"),
+                        })
+                    {
+                        Modifier = Modifier.Companion.FillMaxWidth(),
+                    },
+                    new HorizontalDivider { Modifier = Modifier.Companion.Padding(0, 8) },
+                    new Text("LazyVerticalGrid (Fixed 3)"),
+                    new LazyVerticalGrid<int>(
+                        columns:     GridCells.Fixed(3),
+                        items:       System.Linq.Enumerable.Range(0, 60).ToList(),
+                        itemContent: i => new Card
+                        {
+                            Modifier.Companion.Padding(4),
+                            new Text($"Cell {i}"),
+                        })
+                    {
+                        Modifier = Modifier.Companion.FillMaxWidth().Height(220),
+                    },
+                    new HorizontalDivider { Modifier = Modifier.Companion.Padding(0, 8) },
+                    new Text("LazyVerticalGrid (Adaptive 96dp)"),
+                    new LazyVerticalGrid<int>(
+                        columns:     GridCells.Adaptive(96f),
+                        items:       System.Linq.Enumerable.Range(0, 40).ToList(),
+                        itemContent: i => new Card
+                        {
+                            Modifier.Companion.Padding(4),
+                            new Text($"A {i}"),
+                        })
+                    {
+                        Modifier = Modifier.Companion.FillMaxWidth().Height(220),
                     },
                 },
             };
@@ -640,6 +693,11 @@ public class MainActivity : ComposeActivity
                                 {
                                     Text = new Text("Bars"),
                                     Icon = new Text("📐"),
+                                },
+                                new Tab(selected: tab.Value == 8, onClick: () => tab.Value = 8)
+                                {
+                                    Text = new Text("Lazy"),
+                                    Icon = new Text("🪟"),
                                 },
                             },
                             tabContent,

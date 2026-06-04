@@ -26,7 +26,9 @@ public class BridgeGeneratorTests
                 public static unsafe void CallVoidMethod(System.IntPtr inst, System.IntPtr m, Android.Runtime.JValue* args) { }
                 public static unsafe System.IntPtr CallStaticObjectMethod(System.IntPtr cls, System.IntPtr m, Android.Runtime.JValue* args) => default;
                 public static unsafe System.IntPtr CallObjectMethod(System.IntPtr inst, System.IntPtr m, Android.Runtime.JValue* args) => default;
+                public static unsafe System.IntPtr NewObject(System.IntPtr cls, System.IntPtr m, Android.Runtime.JValue* args) => default;
             }
+            public enum JniHandleOwnership { TransferLocalRef = 0 }
             public readonly struct JValue
             {
                 public JValue(System.IntPtr v) { } public JValue(bool v) { } public JValue(int v) { }
@@ -41,7 +43,14 @@ public class BridgeGeneratorTests
                 public JValue(long v) { } public JValue(float v) { } public JValue(double v) { }
             }
         }
-        namespace Java.Lang { public class Object { public System.IntPtr Handle => default; } }
+        namespace Java.Lang
+        {
+            public class Object
+            {
+                public System.IntPtr Handle => default;
+                public static T? GetObject<T>(System.IntPtr handle, Android.Runtime.JniHandleOwnership transfer) where T : class => default;
+            }
+        }
         namespace AndroidX.Compose.Runtime { public interface IComposer { } }
         namespace Kotlin.Jvm.Functions
         {
@@ -925,5 +934,139 @@ public class BridgeGeneratorTests
 
         var (_, diags, _) = Run(code);
         Assert.Contains(diags, d => d.Id == "CN2005");
+    }
+
+    [Fact]
+    public void Constructor_GeneratesNewObjectAndGetObjectWrap()
+    {
+        // Mirrors androidx.compose.foundation.lazy.grid.GridCells$Adaptive(Dp) —
+        // a stripped Kotlin ctor whose single Dp parameter compiles down to F.
+        var code = """
+            using ComposeNet;
+
+            namespace ComposeNet
+            {
+                public interface IGridCells { }
+                public class GridCellsAdaptiveImpl : global::Java.Lang.Object, IGridCells { }
+
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(
+                        Class = "androidx/compose/foundation/lazy/grid/GridCells$Adaptive",
+                        JvmName = "<init>",
+                        Signature = "(F)V")]
+                    internal static partial GridCellsAdaptiveImpl GridCellsAdaptive(float minSizeDp);
+                }
+            }
+            """;
+
+        var (output, diags, emitted) = Run(code);
+        Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+
+        // Class lookup unchanged; method ID uses GetMethodID with "<init>".
+        Assert.Contains("FindClass(\"androidx/compose/foundation/lazy/grid/GridCells$Adaptive\")", emitted);
+        Assert.Contains("GetMethodID(", emitted);
+        Assert.Contains("\"<init>\"", emitted);
+        Assert.DoesNotContain("GetStaticMethodID", emitted);
+
+        // Single arg slot for the Dp value; no Composer, no $default.
+        Assert.Contains("global::Android.Runtime.JValue[1]", emitted);
+        Assert.Contains("args[0] = new global::Android.Runtime.JValue(minSizeDp)", emitted);
+        Assert.DoesNotContain("args[1]", emitted);
+        Assert.DoesNotContain("Composer", emitted);
+        Assert.DoesNotContain("new global::Android.Runtime.JValue(defaults)", emitted);
+
+        // NewObject + GetObject<T> wrap with TransferLocalRef.
+        Assert.Contains("global::Android.Runtime.JNIEnv.NewObject(", emitted);
+        Assert.Contains("global::Java.Lang.Object.GetObject<global::ComposeNet.GridCellsAdaptiveImpl>(", emitted);
+        Assert.Contains("global::Android.Runtime.JniHandleOwnership.TransferLocalRef", emitted);
+        Assert.DoesNotContain("CallStaticObjectMethod", emitted);
+        Assert.DoesNotContain("CallStaticVoidMethod", emitted);
+
+        var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
+        Assert.Empty(errors);
+    }
+
+    [Fact]
+    public void Constructor_VoidReturn_ReportsCN2006()
+    {
+        var code = """
+            using ComposeNet;
+
+            namespace ComposeNet
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(Class = "x/Y", JvmName = "<init>", Signature = "(F)V")]
+                    internal static partial void Bad(float v);
+                }
+            }
+            """;
+        var (_, diags, _) = Run(code);
+        Assert.Contains(diags, d => d.Id == "CN2006");
+    }
+
+    [Fact]
+    public void Constructor_WithComposer_ReportsCN2006()
+    {
+        var code = """
+            using ComposeNet;
+
+            namespace ComposeNet
+            {
+                public class Thing : global::Java.Lang.Object { }
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(Class = "x/Y", JvmName = "<init>", Signature = "(F)V")]
+                    internal static partial Thing Bad(float v, global::AndroidX.Compose.Runtime.IComposer composer);
+                }
+            }
+            """;
+        var (_, diags, _) = Run(code);
+        Assert.Contains(diags, d => d.Id == "CN2006");
+    }
+
+    [Fact]
+    public void Constructor_WithDefaults_ReportsCN2006()
+    {
+        var code = """
+            using ComposeNet;
+
+            [assembly: ComposeDefaults("ThingDefault", "v")]
+
+            namespace ComposeNet
+            {
+                public class Thing : global::Java.Lang.Object { }
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(Class = "x/Y", JvmName = "<init>", Signature = "(F)V", Defaults = typeof(ThingDefault))]
+                    internal static partial Thing Bad(float v);
+                }
+            }
+            """;
+        var (_, diags, _) = Run(code);
+        Assert.Contains(diags, d => d.Id == "CN2006");
+    }
+
+    [Fact]
+    public void Constructor_NonVoidSignature_ReportsCN2006()
+    {
+        // JVM ctors must return V at the bytecode level.
+        var code = """
+            using ComposeNet;
+
+            namespace ComposeNet
+            {
+                public class Thing : global::Java.Lang.Object { }
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(Class = "x/Y", JvmName = "<init>", Signature = "(F)Lx/Y;")]
+                    internal static partial Thing Bad(float v);
+                }
+            }
+            """;
+        var (_, diags, _) = Run(code);
+        Assert.Contains(diags, d => d.Id == "CN2006");
     }
 }
