@@ -31,7 +31,7 @@ public sealed class CustomTab : ComposableContainer
         var click = new ComposableLambda0(_onClick);
         var content = ComposableLambdas.Wrap3(composer, (scope, c) =>
         {
-            using var _ = RenderContext.PushScope(scope);
+            using var _ = RenderContext.PushScope(scope, ScopeKind.Column);
             RenderChildren(c);
         });
 

@@ -21,7 +21,7 @@ public sealed class FlexibleBottomAppBar : ComposableContainer
     {
         var content = ComposableLambdas.Wrap3(composer, (scope, c) =>
         {
-            using var _ = RenderContext.PushScope(scope);
+            using var _ = RenderContext.PushScope(scope, ScopeKind.Row);
             RenderChildren(c);
         });
         ComposeBridges.FlexibleBottomAppBar(BuildModifier(), content, composer);

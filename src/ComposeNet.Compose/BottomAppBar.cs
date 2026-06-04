@@ -25,7 +25,7 @@ public sealed class BottomAppBar : ComposableContainer
     {
         var actions = ComposableLambdas.Wrap3(composer, (scope, c) =>
         {
-            using var _ = RenderContext.PushScope(scope);
+            using var _ = RenderContext.PushScope(scope, ScopeKind.Row);
             RenderChildren(c);
         });
         var fab = FloatingActionButton is null ? null

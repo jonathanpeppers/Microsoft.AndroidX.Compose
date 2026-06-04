@@ -15,7 +15,7 @@ public sealed class MultiChoiceSegmentedButtonRow : ComposableContainer
     {
         var content = ComposableLambdas.Wrap3(composer, (scope, c) =>
         {
-            using var _    = RenderContext.PushScope(scope);
+            using var _    = RenderContext.PushScope(scope, ScopeKind.Other);
             using var rows = RenderContext.PushRow(Children.Count);
             for (int i = 0; i < Children.Count; i++)
             {

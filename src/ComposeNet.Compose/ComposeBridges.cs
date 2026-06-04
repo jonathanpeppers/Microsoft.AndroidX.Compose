@@ -205,6 +205,33 @@ internal static partial class ComposeBridges
         Signature = "(ILandroidx/compose/runtime/Composer;I)Landroidx/compose/ui/graphics/painter/Painter;")]
     public static partial IntPtr PainterResource(int id, IComposer composer);
 
+    // androidx.compose.foundation.layout.RowScope$DefaultImpls.weight$default —
+    // synthetic helper for `fun RowScope.Modifier.weight(weight, fill = true)`.
+    // Static method taking the dispatch receiver (RowScope) as arg 0,
+    // the extension receiver (Modifier) as arg 1, then weight/fill, the
+    // $default bitmask, and the synthetic marker. The bridge generator
+    // treats the first IntPtr (`rowScope`) as the receiver and binds it
+    // to args[0]; everything else flows through ModifierWeightDefault.
+    [ComposeBridge(
+        Class     = "androidx/compose/foundation/layout/RowScope$DefaultImpls",
+        JvmName   = "weight$default",
+        Signature = "(Landroidx/compose/foundation/layout/RowScope;" +
+                    "Landroidx/compose/ui/Modifier;FZILjava/lang/Object;)" +
+                    "Landroidx/compose/ui/Modifier;",
+        Defaults  = typeof(ModifierWeightDefault))]
+    internal static partial IntPtr RowScopeModifierWeight(IntPtr rowScope, IntPtr modifier, float weight, bool fill);
+
+    // androidx.compose.foundation.layout.ColumnScope$DefaultImpls.weight$default —
+    // same shape as the RowScope helper above.
+    [ComposeBridge(
+        Class     = "androidx/compose/foundation/layout/ColumnScope$DefaultImpls",
+        JvmName   = "weight$default",
+        Signature = "(Landroidx/compose/foundation/layout/ColumnScope;" +
+                    "Landroidx/compose/ui/Modifier;FZILjava/lang/Object;)" +
+                    "Landroidx/compose/ui/Modifier;",
+        Defaults  = typeof(ModifierWeightDefault))]
+    internal static partial IntPtr ColumnScopeModifierWeight(IntPtr columnScope, IntPtr modifier, float weight, bool fill);
+
     // Source-generated bridges below. Each [ComposeBridge] partial
     // declaration is paired with a matching [ComposeDefaults] in
     // ComposeDefaults.cs; the generator reads bit positions and parameter
