@@ -17,6 +17,10 @@ public sealed class PrimaryScrollableTabRow : ComposableContainer
     {
         var tabs = new ComposableLambda2(c => RenderChildren(c));
         ComposeBridges.PrimaryScrollableTabRow(
-            _selectedTabIndex, BuildModifier(), scrollState: null, tabs, composer);
+            selectedTabIndex: _selectedTabIndex,
+            modifier:         BuildModifier(),
+            scrollState:      null,
+            tabs:             tabs,
+            composer:         composer);
     }
 }

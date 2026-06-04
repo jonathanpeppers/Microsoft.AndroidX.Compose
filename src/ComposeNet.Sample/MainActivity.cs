@@ -28,7 +28,14 @@ public class MainActivity : ComposeActivity
             var dateState   = Remember(() => new DatePickerState());
             var timeState   = Remember(() => new TimePickerState(initialHour: 9, initialMinute: 30));
 
-            string[] tabNames = { "Basics", "Buttons", "Cards", "Drawer", "Pickers", "App bars" };
+            var checkbox    = Remember(() => new MutableState<bool>(true));
+            var switchOn    = Remember(() => new MutableState<bool>(false));
+            var radioPick   = Remember(() => new MutableNumberState<int>(0));
+            var sliderVal   = Remember(() => new MutableState<float>(0.5f));
+            var rangeStart  = Remember(() => new MutableState<float>(0.25f));
+            var rangeEnd    = Remember(() => new MutableState<float>(0.75f));
+
+            string[] tabNames = { "Basics", "Buttons", "Cards", "Drawer", "Selection", "Pickers", "App bars" };
 
             // Per-tab content. Only the current tab's column is added to
             // the screen — keeps the sample short enough to fit on one
@@ -249,6 +256,37 @@ public class MainActivity : ComposeActivity
                 },
                 4 => (ComposableNode)new Column
                 {
+                    new Text("Selection controls"),
+                    new Row
+                    {
+                        new Checkbox(@checked: checkbox.Value, onCheckedChange: v => checkbox.Value = v),
+                        new Spacer { Modifier = Modifier.Companion.FillMaxWidth(0.05f) },
+                        new Switch(@checked: switchOn.Value, onCheckedChange: v => switchOn.Value = v),
+                        new Spacer { Modifier = Modifier.Companion.FillMaxWidth(0.05f) },
+                        new RadioButton(selected: radioPick.Value == 0, onClick: () => radioPick.Value = 0),
+                        new Text("A"),
+                        new Spacer { Modifier = Modifier.Companion.FillMaxWidth(0.03f) },
+                        new RadioButton(selected: radioPick.Value == 1, onClick: () => radioPick.Value = 1),
+                        new Text("B"),
+                        new Spacer { Modifier = Modifier.Companion.FillMaxWidth(0.03f) },
+                        new RadioButton(selected: radioPick.Value == 2, onClick: () => radioPick.Value = 2),
+                        new Text("C"),
+                    },
+                    new Text($"Checkbox: {checkbox.Value}, Switch: {switchOn.Value}, Radio: {(char)('A' + radioPick.Value)}"),
+                    new HorizontalDivider { Modifier = Modifier.Companion.Padding(0, 8) },
+                    new Slider(value: sliderVal.Value, onValueChange: v => sliderVal.Value = v),
+                    new Text($"Slider: {sliderVal.Value:F2}"),
+                    new RangeSlider(
+                        value: (rangeStart.Value, rangeEnd.Value),
+                        onValueChange: r =>
+                        {
+                            rangeStart.Value = r.Start;
+                            rangeEnd.Value   = r.End;
+                        }),
+                    new Text($"Range: {rangeStart.Value:F2} – {rangeEnd.Value:F2}"),
+                },
+                5 => new Column
+                {
                     new Text("Dialogs and sheets"),
                     new Row
                     {
@@ -370,10 +408,15 @@ public class MainActivity : ComposeActivity
                             },
                             new NavigationBarItem(selected: tab.Value == 4, onClick: () => tab.Value = 4)
                             {
+                                Icon  = new Text("☑"),
+                                Label = new Text("Selection"),
+                            },
+                            new NavigationBarItem(selected: tab.Value == 5, onClick: () => tab.Value = 5)
+                            {
                                 Icon  = new Text("📅"),
                                 Label = new Text("Pickers"),
                             },
-                            new NavigationBarItem(selected: tab.Value == 5, onClick: () => tab.Value = 5)
+                            new NavigationBarItem(selected: tab.Value == 6, onClick: () => tab.Value = 6)
                             {
                                 Icon  = new Text("📐"),
                                 Label = new Text("Bars"),

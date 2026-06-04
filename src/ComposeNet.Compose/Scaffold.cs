@@ -49,17 +49,16 @@ public sealed class Scaffold : ComposableNode
 
         // Material 3's Scaffold passes PaddingValues as the first arg of
         // its content lambda — body must apply it to avoid rendering
-        // behind the top/bottom bars. We can't prepend a Modifier onto
-        // Body's existing chain from out here (see #37), so we wrap it
-        // in a Box that owns the runtime `Modifier.padding(values)`.
-        // When #37 lands, drop the Box and inject the padding directly.
+        // behind the top/bottom bars. Prepend a runtime
+        // `Modifier.padding(values)` onto Body's existing chain so the
+        // padding and Body's own modifiers compose on the same layout
+        // node, mirroring Kotlin's
+        // `Column(Modifier.padding(paddingValues)) { ... }`.
+        var body = Body;
         var content = new ComposableLambda3((paddingHandle, c) =>
         {
-            new Box
-            {
-                Modifier.Companion.Padding(paddingHandle),
-                Body,
-            }.Render(c);
+            body.PrependModifier(Modifier.Companion.Padding(paddingHandle));
+            body.Render(c);
         });
 
         // Always pass non-null slot lambdas. Toggling between Compose's
