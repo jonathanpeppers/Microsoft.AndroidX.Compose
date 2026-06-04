@@ -20,7 +20,7 @@ public sealed class NavigationRail : ComposableContainer
         // NavigationRailItem (unlike NavigationBarItem) is a top-level
         // static, not a ColumnScope extension — so we don't need to
         // publish the scope. Children can render directly.
-        var content = new ComposableLambda3(c => RenderChildren(c));
+        var content = ComposableLambdas.Wrap3(composer, c => RenderChildren(c));
         ComposeBridges.NavigationRail(BuildModifier(), content, composer);
     }
 }

@@ -53,13 +53,17 @@ public sealed class SegmentedButton : ComposableContainer
             throw new System.InvalidOperationException(
                 "SegmentedButton requires at least one child (the label slot has no Kotlin default).");
 
-        var label = new ComposableLambda2(c =>
+        var label = ComposableLambdas.Wrap2(composer, c =>
         {
             for (int i = 0; i < Children.Count; i++)
-                Children[i].Render(c);
+            {
+                c.StartReplaceableGroup(i);
+                try { Children[i].Render(c); }
+                finally { c.EndReplaceableGroup(); }
+            }
         });
         var iconNode = Icon;
-        ComposableLambda2? icon = iconNode is null ? null : new ComposableLambda2(c => iconNode.Render(c));
+        var icon = iconNode is null ? null : ComposableLambdas.Wrap2(composer, c => iconNode.Render(c));
         var modifier = BuildModifier();
 
         var scope = RenderContext.CurrentScope;

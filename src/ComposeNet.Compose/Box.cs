@@ -15,7 +15,7 @@ public sealed class Box : ComposableContainer
     internal override void Render(IComposer composer)
     {
         var modifier = BuildModifier();
-        var content  = new ComposableLambda3(c => RenderChildren(c));
+        var content  = ComposableLambdas.Wrap3(composer, c => RenderChildren(c));
 
         int defaults = (int)BoxDefault.All;
         if (modifier is not null) defaults &= ~(int)BoxDefault.Modifier;

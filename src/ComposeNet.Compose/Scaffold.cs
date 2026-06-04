@@ -65,7 +65,7 @@ public sealed class Scaffold : ComposableNode
         // is single-threaded, so the temporary mutation is invisible
         // outside this synchronous block.
         var body = Body;
-        var content = new ComposableLambda3((paddingHandle, c) =>
+        var content = ComposableLambdas.Wrap3(composer, (paddingHandle, c) =>
         {
             var saved = body.Modifier;
             var padding = Modifier.Companion.Padding(paddingHandle);
@@ -87,10 +87,10 @@ public sealed class Scaffold : ComposableNode
         // recomposition — a flip in slot type triggers a runtime
         // ClassCastException. Emit nothing when the user didn't supply
         // a slot; functionally identical to M3's `{}` default.
-        var topBar = new ComposableLambda2(c => TopBar?.Render(c));
-        var bottomBar = new ComposableLambda2(c => BottomBar?.Render(c));
-        var snackbarHost = new ComposableLambda2(c => SnackbarHost?.Render(c));
-        var fab = new ComposableLambda2(c => FloatingActionButton?.Render(c));
+        var topBar = ComposableLambdas.Wrap2(composer, c => TopBar?.Render(c));
+        var bottomBar = ComposableLambdas.Wrap2(composer, c => BottomBar?.Render(c));
+        var snackbarHost = ComposableLambdas.Wrap2(composer, c => SnackbarHost?.Render(c));
+        var fab = ComposableLambdas.Wrap2(composer, c => FloatingActionButton?.Render(c));
 
         int defaults = (int)ScaffoldDefault.All;
         var modifier = BuildModifier();

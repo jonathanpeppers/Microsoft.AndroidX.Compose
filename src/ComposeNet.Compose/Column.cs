@@ -9,7 +9,7 @@ public sealed class Column : ComposableContainer
     internal override void Render(IComposer composer)
     {
         var modifier = BuildModifier();
-        var content = new ComposableLambda3(c => RenderChildren(c));
+        var content = ComposableLambdas.Wrap3(composer, c => RenderChildren(c));
         int defaults = (int)ColumnDefault.All;
         if (modifier is not null) defaults &= ~(int)ColumnDefault.Modifier;
         ColumnKt.Column(

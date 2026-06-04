@@ -24,11 +24,11 @@ public sealed class CenterAlignedTopAppBar : ComposableNode
             throw new System.InvalidOperationException(
                 "CenterAlignedTopAppBar.Title is required (the Kotlin parameter has no default).");
 
-        var title = new ComposableLambda2(c => Title.Render(c));
-        ComposableLambda2? nav = NavigationIcon is null ? null
-            : new ComposableLambda2(c => NavigationIcon.Render(c));
-        ComposableLambda3? actions = Actions is null ? null
-            : new ComposableLambda3(c => Actions.Render(c));
+        var title = ComposableLambdas.Wrap2(composer, c => Title.Render(c));
+        var nav = NavigationIcon is null ? null
+            : ComposableLambdas.Wrap2(composer, c => NavigationIcon.Render(c));
+        var actions = Actions is null ? null
+            : ComposableLambdas.Wrap3(composer, c => Actions.Render(c));
 
         int defaults = (int)TopAppBarDefault.All;
         var modifier = BuildModifier();

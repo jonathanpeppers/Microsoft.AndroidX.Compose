@@ -26,7 +26,7 @@ public sealed class NavigationBar : ComposableContainer
         // Capture the RowScope receiver (p0 of the Function3) and publish
         // it so child NavigationBarItems can pass it to their underlying
         // RowScope-extension static.
-        var content = new ComposableLambda3((scope, c) =>
+        var content = ComposableLambdas.Wrap3(composer, (scope, c) =>
         {
             using var _ = RenderContext.PushScope(scope);
             RenderChildren(c);

@@ -28,13 +28,13 @@ public sealed class MediumFlexibleTopAppBar : ComposableNode
             throw new System.InvalidOperationException(
                 "MediumFlexibleTopAppBar.Title is required (the Kotlin parameter has no default).");
 
-        var title = new ComposableLambda2(c => Title.Render(c));
-        ComposableLambda2? subtitle = Subtitle is null ? null
-            : new ComposableLambda2(c => Subtitle.Render(c));
-        ComposableLambda2? nav = NavigationIcon is null ? null
-            : new ComposableLambda2(c => NavigationIcon.Render(c));
-        ComposableLambda3? actions = Actions is null ? null
-            : new ComposableLambda3(c => Actions.Render(c));
+        var title = ComposableLambdas.Wrap2(composer, c => Title.Render(c));
+        var subtitle = Subtitle is null ? null
+            : ComposableLambdas.Wrap2(composer, c => Subtitle.Render(c));
+        var nav = NavigationIcon is null ? null
+            : ComposableLambdas.Wrap2(composer, c => NavigationIcon.Render(c));
+        var actions = Actions is null ? null
+            : ComposableLambdas.Wrap3(composer, c => Actions.Render(c));
 
         int defaults = (int)FlexibleTopAppBarDefault.All;
         var modifier = BuildModifier();

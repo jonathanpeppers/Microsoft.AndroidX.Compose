@@ -23,13 +23,13 @@ public sealed class BottomAppBar : ComposableContainer
 
     internal override void Render(IComposer composer)
     {
-        var actions = new ComposableLambda3((scope, c) =>
+        var actions = ComposableLambdas.Wrap3(composer, (scope, c) =>
         {
             using var _ = RenderContext.PushScope(scope);
             RenderChildren(c);
         });
-        ComposableLambda2? fab = FloatingActionButton is null ? null
-            : new ComposableLambda2(c => FloatingActionButton.Render(c));
+        var fab = FloatingActionButton is null ? null
+            : ComposableLambdas.Wrap2(composer, c => FloatingActionButton.Render(c));
 
         ComposeBridges.BottomAppBar(actions, BuildModifier(), fab, composer);
     }

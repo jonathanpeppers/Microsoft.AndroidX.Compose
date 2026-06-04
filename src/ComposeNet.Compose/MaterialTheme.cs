@@ -14,7 +14,7 @@ public sealed class MaterialTheme : ComposableContainer
     internal override void Render(IComposer composer)
     {
         var scheme  = DynamicTonalPaletteKt.DynamicLightColorScheme(Android.App.Application.Context);
-        var content = new ComposableLambda2(c => RenderChildren(c));
+        var content = ComposableLambdas.Wrap2(composer, c => RenderChildren(c));
         MaterialThemeKt.MaterialTheme(
             colorScheme: scheme,
             shapes:      null,

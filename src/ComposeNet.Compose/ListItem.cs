@@ -40,11 +40,11 @@ public sealed class ListItem : ComposableNode
             throw new System.InvalidOperationException(
                 "ListItem.Headline is required (the Kotlin parameter has no default).");
 
-        var headline = new ComposableLambda2(c => Headline.Render(c));
-        ComposableLambda2? overline   = Overline   is null ? null : new ComposableLambda2(c => Overline.Render(c));
-        ComposableLambda2? supporting = Supporting is null ? null : new ComposableLambda2(c => Supporting.Render(c));
-        ComposableLambda2? leading    = Leading    is null ? null : new ComposableLambda2(c => Leading.Render(c));
-        ComposableLambda2? trailing   = Trailing   is null ? null : new ComposableLambda2(c => Trailing.Render(c));
+        var headline = ComposableLambdas.Wrap2(composer, c => Headline.Render(c));
+        var overline   = Overline   is null ? null : ComposableLambdas.Wrap2(composer, c => Overline.Render(c));
+        var supporting = Supporting is null ? null : ComposableLambdas.Wrap2(composer, c => Supporting.Render(c));
+        var leading    = Leading    is null ? null : ComposableLambdas.Wrap2(composer, c => Leading.Render(c));
+        var trailing   = Trailing   is null ? null : ComposableLambdas.Wrap2(composer, c => Trailing.Render(c));
 
         int defaults = (int)ListItemDefault.All;
         var modifier = BuildModifier();

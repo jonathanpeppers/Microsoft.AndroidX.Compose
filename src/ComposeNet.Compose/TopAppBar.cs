@@ -42,16 +42,16 @@ public sealed class TopAppBar : ComposableNode
             throw new System.InvalidOperationException(
                 "TopAppBar.Title is required (the Kotlin parameter has no default).");
 
-        var title = new ComposableLambda2(c => Title.Render(c));
-        ComposableLambda2? nav = NavigationIcon is null ? null
-            : new ComposableLambda2(c => NavigationIcon.Render(c));
-        ComposableLambda3? actions = Actions is null ? null
-            : new ComposableLambda3(c => Actions.Render(c));
+        var title = ComposableLambdas.Wrap2(composer, c => Title.Render(c));
+        var nav = NavigationIcon is null ? null
+            : ComposableLambdas.Wrap2(composer, c => NavigationIcon.Render(c));
+        var actions = Actions is null ? null
+            : ComposableLambdas.Wrap3(composer, c => Actions.Render(c));
         var modifier = BuildModifier();
 
         if (Subtitle is not null)
         {
-            var subtitle = new ComposableLambda2(c => Subtitle.Render(c));
+            var subtitle = ComposableLambdas.Wrap2(composer, c => Subtitle.Render(c));
 
             int defaults = (int)TopAppBarSubtitleDefault.All;
             if (modifier is not null) defaults &= ~(int)TopAppBarSubtitleDefault.Modifier;

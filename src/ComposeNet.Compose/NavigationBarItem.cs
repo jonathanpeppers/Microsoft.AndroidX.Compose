@@ -33,8 +33,8 @@ public sealed class NavigationBarItem : ComposableNode
                 "NavigationBarItem.Icon is required (the Kotlin parameter has no default).");
 
         var click = new ComposableLambda0(_onClick);
-        var icon  = new ComposableLambda2(c => Icon.Render(c));
-        ComposableLambda2? label = Label is null ? null : new ComposableLambda2(c => Label.Render(c));
+        var icon  = ComposableLambdas.Wrap2(composer, c => Icon.Render(c));
+        var label = Label is null ? null : ComposableLambdas.Wrap2(composer, c => Label.Render(c));
 
         int defaults = (int)NavigationBarItemDefault.All;
         var modifier = BuildModifier();

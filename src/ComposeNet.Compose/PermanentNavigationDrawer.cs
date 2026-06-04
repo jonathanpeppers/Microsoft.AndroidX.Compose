@@ -32,9 +32,8 @@ public sealed class PermanentNavigationDrawer : ComposableNode
             throw new System.InvalidOperationException(
                 "PermanentNavigationDrawer.Content is required.");
 
-        var drawer  = new ComposableLambda2(c => Drawer.Render(c));
-        var content = new ComposableLambda2(c => Content.Render(c));
-
+        var drawer  = ComposableLambdas.Wrap2(composer, c => Drawer.Render(c));
+        var content = ComposableLambdas.Wrap2(composer, c => Content.Render(c));
         // Param order: drawerContent (bit 0, provided), modifier (bit 1,
         // defaulted), content (bit 2, provided). $default = 0b010 = 2.
         NavigationDrawerKt.PermanentNavigationDrawer(

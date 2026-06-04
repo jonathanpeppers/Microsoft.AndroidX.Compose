@@ -33,10 +33,10 @@ public sealed class DatePickerDialog : ComposableNode
                 "DatePickerDialog.Body is required (the dialog's content slot).");
 
         var onDismiss = new ComposableLambda0(_onDismissRequest);
-        var confirm   = new ComposableLambda2(c => ConfirmButton.Render(c));
-        var content   = new ComposableLambda3(c => Body.Render(c));
-        ComposableLambda2? dismiss = DismissButton is null ? null
-            : new ComposableLambda2(c => DismissButton.Render(c));
+        var confirm   = ComposableLambdas.Wrap2(composer, c => ConfirmButton.Render(c));
+        var content   = ComposableLambdas.Wrap3(composer, c => Body.Render(c));
+        var dismiss = DismissButton is null ? null
+            : ComposableLambdas.Wrap2(composer, c => DismissButton.Render(c));
 
         int defaults = (int)DatePickerDialogDefault.All;
         var modifier = BuildModifier();

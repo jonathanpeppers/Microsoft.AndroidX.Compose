@@ -37,7 +37,7 @@ public sealed class SnackbarHost : ComposableNode
         // Forward it to the M3 default — Snackbar(snackbarData) — so an
         // externally-driven host state actually paints. The lambda is a
         // no-op when p0 is null (no queued data).
-        var snackbar = new ComposableLambda3((data, c) =>
+        var snackbar = ComposableLambdas.Wrap3(composer, (data, c) =>
         {
             if (data == IntPtr.Zero) return;
             ComposeBridges.SnackbarFromData(data, modifier: null, composer: c);

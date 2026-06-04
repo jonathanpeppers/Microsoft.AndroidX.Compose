@@ -29,8 +29,8 @@ public sealed class Tab : ComposableNode
     internal override void Render(IComposer composer)
     {
         var click = new ComposableLambda0(_onClick);
-        ComposableLambda2? text = Text is null ? null : new ComposableLambda2(c => Text.Render(c));
-        ComposableLambda2? icon = Icon is null ? null : new ComposableLambda2(c => Icon.Render(c));
+        var text = Text is null ? null : ComposableLambdas.Wrap2(composer, c => Text.Render(c));
+        var icon = Icon is null ? null : ComposableLambdas.Wrap2(composer, c => Icon.Render(c));
 
         int defaults = (int)TabDefault.All;
         var modifier = BuildModifier();

@@ -90,9 +90,9 @@ public sealed class SearchBarInputField : ComposableNode
             ? (Kotlin.Jvm.Functions.IFunction1)NoOpSearchCallback.Instance
             : new ComposableLambda1(p => OnSearch(p?.ToString() ?? ""));
 
-        var placeholder  = Placeholder  is null ? null : new ComposableLambda2(c => Placeholder.Render(c));
-        var leadingIcon  = LeadingIcon  is null ? null : new ComposableLambda2(c => LeadingIcon.Render(c));
-        var trailingIcon = TrailingIcon is null ? null : new ComposableLambda2(c => TrailingIcon.Render(c));
+        var placeholder  = Placeholder  is null ? null : ComposableLambdas.Wrap2(composer, c => Placeholder.Render(c));
+        var leadingIcon  = LeadingIcon  is null ? null : ComposableLambdas.Wrap2(composer, c => LeadingIcon.Render(c));
+        var trailingIcon = TrailingIcon is null ? null : ComposableLambdas.Wrap2(composer, c => TrailingIcon.Render(c));
 
         ComposeBridges.SearchBarDefaultsInputField(
             textPeer.Handle,

@@ -30,11 +30,11 @@ public sealed class Snackbar : ComposableNode
             throw new System.InvalidOperationException(
                 "Snackbar.Body is required (the Kotlin content lambda has no default).");
 
-        var content = new ComposableLambda2(c => Body.Render(c));
-        ComposableLambda2? action = Action is null ? null
-            : new ComposableLambda2(c => Action.Render(c));
-        ComposableLambda2? dismiss = DismissAction is null ? null
-            : new ComposableLambda2(c => DismissAction.Render(c));
+        var content = ComposableLambdas.Wrap2(composer, c => Body.Render(c));
+        var action = Action is null ? null
+            : ComposableLambdas.Wrap2(composer, c => Action.Render(c));
+        var dismiss = DismissAction is null ? null
+            : ComposableLambdas.Wrap2(composer, c => DismissAction.Render(c));
 
         int defaults = (int)SnackbarDefault.All;
         var modifier = BuildModifier();

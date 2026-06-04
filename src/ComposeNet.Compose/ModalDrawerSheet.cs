@@ -22,7 +22,7 @@ public sealed class ModalDrawerSheet : ComposableContainer
 
     internal override void Render(IComposer composer)
     {
-        var content = new ComposableLambda3(c => RenderChildren(c));
+        var content = ComposableLambdas.Wrap3(composer, c => RenderChildren(c));
         var color = ContainerColor != 0L
             ? ContainerColor
             : AndroidX.Compose.Material3.MaterialTheme.Instance.GetColorScheme(composer, 0).SecondaryContainer;

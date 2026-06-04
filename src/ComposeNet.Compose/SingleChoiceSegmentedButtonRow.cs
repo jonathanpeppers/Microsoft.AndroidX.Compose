@@ -22,14 +22,16 @@ public sealed class SingleChoiceSegmentedButtonRow : ComposableContainer
 {
     internal override void Render(IComposer composer)
     {
-        var content = new ComposableLambda3((scope, c) =>
+        var content = ComposableLambdas.Wrap3(composer, (scope, c) =>
         {
             using var _    = RenderContext.PushScope(scope);
             using var rows = RenderContext.PushRow(Children.Count);
             for (int i = 0; i < Children.Count; i++)
             {
                 rows.SetIndex(i);
-                Children[i].Render(c);
+                c.StartReplaceableGroup(i);
+                try { Children[i].Render(c); }
+                finally { c.EndReplaceableGroup(); }
             }
         });
 
