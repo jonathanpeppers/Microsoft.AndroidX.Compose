@@ -125,6 +125,15 @@ public sealed class Modifier
         Append(h => ComposeBridges.ModifierFillMaxSize(h, fraction));
 
     /// <summary>
+    /// <c>Modifier.padding(paddingValues)</c> — pads using the
+    /// <c>PaddingValues</c> handle a layout (e.g. <see cref="Scaffold"/>)
+    /// passes to its content lambda. Internal: only Scaffold-shaped
+    /// composables that receive a runtime <c>PaddingValues</c> need it.
+    /// </summary>
+    internal Modifier Padding(IntPtr paddingValues) =>
+        Append(curr => ComposeBridges.ModifierPaddingValues(curr, paddingValues));
+
+    /// <summary>
     /// <c>Modifier.safeDrawingPadding()</c> — pads for the union of
     /// system bars, IME, and display cutouts. Use as the outer modifier
     /// on a root composable (or inside a <see cref="Scaffold"/>'s body

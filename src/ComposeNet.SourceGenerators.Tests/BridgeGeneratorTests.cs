@@ -556,6 +556,10 @@ public class BridgeGeneratorTests
         // Auto-mask still emitted: shape is a nullable bit.
         Assert.Contains("(int)global::ComposeNet.ModifierBackgroundDefault.All", emitted);
         Assert.Contains("ModifierBackgroundDefault.Shape", emitted);
+        // IntPtr? is treated as nullable: bit is cleared only when the
+        // value is non-null. Otherwise Kotlin sees IntPtr.Zero as a
+        // user-supplied value and never falls back to its default.
+        Assert.Contains("if (shape is not null) defaults &= ~(int)global::ComposeNet.ModifierBackgroundDefault.Shape", emitted);
 
         // Non-void return.
         Assert.Contains("return global::Android.Runtime.JNIEnv.CallStaticObjectMethod(", emitted);

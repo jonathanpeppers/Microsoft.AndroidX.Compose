@@ -280,3 +280,75 @@ using ComposeNet;
 // 1 user param (`spacing`), defaulted by the wrapper.
 [assembly: ComposeDefaults("RememberPlainTooltipPositionProviderDefault",
     "spacing")]
+
+// androidx.compose.material3.AppBarKt.{TopAppBar,CenterAlignedTopAppBar}-GHTll3U:
+// 8 user params; bit 0 (title) always provided. Optional slot bits 2
+// (NavigationIcon) and 3 (Actions) are toggled per-call by the facades.
+[assembly: ComposeDefaults("TopAppBarDefault",
+    "!title", "modifier", "navigationIcon", "actions", "expandedHeight",
+    "windowInsets", "colors", "scrollBehavior")]
+
+// androidx.compose.material3.AppBarKt.{Medium,Large}TopAppBar-oKE7A98:
+// 9 user params; bit 0 (title) always provided. Two-row variants take
+// both collapsedHeight and expandedHeight as Dp.
+[assembly: ComposeDefaults("TwoRowsTopAppBarDefault",
+    "!title", "modifier", "navigationIcon", "actions", "collapsedHeight",
+    "expandedHeight", "windowInsets", "colors", "scrollBehavior")]
+
+// androidx.compose.material3.TabRowKt.{TabRow,PrimaryTabRow,SecondaryTabRow}-pAZo6Ak:
+// 7 user params; bits 0 (selectedTabIndex) and 6 (tabs) always provided.
+[assembly: ComposeDefaults("TabRowDefault",
+    "!selectedTabIndex", "modifier", "containerColor", "contentColor",
+    "indicator", "divider", "!tabs")]
+
+// androidx.compose.material3.TabRowKt.ScrollableTabRow-sKfQg0A:
+// 8 user params; bits 0 (selectedTabIndex) and 7 (tabs) always provided.
+[assembly: ComposeDefaults("ScrollableTabRowDefault",
+    "!selectedTabIndex", "modifier", "containerColor", "contentColor",
+    "edgePadding", "indicator", "divider", "!tabs")]
+
+// androidx.compose.material3.TabKt.Tab-wqdebIU: 9 user params; bits 0
+// (selected) and 1 (onClick) always provided. text/icon are optional
+// slots toggled per-call by Tab.Render.
+[assembly: ComposeDefaults("TabDefault",
+    "!selected", "!onClick", "modifier", "enabled", "text", "icon",
+    "selectedContentColor", "unselectedContentColor", "interactionSource")]
+
+// androidx.compose.material3.TabKt.LeadingIconTab-wqdebIU: 9 user params;
+// bits 0 (selected), 1 (onClick), 2 (text), 3 (icon) all always provided
+// — Kotlin requires text and icon (no defaults).
+[assembly: ComposeDefaults("LeadingIconTabDefault",
+    "!selected", "!onClick", "!text", "!icon", "modifier", "enabled",
+    "selectedContentColor", "unselectedContentColor", "interactionSource")]
+
+// androidx.compose.material3.SnackbarKt.Snackbar-eQBnUkQ: 10 user params;
+// bit 9 (content) always provided. action/dismissAction are optional
+// slots toggled per-call by Snackbar.Render.
+[assembly: ComposeDefaults("SnackbarDefault",
+    "modifier", "action", "dismissAction", "actionOnNewLine", "shape",
+    "containerColor", "contentColor", "actionColor", "actionContentColor",
+    "!content")]
+
+// androidx.compose.material3.SnackbarHostKt.SnackbarHost: 3 user params;
+// bits 0 (hostState) and 2 (snackbar) always provided.
+[assembly: ComposeDefaults("SnackbarHostDefault",
+    "!hostState", "modifier", "!snackbar")]
+
+// androidx.compose.material3.BadgeKt.Badge-eopBjH0: 4 user params; bit
+// 3 (content) always provided.
+[assembly: ComposeDefaults("BadgeDefault",
+    "modifier", "containerColor", "contentColor", "!content")]
+
+// androidx.compose.material3.BadgeKt.BadgedBox: 3 user params; bits 0
+// (badge) and 2 (content) always provided.
+[assembly: ComposeDefaults("BadgedBoxDefault",
+    "!badge", "modifier", "!content")]
+
+// androidx.compose.material3.ListItemKt.ListItem-HXNGIdc: 9 user params;
+// bit 0 (headlineContent) always provided. The four optional slot
+// Function2 params (overline, supporting, leading, trailing) are
+// toggled per-call by ListItem.Render.
+[assembly: ComposeDefaults("ListItemDefault",
+    "!headlineContent", "modifier", "overlineContent", "supportingContent",
+    "leadingContent", "trailingContent", "colors", "tonalElevation",
+    "shadowElevation")]
