@@ -46,16 +46,21 @@ public sealed class SearchBar : ComposableNode
         ComposeBridges.SearchBar(stateHandle, inputField, BuildModifier(), composer);
     }
 
-    // Lazy-resolve the bound JVM peer for the shared SearchBarState. The
-    // first SearchBar/Expanded*SearchBar bound to a given state calls
-    // rememberSearchBarState and caches the resulting Java.Lang.Object;
-    // subsequent renders reuse the handle from that peer. Shared with
-    // TopSearchBar, ExpandedDockedSearchBar, ExpandedFullScreenSearchBar.
+    // Lazy-resolve the bound JVM peer for the shared SearchBarState. Compose's
+    // remember slots are positional, so calling rememberSearchBarState from
+    // each facade (collapsed bar + expanded popup) would allocate TWO
+    // independent SearchBarState peers — breaking the shared-state design.
+    // Cache the peer on the C# wrapper so only the FIRST half to render
+    // invokes the JNI bridge; the other half reuses the cached handle.
+    // Shared with TopSearchBar, ExpandedDockedSearchBar,
+    // ExpandedFullScreenSearchBar.
     internal static IntPtr ResolveStateHandle(SearchBarState state, IComposer composer)
     {
+        if (state.Jvm is not null)
+            return state.Jvm.Handle;
+
         var handle = ComposeBridges.RememberSearchBarState(composer);
-        if (state.Jvm is null)
-            state.Jvm = Java.Lang.Object.GetObject<Java.Lang.Object>(handle, JniHandleOwnership.DoNotTransfer)!;
+        state.Jvm = Java.Lang.Object.GetObject<Java.Lang.Object>(handle, JniHandleOwnership.DoNotTransfer)!;
         return handle;
     }
 }

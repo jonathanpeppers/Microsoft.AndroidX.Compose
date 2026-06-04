@@ -17,7 +17,8 @@ namespace ComposeNet;
 ///     new DropdownMenu(expanded: open.Value, onDismissRequest: () =&gt; open.Value = false)
 ///     {
 ///         new DropdownMenuItem(
-///             text: () =&gt; ..., onClick: () =&gt; { open.Value = false; }),
+///             text:    new Text("Refresh"),
+///             onClick: () =&gt; { open.Value = false; ... }),
 ///     },
 /// }
 /// </code>
