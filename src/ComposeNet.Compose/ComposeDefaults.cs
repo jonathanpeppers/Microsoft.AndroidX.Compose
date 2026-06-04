@@ -31,7 +31,32 @@ using AndroidX.Compose.Material3;
 using ComposeNet;
 
 [assembly: ComposeDefaults<ColumnKt>("Column", "ColumnDefault")]
+[assembly: ComposeDefaults<RowKt>("Row", "RowDefault")]
+[assembly: ComposeDefaults<BoxKt>("Box", "BoxDefault")]
+[assembly: ComposeDefaults<DividerKt>("HorizontalDivider", "HorizontalDividerDefault")]
+[assembly: ComposeDefaults<DividerKt>("VerticalDivider", "VerticalDividerDefault")]
+[assembly: ComposeDefaults<IconKt>("Icon", "IconDefault")]
 [assembly: ComposeDefaults<MaterialThemeKt>("MaterialTheme", "MaterialThemeDefault")]
+
+// androidx.compose.foundation.ImageKt.Image (Painter overload): all four
+// `Image` Kotlin overloads share the JVM name `Image` and only differ by
+// first-param type, so the binder strips them all. 7 user params; bit 0
+// (painter) is always provided by the Image facade.
+[assembly: ComposeDefaults("ImageDefault",
+    "!painter", "contentDescription", "modifier", "alignment",
+    "contentScale", "alpha", "colorFilter")]
+
+// androidx.compose.material3.IconKt.Icon-ww6aTOc (Painter overload):
+// the Painter and ImageBitmap overloads collide with the bound
+// ImageVector overload (same mangled JVM name `Icon-ww6aTOc`) and are
+// stripped from the binding. 4 user params; bit 0 (painter) is always
+// provided by the Icon facade. ContentDescription/Modifier/Tint are
+// optional. A separate enum is required because the matching bridge
+// generator needs Kotlin parameter names (the `IconDefault` enum is
+// produced via the generic `[ComposeDefaults<IconKt>]` form, which the
+// bridge generator doesn't read).
+[assembly: ComposeDefaults("IconPainterDefault",
+    "!painter", "contentDescription", "modifier", "tint")]
 
 // androidx.compose.material3.ButtonKt.Button: 10 user params,
 // bit 0 = onClick, bit 9 = content (both always provided).

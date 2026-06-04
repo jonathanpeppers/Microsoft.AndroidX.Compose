@@ -196,6 +196,13 @@ method**; call the generated C# entry point instead (see
   `ModalBottomSheet`, `DatePickerDialog`, etc. will follow.
 - Required Kotlin parameters with no default (e.g. `AlertDialog.confirmButton`)
   are validated in `Render` with a clear `InvalidOperationException`.
+- **Don't wrap calls to bound binding methods (or to source-generated
+  `[ComposeBridge]` methods) in `try`/`finally` + `GC.KeepAlive`.** The
+  binder-generated wrapper and the bridge generator both already emit
+  their own `GC.KeepAlive` for every `IJavaPeerable` argument. Adding a
+  second one is dead code. `GC.KeepAlive` is only needed when calling
+  raw `JNIEnv.CallStatic*Method` directly (e.g. inside a hand-written
+  helper in `ComposeBridges.cs` that the generator can't handle yet).
 - File-scoped namespaces (`namespace ComposeNet;`). One blank line
   separating `// ---- Section ----` banners. XML doc comments on every
   public type and every non-trivial member.
