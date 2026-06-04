@@ -27,6 +27,10 @@ public class MainActivity : ComposeActivity
             var pickedTime  = Remember(() => new MutableState<string>("(none)"));
             var dateState   = Remember(() => new DatePickerState());
             var timeState   = Remember(() => new TimePickerState(initialHour: 9, initialMinute: 30));
+            var segIdx      = Remember(() => new MutableNumberState<int>(0));
+            var multiBold   = Remember(() => new MutableState<bool>(false));
+            var multiItalic = Remember(() => new MutableState<bool>(false));
+            var railIdx     = Remember(() => new MutableNumberState<int>(0));
 
             var checkbox    = Remember(() => new MutableState<bool>(true));
             var switchOn    = Remember(() => new MutableState<bool>(false));
@@ -40,7 +44,7 @@ public class MainActivity : ComposeActivity
             var searchQuery   = Remember(() => new MutableState<string>(""));
             var searchState   = Remember(() => new SearchBarState());
 
-            string[] tabNames = { "Basics", "Buttons", "Cards", "Drawer", "Selection", "Pickers" };
+            string[] tabNames = { "Basics", "Buttons", "Cards", "Drawer", "Selection", "Pickers", "Misc" };
 
             // Per-tab content. Only the current tab's column is added to
             // the screen — keeps the sample short enough to fit on one
@@ -275,13 +279,80 @@ public class MainActivity : ComposeActivity
                         }),
                     new Text($"Range: {rangeStart.Value:F2} – {rangeEnd.Value:F2}"),
                 },
-                _ => new Column(),
+                5 => new Column
+                {
+                    new Text("Dialogs and sheets"),
+                    new Row
+                    {
+                        new Button(onClick: () => showSheet.Value = true) { new Text("Sheet") },
+                        new Spacer { Modifier = Modifier.Companion.FillMaxWidth(0.03f) },
+                        new Button(onClick: () => showDate.Value  = true) { new Text("Date") },
+                        new Spacer { Modifier = Modifier.Companion.FillMaxWidth(0.03f) },
+                        new Button(onClick: () => showTime.Value  = true) { new Text("Time") },
+                    },
+                    new HorizontalDivider { Modifier = Modifier.Companion.Padding(0, 8) },
+                    new Text($"Picked date: {pickedDate}"),
+                    new Text($"Picked time: {pickedTime}"),
+                },
+                _ => new Column
+                {
+                    new Text("Misc Material 3"),
+                    new Text("Progress indicators (indeterminate):"),
+                    new Row
+                    {
+                        new CircularProgressIndicator(),
+                        new Spacer { Modifier = Modifier.Companion.FillMaxWidth(0.05f) },
+                        new Column
+                        {
+                            new Text("Linear ↓"),
+                            new LinearProgressIndicator { Modifier = Modifier.Companion.FillMaxWidth() },
+                        },
+                    },
+                    new HorizontalDivider { Modifier = Modifier.Companion.Padding(0, 8) },
+                    new Text($"Single-choice segmented (selected: {segIdx})"),
+                    new SingleChoiceSegmentedButtonRow
+                    {
+                        new SegmentedButton(selected: segIdx.Value == 0, onClick: () => segIdx.Value = 0) { new Text("Day") },
+                        new SegmentedButton(selected: segIdx.Value == 1, onClick: () => segIdx.Value = 1) { new Text("Week") },
+                        new SegmentedButton(selected: segIdx.Value == 2, onClick: () => segIdx.Value = 2) { new Text("Month") },
+                    },
+                    new Text($"Multi-choice segmented (bold={multiBold.Value}, italic={multiItalic.Value})"),
+                    new MultiChoiceSegmentedButtonRow
+                    {
+                        new SegmentedButton(@checked: multiBold.Value,   onCheckedChange: v => multiBold.Value   = v) { new Text("Bold") },
+                        new SegmentedButton(@checked: multiItalic.Value, onCheckedChange: v => multiItalic.Value = v) { new Text("Italic") },
+                    },
+                    new HorizontalDivider { Modifier = Modifier.Companion.Padding(0, 8) },
+                    new Text($"WideNavigationRail (selected: {railIdx})"),
+                    new Row
+                    {
+                        new WideNavigationRail
+                        {
+                            new WideNavigationRailItem(selected: railIdx.Value == 0, onClick: () => railIdx.Value = 0)
+                            {
+                                Icon  = new Text("🏠"),
+                                Label = new Text("Home"),
+                            },
+                            new WideNavigationRailItem(selected: railIdx.Value == 1, onClick: () => railIdx.Value = 1)
+                            {
+                                Icon  = new Text("🔍"),
+                                Label = new Text("Search"),
+                            },
+                            new WideNavigationRailItem(selected: railIdx.Value == 2, onClick: () => railIdx.Value = 2)
+                            {
+                                Icon  = new Text("⚙"),
+                                Label = new Text("Settings"),
+                            },
+                        },
+                    },
+                },
             };
 
-            // Tab 5 (Pickers) builds a filtered SearchBar result list
-            // dynamically, so it can't live inside the switch-expression
-            // collection-initializer.
-            if (tab.Value == 5)
+            // Tab 5 (Pickers) appends DropdownMenu + SearchBar sections after
+            // the dialog/sheet/date/time content from the switch. The SearchBar
+            // result list is built dynamically with foreach, which can't live
+            // inside a switch-expression collection-initializer.
+            if (tab.Value == 5 && tabContent is Column pickers)
             {
                 var fruits = new[]
                 {
@@ -300,71 +371,52 @@ public class MainActivity : ComposeActivity
                 foreach (var f in matches)
                     expanded.Add(new Text(f));
 
-                tabContent = new Column
+                pickers.Add(new HorizontalDivider { Modifier = Modifier.Companion.Padding(0, 16) });
+                pickers.Add(new Text("DropdownMenu"));
+                pickers.Add(new Row
                 {
-                    new Text("Dialogs and sheets"),
-                    new Row
-                    {
-                        new Button(onClick: () => showSheet.Value = true) { new Text("Sheet") },
-                        new Spacer { Modifier = Modifier.Companion.FillMaxWidth(0.03f) },
-                        new Button(onClick: () => showDate.Value  = true) { new Text("Date") },
-                        new Spacer { Modifier = Modifier.Companion.FillMaxWidth(0.03f) },
-                        new Button(onClick: () => showTime.Value  = true) { new Text("Time") },
-                    },
-                    new HorizontalDivider { Modifier = Modifier.Companion.Padding(0, 8) },
-                    new Text($"Picked date: {pickedDate}"),
-                    new Text($"Picked time: {pickedTime}"),
-
-                    new HorizontalDivider { Modifier = Modifier.Companion.Padding(0, 16) },
-
-                    new Text("DropdownMenu"),
-                    new Row
-                    {
-                        new Text("Tap ⋮ for actions:"),
-                        new Spacer { Modifier = Modifier.Companion.FillMaxWidth(0.03f) },
-                        // The Box anchors the popup to the IconButton — both
-                        // children share the Box's coordinate space, which is
-                        // what DropdownMenu needs for positioning.
-                        new Box
-                        {
-                            new IconButton(onClick: () => menuOpen.Value = true)
-                            {
-                                new Text("⋮"),
-                            },
-                            new DropdownMenu(
-                                expanded:         menuOpen.Value,
-                                onDismissRequest: () => menuOpen.Value = false)
-                            {
-                                new DropdownMenuItem(
-                                    text:    new Text("Refresh"),
-                                    onClick: () => { menuSelection.Value = "Refresh";  menuOpen.Value = false; }),
-                                new DropdownMenuItem(
-                                    text:    new Text("Settings"),
-                                    onClick: () => { menuSelection.Value = "Settings"; menuOpen.Value = false; }),
-                                new DropdownMenuItem(
-                                    text:    new Text("About"),
-                                    onClick: () => { menuSelection.Value = "About";    menuOpen.Value = false; }),
-                            },
-                        },
-                    },
-                    new Text($"Last menu choice: {menuSelection}"),
-
-                    new HorizontalDivider { Modifier = Modifier.Companion.Padding(0, 16) },
-
-                    new Text("SearchBar"),
-                    new Text("Tap the bar to expand. Type to filter."),
-                    // Render BOTH halves of the SearchBar pair sharing the
-                    // same SearchBarState — Compose toggles the popup's
-                    // visibility internally based on the state.
+                    new Text("Tap ⋮ for actions:"),
+                    new Spacer { Modifier = Modifier.Companion.FillMaxWidth(0.03f) },
+                    // The Box anchors the popup to the IconButton — both
+                    // children share the Box's coordinate space, which is
+                    // what DropdownMenu needs for positioning.
                     new Box
                     {
-                        new SearchBar(state: searchState)
+                        new IconButton(onClick: () => menuOpen.Value = true)
                         {
-                            InputField = new TextField(searchQuery),
+                            new Text("⋮"),
                         },
-                        expanded,
+                        new DropdownMenu(
+                            expanded:         menuOpen.Value,
+                            onDismissRequest: () => menuOpen.Value = false)
+                        {
+                            new DropdownMenuItem(
+                                text:    new Text("Refresh"),
+                                onClick: () => { menuSelection.Value = "Refresh";  menuOpen.Value = false; }),
+                            new DropdownMenuItem(
+                                text:    new Text("Settings"),
+                                onClick: () => { menuSelection.Value = "Settings"; menuOpen.Value = false; }),
+                            new DropdownMenuItem(
+                                text:    new Text("About"),
+                                onClick: () => { menuSelection.Value = "About";    menuOpen.Value = false; }),
+                        },
                     },
-                };
+                });
+                pickers.Add(new Text($"Last menu choice: {menuSelection}"));
+                pickers.Add(new HorizontalDivider { Modifier = Modifier.Companion.Padding(0, 16) });
+                pickers.Add(new Text("SearchBar"));
+                pickers.Add(new Text("Tap the bar to expand. Type to filter."));
+                // Render BOTH halves of the SearchBar pair sharing the
+                // same SearchBarState — Compose toggles the popup's
+                // visibility internally based on the state.
+                pickers.Add(new Box
+                {
+                    new SearchBar(state: searchState)
+                    {
+                        InputField = new TextField(searchQuery),
+                    },
+                    expanded,
+                });
             }
 
             return new MaterialTheme
@@ -387,45 +439,50 @@ public class MainActivity : ComposeActivity
                                 Body = new Text($"Hello from {tabNames[tab.Value]}"),
                             }
                             : null,
-                        // Bottom navigation switches between the three tabs above —
-                        // pinned to the bottom edge by Scaffold instead of flowing
-                        // inline at the end of a Column.
-                        BottomBar = new NavigationBar
-                        {
-                            new NavigationBarItem(selected: tab.Value == 0, onClick: () => tab.Value = 0)
-                            {
-                                Icon  = new Icon(Resource.Drawable.ic_settings, "Basics"),
-                                Label = new Text("Basics"),
-                            },
-                            new NavigationBarItem(selected: tab.Value == 1, onClick: () => tab.Value = 1)
-                            {
-                                Icon  = new Text("👍"),
-                                Label = new Text("Buttons"),
-                            },
-                            new NavigationBarItem(selected: tab.Value == 2, onClick: () => tab.Value = 2)
-                            {
-                                Icon  = new Text("🃏"),
-                                Label = new Text("Cards"),
-                            },
-                            new NavigationBarItem(selected: tab.Value == 3, onClick: () => tab.Value = 3)
-                            {
-                                Icon  = new Text("📂"),
-                                Label = new Text("Drawer"),
-                            },
-                            new NavigationBarItem(selected: tab.Value == 4, onClick: () => tab.Value = 4)
-                            {
-                                Icon  = new Text("☑"),
-                                Label = new Text("Selection"),
-                            },
-                            new NavigationBarItem(selected: tab.Value == 5, onClick: () => tab.Value = 5)
-                            {
-                                Icon  = new Text("📅"),
-                                Label = new Text("Pickers"),
-                            },
-                        },
                         Body = new Column
                         {
                             Modifier.Companion.Padding(16),
+                            // ScrollableTabRow handles many tabs better than NavigationBar
+                            // (which is spec'd for 3-5 items) — the row scrolls horizontally
+                            // so every tab stays reachable as we add more demos.
+                            new ScrollableTabRow(selectedTabIndex: tab.Value)
+                            {
+                                new Tab(selected: tab.Value == 0, onClick: () => tab.Value = 0)
+                                {
+                                    Text = new Text("Basics"),
+                                    Icon = new Icon(Resource.Drawable.ic_settings, "Basics"),
+                                },
+                                new Tab(selected: tab.Value == 1, onClick: () => tab.Value = 1)
+                                {
+                                    Text = new Text("Buttons"),
+                                    Icon = new Text("👍"),
+                                },
+                                new Tab(selected: tab.Value == 2, onClick: () => tab.Value = 2)
+                                {
+                                    Text = new Text("Cards"),
+                                    Icon = new Text("🃏"),
+                                },
+                                new Tab(selected: tab.Value == 3, onClick: () => tab.Value = 3)
+                                {
+                                    Text = new Text("Drawer"),
+                                    Icon = new Text("📂"),
+                                },
+                                new Tab(selected: tab.Value == 4, onClick: () => tab.Value = 4)
+                                {
+                                    Text = new Text("Selection"),
+                                    Icon = new Text("☑"),
+                                },
+                                new Tab(selected: tab.Value == 5, onClick: () => tab.Value = 5)
+                                {
+                                    Text = new Text("Pickers"),
+                                    Icon = new Text("📅"),
+                                },
+                                new Tab(selected: tab.Value == 6, onClick: () => tab.Value = 6)
+                                {
+                                    Text = new Text("Misc"),
+                                    Icon = new Text("✨"),
+                                },
+                            },
                             tabContent,
 
                             // Overlays: rendered in the body so they participate in the
