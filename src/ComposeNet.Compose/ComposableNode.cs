@@ -34,12 +34,11 @@ public abstract class ComposableNode
     Modifier? _appended;
 
     /// <summary>
-    /// Inject a <see cref="ComposeNet.Modifier"/> at the START of this
-    /// node's modifier chain. The prepended ops are consumed (and
-    /// cleared) by the next call to <see cref="BuildModifier"/>, so a
-    /// parent layout typically calls this immediately before
-    /// <see cref="Render"/>. Repeated calls before consumption
-    /// accumulate via <see cref="ComposeNet.Modifier.Then"/>.
+    /// Set the <see cref="ComposeNet.Modifier"/> to prepend at the
+    /// START of this node's modifier chain on the next call to
+    /// <see cref="BuildModifier"/>. Each call REPLACES any prior
+    /// prepended modifier — use <see cref="ComposeNet.Modifier.Then"/>
+    /// at the call site to combine multiple ops into one.
     ///
     /// Intended use: a parent layout that needs to pass a runtime
     /// modifier into a child without inserting a wrapper layout node —
@@ -48,23 +47,31 @@ public abstract class ComposableNode
     /// body's own modifier chain composes naturally with the inset
     /// padding, mirroring the Kotlin idiom
     /// <c>Column(Modifier.padding(paddingValues)) { ... }</c>.
+    ///
+    /// Caveat: the injected modifier is silently dropped if the child's
+    /// <c>Render</c> never calls <see cref="BuildModifier"/> (i.e.
+    /// composables whose Kotlin counterpart has no <c>modifier</c>
+    /// parameter — <see cref="MaterialTheme"/>, the drawer sheets).
+    /// Replace-semantics keeps the stored modifier bounded to one ref
+    /// even when the child never consumes it.
     /// </summary>
     public void PrependModifier(Modifier modifier)
     {
         System.ArgumentNullException.ThrowIfNull(modifier);
-        _prepended = _prepended is null ? modifier : _prepended.Then(modifier);
+        _prepended = modifier;
     }
 
     /// <summary>
-    /// Inject a <see cref="ComposeNet.Modifier"/> at the END of this
-    /// node's modifier chain. Mirror of <see cref="PrependModifier"/>;
-    /// consumed (and cleared) by the next call to
-    /// <see cref="BuildModifier"/>.
+    /// Set the <see cref="ComposeNet.Modifier"/> to append at the END
+    /// of this node's modifier chain on the next call to
+    /// <see cref="BuildModifier"/>. Mirror of
+    /// <see cref="PrependModifier"/> — see that method for semantics,
+    /// caveats, and replace-vs-accumulate notes.
     /// </summary>
     public void AppendModifier(Modifier modifier)
     {
         System.ArgumentNullException.ThrowIfNull(modifier);
-        _appended = _appended is null ? modifier : _appended.Then(modifier);
+        _appended = modifier;
     }
 
     /// <summary>
