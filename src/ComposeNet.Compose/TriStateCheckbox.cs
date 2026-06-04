@@ -10,8 +10,9 @@ namespace ComposeNet;
 /// <see cref="ToggleableState"/> values are <c>On</c>, <c>Off</c>,
 /// and <c>Indeterminate</c>:
 /// <code>
+/// var state = Remember.Of(ToggleableState.Indeterminate);
 /// new TriStateCheckbox(
-///     state: ToggleableState.Indeterminate,
+///     state: state.Value,
 ///     onClick: () => state.Value = ToggleableState.On)
 /// </code>
 /// </summary>

@@ -285,8 +285,8 @@ using ComposeNet;
 // androidx.compose.material3.SwitchKt.Switch: 7 user params,
 // bit 0 = checked (always provided), bit 1 = onCheckedChange (always
 // provided). bit 3 = thumbContent is Function2? with Kotlin default
-// null; the facade doesn't expose it and always passes null, which
-// matches the default — bit can stay clear.
+// null; the facade doesn't expose it, so the bit stays set in `All`
+// and Kotlin substitutes the default null at the call site.
 [assembly: ComposeDefaults("SwitchDefault",
     "!checked", "!onCheckedChange", "modifier", "thumbContent",
     "enabled", "colors", "interactionSource")]
