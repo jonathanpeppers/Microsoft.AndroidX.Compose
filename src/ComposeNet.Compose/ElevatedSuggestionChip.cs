@@ -24,8 +24,8 @@ public sealed class ElevatedSuggestionChip : ComposableNode
                 "ElevatedSuggestionChip.Label is required (the Kotlin parameter has no default).");
 
         var click = new ComposableLambda0(_onClick);
-        var label = new ComposableLambda2(c => Label.Render(c));
-        ComposableLambda2? icon = Icon is null ? null : new ComposableLambda2(c => Icon.Render(c));
+        var label = ComposableLambdas.Wrap2(composer, c => Label.Render(c));
+        var icon = Icon is null ? null : ComposableLambdas.Wrap2(composer, c => Icon.Render(c));
 
         int defaults = (int)SuggestionChipDefault.All;
         if (icon is not null) defaults &= ~(int)SuggestionChipDefault.Icon;

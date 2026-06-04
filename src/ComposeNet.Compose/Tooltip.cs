@@ -32,8 +32,8 @@ public sealed class Tooltip : ComposableNode
         var positionProvider = ComposeBridges.RememberPlainTooltipPositionProvider(composer);
         var stateHandle      = ComposeBridges.RememberTooltipState(_isPersistent, composer);
 
-        var tooltip = new ComposableLambda3(c => Tip.Render(c));
-        var anchor  = new ComposableLambda2(c => Anchor.Render(c));
+        var tooltip = ComposableLambdas.Wrap3(composer, c => Tip.Render(c));
+        var anchor  = ComposableLambdas.Wrap2(composer, c => Anchor.Render(c));
 
         var modifier = BuildModifier();
         int defaults = (int)TooltipBoxDefault.All;

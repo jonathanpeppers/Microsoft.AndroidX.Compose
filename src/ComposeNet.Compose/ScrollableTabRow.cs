@@ -15,7 +15,7 @@ public sealed class ScrollableTabRow : ComposableContainer
 
     internal override void Render(IComposer composer)
     {
-        var tabs = new ComposableLambda2(c => RenderChildren(c));
+        var tabs = ComposableLambdas.Wrap2(composer, c => RenderChildren(c));
         ComposeBridges.ScrollableTabRow(_selectedTabIndex, BuildModifier(), tabs, composer);
     }
 }

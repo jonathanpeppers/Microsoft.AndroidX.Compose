@@ -14,7 +14,7 @@ public sealed class Card : ComposableContainer
 {
     internal override void Render(IComposer composer)
     {
-        var content = new ComposableLambda3(c => RenderChildren(c));
+        var content = ComposableLambdas.Wrap3(composer, c => RenderChildren(c));
         ComposeBridges.Card(BuildModifier(), content, composer);
     }
 }

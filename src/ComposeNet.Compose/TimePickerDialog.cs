@@ -30,13 +30,13 @@ public sealed class TimePickerDialog : ComposableNode
                 "TimePickerDialog.Body is required (the dialog's content slot).");
 
         var onDismiss = new ComposableLambda0(_onDismissRequest);
-        var confirm   = new ComposableLambda2(c => ConfirmButton.Render(c));
-        var dismiss   = new ComposableLambda2(c => DismissButton.Render(c));
-        var content   = new ComposableLambda3(c => Body.Render(c));
-        ComposableLambda2? title = Title is null ? null
-            : new ComposableLambda2(c => Title.Render(c));
-        ComposableLambda2? toggle = ModeToggleButton is null ? null
-            : new ComposableLambda2(c => ModeToggleButton.Render(c));
+        var confirm   = ComposableLambdas.Wrap2(composer, c => ConfirmButton.Render(c));
+        var dismiss   = ComposableLambdas.Wrap2(composer, c => DismissButton.Render(c));
+        var content   = ComposableLambdas.Wrap3(composer, c => Body.Render(c));
+        var title = Title is null ? null
+            : ComposableLambdas.Wrap2(composer, c => Title.Render(c));
+        var toggle = ModeToggleButton is null ? null
+            : ComposableLambdas.Wrap2(composer, c => ModeToggleButton.Render(c));
 
         int defaults = (int)TimePickerDialogDefault.All;
         var modifier = BuildModifier();

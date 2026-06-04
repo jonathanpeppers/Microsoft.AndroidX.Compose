@@ -52,16 +52,16 @@ public sealed class AlertDialog : ComposableNode
                 "AlertDialog.ConfirmButton is required (the Kotlin parameter has no default).");
 
         var onDismiss = new ComposableLambda0(_onDismissRequest);
-        var confirm   = new ComposableLambda2(c => ConfirmButton.Render(c));
+        var confirm   = ComposableLambdas.Wrap2(composer, c => ConfirmButton.Render(c));
 
-        ComposableLambda2? dismissBtn = DismissButton is null ? null
-            : new ComposableLambda2(c => DismissButton.Render(c));
-        ComposableLambda2? icon = Icon is null ? null
-            : new ComposableLambda2(c => Icon.Render(c));
-        ComposableLambda2? title = Title is null ? null
-            : new ComposableLambda2(c => Title.Render(c));
-        ComposableLambda2? text = Text is null ? null
-            : new ComposableLambda2(c => Text.Render(c));
+        var dismissBtn = DismissButton is null ? null
+            : ComposableLambdas.Wrap2(composer, c => DismissButton.Render(c));
+        var icon = Icon is null ? null
+            : ComposableLambdas.Wrap2(composer, c => Icon.Render(c));
+        var title = Title is null ? null
+            : ComposableLambdas.Wrap2(composer, c => Title.Render(c));
+        var text = Text is null ? null
+            : ComposableLambdas.Wrap2(composer, c => Text.Render(c));
 
         // Start from "default everything" and clear the bit for each
         // optional slot the user actually supplied.

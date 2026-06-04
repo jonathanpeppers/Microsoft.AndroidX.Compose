@@ -27,7 +27,7 @@ public sealed class WideNavigationRail : ComposableContainer
         // WideNavigationRailItem is a top-level static (not a scope
         // extension), so we don't need to publish a receiver scope —
         // children render directly.
-        var content = new ComposableLambda2(c => RenderChildren(c));
+        var content = ComposableLambdas.Wrap2(composer, c => RenderChildren(c));
         ComposeBridges.WideNavigationRail(BuildModifier(), content, composer);
     }
 }

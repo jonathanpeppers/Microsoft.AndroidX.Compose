@@ -268,6 +268,42 @@ method**; call the generated C# entry point instead (see
   ```
 - Wrap Kotlin lambdas with `ComposableLambda0/1/2/3` (existing
   helpers — don't hand-roll new lambda adapters).
+- **Never construct `ComposableLambda2` / `ComposableLambda3` directly
+  inside a `Render(IComposer composer)` body.** Route every
+  `@Composable` slot lambda through `ComposableLambdas.Wrap2` /
+  `ComposableLambdas.Wrap3` so Compose's own `composableLambda` factory
+  owns identity across recompositions. `SubcomposeLayout`-backed
+  composables (`Scaffold`, `BottomSheetScaffold`, `ModalNavigationDrawer`,
+  …) cache subcomposed content keyed by lambda identity; a fresh
+  `new ComposableLambda*(...)` every pass thrashes that cache and
+  causes `LayoutNode` insert ops to land at the wrong index
+  (see #42). The helpers derive a unique slot-table key from
+  `[CallerLineNumber]` + `[CallerFilePath]` automatically — no key
+  argument needed.
+  ```csharp
+  // Wrong — fresh identity every recomposition:
+  var content = new ComposableLambda3(c => RenderChildren(c));
+  // Right — stable identity owned by the runtime:
+  var content = ComposableLambdas.Wrap3(composer, c => RenderChildren(c));
+  ```
+  `ComposableLambda0` (onClick) and `ComposableLambda1`
+  (onValueChange / onCheckedChange) callbacks are **not** `@Composable`
+  and must stay raw — wrapping them would inject
+  `startRestartGroup`/`endRestartGroup` machinery into code that runs
+  outside composition.
+- **Sibling `Render()` calls inside a loop need per-position slot
+  keys.** `ComposableContainer.RenderChildren` already wraps each child
+  in `composer.StartReplaceableGroup(i)` / `EndReplaceableGroup()`. Any
+  custom loop that calls `Children[i].Render(c)` directly — e.g. the
+  segmented-row scope loops in `SingleChoiceSegmentedButtonRow`,
+  `MultiChoiceSegmentedButtonRow`, or `SegmentedButton`'s label slot —
+  must do the same, otherwise same-type siblings collide on a single
+  group key and Compose disambiguates by position only (brittle
+  combined with any identity churn).
+- The single call to `ComposableLambdaKt.ComposableLambdaInstance` in
+  `ComposeActivity.SetContent` is the right shape there — it's the
+  call-from-anywhere factory for the root content lambda, which runs
+  outside an active composition. Leave it alone.
 - Multi-slot composables (e.g. `AlertDialog`) expose **named slot
   properties** set via object-initializer syntax, not extra
   collection-init Add overloads. Pattern: start `defaults =

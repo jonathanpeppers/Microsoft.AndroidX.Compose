@@ -46,9 +46,9 @@ public sealed class ModalBottomSheet : ComposableContainer
             _changed:              3);
 
         var onDismiss = new ComposableLambda0(_onDismissRequest);
-        var content   = new ComposableLambda3(c => RenderChildren(c));
-        ComposableLambda2? dragHandle = DragHandle is null ? null
-            : new ComposableLambda2(c => DragHandle.Render(c));
+        var content   = ComposableLambdas.Wrap3(composer, c => RenderChildren(c));
+        var dragHandle = DragHandle is null ? null
+            : ComposableLambdas.Wrap2(composer, c => DragHandle.Render(c));
 
         int defaults = (int)ModalBottomSheetDefault.All;
         var modifier = BuildModifier();

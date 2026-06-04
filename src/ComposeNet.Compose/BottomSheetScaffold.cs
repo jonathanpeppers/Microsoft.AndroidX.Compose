@@ -37,13 +37,13 @@ public sealed class BottomSheetScaffold : ComposableContainer
             p3:                 0,
             _changed:           3);
 
-        var sheet   = new ComposableLambda3(c => SheetContent.Render(c));
-        var content = new ComposableLambda3(c => RenderChildren(c));
+        var sheet   = ComposableLambdas.Wrap3(composer, c => SheetContent.Render(c));
+        var content = ComposableLambdas.Wrap3(composer, c => RenderChildren(c));
 
-        ComposableLambda2? dragHandle = SheetDragHandle is null ? null
-            : new ComposableLambda2(c => SheetDragHandle.Render(c));
-        ComposableLambda2? topBar = TopBar is null ? null
-            : new ComposableLambda2(c => TopBar.Render(c));
+        var dragHandle = SheetDragHandle is null ? null
+            : ComposableLambdas.Wrap2(composer, c => SheetDragHandle.Render(c));
+        var topBar = TopBar is null ? null
+            : ComposableLambdas.Wrap2(composer, c => TopBar.Render(c));
 
         int defaults = (int)BottomSheetScaffoldDefault.All;
         var modifier = BuildModifier();

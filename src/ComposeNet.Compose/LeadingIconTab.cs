@@ -31,8 +31,8 @@ public sealed class LeadingIconTab : ComposableNode
                 "LeadingIconTab.Text and Icon are both required (the Kotlin parameters have no defaults).");
 
         var click = new ComposableLambda0(_onClick);
-        var text  = new ComposableLambda2(c => Text.Render(c));
-        var icon  = new ComposableLambda2(c => Icon.Render(c));
+        var text  = ComposableLambdas.Wrap2(composer, c => Text.Render(c));
+        var icon  = ComposableLambdas.Wrap2(composer, c => Icon.Render(c));
 
         ComposeBridges.LeadingIconTab(_selected, click, text, icon, BuildModifier(), composer);
     }

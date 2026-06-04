@@ -14,7 +14,7 @@ public sealed class IconButton : ComposableContainer
     internal override void Render(IComposer composer)
     {
         var click   = new ComposableLambda0(_onClick);
-        var content = new ComposableLambda2(c => RenderChildren(c));
+        var content = ComposableLambdas.Wrap2(composer, c => RenderChildren(c));
         ComposeBridges.IconButton(click, BuildModifier(), content, composer);
     }
 }

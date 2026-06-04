@@ -37,12 +37,21 @@ public abstract class ComposableContainer : ComposableNode, IEnumerable
 
     /// <summary>
     /// Renders this container's children sequentially into
-    /// <paramref name="composer"/>. Containers call this from inside
-    /// their content lambda.
+    /// <paramref name="composer"/>, wrapping each child in a per-index
+    /// <c>StartReplaceableGroup(i)</c> so sibling renders get distinct
+    /// slot-table group keys. Without this, three sibling
+    /// <c>SegmentedButton</c>s (same C# call site → same group key)
+    /// rely on Compose's positional disambiguation, which combined with
+    /// lambda-identity churn elsewhere can land Reuse/Move ops at the
+    /// wrong tree index.
     /// </summary>
     private protected void RenderChildren(IComposer composer)
     {
         for (int i = 0; i < _children.Count; i++)
-            _children[i].Render(composer);
+        {
+            composer.StartReplaceableGroup(i);
+            try { _children[i].Render(composer); }
+            finally { composer.EndReplaceableGroup(); }
+        }
     }
 }

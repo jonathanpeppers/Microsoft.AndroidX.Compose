@@ -31,9 +31,9 @@ public sealed class AssistChip : ComposableNode
                 "AssistChip.Label is required (the Kotlin parameter has no default).");
 
         var click = new ComposableLambda0(_onClick);
-        var label = new ComposableLambda2(c => Label.Render(c));
-        ComposableLambda2? leading  = LeadingIcon  is null ? null : new ComposableLambda2(c => LeadingIcon.Render(c));
-        ComposableLambda2? trailing = TrailingIcon is null ? null : new ComposableLambda2(c => TrailingIcon.Render(c));
+        var label = ComposableLambdas.Wrap2(composer, c => Label.Render(c));
+        var leading  = LeadingIcon  is null ? null : ComposableLambdas.Wrap2(composer, c => LeadingIcon.Render(c));
+        var trailing = TrailingIcon is null ? null : ComposableLambdas.Wrap2(composer, c => TrailingIcon.Render(c));
 
         int defaults = (int)AssistChipDefault.All;
         var modifier = BuildModifier();

@@ -15,7 +15,7 @@ public sealed class Button : ComposableContainer
     internal override void Render(IComposer composer)
     {
         var click   = new ComposableLambda0(_onClick);
-        var content = new ComposableLambda3(c => RenderChildren(c));
+        var content = ComposableLambdas.Wrap3(composer, c => RenderChildren(c));
         ComposeBridges.Button(click, BuildModifier(), content, composer);
     }
 }

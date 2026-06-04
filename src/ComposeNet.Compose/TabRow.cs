@@ -27,7 +27,7 @@ public sealed class TabRow : ComposableContainer
 
     internal override void Render(IComposer composer)
     {
-        var tabs = new ComposableLambda2(c => RenderChildren(c));
+        var tabs = ComposableLambdas.Wrap2(composer, c => RenderChildren(c));
         ComposeBridges.TabRow(_selectedTabIndex, BuildModifier(), tabs, composer);
     }
 }

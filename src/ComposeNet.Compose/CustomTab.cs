@@ -29,7 +29,7 @@ public sealed class CustomTab : ComposableContainer
     internal override void Render(IComposer composer)
     {
         var click = new ComposableLambda0(_onClick);
-        var content = new ComposableLambda3((scope, c) =>
+        var content = ComposableLambdas.Wrap3(composer, (scope, c) =>
         {
             using var _ = RenderContext.PushScope(scope);
             RenderChildren(c);

@@ -10,7 +10,7 @@ public sealed class Surface : ComposableContainer
 {
     internal override void Render(IComposer composer)
     {
-        var content = new ComposableLambda2(c => RenderChildren(c));
+        var content = ComposableLambdas.Wrap2(composer, c => RenderChildren(c));
         ComposeBridges.Surface(BuildModifier(), content, composer);
     }
 }

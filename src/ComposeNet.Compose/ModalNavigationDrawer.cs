@@ -52,9 +52,8 @@ public sealed class ModalNavigationDrawer : ComposableNode
             p3:                  0,
             _changed:            0);
 
-        var drawer  = new ComposableLambda2(c => Drawer.Render(c));
-        var content = new ComposableLambda2(c => Content.Render(c));
-
+        var drawer  = ComposableLambdas.Wrap2(composer, c => Drawer.Render(c));
+        var content = ComposableLambdas.Wrap2(composer, c => Content.Render(c));
         // Param order: drawerContent (0, provided), modifier (1, def),
         // drawerState (2, provided), gesturesEnabled (3, provided),
         // scrimColor (4, def — 0L is not a valid color sentinel),

@@ -28,8 +28,8 @@ public sealed class BadgedBox : ComposableNode
             throw new System.InvalidOperationException(
                 "BadgedBox requires both Badge and Content.");
 
-        var badge   = new ComposableLambda3(c => Badge.Render(c));
-        var content = new ComposableLambda3(c => Content.Render(c));
+        var badge   = ComposableLambdas.Wrap3(composer, c => Badge.Render(c));
+        var content = ComposableLambdas.Wrap3(composer, c => Content.Render(c));
 
         ComposeBridges.BadgedBox(badge, BuildModifier(), content, composer);
     }
