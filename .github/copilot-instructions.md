@@ -116,9 +116,13 @@ generator fill it in.
 ### Adding a bridge
 
 1. Add `[ComposeBridge(...)]` + a `public static partial` method
-   declaration to `ComposeBridges.cs`. `composer` **must** be the last
-   C# parameter — the generator detects the composer slot by
-   inspecting the trailing param.
+   declaration to `ComposeBridges.cs`. For `@Composable` bridges,
+   `composer` **must** be the last C# parameter — the generator detects
+   the composer slot by inspecting the trailing param. For
+   non-`@Composable` Kotlin extension functions with `$default`
+   (e.g. `Modifier.background`, `Modifier.border`, `Modifier.clickable`),
+   there is no `Composer` slot at all; just declare the user params
+   directly with the extension receiver as the first `IntPtr` param.
 2. **If** the underlying `@Composable` has at least one defaultable
    Kotlin parameter (i.e. the JNI signature has a trailing `$default`
    `I` slot after `$changed`), set `Defaults = typeof(XxxDefault)` and
@@ -128,7 +132,8 @@ generator fill it in.
    always provides). **If** every Kotlin parameter is required (no
    `$default` slot in the bytecode), omit `Defaults` entirely — the
    generator infers `$default` presence from the signature itself and
-   emits CN2005 if attribute and signature disagree.
+   emits CN2005 if attribute and signature disagree. Non-`@Composable`
+   extensions with `$default` always require `Defaults`.
 3. The generator parses the JNI signature, walks the C# parameters,
    and emits everything else.
 
@@ -154,21 +159,43 @@ Example (no `$default` — all params required):
 public static partial IntPtr PainterResource(int id, IComposer composer);
 ```
 
+Example (non-`@Composable` Kotlin extension with `$default`):
+```csharp
+[ComposeBridge(
+    Class     = "androidx/compose/foundation/BackgroundKt",
+    JvmName   = "background-bw27NRU$default",
+    Signature = "(Landroidx/compose/ui/Modifier;JLandroidx/compose/ui/graphics/Shape;ILjava/lang/Object;)Landroidx/compose/ui/Modifier;",
+    Defaults  = typeof(ModifierBackgroundDefault))]
+public static partial IntPtr ModifierBackground(IntPtr modifier, long color, IntPtr? shape);
+```
+The trailing `I L<marker>` slots are the `$default` bitmask plus a
+synthetic-overload `Object` marker; the generator emits both
+automatically (the marker is always `IntPtr.Zero` / `null`).
+
 ### Conventions the generator relies on
 
-- `composer` is the **last** C# parameter (always).
-- Add an `int defaults` parameter immediately before `composer` only
-  when the caller controls the bitmask (state-holders, multi-slot
-  composables that toggle bits per call). Otherwise omit it and the
-  generator builds the mask automatically: one bit per nullable /
-  optional C# param the caller passed `null` for. **Only valid when
-  the bridge has a `$default` slot**; do not declare `int defaults`
-  on a no-`$default` bridge.
-- Kotlin extension receivers: declare as `IntPtr` with a name ending
-  in `Scope` (e.g. `IntPtr rowScope`); the generator places it at
-  `args[0]` and excludes it from the `$default` count.
+- For `@Composable` bridges, `composer` is the **last** C# parameter.
+  For non-`@Composable` extension bridges (no `Composer` in the JNI
+  signature) there is no `composer` parameter — the last param is
+  just a regular user param.
+- Add an `int defaults` parameter at the end of the user params (just
+  before `composer` for `@Composable` shapes, or as the very last
+  param for extension shapes) only when the caller controls the
+  bitmask (state-holders, multi-slot composables that toggle bits per
+  call). Otherwise omit it and the generator builds the mask
+  automatically: one bit per nullable / optional C# param the caller
+  passed `null` for. **Only valid when the bridge has a `$default`
+  slot**; do not declare `int defaults` on a no-`$default` bridge.
+- Kotlin extension receivers on `@Composable` functions: declare as
+  `IntPtr` with a name ending in `Scope` (e.g. `IntPtr rowScope`).
+  Non-`@Composable` extensions: declare the receiver as the first
+  `IntPtr` user parameter (any name — the generator binds it
+  positionally to the first JNI slot). In both cases the generator
+  places it at `args[0]` and excludes it from the `$default` count.
 - `IModifier?` is special-cased to call `ComposeBridges.ModifierHandle`
-  (handles `null` → `IntPtr.Zero`).
+  (handles `null` → `IntPtr.Zero`). `IntPtr?` is also recognized:
+  `null` → `IntPtr.Zero` for the JNI arg, and the auto-mask only
+  clears the corresponding `$default` bit when the value is non-null.
 - String params are hoisted into a `IntPtr __ref_<name>` and freed in
   the generated `finally`.
 - Non-void return (state holders): the generator emits
@@ -179,9 +206,10 @@ public static partial IntPtr PainterResource(int id, IComposer composer);
 
 ### What still lives hand-written
 
-`ModifierHandle` and the modifier-chain helpers (`PaddingAll`,
-`FillMaxWidth`, etc.) — these don't follow the
-`@Composable + $default` shape, so they remain plain JNI calls.
+`ModifierHandle` and the simpler modifier-chain helpers that have
+neither `Composer` nor `$default` (`PaddingAll`, `FillMaxWidth`,
+`RoundedCornerShape`, `ClipKt.clip`, etc.) — these don't follow any
+shape the generator currently recognises and remain plain JNI calls.
 
 ### Generator diagnostics
 

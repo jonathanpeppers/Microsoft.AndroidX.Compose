@@ -90,30 +90,76 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
             });
         }
 
-        // Infer whether the bytecode signature has a trailing $default slot.
-        // Kotlin's @Composable codegen emits ceil(userParams/10) (min 1)
-        // $changed groups, and one $default slot iff at least one parameter
-        // has a default value. So:
-        //   trailingI =  $changedGroups + ($default ? 1 : 0)
-        // Anything beyond the expected $changed count is the $default slot.
-        int trailingInts = 0;
-        for (int i = sigParams.Count - 1; i >= 0 && sigParams[i].Code == 'I' && sigParams[i].ArrayDepth == 0; i--)
-            trailingInts++;
-        int sigUserParamCount = sigParams.Count - 1 /*composer*/ - trailingInts;
-        int expectedChangedSlots = Math.Max(1, (sigUserParamCount + 9) / 10);
-        bool signatureHasDefault = trailingInts > expectedChangedSlots;
+        // Detect the JNI signature "shape". Three supported today:
+        //   1. ComposableWithDefault — ...Composer;I+ trailing (multiple Is).
+        //   2. ComposableNoDefault   — ...Composer;I  trailing (single I).
+        //   3. ExtensionWithDefault  — non-@Composable Kotlin extension
+        //      function with default values; tail is `I L<marker>`,
+        //      no Composer. The marker is always Ljava/lang/Object; and
+        //      is passed `null` (IntPtr.Zero).
+        int composerSigIdx = -1;
+        for (int i = 0; i < sigParams.Count; i++)
+        {
+            if (sigParams[i].Code == 'L' && sigParams[i].ClassName == "androidx/compose/runtime/Composer")
+            {
+                composerSigIdx = i;
+                break;
+            }
+        }
+        bool hasComposerSlot = composerSigIdx >= 0;
+
+        bool extensionWithDefault = false;
+        bool signatureHasDefault;
+        if (hasComposerSlot)
+        {
+            // Kotlin's @Composable codegen emits ceil(userParams/10) (min 1)
+            // $changed groups, and one $default slot iff at least one
+            // parameter has a default value:
+            //   trailingI = $changedGroups + ($default ? 1 : 0)
+            int trailingInts = 0;
+            for (int i = sigParams.Count - 1; i >= 0 && sigParams[i].Code == 'I' && sigParams[i].ArrayDepth == 0; i--)
+                trailingInts++;
+            int sigUserParamCount = sigParams.Count - 1 /*composer*/ - trailingInts;
+            int expectedChangedSlots = Math.Max(1, (sigUserParamCount + 9) / 10);
+            signatureHasDefault = trailingInts > expectedChangedSlots;
+        }
+        else if (sigParams.Count >= 2 &&
+                 sigParams[sigParams.Count - 1].Code == 'L' &&
+                 sigParams[sigParams.Count - 1].ClassName == "java/lang/Object" &&
+                 sigParams[sigParams.Count - 1].ArrayDepth == 0 &&
+                 sigParams[sigParams.Count - 2].Code == 'I' &&
+                 sigParams[sigParams.Count - 2].ArrayDepth == 0)
+        {
+            // Non-@Composable extension function with $default + synthetic
+            // marker. Kotlin's bytecode passes the marker as null at every
+            // call site; we always emit IntPtr.Zero for that slot.
+            extensionWithDefault = true;
+            signatureHasDefault = true;
+        }
+        else
+        {
+            // Non-@Composable, no $default — e.g. RoundedCornerShape or
+            // ClipKt.clip. Not supported by this generator yet (issue #30
+            // explicitly leaves these hand-written).
+            return new GenerationResult(null, null, new[] {
+                Diagnostic.Create(Diagnostics.BridgeMalformedSignature, loc, method.Name,
+                    "signature has neither a Composer slot nor an `I L<marker>` $default tail; this shape is not yet supported")
+            });
+        }
+
+        bool hasDefaultSlot = signatureHasDefault;
 
         // Cross-validate signature against attribute metadata: a mismatch
         // would silently produce a broken bridge (wrong $default slot
         // packing, missing bitmask, etc.) so we fail fast.
-        if (signatureHasDefault && defaultsType is null)
+        if (hasDefaultSlot && defaultsType is null)
         {
             return new GenerationResult(null, null, new[] {
                 Diagnostic.Create(Diagnostics.BridgeDefaultsMismatch, loc, method.Name,
                     "JNI signature has a $default slot but [ComposeBridge] omits 'Defaults'")
             });
         }
-        if (!signatureHasDefault && defaultsType is not null)
+        if (!hasDefaultSlot && defaultsType is not null)
         {
             return new GenerationResult(null, null, new[] {
                 Diagnostic.Create(Diagnostics.BridgeDefaultsMismatch, loc, method.Name,
@@ -127,7 +173,6 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
         // slots (no $default bitmask) — every parameter is required.
         IReadOnlyList<string> kotlinNames;
         string? defaultsEnumName = defaultsType?.Name;
-        bool hasDefaultSlot = signatureHasDefault;
         if (defaultsType is not null && declarativeAttr is not null)
         {
             var match = compilation.Assembly.GetAttributes()
@@ -158,20 +203,35 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
             kotlinNames = Array.Empty<string>();
         }
 
-        // C# parameter walk. composer is required and must be last.
+        // C# parameter walk. For composable shapes the last param must be
+        // an IComposer; for extension shapes there is no Composer slot and
+        // the last param is just the trailing user parameter.
         var csParams = method.Parameters;
-        if (csParams.Length == 0 || !ComposeDefaultsGenerator.IsComposer(csParams[csParams.Length - 1].Type))
+        IParameterSymbol? composerParam;
+        int csTail; // exclusive upper bound of "user-controlled" params before composer
+        if (hasComposerSlot)
         {
-            return new GenerationResult(null, null, new[] {
-                Diagnostic.Create(Diagnostics.MalformedAttribute, loc, method.Name)
-            });
+            if (csParams.Length == 0 || !ComposeDefaultsGenerator.IsComposer(csParams[csParams.Length - 1].Type))
+            {
+                return new GenerationResult(null, null, new[] {
+                    Diagnostic.Create(Diagnostics.MalformedAttribute, loc, method.Name)
+                });
+            }
+            composerParam = csParams[csParams.Length - 1];
+            csTail = csParams.Length - 1;
         }
-        var composerParam = csParams[csParams.Length - 1];
+        else
+        {
+            composerParam = null;
+            csTail = csParams.Length;
+        }
 
-        // Detect optional `int defaults` immediately before composer.
+        // Detect optional `int defaults` immediately before composer (or
+        // at the very end for extension shapes). Caller-controlled bitmask
+        // is only meaningful when the function actually has a $default slot.
         bool callerProvidesDefaults = false;
-        int userTail = csParams.Length - 1;
-        if (userTail > 0 &&
+        int userTail = csTail;
+        if (hasDefaultSlot && userTail > 0 &&
             csParams[userTail - 1].Type.SpecialType == SpecialType.System_Int32 &&
             csParams[userTail - 1].Name == "defaults")
         {
@@ -180,11 +240,27 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
         }
         var userParams = csParams.Take(userTail).ToArray();
 
-        // Detect leading IntPtr <name>Scope receiver.
+        // Detect leading extension receiver. For composable shapes the
+        // convention is `IntPtr <name>Scope` (e.g. `IntPtr rowScope`); for
+        // extension shapes the receiver is whatever the first sigParam is
+        // (e.g. Modifier) and we bind it positionally to the first IntPtr
+        // C# parameter regardless of name.
         IParameterSymbol? receiverParam = null;
-        if (userParams.Length > 0 &&
-            userParams[0].Type.SpecialType == SpecialType.System_IntPtr &&
-            userParams[0].Name.EndsWith("Scope", StringComparison.Ordinal))
+        if (extensionWithDefault)
+        {
+            if (userParams.Length == 0 ||
+                userParams[0].Type.SpecialType != SpecialType.System_IntPtr)
+            {
+                return new GenerationResult(null, null, new[] {
+                    Diagnostic.Create(Diagnostics.MalformedAttribute, loc, method.Name)
+                });
+            }
+            receiverParam = userParams[0];
+            userParams = userParams.Skip(1).ToArray();
+        }
+        else if (userParams.Length > 0 &&
+                 userParams[0].Type.SpecialType == SpecialType.System_IntPtr &&
+                 userParams[0].Name.EndsWith("Scope", StringComparison.Ordinal))
         {
             receiverParam = userParams[0];
             userParams = userParams.Skip(1).ToArray();
@@ -227,10 +303,12 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
         if (diags.Count > 0)
             return new GenerationResult(null, null, diags.ToArray());
 
-        var changedSlots = ChangedSlotCount(sigParams, hasDefaultSlot);
+        var changedSlots = ChangedSlotCount(sigParams, hasDefaultSlot, hasComposerSlot);
         int defaultSlotCount = hasDefaultSlot ? 1 : 0;
         int receiverSlotCount = receiverParam is null ? 0 : 1;
-        int actualUserSlots = sigParams.Count - receiverSlotCount - 1 /*composer*/ - changedSlots - defaultSlotCount;
+        int composerSlotCount = hasComposerSlot ? 1 : 0;
+        int markerSlotCount = extensionWithDefault ? 1 : 0;
+        int actualUserSlots = sigParams.Count - receiverSlotCount - composerSlotCount - changedSlots - defaultSlotCount - markerSlotCount;
         int expectedUserSlots = hasDefaultSlot ? kotlinNames.Count : userParams.Length;
         if (actualUserSlots != expectedUserSlots)
         {
@@ -240,22 +318,24 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
         }
 
         var source = Emit(method, attr, className, jvmName, signature, defaultsEnumName, sigParams,
-            kotlinNames, userParams, userBitOf, receiverParam, callerProvidesDefaults, hasDefaultSlot, instanceField);
+            kotlinNames, userParams, userBitOf, receiverParam, callerProvidesDefaults, hasDefaultSlot,
+            hasComposerSlot, extensionWithDefault, instanceField);
         var hint = $"ComposeNet.{method.ContainingType.Name}.{method.Name}.g.cs";
         return new GenerationResult(source, hint, Array.Empty<Diagnostic>());
     }
 
     /// <summary>
     /// Number of trailing <c>I</c> params that represent <c>$changed</c>
-    /// slots. With <paramref name="hasDefaultSlot"/>=<c>true</c> the very
-    /// last <c>I</c> is the <c>$default</c> bitmask, so this returns
+    /// slots. <c>$changed</c> only exists in @Composable signatures, so
+    /// when <paramref name="hasComposer"/> is <c>false</c> this returns
+    /// <c>0</c>. With <paramref name="hasDefaultSlot"/>=<c>true</c> the
+    /// very last <c>I</c> is the <c>$default</c> bitmask, so this returns
     /// <c>trailing-1</c>; otherwise every trailing <c>I</c> is part of
     /// the <c>$changed</c> group(s).
     /// </summary>
-    static int ChangedSlotCount(IReadOnlyList<JniType> sigParams, bool hasDefaultSlot)
+    static int ChangedSlotCount(IReadOnlyList<JniType> sigParams, bool hasDefaultSlot, bool hasComposer)
     {
-        // Find composer position from the right: composer is the L Composer; before the trailing Is.
-        // Walk back over all trailing I's; with $default the count of them minus one is changedSlots.
+        if (!hasComposer) return 0;
         int trailingInts = 0;
         for (int i = sigParams.Count - 1; i >= 0 && sigParams[i].Code == 'I' && sigParams[i].ArrayDepth == 0; i--)
             trailingInts++;
@@ -272,6 +352,8 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
         IParameterSymbol? receiverParam,
         bool callerProvidesDefaults,
         bool hasDefaultSlot,
+        bool hasComposerSlot,
+        bool extensionWithDefault,
         string? instanceField)
     {
         var sb = new StringBuilder();
@@ -395,13 +477,16 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
             sb.AppendLine(");");
         }
 
-        // Composer.
-        var composer = method.Parameters[method.Parameters.Length - 1];
-        sb.Append("                args[").Append(idx).Append("] = new global::Android.Runtime.JValue(((global::Java.Lang.Object)").Append(composer.Name).AppendLine(").Handle);");
-        idx++;
+        // Composer (only present in @Composable shapes).
+        IParameterSymbol? composer = hasComposerSlot ? method.Parameters[method.Parameters.Length - 1] : null;
+        if (composer is not null)
+        {
+            sb.Append("                args[").Append(idx).Append("] = new global::Android.Runtime.JValue(((global::Java.Lang.Object)").Append(composer.Name).AppendLine(").Handle);");
+            idx++;
+        }
 
         // $changed slots.
-        int changedCount = ChangedSlotCount(sigParams, hasDefaultSlot);
+        int changedCount = ChangedSlotCount(sigParams, hasDefaultSlot, hasComposerSlot);
         for (int c = 0; c < changedCount; c++, idx++)
             sb.Append("                args[").Append(idx).AppendLine("] = new global::Android.Runtime.JValue(0);");
 
@@ -409,6 +494,15 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
         if (hasDefaultSlot)
         {
             sb.Append("                args[").Append(idx).AppendLine("] = new global::Android.Runtime.JValue(defaults);");
+            idx++;
+        }
+
+        // Synthetic-overload marker for non-@Composable extension functions
+        // with $default. Kotlin always passes null here.
+        if (extensionWithDefault)
+        {
+            sb.Append("                args[").Append(idx).AppendLine("] = new global::Android.Runtime.JValue(global::System.IntPtr.Zero);");
+            idx++;
         }
 
         // Call.
@@ -436,7 +530,8 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
             if (NeedsKeepAlive(p))
                 sb.Append("            global::System.GC.KeepAlive(").Append(p.Name).AppendLine(");");
         }
-        sb.Append("            global::System.GC.KeepAlive(").Append(composer.Name).AppendLine(");");
+        if (composer is not null)
+            sb.Append("            global::System.GC.KeepAlive(").Append(composer.Name).AppendLine(");");
         sb.AppendLine("        }");
 
         sb.AppendLine("    }");
@@ -477,6 +572,15 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
             sb.Append(p.Name);
             return;
         }
+        if (IsNullableIntPtr(p.Type))
+        {
+            // `IntPtr? x` → null means "let the Kotlin default kick in";
+            // pass IntPtr.Zero in that slot. The auto-mask logic still
+            // clears the corresponding $default bit only when the user
+            // supplied a value.
+            sb.Append('(').Append(p.Name).Append(" ?? global::System.IntPtr.Zero)");
+            return;
+        }
         if (p.Type.SpecialType is SpecialType.System_Boolean
             or SpecialType.System_Int32
             or SpecialType.System_Int64
@@ -514,8 +618,15 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
             or SpecialType.System_IntPtr
             or SpecialType.System_String)
             return false;
+        if (IsNullableIntPtr(p.Type)) return false;
         return true;
     }
+
+    static bool IsNullableIntPtr(ITypeSymbol t) =>
+        t is INamedTypeSymbol n &&
+        n.OriginalDefinition.SpecialType == SpecialType.System_Nullable_T &&
+        n.TypeArguments.Length == 1 &&
+        n.TypeArguments[0].SpecialType == SpecialType.System_IntPtr;
 
     static bool IsModifierType(ITypeSymbol t)
     {

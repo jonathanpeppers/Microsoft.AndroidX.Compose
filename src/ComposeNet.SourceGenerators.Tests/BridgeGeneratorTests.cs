@@ -509,4 +509,187 @@ public class BridgeGeneratorTests
         var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
         Assert.Empty(errors);
     }
+
+    [Fact]
+    public void ExtensionWithDefault_BackgroundShape_OneReceiverPrimitiveAndNullableRef()
+    {
+        // Mirrors androidx.compose.foundation.BackgroundKt.background-bw27NRU$default —
+        // a non-@Composable Modifier extension. Tail is `I L<marker>`,
+        // no Composer. The marker is always passed null.
+        var code = """
+            using ComposeNet;
+
+            [assembly: ComposeDefaults("ModifierBackgroundDefault", "!color", "shape")]
+
+            namespace ComposeNet
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(
+                        Class = "androidx/compose/foundation/BackgroundKt",
+                        JvmName = "background-bw27NRU$default",
+                        Signature = "(Landroidx/compose/ui/Modifier;JLandroidx/compose/ui/graphics/Shape;ILjava/lang/Object;)Landroidx/compose/ui/Modifier;",
+                        Defaults = typeof(ModifierBackgroundDefault))]
+                    public static partial System.IntPtr ModifierBackground(System.IntPtr modifier, long color, System.IntPtr? shape);
+                }
+            }
+            """;
+
+        var (output, diags, emitted) = Run(code);
+        Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+        Assert.Contains("FindClass(\"androidx/compose/foundation/BackgroundKt\")", emitted);
+        Assert.Contains("\"background-bw27NRU$default\"", emitted);
+
+        // Receiver at args[0], color at args[1], shape at args[2], $default at args[3], marker at args[4].
+        Assert.Contains("global::Android.Runtime.JValue[5]", emitted);
+        Assert.Contains("args[0] = new global::Android.Runtime.JValue(modifier)", emitted);
+        Assert.Contains("args[1] = new global::Android.Runtime.JValue(color)", emitted);
+        Assert.Contains("args[3] = new global::Android.Runtime.JValue(defaults)", emitted);
+        Assert.Contains("args[4] = new global::Android.Runtime.JValue(global::System.IntPtr.Zero)", emitted);
+        Assert.DoesNotContain("args[5]", emitted);
+
+        // No Composer arg, no $changed, no GC.KeepAlive(composer).
+        Assert.DoesNotContain("Composer", emitted);
+        Assert.DoesNotContain("KeepAlive(composer)", emitted);
+
+        // Auto-mask still emitted: shape is a nullable bit.
+        Assert.Contains("(int)global::ComposeNet.ModifierBackgroundDefault.All", emitted);
+        Assert.Contains("ModifierBackgroundDefault.Shape", emitted);
+
+        // Non-void return.
+        Assert.Contains("return global::Android.Runtime.JNIEnv.CallStaticObjectMethod(", emitted);
+
+        var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
+        Assert.Empty(errors);
+    }
+
+    [Fact]
+    public void ExtensionWithDefault_BorderShape_TwoPrimitivesAndNullableRef()
+    {
+        // Mirrors androidx.compose.foundation.BorderKt.border-xT4_qwU$default —
+        // Modifier extension with width (F), color (J), shape (Shape).
+        var code = """
+            using ComposeNet;
+
+            [assembly: ComposeDefaults("ModifierBorderDefault", "!width", "!color", "shape")]
+
+            namespace ComposeNet
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(
+                        Class = "androidx/compose/foundation/BorderKt",
+                        JvmName = "border-xT4_qwU$default",
+                        Signature = "(Landroidx/compose/ui/Modifier;FJLandroidx/compose/ui/graphics/Shape;ILjava/lang/Object;)Landroidx/compose/ui/Modifier;",
+                        Defaults = typeof(ModifierBorderDefault))]
+                    public static partial System.IntPtr ModifierBorder(System.IntPtr modifier, float width, long color, System.IntPtr? shape);
+                }
+            }
+            """;
+
+        var (output, diags, emitted) = Run(code);
+        Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+
+        // Receiver, width, color, shape, $default, marker = 6 slots.
+        Assert.Contains("global::Android.Runtime.JValue[6]", emitted);
+        Assert.Contains("args[0] = new global::Android.Runtime.JValue(modifier)", emitted);
+        Assert.Contains("args[1] = new global::Android.Runtime.JValue(width)", emitted);
+        Assert.Contains("args[2] = new global::Android.Runtime.JValue(color)", emitted);
+        Assert.Contains("args[4] = new global::Android.Runtime.JValue(defaults)", emitted);
+        Assert.Contains("args[5] = new global::Android.Runtime.JValue(global::System.IntPtr.Zero)", emitted);
+
+        var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
+        Assert.Empty(errors);
+    }
+
+    [Fact]
+    public void ExtensionWithDefault_ClickableShape_PrimitiveStringRefAndRequiredFunction()
+    {
+        // Mirrors androidx.compose.foundation.ClickableKt.clickable-XHw0xAI$default —
+        // Modifier extension: enabled (Z), onClickLabel (String, nullable),
+        // role (Role, nullable), onClick (Function0, required).
+        var code = """
+            using ComposeNet;
+            using Kotlin.Jvm.Functions;
+
+            [assembly: ComposeDefaults("ModifierClickableDefault",
+                "enabled", "onClickLabel", "role", "!onClick")]
+
+            namespace ComposeNet
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(
+                        Class = "androidx/compose/foundation/ClickableKt",
+                        JvmName = "clickable-XHw0xAI$default",
+                        Signature = "(Landroidx/compose/ui/Modifier;ZLjava/lang/String;Landroidx/compose/ui/semantics/Role;Lkotlin/jvm/functions/Function0;ILjava/lang/Object;)Landroidx/compose/ui/Modifier;",
+                        Defaults = typeof(ModifierClickableDefault))]
+                    public static partial System.IntPtr ModifierClickable(
+                        System.IntPtr modifier, bool enabled, string? onClickLabel,
+                        System.IntPtr? role, IFunction0 onClick);
+                }
+            }
+            """;
+
+        var (output, diags, emitted) = Run(code);
+        Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+
+        // Receiver, enabled, onClickLabel, role, onClick, $default, marker = 7.
+        Assert.Contains("global::Android.Runtime.JValue[7]", emitted);
+        Assert.Contains("args[0] = new global::Android.Runtime.JValue(modifier)", emitted);
+        Assert.Contains("args[1] = new global::Android.Runtime.JValue(enabled)", emitted);
+        Assert.Contains("args[5] = new global::Android.Runtime.JValue(defaults)", emitted);
+        Assert.Contains("args[6] = new global::Android.Runtime.JValue(global::System.IntPtr.Zero)", emitted);
+
+        // String parameter hoisted into NewString/__ref.
+        Assert.Contains("NewString(onClickLabel)", emitted);
+        Assert.Contains("__ref_onClickLabel", emitted);
+        Assert.Contains("DeleteLocalRef(__ref_onClickLabel)", emitted);
+
+        // onClick (required Function0) gets KeepAlive; composer not present.
+        Assert.Contains("global::System.GC.KeepAlive(onClick);", emitted);
+        Assert.DoesNotContain("KeepAlive(composer)", emitted);
+
+        // No Composer in emitted output at all.
+        Assert.DoesNotContain("Composer", emitted);
+
+        var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
+        Assert.Empty(errors);
+    }
+
+    [Fact]
+    public void ExtensionWithDefault_CallerProvidesDefaults_SuppressesAutoMask()
+    {
+        // Same Background shape but the C# stub takes `int defaults` so
+        // the auto-mask logic is suppressed.
+        var code = """
+            using ComposeNet;
+
+            [assembly: ComposeDefaults("ModifierBackgroundDefault", "!color", "shape")]
+
+            namespace ComposeNet
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(
+                        Class = "androidx/compose/foundation/BackgroundKt",
+                        JvmName = "background-bw27NRU$default",
+                        Signature = "(Landroidx/compose/ui/Modifier;JLandroidx/compose/ui/graphics/Shape;ILjava/lang/Object;)Landroidx/compose/ui/Modifier;",
+                        Defaults = typeof(ModifierBackgroundDefault))]
+                    public static partial System.IntPtr ModifierBackground(
+                        System.IntPtr modifier, long color, System.IntPtr shape, int defaults);
+                }
+            }
+            """;
+
+        var (_, diags, emitted) = Run(code);
+        Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+        Assert.DoesNotContain("(int)global::ComposeNet.ModifierBackgroundDefault.All", emitted);
+        Assert.Contains("args[3] = new global::Android.Runtime.JValue(defaults)", emitted);
+        Assert.Contains("args[4] = new global::Android.Runtime.JValue(global::System.IntPtr.Zero)", emitted);
+    }
 }
