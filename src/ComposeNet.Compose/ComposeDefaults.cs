@@ -338,6 +338,15 @@ using ComposeNet;
     "!selected", "!onClick", "!icon", "label", "railExpanded",
     "modifier", "enabled", "iconPosition", "colors", "interactionSource")]
 
+// androidx.compose.material3.WideNavigationRailKt.ModalWideNavigationRail-k3FuEkE:
+// 12 user params; bits 1 (state) and 11 (content) always provided by the
+// facade. The facade also always sets `hideOnCollapse=true`, but we keep
+// that bit as an enum member because future overloads may toggle it.
+[assembly: ComposeDefaults("ModalWideNavigationRailDefault",
+    "modifier", "!state", "hideOnCollapse", "collapsedShape", "expandedShape",
+    "colors", "header", "collapsedShadowElevation", "windowInsets", "arrangement",
+    "properties", "!content")]
+
 // androidx.compose.material3.ProgressIndicatorKt.LinearProgressIndicator-rIrjwxo
 // (indeterminate, no progress callback). 5 user params, all optional.
 [assembly: ComposeDefaults("LinearProgressIndicatorDefault",

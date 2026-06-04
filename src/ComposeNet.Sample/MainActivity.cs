@@ -31,6 +31,8 @@ public class MainActivity : ComposeActivity
             var multiBold   = Remember(() => new MutableState<bool>(false));
             var multiItalic = Remember(() => new MutableState<bool>(false));
             var railIdx     = Remember(() => new MutableNumberState<int>(0));
+            var showModalRail = Remember(() => new MutableState<bool>(false));
+            var modalRailIdx  = Remember(() => new MutableNumberState<int>(0));
 
             var checkbox    = Remember(() => new MutableState<bool>(true));
             var switchOn    = Remember(() => new MutableState<bool>(false));
@@ -369,6 +371,49 @@ public class MainActivity : ComposeActivity
                             },
                         },
                     },
+                    new HorizontalDivider { Modifier = Modifier.Companion.Padding(0, 8) },
+                    new Text($"ModalWideNavigationRail (selected: {modalRailIdx})"),
+                    new Row
+                    {
+                        new Button(onClick: () => showModalRail.Value = true) { new Text("Open modal rail") },
+                    },
+                    // Visibility-toggle pattern (see ModalWideNavigationRail
+                    // XML doc): mounting the rail opens it; the "Close"
+                    // item dismisses it. Scrim taps visually hide the rail
+                    // but can't notify C# yet (no onDismissRequest /
+                    // coroutine support), so a second "Open" tap requires
+                    // first toggling showModalRail off.
+                    showModalRail.Value
+                        ? new ModalWideNavigationRail
+                        {
+                            new WideNavigationRailItem(
+                                selected: modalRailIdx.Value == 0,
+                                onClick:  () => { modalRailIdx.Value = 0; showModalRail.Value = false; })
+                            {
+                                Icon  = new Text("🏠"),
+                                Label = new Text("Home"),
+                            },
+                            new WideNavigationRailItem(
+                                selected: modalRailIdx.Value == 1,
+                                onClick:  () => { modalRailIdx.Value = 1; showModalRail.Value = false; })
+                            {
+                                Icon  = new Text("🔍"),
+                                Label = new Text("Search"),
+                            },
+                            new WideNavigationRailItem(
+                                selected: modalRailIdx.Value == 2,
+                                onClick:  () => { modalRailIdx.Value = 2; showModalRail.Value = false; })
+                            {
+                                Icon  = new Text("⚙"),
+                                Label = new Text("Settings"),
+                            },
+                            new WideNavigationRailItem(selected: false, onClick: () => showModalRail.Value = false)
+                            {
+                                Icon  = new Text("✕"),
+                                Label = new Text("Close"),
+                            },
+                        }
+                        : (ComposableNode?)null,
                 },
                 _ => new Column
                 {
