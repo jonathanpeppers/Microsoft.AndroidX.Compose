@@ -466,6 +466,63 @@ using ComposeNet;
     "leadingContent", "trailingContent", "colors", "tonalElevation",
     "shadowElevation")]
 
+// androidx.compose.material3.AndroidMenu_androidKt.DropdownMenu-IlH_yew:
+// 12 user params; bits 0 (expanded), 1 (onDismissRequest), 11 (content)
+// always provided.
+[assembly: ComposeDefaults("DropdownMenuDefault",
+    "!expanded", "!onDismissRequest", "modifier", "offset", "scrollState",
+    "properties", "shape", "containerColor", "tonalElevation", "shadowElevation",
+    "border", "!content")]
+
+// androidx.compose.material3.SearchBarKt.rememberSearchBarState: 3 user
+// params; all defaulted by the wrapper (which exposes none).
+[assembly: ComposeDefaults("RememberSearchBarStateDefault",
+    "initialValue", "animationSpecForExpand", "animationSpecForCollapse")]
+
+// androidx.compose.material3.SearchBarKt.SearchBar-nbWgWpA (state-based):
+// 7 user params; bits 0 (state), 1 (inputField) always provided.
+[assembly: ComposeDefaults("SearchBarDefault",
+    "!state", "!inputField", "modifier", "shape", "colors",
+    "inputFieldHeight", "floatingHeight")]
+
+// androidx.compose.material3.SearchBarKt.TopSearchBar-qKj4JfE:
+// 9 user params; bits 0 (state), 1 (inputField) always provided.
+[assembly: ComposeDefaults("TopSearchBarDefault",
+    "!state", "!inputField", "modifier", "shape", "colors",
+    "inputFieldHeight", "floatingHeight", "windowInsets", "scrollBehavior")]
+
+// androidx.compose.material3.SearchBarKt.ExpandedDockedSearchBar-qKj4JfE:
+// 9 user params; bits 0 (state), 1 (inputField), 8 (content) always provided.
+[assembly: ComposeDefaults("ExpandedDockedSearchBarDefault",
+    "!state", "!inputField", "modifier", "shape", "colors",
+    "inputFieldHeight", "floatingHeight", "properties", "!content")]
+
+// androidx.compose.material3.SearchBarKt.ExpandedFullScreenSearchBar-_UtchM0:
+// 10 user params; bits 0 (state), 1 (inputField), 9 (content) always provided.
+[assembly: ComposeDefaults("ExpandedFullScreenSearchBarDefault",
+    "!state", "!inputField", "modifier", "shape", "colors",
+    "inputFieldHeight", "floatingHeight", "windowInsets", "properties", "!content")]
+
+// androidx.compose.material3.SearchBarDefaults.InputField (state-based):
+// 18 user params. Bits 0 (textFieldState), 1 (searchBarState),
+// 2 (onSearch) are always provided by the SearchBarInputField facade —
+// onSearch defaults to a no-op ComposableLambda1 so Kotlin never invokes
+// a null callback on IME Search.
+[assembly: ComposeDefaults("SearchBarDefaultsInputFieldDefault",
+    "!textFieldState", "!searchBarState", "!onSearch",
+    "modifier", "enabled", "autoFocus", "textStyle",
+    "placeholder", "leadingIcon", "trailingIcon", "prefix", "suffix",
+    "inputTransformation", "outputTransformation", "scrollState",
+    "shape", "colors", "interactionSource")]
+
+// androidx.compose.material3.AndroidMenu_androidKt.DropdownMenuItem: 9 user
+// params; bits 0 (text), 1 (onClick) always provided. Declarative form used
+// (instead of generic) so leadingIcon and trailingIcon get enum members the
+// facade can clear when the caller supplies those optional slots.
+[assembly: ComposeDefaults("DropdownMenuItemDefault",
+    "!text", "!onClick", "modifier", "leadingIcon", "trailingIcon",
+    "enabled", "colors", "contentPadding", "interactionSource")]
+
 // androidx.compose.material3.AppBarKt.TopAppBar-cJHQLPU (subtitle overload):
 // 10 user params; bits 0 (title) and 1 (subtitle) always provided.
 // Optional slot bits 3 (NavigationIcon) and 4 (Actions) are toggled
