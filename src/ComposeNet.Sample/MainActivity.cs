@@ -39,7 +39,7 @@ public class MainActivity : ComposeActivity
             var rangeStart  = Remember(() => new MutableState<float>(0.25f));
             var rangeEnd    = Remember(() => new MutableState<float>(0.75f));
 
-            string[] tabNames = { "Basics", "Buttons", "Cards", "Drawer", "Selection", "Pickers", "Misc" };
+            string[] tabNames = { "Basics", "Buttons", "Cards", "Drawer", "Selection", "Pickers", "Misc", "App bars" };
 
             // Per-tab content. Only the current tab's column is added to
             // the screen — keeps the sample short enough to fit on one
@@ -48,7 +48,10 @@ public class MainActivity : ComposeActivity
             {
                 0 => new Column
                 {
-                    new TabRow(selectedTabIndex: sub.Value)
+                    // PrimaryScrollableTabRow lets the row scroll horizontally
+                    // when tabs don't fit; CustomTab is the ColumnScope-content
+                    // overload (multi-line label inside the tab).
+                    new PrimaryScrollableTabRow(selectedTabIndex: sub.Value)
                     {
                         new Tab(selected: sub.Value == 0, onClick: () => sub.Value = 0)
                         {
@@ -62,6 +65,11 @@ public class MainActivity : ComposeActivity
                         {
                             Text = new Text("List"),
                             Icon = new Text("📋"),
+                        },
+                        new CustomTab(selected: sub.Value == 3, onClick: () => sub.Value = 3)
+                        {
+                            new Text("Custom"),
+                            new Text($"count={count}"),
                         },
                     },
                     sub.Value switch
@@ -86,7 +94,7 @@ public class MainActivity : ComposeActivity
                                 },
                             },
                         },
-                        _ => new Column
+                        2 => (ComposableNode)new Column
                         {
                             new ListItem
                             {
@@ -111,6 +119,13 @@ public class MainActivity : ComposeActivity
                                     Content = new Text("✉"),
                                 },
                             },
+                        },
+                        _ => new Column
+                        {
+                            new Text("CustomTab uses the Tab-bogVsAg overload"),
+                            new Text("(ColumnScope-receiver content lambda)."),
+                            new Text($"Current count: {count}"),
+                            new Button(onClick: () => count++) { new Text("+1") },
                         },
                     },
                 },
@@ -243,7 +258,7 @@ public class MainActivity : ComposeActivity
                         },
                     },
                 },
-                4 => new Column
+                4 => (ComposableNode)new Column
                 {
                     new Text("Selection controls"),
                     new Row
@@ -289,7 +304,7 @@ public class MainActivity : ComposeActivity
                     new Text($"Picked date: {pickedDate}"),
                     new Text($"Picked time: {pickedTime}"),
                 },
-                _ => new Column
+                6 => (ComposableNode)new Column
                 {
                     new Text("Misc Material 3"),
                     new Text("Progress indicators (indeterminate):"),
@@ -341,6 +356,62 @@ public class MainActivity : ComposeActivity
                         },
                     },
                 },
+                _ => new Column
+                {
+                    // Inline samples of the M3 app-bar family bound by
+                    // ComposeNet — normally these live in Scaffold.TopBar /
+                    // Scaffold.BottomBar, but we drop them inline here just
+                    // so all variants are visible side-by-side.
+                    new Text("TopAppBar variants"),
+                    new MediumFlexibleTopAppBar
+                    {
+                        Title    = new Text("MediumFlexibleTopAppBar"),
+                        Subtitle = new Text($"count={count}"),
+                    },
+                    new LargeFlexibleTopAppBar
+                    {
+                        Title    = new Text("LargeFlexibleTopAppBar"),
+                        Subtitle = new Text($"count={count}"),
+                        Actions  = new Row
+                        {
+                            new IconButton(onClick: () => count++) { new Text("+") },
+                        },
+                    },
+                    new HorizontalDivider { Modifier = Modifier.Companion.Padding(0, 8) },
+                    new Text("SecondaryScrollableTabRow"),
+                    new SecondaryScrollableTabRow(selectedTabIndex: sub.Value)
+                    {
+                        new Tab(selected: sub.Value == 0, onClick: () => sub.Value = 0) { Text = new Text("One") },
+                        new Tab(selected: sub.Value == 1, onClick: () => sub.Value = 1) { Text = new Text("Two") },
+                        new Tab(selected: sub.Value == 2, onClick: () => sub.Value = 2) { Text = new Text("Three") },
+                        new Tab(selected: sub.Value == 3, onClick: () => sub.Value = 3) { Text = new Text("Four") },
+                        new Tab(selected: sub.Value == 4, onClick: () => sub.Value = 4) { Text = new Text("Five") },
+                    },
+                    new HorizontalDivider { Modifier = Modifier.Companion.Padding(0, 8) },
+                    new Text($"BottomAppBar (actions only) — count is {count}"),
+                    new BottomAppBar
+                    {
+                        new IconButton(onClick: () => count--) { new Text("−") },
+                        new IconButton(onClick: () => count.Value = 0) { new Text("↺") },
+                        new IconButton(onClick: () => count++) { new Text("+") },
+                    },
+                    new HorizontalDivider { Modifier = Modifier.Companion.Padding(0, 8) },
+                    new Text("BottomAppBar (with FAB slot)"),
+                    new BottomAppBar
+                    {
+                        FloatingActionButton = new FloatingActionButton(onClick: () => count++)
+                        {
+                            new Text("+"),
+                        },
+                    },
+                    new HorizontalDivider { Modifier = Modifier.Companion.Padding(0, 8) },
+                    new Text("FlexibleBottomAppBar"),
+                    new FlexibleBottomAppBar
+                    {
+                        new IconButton(onClick: () => count++) { new Text("+") },
+                        new IconButton(onClick: () => count--) { new Text("−") },
+                    },
+                },
             };
 
             return new MaterialTheme
@@ -349,9 +420,12 @@ public class MainActivity : ComposeActivity
                 {
                     new Scaffold
                     {
-                        TopBar = new CenterAlignedTopAppBar
+                        // The main TopAppBar uses the new Subtitle slot
+                        // (routes to the M3 two-line TopAppBar-cJHQLPU overload).
+                        TopBar = new TopAppBar
                         {
-                            Title = new Text(tabNames[tab.Value]),
+                            Title    = new Text(tabNames[tab.Value]),
+                            Subtitle = new Text($"count={count}  ·  sub={sub}"),
                         },
                         SnackbarHost = showSnack.Value
                             ? new Snackbar
@@ -405,6 +479,11 @@ public class MainActivity : ComposeActivity
                                 {
                                     Text = new Text("Misc"),
                                     Icon = new Text("✨"),
+                                },
+                                new Tab(selected: tab.Value == 7, onClick: () => tab.Value = 7)
+                                {
+                                    Text = new Text("Bars"),
+                                    Icon = new Text("📐"),
                                 },
                             },
                             tabContent,
