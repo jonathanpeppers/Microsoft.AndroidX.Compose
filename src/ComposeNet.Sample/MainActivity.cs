@@ -39,6 +39,20 @@ public class MainActivity : ComposeActivity
             var rangeStart  = Remember(() => new MutableState<float>(0.25f));
             var rangeEnd    = Remember(() => new MutableState<float>(0.75f));
 
+            var menuOpen      = Remember(() => new MutableState<bool>(false));
+            var menuSelection = Remember(() => new MutableState<string>("(none)"));
+            var searchState   = Remember(() => new SearchBarState());
+            var searchInput   = Remember(() => new SearchBarTextFieldState());
+            // Holds the committed query that drives the filter. The
+            // bound TextFieldState.text getter doesn't subscribe to
+            // Compose's snapshot read-tracking when read from C# build
+            // code, so we can't drive the filter from it directly.
+            // MutableState<string> IS snapshot-tracked, so updating it
+            // from the SearchBarInputField.OnSearch callback (fired when
+            // the user taps the IME Search action) gives a reactive
+            // filter without binding InputTransformation.
+            var searchQuery   = Remember(() => new MutableState<string>(""));
+
             string[] tabNames = { "Basics", "Buttons", "Cards", "Drawer", "Selection", "Pickers", "Misc", "App bars" };
 
             // Per-tab content. Only the current tab's column is added to
@@ -413,6 +427,100 @@ public class MainActivity : ComposeActivity
                     },
                 },
             };
+
+            // Tab 5 (Pickers) appends DropdownMenu + SearchBar sections after
+            // the dialog/sheet/date/time content from the switch. The SearchBar
+            // result list is built dynamically with foreach, which can't live
+            // inside a switch-expression collection-initializer.
+            if (tab.Value == 5 && tabContent is Column pickers)
+            {
+                var fruits = new[]
+                {
+                    "Apple", "Banana", "Cherry", "Date", "Elderberry",
+                    "Fig", "Grape", "Kiwi", "Lemon", "Mango",
+                };
+                // Read the live query from the MutableState that the
+                // OnSearch callback pumps the typed text into. We can't
+                // read SearchBarTextFieldState.Text here — the bound
+                // JNI getter doesn't subscribe to Compose's snapshot
+                // tracking when read from C# build code, so changes
+                // wouldn't recompose this lambda. MutableState<string>
+                // does subscribe, so the result list reacts when the
+                // user commits a query via the keyboard Search action.
+                var query   = searchQuery.Value;
+                var matches = System.Array.FindAll(
+                    fruits,
+                    f => string.IsNullOrEmpty(query)
+                         || f.Contains(query, System.StringComparison.OrdinalIgnoreCase));
+
+                var expanded = new ExpandedFullScreenSearchBar(state: searchState)
+                {
+                    InputField = new SearchBarInputField(searchInput, searchState)
+                    {
+                        Placeholder = new Text("Search fruits"),
+                        LeadingIcon = new Text("🔍"),
+                        OnSearch    = q => searchQuery.Value = q,
+                    },
+                };
+                foreach (var f in matches)
+                    expanded.Add(new Text(f) { Modifier = Modifier.Companion.Padding(16, 12) });
+                if (matches.Length == 0)
+                    expanded.Add(new Text("(no matches)") { Modifier = Modifier.Companion.Padding(16, 12) });
+
+                pickers.Add(new HorizontalDivider { Modifier = Modifier.Companion.Padding(0, 16) });
+                pickers.Add(new Text("DropdownMenu"));
+                pickers.Add(new Row
+                {
+                    new Text("Tap ⋮ for actions:"),
+                    new Spacer { Modifier = Modifier.Companion.FillMaxWidth(0.03f) },
+                    // The Box anchors the popup to the IconButton — both
+                    // children share the Box's coordinate space, which is
+                    // what DropdownMenu needs for positioning.
+                    new Box
+                    {
+                        new IconButton(onClick: () => menuOpen.Value = true)
+                        {
+                            new Text("⋮"),
+                        },
+                        new DropdownMenu(
+                            expanded:         menuOpen.Value,
+                            onDismissRequest: () => menuOpen.Value = false)
+                        {
+                            new DropdownMenuItem(
+                                text:    new Text("Refresh"),
+                                onClick: () => { menuSelection.Value = "Refresh";  menuOpen.Value = false; }),
+                            new DropdownMenuItem(
+                                text:    new Text("Settings"),
+                                onClick: () => { menuSelection.Value = "Settings"; menuOpen.Value = false; }),
+                            new DropdownMenuItem(
+                                text:    new Text("About"),
+                                onClick: () => { menuSelection.Value = "About";    menuOpen.Value = false; }),
+                        },
+                    },
+                });
+                pickers.Add(new Text($"Last menu choice: {menuSelection}"));
+                pickers.Add(new HorizontalDivider { Modifier = Modifier.Companion.Padding(0, 16) });
+                pickers.Add(new Text("SearchBar"));
+                pickers.Add(new Text("Tap the bar, type a query, then press the keyboard's 🔍 Search key to filter the fruit list."));
+                pickers.Add(new Text($"Filter: \"{query}\" — {matches.Length} match{(matches.Length == 1 ? "" : "es")}"));
+                // Render BOTH halves of the SearchBar pair sharing the
+                // same SearchBarState + SearchBarTextFieldState — Compose
+                // toggles the popup's visibility internally based on the
+                // state, and the typed text is shared between halves.
+                pickers.Add(new Box
+                {
+                    new SearchBar(state: searchState)
+                    {
+                        InputField = new SearchBarInputField(searchInput, searchState)
+                        {
+                            Placeholder = new Text("Search fruits"),
+                            LeadingIcon = new Text("🔍"),
+                            OnSearch    = q => searchQuery.Value = q,
+                        },
+                    },
+                    expanded,
+                });
+            }
 
             return new MaterialTheme
             {

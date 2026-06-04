@@ -49,16 +49,35 @@ public sealed class Scaffold : ComposableNode
 
         // Material 3's Scaffold passes PaddingValues as the first arg of
         // its content lambda — body must apply it to avoid rendering
-        // behind the top/bottom bars. Prepend a runtime
+        // behind the top/bottom bars. Compose a runtime
         // `Modifier.padding(values)` onto Body's existing chain so the
         // padding and Body's own modifiers compose on the same layout
         // node, mirroring Kotlin's
         // `Column(Modifier.padding(paddingValues)) { ... }`.
+        //
+        // ScaffoldLayout is a SubcomposeLayout, so this content callback
+        // runs once per measure pass (and again on remeasure), not once
+        // per composition. We snapshot-and-restore `body.Modifier`
+        // locally inside the lambda instead of using `PrependModifier`,
+        // which would leave mutated state on the user-supplied Body
+        // node between measure passes (see #42 H5). `Modifier` is a
+        // plain auto-property with no side effects, and composition
+        // is single-threaded, so the temporary mutation is invisible
+        // outside this synchronous block.
         var body = Body;
         var content = ComposableLambdas.Wrap3(composer, (paddingHandle, c) =>
         {
-            body.PrependModifier(Modifier.Companion.Padding(paddingHandle));
-            body.Render(c);
+            var saved = body.Modifier;
+            var padding = Modifier.Companion.Padding(paddingHandle);
+            body.Modifier = saved is null ? padding : padding.Then(saved);
+            try
+            {
+                body.Render(c);
+            }
+            finally
+            {
+                body.Modifier = saved;
+            }
         });
 
         // Always pass non-null slot lambdas. Toggling between Compose's

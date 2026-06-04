@@ -283,7 +283,13 @@ using ComposeNet;
 
 // androidx.compose.material3.SegmentedButtonKt.{Single,Multi}ChoiceSegmentedButtonRow-uFdPcIQ:
 // 3 user params, bit 2 (content) always provided. Both row variants
-// share the same signature so they reuse one enum.
+// share the same signature so they reuse one enum. The JNI descriptor
+// is `(...;Composer;II)V` — two trailing `I` slots, so the row HAS a
+// `$default` slot (3 user params → 1 `$changed` group → trailingInts=2
+// > expectedChangedSlots=1). The bound binding's parameter names are
+// misleading: the binder labels position 4 as `p4` ($changed) and
+// position 5 as `_changed` ($default). Call sites pass this enum's
+// mask to the `_changed:` named arg, which is positionally `$default`.
 [assembly: ComposeDefaults("SegmentedButtonRowDefault",
     "modifier", "space", "!content")]
 
@@ -459,6 +465,63 @@ using ComposeNet;
     "!headlineContent", "modifier", "overlineContent", "supportingContent",
     "leadingContent", "trailingContent", "colors", "tonalElevation",
     "shadowElevation")]
+
+// androidx.compose.material3.AndroidMenu_androidKt.DropdownMenu-IlH_yew:
+// 12 user params; bits 0 (expanded), 1 (onDismissRequest), 11 (content)
+// always provided.
+[assembly: ComposeDefaults("DropdownMenuDefault",
+    "!expanded", "!onDismissRequest", "modifier", "offset", "scrollState",
+    "properties", "shape", "containerColor", "tonalElevation", "shadowElevation",
+    "border", "!content")]
+
+// androidx.compose.material3.SearchBarKt.rememberSearchBarState: 3 user
+// params; all defaulted by the wrapper (which exposes none).
+[assembly: ComposeDefaults("RememberSearchBarStateDefault",
+    "initialValue", "animationSpecForExpand", "animationSpecForCollapse")]
+
+// androidx.compose.material3.SearchBarKt.SearchBar-nbWgWpA (state-based):
+// 7 user params; bits 0 (state), 1 (inputField) always provided.
+[assembly: ComposeDefaults("SearchBarDefault",
+    "!state", "!inputField", "modifier", "shape", "colors",
+    "inputFieldHeight", "floatingHeight")]
+
+// androidx.compose.material3.SearchBarKt.TopSearchBar-qKj4JfE:
+// 9 user params; bits 0 (state), 1 (inputField) always provided.
+[assembly: ComposeDefaults("TopSearchBarDefault",
+    "!state", "!inputField", "modifier", "shape", "colors",
+    "inputFieldHeight", "floatingHeight", "windowInsets", "scrollBehavior")]
+
+// androidx.compose.material3.SearchBarKt.ExpandedDockedSearchBar-qKj4JfE:
+// 9 user params; bits 0 (state), 1 (inputField), 8 (content) always provided.
+[assembly: ComposeDefaults("ExpandedDockedSearchBarDefault",
+    "!state", "!inputField", "modifier", "shape", "colors",
+    "inputFieldHeight", "floatingHeight", "properties", "!content")]
+
+// androidx.compose.material3.SearchBarKt.ExpandedFullScreenSearchBar-_UtchM0:
+// 10 user params; bits 0 (state), 1 (inputField), 9 (content) always provided.
+[assembly: ComposeDefaults("ExpandedFullScreenSearchBarDefault",
+    "!state", "!inputField", "modifier", "shape", "colors",
+    "inputFieldHeight", "floatingHeight", "windowInsets", "properties", "!content")]
+
+// androidx.compose.material3.SearchBarDefaults.InputField (state-based):
+// 18 user params. Bits 0 (textFieldState), 1 (searchBarState),
+// 2 (onSearch) are always provided by the SearchBarInputField facade —
+// onSearch defaults to a no-op ComposableLambda1 so Kotlin never invokes
+// a null callback on IME Search.
+[assembly: ComposeDefaults("SearchBarDefaultsInputFieldDefault",
+    "!textFieldState", "!searchBarState", "!onSearch",
+    "modifier", "enabled", "autoFocus", "textStyle",
+    "placeholder", "leadingIcon", "trailingIcon", "prefix", "suffix",
+    "inputTransformation", "outputTransformation", "scrollState",
+    "shape", "colors", "interactionSource")]
+
+// androidx.compose.material3.AndroidMenu_androidKt.DropdownMenuItem: 9 user
+// params; bits 0 (text), 1 (onClick) always provided. Declarative form used
+// (instead of generic) so leadingIcon and trailingIcon get enum members the
+// facade can clear when the caller supplies those optional slots.
+[assembly: ComposeDefaults("DropdownMenuItemDefault",
+    "!text", "!onClick", "modifier", "leadingIcon", "trailingIcon",
+    "enabled", "colors", "contentPadding", "interactionSource")]
 
 // androidx.compose.material3.AppBarKt.TopAppBar-cJHQLPU (subtitle overload):
 // 10 user params; bits 0 (title) and 1 (subtitle) always provided.
