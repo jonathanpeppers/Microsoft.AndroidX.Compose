@@ -40,7 +40,7 @@ public class MainActivity : ComposeActivity
             var searchQuery   = Remember(() => new MutableState<string>(""));
             var searchState   = Remember(() => new SearchBarState());
 
-            string[] tabNames = { "Basics", "Buttons", "Cards", "Drawer", "Selection", "Pickers", "Menus" };
+            string[] tabNames = { "Basics", "Buttons", "Cards", "Drawer", "Selection", "Pickers" };
 
             // Per-tab content. Only the current tab's column is added to
             // the screen — keeps the sample short enough to fit on one
@@ -275,26 +275,13 @@ public class MainActivity : ComposeActivity
                         }),
                     new Text($"Range: {rangeStart.Value:F2} – {rangeEnd.Value:F2}"),
                 },
-                _ => new Column
-                {
-                    new Text("Dialogs and sheets"),
-                    new Row
-                    {
-                        new Button(onClick: () => showSheet.Value = true) { new Text("Sheet") },
-                        new Spacer { Modifier = Modifier.Companion.FillMaxWidth(0.03f) },
-                        new Button(onClick: () => showDate.Value  = true) { new Text("Date") },
-                        new Spacer { Modifier = Modifier.Companion.FillMaxWidth(0.03f) },
-                        new Button(onClick: () => showTime.Value  = true) { new Text("Time") },
-                    },
-                    new HorizontalDivider { Modifier = Modifier.Companion.Padding(0, 8) },
-                    new Text($"Picked date: {pickedDate}"),
-                    new Text($"Picked time: {pickedTime}"),
-                },
+                _ => new Column(),
             };
 
-            // Tab 6 (Menus) builds a filtered result list dynamically, so it
-            // can't live inside the switch-expression collection-initializer.
-            if (tab.Value == 6)
+            // Tab 5 (Pickers) builds a filtered SearchBar result list
+            // dynamically, so it can't live inside the switch-expression
+            // collection-initializer.
+            if (tab.Value == 5)
             {
                 var fruits = new[]
                 {
@@ -315,6 +302,21 @@ public class MainActivity : ComposeActivity
 
                 tabContent = new Column
                 {
+                    new Text("Dialogs and sheets"),
+                    new Row
+                    {
+                        new Button(onClick: () => showSheet.Value = true) { new Text("Sheet") },
+                        new Spacer { Modifier = Modifier.Companion.FillMaxWidth(0.03f) },
+                        new Button(onClick: () => showDate.Value  = true) { new Text("Date") },
+                        new Spacer { Modifier = Modifier.Companion.FillMaxWidth(0.03f) },
+                        new Button(onClick: () => showTime.Value  = true) { new Text("Time") },
+                    },
+                    new HorizontalDivider { Modifier = Modifier.Companion.Padding(0, 8) },
+                    new Text($"Picked date: {pickedDate}"),
+                    new Text($"Picked time: {pickedTime}"),
+
+                    new HorizontalDivider { Modifier = Modifier.Companion.Padding(0, 16) },
+
                     new Text("DropdownMenu"),
                     new Row
                     {
@@ -419,11 +421,6 @@ public class MainActivity : ComposeActivity
                             {
                                 Icon  = new Text("📅"),
                                 Label = new Text("Pickers"),
-                            },
-                            new NavigationBarItem(selected: tab.Value == 6, onClick: () => tab.Value = 6)
-                            {
-                                Icon  = new Text("🔍"),
-                                Label = new Text("Menus"),
                             },
                         },
                         Body = new Column
