@@ -210,20 +210,20 @@ as C# types:
 | Theme & layout          | `MaterialTheme`, `Column`, `Row`, `Box`, `Spacer`, `Scaffold`, `HorizontalDivider`, `VerticalDivider` |
 | Lazy lists              | `LazyColumn<T>`, `LazyRow<T>`, `LazyVerticalGrid<T>`, `LazyHorizontalGrid<T>` (+ `GridCells`)      |
 | Surfaces                | `Surface`, `Card`, `ElevatedCard`, `OutlinedCard`                                                  |
-| App bars                | TopAppBar family (`TopAppBar`, `CenterAlignedTopAppBar`, `Medium`/`Large`/`MediumFlexible`/`LargeFlexibleTopAppBar`), `BottomAppBar`, `FlexibleBottomAppBar` |
-| Tabs                    | TabRow family (`TabRow`, `Primary`/`SecondaryTabRow`, `Primary`/`SecondaryScrollableTabRow`), `Tab`, `LeadingIconTab`, `CustomTab` |
+| App bars                | TopAppBar family (`TopAppBar`, `CenterAlignedTopAppBar`, `MediumTopAppBar`, `LargeTopAppBar`, `MediumFlexibleTopAppBar`, `LargeFlexibleTopAppBar`), `BottomAppBar`, `FlexibleBottomAppBar` |
+| Tabs                    | TabRow family (`TabRow`, `PrimaryTabRow`, `SecondaryTabRow`, `PrimaryScrollableTabRow`, `SecondaryScrollableTabRow`), `Tab`, `LeadingIconTab`, `CustomTab` |
 | Buttons                 | `Button`, `IconButton`, `FloatingActionButton`                                                     |
 | Text & input            | `Text`, `TextField`, `OutlinedTextField`                                                           |
 | Media                   | `Image`, `Icon`                                                                                    |
 | Chips                   | `AssistChip`, `FilterChip`, `InputChip`, `SuggestionChip` (each with `Elevated*` variant where applicable) |
 | Selection               | `Checkbox`, `TriStateCheckbox`, `RadioButton`, `Switch`, `Slider`, `RangeSlider`, `SegmentedButton` + `SingleChoice`/`MultiChoiceSegmentedButtonRow` |
 | Progress, lists, badges | `CircularProgressIndicator`, `LinearProgressIndicator`, `ListItem`, `Badge`, `BadgedBox`           |
-| Menus & search          | `DropdownMenu` + `DropdownMenuItem`, SearchBar family (`SearchBar`, `TopSearchBar`, `ExpandedDocked`/`ExpandedFullScreenSearchBar`, `SearchBarInputField`) |
+| Menus & search          | `DropdownMenu` + `DropdownMenuItem`, SearchBar family (`SearchBar`, `TopSearchBar`, `ExpandedDockedSearchBar`, `ExpandedFullScreenSearchBar`, `SearchBarInputField`) |
 | Navigation              | `NavigationBar`+`Item`, `NavigationRail`+`Item`, `WideNavigationRail`+`Item`, `ModalWideNavigationRail` |
 | Drawers                 | `ModalNavigationDrawer`, `DismissibleNavigationDrawer`, `PermanentNavigationDrawer` (each with matching `*DrawerSheet`) |
 | Sheets & pickers        | `ModalBottomSheet`, `BottomSheetScaffold`, `DatePicker`/`DatePickerDialog`, `TimePicker`/`TimePickerDialog` |
 | Overlays                | `AlertDialog`, `Tooltip`, `Snackbar` + `SnackbarHost`                                              |
-| Modifier                | `Modifier.Companion.{Padding, FillMaxWidth, FillMaxHeight, Background, Border, Clickable, SafeDrawingPadding, ClipRoundedCorners, …}` chains |
+| Modifier                | `Modifier.Companion.{Padding, FillMaxWidth, FillMaxHeight, FillMaxSize, Width, Height, Size, SafeDrawingPadding, SystemBarsPadding}` chains |
 | State                   | `Remember`, `MutableState<T>`, `MutableNumberState<T>` (with `++/--`/`ToString` for Kotlin parity), plus `DatePickerState`, `TimePickerState`, `SearchBarState`, `SnackbarHostState` |
 
 ---
@@ -337,11 +337,13 @@ boilerplate (cached `IntPtr` class/method handles, signature constants,
 wrapper whose `.Handle` was read into a `JValue`, and `DeleteLocalRef`
 for local string refs) is emitted by `ComposeBridgeGenerator` in
 [`ComposeNet.SourceGenerators`](src/ComposeNet.SourceGenerators). Only
-a handful of outliers (`Modifier.Companion` field lookup, the two-step
-`Modifier.ClipRoundedCorners`) stay hand-written. The user never sees
-any of this; when [dotnet/java-interop#1440] lands and the binder
-stops dropping inline-class overloads, each bridge declaration
-collapses to a direct generated binding call.
+two outliers stay hand-written: `ModifierHandle` (a managed
+`IModifier? → IntPtr` conversion that none of the bridge shapes fit)
+and `ModifierCompanionInstance` (a `$$INSTANCE` static field lookup,
+not a method invocation). The user never sees any of this; when
+[dotnet/java-interop#1440] lands and the binder stops dropping
+inline-class overloads, each bridge declaration collapses to a direct
+generated binding call.
 
 [dotnet/java-interop#1440]: https://github.com/dotnet/java-interop/pull/1440
 
