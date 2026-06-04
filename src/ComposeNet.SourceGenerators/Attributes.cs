@@ -61,13 +61,18 @@ internal static class Attributes
             /// <para><b>Signature</b>: full JNI signature string for the
             /// underlying static method, ending in
             /// <c>...Composer;I*I)V</c> (one trailing <c>I</c> per
-            /// <c>$changed</c> slot, then one for <c>$default</c>).</para>
+            /// <c>$changed</c> slot, then one for <c>$default</c>) or
+            /// <c>...Composer;I*)V</c> when <b>Defaults</b> is omitted —
+            /// <c>$default</c> only exists in the bytecode when at least
+            /// one Kotlin parameter has a default value.</para>
             /// <para><b>Defaults</b>: <c>typeof(XxxDefault)</c> — the
             /// <c>$default</c> bitmask enum produced by
             /// <see cref="ComposeDefaultsAttribute"/>. The generator reads
             /// the matching declarative <c>[ComposeDefaults(...)]</c>
             /// attribute to learn the Kotlin parameter names + bit
-            /// positions.</para>
+            /// positions. Omit when the underlying <c>@Composable</c>
+            /// has no defaultable parameters (no <c>$default</c> slot in
+            /// the bytecode); user params are then matched positionally.</para>
             /// <para><b>InstanceField</b>: when set, the bridge calls an
             /// instance method on a Kotlin <c>object</c> singleton — name
             /// the <c>$$INSTANCE</c>-style static field
