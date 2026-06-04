@@ -260,3 +260,49 @@ using ComposeNet;
 // 1 user param (`spacing`), defaulted by the wrapper.
 [assembly: ComposeDefaults("RememberPlainTooltipPositionProviderDefault",
     "spacing")]
+
+// androidx.compose.material3.CheckboxKt.Checkbox: 6 user params,
+// bit 0 = checked (always provided), bit 1 = onCheckedChange (always
+// provided — Function1, the user passes a callback).
+[assembly: ComposeDefaults("CheckboxDefault",
+    "!checked", "!onCheckedChange", "modifier", "enabled",
+    "colors", "interactionSource")]
+
+// androidx.compose.material3.CheckboxKt.TriStateCheckbox: 6 user params,
+// bit 0 = state (always provided). onClick is Function0? defaulting to
+// null in Kotlin; the facade always provides a callback.
+[assembly: ComposeDefaults("TriStateCheckboxDefault",
+    "!state", "!onClick", "modifier", "enabled",
+    "colors", "interactionSource")]
+
+// androidx.compose.material3.RadioButtonKt.RadioButton: 6 user params,
+// bit 0 = selected (always provided). onClick is Function0?, the facade
+// always provides a callback.
+[assembly: ComposeDefaults("RadioButtonDefault",
+    "!selected", "!onClick", "modifier", "enabled",
+    "colors", "interactionSource")]
+
+// androidx.compose.material3.SwitchKt.Switch: 7 user params,
+// bit 0 = checked (always provided), bit 1 = onCheckedChange (always
+// provided). bit 3 = thumbContent is Function2? with Kotlin default
+// null; the facade doesn't expose it and always passes null, which
+// matches the default — bit can stay clear.
+[assembly: ComposeDefaults("SwitchDefault",
+    "!checked", "!onCheckedChange", "modifier", "thumbContent",
+    "enabled", "colors", "interactionSource")]
+
+// androidx.compose.material3.SliderKt.Slider (simple float overload):
+// 9 user params; bits 0 (value) and 1 (onValueChange) always provided.
+// The longer overload with Function3 thumb/track slots has non-null
+// Kotlin defaults that can't be safely substituted, so we lock in this
+// simpler shape via the declarative form.
+[assembly: ComposeDefaults("SliderDefault",
+    "!value", "!onValueChange", "modifier", "enabled", "valueRange",
+    "steps", "onValueChangeFinished", "colors", "interactionSource")]
+
+// androidx.compose.material3.SliderKt.RangeSlider (simple
+// ClosedFloatingPointRange overload): 8 user params; bits 0 (value)
+// and 1 (onValueChange) always provided.
+[assembly: ComposeDefaults("RangeSliderDefault",
+    "!value", "!onValueChange", "modifier", "enabled", "valueRange",
+    "steps", "onValueChangeFinished", "colors")]
