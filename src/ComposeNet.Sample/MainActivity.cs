@@ -375,14 +375,17 @@ public class MainActivity : ComposeActivity
                     new Text($"ModalWideNavigationRail (selected: {modalRailIdx})"),
                     new Row
                     {
-                        new Button(onClick: () => showModalRail.Value = true) { new Text("Open modal rail") },
+                        new Button(onClick: () => showModalRail.Value = !showModalRail.Value)
+                        {
+                            new Text(showModalRail.Value ? "Hide modal rail" : "Open modal rail"),
+                        },
                     },
                     // Visibility-toggle pattern (see ModalWideNavigationRail
                     // XML doc): mounting the rail opens it; the "Close"
                     // item dismisses it. Scrim taps visually hide the rail
-                    // but can't notify C# yet (no onDismissRequest /
-                    // coroutine support), so a second "Open" tap requires
-                    // first toggling showModalRail off.
+                    // but can't notify C# (no onDismissRequest / coroutine
+                    // support), so the toggle button above is the escape
+                    // hatch for re-mounting after a scrim dismiss.
                     showModalRail.Value
                         ? new ModalWideNavigationRail
                         {

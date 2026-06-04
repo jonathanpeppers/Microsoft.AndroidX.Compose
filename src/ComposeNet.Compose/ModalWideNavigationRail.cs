@@ -33,6 +33,7 @@ namespace ComposeNet;
 ///
 /// <code>
 /// var show = Remember(() =&gt; new MutableState&lt;bool&gt;(false));
+/// var tab  = Remember(() =&gt; new MutableNumberState&lt;int&gt;(0));
 /// new Row
 /// {
 ///     new Button(onClick: () =&gt; show.Value = true) { new Text("Menu") },
@@ -40,7 +41,7 @@ namespace ComposeNet;
 ///         ? new ModalWideNavigationRail
 ///         {
 ///             Header = new Text("Sections"),
-///             new WideNavigationRailItem(selected: tab == 0, onClick: () =&gt; { tab.Value = 0; show.Value = false; })
+///             new WideNavigationRailItem(selected: tab.Value == 0, onClick: () =&gt; { tab.Value = 0; show.Value = false; })
 ///             {
 ///                 Icon  = new Text("🏠"),
 ///                 Label = new Text("Home"),
