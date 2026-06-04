@@ -291,6 +291,32 @@ public sealed class Modifier
     }
 
     /// <summary>
+    /// <c>Modifier.weight(weight, fill = true)</c> — only valid inside a
+    /// <see cref="Row"/> or <see cref="Column"/> (or any container that
+    /// publishes <see cref="ScopeKind.Row"/> / <see cref="ScopeKind.Column"/>).
+    /// Distributes the leftover space along the parent's main axis in
+    /// proportion to other weighted children. Set <paramref name="fill"/>
+    /// to <c>false</c> to let the child be smaller than its allotted slot.
+    /// </summary>
+    public Modifier Weight(float weight, bool fill = true)
+    {
+        return Append(curr =>
+        {
+            IntPtr scope = RenderContext.CurrentScope;
+            ScopeKind kind = RenderContext.CurrentScopeKind;
+            return kind switch
+            {
+                ScopeKind.Row    => ComposeBridges.RowScopeModifierWeight(scope, curr, weight, fill),
+                ScopeKind.Column => ComposeBridges.ColumnScopeModifierWeight(scope, curr, weight, fill),
+                _ => throw new System.InvalidOperationException(
+                    "Modifier.Weight() can only be used inside a Row, Column, or " +
+                    "Row/Column-shaped scope (BottomAppBar, NavigationBar, …). " +
+                    $"Current scope kind: {kind}.")
+            };
+        });
+    }
+
+    /// <summary>
     /// Materialize the chain into a managed <c>IModifier</c> wrapper.
     /// Returns <c>null</c> when the chain is empty (no ops appended) so
     /// callers can keep the Kotlin <c>$default</c> bit set and let

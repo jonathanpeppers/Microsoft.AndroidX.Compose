@@ -16,7 +16,11 @@ public sealed class Row : ComposableContainer
     internal override void Render(IComposer composer)
     {
         var modifier = BuildModifier();
-        var content  = ComposableLambdas.Wrap3(composer, c => RenderChildren(c));
+        var content  = ComposableLambdas.Wrap3(composer, (scope, c) =>
+        {
+            using var _ = RenderContext.PushScope(scope, ScopeKind.Row);
+            RenderChildren(c);
+        });
 
         int defaults = (int)RowDefault.All;
         if (modifier is not null) defaults &= ~(int)RowDefault.Modifier;

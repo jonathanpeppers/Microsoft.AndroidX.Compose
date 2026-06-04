@@ -17,7 +17,7 @@ public sealed class Badge : ComposableContainer
     {
         var content = ComposableLambdas.Wrap3(composer, (scope, c) =>
         {
-            using var _ = RenderContext.PushScope(scope);
+            using var _ = RenderContext.PushScope(scope, ScopeKind.Row);
             RenderChildren(c);
         });
         ComposeBridges.Badge(BuildModifier(), content, composer);

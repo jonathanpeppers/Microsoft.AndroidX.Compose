@@ -265,6 +265,20 @@ using ComposeNet;
 [assembly: ComposeDefaults("ModifierClickableDefault",
     "enabled", "onClickLabel", "role", "!onClick")]
 
+// androidx.compose.foundation.layout.{Row,Column}Scope$DefaultImpls.weight$default —
+// non-@Composable scope extension. Shared by both Row and Column
+// weight bridges since the helper signatures are identical apart from
+// the dispatch-receiver class. The bridge generator treats the first
+// IntPtr (rowScope / columnScope) as the JNI receiver (bound to
+// args[0], NOT a $default bit). The remaining Kotlin parameters in
+// declaration order are: the extension receiver Modifier (bit 0,
+// always supplied), weight (bit 1, always supplied), fill (bit 2,
+// optional — Kotlin's default is true). Our wrapper always passes
+// fill explicitly, so the generator clears bit 2 too and the helper
+// uses our value.
+[assembly: ComposeDefaults("ModifierWeightDefault",
+    "!modifier", "!weight", "fill")]
+
 // androidx.compose.material3.NavigationRailKt.NavigationRail-qi6gXK8:
 // 6 user params, bit 5 = content provided.
 [assembly: ComposeDefaults("NavigationRailDefault",

@@ -15,12 +15,23 @@ internal static class RenderContext
     static IntPtr s_scope;
 
     [System.ThreadStatic]
+    static ScopeKind s_scopeKind;
+
+    [System.ThreadStatic]
     static int s_rowChildIndex;
 
     [System.ThreadStatic]
     static int s_rowChildCount;
 
     public static IntPtr CurrentScope => s_scope;
+
+    /// <summary>
+    /// Kind of the currently-active scope receiver, or
+    /// <see cref="ScopeKind.None"/> when no scope has been pushed.
+    /// Read by scope-extension modifiers (e.g. <c>Modifier.Weight</c>)
+    /// to pick the right Kotlin helper.
+    /// </summary>
+    public static ScopeKind CurrentScopeKind => s_scopeKind;
 
     /// <summary>
     /// Index of the currently-rendering child within an enclosing row
@@ -33,11 +44,13 @@ internal static class RenderContext
     /// <summary>Total child count of the enclosing row container, or 0.</summary>
     public static int CurrentRowChildCount => s_rowChildCount;
 
-    public static ScopeFrame PushScope(IntPtr scope)
+    public static ScopeFrame PushScope(IntPtr scope, ScopeKind kind = ScopeKind.Other)
     {
-        var prev = s_scope;
-        s_scope = scope;
-        return new ScopeFrame(prev);
+        var prevScope = s_scope;
+        var prevKind  = s_scopeKind;
+        s_scope     = scope;
+        s_scopeKind = kind;
+        return new ScopeFrame(prevScope, prevKind);
     }
 
     /// <summary>
@@ -56,9 +69,18 @@ internal static class RenderContext
 
     internal readonly struct ScopeFrame : System.IDisposable
     {
-        readonly IntPtr _previous;
-        public ScopeFrame(IntPtr previous) => _previous = previous;
-        public void Dispose() => s_scope = _previous;
+        readonly IntPtr    _previousScope;
+        readonly ScopeKind _previousKind;
+        public ScopeFrame(IntPtr previousScope, ScopeKind previousKind)
+        {
+            _previousScope = previousScope;
+            _previousKind  = previousKind;
+        }
+        public void Dispose()
+        {
+            s_scope     = _previousScope;
+            s_scopeKind = _previousKind;
+        }
     }
 
     internal readonly struct RowFrame : System.IDisposable
