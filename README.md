@@ -240,6 +240,7 @@ as C# types:
 | Buttons     | `Button`, `IconButton`, `FloatingActionButton`                                                    |
 | Text        | `Text`, `TextField`, `OutlinedTextField`                                                          |
 | Chips       | `AssistChip`, `FilterChip`, `InputChip`, `SuggestionChip`                                         |
+| Selection   | `Checkbox`, `TriStateCheckbox`, `RadioButton`, `Switch`, `Slider`, `RangeSlider`                  |
 | Navigation  | `NavigationBar` + `NavigationBarItem`, `NavigationRail` + `NavigationRailItem`                    |
 | Sheets      | `ModalBottomSheet`, `BottomSheetScaffold`                                                         |
 | Pickers     | `DatePicker`, `DatePickerDialog`, `TimePicker`, `TimePickerDialog`                                |
