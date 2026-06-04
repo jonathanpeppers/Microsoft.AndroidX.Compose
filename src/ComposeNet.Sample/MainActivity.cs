@@ -37,7 +37,7 @@ public class MainActivity : ComposeActivity
                     new Text($"Count: {count}"),
                     new Row
                     {
-                        new Image(Resource.Mipmap.appicon, "App icon"),
+                        new Image(Resource.Drawable.ic_star, "Star icon"),
                         new Spacer { Modifier = Modifier.Companion.FillMaxWidth(0.05f) },
                         new Column
                         {
@@ -204,7 +204,7 @@ public class MainActivity : ComposeActivity
                         {
                             new NavigationBarItem(selected: tab.Value == 0, onClick: () => tab.Value = 0)
                             {
-                                Icon  = new Icon(Android.Resource.Drawable.IcMenuPreferences, "Basics"),
+                                Icon  = new Icon(Resource.Drawable.ic_settings, "Basics"),
                                 Label = new Text("Basics"),
                             },
                             new NavigationBarItem(selected: tab.Value == 1, onClick: () => tab.Value = 1)
