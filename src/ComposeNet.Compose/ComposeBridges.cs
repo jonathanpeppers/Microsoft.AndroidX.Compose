@@ -1039,4 +1039,129 @@ internal static partial class ComposeBridges
         IFunction2? trailingContent,
         int         defaults,
         IComposer   composer);
+
+    // androidx.compose.material3.AndroidMenu_androidKt.DropdownMenu-IlH_yew —
+    // the menu *container* that anchors the (already-bound) DropdownMenuItem.
+    // 12 user params: expanded, onDismissRequest, modifier, offset (DpOffset
+    // packed in J), scrollState, properties, shape, containerColor (J),
+    // tonalElevation (Dp F), shadowElevation (Dp F), border, content
+    // (ColumnScope receiver Function3). Bits 0/1/11 (expanded, onDismissRequest,
+    // content) always provided.
+    [ComposeBridge(
+        Class     = "androidx/compose/material3/AndroidMenu_androidKt",
+        JvmName   = "DropdownMenu-IlH_yew",
+        Signature = "(ZLkotlin/jvm/functions/Function0;Landroidx/compose/ui/Modifier;J" +
+                    "Landroidx/compose/foundation/ScrollState;" +
+                    "Landroidx/compose/ui/window/PopupProperties;" +
+                    "Landroidx/compose/ui/graphics/Shape;JFF" +
+                    "Landroidx/compose/foundation/BorderStroke;" +
+                    "Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;III)V",
+        Defaults  = typeof(DropdownMenuDefault))]
+    public static partial void DropdownMenu(
+        bool        expanded,
+        IFunction0  onDismissRequest,
+        IModifier?  modifier,
+        IFunction3  content,
+        IComposer   composer);
+
+    // androidx.compose.material3.SearchBarKt.rememberSearchBarState —
+    // factory @Composable that produces a `SearchBarState`. 3 user params:
+    // initialValue (enum), animationSpecForExpand, animationSpecForCollapse.
+    // The wrapper defaults all three (initialValue defaults to Collapsed).
+    [ComposeBridge(
+        Class     = "androidx/compose/material3/SearchBarKt",
+        JvmName   = "rememberSearchBarState",
+        Signature = "(Landroidx/compose/material3/SearchBarValue;" +
+                    "Landroidx/compose/animation/core/AnimationSpec;" +
+                    "Landroidx/compose/animation/core/AnimationSpec;" +
+                    "Landroidx/compose/runtime/Composer;II)" +
+                    "Landroidx/compose/material3/SearchBarState;",
+        Defaults  = typeof(RememberSearchBarStateDefault))]
+    public static partial IntPtr RememberSearchBarState(IComposer composer);
+
+    // androidx.compose.material3.SearchBarKt.SearchBar-nbWgWpA — the
+    // state-based collapsed search bar. 7 user params: state, inputField
+    // (Function2), modifier, shape, colors, inputFieldHeight (Dp F),
+    // floatingHeight (Dp F). Bits 0/1 (state, inputField) always provided.
+    [ComposeBridge(
+        Class     = "androidx/compose/material3/SearchBarKt",
+        JvmName   = "SearchBar-nbWgWpA",
+        Signature = "(Landroidx/compose/material3/SearchBarState;" +
+                    "Lkotlin/jvm/functions/Function2;Landroidx/compose/ui/Modifier;" +
+                    "Landroidx/compose/ui/graphics/Shape;" +
+                    "Landroidx/compose/material3/SearchBarColors;FF" +
+                    "Landroidx/compose/runtime/Composer;II)V",
+        Defaults  = typeof(SearchBarDefault))]
+    public static partial void SearchBar(
+        IntPtr     state,
+        IFunction2 inputField,
+        IModifier? modifier,
+        IComposer  composer);
+
+    // androidx.compose.material3.SearchBarKt.TopSearchBar-qKj4JfE — like
+    // SearchBar but draws as a scrollable top bar (adds WindowInsets +
+    // SearchBarScrollBehavior). 9 user params; bits 0/1 always provided.
+    [ComposeBridge(
+        Class     = "androidx/compose/material3/SearchBarKt",
+        JvmName   = "TopSearchBar-qKj4JfE",
+        Signature = "(Landroidx/compose/material3/SearchBarState;" +
+                    "Lkotlin/jvm/functions/Function2;Landroidx/compose/ui/Modifier;" +
+                    "Landroidx/compose/ui/graphics/Shape;" +
+                    "Landroidx/compose/material3/SearchBarColors;FF" +
+                    "Landroidx/compose/foundation/layout/WindowInsets;" +
+                    "Landroidx/compose/material3/SearchBarScrollBehavior;" +
+                    "Landroidx/compose/runtime/Composer;II)V",
+        Defaults  = typeof(TopSearchBarDefault))]
+    public static partial void TopSearchBar(
+        IntPtr     state,
+        IFunction2 inputField,
+        IModifier? modifier,
+        IComposer  composer);
+
+    // androidx.compose.material3.SearchBarKt.ExpandedDockedSearchBar-qKj4JfE —
+    // the expanded popup half of a docked SearchBar pair. Renders only when
+    // the SearchBarState is Expanded. 9 user params: state, inputField,
+    // modifier, shape, colors, inputFieldHeight, floatingHeight, properties,
+    // content (ColumnScope receiver Function3). Bits 0/1/8 always provided.
+    [ComposeBridge(
+        Class     = "androidx/compose/material3/SearchBarKt",
+        JvmName   = "ExpandedDockedSearchBar-qKj4JfE",
+        Signature = "(Landroidx/compose/material3/SearchBarState;" +
+                    "Lkotlin/jvm/functions/Function2;Landroidx/compose/ui/Modifier;" +
+                    "Landroidx/compose/ui/graphics/Shape;" +
+                    "Landroidx/compose/material3/SearchBarColors;FF" +
+                    "Landroidx/compose/ui/window/PopupProperties;" +
+                    "Lkotlin/jvm/functions/Function3;" +
+                    "Landroidx/compose/runtime/Composer;II)V",
+        Defaults  = typeof(ExpandedDockedSearchBarDefault))]
+    public static partial void ExpandedDockedSearchBar(
+        IntPtr     state,
+        IFunction2 inputField,
+        IModifier? modifier,
+        IFunction3 content,
+        IComposer  composer);
+
+    // androidx.compose.material3.SearchBarKt.ExpandedFullScreenSearchBar-_UtchM0 —
+    // the full-screen popup half of a SearchBar pair (Dialog-based). 10
+    // user params: state, inputField, modifier, shape, colors, inputFieldHeight,
+    // floatingHeight, windowInsets (Function2 producing WindowInsets),
+    // properties (DialogProperties), content. Bits 0/1/9 always provided.
+    [ComposeBridge(
+        Class     = "androidx/compose/material3/SearchBarKt",
+        JvmName   = "ExpandedFullScreenSearchBar-_UtchM0",
+        Signature = "(Landroidx/compose/material3/SearchBarState;" +
+                    "Lkotlin/jvm/functions/Function2;Landroidx/compose/ui/Modifier;" +
+                    "Landroidx/compose/ui/graphics/Shape;" +
+                    "Landroidx/compose/material3/SearchBarColors;FF" +
+                    "Lkotlin/jvm/functions/Function2;" +
+                    "Landroidx/compose/ui/window/DialogProperties;" +
+                    "Lkotlin/jvm/functions/Function3;" +
+                    "Landroidx/compose/runtime/Composer;II)V",
+        Defaults  = typeof(ExpandedFullScreenSearchBarDefault))]
+    public static partial void ExpandedFullScreenSearchBar(
+        IntPtr     state,
+        IFunction2 inputField,
+        IModifier? modifier,
+        IFunction3 content,
+        IComposer  composer);
 }
