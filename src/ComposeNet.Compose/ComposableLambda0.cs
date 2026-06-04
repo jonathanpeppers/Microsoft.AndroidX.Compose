@@ -13,5 +13,11 @@ internal sealed class ComposableLambda0 : Java.Lang.Object, IFunction0
 {
     readonly System.Action _body;
     public ComposableLambda0(System.Action body) => _body = body;
-    public Java.Lang.Object? Invoke() { _body(); return null; }
+
+    // Kotlin Function0<Unit> contractually returns Unit.INSTANCE. Returning
+    // Java null happens to work today because every Compose call site we
+    // touch discards the result, but a future compose-compiler / K2 emit
+    // may chain `.let { }` / `.also { }` on the result and add an
+    // Intrinsics.checkNotNullExpressionValue. See issue #43.
+    public Java.Lang.Object Invoke() { _body(); return global::Kotlin.Unit.Instance!; }
 }

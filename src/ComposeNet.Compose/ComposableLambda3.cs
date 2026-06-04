@@ -27,11 +27,13 @@ internal sealed class ComposableLambda3 : Java.Lang.Object, IFunction3
 
     public ComposableLambda3(System.Action<IntPtr, IComposer> body) => _body = body;
 
-    public Java.Lang.Object? Invoke(Java.Lang.Object? p0, Java.Lang.Object? p1, Java.Lang.Object? p2)
+    // Kotlin Function3<Scope, Composer, Int, Unit> contractually returns
+    // Unit.INSTANCE. See ComposableLambda0 / issue #43 for the rationale.
+    public Java.Lang.Object Invoke(Java.Lang.Object? p0, Java.Lang.Object? p1, Java.Lang.Object? p2)
     {
         System.ArgumentNullException.ThrowIfNull(p1);
         var composer = Android.Runtime.Extensions.JavaCast<IComposer>(p1);
         _body(p0?.Handle ?? IntPtr.Zero, composer);
-        return null;
+        return global::Kotlin.Unit.Instance!;
     }
 }
