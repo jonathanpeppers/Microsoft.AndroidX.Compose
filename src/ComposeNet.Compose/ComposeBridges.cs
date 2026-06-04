@@ -733,6 +733,106 @@ internal static partial class ComposeBridges
         Defaults  = typeof(DrawerSheetDefault))]
     public static partial void PermanentDrawerSheet(IFunction3 content, long drawerContainerColor, IComposer composer);
 
+    // androidx.compose.material3.SegmentedButtonKt.SegmentedButton
+    // (SingleChoiceSegmentedButtonRowScope receiver, longer 11-param overload
+    // with PaddingValues). The Kt method has 4 same-named overloads, so the
+    // binder strips them all.
+    const string SingleChoiceSegmentedButtonSig =
+        "(Landroidx/compose/material3/SingleChoiceSegmentedButtonRowScope;Z" +
+        "Lkotlin/jvm/functions/Function0;Landroidx/compose/ui/graphics/Shape;" +
+        "Landroidx/compose/ui/Modifier;Z" +
+        "Landroidx/compose/material3/SegmentedButtonColors;" +
+        "Landroidx/compose/foundation/BorderStroke;" +
+        "Landroidx/compose/foundation/layout/PaddingValues;" +
+        "Landroidx/compose/foundation/interaction/MutableInteractionSource;" +
+        "Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;" +
+        "Landroidx/compose/runtime/Composer;III)V";
+
+    [ComposeBridge(
+        Class     = "androidx/compose/material3/SegmentedButtonKt",
+        JvmName   = "SegmentedButton",
+        Signature = SingleChoiceSegmentedButtonSig,
+        Defaults  = typeof(SingleChoiceSegmentedButtonDefault))]
+    public static partial void SingleChoiceSegmentedButton(
+        IntPtr      singleChoiceScope,
+        bool        selected,
+        IFunction0  onClick,
+        IntPtr      shape,
+        IFunction2  label,
+        IModifier?  modifier,
+        IFunction2? icon,
+        int         defaults,
+        IComposer   composer);
+
+    // androidx.compose.material3.SegmentedButtonKt.SegmentedButton
+    // (MultiChoiceSegmentedButtonRowScope receiver, longer 11-param overload).
+    const string MultiChoiceSegmentedButtonSig =
+        "(Landroidx/compose/material3/MultiChoiceSegmentedButtonRowScope;Z" +
+        "Lkotlin/jvm/functions/Function1;Landroidx/compose/ui/graphics/Shape;" +
+        "Landroidx/compose/ui/Modifier;Z" +
+        "Landroidx/compose/material3/SegmentedButtonColors;" +
+        "Landroidx/compose/foundation/BorderStroke;" +
+        "Landroidx/compose/foundation/layout/PaddingValues;" +
+        "Landroidx/compose/foundation/interaction/MutableInteractionSource;" +
+        "Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;" +
+        "Landroidx/compose/runtime/Composer;III)V";
+
+    [ComposeBridge(
+        Class     = "androidx/compose/material3/SegmentedButtonKt",
+        JvmName   = "SegmentedButton",
+        Signature = MultiChoiceSegmentedButtonSig,
+        Defaults  = typeof(MultiChoiceSegmentedButtonDefault))]
+    public static partial void MultiChoiceSegmentedButton(
+        IntPtr      multiChoiceScope,
+        bool        @checked,
+        IFunction1  onCheckedChange,
+        IntPtr      shape,
+        IFunction2  label,
+        IModifier?  modifier,
+        IFunction2? icon,
+        int         defaults,
+        IComposer   composer);
+
+    // androidx.compose.material3.SegmentedButtonDefaults.itemShape — INSTANCE
+    // method on the SegmentedButtonDefaults Kotlin `object` singleton, returns
+    // the rounded-corner Shape for a segment given its position in the row.
+    // The Material3 binding strips the surrounding SegmentedButtonDefaults
+    // helpers (probably because some sibling members use inline-class types),
+    // so we go through the source generator's InstanceField shape — that walks
+    // the static `INSTANCE` field once, caches a global ref, then calls the
+    // method via CallObjectMethod. The auto-defaults logic on the generator
+    // sees `baseShape` is in [ComposeDefaults] but missing from the user-facing
+    // params, so it sets bit 2 ($default for baseShape) automatically — making
+    // Kotlin substitute SegmentedButtonDefaults.getBaseShape() (the theme's
+    // default rounded-corner shape).
+    [ComposeBridge(
+        Class         = "androidx/compose/material3/SegmentedButtonDefaults",
+        JvmName       = "itemShape",
+        Signature     = "(IILandroidx/compose/foundation/shape/CornerBasedShape;" +
+                        "Landroidx/compose/runtime/Composer;II)" +
+                        "Landroidx/compose/ui/graphics/Shape;",
+        InstanceField = "INSTANCE",
+        Defaults      = typeof(SegmentedButtonItemShapeDefault))]
+    internal static partial IntPtr ItemShape(int index, int count, IComposer composer);
+
+    // androidx.compose.material3.WideNavigationRailKt.WideNavigationRail.
+    // No mangled hash (no inline-class types), but the binder still strips
+    // it — likely because it's @ExperimentalMaterial3ExpressiveApi-annotated.
+    [ComposeBridge(
+        Class     = "androidx/compose/material3/WideNavigationRailKt",
+        JvmName   = "WideNavigationRail",
+        Signature = "(Landroidx/compose/ui/Modifier;" +
+                    "Landroidx/compose/material3/WideNavigationRailState;" +
+                    "Landroidx/compose/ui/graphics/Shape;" +
+                    "Landroidx/compose/material3/WideNavigationRailColors;" +
+                    "Lkotlin/jvm/functions/Function2;" +
+                    "Landroidx/compose/foundation/layout/WindowInsets;" +
+                    "Landroidx/compose/foundation/layout/Arrangement$Vertical;" +
+                    "Lkotlin/jvm/functions/Function2;" +
+                    "Landroidx/compose/runtime/Composer;II)V",
+        Defaults  = typeof(WideNavigationRailDefault))]
+    public static partial void WideNavigationRail(IModifier? modifier, IFunction2 content, IComposer composer);
+
     // Modifier-chain extensions. These are non-@Composable Kotlin
     // extension functions on Modifier; their JNI signatures end in
     // `I L<marker>` (the $default bitmask plus a synthetic-overload
