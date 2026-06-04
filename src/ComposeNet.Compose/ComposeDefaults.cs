@@ -283,7 +283,13 @@ using ComposeNet;
 
 // androidx.compose.material3.SegmentedButtonKt.{Single,Multi}ChoiceSegmentedButtonRow-uFdPcIQ:
 // 3 user params, bit 2 (content) always provided. Both row variants
-// share the same signature so they reuse one enum.
+// share the same signature so they reuse one enum. The JNI descriptor
+// is `(...;Composer;II)V` — two trailing `I` slots, so the row HAS a
+// `$default` slot (3 user params → 1 `$changed` group → trailingInts=2
+// > expectedChangedSlots=1). The bound binding's parameter names are
+// misleading: the binder labels position 4 as `p4` ($changed) and
+// position 5 as `_changed` ($default). Call sites pass this enum's
+// mask to the `_changed:` named arg, which is positionally `$default`.
 [assembly: ComposeDefaults("SegmentedButtonRowDefault",
     "modifier", "space", "!content")]
 
