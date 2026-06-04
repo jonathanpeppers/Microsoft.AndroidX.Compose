@@ -167,10 +167,16 @@ public static partial void Button(
 
 | ID      | Meaning                                                     |
 |---------|-------------------------------------------------------------|
-| CN2001  | `[ComposeBridge]` is missing required metadata.             |
-| CN2002  | Could not parse the JNI signature.                          |
-| CN2003  | `[ComposeBridge]` and `[ComposeDefaults]` parameter count disagree. |
-| CN2004  | `composer` is not the last C# parameter.                    |
+| CN2001  | `[ComposeBridge]` is missing/unmatched `Defaults` enum.     |
+| CN2002  | Bridge signature/`Defaults` parameter count disagree.       |
+| CN2003  | Bridge partial-method param doesn't match any Kotlin name.  |
+| CN2004  | `[ComposeBridge]` has a malformed JNI signature.            |
+| CN2005  | `Defaults` disagrees with the JNI `$default` slot.          |
+
+**When you add a new generator diagnostic, also update this table in
+`.github/copilot-instructions.md` (and the matching table for the
+`ComposeDefaultsGenerator` above if it's a CN1xxx code). Source of
+truth is `src/ComposeNet.SourceGenerators/Diagnostics.cs`.**
 
 **Do not add a `[ComposeBridge]` if the binding already exposes the
 method**; call the generated C# entry point instead (see
