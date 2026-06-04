@@ -1131,4 +1131,185 @@ internal static partial class ComposeBridges
         IFunction2? trailingContent,
         int         defaults,
         IComposer   composer);
+
+    // androidx.compose.material3.AppBarKt.TopAppBar-cJHQLPU (subtitle
+    // overload). 10 user params: title, subtitle, modifier, navigationIcon,
+    // actions, titleHorizontalAlignment, expandedHeight, windowInsets,
+    // colors, scrollBehavior.
+    [ComposeBridge(
+        Class     = "androidx/compose/material3/AppBarKt",
+        JvmName   = "TopAppBar-cJHQLPU",
+        Signature = "(Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;" +
+                    "Landroidx/compose/ui/Modifier;Lkotlin/jvm/functions/Function2;" +
+                    "Lkotlin/jvm/functions/Function3;Landroidx/compose/ui/Alignment$Horizontal;F" +
+                    "Landroidx/compose/foundation/layout/WindowInsets;" +
+                    "Landroidx/compose/material3/TopAppBarColors;" +
+                    "Landroidx/compose/material3/TopAppBarScrollBehavior;" +
+                    "Landroidx/compose/runtime/Composer;II)V",
+        Defaults  = typeof(TopAppBarSubtitleDefault))]
+    public static partial void TopAppBarWithSubtitle(
+        IFunction2  title,
+        IFunction2  subtitle,
+        IModifier?  modifier,
+        IFunction2? navigationIcon,
+        IFunction3? actions,
+        int         defaults,
+        IComposer   composer);
+
+    // androidx.compose.material3.AppBarKt.{Medium,Large}FlexibleTopAppBar-eXZ4JBQ
+    // share the descriptor (trailing `III` because 11 params * 3 bits per
+    // $changed slot exceeds the 31 bits in one int). 11 user params:
+    // title, modifier, subtitle, navigationIcon, actions,
+    // titleHorizontalAlignment, collapsedHeight, expandedHeight,
+    // windowInsets, colors, scrollBehavior.
+    const string FlexibleTopAppBarSig =
+        "(Lkotlin/jvm/functions/Function2;Landroidx/compose/ui/Modifier;" +
+        "Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;" +
+        "Lkotlin/jvm/functions/Function3;Landroidx/compose/ui/Alignment$Horizontal;FF" +
+        "Landroidx/compose/foundation/layout/WindowInsets;" +
+        "Landroidx/compose/material3/TopAppBarColors;" +
+        "Landroidx/compose/material3/TopAppBarScrollBehavior;" +
+        "Landroidx/compose/runtime/Composer;III)V";
+
+    [ComposeBridge(
+        Class     = "androidx/compose/material3/AppBarKt",
+        JvmName   = "MediumFlexibleTopAppBar-eXZ4JBQ",
+        Signature = FlexibleTopAppBarSig,
+        Defaults  = typeof(FlexibleTopAppBarDefault))]
+    public static partial void MediumFlexibleTopAppBar(
+        IFunction2  title,
+        IModifier?  modifier,
+        IFunction2? subtitle,
+        IFunction2? navigationIcon,
+        IFunction3? actions,
+        int         defaults,
+        IComposer   composer);
+
+    [ComposeBridge(
+        Class     = "androidx/compose/material3/AppBarKt",
+        JvmName   = "LargeFlexibleTopAppBar-eXZ4JBQ",
+        Signature = FlexibleTopAppBarSig,
+        Defaults  = typeof(FlexibleTopAppBarDefault))]
+    public static partial void LargeFlexibleTopAppBar(
+        IFunction2  title,
+        IModifier?  modifier,
+        IFunction2? subtitle,
+        IFunction2? navigationIcon,
+        IFunction3? actions,
+        int         defaults,
+        IComposer   composer);
+
+    // androidx.compose.material3.AppBarKt.BottomAppBar-qhFBPw4 (actions +
+    // FAB + scrollBehavior — the most flexible of the four BottomAppBar
+    // overloads). 9 user params: actions (RowScope-receiver Function3),
+    // modifier, floatingActionButton, containerColor, contentColor,
+    // tonalElevation, contentPadding, windowInsets, scrollBehavior.
+    [ComposeBridge(
+        Class     = "androidx/compose/material3/AppBarKt",
+        JvmName   = "BottomAppBar-qhFBPw4",
+        Signature = "(Lkotlin/jvm/functions/Function3;Landroidx/compose/ui/Modifier;" +
+                    "Lkotlin/jvm/functions/Function2;JJF" +
+                    "Landroidx/compose/foundation/layout/PaddingValues;" +
+                    "Landroidx/compose/foundation/layout/WindowInsets;" +
+                    "Landroidx/compose/material3/BottomAppBarScrollBehavior;" +
+                    "Landroidx/compose/runtime/Composer;II)V",
+        Defaults  = typeof(BottomAppBarDefault))]
+    public static partial void BottomAppBar(
+        IFunction3  actions,
+        IModifier?  modifier,
+        IFunction2? floatingActionButton,
+        IComposer   composer);
+
+    // androidx.compose.material3.AppBarKt.FlexibleBottomAppBar-wBhsO_E.
+    // 9 user params: modifier, containerColor, contentColor, contentPadding,
+    // horizontalArrangement, expandedHeight, windowInsets, scrollBehavior,
+    // content (RowScope-receiver Function3). Bit 8 (content) always provided.
+    [ComposeBridge(
+        Class     = "androidx/compose/material3/AppBarKt",
+        JvmName   = "FlexibleBottomAppBar-wBhsO_E",
+        Signature = "(Landroidx/compose/ui/Modifier;JJ" +
+                    "Landroidx/compose/foundation/layout/PaddingValues;" +
+                    "Landroidx/compose/foundation/layout/Arrangement$Horizontal;F" +
+                    "Landroidx/compose/foundation/layout/WindowInsets;" +
+                    "Landroidx/compose/material3/BottomAppBarScrollBehavior;" +
+                    "Lkotlin/jvm/functions/Function3;" +
+                    "Landroidx/compose/runtime/Composer;II)V",
+        Defaults  = typeof(FlexibleBottomAppBarDefault))]
+    public static partial void FlexibleBottomAppBar(
+        IModifier? modifier,
+        IFunction3 content,
+        IComposer  composer);
+
+    // androidx.compose.material3.TabRowKt.{Primary,Secondary}ScrollableTabRow-qhFBPw4
+    // (simpler overload of -cx2KkNY without the TabIndicatorScope-aware
+    // indicator/divider Function2 wrap — both share the descriptor).
+    // 9 user params: selectedTabIndex, modifier, scrollState (optional —
+    // null lets Kotlin allocate the default ScrollState), containerColor,
+    // contentColor, edgePadding, indicator, divider, tabs.
+    const string PrimaryScrollableTabRowSig =
+        "(ILandroidx/compose/ui/Modifier;Landroidx/compose/foundation/ScrollState;JJF" +
+        "Lkotlin/jvm/functions/Function3;Lkotlin/jvm/functions/Function2;" +
+        "Lkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;II)V";
+
+    [ComposeBridge(
+        Class     = "androidx/compose/material3/TabRowKt",
+        JvmName   = "PrimaryScrollableTabRow-qhFBPw4",
+        Signature = PrimaryScrollableTabRowSig,
+        Defaults  = typeof(PrimaryScrollableTabRowDefault))]
+    public static partial void PrimaryScrollableTabRow(
+        int        selectedTabIndex,
+        IModifier? modifier,
+        IntPtr?    scrollState,
+        IFunction2 tabs,
+        IComposer  composer);
+
+    [ComposeBridge(
+        Class     = "androidx/compose/material3/TabRowKt",
+        JvmName   = "SecondaryScrollableTabRow-qhFBPw4",
+        Signature = PrimaryScrollableTabRowSig,
+        Defaults  = typeof(PrimaryScrollableTabRowDefault))]
+    public static partial void SecondaryScrollableTabRow(
+        int        selectedTabIndex,
+        IModifier? modifier,
+        IntPtr?    scrollState,
+        IFunction2 tabs,
+        IComposer  composer);
+
+    // androidx.compose.material3.TabKt.Tab-bogVsAg (ColumnScope content
+    // lambda overload — alternative to Tab-wqdebIU). 8 user params:
+    // selected, onClick, modifier, enabled, selectedContentColor,
+    // unselectedContentColor, interactionSource, content.
+    [ComposeBridge(
+        Class     = "androidx/compose/material3/TabKt",
+        JvmName   = "Tab-bogVsAg",
+        Signature = "(ZLkotlin/jvm/functions/Function0;Landroidx/compose/ui/Modifier;ZJJ" +
+                    "Landroidx/compose/foundation/interaction/MutableInteractionSource;" +
+                    "Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;II)V",
+        Defaults  = typeof(TabContentDefault))]
+    public static partial void TabContent(
+        bool       selected,
+        IFunction0 onClick,
+        IModifier? modifier,
+        IFunction3 content,
+        IComposer  composer);
+
+    // androidx.compose.material3.SnackbarKt.Snackbar-sDKtq54 (SnackbarData
+    // overload — fed by SnackbarHost's content lambda when state has
+    // queued data). 9 user params: snackbarData, modifier, actionOnNewLine,
+    // shape, containerColor, contentColor, actionColor, actionContentColor,
+    // dismissActionContentColor. Bit 0 (snackbarData) always provided —
+    // we take the raw JNI handle so SnackbarHost can forward Function3's
+    // p0 (a Java.Lang.Object SnackbarData) directly.
+    [ComposeBridge(
+        Class     = "androidx/compose/material3/SnackbarKt",
+        JvmName   = "Snackbar-sDKtq54",
+        Signature = "(Landroidx/compose/material3/SnackbarData;" +
+                    "Landroidx/compose/ui/Modifier;Z" +
+                    "Landroidx/compose/ui/graphics/Shape;JJJJJ" +
+                    "Landroidx/compose/runtime/Composer;II)V",
+        Defaults  = typeof(SnackbarFromDataDefault))]
+    public static partial void SnackbarFromData(
+        IntPtr     snackbarData,
+        IModifier? modifier,
+        IComposer  composer);
 }
