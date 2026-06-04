@@ -43,13 +43,14 @@ public class MainActivity : ComposeActivity
             var menuSelection = Remember(() => new MutableState<string>("(none)"));
             var searchState   = Remember(() => new SearchBarState());
             var searchInput   = Remember(() => new SearchBarTextFieldState());
-            // Mirror of the typed query, updated when the user commits via
-            // the IME Search action. SearchBarTextFieldState.Text reads
-            // through to the JVM peer but the bound getter bypasses
-            // Compose's snapshot read-tracking, so we can't drive the
-            // result-list filter directly from it. A MutableState<string>
-            // does subscribe to recomposition — pushing into it from the
-            // OnSearch callback gives us a clean reactive filter.
+            // Holds the committed query that drives the filter. The
+            // bound TextFieldState.text getter doesn't subscribe to
+            // Compose's snapshot read-tracking when read from C# build
+            // code, so we can't drive the filter from it directly.
+            // MutableState<string> IS snapshot-tracked, so updating it
+            // from the SearchBarInputField.OnSearch callback (fired when
+            // the user taps the IME Search action) gives a reactive
+            // filter without binding InputTransformation.
             var searchQuery   = Remember(() => new MutableState<string>(""));
 
             string[] tabNames = { "Basics", "Buttons", "Cards", "Drawer", "Selection", "Pickers", "Misc", "App bars" };
@@ -438,10 +439,14 @@ public class MainActivity : ComposeActivity
                     "Apple", "Banana", "Cherry", "Date", "Elderberry",
                     "Fig", "Grape", "Kiwi", "Lemon", "Mango",
                 };
-                // Read the live query from a MutableState<string> that
-                // OnSearch pushes the typed text into when the user hits
-                // the IME Search action. MutableState IS snapshot-tracked,
-                // so the result list and "Typed:" text both react to it.
+                // Read the live query from the MutableState that the
+                // OnSearch callback pumps the typed text into. We can't
+                // read SearchBarTextFieldState.Text here — the bound
+                // JNI getter doesn't subscribe to Compose's snapshot
+                // tracking when read from C# build code, so changes
+                // wouldn't recompose this lambda. MutableState<string>
+                // does subscribe, so the result list reacts when the
+                // user commits a query via the keyboard Search action.
                 var query   = searchQuery.Value;
                 var matches = System.Array.FindAll(
                     fruits,
@@ -458,9 +463,9 @@ public class MainActivity : ComposeActivity
                     },
                 };
                 foreach (var f in matches)
-                    expanded.Add(new Text(f));
+                    expanded.Add(new Text(f) { Modifier = Modifier.Companion.Padding(16, 12) });
                 if (matches.Length == 0)
-                    expanded.Add(new Text("(no matches)"));
+                    expanded.Add(new Text("(no matches)") { Modifier = Modifier.Companion.Padding(16, 12) });
 
                 pickers.Add(new HorizontalDivider { Modifier = Modifier.Companion.Padding(0, 16) });
                 pickers.Add(new Text("DropdownMenu"));
@@ -496,8 +501,8 @@ public class MainActivity : ComposeActivity
                 pickers.Add(new Text($"Last menu choice: {menuSelection}"));
                 pickers.Add(new HorizontalDivider { Modifier = Modifier.Companion.Padding(0, 16) });
                 pickers.Add(new Text("SearchBar"));
-                pickers.Add(new Text("Tap the bar, type, then press the keyboard Search action to filter the fruit list."));
-                pickers.Add(new Text($"Typed: \"{query}\" — {matches.Length} match{(matches.Length == 1 ? "" : "es")}"));
+                pickers.Add(new Text("Tap the bar, type a query, then press the keyboard's 🔍 Search key to filter the fruit list."));
+                pickers.Add(new Text($"Filter: \"{query}\" — {matches.Length} match{(matches.Length == 1 ? "" : "es")}"));
                 // Render BOTH halves of the SearchBar pair sharing the
                 // same SearchBarState + SearchBarTextFieldState — Compose
                 // toggles the popup's visibility internally based on the
