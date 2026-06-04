@@ -68,22 +68,14 @@ public sealed class Icon : ComposableNode
 
         if (_vector is not null)
         {
-            try
-            {
-                IconKt.Icon(
-                    imageVector:        _vector,
-                    contentDescription: _contentDescription!,
-                    modifier:           modifier,
-                    tint:               tint,
-                    _composer:          composer,
-                    p5:                 0,
-                    _changed:           defaults);
-            }
-            finally
-            {
-                GC.KeepAlive(modifier);
-                GC.KeepAlive(composer);
-            }
+            IconKt.Icon(
+                imageVector:        _vector,
+                contentDescription: _contentDescription!,
+                modifier:           modifier,
+                tint:               tint,
+                _composer:          composer,
+                p5:                 0,
+                _changed:           defaults);
             return;
         }
 

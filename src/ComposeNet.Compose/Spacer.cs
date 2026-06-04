@@ -34,14 +34,6 @@ public sealed class Spacer : ComposableNode
                 ComposeBridges.ModifierCompanionInstance(),
                 JniHandleOwnership.TransferLocalRef)!;
 
-        try
-        {
-            SpacerKt.Spacer(modifier, composer, 0);
-        }
-        finally
-        {
-            GC.KeepAlive(modifier);
-            GC.KeepAlive(composer);
-        }
+        SpacerKt.Spacer(modifier, composer, 0);
     }
 }
