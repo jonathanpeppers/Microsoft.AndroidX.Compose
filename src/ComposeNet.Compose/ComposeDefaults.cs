@@ -226,6 +226,26 @@ using ComposeNet;
     "!selected", "!onClick", "!icon", "modifier", "enabled", "label",
     "alwaysShowLabel", "colors", "interactionSource")]
 
+// androidx.compose.foundation.BackgroundKt.background-bw27NRU$default —
+// non-@Composable Modifier extension. Mangled because Color is a
+// @JvmInline value class (ULong). Bit 0 = color (always supplied by
+// the C# wrapper), bit 1 = shape (Compose substitutes RectangleShape
+// when defaulted).
+[assembly: ComposeDefaults("ModifierBackgroundDefault", "!color", "shape")]
+
+// androidx.compose.foundation.BorderKt.border-xT4_qwU$default —
+// non-@Composable Modifier extension. Both width (Dp) and color
+// (Color) are @JvmInline value classes, hence the mangled name.
+// Bits 0/1 = width/color (always supplied), bit 2 = shape.
+[assembly: ComposeDefaults("ModifierBorderDefault", "!width", "!color", "shape")]
+
+// androidx.compose.foundation.ClickableKt.clickable-XHw0xAI$default —
+// non-@Composable Modifier extension. Bit 3 (onClick) is always
+// supplied by the C# wrapper; bits 0/1/2 (enabled/onClickLabel/role)
+// are left to Kotlin's defaults.
+[assembly: ComposeDefaults("ModifierClickableDefault",
+    "enabled", "onClickLabel", "role", "!onClick")]
+
 // androidx.compose.material3.NavigationRailKt.NavigationRail-qi6gXK8:
 // 6 user params, bit 5 = content provided.
 [assembly: ComposeDefaults("NavigationRailDefault",
