@@ -74,6 +74,23 @@ public sealed class Modifier
     }
 
     /// <summary>
+    /// Concatenate <paramref name="other"/> onto this chain, returning
+    /// a new <see cref="Modifier"/>. Mirrors Kotlin's
+    /// <c>Modifier.then(other)</c> — the receiver's ops apply first,
+    /// then <paramref name="other"/>'s ops.
+    /// </summary>
+    public Modifier Then(Modifier other)
+    {
+        System.ArgumentNullException.ThrowIfNull(other);
+        if (other._ops.Length == 0) return this;
+        if (_ops.Length == 0) return other;
+        var arr = new System.Func<IntPtr, IntPtr>[_ops.Length + other._ops.Length];
+        System.Array.Copy(_ops, arr, _ops.Length);
+        System.Array.Copy(other._ops, 0, arr, _ops.Length, other._ops.Length);
+        return new Modifier(arr);
+    }
+
+    /// <summary>
     /// <c>Modifier.padding(all: Dp)</c> — applies <paramref name="allDp"/>
     /// of padding to every edge.
     /// </summary>
