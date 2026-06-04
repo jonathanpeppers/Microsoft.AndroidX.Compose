@@ -119,14 +119,20 @@ generator fill it in.
    declaration to `ComposeBridges.cs`. `composer` **must** be the last
    C# parameter — the generator detects the composer slot by
    inspecting the trailing param.
-2. Add a matching `[assembly: ComposeDefaults(...)]` to
+2. **If** the underlying `@Composable` has at least one defaultable
+   Kotlin parameter (i.e. the JNI signature has a trailing `$default`
+   `I` slot after `$changed`), set `Defaults = typeof(XxxDefault)` and
+   add a matching `[assembly: ComposeDefaults(...)]` to
    `ComposeDefaults.cs` naming each `$default` bit. Prefix with `!` to
    consume a bit but suppress the enum member (params the caller
-   always provides).
+   always provides). **If** every Kotlin parameter is required (no
+   `$default` slot in the bytecode), omit `Defaults` entirely — the
+   generator infers `$default` presence from the signature itself and
+   emits CN2005 if attribute and signature disagree.
 3. The generator parses the JNI signature, walks the C# parameters,
    and emits everything else.
 
-Example:
+Example (with `$default`):
 ```csharp
 [ComposeBridge(
     Class     = "androidx/compose/material3/ButtonKt",
@@ -139,14 +145,25 @@ public static partial void Button(
     IFunction3 content, IComposer composer);
 ```
 
+Example (no `$default` — all params required):
+```csharp
+[ComposeBridge(
+    Class     = "androidx/compose/ui/res/PainterResources_androidKt",
+    JvmName   = "painterResource",
+    Signature = "(ILandroidx/compose/runtime/Composer;I)Landroidx/compose/ui/graphics/painter/Painter;")]
+public static partial IntPtr PainterResource(int id, IComposer composer);
+```
+
 ### Conventions the generator relies on
 
 - `composer` is the **last** C# parameter (always).
-- Add a `int defaults` parameter immediately before `composer` only
+- Add an `int defaults` parameter immediately before `composer` only
   when the caller controls the bitmask (state-holders, multi-slot
   composables that toggle bits per call). Otherwise omit it and the
   generator builds the mask automatically: one bit per nullable /
-  optional C# param the caller passed `null` for.
+  optional C# param the caller passed `null` for. **Only valid when
+  the bridge has a `$default` slot**; do not declare `int defaults`
+  on a no-`$default` bridge.
 - Kotlin extension receivers: declare as `IntPtr` with a name ending
   in `Scope` (e.g. `IntPtr rowScope`); the generator places it at
   `args[0]` and excludes it from the `$default` count.
@@ -156,6 +173,9 @@ public static partial void Button(
   the generated `finally`.
 - Non-void return (state holders): the generator emits
   `return CallStaticObjectMethod(...)` inside the `try`/`finally`.
+- For no-`$default` bridges, user params are matched to JNI slots
+  **positionally** (no `[ComposeDefaults]` lookup); make sure the C#
+  parameter order matches the Kotlin parameter order in the bytecode.
 
 ### What still lives hand-written
 
@@ -224,7 +244,9 @@ If a needed Compose API isn't bound, the workflow is:
    the existing #1415–#1418 references in `README.md`).
 2. Add a `[ComposeBridge]` partial method in `ComposeBridges.cs` (see
    above) — the generator handles all the JNI plumbing.
-3. Add the matching `[ComposeDefaults]` declaration.
+3. Add the matching `[ComposeDefaults]` declaration **only if** the
+   underlying `@Composable` has a `$default` slot (see the "Adding a
+   bridge" section above).
 4. When the upstream binding fix ships, delete the bridge declaration
    and switch the facade to call the generated binding method
    directly.
