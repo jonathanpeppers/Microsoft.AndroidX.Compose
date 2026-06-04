@@ -47,7 +47,20 @@ public sealed class Scaffold : ComposableNode
             throw new System.InvalidOperationException(
                 "Scaffold.Body is required (the Kotlin parameter has no default).");
 
-        var content = new ComposableLambda3(c => Body.Render(c));
+        // Material 3's Scaffold passes PaddingValues as the first arg of
+        // its content lambda — body must apply it to avoid rendering
+        // behind the top/bottom bars. We can't prepend a Modifier onto
+        // Body's existing chain from out here (see #37), so we wrap it
+        // in a Box that owns the runtime `Modifier.padding(values)`.
+        // When #37 lands, drop the Box and inject the padding directly.
+        var content = new ComposableLambda3((paddingHandle, c) =>
+        {
+            new Box
+            {
+                Modifier.Companion.Padding(paddingHandle),
+                Body,
+            }.Render(c);
+        });
 
         ComposableLambda2? topBar = TopBar is null ? null
             : new ComposableLambda2(c => TopBar.Render(c));

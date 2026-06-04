@@ -105,6 +105,25 @@ internal static partial class ComposeBridges
         return JNIEnv.CallStaticObjectMethod(s_paddingKtClass, s_paddingLTRBMethod, args);
     }
 
+    static IntPtr s_paddingValuesMethod;
+    const string ModifierPaddingValuesSig =
+        "(Landroidx/compose/ui/Modifier;Landroidx/compose/foundation/layout/PaddingValues;)Landroidx/compose/ui/Modifier;";
+
+    // PaddingKt.padding(Modifier, PaddingValues) — unmangled because
+    // PaddingValues is a regular interface, not a `value class`.
+    internal static unsafe IntPtr ModifierPaddingValues(IntPtr modifier, IntPtr paddingValues)
+    {
+        if (s_paddingKtClass == IntPtr.Zero)
+            s_paddingKtClass = JNIEnv.FindClass("androidx/compose/foundation/layout/PaddingKt");
+        if (s_paddingValuesMethod == IntPtr.Zero)
+            s_paddingValuesMethod = JNIEnv.GetStaticMethodID(s_paddingKtClass, "padding", ModifierPaddingValuesSig);
+
+        JValue* args = stackalloc JValue[2];
+        args[0] = new JValue(modifier);
+        args[1] = new JValue(paddingValues);
+        return JNIEnv.CallStaticObjectMethod(s_paddingKtClass, s_paddingValuesMethod, args);
+    }
+
     // androidx.compose.foundation.layout.SizeKt — fillMax* take a plain
     // Float fraction, not Dp, so the JVM names are NOT mangled.
     static IntPtr s_sizeKtClass;

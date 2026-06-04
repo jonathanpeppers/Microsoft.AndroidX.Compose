@@ -302,7 +302,7 @@ public class MainActivity : ComposeActivity
                         },
                         Body = new Column
                         {
-                            Modifier.Companion.SafeDrawingPadding().Padding(16),
+                            Modifier.Companion.Padding(16),
                             tabContent,
 
                             // Overlays: rendered in the body so they participate in the
