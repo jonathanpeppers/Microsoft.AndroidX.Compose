@@ -27,6 +27,10 @@ public class MainActivity : ComposeActivity
             var pickedTime  = Remember(() => new MutableState<string>("(none)"));
             var dateState   = Remember(() => new DatePickerState());
             var timeState   = Remember(() => new TimePickerState(initialHour: 9, initialMinute: 30));
+            var segIdx      = Remember(() => new MutableNumberState<int>(0));
+            var multiBold   = Remember(() => new MutableState<bool>(false));
+            var multiItalic = Remember(() => new MutableState<bool>(false));
+            var railIdx     = Remember(() => new MutableNumberState<int>(0));
 
             var checkbox    = Remember(() => new MutableState<bool>(true));
             var switchOn    = Remember(() => new MutableState<bool>(false));
@@ -35,7 +39,7 @@ public class MainActivity : ComposeActivity
             var rangeStart  = Remember(() => new MutableState<float>(0.25f));
             var rangeEnd    = Remember(() => new MutableState<float>(0.75f));
 
-            string[] tabNames = { "Basics", "Buttons", "Cards", "Drawer", "Selection", "Pickers", "App bars" };
+            string[] tabNames = { "Basics", "Buttons", "Cards", "Drawer", "Selection", "Pickers", "Misc", "App bars" };
 
             // Per-tab content. Only the current tab's column is added to
             // the screen — keeps the sample short enough to fit on one
@@ -300,6 +304,58 @@ public class MainActivity : ComposeActivity
                     new Text($"Picked date: {pickedDate}"),
                     new Text($"Picked time: {pickedTime}"),
                 },
+                6 => (ComposableNode)new Column
+                {
+                    new Text("Misc Material 3"),
+                    new Text("Progress indicators (indeterminate):"),
+                    new Row
+                    {
+                        new CircularProgressIndicator(),
+                        new Spacer { Modifier = Modifier.Companion.FillMaxWidth(0.05f) },
+                        new Column
+                        {
+                            new Text("Linear ↓"),
+                            new LinearProgressIndicator { Modifier = Modifier.Companion.FillMaxWidth() },
+                        },
+                    },
+                    new HorizontalDivider { Modifier = Modifier.Companion.Padding(0, 8) },
+                    new Text($"Single-choice segmented (selected: {segIdx})"),
+                    new SingleChoiceSegmentedButtonRow
+                    {
+                        new SegmentedButton(selected: segIdx.Value == 0, onClick: () => segIdx.Value = 0) { new Text("Day") },
+                        new SegmentedButton(selected: segIdx.Value == 1, onClick: () => segIdx.Value = 1) { new Text("Week") },
+                        new SegmentedButton(selected: segIdx.Value == 2, onClick: () => segIdx.Value = 2) { new Text("Month") },
+                    },
+                    new Text($"Multi-choice segmented (bold={multiBold.Value}, italic={multiItalic.Value})"),
+                    new MultiChoiceSegmentedButtonRow
+                    {
+                        new SegmentedButton(@checked: multiBold.Value,   onCheckedChange: v => multiBold.Value   = v) { new Text("Bold") },
+                        new SegmentedButton(@checked: multiItalic.Value, onCheckedChange: v => multiItalic.Value = v) { new Text("Italic") },
+                    },
+                    new HorizontalDivider { Modifier = Modifier.Companion.Padding(0, 8) },
+                    new Text($"WideNavigationRail (selected: {railIdx})"),
+                    new Row
+                    {
+                        new WideNavigationRail
+                        {
+                            new WideNavigationRailItem(selected: railIdx.Value == 0, onClick: () => railIdx.Value = 0)
+                            {
+                                Icon  = new Text("🏠"),
+                                Label = new Text("Home"),
+                            },
+                            new WideNavigationRailItem(selected: railIdx.Value == 1, onClick: () => railIdx.Value = 1)
+                            {
+                                Icon  = new Text("🔍"),
+                                Label = new Text("Search"),
+                            },
+                            new WideNavigationRailItem(selected: railIdx.Value == 2, onClick: () => railIdx.Value = 2)
+                            {
+                                Icon  = new Text("⚙"),
+                                Label = new Text("Settings"),
+                            },
+                        },
+                    },
+                },
                 _ => new Column
                 {
                     // Inline samples of the M3 app-bar family bound by
@@ -381,50 +437,55 @@ public class MainActivity : ComposeActivity
                                 Body = new Text($"Hello from {tabNames[tab.Value]}"),
                             }
                             : null,
-                        // Bottom navigation switches between the three tabs above —
-                        // pinned to the bottom edge by Scaffold instead of flowing
-                        // inline at the end of a Column.
-                        BottomBar = new NavigationBar
-                        {
-                            new NavigationBarItem(selected: tab.Value == 0, onClick: () => tab.Value = 0)
-                            {
-                                Icon  = new Icon(Resource.Drawable.ic_settings, "Basics"),
-                                Label = new Text("Basics"),
-                            },
-                            new NavigationBarItem(selected: tab.Value == 1, onClick: () => tab.Value = 1)
-                            {
-                                Icon  = new Text("👍"),
-                                Label = new Text("Buttons"),
-                            },
-                            new NavigationBarItem(selected: tab.Value == 2, onClick: () => tab.Value = 2)
-                            {
-                                Icon  = new Text("🃏"),
-                                Label = new Text("Cards"),
-                            },
-                            new NavigationBarItem(selected: tab.Value == 3, onClick: () => tab.Value = 3)
-                            {
-                                Icon  = new Text("📂"),
-                                Label = new Text("Drawer"),
-                            },
-                            new NavigationBarItem(selected: tab.Value == 4, onClick: () => tab.Value = 4)
-                            {
-                                Icon  = new Text("☑"),
-                                Label = new Text("Selection"),
-                            },
-                            new NavigationBarItem(selected: tab.Value == 5, onClick: () => tab.Value = 5)
-                            {
-                                Icon  = new Text("📅"),
-                                Label = new Text("Pickers"),
-                            },
-                            new NavigationBarItem(selected: tab.Value == 6, onClick: () => tab.Value = 6)
-                            {
-                                Icon  = new Text("📐"),
-                                Label = new Text("Bars"),
-                            },
-                        },
                         Body = new Column
                         {
                             Modifier.Companion.Padding(16),
+                            // ScrollableTabRow handles many tabs better than NavigationBar
+                            // (which is spec'd for 3-5 items) — the row scrolls horizontally
+                            // so every tab stays reachable as we add more demos.
+                            new ScrollableTabRow(selectedTabIndex: tab.Value)
+                            {
+                                new Tab(selected: tab.Value == 0, onClick: () => tab.Value = 0)
+                                {
+                                    Text = new Text("Basics"),
+                                    Icon = new Icon(Resource.Drawable.ic_settings, "Basics"),
+                                },
+                                new Tab(selected: tab.Value == 1, onClick: () => tab.Value = 1)
+                                {
+                                    Text = new Text("Buttons"),
+                                    Icon = new Text("👍"),
+                                },
+                                new Tab(selected: tab.Value == 2, onClick: () => tab.Value = 2)
+                                {
+                                    Text = new Text("Cards"),
+                                    Icon = new Text("🃏"),
+                                },
+                                new Tab(selected: tab.Value == 3, onClick: () => tab.Value = 3)
+                                {
+                                    Text = new Text("Drawer"),
+                                    Icon = new Text("📂"),
+                                },
+                                new Tab(selected: tab.Value == 4, onClick: () => tab.Value = 4)
+                                {
+                                    Text = new Text("Selection"),
+                                    Icon = new Text("☑"),
+                                },
+                                new Tab(selected: tab.Value == 5, onClick: () => tab.Value = 5)
+                                {
+                                    Text = new Text("Pickers"),
+                                    Icon = new Text("📅"),
+                                },
+                                new Tab(selected: tab.Value == 6, onClick: () => tab.Value = 6)
+                                {
+                                    Text = new Text("Misc"),
+                                    Icon = new Text("✨"),
+                                },
+                                new Tab(selected: tab.Value == 7, onClick: () => tab.Value = 7)
+                                {
+                                    Text = new Text("Bars"),
+                                    Icon = new Text("📐"),
+                                },
+                            },
                             tabContent,
 
                             // Overlays: rendered in the body so they participate in the
