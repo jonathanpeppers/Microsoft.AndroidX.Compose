@@ -155,8 +155,48 @@ internal static partial class ComposeBridges
         Signature = "(Landroidx/compose/ui/Modifier;)Landroidx/compose/ui/Modifier;")]
     internal static partial IntPtr ModifierSystemBarsPadding(IntPtr modifier);
 
+    // androidx.compose.foundation.shape.RoundedCornerShapeKt.RoundedCornerShape-0680j_4(Dp).
+    // Mangled because the lone arg is @JvmInline value class Dp (Float).
+    // Plain-static shape: no receiver, no $default, no Composer.
+    [ComposeBridge(
+        Class     = "androidx/compose/foundation/shape/RoundedCornerShapeKt",
+        JvmName   = "RoundedCornerShape-0680j_4",
+        Signature = "(F)Landroidx/compose/foundation/shape/RoundedCornerShape;")]
+    internal static partial IntPtr RoundedCornerShape(float dp);
+
+    // androidx.compose.ui.draw.ClipKt.clip(Modifier, Shape) — both args
+    // required, no $default and no name mangling. Plain-static shape
+    // with a Modifier extension receiver.
+    [ComposeBridge(
+        Class     = "androidx/compose/ui/draw/ClipKt",
+        JvmName   = "clip",
+        Signature = "(Landroidx/compose/ui/Modifier;" +
+                    "Landroidx/compose/ui/graphics/Shape;)" +
+                    "Landroidx/compose/ui/Modifier;")]
+    internal static partial IntPtr ModifierClip(IntPtr modifier, IntPtr shape);
+
+    // Convenience wrapper that composes RoundedCornerShape + ModifierClip
+    // and manages the intermediate Shape local ref. Listed as out of
+    // scope in #36 — the underlying JNI calls are both generator-driven
+    // now; only the two-step orchestration stays hand-written.
+    internal static IntPtr ModifierClipRoundedCorners(IntPtr modifier, float dp)
+    {
+        IntPtr shape = RoundedCornerShape(dp);
+        try
+        {
+            return ModifierClip(modifier, shape);
+        }
+        finally
+        {
+            if (shape != IntPtr.Zero)
+                JNIEnv.DeleteLocalRef(shape);
+        }
+    }
+
     // androidx.compose.ui.res.PainterResources_androidKt.painterResource —
     // returns a NEW local Painter ref the caller is responsible for
+    // DeleteLocalRef'ing once it's been handed to the consuming
+    // Image/Icon JNI call.
     // DeleteLocalRef'ing once it's been handed to the consuming
     // Image/Icon JNI call.
     [ComposeBridge(
@@ -927,8 +967,8 @@ internal static partial class ComposeBridges
 
     // androidx.compose.foundation.BorderKt.border-xT4_qwU$default —
     // (Modifier, Dp width, Color, Shape). Both width and color are
-    // mangled inline-class params. The C# wrapper supplies width and
-    // color and lets shape default to RectangleShape.
+    // mangled inline-class params. Shape is optional (null → Kotlin
+    // default of RectangleShape).
     [ComposeBridge(
         Class     = "androidx/compose/foundation/BorderKt",
         JvmName   = "border-xT4_qwU$default",
@@ -936,7 +976,7 @@ internal static partial class ComposeBridges
                     "Landroidx/compose/ui/graphics/Shape;ILjava/lang/Object;)" +
                     "Landroidx/compose/ui/Modifier;",
         Defaults  = typeof(ModifierBorderDefault))]
-    internal static partial IntPtr ModifierBorder(IntPtr modifier, float width, long color);
+    internal static partial IntPtr ModifierBorder(IntPtr modifier, float width, long color, IntPtr? shape);
 
     // androidx.compose.foundation.ClickableKt.clickable-XHw0xAI$default —
     // (Modifier, Boolean enabled, String onClickLabel, Role role,
