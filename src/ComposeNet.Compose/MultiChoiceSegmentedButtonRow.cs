@@ -28,6 +28,14 @@ public sealed class MultiChoiceSegmentedButtonRow : ComposableContainer
         int defaults = (int)SegmentedButtonRowDefault.All;
         if (modifier is not null) defaults &= ~(int)SegmentedButtonRowDefault.Modifier;
 
+        // The bound binding's parameter names are misleading. The JNI
+        // descriptor is `(...;Composer;II)V` — two trailing `I` slots —
+        // and the Kotlin layout for a `@Composable` with defaults is
+        // `(...userParams, Composer, $changed, $default)`. So
+        // positionally `p4` is `$changed` and `_changed` is the
+        // `$default` mask. Pass `0` for `$changed` (pessimistic — every
+        // param treated as new) and the `SegmentedButtonRowDefault`
+        // bitmask for `$default`.
         SegmentedButtonKt.MultiChoiceSegmentedButtonRow(
             modifier:  modifier,
             space:     0f,
