@@ -12,17 +12,23 @@ namespace ComposeNet;
 /// </summary>
 /// <remarks>
 /// <see cref="InputField"/> is required (the Kotlin parameter has no
-/// default) — the user supplies any composable that renders the search
-/// text field, typically a <see cref="ComposeNet.TextField"/>.
+/// default). Use a <see cref="SearchBarInputField"/> so the input
+/// field can wire focus / click events to the
+/// <see cref="SearchBarState"/> internally — a bare
+/// <see cref="ComposeNet.TextField"/> renders but does not expand the
+/// popup on tap.
 ///
 /// <code>
 /// var search = Remember(() =&gt; new SearchBarState());
-/// var query  = Remember(() =&gt; new MutableState&lt;string&gt;(""));
+/// var input  = Remember(() =&gt; new SearchBarTextFieldState());
 ///
 /// new SearchBar(state: search)
 /// {
-///     InputField = new TextField(query.Value, q =&gt; query.Value = q)
-///         { Modifier = Modifier.Companion.FillMaxWidth() },
+///     InputField = new SearchBarInputField(input, search)
+///     {
+///         Placeholder = new Text("Search"),
+///         LeadingIcon = new Text("🔍"),
+///     },
 /// }
 /// </code>
 /// </remarks>

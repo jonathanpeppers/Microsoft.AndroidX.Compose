@@ -41,8 +41,16 @@ public class MainActivity : ComposeActivity
 
             var menuOpen      = Remember(() => new MutableState<bool>(false));
             var menuSelection = Remember(() => new MutableState<string>("(none)"));
-            var searchQuery   = Remember(() => new MutableState<string>(""));
             var searchState   = Remember(() => new SearchBarState());
+            var searchInput   = Remember(() => new SearchBarTextFieldState());
+            // Mirror of the typed query, updated when the user commits via
+            // the IME Search action. SearchBarTextFieldState.Text reads
+            // through to the JVM peer but the bound getter bypasses
+            // Compose's snapshot read-tracking, so we can't drive the
+            // result-list filter directly from it. A MutableState<string>
+            // does subscribe to recomposition — pushing into it from the
+            // OnSearch callback gives us a clean reactive filter.
+            var searchQuery   = Remember(() => new MutableState<string>(""));
 
             string[] tabNames = { "Basics", "Buttons", "Cards", "Drawer", "Selection", "Pickers", "Misc", "App bars" };
 
@@ -430,17 +438,29 @@ public class MainActivity : ComposeActivity
                     "Apple", "Banana", "Cherry", "Date", "Elderberry",
                     "Fig", "Grape", "Kiwi", "Lemon", "Mango",
                 };
+                // Read the live query from a MutableState<string> that
+                // OnSearch pushes the typed text into when the user hits
+                // the IME Search action. MutableState IS snapshot-tracked,
+                // so the result list and "Typed:" text both react to it.
+                var query   = searchQuery.Value;
                 var matches = System.Array.FindAll(
                     fruits,
-                    f => string.IsNullOrEmpty(searchQuery.Value)
-                         || f.Contains(searchQuery.Value, System.StringComparison.OrdinalIgnoreCase));
+                    f => string.IsNullOrEmpty(query)
+                         || f.Contains(query, System.StringComparison.OrdinalIgnoreCase));
 
                 var expanded = new ExpandedFullScreenSearchBar(state: searchState)
                 {
-                    InputField = new TextField(searchQuery),
+                    InputField = new SearchBarInputField(searchInput, searchState)
+                    {
+                        Placeholder = new Text("Search fruits"),
+                        LeadingIcon = new Text("🔍"),
+                        OnSearch    = q => searchQuery.Value = q,
+                    },
                 };
                 foreach (var f in matches)
                     expanded.Add(new Text(f));
+                if (matches.Length == 0)
+                    expanded.Add(new Text("(no matches)"));
 
                 pickers.Add(new HorizontalDivider { Modifier = Modifier.Companion.Padding(0, 16) });
                 pickers.Add(new Text("DropdownMenu"));
@@ -476,15 +496,22 @@ public class MainActivity : ComposeActivity
                 pickers.Add(new Text($"Last menu choice: {menuSelection}"));
                 pickers.Add(new HorizontalDivider { Modifier = Modifier.Companion.Padding(0, 16) });
                 pickers.Add(new Text("SearchBar"));
-                pickers.Add(new Text("Tap the bar to expand. Type to filter."));
+                pickers.Add(new Text("Tap the bar, type, then press the keyboard Search action to filter the fruit list."));
+                pickers.Add(new Text($"Typed: \"{query}\" — {matches.Length} match{(matches.Length == 1 ? "" : "es")}"));
                 // Render BOTH halves of the SearchBar pair sharing the
-                // same SearchBarState — Compose toggles the popup's
-                // visibility internally based on the state.
+                // same SearchBarState + SearchBarTextFieldState — Compose
+                // toggles the popup's visibility internally based on the
+                // state, and the typed text is shared between halves.
                 pickers.Add(new Box
                 {
                     new SearchBar(state: searchState)
                     {
-                        InputField = new TextField(searchQuery),
+                        InputField = new SearchBarInputField(searchInput, searchState)
+                        {
+                            Placeholder = new Text("Search fruits"),
+                            LeadingIcon = new Text("🔍"),
+                            OnSearch    = q => searchQuery.Value = q,
+                        },
                     },
                     expanded,
                 });

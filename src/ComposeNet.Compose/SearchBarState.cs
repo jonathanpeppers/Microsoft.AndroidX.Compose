@@ -19,17 +19,21 @@ namespace ComposeNet;
 ///
 /// <code>
 /// var search = Remember(() =&gt; new SearchBarState());
+/// var input  = Remember(() =&gt; new SearchBarTextFieldState());
 ///
 /// new Box
 /// {
 ///     new SearchBar(state: search)
 ///     {
-///         InputField = new TextField(query.Value, q =&gt; query.Value = q),
+///         InputField = new SearchBarInputField(input, search)
+///         {
+///             Placeholder = new Text("Search"),
+///             LeadingIcon = new Text("🔍"),
+///         },
 ///     },
 ///     new ExpandedFullScreenSearchBar(state: search)
 ///     {
-///         InputField = new TextField(query.Value, q =&gt; query.Value = q),
-///         // result list children:
+///         InputField = new SearchBarInputField(input, search),
 ///         new Text("Result A"),
 ///         new Text("Result B"),
 ///     },

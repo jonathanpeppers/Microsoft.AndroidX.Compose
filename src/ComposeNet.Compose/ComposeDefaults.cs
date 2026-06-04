@@ -497,6 +497,18 @@ using ComposeNet;
     "!state", "!inputField", "modifier", "shape", "colors",
     "inputFieldHeight", "floatingHeight", "windowInsets", "properties", "!content")]
 
+// androidx.compose.material3.SearchBarDefaults.InputField (state-based):
+// 18 user params. Bits 0 (textFieldState), 1 (searchBarState),
+// 2 (onSearch) are always provided by the SearchBarInputField facade —
+// onSearch defaults to a no-op ComposableLambda1 so Kotlin never invokes
+// a null callback on IME Search.
+[assembly: ComposeDefaults("SearchBarDefaultsInputFieldDefault",
+    "!textFieldState", "!searchBarState", "!onSearch",
+    "modifier", "enabled", "autoFocus", "textStyle",
+    "placeholder", "leadingIcon", "trailingIcon", "prefix", "suffix",
+    "inputTransformation", "outputTransformation", "scrollState",
+    "shape", "colors", "interactionSource")]
+
 // androidx.compose.material3.AndroidMenu_androidKt.DropdownMenuItem: 9 user
 // params; bits 0 (text), 1 (onClick) always provided. Declarative form used
 // (instead of generic) so leadingIcon and trailingIcon get enum members the

@@ -1265,6 +1265,48 @@ internal static partial class ComposeBridges
         IFunction3 content,
         IComposer  composer);
 
+    // androidx.compose.material3.SearchBarDefaults.InputField — state-based
+    // overload. The state-aware InputField is what wires focus/click events
+    // to SearchBarState (animateToExpanded/Collapsed), so this is what makes
+    // tapping the bar actually expand the popup. Instance method on the
+    // Kotlin SearchBarDefaults singleton — InstanceField walks the static
+    // INSTANCE field once, caches a global ref, then calls via CallVoidMethod.
+    //
+    // 18 user params (textFieldState, searchBarState, onSearch, modifier,
+    // enabled, autoFocus, textStyle, placeholder, leadingIcon, trailingIcon,
+    // prefix, suffix, inputTransformation, outputTransformation, scrollState,
+    // shape, colors, interactionSource). Bits 0-2 always provided
+    // (textFieldState, searchBarState, onSearch); we expose modifier +
+    // placeholder + leadingIcon + trailingIcon and let the rest default.
+    [ComposeBridge(
+        Class         = "androidx/compose/material3/SearchBarDefaults",
+        JvmName       = "InputField",
+        Signature     = "(Landroidx/compose/foundation/text/input/TextFieldState;" +
+                        "Landroidx/compose/material3/SearchBarState;" +
+                        "Lkotlin/jvm/functions/Function1;Landroidx/compose/ui/Modifier;ZZ" +
+                        "Landroidx/compose/ui/text/TextStyle;" +
+                        "Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;" +
+                        "Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;" +
+                        "Lkotlin/jvm/functions/Function2;" +
+                        "Landroidx/compose/foundation/text/input/InputTransformation;" +
+                        "Landroidx/compose/foundation/text/input/OutputTransformation;" +
+                        "Landroidx/compose/foundation/ScrollState;" +
+                        "Landroidx/compose/ui/graphics/Shape;" +
+                        "Landroidx/compose/material3/TextFieldColors;" +
+                        "Landroidx/compose/foundation/interaction/MutableInteractionSource;" +
+                        "Landroidx/compose/runtime/Composer;III)V",
+        InstanceField = "INSTANCE",
+        Defaults      = typeof(SearchBarDefaultsInputFieldDefault))]
+    public static partial void SearchBarDefaultsInputField(
+        IntPtr      textFieldState,
+        IntPtr      searchBarState,
+        IFunction1  onSearch,
+        IModifier?  modifier,
+        IFunction2? placeholder,
+        IFunction2? leadingIcon,
+        IFunction2? trailingIcon,
+        IComposer   composer);
+
     // androidx.compose.material3.AppBarKt.TopAppBar-cJHQLPU (subtitle
     // overload). 10 user params: title, subtitle, modifier, navigationIcon,
     // actions, titleHorizontalAlignment, expandedHeight, windowInsets,
