@@ -833,4 +833,263 @@ internal static partial class ComposeBridges
         Signature = DrawerSheetSig,
         Defaults  = typeof(DrawerSheetDefault))]
     public static partial void PermanentDrawerSheet(IFunction3 content, long drawerContainerColor, IComposer composer);
+
+    // androidx.compose.material3.AppBarKt — TopAppBar / CenterAlignedTopAppBar
+    // share the `-GHTll3U` shape (extra `expandedHeight: Dp` vs. the older
+    // unmangled overload). 8 user params: title, modifier, navigationIcon,
+    // actions, expandedHeight, windowInsets, colors, scrollBehavior.
+    const string TopAppBarSig =
+        "(Lkotlin/jvm/functions/Function2;Landroidx/compose/ui/Modifier;" +
+        "Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function3;F" +
+        "Landroidx/compose/foundation/layout/WindowInsets;" +
+        "Landroidx/compose/material3/TopAppBarColors;" +
+        "Landroidx/compose/material3/TopAppBarScrollBehavior;" +
+        "Landroidx/compose/runtime/Composer;II)V";
+
+    [ComposeBridge(
+        Class     = "androidx/compose/material3/AppBarKt",
+        JvmName   = "TopAppBar-GHTll3U",
+        Signature = TopAppBarSig,
+        Defaults  = typeof(TopAppBarDefault))]
+    public static partial void TopAppBar(
+        IFunction2  title,
+        IModifier?  modifier,
+        IFunction2? navigationIcon,
+        IFunction3? actions,
+        int         defaults,
+        IComposer   composer);
+
+    [ComposeBridge(
+        Class     = "androidx/compose/material3/AppBarKt",
+        JvmName   = "CenterAlignedTopAppBar-GHTll3U",
+        Signature = TopAppBarSig,
+        Defaults  = typeof(TopAppBarDefault))]
+    public static partial void CenterAlignedTopAppBar(
+        IFunction2  title,
+        IModifier?  modifier,
+        IFunction2? navigationIcon,
+        IFunction3? actions,
+        int         defaults,
+        IComposer   composer);
+
+    // MediumTopAppBar / LargeTopAppBar share `-oKE7A98` (two-row variants
+    // take BOTH `collapsedHeight` and `expandedHeight` Dp). 9 user params.
+    const string TwoRowsTopAppBarSig =
+        "(Lkotlin/jvm/functions/Function2;Landroidx/compose/ui/Modifier;" +
+        "Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function3;FF" +
+        "Landroidx/compose/foundation/layout/WindowInsets;" +
+        "Landroidx/compose/material3/TopAppBarColors;" +
+        "Landroidx/compose/material3/TopAppBarScrollBehavior;" +
+        "Landroidx/compose/runtime/Composer;II)V";
+
+    [ComposeBridge(
+        Class     = "androidx/compose/material3/AppBarKt",
+        JvmName   = "MediumTopAppBar-oKE7A98",
+        Signature = TwoRowsTopAppBarSig,
+        Defaults  = typeof(TwoRowsTopAppBarDefault))]
+    public static partial void MediumTopAppBar(
+        IFunction2  title,
+        IModifier?  modifier,
+        IFunction2? navigationIcon,
+        IFunction3? actions,
+        int         defaults,
+        IComposer   composer);
+
+    [ComposeBridge(
+        Class     = "androidx/compose/material3/AppBarKt",
+        JvmName   = "LargeTopAppBar-oKE7A98",
+        Signature = TwoRowsTopAppBarSig,
+        Defaults  = typeof(TwoRowsTopAppBarDefault))]
+    public static partial void LargeTopAppBar(
+        IFunction2  title,
+        IModifier?  modifier,
+        IFunction2? navigationIcon,
+        IFunction3? actions,
+        int         defaults,
+        IComposer   composer);
+
+    // androidx.compose.material3.TabRowKt — TabRow / PrimaryTabRow /
+    // SecondaryTabRow all share `-pAZo6Ak`. 7 user params: selectedTabIndex,
+    // modifier, containerColor, contentColor, indicator, divider, tabs.
+    // (Primary/Secondary's indicator Function3 has a TabIndicatorScope
+    // receiver; TabRow's has List<TabPosition> — irrelevant to the
+    // descriptor since both compile to Function3.)
+    const string TabRowSig =
+        "(ILandroidx/compose/ui/Modifier;JJ" +
+        "Lkotlin/jvm/functions/Function3;Lkotlin/jvm/functions/Function2;" +
+        "Lkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;II)V";
+
+    [ComposeBridge(
+        Class     = "androidx/compose/material3/TabRowKt",
+        JvmName   = "TabRow-pAZo6Ak",
+        Signature = TabRowSig,
+        Defaults  = typeof(TabRowDefault))]
+    public static partial void TabRow(
+        int        selectedTabIndex,
+        IModifier? modifier,
+        IFunction2 tabs,
+        IComposer  composer);
+
+    [ComposeBridge(
+        Class     = "androidx/compose/material3/TabRowKt",
+        JvmName   = "PrimaryTabRow-pAZo6Ak",
+        Signature = TabRowSig,
+        Defaults  = typeof(TabRowDefault))]
+    public static partial void PrimaryTabRow(
+        int        selectedTabIndex,
+        IModifier? modifier,
+        IFunction2 tabs,
+        IComposer  composer);
+
+    [ComposeBridge(
+        Class     = "androidx/compose/material3/TabRowKt",
+        JvmName   = "SecondaryTabRow-pAZo6Ak",
+        Signature = TabRowSig,
+        Defaults  = typeof(TabRowDefault))]
+    public static partial void SecondaryTabRow(
+        int        selectedTabIndex,
+        IModifier? modifier,
+        IFunction2 tabs,
+        IComposer  composer);
+
+    // androidx.compose.material3.TabRowKt.ScrollableTabRow-sKfQg0A.
+    // 8 user params: same as TabRow plus a leading `edgePadding: Dp`.
+    [ComposeBridge(
+        Class     = "androidx/compose/material3/TabRowKt",
+        JvmName   = "ScrollableTabRow-sKfQg0A",
+        Signature = "(ILandroidx/compose/ui/Modifier;JJF" +
+                    "Lkotlin/jvm/functions/Function3;Lkotlin/jvm/functions/Function2;" +
+                    "Lkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;II)V",
+        Defaults  = typeof(ScrollableTabRowDefault))]
+    public static partial void ScrollableTabRow(
+        int        selectedTabIndex,
+        IModifier? modifier,
+        IFunction2 tabs,
+        IComposer  composer);
+
+    // androidx.compose.material3.TabKt.Tab-wqdebIU (text/icon overload).
+    // 9 user params: selected, onClick, modifier, enabled, text, icon,
+    // selectedContentColor, unselectedContentColor, interactionSource.
+    [ComposeBridge(
+        Class     = "androidx/compose/material3/TabKt",
+        JvmName   = "Tab-wqdebIU",
+        Signature = "(ZLkotlin/jvm/functions/Function0;Landroidx/compose/ui/Modifier;Z" +
+                    "Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;JJ" +
+                    "Landroidx/compose/foundation/interaction/MutableInteractionSource;" +
+                    "Landroidx/compose/runtime/Composer;II)V",
+        Defaults  = typeof(TabDefault))]
+    public static partial void Tab(
+        bool        selected,
+        IFunction0  onClick,
+        IModifier?  modifier,
+        IFunction2? text,
+        IFunction2? icon,
+        int         defaults,
+        IComposer   composer);
+
+    // androidx.compose.material3.TabKt.LeadingIconTab-wqdebIU.
+    // 9 user params: selected, onClick, text, icon, modifier, enabled,
+    // selectedContentColor, unselectedContentColor, interactionSource.
+    // Note text and icon are REQUIRED (no Kotlin default), unlike Tab.
+    [ComposeBridge(
+        Class     = "androidx/compose/material3/TabKt",
+        JvmName   = "LeadingIconTab-wqdebIU",
+        Signature = "(ZLkotlin/jvm/functions/Function0;" +
+                    "Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;" +
+                    "Landroidx/compose/ui/Modifier;ZJJ" +
+                    "Landroidx/compose/foundation/interaction/MutableInteractionSource;" +
+                    "Landroidx/compose/runtime/Composer;II)V",
+        Defaults  = typeof(LeadingIconTabDefault))]
+    public static partial void LeadingIconTab(
+        bool       selected,
+        IFunction0 onClick,
+        IFunction2 text,
+        IFunction2 icon,
+        IModifier? modifier,
+        IComposer  composer);
+
+    // androidx.compose.material3.SnackbarKt.Snackbar-eQBnUkQ. 10 user
+    // params: modifier, action, dismissAction, actionOnNewLine, shape,
+    // 4 colors, content. Bit 9 (content) always provided.
+    [ComposeBridge(
+        Class     = "androidx/compose/material3/SnackbarKt",
+        JvmName   = "Snackbar-eQBnUkQ",
+        Signature = "(Landroidx/compose/ui/Modifier;" +
+                    "Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;Z" +
+                    "Landroidx/compose/ui/graphics/Shape;JJJJ" +
+                    "Lkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;II)V",
+        Defaults  = typeof(SnackbarDefault))]
+    public static partial void Snackbar(
+        IModifier?  modifier,
+        IFunction2? action,
+        IFunction2? dismissAction,
+        IFunction2  content,
+        int         defaults,
+        IComposer   composer);
+
+    // androidx.compose.material3.SnackbarHostKt.SnackbarHost — UNMANGLED
+    // (no inline-class params). 3 user params: hostState, modifier,
+    // snackbar. Bits 0 (hostState) and 2 (snackbar) always provided.
+    [ComposeBridge(
+        Class     = "androidx/compose/material3/SnackbarHostKt",
+        JvmName   = "SnackbarHost",
+        Signature = "(Landroidx/compose/material3/SnackbarHostState;" +
+                    "Landroidx/compose/ui/Modifier;Lkotlin/jvm/functions/Function3;" +
+                    "Landroidx/compose/runtime/Composer;II)V",
+        Defaults  = typeof(SnackbarHostDefault))]
+    public static partial void SnackbarHost(
+        IntPtr     hostState,
+        IModifier? modifier,
+        IFunction3 snackbar,
+        IComposer  composer);
+
+    // androidx.compose.material3.BadgeKt.Badge-eopBjH0. 4 user params:
+    // modifier, containerColor, contentColor, content (RowScope-receiver
+    // Function3). Bit 3 (content) always provided.
+    [ComposeBridge(
+        Class     = "androidx/compose/material3/BadgeKt",
+        JvmName   = "Badge-eopBjH0",
+        Signature = "(Landroidx/compose/ui/Modifier;JJ" +
+                    "Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;II)V",
+        Defaults  = typeof(BadgeDefault))]
+    public static partial void Badge(IModifier? modifier, IFunction3 content, IComposer composer);
+
+    // androidx.compose.material3.BadgeKt.BadgedBox — UNMANGLED. 3 user
+    // params: badge (BoxScope-receiver Function3), modifier, content
+    // (BoxScope-receiver Function3). Bits 0 (badge) and 2 (content)
+    // always provided.
+    [ComposeBridge(
+        Class     = "androidx/compose/material3/BadgeKt",
+        JvmName   = "BadgedBox",
+        Signature = "(Lkotlin/jvm/functions/Function3;Landroidx/compose/ui/Modifier;" +
+                    "Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;II)V",
+        Defaults  = typeof(BadgedBoxDefault))]
+    public static partial void BadgedBox(
+        IFunction3 badge,
+        IModifier? modifier,
+        IFunction3 content,
+        IComposer  composer);
+
+    // androidx.compose.material3.ListItemKt.ListItem-HXNGIdc. 9 user
+    // params: headlineContent, modifier, overlineContent, supportingContent,
+    // leadingContent, trailingContent, colors, tonalElevation,
+    // shadowElevation. Bit 0 (headlineContent) always provided.
+    [ComposeBridge(
+        Class     = "androidx/compose/material3/ListItemKt",
+        JvmName   = "ListItem-HXNGIdc",
+        Signature = "(Lkotlin/jvm/functions/Function2;Landroidx/compose/ui/Modifier;" +
+                    "Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;" +
+                    "Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;" +
+                    "Landroidx/compose/material3/ListItemColors;FF" +
+                    "Landroidx/compose/runtime/Composer;II)V",
+        Defaults  = typeof(ListItemDefault))]
+    public static partial void ListItem(
+        IFunction2  headlineContent,
+        IModifier?  modifier,
+        IFunction2? overlineContent,
+        IFunction2? supportingContent,
+        IFunction2? leadingContent,
+        IFunction2? trailingContent,
+        int         defaults,
+        IComposer   composer);
 }
