@@ -90,7 +90,7 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
             });
         }
 
-        // Detect the JNI signature "shape". Four supported today:
+        // Detect the JNI signature "shape". Five supported today:
         //   1. ComposableWithDefault — ...Composer;I+ trailing (multiple Is).
         //   2. ComposableNoDefault   — ...Composer;I  trailing (single I).
         //   3. ExtensionWithDefault  — non-@Composable Kotlin extension
@@ -101,20 +101,58 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
         //      class with no Composer slot and no $default bitmask; just
         //      (args…)Return. Used for Modifier-chain helpers and other
         //      synchronous Kotlin utilities (e.g. RoundedCornerShape).
-        int composerSigIdx = -1;
-        for (int i = 0; i < sigParams.Count; i++)
+        //   5. Constructor           — JvmName is "<init>". Emits
+        //      GetMethodID + NewObject and wraps the returned handle via
+        //      Java.Lang.Object.GetObject<TReturn>(.., TransferLocalRef).
+        //      Used for stripped Kotlin ctors whose parameters were
+        //      mangled by inline-class compilation (e.g.
+        //      GridCells.Adaptive(Dp)).
+        bool isConstructor = jvmName == "<init>";
+        if (isConstructor)
         {
-            if (sigParams[i].Code == 'L' && sigParams[i].ClassName == "androidx/compose/runtime/Composer")
+            // Ctor-specific validation: no Composer, no $default, no
+            // InstanceField, no Defaults attr, non-void return,
+            // signature must end with `V`.
+            if (instanceField is not null)
+                return ConstructorError(loc, method.Name, "InstanceField is not valid with a constructor bridge");
+            if (defaultsType is not null)
+                return ConstructorError(loc, method.Name, "Defaults is not valid with a constructor bridge");
+            for (int i = 0; i < method.Parameters.Length; i++)
             {
-                composerSigIdx = i;
-                break;
+                if (ComposeDefaultsGenerator.IsComposer(method.Parameters[i].Type))
+                    return ConstructorError(loc, method.Name, "constructors have no Composer slot — remove the IComposer parameter");
+            }
+            if (method.ReturnsVoid)
+                return ConstructorError(loc, method.Name, "return type must be the constructed object, not void");
+            // Signature must end with `V` (JVM constructors return void at
+            // the bytecode level even though NewObject hands back a handle).
+            if (!signature.EndsWith(")V", StringComparison.Ordinal))
+                return ConstructorError(loc, method.Name, "JNI signature must end with ')V' (constructors return void at the bytecode level)");
+        }
+
+        int composerSigIdx = -1;
+        if (!isConstructor)
+        {
+            for (int i = 0; i < sigParams.Count; i++)
+            {
+                if (sigParams[i].Code == 'L' && sigParams[i].ClassName == "androidx/compose/runtime/Composer")
+                {
+                    composerSigIdx = i;
+                    break;
+                }
             }
         }
         bool hasComposerSlot = composerSigIdx >= 0;
 
         bool extensionWithDefault = false;
         bool signatureHasDefault;
-        if (hasComposerSlot)
+        if (isConstructor)
+        {
+            // Ctor shape never has $default or extension marker — every
+            // C# user param maps positionally to a JNI slot.
+            signatureHasDefault = false;
+        }
+        else if (hasComposerSlot)
         {
             // Kotlin's @Composable codegen emits ceil(userParams/10) (min 1)
             // $changed groups, and one $default slot iff at least one
@@ -273,7 +311,7 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
             receiverParam = userParams[0];
             userParams = userParams.Skip(1).ToArray();
         }
-        else if (!hasComposerSlot && !extensionWithDefault &&
+        else if (!hasComposerSlot && !extensionWithDefault && !isConstructor &&
                  userParams.Length > 0 && sigParams.Count > 0 &&
                  userParams[0].Type.SpecialType == SpecialType.System_IntPtr &&
                  sigParams[0].Code == 'L' && sigParams[0].ArrayDepth == 0)
@@ -335,10 +373,15 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
 
         var source = Emit(method, attr, className, jvmName, signature, defaultsEnumName, sigParams,
             kotlinNames, userParams, userBitOf, receiverParam, callerProvidesDefaults, hasDefaultSlot,
-            hasComposerSlot, extensionWithDefault, instanceField);
+            hasComposerSlot, extensionWithDefault, instanceField, isConstructor);
         var hint = $"ComposeNet.{method.ContainingType.Name}.{method.Name}.g.cs";
         return new GenerationResult(source, hint, Array.Empty<Diagnostic>());
     }
+
+    static GenerationResult ConstructorError(Location loc, string methodName, string message) =>
+        new(null, null, new[] {
+            Diagnostic.Create(Diagnostics.BridgeConstructorShape, loc, methodName, message)
+        });
 
     /// <summary>
     /// Number of trailing <c>I</c> params that represent <c>$changed</c>
@@ -370,7 +413,8 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
         bool hasDefaultSlot,
         bool hasComposerSlot,
         bool extensionWithDefault,
-        string? instanceField)
+        string? instanceField,
+        bool isConstructor)
     {
         var sb = new StringBuilder();
         sb.AppendLine("// <auto-generated/>");
@@ -407,7 +451,13 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
         sb.Append("        if (s_").Append(sym).AppendLine("_method == global::System.IntPtr.Zero)");
         sb.AppendLine("        {");
         sb.Append("            s_").Append(sym).Append("_class = global::Android.Runtime.JNIEnv.FindClass(\"").Append(className).AppendLine("\");");
-        if (instanceField is null)
+        if (isConstructor)
+        {
+            // Constructor ID lookup is GetMethodID with name "<init>".
+            sb.Append("            s_").Append(sym).Append("_method = global::Android.Runtime.JNIEnv.GetMethodID(s_")
+              .Append(sym).Append("_class, \"").Append(jvmName).Append("\", \"").Append(signature).AppendLine("\");");
+        }
+        else if (instanceField is null)
         {
             sb.Append("            s_").Append(sym).Append("_method = global::Android.Runtime.JNIEnv.GetStaticMethodID(s_")
               .Append(sym).Append("_class, \"").Append(jvmName).Append("\", \"").Append(signature).AppendLine("\");");
@@ -524,15 +574,32 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
         // Call.
         var callTarget = instanceField is null ? $"s_{sym}_class" : $"s_{sym}_instance";
         bool returnsValue = !method.ReturnsVoid;
-        string callMethod;
-        if (returnsValue)
-            callMethod = instanceField is null ? "CallStaticObjectMethod" : "CallObjectMethod";
+        if (isConstructor)
+        {
+            // Constructor shape: NewObject + wrap handle into the C#
+            // return type. Java.Lang.Object.GetObject<T>(handle,
+            // TransferLocalRef) consumes the local ref so we don't need
+            // to DeleteLocalRef it here.
+            var returnTypeFq = method.ReturnType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat
+                .WithMiscellaneousOptions(SymbolDisplayMiscellaneousOptions.UseSpecialTypes
+                    | SymbolDisplayMiscellaneousOptions.EscapeKeywordIdentifiers));
+            sb.Append("                var __handle = global::Android.Runtime.JNIEnv.NewObject(s_")
+              .Append(sym).Append("_class, s_").Append(sym).AppendLine("_method, args);");
+            sb.Append("                return global::Java.Lang.Object.GetObject<")
+              .Append(returnTypeFq).AppendLine(">(__handle, global::Android.Runtime.JniHandleOwnership.TransferLocalRef)!;");
+        }
         else
-            callMethod = instanceField is null ? "CallStaticVoidMethod" : "CallVoidMethod";
-        sb.Append("                ");
-        if (returnsValue) sb.Append("return ");
-        sb.Append("global::Android.Runtime.JNIEnv.").Append(callMethod).Append('(').Append(callTarget)
-          .Append(", s_").Append(sym).AppendLine("_method, args);");
+        {
+            string callMethod;
+            if (returnsValue)
+                callMethod = instanceField is null ? "CallStaticObjectMethod" : "CallObjectMethod";
+            else
+                callMethod = instanceField is null ? "CallStaticVoidMethod" : "CallVoidMethod";
+            sb.Append("                ");
+            if (returnsValue) sb.Append("return ");
+            sb.Append("global::Android.Runtime.JNIEnv.").Append(callMethod).Append('(').Append(callTarget)
+              .Append(", s_").Append(sym).AppendLine("_method, args);");
+        }
         sb.AppendLine("            }");
         sb.AppendLine("        }");
 

@@ -67,4 +67,12 @@ internal static class Diagnostics
         category: "ComposeNet",
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);
+
+    public static readonly DiagnosticDescriptor BridgeConstructorShape = new(
+        id: "CN2006",
+        title: "[ComposeBridge] constructor shape requirements not met",
+        messageFormat: "Constructor bridge '{0}': {1}",
+        category: "ComposeNet",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
 }

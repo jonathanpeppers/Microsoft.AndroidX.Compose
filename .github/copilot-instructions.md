@@ -127,7 +127,12 @@ generator fill it in.
    (e.g. `Modifier.padding`, `RoundedCornerShape`), declare the params
    positionally — the generator treats the first user param as an
    extension receiver only when both it's `IntPtr` and the first JNI
-   sigParam is an object (`L`).
+   sigParam is an object (`L`). For stripped Kotlin constructors whose
+   parameters were mangled by inline-class compilation
+   (e.g. `GridCells.Adaptive(Dp)`), set `JvmName = "<init>"`; the
+   generator emits `GetMethodID` + `NewObject` and wraps the returned
+   handle with `Java.Lang.Object.GetObject<TReturn>(.., TransferLocalRef)`
+   so the declared C# return type is the constructed object, not `void`.
 2. **If** the underlying `@Composable` has at least one defaultable
    Kotlin parameter (i.e. the JNI signature has a trailing `$default`
    `I` slot after `$changed`), set `Defaults = typeof(XxxDefault)` and
@@ -190,6 +195,22 @@ receiver slot because the first sigParam is `L`. For a non-extension
 plain static (e.g. `RoundedCornerShape(Dp)` whose signature starts
 with `F`, not `L`), the first user param is just a regular argument.
 
+Example (Kotlin constructor — `JvmName = "<init>"`):
+```csharp
+[ComposeBridge(
+    Class     = "androidx/compose/foundation/lazy/grid/GridCells$Adaptive",
+    JvmName   = "<init>",
+    Signature = "(F)V")]
+internal static partial IGridCells GridCellsAdaptive(float minSizeDp);
+```
+The signature must end with `V` (JVM constructors return void at the
+bytecode level even though the call hands back a handle), and the C#
+return type must be non-`void` — that's the type the generator passes
+to `Java.Lang.Object.GetObject<T>(.., TransferLocalRef)`. Ctor bridges
+cannot declare a Composer parameter, `Defaults`, or `InstanceField`
+(the generator rejects each with CN2006). All user params map
+positionally to ctor argument slots; there is no extension receiver.
+
 ### Conventions the generator relies on
 
 - For `@Composable` bridges, `composer` is the **last** C# parameter.
@@ -231,7 +252,7 @@ with `F`, not `L`), the first user param is just a regular argument.
 
 `ModifierHandle` (a managed-side `IModifier? → IntPtr` conversion) and
 `ModifierCompanionInstance` (a static field lookup, not a method
-invocation) don't fit any of the four `[ComposeBridge]` shapes and
+invocation) don't fit any of the five `[ComposeBridge]` shapes and
 remain raw JNI. Two-step bridges like `ModifierClipRoundedCorners`
 (which composes `RoundedCornerShape` + `ClipKt.clip` and manages an
 intermediate `Shape` local ref) also stay hand-written — their shape
@@ -246,6 +267,7 @@ isn't a single Kotlin call.
 | CN2003  | Bridge partial-method param doesn't match any Kotlin name.  |
 | CN2004  | `[ComposeBridge]` has a malformed JNI signature.            |
 | CN2005  | `Defaults` disagrees with the JNI `$default` slot.          |
+| CN2006  | Constructor bridge shape requirements not met.              |
 
 **When you add a new generator diagnostic, also update this table in
 `.github/copilot-instructions.md` (and the matching table for the

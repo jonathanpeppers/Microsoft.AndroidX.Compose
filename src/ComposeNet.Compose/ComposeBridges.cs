@@ -2,7 +2,6 @@ using Android.Runtime;
 using AndroidX.Compose.Foundation.Lazy.Grid;
 using AndroidX.Compose.Runtime;
 using AndroidX.Compose.UI;
-using Java.Interop;
 using Kotlin.Jvm.Functions;
 
 namespace ComposeNet;
@@ -52,32 +51,16 @@ internal static partial class ComposeBridges
     // androidx.compose.foundation.lazy.grid.GridCells$Adaptive — the
     // only constructor takes a Dp (`@JvmInline value class Dp(val value: Float)`),
     // mangled to `<init>(F)V` in bytecode, and the binder strips it.
-    // Hand-written because the [ComposeBridge] generator only handles
-    // static methods, not constructors. `GridCells.Fixed(int)` doesn't
-    // need a bridge (no inline-class mangling); the binder exposes its
-    // ctor directly.
-    static IntPtr s_gridCellsAdaptiveClass;
-    static IntPtr s_gridCellsAdaptiveCtor;
-
-    internal static unsafe IGridCells GridCellsAdaptive(float minSizeDp)
-    {
-        // Guard on the ctor handle (last field written) so a concurrent
-        // first-call can't observe a non-zero class handle while the
-        // ctor ID is still null and crash inside NewObject.
-        if (s_gridCellsAdaptiveCtor == IntPtr.Zero)
-        {
-            IntPtr local = JNIEnv.FindClass("androidx/compose/foundation/lazy/grid/GridCells$Adaptive");
-            IntPtr globalCls = JNIEnv.NewGlobalRef(local);
-            JNIEnv.DeleteLocalRef(local);
-            IntPtr ctor = JNIEnv.GetMethodID(globalCls, "<init>", "(F)V");
-            s_gridCellsAdaptiveClass = globalCls;
-            s_gridCellsAdaptiveCtor  = ctor;
-        }
-        JValue* args = stackalloc JValue[1];
-        args[0] = new JValue(minSizeDp);
-        IntPtr handle = JNIEnv.NewObject(s_gridCellsAdaptiveClass, s_gridCellsAdaptiveCtor, args);
-        return Java.Lang.Object.GetObject<IGridCells>(handle, JniHandleOwnership.TransferLocalRef)!;
-    }
+    // The source generator's constructor shape emits FindClass +
+    // GetMethodID("<init>") + NewObject + Java.Lang.Object.GetObject<T>
+    // with TransferLocalRef. `GridCells.Fixed(int)` doesn't need a
+    // bridge (no inline-class mangling); the binder exposes its ctor
+    // directly.
+    [ComposeBridge(
+        Class     = "androidx/compose/foundation/lazy/grid/GridCells$Adaptive",
+        JvmName   = "<init>",
+        Signature = "(F)V")]
+    internal static partial IGridCells GridCellsAdaptive(float minSizeDp);
 
     // androidx.compose.foundation.layout.PaddingKt — the Dp-taking
     // overloads have hashed JVM names from the inline-class compiler
