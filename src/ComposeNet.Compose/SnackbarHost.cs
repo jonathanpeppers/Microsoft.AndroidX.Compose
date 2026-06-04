@@ -32,15 +32,12 @@ public sealed class SnackbarHost : ComposableNode
     internal override void Render(IComposer composer)
     {
         // SnackbarHost's Function3 receives the current SnackbarData as p0.
-        // We forward to the default Snackbar renderer by calling the
-        // default-shaped Snackbar(snackbarData) Kotlin overload — but
-        // since that's a stripped variant we just emit a plain Snackbar
-        // with no message when invoked directly. In practice the host
-        // is rarely visited because the suspending trigger isn't bridged.
-        var snackbar = new ComposableLambda3((_, c) =>
-        {
-            new Snackbar { Body = new Text(string.Empty) }.Render(c);
-        });
+        // The suspending `showSnackbar` trigger on SnackbarHostState isn't
+        // bridged yet, so this lambda would only fire if a Java/Kotlin
+        // caller enqueued data. Render nothing rather than a blank Snackbar
+        // surface — once the `Snackbar(snackbarData)` overload is bridged
+        // we can forward to it here.
+        var snackbar = new ComposableLambda3((_, _) => { });
 
         ComposeBridges.SnackbarHost(
             hostState: ((Java.Lang.Object)_hostState.Jvm).Handle,
