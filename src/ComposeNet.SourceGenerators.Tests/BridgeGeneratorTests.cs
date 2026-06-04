@@ -417,6 +417,62 @@ public class BridgeGeneratorTests
     }
 
     [Fact]
+    public void DefaultsOmittedButSignatureHasDefault_ReportsCN2005()
+    {
+        // Signature has a $default slot (2 trailing Is for 1 user param)
+        // but [ComposeBridge] omits Defaults. Without validation the old
+        // generator would have treated $default as another $changed slot.
+        var code = """
+            using AndroidX.Compose.Runtime;
+            using ComposeNet;
+
+            namespace ComposeNet
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(
+                        Class = "x/Y",
+                        JvmName = "Foo",
+                        Signature = "(ZLandroidx/compose/runtime/Composer;II)V")]
+                    public static partial void Foo(bool flag, IComposer composer);
+                }
+            }
+            """;
+
+        var (_, diags, _) = Run(code);
+        Assert.Contains(diags, d => d.Id == "CN2005");
+    }
+
+    [Fact]
+    public void DefaultsProvidedButSignatureHasNoDefault_ReportsCN2005()
+    {
+        // Signature has only $changed (1 trailing I for 1 user param) so
+        // [ComposeBridge] must not specify Defaults.
+        var code = """
+            using AndroidX.Compose.Runtime;
+            using ComposeNet;
+
+            [assembly: ComposeDefaults("FooDefault", "id")]
+
+            namespace ComposeNet
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(
+                        Class = "x/Y",
+                        JvmName = "Foo",
+                        Signature = "(ILandroidx/compose/runtime/Composer;I)V",
+                        Defaults = typeof(FooDefault))]
+                    public static partial void Foo(int id, IComposer composer);
+                }
+            }
+            """;
+
+        var (_, diags, _) = Run(code);
+        Assert.Contains(diags, d => d.Id == "CN2005");
+    }
+
+    [Fact]
     public void InstanceField_EmitsGlobalRefAndCallObjectMethod()
     {
         var code = """

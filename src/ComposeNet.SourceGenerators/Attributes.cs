@@ -59,20 +59,24 @@ internal static class Attributes
             /// <para><b>JvmName</b>: the (often mangled) Kotlin-emitted
             /// method name, e.g. <c>Button</c> or <c>Surface-T9BRK9s</c>.</para>
             /// <para><b>Signature</b>: full JNI signature string for the
-            /// underlying static method, ending in
-            /// <c>...Composer;I*I)V</c> (one trailing <c>I</c> per
-            /// <c>$changed</c> slot, then one for <c>$default</c>) or
-            /// <c>...Composer;I*)V</c> when <b>Defaults</b> is omitted —
-            /// <c>$default</c> only exists in the bytecode when at least
-            /// one Kotlin parameter has a default value.</para>
+            /// underlying static method. Ends in
+            /// <c>...Composer;I*I)&lt;ReturnType&gt;</c> (one trailing
+            /// <c>I</c> per <c>$changed</c> group plus one for
+            /// <c>$default</c>) when the function has at least one
+            /// defaultable parameter, or <c>...Composer;I*)&lt;ReturnType&gt;</c>
+            /// when every parameter is required (no <c>$default</c> slot
+            /// in the bytecode). The return-type token is <c>V</c> for
+            /// <c>void</c> bridges or an <c>L...;</c> for state holders /
+            /// factories.</para>
             /// <para><b>Defaults</b>: <c>typeof(XxxDefault)</c> — the
             /// <c>$default</c> bitmask enum produced by
             /// <see cref="ComposeDefaultsAttribute"/>. The generator reads
             /// the matching declarative <c>[ComposeDefaults(...)]</c>
             /// attribute to learn the Kotlin parameter names + bit
-            /// positions. Omit when the underlying <c>@Composable</c>
-            /// has no defaultable parameters (no <c>$default</c> slot in
-            /// the bytecode); user params are then matched positionally.</para>
+            /// positions. Required when the JNI signature has a
+            /// <c>$default</c> slot; must be omitted otherwise. The
+            /// generator cross-checks this against the signature and
+            /// reports CN2005 on a mismatch.</para>
             /// <para><b>InstanceField</b>: when set, the bridge calls an
             /// instance method on a Kotlin <c>object</c> singleton — name
             /// the <c>$$INSTANCE</c>-style static field

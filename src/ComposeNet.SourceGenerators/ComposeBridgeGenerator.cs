@@ -90,13 +90,44 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
             });
         }
 
+        // Infer whether the bytecode signature has a trailing $default slot.
+        // Kotlin's @Composable codegen emits ceil(userParams/10) (min 1)
+        // $changed groups, and one $default slot iff at least one parameter
+        // has a default value. So:
+        //   trailingI =  $changedGroups + ($default ? 1 : 0)
+        // Anything beyond the expected $changed count is the $default slot.
+        int trailingInts = 0;
+        for (int i = sigParams.Count - 1; i >= 0 && sigParams[i].Code == 'I' && sigParams[i].ArrayDepth == 0; i--)
+            trailingInts++;
+        int sigUserParamCount = sigParams.Count - 1 /*composer*/ - trailingInts;
+        int expectedChangedSlots = Math.Max(1, (sigUserParamCount + 9) / 10);
+        bool signatureHasDefault = trailingInts > expectedChangedSlots;
+
+        // Cross-validate signature against attribute metadata: a mismatch
+        // would silently produce a broken bridge (wrong $default slot
+        // packing, missing bitmask, etc.) so we fail fast.
+        if (signatureHasDefault && defaultsType is null)
+        {
+            return new GenerationResult(null, null, new[] {
+                Diagnostic.Create(Diagnostics.BridgeDefaultsMismatch, loc, method.Name,
+                    "JNI signature has a $default slot but [ComposeBridge] omits 'Defaults'")
+            });
+        }
+        if (!signatureHasDefault && defaultsType is not null)
+        {
+            return new GenerationResult(null, null, new[] {
+                Diagnostic.Create(Diagnostics.BridgeDefaultsMismatch, loc, method.Name,
+                    "[ComposeBridge] specifies 'Defaults' but the JNI signature has no $default slot")
+            });
+        }
+
         // Locate the matching declarative [ComposeDefaults] attribute, if any.
         // When [ComposeBridge] omits Defaults the bridge targets a
         // @Composable function whose Kotlin codegen emitted only $changed
         // slots (no $default bitmask) — every parameter is required.
         IReadOnlyList<string> kotlinNames;
         string? defaultsEnumName = defaultsType?.Name;
-        bool hasDefaultSlot = defaultsType is not null;
+        bool hasDefaultSlot = signatureHasDefault;
         if (defaultsType is not null && declarativeAttr is not null)
         {
             var match = compilation.Assembly.GetAttributes()
@@ -214,7 +245,13 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
         return new GenerationResult(source, hint, Array.Empty<Diagnostic>());
     }
 
-    /// <summary>Number of trailing <c>I</c> params *between* the composer and the final <c>$default</c>.</summary>
+    /// <summary>
+    /// Number of trailing <c>I</c> params that represent <c>$changed</c>
+    /// slots. With <paramref name="hasDefaultSlot"/>=<c>true</c> the very
+    /// last <c>I</c> is the <c>$default</c> bitmask, so this returns
+    /// <c>trailing-1</c>; otherwise every trailing <c>I</c> is part of
+    /// the <c>$changed</c> group(s).
+    /// </summary>
     static int ChangedSlotCount(IReadOnlyList<JniType> sigParams, bool hasDefaultSlot)
     {
         // Find composer position from the right: composer is the L Composer; before the trailing Is.
