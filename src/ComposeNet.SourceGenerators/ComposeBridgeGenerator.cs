@@ -439,7 +439,7 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
                 var member = PascalCase(p.Name);
                 if (p.NullableAnnotation == NullableAnnotation.Annotated || p.Type.IsReferenceType)
                 {
-                    sb.Append("        if (").Append(p.Name).Append(" is not null) defaults &= ~(int)global::ComposeNet.")
+                    sb.Append("        if (").Append(EscapeIdent(p.Name)).Append(" is not null) defaults &= ~(int)global::ComposeNet.")
                       .Append(enumName).Append('.').Append(member).AppendLine(";");
                 }
                 else
@@ -455,7 +455,7 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
         foreach (var sp in stringParams)
         {
             sb.Append("        global::System.IntPtr __ref_").Append(sp.Name)
-              .Append(" = global::Android.Runtime.JNIEnv.NewString(").Append(sp.Name).AppendLine(");");
+              .Append(" = global::Android.Runtime.JNIEnv.NewString(").Append(EscapeIdent(sp.Name)).AppendLine(");");
         }
 
         sb.AppendLine("        try");
@@ -471,7 +471,7 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
         int idx = 0;
         if (receiverParam is not null)
         {
-            sb.Append("                args[").Append(idx).Append("] = new global::Android.Runtime.JValue(").Append(receiverParam.Name).AppendLine(");");
+            sb.Append("                args[").Append(idx).Append("] = new global::Android.Runtime.JValue(").Append(EscapeIdent(receiverParam.Name)).AppendLine(");");
             idx++;
         }
 
@@ -497,7 +497,7 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
         IParameterSymbol? composer = hasComposerSlot ? method.Parameters[method.Parameters.Length - 1] : null;
         if (composer is not null)
         {
-            sb.Append("                args[").Append(idx).Append("] = new global::Android.Runtime.JValue(((global::Java.Lang.Object)").Append(composer.Name).AppendLine(").Handle);");
+            sb.Append("                args[").Append(idx).Append("] = new global::Android.Runtime.JValue(((global::Java.Lang.Object)").Append(EscapeIdent(composer.Name)).AppendLine(").Handle);");
             idx++;
         }
 
@@ -544,10 +544,10 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
         foreach (var p in userParams)
         {
             if (NeedsKeepAlive(p))
-                sb.Append("            global::System.GC.KeepAlive(").Append(p.Name).AppendLine(");");
+                sb.Append("            global::System.GC.KeepAlive(").Append(EscapeIdent(p.Name)).AppendLine(");");
         }
         if (composer is not null)
-            sb.Append("            global::System.GC.KeepAlive(").Append(composer.Name).AppendLine(");");
+            sb.Append("            global::System.GC.KeepAlive(").Append(EscapeIdent(composer.Name)).AppendLine(");");
         sb.AppendLine("        }");
 
         sb.AppendLine("    }");
@@ -571,13 +571,14 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
                 .WithMiscellaneousOptions(SymbolDisplayMiscellaneousOptions.IncludeNullableReferenceTypeModifier
                     | SymbolDisplayMiscellaneousOptions.UseSpecialTypes
                     | SymbolDisplayMiscellaneousOptions.EscapeKeywordIdentifiers)));
-            sb.Append(' ').Append(p.Name);
+            sb.Append(' ').Append(EscapeIdent(p.Name));
         }
         sb.AppendLine(")");
     }
 
     static void EmitUserArgValue(StringBuilder sb, IParameterSymbol p, JniType sigType)
     {
+        var name = EscapeIdent(p.Name);
         if (p.Type.SpecialType == SpecialType.System_String)
         {
             sb.Append("__ref_").Append(p.Name);
@@ -585,7 +586,7 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
         }
         if (p.Type.SpecialType == SpecialType.System_IntPtr)
         {
-            sb.Append(p.Name);
+            sb.Append(name);
             return;
         }
         if (IsNullableIntPtr(p.Type))
@@ -603,24 +604,24 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
             or SpecialType.System_Single
             or SpecialType.System_Double)
         {
-            sb.Append(p.Name);
+            sb.Append(name);
             return;
         }
         if (IsModifierType(p.Type))
         {
-            sb.Append("global::ComposeNet.ComposeBridges.ModifierHandle(").Append(p.Name).Append(')');
+            sb.Append("global::ComposeNet.ComposeBridges.ModifierHandle(").Append(name).Append(')');
             return;
         }
         // Reference type → handle, with null check for nullable annotations.
         bool nullable = p.NullableAnnotation == NullableAnnotation.Annotated;
         if (nullable)
         {
-            sb.Append(p.Name).Append(" is null ? global::System.IntPtr.Zero : ((global::Java.Lang.Object)")
-              .Append(p.Name).Append(").Handle");
+            sb.Append(name).Append(" is null ? global::System.IntPtr.Zero : ((global::Java.Lang.Object)")
+              .Append(name).Append(").Handle");
         }
         else
         {
-            sb.Append("((global::Java.Lang.Object)").Append(p.Name).Append(").Handle");
+            sb.Append("((global::Java.Lang.Object)").Append(name).Append(").Handle");
         }
     }
 
@@ -662,6 +663,14 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
     }
 
     static string SafeSym(string s) => s.Replace('-', '_');
+
+    // Wrap C# reserved keywords in `@` so a Kotlin parameter literally named
+    // `checked`/`event`/etc. can be declared as a C# parameter and referenced
+    // inside the generated body.
+    static string EscapeIdent(string name) =>
+        Microsoft.CodeAnalysis.CSharp.SyntaxFacts.GetKeywordKind(name)
+            == Microsoft.CodeAnalysis.CSharp.SyntaxKind.None
+        ? name : "@" + name;
 
     static string? ReadString(AttributeData attr, string name)
     {

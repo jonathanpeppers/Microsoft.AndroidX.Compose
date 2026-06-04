@@ -511,6 +511,45 @@ public class BridgeGeneratorTests
     }
 
     [Fact]
+    public void ReservedKeywordParam_IsAtSignEscaped()
+    {
+        // Kotlin-side parameter named `checked` collides with a C# reserved
+        // keyword. The generator must emit `bool @checked` in the partial
+        // method signature and reference `@checked` in the body so the result
+        // compiles.
+        var code = """
+            using AndroidX.Compose.Runtime;
+            using ComposeNet;
+            using Kotlin.Jvm.Functions;
+
+            [assembly: ComposeDefaults("CheckedThingDefault",
+                "!checked", "modifier")]
+
+            namespace ComposeNet
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(
+                        Class = "x/Y",
+                        JvmName = "Foo",
+                        Signature = "(ZLandroidx/compose/ui/Modifier;Landroidx/compose/runtime/Composer;II)V",
+                        Defaults = typeof(CheckedThingDefault))]
+                    public static partial void Foo(bool @checked, IModifier? modifier, IComposer composer);
+                }
+            }
+            """;
+
+        var (output, diags, emitted) = Run(code);
+        Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+        Assert.Contains("bool @checked", emitted);
+        Assert.Contains("new global::Android.Runtime.JValue(@checked)", emitted);
+
+        var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
+        Assert.Empty(errors);
+    }
+
+    [Fact]
     public void ExtensionWithDefault_BackgroundShape_OneReceiverPrimitiveAndNullableRef()
     {
         // Mirrors androidx.compose.foundation.BackgroundKt.background-bw27NRU$default —

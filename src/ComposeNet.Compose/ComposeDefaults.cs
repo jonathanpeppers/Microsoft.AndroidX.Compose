@@ -281,6 +281,67 @@ using ComposeNet;
 [assembly: ComposeDefaults("RememberPlainTooltipPositionProviderDefault",
     "spacing")]
 
+// androidx.compose.material3.SegmentedButtonKt.{Single,Multi}ChoiceSegmentedButtonRow-uFdPcIQ:
+// 3 user params, bit 2 (content) always provided. Both row variants
+// share the same signature so they reuse one enum.
+[assembly: ComposeDefaults("SegmentedButtonRowDefault",
+    "modifier", "space", "!content")]
+
+// androidx.compose.material3.SegmentedButtonKt.SegmentedButton (longer
+// 11-param overload with PaddingValues) — SingleChoiceSegmentedButtonRowScope
+// receiver. Bits 0 (selected), 1 (onClick), 2 (shape), 10 (label) always
+// provided — `shape` has no Kotlin default expression so its $default bit
+// is a no-op; the caller must pass a real Shape (resolved via
+// SegmentedButtonDefaults.itemShape). Bit 9 (icon) is optional and
+// toggled per-call by SegmentedButton.Render.
+[assembly: ComposeDefaults("SingleChoiceSegmentedButtonDefault",
+    "!selected", "!onClick", "!shape", "modifier", "enabled",
+    "colors", "border", "contentPadding", "interactionSource",
+    "icon", "!label")]
+
+// androidx.compose.material3.SegmentedButtonKt.SegmentedButton (longer
+// 11-param overload with PaddingValues) — MultiChoiceSegmentedButtonRowScope
+// receiver. Bits 0 (checked), 1 (onCheckedChange), 2 (shape), 10 (label)
+// always provided. Bit 9 (icon) is optional and toggled per-call.
+[assembly: ComposeDefaults("MultiChoiceSegmentedButtonDefault",
+    "!checked", "!onCheckedChange", "!shape", "modifier", "enabled",
+    "colors", "border", "contentPadding", "interactionSource",
+    "icon", "!label")]
+
+// androidx.compose.material3.SegmentedButtonDefaults.itemShape: 3 user
+// params on the SegmentedButtonDefaults Kotlin `object` instance method.
+// `index` and `count` are always provided; `baseShape` is omitted from
+// the C# user-facing bridge, so the source generator auto-sets bit 2 to
+// have Kotlin substitute SegmentedButtonDefaults.getBaseShape() (the
+// theme's default rounded-corner shape).
+[assembly: ComposeDefaults("SegmentedButtonItemShapeDefault",
+    "!index", "!count", "baseShape")]
+
+// androidx.compose.material3.WideNavigationRailKt.WideNavigationRail.
+// 8 user params; bit 7 (content) always provided. The optional `header`
+// slot (bit 4) is a member of the enum so a future overload of the
+// facade can toggle it; today WideNavigationRail.Render always leaves
+// it as a default ($default bit set).
+[assembly: ComposeDefaults("WideNavigationRailDefault",
+    "modifier", "state", "shape", "colors", "header",
+    "windowInsets", "arrangement", "!content")]
+
+// androidx.compose.material3.WideNavigationRailKt.WideNavigationRailItem-pli-t6k:
+// 10 user params; bits 0 (selected), 1 (onClick), 2 (icon) always provided.
+[assembly: ComposeDefaults("WideNavigationRailItemDefault",
+    "!selected", "!onClick", "!icon", "label", "railExpanded",
+    "modifier", "enabled", "iconPosition", "colors", "interactionSource")]
+
+// androidx.compose.material3.ProgressIndicatorKt.LinearProgressIndicator-rIrjwxo
+// (indeterminate, no progress callback). 5 user params, all optional.
+[assembly: ComposeDefaults("LinearProgressIndicatorDefault",
+    "modifier", "color", "trackColor", "strokeCap", "gapSize")]
+
+// androidx.compose.material3.ProgressIndicatorKt.CircularProgressIndicator-4lLiAd8
+// (indeterminate). 6 user params, all optional.
+[assembly: ComposeDefaults("CircularProgressIndicatorDefault",
+    "modifier", "color", "strokeWidth", "trackColor", "strokeCap", "gapSize")]
+
 // androidx.compose.material3.CheckboxKt.Checkbox: 6 user params,
 // bit 0 = checked (always provided), bit 1 = onCheckedChange (always
 // provided — Function1, the user passes a callback).
