@@ -123,6 +123,11 @@ generator fill it in.
    (e.g. `Modifier.background`, `Modifier.border`, `Modifier.clickable`),
    there is no `Composer` slot at all; just declare the user params
    directly with the extension receiver as the first `IntPtr` param.
+   For plain Kotlin static methods with no `Composer` and no `$default`
+   (e.g. `Modifier.padding`, `RoundedCornerShape`), declare the params
+   positionally — the generator treats the first user param as an
+   extension receiver only when both it's `IntPtr` and the first JNI
+   sigParam is an object (`L`).
 2. **If** the underlying `@Composable` has at least one defaultable
    Kotlin parameter (i.e. the JNI signature has a trailing `$default`
    `I` slot after `$changed`), set `Defaults = typeof(XxxDefault)` and
@@ -172,6 +177,19 @@ The trailing `I L<marker>` slots are the `$default` bitmask plus a
 synthetic-overload `Object` marker; the generator emits both
 automatically (the marker is always `IntPtr.Zero` / `null`).
 
+Example (plain Kotlin static — no `Composer`, no `$default`):
+```csharp
+[ComposeBridge(
+    Class     = "androidx/compose/foundation/layout/PaddingKt",
+    JvmName   = "padding-3ABfNKs",
+    Signature = "(Landroidx/compose/ui/Modifier;F)Landroidx/compose/ui/Modifier;")]
+internal static partial IntPtr ModifierPaddingAll(IntPtr modifier, float dp);
+```
+The leading `IntPtr modifier` is auto-bound to the JNI extension
+receiver slot because the first sigParam is `L`. For a non-extension
+plain static (e.g. `RoundedCornerShape(Dp)` whose signature starts
+with `F`, not `L`), the first user param is just a regular argument.
+
 ### Conventions the generator relies on
 
 - For `@Composable` bridges, `composer` is the **last** C# parameter.
@@ -188,10 +206,15 @@ automatically (the marker is always `IntPtr.Zero` / `null`).
   slot**; do not declare `int defaults` on a no-`$default` bridge.
 - Kotlin extension receivers on `@Composable` functions: declare as
   `IntPtr` with a name ending in `Scope` (e.g. `IntPtr rowScope`).
-  Non-`@Composable` extensions: declare the receiver as the first
-  `IntPtr` user parameter (any name — the generator binds it
-  positionally to the first JNI slot). In both cases the generator
-  places it at `args[0]` and excludes it from the `$default` count.
+  Non-`@Composable` extensions with `$default`: declare the receiver
+  as the first `IntPtr` user parameter (any name — the generator binds
+  it positionally to the first JNI slot). Plain Kotlin static
+  extensions (no `Composer`, no `$default`): the first user param is
+  treated as the receiver iff it is `IntPtr` AND the first JNI
+  sigParam is an object (`L`); otherwise every user param is a regular
+  positional argument (e.g. `RoundedCornerShape(float dp)` over
+  `(F)Shape;` has no receiver). In all cases the receiver is placed at
+  `args[0]` and excluded from the `$default` count.
 - `IModifier?` is special-cased to call `ComposeBridges.ModifierHandle`
   (handles `null` → `IntPtr.Zero`). `IntPtr?` is also recognized:
   `null` → `IntPtr.Zero` for the JNI arg, and the auto-mask only
@@ -206,10 +229,13 @@ automatically (the marker is always `IntPtr.Zero` / `null`).
 
 ### What still lives hand-written
 
-`ModifierHandle` and the simpler modifier-chain helpers that have
-neither `Composer` nor `$default` (`PaddingAll`, `FillMaxWidth`,
-`RoundedCornerShape`, `ClipKt.clip`, etc.) — these don't follow any
-shape the generator currently recognises and remain plain JNI calls.
+`ModifierHandle` (a managed-side `IModifier? → IntPtr` conversion) and
+`ModifierCompanionInstance` (a static field lookup, not a method
+invocation) don't fit any of the four `[ComposeBridge]` shapes and
+remain raw JNI. Two-step bridges like `ModifierClipRoundedCorners`
+(which composes `RoundedCornerShape` + `ClipKt.clip` and manages an
+intermediate `Shape` local ref) also stay hand-written — their shape
+isn't a single Kotlin call.
 
 ### Generator diagnostics
 

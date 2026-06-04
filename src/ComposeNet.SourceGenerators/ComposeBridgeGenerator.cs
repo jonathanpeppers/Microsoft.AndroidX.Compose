@@ -90,13 +90,17 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
             });
         }
 
-        // Detect the JNI signature "shape". Three supported today:
+        // Detect the JNI signature "shape". Four supported today:
         //   1. ComposableWithDefault — ...Composer;I+ trailing (multiple Is).
         //   2. ComposableNoDefault   — ...Composer;I  trailing (single I).
         //   3. ExtensionWithDefault  — non-@Composable Kotlin extension
         //      function with default values; tail is `I L<marker>`,
         //      no Composer. The marker is always Ljava/lang/Object; and
         //      is passed `null` (IntPtr.Zero).
+        //   4. PlainStatic           — plain Kotlin static method on a Kt
+        //      class with no Composer slot and no $default bitmask; just
+        //      (args…)Return. Used for Modifier-chain helpers and other
+        //      synchronous Kotlin utilities (e.g. RoundedCornerShape).
         int composerSigIdx = -1;
         for (int i = 0; i < sigParams.Count; i++)
         {
@@ -138,13 +142,12 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
         }
         else
         {
-            // Non-@Composable, no $default — e.g. RoundedCornerShape or
-            // ClipKt.clip. Not supported by this generator yet (issue #30
-            // explicitly leaves these hand-written).
-            return new GenerationResult(null, null, new[] {
-                Diagnostic.Create(Diagnostics.BridgeMalformedSignature, loc, method.Name,
-                    "signature has neither a Composer slot nor an `I L<marker>` $default tail; this shape is not yet supported")
-            });
+            // Plain static call, no Composer, no $default — e.g.
+            // PaddingKt.padding(Modifier, Dp), RoundedCornerShape(Dp).
+            // Every Kotlin parameter is required; the C# stub lists them
+            // positionally (with an optional leading IntPtr receiver
+            // when the Kotlin function is an extension method).
+            signatureHasDefault = false;
         }
 
         bool hasDefaultSlot = signatureHasDefault;
@@ -242,9 +245,13 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
 
         // Detect leading extension receiver. For composable shapes the
         // convention is `IntPtr <name>Scope` (e.g. `IntPtr rowScope`); for
-        // extension shapes the receiver is whatever the first sigParam is
-        // (e.g. Modifier) and we bind it positionally to the first IntPtr
-        // C# parameter regardless of name.
+        // extension-with-default shapes the receiver is whatever the first
+        // sigParam is (e.g. Modifier) and we bind it positionally to the
+        // first IntPtr C# parameter regardless of name; for the plain-static
+        // shape we treat the first user param as the receiver iff the
+        // first sigParam is an object (`L`) AND the first C# param is
+        // `IntPtr` — that covers Modifier-chain extensions while leaving
+        // non-extension static calls (e.g. `RoundedCornerShape(Dp)`) alone.
         IParameterSymbol? receiverParam = null;
         if (extensionWithDefault)
         {
@@ -258,9 +265,18 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
             receiverParam = userParams[0];
             userParams = userParams.Skip(1).ToArray();
         }
-        else if (userParams.Length > 0 &&
+        else if (hasComposerSlot &&
+                 userParams.Length > 0 &&
                  userParams[0].Type.SpecialType == SpecialType.System_IntPtr &&
                  userParams[0].Name.EndsWith("Scope", StringComparison.Ordinal))
+        {
+            receiverParam = userParams[0];
+            userParams = userParams.Skip(1).ToArray();
+        }
+        else if (!hasComposerSlot && !extensionWithDefault &&
+                 userParams.Length > 0 && sigParams.Count > 0 &&
+                 userParams[0].Type.SpecialType == SpecialType.System_IntPtr &&
+                 sigParams[0].Code == 'L' && sigParams[0].ArrayDepth == 0)
         {
             receiverParam = userParams[0];
             userParams = userParams.Skip(1).ToArray();

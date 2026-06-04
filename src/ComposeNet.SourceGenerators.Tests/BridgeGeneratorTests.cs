@@ -696,4 +696,195 @@ public class BridgeGeneratorTests
         Assert.Contains("args[3] = new global::Android.Runtime.JValue(defaults)", emitted);
         Assert.Contains("args[4] = new global::Android.Runtime.JValue(global::System.IntPtr.Zero)", emitted);
     }
+
+    [Fact]
+    public void PlainStatic_ReceiverPlusPrimitive()
+    {
+        // Mirrors androidx.compose.foundation.layout.SizeKt.fillMaxWidth —
+        // plain Kotlin static extension on Modifier, no Composer, no $default.
+        var code = """
+            using ComposeNet;
+
+            namespace ComposeNet
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(
+                        Class = "androidx/compose/foundation/layout/SizeKt",
+                        JvmName = "fillMaxWidth",
+                        Signature = "(Landroidx/compose/ui/Modifier;F)Landroidx/compose/ui/Modifier;")]
+                    public static partial System.IntPtr ModifierFillMaxWidth(System.IntPtr modifier, float fraction);
+                }
+            }
+            """;
+
+        var (output, diags, emitted) = Run(code);
+        Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+        Assert.Contains("FindClass(\"androidx/compose/foundation/layout/SizeKt\")", emitted);
+        Assert.Contains("GetStaticMethodID(s_ModifierFillMaxWidth_class, \"fillMaxWidth\"", emitted);
+
+        // Receiver at args[0], fraction at args[1] — 2 slots total.
+        Assert.Contains("global::Android.Runtime.JValue[2]", emitted);
+        Assert.Contains("args[0] = new global::Android.Runtime.JValue(modifier)", emitted);
+        Assert.Contains("args[1] = new global::Android.Runtime.JValue(fraction)", emitted);
+        Assert.DoesNotContain("args[2]", emitted);
+
+        // No bitmask, no $default slot, no marker, no Composer.
+        Assert.DoesNotContain(".All;", emitted);
+        Assert.DoesNotContain("new global::Android.Runtime.JValue(defaults)", emitted);
+        Assert.DoesNotContain("new global::Android.Runtime.JValue(global::System.IntPtr.Zero)", emitted);
+        Assert.DoesNotContain("Composer", emitted);
+        Assert.DoesNotContain("KeepAlive(composer)", emitted);
+
+        Assert.Contains("return global::Android.Runtime.JNIEnv.CallStaticObjectMethod(", emitted);
+
+        var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
+        Assert.Empty(errors);
+    }
+
+    [Fact]
+    public void PlainStatic_ReceiverOnly()
+    {
+        // Mirrors androidx.compose.foundation.layout.WindowInsetsPadding_androidKt.safeDrawingPadding —
+        // Modifier extension with no other parameters.
+        var code = """
+            using ComposeNet;
+
+            namespace ComposeNet
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(
+                        Class = "androidx/compose/foundation/layout/WindowInsetsPadding_androidKt",
+                        JvmName = "safeDrawingPadding",
+                        Signature = "(Landroidx/compose/ui/Modifier;)Landroidx/compose/ui/Modifier;")]
+                    public static partial System.IntPtr ModifierSafeDrawingPadding(System.IntPtr modifier);
+                }
+            }
+            """;
+
+        var (output, diags, emitted) = Run(code);
+        Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+        Assert.Contains("global::Android.Runtime.JValue[1]", emitted);
+        Assert.Contains("args[0] = new global::Android.Runtime.JValue(modifier)", emitted);
+        Assert.DoesNotContain("args[1]", emitted);
+        Assert.DoesNotContain("Composer", emitted);
+        Assert.DoesNotContain("new global::Android.Runtime.JValue(defaults)", emitted);
+        Assert.Contains("return global::Android.Runtime.JNIEnv.CallStaticObjectMethod(", emitted);
+
+        var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
+        Assert.Empty(errors);
+    }
+
+    [Fact]
+    public void PlainStatic_FourPrimitives()
+    {
+        // Mirrors androidx.compose.foundation.layout.PaddingKt.padding-qDBjuR0 —
+        // Modifier extension with four Dp values.
+        var code = """
+            using ComposeNet;
+
+            namespace ComposeNet
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(
+                        Class = "androidx/compose/foundation/layout/PaddingKt",
+                        JvmName = "padding-qDBjuR0",
+                        Signature = "(Landroidx/compose/ui/Modifier;FFFF)Landroidx/compose/ui/Modifier;")]
+                    public static partial System.IntPtr ModifierPaddingLTRB(
+                        System.IntPtr modifier, float start, float top, float end, float bottom);
+                }
+            }
+            """;
+
+        var (output, diags, emitted) = Run(code);
+        Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+        Assert.Contains("\"padding-qDBjuR0\"", emitted);
+        Assert.Contains("global::Android.Runtime.JValue[5]", emitted);
+        Assert.Contains("args[0] = new global::Android.Runtime.JValue(modifier)", emitted);
+        Assert.Contains("args[1] = new global::Android.Runtime.JValue(start)", emitted);
+        Assert.Contains("args[2] = new global::Android.Runtime.JValue(top)", emitted);
+        Assert.Contains("args[3] = new global::Android.Runtime.JValue(end)", emitted);
+        Assert.Contains("args[4] = new global::Android.Runtime.JValue(bottom)", emitted);
+        Assert.DoesNotContain("args[5]", emitted);
+        Assert.DoesNotContain("Composer", emitted);
+
+        var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
+        Assert.Empty(errors);
+    }
+
+    [Fact]
+    public void PlainStatic_NoReceiver_PrimitiveInObjectOut()
+    {
+        // Mirrors androidx.compose.foundation.shape.RoundedCornerShapeKt.RoundedCornerShape —
+        // plain static call with no leading receiver, returns an object.
+        var code = """
+            using ComposeNet;
+
+            namespace ComposeNet
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(
+                        Class = "androidx/compose/foundation/shape/RoundedCornerShapeKt",
+                        JvmName = "RoundedCornerShape-0680j_4",
+                        Signature = "(F)Landroidx/compose/foundation/shape/RoundedCornerShape;")]
+                    public static partial System.IntPtr RoundedCornerShape(float dp);
+                }
+            }
+            """;
+
+        var (output, diags, emitted) = Run(code);
+        Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+        Assert.Contains("FindClass(\"androidx/compose/foundation/shape/RoundedCornerShapeKt\")", emitted);
+        Assert.Contains("\"RoundedCornerShape-0680j_4\"", emitted);
+
+        // No receiver — dp goes into args[0].
+        Assert.Contains("global::Android.Runtime.JValue[1]", emitted);
+        Assert.Contains("args[0] = new global::Android.Runtime.JValue(dp)", emitted);
+        Assert.DoesNotContain("args[1]", emitted);
+
+        // No Composer, no $default, no marker.
+        Assert.DoesNotContain("Composer", emitted);
+        Assert.DoesNotContain("new global::Android.Runtime.JValue(defaults)", emitted);
+        Assert.DoesNotContain("new global::Android.Runtime.JValue(global::System.IntPtr.Zero)", emitted);
+
+        Assert.Contains("return global::Android.Runtime.JNIEnv.CallStaticObjectMethod(", emitted);
+
+        var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
+        Assert.Empty(errors);
+    }
+
+    [Fact]
+    public void PlainStatic_DefaultsSpecified_ReportsCN2005()
+    {
+        // Plain-static shape rejects Defaults via the existing CN2005
+        // "signature has no $default slot" check.
+        var code = """
+            using ComposeNet;
+
+            [assembly: ComposeDefaults("FooDefault", "dp")]
+
+            namespace ComposeNet
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(
+                        Class = "x/Y",
+                        JvmName = "Foo",
+                        Signature = "(F)Landroidx/compose/foundation/shape/RoundedCornerShape;",
+                        Defaults = typeof(FooDefault))]
+                    public static partial System.IntPtr Foo(float dp);
+                }
+            }
+            """;
+
+        var (_, diags, _) = Run(code);
+        Assert.Contains(diags, d => d.Id == "CN2005");
+    }
 }

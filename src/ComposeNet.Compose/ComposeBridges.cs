@@ -11,11 +11,13 @@ namespace ComposeNet;
 // — the trailing $default bitmask lives on the regular method). The bodies
 // for every method tagged with [ComposeBridge] are emitted by
 // ComposeNet.SourceGenerators.ComposeBridgeGenerator from the attribute
-// metadata + the matching [ComposeDefaults] enum names.
+// metadata + (for $default-bearing signatures) the matching [ComposeDefaults]
+// enum names. Plain Kotlin static helpers — no Composer, no $default — don't
+// need a [ComposeDefaults] declaration.
 //
-// A few helpers stay hand-written: the Modifier-chain helpers (no $default,
-// they wrap plain Kotlin static functions, not @Composable), and the
-// Modifier.Companion.$$INSTANCE field lookup used by Modifier.Build().
+// A few helpers stay hand-written: ModifierHandle (a managed-side conversion
+// from the IModifier wrapper to a raw handle) and ModifierCompanionInstance
+// (a static field lookup, not a method invocation).
 internal static partial class ComposeBridges
 {
     // Convert a managed Modifier wrapper (from `Modifier.Build()`) to a
@@ -48,134 +50,69 @@ internal static partial class ComposeBridges
 
     // androidx.compose.foundation.layout.PaddingKt — the Dp-taking
     // overloads have hashed JVM names from the inline-class compiler
-    // mangling (`@JvmInline value class Dp(val value: Float)`).
-    // The signatures below are stable across Compose UI 1.x.
-    const string ModifierDpSig =
-        "(Landroidx/compose/ui/Modifier;F)Landroidx/compose/ui/Modifier;";
-    const string ModifierDp2Sig =
-        "(Landroidx/compose/ui/Modifier;FF)Landroidx/compose/ui/Modifier;";
-    const string ModifierDp4Sig =
-        "(Landroidx/compose/ui/Modifier;FFFF)Landroidx/compose/ui/Modifier;";
+    // mangling (`@JvmInline value class Dp(val value: Float)`). Bodies
+    // are emitted by the source generator's plain-static shape.
+    [ComposeBridge(
+        Class     = "androidx/compose/foundation/layout/PaddingKt",
+        JvmName   = "padding-3ABfNKs",
+        Signature = "(Landroidx/compose/ui/Modifier;F)Landroidx/compose/ui/Modifier;")]
+    internal static partial IntPtr ModifierPaddingAll(IntPtr modifier, float dp);
 
-    static IntPtr s_paddingKtClass;
-    static IntPtr s_paddingAllMethod;
-    static IntPtr s_paddingHVMethod;
-    static IntPtr s_paddingLTRBMethod;
+    [ComposeBridge(
+        Class     = "androidx/compose/foundation/layout/PaddingKt",
+        JvmName   = "padding-VpY3zN4",
+        Signature = "(Landroidx/compose/ui/Modifier;FF)Landroidx/compose/ui/Modifier;")]
+    internal static partial IntPtr ModifierPaddingHV(IntPtr modifier, float horizontal, float vertical);
 
-    internal static unsafe IntPtr ModifierPaddingAll(IntPtr modifier, float dp)
-    {
-        if (s_paddingKtClass == IntPtr.Zero)
-            s_paddingKtClass = JNIEnv.FindClass("androidx/compose/foundation/layout/PaddingKt");
-        if (s_paddingAllMethod == IntPtr.Zero)
-            s_paddingAllMethod = JNIEnv.GetStaticMethodID(s_paddingKtClass, "padding-3ABfNKs", ModifierDpSig);
-
-        JValue* args = stackalloc JValue[2];
-        args[0] = new JValue(modifier);
-        args[1] = new JValue(dp);
-        return JNIEnv.CallStaticObjectMethod(s_paddingKtClass, s_paddingAllMethod, args);
-    }
-
-    internal static unsafe IntPtr ModifierPaddingHV(IntPtr modifier, float horizontal, float vertical)
-    {
-        if (s_paddingKtClass == IntPtr.Zero)
-            s_paddingKtClass = JNIEnv.FindClass("androidx/compose/foundation/layout/PaddingKt");
-        if (s_paddingHVMethod == IntPtr.Zero)
-            s_paddingHVMethod = JNIEnv.GetStaticMethodID(s_paddingKtClass, "padding-VpY3zN4", ModifierDp2Sig);
-
-        JValue* args = stackalloc JValue[3];
-        args[0] = new JValue(modifier);
-        args[1] = new JValue(horizontal);
-        args[2] = new JValue(vertical);
-        return JNIEnv.CallStaticObjectMethod(s_paddingKtClass, s_paddingHVMethod, args);
-    }
-
-    internal static unsafe IntPtr ModifierPaddingLTRB(IntPtr modifier, float start, float top, float end, float bottom)
-    {
-        if (s_paddingKtClass == IntPtr.Zero)
-            s_paddingKtClass = JNIEnv.FindClass("androidx/compose/foundation/layout/PaddingKt");
-        if (s_paddingLTRBMethod == IntPtr.Zero)
-            s_paddingLTRBMethod = JNIEnv.GetStaticMethodID(s_paddingKtClass, "padding-qDBjuR0", ModifierDp4Sig);
-
-        JValue* args = stackalloc JValue[5];
-        args[0] = new JValue(modifier);
-        args[1] = new JValue(start);
-        args[2] = new JValue(top);
-        args[3] = new JValue(end);
-        args[4] = new JValue(bottom);
-        return JNIEnv.CallStaticObjectMethod(s_paddingKtClass, s_paddingLTRBMethod, args);
-    }
-
-    static IntPtr s_paddingValuesMethod;
-    const string ModifierPaddingValuesSig =
-        "(Landroidx/compose/ui/Modifier;Landroidx/compose/foundation/layout/PaddingValues;)Landroidx/compose/ui/Modifier;";
+    [ComposeBridge(
+        Class     = "androidx/compose/foundation/layout/PaddingKt",
+        JvmName   = "padding-qDBjuR0",
+        Signature = "(Landroidx/compose/ui/Modifier;FFFF)Landroidx/compose/ui/Modifier;")]
+    internal static partial IntPtr ModifierPaddingLTRB(IntPtr modifier, float start, float top, float end, float bottom);
 
     // PaddingKt.padding(Modifier, PaddingValues) — unmangled because
     // PaddingValues is a regular interface, not a `value class`.
-    internal static unsafe IntPtr ModifierPaddingValues(IntPtr modifier, IntPtr paddingValues)
-    {
-        if (s_paddingKtClass == IntPtr.Zero)
-            s_paddingKtClass = JNIEnv.FindClass("androidx/compose/foundation/layout/PaddingKt");
-        if (s_paddingValuesMethod == IntPtr.Zero)
-            s_paddingValuesMethod = JNIEnv.GetStaticMethodID(s_paddingKtClass, "padding", ModifierPaddingValuesSig);
-
-        JValue* args = stackalloc JValue[2];
-        args[0] = new JValue(modifier);
-        args[1] = new JValue(paddingValues);
-        return JNIEnv.CallStaticObjectMethod(s_paddingKtClass, s_paddingValuesMethod, args);
-    }
+    [ComposeBridge(
+        Class     = "androidx/compose/foundation/layout/PaddingKt",
+        JvmName   = "padding",
+        Signature = "(Landroidx/compose/ui/Modifier;Landroidx/compose/foundation/layout/PaddingValues;)Landroidx/compose/ui/Modifier;")]
+    internal static partial IntPtr ModifierPaddingValues(IntPtr modifier, IntPtr paddingValues);
 
     // androidx.compose.foundation.layout.SizeKt — fillMax* take a plain
     // Float fraction, not Dp, so the JVM names are NOT mangled.
-    static IntPtr s_sizeKtClass;
-    static IntPtr s_fillMaxWidthMethod;
-    static IntPtr s_fillMaxHeightMethod;
-    static IntPtr s_fillMaxSizeMethod;
+    [ComposeBridge(
+        Class     = "androidx/compose/foundation/layout/SizeKt",
+        JvmName   = "fillMaxWidth",
+        Signature = "(Landroidx/compose/ui/Modifier;F)Landroidx/compose/ui/Modifier;")]
+    internal static partial IntPtr ModifierFillMaxWidth(IntPtr modifier, float fraction);
 
-    internal static unsafe IntPtr ModifierFillMaxWidth(IntPtr modifier, float fraction)
-    {
-        if (s_sizeKtClass == IntPtr.Zero)
-            s_sizeKtClass = JNIEnv.FindClass("androidx/compose/foundation/layout/SizeKt");
-        if (s_fillMaxWidthMethod == IntPtr.Zero)
-            s_fillMaxWidthMethod = JNIEnv.GetStaticMethodID(s_sizeKtClass, "fillMaxWidth", ModifierDpSig);
+    [ComposeBridge(
+        Class     = "androidx/compose/foundation/layout/SizeKt",
+        JvmName   = "fillMaxHeight",
+        Signature = "(Landroidx/compose/ui/Modifier;F)Landroidx/compose/ui/Modifier;")]
+    internal static partial IntPtr ModifierFillMaxHeight(IntPtr modifier, float fraction);
 
-        JValue* args = stackalloc JValue[2];
-        args[0] = new JValue(modifier);
-        args[1] = new JValue(fraction);
-        return JNIEnv.CallStaticObjectMethod(s_sizeKtClass, s_fillMaxWidthMethod, args);
-    }
-
-    internal static unsafe IntPtr ModifierFillMaxHeight(IntPtr modifier, float fraction)
-    {
-        if (s_sizeKtClass == IntPtr.Zero)
-            s_sizeKtClass = JNIEnv.FindClass("androidx/compose/foundation/layout/SizeKt");
-        if (s_fillMaxHeightMethod == IntPtr.Zero)
-            s_fillMaxHeightMethod = JNIEnv.GetStaticMethodID(s_sizeKtClass, "fillMaxHeight", ModifierDpSig);
-
-        JValue* args = stackalloc JValue[2];
-        args[0] = new JValue(modifier);
-        args[1] = new JValue(fraction);
-        return JNIEnv.CallStaticObjectMethod(s_sizeKtClass, s_fillMaxHeightMethod, args);
-    }
-
-    internal static unsafe IntPtr ModifierFillMaxSize(IntPtr modifier, float fraction)
-    {
-        if (s_sizeKtClass == IntPtr.Zero)
-            s_sizeKtClass = JNIEnv.FindClass("androidx/compose/foundation/layout/SizeKt");
-        if (s_fillMaxSizeMethod == IntPtr.Zero)
-            s_fillMaxSizeMethod = JNIEnv.GetStaticMethodID(s_sizeKtClass, "fillMaxSize", ModifierDpSig);
-
-        JValue* args = stackalloc JValue[2];
-        args[0] = new JValue(modifier);
-        args[1] = new JValue(fraction);
-        return JNIEnv.CallStaticObjectMethod(s_sizeKtClass, s_fillMaxSizeMethod, args);
-    }
+    [ComposeBridge(
+        Class     = "androidx/compose/foundation/layout/SizeKt",
+        JvmName   = "fillMaxSize",
+        Signature = "(Landroidx/compose/ui/Modifier;F)Landroidx/compose/ui/Modifier;")]
+    internal static partial IntPtr ModifierFillMaxSize(IntPtr modifier, float fraction);
 
     // androidx.compose.foundation.layout.WindowInsetsPadding_androidKt —
     // Modifier extensions that read WindowInsets from CompositionLocals
     // and apply them as padding. Take only Modifier (no Dp), so JVM
     // names are unmangled.
-    const string ModifierToModifierSig =
-        "(Landroidx/compose/ui/Modifier;)Landroidx/compose/ui/Modifier;";
+    [ComposeBridge(
+        Class     = "androidx/compose/foundation/layout/WindowInsetsPadding_androidKt",
+        JvmName   = "safeDrawingPadding",
+        Signature = "(Landroidx/compose/ui/Modifier;)Landroidx/compose/ui/Modifier;")]
+    internal static partial IntPtr ModifierSafeDrawingPadding(IntPtr modifier);
+
+    [ComposeBridge(
+        Class     = "androidx/compose/foundation/layout/WindowInsetsPadding_androidKt",
+        JvmName   = "systemBarsPadding",
+        Signature = "(Landroidx/compose/ui/Modifier;)Landroidx/compose/ui/Modifier;")]
+    internal static partial IntPtr ModifierSystemBarsPadding(IntPtr modifier);
 
     // androidx.compose.ui.res.PainterResources_androidKt.painterResource —
     // returns a NEW local Painter ref the caller is responsible for
@@ -186,35 +123,6 @@ internal static partial class ComposeBridges
         JvmName   = "painterResource",
         Signature = "(ILandroidx/compose/runtime/Composer;I)Landroidx/compose/ui/graphics/painter/Painter;")]
     public static partial IntPtr PainterResource(int id, IComposer composer);
-
-
-    static IntPtr s_windowInsetsPaddingAndroidKtClass;
-    static IntPtr s_safeDrawingPaddingMethod;
-    static IntPtr s_systemBarsPaddingMethod;
-
-    internal static unsafe IntPtr ModifierSafeDrawingPadding(IntPtr modifier)
-    {
-        if (s_windowInsetsPaddingAndroidKtClass == IntPtr.Zero)
-            s_windowInsetsPaddingAndroidKtClass = JNIEnv.FindClass("androidx/compose/foundation/layout/WindowInsetsPadding_androidKt");
-        if (s_safeDrawingPaddingMethod == IntPtr.Zero)
-            s_safeDrawingPaddingMethod = JNIEnv.GetStaticMethodID(s_windowInsetsPaddingAndroidKtClass, "safeDrawingPadding", ModifierToModifierSig);
-
-        JValue* args = stackalloc JValue[1];
-        args[0] = new JValue(modifier);
-        return JNIEnv.CallStaticObjectMethod(s_windowInsetsPaddingAndroidKtClass, s_safeDrawingPaddingMethod, args);
-    }
-
-    internal static unsafe IntPtr ModifierSystemBarsPadding(IntPtr modifier)
-    {
-        if (s_windowInsetsPaddingAndroidKtClass == IntPtr.Zero)
-            s_windowInsetsPaddingAndroidKtClass = JNIEnv.FindClass("androidx/compose/foundation/layout/WindowInsetsPadding_androidKt");
-        if (s_systemBarsPaddingMethod == IntPtr.Zero)
-            s_systemBarsPaddingMethod = JNIEnv.GetStaticMethodID(s_windowInsetsPaddingAndroidKtClass, "systemBarsPadding", ModifierToModifierSig);
-
-        JValue* args = stackalloc JValue[1];
-        args[0] = new JValue(modifier);
-        return JNIEnv.CallStaticObjectMethod(s_windowInsetsPaddingAndroidKtClass, s_systemBarsPaddingMethod, args);
-    }
 
     // Source-generated bridges below. Each [ComposeBridge] partial
     // declaration is paired with a matching [ComposeDefaults] in
