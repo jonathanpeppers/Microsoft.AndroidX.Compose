@@ -241,6 +241,64 @@ internal static partial class ComposeBridges
     public static partial void Button(IFunction0 onClick, IModifier? modifier,
                                       IFunction3 content, IComposer composer);
 
+    // androidx.compose.material3.ButtonKt.OutlinedButton — same Kotlin
+    // signature as Button (10 user params with shape/colors/elevation/
+    // border/contentPadding/interactionSource), so it reuses ButtonDefault.
+    [ComposeBridge(
+        Class     = "androidx/compose/material3/ButtonKt",
+        JvmName   = "OutlinedButton",
+        Signature = "(Lkotlin/jvm/functions/Function0;Landroidx/compose/ui/Modifier;Z" +
+                    "Landroidx/compose/ui/graphics/Shape;Landroidx/compose/material3/ButtonColors;" +
+                    "Landroidx/compose/material3/ButtonElevation;Landroidx/compose/foundation/BorderStroke;" +
+                    "Landroidx/compose/foundation/layout/PaddingValues;" +
+                    "Landroidx/compose/foundation/interaction/MutableInteractionSource;" +
+                    "Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;II)V",
+        Defaults  = typeof(ButtonDefault))]
+    public static partial void OutlinedButton(IFunction0 onClick, IModifier? modifier,
+                                              IFunction3 content, IComposer composer);
+
+    // androidx.compose.material3.ButtonKt.TextButton — same shape as Button.
+    [ComposeBridge(
+        Class     = "androidx/compose/material3/ButtonKt",
+        JvmName   = "TextButton",
+        Signature = "(Lkotlin/jvm/functions/Function0;Landroidx/compose/ui/Modifier;Z" +
+                    "Landroidx/compose/ui/graphics/Shape;Landroidx/compose/material3/ButtonColors;" +
+                    "Landroidx/compose/material3/ButtonElevation;Landroidx/compose/foundation/BorderStroke;" +
+                    "Landroidx/compose/foundation/layout/PaddingValues;" +
+                    "Landroidx/compose/foundation/interaction/MutableInteractionSource;" +
+                    "Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;II)V",
+        Defaults  = typeof(ButtonDefault))]
+    public static partial void TextButton(IFunction0 onClick, IModifier? modifier,
+                                          IFunction3 content, IComposer composer);
+
+    // androidx.compose.material3.ButtonKt.ElevatedButton — same shape as Button.
+    [ComposeBridge(
+        Class     = "androidx/compose/material3/ButtonKt",
+        JvmName   = "ElevatedButton",
+        Signature = "(Lkotlin/jvm/functions/Function0;Landroidx/compose/ui/Modifier;Z" +
+                    "Landroidx/compose/ui/graphics/Shape;Landroidx/compose/material3/ButtonColors;" +
+                    "Landroidx/compose/material3/ButtonElevation;Landroidx/compose/foundation/BorderStroke;" +
+                    "Landroidx/compose/foundation/layout/PaddingValues;" +
+                    "Landroidx/compose/foundation/interaction/MutableInteractionSource;" +
+                    "Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;II)V",
+        Defaults  = typeof(ButtonDefault))]
+    public static partial void ElevatedButton(IFunction0 onClick, IModifier? modifier,
+                                              IFunction3 content, IComposer composer);
+
+    // androidx.compose.material3.ButtonKt.FilledTonalButton — same shape as Button.
+    [ComposeBridge(
+        Class     = "androidx/compose/material3/ButtonKt",
+        JvmName   = "FilledTonalButton",
+        Signature = "(Lkotlin/jvm/functions/Function0;Landroidx/compose/ui/Modifier;Z" +
+                    "Landroidx/compose/ui/graphics/Shape;Landroidx/compose/material3/ButtonColors;" +
+                    "Landroidx/compose/material3/ButtonElevation;Landroidx/compose/foundation/BorderStroke;" +
+                    "Landroidx/compose/foundation/layout/PaddingValues;" +
+                    "Landroidx/compose/foundation/interaction/MutableInteractionSource;" +
+                    "Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;II)V",
+        Defaults  = typeof(ButtonDefault))]
+    public static partial void FilledTonalButton(IFunction0 onClick, IModifier? modifier,
+                                                 IFunction3 content, IComposer composer);
+
     // androidx.compose.material3.IconButtonKt.IconButton
     [ComposeBridge(
         Class     = "androidx/compose/material3/IconButtonKt",
@@ -252,6 +310,111 @@ internal static partial class ComposeBridges
         Defaults  = typeof(IconButtonDefault))]
     public static partial void IconButton(IFunction0 onClick, IModifier? modifier,
                                           IFunction2 content, IComposer composer);
+
+    // androidx.compose.material3.IconButtonKt.FilledIconButton — adds Shape
+    // before colors compared to plain IconButton (7 user params).
+    [ComposeBridge(
+        Class     = "androidx/compose/material3/IconButtonKt",
+        JvmName   = "FilledIconButton",
+        Signature = "(Lkotlin/jvm/functions/Function0;Landroidx/compose/ui/Modifier;Z" +
+                    "Landroidx/compose/ui/graphics/Shape;" +
+                    "Landroidx/compose/material3/IconButtonColors;" +
+                    "Landroidx/compose/foundation/interaction/MutableInteractionSource;" +
+                    "Lkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;II)V",
+        Defaults  = typeof(FilledIconButtonDefault))]
+    public static partial void FilledIconButton(IFunction0 onClick, IModifier? modifier,
+                                                IFunction2 content, IComposer composer);
+
+    // androidx.compose.material3.IconButtonKt.FilledTonalIconButton — same
+    // signature as FilledIconButton.
+    [ComposeBridge(
+        Class     = "androidx/compose/material3/IconButtonKt",
+        JvmName   = "FilledTonalIconButton",
+        Signature = "(Lkotlin/jvm/functions/Function0;Landroidx/compose/ui/Modifier;Z" +
+                    "Landroidx/compose/ui/graphics/Shape;" +
+                    "Landroidx/compose/material3/IconButtonColors;" +
+                    "Landroidx/compose/foundation/interaction/MutableInteractionSource;" +
+                    "Lkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;II)V",
+        Defaults  = typeof(FilledIconButtonDefault))]
+    public static partial void FilledTonalIconButton(IFunction0 onClick, IModifier? modifier,
+                                                     IFunction2 content, IComposer composer);
+
+    // androidx.compose.material3.IconButtonKt.OutlinedIconButton — adds
+    // BorderStroke between colors and interactionSource (8 user params).
+    [ComposeBridge(
+        Class     = "androidx/compose/material3/IconButtonKt",
+        JvmName   = "OutlinedIconButton",
+        Signature = "(Lkotlin/jvm/functions/Function0;Landroidx/compose/ui/Modifier;Z" +
+                    "Landroidx/compose/ui/graphics/Shape;" +
+                    "Landroidx/compose/material3/IconButtonColors;" +
+                    "Landroidx/compose/foundation/BorderStroke;" +
+                    "Landroidx/compose/foundation/interaction/MutableInteractionSource;" +
+                    "Lkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;II)V",
+        Defaults  = typeof(OutlinedIconButtonDefault))]
+    public static partial void OutlinedIconButton(IFunction0 onClick, IModifier? modifier,
+                                                  IFunction2 content, IComposer composer);
+
+    // androidx.compose.material3.IconButtonKt.IconToggleButton — toggle
+    // shape: leading boolean checked + Function1 onCheckedChange instead of
+    // a Function0 onClick (7 user params).
+    [ComposeBridge(
+        Class     = "androidx/compose/material3/IconButtonKt",
+        JvmName   = "IconToggleButton",
+        Signature = "(ZLkotlin/jvm/functions/Function1;Landroidx/compose/ui/Modifier;Z" +
+                    "Landroidx/compose/material3/IconToggleButtonColors;" +
+                    "Landroidx/compose/foundation/interaction/MutableInteractionSource;" +
+                    "Lkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;II)V",
+        Defaults  = typeof(IconToggleButtonDefault))]
+    public static partial void IconToggleButton(bool @checked, IFunction1 onCheckedChange,
+                                                IModifier? modifier, IFunction2 content,
+                                                IComposer composer);
+
+    // androidx.compose.material3.IconButtonKt.FilledIconToggleButton — adds
+    // Shape between enabled and colors compared to plain IconToggleButton
+    // (8 user params).
+    [ComposeBridge(
+        Class     = "androidx/compose/material3/IconButtonKt",
+        JvmName   = "FilledIconToggleButton",
+        Signature = "(ZLkotlin/jvm/functions/Function1;Landroidx/compose/ui/Modifier;Z" +
+                    "Landroidx/compose/ui/graphics/Shape;" +
+                    "Landroidx/compose/material3/IconToggleButtonColors;" +
+                    "Landroidx/compose/foundation/interaction/MutableInteractionSource;" +
+                    "Lkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;II)V",
+        Defaults  = typeof(FilledIconToggleButtonDefault))]
+    public static partial void FilledIconToggleButton(bool @checked, IFunction1 onCheckedChange,
+                                                      IModifier? modifier, IFunction2 content,
+                                                      IComposer composer);
+
+    // androidx.compose.material3.IconButtonKt.FilledTonalIconToggleButton —
+    // same signature as FilledIconToggleButton.
+    [ComposeBridge(
+        Class     = "androidx/compose/material3/IconButtonKt",
+        JvmName   = "FilledTonalIconToggleButton",
+        Signature = "(ZLkotlin/jvm/functions/Function1;Landroidx/compose/ui/Modifier;Z" +
+                    "Landroidx/compose/ui/graphics/Shape;" +
+                    "Landroidx/compose/material3/IconToggleButtonColors;" +
+                    "Landroidx/compose/foundation/interaction/MutableInteractionSource;" +
+                    "Lkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;II)V",
+        Defaults  = typeof(FilledIconToggleButtonDefault))]
+    public static partial void FilledTonalIconToggleButton(bool @checked, IFunction1 onCheckedChange,
+                                                           IModifier? modifier, IFunction2 content,
+                                                           IComposer composer);
+
+    // androidx.compose.material3.IconButtonKt.OutlinedIconToggleButton —
+    // adds BorderStroke between colors and interactionSource (9 user params).
+    [ComposeBridge(
+        Class     = "androidx/compose/material3/IconButtonKt",
+        JvmName   = "OutlinedIconToggleButton",
+        Signature = "(ZLkotlin/jvm/functions/Function1;Landroidx/compose/ui/Modifier;Z" +
+                    "Landroidx/compose/ui/graphics/Shape;" +
+                    "Landroidx/compose/material3/IconToggleButtonColors;" +
+                    "Landroidx/compose/foundation/BorderStroke;" +
+                    "Landroidx/compose/foundation/interaction/MutableInteractionSource;" +
+                    "Lkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;II)V",
+        Defaults  = typeof(OutlinedIconToggleButtonDefault))]
+    public static partial void OutlinedIconToggleButton(bool @checked, IFunction1 onCheckedChange,
+                                                        IModifier? modifier, IFunction2 content,
+                                                        IComposer composer);
 
     // androidx.compose.material3.FloatingActionButtonKt.FloatingActionButton-X-z6DiA
     [ComposeBridge(

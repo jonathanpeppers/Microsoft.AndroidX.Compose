@@ -96,6 +96,40 @@ using ComposeNet;
 [assembly: ComposeDefaults("IconButtonDefault",
     "!onClick", "modifier", "enabled", "colors", "interactionSource", "!content")]
 
+// androidx.compose.material3.IconButtonKt.{FilledIconButton,FilledTonalIconButton}:
+// 7 user params, bit 0 = onClick, bit 6 = content (both provided).
+// Filled and FilledTonal variants share the same Kotlin signature so they
+// reuse one enum.
+[assembly: ComposeDefaults("FilledIconButtonDefault",
+    "!onClick", "modifier", "enabled", "shape", "colors",
+    "interactionSource", "!content")]
+
+// androidx.compose.material3.IconButtonKt.OutlinedIconButton: 8 user
+// params, bit 0 = onClick, bit 7 = content (both provided).
+[assembly: ComposeDefaults("OutlinedIconButtonDefault",
+    "!onClick", "modifier", "enabled", "shape", "colors", "border",
+    "interactionSource", "!content")]
+
+// androidx.compose.material3.IconButtonKt.IconToggleButton: 7 user params,
+// bits 0 (checked), 1 (onCheckedChange), 6 (content) always provided.
+[assembly: ComposeDefaults("IconToggleButtonDefault",
+    "!checked", "!onCheckedChange", "modifier", "enabled", "colors",
+    "interactionSource", "!content")]
+
+// androidx.compose.material3.IconButtonKt.{FilledIconToggleButton,FilledTonalIconToggleButton}:
+// 8 user params, bits 0 (checked), 1 (onCheckedChange), 7 (content)
+// always provided. Filled and FilledTonal share one enum.
+[assembly: ComposeDefaults("FilledIconToggleButtonDefault",
+    "!checked", "!onCheckedChange", "modifier", "enabled", "shape",
+    "colors", "interactionSource", "!content")]
+
+// androidx.compose.material3.IconButtonKt.OutlinedIconToggleButton:
+// 9 user params, bits 0 (checked), 1 (onCheckedChange), 8 (content)
+// always provided.
+[assembly: ComposeDefaults("OutlinedIconToggleButtonDefault",
+    "!checked", "!onCheckedChange", "modifier", "enabled", "shape",
+    "colors", "border", "interactionSource", "!content")]
+
 // androidx.compose.material3.FloatingActionButtonKt.FloatingActionButton-X-z6DiA:
 // 8 user params, bit 0 = onClick, bit 7 = content (both provided).
 [assembly: ComposeDefaults("FloatingActionButtonDefault",
