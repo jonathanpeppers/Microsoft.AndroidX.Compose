@@ -41,6 +41,10 @@ public class MainActivity : ComposeActivity
             var sliderVal   = Remember(() => new MutableState<float>(0.5f));
             var rangeStart  = Remember(() => new MutableState<float>(0.25f));
             var rangeEnd    = Remember(() => new MutableState<float>(0.75f));
+            var iconToggle1 = Remember(() => new MutableState<bool>(false));
+            var iconToggle2 = Remember(() => new MutableState<bool>(true));
+            var iconToggle3 = Remember(() => new MutableState<bool>(false));
+            var iconToggle4 = Remember(() => new MutableState<bool>(true));
 
             var menuOpen      = Remember(() => new MutableState<bool>(false));
             var menuSelection = Remember(() => new MutableState<string>("(none)"));
@@ -159,6 +163,39 @@ public class MainActivity : ComposeActivity
                 },
                 1 => new Column
                 {
+                    new Text("Button fill styles"),
+                    new Button(onClick: () => count++) { new Text("Filled") },
+                    new ElevatedButton(onClick: () => count++) { new Text("Elevated") },
+                    new FilledTonalButton(onClick: () => count++) { new Text("Filled tonal") },
+                    new OutlinedButton(onClick: () => count++) { new Text("Outlined") },
+                    new TextButton(onClick: () => count++) { new Text("Text") },
+
+                    new Text("Icon button fill styles"),
+                    new Row
+                    {
+                        new IconButton(onClick: () => count++) { new Text("☆") },
+                        new FilledIconButton(onClick: () => count++) { new Text("★") },
+                        new FilledTonalIconButton(onClick: () => count++) { new Text("◆") },
+                        new OutlinedIconButton(onClick: () => count++) { new Text("◇") },
+                    },
+
+                    new Text("Icon toggle buttons"),
+                    new Row
+                    {
+                        new IconToggleButton(@checked: iconToggle1.Value,
+                            onCheckedChange: v => iconToggle1.Value = v)
+                        { new Text(iconToggle1.Value ? "★" : "☆") },
+                        new FilledIconToggleButton(@checked: iconToggle2.Value,
+                            onCheckedChange: v => iconToggle2.Value = v)
+                        { new Text(iconToggle2.Value ? "★" : "☆") },
+                        new FilledTonalIconToggleButton(@checked: iconToggle3.Value,
+                            onCheckedChange: v => iconToggle3.Value = v)
+                        { new Text(iconToggle3.Value ? "◆" : "◇") },
+                        new OutlinedIconToggleButton(@checked: iconToggle4.Value,
+                            onCheckedChange: v => iconToggle4.Value = v)
+                        { new Text(iconToggle4.Value ? "◆" : "◇") },
+                    },
+
                     new Text("Chips, FAB, tooltip"),
                     new AssistChip(onClick: () => count++)
                     {
