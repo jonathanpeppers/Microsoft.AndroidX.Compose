@@ -30,14 +30,73 @@ public abstract class ComposableNode
     /// </summary>
     public Modifier? Modifier { get; set; }
 
+    Modifier? _prepended;
+    Modifier? _appended;
+
     /// <summary>
-    /// Materialize <see cref="Modifier"/> for the JNI call. Returns
-    /// <c>null</c> when the user did not supply a modifier OR supplied
-    /// the empty <see cref="ComposeNet.Modifier.Companion"/> — in both
-    /// cases callers should leave the Kotlin <c>$default</c> bit set so
+    /// Set the <see cref="ComposeNet.Modifier"/> to prepend at the
+    /// START of this node's modifier chain on the next call to
+    /// <see cref="BuildModifier"/>. Each call REPLACES any prior
+    /// prepended modifier — use <see cref="ComposeNet.Modifier.Then"/>
+    /// at the call site to combine multiple ops into one.
+    ///
+    /// Intended use: a parent layout that needs to pass a runtime
+    /// modifier into a child without inserting a wrapper layout node —
+    /// e.g. <see cref="Scaffold"/> threading
+    /// <c>Modifier.padding(paddingValues)</c> into its body so the
+    /// body's own modifier chain composes naturally with the inset
+    /// padding, mirroring the Kotlin idiom
+    /// <c>Column(Modifier.padding(paddingValues)) { ... }</c>.
+    ///
+    /// Caveat: the injected modifier is silently dropped if the child's
+    /// <c>Render</c> never calls <see cref="BuildModifier"/> (i.e.
+    /// composables whose Kotlin counterpart has no <c>modifier</c>
+    /// parameter — <see cref="MaterialTheme"/>, the drawer sheets).
+    /// Replace-semantics keeps the stored modifier bounded to one ref
+    /// even when the child never consumes it.
+    /// </summary>
+    public void PrependModifier(Modifier modifier)
+    {
+        System.ArgumentNullException.ThrowIfNull(modifier);
+        _prepended = modifier;
+    }
+
+    /// <summary>
+    /// Set the <see cref="ComposeNet.Modifier"/> to append at the END
+    /// of this node's modifier chain on the next call to
+    /// <see cref="BuildModifier"/>. Mirror of
+    /// <see cref="PrependModifier"/> — see that method for semantics,
+    /// caveats, and replace-vs-accumulate notes.
+    /// </summary>
+    public void AppendModifier(Modifier modifier)
+    {
+        System.ArgumentNullException.ThrowIfNull(modifier);
+        _appended = modifier;
+    }
+
+    /// <summary>
+    /// Materialize <see cref="Modifier"/> for the JNI call, folding in
+    /// any pending <see cref="PrependModifier"/> / <see cref="AppendModifier"/>
+    /// contributions and clearing them so the next composition starts
+    /// fresh. Returns <c>null</c> when the combined chain is empty —
+    /// callers should leave the Kotlin <c>$default</c> bit set so
     /// Compose substitutes its real default.
     /// </summary>
-    internal IModifier? BuildModifier() => Modifier?.Build();
+    internal IModifier? BuildModifier()
+    {
+        var prepended = _prepended;
+        var appended = _appended;
+        _prepended = null;
+        _appended = null;
+
+        Modifier? combined = prepended;
+        if (Modifier is not null)
+            combined = combined is null ? Modifier : combined.Then(Modifier);
+        if (appended is not null)
+            combined = combined is null ? appended : combined.Then(appended);
+
+        return combined?.Build();
+    }
 
     internal abstract void Render(IComposer composer);
 }
