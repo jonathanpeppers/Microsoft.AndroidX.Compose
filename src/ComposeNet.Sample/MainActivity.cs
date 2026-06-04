@@ -388,11 +388,11 @@ public class MainActivity : ComposeActivity
                         new Tab(selected: sub.Value == 4, onClick: () => sub.Value = 4) { Text = new Text("Five") },
                     },
                     new HorizontalDivider { Modifier = Modifier.Companion.Padding(0, 8) },
-                    new Text("BottomAppBar (actions only)"),
+                    new Text($"BottomAppBar (actions only) — count is {count}"),
                     new BottomAppBar
                     {
                         new IconButton(onClick: () => count--) { new Text("−") },
-                        new IconButton(onClick: () => count.Value = 0) { new Text("0") },
+                        new IconButton(onClick: () => count.Value = 0) { new Text("↺") },
                         new IconButton(onClick: () => count++) { new Text("+") },
                     },
                     new HorizontalDivider { Modifier = Modifier.Companion.Padding(0, 8) },
