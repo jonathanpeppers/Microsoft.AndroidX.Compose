@@ -16,8 +16,10 @@ public class MainActivity : ComposeActivity
             var name        = Remember(() => new MutableState<string>(""));
             var liked       = Remember(() => new MutableState<bool>(false));
             var tab         = Remember(() => new MutableNumberState<int>(0));
+            var sub         = Remember(() => new MutableNumberState<int>(0));
             var showAlert   = Remember(() => new MutableState<bool>(false));
             var showSheet   = Remember(() => new MutableState<bool>(false));
+            var showSnack   = Remember(() => new MutableState<bool>(false));
             var showDate    = Remember(() => new MutableState<bool>(false));
             var showTime    = Remember(() => new MutableState<bool>(false));
             var drawerKind  = Remember(() => new MutableNumberState<int>(0));
@@ -26,6 +28,8 @@ public class MainActivity : ComposeActivity
             var dateState   = Remember(() => new DatePickerState());
             var timeState   = Remember(() => new TimePickerState(initialHour: 9, initialMinute: 30));
 
+            string[] tabNames = { "Basics", "Buttons", "Cards", "Drawer", "Pickers" };
+
             // Per-tab content. Only the current tab's column is added to
             // the screen — keeps the sample short enough to fit on one
             // phone-sized scroll area.
@@ -33,21 +37,71 @@ public class MainActivity : ComposeActivity
             {
                 0 => new Column
                 {
-                    new Text("Hello from .NET"),
-                    new Text($"Count: {count}"),
-                    new Row
+                    new TabRow(selectedTabIndex: sub.Value)
                     {
-                        new Image(Resource.Drawable.ic_star, "Star icon"),
-                        new Spacer { Modifier = Modifier.Companion.FillMaxWidth(0.05f) },
-                        new Column
+                        new Tab(selected: sub.Value == 0, onClick: () => sub.Value = 0)
                         {
-                            new Button(onClick: () => count++) { new Text("Tap to increment") },
-                            new IconButton(onClick: () => count--) { new Text("−") },
+                            Text = new Text("Greeting"),
+                        },
+                        new Tab(selected: sub.Value == 1, onClick: () => sub.Value = 1)
+                        {
+                            Text = new Text("Counter"),
+                        },
+                        new LeadingIconTab(selected: sub.Value == 2, onClick: () => sub.Value = 2)
+                        {
+                            Text = new Text("List"),
+                            Icon = new Text("📋"),
                         },
                     },
-                    new HorizontalDivider { Modifier = Modifier.Companion.Padding(0, 8) },
-                    new OutlinedTextField(name),
-                    new Text($"Hi {(string.IsNullOrEmpty(name.Value) ? "stranger" : name.Value)}"),
+                    sub.Value switch
+                    {
+                        0 => (ComposableNode)new Column
+                        {
+                            new Text("Hello from .NET"),
+                            new OutlinedTextField(name),
+                            new Text($"Hi {(string.IsNullOrEmpty(name.Value) ? "stranger" : name.Value)}"),
+                        },
+                        1 => new Column
+                        {
+                            new Text($"Count: {count}"),
+                            new Row
+                            {
+                                new Image(Resource.Drawable.ic_star, "Star icon"),
+                                new Spacer { Modifier = Modifier.Companion.FillMaxWidth(0.05f) },
+                                new Column
+                                {
+                                    new Button(onClick: () => count++) { new Text("Tap to increment") },
+                                    new IconButton(onClick: () => count--) { new Text("−") },
+                                },
+                            },
+                        },
+                        _ => new Column
+                        {
+                            new ListItem
+                            {
+                                Headline   = new Text("Inbox"),
+                                Supporting = new Text("12 unread messages"),
+                                Leading    = new Text("📥"),
+                                Trailing   = new Badge { new Text("12") },
+                            },
+                            new ListItem
+                            {
+                                Headline   = new Text("Sent"),
+                                Supporting = new Text("Last sent yesterday"),
+                                Leading    = new Text("📤"),
+                            },
+                            new ListItem
+                            {
+                                Headline = new Text("Drafts"),
+                                Leading  = new Text("📝"),
+                                Trailing = new BadgedBox
+                                {
+                                    Badge   = new Badge { new Text("3") },
+                                    Content = new Text("✉"),
+                                },
+                            },
+                        },
+                    },
                 },
                 1 => new Column
                 {
@@ -84,6 +138,10 @@ public class MainActivity : ComposeActivity
                     new FloatingActionButton(onClick: () => showAlert.Value = true)
                     {
                         new Text("✕"),
+                    },
+                    new Button(onClick: () => showSnack.Value = true)
+                    {
+                        new Text("Show snackbar"),
                     },
                 },
                 2 => new Column
@@ -197,6 +255,20 @@ public class MainActivity : ComposeActivity
                 {
                     new Scaffold
                     {
+                        TopBar = new CenterAlignedTopAppBar
+                        {
+                            Title = new Text(tabNames[tab.Value]),
+                        },
+                        SnackbarHost = showSnack.Value
+                            ? new Snackbar
+                            {
+                                Action = new Button(onClick: () => showSnack.Value = false)
+                                {
+                                    new Text("Hide"),
+                                },
+                                Body = new Text($"Hello from {tabNames[tab.Value]}"),
+                            }
+                            : null,
                         // Bottom navigation switches between the three tabs above —
                         // pinned to the bottom edge by Scaffold instead of flowing
                         // inline at the end of a Column.
@@ -230,7 +302,7 @@ public class MainActivity : ComposeActivity
                         },
                         Body = new Column
                         {
-                            Modifier.Companion.SafeDrawingPadding().Padding(16),
+                            Modifier.Companion.Padding(16),
                             tabContent,
 
                             // Overlays: rendered in the body so they participate in the
