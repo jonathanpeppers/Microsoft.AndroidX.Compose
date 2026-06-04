@@ -35,7 +35,12 @@ public class MainActivity : ComposeActivity
             var rangeStart  = Remember(() => new MutableState<float>(0.25f));
             var rangeEnd    = Remember(() => new MutableState<float>(0.75f));
 
-            string[] tabNames = { "Basics", "Buttons", "Cards", "Drawer", "Selection", "Pickers" };
+            var menuOpen      = Remember(() => new MutableState<bool>(false));
+            var menuSelection = Remember(() => new MutableState<string>("(none)"));
+            var searchQuery   = Remember(() => new MutableState<string>(""));
+            var searchState   = Remember(() => new SearchBarState());
+
+            string[] tabNames = { "Basics", "Buttons", "Cards", "Drawer", "Selection", "Pickers", "Menus" };
 
             // Per-tab content. Only the current tab's column is added to
             // the screen — keeps the sample short enough to fit on one
@@ -287,6 +292,79 @@ public class MainActivity : ComposeActivity
                 },
             };
 
+            // Tab 6 (Menus) builds a filtered result list dynamically, so it
+            // can't live inside the switch-expression collection-initializer.
+            if (tab.Value == 6)
+            {
+                var fruits = new[]
+                {
+                    "Apple", "Banana", "Cherry", "Date", "Elderberry",
+                    "Fig", "Grape", "Kiwi", "Lemon", "Mango",
+                };
+                var matches = System.Array.FindAll(
+                    fruits,
+                    f => string.IsNullOrEmpty(searchQuery.Value)
+                         || f.Contains(searchQuery.Value, System.StringComparison.OrdinalIgnoreCase));
+
+                var expanded = new ExpandedFullScreenSearchBar(state: searchState)
+                {
+                    InputField = new TextField(searchQuery),
+                };
+                foreach (var f in matches)
+                    expanded.Add(new Text(f));
+
+                tabContent = new Column
+                {
+                    new Text("DropdownMenu"),
+                    new Row
+                    {
+                        new Text("Tap ⋮ for actions:"),
+                        new Spacer { Modifier = Modifier.Companion.FillMaxWidth(0.03f) },
+                        // The Box anchors the popup to the IconButton — both
+                        // children share the Box's coordinate space, which is
+                        // what DropdownMenu needs for positioning.
+                        new Box
+                        {
+                            new IconButton(onClick: () => menuOpen.Value = true)
+                            {
+                                new Text("⋮"),
+                            },
+                            new DropdownMenu(
+                                expanded:         menuOpen.Value,
+                                onDismissRequest: () => menuOpen.Value = false)
+                            {
+                                new DropdownMenuItem(
+                                    text:    new Text("Refresh"),
+                                    onClick: () => { menuSelection.Value = "Refresh";  menuOpen.Value = false; }),
+                                new DropdownMenuItem(
+                                    text:    new Text("Settings"),
+                                    onClick: () => { menuSelection.Value = "Settings"; menuOpen.Value = false; }),
+                                new DropdownMenuItem(
+                                    text:    new Text("About"),
+                                    onClick: () => { menuSelection.Value = "About";    menuOpen.Value = false; }),
+                            },
+                        },
+                    },
+                    new Text($"Last menu choice: {menuSelection}"),
+
+                    new HorizontalDivider { Modifier = Modifier.Companion.Padding(0, 16) },
+
+                    new Text("SearchBar"),
+                    new Text("Tap the bar to expand. Type to filter."),
+                    // Render BOTH halves of the SearchBar pair sharing the
+                    // same SearchBarState — Compose toggles the popup's
+                    // visibility internally based on the state.
+                    new Box
+                    {
+                        new SearchBar(state: searchState)
+                        {
+                            InputField = new TextField(searchQuery),
+                        },
+                        expanded,
+                    },
+                };
+            }
+
             return new MaterialTheme
             {
                 new Surface
@@ -341,6 +419,11 @@ public class MainActivity : ComposeActivity
                             {
                                 Icon  = new Text("📅"),
                                 Label = new Text("Pickers"),
+                            },
+                            new NavigationBarItem(selected: tab.Value == 6, onClick: () => tab.Value = 6)
+                            {
+                                Icon  = new Text("🔍"),
+                                Label = new Text("Menus"),
                             },
                         },
                         Body = new Column
