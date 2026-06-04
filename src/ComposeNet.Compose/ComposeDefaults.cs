@@ -27,6 +27,8 @@
 // this comment can be deleted.
 
 using AndroidX.Compose.Foundation.Layout;
+using AndroidX.Compose.Foundation.Lazy;
+using AndroidX.Compose.Foundation.Lazy.Grid;
 using AndroidX.Compose.Material3;
 using ComposeNet;
 
@@ -37,6 +39,23 @@ using ComposeNet;
 [assembly: ComposeDefaults<DividerKt>("VerticalDivider", "VerticalDividerDefault")]
 [assembly: ComposeDefaults<IconKt>("Icon", "IconDefault")]
 [assembly: ComposeDefaults<MaterialThemeKt>("MaterialTheme", "MaterialThemeDefault")]
+
+// androidx.compose.foundation.lazy.LazyDslKt — the LazyColumn / LazyRow
+// @Composable functions take no inline-class params (modifier/state/etc.
+// are all reference types or plain bools), so the binder exposes the
+// Kt class and the generic generator path Just Works. 9 optional params
+// per overload (modifier through overscrollEffect; content lambda is
+// skipped as IFunction1).
+[assembly: ComposeDefaults<LazyDslKt>("LazyColumn", "LazyColumnDefault")]
+[assembly: ComposeDefaults<LazyDslKt>("LazyRow", "LazyRowDefault")]
+
+// androidx.compose.foundation.lazy.grid.LazyGridDslKt — same story for
+// LazyVerticalGrid / LazyHorizontalGrid, but with a required first
+// `columns` / `rows` IGridCells param. The facade always supplies that
+// param and clears the bit (mirror of how Icon clears
+// IconDefault.ImageVector / IconDefault.ContentDescription).
+[assembly: ComposeDefaults<LazyGridDslKt>("LazyVerticalGrid", "LazyVerticalGridDefault")]
+[assembly: ComposeDefaults<LazyGridDslKt>("LazyHorizontalGrid", "LazyHorizontalGridDefault")]
 
 // androidx.compose.foundation.ImageKt.Image (Painter overload): all four
 // `Image` Kotlin overloads share the JVM name `Image` and only differ by

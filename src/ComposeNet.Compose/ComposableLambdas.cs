@@ -8,37 +8,43 @@ namespace ComposeNet;
 
 /// <summary>
 /// Helpers that wrap <see cref="ComposableLambda2"/> /
-/// <see cref="ComposableLambda3"/> @Composable content lambdas through
-/// Compose's own <c>ComposableLambdaKt.ComposableLambda</c> factory so
-/// the runtime owns lambda identity across recompositions.
+/// <see cref="ComposableLambda3"/> / <see cref="ComposableLambda4"/>
+/// @Composable content lambdas through one of Compose's two factory
+/// functions so the runtime owns lambda identity across recompositions.
 ///
-/// <para>The factory does, internally:</para>
-/// <list type="number">
-///   <item><description><c>composer.startReplaceableGroup(key)</c></description></item>
-///   <item><description>Looks up a remembered slot; on first reach it
-///     stores a fresh <c>ComposableLambdaImpl(key, tracked)</c>, otherwise
-///     it reuses the stored instance.</description></item>
-///   <item><description>Updates the impl's <c>block</c> field to point
-///     at the fresh inner <see cref="ComposableLambda2"/> /
-///     <see cref="ComposableLambda3"/> we just allocated.</description></item>
-///   <item><description><c>composer.endReplaceableGroup()</c></description></item>
-///   <item><description>Returns the stable impl.</description></item>
+/// <para>Two factories exist and they are not interchangeable:</para>
+/// <list type="bullet">
+///   <item><description><c>ComposableLambdaKt.ComposableLambda(composer,
+///     key, tracked, block)</c> — used by <see cref="Wrap2"/> /
+///     <see cref="Wrap3(IComposer, Action{IComposer}, int, string)"/>.
+///     Stores/retrieves the wrapper from the current composition's slot
+///     table at the given key; requires an *active* composer. Use for
+///     content slots that are evaluated synchronously during the outer
+///     composition pass (e.g. <c>topBar</c>, <c>title</c>, button
+///     content).</description></item>
+///   <item><description><c>ComposableLambdaKt.ComposableLambdaInstance(
+///     key, tracked, block)</c> — used by <see cref="Instantiate4"/> and
+///     by <c>ComposeActivity.SetContent</c>. Allocates a fresh wrapper
+///     each call without touching any composer; safe to invoke from
+///     outside composition. Use for content that runs at measure time
+///     or in a subcomposition (e.g. <c>LazyListScope.items</c> /
+///     <c>LazyGridScope.items</c> <c>itemContent</c>, which Compose
+///     realizes inside the lazy list's
+///     <c>rememberLazyListItemProviderLambda</c> long after the outer
+///     <c>Render</c> has returned).</description></item>
 /// </list>
 ///
-/// <para>The result is an <see cref="IComposableLambda"/> whose identity
-/// is stable across recompositions even though we allocate a fresh
-/// inner adapter each call — exactly what
-/// <c>SubcomposeLayout</c> needs to keep its per-lambda-identity content
-/// cache from thrashing.</para>
-///
 /// <para><b>Convention:</b> never construct
-/// <see cref="ComposableLambda2"/> / <see cref="ComposableLambda3"/>
-/// directly inside a <c>Render</c> method — always route through
-/// <see cref="Wrap2"/> / <see cref="Wrap3(IComposer, Action{IComposer}, int, string)"/>.
-/// The non-@Composable adapters <see cref="ComposableLambda0"/> /
-/// <see cref="ComposableLambda1"/> (onClick / onValueChange callbacks)
-/// are NOT wrapped — they run outside composition and would crash
-/// inside Compose's restart-group machinery.</para>
+/// <see cref="ComposableLambda2"/> / <see cref="ComposableLambda3"/> /
+/// <see cref="ComposableLambda4"/> directly inside a <c>Render</c>
+/// method — always route through <see cref="Wrap2"/> /
+/// <see cref="Wrap3(IComposer, Action{IComposer}, int, string)"/> /
+/// <see cref="Instantiate4"/>. The non-@Composable adapters
+/// <see cref="ComposableLambda0"/> / <see cref="ComposableLambda1"/>
+/// (onClick / onValueChange callbacks, plus the LazyListScope /
+/// LazyGridScope DSL builders which are *not* @Composable) are NOT
+/// wrapped — they run outside composition and would crash inside
+/// Compose's restart-group machinery.</para>
 /// </summary>
 internal static class ComposableLambdas
 {
@@ -88,4 +94,30 @@ internal static class ComposableLambdas
         => (IFunction3)ComposableLambdaKt.ComposableLambda(
             composer, HashCode.Combine(line, file), tracked: true,
             block: new ComposableLambda3(body));
+
+    /// <summary>
+    /// Build an identity-stable <see cref="IFunction4"/> wrapper for the
+    /// <c>Function4&lt;LazyItemScope, Int, Composer, Int, Unit&gt;</c>
+    /// @Composable shape used by <c>LazyListScope.items</c> and
+    /// <c>LazyGridScope.items</c> <c>itemContent</c>. <c>p0</c> is the
+    /// lazy item scope handle, <c>p1</c> is the boxed item index,
+    /// <c>p2</c> is the composer.
+    ///
+    /// <para>Uses <c>ComposableLambdaInstance</c> (not
+    /// <c>ComposableLambda</c>) because the lazy list DSL builder runs
+    /// at measure time inside the list's
+    /// <c>rememberLazyListItemProviderLambda</c>, *not* inside the outer
+    /// <c>Render</c>'s composition pass. There is no active composer at
+    /// the call site, so we can't look up a slot-table entry — the
+    /// <c>Instance</c> factory allocates a fresh wrapper without one,
+    /// which is exactly what Kotlin's inline
+    /// <c>LazyListScope.items(...)</c> extension expands to.</para>
+    /// </summary>
+    public static IFunction4 Instantiate4(
+        Action<IntPtr, Java.Lang.Object?, IComposer> body,
+        [CallerLineNumber] int line = 0,
+        [CallerFilePath] string file = "")
+        => (IFunction4)ComposableLambdaKt.ComposableLambdaInstance(
+            key: HashCode.Combine(line, file), tracked: true,
+            block: new ComposableLambda4(body));
 }

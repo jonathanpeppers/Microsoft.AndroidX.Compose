@@ -237,6 +237,7 @@ as C# types:
 | Category    | Composables                                                                                       |
 | ----------- | ------------------------------------------------------------------------------------------------- |
 | Layout      | `Column`, `MaterialTheme`, `Surface`, `Card`                                                      |
+| Lazy lists  | `LazyColumn<T>`, `LazyRow<T>`, `LazyVerticalGrid<T>`, `LazyHorizontalGrid<T>` (+ `GridCells`)     |
 | Buttons     | `Button`, `IconButton`, `FloatingActionButton`                                                    |
 | Text        | `Text`, `TextField`, `OutlinedTextField`                                                          |
 | Chips       | `AssistChip`, `FilterChip`, `InputChip`, `SuggestionChip`                                         |
