@@ -33,19 +33,6 @@ have been deleted. The sample and facade reference the official NuGets
 directly. The historical context behind the in-repo bindings is preserved in
 [NOTES.md](NOTES.md).
 
-- [dotnet/android-libraries#1418][pr-1418] — PR: ship real bindings for
-  `Xamarin.AndroidX.Compose.Runtime` (tracking issue:
-  [#1415][issue-1415]).
-- [dotnet/android-libraries#1416][issue-1416] — stop stripping
-  `Xamarin.AndroidX.Compose.UI` / `Foundation` / `Foundation.Layout`.
-- [dotnet/android-libraries#1417][issue-1417] — stop stripping
-  `@Composable` functions in `Xamarin.AndroidX.Compose.Material3`.
-
-[pr-1418]: https://github.com/dotnet/android-libraries/pull/1418
-[issue-1415]: https://github.com/dotnet/android-libraries/issues/1415
-[issue-1416]: https://github.com/dotnet/android-libraries/issues/1416
-[issue-1417]: https://github.com/dotnet/android-libraries/issues/1417
-
 ## Why this exists
 
 [*Android UI Development is Compose First*](https://android-developers.googleblog.com/2026/05/android-ui-development-is-compose-first.html) (Nick Butcher, May 2026) puts `android.widget.*`, Fragments, RecyclerView, ViewPager and the View-based tooling into **maintenance mode**. All new APIs, libraries, samples, and tools target Compose. For dotnet/android this is roughly equivalent to Apple's UIKit→SwiftUI shift in 2019 — we need a story.
@@ -127,12 +114,7 @@ Technically feasible, *very* substantial. The Compose compiler plugin is ~30k li
 
 Realistic path: a **Roslyn source generator + analyzer + interceptors** that emits the rewritten methods as `partial` peers and intercepts call sites. You'd lose: function-typed `@Composable` (no syntactic equivalent in C#), K2-level type-system enforcement, IDE refactorings. You'd gain: pure C# authoring against the same `androidx.compose.runtime` runtime jar.
 
-This is a multi-engineer-year effort and you'd be perpetually chasing Google's plugin (it changes every Kotlin release).
-
-A more pragmatic middle path: **two-tier strategy**.
-
-1. **Tier 1 (ship soon, this repo):** bindings + a `ComposeView`-hosted "give us a Kotlin file" story, so devs can drop Compose UI into existing .NET for Android apps. No new compiler.
-2. **Tier 2 (R&D):** prototype a Roslyn generator that targets only a useful subset (no function-typed composables — methods only) and emits to `Composer` directly. Validate with `Text`, `Column`, `Button`, `remember`, `mutableStateOf` before scaling.
+This is a multi-engineer-year effort and you'd be perpetually chasing Google's plugin (it changes every Kotlin release). The pragmatic middle path is the two-tier strategy introduced at the top — ship tier 1 today against the existing runtime, evaluate tier 2 as separate R&D.
 
 ## What APIs are needed on the C# side — and the Maven/AAR/NuGet status
 
@@ -180,21 +162,10 @@ So from a binding standpoint a .NET for Android dev can already:
 What they **cannot** do today:
 
 - Write a method that is meaningfully `@Composable`. The Kotlin annotation is `@Retention(BINARY)` and the magic isn't in the annotation — it's in the IR rewrite. A C# method with a `[Register]`'d `@Composable` attribute won't get rewritten, will have the wrong JVM signature, and will throw when called from a composition.
-- Pass a C# lambda to `setContent`. The lambda parameter type after the plugin runs is `Function2<Composer, Integer, Unit>`, but the runtime additionally expects it to be a `ComposableLambda` instance built via `composableLambdaInstance(key, tracked, block)` from `androidx.compose.runtime.internal`. You can construct that from C# — and **that's the realistic interop seam** this repo will exercise.
+
+Passing a C# lambda to `setContent` is the realistic interop seam, and the one this repo exercises: the runtime expects a `ComposableLambda` built via `composableLambdaInstance(key, tracked, block)` from `androidx.compose.runtime.internal`, and that we can construct from C#. `ComposeActivity.SetContent(() => …)` is the canonical entry point today.
 
 ---
-
-## What this repo will build
-
-A minimal **.NET for Android** sample app that:
-
-1. Targets `net10.0-android` (or latest available).
-2. References the relevant `Xamarin.AndroidX.Compose.*` NuGets.
-3. In `MainActivity`, creates a `ComposeView` and calls `SetContent(...)` with a `ComposableLambda` constructed in C#.
-4. The composable renders `Text("Hello from .NET")` plus a `Button` with click-counter state via `RememberMutableState`.
-5. Documents every API that needed special handling (inline classes, `Modifier` companion, default-value bitmasks, etc.).
-
-The goal isn't beauty — it's to find the **smallest possible "Hello, Compose" from C# without any Kotlin file in the project**, and to enumerate every rough edge so we can decide what tooling, if any, is worth investing in.
 
 ## Status
 
@@ -234,18 +205,25 @@ binding projects (now deleted) is preserved in [NOTES.md](NOTES.md).
 The facade currently wraps these Material 3 / Foundation composables
 as C# types:
 
-| Category    | Composables                                                                                       |
-| ----------- | ------------------------------------------------------------------------------------------------- |
-| Layout      | `Column`, `MaterialTheme`, `Surface`, `Card`                                                      |
-| Buttons     | `Button`, `IconButton`, `FloatingActionButton`                                                    |
-| Text        | `Text`, `TextField`, `OutlinedTextField`                                                          |
-| Chips       | `AssistChip`, `FilterChip`, `InputChip`, `SuggestionChip`                                         |
-| Selection   | `Checkbox`, `TriStateCheckbox`, `RadioButton`, `Switch`, `Slider`, `RangeSlider`                  |
-| Navigation  | `NavigationBar` + `NavigationBarItem`, `NavigationRail` + `NavigationRailItem`                    |
-| Sheets      | `ModalBottomSheet`, `BottomSheetScaffold`                                                         |
-| Pickers     | `DatePicker`, `DatePickerDialog`, `TimePicker`, `TimePickerDialog`                                |
-| Overlays    | `AlertDialog`, `Tooltip`                                                                          |
-| State       | `Remember`, `MutableState<T>`, `MutableNumberState<T>` (with `++/--`/`ToString` for Kotlin parity)|
+| Category                | Composables                                                                                       |
+| ----------------------- | ------------------------------------------------------------------------------------------------- |
+| Theme & layout          | `MaterialTheme`, `Column`, `Row`, `Box`, `Spacer`, `Scaffold`, `HorizontalDivider`, `VerticalDivider` |
+| Surfaces                | `Surface`, `Card`, `ElevatedCard`, `OutlinedCard`                                                  |
+| App bars                | TopAppBar family (`TopAppBar`, `CenterAlignedTopAppBar`, `Medium`/`Large`/`MediumFlexible`/`LargeFlexibleTopAppBar`), `BottomAppBar`, `FlexibleBottomAppBar` |
+| Tabs                    | TabRow family (`TabRow`, `Primary`/`SecondaryTabRow`, `Primary`/`SecondaryScrollableTabRow`), `Tab`, `LeadingIconTab`, `CustomTab` |
+| Buttons                 | `Button`, `IconButton`, `FloatingActionButton`                                                     |
+| Text & input            | `Text`, `TextField`, `OutlinedTextField`                                                           |
+| Media                   | `Image`, `Icon`                                                                                    |
+| Chips                   | `AssistChip`, `FilterChip`, `InputChip`, `SuggestionChip` (each with `Elevated*` variant where applicable) |
+| Selection               | `Checkbox`, `TriStateCheckbox`, `RadioButton`, `Switch`, `Slider`, `RangeSlider`, `SegmentedButton` + `SingleChoice`/`MultiChoiceSegmentedButtonRow` |
+| Progress, lists, badges | `CircularProgressIndicator`, `LinearProgressIndicator`, `ListItem`, `Badge`, `BadgedBox`           |
+| Menus & search          | `DropdownMenu` + `DropdownMenuItem`, SearchBar family (`SearchBar`, `TopSearchBar`, `ExpandedDocked`/`ExpandedFullScreenSearchBar`, `SearchBarInputField`) |
+| Navigation              | `NavigationBar`+`Item`, `NavigationRail`+`Item`, `WideNavigationRail`+`Item`, `ModalWideNavigationRail` |
+| Drawers                 | `ModalNavigationDrawer`, `DismissibleNavigationDrawer`, `PermanentNavigationDrawer` (each with matching `*DrawerSheet`) |
+| Sheets & pickers        | `ModalBottomSheet`, `BottomSheetScaffold`, `DatePicker`/`DatePickerDialog`, `TimePicker`/`TimePickerDialog` |
+| Overlays                | `AlertDialog`, `Tooltip`, `Snackbar` + `SnackbarHost`                                              |
+| Modifier                | `Modifier.Companion.{Padding, FillMaxWidth, FillMaxHeight, Background, Border, Clickable, SafeDrawingPadding, ClipRoundedCorners, …}` chains |
+| State                   | `Remember`, `MutableState<T>`, `MutableNumberState<T>` (with `++/--`/`ToString` for Kotlin parity), plus `DatePickerState`, `TimePickerState`, `SearchBarState`, `SnackbarHostState` |
 
 ---
 
@@ -348,17 +326,21 @@ implementation layer — invisible to user code, but explicit (no
 `ThreadStatic`!) the same way Kotlin's compiler plugin makes
 `$composer` an explicit IR parameter.
 
-Inside each container's `Render`, raw-JNI bridges in
+Inside each container's `Render`, JNI bridges declared in
 [`ComposeBridges.cs`](src/ComposeNet.Compose/ComposeBridges.cs) call the
 Kotlin-mangled Compose functions (`Text--4IGK_g`, `Button-LP…`,
-`AlertDialog-Oix01E0`, etc.) with their `$default` bitmasks. The bridges
-follow a strict pattern — cached `IntPtr` class/method handles, JNI
-signature constants, `try { Call… } finally { GC.KeepAlive(…) }` around
-every managed wrapper whose `.Handle` was read into a `JValue`, and
-`DeleteLocalRef` for any local string refs. The user never sees that;
-when [dotnet/java-interop#1440] lands and the binder stops dropping
-inline-class overloads, each bridge collapses to a direct generated
-binding call.
+`AlertDialog-Oix01E0`, etc.) with their `$default` bitmasks. Each
+bridge is a one-line `[ComposeBridge]` partial-method declaration; the
+boilerplate (cached `IntPtr` class/method handles, signature constants,
+`try { Call… } finally { GC.KeepAlive(…) }` around every managed
+wrapper whose `.Handle` was read into a `JValue`, and `DeleteLocalRef`
+for local string refs) is emitted by `ComposeBridgeGenerator` in
+[`ComposeNet.SourceGenerators`](src/ComposeNet.SourceGenerators). Only
+a handful of outliers (`Modifier.Companion` field lookup, the two-step
+`Modifier.ClipRoundedCorners`) stay hand-written. The user never sees
+any of this; when [dotnet/java-interop#1440] lands and the binder
+stops dropping inline-class overloads, each bridge declaration
+collapses to a direct generated binding call.
 
 [dotnet/java-interop#1440]: https://github.com/dotnet/java-interop/pull/1440
 
@@ -421,13 +403,8 @@ as enum members so the call site can OR them in. Call sites collapse to
 `(int)ButtonDefault.All`.
 
 [`ComposeDefaults.cs`](src/ComposeNet.Compose/ComposeDefaults.cs) holds
-all of these declarations — every composable shipped today (Button,
-Text, IconButton, FloatingActionButton, Surface, AlertDialog, TextField,
-OutlinedTextField, Card, AssistChip, FilterChip, InputChip,
-SuggestionChip, NavigationBar(Item), NavigationRail(Item),
-ModalBottomSheet, BottomSheetScaffold, DatePicker(Dialog),
-TimePicker(Dialog), TooltipBox) gets its `$default` enum from this one
-file. Unit tests in
+all of these declarations — every composable in the facade gets its
+`$default` enum from this one file. Unit tests in
 [`ComposeNet.SourceGenerators.Tests`](src/ComposeNet.SourceGenerators.Tests)
 pin the emitted output. When the upstream binder fix lands, each
 declarative attribute can be swapped one-for-one to the generic form.
@@ -436,7 +413,6 @@ declarative attribute can be swapped one-for-one to the generic form.
 
 | Kotlin                                  | C# today                                                       | Cost |
 | --------------------------------------- | -------------------------------------------------------------- | ---- |
-| `Modifier.padding(16.dp).fillMaxWidth()` | Host-view padding via `ApplySafeAreaPadding`; no `Modifier` chain | Can't compose modifiers from C# yet (inline-class param chain) |
 | Skipping / recomposition optimization   | `$changed = 0` everywhere → full subtree recomposes on every state change | Correctness ✅, perf 🙁 |
 | Slot-table-backed `remember`            | `Remember(() => …)` with `[CallerLineNumber]` keying into an activity-scoped cache | Works for top-level state; nested-scope / keyed `remember(key1, key2)` is Tier 2 |
 | `@Composable` type-system enforcement   | None — calling a non-composable from a composable context fails at runtime, not compile-time | Footgun |
@@ -481,16 +457,20 @@ class.
   has a Kotlin-compiler-mangled JVM name (`Text--4IGK_g`, `Button-LP…`,
   `AlertDialog-Oix01E0`, `NavigationBar-HsRjFd4`,
   `FloatingActionButton-X-z6DiA`, `ModalBottomSheet-dYc4hso`) that the
-  binding generator drops. Each one we use is a hand-written raw-JNI
-  bridge in [`ComposeBridges.cs`](src/ComposeNet.Compose/ComposeBridges.cs).
-  Tracked upstream in [dotnet/java-interop#1440] — when it lands every
-  bridge in this repo can be deleted in favour of a direct generated
-  binding call.
+  binding generator drops. Each one we use is a `[ComposeBridge]`
+  partial-method declaration in
+  [`ComposeBridges.cs`](src/ComposeNet.Compose/ComposeBridges.cs);
+  `ComposeBridgeGenerator` emits the JNI plumbing. Tracked upstream in
+  [dotnet/java-interop#1440] — when it lands every bridge declaration
+  in this repo can be deleted in favour of a direct generated binding
+  call.
 - **`$changed` bitmasks** — we pass `0` everywhere, so the runtime
   recomposes the whole subtree on every state change. Correct, not
   optimal. Proper bitmask computation per arg is Tier 2 territory.
-- **`Modifier.Companion` not bound.** Workaround: raw JNI fetch.
-  See `NOTES.md` open issue #1 for the upstream-friendly fix.
+- **`Modifier.Companion` not bound upstream.** Wrapped by the
+  `Modifier` class via a one-time JNI fetch of the `$$INSTANCE` field
+  — invisible to callers. See `NOTES.md` open issue #1 for the
+  upstream-friendly fix.
 - **`remember(keys, …)` not yet supported.** Top-level `Remember(() =>
   state)` works (state is keyed by `[CallerLineNumber]` into an
   activity-scoped cache), but Compose's keyed/nested `remember` —
