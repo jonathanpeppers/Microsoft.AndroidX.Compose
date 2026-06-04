@@ -833,6 +833,38 @@ internal static partial class ComposeBridges
         Defaults  = typeof(WideNavigationRailDefault))]
     public static partial void WideNavigationRail(IModifier? modifier, IFunction2 content, IComposer composer);
 
+    // androidx.compose.material3.WideNavigationRailKt.ModalWideNavigationRail-k3FuEkE.
+    // The "-k3FuEkE" hash comes from the @JvmInline value-class Dp param
+    // (collapsedShadowElevation). 12 user params + 3 trailing ints
+    // ($changed, $changed1, $default). The facade always supplies
+    // `state` (via the bound RememberWideNavigationRailState),
+    // `hideOnCollapse` (true so the rail unmounts visually on collapse),
+    // and `content`. Shape / colors / elevation / windowInsets /
+    // arrangement / properties remain Kotlin defaults.
+    [ComposeBridge(
+        Class     = "androidx/compose/material3/WideNavigationRailKt",
+        JvmName   = "ModalWideNavigationRail-k3FuEkE",
+        Signature = "(Landroidx/compose/ui/Modifier;" +
+                    "Landroidx/compose/material3/WideNavigationRailState;Z" +
+                    "Landroidx/compose/ui/graphics/Shape;" +
+                    "Landroidx/compose/ui/graphics/Shape;" +
+                    "Landroidx/compose/material3/WideNavigationRailColors;" +
+                    "Lkotlin/jvm/functions/Function2;F" +
+                    "Landroidx/compose/foundation/layout/WindowInsets;" +
+                    "Landroidx/compose/foundation/layout/Arrangement$Vertical;" +
+                    "Landroidx/compose/material3/ModalWideNavigationRailProperties;" +
+                    "Lkotlin/jvm/functions/Function2;" +
+                    "Landroidx/compose/runtime/Composer;III)V",
+        Defaults  = typeof(ModalWideNavigationRailDefault))]
+    public static partial void ModalWideNavigationRail(
+        IModifier?  modifier,
+        IntPtr      state,
+        bool        hideOnCollapse,
+        IFunction2? header,
+        IFunction2  content,
+        int         defaults,
+        IComposer   composer);
+
     // Modifier-chain extensions. These are non-@Composable Kotlin
     // extension functions on Modifier; their JNI signatures end in
     // `I L<marker>` (the $default bitmask plus a synthetic-overload
