@@ -35,8 +35,8 @@ public sealed class ExpandedDockedSearchBar : ComposableContainer
                 "ExpandedDockedSearchBar.InputField is required (the Kotlin parameter has no default).");
 
         var stateHandle = SearchBar.ResolveStateHandle(_state, composer);
-        var inputField  = new ComposableLambda2(c => InputField.Render(c));
-        var content     = new ComposableLambda3(c => RenderChildren(c));
+        var inputField  = ComposableLambdas.Wrap2(composer, c => InputField.Render(c));
+        var content     = ComposableLambdas.Wrap3(composer, c => RenderChildren(c));
         ComposeBridges.ExpandedDockedSearchBar(stateHandle, inputField, BuildModifier(), content, composer);
     }
 }

@@ -37,7 +37,7 @@ public sealed class DropdownMenu : ComposableContainer
     internal override void Render(IComposer composer)
     {
         var onDismiss = new ComposableLambda0(_onDismissRequest);
-        var content   = new ComposableLambda3(c => RenderChildren(c));
+        var content   = ComposableLambdas.Wrap3(composer, c => RenderChildren(c));
         ComposeBridges.DropdownMenu(_expanded, onDismiss, BuildModifier(), content, composer);
     }
 }

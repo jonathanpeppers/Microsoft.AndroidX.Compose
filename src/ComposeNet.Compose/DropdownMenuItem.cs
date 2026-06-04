@@ -39,14 +39,14 @@ public sealed class DropdownMenuItem : ComposableNode
 
     internal override void Render(IComposer composer)
     {
-        var text    = new ComposableLambda2(c => _text.Render(c));
+        var text    = ComposableLambdas.Wrap2(composer, c => _text.Render(c));
         var onClick = new ComposableLambda0(_onClick);
         var modifier = BuildModifier();
 
-        ComposableLambda2? leading = LeadingIcon is null ? null
-            : new ComposableLambda2(c => LeadingIcon.Render(c));
-        ComposableLambda2? trailing = TrailingIcon is null ? null
-            : new ComposableLambda2(c => TrailingIcon.Render(c));
+        Kotlin.Jvm.Functions.IFunction2? leading = LeadingIcon is null ? null
+            : ComposableLambdas.Wrap2(composer, c => LeadingIcon.Render(c));
+        Kotlin.Jvm.Functions.IFunction2? trailing = TrailingIcon is null ? null
+            : ComposableLambdas.Wrap2(composer, c => TrailingIcon.Render(c));
 
         int defaults = (int)DropdownMenuItemDefault.All;
         if (modifier is not null) defaults &= ~(int)DropdownMenuItemDefault.Modifier;

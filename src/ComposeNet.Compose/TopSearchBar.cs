@@ -26,7 +26,7 @@ public sealed class TopSearchBar : ComposableNode
                 "TopSearchBar.InputField is required (the Kotlin parameter has no default).");
 
         var stateHandle = SearchBar.ResolveStateHandle(_state, composer);
-        var inputField  = new ComposableLambda2(c => InputField.Render(c));
+        var inputField  = ComposableLambdas.Wrap2(composer, c => InputField.Render(c));
         ComposeBridges.TopSearchBar(stateHandle, inputField, BuildModifier(), composer);
     }
 }
