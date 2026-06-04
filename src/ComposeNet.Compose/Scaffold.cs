@@ -47,24 +47,40 @@ public sealed class Scaffold : ComposableNode
             throw new System.InvalidOperationException(
                 "Scaffold.Body is required (the Kotlin parameter has no default).");
 
-        var content = new ComposableLambda3(c => Body.Render(c));
+        // Material 3's Scaffold passes PaddingValues as the first arg of
+        // its content lambda — body must apply it to avoid rendering
+        // behind the top/bottom bars. We can't prepend a Modifier onto
+        // Body's existing chain from out here (see #37), so we wrap it
+        // in a Box that owns the runtime `Modifier.padding(values)`.
+        // When #37 lands, drop the Box and inject the padding directly.
+        var content = new ComposableLambda3((paddingHandle, c) =>
+        {
+            new Box
+            {
+                Modifier.Companion.Padding(paddingHandle),
+                Body,
+            }.Render(c);
+        });
 
-        ComposableLambda2? topBar = TopBar is null ? null
-            : new ComposableLambda2(c => TopBar.Render(c));
-        ComposableLambda2? bottomBar = BottomBar is null ? null
-            : new ComposableLambda2(c => BottomBar.Render(c));
-        ComposableLambda2? snackbarHost = SnackbarHost is null ? null
-            : new ComposableLambda2(c => SnackbarHost.Render(c));
-        ComposableLambda2? fab = FloatingActionButton is null ? null
-            : new ComposableLambda2(c => FloatingActionButton.Render(c));
+        // Always pass non-null slot lambdas. Toggling between Compose's
+        // default `{}` (a synthetic Java SAM lambda) and our IFunction2
+        // identity confuses M3's internal `rememberComposableLambda`,
+        // which casts the slot value to ComposableLambdaImpl on every
+        // recomposition — a flip in slot type triggers a runtime
+        // ClassCastException. Emit nothing when the user didn't supply
+        // a slot; functionally identical to M3's `{}` default.
+        var topBar = new ComposableLambda2(c => TopBar?.Render(c));
+        var bottomBar = new ComposableLambda2(c => BottomBar?.Render(c));
+        var snackbarHost = new ComposableLambda2(c => SnackbarHost?.Render(c));
+        var fab = new ComposableLambda2(c => FloatingActionButton?.Render(c));
 
         int defaults = (int)ScaffoldDefault.All;
         var modifier = BuildModifier();
-        if (modifier     is not null) defaults &= ~(int)ScaffoldDefault.Modifier;
-        if (topBar       is not null) defaults &= ~(int)ScaffoldDefault.TopBar;
-        if (bottomBar    is not null) defaults &= ~(int)ScaffoldDefault.BottomBar;
-        if (snackbarHost is not null) defaults &= ~(int)ScaffoldDefault.SnackbarHost;
-        if (fab          is not null) defaults &= ~(int)ScaffoldDefault.FloatingActionButton;
+        if (modifier is not null) defaults &= ~(int)ScaffoldDefault.Modifier;
+        defaults &= ~(int)ScaffoldDefault.TopBar;
+        defaults &= ~(int)ScaffoldDefault.BottomBar;
+        defaults &= ~(int)ScaffoldDefault.SnackbarHost;
+        defaults &= ~(int)ScaffoldDefault.FloatingActionButton;
 
         ComposeBridges.Scaffold(
             modifier:             modifier,

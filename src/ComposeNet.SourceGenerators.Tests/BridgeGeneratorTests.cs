@@ -370,6 +370,109 @@ public class BridgeGeneratorTests
     }
 
     [Fact]
+    public void NoDefaults_RequiredOnlyParameters_OmitsBitmaskAndDefaultSlot()
+    {
+        // Mirrors androidx.compose.ui.res.PainterResources_androidKt.painterResource —
+        // a @Composable with one required `int id` parameter, no defaultable
+        // params, so the Kotlin codegen emits only $changed (no $default).
+        var code = """
+            using AndroidX.Compose.Runtime;
+            using ComposeNet;
+
+            namespace ComposeNet
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(
+                        Class = "androidx/compose/ui/res/PainterResources_androidKt",
+                        JvmName = "painterResource",
+                        Signature = "(ILandroidx/compose/runtime/Composer;I)Landroidx/compose/ui/graphics/painter/Painter;")]
+                    public static partial System.IntPtr PainterResource(int id, IComposer composer);
+                }
+            }
+            """;
+
+        var (output, diags, emitted) = Run(code);
+        Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+        Assert.Contains("FindClass(\"androidx/compose/ui/res/PainterResources_androidKt\")", emitted);
+        Assert.Contains("GetStaticMethodID(s_PainterResource_class, \"painterResource\"", emitted);
+
+        // No bitmask: no `int defaults = ...All`, no $default JValue, no enum reference.
+        Assert.DoesNotContain(".All;", emitted);
+        Assert.DoesNotContain("new global::Android.Runtime.JValue(defaults)", emitted);
+
+        // The user param goes into slot 0; composer into slot 1; one $changed at slot 2; no further slots.
+        Assert.Contains("global::Android.Runtime.JValue[3]", emitted);
+        Assert.Contains("args[0] = new global::Android.Runtime.JValue(id)", emitted);
+        Assert.Contains("args[2] = new global::Android.Runtime.JValue(0);", emitted);
+        Assert.DoesNotContain("args[3]", emitted);
+
+        // Non-void returns are still wrapped in try/finally.
+        Assert.Contains("return global::Android.Runtime.JNIEnv.CallStaticObjectMethod(", emitted);
+        Assert.Contains("global::System.GC.KeepAlive(composer);", emitted);
+
+        var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
+        Assert.Empty(errors);
+    }
+
+    [Fact]
+    public void DefaultsOmittedButSignatureHasDefault_ReportsCN2005()
+    {
+        // Signature has a $default slot (2 trailing Is for 1 user param)
+        // but [ComposeBridge] omits Defaults. Without validation the old
+        // generator would have treated $default as another $changed slot.
+        var code = """
+            using AndroidX.Compose.Runtime;
+            using ComposeNet;
+
+            namespace ComposeNet
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(
+                        Class = "x/Y",
+                        JvmName = "Foo",
+                        Signature = "(ZLandroidx/compose/runtime/Composer;II)V")]
+                    public static partial void Foo(bool flag, IComposer composer);
+                }
+            }
+            """;
+
+        var (_, diags, _) = Run(code);
+        Assert.Contains(diags, d => d.Id == "CN2005");
+    }
+
+    [Fact]
+    public void DefaultsProvidedButSignatureHasNoDefault_ReportsCN2005()
+    {
+        // Signature has only $changed (1 trailing I for 1 user param) so
+        // [ComposeBridge] must not specify Defaults.
+        var code = """
+            using AndroidX.Compose.Runtime;
+            using ComposeNet;
+
+            [assembly: ComposeDefaults("FooDefault", "id")]
+
+            namespace ComposeNet
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(
+                        Class = "x/Y",
+                        JvmName = "Foo",
+                        Signature = "(ILandroidx/compose/runtime/Composer;I)V",
+                        Defaults = typeof(FooDefault))]
+                    public static partial void Foo(int id, IComposer composer);
+                }
+            }
+            """;
+
+        var (_, diags, _) = Run(code);
+        Assert.Contains(diags, d => d.Id == "CN2005");
+    }
+
+    [Fact]
     public void InstanceField_EmitsGlobalRefAndCallObjectMethod()
     {
         var code = """
