@@ -805,4 +805,52 @@ internal static partial class ComposeBridges
         Signature = DrawerSheetSig,
         Defaults  = typeof(DrawerSheetDefault))]
     public static partial void PermanentDrawerSheet(IFunction3 content, long drawerContainerColor, IComposer composer);
+
+    // Modifier-chain extensions. These are non-@Composable Kotlin
+    // extension functions on Modifier; their JNI signatures end in
+    // `I L<marker>` (the $default bitmask plus a synthetic-overload
+    // Object marker, which Kotlin always passes as null). The bridge
+    // generator emits the marker slot automatically.
+
+    // androidx.compose.foundation.BackgroundKt.background-bw27NRU$default —
+    // (Modifier, Color, Shape). Color is mangled because it's a
+    // @JvmInline value class (ULong). The C# wrapper supplies color
+    // and lets shape default to RectangleShape.
+    [ComposeBridge(
+        Class     = "androidx/compose/foundation/BackgroundKt",
+        JvmName   = "background-bw27NRU$default",
+        Signature = "(Landroidx/compose/ui/Modifier;J" +
+                    "Landroidx/compose/ui/graphics/Shape;ILjava/lang/Object;)" +
+                    "Landroidx/compose/ui/Modifier;",
+        Defaults  = typeof(ModifierBackgroundDefault))]
+    internal static partial IntPtr ModifierBackground(IntPtr modifier, long color);
+
+    // androidx.compose.foundation.BorderKt.border-xT4_qwU$default —
+    // (Modifier, Dp width, Color, Shape). Both width and color are
+    // mangled inline-class params. The C# wrapper supplies width and
+    // color and lets shape default to RectangleShape.
+    [ComposeBridge(
+        Class     = "androidx/compose/foundation/BorderKt",
+        JvmName   = "border-xT4_qwU$default",
+        Signature = "(Landroidx/compose/ui/Modifier;FJ" +
+                    "Landroidx/compose/ui/graphics/Shape;ILjava/lang/Object;)" +
+                    "Landroidx/compose/ui/Modifier;",
+        Defaults  = typeof(ModifierBorderDefault))]
+    internal static partial IntPtr ModifierBorder(IntPtr modifier, float width, long color);
+
+    // androidx.compose.foundation.ClickableKt.clickable-XHw0xAI$default —
+    // (Modifier, Boolean enabled, String onClickLabel, Role role,
+    // Function0 onClick). Returns a Modifier directly — the lambda is
+    // wrapped via composed { ... } internally so no Composer is needed.
+    // The C# wrapper supplies onClick; enabled/onClickLabel/role are
+    // left to Kotlin's defaults.
+    [ComposeBridge(
+        Class     = "androidx/compose/foundation/ClickableKt",
+        JvmName   = "clickable-XHw0xAI$default",
+        Signature = "(Landroidx/compose/ui/Modifier;ZLjava/lang/String;" +
+                    "Landroidx/compose/ui/semantics/Role;" +
+                    "Lkotlin/jvm/functions/Function0;ILjava/lang/Object;)" +
+                    "Landroidx/compose/ui/Modifier;",
+        Defaults  = typeof(ModifierClickableDefault))]
+    internal static partial IntPtr ModifierClickable(IntPtr modifier, IFunction0 onClick);
 }
