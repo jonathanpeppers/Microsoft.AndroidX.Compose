@@ -460,7 +460,6 @@ using ComposeNet;
     "leadingContent", "trailingContent", "colors", "tonalElevation",
     "shadowElevation")]
 
-
 // androidx.compose.material3.AndroidMenu_androidKt.DropdownMenu-IlH_yew:
 // 12 user params; bits 0 (expanded), 1 (onDismissRequest), 11 (content)
 // always provided.
@@ -505,3 +504,60 @@ using ComposeNet;
 [assembly: ComposeDefaults("DropdownMenuItemDefault",
     "!text", "!onClick", "modifier", "leadingIcon", "trailingIcon",
     "enabled", "colors", "contentPadding", "interactionSource")]
+
+// androidx.compose.material3.AppBarKt.TopAppBar-cJHQLPU (subtitle overload):
+// 10 user params; bits 0 (title) and 1 (subtitle) always provided.
+// Optional slot bits 3 (NavigationIcon) and 4 (Actions) are toggled
+// per-call by TopAppBar.Render when Subtitle is set.
+[assembly: ComposeDefaults("TopAppBarSubtitleDefault",
+    "!title", "!subtitle", "modifier", "navigationIcon", "actions",
+    "titleHorizontalAlignment", "expandedHeight", "windowInsets",
+    "colors", "scrollBehavior")]
+
+// androidx.compose.material3.AppBarKt.{Medium,Large}FlexibleTopAppBar-eXZ4JBQ:
+// 11 user params; bit 0 (title) always provided. Optional slot bits
+// 2 (Subtitle), 3 (NavigationIcon), 4 (Actions) toggled per-call.
+// 11 params * 3 bits/param > 31, so the bytecode emits two `$changed`
+// ints in addition to `$default` (trailing `III`).
+[assembly: ComposeDefaults("FlexibleTopAppBarDefault",
+    "!title", "modifier", "subtitle", "navigationIcon", "actions",
+    "titleHorizontalAlignment", "collapsedHeight", "expandedHeight",
+    "windowInsets", "colors", "scrollBehavior")]
+
+// androidx.compose.material3.AppBarKt.BottomAppBar-qhFBPw4 (RowScope actions
+// + optional FAB + scrollBehavior overload — the most flexible of the four
+// `BottomAppBar` overloads; the older variants are intentionally not bound):
+// 9 user params; bit 0 (actions) always provided. Optional FAB slot
+// (bit 2) toggled per-call by BottomAppBar.Render.
+[assembly: ComposeDefaults("BottomAppBarDefault",
+    "!actions", "modifier", "floatingActionButton", "containerColor",
+    "contentColor", "tonalElevation", "contentPadding", "windowInsets",
+    "scrollBehavior")]
+
+// androidx.compose.material3.AppBarKt.FlexibleBottomAppBar-wBhsO_E:
+// 9 user params; bit 8 (content) always provided.
+[assembly: ComposeDefaults("FlexibleBottomAppBarDefault",
+    "modifier", "containerColor", "contentColor", "contentPadding",
+    "horizontalArrangement", "expandedHeight", "windowInsets",
+    "scrollBehavior", "!content")]
+
+// androidx.compose.material3.TabRowKt.{Primary,Secondary}ScrollableTabRow-qhFBPw4:
+// 9 user params; bits 0 (selectedTabIndex) and 8 (tabs) always provided.
+[assembly: ComposeDefaults("PrimaryScrollableTabRowDefault",
+    "!selectedTabIndex", "modifier", "scrollState", "containerColor",
+    "contentColor", "edgePadding", "indicator", "divider", "!tabs")]
+
+// androidx.compose.material3.TabKt.Tab-bogVsAg (ColumnScope content
+// overload — alternative to the text/icon `Tab-wqdebIU`): 8 user
+// params; bits 0 (selected), 1 (onClick), 7 (content) always provided.
+[assembly: ComposeDefaults("TabContentDefault",
+    "!selected", "!onClick", "modifier", "enabled", "selectedContentColor",
+    "unselectedContentColor", "interactionSource", "!content")]
+
+// androidx.compose.material3.SnackbarKt.Snackbar-sDKtq54 (SnackbarData
+// overload — the one normally rendered inside SnackbarHost's default
+// content lambda): 9 user params; bit 0 (snackbarData) always provided.
+[assembly: ComposeDefaults("SnackbarFromDataDefault",
+    "!snackbarData", "modifier", "actionOnNewLine", "shape", "containerColor",
+    "contentColor", "actionColor", "actionContentColor",
+    "dismissActionContentColor")]
