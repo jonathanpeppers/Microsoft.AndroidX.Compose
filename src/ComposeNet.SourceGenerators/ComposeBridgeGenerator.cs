@@ -90,9 +90,44 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
             });
         }
 
+        // Infer whether the bytecode signature has a trailing $default slot.
+        // Kotlin's @Composable codegen emits ceil(userParams/10) (min 1)
+        // $changed groups, and one $default slot iff at least one parameter
+        // has a default value. So:
+        //   trailingI =  $changedGroups + ($default ? 1 : 0)
+        // Anything beyond the expected $changed count is the $default slot.
+        int trailingInts = 0;
+        for (int i = sigParams.Count - 1; i >= 0 && sigParams[i].Code == 'I' && sigParams[i].ArrayDepth == 0; i--)
+            trailingInts++;
+        int sigUserParamCount = sigParams.Count - 1 /*composer*/ - trailingInts;
+        int expectedChangedSlots = Math.Max(1, (sigUserParamCount + 9) / 10);
+        bool signatureHasDefault = trailingInts > expectedChangedSlots;
+
+        // Cross-validate signature against attribute metadata: a mismatch
+        // would silently produce a broken bridge (wrong $default slot
+        // packing, missing bitmask, etc.) so we fail fast.
+        if (signatureHasDefault && defaultsType is null)
+        {
+            return new GenerationResult(null, null, new[] {
+                Diagnostic.Create(Diagnostics.BridgeDefaultsMismatch, loc, method.Name,
+                    "JNI signature has a $default slot but [ComposeBridge] omits 'Defaults'")
+            });
+        }
+        if (!signatureHasDefault && defaultsType is not null)
+        {
+            return new GenerationResult(null, null, new[] {
+                Diagnostic.Create(Diagnostics.BridgeDefaultsMismatch, loc, method.Name,
+                    "[ComposeBridge] specifies 'Defaults' but the JNI signature has no $default slot")
+            });
+        }
+
         // Locate the matching declarative [ComposeDefaults] attribute, if any.
+        // When [ComposeBridge] omits Defaults the bridge targets a
+        // @Composable function whose Kotlin codegen emitted only $changed
+        // slots (no $default bitmask) — every parameter is required.
         IReadOnlyList<string> kotlinNames;
         string? defaultsEnumName = defaultsType?.Name;
+        bool hasDefaultSlot = signatureHasDefault;
         if (defaultsType is not null && declarativeAttr is not null)
         {
             var match = compilation.Assembly.GetAttributes()
@@ -112,11 +147,15 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
                 ? arr.Values.Select(v => v.Value as string ?? string.Empty).ToArray()
                 : Array.Empty<string>();
         }
-        else
+        else if (defaultsType is not null)
         {
             return new GenerationResult(null, null, new[] {
                 Diagnostic.Create(Diagnostics.BridgeMissingDefaults, loc, defaultsEnumName ?? "?", method.Name)
             });
+        }
+        else
+        {
+            kotlinNames = Array.Empty<string>();
         }
 
         // C# parameter walk. composer is required and must be last.
@@ -151,9 +190,10 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
             userParams = userParams.Skip(1).ToArray();
         }
 
-        // Match each remaining user param to a Kotlin bit position by name.
-        // Names with '!' prefix in the declarative list mean "always supplied,
-        // not in enum"; the matching is purely positional-by-name.
+        // Match each remaining user param to a Kotlin bit position.
+        // With $default: by Kotlin name from the declarative list.
+        // Without $default: positionally — the user param at index N goes
+        // into JNI slot N (after any extension receiver).
         var kotlinNameMap = new Dictionary<string, int>(StringComparer.Ordinal);
         for (int bit = 0; bit < kotlinNames.Count; bit++)
         {
@@ -166,56 +206,72 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
         // userParam name -> kotlin bit
         var userBitOf = new Dictionary<string, int>(StringComparer.Ordinal);
         var diags = new List<Diagnostic>();
-        foreach (var p in userParams)
+        if (hasDefaultSlot)
         {
-            if (!kotlinNameMap.TryGetValue(p.Name, out var bit))
+            foreach (var p in userParams)
             {
-                diags.Add(Diagnostic.Create(Diagnostics.BridgeUnknownParameter, loc,
-                    method.Name, p.Name, defaultsEnumName ?? "?"));
-                continue;
+                if (!kotlinNameMap.TryGetValue(p.Name, out var bit))
+                {
+                    diags.Add(Diagnostic.Create(Diagnostics.BridgeUnknownParameter, loc,
+                        method.Name, p.Name, defaultsEnumName ?? "?"));
+                    continue;
+                }
+                userBitOf[p.Name] = bit;
             }
-            userBitOf[p.Name] = bit;
+        }
+        else
+        {
+            for (int i = 0; i < userParams.Length; i++)
+                userBitOf[userParams[i].Name] = i;
         }
         if (diags.Count > 0)
             return new GenerationResult(null, null, diags.ToArray());
 
-        var changedSlots = ChangedSlotCount(sigParams);
-        var actualUserSlots = sigParams.Count - (receiverParam is null ? 0 : 1) - 1 /*composer*/ - changedSlots - 1 /*default*/;
-        if (actualUserSlots != kotlinNames.Count)
+        var changedSlots = ChangedSlotCount(sigParams, hasDefaultSlot);
+        int defaultSlotCount = hasDefaultSlot ? 1 : 0;
+        int receiverSlotCount = receiverParam is null ? 0 : 1;
+        int actualUserSlots = sigParams.Count - receiverSlotCount - 1 /*composer*/ - changedSlots - defaultSlotCount;
+        int expectedUserSlots = hasDefaultSlot ? kotlinNames.Count : userParams.Length;
+        if (actualUserSlots != expectedUserSlots)
         {
-            // Sanity check: sig param count = receiver? + kotlin params + composer + $changed* + $default.
-            // We expose the mismatch via diagnostic — common cause is wrong Defaults enum.
             diags.Add(Diagnostic.Create(Diagnostics.BridgeSignatureMismatch, loc,
-                method.Name, actualUserSlots, defaultsEnumName ?? "?", kotlinNames.Count));
+                method.Name, actualUserSlots, defaultsEnumName ?? "?", expectedUserSlots));
             return new GenerationResult(null, null, diags.ToArray());
         }
 
-        var source = Emit(method, attr, className, jvmName, signature, defaultsEnumName!, sigParams,
-            kotlinNames, userParams, userBitOf, receiverParam, callerProvidesDefaults, instanceField);
+        var source = Emit(method, attr, className, jvmName, signature, defaultsEnumName, sigParams,
+            kotlinNames, userParams, userBitOf, receiverParam, callerProvidesDefaults, hasDefaultSlot, instanceField);
         var hint = $"ComposeNet.{method.ContainingType.Name}.{method.Name}.g.cs";
         return new GenerationResult(source, hint, Array.Empty<Diagnostic>());
     }
 
-    /// <summary>Number of trailing <c>I</c> params *between* the composer and the final <c>$default</c>.</summary>
-    static int ChangedSlotCount(IReadOnlyList<JniType> sigParams)
+    /// <summary>
+    /// Number of trailing <c>I</c> params that represent <c>$changed</c>
+    /// slots. With <paramref name="hasDefaultSlot"/>=<c>true</c> the very
+    /// last <c>I</c> is the <c>$default</c> bitmask, so this returns
+    /// <c>trailing-1</c>; otherwise every trailing <c>I</c> is part of
+    /// the <c>$changed</c> group(s).
+    /// </summary>
+    static int ChangedSlotCount(IReadOnlyList<JniType> sigParams, bool hasDefaultSlot)
     {
         // Find composer position from the right: composer is the L Composer; before the trailing Is.
-        // Walk back over all trailing I's; the count of them minus one is changedSlots.
+        // Walk back over all trailing I's; with $default the count of them minus one is changedSlots.
         int trailingInts = 0;
         for (int i = sigParams.Count - 1; i >= 0 && sigParams[i].Code == 'I' && sigParams[i].ArrayDepth == 0; i--)
             trailingInts++;
-        return Math.Max(0, trailingInts - 1);
+        return hasDefaultSlot ? Math.Max(0, trailingInts - 1) : trailingInts;
     }
 
     static string Emit(
         IMethodSymbol method, AttributeData _attr,
-        string className, string jvmName, string signature, string enumName,
+        string className, string jvmName, string signature, string? enumName,
         IReadOnlyList<JniType> sigParams,
         IReadOnlyList<string> kotlinNames,
         IParameterSymbol[] userParams,
         Dictionary<string, int> userBitOf,
         IParameterSymbol? receiverParam,
         bool callerProvidesDefaults,
+        bool hasDefaultSlot,
         string? instanceField)
     {
         var sb = new StringBuilder();
@@ -271,8 +327,9 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
         sb.AppendLine("        }");
         sb.AppendLine();
 
-        // Defaults computation (only when caller didn't pass one).
-        if (!callerProvidesDefaults)
+        // Defaults computation (only when caller didn't pass one and the
+        // function actually has a $default slot).
+        if (hasDefaultSlot && !callerProvidesDefaults)
         {
             sb.Append("        int defaults = (int)global::ComposeNet.").Append(enumName).AppendLine(".All;");
             foreach (var p in userParams)
@@ -320,8 +377,9 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
             idx++;
         }
 
-        // Kotlin user params: walk bits 0..kotlinNames.Count-1.
-        for (int bit = 0; bit < kotlinNames.Count; bit++, idx++)
+        // Kotlin user params: walk one bit per JNI slot before composer.
+        int userSlotCount = hasDefaultSlot ? kotlinNames.Count : userParams.Length;
+        for (int bit = 0; bit < userSlotCount; bit++, idx++)
         {
             var sigType = sigParams[idx];
             var supplier = userParams.FirstOrDefault(p => userBitOf.TryGetValue(p.Name, out var b) && b == bit);
@@ -343,12 +401,15 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
         idx++;
 
         // $changed slots.
-        int changedCount = ChangedSlotCount(sigParams);
+        int changedCount = ChangedSlotCount(sigParams, hasDefaultSlot);
         for (int c = 0; c < changedCount; c++, idx++)
             sb.Append("                args[").Append(idx).AppendLine("] = new global::Android.Runtime.JValue(0);");
 
-        // $default.
-        sb.Append("                args[").Append(idx).AppendLine("] = new global::Android.Runtime.JValue(defaults);");
+        // $default (only when present in the bytecode signature).
+        if (hasDefaultSlot)
+        {
+            sb.Append("                args[").Append(idx).AppendLine("] = new global::Android.Runtime.JValue(defaults);");
+        }
 
         // Call.
         var callTarget = instanceField is null ? $"s_{sym}_class" : $"s_{sym}_instance";
