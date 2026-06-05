@@ -217,6 +217,30 @@ using ComposeNet;
     "keyboardOptions", "keyboardActions", "singleLine", "maxLines", "minLines",
     "interactionSource", "shape", "colors")]
 
+// androidx.compose.material3.SecureTextFieldKt.SecureTextField-XvU6IwQ AND
+// OutlinedSecureTextField-XvU6IwQ: 23 user params, bit 0 = state (always
+// provided through the SecureTextFieldState wrapper). Two enums (one per
+// JVM function) so each [ComposeBridge] can disambiguate via its own
+// `Defaults` typeof — the bit layout is identical between filled and
+// outlined variants.
+[assembly: ComposeDefaults("SecureTextFieldDefault",
+    "!state",
+    "modifier", "enabled", "textStyle", "labelPosition",
+    "label", "placeholder", "leadingIcon", "trailingIcon",
+    "prefix", "suffix", "supportingText", "isError",
+    "inputTransformation", "textObfuscationMode", "textObfuscationCharacter",
+    "keyboardOptions", "onKeyboardAction", "onTextLayout",
+    "shape", "colors", "contentPadding", "interactionSource")]
+
+[assembly: ComposeDefaults("OutlinedSecureTextFieldDefault",
+    "!state",
+    "modifier", "enabled", "textStyle", "labelPosition",
+    "label", "placeholder", "leadingIcon", "trailingIcon",
+    "prefix", "suffix", "supportingText", "isError",
+    "inputTransformation", "textObfuscationMode", "textObfuscationCharacter",
+    "keyboardOptions", "onKeyboardAction", "onTextLayout",
+    "shape", "colors", "contentPadding", "interactionSource")]
+
 // androidx.compose.material3.CardKt.Card (non-clickable): 6 user params,
 // bit 5 = content provided. Also reused by OutlinedCard — it takes the
 // same 6 params in the same order.

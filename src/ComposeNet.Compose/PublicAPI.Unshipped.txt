@@ -373,6 +373,22 @@ ComposeNet.OutlinedIconButton
 ComposeNet.OutlinedIconButton.OutlinedIconButton(System.Action! onClick) -> void
 ComposeNet.OutlinedIconToggleButton
 ComposeNet.OutlinedIconToggleButton.OutlinedIconToggleButton(bool checked, System.Action<bool>! onCheckedChange) -> void
+ComposeNet.OutlinedSecureTextField
+ComposeNet.OutlinedSecureTextField.Enabled.get -> bool
+ComposeNet.OutlinedSecureTextField.Enabled.set -> void
+ComposeNet.OutlinedSecureTextField.IsError.get -> bool
+ComposeNet.OutlinedSecureTextField.IsError.set -> void
+ComposeNet.OutlinedSecureTextField.Label.get -> ComposeNet.ComposableNode?
+ComposeNet.OutlinedSecureTextField.Label.set -> void
+ComposeNet.OutlinedSecureTextField.LeadingIcon.get -> ComposeNet.ComposableNode?
+ComposeNet.OutlinedSecureTextField.LeadingIcon.set -> void
+ComposeNet.OutlinedSecureTextField.OutlinedSecureTextField(ComposeNet.SecureTextFieldState! state) -> void
+ComposeNet.OutlinedSecureTextField.Placeholder.get -> ComposeNet.ComposableNode?
+ComposeNet.OutlinedSecureTextField.Placeholder.set -> void
+ComposeNet.OutlinedSecureTextField.SupportingText.get -> ComposeNet.ComposableNode?
+ComposeNet.OutlinedSecureTextField.SupportingText.set -> void
+ComposeNet.OutlinedSecureTextField.TrailingIcon.get -> ComposeNet.ComposableNode?
+ComposeNet.OutlinedSecureTextField.TrailingIcon.set -> void
 ComposeNet.OutlinedTextField
 ComposeNet.OutlinedTextField.OutlinedTextField(ComposeNet.MutableState<string!>! state) -> void
 ComposeNet.OutlinedTextField.OutlinedTextField(string! value, System.Action<string!>! onValueChange) -> void
@@ -435,6 +451,25 @@ ComposeNet.SecondaryScrollableTabRow
 ComposeNet.SecondaryScrollableTabRow.SecondaryScrollableTabRow(int selectedTabIndex) -> void
 ComposeNet.SecondaryTabRow
 ComposeNet.SecondaryTabRow.SecondaryTabRow(int selectedTabIndex) -> void
+ComposeNet.SecureTextField
+ComposeNet.SecureTextField.Enabled.get -> bool
+ComposeNet.SecureTextField.Enabled.set -> void
+ComposeNet.SecureTextField.IsError.get -> bool
+ComposeNet.SecureTextField.IsError.set -> void
+ComposeNet.SecureTextField.Label.get -> ComposeNet.ComposableNode?
+ComposeNet.SecureTextField.Label.set -> void
+ComposeNet.SecureTextField.LeadingIcon.get -> ComposeNet.ComposableNode?
+ComposeNet.SecureTextField.LeadingIcon.set -> void
+ComposeNet.SecureTextField.Placeholder.get -> ComposeNet.ComposableNode?
+ComposeNet.SecureTextField.Placeholder.set -> void
+ComposeNet.SecureTextField.SecureTextField(ComposeNet.SecureTextFieldState! state) -> void
+ComposeNet.SecureTextField.SupportingText.get -> ComposeNet.ComposableNode?
+ComposeNet.SecureTextField.SupportingText.set -> void
+ComposeNet.SecureTextField.TrailingIcon.get -> ComposeNet.ComposableNode?
+ComposeNet.SecureTextField.TrailingIcon.set -> void
+ComposeNet.SecureTextFieldState
+ComposeNet.SecureTextFieldState.SecureTextFieldState(string! initialText = "") -> void
+ComposeNet.SecureTextFieldState.Text.get -> string!
 ComposeNet.SegmentedButton
 ComposeNet.SegmentedButton.Icon.get -> ComposeNet.ComposableNode?
 ComposeNet.SegmentedButton.Icon.set -> void
