@@ -717,11 +717,13 @@ using ComposeNet;
 // isRefreshing / onRefresh (bits 0/1) and a state holder for bit 3 (via
 // the [StateHolder] attribute on the bridge), so those three bits are
 // suppressed ("!" prefix — consume the bit position, emit no enum
-// member). Bits 4/5 (contentAlignment / indicator) are not exposed at
-// all by the bridge — JNI sees null for those slots and Kotlin
-// substitutes the defaults; suppressing them prevents bogus enum
-// members no caller can use. Bit 6 (content) is the container content
-// slot, always provided by RenderChildren.
+// member). Bits 4/5 (contentAlignment / indicator) are not exposed by
+// the bridge — JNI passes null for those slots and the bits MUST be
+// set in $default so Kotlin substitutes its defaults instead of
+// invoking a null Function3 (NPE). Keeping them as enum members lets
+// `All` include those bits; nothing surfaced to callers ever clears
+// them. Bit 6 (content) is the container content slot, always
+// provided by RenderChildren.
 [assembly: ComposeDefaults("PullToRefreshBoxDefault",
-    "!isRefreshing", "!onRefresh", "modifier", "!state", "!contentAlignment",
-    "!indicator", "!content")]
+    "!isRefreshing", "!onRefresh", "modifier", "!state", "contentAlignment",
+    "indicator", "!content")]
