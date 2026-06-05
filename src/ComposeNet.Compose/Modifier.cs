@@ -216,10 +216,13 @@ public sealed class Modifier
     /// <c>androidx.compose.ui.graphics.Color</c> value (a <c>ULong</c>
     /// surfaced as a <c>long</c> in the binding because Color is a Kotlin
     /// <c>@JvmInline value class</c>). Build one with
-    /// <see cref="AndroidX.Compose.UI.Graphics.ColorKt.Color(int)"/> from
-    /// an <c>0xAARRGGBB</c> int, or
     /// <see cref="AndroidX.Compose.UI.Graphics.ColorKt.Color(int, int, int, int)"/>
-    /// from per-channel bytes.
+    /// from per-channel bytes (recommended), or
+    /// <see cref="AndroidX.Compose.UI.Graphics.ColorKt.Color(int)"/> from an
+    /// <c>0xAARRGGBB</c> int — note that opaque-alpha hex literals like
+    /// <c>0xFF1976D2</c> are <c>uint</c> in C#, so they need an
+    /// <c>unchecked((int)0xFF1976D2)</c> cast to compile against the
+    /// <c>int</c> overload.
     /// </summary>
     public Modifier Background(long color) =>
         Append(curr => ComposeBridges.ModifierBackground(curr, color));
