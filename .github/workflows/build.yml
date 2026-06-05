@@ -22,7 +22,7 @@ jobs:
         run: dotnet workload install android
 
       - name: Build
-        run: dotnet build ComposeNet.sln -bl:ComposeNet.binlog
+        run: dotnet build ComposeNet.slnx -bl:ComposeNet.binlog
 
       - name: Upload binlog
         if: always()
