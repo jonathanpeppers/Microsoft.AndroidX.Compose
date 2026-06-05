@@ -21,7 +21,7 @@ Status legend: ✅ done · 🚧 in progress · ⬜️ not started · ❌ blocked
 
 | Complexity (upstream) | Sample      | Status | Notes |
 |----------------------:|-------------|:------:|-------|
-| Low                   | **Jetchat** | ✅      | Simplified single-channel chat with navigation drawer (`composers` / `droidcon-nyc`), top-bar search/info action icons, photo avatars (`ali.png` / `someone_else.jpg` from upstream, redistributed under Apache-2.0 — see [`samples/Jetchat/Resources/drawable-nodpi/LICENSE`](Jetchat/Resources/drawable-nodpi/LICENSE)), and a `LazyColumn`-backed message log. Programmatic drawer open + multi-channel routing still pending. See `Jetchat/README.md`. |
+| Low                   | **Jetchat** | ✅      | Simplified single-channel chat with navigation drawer (`composers` / `droidcon-nyc`), top-bar search/info action icons, distinct-per-author avatars (DiceBear `lorelei`, CC0), and a `LazyColumn`-backed message log. Programmatic drawer open + multi-channel routing still pending. See `Jetchat/README.md`. |
 | Medium                | JetNews     | ⬜️     | Needs image loading and navigation. |
 | Medium                | Reply       | ⬜️     | Needs adaptive layouts (window-size classes). |
 | Medium-High           | Jetsnack    | ⬜️     | Heavy custom layouts and animation. |
@@ -55,7 +55,7 @@ that needs the same primitive.
 
 These samples are C# ports inspired by Google's [android/compose-samples](https://github.com/android/compose-samples), which is licensed under the [Apache License 2.0](https://github.com/android/compose-samples/blob/main/LICENSE). No upstream Kotlin source code is copied into this repo — the ports re-implement the same UI in C# against this repo's `ComposeNet.Compose` facade.
 
-The two avatar bitmaps in [`samples/Jetchat/Resources/drawable-nodpi/`](Jetchat/Resources/drawable-nodpi/) (`ali.png`, `someone_else.jpg`) are copied without modification from upstream and remain under the Apache License 2.0; the full license text is reproduced alongside them in [`samples/Jetchat/Resources/drawable-nodpi/LICENSE`](Jetchat/Resources/drawable-nodpi/LICENSE). All other sample drawables and string content under each `samples/<Name>/` folder are original to this repo.
+The four per-author avatar PNGs in [`samples/Jetchat/Resources/drawable-nodpi/`](Jetchat/Resources/drawable-nodpi/) (`avatar_ali.png`, `avatar_aubrey.png`, `avatar_taylor.png`, `avatar_jordan.png`) were generated with [DiceBear](https://www.dicebear.com)'s `lorelei` style and are released under [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) (no attribution required, but credit appreciated). All other sample drawables and string content under each `samples/<Name>/` folder are original to this repo.
 | [#20](https://github.com/jonathanpeppers/compose-net/issues/20)  | Edge-to-edge bootstrapping | Status/nav-bar overlap on every sample. |
 
 ## Conventions

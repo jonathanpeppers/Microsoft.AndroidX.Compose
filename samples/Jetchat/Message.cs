@@ -6,6 +6,8 @@ namespace ComposeNet.Samples.Jetchat;
 /// (author / content / timestamp), minus the inline image-attachment
 /// field. The author avatar is a drawable resource id rendered through
 /// the Phase 7 <see cref="ComposeNet.Image"/> facade — same shape as
-/// upstream's <c>painterResource(R.drawable.someone_else)</c>.
+/// upstream's <c>painterResource(R.drawable.someone_else)</c>. Where
+/// upstream reuses a single photo for every non-"me" author, this
+/// port ships distinct per-author portraits.
 /// </summary>
 public sealed record Message(string Author, string Content, string Timestamp, int AuthorAvatarRes);

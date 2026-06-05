@@ -33,10 +33,12 @@ dotnet build samples/Jetchat -t:Run
   rendered through the Phase 7 `[PainterResource]` `Icon` facade.
 - Drawable-resource avatars rendered via the Phase 7
   `Image(int drawableResourceId, …)` facade, the same shape as
-  upstream's `painterResource(R.drawable.someone_else)` calls. The
-  two avatar bitmaps (`ali.png` and `someone_else.jpg`) are copied
-  unmodified from upstream Jetchat under the Apache License 2.0 —
-  see [`Resources/drawable-nodpi/LICENSE`](Resources/drawable-nodpi/LICENSE).
+  upstream's `painterResource(R.drawable.someone_else)` calls. Where
+  upstream reuses a single `someone_else.jpg` photo for every non-`me`
+  author, this port ships a **distinct portrait per author** generated
+  with [DiceBear](https://www.dicebear.com)'s `lorelei` style
+  ([CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) —
+  deterministic from the author's name).
 - A "Today" day-separator row (`HorizontalDivider` + `Text` +
   `HorizontalDivider`) above the message list.
 - Message bubbles with author name + relative timestamp on one row,

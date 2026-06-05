@@ -278,8 +278,8 @@ public static class Conversation
                     Modifier = Modifier.Companion.Padding(horizontalDp: 28, verticalDp: 0),
                 },
                 BuildDrawerSectionHeader("Recent Profiles"),
-                BuildProfileItem("Ali Conors (you)", Resource.Drawable.ali),
-                BuildProfileItem("Taylor Brooks",     Resource.Drawable.someone_else),
+                BuildProfileItem("Ali Conors (you)", Resource.Drawable.avatar_ali),
+                BuildProfileItem("Taylor Brooks",     Resource.Drawable.avatar_taylor),
             },
         };
 
@@ -356,7 +356,7 @@ public static class Conversation
     {
         var text = input.Value ?? string.Empty;
         if (string.IsNullOrWhiteSpace(text)) return;
-        ui.AddMessage(MyName, text, Resource.Drawable.ali, FormatNow());
+        ui.AddMessage(MyName, text, Resource.Drawable.avatar_ali, FormatNow());
         input.Value = string.Empty;
     }
 
