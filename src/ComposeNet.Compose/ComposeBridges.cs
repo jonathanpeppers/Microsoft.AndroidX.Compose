@@ -557,6 +557,65 @@ internal static partial class ComposeBridges
     public static partial void OutlinedTextField(string value, [Callback(typeof(string))] IFunction1 onValueChange,
                                                  IModifier? modifier, IComposer composer);
 
+    // androidx.compose.material3.SecureTextFieldKt.{SecureTextField,OutlinedSecureTextField}-XvU6IwQ.
+    // Both overloads have identical 23-user-param signatures (TextFieldState
+    // + Modifier + 11 Z/L slots + 7 L slots + Composer + 3 $changed + 1
+    // $default). Hashed JVM names come from the inline-class compiler
+    // mangling on `textObfuscationMode` (TextObfuscationMode is
+    // @JvmInline value class wrapping Int).
+    const string SecureTextFieldSig =
+        "(Landroidx/compose/foundation/text/input/TextFieldState;" +
+        "Landroidx/compose/ui/Modifier;Z" +
+        "Landroidx/compose/ui/text/TextStyle;" +
+        "Landroidx/compose/material3/TextFieldLabelPosition;" +
+        "Lkotlin/jvm/functions/Function3;" +
+        "Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;" +
+        "Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;" +
+        "Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;Z" +
+        "Landroidx/compose/foundation/text/input/InputTransformation;IC" +
+        "Landroidx/compose/foundation/text/KeyboardOptions;" +
+        "Landroidx/compose/foundation/text/input/KeyboardActionHandler;" +
+        "Lkotlin/jvm/functions/Function2;" +
+        "Landroidx/compose/ui/graphics/Shape;" +
+        "Landroidx/compose/material3/TextFieldColors;" +
+        "Landroidx/compose/foundation/layout/PaddingValues;" +
+        "Landroidx/compose/foundation/interaction/MutableInteractionSource;" +
+        "Landroidx/compose/runtime/Composer;IIII)V";
+
+    [ComposeBridge(
+        Class     = "androidx/compose/material3/SecureTextFieldKt",
+        JvmName   = "SecureTextField-XvU6IwQ",
+        Signature = SecureTextFieldSig,
+        Defaults  = typeof(SecureTextFieldDefault))]
+    public static partial void SecureTextField(
+        IntPtr      state,
+        IModifier?  modifier,
+        bool        enabled,
+        IFunction3? label,
+        IFunction2? placeholder,
+        IFunction2? leadingIcon,
+        IFunction2? trailingIcon,
+        IFunction2? supportingText,
+        bool        isError,
+        IComposer   composer);
+
+    [ComposeBridge(
+        Class     = "androidx/compose/material3/SecureTextFieldKt",
+        JvmName   = "OutlinedSecureTextField-XvU6IwQ",
+        Signature = SecureTextFieldSig,
+        Defaults  = typeof(OutlinedSecureTextFieldDefault))]
+    public static partial void OutlinedSecureTextField(
+        IntPtr      state,
+        IModifier?  modifier,
+        bool        enabled,
+        IFunction3? label,
+        IFunction2? placeholder,
+        IFunction2? leadingIcon,
+        IFunction2? trailingIcon,
+        IFunction2? supportingText,
+        bool        isError,
+        IComposer   composer);
+
     // androidx.compose.material3.AndroidAlertDialog_androidKt.AlertDialog-Oix01E0
     [ComposeBridge(
         Class     = "androidx/compose/material3/AndroidAlertDialog_androidKt",
