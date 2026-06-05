@@ -459,7 +459,7 @@ end-to-end recipe is:
 | CN3003  | `Scope` is set but bridge has no `IFunction3` content slot.        |
 | CN3004  | `[ComposeFacade]` without an accompanying `[ComposeBridge]`.       |
 | CN3005  | `[Callback(typeof(T))]` target type is unsupported (must be `bool`, `string`, or `float`). |
-| CN3006  | `[Slot]` placement conflicts with the facade's classified shape.   |
+| CN3006  | `[Slot]` placement conflicts with the facade's classified shape, `[Callback]` placed on a non-`IFunction1` param, multiple `[PainterResource]` params on one bridge, or `int defaults` declared without a resolvable `Defaults` enum. |
 | CN3007  | `DefaultColorFromTheme` cannot bind to any `long` user param (or `ColorParameter` is ambiguous / missing). |
 | CN3008  | `[PainterResource]` annotates a non-`IntPtr` parameter.            |
 

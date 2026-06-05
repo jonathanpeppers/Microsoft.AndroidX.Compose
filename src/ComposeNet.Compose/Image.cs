@@ -13,5 +13,5 @@ namespace ComposeNet;
 public sealed partial class Image
 {
     /// <summary>Render an Android drawable resource with no content description (decorative).</summary>
-    public Image(int painterResourceId) : this(painterResourceId, null) { }
+    public Image(int drawableResourceId) : this(drawableResourceId, null) { }
 }

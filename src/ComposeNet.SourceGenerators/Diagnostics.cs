@@ -134,7 +134,7 @@ internal static class Diagnostics
 
     public static readonly DiagnosticDescriptor FacadePainterMisuse = new(
         id: "CN3008",
-        title: "[PainterResource] requires a sibling 'IntPtr painter' parameter on the bridge",
+        title: "[PainterResource] must annotate an 'IntPtr' bridge parameter",
         messageFormat: "Facade for bridge '{0}': {1}",
         category: "ComposeNet",
         defaultSeverity: DiagnosticSeverity.Error,

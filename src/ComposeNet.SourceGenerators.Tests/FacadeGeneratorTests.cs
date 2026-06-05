@@ -865,9 +865,9 @@ public class FacadeGeneratorTests
         var (output, diags, emitted) = Run(code, "Image");
         Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
         Assert.NotNull(emitted);
-        Assert.Contains("public Image(int painterResourceId", emitted);
-        Assert.Contains("readonly int _painterResourceId;", emitted);
-        Assert.Contains("global::System.IntPtr __painterRef = global::ComposeNet.ComposeBridges.PainterResource(_painterResourceId, composer);", emitted);
+        Assert.Contains("public Image(int drawableResourceId", emitted);
+        Assert.Contains("readonly int _drawableResourceId;", emitted);
+        Assert.Contains("global::System.IntPtr __painterRef = global::ComposeNet.ComposeBridges.PainterResource(_drawableResourceId, composer);", emitted);
         Assert.Contains("try", emitted);
         Assert.Contains("finally", emitted);
         Assert.Contains("global::Android.Runtime.JNIEnv.DeleteLocalRef(__painterRef);", emitted);
@@ -922,5 +922,84 @@ public class FacadeGeneratorTests
 
         var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
         Assert.Empty(errors);
+    }
+
+    [Fact]
+    public void Callback_OnNonFunction1Param_ReportsCN3006()
+    {
+        var code = """
+            using System;
+            using AndroidX.Compose.Runtime;
+            using AndroidX.Compose.UI;
+            using ComposeNet;
+            using Kotlin.Jvm.Functions;
+
+            namespace ComposeNet
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(Class="x/Foo", JvmName="bar", Signature="()V")]
+                    [ComposeFacade]
+                    public static partial void Foo([Callback(typeof(bool))] IFunction0 onClick, IComposer composer);
+                }
+            }
+            """;
+        var (_, diags, _) = Run(code, "Foo");
+        Assert.Contains(diags, d => d.Id == "CN3006" && d.GetMessage().Contains("[Callback]") && d.GetMessage().Contains("IFunction1"));
+        Assert.DoesNotContain(diags, d => d.Id == "CN3005");
+    }
+
+    [Fact]
+    public void MultiplePainterResource_ReportsCN3006()
+    {
+        var code = """
+            using System;
+            using AndroidX.Compose.Runtime;
+            using AndroidX.Compose.UI;
+            using ComposeNet;
+
+            [assembly: ComposeDefaults("FooDefault", "!a", "!b")]
+
+            namespace ComposeNet
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(Class="x/Foo", JvmName="bar",
+                                   Signature="(Landroidx/compose/ui/graphics/painter/Painter;Landroidx/compose/ui/graphics/painter/Painter;Landroidx/compose/runtime/Composer;II)V",
+                                   Defaults=typeof(FooDefault))]
+                    [ComposeFacade]
+                    public static partial void Foo([PainterResource] IntPtr a, [PainterResource] IntPtr b,
+                        int defaults, IComposer composer);
+                }
+            }
+            """;
+        var (_, diags, _) = Run(code, "Foo");
+        Assert.Contains(diags, d => d.Id == "CN3006" && d.GetMessage().Contains("only be applied to one"));
+    }
+
+    [Fact]
+    public void CallerDefaults_WithoutDefaultsEnum_ReportsCN3006()
+    {
+        var code = """
+            using System;
+            using AndroidX.Compose.Runtime;
+            using AndroidX.Compose.UI;
+            using ComposeNet;
+            using Kotlin.Jvm.Functions;
+
+            namespace ComposeNet
+            {
+                public static partial class ComposeBridges
+                {
+                    // Bridge has `int defaults` but no `Defaults = typeof(...)` on [ComposeBridge].
+                    [ComposeBridge(Class="x/Foo", JvmName="bar",
+                                   Signature="(Lkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;II)V")]
+                    [ComposeFacade]
+                    public static partial void Foo(IFunction2 content, int defaults, IComposer composer);
+                }
+            }
+            """;
+        var (_, diags, _) = Run(code, "Foo");
+        Assert.Contains(diags, d => d.Id == "CN3006" && d.GetMessage().Contains("int defaults"));
     }
 }

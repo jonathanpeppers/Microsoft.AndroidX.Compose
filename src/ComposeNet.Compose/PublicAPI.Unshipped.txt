@@ -194,8 +194,8 @@ ComposeNet.IconButton.IconButton(System.Action! onClick) -> void
 ComposeNet.IconToggleButton
 ComposeNet.IconToggleButton.IconToggleButton(bool checked, System.Action<bool>! onCheckedChange) -> void
 ComposeNet.Image
-ComposeNet.Image.Image(int painterResourceId) -> void
-ComposeNet.Image.Image(int painterResourceId, string? contentDescription) -> void
+ComposeNet.Image.Image(int drawableResourceId) -> void
+ComposeNet.Image.Image(int drawableResourceId, string? contentDescription) -> void
 ComposeNet.InputChip
 ComposeNet.InputChip.Avatar.get -> ComposeNet.ComposableNode?
 ComposeNet.InputChip.Avatar.set -> void

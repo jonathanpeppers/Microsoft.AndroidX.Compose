@@ -206,15 +206,15 @@ internal static class Attributes
             }
 
             /// <summary>
-            /// Phase 7 — apply to an <c>int</c> bridge parameter to mark
-            /// it as an Android drawable resource id. The facade ctor
-            /// takes <c>int drawableResourceId</c>; <c>Render</c> calls
+            /// Phase 7 — apply to the <c>IntPtr</c> bridge parameter
+            /// that takes the resolved <c>Painter</c> handle. The facade
+            /// replaces this parameter with a synthetic ctor argument
+            /// <c>int drawableResourceId</c>; <c>Render</c> calls
             /// <c>ComposeBridges.PainterResource(id, composer)</c> to
-            /// resolve a <c>Painter</c> handle and wraps the bridge
-            /// invocation in <c>try</c> / <c>finally</c> +
-            /// <c>JNIEnv.DeleteLocalRef</c>. The bridge must also have
-            /// a sibling <c>IntPtr painter</c> parameter that the
-            /// generator forwards the resolved handle to.
+            /// resolve the handle, forwards it to the annotated
+            /// parameter, and wraps the bridge invocation in
+            /// <c>try</c> / <c>finally</c> + <c>JNIEnv.DeleteLocalRef</c>.
+            /// At most one bridge parameter may carry <c>[PainterResource]</c>.
             /// </summary>
             [global::System.AttributeUsage(global::System.AttributeTargets.Parameter,
                                            AllowMultiple = false)]

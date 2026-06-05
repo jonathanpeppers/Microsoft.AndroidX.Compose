@@ -32,9 +32,10 @@ namespace ComposeNet.SourceGenerators;
 /// <item>Phase 6 — <c>[ComposeFacade(DefaultColorFromTheme="...")]</c>
 /// adds a <c>long ContainerColor</c> property with a
 /// <c>MaterialTheme.colorScheme</c> fallback.</item>
-/// <item>Phase 7 — <c>[PainterResource]</c> on an <c>int</c> param
-/// emits the <c>painterResource()</c> + <c>try</c>/<c>finally</c>
-/// + <c>DeleteLocalRef</c> dance.</item>
+/// <item>Phase 7 — <c>[PainterResource]</c> on an <c>IntPtr</c> param
+/// (the painter handle the bridge forwards) emits a synthetic
+/// <c>int drawableResourceId</c> ctor arg + <c>painterResource()</c>
+/// + <c>try</c>/<c>finally</c> + <c>DeleteLocalRef</c> dance.</item>
 /// </list>
 /// </summary>
 [Generator(LanguageNames.CSharp)]
@@ -268,7 +269,28 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             colorSlot = picked;
         }
 
-        // Phase 7 — sanity check: PainterResource is one-of (validated above).
+        // Phase 7 — at most one [PainterResource] parameter per bridge.
+        int painterCount = 0;
+        foreach (var s in slots)
+            if (s.Kind == FacadeSlotKind.PainterResource) painterCount++;
+        if (painterCount > 1)
+        {
+            diags.Add(Diagnostic.Create(Diagnostics.FacadeSlotConflict, loc, method.Name,
+                $"[PainterResource] may only be applied to one bridge parameter, found {painterCount}"));
+        }
+
+        // Phase 3 sanity — if the bridge takes a caller-controlled
+        // `int defaults`, we must know its enum (`Defaults = typeof(...)`
+        // + matching `[assembly: ComposeDefaults(...)]`) or the emitted
+        // code will reference an undeclared `__defaults` local.
+        if (callerProvidesDefaults && defaults is null)
+        {
+            string reason = defaultsType is null
+                ? "the bridge has an 'int defaults' parameter but no 'Defaults = typeof(...)' on [ComposeBridge]"
+                : $"no '[assembly: ComposeDefaults(\"{defaultsType.Name}\", ...)]' declaration was found for the bridge's Defaults enum";
+            diags.Add(Diagnostic.Create(Diagnostics.FacadeSlotConflict, loc, method.Name, reason));
+        }
+
         if (diags.Count > 0)
             return new GenerationResult(null, null, diags);
 
@@ -282,7 +304,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
     {
         // [PainterResource] — annotates the IntPtr bridge param that
         // takes the resolved Painter handle. The facade exposes a
-        // synthetic `int painterResourceId` ctor arg in its place.
+        // synthetic `int drawableResourceId` ctor arg in its place.
         if (c.PainterAttr is not null &&
             p.GetAttributes().Any(a => SymbolEqualityComparer.Default.Equals(a.AttributeClass, c.PainterAttr)))
         {
@@ -304,8 +326,8 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             {
                 if (KotlinFunctionArity(p.Type) != 1)
                 {
-                    diags.Add(Diagnostic.Create(Diagnostics.FacadeCallbackUnsupportedType, loc, methodName, p.Name,
-                        $"[Callback] target type must be Kotlin.Jvm.Functions.IFunction1, was '{p.Type.ToDisplayString()}'"));
+                    diags.Add(Diagnostic.Create(Diagnostics.FacadeSlotConflict, loc, methodName,
+                        $"[Callback] on parameter '{p.Name}' requires a Kotlin.Jvm.Functions.IFunction1 parameter type; was '{p.Type.ToDisplayString()}'"));
                     return null;
                 }
                 var typeArg = cba.ConstructorArguments.Length > 0 ? cba.ConstructorArguments[0].Value as INamedTypeSymbol : null;
@@ -517,7 +539,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         bool hasPainter = painterIdSlot.Param is not null;
         if (hasPainter)
         {
-            sb.AppendLine("            global::System.IntPtr __painterRef = global::ComposeNet.ComposeBridges.PainterResource(_painterResourceId, "
+            sb.AppendLine("            global::System.IntPtr __painterRef = global::ComposeNet.ComposeBridges.PainterResource(_drawableResourceId, "
                 + composerName + ");");
             sb.AppendLine("            try");
             sb.AppendLine("            {");
@@ -668,7 +690,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
     static string CtorFieldType(FacadeSlot slot) => CtorParamType(slot);
 
     static string CtorIdentifier(FacadeSlot slot) =>
-        slot.Kind == FacadeSlotKind.PainterResource ? "painterResourceId" : slot.Param.Name;
+        slot.Kind == FacadeSlotKind.PainterResource ? "drawableResourceId" : slot.Param.Name;
 
     static string CtorParamType(FacadeSlot slot)
     {
