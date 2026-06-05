@@ -24,9 +24,19 @@ jobs:
       - name: Build
         run: dotnet build ComposeNet.slnx -bl:ComposeNet.binlog
 
+      - name: Test source generators
+        run: dotnet test src/ComposeNet.SourceGenerators.Tests --no-build --logger "console;verbosity=normal" --logger "trx;LogFileName=test-results.trx"
+
       - name: Upload binlog
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: ComposeNet.binlog
           path: ComposeNet.binlog
+
+      - name: Upload test results
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: '**/TestResults/*.trx'
