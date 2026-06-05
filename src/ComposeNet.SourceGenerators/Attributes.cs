@@ -117,8 +117,8 @@ internal static class Attributes
             /// <c>ComposableContainer</c>; render uses
             /// <c>ComposableLambdas.Wrap2</c> / <c>Wrap3</c>.</description></item>
             /// <item><description>Primitive (<c>string</c>, <c>int</c>,
-            /// <c>bool</c>, <c>float</c>, <c>long</c>) → positional ctor
-            /// parameter.</description></item>
+            /// <c>long</c>, <c>bool</c>, <c>float</c>, <c>double</c>) →
+            /// positional ctor parameter.</description></item>
             /// </list>
             /// Anything else (e.g. <c>IFunction1</c> callbacks, value-class
             /// handles, the caller-controlled <c>int defaults</c> hatch) is

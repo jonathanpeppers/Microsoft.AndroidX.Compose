@@ -180,14 +180,14 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         if (diags.Count > 0)
             return new GenerationResult(null, null, diags);
 
-        var source = Emit(className, method.Name, scope, composerParam, slots, contentArity, modifierParam is not null);
+        var source = Emit(className, method.Name, scope, composerParam, slots, contentArity);
         var hint = $"ComposeNet.Facade.{className}.g.cs";
         return new GenerationResult(source, hint, Array.Empty<Diagnostic>());
     }
 
     static string Emit(string className, string bridgeMethodName, string? scope,
         IParameterSymbol composerParam, IReadOnlyList<FacadeSlot> slots,
-        int contentArity, bool hasModifier)
+        int contentArity)
     {
         bool isContainer = contentArity != 0;
         string baseClass = isContainer ? "global::ComposeNet.ComposableContainer" : "global::ComposeNet.ComposableNode";

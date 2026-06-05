@@ -319,7 +319,7 @@ The generator classifies each user param of the bridge:
 | `IFunction0` (onClick-style)            | Surfaced as a `System.Action` ctor parameter      |
 | `IFunction2` content                    | Wrapped via `ComposableLambdas.Wrap2(…)`          |
 | `IFunction3` content                    | Wrapped via `ComposableLambdas.Wrap3(…)`          |
-| Primitive (`string`, `int`, `bool`, …)  | Surfaced as a ctor parameter, stored in `_<name>` |
+| Primitive (`string`, `int`, `long`, `bool`, `float`, `double`)  | Surfaced as a ctor parameter, stored in `_<name>` |
 | Anything else (callbacks, handles, etc.) | Rejected with CN3002                              |
 
 `Scope = "Row"` / `Scope = "Column"` opt-in: when the content slot is
