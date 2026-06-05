@@ -46,6 +46,15 @@ public class MainActivity : ComposeActivity
             var iconToggle3 = Remember(() => new MutableState<bool>(false));
             var iconToggle4 = Remember(() => new MutableState<bool>(true));
 
+            var pwd        = Remember(() => new SecureTextFieldState());
+            var pwdConfirm = Remember(() => new SecureTextFieldState());
+            // SecureTextFieldState.Text isn't snapshot-tracked when
+            // read from C# build code (same constraint as
+            // SearchBarTextFieldState — see Pickers tab note). Mirror
+            // the lengths into a MutableState on Sign-in tap so the
+            // status line updates reactively.
+            var signInStatus = Remember(() => new MutableState<string>(""));
+
             var menuOpen      = Remember(() => new MutableState<bool>(false));
             var menuSelection = Remember(() => new MutableState<string>("(none)"));
             var searchState   = Remember(() => new SearchBarState());
@@ -111,7 +120,35 @@ public class MainActivity : ComposeActivity
                                     .Clickable(() => count++)
                                     .Padding(horizontalDp: 16, verticalDp: 8),
                             },
-                        },
+                                // Secure text inputs — exercise both
+                                // SecureTextField (filled) and
+                                // OutlinedSecureTextField. The two state
+                                // holders are independent; tapping "Sign in"
+                                // snapshots both lengths into signInStatus.
+                                new Text("Secure inputs:"),
+                                new SecureTextField(pwd)
+                                {
+                                    Label          = new Text("Password"),
+                                    LeadingIcon    = new Text("🔒"),
+                                    SupportingText = new Text("Filled"),
+                                },
+                                new OutlinedSecureTextField(pwdConfirm)
+                                {
+                                    Label          = new Text("Confirm password"),
+                                    LeadingIcon    = new Text("🔒"),
+                                    SupportingText = new Text("Outlined"),
+                                },
+                                new Button(onClick: () =>
+                                    signInStatus.Value =
+                                        $"len={pwd.Text.Length}/{pwdConfirm.Text.Length}, " +
+                                        $"match={(pwd.Text == pwdConfirm.Text)}")
+                                {
+                                    new Text("Sign in"),
+                                },
+                                new Text(string.IsNullOrEmpty(signInStatus.Value)
+                                    ? "Tap Sign in to compare"
+                                    : signInStatus.Value),
+                            },
                         1 => new Column
                         {
                             new Text($"Count: {count}"),
