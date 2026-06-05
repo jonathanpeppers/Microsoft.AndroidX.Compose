@@ -15,9 +15,10 @@ internal static class Attributes
             /// Apply at assembly scope to generate a named-bit
             /// <c>[Flags] internal enum &lt;EnumName&gt;</c> from the
             /// parameter shape of <typeparamref name="T"/>'s static
-            /// method <paramref name="methodName"/>. Bit numbers match
-            /// the Kotlin parameter index in the bytecode — the position
-            /// the <c>$default</c> bitmask expects.
+            /// method named by the constructor's <c>methodName</c>
+            /// argument. Bit numbers match the Kotlin parameter index
+            /// in the bytecode — the position the <c>$default</c>
+            /// bitmask expects.
             /// </summary>
             [global::System.AttributeUsage(global::System.AttributeTargets.Assembly,
                                            AllowMultiple = true)]

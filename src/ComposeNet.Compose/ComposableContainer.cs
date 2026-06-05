@@ -32,7 +32,7 @@ public abstract class ComposableContainer : ComposableNode, IEnumerable
     public void Add(Modifier modifier) => Modifier = modifier;
     IEnumerator IEnumerable.GetEnumerator() => _children.GetEnumerator();
 
-    /// <summary>Internal accessor for <see cref="Render"/> impls.</summary>
+    /// <summary>Internal accessor for <c>Render</c> impls.</summary>
     private protected IReadOnlyList<ComposableNode> Children => _children;
 
     /// <summary>
