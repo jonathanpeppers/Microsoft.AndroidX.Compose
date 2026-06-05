@@ -84,11 +84,11 @@ public class MainActivity : ComposeActivity
             // filter without binding InputTransformation.
             var searchQuery   = Remember(() => new MutableState<string>(""));
 
-            // Scroll state for the (long) Misc tab — `Modifier.VerticalScroll`
+            // Scroll state for the (long) Buttons tab — `Modifier.VerticalScroll`
             // turns its outer Column into a scrollable viewport, the standard
             // Compose pattern for non-Lazy content that simply might overflow
             // on small screens.
-            var miscScroll    = Remember(() => new ScrollState());
+            var buttonsScroll = Remember(() => new ScrollState());
 
             string[] tabNames = { "Basics", "Buttons", "Cards", "Drawer", "Selection", "Pickers", "Misc", "App bars", "Lazy", "Carousels" };
 
@@ -221,6 +221,7 @@ public class MainActivity : ComposeActivity
                 },
                 1 => new Column
                 {
+                    Modifier.Companion.Weight(1f).VerticalScroll(buttonsScroll),
                     new Text("Button fill styles"),
                     new Button(onClick: () => count++) { new Text("Filled") },
                     new ElevatedButton(onClick: () => count++) { new Text("Elevated") },
@@ -429,7 +430,6 @@ public class MainActivity : ComposeActivity
                 },
                 6 => (ComposableNode)new Column
                 {
-                    Modifier.Companion.VerticalScroll(miscScroll),
                     new Text("Misc Material 3"),
                     new Text("Progress indicators (indeterminate):"),
                     new Row
@@ -816,7 +816,7 @@ public class MainActivity : ComposeActivity
                             : null,
                         Body = new Column
                         {
-                            Modifier.Companion.Padding(16),
+                            Modifier.Companion.FillMaxSize().Padding(16),
                             // ScrollableTabRow handles many tabs better than NavigationBar
                             // (which is spec'd for 3-5 items) — the row scrolls horizontally
                             // so every tab stays reachable as we add more demos.
