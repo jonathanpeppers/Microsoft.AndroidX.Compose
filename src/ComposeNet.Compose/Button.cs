@@ -1,10 +1,8 @@
 namespace ComposeNet;
 
 /// <summary>
-/// Material 3 filled <c>Button</c>. Constructor takes an onClick;
-/// content comes from collection-initializer children:
-/// <code>
-/// new Button(onClick: () => count++) { new Text("Tap") }
-/// </code>
+/// Material 3 filled <c>Button</c>. Takes an <c>onClick</c> in its
+/// constructor and uses collection-initializer syntax for content:
+/// <code>new Button(onClick: () => count++) { new Text("Tap") }</code>
 /// </summary>
 public sealed partial class Button;
