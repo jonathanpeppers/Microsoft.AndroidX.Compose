@@ -1,7 +1,7 @@
 namespace ComposeNet;
 
 /// <summary>
-/// Material 3 <c>ElevatedCard</c> — like <see cref="Card"/> but uses
+/// Material 3 ElevatedCard — like <see cref="Card"/> but uses
 /// shadow rather than tonal elevation for separation. Children are
 /// added via collection-initializer syntax.
 /// </summary>

@@ -1,14 +1,10 @@
 namespace ComposeNet;
 
 /// <summary>
-/// Material 3 <c>IconButton</c> — a circular tap target sized for a
-/// single icon glyph.
-/// </summary>
-/// <remarks>
-/// Children render into a <c>Function2</c> content slot (no
-/// <c>RowScope</c> receiver). Typical use:
+/// Material 3 IconButton. Children render into a Function2 content
+/// slot (no RowScope). Typical use:
 /// <code>
-/// new IconButton(onClick: …) { new Text("☆") }
+/// new IconButton(...) { new Text("☆") }
 /// </code>
-/// </remarks>
+/// </summary>
 public sealed partial class IconButton;
