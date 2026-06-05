@@ -612,6 +612,47 @@ public class MainActivity : ComposeActivity
                     {
                         Modifier = Modifier.Companion.FillMaxWidth().Height(220),
                     },
+                    new HorizontalDivider { Modifier = Modifier.Companion.Padding(0, 8) },
+                    new Text("HorizontalUncontainedCarousel (200dp)"),
+                    new HorizontalUncontainedCarousel<int>(
+                        items:       System.Linq.Enumerable.Range(0, 12).ToList(),
+                        itemWidth:   200f,
+                        itemContent: i => new Card
+                        {
+                            Modifier.Companion.Padding(4).Size(200, 140),
+                            new Text($"Item {i}"),
+                        })
+                    {
+                        Modifier     = Modifier.Companion.FillMaxWidth(),
+                        ItemSpacing  = 8f,
+                    },
+                    new HorizontalDivider { Modifier = Modifier.Companion.Padding(0, 8) },
+                    new Text("HorizontalMultiBrowseCarousel (240dp)"),
+                    new HorizontalMultiBrowseCarousel<int>(
+                        items:              System.Linq.Enumerable.Range(0, 12).ToList(),
+                        preferredItemWidth: 240f,
+                        itemContent:        i => new Card
+                        {
+                            Modifier.Companion.Padding(4).Height(160),
+                            new Text($"#{i:D2}"),
+                        })
+                    {
+                        Modifier     = Modifier.Companion.FillMaxWidth(),
+                        ItemSpacing  = 8f,
+                    },
+                    new HorizontalDivider { Modifier = Modifier.Companion.Padding(0, 8) },
+                    new Text("HorizontalCenteredHeroCarousel"),
+                    new HorizontalCenteredHeroCarousel<int>(
+                        items:       System.Linq.Enumerable.Range(0, 8).ToList(),
+                        itemContent: i => new Card
+                        {
+                            Modifier.Companion.Padding(4).Height(180),
+                            new Text($"Hero {i}"),
+                        })
+                    {
+                        Modifier    = Modifier.Companion.FillMaxWidth(),
+                        ItemSpacing = 8f,
+                    },
                 },
             };
 

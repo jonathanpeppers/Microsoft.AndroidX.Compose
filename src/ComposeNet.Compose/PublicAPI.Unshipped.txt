@@ -184,6 +184,32 @@ ComposeNet.HorizontalDivider.ColorArgb.set -> void
 ComposeNet.HorizontalDivider.HorizontalDivider() -> void
 ComposeNet.HorizontalDivider.ThicknessDp.get -> float?
 ComposeNet.HorizontalDivider.ThicknessDp.set -> void
+ComposeNet.HorizontalCenteredHeroCarousel<T>
+ComposeNet.HorizontalCenteredHeroCarousel<T>.HorizontalCenteredHeroCarousel(System.Collections.Generic.IReadOnlyList<T>! items, System.Func<T, ComposeNet.ComposableNode!>! itemContent) -> void
+ComposeNet.HorizontalCenteredHeroCarousel<T>.ItemSpacing.get -> float
+ComposeNet.HorizontalCenteredHeroCarousel<T>.ItemSpacing.set -> void
+ComposeNet.HorizontalCenteredHeroCarousel<T>.MaxItemWidth.get -> float
+ComposeNet.HorizontalCenteredHeroCarousel<T>.MaxItemWidth.set -> void
+ComposeNet.HorizontalCenteredHeroCarousel<T>.State.get -> AndroidX.Compose.Material3.Carousel.CarouselState?
+ComposeNet.HorizontalCenteredHeroCarousel<T>.State.set -> void
+ComposeNet.HorizontalCenteredHeroCarousel<T>.UserScrollEnabled.get -> bool?
+ComposeNet.HorizontalCenteredHeroCarousel<T>.UserScrollEnabled.set -> void
+ComposeNet.HorizontalMultiBrowseCarousel<T>
+ComposeNet.HorizontalMultiBrowseCarousel<T>.HorizontalMultiBrowseCarousel(System.Collections.Generic.IReadOnlyList<T>! items, float preferredItemWidth, System.Func<T, ComposeNet.ComposableNode!>! itemContent) -> void
+ComposeNet.HorizontalMultiBrowseCarousel<T>.ItemSpacing.get -> float
+ComposeNet.HorizontalMultiBrowseCarousel<T>.ItemSpacing.set -> void
+ComposeNet.HorizontalMultiBrowseCarousel<T>.State.get -> AndroidX.Compose.Material3.Carousel.CarouselState?
+ComposeNet.HorizontalMultiBrowseCarousel<T>.State.set -> void
+ComposeNet.HorizontalMultiBrowseCarousel<T>.UserScrollEnabled.get -> bool?
+ComposeNet.HorizontalMultiBrowseCarousel<T>.UserScrollEnabled.set -> void
+ComposeNet.HorizontalUncontainedCarousel<T>
+ComposeNet.HorizontalUncontainedCarousel<T>.HorizontalUncontainedCarousel(System.Collections.Generic.IReadOnlyList<T>! items, float itemWidth, System.Func<T, ComposeNet.ComposableNode!>! itemContent) -> void
+ComposeNet.HorizontalUncontainedCarousel<T>.ItemSpacing.get -> float
+ComposeNet.HorizontalUncontainedCarousel<T>.ItemSpacing.set -> void
+ComposeNet.HorizontalUncontainedCarousel<T>.State.get -> AndroidX.Compose.Material3.Carousel.CarouselState?
+ComposeNet.HorizontalUncontainedCarousel<T>.State.set -> void
+ComposeNet.HorizontalUncontainedCarousel<T>.UserScrollEnabled.get -> bool?
+ComposeNet.HorizontalUncontainedCarousel<T>.UserScrollEnabled.set -> void
 ComposeNet.Icon
 ComposeNet.Icon.Icon(AndroidX.Compose.UI.Graphics.Vector.ImageVector! imageVector, string? contentDescription) -> void
 ComposeNet.Icon.Icon(int drawableResourceId, string? contentDescription) -> void
