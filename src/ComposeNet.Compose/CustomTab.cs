@@ -1,5 +1,3 @@
-using AndroidX.Compose.Runtime;
-
 namespace ComposeNet;
 
 /// <summary>
@@ -15,26 +13,4 @@ namespace ComposeNet;
 /// </code>
 /// Children are stacked vertically inside the tab's <c>ColumnScope</c>.
 /// </summary>
-public sealed class CustomTab : ComposableContainer
-{
-    readonly bool _selected;
-    readonly System.Action _onClick;
-
-    public CustomTab(bool selected, System.Action onClick)
-    {
-        _selected = selected;
-        _onClick  = onClick;
-    }
-
-    internal override void Render(IComposer composer)
-    {
-        var click = new ComposableLambda0(_onClick);
-        var content = ComposableLambdas.Wrap3(composer, (scope, c) =>
-        {
-            using var _ = RenderContext.PushScope(scope, ScopeKind.Column);
-            RenderChildren(c);
-        });
-
-        ComposeBridges.TabContent(_selected, click, BuildModifier(), content, composer);
-    }
-}
+public sealed partial class CustomTab;

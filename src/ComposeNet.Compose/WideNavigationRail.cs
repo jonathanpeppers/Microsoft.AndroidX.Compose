@@ -1,5 +1,3 @@
-using AndroidX.Compose.Runtime;
-
 namespace ComposeNet;
 
 /// <summary>
@@ -19,15 +17,7 @@ namespace ComposeNet;
 ///     },
 /// }
 /// </code>
+/// <c>WideNavigationRailItem</c> is a top-level static (not a scope
+/// extension), so children render directly without a published scope.
 /// </summary>
-public sealed class WideNavigationRail : ComposableContainer
-{
-    internal override void Render(IComposer composer)
-    {
-        // WideNavigationRailItem is a top-level static (not a scope
-        // extension), so we don't need to publish a receiver scope —
-        // children render directly.
-        var content = ComposableLambdas.Wrap2(composer, c => RenderChildren(c));
-        ComposeBridges.WideNavigationRail(BuildModifier(), content, composer);
-    }
-}
+public sealed partial class WideNavigationRail;

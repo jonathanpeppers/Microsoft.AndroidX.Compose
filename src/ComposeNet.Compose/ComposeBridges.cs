@@ -971,6 +971,7 @@ internal static partial class ComposeBridges
                     "Landroidx/compose/foundation/layout/WindowInsets;" +
                     "Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;II)V",
         Defaults  = typeof(NavigationRailDefault))]
+    [ComposeFacade]
     public static partial void NavigationRail(IModifier? modifier, IFunction3 content, IComposer composer);
 
     // androidx.compose.material3.NavigationRailKt.NavigationRailItem
@@ -1118,6 +1119,7 @@ internal static partial class ComposeBridges
                     "Lkotlin/jvm/functions/Function2;" +
                     "Landroidx/compose/runtime/Composer;II)V",
         Defaults  = typeof(WideNavigationRailDefault))]
+    [ComposeFacade]
     public static partial void WideNavigationRail(IModifier? modifier, IFunction2 content, IComposer composer);
 
     // androidx.compose.material3.WideNavigationRailKt.ModalWideNavigationRail-k3FuEkE.
@@ -1290,6 +1292,7 @@ internal static partial class ComposeBridges
         JvmName   = "TabRow-pAZo6Ak",
         Signature = TabRowSig,
         Defaults  = typeof(TabRowDefault))]
+    [ComposeFacade]
     public static partial void TabRow(
         int        selectedTabIndex,
         IModifier? modifier,
@@ -1301,6 +1304,7 @@ internal static partial class ComposeBridges
         JvmName   = "PrimaryTabRow-pAZo6Ak",
         Signature = TabRowSig,
         Defaults  = typeof(TabRowDefault))]
+    [ComposeFacade]
     public static partial void PrimaryTabRow(
         int        selectedTabIndex,
         IModifier? modifier,
@@ -1312,6 +1316,7 @@ internal static partial class ComposeBridges
         JvmName   = "SecondaryTabRow-pAZo6Ak",
         Signature = TabRowSig,
         Defaults  = typeof(TabRowDefault))]
+    [ComposeFacade]
     public static partial void SecondaryTabRow(
         int        selectedTabIndex,
         IModifier? modifier,
@@ -1327,6 +1332,7 @@ internal static partial class ComposeBridges
                     "Lkotlin/jvm/functions/Function3;Lkotlin/jvm/functions/Function2;" +
                     "Lkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;II)V",
         Defaults  = typeof(ScrollableTabRowDefault))]
+    [ComposeFacade]
     public static partial void ScrollableTabRow(
         int        selectedTabIndex,
         IModifier? modifier,
@@ -1477,6 +1483,7 @@ internal static partial class ComposeBridges
                     "Landroidx/compose/foundation/BorderStroke;" +
                     "Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;III)V",
         Defaults  = typeof(DropdownMenuDefault))]
+    [ComposeFacade]
     public static partial void DropdownMenu(
         bool        expanded,
         IFunction0  onDismissRequest,
@@ -1730,6 +1737,7 @@ internal static partial class ComposeBridges
                     "Lkotlin/jvm/functions/Function3;" +
                     "Landroidx/compose/runtime/Composer;II)V",
         Defaults  = typeof(FlexibleBottomAppBarDefault))]
+    [ComposeFacade(Scope = "Row")]
     public static partial void FlexibleBottomAppBar(
         IModifier? modifier,
         IFunction3 content,
@@ -1781,6 +1789,7 @@ internal static partial class ComposeBridges
                     "Landroidx/compose/foundation/interaction/MutableInteractionSource;" +
                     "Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;II)V",
         Defaults  = typeof(TabContentDefault))]
+    [ComposeFacade(ClassName = "CustomTab", Scope = "Column")]
     public static partial void TabContent(
         bool       selected,
         IFunction0 onClick,

@@ -1,5 +1,3 @@
-using AndroidX.Compose.Runtime;
-
 namespace ComposeNet;
 
 /// <summary>
@@ -7,14 +5,4 @@ namespace ComposeNet;
 /// <see cref="TabRow"/> with the secondary indicator style (full-width
 /// underline). Use for tab groups nested inside a screen.
 /// </summary>
-public sealed class SecondaryTabRow : ComposableContainer
-{
-    readonly int _selectedTabIndex;
-    public SecondaryTabRow(int selectedTabIndex) => _selectedTabIndex = selectedTabIndex;
-
-    internal override void Render(IComposer composer)
-    {
-        var tabs = ComposableLambdas.Wrap2(composer, c => RenderChildren(c));
-        ComposeBridges.SecondaryTabRow(_selectedTabIndex, BuildModifier(), tabs, composer);
-    }
-}
+public sealed partial class SecondaryTabRow;
