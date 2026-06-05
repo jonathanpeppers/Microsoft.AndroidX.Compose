@@ -27,7 +27,7 @@ internal sealed class DrawerConfirmStateChange : Java.Lang.Object, IFunction1
         var cb = Callback;
         if (cb is null)
             return Java.Lang.Boolean.True;
-        var value = (DrawerValue)p0!;
+        var value = Android.Runtime.Extensions.JavaCast<DrawerValue>(p0!);
         return cb(value) ? Java.Lang.Boolean.True : Java.Lang.Boolean.False;
     }
 }

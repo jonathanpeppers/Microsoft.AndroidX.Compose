@@ -365,12 +365,12 @@ method**; call the generated C# entry point instead (see
 
 Several Compose APIs take a `(T) -> Boolean` callback the runtime
 invokes to ask the caller "should this transition proceed?" — e.g.
-`rememberDrawerState(confirmStateChange)`,
-`rememberSheetState(confirmValueChange)`,
-`rememberSaveableStateHolder`. **These are part of the cached state
-holder's `remember` key**, so the JNI reference identity has to stay
-stable across recompositions or the cache is dropped and the state
-holder is rebuilt (the drawer / sheet forgets whether it was open).
+`rememberDrawerState(confirmStateChange)` and
+`rememberSheetState(confirmValueChange)`. **These are part of the
+cached state holder's `remember` key**, so the JNI reference identity
+has to stay stable across recompositions or the cache is dropped and
+the state holder is rebuilt (the drawer / sheet forgets whether it
+was open).
 
 The pattern (see `DrawerConfirmStateChange` + `ModalNavigationDrawer`
 for the canonical implementation):
