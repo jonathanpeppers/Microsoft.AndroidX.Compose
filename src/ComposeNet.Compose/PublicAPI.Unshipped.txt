@@ -99,6 +99,14 @@ ComposeNet.DatePickerState.SelectedDateMillis.get -> long?
 ComposeNet.DatePickerState.SelectedDateMillis.set -> void
 ComposeNet.DateRangePicker
 ComposeNet.DateRangePicker.DateRangePicker(ComposeNet.DateRangePickerState? state = null) -> void
+ComposeNet.DateRangePickerDialog
+ComposeNet.DateRangePickerDialog.Body.get -> ComposeNet.ComposableNode?
+ComposeNet.DateRangePickerDialog.Body.set -> void
+ComposeNet.DateRangePickerDialog.ConfirmButton.get -> ComposeNet.ComposableNode?
+ComposeNet.DateRangePickerDialog.ConfirmButton.set -> void
+ComposeNet.DateRangePickerDialog.DateRangePickerDialog(System.Action! onDismissRequest) -> void
+ComposeNet.DateRangePickerDialog.DismissButton.get -> ComposeNet.ComposableNode?
+ComposeNet.DateRangePickerDialog.DismissButton.set -> void
 ComposeNet.DateRangePickerState
 ComposeNet.DateRangePickerState.DateRangePickerState() -> void
 ComposeNet.DateRangePickerState.DisplayedMonthMillis.get -> long
@@ -122,6 +130,10 @@ ComposeNet.DismissibleNavigationDrawer.Drawer.get -> ComposeNet.ComposableNode?
 ComposeNet.DismissibleNavigationDrawer.Drawer.set -> void
 ComposeNet.DismissibleNavigationDrawer.InitiallyOpen.get -> bool
 ComposeNet.DismissibleNavigationDrawer.InitiallyOpen.set -> void
+ComposeNet.DockedSearchBar
+ComposeNet.DockedSearchBar.DockedSearchBar(bool expanded, System.Action<bool>! onExpandedChange) -> void
+ComposeNet.DockedSearchBar.InputField.get -> ComposeNet.ComposableNode?
+ComposeNet.DockedSearchBar.InputField.set -> void
 ComposeNet.DropdownMenu
 ComposeNet.DropdownMenu.DropdownMenu(bool expanded, System.Action! onDismissRequest) -> void
 ComposeNet.DropdownMenuItem
@@ -166,6 +178,10 @@ ComposeNet.ExpandedFullScreenSearchBar
 ComposeNet.ExpandedFullScreenSearchBar.ExpandedFullScreenSearchBar(ComposeNet.SearchBarState! state) -> void
 ComposeNet.ExpandedFullScreenSearchBar.InputField.get -> ComposeNet.ComposableNode?
 ComposeNet.ExpandedFullScreenSearchBar.InputField.set -> void
+ComposeNet.ExposedDropdownMenu
+ComposeNet.ExposedDropdownMenu.ExposedDropdownMenu(bool expanded, System.Action! onDismissRequest) -> void
+ComposeNet.ExposedDropdownMenuBox
+ComposeNet.ExposedDropdownMenuBox.ExposedDropdownMenuBox(bool expanded, System.Action<bool>! onExpandedChange) -> void
 ComposeNet.FilledIconButton
 ComposeNet.FilledIconButton.FilledIconButton(System.Action! onClick) -> void
 ComposeNet.FilledIconToggleButton

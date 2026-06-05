@@ -641,6 +641,27 @@ using ComposeNet;
     "!text", "!onClick", "modifier", "leadingIcon", "trailingIcon",
     "enabled", "colors", "contentPadding", "interactionSource")]
 
+// androidx.compose.material3.ExposedDropdownMenuKt.ExposedDropdownMenuBox:
+// 4 user params; bits 0 (expanded), 1 (onExpandedChange), 3 (content)
+// always provided.
+[assembly: ComposeDefaults("ExposedDropdownMenuBoxDefault",
+    "!expanded", "!onExpandedChange", "modifier", "!content")]
+
+// androidx.compose.material3.ExposedDropdownMenuBoxScope.ExposedDropdownMenu
+// (the unmangled instance-method overload): 5 user params;
+// bits 0 (expanded), 1 (onDismissRequest), 4 (content) always provided.
+// ScrollState (bit 3) is intentionally exposed so callers can keep the
+// menu's scroll position in sync with their own state holder.
+[assembly: ComposeDefaults("ExposedDropdownMenuDefault",
+    "!expanded", "!onDismissRequest", "modifier", "scrollState", "!content")]
+
+// androidx.compose.material3.SearchBarKt.DockedSearchBar-EQC0FA8 (boolean-
+// state, deprecated): 9 user params; bits 0 (inputField), 1 (expanded),
+// 2 (onExpandedChange), 8 (content) always provided.
+[assembly: ComposeDefaults("DockedSearchBarDefault",
+    "!inputField", "!expanded", "!onExpandedChange", "modifier", "shape",
+    "colors", "tonalElevation", "shadowElevation", "!content")]
+
 // androidx.compose.material3.AppBarKt.TopAppBar-cJHQLPU (subtitle overload):
 // 10 user params; bits 0 (title) and 1 (subtitle) always provided.
 // Optional slot bits 3 (NavigationIcon) and 4 (Actions) are toggled
