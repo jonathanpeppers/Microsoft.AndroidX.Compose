@@ -286,15 +286,30 @@ wrap children in `ComposableLambdas.Wrap2/3`, call `BuildModifier()`,
 forward to the bridge. `ComposeFacadeGenerator` emits the whole
 facade class (base class, backing fields, ctor, `Render` body) from
 the bridge's own C# parameter shape — the user just adds
-`[ComposeFacade]` next to the bridge's existing `[ComposeBridge]` and
-deletes the hand-written facade file.
+`[ComposeFacade]` next to the bridge's existing `[ComposeBridge]`
+and provides a tiny hand-written sibling stub that owns the XML
+docs (and any extra members the facade needs).
 
 ```csharp
+// In ComposeBridges.cs
 [ComposeBridge(/* … */)]
-[ComposeFacade(Summary = "Material 3 filled Button.")]
+[ComposeFacade]
 public static partial void Button(IFunction0 onClick, IModifier? modifier,
                                   IFunction3 content, IComposer composer);
+
+// In Button.cs (sibling stub — owns the docs)
+namespace ComposeNet;
+
+/// <summary>Material 3 filled <see cref="Button"/>.</summary>
+public sealed partial class Button;
 ```
+
+The generator deliberately does **not** emit a `<summary>` of its
+own; the stub is the canonical place for prose docs (XML cref links,
+`<code>` blocks, `<remarks>`, etc., none of which would survive the
+attribute round-trip). The stub is also the override hatch — if a
+facade later needs an extra ctor overload, helper method, or
+operator, add it to the same `partial class` declaration.
 
 The generator classifies each user param of the bridge:
 
@@ -328,6 +343,45 @@ via `ComposeBridges`) stay hand-written. Trying to apply
 `[ComposeFacade]` to them will emit CN3002 (unsupported parameter)
 or CN3003 (scope misuse) at build time.
 
+### Adding a new generated facade
+
+When a Material 3 control fits the Phase 1 shapes (modifier +
+onClick + content + primitives — see the table above), the
+end-to-end recipe is:
+
+1. **Add the bridge** in `ComposeBridges.cs` exactly as documented
+   in the "Adding a bridge" section above (`[ComposeBridge]` +
+   matching `[ComposeDefaults]` if the Kt method has a `$default`
+   slot). Verify it compiles in isolation by building
+   `src/ComposeNet.Compose`.
+2. **Stack `[ComposeFacade]` on the same partial method.** Place
+   it on the line directly above (or below) `[ComposeBridge]`. Pass
+   `Scope = "Row"` / `"Column"` only if the content lambda is an
+   `IFunction3` and child facades need that receiver via
+   `RenderContext.PushScope`. Pass `ClassName = "MyName"` only when
+   the public-facing class name must differ from the bridge method
+   name (rare).
+3. **Create the sibling stub** at
+   `src/ComposeNet.Compose/<ClassName>.cs` with a single-line
+   `public sealed partial class <ClassName>;` and the `<summary>`
+   doc comment. Use the existing facades (`Button.cs`,
+   `IconButton.cs`, `Card.cs`) as templates — keep summaries short,
+   prefer `<see cref="…"/>` over inline names, and cross-reference
+   the closest sibling for "same shape as X" facades. **Do not omit
+   the stub** — without it the generated class has no XML docs.
+4. **Build the sample** (`dotnet build src/ComposeNet.Sample`) to
+   verify the bridge + facade compile together. The Phase 1 shapes
+   are validated at build time; CN3001-CN3004 will fire if the
+   generator can't accept the bridge.
+5. **If CN3002 fires**, the bridge has a parameter outside the
+   table above — either a non-content `IFunction1` callback, a
+   value-class handle, or the manual `int defaults` hatch. Stop
+   here, drop `[ComposeFacade]`, and write the facade by hand
+   (delete the stub or expand it into a full hand-written class).
+6. **Use the facade from the sample** (`MainActivity.cs` or one of
+   the screen files) and confirm the rendered tree matches what a
+   hand-written facade would have produced.
+
 ### Generator diagnostics
 
 | ID      | Meaning                                                            |
@@ -339,11 +393,15 @@ or CN3003 (scope misuse) at build time.
 
 ### Migration rule
 
-When you add `[ComposeFacade]` to a bridge, **delete the existing
-hand-written facade file** in the same commit — otherwise the
-declarations collide. Conversely, if you ever need a custom
-`Render()` body again, remove the `[ComposeFacade]` attribute first
-and recreate the hand-written file.
+When you add `[ComposeFacade]` to a previously hand-written facade,
+**replace the hand-written file** with a 3-line stub
+(`namespace ComposeNet; /// <summary>…</summary> public sealed
+partial class <Name>;`) in the same commit. The sibling stub is
+required (it owns the XML docs) but must not redeclare members the
+generator emits — otherwise you'll see duplicate-member errors.
+Conversely, if you ever need a fully custom `Render()` body again,
+remove the `[ComposeFacade]` attribute first and expand the stub
+into a normal hand-written class.
 
 ## Facade conventions (`Composables.cs`)
 

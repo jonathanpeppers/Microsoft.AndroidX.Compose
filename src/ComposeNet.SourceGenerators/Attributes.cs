@@ -123,11 +123,12 @@ internal static class Attributes
             /// Anything else (e.g. <c>IFunction1</c> callbacks, value-class
             /// handles, the caller-controlled <c>int defaults</c> hatch) is
             /// rejected via diagnostic CN3002 — leave that bridge hand-written.
-            /// <para><b>Migration:</b> when adding <c>[ComposeFacade]</c>
-            /// to a bridge, delete the corresponding hand-written
-            /// <c>&lt;Name&gt;.cs</c> from <c>src/ComposeNet.Compose/</c>
-            /// (the generator emits a <c>sealed partial</c> with the same
-            /// public API).</para>
+            /// <para><b>Docs &amp; overrides:</b> the generated class is
+            /// <c>sealed partial</c>. Add a sibling stub
+            /// <c>src/ComposeNet.Compose/&lt;Name&gt;.cs</c> with the
+            /// <c>///&lt;summary&gt;</c> comment (and any extra members
+            /// the facade needs) — the generator deliberately does not
+            /// emit a summary so the stub owns it.</para>
             /// </remarks>
             [global::System.AttributeUsage(global::System.AttributeTargets.Method,
                                            AllowMultiple = false)]
@@ -148,12 +149,6 @@ internal static class Attributes
                 /// an <c>IFunction3 content</c> parameter.
                 /// </summary>
                 public string? Scope { get; set; }
-
-                /// <summary>
-                /// Optional XML doc summary emitted on the generated
-                /// class. When omitted, a generic summary is used.
-                /// </summary>
-                public string? Summary { get; set; }
             }
         }
         """;

@@ -84,7 +84,6 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
 
         string className = ReadString(attr, "ClassName") ?? method.Name;
         string? scope = ReadString(attr, "Scope");
-        string? summary = ReadString(attr, "Summary");
 
         // Identify the composer slot (must be the trailing parameter for
         // @Composable bridges — the only shape facade generation supports).
@@ -181,12 +180,12 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         if (diags.Count > 0)
             return new GenerationResult(null, null, diags);
 
-        var source = Emit(className, method.Name, summary, scope, composerParam, slots, contentArity, modifierParam is not null);
+        var source = Emit(className, method.Name, scope, composerParam, slots, contentArity, modifierParam is not null);
         var hint = $"ComposeNet.Facade.{className}.g.cs";
         return new GenerationResult(source, hint, Array.Empty<Diagnostic>());
     }
 
-    static string Emit(string className, string bridgeMethodName, string? summary, string? scope,
+    static string Emit(string className, string bridgeMethodName, string? scope,
         IParameterSymbol composerParam, IReadOnlyList<FacadeSlot> slots,
         int contentArity, bool hasModifier)
     {
@@ -202,13 +201,11 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         sb.AppendLine("namespace ComposeNet");
         sb.AppendLine("{");
 
-        sb.Append("    /// <summary>");
-        if (!string.IsNullOrEmpty(summary))
-            sb.Append(EscapeXml(summary!));
-        else
-            sb.Append("Generated facade for <c>ComposeBridges.").Append(className).Append("</c>.");
-        sb.AppendLine("</summary>");
-
+        // No XML <summary> here on purpose: docs live on the sibling
+        // hand-written `partial class <Name>` stub in
+        // src/ComposeNet.Compose/<Name>.cs so users can use real cref
+        // links, code samples, etc. without HTML-escape gymnastics, and
+        // can extend the facade with extra members if needed.
         sb.Append("    public sealed partial class ").Append(className).Append(" : ").AppendLine(baseClass);
         sb.AppendLine("    {");
 
@@ -356,9 +353,6 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
 
     static string EscapeIdent(string name) =>
         SyntaxFacts.GetKeywordKind(name) == SyntaxKind.None ? name : "@" + name;
-
-    static string EscapeXml(string s) =>
-        s.Replace("&", "&amp;").Replace("<", "&lt;").Replace(">", "&gt;");
 
     enum FacadeSlotKind
     {
