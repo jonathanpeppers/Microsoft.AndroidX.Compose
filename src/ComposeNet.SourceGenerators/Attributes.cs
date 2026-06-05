@@ -150,6 +150,77 @@ internal static class Attributes
                 /// an <c>IFunction3 content</c> parameter.
                 /// </summary>
                 public string? Scope { get; set; }
+
+                /// <summary>
+                /// Phase 6 — name of a <c>ColorScheme</c> property (e.g.
+                /// <c>"secondaryContainer"</c>) to use as a runtime fallback
+                /// when the user leaves the bridge's container-color
+                /// parameter at its sentinel <c>0L</c>. The generator
+                /// emits a <c>long ContainerColor { get; set; }</c>
+                /// property and binds the named bridge param (see
+                /// <see cref="ColorParameter"/>) to
+                /// <c>ContainerColor != 0L ? ContainerColor :
+                /// MaterialTheme.Instance.GetColorScheme(composer,0).&lt;Slot&gt;</c>.
+                /// </summary>
+                public string? DefaultColorFromTheme { get; set; }
+
+                /// <summary>
+                /// Phase 6 — the name of the bridge's <c>long</c>
+                /// parameter that <see cref="DefaultColorFromTheme"/>
+                /// targets. Optional when the bridge has exactly one
+                /// <c>long</c> user parameter; required when there's
+                /// ambiguity.
+                /// </summary>
+                public string? ColorParameter { get; set; }
+            }
+
+            /// <summary>
+            /// Phase 3 — apply to a Kotlin-function bridge parameter to
+            /// override the C# property name the facade exposes for that
+            /// slot. Default is the parameter name PascalCased. Useful
+            /// when the Kotlin name reads awkwardly in C# (e.g.
+            /// <c>content</c> → <c>Body</c>,
+            /// <c>headlineContent</c> → <c>Headline</c>,
+            /// <c>tooltip</c> → <c>Tip</c>).
+            /// </summary>
+            [global::System.AttributeUsage(global::System.AttributeTargets.Parameter,
+                                           AllowMultiple = false)]
+            internal sealed class SlotAttribute : global::System.Attribute
+            {
+                public SlotAttribute(string propertyName) { }
+            }
+
+            /// <summary>
+            /// Phase 2 — apply to an <c>IFunction1</c> bridge parameter
+            /// to mark it as a typed C# callback. The facade gets an
+            /// <c>Action&lt;T&gt;</c> ctor parameter; the generated
+            /// <c>Render</c> body wraps it in a <c>ComposableLambda1</c>
+            /// that un-boxes the Kotlin value for <c>T</c>.
+            /// Supported <c>T</c>: <c>bool</c>, <c>string</c>, <c>float</c>.
+            /// </summary>
+            [global::System.AttributeUsage(global::System.AttributeTargets.Parameter,
+                                           AllowMultiple = false)]
+            internal sealed class CallbackAttribute : global::System.Attribute
+            {
+                public CallbackAttribute(global::System.Type valueType) { }
+            }
+
+            /// <summary>
+            /// Phase 7 — apply to an <c>int</c> bridge parameter to mark
+            /// it as an Android drawable resource id. The facade ctor
+            /// takes <c>int drawableResourceId</c>; <c>Render</c> calls
+            /// <c>ComposeBridges.PainterResource(id, composer)</c> to
+            /// resolve a <c>Painter</c> handle and wraps the bridge
+            /// invocation in <c>try</c> / <c>finally</c> +
+            /// <c>JNIEnv.DeleteLocalRef</c>. The bridge must also have
+            /// a sibling <c>IntPtr painter</c> parameter that the
+            /// generator forwards the resolved handle to.
+            /// </summary>
+            [global::System.AttributeUsage(global::System.AttributeTargets.Parameter,
+                                           AllowMultiple = false)]
+            internal sealed class PainterResourceAttribute : global::System.Attribute
+            {
+                public PainterResourceAttribute() { }
             }
         }
         """;

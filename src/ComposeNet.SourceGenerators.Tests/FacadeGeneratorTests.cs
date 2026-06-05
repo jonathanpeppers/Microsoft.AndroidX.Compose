@@ -48,9 +48,28 @@ public class FacadeGeneratorTests
                 public System.IntPtr Handle => default;
                 public static T? GetObject<T>(System.IntPtr handle, Android.Runtime.JniHandleOwnership transfer) where T : class => default;
             }
+            public sealed class Boolean : Object { public bool BooleanValue() => false; }
+            public sealed class Float : Object { public float FloatValue() => 0f; }
         }
         namespace AndroidX.Compose.Runtime { public interface IComposer { } }
         namespace AndroidX.Compose.UI { public interface IModifier { } }
+        namespace AndroidX.Compose.Material3
+        {
+            public sealed class ColorScheme
+            {
+                public long Primary { get; set; }
+                public long Surface { get; set; }
+                public long SecondaryContainer { get; set; }
+            }
+            public static class MaterialTheme
+            {
+                public static MaterialThemeImpl Instance => null!;
+            }
+            public sealed class MaterialThemeImpl
+            {
+                public ColorScheme GetColorScheme(AndroidX.Compose.Runtime.IComposer c, int n) => null!;
+            }
+        }
         namespace Kotlin.Jvm.Functions
         {
             public interface IFunction0 { }
@@ -65,6 +84,7 @@ public class FacadeGeneratorTests
             {
                 public ref struct ScopeFrame { public void Dispose() { } }
                 public static ScopeFrame PushScope(System.IntPtr scope, ScopeKind kind) => default;
+                public static System.IntPtr CurrentScope => default;
             }
             public abstract class ComposableNode
             {
@@ -78,6 +98,10 @@ public class FacadeGeneratorTests
             public sealed class ComposableLambda0 : Kotlin.Jvm.Functions.IFunction0
             {
                 public ComposableLambda0(System.Action body) { }
+            }
+            public sealed class ComposableLambda1 : Kotlin.Jvm.Functions.IFunction1
+            {
+                public ComposableLambda1(System.Action<object?> body) { }
             }
             public static class ComposableLambdas
             {
@@ -100,6 +124,7 @@ public class FacadeGeneratorTests
             public static partial class ComposeBridges
             {
                 public static System.IntPtr ModifierHandle(AndroidX.Compose.UI.IModifier? m) => default;
+                public static System.IntPtr PainterResource(int id, AndroidX.Compose.Runtime.IComposer composer) => default;
             }
         }
         """;
@@ -356,7 +381,7 @@ public class FacadeGeneratorTests
     }
 
     [Fact]
-    public void ManualDefaultsParam_EmitsCN3002()
+    public void AlertDialog_MultiSlotWithDefaultsMask()
     {
         var code = """
             using AndroidX.Compose.Runtime;
@@ -383,10 +408,23 @@ public class FacadeGeneratorTests
             }
             """;
 
-        var (_, diags, _) = Run(code, "AlertDialog");
-        var cn3002 = diags.Where(d => d.Id == "CN3002").ToArray();
-        Assert.NotEmpty(cn3002);
-        Assert.Contains(cn3002, d => d.GetMessage().Contains("defaults"));
+        var (output, diags, emitted) = Run(code, "AlertDialog");
+        Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+        // Leaf (not a container): required ConfirmButton property + null-check.
+        Assert.Contains("public sealed partial class AlertDialog : global::ComposeNet.ComposableNode", emitted);
+        Assert.Contains("public global::ComposeNet.ComposableNode? ConfirmButton { get; set; }", emitted);
+        Assert.Contains("public global::ComposeNet.ComposableNode? DismissButton { get; set; }", emitted);
+        Assert.Contains("if (ConfirmButton is null)", emitted);
+        // OnDismissRequest is a System.Action ctor param.
+        Assert.Contains("public AlertDialog(global::System.Action onDismissRequest)", emitted);
+        // Auto-mask logic touches each enum member the slot bit corresponds to.
+        Assert.Contains("int __defaults = (int)global::ComposeNet.AlertDialogDefault.All;", emitted);
+        Assert.Contains("if (__modifier is not null) __defaults &= ~(int)global::ComposeNet.AlertDialogDefault.Modifier;", emitted);
+        Assert.Contains("if (__dismissButton is not null) __defaults &= ~(int)global::ComposeNet.AlertDialogDefault.DismissButton;", emitted);
+
+        var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
+        Assert.Empty(errors);
     }
 
     [Fact]
@@ -526,6 +564,361 @@ public class FacadeGeneratorTests
         // not the override "MyButton" (which doesn't exist on ComposeBridges).
         Assert.Contains("global::ComposeNet.ComposeBridges.Button(", emitted);
         Assert.DoesNotContain("global::ComposeNet.ComposeBridges.MyButton(", emitted);
+
+        var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
+        Assert.Empty(errors);
+    }
+
+    // ---------------------------------------------------------------
+    // Phase 2 — [Callback(typeof(T))] → Action<T> ctor
+    // ---------------------------------------------------------------
+
+    [Fact]
+    public void Callback_BoolUnboxesViaJavaLangBoolean()
+    {
+        var code = """
+            using AndroidX.Compose.Runtime;
+            using AndroidX.Compose.UI;
+            using ComposeNet;
+            using Kotlin.Jvm.Functions;
+
+            [assembly: ComposeDefaults("IconToggleButtonDefault",
+                "!checked", "!onCheckedChange", "modifier", "enabled", "colors", "interactionSource", "!content")]
+
+            namespace ComposeNet
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(Class="androidx/compose/material3/IconButtonKt", JvmName="IconToggleButton",
+                                   Signature="(ZLkotlin/jvm/functions/Function1;Landroidx/compose/ui/Modifier;ZLandroidx/compose/material3/IconToggleButtonColors;Landroidx/compose/foundation/interaction/MutableInteractionSource;Lkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;II)V",
+                                   Defaults=typeof(IconToggleButtonDefault))]
+                    [ComposeFacade]
+                    public static partial void IconToggleButton(bool @checked, [Callback(typeof(bool))] IFunction1 onCheckedChange,
+                        IModifier? modifier, IFunction2 content, IComposer composer);
+                }
+            }
+            """;
+
+        var (output, diags, emitted) = Run(code, "IconToggleButton");
+        Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+        Assert.Contains("readonly global::System.Action<bool> _onCheckedChange;", emitted);
+        Assert.Contains("public IconToggleButton(bool @checked, global::System.Action<bool> onCheckedChange)", emitted);
+        Assert.Contains("new global::ComposeNet.ComposableLambda1(v => _onCheckedChange(v is global::Java.Lang.Boolean __b && __b.BooleanValue()));", emitted);
+
+        var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
+        Assert.Empty(errors);
+    }
+
+    [Fact]
+    public void Callback_StringUnboxesViaToString()
+    {
+        var code = """
+            using AndroidX.Compose.Runtime;
+            using AndroidX.Compose.UI;
+            using ComposeNet;
+            using Kotlin.Jvm.Functions;
+
+            [assembly: ComposeDefaults("TextFieldDefault",
+                "!value", "!onValueChange", "modifier")]
+
+            namespace ComposeNet
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(Class="androidx/compose/material3/TextFieldKt", JvmName="TextField",
+                                   Signature="(Ljava/lang/String;Lkotlin/jvm/functions/Function1;Landroidx/compose/ui/Modifier;Landroidx/compose/runtime/Composer;II)V",
+                                   Defaults=typeof(TextFieldDefault))]
+                    [ComposeFacade]
+                    public static partial void TextField(string value, [Callback(typeof(string))] IFunction1 onValueChange,
+                        IModifier? modifier, IComposer composer);
+                }
+            }
+            """;
+
+        var (output, diags, emitted) = Run(code, "TextField");
+        Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+        Assert.Contains("readonly global::System.Action<string> _onValueChange;", emitted);
+        Assert.Contains("public TextField(string value, global::System.Action<string> onValueChange)", emitted);
+        Assert.Contains("new global::ComposeNet.ComposableLambda1(v => _onValueChange(v?.ToString() ?? string.Empty));", emitted);
+
+        var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
+        Assert.Empty(errors);
+    }
+
+    [Fact]
+    public void Callback_UnsupportedTypeEmitsCN3005()
+    {
+        var code = """
+            using AndroidX.Compose.Runtime;
+            using AndroidX.Compose.UI;
+            using ComposeNet;
+            using Kotlin.Jvm.Functions;
+
+            [assembly: ComposeDefaults("FooDefault", "!a", "!cb", "modifier")]
+
+            namespace ComposeNet
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(Class="x/Kt", JvmName="Foo",
+                                   Signature="(ILkotlin/jvm/functions/Function1;Landroidx/compose/ui/Modifier;Landroidx/compose/runtime/Composer;II)V",
+                                   Defaults=typeof(FooDefault))]
+                    [ComposeFacade]
+                    public static partial void Foo(int a, [Callback(typeof(int))] IFunction1 cb, IModifier? modifier, IComposer composer);
+                }
+            }
+            """;
+
+        var (_, diags, _) = Run(code, "Foo");
+        Assert.Contains(diags, d => d.Id == "CN3005");
+    }
+
+    // ---------------------------------------------------------------
+    // Phase 3 — named slots
+    // ---------------------------------------------------------------
+
+    [Fact]
+    public void NamedSlots_RenameViaSlotAttribute()
+    {
+        var code = """
+            using AndroidX.Compose.Runtime;
+            using AndroidX.Compose.UI;
+            using ComposeNet;
+            using Kotlin.Jvm.Functions;
+
+            [assembly: ComposeDefaults("ListItemDefault",
+                "!headlineContent", "modifier", "overlineContent", "supportingContent",
+                "leadingContent", "trailingContent", "colors", "tonalElevation", "shadowElevation")]
+
+            namespace ComposeNet
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(Class="androidx/compose/material3/ListItemKt", JvmName="ListItem",
+                                   Signature="(Lkotlin/jvm/functions/Function2;Landroidx/compose/ui/Modifier;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;Landroidx/compose/material3/ListItemColors;FFLandroidx/compose/runtime/Composer;II)V",
+                                   Defaults=typeof(ListItemDefault))]
+                    [ComposeFacade]
+                    public static partial void ListItem(
+                        [Slot("Headline")] IFunction2 headlineContent,
+                        IModifier? modifier,
+                        [Slot("Overline")] IFunction2? overlineContent,
+                        [Slot("Supporting")] IFunction2? supportingContent,
+                        [Slot("Leading")] IFunction2? leadingContent,
+                        [Slot("Trailing")] IFunction2? trailingContent,
+                        int defaults, IComposer composer);
+                }
+            }
+            """;
+
+        var (output, diags, emitted) = Run(code, "ListItem");
+        Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+        Assert.Contains("public global::ComposeNet.ComposableNode? Headline { get; set; }", emitted);
+        Assert.Contains("public global::ComposeNet.ComposableNode? Overline { get; set; }", emitted);
+        Assert.Contains("public global::ComposeNet.ComposableNode? Trailing { get; set; }", emitted);
+        Assert.Contains("if (Headline is null)", emitted);
+        Assert.Contains("if (__overlineContent is not null) __defaults &= ~(int)global::ComposeNet.ListItemDefault.OverlineContent;", emitted);
+
+        var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
+        Assert.Empty(errors);
+    }
+
+    [Fact]
+    public void BadgedBox_TwoRequiredFunction3Slots()
+    {
+        var code = """
+            using AndroidX.Compose.Runtime;
+            using AndroidX.Compose.UI;
+            using ComposeNet;
+            using Kotlin.Jvm.Functions;
+
+            [assembly: ComposeDefaults("BadgedBoxDefault", "!badge", "modifier", "!content")]
+
+            namespace ComposeNet
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(Class="androidx/compose/material3/BadgeKt", JvmName="BadgedBox",
+                                   Signature="(Lkotlin/jvm/functions/Function3;Landroidx/compose/ui/Modifier;Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;II)V",
+                                   Defaults=typeof(BadgedBoxDefault))]
+                    [ComposeFacade]
+                    public static partial void BadgedBox(IFunction3 badge, IModifier? modifier, IFunction3 content,
+                        int defaults, IComposer composer);
+                }
+            }
+            """;
+
+        var (output, diags, emitted) = Run(code, "BadgedBox");
+        Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+        // Two required Function3 slots → both surface as properties, not RenderChildren.
+        Assert.Contains("public sealed partial class BadgedBox : global::ComposeNet.ComposableNode", emitted);
+        Assert.Contains("public global::ComposeNet.ComposableNode? Badge { get; set; }", emitted);
+        Assert.Contains("public global::ComposeNet.ComposableNode? Content { get; set; }", emitted);
+        Assert.Contains("if (Badge is null)", emitted);
+        Assert.Contains("if (Content is null)", emitted);
+
+        var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
+        Assert.Empty(errors);
+    }
+
+    // ---------------------------------------------------------------
+    // Phase 6 — DefaultColorFromTheme
+    // ---------------------------------------------------------------
+
+    [Fact]
+    public void DefaultColorFromTheme_EmitsContainerColorProperty()
+    {
+        var code = """
+            using AndroidX.Compose.Runtime;
+            using AndroidX.Compose.UI;
+            using ComposeNet;
+            using Kotlin.Jvm.Functions;
+
+            [assembly: ComposeDefaults("DrawerSheetDefault", "!content", "drawerContainerColor")]
+
+            namespace ComposeNet
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(Class="androidx/compose/material3/NavigationDrawerKt", JvmName="ModalDrawerSheet-afqeVBk",
+                                   Signature="(Lkotlin/jvm/functions/Function3;JLandroidx/compose/runtime/Composer;II)V",
+                                   Defaults=typeof(DrawerSheetDefault))]
+                    [ComposeFacade(DefaultColorFromTheme = "secondaryContainer")]
+                    public static partial void ModalDrawerSheet(IFunction3 content, long drawerContainerColor, IComposer composer);
+                }
+            }
+            """;
+
+        var (output, diags, emitted) = Run(code, "ModalDrawerSheet");
+        Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+        Assert.Contains("public long ContainerColor { get; set; }", emitted);
+        Assert.Contains("long __color = ContainerColor != 0L ? ContainerColor : global::AndroidX.Compose.Material3.MaterialTheme.Instance.GetColorScheme(composer, 0).SecondaryContainer;", emitted);
+        Assert.Contains("global::ComposeNet.ComposeBridges.ModalDrawerSheet(__content, __color, composer);", emitted);
+
+        var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
+        Assert.Empty(errors);
+    }
+
+    [Fact]
+    public void DefaultColorFromTheme_NoLongParamEmitsCN3007()
+    {
+        var code = """
+            using AndroidX.Compose.Runtime;
+            using AndroidX.Compose.UI;
+            using ComposeNet;
+            using Kotlin.Jvm.Functions;
+
+            [assembly: ComposeDefaults("CardDefault", "modifier", "!content")]
+
+            namespace ComposeNet
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(Class="x/Kt", JvmName="Card",
+                                   Signature="(Landroidx/compose/ui/Modifier;Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;II)V",
+                                   Defaults=typeof(CardDefault))]
+                    [ComposeFacade(DefaultColorFromTheme = "secondaryContainer")]
+                    public static partial void Card(IModifier? modifier, IFunction3 content, IComposer composer);
+                }
+            }
+            """;
+
+        var (_, diags, _) = Run(code, "Card");
+        Assert.Contains(diags, d => d.Id == "CN3007");
+    }
+
+    // ---------------------------------------------------------------
+    // Phase 7 — PainterResource
+    // ---------------------------------------------------------------
+
+    [Fact]
+    public void PainterResource_EmitsTryFinallyDeleteLocalRef()
+    {
+        var code = """
+            using System;
+            using AndroidX.Compose.Runtime;
+            using AndroidX.Compose.UI;
+            using ComposeNet;
+            using Kotlin.Jvm.Functions;
+
+            [assembly: ComposeDefaults("ImageDefault", "!painter", "contentDescription", "modifier")]
+
+            namespace ComposeNet
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(Class="androidx/compose/foundation/ImageKt", JvmName="Image",
+                                   Signature="(Landroidx/compose/ui/graphics/painter/Painter;Ljava/lang/String;Landroidx/compose/ui/Modifier;Landroidx/compose/runtime/Composer;II)V",
+                                   Defaults=typeof(ImageDefault))]
+                    [ComposeFacade]
+                    public static partial void Image([PainterResource] IntPtr painter,
+                        string? contentDescription, IModifier? modifier,
+                        int defaults, IComposer composer);
+                }
+            }
+            """;
+
+        var (output, diags, emitted) = Run(code, "Image");
+        Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+        Assert.Contains("public Image(int painterResourceId", emitted);
+        Assert.Contains("readonly int _painterResourceId;", emitted);
+        Assert.Contains("global::System.IntPtr __painterRef = global::ComposeNet.ComposeBridges.PainterResource(_painterResourceId, composer);", emitted);
+        Assert.Contains("try", emitted);
+        Assert.Contains("finally", emitted);
+        Assert.Contains("global::Android.Runtime.JNIEnv.DeleteLocalRef(__painterRef);", emitted);
+        // Bridge call inside try block — uses __painterRef for painter arg.
+        Assert.Contains("global::ComposeNet.ComposeBridges.Image(__painterRef", emitted);
+
+        var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
+        Assert.Empty(errors);
+    }
+
+    [Fact]
+    public void ScopeReceiver_IntPtrEndingInScope_BindsToRenderContextCurrentScope()
+    {
+        var code = """
+            using System;
+            using AndroidX.Compose.Runtime;
+            using AndroidX.Compose.UI;
+            using ComposeNet;
+            using Kotlin.Jvm.Functions;
+
+            [assembly: ComposeDefaults("NavigationBarItemDefault",
+                "!selected", "!onClick", "!icon", "modifier",
+                "enabled", "label", "alwaysShowLabel", "colors", "interactionSource")]
+
+            namespace ComposeNet
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(Class="androidx/compose/material3/NavigationBarKt", JvmName="NavigationBarItem",
+                                   Signature="(Landroidx/compose/foundation/layout/RowScope;ZLkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function2;Landroidx/compose/ui/Modifier;ZLkotlin/jvm/functions/Function2;ZLandroidx/compose/material3/NavigationBarItemColors;Landroidx/compose/foundation/interaction/MutableInteractionSource;Landroidx/compose/runtime/Composer;II)V",
+                                   Defaults=typeof(NavigationBarItemDefault))]
+                    [ComposeFacade]
+                    public static partial void NavigationBarItem(
+                        IntPtr rowScope, bool selected, IFunction0 onClick,
+                        IFunction2 icon, IModifier? modifier, IFunction2? label,
+                        int defaults, IComposer composer);
+                }
+            }
+            """;
+
+        var (output, diags, emitted) = Run(code, "NavigationBarItem");
+        Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+        // ScopeReceiver is bound to RenderContext.CurrentScope (no ctor slot).
+        Assert.Contains("global::ComposeNet.ComposeBridges.NavigationBarItem(global::ComposeNet.RenderContext.CurrentScope,", emitted);
+        // Required Function2 (icon) becomes a named property (auto multi-slot).
+        Assert.Contains("public global::ComposeNet.ComposableNode? Icon", emitted);
+        // Optional Function2 (label) becomes a named property.
+        Assert.Contains("public global::ComposeNet.ComposableNode? Label", emitted);
+        // Ctor exposes only selected + onClick (rowScope is auto-bound).
+        Assert.Contains("public NavigationBarItem(bool selected, global::System.Action onClick)", emitted);
 
         var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
         Assert.Empty(errors);

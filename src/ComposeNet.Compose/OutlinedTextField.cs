@@ -1,19 +1,16 @@
-using AndroidX.Compose.Runtime;
-
 namespace ComposeNet;
 
 /// <summary>
-/// Material 3 <c>OutlinedTextField</c>. Same binding contract as
-/// <see cref="TextField"/>.
+/// Material 3 <c>OutlinedTextField</c>. Same binding contract as <see cref="TextField"/>.
 /// </summary>
-public sealed class OutlinedTextField : ComposableNode
+public sealed partial class OutlinedTextField
 {
-    readonly MutableState<string> _state;
-    public OutlinedTextField(MutableState<string> state) => _state = state;
-
-    internal override void Render(IComposer composer)
+    /// <summary>
+    /// Bind this <c>OutlinedTextField</c> to a <see cref="MutableState{T}"/> of <see cref="string"/>
+    /// so user edits trigger recomposition automatically.
+    /// </summary>
+    public OutlinedTextField(MutableState<string> state)
+        : this(state.Value ?? string.Empty, v => state.Value = v)
     {
-        var onChange = new ComposableLambda1(v => _state.Value = v?.ToString() ?? string.Empty);
-        ComposeBridges.OutlinedTextField(_state.Value ?? string.Empty, onChange, BuildModifier(), composer);
     }
 }

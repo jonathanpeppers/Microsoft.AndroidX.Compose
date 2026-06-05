@@ -402,7 +402,8 @@ internal static partial class ComposeBridges
                     "Landroidx/compose/foundation/interaction/MutableInteractionSource;" +
                     "Lkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;II)V",
         Defaults  = typeof(IconToggleButtonDefault))]
-    public static partial void IconToggleButton(bool @checked, IFunction1 onCheckedChange,
+    [ComposeFacade]
+    public static partial void IconToggleButton(bool @checked, [Callback(typeof(bool))] IFunction1 onCheckedChange,
                                                 IModifier? modifier, IFunction2 content,
                                                 IComposer composer);
 
@@ -418,7 +419,8 @@ internal static partial class ComposeBridges
                     "Landroidx/compose/foundation/interaction/MutableInteractionSource;" +
                     "Lkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;II)V",
         Defaults  = typeof(FilledIconToggleButtonDefault))]
-    public static partial void FilledIconToggleButton(bool @checked, IFunction1 onCheckedChange,
+    [ComposeFacade]
+    public static partial void FilledIconToggleButton(bool @checked, [Callback(typeof(bool))] IFunction1 onCheckedChange,
                                                       IModifier? modifier, IFunction2 content,
                                                       IComposer composer);
 
@@ -433,7 +435,8 @@ internal static partial class ComposeBridges
                     "Landroidx/compose/foundation/interaction/MutableInteractionSource;" +
                     "Lkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;II)V",
         Defaults  = typeof(FilledIconToggleButtonDefault))]
-    public static partial void FilledTonalIconToggleButton(bool @checked, IFunction1 onCheckedChange,
+    [ComposeFacade]
+    public static partial void FilledTonalIconToggleButton(bool @checked, [Callback(typeof(bool))] IFunction1 onCheckedChange,
                                                            IModifier? modifier, IFunction2 content,
                                                            IComposer composer);
 
@@ -449,7 +452,8 @@ internal static partial class ComposeBridges
                     "Landroidx/compose/foundation/interaction/MutableInteractionSource;" +
                     "Lkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;II)V",
         Defaults  = typeof(OutlinedIconToggleButtonDefault))]
-    public static partial void OutlinedIconToggleButton(bool @checked, IFunction1 onCheckedChange,
+    [ComposeFacade]
+    public static partial void OutlinedIconToggleButton(bool @checked, [Callback(typeof(bool))] IFunction1 onCheckedChange,
                                                         IModifier? modifier, IFunction2 content,
                                                         IComposer composer);
 
@@ -493,8 +497,9 @@ internal static partial class ComposeBridges
                     "Landroidx/compose/ui/graphics/ColorFilter;" +
                     "Landroidx/compose/runtime/Composer;II)V",
         Defaults  = typeof(ImageDefault))]
+    [ComposeFacade]
     public static partial void Image(
-        IntPtr     painter,
+        [PainterResource] IntPtr painter,
         string?    contentDescription,
         IModifier? modifier,
         int        defaults,
@@ -539,7 +544,8 @@ internal static partial class ComposeBridges
         JvmName   = "TextField",
         Signature = TextFieldStringSig,
         Defaults  = typeof(TextFieldDefault))]
-    public static partial void TextField(string value, IFunction1 onValueChange,
+    [ComposeFacade]
+    public static partial void TextField(string value, [Callback(typeof(string))] IFunction1 onValueChange,
                                          IModifier? modifier, IComposer composer);
 
     [ComposeBridge(
@@ -547,7 +553,8 @@ internal static partial class ComposeBridges
         JvmName   = "OutlinedTextField",
         Signature = TextFieldStringSig,
         Defaults  = typeof(TextFieldDefault))]
-    public static partial void OutlinedTextField(string value, IFunction1 onValueChange,
+    [ComposeFacade]
+    public static partial void OutlinedTextField(string value, [Callback(typeof(string))] IFunction1 onValueChange,
                                                  IModifier? modifier, IComposer composer);
 
     // androidx.compose.material3.AndroidAlertDialog_androidKt.AlertDialog-Oix01E0
@@ -562,6 +569,7 @@ internal static partial class ComposeBridges
                     "Landroidx/compose/ui/window/DialogProperties;" +
                     "Landroidx/compose/runtime/Composer;III)V",
         Defaults  = typeof(AlertDialogDefault))]
+    [ComposeFacade]
     public static partial void AlertDialog(
         IFunction0  onDismissRequest,
         IFunction2  confirmButton,
@@ -808,6 +816,7 @@ internal static partial class ComposeBridges
         JvmName   = "AssistChip",
         Signature = AssistChipSig,
         Defaults  = typeof(AssistChipDefault))]
+    [ComposeFacade]
     public static partial void AssistChip(
         IFunction0  onClick,
         IFunction2  label,
@@ -822,6 +831,7 @@ internal static partial class ComposeBridges
         JvmName   = "ElevatedAssistChip",
         Signature = AssistChipSig,
         Defaults  = typeof(AssistChipDefault))]
+    [ComposeFacade]
     public static partial void ElevatedAssistChip(
         IFunction0  onClick,
         IFunction2  label,
@@ -846,6 +856,7 @@ internal static partial class ComposeBridges
         JvmName   = "FilterChip",
         Signature = FilterChipSig,
         Defaults  = typeof(FilterChipDefault))]
+    [ComposeFacade]
     public static partial void FilterChip(
         bool        selected,
         IFunction0  onClick,
@@ -861,6 +872,7 @@ internal static partial class ComposeBridges
         JvmName   = "ElevatedFilterChip",
         Signature = FilterChipSig,
         Defaults  = typeof(FilterChipDefault))]
+    [ComposeFacade]
     public static partial void ElevatedFilterChip(
         bool        selected,
         IFunction0  onClick,
@@ -884,6 +896,7 @@ internal static partial class ComposeBridges
                     "Landroidx/compose/foundation/interaction/MutableInteractionSource;" +
                     "Landroidx/compose/runtime/Composer;III)V",
         Defaults  = typeof(InputChipDefault))]
+    [ComposeFacade]
     public static partial void InputChip(
         bool        selected,
         IFunction0  onClick,
@@ -909,6 +922,7 @@ internal static partial class ComposeBridges
         JvmName   = "SuggestionChip",
         Signature = SuggestionChipSig,
         Defaults  = typeof(SuggestionChipDefault))]
+    [ComposeFacade]
     public static partial void SuggestionChip(
         IFunction0  onClick,
         IFunction2  label,
@@ -922,6 +936,7 @@ internal static partial class ComposeBridges
         JvmName   = "ElevatedSuggestionChip",
         Signature = SuggestionChipSig,
         Defaults  = typeof(SuggestionChipDefault))]
+    [ComposeFacade]
     public static partial void ElevatedSuggestionChip(
         IFunction0  onClick,
         IFunction2  label,
@@ -952,6 +967,7 @@ internal static partial class ComposeBridges
                     "Landroidx/compose/foundation/interaction/MutableInteractionSource;" +
                     "Landroidx/compose/runtime/Composer;II)V",
         Defaults  = typeof(NavigationBarItemDefault))]
+    [ComposeFacade]
     public static partial void NavigationBarItem(
         IntPtr      rowScope,
         bool        selected,
@@ -985,6 +1001,7 @@ internal static partial class ComposeBridges
                     "Landroidx/compose/foundation/interaction/MutableInteractionSource;" +
                     "Landroidx/compose/runtime/Composer;II)V",
         Defaults  = typeof(NavigationRailItemDefault))]
+    [ComposeFacade]
     public static partial void NavigationRailItem(
         bool        selected,
         IFunction0  onClick,
@@ -1005,6 +1022,7 @@ internal static partial class ComposeBridges
         JvmName   = "ModalDrawerSheet-afqeVBk",
         Signature = DrawerSheetSig,
         Defaults  = typeof(DrawerSheetDefault))]
+    [ComposeFacade(DefaultColorFromTheme = "secondaryContainer")]
     public static partial void ModalDrawerSheet(IFunction3 content, long drawerContainerColor, IComposer composer);
 
     [ComposeBridge(
@@ -1012,6 +1030,7 @@ internal static partial class ComposeBridges
         JvmName   = "DismissibleDrawerSheet-afqeVBk",
         Signature = DrawerSheetSig,
         Defaults  = typeof(DrawerSheetDefault))]
+    [ComposeFacade(DefaultColorFromTheme = "secondaryContainer")]
     public static partial void DismissibleDrawerSheet(IFunction3 content, long drawerContainerColor, IComposer composer);
 
     [ComposeBridge(
@@ -1019,6 +1038,7 @@ internal static partial class ComposeBridges
         JvmName   = "PermanentDrawerSheet-afqeVBk",
         Signature = DrawerSheetSig,
         Defaults  = typeof(DrawerSheetDefault))]
+    [ComposeFacade(DefaultColorFromTheme = "secondaryContainer")]
     public static partial void PermanentDrawerSheet(IFunction3 content, long drawerContainerColor, IComposer composer);
 
     // androidx.compose.material3.SegmentedButtonKt.SegmentedButton
@@ -1232,6 +1252,7 @@ internal static partial class ComposeBridges
         JvmName   = "CenterAlignedTopAppBar-GHTll3U",
         Signature = TopAppBarSig,
         Defaults  = typeof(TopAppBarDefault))]
+    [ComposeFacade]
     public static partial void CenterAlignedTopAppBar(
         IFunction2  title,
         IModifier?  modifier,
@@ -1255,6 +1276,7 @@ internal static partial class ComposeBridges
         JvmName   = "MediumTopAppBar-oKE7A98",
         Signature = TwoRowsTopAppBarSig,
         Defaults  = typeof(TwoRowsTopAppBarDefault))]
+    [ComposeFacade]
     public static partial void MediumTopAppBar(
         IFunction2  title,
         IModifier?  modifier,
@@ -1268,6 +1290,7 @@ internal static partial class ComposeBridges
         JvmName   = "LargeTopAppBar-oKE7A98",
         Signature = TwoRowsTopAppBarSig,
         Defaults  = typeof(TwoRowsTopAppBarDefault))]
+    [ComposeFacade]
     public static partial void LargeTopAppBar(
         IFunction2  title,
         IModifier?  modifier,
@@ -1350,6 +1373,7 @@ internal static partial class ComposeBridges
                     "Landroidx/compose/foundation/interaction/MutableInteractionSource;" +
                     "Landroidx/compose/runtime/Composer;II)V",
         Defaults  = typeof(TabDefault))]
+    [ComposeFacade]
     public static partial void Tab(
         bool        selected,
         IFunction0  onClick,
@@ -1372,6 +1396,7 @@ internal static partial class ComposeBridges
                     "Landroidx/compose/foundation/interaction/MutableInteractionSource;" +
                     "Landroidx/compose/runtime/Composer;II)V",
         Defaults  = typeof(LeadingIconTabDefault))]
+    [ComposeFacade]
     public static partial void LeadingIconTab(
         bool       selected,
         IFunction0 onClick,
@@ -1391,11 +1416,12 @@ internal static partial class ComposeBridges
                     "Landroidx/compose/ui/graphics/Shape;JJJJ" +
                     "Lkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;II)V",
         Defaults  = typeof(SnackbarDefault))]
+    [ComposeFacade]
     public static partial void Snackbar(
         IModifier?  modifier,
         IFunction2? action,
         IFunction2? dismissAction,
-        IFunction2  content,
+        [Slot("Body")] IFunction2 content,
         int         defaults,
         IComposer   composer);
 
@@ -1437,6 +1463,7 @@ internal static partial class ComposeBridges
         Signature = "(Lkotlin/jvm/functions/Function3;Landroidx/compose/ui/Modifier;" +
                     "Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;II)V",
         Defaults  = typeof(BadgedBoxDefault))]
+    [ComposeFacade]
     public static partial void BadgedBox(
         IFunction3 badge,
         IModifier? modifier,
@@ -1456,13 +1483,14 @@ internal static partial class ComposeBridges
                     "Landroidx/compose/material3/ListItemColors;FF" +
                     "Landroidx/compose/runtime/Composer;II)V",
         Defaults  = typeof(ListItemDefault))]
+    [ComposeFacade]
     public static partial void ListItem(
-        IFunction2  headlineContent,
+        [Slot("Headline")]   IFunction2  headlineContent,
         IModifier?  modifier,
-        IFunction2? overlineContent,
-        IFunction2? supportingContent,
-        IFunction2? leadingContent,
-        IFunction2? trailingContent,
+        [Slot("Overline")]   IFunction2? overlineContent,
+        [Slot("Supporting")] IFunction2? supportingContent,
+        [Slot("Leading")]    IFunction2? leadingContent,
+        [Slot("Trailing")]   IFunction2? trailingContent,
         int         defaults,
         IComposer   composer);
 
@@ -1678,6 +1706,7 @@ internal static partial class ComposeBridges
         JvmName   = "MediumFlexibleTopAppBar-eXZ4JBQ",
         Signature = FlexibleTopAppBarSig,
         Defaults  = typeof(FlexibleTopAppBarDefault))]
+    [ComposeFacade]
     public static partial void MediumFlexibleTopAppBar(
         IFunction2  title,
         IModifier?  modifier,
@@ -1692,6 +1721,7 @@ internal static partial class ComposeBridges
         JvmName   = "LargeFlexibleTopAppBar-eXZ4JBQ",
         Signature = FlexibleTopAppBarSig,
         Defaults  = typeof(FlexibleTopAppBarDefault))]
+    [ComposeFacade]
     public static partial void LargeFlexibleTopAppBar(
         IFunction2  title,
         IModifier?  modifier,

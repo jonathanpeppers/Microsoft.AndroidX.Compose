@@ -317,8 +317,12 @@ The generator classifies each user param of the bridge:
 |-----------------------------------------|---------------------------------------------------|
 | `AndroidX.Compose.UI.IModifier?`        | Passed as `BuildModifier()` — no ctor param      |
 | `IFunction0` (onClick-style)            | Surfaced as a `System.Action` ctor parameter      |
-| `IFunction2` content                    | Wrapped via `ComposableLambdas.Wrap2(…)`          |
-| `IFunction3` content                    | Wrapped via `ComposableLambdas.Wrap3(…)`          |
+| `IFunction1` + `[Callback(typeof(T))]`  | Surfaced as `Action<T>` ctor; supports `bool`, `string`, `float` |
+| `IFunction2` content (non-nullable, sole content slot) | Wrapped via `ComposableLambdas.Wrap2(…)` — container shape |
+| `IFunction3` content (non-nullable, sole content slot) | Wrapped via `ComposableLambdas.Wrap3(…)` — container shape |
+| `IFunction2?` / `IFunction3?` (any nullable, OR `[Slot]`, OR >1 content slot) | Surfaced as a named `ComposableNode?` property — multi-slot leaf shape |
+| `IntPtr` with name ending in `Scope`    | Kotlin extension receiver; auto-bound to `RenderContext.CurrentScope` (no ctor slot) |
+| `IntPtr` + `[PainterResource]`          | Synthetic `int painterResourceId` ctor arg + `PainterResource` resolution + try/finally |
 | Primitive (`string`, `int`, `long`, `bool`, `float`, `double`)  | Surfaced as a ctor parameter, stored in `_<name>` |
 | Anything else (callbacks, handles, etc.) | Rejected with CN3002                              |
 
@@ -327,6 +331,30 @@ an `IFunction3`, the generator passes its first arg into
 `RenderContext.PushScope(scope, ScopeKind.Row|Column)` so child
 composables that need a `RowScope`/`ColumnScope` receiver pick it up.
 
+`[ComposeFacade(DefaultColorFromTheme = "secondaryContainer")]` opt-in
+(Phase 6): the matching `long` user param is reclassified as a
+`ContainerColor` property. The render body falls back to
+`MaterialTheme.Instance.GetColorScheme(composer, 0).<Slot>` when the
+caller leaves it at `0L`. Use `ColorParameter` to disambiguate when
+the bridge has more than one `long` user param; otherwise the sole
+`long` is auto-picked.
+
+Parameter-level attributes the generator recognizes:
+
+- `[Slot("PropertyName")]` — rename the generated property for an
+  `IFunction2` / `IFunction3` slot (default = `PascalCase` of the
+  Kotlin parameter name). Also forces the bridge into multi-slot
+  shape even if only one content lambda is present.
+- `[Callback(typeof(T))]` — surface an `IFunction1` user param as a
+  typed `Action<T>` ctor slot. `T` must be `bool`, `string`, or
+  `float`; the generator emits the appropriate `Java.Lang.Boolean`
+  / `Java.Lang.Float` unboxing or `ToString()` adapter.
+- `[PainterResource]` — annotate the `IntPtr` user param that takes
+  the resolved Painter handle. The facade exposes a synthetic
+  `int painterResourceId` ctor arg in its place and emits the
+  `PainterResource(id, composer)` + try/finally + `DeleteLocalRef`
+  preamble around the bridge call.
+
 Each facade is emitted to a unique hint name
 (`ComposeNet.Facade.<ClassName>.g.cs`) so the `[CallerFilePath]` +
 `[CallerLineNumber]` slot keys baked into `ComposableLambdas.Wrap*`
@@ -334,14 +362,52 @@ stay distinct per facade.
 
 ### When to use it
 
-Only when the bridge fits the Phase 1 shapes above. Multi-slot
-composables (`AlertDialog`, `Scaffold`, `ModalBottomSheet`),
-callback-bearing leafs (`Checkbox`, `Slider`, `Switch`,
-`RadioButton`), scope-consuming facades (`Tab`, `NavigationBarItem`,
-`SegmentedButton`), and anything calling a Kt method directly (not
-via `ComposeBridges`) stay hand-written. Trying to apply
-`[ComposeFacade]` to them will emit CN3002 (unsupported parameter)
-or CN3003 (scope misuse) at build time.
+The generator now supports a wide range of facade shapes (Phases 1,
+2, 3, 6, 7 are implemented):
+
+- **Phase 1** — container with content lambda + ctor primitives
+  (`Button`, `Card`, `Text`, `Column`, `Row`, `Box`).
+- **Phase 2** — callbacks via `[Callback(typeof(T))]` for
+  `IFunction1` user params (`TextField`, `OutlinedTextField`,
+  `IconToggleButton` family).
+- **Phase 3** — multi-slot leafs with named `ComposableNode?`
+  properties (`AlertDialog`, `AssistChip`, `ListItem`, `Snackbar`,
+  `BadgedBox`, `Tab`, `NavigationBarItem`, the top-app-bar family).
+- **Phase 6** — `[ComposeFacade(DefaultColorFromTheme = "...")]`
+  for drawer sheets and similar containers that fall back to a
+  `ColorScheme` slot when the caller doesn't override.
+- **Phase 7** — `[PainterResource]` resource-id-style facades
+  (`Image`, the Painter overload of `Icon`).
+
+Facades that still stay hand-written are the ones the generator
+can't model:
+
+- State-holder facades that need `remember*State` resolution and a
+  `Jvm` round-trip (`DatePicker`, `TimePicker`, `SearchBar`,
+  `SnackbarHost`, `ModalBottomSheet`). These are Phase 4 work.
+- Scope facades whose bodies do non-trivial work beyond
+  `RenderContext.PushScope` (`SegmentedButton`,
+  `SingleChoice`/`MultiChoiceSegmentedButtonRow`, the segmented
+  scrollable tab rows).
+- Facades that call a bound binding method directly (no underlying
+  `[ComposeBridge]` to attach to) — `WideNavigationRailItem`,
+  `DropdownMenuItem`, `Icon` (`ImageVector` overload).
+- Facades that branch between two bridges based on an optional
+  slot (`TopAppBar` — Subtitle toggles between `TopAppBar-GHTll3U`
+  and `MediumFlexibleTopAppBar-eXZ4JBQ`).
+- Drawer facades with a `confirmStateChange` adapter
+  (`ModalNavigationDrawer`, `DismissibleNavigationDrawer`,
+  `PermanentNavigationDrawer`, `ModalWideNavigationRail`).
+- Container+slot facades like `BottomAppBar` whose required
+  Function3 is the container's content but also has an optional
+  Function2 slot — the generator's multi-slot rule (any nullable
+  Function2/3 → leaf) doesn't model this hybrid.
+
+Trying to apply `[ComposeFacade]` to an unsupported bridge will
+emit CN3002 (unsupported parameter), CN3003 (scope misuse), CN3005
+(invalid callback type), CN3006 (slot conflict), CN3007 (color
+theme binding failed), or CN3008 (painter misuse) at build time —
+back out the attribute and write the facade by hand.
 
 ### Adding a new generated facade
 
@@ -370,14 +436,16 @@ end-to-end recipe is:
    the closest sibling for "same shape as X" facades. **Do not omit
    the stub** — without it the generated class has no XML docs.
 4. **Build the sample** (`dotnet build src/ComposeNet.Sample`) to
-   verify the bridge + facade compile together. The Phase 1 shapes
-   are validated at build time; CN3001-CN3004 will fire if the
-   generator can't accept the bridge.
+   verify the bridge + facade compile together. The supported
+   shapes are validated at build time; CN3001-CN3008 will fire if
+   the generator can't accept the bridge.
 5. **If CN3002 fires**, the bridge has a parameter outside the
-   table above — either a non-content `IFunction1` callback, a
-   value-class handle, or the manual `int defaults` hatch. Stop
-   here, drop `[ComposeFacade]`, and write the facade by hand
-   (delete the stub or expand it into a full hand-written class).
+   table above — either an unmarked `IFunction1` callback, a
+   value-class handle, or some other unsupported type. Either add
+   the right marker attribute (`[Callback]` / `[Slot]` /
+   `[PainterResource]`) or back out the attribute and write the
+   facade by hand (delete the stub or expand it into a full
+   hand-written class).
 6. **Use the facade from the sample** (`MainActivity.cs` or one of
    the screen files) and confirm the rendered tree matches what a
    hand-written facade would have produced.
@@ -390,6 +458,10 @@ end-to-end recipe is:
 | CN3002  | Bridge parameter type isn't a supported facade slot.               |
 | CN3003  | `Scope` is set but bridge has no `IFunction3` content slot.        |
 | CN3004  | `[ComposeFacade]` without an accompanying `[ComposeBridge]`.       |
+| CN3005  | `[Callback(typeof(T))]` target type is unsupported (must be `bool`, `string`, or `float`). |
+| CN3006  | `[Slot]` placement conflicts with the facade's classified shape.   |
+| CN3007  | `DefaultColorFromTheme` cannot bind to any `long` user param (or `ColorParameter` is ambiguous / missing). |
+| CN3008  | `[PainterResource]` annotates a non-`IntPtr` parameter.            |
 
 ### Migration rule
 

@@ -1,9 +1,7 @@
-using AndroidX.Compose.Runtime;
-
 namespace ComposeNet;
 
 /// <summary>
-/// Material 3 <c>BadgedBox</c>. Wraps a <see cref="Content"/> node
+/// Material 3 <c>BadgedBox</c>. Wraps a <c>Content</c> node
 /// (typically an <see cref="Icon"/>) and overlays a <see cref="Badge"/>
 /// on its top-end corner:
 /// <code>
@@ -14,23 +12,4 @@ namespace ComposeNet;
 /// }
 /// </code>
 /// </summary>
-public sealed class BadgedBox : ComposableNode
-{
-    /// <summary>Required: the badge to overlay on the content.</summary>
-    public ComposableNode? Badge { get; set; }
-
-    /// <summary>Required: the underlying content the badge attaches to.</summary>
-    public ComposableNode? Content { get; set; }
-
-    internal override void Render(IComposer composer)
-    {
-        if (Badge is null || Content is null)
-            throw new System.InvalidOperationException(
-                "BadgedBox requires both Badge and Content.");
-
-        var badge   = ComposableLambdas.Wrap3(composer, c => Badge.Render(c));
-        var content = ComposableLambdas.Wrap3(composer, c => Content.Render(c));
-
-        ComposeBridges.BadgedBox(badge, BuildModifier(), content, composer);
-    }
-}
+public sealed partial class BadgedBox;
