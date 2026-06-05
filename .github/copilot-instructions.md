@@ -6,8 +6,10 @@ custom bindings, no `[InterceptsLocation]` magic. Every C# composable
 either calls a generated binding method directly or a JNI bridge in
 `ComposeBridges.cs`.
 
-Read `README.md` and `NOTES.md` for the why. This file documents the
-conventions an agent **must** follow when changing code.
+Read `README.md` for the pitch, `docs/architecture.md` for how the
+facade is built, and `docs/compose-internals.md` + `docs/NOTES.md` for
+the deeper why. This file documents the conventions an agent **must**
+follow when changing code.
 
 ## Layout
 
