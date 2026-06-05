@@ -1,9 +1,8 @@
 namespace ComposeNet;
 
 /// <summary>
-/// Material 3 <c>AssistChip</c>. <see cref="Label"/> is required;
-/// <see cref="LeadingIcon"/> and <see cref="TrailingIcon"/> are optional
-/// slots:
+/// Material 3 <c>AssistChip</c>. <c>Label</c> is required;
+/// <c>LeadingIcon</c> and <c>TrailingIcon</c> are optional slots:
 /// <code>
 /// new AssistChip(onClick: ...) { Label = new Text("Filter") }
 /// </code>

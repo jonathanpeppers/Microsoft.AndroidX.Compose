@@ -1,7 +1,7 @@
 namespace ComposeNet;
 
 /// <summary>
-/// Material 3 <c>ElevatedFilterChip</c>. Same shape as
-/// <see cref="FilterChip"/>; no <c>Modifier</c> parameter.
+/// Material 3 <c>ElevatedFilterChip</c> — same API surface as
+/// <see cref="FilterChip"/> but uses shadow elevation for emphasis.
 /// </summary>
 public sealed partial class ElevatedFilterChip;

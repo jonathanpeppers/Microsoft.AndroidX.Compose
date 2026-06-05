@@ -2,7 +2,7 @@ namespace ComposeNet;
 
 /// <summary>
 /// Material 3 <c>Snackbar</c>. A transient message bar typically
-/// rendered in <see cref="Scaffold.SnackbarHost"/>:
+/// rendered in <c>Scaffold.SnackbarHost</c>:
 /// <code>
 /// new Snackbar
 /// {

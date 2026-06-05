@@ -3,7 +3,7 @@ namespace ComposeNet;
 /// <summary>
 /// Material 3 <c>TextField</c> (filled variant). Pass a <c>value</c> + <c>onValueChange</c>
 /// pair, or use the <see cref="TextField(MutableState{string})"/> convenience ctor to bind
-/// to a <see cref="MutableState{T}"/> directly.
+/// to a <see cref="MutableState{T}"/> directly so user edits trigger recomposition.
 /// </summary>
 public sealed partial class TextField
 {

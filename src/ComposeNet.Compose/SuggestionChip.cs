@@ -1,7 +1,7 @@
 namespace ComposeNet;
 
 /// <summary>
-/// Material 3 <c>SuggestionChip</c>. Only a single optional <c>Icon</c>
-/// slot (no trailing icon).
+/// Material 3 <c>SuggestionChip</c>. Single-icon variant — only an
+/// <c>Icon</c> slot is exposed (vs. AssistChip's leading + trailing).
 /// </summary>
 public sealed partial class SuggestionChip;

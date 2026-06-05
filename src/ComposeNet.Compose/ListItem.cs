@@ -2,9 +2,8 @@ namespace ComposeNet;
 
 /// <summary>
 /// Material 3 <c>ListItem</c>. A row in a list with a required
-/// <c>Headline</c> and four optional content slots
-/// (<c>Overline</c>, <c>Supporting</c>, <c>Leading</c>,
-/// <c>Trailing</c>):
+/// <c>Headline</c> and four optional content slots (<c>Overline</c>,
+/// <c>Supporting</c>, <c>Leading</c>, <c>Trailing</c>):
 /// <code>
 /// new ListItem
 /// {

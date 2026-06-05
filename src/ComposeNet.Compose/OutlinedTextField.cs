@@ -1,7 +1,8 @@
 namespace ComposeNet;
 
 /// <summary>
-/// Material 3 <c>OutlinedTextField</c>. Same binding contract as <see cref="TextField"/>.
+/// Material 3 <c>OutlinedTextField</c>. Same binding contract as
+/// <see cref="TextField"/>.
 /// </summary>
 public sealed partial class OutlinedTextField
 {

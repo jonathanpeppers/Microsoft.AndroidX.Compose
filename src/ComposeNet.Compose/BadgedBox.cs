@@ -2,7 +2,7 @@ namespace ComposeNet;
 
 /// <summary>
 /// Material 3 <c>BadgedBox</c>. Wraps a <c>Content</c> node
-/// (typically an <see cref="Icon"/>) and overlays a <see cref="Badge"/>
+/// (typically an <see cref="Icon"/>) and overlays a <c>Badge</c>
 /// on its top-end corner:
 /// <code>
 /// new BadgedBox

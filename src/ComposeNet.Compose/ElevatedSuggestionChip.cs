@@ -1,7 +1,7 @@
 namespace ComposeNet;
 
 /// <summary>
-/// Material 3 <c>ElevatedSuggestionChip</c>. Same shape as
-/// <see cref="SuggestionChip"/>; no <c>Modifier</c> parameter.
+/// Material 3 <c>ElevatedSuggestionChip</c> — like
+/// <see cref="SuggestionChip"/> but uses shadow elevation for emphasis.
 /// </summary>
 public sealed partial class ElevatedSuggestionChip;
