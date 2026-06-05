@@ -18,11 +18,12 @@ namespace ComposeNet;
 /// property, which is itself a Compose snapshot state, so subscribing
 /// inside composition triggers recomposition.
 ///
-/// <para><see cref="SecureTextFieldState"/> only honours the
-/// <c>initialText</c> ctor argument on the first render that resolves
-/// the JVM peer; later mutations to the C# constructor argument are
-/// ignored. Persist your own <see cref="MutableState{T}"/>-backed
-/// mirror if you need to survive process death.</para>
+/// <para>The <c>initialText</c> constructor argument only seeds the
+/// JVM peer the first time a <see cref="SecureTextField"/> bound to
+/// this state is rendered. Once the peer exists, the seed value is no
+/// longer consulted — to clear or reset the text, mutate the live JVM
+/// state via the typed UI or persist your own <see cref="MutableState{T}"/>-backed
+/// mirror.</para>
 ///
 /// <code>
 /// var pwd = Remember(() =&gt; new SecureTextFieldState());

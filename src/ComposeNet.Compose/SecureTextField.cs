@@ -5,8 +5,8 @@ namespace ComposeNet;
 /// <summary>
 /// Material 3 <c>SecureTextField</c> — a single-line filled text field
 /// designed for password / secure input. Obscures typed characters with
-/// a configurable bullet, disables cut/copy/drag, and pre-configures the
-/// IME for password input. Stripped from the binding because
+/// a bullet glyph, disables cut/copy/drag, and pre-configures the IME
+/// for password input. Stripped from the binding because
 /// <c>textObfuscationMode</c> is a <c>@JvmInline value class</c> (hashed
 /// JVM name <c>-XvU6IwQ</c>); reached via <see cref="ComposeBridges"/>.
 /// </summary>

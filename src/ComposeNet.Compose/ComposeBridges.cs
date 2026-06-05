@@ -558,11 +558,17 @@ internal static partial class ComposeBridges
                                                  IModifier? modifier, IComposer composer);
 
     // androidx.compose.material3.SecureTextFieldKt.{SecureTextField,OutlinedSecureTextField}-XvU6IwQ.
-    // Both overloads have identical 23-user-param signatures (TextFieldState
-    // + Modifier + 11 Z/L slots + 7 L slots + Composer + 3 $changed + 1
-    // $default). Hashed JVM names come from the inline-class compiler
-    // mangling on `textObfuscationMode` (TextObfuscationMode is
-    // @JvmInline value class wrapping Int).
+    // Both overloads have identical 23-user-param signatures: the
+    // TextFieldState peer, a Modifier, 19 object slots (TextStyle,
+    // TextFieldLabelPosition, six Function2/3 lambdas, InputTransformation,
+    // KeyboardOptions, KeyboardActionHandler, an onTextLayout Function2,
+    // Shape, TextFieldColors, PaddingValues, MutableInteractionSource),
+    // 2 booleans (enabled, isError), 1 int + 1 char for the inline-class
+    // textObfuscationMode/textObfuscationCharacter pair, then the trailing
+    // Composer + IIII (3 $changed groups + 1 $default int). Hashed JVM
+    // names come from the inline-class compiler mangling on
+    // textObfuscationMode (TextObfuscationMode is @JvmInline value class
+    // wrapping Int).
     const string SecureTextFieldSig =
         "(Landroidx/compose/foundation/text/input/TextFieldState;" +
         "Landroidx/compose/ui/Modifier;Z" +
