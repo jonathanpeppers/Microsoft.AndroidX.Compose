@@ -117,7 +117,7 @@ The facade [`ComposeNet.Compose`](src/ComposeNet.Compose) covers the common Mate
 | Media                   | `Image`, `Icon` |
 | Chips                   | `AssistChip`, `FilterChip`, `InputChip`, `SuggestionChip` (+ `Elevated*` variants) |
 | Selection               | `Checkbox`, `TriStateCheckbox`, `RadioButton`, `Switch`, `Slider`, `RangeSlider`, `SegmentedButton` |
-| Progress & feedback     | `CircularProgressIndicator`, `LinearProgressIndicator`, `ListItem`, `Badge`, `BadgedBox`, `Snackbar`, `Tooltip` |
+| Progress & feedback     | `CircularProgressIndicator`, `LinearProgressIndicator`, `ListItem`, `Badge`, `BadgedBox` |
 | Menus & search          | `DropdownMenu` + `DropdownMenuItem`, `SearchBar` family (Top, ExpandedDocked, ExpandedFullScreen) |
 | Navigation              | `NavigationBar`, `NavigationRail`, `WideNavigationRail`, `ModalWideNavigationRail` (+ items) |
 | Drawers                 | `ModalNavigationDrawer`, `DismissibleNavigationDrawer`, `PermanentNavigationDrawer` |
