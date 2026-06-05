@@ -6,12 +6,15 @@ namespace ComposeNet.Samples.Jetchat;
 
 /// <summary>
 /// Builds the Jetchat conversation tree. A simplified port of
-/// upstream's <c>ConversationContent</c>: a <see cref="Scaffold"/>
-/// inside a <see cref="MaterialTheme"/>, with a centered top bar
-/// showing the channel name and member count on two lines, a vertical
-/// list of message bubbles taking the remaining height (via
+/// upstream's <c>ConversationContent</c> + <c>JetchatDrawerContent</c>:
+/// a <see cref="ModalNavigationDrawer"/> wraps a <see cref="Scaffold"/>
+/// inside a <see cref="MaterialTheme"/>. The Scaffold has a
+/// <see cref="CenterAlignedTopAppBar"/> showing the channel name and
+/// member count plus search / info action icons, a vertical list of
+/// message bubbles taking the remaining height (via
 /// <c>Modifier.Weight(1f)</c>), and a sticky input row at the bottom
-/// for typing and sending new messages.
+/// for typing and sending new messages. Edge-swipe from the left opens
+/// the drawer; tapping a channel updates the top-bar title.
 ///
 /// Implemented as a static builder rather than a
 /// <see cref="ComposableNode"/> subclass because
@@ -22,31 +25,34 @@ namespace ComposeNet.Samples.Jetchat;
 public static class Conversation
 {
     public const string MyName = "me";
-    const string MyAvatar = "🙂";
 
     // Material 3 surface-variant-ish greys, picked to approximate
     // Jetchat's bubble palette without binding MaterialTheme.colorScheme
     // (issue #61). "Me" bubbles get the primary-container shade, others
     // get the surface-variant shade. Stored as packed Compose Color
     // longs (see AndroidX.Compose.UI.Graphics.ColorKt.Color).
-    static readonly long MeBubbleColor    = ColorKt.Color(red: 0xD0, green: 0xE4, blue: 0xFF, alpha: 0xFF);
-    static readonly long OtherBubbleColor = ColorKt.Color(red: 0xED, green: 0xED, blue: 0xED, alpha: 0xFF);
-    static readonly long AvatarTileColor  = ColorKt.Color(red: 0xE0, green: 0xE0, blue: 0xE0, alpha: 0xFF);
-
+    static readonly long MeBubbleColor       = ColorKt.Color(red: 0xD0, green: 0xE4, blue: 0xFF, alpha: 0xFF);
+    static readonly long OtherBubbleColor    = ColorKt.Color(red: 0xED, green: 0xED, blue: 0xED, alpha: 0xFF);
+    static readonly long DrawerSelectedColor = ColorKt.Color(red: 0xD0, green: 0xE4, blue: 0xFF, alpha: 0xFF);
 
     /// <summary>Materialize the conversation tree for one composition pass.</summary>
-    public static ComposableNode Build(ConversationUiState ui, MutableState<string> input)
+    public static ComposableNode Build(ConversationUiState ui, MutableState<string> input, ScrollState drawerScroll)
     {
         // MaterialTheme injects M3 default colors / typography into the
         // composition so child Scaffold/TopAppBar/TextField pick up
         // proper surface colors instead of falling back to undefined
-        // defaults.
+        // defaults. The drawer has to be inside the theme so its
+        // ModalDrawerSheet's secondaryContainer fallback resolves.
         return new MaterialTheme
         {
-            new Scaffold
+            new ModalNavigationDrawer
             {
-                TopBar = BuildTopBar(ui),
-                Body   = BuildBody(ui, input),
+                Drawer  = BuildDrawer(ui, drawerScroll),
+                Content = new Scaffold
+                {
+                    TopBar = BuildTopBar(ui),
+                    Body   = BuildBody(ui, input),
+                },
             },
         };
     }
@@ -57,15 +63,37 @@ public static class Conversation
             // Two-line title: channel name on top, member count below.
             // Upstream uses different typography weights/sizes for each
             // — we render both at default size since `Text` doesn't
-            // expose fontWeight/style yet (issue #58).
+            // expose fontWeight/style yet (issue #58). The channel name
+            // reads from the mutable CurrentChannel so drawer taps
+            // update the displayed title.
             Title = new Column
             {
-                new Text($"#{ui.ChannelName}"),
+                new Text($"#{ui.CurrentChannel}"),
                 new Text($"{ui.ChannelMembers} members")
                 {
                     Modifier = Modifier.Companion.Padding(topDp: 2, bottomDp: 0, startDp: 0, endDp: 0),
                 },
             },
+            // Trailing search + info icons. Match upstream's
+            // ChannelNameBar — no-op onClick because the upstream popup
+            // ("FunctionalityNotAvailablePopup") would itself need
+            // bound popup APIs. Real affordances; would-be-popup omitted.
+            Actions = new Row
+            {
+                new IconButton(onClick: NoOp)
+                {
+                    new Icon(Resource.Drawable.ic_search, "Search"),
+                },
+                new IconButton(onClick: NoOp)
+                {
+                    new Icon(Resource.Drawable.ic_info, "Info"),
+                },
+            },
+            // No NavigationIcon: programmatic drawer open requires
+            // DrawerState.open() (a Kotlin suspend function), which
+            // isn't bound yet. A no-op hamburger would be a misleading
+            // affordance — users open the drawer with an edge-swipe
+            // from the left until #74 follow-up lands.
         };
 
     static Column BuildBody(ConversationUiState ui, MutableState<string> input) =>
@@ -151,11 +179,11 @@ public static class Conversation
             },
         };
 
-    // Others: avatar tile on the left, then author/timestamp row +
-    // bubble. On a streak (same author as previous message), hide the
-    // avatar with a same-width Spacer so the message body stays
-    // visually aligned with the previous one — matches upstream's
-    // "first message in a chain only" behavior.
+    // Others: drawable-resource avatar on the left, then
+    // author/timestamp row + bubble. On a streak (same author as
+    // previous message), hide the avatar with a same-width Spacer so
+    // the message body stays visually aligned with the previous one —
+    // matches upstream's "first message in a chain only" behavior.
     static Row BuildOtherMessageRow(Message m, bool isStreak)
     {
         var row = new Row
@@ -168,10 +196,11 @@ public static class Conversation
         }
         else
         {
-            row.Add(new Box
+            // Drawable avatar via the new Phase 7 [PainterResource]
+            // facade. Clip(20) on a 40dp box yields a circle.
+            row.Add(new Image(m.AuthorAvatarRes, "Profile photo")
             {
-                Modifier.Companion.Size(40).Clip(20).Background(AvatarTileColor),
-                new Text(m.AuthorAvatar) { Modifier = Modifier.Companion.Padding(8) },
+                Modifier = Modifier.Companion.Size(40).Clip(20),
             });
         }
         var contentCol = new Column
@@ -225,11 +254,109 @@ public static class Conversation
             },
         };
 
+    /// <summary>
+    /// Builds the navigation drawer panel. Mirrors upstream's
+    /// <c>JetchatDrawerContent</c>: header, "Chats" section with two
+    /// channel rows, "Recent Profiles" section with two profile rows.
+    /// The whole column is wrapped in <see cref="Modifier.VerticalScroll"/>
+    /// so the panel scrolls if it overflows on small heights —
+    /// upstream uses the same pattern via <c>verticalScroll(rememberScrollState())</c>.
+    /// </summary>
+    static ModalDrawerSheet BuildDrawer(ConversationUiState ui, ScrollState scroll) =>
+        new()
+        {
+            new Column
+            {
+                Modifier.Companion.FillMaxWidth().VerticalScroll(scroll),
+                BuildDrawerHeader(),
+                new HorizontalDivider(),
+                BuildDrawerSectionHeader("Chats"),
+                BuildChatItem(ui, "composers"),
+                BuildChatItem(ui, "droidcon-nyc"),
+                new HorizontalDivider
+                {
+                    Modifier = Modifier.Companion.Padding(horizontalDp: 28, verticalDp: 0),
+                },
+                BuildDrawerSectionHeader("Recent Profiles"),
+                BuildProfileItem("Ali Conors (you)", Resource.Drawable.avatar_me),
+                BuildProfileItem("Taylor Brooks",     Resource.Drawable.avatar_taylor),
+            },
+        };
+
+    static Row BuildDrawerHeader() =>
+        new()
+        {
+            Modifier.Companion.FillMaxWidth().Padding(16),
+            new Icon(Resource.Drawable.ic_jetchat, "Jetchat logo")
+            {
+                Modifier = Modifier.Companion.Size(24),
+            },
+            new Spacer(Modifier.Companion.Width(8)),
+            new Text("Jetchat"),
+        };
+
+    static Box BuildDrawerSectionHeader(string label) =>
+        new()
+        {
+            Modifier.Companion.FillMaxWidth().Padding(horizontalDp: 28, verticalDp: 16),
+            new Text(label),
+        };
+
+    static Row BuildChatItem(ConversationUiState ui, string channel)
+    {
+        bool selected = ui.CurrentChannel == channel;
+        // Selection highlight: matching primary-container fill on the
+        // pill. Tapping updates the mutable channel state, which in
+        // turn re-renders the top app bar title.
+        var modifier = Modifier.Companion
+            .FillMaxWidth()
+            .Height(56)
+            .Padding(horizontalDp: 12, verticalDp: 0)
+            .Clip(28)
+            .Clickable(() => ui.CurrentChannel = channel);
+        if (selected)
+            modifier = modifier.Background(DrawerSelectedColor);
+
+        return new Row
+        {
+            modifier,
+            new Icon(Resource.Drawable.ic_jetchat, "Channel")
+            {
+                Modifier = Modifier.Companion.Padding(16),
+            },
+            new Spacer(Modifier.Companion.Width(12)),
+            new Text(channel)
+            {
+                Modifier = Modifier.Companion.Padding(topDp: 16, bottomDp: 16, startDp: 0, endDp: 0),
+            },
+        };
+    }
+
+    static Row BuildProfileItem(string name, int avatarRes) =>
+        new()
+        {
+            Modifier.Companion
+                .FillMaxWidth()
+                .Height(56)
+                .Padding(horizontalDp: 12, verticalDp: 0)
+                .Clip(28)
+                .Clickable(NoOp),
+            new Image(avatarRes, "Profile photo")
+            {
+                Modifier = Modifier.Companion.Padding(16).Size(24).Clip(12),
+            },
+            new Spacer(Modifier.Companion.Width(12)),
+            new Text(name)
+            {
+                Modifier = Modifier.Companion.Padding(topDp: 16, bottomDp: 16, startDp: 0, endDp: 0),
+            },
+        };
+
     static void Send(ConversationUiState ui, MutableState<string> input)
     {
         var text = input.Value ?? string.Empty;
         if (string.IsNullOrWhiteSpace(text)) return;
-        ui.AddMessage(MyName, text, MyAvatar, FormatNow());
+        ui.AddMessage(MyName, text, Resource.Drawable.avatar_me, FormatNow());
         input.Value = string.Empty;
     }
 
@@ -238,4 +365,6 @@ public static class Conversation
         var now = System.DateTime.Now;
         return now.ToString("h:mm tt", System.Globalization.CultureInfo.InvariantCulture);
     }
+
+    static void NoOp() { }
 }

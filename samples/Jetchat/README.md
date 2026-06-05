@@ -18,13 +18,26 @@ dotnet build samples/Jetchat -t:Run
 
 - `MaterialTheme` wrapping the whole tree — picks up the device
   wallpaper-derived dynamic color scheme on Android 12+ (Material You).
+- **Navigation drawer** — `ModalNavigationDrawer` + `ModalDrawerSheet`
+  hosting upstream's `JetchatDrawerContent` shape: header logo +
+  "Jetchat", divider, "Chats" section with `composers` and
+  `droidcon-nyc` rows, divider, "Recent Profiles" section. Tapping a
+  channel updates the selected highlight and the top-bar title. The
+  drawer column is wrapped in `Modifier.VerticalScroll(rememberedScrollState)`
+  so the panel scrolls if it overflows on small heights — same pattern
+  upstream uses.
 - `Scaffold` + `CenterAlignedTopAppBar` with a two-line title showing
-  the channel name (`#composers`) and member count (`42 members`),
-  matching upstream.
+  the current channel name and member count, plus trailing **search**
+  and **info** action icons — same `Actions` slot upstream's
+  `ChannelNameBar` puts them in. Icons are real drawable resources
+  rendered through the Phase 7 `[PainterResource]` `Icon` facade.
+- Drawable-resource avatars (one per author) rendered via the Phase 7
+  `Image(int drawableResourceId, …)` facade, the same shape as
+  upstream's `painterResource(R.drawable.someone_aubrey)` calls.
 - A "Today" day-separator row (`HorizontalDivider` + `Text` +
   `HorizontalDivider`) above the message list.
 - Message bubbles with author name + relative timestamp on one row,
-  a 40 dp rounded emoji avatar tile, and a rounded coloured bubble for
+  a 40 dp circular avatar tile, and a rounded coloured bubble for
   the message body.
 - **Streak-aware avatars** — when a sender posts multiple messages in a
   row, only the first shows the avatar tile; subsequent messages indent
@@ -37,6 +50,8 @@ dotnet build samples/Jetchat -t:Run
   control.
 - Reactive message list via `ObservableList<Message>` — tapping send
   appends a message and the UI recomposes.
+- Reactive channel selection via `MutableState<string>` — drawer taps
+  flow into the title.
 
 ## What's omitted
 
@@ -45,20 +60,22 @@ feature:
 
 | Upstream feature                          | Tracking issue |
 |-------------------------------------------|----------------|
-| `verticalScroll` for the message list (now uses `LazyColumn`) | [#63](https://github.com/jonathanpeppers/compose-net/issues/63) |
-| Navigation drawer + multi-channel nav     | requires `androidx.navigation.compose` binding (no issue yet) |
-| Image / sticker / file attachments        | requires `painterResource` + an image loader |
-| User profile screen                       | depends on navigation |
+| Hamburger nav icon that programmatically opens the drawer | requires Kotlin `suspend` `DrawerState.open()` (no issue yet) — edge-swipe still works |
+| Multi-channel message lists (the drawer changes the title but not the messages — we only seed one conversation) | requires extending the sample's seed data, not blocked by facade |
+| `LazyColumn(reverseLayout = true)` so newest messages sit at the bottom | not yet exposed on the `LazyColumn` facade |
+| Image / sticker / file message attachments inside bubbles | requires composable image-loader plumbing |
+| User profile screen                       | depends on `androidx.navigation.compose` binding |
 | IME-synchronized scroll-to-bottom         | [#69](https://github.com/jonathanpeppers/compose-net/issues/69) (`imePadding`) |
 | Bold author names / typography variants   | [#58](https://github.com/jonathanpeppers/compose-net/issues/58) (`Text` styling, `FontWeight`) |
-| `MaterialTheme.colorScheme.primary` reads for the "me" bubble | [#61](https://github.com/jonathanpeppers/compose-net/issues/61) |
+| `MaterialTheme.colorScheme.primary` reads for the "me" bubble + drawer selection | [#61](https://github.com/jonathanpeppers/compose-net/issues/61) |
 | `Row(horizontalArrangement = Arrangement.End)` for "me" alignment | [#70](https://github.com/jonathanpeppers/compose-net/issues/70) (workaround: `Spacer().Weight(1f)`) |
 | Asymmetric `RoundedCornerShape(topStart, …)` on bubbles | [#65](https://github.com/jonathanpeppers/compose-net/issues/65) |
-| Vector / painter resources for the app-bar icons | [#61](https://github.com/jonathanpeppers/compose-net/issues/61) (Material Icons) |
+| Search / info popups behind the action icons (`FunctionalityNotAvailablePopup`) | requires popup APIs not yet bound; the icons are wired but the onClick is a no-op |
 
 ## Facade features added for this port
 
-Phase 1 of this branch landed the facade gaps Jetchat needed:
+Phase 1 of this branch landed the facade gaps Jetchat needed, and a
+later round (Jun 5) closed three more — all now in use here:
 
 - **Sizing modifiers**: `Modifier.Size(int)`, `Size(int, int)`,
   `Width(int)`, `Height(int)`.
@@ -72,8 +89,22 @@ Phase 1 of this branch landed the facade gaps Jetchat needed:
   `ClipKt.clip` in one fluent op.
 - **Weight modifier**: `Modifier.Weight(float, bool fill = true)` —
   dispatches to `RowScope` / `ColumnScope` `weight$default` based on
-  the enclosing `RenderContext.CurrentScopeKind`. The input row in
-  this sample is the primary consumer.
+  the enclosing `RenderContext.CurrentScopeKind`. The input row, the
+  message list's vertical fill, and the day-separator dividers all use
+  it.
 - **`ObservableList<T>`**: a managed `IList<T>` that participates in
   Compose's snapshot system without needing a `SnapshotStateList`
   binding. Backs the message log.
+- **Drawable-resource `Image` / `Icon`** (PR #86, Phase 7
+  `[PainterResource]` facade): `new Image(int)` and
+  `new Icon(int, string?)` over `painterResource(id)`. Drives every
+  drawable in the drawer + the search/info top-bar actions + the
+  message-row avatars.
+- **`Modifier.VerticalScroll(ScrollState)`** (PR #94): the drawer
+  panel uses it so an overflowing list of channels / profiles scrolls
+  the same way upstream's `verticalScroll(rememberScrollState())` does.
+- **`ModalNavigationDrawer` + `ModalDrawerSheet`** (already bound
+  pre-port; first wired up by this sample): swipe-from-left opens the
+  drawer; the panel falls back to
+  `MaterialTheme.colorScheme.secondaryContainer` for its container
+  color via the Phase 6 `DefaultColorFromTheme` facade attribute.
