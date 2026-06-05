@@ -76,6 +76,14 @@ internal static class Diagnostics
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);
 
+    public static readonly DiagnosticDescriptor BridgeValueTypeNeedsDefaults = new(
+        id: "CN2007",
+        title: "[ComposeBridge] recognized Compose value type requires a $default slot",
+        messageFormat: "Bridge '{0}' parameter '{1}' is a recognized Compose value type ({2}) — those rely on the auto-default-mask logic, but this bridge has no $default slot",
+        category: "ComposeNet",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
+
     public static readonly DiagnosticDescriptor FacadeWrongContainingType = new(
         id: "CN3001",
         title: "[ComposeFacade] must be applied to a method on ComposeBridges",

@@ -357,6 +357,25 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
         if (diags.Count > 0)
             return new GenerationResult(null, null, diags.ToArray());
 
+        // CN2007: recognized Compose value types (Color/Dp/Sp/Em/TextAlign)
+        // rely on the auto-default-mask logic to leave the $default bit
+        // set when null. Without a $default slot there's no way to
+        // signal "use Kotlin default" to the call, so reject them up
+        // front rather than silently emitting a value-zeroed argument.
+        if (!hasDefaultSlot)
+        {
+            foreach (var p in userParams)
+            {
+                if (ComposeValueTypes.TryGet(p.Type, out var vtName, out _))
+                {
+                    diags.Add(Diagnostic.Create(Diagnostics.BridgeValueTypeNeedsDefaults, loc,
+                        method.Name, p.Name, vtName));
+                }
+            }
+            if (diags.Count > 0)
+                return new GenerationResult(null, null, diags.ToArray());
+        }
+
         var changedSlots = ChangedSlotCount(sigParams, hasDefaultSlot, hasComposerSlot);
         int defaultSlotCount = hasDefaultSlot ? 1 : 0;
         int receiverSlotCount = receiverParam is null ? 0 : 1;
@@ -487,7 +506,8 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
                 if (kotlinNames[bit].StartsWith("!", StringComparison.Ordinal)) continue;
 
                 var member = PascalCase(p.Name);
-                if (p.NullableAnnotation == NullableAnnotation.Annotated || p.Type.IsReferenceType)
+                bool nullableValueType = ComposeValueTypes.TryGet(p.Type, out _, out _);
+                if (p.NullableAnnotation == NullableAnnotation.Annotated || p.Type.IsReferenceType || nullableValueType || IsNullableIntPtr(p.Type))
                 {
                     sb.Append("        if (").Append(EscapeIdent(p.Name)).Append(" is not null) defaults &= ~(int)global::ComposeNet.")
                       .Append(enumName).Append('.').Append(member).AppendLine(";");
@@ -665,6 +685,15 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
             sb.Append('(').Append(p.Name).Append(" ?? global::System.IntPtr.Zero)");
             return;
         }
+        if (ComposeValueTypes.TryGet(p.Type, out _, out var info))
+        {
+            // Recognized Compose @JvmInline value class. The lowering
+            // template takes the Nullable<T> wrapper directly and
+            // returns the JNI primitive — null cases yield the Kotlin
+            // default zero (the auto-mask leaves the bit set).
+            sb.Append(string.Format(info.LowerTemplate, name));
+            return;
+        }
         if (p.Type.SpecialType is SpecialType.System_Boolean
             or SpecialType.System_Int32
             or SpecialType.System_Int64
@@ -703,6 +732,9 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
             or SpecialType.System_String)
             return false;
         if (IsNullableIntPtr(p.Type)) return false;
+        // Recognized Compose value types (Color/Dp/Sp/Em/TextAlign) lower
+        // to JNI primitives — no managed handle to keep alive.
+        if (ComposeValueTypes.TryGet(p.Type, out _, out _)) return false;
         return true;
     }
 

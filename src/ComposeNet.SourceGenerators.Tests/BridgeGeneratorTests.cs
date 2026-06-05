@@ -66,6 +66,25 @@ public class BridgeGeneratorTests
             {
                 public static System.IntPtr ModifierHandle(IModifier? m) => default;
             }
+            public readonly record struct Dp(float Value)
+            {
+                public static float Pack(Dp? value) => value?.Value ?? 0f;
+            }
+            public readonly record struct Sp(float Value)
+            {
+                public static long Pack(Sp? value) => default;
+            }
+            public readonly record struct Em(float Value)
+            {
+                public static long Pack(Em? value) => default;
+            }
+            public readonly record struct TextAlign(int Value)
+            {
+                public static int Pack(TextAlign? value) => value?.Value ?? 0;
+            }
+            public sealed class Shape : Java.Lang.Object { }
+            public sealed class FontWeight : Java.Lang.Object { }
+            public sealed class TextDecoration : Java.Lang.Object { }
         }
         """;
 
@@ -1068,5 +1087,140 @@ public class BridgeGeneratorTests
             """;
         var (_, diags, _) = Run(code);
         Assert.Contains(diags, d => d.Id == "CN2006");
+    }
+
+    // ---------- Compose value type recognition (Dp/Sp/Em/TextAlign) ----------
+
+    [Fact]
+    public void ValueType_Dp_LowersToPackHelper()
+    {
+        // Border-shaped bridge: (Modifier, Dp width, long color, Shape).
+        // Color is a Compose `@JvmInline value class Color(val value: ULong)`
+        // and the binding already surfaces it as a `long`, so it stays
+        // a raw `long` slot — only Dp and Shape go through the value-type
+        // / nullable-ref lowering.
+        var code = """
+            using ComposeNet;
+
+            [assembly: ComposeDefaults("BorderDefault", "width", "!color", "shape")]
+
+            namespace ComposeNet
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(
+                        Class = "androidx/compose/foundation/BorderKt",
+                        JvmName = "border-xT4_qwU$default",
+                        Signature = "(Landroidx/compose/ui/Modifier;FJLandroidx/compose/ui/graphics/Shape;ILjava/lang/Object;)Landroidx/compose/ui/Modifier;",
+                        Defaults = typeof(BorderDefault))]
+                    public static partial System.IntPtr Border(System.IntPtr modifier, Dp? width, long color, Shape? shape);
+                }
+            }
+            """;
+
+        var (_, diags, emitted) = Run(code);
+        Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+        Assert.Contains("global::ComposeNet.Dp.Pack(width)", emitted);
+        // Shape? is a Java.Lang.Object subclass → existing nullable-ref path.
+        Assert.Contains("shape is null ? global::System.IntPtr.Zero : ((global::Java.Lang.Object)shape).Handle", emitted);
+        // Width and shape get the auto-mask null check; color is '!'d and
+        // always passed as a raw long, so no enum member for it.
+        Assert.Contains("if (width is not null) defaults &= ~(int)global::ComposeNet.BorderDefault.Width", emitted);
+        Assert.DoesNotContain("BorderDefault.Color", emitted);
+        Assert.Contains("if (shape is not null) defaults &= ~(int)global::ComposeNet.BorderDefault.Shape", emitted);
+    }
+
+    [Fact]
+    public void ValueType_SpEmTextAlign_LowerCorrectly()
+    {
+        // @Composable bridge: (Sp fontSize, Em letterSpacing, TextAlign align, Composer).
+        // JNI: 3 user slots (J/J/I) + Composer (L) + 1 $changed (I) + 1 $default (I).
+        var code = """
+            using ComposeNet;
+            using AndroidX.Compose.Runtime;
+
+            [assembly: ComposeDefaults("FontDefault", "fontSize", "letterSpacing", "align")]
+
+            namespace ComposeNet
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(
+                        Class = "x/Y",
+                        JvmName = "f",
+                        Signature = "(JJILandroidx/compose/runtime/Composer;II)V",
+                        Defaults = typeof(FontDefault))]
+                    public static partial void F(Sp? fontSize, Em? letterSpacing, TextAlign? align, IComposer composer);
+                }
+            }
+            """;
+
+        var (_, diags, emitted) = Run(code);
+        Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+        Assert.Contains("global::ComposeNet.Sp.Pack(fontSize)", emitted);
+        Assert.Contains("global::ComposeNet.Em.Pack(letterSpacing)", emitted);
+        Assert.Contains("global::ComposeNet.TextAlign.Pack(align)", emitted);
+    }
+
+    [Fact]
+    public void ValueType_OnNoDefaultBridge_ReportsCN2007()
+    {
+        // No $default slot → the auto-mask logic that backs value
+        // types can't fire, so the generator must reject up front.
+        var code = """
+            using ComposeNet;
+
+            namespace ComposeNet
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(
+                        Class = "x/Y",
+                        JvmName = "f",
+                        Signature = "(F)V")]
+                    public static partial void F(Dp? width);
+                }
+            }
+            """;
+
+        var (_, diags, _) = Run(code);
+        Assert.Contains(diags, d => d.Id == "CN2007");
+    }
+
+    [Fact]
+    public void RefType_FontWeight_GoesThroughGenericNullableRefPath()
+    {
+        // FontWeight subclasses Java.Lang.Object — it should hit the
+        // existing reference-type code path, not the value-type
+        // registry. The auto-mask still clears the bit when non-null.
+        // @Composable bridge: (FontWeight, Composer) → 1 user slot + 1
+        // $changed + 1 $default.
+        var code = """
+            using ComposeNet;
+            using AndroidX.Compose.Runtime;
+
+            [assembly: ComposeDefaults("WeightedDefault", "weight")]
+
+            namespace ComposeNet
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(
+                        Class = "x/Y",
+                        JvmName = "f",
+                        Signature = "(Landroidx/compose/ui/text/font/FontWeight;Landroidx/compose/runtime/Composer;II)V",
+                        Defaults = typeof(WeightedDefault))]
+                    public static partial void F(FontWeight? weight, IComposer composer);
+                }
+            }
+            """;
+
+        var (_, diags, emitted) = Run(code);
+        Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+        Assert.Contains("weight is null ? global::System.IntPtr.Zero : ((global::Java.Lang.Object)weight).Handle", emitted);
+        Assert.Contains("if (weight is not null) defaults &= ~(int)global::ComposeNet.WeightedDefault.Weight", emitted);
     }
 }
