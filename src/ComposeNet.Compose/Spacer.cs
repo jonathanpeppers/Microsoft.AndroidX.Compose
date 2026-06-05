@@ -1,9 +1,3 @@
-using Android.Runtime;
-using AndroidX.Compose.Foundation.Layout;
-using AndroidX.Compose.Runtime;
-using AndroidX.Compose.UI;
-using Java.Interop;
-
 namespace ComposeNet;
 
 /// <summary>
@@ -19,21 +13,11 @@ namespace ComposeNet;
 /// <c>Modifier.Companion</c> (the empty modifier) when the caller
 /// doesn't supply a chain so the binding receives a non-null value.
 /// </remarks>
-public sealed class Spacer : ComposableNode
+public sealed partial class Spacer
 {
     /// <summary>Empty Spacer (zero-sized). Apply a sizing modifier to give it presence.</summary>
     public Spacer() { }
 
     /// <summary>Convenience overload that sets <see cref="ComposableNode.Modifier"/>.</summary>
     public Spacer(Modifier modifier) => Modifier = modifier;
-
-    internal override void Render(IComposer composer)
-    {
-        var modifier = BuildModifier()
-            ?? Java.Lang.Object.GetObject<IModifier>(
-                ComposeBridges.ModifierCompanionInstance(),
-                JniHandleOwnership.TransferLocalRef)!;
-
-        SpacerKt.Spacer(modifier, composer, 0);
-    }
 }

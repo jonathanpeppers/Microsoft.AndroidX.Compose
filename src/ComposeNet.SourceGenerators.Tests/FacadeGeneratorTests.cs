@@ -1002,4 +1002,112 @@ public class FacadeGeneratorTests
         var (_, diags, _) = Run(code, "Foo");
         Assert.Contains(diags, d => d.Id == "CN3006" && d.GetMessage().Contains("int defaults"));
     }
+
+    [Fact]
+    public void WrapperFacade_WithBodyAndDefaults_GeneratesFacade()
+    {
+        // Direct-binding "wrapper" facade: a partial method with a
+        // hand-written body and no [ComposeBridge]. The wrapper takes
+        // an `int defaults` (user-controlled mask) so the facade emits
+        // the auto-mask logic and the wrapper just passes it through.
+        var code = """
+            using AndroidX.Compose.Runtime;
+            using AndroidX.Compose.UI;
+            using ComposeNet;
+            using Kotlin.Jvm.Functions;
+
+            [assembly: ComposeDefaults("BoxDefault", "modifier", "contentAlignment", "propagateMinConstraints", "!content")]
+
+            namespace ComposeNet
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeFacade(Defaults = typeof(BoxDefault))]
+                    public static partial void Box(IModifier? modifier, IFunction3 content, int defaults, IComposer composer);
+
+                    public static partial void Box(IModifier? modifier, IFunction3 content, int defaults, IComposer composer)
+                    {
+                        // Pretend this calls BoxKt.Box — body irrelevant to the facade generator.
+                    }
+                }
+            }
+            """;
+        var (_, diags, emitted) = Run(code, "Box");
+        Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+        Assert.Contains("public sealed partial class Box : global::ComposeNet.ComposableContainer", emitted);
+        Assert.Contains("global::ComposeNet.ComposeBridges.Box(", emitted);
+        // Auto-mask emits because the wrapper takes `int defaults`.
+        Assert.Contains("(int)global::ComposeNet.BoxDefault.All", emitted);
+        Assert.Contains("if (__modifier is not null) __defaults &= ~(int)global::ComposeNet.BoxDefault.Modifier", emitted);
+    }
+
+    [Fact]
+    public void WrapperFacade_NoDefaultsAttribute_GeneratesFacadeWithoutMask()
+    {
+        // Spacer-style wrapper: no $default in the bytecode, so no
+        // Defaults enum either. Facade generator should still emit a
+        // working facade — just without the auto-mask code.
+        var code = """
+            using AndroidX.Compose.Runtime;
+            using AndroidX.Compose.UI;
+            using ComposeNet;
+            using Kotlin.Jvm.Functions;
+
+            namespace ComposeNet
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeFacade]
+                    public static partial void Spacer(IModifier? modifier, IComposer composer);
+
+                    public static partial void Spacer(IModifier? modifier, IComposer composer) { }
+                }
+            }
+            """;
+        var (_, diags, emitted) = Run(code, "Spacer");
+        Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+        Assert.Contains("public sealed partial class Spacer : global::ComposeNet.ComposableNode", emitted);
+        Assert.Contains("global::ComposeNet.ComposeBridges.Spacer(", emitted);
+        Assert.DoesNotContain("__defaults", emitted);
+    }
+
+    [Fact]
+    public void Facade_EnumCtorParameter_IsAcceptedAsPrimitive()
+    {
+        // TriStateCheckbox-style facade: the ctor takes an enum value
+        // (ToggleableState) plus an Action onClick. Enums should be
+        // classified as ctor primitives (TypeKind.Enum).
+        var code = """
+            using AndroidX.Compose.Runtime;
+            using AndroidX.Compose.UI;
+            using ComposeNet;
+            using Kotlin.Jvm.Functions;
+
+            namespace MyApp { public enum MyState { On, Off, Mixed } }
+
+            [assembly: ComposeDefaults("TriDefault", "!state", "!onClick", "modifier")]
+
+            namespace ComposeNet
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeFacade(Defaults = typeof(TriDefault))]
+                    public static partial void TriStateCheckbox(
+                        MyApp.MyState state, IFunction0 onClick, IModifier? modifier, IComposer composer);
+
+                    public static partial void TriStateCheckbox(
+                        MyApp.MyState state, IFunction0 onClick, IModifier? modifier, IComposer composer) { }
+                }
+            }
+            """;
+        var (_, diags, emitted) = Run(code, "TriStateCheckbox");
+        Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+        Assert.Contains("public sealed partial class TriStateCheckbox : global::ComposeNet.ComposableNode", emitted);
+        // Enum becomes a positional ctor primitive.
+        Assert.Contains("readonly global::MyApp.MyState _state", emitted);
+        Assert.Contains("global::MyApp.MyState state", emitted);
+    }
 }

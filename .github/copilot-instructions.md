@@ -363,7 +363,7 @@ stay distinct per facade.
 ### When to use it
 
 The generator now supports a wide range of facade shapes (Phases 1,
-2, 3, 6, 7 are implemented):
+2, 3, 6, 7, 8 are implemented):
 
 - **Phase 1** — container with content lambda + ctor primitives
   (`Button`, `Card`, `Text`, `Column`, `Row`, `Box`).
@@ -378,6 +378,22 @@ The generator now supports a wide range of facade shapes (Phases 1,
   `ColorScheme` slot when the caller doesn't override.
 - **Phase 7** — `[PainterResource]` resource-id-style facades
   (`Image`, the Painter overload of `Icon`).
+- **Phase 8** — wrapper-passthrough facades for bound bindings the
+  facade generator can otherwise call directly. Stack
+  `[ComposeFacade]` on a `partial` method on `ComposeBridges` that
+  has a hand-written body delegating to a bound `*Kt` method (e.g.
+  `BoxKt.Box`, `CheckboxKt.Checkbox`). The wrapper has a
+  trailing `int defaults` user param that the facade generator
+  fills via the auto-mask and the body passes through to the
+  binding's `_changed:` argument. `[ComposeFacade]` recognizes the
+  `Defaults = typeof(XDefault)` argument and reads the bit names
+  from the matching declarative-form `[assembly: ComposeDefaults(...)]`
+  declaration. There is no `[ComposeBridge]` attribute on these
+  wrappers; the generator pipeline doesn't see the other generator's
+  source-generated enums, so the bit-name map has to come from a
+  declarative `ComposeDefaults` declaration (not the generic form).
+  Used for `Box`, `Column`, `Row`, `Spacer`, `Checkbox`, `Switch`,
+  `RadioButton`, `Slider`.
 
 Facades that still stay hand-written are the ones the generator
 can't model:
