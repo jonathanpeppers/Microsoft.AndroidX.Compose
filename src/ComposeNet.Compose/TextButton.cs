@@ -1,6 +1,6 @@
 namespace ComposeNet;
 
 /// <summary>
-/// Material 3 TextButton. Same shape as <see cref="Button"/>.
+/// Material 3 <c>TextButton</c>. Same shape as <see cref="Button"/>.
 /// </summary>
 public sealed partial class TextButton;

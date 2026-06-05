@@ -1,4 +1,4 @@
 namespace ComposeNet;
 
-/// <summary>Material 3 FloatingActionButton.</summary>
+/// <summary>Material 3 <c>FloatingActionButton</c>.</summary>
 public sealed partial class FloatingActionButton;

@@ -1,8 +1,8 @@
 namespace ComposeNet;
 
 /// <summary>
-/// Material 3 IconButton. Children render into a Function2 content
-/// slot (no RowScope). Typical use:
+/// Material 3 <c>IconButton</c>. Children render into a
+/// <c>Function2</c> content slot (no <c>RowScope</c>). Typical use:
 /// <code>
 /// new IconButton(...) { new Text("☆") }
 /// </code>
