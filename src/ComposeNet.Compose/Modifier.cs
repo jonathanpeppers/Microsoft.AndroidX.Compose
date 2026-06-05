@@ -1,4 +1,3 @@
-using Android.Graphics;
 using Android.Runtime;
 using AndroidX.Compose.UI;
 using Java.Interop;
@@ -213,35 +212,38 @@ public sealed class Modifier
 
     /// <summary>
     /// <c>Modifier.background(color)</c> — paints a flat fill behind the
-    /// composable using a <c>RectangleShape</c>. Takes an
-    /// <see cref="Android.Graphics.Color"/>; use one of the named
-    /// constants (<c>Color.Blue</c>, <c>Color.Transparent</c>, …) or
-    /// <c>Color.Argb(a, r, g, b)</c> / <c>Color.ParseColor("#…")</c>.
-    /// (Temporary: should be <c>androidx.compose.ui.graphics.Color</c>
-    /// once dotnet/android-libraries#1437 lands.)
+    /// composable using a <c>RectangleShape</c>. Takes a packed Compose
+    /// <c>androidx.compose.ui.graphics.Color</c> value (a <c>ULong</c>
+    /// surfaced as a <c>long</c> in the binding because Color is a Kotlin
+    /// <c>@JvmInline value class</c>). Build one with
+    /// <see cref="AndroidX.Compose.UI.Graphics.ColorKt.Color(int, int, int, int)"/>
+    /// from per-channel bytes (recommended), or
+    /// <see cref="AndroidX.Compose.UI.Graphics.ColorKt.Color(int)"/> from an
+    /// <c>0xAARRGGBB</c> int — note that opaque-alpha hex literals like
+    /// <c>0xFF1976D2</c> are <c>uint</c> in C#, so they need an
+    /// <c>unchecked((int)0xFF1976D2)</c> cast to compile against the
+    /// <c>int</c> overload.
     /// </summary>
-    public Modifier Background(Color color)
-    {
-        long packed = PackComposeColor(color);
-        return Append(curr => ComposeBridges.ModifierBackground(curr, packed));
-    }
+    public Modifier Background(long color) =>
+        Append(curr => ComposeBridges.ModifierBackground(curr, color));
 
     /// <summary>
     /// <c>Modifier.border(width, color, shape)</c> — draws a stroke
     /// around the composable. <paramref name="widthDp"/> is the stroke
-    /// width in density-independent pixels.
+    /// width in density-independent pixels. <paramref name="color"/> is a
+    /// packed Compose <c>Color</c> long (see
+    /// <see cref="Background(long)"/> for how to build one).
     /// <paramref name="cornerRadiusDp"/> defaults to <c>0</c> for a
     /// rectangular stroke; pass a positive value to match a
     /// <see cref="Clip(int)"/> earlier in the chain so the corners
     /// align (otherwise the rectangular stroke gets sliced by a rounded
     /// clip and you see jagged corner stubs).
     /// </summary>
-    public Modifier Border(int widthDp, Color color, int cornerRadiusDp = 0)
+    public Modifier Border(int widthDp, long color, int cornerRadiusDp = 0)
     {
-        var width   = (float)widthDp;
-        long packed = PackComposeColor(color);
+        var width = (float)widthDp;
         if (cornerRadiusDp <= 0)
-            return Append(curr => ComposeBridges.ModifierBorder(curr, width, packed, null));
+            return Append(curr => ComposeBridges.ModifierBorder(curr, width, color, null));
 
         var radius = (float)cornerRadiusDp;
         return Append(curr =>
@@ -249,7 +251,7 @@ public sealed class Modifier
             IntPtr shape = ComposeBridges.RoundedCornerShape(radius);
             try
             {
-                return ComposeBridges.ModifierBorder(curr, width, packed, shape);
+                return ComposeBridges.ModifierBorder(curr, width, color, shape);
             }
             finally
             {
@@ -258,12 +260,6 @@ public sealed class Modifier
             }
         });
     }
-
-    // Pack an Android.Graphics.Color into the 64-bit value Kotlin's
-    // @JvmInline value class Color(val value: ULong) uses: ARGB int in
-    // the upper 32 bits, sRGB color-space id (0) in the lower 32 bits.
-    static long PackComposeColor(Color color) =>
-        unchecked((long)((ulong)(uint)color.ToArgb() << 32));
 
     /// <summary>
     /// <c>Modifier.clip(RoundedCornerShape(<paramref name="cornerRadiusDp"/>))</c> —
