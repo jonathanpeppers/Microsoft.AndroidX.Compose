@@ -122,8 +122,8 @@ internal static class ComposableLambdas
             block: new ComposableLambda4(body));
 
     /// <summary>
-    /// Wrap an <see cref="Action{IntPtr, Object, IComposer}"/> as an
-    /// identity-stable <see cref="IFunction4"/> for the
+    /// Wrap an <c>Action&lt;IntPtr, Java.Lang.Object?, IComposer&gt;</c>
+    /// as an identity-stable <see cref="IFunction4"/> for the
     /// <c>Function4&lt;Scope, Int, Composer, Int, Unit&gt;</c> @Composable
     /// shape used by Material 3 carousel <c>content</c> slots
     /// (<c>HorizontalUncontainedCarousel</c>, etc.).

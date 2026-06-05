@@ -178,12 +178,6 @@ ComposeNet.FlexibleBottomAppBar.FlexibleBottomAppBar() -> void
 ComposeNet.FloatingActionButton
 ComposeNet.FloatingActionButton.FloatingActionButton(System.Action! onClick) -> void
 ComposeNet.GridCells
-ComposeNet.HorizontalDivider
-ComposeNet.HorizontalDivider.ColorArgb.get -> long?
-ComposeNet.HorizontalDivider.ColorArgb.set -> void
-ComposeNet.HorizontalDivider.HorizontalDivider() -> void
-ComposeNet.HorizontalDivider.ThicknessDp.get -> float?
-ComposeNet.HorizontalDivider.ThicknessDp.set -> void
 ComposeNet.HorizontalCenteredHeroCarousel<T>
 ComposeNet.HorizontalCenteredHeroCarousel<T>.HorizontalCenteredHeroCarousel(System.Collections.Generic.IReadOnlyList<T>! items, System.Func<T, ComposeNet.ComposableNode!>! itemContent) -> void
 ComposeNet.HorizontalCenteredHeroCarousel<T>.ItemSpacing.get -> float
@@ -194,6 +188,12 @@ ComposeNet.HorizontalCenteredHeroCarousel<T>.State.get -> AndroidX.Compose.Mater
 ComposeNet.HorizontalCenteredHeroCarousel<T>.State.set -> void
 ComposeNet.HorizontalCenteredHeroCarousel<T>.UserScrollEnabled.get -> bool?
 ComposeNet.HorizontalCenteredHeroCarousel<T>.UserScrollEnabled.set -> void
+ComposeNet.HorizontalDivider
+ComposeNet.HorizontalDivider.ColorArgb.get -> long?
+ComposeNet.HorizontalDivider.ColorArgb.set -> void
+ComposeNet.HorizontalDivider.HorizontalDivider() -> void
+ComposeNet.HorizontalDivider.ThicknessDp.get -> float?
+ComposeNet.HorizontalDivider.ThicknessDp.set -> void
 ComposeNet.HorizontalMultiBrowseCarousel<T>
 ComposeNet.HorizontalMultiBrowseCarousel<T>.HorizontalMultiBrowseCarousel(System.Collections.Generic.IReadOnlyList<T>! items, float preferredItemWidth, System.Func<T, ComposeNet.ComposableNode!>! itemContent) -> void
 ComposeNet.HorizontalMultiBrowseCarousel<T>.ItemSpacing.get -> float
