@@ -361,6 +361,41 @@ method**; call the generated C# entry point instead (see
   separating `// ---- Section ----` banners. XML doc comments on every
   public type and every non-trivial member.
 
+### Optional veto / confirm callbacks (`(T) -> Boolean` parameters)
+
+Several Compose APIs take a `(T) -> Boolean` callback the runtime
+invokes to ask the caller "should this transition proceed?" — e.g.
+`rememberDrawerState(confirmStateChange)`,
+`rememberSheetState(confirmValueChange)`,
+`rememberSaveableStateHolder`. **These are part of the cached state
+holder's `remember` key**, so the JNI reference identity has to stay
+stable across recompositions or the cache is dropped and the state
+holder is rebuilt (the drawer / sheet forgets whether it was open).
+
+The pattern (see `DrawerConfirmStateChange` + `ModalNavigationDrawer`
+for the canonical implementation):
+
+1. **Expose the hook as a `Func<T, bool>?` property** on the facade
+   type, defaulting to `null` (= "use Kotlin's default — always
+   allow"). Document what `false` means (veto / block transition).
+2. **Allocate the JNI adapter once per node instance** as a
+   `readonly` field. Never `new` it inside `Render` — that recreates
+   the Java peer on every recomposition and invalidates the
+   `remember` key.
+3. **Read the delegate inside the adapter's `Invoke`** (not at
+   adapter construction), so the developer can mutate the property
+   between renders without re-allocating.
+4. **Treat `null` as "always true"** inside the adapter — no
+   separate singleton fallback is needed; the adapter is already
+   allocated, and a single branch in `Invoke` keeps the JNI reference
+   identical whether or not the developer wired up a callback.
+
+Do **not** use a static singleton for these callbacks: the singleton
+trick is fine for genuinely stateless stubs that the user can't
+override (`NoOpSearchCallback` — `onSearch` is *not* a `remember`
+key), but it can't host a per-node mutable delegate without becoming
+shared state across all instances.
+
 ## Bindings policy
 
 The repo used to ship its own `*.Compose.*` binding projects. **Don't

@@ -27,6 +27,20 @@ public sealed class DismissibleNavigationDrawer : ComposableNode
     /// </summary>
     public bool InitiallyOpen { get; set; }
 
+    /// <summary>
+    /// Optional veto invoked before the drawer transitions between
+    /// <c>Open</c> and <c>Closed</c> (Compose Kotlin
+    /// <c>confirmStateChange</c>). Return <c>true</c> to allow the
+    /// change, <c>false</c> to block it. When <c>null</c> all
+    /// transitions are allowed.
+    /// </summary>
+    public System.Func<DrawerValue, bool>? ConfirmStateChange { get; set; }
+
+    // Allocate once per node and reuse across recompositions — the
+    // Java peer is part of `rememberDrawerState`'s cache key, so a
+    // fresh adapter each pass would drop the cached DrawerState.
+    readonly DrawerConfirmStateChange _confirm = new();
+
     internal override void Render(IComposer composer)
     {
         if (Drawer is null)
@@ -38,9 +52,11 @@ public sealed class DismissibleNavigationDrawer : ComposableNode
 
         var initial = InitiallyOpen ? DrawerValue.Open! : DrawerValue.Closed!;
 
+        _confirm.Callback = ConfirmStateChange;
+
         var state = NavigationDrawerKt.RememberDrawerState(
             initialValue:        initial,
-            confirmStateChange:  AlwaysTrueFunction1.Instance,
+            confirmStateChange:  _confirm,
             _composer:           composer,
             p3:                  0,
             _changed:            0);
