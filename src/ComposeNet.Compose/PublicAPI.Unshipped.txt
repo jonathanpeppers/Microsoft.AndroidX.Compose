@@ -1,0 +1,547 @@
+#nullable enable
+ComposeNet.AlertDialog
+ComposeNet.AlertDialog.AlertDialog(System.Action! onDismissRequest) -> void
+ComposeNet.AlertDialog.ConfirmButton.get -> ComposeNet.ComposableNode?
+ComposeNet.AlertDialog.ConfirmButton.set -> void
+ComposeNet.AlertDialog.DismissButton.get -> ComposeNet.ComposableNode?
+ComposeNet.AlertDialog.DismissButton.set -> void
+ComposeNet.AlertDialog.Icon.get -> ComposeNet.ComposableNode?
+ComposeNet.AlertDialog.Icon.set -> void
+ComposeNet.AlertDialog.Text.get -> ComposeNet.ComposableNode?
+ComposeNet.AlertDialog.Text.set -> void
+ComposeNet.AlertDialog.Title.get -> ComposeNet.ComposableNode?
+ComposeNet.AlertDialog.Title.set -> void
+ComposeNet.AssistChip
+ComposeNet.AssistChip.AssistChip(System.Action! onClick) -> void
+ComposeNet.AssistChip.Label.get -> ComposeNet.ComposableNode?
+ComposeNet.AssistChip.Label.set -> void
+ComposeNet.AssistChip.LeadingIcon.get -> ComposeNet.ComposableNode?
+ComposeNet.AssistChip.LeadingIcon.set -> void
+ComposeNet.AssistChip.TrailingIcon.get -> ComposeNet.ComposableNode?
+ComposeNet.AssistChip.TrailingIcon.set -> void
+ComposeNet.Badge
+ComposeNet.Badge.Badge() -> void
+ComposeNet.BadgedBox
+ComposeNet.BadgedBox.Badge.get -> ComposeNet.ComposableNode?
+ComposeNet.BadgedBox.Badge.set -> void
+ComposeNet.BadgedBox.BadgedBox() -> void
+ComposeNet.BadgedBox.Content.get -> ComposeNet.ComposableNode?
+ComposeNet.BadgedBox.Content.set -> void
+ComposeNet.BottomAppBar
+ComposeNet.BottomAppBar.BottomAppBar() -> void
+ComposeNet.BottomAppBar.FloatingActionButton.get -> ComposeNet.ComposableNode?
+ComposeNet.BottomAppBar.FloatingActionButton.set -> void
+ComposeNet.BottomSheetScaffold
+ComposeNet.BottomSheetScaffold.BottomSheetScaffold() -> void
+ComposeNet.BottomSheetScaffold.SheetContent.get -> ComposeNet.ComposableNode?
+ComposeNet.BottomSheetScaffold.SheetContent.set -> void
+ComposeNet.BottomSheetScaffold.SheetDragHandle.get -> ComposeNet.ComposableNode?
+ComposeNet.BottomSheetScaffold.SheetDragHandle.set -> void
+ComposeNet.BottomSheetScaffold.TopBar.get -> ComposeNet.ComposableNode?
+ComposeNet.BottomSheetScaffold.TopBar.set -> void
+ComposeNet.Box
+ComposeNet.Box.Box() -> void
+ComposeNet.Button
+ComposeNet.Button.Button(System.Action! onClick) -> void
+ComposeNet.Card
+ComposeNet.Card.Card() -> void
+ComposeNet.CenterAlignedTopAppBar
+ComposeNet.CenterAlignedTopAppBar.Actions.get -> ComposeNet.ComposableNode?
+ComposeNet.CenterAlignedTopAppBar.Actions.set -> void
+ComposeNet.CenterAlignedTopAppBar.CenterAlignedTopAppBar() -> void
+ComposeNet.CenterAlignedTopAppBar.NavigationIcon.get -> ComposeNet.ComposableNode?
+ComposeNet.CenterAlignedTopAppBar.NavigationIcon.set -> void
+ComposeNet.CenterAlignedTopAppBar.Title.get -> ComposeNet.ComposableNode?
+ComposeNet.CenterAlignedTopAppBar.Title.set -> void
+ComposeNet.Checkbox
+ComposeNet.Checkbox.Checkbox(bool checked, System.Action<bool>! onCheckedChange) -> void
+ComposeNet.CircularProgressIndicator
+ComposeNet.CircularProgressIndicator.CircularProgressIndicator() -> void
+ComposeNet.CircularProgressIndicator.ColorArgb.get -> long?
+ComposeNet.CircularProgressIndicator.ColorArgb.set -> void
+ComposeNet.CircularProgressIndicator.StrokeWidthDp.get -> float?
+ComposeNet.CircularProgressIndicator.StrokeWidthDp.set -> void
+ComposeNet.CircularProgressIndicator.TrackColorArgb.get -> long?
+ComposeNet.CircularProgressIndicator.TrackColorArgb.set -> void
+ComposeNet.Column
+ComposeNet.Column.Column() -> void
+ComposeNet.ComposableContainer
+ComposeNet.ComposableContainer.Add(ComposeNet.ComposableNode? child) -> void
+ComposeNet.ComposableContainer.Add(ComposeNet.Modifier! modifier) -> void
+ComposeNet.ComposableContainer.ComposableContainer() -> void
+ComposeNet.ComposableNode
+ComposeNet.ComposableNode.AppendModifier(ComposeNet.Modifier! modifier) -> void
+ComposeNet.ComposableNode.ComposableNode() -> void
+ComposeNet.ComposableNode.Modifier.get -> ComposeNet.Modifier?
+ComposeNet.ComposableNode.Modifier.set -> void
+ComposeNet.ComposableNode.PrependModifier(ComposeNet.Modifier! modifier) -> void
+ComposeNet.ComposeActivity
+ComposeNet.ComposeActivity.ComposeActivity() -> void
+ComposeNet.ComposeActivity.Remember<T>(System.Func<T>! factory, int key = 0) -> T
+ComposeNet.ComposeActivity.SetContent(System.Func<ComposeNet.ComposableNode!>! content) -> void
+ComposeNet.CustomTab
+ComposeNet.CustomTab.CustomTab(bool selected, System.Action! onClick) -> void
+ComposeNet.DatePicker
+ComposeNet.DatePicker.DatePicker(ComposeNet.DatePickerState? state = null) -> void
+ComposeNet.DatePickerDialog
+ComposeNet.DatePickerDialog.Body.get -> ComposeNet.ComposableNode?
+ComposeNet.DatePickerDialog.Body.set -> void
+ComposeNet.DatePickerDialog.ConfirmButton.get -> ComposeNet.ComposableNode?
+ComposeNet.DatePickerDialog.ConfirmButton.set -> void
+ComposeNet.DatePickerDialog.DatePickerDialog(System.Action! onDismissRequest) -> void
+ComposeNet.DatePickerDialog.DismissButton.get -> ComposeNet.ComposableNode?
+ComposeNet.DatePickerDialog.DismissButton.set -> void
+ComposeNet.DatePickerState
+ComposeNet.DatePickerState.DatePickerState() -> void
+ComposeNet.DatePickerState.DisplayedMonthMillis.get -> long
+ComposeNet.DatePickerState.DisplayedMonthMillis.set -> void
+ComposeNet.DatePickerState.SelectedDateMillis.get -> long?
+ComposeNet.DatePickerState.SelectedDateMillis.set -> void
+ComposeNet.DismissibleDrawerSheet
+ComposeNet.DismissibleDrawerSheet.ContainerColor.get -> long
+ComposeNet.DismissibleDrawerSheet.ContainerColor.set -> void
+ComposeNet.DismissibleDrawerSheet.DismissibleDrawerSheet() -> void
+ComposeNet.DismissibleNavigationDrawer
+ComposeNet.DismissibleNavigationDrawer.ConfirmStateChange.get -> System.Func<AndroidX.Compose.Material3.DrawerValue!, bool>?
+ComposeNet.DismissibleNavigationDrawer.ConfirmStateChange.set -> void
+ComposeNet.DismissibleNavigationDrawer.Content.get -> ComposeNet.ComposableNode?
+ComposeNet.DismissibleNavigationDrawer.Content.set -> void
+ComposeNet.DismissibleNavigationDrawer.DismissibleNavigationDrawer() -> void
+ComposeNet.DismissibleNavigationDrawer.Drawer.get -> ComposeNet.ComposableNode?
+ComposeNet.DismissibleNavigationDrawer.Drawer.set -> void
+ComposeNet.DismissibleNavigationDrawer.InitiallyOpen.get -> bool
+ComposeNet.DismissibleNavigationDrawer.InitiallyOpen.set -> void
+ComposeNet.DropdownMenu
+ComposeNet.DropdownMenu.DropdownMenu(bool expanded, System.Action! onDismissRequest) -> void
+ComposeNet.DropdownMenuItem
+ComposeNet.DropdownMenuItem.DropdownMenuItem(ComposeNet.ComposableNode! text, System.Action! onClick) -> void
+ComposeNet.DropdownMenuItem.Enabled.get -> bool
+ComposeNet.DropdownMenuItem.Enabled.set -> void
+ComposeNet.DropdownMenuItem.LeadingIcon.get -> ComposeNet.ComposableNode?
+ComposeNet.DropdownMenuItem.LeadingIcon.set -> void
+ComposeNet.DropdownMenuItem.TrailingIcon.get -> ComposeNet.ComposableNode?
+ComposeNet.DropdownMenuItem.TrailingIcon.set -> void
+ComposeNet.ElevatedAssistChip
+ComposeNet.ElevatedAssistChip.ElevatedAssistChip(System.Action! onClick) -> void
+ComposeNet.ElevatedAssistChip.Label.get -> ComposeNet.ComposableNode?
+ComposeNet.ElevatedAssistChip.Label.set -> void
+ComposeNet.ElevatedAssistChip.LeadingIcon.get -> ComposeNet.ComposableNode?
+ComposeNet.ElevatedAssistChip.LeadingIcon.set -> void
+ComposeNet.ElevatedAssistChip.TrailingIcon.get -> ComposeNet.ComposableNode?
+ComposeNet.ElevatedAssistChip.TrailingIcon.set -> void
+ComposeNet.ElevatedButton
+ComposeNet.ElevatedButton.ElevatedButton(System.Action! onClick) -> void
+ComposeNet.ElevatedCard
+ComposeNet.ElevatedCard.ElevatedCard() -> void
+ComposeNet.ElevatedFilterChip
+ComposeNet.ElevatedFilterChip.ElevatedFilterChip(bool selected, System.Action! onClick) -> void
+ComposeNet.ElevatedFilterChip.Label.get -> ComposeNet.ComposableNode?
+ComposeNet.ElevatedFilterChip.Label.set -> void
+ComposeNet.ElevatedFilterChip.LeadingIcon.get -> ComposeNet.ComposableNode?
+ComposeNet.ElevatedFilterChip.LeadingIcon.set -> void
+ComposeNet.ElevatedFilterChip.TrailingIcon.get -> ComposeNet.ComposableNode?
+ComposeNet.ElevatedFilterChip.TrailingIcon.set -> void
+ComposeNet.ElevatedSuggestionChip
+ComposeNet.ElevatedSuggestionChip.ElevatedSuggestionChip(System.Action! onClick) -> void
+ComposeNet.ElevatedSuggestionChip.Icon.get -> ComposeNet.ComposableNode?
+ComposeNet.ElevatedSuggestionChip.Icon.set -> void
+ComposeNet.ElevatedSuggestionChip.Label.get -> ComposeNet.ComposableNode?
+ComposeNet.ElevatedSuggestionChip.Label.set -> void
+ComposeNet.ExpandedDockedSearchBar
+ComposeNet.ExpandedDockedSearchBar.ExpandedDockedSearchBar(ComposeNet.SearchBarState! state) -> void
+ComposeNet.ExpandedDockedSearchBar.InputField.get -> ComposeNet.ComposableNode?
+ComposeNet.ExpandedDockedSearchBar.InputField.set -> void
+ComposeNet.ExpandedFullScreenSearchBar
+ComposeNet.ExpandedFullScreenSearchBar.ExpandedFullScreenSearchBar(ComposeNet.SearchBarState! state) -> void
+ComposeNet.ExpandedFullScreenSearchBar.InputField.get -> ComposeNet.ComposableNode?
+ComposeNet.ExpandedFullScreenSearchBar.InputField.set -> void
+ComposeNet.FilledIconButton
+ComposeNet.FilledIconButton.FilledIconButton(System.Action! onClick) -> void
+ComposeNet.FilledIconToggleButton
+ComposeNet.FilledIconToggleButton.FilledIconToggleButton(bool checked, System.Action<bool>! onCheckedChange) -> void
+ComposeNet.FilledTonalButton
+ComposeNet.FilledTonalButton.FilledTonalButton(System.Action! onClick) -> void
+ComposeNet.FilledTonalIconButton
+ComposeNet.FilledTonalIconButton.FilledTonalIconButton(System.Action! onClick) -> void
+ComposeNet.FilledTonalIconToggleButton
+ComposeNet.FilledTonalIconToggleButton.FilledTonalIconToggleButton(bool checked, System.Action<bool>! onCheckedChange) -> void
+ComposeNet.FilterChip
+ComposeNet.FilterChip.FilterChip(bool selected, System.Action! onClick) -> void
+ComposeNet.FilterChip.Label.get -> ComposeNet.ComposableNode?
+ComposeNet.FilterChip.Label.set -> void
+ComposeNet.FilterChip.LeadingIcon.get -> ComposeNet.ComposableNode?
+ComposeNet.FilterChip.LeadingIcon.set -> void
+ComposeNet.FilterChip.TrailingIcon.get -> ComposeNet.ComposableNode?
+ComposeNet.FilterChip.TrailingIcon.set -> void
+ComposeNet.FlexibleBottomAppBar
+ComposeNet.FlexibleBottomAppBar.FlexibleBottomAppBar() -> void
+ComposeNet.FloatingActionButton
+ComposeNet.FloatingActionButton.FloatingActionButton(System.Action! onClick) -> void
+ComposeNet.GridCells
+ComposeNet.HorizontalDivider
+ComposeNet.HorizontalDivider.ColorArgb.get -> long?
+ComposeNet.HorizontalDivider.ColorArgb.set -> void
+ComposeNet.HorizontalDivider.HorizontalDivider() -> void
+ComposeNet.HorizontalDivider.ThicknessDp.get -> float?
+ComposeNet.HorizontalDivider.ThicknessDp.set -> void
+ComposeNet.Icon
+ComposeNet.Icon.Icon(AndroidX.Compose.UI.Graphics.Vector.ImageVector! imageVector, string? contentDescription = null) -> void
+ComposeNet.Icon.Icon(int drawableResourceId, string? contentDescription = null) -> void
+ComposeNet.Icon.TintArgb.get -> long?
+ComposeNet.Icon.TintArgb.set -> void
+ComposeNet.IconButton
+ComposeNet.IconButton.IconButton(System.Action! onClick) -> void
+ComposeNet.IconToggleButton
+ComposeNet.IconToggleButton.IconToggleButton(bool checked, System.Action<bool>! onCheckedChange) -> void
+ComposeNet.Image
+ComposeNet.Image.Image(int drawableResourceId, string? contentDescription = null) -> void
+ComposeNet.InputChip
+ComposeNet.InputChip.Avatar.get -> ComposeNet.ComposableNode?
+ComposeNet.InputChip.Avatar.set -> void
+ComposeNet.InputChip.InputChip(bool selected, System.Action! onClick) -> void
+ComposeNet.InputChip.Label.get -> ComposeNet.ComposableNode?
+ComposeNet.InputChip.Label.set -> void
+ComposeNet.InputChip.LeadingIcon.get -> ComposeNet.ComposableNode?
+ComposeNet.InputChip.LeadingIcon.set -> void
+ComposeNet.InputChip.TrailingIcon.get -> ComposeNet.ComposableNode?
+ComposeNet.InputChip.TrailingIcon.set -> void
+ComposeNet.LargeFlexibleTopAppBar
+ComposeNet.LargeFlexibleTopAppBar.Actions.get -> ComposeNet.ComposableNode?
+ComposeNet.LargeFlexibleTopAppBar.Actions.set -> void
+ComposeNet.LargeFlexibleTopAppBar.LargeFlexibleTopAppBar() -> void
+ComposeNet.LargeFlexibleTopAppBar.NavigationIcon.get -> ComposeNet.ComposableNode?
+ComposeNet.LargeFlexibleTopAppBar.NavigationIcon.set -> void
+ComposeNet.LargeFlexibleTopAppBar.Subtitle.get -> ComposeNet.ComposableNode?
+ComposeNet.LargeFlexibleTopAppBar.Subtitle.set -> void
+ComposeNet.LargeFlexibleTopAppBar.Title.get -> ComposeNet.ComposableNode?
+ComposeNet.LargeFlexibleTopAppBar.Title.set -> void
+ComposeNet.LargeTopAppBar
+ComposeNet.LargeTopAppBar.Actions.get -> ComposeNet.ComposableNode?
+ComposeNet.LargeTopAppBar.Actions.set -> void
+ComposeNet.LargeTopAppBar.LargeTopAppBar() -> void
+ComposeNet.LargeTopAppBar.NavigationIcon.get -> ComposeNet.ComposableNode?
+ComposeNet.LargeTopAppBar.NavigationIcon.set -> void
+ComposeNet.LargeTopAppBar.Title.get -> ComposeNet.ComposableNode?
+ComposeNet.LargeTopAppBar.Title.set -> void
+ComposeNet.LazyColumn<T>
+ComposeNet.LazyColumn<T>.LazyColumn(System.Collections.Generic.IReadOnlyList<T>! items, System.Func<T, ComposeNet.ComposableNode!>! itemContent) -> void
+ComposeNet.LazyColumn<T>.State.get -> AndroidX.Compose.Foundation.Lazy.LazyListState?
+ComposeNet.LazyColumn<T>.State.set -> void
+ComposeNet.LazyHorizontalGrid<T>
+ComposeNet.LazyHorizontalGrid<T>.LazyHorizontalGrid(AndroidX.Compose.Foundation.Lazy.Grid.IGridCells! rows, System.Collections.Generic.IReadOnlyList<T>! items, System.Func<T, ComposeNet.ComposableNode!>! itemContent) -> void
+ComposeNet.LazyHorizontalGrid<T>.State.get -> AndroidX.Compose.Foundation.Lazy.Grid.LazyGridState?
+ComposeNet.LazyHorizontalGrid<T>.State.set -> void
+ComposeNet.LazyRow<T>
+ComposeNet.LazyRow<T>.LazyRow(System.Collections.Generic.IReadOnlyList<T>! items, System.Func<T, ComposeNet.ComposableNode!>! itemContent) -> void
+ComposeNet.LazyRow<T>.State.get -> AndroidX.Compose.Foundation.Lazy.LazyListState?
+ComposeNet.LazyRow<T>.State.set -> void
+ComposeNet.LazyVerticalGrid<T>
+ComposeNet.LazyVerticalGrid<T>.LazyVerticalGrid(AndroidX.Compose.Foundation.Lazy.Grid.IGridCells! columns, System.Collections.Generic.IReadOnlyList<T>! items, System.Func<T, ComposeNet.ComposableNode!>! itemContent) -> void
+ComposeNet.LazyVerticalGrid<T>.State.get -> AndroidX.Compose.Foundation.Lazy.Grid.LazyGridState?
+ComposeNet.LazyVerticalGrid<T>.State.set -> void
+ComposeNet.LeadingIconTab
+ComposeNet.LeadingIconTab.Icon.get -> ComposeNet.ComposableNode?
+ComposeNet.LeadingIconTab.Icon.set -> void
+ComposeNet.LeadingIconTab.LeadingIconTab(bool selected, System.Action! onClick) -> void
+ComposeNet.LeadingIconTab.Text.get -> ComposeNet.ComposableNode?
+ComposeNet.LeadingIconTab.Text.set -> void
+ComposeNet.LinearProgressIndicator
+ComposeNet.LinearProgressIndicator.ColorArgb.get -> long?
+ComposeNet.LinearProgressIndicator.ColorArgb.set -> void
+ComposeNet.LinearProgressIndicator.LinearProgressIndicator() -> void
+ComposeNet.LinearProgressIndicator.TrackColorArgb.get -> long?
+ComposeNet.LinearProgressIndicator.TrackColorArgb.set -> void
+ComposeNet.ListItem
+ComposeNet.ListItem.Headline.get -> ComposeNet.ComposableNode?
+ComposeNet.ListItem.Headline.set -> void
+ComposeNet.ListItem.Leading.get -> ComposeNet.ComposableNode?
+ComposeNet.ListItem.Leading.set -> void
+ComposeNet.ListItem.ListItem() -> void
+ComposeNet.ListItem.Overline.get -> ComposeNet.ComposableNode?
+ComposeNet.ListItem.Overline.set -> void
+ComposeNet.ListItem.Supporting.get -> ComposeNet.ComposableNode?
+ComposeNet.ListItem.Supporting.set -> void
+ComposeNet.ListItem.Trailing.get -> ComposeNet.ComposableNode?
+ComposeNet.ListItem.Trailing.set -> void
+ComposeNet.MaterialTheme
+ComposeNet.MaterialTheme.MaterialTheme() -> void
+ComposeNet.MediumFlexibleTopAppBar
+ComposeNet.MediumFlexibleTopAppBar.Actions.get -> ComposeNet.ComposableNode?
+ComposeNet.MediumFlexibleTopAppBar.Actions.set -> void
+ComposeNet.MediumFlexibleTopAppBar.MediumFlexibleTopAppBar() -> void
+ComposeNet.MediumFlexibleTopAppBar.NavigationIcon.get -> ComposeNet.ComposableNode?
+ComposeNet.MediumFlexibleTopAppBar.NavigationIcon.set -> void
+ComposeNet.MediumFlexibleTopAppBar.Subtitle.get -> ComposeNet.ComposableNode?
+ComposeNet.MediumFlexibleTopAppBar.Subtitle.set -> void
+ComposeNet.MediumFlexibleTopAppBar.Title.get -> ComposeNet.ComposableNode?
+ComposeNet.MediumFlexibleTopAppBar.Title.set -> void
+ComposeNet.MediumTopAppBar
+ComposeNet.MediumTopAppBar.Actions.get -> ComposeNet.ComposableNode?
+ComposeNet.MediumTopAppBar.Actions.set -> void
+ComposeNet.MediumTopAppBar.MediumTopAppBar() -> void
+ComposeNet.MediumTopAppBar.NavigationIcon.get -> ComposeNet.ComposableNode?
+ComposeNet.MediumTopAppBar.NavigationIcon.set -> void
+ComposeNet.MediumTopAppBar.Title.get -> ComposeNet.ComposableNode?
+ComposeNet.MediumTopAppBar.Title.set -> void
+ComposeNet.ModalBottomSheet
+ComposeNet.ModalBottomSheet.DragHandle.get -> ComposeNet.ComposableNode?
+ComposeNet.ModalBottomSheet.DragHandle.set -> void
+ComposeNet.ModalBottomSheet.ModalBottomSheet(System.Action! onDismissRequest) -> void
+ComposeNet.ModalDrawerSheet
+ComposeNet.ModalDrawerSheet.ContainerColor.get -> long
+ComposeNet.ModalDrawerSheet.ContainerColor.set -> void
+ComposeNet.ModalDrawerSheet.ModalDrawerSheet() -> void
+ComposeNet.ModalNavigationDrawer
+ComposeNet.ModalNavigationDrawer.ConfirmStateChange.get -> System.Func<AndroidX.Compose.Material3.DrawerValue!, bool>?
+ComposeNet.ModalNavigationDrawer.ConfirmStateChange.set -> void
+ComposeNet.ModalNavigationDrawer.Content.get -> ComposeNet.ComposableNode?
+ComposeNet.ModalNavigationDrawer.Content.set -> void
+ComposeNet.ModalNavigationDrawer.Drawer.get -> ComposeNet.ComposableNode?
+ComposeNet.ModalNavigationDrawer.Drawer.set -> void
+ComposeNet.ModalNavigationDrawer.InitiallyOpen.get -> bool
+ComposeNet.ModalNavigationDrawer.InitiallyOpen.set -> void
+ComposeNet.ModalNavigationDrawer.ModalNavigationDrawer() -> void
+ComposeNet.ModalWideNavigationRail
+ComposeNet.ModalWideNavigationRail.Header.get -> ComposeNet.ComposableNode?
+ComposeNet.ModalWideNavigationRail.Header.set -> void
+ComposeNet.ModalWideNavigationRail.ModalWideNavigationRail() -> void
+ComposeNet.Modifier
+ComposeNet.Modifier.Background(long color) -> ComposeNet.Modifier!
+ComposeNet.Modifier.Border(int widthDp, long color, int cornerRadiusDp = 0) -> ComposeNet.Modifier!
+ComposeNet.Modifier.Clickable(System.Action! onClick) -> ComposeNet.Modifier!
+ComposeNet.Modifier.Clip(int cornerRadiusDp) -> ComposeNet.Modifier!
+ComposeNet.Modifier.FillMaxHeight(float fraction = 1) -> ComposeNet.Modifier!
+ComposeNet.Modifier.FillMaxSize(float fraction = 1) -> ComposeNet.Modifier!
+ComposeNet.Modifier.FillMaxWidth(float fraction = 1) -> ComposeNet.Modifier!
+ComposeNet.Modifier.Height(int dp) -> ComposeNet.Modifier!
+ComposeNet.Modifier.Padding(int allDp) -> ComposeNet.Modifier!
+ComposeNet.Modifier.Padding(int horizontalDp, int verticalDp) -> ComposeNet.Modifier!
+ComposeNet.Modifier.Padding(int startDp, int topDp, int endDp, int bottomDp) -> ComposeNet.Modifier!
+ComposeNet.Modifier.SafeDrawingPadding() -> ComposeNet.Modifier!
+ComposeNet.Modifier.Size(int dp) -> ComposeNet.Modifier!
+ComposeNet.Modifier.Size(int widthDp, int heightDp) -> ComposeNet.Modifier!
+ComposeNet.Modifier.SystemBarsPadding() -> ComposeNet.Modifier!
+ComposeNet.Modifier.Then(ComposeNet.Modifier! other) -> ComposeNet.Modifier!
+ComposeNet.Modifier.Weight(float weight, bool fill = true) -> ComposeNet.Modifier!
+ComposeNet.Modifier.Width(int dp) -> ComposeNet.Modifier!
+ComposeNet.MultiChoiceSegmentedButtonRow
+ComposeNet.MultiChoiceSegmentedButtonRow.MultiChoiceSegmentedButtonRow() -> void
+ComposeNet.MutableNumberState<T>
+ComposeNet.MutableNumberState<T>.MutableNumberState(T initial) -> void
+ComposeNet.MutableState<T>
+ComposeNet.MutableState<T>.MutableState(T initial) -> void
+ComposeNet.MutableState<T>.Value.get -> T
+ComposeNet.MutableState<T>.Value.set -> void
+ComposeNet.NavigationBar
+ComposeNet.NavigationBar.NavigationBar() -> void
+ComposeNet.NavigationBarItem
+ComposeNet.NavigationBarItem.Icon.get -> ComposeNet.ComposableNode?
+ComposeNet.NavigationBarItem.Icon.set -> void
+ComposeNet.NavigationBarItem.Label.get -> ComposeNet.ComposableNode?
+ComposeNet.NavigationBarItem.Label.set -> void
+ComposeNet.NavigationBarItem.NavigationBarItem(bool selected, System.Action! onClick) -> void
+ComposeNet.NavigationRail
+ComposeNet.NavigationRail.NavigationRail() -> void
+ComposeNet.NavigationRailItem
+ComposeNet.NavigationRailItem.Icon.get -> ComposeNet.ComposableNode?
+ComposeNet.NavigationRailItem.Icon.set -> void
+ComposeNet.NavigationRailItem.Label.get -> ComposeNet.ComposableNode?
+ComposeNet.NavigationRailItem.Label.set -> void
+ComposeNet.NavigationRailItem.NavigationRailItem(bool selected, System.Action! onClick) -> void
+ComposeNet.ObservableList<T>
+ComposeNet.ObservableList<T>.Add(T item) -> void
+ComposeNet.ObservableList<T>.Clear() -> void
+ComposeNet.ObservableList<T>.Contains(T item) -> bool
+ComposeNet.ObservableList<T>.CopyTo(T[]! array, int arrayIndex) -> void
+ComposeNet.ObservableList<T>.Count.get -> int
+ComposeNet.ObservableList<T>.GetEnumerator() -> System.Collections.Generic.IEnumerator<T>!
+ComposeNet.ObservableList<T>.IndexOf(T item) -> int
+ComposeNet.ObservableList<T>.Insert(int index, T item) -> void
+ComposeNet.ObservableList<T>.IsReadOnly.get -> bool
+ComposeNet.ObservableList<T>.ObservableList() -> void
+ComposeNet.ObservableList<T>.ObservableList(System.Collections.Generic.IEnumerable<T>! initial) -> void
+ComposeNet.ObservableList<T>.Remove(T item) -> bool
+ComposeNet.ObservableList<T>.RemoveAt(int index) -> void
+ComposeNet.ObservableList<T>.this[int index].get -> T
+ComposeNet.ObservableList<T>.this[int index].set -> void
+ComposeNet.OutlinedButton
+ComposeNet.OutlinedButton.OutlinedButton(System.Action! onClick) -> void
+ComposeNet.OutlinedCard
+ComposeNet.OutlinedCard.OutlinedCard() -> void
+ComposeNet.OutlinedIconButton
+ComposeNet.OutlinedIconButton.OutlinedIconButton(System.Action! onClick) -> void
+ComposeNet.OutlinedIconToggleButton
+ComposeNet.OutlinedIconToggleButton.OutlinedIconToggleButton(bool checked, System.Action<bool>! onCheckedChange) -> void
+ComposeNet.OutlinedTextField
+ComposeNet.OutlinedTextField.OutlinedTextField(ComposeNet.MutableState<string!>! state) -> void
+ComposeNet.PermanentDrawerSheet
+ComposeNet.PermanentDrawerSheet.ContainerColor.get -> long
+ComposeNet.PermanentDrawerSheet.ContainerColor.set -> void
+ComposeNet.PermanentDrawerSheet.PermanentDrawerSheet() -> void
+ComposeNet.PermanentNavigationDrawer
+ComposeNet.PermanentNavigationDrawer.Content.get -> ComposeNet.ComposableNode?
+ComposeNet.PermanentNavigationDrawer.Content.set -> void
+ComposeNet.PermanentNavigationDrawer.Drawer.get -> ComposeNet.ComposableNode?
+ComposeNet.PermanentNavigationDrawer.Drawer.set -> void
+ComposeNet.PermanentNavigationDrawer.PermanentNavigationDrawer() -> void
+ComposeNet.PrimaryScrollableTabRow
+ComposeNet.PrimaryScrollableTabRow.PrimaryScrollableTabRow(int selectedTabIndex) -> void
+ComposeNet.PrimaryTabRow
+ComposeNet.PrimaryTabRow.PrimaryTabRow(int selectedTabIndex) -> void
+ComposeNet.RadioButton
+ComposeNet.RadioButton.RadioButton(bool selected, System.Action! onClick) -> void
+ComposeNet.RangeSlider
+ComposeNet.RangeSlider.RangeSlider((float Start, float End) value, System.Action<(float Start, float End)>! onValueChange) -> void
+ComposeNet.Resource
+ComposeNet.Resource.Resource() -> void
+ComposeNet.Row
+ComposeNet.Row.Row() -> void
+ComposeNet.Scaffold
+ComposeNet.Scaffold.Body.get -> ComposeNet.ComposableNode?
+ComposeNet.Scaffold.Body.set -> void
+ComposeNet.Scaffold.BottomBar.get -> ComposeNet.ComposableNode?
+ComposeNet.Scaffold.BottomBar.set -> void
+ComposeNet.Scaffold.FloatingActionButton.get -> ComposeNet.ComposableNode?
+ComposeNet.Scaffold.FloatingActionButton.set -> void
+ComposeNet.Scaffold.Scaffold() -> void
+ComposeNet.Scaffold.SnackbarHost.get -> ComposeNet.ComposableNode?
+ComposeNet.Scaffold.SnackbarHost.set -> void
+ComposeNet.Scaffold.TopBar.get -> ComposeNet.ComposableNode?
+ComposeNet.Scaffold.TopBar.set -> void
+ComposeNet.ScrollableTabRow
+ComposeNet.ScrollableTabRow.ScrollableTabRow(int selectedTabIndex) -> void
+ComposeNet.SearchBar
+ComposeNet.SearchBar.InputField.get -> ComposeNet.ComposableNode?
+ComposeNet.SearchBar.InputField.set -> void
+ComposeNet.SearchBar.SearchBar(ComposeNet.SearchBarState! state) -> void
+ComposeNet.SearchBarInputField
+ComposeNet.SearchBarInputField.LeadingIcon.get -> ComposeNet.ComposableNode?
+ComposeNet.SearchBarInputField.LeadingIcon.set -> void
+ComposeNet.SearchBarInputField.OnSearch.get -> System.Action<string!>?
+ComposeNet.SearchBarInputField.OnSearch.set -> void
+ComposeNet.SearchBarInputField.Placeholder.get -> ComposeNet.ComposableNode?
+ComposeNet.SearchBarInputField.Placeholder.set -> void
+ComposeNet.SearchBarInputField.SearchBarInputField(ComposeNet.SearchBarTextFieldState! textState, ComposeNet.SearchBarState! searchState) -> void
+ComposeNet.SearchBarInputField.TrailingIcon.get -> ComposeNet.ComposableNode?
+ComposeNet.SearchBarInputField.TrailingIcon.set -> void
+ComposeNet.SearchBarState
+ComposeNet.SearchBarState.SearchBarState() -> void
+ComposeNet.SearchBarTextFieldState
+ComposeNet.SearchBarTextFieldState.SearchBarTextFieldState(string! initialText = "") -> void
+ComposeNet.SearchBarTextFieldState.Text.get -> string!
+ComposeNet.SecondaryScrollableTabRow
+ComposeNet.SecondaryScrollableTabRow.SecondaryScrollableTabRow(int selectedTabIndex) -> void
+ComposeNet.SecondaryTabRow
+ComposeNet.SecondaryTabRow.SecondaryTabRow(int selectedTabIndex) -> void
+ComposeNet.SegmentedButton
+ComposeNet.SegmentedButton.Icon.get -> ComposeNet.ComposableNode?
+ComposeNet.SegmentedButton.Icon.set -> void
+ComposeNet.SegmentedButton.SegmentedButton(bool checked, System.Action<bool>! onCheckedChange) -> void
+ComposeNet.SegmentedButton.SegmentedButton(bool selected, System.Action! onClick) -> void
+ComposeNet.SingleChoiceSegmentedButtonRow
+ComposeNet.SingleChoiceSegmentedButtonRow.SingleChoiceSegmentedButtonRow() -> void
+ComposeNet.Slider
+ComposeNet.Slider.Slider(float value, System.Action<float>! onValueChange) -> void
+ComposeNet.Snackbar
+ComposeNet.Snackbar.Action.get -> ComposeNet.ComposableNode?
+ComposeNet.Snackbar.Action.set -> void
+ComposeNet.Snackbar.Body.get -> ComposeNet.ComposableNode?
+ComposeNet.Snackbar.Body.set -> void
+ComposeNet.Snackbar.DismissAction.get -> ComposeNet.ComposableNode?
+ComposeNet.Snackbar.DismissAction.set -> void
+ComposeNet.Snackbar.Snackbar() -> void
+ComposeNet.SnackbarHost
+ComposeNet.SnackbarHost.SnackbarHost(ComposeNet.SnackbarHostState! hostState) -> void
+ComposeNet.SnackbarHostState
+ComposeNet.SnackbarHostState.SnackbarHostState() -> void
+ComposeNet.Spacer
+ComposeNet.Spacer.Spacer() -> void
+ComposeNet.Spacer.Spacer(ComposeNet.Modifier! modifier) -> void
+ComposeNet.SuggestionChip
+ComposeNet.SuggestionChip.Icon.get -> ComposeNet.ComposableNode?
+ComposeNet.SuggestionChip.Icon.set -> void
+ComposeNet.SuggestionChip.Label.get -> ComposeNet.ComposableNode?
+ComposeNet.SuggestionChip.Label.set -> void
+ComposeNet.SuggestionChip.SuggestionChip(System.Action! onClick) -> void
+ComposeNet.Surface
+ComposeNet.Surface.Surface() -> void
+ComposeNet.Switch
+ComposeNet.Switch.Switch(bool checked, System.Action<bool>! onCheckedChange) -> void
+ComposeNet.Tab
+ComposeNet.Tab.Icon.get -> ComposeNet.ComposableNode?
+ComposeNet.Tab.Icon.set -> void
+ComposeNet.Tab.Tab(bool selected, System.Action! onClick) -> void
+ComposeNet.Tab.Text.get -> ComposeNet.ComposableNode?
+ComposeNet.Tab.Text.set -> void
+ComposeNet.TabRow
+ComposeNet.TabRow.TabRow(int selectedTabIndex) -> void
+ComposeNet.Text
+ComposeNet.Text.Text(string! text) -> void
+ComposeNet.TextButton
+ComposeNet.TextButton.TextButton(System.Action! onClick) -> void
+ComposeNet.TextField
+ComposeNet.TextField.TextField(ComposeNet.MutableState<string!>! state) -> void
+ComposeNet.TimePicker
+ComposeNet.TimePicker.TimePicker(ComposeNet.TimePickerState? state = null) -> void
+ComposeNet.TimePickerDialog
+ComposeNet.TimePickerDialog.Body.get -> ComposeNet.ComposableNode?
+ComposeNet.TimePickerDialog.Body.set -> void
+ComposeNet.TimePickerDialog.ConfirmButton.get -> ComposeNet.ComposableNode?
+ComposeNet.TimePickerDialog.ConfirmButton.set -> void
+ComposeNet.TimePickerDialog.DismissButton.get -> ComposeNet.ComposableNode?
+ComposeNet.TimePickerDialog.DismissButton.set -> void
+ComposeNet.TimePickerDialog.ModeToggleButton.get -> ComposeNet.ComposableNode?
+ComposeNet.TimePickerDialog.ModeToggleButton.set -> void
+ComposeNet.TimePickerDialog.TimePickerDialog(System.Action! onDismissRequest) -> void
+ComposeNet.TimePickerDialog.Title.get -> ComposeNet.ComposableNode?
+ComposeNet.TimePickerDialog.Title.set -> void
+ComposeNet.TimePickerState
+ComposeNet.TimePickerState.Hour.get -> int
+ComposeNet.TimePickerState.Hour.set -> void
+ComposeNet.TimePickerState.Is24Hour.get -> bool
+ComposeNet.TimePickerState.Minute.get -> int
+ComposeNet.TimePickerState.Minute.set -> void
+ComposeNet.TimePickerState.TimePickerState(int initialHour = 12, int initialMinute = 0, bool is24Hour = true) -> void
+ComposeNet.Tooltip
+ComposeNet.Tooltip.Anchor.get -> ComposeNet.ComposableNode?
+ComposeNet.Tooltip.Anchor.set -> void
+ComposeNet.Tooltip.Tip.get -> ComposeNet.ComposableNode?
+ComposeNet.Tooltip.Tip.set -> void
+ComposeNet.Tooltip.Tooltip(bool isPersistent = false) -> void
+ComposeNet.TopAppBar
+ComposeNet.TopAppBar.Actions.get -> ComposeNet.ComposableNode?
+ComposeNet.TopAppBar.Actions.set -> void
+ComposeNet.TopAppBar.NavigationIcon.get -> ComposeNet.ComposableNode?
+ComposeNet.TopAppBar.NavigationIcon.set -> void
+ComposeNet.TopAppBar.Subtitle.get -> ComposeNet.ComposableNode?
+ComposeNet.TopAppBar.Subtitle.set -> void
+ComposeNet.TopAppBar.Title.get -> ComposeNet.ComposableNode?
+ComposeNet.TopAppBar.Title.set -> void
+ComposeNet.TopAppBar.TopAppBar() -> void
+ComposeNet.TopSearchBar
+ComposeNet.TopSearchBar.InputField.get -> ComposeNet.ComposableNode?
+ComposeNet.TopSearchBar.InputField.set -> void
+ComposeNet.TopSearchBar.TopSearchBar(ComposeNet.SearchBarState! state) -> void
+ComposeNet.TriStateCheckbox
+ComposeNet.TriStateCheckbox.TriStateCheckbox(AndroidX.Compose.UI.State.ToggleableState! state, System.Action! onClick) -> void
+ComposeNet.VerticalDivider
+ComposeNet.VerticalDivider.ColorArgb.get -> long?
+ComposeNet.VerticalDivider.ColorArgb.set -> void
+ComposeNet.VerticalDivider.ThicknessDp.get -> float?
+ComposeNet.VerticalDivider.ThicknessDp.set -> void
+ComposeNet.VerticalDivider.VerticalDivider() -> void
+ComposeNet.WideNavigationRail
+ComposeNet.WideNavigationRail.WideNavigationRail() -> void
+ComposeNet.WideNavigationRailItem
+ComposeNet.WideNavigationRailItem.Icon.get -> ComposeNet.ComposableNode?
+ComposeNet.WideNavigationRailItem.Icon.set -> void
+ComposeNet.WideNavigationRailItem.Label.get -> ComposeNet.ComposableNode?
+ComposeNet.WideNavigationRailItem.Label.set -> void
+ComposeNet.WideNavigationRailItem.WideNavigationRailItem(bool selected, System.Action! onClick) -> void
+override ComposeNet.ComposeActivity.OnCreate(Android.OS.Bundle? savedInstanceState) -> void
+override ComposeNet.MutableState<T>.ToString() -> string!
+static ComposeNet.GridCells.Adaptive(float minSizeDp) -> AndroidX.Compose.Foundation.Lazy.Grid.IGridCells!
+static ComposeNet.GridCells.Fixed(int count) -> AndroidX.Compose.Foundation.Lazy.Grid.IGridCells!
+static ComposeNet.Modifier.Companion.get -> ComposeNet.Modifier!
+static ComposeNet.MutableNumberState<T>.operator --(ComposeNet.MutableNumberState<T>! s) -> ComposeNet.MutableNumberState<T>!
+static ComposeNet.MutableNumberState<T>.operator ++(ComposeNet.MutableNumberState<T>! s) -> ComposeNet.MutableNumberState<T>!

@@ -14,6 +14,11 @@
                       ReferenceOutputAssembly="false" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" Version="4.14.0" PrivateAssets="All" />
+    <AdditionalFiles Include="PublicAPI.Shipped.txt" />
+    <AdditionalFiles Include="PublicAPI.Unshipped.txt" />
+  </ItemGroup>
+  <ItemGroup>
     <PackageReference Include="Xamarin.AndroidX.Activity" />
     <PackageReference Include="Xamarin.AndroidX.Activity.Compose" />
     <PackageReference Include="Xamarin.AndroidX.Compose.Runtime" />
