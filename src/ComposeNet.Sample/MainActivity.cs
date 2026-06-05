@@ -294,6 +294,19 @@ public class MainActivity : ComposeActivity
                     {
                         new Text("Show snackbar"),
                     },
+
+                    new Text("Programmatic scrolling (suspend bridge)"),
+                    new Row
+                    {
+                        new Button(onClick: () => _ = buttonsScroll.AnimateScrollToAsync(0))
+                        {
+                            new Text("Scroll to top (animated)"),
+                        },
+                        new Button(onClick: () => _ = buttonsScroll.ScrollToAsync(0))
+                        {
+                            new Text("Scroll to top (instant)"),
+                        },
+                    },
                 },
                 2 => new Column
                 {
