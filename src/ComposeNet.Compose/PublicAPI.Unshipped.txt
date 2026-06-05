@@ -445,6 +445,12 @@ ComposeNet.PrimaryScrollableTabRow
 ComposeNet.PrimaryScrollableTabRow.PrimaryScrollableTabRow(int selectedTabIndex) -> void
 ComposeNet.PrimaryTabRow
 ComposeNet.PrimaryTabRow.PrimaryTabRow(int selectedTabIndex) -> void
+ComposeNet.PullToRefreshBox
+ComposeNet.PullToRefreshBox.PullToRefreshBox(bool isRefreshing, System.Action! onRefresh, ComposeNet.PullToRefreshState? state = null) -> void
+ComposeNet.PullToRefreshState
+ComposeNet.PullToRefreshState.DistanceFraction.get -> float
+ComposeNet.PullToRefreshState.IsAnimating.get -> bool
+ComposeNet.PullToRefreshState.PullToRefreshState() -> void
 ComposeNet.RadioButton
 ComposeNet.RadioButton.RadioButton(bool selected, System.Action! onClick) -> void
 ComposeNet.RangeSlider

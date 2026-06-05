@@ -84,11 +84,13 @@ public class MainActivity : ComposeActivity
             // filter without binding InputTransformation.
             var searchQuery   = Remember(() => new MutableState<string>(""));
 
-            // Scroll state for the (long) Buttons tab — `Modifier.VerticalScroll`
-            // turns its outer Column into a scrollable viewport, the standard
-            // Compose pattern for non-Lazy content that simply might overflow
-            // on small screens.
-            var buttonsScroll = Remember(() => new ScrollState());
+            // Lazy tab: pull-to-refresh demo state. `refreshing` drives the
+            // PullToRefreshBox indicator; `refreshTick` bumps once per
+            // completed refresh so the rows visibly change. The reload
+            // is faked with a 1.2s Handler.PostDelayed callback so the
+            // spinner is observable without any real async work.
+            var refreshing  = Remember(() => new MutableState<bool>(false));
+            var refreshTick = Remember(() => new MutableNumberState<int>(0));
 
             string[] tabNames = { "Basics", "Buttons", "Cards", "Drawer", "Selection", "Pickers", "Misc", "App bars", "Lazy", "Carousels" };
 
@@ -221,7 +223,6 @@ public class MainActivity : ComposeActivity
                 },
                 1 => new Column
                 {
-                    Modifier.Companion.Weight(1f).VerticalScroll(buttonsScroll),
                     new Text("Button fill styles"),
                     new Button(onClick: () => count++) { new Text("Filled") },
                     new ElevatedButton(onClick: () => count++) { new Text("Elevated") },
@@ -649,12 +650,31 @@ public class MainActivity : ComposeActivity
                     // list + a per-item callback. Compose lazily composes
                     // only the visible window, so 1000 rows costs about
                     // the same as 20.
-                    new Text("LazyColumn (1000 rows)"),
-                    new LazyColumn<int>(
-                        items:       System.Linq.Enumerable.Range(0, 1000).ToList(),
-                        itemContent: i => new Text($"Row {i:D4}"))
+                    new Text($"LazyColumn (1000 rows) — pull to refresh, rev {refreshTick}"),
+                    // PullToRefreshBox wraps a scrollable child and surfaces
+                    // the Material 3 pull gesture. The Box stretches to fill
+                    // the available height so the indicator animates over
+                    // the list rather than overflowing below it.
+                    new PullToRefreshBox(
+                        isRefreshing: refreshing.Value,
+                        onRefresh:    () =>
+                        {
+                            refreshing.Value = true;
+                            new Handler(Looper.MainLooper!).PostDelayed(() =>
+                            {
+                                refreshTick.Value++;
+                                refreshing.Value = false;
+                            }, 1200);
+                        })
                     {
-                        Modifier = Modifier.Companion.FillMaxWidth().Height(220),
+                        Modifier.Companion.FillMaxWidth().Height(220),
+
+                        new LazyColumn<int>(
+                            items:       System.Linq.Enumerable.Range(0, 1000).ToList(),
+                            itemContent: i => new Text($"Row {i:D4} (rev {refreshTick})"))
+                        {
+                            Modifier = Modifier.Companion.FillMaxSize(),
+                        },
                     },
                     new HorizontalDivider { Modifier = Modifier.Companion.Padding(0, 8) },
                     new Text("LazyRow (carousel)"),
@@ -816,7 +836,7 @@ public class MainActivity : ComposeActivity
                             : null,
                         Body = new Column
                         {
-                            Modifier.Companion.FillMaxSize().Padding(16),
+                            Modifier.Companion.Padding(16),
                             // ScrollableTabRow handles many tabs better than NavigationBar
                             // (which is spec'd for 3-5 items) — the row scrolls horizontally
                             // so every tab stays reachable as we add more demos.
