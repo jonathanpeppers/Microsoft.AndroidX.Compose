@@ -51,7 +51,7 @@ public sealed class HorizontalMultiBrowseCarousel<T> : ComposableNode
 
     internal override void Render(IComposer composer)
     {
-        _itemCountFn ??= new CarouselItemCountLambda(() => _items.Count);
+        _itemCountFn ??= new ComposableLambda0Int(() => _items.Count);
 
         var rememberedState = CarouselStateKt.RememberCarouselState(
             p0:          0,

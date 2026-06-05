@@ -65,7 +65,7 @@ public sealed class HorizontalUncontainedCarousel<T> : ComposableNode
         // pass, so re-allocating per render is wasteful — and
         // unhelpful, since the closure already reads _items.Count
         // lazily.
-        _itemCountFn ??= new CarouselItemCountLambda(() => _items.Count);
+        _itemCountFn ??= new ComposableLambda0Int(() => _items.Count);
 
         // Always call RememberCarouselState — both for slot-table
         // stability (so the carousel call below sees a consistent
