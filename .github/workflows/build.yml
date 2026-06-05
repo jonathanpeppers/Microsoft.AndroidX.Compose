@@ -1,0 +1,32 @@
+name: Build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET 10
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Install android workload
+        run: dotnet workload install android
+
+      - name: Build
+        run: dotnet build ComposeNet.sln -bl:ComposeNet.binlog
+
+      - name: Upload binlog
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ComposeNet.binlog
+          path: ComposeNet.binlog
