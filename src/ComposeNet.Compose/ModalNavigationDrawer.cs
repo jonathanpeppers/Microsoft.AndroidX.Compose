@@ -15,7 +15,7 @@ namespace ComposeNet;
 /// natively. Driving open/close from C# requires Kotlin
 /// <c>suspend</c> calls (<c>DrawerState.open()</c> /
 /// <c>close()</c>), so this facade exposes only swipe-to-toggle
-/// behavior using a <see cref="RememberDrawerState"/>-backed state.
+/// behavior using a <c>rememberDrawerState</c>-backed state.
 /// </remarks>
 public sealed class ModalNavigationDrawer : ComposableNode
 {
