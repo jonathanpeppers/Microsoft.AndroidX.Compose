@@ -120,4 +120,34 @@ internal static class ComposableLambdas
         => (IFunction4)ComposableLambdaKt.ComposableLambdaInstance(
             key: HashCode.Combine(line, file), tracked: true,
             block: new ComposableLambda4(body));
+
+    /// <summary>
+    /// Wrap an <c>Action&lt;IntPtr, Java.Lang.Object?, IComposer&gt;</c>
+    /// as an identity-stable <see cref="IFunction4"/> for the
+    /// <c>Function4&lt;Scope, Int, Composer, Int, Unit&gt;</c> @Composable
+    /// shape used by Material 3 carousel <c>content</c> slots
+    /// (<c>HorizontalUncontainedCarousel</c>, etc.).
+    /// <c>scope</c> is the raw scope receiver handle (e.g.
+    /// <c>CarouselItemScope</c>), <c>indexBoxed</c> is the boxed
+    /// <see cref="Java.Lang.Integer"/> item index, <c>composer</c> is
+    /// the active composer for the item's composition.
+    ///
+    /// <para>Uses <c>ComposableLambda</c> (not
+    /// <c>ComposableLambdaInstance</c>) because the carousel's
+    /// <c>content</c> parameter is a direct @Composable lambda on the
+    /// outer carousel call — the Kotlin compiler would wrap it via
+    /// <c>composableLambda(composer, ...)</c> in the OUTER composition's
+    /// slot table even though the lambda body itself eventually runs
+    /// inside the carousel's pager subcomposition. Mirrors
+    /// <see cref="Wrap2"/>/<see cref="Wrap3(IComposer, Action{IComposer}, int, string)"/>
+    /// for the 4-arg shape.</para>
+    /// </summary>
+    public static IFunction4 Wrap4(
+        IComposer composer,
+        Action<IntPtr, Java.Lang.Object?, IComposer> body,
+        [CallerLineNumber] int line = 0,
+        [CallerFilePath] string file = "")
+        => (IFunction4)ComposableLambdaKt.ComposableLambda(
+            composer, HashCode.Combine(line, file), tracked: true,
+            block: new ComposableLambda4(body));
 }

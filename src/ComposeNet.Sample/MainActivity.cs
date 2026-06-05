@@ -8,6 +8,21 @@ namespace ComposeNet.Sample;
 [Activity(Label = "@string/app_name", MainLauncher = true, Theme = "@android:style/Theme.Material.Light.NoActionBar")]
 public class MainActivity : ComposeActivity
 {
+    // Pastel M3-feeling palette used by the Carousels tab so the
+    // item slots are visually distinct (default Card on a near-white
+    // surface gives empty gray boxes).
+    static readonly long[] CarouselPalette =
+    {
+        ColorKt.Color(red: 0xD0, green: 0xBC, blue: 0xFF, alpha: 0xFF),
+        ColorKt.Color(red: 0xB3, green: 0xE5, blue: 0xFC, alpha: 0xFF),
+        ColorKt.Color(red: 0xC8, green: 0xE6, blue: 0xC9, alpha: 0xFF),
+        ColorKt.Color(red: 0xFF, green: 0xE0, blue: 0xB2, alpha: 0xFF),
+        ColorKt.Color(red: 0xEF, green: 0xB8, blue: 0xC8, alpha: 0xFF),
+        ColorKt.Color(red: 0xFF, green: 0xCD, blue: 0xD2, alpha: 0xFF),
+        ColorKt.Color(red: 0xCC, green: 0xC2, blue: 0xDC, alpha: 0xFF),
+        ColorKt.Color(red: 0xD7, green: 0xCC, blue: 0xC8, alpha: 0xFF),
+    };
+
     protected override void OnCreate(Bundle? savedInstanceState)
     {
         base.OnCreate(savedInstanceState);
@@ -69,7 +84,7 @@ public class MainActivity : ComposeActivity
             // filter without binding InputTransformation.
             var searchQuery   = Remember(() => new MutableState<string>(""));
 
-            string[] tabNames = { "Basics", "Buttons", "Cards", "Drawer", "Selection", "Pickers", "Misc", "App bars", "Lazy" };
+            string[] tabNames = { "Basics", "Buttons", "Cards", "Drawer", "Selection", "Pickers", "Misc", "App bars", "Lazy", "Carousels" };
 
             // Per-tab content. Only the current tab's column is added to
             // the screen — keeps the sample short enough to fit on one
@@ -560,6 +575,66 @@ public class MainActivity : ComposeActivity
                         new IconButton(onClick: () => count--) { new Text("−") },
                     },
                 },
+                9 => new Column
+                {
+                    // Material 3 horizontal carousels. Each takes an items
+                    // list + a per-item builder (same shape as LazyRow) and
+                    // uses an auto-allocated CarouselState by default —
+                    // assign State explicitly to share scroll position
+                    // across recompositions. The per-item Box uses
+                    // FillMaxSize so it stretches to whatever slot the
+                    // carousel measures for it (the keyline strategy
+                    // shrinks small/edge items independently).
+                    new Text("HorizontalUncontainedCarousel (200dp items)"),
+                    new HorizontalUncontainedCarousel<int>(
+                        items:       System.Linq.Enumerable.Range(0, 12).ToList(),
+                        itemWidth:   200f,
+                        itemContent: i => new Box
+                        {
+                            Modifier.Companion
+                                .FillMaxSize()
+                                .Clip(20)
+                                .Background(CarouselPalette[i % CarouselPalette.Length]),
+                            new Text($"Item {i}") { Modifier = Modifier.Companion.Padding(16) },
+                        })
+                    {
+                        Modifier    = Modifier.Companion.FillMaxWidth().Height(160),
+                        ItemSpacing = 8f,
+                    },
+                    new HorizontalDivider { Modifier = Modifier.Companion.Padding(0, 8) },
+                    new Text("HorizontalMultiBrowseCarousel (240dp preferred)"),
+                    new HorizontalMultiBrowseCarousel<int>(
+                        items:              System.Linq.Enumerable.Range(0, 12).ToList(),
+                        preferredItemWidth: 240f,
+                        itemContent:        i => new Box
+                        {
+                            Modifier.Companion
+                                .FillMaxSize()
+                                .Clip(20)
+                                .Background(CarouselPalette[i % CarouselPalette.Length]),
+                            new Text($"#{i:D2}") { Modifier = Modifier.Companion.Padding(16) },
+                        })
+                    {
+                        Modifier    = Modifier.Companion.FillMaxWidth().Height(180),
+                        ItemSpacing = 8f,
+                    },
+                    new HorizontalDivider { Modifier = Modifier.Companion.Padding(0, 8) },
+                    new Text("HorizontalCenteredHeroCarousel"),
+                    new HorizontalCenteredHeroCarousel<int>(
+                        items:       System.Linq.Enumerable.Range(0, 8).ToList(),
+                        itemContent: i => new Box
+                        {
+                            Modifier.Companion
+                                .FillMaxSize()
+                                .Clip(24)
+                                .Background(CarouselPalette[i % CarouselPalette.Length]),
+                            new Text($"Hero {i}") { Modifier = Modifier.Companion.Padding(16) },
+                        })
+                    {
+                        Modifier    = Modifier.Companion.FillMaxWidth().Height(220),
+                        ItemSpacing = 8f,
+                    },
+                },
                 _ => new Column
                 {
                     // Lazy lists — bound through LazyDslKt / LazyGridDslKt.
@@ -784,6 +859,11 @@ public class MainActivity : ComposeActivity
                                 {
                                     Text = new Text("Lazy"),
                                     Icon = new Text("🪟"),
+                                },
+                                new Tab(selected: tab.Value == 9, onClick: () => tab.Value = 9)
+                                {
+                                    Text = new Text("Carousels"),
+                                    Icon = new Text("🎠"),
                                 },
                             },
                             tabContent,
