@@ -352,6 +352,7 @@ ComposeNet.Modifier.FillMaxHeight(float fraction = 1) -> ComposeNet.Modifier!
 ComposeNet.Modifier.FillMaxSize(float fraction = 1) -> ComposeNet.Modifier!
 ComposeNet.Modifier.FillMaxWidth(float fraction = 1) -> ComposeNet.Modifier!
 ComposeNet.Modifier.Height(int dp) -> ComposeNet.Modifier!
+ComposeNet.Modifier.HorizontalScroll(ComposeNet.ScrollState! state, bool enabled = true, bool reverseScrolling = false) -> ComposeNet.Modifier!
 ComposeNet.Modifier.Padding(int allDp) -> ComposeNet.Modifier!
 ComposeNet.Modifier.Padding(int horizontalDp, int verticalDp) -> ComposeNet.Modifier!
 ComposeNet.Modifier.Padding(int startDp, int topDp, int endDp, int bottomDp) -> ComposeNet.Modifier!
@@ -360,6 +361,7 @@ ComposeNet.Modifier.Size(int dp) -> ComposeNet.Modifier!
 ComposeNet.Modifier.Size(int widthDp, int heightDp) -> ComposeNet.Modifier!
 ComposeNet.Modifier.SystemBarsPadding() -> ComposeNet.Modifier!
 ComposeNet.Modifier.Then(ComposeNet.Modifier! other) -> ComposeNet.Modifier!
+ComposeNet.Modifier.VerticalScroll(ComposeNet.ScrollState! state, bool enabled = true, bool reverseScrolling = false) -> ComposeNet.Modifier!
 ComposeNet.Modifier.Weight(float weight, bool fill = true) -> ComposeNet.Modifier!
 ComposeNet.Modifier.Width(int dp) -> ComposeNet.Modifier!
 ComposeNet.MultiChoiceSegmentedButtonRow
@@ -465,6 +467,14 @@ ComposeNet.Scaffold.TopBar.get -> ComposeNet.ComposableNode?
 ComposeNet.Scaffold.TopBar.set -> void
 ComposeNet.ScrollableTabRow
 ComposeNet.ScrollableTabRow.ScrollableTabRow(int selectedTabIndex) -> void
+ComposeNet.ScrollState
+ComposeNet.ScrollState.CanScrollBackward.get -> bool
+ComposeNet.ScrollState.CanScrollForward.get -> bool
+ComposeNet.ScrollState.IsScrollInProgress.get -> bool
+ComposeNet.ScrollState.MaxValue.get -> int
+ComposeNet.ScrollState.ScrollState(int initial = 0) -> void
+ComposeNet.ScrollState.Value.get -> int
+ComposeNet.ScrollState.ViewportSize.get -> int
 ComposeNet.SearchBar
 ComposeNet.SearchBar.InputField.get -> ComposeNet.ComposableNode?
 ComposeNet.SearchBar.InputField.set -> void

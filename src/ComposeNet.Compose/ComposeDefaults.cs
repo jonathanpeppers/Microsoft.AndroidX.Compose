@@ -334,6 +334,20 @@ using ComposeNet;
 [assembly: ComposeDefaults("ModifierClickableDefault",
     "enabled", "onClickLabel", "role", "!onClick")]
 
+// androidx.compose.foundation.ScrollKt.verticalScroll$default —
+// non-@Composable Modifier extension. 4 Kotlin params after the
+// receiver: state, enabled, flingBehavior, reverseScrolling. The C#
+// wrapper always supplies state/enabled/reverseScrolling (bits 0/1/3
+// cleared) and leaves flingBehavior to Kotlin's default (bit 2 set,
+// substitutes ScrollableDefaults.flingBehavior()).
+[assembly: ComposeDefaults("ModifierVerticalScrollDefault",
+    "!state", "!enabled", "flingBehavior", "!reverseScrolling")]
+
+// androidx.compose.foundation.ScrollKt.horizontalScroll$default —
+// same shape as ModifierVerticalScrollDefault above.
+[assembly: ComposeDefaults("ModifierHorizontalScrollDefault",
+    "!state", "!enabled", "flingBehavior", "!reverseScrolling")]
+
 // androidx.compose.foundation.layout.{Row,Column}Scope$DefaultImpls.weight$default —
 // non-@Composable scope extension. Shared by both Row and Column
 // weight bridges since the helper signatures are identical apart from

@@ -1330,6 +1330,38 @@ internal static partial class ComposeBridges
         Defaults  = typeof(ModifierClickableDefault))]
     internal static partial IntPtr ModifierClickable(IntPtr modifier, IFunction0 onClick);
 
+    // androidx.compose.foundation.ScrollKt.verticalScroll$default —
+    // non-@Composable Modifier extension. Kotlin params after the
+    // receiver: state, enabled, flingBehavior?, reverseScrolling. The
+    // C# wrapper always supplies state/enabled/reverseScrolling and
+    // leaves flingBehavior to Kotlin's default
+    // (ScrollableDefaults.flingBehavior()).
+    [ComposeBridge(
+        Class     = "androidx/compose/foundation/ScrollKt",
+        JvmName   = "verticalScroll$default",
+        Signature = "(Landroidx/compose/ui/Modifier;" +
+                    "Landroidx/compose/foundation/ScrollState;Z" +
+                    "Landroidx/compose/foundation/gestures/FlingBehavior;Z" +
+                    "ILjava/lang/Object;)" +
+                    "Landroidx/compose/ui/Modifier;",
+        Defaults  = typeof(ModifierVerticalScrollDefault))]
+    internal static partial IntPtr ModifierVerticalScroll(
+        IntPtr modifier, IntPtr state, bool enabled, bool reverseScrolling);
+
+    // androidx.compose.foundation.ScrollKt.horizontalScroll$default —
+    // same shape as ModifierVerticalScroll above.
+    [ComposeBridge(
+        Class     = "androidx/compose/foundation/ScrollKt",
+        JvmName   = "horizontalScroll$default",
+        Signature = "(Landroidx/compose/ui/Modifier;" +
+                    "Landroidx/compose/foundation/ScrollState;Z" +
+                    "Landroidx/compose/foundation/gestures/FlingBehavior;Z" +
+                    "ILjava/lang/Object;)" +
+                    "Landroidx/compose/ui/Modifier;",
+        Defaults  = typeof(ModifierHorizontalScrollDefault))]
+    internal static partial IntPtr ModifierHorizontalScroll(
+        IntPtr modifier, IntPtr state, bool enabled, bool reverseScrolling);
+
     // androidx.compose.material3.AppBarKt — TopAppBar / CenterAlignedTopAppBar
     // share the `-GHTll3U` shape (extra `expandedHeight: Dp` vs. the older
     // unmangled overload). 8 user params: title, modifier, navigationIcon,

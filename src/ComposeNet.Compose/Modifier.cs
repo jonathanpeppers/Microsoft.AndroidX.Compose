@@ -287,6 +287,69 @@ public sealed class Modifier
     }
 
     /// <summary>
+    /// <c>Modifier.verticalScroll(state)</c> — makes a non-Lazy parent
+    /// (e.g. a regular <see cref="Column"/> or <see cref="Box"/>)
+    /// vertically scrollable when its content overflows. Hold the
+    /// <paramref name="state"/> across recompositions with
+    /// <see cref="ComposeActivity.Remember{T}"/>:
+    /// <code>
+    /// var scroll = Remember(() =&gt; new ScrollState());
+    /// new Column { Modifier.Companion.VerticalScroll(scroll), /* children */ };
+    /// </code>
+    /// Prefer <see cref="LazyColumn{T}"/> for long lists of like-shaped
+    /// items — it only composes the children currently on screen. Use
+    /// <see cref="VerticalScroll"/> for a small, known set of children
+    /// that simply might overflow on smaller screens.
+    /// </summary>
+    /// <param name="state">Scroll position state to drive (and read
+    /// the current offset from).</param>
+    /// <param name="enabled">When <c>false</c>, the user can no longer
+    /// scroll the content via touch gestures. <see cref="ScrollState"/>
+    /// still updates as the layout changes, but this binding does not
+    /// yet expose programmatic scrolling (Kotlin's
+    /// <c>scrollTo</c> / <c>animateScrollTo</c> are <c>suspend</c>
+    /// functions, not yet wired up).</param>
+    /// <param name="reverseScrolling">When <c>true</c>, flip the
+    /// scroll direction so the start of the content sits at the
+    /// bottom of the viewport (and dragging up reveals earlier
+    /// content). Defaults to <c>false</c>.</param>
+    public Modifier VerticalScroll(ScrollState state, bool enabled = true, bool reverseScrolling = false)
+    {
+        System.ArgumentNullException.ThrowIfNull(state);
+        var jvm = state.Jvm;
+        return Append(curr =>
+            ComposeBridges.ModifierVerticalScroll(
+                curr, ((Java.Lang.Object)jvm).Handle, enabled, reverseScrolling));
+    }
+
+    /// <summary>
+    /// <c>Modifier.horizontalScroll(state)</c> — makes a non-Lazy
+    /// parent (e.g. a regular <see cref="Row"/> or <see cref="Box"/>)
+    /// horizontally scrollable when its content overflows. See
+    /// <see cref="VerticalScroll"/> for the typical usage shape; prefer
+    /// <see cref="LazyRow{T}"/> for long horizontally-scrollable lists.
+    /// </summary>
+    /// <param name="state">Scroll position state to drive (and read
+    /// the current offset from).</param>
+    /// <param name="enabled">When <c>false</c>, the user can no longer
+    /// scroll the content via touch gestures. <see cref="ScrollState"/>
+    /// still updates as the layout changes, but this binding does not
+    /// yet expose programmatic scrolling (Kotlin's
+    /// <c>scrollTo</c> / <c>animateScrollTo</c> are <c>suspend</c>
+    /// functions, not yet wired up).</param>
+    /// <param name="reverseScrolling">When <c>true</c>, flip the
+    /// scroll direction so the start of the content sits at the end
+    /// of the viewport. Defaults to <c>false</c>.</param>
+    public Modifier HorizontalScroll(ScrollState state, bool enabled = true, bool reverseScrolling = false)
+    {
+        System.ArgumentNullException.ThrowIfNull(state);
+        var jvm = state.Jvm;
+        return Append(curr =>
+            ComposeBridges.ModifierHorizontalScroll(
+                curr, ((Java.Lang.Object)jvm).Handle, enabled, reverseScrolling));
+    }
+
+    /// <summary>
     /// <c>Modifier.weight(weight, fill = true)</c> — only valid inside a
     /// <see cref="Row"/> or <see cref="Column"/> (or any container that
     /// publishes <see cref="ScopeKind.Row"/> / <see cref="ScopeKind.Column"/>).

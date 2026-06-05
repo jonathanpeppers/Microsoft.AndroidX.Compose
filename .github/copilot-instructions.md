@@ -729,8 +729,16 @@ adding new overloads and obsoleting the old ones.
   separator comments.** With one type per file, the file itself is the
   section. Comment code only when a specific bit of logic needs
   clarification; never use comments to label or group classes.
-- Public API gets XML doc comments. Internal helpers get a one-line
-  `//` comment when they're non-obvious; otherwise leave them bare.
+- Public API gets XML doc comments. This is non-negotiable for **any
+  new public type** — whether it's a hand-written class (like
+  `ScrollState`, `SnackbarHostState`), a state holder, a Modifier
+  extension method, or the sibling stub for a `[ComposeFacade]`. Every
+  new `public sealed class`, `public sealed partial class`, public
+  constructor, public method, and public property gets a
+  `<summary>` (and a `<remarks>` block when there's nuance worth
+  capturing — e.g. lifecycle, threading, "not yet bound"). Internal
+  helpers get a one-line `//` comment when they're non-obvious;
+  otherwise leave them bare.
 - Don't add markdown planning docs to the repo — use the session
   artifact folder.
 - Commit trailer: `Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>`.
