@@ -22,17 +22,14 @@ jobs:
         run: sudo chown -R "$USER" /usr/share/dotnet
 
       - name: Cache android workload
-        id: workload-cache
         uses: actions/cache@v4
         with:
           path: |
             /usr/share/dotnet/sdk-manifests
-            /usr/share/dotnet/metadata
             /usr/share/dotnet/packs/Microsoft.Android.*
           key: dotnet-workload-${{ runner.os }}-${{ hashFiles('global.json') }}
 
       - name: Restore android workload
-        if: steps.workload-cache.outputs.cache-hit != 'true'
         run: dotnet workload restore
 
       - name: Cache NuGet packages
