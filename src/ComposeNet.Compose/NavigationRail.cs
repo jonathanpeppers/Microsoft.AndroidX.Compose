@@ -1,5 +1,3 @@
-using AndroidX.Compose.Runtime;
-
 namespace ComposeNet;
 
 /// <summary>
@@ -12,15 +10,8 @@ namespace ComposeNet;
 ///     new NavigationRailItem(selected: tab == 1, onClick: ...) { Icon = ..., Label = ... },
 /// }
 /// </code>
+/// <c>NavigationRailItem</c> (unlike <see cref="NavigationBarItem"/>) is
+/// a top-level static, not a <c>ColumnScope</c> extension, so children
+/// render directly without a published scope receiver.
 /// </summary>
-public sealed class NavigationRail : ComposableContainer
-{
-    internal override void Render(IComposer composer)
-    {
-        // NavigationRailItem (unlike NavigationBarItem) is a top-level
-        // static, not a ColumnScope extension — so we don't need to
-        // publish the scope. Children can render directly.
-        var content = ComposableLambdas.Wrap3(composer, c => RenderChildren(c));
-        ComposeBridges.NavigationRail(BuildModifier(), content, composer);
-    }
-}
+public sealed partial class NavigationRail;

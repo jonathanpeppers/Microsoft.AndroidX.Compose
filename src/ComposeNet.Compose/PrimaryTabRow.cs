@@ -1,5 +1,3 @@
-using AndroidX.Compose.Runtime;
-
 namespace ComposeNet;
 
 /// <summary>
@@ -8,14 +6,4 @@ namespace ComposeNet;
 /// under the selected tab). Use when the tabs are the top-level
 /// destination switcher of a screen.
 /// </summary>
-public sealed class PrimaryTabRow : ComposableContainer
-{
-    readonly int _selectedTabIndex;
-    public PrimaryTabRow(int selectedTabIndex) => _selectedTabIndex = selectedTabIndex;
-
-    internal override void Render(IComposer composer)
-    {
-        var tabs = ComposableLambdas.Wrap2(composer, c => RenderChildren(c));
-        ComposeBridges.PrimaryTabRow(_selectedTabIndex, BuildModifier(), tabs, composer);
-    }
-}
+public sealed partial class PrimaryTabRow;

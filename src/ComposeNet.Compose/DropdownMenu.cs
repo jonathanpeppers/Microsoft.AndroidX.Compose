@@ -1,5 +1,3 @@
-using AndroidX.Compose.Runtime;
-
 namespace ComposeNet;
 
 /// <summary>
@@ -23,21 +21,4 @@ namespace ComposeNet;
 /// }
 /// </code>
 /// </summary>
-public sealed class DropdownMenu : ComposableContainer
-{
-    readonly bool _expanded;
-    readonly System.Action _onDismissRequest;
-
-    public DropdownMenu(bool expanded, System.Action onDismissRequest)
-    {
-        _expanded = expanded;
-        _onDismissRequest = onDismissRequest;
-    }
-
-    internal override void Render(IComposer composer)
-    {
-        var onDismiss = new ComposableLambda0(_onDismissRequest);
-        var content   = ComposableLambdas.Wrap3(composer, c => RenderChildren(c));
-        ComposeBridges.DropdownMenu(_expanded, onDismiss, BuildModifier(), content, composer);
-    }
-}
+public sealed partial class DropdownMenu;

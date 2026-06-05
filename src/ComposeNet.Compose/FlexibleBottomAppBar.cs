@@ -1,5 +1,3 @@
-using AndroidX.Compose.Runtime;
-
 namespace ComposeNet;
 
 /// <summary>
@@ -15,15 +13,4 @@ namespace ComposeNet;
 /// }
 /// </code>
 /// </summary>
-public sealed class FlexibleBottomAppBar : ComposableContainer
-{
-    internal override void Render(IComposer composer)
-    {
-        var content = ComposableLambdas.Wrap3(composer, (scope, c) =>
-        {
-            using var _ = RenderContext.PushScope(scope, ScopeKind.Row);
-            RenderChildren(c);
-        });
-        ComposeBridges.FlexibleBottomAppBar(BuildModifier(), content, composer);
-    }
-}
+public sealed partial class FlexibleBottomAppBar;
