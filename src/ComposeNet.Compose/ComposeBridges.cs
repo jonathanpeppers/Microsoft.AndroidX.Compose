@@ -252,6 +252,7 @@ internal static partial class ComposeBridges
                     "Lkotlin/jvm/functions/Function1;Landroidx/compose/ui/text/TextStyle;" +
                     "Landroidx/compose/runtime/Composer;III)V",
         Defaults  = typeof(TextDefault))]
+    [ComposeFacade]
     public static partial void Text(string text, IModifier? modifier, IComposer composer);
 
     // androidx.compose.material3.ButtonKt.Button
@@ -265,6 +266,7 @@ internal static partial class ComposeBridges
                     "Landroidx/compose/foundation/interaction/MutableInteractionSource;" +
                     "Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;II)V",
         Defaults  = typeof(ButtonDefault))]
+    [ComposeFacade]
     public static partial void Button(IFunction0 onClick, IModifier? modifier,
                                       IFunction3 content, IComposer composer);
 
@@ -281,6 +283,7 @@ internal static partial class ComposeBridges
                     "Landroidx/compose/foundation/interaction/MutableInteractionSource;" +
                     "Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;II)V",
         Defaults  = typeof(ButtonDefault))]
+    [ComposeFacade]
     public static partial void OutlinedButton(IFunction0 onClick, IModifier? modifier,
                                               IFunction3 content, IComposer composer);
 
@@ -295,6 +298,7 @@ internal static partial class ComposeBridges
                     "Landroidx/compose/foundation/interaction/MutableInteractionSource;" +
                     "Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;II)V",
         Defaults  = typeof(ButtonDefault))]
+    [ComposeFacade]
     public static partial void TextButton(IFunction0 onClick, IModifier? modifier,
                                           IFunction3 content, IComposer composer);
 
@@ -309,6 +313,7 @@ internal static partial class ComposeBridges
                     "Landroidx/compose/foundation/interaction/MutableInteractionSource;" +
                     "Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;II)V",
         Defaults  = typeof(ButtonDefault))]
+    [ComposeFacade]
     public static partial void ElevatedButton(IFunction0 onClick, IModifier? modifier,
                                               IFunction3 content, IComposer composer);
 
@@ -323,6 +328,7 @@ internal static partial class ComposeBridges
                     "Landroidx/compose/foundation/interaction/MutableInteractionSource;" +
                     "Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;II)V",
         Defaults  = typeof(ButtonDefault))]
+    [ComposeFacade]
     public static partial void FilledTonalButton(IFunction0 onClick, IModifier? modifier,
                                                  IFunction3 content, IComposer composer);
 
@@ -335,6 +341,7 @@ internal static partial class ComposeBridges
                     "Landroidx/compose/foundation/interaction/MutableInteractionSource;" +
                     "Lkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;II)V",
         Defaults  = typeof(IconButtonDefault))]
+    [ComposeFacade]
     public static partial void IconButton(IFunction0 onClick, IModifier? modifier,
                                           IFunction2 content, IComposer composer);
 
@@ -349,6 +356,7 @@ internal static partial class ComposeBridges
                     "Landroidx/compose/foundation/interaction/MutableInteractionSource;" +
                     "Lkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;II)V",
         Defaults  = typeof(FilledIconButtonDefault))]
+    [ComposeFacade]
     public static partial void FilledIconButton(IFunction0 onClick, IModifier? modifier,
                                                 IFunction2 content, IComposer composer);
 
@@ -363,6 +371,7 @@ internal static partial class ComposeBridges
                     "Landroidx/compose/foundation/interaction/MutableInteractionSource;" +
                     "Lkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;II)V",
         Defaults  = typeof(FilledIconButtonDefault))]
+    [ComposeFacade]
     public static partial void FilledTonalIconButton(IFunction0 onClick, IModifier? modifier,
                                                      IFunction2 content, IComposer composer);
 
@@ -378,6 +387,7 @@ internal static partial class ComposeBridges
                     "Landroidx/compose/foundation/interaction/MutableInteractionSource;" +
                     "Lkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;II)V",
         Defaults  = typeof(OutlinedIconButtonDefault))]
+    [ComposeFacade]
     public static partial void OutlinedIconButton(IFunction0 onClick, IModifier? modifier,
                                                   IFunction2 content, IComposer composer);
 
@@ -453,6 +463,7 @@ internal static partial class ComposeBridges
                     "Landroidx/compose/foundation/interaction/MutableInteractionSource;" +
                     "Lkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;II)V",
         Defaults  = typeof(FloatingActionButtonDefault))]
+    [ComposeFacade]
     public static partial void FloatingActionButton(IFunction0 onClick, IModifier? modifier,
                                                     IFunction2 content, IComposer composer);
 
@@ -464,6 +475,7 @@ internal static partial class ComposeBridges
                     "Landroidx/compose/foundation/BorderStroke;" +
                     "Lkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;II)V",
         Defaults  = typeof(SurfaceDefault))]
+    [ComposeFacade]
     public static partial void Surface(IModifier? modifier, IFunction2 content, IComposer composer);
 
     // androidx.compose.foundation.ImageKt.Image (Painter overload) — all
@@ -758,6 +770,7 @@ internal static partial class ComposeBridges
         JvmName   = "Card",
         Signature = CardSig,
         Defaults  = typeof(CardDefault))]
+    [ComposeFacade]
     public static partial void Card(IModifier? modifier, IFunction3 content, IComposer composer);
 
     // androidx.compose.material3.CardKt.OutlinedCard (same shape as Card)
@@ -766,6 +779,7 @@ internal static partial class ComposeBridges
         JvmName   = "OutlinedCard",
         Signature = CardSig,
         Defaults  = typeof(CardDefault))]
+    [ComposeFacade]
     public static partial void OutlinedCard(IFunction3 content, IComposer composer);
 
     // androidx.compose.material3.CardKt.ElevatedCard (no border)
@@ -776,6 +790,7 @@ internal static partial class ComposeBridges
                     "Landroidx/compose/material3/CardColors;Landroidx/compose/material3/CardElevation;" +
                     "Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;II)V",
         Defaults  = typeof(ElevatedCardDefault))]
+    [ComposeFacade]
     public static partial void ElevatedCard(IFunction3 content, IComposer composer);
 
     const string AssistChipSig =
@@ -922,6 +937,7 @@ internal static partial class ComposeBridges
                     "Landroidx/compose/foundation/layout/WindowInsets;" +
                     "Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;II)V",
         Defaults  = typeof(NavigationBarDefault))]
+    [ComposeFacade(Scope = "Row")]
     public static partial void NavigationBar(IModifier? modifier, IFunction3 content, IComposer composer);
 
     // androidx.compose.material3.NavigationBarKt.NavigationBarItem (RowScope receiver)
@@ -1402,6 +1418,7 @@ internal static partial class ComposeBridges
         Signature = "(Landroidx/compose/ui/Modifier;JJ" +
                     "Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;II)V",
         Defaults  = typeof(BadgeDefault))]
+    [ComposeFacade(Scope = "Row")]
     public static partial void Badge(IModifier? modifier, IFunction3 content, IComposer composer);
 
     // androidx.compose.material3.BadgeKt.BadgedBox — UNMANGLED. 3 user

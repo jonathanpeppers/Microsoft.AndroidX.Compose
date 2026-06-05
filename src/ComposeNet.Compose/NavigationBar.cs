@@ -1,5 +1,3 @@
-using AndroidX.Compose.Runtime;
-
 namespace ComposeNet;
 
 /// <summary>
@@ -18,19 +16,8 @@ namespace ComposeNet;
 ///     },
 /// }
 /// </code>
+/// The <c>RowScope</c> receiver is published via
+/// <see cref="RenderContext"/> so child <c>NavigationBarItem</c>s can
+/// pass it to their <c>RowScope</c>-extension static.
 /// </summary>
-public sealed class NavigationBar : ComposableContainer
-{
-    internal override void Render(IComposer composer)
-    {
-        // Capture the RowScope receiver (p0 of the Function3) and publish
-        // it so child NavigationBarItems can pass it to their underlying
-        // RowScope-extension static.
-        var content = ComposableLambdas.Wrap3(composer, (scope, c) =>
-        {
-            using var _ = RenderContext.PushScope(scope, ScopeKind.Row);
-            RenderChildren(c);
-        });
-        ComposeBridges.NavigationBar(BuildModifier(), content, composer);
-    }
-}
+public sealed partial class NavigationBar;

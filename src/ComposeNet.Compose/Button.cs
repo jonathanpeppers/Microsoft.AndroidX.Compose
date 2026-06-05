@@ -1,5 +1,3 @@
-using AndroidX.Compose.Runtime;
-
 namespace ComposeNet;
 
 /// <summary>
@@ -7,15 +5,4 @@ namespace ComposeNet;
 /// constructor and uses collection-initializer syntax for content:
 /// <code>new Button(onClick: () => count++) { new Text("Tap") }</code>
 /// </summary>
-public sealed class Button : ComposableContainer
-{
-    readonly System.Action _onClick;
-    public Button(System.Action onClick) => _onClick = onClick;
-
-    internal override void Render(IComposer composer)
-    {
-        var click   = new ComposableLambda0(_onClick);
-        var content = ComposableLambdas.Wrap3(composer, c => RenderChildren(c));
-        ComposeBridges.Button(click, BuildModifier(), content, composer);
-    }
-}
+public sealed partial class Button;
