@@ -34,14 +34,14 @@ public sealed class Icon : ComposableNode
     public long? TintArgb { get; set; }
 
     /// <summary>Render an <see cref="ImageVector"/> (e.g. from a Compose icon library).</summary>
-    public Icon(ImageVector imageVector, string? contentDescription = null)
+    public Icon(ImageVector imageVector, string? contentDescription)
     {
         _vector = imageVector;
         _contentDescription = contentDescription;
     }
 
     /// <summary>Render an Android drawable resource (resolved via <c>painterResource</c>).</summary>
-    public Icon(int drawableResourceId, string? contentDescription = null)
+    public Icon(int drawableResourceId, string? contentDescription)
     {
         _resourceId = drawableResourceId;
         _contentDescription = contentDescription;

@@ -185,8 +185,8 @@ ComposeNet.HorizontalDivider.HorizontalDivider() -> void
 ComposeNet.HorizontalDivider.ThicknessDp.get -> float?
 ComposeNet.HorizontalDivider.ThicknessDp.set -> void
 ComposeNet.Icon
-ComposeNet.Icon.Icon(AndroidX.Compose.UI.Graphics.Vector.ImageVector! imageVector, string? contentDescription = null) -> void
-ComposeNet.Icon.Icon(int drawableResourceId, string? contentDescription = null) -> void
+ComposeNet.Icon.Icon(AndroidX.Compose.UI.Graphics.Vector.ImageVector! imageVector, string? contentDescription) -> void
+ComposeNet.Icon.Icon(int drawableResourceId, string? contentDescription) -> void
 ComposeNet.Icon.TintArgb.get -> long?
 ComposeNet.Icon.TintArgb.set -> void
 ComposeNet.IconButton
