@@ -40,7 +40,7 @@ namespace ComposeNet;
 /// cheap modifier chains every recomposition is the per-composition
 /// cost the Tier 1.5 facade pays — Tier 2 codegen would skip it.
 ///
-/// Phase 1 ships <see cref="Padding(int)"/>, the horizontal/vertical
+/// Phase 1 ships <see cref="Padding(ComposeNet.Dp)"/>, the horizontal/vertical
 /// + per-edge overloads, and <see cref="FillMaxWidth"/> /
 /// <see cref="FillMaxHeight"/> / <see cref="FillMaxSize"/>. Phase 2
 /// adds <see cref="Background"/>, <see cref="Border"/>,
@@ -92,34 +92,34 @@ public sealed class Modifier
     }
 
     /// <summary>
-    /// <c>Modifier.padding(all: Dp)</c> — applies <paramref name="allDp"/>
+    /// <c>Modifier.padding(all: Dp)</c> — applies <paramref name="all"/>
     /// of padding to every edge.
     /// </summary>
-    public Modifier Padding(int allDp)
+    public Modifier Padding(Dp all)
     {
-        var dp = (float)allDp;
+        var dp = all.Value;
         return Append(h => ComposeBridges.ModifierPaddingAll(h, dp));
     }
 
     /// <summary>
     /// <c>Modifier.padding(horizontal: Dp, vertical: Dp)</c>.
     /// </summary>
-    public Modifier Padding(int horizontalDp, int verticalDp)
+    public Modifier Padding(Dp horizontal, Dp vertical)
     {
-        var h = (float)horizontalDp;
-        var v = (float)verticalDp;
+        var h = horizontal.Value;
+        var v = vertical.Value;
         return Append(curr => ComposeBridges.ModifierPaddingHV(curr, h, v));
     }
 
     /// <summary>
     /// <c>Modifier.padding(start: Dp, top: Dp, end: Dp, bottom: Dp)</c>.
     /// </summary>
-    public Modifier Padding(int startDp, int topDp, int endDp, int bottomDp)
+    public Modifier Padding(Dp start, Dp top, Dp end, Dp bottom)
     {
-        var s = (float)startDp;
-        var t = (float)topDp;
-        var e = (float)endDp;
-        var b = (float)bottomDp;
+        var s = start.Value;
+        var t = top.Value;
+        var e = end.Value;
+        var b = bottom.Value;
         return Append(curr => ComposeBridges.ModifierPaddingLTRB(curr, s, t, e, b));
     }
 
@@ -148,18 +148,18 @@ public sealed class Modifier
     /// <see cref="LazyColumn{T}"/>) a bounded viewport when it lives
     /// inside an unbounded parent like a regular <see cref="Column"/>.
     /// </summary>
-    public Modifier Height(int dp)
+    public Modifier Height(Dp height)
     {
-        var f = (float)dp;
+        var f = height.Value;
         return Append(h => ComposeBridges.ModifierHeight(h, f));
     }
 
     /// <summary>
     /// <c>Modifier.width(dp)</c> — sets a fixed width in dp.
     /// </summary>
-    public Modifier Width(int dp)
+    public Modifier Width(Dp width)
     {
-        var f = (float)dp;
+        var f = width.Value;
         return Append(h => ComposeBridges.ModifierWidth(h, f));
     }
 
@@ -167,19 +167,19 @@ public sealed class Modifier
     /// <c>Modifier.size(dp)</c> — sets both width and height to the
     /// same value in dp.
     /// </summary>
-    public Modifier Size(int dp)
+    public Modifier Size(Dp size)
     {
-        var f = (float)dp;
+        var f = size.Value;
         return Append(h => ComposeBridges.ModifierSizeAll(h, f));
     }
 
     /// <summary>
     /// <c>Modifier.size(width, height)</c> in dp.
     /// </summary>
-    public Modifier Size(int widthDp, int heightDp)
+    public Modifier Size(Dp width, Dp height)
     {
-        var w = (float)widthDp;
-        var h = (float)heightDp;
+        var w = width.Value;
+        var h = height.Value;
         return Append(curr => ComposeBridges.ModifierSizeWH(curr, w, h));
     }
 
@@ -229,29 +229,29 @@ public sealed class Modifier
 
     /// <summary>
     /// <c>Modifier.border(width, color, shape)</c> — draws a stroke
-    /// around the composable. <paramref name="widthDp"/> is the stroke
+    /// around the composable. <paramref name="width"/> is the stroke
     /// width in density-independent pixels. <paramref name="color"/> is a
     /// packed Compose <c>Color</c> long (see
     /// <see cref="Background(long)"/> for how to build one).
-    /// <paramref name="cornerRadiusDp"/> defaults to <c>0</c> for a
+    /// <paramref name="cornerRadius"/> defaults to <c>0</c> for a
     /// rectangular stroke; pass a positive value to match a
-    /// <see cref="Clip(int)"/> earlier in the chain so the corners
+    /// <see cref="Clip(Dp)"/> earlier in the chain so the corners
     /// align (otherwise the rectangular stroke gets sliced by a rounded
     /// clip and you see jagged corner stubs).
     /// </summary>
-    public Modifier Border(int widthDp, long color, int cornerRadiusDp = 0)
+    public Modifier Border(Dp width, long color, Dp cornerRadius = default)
     {
-        var width = (float)widthDp;
-        if (cornerRadiusDp <= 0)
-            return Append(curr => ComposeBridges.ModifierBorder(curr, width, color, null));
+        var w = width.Value;
+        var r = cornerRadius.Value;
+        if (r <= 0f)
+            return Append(curr => ComposeBridges.ModifierBorder(curr, w, color, null));
 
-        var radius = (float)cornerRadiusDp;
         return Append(curr =>
         {
-            IntPtr shape = ComposeBridges.RoundedCornerShape(radius);
+            IntPtr shape = ComposeBridges.RoundedCornerShape(r);
             try
             {
-                return ComposeBridges.ModifierBorder(curr, width, color, shape);
+                return ComposeBridges.ModifierBorder(curr, w, color, shape);
             }
             finally
             {
@@ -262,13 +262,13 @@ public sealed class Modifier
     }
 
     /// <summary>
-    /// <c>Modifier.clip(RoundedCornerShape(<paramref name="cornerRadiusDp"/>))</c> —
+    /// <c>Modifier.clip(RoundedCornerShape(<paramref name="cornerRadius"/>))</c> —
     /// rounds the four corners by the same radius and clips drawing to the
     /// resulting shape. Pass <c>0</c> for no rounding (rectangle clip).
     /// </summary>
-    public Modifier Clip(int cornerRadiusDp)
+    public Modifier Clip(Dp cornerRadius)
     {
-        var dp = (float)cornerRadiusDp;
+        var dp = cornerRadius.Value;
         return Append(curr => ComposeBridges.ModifierClipRoundedCorners(curr, dp));
     }
 
