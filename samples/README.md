@@ -50,6 +50,10 @@ that needs the same primitive.
 | [#65](https://github.com/jonathanpeppers/compose-net/issues/65)  | C# value types for inline classes (`Color`, `Dp`, `Sp`, `FontWeight`, `TextAlign`, `Shape`) | Asymmetric `RoundedCornerShape(topStart, topEnd, …)` on **Jetchat** bubbles; ergonomic API everywhere. |
 | [#69](https://github.com/jonathanpeppers/compose-net/issues/69)  | WindowInsets padding modifiers (`imePadding`, `navigationBarsPadding`, `statusBarsPadding`, …) | IME-synced input row in **Jetchat**. |
 | [#70](https://github.com/jonathanpeppers/compose-net/issues/70)  | `Row` / `Column` `Arrangement` parameter (`Start`, `End`, `Center`, `SpaceBetween`, `SpaceAround`, `spacedBy`) | Right-aligned "me" bubbles in **Jetchat** (currently faked with `Spacer().Weight(1f)`). |
+
+## Attribution
+
+These samples are C# ports inspired by Google's [android/compose-samples](https://github.com/android/compose-samples), which is licensed under the [Apache License 2.0](https://github.com/android/compose-samples/blob/main/LICENSE). No upstream Kotlin source code is copied into this repo — the ports re-implement the same UI in C# against this repo's `ComposeNet.Compose` facade. Drawable resources and string content under each `samples/<Name>/` folder are original to this repo.
 | [#20](https://github.com/jonathanpeppers/compose-net/issues/20)  | Edge-to-edge bootstrapping | Status/nav-bar overlap on every sample. |
 
 ## Conventions
