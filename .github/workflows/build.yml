@@ -27,6 +27,8 @@ jobs:
           path: |
             /usr/share/dotnet/sdk-manifests
             /usr/share/dotnet/packs/Microsoft.Android.*
+            /usr/share/dotnet/packs/Microsoft.NETCore.*
+            /usr/share/dotnet/packs/Microsoft.NET.Runtime.*
           key: dotnet-workload-${{ runner.os }}-${{ hashFiles('global.json') }}
 
       - name: Restore android workload
