@@ -1,20 +1,18 @@
-using AndroidX.Compose.Runtime;
-
 namespace ComposeNet;
 
 /// <summary>
-/// Material 3 <c>TextField</c> (filled variant). Bound to a
-/// <see cref="MutableState{T}"/> of <see cref="string"/> so user edits
-/// trigger recomposition.
+/// Material 3 <c>TextField</c> (filled variant). Pass a <c>value</c> + <c>onValueChange</c>
+/// pair, or use the <see cref="TextField(MutableState{string})"/> convenience ctor to bind
+/// to a <see cref="MutableState{T}"/> directly so user edits trigger recomposition.
 /// </summary>
-public sealed class TextField : ComposableNode
+public sealed partial class TextField
 {
-    readonly MutableState<string> _state;
-    public TextField(MutableState<string> state) => _state = state;
-
-    internal override void Render(IComposer composer)
+    /// <summary>
+    /// Bind this <c>TextField</c> to a <see cref="MutableState{T}"/> of <see cref="string"/>
+    /// so user edits trigger recomposition automatically.
+    /// </summary>
+    public TextField(MutableState<string> state)
+        : this(state.Value ?? string.Empty, v => state.Value = v)
     {
-        var onChange = new ComposableLambda1(v => _state.Value = v?.ToString() ?? string.Empty);
-        ComposeBridges.TextField(_state.Value ?? string.Empty, onChange, BuildModifier(), composer);
     }
 }

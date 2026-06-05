@@ -194,7 +194,8 @@ ComposeNet.IconButton.IconButton(System.Action! onClick) -> void
 ComposeNet.IconToggleButton
 ComposeNet.IconToggleButton.IconToggleButton(bool checked, System.Action<bool>! onCheckedChange) -> void
 ComposeNet.Image
-ComposeNet.Image.Image(int drawableResourceId, string? contentDescription = null) -> void
+ComposeNet.Image.Image(int drawableResourceId) -> void
+ComposeNet.Image.Image(int drawableResourceId, string? contentDescription) -> void
 ComposeNet.InputChip
 ComposeNet.InputChip.Avatar.get -> ComposeNet.ComposableNode?
 ComposeNet.InputChip.Avatar.set -> void
@@ -374,6 +375,7 @@ ComposeNet.OutlinedIconToggleButton
 ComposeNet.OutlinedIconToggleButton.OutlinedIconToggleButton(bool checked, System.Action<bool>! onCheckedChange) -> void
 ComposeNet.OutlinedTextField
 ComposeNet.OutlinedTextField.OutlinedTextField(ComposeNet.MutableState<string!>! state) -> void
+ComposeNet.OutlinedTextField.OutlinedTextField(string! value, System.Action<string!>! onValueChange) -> void
 ComposeNet.PermanentDrawerSheet
 ComposeNet.PermanentDrawerSheet.ContainerColor.get -> long
 ComposeNet.PermanentDrawerSheet.ContainerColor.set -> void
@@ -481,6 +483,7 @@ ComposeNet.TextButton
 ComposeNet.TextButton.TextButton(System.Action! onClick) -> void
 ComposeNet.TextField
 ComposeNet.TextField.TextField(ComposeNet.MutableState<string!>! state) -> void
+ComposeNet.TextField.TextField(string! value, System.Action<string!>! onValueChange) -> void
 ComposeNet.TimePicker
 ComposeNet.TimePicker.TimePicker(ComposeNet.TimePickerState? state = null) -> void
 ComposeNet.TimePickerDialog

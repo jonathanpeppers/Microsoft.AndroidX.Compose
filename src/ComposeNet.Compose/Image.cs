@@ -1,6 +1,3 @@
-using Android.Runtime;
-using AndroidX.Compose.Runtime;
-
 namespace ComposeNet;
 
 /// <summary>
@@ -13,42 +10,8 @@ namespace ComposeNet;
 /// the drawable-resource entry point — that's what most apps want
 /// anyway.
 /// </summary>
-public sealed class Image : ComposableNode
+public sealed partial class Image
 {
-    readonly int _resourceId;
-    readonly string? _contentDescription;
-
-    /// <summary>Render an Android drawable resource (resolved via <c>painterResource</c>).</summary>
-    public Image(int drawableResourceId, string? contentDescription = null)
-    {
-        _resourceId = drawableResourceId;
-        _contentDescription = contentDescription;
-    }
-
-    internal override void Render(IComposer composer)
-    {
-        var modifier = BuildModifier();
-
-        // bit 0 (painter) is marked `!` in the declarative attribute so
-        // it isn't part of `All`. bit 1 (contentDescription) is always
-        // cleared — we forward the caller's value, including null,
-        // which Compose treats as "decorative" (no semantics node).
-        int defaults = (int)ImageDefault.All & ~(int)ImageDefault.ContentDescription;
-        if (modifier is not null) defaults &= ~(int)ImageDefault.Modifier;
-
-        IntPtr painterRef = ComposeBridges.PainterResource(_resourceId, composer);
-        try
-        {
-            ComposeBridges.Image(
-                painter:            painterRef,
-                contentDescription: _contentDescription,
-                modifier:           modifier,
-                defaults:           defaults,
-                composer:           composer);
-        }
-        finally
-        {
-            JNIEnv.DeleteLocalRef(painterRef);
-        }
-    }
+    /// <summary>Render an Android drawable resource with no content description (decorative).</summary>
+    public Image(int drawableResourceId) : this(drawableResourceId, null) { }
 }

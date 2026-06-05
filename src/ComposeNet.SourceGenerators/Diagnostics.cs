@@ -107,4 +107,36 @@ internal static class Diagnostics
         category: "ComposeNet",
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);
+
+    public static readonly DiagnosticDescriptor FacadeCallbackUnsupportedType = new(
+        id: "CN3005",
+        title: "[Callback] unbox type is not supported",
+        messageFormat: "Facade for bridge '{0}': [Callback] on parameter '{1}' uses unsupported value type '{2}'. Supported types: bool, string, float.",
+        category: "ComposeNet",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
+
+    public static readonly DiagnosticDescriptor FacadeSlotConflict = new(
+        id: "CN3006",
+        title: "[ComposeFacade] slot configuration is invalid",
+        messageFormat: "Facade for bridge '{0}': {1}",
+        category: "ComposeNet",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
+
+    public static readonly DiagnosticDescriptor FacadeColorThemeBindingFailed = new(
+        id: "CN3007",
+        title: "[ComposeFacade(DefaultColorFromTheme=...)] could not bind to a bridge parameter",
+        messageFormat: "Facade for bridge '{0}': {1}",
+        category: "ComposeNet",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
+
+    public static readonly DiagnosticDescriptor FacadePainterMisuse = new(
+        id: "CN3008",
+        title: "[PainterResource] must annotate an 'IntPtr' bridge parameter",
+        messageFormat: "Facade for bridge '{0}': {1}",
+        category: "ComposeNet",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
 }

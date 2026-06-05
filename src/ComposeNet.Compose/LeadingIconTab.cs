@@ -1,5 +1,3 @@
-using AndroidX.Compose.Runtime;
-
 namespace ComposeNet;
 
 /// <summary>
@@ -7,33 +5,4 @@ namespace ComposeNet;
 /// icon and text are required and laid out side-by-side (icon first)
 /// instead of stacked vertically.
 /// </summary>
-public sealed class LeadingIconTab : ComposableNode
-{
-    readonly bool _selected;
-    readonly System.Action _onClick;
-
-    public LeadingIconTab(bool selected, System.Action onClick)
-    {
-        _selected = selected;
-        _onClick  = onClick;
-    }
-
-    /// <summary>Required: tab label slot.</summary>
-    public ComposableNode? Text { get; set; }
-
-    /// <summary>Required: tab icon slot, rendered before the text.</summary>
-    public ComposableNode? Icon { get; set; }
-
-    internal override void Render(IComposer composer)
-    {
-        if (Text is null || Icon is null)
-            throw new System.InvalidOperationException(
-                "LeadingIconTab.Text and Icon are both required (the Kotlin parameters have no defaults).");
-
-        var click = new ComposableLambda0(_onClick);
-        var text  = ComposableLambdas.Wrap2(composer, c => Text.Render(c));
-        var icon  = ComposableLambdas.Wrap2(composer, c => Icon.Render(c));
-
-        ComposeBridges.LeadingIconTab(_selected, click, text, icon, BuildModifier(), composer);
-    }
-}
+public sealed partial class LeadingIconTab;
