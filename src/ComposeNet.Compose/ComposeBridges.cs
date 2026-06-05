@@ -874,6 +874,38 @@ internal static partial class ComposeBridges
         InstanceField = "INSTANCE")]
     public static partial IntPtr RememberPlainTooltipPositionProvider(IComposer composer);
 
+    // androidx.compose.material3.pulltorefresh.PullToRefreshKt.PullToRefreshBox
+    [ComposeBridge(
+        Class     = "androidx/compose/material3/pulltorefresh/PullToRefreshKt",
+        JvmName   = "PullToRefreshBox",
+        Signature = "(ZLkotlin/jvm/functions/Function0;Landroidx/compose/ui/Modifier;" +
+                    "Landroidx/compose/material3/pulltorefresh/PullToRefreshState;" +
+                    "Landroidx/compose/ui/Alignment;Lkotlin/jvm/functions/Function3;" +
+                    "Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;II)V",
+        Defaults  = typeof(PullToRefreshBoxDefault))]
+    [ComposeFacade]
+    public static partial void PullToRefreshBox(
+        bool        isRefreshing,
+        IFunction0  onRefresh,
+        [StateHolder(Remember  = nameof(RememberPullToRefreshState),
+                     StateType = typeof(PullToRefreshState))]
+        IntPtr      state,
+        IModifier?  modifier,
+        IFunction3  content,
+        int         defaults,
+        IComposer   composer);
+
+    // androidx.compose.material3.pulltorefresh.PullToRefreshKt.rememberPullToRefreshState
+    // No-arg @Composable; signature has only the trailing _changed I slot
+    // (no $default), so omit Defaults entirely per the bridge generator
+    // contract (see CN2005).
+    [ComposeBridge(
+        Class     = "androidx/compose/material3/pulltorefresh/PullToRefreshKt",
+        JvmName   = "rememberPullToRefreshState",
+        Signature = "(Landroidx/compose/runtime/Composer;I)" +
+                    "Landroidx/compose/material3/pulltorefresh/PullToRefreshState;")]
+    public static partial IntPtr RememberPullToRefreshState(IComposer composer);
+
     // androidx.compose.material3.CardKt.Card (non-clickable)
     const string CardSig =
         "(Landroidx/compose/ui/Modifier;Landroidx/compose/ui/graphics/Shape;" +

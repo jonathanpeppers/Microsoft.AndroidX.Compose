@@ -711,3 +711,17 @@ using ComposeNet;
     "!snackbarData", "modifier", "actionOnNewLine", "shape", "containerColor",
     "contentColor", "actionColor", "actionContentColor",
     "dismissActionContentColor")]
+
+// androidx.compose.material3.pulltorefresh.PullToRefreshKt.PullToRefreshBox:
+// 7 user params. The [ComposeFacade] generator surfaces ctor params for
+// isRefreshing / onRefresh (bits 0/1) and a state holder for bit 3 (via
+// the [StateHolder] attribute on the bridge), so those three bits are
+// suppressed ("!" prefix — consume the bit position, emit no enum
+// member). Bits 4/5 (contentAlignment / indicator) are not exposed at
+// all by the bridge — JNI sees null for those slots and Kotlin
+// substitutes the defaults; suppressing them prevents bogus enum
+// members no caller can use. Bit 6 (content) is the container content
+// slot, always provided by RenderChildren.
+[assembly: ComposeDefaults("PullToRefreshBoxDefault",
+    "!isRefreshing", "!onRefresh", "modifier", "!state", "!contentAlignment",
+    "!indicator", "!content")]
