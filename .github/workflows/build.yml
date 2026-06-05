@@ -28,7 +28,6 @@ jobs:
           path: |
             /usr/share/dotnet/sdk-manifests
             /usr/share/dotnet/metadata
-            /usr/share/dotnet/library-packs
             /usr/share/dotnet/packs/Microsoft.Android.*
           key: dotnet-workload-${{ runner.os }}-${{ hashFiles('global.json') }}
 
