@@ -31,9 +31,12 @@ dotnet build samples/Jetchat -t:Run
   and **info** action icons — same `Actions` slot upstream's
   `ChannelNameBar` puts them in. Icons are real drawable resources
   rendered through the Phase 7 `[PainterResource]` `Icon` facade.
-- Drawable-resource avatars (one per author) rendered via the Phase 7
+- Drawable-resource avatars rendered via the Phase 7
   `Image(int drawableResourceId, …)` facade, the same shape as
-  upstream's `painterResource(R.drawable.someone_aubrey)` calls.
+  upstream's `painterResource(R.drawable.someone_else)` calls. The
+  two avatar bitmaps (`ali.png` and `someone_else.jpg`) are copied
+  unmodified from upstream Jetchat under the Apache License 2.0 —
+  see [`Resources/drawable-nodpi/LICENSE`](Resources/drawable-nodpi/LICENSE).
 - A "Today" day-separator row (`HorizontalDivider` + `Text` +
   `HorizontalDivider`) above the message list.
 - Message bubbles with author name + relative timestamp on one row,
