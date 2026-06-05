@@ -33,6 +33,7 @@ internal sealed class ComposableLambda3 : Java.Lang.Object, IFunction3
     {
         System.ArgumentNullException.ThrowIfNull(p1);
         var composer = Android.Runtime.Extensions.JavaCast<IComposer>(p1);
+        using var _ = ComposeContext.Push(composer);
         _body(p0?.Handle ?? IntPtr.Zero, composer);
         return global::Kotlin.Unit.Instance!;
     }

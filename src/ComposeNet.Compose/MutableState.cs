@@ -18,7 +18,12 @@ public class MutableState<T>
             SnapshotStateKt.StructuralEqualityPolicy());
     }
 
-    public T Value
+    // Subclass hook: lets MutableNumberState<int|long|float> inject a
+    // primitive-specialized IMutableState (MutableIntState etc.) so its
+    // overridden Value getter/setter can bypass the boxed slow path.
+    internal MutableState(IMutableState state) => _state = state;
+
+    public virtual T Value
     {
         get => FromJava(_state.Value);
         set => _state.Value = ToJava(value);
@@ -31,7 +36,7 @@ public class MutableState<T>
     /// </summary>
     public override string ToString() => Value?.ToString() ?? "null";
 
-    static Java.Lang.Object? ToJava(T value) => value switch
+    internal static Java.Lang.Object? ToJava(T value) => value switch
     {
         null                  => null,
         Java.Lang.Object o    => o,

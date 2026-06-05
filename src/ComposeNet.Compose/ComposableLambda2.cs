@@ -21,6 +21,7 @@ internal sealed class ComposableLambda2 : Java.Lang.Object, IFunction2
     {
         System.ArgumentNullException.ThrowIfNull(p0);
         var composer = Android.Runtime.Extensions.JavaCast<IComposer>(p0);
+        using var _ = ComposeContext.Push(composer);
         _body(composer);
         return global::Kotlin.Unit.Instance!;
     }
