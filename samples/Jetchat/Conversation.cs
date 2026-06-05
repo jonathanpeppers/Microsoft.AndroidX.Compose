@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using Android.Graphics;
+using AndroidX.Compose.UI.Graphics;
 using ComposeNet;
 
 namespace ComposeNet.Samples.Jetchat;
@@ -27,10 +27,11 @@ public static class Conversation
     // Material 3 surface-variant-ish greys, picked to approximate
     // Jetchat's bubble palette without binding MaterialTheme.colorScheme
     // (issue #61). "Me" bubbles get the primary-container shade, others
-    // get the surface-variant shade.
-    static readonly Color MeBubbleColor    = new Color(0xD0, 0xE4, 0xFF);
-    static readonly Color OtherBubbleColor = new Color(0xED, 0xED, 0xED);
-    static readonly Color AvatarTileColor  = new Color(0xE0, 0xE0, 0xE0);
+    // get the surface-variant shade. Stored as packed Compose Color
+    // longs (see AndroidX.Compose.UI.Graphics.ColorKt.Color).
+    static readonly long MeBubbleColor    = ColorKt.Color(red: 0xD0, green: 0xE4, blue: 0xFF, alpha: 0xFF);
+    static readonly long OtherBubbleColor = ColorKt.Color(red: 0xED, green: 0xED, blue: 0xED, alpha: 0xFF);
+    static readonly long AvatarTileColor  = ColorKt.Color(red: 0xE0, green: 0xE0, blue: 0xE0, alpha: 0xFF);
 
 
     /// <summary>Materialize the conversation tree for one composition pass.</summary>

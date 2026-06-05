@@ -27,7 +27,7 @@ dotnet test src/ComposeNet.SourceGenerators.Tests
 
 ## Progress
 
-Upstream `Xamarin.AndroidX.Compose.*` 1.11.1.1 (and `Material3` 1.4.0.x) now
+Upstream `Xamarin.AndroidX.Compose.*` 1.11.2.x (and `Material3` 1.4.0.x) now
 ship real bindings, so the per-binding projects this repo originally needed
 have been deleted. The sample and facade reference the official NuGets
 directly. The historical context behind the in-repo bindings is preserved in
@@ -195,7 +195,7 @@ Confirmed on device:
 - Click → `count++` → recomposition → visible count update.
 
 The facade ([`ComposeNet.Compose`](src/ComposeNet.Compose)) and sample
-reference the official `Xamarin.AndroidX.Compose.*` 1.11.1.1 and
+reference the official `Xamarin.AndroidX.Compose.*` 1.11.2.x and
 `Xamarin.AndroidX.Compose.Material3` 1.4.0.x NuGets directly. The
 historical context behind the previously in-repo `<AndroidMavenLibrary>`
 binding projects (now deleted) is preserved in [NOTES.md](NOTES.md).

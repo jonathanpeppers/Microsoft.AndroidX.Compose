@@ -63,8 +63,10 @@ Phase 1 of this branch landed the facade gaps Jetchat needed:
 - **Sizing modifiers**: `Modifier.Size(int)`, `Size(int, int)`,
   `Width(int)`, `Height(int)`.
 - **Background / Border / Clickable**: surfaced existing bridges as
-  public `Modifier` methods (`Background(Android.Graphics.Color)`,
-  `Border(int, Android.Graphics.Color, int = 0)`, `Clickable(Action)`).
+  public `Modifier` methods (`Background(long)` / `Border(int, long, int = 0)`
+  taking a packed Compose `Color` long built via
+  `AndroidX.Compose.UI.Graphics.ColorKt.Color(...)`, and
+  `Clickable(Action)`).
 - **Shape clipping**: `Modifier.Clip(int cornerDp)` — two-step JNI
   helper that constructs a `RoundedCornerShape` and applies
   `ClipKt.clip` in one fluent op.
