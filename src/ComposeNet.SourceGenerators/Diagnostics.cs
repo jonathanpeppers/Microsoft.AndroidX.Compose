@@ -75,4 +75,36 @@ internal static class Diagnostics
         category: "ComposeNet",
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);
+
+    public static readonly DiagnosticDescriptor FacadeWrongContainingType = new(
+        id: "CN3001",
+        title: "[ComposeFacade] must be applied to a method on ComposeBridges",
+        messageFormat: "[ComposeFacade] on '{0}' was found on type '{1}'; facade generation only runs on methods declared in ComposeNet.ComposeBridges",
+        category: "ComposeNet",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
+
+    public static readonly DiagnosticDescriptor FacadeUnsupportedParameter = new(
+        id: "CN3002",
+        title: "[ComposeFacade] bridge has an unsupported parameter shape",
+        messageFormat: "Facade for bridge '{0}' cannot be generated: parameter '{1}' has unsupported type '{2}'. Leave this bridge hand-written and remove [ComposeFacade].",
+        category: "ComposeNet",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
+
+    public static readonly DiagnosticDescriptor FacadeScopeMisuse = new(
+        id: "CN3003",
+        title: "[ComposeFacade] Scope set without an IFunction3 content slot",
+        messageFormat: "Facade for bridge '{0}' has Scope='{1}' but no IFunction3 content parameter to publish the scope from",
+        category: "ComposeNet",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
+
+    public static readonly DiagnosticDescriptor FacadeMissingBridge = new(
+        id: "CN3004",
+        title: "[ComposeFacade] requires a sibling [ComposeBridge]",
+        messageFormat: "[ComposeFacade] on '{0}' is missing the required [ComposeBridge] attribute; facade generation only wraps bridge-emitted methods",
+        category: "ComposeNet",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
 }

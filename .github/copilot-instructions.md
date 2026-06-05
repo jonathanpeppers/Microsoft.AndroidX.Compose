@@ -278,6 +278,73 @@ truth is `src/ComposeNet.SourceGenerators/Diagnostics.cs`.**
 method**; call the generated C# entry point instead (see
 `Column.cs::Column.Render` for the canonical example).
 
+## Facade generator — `[ComposeFacade]`
+
+For ~17 of the simplest user-facing facades the `Render()` body is
+pure mechanical boilerplate — wrap `_onClick` in `ComposableLambda0`,
+wrap children in `ComposableLambdas.Wrap2/3`, call `BuildModifier()`,
+forward to the bridge. `ComposeFacadeGenerator` emits the whole
+facade class (base class, backing fields, ctor, `Render` body) from
+the bridge's own C# parameter shape — the user just adds
+`[ComposeFacade]` next to the bridge's existing `[ComposeBridge]` and
+deletes the hand-written facade file.
+
+```csharp
+[ComposeBridge(/* … */)]
+[ComposeFacade(Summary = "Material 3 filled Button.")]
+public static partial void Button(IFunction0 onClick, IModifier? modifier,
+                                  IFunction3 content, IComposer composer);
+```
+
+The generator classifies each user param of the bridge:
+
+| Param type                              | Treatment                                         |
+|-----------------------------------------|---------------------------------------------------|
+| `AndroidX.Compose.UI.IModifier?`        | Passed as `BuildModifier()` — no ctor param      |
+| `IFunction0` (onClick-style)            | Surfaced as a `System.Action` ctor parameter      |
+| `IFunction2` content                    | Wrapped via `ComposableLambdas.Wrap2(…)`          |
+| `IFunction3` content                    | Wrapped via `ComposableLambdas.Wrap3(…)`          |
+| Primitive (`string`, `int`, `bool`, …)  | Surfaced as a ctor parameter, stored in `_<name>` |
+| Anything else (callbacks, handles, etc.) | Rejected with CN3002                              |
+
+`Scope = "Row"` / `Scope = "Column"` opt-in: when the content slot is
+an `IFunction3`, the generator passes its first arg into
+`RenderContext.PushScope(scope, ScopeKind.Row|Column)` so child
+composables that need a `RowScope`/`ColumnScope` receiver pick it up.
+
+Each facade is emitted to a unique hint name
+(`ComposeNet.Facade.<ClassName>.g.cs`) so the `[CallerFilePath]` +
+`[CallerLineNumber]` slot keys baked into `ComposableLambdas.Wrap*`
+stay distinct per facade.
+
+### When to use it
+
+Only when the bridge fits the Phase 1 shapes above. Multi-slot
+composables (`AlertDialog`, `Scaffold`, `ModalBottomSheet`),
+callback-bearing leafs (`Checkbox`, `Slider`, `Switch`,
+`RadioButton`), scope-consuming facades (`Tab`, `NavigationBarItem`,
+`SegmentedButton`), and anything calling a Kt method directly (not
+via `ComposeBridges`) stay hand-written. Trying to apply
+`[ComposeFacade]` to them will emit CN3002 (unsupported parameter)
+or CN3003 (scope misuse) at build time.
+
+### Generator diagnostics
+
+| ID      | Meaning                                                            |
+|---------|--------------------------------------------------------------------|
+| CN3001  | `[ComposeFacade]` on a method not declared on `ComposeBridges`.    |
+| CN3002  | Bridge parameter type isn't a supported facade slot.               |
+| CN3003  | `Scope` is set but bridge has no `IFunction3` content slot.        |
+| CN3004  | `[ComposeFacade]` without an accompanying `[ComposeBridge]`.       |
+
+### Migration rule
+
+When you add `[ComposeFacade]` to a bridge, **delete the existing
+hand-written facade file** in the same commit — otherwise the
+declarations collide. Conversely, if you ever need a custom
+`Render()` body again, remove the `[ComposeFacade]` attribute first
+and recreate the hand-written file.
+
 ## Facade conventions (`Composables.cs`)
 
 - All public types derive from `ComposableNode` (a single `internal

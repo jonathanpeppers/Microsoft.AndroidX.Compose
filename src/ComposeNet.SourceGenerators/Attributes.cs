@@ -94,6 +94,67 @@ internal static class Attributes
                 public global::System.Type? Defaults { get; set; }
                 public string? InstanceField { get; set; }
             }
+
+            /// <summary>
+            /// Apply alongside <see cref="ComposeBridgeAttribute"/> on a
+            /// <c>partial</c> method in <c>ComposeBridges</c> to have
+            /// <c>ComposeFacadeGenerator</c> emit the corresponding
+            /// user-facing facade class (a <c>public sealed partial</c>
+            /// <see cref="ComposableNode"/> / <see cref="ComposableContainer"/>
+            /// in <c>namespace ComposeNet</c>).
+            /// </summary>
+            /// <remarks>
+            /// The facade's constructor, base class, and <c>Render</c> body
+            /// are inferred from the bridge's C# parameter shape:
+            /// <list type="bullet">
+            /// <item><description><c>IModifier? modifier</c> → render uses
+            /// <c>BuildModifier()</c>; no ctor param.</description></item>
+            /// <item><description><c>IFunction0 &lt;name&gt;</c> → ctor takes
+            /// <c>System.Action &lt;name&gt;</c>; render wraps in
+            /// <c>ComposableLambda0</c>.</description></item>
+            /// <item><description><c>IFunction2 content</c> /
+            /// <c>IFunction3 content</c> → container shape, base
+            /// <c>ComposableContainer</c>; render uses
+            /// <c>ComposableLambdas.Wrap2</c> / <c>Wrap3</c>.</description></item>
+            /// <item><description>Primitive (<c>string</c>, <c>int</c>,
+            /// <c>bool</c>, <c>float</c>, <c>long</c>) → positional ctor
+            /// parameter.</description></item>
+            /// </list>
+            /// Anything else (e.g. <c>IFunction1</c> callbacks, value-class
+            /// handles, the caller-controlled <c>int defaults</c> hatch) is
+            /// rejected via diagnostic CN3002 — leave that bridge hand-written.
+            /// <para><b>Migration:</b> when adding <c>[ComposeFacade]</c>
+            /// to a bridge, delete the corresponding hand-written
+            /// <c>&lt;Name&gt;.cs</c> from <c>src/ComposeNet.Compose/</c>
+            /// (the generator emits a <c>sealed partial</c> with the same
+            /// public API).</para>
+            /// </remarks>
+            [global::System.AttributeUsage(global::System.AttributeTargets.Method,
+                                           AllowMultiple = false)]
+            internal sealed class ComposeFacadeAttribute : global::System.Attribute
+            {
+                public ComposeFacadeAttribute() { }
+
+                /// <summary>Optional override for the generated class name. Defaults to the bridge method name.</summary>
+                public string? ClassName { get; set; }
+
+                /// <summary>
+                /// Optional scope to publish from an <c>IFunction3</c> content
+                /// lambda. <c>"Row"</c> (e.g. <see cref="NavigationBar"/>,
+                /// <see cref="Badge"/>) or <c>"Column"</c>. The lambda
+                /// receives the scope handle and pushes it via
+                /// <c>RenderContext.PushScope(scope, ScopeKind.X)</c> so
+                /// child composables can read it. Requires a bridge with
+                /// an <c>IFunction3 content</c> parameter.
+                /// </summary>
+                public string? Scope { get; set; }
+
+                /// <summary>
+                /// Optional XML doc summary emitted on the generated
+                /// class. When omitted, a generic summary is used.
+                /// </summary>
+                public string? Summary { get; set; }
+            }
         }
         """;
 }
