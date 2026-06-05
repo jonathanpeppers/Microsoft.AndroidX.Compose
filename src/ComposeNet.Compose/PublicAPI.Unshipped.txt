@@ -11,6 +11,16 @@ ComposeNet.AlertDialog.Text.get -> ComposeNet.ComposableNode?
 ComposeNet.AlertDialog.Text.set -> void
 ComposeNet.AlertDialog.Title.get -> ComposeNet.ComposableNode?
 ComposeNet.AlertDialog.Title.set -> void
+ComposeNet.Arrangement
+static ComposeNet.Arrangement.Bottom.get -> ComposeNet.Arrangement!
+static ComposeNet.Arrangement.Center.get -> ComposeNet.Arrangement!
+static ComposeNet.Arrangement.End.get -> ComposeNet.Arrangement!
+static ComposeNet.Arrangement.SpaceAround.get -> ComposeNet.Arrangement!
+static ComposeNet.Arrangement.SpaceBetween.get -> ComposeNet.Arrangement!
+static ComposeNet.Arrangement.SpaceEvenly.get -> ComposeNet.Arrangement!
+static ComposeNet.Arrangement.SpacedBy(int dp) -> ComposeNet.Arrangement!
+static ComposeNet.Arrangement.Start.get -> ComposeNet.Arrangement!
+static ComposeNet.Arrangement.Top.get -> ComposeNet.Arrangement!
 ComposeNet.AssistChip
 ComposeNet.AssistChip.AssistChip(System.Action! onClick) -> void
 ComposeNet.AssistChip.Label.get -> ComposeNet.ComposableNode?
@@ -65,6 +75,7 @@ ComposeNet.CircularProgressIndicator.TrackColorArgb.get -> long?
 ComposeNet.CircularProgressIndicator.TrackColorArgb.set -> void
 ComposeNet.Column
 ComposeNet.Column.Column() -> void
+ComposeNet.Column.Column(ComposeNet.Arrangement? verticalArrangement) -> void
 ComposeNet.ComposableContainer
 ComposeNet.ComposableContainer.Add(ComposeNet.ComposableNode? child) -> void
 ComposeNet.ComposableContainer.Add(ComposeNet.Modifier! modifier) -> void
@@ -459,6 +470,7 @@ ComposeNet.Resource
 ComposeNet.Resource.Resource() -> void
 ComposeNet.Row
 ComposeNet.Row.Row() -> void
+ComposeNet.Row.Row(ComposeNet.Arrangement? horizontalArrangement) -> void
 ComposeNet.Scaffold
 ComposeNet.Scaffold.Body.get -> ComposeNet.ComposableNode?
 ComposeNet.Scaffold.Body.set -> void

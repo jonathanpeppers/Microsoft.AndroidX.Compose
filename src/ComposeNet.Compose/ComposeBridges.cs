@@ -2040,26 +2040,37 @@ internal static partial class ComposeBridges
             p5:                      0,
             _changed:                defaults);
 
-    [ComposeFacade(Defaults = typeof(ColumnDefault), Scope = "Column")]
-    public static partial void Column(IModifier? modifier, IFunction3 content, int defaults, IComposer composer);
-
-    public static partial void Column(IModifier? modifier, IFunction3 content, int defaults, IComposer composer)
+    // Internal forwarder for Column. The public-facing facade
+    // (Column.cs) is hand-written because the [ComposeFacade] generator
+    // can't surface a typed Arrangement? ctor parameter; it owns the
+    // $default mask and forwards the chosen verticalArrangement here.
+    internal static void Column(
+        IModifier? modifier,
+        AndroidX.Compose.Foundation.Layout.Arrangement.IVertical? verticalArrangement,
+        IFunction3 content,
+        int defaults,
+        IComposer composer)
         => ColumnKt.Column(
             modifier:            modifier,
-            verticalArrangement: null,
+            verticalArrangement: verticalArrangement,
             horizontalAlignment: null,
             content:             content,
             _composer:           composer,
             p5:                  0,
             _changed:            defaults);
 
-    [ComposeFacade(Defaults = typeof(RowDefault), Scope = "Row")]
-    public static partial void Row(IModifier? modifier, IFunction3 content, int defaults, IComposer composer);
-
-    public static partial void Row(IModifier? modifier, IFunction3 content, int defaults, IComposer composer)
+    // Internal forwarder for Row — see the Column helper above for why
+    // this isn't an auto-generated facade. Row.cs supplies the typed
+    // horizontalArrangement and matching $default mask.
+    internal static void Row(
+        IModifier? modifier,
+        AndroidX.Compose.Foundation.Layout.Arrangement.IHorizontal? horizontalArrangement,
+        IFunction3 content,
+        int defaults,
+        IComposer composer)
         => RowKt.Row(
             modifier:              modifier,
-            horizontalArrangement: null,
+            horizontalArrangement: horizontalArrangement,
             verticalAlignment:     null,
             content:               content,
             _composer:             composer,
