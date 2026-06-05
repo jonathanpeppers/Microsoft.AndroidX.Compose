@@ -34,7 +34,7 @@ public class FacadeGeneratorTests
                 public static unsafe System.IntPtr CallObjectMethod(System.IntPtr inst, System.IntPtr m, Android.Runtime.JValue* args) => default;
                 public static unsafe System.IntPtr NewObject(System.IntPtr cls, System.IntPtr m, Android.Runtime.JValue* args) => default;
             }
-            public enum JniHandleOwnership { TransferLocalRef = 0 }
+            public enum JniHandleOwnership { TransferLocalRef = 0, DoNotTransfer = 1 }
             public readonly struct JValue
             {
                 public JValue(System.IntPtr v) { } public JValue(bool v) { } public JValue(int v) { }
@@ -1157,5 +1157,220 @@ public class FacadeGeneratorTests
         Assert.True(
             emitted!.Contains("WideDefault.Modifier"),
             "Expected emitted facade to reference WideDefault.Modifier (bit 31 slot). Emitted:\n" + emitted);
+    }
+
+    // ─── Phase 4 — [StateHolder] state-holder facades ─────────────────
+
+    /// <summary>Shared snippet stubbing a DatePicker-style state class.</summary>
+    const string DatePickerStateStubs = """
+        namespace AndroidX.Compose.Material3
+        {
+            public interface IDatePickerState { }
+        }
+        namespace ComposeNet
+        {
+            public sealed class DatePickerState
+            {
+                internal AndroidX.Compose.Material3.IDatePickerState? Jvm;
+            }
+        }
+        """;
+
+    const string DatePickerSig =
+        "(Landroidx/compose/material3/DatePickerState;Landroidx/compose/ui/Modifier;Landroidx/compose/material3/DatePickerFormatter;Landroidx/compose/material3/DatePickerColors;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;ZLandroidx/compose/runtime/Composer;II)V";
+
+    [Fact]
+    public void DatePicker_StateHolder_GeneratesRememberRoundTrip()
+    {
+        var code = $$"""
+            using AndroidX.Compose.Runtime;
+            using AndroidX.Compose.UI;
+            using ComposeNet;
+            using Kotlin.Jvm.Functions;
+            using System;
+
+            [assembly: ComposeDefaults("DatePickerDefault",
+                "!state", "modifier", "dateFormatter", "colors", "title", "headline", "showModeToggle")]
+
+            {{DatePickerStateStubs}}
+
+            namespace ComposeNet
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(Class="androidx/compose/material3/DatePickerKt",
+                                   JvmName="DatePicker",
+                                   Signature="{{DatePickerSig}}",
+                                   Defaults=typeof(DatePickerDefault))]
+                    [ComposeFacade]
+                    public static partial void DatePicker(
+                        [StateHolder(Remember = nameof(RememberDatePickerState),
+                                     StateType = typeof(DatePickerState))]
+                        IntPtr state,
+                        IModifier? modifier,
+                        int defaults,
+                        IComposer composer);
+
+                    public static IntPtr RememberDatePickerState(IComposer composer) => default;
+                }
+            }
+            """;
+
+        var (output, diags, emitted) = Run(code, "DatePicker");
+        Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+
+        // Ctor: state slot LAST, with default = null.
+        Assert.Contains("readonly global::ComposeNet.DatePickerState? _state;", emitted);
+        Assert.Contains("public DatePicker(global::ComposeNet.DatePickerState? state = null)", emitted);
+
+        // Render: Remember + .Jvm population.
+        Assert.Contains(
+            "var __state = global::ComposeNet.ComposeBridges.RememberDatePickerState(composer);",
+            emitted);
+        Assert.Contains("if (_state is not null && _state.Jvm is null)", emitted);
+        Assert.Contains(
+            "_state.Jvm = global::Java.Lang.Object.GetObject<global::AndroidX.Compose.Material3.IDatePickerState>(__state, global::Android.Runtime.JniHandleOwnership.DoNotTransfer)!;",
+            emitted);
+
+        // Bridge call uses __state in the IntPtr slot.
+        Assert.Contains(
+            "global::ComposeNet.ComposeBridges.DatePicker(__state, __modifier, __defaults, composer);",
+            emitted);
+
+        var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
+        Assert.Empty(errors);
+    }
+
+    [Fact]
+    public void StateHolder_OnNonIntPtr_FailsCN3009()
+    {
+        var code = $$"""
+            using AndroidX.Compose.Runtime;
+            using AndroidX.Compose.UI;
+            using ComposeNet;
+            using Kotlin.Jvm.Functions;
+
+            [assembly: ComposeDefaults("DatePickerDefault",
+                "!state", "modifier", "dateFormatter", "colors", "title", "headline", "showModeToggle")]
+
+            {{DatePickerStateStubs}}
+
+            namespace ComposeNet
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(Class="x/y/DatePickerKt", JvmName="DatePicker",
+                                   Signature="{{DatePickerSig}}",
+                                   Defaults=typeof(DatePickerDefault))]
+                    [ComposeFacade]
+                    public static partial void DatePicker(
+                        [StateHolder(Remember = nameof(RememberDatePickerState),
+                                     StateType = typeof(DatePickerState))]
+                        int state,
+                        IModifier? modifier,
+                        int defaults,
+                        IComposer composer);
+
+                    public static System.IntPtr RememberDatePickerState(IComposer composer) => default;
+                }
+            }
+            """;
+
+        var (_, diags, emitted) = Run(code, "DatePicker");
+        Assert.Null(emitted);
+        Assert.Contains(diags, d => d.Id == "CN3009"
+            && d.GetMessage().Contains("must annotate an 'IntPtr' parameter"));
+    }
+
+    [Fact]
+    public void StateHolder_MissingJvmField_FailsCN3009()
+    {
+        // Wrapper class with NO Jvm field — generator must reject.
+        var code = $$"""
+            using AndroidX.Compose.Runtime;
+            using AndroidX.Compose.UI;
+            using ComposeNet;
+            using Kotlin.Jvm.Functions;
+            using System;
+
+            [assembly: ComposeDefaults("DatePickerDefault",
+                "!state", "modifier", "dateFormatter", "colors", "title", "headline", "showModeToggle")]
+
+            namespace AndroidX.Compose.Material3 { public interface IDatePickerState { } }
+            namespace ComposeNet { public sealed class BadState { } }
+
+            namespace ComposeNet
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(Class="x/y/DatePickerKt", JvmName="DatePicker",
+                                   Signature="{{DatePickerSig}}",
+                                   Defaults=typeof(DatePickerDefault))]
+                    [ComposeFacade]
+                    public static partial void DatePicker(
+                        [StateHolder(Remember = nameof(RememberDatePickerState),
+                                     StateType = typeof(BadState))]
+                        IntPtr state,
+                        IModifier? modifier,
+                        int defaults,
+                        IComposer composer);
+
+                    public static IntPtr RememberDatePickerState(IComposer composer) => default;
+                }
+            }
+            """;
+
+        var (_, diags, emitted) = Run(code, "DatePicker");
+        Assert.Null(emitted);
+        Assert.Contains(diags, d => d.Id == "CN3009"
+            && d.GetMessage().Contains("no instance field named 'Jvm'"));
+    }
+
+    [Fact]
+    public void StateHolder_NonSuppressedStateBit_ClearedByMask()
+    {
+        // If a future declaration forgets the "!" prefix and exposes
+        // the state bit as an enum member, the StateHolder belt+suspenders
+        // mask path MUST still clear it so the bridge sees "supplied".
+        var code = $$"""
+            using AndroidX.Compose.Runtime;
+            using AndroidX.Compose.UI;
+            using ComposeNet;
+            using Kotlin.Jvm.Functions;
+            using System;
+
+            [assembly: ComposeDefaults("DatePickerDefault",
+                "state", "modifier", "dateFormatter", "colors", "title", "headline", "showModeToggle")]
+
+            {{DatePickerStateStubs}}
+
+            namespace ComposeNet
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(Class="x/y/DatePickerKt", JvmName="DatePicker",
+                                   Signature="{{DatePickerSig}}",
+                                   Defaults=typeof(DatePickerDefault))]
+                    [ComposeFacade]
+                    public static partial void DatePicker(
+                        [StateHolder(Remember = nameof(RememberDatePickerState),
+                                     StateType = typeof(DatePickerState))]
+                        IntPtr state,
+                        IModifier? modifier,
+                        int defaults,
+                        IComposer composer);
+
+                    public static IntPtr RememberDatePickerState(IComposer composer) => default;
+                }
+            }
+            """;
+
+        var (_, diags, emitted) = Run(code, "DatePicker");
+        Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+        Assert.Contains(
+            "__defaults &= ~(int)global::ComposeNet.DatePickerDefault.State;",
+            emitted);
     }
 }

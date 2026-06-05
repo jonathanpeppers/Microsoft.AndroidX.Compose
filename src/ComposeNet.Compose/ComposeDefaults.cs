@@ -193,6 +193,12 @@ using ComposeNet;
     "!state", "modifier", "dateFormatter", "colors", "title",
     "headline", "showModeToggle", "requestFocus")]
 
+// androidx.compose.material3.DateRangePickerKt.DateRangePicker:
+// 8 user params; bit 0 (state) always provided.
+[assembly: ComposeDefaults("DateRangePickerDefault",
+    "!state", "modifier", "dateFormatter", "colors", "title",
+    "headline", "showModeToggle", "requestFocus")]
+
 // androidx.compose.material3.TimePickerKt.TimePicker-mT9BvqQ:
 // 4 user params; bit 0 (state) always provided.
 [assembly: ComposeDefaults("TimePickerDefault",
@@ -359,6 +365,13 @@ using ComposeNet;
 // 5 user params, all defaulted by the wrapper (which exposes none).
 [assembly: ComposeDefaults("RememberDatePickerStateDefault",
     "initialSelectedDateMillis", "initialDisplayedMonthMillis", "yearRange",
+    "initialDisplayMode", "selectableDates")]
+
+// androidx.compose.material3.DateRangePickerKt.rememberDateRangePickerState-IlFM19s:
+// 6 user params, all defaulted by the wrapper (which exposes none).
+[assembly: ComposeDefaults("RememberDateRangePickerStateDefault",
+    "initialSelectedStartDateMillis", "initialSelectedEndDateMillis",
+    "initialDisplayedMonthMillis", "yearRange",
     "initialDisplayMode", "selectableDates")]
 
 // androidx.compose.material3.TimePickerKt.rememberTimePickerState:

@@ -97,6 +97,17 @@ ComposeNet.DatePickerState.DisplayedMonthMillis.get -> long
 ComposeNet.DatePickerState.DisplayedMonthMillis.set -> void
 ComposeNet.DatePickerState.SelectedDateMillis.get -> long?
 ComposeNet.DatePickerState.SelectedDateMillis.set -> void
+ComposeNet.DateRangePicker
+ComposeNet.DateRangePicker.DateRangePicker(ComposeNet.DateRangePickerState? state = null) -> void
+ComposeNet.DateRangePickerState
+ComposeNet.DateRangePickerState.DateRangePickerState() -> void
+ComposeNet.DateRangePickerState.DisplayedMonthMillis.get -> long
+ComposeNet.DateRangePickerState.DisplayedMonthMillis.set -> void
+ComposeNet.DateRangePickerState.SelectedEndDateMillis.get -> long?
+ComposeNet.DateRangePickerState.SelectedEndDateMillis.set -> void
+ComposeNet.DateRangePickerState.SelectedStartDateMillis.get -> long?
+ComposeNet.DateRangePickerState.SelectedStartDateMillis.set -> void
+ComposeNet.DateRangePickerState.SetSelection(long? startDateMillis, long? endDateMillis) -> void
 ComposeNet.DismissibleDrawerSheet
 ComposeNet.DismissibleDrawerSheet.ContainerColor.get -> long
 ComposeNet.DismissibleDrawerSheet.ContainerColor.set -> void

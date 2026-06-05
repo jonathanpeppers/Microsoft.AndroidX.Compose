@@ -236,6 +236,43 @@ internal static class Attributes
             {
                 public PainterResourceAttribute() { }
             }
+
+            /// <summary>
+            /// Phase 4 — apply to the <c>IntPtr</c> bridge parameter that
+            /// carries a Kotlin state-holder handle (e.g.
+            /// <c>DatePickerState</c>, <c>DateRangePickerState</c>). The
+            /// facade calls the named <c>Remember*State</c> bridge on
+            /// <c>ComposeBridges</c> to resolve the handle, optionally
+            /// binds it to a caller-supplied wrapper of type
+            /// <see cref="StateType"/>, and forwards the handle to this
+            /// parameter. The wrapper is exposed as a defaulted ctor
+            /// argument (<c>StateType? state = null</c>).
+            /// </summary>
+            /// <remarks>
+            /// <para><b>Remember</b>: the <c>nameof(ComposeBridges.X)</c>
+            /// of a static partial bridge on <c>ComposeBridges</c> with
+            /// signature <c>(IComposer composer) -&gt; IntPtr</c>. Phase
+            /// 4 supports only zero-user-param remembers; bridges that
+            /// take initialization values (e.g.
+            /// <c>RememberTimePickerState(int, int, bool, composer)</c>)
+            /// stay hand-written until Phase 4b.</para>
+            /// <para><b>StateType</b>: the C# wrapper class that exposes
+            /// the state-holder's properties. It must declare an
+            /// instance, writable, non-readonly field named <c>Jvm</c>
+            /// whose declared type is the binding-generated interface
+            /// (e.g. <c>IDatePickerState</c>) — the generator emits
+            /// <c>state.Jvm = Java.Lang.Object.GetObject&lt;IXxxState&gt;
+            /// (handle, JniHandleOwnership.DoNotTransfer)!</c> the first
+            /// time <c>Render</c> sees a non-null wrapper.</para>
+            /// </remarks>
+            [global::System.AttributeUsage(global::System.AttributeTargets.Parameter,
+                                           AllowMultiple = false)]
+            internal sealed class StateHolderAttribute : global::System.Attribute
+            {
+                public StateHolderAttribute() { }
+                public string Remember { get; set; } = "";
+                public global::System.Type StateType { get; set; } = null!;
+            }
         }
         """;
 }
