@@ -153,18 +153,14 @@ public static class Conversation
             : BuildOtherMessageRow(m, isStreak);
     }
 
-    // "me" messages: right-aligned via a leading Spacer().Weight(1f),
+    // "me" messages: right-aligned via Arrangement.End on the Row,
     // no avatar tile, blueish bubble. Upstream uses a primary-color
-    // bubble with no avatar on the "me" side — same idea, different
-    // exact color since we don't have MaterialTheme.colorScheme reads
-    // (issue #61).
+    // bubble — same idea, different exact color since we don't have
+    // MaterialTheme.colorScheme reads (issue #61).
     static Row BuildMyMessageRow(Message m) =>
-        new()
+        new(Arrangement.End)
         {
             Modifier.Companion.FillMaxWidth().Padding(horizontalDp: 8, verticalDp: 4),
-            // Push everything to the right edge. Workaround for missing
-            // Row(horizontalArrangement=Arrangement.End) — issue #70.
-            new Spacer(Modifier.Companion.Weight(1f)),
             new Column
             {
                 BuildAuthorAndTimestamp(m, alignEnd: true),
@@ -222,17 +218,14 @@ public static class Conversation
     }
 
     // Author + timestamp on one line, separated by a small spacer.
-    // alignEnd uses a leading Spacer-weight trick to push the row's
-    // content to the right (workaround for missing
-    // Row(horizontalArrangement=Arrangement.End) — issue #70).
+    // alignEnd pushes the row's content to the right via
+    // Arrangement.End — matches what "me" message rows want.
     static Row BuildAuthorAndTimestamp(Message m, bool alignEnd)
     {
-        var row = new Row
+        var row = new Row(alignEnd ? Arrangement.End : null)
         {
             Modifier.Companion.FillMaxWidth(),
         };
-        if (alignEnd)
-            row.Add(new Spacer(Modifier.Companion.Weight(1f)));
         row.Add(new Text(m.Author));
         row.Add(new Spacer(Modifier.Companion.Width(8)));
         row.Add(new Text(m.Timestamp));
