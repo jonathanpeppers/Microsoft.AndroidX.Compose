@@ -539,6 +539,39 @@ If a needed Compose API isn't bound, the workflow is:
    and switch the facade to call the generated binding method
    directly.
 
+## Public API tracking
+
+`ComposeNet.Compose` has `Microsoft.CodeAnalysis.PublicApiAnalyzers`
+wired up. Every public symbol must be listed in
+`src/ComposeNet.Compose/PublicAPI.Shipped.txt` (released surface) or
+`src/ComposeNet.Compose/PublicAPI.Unshipped.txt` (pending the next
+release). The build fires `RS0016` for any public symbol that isn't
+in either file, and `RS0017` for entries in the file that no longer
+exist in source.
+
+When you add or change public API:
+
+1. Build `src/ComposeNet.Compose` and note the `RS0016`/`RS0017`
+   warnings. The IDE code fix can update `Unshipped.txt` for you,
+   **or**
+2. Run from the repo root:
+   ```pwsh
+   dotnet format analyzers src/ComposeNet.Compose --diagnostics RS0016 RS0017 --severity warn
+   ```
+   This rewrites `PublicAPI.Unshipped.txt` to match the current
+   surface.
+3. **`dotnet format` skips source-generated files** (e.g. the
+   `[ComposeFacade]` ctors and the Android `Resource` class under
+   `obj/`). After running it, rebuild and add any remaining `RS0016`
+   entries by hand — the warning message contains the exact line to
+   append (`Symbol '<entry>' is not part of the declared public API`).
+4. Sort `PublicAPI.Unshipped.txt` and keep the leading
+   `#nullable enable` line.
+
+On release, move entries from `Unshipped.txt` to `Shipped.txt`.
+Removing or renaming a public symbol is a breaking change — prefer
+adding new overloads and obsoleting the old ones.
+
 ## Style
 
 - Target framework: `net10.0-android` for the facade and sample;
