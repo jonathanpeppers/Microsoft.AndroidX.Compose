@@ -304,8 +304,11 @@ public sealed class Modifier
     /// <param name="state">Scroll position state to drive (and read
     /// the current offset from).</param>
     /// <param name="enabled">When <c>false</c>, the user can no longer
-    /// scroll the content — programmatic scroll via
-    /// <paramref name="state"/> still works.</param>
+    /// scroll the content via touch gestures. <see cref="ScrollState"/>
+    /// still updates as the layout changes, but this binding does not
+    /// yet expose programmatic scrolling (Kotlin's
+    /// <c>scrollTo</c> / <c>animateScrollTo</c> are <c>suspend</c>
+    /// functions, not yet wired up).</param>
     /// <param name="reverseScrolling">When <c>true</c>, flip the
     /// scroll direction so the start of the content sits at the
     /// bottom of the viewport (and dragging up reveals earlier
@@ -329,8 +332,11 @@ public sealed class Modifier
     /// <param name="state">Scroll position state to drive (and read
     /// the current offset from).</param>
     /// <param name="enabled">When <c>false</c>, the user can no longer
-    /// scroll the content — programmatic scroll via
-    /// <paramref name="state"/> still works.</param>
+    /// scroll the content via touch gestures. <see cref="ScrollState"/>
+    /// still updates as the layout changes, but this binding does not
+    /// yet expose programmatic scrolling (Kotlin's
+    /// <c>scrollTo</c> / <c>animateScrollTo</c> are <c>suspend</c>
+    /// functions, not yet wired up).</param>
     /// <param name="reverseScrolling">When <c>true</c>, flip the
     /// scroll direction so the start of the content sits at the end
     /// of the viewport. Defaults to <c>false</c>.</param>
