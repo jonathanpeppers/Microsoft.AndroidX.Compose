@@ -47,6 +47,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
     const string SlotAttributeMetadataName = "ComposeNet.SlotAttribute";
     const string CallbackAttributeMetadataName = "ComposeNet.CallbackAttribute";
     const string PainterResourceAttributeMetadataName = "ComposeNet.PainterResourceAttribute";
+    const string StateHolderAttributeMetadataName = "ComposeNet.StateHolderAttribute";
 
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
@@ -70,6 +71,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             var slotAttr = compilation.GetTypeByMetadataName(SlotAttributeMetadataName);
             var callbackAttr = compilation.GetTypeByMetadataName(CallbackAttributeMetadataName);
             var painterAttr = compilation.GetTypeByMetadataName(PainterResourceAttributeMetadataName);
+            var stateHolderAttr = compilation.GetTypeByMetadataName(StateHolderAttributeMetadataName);
             if (facadeAttr is null) return;
 
             var method = (IMethodSymbol)ctx.SemanticModel.GetDeclaredSymbol((MethodDeclarationSyntax)ctx.Node)!;
@@ -77,7 +79,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
                 .FirstOrDefault(a => SymbolEqualityComparer.Default.Equals(a.AttributeClass, facadeAttr));
             if (attr is null) return;
 
-            var ctxObj = new Context(method, attr, bridgeAttr, declarativeAttr, slotAttr, callbackAttr, painterAttr, compilation);
+            var ctxObj = new Context(method, attr, bridgeAttr, declarativeAttr, slotAttr, callbackAttr, painterAttr, stateHolderAttr, compilation);
             var result = Build(ctxObj);
             foreach (var diag in result.Diagnostics)
                 spc.ReportDiagnostic(diag);
@@ -95,11 +97,12 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         public INamedTypeSymbol? SlotAttr { get; }
         public INamedTypeSymbol? CallbackAttr { get; }
         public INamedTypeSymbol? PainterAttr { get; }
+        public INamedTypeSymbol? StateHolderAttr { get; }
         public Compilation Compilation { get; }
 
         public Context(IMethodSymbol method, AttributeData attr, INamedTypeSymbol? bridgeAttr,
             INamedTypeSymbol? declarativeAttr, INamedTypeSymbol? slotAttr, INamedTypeSymbol? callbackAttr,
-            INamedTypeSymbol? painterAttr, Compilation compilation)
+            INamedTypeSymbol? painterAttr, INamedTypeSymbol? stateHolderAttr, Compilation compilation)
         {
             Method = method;
             Attr = attr;
@@ -108,6 +111,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             SlotAttr = slotAttr;
             CallbackAttr = callbackAttr;
             PainterAttr = painterAttr;
+            StateHolderAttr = stateHolderAttr;
             Compilation = compilation;
         }
     }
@@ -315,6 +319,107 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
 
     static FacadeSlot? Classify(IParameterSymbol p, Context c, string methodName, Location loc, List<Diagnostic> diags)
     {
+        // [StateHolder] — annotates the IntPtr bridge param carrying a
+        // Kotlin state-holder handle. The facade emits a RememberXxxState
+        // round-trip and an optional `.Jvm` population for a wrapper.
+        AttributeData? stateAttr = null;
+        if (c.StateHolderAttr is not null)
+        {
+            stateAttr = p.GetAttributes()
+                .FirstOrDefault(a => SymbolEqualityComparer.Default.Equals(a.AttributeClass, c.StateHolderAttr));
+        }
+        if (stateAttr is not null)
+        {
+            // Mutex with [PainterResource].
+            if (c.PainterAttr is not null &&
+                p.GetAttributes().Any(a => SymbolEqualityComparer.Default.Equals(a.AttributeClass, c.PainterAttr)))
+            {
+                diags.Add(Diagnostic.Create(Diagnostics.FacadeStateHolderInvalid, loc, methodName,
+                    $"parameter '{p.Name}' has both [StateHolder] and [PainterResource]; pick one"));
+                return null;
+            }
+            if (p.Type.SpecialType != SpecialType.System_IntPtr)
+            {
+                diags.Add(Diagnostic.Create(Diagnostics.FacadeStateHolderInvalid, loc, methodName,
+                    $"[StateHolder] must annotate an 'IntPtr' parameter; '{p.Name}' is '{p.Type.ToDisplayString()}'"));
+                return null;
+            }
+            string? remember = ReadString(stateAttr, "Remember");
+            INamedTypeSymbol? stateType = ReadType(stateAttr, "StateType");
+            if (string.IsNullOrEmpty(remember))
+            {
+                diags.Add(Diagnostic.Create(Diagnostics.FacadeStateHolderInvalid, loc, methodName,
+                    $"[StateHolder] on '{p.Name}' is missing required property 'Remember'"));
+                return null;
+            }
+            if (stateType is null)
+            {
+                diags.Add(Diagnostic.Create(Diagnostics.FacadeStateHolderInvalid, loc, methodName,
+                    $"[StateHolder] on '{p.Name}' is missing required property 'StateType'"));
+                return null;
+            }
+            if (!SyntaxFacts.IsValidIdentifier(remember!))
+            {
+                diags.Add(Diagnostic.Create(Diagnostics.FacadeStateHolderInvalid, loc, methodName,
+                    $"[StateHolder] on '{p.Name}': Remember value '{remember}' is not a valid C# identifier"));
+                return null;
+            }
+
+            // Validate the Remember bridge resolves to a static
+            // `(IComposer) -> IntPtr` method on ComposeNet.ComposeBridges.
+            var bridgesType = c.Compilation.GetTypeByMetadataName("ComposeNet.ComposeBridges");
+            if (bridgesType is null)
+            {
+                diags.Add(Diagnostic.Create(Diagnostics.FacadeStateHolderInvalid, loc, methodName,
+                    $"[StateHolder] on '{p.Name}': cannot resolve type 'ComposeNet.ComposeBridges'"));
+                return null;
+            }
+            var rememberMethods = bridgesType.GetMembers(remember!).OfType<IMethodSymbol>().ToArray();
+            if (rememberMethods.Length == 0)
+            {
+                diags.Add(Diagnostic.Create(Diagnostics.FacadeStateHolderInvalid, loc, methodName,
+                    $"[StateHolder] on '{p.Name}': no static method 'ComposeBridges.{remember}' found"));
+                return null;
+            }
+            var rememberFit = rememberMethods.FirstOrDefault(m =>
+                m.IsStatic &&
+                m.Parameters.Length == 1 &&
+                ComposeDefaultsGenerator.IsComposer(m.Parameters[0].Type) &&
+                m.ReturnType.SpecialType == SpecialType.System_IntPtr);
+            if (rememberFit is null)
+            {
+                diags.Add(Diagnostic.Create(Diagnostics.FacadeStateHolderInvalid, loc, methodName,
+                    $"[StateHolder] on '{p.Name}': 'ComposeBridges.{remember}' must be a static method with signature '(IComposer) -> IntPtr' (Phase 4 supports only zero-user-param remembers)"));
+                return null;
+            }
+
+            // Validate StateType has a writable instance Jvm field.
+            var jvmMember = stateType.GetMembers("Jvm").OfType<IFieldSymbol>().FirstOrDefault();
+            if (jvmMember is null)
+            {
+                diags.Add(Diagnostic.Create(Diagnostics.FacadeStateHolderInvalid, loc, methodName,
+                    $"[StateHolder] on '{p.Name}': StateType '{stateType.ToDisplayString()}' has no instance field named 'Jvm'"));
+                return null;
+            }
+            if (jvmMember.IsStatic || jvmMember.IsConst || jvmMember.IsReadOnly)
+            {
+                diags.Add(Diagnostic.Create(Diagnostics.FacadeStateHolderInvalid, loc, methodName,
+                    $"[StateHolder] on '{p.Name}': StateType '{stateType.ToDisplayString()}'.Jvm must be a non-static, non-const, non-readonly field"));
+                return null;
+            }
+            if (jvmMember.DeclaredAccessibility is not (Accessibility.Public or Accessibility.Internal or Accessibility.ProtectedOrInternal))
+            {
+                diags.Add(Diagnostic.Create(Diagnostics.FacadeStateHolderInvalid, loc, methodName,
+                    $"[StateHolder] on '{p.Name}': StateType '{stateType.ToDisplayString()}'.Jvm must be accessible (public or internal)"));
+                return null;
+            }
+
+            return new FacadeSlot(p, FacadeSlotKind.StateHolder,
+                rememberMethodName: remember,
+                stateWrapperType: stateType,
+                stateJvmType: jvmMember.Type);
+        }
+
         // [PainterResource] — annotates the IntPtr bridge param that
         // takes the resolved Painter handle. The facade exposes a
         // synthetic `int drawableResourceId` ctor arg in its place.
@@ -405,7 +510,13 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         string baseClass = isContainer ? "global::ComposeNet.ComposableContainer" : "global::ComposeNet.ComposableNode";
 
         // Ctor slots: every non-modifier, non-named-property slot.
-        var ctorSlots = slots.Where(s => IsCtorSlot(s)).ToArray();
+        // StateHolder slots go LAST (they have default = null) so all
+        // required slots come first and stay positional.
+        var ctorSlotsAll = slots.Where(s => IsCtorSlot(s)).ToArray();
+        var ctorSlots = ctorSlotsAll
+            .Where(s => s.Kind != FacadeSlotKind.StateHolder)
+            .Concat(ctorSlotsAll.Where(s => s.Kind == FacadeSlotKind.StateHolder))
+            .ToArray();
         // Named-property slots (Phase 3).
         var namedSlots = slots.Where(s => s.Kind is FacadeSlotKind.NamedFunction2 or FacadeSlotKind.NamedFunction3
             or FacadeSlotKind.RequiredFunction2 or FacadeSlotKind.RequiredFunction3).ToArray();
@@ -448,6 +559,8 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             {
                 if (i > 0) sb.Append(", ");
                 sb.Append(CtorParamType(ctorSlots[i])).Append(' ').Append(EscapeIdent(CtorIdentifier(ctorSlots[i])));
+                if (ctorSlots[i].Kind == FacadeSlotKind.StateHolder)
+                    sb.Append(" = null");
             }
             sb.AppendLine(")");
             sb.AppendLine("        {");
@@ -469,6 +582,22 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             sb.Append("            if (").Append(name).AppendLine(" is null)");
             sb.Append("                throw new global::System.InvalidOperationException(\"")
               .Append(className).Append('.').Append(name).AppendLine(" is required (the Kotlin parameter has no default).\");");
+        }
+
+        // StateHolder preamble — call RememberXxxState and (optionally)
+        // populate the caller-supplied wrapper's Jvm field.
+        foreach (var s in slots.Where(s => s.Kind == FacadeSlotKind.StateHolder))
+        {
+            var id = CtorIdentifier(s);
+            var jvmFqn = s.StateJvmType!.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat
+                .WithMiscellaneousOptions(SymbolDisplayMiscellaneousOptions.UseSpecialTypes));
+            sb.Append("            var __").Append(s.Param.Name)
+              .Append(" = global::ComposeNet.ComposeBridges.").Append(s.RememberMethodName)
+              .Append('(').Append(composerName).AppendLine(");");
+            sb.Append("            if (_").Append(id).Append(" is not null && _").Append(id).AppendLine(".Jvm is null)");
+            sb.Append("                _").Append(id).Append(".Jvm = global::Java.Lang.Object.GetObject<")
+              .Append(jvmFqn).Append(">(__").Append(s.Param.Name)
+              .AppendLine(", global::Android.Runtime.JniHandleOwnership.DoNotTransfer)!;");
         }
 
         // OnClick wrappers — one per line so slot-table keys stay distinct.
@@ -650,6 +779,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
                 case FacadeSlotKind.PainterResource:
                 case FacadeSlotKind.Primitive:
                 case FacadeSlotKind.ThemeColor:
+                case FacadeSlotKind.StateHolder:
                     sb.Append(indent).Append("__defaults &= ~(int)global::ComposeNet.")
                       .Append(d.EnumName).Append('.').Append(bitMember).AppendLine(";");
                     break;
@@ -694,11 +824,13 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             FacadeSlotKind.PainterResource  => "__painterRef",
             FacadeSlotKind.ThemeColor       => "__color",
             FacadeSlotKind.ScopeReceiver    => "global::ComposeNet.RenderContext.CurrentScope",
+            FacadeSlotKind.StateHolder      => "__" + s.Param.Name,
             _ => "default",
         };
 
     static bool IsCtorSlot(FacadeSlot s) =>
-        s.Kind is FacadeSlotKind.OnClick or FacadeSlotKind.Primitive or FacadeSlotKind.Callback or FacadeSlotKind.PainterResource;
+        s.Kind is FacadeSlotKind.OnClick or FacadeSlotKind.Primitive or FacadeSlotKind.Callback
+            or FacadeSlotKind.PainterResource or FacadeSlotKind.StateHolder;
 
     static string CtorFieldType(FacadeSlot slot) => CtorParamType(slot);
 
@@ -717,6 +849,8 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             FacadeSlotKind.Callback  => "global::System.Action<" + slot.CallbackType!.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat
                 .WithMiscellaneousOptions(SymbolDisplayMiscellaneousOptions.UseSpecialTypes)) + ">",
             FacadeSlotKind.PainterResource => "int",
+            FacadeSlotKind.StateHolder => slot.StateWrapperType!.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat
+                .WithMiscellaneousOptions(SymbolDisplayMiscellaneousOptions.UseSpecialTypes)) + "?",
             FacadeSlotKind.Primitive => slot.Param.Type.ToDisplayString(format),
             _ => slot.Param.Type.ToDisplayString(),
         };
@@ -829,22 +963,31 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         PainterResource,
         ThemeColor,
         ScopeReceiver,
+        StateHolder,
     }
 
     internal readonly struct FacadeSlot
     {
         public FacadeSlot(IParameterSymbol param, FacadeSlotKind kind,
-            ITypeSymbol? callbackType = null, string? slotPropertyName = null)
+            ITypeSymbol? callbackType = null, string? slotPropertyName = null,
+            string? rememberMethodName = null, INamedTypeSymbol? stateWrapperType = null,
+            ITypeSymbol? stateJvmType = null)
         {
             Param = param;
             Kind = kind;
             CallbackType = callbackType;
             SlotPropertyName = slotPropertyName;
+            RememberMethodName = rememberMethodName;
+            StateWrapperType = stateWrapperType;
+            StateJvmType = stateJvmType;
         }
         public IParameterSymbol Param { get; }
         public FacadeSlotKind Kind { get; }
         public ITypeSymbol? CallbackType { get; }
         public string? SlotPropertyName { get; }
+        public string? RememberMethodName { get; }
+        public INamedTypeSymbol? StateWrapperType { get; }
+        public ITypeSymbol? StateJvmType { get; }
         public bool HasSlotAttribute => SlotPropertyName is not null;
         public bool IsNullableSlot => Param.NullableAnnotation == NullableAnnotation.Annotated
             && KindIsFnSlot(Kind);
@@ -853,6 +996,6 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
               or FacadeSlotKind.NamedFunction2 or FacadeSlotKind.NamedFunction3
               or FacadeSlotKind.RequiredFunction2 or FacadeSlotKind.RequiredFunction3;
         public FacadeSlot WithKind(FacadeSlotKind newKind) =>
-            new(Param, newKind, CallbackType, SlotPropertyName);
+            new(Param, newKind, CallbackType, SlotPropertyName, RememberMethodName, StateWrapperType, StateJvmType);
     }
 }

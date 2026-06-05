@@ -798,8 +798,14 @@ internal static partial class ComposeBridges
                     "Landroidx/compose/ui/focus/FocusRequester;" +
                     "Landroidx/compose/runtime/Composer;II)V",
         Defaults  = typeof(DatePickerDefault))]
-    public static partial void DatePicker(IntPtr state, IModifier? modifier,
-                                          int defaults, IComposer composer);
+    [ComposeFacade]
+    public static partial void DatePicker(
+        [StateHolder(Remember = nameof(RememberDatePickerState),
+                     StateType = typeof(DatePickerState))]
+        IntPtr      state,
+        IModifier?  modifier,
+        int         defaults,
+        IComposer   composer);
 
     // androidx.compose.material3.DatePickerKt.rememberDatePickerState-EU0dCGE
     [ComposeBridge(
@@ -810,6 +816,36 @@ internal static partial class ComposeBridges
                     "Landroidx/compose/runtime/Composer;II)Landroidx/compose/material3/DatePickerState;",
         Defaults  = typeof(RememberDatePickerStateDefault))]
     public static partial IntPtr RememberDatePickerState(IComposer composer);
+
+    // androidx.compose.material3.DateRangePickerKt.DateRangePicker
+    [ComposeBridge(
+        Class     = "androidx/compose/material3/DateRangePickerKt",
+        JvmName   = "DateRangePicker",
+        Signature = "(Landroidx/compose/material3/DateRangePickerState;Landroidx/compose/ui/Modifier;" +
+                    "Landroidx/compose/material3/DatePickerFormatter;" +
+                    "Landroidx/compose/material3/DatePickerColors;" +
+                    "Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;Z" +
+                    "Landroidx/compose/ui/focus/FocusRequester;" +
+                    "Landroidx/compose/runtime/Composer;II)V",
+        Defaults  = typeof(DateRangePickerDefault))]
+    [ComposeFacade]
+    public static partial void DateRangePicker(
+        [StateHolder(Remember = nameof(RememberDateRangePickerState),
+                     StateType = typeof(DateRangePickerState))]
+        IntPtr      state,
+        IModifier?  modifier,
+        int         defaults,
+        IComposer   composer);
+
+    // androidx.compose.material3.DateRangePickerKt.rememberDateRangePickerState-IlFM19s
+    [ComposeBridge(
+        Class     = "androidx/compose/material3/DateRangePickerKt",
+        JvmName   = "rememberDateRangePickerState-IlFM19s",
+        Signature = "(Ljava/lang/Long;Ljava/lang/Long;Ljava/lang/Long;Lkotlin/ranges/IntRange;I" +
+                    "Landroidx/compose/material3/SelectableDates;" +
+                    "Landroidx/compose/runtime/Composer;II)Landroidx/compose/material3/DateRangePickerState;",
+        Defaults  = typeof(RememberDateRangePickerStateDefault))]
+    public static partial IntPtr RememberDateRangePickerState(IComposer composer);
 
     // androidx.compose.material3.TimePickerKt.rememberTimePickerState
     [ComposeBridge(

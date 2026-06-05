@@ -323,6 +323,7 @@ The generator classifies each user param of the bridge:
 | `IFunction2?` / `IFunction3?` (any nullable, OR `[Slot]`, OR >1 content slot) | Surfaced as a named `ComposableNode?` property — multi-slot leaf shape |
 | `IntPtr` with name ending in `Scope`    | Kotlin extension receiver; auto-bound to `RenderContext.CurrentScope` (no ctor slot) |
 | `IntPtr` + `[PainterResource]`          | Synthetic `int painterResourceId` ctor arg + `PainterResource` resolution + try/finally |
+| `IntPtr` + `[StateHolder(Remember = …, StateType = typeof(…))]` | State-holder shape (Phase 4): the facade exposes the wrapper type as a defaulted ctor slot (`StateType? state = null`), calls the named `RememberXxxState(composer)` bridge on first render, populates the wrapper's `Jvm` field, and forwards the JNI handle to this parameter. |
 | Primitive (`string`, `int`, `long`, `bool`, `float`, `double`)  | Surfaced as a ctor parameter, stored in `_<name>` |
 | Anything else (callbacks, handles, etc.) | Rejected with CN3002                              |
 
@@ -354,6 +355,23 @@ Parameter-level attributes the generator recognizes:
   `int painterResourceId` ctor arg in its place and emits the
   `PainterResource(id, composer)` + try/finally + `DeleteLocalRef`
   preamble around the bridge call.
+- `[StateHolder(Remember = nameof(ComposeBridges.X), StateType = typeof(T))]`
+  — annotate the `IntPtr` user param that carries a Kotlin
+  state-holder handle (e.g. `DatePickerState`,
+  `DateRangePickerState`). The facade gains a defaulted ctor slot
+  `T? state = null` (appended last), calls
+  `ComposeBridges.<Remember>(composer)` at the top of `Render` to
+  obtain the JNI handle, populates `state.Jvm` via
+  `Java.Lang.Object.GetObject<TJvm>(handle, JniHandleOwnership.DoNotTransfer)`
+  the first time it sees a non-null wrapper, and forwards the handle
+  to this parameter. Phase 4 supports only Remember bridges with
+  signature `(IComposer) -> IntPtr` — Remember bridges that take user
+  parameters (e.g. `RememberTimePickerState(int, int, bool, IComposer)`)
+  are blocked on Phase 4b and stay hand-written. The
+  `StateType` must declare an instance, writable, non-readonly,
+  accessible field named `Jvm` whose declared type is the
+  binding-generated state interface (e.g. `IDatePickerState`). Cannot
+  be combined with `[PainterResource]` on the same parameter.
 
 Each facade is emitted to a unique hint name
 (`ComposeNet.Facade.<ClassName>.g.cs`) so the `[CallerFilePath]` +
@@ -363,7 +381,7 @@ stay distinct per facade.
 ### When to use it
 
 The generator now supports a wide range of facade shapes (Phases 1,
-2, 3, 6, 7, 8 are implemented):
+2, 3, 4, 6, 7, 8 are implemented):
 
 - **Phase 1** — container with content lambda + ctor primitives
   (`Button`, `Card`, `Text`, `Column`, `Row`, `Box`).
@@ -373,6 +391,13 @@ The generator now supports a wide range of facade shapes (Phases 1,
 - **Phase 3** — multi-slot leafs with named `ComposableNode?`
   properties (`AlertDialog`, `AssistChip`, `ListItem`, `Snackbar`,
   `BadgedBox`, `Tab`, `NavigationBarItem`, the top-app-bar family).
+- **Phase 4** — `[StateHolder(...)]` state-holder facades that need
+  a `RememberXxxState(composer)` round-trip and a `.Jvm` population
+  for the caller-supplied wrapper (`DatePicker`, `DateRangePicker`).
+  Limited to Remember bridges with signature `(IComposer) -> IntPtr`;
+  parameterised remembers (`TimePicker`, `TimeInput`, `SearchBar`,
+  `SnackbarHost`, `ModalBottomSheet`, `BottomSheetScaffold`) stay
+  hand-written until Phase 4b.
 - **Phase 6** — `[ComposeFacade(DefaultColorFromTheme = "...")]`
   for drawer sheets and similar containers that fall back to a
   `ColorScheme` slot when the caller doesn't override.
@@ -398,9 +423,12 @@ The generator now supports a wide range of facade shapes (Phases 1,
 Facades that still stay hand-written are the ones the generator
 can't model:
 
-- State-holder facades that need `remember*State` resolution and a
-  `Jvm` round-trip (`DatePicker`, `TimePicker`, `SearchBar`,
-  `SnackbarHost`, `ModalBottomSheet`). These are Phase 4 work.
+- State-holder facades whose `RememberXxxState` bridge takes user
+  initialisation params (`TimePicker` / `TimeInput` need
+  `initialHour`/`initialMinute`/`is24Hour`; `SearchBar` and
+  `ModalBottomSheet`/`BottomSheetScaffold` similarly). Phase 4
+  supports the zero-user-param shape (`DatePicker`,
+  `DateRangePicker`); parameterised remembers wait for Phase 4b.
 - Scope facades whose bodies do non-trivial work beyond
   `RenderContext.PushScope` (`SegmentedButton`,
   `SingleChoice`/`MultiChoiceSegmentedButtonRow`, the segmented
@@ -422,7 +450,8 @@ can't model:
 Trying to apply `[ComposeFacade]` to an unsupported bridge will
 emit CN3002 (unsupported parameter), CN3003 (scope misuse), CN3005
 (invalid callback type), CN3006 (slot conflict), CN3007 (color
-theme binding failed), or CN3008 (painter misuse) at build time —
+theme binding failed), CN3008 (painter misuse), or CN3009
+(state-holder misuse) at build time —
 back out the attribute and write the facade by hand.
 
 ### Adding a new generated facade
@@ -453,7 +482,7 @@ end-to-end recipe is:
    the stub** — without it the generated class has no XML docs.
 4. **Build the sample** (`dotnet build src/ComposeNet.Sample`) to
    verify the bridge + facade compile together. The supported
-   shapes are validated at build time; CN3001-CN3008 will fire if
+   shapes are validated at build time; CN3001-CN3009 will fire if
    the generator can't accept the bridge.
 5. **If CN3002 fires**, the bridge has a parameter outside the
    table above — either an unmarked `IFunction1` callback, a
@@ -478,6 +507,7 @@ end-to-end recipe is:
 | CN3006  | `[Slot]` placement conflicts with the facade's classified shape, `[Callback]` placed on a non-`IFunction1` param, multiple `[PainterResource]` params on one bridge, or `int defaults` declared without a resolvable `Defaults` enum. |
 | CN3007  | `DefaultColorFromTheme` cannot bind to any `long` user param (or `ColorParameter` is ambiguous / missing). |
 | CN3008  | `[PainterResource]` annotates a non-`IntPtr` parameter.            |
+| CN3009  | `[StateHolder]` is invalid: applied to a non-`IntPtr` param, combined with `[PainterResource]`, missing or unidentifier-valued `Remember` / `StateType`, the named `Remember` method is not a static `(IComposer) -> IntPtr` on `ComposeBridges`, or `StateType` has no accessible writable instance field named `Jvm`. |
 
 ### Migration rule
 
