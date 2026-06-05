@@ -734,6 +734,31 @@ internal static partial class ComposeBridges
         int         defaults,
         IComposer   composer);
 
+    // DateRangePickerDialog is just DatePickerDialog with a DateRangePicker
+    // body — same Kotlin composable, same $default bitmask. Wrapper-passthrough
+    // gives us a distinct C# facade name (and matching XML doc focus) without
+    // a second JNI bridge.
+    [ComposeFacade(Defaults = typeof(DatePickerDialogDefault))]
+    public static partial void DateRangePickerDialog(
+        IFunction0  onDismissRequest,
+        IFunction2  confirmButton,
+        IModifier?  modifier,
+        IFunction2? dismissButton,
+        [Slot("Body")]
+        IFunction3  content,
+        int         defaults,
+        IComposer   composer);
+
+    public static partial void DateRangePickerDialog(
+        IFunction0  onDismissRequest,
+        IFunction2  confirmButton,
+        IModifier?  modifier,
+        IFunction2? dismissButton,
+        IFunction3  content,
+        int         defaults,
+        IComposer   composer)
+        => DatePickerDialog(onDismissRequest, confirmButton, modifier, dismissButton, content, defaults, composer);
+
     // androidx.compose.material3.TimePickerKt.TimePicker-mT9BvqQ
     [ComposeBridge(
         Class     = "androidx/compose/material3/TimePickerKt",
@@ -1652,24 +1677,40 @@ internal static partial class ComposeBridges
     // ScrollState + Function3<ColumnScope, Composer, Integer, Unit>). This is
     // an INSTANCE method on the abstract scope class (not a static helper, not
     // a Kotlin object singleton), so the [ComposeBridge] generator's static /
-    // ctor / InstanceField shapes don't fit — hand-written raw JNI.
+    // ctor / InstanceField shapes don't fit — hand-written raw JNI in the
+    // wrapper-passthrough body below.
     //
     // The receiver is whichever scope the enclosing ExposedDropdownMenuBox
-    // pushed onto RenderContext. Callers must guard against IntPtr.Zero
-    // before calling (see ExposedDropdownMenu.Render). We do NOT cache the
-    // receiver — Compose hands a fresh scope per recomposition.
+    // pushed onto RenderContext (auto-bound by the facade generator because
+    // the param name ends in "Scope"). We do NOT cache the receiver —
+    // Compose hands a fresh scope per recomposition.
     static IntPtr s_exposedDropdownMenuBoxScopeClass;
     static IntPtr s_exposedDropdownMenuMethodId;
 
-    internal static unsafe void ExposedDropdownMenu(
-        IntPtr     scope,
+    [ComposeFacade(Defaults = typeof(ExposedDropdownMenuDefault))]
+    public static unsafe partial void ExposedDropdownMenu(
+        IntPtr     exposedDropdownMenuBoxScope,
         bool       expanded,
         IFunction0 onDismissRequest,
         IModifier? modifier,
-        int        defaults,
         IFunction3 content,
+        int        defaults,
+        IComposer  composer);
+
+    public static unsafe partial void ExposedDropdownMenu(
+        IntPtr     exposedDropdownMenuBoxScope,
+        bool       expanded,
+        IFunction0 onDismissRequest,
+        IModifier? modifier,
+        IFunction3 content,
+        int        defaults,
         IComposer  composer)
     {
+        if (exposedDropdownMenuBoxScope == IntPtr.Zero)
+            throw new InvalidOperationException(
+                "ExposedDropdownMenu must be rendered inside an ExposedDropdownMenuBox " +
+                "so it can resolve the menu-anchor scope.");
+
         if (s_exposedDropdownMenuMethodId == IntPtr.Zero)
         {
             IntPtr cls = JNIEnv.FindClass("androidx/compose/material3/ExposedDropdownMenuBoxScope");
@@ -1696,7 +1737,7 @@ internal static partial class ComposeBridges
 
         try
         {
-            JNIEnv.CallVoidMethod(scope, s_exposedDropdownMenuMethodId, args);
+            JNIEnv.CallVoidMethod(exposedDropdownMenuBoxScope, s_exposedDropdownMenuMethodId, args);
         }
         finally
         {

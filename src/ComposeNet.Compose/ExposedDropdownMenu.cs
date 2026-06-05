@@ -1,5 +1,3 @@
-using AndroidX.Compose.Runtime;
-
 namespace ComposeNet;
 
 /// <summary>
@@ -11,39 +9,4 @@ namespace ComposeNet;
 /// <see cref="ExposedDropdownMenuBox"/> throws
 /// <see cref="System.InvalidOperationException"/>.
 /// </summary>
-public sealed class ExposedDropdownMenu : ComposableContainer
-{
-    readonly bool _expanded;
-    readonly System.Action _onDismissRequest;
-
-    public ExposedDropdownMenu(bool expanded, System.Action onDismissRequest)
-    {
-        _expanded = expanded;
-        _onDismissRequest = onDismissRequest;
-    }
-
-    internal override void Render(IComposer composer)
-    {
-        var scope = RenderContext.CurrentScope;
-        if (scope == System.IntPtr.Zero)
-            throw new System.InvalidOperationException(
-                "ExposedDropdownMenu must be rendered inside an ExposedDropdownMenuBox " +
-                "so it can resolve the menu-anchor scope.");
-
-        var onDismiss = new ComposableLambda0(_onDismissRequest);
-        var content   = ComposableLambdas.Wrap3(composer, c => RenderChildren(c));
-
-        int defaults = (int)ExposedDropdownMenuDefault.All;
-        var modifier = BuildModifier();
-        if (modifier is not null) defaults &= ~(int)ExposedDropdownMenuDefault.Modifier;
-
-        ComposeBridges.ExposedDropdownMenu(
-            scope:            scope,
-            expanded:         _expanded,
-            onDismissRequest: onDismiss,
-            modifier:         modifier,
-            defaults:         defaults,
-            content:          content,
-            composer:         composer);
-    }
-}
+public sealed partial class ExposedDropdownMenu;
