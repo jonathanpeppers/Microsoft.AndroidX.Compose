@@ -97,12 +97,15 @@ internal readonly struct DefaultsInfo
         {
             if (!member.IsConst) continue;
             if (member.Name == "All") continue;
-            if (member.ConstantValue is not int v || v <= 0) continue;
-            // Single-bit masks only — the All sentinel is filtered above
-            // and any future composite values are skipped.
+            if (member.ConstantValue is not int raw || raw == 0) continue;
+            // Treat the value as an unsigned bitmask so bit 31 (which is
+            // negative when read as `int`) is decoded correctly. Single-bit
+            // masks only — the All sentinel is filtered above and any
+            // composite values are skipped.
+            uint v = unchecked((uint)raw);
             if ((v & (v - 1)) != 0) continue;
             int bit = 0;
-            for (int x = v; x > 1; x >>= 1) bit++;
+            for (uint x = v; x > 1; x >>= 1) bit++;
             var kotlin = char.ToLowerInvariant(member.Name[0]) + member.Name.Substring(1);
             slots.Add(new DefaultsSlot(kotlin, bit, member.Name));
         }

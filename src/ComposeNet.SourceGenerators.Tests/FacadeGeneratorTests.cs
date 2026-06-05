@@ -1110,4 +1110,52 @@ public class FacadeGeneratorTests
         Assert.Contains("readonly global::MyApp.MyState _state", emitted);
         Assert.Contains("global::MyApp.MyState state", emitted);
     }
+
+    [Fact]
+    public void WrapperFacade_TryReadFromEnum_HandlesBit31()
+    {
+        // Regression: bit 31 of an int $default mask is negative when
+        // read as `int`. TryReadFromEnum must still decode it correctly.
+        // Verified by placing Modifier at bit 31 so the IModifier?
+        // auto-mask emits "& ~(int)WideDefault.Modifier" — without the
+        // fix, TryReadFromEnum drops the Modifier slot (v <= 0 filter)
+        // and the auto-mask clear is silently omitted.
+        var code = """
+            using AndroidX.Compose.Runtime;
+            using AndroidX.Compose.UI;
+            using ComposeNet;
+            using Kotlin.Jvm.Functions;
+            using System;
+
+            namespace MyApp
+            {
+                [Flags]
+                public enum WideDefault
+                {
+                    Other      = 1 << 0,
+                    Modifier   = unchecked((int)0x80000000), // bit 31
+                    All        = Other | Modifier,
+                }
+            }
+
+            namespace ComposeNet
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeFacade(Defaults = typeof(MyApp.WideDefault))]
+                    public static partial void Wide(int other, IModifier? modifier, int defaults, IComposer composer);
+
+                    public static partial void Wide(int other, IModifier? modifier, int defaults, IComposer composer) { }
+                }
+            }
+            """;
+        var (_, diags, emitted) = Run(code, "Wide");
+        Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+        // The auto-mask clear for the IModifier? slot proves bit 31 was
+        // decoded — without it, this clear would be missing.
+        Assert.True(
+            emitted!.Contains("WideDefault.Modifier"),
+            "Expected emitted facade to reference WideDefault.Modifier (bit 31 slot). Emitted:\n" + emitted);
+    }
 }
