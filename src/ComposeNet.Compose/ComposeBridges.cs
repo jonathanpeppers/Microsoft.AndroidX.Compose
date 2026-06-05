@@ -1,7 +1,10 @@
 using Android.Runtime;
+using AndroidX.Compose.Foundation.Layout;
 using AndroidX.Compose.Foundation.Lazy.Grid;
+using AndroidX.Compose.Material3;
 using AndroidX.Compose.Runtime;
 using AndroidX.Compose.UI;
+using AndroidX.Compose.UI.State;
 using Kotlin.Jvm.Functions;
 
 namespace ComposeNet;
@@ -720,11 +723,13 @@ internal static partial class ComposeBridges
                     "Landroidx/compose/ui/window/DialogProperties;" +
                     "Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;II)V",
         Defaults  = typeof(DatePickerDialogDefault))]
+    [ComposeFacade]
     public static partial void DatePickerDialog(
         IFunction0  onDismissRequest,
         IFunction2  confirmButton,
         IModifier?  modifier,
         IFunction2? dismissButton,
+        [Slot("Body")]
         IFunction3  content,
         int         defaults,
         IComposer   composer);
@@ -750,6 +755,7 @@ internal static partial class ComposeBridges
                     "Landroidx/compose/ui/graphics/Shape;J" +
                     "Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;II)V",
         Defaults  = typeof(TimePickerDialogDefault))]
+    [ComposeFacade]
     public static partial void TimePickerDialog(
         IFunction0  onDismissRequest,
         IFunction2  confirmButton,
@@ -757,6 +763,7 @@ internal static partial class ComposeBridges
         IModifier?  modifier,
         IFunction2? title,
         IFunction2? modeToggleButton,
+        [Slot("Body")]
         IFunction3  content,
         int         defaults,
         IComposer   composer);
@@ -1911,4 +1918,152 @@ internal static partial class ComposeBridges
         IntPtr     snackbarData,
         IModifier? modifier,
         IComposer  composer);
+
+    // Phase 8 — wrapper-passthrough facades. These are [ComposeFacade]-only
+    // partial methods with hand-written bodies that delegate to a bound
+    // binding. They eliminate per-facade boilerplate (ComposableLambda
+    // wrapping, modifier handling, $default mask) by routing through the
+    // ComposeFacadeGenerator. The wrapper itself is just one explicit
+    // call to the binding — no overload resolution magic, every arg
+    // hand-picked.
+
+    [ComposeFacade(Defaults = typeof(BoxDefault))]
+    public static partial void Box(IModifier? modifier, IFunction3 content, int defaults, IComposer composer);
+
+    public static partial void Box(IModifier? modifier, IFunction3 content, int defaults, IComposer composer)
+        => BoxKt.Box(
+            modifier:                modifier,
+            contentAlignment:        null,
+            propagateMinConstraints: false,
+            content:                 content,
+            _composer:               composer,
+            p5:                      0,
+            _changed:                defaults);
+
+    [ComposeFacade(Defaults = typeof(ColumnDefault), Scope = "Column")]
+    public static partial void Column(IModifier? modifier, IFunction3 content, int defaults, IComposer composer);
+
+    public static partial void Column(IModifier? modifier, IFunction3 content, int defaults, IComposer composer)
+        => ColumnKt.Column(
+            modifier:            modifier,
+            verticalArrangement: null,
+            horizontalAlignment: null,
+            content:             content,
+            _composer:           composer,
+            p5:                  0,
+            _changed:            defaults);
+
+    [ComposeFacade(Defaults = typeof(RowDefault), Scope = "Row")]
+    public static partial void Row(IModifier? modifier, IFunction3 content, int defaults, IComposer composer);
+
+    public static partial void Row(IModifier? modifier, IFunction3 content, int defaults, IComposer composer)
+        => RowKt.Row(
+            modifier:              modifier,
+            horizontalArrangement: null,
+            verticalAlignment:     null,
+            content:               content,
+            _composer:             composer,
+            p5:                    0,
+            _changed:              defaults);
+
+    // Spacer has no Kotlin $default — the modifier param is required.
+    // The wrapper materialises Modifier.Companion when the caller leaves
+    // it null so the binding receives a non-null receiver.
+    [ComposeFacade]
+    public static partial void Spacer(IModifier? modifier, IComposer composer);
+
+    public static partial void Spacer(IModifier? modifier, IComposer composer)
+        => SpacerKt.Spacer(
+            modifier ?? Java.Lang.Object.GetObject<IModifier>(
+                ModifierCompanionInstance(),
+                JniHandleOwnership.TransferLocalRef)!,
+            composer,
+            0);
+
+    [ComposeFacade(Defaults = typeof(CheckboxDefault))]
+    public static partial void Checkbox(
+        bool                       @checked,
+        [Callback(typeof(bool))]
+        IFunction1                 onCheckedChange,
+        IModifier?                 modifier,
+        int                        defaults,
+        IComposer                  composer);
+
+    public static partial void Checkbox(bool @checked, IFunction1 onCheckedChange, IModifier? modifier, int defaults, IComposer composer)
+        => CheckboxKt.Checkbox(
+            @checked:          @checked,
+            onCheckedChange:   onCheckedChange,
+            modifier:          modifier,
+            enabled:           true,
+            colors:            null,
+            interactionSource: null,
+            _composer:         composer,
+            p7:                0,
+            _changed:          defaults);
+
+    [ComposeFacade(Defaults = typeof(SwitchDefault))]
+    public static partial void Switch(
+        bool                       @checked,
+        [Callback(typeof(bool))]
+        IFunction1                 onCheckedChange,
+        IModifier?                 modifier,
+        int                        defaults,
+        IComposer                  composer);
+
+    public static partial void Switch(bool @checked, IFunction1 onCheckedChange, IModifier? modifier, int defaults, IComposer composer)
+        => SwitchKt.Switch(
+            @checked:          @checked,
+            onCheckedChange:   onCheckedChange,
+            modifier:          modifier,
+            thumbContent:      null,
+            enabled:           true,
+            colors:            null,
+            interactionSource: null,
+            _composer:         composer,
+            p8:                0,
+            _changed:          defaults);
+
+    [ComposeFacade(Defaults = typeof(RadioButtonDefault))]
+    public static partial void RadioButton(
+        bool        selected,
+        IFunction0  onClick,
+        IModifier?  modifier,
+        int         defaults,
+        IComposer   composer);
+
+    public static partial void RadioButton(bool selected, IFunction0 onClick, IModifier? modifier, int defaults, IComposer composer)
+        => RadioButtonKt.RadioButton(
+            selected:          selected,
+            onClick:           onClick,
+            modifier:          modifier,
+            enabled:           true,
+            colors:            null,
+            interactionSource: null,
+            _composer:         composer,
+            p7:                0,
+            _changed:          defaults);
+
+    [ComposeFacade(Defaults = typeof(SliderDefault))]
+    public static partial void Slider(
+        float                       value,
+        [Callback(typeof(float))]
+        IFunction1                  onValueChange,
+        IModifier?                  modifier,
+        int                         defaults,
+        IComposer                   composer);
+
+    public static partial void Slider(float value, IFunction1 onValueChange, IModifier? modifier, int defaults, IComposer composer)
+        => SliderKt.Slider(
+            value:                  value,
+            onValueChange:          onValueChange,
+            modifier:               modifier,
+            enabled:                true,
+            valueRange:             null,
+            p5:                     0,
+            onValueChangeFinished:  null,
+            colors:                 null,
+            interactionSource:      null,
+            _composer:              composer,
+            steps:                  0,
+            _changed:               defaults);
 }

@@ -32,9 +32,14 @@ using AndroidX.Compose.Foundation.Lazy.Grid;
 using AndroidX.Compose.Material3;
 using ComposeNet;
 
-[assembly: ComposeDefaults<ColumnKt>("Column", "ColumnDefault")]
-[assembly: ComposeDefaults<RowKt>("Row", "RowDefault")]
-[assembly: ComposeDefaults<BoxKt>("Box", "BoxDefault")]
+// Hand-rolled declarative form (instead of generic form) so the
+// ComposeFacadeGenerator can see the bit names — generic-form enums
+// are emitted by another source generator in the same pass and aren't
+// visible cross-generator. Bits and names match what the generic form
+// would have produced.
+[assembly: ComposeDefaults("ColumnDefault", "modifier", "verticalArrangement", "horizontalAlignment", "!content")]
+[assembly: ComposeDefaults("RowDefault", "modifier", "horizontalArrangement", "verticalAlignment", "!content")]
+[assembly: ComposeDefaults("BoxDefault", "modifier", "contentAlignment", "propagateMinConstraints", "!content")]
 [assembly: ComposeDefaults<DividerKt>("HorizontalDivider", "HorizontalDividerDefault")]
 [assembly: ComposeDefaults<DividerKt>("VerticalDivider", "VerticalDividerDefault")]
 [assembly: ComposeDefaults<IconKt>("Icon", "IconDefault")]

@@ -172,6 +172,20 @@ internal static class Attributes
                 /// ambiguity.
                 /// </summary>
                 public string? ColorParameter { get; set; }
+
+                /// <summary>
+                /// Phase 8 — fallback for the <c>$default</c> enum when
+                /// the facade method has no paired
+                /// <see cref="ComposeBridgeAttribute"/>. Used by tiny
+                /// pass-through "wrapper" bridges (extended partial methods
+                /// with hand-written bodies that delegate straight to a
+                /// bound binding instead of doing JNI). Set this to
+                /// <c>typeof(XxxDefault)</c> to drive the auto-mask logic
+                /// for direct-binding facades. Bridge-mode facades read
+                /// <c>Defaults</c> from their <c>[ComposeBridge]</c>
+                /// instead — this property is ignored in that case.
+                /// </summary>
+                public global::System.Type? Defaults { get; set; }
             }
 
             /// <summary>

@@ -78,6 +78,42 @@ internal readonly struct DefaultsInfo
         return new DefaultsInfo(enumName, slots);
     }
 
+    /// <summary>
+    /// Read slot info directly from the generated enum's members. Used as
+    /// a fallback when the enum was declared via the generic form
+    /// (<c>[assembly: ComposeDefaults&lt;T&gt;("Method", "EnumName")]</c>),
+    /// which doesn't leave a declarative attribute behind for
+    /// <see cref="TryRead"/> to parse. Each non-<c>All</c> enum member's
+    /// constant value is treated as a single-bit mask and decoded via
+    /// log2; the member name (PascalCased) maps back to a camelCase
+    /// Kotlin parameter name.
+    /// </summary>
+    public static DefaultsInfo? TryReadFromEnum(INamedTypeSymbol enumType)
+    {
+        if (enumType.TypeKind != TypeKind.Enum) return null;
+
+        var slots = new List<DefaultsSlot>();
+        foreach (var member in enumType.GetMembers().OfType<IFieldSymbol>())
+        {
+            if (!member.IsConst) continue;
+            if (member.Name == "All") continue;
+            if (member.ConstantValue is not int raw || raw == 0) continue;
+            // Treat the value as an unsigned bitmask so bit 31 (which is
+            // negative when read as `int`) is decoded correctly. Single-bit
+            // masks only — the All sentinel is filtered above and any
+            // composite values are skipped.
+            uint v = unchecked((uint)raw);
+            if ((v & (v - 1)) != 0) continue;
+            int bit = 0;
+            for (uint x = v; x > 1; x >>= 1) bit++;
+            var kotlin = char.ToLowerInvariant(member.Name[0]) + member.Name.Substring(1);
+            slots.Add(new DefaultsSlot(kotlin, bit, member.Name));
+        }
+        if (slots.Count == 0) return null;
+        slots.Sort((a, b) => a.Bit.CompareTo(b.Bit));
+        return new DefaultsInfo(enumType.Name, slots);
+    }
+
     static string Pascal(string s)
     {
         if (string.IsNullOrEmpty(s)) return s;

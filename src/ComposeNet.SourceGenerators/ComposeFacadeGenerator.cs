@@ -126,13 +126,17 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             return Fail(Diagnostics.FacadeWrongContainingType, loc, method.Name, container.ToDisplayString());
         }
 
-        // CN3004 — paired with [ComposeBridge].
+        // CN3004 — paired with [ComposeBridge]. Relaxed for "wrapper"
+        // facades: a partial method with a hand-written body and no
+        // [ComposeBridge] is a tiny pass-through to a bound binding
+        // (e.g. BoxKt.Box) — its $default enum is read from
+        // [ComposeFacade].Defaults instead.
         AttributeData? bridge = null;
         if (c.BridgeAttr is not null)
         {
             bridge = method.GetAttributes()
                 .FirstOrDefault(a => SymbolEqualityComparer.Default.Equals(a.AttributeClass, c.BridgeAttr));
-            if (bridge is null)
+            if (bridge is null && !HasMethodBody(method))
             {
                 return Fail(Diagnostics.FacadeMissingBridge, loc, method.Name);
             }
@@ -155,12 +159,21 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         var userParams = csParams.Take(csParams.Length - 1).ToArray();
 
         // Look up the bridge's Defaults enum so Phase 3 can emit the
-        // matching auto-mask code.
+        // matching auto-mask code. Bridge-mode reads it from
+        // [ComposeBridge].Defaults; wrapper-mode (no bridge) falls
+        // back to [ComposeFacade].Defaults.
         DefaultsInfo? defaults = null;
-        INamedTypeSymbol? defaultsType = bridge is null ? null : ReadType(bridge, "Defaults");
-        if (defaultsType is not null && c.DeclarativeAttr is not null)
+        INamedTypeSymbol? defaultsType = bridge is not null ? ReadType(bridge, "Defaults") : null;
+        defaultsType ??= ReadType(attr, "Defaults");
+        if (defaultsType is not null)
         {
-            defaults = DefaultsInfo.TryRead(c.Compilation, c.DeclarativeAttr, defaultsType.Name);
+            // Try declarative form first; fall back to walking the enum
+            // directly (covers generic-form-generated enums).
+            if (c.DeclarativeAttr is not null)
+            {
+                defaults = DefaultsInfo.TryRead(c.Compilation, c.DeclarativeAttr, defaultsType.Name);
+            }
+            defaults ??= DefaultsInfo.TryReadFromEnum(defaultsType);
         }
 
         // Look up a sibling "defaults: int" param the caller manages. If
@@ -733,6 +746,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
     }
 
     static bool IsPrimitiveCtorType(ITypeSymbol type) =>
+        type.TypeKind == TypeKind.Enum ||
         type.SpecialType is SpecialType.System_String
             or SpecialType.System_Int32
             or SpecialType.System_Int64
@@ -778,6 +792,27 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
 
     static string EscapeIdent(string name) =>
         SyntaxFacts.GetKeywordKind(name) == SyntaxKind.None ? name : "@" + name;
+
+    static bool HasMethodBody(IMethodSymbol method)
+    {
+        if (HasBodyInRefs(method)) return true;
+        if (method.PartialImplementationPart is { } impl && HasBodyInRefs(impl)) return true;
+        if (method.PartialDefinitionPart is { } defn && HasBodyInRefs(defn)) return true;
+        return false;
+    }
+
+    static bool HasBodyInRefs(IMethodSymbol m)
+    {
+        foreach (var sr in m.DeclaringSyntaxReferences)
+        {
+            if (sr.GetSyntax() is MethodDeclarationSyntax mds &&
+                (mds.Body is not null || mds.ExpressionBody is not null))
+            {
+                return true;
+            }
+        }
+        return false;
+    }
 
     internal enum FacadeSlotKind
     {
