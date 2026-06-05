@@ -94,16 +94,28 @@ internal static class SuspendBridge
             return Task.FromException<T>(ex);
         }
 
-        if (!IsCoroutineSuspended(syncResult))
+        try
         {
-            // Synchronous completion — pretend Kotlin called resumeWith
-            // for us so all failure-detection / promotion logic lives in
-            // SuspendContinuation.ResumeWith.
-            cont.ResumeWith(syncResult!);
+            if (!IsCoroutineSuspended(syncResult))
+            {
+                // Synchronous completion — pretend Kotlin called resumeWith
+                // for us so all failure-detection / promotion logic lives in
+                // SuspendContinuation.ResumeWith.
+                cont.ResumeWith(syncResult!);
+            }
+            // else: Kotlin keeps cont strong-rooted Java-side and will
+            // resume it later. SuspendContinuation's GCHandle pin keeps the
+            // managed peer alive for fire-and-forget callers.
         }
-        // else: Kotlin keeps cont strong-rooted Java-side and will
-        // resume it later. SuspendContinuation's GCHandle pin keeps the
-        // managed peer alive for fire-and-forget callers.
+        finally
+        {
+            // syncResult typically wraps a JNI local ref (binding methods
+            // and our hand-written bridges both use TransferLocalRef).
+            // ResumeWith promoted its handle to a global for the TCS, so
+            // dispose the original wrapper now to free the local ref
+            // promptly instead of waiting for finalization.
+            syncResult?.Dispose();
+        }
 
         return cont.Tcs.Task.ContinueWith(static (t, state) =>
         {
@@ -169,16 +181,18 @@ internal static class SuspendBridge
         var local = JNIEnv.FindClass("kotlin/Result$Failure");
         try
         {
+            // Resolve the field id from the local class ref — jfieldID
+            // is a stable pointer and doesn't depend on which jclass ref
+            // looked it up. Write the field id BEFORE publishing the
+            // class ref via Interlocked.CompareExchange so any reader
+            // that observes a non-zero s_resultFailureClass is
+            // guaranteed (via the CAS's release semantics) to see a
+            // fully initialised s_resultFailureExceptionField.
+            var fid = JNIEnv.GetFieldID(local, "exception", "Ljava/lang/Throwable;");
             var gref = JNIEnv.NewGlobalRef(local);
+            s_resultFailureExceptionField = fid;
             if (Interlocked.CompareExchange(ref s_resultFailureClass, gref, IntPtr.Zero) != IntPtr.Zero)
-            {
                 JNIEnv.DeleteGlobalRef(gref);
-            }
-            else
-            {
-                s_resultFailureExceptionField = JNIEnv.GetFieldID(
-                    s_resultFailureClass, "exception", "Ljava/lang/Throwable;");
-            }
         }
         finally
         {

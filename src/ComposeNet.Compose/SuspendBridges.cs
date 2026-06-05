@@ -34,8 +34,13 @@ internal static partial class ComposeBridges
     {
         if (s_scrollStateAnimateScrollTo_method == System.IntPtr.Zero)
         {
-            s_scrollStateAnimateScrollTo_class = JNIEnv.FindClass(
-                "androidx/compose/foundation/ScrollState");
+            // FindClass returns a *local* JNI ref; promote to a global
+            // ref before caching so the cached handle stays valid past
+            // the current JNI frame. Matches the ModifierCompanionInstance
+            // pattern in ComposeBridges.cs.
+            var local = JNIEnv.FindClass("androidx/compose/foundation/ScrollState");
+            s_scrollStateAnimateScrollTo_class = JNIEnv.NewGlobalRef(local);
+            JNIEnv.DeleteLocalRef(local);
             s_scrollStateAnimateScrollTo_method = JNIEnv.GetStaticMethodID(
                 s_scrollStateAnimateScrollTo_class,
                 "animateScrollTo$default",
