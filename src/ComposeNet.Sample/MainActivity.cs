@@ -84,6 +84,12 @@ public class MainActivity : ComposeActivity
             // filter without binding InputTransformation.
             var searchQuery   = Remember(() => new MutableState<string>(""));
 
+            // Scroll state for the (long) Misc tab — `Modifier.VerticalScroll`
+            // turns its outer Column into a scrollable viewport, the standard
+            // Compose pattern for non-Lazy content that simply might overflow
+            // on small screens.
+            var miscScroll    = Remember(() => new ScrollState());
+
             string[] tabNames = { "Basics", "Buttons", "Cards", "Drawer", "Selection", "Pickers", "Misc", "App bars", "Lazy", "Carousels" };
 
             // Per-tab content. Only the current tab's column is added to
@@ -423,6 +429,7 @@ public class MainActivity : ComposeActivity
                 },
                 6 => (ComposableNode)new Column
                 {
+                    Modifier.Companion.VerticalScroll(miscScroll),
                     new Text("Misc Material 3"),
                     new Text("Progress indicators (indeterminate):"),
                     new Row
