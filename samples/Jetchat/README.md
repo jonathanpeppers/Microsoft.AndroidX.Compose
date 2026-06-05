@@ -6,7 +6,7 @@ The upstream sample is labeled **Low complexity** and is the smallest
 of the six showcase apps, which makes it the natural first target for
 `ComposeNet.Compose`.
 
-![Jetchat running on an Android emulator](../docs/jetchat.png)
+<img src="../docs/jetchat.png" alt="Jetchat running on an Android emulator" width="320" />
 
 Run with:
 
