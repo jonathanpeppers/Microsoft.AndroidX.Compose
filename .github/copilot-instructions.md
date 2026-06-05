@@ -539,6 +539,26 @@ If a needed Compose API isn't bound, the workflow is:
    and switch the facade to call the generated binding method
    directly.
 
+## Central package versioning
+
+All `<PackageReference>` items in this repo are **versionless** at the
+project level. Versions live in `Directory.Build.targets` as
+`<PackageReference Update="..." Version="..." />` items so the entire
+repo stays on a consistent set of dependency versions.
+
+When adding a new package dependency:
+
+1. Add a versionless `<PackageReference Include="..." />` (plus any
+   metadata like `PrivateAssets="All"`) in the project file.
+2. Add a matching `<PackageReference Update="..." Version="..." />`
+   in `Directory.Build.targets`, grouped under the appropriate
+   comment banner (Roslyn analyzers / Kotlin / AndroidX core /
+   AndroidX Compose / etc.). Add a new banner if none fits.
+
+Do not pin a `Version` attribute on `<PackageReference Include>` in
+the project file — that bypasses central versioning and is the
+opposite of what reviewers want.
+
 ## Public API tracking
 
 `ComposeNet.Compose` has `Microsoft.CodeAnalysis.PublicApiAnalyzers`
