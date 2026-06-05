@@ -13,13 +13,41 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup .NET 10
+      - name: Cache .NET SDK and workloads
+        id: dotnet-cache
+        uses: actions/cache@v4
+        with:
+          path: /usr/share/dotnet
+          key: dotnet-${{ runner.os }}-${{ hashFiles('global.json') }}
+
+      - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '10.0.x'
+          global-json-file: global.json
 
-      - name: Install android workload
-        run: dotnet workload install android
+      - name: Prune unused .NET versions
+        if: steps.dotnet-cache.outputs.cache-hit != 'true'
+        run: |
+          set -eu
+          for dir in \
+            /usr/share/dotnet/sdk \
+            /usr/share/dotnet/shared/Microsoft.NETCore.App \
+            /usr/share/dotnet/shared/Microsoft.AspNetCore.App; do
+            [ -d "$dir" ] || continue
+            sudo find "$dir" -mindepth 1 -maxdepth 1 -type d ! -name '10.*' -exec rm -rf {} +
+          done
+
+      - name: Restore android workload
+        if: steps.dotnet-cache.outputs.cache-hit != 'true'
+        run: dotnet workload restore
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: nuget-${{ runner.os }}-${{ hashFiles('**/*.csproj', '**/*.slnx', 'global.json') }}
+          restore-keys: |
+            nuget-${{ runner.os }}-
 
       - name: Build
         run: dotnet build ComposeNet.slnx -bl:ComposeNet.binlog
