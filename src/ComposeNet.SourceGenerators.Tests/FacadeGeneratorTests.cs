@@ -86,6 +86,33 @@ public class FacadeGeneratorTests
                 public static ScopeFrame PushScope(System.IntPtr scope, ScopeKind kind) => default;
                 public static System.IntPtr CurrentScope => default;
             }
+            public readonly struct Dp
+            {
+                public Dp(float v) { Value = v; }
+                public float Value { get; }
+                public static float Pack(Dp? d) => d?.Value ?? 0f;
+            }
+            public readonly struct Sp
+            {
+                public Sp(float v) { Value = v; }
+                public float Value { get; }
+                public static long Pack(Sp? s) => 0L;
+            }
+            public readonly struct Em
+            {
+                public Em(float v) { Value = v; }
+                public float Value { get; }
+                public static long Pack(Em? e) => 0L;
+            }
+            public readonly struct TextAlign
+            {
+                public TextAlign(int v) { Value = v; }
+                public int Value { get; }
+                public static int Pack(TextAlign? a) => 0;
+            }
+            public class FontWeight : Java.Lang.Object { }
+            public class TextDecoration : Java.Lang.Object { }
+            public class Shape : Java.Lang.Object { }
             public abstract class ComposableNode
             {
                 internal abstract void Render(AndroidX.Compose.Runtime.IComposer composer);
@@ -1372,5 +1399,244 @@ public class FacadeGeneratorTests
         Assert.Contains(
             "__defaults &= ~(int)global::ComposeNet.DatePickerDefault.State;",
             emitted);
+    }
+
+    // ---------------------------------------------------------------
+    // OptionalValue — Compose value-class types (Sp/Dp/Em/TextAlign)
+    // and reference-typed wrappers (FontWeight/TextDecoration/Shape)
+    // surface as nullable auto-properties on the generated facade.
+    // ---------------------------------------------------------------
+
+    [Fact]
+    public void OptionalValue_SpEmitsNullableAutoProperty()
+    {
+        var code = """
+            using AndroidX.Compose.Runtime;
+            using AndroidX.Compose.UI;
+            using ComposeNet;
+            using Kotlin.Jvm.Functions;
+
+            [assembly: ComposeDefaults("TextDefault",
+                "!text", "modifier", "fontSize")]
+
+            namespace ComposeNet
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(Class="androidx/compose/material3/TextKt", JvmName="Text",
+                                   Signature="(Ljava/lang/String;Landroidx/compose/ui/Modifier;JLandroidx/compose/runtime/Composer;II)V",
+                                   Defaults=typeof(TextDefault))]
+                    [ComposeFacade]
+                    public static partial void Text(string text, IModifier? modifier, Sp? fontSize, IComposer composer);
+                }
+            }
+            """;
+
+        var (output, diags, emitted) = Run(code, "Text");
+        Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+        // Property emitted as nullable Sp.
+        Assert.Contains("public global::ComposeNet.Sp? FontSize { get; set; }", emitted);
+        // Bridge call passes property through (no ctor slot, no field).
+        Assert.Contains("global::ComposeNet.ComposeBridges.Text(_text, BuildModifier(), FontSize, composer);", emitted);
+        // Not a ctor parameter.
+        Assert.DoesNotContain("Sp? fontSize", emitted);
+
+        var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
+        Assert.Empty(errors);
+    }
+
+    [Fact]
+    public void OptionalValue_FontWeightEmitsNullableReferenceProperty()
+    {
+        var code = """
+            using AndroidX.Compose.Runtime;
+            using AndroidX.Compose.UI;
+            using ComposeNet;
+            using Kotlin.Jvm.Functions;
+
+            [assembly: ComposeDefaults("TextDefault",
+                "!text", "modifier", "fontWeight")]
+
+            namespace ComposeNet
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(Class="androidx/compose/material3/TextKt", JvmName="Text",
+                                   Signature="(Ljava/lang/String;Landroidx/compose/ui/Modifier;Landroidx/compose/ui/text/font/FontWeight;Landroidx/compose/runtime/Composer;II)V",
+                                   Defaults=typeof(TextDefault))]
+                    [ComposeFacade]
+                    public static partial void Text(string text, IModifier? modifier, FontWeight? fontWeight, IComposer composer);
+                }
+            }
+            """;
+
+        var (output, diags, emitted) = Run(code, "Text");
+        Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+        // Reference-typed wrapper surfaces as a nullable property.
+        Assert.Contains("public global::ComposeNet.FontWeight? FontWeight { get; set; }", emitted);
+        Assert.Contains("global::ComposeNet.ComposeBridges.Text(_text, BuildModifier(), FontWeight, composer);", emitted);
+
+        var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
+        Assert.Empty(errors);
+    }
+
+    [Fact]
+    public void OptionalValue_NonNullableReferenceWrapperIsRejected()
+    {
+        // Non-nullable FontWeight (no `?`) must not classify as
+        // OptionalValue: surfacing it as a nullable auto-property would
+        // pass `null` straight to a bridge slot the caller declared as
+        // non-nullable. CN3002 is expected.
+        var code = """
+            using AndroidX.Compose.Runtime;
+            using AndroidX.Compose.UI;
+            using ComposeNet;
+            using Kotlin.Jvm.Functions;
+
+            [assembly: ComposeDefaults("TextDefault", "!text", "modifier", "fontWeight")]
+
+            namespace ComposeNet
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(Class="androidx/compose/material3/TextKt", JvmName="Text",
+                                   Signature="(Ljava/lang/String;Landroidx/compose/ui/Modifier;Landroidx/compose/ui/text/font/FontWeight;Landroidx/compose/runtime/Composer;II)V",
+                                   Defaults=typeof(TextDefault))]
+                    [ComposeFacade]
+                    public static partial void Text(string text, IModifier? modifier, FontWeight fontWeight, IComposer composer);
+                }
+            }
+            """;
+
+        var (_, diags, _) = Run(code, "Text");
+        Assert.Contains(diags, d => d.Id == "CN3002");
+    }
+
+    [Fact]
+    public void OptionalValue_MultipleValueAndReferenceTypesCoexist()
+    {
+        var code = """
+            using AndroidX.Compose.Runtime;
+            using AndroidX.Compose.UI;
+            using ComposeNet;
+            using Kotlin.Jvm.Functions;
+
+            [assembly: ComposeDefaults("TextDefault",
+                "!text", "modifier", "fontSize", "fontWeight", "letterSpacing", "decoration", "lineHeight")]
+
+            namespace ComposeNet
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(Class="androidx/compose/material3/TextKt", JvmName="Text",
+                                   Signature="(Ljava/lang/String;Landroidx/compose/ui/Modifier;JLandroidx/compose/ui/text/font/FontWeight;JLandroidx/compose/ui/text/style/TextDecoration;JLandroidx/compose/runtime/Composer;II)V",
+                                   Defaults=typeof(TextDefault))]
+                    [ComposeFacade]
+                    public static partial void Text(
+                        string text, IModifier? modifier,
+                        Sp? fontSize, FontWeight? fontWeight,
+                        Sp? letterSpacing, TextDecoration? decoration,
+                        Sp? lineHeight,
+                        IComposer composer);
+                }
+            }
+            """;
+
+        var (output, diags, emitted) = Run(code, "Text");
+        Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+        Assert.Contains("public global::ComposeNet.Sp? FontSize { get; set; }", emitted);
+        Assert.Contains("public global::ComposeNet.FontWeight? FontWeight { get; set; }", emitted);
+        Assert.Contains("public global::ComposeNet.Sp? LetterSpacing { get; set; }", emitted);
+        Assert.Contains("public global::ComposeNet.TextDecoration? Decoration { get; set; }", emitted);
+        Assert.Contains("public global::ComposeNet.Sp? LineHeight { get; set; }", emitted);
+        // PascalCased property names flow through the bridge call.
+        Assert.Contains(
+            "global::ComposeNet.ComposeBridges.Text(_text, BuildModifier(), FontSize, FontWeight, LetterSpacing, Decoration, LineHeight, composer);",
+            emitted);
+
+        var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
+        Assert.Empty(errors);
+    }
+
+    [Fact]
+    public void OptionalValue_TextAlignAndDpAreClassifiedAsValueTypes()
+    {
+        var code = """
+            using AndroidX.Compose.Runtime;
+            using AndroidX.Compose.UI;
+            using ComposeNet;
+            using Kotlin.Jvm.Functions;
+
+            [assembly: ComposeDefaults("FooDefault",
+                "!a", "align", "size")]
+
+            namespace ComposeNet
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(Class="x/Foo", JvmName="Foo",
+                                   Signature="(Ljava/lang/String;IFLandroidx/compose/runtime/Composer;II)V",
+                                   Defaults=typeof(FooDefault))]
+                    [ComposeFacade]
+                    public static partial void Foo(string a, TextAlign? align, Dp? size, IComposer composer);
+                }
+            }
+            """;
+
+        var (output, diags, emitted) = Run(code, "Foo");
+        Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+        Assert.Contains("public global::ComposeNet.TextAlign? Align { get; set; }", emitted);
+        Assert.Contains("public global::ComposeNet.Dp? Size { get; set; }", emitted);
+
+        var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
+        Assert.Empty(errors);
+    }
+
+    [Fact]
+    public void OptionalValue_ClearsBitInCallerProvidesDefaultsPath()
+    {
+        // With a user-declared `int defaults` param, the facade owns
+        // the mask. OptionalValue properties must clear their bit when
+        // the caller assigned a non-null value.
+        var code = """
+            using AndroidX.Compose.Runtime;
+            using AndroidX.Compose.UI;
+            using ComposeNet;
+            using Kotlin.Jvm.Functions;
+
+            [assembly: ComposeDefaults("BarDefault",
+                "!a", "modifier", "fontSize", "fontWeight")]
+
+            namespace ComposeNet
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(Class="x/Bar", JvmName="Bar",
+                                   Signature="(Ljava/lang/String;Landroidx/compose/ui/Modifier;JLandroidx/compose/ui/text/font/FontWeight;Landroidx/compose/runtime/Composer;II)V",
+                                   Defaults=typeof(BarDefault))]
+                    [ComposeFacade]
+                    public static partial void Bar(
+                        string a, IModifier? modifier,
+                        Sp? fontSize, FontWeight? fontWeight,
+                        int defaults, IComposer composer);
+                }
+            }
+            """;
+
+        var (output, diags, emitted) = Run(code, "Bar");
+        Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+        Assert.Contains(
+            "if (FontSize is not null) __defaults &= ~(int)global::ComposeNet.BarDefault.FontSize;",
+            emitted);
+        Assert.Contains(
+            "if (FontWeight is not null) __defaults &= ~(int)global::ComposeNet.BarDefault.FontWeight;",
+            emitted);
+        var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
+        Assert.Empty(errors);
     }
 }

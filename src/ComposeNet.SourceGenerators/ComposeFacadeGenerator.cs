@@ -496,6 +496,13 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         if (IsPrimitiveCtorType(p.Type))
             return new FacadeSlot(p, FacadeSlotKind.Primitive);
 
+        // Compose @JvmInline value-class types (Dp?/Sp?/Em?/TextAlign?)
+        // and reference-typed wrappers (FontWeight?/TextDecoration?/
+        // Shape?). Surfaced as nullable auto-properties; the bridge
+        // generator handles JNI lowering and auto-mask bit clearing.
+        if (IsOptionalValueType(p.Type, p.NullableAnnotation))
+            return new FacadeSlot(p, FacadeSlotKind.OptionalValue);
+
         diags.Add(Diagnostic.Create(Diagnostics.FacadeUnsupportedParameter, loc, methodName, p.Name, p.Type.ToDisplayString()));
         return null;
     }
@@ -549,6 +556,17 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         foreach (var s in namedSlots)
         {
             sb.Append("        public global::ComposeNet.ComposableNode? ").Append(PropertyName(s)).AppendLine(" { get; set; }");
+        }
+
+        // OptionalValue — Compose value-class types (Dp?/Sp?/Em?/
+        // TextAlign?) and reference-typed wrappers (FontWeight?/
+        // TextDecoration?/Shape?). Surfaced as nullable auto-properties
+        // for object-init syntax: `new Text("hi") { FontSize = 24.Sp() }`.
+        var optionalValueSlots = slots.Where(s => s.Kind == FacadeSlotKind.OptionalValue).ToArray();
+        foreach (var s in optionalValueSlots)
+        {
+            sb.Append("        public ").Append(OptionalValueDisplay(s)).Append(' ')
+              .Append(PropertyName(s)).AppendLine(" { get; set; }");
         }
 
         // Constructor.
@@ -774,6 +792,10 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
                     sb.Append(indent).Append("if (__").Append(s.Param.Name).Append(" is not null) __defaults &= ~(int)global::ComposeNet.")
                       .Append(d.EnumName).Append('.').Append(bitMember).AppendLine(";");
                     break;
+                case FacadeSlotKind.OptionalValue:
+                    sb.Append(indent).Append("if (").Append(PropertyName(s)).Append(" is not null) __defaults &= ~(int)global::ComposeNet.")
+                      .Append(d.EnumName).Append('.').Append(bitMember).AppendLine(";");
+                    break;
                 case FacadeSlotKind.RequiredFunction2:
                 case FacadeSlotKind.RequiredFunction3:
                 case FacadeSlotKind.PainterResource:
@@ -825,6 +847,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             FacadeSlotKind.ThemeColor       => "__color",
             FacadeSlotKind.ScopeReceiver    => "global::ComposeNet.RenderContext.CurrentScope",
             FacadeSlotKind.StateHolder      => "__" + s.Param.Name,
+            FacadeSlotKind.OptionalValue    => PropertyName(s),
             _ => "default",
         };
 
@@ -858,6 +881,26 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
 
     static string PropertyName(FacadeSlot s) => s.SlotPropertyName ?? Pascal(s.Param.Name);
 
+    /// <summary>
+    /// C# type display for an <see cref="FacadeSlotKind.OptionalValue"/>
+    /// property declaration. For value-class types (Dp/Sp/Em/TextAlign)
+    /// the param is already <c>Nullable&lt;T&gt;</c> and round-trips
+    /// fine with <c>FullyQualifiedFormat</c>. For reference-typed
+    /// wrappers (FontWeight/TextDecoration/Shape) we have to append
+    /// <c>?</c> manually because the unannotated symbol does not carry
+    /// nullable annotation through <c>ToDisplayString</c>.
+    /// </summary>
+    static string OptionalValueDisplay(FacadeSlot s)
+    {
+        var t = s.Param.Type;
+        var format = SymbolDisplayFormat.FullyQualifiedFormat
+            .WithMiscellaneousOptions(SymbolDisplayMiscellaneousOptions.UseSpecialTypes
+                | SymbolDisplayMiscellaneousOptions.IncludeNullableReferenceTypeModifier);
+        var rendered = t.ToDisplayString(format);
+        if (t.IsReferenceType && !rendered.EndsWith("?")) rendered += "?";
+        return rendered;
+    }
+
     static string Pascal(string s)
     {
         if (string.IsNullOrEmpty(s)) return s;
@@ -887,6 +930,30 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             or SpecialType.System_Boolean
             or SpecialType.System_Single
             or SpecialType.System_Double;
+
+    /// <summary>
+    /// True for parameters typed as <c>Nullable&lt;T&gt;</c> where <c>T</c>
+    /// is a recognized Compose <c>@JvmInline value class</c> (Dp/Sp/Em/
+    /// TextAlign), or for <em>nullable</em> reference-typed wrappers in
+    /// <see cref="ComposeReferenceTypes"/>. Both shapes surface as
+    /// <see cref="FacadeSlotKind.OptionalValue"/> auto-properties on
+    /// the generated facade. Non-nullable reference wrappers do not
+    /// qualify — emitting a nullable auto-property for them would
+    /// pass <c>null</c> to a non-nullable bridge parameter.
+    /// </summary>
+    static bool IsOptionalValueType(ITypeSymbol type, NullableAnnotation annotation)
+    {
+        if (ComposeValueTypes.TryGet(type, out _, out _)) return true;
+        // Nullable reference-type wrapper: T? where T is recognized.
+        // The C# nullable-annotation flow gives us the underlying type
+        // directly (no Nullable<T> wrapping) for reference types, so
+        // we must consult the annotation explicitly.
+        if (type.IsReferenceType
+            && annotation == NullableAnnotation.Annotated
+            && ComposeReferenceTypes.IsRecognized(type))
+            return true;
+        return false;
+    }
 
     static bool IsKnownScopeKind(Compilation compilation, string scope)
     {
@@ -964,6 +1031,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         ThemeColor,
         ScopeReceiver,
         StateHolder,
+        OptionalValue,
     }
 
     internal readonly struct FacadeSlot

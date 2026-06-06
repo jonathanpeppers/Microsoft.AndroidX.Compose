@@ -70,4 +70,12 @@ public readonly struct Sp : System.IEquatable<Sp>
 
     /// <inheritdoc/>
     public override string ToString() => $"Sp(0x{PackedValue:X16})";
+
+    /// <summary>
+    /// Pack a nullable <see cref="Sp"/> into the packed <c>TextUnit</c>
+    /// long the JNI slot expects. <c>null</c> -&gt; <c>0L</c>; the
+    /// auto-mask leaves the matching <c>$default</c> bit set so
+    /// Kotlin's real default applies.
+    /// </summary>
+    public static long Pack(Sp? value) => value?.PackedValue ?? 0L;
 }

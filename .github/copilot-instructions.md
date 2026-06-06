@@ -270,6 +270,8 @@ isn't a single Kotlin call.
 | CN2004  | `[ComposeBridge]` has a malformed JNI signature.            |
 | CN2005  | `Defaults` disagrees with the JNI `$default` slot.          |
 | CN2006  | Constructor bridge shape requirements not met.              |
+| CN2007  | Recognized Compose value type used on a no-`$default` bridge. |
+| CN2008  | Value-type parameter lowers to a JNI slot that doesn't match the bridge signature at that position. |
 
 **When you add a new generator diagnostic, also update this table in
 `.github/copilot-instructions.md` (and the matching table for the
@@ -279,6 +281,45 @@ truth is `src/ComposeNet.SourceGenerators/Diagnostics.cs`.**
 **Do not add a `[ComposeBridge]` if the binding already exposes the
 method**; call the generated C# entry point instead (see
 `Column.cs::Column.Render` for the canonical example).
+
+### Compose value types — `@JvmInline value class` lowering
+
+Compose has a handful of `@JvmInline value class` types whose params
+the binder strips because their JVM-mangled names (`Dp`, `TextUnit`,
+`TextAlign`, …) surface as raw primitives at the JNI boundary. To let
+bridges declare typed parameters and still lower correctly, the
+generator hosts a small registry in
+`src/ComposeNet.SourceGenerators/ComposeValueTypes.cs`:
+
+| C# type | JNI slot | Lowering |
+|---------|----------|----------|
+| `ComposeNet.Dp?`          | `F` | `Dp.Pack(x)`                          |
+| `ComposeNet.Sp?`          | `J` | `Sp.Pack(x)` (TextUnit, type=0x1)     |
+| `ComposeNet.TextAlign?`   | `I` | `TextAlign.Pack(x)`                   |
+
+Recognition keys on **`Nullable<T>` of the registered type** — bare
+non-nullable `Dp`/`Sp`/etc. params are not recognized. This integrates
+with the existing auto-default-mask flow: a non-`null` value clears
+its `$default` bit (Kotlin uses the C# value), `null` leaves the bit
+set (Kotlin substitutes its real default).
+
+`androidx.compose.ui.graphics.Color` is intentionally NOT in this
+registry. It's a `@JvmInline value class Color(val value: ULong)`
+that surfaces as a packed `long` once
+`Xamarin.AndroidX.Compose.UI.Graphics` is referenced — call sites
+build it via `AndroidX.Compose.UI.Graphics.ColorKt.Color(r, g, b, a)`
+and pass the resulting `long` straight through to the bridge, so
+there's no C# struct to lower from.
+
+Reference-typed Compose wrappers (`FontWeight`, `TextDecoration`,
+`Shape`) are NOT in this registry either — they go through the
+generic "reference-type → handle with null check" path, since they
+subclass `Java.Lang.Object` directly and the bridge generator already
+handles `T?` for `T : Java.Lang.Object` correctly.
+
+Adding a new value type means appending one entry to
+`ComposeValueTypes.Recognized`, optionally a `Pack(T?)` static helper
+on the value type, and a generator test in `BridgeGeneratorTests.cs`.
 
 ## Facade generator — `[ComposeFacade]`
 

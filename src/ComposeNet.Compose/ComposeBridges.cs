@@ -256,7 +256,15 @@ internal static partial class ComposeBridges
                     "Landroidx/compose/runtime/Composer;III)V",
         Defaults  = typeof(TextDefault))]
     [ComposeFacade]
-    public static partial void Text(string text, IModifier? modifier, IComposer composer);
+    public static partial void Text(
+        string text,
+        IModifier? modifier,
+        Sp? fontSize,
+        FontWeight? fontWeight,
+        Sp? letterSpacing,
+        TextDecoration? decoration,
+        Sp? lineHeight,
+        IComposer composer);
 
     // androidx.compose.material3.ButtonKt.Button
     [ComposeBridge(
