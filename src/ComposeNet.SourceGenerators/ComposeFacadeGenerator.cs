@@ -990,16 +990,24 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
     /// <summary>
     /// True for parameters typed as <c>Nullable&lt;T&gt;</c> where <c>T</c>
     /// is a recognized Compose <c>@JvmInline value class</c> (Dp/Sp/Em/
-    /// TextAlign), or for <em>nullable</em> reference-typed wrappers in
-    /// <see cref="ComposeReferenceTypes"/>. Both shapes surface as
-    /// <see cref="FacadeSlotKind.OptionalValue"/> auto-properties on
-    /// the generated facade. Non-nullable reference wrappers do not
-    /// qualify — emitting a nullable auto-property for them would
-    /// pass <c>null</c> to a non-nullable bridge parameter.
+    /// TextOverflow), for <em>nullable</em> reference-typed wrappers in
+    /// <see cref="ComposeReferenceTypes"/> (FontWeight/FontStyle/
+    /// FontFamily/TextAlign/TextDecoration/Shape), or for
+    /// <c>Nullable&lt;T&gt;</c> where <c>T</c> is a JNI-friendly
+    /// primitive (<c>bool</c>, <c>int</c>, <c>long</c>, <c>float</c>,
+    /// <c>double</c>) — the "optional Compose primitive" shape:
+    /// <c>null</c> → leave the <c>$default</c> bit set; a value clears
+    /// the bit and lowers to the primitive JNI slot. All three shapes
+    /// surface as <see cref="FacadeSlotKind.OptionalValue"/>
+    /// auto-properties on the generated facade. Non-nullable reference
+    /// wrappers do not qualify — emitting a nullable auto-property for
+    /// them would pass <c>null</c> to a non-nullable bridge parameter.
     /// </summary>
     static bool IsOptionalValueType(ITypeSymbol type, NullableAnnotation annotation)
     {
         if (ComposeValueTypes.TryGet(type, out _, out _)) return true;
+        // Nullable<primitive>: bool?, int?, long?, float?, double?.
+        if (IsNullablePrimitive(type)) return true;
         // Nullable reference-type wrapper: T? where T is recognized.
         // The C# nullable-annotation flow gives us the underlying type
         // directly (no Nullable<T> wrapping) for reference types, so
@@ -1009,6 +1017,26 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             && ComposeReferenceTypes.IsRecognized(type))
             return true;
         return false;
+    }
+
+    /// <summary>
+    /// Mirror of <c>ComposeBridgeGenerator.IsNullablePrimitive</c> —
+    /// see that helper for the rationale. Kept private here because
+    /// the bridge generator's copy lives in a separate translation
+    /// unit and the registry of "primitive Nullable types" is small
+    /// and stable.
+    /// </summary>
+    static bool IsNullablePrimitive(ITypeSymbol t)
+    {
+        if (t is not INamedTypeSymbol n) return false;
+        if (n.OriginalDefinition.SpecialType != SpecialType.System_Nullable_T) return false;
+        if (n.TypeArguments.Length != 1) return false;
+        return n.TypeArguments[0].SpecialType is
+            SpecialType.System_Boolean
+            or SpecialType.System_Int32
+            or SpecialType.System_Int64
+            or SpecialType.System_Single
+            or SpecialType.System_Double;
     }
 
     static bool IsKnownScopeKind(Compilation compilation, string scope)

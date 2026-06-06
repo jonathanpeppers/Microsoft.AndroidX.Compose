@@ -31,6 +31,9 @@ internal static class ComposeReferenceTypes
     public static readonly IReadOnlyCollection<string> Recognized = new HashSet<string>
     {
         "ComposeNet.FontWeight",
+        "ComposeNet.FontFamily",
+        "ComposeNet.FontStyle",
+        "ComposeNet.TextAlign",
         "ComposeNet.TextDecoration",
         "ComposeNet.Shape",
     };
