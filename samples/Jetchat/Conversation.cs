@@ -218,14 +218,15 @@ public static class Conversation
     }
 
     // Author + timestamp on one line, separated by a small spacer.
-    // alignEnd pushes the row's content to the right via
-    // Arrangement.End — matches what "me" message rows want.
+    // When alignEnd is true (me messages), this row sizes to its
+    // content rather than FillMaxWidth so the enclosing Column
+    // collapses too and the OUTER Row's Arrangement.End can push the
+    // whole "me" stack (header + bubble) to the right edge.
     static Row BuildAuthorAndTimestamp(Message m, bool alignEnd)
     {
-        var row = new Row(alignEnd ? Arrangement.End : null)
-        {
-            Modifier.Companion.FillMaxWidth(),
-        };
+        var row = alignEnd
+            ? new Row()
+            : new Row { Modifier.Companion.FillMaxWidth() };
         row.Add(new Text(m.Author));
         row.Add(new Spacer(Modifier.Companion.Width(8)));
         row.Add(new Text(m.Timestamp));
