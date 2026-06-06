@@ -191,6 +191,19 @@ internal static class SuspendBridge
     static void EnsureResultFailureClass()
     {
         if (s_resultFailureClass != IntPtr.Zero) return;
+        // Why raw JNI: `kotlin/Result` itself is bound (as
+        // `Kotlin.Result` in `Xamarin.Kotlin.StdLib.dll`) but its
+        // members are stripped — the type is a `@JvmInline value class`
+        // wrapping `Object`, so every accessor emits a mangled JVM
+        // name (`Result-impl`, `isFailure-impl`, `exceptionOrNull-impl`)
+        // that the parser drops. Same root cause as
+        // dotnet/java-interop#1440. The nested `Result$Failure` class
+        // is intentionally `internal` in Kotlin source and isn't
+        // surfaced by the binder regardless. We read its private
+        // `exception` field directly via JNI; once #1440 lands and the
+        // binder restores `ResultKt.throwOnFailure(Object)`, replace
+        // this lookup with a call to that bound helper.
+        //
         // JNIEnv.FindClass in Mono.Android returns a stable, globally
         // registered class ref — no NewGlobalRef/DeleteLocalRef dance.
         // Resolve the field id first, then publish the class ref via

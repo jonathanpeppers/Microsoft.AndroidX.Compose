@@ -69,6 +69,19 @@ internal static partial class ComposeBridges
     // Mask = 0b010 (bit 1) → "use Kotlin default for animationSpec".
     // Marker is always null at every call site (synthetic-overload
     // requirement). Returns kotlin/Unit on success or COROUTINE_SUSPENDED.
+    //
+    // Why raw JNI: animateScrollTo lives in the Kotlin extension class
+    // `androidx/compose/foundation/gestures/AnimateScrollExtensionsKt`,
+    // which is stripped wholesale from `Xamarin.AndroidX.Compose.Foundation.Android.dll`
+    // (zero `*Animate*` types in that assembly). The cause is the
+    // `AnimationSpec<Float>` parameter — Kotlin's generic + `@JvmInline`
+    // mangling produces a JVM name (`animateScrollTo-XXXXXXXX`) the
+    // generator-bindings parser drops, and the parameterless-default
+    // synthetic gets dropped along with it. Same root cause as the
+    // mangled Compose Material3 overloads tracked by
+    // dotnet/java-interop#1440 — once that lands and the upstream
+    // Compose binding is regenerated, this bridge can be replaced with
+    // a clean call through the bound `AnimateScrollExtensionsKt`.
     internal static unsafe System.IntPtr ScrollStateAnimateScrollTo(
         System.IntPtr state, int value, SuspendContinuation cont)
     {
