@@ -200,6 +200,12 @@ ComposeNet.ExposedDropdownMenu
 ComposeNet.ExposedDropdownMenu.ExposedDropdownMenu(bool expanded, System.Action! onDismissRequest) -> void
 ComposeNet.ExposedDropdownMenuBox
 ComposeNet.ExposedDropdownMenuBox.ExposedDropdownMenuBox(bool expanded, System.Action<bool>! onExpandedChange) -> void
+ComposeNet.ExtendedFloatingActionButton
+ComposeNet.ExtendedFloatingActionButton.ExtendedFloatingActionButton(System.Action! onClick, bool expanded) -> void
+ComposeNet.ExtendedFloatingActionButton.Icon.get -> ComposeNet.ComposableNode?
+ComposeNet.ExtendedFloatingActionButton.Icon.set -> void
+ComposeNet.ExtendedFloatingActionButton.Text.get -> ComposeNet.ComposableNode?
+ComposeNet.ExtendedFloatingActionButton.Text.set -> void
 ComposeNet.FilledIconButton
 ComposeNet.FilledIconButton.FilledIconButton(System.Action! onClick) -> void
 ComposeNet.FilledIconToggleButton
@@ -287,6 +293,8 @@ ComposeNet.LargeFlexibleTopAppBar.Subtitle.get -> ComposeNet.ComposableNode?
 ComposeNet.LargeFlexibleTopAppBar.Subtitle.set -> void
 ComposeNet.LargeFlexibleTopAppBar.Title.get -> ComposeNet.ComposableNode?
 ComposeNet.LargeFlexibleTopAppBar.Title.set -> void
+ComposeNet.LargeFloatingActionButton
+ComposeNet.LargeFloatingActionButton.LargeFloatingActionButton(System.Action! onClick) -> void
 ComposeNet.LargeTopAppBar
 ComposeNet.LargeTopAppBar.Actions.get -> ComposeNet.ComposableNode?
 ComposeNet.LargeTopAppBar.Actions.set -> void
@@ -571,6 +579,8 @@ ComposeNet.SingleChoiceSegmentedButtonRow
 ComposeNet.SingleChoiceSegmentedButtonRow.SingleChoiceSegmentedButtonRow() -> void
 ComposeNet.Slider
 ComposeNet.Slider.Slider(float value, System.Action<float>! onValueChange) -> void
+ComposeNet.SmallFloatingActionButton
+ComposeNet.SmallFloatingActionButton.SmallFloatingActionButton(System.Action! onClick) -> void
 ComposeNet.Snackbar
 ComposeNet.Snackbar.Action.get -> ComposeNet.ComposableNode?
 ComposeNet.Snackbar.Action.set -> void
