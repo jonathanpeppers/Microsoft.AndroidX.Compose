@@ -934,17 +934,18 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
     /// <summary>
     /// True for parameters typed as <c>Nullable&lt;T&gt;</c> where <c>T</c>
     /// is a recognized Compose <c>@JvmInline value class</c> (Dp/Sp/Em/
-    /// TextAlign), for <em>nullable</em> reference-typed wrappers in
-    /// <see cref="ComposeReferenceTypes"/>, or for <c>Nullable&lt;T&gt;</c>
-    /// where <c>T</c> is a JNI-friendly primitive (<c>bool</c>,
-    /// <c>int</c>, <c>long</c>, <c>float</c>, <c>double</c>) — the
-    /// "optional Compose primitive" shape: <c>null</c> → leave the
-    /// <c>$default</c> bit set; a value clears the bit and lowers to
-    /// the primitive JNI slot. All three shapes surface as
-    /// <see cref="FacadeSlotKind.OptionalValue"/> auto-properties on
-    /// the generated facade. Non-nullable reference wrappers do not
-    /// qualify — emitting a nullable auto-property for them would
-    /// pass <c>null</c> to a non-nullable bridge parameter.
+    /// TextOverflow), for <em>nullable</em> reference-typed wrappers in
+    /// <see cref="ComposeReferenceTypes"/> (FontWeight/FontStyle/
+    /// FontFamily/TextAlign/TextDecoration/Shape), or for
+    /// <c>Nullable&lt;T&gt;</c> where <c>T</c> is a JNI-friendly
+    /// primitive (<c>bool</c>, <c>int</c>, <c>long</c>, <c>float</c>,
+    /// <c>double</c>) — the "optional Compose primitive" shape:
+    /// <c>null</c> → leave the <c>$default</c> bit set; a value clears
+    /// the bit and lowers to the primitive JNI slot. All three shapes
+    /// surface as <see cref="FacadeSlotKind.OptionalValue"/>
+    /// auto-properties on the generated facade. Non-nullable reference
+    /// wrappers do not qualify — emitting a nullable auto-property for
+    /// them would pass <c>null</c> to a non-nullable bridge parameter.
     /// </summary>
     static bool IsOptionalValueType(ITypeSymbol type, NullableAnnotation annotation)
     {

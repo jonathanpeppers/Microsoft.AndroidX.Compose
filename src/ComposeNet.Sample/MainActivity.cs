@@ -182,8 +182,12 @@ public class MainActivity : ComposeActivity
                             },
                             // Issue #58: text styling additions — color, italic /
                             // family, alignment, overflow, line clamping. Each
-                            // property surfaces through the [ComposeFacade] /
-                            // [ComposeBridge] nullable-primitive generator path.
+                            // property flows through the [ComposeFacade] /
+                            // [ComposeBridge] generators: Color/MaxLines/MinLines/
+                            // SoftWrap use the new nullable-primitive path,
+                            // FontStyle/FontFamily/TextAlign use the nullable
+                            // reference-wrapper path, and TextOverflow uses the
+                            // packed @JvmInline value-class path.
                             new Text("Issue #58 text styling:")
                             {
                                 Modifier = Modifier.Companion.Padding(top: 8, bottom: 4, start: 0, end: 0),

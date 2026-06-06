@@ -768,7 +768,7 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
             return false;
         if (IsNullableIntPtr(p.Type)) return false;
         if (IsNullablePrimitive(p.Type)) return false;
-        // Recognized Compose value types (Color/Dp/Sp/Em/TextAlign) lower
+        // Recognized Compose value types (Dp/Sp/Em/TextOverflow) lower
         // to JNI primitives — no managed handle to keep alive.
         if (ComposeValueTypes.TryGet(p.Type, out _, out _)) return false;
         return true;
