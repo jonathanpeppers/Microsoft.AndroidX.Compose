@@ -8,9 +8,9 @@ namespace ComposeNet;
 ///
 /// A <see cref="ComposableNode"/> is a passive AST node: building it
 /// (<c>new Text("Hi")</c>, <c>new Column { ... }</c>) does NOT call into
-/// Compose. The activity walks the tree and calls <see cref="Render"/>
-/// during composition, threading the <see cref="IComposer"/> through
-/// container nodes to their children.
+/// Compose. The activity walks the tree and calls
+/// <see cref="Render(IComposer)"/> during composition, threading the
+/// <see cref="IComposer"/> through container nodes to their children.
 ///
 /// This is the C# moral equivalent of Kotlin Compose's IR transform —
 /// the composer is explicit at the implementation layer (honest mirror
@@ -33,6 +33,16 @@ public abstract class ComposableNode
     Modifier? _prepended;
     Modifier? _appended;
 
+    // Per-render seed for runtime PaddingValues handed to a child node
+    // by a parent layout (e.g. Scaffold) via Render(IComposer, IntPtr).
+    // ThreadStatic because composition is single-threaded (see
+    // RenderContext); owner-checked because BuildModifier is called by
+    // every facade in the tree, not just the seed target — without the
+    // owner check, the first descendant to call BuildModifier would
+    // capture padding meant for the body. See issue #46.
+    [System.ThreadStatic] static ComposableNode? s_seedOwner;
+    [System.ThreadStatic] static IntPtr           s_seedPaddingValues;
+
     /// <summary>
     /// Set the <see cref="ComposeNet.Modifier"/> to prepend at the
     /// START of this node's modifier chain on the next call to
@@ -41,12 +51,12 @@ public abstract class ComposableNode
     /// at the call site to combine multiple ops into one.
     ///
     /// Intended use: a parent layout that needs to pass a runtime
-    /// modifier into a child without inserting a wrapper layout node —
-    /// e.g. <see cref="Scaffold"/> threading
-    /// <c>Modifier.padding(paddingValues)</c> into its body so the
-    /// body's own modifier chain composes naturally with the inset
-    /// padding, mirroring the Kotlin idiom
-    /// <c>Column(Modifier.padding(paddingValues)) { ... }</c>.
+    /// modifier into a child without inserting a wrapper layout node.
+    /// For the specific case of forwarding a <c>PaddingValues</c>
+    /// handle from <see cref="Scaffold"/> to its body, prefer the
+    /// internal <c>Render(IComposer, IntPtr)</c> overload — it skips
+    /// the managed <see cref="ComposeNet.Modifier"/> wrapper altogether
+    /// (see issue #46).
     ///
     /// Caveat: the injected modifier is silently dropped if the child's
     /// <c>Render</c> never calls <see cref="BuildModifier"/> (i.e.
@@ -54,6 +64,11 @@ public abstract class ComposableNode
     /// parameter — <see cref="MaterialTheme"/>, the drawer sheets).
     /// Replace-semantics keeps the stored modifier bounded to one ref
     /// even when the child never consumes it.
+    ///
+    /// Ordering: when both a prepended modifier and a runtime padding
+    /// seed (from <c>Render(IComposer, IntPtr)</c>) are present on the
+    /// same node, the seed runs OUTSIDE the prepended op — i.e.
+    /// <c>seed → prepended → Modifier → appended</c>.
     /// </summary>
     public void PrependModifier(Modifier modifier)
     {
@@ -78,16 +93,33 @@ public abstract class ComposableNode
     /// Materialize <see cref="Modifier"/> for the JNI call, folding in
     /// any pending <see cref="PrependModifier"/> / <see cref="AppendModifier"/>
     /// contributions and clearing them so the next composition starts
-    /// fresh. Returns <c>null</c> when the combined chain is empty —
+    /// fresh. When this node was rendered via the
+    /// <c>Render(IComposer, IntPtr)</c> overload, also seeds the
+    /// chain with a <c>Modifier.padding(paddingValues)</c> op without
+    /// allocating a managed <see cref="Modifier"/> wrapper (issue #46).
+    /// Returns <c>null</c> when the combined chain is empty —
     /// callers should leave the Kotlin <c>$default</c> bit set so
     /// Compose substitutes its real default.
     /// </summary>
     internal IModifier? BuildModifier()
     {
         var prepended = _prepended;
-        var appended = _appended;
+        var appended  = _appended;
         _prepended = null;
-        _appended = null;
+        _appended  = null;
+
+        // Only consume the seed if it was scoped to this node. The
+        // owner check prevents leaking padding into descendants when a
+        // pass-through container (e.g. MaterialTheme) doesn't call
+        // BuildModifier itself; in that case padding is silently dropped,
+        // matching the long-standing PrependModifier caveat above.
+        IntPtr seed = IntPtr.Zero;
+        if (ReferenceEquals(s_seedOwner, this))
+        {
+            seed = s_seedPaddingValues;
+            s_seedOwner         = null;
+            s_seedPaddingValues = IntPtr.Zero;
+        }
 
         Modifier? combined = prepended;
         if (Modifier is not null)
@@ -95,8 +127,45 @@ public abstract class ComposableNode
         if (appended is not null)
             combined = combined is null ? appended : combined.Then(appended);
 
-        return combined?.Build();
+        if (seed == IntPtr.Zero)
+            return combined?.Build();
+        return (combined ?? Modifier.Companion).Build(seed);
     }
 
     internal abstract void Render(IComposer composer);
+
+    /// <summary>
+    /// Render this node as the body of a parent layout that supplies a
+    /// runtime <c>PaddingValues</c> handle (e.g.
+    /// <see cref="Scaffold"/>'s content lambda). The default
+    /// implementation stashes <paramref name="paddingValues"/> in a
+    /// thread-static slot keyed on this node and delegates to the
+    /// regular <see cref="Render(IComposer)"/>; the next call to
+    /// <see cref="BuildModifier"/> on this same node consumes the
+    /// handle and prepends a <c>Modifier.padding(paddingValues)</c> op
+    /// directly via JNI — no per-measure managed
+    /// <see cref="ComposeNet.Modifier"/> allocations.
+    ///
+    /// Container facades whose Kotlin counterpart accepts a
+    /// <c>contentPadding</c> parameter directly (<see cref="LazyColumn{T}"/>,
+    /// <see cref="LazyRow{T}"/>, the lazy grids) can override this to
+    /// forward the handle into the binding instead of materializing a
+    /// <c>Modifier.padding(values)</c> chain. See issue #46.
+    /// </summary>
+    internal virtual void Render(IComposer composer, IntPtr paddingValues)
+    {
+        var prevOwner = s_seedOwner;
+        var prevSeed  = s_seedPaddingValues;
+        s_seedOwner         = this;
+        s_seedPaddingValues = paddingValues;
+        try
+        {
+            Render(composer);
+        }
+        finally
+        {
+            s_seedOwner         = prevOwner;
+            s_seedPaddingValues = prevSeed;
+        }
+    }
 }

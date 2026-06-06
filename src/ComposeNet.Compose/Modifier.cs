@@ -381,14 +381,35 @@ public sealed class Modifier
     /// callers can keep the Kotlin <c>$default</c> bit set and let
     /// Compose substitute the real default.
     /// </summary>
-    internal IModifier? Build()
+    internal IModifier? Build() => Build(IntPtr.Zero);
+
+    /// <summary>
+    /// Materialize the chain into a managed <c>IModifier</c> wrapper,
+    /// optionally seeding it with a <c>Modifier.padding(paddingValues)</c>
+    /// op against the supplied <see cref="IntPtr"/> handle. The seed op
+    /// runs FIRST, before any user ops — semantically equivalent to
+    /// <c>Modifier.padding(paddingValues).then(this)</c> but without
+    /// allocating a managed <see cref="Modifier"/> wrapper. Used by
+    /// <see cref="ComposableNode.BuildModifier"/> to apply the
+    /// <see cref="Scaffold"/>-supplied <c>PaddingValues</c> to the body
+    /// node on every measure pass without per-pass allocations
+    /// (issue #46).
+    /// </summary>
+    internal IModifier? Build(IntPtr seedPaddingValues)
     {
-        if (_ops.Length == 0)
+        bool hasSeed = seedPaddingValues != IntPtr.Zero;
+        if (_ops.Length == 0 && !hasSeed)
             return null;
 
         IntPtr current = ComposeBridges.ModifierCompanionInstance();
         try
         {
+            if (hasSeed)
+            {
+                IntPtr next = ComposeBridges.ModifierPaddingValues(current, seedPaddingValues);
+                JNIEnv.DeleteLocalRef(current);
+                current = next;
+            }
             for (int i = 0; i < _ops.Length; i++)
             {
                 IntPtr next = _ops[i](current);
