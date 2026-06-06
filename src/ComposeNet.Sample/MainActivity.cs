@@ -102,6 +102,11 @@ public class MainActivity : ComposeActivity
             var refreshing  = Remember(() => new MutableState<bool>(false));
             var refreshTick = Remember(() => new MutableNumberState<int>(0));
 
+            // Scroll state for the (long) Buttons tab — drives both the
+            // VerticalScroll modifier and the SuspendBridge demo buttons
+            // that programmatically scroll back to the top.
+            var buttonsScroll = Remember(() => new ScrollState());
+
             string[] tabNames = { "Basics", "Buttons", "Cards", "Drawer", "Selection", "Pickers", "Misc", "App bars", "Lazy", "Carousels" };
 
             // Per-tab content. Only the current tab's column is added to
@@ -233,6 +238,8 @@ public class MainActivity : ComposeActivity
                 },
                 1 => new Column
                 {
+                    Modifier.Companion.VerticalScroll(buttonsScroll),
+
                     new Text("Button fill styles"),
                     new Button(onClick: () => count++) { new Text("Filled") },
                     new ElevatedButton(onClick: () => count++) { new Text("Elevated") },
@@ -303,6 +310,19 @@ public class MainActivity : ComposeActivity
                     new Button(onClick: () => showSnack.Value = true)
                     {
                         new Text("Show snackbar"),
+                    },
+
+                    new Text("Programmatic scrolling (suspend bridge)"),
+                    new Row
+                    {
+                        new Button(onClick: () => _ = buttonsScroll.AnimateScrollToAsync(0))
+                        {
+                            new Text("Scroll to top (animated)"),
+                        },
+                        new Button(onClick: () => _ = buttonsScroll.ScrollToAsync(0))
+                        {
+                            new Text("Scroll to top (instant)"),
+                        },
                     },
                 },
                 2 => new Column

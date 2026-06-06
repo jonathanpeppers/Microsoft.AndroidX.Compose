@@ -1,3 +1,5 @@
+using System.Threading.Tasks;
+
 namespace ComposeNet;
 
 /// <summary>
@@ -30,11 +32,14 @@ namespace ComposeNet;
 /// yourself with the rest of your view-model state.
 /// </para>
 /// <para>
-/// Programmatic scrolling (<c>scrollTo</c> / <c>animateScrollTo</c>) is
-/// a Kotlin suspending function and isn't yet wired up in this binding
-/// — read-only inspection of the current position via
-/// <see cref="Value"/> / <see cref="MaxValue"/> is the supported
-/// surface today.
+/// Programmatic scrolling is exposed via the <c>Async</c> methods —
+/// <see cref="ScrollToAsync"/> jumps instantly, <see cref="AnimateScrollToAsync"/>
+/// runs the default spring animation. Both bridge the underlying
+/// Kotlin <c>suspend</c> function through <see cref="Task"/> so they
+/// integrate with C# <c>async</c>/<c>await</c>. The returned task may
+/// complete on the Compose main thread; awaiters resume on whatever
+/// <see cref="System.Threading.SynchronizationContext"/> the
+/// <c>await</c> captured.
 /// </para>
 /// </remarks>
 public sealed class ScrollState
@@ -89,4 +94,35 @@ public sealed class ScrollState
     /// <see cref="Modifier.HorizontalScroll"/> on LTR layouts).
     /// </summary>
     public bool CanScrollBackward => Jvm.CanScrollBackward;
+
+    /// <summary>
+    /// Jump instantly to the given pixel <paramref name="value"/>
+    /// (clamped to <c>[0, MaxValue]</c>). Mirrors Kotlin's
+    /// <c>ScrollState.scrollTo(value)</c>.
+    /// </summary>
+    /// <returns>
+    /// A task whose result is the actual delta the scroll covered (the
+    /// Kotlin return) — useful when the requested value was clamped.
+    /// Faulted with the wrapped <c>Throwable</c> if Kotlin reports
+    /// <c>Result.Failure</c>.
+    /// </returns>
+    public Task<float> ScrollToAsync(int value) =>
+        SuspendBridge.Invoke<float>(
+            cont => ComposeBridges.ScrollStateScrollTo(
+                ((Java.Lang.Object)Jvm).Handle, value, cont),
+            static boxed => boxed is Java.Lang.Float f
+                ? f.FloatValue()
+                : throw new System.InvalidCastException(
+                    $"Expected java.lang.Float from ScrollState.scrollTo; got '{boxed?.Class?.Name ?? "null"}'"));
+
+    /// <summary>
+    /// Animate to the given pixel <paramref name="value"/> using the
+    /// default Compose spring animation. Mirrors Kotlin's
+    /// <c>ScrollState.animateScrollTo(value)</c>; the returned task
+    /// completes when the animation lands.
+    /// </summary>
+    public Task AnimateScrollToAsync(int value) =>
+        SuspendBridge.Invoke(cont =>
+            ComposeBridges.ScrollStateAnimateScrollTo(
+                ((Java.Lang.Object)Jvm).Handle, value, cont));
 }
