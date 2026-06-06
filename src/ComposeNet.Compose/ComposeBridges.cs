@@ -1713,9 +1713,12 @@ internal static partial class ComposeBridges
 
         if (s_exposedDropdownMenuMethodId == IntPtr.Zero)
         {
-            IntPtr cls = JNIEnv.FindClass("androidx/compose/material3/ExposedDropdownMenuBoxScope");
-            s_exposedDropdownMenuBoxScopeClass = JNIEnv.NewGlobalRef(cls);
-            JNIEnv.DeleteLocalRef(cls);
+            // JNIEnv.FindClass on .NET for Android returns a long-lived
+            // global handle the runtime caches — passing it to
+            // DeleteLocalRef trips CheckJNI ("expected Local but found
+            // Global"). Cache it directly, matching every generated bridge.
+            s_exposedDropdownMenuBoxScopeClass = JNIEnv.FindClass(
+                "androidx/compose/material3/ExposedDropdownMenuBoxScope");
             s_exposedDropdownMenuMethodId = JNIEnv.GetMethodID(
                 s_exposedDropdownMenuBoxScopeClass,
                 "ExposedDropdownMenu",
