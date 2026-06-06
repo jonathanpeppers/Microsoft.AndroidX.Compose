@@ -343,6 +343,128 @@ public class FacadeGeneratorTests
     }
 
     [Fact]
+    public void HybridContainer_RequiredFn3PlusNullableFn2_EmitsContainerWithNamedSlot()
+    {
+        var code = """
+            using AndroidX.Compose.Runtime;
+            using AndroidX.Compose.UI;
+            using ComposeNet;
+            using Kotlin.Jvm.Functions;
+
+            [assembly: ComposeDefaults("BottomAppBarDefault",
+                "!actions", "modifier", "floatingActionButton", "containerColor",
+                "contentColor", "tonalElevation", "contentPadding", "windowInsets",
+                "scrollBehavior")]
+
+            namespace ComposeNet
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(Class="androidx/compose/material3/AppBarKt", JvmName="BottomAppBar-qhFBPw4",
+                                   Signature="(Lkotlin/jvm/functions/Function3;Landroidx/compose/ui/Modifier;Lkotlin/jvm/functions/Function2;JJFLandroidx/compose/foundation/layout/PaddingValues;Landroidx/compose/foundation/layout/WindowInsets;Landroidx/compose/material3/BottomAppBarScrollBehavior;Landroidx/compose/runtime/Composer;II)V",
+                                   Defaults=typeof(BottomAppBarDefault))]
+                    [ComposeFacade(Scope = "Row")]
+                    public static partial void BottomAppBar(IFunction3 actions, IModifier? modifier, IFunction2? floatingActionButton, IComposer composer);
+                }
+            }
+            """;
+
+        var (output, diags, emitted) = Run(code, "BottomAppBar");
+        Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+        // Derives from ComposableContainer (container body), not ComposableNode.
+        Assert.Contains(": global::ComposeNet.ComposableContainer", emitted);
+        // Required Fn3 stays as container body: RenderChildren + PushScope(Row).
+        Assert.Contains("Wrap3(composer, (__scope, c) =>", emitted);
+        Assert.Contains("global::ComposeNet.RenderContext.PushScope(__scope, global::ComposeNet.ScopeKind.Row);", emitted);
+        Assert.Contains("RenderChildren(c);", emitted);
+        // Nullable Fn2 surfaces as a named property.
+        Assert.Contains("public global::ComposeNet.ComposableNode? FloatingActionButton { get; set; }", emitted);
+
+        var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
+        Assert.Empty(errors);
+    }
+
+    [Fact]
+    public void HybridContainer_WithoutScope_StillBehavesAsLeaf()
+    {
+        // Same shape as BottomAppBar but without [ComposeFacade(Scope=...)] —
+        // the generator must NOT treat as hybrid; both Fn slots become
+        // named properties (no RenderChildren, no ComposableContainer).
+        var code = """
+            using AndroidX.Compose.Runtime;
+            using AndroidX.Compose.UI;
+            using ComposeNet;
+            using Kotlin.Jvm.Functions;
+
+            [assembly: ComposeDefaults("FooBarDefault",
+                "!actions", "modifier", "floatingActionButton")]
+
+            namespace ComposeNet
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(Class="x/y/Z", JvmName="FooBar",
+                                   Signature="(Lkotlin/jvm/functions/Function3;Landroidx/compose/ui/Modifier;Lkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;II)V",
+                                   Defaults=typeof(FooBarDefault))]
+                    [ComposeFacade]
+                    public static partial void FooBar(IFunction3 actions, IModifier? modifier, IFunction2? floatingActionButton, IComposer composer);
+                }
+            }
+            """;
+
+        var (_, diags, emitted) = Run(code, "FooBar");
+        Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+        // No Scope → leaf shape: ComposableNode base, no RenderChildren.
+        Assert.Contains(": global::ComposeNet.ComposableNode", emitted);
+        Assert.DoesNotContain("RenderChildren", emitted);
+        Assert.Contains("public global::ComposeNet.ComposableNode? Actions { get; set; }", emitted);
+        Assert.Contains("public global::ComposeNet.ComposableNode? FloatingActionButton { get; set; }", emitted);
+    }
+
+    [Fact]
+    public void JavaEnumPrimitive_SurfacedAsCtorParam()
+    {
+        // Simulates ToggleableState — a class derived from Java.Lang.Enum.
+        // The generator must accept it as a primitive-like ctor slot.
+        var code = """
+            using AndroidX.Compose.Runtime;
+            using AndroidX.Compose.UI;
+            using ComposeNet;
+            using Kotlin.Jvm.Functions;
+
+            [assembly: ComposeDefaults("TriStateCheckboxDefault",
+                "!state", "!onClick", "modifier", "enabled", "colors", "interactionSource")]
+
+            namespace ComposeNet.Demo
+            {
+                public class FakeToggleableState : global::Java.Lang.Enum { }
+            }
+
+            namespace ComposeNet
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(Class="x/y/Z", JvmName="TriStateCheckbox",
+                                   Signature="(Landroidx/compose/ui/state/ToggleableState;Lkotlin/jvm/functions/Function0;Landroidx/compose/ui/Modifier;ZLandroidx/compose/material3/CheckboxColors;Landroidx/compose/foundation/interaction/MutableInteractionSource;Landroidx/compose/runtime/Composer;II)V",
+                                   Defaults=typeof(TriStateCheckboxDefault))]
+                    [ComposeFacade]
+                    public static partial void TriStateCheckbox(global::ComposeNet.Demo.FakeToggleableState state, IFunction0 onClick, IModifier? modifier, IComposer composer);
+                }
+            }
+            """;
+
+        var (_, diags, emitted) = Run(code, "TriStateCheckbox");
+        Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+        // Java enum surfaces as a ctor field + ctor param + bridge arg pass-through.
+        Assert.Contains("readonly global::ComposeNet.Demo.FakeToggleableState _state;", emitted);
+        Assert.Contains("global::ComposeNet.Demo.FakeToggleableState state", emitted);
+        Assert.Contains("ComposeBridges.TriStateCheckbox(_state,", emitted);
+    }
+
+    [Fact]
     public void ScopePublishingContainer_EmitsPushScope()
     {
         var code = """
