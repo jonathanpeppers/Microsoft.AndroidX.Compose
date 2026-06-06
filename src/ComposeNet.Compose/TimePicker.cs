@@ -1,29 +1,11 @@
-using Android.Runtime;
-using AndroidX.Compose.Material3;
-using AndroidX.Compose.Runtime;
-
 namespace ComposeNet;
 
 /// <summary>
-/// Material 3 <c>TimePicker</c>. Resolves <c>TimePickerState</c> via
-/// raw JNI (<c>rememberTimePickerState</c> takes a <see cref="IComposer"/>
-/// so it requires the composer-aware bridge). Pass an explicit
-/// <see cref="ComposeNet.TimePickerState"/> to read the picked
-/// hour/minute from a button callback.
+/// Material 3 <c>TimePicker</c>. The generator wires the
+/// <c>rememberTimePickerState(initialHour, initialMinute, is24Hour, composer)</c>
+/// round-trip and auto-creates a <see cref="TimePickerState"/> wrapper
+/// when the caller leaves the <c>state</c> ctor argument null, so reading
+/// <see cref="TimePickerState.Hour"/> / <see cref="TimePickerState.Minute"/>
+/// from a button callback Just Works without manual <c>remember</c> plumbing.
 /// </summary>
-public sealed class TimePicker : ComposableNode
-{
-    readonly TimePickerState _state;
-    public TimePicker(TimePickerState? state = null) => _state = state ?? new TimePickerState();
-
-    internal override void Render(IComposer composer)
-    {
-        var stateHandle = ComposeBridges.RememberTimePickerState(_state.InitialHour, _state.InitialMinute, _state.InitialIs24Hour, composer);
-        if (_state.Jvm is null)
-            _state.Jvm = Java.Lang.Object.GetObject<ITimePickerState>(stateHandle, JniHandleOwnership.DoNotTransfer)!;
-        var modifier = BuildModifier();
-        int defaults = (int)TimePickerDefault.All;
-        if (modifier is not null) defaults &= ~(int)TimePickerDefault.Modifier;
-        ComposeBridges.TimePicker(stateHandle, modifier, defaults, composer);
-    }
-}
+public sealed partial class TimePicker;

@@ -1531,6 +1531,265 @@ public class FacadeGeneratorTests
             emitted);
     }
 
+    // ─── Phase 4b — parameterised Remember*State (TimePicker-style) ──
+
+    /// <summary>Shared snippet stubbing a TimePicker-style state class
+    /// with the Kotlin "initialX → live X" convention.</summary>
+    const string TimePickerStateStubs = """
+        namespace AndroidX.Compose.Material3
+        {
+            public interface ITimePickerState
+            {
+                int Hour { get; set; }
+                int Minute { get; set; }
+                bool Is24hour();
+            }
+        }
+        namespace ComposeNet
+        {
+            public sealed class TimePickerState
+            {
+                internal AndroidX.Compose.Material3.ITimePickerState? Jvm;
+                public TimePickerState(int initialHour = 12, int initialMinute = 0, bool is24Hour = true)
+                {
+                    InitialHour = initialHour;
+                    InitialMinute = initialMinute;
+                    InitialIs24Hour = is24Hour;
+                }
+                internal int InitialHour { get; }
+                internal int InitialMinute { get; }
+                internal bool InitialIs24Hour { get; }
+                public int Hour => Jvm?.Hour ?? InitialHour;
+                public int Minute => Jvm?.Minute ?? InitialMinute;
+                public bool Is24Hour => Jvm?.Is24hour() ?? InitialIs24Hour;
+            }
+        }
+        """;
+
+    const string TimePickerSig =
+        "(Landroidx/compose/material3/TimePickerState;Landroidx/compose/ui/Modifier;Landroidx/compose/material3/TimePickerColors;ILandroidx/compose/runtime/Composer;II)V";
+
+    [Fact]
+    public void TimePicker_ParameterisedStateHolder_GeneratesAutoCreateAndArgs()
+    {
+        var code = $$"""
+            using AndroidX.Compose.Runtime;
+            using AndroidX.Compose.UI;
+            using ComposeNet;
+            using Kotlin.Jvm.Functions;
+            using System;
+
+            [assembly: ComposeDefaults("TimePickerDefault",
+                "!state", "modifier", "colors", "layoutType")]
+
+            {{TimePickerStateStubs}}
+
+            namespace ComposeNet
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(Class="androidx/compose/material3/TimePickerKt",
+                                   JvmName="TimePicker-mT9BvqQ",
+                                   Signature="{{TimePickerSig}}",
+                                   Defaults=typeof(TimePickerDefault))]
+                    [ComposeFacade]
+                    public static partial void TimePicker(
+                        [StateHolder(Remember = nameof(RememberTimePickerState),
+                                     StateType = typeof(TimePickerState))]
+                        IntPtr state,
+                        IModifier? modifier,
+                        int defaults,
+                        IComposer composer);
+
+                    public static IntPtr RememberTimePickerState(int initialHour, int initialMinute,
+                                                                 bool is24Hour, IComposer composer) => default;
+                }
+            }
+            """;
+
+        var (output, diags, emitted) = Run(code, "TimePicker");
+        Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+
+        // Ctor: parameterised StateHolder auto-creates the wrapper when
+        // the caller passes null, so the field is guaranteed non-null
+        // even though the ctor param keeps its = null default.
+        Assert.Contains("readonly global::ComposeNet.TimePickerState? _state;", emitted);
+        Assert.Contains("public TimePicker(global::ComposeNet.TimePickerState? state = null)", emitted);
+        Assert.Contains("_state = state ?? new global::ComposeNet.TimePickerState();", emitted);
+
+        // Render: Remember called with wrapper-sourced init args.
+        // InitialHour/InitialMinute resolve via Pascal match;
+        // is24Hour falls back to Is24Hour (live getter), which returns
+        // InitialIs24Hour while Jvm is still null on first render.
+        Assert.Contains(
+            "var __state = global::ComposeNet.ComposeBridges.RememberTimePickerState(_state!.InitialHour, _state!.InitialMinute, _state!.Is24Hour, composer);",
+            emitted);
+        // Unguarded Jvm population — Phase 4b knows _state is non-null.
+        Assert.Contains("if (_state.Jvm is null)", emitted);
+        Assert.DoesNotContain("if (_state is not null && _state.Jvm is null)", emitted);
+        Assert.Contains(
+            "_state.Jvm = global::Java.Lang.Object.GetObject<global::AndroidX.Compose.Material3.ITimePickerState>(__state, global::Android.Runtime.JniHandleOwnership.DoNotTransfer)!;",
+            emitted);
+
+        // Bridge call uses __state in the IntPtr slot.
+        Assert.Contains(
+            "global::ComposeNet.ComposeBridges.TimePicker(__state, __modifier, __defaults, composer);",
+            emitted);
+
+        var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
+        Assert.Empty(errors);
+    }
+
+    [Fact]
+    public void ParameterisedStateHolder_UnresolvedMember_FailsCN3009()
+    {
+        // RememberFooState takes 'mystery' which is not a member of
+        // TimePickerState (and 'InitialMystery' doesn't exist either),
+        // so the generator must reject.
+        var code = $$"""
+            using AndroidX.Compose.Runtime;
+            using AndroidX.Compose.UI;
+            using ComposeNet;
+            using Kotlin.Jvm.Functions;
+            using System;
+
+            [assembly: ComposeDefaults("TimePickerDefault",
+                "!state", "modifier", "colors", "layoutType")]
+
+            {{TimePickerStateStubs}}
+
+            namespace ComposeNet
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(Class="x/y/TimePickerKt", JvmName="TimePicker-mT9BvqQ",
+                                   Signature="{{TimePickerSig}}",
+                                   Defaults=typeof(TimePickerDefault))]
+                    [ComposeFacade]
+                    public static partial void TimePicker(
+                        [StateHolder(Remember = nameof(RememberTimePickerState),
+                                     StateType = typeof(TimePickerState))]
+                        IntPtr state,
+                        IModifier? modifier,
+                        int defaults,
+                        IComposer composer);
+
+                    public static IntPtr RememberTimePickerState(int mystery, IComposer composer) => default;
+                }
+            }
+            """;
+
+        var (_, diags, emitted) = Run(code, "TimePicker");
+        Assert.Null(emitted);
+        Assert.Contains(diags, d => d.Id == "CN3009"
+            && d.GetMessage().Contains("cannot resolve Remember parameter 'mystery'")
+            && d.GetMessage().Contains("InitialMystery"));
+    }
+
+    [Fact]
+    public void ParameterisedStateHolder_NoParameterlessCtor_FailsCN3009()
+    {
+        // StateType only has an all-required-params ctor, so the
+        // facade can't auto-create it. CN3009 fires.
+        var code = $$"""
+            using AndroidX.Compose.Runtime;
+            using AndroidX.Compose.UI;
+            using ComposeNet;
+            using Kotlin.Jvm.Functions;
+            using System;
+
+            [assembly: ComposeDefaults("TimePickerDefault",
+                "!state", "modifier", "colors", "layoutType")]
+            namespace AndroidX.Compose.Material3 { public interface ITimePickerState { } }
+            namespace ComposeNet
+            {
+                public sealed class TimePickerState
+                {
+                    internal AndroidX.Compose.Material3.ITimePickerState? Jvm;
+                    public TimePickerState(int initialHour, int initialMinute, bool is24Hour) { }
+                    public int InitialHour => 0;
+                    public int InitialMinute => 0;
+                    public bool Is24Hour => false;
+                }
+            }
+
+            namespace ComposeNet
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(Class="x/y/TimePickerKt", JvmName="TimePicker-mT9BvqQ",
+                                   Signature="{{TimePickerSig}}",
+                                   Defaults=typeof(TimePickerDefault))]
+                    [ComposeFacade]
+                    public static partial void TimePicker(
+                        [StateHolder(Remember = nameof(RememberTimePickerState),
+                                     StateType = typeof(TimePickerState))]
+                        IntPtr state,
+                        IModifier? modifier,
+                        int defaults,
+                        IComposer composer);
+
+                    public static IntPtr RememberTimePickerState(int initialHour, int initialMinute,
+                                                                 bool is24Hour, IComposer composer) => default;
+                }
+            }
+            """;
+
+        var (_, diags, emitted) = Run(code, "TimePicker");
+        Assert.Null(emitted);
+        Assert.Contains(diags, d => d.Id == "CN3009"
+            && d.GetMessage().Contains("parameterised Remember requires StateType")
+            && d.GetMessage().Contains("constructible with no arguments"));
+    }
+
+    [Fact]
+    public void StateHolder_Phase4_StillEmitsGuardedJvmPopulation()
+    {
+        // Belt+suspenders: confirm the existing Phase 4 (zero-user-param
+        // Remember) path still emits the nullable guard `if (_state is
+        // not null && ...)`. Phase 4b's stricter unguarded path is only
+        // for parameterised remembers.
+        var code = $$"""
+            using AndroidX.Compose.Runtime;
+            using AndroidX.Compose.UI;
+            using ComposeNet;
+            using Kotlin.Jvm.Functions;
+            using System;
+
+            [assembly: ComposeDefaults("DatePickerDefault",
+                "!state", "modifier", "dateFormatter", "colors", "title", "headline", "showModeToggle")]
+
+            {{DatePickerStateStubs}}
+
+            namespace ComposeNet
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(Class="x/y/DatePickerKt", JvmName="DatePicker",
+                                   Signature="{{DatePickerSig}}",
+                                   Defaults=typeof(DatePickerDefault))]
+                    [ComposeFacade]
+                    public static partial void DatePicker(
+                        [StateHolder(Remember = nameof(RememberDatePickerState),
+                                     StateType = typeof(DatePickerState))]
+                        IntPtr state,
+                        IModifier? modifier,
+                        int defaults,
+                        IComposer composer);
+
+                    public static IntPtr RememberDatePickerState(IComposer composer) => default;
+                }
+            }
+            """;
+
+        var (_, diags, emitted) = Run(code, "DatePicker");
+        Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+        Assert.Contains("if (_state is not null && _state.Jvm is null)", emitted);
+        Assert.DoesNotContain("_state = state ?? new", emitted);
+    }
+
     // ---------------------------------------------------------------
     // OptionalValue — Compose value-class types (Sp/Dp/Em/TextAlign)
     // and reference-typed wrappers (FontWeight/TextDecoration/Shape)
