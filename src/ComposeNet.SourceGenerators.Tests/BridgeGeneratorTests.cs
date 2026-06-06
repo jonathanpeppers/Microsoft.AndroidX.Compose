@@ -1189,6 +1189,37 @@ public class BridgeGeneratorTests
     }
 
     [Fact]
+    public void ValueType_SlotMismatch_ReportsCN2008()
+    {
+        // Sp? lowers to JNI slot 'J' (packed TextUnit long). Declaring
+        // it against a slot whose JNI code is 'I' would silently emit
+        // Sp.Pack(...) into a JValue.i field at runtime. CN2008 makes
+        // that misuse a build-time error.
+        var code = """
+            using ComposeNet;
+            using AndroidX.Compose.Runtime;
+
+            [assembly: ComposeDefaults("WrongDefault", "fontSize")]
+
+            namespace ComposeNet
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(
+                        Class = "x/Y",
+                        JvmName = "f",
+                        Signature = "(ILandroidx/compose/runtime/Composer;II)V",
+                        Defaults = typeof(WrongDefault))]
+                    public static partial void F(Sp? fontSize, IComposer composer);
+                }
+            }
+            """;
+
+        var (_, diags, _) = Run(code);
+        Assert.Contains(diags, d => d.Id == "CN2008");
+    }
+
+    [Fact]
     public void RefType_FontWeight_GoesThroughGenericNullableRefPath()
     {
         // FontWeight subclasses Java.Lang.Object — it should hit the

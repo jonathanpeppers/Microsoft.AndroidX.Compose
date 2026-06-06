@@ -271,6 +271,7 @@ isn't a single Kotlin call.
 | CN2005  | `Defaults` disagrees with the JNI `$default` slot.          |
 | CN2006  | Constructor bridge shape requirements not met.              |
 | CN2007  | Recognized Compose value type used on a no-`$default` bridge. |
+| CN2008  | Value-type parameter lowers to a JNI slot that doesn't match the bridge signature at that position. |
 
 **When you add a new generator diagnostic, also update this table in
 `.github/copilot-instructions.md` (and the matching table for the
@@ -294,7 +295,6 @@ generator hosts a small registry in
 |---------|----------|----------|
 | `ComposeNet.Dp?`          | `F` | `Dp.Pack(x)`                          |
 | `ComposeNet.Sp?`          | `J` | `Sp.Pack(x)` (TextUnit, type=0x1)     |
-| `ComposeNet.Em?`          | `J` | `Em.Pack(x)` (TextUnit, type=0x2)     |
 | `ComposeNet.TextAlign?`   | `I` | `TextAlign.Pack(x)`                   |
 
 Recognition keys on **`Nullable<T>` of the registered type** — bare

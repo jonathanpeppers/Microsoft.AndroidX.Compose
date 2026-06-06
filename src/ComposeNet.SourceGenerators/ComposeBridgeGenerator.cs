@@ -390,6 +390,31 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
             return new GenerationResult(null, null, diags.ToArray());
         }
 
+        // CN2008: each recognized Compose value type lowers to a specific
+        // JNI primitive slot (Dp -> F, Sp -> J, TextAlign -> I). Validate
+        // that the bridge's JNI signature actually has that slot at the
+        // bit's position — otherwise EmitUserArgValue would silently
+        // route a packed long / float into the wrong JValue field and
+        // crash at runtime with a type-mismatch / corrupt arg.
+        foreach (var p in userParams)
+        {
+            if (!ComposeValueTypes.TryGet(p.Type, out var vtName, out var info))
+                continue;
+            if (!userBitOf.TryGetValue(p.Name, out var bit))
+                continue;
+            int slotIndex = receiverSlotCount + bit;
+            if (slotIndex < 0 || slotIndex >= sigParams.Count)
+                continue;
+            var actualCode = sigParams[slotIndex].Code;
+            if (actualCode != info.Slot)
+            {
+                diags.Add(Diagnostic.Create(Diagnostics.BridgeValueTypeSlotMismatch, loc,
+                    method.Name, p.Name, vtName, info.Slot, actualCode));
+            }
+        }
+        if (diags.Count > 0)
+            return new GenerationResult(null, null, diags.ToArray());
+
         var source = Emit(method, attr, className, jvmName, signature, defaultsEnumName, sigParams,
             kotlinNames, userParams, userBitOf, receiverParam, callerProvidesDefaults, hasDefaultSlot,
             hasComposerSlot, extensionWithDefault, instanceField, isConstructor);

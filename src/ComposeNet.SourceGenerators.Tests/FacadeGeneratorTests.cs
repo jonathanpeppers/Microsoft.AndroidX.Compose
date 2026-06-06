@@ -1483,6 +1483,38 @@ public class FacadeGeneratorTests
     }
 
     [Fact]
+    public void OptionalValue_NonNullableReferenceWrapperIsRejected()
+    {
+        // Non-nullable FontWeight (no `?`) must not classify as
+        // OptionalValue: surfacing it as a nullable auto-property would
+        // pass `null` straight to a bridge slot the caller declared as
+        // non-nullable. CN3002 is expected.
+        var code = """
+            using AndroidX.Compose.Runtime;
+            using AndroidX.Compose.UI;
+            using ComposeNet;
+            using Kotlin.Jvm.Functions;
+
+            [assembly: ComposeDefaults("TextDefault", "!text", "modifier", "fontWeight")]
+
+            namespace ComposeNet
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(Class="androidx/compose/material3/TextKt", JvmName="Text",
+                                   Signature="(Ljava/lang/String;Landroidx/compose/ui/Modifier;Landroidx/compose/ui/text/font/FontWeight;Landroidx/compose/runtime/Composer;II)V",
+                                   Defaults=typeof(TextDefault))]
+                    [ComposeFacade]
+                    public static partial void Text(string text, IModifier? modifier, FontWeight fontWeight, IComposer composer);
+                }
+            }
+            """;
+
+        var (_, diags, _) = Run(code, "Text");
+        Assert.Contains(diags, d => d.Id == "CN3002");
+    }
+
+    [Fact]
     public void OptionalValue_MultipleValueAndReferenceTypesCoexist()
     {
         var code = """

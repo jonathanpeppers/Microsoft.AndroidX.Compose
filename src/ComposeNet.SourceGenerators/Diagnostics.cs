@@ -84,6 +84,14 @@ internal static class Diagnostics
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);
 
+    public static readonly DiagnosticDescriptor BridgeValueTypeSlotMismatch = new(
+        id: "CN2008",
+        title: "[ComposeBridge] value-type parameter lowers to the wrong JNI slot",
+        messageFormat: "Bridge '{0}' parameter '{1}' is a recognized Compose value type ({2}) that lowers to JNI slot '{3}' but the signature has slot '{4}' at that position — declare a different parameter type or fix the signature",
+        category: "ComposeNet",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
+
     public static readonly DiagnosticDescriptor FacadeWrongContainingType = new(
         id: "CN3001",
         title: "[ComposeFacade] must be applied to a method on ComposeBridges",

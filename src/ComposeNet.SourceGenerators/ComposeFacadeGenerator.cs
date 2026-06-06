@@ -500,7 +500,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         // and reference-typed wrappers (FontWeight?/TextDecoration?/
         // Shape?). Surfaced as nullable auto-properties; the bridge
         // generator handles JNI lowering and auto-mask bit clearing.
-        if (IsOptionalValueType(p.Type))
+        if (IsOptionalValueType(p.Type, p.NullableAnnotation))
             return new FacadeSlot(p, FacadeSlotKind.OptionalValue);
 
         diags.Add(Diagnostic.Create(Diagnostics.FacadeUnsupportedParameter, loc, methodName, p.Name, p.Type.ToDisplayString()));
@@ -934,18 +934,23 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
     /// <summary>
     /// True for parameters typed as <c>Nullable&lt;T&gt;</c> where <c>T</c>
     /// is a recognized Compose <c>@JvmInline value class</c> (Dp/Sp/Em/
-    /// TextAlign), or for nullable reference-typed wrappers in
+    /// TextAlign), or for <em>nullable</em> reference-typed wrappers in
     /// <see cref="ComposeReferenceTypes"/>. Both shapes surface as
     /// <see cref="FacadeSlotKind.OptionalValue"/> auto-properties on
-    /// the generated facade.
+    /// the generated facade. Non-nullable reference wrappers do not
+    /// qualify — emitting a nullable auto-property for them would
+    /// pass <c>null</c> to a non-nullable bridge parameter.
     /// </summary>
-    static bool IsOptionalValueType(ITypeSymbol type)
+    static bool IsOptionalValueType(ITypeSymbol type, NullableAnnotation annotation)
     {
         if (ComposeValueTypes.TryGet(type, out _, out _)) return true;
         // Nullable reference-type wrapper: T? where T is recognized.
         // The C# nullable-annotation flow gives us the underlying type
-        // directly (no Nullable<T> wrapping) for reference types.
-        if (type.IsReferenceType && ComposeReferenceTypes.IsRecognized(type))
+        // directly (no Nullable<T> wrapping) for reference types, so
+        // we must consult the annotation explicitly.
+        if (type.IsReferenceType
+            && annotation == NullableAnnotation.Annotated
+            && ComposeReferenceTypes.IsRecognized(type))
             return true;
         return false;
     }

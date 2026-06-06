@@ -58,7 +58,7 @@ public readonly struct Dp : System.IEquatable<Dp>
 
     /// <summary>
     /// Pack a nullable <see cref="Dp"/> into the raw <c>float</c> the
-    /// JNI slot expects. <c>null</c> ΓåÆ <c>0f</c>, which the auto-mask
+    /// JNI slot expects. <c>null</c> -&gt; <c>0f</c>, which the auto-mask
     /// in the bridge generator pairs with leaving the matching
     /// <c>$default</c> bit set so Kotlin substitutes its real default.
     /// </summary>
