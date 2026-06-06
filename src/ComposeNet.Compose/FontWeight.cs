@@ -23,47 +23,51 @@ public sealed class FontWeight : Java.Lang.Object
     FontWeight(IntPtr handle, JniHandleOwnership transfer)
         : base(handle, transfer) { }
 
+    // Companion fields on FontWeight are private — the public surface
+    // is the `getXxx()` getters on the Companion class. (Decompiled the
+    // 1.11.1 jar with javap to confirm.) The pattern is:
+    //   FontWeight$Companion.getThin() : FontWeight
     static IntPtr s_companion;
     static unsafe IntPtr Companion()
     {
         if (s_companion == IntPtr.Zero)
         {
-            IntPtr cls = JNIEnv.FindClass("androidx/compose/ui/text/font/FontWeight$Companion");
-            IntPtr fid = JNIEnv.GetStaticFieldID(cls, "$$INSTANCE", "Landroidx/compose/ui/text/font/FontWeight$Companion;");
-            IntPtr local = JNIEnv.GetStaticObjectField(cls, fid);
+            IntPtr fontWeightCls = JNIEnv.FindClass("androidx/compose/ui/text/font/FontWeight");
+            IntPtr fid = JNIEnv.GetStaticFieldID(fontWeightCls, "Companion", "Landroidx/compose/ui/text/font/FontWeight$Companion;");
+            IntPtr local = JNIEnv.GetStaticObjectField(fontWeightCls, fid);
             s_companion = JNIEnv.NewGlobalRef(local);
             JNIEnv.DeleteLocalRef(local);
         }
         return s_companion;
     }
 
-    static FontWeight Resolve(string fieldName)
+    static FontWeight Resolve(string getterName)
     {
         IntPtr cls = JNIEnv.FindClass("androidx/compose/ui/text/font/FontWeight$Companion");
-        IntPtr fid = JNIEnv.GetFieldID(cls, fieldName, "Landroidx/compose/ui/text/font/FontWeight;");
+        IntPtr mid = JNIEnv.GetMethodID(cls, getterName, "()Landroidx/compose/ui/text/font/FontWeight;");
         IntPtr companion = Companion();
-        IntPtr value = JNIEnv.GetObjectField(companion, fid);
+        IntPtr value = JNIEnv.CallObjectMethod(companion, mid);
         return new FontWeight(value, JniHandleOwnership.TransferLocalRef);
     }
 
     static FontWeight? s_thin, s_extraLight, s_light, s_normal, s_medium, s_semiBold, s_bold, s_extraBold, s_black;
 
     /// <summary><c>FontWeight.Thin</c> (W100).</summary>
-    public static FontWeight Thin => s_thin ??= Resolve("Thin");
+    public static FontWeight Thin => s_thin ??= Resolve("getThin");
     /// <summary><c>FontWeight.ExtraLight</c> (W200).</summary>
-    public static FontWeight ExtraLight => s_extraLight ??= Resolve("ExtraLight");
+    public static FontWeight ExtraLight => s_extraLight ??= Resolve("getExtraLight");
     /// <summary><c>FontWeight.Light</c> (W300).</summary>
-    public static FontWeight Light => s_light ??= Resolve("Light");
+    public static FontWeight Light => s_light ??= Resolve("getLight");
     /// <summary><c>FontWeight.Normal</c> (W400). The default.</summary>
-    public static FontWeight Normal => s_normal ??= Resolve("Normal");
+    public static FontWeight Normal => s_normal ??= Resolve("getNormal");
     /// <summary><c>FontWeight.Medium</c> (W500).</summary>
-    public static FontWeight Medium => s_medium ??= Resolve("Medium");
+    public static FontWeight Medium => s_medium ??= Resolve("getMedium");
     /// <summary><c>FontWeight.SemiBold</c> (W600).</summary>
-    public static FontWeight SemiBold => s_semiBold ??= Resolve("SemiBold");
+    public static FontWeight SemiBold => s_semiBold ??= Resolve("getSemiBold");
     /// <summary><c>FontWeight.Bold</c> (W700).</summary>
-    public static FontWeight Bold => s_bold ??= Resolve("Bold");
+    public static FontWeight Bold => s_bold ??= Resolve("getBold");
     /// <summary><c>FontWeight.ExtraBold</c> (W800).</summary>
-    public static FontWeight ExtraBold => s_extraBold ??= Resolve("ExtraBold");
+    public static FontWeight ExtraBold => s_extraBold ??= Resolve("getExtraBold");
     /// <summary><c>FontWeight.Black</c> (W900).</summary>
-    public static FontWeight Black => s_black ??= Resolve("Black");
+    public static FontWeight Black => s_black ??= Resolve("getBlack");
 }

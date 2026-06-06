@@ -43,8 +43,8 @@ namespace ComposeNet;
 /// Phase 1 ships <see cref="Padding(int)"/>, the horizontal/vertical
 /// + per-edge overloads, and <see cref="FillMaxWidth"/> /
 /// <see cref="FillMaxHeight"/> / <see cref="FillMaxSize"/>. Phase 2
-/// adds <see cref="Background"/>, <see cref="Border"/>,
-/// <see cref="Clip"/>, and <see cref="Clickable"/>. Gesture and
+/// adds <see cref="Background"/>, <see cref="Border(int,long,int)"/>,
+/// <see cref="Clip(int)"/>, and <see cref="Clickable"/>. Gesture and
 /// size-constraint modifiers land in later phases (issue #21).
 /// </summary>
 public sealed class Modifier
@@ -123,6 +123,17 @@ public sealed class Modifier
         return Append(curr => ComposeBridges.ModifierPaddingLTRB(curr, s, t, e, b));
     }
 
+    /// <summary><c>Modifier.padding(all: Dp)</c> — typed Dp overload.</summary>
+    public Modifier Padding(Dp all) => Padding((int)all.Value);
+
+    /// <summary><c>Modifier.padding(horizontal: Dp, vertical: Dp)</c> — typed Dp overload.</summary>
+    public Modifier Padding(Dp horizontal, Dp vertical) =>
+        Padding((int)horizontal.Value, (int)vertical.Value);
+
+    /// <summary><c>Modifier.padding(start, top, end, bottom)</c> — typed Dp overload.</summary>
+    public Modifier Padding(Dp start, Dp top, Dp end, Dp bottom) =>
+        Padding((int)start.Value, (int)top.Value, (int)end.Value, (int)bottom.Value);
+
     /// <summary>
     /// <c>Modifier.fillMaxWidth(fraction)</c>. Defaults to filling
     /// the entire available width (<paramref name="fraction"/> = 1).
@@ -182,6 +193,18 @@ public sealed class Modifier
         var h = (float)heightDp;
         return Append(curr => ComposeBridges.ModifierSizeWH(curr, w, h));
     }
+
+    /// <summary><c>Modifier.height(dp)</c> — typed Dp overload.</summary>
+    public Modifier Height(Dp dp) => Height((int)dp.Value);
+
+    /// <summary><c>Modifier.width(dp)</c> — typed Dp overload.</summary>
+    public Modifier Width(Dp dp) => Width((int)dp.Value);
+
+    /// <summary><c>Modifier.size(dp)</c> — typed Dp overload.</summary>
+    public Modifier Size(Dp dp) => Size((int)dp.Value);
+
+    /// <summary><c>Modifier.size(width, height)</c> — typed Dp overload.</summary>
+    public Modifier Size(Dp width, Dp height) => Size((int)width.Value, (int)height.Value);
 
     /// <summary>
     /// <c>Modifier.padding(paddingValues)</c> — pads using the
@@ -271,6 +294,12 @@ public sealed class Modifier
         var dp = (float)cornerRadiusDp;
         return Append(curr => ComposeBridges.ModifierClipRoundedCorners(curr, dp));
     }
+
+    /// <summary><c>Modifier.clip(RoundedCornerShape(cornerRadius))</c> — typed Dp overload.</summary>
+    public Modifier Clip(Dp cornerRadius) => Clip((int)cornerRadius.Value);
+
+    /// <summary><c>Modifier.border(width, color)</c> — typed Dp overload.</summary>
+    public Modifier Border(Dp width, long color) => Border((int)width.Value, color);
 
     /// <summary>
     /// <c>Modifier.clickable { onClick() }</c> — handles taps with the

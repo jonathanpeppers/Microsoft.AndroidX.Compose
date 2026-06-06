@@ -132,6 +132,39 @@ public class MainActivity : ComposeActivity
                             new Text("Hello from .NET"),
                             new OutlinedTextField(name),
                             new Text($"Hi {(string.IsNullOrEmpty(name.Value) ? "stranger" : name.Value)}"),
+                            // Value-type demo (issue #65): typed Sp / FontWeight /
+                            // TextDecoration properties on Text + typed Dp on Modifier.
+                            // Each property surfaces through the [ComposeFacade] /
+                            // [ComposeBridge] generators end-to-end.
+                            new Text("Styled text (issue #65):")
+                            {
+                                Modifier = Modifier.Companion.Padding(top: 8.Dp(), bottom: 4.Dp(), start: 0.Dp(), end: 0.Dp()),
+                                FontWeight = ComposeNet.FontWeight.Bold,
+                            },
+                            new Text("Large + Bold")
+                            {
+                                FontSize = 24.Sp(),
+                                FontWeight = ComposeNet.FontWeight.Bold,
+                            },
+                            new Text("Italic-weight underline")
+                            {
+                                FontSize = 16.Sp(),
+                                FontWeight = ComposeNet.FontWeight.Medium,
+                                Decoration = TextDecoration.Underline,
+                            },
+                            new Text("Strikethrough light")
+                            {
+                                FontSize = 14.Sp(),
+                                FontWeight = ComposeNet.FontWeight.Light,
+                                Decoration = TextDecoration.LineThrough,
+                            },
+                            new Text("Wide letter spacing, taller lines, so the rendered glyphs visibly drift apart and rows breathe.")
+                            {
+                                FontSize = 14.Sp(),
+                                LetterSpacing = 2.Sp(),
+                                LineHeight = 22.Sp(),
+                                Modifier = Modifier.Companion.Padding(8.Dp()),
+                            },
                             // Phase 2 modifier demo — clickable rounded chip painted with
                             // Background + Border + Clip; tapping it increments the counter.
                             new Text($"Phase 2 modifiers (tap me): {count}")

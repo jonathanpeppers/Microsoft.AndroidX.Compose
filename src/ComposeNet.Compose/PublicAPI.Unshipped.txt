@@ -371,24 +371,33 @@ ComposeNet.ModalWideNavigationRail.ModalWideNavigationRail() -> void
 ComposeNet.Modifier
 ComposeNet.Modifier.Background(long color) -> ComposeNet.Modifier!
 ComposeNet.Modifier.Border(int widthDp, long color, int cornerRadiusDp = 0) -> ComposeNet.Modifier!
+ComposeNet.Modifier.Border(ComposeNet.Dp width, long color) -> ComposeNet.Modifier!
 ComposeNet.Modifier.Clickable(System.Action! onClick) -> ComposeNet.Modifier!
 ComposeNet.Modifier.Clip(int cornerRadiusDp) -> ComposeNet.Modifier!
+ComposeNet.Modifier.Clip(ComposeNet.Dp cornerRadius) -> ComposeNet.Modifier!
 ComposeNet.Modifier.FillMaxHeight(float fraction = 1) -> ComposeNet.Modifier!
 ComposeNet.Modifier.FillMaxSize(float fraction = 1) -> ComposeNet.Modifier!
 ComposeNet.Modifier.FillMaxWidth(float fraction = 1) -> ComposeNet.Modifier!
 ComposeNet.Modifier.Height(int dp) -> ComposeNet.Modifier!
+ComposeNet.Modifier.Height(ComposeNet.Dp dp) -> ComposeNet.Modifier!
 ComposeNet.Modifier.HorizontalScroll(ComposeNet.ScrollState! state, bool enabled = true, bool reverseScrolling = false) -> ComposeNet.Modifier!
 ComposeNet.Modifier.Padding(int allDp) -> ComposeNet.Modifier!
 ComposeNet.Modifier.Padding(int horizontalDp, int verticalDp) -> ComposeNet.Modifier!
 ComposeNet.Modifier.Padding(int startDp, int topDp, int endDp, int bottomDp) -> ComposeNet.Modifier!
+ComposeNet.Modifier.Padding(ComposeNet.Dp all) -> ComposeNet.Modifier!
+ComposeNet.Modifier.Padding(ComposeNet.Dp horizontal, ComposeNet.Dp vertical) -> ComposeNet.Modifier!
+ComposeNet.Modifier.Padding(ComposeNet.Dp start, ComposeNet.Dp top, ComposeNet.Dp end, ComposeNet.Dp bottom) -> ComposeNet.Modifier!
 ComposeNet.Modifier.SafeDrawingPadding() -> ComposeNet.Modifier!
 ComposeNet.Modifier.Size(int dp) -> ComposeNet.Modifier!
 ComposeNet.Modifier.Size(int widthDp, int heightDp) -> ComposeNet.Modifier!
+ComposeNet.Modifier.Size(ComposeNet.Dp dp) -> ComposeNet.Modifier!
+ComposeNet.Modifier.Size(ComposeNet.Dp width, ComposeNet.Dp height) -> ComposeNet.Modifier!
 ComposeNet.Modifier.SystemBarsPadding() -> ComposeNet.Modifier!
 ComposeNet.Modifier.Then(ComposeNet.Modifier! other) -> ComposeNet.Modifier!
 ComposeNet.Modifier.VerticalScroll(ComposeNet.ScrollState! state, bool enabled = true, bool reverseScrolling = false) -> ComposeNet.Modifier!
 ComposeNet.Modifier.Weight(float weight, bool fill = true) -> ComposeNet.Modifier!
 ComposeNet.Modifier.Width(int dp) -> ComposeNet.Modifier!
+ComposeNet.Modifier.Width(ComposeNet.Dp dp) -> ComposeNet.Modifier!
 ComposeNet.MultiChoiceSegmentedButtonRow
 ComposeNet.MultiChoiceSegmentedButtonRow.MultiChoiceSegmentedButtonRow() -> void
 ComposeNet.MutableNumberState<T>
@@ -600,6 +609,16 @@ ComposeNet.Tab.Text.set -> void
 ComposeNet.TabRow
 ComposeNet.TabRow.TabRow(int selectedTabIndex) -> void
 ComposeNet.Text
+ComposeNet.Text.Decoration.get -> ComposeNet.TextDecoration?
+ComposeNet.Text.Decoration.set -> void
+ComposeNet.Text.FontSize.get -> ComposeNet.Sp?
+ComposeNet.Text.FontSize.set -> void
+ComposeNet.Text.FontWeight.get -> ComposeNet.FontWeight?
+ComposeNet.Text.FontWeight.set -> void
+ComposeNet.Text.LetterSpacing.get -> ComposeNet.Sp?
+ComposeNet.Text.LetterSpacing.set -> void
+ComposeNet.Text.LineHeight.get -> ComposeNet.Sp?
+ComposeNet.Text.LineHeight.set -> void
 ComposeNet.Text.Text(string! text) -> void
 ComposeNet.TextAlign
 ComposeNet.TextAlign.Deconstruct(out int Value) -> void
