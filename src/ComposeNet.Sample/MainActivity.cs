@@ -184,6 +184,64 @@ public class MainActivity : ComposeActivity
                                 LineHeight = 22,
                                 Modifier = Modifier.Companion.Padding(8),
                             },
+                            // Issue #58: text styling additions — color, italic /
+                            // family, alignment, overflow, line clamping. Each
+                            // property flows through the [ComposeFacade] /
+                            // [ComposeBridge] generators: Color/MaxLines/MinLines/
+                            // SoftWrap use the new nullable-primitive path,
+                            // FontStyle/FontFamily/TextAlign use the nullable
+                            // reference-wrapper path, and TextOverflow uses the
+                            // packed @JvmInline value-class path.
+                            new Text("Issue #58 text styling:")
+                            {
+                                Modifier = Modifier.Companion.Padding(top: 8, bottom: 4, start: 0, end: 0),
+                                FontWeight = ComposeNet.FontWeight.Bold,
+                            },
+                            new Text("Italic serif red, centered")
+                            {
+                                Color = ColorKt.Color(red: 0xC6, green: 0x28, blue: 0x28, alpha: 0xFF),
+                                FontStyle = ComposeNet.FontStyle.Italic,
+                                FontFamily = ComposeNet.FontFamily.Serif,
+                                Align = ComposeNet.TextAlign.Center,
+                                Modifier = Modifier.Companion.FillMaxWidth(),
+                            },
+                            new Text("Monospace, end-aligned")
+                            {
+                                FontFamily = ComposeNet.FontFamily.Monospace,
+                                Align = ComposeNet.TextAlign.End,
+                                Modifier = Modifier.Companion.FillMaxWidth(),
+                            },
+                            new Text("This long line should clip with an ellipsis because we cap it at MaxLines=1 and force overflow.")
+                            {
+                                MaxLines = 1,
+                                Overflow = ComposeNet.TextOverflow.Ellipsis,
+                                SoftWrap = false,
+                            },
+                            new Text("This paragraph wraps to at most two lines and uses a non-default minLines so the slot reserves vertical space even when the content is shorter than the maximum allowed.")
+                            {
+                                MaxLines = 2,
+                                MinLines = 2,
+                                Overflow = ComposeNet.TextOverflow.Ellipsis,
+                            },
+                            // TextField with new slots: leading/trailing icons,
+                            // label, supporting text, prefix, suffix.
+                            new TextField(name)
+                            {
+                                Label          = new Text("Your name"),
+                                Placeholder    = new Text("Type something…"),
+                                LeadingIcon    = new Text("👤"),
+                                TrailingIcon   = new Text("✎"),
+                                SupportingText = new Text("Powered by issue #58 slots"),
+                                SingleLine     = true,
+                            },
+                            new OutlinedTextField(name)
+                            {
+                                Label          = new Text("Outlined variant"),
+                                Prefix         = new Text("@"),
+                                Suffix         = new Text(".dev"),
+                                SupportingText = new Text($"len={name.Value.Length}"),
+                                SingleLine     = true,
+                            },
                             // Phase 2 modifier demo — clickable rounded chip painted with
                             // Background + Border + Clip; tapping it increments the counter.
                             new Text($"Phase 2 modifiers (tap me): {count}")
@@ -389,6 +447,98 @@ public class MainActivity : ComposeActivity
                     {
                         new Text("OutlinedCard (border)"),
                         new Text($"Counter snapshot: {count}"),
+                    },
+
+                    new HorizontalDivider { Modifier = Modifier.Companion.Padding(0, 8) },
+                    new Text("Modifier showcase — shapes, shadow, transforms"),
+
+                    // Background(long, Shape) + Shape.Circle / RoundedPercent /
+                    // CutCorners. Each tile is a 56dp Box wrapping a label.
+                    new Row
+                    {
+                        new Box
+                        {
+                            Modifier.Companion
+                                .Size(56)
+                                .Background(ColorKt.Color(red: 0xD0, green: 0xBC, blue: 0xFF, alpha: 0xFF), Shape.Circle()),
+                            new Text("●") { Modifier = Modifier.Companion.Padding(16) },
+                        },
+                        new Spacer { Modifier = Modifier.Companion.WidthIn(8, null) },
+                        new Box
+                        {
+                            Modifier.Companion
+                                .Size(56)
+                                .Background(ColorKt.Color(red: 0xB3, green: 0xE5, blue: 0xFC, alpha: 0xFF), Shape.RoundedPercent(25)),
+                            new Text("◼") { Modifier = Modifier.Companion.Padding(16) },
+                        },
+                        new Spacer { Modifier = Modifier.Companion.WidthIn(8, null) },
+                        new Box
+                        {
+                            Modifier.Companion
+                                .Size(56)
+                                .Background(ColorKt.Color(red: 0xC8, green: 0xE6, blue: 0xC9, alpha: 0xFF), Shape.CutCorners(10)),
+                            new Text("◆") { Modifier = Modifier.Companion.Padding(16) },
+                        },
+                    },
+
+                    // Shadow(elevation, shape) + Border(width, color, shape).
+                    new Box
+                    {
+                        Modifier.Companion
+                            .Padding(8)
+                            .Shadow(8, Shape.RoundedCorners(16))
+                            .Background(ColorKt.Color(red: 0xFF, green: 0xE0, blue: 0xB2, alpha: 0xFF), Shape.RoundedCorners(16))
+                            .Border(2, ColorKt.Color(red: 0xEF, green: 0x6C, blue: 0x00, alpha: 0xFF), Shape.RoundedCorners(16))
+                            .Padding(16),
+                        new Text("Shadow + Border + Background, all on a shared Shape"),
+                    },
+
+                    // AspectRatio(16f/9f, matchHeightConstraintsFirst:true) — when
+                    // both width and height are bounded, prefer the height
+                    // constraint and let width follow.
+                    new Box
+                    {
+                        Modifier.Companion
+                            .FillMaxWidth()
+                            .Height(80)
+                            .AspectRatio(16f / 9f, matchHeightConstraintsFirst: true)
+                            .Background(ColorKt.Color(red: 0xCC, green: 0xC2, blue: 0xDC, alpha: 0xFF)),
+                        new Text("16:9 (height-first)") { Modifier = Modifier.Companion.Padding(8) },
+                    },
+
+                    // Rotate / Scale / Alpha tiles, each tagged so UI tests can
+                    // match by semantic id.
+                    new Row
+                    {
+                        new Box
+                        {
+                            Modifier.Companion
+                                .TestTag("rotate-tile")
+                                .Size(48)
+                                .Rotate(15f)
+                                .Background(ColorKt.Color(red: 0xEF, green: 0xB8, blue: 0xC8, alpha: 0xFF)),
+                            new Text("⟲") { Modifier = Modifier.Companion.Padding(12) },
+                        },
+                        new Spacer { Modifier = Modifier.Companion.WidthIn(8, null) },
+                        new Box
+                        {
+                            Modifier.Companion
+                                .TestTag("scale-tile")
+                                .Size(48)
+                                .Scale(0.85f, 1.15f)
+                                .Background(ColorKt.Color(red: 0xFF, green: 0xCD, blue: 0xD2, alpha: 0xFF)),
+                            new Text("↕") { Modifier = Modifier.Companion.Padding(12) },
+                        },
+                        new Spacer { Modifier = Modifier.Companion.WidthIn(8, null) },
+                        new Box
+                        {
+                            Modifier.Companion
+                                .TestTag("alpha-tile")
+                                .Size(48)
+                                .Alpha(0.4f)
+                                .Background(ColorKt.Color(red: 0xD7, green: 0xCC, blue: 0xC8, alpha: 0xFF)),
+                            new Text("◐") { Modifier = Modifier.Companion.Padding(12) },
+                        },
                     },
                 },
                 3 => new Column

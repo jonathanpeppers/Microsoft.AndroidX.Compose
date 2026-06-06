@@ -43,8 +43,8 @@ namespace ComposeNet;
 /// Phase 1 ships <see cref="Padding(ComposeNet.Dp)"/>, the horizontal/vertical
 /// + per-edge overloads, and <see cref="FillMaxWidth"/> /
 /// <see cref="FillMaxHeight"/> / <see cref="FillMaxSize"/>. Phase 2
-/// adds <see cref="Background"/>, <see cref="Border"/>,
-/// <see cref="Clip"/>, and <see cref="Clickable"/>. Gesture and
+/// adds <see cref="Background(long)"/>, <see cref="Border(ComposeNet.Dp, long)"/>,
+/// <see cref="Clip(ComposeNet.Dp)"/>, and <see cref="Clickable"/>. Gesture and
 /// size-constraint modifiers land in later phases (issue #21).
 /// </summary>
 public sealed class Modifier
@@ -225,21 +225,45 @@ public sealed class Modifier
     /// <c>int</c> overload.
     /// </summary>
     public Modifier Background(long color) =>
-        Append(curr => ComposeBridges.ModifierBackground(curr, color));
+        Append(curr => ComposeBridges.ModifierBackground(curr, color, null));
 
     /// <summary>
-    /// <c>Modifier.border(width, color, shape)</c> — draws a stroke
+    /// <c>Modifier.background(color, shape)</c> — paints a flat fill
+    /// behind the composable, clipped to <paramref name="shape"/>. Pass
+    /// <c>null</c> for the default <c>RectangleShape</c>; otherwise build
+    /// a shape via <see cref="ComposeNet.Shape.RoundedCorners(Dp)"/>,
+    /// <see cref="ComposeNet.Shape.Circle"/>,
+    /// <see cref="ComposeNet.Shape.CutCorners(Dp)"/>, etc. The shape is
+    /// captured by the closure so its Java peer stays alive across
+    /// recompositions.
+    /// </summary>
+    public Modifier Background(long color, Shape? shape) =>
+        Append(curr => ComposeBridges.ModifierBackground(curr, color, shape?.Handle));
+
+    /// <summary>
+    /// <c>Modifier.border(width, color)</c> — draws a rectangular stroke
     /// around the composable. <paramref name="width"/> is the stroke
     /// width in density-independent pixels. <paramref name="color"/> is a
     /// packed Compose <c>Color</c> long (see
-    /// <see cref="Background(long)"/> for how to build one).
-    /// <paramref name="cornerRadius"/> defaults to <c>0</c> for a
-    /// rectangular stroke; pass a positive value to match a
-    /// <see cref="Clip(Dp)"/> earlier in the chain so the corners
-    /// align (otherwise the rectangular stroke gets sliced by a rounded
-    /// clip and you see jagged corner stubs).
+    /// <see cref="Background(long)"/> for how to build one). For rounded
+    /// corners use <see cref="Border(Dp, long, Dp)"/>; for arbitrary
+    /// shapes use <see cref="Border(Dp, long, Shape?)"/>.
     /// </summary>
-    public Modifier Border(Dp width, long color, Dp cornerRadius = default)
+    public Modifier Border(Dp width, long color)
+    {
+        var w = width.Value;
+        return Append(curr => ComposeBridges.ModifierBorder(curr, w, color, null));
+    }
+
+    /// <summary>
+    /// <c>Modifier.border(width, color, RoundedCornerShape(cornerRadius))</c> —
+    /// draws a stroke with rounded corners. Match
+    /// <paramref name="cornerRadius"/> to a <see cref="Clip(Dp)"/>
+    /// earlier in the chain so the corners align (otherwise the
+    /// rectangular stroke gets sliced by a rounded clip and you see
+    /// jagged corner stubs).
+    /// </summary>
+    public Modifier Border(Dp width, long color, Dp cornerRadius)
     {
         var w = width.Value;
         var r = cornerRadius.Value;
@@ -262,6 +286,19 @@ public sealed class Modifier
     }
 
     /// <summary>
+    /// <c>Modifier.border(width, color, shape)</c> — overload taking an
+    /// explicit <see cref="ComposeNet.Shape"/> for non-rounded geometry
+    /// (cut corners, custom shape factories, etc.). Pass <c>null</c> for
+    /// <c>RectangleShape</c>. The shape is captured by the closure so its
+    /// Java peer stays alive across recompositions.
+    /// </summary>
+    public Modifier Border(Dp width, long color, Shape? shape)
+    {
+        var w = width.Value;
+        return Append(curr => ComposeBridges.ModifierBorder(curr, w, color, shape?.Handle));
+    }
+
+    /// <summary>
     /// <c>Modifier.clip(RoundedCornerShape(<paramref name="cornerRadius"/>))</c> —
     /// rounds the four corners by the same radius and clips drawing to the
     /// resulting shape. Pass <c>0</c> for no rounding (rectangle clip).
@@ -270,6 +307,20 @@ public sealed class Modifier
     {
         var dp = cornerRadius.Value;
         return Append(curr => ComposeBridges.ModifierClipRoundedCorners(curr, dp));
+    }
+
+    /// <summary>
+    /// <c>Modifier.clip(shape)</c> — clips drawing (and pointer hits)
+    /// to the supplied <paramref name="shape"/>. Use with
+    /// <see cref="ComposeNet.Shape.Circle"/> for circular clips,
+    /// <see cref="ComposeNet.Shape.CutCorners(Dp)"/> for chamfered
+    /// corners, or any other shape factory. The shape is captured by
+    /// the closure so its Java peer stays alive across recompositions.
+    /// </summary>
+    public Modifier Clip(Shape shape)
+    {
+        System.ArgumentNullException.ThrowIfNull(shape);
+        return Append(curr => ComposeBridges.ModifierClip(curr, shape.Handle));
     }
 
     /// <summary>
@@ -373,6 +424,236 @@ public sealed class Modifier
                     $"Current scope kind: {kind}.")
             };
         });
+    }
+
+    /// <summary>
+    /// <c>Modifier.widthIn(min, max)</c> — adds a min and/or max width
+    /// constraint. Pass <c>null</c> for either bound to leave it
+    /// unconstrained (Kotlin's <c>Dp.Unspecified</c> default), so
+    /// <c>WidthIn(min: 100)</c> caps only the lower bound.
+    /// </summary>
+    public Modifier WidthIn(Dp? min = null, Dp? max = null) =>
+        Append(curr => ComposeBridges.ModifierWidthIn(curr, min, max));
+
+    /// <summary>
+    /// <c>Modifier.heightIn(min, max)</c> — adds a min and/or max height
+    /// constraint. Pass <c>null</c> for either bound to leave it
+    /// unconstrained.
+    /// </summary>
+    public Modifier HeightIn(Dp? min = null, Dp? max = null) =>
+        Append(curr => ComposeBridges.ModifierHeightIn(curr, min, max));
+
+    /// <summary>
+    /// <c>Modifier.sizeIn(minWidth, minHeight, maxWidth, maxHeight)</c> —
+    /// constrains both axes. Pass <c>null</c> for any bound to leave it
+    /// unconstrained.
+    /// </summary>
+    public Modifier SizeIn(Dp? minWidth = null, Dp? minHeight = null, Dp? maxWidth = null, Dp? maxHeight = null) =>
+        Append(curr => ComposeBridges.ModifierSizeIn(curr, minWidth, minHeight, maxWidth, maxHeight));
+
+    /// <summary>
+    /// <c>Modifier.requiredSize(size)</c> — declares an exact size that
+    /// bypasses the parent's constraints (the composable is allowed to
+    /// be drawn outside the parent if needed). Use sparingly; prefer
+    /// <see cref="Size(Dp)"/> for normal layout.
+    /// </summary>
+    public Modifier RequiredSize(Dp size)
+    {
+        var dp = size.Value;
+        return Append(curr => ComposeBridges.ModifierRequiredSizeAll(curr, dp));
+    }
+
+    /// <summary>
+    /// <c>Modifier.requiredSize(width, height)</c> — overload taking
+    /// independent width and height (each bypassing parent constraints).
+    /// </summary>
+    public Modifier RequiredSize(Dp width, Dp height)
+    {
+        var w = width.Value;
+        var h = height.Value;
+        return Append(curr => ComposeBridges.ModifierRequiredSizeWH(curr, w, h));
+    }
+
+    /// <summary>
+    /// <c>Modifier.requiredWidth(width)</c> — declares an exact width
+    /// that bypasses the parent's constraints.
+    /// </summary>
+    public Modifier RequiredWidth(Dp width)
+    {
+        var w = width.Value;
+        return Append(curr => ComposeBridges.ModifierRequiredWidth(curr, w));
+    }
+
+    /// <summary>
+    /// <c>Modifier.requiredHeight(height)</c> — declares an exact height
+    /// that bypasses the parent's constraints.
+    /// </summary>
+    public Modifier RequiredHeight(Dp height)
+    {
+        var h = height.Value;
+        return Append(curr => ComposeBridges.ModifierRequiredHeight(curr, h));
+    }
+
+    /// <summary>
+    /// <c>Modifier.defaultMinSize(minWidth, minHeight)</c> — supplies a
+    /// minimum size that's only used when the parent doesn't already
+    /// constrain that dimension. Useful for default-sized buttons /
+    /// chips that should grow with content but never shrink below a
+    /// hit-target floor. Pass <c>null</c> for either bound to leave it
+    /// unspecified.
+    /// </summary>
+    public Modifier DefaultMinSize(Dp? minWidth = null, Dp? minHeight = null) =>
+        Append(curr => ComposeBridges.ModifierDefaultMinSize(curr, minWidth, minHeight));
+
+    /// <summary>
+    /// <c>Modifier.wrapContentSize(unbounded)</c> — measures content
+    /// without imposing the parent's constraints, then centers the
+    /// result inside the parent's available space. Set
+    /// <paramref name="unbounded"/> to <c>true</c> to let content
+    /// overflow the parent.
+    /// </summary>
+    public Modifier WrapContentSize(bool unbounded = false) =>
+        Append(curr => ComposeBridges.ModifierWrapContentSize(curr, unbounded));
+
+    /// <summary>
+    /// <c>Modifier.wrapContentWidth(unbounded)</c> — same as
+    /// <see cref="WrapContentSize(bool)"/> but only relaxes the width
+    /// axis.
+    /// </summary>
+    public Modifier WrapContentWidth(bool unbounded = false) =>
+        Append(curr => ComposeBridges.ModifierWrapContentWidth(curr, unbounded));
+
+    /// <summary>
+    /// <c>Modifier.wrapContentHeight(unbounded)</c> — same as
+    /// <see cref="WrapContentSize(bool)"/> but only relaxes the height
+    /// axis.
+    /// </summary>
+    public Modifier WrapContentHeight(bool unbounded = false) =>
+        Append(curr => ComposeBridges.ModifierWrapContentHeight(curr, unbounded));
+
+    /// <summary>
+    /// <c>Modifier.aspectRatio(ratio, matchHeightConstraintsFirst)</c> —
+    /// forces the composable's width-to-height ratio.
+    /// <paramref name="ratio"/> is <c>width / height</c>: <c>16f / 9f</c>
+    /// for a wide video frame, <c>1f</c> for a square. When
+    /// <paramref name="matchHeightConstraintsFirst"/> is <c>true</c>, the
+    /// height constraint is preferred when both width and height are
+    /// bounded; otherwise width wins (Kotlin's default).
+    /// </summary>
+    public Modifier AspectRatio(float ratio, bool matchHeightConstraintsFirst = false) =>
+        Append(curr => ComposeBridges.ModifierAspectRatio(curr, ratio, matchHeightConstraintsFirst));
+
+    /// <summary>
+    /// <c>Modifier.offset(x, y)</c> — shifts the composable's draw
+    /// position by (x, y) without affecting the layout slot the parent
+    /// allocates for it. Layout-direction-aware (start/end on RTL).
+    /// Pass <c>null</c> for either axis to leave it at <c>0.dp</c>.
+    /// </summary>
+    public Modifier Offset(Dp? x = null, Dp? y = null) =>
+        Append(curr => ComposeBridges.ModifierOffset(curr, x, y));
+
+    /// <summary>
+    /// <c>Modifier.absoluteOffset(x, y)</c> — like <see cref="Offset"/>
+    /// but always uses absolute (left/right) axes, ignoring layout
+    /// direction.
+    /// </summary>
+    public Modifier AbsoluteOffset(Dp? x = null, Dp? y = null) =>
+        Append(curr => ComposeBridges.ModifierAbsoluteOffset(curr, x, y));
+
+    /// <summary>
+    /// <c>Modifier.zIndex(z)</c> — sets the draw order within a parent
+    /// layout. Children with higher <paramref name="z"/> draw on top of
+    /// siblings with lower values. Defaults to <c>0f</c>.
+    /// </summary>
+    public Modifier ZIndex(float z) =>
+        Append(curr => ComposeBridges.ModifierZIndex(curr, z));
+
+    /// <summary>
+    /// <c>Modifier.alpha(alpha)</c> — applies an alpha multiplier to
+    /// the composable's draw output. <c>0f</c> is fully transparent;
+    /// <c>1f</c> is fully opaque. Cheap to animate (forces a graphics
+    /// layer).
+    /// </summary>
+    public Modifier Alpha(float alpha) =>
+        Append(curr => ComposeBridges.ModifierAlpha(curr, alpha));
+
+    /// <summary>
+    /// <c>Modifier.rotate(degrees)</c> — rotates the composable around
+    /// its center by <paramref name="degrees"/>. Negative values rotate
+    /// counter-clockwise.
+    /// </summary>
+    public Modifier Rotate(float degrees) =>
+        Append(curr => ComposeBridges.ModifierRotate(curr, degrees));
+
+    /// <summary>
+    /// <c>Modifier.scale(scale)</c> — uniform scale around the
+    /// composable's center.
+    /// </summary>
+    public Modifier Scale(float scale) =>
+        Append(curr => ComposeBridges.ModifierScaleUniform(curr, scale));
+
+    /// <summary>
+    /// <c>Modifier.scale(scaleX, scaleY)</c> — independent X / Y scale
+    /// around the composable's center.
+    /// </summary>
+    public Modifier Scale(float scaleX, float scaleY) =>
+        Append(curr => ComposeBridges.ModifierScaleXY(curr, scaleX, scaleY));
+
+    /// <summary>
+    /// <c>Modifier.shadow(elevation, shape)</c> — draws a soft drop
+    /// shadow under the composable. <paramref name="elevation"/> is the
+    /// shadow's apparent depth in dp. Pass a non-null
+    /// <paramref name="shape"/> to clip the shadow to a custom outline;
+    /// otherwise it follows Kotlin's default <c>RectangleShape</c>. The
+    /// shape is captured by the closure so its Java peer stays alive
+    /// across recompositions. Kotlin's default for the underlying
+    /// <c>clip</c> parameter (<c>elevation &gt; 0.dp</c>) is honored.
+    /// </summary>
+    public Modifier Shadow(Dp elevation, Shape? shape = null)
+    {
+        var e = elevation.Value;
+        return Append(curr => ComposeBridges.ModifierShadow(curr, e, shape?.Handle));
+    }
+
+    /// <summary>
+    /// <c>Modifier.imePadding()</c> — pads the composable so it sits
+    /// above the soft keyboard (IME) when it's visible. Use under
+    /// edge-to-edge to keep input controls visible.
+    /// </summary>
+    public Modifier ImePadding() =>
+        Append(curr => ComposeBridges.ModifierImePadding(curr));
+
+    /// <summary>
+    /// <c>Modifier.navigationBarsPadding()</c> — pads for the system
+    /// navigation bar inset only.
+    /// </summary>
+    public Modifier NavigationBarsPadding() =>
+        Append(curr => ComposeBridges.ModifierNavigationBarsPadding(curr));
+
+    /// <summary>
+    /// <c>Modifier.statusBarsPadding()</c> — pads for the status bar
+    /// inset only.
+    /// </summary>
+    public Modifier StatusBarsPadding() =>
+        Append(curr => ComposeBridges.ModifierStatusBarsPadding(curr));
+
+    /// <summary>
+    /// <c>Modifier.displayCutoutPadding()</c> — pads for display cutouts
+    /// (notches, hole-punch cameras) so content doesn't get clipped by
+    /// hardware features.
+    /// </summary>
+    public Modifier DisplayCutoutPadding() =>
+        Append(curr => ComposeBridges.ModifierDisplayCutoutPadding(curr));
+
+    /// <summary>
+    /// <c>Modifier.testTag(tag)</c> — attaches a stable identifier for
+    /// UI testing frameworks (Compose UI Test, Espresso). Has no visual
+    /// effect; only affects the semantics tree.
+    /// </summary>
+    public Modifier TestTag(string tag)
+    {
+        System.ArgumentNullException.ThrowIfNull(tag);
+        return Append(curr => ComposeBridges.ModifierTestTag(curr, tag));
     }
 
     /// <summary>

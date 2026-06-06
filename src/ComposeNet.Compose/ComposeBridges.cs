@@ -278,11 +278,19 @@ internal static partial class ComposeBridges
     public static partial void Text(
         string text,
         IModifier? modifier,
+        long? color,
         Sp? fontSize,
+        FontStyle? fontStyle,
         FontWeight? fontWeight,
+        FontFamily? fontFamily,
         Sp? letterSpacing,
         TextDecoration? decoration,
+        TextAlign? align,
         Sp? lineHeight,
+        TextOverflow? overflow,
+        bool? softWrap,
+        int? maxLines,
+        int? minLines,
         IComposer composer);
 
     // androidx.compose.material3.ButtonKt.Button
@@ -624,8 +632,24 @@ internal static partial class ComposeBridges
         Signature = TextFieldStringSig,
         Defaults  = typeof(TextFieldDefault))]
     [ComposeFacade]
-    public static partial void TextField(string value, [Callback(typeof(string))] IFunction1 onValueChange,
-                                         IModifier? modifier, IComposer composer);
+    public static partial void TextField(
+        string value,
+        [Callback(typeof(string))] IFunction1 onValueChange,
+        IModifier? modifier,
+        bool? enabled,
+        bool? readOnly,
+        IFunction2? label,
+        IFunction2? placeholder,
+        IFunction2? leadingIcon,
+        IFunction2? trailingIcon,
+        IFunction2? prefix,
+        IFunction2? suffix,
+        IFunction2? supportingText,
+        bool? isError,
+        bool? singleLine,
+        int? maxLines,
+        int? minLines,
+        IComposer composer);
 
     [ComposeBridge(
         Class     = "androidx/compose/material3/OutlinedTextFieldKt",
@@ -633,8 +657,24 @@ internal static partial class ComposeBridges
         Signature = TextFieldStringSig,
         Defaults  = typeof(TextFieldDefault))]
     [ComposeFacade]
-    public static partial void OutlinedTextField(string value, [Callback(typeof(string))] IFunction1 onValueChange,
-                                                 IModifier? modifier, IComposer composer);
+    public static partial void OutlinedTextField(
+        string value,
+        [Callback(typeof(string))] IFunction1 onValueChange,
+        IModifier? modifier,
+        bool? enabled,
+        bool? readOnly,
+        IFunction2? label,
+        IFunction2? placeholder,
+        IFunction2? leadingIcon,
+        IFunction2? trailingIcon,
+        IFunction2? prefix,
+        IFunction2? suffix,
+        IFunction2? supportingText,
+        bool? isError,
+        bool? singleLine,
+        int? maxLines,
+        int? minLines,
+        IComposer composer);
 
     // androidx.compose.material3.SecureTextFieldKt.{SecureTextField,OutlinedSecureTextField}-XvU6IwQ.
     // Both overloads have identical 23-user-param signatures: the
@@ -1423,8 +1463,8 @@ internal static partial class ComposeBridges
 
     // androidx.compose.foundation.BackgroundKt.background-bw27NRU$default —
     // (Modifier, Color, Shape). Color is mangled because it's a
-    // @JvmInline value class (ULong). The C# wrapper supplies color
-    // and lets shape default to RectangleShape.
+    // @JvmInline value class (ULong). The C# wrapper always supplies
+    // color; shape is optional (null → Kotlin default of RectangleShape).
     [ComposeBridge(
         Class     = "androidx/compose/foundation/BackgroundKt",
         JvmName   = "background-bw27NRU$default",
@@ -1432,7 +1472,7 @@ internal static partial class ComposeBridges
                     "Landroidx/compose/ui/graphics/Shape;ILjava/lang/Object;)" +
                     "Landroidx/compose/ui/Modifier;",
         Defaults  = typeof(ModifierBackgroundDefault))]
-    internal static partial IntPtr ModifierBackground(IntPtr modifier, long color);
+    internal static partial IntPtr ModifierBackground(IntPtr modifier, long color, IntPtr? shape);
 
     // androidx.compose.foundation.BorderKt.border-xT4_qwU$default —
     // (Modifier, Dp width, Color, Shape). Both width and color are
@@ -1494,6 +1534,251 @@ internal static partial class ComposeBridges
         Defaults  = typeof(ModifierHorizontalScrollDefault))]
     internal static partial IntPtr ModifierHorizontalScroll(
         IntPtr modifier, IntPtr state, bool enabled, bool reverseScrolling);
+
+    // androidx.compose.foundation.layout.SizeKt — ranged size constraints.
+    // All Dp params are `@JvmInline value class Dp(val value: Float)`
+    // hence the mangled JVM names. Each bridge takes Dp? per parameter so
+    // a `null` value leaves the corresponding $default bit set and Kotlin
+    // substitutes `Dp.Unspecified` (no constraint), letting callers
+    // express one-sided constraints like `Modifier.WidthIn(min: 100)`.
+    [ComposeBridge(
+        Class     = "androidx/compose/foundation/layout/SizeKt",
+        JvmName   = "widthIn-VpY3zN4$default",
+        Signature = "(Landroidx/compose/ui/Modifier;FFILjava/lang/Object;)" +
+                    "Landroidx/compose/ui/Modifier;",
+        Defaults  = typeof(ModifierWidthInDefault))]
+    internal static partial IntPtr ModifierWidthIn(IntPtr modifier, Dp? min, Dp? max);
+
+    [ComposeBridge(
+        Class     = "androidx/compose/foundation/layout/SizeKt",
+        JvmName   = "heightIn-VpY3zN4$default",
+        Signature = "(Landroidx/compose/ui/Modifier;FFILjava/lang/Object;)" +
+                    "Landroidx/compose/ui/Modifier;",
+        Defaults  = typeof(ModifierHeightInDefault))]
+    internal static partial IntPtr ModifierHeightIn(IntPtr modifier, Dp? min, Dp? max);
+
+    [ComposeBridge(
+        Class     = "androidx/compose/foundation/layout/SizeKt",
+        JvmName   = "sizeIn-qDBjuR0$default",
+        Signature = "(Landroidx/compose/ui/Modifier;FFFFILjava/lang/Object;)" +
+                    "Landroidx/compose/ui/Modifier;",
+        Defaults  = typeof(ModifierSizeInDefault))]
+    internal static partial IntPtr ModifierSizeIn(IntPtr modifier, Dp? minWidth, Dp? minHeight, Dp? maxWidth, Dp? maxHeight);
+
+    [ComposeBridge(
+        Class     = "androidx/compose/foundation/layout/SizeKt",
+        JvmName   = "defaultMinSize-VpY3zN4$default",
+        Signature = "(Landroidx/compose/ui/Modifier;FFILjava/lang/Object;)" +
+                    "Landroidx/compose/ui/Modifier;",
+        Defaults  = typeof(ModifierDefaultMinSizeDefault))]
+    internal static partial IntPtr ModifierDefaultMinSize(IntPtr modifier, Dp? minWidth, Dp? minHeight);
+
+    // androidx.compose.foundation.layout.SizeKt — required size variants.
+    // requiredSize / requiredWidth / requiredHeight bypass parent
+    // constraints (clip-out is permitted). No $default — both args are
+    // mandatory positional. Plain-static shape, no auto-mask.
+    [ComposeBridge(
+        Class     = "androidx/compose/foundation/layout/SizeKt",
+        JvmName   = "requiredSize-3ABfNKs",
+        Signature = "(Landroidx/compose/ui/Modifier;F)Landroidx/compose/ui/Modifier;")]
+    internal static partial IntPtr ModifierRequiredSizeAll(IntPtr modifier, float dp);
+
+    [ComposeBridge(
+        Class     = "androidx/compose/foundation/layout/SizeKt",
+        JvmName   = "requiredSize-VpY3zN4",
+        Signature = "(Landroidx/compose/ui/Modifier;FF)Landroidx/compose/ui/Modifier;")]
+    internal static partial IntPtr ModifierRequiredSizeWH(IntPtr modifier, float width, float height);
+
+    [ComposeBridge(
+        Class     = "androidx/compose/foundation/layout/SizeKt",
+        JvmName   = "requiredWidth-3ABfNKs",
+        Signature = "(Landroidx/compose/ui/Modifier;F)Landroidx/compose/ui/Modifier;")]
+    internal static partial IntPtr ModifierRequiredWidth(IntPtr modifier, float dp);
+
+    [ComposeBridge(
+        Class     = "androidx/compose/foundation/layout/SizeKt",
+        JvmName   = "requiredHeight-3ABfNKs",
+        Signature = "(Landroidx/compose/ui/Modifier;F)Landroidx/compose/ui/Modifier;")]
+    internal static partial IntPtr ModifierRequiredHeight(IntPtr modifier, float dp);
+
+    // androidx.compose.foundation.layout.SizeKt — wrapContent variants.
+    // Each takes an Alignment (or Alignment.Horizontal / Vertical) and
+    // an `unbounded` boolean. We always supply the boolean (bit cleared)
+    // and leave alignment to Kotlin's default (Center / CenterHorizontally
+    // / CenterVertically — bit kept set). Names are not mangled (no
+    // inline-class params).
+    [ComposeBridge(
+        Class     = "androidx/compose/foundation/layout/SizeKt",
+        JvmName   = "wrapContentSize$default",
+        Signature = "(Landroidx/compose/ui/Modifier;Landroidx/compose/ui/Alignment;ZILjava/lang/Object;)" +
+                    "Landroidx/compose/ui/Modifier;",
+        Defaults  = typeof(ModifierWrapContentSizeDefault))]
+    internal static partial IntPtr ModifierWrapContentSize(IntPtr modifier, bool unbounded);
+
+    [ComposeBridge(
+        Class     = "androidx/compose/foundation/layout/SizeKt",
+        JvmName   = "wrapContentWidth$default",
+        Signature = "(Landroidx/compose/ui/Modifier;Landroidx/compose/ui/Alignment$Horizontal;ZILjava/lang/Object;)" +
+                    "Landroidx/compose/ui/Modifier;",
+        Defaults  = typeof(ModifierWrapContentWidthDefault))]
+    internal static partial IntPtr ModifierWrapContentWidth(IntPtr modifier, bool unbounded);
+
+    [ComposeBridge(
+        Class     = "androidx/compose/foundation/layout/SizeKt",
+        JvmName   = "wrapContentHeight$default",
+        Signature = "(Landroidx/compose/ui/Modifier;Landroidx/compose/ui/Alignment$Vertical;ZILjava/lang/Object;)" +
+                    "Landroidx/compose/ui/Modifier;",
+        Defaults  = typeof(ModifierWrapContentHeightDefault))]
+    internal static partial IntPtr ModifierWrapContentHeight(IntPtr modifier, bool unbounded);
+
+    // androidx.compose.foundation.layout.AspectRatioKt.aspectRatio$default —
+    // (Modifier, Float ratio, Boolean matchHeightConstraintsFirst). Both
+    // params are non-inline so the JVM name is unmangled. Both bits are
+    // cleared when the caller supplies values (the auto-mask treats
+    // non-nullable primitives as unconditional clears).
+    [ComposeBridge(
+        Class     = "androidx/compose/foundation/layout/AspectRatioKt",
+        JvmName   = "aspectRatio$default",
+        Signature = "(Landroidx/compose/ui/Modifier;FZILjava/lang/Object;)" +
+                    "Landroidx/compose/ui/Modifier;",
+        Defaults  = typeof(ModifierAspectRatioDefault))]
+    internal static partial IntPtr ModifierAspectRatio(IntPtr modifier, float ratio, bool matchHeightConstraintsFirst);
+
+    // androidx.compose.foundation.layout.OffsetKt — Dp-Dp offset shifts
+    // a composable's draw position by (x, y) without affecting its parent
+    // layout slot. `offset` is layout-direction-aware (start/end on RTL);
+    // `absoluteOffset` is always absolute (left/right). Both mangled
+    // because of @JvmInline value class Dp.
+    [ComposeBridge(
+        Class     = "androidx/compose/foundation/layout/OffsetKt",
+        JvmName   = "offset-VpY3zN4$default",
+        Signature = "(Landroidx/compose/ui/Modifier;FFILjava/lang/Object;)" +
+                    "Landroidx/compose/ui/Modifier;",
+        Defaults  = typeof(ModifierOffsetDefault))]
+    internal static partial IntPtr ModifierOffset(IntPtr modifier, Dp? x, Dp? y);
+
+    [ComposeBridge(
+        Class     = "androidx/compose/foundation/layout/OffsetKt",
+        JvmName   = "absoluteOffset-VpY3zN4$default",
+        Signature = "(Landroidx/compose/ui/Modifier;FFILjava/lang/Object;)" +
+                    "Landroidx/compose/ui/Modifier;",
+        Defaults  = typeof(ModifierAbsoluteOffsetDefault))]
+    internal static partial IntPtr ModifierAbsoluteOffset(IntPtr modifier, Dp? x, Dp? y);
+
+    // androidx.compose.ui.ZIndexModifierKt.zIndex(Modifier, Float) — sets
+    // the draw order within a parent layout (higher z draws later, on
+    // top). No $default. Plain-static, unmangled.
+    [ComposeBridge(
+        Class     = "androidx/compose/ui/ZIndexModifierKt",
+        JvmName   = "zIndex",
+        Signature = "(Landroidx/compose/ui/Modifier;F)Landroidx/compose/ui/Modifier;")]
+    internal static partial IntPtr ModifierZIndex(IntPtr modifier, float z);
+
+    // androidx.compose.ui.draw.AlphaKt.alpha(Modifier, Float) — sets the
+    // composable's alpha (0 = invisible, 1 = opaque). Forces a graphics
+    // layer; cheap to animate.
+    [ComposeBridge(
+        Class     = "androidx/compose/ui/draw/AlphaKt",
+        JvmName   = "alpha",
+        Signature = "(Landroidx/compose/ui/Modifier;F)Landroidx/compose/ui/Modifier;")]
+    internal static partial IntPtr ModifierAlpha(IntPtr modifier, float alpha);
+
+    // androidx.compose.ui.draw.RotateKt.rotate(Modifier, Float) — rotates
+    // around the composable's center by `degrees`.
+    [ComposeBridge(
+        Class     = "androidx/compose/ui/draw/RotateKt",
+        JvmName   = "rotate",
+        Signature = "(Landroidx/compose/ui/Modifier;F)Landroidx/compose/ui/Modifier;")]
+    internal static partial IntPtr ModifierRotate(IntPtr modifier, float degrees);
+
+    // androidx.compose.ui.draw.ScaleKt.scale(Modifier, Float) — uniform
+    // scale around the composable's center.
+    [ComposeBridge(
+        Class     = "androidx/compose/ui/draw/ScaleKt",
+        JvmName   = "scale",
+        Signature = "(Landroidx/compose/ui/Modifier;F)Landroidx/compose/ui/Modifier;")]
+    internal static partial IntPtr ModifierScaleUniform(IntPtr modifier, float scale);
+
+    // androidx.compose.ui.draw.ScaleKt.scale(Modifier, Float, Float) —
+    // independent X/Y scale. Distinct C# name avoids the partial-method
+    // overload collision; the JVM resolves to the (M,F,F) overload.
+    [ComposeBridge(
+        Class     = "androidx/compose/ui/draw/ScaleKt",
+        JvmName   = "scale",
+        Signature = "(Landroidx/compose/ui/Modifier;FF)Landroidx/compose/ui/Modifier;")]
+    internal static partial IntPtr ModifierScaleXY(IntPtr modifier, float scaleX, float scaleY);
+
+    // androidx.compose.ui.draw.ShadowKt.shadow-ziNgDLE$default —
+    // (Modifier, Dp elevation, Shape shape, Boolean clip). Mangled because
+    // elevation is @JvmInline value class Dp. The C# wrapper exposes
+    // elevation + shape; Kotlin's default for `clip` is
+    // `elevation > 0.dp` which we honor by leaving that bit set.
+    [ComposeBridge(
+        Class     = "androidx/compose/ui/draw/ShadowKt",
+        JvmName   = "shadow-ziNgDLE$default",
+        Signature = "(Landroidx/compose/ui/Modifier;F" +
+                    "Landroidx/compose/ui/graphics/Shape;ZILjava/lang/Object;)" +
+                    "Landroidx/compose/ui/Modifier;",
+        Defaults  = typeof(ModifierShadowDefault))]
+    internal static partial IntPtr ModifierShadow(IntPtr modifier, float elevation, IntPtr? shape);
+
+    // androidx.compose.foundation.layout.WindowInsetsPadding_androidKt —
+    // additional inset-padding helpers. Same shape as the existing
+    // safeDrawingPadding / systemBarsPadding bridges.
+    [ComposeBridge(
+        Class     = "androidx/compose/foundation/layout/WindowInsetsPadding_androidKt",
+        JvmName   = "imePadding",
+        Signature = "(Landroidx/compose/ui/Modifier;)Landroidx/compose/ui/Modifier;")]
+    internal static partial IntPtr ModifierImePadding(IntPtr modifier);
+
+    [ComposeBridge(
+        Class     = "androidx/compose/foundation/layout/WindowInsetsPadding_androidKt",
+        JvmName   = "navigationBarsPadding",
+        Signature = "(Landroidx/compose/ui/Modifier;)Landroidx/compose/ui/Modifier;")]
+    internal static partial IntPtr ModifierNavigationBarsPadding(IntPtr modifier);
+
+    [ComposeBridge(
+        Class     = "androidx/compose/foundation/layout/WindowInsetsPadding_androidKt",
+        JvmName   = "statusBarsPadding",
+        Signature = "(Landroidx/compose/ui/Modifier;)Landroidx/compose/ui/Modifier;")]
+    internal static partial IntPtr ModifierStatusBarsPadding(IntPtr modifier);
+
+    [ComposeBridge(
+        Class     = "androidx/compose/foundation/layout/WindowInsetsPadding_androidKt",
+        JvmName   = "displayCutoutPadding",
+        Signature = "(Landroidx/compose/ui/Modifier;)Landroidx/compose/ui/Modifier;")]
+    internal static partial IntPtr ModifierDisplayCutoutPadding(IntPtr modifier);
+
+    // androidx.compose.ui.platform.TestTagKt.testTag(Modifier, String) —
+    // attaches a test tag for UI testing frameworks.
+    [ComposeBridge(
+        Class     = "androidx/compose/ui/platform/TestTagKt",
+        JvmName   = "testTag",
+        Signature = "(Landroidx/compose/ui/Modifier;Ljava/lang/String;)" +
+                    "Landroidx/compose/ui/Modifier;")]
+    internal static partial IntPtr ModifierTestTag(IntPtr modifier, string tag);
+
+    // Shape factories — additional overloads of RoundedCornerShape /
+    // CutCornerShape beyond the existing Dp variant. The Int (percent)
+    // overloads aren't mangled because Int isn't an inline class. The
+    // Dp variant of CutCornerShape is mangled.
+    [ComposeBridge(
+        Class     = "androidx/compose/foundation/shape/RoundedCornerShapeKt",
+        JvmName   = "RoundedCornerShape",
+        Signature = "(I)Landroidx/compose/foundation/shape/RoundedCornerShape;")]
+    internal static partial IntPtr RoundedCornerShapePercent(int percent);
+
+    [ComposeBridge(
+        Class     = "androidx/compose/foundation/shape/CutCornerShapeKt",
+        JvmName   = "CutCornerShape-0680j_4",
+        Signature = "(F)Landroidx/compose/foundation/shape/CutCornerShape;")]
+    internal static partial IntPtr CutCornerShapeDp(float dp);
+
+    [ComposeBridge(
+        Class     = "androidx/compose/foundation/shape/CutCornerShapeKt",
+        JvmName   = "CutCornerShape",
+        Signature = "(I)Landroidx/compose/foundation/shape/CutCornerShape;")]
+    internal static partial IntPtr CutCornerShapePercent(int percent);
 
     // androidx.compose.material3.AppBarKt — TopAppBar / CenterAlignedTopAppBar
     // share the `-GHTll3U` shape (extra `expandedHeight: Dp` vs. the older
@@ -2145,6 +2430,7 @@ internal static partial class ComposeBridges
                     "Landroidx/compose/material3/BottomAppBarScrollBehavior;" +
                     "Landroidx/compose/runtime/Composer;II)V",
         Defaults  = typeof(BottomAppBarDefault))]
+    [ComposeFacade(Scope = "Row")]
     public static partial void BottomAppBar(
         IFunction3  actions,
         IModifier?  modifier,
@@ -2447,4 +2733,54 @@ internal static partial class ComposeBridges
             _composer:               composer,
             maxLines:                0,
             _changed:                defaults);
+
+    // WideNavigationRailKt.WideNavigationRailItem-pli-t6k. Bound C# wrapper
+    // has misnamed trailing params: `iconPosition` is actually $changed,
+    // `_changed` is actually $default. The mid-list `int p7` is the real
+    // iconPosition slot (not user-exposed).
+    [ComposeFacade(Defaults = typeof(WideNavigationRailItemDefault))]
+    public static partial void WideNavigationRailItem(
+        bool        selected,
+        IFunction0  onClick,
+        IFunction2  icon,
+        IFunction2? label,
+        IModifier?  modifier,
+        int         defaults,
+        IComposer   composer);
+
+    public static partial void WideNavigationRailItem(bool selected, IFunction0 onClick, IFunction2 icon, IFunction2? label, IModifier? modifier, int defaults, IComposer composer)
+        => AndroidX.Compose.Material3.WideNavigationRailKt.WideNavigationRailItem(
+            selected:          selected,
+            onClick:           onClick,
+            icon:              icon,
+            label:             label,
+            railExpanded:      false,
+            modifier:          modifier,
+            enabled:           true,
+            p7:                0,
+            colors:            null,
+            interactionSource: null,
+            _composer:         composer,
+            iconPosition:      0,
+            _changed:          defaults);
+
+    [ComposeFacade(Defaults = typeof(TriStateCheckboxDefault))]
+    public static partial void TriStateCheckbox(
+        AndroidX.Compose.UI.State.ToggleableState state,
+        IFunction0  onClick,
+        IModifier?  modifier,
+        int         defaults,
+        IComposer   composer);
+
+    public static partial void TriStateCheckbox(AndroidX.Compose.UI.State.ToggleableState state, IFunction0 onClick, IModifier? modifier, int defaults, IComposer composer)
+        => AndroidX.Compose.Material3.CheckboxKt.TriStateCheckbox(
+            state:             state,
+            onClick:           onClick,
+            modifier:          modifier,
+            enabled:           true,
+            colors:            null,
+            interactionSource: null,
+            _composer:         composer,
+            p7:                0,
+            _changed:          defaults);
 }

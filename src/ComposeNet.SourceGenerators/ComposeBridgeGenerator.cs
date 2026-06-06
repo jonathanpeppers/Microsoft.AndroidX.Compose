@@ -532,7 +532,7 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
 
                 var member = PascalCase(p.Name);
                 bool nullableValueType = ComposeValueTypes.TryGet(p.Type, out _, out _);
-                if (p.NullableAnnotation == NullableAnnotation.Annotated || p.Type.IsReferenceType || nullableValueType || IsNullableIntPtr(p.Type))
+                if (p.NullableAnnotation == NullableAnnotation.Annotated || p.Type.IsReferenceType || nullableValueType || IsNullableIntPtr(p.Type) || IsNullablePrimitive(p.Type))
                 {
                     sb.Append("        if (").Append(EscapeIdent(p.Name)).Append(" is not null) defaults &= ~(int)global::ComposeNet.")
                       .Append(enumName).Append('.').Append(member).AppendLine(";");
@@ -710,6 +710,16 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
             sb.Append('(').Append(p.Name).Append(" ?? global::System.IntPtr.Zero)");
             return;
         }
+        if (IsNullablePrimitive(p.Type))
+        {
+            // `bool? / int? / long? / float? / double?` → null means
+            // "let the Kotlin default kick in"; pass the zero literal
+            // in that slot. The auto-mask logic clears the matching
+            // `$default` bit only when the caller supplied a value.
+            var defaultLit = NullablePrimitiveZeroLiteral(p.Type);
+            sb.Append('(').Append(EscapeIdent(p.Name)).Append(" ?? ").Append(defaultLit).Append(')');
+            return;
+        }
         if (ComposeValueTypes.TryGet(p.Type, out _, out var info))
         {
             // Recognized Compose @JvmInline value class. The lowering
@@ -757,7 +767,8 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
             or SpecialType.System_String)
             return false;
         if (IsNullableIntPtr(p.Type)) return false;
-        // Recognized Compose value types (Color/Dp/Sp/Em/TextAlign) lower
+        if (IsNullablePrimitive(p.Type)) return false;
+        // Recognized Compose value types (Dp/Sp/Em/TextOverflow) lower
         // to JNI primitives — no managed handle to keep alive.
         if (ComposeValueTypes.TryGet(p.Type, out _, out _)) return false;
         return true;
@@ -768,6 +779,48 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
         n.OriginalDefinition.SpecialType == SpecialType.System_Nullable_T &&
         n.TypeArguments.Length == 1 &&
         n.TypeArguments[0].SpecialType == SpecialType.System_IntPtr;
+
+    /// <summary>
+    /// True for parameters typed as <c>Nullable&lt;T&gt;</c> where
+    /// <c>T</c> is one of the primitive JNI-friendly value types
+    /// (<c>bool</c>, <c>int</c>, <c>long</c>, <c>float</c>,
+    /// <c>double</c>). These let a bridge expose an "optional" Compose
+    /// param: <c>null</c> leaves the <c>$default</c> bit set so Kotlin's
+    /// real default applies; a value clears the bit and is passed
+    /// through to the JNI primitive slot.
+    /// </summary>
+    static bool IsNullablePrimitive(ITypeSymbol t)
+    {
+        if (t is not INamedTypeSymbol n) return false;
+        if (n.OriginalDefinition.SpecialType != SpecialType.System_Nullable_T) return false;
+        if (n.TypeArguments.Length != 1) return false;
+        return n.TypeArguments[0].SpecialType is
+            SpecialType.System_Boolean
+            or SpecialType.System_Int32
+            or SpecialType.System_Int64
+            or SpecialType.System_Single
+            or SpecialType.System_Double;
+    }
+
+    /// <summary>
+    /// Zero-literal expression for the underlying primitive of a
+    /// <see cref="IsNullablePrimitive"/> type. Used as the
+    /// <c>?? default</c> fallback in <see cref="EmitUserArgValue"/>
+    /// when the caller passes <c>null</c>.
+    /// </summary>
+    static string NullablePrimitiveZeroLiteral(ITypeSymbol t)
+    {
+        var inner = ((INamedTypeSymbol)t).TypeArguments[0].SpecialType;
+        return inner switch
+        {
+            SpecialType.System_Boolean => "false",
+            SpecialType.System_Int32   => "0",
+            SpecialType.System_Int64   => "0L",
+            SpecialType.System_Single  => "0f",
+            SpecialType.System_Double  => "0d",
+            _ => "default",
+        };
+    }
 
     static bool IsModifierType(ITypeSymbol t)
     {

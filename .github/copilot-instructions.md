@@ -461,34 +461,64 @@ The generator now supports a wide range of facade shapes (Phases 1,
   source-generated enums, so the bit-name map has to come from a
   declarative `ComposeDefaults` declaration (not the generic form).
   Used for `Box`, `Column`, `Row`, `Spacer`, `Checkbox`, `Switch`,
-  `RadioButton`, `Slider`.
+  `RadioButton`, `Slider`, `WideNavigationRailItem`, `TriStateCheckbox`.
+
+  **Java enum primitives** (issue #67): the primitive-ctor slot detector
+  also accepts any reference type that derives transitively from
+  `Java.Lang.Enum`. The Compose binding generates `@JvmInline`-free
+  Kotlin/Java enums (e.g. `AndroidX.Compose.UI.State.ToggleableState`
+  with `On`, `Off`, `Indeterminate`) as `Java.Lang.Object` subclasses,
+  and these surface as ctor primitives forwarded directly to the
+  bridge — no JNI lowering required (see `TriStateCheckbox`).
+
+  **Hybrid container + named slots** (issue #67): a bridge with
+  exactly one non-nullable `IFunction3` body **plus** one or more
+  nullable `IFunction2?`/`IFunction3?` slots is now allowed when the
+  facade declares `[ComposeFacade(Scope = "...")]`. The non-nullable
+  Function3 stays as the container body (`RenderChildren`), the
+  nullable Function2/3 slots become named `ComposableNode?`
+  properties, and the class still derives from `ComposableContainer`
+  so caller-side collection-init syntax keeps working. Without
+  `Scope`, the bridge still classifies as a multi-slot leaf
+  (existing behavior — preserves `AssistChip`-style facades whose
+  required Function2 is a label, not a content slot). Used for
+  `BottomAppBar`.
 
 Facades that still stay hand-written are the ones the generator
 can't model:
 
+- Facades that call a bound binding method directly (no underlying
+  `[ComposeBridge]` to attach to) — `DropdownMenuItem`, `Icon`
+  (`ImageVector` overload). `WideNavigationRailItem` was migrated
+  to a Phase 8 wrapper-passthrough in issue #67.
+- Facades that branch between two bridges based on an optional
+  slot (`TopAppBar` — Subtitle toggles between `TopAppBar-GHTll3U`
+  and `MediumFlexibleTopAppBar-eXZ4JBQ`).
+- Drawer facades with a `confirmStateChange` adapter — the
+  per-`ComposableNode`-instance `DrawerConfirmStateChange` Java peer
+  has to live in a field on the facade (it's part of
+  `rememberDrawerState`'s cache key), and the Remember call also
+  consumes a user-supplied `initialValue` primitive. That combined
+  shape (per-instance `IFunction1` adapter + Phase 4b parameterised
+  Remember) isn't modelled by the generator yet:
+  `ModalNavigationDrawer`, `DismissibleNavigationDrawer`,
+  `PermanentNavigationDrawer`, `ModalWideNavigationRail`. The
+  permanent drawer doesn't actually need a veto adapter, but it
+  shares the hand-written family for consistency.
 - State-holder facades whose `RememberXxxState` bridge takes user
-  initialisation params (`TimePicker` / `TimeInput` need
-  `initialHour`/`initialMinute`/`is24Hour`; `SearchBar` and
-  `ModalBottomSheet`/`BottomSheetScaffold` similarly). Phase 4
+  parameters (`TimePicker` / `TimeInput` need
+  `initialHour`/`initialMinute`/`is24Hour`; `SearchBar`,
+  `ModalBottomSheet`, `BottomSheetScaffold` similarly). Phase 4
   supports the zero-user-param shape (`DatePicker`,
   `DateRangePicker`); parameterised remembers wait for Phase 4b.
 - Scope facades whose bodies do non-trivial work beyond
   `RenderContext.PushScope` (`SegmentedButton`,
   `SingleChoice`/`MultiChoiceSegmentedButtonRow`, the segmented
   scrollable tab rows).
-- Facades that call a bound binding method directly (no underlying
-  `[ComposeBridge]` to attach to) — `WideNavigationRailItem`,
-  `DropdownMenuItem`, `Icon` (`ImageVector` overload).
-- Facades that branch between two bridges based on an optional
-  slot (`TopAppBar` — Subtitle toggles between `TopAppBar-GHTll3U`
-  and `MediumFlexibleTopAppBar-eXZ4JBQ`).
-- Drawer facades with a `confirmStateChange` adapter
-  (`ModalNavigationDrawer`, `DismissibleNavigationDrawer`,
-  `PermanentNavigationDrawer`, `ModalWideNavigationRail`).
-- Container+slot facades like `BottomAppBar` whose required
-  Function3 is the container's content but also has an optional
-  Function2 slot — the generator's multi-slot rule (any nullable
-  Function2/3 → leaf) doesn't model this hybrid.
+- The `Icon` facade, which exposes two distinct constructors
+  (`ImageVector` vs. resource-id `Painter`) that route to two
+  different bridges. The generator emits one ctor + one `Render`
+  per facade, so the dual-shape control stays hand-written.
 
 Trying to apply `[ComposeFacade]` to an unsupported bridge will
 emit CN3002 (unsupported parameter), CN3003 (scope misuse), CN3005

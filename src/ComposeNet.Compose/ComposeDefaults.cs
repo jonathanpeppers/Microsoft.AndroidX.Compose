@@ -429,6 +429,53 @@ using ComposeNet;
 [assembly: ComposeDefaults("ModifierWeightDefault",
     "!modifier", "!weight", "fill")]
 
+// androidx.compose.foundation.layout.SizeKt — ranged size constraints.
+// Each bit corresponds to one Dp parameter. C# bridges declare each
+// param as `Dp?`, so the auto-mask clears the bit only when the user
+// supplies a non-null value (otherwise Kotlin substitutes
+// `Dp.Unspecified` — no constraint on that side).
+[assembly: ComposeDefaults("ModifierWidthInDefault", "min", "max")]
+[assembly: ComposeDefaults("ModifierHeightInDefault", "min", "max")]
+[assembly: ComposeDefaults("ModifierSizeInDefault",
+    "minWidth", "minHeight", "maxWidth", "maxHeight")]
+[assembly: ComposeDefaults("ModifierDefaultMinSizeDefault",
+    "minWidth", "minHeight")]
+
+// androidx.compose.foundation.layout.SizeKt — wrapContent variants.
+// Bit 0 = align (left to Kotlin's default — Center, etc.; the
+// param has no C# slot, generator emits IntPtr.Zero into the JNI
+// arg and the bit stays set). Bit 1 = unbounded — always supplied
+// by the C# wrapper, so the auto-mask must clear the bit; do NOT
+// prefix with `!` (that would skip auto-mask clearing and Kotlin
+// would always use its `false` default).
+[assembly: ComposeDefaults("ModifierWrapContentSizeDefault",
+    "align", "unbounded")]
+[assembly: ComposeDefaults("ModifierWrapContentWidthDefault",
+    "align", "unbounded")]
+[assembly: ComposeDefaults("ModifierWrapContentHeightDefault",
+    "align", "unbounded")]
+
+// androidx.compose.foundation.layout.AspectRatioKt.aspectRatio$default —
+// (Modifier, Float ratio, Boolean matchHeightConstraintsFirst). Bit 0
+// = ratio (always supplied), bit 1 = matchHeightConstraintsFirst (cleared
+// when the C# caller supplies a value; default false matches Kotlin).
+[assembly: ComposeDefaults("ModifierAspectRatioDefault",
+    "!ratio", "matchHeightConstraintsFirst")]
+
+// androidx.compose.foundation.layout.OffsetKt.offset / absoluteOffset —
+// (Modifier, Dp x, Dp y). Both Dp params are nullable in the C#
+// wrapper; null leaves Kotlin's default of 0.dp on that axis.
+[assembly: ComposeDefaults("ModifierOffsetDefault", "x", "y")]
+[assembly: ComposeDefaults("ModifierAbsoluteOffsetDefault", "x", "y")]
+
+// androidx.compose.ui.draw.ShadowKt.shadow-ziNgDLE$default —
+// (Modifier, Dp elevation, Shape shape, Boolean clip). Bit 0 =
+// elevation (always supplied), bit 1 = shape (auto-mask honors
+// null), bit 2 = clip (left to Kotlin's default of
+// `elevation > 0.dp`).
+[assembly: ComposeDefaults("ModifierShadowDefault",
+    "!elevation", "shape", "clip")]
+
 // androidx.compose.material3.NavigationRailKt.NavigationRail-qi6gXK8:
 // 6 user params, bit 5 = content provided.
 [assembly: ComposeDefaults("NavigationRailDefault",

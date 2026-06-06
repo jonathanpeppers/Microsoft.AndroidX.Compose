@@ -6,10 +6,10 @@ namespace ComposeNet;
 /// Caller-supplied state holder for <see cref="DateRangePicker"/>. The
 /// underlying JVM <c>androidx.compose.material3.DateRangePickerState</c>
 /// is created lazily the first time a <see cref="DateRangePicker"/>
-/// bound to this state is rendered; reads/writes to
+/// bound to this state is rendered; before that point reads from
 /// <see cref="SelectedStartDateMillis"/> /
-/// <see cref="SelectedEndDateMillis"/> before that point are
-/// no-ops/fallbacks.
+/// <see cref="SelectedEndDateMillis"/> return <c>null</c> and calls to
+/// <see cref="SetSelection"/> are no-ops.
 /// </summary>
 /// <remarks>
 /// Typical usage — <c>Remember</c> a state instance, pass it to a

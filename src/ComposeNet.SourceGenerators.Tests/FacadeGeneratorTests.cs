@@ -50,6 +50,7 @@ public class FacadeGeneratorTests
             }
             public sealed class Boolean : Object { public bool BooleanValue() => false; }
             public sealed class Float : Object { public float FloatValue() => 0f; }
+            public abstract class Enum : Object { }
         }
         namespace AndroidX.Compose.Runtime { public interface IComposer { } }
         namespace AndroidX.Compose.UI { public interface IModifier { } }
@@ -104,13 +105,16 @@ public class FacadeGeneratorTests
                 public float Value { get; }
                 public static long Pack(Em? e) => 0L;
             }
-            public readonly struct TextAlign
+            public readonly struct TextOverflow
             {
-                public TextAlign(int v) { Value = v; }
+                public TextOverflow(int v) { Value = v; }
                 public int Value { get; }
-                public static int Pack(TextAlign? a) => 0;
+                public static int Pack(TextOverflow? a) => 0;
             }
             public class FontWeight : Java.Lang.Object { }
+            public class FontStyle : Java.Lang.Object { }
+            public class FontFamily : Java.Lang.Object { }
+            public class TextAlign : Java.Lang.Object { }
             public class TextDecoration : Java.Lang.Object { }
             public class Shape : Java.Lang.Object { }
             public abstract class ComposableNode
@@ -340,6 +344,135 @@ public class FacadeGeneratorTests
 
         var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
         Assert.Empty(errors);
+    }
+
+    [Fact]
+    public void HybridContainer_RequiredFn3PlusNullableFn2_EmitsContainerWithNamedSlot()
+    {
+        var code = """
+            using AndroidX.Compose.Runtime;
+            using AndroidX.Compose.UI;
+            using ComposeNet;
+            using Kotlin.Jvm.Functions;
+
+            [assembly: ComposeDefaults("BottomAppBarDefault",
+                "!actions", "modifier", "floatingActionButton", "containerColor",
+                "contentColor", "tonalElevation", "contentPadding", "windowInsets",
+                "scrollBehavior")]
+
+            namespace ComposeNet
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(Class="androidx/compose/material3/AppBarKt", JvmName="BottomAppBar-qhFBPw4",
+                                   Signature="(Lkotlin/jvm/functions/Function3;Landroidx/compose/ui/Modifier;Lkotlin/jvm/functions/Function2;JJFLandroidx/compose/foundation/layout/PaddingValues;Landroidx/compose/foundation/layout/WindowInsets;Landroidx/compose/material3/BottomAppBarScrollBehavior;Landroidx/compose/runtime/Composer;II)V",
+                                   Defaults=typeof(BottomAppBarDefault))]
+                    [ComposeFacade(Scope = "Row")]
+                    public static partial void BottomAppBar(IFunction3 actions, IModifier? modifier, IFunction2? floatingActionButton, IComposer composer);
+                }
+            }
+            """;
+
+        var (output, diags, emitted) = Run(code, "BottomAppBar");
+        Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+        // Derives from ComposableContainer (container body), not ComposableNode.
+        Assert.Contains(": global::ComposeNet.ComposableContainer", emitted);
+        // Required Fn3 stays as container body: RenderChildren + PushScope(Row).
+        Assert.Contains("Wrap3(composer, (__scope, c) =>", emitted);
+        Assert.Contains("global::ComposeNet.RenderContext.PushScope(__scope, global::ComposeNet.ScopeKind.Row);", emitted);
+        Assert.Contains("RenderChildren(c);", emitted);
+        // Nullable Fn2 surfaces as a named property.
+        Assert.Contains("public global::ComposeNet.ComposableNode? FloatingActionButton { get; set; }", emitted);
+
+        var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
+        Assert.Empty(errors);
+    }
+
+    [Fact]
+    public void HybridContainer_WithoutScope_StillBehavesAsLeaf()
+    {
+        // Same shape as BottomAppBar but without [ComposeFacade(Scope=...)] —
+        // the generator must NOT treat as hybrid; both Fn slots become
+        // named properties (no RenderChildren, no ComposableContainer).
+        var code = """
+            using AndroidX.Compose.Runtime;
+            using AndroidX.Compose.UI;
+            using ComposeNet;
+            using Kotlin.Jvm.Functions;
+
+            [assembly: ComposeDefaults("FooBarDefault",
+                "!actions", "modifier", "floatingActionButton")]
+
+            namespace ComposeNet
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(Class="x/y/Z", JvmName="FooBar",
+                                   Signature="(Lkotlin/jvm/functions/Function3;Landroidx/compose/ui/Modifier;Lkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;II)V",
+                                   Defaults=typeof(FooBarDefault))]
+                    [ComposeFacade]
+                    public static partial void FooBar(IFunction3 actions, IModifier? modifier, IFunction2? floatingActionButton, IComposer composer);
+                }
+            }
+            """;
+
+        var (_, diags, emitted) = Run(code, "FooBar");
+        Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+        // No Scope → leaf shape: ComposableNode base, no RenderChildren.
+        Assert.Contains(": global::ComposeNet.ComposableNode", emitted);
+        Assert.DoesNotContain("RenderChildren", emitted);
+        Assert.Contains("public global::ComposeNet.ComposableNode? Actions { get; set; }", emitted);
+        Assert.Contains("public global::ComposeNet.ComposableNode? FloatingActionButton { get; set; }", emitted);
+    }
+
+    [Fact]
+    public void JavaEnumPrimitive_SurfacedAsCtorParam()
+    {
+        // Simulates ToggleableState — a class derived from Java.Lang.Enum.
+        // The generator must accept it as a primitive-like ctor slot.
+        var code = """
+            using AndroidX.Compose.Runtime;
+            using AndroidX.Compose.UI;
+            using ComposeNet;
+            using Kotlin.Jvm.Functions;
+
+            [assembly: ComposeDefaults("TriStateCheckboxDefault",
+                "!state", "!onClick", "modifier", "enabled", "colors", "interactionSource")]
+
+            namespace ComposeNet.Demo
+            {
+                public class FakeToggleableState : global::Java.Lang.Enum { }
+            }
+
+            namespace ComposeNet
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(Class="x/y/Z", JvmName="TriStateCheckbox",
+                                   Signature="(Landroidx/compose/ui/state/ToggleableState;Lkotlin/jvm/functions/Function0;Landroidx/compose/ui/Modifier;ZLandroidx/compose/material3/CheckboxColors;Landroidx/compose/foundation/interaction/MutableInteractionSource;Landroidx/compose/runtime/Composer;II)V",
+                                   Defaults=typeof(TriStateCheckboxDefault))]
+                    [ComposeFacade]
+                    public static partial void TriStateCheckbox(global::ComposeNet.Demo.FakeToggleableState state, IFunction0 onClick, IModifier? modifier, IComposer composer);
+                }
+            }
+            """;
+
+        var (output, diags, emitted) = Run(code, "TriStateCheckbox");
+        Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+        // Java enum surfaces as a ctor field + ctor param + bridge arg pass-through.
+        Assert.Contains("readonly global::ComposeNet.Demo.FakeToggleableState _state;", emitted);
+        Assert.Contains("global::ComposeNet.Demo.FakeToggleableState state", emitted);
+        Assert.Contains("ComposeBridges.TriStateCheckbox(_state,", emitted);
+
+        // Sanity-check: the synthetic compilation must actually compile —
+        // otherwise the generator could be matching against an
+        // IErrorTypeSymbol's syntactic Name/Namespace rather than truly
+        // exercising IsJavaEnum's inheritance walk.
+        var compileErrors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
+        Assert.Empty(compileErrors);
     }
 
     [Fact]
@@ -1562,8 +1695,11 @@ public class FacadeGeneratorTests
     }
 
     [Fact]
-    public void OptionalValue_TextAlignAndDpAreClassifiedAsValueTypes()
+    public void OptionalValue_TextOverflowAndDpAreClassifiedAsValueTypes()
     {
+        // TextOverflow is a non-nullable @JvmInline value class in
+        // Compose source — it travels as packed `I`. Dp is also packed
+        // (`F`). Both surface as nullable auto-properties.
         var code = """
             using AndroidX.Compose.Runtime;
             using AndroidX.Compose.UI;
@@ -1571,7 +1707,7 @@ public class FacadeGeneratorTests
             using Kotlin.Jvm.Functions;
 
             [assembly: ComposeDefaults("FooDefault",
-                "!a", "align", "size")]
+                "!a", "overflow", "size")]
 
             namespace ComposeNet
             {
@@ -1581,7 +1717,7 @@ public class FacadeGeneratorTests
                                    Signature="(Ljava/lang/String;IFLandroidx/compose/runtime/Composer;II)V",
                                    Defaults=typeof(FooDefault))]
                     [ComposeFacade]
-                    public static partial void Foo(string a, TextAlign? align, Dp? size, IComposer composer);
+                    public static partial void Foo(string a, TextOverflow? overflow, Dp? size, IComposer composer);
                 }
             }
             """;
@@ -1589,7 +1725,7 @@ public class FacadeGeneratorTests
         var (output, diags, emitted) = Run(code, "Foo");
         Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
         Assert.NotNull(emitted);
-        Assert.Contains("public global::ComposeNet.TextAlign? Align { get; set; }", emitted);
+        Assert.Contains("public global::ComposeNet.TextOverflow? Overflow { get; set; }", emitted);
         Assert.Contains("public global::ComposeNet.Dp? Size { get; set; }", emitted);
 
         var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
@@ -1636,6 +1772,56 @@ public class FacadeGeneratorTests
         Assert.Contains(
             "if (FontWeight is not null) __defaults &= ~(int)global::ComposeNet.BarDefault.FontWeight;",
             emitted);
+        var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
+        Assert.Empty(errors);
+    }
+
+    [Fact]
+    public void OptionalValue_NullablePrimitivesEmitNullableAutoProperties()
+    {
+        // bool? / int? / long? params surface as Optional auto-properties
+        // — null leaves the Kotlin default in place via the auto-mask
+        // bit, a value clears the bit and lowers to the JNI primitive
+        // slot.
+        var code = """
+            using AndroidX.Compose.Runtime;
+            using AndroidX.Compose.UI;
+            using ComposeNet;
+            using Kotlin.Jvm.Functions;
+
+            [assembly: ComposeDefaults("PrimDefault",
+                "!text", "modifier", "softWrap", "maxLines", "color")]
+
+            namespace ComposeNet
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(Class="x/Y", JvmName="F",
+                                   Signature="(Ljava/lang/String;Landroidx/compose/ui/Modifier;ZIJLandroidx/compose/runtime/Composer;II)V",
+                                   Defaults=typeof(PrimDefault))]
+                    [ComposeFacade]
+                    public static partial void F(
+                        string text, IModifier? modifier,
+                        bool? softWrap, int? maxLines, long? color,
+                        IComposer composer);
+                }
+            }
+            """;
+
+        var (output, diags, emitted) = Run(code, "F");
+        Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+        // Each nullable primitive surfaces as an auto-property.
+        Assert.Contains("public bool? SoftWrap { get; set; }", emitted);
+        Assert.Contains("public int? MaxLines { get; set; }", emitted);
+        Assert.Contains("public long? Color { get; set; }", emitted);
+        // The bridge call passes the property names through.
+        Assert.Contains("global::ComposeNet.ComposeBridges.F(_text, BuildModifier(), SoftWrap, MaxLines, Color, composer);", emitted);
+        // Not surfaced as ctor parameters.
+        Assert.DoesNotContain("bool? softWrap", emitted);
+        Assert.DoesNotContain("int? maxLines", emitted);
+        Assert.DoesNotContain("long? color", emitted);
+
         var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
         Assert.Empty(errors);
     }
