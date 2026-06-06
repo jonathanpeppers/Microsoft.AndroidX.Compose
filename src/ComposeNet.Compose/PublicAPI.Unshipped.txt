@@ -1,5 +1,4 @@
 #nullable enable
-
 ~override ComposeNet.TextAlign.Equals(object obj) -> bool
 ~override ComposeNet.TextAlign.ToString() -> string
 ComposeNet.AlertDialog
@@ -14,6 +13,9 @@ ComposeNet.AlertDialog.Text.get -> ComposeNet.ComposableNode?
 ComposeNet.AlertDialog.Text.set -> void
 ComposeNet.AlertDialog.Title.get -> ComposeNet.ComposableNode?
 ComposeNet.AlertDialog.Title.set -> void
+ComposeNet.Alignment
+ComposeNet.Alignment.Horizontal
+ComposeNet.Alignment.Vertical
 ComposeNet.Arrangement
 ComposeNet.AssistChip
 ComposeNet.AssistChip.AssistChip(System.Action! onClick) -> void
@@ -221,6 +223,17 @@ ComposeNet.FlexibleBottomAppBar
 ComposeNet.FlexibleBottomAppBar.FlexibleBottomAppBar() -> void
 ComposeNet.FloatingActionButton
 ComposeNet.FloatingActionButton.FloatingActionButton(System.Action! onClick) -> void
+ComposeNet.FocusRequester
+ComposeNet.FocusRequester.CaptureFocus() -> bool
+ComposeNet.FocusRequester.FocusRequester() -> void
+ComposeNet.FocusRequester.FreeFocus() -> bool
+ComposeNet.FocusRequester.RequestFocus() -> void
+ComposeNet.FocusState
+ComposeNet.FocusState.FocusState() -> void
+ComposeNet.FocusState.FocusState(bool isFocused, bool hasFocus, bool isCaptured) -> void
+ComposeNet.FocusState.HasFocus.get -> bool
+ComposeNet.FocusState.IsCaptured.get -> bool
+ComposeNet.FocusState.IsFocused.get -> bool
 ComposeNet.FontWeight
 ComposeNet.GridCells
 ComposeNet.HorizontalCenteredHeroCarousel<T>
@@ -381,27 +394,37 @@ ComposeNet.ModalWideNavigationRail.Header.set -> void
 ComposeNet.ModalWideNavigationRail.ModalWideNavigationRail() -> void
 ComposeNet.Modifier
 ComposeNet.Modifier.AbsoluteOffset(ComposeNet.Dp? x = null, ComposeNet.Dp? y = null) -> ComposeNet.Modifier!
+ComposeNet.Modifier.Align(ComposeNet.Alignment! alignment) -> ComposeNet.Modifier!
+ComposeNet.Modifier.Align(ComposeNet.Alignment.Horizontal! alignment) -> ComposeNet.Modifier!
+ComposeNet.Modifier.Align(ComposeNet.Alignment.Vertical! alignment) -> ComposeNet.Modifier!
 ComposeNet.Modifier.Alpha(float alpha) -> ComposeNet.Modifier!
 ComposeNet.Modifier.AspectRatio(float ratio, bool matchHeightConstraintsFirst = false) -> ComposeNet.Modifier!
-ComposeNet.Modifier.Background(long color) -> ComposeNet.Modifier!
 ComposeNet.Modifier.Background(long color, ComposeNet.Shape? shape) -> ComposeNet.Modifier!
-ComposeNet.Modifier.Border(ComposeNet.Dp width, long color) -> ComposeNet.Modifier!
+ComposeNet.Modifier.Background(long color) -> ComposeNet.Modifier!
 ComposeNet.Modifier.Border(ComposeNet.Dp width, long color, ComposeNet.Dp cornerRadius) -> ComposeNet.Modifier!
 ComposeNet.Modifier.Border(ComposeNet.Dp width, long color, ComposeNet.Shape? shape) -> ComposeNet.Modifier!
+ComposeNet.Modifier.Border(ComposeNet.Dp width, long color) -> ComposeNet.Modifier!
+ComposeNet.Modifier.ClearAndSetSemantics(string! contentDescription) -> ComposeNet.Modifier!
 ComposeNet.Modifier.Clickable(System.Action! onClick) -> ComposeNet.Modifier!
 ComposeNet.Modifier.Clip(ComposeNet.Dp cornerRadius) -> ComposeNet.Modifier!
 ComposeNet.Modifier.Clip(ComposeNet.Shape! shape) -> ComposeNet.Modifier!
+ComposeNet.Modifier.CombinedClickable(System.Action! onClick, System.Action? onLongClick = null, System.Action? onDoubleClick = null) -> ComposeNet.Modifier!
 ComposeNet.Modifier.DefaultMinSize(ComposeNet.Dp? minWidth = null, ComposeNet.Dp? minHeight = null) -> ComposeNet.Modifier!
 ComposeNet.Modifier.DisplayCutoutPadding() -> ComposeNet.Modifier!
 ComposeNet.Modifier.FillMaxHeight(float fraction = 1) -> ComposeNet.Modifier!
 ComposeNet.Modifier.FillMaxSize(float fraction = 1) -> ComposeNet.Modifier!
 ComposeNet.Modifier.FillMaxWidth(float fraction = 1) -> ComposeNet.Modifier!
+ComposeNet.Modifier.Focusable(bool enabled = true) -> ComposeNet.Modifier!
+ComposeNet.Modifier.FocusGroup() -> ComposeNet.Modifier!
+ComposeNet.Modifier.FocusRequester(ComposeNet.FocusRequester! requester) -> ComposeNet.Modifier!
 ComposeNet.Modifier.Height(ComposeNet.Dp height) -> ComposeNet.Modifier!
 ComposeNet.Modifier.HeightIn(ComposeNet.Dp? min = null, ComposeNet.Dp? max = null) -> ComposeNet.Modifier!
 ComposeNet.Modifier.HorizontalScroll(ComposeNet.ScrollState! state, bool enabled = true, bool reverseScrolling = false) -> ComposeNet.Modifier!
 ComposeNet.Modifier.ImePadding() -> ComposeNet.Modifier!
+ComposeNet.Modifier.MatchParentSize() -> ComposeNet.Modifier!
 ComposeNet.Modifier.NavigationBarsPadding() -> ComposeNet.Modifier!
 ComposeNet.Modifier.Offset(ComposeNet.Dp? x = null, ComposeNet.Dp? y = null) -> ComposeNet.Modifier!
+ComposeNet.Modifier.OnFocusChanged(System.Action<ComposeNet.FocusState>! onFocusChanged) -> ComposeNet.Modifier!
 ComposeNet.Modifier.Padding(ComposeNet.Dp all) -> ComposeNet.Modifier!
 ComposeNet.Modifier.Padding(ComposeNet.Dp horizontal, ComposeNet.Dp vertical) -> ComposeNet.Modifier!
 ComposeNet.Modifier.Padding(ComposeNet.Dp start, ComposeNet.Dp top, ComposeNet.Dp end, ComposeNet.Dp bottom) -> ComposeNet.Modifier!
@@ -413,6 +436,9 @@ ComposeNet.Modifier.Rotate(float degrees) -> ComposeNet.Modifier!
 ComposeNet.Modifier.SafeDrawingPadding() -> ComposeNet.Modifier!
 ComposeNet.Modifier.Scale(float scale) -> ComposeNet.Modifier!
 ComposeNet.Modifier.Scale(float scaleX, float scaleY) -> ComposeNet.Modifier!
+ComposeNet.Modifier.Selectable(bool selected, System.Action! onClick) -> ComposeNet.Modifier!
+ComposeNet.Modifier.Semantics(bool mergeDescendants, string! contentDescription) -> ComposeNet.Modifier!
+ComposeNet.Modifier.Semantics(string! contentDescription) -> ComposeNet.Modifier!
 ComposeNet.Modifier.Shadow(ComposeNet.Dp elevation, ComposeNet.Shape? shape = null) -> ComposeNet.Modifier!
 ComposeNet.Modifier.Size(ComposeNet.Dp size) -> ComposeNet.Modifier!
 ComposeNet.Modifier.Size(ComposeNet.Dp width, ComposeNet.Dp height) -> ComposeNet.Modifier!
@@ -421,6 +447,7 @@ ComposeNet.Modifier.StatusBarsPadding() -> ComposeNet.Modifier!
 ComposeNet.Modifier.SystemBarsPadding() -> ComposeNet.Modifier!
 ComposeNet.Modifier.TestTag(string! tag) -> ComposeNet.Modifier!
 ComposeNet.Modifier.Then(ComposeNet.Modifier! other) -> ComposeNet.Modifier!
+ComposeNet.Modifier.Toggleable(bool value, System.Action<bool>! onValueChange) -> ComposeNet.Modifier!
 ComposeNet.Modifier.VerticalScroll(ComposeNet.ScrollState! state, bool enabled = true, bool reverseScrolling = false) -> ComposeNet.Modifier!
 ComposeNet.Modifier.Weight(float weight, bool fill = true) -> ComposeNet.Modifier!
 ComposeNet.Modifier.Width(ComposeNet.Dp width) -> ComposeNet.Modifier!
@@ -733,6 +760,21 @@ override ComposeNet.Sp.Equals(object? obj) -> bool
 override ComposeNet.Sp.GetHashCode() -> int
 override ComposeNet.Sp.ToString() -> string!
 override ComposeNet.TextAlign.GetHashCode() -> int
+static ComposeNet.Alignment.BottomCenter.get -> ComposeNet.Alignment!
+static ComposeNet.Alignment.BottomEnd.get -> ComposeNet.Alignment!
+static ComposeNet.Alignment.BottomStart.get -> ComposeNet.Alignment!
+static ComposeNet.Alignment.Center.get -> ComposeNet.Alignment!
+static ComposeNet.Alignment.CenterEnd.get -> ComposeNet.Alignment!
+static ComposeNet.Alignment.CenterStart.get -> ComposeNet.Alignment!
+static ComposeNet.Alignment.Horizontal.CenterHorizontally.get -> ComposeNet.Alignment.Horizontal!
+static ComposeNet.Alignment.Horizontal.End.get -> ComposeNet.Alignment.Horizontal!
+static ComposeNet.Alignment.Horizontal.Start.get -> ComposeNet.Alignment.Horizontal!
+static ComposeNet.Alignment.TopCenter.get -> ComposeNet.Alignment!
+static ComposeNet.Alignment.TopEnd.get -> ComposeNet.Alignment!
+static ComposeNet.Alignment.TopStart.get -> ComposeNet.Alignment!
+static ComposeNet.Alignment.Vertical.Bottom.get -> ComposeNet.Alignment.Vertical!
+static ComposeNet.Alignment.Vertical.CenterVertically.get -> ComposeNet.Alignment.Vertical!
+static ComposeNet.Alignment.Vertical.Top.get -> ComposeNet.Alignment.Vertical!
 static ComposeNet.Arrangement.Bottom.get -> ComposeNet.Arrangement!
 static ComposeNet.Arrangement.Center.get -> ComposeNet.Arrangement!
 static ComposeNet.Arrangement.End.get -> ComposeNet.Arrangement!

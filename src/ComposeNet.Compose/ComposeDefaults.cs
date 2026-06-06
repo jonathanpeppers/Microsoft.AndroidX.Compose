@@ -352,6 +352,43 @@ using ComposeNet;
 [assembly: ComposeDefaults("ModifierClickableDefault",
     "enabled", "onClickLabel", "role", "!onClick")]
 
+// androidx.compose.foundation.ClickableKt.combinedClickable-cJG_KMw$default —
+// non-@Composable Modifier extension (no MutableInteractionSource overload).
+// 7 Kotlin params after the receiver. The C# wrapper always supplies
+// onClick (bit 6 always cleared); enabled / onClickLabel / role / onLongClickLabel
+// are left to Kotlin's defaults; the optional onLongClick / onDoubleClick
+// slots are auto-cleared per-call when the caller passes a non-null
+// IFunction0 (Kotlin requires nullability here — a null callback DOES
+// substitute Kotlin's default of "ignore that gesture").
+[assembly: ComposeDefaults("ModifierCombinedClickableDefault",
+    "enabled", "onClickLabel", "role", "onLongClickLabel",
+    "onLongClick", "onDoubleClick", "!onClick")]
+
+// androidx.compose.foundation.selection.SelectableKt.selectable-XHw0xAI$default —
+// 4 Kotlin params after the receiver: selected, enabled, role, onClick.
+// C# wrapper always supplies selected + onClick.
+[assembly: ComposeDefaults("ModifierSelectableDefault",
+    "!selected", "enabled", "role", "!onClick")]
+
+// androidx.compose.foundation.selection.ToggleableKt.toggleable-XHw0xAI$default —
+// 4 Kotlin params after the receiver: value, enabled, role, onValueChange.
+// C# wrapper always supplies value + onValueChange.
+[assembly: ComposeDefaults("ModifierToggleableDefault",
+    "!value", "enabled", "role", "!onValueChange")]
+
+// androidx.compose.foundation.FocusableKt.focusable$default — 2 Kotlin
+// params after the receiver: enabled (always supplied by C#) and
+// interactionSource (left to Kotlin's default).
+[assembly: ComposeDefaults("ModifierFocusableDefault",
+    "!enabled", "interactionSource")]
+
+// androidx.compose.ui.semantics.SemanticsModifierKt.semantics$default —
+// 2 Kotlin params after the receiver: mergeDescendants (always supplied
+// by the C# wrapper, the `Semantics(string)` helper hard-codes `false`)
+// and properties (the configuration Function1, always supplied).
+[assembly: ComposeDefaults("ModifierSemanticsDefault",
+    "mergeDescendants", "!properties")]
+
 // androidx.compose.foundation.ScrollKt.verticalScroll$default —
 // non-@Composable Modifier extension. 4 Kotlin params after the
 // receiver: state, enabled, flingBehavior, reverseScrolling. The C#
