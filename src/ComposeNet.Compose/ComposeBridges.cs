@@ -2126,6 +2126,7 @@ internal static partial class ComposeBridges
                     "Landroidx/compose/material3/BottomAppBarScrollBehavior;" +
                     "Landroidx/compose/runtime/Composer;II)V",
         Defaults  = typeof(BottomAppBarDefault))]
+    [ComposeFacade(Scope = "Row")]
     public static partial void BottomAppBar(
         IFunction3  actions,
         IModifier?  modifier,
@@ -2385,4 +2386,54 @@ internal static partial class ComposeBridges
             _composer:              composer,
             steps:                  0,
             _changed:               defaults);
+
+    // WideNavigationRailKt.WideNavigationRailItem-pli-t6k. Bound C# wrapper
+    // has misnamed trailing params: `iconPosition` is actually $changed,
+    // `_changed` is actually $default. The mid-list `int p7` is the real
+    // iconPosition slot (not user-exposed).
+    [ComposeFacade(Defaults = typeof(WideNavigationRailItemDefault))]
+    public static partial void WideNavigationRailItem(
+        bool        selected,
+        IFunction0  onClick,
+        IFunction2  icon,
+        IFunction2? label,
+        IModifier?  modifier,
+        int         defaults,
+        IComposer   composer);
+
+    public static partial void WideNavigationRailItem(bool selected, IFunction0 onClick, IFunction2 icon, IFunction2? label, IModifier? modifier, int defaults, IComposer composer)
+        => AndroidX.Compose.Material3.WideNavigationRailKt.WideNavigationRailItem(
+            selected:          selected,
+            onClick:           onClick,
+            icon:              icon,
+            label:             label,
+            railExpanded:      false,
+            modifier:          modifier,
+            enabled:           true,
+            p7:                0,
+            colors:            null,
+            interactionSource: null,
+            _composer:         composer,
+            iconPosition:      0,
+            _changed:          defaults);
+
+    [ComposeFacade(Defaults = typeof(TriStateCheckboxDefault))]
+    public static partial void TriStateCheckbox(
+        AndroidX.Compose.UI.State.ToggleableState state,
+        IFunction0  onClick,
+        IModifier?  modifier,
+        int         defaults,
+        IComposer   composer);
+
+    public static partial void TriStateCheckbox(AndroidX.Compose.UI.State.ToggleableState state, IFunction0 onClick, IModifier? modifier, int defaults, IComposer composer)
+        => AndroidX.Compose.Material3.CheckboxKt.TriStateCheckbox(
+            state:             state,
+            onClick:           onClick,
+            modifier:          modifier,
+            enabled:           true,
+            colors:            null,
+            interactionSource: null,
+            _composer:         composer,
+            p7:                0,
+            _changed:          defaults);
 }
