@@ -1,3 +1,4 @@
+using System;
 using AndroidX.Compose.Material3;
 using AndroidX.Compose.Runtime;
 
@@ -21,7 +22,7 @@ public sealed class MultiChoiceSegmentedButtonRow : ComposableContainer
             {
                 rows.SetIndex(i);
                 var child = Children[i];
-                c.StartReplaceableGroup(System.HashCode.Combine(i, child.GetType()));
+                c.StartReplaceableGroup(HashCode.Combine(i, child.GetType()));
                 try { child.Render(c); }
                 finally { c.EndReplaceableGroup(); }
             }

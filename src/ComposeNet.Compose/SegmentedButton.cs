@@ -1,3 +1,4 @@
+using System;
 using AndroidX.Compose.Runtime;
 
 namespace ComposeNet;
@@ -58,7 +59,7 @@ public sealed class SegmentedButton : ComposableContainer
             for (int i = 0; i < Children.Count; i++)
             {
                 var child = Children[i];
-                c.StartReplaceableGroup(System.HashCode.Combine(i, child.GetType()));
+                c.StartReplaceableGroup(HashCode.Combine(i, child.GetType()));
                 try { child.Render(c); }
                 finally { c.EndReplaceableGroup(); }
             }
