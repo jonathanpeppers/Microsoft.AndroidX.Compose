@@ -380,26 +380,55 @@ ComposeNet.ModalWideNavigationRail.Header.get -> ComposeNet.ComposableNode?
 ComposeNet.ModalWideNavigationRail.Header.set -> void
 ComposeNet.ModalWideNavigationRail.ModalWideNavigationRail() -> void
 ComposeNet.Modifier
+ComposeNet.Modifier.AbsoluteOffset(ComposeNet.Dp? x = null, ComposeNet.Dp? y = null) -> ComposeNet.Modifier!
+ComposeNet.Modifier.Alpha(float alpha) -> ComposeNet.Modifier!
+ComposeNet.Modifier.AspectRatio(float ratio) -> ComposeNet.Modifier!
 ComposeNet.Modifier.Background(long color) -> ComposeNet.Modifier!
-ComposeNet.Modifier.Border(ComposeNet.Dp width, long color, ComposeNet.Dp cornerRadius = default(ComposeNet.Dp)) -> ComposeNet.Modifier!
+ComposeNet.Modifier.Background(long color, ComposeNet.Shape? shape) -> ComposeNet.Modifier!
+ComposeNet.Modifier.Border(ComposeNet.Dp width, long color) -> ComposeNet.Modifier!
+ComposeNet.Modifier.Border(ComposeNet.Dp width, long color, ComposeNet.Dp cornerRadius) -> ComposeNet.Modifier!
+ComposeNet.Modifier.Border(ComposeNet.Dp width, long color, ComposeNet.Shape? shape) -> ComposeNet.Modifier!
 ComposeNet.Modifier.Clickable(System.Action! onClick) -> ComposeNet.Modifier!
 ComposeNet.Modifier.Clip(ComposeNet.Dp cornerRadius) -> ComposeNet.Modifier!
+ComposeNet.Modifier.Clip(ComposeNet.Shape! shape) -> ComposeNet.Modifier!
+ComposeNet.Modifier.DefaultMinSize(ComposeNet.Dp? minWidth = null, ComposeNet.Dp? minHeight = null) -> ComposeNet.Modifier!
+ComposeNet.Modifier.DisplayCutoutPadding() -> ComposeNet.Modifier!
 ComposeNet.Modifier.FillMaxHeight(float fraction = 1) -> ComposeNet.Modifier!
 ComposeNet.Modifier.FillMaxSize(float fraction = 1) -> ComposeNet.Modifier!
 ComposeNet.Modifier.FillMaxWidth(float fraction = 1) -> ComposeNet.Modifier!
 ComposeNet.Modifier.Height(ComposeNet.Dp height) -> ComposeNet.Modifier!
+ComposeNet.Modifier.HeightIn(ComposeNet.Dp? min = null, ComposeNet.Dp? max = null) -> ComposeNet.Modifier!
 ComposeNet.Modifier.HorizontalScroll(ComposeNet.ScrollState! state, bool enabled = true, bool reverseScrolling = false) -> ComposeNet.Modifier!
+ComposeNet.Modifier.ImePadding() -> ComposeNet.Modifier!
+ComposeNet.Modifier.NavigationBarsPadding() -> ComposeNet.Modifier!
+ComposeNet.Modifier.Offset(ComposeNet.Dp? x = null, ComposeNet.Dp? y = null) -> ComposeNet.Modifier!
 ComposeNet.Modifier.Padding(ComposeNet.Dp all) -> ComposeNet.Modifier!
 ComposeNet.Modifier.Padding(ComposeNet.Dp horizontal, ComposeNet.Dp vertical) -> ComposeNet.Modifier!
 ComposeNet.Modifier.Padding(ComposeNet.Dp start, ComposeNet.Dp top, ComposeNet.Dp end, ComposeNet.Dp bottom) -> ComposeNet.Modifier!
+ComposeNet.Modifier.RequiredHeight(ComposeNet.Dp height) -> ComposeNet.Modifier!
+ComposeNet.Modifier.RequiredSize(ComposeNet.Dp size) -> ComposeNet.Modifier!
+ComposeNet.Modifier.RequiredSize(ComposeNet.Dp width, ComposeNet.Dp height) -> ComposeNet.Modifier!
+ComposeNet.Modifier.RequiredWidth(ComposeNet.Dp width) -> ComposeNet.Modifier!
+ComposeNet.Modifier.Rotate(float degrees) -> ComposeNet.Modifier!
 ComposeNet.Modifier.SafeDrawingPadding() -> ComposeNet.Modifier!
+ComposeNet.Modifier.Scale(float scale) -> ComposeNet.Modifier!
+ComposeNet.Modifier.Scale(float scaleX, float scaleY) -> ComposeNet.Modifier!
+ComposeNet.Modifier.Shadow(ComposeNet.Dp elevation, ComposeNet.Shape? shape = null) -> ComposeNet.Modifier!
 ComposeNet.Modifier.Size(ComposeNet.Dp size) -> ComposeNet.Modifier!
 ComposeNet.Modifier.Size(ComposeNet.Dp width, ComposeNet.Dp height) -> ComposeNet.Modifier!
+ComposeNet.Modifier.SizeIn(ComposeNet.Dp? minWidth = null, ComposeNet.Dp? minHeight = null, ComposeNet.Dp? maxWidth = null, ComposeNet.Dp? maxHeight = null) -> ComposeNet.Modifier!
+ComposeNet.Modifier.StatusBarsPadding() -> ComposeNet.Modifier!
 ComposeNet.Modifier.SystemBarsPadding() -> ComposeNet.Modifier!
+ComposeNet.Modifier.TestTag(string! tag) -> ComposeNet.Modifier!
 ComposeNet.Modifier.Then(ComposeNet.Modifier! other) -> ComposeNet.Modifier!
 ComposeNet.Modifier.VerticalScroll(ComposeNet.ScrollState! state, bool enabled = true, bool reverseScrolling = false) -> ComposeNet.Modifier!
 ComposeNet.Modifier.Weight(float weight, bool fill = true) -> ComposeNet.Modifier!
 ComposeNet.Modifier.Width(ComposeNet.Dp width) -> ComposeNet.Modifier!
+ComposeNet.Modifier.WidthIn(ComposeNet.Dp? min = null, ComposeNet.Dp? max = null) -> ComposeNet.Modifier!
+ComposeNet.Modifier.WrapContentHeight(bool unbounded = false) -> ComposeNet.Modifier!
+ComposeNet.Modifier.WrapContentSize(bool unbounded = false) -> ComposeNet.Modifier!
+ComposeNet.Modifier.WrapContentWidth(bool unbounded = false) -> ComposeNet.Modifier!
+ComposeNet.Modifier.ZIndex(float z) -> ComposeNet.Modifier!
 ComposeNet.MultiChoiceSegmentedButtonRow
 ComposeNet.MultiChoiceSegmentedButtonRow.MultiChoiceSegmentedButtonRow() -> void
 ComposeNet.MutableNumberState<T>
@@ -734,7 +763,11 @@ static ComposeNet.GridCells.Fixed(int count) -> AndroidX.Compose.Foundation.Lazy
 static ComposeNet.Modifier.Companion.get -> ComposeNet.Modifier!
 static ComposeNet.MutableNumberState<T>.operator --(ComposeNet.MutableNumberState<T>! s) -> ComposeNet.MutableNumberState<T>!
 static ComposeNet.MutableNumberState<T>.operator ++(ComposeNet.MutableNumberState<T>! s) -> ComposeNet.MutableNumberState<T>!
+static ComposeNet.Shape.Circle() -> ComposeNet.Shape!
+static ComposeNet.Shape.CutCorners(ComposeNet.Dp cornerSize) -> ComposeNet.Shape!
+static ComposeNet.Shape.CutCornersPercent(int percent) -> ComposeNet.Shape!
 static ComposeNet.Shape.RoundedCorners(ComposeNet.Dp cornerRadius) -> ComposeNet.Shape!
+static ComposeNet.Shape.RoundedPercent(int percent) -> ComposeNet.Shape!
 static ComposeNet.Sp.implicit operator ComposeNet.Sp(int value) -> ComposeNet.Sp
 static ComposeNet.Sp.operator !=(ComposeNet.Sp left, ComposeNet.Sp right) -> bool
 static ComposeNet.Sp.operator ==(ComposeNet.Sp left, ComposeNet.Sp right) -> bool
