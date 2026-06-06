@@ -130,3 +130,116 @@ later round (Jun 5) closed three more — all now in use here:
   drawer; the panel falls back to
   `MaterialTheme.colorScheme.secondaryContainer` for its container
   color via the Phase 6 `DefaultColorFromTheme` facade attribute.
+
+## Implementation notes
+
+These notes track the technical reasoning behind specific deviations
+from upstream's `Conversation.kt`, and the facade gaps that would let
+us close them. Filed here instead of inline in `Conversation.cs` so
+the C# source stays close in shape to the Kotlin original.
+
+### Hard-coded colors instead of `MaterialTheme.colorScheme.*` reads — [#61]
+
+User code can't read `MaterialTheme.colorScheme.primary` /
+`primaryContainer` / `surfaceVariant` / `onSurfaceVariant` etc. yet —
+only the source generator's `[ComposeFacade(DefaultColorFromTheme=…)]`
+path consumes them, and it's internal. Until #61 lands the sample
+hard-codes:
+
+| Slot                          | Hex          | Approximates upstream's |
+|-------------------------------|--------------|--------------------------|
+| `MeBubbleColor`               | `#D0E4FF`    | `primaryContainer`       |
+| `OtherBubbleColor`            | `#EDEDED`    | `surfaceVariant`         |
+| `DrawerSelectedColor`         | `#D0E4FF`    | `primaryContainer`       |
+
+Timestamps and member-count subtitles also keep the default content
+color instead of `onSurfaceVariant`.
+
+### Hard-coded sp / weight values instead of `MaterialTheme.typography.*` reads — [#58]
+
+Same shape as the color gap: typography reads aren't exposed yet.
+The sample sets `FontSize` / `FontWeight` directly to the M3 spec
+values for each role:
+
+| Upstream role     | Where used                           | sp | Weight       | Letter-spacing |
+|-------------------|--------------------------------------|----|--------------|----------------|
+| `titleMedium`     | author names, channel title          | 16 | Medium       | (default)      |
+| `bodySmall`       | timestamps, member-count subtitle    | 12 | Normal       | (default)      |
+| `labelSmall`      | "Today" day separator                | 11 | Medium       | **1** (rounded; spec is 0.5) |
+| `titleSmall`      | drawer section labels                | 14 | Medium       | **dropped** (spec is 0.1, would round to 0) |
+| `bodyLarge`       | drawer chat / profile rows           | 16 | Normal       | (default)      |
+| custom brand      | drawer "Jetchat" header              | 18 | SemiBold     | — (upstream is also hand-tuned)
+
+`Sp` currently only takes an `int` constructor (`new Sp(11)` / implicit
+`int → Sp`). Adding `Sp(float)` would let labelSmall hit 0.5 sp and
+titleSmall hit 0.1 sp.
+
+### Single-radius bubbles instead of `RoundedCornerShape(topStart, …)`
+
+Upstream's chat bubbles use `RoundedCornerShape(4.dp, 20.dp, 20.dp, 20.dp)`
+to flatten the corner that visually meets the avatar. `Modifier.Clip(Dp)`
+only takes one radius, so all four corners are 12 dp here. Closing the
+gap needs the asymmetric `RoundedCornerShape` factory exposed through a
+public `Shape` API.
+
+### `!isStreak` ↔ upstream's `isLastMessageByAuthor`
+
+Upstream's `LazyColumn` is `reverseLayout = true`, so "last message
+by this author" in chronological order is the *first* message rendered
+visually. Our `LazyColumn` is forward-layout (no `reverseLayout` slot
+exposed yet), and we pre-compute `isStreak = (m.Author == lastAuthor)`
+during enumeration. The semantic in both cases is identical: "this is
+the first message visually rendered for this author chain — apply the
+8 dp `spaceBetweenAuthors` top padding and show the avatar tile."
+
+### 72 dp streak `Spacer` (upstream uses 74 dp)
+
+Upstream reserves `42.dp + 16.dp + 16.dp = 74.dp` for the avatar slot
+(42 dp avatar + 16 dp horizontal padding on each side). This sample
+uses a 40 dp avatar (matching `androidx.compose.material3.Icon`'s
+default tap target), so the streak `Spacer` is `40 + 16 + 16 = 72.dp`.
+
+### `"now"` literal instead of formatted clock time
+
+Newly sent messages stamp `"now"` to match upstream's
+`R.string.now` resource value. Earlier revisions used a wall-clock
+`HH:mm` formatter — the literal is faithful to the original.
+
+### Search / info icon onClicks are no-ops
+
+Upstream wires the icons to a `FunctionalityNotAvailablePopup`. The
+icons are real affordances (correct drawables, real ripple via
+`IconButton`), but the `onClick` is `NoOp` until popup APIs are bound.
+
+### No hamburger nav icon — drawer opens via edge-swipe only
+
+Programmatic drawer open requires a `DrawerState` C# wrapper plus
+suspend bridges around `DrawerState.open()` / `close()`. The
+`SuspendBridge` plumbing landed in #97 and is already used by
+`ScrollState.scrollTo` + `animateScrollToItem`, so this is the next
+state-holder to expose. A no-op hamburger button would be a misleading
+affordance, so it's omitted entirely until the wrapper lands.
+
+### Static builder instead of `ComposableNode` subclass
+
+`Conversation.Build` is a `static` method that allocates a fresh
+`ComposableNode` tree per composition pass instead of being a
+`ComposableNode` subclass with its own `Render` override.
+`ComposableNode.Render(IComposer)` is `internal` to the facade
+assembly so a sample-side subclass can't override it. Cost: every
+recomposition allocates the tree (Tier 1.5 per-composition cost).
+Exposing a public composition extension point would let user code
+build classes that participate in Compose's slot-table identity
+directly.
+
+### Single-channel seed data
+
+Tapping `composers` / `droidcon-nyc` updates the title and selection
+highlight but the message list itself is shared across channels.
+Multi-channel state would refactor `ObservableList<Message>` into a
+`Dictionary<string, ObservableList<Message>>` or similar — out of
+scope for this port; the upstream sample's seed data lives in a
+separate `JetchatViewModel` + Hilt-injected fake repository.
+
+[#58]: https://github.com/jonathanpeppers/compose-net/issues/58
+[#61]: https://github.com/jonathanpeppers/compose-net/issues/61
