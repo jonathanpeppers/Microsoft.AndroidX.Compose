@@ -386,18 +386,14 @@ public class MainActivity : ComposeActivity
                 4 => (ComposableNode)new Column
                 {
                     new Text("Selection controls"),
-                    new Row
+                    new Row(Arrangement.SpacedBy(12))
                     {
                         new Checkbox(@checked: checkbox.Value, onCheckedChange: v => checkbox.Value = v),
-                        new Spacer { Modifier = Modifier.Companion.FillMaxWidth(0.05f) },
                         new Switch(@checked: switchOn.Value, onCheckedChange: v => switchOn.Value = v),
-                        new Spacer { Modifier = Modifier.Companion.FillMaxWidth(0.05f) },
                         new RadioButton(selected: radioPick.Value == 0, onClick: () => radioPick.Value = 0),
                         new Text("A"),
-                        new Spacer { Modifier = Modifier.Companion.FillMaxWidth(0.03f) },
                         new RadioButton(selected: radioPick.Value == 1, onClick: () => radioPick.Value = 1),
                         new Text("B"),
-                        new Spacer { Modifier = Modifier.Companion.FillMaxWidth(0.03f) },
                         new RadioButton(selected: radioPick.Value == 2, onClick: () => radioPick.Value = 2),
                         new Text("C"),
                     },
@@ -417,12 +413,10 @@ public class MainActivity : ComposeActivity
                 5 => new Column
                 {
                     new Text("Dialogs and sheets"),
-                    new Row
+                    new Row(Arrangement.SpacedBy(8))
                     {
                         new Button(onClick: () => showSheet.Value = true) { new Text("Sheet") },
-                        new Spacer { Modifier = Modifier.Companion.FillMaxWidth(0.03f) },
                         new Button(onClick: () => showDate.Value  = true) { new Text("Date") },
-                        new Spacer { Modifier = Modifier.Companion.FillMaxWidth(0.03f) },
                         new Button(onClick: () => showTime.Value  = true) { new Text("Time") },
                     },
                     new HorizontalDivider { Modifier = Modifier.Companion.Padding(0, 8) },
@@ -433,10 +427,9 @@ public class MainActivity : ComposeActivity
                 {
                     new Text("Misc Material 3"),
                     new Text("Progress indicators (indeterminate):"),
-                    new Row
+                    new Row(Arrangement.SpacedBy(12))
                     {
                         new CircularProgressIndicator(),
-                        new Spacer { Modifier = Modifier.Companion.FillMaxWidth(0.05f) },
                         new Column
                         {
                             new Text("Linear ↓"),
