@@ -50,6 +50,7 @@ public class FacadeGeneratorTests
             }
             public sealed class Boolean : Object { public bool BooleanValue() => false; }
             public sealed class Float : Object { public float FloatValue() => 0f; }
+            public abstract class Enum : Object { }
         }
         namespace AndroidX.Compose.Runtime { public interface IComposer { } }
         namespace AndroidX.Compose.UI { public interface IModifier { } }
@@ -455,13 +456,20 @@ public class FacadeGeneratorTests
             }
             """;
 
-        var (_, diags, emitted) = Run(code, "TriStateCheckbox");
+        var (output, diags, emitted) = Run(code, "TriStateCheckbox");
         Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
         Assert.NotNull(emitted);
         // Java enum surfaces as a ctor field + ctor param + bridge arg pass-through.
         Assert.Contains("readonly global::ComposeNet.Demo.FakeToggleableState _state;", emitted);
         Assert.Contains("global::ComposeNet.Demo.FakeToggleableState state", emitted);
         Assert.Contains("ComposeBridges.TriStateCheckbox(_state,", emitted);
+
+        // Sanity-check: the synthetic compilation must actually compile —
+        // otherwise the generator could be matching against an
+        // IErrorTypeSymbol's syntactic Name/Namespace rather than truly
+        // exercising IsJavaEnum's inheritance walk.
+        var compileErrors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
+        Assert.Empty(compileErrors);
     }
 
     [Fact]
