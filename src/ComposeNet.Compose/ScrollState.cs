@@ -108,7 +108,8 @@ public sealed class ScrollState
     /// </returns>
     public Task<float> ScrollToAsync(int value) =>
         SuspendBridge.Invoke<float>(
-            cont => Jvm.ScrollTo(value, cont),
+            cont => ComposeBridges.ScrollStateScrollTo(
+                ((Java.Lang.Object)Jvm).Handle, value, cont),
             static boxed => boxed is Java.Lang.Float f
                 ? f.FloatValue()
                 : throw new System.InvalidCastException(

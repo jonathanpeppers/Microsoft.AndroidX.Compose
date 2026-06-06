@@ -17,17 +17,18 @@ namespace ComposeNet;
 /// <para>
 /// Allocate one instance per suspend call (continuations cannot be
 /// reused). The class is internal — call sites should go through
-/// <see cref="SuspendBridge.Invoke{T}(System.Func{SuspendContinuation, Java.Lang.Object?}, System.Func{Java.Lang.Object?, T})"/>
+/// <see cref="SuspendBridge.Invoke{T}(System.Func{SuspendContinuation, System.IntPtr}, System.Func{Java.Lang.Object?, T})"/>
 /// instead of constructing one directly.
 /// </para>
 /// <para>
-/// Lifetime: pinned with a strong <see cref="GCHandle"/> in the
-/// constructor so the managed peer survives until Kotlin invokes
+/// Lifetime: held by a strong <see cref="GCHandle"/> allocated in
+/// the constructor so the managed peer survives until Kotlin invokes
 /// <see cref="ResumeWith(Java.Lang.Object)"/> — fire-and-forget callers
 /// (no one holding the returned <see cref="Task"/>) would otherwise
-/// race the GC. The pin is released in <see cref="ResumeWith"/>'s
-/// finally, or by <see cref="Dispose(bool)"/> if the suspend call
-/// throws before suspension.
+/// race the GC. The handle is a normal strong reference, not pinned
+/// in memory. It is released in <see cref="ResumeWith"/>'s finally,
+/// or by <see cref="Dispose(bool)"/> if the suspend call throws
+/// before suspension.
 /// </para>
 /// </remarks>
 [Register("composenet/compose/SuspendContinuation")]
@@ -50,11 +51,30 @@ internal sealed class SuspendContinuation : Java.Lang.Object, IContinuation
     }
 
     /// <summary>
-    /// Always returns <see cref="EmptyCoroutineContext.Instance"/> —
-    /// v1 doesn't propagate cancellation or dispatcher overrides into
-    /// the suspend call.
+    /// Returns the <c>androidx.compose.ui.platform.AndroidUiDispatcher.Main</c>
+    /// context — combines a Compose main-thread dispatcher with a
+    /// <c>MonotonicFrameClock</c>. Required so suspend functions that
+    /// rely on <c>withFrameNanos</c> (the entire animation family —
+    /// <c>animateScrollTo</c>, <c>animateTo</c>, <c>animate</c>) can
+    /// drive frames; otherwise their internal
+    /// <c>coroutineContext[MonotonicFrameClock]</c> lookup throws.
     /// </summary>
-    public ICoroutineContext Context => EmptyCoroutineContext.Instance!;
+    /// <remarks>
+    /// The <c>AndroidUiDispatcher.Companion</c> nested type is bound but
+    /// has an internal constructor and no static accessor on
+    /// <c>AndroidUiDispatcher</c>, so we resolve <c>Companion.Main</c>
+    /// via raw JNI. Replace with a direct binding call once
+    /// <c>AndroidUiDispatcher.Companion</c> becomes accessible.
+    /// </remarks>
+    public ICoroutineContext Context
+    {
+        get
+        {
+            var handle = ComposeBridges.AndroidUiDispatcherMain();
+            return global::Java.Lang.Object.GetObject<ICoroutineContext>(
+                handle, JniHandleOwnership.DoNotTransfer)!;
+        }
+    }
 
     /// <summary>
     /// Kotlin's resume callback. The boxed <c>kotlin.Result&lt;T&gt;</c>
@@ -69,20 +89,58 @@ internal sealed class SuspendContinuation : Java.Lang.Object, IContinuation
     /// </remarks>
     public void ResumeWith(Java.Lang.Object boxedResult)
     {
-        Java.Lang.Object? owned = null;
         try
         {
-            if (boxedResult is { Handle: var handle } && handle != System.IntPtr.Zero)
+            try
             {
-                var gref = JNIEnv.NewGlobalRef(handle);
-                owned = global::Java.Lang.Object.GetObject<Java.Lang.Object>(gref, JniHandleOwnership.TransferGlobalRef);
+                CompleteWithLocalHandle(boxedResult?.Handle ?? System.IntPtr.Zero, deleteLocal: false);
             }
-            Tcs.TrySetResult(owned);
+            catch (System.Exception ex)
+            {
+                // NewGlobalRef / GetObject can throw; without this catch
+                // the TCS would never complete and any awaiter would
+                // hang forever. Surface the failure as the task result.
+                Tcs.TrySetException(ex);
+            }
         }
         finally
         {
             if (_selfPin.IsAllocated)
                 _selfPin.Free();
+        }
+    }
+
+    /// <summary>
+    /// Funnel a raw JNI local ref into the TCS. Promotes the handle to
+    /// a global ref, wraps it in a managed peer with
+    /// <see cref="JniHandleOwnership.TransferGlobalRef"/>, and stores
+    /// the peer in <see cref="Tcs"/>.
+    /// </summary>
+    /// <param name="handle">Local ref to the boxed result, or <c>IntPtr.Zero</c>.</param>
+    /// <param name="deleteLocal">
+    /// When <c>true</c>, the supplied local ref is freed after
+    /// promotion. Pass <c>true</c> for the synchronous-completion path
+    /// in <see cref="SuspendBridge.Invoke{T}"/> (we own the local that
+    /// came back from <c>CallStaticObjectMethod</c>); pass <c>false</c>
+    /// when called from the JCW marshaller, which owns its own
+    /// argument locals.
+    /// </param>
+    internal void CompleteWithLocalHandle(System.IntPtr handle, bool deleteLocal = true)
+    {
+        Java.Lang.Object? owned = null;
+        if (handle != System.IntPtr.Zero)
+        {
+            var gref = JNIEnv.NewGlobalRef(handle);
+            owned = global::Java.Lang.Object.GetObject<Java.Lang.Object>(gref, JniHandleOwnership.TransferGlobalRef);
+            if (deleteLocal)
+                JNIEnv.DeleteLocalRef(handle);
+        }
+        if (!Tcs.TrySetResult(owned))
+        {
+            // Double-resume (Kotlin shouldn't, but be defensive):
+            // the TCS already has a result, so we own this wrapper
+            // and must release the global ref ourselves.
+            owned?.Dispose();
         }
     }
 

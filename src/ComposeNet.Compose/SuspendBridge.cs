@@ -71,17 +71,17 @@ internal static class SuspendBridge
     /// functions that return <c>Unit</c>.
     /// </param>
     public static Task<T> Invoke<T>(
-        Func<SuspendContinuation, Java.Lang.Object?> call,
+        Func<SuspendContinuation, IntPtr> call,
         Func<Java.Lang.Object?, T> unbox)
     {
         if (call is null) throw new ArgumentNullException(nameof(call));
         if (unbox is null) throw new ArgumentNullException(nameof(unbox));
 
         var cont = new SuspendContinuation();
-        Java.Lang.Object? syncResult;
+        IntPtr syncHandle;
         try
         {
-            syncResult = call(cont);
+            syncHandle = call(cont);
         }
         catch (Exception ex)
         {
@@ -94,27 +94,37 @@ internal static class SuspendBridge
             return Task.FromException<T>(ex);
         }
 
-        try
+        // We work in raw JNI handles here rather than wrapping syncHandle
+        // in a Java.Lang.Object up-front. The COROUTINE_SUSPENDED
+        // sentinel is a Kotlin singleton, and Mono's peer cache resolves
+        // every local ref to it back to a single cached Java.Lang.Object
+        // whose Handle is a *global* ref. If we wrap with TransferLocalRef
+        // and later dispose, the dispose path calls DeleteLocalRef on a
+        // global, which CheckJNI aborts. Raw-handle work-flow side-steps
+        // the issue entirely.
+        if (syncHandle != IntPtr.Zero)
         {
-            if (!IsCoroutineSuspended(syncResult))
+            if (IsCoroutineSuspended(syncHandle))
             {
-                // Synchronous completion — pretend Kotlin called resumeWith
-                // for us so all failure-detection / promotion logic lives in
-                // SuspendContinuation.ResumeWith.
-                cont.ResumeWith(syncResult!);
+                // Kotlin will resume cont later. Free the local ref to
+                // the sentinel; the cached global lives in
+                // s_suspendedHandle for future comparisons.
+                JNIEnv.DeleteLocalRef(syncHandle);
             }
-            // else: Kotlin keeps cont strong-rooted Java-side and will
-            // resume it later. SuspendContinuation's GCHandle pin keeps the
-            // managed peer alive for fire-and-forget callers.
+            else
+            {
+                // Synchronous completion — funnel through the same
+                // promote-to-global + TCS path as the Kotlin-async
+                // callback (SuspendContinuation.ResumeWith).
+                cont.CompleteWithLocalHandle(syncHandle);
+            }
         }
-        finally
+        else
         {
-            // syncResult typically wraps a JNI local ref (binding methods
-            // and our hand-written bridges both use TransferLocalRef).
-            // ResumeWith promoted its handle to a global for the TCS, so
-            // dispose the original wrapper now to free the local ref
-            // promptly instead of waiting for finalization.
-            syncResult?.Dispose();
+            // Suspend returned a Java null. Treat as a successful null
+            // result (rare in practice; most suspends either suspend or
+            // return a boxed Unit / boxed primitive).
+            cont.CompleteWithLocalHandle(IntPtr.Zero);
         }
 
         return cont.Tcs.Task.ContinueWith(static (t, state) =>
@@ -123,7 +133,10 @@ internal static class SuspendBridge
             // Belt-and-suspenders: keep the JCW alive until completion.
             GC.KeepAlive(cont);
 
-            var boxed = t.Result;
+            // GetAwaiter().GetResult() rather than t.Result so a faulted
+            // TCS surfaces the original exception instead of an
+            // AggregateException wrapper.
+            var boxed = t.GetAwaiter().GetResult();
             try
             {
                 if (boxed is not null && IsResultFailure(boxed.Handle))
@@ -147,14 +160,14 @@ internal static class SuspendBridge
     /// Non-generic overload for suspend functions that return Kotlin
     /// <c>Unit</c> (e.g. <c>ScrollState.animateScrollTo</c>).
     /// </summary>
-    public static Task Invoke(Func<SuspendContinuation, Java.Lang.Object?> call) =>
+    public static Task Invoke(Func<SuspendContinuation, IntPtr> call) =>
         Invoke<object?>(call, static _ => null);
 
-    static bool IsCoroutineSuspended(Java.Lang.Object? boxed)
+    static bool IsCoroutineSuspended(IntPtr handle)
     {
-        if (boxed is null) return false;
+        if (handle == IntPtr.Zero) return false;
         EnsureSuspendedHandle();
-        return JNIEnv.IsSameObject(boxed.Handle, s_suspendedHandle);
+        return JNIEnv.IsSameObject(handle, s_suspendedHandle);
     }
 
     static void EnsureSuspendedHandle()
@@ -178,26 +191,16 @@ internal static class SuspendBridge
     static void EnsureResultFailureClass()
     {
         if (s_resultFailureClass != IntPtr.Zero) return;
-        var local = JNIEnv.FindClass("kotlin/Result$Failure");
-        try
-        {
-            // Resolve the field id from the local class ref — jfieldID
-            // is a stable pointer and doesn't depend on which jclass ref
-            // looked it up. Write the field id BEFORE publishing the
-            // class ref via Interlocked.CompareExchange so any reader
-            // that observes a non-zero s_resultFailureClass is
-            // guaranteed (via the CAS's release semantics) to see a
-            // fully initialised s_resultFailureExceptionField.
-            var fid = JNIEnv.GetFieldID(local, "exception", "Ljava/lang/Throwable;");
-            var gref = JNIEnv.NewGlobalRef(local);
-            s_resultFailureExceptionField = fid;
-            if (Interlocked.CompareExchange(ref s_resultFailureClass, gref, IntPtr.Zero) != IntPtr.Zero)
-                JNIEnv.DeleteGlobalRef(gref);
-        }
-        finally
-        {
-            JNIEnv.DeleteLocalRef(local);
-        }
+        // JNIEnv.FindClass in Mono.Android returns a stable, globally
+        // registered class ref — no NewGlobalRef/DeleteLocalRef dance.
+        // Resolve the field id first, then publish the class ref via
+        // CAS with release semantics so readers that observe a non-zero
+        // s_resultFailureClass are guaranteed to see a fully
+        // initialised s_resultFailureExceptionField.
+        var cls = JNIEnv.FindClass("kotlin/Result$Failure");
+        var fid = JNIEnv.GetFieldID(cls, "exception", "Ljava/lang/Throwable;");
+        s_resultFailureExceptionField = fid;
+        Interlocked.CompareExchange(ref s_resultFailureClass, cls, IntPtr.Zero);
     }
 
     static Exception ExtractFailureException(Java.Lang.Object failure)
