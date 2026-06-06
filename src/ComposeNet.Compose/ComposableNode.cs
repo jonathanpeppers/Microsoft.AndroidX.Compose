@@ -33,15 +33,11 @@ public abstract class ComposableNode
     Modifier? _prepended;
     Modifier? _appended;
 
-    // Per-render seed for runtime PaddingValues handed to a child node
-    // by a parent layout (e.g. Scaffold) via Render(IComposer, IntPtr).
-    // ThreadStatic because composition is single-threaded (see
-    // RenderContext); owner-checked because BuildModifier is called by
-    // every facade in the tree, not just the seed target — without the
-    // owner check, the first descendant to call BuildModifier would
-    // capture padding meant for the body. See issue #46.
-    [System.ThreadStatic] static ComposableNode? s_seedOwner;
-    [System.ThreadStatic] static IntPtr           s_seedPaddingValues;
+    // Runtime PaddingValues handle stashed by Render(IComposer, IntPtr)
+    // (e.g. a Scaffold body) for the next BuildModifier call to consume.
+    // Per-instance so descendants don't inherit it; save/restored by the
+    // virtual so re-entrant renders nest cleanly. See issue #46.
+    IntPtr _seedPaddingValues;
 
     /// <summary>
     /// Set the <see cref="ComposeNet.Modifier"/> to prepend at the
@@ -108,18 +104,11 @@ public abstract class ComposableNode
         _prepended = null;
         _appended  = null;
 
-        // Only consume the seed if it was scoped to this node. The
-        // owner check prevents leaking padding into descendants when a
-        // pass-through container (e.g. MaterialTheme) doesn't call
-        // BuildModifier itself; in that case padding is silently dropped,
-        // matching the long-standing PrependModifier caveat above.
-        IntPtr seed = IntPtr.Zero;
-        if (ReferenceEquals(s_seedOwner, this))
-        {
-            seed = s_seedPaddingValues;
-            s_seedOwner         = null;
-            s_seedPaddingValues = IntPtr.Zero;
-        }
+        // Consume any seed stashed by Render(IComposer, IntPtr); the
+        // wrapper restores the prior value in its finally block so
+        // nested renders nest cleanly without leaking.
+        IntPtr seed = _seedPaddingValues;
+        _seedPaddingValues = IntPtr.Zero;
 
         Modifier? combined = prepended;
         if (Modifier is not null)
@@ -139,8 +128,8 @@ public abstract class ComposableNode
     /// runtime <c>PaddingValues</c> handle (e.g.
     /// <see cref="Scaffold"/>'s content lambda). The default
     /// implementation stashes <paramref name="paddingValues"/> in a
-    /// thread-static slot keyed on this node and delegates to the
-    /// regular <see cref="Render(IComposer)"/>; the next call to
+    /// per-instance slot and delegates to the regular
+    /// <see cref="Render(IComposer)"/>; the next call to
     /// <see cref="BuildModifier"/> on this same node consumes the
     /// handle and prepends a <c>Modifier.padding(paddingValues)</c> op
     /// directly via JNI — no per-measure managed
@@ -154,18 +143,15 @@ public abstract class ComposableNode
     /// </summary>
     internal virtual void Render(IComposer composer, IntPtr paddingValues)
     {
-        var prevOwner = s_seedOwner;
-        var prevSeed  = s_seedPaddingValues;
-        s_seedOwner         = this;
-        s_seedPaddingValues = paddingValues;
+        var prev = _seedPaddingValues;
+        _seedPaddingValues = paddingValues;
         try
         {
             Render(composer);
         }
         finally
         {
-            s_seedOwner         = prevOwner;
-            s_seedPaddingValues = prevSeed;
+            _seedPaddingValues = prev;
         }
     }
 }
