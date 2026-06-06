@@ -899,6 +899,38 @@ internal static partial class ComposeBridges
         InstanceField = "INSTANCE")]
     public static partial IntPtr RememberPlainTooltipPositionProvider(IComposer composer);
 
+    // androidx.compose.material3.pulltorefresh.PullToRefreshKt.PullToRefreshBox
+    [ComposeBridge(
+        Class     = "androidx/compose/material3/pulltorefresh/PullToRefreshKt",
+        JvmName   = "PullToRefreshBox",
+        Signature = "(ZLkotlin/jvm/functions/Function0;Landroidx/compose/ui/Modifier;" +
+                    "Landroidx/compose/material3/pulltorefresh/PullToRefreshState;" +
+                    "Landroidx/compose/ui/Alignment;Lkotlin/jvm/functions/Function3;" +
+                    "Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;II)V",
+        Defaults  = typeof(PullToRefreshBoxDefault))]
+    [ComposeFacade]
+    public static partial void PullToRefreshBox(
+        bool        isRefreshing,
+        IFunction0  onRefresh,
+        [StateHolder(Remember  = nameof(RememberPullToRefreshState),
+                     StateType = typeof(PullToRefreshState))]
+        IntPtr      state,
+        IModifier?  modifier,
+        IFunction3  content,
+        int         defaults,
+        IComposer   composer);
+
+    // androidx.compose.material3.pulltorefresh.PullToRefreshKt.rememberPullToRefreshState
+    // No-arg @Composable; signature has only the trailing _changed I slot
+    // (no $default), so omit Defaults entirely per the bridge generator
+    // contract (see CN2005).
+    [ComposeBridge(
+        Class     = "androidx/compose/material3/pulltorefresh/PullToRefreshKt",
+        JvmName   = "rememberPullToRefreshState",
+        Signature = "(Landroidx/compose/runtime/Composer;I)" +
+                    "Landroidx/compose/material3/pulltorefresh/PullToRefreshState;")]
+    public static partial IntPtr RememberPullToRefreshState(IComposer composer);
+
     // androidx.compose.material3.CardKt.Card (non-clickable)
     const string CardSig =
         "(Landroidx/compose/ui/Modifier;Landroidx/compose/ui/graphics/Shape;" +
@@ -1354,6 +1386,38 @@ internal static partial class ComposeBridges
                     "Landroidx/compose/ui/Modifier;",
         Defaults  = typeof(ModifierClickableDefault))]
     internal static partial IntPtr ModifierClickable(IntPtr modifier, IFunction0 onClick);
+
+    // androidx.compose.foundation.ScrollKt.verticalScroll$default —
+    // non-@Composable Modifier extension. Kotlin params after the
+    // receiver: state, enabled, flingBehavior?, reverseScrolling. The
+    // C# wrapper always supplies state/enabled/reverseScrolling and
+    // leaves flingBehavior to Kotlin's default
+    // (ScrollableDefaults.flingBehavior()).
+    [ComposeBridge(
+        Class     = "androidx/compose/foundation/ScrollKt",
+        JvmName   = "verticalScroll$default",
+        Signature = "(Landroidx/compose/ui/Modifier;" +
+                    "Landroidx/compose/foundation/ScrollState;Z" +
+                    "Landroidx/compose/foundation/gestures/FlingBehavior;Z" +
+                    "ILjava/lang/Object;)" +
+                    "Landroidx/compose/ui/Modifier;",
+        Defaults  = typeof(ModifierVerticalScrollDefault))]
+    internal static partial IntPtr ModifierVerticalScroll(
+        IntPtr modifier, IntPtr state, bool enabled, bool reverseScrolling);
+
+    // androidx.compose.foundation.ScrollKt.horizontalScroll$default —
+    // same shape as ModifierVerticalScroll above.
+    [ComposeBridge(
+        Class     = "androidx/compose/foundation/ScrollKt",
+        JvmName   = "horizontalScroll$default",
+        Signature = "(Landroidx/compose/ui/Modifier;" +
+                    "Landroidx/compose/foundation/ScrollState;Z" +
+                    "Landroidx/compose/foundation/gestures/FlingBehavior;Z" +
+                    "ILjava/lang/Object;)" +
+                    "Landroidx/compose/ui/Modifier;",
+        Defaults  = typeof(ModifierHorizontalScrollDefault))]
+    internal static partial IntPtr ModifierHorizontalScroll(
+        IntPtr modifier, IntPtr state, bool enabled, bool reverseScrolling);
 
     // androidx.compose.material3.AppBarKt — TopAppBar / CenterAlignedTopAppBar
     // share the `-GHTll3U` shape (extra `expandedHeight: Dp` vs. the older
@@ -2127,26 +2191,37 @@ internal static partial class ComposeBridges
             p5:                      0,
             _changed:                defaults);
 
-    [ComposeFacade(Defaults = typeof(ColumnDefault), Scope = "Column")]
-    public static partial void Column(IModifier? modifier, IFunction3 content, int defaults, IComposer composer);
-
-    public static partial void Column(IModifier? modifier, IFunction3 content, int defaults, IComposer composer)
+    // Internal forwarder for Column. The public-facing facade
+    // (Column.cs) is hand-written because the [ComposeFacade] generator
+    // can't surface a typed Arrangement? ctor parameter; it owns the
+    // $default mask and forwards the chosen verticalArrangement here.
+    internal static void Column(
+        IModifier? modifier,
+        AndroidX.Compose.Foundation.Layout.Arrangement.IVertical? verticalArrangement,
+        IFunction3 content,
+        int defaults,
+        IComposer composer)
         => ColumnKt.Column(
             modifier:            modifier,
-            verticalArrangement: null,
+            verticalArrangement: verticalArrangement,
             horizontalAlignment: null,
             content:             content,
             _composer:           composer,
             p5:                  0,
             _changed:            defaults);
 
-    [ComposeFacade(Defaults = typeof(RowDefault), Scope = "Row")]
-    public static partial void Row(IModifier? modifier, IFunction3 content, int defaults, IComposer composer);
-
-    public static partial void Row(IModifier? modifier, IFunction3 content, int defaults, IComposer composer)
+    // Internal forwarder for Row — see the Column helper above for why
+    // this isn't an auto-generated facade. Row.cs supplies the typed
+    // horizontalArrangement and matching $default mask.
+    internal static void Row(
+        IModifier? modifier,
+        AndroidX.Compose.Foundation.Layout.Arrangement.IHorizontal? horizontalArrangement,
+        IFunction3 content,
+        int defaults,
+        IComposer composer)
         => RowKt.Row(
             modifier:              modifier,
-            horizontalArrangement: null,
+            horizontalArrangement: horizontalArrangement,
             verticalAlignment:     null,
             content:               content,
             _composer:             composer,

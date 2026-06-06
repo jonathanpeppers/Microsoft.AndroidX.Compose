@@ -11,6 +11,16 @@ ComposeNet.AlertDialog.Text.get -> ComposeNet.ComposableNode?
 ComposeNet.AlertDialog.Text.set -> void
 ComposeNet.AlertDialog.Title.get -> ComposeNet.ComposableNode?
 ComposeNet.AlertDialog.Title.set -> void
+ComposeNet.Arrangement
+static ComposeNet.Arrangement.Bottom.get -> ComposeNet.Arrangement!
+static ComposeNet.Arrangement.Center.get -> ComposeNet.Arrangement!
+static ComposeNet.Arrangement.End.get -> ComposeNet.Arrangement!
+static ComposeNet.Arrangement.SpaceAround.get -> ComposeNet.Arrangement!
+static ComposeNet.Arrangement.SpaceBetween.get -> ComposeNet.Arrangement!
+static ComposeNet.Arrangement.SpaceEvenly.get -> ComposeNet.Arrangement!
+static ComposeNet.Arrangement.SpacedBy(int dp) -> ComposeNet.Arrangement!
+static ComposeNet.Arrangement.Start.get -> ComposeNet.Arrangement!
+static ComposeNet.Arrangement.Top.get -> ComposeNet.Arrangement!
 ComposeNet.AssistChip
 ComposeNet.AssistChip.AssistChip(System.Action! onClick) -> void
 ComposeNet.AssistChip.Label.get -> ComposeNet.ComposableNode?
@@ -65,6 +75,7 @@ ComposeNet.CircularProgressIndicator.TrackColorArgb.get -> long?
 ComposeNet.CircularProgressIndicator.TrackColorArgb.set -> void
 ComposeNet.Column
 ComposeNet.Column.Column() -> void
+ComposeNet.Column.Column(ComposeNet.Arrangement? verticalArrangement) -> void
 ComposeNet.ComposableContainer
 ComposeNet.ComposableContainer.Add(ComposeNet.ComposableNode? child) -> void
 ComposeNet.ComposableContainer.Add(ComposeNet.Modifier! modifier) -> void
@@ -368,6 +379,7 @@ ComposeNet.Modifier.FillMaxHeight(float fraction = 1) -> ComposeNet.Modifier!
 ComposeNet.Modifier.FillMaxSize(float fraction = 1) -> ComposeNet.Modifier!
 ComposeNet.Modifier.FillMaxWidth(float fraction = 1) -> ComposeNet.Modifier!
 ComposeNet.Modifier.Height(int dp) -> ComposeNet.Modifier!
+ComposeNet.Modifier.HorizontalScroll(ComposeNet.ScrollState! state, bool enabled = true, bool reverseScrolling = false) -> ComposeNet.Modifier!
 ComposeNet.Modifier.Padding(int allDp) -> ComposeNet.Modifier!
 ComposeNet.Modifier.Padding(int horizontalDp, int verticalDp) -> ComposeNet.Modifier!
 ComposeNet.Modifier.Padding(int startDp, int topDp, int endDp, int bottomDp) -> ComposeNet.Modifier!
@@ -376,6 +388,7 @@ ComposeNet.Modifier.Size(int dp) -> ComposeNet.Modifier!
 ComposeNet.Modifier.Size(int widthDp, int heightDp) -> ComposeNet.Modifier!
 ComposeNet.Modifier.SystemBarsPadding() -> ComposeNet.Modifier!
 ComposeNet.Modifier.Then(ComposeNet.Modifier! other) -> ComposeNet.Modifier!
+ComposeNet.Modifier.VerticalScroll(ComposeNet.ScrollState! state, bool enabled = true, bool reverseScrolling = false) -> ComposeNet.Modifier!
 ComposeNet.Modifier.Weight(float weight, bool fill = true) -> ComposeNet.Modifier!
 ComposeNet.Modifier.Width(int dp) -> ComposeNet.Modifier!
 ComposeNet.MultiChoiceSegmentedButtonRow
@@ -459,6 +472,12 @@ ComposeNet.PrimaryScrollableTabRow
 ComposeNet.PrimaryScrollableTabRow.PrimaryScrollableTabRow(int selectedTabIndex) -> void
 ComposeNet.PrimaryTabRow
 ComposeNet.PrimaryTabRow.PrimaryTabRow(int selectedTabIndex) -> void
+ComposeNet.PullToRefreshBox
+ComposeNet.PullToRefreshBox.PullToRefreshBox(bool isRefreshing, System.Action! onRefresh, ComposeNet.PullToRefreshState? state = null) -> void
+ComposeNet.PullToRefreshState
+ComposeNet.PullToRefreshState.DistanceFraction.get -> float
+ComposeNet.PullToRefreshState.IsAnimating.get -> bool
+ComposeNet.PullToRefreshState.PullToRefreshState() -> void
 ComposeNet.RadioButton
 ComposeNet.RadioButton.RadioButton(bool selected, System.Action! onClick) -> void
 ComposeNet.RangeSlider
@@ -467,6 +486,7 @@ ComposeNet.Resource
 ComposeNet.Resource.Resource() -> void
 ComposeNet.Row
 ComposeNet.Row.Row() -> void
+ComposeNet.Row.Row(ComposeNet.Arrangement? horizontalArrangement) -> void
 ComposeNet.Scaffold
 ComposeNet.Scaffold.Body.get -> ComposeNet.ComposableNode?
 ComposeNet.Scaffold.Body.set -> void
@@ -481,6 +501,14 @@ ComposeNet.Scaffold.TopBar.get -> ComposeNet.ComposableNode?
 ComposeNet.Scaffold.TopBar.set -> void
 ComposeNet.ScrollableTabRow
 ComposeNet.ScrollableTabRow.ScrollableTabRow(int selectedTabIndex) -> void
+ComposeNet.ScrollState
+ComposeNet.ScrollState.CanScrollBackward.get -> bool
+ComposeNet.ScrollState.CanScrollForward.get -> bool
+ComposeNet.ScrollState.IsScrollInProgress.get -> bool
+ComposeNet.ScrollState.MaxValue.get -> int
+ComposeNet.ScrollState.ScrollState(int initial = 0) -> void
+ComposeNet.ScrollState.Value.get -> int
+ComposeNet.ScrollState.ViewportSize.get -> int
 ComposeNet.SearchBar
 ComposeNet.SearchBar.InputField.get -> ComposeNet.ComposableNode?
 ComposeNet.SearchBar.InputField.set -> void

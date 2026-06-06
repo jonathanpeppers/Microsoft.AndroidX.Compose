@@ -94,6 +94,14 @@ public class MainActivity : ComposeActivity
             // filter without binding InputTransformation.
             var searchQuery   = Remember(() => new MutableState<string>(""));
 
+            // Lazy tab: pull-to-refresh demo state. `refreshing` drives the
+            // PullToRefreshBox indicator; `refreshTick` bumps once per
+            // completed refresh so the rows visibly change. The reload
+            // is faked with a 1.2s Handler.PostDelayed callback so the
+            // spinner is observable without any real async work.
+            var refreshing  = Remember(() => new MutableState<bool>(false));
+            var refreshTick = Remember(() => new MutableNumberState<int>(0));
+
             string[] tabNames = { "Basics", "Buttons", "Cards", "Drawer", "Selection", "Pickers", "Misc", "App bars", "Lazy", "Carousels" };
 
             // Per-tab content. Only the current tab's column is added to
@@ -388,18 +396,14 @@ public class MainActivity : ComposeActivity
                 4 => (ComposableNode)new Column
                 {
                     new Text("Selection controls"),
-                    new Row
+                    new Row(Arrangement.SpacedBy(12))
                     {
                         new Checkbox(@checked: checkbox.Value, onCheckedChange: v => checkbox.Value = v),
-                        new Spacer { Modifier = Modifier.Companion.FillMaxWidth(0.05f) },
                         new Switch(@checked: switchOn.Value, onCheckedChange: v => switchOn.Value = v),
-                        new Spacer { Modifier = Modifier.Companion.FillMaxWidth(0.05f) },
                         new RadioButton(selected: radioPick.Value == 0, onClick: () => radioPick.Value = 0),
                         new Text("A"),
-                        new Spacer { Modifier = Modifier.Companion.FillMaxWidth(0.03f) },
                         new RadioButton(selected: radioPick.Value == 1, onClick: () => radioPick.Value = 1),
                         new Text("B"),
-                        new Spacer { Modifier = Modifier.Companion.FillMaxWidth(0.03f) },
                         new RadioButton(selected: radioPick.Value == 2, onClick: () => radioPick.Value = 2),
                         new Text("C"),
                     },
@@ -419,14 +423,11 @@ public class MainActivity : ComposeActivity
                 5 => new Column
                 {
                     new Text("Dialogs and sheets"),
-                    new Row
+                    new Row(Arrangement.SpacedBy(8))
                     {
                         new Button(onClick: () => showSheet.Value = true) { new Text("Sheet") },
-                        new Spacer { Modifier = Modifier.Companion.FillMaxWidth(0.03f) },
                         new Button(onClick: () => showDate.Value  = true) { new Text("Date") },
-                        new Spacer { Modifier = Modifier.Companion.FillMaxWidth(0.03f) },
                         new Button(onClick: () => showRange.Value = true) { new Text("Range") },
-                        new Spacer { Modifier = Modifier.Companion.FillMaxWidth(0.03f) },
                         new Button(onClick: () => showTime.Value  = true) { new Text("Time") },
                     },
                     new HorizontalDivider { Modifier = Modifier.Companion.Padding(0, 8) },
@@ -438,10 +439,9 @@ public class MainActivity : ComposeActivity
                 {
                     new Text("Misc Material 3"),
                     new Text("Progress indicators (indeterminate):"),
-                    new Row
+                    new Row(Arrangement.SpacedBy(12))
                     {
                         new CircularProgressIndicator(),
-                        new Spacer { Modifier = Modifier.Companion.FillMaxWidth(0.05f) },
                         new Column
                         {
                             new Text("Linear ↓"),
@@ -655,12 +655,31 @@ public class MainActivity : ComposeActivity
                     // list + a per-item callback. Compose lazily composes
                     // only the visible window, so 1000 rows costs about
                     // the same as 20.
-                    new Text("LazyColumn (1000 rows)"),
-                    new LazyColumn<int>(
-                        items:       System.Linq.Enumerable.Range(0, 1000).ToList(),
-                        itemContent: i => new Text($"Row {i:D4}"))
+                    new Text($"LazyColumn (1000 rows) — pull to refresh, rev {refreshTick}"),
+                    // PullToRefreshBox wraps a scrollable child and surfaces
+                    // the Material 3 pull gesture. The Box stretches to fill
+                    // the available height so the indicator animates over
+                    // the list rather than overflowing below it.
+                    new PullToRefreshBox(
+                        isRefreshing: refreshing.Value,
+                        onRefresh:    () =>
+                        {
+                            refreshing.Value = true;
+                            new Handler(Looper.MainLooper!).PostDelayed(() =>
+                            {
+                                refreshTick.Value++;
+                                refreshing.Value = false;
+                            }, 1200);
+                        })
                     {
-                        Modifier = Modifier.Companion.FillMaxWidth().Height(220),
+                        Modifier.Companion.FillMaxWidth().Height(220),
+
+                        new LazyColumn<int>(
+                            items:       System.Linq.Enumerable.Range(0, 1000).ToList(),
+                            itemContent: i => new Text($"Row {i:D4} (rev {refreshTick})"))
+                        {
+                            Modifier = Modifier.Companion.FillMaxSize(),
+                        },
                     },
                     new HorizontalDivider { Modifier = Modifier.Companion.Padding(0, 8) },
                     new Text("LazyRow (carousel)"),

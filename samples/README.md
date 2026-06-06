@@ -21,7 +21,7 @@ Status legend: ✅ done · 🚧 in progress · ⬜️ not started · ❌ blocked
 
 | Complexity (upstream) | Sample      | Status | Notes |
 |----------------------:|-------------|:------:|-------|
-| Low                   | **Jetchat** | ✅      | Simplified single-channel chat — message log uses `LazyColumn`. No navigation, no IME-sync. See `Jetchat/README.md`. |
+| Low                   | **Jetchat** | ✅      | Simplified single-channel chat with navigation drawer (`composers` / `droidcon-nyc`), top-bar search/info action icons, distinct-per-author avatars (DiceBear `lorelei`, CC0), and a `LazyColumn`-backed message log. Programmatic drawer open + multi-channel routing still pending. See `Jetchat/README.md`. |
 | Medium                | JetNews     | ⬜️     | Needs image loading and navigation. |
 | Medium                | Reply       | ⬜️     | Needs adaptive layouts (window-size classes). |
 | Medium-High           | Jetsnack    | ⬜️     | Heavy custom layouts and animation. |
@@ -45,11 +45,17 @@ that needs the same primitive.
 | [#58](https://github.com/jonathanpeppers/compose-net/issues/58)  | `Text` styling — `TextStyle`, `FontWeight`, `AnnotatedString`, `KeyboardOptions`, `supportingText`, leading/trailing icons | **Jetchat** bold author names; every sample's typography. |
 | [#61](https://github.com/jonathanpeppers/compose-net/issues/61)  | Theming — parameterize `MaterialTheme`, `ColorScheme` / `Typography` / `Shapes`, `MaterialTheme.colorScheme.*` reads, Material Icons | **Jetchat** primary-tinted "me" bubble, every sample's app-bar icons. |
 | [#62](https://github.com/jonathanpeppers/compose-net/issues/62)  | State primitives — `rememberSaveable`, `mutableStateListOf`/`MapOf`, `derivedStateOf` | Rotation-stable state in every sample. |
-| [#63](https://github.com/jonathanpeppers/compose-net/issues/63)  | `Modifier` surface — `verticalScroll` / `horizontalScroll`, gestures, focus, semantics, `weight` / `align` extras | Scrolling message list in **Jetchat**, drag/drop everywhere. |
+| [#63](https://github.com/jonathanpeppers/compose-net/issues/63)  | `Modifier` surface — gestures, focus, semantics, `weight` / `align` extras (`verticalScroll` / `horizontalScroll` ✅ landed in #94 and exercised by **Jetchat**'s drawer panel) | Drag/drop everywhere. |
 | [#64](https://github.com/jonathanpeppers/compose-net/issues/64)  | Drawing primitives — `Canvas`, `drawBehind`, `Brush`, `Path`, `Shape` factories | Custom visuals in **JetLagged**. |
 | [#65](https://github.com/jonathanpeppers/compose-net/issues/65)  | C# value types for inline classes (`Color`, `Dp`, `Sp`, `FontWeight`, `TextAlign`, `Shape`) | Asymmetric `RoundedCornerShape(topStart, topEnd, …)` on **Jetchat** bubbles; ergonomic API everywhere. |
 | [#69](https://github.com/jonathanpeppers/compose-net/issues/69)  | WindowInsets padding modifiers (`imePadding`, `navigationBarsPadding`, `statusBarsPadding`, …) | IME-synced input row in **Jetchat**. |
 | [#70](https://github.com/jonathanpeppers/compose-net/issues/70)  | `Row` / `Column` `Arrangement` parameter (`Start`, `End`, `Center`, `SpaceBetween`, `SpaceAround`, `spacedBy`) | Right-aligned "me" bubbles in **Jetchat** (currently faked with `Spacer().Weight(1f)`). |
+
+## Attribution
+
+These samples are C# ports inspired by Google's [android/compose-samples](https://github.com/android/compose-samples), which is licensed under the [Apache License 2.0](https://github.com/android/compose-samples/blob/main/LICENSE). No upstream Kotlin source code is copied into this repo — the ports re-implement the same UI in C# against this repo's `ComposeNet.Compose` facade.
+
+The four per-author avatar PNGs in [`samples/Jetchat/Resources/drawable-nodpi/`](Jetchat/Resources/drawable-nodpi/) (`avatar_ali.png`, `avatar_aubrey.png`, `avatar_taylor.png`, `avatar_jordan.png`) were generated with [DiceBear](https://www.dicebear.com)'s `lorelei` style and are released under [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) (no attribution required, but credit appreciated). All other sample drawables and string content under each `samples/<Name>/` folder are original to this repo.
 | [#20](https://github.com/jonathanpeppers/compose-net/issues/20)  | Edge-to-edge bootstrapping | Status/nav-bar overlap on every sample. |
 
 ## Conventions
