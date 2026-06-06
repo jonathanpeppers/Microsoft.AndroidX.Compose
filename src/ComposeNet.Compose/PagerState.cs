@@ -46,6 +46,19 @@ namespace ComposeNet;
 public sealed class PagerState
 {
     /// <summary>
+    /// Create a new <see cref="PagerState"/>. The wrapper starts
+    /// unbound; the underlying Kotlin
+    /// <c>androidx.compose.foundation.pager.PagerState</c> is bound on
+    /// the first render of the pager facade this instance is passed to,
+    /// and refreshed every recomposition thereafter. Property reads
+    /// return safe fallbacks (<c>0</c> / <c>0f</c>) until the first
+    /// bind.
+    /// </summary>
+    public PagerState()
+    {
+    }
+
+    /// <summary>
     /// Underlying <c>androidx.compose.foundation.pager.PagerState</c>
     /// returned by <c>rememberPagerState</c>. Refreshed every render so
     /// the Kotlin <c>pageCount</c> lambda observes recomposition-time
