@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using AndroidX.Compose.Runtime;
@@ -37,20 +38,30 @@ public abstract class ComposableContainer : ComposableNode, IEnumerable
 
     /// <summary>
     /// Renders this container's children sequentially into
-    /// <paramref name="composer"/>, wrapping each child in a per-index
-    /// <c>StartReplaceableGroup(i)</c> so sibling renders get distinct
-    /// slot-table group keys. Without this, three sibling
-    /// <c>SegmentedButton</c>s (same C# call site → same group key)
-    /// rely on Compose's positional disambiguation, which combined with
-    /// lambda-identity churn elsewhere can land Reuse/Move ops at the
-    /// wrong tree index.
+    /// <paramref name="composer"/>, wrapping each child in a per-position
+    /// <c>StartReplaceableGroup</c> whose key combines the sibling index
+    /// <em>and</em> the child's runtime <see cref="Type"/>. Without per-
+    /// position groups, three sibling <c>SegmentedButton</c>s (same C#
+    /// call site → same group key) rely on Compose's positional
+    /// disambiguation, which combined with lambda-identity churn
+    /// elsewhere can land Reuse/Move ops at the wrong tree index.
+    /// Without the type component, a sibling that swaps to a different
+    /// <see cref="ComposableNode"/> subclass at the same position
+    /// (e.g. tab navigation flipping a <c>PullToRefreshBox</c> for a
+    /// <c>HorizontalUncontainedCarousel</c>) would re-enter the prior
+    /// occupant's group and read its slot-table entries, throwing
+    /// <c>ClassCastException</c> from inside <c>rememberSaveable</c>
+    /// when the prior slot held an incompatible type. Same-typed
+    /// siblings at the same position keep their identity and slot
+    /// state intact — that is intentional Compose positional identity.
     /// </summary>
     private protected void RenderChildren(IComposer composer)
     {
         for (int i = 0; i < _children.Count; i++)
         {
-            composer.StartReplaceableGroup(i);
-            try { _children[i].Render(composer); }
+            var child = _children[i];
+            composer.StartReplaceableGroup(HashCode.Combine(i, child.GetType()));
+            try { child.Render(composer); }
             finally { composer.EndReplaceableGroup(); }
         }
     }

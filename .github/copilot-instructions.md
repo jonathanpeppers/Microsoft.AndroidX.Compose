@@ -617,13 +617,22 @@ into a normal hand-written class.
   runs outside composition.
 - **Sibling `Render()` calls inside a loop need per-position slot
   keys.** `ComposableContainer.RenderChildren` already wraps each child
-  in `composer.StartReplaceableGroup(i)` / `EndReplaceableGroup()`. Any
-  custom loop that calls `Children[i].Render(c)` directly — e.g. the
-  segmented-row scope loops in `SingleChoiceSegmentedButtonRow`,
-  `MultiChoiceSegmentedButtonRow`, or `SegmentedButton`'s label slot —
-  must do the same, otherwise same-type siblings collide on a single
-  group key and Compose disambiguates by position only (brittle
-  combined with any identity churn).
+  in `composer.StartReplaceableGroup(HashCode.Combine(i, child.GetType()))`
+  / `EndReplaceableGroup()`. Any custom loop that calls
+  `Children[i].Render(c)` directly — e.g. the segmented-row scope loops
+  in `SingleChoiceSegmentedButtonRow`, `MultiChoiceSegmentedButtonRow`,
+  or `SegmentedButton`'s label slot — must do the same, otherwise same-
+  type siblings collide on a single group key and Compose disambiguates
+  by position only (brittle combined with any identity churn). The
+  type component of the key is what stops a sibling that swaps
+  subclass-at-the-same-position (e.g. tab navigation flipping a
+  `PullToRefreshBox` for a `HorizontalUncontainedCarousel`) from re-
+  entering the prior occupant's group and reading its slot-table
+  entries — that path throws `ClassCastException` from inside
+  Compose's `rememberSaveable` (`SaverKt$Saver$1 cannot be cast to
+  SaveableHolder`). Same-typed siblings at the same position keep
+  their identity and slot state intact — that is intentional Compose
+  positional identity.
 - The single call to `ComposableLambdaKt.ComposableLambdaInstance` in
   `ComposeActivity.SetContent` is the right shape there — it's the
   call-from-anywhere factory for the root content lambda, which runs
