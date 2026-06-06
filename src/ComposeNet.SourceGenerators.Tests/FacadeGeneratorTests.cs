@@ -104,13 +104,16 @@ public class FacadeGeneratorTests
                 public float Value { get; }
                 public static long Pack(Em? e) => 0L;
             }
-            public readonly struct TextAlign
+            public readonly struct TextOverflow
             {
-                public TextAlign(int v) { Value = v; }
+                public TextOverflow(int v) { Value = v; }
                 public int Value { get; }
-                public static int Pack(TextAlign? a) => 0;
+                public static int Pack(TextOverflow? a) => 0;
             }
             public class FontWeight : Java.Lang.Object { }
+            public class FontStyle : Java.Lang.Object { }
+            public class FontFamily : Java.Lang.Object { }
+            public class TextAlign : Java.Lang.Object { }
             public class TextDecoration : Java.Lang.Object { }
             public class Shape : Java.Lang.Object { }
             public abstract class ComposableNode
@@ -1562,8 +1565,11 @@ public class FacadeGeneratorTests
     }
 
     [Fact]
-    public void OptionalValue_TextAlignAndDpAreClassifiedAsValueTypes()
+    public void OptionalValue_TextOverflowAndDpAreClassifiedAsValueTypes()
     {
+        // TextOverflow is a non-nullable @JvmInline value class in
+        // Compose source — it travels as packed `I`. Dp is also packed
+        // (`F`). Both surface as nullable auto-properties.
         var code = """
             using AndroidX.Compose.Runtime;
             using AndroidX.Compose.UI;
@@ -1571,7 +1577,7 @@ public class FacadeGeneratorTests
             using Kotlin.Jvm.Functions;
 
             [assembly: ComposeDefaults("FooDefault",
-                "!a", "align", "size")]
+                "!a", "overflow", "size")]
 
             namespace ComposeNet
             {
@@ -1581,7 +1587,7 @@ public class FacadeGeneratorTests
                                    Signature="(Ljava/lang/String;IFLandroidx/compose/runtime/Composer;II)V",
                                    Defaults=typeof(FooDefault))]
                     [ComposeFacade]
-                    public static partial void Foo(string a, TextAlign? align, Dp? size, IComposer composer);
+                    public static partial void Foo(string a, TextOverflow? overflow, Dp? size, IComposer composer);
                 }
             }
             """;
@@ -1589,7 +1595,7 @@ public class FacadeGeneratorTests
         var (output, diags, emitted) = Run(code, "Foo");
         Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
         Assert.NotNull(emitted);
-        Assert.Contains("public global::ComposeNet.TextAlign? Align { get; set; }", emitted);
+        Assert.Contains("public global::ComposeNet.TextOverflow? Overflow { get; set; }", emitted);
         Assert.Contains("public global::ComposeNet.Dp? Size { get; set; }", emitted);
 
         var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
@@ -1636,6 +1642,56 @@ public class FacadeGeneratorTests
         Assert.Contains(
             "if (FontWeight is not null) __defaults &= ~(int)global::ComposeNet.BarDefault.FontWeight;",
             emitted);
+        var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
+        Assert.Empty(errors);
+    }
+
+    [Fact]
+    public void OptionalValue_NullablePrimitivesEmitNullableAutoProperties()
+    {
+        // bool? / int? / long? params surface as Optional auto-properties
+        // — null leaves the Kotlin default in place via the auto-mask
+        // bit, a value clears the bit and lowers to the JNI primitive
+        // slot.
+        var code = """
+            using AndroidX.Compose.Runtime;
+            using AndroidX.Compose.UI;
+            using ComposeNet;
+            using Kotlin.Jvm.Functions;
+
+            [assembly: ComposeDefaults("PrimDefault",
+                "!text", "modifier", "softWrap", "maxLines", "color")]
+
+            namespace ComposeNet
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(Class="x/Y", JvmName="F",
+                                   Signature="(Ljava/lang/String;Landroidx/compose/ui/Modifier;ZIJLandroidx/compose/runtime/Composer;II)V",
+                                   Defaults=typeof(PrimDefault))]
+                    [ComposeFacade]
+                    public static partial void F(
+                        string text, IModifier? modifier,
+                        bool? softWrap, int? maxLines, long? color,
+                        IComposer composer);
+                }
+            }
+            """;
+
+        var (output, diags, emitted) = Run(code, "F");
+        Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+        // Each nullable primitive surfaces as an auto-property.
+        Assert.Contains("public bool? SoftWrap { get; set; }", emitted);
+        Assert.Contains("public int? MaxLines { get; set; }", emitted);
+        Assert.Contains("public long? Color { get; set; }", emitted);
+        // The bridge call passes the property names through.
+        Assert.Contains("global::ComposeNet.ComposeBridges.F(_text, BuildModifier(), SoftWrap, MaxLines, Color, composer);", emitted);
+        // Not surfaced as ctor parameters.
+        Assert.DoesNotContain("bool? softWrap", emitted);
+        Assert.DoesNotContain("int? maxLines", emitted);
+        Assert.DoesNotContain("long? color", emitted);
+
         var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
         Assert.Empty(errors);
     }

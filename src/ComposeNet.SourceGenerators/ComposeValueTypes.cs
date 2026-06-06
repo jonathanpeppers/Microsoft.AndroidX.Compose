@@ -41,9 +41,13 @@ internal static class ComposeValueTypes
             ["ComposeNet.Sp"] =
                 ('J', "global::ComposeNet.Sp.Pack({0})"),
 
-            // androidx.compose.ui.text.style.TextAlign → JNI int.
-            ["ComposeNet.TextAlign"] =
-                ('I', "global::ComposeNet.TextAlign.Pack({0})"),
+            // androidx.compose.ui.text.style.TextOverflow → JNI int.
+            // (Compose declares TextOverflow as non-nullable in
+            // @Composable signatures, so it lowers as packed `I` rather
+            // than the boxed `L` reference seen for nullable inline
+            // classes like TextAlign / FontStyle.)
+            ["ComposeNet.TextOverflow"] =
+                ('I', "global::ComposeNet.TextOverflow.Pack({0})"),
 
             // androidx.compose.ui.graphics.Color is bound by
             // Xamarin.AndroidX.Compose.UI.Graphics 1.11.2.1, but Kotlin's

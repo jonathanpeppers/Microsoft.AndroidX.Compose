@@ -259,11 +259,19 @@ internal static partial class ComposeBridges
     public static partial void Text(
         string text,
         IModifier? modifier,
+        long? color,
         Sp? fontSize,
+        FontStyle? fontStyle,
         FontWeight? fontWeight,
+        FontFamily? fontFamily,
         Sp? letterSpacing,
         TextDecoration? decoration,
+        TextAlign? align,
         Sp? lineHeight,
+        TextOverflow? overflow,
+        bool? softWrap,
+        int? maxLines,
+        int? minLines,
         IComposer composer);
 
     // androidx.compose.material3.ButtonKt.Button
@@ -605,8 +613,24 @@ internal static partial class ComposeBridges
         Signature = TextFieldStringSig,
         Defaults  = typeof(TextFieldDefault))]
     [ComposeFacade]
-    public static partial void TextField(string value, [Callback(typeof(string))] IFunction1 onValueChange,
-                                         IModifier? modifier, IComposer composer);
+    public static partial void TextField(
+        string value,
+        [Callback(typeof(string))] IFunction1 onValueChange,
+        IModifier? modifier,
+        bool? enabled,
+        bool? readOnly,
+        IFunction2? label,
+        IFunction2? placeholder,
+        IFunction2? leadingIcon,
+        IFunction2? trailingIcon,
+        IFunction2? prefix,
+        IFunction2? suffix,
+        IFunction2? supportingText,
+        bool? isError,
+        bool? singleLine,
+        int? maxLines,
+        int? minLines,
+        IComposer composer);
 
     [ComposeBridge(
         Class     = "androidx/compose/material3/OutlinedTextFieldKt",
@@ -614,8 +638,24 @@ internal static partial class ComposeBridges
         Signature = TextFieldStringSig,
         Defaults  = typeof(TextFieldDefault))]
     [ComposeFacade]
-    public static partial void OutlinedTextField(string value, [Callback(typeof(string))] IFunction1 onValueChange,
-                                                 IModifier? modifier, IComposer composer);
+    public static partial void OutlinedTextField(
+        string value,
+        [Callback(typeof(string))] IFunction1 onValueChange,
+        IModifier? modifier,
+        bool? enabled,
+        bool? readOnly,
+        IFunction2? label,
+        IFunction2? placeholder,
+        IFunction2? leadingIcon,
+        IFunction2? trailingIcon,
+        IFunction2? prefix,
+        IFunction2? suffix,
+        IFunction2? supportingText,
+        bool? isError,
+        bool? singleLine,
+        int? maxLines,
+        int? minLines,
+        IComposer composer);
 
     // androidx.compose.material3.SecureTextFieldKt.{SecureTextField,OutlinedSecureTextField}-XvU6IwQ.
     // Both overloads have identical 23-user-param signatures: the

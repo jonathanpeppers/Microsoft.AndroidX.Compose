@@ -180,6 +180,60 @@ public class MainActivity : ComposeActivity
                                 LineHeight = 22,
                                 Modifier = Modifier.Companion.Padding(8),
                             },
+                            // Issue #58: text styling additions — color, italic /
+                            // family, alignment, overflow, line clamping. Each
+                            // property surfaces through the [ComposeFacade] /
+                            // [ComposeBridge] nullable-primitive generator path.
+                            new Text("Issue #58 text styling:")
+                            {
+                                Modifier = Modifier.Companion.Padding(top: 8, bottom: 4, start: 0, end: 0),
+                                FontWeight = ComposeNet.FontWeight.Bold,
+                            },
+                            new Text("Italic serif red, centered")
+                            {
+                                Color = ColorKt.Color(red: 0xC6, green: 0x28, blue: 0x28, alpha: 0xFF),
+                                FontStyle = ComposeNet.FontStyle.Italic,
+                                FontFamily = ComposeNet.FontFamily.Serif,
+                                Align = ComposeNet.TextAlign.Center,
+                                Modifier = Modifier.Companion.FillMaxWidth(),
+                            },
+                            new Text("Monospace, end-aligned")
+                            {
+                                FontFamily = ComposeNet.FontFamily.Monospace,
+                                Align = ComposeNet.TextAlign.End,
+                                Modifier = Modifier.Companion.FillMaxWidth(),
+                            },
+                            new Text("This long line should clip with an ellipsis because we cap it at MaxLines=1 and force overflow.")
+                            {
+                                MaxLines = 1,
+                                Overflow = ComposeNet.TextOverflow.Ellipsis,
+                                SoftWrap = false,
+                            },
+                            new Text("This paragraph wraps to at most two lines and uses a non-default minLines so the slot reserves vertical space even when the content is shorter than the maximum allowed.")
+                            {
+                                MaxLines = 2,
+                                MinLines = 2,
+                                Overflow = ComposeNet.TextOverflow.Ellipsis,
+                            },
+                            // TextField with new slots: leading/trailing icons,
+                            // label, supporting text, prefix, suffix.
+                            new TextField(name)
+                            {
+                                Label          = new Text("Your name"),
+                                Placeholder    = new Text("Type something…"),
+                                LeadingIcon    = new Text("👤"),
+                                TrailingIcon   = new Text("✎"),
+                                SupportingText = new Text("Powered by issue #58 slots"),
+                                SingleLine     = true,
+                            },
+                            new OutlinedTextField(name)
+                            {
+                                Label          = new Text("Outlined variant"),
+                                Prefix         = new Text("@"),
+                                Suffix         = new Text(".dev"),
+                                SupportingText = new Text($"len={name.Value.Length}"),
+                                SingleLine     = true,
+                            },
                             // Phase 2 modifier demo — clickable rounded chip painted with
                             // Background + Border + Clip; tapping it increments the counter.
                             new Text($"Phase 2 modifiers (tap me): {count}")
