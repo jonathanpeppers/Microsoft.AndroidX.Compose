@@ -7,7 +7,7 @@ namespace ComposeNet;
 /// child:
 ///
 /// <code>
-/// new LargeFloatingActionButton(onClick: () => /* ... */)
+/// new LargeFloatingActionButton(onClick: () => count.Value++)
 /// {
 ///     new Text("+"),
 /// }

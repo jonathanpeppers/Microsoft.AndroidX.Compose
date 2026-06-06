@@ -7,11 +7,10 @@ namespace ComposeNet;
 /// icon&#x202F;+&#x202F;text states.
 ///
 /// <code>
-/// new ExtendedFloatingActionButton(onClick: () => /* ... */)
+/// new ExtendedFloatingActionButton(onClick: () => count.Value++, expanded: true)
 /// {
-///     Icon     = new Text("+"),
-///     Text     = new Text("Add"),
-///     Expanded = true,
+///     Icon = new Text("+"),
+///     Text = new Text("Add"),
 /// }
 /// </code>
 ///
