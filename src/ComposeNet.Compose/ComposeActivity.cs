@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Android.OS;
 using Android.Util;
@@ -61,25 +60,23 @@ public abstract class ComposeActivity : ComponentActivity
 {
     const string TAG = "ComposeNet";
 
-    // Activity-scoped Remember cache — tier-1.5 shim keyed off
-    // [CallerLineNumber]. Survives recompositions but resets on
-    // activity recreation (real fix would be rememberSaveable +
-    // Composer.cache slot-table integration).
-    readonly Dictionary<int, object?> _remembered = new();
-
     /// <summary>
     /// Returns the value of <paramref name="factory"/> the first time
     /// this call-site is reached, then the cached value on subsequent
     /// recompositions. Use to create <see cref="MutableState{T}"/> /
     /// <see cref="MutableNumberState{T}"/> instances at the top of a
     /// <see cref="SetContent"/> lambda.
+    ///
+    /// Forwards to <see cref="Compose.Remember{T}(System.Func{T}, int, string)"/>,
+    /// which is backed by the active composer's slot table — so the cached
+    /// value survives recomposition the same way Kotlin's <c>remember { }</c>
+    /// does, and clears with the composition (not the activity).
     /// </summary>
-    protected T Remember<T>(System.Func<T> factory, [CallerLineNumber] int key = 0)
-    {
-        if (!_remembered.TryGetValue(key, out var v))
-            _remembered[key] = v = factory()!;
-        return (T)v!;
-    }
+    protected T Remember<T>(
+        System.Func<T> factory,
+        [CallerLineNumber] int line = 0,
+        [CallerFilePath]   string file = "")
+        => Compose.Remember(factory, line, file);
 
     /// <summary>
     /// Opts the window into edge-to-edge. Call <c>base.OnCreate</c>

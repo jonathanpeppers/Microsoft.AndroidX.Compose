@@ -154,9 +154,9 @@ public class MainActivity : ComposeActivity
                                 Modifier = Modifier.Companion
                                     .Clip(12)
                                     .Background(ColorKt.Color(red: 0x19, green: 0x76, blue: 0xD2, alpha: 0xFF))
-                                    .Border(2, ColorKt.Color(red: 0x0D, green: 0x47, blue: 0xA1, alpha: 0xFF), cornerRadiusDp: 12)
+                                    .Border(2, ColorKt.Color(red: 0x0D, green: 0x47, blue: 0xA1, alpha: 0xFF), cornerRadius: 12)
                                     .Clickable(() => count++)
-                                    .Padding(horizontalDp: 16, verticalDp: 8),
+                                    .Padding(horizontal: 16, vertical: 8),
                             },
                                 // Secure text inputs — exercise both
                                 // SecureTextField (filled) and
