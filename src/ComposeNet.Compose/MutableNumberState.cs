@@ -1,6 +1,5 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
-using Android.Runtime;
 using AndroidX.Compose.Runtime;
 
 namespace ComposeNet;
@@ -52,17 +51,11 @@ public class MutableNumberState<T> : MutableState<T> where T : INumber<T>
         switch (s_kind)
         {
             case Kind.Int:
-                return Java.Lang.Object.GetObject<IMutableState>(
-                    ComposeBridges.MutableIntStateOf(Unsafe.As<T, int>(ref initial)),
-                    JniHandleOwnership.TransferLocalRef)!;
+                return SnapshotIntStateKt.MutableIntStateOf(Unsafe.As<T, int>(ref initial));
             case Kind.Long:
-                return Java.Lang.Object.GetObject<IMutableState>(
-                    ComposeBridges.MutableLongStateOf(Unsafe.As<T, long>(ref initial)),
-                    JniHandleOwnership.TransferLocalRef)!;
+                return SnapshotLongStateKt.MutableLongStateOf(Unsafe.As<T, long>(ref initial));
             case Kind.Float:
-                return Java.Lang.Object.GetObject<IMutableState>(
-                    ComposeBridges.MutableFloatStateOf(Unsafe.As<T, float>(ref initial)),
-                    JniHandleOwnership.TransferLocalRef)!;
+                return PrimitiveSnapshotStateKt.MutableFloatStateOf(Unsafe.As<T, float>(ref initial));
             default:
                 return SnapshotStateKt.MutableStateOf(
                     MutableState<T>.ToJava(initial),
@@ -77,13 +70,13 @@ public class MutableNumberState<T> : MutableState<T> where T : INumber<T>
             switch (s_kind)
             {
                 case Kind.Int:
-                    int i = ComposeBridges.MutableIntStateGetIntValue(((Java.Lang.Object)_state).Handle);
+                    int i = ((IMutableIntState)_state).IntValue;
                     return Unsafe.As<int, T>(ref i);
                 case Kind.Long:
-                    long l = ComposeBridges.MutableLongStateGetLongValue(((Java.Lang.Object)_state).Handle);
+                    long l = ((IMutableLongState)_state).LongValue;
                     return Unsafe.As<long, T>(ref l);
                 case Kind.Float:
-                    float f = ComposeBridges.MutableFloatStateGetFloatValue(((Java.Lang.Object)_state).Handle);
+                    float f = ((IMutableFloatState)_state).FloatValue;
                     return Unsafe.As<float, T>(ref f);
                 default:
                     return base.Value;
@@ -94,19 +87,13 @@ public class MutableNumberState<T> : MutableState<T> where T : INumber<T>
             switch (s_kind)
             {
                 case Kind.Int:
-                    ComposeBridges.MutableIntStateSetIntValue(
-                        ((Java.Lang.Object)_state).Handle,
-                        Unsafe.As<T, int>(ref value));
+                    ((IMutableIntState)_state).IntValue = Unsafe.As<T, int>(ref value);
                     break;
                 case Kind.Long:
-                    ComposeBridges.MutableLongStateSetLongValue(
-                        ((Java.Lang.Object)_state).Handle,
-                        Unsafe.As<T, long>(ref value));
+                    ((IMutableLongState)_state).LongValue = Unsafe.As<T, long>(ref value);
                     break;
                 case Kind.Float:
-                    ComposeBridges.MutableFloatStateSetFloatValue(
-                        ((Java.Lang.Object)_state).Handle,
-                        Unsafe.As<T, float>(ref value));
+                    ((IMutableFloatState)_state).FloatValue = Unsafe.As<T, float>(ref value);
                     break;
                 default:
                     base.Value = value;
