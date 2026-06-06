@@ -215,27 +215,55 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         // an explicit [Slot], OR there's >1 Fn2/3 slot, treat the facade
         // as a multi-slot LEAF (named properties). Otherwise stick with
         // the Phase 1 "container with children" shape.
+        // Hybrid container exception: exactly 1 non-nullable Fn3 (+ no
+        // [Slot]) PLUS 1+ nullable Fn2/3 slots AND `[ComposeFacade(Scope = "...")]`
+        // explicitly set — the non-nullable Fn3 stays as the container
+        // body (RenderChildren) and the nullable slots become named
+        // properties. The Scope opt-in disambiguates from leafs that
+        // happen to have a required Fn2 label slot (e.g. AssistChip).
         bool hasMultiSlot = slots.Any(s => s.IsNullableSlot || s.HasSlotAttribute) || fnContentCount > 1;
+        bool isHybridContainer = false;
+        if (hasMultiSlot && !string.IsNullOrEmpty(scope))
+        {
+            var nonNullableFn3 = slots.Where(s =>
+                s.Kind == FacadeSlotKind.Content3 &&
+                s.Param.NullableAnnotation != NullableAnnotation.Annotated &&
+                !s.HasSlotAttribute).ToArray();
+            var nullableContent = slots.Where(s =>
+                s.Kind is FacadeSlotKind.Content2 or FacadeSlotKind.Content3 &&
+                s.Param.NullableAnnotation == NullableAnnotation.Annotated).ToArray();
+            isHybridContainer =
+                nonNullableFn3.Length == 1 &&
+                nullableContent.Length >= 1 &&
+                !slots.Any(s => s.HasSlotAttribute);
+        }
         if (hasMultiSlot)
         {
             // Re-classify the Fn2/Fn3 slots into property slots (the
             // generator picks one shape per bridge; mixing is invalid).
+            // Hybrid container: leave the sole non-nullable Fn3 as
+            // Content3 so it renders the container body.
             for (int i = 0; i < slots.Count; i++)
             {
                 var s = slots[i];
-                if (s.Kind is FacadeSlotKind.Content2)
+                bool isContainerBody = isHybridContainer
+                    && s.Kind == FacadeSlotKind.Content3
+                    && s.Param.NullableAnnotation != NullableAnnotation.Annotated
+                    && !s.HasSlotAttribute;
+                if (s.Kind is FacadeSlotKind.Content2 && !isContainerBody)
                     slots[i] = s.WithKind(s.Param.NullableAnnotation == NullableAnnotation.Annotated
                         ? FacadeSlotKind.NamedFunction2 : FacadeSlotKind.RequiredFunction2);
-                else if (s.Kind is FacadeSlotKind.Content3)
+                else if (s.Kind is FacadeSlotKind.Content3 && !isContainerBody)
                     slots[i] = s.WithKind(s.Param.NullableAnnotation == NullableAnnotation.Annotated
                         ? FacadeSlotKind.NamedFunction3 : FacadeSlotKind.RequiredFunction3);
             }
         }
 
-        // Scope only makes sense with a Phase 1 Content3 (container shape).
+        // Scope only makes sense with a Content3 (container shape — Phase 1
+        // pure container, or the new hybrid container with named slots).
         if (!string.IsNullOrEmpty(scope))
         {
-            if (hasMultiSlot || !slots.Any(s => s.Kind == FacadeSlotKind.Content3))
+            if ((hasMultiSlot && !isHybridContainer) || !slots.Any(s => s.Kind == FacadeSlotKind.Content3))
             {
                 diags.Add(Diagnostic.Create(Diagnostics.FacadeScopeMisuse, loc, method.Name, scope ?? "?"));
             }
@@ -513,7 +541,14 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         DefaultsInfo? defaults, string? defaultsEnumName,
         string? themeColor, FacadeSlot? colorSlot)
     {
-        bool isContainer = !isMultiSlot && slots.Any(s => s.Kind is FacadeSlotKind.Content2 or FacadeSlotKind.Content3);
+        // After classification, only the container's body survives as
+        // Content2/3 (multi-slot leafs re-classified to Named/Required).
+        // For the hybrid "container + named slots" shape (e.g.
+        // BottomAppBar's required `actions` Function3 + nullable
+        // `floatingActionButton` Function2 slot), the Content2/3 body
+        // and the Named slots coexist — the class still derives from
+        // ComposableContainer and the body wraps RenderChildren.
+        bool isContainer = slots.Any(s => s.Kind is FacadeSlotKind.Content2 or FacadeSlotKind.Content3);
         string baseClass = isContainer ? "global::ComposeNet.ComposableContainer" : "global::ComposeNet.ComposableNode";
 
         // Ctor slots: every non-modifier, non-named-property slot.
@@ -924,6 +959,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
 
     static bool IsPrimitiveCtorType(ITypeSymbol type) =>
         type.TypeKind == TypeKind.Enum ||
+        IsJavaEnum(type) ||
         type.SpecialType is SpecialType.System_String
             or SpecialType.System_Int32
             or SpecialType.System_Int64
@@ -932,18 +968,46 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             or SpecialType.System_Double;
 
     /// <summary>
+    /// True when <paramref name="type"/> derives (transitively) from
+    /// <c>Java.Lang.Enum</c> — i.e. it's a Kotlin/Java enum class
+    /// generated by the Xamarin.Android binding (e.g. Compose's
+    /// <c>ToggleableState</c>: <c>On</c>, <c>Off</c>,
+    /// <c>Indeterminate</c>). Recognized as a primitive-like ctor
+    /// slot: surfaced as a positional ctor parameter and forwarded
+    /// to the bridge unchanged.
+    /// </summary>
+    static bool IsJavaEnum(ITypeSymbol type)
+    {
+        for (var t = type.BaseType; t is not null; t = t.BaseType)
+        {
+            if (t.Name == "Enum" &&
+                t.ContainingNamespace?.ToDisplayString() == "Java.Lang")
+                return true;
+        }
+        return false;
+    }
+
+    /// <summary>
     /// True for parameters typed as <c>Nullable&lt;T&gt;</c> where <c>T</c>
     /// is a recognized Compose <c>@JvmInline value class</c> (Dp/Sp/Em/
-    /// TextAlign), or for <em>nullable</em> reference-typed wrappers in
-    /// <see cref="ComposeReferenceTypes"/>. Both shapes surface as
-    /// <see cref="FacadeSlotKind.OptionalValue"/> auto-properties on
-    /// the generated facade. Non-nullable reference wrappers do not
-    /// qualify — emitting a nullable auto-property for them would
-    /// pass <c>null</c> to a non-nullable bridge parameter.
+    /// TextOverflow), for <em>nullable</em> reference-typed wrappers in
+    /// <see cref="ComposeReferenceTypes"/> (FontWeight/FontStyle/
+    /// FontFamily/TextAlign/TextDecoration/Shape), or for
+    /// <c>Nullable&lt;T&gt;</c> where <c>T</c> is a JNI-friendly
+    /// primitive (<c>bool</c>, <c>int</c>, <c>long</c>, <c>float</c>,
+    /// <c>double</c>) — the "optional Compose primitive" shape:
+    /// <c>null</c> → leave the <c>$default</c> bit set; a value clears
+    /// the bit and lowers to the primitive JNI slot. All three shapes
+    /// surface as <see cref="FacadeSlotKind.OptionalValue"/>
+    /// auto-properties on the generated facade. Non-nullable reference
+    /// wrappers do not qualify — emitting a nullable auto-property for
+    /// them would pass <c>null</c> to a non-nullable bridge parameter.
     /// </summary>
     static bool IsOptionalValueType(ITypeSymbol type, NullableAnnotation annotation)
     {
         if (ComposeValueTypes.TryGet(type, out _, out _)) return true;
+        // Nullable<primitive>: bool?, int?, long?, float?, double?.
+        if (IsNullablePrimitive(type)) return true;
         // Nullable reference-type wrapper: T? where T is recognized.
         // The C# nullable-annotation flow gives us the underlying type
         // directly (no Nullable<T> wrapping) for reference types, so
@@ -953,6 +1017,26 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             && ComposeReferenceTypes.IsRecognized(type))
             return true;
         return false;
+    }
+
+    /// <summary>
+    /// Mirror of <c>ComposeBridgeGenerator.IsNullablePrimitive</c> —
+    /// see that helper for the rationale. Kept private here because
+    /// the bridge generator's copy lives in a separate translation
+    /// unit and the registry of "primitive Nullable types" is small
+    /// and stable.
+    /// </summary>
+    static bool IsNullablePrimitive(ITypeSymbol t)
+    {
+        if (t is not INamedTypeSymbol n) return false;
+        if (n.OriginalDefinition.SpecialType != SpecialType.System_Nullable_T) return false;
+        if (n.TypeArguments.Length != 1) return false;
+        return n.TypeArguments[0].SpecialType is
+            SpecialType.System_Boolean
+            or SpecialType.System_Int32
+            or SpecialType.System_Int64
+            or SpecialType.System_Single
+            or SpecialType.System_Double;
     }
 
     static bool IsKnownScopeKind(Compilation compilation, string scope)
