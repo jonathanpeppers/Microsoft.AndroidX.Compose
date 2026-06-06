@@ -307,6 +307,16 @@ public class MainActivity : ComposeActivity
                     {
                         new Text("✕"),
                     },
+                    new Row
+                    {
+                        new SmallFloatingActionButton(onClick: () => count++) { new Text("+") },
+                        new LargeFloatingActionButton(onClick: () => count++) { new Text("+") },
+                    },
+                    new ExtendedFloatingActionButton(onClick: () => count++, expanded: true)
+                    {
+                        Icon = new Text("✓"),
+                        Text = new Text("Increment"),
+                    },
                     new Button(onClick: () => showSnack.Value = true)
                     {
                         new Text("Show snackbar"),

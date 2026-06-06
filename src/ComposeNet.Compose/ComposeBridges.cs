@@ -474,6 +474,55 @@ internal static partial class ComposeBridges
     public static partial void FloatingActionButton(IFunction0 onClick, IModifier? modifier,
                                                     IFunction2 content, IComposer composer);
 
+    // androidx.compose.material3.FloatingActionButtonKt.SmallFloatingActionButton-X-z6DiA
+    [ComposeBridge(
+        Class     = "androidx/compose/material3/FloatingActionButtonKt",
+        JvmName   = "SmallFloatingActionButton-X-z6DiA",
+        Signature = "(Lkotlin/jvm/functions/Function0;Landroidx/compose/ui/Modifier;" +
+                    "Landroidx/compose/ui/graphics/Shape;JJ" +
+                    "Landroidx/compose/material3/FloatingActionButtonElevation;" +
+                    "Landroidx/compose/foundation/interaction/MutableInteractionSource;" +
+                    "Lkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;II)V",
+        Defaults  = typeof(SmallFloatingActionButtonDefault))]
+    [ComposeFacade]
+    public static partial void SmallFloatingActionButton(IFunction0 onClick, IModifier? modifier,
+                                                         IFunction2 content, IComposer composer);
+
+    // androidx.compose.material3.FloatingActionButtonKt.LargeFloatingActionButton-X-z6DiA
+    [ComposeBridge(
+        Class     = "androidx/compose/material3/FloatingActionButtonKt",
+        JvmName   = "LargeFloatingActionButton-X-z6DiA",
+        Signature = "(Lkotlin/jvm/functions/Function0;Landroidx/compose/ui/Modifier;" +
+                    "Landroidx/compose/ui/graphics/Shape;JJ" +
+                    "Landroidx/compose/material3/FloatingActionButtonElevation;" +
+                    "Landroidx/compose/foundation/interaction/MutableInteractionSource;" +
+                    "Lkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;II)V",
+        Defaults  = typeof(LargeFloatingActionButtonDefault))]
+    [ComposeFacade]
+    public static partial void LargeFloatingActionButton(IFunction0 onClick, IModifier? modifier,
+                                                         IFunction2 content, IComposer composer);
+
+    // androidx.compose.material3.FloatingActionButtonKt.ExtendedFloatingActionButton-ElI5-7k
+    // (icon + text + expanded multi-slot variant — the canonical animated extended FAB)
+    [ComposeBridge(
+        Class     = "androidx/compose/material3/FloatingActionButtonKt",
+        JvmName   = "ExtendedFloatingActionButton-ElI5-7k",
+        Signature = "(Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;" +
+                    "Lkotlin/jvm/functions/Function0;Landroidx/compose/ui/Modifier;Z" +
+                    "Landroidx/compose/ui/graphics/Shape;JJ" +
+                    "Landroidx/compose/material3/FloatingActionButtonElevation;" +
+                    "Landroidx/compose/foundation/interaction/MutableInteractionSource;" +
+                    "Landroidx/compose/runtime/Composer;II)V",
+        Defaults  = typeof(ExtendedFloatingActionButtonDefault))]
+    [ComposeFacade]
+    public static partial void ExtendedFloatingActionButton(
+        IFunction2 text,
+        IFunction2 icon,
+        IFunction0 onClick,
+        IModifier? modifier,
+        bool       expanded,
+        IComposer  composer);
+
     // androidx.compose.material3.SurfaceKt.Surface-T9BRK9s (non-interactive)
     [ComposeBridge(
         Class     = "androidx/compose/material3/SurfaceKt",

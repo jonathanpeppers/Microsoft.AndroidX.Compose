@@ -141,6 +141,24 @@ using ComposeNet;
     "!onClick", "modifier", "shape", "containerColor", "contentColor",
     "elevation", "interactionSource", "!content")]
 
+// androidx.compose.material3.FloatingActionButtonKt.SmallFloatingActionButton-X-z6DiA:
+// same shape as FloatingActionButton.
+[assembly: ComposeDefaults("SmallFloatingActionButtonDefault",
+    "!onClick", "modifier", "shape", "containerColor", "contentColor",
+    "elevation", "interactionSource", "!content")]
+
+// androidx.compose.material3.FloatingActionButtonKt.LargeFloatingActionButton-X-z6DiA:
+// same shape as FloatingActionButton.
+[assembly: ComposeDefaults("LargeFloatingActionButtonDefault",
+    "!onClick", "modifier", "shape", "containerColor", "contentColor",
+    "elevation", "interactionSource", "!content")]
+
+// androidx.compose.material3.FloatingActionButtonKt.ExtendedFloatingActionButton-ElI5-7k:
+// 10 user params; text/icon/onClick/expanded always provided by the caller.
+[assembly: ComposeDefaults("ExtendedFloatingActionButtonDefault",
+    "!text", "!icon", "!onClick", "modifier", "!expanded", "shape",
+    "containerColor", "contentColor", "elevation", "interactionSource")]
+
 // androidx.compose.material3.SurfaceKt.Surface-T9BRK9s (non-interactive):
 // 8 user params, only bit 7 = content provided.
 [assembly: ComposeDefaults("SurfaceDefault",
