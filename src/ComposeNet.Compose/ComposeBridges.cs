@@ -2386,8 +2386,6 @@ internal static partial class ComposeBridges
             steps:                  0,
             _changed:               defaults);
 
-    // ---- AndroidX Navigation Compose ----
-    //
     // Tracking dotnet/android-libraries#1444: the binder strips every
     // @Composable static from `Xamarin.AndroidX.Navigation.Compose`'s
     // *Kt wrapper classes (NavHostKt, NavGraphBuilderKt,

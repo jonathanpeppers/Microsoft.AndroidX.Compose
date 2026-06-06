@@ -70,16 +70,16 @@ ComposeNet.CircularProgressIndicator.TrackColorArgb.set -> void
 ComposeNet.Column
 ComposeNet.Column.Column() -> void
 ComposeNet.Column.Column(ComposeNet.Arrangement? verticalArrangement) -> void
-ComposeNet.ComposableContainer
-ComposeNet.ComposableContainer.Add(ComposeNet.ComposableNode? child) -> void
-ComposeNet.ComposableContainer.Add(ComposeNet.Modifier! modifier) -> void
-ComposeNet.ComposableContainer.ComposableContainer() -> void
 ComposeNet.Composable
 ComposeNet.Composable.Add(ComposeNet.ComposableNode? child) -> void
 ComposeNet.Composable.Add(ComposeNet.Modifier! modifier) -> void
 ComposeNet.Composable.Composable(string! route) -> void
 ComposeNet.Composable.Composable(string! route, System.Func<ComposeNet.NavBackStackEntry!, ComposeNet.ComposableNode!>! content) -> void
 ComposeNet.Composable.Route.get -> string!
+ComposeNet.ComposableContainer
+ComposeNet.ComposableContainer.Add(ComposeNet.ComposableNode? child) -> void
+ComposeNet.ComposableContainer.Add(ComposeNet.Modifier! modifier) -> void
+ComposeNet.ComposableContainer.ComposableContainer() -> void
 ComposeNet.ComposableNode
 ComposeNet.ComposableNode.AppendModifier(ComposeNet.Modifier! modifier) -> void
 ComposeNet.ComposableNode.ComposableNode() -> void
