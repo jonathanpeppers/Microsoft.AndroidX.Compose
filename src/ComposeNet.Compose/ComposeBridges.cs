@@ -734,6 +734,31 @@ internal static partial class ComposeBridges
         int         defaults,
         IComposer   composer);
 
+    // DateRangePickerDialog is just DatePickerDialog with a DateRangePicker
+    // body — same Kotlin composable, same $default bitmask. Wrapper-passthrough
+    // gives us a distinct C# facade name (and matching XML doc focus) without
+    // a second JNI bridge.
+    [ComposeFacade(Defaults = typeof(DatePickerDialogDefault))]
+    public static partial void DateRangePickerDialog(
+        IFunction0  onDismissRequest,
+        IFunction2  confirmButton,
+        IModifier?  modifier,
+        IFunction2? dismissButton,
+        [Slot("Body")]
+        IFunction3  content,
+        int         defaults,
+        IComposer   composer);
+
+    public static partial void DateRangePickerDialog(
+        IFunction0  onDismissRequest,
+        IFunction2  confirmButton,
+        IModifier?  modifier,
+        IFunction2? dismissButton,
+        IFunction3  content,
+        int         defaults,
+        IComposer   composer)
+        => DatePickerDialog(onDismissRequest, confirmButton, modifier, dismissButton, content, defaults, composer);
+
     // androidx.compose.material3.TimePickerKt.TimePicker-mT9BvqQ
     [ComposeBridge(
         Class     = "androidx/compose/material3/TimePickerKt",
@@ -1691,6 +1716,105 @@ internal static partial class ComposeBridges
         IFunction3  content,
         IComposer   composer);
 
+    // androidx.compose.material3.ExposedDropdownMenuKt.ExposedDropdownMenuBox —
+    // textfield-anchored menu container. 4 user params: expanded, onExpandedChange
+    // (Function1<Boolean,Unit>), modifier, content (Function3 with
+    // ExposedDropdownMenuBoxScope receiver). Bits 0/1/3 always provided.
+    // The Kt method itself is NOT mangled (no inline-class params), but the
+    // binder still strips the trailing `$default` int, so we go through JNI.
+    [ComposeBridge(
+        Class     = "androidx/compose/material3/ExposedDropdownMenuKt",
+        JvmName   = "ExposedDropdownMenuBox",
+        Signature = "(ZLkotlin/jvm/functions/Function1;Landroidx/compose/ui/Modifier;" +
+                    "Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;II)V",
+        Defaults  = typeof(ExposedDropdownMenuBoxDefault))]
+    [ComposeFacade(Scope = "Other")]
+    public static partial void ExposedDropdownMenuBox(
+        bool       expanded,
+        [Callback(typeof(bool))] IFunction1 onExpandedChange,
+        IModifier? modifier,
+        IFunction3 content,
+        IComposer  composer);
+
+    // androidx.compose.material3.ExposedDropdownMenuBoxScope.ExposedDropdownMenu
+    // (the simplest unmangled overload — boolean + Function0 + Modifier +
+    // ScrollState + Function3<ColumnScope, Composer, Integer, Unit>). This is
+    // an INSTANCE method on the abstract scope class (not a static helper, not
+    // a Kotlin object singleton), so the [ComposeBridge] generator's static /
+    // ctor / InstanceField shapes don't fit — hand-written raw JNI in the
+    // wrapper-passthrough body below.
+    //
+    // The receiver is whichever scope the enclosing ExposedDropdownMenuBox
+    // pushed onto RenderContext (auto-bound by the facade generator because
+    // the param name ends in "Scope"). We do NOT cache the receiver —
+    // Compose hands a fresh scope per recomposition.
+    static IntPtr s_exposedDropdownMenuBoxScopeClass;
+    static IntPtr s_exposedDropdownMenuMethodId;
+
+    [ComposeFacade(Defaults = typeof(ExposedDropdownMenuDefault))]
+    public static unsafe partial void ExposedDropdownMenu(
+        IntPtr     exposedDropdownMenuBoxScope,
+        bool       expanded,
+        IFunction0 onDismissRequest,
+        IModifier? modifier,
+        IFunction3 content,
+        int        defaults,
+        IComposer  composer);
+
+    public static unsafe partial void ExposedDropdownMenu(
+        IntPtr     exposedDropdownMenuBoxScope,
+        bool       expanded,
+        IFunction0 onDismissRequest,
+        IModifier? modifier,
+        IFunction3 content,
+        int        defaults,
+        IComposer  composer)
+    {
+        if (exposedDropdownMenuBoxScope == IntPtr.Zero)
+            throw new InvalidOperationException(
+                "ExposedDropdownMenu must be rendered inside an ExposedDropdownMenuBox " +
+                "so it can resolve the menu-anchor scope.");
+
+        if (s_exposedDropdownMenuMethodId == IntPtr.Zero)
+        {
+            // JNIEnv.FindClass on .NET for Android returns a long-lived
+            // global handle the runtime caches — passing it to
+            // DeleteLocalRef trips CheckJNI ("expected Local but found
+            // Global"). Cache it directly, matching every generated bridge.
+            s_exposedDropdownMenuBoxScopeClass = JNIEnv.FindClass(
+                "androidx/compose/material3/ExposedDropdownMenuBoxScope");
+            s_exposedDropdownMenuMethodId = JNIEnv.GetMethodID(
+                s_exposedDropdownMenuBoxScopeClass,
+                "ExposedDropdownMenu",
+                "(ZLkotlin/jvm/functions/Function0;Landroidx/compose/ui/Modifier;" +
+                "Landroidx/compose/foundation/ScrollState;Lkotlin/jvm/functions/Function3;" +
+                "Landroidx/compose/runtime/Composer;II)V");
+        }
+
+        IntPtr modifierHandle = ModifierHandle(modifier);
+        var args = stackalloc JValue[8];
+        args[0] = new JValue(expanded);
+        args[1] = new JValue(((Java.Lang.Object)onDismissRequest).Handle);
+        args[2] = new JValue(modifierHandle);
+        args[3] = new JValue(IntPtr.Zero); // scrollState — defaulted
+        args[4] = new JValue(((Java.Lang.Object)content).Handle);
+        args[5] = new JValue(((Java.Lang.Object)composer).Handle);
+        args[6] = new JValue(0); // $changed
+        args[7] = new JValue(defaults);
+
+        try
+        {
+            JNIEnv.CallVoidMethod(exposedDropdownMenuBoxScope, s_exposedDropdownMenuMethodId, args);
+        }
+        finally
+        {
+            GC.KeepAlive(onDismissRequest);
+            GC.KeepAlive(modifier);
+            GC.KeepAlive(content);
+            GC.KeepAlive(composer);
+        }
+    }
+
     // androidx.compose.material3.SearchBarKt.rememberSearchBarState —
     // factory @Composable that produces a `SearchBarState`. 3 user params:
     // initialValue (enum), animationSpecForExpand, animationSpecForCollapse.
@@ -1788,6 +1912,33 @@ internal static partial class ComposeBridges
     public static partial void ExpandedFullScreenSearchBar(
         IntPtr     state,
         IFunction2 inputField,
+        IModifier? modifier,
+        IFunction3 content,
+        IComposer  composer);
+
+    // androidx.compose.material3.SearchBarKt.DockedSearchBar-EQC0FA8 — the
+    // boolean-state docked variant. Deprecated in M3 1.4 in favor of the
+    // state-based `SearchBar` + `ExpandedDockedSearchBar` pair, but still
+    // ships in 1.4.0.3 and is the only standalone "DockedSearchBar" entry
+    // point — the new state-based design has no separate `DockedSearchBar`
+    // composable. 9 user params: inputField (Function2), expanded (Z),
+    // onExpandedChange (Function1<Boolean,Unit>), modifier, shape, colors,
+    // tonalElevation (Dp F), shadowElevation (Dp F), content (Function3
+    // ColumnScope receiver). Bits 0/1/2/8 always provided.
+    [ComposeBridge(
+        Class     = "androidx/compose/material3/SearchBarKt",
+        JvmName   = "DockedSearchBar-EQC0FA8",
+        Signature = "(Lkotlin/jvm/functions/Function2;ZLkotlin/jvm/functions/Function1;" +
+                    "Landroidx/compose/ui/Modifier;" +
+                    "Landroidx/compose/ui/graphics/Shape;" +
+                    "Landroidx/compose/material3/SearchBarColors;FF" +
+                    "Lkotlin/jvm/functions/Function3;" +
+                    "Landroidx/compose/runtime/Composer;II)V",
+        Defaults  = typeof(DockedSearchBarDefault))]
+    public static partial void DockedSearchBar(
+        IFunction2 inputField,
+        bool       expanded,
+        IFunction1 onExpandedChange,
         IModifier? modifier,
         IFunction3 content,
         IComposer  composer);

@@ -74,6 +74,16 @@ public class MainActivity : ComposeActivity
             var menuSelection = Remember(() => new MutableState<string>("(none)"));
             var searchState   = Remember(() => new SearchBarState());
             var searchInput   = Remember(() => new SearchBarTextFieldState());
+
+            // New in this PR: range picker, exposed-dropdown box, docked
+            // search bar.
+            var showRange     = Remember(() => new MutableState<bool>(false));
+            var pickedRange   = Remember(() => new MutableState<string>("(none)"));
+            var rangeState    = Remember(() => new DateRangePickerState());
+            var ddOpen        = Remember(() => new MutableState<bool>(false));
+            var ddSelected    = Remember(() => new MutableState<string>("Apple"));
+            var dockedOpen    = Remember(() => new MutableState<bool>(false));
+            var dockedQuery   = Remember(() => new MutableState<string>(""));
             // Holds the committed query that drives the filter. The
             // bound TextFieldState.text getter doesn't subscribe to
             // Compose's snapshot read-tracking when read from C# build
@@ -417,11 +427,13 @@ public class MainActivity : ComposeActivity
                     {
                         new Button(onClick: () => showSheet.Value = true) { new Text("Sheet") },
                         new Button(onClick: () => showDate.Value  = true) { new Text("Date") },
+                        new Button(onClick: () => showRange.Value = true) { new Text("Range") },
                         new Button(onClick: () => showTime.Value  = true) { new Text("Time") },
                     },
                     new HorizontalDivider { Modifier = Modifier.Companion.Padding(0, 8) },
-                    new Text($"Picked date: {pickedDate}"),
-                    new Text($"Picked time: {pickedTime}"),
+                    new Text($"Picked date:  {pickedDate}"),
+                    new Text($"Picked range: {pickedRange}"),
+                    new Text($"Picked time:  {pickedTime}"),
                 },
                 6 => (ComposableNode)new Column
                 {
@@ -781,6 +793,32 @@ public class MainActivity : ComposeActivity
                     },
                 });
                 pickers.Add(new Text($"Last menu choice: {menuSelection}"));
+
+                pickers.Add(new HorizontalDivider { Modifier = Modifier.Companion.Padding(0, 16) });
+                pickers.Add(new Text("ExposedDropdownMenuBox"));
+                pickers.Add(new Text("Read-only TextField + tap the ▼ button to open the menu."));
+                pickers.Add(new ExposedDropdownMenuBox(
+                    expanded:         ddOpen.Value,
+                    onExpandedChange: v => ddOpen.Value = v)
+                {
+                    new Row
+                    {
+                        new TextField(value: ddSelected.Value, onValueChange: _ => { }),
+                        new IconButton(onClick: () => ddOpen.Value = !ddOpen.Value)
+                        {
+                            new Text(ddOpen.Value ? "▲" : "▼"),
+                        },
+                    },
+                    new ExposedDropdownMenu(
+                        expanded:         ddOpen.Value,
+                        onDismissRequest: () => ddOpen.Value = false)
+                    {
+                        new DropdownMenuItem(text: new Text("Apple"),  onClick: () => { ddSelected.Value = "Apple";  ddOpen.Value = false; }),
+                        new DropdownMenuItem(text: new Text("Banana"), onClick: () => { ddSelected.Value = "Banana"; ddOpen.Value = false; }),
+                        new DropdownMenuItem(text: new Text("Cherry"), onClick: () => { ddSelected.Value = "Cherry"; ddOpen.Value = false; }),
+                    },
+                });
+
                 pickers.Add(new HorizontalDivider { Modifier = Modifier.Companion.Padding(0, 16) });
                 pickers.Add(new Text("SearchBar"));
                 pickers.Add(new Text("Tap the bar, type a query, then press the keyboard's 🔍 Search key to filter the fruit list."));
@@ -802,6 +840,34 @@ public class MainActivity : ComposeActivity
                     },
                     expanded,
                 });
+
+                pickers.Add(new HorizontalDivider { Modifier = Modifier.Companion.Padding(0, 16) });
+                pickers.Add(new Text("DockedSearchBar (deprecated boolean-state variant)"));
+                pickers.Add(new Text("Type in the field, tap the ▼/▲ button to toggle the docked results popup."));
+                var dockedMatches = System.Array.FindAll(
+                    fruits,
+                    f => string.IsNullOrEmpty(dockedQuery.Value)
+                         || f.Contains(dockedQuery.Value, System.StringComparison.OrdinalIgnoreCase));
+#pragma warning disable CS0618 // DockedSearchBar is intentionally exercised here
+                var docked = new DockedSearchBar(
+                    expanded:         dockedOpen.Value,
+                    onExpandedChange: v => dockedOpen.Value = v)
+                {
+                    InputField = new Row
+                    {
+                        new TextField(dockedQuery),
+                        new IconButton(onClick: () => dockedOpen.Value = !dockedOpen.Value)
+                        {
+                            new Text(dockedOpen.Value ? "▲" : "▼"),
+                        },
+                    },
+                };
+#pragma warning restore CS0618
+                foreach (var f in dockedMatches)
+                    docked.Add(new Text(f) { Modifier = Modifier.Companion.Padding(16, 12) });
+                if (dockedMatches.Length == 0)
+                    docked.Add(new Text("(no matches)") { Modifier = Modifier.Companion.Padding(16, 12) });
+                pickers.Add(docked);
             }
 
             return new MaterialTheme
@@ -934,6 +1000,24 @@ public class MainActivity : ComposeActivity
                                     { new Text("OK") },
                                     DismissButton = new Button(onClick: () => showDate.Value = false) { new Text("Cancel") },
                                     Body          = new DatePicker(dateState),
+                                }
+                                : null,
+
+                            showRange.Value
+                                ? new DateRangePickerDialog(onDismissRequest: () => showRange.Value = false)
+                                {
+                                    ConfirmButton = new Button(onClick: () =>
+                                    {
+                                        static string Fmt(long? ms) => ms is long m
+                                            ? System.DateTimeOffset.FromUnixTimeMilliseconds(m).UtcDateTime.ToString("yyyy-MM-dd")
+                                            : "(none)";
+                                        pickedRange.Value =
+                                            $"{Fmt(rangeState.SelectedStartDateMillis)} → {Fmt(rangeState.SelectedEndDateMillis)}";
+                                        showRange.Value = false;
+                                    })
+                                    { new Text("OK") },
+                                    DismissButton = new Button(onClick: () => showRange.Value = false) { new Text("Cancel") },
+                                    Body          = new DateRangePicker(rangeState),
                                 }
                                 : null,
 
