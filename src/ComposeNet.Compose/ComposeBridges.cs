@@ -1854,7 +1854,7 @@ internal static partial class ComposeBridges
     // state-based `SearchBar` + `ExpandedDockedSearchBar` pair, but still
     // ships in 1.4.0.3 and is the only standalone "DockedSearchBar" entry
     // point — the new state-based design has no separate `DockedSearchBar`
-    // composable. 8 user params: inputField (Function2), expanded (Z),
+    // composable. 9 user params: inputField (Function2), expanded (Z),
     // onExpandedChange (Function1<Boolean,Unit>), modifier, shape, colors,
     // tonalElevation (Dp F), shadowElevation (Dp F), content (Function3
     // ColumnScope receiver). Bits 0/1/2/8 always provided.
