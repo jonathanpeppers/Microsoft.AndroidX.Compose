@@ -1,10 +1,5 @@
 #nullable enable
-~override ComposeNet.Dp.Equals(object obj) -> bool
-~override ComposeNet.Dp.ToString() -> string
-~override ComposeNet.Em.Equals(object obj) -> bool
-~override ComposeNet.Em.ToString() -> string
-~override ComposeNet.Sp.Equals(object obj) -> bool
-~override ComposeNet.Sp.ToString() -> string
+
 ~override ComposeNet.TextAlign.Equals(object obj) -> bool
 ~override ComposeNet.TextAlign.ToString() -> string
 ComposeNet.AlertDialog
@@ -19,6 +14,7 @@ ComposeNet.AlertDialog.Text.get -> ComposeNet.ComposableNode?
 ComposeNet.AlertDialog.Text.set -> void
 ComposeNet.AlertDialog.Title.get -> ComposeNet.ComposableNode?
 ComposeNet.AlertDialog.Title.set -> void
+ComposeNet.Arrangement
 ComposeNet.AssistChip
 ComposeNet.AssistChip.AssistChip(System.Action! onClick) -> void
 ComposeNet.AssistChip.Label.get -> ComposeNet.ComposableNode?
@@ -73,6 +69,7 @@ ComposeNet.CircularProgressIndicator.TrackColorArgb.get -> long?
 ComposeNet.CircularProgressIndicator.TrackColorArgb.set -> void
 ComposeNet.Column
 ComposeNet.Column.Column() -> void
+ComposeNet.Column.Column(ComposeNet.Arrangement? verticalArrangement) -> void
 ComposeNet.ComposableContainer
 ComposeNet.ComposableContainer.Add(ComposeNet.ComposableNode? child) -> void
 ComposeNet.ComposableContainer.Add(ComposeNet.Modifier! modifier) -> void
@@ -83,9 +80,10 @@ ComposeNet.ComposableNode.ComposableNode() -> void
 ComposeNet.ComposableNode.Modifier.get -> ComposeNet.Modifier?
 ComposeNet.ComposableNode.Modifier.set -> void
 ComposeNet.ComposableNode.PrependModifier(ComposeNet.Modifier! modifier) -> void
+ComposeNet.Compose
 ComposeNet.ComposeActivity
 ComposeNet.ComposeActivity.ComposeActivity() -> void
-ComposeNet.ComposeActivity.Remember<T>(System.Func<T>! factory, int key = 0) -> T
+ComposeNet.ComposeActivity.Remember<T>(System.Func<T>! factory, int line = 0, string! file = "") -> T
 ComposeNet.ComposeActivity.SetContent(System.Func<ComposeNet.ComposableNode!>! content) -> void
 ComposeNet.CustomTab
 ComposeNet.CustomTab.CustomTab(bool selected, System.Action! onClick) -> void
@@ -107,6 +105,14 @@ ComposeNet.DatePickerState.SelectedDateMillis.get -> long?
 ComposeNet.DatePickerState.SelectedDateMillis.set -> void
 ComposeNet.DateRangePicker
 ComposeNet.DateRangePicker.DateRangePicker(ComposeNet.DateRangePickerState? state = null) -> void
+ComposeNet.DateRangePickerDialog
+ComposeNet.DateRangePickerDialog.Body.get -> ComposeNet.ComposableNode?
+ComposeNet.DateRangePickerDialog.Body.set -> void
+ComposeNet.DateRangePickerDialog.ConfirmButton.get -> ComposeNet.ComposableNode?
+ComposeNet.DateRangePickerDialog.ConfirmButton.set -> void
+ComposeNet.DateRangePickerDialog.DateRangePickerDialog(System.Action! onDismissRequest) -> void
+ComposeNet.DateRangePickerDialog.DismissButton.get -> ComposeNet.ComposableNode?
+ComposeNet.DateRangePickerDialog.DismissButton.set -> void
 ComposeNet.DateRangePickerState
 ComposeNet.DateRangePickerState.DateRangePickerState() -> void
 ComposeNet.DateRangePickerState.DisplayedMonthMillis.get -> long
@@ -130,14 +136,15 @@ ComposeNet.DismissibleNavigationDrawer.Drawer.get -> ComposeNet.ComposableNode?
 ComposeNet.DismissibleNavigationDrawer.Drawer.set -> void
 ComposeNet.DismissibleNavigationDrawer.InitiallyOpen.get -> bool
 ComposeNet.DismissibleNavigationDrawer.InitiallyOpen.set -> void
+ComposeNet.DockedSearchBar
+ComposeNet.DockedSearchBar.DockedSearchBar(bool expanded, System.Action<bool>! onExpandedChange) -> void
+ComposeNet.DockedSearchBar.InputField.get -> ComposeNet.ComposableNode?
+ComposeNet.DockedSearchBar.InputField.set -> void
 ComposeNet.Dp
-ComposeNet.Dp.Deconstruct(out float Value) -> void
 ComposeNet.Dp.Dp() -> void
-ComposeNet.Dp.Dp(float Value) -> void
+ComposeNet.Dp.Dp(float value) -> void
 ComposeNet.Dp.Equals(ComposeNet.Dp other) -> bool
 ComposeNet.Dp.Value.get -> float
-ComposeNet.Dp.Value.init -> void
-ComposeNet.DpExtensions
 ComposeNet.DropdownMenu
 ComposeNet.DropdownMenu.DropdownMenu(bool expanded, System.Action! onDismissRequest) -> void
 ComposeNet.DropdownMenuItem
@@ -174,14 +181,6 @@ ComposeNet.ElevatedSuggestionChip.Icon.get -> ComposeNet.ComposableNode?
 ComposeNet.ElevatedSuggestionChip.Icon.set -> void
 ComposeNet.ElevatedSuggestionChip.Label.get -> ComposeNet.ComposableNode?
 ComposeNet.ElevatedSuggestionChip.Label.set -> void
-ComposeNet.Em
-ComposeNet.Em.Deconstruct(out float Value) -> void
-ComposeNet.Em.Em() -> void
-ComposeNet.Em.Em(float Value) -> void
-ComposeNet.Em.Equals(ComposeNet.Em other) -> bool
-ComposeNet.Em.Value.get -> float
-ComposeNet.Em.Value.init -> void
-ComposeNet.EmExtensions
 ComposeNet.ExpandedDockedSearchBar
 ComposeNet.ExpandedDockedSearchBar.ExpandedDockedSearchBar(ComposeNet.SearchBarState! state) -> void
 ComposeNet.ExpandedDockedSearchBar.InputField.get -> ComposeNet.ComposableNode?
@@ -190,6 +189,10 @@ ComposeNet.ExpandedFullScreenSearchBar
 ComposeNet.ExpandedFullScreenSearchBar.ExpandedFullScreenSearchBar(ComposeNet.SearchBarState! state) -> void
 ComposeNet.ExpandedFullScreenSearchBar.InputField.get -> ComposeNet.ComposableNode?
 ComposeNet.ExpandedFullScreenSearchBar.InputField.set -> void
+ComposeNet.ExposedDropdownMenu
+ComposeNet.ExposedDropdownMenu.ExposedDropdownMenu(bool expanded, System.Action! onDismissRequest) -> void
+ComposeNet.ExposedDropdownMenuBox
+ComposeNet.ExposedDropdownMenuBox.ExposedDropdownMenuBox(bool expanded, System.Action<bool>! onExpandedChange) -> void
 ComposeNet.FilledIconButton
 ComposeNet.FilledIconButton.FilledIconButton(System.Action! onClick) -> void
 ComposeNet.FilledIconToggleButton
@@ -370,42 +373,31 @@ ComposeNet.ModalWideNavigationRail.Header.set -> void
 ComposeNet.ModalWideNavigationRail.ModalWideNavigationRail() -> void
 ComposeNet.Modifier
 ComposeNet.Modifier.Background(long color) -> ComposeNet.Modifier!
-ComposeNet.Modifier.Border(int widthDp, long color, int cornerRadiusDp = 0) -> ComposeNet.Modifier!
-ComposeNet.Modifier.Border(ComposeNet.Dp width, long color) -> ComposeNet.Modifier!
+ComposeNet.Modifier.Border(ComposeNet.Dp width, long color, ComposeNet.Dp cornerRadius = default(ComposeNet.Dp)) -> ComposeNet.Modifier!
 ComposeNet.Modifier.Clickable(System.Action! onClick) -> ComposeNet.Modifier!
-ComposeNet.Modifier.Clip(int cornerRadiusDp) -> ComposeNet.Modifier!
 ComposeNet.Modifier.Clip(ComposeNet.Dp cornerRadius) -> ComposeNet.Modifier!
 ComposeNet.Modifier.FillMaxHeight(float fraction = 1) -> ComposeNet.Modifier!
 ComposeNet.Modifier.FillMaxSize(float fraction = 1) -> ComposeNet.Modifier!
 ComposeNet.Modifier.FillMaxWidth(float fraction = 1) -> ComposeNet.Modifier!
-ComposeNet.Modifier.Height(int dp) -> ComposeNet.Modifier!
-ComposeNet.Modifier.Height(ComposeNet.Dp dp) -> ComposeNet.Modifier!
+ComposeNet.Modifier.Height(ComposeNet.Dp height) -> ComposeNet.Modifier!
 ComposeNet.Modifier.HorizontalScroll(ComposeNet.ScrollState! state, bool enabled = true, bool reverseScrolling = false) -> ComposeNet.Modifier!
-ComposeNet.Modifier.Padding(int allDp) -> ComposeNet.Modifier!
-ComposeNet.Modifier.Padding(int horizontalDp, int verticalDp) -> ComposeNet.Modifier!
-ComposeNet.Modifier.Padding(int startDp, int topDp, int endDp, int bottomDp) -> ComposeNet.Modifier!
 ComposeNet.Modifier.Padding(ComposeNet.Dp all) -> ComposeNet.Modifier!
 ComposeNet.Modifier.Padding(ComposeNet.Dp horizontal, ComposeNet.Dp vertical) -> ComposeNet.Modifier!
 ComposeNet.Modifier.Padding(ComposeNet.Dp start, ComposeNet.Dp top, ComposeNet.Dp end, ComposeNet.Dp bottom) -> ComposeNet.Modifier!
 ComposeNet.Modifier.SafeDrawingPadding() -> ComposeNet.Modifier!
-ComposeNet.Modifier.Size(int dp) -> ComposeNet.Modifier!
-ComposeNet.Modifier.Size(int widthDp, int heightDp) -> ComposeNet.Modifier!
-ComposeNet.Modifier.Size(ComposeNet.Dp dp) -> ComposeNet.Modifier!
+ComposeNet.Modifier.Size(ComposeNet.Dp size) -> ComposeNet.Modifier!
 ComposeNet.Modifier.Size(ComposeNet.Dp width, ComposeNet.Dp height) -> ComposeNet.Modifier!
 ComposeNet.Modifier.SystemBarsPadding() -> ComposeNet.Modifier!
 ComposeNet.Modifier.Then(ComposeNet.Modifier! other) -> ComposeNet.Modifier!
 ComposeNet.Modifier.VerticalScroll(ComposeNet.ScrollState! state, bool enabled = true, bool reverseScrolling = false) -> ComposeNet.Modifier!
 ComposeNet.Modifier.Weight(float weight, bool fill = true) -> ComposeNet.Modifier!
-ComposeNet.Modifier.Width(int dp) -> ComposeNet.Modifier!
-ComposeNet.Modifier.Width(ComposeNet.Dp dp) -> ComposeNet.Modifier!
+ComposeNet.Modifier.Width(ComposeNet.Dp width) -> ComposeNet.Modifier!
 ComposeNet.MultiChoiceSegmentedButtonRow
 ComposeNet.MultiChoiceSegmentedButtonRow.MultiChoiceSegmentedButtonRow() -> void
 ComposeNet.MutableNumberState<T>
 ComposeNet.MutableNumberState<T>.MutableNumberState(T initial) -> void
 ComposeNet.MutableState<T>
 ComposeNet.MutableState<T>.MutableState(T initial) -> void
-ComposeNet.MutableState<T>.Value.get -> T
-ComposeNet.MutableState<T>.Value.set -> void
 ComposeNet.NavigationBar
 ComposeNet.NavigationBar.NavigationBar() -> void
 ComposeNet.NavigationBarItem
@@ -493,6 +485,7 @@ ComposeNet.Resource
 ComposeNet.Resource.Resource() -> void
 ComposeNet.Row
 ComposeNet.Row.Row() -> void
+ComposeNet.Row.Row(ComposeNet.Arrangement? horizontalArrangement) -> void
 ComposeNet.Scaffold
 ComposeNet.Scaffold.Body.get -> ComposeNet.ComposableNode?
 ComposeNet.Scaffold.Body.set -> void
@@ -508,11 +501,13 @@ ComposeNet.Scaffold.TopBar.set -> void
 ComposeNet.ScrollableTabRow
 ComposeNet.ScrollableTabRow.ScrollableTabRow(int selectedTabIndex) -> void
 ComposeNet.ScrollState
+ComposeNet.ScrollState.AnimateScrollToAsync(int value) -> System.Threading.Tasks.Task!
 ComposeNet.ScrollState.CanScrollBackward.get -> bool
 ComposeNet.ScrollState.CanScrollForward.get -> bool
 ComposeNet.ScrollState.IsScrollInProgress.get -> bool
 ComposeNet.ScrollState.MaxValue.get -> int
 ComposeNet.ScrollState.ScrollState(int initial = 0) -> void
+ComposeNet.ScrollState.ScrollToAsync(int value) -> System.Threading.Tasks.Task<float>!
 ComposeNet.ScrollState.Value.get -> int
 ComposeNet.ScrollState.ViewportSize.get -> int
 ComposeNet.SearchBar
@@ -580,16 +575,14 @@ ComposeNet.SnackbarHost.SnackbarHost(ComposeNet.SnackbarHostState! hostState) ->
 ComposeNet.SnackbarHostState
 ComposeNet.SnackbarHostState.SnackbarHostState() -> void
 ComposeNet.Sp
-ComposeNet.Sp.Deconstruct(out float Value) -> void
 ComposeNet.Sp.Equals(ComposeNet.Sp other) -> bool
+ComposeNet.Sp.PackedValue.get -> long
 ComposeNet.Sp.Sp() -> void
-ComposeNet.Sp.Sp(float Value) -> void
-ComposeNet.Sp.Value.get -> float
-ComposeNet.Sp.Value.init -> void
+ComposeNet.Sp.Sp(int sp) -> void
+ComposeNet.Sp.Sp(long packedValue) -> void
 ComposeNet.Spacer
 ComposeNet.Spacer.Spacer() -> void
 ComposeNet.Spacer.Spacer(ComposeNet.Modifier! modifier) -> void
-ComposeNet.SpExtensions
 ComposeNet.SuggestionChip
 ComposeNet.SuggestionChip.Icon.get -> ComposeNet.ComposableNode?
 ComposeNet.SuggestionChip.Icon.set -> void
@@ -691,26 +684,32 @@ ComposeNet.WideNavigationRailItem.Label.get -> ComposeNet.ComposableNode?
 ComposeNet.WideNavigationRailItem.Label.set -> void
 ComposeNet.WideNavigationRailItem.WideNavigationRailItem(bool selected, System.Action! onClick) -> void
 override ComposeNet.ComposeActivity.OnCreate(Android.OS.Bundle? savedInstanceState) -> void
+override ComposeNet.Dp.Equals(object? obj) -> bool
 override ComposeNet.Dp.GetHashCode() -> int
-override ComposeNet.Em.GetHashCode() -> int
+override ComposeNet.Dp.ToString() -> string!
+override ComposeNet.MutableNumberState<T>.Value.get -> T
+override ComposeNet.MutableNumberState<T>.Value.set -> void
 override ComposeNet.MutableState<T>.ToString() -> string!
+override ComposeNet.Sp.Equals(object? obj) -> bool
 override ComposeNet.Sp.GetHashCode() -> int
+override ComposeNet.Sp.ToString() -> string!
 override ComposeNet.TextAlign.GetHashCode() -> int
-static ComposeNet.Dp.From(float dp) -> ComposeNet.Dp
-static ComposeNet.Dp.From(int dp) -> ComposeNet.Dp
-static ComposeNet.Dp.Hairline.get -> ComposeNet.Dp
+static ComposeNet.Arrangement.Bottom.get -> ComposeNet.Arrangement!
+static ComposeNet.Arrangement.Center.get -> ComposeNet.Arrangement!
+static ComposeNet.Arrangement.End.get -> ComposeNet.Arrangement!
+static ComposeNet.Arrangement.SpaceAround.get -> ComposeNet.Arrangement!
+static ComposeNet.Arrangement.SpaceBetween.get -> ComposeNet.Arrangement!
+static ComposeNet.Arrangement.SpacedBy(int dp) -> ComposeNet.Arrangement!
+static ComposeNet.Arrangement.SpaceEvenly.get -> ComposeNet.Arrangement!
+static ComposeNet.Arrangement.Start.get -> ComposeNet.Arrangement!
+static ComposeNet.Arrangement.Top.get -> ComposeNet.Arrangement!
+static ComposeNet.Compose.Remember<T>(System.Func<T>! factory, int line = 0, string! file = "") -> T
+static ComposeNet.Dp.implicit operator ComposeNet.Dp(float value) -> ComposeNet.Dp
+static ComposeNet.Dp.implicit operator ComposeNet.Dp(int value) -> ComposeNet.Dp
 static ComposeNet.Dp.operator !=(ComposeNet.Dp left, ComposeNet.Dp right) -> bool
 static ComposeNet.Dp.operator ==(ComposeNet.Dp left, ComposeNet.Dp right) -> bool
 static ComposeNet.Dp.Pack(ComposeNet.Dp? value) -> float
-static ComposeNet.Dp.Unspecified.get -> ComposeNet.Dp
 static ComposeNet.Dp.Zero.get -> ComposeNet.Dp
-static ComposeNet.DpExtensions.Dp(this float value) -> ComposeNet.Dp
-static ComposeNet.DpExtensions.Dp(this int value) -> ComposeNet.Dp
-static ComposeNet.Em.From(float em) -> ComposeNet.Em
-static ComposeNet.Em.operator !=(ComposeNet.Em left, ComposeNet.Em right) -> bool
-static ComposeNet.Em.operator ==(ComposeNet.Em left, ComposeNet.Em right) -> bool
-static ComposeNet.Em.Pack(ComposeNet.Em? value) -> long
-static ComposeNet.EmExtensions.Em(this float value) -> ComposeNet.Em
 static ComposeNet.FontWeight.Black.get -> ComposeNet.FontWeight!
 static ComposeNet.FontWeight.Bold.get -> ComposeNet.FontWeight!
 static ComposeNet.FontWeight.ExtraBold.get -> ComposeNet.FontWeight!
@@ -726,14 +725,11 @@ static ComposeNet.Modifier.Companion.get -> ComposeNet.Modifier!
 static ComposeNet.MutableNumberState<T>.operator --(ComposeNet.MutableNumberState<T>! s) -> ComposeNet.MutableNumberState<T>!
 static ComposeNet.MutableNumberState<T>.operator ++(ComposeNet.MutableNumberState<T>! s) -> ComposeNet.MutableNumberState<T>!
 static ComposeNet.Shape.RoundedCorners(ComposeNet.Dp cornerRadius) -> ComposeNet.Shape!
-static ComposeNet.Sp.From(float sp) -> ComposeNet.Sp
-static ComposeNet.Sp.From(int sp) -> ComposeNet.Sp
+static ComposeNet.Sp.implicit operator ComposeNet.Sp(int value) -> ComposeNet.Sp
 static ComposeNet.Sp.operator !=(ComposeNet.Sp left, ComposeNet.Sp right) -> bool
 static ComposeNet.Sp.operator ==(ComposeNet.Sp left, ComposeNet.Sp right) -> bool
 static ComposeNet.Sp.Pack(ComposeNet.Sp? value) -> long
-static ComposeNet.Sp.Unspecified.get -> ComposeNet.Sp
-static ComposeNet.SpExtensions.Sp(this float value) -> ComposeNet.Sp
-static ComposeNet.SpExtensions.Sp(this int value) -> ComposeNet.Sp
+static ComposeNet.Sp.Zero.get -> ComposeNet.Sp
 static ComposeNet.TextAlign.Center.get -> ComposeNet.TextAlign
 static ComposeNet.TextAlign.End.get -> ComposeNet.TextAlign
 static ComposeNet.TextAlign.Justify.get -> ComposeNet.TextAlign
@@ -747,3 +743,5 @@ static ComposeNet.TextAlign.Unspecified.get -> ComposeNet.TextAlign
 static ComposeNet.TextDecoration.LineThrough.get -> ComposeNet.TextDecoration!
 static ComposeNet.TextDecoration.None.get -> ComposeNet.TextDecoration!
 static ComposeNet.TextDecoration.Underline.get -> ComposeNet.TextDecoration!
+virtual ComposeNet.MutableState<T>.Value.get -> T
+virtual ComposeNet.MutableState<T>.Value.set -> void

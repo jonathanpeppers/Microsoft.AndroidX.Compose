@@ -700,6 +700,151 @@ If a needed Compose API isn't bound, the workflow is:
    and switch the facade to call the generated binding method
    directly.
 
+## Suspend / async bridges
+
+Use this path when a Kotlin Compose API exposes a `suspend` function
+(e.g. `ScrollState.scrollTo`, `LazyListState.animateScrollToItem`,
+`SnackbarHostState.showSnackbar`, `DrawerState.open`) and the C# facade
+should surface it as `Task` / `Task<T>`.
+
+`SuspendBridge.Invoke` allocates one `SuspendContinuation`, calls the
+raw JNI bridge, and completes the returned task from either the
+synchronous result or the later Kotlin resume. `SuspendContinuation` is
+an internal JCW registered as `composenet/compose/SuspendContinuation`;
+it self-roots with a strong `GCHandle` per call and its `Context`
+returns `AndroidUiDispatcher.Main`, which supplies the
+`MonotonicFrameClock` required by animation suspends that use
+`withFrameNanos`.
+
+### Adding a new `*Async` method
+
+1. Add a hand-written bridge to `SuspendBridges.cs`. It returns the
+   raw `IntPtr` that Kotlin returns: either the `COROUTINE_SUSPENDED`
+   sentinel or a synchronous boxed result.
+
+   Instance suspend method template:
+   ```csharp
+   static IntPtr s_myStateDoThing_class;
+   static IntPtr s_myStateDoThing_method;
+
+   internal static unsafe IntPtr MyStateDoThing(
+       IntPtr state, int value, SuspendContinuation cont)
+   {
+       if (s_myStateDoThing_method == IntPtr.Zero)
+       {
+           s_myStateDoThing_class = JNIEnv.FindClass("my/package/MyState");
+           s_myStateDoThing_method = JNIEnv.GetMethodID(
+               s_myStateDoThing_class,
+               "doThing",
+               "(ILkotlin/coroutines/Continuation;)Ljava/lang/Object;");
+       }
+
+       try
+       {
+           JValue* args = stackalloc JValue[2];
+           args[0] = new JValue(value);
+           args[1] = new JValue(cont.Handle);
+           return JNIEnv.CallObjectMethod(state, s_myStateDoThing_method, args);
+       }
+       finally
+       {
+           GC.KeepAlive(cont);
+       }
+   }
+   ```
+
+   Static extension / synthetic `$default` template:
+   ```csharp
+   internal static unsafe IntPtr MyStateAnimate(
+       IntPtr state, int value, SuspendContinuation cont)
+   {
+       if (s_myStateAnimate_method == IntPtr.Zero)
+       {
+           s_myStateAnimate_class = JNIEnv.FindClass("my/package/MyStateKt");
+           s_myStateAnimate_method = JNIEnv.GetStaticMethodID(
+               s_myStateAnimate_class,
+               "animate$default",
+               "(Lmy/package/MyState;ILmy/package/AnimationSpec;" +
+               "Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;");
+       }
+
+       try
+       {
+           JValue* args = stackalloc JValue[6];
+           args[0] = new JValue(state);
+           args[1] = new JValue(value);
+           args[2] = new JValue(IntPtr.Zero); // AnimationSpec — defaulted
+           args[3] = new JValue(cont.Handle);
+           args[4] = new JValue(0b010);       // $default mask
+           args[5] = new JValue(IntPtr.Zero); // synthetic marker
+           return JNIEnv.CallStaticObjectMethod(
+               s_myStateAnimate_class, s_myStateAnimate_method, args);
+       }
+       finally
+       {
+           GC.KeepAlive(cont);
+       }
+   }
+   ```
+
+2. Add the public facade method and route the bridge through
+   `SuspendBridge.Invoke`:
+   ```csharp
+   public Task<float> DoThingAsync(int value) =>
+       SuspendBridge.Invoke<float>(
+           cont => ComposeBridges.MyStateDoThing(
+               ((Java.Lang.Object)Jvm).Handle, value, cont),
+           static boxed => boxed is Java.Lang.Float f
+               ? f.FloatValue()
+               : throw new InvalidCastException(
+                   $"Expected java.lang.Float; got '{boxed?.Class?.Name ?? "null"}'"));
+
+   public Task AnimateAsync(int value) =>
+       SuspendBridge.Invoke(cont =>
+           ComposeBridges.MyStateAnimate(
+               ((Java.Lang.Object)Jvm).Handle, value, cont));
+   ```
+3. Add the new public member(s) to `PublicAPI.Unshipped.txt`.
+
+### Conventions and footguns
+
+- Bridges **must** return raw `IntPtr` and work in raw handles
+  end-to-end. Do not wrap `COROUTINE_SUSPENDED` with
+  `Java.Lang.Object.GetObject(..., TransferLocalRef)` — Mono's peer
+  cache resolves Kotlin singletons to globally-ref-backed wrappers that
+  crash CheckJNI when disposed later.
+- Do not wrap `JNIEnv.FindClass` results in `NewGlobalRef` /
+  `DeleteLocalRef`; Mono.Android already returns stable, globally
+  registered class refs.
+- For instance-method bridges, the facade passes
+  `((Java.Lang.Object)Jvm).Handle` as the receiver; the bridge's first
+  `IntPtr` parameter is that receiver.
+- For Kotlin extension functions / `$default` synthetic overloads, the
+  JVM signature is `(receiver, ...userParams, AnimationSpec,
+  Continuation, int $default, Object marker)`. The marker is always
+  `IntPtr.Zero`; the `$default` mask has bits set for defaulted
+  parameters.
+- The `unbox` lambda receives the boxed `Java.Lang.Object?` success
+  value Kotlin handed back. Use `Java.Lang.Integer.IntValue()`,
+  `Java.Lang.Float.FloatValue()`, etc. for boxed primitives; use the
+  non-generic `Invoke` overload for Kotlin `Unit` results.
+- Callers handle failures with normal `try` / `catch` around `await`.
+  `SuspendBridge` detects `kotlin.Result$Failure` and faults the task
+  with the underlying `Throwable` automatically.
+- Allocate one JCW continuation per call. Never reuse
+  `SuspendContinuation` instances.
+
+Do not add a `[ComposeBridge]` generator path yet. v1 intentionally
+uses hand-written bridges for the two ScrollState suspend calls; once a
+third suspend API is needed, formalise the pattern as
+`ComposeBridgeAttribute(Suspend = true)` instead of copying more
+boilerplate.
+
+The `Why raw JNI` comments in `SuspendBridges.cs` and `SuspendBridge.cs`
+explain the current `dotnet/java-interop#1440` dependency and what can
+be replaced with cleaner binding calls after the upstream binder fixes
+land. Check those comments before assuming a binding is truly missing.
+
 ## Central package versioning
 
 All `<PackageReference>` items in this repo are **versionless** at the

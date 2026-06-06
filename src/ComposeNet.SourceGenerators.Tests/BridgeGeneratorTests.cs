@@ -1132,15 +1132,15 @@ public class BridgeGeneratorTests
     }
 
     [Fact]
-    public void ValueType_SpEmTextAlign_LowerCorrectly()
+    public void ValueType_SpTextAlign_LowerCorrectly()
     {
-        // @Composable bridge: (Sp fontSize, Em letterSpacing, TextAlign align, Composer).
-        // JNI: 3 user slots (J/J/I) + Composer (L) + 1 $changed (I) + 1 $default (I).
+        // @Composable bridge: (Sp fontSize, TextAlign align, Composer).
+        // JNI: 2 user slots (J/I) + Composer (L) + 1 $changed (I) + 1 $default (I).
         var code = """
             using ComposeNet;
             using AndroidX.Compose.Runtime;
 
-            [assembly: ComposeDefaults("FontDefault", "fontSize", "letterSpacing", "align")]
+            [assembly: ComposeDefaults("FontDefault", "fontSize", "align")]
 
             namespace ComposeNet
             {
@@ -1149,9 +1149,9 @@ public class BridgeGeneratorTests
                     [ComposeBridge(
                         Class = "x/Y",
                         JvmName = "f",
-                        Signature = "(JJILandroidx/compose/runtime/Composer;II)V",
+                        Signature = "(JILandroidx/compose/runtime/Composer;II)V",
                         Defaults = typeof(FontDefault))]
-                    public static partial void F(Sp? fontSize, Em? letterSpacing, TextAlign? align, IComposer composer);
+                    public static partial void F(Sp? fontSize, TextAlign? align, IComposer composer);
                 }
             }
             """;
@@ -1160,7 +1160,6 @@ public class BridgeGeneratorTests
         Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
         Assert.NotNull(emitted);
         Assert.Contains("global::ComposeNet.Sp.Pack(fontSize)", emitted);
-        Assert.Contains("global::ComposeNet.Em.Pack(letterSpacing)", emitted);
         Assert.Contains("global::ComposeNet.TextAlign.Pack(align)", emitted);
     }
 

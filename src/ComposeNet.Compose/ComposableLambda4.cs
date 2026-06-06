@@ -24,7 +24,8 @@ internal sealed class ComposableLambda4 : Java.Lang.Object, IFunction4
     {
         System.ArgumentNullException.ThrowIfNull(p2);
         var composer = Android.Runtime.Extensions.JavaCast<IComposer>(p2);
+        using var _ = ComposeContext.Push(composer);
         _body(p0?.Handle ?? IntPtr.Zero, p1, composer);
-        return null;
+        return global::Kotlin.Unit.Instance!;
     }
 }

@@ -74,6 +74,16 @@ public class MainActivity : ComposeActivity
             var menuSelection = Remember(() => new MutableState<string>("(none)"));
             var searchState   = Remember(() => new SearchBarState());
             var searchInput   = Remember(() => new SearchBarTextFieldState());
+
+            // New in this PR: range picker, exposed-dropdown box, docked
+            // search bar.
+            var showRange     = Remember(() => new MutableState<bool>(false));
+            var pickedRange   = Remember(() => new MutableState<string>("(none)"));
+            var rangeState    = Remember(() => new DateRangePickerState());
+            var ddOpen        = Remember(() => new MutableState<bool>(false));
+            var ddSelected    = Remember(() => new MutableState<string>("Apple"));
+            var dockedOpen    = Remember(() => new MutableState<bool>(false));
+            var dockedQuery   = Remember(() => new MutableState<string>(""));
             // Holds the committed query that drives the filter. The
             // bound TextFieldState.text getter doesn't subscribe to
             // Compose's snapshot read-tracking when read from C# build
@@ -91,6 +101,11 @@ public class MainActivity : ComposeActivity
             // spinner is observable without any real async work.
             var refreshing  = Remember(() => new MutableState<bool>(false));
             var refreshTick = Remember(() => new MutableNumberState<int>(0));
+
+            // Scroll state for the (long) Buttons tab — drives both the
+            // VerticalScroll modifier and the SuspendBridge demo buttons
+            // that programmatically scroll back to the top.
+            var buttonsScroll = Remember(() => new ScrollState());
 
             string[] tabNames = { "Basics", "Buttons", "Cards", "Drawer", "Selection", "Pickers", "Misc", "App bars", "Lazy", "Carousels" };
 
@@ -138,32 +153,32 @@ public class MainActivity : ComposeActivity
                             // [ComposeBridge] generators end-to-end.
                             new Text("Styled text (issue #65):")
                             {
-                                Modifier = Modifier.Companion.Padding(top: 8.Dp(), bottom: 4.Dp(), start: 0.Dp(), end: 0.Dp()),
+                                Modifier = Modifier.Companion.Padding(top: 8, bottom: 4, start: 0, end: 0),
                                 FontWeight = ComposeNet.FontWeight.Bold,
                             },
                             new Text("Large + Bold")
                             {
-                                FontSize = 24.Sp(),
+                                FontSize = 24,
                                 FontWeight = ComposeNet.FontWeight.Bold,
                             },
                             new Text("Italic-weight underline")
                             {
-                                FontSize = 16.Sp(),
+                                FontSize = 16,
                                 FontWeight = ComposeNet.FontWeight.Medium,
                                 Decoration = TextDecoration.Underline,
                             },
                             new Text("Strikethrough light")
                             {
-                                FontSize = 14.Sp(),
+                                FontSize = 14,
                                 FontWeight = ComposeNet.FontWeight.Light,
                                 Decoration = TextDecoration.LineThrough,
                             },
                             new Text("Wide letter spacing, taller lines, so the rendered glyphs visibly drift apart and rows breathe.")
                             {
-                                FontSize = 14.Sp(),
-                                LetterSpacing = 2.Sp(),
-                                LineHeight = 22.Sp(),
-                                Modifier = Modifier.Companion.Padding(8.Dp()),
+                                FontSize = 14,
+                                LetterSpacing = 2,
+                                LineHeight = 22,
+                                Modifier = Modifier.Companion.Padding(8),
                             },
                             // Phase 2 modifier demo — clickable rounded chip painted with
                             // Background + Border + Clip; tapping it increments the counter.
@@ -172,9 +187,9 @@ public class MainActivity : ComposeActivity
                                 Modifier = Modifier.Companion
                                     .Clip(12)
                                     .Background(ColorKt.Color(red: 0x19, green: 0x76, blue: 0xD2, alpha: 0xFF))
-                                    .Border(2, ColorKt.Color(red: 0x0D, green: 0x47, blue: 0xA1, alpha: 0xFF), cornerRadiusDp: 12)
+                                    .Border(2, ColorKt.Color(red: 0x0D, green: 0x47, blue: 0xA1, alpha: 0xFF), cornerRadius: 12)
                                     .Clickable(() => count++)
-                                    .Padding(horizontalDp: 16, verticalDp: 8),
+                                    .Padding(horizontal: 16, vertical: 8),
                             },
                                 // Secure text inputs — exercise both
                                 // SecureTextField (filled) and
@@ -256,6 +271,8 @@ public class MainActivity : ComposeActivity
                 },
                 1 => new Column
                 {
+                    Modifier.Companion.VerticalScroll(buttonsScroll),
+
                     new Text("Button fill styles"),
                     new Button(onClick: () => count++) { new Text("Filled") },
                     new ElevatedButton(onClick: () => count++) { new Text("Elevated") },
@@ -326,6 +343,19 @@ public class MainActivity : ComposeActivity
                     new Button(onClick: () => showSnack.Value = true)
                     {
                         new Text("Show snackbar"),
+                    },
+
+                    new Text("Programmatic scrolling (suspend bridge)"),
+                    new Row
+                    {
+                        new Button(onClick: () => _ = buttonsScroll.AnimateScrollToAsync(0))
+                        {
+                            new Text("Scroll to top (animated)"),
+                        },
+                        new Button(onClick: () => _ = buttonsScroll.ScrollToAsync(0))
+                        {
+                            new Text("Scroll to top (instant)"),
+                        },
                     },
                 },
                 2 => new Column
@@ -419,18 +449,14 @@ public class MainActivity : ComposeActivity
                 4 => (ComposableNode)new Column
                 {
                     new Text("Selection controls"),
-                    new Row
+                    new Row(Arrangement.SpacedBy(12))
                     {
                         new Checkbox(@checked: checkbox.Value, onCheckedChange: v => checkbox.Value = v),
-                        new Spacer { Modifier = Modifier.Companion.FillMaxWidth(0.05f) },
                         new Switch(@checked: switchOn.Value, onCheckedChange: v => switchOn.Value = v),
-                        new Spacer { Modifier = Modifier.Companion.FillMaxWidth(0.05f) },
                         new RadioButton(selected: radioPick.Value == 0, onClick: () => radioPick.Value = 0),
                         new Text("A"),
-                        new Spacer { Modifier = Modifier.Companion.FillMaxWidth(0.03f) },
                         new RadioButton(selected: radioPick.Value == 1, onClick: () => radioPick.Value = 1),
                         new Text("B"),
-                        new Spacer { Modifier = Modifier.Companion.FillMaxWidth(0.03f) },
                         new RadioButton(selected: radioPick.Value == 2, onClick: () => radioPick.Value = 2),
                         new Text("C"),
                     },
@@ -450,26 +476,25 @@ public class MainActivity : ComposeActivity
                 5 => new Column
                 {
                     new Text("Dialogs and sheets"),
-                    new Row
+                    new Row(Arrangement.SpacedBy(8))
                     {
                         new Button(onClick: () => showSheet.Value = true) { new Text("Sheet") },
-                        new Spacer { Modifier = Modifier.Companion.FillMaxWidth(0.03f) },
                         new Button(onClick: () => showDate.Value  = true) { new Text("Date") },
-                        new Spacer { Modifier = Modifier.Companion.FillMaxWidth(0.03f) },
+                        new Button(onClick: () => showRange.Value = true) { new Text("Range") },
                         new Button(onClick: () => showTime.Value  = true) { new Text("Time") },
                     },
                     new HorizontalDivider { Modifier = Modifier.Companion.Padding(0, 8) },
-                    new Text($"Picked date: {pickedDate}"),
-                    new Text($"Picked time: {pickedTime}"),
+                    new Text($"Picked date:  {pickedDate}"),
+                    new Text($"Picked range: {pickedRange}"),
+                    new Text($"Picked time:  {pickedTime}"),
                 },
                 6 => (ComposableNode)new Column
                 {
                     new Text("Misc Material 3"),
                     new Text("Progress indicators (indeterminate):"),
-                    new Row
+                    new Row(Arrangement.SpacedBy(12))
                     {
                         new CircularProgressIndicator(),
-                        new Spacer { Modifier = Modifier.Companion.FillMaxWidth(0.05f) },
                         new Column
                         {
                             new Text("Linear ↓"),
@@ -821,6 +846,32 @@ public class MainActivity : ComposeActivity
                     },
                 });
                 pickers.Add(new Text($"Last menu choice: {menuSelection}"));
+
+                pickers.Add(new HorizontalDivider { Modifier = Modifier.Companion.Padding(0, 16) });
+                pickers.Add(new Text("ExposedDropdownMenuBox"));
+                pickers.Add(new Text("Read-only TextField + tap the ▼ button to open the menu."));
+                pickers.Add(new ExposedDropdownMenuBox(
+                    expanded:         ddOpen.Value,
+                    onExpandedChange: v => ddOpen.Value = v)
+                {
+                    new Row
+                    {
+                        new TextField(value: ddSelected.Value, onValueChange: _ => { }),
+                        new IconButton(onClick: () => ddOpen.Value = !ddOpen.Value)
+                        {
+                            new Text(ddOpen.Value ? "▲" : "▼"),
+                        },
+                    },
+                    new ExposedDropdownMenu(
+                        expanded:         ddOpen.Value,
+                        onDismissRequest: () => ddOpen.Value = false)
+                    {
+                        new DropdownMenuItem(text: new Text("Apple"),  onClick: () => { ddSelected.Value = "Apple";  ddOpen.Value = false; }),
+                        new DropdownMenuItem(text: new Text("Banana"), onClick: () => { ddSelected.Value = "Banana"; ddOpen.Value = false; }),
+                        new DropdownMenuItem(text: new Text("Cherry"), onClick: () => { ddSelected.Value = "Cherry"; ddOpen.Value = false; }),
+                    },
+                });
+
                 pickers.Add(new HorizontalDivider { Modifier = Modifier.Companion.Padding(0, 16) });
                 pickers.Add(new Text("SearchBar"));
                 pickers.Add(new Text("Tap the bar, type a query, then press the keyboard's 🔍 Search key to filter the fruit list."));
@@ -842,6 +893,34 @@ public class MainActivity : ComposeActivity
                     },
                     expanded,
                 });
+
+                pickers.Add(new HorizontalDivider { Modifier = Modifier.Companion.Padding(0, 16) });
+                pickers.Add(new Text("DockedSearchBar (deprecated boolean-state variant)"));
+                pickers.Add(new Text("Type in the field, tap the ▼/▲ button to toggle the docked results popup."));
+                var dockedMatches = System.Array.FindAll(
+                    fruits,
+                    f => string.IsNullOrEmpty(dockedQuery.Value)
+                         || f.Contains(dockedQuery.Value, System.StringComparison.OrdinalIgnoreCase));
+#pragma warning disable CS0618 // DockedSearchBar is intentionally exercised here
+                var docked = new DockedSearchBar(
+                    expanded:         dockedOpen.Value,
+                    onExpandedChange: v => dockedOpen.Value = v)
+                {
+                    InputField = new Row
+                    {
+                        new TextField(dockedQuery),
+                        new IconButton(onClick: () => dockedOpen.Value = !dockedOpen.Value)
+                        {
+                            new Text(dockedOpen.Value ? "▲" : "▼"),
+                        },
+                    },
+                };
+#pragma warning restore CS0618
+                foreach (var f in dockedMatches)
+                    docked.Add(new Text(f) { Modifier = Modifier.Companion.Padding(16, 12) });
+                if (dockedMatches.Length == 0)
+                    docked.Add(new Text("(no matches)") { Modifier = Modifier.Companion.Padding(16, 12) });
+                pickers.Add(docked);
             }
 
             return new MaterialTheme
@@ -974,6 +1053,24 @@ public class MainActivity : ComposeActivity
                                     { new Text("OK") },
                                     DismissButton = new Button(onClick: () => showDate.Value = false) { new Text("Cancel") },
                                     Body          = new DatePicker(dateState),
+                                }
+                                : null,
+
+                            showRange.Value
+                                ? new DateRangePickerDialog(onDismissRequest: () => showRange.Value = false)
+                                {
+                                    ConfirmButton = new Button(onClick: () =>
+                                    {
+                                        static string Fmt(long? ms) => ms is long m
+                                            ? System.DateTimeOffset.FromUnixTimeMilliseconds(m).UtcDateTime.ToString("yyyy-MM-dd")
+                                            : "(none)";
+                                        pickedRange.Value =
+                                            $"{Fmt(rangeState.SelectedStartDateMillis)} → {Fmt(rangeState.SelectedEndDateMillis)}";
+                                        showRange.Value = false;
+                                    })
+                                    { new Text("OK") },
+                                    DismissButton = new Button(onClick: () => showRange.Value = false) { new Text("Cancel") },
+                                    Body          = new DateRangePicker(rangeState),
                                 }
                                 : null,
 

@@ -41,10 +41,6 @@ internal static class ComposeValueTypes
             ["ComposeNet.Sp"] =
                 ('J', "global::ComposeNet.Sp.Pack({0})"),
 
-            // androidx.compose.ui.unit.TextUnit (em variant) → JNI long.
-            ["ComposeNet.Em"] =
-                ('J', "global::ComposeNet.Em.Pack({0})"),
-
             // androidx.compose.ui.text.style.TextAlign → JNI int.
             ["ComposeNet.TextAlign"] =
                 ('I', "global::ComposeNet.TextAlign.Pack({0})"),

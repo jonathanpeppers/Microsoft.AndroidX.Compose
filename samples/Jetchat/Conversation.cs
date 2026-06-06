@@ -71,7 +71,7 @@ public static class Conversation
                 new Text($"#{ui.CurrentChannel}"),
                 new Text($"{ui.ChannelMembers} members")
                 {
-                    Modifier = Modifier.Companion.Padding(topDp: 2, bottomDp: 0, startDp: 0, endDp: 0),
+                    Modifier = Modifier.Companion.Padding(top: 2, bottom: 0, start: 0, end: 0),
                 },
             },
             // Trailing search + info icons. Match upstream's
@@ -128,7 +128,7 @@ public static class Conversation
                 items:       rows,
                 itemContent: row => BuildMessageRow(row.Message, row.IsStreak))
             {
-                Modifier = Modifier.Companion.FillMaxWidth().Weight(1f, fill: true).Padding(horizontalDp: 8, verticalDp: 0),
+                Modifier = Modifier.Companion.FillMaxWidth().Weight(1f, fill: true).Padding(horizontal: 8, vertical: 0),
             },
         };
     }
@@ -136,11 +136,11 @@ public static class Conversation
     static Row BuildDaySeparator(string label) =>
         new()
         {
-            Modifier.Companion.FillMaxWidth().Padding(horizontalDp: 8, verticalDp: 12),
+            Modifier.Companion.FillMaxWidth().Padding(horizontal: 8, vertical: 12),
             new HorizontalDivider { Modifier = Modifier.Companion.Weight(1f) },
             new Text(label)
             {
-                Modifier = Modifier.Companion.Padding(horizontalDp: 12, verticalDp: 0),
+                Modifier = Modifier.Companion.Padding(horizontal: 12, vertical: 0),
             },
             new HorizontalDivider { Modifier = Modifier.Companion.Weight(1f) },
         };
@@ -153,28 +153,24 @@ public static class Conversation
             : BuildOtherMessageRow(m, isStreak);
     }
 
-    // "me" messages: right-aligned via a leading Spacer().Weight(1f),
+    // "me" messages: right-aligned via Arrangement.End on the Row,
     // no avatar tile, blueish bubble. Upstream uses a primary-color
-    // bubble with no avatar on the "me" side — same idea, different
-    // exact color since we don't have MaterialTheme.colorScheme reads
-    // (issue #61).
+    // bubble — same idea, different exact color since we don't have
+    // MaterialTheme.colorScheme reads (issue #61).
     static Row BuildMyMessageRow(Message m) =>
-        new()
+        new(Arrangement.End)
         {
-            Modifier.Companion.FillMaxWidth().Padding(horizontalDp: 8, verticalDp: 4),
-            // Push everything to the right edge. Workaround for missing
-            // Row(horizontalArrangement=Arrangement.End) — issue #70.
-            new Spacer(Modifier.Companion.Weight(1f)),
+            Modifier.Companion.FillMaxWidth().Padding(horizontal: 8, vertical: 4),
             new Column
             {
                 BuildAuthorAndTimestamp(m, alignEnd: true),
                 new Text(m.Content)
                 {
                     Modifier = Modifier.Companion
-                        .Padding(topDp: 4, bottomDp: 0, startDp: 0, endDp: 0)
+                        .Padding(top: 4, bottom: 0, start: 0, end: 0)
                         .Clip(12)
                         .Background(MeBubbleColor)
-                        .Padding(horizontalDp: 12, verticalDp: 8),
+                        .Padding(horizontal: 12, vertical: 8),
                 },
             },
         };
@@ -188,7 +184,7 @@ public static class Conversation
     {
         var row = new Row
         {
-            Modifier.Companion.FillMaxWidth().Padding(horizontalDp: 8, verticalDp: 4),
+            Modifier.Companion.FillMaxWidth().Padding(horizontal: 8, vertical: 4),
         };
         if (isStreak)
         {
@@ -205,34 +201,32 @@ public static class Conversation
         }
         var contentCol = new Column
         {
-            Modifier.Companion.Padding(startDp: 12, topDp: 0, endDp: 0, bottomDp: 0),
+            Modifier.Companion.Padding(start: 12, top: 0, end: 0, bottom: 0),
         };
         if (!isStreak)
             contentCol.Add(BuildAuthorAndTimestamp(m, alignEnd: false));
         contentCol.Add(new Text(m.Content)
         {
             Modifier = Modifier.Companion
-                .Padding(topDp: 4, bottomDp: 0, startDp: 0, endDp: 0)
+                .Padding(top: 4, bottom: 0, start: 0, end: 0)
                 .Clip(12)
                 .Background(OtherBubbleColor)
-                .Padding(horizontalDp: 12, verticalDp: 8),
+                .Padding(horizontal: 12, vertical: 8),
         });
         row.Add(contentCol);
         return row;
     }
 
     // Author + timestamp on one line, separated by a small spacer.
-    // alignEnd uses a leading Spacer-weight trick to push the row's
-    // content to the right (workaround for missing
-    // Row(horizontalArrangement=Arrangement.End) — issue #70).
+    // When alignEnd is true (me messages), this row sizes to its
+    // content rather than FillMaxWidth so the enclosing Column
+    // collapses too and the OUTER Row's Arrangement.End can push the
+    // whole "me" stack (header + bubble) to the right edge.
     static Row BuildAuthorAndTimestamp(Message m, bool alignEnd)
     {
-        var row = new Row
-        {
-            Modifier.Companion.FillMaxWidth(),
-        };
-        if (alignEnd)
-            row.Add(new Spacer(Modifier.Companion.Weight(1f)));
+        var row = alignEnd
+            ? new Row()
+            : new Row { Modifier.Companion.FillMaxWidth() };
         row.Add(new Text(m.Author));
         row.Add(new Spacer(Modifier.Companion.Width(8)));
         row.Add(new Text(m.Timestamp));
@@ -249,7 +243,7 @@ public static class Conversation
             },
             new IconButton(() => Send(ui, input))
             {
-                Modifier.Companion.Padding(startDp: 8, topDp: 0, endDp: 0, bottomDp: 0),
+                Modifier.Companion.Padding(start: 8, top: 0, end: 0, bottom: 0),
                 new Text("➤"),
             },
         };
@@ -275,7 +269,7 @@ public static class Conversation
                 BuildChatItem(ui, "droidcon-nyc"),
                 new HorizontalDivider
                 {
-                    Modifier = Modifier.Companion.Padding(horizontalDp: 28, verticalDp: 0),
+                    Modifier = Modifier.Companion.Padding(horizontal: 28, vertical: 0),
                 },
                 BuildDrawerSectionHeader("Recent Profiles"),
                 BuildProfileItem("Ali Conors (you)", Resource.Drawable.avatar_ali),
@@ -298,7 +292,7 @@ public static class Conversation
     static Box BuildDrawerSectionHeader(string label) =>
         new()
         {
-            Modifier.Companion.FillMaxWidth().Padding(horizontalDp: 28, verticalDp: 16),
+            Modifier.Companion.FillMaxWidth().Padding(horizontal: 28, vertical: 16),
             new Text(label),
         };
 
@@ -311,7 +305,7 @@ public static class Conversation
         var modifier = Modifier.Companion
             .FillMaxWidth()
             .Height(56)
-            .Padding(horizontalDp: 12, verticalDp: 0)
+            .Padding(horizontal: 12, vertical: 0)
             .Clip(28)
             .Clickable(() => ui.CurrentChannel = channel);
         if (selected)
@@ -327,7 +321,7 @@ public static class Conversation
             new Spacer(Modifier.Companion.Width(12)),
             new Text(channel)
             {
-                Modifier = Modifier.Companion.Padding(topDp: 16, bottomDp: 16, startDp: 0, endDp: 0),
+                Modifier = Modifier.Companion.Padding(top: 16, bottom: 16, start: 0, end: 0),
             },
         };
     }
@@ -338,7 +332,7 @@ public static class Conversation
             Modifier.Companion
                 .FillMaxWidth()
                 .Height(56)
-                .Padding(horizontalDp: 12, verticalDp: 0)
+                .Padding(horizontal: 12, vertical: 0)
                 .Clip(28)
                 .Clickable(NoOp),
             new Image(avatarRes, "Profile photo")
@@ -348,7 +342,7 @@ public static class Conversation
             new Spacer(Modifier.Companion.Width(12)),
             new Text(name)
             {
-                Modifier = Modifier.Companion.Padding(topDp: 16, bottomDp: 16, startDp: 0, endDp: 0),
+                Modifier = Modifier.Companion.Padding(top: 16, bottom: 16, start: 0, end: 0),
             },
         };
 

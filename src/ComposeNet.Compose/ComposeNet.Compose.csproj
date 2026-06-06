@@ -27,6 +27,10 @@
     <PackageReference Include="Xamarin.AndroidX.Compose.UI.Android" />
     <PackageReference Include="Xamarin.AndroidX.Compose.UI.Graphics" />
     <PackageReference Include="Xamarin.AndroidX.Compose.UI.Graphics.Android" />
+    <PackageReference Include="Xamarin.AndroidX.Compose.UI.Text" />
+    <PackageReference Include="Xamarin.AndroidX.Compose.UI.Text.Android" />
+    <PackageReference Include="Xamarin.AndroidX.Compose.UI.Unit" />
+    <PackageReference Include="Xamarin.AndroidX.Compose.UI.Unit.Android" />
     <PackageReference Include="Xamarin.AndroidX.Compose.Foundation" />
     <PackageReference Include="Xamarin.AndroidX.Compose.Foundation.Android" />
     <PackageReference Include="Xamarin.AndroidX.Compose.Foundation.Layout" />
