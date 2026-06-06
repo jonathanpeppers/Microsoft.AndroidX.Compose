@@ -29,8 +29,9 @@ public sealed class SingleChoiceSegmentedButtonRow : ComposableContainer
             for (int i = 0; i < Children.Count; i++)
             {
                 rows.SetIndex(i);
-                c.StartReplaceableGroup(i);
-                try { Children[i].Render(c); }
+                var child = Children[i];
+                c.StartReplaceableGroup(System.HashCode.Combine(i, child.GetType()));
+                try { child.Render(c); }
                 finally { c.EndReplaceableGroup(); }
             }
         });
