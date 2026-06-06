@@ -18,7 +18,7 @@ namespace ComposeNet.Samples.Jetchat;
 ///
 /// Implemented as a static builder rather than a
 /// <see cref="ComposableNode"/> subclass because
-/// <see cref="ComposableNode.Render"/> is internal to the facade
+/// <see cref="ComposableNode.Render(AndroidX.Compose.Runtime.IComposer)"/> is internal to the facade
 /// assembly. Each recomposition calls <see cref="Build"/> to allocate
 /// a fresh tree — that's the Tier 1.5 per-composition cost.
 /// </summary>
