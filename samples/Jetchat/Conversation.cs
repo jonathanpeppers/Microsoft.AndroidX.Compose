@@ -45,8 +45,9 @@ public static class Conversation
                 },
                 new Text($"{ui.ChannelMembers} members")
                 {
-                    FontSize = 12,
-                    Modifier = Modifier.Companion.Padding(top: 2, bottom: 0, start: 0, end: 0),
+                    FontSize   = 12,
+                    FontWeight = FontWeight.Normal,
+                    Modifier   = Modifier.Companion.Padding(top: 2, bottom: 0, start: 0, end: 0),
                 },
             },
             Actions = new Row
@@ -183,7 +184,8 @@ public static class Conversation
         row.Add(new Spacer(Modifier.Companion.Width(8)));
         row.Add(new Text(m.Timestamp)
         {
-            FontSize = 12,
+            FontSize   = 12,
+            FontWeight = FontWeight.Normal,
         });
         return row;
     }
