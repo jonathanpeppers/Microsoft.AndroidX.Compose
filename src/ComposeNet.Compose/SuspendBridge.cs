@@ -206,14 +206,13 @@ internal static class SuspendBridge
         //
         // JNIEnv.FindClass in Mono.Android returns a stable, globally
         // registered class ref — no NewGlobalRef/DeleteLocalRef dance.
-        // Resolve the field id first, then publish the class ref via
-        // CAS with release semantics so readers that observe a non-zero
-        // s_resultFailureClass are guaranteed to see a fully
-        // initialised s_resultFailureExceptionField.
+        // Multi-thread racers all observe the same class ref + field id
+        // (FindClass / GetFieldID are pure functions of their string
+        // args), so plain stores are fine — losing the race just
+        // re-writes identical values.
         var cls = JNIEnv.FindClass("kotlin/Result$Failure");
-        var fid = JNIEnv.GetFieldID(cls, "exception", "Ljava/lang/Throwable;");
-        s_resultFailureExceptionField = fid;
-        Interlocked.CompareExchange(ref s_resultFailureClass, cls, IntPtr.Zero);
+        s_resultFailureExceptionField = JNIEnv.GetFieldID(cls, "exception", "Ljava/lang/Throwable;");
+        s_resultFailureClass = cls;
     }
 
     static Exception ExtractFailureException(Java.Lang.Object failure)
