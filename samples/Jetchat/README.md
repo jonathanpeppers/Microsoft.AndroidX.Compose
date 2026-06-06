@@ -41,22 +41,40 @@ dotnet build samples/Jetchat -t:Run
   deterministic from the author's name).
 - A "Today" day-separator row (`HorizontalDivider` + `Text` +
   `HorizontalDivider`) above the message list.
-- Message bubbles with author name + relative timestamp on one row,
-  a 40 dp circular avatar tile, and a rounded coloured bubble for
-  the message body.
-- **Streak-aware avatars** — when a sender posts multiple messages in a
-  row, only the first shows the avatar tile; subsequent messages indent
-  with a `Spacer(Size(40))` so the bubbles still align.
-- **`isUserMe` right-alignment** for the local user — distinct blue
-  bubble, no avatar tile, pushed to the right with `Spacer().Weight(1f)`.
-  (See issue #70 for the proper `Arrangement.End` fix.)
+- Message bubbles with a 40 dp circular avatar tile (16 dp horizontal
+  padding around it, mirroring upstream's 74 dp avatar+padding
+  reservation) and a rounded coloured bubble for the message body.
+- **Typography parity via the new `Text` styling surface** (#73 /
+  #58) — author names ride at 16 sp / `FontWeight.Medium` (Material
+  3's `titleMedium`), timestamps at 12 sp (`bodySmall`), the "Today"
+  separator at 11 sp / Medium / 1 sp letter-spacing (`labelSmall`,
+  rounded from M3's 0.5 sp because `Sp` only takes integers), the
+  top-bar channel name at 16 sp / Medium with a 12 sp member-count
+  subtitle, and drawer brand / section / chat labels at the
+  matching M3 sizes. Theme-aware reads (`MaterialTheme.typography.*`
+  + tonal `onSurfaceVariant` color) aren't bound yet — see
+  [#58](https://github.com/jonathanpeppers/compose-net/issues/58)
+  / [#61](https://github.com/jonathanpeppers/compose-net/issues/61).
+- **Streak-aware avatars + per-author spacing** — when a sender
+  posts multiple messages in a row, only the first shows the avatar
+  tile; subsequent messages indent with a 72 dp `Spacer` so the
+  bubbles still align. Author boundaries get an extra 4 dp of top
+  padding (8 dp first-in-chain vs 4 dp within a streak) — mirrors
+  upstream's `spaceBetweenAuthors` modifier, with the
+  forward-vs-reverse-layout flag inverted (we use `!isStreak` where
+  upstream uses `isLastMessageByAuthor`).
+- **`isUserMe` right-alignment** for the local user via
+  `new Row(Arrangement.End)` (#100) — distinct blue bubble, no
+  avatar tile, pushed to the right edge with proper Compose
+  arrangement instead of the previous `Spacer().Weight(1f)` hack.
 - A pinned input row at the bottom: a `TextField` that grows to fill
   available width via `Modifier.Weight(1f)`, plus an `IconButton` send
-  control.
+  control. Newly sent messages are stamped `"now"` (matching
+  upstream's `R.string.now`) instead of a wall-clock time.
 - Reactive message list via `ObservableList<Message>` — tapping send
   appends a message and the UI recomposes.
 - Reactive channel selection via `MutableState<string>` — drawer taps
-  flow into the title.
+  flow into the title and bold the selected chat row in the drawer.
 
 ## What's omitted
 
@@ -65,16 +83,15 @@ feature:
 
 | Upstream feature                          | Tracking issue |
 |-------------------------------------------|----------------|
-| Hamburger nav icon that programmatically opens the drawer | requires Kotlin `suspend` `DrawerState.open()` (no issue yet) — edge-swipe still works |
+| Hamburger nav icon that programmatically opens the drawer | needs a `DrawerState` wrapper + suspend bridges (the `SuspendBridge` plumbing landed in #97 but the drawer-state type isn't exposed yet) — edge-swipe still works |
 | Multi-channel message lists (the drawer changes the title but not the messages — we only seed one conversation) | requires extending the sample's seed data, not blocked by facade |
 | `LazyColumn(reverseLayout = true)` so newest messages sit at the bottom | not yet exposed on the `LazyColumn` facade |
 | Image / sticker / file message attachments inside bubbles | requires composable image-loader plumbing |
 | User profile screen                       | depends on `androidx.navigation.compose` binding |
 | IME-synchronized scroll-to-bottom         | [#69](https://github.com/jonathanpeppers/compose-net/issues/69) (`imePadding`) |
-| Bold author names / typography variants   | [#58](https://github.com/jonathanpeppers/compose-net/issues/58) (`Text` styling, `FontWeight`) |
-| `MaterialTheme.colorScheme.primary` reads for the "me" bubble + drawer selection | [#61](https://github.com/jonathanpeppers/compose-net/issues/61) |
-| `Row(horizontalArrangement = Arrangement.End)` for "me" alignment | [#70](https://github.com/jonathanpeppers/compose-net/issues/70) (workaround: `Spacer().Weight(1f)`) |
-| Asymmetric `RoundedCornerShape(topStart, …)` on bubbles | [#65](https://github.com/jonathanpeppers/compose-net/issues/65) |
+| `MaterialTheme.colorScheme.primary` reads for the "me" bubble + drawer selection + tonal text colors (`onSurfaceVariant`) | [#61](https://github.com/jonathanpeppers/compose-net/issues/61) |
+| `MaterialTheme.typography.*` reads (we approximate the M3 sp/weight values directly until these land) | [#58](https://github.com/jonathanpeppers/compose-net/issues/58) |
+| Asymmetric `RoundedCornerShape(topStart, …)` on bubbles | `Modifier.Clip(Dp)` only takes a single radius; full `Shape` API tracked under [#65](https://github.com/jonathanpeppers/compose-net/issues/65)'s follow-up surface |
 | Search / info popups behind the action icons (`FunctionalityNotAvailablePopup`) | requires popup APIs not yet bound; the icons are wired but the onClick is a no-op |
 
 ## Facade features added for this port

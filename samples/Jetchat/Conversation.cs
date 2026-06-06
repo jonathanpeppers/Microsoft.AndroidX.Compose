@@ -61,16 +61,24 @@ public static class Conversation
         new()
         {
             // Two-line title: channel name on top, member count below.
-            // Upstream uses different typography weights/sizes for each
-            // — we render both at default size since `Text` doesn't
-            // expose fontWeight/style yet (issue #58). The channel name
-            // reads from the mutable CurrentChannel so drawer taps
-            // update the displayed title.
+            // Upstream uses MaterialTheme.typography.titleMedium for the
+            // channel name and bodySmall (+ onSurfaceVariant) for the
+            // member count; theme-aware typography reads aren't bound
+            // yet (#58 / #61), so we approximate with the M3 spec sizes
+            // and weights directly — 16sp/Medium for titleMedium,
+            // 12sp/Normal for bodySmall. The channel name reads from
+            // the mutable CurrentChannel so drawer taps update the
+            // displayed title.
             Title = new Column
             {
-                new Text($"#{ui.CurrentChannel}"),
+                new Text($"#{ui.CurrentChannel}")
+                {
+                    FontSize   = 16,
+                    FontWeight = FontWeight.Medium,
+                },
                 new Text($"{ui.ChannelMembers} members")
                 {
+                    FontSize = 12,
                     Modifier = Modifier.Companion.Padding(top: 2, bottom: 0, start: 0, end: 0),
                 },
             },
@@ -138,9 +146,16 @@ public static class Conversation
         {
             Modifier.Companion.FillMaxWidth().Padding(horizontal: 8, vertical: 12),
             new HorizontalDivider { Modifier = Modifier.Companion.Weight(1f) },
+            // Upstream uses MaterialTheme.typography.labelSmall (11sp /
+            // Medium / 0.5sp letter-spacing). Sp only accepts integers,
+            // so letterSpacing is rounded up to 1 — a hair wider than
+            // spec but the closest int approximation we can express.
             new Text(label)
             {
-                Modifier = Modifier.Companion.Padding(horizontal: 12, vertical: 0),
+                FontSize      = 11,
+                FontWeight    = FontWeight.Medium,
+                LetterSpacing = 1,
+                Modifier      = Modifier.Companion.Padding(horizontal: 12, vertical: 0),
             },
             new HorizontalDivider { Modifier = Modifier.Companion.Weight(1f) },
         };
@@ -149,7 +164,7 @@ public static class Conversation
     {
         bool isMe = m.Author == MyName;
         return isMe
-            ? BuildMyMessageRow(m)
+            ? BuildMyMessageRow(m, isStreak)
             : BuildOtherMessageRow(m, isStreak);
     }
 
@@ -157,10 +172,18 @@ public static class Conversation
     // no avatar tile, blueish bubble. Upstream uses a primary-color
     // bubble — same idea, different exact color since we don't have
     // MaterialTheme.colorScheme reads (issue #61).
-    static Row BuildMyMessageRow(Message m) =>
+    //
+    // Per-author top spacing mirrors upstream's `spaceBetweenAuthors`
+    // pattern: when this is the first message in a chain by this
+    // author (`!isStreak` here) bump the top padding from 4dp → 8dp
+    // so author boundaries breathe. Upstream computes the same flag
+    // as `isLastMessageByAuthor` because its LazyColumn is
+    // `reverseLayout = true`; in our forward layout the equivalent
+    // semantic is `!isStreak`.
+    static Row BuildMyMessageRow(Message m, bool isStreak) =>
         new(Arrangement.End)
         {
-            Modifier.Companion.FillMaxWidth().Padding(horizontal: 8, vertical: 4),
+            Modifier.Companion.FillMaxWidth().Padding(start: 8, end: 8, top: isStreak ? 4 : 8, bottom: 0),
             new Column
             {
                 BuildAuthorAndTimestamp(m, alignEnd: true),
@@ -180,35 +203,36 @@ public static class Conversation
     // previous message), hide the avatar with a same-width Spacer so
     // the message body stays visually aligned with the previous one —
     // matches upstream's "first message in a chain only" behavior.
+    // Upstream reserves 74.dp (42 avatar + 16+16 horizontal padding);
+    // we use 72.dp (40 + 16+16) to match our 40 dp avatar size.
     static Row BuildOtherMessageRow(Message m, bool isStreak)
     {
         var row = new Row
         {
-            Modifier.Companion.FillMaxWidth().Padding(horizontal: 8, vertical: 4),
+            Modifier.Companion.FillMaxWidth().Padding(start: 8, end: 8, top: isStreak ? 4 : 8, bottom: 0),
         };
         if (isStreak)
         {
-            row.Add(new Spacer(Modifier.Companion.Size(40)));
+            row.Add(new Spacer(Modifier.Companion.Width(72)));
         }
         else
         {
             // Drawable avatar via the new Phase 7 [PainterResource]
             // facade. Clip(20) on a 40dp box yields a circle.
+            // 16dp horizontal padding mirrors upstream's avatar
+            // surround.
             row.Add(new Image(m.AuthorAvatarRes, "Profile photo")
             {
-                Modifier = Modifier.Companion.Size(40).Clip(20),
+                Modifier = Modifier.Companion.Padding(horizontal: 16, vertical: 0).Size(40).Clip(20),
             });
         }
-        var contentCol = new Column
-        {
-            Modifier.Companion.Padding(start: 12, top: 0, end: 0, bottom: 0),
-        };
+        var contentCol = new Column();
         if (!isStreak)
             contentCol.Add(BuildAuthorAndTimestamp(m, alignEnd: false));
         contentCol.Add(new Text(m.Content)
         {
             Modifier = Modifier.Companion
-                .Padding(top: 4, bottom: 0, start: 0, end: 0)
+                .Padding(top: 4, bottom: 0, start: 0, end: 16)
                 .Clip(12)
                 .Background(OtherBubbleColor)
                 .Padding(horizontal: 12, vertical: 8),
@@ -222,14 +246,27 @@ public static class Conversation
     // content rather than FillMaxWidth so the enclosing Column
     // collapses too and the OUTER Row's Arrangement.End can push the
     // whole "me" stack (header + bubble) to the right edge.
+    //
+    // Upstream uses MaterialTheme.typography.titleMedium for the
+    // author (16sp / Medium) and bodySmall for the timestamp (12sp /
+    // Normal + onSurfaceVariant tint). We approximate the spec sizes
+    // / weights directly — theme-aware reads aren't bound yet (#58 /
+    // #61), so the timestamp keeps the default content color.
     static Row BuildAuthorAndTimestamp(Message m, bool alignEnd)
     {
         var row = alignEnd
             ? new Row()
             : new Row { Modifier.Companion.FillMaxWidth() };
-        row.Add(new Text(m.Author));
+        row.Add(new Text(m.Author)
+        {
+            FontSize   = 16,
+            FontWeight = FontWeight.Medium,
+        });
         row.Add(new Spacer(Modifier.Companion.Width(8)));
-        row.Add(new Text(m.Timestamp));
+        row.Add(new Text(m.Timestamp)
+        {
+            FontSize = 12,
+        });
         return row;
     }
 
@@ -286,14 +323,32 @@ public static class Conversation
                 Modifier = Modifier.Companion.Size(24),
             },
             new Spacer(Modifier.Companion.Width(8)),
-            new Text("Jetchat"),
+            // Upstream renders the brand name with titleMedium-ish
+            // emphasis (it's not a literal MaterialTheme typography
+            // read upstream either — JetchatDrawerHeader takes a
+            // hand-tuned style). 18sp / SemiBold reads as a brand
+            // header without a theme dependency.
+            new Text("Jetchat")
+            {
+                FontSize   = 18,
+                FontWeight = FontWeight.SemiBold,
+            },
         };
 
     static Box BuildDrawerSectionHeader(string label) =>
         new()
         {
             Modifier.Companion.FillMaxWidth().Padding(horizontal: 28, vertical: 16),
-            new Text(label),
+            // Upstream styles section dividers with titleSmall (14sp /
+            // Medium / 0.1sp letter-spacing). Sp only accepts ints, so
+            // letterSpacing is dropped — the M3 spec value (0.1) would
+            // round to 0 anyway. Section labels look like proper M3
+            // category dividers without a typography binding.
+            new Text(label)
+            {
+                FontSize   = 14,
+                FontWeight = FontWeight.Medium,
+            },
         };
 
     static Row BuildChatItem(ConversationUiState ui, string channel)
@@ -319,9 +374,16 @@ public static class Conversation
                 Modifier = Modifier.Companion.Padding(16),
             },
             new Spacer(Modifier.Companion.Width(12)),
+            // Channel labels mirror upstream's bodyLarge usage in
+            // NavigationDrawerItem (16sp / Normal). The selected
+            // channel reads SemiBold so the highlight reinforces
+            // visually — same affordance upstream gets via the
+            // selected NavigationDrawerItem typography.
             new Text(channel)
             {
-                Modifier = Modifier.Companion.Padding(top: 16, bottom: 16, start: 0, end: 0),
+                FontSize   = 16,
+                FontWeight = selected ? FontWeight.SemiBold : FontWeight.Normal,
+                Modifier   = Modifier.Companion.Padding(top: 16, bottom: 16, start: 0, end: 0),
             },
         };
     }
@@ -342,6 +404,7 @@ public static class Conversation
             new Spacer(Modifier.Companion.Width(12)),
             new Text(name)
             {
+                FontSize = 16,
                 Modifier = Modifier.Companion.Padding(top: 16, bottom: 16, start: 0, end: 0),
             },
         };
@@ -350,14 +413,10 @@ public static class Conversation
     {
         var text = input.Value ?? string.Empty;
         if (string.IsNullOrWhiteSpace(text)) return;
-        ui.AddMessage(MyName, text, Resource.Drawable.avatar_ali, FormatNow());
+        // Match upstream's `R.string.now` — Jetchat marks newly sent
+        // messages as "now" instead of stamping a wall-clock time.
+        ui.AddMessage(MyName, text, Resource.Drawable.avatar_ali, "now");
         input.Value = string.Empty;
-    }
-
-    static string FormatNow()
-    {
-        var now = System.DateTime.Now;
-        return now.ToString("h:mm tt", System.Globalization.CultureInfo.InvariantCulture);
     }
 
     static void NoOp() { }
