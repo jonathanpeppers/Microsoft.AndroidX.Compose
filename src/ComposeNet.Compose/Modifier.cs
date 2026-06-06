@@ -385,28 +385,35 @@ public sealed class Modifier
 
     /// <summary>
     /// Materialize the chain into a managed <c>IModifier</c> wrapper,
-    /// optionally seeding it with a <c>Modifier.padding(paddingValues)</c>
-    /// op against the supplied <see cref="IntPtr"/> handle. The seed op
-    /// runs FIRST, before any user ops — semantically equivalent to
-    /// <c>Modifier.padding(paddingValues).then(this)</c> but without
+    /// optionally prepending a <c>Modifier.padding(contentPadding)</c>
+    /// op against the supplied <see cref="IntPtr"/> handle. The padding
+    /// op runs FIRST, before any user ops — semantically equivalent to
+    /// <c>Modifier.padding(contentPadding).then(this)</c> but without
     /// allocating a managed <see cref="Modifier"/> wrapper. Used by
     /// <see cref="ComposableNode.BuildModifier"/> to apply the
     /// <see cref="Scaffold"/>-supplied <c>PaddingValues</c> to the body
     /// node on every measure pass without per-pass allocations
     /// (issue #46).
     /// </summary>
-    internal IModifier? Build(IntPtr seedPaddingValues)
+    internal IModifier? Build(IntPtr contentPadding)
     {
-        bool hasSeed = seedPaddingValues != IntPtr.Zero;
-        if (_ops.Length == 0 && !hasSeed)
+        bool hasContentPadding = contentPadding != IntPtr.Zero;
+        if (_ops.Length == 0 && !hasContentPadding)
             return null;
 
-        IntPtr current = ComposeBridges.ModifierCompanionInstance();
+        // `current` always holds the latest live local ref. On the
+        // happy path we zero it out after handing ownership to
+        // GetObject; the finally then no-ops. On any exception path
+        // — JNI op throwing, GetObject throwing, anything in between
+        // — the finally deletes whichever local ref is still live so
+        // we never leak.
+        IntPtr current = IntPtr.Zero;
         try
         {
-            if (hasSeed)
+            current = ComposeBridges.ModifierCompanionInstance();
+            if (hasContentPadding)
             {
-                IntPtr next = ComposeBridges.ModifierPaddingValues(current, seedPaddingValues);
+                IntPtr next = ComposeBridges.ModifierPaddingValues(current, contentPadding);
                 JNIEnv.DeleteLocalRef(current);
                 current = next;
             }
@@ -416,14 +423,15 @@ public sealed class Modifier
                 JNIEnv.DeleteLocalRef(current);
                 current = next;
             }
+
+            var result = Java.Lang.Object.GetObject<IModifier>(current, JniHandleOwnership.TransferLocalRef)!;
+            current = IntPtr.Zero;
+            return result;
         }
-        catch
+        finally
         {
             if (current != IntPtr.Zero)
                 JNIEnv.DeleteLocalRef(current);
-            throw;
         }
-
-        return Java.Lang.Object.GetObject<IModifier>(current, JniHandleOwnership.TransferLocalRef)!;
     }
 }
