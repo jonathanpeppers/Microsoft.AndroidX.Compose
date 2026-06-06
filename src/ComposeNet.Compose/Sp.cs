@@ -47,8 +47,8 @@ public readonly struct Sp : System.IEquatable<Sp>
     {
     }
 
-    /// <summary>The unspecified-Sp constant (<c>0L</c>).</summary>
-    public static Sp Zero => default;
+    /// <summary>The zero-sp constant (equivalent to <c>0.sp</c> in Kotlin).</summary>
+    public static Sp Zero => new(0);
 
     /// <summary>Implicit conversion from <see cref="int"/> for ergonomic call sites.</summary>
     public static implicit operator Sp(int value) => new Sp(value);
