@@ -382,7 +382,7 @@ ComposeNet.ModalWideNavigationRail.ModalWideNavigationRail() -> void
 ComposeNet.Modifier
 ComposeNet.Modifier.AbsoluteOffset(ComposeNet.Dp? x = null, ComposeNet.Dp? y = null) -> ComposeNet.Modifier!
 ComposeNet.Modifier.Alpha(float alpha) -> ComposeNet.Modifier!
-ComposeNet.Modifier.AspectRatio(float ratio) -> ComposeNet.Modifier!
+ComposeNet.Modifier.AspectRatio(float ratio, bool matchHeightConstraintsFirst = false) -> ComposeNet.Modifier!
 ComposeNet.Modifier.Background(long color) -> ComposeNet.Modifier!
 ComposeNet.Modifier.Background(long color, ComposeNet.Shape? shape) -> ComposeNet.Modifier!
 ComposeNet.Modifier.Border(ComposeNet.Dp width, long color) -> ComposeNet.Modifier!

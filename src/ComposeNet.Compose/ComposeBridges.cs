@@ -1574,16 +1574,16 @@ internal static partial class ComposeBridges
 
     // androidx.compose.foundation.layout.AspectRatioKt.aspectRatio$default —
     // (Modifier, Float ratio, Boolean matchHeightConstraintsFirst). Both
-    // params are non-inline so the JVM name is unmangled. Bit 1 is the
-    // boolean — we leave it to Kotlin's default (false) when the C# caller
-    // doesn't override.
+    // params are non-inline so the JVM name is unmangled. Both bits are
+    // cleared when the caller supplies values (the auto-mask treats
+    // non-nullable primitives as unconditional clears).
     [ComposeBridge(
         Class     = "androidx/compose/foundation/layout/AspectRatioKt",
         JvmName   = "aspectRatio$default",
         Signature = "(Landroidx/compose/ui/Modifier;FZILjava/lang/Object;)" +
                     "Landroidx/compose/ui/Modifier;",
         Defaults  = typeof(ModifierAspectRatioDefault))]
-    internal static partial IntPtr ModifierAspectRatio(IntPtr modifier, float ratio);
+    internal static partial IntPtr ModifierAspectRatio(IntPtr modifier, float ratio, bool matchHeightConstraintsFirst);
 
     // androidx.compose.foundation.layout.OffsetKt — Dp-Dp offset shifts
     // a composable's draw position by (x, y) without affecting its parent

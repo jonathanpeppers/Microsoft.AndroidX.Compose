@@ -532,13 +532,16 @@ public sealed class Modifier
         Append(curr => ComposeBridges.ModifierWrapContentHeight(curr, unbounded));
 
     /// <summary>
-    /// <c>Modifier.aspectRatio(ratio)</c> — forces the composable's
-    /// width-to-height ratio. <paramref name="ratio"/> is
-    /// <c>width / height</c>: <c>16f / 9f</c> for a wide video frame,
-    /// <c>1f</c> for a square.
+    /// <c>Modifier.aspectRatio(ratio, matchHeightConstraintsFirst)</c> —
+    /// forces the composable's width-to-height ratio.
+    /// <paramref name="ratio"/> is <c>width / height</c>: <c>16f / 9f</c>
+    /// for a wide video frame, <c>1f</c> for a square. When
+    /// <paramref name="matchHeightConstraintsFirst"/> is <c>true</c>, the
+    /// height constraint is preferred when both width and height are
+    /// bounded; otherwise width wins (Kotlin's default).
     /// </summary>
-    public Modifier AspectRatio(float ratio) =>
-        Append(curr => ComposeBridges.ModifierAspectRatio(curr, ratio));
+    public Modifier AspectRatio(float ratio, bool matchHeightConstraintsFirst = false) =>
+        Append(curr => ComposeBridges.ModifierAspectRatio(curr, ratio, matchHeightConstraintsFirst));
 
     /// <summary>
     /// <c>Modifier.offset(x, y)</c> — shifts the composable's draw

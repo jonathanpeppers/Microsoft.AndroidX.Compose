@@ -408,8 +408,8 @@ using ComposeNet;
 
 // androidx.compose.foundation.layout.AspectRatioKt.aspectRatio$default —
 // (Modifier, Float ratio, Boolean matchHeightConstraintsFirst). Bit 0
-// = ratio (always supplied), bit 1 = matchHeightConstraintsFirst (we
-// leave it at Kotlin's default of false).
+// = ratio (always supplied), bit 1 = matchHeightConstraintsFirst (cleared
+// when the C# caller supplies a value; default false matches Kotlin).
 [assembly: ComposeDefaults("ModifierAspectRatioDefault",
     "!ratio", "matchHeightConstraintsFirst")]
 
