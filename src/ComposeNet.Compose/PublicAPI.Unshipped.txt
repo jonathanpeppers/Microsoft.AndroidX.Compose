@@ -163,6 +163,10 @@ ComposeNet.DismissibleNavigationDrawer.Drawer.get -> ComposeNet.ComposableNode?
 ComposeNet.DismissibleNavigationDrawer.Drawer.set -> void
 ComposeNet.DismissibleNavigationDrawer.InitiallyOpen.get -> bool
 ComposeNet.DismissibleNavigationDrawer.InitiallyOpen.set -> void
+ComposeNet.DisposableEffect
+ComposeNet.DisposableEffect.DisposableEffect(object? key1, object? key2, object? key3, System.Func<AndroidX.Compose.Runtime.DisposableEffectScope!, System.Action!>! effect) -> void
+ComposeNet.DisposableEffect.DisposableEffect(object? key1, object? key2, System.Func<AndroidX.Compose.Runtime.DisposableEffectScope!, System.Action!>! effect) -> void
+ComposeNet.DisposableEffect.DisposableEffect(object? key1, System.Func<AndroidX.Compose.Runtime.DisposableEffectScope!, System.Action!>! effect) -> void
 ComposeNet.DockedSearchBar
 ComposeNet.DockedSearchBar.DockedSearchBar(bool expanded, System.Action<bool>! onExpandedChange) -> void
 ComposeNet.DockedSearchBar.InputField.get -> ComposeNet.ComposableNode?
@@ -345,6 +349,10 @@ ComposeNet.LargeTopAppBar.NavigationIcon.get -> ComposeNet.ComposableNode?
 ComposeNet.LargeTopAppBar.NavigationIcon.set -> void
 ComposeNet.LargeTopAppBar.Title.get -> ComposeNet.ComposableNode?
 ComposeNet.LargeTopAppBar.Title.set -> void
+ComposeNet.LaunchedEffect
+ComposeNet.LaunchedEffect.LaunchedEffect(object? key1, object? key2, object? key3, System.Func<System.Threading.CancellationToken, System.Threading.Tasks.Task!>! body) -> void
+ComposeNet.LaunchedEffect.LaunchedEffect(object? key1, object? key2, System.Func<System.Threading.CancellationToken, System.Threading.Tasks.Task!>! body) -> void
+ComposeNet.LaunchedEffect.LaunchedEffect(object? key1, System.Func<System.Threading.CancellationToken, System.Threading.Tasks.Task!>! body) -> void
 ComposeNet.LazyColumn<T>
 ComposeNet.LazyColumn<T>.LazyColumn(System.Collections.Generic.IReadOnlyList<T>! items, System.Func<T, ComposeNet.ComposableNode!>! itemContent) -> void
 ComposeNet.LazyColumn<T>.State.get -> AndroidX.Compose.Foundation.Lazy.LazyListState?
@@ -733,6 +741,8 @@ ComposeNet.SegmentedButton.Icon.set -> void
 ComposeNet.SegmentedButton.SegmentedButton(bool checked, System.Action<bool>! onCheckedChange) -> void
 ComposeNet.SegmentedButton.SegmentedButton(bool selected, System.Action! onClick) -> void
 ComposeNet.Shape
+ComposeNet.SideEffect
+ComposeNet.SideEffect.SideEffect(System.Action! effect) -> void
 ComposeNet.SingleChoiceSegmentedButtonRow
 ComposeNet.SingleChoiceSegmentedButtonRow.SingleChoiceSegmentedButtonRow() -> void
 ComposeNet.Slider
@@ -947,6 +957,12 @@ static ComposeNet.Arrangement.SpaceEvenly.get -> ComposeNet.Arrangement!
 static ComposeNet.Arrangement.Start.get -> ComposeNet.Arrangement!
 static ComposeNet.Arrangement.Top.get -> ComposeNet.Arrangement!
 static ComposeNet.Compose.DerivedStateOf<T>(System.Func<T>! calculation) -> ComposeNet.DerivedState<T>!
+static ComposeNet.Compose.DisposableEffect(object? key1, object? key2, object? key3, System.Func<AndroidX.Compose.Runtime.DisposableEffectScope!, System.Action!>! effect) -> void
+static ComposeNet.Compose.DisposableEffect(object? key1, object? key2, System.Func<AndroidX.Compose.Runtime.DisposableEffectScope!, System.Action!>! effect) -> void
+static ComposeNet.Compose.DisposableEffect(object? key1, System.Func<AndroidX.Compose.Runtime.DisposableEffectScope!, System.Action!>! effect) -> void
+static ComposeNet.Compose.LaunchedEffect(object? key1, object? key2, object? key3, System.Func<System.Threading.CancellationToken, System.Threading.Tasks.Task!>! body) -> void
+static ComposeNet.Compose.LaunchedEffect(object? key1, object? key2, System.Func<System.Threading.CancellationToken, System.Threading.Tasks.Task!>! body) -> void
+static ComposeNet.Compose.LaunchedEffect(object? key1, System.Func<System.Threading.CancellationToken, System.Threading.Tasks.Task!>! body) -> void
 static ComposeNet.Compose.ProduceState<T>(T initialValue, object? key1, object? key2, object? key3, System.Func<ComposeNet.MutableState<T>!, System.Threading.CancellationToken, System.Threading.Tasks.Task!>! producer, int line = 0, string! file = "") -> ComposeNet.MutableState<T>!
 static ComposeNet.Compose.ProduceState<T>(T initialValue, object? key1, object? key2, System.Func<ComposeNet.MutableState<T>!, System.Threading.CancellationToken, System.Threading.Tasks.Task!>! producer, int line = 0, string! file = "") -> ComposeNet.MutableState<T>!
 static ComposeNet.Compose.ProduceState<T>(T initialValue, object? key1, System.Func<ComposeNet.MutableState<T>!, System.Threading.CancellationToken, System.Threading.Tasks.Task!>! producer, int line = 0, string! file = "") -> ComposeNet.MutableState<T>!
@@ -962,6 +978,7 @@ static ComposeNet.Compose.RememberSaveable<T>(System.Func<T>! factory, object? k
 static ComposeNet.Compose.RememberSaveable<T>(System.Func<T>! factory, object? key1, object? key2, int line = 0, string! file = "") -> T
 static ComposeNet.Compose.RememberSaveable<T>(System.Func<T>! factory, object? key1, object? key2, object? key3, int line = 0, string! file = "") -> T
 static ComposeNet.Compose.RememberSaveableKeyed<T>(System.Func<T>! factory, object?[]! keys, int line = 0, string! file = "") -> T
+static ComposeNet.Compose.SideEffect(System.Action! effect) -> void
 static ComposeNet.Dp.implicit operator ComposeNet.Dp(float value) -> ComposeNet.Dp
 static ComposeNet.Dp.implicit operator ComposeNet.Dp(int value) -> ComposeNet.Dp
 static ComposeNet.Dp.operator !=(ComposeNet.Dp left, ComposeNet.Dp right) -> bool

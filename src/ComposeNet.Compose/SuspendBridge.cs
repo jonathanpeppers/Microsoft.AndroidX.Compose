@@ -47,13 +47,6 @@ internal static class SuspendBridge
     // JNI ref types).
     static IntPtr s_suspendedHandle;
 
-    // Cached global ref + field id for kotlin/Result$Failure (the
-    // wrapper for failed suspend results). Kotlin.ResultKt's static
-    // methods are NOT bound in Xamarin.Kotlin.StdLib 2.3.21, so we
-    // detect failures via raw JNI instead.
-    static IntPtr s_resultFailureClass;
-    static IntPtr s_resultFailureExceptionField;
-
     /// <summary>
     /// Call a Kotlin <c>suspend</c> function and project its boxed
     /// result through <paramref name="unbox"/> into a typed
@@ -139,8 +132,8 @@ internal static class SuspendBridge
             var boxed = t.GetAwaiter().GetResult();
             try
             {
-                if (boxed is not null && IsResultFailure(boxed.Handle))
-                    throw ExtractFailureException(boxed);
+                if (boxed is not null && KotlinResult.IsFailure(boxed.Handle))
+                    throw KotlinResult.ExtractException(boxed);
                 return unboxFn(boxed);
             }
             finally
@@ -179,61 +172,5 @@ internal static class SuspendBridge
         if (Interlocked.CompareExchange(ref s_suspendedHandle, gref, IntPtr.Zero) != IntPtr.Zero)
             JNIEnv.DeleteGlobalRef(gref);
         GC.KeepAlive(inst);
-    }
-
-    static bool IsResultFailure(IntPtr handle)
-    {
-        if (handle == IntPtr.Zero) return false;
-        EnsureResultFailureClass();
-        return JNIEnv.IsInstanceOf(handle, s_resultFailureClass);
-    }
-
-    static void EnsureResultFailureClass()
-    {
-        if (s_resultFailureClass != IntPtr.Zero) return;
-        // Why raw JNI: `kotlin/Result` itself is bound (as
-        // `Kotlin.Result` in `Xamarin.Kotlin.StdLib.dll`) but its
-        // members are stripped — the type is a `@JvmInline value class`
-        // wrapping `Object`, so every accessor emits a mangled JVM
-        // name (`Result-impl`, `isFailure-impl`, `exceptionOrNull-impl`)
-        // that the parser drops. Same root cause as
-        // dotnet/java-interop#1440. The nested `Result$Failure` class
-        // is intentionally `internal` in Kotlin source and isn't
-        // surfaced by the binder regardless. We read its private
-        // `exception` field directly via JNI; once #1440 lands and the
-        // binder restores `ResultKt.throwOnFailure(Object)`, replace
-        // this lookup with a call to that bound helper.
-        //
-        // JNIEnv.FindClass in Mono.Android returns a stable, globally
-        // registered class ref — no NewGlobalRef/DeleteLocalRef dance.
-        // Multi-thread racers all observe the same class ref + field id
-        // (FindClass / GetFieldID are pure functions of their string
-        // args), so plain stores are fine — losing the race just
-        // re-writes identical values.
-        var cls = JNIEnv.FindClass("kotlin/Result$Failure");
-        s_resultFailureExceptionField = JNIEnv.GetFieldID(cls, "exception", "Ljava/lang/Throwable;");
-        s_resultFailureClass = cls;
-    }
-
-    static Exception ExtractFailureException(Java.Lang.Object failure)
-    {
-        // s_resultFailureExceptionField was set by EnsureResultFailureClass
-        // earlier (IsResultFailure path is the only caller).
-        IntPtr exHandle = JNIEnv.GetObjectField(failure.Handle, s_resultFailureExceptionField);
-        try
-        {
-            // Java.Lang.Throwable : System.Exception, so callers can
-            // `catch (Exception)` or even pattern-match on the Java type.
-            var th = global::Java.Lang.Object.GetObject<Java.Lang.Throwable>(
-                exHandle, JniHandleOwnership.TransferLocalRef);
-            if (th is not null)
-                return th;
-            return new InvalidOperationException(
-                "Kotlin suspend call failed with a null Throwable in Result.Failure");
-        }
-        finally
-        {
-            GC.KeepAlive(failure);
-        }
     }
 }
