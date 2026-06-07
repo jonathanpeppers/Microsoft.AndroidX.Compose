@@ -1,5 +1,4 @@
 #nullable enable
-
 ~override ComposeNet.TextOverflow.Equals(object obj) -> bool
 ~override ComposeNet.TextOverflow.ToString() -> string
 ComposeNet.AlertDialog
@@ -75,14 +74,28 @@ ComposeNet.CircularProgressIndicator.StrokeWidthDp.get -> float?
 ComposeNet.CircularProgressIndicator.StrokeWidthDp.set -> void
 ComposeNet.CircularProgressIndicator.TrackColorArgb.get -> long?
 ComposeNet.CircularProgressIndicator.TrackColorArgb.set -> void
+ComposeNet.Color
+ComposeNet.Color.A.get -> byte
+ComposeNet.Color.B.get -> byte
+ComposeNet.Color.Color() -> void
+ComposeNet.Color.Color(byte alpha, byte red, byte green, byte blue) -> void
+ComposeNet.Color.Color(byte red, byte green, byte blue) -> void
+ComposeNet.Color.Color(long packedValue) -> void
+ComposeNet.Color.Color(ulong packedValue) -> void
+ComposeNet.Color.Equals(ComposeNet.Color other) -> bool
+ComposeNet.Color.G.get -> byte
+ComposeNet.Color.PackedValue.get -> ulong
+ComposeNet.Color.R.get -> byte
+ComposeNet.Color.WithAlpha(byte alpha) -> ComposeNet.Color
+ComposeNet.Color.WithOpacity(float opacity) -> ComposeNet.Color
 ComposeNet.Column
 ComposeNet.Column.Column() -> void
 ComposeNet.Column.Column(ComposeNet.Arrangement? verticalArrangement) -> void
 ComposeNet.Composable
 ComposeNet.Composable.Add(ComposeNet.ComposableNode? child) -> void
 ComposeNet.Composable.Add(ComposeNet.Modifier! modifier) -> void
-ComposeNet.Composable.Composable(string! route) -> void
 ComposeNet.Composable.Composable(string! route, System.Func<ComposeNet.NavBackStackEntry!, ComposeNet.ComposableNode!>! content) -> void
+ComposeNet.Composable.Composable(string! route) -> void
 ComposeNet.Composable.Route.get -> string!
 ComposeNet.ComposableContainer
 ComposeNet.ComposableContainer.Add(ComposeNet.ComposableNode? child) -> void
@@ -371,7 +384,17 @@ ComposeNet.ListItem.Supporting.set -> void
 ComposeNet.ListItem.Trailing.get -> ComposeNet.ComposableNode?
 ComposeNet.ListItem.Trailing.set -> void
 ComposeNet.MaterialTheme
+ComposeNet.MaterialTheme.ColorScheme.get -> AndroidX.Compose.Material3.ColorScheme?
+ComposeNet.MaterialTheme.ColorScheme.set -> void
+ComposeNet.MaterialTheme.Dark.get -> bool?
+ComposeNet.MaterialTheme.Dark.set -> void
 ComposeNet.MaterialTheme.MaterialTheme() -> void
+ComposeNet.MaterialTheme.Shapes.get -> AndroidX.Compose.Material3.Shapes?
+ComposeNet.MaterialTheme.Shapes.set -> void
+ComposeNet.MaterialTheme.Typography.get -> AndroidX.Compose.Material3.Typography?
+ComposeNet.MaterialTheme.Typography.set -> void
+ComposeNet.MaterialTheme.UseDynamicColor.get -> bool
+ComposeNet.MaterialTheme.UseDynamicColor.set -> void
 ComposeNet.MediumFlexibleTopAppBar
 ComposeNet.MediumFlexibleTopAppBar.Actions.get -> ComposeNet.ComposableNode?
 ComposeNet.MediumFlexibleTopAppBar.Actions.set -> void
@@ -416,11 +439,11 @@ ComposeNet.Modifier
 ComposeNet.Modifier.AbsoluteOffset(ComposeNet.Dp? x = null, ComposeNet.Dp? y = null) -> ComposeNet.Modifier!
 ComposeNet.Modifier.Alpha(float alpha) -> ComposeNet.Modifier!
 ComposeNet.Modifier.AspectRatio(float ratio, bool matchHeightConstraintsFirst = false) -> ComposeNet.Modifier!
-ComposeNet.Modifier.Background(long color) -> ComposeNet.Modifier!
 ComposeNet.Modifier.Background(long color, ComposeNet.Shape? shape) -> ComposeNet.Modifier!
-ComposeNet.Modifier.Border(ComposeNet.Dp width, long color) -> ComposeNet.Modifier!
+ComposeNet.Modifier.Background(long color) -> ComposeNet.Modifier!
 ComposeNet.Modifier.Border(ComposeNet.Dp width, long color, ComposeNet.Dp cornerRadius) -> ComposeNet.Modifier!
 ComposeNet.Modifier.Border(ComposeNet.Dp width, long color, ComposeNet.Shape? shape) -> ComposeNet.Modifier!
+ComposeNet.Modifier.Border(ComposeNet.Dp width, long color) -> ComposeNet.Modifier!
 ComposeNet.Modifier.Clickable(System.Action! onClick) -> ComposeNet.Modifier!
 ComposeNet.Modifier.Clip(ComposeNet.Dp cornerRadius) -> ComposeNet.Modifier!
 ComposeNet.Modifier.Clip(ComposeNet.Shape! shape) -> ComposeNet.Modifier!
@@ -854,6 +877,9 @@ ComposeNet.WideNavigationRailItem.Icon.set -> void
 ComposeNet.WideNavigationRailItem.Label.get -> ComposeNet.ComposableNode?
 ComposeNet.WideNavigationRailItem.Label.set -> void
 ComposeNet.WideNavigationRailItem.WideNavigationRailItem(bool selected, System.Action! onClick) -> void
+override ComposeNet.Color.Equals(object? obj) -> bool
+override ComposeNet.Color.GetHashCode() -> int
+override ComposeNet.Color.ToString() -> string!
 override ComposeNet.ComposeActivity.OnCreate(Android.OS.Bundle? savedInstanceState) -> void
 override ComposeNet.Dp.Equals(object? obj) -> bool
 override ComposeNet.Dp.GetHashCode() -> int
@@ -874,6 +900,26 @@ static ComposeNet.Arrangement.SpacedBy(int dp) -> ComposeNet.Arrangement!
 static ComposeNet.Arrangement.SpaceEvenly.get -> ComposeNet.Arrangement!
 static ComposeNet.Arrangement.Start.get -> ComposeNet.Arrangement!
 static ComposeNet.Arrangement.Top.get -> ComposeNet.Arrangement!
+static ComposeNet.Color.Black.get -> ComposeNet.Color
+static ComposeNet.Color.Blue.get -> ComposeNet.Color
+static ComposeNet.Color.Cyan.get -> ComposeNet.Color
+static ComposeNet.Color.DarkGray.get -> ComposeNet.Color
+static ComposeNet.Color.FromArgb(byte alpha, byte red, byte green, byte blue) -> ComposeNet.Color
+static ComposeNet.Color.FromArgb(uint argb) -> ComposeNet.Color
+static ComposeNet.Color.FromHex(string! hex) -> ComposeNet.Color
+static ComposeNet.Color.FromRgb(byte red, byte green, byte blue) -> ComposeNet.Color
+static ComposeNet.Color.Gray.get -> ComposeNet.Color
+static ComposeNet.Color.Green.get -> ComposeNet.Color
+static ComposeNet.Color.implicit operator long(ComposeNet.Color c) -> long
+static ComposeNet.Color.LightGray.get -> ComposeNet.Color
+static ComposeNet.Color.Magenta.get -> ComposeNet.Color
+static ComposeNet.Color.operator !=(ComposeNet.Color left, ComposeNet.Color right) -> bool
+static ComposeNet.Color.operator ==(ComposeNet.Color left, ComposeNet.Color right) -> bool
+static ComposeNet.Color.Red.get -> ComposeNet.Color
+static ComposeNet.Color.Transparent.get -> ComposeNet.Color
+static ComposeNet.Color.Unspecified.get -> ComposeNet.Color
+static ComposeNet.Color.White.get -> ComposeNet.Color
+static ComposeNet.Color.Yellow.get -> ComposeNet.Color
 static ComposeNet.Compose.Remember<T>(System.Func<T>! factory, int line = 0, string! file = "") -> T
 static ComposeNet.Compose.RememberSaveable<T>(System.Func<T>! factory, int line = 0, string! file = "") -> T
 static ComposeNet.Dp.implicit operator ComposeNet.Dp(float value) -> ComposeNet.Dp
@@ -900,6 +946,14 @@ static ComposeNet.FontWeight.SemiBold.get -> ComposeNet.FontWeight!
 static ComposeNet.FontWeight.Thin.get -> ComposeNet.FontWeight!
 static ComposeNet.GridCells.Adaptive(float minSizeDp) -> AndroidX.Compose.Foundation.Lazy.Grid.IGridCells!
 static ComposeNet.GridCells.Fixed(int count) -> AndroidX.Compose.Foundation.Lazy.Grid.IGridCells!
+static ComposeNet.MaterialTheme.CurrentColorScheme(AndroidX.Compose.Runtime.IComposer! composer) -> AndroidX.Compose.Material3.ColorScheme!
+static ComposeNet.MaterialTheme.CurrentShapes(AndroidX.Compose.Runtime.IComposer! composer) -> AndroidX.Compose.Material3.Shapes!
+static ComposeNet.MaterialTheme.CurrentTypography(AndroidX.Compose.Runtime.IComposer! composer) -> AndroidX.Compose.Material3.Typography!
+static ComposeNet.MaterialTheme.DarkColorScheme() -> AndroidX.Compose.Material3.ColorScheme!
+static ComposeNet.MaterialTheme.DynamicDarkColorScheme(Android.Content.Context? context = null) -> AndroidX.Compose.Material3.ColorScheme!
+static ComposeNet.MaterialTheme.DynamicLightColorScheme(Android.Content.Context? context = null) -> AndroidX.Compose.Material3.ColorScheme!
+static ComposeNet.MaterialTheme.IsSystemInDarkTheme(AndroidX.Compose.Runtime.IComposer! composer) -> bool
+static ComposeNet.MaterialTheme.LightColorScheme() -> AndroidX.Compose.Material3.ColorScheme!
 static ComposeNet.Modifier.Companion.get -> ComposeNet.Modifier!
 static ComposeNet.MutableNumberState<T>.operator --(ComposeNet.MutableNumberState<T>! s) -> ComposeNet.MutableNumberState<T>!
 static ComposeNet.MutableNumberState<T>.operator ++(ComposeNet.MutableNumberState<T>! s) -> ComposeNet.MutableNumberState<T>!
