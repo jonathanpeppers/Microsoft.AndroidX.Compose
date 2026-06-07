@@ -7,6 +7,19 @@
     <IsTrimmable>true</IsTrimmable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <RootNamespace>ComposeNet</RootNamespace>
+    <!--
+      RS0026: "Do not add multiple overloads with optional parameters."
+      Triggers on our [CallerLineNumber]/[CallerFilePath]-bearing
+      overloads (Compose.Remember, Compose.RememberSaveable,
+      Compose.ProduceState). The new overloads add a REQUIRED key
+      parameter ahead of the optional caller-info ones — so callers
+      can never get into the "which overload did I want?" situation
+      the analyzer warns about. The BCL freely does this for the
+      same caller-info pattern; suppress here for the same reason.
+
+      RS0027: companion warning for the same scenario.
+    -->
+    <NoWarn>$(NoWarn);RS0026;RS0027</NoWarn>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\ComposeNet.SourceGenerators\ComposeNet.SourceGenerators.csproj"

@@ -342,7 +342,7 @@ public sealed class Modifier
     /// (e.g. a regular <see cref="Column"/> or <see cref="Box"/>)
     /// vertically scrollable when its content overflows. Hold the
     /// <paramref name="state"/> across recompositions with
-    /// <see cref="ComposeActivity.Remember{T}"/>:
+    /// <see cref="ComposeActivity.Remember{T}(System.Func{T}, int, string)"/>:
     /// <code>
     /// var scroll = Remember(() =&gt; new ScrollState());
     /// new Column { Modifier.Companion.VerticalScroll(scroll), /* children */ };

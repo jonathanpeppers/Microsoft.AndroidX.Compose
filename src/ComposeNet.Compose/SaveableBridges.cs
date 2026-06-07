@@ -176,4 +176,63 @@ internal static partial class ComposeBridges
             System.GC.KeepAlive(init);
         }
     }
+
+    // Builds a Kotlin-compatible `Object[]` from a managed `object?[]`
+    // for the `inputs` (vararg) parameter of `rememberSaveable`. Each
+    // element is boxed via the same primitive→Java.Lang.Object switch
+    // MutableState<T> uses, so primitives compare structurally rather
+    // than by reference. Returns a JNI local ref the caller MUST free
+    // (call DeleteLocalRef inside a finally). Also creates local refs
+    // for each boxed element; we delete each one immediately after
+    // setting it into the array (the array owns its own ref).
+    //
+    // Null/empty keys array → `EmptyObjectArray()`, a cached global
+    // ref — `ownsHandle` is false, signalling the caller MUST NOT
+    // delete the returned handle.
+    internal static System.IntPtr BuildKeysArray(object?[]? keys, out bool ownsHandle)
+    {
+        if (keys is null || keys.Length == 0)
+        {
+            ownsHandle = false;
+            return EmptyObjectArray();
+        }
+
+        ownsHandle = true;
+        var objectClass = Java.Lang.Class.FromType(typeof(Java.Lang.Object));
+        var array = JNIEnv.NewObjectArray(keys.Length, objectClass.Handle, System.IntPtr.Zero);
+        for (int i = 0; i < keys.Length; i++)
+        {
+            var boxed = BoxKey(keys[i]);
+            if (boxed is null)
+            {
+                JNIEnv.SetObjectArrayElement(array, i, System.IntPtr.Zero);
+                continue;
+            }
+            JNIEnv.SetObjectArrayElement(array, i, boxed.Handle);
+            // Disposing releases the local ref the boxing constructor
+            // created; the array now holds its own ref to the element.
+            boxed.Dispose();
+        }
+        return array;
+    }
+
+    static Java.Lang.Object? BoxKey(object? key) => key switch
+    {
+        null               => null,
+        Java.Lang.Object o => o,
+        string s           => new Java.Lang.String(s),
+        bool b             => Java.Lang.Boolean.ValueOf(b),
+        char c             => Java.Lang.Character.ValueOf(c),
+        sbyte sb           => Java.Lang.Byte.ValueOf(sb),
+        byte by            => Java.Lang.Short.ValueOf((short)by),
+        short sh           => Java.Lang.Short.ValueOf(sh),
+        ushort us          => Java.Lang.Integer.ValueOf(us),
+        int i              => Java.Lang.Integer.ValueOf(i),
+        uint ui            => Java.Lang.Long.ValueOf(ui),
+        long l             => Java.Lang.Long.ValueOf(l),
+        ulong ul           => Java.Lang.Long.ValueOf(unchecked((long)ul)),
+        float f            => Java.Lang.Float.ValueOf(f),
+        double d           => Java.Lang.Double.ValueOf(d),
+        _                  => new Java.Lang.String(key.ToString() ?? string.Empty),
+    };
 }
