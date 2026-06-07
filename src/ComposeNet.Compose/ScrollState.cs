@@ -11,7 +11,7 @@ namespace ComposeNet;
 /// </summary>
 /// <remarks>
 /// <para>
-/// Construct one inside a <see cref="ComposeActivity.Remember{T}"/>
+/// Construct one inside a <see cref="ComposeActivity.Remember{T}(System.Func{T}, int, string)"/>
 /// callback so the scroll position survives recompositions:
 /// <code>
 /// var scroll = Remember(() =&gt; new ScrollState());

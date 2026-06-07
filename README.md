@@ -124,7 +124,7 @@ The facade [`ComposeNet.Compose`](src/ComposeNet.Compose) covers the common Mate
 | Sheets & pickers        | `ModalBottomSheet`, `BottomSheetScaffold`, `DatePicker`/`DatePickerDialog`, `TimePicker`/`TimePickerDialog` |
 | Overlays                | `AlertDialog`, `Snackbar` + `SnackbarHost`, `Tooltip` |
 | Modifier chains         | `Padding`, `FillMaxWidth/Height/Size`, `Width`, `Height`, `Size`, `SafeDrawingPadding`, `SystemBarsPadding` |
-| State                   | `Remember`, `MutableState<T>`, `MutableNumberState<T>`, plus `DatePickerState`, `TimePickerState`, `SearchBarState`, `SnackbarHostState` |
+| State                   | `Remember` (+ keyed `Remember(factory, key1, …)`, `RememberKeyed`), `RememberSaveable` (+ keyed), `MutableState<T>`, `MutableNumberState<T>`, `MutableStateList<T>`, `MutableStateMap<K,V>`, `DerivedStateOf`, `ProduceState`, plus `DatePickerState`, `TimePickerState`, `SearchBarState`, `SnackbarHostState` |
 
 ## Samples
 

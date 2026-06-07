@@ -133,7 +133,36 @@ public class MainActivity : ComposeActivity
             // controller into NavController.Jvm on first NavHost render.
             var navController = Remember(() => new NavController());
 
-            string[] tabNames = { "Basics", "Buttons", "Cards", "Drawer", "Selection", "Pickers", "Misc", "App bars", "Lazy", "Carousels", "Pager", "Nav" };
+            // State primitives demo (issue #62). Bumping `seed` via the
+            // "New seed" button resets the keyed counter back to its
+            // initial value and cancels-and-restarts the ProduceState
+            // producer with a fresh CancellationToken (the producer
+            // explicitly resets state.Value = 0 at the top of the
+            // lambda; Kotlin's produceState semantics preserve state
+            // across key changes by default). `wordMap` and `wordList`
+            // show the dictionary- and list-shaped observables.
+            // `derived` reads `wordList.Count` so Compose recomposes
+            // anything that reads `derived.Value` whenever the list
+            // mutates — wrapped in Remember so the same DerivedState
+            // instance survives recomposition (otherwise we'd allocate
+            // a new Kotlin IState every pass).
+            var seed       = Remember(() => new MutableNumberState<int>(0));
+            var keyedCount = Remember(() => new MutableNumberState<int>(0), seed.Value);
+            var wordList   = Remember(() => new MutableStateList<string> { "alpha", "beta" });
+            var wordMap    = Remember(() => new MutableStateMap<string, int> { ["alpha"] = 1, ["beta"] = 2 });
+            var derived    = Remember(() => Compose.DerivedStateOf(() => wordList.Count));
+            var ticker = Compose.ProduceState<int>(0, seed.Value, async (state, ct) =>
+            {
+                state.Value = 0;
+                while (!ct.IsCancellationRequested)
+                {
+                    try { await System.Threading.Tasks.Task.Delay(1000, ct); }
+                    catch (System.OperationCanceledException) { return; }
+                    state.Value = state.Value + 1;
+                }
+            });
+
+            string[] tabNames = { "Basics", "Buttons", "Cards", "Drawer", "Selection", "Pickers", "Misc", "App bars", "Lazy", "Carousels", "Pager", "Nav", "State" };
 
             // Per-tab content. Only the current tab's column is added to
             // the screen — keeps the sample short enough to fit on one
@@ -1107,6 +1136,60 @@ public class MainActivity : ComposeActivity
                         }),
                     },
                 },
+                12 => new Column
+                {
+                    Modifier.Companion.Padding(16),
+                    new Text("State primitives (issue #62)"),
+                    new HorizontalDivider { Modifier = Modifier.Companion.Padding(0, 8) },
+                    new Text($"Seed: {seed.Value}"),
+                    new Text($"Keyed counter: {keyedCount.Value}"),
+                    new Text($"ProduceState ticker: {ticker.Value}s"),
+                    new Row
+                    {
+                        new Button(onClick: () => keyedCount.Value++)
+                        {
+                            new Text("count++"),
+                        },
+                        new Spacer { Modifier = Modifier.Companion.Padding(4) },
+                        new Button(onClick: () => seed.Value++)
+                        {
+                            new Text("New seed (resets keyed + ticker)"),
+                        },
+                    },
+                    new HorizontalDivider { Modifier = Modifier.Companion.Padding(0, 8) },
+                    new Text($"DerivedState (wordList.Count): {derived.Value}"),
+                    new Text($"List: [{string.Join(", ", wordList)}]"),
+                    new Row
+                    {
+                        new Button(onClick: () => wordList.Add($"item{wordList.Count}"))
+                        {
+                            new Text("Add to list"),
+                        },
+                        new Spacer { Modifier = Modifier.Companion.Padding(4) },
+                        new Button(onClick: () => { if (wordList.Count > 0) wordList.RemoveAt(wordList.Count - 1); })
+                        {
+                            new Text("Remove last"),
+                        },
+                    },
+                    new HorizontalDivider { Modifier = Modifier.Companion.Padding(0, 8) },
+                    new Text($"Map: {{{string.Join(", ", wordMap.Select(kv => $"{kv.Key}={kv.Value}"))}}}"),
+                    new Row
+                    {
+                        new Button(onClick: () =>
+                        {
+                            var key = $"k{wordMap.Count}";
+                            wordMap[key] = wordMap.Count + 1;
+                        })
+                        {
+                            new Text("Add to map"),
+                        },
+                        new Spacer { Modifier = Modifier.Companion.Padding(4) },
+                        new Button(onClick: () => wordMap.Clear())
+                        {
+                            new Text("Clear map"),
+                        },
+                    },
+                },
                 _ => new Column
                 {
                     // Lazy lists — bound through LazyDslKt / LazyGridDslKt.
@@ -1416,6 +1499,11 @@ public class MainActivity : ComposeActivity
                                 {
                                     Text = new Text("Nav"),
                                     Icon = new Text("🧭"),
+                                },
+                                new Tab(selected: tab.Value == 12, onClick: () => tab.Value = 12)
+                                {
+                                    Text = new Text("State"),
+                                    Icon = new Text("🧠"),
                                 },
                             },
                             tabContent,
