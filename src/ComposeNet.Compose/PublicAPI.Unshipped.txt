@@ -994,9 +994,7 @@ static ComposeNet.Compose.RememberSaveable<T>(System.Func<T>! factory, object? k
 static ComposeNet.Compose.RememberSaveableKeyed<T>(System.Func<T>! factory, object?[]! keys, int line = 0, string! file = "") -> T
 static ComposeNet.Compose.SideEffect(System.Action! effect) -> void
 static ComposeNet.CompositionLocal.Of<T>(System.Func<T>! defaultFactory) -> ComposeNet.CompositionLocal<T>!
-static ComposeNet.CompositionLocal.Of<T>(T defaultValue) -> ComposeNet.CompositionLocal<T>!
 static ComposeNet.CompositionLocal.StaticOf<T>(System.Func<T>! defaultFactory) -> ComposeNet.CompositionLocal<T>!
-static ComposeNet.CompositionLocal.StaticOf<T>(T defaultValue) -> ComposeNet.CompositionLocal<T>!
 static ComposeNet.CompositionLocal<T>.Of(System.Func<T>! defaultFactory) -> ComposeNet.CompositionLocal<T>!
 static ComposeNet.CompositionLocal<T>.StaticOf(System.Func<T>! defaultFactory) -> ComposeNet.CompositionLocal<T>!
 static ComposeNet.Dp.implicit operator ComposeNet.Dp(float value) -> ComposeNet.Dp
