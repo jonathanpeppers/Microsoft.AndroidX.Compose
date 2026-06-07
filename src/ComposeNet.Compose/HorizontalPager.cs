@@ -49,24 +49,35 @@ public sealed class HorizontalPager<T> : ComposableNode
 
     internal override void Render(IComposer composer)
     {
-        // Compose's rememberPagerState reads the pageCount lambda on
-        // every measure pass, so the lambda has to close over the live
-        // _items reference (count can change between recompositions
-        // when callers swap in a new list).
-        _pageCountFn ??= new ComposableLambda0Int(() => _items.Count);
-
-        var rememberedState = PagerStateKt.RememberPagerState(
-            p0:                        0,
-            initialPageOffsetFraction: 0f,
-            pageCount:                 _pageCountFn,
-            _composer:                 composer,
-            initialPage:               0,
-            _changed:                  0);
-
-        // Refresh the wrapper's Jvm field every render so the pageCount
-        // lambda observes recompositions (rubber-duck #1).
-        if (State is not null) State.Jvm = rememberedState;
-        var jvmState = State?.Jvm ?? rememberedState;
+        // When the caller supplies a PagerState wrapper its Jvm is
+        // built eagerly in the wrapper's ctor (via the non-@Composable
+        // PagerStateKt.PagerState factory), so we just pass it through
+        // and reads from C# build code subscribe to snapshot changes
+        // regardless of render order — see issue #119.
+        //
+        // When State == null we fall back to rememberPagerState so the
+        // pager owns an internal scroll-position-preserving state
+        // across recompositions.
+        AndroidX.Compose.Foundation.Pager.PagerState jvmState;
+        if (State is not null)
+        {
+            jvmState = State.Jvm;
+        }
+        else
+        {
+            // Compose's rememberPagerState reads the pageCount lambda
+            // on every measure pass, so the lambda has to close over
+            // the live _items reference (count can change between
+            // recompositions when callers swap in a new list).
+            _pageCountFn ??= new ComposableLambda0Int(() => _items.Count);
+            jvmState = PagerStateKt.RememberPagerState(
+                p0:                        0,
+                initialPageOffsetFraction: 0f,
+                pageCount:                 _pageCountFn,
+                _composer:                 composer,
+                initialPage:               0,
+                _changed:                  0);
+        }
 
         var modifier = BuildModifier();
         var content  = ComposableLambdas.Wrap4(composer, (_, indexBoxed, comp) =>
