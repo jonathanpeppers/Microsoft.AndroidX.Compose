@@ -86,6 +86,12 @@ public static class Catalog
         D.ListsGrids.LazyVerticalGridAdaptive.Demo,
         D.ListsGrids.LazyVerticalStaggeredGridDemo.Demo,
         D.ListsGrids.PullToRefreshBoxDemo.Demo,
+
+        // ---- Carousels & paging ----
+        D.CarouselsPaging.HorizontalUncontainedCarouselDemo.Demo,
+        D.CarouselsPaging.HorizontalMultiBrowseCarouselDemo.Demo,
+        D.CarouselsPaging.HorizontalCenteredHeroCarouselDemo.Demo,
+        D.CarouselsPaging.HorizontalPagerDemo.Demo,
     ];
 
     /// <summary>
