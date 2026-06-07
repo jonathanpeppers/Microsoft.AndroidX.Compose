@@ -38,7 +38,7 @@ public sealed class BoxWithConstraints : ComposableNode
         _content = content ?? throw new ArgumentNullException(nameof(content));
     }
 
-    internal override void Render(IComposer composer)
+    public override void Render(IComposer composer)
     {
         var modifier = BuildModifier();
         var lambda   = ComposableLambdas.Wrap3(composer, (scopeHandle, comp) =>

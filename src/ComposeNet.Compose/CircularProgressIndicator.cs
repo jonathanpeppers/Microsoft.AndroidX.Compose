@@ -24,7 +24,7 @@ public sealed class CircularProgressIndicator : ComposableNode
     /// <summary>Optional track ARGB color (packed Compose <c>Color</c> long). Leave null for the Material default.</summary>
     public long? TrackColorArgb { get; set; }
 
-    internal override void Render(IComposer composer)
+    public override void Render(IComposer composer)
     {
         var modifier = BuildModifier();
 

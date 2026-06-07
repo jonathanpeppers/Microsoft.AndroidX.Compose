@@ -54,7 +54,7 @@ public sealed class HorizontalCenteredHeroCarousel<T> : ComposableNode
     /// <summary>User scroll gesture toggle. <c>null</c> uses Compose's default (<c>true</c>).</summary>
     public bool? UserScrollEnabled { get; set; }
 
-    internal override void Render(IComposer composer)
+    public override void Render(IComposer composer)
     {
         _itemCountFn ??= new ComposableLambda0Int(() => _items.Count);
 

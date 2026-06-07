@@ -41,7 +41,7 @@ public sealed class DismissibleNavigationDrawer : ComposableNode
     // fresh adapter each pass would drop the cached DrawerState.
     readonly DrawerConfirmStateChange _confirm = new();
 
-    internal override void Render(IComposer composer)
+    public override void Render(IComposer composer)
     {
         if (Drawer is null)
             throw new System.InvalidOperationException(

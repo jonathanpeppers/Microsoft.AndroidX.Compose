@@ -223,14 +223,14 @@ affordance, so it's omitted entirely until the wrapper lands.
 ### Static builder instead of `ComposableNode` subclass
 
 `Conversation.Build` is a `static` method that allocates a fresh
-`ComposableNode` tree per composition pass instead of being a
-`ComposableNode` subclass with its own `Render` override.
-`ComposableNode.Render(IComposer)` is `internal` to the facade
-assembly so a sample-side subclass can't override it. Cost: every
-recomposition allocates the tree (Tier 1.5 per-composition cost).
-Exposing a public composition extension point would let user code
-build classes that participate in Compose's slot-table identity
-directly.
+`ComposableNode` tree per composition pass. As of #132,
+`ComposableNode.Render(IComposer)` is `public abstract` and
+`ComposableContainer.Children` / `RenderChildren` are `protected`, so
+a sample-side subclass with its own `Render` override is now possible
+— converting `Conversation` to a subclass would let it participate in
+the slot table directly and avoid the per-composition tree allocation
+(Tier 1.5 cost). Left as a follow-up; the static builder still
+renders correctly.
 
 ### Single-channel seed data
 

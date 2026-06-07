@@ -123,7 +123,7 @@ public class FacadeGeneratorTests
             public class Shape : Java.Lang.Object { }
             public abstract class ComposableNode
             {
-                internal abstract void Render(AndroidX.Compose.Runtime.IComposer composer);
+                public abstract void Render(AndroidX.Compose.Runtime.IComposer composer);
                 protected AndroidX.Compose.UI.IModifier? BuildModifier() => null;
             }
             public abstract class ComposableContainer : ComposableNode

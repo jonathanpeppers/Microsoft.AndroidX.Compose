@@ -45,7 +45,7 @@ public sealed class LazyColumn<T> : ComposableNode
     /// </summary>
     public LazyListState? State { get; set; }
 
-    internal override void Render(IComposer composer)
+    public override void Render(IComposer composer)
     {
         var modifier = BuildModifier();
         var content  = new ComposableLambda1(scopeObj =>

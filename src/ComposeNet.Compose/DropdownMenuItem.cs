@@ -37,7 +37,7 @@ public sealed class DropdownMenuItem : ComposableNode
     /// <summary>Whether the item responds to clicks. Defaults to <c>true</c>.</summary>
     public bool Enabled { get; set; } = true;
 
-    internal override void Render(IComposer composer)
+    public override void Render(IComposer composer)
     {
         var text    = ComposableLambdas.Wrap2(composer, c => _text.Render(c));
         var onClick = new ComposableLambda0(_onClick);

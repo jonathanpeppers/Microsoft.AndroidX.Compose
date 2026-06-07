@@ -58,7 +58,7 @@ public sealed class LaunchedEffect : ComposableNode
         _key1 = key1; _key2 = key2; _key3 = key3; _keyCount = 3; _body = body;
     }
 
-    internal override void Render(IComposer composer)
+    public override void Render(IComposer composer)
     {
         switch (_keyCount)
         {

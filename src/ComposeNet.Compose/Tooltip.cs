@@ -23,7 +23,7 @@ public sealed class Tooltip : ComposableNode
     /// <summary>Required: the always-visible anchor the tooltip attaches to.</summary>
     public ComposableNode? Anchor { get; set; }
 
-    internal override void Render(IComposer composer)
+    public override void Render(IComposer composer)
     {
         if (Tip is null || Anchor is null)
             throw new System.InvalidOperationException(

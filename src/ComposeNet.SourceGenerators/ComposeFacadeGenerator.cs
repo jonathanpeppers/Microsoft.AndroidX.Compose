@@ -929,7 +929,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
 
         // Render
         var composerName = EscapeIdent(composerParam.Name);
-        sb.Append("        internal override void Render(global::AndroidX.Compose.Runtime.IComposer ")
+        sb.Append("        public override void Render(global::AndroidX.Compose.Runtime.IComposer ")
           .Append(composerName).AppendLine(")");
         sb.AppendLine("        {");
 

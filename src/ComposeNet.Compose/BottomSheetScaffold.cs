@@ -23,7 +23,7 @@ public sealed class BottomSheetScaffold : ComposableContainer
     /// <summary>Optional: persistent top bar above the main content.</summary>
     public ComposableNode? TopBar { get; set; }
 
-    internal override void Render(IComposer composer)
+    public override void Render(IComposer composer)
     {
         if (SheetContent is null)
             throw new System.InvalidOperationException(

@@ -47,7 +47,7 @@ public sealed class CompositionLocalProvider : ComposableContainer
         _provided.Add(value);
     }
 
-    internal override void Render(IComposer composer)
+    public override void Render(IComposer composer)
     {
         if (_provided.Count == 0)
         {

@@ -55,7 +55,7 @@ public sealed class Column : ComposableContainer
         _verticalArrangement = verticalArrangement;
     }
 
-    internal override void Render(IComposer composer)
+    public override void Render(IComposer composer)
     {
         var vertical = _verticalArrangement?.Vertical;
         var modifier = BuildModifier();

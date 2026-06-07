@@ -55,7 +55,7 @@ public sealed class DisposableEffect : ComposableNode
         _key1 = key1; _key2 = key2; _key3 = key3; _keyCount = 3; _effect = effect;
     }
 
-    internal override void Render(IComposer composer)
+    public override void Render(IComposer composer)
     {
         switch (_keyCount)
         {

@@ -32,7 +32,7 @@ public sealed class RangeSlider : ComposableNode
         _onValueChange = onValueChange;
     }
 
-    internal override void Render(IComposer composer)
+    public override void Render(IComposer composer)
     {
         var range = RangesKt.RangeTo(_value.Start, _value.End);
 

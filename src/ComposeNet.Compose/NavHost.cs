@@ -89,7 +89,7 @@ public sealed class NavHost : ComposableNode, IEnumerable
 
     IEnumerator IEnumerable.GetEnumerator() => _routes.GetEnumerator();
 
-    internal override void Render(IComposer composer)
+    public override void Render(IComposer composer)
     {
         // Allocate (or reuse) the underlying NavHostController via
         // Kotlin's rememberNavController(). Because rememberNavController

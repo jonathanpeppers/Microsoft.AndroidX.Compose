@@ -41,7 +41,7 @@ public sealed class Scaffold : ComposableNode
     /// <summary>Required: the main body, laid out under the top bar and above the bottom bar.</summary>
     public ComposableNode? Body { get; set; }
 
-    internal override void Render(IComposer composer)
+    public override void Render(IComposer composer)
     {
         if (Body is null)
             throw new System.InvalidOperationException(

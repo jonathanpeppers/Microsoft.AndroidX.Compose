@@ -47,7 +47,7 @@ public sealed class Icon : ComposableNode
         _contentDescription = contentDescription;
     }
 
-    internal override void Render(IComposer composer)
+    public override void Render(IComposer composer)
     {
         var modifier = BuildModifier();
 

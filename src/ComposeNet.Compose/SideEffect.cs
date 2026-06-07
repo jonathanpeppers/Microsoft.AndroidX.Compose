@@ -29,6 +29,6 @@ public sealed class SideEffect : ComposableNode
         _effect = effect;
     }
 
-    internal override void Render(IComposer composer)
+    public override void Render(IComposer composer)
         => Compose.SideEffect(_effect);
 }

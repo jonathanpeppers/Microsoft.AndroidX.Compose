@@ -21,7 +21,7 @@ namespace ComposeNet;
 /// </summary>
 public sealed class SingleChoiceSegmentedButtonRow : ComposableContainer
 {
-    internal override void Render(IComposer composer)
+    public override void Render(IComposer composer)
     {
         var content = ComposableLambdas.Wrap3(composer, (scope, c) =>
         {

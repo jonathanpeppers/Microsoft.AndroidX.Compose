@@ -19,7 +19,7 @@ public sealed class TopSearchBar : ComposableNode
     /// <summary>Required: composable that renders the search input field.</summary>
     public ComposableNode? InputField { get; set; }
 
-    internal override void Render(IComposer composer)
+    public override void Render(IComposer composer)
     {
         if (InputField is null)
             throw new System.InvalidOperationException(

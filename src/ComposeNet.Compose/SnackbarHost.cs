@@ -31,7 +31,7 @@ public sealed class SnackbarHost : ComposableNode
 
     public SnackbarHost(SnackbarHostState hostState) => _hostState = hostState;
 
-    internal override void Render(IComposer composer)
+    public override void Render(IComposer composer)
     {
         // SnackbarHost's Function3 receives the current SnackbarData as p0.
         // Forward it to the M3 default — Snackbar(snackbarData) — so an

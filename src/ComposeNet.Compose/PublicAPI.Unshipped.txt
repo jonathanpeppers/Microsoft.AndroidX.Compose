@@ -1,6 +1,8 @@
 #nullable enable
+
 ~override ComposeNet.TextOverflow.Equals(object obj) -> bool
 ~override ComposeNet.TextOverflow.ToString() -> string
+abstract ComposeNet.ComposableNode.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
 ComposeNet.AlertDialog
 ComposeNet.AlertDialog.AlertDialog(System.Action! onDismissRequest) -> void
 ComposeNet.AlertDialog.ConfirmButton.get -> ComposeNet.ComposableNode?
@@ -89,7 +91,9 @@ ComposeNet.Composable.Route.get -> string!
 ComposeNet.ComposableContainer
 ComposeNet.ComposableContainer.Add(ComposeNet.ComposableNode? child) -> void
 ComposeNet.ComposableContainer.Add(ComposeNet.Modifier! modifier) -> void
+ComposeNet.ComposableContainer.Children.get -> System.Collections.Generic.IReadOnlyList<ComposeNet.ComposableNode!>!
 ComposeNet.ComposableContainer.ComposableContainer() -> void
+ComposeNet.ComposableContainer.RenderChildren(AndroidX.Compose.Runtime.IComposer! composer) -> void
 ComposeNet.ComposableNode
 ComposeNet.ComposableNode.AppendModifier(ComposeNet.Modifier! modifier) -> void
 ComposeNet.ComposableNode.ComposableNode() -> void
@@ -526,38 +530,6 @@ ComposeNet.MutableNumberState<T>
 ComposeNet.MutableNumberState<T>.MutableNumberState(T initial) -> void
 ComposeNet.MutableState<T>
 ComposeNet.MutableState<T>.MutableState(T initial) -> void
-ComposeNet.NavBackStackEntry
-ComposeNet.NavBackStackEntry.Arguments.get -> Android.OS.Bundle?
-ComposeNet.NavBackStackEntry.Route.get -> string?
-ComposeNet.NavController
-ComposeNet.NavController.CurrentBackStackEntry.get -> ComposeNet.NavBackStackEntry?
-ComposeNet.NavController.NavController() -> void
-ComposeNet.NavController.Navigate(string! route) -> void
-ComposeNet.NavController.NavigateUp() -> bool
-ComposeNet.NavController.PopBackStack() -> bool
-ComposeNet.NavController.PopBackStack(string! route, bool inclusive) -> bool
-ComposeNet.NavHost
-ComposeNet.NavHost.Add(ComposeNet.Composable? route) -> void
-ComposeNet.NavHost.Add(ComposeNet.Modifier! modifier) -> void
-ComposeNet.NavHost.NavController.get -> ComposeNet.NavController!
-ComposeNet.NavHost.NavHost(string! startDestination, ComposeNet.NavController? navController = null) -> void
-ComposeNet.NavHost.StartDestination.get -> string!
-ComposeNet.NavigationBar
-ComposeNet.NavigationBar.NavigationBar() -> void
-ComposeNet.NavigationBarItem
-ComposeNet.NavigationBarItem.Icon.get -> ComposeNet.ComposableNode?
-ComposeNet.NavigationBarItem.Icon.set -> void
-ComposeNet.NavigationBarItem.Label.get -> ComposeNet.ComposableNode?
-ComposeNet.NavigationBarItem.Label.set -> void
-ComposeNet.NavigationBarItem.NavigationBarItem(bool selected, System.Action! onClick) -> void
-ComposeNet.NavigationRail
-ComposeNet.NavigationRail.NavigationRail() -> void
-ComposeNet.NavigationRailItem
-ComposeNet.NavigationRailItem.Icon.get -> ComposeNet.ComposableNode?
-ComposeNet.NavigationRailItem.Icon.set -> void
-ComposeNet.NavigationRailItem.Label.get -> ComposeNet.ComposableNode?
-ComposeNet.NavigationRailItem.Label.set -> void
-ComposeNet.NavigationRailItem.NavigationRailItem(bool selected, System.Action! onClick) -> void
 ComposeNet.MutableStateList<T>
 ComposeNet.MutableStateList<T>.Add(T item) -> void
 ComposeNet.MutableStateList<T>.Clear() -> void
@@ -593,6 +565,38 @@ ComposeNet.MutableStateMap<TKey, TValue>.this[TKey key].get -> TValue
 ComposeNet.MutableStateMap<TKey, TValue>.this[TKey key].set -> void
 ComposeNet.MutableStateMap<TKey, TValue>.TryGetValue(TKey key, out TValue value) -> bool
 ComposeNet.MutableStateMap<TKey, TValue>.Values.get -> System.Collections.Generic.ICollection<TValue>!
+ComposeNet.NavBackStackEntry
+ComposeNet.NavBackStackEntry.Arguments.get -> Android.OS.Bundle?
+ComposeNet.NavBackStackEntry.Route.get -> string?
+ComposeNet.NavController
+ComposeNet.NavController.CurrentBackStackEntry.get -> ComposeNet.NavBackStackEntry?
+ComposeNet.NavController.NavController() -> void
+ComposeNet.NavController.Navigate(string! route) -> void
+ComposeNet.NavController.NavigateUp() -> bool
+ComposeNet.NavController.PopBackStack() -> bool
+ComposeNet.NavController.PopBackStack(string! route, bool inclusive) -> bool
+ComposeNet.NavHost
+ComposeNet.NavHost.Add(ComposeNet.Composable? route) -> void
+ComposeNet.NavHost.Add(ComposeNet.Modifier! modifier) -> void
+ComposeNet.NavHost.NavController.get -> ComposeNet.NavController!
+ComposeNet.NavHost.NavHost(string! startDestination, ComposeNet.NavController? navController = null) -> void
+ComposeNet.NavHost.StartDestination.get -> string!
+ComposeNet.NavigationBar
+ComposeNet.NavigationBar.NavigationBar() -> void
+ComposeNet.NavigationBarItem
+ComposeNet.NavigationBarItem.Icon.get -> ComposeNet.ComposableNode?
+ComposeNet.NavigationBarItem.Icon.set -> void
+ComposeNet.NavigationBarItem.Label.get -> ComposeNet.ComposableNode?
+ComposeNet.NavigationBarItem.Label.set -> void
+ComposeNet.NavigationBarItem.NavigationBarItem(bool selected, System.Action! onClick) -> void
+ComposeNet.NavigationRail
+ComposeNet.NavigationRail.NavigationRail() -> void
+ComposeNet.NavigationRailItem
+ComposeNet.NavigationRailItem.Icon.get -> ComposeNet.ComposableNode?
+ComposeNet.NavigationRailItem.Icon.set -> void
+ComposeNet.NavigationRailItem.Label.get -> ComposeNet.ComposableNode?
+ComposeNet.NavigationRailItem.Label.set -> void
+ComposeNet.NavigationRailItem.NavigationRailItem(bool selected, System.Action! onClick) -> void
 ComposeNet.OutlinedButton
 ComposeNet.OutlinedButton.OutlinedButton(System.Action! onClick) -> void
 ComposeNet.OutlinedCard
@@ -934,18 +938,148 @@ ComposeNet.WideNavigationRailItem.Icon.set -> void
 ComposeNet.WideNavigationRailItem.Label.get -> ComposeNet.ComposableNode?
 ComposeNet.WideNavigationRailItem.Label.set -> void
 ComposeNet.WideNavigationRailItem.WideNavigationRailItem(bool selected, System.Action! onClick) -> void
+override ComposeNet.AlertDialog.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.AssistChip.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.Badge.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.BadgedBox.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.BottomAppBar.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.BottomSheetScaffold.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.Box.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.BoxWithConstraints.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.Button.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.Card.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.CenterAlignedTopAppBar.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.Checkbox.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.CircularProgressIndicator.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.Column.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
 override ComposeNet.ComposeActivity.OnCreate(Android.OS.Bundle? savedInstanceState) -> void
+override ComposeNet.CompositionLocalProvider.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.CustomTab.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.DatePicker.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.DatePickerDialog.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.DateRangePicker.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.DateRangePickerDialog.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
 override ComposeNet.DerivedState<T>.ToString() -> string!
+override ComposeNet.DismissibleDrawerSheet.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.DismissibleNavigationDrawer.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.DisposableEffect.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.DockedSearchBar.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
 override ComposeNet.Dp.Equals(object? obj) -> bool
 override ComposeNet.Dp.GetHashCode() -> int
 override ComposeNet.Dp.ToString() -> string!
+override ComposeNet.DropdownMenu.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.DropdownMenuItem.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.ElevatedAssistChip.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.ElevatedButton.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.ElevatedCard.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.ElevatedFilterChip.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.ElevatedSuggestionChip.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.ExpandedDockedSearchBar.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.ExpandedFullScreenSearchBar.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.ExposedDropdownMenu.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.ExposedDropdownMenuBox.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.ExtendedFloatingActionButton.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.FilledIconButton.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.FilledIconToggleButton.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.FilledTonalButton.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.FilledTonalIconButton.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.FilledTonalIconToggleButton.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.FilterChip.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.FlexibleBottomAppBar.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.FloatingActionButton.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.FlowColumn.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.FlowRow.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.HorizontalCenteredHeroCarousel<T>.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.HorizontalDivider.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.HorizontalMultiBrowseCarousel<T>.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.HorizontalPager<T>.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.HorizontalUncontainedCarousel<T>.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.Icon.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.IconButton.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.IconToggleButton.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.Image.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.InputChip.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.LargeFlexibleTopAppBar.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.LargeFloatingActionButton.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.LargeTopAppBar.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.LaunchedEffect.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.LazyColumn<T>.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.LazyHorizontalGrid<T>.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.LazyHorizontalStaggeredGrid<T>.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.LazyRow<T>.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.LazyVerticalGrid<T>.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.LazyVerticalStaggeredGrid<T>.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.LeadingIconTab.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.LinearProgressIndicator.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.ListItem.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.MaterialTheme.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.MediumFlexibleTopAppBar.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.MediumTopAppBar.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.ModalBottomSheet.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.ModalDrawerSheet.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.ModalNavigationDrawer.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.ModalWideNavigationRail.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.MultiChoiceSegmentedButtonRow.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
 override ComposeNet.MutableNumberState<T>.Value.get -> T
 override ComposeNet.MutableNumberState<T>.Value.set -> void
 override ComposeNet.MutableState<T>.ToString() -> string!
+override ComposeNet.NavHost.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.NavigationBar.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.NavigationBarItem.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.NavigationRail.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.NavigationRailItem.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.OutlinedButton.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.OutlinedCard.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.OutlinedIconButton.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.OutlinedIconToggleButton.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.OutlinedSecureTextField.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.OutlinedTextField.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.PermanentDrawerSheet.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.PermanentNavigationDrawer.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.PrimaryScrollableTabRow.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.PrimaryTabRow.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.PullToRefreshBox.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.RadioButton.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.RangeSlider.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.Row.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.Scaffold.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.ScrollableTabRow.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.SearchBar.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.SearchBarInputField.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.SecondaryScrollableTabRow.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.SecondaryTabRow.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.SecureTextField.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.SegmentedButton.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.SideEffect.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.SingleChoiceSegmentedButtonRow.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.Slider.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.SmallFloatingActionButton.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.Snackbar.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.SnackbarHost.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
 override ComposeNet.Sp.Equals(object? obj) -> bool
 override ComposeNet.Sp.GetHashCode() -> int
 override ComposeNet.Sp.ToString() -> string!
+override ComposeNet.Spacer.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.SuggestionChip.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.Surface.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.Switch.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.Tab.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.TabRow.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.Text.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.TextButton.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.TextField.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
 override ComposeNet.TextOverflow.GetHashCode() -> int
+override ComposeNet.TimeInput.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.TimePicker.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.TimePickerDialog.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.Tooltip.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.TopAppBar.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.TopSearchBar.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.TriStateCheckbox.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.VerticalDivider.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.VerticalPager<T>.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.WideNavigationRail.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.WideNavigationRailItem.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
 static ComposeNet.Alignment.BottomCenter.get -> ComposeNet.Alignment!
 static ComposeNet.Alignment.BottomEnd.get -> ComposeNet.Alignment!
 static ComposeNet.Alignment.BottomStart.get -> ComposeNet.Alignment!
@@ -1021,12 +1155,6 @@ static ComposeNet.FontWeight.SemiBold.get -> ComposeNet.FontWeight!
 static ComposeNet.FontWeight.Thin.get -> ComposeNet.FontWeight!
 static ComposeNet.GridCells.Adaptive(float minSizeDp) -> AndroidX.Compose.Foundation.Lazy.Grid.IGridCells!
 static ComposeNet.GridCells.Fixed(int count) -> AndroidX.Compose.Foundation.Lazy.Grid.IGridCells!
-static readonly ComposeNet.Locals.LocalColorScheme -> ComposeNet.CompositionLocal<AndroidX.Compose.Material3.ColorScheme!>!
-static readonly ComposeNet.Locals.LocalConfiguration -> ComposeNet.CompositionLocal<Android.Content.Res.Configuration!>!
-static readonly ComposeNet.Locals.LocalContext -> ComposeNet.CompositionLocal<Android.Content.Context!>!
-static readonly ComposeNet.Locals.LocalLifecycleOwner -> ComposeNet.CompositionLocal<AndroidX.Lifecycle.ILifecycleOwner!>!
-static readonly ComposeNet.Locals.LocalResources -> ComposeNet.CompositionLocal<Android.Content.Res.Resources!>!
-static readonly ComposeNet.Locals.LocalView -> ComposeNet.CompositionLocal<Android.Views.View!>!
 static ComposeNet.Modifier.Companion.get -> ComposeNet.Modifier!
 static ComposeNet.MutableNumberState<T>.operator --(ComposeNet.MutableNumberState<T>! s) -> ComposeNet.MutableNumberState<T>!
 static ComposeNet.MutableNumberState<T>.operator ++(ComposeNet.MutableNumberState<T>! s) -> ComposeNet.MutableNumberState<T>!
@@ -1061,5 +1189,11 @@ static ComposeNet.TextOverflow.operator ==(ComposeNet.TextOverflow left, Compose
 static ComposeNet.TextOverflow.Pack(ComposeNet.TextOverflow? value) -> int
 static ComposeNet.TextOverflow.StartEllipsis.get -> ComposeNet.TextOverflow
 static ComposeNet.TextOverflow.Visible.get -> ComposeNet.TextOverflow
+static readonly ComposeNet.Locals.LocalColorScheme -> ComposeNet.CompositionLocal<AndroidX.Compose.Material3.ColorScheme!>!
+static readonly ComposeNet.Locals.LocalConfiguration -> ComposeNet.CompositionLocal<Android.Content.Res.Configuration!>!
+static readonly ComposeNet.Locals.LocalContext -> ComposeNet.CompositionLocal<Android.Content.Context!>!
+static readonly ComposeNet.Locals.LocalLifecycleOwner -> ComposeNet.CompositionLocal<AndroidX.Lifecycle.ILifecycleOwner!>!
+static readonly ComposeNet.Locals.LocalResources -> ComposeNet.CompositionLocal<Android.Content.Res.Resources!>!
+static readonly ComposeNet.Locals.LocalView -> ComposeNet.CompositionLocal<Android.Views.View!>!
 virtual ComposeNet.MutableState<T>.Value.get -> T
 virtual ComposeNet.MutableState<T>.Value.set -> void

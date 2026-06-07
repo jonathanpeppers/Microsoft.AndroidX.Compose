@@ -170,7 +170,7 @@ public class MainActivity : ComposeActivity
             var effectKey   = Remember(() => new MutableNumberState<int>(0));
             var disposeCount = Remember(() => new MutableNumberState<int>(0));
 
-            string[] tabNames = { "Basics", "Buttons", "Cards", "Drawer", "Selection", "Pickers", "Misc", "App bars", "Lazy", "Carousels", "Pager", "Nav", "State", "Effects" };
+            string[] tabNames = { "Basics", "Buttons", "Cards", "Drawer", "Selection", "Pickers", "Misc", "App bars", "Lazy", "Carousels", "Pager", "Nav", "State", "Effects", "Locals" };
 
             // Per-tab content. Only the current tab's column is added to
             // the screen — keeps the sample short enough to fit on one
@@ -1260,6 +1260,7 @@ public class MainActivity : ComposeActivity
                         new Text("Reset counters"),
                     },
                 },
+                14 => LocalsScreen.Build(),
                 _ => new Column
                 {
                     // Lazy lists — bound through LazyDslKt / LazyGridDslKt.

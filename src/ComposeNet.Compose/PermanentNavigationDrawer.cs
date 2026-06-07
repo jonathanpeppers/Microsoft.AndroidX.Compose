@@ -23,7 +23,7 @@ public sealed class PermanentNavigationDrawer : ComposableNode
     /// <summary>Required: the main content shown next to the drawer.</summary>
     public ComposableNode? Content { get; set; }
 
-    internal override void Render(IComposer composer)
+    public override void Render(IComposer composer)
     {
         if (Drawer is null)
             throw new System.InvalidOperationException(

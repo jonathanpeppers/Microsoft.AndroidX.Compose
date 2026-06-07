@@ -11,7 +11,7 @@ namespace ComposeNet;
 /// </summary>
 public sealed class MaterialTheme : ComposableContainer
 {
-    internal override void Render(IComposer composer)
+    public override void Render(IComposer composer)
     {
         // Read the composition-scoped Android context rather than
         // Android.App.Application.Context, so the theme reflects any

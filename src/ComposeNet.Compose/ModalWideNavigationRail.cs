@@ -56,7 +56,7 @@ public sealed class ModalWideNavigationRail : ComposableContainer
     /// <summary>Optional header slot drawn at the top of the rail (e.g. a logo or menu button).</summary>
     public ComposableNode? Header { get; set; }
 
-    internal override void Render(IComposer composer)
+    public override void Render(IComposer composer)
     {
         if (Children.Count == 0)
             throw new System.InvalidOperationException(

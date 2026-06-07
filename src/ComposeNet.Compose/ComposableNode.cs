@@ -125,7 +125,24 @@ public abstract class ComposableNode
         return (combined ?? Modifier.Companion).Build(contentPadding);
     }
 
-    internal abstract void Render(IComposer composer);
+    /// <summary>
+    /// Compose this node's contribution into <paramref name="composer"/>.
+    ///
+    /// The C# moral equivalent of an <c>@Composable</c> function body
+    /// in Kotlin: anything that runs at composition time — emitting
+    /// child nodes, reading <see cref="CompositionLocal{T}.GetCurrent(IComposer)"/>,
+    /// calling <see cref="Compose.Remember{T}(System.Func{T}, int, string)"/>,
+    /// etc. — happens here. To compose a child node from inside a
+    /// custom override, build it and call <c>child.Render(composer)</c>
+    /// directly; for richer container shapes derive from
+    /// <see cref="ComposableContainer"/> and use <c>RenderChildren</c>.
+    ///
+    /// Must be invoked with the live <see cref="IComposer"/> handed to
+    /// the enclosing composition pass — calling it outside a
+    /// composition has no useful effect (and will fault when child
+    /// composables read snapshot state).
+    /// </summary>
+    public abstract void Render(IComposer composer);
 
     /// <summary>
     /// Render this node as the body of a parent layout that supplies a

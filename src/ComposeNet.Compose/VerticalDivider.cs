@@ -15,7 +15,7 @@ public sealed class VerticalDivider : ComposableNode
     /// <summary>Optional explicit ARGB color (packed into a Compose <c>Color</c> long). Leave null to use the Material default.</summary>
     public long? ColorArgb { get; set; }
 
-    internal override void Render(IComposer composer)
+    public override void Render(IComposer composer)
     {
         var modifier = BuildModifier();
 
