@@ -119,6 +119,10 @@ public static class Catalog
         D.DialogsSheets.TimePickerDialogDemo.Demo,
         D.DialogsSheets.DropdownMenuDemo.Demo,
         D.DialogsSheets.ExposedDropdownMenuBoxDemo.Demo,
+
+        // ---- Search ----
+        D.Search.SearchBarPair.Demo,
+        D.Search.DockedSearchBarDemo.Demo,
     ];
 
     /// <summary>
