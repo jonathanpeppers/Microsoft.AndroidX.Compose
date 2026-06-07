@@ -92,6 +92,16 @@ public static class Catalog
         D.CarouselsPaging.HorizontalMultiBrowseCarouselDemo.Demo,
         D.CarouselsPaging.HorizontalCenteredHeroCarouselDemo.Demo,
         D.CarouselsPaging.HorizontalPagerDemo.Demo,
+
+        // ---- App bars & tabs ----
+        D.AppBars.CenterAlignedTopAppBarDemo.Demo,
+        D.AppBars.MediumFlexibleTopAppBarDemo.Demo,
+        D.AppBars.LargeFlexibleTopAppBarDemo.Demo,
+        D.AppBars.BottomAppBarActions.Demo,
+        D.AppBars.BottomAppBarWithFab.Demo,
+        D.AppBars.FlexibleBottomAppBarDemo.Demo,
+        D.AppBars.PrimaryScrollableTabRowDemo.Demo,
+        D.AppBars.SecondaryScrollableTabRowDemo.Demo,
     ];
 
     /// <summary>
