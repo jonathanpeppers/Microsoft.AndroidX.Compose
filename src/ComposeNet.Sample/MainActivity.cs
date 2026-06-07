@@ -120,22 +120,26 @@ public class MainActivity : ComposeActivity
 
             // State primitives demo (issue #62). The `seed` value is the
             // key for the keyed-Remember overload — bumping it via the
-            // "New seed" button restarts the slot, forcing the wrapped
-            // counter back to its initial value and the ProduceState
-            // ticker back to 0. `wordMap` and `wordList` show the
-            // dictionary- and list-shaped observables. `derived` reads
-            // `wordList.Count` so Compose recomposes anything that
-            // reads `derived.Value` whenever the list mutates.
+            // "New seed" button resets the wrapped counter back to its
+            // initial value and cancels-and-restarts the ProduceState
+            // producer with a fresh CancellationToken (the producer
+            // explicitly resets state.Value = 0 at the top of the
+            // lambda; Kotlin's produceState semantics preserve state
+            // across key changes by default). `wordMap` and `wordList`
+            // show the dictionary- and list-shaped observables.
+            // `derived` reads `wordList.Count` so Compose recomposes
+            // anything that reads `derived.Value` whenever the list
+            // mutates — wrapped in Remember so the same DerivedState
+            // instance survives recomposition (otherwise we'd allocate
+            // a new Kotlin IState every pass).
             var seed       = Remember(() => new MutableNumberState<int>(0));
             var keyedCount = Remember(() => new MutableNumberState<int>(0), seed.Value);
             var wordList   = Remember(() => new MutableStateList<string> { "alpha", "beta" });
             var wordMap    = Remember(() => new MutableStateMap<string, int> { ["alpha"] = 1, ["beta"] = 2 });
-            var derived    = Compose.DerivedStateOf(() => wordList.Count);
-            // Producer increments `ticker` once a second on a background
-            // task; the keyed overload (`seed.Value`) restarts the
-            // producer with a fresh CancellationToken when seed changes.
+            var derived    = Remember(() => Compose.DerivedStateOf(() => wordList.Count));
             var ticker = Compose.ProduceState<int>(0, seed.Value, async (state, ct) =>
             {
+                state.Value = 0;
                 while (!ct.IsCancellationRequested)
                 {
                     try { await System.Threading.Tasks.Task.Delay(1000, ct); }

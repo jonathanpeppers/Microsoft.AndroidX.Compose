@@ -202,37 +202,47 @@ internal static partial class ComposeBridges
         var array = JNIEnv.NewObjectArray(keys.Length, objectClass.Handle, System.IntPtr.Zero);
         for (int i = 0; i < keys.Length; i++)
         {
-            var boxed = BoxKey(keys[i]);
+            var boxed = BoxKey(keys[i], out var ownsBoxed);
             if (boxed is null)
             {
                 JNIEnv.SetObjectArrayElement(array, i, System.IntPtr.Zero);
                 continue;
             }
             JNIEnv.SetObjectArrayElement(array, i, boxed.Handle);
-            // Disposing releases the local ref the boxing constructor
-            // created; the array now holds its own ref to the element.
-            boxed.Dispose();
+            // Only dispose freshly created boxing wrappers — disposing
+            // a pass-through caller-owned Java.Lang.Object would
+            // invalidate their managed peer.
+            if (ownsBoxed) boxed.Dispose();
         }
         return array;
     }
 
-    static Java.Lang.Object? BoxKey(object? key) => key switch
+    static Java.Lang.Object? BoxKey(object? key, out bool owns)
     {
-        null               => null,
-        Java.Lang.Object o => o,
-        string s           => new Java.Lang.String(s),
-        bool b             => Java.Lang.Boolean.ValueOf(b),
-        char c             => Java.Lang.Character.ValueOf(c),
-        sbyte sb           => Java.Lang.Byte.ValueOf(sb),
-        byte by            => Java.Lang.Short.ValueOf((short)by),
-        short sh           => Java.Lang.Short.ValueOf(sh),
-        ushort us          => Java.Lang.Integer.ValueOf(us),
-        int i              => Java.Lang.Integer.ValueOf(i),
-        uint ui            => Java.Lang.Long.ValueOf(ui),
-        long l             => Java.Lang.Long.ValueOf(l),
-        ulong ul           => Java.Lang.Long.ValueOf(unchecked((long)ul)),
-        float f            => Java.Lang.Float.ValueOf(f),
-        double d           => Java.Lang.Double.ValueOf(d),
-        _                  => new Java.Lang.String(key.ToString() ?? string.Empty),
-    };
+        switch (key)
+        {
+            case null:
+                owns = false;
+                return null;
+            case Java.Lang.Object o:
+                // Caller-owned — do NOT dispose; the array still
+                // takes its own JNI ref via SetObjectArrayElement.
+                owns = false;
+                return o;
+            case string s:           owns = true; return new Java.Lang.String(s);
+            case bool b:             owns = true; return Java.Lang.Boolean.ValueOf(b);
+            case char c:             owns = true; return Java.Lang.Character.ValueOf(c);
+            case sbyte sb:           owns = true; return Java.Lang.Byte.ValueOf(sb);
+            case byte by:            owns = true; return Java.Lang.Short.ValueOf((short)by);
+            case short sh:           owns = true; return Java.Lang.Short.ValueOf(sh);
+            case ushort us:          owns = true; return Java.Lang.Integer.ValueOf(us);
+            case int i:              owns = true; return Java.Lang.Integer.ValueOf(i);
+            case uint ui:            owns = true; return Java.Lang.Long.ValueOf(ui);
+            case long l:             owns = true; return Java.Lang.Long.ValueOf(l);
+            case ulong ul:           owns = true; return Java.Lang.Long.ValueOf(unchecked((long)ul));
+            case float f:            owns = true; return Java.Lang.Float.ValueOf(f);
+            case double d:           owns = true; return Java.Lang.Double.ValueOf(d);
+            default:                 owns = true; return new Java.Lang.String(key.ToString() ?? string.Empty);
+        }
+    }
 }
