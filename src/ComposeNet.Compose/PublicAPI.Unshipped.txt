@@ -45,6 +45,14 @@ ComposeNet.BottomSheetScaffold.TopBar.get -> ComposeNet.ComposableNode?
 ComposeNet.BottomSheetScaffold.TopBar.set -> void
 ComposeNet.Box
 ComposeNet.Box.Box() -> void
+ComposeNet.BoxConstraints
+ComposeNet.BoxConstraints.BoxConstraints() -> void
+ComposeNet.BoxConstraints.MaxHeight.get -> float
+ComposeNet.BoxConstraints.MaxWidth.get -> float
+ComposeNet.BoxConstraints.MinHeight.get -> float
+ComposeNet.BoxConstraints.MinWidth.get -> float
+ComposeNet.BoxWithConstraints
+ComposeNet.BoxWithConstraints.BoxWithConstraints(System.Func<ComposeNet.BoxConstraints, ComposeNet.ComposableNode!>! content) -> void
 ComposeNet.Button
 ComposeNet.Button.Button(System.Action! onClick) -> void
 ComposeNet.Card
@@ -228,6 +236,10 @@ ComposeNet.FlexibleBottomAppBar
 ComposeNet.FlexibleBottomAppBar.FlexibleBottomAppBar() -> void
 ComposeNet.FloatingActionButton
 ComposeNet.FloatingActionButton.FloatingActionButton(System.Action! onClick) -> void
+ComposeNet.FlowColumn
+ComposeNet.FlowColumn.FlowColumn() -> void
+ComposeNet.FlowRow
+ComposeNet.FlowRow.FlowRow() -> void
 ComposeNet.FontFamily
 ComposeNet.FontStyle
 ComposeNet.FontWeight
@@ -256,6 +268,10 @@ ComposeNet.HorizontalMultiBrowseCarousel<T>.State.get -> AndroidX.Compose.Materi
 ComposeNet.HorizontalMultiBrowseCarousel<T>.State.set -> void
 ComposeNet.HorizontalMultiBrowseCarousel<T>.UserScrollEnabled.get -> bool?
 ComposeNet.HorizontalMultiBrowseCarousel<T>.UserScrollEnabled.set -> void
+ComposeNet.HorizontalPager<T>
+ComposeNet.HorizontalPager<T>.HorizontalPager(System.Collections.Generic.IReadOnlyList<T>! items, System.Func<T, ComposeNet.ComposableNode!>! itemContent) -> void
+ComposeNet.HorizontalPager<T>.State.get -> ComposeNet.PagerState?
+ComposeNet.HorizontalPager<T>.State.set -> void
 ComposeNet.HorizontalUncontainedCarousel<T>
 ComposeNet.HorizontalUncontainedCarousel<T>.HorizontalUncontainedCarousel(System.Collections.Generic.IReadOnlyList<T>! items, float itemWidth, System.Func<T, ComposeNet.ComposableNode!>! itemContent) -> void
 ComposeNet.HorizontalUncontainedCarousel<T>.ItemSpacing.get -> float
@@ -314,6 +330,10 @@ ComposeNet.LazyHorizontalGrid<T>
 ComposeNet.LazyHorizontalGrid<T>.LazyHorizontalGrid(AndroidX.Compose.Foundation.Lazy.Grid.IGridCells! rows, System.Collections.Generic.IReadOnlyList<T>! items, System.Func<T, ComposeNet.ComposableNode!>! itemContent) -> void
 ComposeNet.LazyHorizontalGrid<T>.State.get -> AndroidX.Compose.Foundation.Lazy.Grid.LazyGridState?
 ComposeNet.LazyHorizontalGrid<T>.State.set -> void
+ComposeNet.LazyHorizontalStaggeredGrid<T>
+ComposeNet.LazyHorizontalStaggeredGrid<T>.LazyHorizontalStaggeredGrid(AndroidX.Compose.Foundation.Lazy.Staggeredgrid.IStaggeredGridCells! rows, System.Collections.Generic.IReadOnlyList<T>! items, System.Func<T, ComposeNet.ComposableNode!>! itemContent) -> void
+ComposeNet.LazyHorizontalStaggeredGrid<T>.State.get -> AndroidX.Compose.Foundation.Lazy.Staggeredgrid.LazyStaggeredGridState?
+ComposeNet.LazyHorizontalStaggeredGrid<T>.State.set -> void
 ComposeNet.LazyRow<T>
 ComposeNet.LazyRow<T>.LazyRow(System.Collections.Generic.IReadOnlyList<T>! items, System.Func<T, ComposeNet.ComposableNode!>! itemContent) -> void
 ComposeNet.LazyRow<T>.State.get -> AndroidX.Compose.Foundation.Lazy.LazyListState?
@@ -322,6 +342,10 @@ ComposeNet.LazyVerticalGrid<T>
 ComposeNet.LazyVerticalGrid<T>.LazyVerticalGrid(AndroidX.Compose.Foundation.Lazy.Grid.IGridCells! columns, System.Collections.Generic.IReadOnlyList<T>! items, System.Func<T, ComposeNet.ComposableNode!>! itemContent) -> void
 ComposeNet.LazyVerticalGrid<T>.State.get -> AndroidX.Compose.Foundation.Lazy.Grid.LazyGridState?
 ComposeNet.LazyVerticalGrid<T>.State.set -> void
+ComposeNet.LazyVerticalStaggeredGrid<T>
+ComposeNet.LazyVerticalStaggeredGrid<T>.LazyVerticalStaggeredGrid(AndroidX.Compose.Foundation.Lazy.Staggeredgrid.IStaggeredGridCells! columns, System.Collections.Generic.IReadOnlyList<T>! items, System.Func<T, ComposeNet.ComposableNode!>! itemContent) -> void
+ComposeNet.LazyVerticalStaggeredGrid<T>.State.get -> AndroidX.Compose.Foundation.Lazy.Staggeredgrid.LazyStaggeredGridState?
+ComposeNet.LazyVerticalStaggeredGrid<T>.State.set -> void
 ComposeNet.LeadingIconTab
 ComposeNet.LeadingIconTab.Icon.get -> ComposeNet.ComposableNode?
 ComposeNet.LeadingIconTab.Icon.set -> void
@@ -545,6 +569,13 @@ ComposeNet.OutlinedTextField.SupportingText.get -> ComposeNet.ComposableNode?
 ComposeNet.OutlinedTextField.SupportingText.set -> void
 ComposeNet.OutlinedTextField.TrailingIcon.get -> ComposeNet.ComposableNode?
 ComposeNet.OutlinedTextField.TrailingIcon.set -> void
+ComposeNet.PagerState
+ComposeNet.PagerState.CurrentPage.get -> int
+ComposeNet.PagerState.CurrentPageOffsetFraction.get -> float
+ComposeNet.PagerState.PageCount.get -> int
+ComposeNet.PagerState.PagerState() -> void
+ComposeNet.PagerState.SettledPage.get -> int
+ComposeNet.PagerState.TargetPage.get -> int
 ComposeNet.PermanentDrawerSheet
 ComposeNet.PermanentDrawerSheet.ContainerColor.get -> long
 ComposeNet.PermanentDrawerSheet.ContainerColor.set -> void
@@ -673,6 +704,7 @@ ComposeNet.Sp.Sp(long packedValue) -> void
 ComposeNet.Spacer
 ComposeNet.Spacer.Spacer() -> void
 ComposeNet.Spacer.Spacer(ComposeNet.Modifier! modifier) -> void
+ComposeNet.StaggeredGridCells
 ComposeNet.SuggestionChip
 ComposeNet.SuggestionChip.Icon.get -> ComposeNet.ComposableNode?
 ComposeNet.SuggestionChip.Icon.set -> void
@@ -808,6 +840,10 @@ ComposeNet.VerticalDivider.ColorArgb.set -> void
 ComposeNet.VerticalDivider.ThicknessDp.get -> float?
 ComposeNet.VerticalDivider.ThicknessDp.set -> void
 ComposeNet.VerticalDivider.VerticalDivider() -> void
+ComposeNet.VerticalPager<T>
+ComposeNet.VerticalPager<T>.State.get -> ComposeNet.PagerState?
+ComposeNet.VerticalPager<T>.State.set -> void
+ComposeNet.VerticalPager<T>.VerticalPager(System.Collections.Generic.IReadOnlyList<T>! items, System.Func<T, ComposeNet.ComposableNode!>! itemContent) -> void
 ComposeNet.WideNavigationRail
 ComposeNet.WideNavigationRail.WideNavigationRail() -> void
 ComposeNet.WideNavigationRailItem
@@ -875,6 +911,9 @@ static ComposeNet.Sp.operator !=(ComposeNet.Sp left, ComposeNet.Sp right) -> boo
 static ComposeNet.Sp.operator ==(ComposeNet.Sp left, ComposeNet.Sp right) -> bool
 static ComposeNet.Sp.Pack(ComposeNet.Sp? value) -> long
 static ComposeNet.Sp.Zero.get -> ComposeNet.Sp
+static ComposeNet.StaggeredGridCells.Adaptive(float minSizeDp) -> AndroidX.Compose.Foundation.Lazy.Staggeredgrid.IStaggeredGridCells!
+static ComposeNet.StaggeredGridCells.Fixed(int count) -> AndroidX.Compose.Foundation.Lazy.Staggeredgrid.IStaggeredGridCells!
+static ComposeNet.StaggeredGridCells.FixedSize(float sizeDp) -> AndroidX.Compose.Foundation.Lazy.Staggeredgrid.IStaggeredGridCells!
 static ComposeNet.TextAlign.Center.get -> ComposeNet.TextAlign!
 static ComposeNet.TextAlign.End.get -> ComposeNet.TextAlign!
 static ComposeNet.TextAlign.Justify.get -> ComposeNet.TextAlign!

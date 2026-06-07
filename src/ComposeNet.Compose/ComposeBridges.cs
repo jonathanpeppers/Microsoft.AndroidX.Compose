@@ -65,6 +65,25 @@ internal static partial class ComposeBridges
         Signature = "(F)V")]
     internal static partial IGridCells GridCellsAdaptive(float minSizeDp);
 
+    // androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells$Adaptive
+    // and StaggeredGridCells$FixedSize — same Dp inline-class story as
+    // GridCells$Adaptive above. StaggeredGridCells.Fixed(int) is
+    // unaffected by inline-class mangling and the binder exposes its
+    // ctor directly, so no bridge is needed for it.
+    [ComposeBridge(
+        Class     = "androidx/compose/foundation/lazy/staggeredgrid/StaggeredGridCells$Adaptive",
+        JvmName   = "<init>",
+        Signature = "(F)V")]
+    internal static partial AndroidX.Compose.Foundation.Lazy.Staggeredgrid.IStaggeredGridCells
+        StaggeredGridCellsAdaptive(float minSizeDp);
+
+    [ComposeBridge(
+        Class     = "androidx/compose/foundation/lazy/staggeredgrid/StaggeredGridCells$FixedSize",
+        JvmName   = "<init>",
+        Signature = "(F)V")]
+    internal static partial AndroidX.Compose.Foundation.Lazy.Staggeredgrid.IStaggeredGridCells
+        StaggeredGridCellsFixedSize(float sizeDp);
+
     // androidx.compose.foundation.layout.PaddingKt — the Dp-taking
     // overloads have hashed JVM names from the inline-class compiler
     // mangling (`@JvmInline value class Dp(val value: Float)`). Bodies
@@ -2675,6 +2694,49 @@ internal static partial class ComposeBridges
             _composer:              composer,
             steps:                  0,
             _changed:               defaults);
+
+    // FlowRow / FlowColumn — Phase 8 wrapper-passthrough facades. The
+    // simpler 7-Kotlin-param overloads (no FlowRowOverflow / FlowColumnOverflow
+    // slot) are bound directly. The Int params `maxItemsInEachRow` /
+    // `maxLines` (resp. `maxItemsInEachColumn` / `maxLines`) can't be
+    // safely auto-masked from a nullable C# slot, so v1 leaves their
+    // $default bits set and passes 0 — Kotlin substitutes Int.MAX_VALUE.
+    // The binder rename pattern: the C# `p4` param is the actual Kotlin
+    // `maxItemsInEachRow`/`maxItemsInEachColumn` Int, and the C# named
+    // `maxItemsInEachRow`/`maxItemsInEachColumn` is the Kotlin `maxLines`
+    // Int. The `maxLines` slot in C# is the JVM `$changed` int; `_changed`
+    // is `$default`.
+    [ComposeFacade(Defaults = typeof(FlowRowDefault))]
+    public static partial void FlowRow(IModifier? modifier, IFunction3 content, int defaults, IComposer composer);
+
+    public static partial void FlowRow(IModifier? modifier, IFunction3 content, int defaults, IComposer composer)
+        => FlowLayoutKt.FlowRow(
+            modifier:              modifier,
+            horizontalArrangement: null,
+            verticalArrangement:   null,
+            itemVerticalAlignment: null,
+            p4:                    0,
+            maxItemsInEachRow:     0,
+            content:               content,
+            _composer:             composer,
+            maxLines:              0,
+            _changed:              defaults);
+
+    [ComposeFacade(Defaults = typeof(FlowColumnDefault))]
+    public static partial void FlowColumn(IModifier? modifier, IFunction3 content, int defaults, IComposer composer);
+
+    public static partial void FlowColumn(IModifier? modifier, IFunction3 content, int defaults, IComposer composer)
+        => FlowLayoutKt.FlowColumn(
+            modifier:                modifier,
+            verticalArrangement:     null,
+            horizontalArrangement:   null,
+            itemHorizontalAlignment: null,
+            p4:                      0,
+            maxItemsInEachColumn:    0,
+            content:                 content,
+            _composer:               composer,
+            maxLines:                0,
+            _changed:                defaults);
 
     // WideNavigationRailKt.WideNavigationRailItem-pli-t6k. Bound C# wrapper
     // has misnamed trailing params: `iconPosition` is actually $changed,
