@@ -93,7 +93,7 @@ public static class HomeScreen
         new(items: posts,
             itemContent: p => HomeCards.BuildPopular(p, onSelectPost))
         {
-            Modifier              = Modifier.Companion.FillMaxWidth().Padding(horizontal: 16, vertical: 0),
+            Modifier              = Modifier.Companion.FillMaxWidth().Height(220).Padding(horizontal: 16, vertical: 0),
             HorizontalArrangement = Arrangement.SpacedBy(8),
         };
 
