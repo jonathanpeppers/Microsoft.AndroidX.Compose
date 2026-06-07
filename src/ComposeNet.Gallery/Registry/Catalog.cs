@@ -133,6 +133,18 @@ public static class Catalog
         D.Modifiers.DraggableOffsetDemo.Demo,
         D.Modifiers.GraphicsLayerDemo.Demo,
         D.Modifiers.FlowRowScopeDispatch.Demo,
+
+        // ---- State, effects, animation ----
+        D.StateEffectsAnimation.RememberSaveableDemo.Demo,
+        D.StateEffectsAnimation.ProduceStateTicker.Demo,
+        D.StateEffectsAnimation.MutableStateCollections.Demo,
+        D.StateEffectsAnimation.DerivedStateDemo.Demo,
+        D.StateEffectsAnimation.LaunchedEffectDemo.Demo,
+        D.StateEffectsAnimation.DisposableEffectDemo.Demo,
+        D.StateEffectsAnimation.SideEffectDemo.Demo,
+        D.StateEffectsAnimation.AnimatedVisibilityDemo.Demo,
+        D.StateEffectsAnimation.CrossfadeDemo.Demo,
+        D.StateEffectsAnimation.AnimatedContentDemo.Demo,
     ];
 
     /// <summary>
