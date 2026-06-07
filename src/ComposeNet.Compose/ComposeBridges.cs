@@ -2041,6 +2041,9 @@ internal static partial class ComposeBridges
         JvmName   = "TopAppBar-GHTll3U",
         Signature = TopAppBarSig,
         Defaults  = typeof(TopAppBarDefault))]
+    [ComposeFacade(
+        BranchOn        = "Subtitle",
+        AlternateBridge = nameof(TopAppBarWithSubtitle))]
     public static partial void TopAppBar(
         IFunction2  title,
         IModifier?  modifier,
@@ -2078,7 +2081,9 @@ internal static partial class ComposeBridges
         JvmName   = "MediumTopAppBar-oKE7A98",
         Signature = TwoRowsTopAppBarSig,
         Defaults  = typeof(TwoRowsTopAppBarDefault))]
-    [ComposeFacade]
+    [ComposeFacade(
+        BranchOn        = "Subtitle",
+        AlternateBridge = nameof(MediumFlexibleTopAppBar))]
     public static partial void MediumTopAppBar(
         IFunction2  title,
         IModifier?  modifier,
@@ -2092,7 +2097,9 @@ internal static partial class ComposeBridges
         JvmName   = "LargeTopAppBar-oKE7A98",
         Signature = TwoRowsTopAppBarSig,
         Defaults  = typeof(TwoRowsTopAppBarDefault))]
-    [ComposeFacade]
+    [ComposeFacade(
+        BranchOn        = "Subtitle",
+        AlternateBridge = nameof(LargeFlexibleTopAppBar))]
     public static partial void LargeTopAppBar(
         IFunction2  title,
         IModifier?  modifier,
