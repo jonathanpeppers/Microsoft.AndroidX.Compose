@@ -60,12 +60,16 @@ public class MainActivity : ComposeActivity
             var selectedRow63   = Remember(() => new MutableNumberState<int>(0));
             var taps63          = Remember(() => new MutableNumberState<int>(0));
             // Issue #63 follow-up: Modifier.Draggable demo state.
-            // dragX63 holds the running offset in pixels; the
-            // RememberDraggableState callback closes over it so the
-            // Java DraggableState identity stays stable across
-            // recompositions while the offset still updates.
+            // The Draggable callback hands us raw pixel deltas; divide
+            // by the screen density so dragX63 accumulates in Dp,
+            // matching what Modifier.Offset(x: Dp) expects. Otherwise
+            // a 3x-density phone moves the box 3x faster than the
+            // finger. The RememberDraggableState callback closes over
+            // dragX63 so the Java DraggableState identity stays stable
+            // across recompositions while the offset still updates.
+            var dragDensity     = Android.Content.Res.Resources.System!.DisplayMetrics!.Density;
             var dragX63         = Remember(() => new MutableState<float>(0f));
-            var dragState63     = Compose.RememberDraggableState(delta => dragX63.Value += delta);
+            var dragState63     = Compose.RememberDraggableState(delta => dragX63.Value += delta / dragDensity);
 
             var checkbox    = Remember(() => new MutableState<bool>(true));
             var switchOn    = Remember(() => new MutableState<bool>(false));
@@ -535,7 +539,7 @@ public class MainActivity : ComposeActivity
                             // that bridge too — it's a no-op without
                             // edge-to-edge but proves the JNI call
                             // doesn't throw.
-                            new Text($"Drag offset: {dragX63.Value:F0}px") { Modifier = Modifier.Companion.SafeContentPadding() },
+                            new Text($"Drag offset: {dragX63.Value:F0}dp") { Modifier = Modifier.Companion.SafeContentPadding() },
                             new Box
                             {
                                 Modifier.Companion.FillMaxWidth().Height(72).Padding(4)
