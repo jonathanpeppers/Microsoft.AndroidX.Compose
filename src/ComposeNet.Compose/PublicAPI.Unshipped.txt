@@ -509,6 +509,7 @@ ComposeNet.Modifier.Border(ComposeNet.Dp width, ComposeNet.Color color, ComposeN
 ComposeNet.Modifier.Border(ComposeNet.Dp width, ComposeNet.Color color) -> ComposeNet.Modifier!
 ComposeNet.Modifier.CaptionBarPadding() -> ComposeNet.Modifier!
 ComposeNet.Modifier.ClearAndSetSemantics(string! contentDescription) -> ComposeNet.Modifier!
+ComposeNet.Modifier.ClearAndSetSemantics(string? contentDescription, ComposeNet.SemanticsRole? role) -> ComposeNet.Modifier!
 ComposeNet.Modifier.Clickable(System.Action! onClick) -> ComposeNet.Modifier!
 ComposeNet.Modifier.Clip(ComposeNet.Dp cornerRadius) -> ComposeNet.Modifier!
 ComposeNet.Modifier.Clip(ComposeNet.Shape! shape) -> ComposeNet.Modifier!
@@ -522,6 +523,7 @@ ComposeNet.Modifier.FillMaxWidth(float fraction = 1) -> ComposeNet.Modifier!
 ComposeNet.Modifier.Focusable(bool enabled = true) -> ComposeNet.Modifier!
 ComposeNet.Modifier.FocusGroup() -> ComposeNet.Modifier!
 ComposeNet.Modifier.FocusRequester(ComposeNet.FocusRequester! requester) -> ComposeNet.Modifier!
+ComposeNet.Modifier.GraphicsLayer(float? scaleX = null, float? scaleY = null, float? alpha = null, float? translationX = null, float? translationY = null, float? shadowElevation = null, float? rotationX = null, float? rotationY = null, float? rotationZ = null, float? cameraDistance = null, long? transformOrigin = null, ComposeNet.Shape? shape = null, bool? clip = null) -> ComposeNet.Modifier!
 ComposeNet.Modifier.Height(ComposeNet.Dp height) -> ComposeNet.Modifier!
 ComposeNet.Modifier.HeightIn(ComposeNet.Dp? min = null, ComposeNet.Dp? max = null) -> ComposeNet.Modifier!
 ComposeNet.Modifier.HorizontalScroll(ComposeNet.ScrollState! state, bool enabled = true, bool reverseScrolling = false) -> ComposeNet.Modifier!
@@ -546,7 +548,10 @@ ComposeNet.Modifier.Scale(float scale) -> ComposeNet.Modifier!
 ComposeNet.Modifier.Scale(float scaleX, float scaleY) -> ComposeNet.Modifier!
 ComposeNet.Modifier.Selectable(bool selected, System.Action! onClick) -> ComposeNet.Modifier!
 ComposeNet.Modifier.Semantics(bool mergeDescendants, string! contentDescription) -> ComposeNet.Modifier!
+ComposeNet.Modifier.Semantics(bool mergeDescendants, string? contentDescription, ComposeNet.SemanticsRole? role) -> ComposeNet.Modifier!
+ComposeNet.Modifier.Semantics(ComposeNet.SemanticsRole role) -> ComposeNet.Modifier!
 ComposeNet.Modifier.Semantics(string! contentDescription) -> ComposeNet.Modifier!
+ComposeNet.Modifier.Semantics(string? contentDescription, ComposeNet.SemanticsRole? role) -> ComposeNet.Modifier!
 ComposeNet.Modifier.Shadow(ComposeNet.Dp elevation, ComposeNet.Shape? shape = null) -> ComposeNet.Modifier!
 ComposeNet.Modifier.Size(ComposeNet.Dp size) -> ComposeNet.Modifier!
 ComposeNet.Modifier.Size(ComposeNet.Dp width, ComposeNet.Dp height) -> ComposeNet.Modifier!
@@ -802,6 +807,16 @@ ComposeNet.SegmentedButton.Icon.get -> ComposeNet.ComposableNode?
 ComposeNet.SegmentedButton.Icon.set -> void
 ComposeNet.SegmentedButton.SegmentedButton(bool checked, System.Action<bool>! onCheckedChange) -> void
 ComposeNet.SegmentedButton.SegmentedButton(bool selected, System.Action! onClick) -> void
+ComposeNet.SemanticsRole
+ComposeNet.SemanticsRole.Button = 0 -> ComposeNet.SemanticsRole
+ComposeNet.SemanticsRole.Carousel = 8 -> ComposeNet.SemanticsRole
+ComposeNet.SemanticsRole.Checkbox = 1 -> ComposeNet.SemanticsRole
+ComposeNet.SemanticsRole.DropdownList = 6 -> ComposeNet.SemanticsRole
+ComposeNet.SemanticsRole.Image = 5 -> ComposeNet.SemanticsRole
+ComposeNet.SemanticsRole.RadioButton = 3 -> ComposeNet.SemanticsRole
+ComposeNet.SemanticsRole.Switch = 2 -> ComposeNet.SemanticsRole
+ComposeNet.SemanticsRole.Tab = 4 -> ComposeNet.SemanticsRole
+ComposeNet.SemanticsRole.ValuePicker = 7 -> ComposeNet.SemanticsRole
 ComposeNet.Shape
 ComposeNet.SideEffect
 ComposeNet.SideEffect.SideEffect(System.Action! effect) -> void
@@ -958,6 +973,9 @@ ComposeNet.TopAppBar.Subtitle.set -> void
 ComposeNet.TopAppBar.Title.get -> ComposeNet.ComposableNode?
 ComposeNet.TopAppBar.Title.set -> void
 ComposeNet.TopAppBar.TopAppBar() -> void
+ComposeNet.TransformOrigin
+static ComposeNet.TransformOrigin.Center.get -> long
+static ComposeNet.TransformOrigin.Pack(float pivotFractionX, float pivotFractionY) -> long
 ComposeNet.TopSearchBar
 ComposeNet.TopSearchBar.InputField.get -> ComposeNet.ComposableNode?
 ComposeNet.TopSearchBar.InputField.set -> void
