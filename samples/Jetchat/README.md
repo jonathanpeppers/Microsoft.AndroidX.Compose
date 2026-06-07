@@ -102,9 +102,8 @@ later round (Jun 5) closed three more — all now in use here:
 - **Sizing modifiers**: `Modifier.Size(int)`, `Size(int, int)`,
   `Width(int)`, `Height(int)`.
 - **Background / Border / Clickable**: surfaced existing bridges as
-  public `Modifier` methods (`Background(long)` / `Border(int, long, int = 0)`
-  taking a packed Compose `Color` long built via
-  `AndroidX.Compose.UI.Graphics.ColorKt.Color(...)`, and
+  public `Modifier` methods (`Background(Color)` / `Border(Dp, Color, Dp = 0)`
+  taking a `ComposeNet.Color` value built via `Color.FromRgb(...)`, and
   `Clickable(Action)`).
 - **Shape clipping**: `Modifier.Clip(int cornerDp)` — two-step JNI
   helper that constructs a `RoundedCornerShape` and applies

@@ -50,11 +50,15 @@ internal static class ComposeValueTypes
                 ('I', "global::ComposeNet.TextOverflow.Pack({0})"),
 
             // androidx.compose.ui.graphics.Color is bound by
-            // Xamarin.AndroidX.Compose.UI.Graphics 1.11.2.1, but Kotlin's
-            // `@JvmInline value class Color(val value: ULong)` surfaces as
-            // a packed `long` at the JNI boundary, so call sites pass
-            // `long` directly (built via ColorKt.Color(r,g,b,a)) — there's
-            // no C# struct to lower from and Color is not in this registry.
+            // Xamarin.AndroidX.Compose.UI.Graphics 1.11.2.1, and the
+            // managed-side `ComposeNet.Color` is a value-type wrapper
+            // over the same packed ULong. The Kotlin
+            // `@JvmInline value class Color(val value: ULong)` surfaces
+            // as a packed `long` at the JNI boundary; the implicit
+            // `Color -> long` operator turns the C# struct into the
+            // bridge's actual `long` JNI slot.
+            ["ComposeNet.Color"] =
+                ('J', "(long)({0}.GetValueOrDefault())"),
         };
 
     /// <summary>

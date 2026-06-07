@@ -30,7 +30,7 @@ namespace ComposeNet.SourceGenerators;
 /// throwing null-check. Auto-mask emission against the bridge's
 /// <c>$default</c> enum.</item>
 /// <item>Phase 6 — <c>[ComposeFacade(DefaultColorFromTheme="...")]</c>
-/// adds a <c>long ContainerColor</c> property with a
+/// adds a <c>Color ContainerColor</c> property with a
 /// <c>MaterialTheme.colorScheme</c> fallback.</item>
 /// <item>Phase 7 — <c>[PainterResource]</c> on an <c>IntPtr</c> param
 /// (the painter handle the bridge forwards) emits a synthetic
@@ -941,8 +941,8 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         // Phase 6 — ContainerColor property + (no theme fallback here; happens in Render).
         if (themeColor is not null && colorSlot is not null)
         {
-            sb.AppendLine("        /// <summary>Optional packed Compose <c>Color</c> (long). Leave <c>0L</c> to inherit the active <c>MaterialTheme.colorScheme</c> fallback.</summary>");
-            sb.AppendLine("        public long ContainerColor { get; set; }");
+            sb.AppendLine("        /// <summary>Optional explicit <see cref=\"global::ComposeNet.Color\"/>. Leave at the default to inherit the active <c>MaterialTheme.colorScheme</c> fallback.</summary>");
+            sb.AppendLine("        public global::ComposeNet.Color ContainerColor { get; set; }");
         }
 
         // Phase 3 — named properties.
@@ -1167,7 +1167,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         // Phase 6 — theme color resolution.
         if (themeColor is not null && colorSlot is not null)
         {
-            sb.Append("            long __color = ContainerColor != 0L ? ContainerColor : global::AndroidX.Compose.Material3.MaterialTheme.Instance.GetColorScheme(")
+            sb.Append("            long __color = (long)ContainerColor != 0L ? (long)ContainerColor : global::AndroidX.Compose.Material3.MaterialTheme.Instance.GetColorScheme(")
               .Append(composerName).Append(", 0).").Append(Pascal(themeColor)).AppendLine(";");
         }
 

@@ -11,16 +11,16 @@ public class MainActivity : ComposeActivity
     // Pastel M3-feeling palette used by the Carousels tab so the
     // item slots are visually distinct (default Card on a near-white
     // surface gives empty gray boxes).
-    static readonly long[] CarouselPalette =
+    static readonly Color[] CarouselPalette =
     {
-        ColorKt.Color(red: 0xD0, green: 0xBC, blue: 0xFF, alpha: 0xFF),
-        ColorKt.Color(red: 0xB3, green: 0xE5, blue: 0xFC, alpha: 0xFF),
-        ColorKt.Color(red: 0xC8, green: 0xE6, blue: 0xC9, alpha: 0xFF),
-        ColorKt.Color(red: 0xFF, green: 0xE0, blue: 0xB2, alpha: 0xFF),
-        ColorKt.Color(red: 0xEF, green: 0xB8, blue: 0xC8, alpha: 0xFF),
-        ColorKt.Color(red: 0xFF, green: 0xCD, blue: 0xD2, alpha: 0xFF),
-        ColorKt.Color(red: 0xCC, green: 0xC2, blue: 0xDC, alpha: 0xFF),
-        ColorKt.Color(red: 0xD7, green: 0xCC, blue: 0xC8, alpha: 0xFF),
+        Color.FromRgb(0xD0, 0xBC, 0xFF),
+        Color.FromRgb(0xB3, 0xE5, 0xFC),
+        Color.FromRgb(0xC8, 0xE6, 0xC9),
+        Color.FromRgb(0xFF, 0xE0, 0xB2),
+        Color.FromRgb(0xEF, 0xB8, 0xC8),
+        Color.FromRgb(0xFF, 0xCD, 0xD2),
+        Color.FromRgb(0xCC, 0xC2, 0xDC),
+        Color.FromRgb(0xD7, 0xCC, 0xC8),
     };
 
     protected override void OnCreate(Bundle? savedInstanceState)
@@ -281,7 +281,7 @@ public class MainActivity : ComposeActivity
                             },
                             new Text("Italic serif red, centered")
                             {
-                                Color = ColorKt.Color(red: 0xC6, green: 0x28, blue: 0x28, alpha: 0xFF),
+                                Color = Color.FromRgb(0xC6, 0x28, 0x28),
                                 FontStyle = ComposeNet.FontStyle.Italic,
                                 FontFamily = ComposeNet.FontFamily.Serif,
                                 Align = ComposeNet.TextAlign.Center,
@@ -330,8 +330,8 @@ public class MainActivity : ComposeActivity
                             {
                                 Modifier = Modifier.Companion
                                     .Clip(12)
-                                    .Background(ColorKt.Color(red: 0x19, green: 0x76, blue: 0xD2, alpha: 0xFF))
-                                    .Border(2, ColorKt.Color(red: 0x0D, green: 0x47, blue: 0xA1, alpha: 0xFF), cornerRadius: 12)
+                                    .Background(Color.FromRgb(0x19, 0x76, 0xD2))
+                                    .Border(2, Color.FromRgb(0x0D, 0x47, 0xA1), cornerRadius: 12)
                                     .Clickable(() => count++)
                                     .Padding(horizontal: 16, vertical: 8),
                             },
@@ -426,12 +426,12 @@ public class MainActivity : ComposeActivity
                                 Modifier.Companion
                                     .FillMaxWidth()
                                     .Height(72)
-                                    .Border(1, ColorKt.Color(red: 0x90, green: 0x90, blue: 0x90, alpha: 0xFF)),
+                                    .Border(1, Color.FromRgb(0x90, 0x90, 0x90)),
                                 new Box
                                 {
                                     Modifier.Companion
                                         .MatchParentSize()
-                                        .Background(ColorKt.Color(red: 0xFF, green: 0xF0, blue: 0xE0, alpha: 0xFF))
+                                        .Background(Color.FromRgb(0xFF, 0xF0, 0xE0))
                                         .Semantics("Background overlay that fills the box"),
                                 },
                                 new Text("TopStart")    { Modifier = Modifier.Companion.Align(Alignment.TopStart) },
@@ -461,7 +461,7 @@ public class MainActivity : ComposeActivity
                                         fs.IsFocused ? "focused" : (fs.HasFocus ? "child has focus" : "not focused"))
                                     .Focusable()
                                     .Padding(8)
-                                    .Border(1, ColorKt.Color(red: 0x55, green: 0x55, blue: 0xAA, alpha: 0xFF))
+                                    .Border(1, Color.FromRgb(0x55, 0x55, 0xAA))
                                     .Padding(4),
                             },
                             new Button(onClick: () => focusReq63.RequestFocus()) { new Text("Request focus") },
@@ -549,13 +549,13 @@ public class MainActivity : ComposeActivity
                             new Box
                             {
                                 Modifier.Companion.FillMaxWidth().Height(72).Padding(4)
-                                    .Border(1, ColorKt.Color(red: 0xB0, green: 0xB0, blue: 0xB0, alpha: 0xFF)),
+                                    .Border(1, Color.FromRgb(0xB0, 0xB0, 0xB0)),
                                 new Box
                                 {
                                     Modifier.Companion
                                         .Offset(x: dragX63.Value)
                                         .Size(56)
-                                        .Background(ColorKt.Color(red: 0xCE, green: 0x93, blue: 0xD8, alpha: 0xFF))
+                                        .Background(Color.FromRgb(0xCE, 0x93, 0xD8))
                                         .Draggable(dragState63, Orientation.Horizontal),
                                 },
                             },
@@ -699,7 +699,7 @@ public class MainActivity : ComposeActivity
                         {
                             Modifier.Companion
                                 .Size(56)
-                                .Background(ColorKt.Color(red: 0xD0, green: 0xBC, blue: 0xFF, alpha: 0xFF), Shape.Circle()),
+                                .Background(Color.FromRgb(0xD0, 0xBC, 0xFF), Shape.Circle()),
                             new Text("●") { Modifier = Modifier.Companion.Padding(16) },
                         },
                         new Spacer { Modifier = Modifier.Companion.WidthIn(8, null) },
@@ -707,7 +707,7 @@ public class MainActivity : ComposeActivity
                         {
                             Modifier.Companion
                                 .Size(56)
-                                .Background(ColorKt.Color(red: 0xB3, green: 0xE5, blue: 0xFC, alpha: 0xFF), Shape.RoundedPercent(25)),
+                                .Background(Color.FromRgb(0xB3, 0xE5, 0xFC), Shape.RoundedPercent(25)),
                             new Text("◼") { Modifier = Modifier.Companion.Padding(16) },
                         },
                         new Spacer { Modifier = Modifier.Companion.WidthIn(8, null) },
@@ -715,7 +715,7 @@ public class MainActivity : ComposeActivity
                         {
                             Modifier.Companion
                                 .Size(56)
-                                .Background(ColorKt.Color(red: 0xC8, green: 0xE6, blue: 0xC9, alpha: 0xFF), Shape.CutCorners(10)),
+                                .Background(Color.FromRgb(0xC8, 0xE6, 0xC9), Shape.CutCorners(10)),
                             new Text("◆") { Modifier = Modifier.Companion.Padding(16) },
                         },
                     },
@@ -726,8 +726,8 @@ public class MainActivity : ComposeActivity
                         Modifier.Companion
                             .Padding(8)
                             .Shadow(8, Shape.RoundedCorners(16))
-                            .Background(ColorKt.Color(red: 0xFF, green: 0xE0, blue: 0xB2, alpha: 0xFF), Shape.RoundedCorners(16))
-                            .Border(2, ColorKt.Color(red: 0xEF, green: 0x6C, blue: 0x00, alpha: 0xFF), Shape.RoundedCorners(16))
+                            .Background(Color.FromRgb(0xFF, 0xE0, 0xB2), Shape.RoundedCorners(16))
+                            .Border(2, Color.FromRgb(0xEF, 0x6C, 0x00), Shape.RoundedCorners(16))
                             .Padding(16),
                         new Text("Shadow + Border + Background, all on a shared Shape"),
                     },
@@ -741,7 +741,7 @@ public class MainActivity : ComposeActivity
                             .FillMaxWidth()
                             .Height(80)
                             .AspectRatio(16f / 9f, matchHeightConstraintsFirst: true)
-                            .Background(ColorKt.Color(red: 0xCC, green: 0xC2, blue: 0xDC, alpha: 0xFF)),
+                            .Background(Color.FromRgb(0xCC, 0xC2, 0xDC)),
                         new Text("16:9 (height-first)") { Modifier = Modifier.Companion.Padding(8) },
                     },
 
@@ -755,7 +755,7 @@ public class MainActivity : ComposeActivity
                                 .TestTag("rotate-tile")
                                 .Size(48)
                                 .Rotate(15f)
-                                .Background(ColorKt.Color(red: 0xEF, green: 0xB8, blue: 0xC8, alpha: 0xFF)),
+                                .Background(Color.FromRgb(0xEF, 0xB8, 0xC8)),
                             new Text("⟲") { Modifier = Modifier.Companion.Padding(12) },
                         },
                         new Spacer { Modifier = Modifier.Companion.WidthIn(8, null) },
@@ -765,7 +765,7 @@ public class MainActivity : ComposeActivity
                                 .TestTag("scale-tile")
                                 .Size(48)
                                 .Scale(0.85f, 1.15f)
-                                .Background(ColorKt.Color(red: 0xFF, green: 0xCD, blue: 0xD2, alpha: 0xFF)),
+                                .Background(Color.FromRgb(0xFF, 0xCD, 0xD2)),
                             new Text("↕") { Modifier = Modifier.Companion.Padding(12) },
                         },
                         new Spacer { Modifier = Modifier.Companion.WidthIn(8, null) },
@@ -775,7 +775,7 @@ public class MainActivity : ComposeActivity
                                 .TestTag("alpha-tile")
                                 .Size(48)
                                 .Alpha(0.4f)
-                                .Background(ColorKt.Color(red: 0xD7, green: 0xCC, blue: 0xC8, alpha: 0xFF)),
+                                .Background(Color.FromRgb(0xD7, 0xCC, 0xC8)),
                             new Text("◐") { Modifier = Modifier.Companion.Padding(12) },
                         },
                     },

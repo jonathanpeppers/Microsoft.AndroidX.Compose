@@ -97,6 +97,12 @@ public class FacadeGeneratorTests
                 public float Value { get; }
                 public static float Pack(Dp? d) => d?.Value ?? 0f;
             }
+            public readonly struct Color
+            {
+                public Color(long v) { PackedValue = (ulong)v; }
+                public ulong PackedValue { get; }
+                public static implicit operator long(Color c) => (long)c.PackedValue;
+            }
             public readonly struct Sp
             {
                 public Sp(float v) { Value = v; }
@@ -1010,8 +1016,8 @@ public class FacadeGeneratorTests
         var (output, diags, emitted) = Run(code, "ModalDrawerSheet");
         Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
         Assert.NotNull(emitted);
-        Assert.Contains("public long ContainerColor { get; set; }", emitted);
-        Assert.Contains("long __color = ContainerColor != 0L ? ContainerColor : global::AndroidX.Compose.Material3.MaterialTheme.Instance.GetColorScheme(composer, 0).SecondaryContainer;", emitted);
+        Assert.Contains("public global::ComposeNet.Color ContainerColor { get; set; }", emitted);
+        Assert.Contains("long __color = (long)ContainerColor != 0L ? (long)ContainerColor : global::AndroidX.Compose.Material3.MaterialTheme.Instance.GetColorScheme(composer, 0).SecondaryContainer;", emitted);
         Assert.Contains("global::ComposeNet.ComposeBridges.ModalDrawerSheet(__content, __color, composer);", emitted);
 
         var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
