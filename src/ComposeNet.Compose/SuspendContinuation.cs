@@ -48,7 +48,7 @@ internal sealed class SuspendContinuation : Java.Lang.Object, IContinuation
 {
     GCHandle _selfPin;
     CancellationTokenRegistration _ctr;
-    int _disposed;
+    bool _disposed;
 
     /// <summary>
     /// Backing TCS exposed for <see cref="SuspendBridge"/>.
@@ -196,7 +196,7 @@ internal sealed class SuspendContinuation : Java.Lang.Object, IContinuation
     /// </remarks>
     protected override void Dispose(bool disposing)
     {
-        if (Interlocked.Exchange(ref _disposed, 1) == 0)
+        if (!Interlocked.Exchange(ref _disposed, true))
         {
             if (disposing)
                 _ctr.Dispose();
