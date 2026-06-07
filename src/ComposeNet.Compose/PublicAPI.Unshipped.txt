@@ -573,7 +573,7 @@ ComposeNet.PagerState
 ComposeNet.PagerState.CurrentPage.get -> int
 ComposeNet.PagerState.CurrentPageOffsetFraction.get -> float
 ComposeNet.PagerState.PageCount.get -> int
-ComposeNet.PagerState.PagerState() -> void
+ComposeNet.PagerState.PagerState(System.Func<int>! pageCount, int initialPage = 0, float initialPageOffsetFraction = 0) -> void
 ComposeNet.PagerState.SettledPage.get -> int
 ComposeNet.PagerState.TargetPage.get -> int
 ComposeNet.PermanentDrawerSheet

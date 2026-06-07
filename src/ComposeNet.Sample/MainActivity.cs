@@ -98,8 +98,11 @@ public class MainActivity : ComposeActivity
             var searchQuery   = Remember(() => new MutableState<string>(""));
 
             // Pager tab: PagerState exposes CurrentPage to a reactive
-            // indicator rendered after the pager.
-            var pagerState    = Remember(() => new PagerState());
+            // indicator rendered after the pager. The same items array
+            // is closed over by both the state's pageCount lambda and
+            // the pager facade so the two stay in sync.
+            var pagerItems = new[] { 0, 1, 2 };
+            var pagerState = Remember(() => new PagerState(pageCount: () => pagerItems.Length));
 
             // Lazy tab: pull-to-refresh demo state. `refreshing` drives the
             // PullToRefreshBox indicator; `refreshTick` bumps once per
@@ -883,7 +886,7 @@ public class MainActivity : ComposeActivity
                     // gets its own pastel slot so swipes feel obvious.
                     new Text("HorizontalPager (swipe between 3 screens)"),
                     new HorizontalPager<int>(
-                        items:       new[] { 0, 1, 2 },
+                        items:       pagerItems,
                         itemContent: i => new Box
                         {
                             Modifier.Companion
@@ -899,7 +902,7 @@ public class MainActivity : ComposeActivity
                         State    = pagerState,
                         Modifier = Modifier.Companion.FillMaxWidth().Height(200),
                     },
-                    new Text($"Page {pagerState.CurrentPage + 1} of 3"),
+                    new Text($"Page {pagerState.CurrentPage + 1} of {pagerState.PageCount}"),
                     new HorizontalDivider { Modifier = Modifier.Companion.Padding(0, 8) },
 
                     // FlowRow — chip-style group that wraps when it
@@ -1319,6 +1322,11 @@ public class MainActivity : ComposeActivity
                                     Icon = new Text("🎠"),
                                 },
                                 new Tab(selected: tab.Value == 10, onClick: () => tab.Value = 10)
+                                {
+                                    Text = new Text("Pager"),
+                                    Icon = new Text("📑"),
+                                },
+                                new Tab(selected: tab.Value == 11, onClick: () => tab.Value = 11)
                                 {
                                     Text = new Text("Nav"),
                                     Icon = new Text("🧭"),

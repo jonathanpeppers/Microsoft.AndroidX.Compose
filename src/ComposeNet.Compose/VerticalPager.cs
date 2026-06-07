@@ -45,18 +45,23 @@ public sealed class VerticalPager<T> : ComposableNode
 
     internal override void Render(IComposer composer)
     {
-        _pageCountFn ??= new ComposableLambda0Int(() => _items.Count);
-
-        var rememberedState = PagerStateKt.RememberPagerState(
-            p0:                        0,
-            initialPageOffsetFraction: 0f,
-            pageCount:                 _pageCountFn,
-            _composer:                 composer,
-            initialPage:               0,
-            _changed:                  0);
-
-        if (State is not null) State.Jvm = rememberedState;
-        var jvmState = State?.Jvm ?? rememberedState;
+        // See HorizontalPager.Render — same eager-vs-remember path.
+        AndroidX.Compose.Foundation.Pager.PagerState jvmState;
+        if (State is not null)
+        {
+            jvmState = State.Jvm;
+        }
+        else
+        {
+            _pageCountFn ??= new ComposableLambda0Int(() => _items.Count);
+            jvmState = PagerStateKt.RememberPagerState(
+                p0:                        0,
+                initialPageOffsetFraction: 0f,
+                pageCount:                 _pageCountFn,
+                _composer:                 composer,
+                initialPage:               0,
+                _changed:                  0);
+        }
 
         var modifier = BuildModifier();
         var content  = ComposableLambdas.Wrap4(composer, (_, indexBoxed, comp) =>
