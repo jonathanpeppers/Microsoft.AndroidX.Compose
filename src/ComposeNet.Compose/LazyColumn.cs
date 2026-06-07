@@ -45,6 +45,23 @@ public sealed class LazyColumn<T> : ComposableNode
     /// </summary>
     public LazyListState? State { get; set; }
 
+    /// <summary>
+    /// When <see langword="true"/>, items are stacked from the bottom up
+    /// — the first item rendered sits at the bottom of the viewport and
+    /// scroll offset 0 corresponds to the end of the list. Mirrors
+    /// Kotlin's <c>reverseLayout</c> parameter. Defaults to
+    /// <see langword="false"/> (normal top-down layout).
+    /// </summary>
+    /// <remarks>
+    /// Reverse layout is the canonical pattern for chat / message
+    /// timelines where newly appended items should appear at the bottom
+    /// and the scroll position should pin to the latest message. Pair
+    /// with <c>items.Reverse()</c> at the data layer if your underlying
+    /// collection is in chronological order — Compose lays items out
+    /// bottom-first when this flag is set.
+    /// </remarks>
+    public bool ReverseLayout { get; set; }
+
     public override void Render(IComposer composer)
     {
         var modifier = BuildModifier();
@@ -72,12 +89,17 @@ public sealed class LazyColumn<T> : ComposableNode
         int defaults = (int)LazyColumnDefault.All;
         if (modifier is not null) defaults &= ~(int)LazyColumnDefault.Modifier;
         if (State    is not null) defaults &= ~(int)LazyColumnDefault.State;
+        // Bool params lower to a single $default bit. Kotlin's default
+        // is false, so only clear the bit when the caller asked for
+        // true — otherwise let Kotlin substitute its own false and
+        // save the explicit-pass round trip.
+        if (ReverseLayout)        defaults &= ~(int)LazyColumnDefault.ReverseLayout;
 
         LazyDslKt.LazyColumn(
             modifier:            modifier,
             state:               State,
             contentPadding:      null,
-            reverseLayout:       false,
+            reverseLayout:       ReverseLayout,
             verticalArrangement: null,
             horizontalAlignment: null,
             flingBehavior:       null,

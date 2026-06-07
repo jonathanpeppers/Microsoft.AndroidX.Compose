@@ -1,317 +1,581 @@
+using System;
 using System.Collections.Generic;
+using AndroidX.Compose.Material3;
 using ComposeNet;
 
 namespace ComposeNet.Samples.Jetchat;
 
 /// <summary>
-/// Builds the Jetchat conversation tree. A simplified port of upstream's
-/// <c>ConversationContent</c> + <c>JetchatDrawerContent</c>. See the
-/// sample's <c>README.md</c> ("Implementation notes") for the deviations
-/// from the original Kotlin sample.
+/// Builds the Jetchat conversation tree. C# port of upstream's
+/// <c>ConversationContent</c> + <c>UserInput</c> +
+/// <c>JetchatDrawerContent</c>. See <c>README.md</c> for the remaining
+/// gaps vs the Kotlin original (jump-to-bottom, message formatter,
+/// voice record, profile screen, real emoji table).
 /// </summary>
 public static class Conversation
 {
+    /// <summary>Author tag the local user sends with — matches upstream's <c>R.string.author_me</c>.</summary>
     public const string MyName = "me";
 
-    static readonly Color MeBubbleColor       = Color.FromRgb(0xD0, 0xE4, 0xFF);
-    static readonly Color OtherBubbleColor    = Color.FromRgb(0xED, 0xED, 0xED);
-    static readonly Color DrawerSelectedColor = Color.FromRgb(0xD0, 0xE4, 0xFF);
-    static readonly Color BubbleTextColor     = Color.FromRgb(0x1F, 0x1F, 0x1F);
+    // Profile id used for the local-user drawer row. Mirrors upstream's
+    // meProfile.userId. The drawer's highlighted-selection state cycles
+    // between this, ColleagueProfileId, and the two channel names.
+    const string MeProfileId        = "me";
+    const string ColleagueProfileId = "12345";
+
+    // Input selector indices — toggles the expanded panel below the
+    // text field. 0 = none (panel hidden).
+    const int SelEmoji   = 1;
+    const int SelDm      = 2;
+    const int SelPicture = 3;
+    const int SelMap     = 4;
+    const int SelPhone   = 5;
 
     /// <summary>Materialize the conversation tree for one composition pass.</summary>
-    public static ComposableNode Build(ConversationUiState ui, MutableState<string> input, ScrollState drawerScroll) =>
+    public static ComposableNode Build(
+        ConversationUiState  ui,
+        MutableState<string> input,
+        MutableState<string> selectedMenu,
+        ScrollState          drawerScroll,
+        DrawerStateHolder    drawerState,
+        MutableState<int>    selectedSelector,
+        MutableState<bool>   popupOpen) =>
         new MaterialTheme
         {
-            new ModalNavigationDrawer
+            new Composed(c =>
             {
-                Drawer  = BuildDrawer(ui, drawerScroll),
-                Content = new Scaffold
+                var scheme = MaterialTheme.CurrentColorScheme(c);
+                var root   = new Column
                 {
-                    TopBar = BuildTopBar(ui),
-                    Body   = BuildBody(ui, input),
-                },
-            },
+                    Modifier.Companion.FillMaxSize(),
+                    new ModalNavigationDrawer(drawerState)
+                    {
+                        Drawer  = BuildDrawer(ui, selectedMenu, drawerState, drawerScroll, scheme),
+                        Content = new Scaffold
+                        {
+                            TopBar = BuildTopBar(ui, scheme, drawerState, popupOpen),
+                            Body   = BuildBody(ui, input, scheme, selectedSelector),
+                        },
+                    },
+                };
+                if (popupOpen.Value)
+                    root.Add(BuildFunctionalityPopup(popupOpen));
+                return root;
+            }),
         };
 
-    static CenterAlignedTopAppBar BuildTopBar(ConversationUiState ui) =>
+    static CenterAlignedTopAppBar BuildTopBar(
+        ConversationUiState ui,
+        ColorScheme         scheme,
+        DrawerStateHolder   drawerState,
+        MutableState<bool>  popupOpen) =>
         new()
         {
+            NavigationIcon = new IconButton(onClick: () => _ = drawerState.OpenAsync())
+            {
+                new Icon(Resource.Drawable.ic_jetchat, "Open navigation drawer")
+                {
+                    Modifier = Modifier.Companion.Size(24),
+                    TintArgb = scheme.Primary,
+                },
+            },
             Title = new Column
             {
-                new Text($"#{ui.CurrentChannel}")
+                new Text(ui.ChannelName)
                 {
                     FontSize   = 16,
                     FontWeight = FontWeight.Medium,
+                    Color      = new Color(scheme.OnSurface),
                 },
                 new Text($"{ui.ChannelMembers} members")
                 {
-                    FontSize   = 12,
-                    FontWeight = FontWeight.Normal,
-                    Modifier   = Modifier.Companion.Padding(top: 2, bottom: 0, start: 0, end: 0),
+                    FontSize = 12,
+                    Color    = new Color(scheme.OnSurfaceVariant),
+                    Modifier = Modifier.Companion.Padding(top: 2, bottom: 0, start: 0, end: 0),
                 },
             },
+            // Upstream renders Search / Info as plain `Icon` composables
+            // with a `.clickable` modifier (not IconButtons), tinted
+            // onSurfaceVariant, with horizontal=12dp vertical=16dp padding
+            // and a fixed 24dp height.
             Actions = new Row
             {
-                new IconButton(onClick: NoOp)
+                new Icon(Resource.Drawable.ic_search, "Search")
                 {
-                    new Icon(Resource.Drawable.ic_search, "Search"),
+                    Modifier = Modifier.Companion
+                        .Clickable(() => popupOpen.Value = true)
+                        .Padding(horizontal: 12, vertical: 16)
+                        .Height(24),
+                    TintArgb = scheme.OnSurfaceVariant,
                 },
-                new IconButton(onClick: NoOp)
+                new Icon(Resource.Drawable.ic_info, "Information")
                 {
-                    new Icon(Resource.Drawable.ic_info, "Info"),
+                    Modifier = Modifier.Companion
+                        .Clickable(() => popupOpen.Value = true)
+                        .Padding(horizontal: 12, vertical: 16)
+                        .Height(24),
+                    TintArgb = scheme.OnSurfaceVariant,
                 },
             },
         };
 
-    static Column BuildBody(ConversationUiState ui, MutableState<string> input) =>
+    static AlertDialog BuildFunctionalityPopup(MutableState<bool> popupOpen) =>
+        new(onDismissRequest: () => popupOpen.Value = false)
+        {
+            Text          = new Text("Functionality not available \U0001F648"),
+            ConfirmButton = new TextButton(onClick: () => popupOpen.Value = false)
+            {
+                new Text("CLOSE"),
+            },
+        };
+
+    static Column BuildBody(
+        ConversationUiState  ui,
+        MutableState<string> input,
+        ColorScheme          scheme,
+        MutableState<int>    selectedSelector) =>
         new()
         {
             Modifier.Companion.FillMaxSize(),
-            BuildMessages(ui),
-            BuildInputRow(ui, input),
+            BuildMessages(ui, scheme),
+            BuildInputArea(ui, input, scheme, selectedSelector),
         };
 
-    static ComposableNode BuildMessages(ConversationUiState ui)
+    // Flat row stream for the LazyColumn: either a single message
+    // (with its computed first/last-by-author flags) or a hardcoded
+    // day-separator header. Matches upstream's `for index in
+    // messages.indices { if … item { DayHeader … }; item { Message … } }`
+    // shape — we just precompute the same item stream into a list so
+    // the LazyColumn<T> facade can render it.
+    abstract record ChatRow;
+    sealed record MessageRow(Message Msg, bool IsFirstByAuthor, bool IsLastByAuthor) : ChatRow;
+    sealed record HeaderRow(string Label) : ChatRow;
+
+    static ComposableNode BuildMessages(ConversationUiState ui, ColorScheme scheme)
     {
-        // Pre-compute streak flags so each LazyColumn item callback only
-        // needs the message + isStreak, not the previous neighbor.
-        var rows       = new List<(Message Message, bool IsStreak)>(ui.Messages.Count);
-        string? lastAuthor = null;
-        foreach (var m in ui.Messages)
+        var msgs = ui.Messages;
+        var rows = new List<ChatRow>(msgs.Count + 2);
+        for (int i = 0; i < msgs.Count; i++)
         {
-            rows.Add((m, m.Author == lastAuthor));
-            lastAuthor = m.Author;
+            // Hardcoded day dividers — same placement as upstream.
+            if (i == msgs.Count - 1)
+                rows.Add(new HeaderRow("20 Aug"));
+            else if (i == 2)
+                rows.Add(new HeaderRow("Today"));
+
+            var m          = msgs[i];
+            var prevAuthor = i - 1 >= 0         ? msgs[i - 1].Author : null;
+            var nextAuthor = i + 1 < msgs.Count ? msgs[i + 1].Author : null;
+            // In the upstream array, index 0 is newest. "First" by
+            // author means the previous (newer) message is by someone
+            // else — i.e. this row is the chronologically-oldest
+            // bubble in its streak. "Last" means the next (older)
+            // message is by someone else — i.e. this row is the
+            // chronologically-newest bubble in its streak, the one
+            // that carries the avatar.
+            bool isFirst = prevAuthor != m.Author;
+            bool isLast  = nextAuthor != m.Author;
+            rows.Add(new MessageRow(m, isFirst, isLast));
         }
 
-        return new Column
-        {
-            Modifier.Companion.FillMaxWidth().Weight(1f, fill: true),
-            BuildDaySeparator("Today"),
-            new LazyColumn<(Message Message, bool IsStreak)>(
-                items:       rows,
-                itemContent: row => BuildMessageRow(row.Message, row.IsStreak))
+        return new LazyColumn<ChatRow>(
+            items:       rows,
+            itemContent: row => row switch
             {
-                Modifier = Modifier.Companion.FillMaxWidth().Weight(1f, fill: true).Padding(horizontal: 8, vertical: 0),
-            },
+                MessageRow mr => BuildMessageRow(mr.Msg, mr.IsFirstByAuthor, mr.IsLastByAuthor, scheme),
+                HeaderRow  hr => BuildDayHeader(hr.Label, scheme),
+                _             => new Spacer(Modifier.Companion.Width(0)),
+            })
+        {
+            Modifier      = Modifier.Companion.FillMaxWidth().Weight(1f, fill: true),
+            ReverseLayout = true,
         };
     }
 
-    static Row BuildDaySeparator(string label) =>
+    static Row BuildDayHeader(string label, ColorScheme scheme) =>
         new()
         {
-            Modifier.Companion.FillMaxWidth().Padding(horizontal: 8, vertical: 12),
-            new HorizontalDivider { Modifier = Modifier.Companion.Weight(1f) },
+            Modifier.Companion.Padding(horizontal: 16, vertical: 8).Height(16),
+            new HorizontalDivider
+            {
+                Modifier  = Modifier.Companion.Weight(1f),
+                ColorArgb = scheme.OnSurface,
+            },
             new Text(label)
             {
-                FontSize      = 11,
-                FontWeight    = FontWeight.Medium,
-                LetterSpacing = 1,
-                Modifier      = Modifier.Companion.Padding(horizontal: 12, vertical: 0),
+                FontSize   = 11,
+                FontWeight = FontWeight.Medium,
+                Color      = new Color(scheme.OnSurfaceVariant),
+                Modifier   = Modifier.Companion.Padding(horizontal: 16, vertical: 0),
             },
-            new HorizontalDivider { Modifier = Modifier.Companion.Weight(1f) },
-        };
-
-    static Row BuildMessageRow(Message m, bool isStreak)
-    {
-        bool isMe = m.Author == MyName;
-        return isMe
-            ? BuildMyMessageRow(m, isStreak)
-            : BuildOtherMessageRow(m, isStreak);
-    }
-
-    static Row BuildMyMessageRow(Message m, bool isStreak) =>
-        new(Arrangement.End)
-        {
-            Modifier.Companion.FillMaxWidth().Padding(start: 8, end: 8, top: isStreak ? 4 : 8, bottom: 0),
-            new Column
+            new HorizontalDivider
             {
-                BuildAuthorAndTimestamp(m, alignEnd: true),
-                new Text(m.Content)
-                {
-                    Color = BubbleTextColor,
-                    Modifier = Modifier.Companion
-                        .Padding(top: 4, bottom: 0, start: 0, end: 0)
-                        .Clip(12)
-                        .Background(MeBubbleColor)
-                        .Padding(horizontal: 12, vertical: 8),
-                },
+                Modifier  = Modifier.Companion.Weight(1f),
+                ColorArgb = scheme.OnSurface,
             },
         };
 
-    static Row BuildOtherMessageRow(Message m, bool isStreak)
+    static Row BuildMessageRow(Message m, bool isFirstByAuthor, bool isLastByAuthor, ColorScheme scheme)
     {
+        // Upstream layout: every row uses the same Row(Avatar+Spacer + AuthorAndTextMessage)
+        // shape, regardless of whether the author is the local user.
+        // The bubble color flips (primary vs surfaceVariant) but the
+        // structure does NOT right-align "me" messages.
         var row = new Row
         {
-            Modifier.Companion.FillMaxWidth().Padding(start: 8, end: 8, top: isStreak ? 4 : 8, bottom: 0),
+            Modifier.Companion.Padding(top: isLastByAuthor ? 8 : 0, bottom: 0, start: 0, end: 0),
         };
-        if (isStreak)
-        {
-            row.Add(new Spacer(Modifier.Companion.Width(72)));
-        }
+
+        if (isLastByAuthor)
+            row.Add(BuildAvatar(m, scheme));
         else
-        {
-            row.Add(new Image(m.AuthorAvatarRes, "Profile photo")
-            {
-                Modifier = Modifier.Companion.Padding(horizontal: 16, vertical: 0).Size(40).Clip(20),
-            });
-        }
-        var contentCol = new Column();
-        if (!isStreak)
-            contentCol.Add(BuildAuthorAndTimestamp(m, alignEnd: false));
-        contentCol.Add(new Text(m.Content)
-        {
-            Color = BubbleTextColor,
-            Modifier = Modifier.Companion
-                .Padding(top: 4, bottom: 0, start: 0, end: 16)
-                .Clip(12)
-                .Background(OtherBubbleColor)
-                .Padding(horizontal: 12, vertical: 8),
-        });
-        row.Add(contentCol);
+            row.Add(new Spacer(Modifier.Companion.Width(74)));
+
+        row.Add(BuildAuthorAndTextMessage(m, isFirstByAuthor, isLastByAuthor, scheme));
         return row;
     }
 
-    static Row BuildAuthorAndTimestamp(Message m, bool alignEnd)
+    static Image BuildAvatar(Message m, ColorScheme scheme)
     {
-        // alignEnd rows size to content so the outer Arrangement.End
-        // Row can push the whole "me" stack to the right edge.
-        var row = alignEnd
-            ? new Row()
-            : new Row { Modifier.Companion.FillMaxWidth() };
-        row.Add(new Text(m.Author)
+        // 42dp avatar with two stacked borders: a 1.5dp accent ring
+        // (primary for me, tertiary for others) plus a 3dp surface
+        // ring outside it, then clipped to a circle. Upstream pulls
+        // this off with `.border(1.5.dp, accent, CircleShape).border(3.dp,
+        // surface, CircleShape).clip(CircleShape)` — modifiers compose
+        // outside-in, so the 3dp ring sits between the 1.5dp ring and
+        // any surrounding background.
+        bool isMe = m.Author == MyName;
+        long accent = isMe ? scheme.Primary : scheme.Tertiary;
+        return new Image(m.AuthorImage, "Profile photo")
         {
-            FontSize   = 16,
-            FontWeight = FontWeight.Medium,
-        });
-        row.Add(new Spacer(Modifier.Companion.Width(8)));
-        row.Add(new Text(m.Timestamp)
-        {
-            FontSize   = 12,
-            FontWeight = FontWeight.Normal,
-        });
-        return row;
+            Modifier = Modifier.Companion
+                .Padding(horizontal: 16, vertical: 0)
+                .Size(42)
+                .Border(1.5f, new Color(accent),         Shape.Circle())
+                .Border(3,    new Color(scheme.Surface), Shape.Circle())
+                .Clip(21),
+        };
     }
 
-    static Row BuildInputRow(ConversationUiState ui, MutableState<string> input) =>
+    static Column BuildAuthorAndTextMessage(Message m, bool isFirstByAuthor, bool isLastByAuthor, ColorScheme scheme)
+    {
+        var col = new Column
+        {
+            Modifier.Companion.Padding(top: 0, bottom: 0, start: 0, end: 16).Weight(1f, fill: true),
+        };
+        if (isLastByAuthor)
+            col.Add(BuildAuthorNameTimestamp(m, scheme));
+        col.Add(BuildChatItemBubble(m, scheme));
+        // Inside-streak gap is 4dp; between-author gap is 8dp.
+        col.Add(new Spacer(Modifier.Companion.Height(isFirstByAuthor ? 8 : 4)));
+        return col;
+    }
+
+    static Row BuildAuthorNameTimestamp(Message m, ColorScheme scheme) =>
         new()
         {
-            Modifier.Companion.FillMaxWidth().Padding(8),
+            new Text(m.Author)
+            {
+                FontSize   = 16,
+                FontWeight = FontWeight.Medium,
+                Color      = new Color(scheme.OnSurface),
+                Modifier   = Modifier.Companion.Padding(top: 0, bottom: 8, start: 0, end: 0),
+            },
+            new Spacer(Modifier.Companion.Width(8)),
+            new Text(m.Timestamp)
+            {
+                FontSize = 12,
+                Color    = new Color(scheme.OnSurfaceVariant),
+                Modifier = Modifier.Companion.Padding(top: 0, bottom: 8, start: 0, end: 0),
+            },
+        };
+
+    static ComposableNode BuildChatItemBubble(Message m, ColorScheme scheme)
+    {
+        bool isMe = m.Author == MyName;
+        long bg   = isMe ? scheme.Primary : scheme.SurfaceVariant;
+        long fg   = isMe ? scheme.OnPrimary : scheme.OnSurface;
+        // Same chat-bubble shape for both me and others — upstream's
+        // `ChatBubbleShape = RoundedCornerShape(4, 20, 20, 20)` is the
+        // single source of truth for the bubble silhouette.
+        return new Text(m.Content)
+        {
+            Color    = new Color(fg),
+            Modifier = Modifier.Companion
+                .Background(new Color(bg), Shape.RoundedCorners(4, 20, 20, 20))
+                .Padding(horizontal: 16, vertical: 16),
+        };
+    }
+
+    static Surface BuildInputArea(
+        ConversationUiState  ui,
+        MutableState<string> input,
+        ColorScheme          scheme,
+        MutableState<int>    selectedSelector) =>
+        new()
+        {
+            // Surface gives the input region its own tonal layer and
+            // soaks up the IME + nav-bar insets so the bar slides up
+            // with the soft keyboard.
+            Modifier.Companion.FillMaxWidth().NavigationBarsPadding().ImePadding(),
+            new Column
+            {
+                Modifier.Companion.FillMaxWidth(),
+                BuildTextFieldRow(ui, input),
+                BuildSelectorRow(ui, input, scheme, selectedSelector),
+                BuildSelectorPanel(scheme, selectedSelector),
+            },
+        };
+
+    static Row BuildTextFieldRow(ConversationUiState ui, MutableState<string> input) =>
+        new()
+        {
+            Modifier.Companion.FillMaxWidth().Padding(horizontal: 8, vertical: 4),
             new TextField(input)
             {
                 Modifier = Modifier.Companion.Weight(1f, fill: true),
             },
-            new IconButton(() => Send(ui, input))
-            {
-                Modifier.Companion.Padding(start: 8, top: 0, end: 0, bottom: 0),
-                new Text("➤"),
-            },
         };
 
-    static ModalDrawerSheet BuildDrawer(ConversationUiState ui, ScrollState scroll) =>
+    static Row BuildSelectorRow(
+        ConversationUiState  ui,
+        MutableState<string> input,
+        ColorScheme          scheme,
+        MutableState<int>    selectedSelector)
+    {
+        var row = new Row(Arrangement.SpaceBetween)
+        {
+            Modifier.Companion.FillMaxWidth().Padding(horizontal: 4, vertical: 4),
+            new Row
+            {
+                InputSelectorButton(Resource.Drawable.ic_mood,            "Show Emoji selector", SelEmoji,   selectedSelector, scheme),
+                InputSelectorButton(Resource.Drawable.ic_alternate_email, "Direct Message",      SelDm,      selectedSelector, scheme),
+                InputSelectorButton(Resource.Drawable.ic_insert_photo,    "Attach Photo",        SelPicture, selectedSelector, scheme),
+                InputSelectorButton(Resource.Drawable.ic_place,           "Location selector",   SelMap,     selectedSelector, scheme),
+                InputSelectorButton(Resource.Drawable.ic_duo,             "Start videochat",     SelPhone,   selectedSelector, scheme),
+            },
+        };
+        bool enabled = !string.IsNullOrWhiteSpace(input.Value);
+        row.Add(new TextButton(onClick: () => Send(ui, input, selectedSelector))
+        {
+            new Text("Send")
+            {
+                FontWeight = FontWeight.SemiBold,
+                Color      = enabled ? new Color(scheme.Primary) : new Color(scheme.OnSurfaceVariant),
+            },
+        });
+        return row;
+    }
+
+    static IconButton InputSelectorButton(
+        int               drawableId,
+        string            contentDescription,
+        int               selectorId,
+        MutableState<int> selectedSelector,
+        ColorScheme       scheme)
+    {
+        bool selected = selectedSelector.Value == selectorId;
+        // Upstream's selected style is a 14dp rounded-square background
+        // in `LocalContentColor.current` with the icon tinted to the
+        // contrasting color. The Surface above this row sets
+        // contentColor = scheme.secondary, so the highlight matches.
+        var button = new IconButton(onClick: () =>
+            selectedSelector.Value = selected ? 0 : selectorId)
+        {
+            new Icon(drawableId, contentDescription)
+            {
+                TintArgb = selected ? scheme.OnSecondary : scheme.OnSurface,
+            },
+        };
+        if (selected)
+            button.Modifier = Modifier.Companion.Background(new Color(scheme.Secondary), Shape.RoundedCorners(14, 14, 14, 14));
+        return button;
+    }
+
+    static ComposableNode BuildSelectorPanel(ColorScheme scheme, MutableState<int> selectedSelector)
+    {
+        int sel = selectedSelector.Value;
+        if (sel == 0) return new Spacer(Modifier.Companion.Width(0));
+        // Upstream's NotAvailablePopup (DM selector) actually opens
+        // the same AlertDialog the search/info icons do; the other
+        // three (picture/map/phone) open a panel titled
+        // "Functionality currently not available" with the subtitle
+        // "Grab a beverage and check back later!". This port collapses
+        // both into a single panel for now — close enough that the
+        // expanded-selector visual + back-affordance is exercised.
+        string title    = "Functionality currently not available";
+        string subtitle = "Grab a beverage and check back later!";
+        return new Column
+        {
+            Modifier.Companion.FillMaxWidth().Height(320).Background(new Color(scheme.SurfaceVariant)),
+            new Spacer(Modifier.Companion.Height(96)),
+            new Text(title)
+            {
+                FontSize   = 16,
+                FontWeight = FontWeight.Medium,
+                Color      = new Color(scheme.OnSurfaceVariant),
+                Modifier   = Modifier.Companion.Padding(horizontal: 16, vertical: 0),
+            },
+            new Spacer(Modifier.Companion.Height(8)),
+            new Text(subtitle)
+            {
+                FontSize = 14,
+                Color    = new Color(scheme.OnSurfaceVariant),
+                Modifier = Modifier.Companion.Padding(horizontal: 16, vertical: 0),
+            },
+        };
+    }
+
+    static ModalDrawerSheet BuildDrawer(
+        ConversationUiState  ui,
+        MutableState<string> selectedMenu,
+        DrawerStateHolder    drawerState,
+        ScrollState          scroll,
+        ColorScheme          scheme) =>
         new()
         {
             new Column
             {
                 Modifier.Companion.FillMaxWidth().VerticalScroll(scroll),
-                BuildDrawerHeader(),
-                new HorizontalDivider(),
-                BuildDrawerSectionHeader("Chats"),
-                BuildChatItem(ui, "composers"),
-                BuildChatItem(ui, "droidcon-nyc"),
-                new HorizontalDivider
-                {
-                    Modifier = Modifier.Companion.Padding(horizontal: 28, vertical: 0),
-                },
-                BuildDrawerSectionHeader("Recent Profiles"),
-                BuildProfileItem("Ali Conors (you)", Resource.Drawable.avatar_ali),
-                BuildProfileItem("Taylor Brooks",     Resource.Drawable.avatar_taylor),
+                // Push everything below the status bar so the system
+                // chrome doesn't overlap the drawer logo.
+                new Spacer(Modifier.Companion.StatusBarsPadding()),
+                BuildDrawerHeader(scheme),
+                BuildDividerItem(scheme, sidePadding: 0),
+                BuildDrawerSectionHeader("Chats", scheme),
+                BuildChatItem(selectedMenu, drawerState, "composers",    scheme),
+                BuildChatItem(selectedMenu, drawerState, "droidcon-nyc", scheme),
+                BuildDividerItem(scheme, sidePadding: 28),
+                BuildDrawerSectionHeader("Recent Profiles", scheme),
+                BuildProfileItem(selectedMenu, drawerState, "Ali Conors (you)", MeProfileId,        Resource.Drawable.avatar_ali,          scheme),
+                BuildProfileItem(selectedMenu, drawerState, "Taylor Brooks",    ColleagueProfileId, Resource.Drawable.avatar_someone_else, scheme),
             },
         };
 
-    static Row BuildDrawerHeader() =>
+    static Row BuildDrawerHeader(ColorScheme scheme) =>
         new()
         {
             Modifier.Companion.FillMaxWidth().Padding(16),
-            new Icon(Resource.Drawable.ic_jetchat, "Jetchat logo")
+            new Icon(Resource.Drawable.ic_jetchat, null)
             {
                 Modifier = Modifier.Companion.Size(24),
+                TintArgb = scheme.Primary,
             },
             new Spacer(Modifier.Companion.Width(8)),
             new Text("Jetchat")
             {
                 FontSize   = 18,
                 FontWeight = FontWeight.SemiBold,
+                Color      = new Color(scheme.OnSurface),
             },
         };
 
-    static Box BuildDrawerSectionHeader(string label) =>
+    static HorizontalDivider BuildDividerItem(ColorScheme scheme, int sidePadding) =>
         new()
         {
-            Modifier.Companion.FillMaxWidth().Padding(horizontal: 28, vertical: 16),
+            Modifier  = sidePadding > 0
+                ? Modifier.Companion.Padding(horizontal: sidePadding, vertical: 0)
+                : null,
+            // Upstream tints the divider with `onSurface.copy(alpha = 0.12f)`.
+            // We don't model alpha-blended ARGB at the facade layer yet,
+            // so the divider falls back to the binding default. Tracked
+            // as part of the "divider alpha" Jetchat parity work.
+        };
+
+    static Box BuildDrawerSectionHeader(string label, ColorScheme scheme) =>
+        new()
+        {
+            Modifier.Companion.FillMaxWidth().Height(52).Padding(horizontal: 28, vertical: 0),
             new Text(label)
             {
-                FontSize   = 14,
-                FontWeight = FontWeight.Medium,
+                FontSize = 14,
+                Color    = new Color(scheme.OnSurfaceVariant),
+                Modifier = Modifier.Companion.Padding(top: 16, bottom: 0, start: 0, end: 0),
             },
         };
 
-    static Row BuildChatItem(ConversationUiState ui, string channel)
+    static Row BuildChatItem(MutableState<string> selectedMenu, DrawerStateHolder drawerState, string channel, ColorScheme scheme)
     {
-        bool selected = ui.CurrentChannel == channel;
+        bool selected = selectedMenu.Value == channel;
         var modifier = Modifier.Companion
             .FillMaxWidth()
             .Height(56)
             .Padding(horizontal: 12, vertical: 0)
             .Clip(28)
-            .Clickable(() => ui.CurrentChannel = channel);
+            .Clickable(() =>
+            {
+                selectedMenu.Value = channel;
+                _ = drawerState.CloseAsync();
+            });
         if (selected)
-            modifier = modifier.Background(DrawerSelectedColor);
+            modifier = modifier.Background(new Color(scheme.PrimaryContainer));
+
+        long iconTint = selected ? scheme.Primary : scheme.OnSurfaceVariant;
+        long textColor = selected ? scheme.Primary : scheme.OnSurface;
 
         return new Row
         {
             modifier,
-            new Icon(Resource.Drawable.ic_jetchat, "Channel")
+            new Icon(Resource.Drawable.ic_jetchat, null)
             {
-                Modifier = Modifier.Companion.Padding(16),
+                Modifier = Modifier.Companion.Padding(top: 16, bottom: 16, start: 16, end: 0),
+                TintArgb = iconTint,
             },
-            new Spacer(Modifier.Companion.Width(12)),
             new Text(channel)
             {
-                FontSize   = 16,
+                FontSize   = 14,
                 FontWeight = selected ? FontWeight.SemiBold : FontWeight.Normal,
-                Modifier   = Modifier.Companion.Padding(top: 16, bottom: 16, start: 0, end: 0),
+                Color      = new Color(textColor),
+                Modifier   = Modifier.Companion.Padding(top: 16, bottom: 16, start: 12, end: 0),
             },
         };
     }
 
-    static Row BuildProfileItem(string name, int avatarRes) =>
-        new()
+    static Row BuildProfileItem(MutableState<string> selectedMenu, DrawerStateHolder drawerState, string name, string userId, int avatarRes, ColorScheme scheme)
+    {
+        bool selected = selectedMenu.Value == userId;
+        var modifier = Modifier.Companion
+            .FillMaxWidth()
+            .Height(56)
+            .Padding(horizontal: 12, vertical: 0)
+            .Clip(28)
+            .Clickable(() =>
+            {
+                selectedMenu.Value = userId;
+                _ = drawerState.CloseAsync();
+            });
+        if (selected)
+            modifier = modifier.Background(new Color(scheme.PrimaryContainer));
+
+        return new Row
         {
-            Modifier.Companion
-                .FillMaxWidth()
-                .Height(56)
-                .Padding(horizontal: 12, vertical: 0)
-                .Clip(28)
-                .Clickable(NoOp),
+            modifier,
             new Image(avatarRes, "Profile photo")
             {
-                Modifier = Modifier.Companion.Padding(16).Size(24).Clip(12),
+                Modifier = Modifier.Companion
+                    .Padding(top: 16, bottom: 16, start: 16, end: 0)
+                    .Size(24)
+                    .Clip(12),
             },
-            new Spacer(Modifier.Companion.Width(12)),
             new Text(name)
             {
-                FontSize = 16,
-                Modifier = Modifier.Companion.Padding(top: 16, bottom: 16, start: 0, end: 0),
+                FontSize = 14,
+                Color    = new Color(scheme.OnSurface),
+                Modifier = Modifier.Companion.Padding(top: 16, bottom: 16, start: 12, end: 0),
             },
         };
+    }
 
-    static void Send(ConversationUiState ui, MutableState<string> input)
+    static void Send(
+        ConversationUiState  ui,
+        MutableState<string> input,
+        MutableState<int>    selectedSelector)
     {
         var text = input.Value ?? string.Empty;
         if (string.IsNullOrWhiteSpace(text)) return;
-        ui.AddMessage(MyName, text, Resource.Drawable.avatar_ali, "now");
+        ui.AddMessage(new Message(MyName, text.Trim(), "8:30 PM"));
         input.Value = string.Empty;
+        // Dismiss any open input selector panel after sending.
+        selectedSelector.Value = 0;
     }
-
-    static void NoOp() { }
 }

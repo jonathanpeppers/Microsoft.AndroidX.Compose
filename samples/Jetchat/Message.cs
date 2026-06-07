@@ -2,12 +2,26 @@ namespace ComposeNet.Samples.Jetchat;
 
 /// <summary>
 /// A single chat message. Mirrors upstream's
-/// <c>com.example.compose.jetchat.conversation.Message</c> data class
-/// (author / content / timestamp), minus the inline image-attachment
-/// field. The author avatar is a drawable resource id rendered through
-/// the Phase 7 <see cref="ComposeNet.Image"/> facade — same shape as
-/// upstream's <c>painterResource(R.drawable.someone_else)</c>. Where
-/// upstream reuses a single photo for every non-"me" author, this
-/// port ships distinct per-author portraits.
+/// <c>com.example.compose.jetchat.conversation.Message</c> data class:
+/// <c>author</c>, <c>content</c>, <c>timestamp</c>, optional inline
+/// attachment <c>image</c>, and a derived <see cref="AuthorImage"/>
+/// that resolves to <c>avatar_ali</c> for the local user and a shared
+/// <c>avatar_someone_else</c> for every other author (same convention
+/// upstream uses).
 /// </summary>
-public sealed record Message(string Author, string Content, string Timestamp, int AuthorAvatarRes);
+public sealed record Message(
+    string Author,
+    string Content,
+    string Timestamp,
+    int? Image = null)
+{
+    /// <summary>
+    /// Drawable resource id of the author's portrait. Computed from
+    /// <see cref="Author"/> at read-time so seed data only has to pass
+    /// the author name — same default-driven shape as upstream's Kotlin
+    /// <c>authorImage = if (author == "me") R.drawable.ali else R.drawable.someone_else</c>.
+    /// </summary>
+    public int AuthorImage => Author == Conversation.MyName
+        ? Resource.Drawable.avatar_ali
+        : Resource.Drawable.avatar_someone_else;
+}

@@ -134,6 +134,8 @@ ComposeNet.ComposeActivity.RememberSaveable<T>(System.Func<T>! factory, object? 
 ComposeNet.ComposeActivity.RememberSaveable<T>(System.Func<T>! factory, object? key1, object? key2, object? key3, int line = 0, string! file = "") -> T
 ComposeNet.ComposeActivity.RememberSaveableKeyed<T>(System.Func<T>! factory, object?[]! keys, int line = 0, string! file = "") -> T
 ComposeNet.ComposeActivity.SetContent(System.Func<ComposeNet.ComposableNode!>! content) -> void
+ComposeNet.Composed
+ComposeNet.Composed.Composed(System.Func<AndroidX.Compose.Runtime.IComposer!, ComposeNet.ComposableNode?>! builder) -> void
 ComposeNet.CompositionLocal
 ComposeNet.CompositionLocal<T>
 ComposeNet.CompositionLocal<T>.Current.get -> T
@@ -215,11 +217,13 @@ ComposeNet.DraggableState
 ComposeNet.DraggableState.DispatchRawDelta(float delta) -> void
 ComposeNet.DraggableState.DraggableState(System.Action<float>! onDelta) -> void
 ComposeNet.DrawerStateHolder
+ComposeNet.DrawerStateHolder.CloseAsync() -> System.Threading.Tasks.Task!
 ComposeNet.DrawerStateHolder.CurrentValue.get -> AndroidX.Compose.Material3.DrawerValue!
 ComposeNet.DrawerStateHolder.DrawerStateHolder(AndroidX.Compose.Material3.DrawerValue? initialValue = null) -> void
 ComposeNet.DrawerStateHolder.InitialValue.get -> AndroidX.Compose.Material3.DrawerValue!
 ComposeNet.DrawerStateHolder.IsClosed.get -> bool
 ComposeNet.DrawerStateHolder.IsOpen.get -> bool
+ComposeNet.DrawerStateHolder.OpenAsync() -> System.Threading.Tasks.Task!
 ComposeNet.DrawerStateHolder.TargetValue.get -> AndroidX.Compose.Material3.DrawerValue!
 ComposeNet.DrawerValueConfirmStateChange
 ComposeNet.DrawerValueConfirmStateChange.Callback.get -> System.Func<AndroidX.Compose.Material3.DrawerValue!, bool>?
@@ -407,6 +411,8 @@ ComposeNet.LaunchedEffect.LaunchedEffect(object? key1, object? key2, System.Func
 ComposeNet.LaunchedEffect.LaunchedEffect(object? key1, System.Func<System.Threading.CancellationToken, System.Threading.Tasks.Task!>! body) -> void
 ComposeNet.LazyColumn<T>
 ComposeNet.LazyColumn<T>.LazyColumn(System.Collections.Generic.IReadOnlyList<T>! items, System.Func<T, ComposeNet.ComposableNode!>! itemContent) -> void
+ComposeNet.LazyColumn<T>.ReverseLayout.get -> bool
+ComposeNet.LazyColumn<T>.ReverseLayout.set -> void
 ComposeNet.LazyColumn<T>.State.get -> AndroidX.Compose.Foundation.Lazy.LazyListState?
 ComposeNet.LazyColumn<T>.State.set -> void
 ComposeNet.LazyHorizontalGrid<T>
@@ -1039,6 +1045,7 @@ override ComposeNet.Color.GetHashCode() -> int
 override ComposeNet.Color.ToString() -> string!
 override ComposeNet.Column.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
 override ComposeNet.ComposeActivity.OnCreate(Android.OS.Bundle? savedInstanceState) -> void
+override ComposeNet.Composed.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
 override ComposeNet.CompositionLocalProvider.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
 override ComposeNet.Crossfade<T>.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
 override ComposeNet.CustomTab.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
@@ -1278,6 +1285,7 @@ static ComposeNet.Shape.Circle() -> ComposeNet.Shape!
 static ComposeNet.Shape.CutCorners(ComposeNet.Dp cornerSize) -> ComposeNet.Shape!
 static ComposeNet.Shape.CutCornersPercent(int percent) -> ComposeNet.Shape!
 static ComposeNet.Shape.RoundedCorners(ComposeNet.Dp cornerRadius) -> ComposeNet.Shape!
+static ComposeNet.Shape.RoundedCorners(ComposeNet.Dp topStart, ComposeNet.Dp topEnd, ComposeNet.Dp bottomEnd, ComposeNet.Dp bottomStart) -> ComposeNet.Shape!
 static ComposeNet.Shape.RoundedPercent(int percent) -> ComposeNet.Shape!
 static ComposeNet.Sp.implicit operator ComposeNet.Sp(int value) -> ComposeNet.Sp
 static ComposeNet.Sp.operator !=(ComposeNet.Sp left, ComposeNet.Sp right) -> bool

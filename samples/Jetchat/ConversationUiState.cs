@@ -1,48 +1,37 @@
+using System.Collections.Generic;
 using ComposeNet;
 
 namespace ComposeNet.Samples.Jetchat;
 
 /// <summary>
-/// Holds the chat's mutable message log, the currently selected
-/// channel, and channel metadata. Mirrors upstream's
-/// <c>ConversationUiState</c>, but uses our
-/// <see cref="MutableStateList{T}"/> instead of Kotlin's
-/// <c>SnapshotStateList</c> (which isn't bound). The
-/// <see cref="CurrentChannel"/> property is backed by a
-/// <see cref="MutableState{T}"/> so drawer taps trigger recomposition
-/// of the top app bar title — we don't actually swap message lists per
-/// channel since the seed only has one conversation.
+/// UI state for the conversation screen. One channel per state object,
+/// matching upstream's
+/// <c>com.example.compose.jetchat.conversation.ConversationUiState</c>:
+/// channel name, member count, and a snapshot-aware
+/// <see cref="MutableStateList{T}"/> of messages. New messages are
+/// inserted at index 0 (newest first), so the
+/// <c>LazyColumn(reverseLayout = true)</c> in the screen body pins the
+/// newest message to the bottom of the viewport.
 /// </summary>
 public sealed class ConversationUiState
 {
-    readonly MutableState<string> _currentChannel;
+    /// <summary>Channel-display name (e.g. <c>#composers</c>) — already includes the leading <c>#</c>.</summary>
+    public string ChannelName { get; }
 
+    /// <summary>Channel headcount displayed in the top app bar subtitle.</summary>
     public int ChannelMembers { get; }
+
+    /// <summary>Snapshot-aware message log. Index 0 is the newest message.</summary>
     public MutableStateList<Message> Messages { get; }
 
-    /// <summary>
-    /// Currently selected channel, displayed in the top app bar and
-    /// highlighted in the drawer. Tapping a drawer item updates this;
-    /// the displayed message list does not change because the sample
-    /// only seeds one conversation.
-    /// </summary>
-    public string CurrentChannel
+    /// <summary>Construct the state with a fixed channel and a seed message list.</summary>
+    public ConversationUiState(string channelName, int channelMembers, IEnumerable<Message> initialMessages)
     {
-        get => _currentChannel.Value;
-        set => _currentChannel.Value = value;
-    }
-
-    public ConversationUiState(string channelName, int channelMembers, IEnumerable<Message> initial)
-    {
-        _currentChannel = new MutableState<string>(channelName);
+        ChannelName    = channelName;
         ChannelMembers = channelMembers;
-        Messages = new MutableStateList<Message>(initial);
+        Messages       = new MutableStateList<Message>(initialMessages);
     }
 
-    /// <summary>Append a new user-authored message to the log.</summary>
-    public void AddMessage(string author, string content, int avatarRes, string timestamp)
-    {
-        if (string.IsNullOrWhiteSpace(content)) return;
-        Messages.Add(new Message(author, content.Trim(), timestamp, avatarRes));
-    }
+    /// <summary>Add a new message to the log (inserts at index 0 — newest position).</summary>
+    public void AddMessage(Message msg) => Messages.Insert(0, msg);
 }

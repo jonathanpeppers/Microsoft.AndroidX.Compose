@@ -1,4 +1,5 @@
 using Android.OS;
+using AndroidX.Compose.Material3;
 using ComposeNet;
 
 namespace ComposeNet.Samples.Jetchat;
@@ -9,32 +10,19 @@ namespace ComposeNet.Samples.Jetchat;
     Theme = "@android:style/Theme.Material.Light.NoActionBar")]
 public class MainActivity : ComposeActivity
 {
-    // Seed data lifted from the upstream Jetchat sample, condensed.
-    // Avatar drawable ids are resolved at JIT time so the field is
-    // populated lazily inside OnCreate (Resource.* generation runs
-    // during the Android build).
-    static Message[] BuildSeedMessages() => new[]
-    {
-        new Message("Aubrey",  "Welcome to #composers!",                                                 "8 min ago", Resource.Drawable.avatar_aubrey),
-        new Message("Taylor",  "Glad to be here. What are folks working on?",                            "6 min ago", Resource.Drawable.avatar_taylor),
-        new Message("Aubrey",  "Just shipped a Material 3 update — finally have proper top app bars.",   "5 min ago", Resource.Drawable.avatar_aubrey),
-        new Message("Jordan",  "Nice. I'm porting the Jetchat sample to .NET — it's coming together.",   "3 min ago", Resource.Drawable.avatar_jordan),
-        new Message("Taylor",  "Ha, meta. Does Compose for .NET handle weight modifiers?",               "2 min ago", Resource.Drawable.avatar_taylor),
-        new Message("Jordan",  "Yep, just landed Modifier.Weight() — that's how this input row works.",  "1 min ago", Resource.Drawable.avatar_jordan),
-    };
-
     protected override void OnCreate(Bundle? savedInstanceState)
     {
         base.OnCreate(savedInstanceState);
         SetContent(() =>
         {
-            var ui          = Remember(() => new ConversationUiState(
-                channelName: "composers",
-                channelMembers: 42,
-                initial: BuildSeedMessages()));
-            var input       = Remember(() => new MutableState<string>(""));
-            var drawerScroll = Remember(() => new ScrollState());
-            return Conversation.Build(ui, input, drawerScroll);
+            var ui               = Remember(() => new ConversationUiState("#composers", channelMembers: 42, FakeData.InitialMessages()));
+            var input            = Remember(() => new MutableState<string>(""));
+            var selectedMenu     = Remember(() => new MutableState<string>("composers"));
+            var drawerScroll     = Remember(() => new ScrollState());
+            var drawerState      = Remember(() => new DrawerStateHolder(DrawerValue.Closed));
+            var selectedSelector = Remember(() => new MutableState<int>(0));
+            var popupOpen        = Remember(() => new MutableState<bool>(false));
+            return Conversation.Build(ui, input, selectedMenu, drawerScroll, drawerState, selectedSelector, popupOpen);
         });
     }
 }

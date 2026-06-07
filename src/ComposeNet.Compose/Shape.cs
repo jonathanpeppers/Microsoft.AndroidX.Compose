@@ -1,4 +1,5 @@
 using Android.Runtime;
+using AndroidX.Compose.Foundation.Shape;
 
 namespace ComposeNet;
 
@@ -29,6 +30,28 @@ public sealed class Shape : Java.Lang.Object
     {
         IntPtr handle = ComposeBridges.RoundedCornerShape(cornerRadius.Value);
         return new Shape(handle, JniHandleOwnership.TransferLocalRef);
+    }
+
+    /// <summary>
+    /// <c>androidx.compose.foundation.shape.RoundedCornerShape(topStart, topEnd, bottomEnd, bottomStart)</c>
+    /// — independent radii per corner expressed in <see cref="Dp"/>. The
+    /// argument order matches Kotlin: top-start, top-end, bottom-end,
+    /// bottom-start (clockwise from the top-leading corner). Pass
+    /// <c>0.Dp()</c> for a square corner.
+    /// </summary>
+    /// <remarks>
+    /// The canonical "chat bubble" shape uses one flattened corner to
+    /// visually connect to its avatar tile — e.g.
+    /// <c>Shape.RoundedCorners(4, 20, 20, 20)</c> for a bubble whose
+    /// top-leading corner is squared off where it meets the speaker's
+    /// avatar.
+    /// </remarks>
+    public static Shape RoundedCorners(Dp topStart, Dp topEnd, Dp bottomEnd, Dp bottomStart)
+    {
+        var rounded = RoundedCornerShapeKt.RoundedCornerShape(
+            topStart.Value, topEnd.Value, bottomEnd.Value, bottomStart.Value);
+        IntPtr handle = ((Java.Lang.Object)rounded).Handle;
+        return new Shape(JNIEnv.NewLocalRef(handle), JniHandleOwnership.TransferLocalRef);
     }
 
     /// <summary>
