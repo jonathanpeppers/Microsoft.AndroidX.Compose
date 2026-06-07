@@ -41,6 +41,16 @@ public static class Catalog
     /// </summary>
     public static readonly IReadOnlyList<Demo> Demos =
     [
+        // ---- Text & inputs ----
+        D.TextInputs.TextStyling.Demo,
+        D.TextInputs.FontWeightStyleFamily.Demo,
+        D.TextInputs.ColorAndAlignment.Demo,
+        D.TextInputs.OverflowAndClamping.Demo,
+        D.TextInputs.TextFieldSlots.Demo,
+        D.TextInputs.OutlinedTextFieldDemo.Demo,
+        D.TextInputs.SecureTextFieldDemo.Demo,
+        D.TextInputs.OutlinedSecureTextFieldDemo.Demo,
+
         // ---- Buttons ----
         D.Buttons.FillStyles.Demo,
         D.Buttons.IconButtons.Demo,

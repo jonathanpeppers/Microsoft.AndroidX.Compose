@@ -1,0 +1,41 @@
+using ComposeNet.Gallery.Registry;
+
+namespace ComposeNet.Gallery.Demos.TextInputs;
+
+/// <summary>Bold, italic, size, decoration, spacing — typed Text properties.</summary>
+public static class TextStyling
+{
+    /// <summary>Registry entry exposed via <see cref="Catalog.Demos"/>.</summary>
+    public static Demo Demo => new(
+        Id:          "text-styling",
+        CategoryId:  "text-inputs",
+        Title:       "Text styling",
+        Description: "FontSize, FontWeight, Decoration, LetterSpacing, LineHeight.",
+        Build:       () => new Column
+        {
+            new Text("Large + Bold")
+            {
+                FontSize   = 24,
+                FontWeight = ComposeNet.FontWeight.Bold,
+            },
+            new Text("Medium underline")
+            {
+                FontSize   = 16,
+                FontWeight = ComposeNet.FontWeight.Medium,
+                Decoration = TextDecoration.Underline,
+            },
+            new Text("Light strikethrough")
+            {
+                FontSize   = 14,
+                FontWeight = ComposeNet.FontWeight.Light,
+                Decoration = TextDecoration.LineThrough,
+            },
+            new Text("Wide letter spacing, taller lines — rendered glyphs visibly drift apart and rows breathe.")
+            {
+                FontSize      = 14,
+                LetterSpacing = 2,
+                LineHeight    = 22,
+                Modifier      = Modifier.Companion.Padding(8),
+            },
+        });
+}
