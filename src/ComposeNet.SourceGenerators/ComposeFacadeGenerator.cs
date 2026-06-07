@@ -30,7 +30,7 @@ namespace ComposeNet.SourceGenerators;
 /// throwing null-check. Auto-mask emission against the bridge's
 /// <c>$default</c> enum.</item>
 /// <item>Phase 6 — <c>[ComposeFacade(DefaultColorFromTheme="...")]</c>
-/// adds a <c>long ContainerColor</c> property with a
+/// adds a <c>Color ContainerColor</c> property with a
 /// <c>MaterialTheme.colorScheme</c> fallback.</item>
 /// <item>Phase 7 — <c>[PainterResource]</c> on an <c>IntPtr</c> param
 /// (the painter handle the bridge forwards) emits a synthetic
@@ -48,6 +48,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
     const string CallbackAttributeMetadataName = "ComposeNet.CallbackAttribute";
     const string PainterResourceAttributeMetadataName = "ComposeNet.PainterResourceAttribute";
     const string StateHolderAttributeMetadataName = "ComposeNet.StateHolderAttribute";
+    const string ConfirmStateChangeAttributeMetadataName = "ComposeNet.ConfirmStateChangeAttribute";
 
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
@@ -72,6 +73,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             var callbackAttr = compilation.GetTypeByMetadataName(CallbackAttributeMetadataName);
             var painterAttr = compilation.GetTypeByMetadataName(PainterResourceAttributeMetadataName);
             var stateHolderAttr = compilation.GetTypeByMetadataName(StateHolderAttributeMetadataName);
+            var confirmAttr = compilation.GetTypeByMetadataName(ConfirmStateChangeAttributeMetadataName);
             if (facadeAttr is null) return;
 
             var method = (IMethodSymbol)ctx.SemanticModel.GetDeclaredSymbol((MethodDeclarationSyntax)ctx.Node)!;
@@ -79,7 +81,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
                 .FirstOrDefault(a => SymbolEqualityComparer.Default.Equals(a.AttributeClass, facadeAttr));
             if (attr is null) return;
 
-            var ctxObj = new Context(method, attr, bridgeAttr, declarativeAttr, slotAttr, callbackAttr, painterAttr, stateHolderAttr, compilation);
+            var ctxObj = new Context(method, attr, bridgeAttr, declarativeAttr, slotAttr, callbackAttr, painterAttr, stateHolderAttr, confirmAttr, compilation);
             var result = Build(ctxObj);
             foreach (var diag in result.Diagnostics)
                 spc.ReportDiagnostic(diag);
@@ -98,11 +100,13 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         public INamedTypeSymbol? CallbackAttr { get; }
         public INamedTypeSymbol? PainterAttr { get; }
         public INamedTypeSymbol? StateHolderAttr { get; }
+        public INamedTypeSymbol? ConfirmStateChangeAttr { get; }
         public Compilation Compilation { get; }
 
         public Context(IMethodSymbol method, AttributeData attr, INamedTypeSymbol? bridgeAttr,
             INamedTypeSymbol? declarativeAttr, INamedTypeSymbol? slotAttr, INamedTypeSymbol? callbackAttr,
-            INamedTypeSymbol? painterAttr, INamedTypeSymbol? stateHolderAttr, Compilation compilation)
+            INamedTypeSymbol? painterAttr, INamedTypeSymbol? stateHolderAttr,
+            INamedTypeSymbol? confirmStateChangeAttr, Compilation compilation)
         {
             Method = method;
             Attr = attr;
@@ -112,6 +116,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             CallbackAttr = callbackAttr;
             PainterAttr = painterAttr;
             StateHolderAttr = stateHolderAttr;
+            ConfirmStateChangeAttr = confirmStateChangeAttr;
             Compilation = compilation;
         }
     }
@@ -150,6 +155,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         string? scope = ReadString(attr, "Scope");
         string? themeColor = ReadString(attr, "DefaultColorFromTheme");
         string? colorParameter = ReadString(attr, "ColorParameter");
+        bool containerOptIn = ReadBool(attr, "Container");
         string? branchOn = ReadString(attr, "BranchOn");
         string? alternateBridgeName = ReadString(attr, "AlternateBridge");
 
@@ -217,39 +223,59 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         // an explicit [Slot], OR there's >1 Fn2/3 slot, treat the facade
         // as a multi-slot LEAF (named properties). Otherwise stick with
         // the Phase 1 "container with children" shape.
-        // Hybrid container exception: exactly 1 non-nullable Fn3 (+ no
-        // [Slot]) PLUS 1+ nullable Fn2/3 slots AND `[ComposeFacade(Scope = "...")]`
-        // explicitly set — the non-nullable Fn3 stays as the container
-        // body (RenderChildren) and the nullable slots become named
-        // properties. The Scope opt-in disambiguates from leafs that
-        // happen to have a required Fn2 label slot (e.g. AssistChip).
+        // Hybrid container exception: exactly 1 non-nullable Fn2/Fn3
+        // (without [Slot]) PLUS 1+ nullable Fn2/3 slots, AND either:
+        //   (a) `[ComposeFacade(Scope = "...")]` is set — disambiguates
+        //       from leafs that happen to have a required Fn2 label
+        //       slot (e.g. AssistChip). Only valid when the body slot
+        //       is Fn3 (Fn2 has no scope receiver to publish). OR
+        //   (b) `[ComposeFacade(Container = true)]` is set explicitly —
+        //       allows Fn2 body without a scope (e.g.
+        //       ModalWideNavigationRail's `content: @Composable () -> Unit`).
         bool hasMultiSlot = slots.Any(s => s.IsNullableSlot || s.HasSlotAttribute) || fnContentCount > 1;
         bool isHybridContainer = false;
-        if (hasMultiSlot && !string.IsNullOrEmpty(scope))
+        if (hasMultiSlot && (!string.IsNullOrEmpty(scope) || containerOptIn))
         {
             var nonNullableFn3 = slots.Where(s =>
                 s.Kind == FacadeSlotKind.Content3 &&
                 s.Param.NullableAnnotation != NullableAnnotation.Annotated &&
                 !s.HasSlotAttribute).ToArray();
+            var nonNullableFn2 = slots.Where(s =>
+                s.Kind == FacadeSlotKind.Content2 &&
+                s.Param.NullableAnnotation != NullableAnnotation.Annotated &&
+                !s.HasSlotAttribute).ToArray();
             var nullableContent = slots.Where(s =>
                 s.Kind is FacadeSlotKind.Content2 or FacadeSlotKind.Content3 &&
                 s.Param.NullableAnnotation == NullableAnnotation.Annotated).ToArray();
-            isHybridContainer =
-                nonNullableFn3.Length == 1 &&
-                nullableContent.Length >= 1 &&
-                !slots.Any(s => s.HasSlotAttribute);
+            // Scope path: Fn3 body only.
+            if (!string.IsNullOrEmpty(scope))
+            {
+                isHybridContainer =
+                    nonNullableFn3.Length == 1 &&
+                    nullableContent.Length >= 1 &&
+                    !slots.Any(s => s.HasSlotAttribute);
+            }
+            // Container=true path: accept either Fn2 or Fn3 body.
+            else if (containerOptIn)
+            {
+                int totalBodies = nonNullableFn3.Length + nonNullableFn2.Length;
+                isHybridContainer =
+                    totalBodies == 1 &&
+                    nullableContent.Length >= 1 &&
+                    !slots.Any(s => s.HasSlotAttribute);
+            }
         }
         if (hasMultiSlot)
         {
             // Re-classify the Fn2/Fn3 slots into property slots (the
             // generator picks one shape per bridge; mixing is invalid).
-            // Hybrid container: leave the sole non-nullable Fn3 as
-            // Content3 so it renders the container body.
+            // Hybrid container: leave the sole non-nullable body slot
+            // (Fn2 or Fn3) as Content2/3 so it renders as RenderChildren.
             for (int i = 0; i < slots.Count; i++)
             {
                 var s = slots[i];
                 bool isContainerBody = isHybridContainer
-                    && s.Kind == FacadeSlotKind.Content3
+                    && s.Kind is FacadeSlotKind.Content2 or FacadeSlotKind.Content3
                     && s.Param.NullableAnnotation != NullableAnnotation.Annotated
                     && !s.HasSlotAttribute;
                 if (s.Kind is FacadeSlotKind.Content2 && !isContainerBody)
@@ -692,17 +718,22 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             }
 
             // Phase 4b — Remember has N user params before composer. Each
-            // user param must resolve to a readable instance member on
-            // the StateType (case-insensitive PascalCase match; fall back
-            // to `Initial<PascalCase>` for the Kotlin "initialX → live X"
-            // wrapper convention). Phase 4b also requires an accessible
-            // parameterless construction path on the StateType so the
-            // ctor can auto-create a default wrapper when the caller
-            // passes null.
+            // user param must either:
+            //   (a) carry [ConfirmStateChange] — surface as a per-instance
+            //       JCW veto adapter (CN3010 if the configuration is
+            //       invalid); OR
+            //   (b) resolve to a readable instance member on the
+            //       StateType (case-insensitive PascalCase match; fall
+            //       back to `Initial<PascalCase>` for the Kotlin
+            //       "initialX → live X" wrapper convention).
+            // Phase 4b also requires an accessible parameterless
+            // construction path on the StateType so the ctor can
+            // auto-create a default wrapper when the caller passes null.
             var rememberUserParams = rememberFit.Parameters
                 .Take(rememberFit.Parameters.Length - 1)
                 .ToArray();
             string[] rememberArgExpressions = System.Array.Empty<string>();
+            var confirmInfos = new List<ConfirmStateChangeInfo>();
             if (rememberUserParams.Length > 0)
             {
                 if (!HasAccessibleParameterlessConstructor(stateType))
@@ -716,6 +747,23 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
                 for (int i = 0; i < rememberUserParams.Length; i++)
                 {
                     var up = rememberUserParams[i];
+
+                    // [ConfirmStateChange] — per-instance JCW veto adapter.
+                    AttributeData? confirmAttr = null;
+                    if (c.ConfirmStateChangeAttr is not null)
+                    {
+                        confirmAttr = up.GetAttributes().FirstOrDefault(a =>
+                            SymbolEqualityComparer.Default.Equals(a.AttributeClass, c.ConfirmStateChangeAttr));
+                    }
+                    if (confirmAttr is not null)
+                    {
+                        var info = ResolveConfirmStateChange(c, up, confirmAttr, methodName, loc, diags);
+                        if (info is null) return null;
+                        confirmInfos.Add(info.Value);
+                        rememberArgExpressions[i] = "_" + info.Value.FieldIdentifier;
+                        continue;
+                    }
+
                     var resolved = ResolveStateMember(stateType, up.Name);
                     if (resolved is null)
                     {
@@ -723,7 +771,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
                             $"[StateHolder] on '{p.Name}': cannot resolve Remember parameter '{up.Name}' on StateType '{stateType.ToDisplayString()}'; expected a readable instance member named '{Pascal(up.Name)}' or 'Initial{Pascal(up.Name)}'"));
                         return null;
                     }
-                    rememberArgExpressions[i] = "_state!." + resolved;
+                    rememberArgExpressions[i] = "_" + p.Name + "!." + resolved;
                 }
             }
 
@@ -732,7 +780,8 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
                 stateWrapperType: stateType,
                 stateJvmType: jvmMember.Type,
                 rememberArgExpressions: rememberArgExpressions,
-                sharedState: ReadBool(stateAttr, "SharedState"));
+                sharedState: ReadBool(stateAttr, "SharedState"),
+                confirmStateChanges: confirmInfos.ToArray());
         }
 
         // [PainterResource] — annotates the IntPtr bridge param that
@@ -862,18 +911,38 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         sb.Append("    public sealed partial class ").Append(className).Append(" : ").AppendLine(baseClass);
         sb.AppendLine("    {");
 
-        // Backing fields for ctor slots.
+        // Backing fields for ctor slots. StateHolder fields are
+        // emitted writable (no `readonly`) so that hand-written
+        // partial declarations of the same facade can pre-populate
+        // them via `init`-only properties — useful for thin
+        // convenience accessors like `InitiallyOpen = true` over the
+        // state holder's constructor argument.
         foreach (var s in ctorSlots)
         {
             var typeRef = CtorFieldType(s);
-            sb.Append("        readonly ").Append(typeRef).Append(" _").Append(CtorIdentifier(s)).AppendLine(";");
+            var modifier = s.Kind == FacadeSlotKind.StateHolder ? "" : "readonly ";
+            sb.Append("        ").Append(modifier).Append(typeRef).Append(" _").Append(CtorIdentifier(s)).AppendLine(";");
+        }
+
+        // Phase 10 — per-instance JCW veto adapter fields. One per
+        // [ConfirmStateChange] across all StateHolder slots. Stable
+        // JNI identity for Kotlin's `remember` cache key.
+        foreach (var s in slots.Where(s => s.Kind == FacadeSlotKind.StateHolder))
+        {
+            foreach (var info in s.ConfirmStateChanges)
+            {
+                var adapterFqn = info.AdapterType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat
+                    .WithMiscellaneousOptions(SymbolDisplayMiscellaneousOptions.UseSpecialTypes));
+                sb.Append("        readonly ").Append(adapterFqn).Append(" _").Append(info.FieldIdentifier)
+                  .Append(" = new ").Append(adapterFqn).AppendLine("();");
+            }
         }
 
         // Phase 6 — ContainerColor property + (no theme fallback here; happens in Render).
         if (themeColor is not null && colorSlot is not null)
         {
-            sb.AppendLine("        /// <summary>Optional packed Compose <c>Color</c> (long). Leave <c>0L</c> to inherit the active <c>MaterialTheme.colorScheme</c> fallback.</summary>");
-            sb.AppendLine("        public long ContainerColor { get; set; }");
+            sb.AppendLine("        /// <summary>Optional explicit <see cref=\"global::ComposeNet.Color\"/>. Leave at the default to inherit the active <c>MaterialTheme.colorScheme</c> fallback.</summary>");
+            sb.AppendLine("        public global::ComposeNet.Color ContainerColor { get; set; }");
         }
 
         // Phase 3 — named properties.
@@ -891,6 +960,20 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         {
             sb.Append("        public ").Append(OptionalValueDisplay(s)).Append(' ')
               .Append(PropertyName(s)).AppendLine(" { get; set; }");
+        }
+
+        // Phase 10 — public `Func<T, bool>?` properties for each
+        // [ConfirmStateChange] adapter. Null = "always allow"; the
+        // adapter's Invoke reads this property each call.
+        foreach (var s in slots.Where(s => s.Kind == FacadeSlotKind.StateHolder))
+        {
+            foreach (var info in s.ConfirmStateChanges)
+            {
+                var valueFqn = info.ValueType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat
+                    .WithMiscellaneousOptions(SymbolDisplayMiscellaneousOptions.UseSpecialTypes));
+                sb.Append("        public global::System.Func<").Append(valueFqn).Append(", bool>? ")
+                  .Append(info.PropertyName).AppendLine(" { get; set; }");
+            }
         }
 
         // Constructor.
@@ -960,6 +1043,21 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             var id = CtorIdentifier(s);
             var jvmFqn = s.StateJvmType!.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat
                 .WithMiscellaneousOptions(SymbolDisplayMiscellaneousOptions.UseSpecialTypes));
+
+            // Phase 10 — assign the developer-supplied delegate onto each
+            // per-instance JCW adapter BEFORE the Remember call so the
+            // adapter is wired up by the time Kotlin invokes it. Skip on
+            // SharedState cache-hit paths because the assignment is
+            // identity-stable (same `_<id>Adapter` field) regardless of
+            // whether Remember runs; doing it unconditionally also avoids
+            // a missed assignment when the developer mutates the property
+            // between renders without a re-Remember.
+            foreach (var info in s.ConfirmStateChanges)
+            {
+                sb.Append("            _").Append(info.FieldIdentifier).Append(".Callback = ")
+                  .Append(info.PropertyName).AppendLine(";");
+            }
+
             if (s.SharedState)
             {
                 EmitStateHolderPreambleShared(sb, s, id, jvmFqn, composerName);
@@ -1069,7 +1167,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         // Phase 6 — theme color resolution.
         if (themeColor is not null && colorSlot is not null)
         {
-            sb.Append("            long __color = ContainerColor != 0L ? ContainerColor : global::AndroidX.Compose.Material3.MaterialTheme.Instance.GetColorScheme(")
+            sb.Append("            long __color = (long)ContainerColor != 0L ? (long)ContainerColor : global::AndroidX.Compose.Material3.MaterialTheme.Instance.GetColorScheme(")
               .Append(composerName).Append(", 0).").Append(Pascal(themeColor)).AppendLine(";");
         }
 
@@ -1559,6 +1657,99 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         SyntaxFacts.GetKeywordKind(name) == SyntaxKind.None ? name : "@" + name;
 
     /// <summary>
+    /// Phase 10 — validate a <c>[ConfirmStateChange]</c> attribute on a
+    /// Remember-bridge user param and produce its emission metadata.
+    /// Reports CN3010 on any failure and returns <c>null</c>.
+    /// </summary>
+    static ConfirmStateChangeInfo? ResolveConfirmStateChange(Context c, IParameterSymbol up,
+        AttributeData attr, string methodName, Location loc, List<Diagnostic> diags)
+    {
+        // (a) IFunction1 / IFunction1? param required.
+        if (KotlinFunctionArity(up.Type) != 1)
+        {
+            diags.Add(Diagnostic.Create(Diagnostics.FacadeConfirmStateChangeInvalid, loc, methodName,
+                $"[ConfirmStateChange] on Remember parameter '{up.Name}' requires a Kotlin.Jvm.Functions.IFunction1 parameter type; was '{up.Type.ToDisplayString()}'"));
+            return null;
+        }
+
+        // (b) Value type — typeof(T) ctor arg.
+        if (attr.ConstructorArguments.Length == 0 ||
+            attr.ConstructorArguments[0].Value is not INamedTypeSymbol valueType)
+        {
+            diags.Add(Diagnostic.Create(Diagnostics.FacadeConfirmStateChangeInvalid, loc, methodName,
+                $"[ConfirmStateChange] on Remember parameter '{up.Name}' is missing its required typeof(T) constructor argument"));
+            return null;
+        }
+
+        // (c) Adapter type — explicit AdapterType or convention lookup.
+        INamedTypeSymbol? adapterType = ReadType(attr, "AdapterType");
+        if (adapterType is null)
+        {
+            var conventionName = "ComposeNet." + valueType.Name + "ConfirmStateChange";
+            adapterType = c.Compilation.GetTypeByMetadataName(conventionName);
+            if (adapterType is null)
+            {
+                diags.Add(Diagnostic.Create(Diagnostics.FacadeConfirmStateChangeInvalid, loc, methodName,
+                    $"[ConfirmStateChange] on Remember parameter '{up.Name}': cannot resolve adapter type '{conventionName}' by convention; set AdapterType = typeof(...) explicitly"));
+                return null;
+            }
+        }
+
+        // (d) AdapterType must implement Kotlin.Jvm.Functions.IFunction1.
+        bool implementsIFunction1 = adapterType.AllInterfaces.Any(i =>
+            i.Name == "IFunction1" &&
+            i.ContainingNamespace?.ToDisplayString() == "Kotlin.Jvm.Functions");
+        if (!implementsIFunction1)
+        {
+            diags.Add(Diagnostic.Create(Diagnostics.FacadeConfirmStateChangeInvalid, loc, methodName,
+                $"[ConfirmStateChange] on Remember parameter '{up.Name}': AdapterType '{adapterType.ToDisplayString()}' must implement Kotlin.Jvm.Functions.IFunction1"));
+            return null;
+        }
+
+        // (e) AdapterType must have a public parameterless ctor.
+        bool hasParameterlessCtor = adapterType.InstanceConstructors.Any(ic =>
+            ic.DeclaredAccessibility == Accessibility.Public &&
+            (ic.Parameters.Length == 0 || ic.Parameters.All(pp => pp.HasExplicitDefaultValue)));
+        if (adapterType.InstanceConstructors.Length > 0 && !hasParameterlessCtor)
+        {
+            diags.Add(Diagnostic.Create(Diagnostics.FacadeConfirmStateChangeInvalid, loc, methodName,
+                $"[ConfirmStateChange] on Remember parameter '{up.Name}': AdapterType '{adapterType.ToDisplayString()}' must declare a public parameterless constructor"));
+            return null;
+        }
+
+        // (f) AdapterType must have an accessible writable `Callback`
+        // property of type Func<T, bool> or Func<T, bool>?.
+        var callbackProp = adapterType.GetMembers("Callback").OfType<IPropertySymbol>().FirstOrDefault();
+        if (callbackProp is null || callbackProp.SetMethod is null)
+        {
+            diags.Add(Diagnostic.Create(Diagnostics.FacadeConfirmStateChangeInvalid, loc, methodName,
+                $"[ConfirmStateChange] on Remember parameter '{up.Name}': AdapterType '{adapterType.ToDisplayString()}' must declare a writable instance property 'Callback'"));
+            return null;
+        }
+        if (callbackProp.Type is not INamedTypeSymbol ct ||
+            ct.Name != "Func" || ct.ContainingNamespace?.ToDisplayString() != "System" ||
+            ct.TypeArguments.Length != 2 ||
+            !SymbolEqualityComparer.Default.Equals(ct.TypeArguments[0], valueType) ||
+            ct.TypeArguments[1].SpecialType != SpecialType.System_Boolean)
+        {
+            diags.Add(Diagnostic.Create(Diagnostics.FacadeConfirmStateChangeInvalid, loc, methodName,
+                $"[ConfirmStateChange] on Remember parameter '{up.Name}': AdapterType '{adapterType.ToDisplayString()}'.Callback must be 'System.Func<{valueType.ToDisplayString()}, bool>?'"));
+            return null;
+        }
+
+        // (g) Optional property name override; default = "ConfirmStateChange".
+        string propertyName = ReadString(attr, "PropertyName") ?? "ConfirmStateChange";
+        if (!SyntaxFacts.IsValidIdentifier(propertyName))
+        {
+            diags.Add(Diagnostic.Create(Diagnostics.FacadeConfirmStateChangeInvalid, loc, methodName,
+                $"[ConfirmStateChange] on Remember parameter '{up.Name}': PropertyName '{propertyName}' is not a valid C# identifier"));
+            return null;
+        }
+
+        return new ConfirmStateChangeInfo(up, adapterType, valueType, propertyName);
+    }
+
+    /// <summary>
     /// Phase 4b — resolve the wrapper-side member name for a Remember
     /// bridge user parameter. Tries an exact <see cref="Pascal"/> match
     /// first, then falls back to <c>Initial&lt;Pascal&gt;</c> for the
@@ -1639,6 +1830,42 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         return false;
     }
 
+    /// <summary>
+    /// Phase 10 — metadata for a <c>[ConfirmStateChange(typeof(T))]</c>
+    /// Remember-bridge parameter. The facade allocates one JCW
+    /// instance per node (<c>readonly</c> field
+    /// <c>_&lt;FieldIdentifier&gt;</c>), exposes a developer-mutable
+    /// <c>Func&lt;T, bool&gt;? &lt;PropertyName&gt;</c> property, and
+    /// assigns <c>_&lt;FieldIdentifier&gt;.Callback = &lt;PropertyName&gt;</c>
+    /// in the Render preamble before the <c>RememberXxxState</c> call.
+    /// The Remember bridge sees a stable JNI reference (the JCW), so
+    /// Kotlin's <c>remember</c> cache key is unaffected when the
+    /// developer rewires the C# delegate.
+    /// </summary>
+    internal readonly struct ConfirmStateChangeInfo
+    {
+        public ConfirmStateChangeInfo(IParameterSymbol rememberParam,
+            INamedTypeSymbol adapterType, INamedTypeSymbol valueType, string propertyName)
+        {
+            RememberParam = rememberParam;
+            AdapterType = adapterType;
+            ValueType = valueType;
+            PropertyName = propertyName;
+        }
+        public IParameterSymbol RememberParam { get; }
+        public INamedTypeSymbol AdapterType { get; }
+        public INamedTypeSymbol ValueType { get; }
+        public string PropertyName { get; }
+        /// <summary>
+        /// Backing-field identifier (no leading underscore). Conventional
+        /// form: lowercased first char of <see cref="PropertyName"/> plus
+        /// <c>"Adapter"</c>. Two different <see cref="PropertyName"/>s
+        /// produce two different fields.
+        /// </summary>
+        public string FieldIdentifier =>
+            char.ToLowerInvariant(PropertyName[0]) + PropertyName.Substring(1) + "Adapter";
+    }
+
     internal enum FacadeSlotKind
     {
         Modifier,
@@ -1664,7 +1891,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             ITypeSymbol? callbackType = null, string? slotPropertyName = null,
             string? rememberMethodName = null, INamedTypeSymbol? stateWrapperType = null,
             ITypeSymbol? stateJvmType = null, string[]? rememberArgExpressions = null,
-            bool sharedState = false)
+            bool sharedState = false, ConfirmStateChangeInfo[]? confirmStateChanges = null)
         {
             Param = param;
             Kind = kind;
@@ -1675,6 +1902,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             StateJvmType = stateJvmType;
             RememberArgExpressions = rememberArgExpressions ?? System.Array.Empty<string>();
             SharedState = sharedState;
+            ConfirmStateChanges = confirmStateChanges ?? System.Array.Empty<ConfirmStateChangeInfo>();
         }
         public IParameterSymbol Param { get; }
         public FacadeSlotKind Kind { get; }
@@ -1687,8 +1915,10 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         /// Phase 4b — one C# expression per user parameter of the
         /// <c>Remember*State</c> bridge (composer excluded). Each expression
         /// reads a member of the caller-supplied state wrapper, e.g.
-        /// <c>_state!.InitialHour</c>. Empty when the Remember bridge has
-        /// zero user params (Phase 4).
+        /// <c>_state!.InitialHour</c>. For Remember params marked with
+        /// <c>[ConfirmStateChange]</c>, the expression instead reads the
+        /// per-instance JCW field (e.g. <c>_confirmStateChangeAdapter</c>).
+        /// Empty when the Remember bridge has zero user params (Phase 4).
         /// </summary>
         public string[] RememberArgExpressions { get; }
         /// <summary>
@@ -1698,6 +1928,12 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         /// call in that case, reusing the cached JNI handle.
         /// </summary>
         public bool SharedState { get; }
+        /// <summary>
+        /// Phase 10 — zero or more <c>[ConfirmStateChange]</c> Remember
+        /// params hoisted to per-node JCW adapter fields with stable
+        /// JNI identity.
+        /// </summary>
+        public ConfirmStateChangeInfo[] ConfirmStateChanges { get; }
         public bool HasSlotAttribute => SlotPropertyName is not null;
         public bool IsNullableSlot => Param.NullableAnnotation == NullableAnnotation.Annotated
             && KindIsFnSlot(Kind);
@@ -1709,6 +1945,6 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
               or FacadeSlotKind.RequiredFunction2 or FacadeSlotKind.RequiredFunction3;
         public FacadeSlot WithKind(FacadeSlotKind newKind) =>
             new(Param, newKind, CallbackType, SlotPropertyName, RememberMethodName,
-                StateWrapperType, StateJvmType, RememberArgExpressions, SharedState);
+                StateWrapperType, StateJvmType, RememberArgExpressions, SharedState, ConfirmStateChanges);
     }
 }

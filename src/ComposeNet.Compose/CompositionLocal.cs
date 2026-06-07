@@ -155,13 +155,13 @@ public sealed class CompositionLocal<T>
         ulong ul           => Java.Lang.Long.ValueOf(unchecked((long)ul)),
         float f            => Java.Lang.Float.ValueOf(f),
         double d           => Java.Lang.Double.ValueOf(d),
-        _                  => new ManagedBox<T>(value),
+        _                  => new ManagedBox(value),
     };
 
     static T FromJava(Java.Lang.Object? value)
     {
         if (value is null) return default!;
-        if (value is ManagedBox<T> box) return box.Value;
+        if (value is ManagedBox box) return (T)box.Value!;
         if (value is T t) return t;
         var type = typeof(T);
         if (type == typeof(string))  return (T)(object)value.ToString()!;
@@ -182,6 +182,6 @@ public sealed class CompositionLocal<T>
             + $"{value.GetType().Name}. Built-in composition locals always return "
             + "their own bound types; for user-defined locals the value must be a "
             + "Java.Lang.Object subclass, a built-in primitive/string, or wrapped in "
-            + "ManagedBox<T> (handled automatically by Provides).");
+            + "ManagedBox (handled automatically by Provides).");
     }
 }

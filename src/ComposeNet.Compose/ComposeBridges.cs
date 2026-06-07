@@ -278,7 +278,7 @@ internal static partial class ComposeBridges
     public static partial void Text(
         string text,
         IModifier? modifier,
-        long? color,
+        Color? color,
         Sp? fontSize,
         FontStyle? fontStyle,
         FontWeight? fontWeight,
@@ -1017,6 +1017,47 @@ internal static partial class ComposeBridges
     public static partial IntPtr RememberTimePickerState(int initialHour, int initialMinute,
                                                          bool is24Hour, IComposer composer);
 
+    // androidx.compose.material3.NavigationDrawerKt.rememberDrawerState.
+    // The Kotlin function is bound natively so we go through it instead
+    // of duplicating the JNI plumbing here. The [ComposeFacade]-generated
+    // facade hands us the per-instance JCW veto adapter as
+    // confirmStateChange (stable JNI identity = stable `remember` key);
+    // initialValue comes from the wrapper's InitialValue property. The
+    // [ConfirmStateChange] attribute is read by the facade generator off
+    // this declaration when resolving the Remember parameter to a
+    // per-instance JCW field instead of a state-wrapper member.
+    public static IntPtr RememberDrawerState(
+        AndroidX.Compose.Material3.DrawerValue initialValue,
+        [ConfirmStateChange(typeof(AndroidX.Compose.Material3.DrawerValue),
+            AdapterType = typeof(DrawerValueConfirmStateChange))]
+        IFunction1 confirmStateChange,
+        IComposer composer)
+    {
+        var state = AndroidX.Compose.Material3.NavigationDrawerKt.RememberDrawerState(
+            initialValue:        initialValue,
+            confirmStateChange:  confirmStateChange,
+            _composer:           composer,
+            p3:                  0,
+            _changed:            0);
+        return ((Java.Lang.Object)state).Handle;
+    }
+
+    // androidx.compose.material3.WideNavigationRailStateKt.rememberWideNavigationRailState.
+    // No confirmStateChange callback; the rail's state is driven entirely
+    // from C# via the wrapper's InitialValue property. Kotlin function is
+    // bound natively — wrapper-passthrough only.
+    public static IntPtr RememberWideNavigationRailState(
+        AndroidX.Compose.Material3.WideNavigationRailValue initialValue,
+        IComposer composer)
+    {
+        var state = AndroidX.Compose.Material3.WideNavigationRailStateKt.RememberWideNavigationRailState(
+            initialValue: initialValue,
+            _composer:    composer,
+            p2:           0,
+            _changed:     0);
+        return ((Java.Lang.Object)state).Handle;
+    }
+
     // androidx.compose.material3.TooltipKt.rememberTooltipState
     [ComposeBridge(
         Class     = "androidx/compose/material3/TooltipKt",
@@ -1446,11 +1487,10 @@ internal static partial class ComposeBridges
     // androidx.compose.material3.WideNavigationRailKt.ModalWideNavigationRail-k3FuEkE.
     // The "-k3FuEkE" hash comes from the @JvmInline value-class Dp param
     // (collapsedShadowElevation). 12 user params + 3 trailing ints
-    // ($changed, $changed1, $default). The facade always supplies
-    // `state` (via the bound RememberWideNavigationRailState),
-    // `hideOnCollapse` (true so the rail unmounts visually on collapse),
-    // and `content`. Shape / colors / elevation / windowInsets /
-    // arrangement / properties remain Kotlin defaults.
+    // ($changed, $changed1, $default). The raw JNI bridge takes the full
+    // surface; the [ComposeFacade]-wrapped partial below hides
+    // `hideOnCollapse` (always true) so the public facade matches the
+    // visibility-toggle pattern documented on the facade class.
     [ComposeBridge(
         Class     = "androidx/compose/material3/WideNavigationRailKt",
         JvmName   = "ModalWideNavigationRail-k3FuEkE",
@@ -1466,7 +1506,7 @@ internal static partial class ComposeBridges
                     "Lkotlin/jvm/functions/Function2;" +
                     "Landroidx/compose/runtime/Composer;III)V",
         Defaults  = typeof(ModalWideNavigationRailDefault))]
-    public static partial void ModalWideNavigationRail(
+    internal static partial void ModalWideNavigationRailRaw(
         IModifier?  modifier,
         IntPtr      state,
         bool        hideOnCollapse,
@@ -1474,6 +1514,135 @@ internal static partial class ComposeBridges
         IFunction2  content,
         int         defaults,
         IComposer   composer);
+
+    // Phase 8 wrapper-passthrough for the public ModalWideNavigationRail
+    // facade. Hides `hideOnCollapse` (always true — the C# visibility-
+    // toggle pattern owns mount/unmount), so the auto-mask never
+    // computes the HideOnCollapse bit. We pre-clear it here before
+    // forwarding, so Kotlin substitutes the body-supplied `true` rather
+    // than its own default.
+    [ComposeFacade(Container = true, Defaults = typeof(ModalWideNavigationRailDefault))]
+    public static partial void ModalWideNavigationRail(
+        IModifier?  modifier,
+        [StateHolder(Remember = nameof(RememberWideNavigationRailState),
+                     StateType = typeof(WideNavigationRailState))] IntPtr state,
+        IFunction2? header,
+        IFunction2  content,
+        int         defaults,
+        IComposer   composer);
+
+    public static partial void ModalWideNavigationRail(
+        IModifier?  modifier,
+        IntPtr      state,
+        IFunction2? header,
+        IFunction2  content,
+        int         defaults,
+        IComposer   composer)
+    {
+        // Clear the HideOnCollapse bit so Kotlin uses our hardcoded
+        // `true` rather than its own default (which is `false`).
+        defaults &= ~(int)ModalWideNavigationRailDefault.HideOnCollapse;
+        ModalWideNavigationRailRaw(
+            modifier:        modifier,
+            state:           state,
+            hideOnCollapse:  true,
+            header:          header,
+            content:         content,
+            defaults:        defaults,
+            composer:        composer);
+    }
+
+    // Phase 8 wrapper-passthroughs for the navigation-drawer family.
+    // Kotlin functions are all bound natively (no hash mangling on the
+    // public overload), so we just forward to `NavigationDrawerKt.*`
+    // and let the bridge generator stay out of it. Each bridge declares
+    // the facade ctor slots the user actually controls (drawer, modifier,
+    // optional state, content) and the bound binding fills in the
+    // hard-coded Kotlin params (gesturesEnabled: true, scrimColor: 0L
+    // — left at the Kotlin default sentinel via the bit mask). The
+    // facade-side $default mask is computed by the [ComposeFacade]
+    // generator from the matching [ComposeDefaults] declaration and
+    // forwarded into _changed.
+
+    [ComposeFacade(Defaults = typeof(ModalNavigationDrawerDefault))]
+    public static partial void ModalNavigationDrawer(
+        [Slot("Drawer")]  IFunction2 drawerContent,
+        IModifier?        modifier,
+        [StateHolder(Remember = nameof(RememberDrawerState),
+                     StateType = typeof(DrawerStateHolder),
+                     SharedState = true)] IntPtr drawerState,
+        [Slot("Content")] IFunction2 content,
+        int               defaults,
+        IComposer         composer);
+
+    public static partial void ModalNavigationDrawer(
+        IFunction2 drawerContent, IModifier? modifier, IntPtr drawerState,
+        IFunction2 content, int defaults, IComposer composer)
+    {
+        // The bound binding takes a typed DrawerState; reconstitute it
+        // from the JNI handle the [StateHolder] handed us.
+        var stateObj = global::Java.Lang.Object.GetObject<AndroidX.Compose.Material3.DrawerState>(
+            drawerState, global::Android.Runtime.JniHandleOwnership.DoNotTransfer)!;
+        AndroidX.Compose.Material3.NavigationDrawerKt.ModalNavigationDrawer(
+            drawerContent:    drawerContent,
+            modifier:         modifier,
+            drawerState:      stateObj,
+            gesturesEnabled:  true,
+            scrimColor:       0L,
+            content:          content,
+            _composer:        composer,
+            p7:               0,
+            _changed:         defaults);
+    }
+
+    [ComposeFacade(Defaults = typeof(DismissibleNavigationDrawerDefault))]
+    public static partial void DismissibleNavigationDrawer(
+        [Slot("Drawer")]  IFunction2 drawerContent,
+        IModifier?        modifier,
+        [StateHolder(Remember = nameof(RememberDrawerState),
+                     StateType = typeof(DrawerStateHolder),
+                     SharedState = true)] IntPtr drawerState,
+        [Slot("Content")] IFunction2 content,
+        int               defaults,
+        IComposer         composer);
+
+    public static partial void DismissibleNavigationDrawer(
+        IFunction2 drawerContent, IModifier? modifier, IntPtr drawerState,
+        IFunction2 content, int defaults, IComposer composer)
+    {
+        var stateObj = global::Java.Lang.Object.GetObject<AndroidX.Compose.Material3.DrawerState>(
+            drawerState, global::Android.Runtime.JniHandleOwnership.DoNotTransfer)!;
+        AndroidX.Compose.Material3.NavigationDrawerKt.DismissibleNavigationDrawer(
+            drawerContent:    drawerContent,
+            modifier:         modifier,
+            drawerState:      stateObj,
+            gesturesEnabled:  true,
+            content:          content,
+            _composer:        composer,
+            p6:               0,
+            _changed:         defaults);
+    }
+
+    [ComposeFacade(Defaults = typeof(PermanentNavigationDrawerDefault))]
+    public static partial void PermanentNavigationDrawer(
+        [Slot("Drawer")]  IFunction2 drawerContent,
+        IModifier?        modifier,
+        [Slot("Content")] IFunction2 content,
+        int               defaults,
+        IComposer         composer);
+
+    public static partial void PermanentNavigationDrawer(
+        IFunction2 drawerContent, IModifier? modifier,
+        IFunction2 content, int defaults, IComposer composer)
+    {
+        AndroidX.Compose.Material3.NavigationDrawerKt.PermanentNavigationDrawer(
+            drawerContent: drawerContent,
+            modifier:      modifier,
+            content:       content,
+            _composer:     composer,
+            p4:            0,
+            _changed:      defaults);
+    }
 
     // Modifier-chain extensions. These are non-@Composable Kotlin
     // extension functions on Modifier; their JNI signatures end in
@@ -1769,6 +1938,42 @@ internal static partial class ComposeBridges
         Signature = "(Landroidx/compose/ui/Modifier;)Landroidx/compose/ui/Modifier;")]
     internal static partial IntPtr ModifierDisplayCutoutPadding(IntPtr modifier);
 
+    [ComposeBridge(
+        Class     = "androidx/compose/foundation/layout/WindowInsetsPadding_androidKt",
+        JvmName   = "captionBarPadding",
+        Signature = "(Landroidx/compose/ui/Modifier;)Landroidx/compose/ui/Modifier;")]
+    internal static partial IntPtr ModifierCaptionBarPadding(IntPtr modifier);
+
+    [ComposeBridge(
+        Class     = "androidx/compose/foundation/layout/WindowInsetsPadding_androidKt",
+        JvmName   = "mandatorySystemGesturesPadding",
+        Signature = "(Landroidx/compose/ui/Modifier;)Landroidx/compose/ui/Modifier;")]
+    internal static partial IntPtr ModifierMandatorySystemGesturesPadding(IntPtr modifier);
+
+    [ComposeBridge(
+        Class     = "androidx/compose/foundation/layout/WindowInsetsPadding_androidKt",
+        JvmName   = "safeContentPadding",
+        Signature = "(Landroidx/compose/ui/Modifier;)Landroidx/compose/ui/Modifier;")]
+    internal static partial IntPtr ModifierSafeContentPadding(IntPtr modifier);
+
+    [ComposeBridge(
+        Class     = "androidx/compose/foundation/layout/WindowInsetsPadding_androidKt",
+        JvmName   = "safeGesturesPadding",
+        Signature = "(Landroidx/compose/ui/Modifier;)Landroidx/compose/ui/Modifier;")]
+    internal static partial IntPtr ModifierSafeGesturesPadding(IntPtr modifier);
+
+    [ComposeBridge(
+        Class     = "androidx/compose/foundation/layout/WindowInsetsPadding_androidKt",
+        JvmName   = "systemGesturesPadding",
+        Signature = "(Landroidx/compose/ui/Modifier;)Landroidx/compose/ui/Modifier;")]
+    internal static partial IntPtr ModifierSystemGesturesPadding(IntPtr modifier);
+
+    [ComposeBridge(
+        Class     = "androidx/compose/foundation/layout/WindowInsetsPadding_androidKt",
+        JvmName   = "waterfallPadding",
+        Signature = "(Landroidx/compose/ui/Modifier;)Landroidx/compose/ui/Modifier;")]
+    internal static partial IntPtr ModifierWaterfallPadding(IntPtr modifier);
+
     // androidx.compose.ui.platform.TestTagKt.testTag(Modifier, String) —
     // attaches a test tag for UI testing frameworks.
     [ComposeBridge(
@@ -1869,6 +2074,27 @@ internal static partial class ComposeBridges
         Defaults  = typeof(ModifierToggleableDefault))]
     internal static partial IntPtr ModifierToggleable(
         IntPtr modifier, bool value, IFunction1 onValueChange);
+
+    // androidx.compose.foundation.gestures.DraggableKt.draggable$default —
+    // non-@Composable Modifier extension. 8 Kotlin params after the
+    // receiver: state, orientation, enabled, interactionSource,
+    // startDragImmediately, onDragStarted, onDragStopped,
+    // reverseDirection. The C# wrapper always supplies state /
+    // orientation / enabled (bits 0/1/2 cleared); the other five slots
+    // (interactionSource + the two suspend Function3s + the two
+    // booleans) stay defaulted in v1.
+    [ComposeBridge(
+        Class     = "androidx/compose/foundation/gestures/DraggableKt",
+        JvmName   = "draggable$default",
+        Signature = "(Landroidx/compose/ui/Modifier;" +
+                    "Landroidx/compose/foundation/gestures/DraggableState;" +
+                    "Landroidx/compose/foundation/gestures/Orientation;Z" +
+                    "Landroidx/compose/foundation/interaction/MutableInteractionSource;Z" +
+                    "Lkotlin/jvm/functions/Function3;Lkotlin/jvm/functions/Function3;Z" +
+                    "ILjava/lang/Object;)Landroidx/compose/ui/Modifier;",
+        Defaults  = typeof(ModifierDraggableDefault))]
+    internal static partial IntPtr ModifierDraggable(
+        IntPtr modifier, IntPtr state, IntPtr orientation, bool enabled);
 
     // androidx.compose.ui.semantics.SemanticsModifierKt.semantics$default —
     // 2 Kotlin params after the receiver: mergeDescendants (Bool),
@@ -2953,7 +3179,7 @@ internal static partial class ComposeBridges
     // `maxItemsInEachRow`/`maxItemsInEachColumn` is the Kotlin `maxLines`
     // Int. The `maxLines` slot in C# is the JVM `$changed` int; `_changed`
     // is `$default`.
-    [ComposeFacade(Defaults = typeof(FlowRowDefault))]
+    [ComposeFacade(Defaults = typeof(FlowRowDefault), Scope = "Row")]
     public static partial void FlowRow(IModifier? modifier, IFunction3 content, int defaults, IComposer composer);
 
     public static partial void FlowRow(IModifier? modifier, IFunction3 content, int defaults, IComposer composer)
@@ -2969,7 +3195,7 @@ internal static partial class ComposeBridges
             maxLines:              0,
             _changed:              defaults);
 
-    [ComposeFacade(Defaults = typeof(FlowColumnDefault))]
+    [ComposeFacade(Defaults = typeof(FlowColumnDefault), Scope = "Column")]
     public static partial void FlowColumn(IModifier? modifier, IFunction3 content, int defaults, IComposer composer);
 
     public static partial void FlowColumn(IModifier? modifier, IFunction3 content, int defaults, IComposer composer)
