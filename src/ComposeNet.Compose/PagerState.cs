@@ -15,7 +15,7 @@ namespace ComposeNet;
 /// </summary>
 /// <remarks>
 /// <para>
-/// Construct one inside a <see cref="ComposeActivity.Remember{T}"/>
+/// Construct one inside a <see cref="ComposeActivity.Remember{T}(System.Func{T}, int, string)"/>
 /// callback so the page position survives recompositions. The
 /// <c>pageCount</c> lambda must be supplied (the Kotlin
 /// runtime calls it on every measure pass) and should close over a

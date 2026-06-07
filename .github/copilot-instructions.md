@@ -461,7 +461,7 @@ stay distinct per facade.
 ### When to use it
 
 The generator now supports a wide range of facade shapes (Phases 1,
-2, 3, 4, 6, 7, 8 are implemented):
+2, 3, 4, 6, 7, 8, 9 are implemented):
 
 - **Phase 1** — container with content lambda + ctor primitives
   (`Button`, `Card`, `Text`, `Column`, `Row`, `Box`).
@@ -535,6 +535,32 @@ The generator now supports a wide range of facade shapes (Phases 1,
   required Function2 is a label, not a content slot). Used for
   `BottomAppBar`.
 
+- **Phase 9** — bridge branching via
+  `[ComposeFacade(BranchOn = "Subtitle", AlternateBridge = nameof(AltBridge))]`
+  (issue #122). One facade routes between two `[ComposeBridge]`
+  methods based on whether a single optional slot is supplied.
+  The partial method carries the **primary** (smaller) bridge — no
+  branched slot. `AlternateBridge` names a sibling
+  `ComposeBridges` method whose user parameters are the primary's
+  set plus exactly one extra `IFunction2`/`IFunction3` slot whose
+  PascalCased name matches `BranchOn`. Both bridges must declare a
+  trailing `int defaults` parameter (the caller-managed-mask shape),
+  and each must reference its own `Defaults = typeof(XxxDefault)`
+  enum so the per-branch mask can be computed independently.
+  The generator emits a single facade that exposes the extra slot
+  as a nullable `ComposableNode?` property and renders
+  `if (Subtitle is not null) { …alt-bridge call… } else { …primary
+  call… }`. Shared lambdas (`__title`, `__navigationIcon`, …) and
+  `__modifier = BuildModifier()` are hoisted ABOVE the if/else;
+  the branched slot's wrapper, the per-branch mask, and each
+  bridge call live INSIDE their respective branches. Parameter
+  order may differ between primary and alternate — the emitter
+  walks each bridge's actual `Parameters` list (not the slots
+  list) to keep arguments correctly positioned. Used for
+  `TopAppBar` (branches to `TopAppBarWithSubtitle`), `MediumTopAppBar`
+  (→ `MediumFlexibleTopAppBar`), `LargeTopAppBar` (→
+  `LargeFlexibleTopAppBar`). Errors are reported as CN3010.
+
 Facades that still stay hand-written are the ones the generator
 can't model:
 
@@ -542,9 +568,6 @@ can't model:
   `[ComposeBridge]` to attach to) — `DropdownMenuItem`, `Icon`
   (`ImageVector` overload). `WideNavigationRailItem` was migrated
   to a Phase 8 wrapper-passthrough in issue #67.
-- Facades that branch between two bridges based on an optional
-  slot (`TopAppBar` — Subtitle toggles between `TopAppBar-GHTll3U`
-  and `MediumFlexibleTopAppBar-eXZ4JBQ`).
 - Drawer facades with a `confirmStateChange` adapter — the
   per-`ComposableNode`-instance `DrawerConfirmStateChange` Java peer
   has to live in a field on the facade (it's part of
@@ -581,8 +604,8 @@ can't model:
 Trying to apply `[ComposeFacade]` to an unsupported bridge will
 emit CN3002 (unsupported parameter), CN3003 (scope misuse), CN3005
 (invalid callback type), CN3006 (slot conflict), CN3007 (color
-theme binding failed), CN3008 (painter misuse), or CN3009
-(state-holder misuse) at build time —
+theme binding failed), CN3008 (painter misuse), CN3009
+(state-holder misuse), or CN3010 (branching misuse) at build time —
 back out the attribute and write the facade by hand.
 
 ### Adding a new generated facade
@@ -613,7 +636,7 @@ end-to-end recipe is:
    the stub** — without it the generated class has no XML docs.
 4. **Build the sample** (`dotnet build src/ComposeNet.Sample`) to
    verify the bridge + facade compile together. The supported
-   shapes are validated at build time; CN3001-CN3009 will fire if
+   shapes are validated at build time; CN3001-CN3010 will fire if
    the generator can't accept the bridge.
 5. **If CN3002 fires**, the bridge has a parameter outside the
    table above — either an unmarked `IFunction1` callback, a
@@ -639,6 +662,7 @@ end-to-end recipe is:
 | CN3007  | `DefaultColorFromTheme` cannot bind to any `long` user param (or `ColorParameter` is ambiguous / missing). |
 | CN3008  | `[PainterResource]` annotates a non-`IntPtr` parameter.            |
 | CN3009  | `[StateHolder]` is invalid: applied to a non-`IntPtr` param, combined with `[PainterResource]`, missing or unidentifier-valued `Remember` / `StateType`, the named `Remember` method is not a static `(IComposer) -> IntPtr` on `ComposeBridges`, or `StateType` has no accessible writable instance field named `Jvm`. |
+| CN3010  | `BranchOn` / `AlternateBridge` is invalid: only one of the two is set, primary or alternate is missing a trailing `int defaults` parameter, the named alternate is not resolvable or ambiguous on `ComposeBridges`, alternate is not a strict superset (missing a primary param or has more than one extra), the extra param's PascalCased name doesn't match `BranchOn`, the extra param isn't `IFunction2`/`IFunction3`, a shared param has incompatible types, branching is used on a hybrid container shape, or the alternate has no resolvable `[ComposeBridge].Defaults` enum. |
 
 ### Migration rule
 

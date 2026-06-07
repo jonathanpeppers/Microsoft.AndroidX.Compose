@@ -150,6 +150,8 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         string? scope = ReadString(attr, "Scope");
         string? themeColor = ReadString(attr, "DefaultColorFromTheme");
         string? colorParameter = ReadString(attr, "ColorParameter");
+        string? branchOn = ReadString(attr, "BranchOn");
+        string? alternateBridgeName = ReadString(attr, "AlternateBridge");
 
         // Composer is the trailing param for @Composable bridges (the only
         // shape facade generation supports).
@@ -336,13 +338,258 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             diags.Add(Diagnostic.Create(Diagnostics.FacadeSlotConflict, loc, method.Name, reason));
         }
 
+        // Branching (CN3010). When BranchOn/AlternateBridge are set, the
+        // facade dispatches between this primary bridge and a sibling
+        // bridge whose param list is a strict superset (one extra
+        // optional slot). The extra slot becomes a nullable property on
+        // the facade; the if-branch passes it, the else-branch omits it.
+        BranchInfo? branchInfo = null;
+        if (!string.IsNullOrEmpty(branchOn) || !string.IsNullOrEmpty(alternateBridgeName))
+        {
+            branchInfo = BuildBranchInfo(c, method, branchOn, alternateBridgeName, loc,
+                userParams, slots, callerProvidesDefaults, isHybridContainer, diags);
+            if (branchInfo is not null)
+            {
+                // Append the synthesised slot, force the facade into
+                // multi-slot leaf shape.
+                slots.Add(branchInfo.BranchedSlot);
+                for (int i = 0; i < slots.Count; i++)
+                {
+                    var s = slots[i];
+                    if (s.Kind == FacadeSlotKind.Content2)
+                        slots[i] = s.WithKind(s.Param.NullableAnnotation == NullableAnnotation.Annotated
+                            ? FacadeSlotKind.NamedFunction2 : FacadeSlotKind.RequiredFunction2);
+                    else if (s.Kind == FacadeSlotKind.Content3)
+                        slots[i] = s.WithKind(s.Param.NullableAnnotation == NullableAnnotation.Annotated
+                            ? FacadeSlotKind.NamedFunction3 : FacadeSlotKind.RequiredFunction3);
+                }
+                hasMultiSlot = true;
+            }
+        }
+
         if (diags.Count > 0)
             return new GenerationResult(null, null, diags);
 
         var source = Emit(className, method.Name, scope, composerParam, slots, hasMultiSlot,
-            callerProvidesDefaults, defaultsParam, defaults, defaultsType?.Name, themeColor, colorSlot);
+            callerProvidesDefaults, defaultsParam, defaults, defaultsType?.Name, themeColor, colorSlot,
+            userParams, branchInfo);
         var hint = $"ComposeNet.Facade.{className}.g.cs";
         return new GenerationResult(source, hint, Array.Empty<Diagnostic>());
+    }
+
+    static BranchInfo? BuildBranchInfo(Context c, IMethodSymbol primary,
+        string? branchOn, string? alternateBridgeName, Location loc,
+        IReadOnlyList<IParameterSymbol> primaryUserParams,
+        IReadOnlyList<FacadeSlot> primarySlots,
+        bool callerProvidesDefaults, bool isHybridContainer,
+        List<Diagnostic> diags)
+    {
+        // Both required.
+        if (string.IsNullOrEmpty(branchOn) || string.IsNullOrEmpty(alternateBridgeName))
+        {
+            diags.Add(Diagnostic.Create(Diagnostics.FacadeBranchInvalid, loc, primary.Name,
+                "BranchOn and AlternateBridge must both be set"));
+            return null;
+        }
+
+        // Primary must use the caller-managed-defaults shape.
+        if (!callerProvidesDefaults)
+        {
+            diags.Add(Diagnostic.Create(Diagnostics.FacadeBranchInvalid, loc, primary.Name,
+                "branching requires the primary bridge to declare a trailing 'int defaults' parameter"));
+            return null;
+        }
+
+        // Container shape disallowed — branching only supports multi-slot
+        // leafs (every slot exposed as a property). Hybrid containers
+        // (Scope opt-in with a named-slot mix) are explicitly rejected
+        // because the container body would bleed across branches in
+        // surprising ways. Pure Phase 1 container shapes are silently
+        // reclassified to leaf at the call site in Build().
+        if (isHybridContainer)
+        {
+            diags.Add(Diagnostic.Create(Diagnostics.FacadeBranchInvalid, loc, primary.Name,
+                "branching is not supported on hybrid container shapes (Scope opt-in with named slots)"));
+            return null;
+        }
+
+        // Resolve alternate method symbol on ComposeBridges.
+        var bridgesType = c.Compilation.GetTypeByMetadataName("ComposeNet.ComposeBridges");
+        if (bridgesType is null)
+        {
+            diags.Add(Diagnostic.Create(Diagnostics.FacadeBranchInvalid, loc, primary.Name,
+                "ComposeNet.ComposeBridges not found in compilation"));
+            return null;
+        }
+
+        var allOverloads = bridgesType.GetMembers(alternateBridgeName!).OfType<IMethodSymbol>()
+            .Where(m => m.IsStatic).ToArray();
+        // Require @Composable shape: trailing IComposer + (optionally) a
+        // [ComposeBridge] attribute. Filter to the candidate set first
+        // (this matches what the StateHolder validator does for Remember).
+        var candidates = allOverloads.Where(m =>
+            m.Parameters.Length >= 1 &&
+            ComposeDefaultsGenerator.IsComposer(m.Parameters[m.Parameters.Length - 1].Type) &&
+            (c.BridgeAttr is null ||
+             m.GetAttributes().Any(a => SymbolEqualityComparer.Default.Equals(a.AttributeClass, c.BridgeAttr)))
+        ).ToArray();
+
+        if (candidates.Length == 0)
+        {
+            diags.Add(Diagnostic.Create(Diagnostics.FacadeBranchInvalid, loc, primary.Name,
+                $"no static @Composable method 'ComposeBridges.{alternateBridgeName}' with [ComposeBridge] and a trailing IComposer parameter was found"));
+            return null;
+        }
+        if (candidates.Length > 1)
+        {
+            diags.Add(Diagnostic.Create(Diagnostics.FacadeBranchInvalid, loc, primary.Name,
+                $"AlternateBridge='{alternateBridgeName}' is ambiguous — {candidates.Length} matching overloads of ComposeBridges.{alternateBridgeName} found"));
+            return null;
+        }
+
+        var altMethod = candidates[0];
+        // Strip trailing composer + (optional) `int defaults`.
+        var altAll = altMethod.Parameters;
+        var altUser = altAll.Take(altAll.Length - 1).ToArray();
+        IParameterSymbol? altDefaultsParam = null;
+        if (altUser.Length > 0 &&
+            altUser[altUser.Length - 1].Type.SpecialType == SpecialType.System_Int32 &&
+            altUser[altUser.Length - 1].Name == "defaults")
+        {
+            altDefaultsParam = altUser[altUser.Length - 1];
+            altUser = altUser.Take(altUser.Length - 1).ToArray();
+        }
+        if (altDefaultsParam is null)
+        {
+            diags.Add(Diagnostic.Create(Diagnostics.FacadeBranchInvalid, loc, primary.Name,
+                $"alternate bridge 'ComposeBridges.{alternateBridgeName}' must declare a trailing 'int defaults' parameter"));
+            return null;
+        }
+
+        // Compute the diff. Alternate's user-param set must be exactly
+        // primary's set plus one extra whose Pascal-cased name matches
+        // BranchOn.
+        var primaryNames = new HashSet<string>(primaryUserParams.Select(p => p.Name), StringComparer.Ordinal);
+        var altNames = new HashSet<string>(altUser.Select(p => p.Name), StringComparer.Ordinal);
+        var missing = primaryNames.Where(n => !altNames.Contains(n)).ToArray();
+        if (missing.Length > 0)
+        {
+            diags.Add(Diagnostic.Create(Diagnostics.FacadeBranchInvalid, loc, primary.Name,
+                $"alternate bridge 'ComposeBridges.{alternateBridgeName}' is missing primary parameters: {string.Join(", ", missing)}"));
+            return null;
+        }
+        var extras = altUser.Where(p => !primaryNames.Contains(p.Name)).ToArray();
+        if (extras.Length != 1)
+        {
+            diags.Add(Diagnostic.Create(Diagnostics.FacadeBranchInvalid, loc, primary.Name,
+                $"alternate bridge 'ComposeBridges.{alternateBridgeName}' must add exactly one parameter vs primary; found {extras.Length} ({string.Join(", ", extras.Select(e => e.Name))})"));
+            return null;
+        }
+        var extra = extras[0];
+        var pascalExtra = Pascal(extra.Name);
+        if (!string.Equals(pascalExtra, branchOn, StringComparison.Ordinal))
+        {
+            diags.Add(Diagnostic.Create(Diagnostics.FacadeBranchInvalid, loc, primary.Name,
+                $"extra parameter '{extra.Name}' (Pascal '{pascalExtra}') does not match BranchOn='{branchOn}'"));
+            return null;
+        }
+
+        // Shape compatibility on shared params. Compose function types
+        // are compared by Kotlin arity (nullability is allowed to differ
+        // because the facade hides it); everything else is compared by
+        // canonical type symbol equality (nullable-aware).
+        foreach (var pp in primaryUserParams)
+        {
+            var ap = altUser.First(a => a.Name == pp.Name);
+            if (!AreCompatibleSharedParams(pp, ap))
+            {
+                diags.Add(Diagnostic.Create(Diagnostics.FacadeBranchInvalid, loc, primary.Name,
+                    $"shared parameter '{pp.Name}' has incompatible types between primary ({pp.Type.ToDisplayString()}) and alternate ({ap.Type.ToDisplayString()})"));
+                return null;
+            }
+        }
+
+        // Synthesise the branched slot. It must be a Kotlin function so
+        // the facade can expose it as a ComposableNode? property.
+        var extraArity = KotlinFunctionArity(extra.Type);
+        FacadeSlotKind branchedKind;
+        if (extraArity == 2) branchedKind = FacadeSlotKind.NamedFunction2;
+        else if (extraArity == 3) branchedKind = FacadeSlotKind.NamedFunction3;
+        else
+        {
+            diags.Add(Diagnostic.Create(Diagnostics.FacadeBranchInvalid, loc, primary.Name,
+                $"extra parameter '{extra.Name}' must be Kotlin.Jvm.Functions.IFunction2 or IFunction3; was '{extra.Type.ToDisplayString()}'"));
+            return null;
+        }
+
+        // Resolve the alternate's Defaults enum (declarative first, then
+        // generic-form enum walk).
+        AttributeData? altBridgeAttr = c.BridgeAttr is null ? null
+            : altMethod.GetAttributes().FirstOrDefault(a => SymbolEqualityComparer.Default.Equals(a.AttributeClass, c.BridgeAttr));
+        INamedTypeSymbol? altDefaultsType = altBridgeAttr is not null ? ReadType(altBridgeAttr, "Defaults") : null;
+        if (altDefaultsType is null)
+        {
+            diags.Add(Diagnostic.Create(Diagnostics.FacadeBranchInvalid, loc, primary.Name,
+                $"alternate bridge 'ComposeBridges.{alternateBridgeName}' has no '[ComposeBridge].Defaults' enum to drive the per-branch defaults mask"));
+            return null;
+        }
+        DefaultsInfo? altDefaults = null;
+        if (c.DeclarativeAttr is not null)
+            altDefaults = DefaultsInfo.TryRead(c.Compilation, c.DeclarativeAttr, altDefaultsType.Name);
+        altDefaults ??= DefaultsInfo.TryReadFromEnum(altDefaultsType);
+        if (altDefaults is null)
+        {
+            diags.Add(Diagnostic.Create(Diagnostics.FacadeBranchInvalid, loc, primary.Name,
+                $"could not resolve [assembly: ComposeDefaults(\"{altDefaultsType.Name}\", ...)] for the alternate bridge"));
+            return null;
+        }
+
+        // Note: the branched slot's SlotPropertyName is the PascalCased
+        // BranchOn; we pass it explicitly so PropertyName() agrees with
+        // the if-condition the emitter produces.
+        var branchedSlot = new FacadeSlot(extra, branchedKind, slotPropertyName: branchOn);
+
+        return new BranchInfo(
+            alternateMethodName: altMethod.Name,
+            alternateUserParams: altUser,
+            alternateDefaults: altDefaults!.Value,
+            alternateDefaultsEnumName: altDefaultsType.Name,
+            branchedSlot: branchedSlot,
+            branchProperty: branchOn!);
+    }
+
+    static bool AreCompatibleSharedParams(IParameterSymbol a, IParameterSymbol b)
+    {
+        var aArity = KotlinFunctionArity(a.Type);
+        var bArity = KotlinFunctionArity(b.Type);
+        if (aArity >= 0 || bArity >= 0) return aArity == bArity;
+        // Strip nullability and compare type symbols.
+        var aType = a.Type.WithNullableAnnotation(NullableAnnotation.None);
+        var bType = b.Type.WithNullableAnnotation(NullableAnnotation.None);
+        return SymbolEqualityComparer.Default.Equals(aType, bType);
+    }
+
+    internal sealed class BranchInfo
+    {
+        public BranchInfo(string alternateMethodName, IReadOnlyList<IParameterSymbol> alternateUserParams,
+            DefaultsInfo alternateDefaults, string alternateDefaultsEnumName,
+            FacadeSlot branchedSlot, string branchProperty)
+        {
+            AlternateMethodName = alternateMethodName;
+            AlternateUserParams = alternateUserParams;
+            AlternateDefaults = alternateDefaults;
+            AlternateDefaultsEnumName = alternateDefaultsEnumName;
+            BranchedSlot = branchedSlot;
+            BranchProperty = branchProperty;
+        }
+        public string AlternateMethodName { get; }
+        /// <summary>Alternate bridge's user parameters, in declaration order, excluding trailing IComposer and `int defaults`.</summary>
+        public IReadOnlyList<IParameterSymbol> AlternateUserParams { get; }
+        public DefaultsInfo AlternateDefaults { get; }
+        public string AlternateDefaultsEnumName { get; }
+        public FacadeSlot BranchedSlot { get; }
+        /// <summary>The PascalCased property name on the facade (e.g. "Subtitle").</summary>
+        public string BranchProperty { get; }
     }
 
     static FacadeSlot? Classify(IParameterSymbol p, Context c, string methodName, Location loc, List<Diagnostic> diags)
@@ -579,7 +826,9 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         IParameterSymbol composerParam, IReadOnlyList<FacadeSlot> slots,
         bool isMultiSlot, bool callerProvidesDefaults, IParameterSymbol? defaultsParam,
         DefaultsInfo? defaults, string? defaultsEnumName,
-        string? themeColor, FacadeSlot? colorSlot)
+        string? themeColor, FacadeSlot? colorSlot,
+        IReadOnlyList<IParameterSymbol> primaryUserParams,
+        BranchInfo? branchInfo)
     {
         // After classification, only the container's body survives as
         // Content2/3 (multi-slot leafs re-classified to Named/Required).
@@ -755,16 +1004,25 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         // Modifier evaluation. Only hoist to a local when needed for
         // the auto-mask (callerProvidesDefaults). Otherwise the bridge
         // call uses BuildModifier() inline to keep Phase 1 output stable.
+        // Branching always hoists (both branches reference __modifier in
+        // their per-branch mask).
         var modifierSlot = slots.FirstOrDefault(s => s.Kind == FacadeSlotKind.Modifier);
-        bool hoistModifier = modifierSlot.Param is not null && callerProvidesDefaults;
+        bool hoistModifier = modifierSlot.Param is not null && (callerProvidesDefaults || branchInfo is not null);
         if (hoistModifier)
         {
             sb.AppendLine("            var __modifier = BuildModifier();");
         }
 
-        // Named slot wrappers (Phase 3). One per line.
+        // Named slot wrappers (Phase 3). One per line. When branching,
+        // skip the branched slot — it gets wrapped inside the if-branch
+        // only (the primary bridge has no corresponding parameter).
         foreach (var s in namedSlots)
         {
+            if (branchInfo is not null &&
+                SymbolEqualityComparer.Default.Equals(s.Param, branchInfo.BranchedSlot.Param))
+            {
+                continue;
+            }
             var name = PropertyName(s);
             string wrap = s.Kind is FacadeSlotKind.NamedFunction3 or FacadeSlotKind.RequiredFunction3
                 ? "Wrap3"
@@ -828,32 +1086,40 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
 
         string indent = hasPainter ? "                " : "            ";
 
-        // Phase 3 — auto-mask defaults.
-        if (callerProvidesDefaults && defaults is { } d)
+        // Phase 3 — auto-mask defaults + bridge call.
+        if (branchInfo is not null)
         {
-            EmitDefaultsMask(sb, indent, d, slots, namedSlots, modifierSlot.Param is not null, hasPainter);
+            EmitBranchedRender(sb, indent, bridgeMethodName, slots, primaryUserParams,
+                defaults!.Value, defaultsEnumName!, branchInfo, composerName, hoistModifier);
         }
+        else
+        {
+            if (callerProvidesDefaults && defaults is { } d)
+            {
+                EmitDefaultsMask(sb, indent, d, slots, namedSlots, modifierSlot.Param is not null, hasPainter);
+            }
 
-        // Bridge call. Preserve original bridge param order.
-        sb.Append(indent).Append("global::ComposeNet.ComposeBridges.").Append(bridgeMethodName).Append('(');
-        bool first = true;
-        // Walk method.Parameters via slots in their original order; the
-        // defaults param (if any) was removed from `slots` so we add it
-        // back here from the local __defaults symbol.
-        foreach (var s in slots)
-        {
+            // Bridge call. Preserve original bridge param order.
+            sb.Append(indent).Append("global::ComposeNet.ComposeBridges.").Append(bridgeMethodName).Append('(');
+            bool first = true;
+            // Walk method.Parameters via slots in their original order; the
+            // defaults param (if any) was removed from `slots` so we add it
+            // back here from the local __defaults symbol.
+            foreach (var s in slots)
+            {
+                if (!first) sb.Append(", ");
+                first = false;
+                sb.Append(BridgeArgExpr(s, hoistModifier));
+            }
+            if (callerProvidesDefaults)
+            {
+                if (!first) sb.Append(", ");
+                sb.Append("__defaults");
+                first = false;
+            }
             if (!first) sb.Append(", ");
-            first = false;
-            sb.Append(BridgeArgExpr(s, hoistModifier));
+            sb.Append(composerName).AppendLine(");");
         }
-        if (callerProvidesDefaults)
-        {
-            if (!first) sb.Append(", ");
-            sb.Append("__defaults");
-            first = false;
-        }
-        if (!first) sb.Append(", ");
-        sb.Append(composerName).AppendLine(");");
 
         if (hasPainter)
         {
@@ -868,6 +1134,70 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         sb.AppendLine("    }");
         sb.AppendLine("}");
         return sb.ToString();
+    }
+
+    static void EmitBranchedRender(StringBuilder sb, string indent,
+        string primaryMethodName, IReadOnlyList<FacadeSlot> slots,
+        IReadOnlyList<IParameterSymbol> primaryUserParams,
+        DefaultsInfo primaryDefaults, string primaryDefaultsEnumName,
+        BranchInfo branch, string composerName, bool hoistModifier)
+    {
+        // Lookup table from bridge-param-name to facade slot. Built once
+        // and reused for both branches' call emission. Names that only
+        // exist in the alternate (the branched slot) map to the
+        // synthesized slot; names shared by both bridges map to the
+        // primary's classification.
+        var slotByName = new Dictionary<string, FacadeSlot>(StringComparer.Ordinal);
+        foreach (var s in slots)
+            slotByName[s.Param.Name] = s;
+
+        var branched = branch.BranchedSlot;
+        var branchPropName = branch.BranchProperty;
+        int arity = branched.Kind == FacadeSlotKind.NamedFunction3 ? 3 : 2;
+        string wrap = arity == 3 ? "Wrap3" : "Wrap2";
+
+        var allNamedSlots = slots.Where(s => s.Kind is FacadeSlotKind.NamedFunction2 or FacadeSlotKind.NamedFunction3
+            or FacadeSlotKind.RequiredFunction2 or FacadeSlotKind.RequiredFunction3).ToArray();
+
+        // Alternate branch: the branched slot is provided.
+        sb.Append(indent).Append("if (").Append(branchPropName).AppendLine(" is not null)");
+        sb.Append(indent).AppendLine("{");
+        var inner = indent + "    ";
+        sb.Append(inner).Append("var __").Append(branched.Param.Name)
+          .Append(" = global::ComposeNet.ComposableLambdas.").Append(wrap)
+          .Append('(').Append(composerName).Append(", c => ")
+          .Append(branchPropName).AppendLine("!.Render(c));");
+        EmitDefaultsMask(sb, inner, branch.AlternateDefaults, slots, allNamedSlots,
+            hasModifier: hoistModifier, hasPainter: false);
+        EmitBridgeCallByParams(sb, inner, branch.AlternateMethodName, branch.AlternateUserParams,
+            slotByName, composerName, hoistModifier);
+        sb.Append(indent).AppendLine("}");
+
+        // Primary branch: branched slot is null.
+        sb.Append(indent).AppendLine("else");
+        sb.Append(indent).AppendLine("{");
+        EmitDefaultsMask(sb, inner, primaryDefaults, slots, allNamedSlots,
+            hasModifier: hoistModifier, hasPainter: false);
+        EmitBridgeCallByParams(sb, inner, primaryMethodName, primaryUserParams,
+            slotByName, composerName, hoistModifier);
+        sb.Append(indent).AppendLine("}");
+    }
+
+    static void EmitBridgeCallByParams(StringBuilder sb, string indent,
+        string bridgeMethodName, IReadOnlyList<IParameterSymbol> bridgeUserParams,
+        IReadOnlyDictionary<string, FacadeSlot> slotByName,
+        string composerName, bool hoistModifier)
+    {
+        sb.Append(indent).Append("global::ComposeNet.ComposeBridges.").Append(bridgeMethodName).Append('(');
+        foreach (var p in bridgeUserParams)
+        {
+            if (slotByName.TryGetValue(p.Name, out var slot))
+                sb.Append(BridgeArgExpr(slot, hoistModifier));
+            else
+                sb.Append("default");
+            sb.Append(", ");
+        }
+        sb.Append("__defaults, ").Append(composerName).AppendLine(");");
     }
 
     static void EmitCallbackWrapper(StringBuilder sb, FacadeSlot s)

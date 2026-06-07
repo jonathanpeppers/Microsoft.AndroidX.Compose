@@ -739,6 +739,81 @@ public class BridgeGeneratorTests
     }
 
     [Fact]
+    public void ExtensionWithDefault_DraggableShape_AllRequiredBitsSuppressedAndOptionalsDefaulted()
+    {
+        // Mirrors androidx.compose.foundation.gestures.DraggableKt.draggable$default —
+        // Modifier extension with 8 Kotlin params. The C# wrapper supplies
+        // only the first 3 (state, orientation, enabled); the remaining 5
+        // slots stay defaulted in v1 (omitted from the C# signature).
+        var code = """
+            using ComposeNet;
+
+            [assembly: ComposeDefaults("ModifierDraggableDefault",
+                "!state", "!orientation", "!enabled",
+                "interactionSource", "startDragImmediately",
+                "onDragStarted", "onDragStopped", "reverseDirection")]
+
+            namespace ComposeNet
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(
+                        Class = "androidx/compose/foundation/gestures/DraggableKt",
+                        JvmName = "draggable$default",
+                        Signature = "(Landroidx/compose/ui/Modifier;Landroidx/compose/foundation/gestures/DraggableState;Landroidx/compose/foundation/gestures/Orientation;ZLandroidx/compose/foundation/interaction/MutableInteractionSource;ZLkotlin/jvm/functions/Function3;Lkotlin/jvm/functions/Function3;ZILjava/lang/Object;)Landroidx/compose/ui/Modifier;",
+                        Defaults = typeof(ModifierDraggableDefault))]
+                    internal static partial System.IntPtr ModifierDraggable(
+                        System.IntPtr modifier, System.IntPtr state,
+                        System.IntPtr orientation, bool enabled);
+                }
+            }
+            """;
+
+        var (output, diags, emitted) = Run(code);
+        Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+
+        // Receiver, state, orientation, enabled, interactionSource,
+        // startDragImmediately, onDragStarted, onDragStopped,
+        // reverseDirection, $default, marker = 11 slots.
+        Assert.Contains("global::Android.Runtime.JValue[11]", emitted);
+
+        // Supplied params occupy slots 0..3.
+        Assert.Contains("args[0] = new global::Android.Runtime.JValue(modifier)", emitted);
+        Assert.Contains("args[1] = new global::Android.Runtime.JValue(state)", emitted);
+        Assert.Contains("args[2] = new global::Android.Runtime.JValue(orientation)", emitted);
+        Assert.Contains("args[3] = new global::Android.Runtime.JValue(enabled)", emitted);
+
+        // Defaulted-only slots 4..8 fill with IntPtr.Zero / false.
+        Assert.Contains("args[4] = new global::Android.Runtime.JValue(global::System.IntPtr.Zero)", emitted);
+        Assert.Contains("args[8] = new global::Android.Runtime.JValue(false)", emitted);
+
+        // $default at slot 9, synthetic marker at slot 10.
+        Assert.Contains("args[9] = new global::Android.Runtime.JValue(defaults)", emitted);
+        Assert.Contains("args[10] = new global::Android.Runtime.JValue(global::System.IntPtr.Zero)", emitted);
+
+        // Auto-mask seeded with the full bitmask...
+        Assert.Contains("(int)global::ComposeNet.ModifierDraggableDefault.All", emitted);
+
+        // ...but the !-prefixed required bits are NOT cleared (they stay 0
+        // because the `!` form excludes them from `All`). The mask-clearing
+        // loop skips them entirely.
+        Assert.DoesNotContain("ModifierDraggableDefault.State", emitted);
+        Assert.DoesNotContain("ModifierDraggableDefault.Orientation", emitted);
+        Assert.DoesNotContain("ModifierDraggableDefault.Enabled", emitted);
+
+        // No Composer slot anywhere — non-@Composable extension.
+        Assert.DoesNotContain("Composer", emitted);
+        Assert.DoesNotContain("KeepAlive(composer)", emitted);
+
+        // Non-void return.
+        Assert.Contains("return global::Android.Runtime.JNIEnv.CallStaticObjectMethod(", emitted);
+
+        var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
+        Assert.Empty(errors);
+    }
+
+    [Fact]
     public void ExtensionWithDefault_CallerProvidesDefaults_SuppressesAutoMask()
     {
         // Same Background shape but the C# stub takes `int defaults` so

@@ -71,7 +71,7 @@ dotnet build samples/Jetchat -t:Run
   available width via `Modifier.Weight(1f)`, plus an `IconButton` send
   control. Newly sent messages are stamped `"now"` (matching
   upstream's `R.string.now`) instead of a wall-clock time.
-- Reactive message list via `ObservableList<Message>` — tapping send
+- Reactive message list via `MutableStateList<Message>` — tapping send
   appends a message and the UI recomposes.
 - Reactive channel selection via `MutableState<string>` — drawer taps
   flow into the title and bold the selected chat row in the drawer.
@@ -113,7 +113,7 @@ later round (Jun 5) closed three more — all now in use here:
   the enclosing `RenderContext.CurrentScopeKind`. The input row, the
   message list's vertical fill, and the day-separator dividers all use
   it.
-- **`ObservableList<T>`**: a managed `IList<T>` that participates in
+- **`MutableStateList<T>`**: a managed `IList<T>` that participates in
   Compose's snapshot system without needing a `SnapshotStateList`
   binding. Backs the message log.
 - **Drawable-resource `Image` / `Icon`** (PR #86, Phase 7
@@ -235,8 +235,8 @@ directly.
 
 Tapping `composers` / `droidcon-nyc` updates the title and selection
 highlight but the message list itself is shared across channels.
-Multi-channel state would refactor `ObservableList<Message>` into a
-`Dictionary<string, ObservableList<Message>>` or similar — out of
+Multi-channel state would refactor `MutableStateList<Message>` into a
+`Dictionary<string, MutableStateList<Message>>` or similar — out of
 scope for this port; the upstream sample's seed data lives in a
 separate `JetchatViewModel` + Hilt-injected fake repository.
 
