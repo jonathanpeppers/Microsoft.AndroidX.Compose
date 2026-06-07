@@ -1,7 +1,7 @@
 using AndroidX.Compose.Runtime;
 using ComposeNet;
 
-namespace ComposeNet.Sample;
+namespace ComposeNet.Gallery;
 
 /// <summary>
 /// Demo for the Locals tab: shows both a built-in

@@ -4,7 +4,7 @@ using AndroidX.Compose.UI.Graphics;
 using ComposeNet;
 using ComposeResources = ComposeNet.Resources;
 
-namespace ComposeNet.Sample;
+namespace ComposeNet.Gallery;
 
 [Activity(Label = "@string/app_name", MainLauncher = true, Theme = "@android:style/Theme.Material.Light.NoActionBar")]
 public class MainActivity : ComposeActivity
@@ -1377,7 +1377,7 @@ public class MainActivity : ComposeActivity
                     new Text($"Ticks (LaunchedEffect): {ticks.Value}"),
                     new Text($"Disposable cleanups: {disposeCount.Value}"),
                     new Text($"Effect key: {effectKey.Value}"),
-                    new Text("SideEffect: see logcat (filter: ComposeNet.Sample)"),
+                    new Text("SideEffect: see logcat (filter: ComposeNet.Gallery)"),
 
                     new HorizontalDivider { Modifier = Modifier.Companion.Padding(0, 8) },
 
@@ -1387,7 +1387,7 @@ public class MainActivity : ComposeActivity
                     // SideEffect that the same composition reads would
                     // create an infinite recomposition loop).
                     new SideEffect(() =>
-                        Android.Util.Log.Debug("ComposeNet.Sample",
+                        Android.Util.Log.Debug("ComposeNet.Gallery",
                             $"SideEffect ran (effectKey={effectKey.Value}, ticks={ticks.Value})")),
 
                     // LaunchedEffect — async tick loop scoped to the

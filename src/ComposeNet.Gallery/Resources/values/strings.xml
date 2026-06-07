@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">ComposeNet.Sample</string>
+    <string name="app_name">ComposeNet Gallery</string>
     <string name="app_text">Hello, Android!</string>
     <string name="greeting">Hello from .NET</string>
     <string name="counter_caption">Tap the star (loaded via Painter handle)</string>

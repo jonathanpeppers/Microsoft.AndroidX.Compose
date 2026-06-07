@@ -23,16 +23,16 @@ follow when changing code.
   `$default` bitmask.
 - `src/ComposeNet.SourceGenerators.Tests/` — xUnit tests, **no Android
   SDK required**. Run with `dotnet test src/ComposeNet.SourceGenerators.Tests`.
-- `src/ComposeNet.Sample/` — runnable Android app. Build with
-  `dotnet build src/ComposeNet.Sample` (needs the `android` workload).
+- `src/ComposeNet.Gallery/` — runnable Android app. Build with
+  `dotnet build src/ComposeNet.Gallery` (needs the `android` workload).
 
 ## Build / test / run
 
 ```pwsh
 dotnet test  src/ComposeNet.SourceGenerators.Tests   # generator unit tests
 dotnet build src/ComposeNet.Compose                  # facade only
-dotnet build src/ComposeNet.Sample                   # full Android build
-dotnet build src/ComposeNet.Sample -t:Run            # deploy to device
+dotnet build src/ComposeNet.Gallery                  # full Android build
+dotnet build src/ComposeNet.Gallery -t:Run           # deploy to device
 ```
 
 Run the generator tests on every change to `ComposeNet.SourceGenerators`
@@ -669,7 +669,7 @@ end-to-end recipe is:
    prefer `<see cref="…"/>` over inline names, and cross-reference
    the closest sibling for "same shape as X" facades. **Do not omit
    the stub** — without it the generated class has no XML docs.
-4. **Build the sample** (`dotnet build src/ComposeNet.Sample`) to
+4. **Build the sample** (`dotnet build src/ComposeNet.Gallery`) to
    verify the bridge + facade compile together. The supported
    shapes are validated at build time; CN3001-CN3011 will fire if
    the generator can't accept the bridge.

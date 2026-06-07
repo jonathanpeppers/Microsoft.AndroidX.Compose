@@ -5,7 +5,7 @@
     <OutputType>Exe</OutputType>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <ApplicationId>com.companyname.ComposeNet.Sample</ApplicationId>
+    <ApplicationId>com.companyname.ComposeNet.Gallery</ApplicationId>
     <ApplicationVersion>1</ApplicationVersion>
     <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
