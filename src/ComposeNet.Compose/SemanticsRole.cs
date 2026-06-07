@@ -6,7 +6,7 @@ namespace ComposeNet;
 /// <c>Modifier.semantics { role = ... }</c>. Compose defines
 /// <c>Role</c> as a <c>@JvmInline value class</c> over an <see cref="int"/>;
 /// the underlying values match Kotlin's source order
-/// (<see cref="Button"/> = 0 … <see cref="ValuePicker"/> = 8) and have
+/// (<see cref="Button"/> = 0 … <see cref="Carousel"/> = 8) and have
 /// been stable since the feature was introduced.
 ///
 /// Use with <see cref="Modifier.Semantics(SemanticsRole)"/> or

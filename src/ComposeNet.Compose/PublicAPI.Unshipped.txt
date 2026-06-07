@@ -973,13 +973,13 @@ ComposeNet.TopAppBar.Subtitle.set -> void
 ComposeNet.TopAppBar.Title.get -> ComposeNet.ComposableNode?
 ComposeNet.TopAppBar.Title.set -> void
 ComposeNet.TopAppBar.TopAppBar() -> void
-ComposeNet.TransformOrigin
-static ComposeNet.TransformOrigin.Center.get -> long
-static ComposeNet.TransformOrigin.Pack(float pivotFractionX, float pivotFractionY) -> long
 ComposeNet.TopSearchBar
 ComposeNet.TopSearchBar.InputField.get -> ComposeNet.ComposableNode?
 ComposeNet.TopSearchBar.InputField.set -> void
 ComposeNet.TopSearchBar.TopSearchBar(ComposeNet.SearchBarState! state) -> void
+ComposeNet.TransformOrigin
+static ComposeNet.TransformOrigin.Center.get -> long
+static ComposeNet.TransformOrigin.Pack(float pivotFractionX, float pivotFractionY) -> long
 ComposeNet.TriStateCheckbox
 ComposeNet.TriStateCheckbox.TriStateCheckbox(AndroidX.Compose.UI.State.ToggleableState! state, System.Action! onClick) -> void
 ComposeNet.VerticalDivider
