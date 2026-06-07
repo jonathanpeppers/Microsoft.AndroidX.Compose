@@ -100,6 +100,14 @@ ComposeNet.ComposeActivity.ComposeActivity() -> void
 ComposeNet.ComposeActivity.Remember<T>(System.Func<T>! factory, int line = 0, string! file = "") -> T
 ComposeNet.ComposeActivity.RememberSaveable<T>(System.Func<T>! factory, int line = 0, string! file = "") -> T
 ComposeNet.ComposeActivity.SetContent(System.Func<ComposeNet.ComposableNode!>! content) -> void
+ComposeNet.CompositionLocal
+ComposeNet.CompositionLocal<T>
+ComposeNet.CompositionLocal<T>.Current.get -> T
+ComposeNet.CompositionLocal<T>.GetCurrent(AndroidX.Compose.Runtime.IComposer! composer) -> T
+ComposeNet.CompositionLocal<T>.Provides(T value) -> ComposeNet.ProvidedValue!
+ComposeNet.CompositionLocalProvider
+ComposeNet.CompositionLocalProvider.Add(ComposeNet.ProvidedValue! value) -> void
+ComposeNet.CompositionLocalProvider.CompositionLocalProvider() -> void
 ComposeNet.CustomTab
 ComposeNet.CustomTab.CustomTab(bool selected, System.Action! onClick) -> void
 ComposeNet.DatePicker
@@ -370,6 +378,7 @@ ComposeNet.ListItem.Supporting.get -> ComposeNet.ComposableNode?
 ComposeNet.ListItem.Supporting.set -> void
 ComposeNet.ListItem.Trailing.get -> ComposeNet.ComposableNode?
 ComposeNet.ListItem.Trailing.set -> void
+ComposeNet.Locals
 ComposeNet.MaterialTheme
 ComposeNet.MaterialTheme.MaterialTheme() -> void
 ComposeNet.MediumFlexibleTopAppBar
@@ -590,6 +599,7 @@ ComposeNet.PrimaryScrollableTabRow
 ComposeNet.PrimaryScrollableTabRow.PrimaryScrollableTabRow(int selectedTabIndex) -> void
 ComposeNet.PrimaryTabRow
 ComposeNet.PrimaryTabRow.PrimaryTabRow(int selectedTabIndex) -> void
+ComposeNet.ProvidedValue
 ComposeNet.PullToRefreshBox
 ComposeNet.PullToRefreshBox.PullToRefreshBox(bool isRefreshing, System.Action! onRefresh, ComposeNet.PullToRefreshState? state = null) -> void
 ComposeNet.PullToRefreshState
@@ -876,6 +886,10 @@ static ComposeNet.Arrangement.Start.get -> ComposeNet.Arrangement!
 static ComposeNet.Arrangement.Top.get -> ComposeNet.Arrangement!
 static ComposeNet.Compose.Remember<T>(System.Func<T>! factory, int line = 0, string! file = "") -> T
 static ComposeNet.Compose.RememberSaveable<T>(System.Func<T>! factory, int line = 0, string! file = "") -> T
+static ComposeNet.CompositionLocal.Of<T>(System.Func<T>! defaultFactory) -> ComposeNet.CompositionLocal<T>!
+static ComposeNet.CompositionLocal.StaticOf<T>(System.Func<T>! defaultFactory) -> ComposeNet.CompositionLocal<T>!
+static ComposeNet.CompositionLocal<T>.Of(System.Func<T>! defaultFactory) -> ComposeNet.CompositionLocal<T>!
+static ComposeNet.CompositionLocal<T>.StaticOf(System.Func<T>! defaultFactory) -> ComposeNet.CompositionLocal<T>!
 static ComposeNet.Dp.implicit operator ComposeNet.Dp(float value) -> ComposeNet.Dp
 static ComposeNet.Dp.implicit operator ComposeNet.Dp(int value) -> ComposeNet.Dp
 static ComposeNet.Dp.operator !=(ComposeNet.Dp left, ComposeNet.Dp right) -> bool
@@ -900,6 +914,12 @@ static ComposeNet.FontWeight.SemiBold.get -> ComposeNet.FontWeight!
 static ComposeNet.FontWeight.Thin.get -> ComposeNet.FontWeight!
 static ComposeNet.GridCells.Adaptive(float minSizeDp) -> AndroidX.Compose.Foundation.Lazy.Grid.IGridCells!
 static ComposeNet.GridCells.Fixed(int count) -> AndroidX.Compose.Foundation.Lazy.Grid.IGridCells!
+static readonly ComposeNet.Locals.LocalColorScheme -> ComposeNet.CompositionLocal<AndroidX.Compose.Material3.ColorScheme!>!
+static readonly ComposeNet.Locals.LocalConfiguration -> ComposeNet.CompositionLocal<Android.Content.Res.Configuration!>!
+static readonly ComposeNet.Locals.LocalContext -> ComposeNet.CompositionLocal<Android.Content.Context!>!
+static readonly ComposeNet.Locals.LocalLifecycleOwner -> ComposeNet.CompositionLocal<AndroidX.Lifecycle.ILifecycleOwner!>!
+static readonly ComposeNet.Locals.LocalResources -> ComposeNet.CompositionLocal<Android.Content.Res.Resources!>!
+static readonly ComposeNet.Locals.LocalView -> ComposeNet.CompositionLocal<Android.Views.View!>!
 static ComposeNet.Modifier.Companion.get -> ComposeNet.Modifier!
 static ComposeNet.MutableNumberState<T>.operator --(ComposeNet.MutableNumberState<T>! s) -> ComposeNet.MutableNumberState<T>!
 static ComposeNet.MutableNumberState<T>.operator ++(ComposeNet.MutableNumberState<T>! s) -> ComposeNet.MutableNumberState<T>!

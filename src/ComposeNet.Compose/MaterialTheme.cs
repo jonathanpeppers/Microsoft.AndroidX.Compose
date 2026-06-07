@@ -13,7 +13,13 @@ public sealed class MaterialTheme : ComposableContainer
 {
     internal override void Render(IComposer composer)
     {
-        var scheme  = DynamicTonalPaletteKt.DynamicLightColorScheme(Android.App.Application.Context);
+        // Read the composition-scoped Android context rather than
+        // Android.App.Application.Context, so the theme reflects any
+        // override installed by an enclosing CompositionLocalProvider
+        // (e.g. a contextual content-wrapper) and updates correctly on
+        // activity recreations.
+        var context = Locals.LocalContext.GetCurrent(composer);
+        var scheme  = DynamicTonalPaletteKt.DynamicLightColorScheme(context);
         var content = ComposableLambdas.Wrap2(composer, c => RenderChildren(c));
         MaterialThemeKt.MaterialTheme(
             colorScheme: scheme,
