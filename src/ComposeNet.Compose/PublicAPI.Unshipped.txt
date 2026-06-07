@@ -16,6 +16,12 @@ ComposeNet.AlertDialog.Title.set -> void
 ComposeNet.Alignment
 ComposeNet.Alignment.Horizontal
 ComposeNet.Alignment.Vertical
+ComposeNet.AnimatedContent<T>
+ComposeNet.AnimatedContent<T>.AnimatedContent(T targetState, System.Func<T, ComposeNet.ComposableNode!>! content) -> void
+ComposeNet.AnimatedContent<T>.TargetState.get -> T
+ComposeNet.AnimatedVisibility
+ComposeNet.AnimatedVisibility.AnimatedVisibility(bool visible) -> void
+ComposeNet.AnimatedVisibility.Visible.get -> bool
 ComposeNet.Arrangement
 ComposeNet.AssistChip
 ComposeNet.AssistChip.AssistChip(System.Action! onClick) -> void
@@ -110,6 +116,9 @@ ComposeNet.ComposeActivity.RememberSaveable<T>(System.Func<T>! factory, object? 
 ComposeNet.ComposeActivity.RememberSaveable<T>(System.Func<T>! factory, object? key1, object? key2, object? key3, int line = 0, string! file = "") -> T
 ComposeNet.ComposeActivity.RememberSaveableKeyed<T>(System.Func<T>! factory, object?[]! keys, int line = 0, string! file = "") -> T
 ComposeNet.ComposeActivity.SetContent(System.Func<ComposeNet.ComposableNode!>! content) -> void
+ComposeNet.Crossfade<T>
+ComposeNet.Crossfade<T>.Crossfade(T targetState, System.Func<T, ComposeNet.ComposableNode!>! content) -> void
+ComposeNet.Crossfade<T>.TargetState.get -> T
 ComposeNet.CustomTab
 ComposeNet.CustomTab.CustomTab(bool selected, System.Action! onClick) -> void
 ComposeNet.DatePicker

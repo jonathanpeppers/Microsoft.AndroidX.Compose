@@ -182,7 +182,13 @@ public class MainActivity : ComposeActivity
             var effectKey   = Remember(() => new MutableNumberState<int>(0));
             var disposeCount = Remember(() => new MutableNumberState<int>(0));
 
-            string[] tabNames = { "Basics", "Buttons", "Cards", "Drawer", "Selection", "Pickers", "Misc", "App bars", "Lazy", "Carousels", "Pager", "Nav", "State", "Effects" };
+            // Animation tab (issue #56): drive AnimatedVisibility with a bool,
+            // and Crossfade<int> / AnimatedContent<int> with the same step
+            // counter so the two transitions can be compared side-by-side.
+            var animVisible = Remember(() => new MutableState<bool>(true));
+            var animStep    = Remember(() => new MutableNumberState<int>(0));
+
+            string[] tabNames = { "Basics", "Buttons", "Cards", "Drawer", "Selection", "Pickers", "Misc", "App bars", "Lazy", "Carousels", "Pager", "Nav", "State", "Effects", "Animation" };
 
             // Per-tab content. Only the current tab's column is added to
             // the screen — keeps the sample short enough to fit on one
@@ -1358,6 +1364,62 @@ public class MainActivity : ComposeActivity
                         new Text("Reset counters"),
                     },
                 },
+                14 => new Column
+                {
+                    // Animation tab (issue #56): demonstrate the three Compose
+                    // animation primitives bound by ComposeNet.
+                    //   - AnimatedVisibility: fade/expand a child in and out
+                    //     as a bool toggles.
+                    //   - Crossfade<T>: cross-dissolve between content keyed
+                    //     on a value (here: an int step counter).
+                    //   - AnimatedContent<T>: fade + slight size animation
+                    //     between content for the same key — Material 3's
+                    //     richer counterpart to Crossfade.
+                    new Text("AnimatedVisibility — toggle a child"),
+                    new Button(onClick: () => animVisible.Value = !animVisible.Value)
+                    {
+                        new Text(animVisible.Value ? "Hide" : "Show"),
+                    },
+                    new AnimatedVisibility(animVisible.Value)
+                    {
+                        new Card
+                        {
+                            Modifier.Companion.Padding(8),
+                            new Text("👋 I fade in and out"),
+                        },
+                    },
+                    new HorizontalDivider { Modifier = Modifier.Companion.Padding(0, 8) },
+
+                    new Text("Crossfade<int> — cross-dissolve between values"),
+                    new Row(horizontalArrangement: Arrangement.SpacedBy(8))
+                    {
+                        new Button(onClick: () => animStep.Value--)
+                        {
+                            new Text("−"),
+                        },
+                        new Button(onClick: () => animStep.Value++)
+                        {
+                            new Text("+"),
+                        },
+                    },
+                    new Crossfade<int>(
+                        targetState: animStep.Value,
+                        content:     i => new Card
+                        {
+                            Modifier.Companion.Padding(8),
+                            new Text($"Step {i}"),
+                        }),
+                    new HorizontalDivider { Modifier = Modifier.Companion.Padding(0, 8) },
+
+                    new Text("AnimatedContent<int> — same counter, richer transition"),
+                    new AnimatedContent<int>(
+                        targetState: animStep.Value,
+                        content:     i => new Card
+                        {
+                            Modifier.Companion.Padding(8),
+                            new Text($"Frame {i}"),
+                        }),
+                },
                 _ => new Column
                 {
                     // Lazy lists — bound through LazyDslKt / LazyGridDslKt.
@@ -1677,6 +1739,11 @@ public class MainActivity : ComposeActivity
                                 {
                                     Text = new Text("Effects"),
                                     Icon = new Text("⚡"),
+                                },
+                                new Tab(selected: tab.Value == 14, onClick: () => tab.Value = 14)
+                                {
+                                    Text = new Text("Animation"),
+                                    Icon = new Text("🎞"),
                                 },
                             },
                             tabContent,

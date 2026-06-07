@@ -96,6 +96,31 @@ internal static class ComposableLambdas
             block: new ComposableLambda3(body));
 
     /// <summary>
+    /// Wrap an <see cref="Action{IComposer}"/> as an identity-stable
+    /// <see cref="IFunction3"/> that receives the boxed <c>p0</c> as a
+    /// <see cref="Java.Lang.Object"/> — the value-typed Function3 shape
+    /// used by <c>Crossfade</c>'s
+    /// <c>content: @Composable (T) -&gt; Unit</c>, where <c>p0</c> is
+    /// the boxed targetState (not a scope receiver). The body unboxes
+    /// it back to <c>T</c>.
+    /// </summary>
+    /// <remarks>
+    /// Distinct method name (rather than a third <c>Wrap3</c>
+    /// overload) so existing call sites that pass
+    /// <c>(_, c) =&gt; ...</c> aren't ambiguous between the
+    /// <c>Action&lt;IntPtr, IComposer&gt;</c> and
+    /// <c>Action&lt;Java.Lang.Object?, IComposer&gt;</c> shapes.
+    /// </remarks>
+    public static IFunction3 Wrap3WithValue(
+        IComposer composer,
+        Action<Java.Lang.Object?, IComposer> body,
+        [CallerLineNumber] int line = 0,
+        [CallerFilePath] string file = "")
+        => (IFunction3)ComposableLambdaKt.ComposableLambda(
+            composer, SourceLocationKey.Compute(line, file), tracked: true,
+            block: new ComposableLambda3(body));
+
+    /// <summary>
     /// Build an identity-stable <see cref="IFunction4"/> wrapper for the
     /// <c>Function4&lt;LazyItemScope, Int, Composer, Int, Unit&gt;</c>
     /// @Composable shape used by <c>LazyListScope.items</c> and
