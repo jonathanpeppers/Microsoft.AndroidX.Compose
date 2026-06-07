@@ -358,6 +358,7 @@ ComposeNet.HorizontalUncontainedCarousel<T>.State.set -> void
 ComposeNet.HorizontalUncontainedCarousel<T>.UserScrollEnabled.get -> bool?
 ComposeNet.HorizontalUncontainedCarousel<T>.UserScrollEnabled.set -> void
 ComposeNet.Icon
+ComposeNet.Icon.Icon(AndroidX.Compose.UI.Graphics.Painter.Painter! painter, string? contentDescription) -> void
 ComposeNet.Icon.Icon(AndroidX.Compose.UI.Graphics.Vector.ImageVector! imageVector, string? contentDescription) -> void
 ComposeNet.Icon.Icon(int drawableResourceId, string? contentDescription) -> void
 ComposeNet.Icon.TintArgb.get -> long?
@@ -367,6 +368,7 @@ ComposeNet.IconButton.IconButton(System.Action! onClick) -> void
 ComposeNet.IconToggleButton
 ComposeNet.IconToggleButton.IconToggleButton(bool checked, System.Action<bool>! onCheckedChange) -> void
 ComposeNet.Image
+ComposeNet.Image.Image(AndroidX.Compose.UI.Graphics.Painter.Painter! painter, string? contentDescription) -> void
 ComposeNet.Image.Image(int drawableResourceId, string? contentDescription) -> void
 ComposeNet.Image.Image(int drawableResourceId) -> void
 ComposeNet.InputChip

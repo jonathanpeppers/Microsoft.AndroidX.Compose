@@ -58,6 +58,10 @@ public class FacadeGeneratorTests
         }
         namespace AndroidX.Compose.Runtime { public interface IComposer { } }
         namespace AndroidX.Compose.UI { public interface IModifier { } }
+        namespace AndroidX.Compose.UI.Graphics.Painter
+        {
+            public abstract class Painter : Java.Lang.Object { }
+        }
         namespace AndroidX.Compose.Material3
         {
             public sealed class ColorScheme
@@ -1086,12 +1090,31 @@ public class FacadeGeneratorTests
         var (output, diags, emitted) = Run(code, "Image");
         Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
         Assert.NotNull(emitted);
+
+        // Both ctor overloads: id-based (default) and pre-resolved Painter.
         Assert.Contains("public Image(int drawableResourceId", emitted);
+        Assert.Contains("public Image(global::AndroidX.Compose.UI.Graphics.Painter.Painter painter", emitted);
+
+        // Sibling backing fields. Exactly one is populated per instance.
         Assert.Contains("readonly int _drawableResourceId;", emitted);
-        Assert.Contains("global::System.IntPtr __painterRef = global::ComposeNet.ComposeBridges.PainterResource(_drawableResourceId, composer);", emitted);
+        Assert.Contains("readonly global::AndroidX.Compose.UI.Graphics.Painter.Painter? _painter;", emitted);
+
+        // Painter ctor null-guards and stores into `_painter`.
+        Assert.Contains("_painter = painter ?? throw new global::System.ArgumentNullException(nameof(painter));", emitted);
+
+        // Render preamble branches: caller-owned Painter forwards a
+        // global-ref handle; resource-id path resolves a local ref we
+        // must release.
+        Assert.Contains("if (_painter is not null)", emitted);
+        Assert.Contains("__painterRef = ((global::Android.Runtime.IJavaObject)_painter).Handle;", emitted);
+        Assert.Contains("__painterOwned = false;", emitted);
+        Assert.Contains("__painterRef = global::ComposeNet.ComposeBridges.PainterResource(_drawableResourceId, composer);", emitted);
+        Assert.Contains("__painterOwned = true;", emitted);
         Assert.Contains("try", emitted);
         Assert.Contains("finally", emitted);
-        Assert.Contains("global::Android.Runtime.JNIEnv.DeleteLocalRef(__painterRef);", emitted);
+        Assert.Contains("if (__painterOwned) global::Android.Runtime.JNIEnv.DeleteLocalRef(__painterRef);", emitted);
+        Assert.Contains("global::System.GC.KeepAlive(_painter);", emitted);
+
         // Bridge call inside try block — uses __painterRef for painter arg.
         Assert.Contains("global::ComposeNet.ComposeBridges.Image(__painterRef", emitted);
 

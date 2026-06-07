@@ -922,6 +922,15 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             var typeRef = CtorFieldType(s);
             var modifier = s.Kind == FacadeSlotKind.StateHolder ? "" : "readonly ";
             sb.Append("        ").Append(modifier).Append(typeRef).Append(" _").Append(CtorIdentifier(s)).AppendLine(";");
+            // Phase 7 — for PainterResource, also emit a sibling
+            // Painter? field so the facade can accept a pre-resolved
+            // Painter as an alternative to the resource id. Exactly
+            // one of `_drawableResourceId` / `_painter` is set per
+            // instance (see the two ctor overloads below).
+            if (s.Kind == FacadeSlotKind.PainterResource)
+            {
+                sb.AppendLine("        readonly global::AndroidX.Compose.UI.Graphics.Painter.Painter? _painter;");
+            }
         }
 
         // Phase 10 — per-instance JCW veto adapter fields. One per
@@ -979,35 +988,20 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         // Constructor.
         if (ctorSlots.Length > 0)
         {
-            sb.Append("        public ").Append(className).Append('(');
-            for (int i = 0; i < ctorSlots.Length; i++)
+            // Phase 7 — when a PainterResource slot is present, emit
+            // TWO ctors. The "id" overload (default) takes an
+            // `int drawableResourceId` and the Render preamble resolves
+            // it inside the composition. The "painter" overload takes
+            // a pre-resolved `Painter` (e.g. from
+            // Resources.PainterResource) and forwards its handle
+            // directly. Exactly one of `_drawableResourceId` /
+            // `_painter` is set per instance; Render() branches on
+            // `_painter is not null`.
+            EmitFacadeCtor(sb, className, ctorSlots, painterShape: PainterCtorShape.Id);
+            if (ctorSlots.Any(s => s.Kind == FacadeSlotKind.PainterResource))
             {
-                if (i > 0) sb.Append(", ");
-                sb.Append(CtorParamType(ctorSlots[i])).Append(' ').Append(EscapeIdent(CtorIdentifier(ctorSlots[i])));
-                if (ctorSlots[i].Kind == FacadeSlotKind.StateHolder)
-                    sb.Append(" = null");
+                EmitFacadeCtor(sb, className, ctorSlots, painterShape: PainterCtorShape.Painter);
             }
-            sb.AppendLine(")");
-            sb.AppendLine("        {");
-            foreach (var s in ctorSlots)
-            {
-                // Phase 4b — auto-create wrapper instance when the
-                // Remember bridge has user params. The Render body
-                // reads init values off `_state` to pass into Remember,
-                // so the field must be non-null on entry.
-                if (s.IsParameterisedStateHolder)
-                {
-                    var fqType = s.StateWrapperType!.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat
-                        .WithMiscellaneousOptions(SymbolDisplayMiscellaneousOptions.UseSpecialTypes));
-                    sb.Append("            _").Append(CtorIdentifier(s)).Append(" = ")
-                      .Append(EscapeIdent(CtorIdentifier(s))).Append(" ?? new ").Append(fqType).AppendLine("();");
-                }
-                else
-                {
-                    sb.Append("            _").Append(CtorIdentifier(s)).Append(" = ").Append(EscapeIdent(CtorIdentifier(s))).AppendLine(";");
-                }
-            }
-            sb.AppendLine("        }");
         }
 
         // Render
@@ -1171,13 +1165,29 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
               .Append(composerName).Append(", 0).").Append(Pascal(themeColor)).AppendLine(";");
         }
 
-        // Phase 7 — PainterResource preamble.
+        // Phase 7 — PainterResource preamble. Resolves the painter
+        // handle two ways: if the caller used the Painter ctor, we
+        // forward the wrapper's global-ref handle directly (no
+        // local-ref ownership). Otherwise we resolve the drawable
+        // resource id inside the composition via painterResource(id)
+        // — that produces a local ref we must clean up in `finally`.
         var painterIdSlot = slots.FirstOrDefault(s => s.Kind == FacadeSlotKind.PainterResource);
         bool hasPainter = painterIdSlot.Param is not null;
         if (hasPainter)
         {
-            sb.AppendLine("            global::System.IntPtr __painterRef = global::ComposeNet.ComposeBridges.PainterResource(_drawableResourceId, "
+            sb.AppendLine("            global::System.IntPtr __painterRef;");
+            sb.AppendLine("            bool __painterOwned;");
+            sb.AppendLine("            if (_painter is not null)");
+            sb.AppendLine("            {");
+            sb.AppendLine("                __painterRef = ((global::Android.Runtime.IJavaObject)_painter).Handle;");
+            sb.AppendLine("                __painterOwned = false;");
+            sb.AppendLine("            }");
+            sb.AppendLine("            else");
+            sb.AppendLine("            {");
+            sb.AppendLine("                __painterRef = global::ComposeNet.ComposeBridges.PainterResource(_drawableResourceId, "
                 + composerName + ");");
+            sb.AppendLine("                __painterOwned = true;");
+            sb.AppendLine("            }");
             sb.AppendLine("            try");
             sb.AppendLine("            {");
         }
@@ -1224,7 +1234,8 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             sb.AppendLine("            }");
             sb.AppendLine("            finally");
             sb.AppendLine("            {");
-            sb.AppendLine("                global::Android.Runtime.JNIEnv.DeleteLocalRef(__painterRef);");
+            sb.AppendLine("                if (__painterOwned) global::Android.Runtime.JNIEnv.DeleteLocalRef(__painterRef);");
+            sb.AppendLine("                global::System.GC.KeepAlive(_painter);");
             sb.AppendLine("            }");
         }
 
@@ -1460,6 +1471,61 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
     static bool IsCtorSlot(FacadeSlot s) =>
         s.Kind is FacadeSlotKind.OnClick or FacadeSlotKind.Primitive or FacadeSlotKind.Callback
             or FacadeSlotKind.PainterResource or FacadeSlotKind.StateHolder;
+
+    // Phase 7 — PainterResource ctor variant. The generator emits one
+    // ctor per shape: `Id` takes an `int drawableResourceId` (Render
+    // resolves it via painterResource), `Painter` takes a pre-resolved
+    // Painter (Render forwards the wrapper's handle directly).
+    enum PainterCtorShape { Id, Painter }
+
+    static void EmitFacadeCtor(StringBuilder sb, string className,
+        FacadeSlot[] ctorSlots, PainterCtorShape painterShape)
+    {
+        sb.Append("        public ").Append(className).Append('(');
+        for (int i = 0; i < ctorSlots.Length; i++)
+        {
+            if (i > 0) sb.Append(", ");
+            var s = ctorSlots[i];
+            if (s.Kind == FacadeSlotKind.PainterResource && painterShape == PainterCtorShape.Painter)
+            {
+                sb.Append("global::AndroidX.Compose.UI.Graphics.Painter.Painter painter");
+            }
+            else
+            {
+                sb.Append(CtorParamType(s)).Append(' ').Append(EscapeIdent(CtorIdentifier(s)));
+                if (s.Kind == FacadeSlotKind.StateHolder)
+                    sb.Append(" = null");
+            }
+        }
+        sb.AppendLine(")");
+        sb.AppendLine("        {");
+        foreach (var s in ctorSlots)
+        {
+            // Phase 4b — auto-create wrapper instance when the
+            // Remember bridge has user params. The Render body
+            // reads init values off `_state` to pass into Remember,
+            // so the field must be non-null on entry.
+            if (s.IsParameterisedStateHolder)
+            {
+                var fqType = s.StateWrapperType!.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat
+                    .WithMiscellaneousOptions(SymbolDisplayMiscellaneousOptions.UseSpecialTypes));
+                sb.Append("            _").Append(CtorIdentifier(s)).Append(" = ")
+                  .Append(EscapeIdent(CtorIdentifier(s))).Append(" ?? new ").Append(fqType).AppendLine("();");
+            }
+            else if (s.Kind == FacadeSlotKind.PainterResource && painterShape == PainterCtorShape.Painter)
+            {
+                // Painter ctor: store the wrapper into _painter; leave
+                // _drawableResourceId at default (the sibling ctor sets
+                // it). Render branches on `_painter is not null`.
+                sb.AppendLine("            _painter = painter ?? throw new global::System.ArgumentNullException(nameof(painter));");
+            }
+            else
+            {
+                sb.Append("            _").Append(CtorIdentifier(s)).Append(" = ").Append(EscapeIdent(CtorIdentifier(s))).AppendLine(";");
+            }
+        }
+        sb.AppendLine("        }");
+    }
 
     static string CtorFieldType(FacadeSlot slot) => CtorParamType(slot);
 

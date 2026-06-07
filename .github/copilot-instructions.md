@@ -708,9 +708,52 @@ When you add `[ComposeFacade]` to a previously hand-written facade,
 partial class <Name>;`) in the same commit. The sibling stub is
 required (it owns the XML docs) but must not redeclare members the
 generator emits — otherwise you'll see duplicate-member errors.
-Conversely, if you ever need a fully custom `Render()` body again,
-remove the `[ComposeFacade]` attribute first and expand the stub
-into a normal hand-written class.
+
+### ⚠️ DO NOT demote a generated facade to hand-written
+
+**This is a critical rule with no exceptions in normal work.** If a
+facade is currently `[ComposeFacade]`-generated and you discover the
+generator can't model a new shape you need (extra ctor, branched
+Render path, new slot kind, etc.), the answer is **always to extend
+the generator**, never to delete `[ComposeFacade]` and re-implement
+the facade by hand. The hand-written code immediately loses the
+guarantees the generator provides (slot-key stability via
+`ComposableLambdas.Wrap*`, correct `$default` mask construction,
+consistent disposal ordering, future-proofing when the generator
+gains new features), and creates an orphaned hand-written facade
+that future contributors will mistake for a "this can't be
+generated" example.
+
+Concretely, when faced with "I need feature X that the generator
+doesn't emit":
+
+1. **Add a new slot kind, attribute, or codegen branch** to
+   `ComposeFacadeGenerator` / `ComposeBridgeGenerator` /
+   `ComposeDefaultsGenerator`. Phases 1–10 in this document are
+   precedents for how to scope and name a new shape.
+2. **Add a generator test** for the new shape in
+   `ComposeNet.SourceGenerators.Tests`. This is how every prior
+   phase landed; skipping it makes future regressions invisible.
+3. **Document the new shape** in the "Phase N" table above and add
+   any new CN3xxx diagnostics to the diagnostics table.
+4. **Apply the new attribute/argument** to the existing facade.
+   The hand-written sibling stub stays a one-liner.
+
+The only legitimate cases for hand-written facades are documented
+in the "Facades that still stay hand-written" list — they're shapes
+that genuinely cannot be modelled (multi-ctor `Icon` routing to two
+different bridges, scope facades with non-trivial scope-management
+logic, state-holders that combine parameterised Remember *with*
+per-instance confirm adapters, etc.). If you think a new facade
+belongs on that list, propose the addition explicitly and justify
+it — don't demote silently.
+
+Reverse rule (rare): if you ever need a fully custom `Render()`
+body that genuinely can't be expressed in the generator, remove
+the `[ComposeFacade]` attribute first, expand the stub into a
+normal hand-written class, **and add the facade to the
+"hand-written holdouts" list above with a one-sentence reason**.
+This requires user approval; do not do it on autopilot.
 
 ## Facade conventions (`Composables.cs`)
 
