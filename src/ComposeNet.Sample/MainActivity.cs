@@ -53,6 +53,13 @@ public class MainActivity : ComposeActivity
             var showModalRail = Remember(() => new MutableState<bool>(false));
             var modalRailIdx  = Remember(() => new MutableNumberState<int>(0));
 
+            // Issue #63: focus/toggle/semantics modifier demo state.
+            var toggle63        = Remember(() => new MutableState<bool>(false));
+            var focusReq63      = Remember(() => new FocusRequester());
+            var focusStatus63   = Remember(() => new MutableState<string>("not focused"));
+            var selectedRow63   = Remember(() => new MutableNumberState<int>(0));
+            var taps63          = Remember(() => new MutableNumberState<int>(0));
+
             var checkbox    = Remember(() => new MutableState<bool>(true));
             var switchOn    = Remember(() => new MutableState<bool>(false));
             var radioPick   = Remember(() => new MutableNumberState<int>(0));
@@ -116,6 +123,7 @@ public class MainActivity : ComposeActivity
             // VerticalScroll modifier and the SuspendBridge demo buttons
             // that programmatically scroll back to the top.
             var buttonsScroll = Remember(() => new ScrollState());
+            var greetingScroll = Remember(() => new ScrollState());
 
             // Compose Navigation demo state (issue #60). The NavController
             // is the externally-driven entry point — Button onClicks call
@@ -162,6 +170,7 @@ public class MainActivity : ComposeActivity
                     {
                         0 => (ComposableNode)new Column
                         {
+                            Modifier.Companion.VerticalScroll(greetingScroll),
                             new Text("Hello from .NET"),
                             new OutlinedTextField(name),
                             new Text($"Hi {(string.IsNullOrEmpty(name.Value) ? "stranger" : name.Value)}"),
@@ -266,6 +275,83 @@ public class MainActivity : ComposeActivity
                                     .Border(2, ColorKt.Color(red: 0x0D, green: 0x47, blue: 0xA1, alpha: 0xFF), cornerRadius: 12)
                                     .Clickable(() => count++)
                                     .Padding(horizontal: 16, vertical: 8),
+                            },
+                            // Issue #63 modifier demo — scope alignment inside a Box,
+                            // Toggleable row with semantic merge, programmatic focus
+                            // via FocusRequester + OnFocusChanged + Focusable, and
+                            // CombinedClickable + Selectable + Semantics.
+                            new Text("Issue #63 modifiers:"),
+                            // Box with three corner-aligned labels (TopStart, Center,
+                            // BottomEnd). The fourth child is an explicit colored
+                            // Box that uses MatchParentSize() to fill the parent —
+                            // the parent draws underneath the labels, which sit on
+                            // top of it. This is the standard "background overlay"
+                            // use of MatchParentSize.
+                            new Box
+                            {
+                                Modifier.Companion
+                                    .FillMaxWidth()
+                                    .Height(72)
+                                    .Border(1, ColorKt.Color(red: 0x90, green: 0x90, blue: 0x90, alpha: 0xFF)),
+                                new Box
+                                {
+                                    Modifier.Companion
+                                        .MatchParentSize()
+                                        .Background(ColorKt.Color(red: 0xFF, green: 0xF0, blue: 0xE0, alpha: 0xFF))
+                                        .Semantics("Background overlay that fills the box"),
+                                },
+                                new Text("TopStart")    { Modifier = Modifier.Companion.Align(Alignment.TopStart) },
+                                new Text("Center")      { Modifier = Modifier.Companion.Align(Alignment.Center) },
+                                new Text("BottomEnd")   { Modifier = Modifier.Companion.Align(Alignment.BottomEnd) },
+                            },
+                            // Toggleable row — whole row is a single accessibility
+                            // node that announces "Liked" / "Not liked".
+                            new Row
+                            {
+                                Modifier.Companion
+                                    .FillMaxWidth()
+                                    .Toggleable(toggle63.Value, v => toggle63.Value = v)
+                                    .Semantics(mergeDescendants: true, toggle63.Value ? "Liked" : "Not liked")
+                                    .Padding(8),
+                                new Text(toggle63.Value ? "♥ Liked" : "♡ Tap to like"),
+                            },
+                            // Programmatic focus via FocusRequester + Focusable +
+                            // OnFocusChanged. Tapping the button moves focus to the
+                            // first Text; the status line below updates.
+                            new Text($"Focus status: {focusStatus63.Value}"),
+                            new Text("Focus target")
+                            {
+                                Modifier = Modifier.Companion
+                                    .FocusRequester(focusReq63)
+                                    .OnFocusChanged(fs => focusStatus63.Value =
+                                        fs.IsFocused ? "focused" : (fs.HasFocus ? "child has focus" : "not focused"))
+                                    .Focusable()
+                                    .Padding(8)
+                                    .Border(1, ColorKt.Color(red: 0x55, green: 0x55, blue: 0xAA, alpha: 0xFF))
+                                    .Padding(4),
+                            },
+                            new Button(onClick: () => focusReq63.RequestFocus()) { new Text("Request focus") },
+                            // CombinedClickable + Selectable in a small list.
+                            new Text($"Taps (single/long/double): {taps63.Value}"),
+                            new Text("Hold or double-tap me")
+                            {
+                                Modifier = Modifier.Companion
+                                    .FillMaxWidth()
+                                    .CombinedClickable(
+                                        onClick:       () => taps63.Value += 1,
+                                        onLongClick:   () => taps63.Value += 10,
+                                        onDoubleClick: () => taps63.Value += 100)
+                                    .Padding(8),
+                            },
+                            new Column
+                            {
+                                new Text($"Selected row: {selectedRow63.Value}"),
+                                new Text("Row 0") { Modifier = Modifier.Companion
+                                    .FillMaxWidth().Selectable(selectedRow63.Value == 0, () => selectedRow63.Value = 0).Padding(6) },
+                                new Text("Row 1") { Modifier = Modifier.Companion
+                                    .FillMaxWidth().Selectable(selectedRow63.Value == 1, () => selectedRow63.Value = 1).Padding(6) },
+                                new Text("Row 2") { Modifier = Modifier.Companion
+                                    .FillMaxWidth().Selectable(selectedRow63.Value == 2, () => selectedRow63.Value = 2).Padding(6) },
                             },
                                 // Secure text inputs — exercise both
                                 // SecureTextField (filled) and

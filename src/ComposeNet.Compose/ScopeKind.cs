@@ -26,6 +26,15 @@ internal enum ScopeKind
     Column,
 
     /// <summary>
+    /// The scope is an
+    /// <c>androidx.compose.foundation.layout.BoxScope</c>. Read by
+    /// alignment-extension modifiers (<c>Modifier.Align</c>,
+    /// <c>Modifier.MatchParentSize</c>) to dispatch through the right
+    /// Kotlin interface method.
+    /// </summary>
+    Box,
+
+    /// <summary>
     /// The scope is some other receiver type (e.g.
     /// <c>SingleChoiceSegmentedButtonRowScope</c>) that doesn't
     /// participate in Row/Column weight. Modifiers like

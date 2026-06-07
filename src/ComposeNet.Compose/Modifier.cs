@@ -657,6 +657,226 @@ public sealed class Modifier
     }
 
     /// <summary>
+    /// <c>Modifier.align(alignment)</c> — positions the child within
+    /// a parent <see cref="Box"/>. Only valid inside a <see cref="Box"/>
+    /// (any container that publishes <see cref="ScopeKind.Box"/>).
+    /// </summary>
+    public Modifier Align(Alignment alignment)
+    {
+        System.ArgumentNullException.ThrowIfNull(alignment);
+        return Append(curr =>
+        {
+            IntPtr scope = RenderContext.CurrentScope;
+            if (RenderContext.CurrentScopeKind != ScopeKind.Box)
+                throw new System.InvalidOperationException(
+                    "Modifier.Align(Alignment) is only valid inside a Box. " +
+                    $"Current scope kind: {RenderContext.CurrentScopeKind}.");
+            return ComposeBridges.BoxScopeAlign(scope, curr, ((Java.Lang.Object)alignment.Java).Handle);
+        });
+    }
+
+    /// <summary>
+    /// <c>Modifier.align(alignment)</c> for a Row child — aligns the
+    /// child vertically within the row. Only valid inside a
+    /// <see cref="Row"/>.
+    /// </summary>
+    public Modifier Align(Alignment.Vertical alignment)
+    {
+        System.ArgumentNullException.ThrowIfNull(alignment);
+        return Append(curr =>
+        {
+            IntPtr scope = RenderContext.CurrentScope;
+            if (RenderContext.CurrentScopeKind != ScopeKind.Row)
+                throw new System.InvalidOperationException(
+                    "Modifier.Align(Alignment.Vertical) is only valid inside a Row. " +
+                    $"Current scope kind: {RenderContext.CurrentScopeKind}.");
+            return ComposeBridges.RowScopeAlignVertical(scope, curr, ((Java.Lang.Object)alignment.Java).Handle);
+        });
+    }
+
+    /// <summary>
+    /// <c>Modifier.align(alignment)</c> for a Column child — aligns the
+    /// child horizontally within the column. Only valid inside a
+    /// <see cref="Column"/>.
+    /// </summary>
+    public Modifier Align(Alignment.Horizontal alignment)
+    {
+        System.ArgumentNullException.ThrowIfNull(alignment);
+        return Append(curr =>
+        {
+            IntPtr scope = RenderContext.CurrentScope;
+            if (RenderContext.CurrentScopeKind != ScopeKind.Column)
+                throw new System.InvalidOperationException(
+                    "Modifier.Align(Alignment.Horizontal) is only valid inside a Column. " +
+                    $"Current scope kind: {RenderContext.CurrentScopeKind}.");
+            return ComposeBridges.ColumnScopeAlignHorizontal(scope, curr, ((Java.Lang.Object)alignment.Java).Handle);
+        });
+    }
+
+    /// <summary>
+    /// <c>Modifier.matchParentSize()</c> — sizes the child to match
+    /// the parent <see cref="Box"/>'s measured size without
+    /// participating in measurement. Only valid inside a
+    /// <see cref="Box"/>.
+    /// </summary>
+    public Modifier MatchParentSize() =>
+        Append(curr =>
+        {
+            IntPtr scope = RenderContext.CurrentScope;
+            if (RenderContext.CurrentScopeKind != ScopeKind.Box)
+                throw new System.InvalidOperationException(
+                    "Modifier.MatchParentSize() is only valid inside a Box. " +
+                    $"Current scope kind: {RenderContext.CurrentScopeKind}.");
+            return ComposeBridges.BoxScopeMatchParentSize(scope, curr);
+        });
+
+    /// <summary>
+    /// <c>Modifier.focusable(enabled = true)</c> — marks the node as a
+    /// focus target. Combine with <see cref="FocusRequester(ComposeNet.FocusRequester)"/>
+    /// to programmatically move focus, or with
+    /// <see cref="OnFocusChanged(System.Action{ComposeNet.FocusState})"/>
+    /// to observe focus changes.
+    /// </summary>
+    public Modifier Focusable(bool enabled = true) =>
+        Append(curr => ComposeBridges.ModifierFocusable(curr, enabled));
+
+    /// <summary>
+    /// <c>Modifier.focusGroup()</c> — groups focusable descendants so
+    /// two-dimensional focus search treats them as a single unit.
+    /// </summary>
+    public Modifier FocusGroup() =>
+        Append(curr => ComposeBridges.ModifierFocusGroup(curr));
+
+    /// <summary>
+    /// <c>Modifier.onFocusChanged { ... }</c> — invokes <paramref name="onFocusChanged"/>
+    /// whenever the node gains, loses, or has its focus state mutated
+    /// (capture / release). The callback receives an immutable
+    /// <see cref="FocusState"/> snapshot.
+    /// </summary>
+    public Modifier OnFocusChanged(System.Action<FocusState> onFocusChanged)
+    {
+        System.ArgumentNullException.ThrowIfNull(onFocusChanged);
+        var f1 = new ComposableLambda1(arg =>
+        {
+            if (arg is null) return;
+            var fs = Android.Runtime.Extensions.JavaCast<AndroidX.Compose.UI.Focus.IFocusState>(arg);
+            onFocusChanged(FocusState.From(fs));
+        });
+        return Append(curr => ComposeBridges.ModifierOnFocusChanged(curr, f1));
+    }
+
+    /// <summary>
+    /// <c>Modifier.focusRequester(requester)</c> — installs
+    /// <paramref name="requester"/> on the node so the caller can
+    /// programmatically move focus by calling
+    /// <see cref="ComposeNet.FocusRequester.RequestFocus"/>.
+    /// </summary>
+    public Modifier FocusRequester(FocusRequester requester)
+    {
+        System.ArgumentNullException.ThrowIfNull(requester);
+        return Append(curr =>
+            ComposeBridges.ModifierFocusRequester(curr, ((Java.Lang.Object)requester.Java).Handle));
+    }
+
+    /// <summary>
+    /// <c>Modifier.combinedClickable(...)</c> — clickable with optional
+    /// long-press and double-tap handlers. <paramref name="onClick"/> is
+    /// required; pass <c>null</c> for either of the other two to fall
+    /// back to Kotlin's "ignore that gesture" defaults.
+    /// </summary>
+    public Modifier CombinedClickable(
+        System.Action onClick,
+        System.Action? onLongClick = null,
+        System.Action? onDoubleClick = null)
+    {
+        System.ArgumentNullException.ThrowIfNull(onClick);
+        var click = new ComposableLambda0(onClick);
+        var longClick = onLongClick is null ? null : new ComposableLambda0(onLongClick);
+        var doubleClick = onDoubleClick is null ? null : new ComposableLambda0(onDoubleClick);
+        return Append(curr =>
+            ComposeBridges.ModifierCombinedClickable(curr, longClick, doubleClick, click));
+    }
+
+    /// <summary>
+    /// <c>Modifier.selectable(selected, onClick)</c> — marks the node
+    /// as a selectable choice in a single-selection group (e.g. a
+    /// radio button group). Sets up the right accessibility semantics
+    /// and forwards taps to <paramref name="onClick"/>.
+    /// </summary>
+    public Modifier Selectable(bool selected, System.Action onClick)
+    {
+        System.ArgumentNullException.ThrowIfNull(onClick);
+        var click = new ComposableLambda0(onClick);
+        return Append(curr =>
+            ComposeBridges.ModifierSelectable(curr, selected, click));
+    }
+
+    /// <summary>
+    /// <c>Modifier.toggleable(value, onValueChange)</c> — marks the
+    /// node as a binary toggle (e.g. a checkbox row). Sets up the
+    /// right accessibility semantics and forwards taps to
+    /// <paramref name="onValueChange"/> with the negated value.
+    /// </summary>
+    public Modifier Toggleable(bool value, System.Action<bool> onValueChange)
+    {
+        System.ArgumentNullException.ThrowIfNull(onValueChange);
+        var f1 = new ComposableLambda1(arg =>
+        {
+            bool v = arg is Java.Lang.Boolean jb && jb.BooleanValue();
+            onValueChange(v);
+        });
+        return Append(curr =>
+            ComposeBridges.ModifierToggleable(curr, value, f1));
+    }
+
+    /// <summary>
+    /// <c>Modifier.semantics { contentDescription = ... }</c> — adds
+    /// a content description for accessibility (TalkBack reads it
+    /// aloud when the node is focused). Doesn't merge descendant
+    /// semantics; call the overload taking <c>mergeDescendants</c> for
+    /// that.
+    /// </summary>
+    public Modifier Semantics(string contentDescription) =>
+        Semantics(mergeDescendants: false, contentDescription);
+
+    /// <summary>
+    /// <c>Modifier.semantics(mergeDescendants) { contentDescription = ... }</c> —
+    /// set <paramref name="mergeDescendants"/> to <c>true</c> for a
+    /// container that should announce itself instead of its children
+    /// (e.g. a card with a label and a value).
+    /// </summary>
+    public Modifier Semantics(bool mergeDescendants, string contentDescription)
+    {
+        System.ArgumentNullException.ThrowIfNull(contentDescription);
+        var properties = new ComposableLambda1(arg =>
+        {
+            if (arg is Java.Lang.Object obj)
+                ComposeBridges.SemanticsSetContentDescription(obj.Handle, contentDescription);
+        });
+        return Append(curr =>
+            ComposeBridges.ModifierSemantics(curr, mergeDescendants, properties));
+    }
+
+    /// <summary>
+    /// <c>Modifier.clearAndSetSemantics { contentDescription = ... }</c> —
+    /// like <see cref="Semantics(string)"/>, but discards the
+    /// descendant semantics first. Use when a custom composable
+    /// should appear as a single accessibility node with a curated
+    /// description, hiding implementation details.
+    /// </summary>
+    public Modifier ClearAndSetSemantics(string contentDescription)
+    {
+        System.ArgumentNullException.ThrowIfNull(contentDescription);
+        var properties = new ComposableLambda1(arg =>
+        {
+            if (arg is Java.Lang.Object obj)
+                ComposeBridges.SemanticsSetContentDescription(obj.Handle, contentDescription);
+        });
+        return Append(curr =>
+            ComposeBridges.ModifierClearAndSetSemantics(curr, properties));
+    }
+
+    /// <summary>
     /// Materialize the chain into a managed <c>IModifier</c> wrapper.
     /// Returns <c>null</c> when the chain is empty (no ops appended) so
     /// callers can keep the Kotlin <c>$default</c> bit set and let
