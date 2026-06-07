@@ -343,6 +343,30 @@ using ComposeNet;
     "modifier", "shape", "drawerContainerColor", "drawerContentColor",
     "tonalElevation", "windowInsets", "!content")]
 
+// androidx.compose.material3.NavigationDrawerKt.ModalNavigationDrawer.
+// 6 Kotlin user params. The facade ALWAYS supplies drawerContent (Drawer
+// slot), drawerState (Phase 4b StateHolder auto-creates a wrapper), and
+// content (Content slot); modifier is the only auto-mask-controlled bit.
+// gesturesEnabled and scrimColor stay set so Kotlin substitutes its
+// defaults (true / DrawerDefaults.scrimColor); the wrapper-passthrough
+// body passes dummy values that Kotlin ignores when the bit is set.
+[assembly: ComposeDefaults("ModalNavigationDrawerDefault",
+    "!drawerContent", "modifier", "!drawerState", "gesturesEnabled",
+    "scrimColor", "!content")]
+
+// androidx.compose.material3.NavigationDrawerKt.DismissibleNavigationDrawer.
+// 5 Kotlin user params (same as ModalNavigationDrawer minus scrimColor —
+// the dismissible drawer has no scrim).
+[assembly: ComposeDefaults("DismissibleNavigationDrawerDefault",
+    "!drawerContent", "modifier", "!drawerState", "gesturesEnabled",
+    "!content")]
+
+// androidx.compose.material3.NavigationDrawerKt.PermanentNavigationDrawer.
+// 3 Kotlin user params — no state holder (drawer is always visible), no
+// gesturesEnabled (can't be swiped closed), no scrimColor (no scrim).
+[assembly: ComposeDefaults("PermanentNavigationDrawerDefault",
+    "!drawerContent", "modifier", "!content")]
+
 // androidx.compose.material3.ChipKt.AssistChip: 11 user params,
 // bit 0 = onClick, bit 1 = label (both always provided).
 // Optional slot bits 4 (LeadingIcon) and 5 (TrailingIcon) are toggled

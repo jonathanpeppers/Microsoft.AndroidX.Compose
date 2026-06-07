@@ -420,12 +420,12 @@ public class MainActivity : ComposeActivity
                                 Modifier.Companion
                                     .FillMaxWidth()
                                     .Height(72)
-                                    .Border(1, ColorKt.Color(red: 0x90, green: 0x90, blue: 0x90, alpha: 0xFF)),
+                                    .Border(1, Color.FromRgb(0x90, 0x90, 0x90)),
                                 new Box
                                 {
                                     Modifier.Companion
                                         .MatchParentSize()
-                                        .Background(ColorKt.Color(red: 0xFF, green: 0xF0, blue: 0xE0, alpha: 0xFF))
+                                        .Background(Color.FromRgb(0xFF, 0xF0, 0xE0))
                                         .Semantics("Background overlay that fills the box"),
                                 },
                                 new Text("TopStart")    { Modifier = Modifier.Companion.Align(Alignment.TopStart) },
@@ -455,7 +455,7 @@ public class MainActivity : ComposeActivity
                                         fs.IsFocused ? "focused" : (fs.HasFocus ? "child has focus" : "not focused"))
                                     .Focusable()
                                     .Padding(8)
-                                    .Border(1, ColorKt.Color(red: 0x55, green: 0x55, blue: 0xAA, alpha: 0xFF))
+                                    .Border(1, Color.FromRgb(0x55, 0x55, 0xAA))
                                     .Padding(4),
                             },
                             new Button(onClick: () => focusReq63.RequestFocus()) { new Text("Request focus") },
@@ -543,13 +543,13 @@ public class MainActivity : ComposeActivity
                             new Box
                             {
                                 Modifier.Companion.FillMaxWidth().Height(72).Padding(4)
-                                    .Border(1, ColorKt.Color(red: 0xB0, green: 0xB0, blue: 0xB0, alpha: 0xFF)),
+                                    .Border(1, Color.FromRgb(0xB0, 0xB0, 0xB0)),
                                 new Box
                                 {
                                     Modifier.Companion
                                         .Offset(x: dragX63.Value)
                                         .Size(56)
-                                        .Background(ColorKt.Color(red: 0xCE, green: 0x93, blue: 0xD8, alpha: 0xFF))
+                                        .Background(Color.FromRgb(0xCE, 0x93, 0xD8))
                                         .Draggable(dragState63, Orientation.Horizontal),
                                 },
                             },
@@ -810,6 +810,7 @@ public class MainActivity : ComposeActivity
                         },
                         1 => new DismissibleNavigationDrawer
                         {
+                            InitialValue = DrawerValue.Open!,
                             Drawer = new DismissibleDrawerSheet
                             {
                                 new Text("Dismissible drawer"),
@@ -820,7 +821,8 @@ public class MainActivity : ComposeActivity
                             Content = new Column
                             {
                                 new Text("Main content"),
-                                new Text("Swipe right to open →"),
+                                new Text("Drawer opens initially via InitialValue = DrawerValue.Open"),
+                                new Text("Swipe horizontally to toggle"),
                                 new Text($"Count: {count}"),
                                 new Button(onClick: () => count++) { new Text("+1") },
                             },
