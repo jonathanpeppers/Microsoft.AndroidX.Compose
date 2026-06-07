@@ -28,10 +28,13 @@ public class MainActivity : ComposeActivity
         base.OnCreate(savedInstanceState);
         SetContent(() =>
         {
-            var count       = Remember(() => new MutableNumberState<int>(0));
-            var name        = Remember(() => new MutableState<string>(""));
-            var liked       = Remember(() => new MutableState<bool>(false));
-            var tab         = Remember(() => new MutableNumberState<int>(0));
+            // These four use RememberSaveable so their values survive
+            // process death / activity recreation (e.g. rotation when
+            // the activity doesn't override android:configChanges).
+            var count       = RememberSaveable(() => new MutableNumberState<int>(0));
+            var name        = RememberSaveable(() => new MutableState<string>(""));
+            var liked       = RememberSaveable(() => new MutableState<bool>(false));
+            var tab         = RememberSaveable(() => new MutableNumberState<int>(0));
             var sub         = Remember(() => new MutableNumberState<int>(0));
             var showAlert   = Remember(() => new MutableState<bool>(false));
             var showSheet   = Remember(() => new MutableState<bool>(false));
@@ -114,7 +117,15 @@ public class MainActivity : ComposeActivity
             // that programmatically scroll back to the top.
             var buttonsScroll = Remember(() => new ScrollState());
 
-            string[] tabNames = { "Basics", "Buttons", "Cards", "Drawer", "Selection", "Pickers", "Misc", "App bars", "Lazy", "Carousels" };
+            // Compose Navigation demo state (issue #60). The NavController
+            // is the externally-driven entry point — Button onClicks call
+            // .Navigate("...") / .PopBackStack() on it. Held in Remember
+            // so it survives recompositions; Kotlin's rememberNavController
+            // (via the ComposeBridges helper) stamps the underlying
+            // controller into NavController.Jvm on first NavHost render.
+            var navController = Remember(() => new NavController());
+
+            string[] tabNames = { "Basics", "Buttons", "Cards", "Drawer", "Selection", "Pickers", "Misc", "App bars", "Lazy", "Carousels", "Nav" };
 
             // Per-tab content. Only the current tab's column is added to
             // the screen — keeps the sample short enough to fit on one
@@ -186,6 +197,64 @@ public class MainActivity : ComposeActivity
                                 LetterSpacing = 2,
                                 LineHeight = 22,
                                 Modifier = Modifier.Companion.Padding(8),
+                            },
+                            // Issue #58: text styling additions — color, italic /
+                            // family, alignment, overflow, line clamping. Each
+                            // property flows through the [ComposeFacade] /
+                            // [ComposeBridge] generators: Color/MaxLines/MinLines/
+                            // SoftWrap use the new nullable-primitive path,
+                            // FontStyle/FontFamily/TextAlign use the nullable
+                            // reference-wrapper path, and TextOverflow uses the
+                            // packed @JvmInline value-class path.
+                            new Text("Issue #58 text styling:")
+                            {
+                                Modifier = Modifier.Companion.Padding(top: 8, bottom: 4, start: 0, end: 0),
+                                FontWeight = ComposeNet.FontWeight.Bold,
+                            },
+                            new Text("Italic serif red, centered")
+                            {
+                                Color = ColorKt.Color(red: 0xC6, green: 0x28, blue: 0x28, alpha: 0xFF),
+                                FontStyle = ComposeNet.FontStyle.Italic,
+                                FontFamily = ComposeNet.FontFamily.Serif,
+                                Align = ComposeNet.TextAlign.Center,
+                                Modifier = Modifier.Companion.FillMaxWidth(),
+                            },
+                            new Text("Monospace, end-aligned")
+                            {
+                                FontFamily = ComposeNet.FontFamily.Monospace,
+                                Align = ComposeNet.TextAlign.End,
+                                Modifier = Modifier.Companion.FillMaxWidth(),
+                            },
+                            new Text("This long line should clip with an ellipsis because we cap it at MaxLines=1 and force overflow.")
+                            {
+                                MaxLines = 1,
+                                Overflow = ComposeNet.TextOverflow.Ellipsis,
+                                SoftWrap = false,
+                            },
+                            new Text("This paragraph wraps to at most two lines and uses a non-default minLines so the slot reserves vertical space even when the content is shorter than the maximum allowed.")
+                            {
+                                MaxLines = 2,
+                                MinLines = 2,
+                                Overflow = ComposeNet.TextOverflow.Ellipsis,
+                            },
+                            // TextField with new slots: leading/trailing icons,
+                            // label, supporting text, prefix, suffix.
+                            new TextField(name)
+                            {
+                                Label          = new Text("Your name"),
+                                Placeholder    = new Text("Type something…"),
+                                LeadingIcon    = new Text("👤"),
+                                TrailingIcon   = new Text("✎"),
+                                SupportingText = new Text("Powered by issue #58 slots"),
+                                SingleLine     = true,
+                            },
+                            new OutlinedTextField(name)
+                            {
+                                Label          = new Text("Outlined variant"),
+                                Prefix         = new Text("@"),
+                                Suffix         = new Text(".dev"),
+                                SupportingText = new Text($"len={name.Value.Length}"),
+                                SingleLine     = true,
                             },
                             // Phase 2 modifier demo — clickable rounded chip painted with
                             // Background + Border + Clip; tapping it increments the counter.
@@ -877,6 +946,69 @@ public class MainActivity : ComposeActivity
                         ItemSpacing = 8f,
                     },
                 },
+                10 => new Column
+                {
+                    // Compose Navigation demo (issue #60). NavHost holds a
+                    // graph of `Composable("route") { ... }` destinations and
+                    // switches the visible one based on the bound NavController's
+                    // back stack. Each route subcomposes its own children
+                    // independently — unlike a normal switch-on-state UI, the
+                    // destinations don't share a composition with the host.
+                    //
+                    // The "user/{id}" route demos the dynamic-content factory
+                    // overload (Composable(route, entry => ...)) — we read
+                    // the {id} placeholder out of NavBackStackEntry.Arguments.
+                    new Text("Compose Navigation"),
+                    new Text("Tap a button to navigate. The Up button uses navController.NavigateUp()."),
+                    new HorizontalDivider { Modifier = Modifier.Companion.Padding(0, 8) },
+                    new NavHost(startDestination: "home", navController: navController)
+                    {
+                        Modifier.Companion.FillMaxWidth().Height(360),
+
+                        new Composable("home")
+                        {
+                            new Column
+                            {
+                                Modifier.Companion.Padding(16),
+                                new Text("🏠 Home"),
+                                new Button(onClick: () => navController.Navigate("detail"))
+                                {
+                                    new Text("Go to detail"),
+                                },
+                                new Button(onClick: () => navController.Navigate("user/42"))
+                                {
+                                    new Text("Open user 42"),
+                                },
+                            },
+                        },
+                        new Composable("detail")
+                        {
+                            new Column
+                            {
+                                Modifier.Companion.Padding(16),
+                                new Text("📄 Detail"),
+                                new Button(onClick: () => navController.Navigate("user/7"))
+                                {
+                                    new Text("Drill down to user 7"),
+                                },
+                                new Button(onClick: () => navController.PopBackStack())
+                                {
+                                    new Text("Back"),
+                                },
+                            },
+                        },
+                        new Composable("user/{id}", entry => new Column
+                        {
+                            Modifier.Companion.Padding(16),
+                            new Text($"👤 User #{entry.Arguments?.GetString("id") ?? "?"}"),
+                            new Text($"Route: {entry.Route ?? "(unknown)"}"),
+                            new Button(onClick: () => navController.NavigateUp())
+                            {
+                                new Text("Up"),
+                            },
+                        }),
+                    },
+                },
                 _ => new Column
                 {
                     // Lazy lists — bound through LazyDslKt / LazyGridDslKt.
@@ -1179,6 +1311,11 @@ public class MainActivity : ComposeActivity
                                 {
                                     Text = new Text("Carousels"),
                                     Icon = new Text("🎠"),
+                                },
+                                new Tab(selected: tab.Value == 10, onClick: () => tab.Value = 10)
+                                {
+                                    Text = new Text("Nav"),
+                                    Icon = new Text("🧭"),
                                 },
                             },
                             tabContent,

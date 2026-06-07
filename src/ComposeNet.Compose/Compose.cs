@@ -17,12 +17,16 @@ public static class Compose
     /// the first time this call site is reached, then the cached value on
     /// subsequent recompositions.
     ///
-    /// The slot is keyed by <c>HashCode.Combine(line, file)</c> from the
-    /// <see cref="CallerLineNumberAttribute"/> / <see cref="CallerFilePathAttribute"/>
-    /// fill-ins so two call sites in different files (or different lines)
-    /// never share a slot — and so the same call site reached repeatedly
-    /// across recompositions does share its slot, returning the cached
-    /// value.
+    /// The slot is keyed by <see cref="SourceLocationKey"/>'s FNV-1a hash
+    /// of the file path mixed with the line number — a stable identifier
+    /// derived from <see cref="CallerLineNumberAttribute"/> /
+    /// <see cref="CallerFilePathAttribute"/> fill-ins, deterministic
+    /// across process restarts (unlike <see cref="System.HashCode"/>,
+    /// which is per-process randomized) so the saveable-state registry
+    /// can match the recomputed key to its stored value on restore.
+    /// Two call sites in different files (or different lines) never
+    /// share a slot, and the same call site reached repeatedly across
+    /// recompositions does share its slot.
     ///
     /// Wrapped in <c>StartReplaceableGroup</c> / <c>EndReplaceableGroup</c>
     /// so the slot belongs to its own group; sibling positional grouping
@@ -43,7 +47,7 @@ public static class Compose
             ?? throw new System.InvalidOperationException(
                 "Compose.Remember<T> must be called inside a composition (e.g. inside a SetContent body or a ComposableNode.Render override).");
 
-        composer.StartReplaceableGroup(System.HashCode.Combine(line, file));
+        composer.StartReplaceableGroup(SourceLocationKey.Compute(line, file));
         try
         {
             if (composer.RememberedValue() is RememberHolder existing)
@@ -57,4 +61,133 @@ public static class Compose
             composer.EndReplaceableGroup();
         }
     }
+
+    /// <summary>
+    /// Compose's <c>rememberSaveable { factory() }</c>: like
+    /// <see cref="Remember{T}(System.Func{T}, int, string)"/>, but the
+    /// cached value also survives <b>process death and activity
+    /// recreation</b> (e.g. rotation when the activity doesn't override
+    /// <c>android:configChanges</c>) via Compose's
+    /// <c>SaveableStateRegistry</c>, which serialises into the
+    /// activity's saved-instance <see cref="Android.OS.Bundle"/>.
+    ///
+    /// Mirrors Kotlin's single <c>rememberSaveable&lt;T&gt;</c> entry
+    /// point — the same call works for scalar values
+    /// (<c>int</c>, <c>long</c>, <c>float</c>, <c>double</c>,
+    /// <c>bool</c>, <c>string</c>, plus any other type
+    /// <see cref="MutableState{T}"/> can box / unbox) and for
+    /// state-holder wrappers (<see cref="MutableState{U}"/>,
+    /// <see cref="MutableNumberState{U}"/>):
+    /// <code>
+    /// var count = RememberSaveable(() =&gt; new MutableNumberState&lt;int&gt;(0));
+    /// var name  = RememberSaveable(() =&gt; new MutableState&lt;string&gt;(""));
+    /// var pi    = RememberSaveable(() =&gt; 3.14159);
+    /// </code>
+    /// Wrappers are routed through Compose's <c>mutableStateSaver</c>
+    /// (only the inner value is persisted); scalars use
+    /// <c>autoSaver</c>.
+    ///
+    /// The slot is keyed by <see cref="SourceLocationKey"/>'s FNV-1a
+    /// hash — deterministic across process restarts so the saveable-
+    /// state registry can match the recomputed key to its stored value
+    /// on restore. The <c>vararg inputs</c> dependency-tracking
+    /// parameter isn't surfaced here — an empty <c>Object[]</c> is
+    /// passed, meaning the cached value is never invalidated on
+    /// dependency change. A future <c>params object?[]</c> overload
+    /// can lift that.
+    /// </summary>
+    public static T RememberSaveable<T>(
+        System.Func<T> factory,
+        [CallerLineNumber] int line = 0,
+        [CallerFilePath] string file = "")
+    {
+        var composer = ComposeContext.Current
+            ?? throw new System.InvalidOperationException(
+                "Compose.RememberSaveable<T> must be called inside a composition (e.g. inside a SetContent body or a ComposableNode.Render override).");
+
+        composer.StartReplaceableGroup(SourceLocationKey.Compute(line, file));
+        try
+        {
+            // State-holder branch: T is MutableState<U>, MutableNumberState<U>,
+            // or any future wrapper that implements IMutableStateWrapper.
+            // The `is`-check is type-metadata only — no reflection, no
+            // member lookup, fully trim-safe.
+            if (typeof(IMutableStateWrapper).IsAssignableFrom(typeof(T)))
+                return RememberSaveableWrapper(factory, composer);
+
+            return RememberSaveableScalar(factory, composer);
+        }
+        finally
+        {
+            composer.EndReplaceableGroup();
+        }
+    }
+
+    static T RememberSaveableScalar<T>(System.Func<T> factory, IComposer composer)
+    {
+        var jcw = new ObjectFunction0(() => MutableState<T>.ToJava(factory()));
+        var handle = ComposeBridges.RememberSaveableSimple(
+            ComposeBridges.EmptyObjectArray(),
+            jcw,
+            ((Java.Lang.Object)composer).Handle,
+            changed: 0);
+        try
+        {
+            if (handle == System.IntPtr.Zero)
+                return default!;
+            var boxed = Java.Lang.Object.GetObject<Java.Lang.Object>(
+                handle, Android.Runtime.JniHandleOwnership.DoNotTransfer);
+            return MutableState<T>.FromJava(boxed);
+        }
+        finally
+        {
+            if (handle != System.IntPtr.Zero)
+                Android.Runtime.JNIEnv.DeleteLocalRef(handle);
+            System.GC.KeepAlive(composer);
+        }
+    }
+
+    static T RememberSaveableWrapper<T>(System.Func<T> factory, IComposer composer)
+    {
+        // Cache the C# wrapper across recompositions so we don't
+        // allocate a fresh facade + Kotlin IMutableState on every
+        // render. `Compose.Remember` opens its own nested replaceable
+        // group; nesting is fine — Compose's slot table handles it.
+        var wrapper = Remember(factory)
+            ?? throw new System.InvalidOperationException(
+                $"Compose.RememberSaveable<{typeof(T).Name}>: factory returned null.");
+        var iwrap = (IMutableStateWrapper)wrapper;
+
+        // Hand Compose's `rememberSaveable` the wrapper's underlying
+        // IMutableState. On first composition Compose calls our JCW
+        // and caches whatever we return. On a process-death restore
+        // Compose builds a fresh boxed state via mutableStateSaver
+        // and ignores our JCW; its return value is the restored
+        // state. On every subsequent recomposition Compose returns
+        // the cached state directly. We swap our wrapper's _state
+        // to point at whatever Compose hands back.
+        var jcw = new ObjectFunction0(() => (Java.Lang.Object)iwrap.State);
+        var handle = ComposeBridges.RememberSaveableMutableState(
+            ComposeBridges.EmptyObjectArray(),
+            ComposeBridges.SaverAutoSaver(),
+            jcw,
+            ((Java.Lang.Object)composer).Handle,
+            changed: 0);
+        try
+        {
+            if (handle == System.IntPtr.Zero)
+                throw new System.InvalidOperationException(
+                    $"Compose.RememberSaveable<{typeof(T).Name}>: rememberSaveable returned null.");
+            iwrap.State = Java.Lang.Object.GetObject<IMutableState>(
+                handle, Android.Runtime.JniHandleOwnership.DoNotTransfer)!;
+            return wrapper;
+        }
+        finally
+        {
+            if (handle != System.IntPtr.Zero)
+                Android.Runtime.JNIEnv.DeleteLocalRef(handle);
+            System.GC.KeepAlive(composer);
+        }
+    }
 }
+

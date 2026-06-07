@@ -7,9 +7,9 @@ namespace ComposeNet;
 /// boxed values through the JVM state container so changes are observed
 /// by the Compose runtime and trigger recomposition.
 /// </summary>
-public class MutableState<T>
+public class MutableState<T> : IMutableStateWrapper
 {
-    internal readonly IMutableState _state;
+    internal IMutableState _state;
 
     public MutableState(T initial)
     {
@@ -22,6 +22,22 @@ public class MutableState<T>
     // primitive-specialized IMutableState (MutableIntState etc.) so its
     // overridden Value getter/setter can bypass the boxed slow path.
     internal MutableState(IMutableState state) => _state = state;
+
+    /// <summary>
+    /// Subclass hook for <see cref="IMutableStateWrapper.State"/>'s
+    /// setter. <see cref="MutableNumberState{T}"/> overrides this to
+    /// re-probe its specialized-state <c>_kind</c> when Compose hands
+    /// back a (potentially boxed) restored state after a process-death
+    /// round-trip through
+    /// <see cref="Compose.RememberSaveable{T}(System.Func{T}, int, string)"/>.
+    /// </summary>
+    internal virtual void SetUnderlyingState(IMutableState state) => _state = state;
+
+    IMutableState IMutableStateWrapper.State
+    {
+        get => _state;
+        set => SetUnderlyingState(value);
+    }
 
     public virtual T Value
     {
@@ -57,7 +73,7 @@ public class MutableState<T>
                                     $"MutableState<{typeof(T).Name}>: T must be a Java.Lang.Object subclass, string, bool, char, or a built-in numeric primitive (sbyte/byte/short/ushort/int/uint/long/ulong/float/double). Types like decimal, Half, BigInteger, and IntPtr have no clean Java box and are not supported.")
     };
 
-    static T FromJava(Java.Lang.Object? value)
+    internal static T FromJava(Java.Lang.Object? value)
     {
         if (value is null) return default!;
         if (value is T t) return t;

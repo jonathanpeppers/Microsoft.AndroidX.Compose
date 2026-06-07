@@ -259,11 +259,19 @@ internal static partial class ComposeBridges
     public static partial void Text(
         string text,
         IModifier? modifier,
+        long? color,
         Sp? fontSize,
+        FontStyle? fontStyle,
         FontWeight? fontWeight,
+        FontFamily? fontFamily,
         Sp? letterSpacing,
         TextDecoration? decoration,
+        TextAlign? align,
         Sp? lineHeight,
+        TextOverflow? overflow,
+        bool? softWrap,
+        int? maxLines,
+        int? minLines,
         IComposer composer);
 
     // androidx.compose.material3.ButtonKt.Button
@@ -605,8 +613,24 @@ internal static partial class ComposeBridges
         Signature = TextFieldStringSig,
         Defaults  = typeof(TextFieldDefault))]
     [ComposeFacade]
-    public static partial void TextField(string value, [Callback(typeof(string))] IFunction1 onValueChange,
-                                         IModifier? modifier, IComposer composer);
+    public static partial void TextField(
+        string value,
+        [Callback(typeof(string))] IFunction1 onValueChange,
+        IModifier? modifier,
+        bool? enabled,
+        bool? readOnly,
+        IFunction2? label,
+        IFunction2? placeholder,
+        IFunction2? leadingIcon,
+        IFunction2? trailingIcon,
+        IFunction2? prefix,
+        IFunction2? suffix,
+        IFunction2? supportingText,
+        bool? isError,
+        bool? singleLine,
+        int? maxLines,
+        int? minLines,
+        IComposer composer);
 
     [ComposeBridge(
         Class     = "androidx/compose/material3/OutlinedTextFieldKt",
@@ -614,8 +638,24 @@ internal static partial class ComposeBridges
         Signature = TextFieldStringSig,
         Defaults  = typeof(TextFieldDefault))]
     [ComposeFacade]
-    public static partial void OutlinedTextField(string value, [Callback(typeof(string))] IFunction1 onValueChange,
-                                                 IModifier? modifier, IComposer composer);
+    public static partial void OutlinedTextField(
+        string value,
+        [Callback(typeof(string))] IFunction1 onValueChange,
+        IModifier? modifier,
+        bool? enabled,
+        bool? readOnly,
+        IFunction2? label,
+        IFunction2? placeholder,
+        IFunction2? leadingIcon,
+        IFunction2? trailingIcon,
+        IFunction2? prefix,
+        IFunction2? suffix,
+        IFunction2? supportingText,
+        bool? isError,
+        bool? singleLine,
+        int? maxLines,
+        int? minLines,
+        IComposer composer);
 
     // androidx.compose.material3.SecureTextFieldKt.{SecureTextField,OutlinedSecureTextField}-XvU6IwQ.
     // Both overloads have identical 23-user-param signatures: the
@@ -823,8 +863,12 @@ internal static partial class ComposeBridges
         Signature = "(Landroidx/compose/material3/TimePickerState;Landroidx/compose/ui/Modifier;" +
                     "Landroidx/compose/material3/TimePickerColors;ILandroidx/compose/runtime/Composer;II)V",
         Defaults  = typeof(TimePickerDefault))]
-    public static partial void TimePicker(IntPtr state, IModifier? modifier,
-                                          int defaults, IComposer composer);
+    [ComposeFacade]
+    public static partial void TimePicker(
+        [StateHolder(Remember = nameof(RememberTimePickerState),
+                     StateType = typeof(TimePickerState))] IntPtr state,
+        IModifier? modifier,
+        int defaults, IComposer composer);
 
     // androidx.compose.material3.TimePickerDialogKt.TimePickerDialog-FItCLgY
     [ComposeBridge(
@@ -2905,4 +2949,100 @@ internal static partial class ComposeBridges
             _composer:         composer,
             p7:                0,
             _changed:          defaults);
+
+    // Tracking dotnet/android-libraries#1444: the binder strips every
+    // @Composable static from `Xamarin.AndroidX.Navigation.Compose`'s
+    // *Kt wrapper classes (NavHostKt, NavGraphBuilderKt,
+    // NavHostControllerKt, ...). We bridge the three we need —
+    // NavHost, NavGraphBuilder.composable, and rememberNavController.
+
+    // androidx.navigation.compose.NavHostControllerKt.rememberNavController.
+    // Kotlin signature: `rememberNavController(vararg navigators: Navigator<*>): NavHostController`.
+    // Hand-written rather than [ComposeBridge] because the bridge
+    // generator has no path for "construct an empty Java array of
+    // Navigator and pass it as the varargs argument". Empty
+    // `Navigator[]` is cached as a global ref so we don't allocate one
+    // per recomposition.
+    static IntPtr s_rememberNavController_class;
+    static IntPtr s_rememberNavController_method;
+    static IntPtr s_rememberNavController_emptyArray;
+
+    internal static unsafe AndroidX.Navigation.NavHostController RememberNavController(IComposer composer)
+    {
+        if (s_rememberNavController_method == IntPtr.Zero)
+        {
+            s_rememberNavController_class = JNIEnv.FindClass("androidx/navigation/compose/NavHostControllerKt");
+            s_rememberNavController_method = JNIEnv.GetStaticMethodID(
+                s_rememberNavController_class,
+                "rememberNavController",
+                "([Landroidx/navigation/Navigator;Landroidx/compose/runtime/Composer;I)Landroidx/navigation/NavHostController;");
+
+            IntPtr navigatorClass = JNIEnv.FindClass("androidx/navigation/Navigator");
+            IntPtr local = JNIEnv.NewObjectArray(0, navigatorClass, IntPtr.Zero);
+            s_rememberNavController_emptyArray = JNIEnv.NewGlobalRef(local);
+            JNIEnv.DeleteLocalRef(local);
+        }
+
+        try
+        {
+            JValue* args = stackalloc JValue[3];
+            args[0] = new JValue(s_rememberNavController_emptyArray);
+            args[1] = new JValue(((Java.Lang.Object)composer).Handle);
+            args[2] = new JValue(0); // $changed — Compose substitutes its own
+            IntPtr handle = JNIEnv.CallStaticObjectMethod(
+                s_rememberNavController_class, s_rememberNavController_method, args);
+            return Java.Lang.Object.GetObject<AndroidX.Navigation.NavHostController>(
+                handle, JniHandleOwnership.TransferLocalRef)!;
+        }
+        finally
+        {
+            GC.KeepAlive(composer);
+        }
+    }
+
+    // androidx.navigation.compose.NavHostKt.NavHost (string-route overload).
+    // Kotlin: `NavHost(navController, startDestination, modifier=Modifier,
+    // route=null, builder)`. Trailing `II` on the JNI sig = $changed +
+    // $default. The auto-mask drives the $default bits — modifier and
+    // route are nullable so the generator clears their bits only when
+    // the caller supplies a non-null value.
+    [ComposeBridge(
+        Class     = "androidx/navigation/compose/NavHostKt",
+        JvmName   = "NavHost",
+        Signature = "(Landroidx/navigation/NavHostController;Ljava/lang/String;" +
+                    "Landroidx/compose/ui/Modifier;Ljava/lang/String;" +
+                    "Lkotlin/jvm/functions/Function1;" +
+                    "Landroidx/compose/runtime/Composer;II)V",
+        Defaults  = typeof(NavHostDefault))]
+    internal static partial void NavHost(
+        AndroidX.Navigation.NavHostController navController,
+        string                                startDestination,
+        IModifier?                            modifier,
+        string?                               route,
+        IFunction1                            builder,
+        IComposer                             composer);
+
+    // androidx.navigation.compose.NavGraphBuilderKt.composable$default
+    // (string-route overload). Kotlin extension on NavGraphBuilder:
+    // `NavGraphBuilder.composable(route, arguments=emptyList(),
+    // deepLinks=emptyList(), content)`. NOT @Composable itself —
+    // invoked synchronously inside NavHost's builder lambda. The
+    // trailing `IL...;` on the JNI sig is `$default` + the synthetic
+    // marker the bridge generator fills with `IntPtr.Zero` for any
+    // `*$default` overload. The first IntPtr (navGraphBuilder) is the
+    // extension receiver; route/content are required (suppressed bits);
+    // arguments and deepLinks are nullable lists with empty defaults.
+    [ComposeBridge(
+        Class     = "androidx/navigation/compose/NavGraphBuilderKt",
+        JvmName   = "composable$default",
+        Signature = "(Landroidx/navigation/NavGraphBuilder;Ljava/lang/String;" +
+                    "Ljava/util/List;Ljava/util/List;" +
+                    "Lkotlin/jvm/functions/Function3;ILjava/lang/Object;)V",
+        Defaults  = typeof(NavComposableDefault))]
+    internal static partial void NavGraphBuilderComposable(
+        IntPtr           navGraphBuilder,
+        string           route,
+        Java.Lang.Object? arguments,
+        Java.Lang.Object? deepLinks,
+        IFunction3       content);
 }

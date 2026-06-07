@@ -417,6 +417,25 @@ using ComposeNet;
 [assembly: ComposeDefaults("ModifierWeightDefault",
     "!modifier", "!weight", "fill")]
 
+// androidx.navigation.compose.NavHostKt.NavHost — Kotlin signature
+// `NavHost(navController, startDestination, modifier=Modifier,
+// route=null, builder)`. Bits 0/1/4 are required params (always
+// supplied) so they're suppressed; bits 2 (modifier) and 3 (route)
+// are optional and the auto-mask in the bridge generator clears them
+// when the caller provides a non-null value.
+[assembly: ComposeDefaults("NavHostDefault",
+    "!navController", "!startDestination", "modifier", "route", "!builder")]
+
+// androidx.navigation.compose.NavGraphBuilderKt.composable — Kotlin
+// extension `NavGraphBuilder.composable(route, arguments=emptyList(),
+// deepLinks=emptyList(), content)`. The receiver is NOT in the
+// $default bitmask. Bit 0 (route) and bit 3 (content) are required,
+// so suppressed; bits 1/2 (arguments/deepLinks) are optional and
+// driven by the auto-mask — passing null leaves the bit set so
+// Kotlin substitutes its emptyList() default.
+[assembly: ComposeDefaults("NavComposableDefault",
+    "!route", "arguments", "deepLinks", "!content")]
+
 // androidx.compose.foundation.layout.SizeKt — ranged size constraints.
 // Each bit corresponds to one Dp parameter. C# bridges declare each
 // param as `Dp?`, so the auto-mask clears the bit only when the user

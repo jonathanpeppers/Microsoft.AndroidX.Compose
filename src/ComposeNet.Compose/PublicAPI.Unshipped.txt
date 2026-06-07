@@ -1,6 +1,6 @@
 #nullable enable
-~override ComposeNet.TextAlign.Equals(object obj) -> bool
-~override ComposeNet.TextAlign.ToString() -> string
+~override ComposeNet.TextOverflow.Equals(object obj) -> bool
+~override ComposeNet.TextOverflow.ToString() -> string
 ComposeNet.AlertDialog
 ComposeNet.AlertDialog.AlertDialog(System.Action! onDismissRequest) -> void
 ComposeNet.AlertDialog.ConfirmButton.get -> ComposeNet.ComposableNode?
@@ -72,6 +72,12 @@ ComposeNet.CircularProgressIndicator.TrackColorArgb.set -> void
 ComposeNet.Column
 ComposeNet.Column.Column() -> void
 ComposeNet.Column.Column(ComposeNet.Arrangement? verticalArrangement) -> void
+ComposeNet.Composable
+ComposeNet.Composable.Add(ComposeNet.ComposableNode? child) -> void
+ComposeNet.Composable.Add(ComposeNet.Modifier! modifier) -> void
+ComposeNet.Composable.Composable(string! route, System.Func<ComposeNet.NavBackStackEntry!, ComposeNet.ComposableNode!>! content) -> void
+ComposeNet.Composable.Composable(string! route) -> void
+ComposeNet.Composable.Route.get -> string!
 ComposeNet.ComposableContainer
 ComposeNet.ComposableContainer.Add(ComposeNet.ComposableNode? child) -> void
 ComposeNet.ComposableContainer.Add(ComposeNet.Modifier! modifier) -> void
@@ -86,6 +92,7 @@ ComposeNet.Compose
 ComposeNet.ComposeActivity
 ComposeNet.ComposeActivity.ComposeActivity() -> void
 ComposeNet.ComposeActivity.Remember<T>(System.Func<T>! factory, int line = 0, string! file = "") -> T
+ComposeNet.ComposeActivity.RememberSaveable<T>(System.Func<T>! factory, int line = 0, string! file = "") -> T
 ComposeNet.ComposeActivity.SetContent(System.Func<ComposeNet.ComposableNode!>! content) -> void
 ComposeNet.CustomTab
 ComposeNet.CustomTab.CustomTab(bool selected, System.Action! onClick) -> void
@@ -234,6 +241,8 @@ ComposeNet.FocusState.FocusState(bool isFocused, bool hasFocus, bool isCaptured)
 ComposeNet.FocusState.HasFocus.get -> bool
 ComposeNet.FocusState.IsCaptured.get -> bool
 ComposeNet.FocusState.IsFocused.get -> bool
+ComposeNet.FontFamily
+ComposeNet.FontStyle
 ComposeNet.FontWeight
 ComposeNet.GridCells
 ComposeNet.HorizontalCenteredHeroCarousel<T>
@@ -462,6 +471,22 @@ ComposeNet.MutableNumberState<T>
 ComposeNet.MutableNumberState<T>.MutableNumberState(T initial) -> void
 ComposeNet.MutableState<T>
 ComposeNet.MutableState<T>.MutableState(T initial) -> void
+ComposeNet.NavBackStackEntry
+ComposeNet.NavBackStackEntry.Arguments.get -> Android.OS.Bundle?
+ComposeNet.NavBackStackEntry.Route.get -> string?
+ComposeNet.NavController
+ComposeNet.NavController.CurrentBackStackEntry.get -> ComposeNet.NavBackStackEntry?
+ComposeNet.NavController.NavController() -> void
+ComposeNet.NavController.Navigate(string! route) -> void
+ComposeNet.NavController.NavigateUp() -> bool
+ComposeNet.NavController.PopBackStack() -> bool
+ComposeNet.NavController.PopBackStack(string! route, bool inclusive) -> bool
+ComposeNet.NavHost
+ComposeNet.NavHost.Add(ComposeNet.Composable? route) -> void
+ComposeNet.NavHost.Add(ComposeNet.Modifier! modifier) -> void
+ComposeNet.NavHost.NavController.get -> ComposeNet.NavController!
+ComposeNet.NavHost.NavHost(string! startDestination, ComposeNet.NavController? navController = null) -> void
+ComposeNet.NavHost.StartDestination.get -> string!
 ComposeNet.NavigationBar
 ComposeNet.NavigationBar.NavigationBar() -> void
 ComposeNet.NavigationBarItem
@@ -519,8 +544,34 @@ ComposeNet.OutlinedSecureTextField.SupportingText.set -> void
 ComposeNet.OutlinedSecureTextField.TrailingIcon.get -> ComposeNet.ComposableNode?
 ComposeNet.OutlinedSecureTextField.TrailingIcon.set -> void
 ComposeNet.OutlinedTextField
+ComposeNet.OutlinedTextField.Enabled.get -> bool?
+ComposeNet.OutlinedTextField.Enabled.set -> void
+ComposeNet.OutlinedTextField.IsError.get -> bool?
+ComposeNet.OutlinedTextField.IsError.set -> void
+ComposeNet.OutlinedTextField.Label.get -> ComposeNet.ComposableNode?
+ComposeNet.OutlinedTextField.Label.set -> void
+ComposeNet.OutlinedTextField.LeadingIcon.get -> ComposeNet.ComposableNode?
+ComposeNet.OutlinedTextField.LeadingIcon.set -> void
+ComposeNet.OutlinedTextField.MaxLines.get -> int?
+ComposeNet.OutlinedTextField.MaxLines.set -> void
+ComposeNet.OutlinedTextField.MinLines.get -> int?
+ComposeNet.OutlinedTextField.MinLines.set -> void
 ComposeNet.OutlinedTextField.OutlinedTextField(ComposeNet.MutableState<string!>! state) -> void
 ComposeNet.OutlinedTextField.OutlinedTextField(string! value, System.Action<string!>! onValueChange) -> void
+ComposeNet.OutlinedTextField.Placeholder.get -> ComposeNet.ComposableNode?
+ComposeNet.OutlinedTextField.Placeholder.set -> void
+ComposeNet.OutlinedTextField.Prefix.get -> ComposeNet.ComposableNode?
+ComposeNet.OutlinedTextField.Prefix.set -> void
+ComposeNet.OutlinedTextField.ReadOnly.get -> bool?
+ComposeNet.OutlinedTextField.ReadOnly.set -> void
+ComposeNet.OutlinedTextField.SingleLine.get -> bool?
+ComposeNet.OutlinedTextField.SingleLine.set -> void
+ComposeNet.OutlinedTextField.Suffix.get -> ComposeNet.ComposableNode?
+ComposeNet.OutlinedTextField.Suffix.set -> void
+ComposeNet.OutlinedTextField.SupportingText.get -> ComposeNet.ComposableNode?
+ComposeNet.OutlinedTextField.SupportingText.set -> void
+ComposeNet.OutlinedTextField.TrailingIcon.get -> ComposeNet.ComposableNode?
+ComposeNet.OutlinedTextField.TrailingIcon.set -> void
 ComposeNet.PermanentDrawerSheet
 ComposeNet.PermanentDrawerSheet.ContainerColor.get -> long
 ComposeNet.PermanentDrawerSheet.ContainerColor.set -> void
@@ -668,30 +719,73 @@ ComposeNet.Tab.Text.set -> void
 ComposeNet.TabRow
 ComposeNet.TabRow.TabRow(int selectedTabIndex) -> void
 ComposeNet.Text
+ComposeNet.Text.Align.get -> ComposeNet.TextAlign?
+ComposeNet.Text.Align.set -> void
+ComposeNet.Text.Color.get -> long?
+ComposeNet.Text.Color.set -> void
 ComposeNet.Text.Decoration.get -> ComposeNet.TextDecoration?
 ComposeNet.Text.Decoration.set -> void
+ComposeNet.Text.FontFamily.get -> ComposeNet.FontFamily?
+ComposeNet.Text.FontFamily.set -> void
 ComposeNet.Text.FontSize.get -> ComposeNet.Sp?
 ComposeNet.Text.FontSize.set -> void
+ComposeNet.Text.FontStyle.get -> ComposeNet.FontStyle?
+ComposeNet.Text.FontStyle.set -> void
 ComposeNet.Text.FontWeight.get -> ComposeNet.FontWeight?
 ComposeNet.Text.FontWeight.set -> void
 ComposeNet.Text.LetterSpacing.get -> ComposeNet.Sp?
 ComposeNet.Text.LetterSpacing.set -> void
 ComposeNet.Text.LineHeight.get -> ComposeNet.Sp?
 ComposeNet.Text.LineHeight.set -> void
+ComposeNet.Text.MaxLines.get -> int?
+ComposeNet.Text.MaxLines.set -> void
+ComposeNet.Text.MinLines.get -> int?
+ComposeNet.Text.MinLines.set -> void
+ComposeNet.Text.Overflow.get -> ComposeNet.TextOverflow?
+ComposeNet.Text.Overflow.set -> void
+ComposeNet.Text.SoftWrap.get -> bool?
+ComposeNet.Text.SoftWrap.set -> void
 ComposeNet.Text.Text(string! text) -> void
 ComposeNet.TextAlign
-ComposeNet.TextAlign.Deconstruct(out int Value) -> void
-ComposeNet.TextAlign.Equals(ComposeNet.TextAlign other) -> bool
-ComposeNet.TextAlign.TextAlign() -> void
-ComposeNet.TextAlign.TextAlign(int Value) -> void
-ComposeNet.TextAlign.Value.get -> int
-ComposeNet.TextAlign.Value.init -> void
 ComposeNet.TextButton
 ComposeNet.TextButton.TextButton(System.Action! onClick) -> void
 ComposeNet.TextDecoration
 ComposeNet.TextField
+ComposeNet.TextField.Enabled.get -> bool?
+ComposeNet.TextField.Enabled.set -> void
+ComposeNet.TextField.IsError.get -> bool?
+ComposeNet.TextField.IsError.set -> void
+ComposeNet.TextField.Label.get -> ComposeNet.ComposableNode?
+ComposeNet.TextField.Label.set -> void
+ComposeNet.TextField.LeadingIcon.get -> ComposeNet.ComposableNode?
+ComposeNet.TextField.LeadingIcon.set -> void
+ComposeNet.TextField.MaxLines.get -> int?
+ComposeNet.TextField.MaxLines.set -> void
+ComposeNet.TextField.MinLines.get -> int?
+ComposeNet.TextField.MinLines.set -> void
+ComposeNet.TextField.Placeholder.get -> ComposeNet.ComposableNode?
+ComposeNet.TextField.Placeholder.set -> void
+ComposeNet.TextField.Prefix.get -> ComposeNet.ComposableNode?
+ComposeNet.TextField.Prefix.set -> void
+ComposeNet.TextField.ReadOnly.get -> bool?
+ComposeNet.TextField.ReadOnly.set -> void
+ComposeNet.TextField.SingleLine.get -> bool?
+ComposeNet.TextField.SingleLine.set -> void
+ComposeNet.TextField.Suffix.get -> ComposeNet.ComposableNode?
+ComposeNet.TextField.Suffix.set -> void
+ComposeNet.TextField.SupportingText.get -> ComposeNet.ComposableNode?
+ComposeNet.TextField.SupportingText.set -> void
 ComposeNet.TextField.TextField(ComposeNet.MutableState<string!>! state) -> void
 ComposeNet.TextField.TextField(string! value, System.Action<string!>! onValueChange) -> void
+ComposeNet.TextField.TrailingIcon.get -> ComposeNet.ComposableNode?
+ComposeNet.TextField.TrailingIcon.set -> void
+ComposeNet.TextOverflow
+ComposeNet.TextOverflow.Deconstruct(out int Value) -> void
+ComposeNet.TextOverflow.Equals(ComposeNet.TextOverflow other) -> bool
+ComposeNet.TextOverflow.TextOverflow() -> void
+ComposeNet.TextOverflow.TextOverflow(int Value) -> void
+ComposeNet.TextOverflow.Value.get -> int
+ComposeNet.TextOverflow.Value.init -> void
 ComposeNet.TimePicker
 ComposeNet.TimePicker.TimePicker(ComposeNet.TimePickerState? state = null) -> void
 ComposeNet.TimePickerDialog
@@ -759,7 +853,7 @@ override ComposeNet.MutableState<T>.ToString() -> string!
 override ComposeNet.Sp.Equals(object? obj) -> bool
 override ComposeNet.Sp.GetHashCode() -> int
 override ComposeNet.Sp.ToString() -> string!
-override ComposeNet.TextAlign.GetHashCode() -> int
+override ComposeNet.TextOverflow.GetHashCode() -> int
 static ComposeNet.Alignment.BottomCenter.get -> ComposeNet.Alignment!
 static ComposeNet.Alignment.BottomEnd.get -> ComposeNet.Alignment!
 static ComposeNet.Alignment.BottomStart.get -> ComposeNet.Alignment!
@@ -785,12 +879,20 @@ static ComposeNet.Arrangement.SpaceEvenly.get -> ComposeNet.Arrangement!
 static ComposeNet.Arrangement.Start.get -> ComposeNet.Arrangement!
 static ComposeNet.Arrangement.Top.get -> ComposeNet.Arrangement!
 static ComposeNet.Compose.Remember<T>(System.Func<T>! factory, int line = 0, string! file = "") -> T
+static ComposeNet.Compose.RememberSaveable<T>(System.Func<T>! factory, int line = 0, string! file = "") -> T
 static ComposeNet.Dp.implicit operator ComposeNet.Dp(float value) -> ComposeNet.Dp
 static ComposeNet.Dp.implicit operator ComposeNet.Dp(int value) -> ComposeNet.Dp
 static ComposeNet.Dp.operator !=(ComposeNet.Dp left, ComposeNet.Dp right) -> bool
 static ComposeNet.Dp.operator ==(ComposeNet.Dp left, ComposeNet.Dp right) -> bool
 static ComposeNet.Dp.Pack(ComposeNet.Dp? value) -> float
 static ComposeNet.Dp.Zero.get -> ComposeNet.Dp
+static ComposeNet.FontFamily.Cursive.get -> ComposeNet.FontFamily!
+static ComposeNet.FontFamily.Default.get -> ComposeNet.FontFamily!
+static ComposeNet.FontFamily.Monospace.get -> ComposeNet.FontFamily!
+static ComposeNet.FontFamily.SansSerif.get -> ComposeNet.FontFamily!
+static ComposeNet.FontFamily.Serif.get -> ComposeNet.FontFamily!
+static ComposeNet.FontStyle.Italic.get -> ComposeNet.FontStyle!
+static ComposeNet.FontStyle.Normal.get -> ComposeNet.FontStyle!
 static ComposeNet.FontWeight.Black.get -> ComposeNet.FontWeight!
 static ComposeNet.FontWeight.Bold.get -> ComposeNet.FontWeight!
 static ComposeNet.FontWeight.ExtraBold.get -> ComposeNet.FontWeight!
@@ -815,18 +917,23 @@ static ComposeNet.Sp.operator !=(ComposeNet.Sp left, ComposeNet.Sp right) -> boo
 static ComposeNet.Sp.operator ==(ComposeNet.Sp left, ComposeNet.Sp right) -> bool
 static ComposeNet.Sp.Pack(ComposeNet.Sp? value) -> long
 static ComposeNet.Sp.Zero.get -> ComposeNet.Sp
-static ComposeNet.TextAlign.Center.get -> ComposeNet.TextAlign
-static ComposeNet.TextAlign.End.get -> ComposeNet.TextAlign
-static ComposeNet.TextAlign.Justify.get -> ComposeNet.TextAlign
-static ComposeNet.TextAlign.Left.get -> ComposeNet.TextAlign
-static ComposeNet.TextAlign.operator !=(ComposeNet.TextAlign left, ComposeNet.TextAlign right) -> bool
-static ComposeNet.TextAlign.operator ==(ComposeNet.TextAlign left, ComposeNet.TextAlign right) -> bool
-static ComposeNet.TextAlign.Pack(ComposeNet.TextAlign? value) -> int
-static ComposeNet.TextAlign.Right.get -> ComposeNet.TextAlign
-static ComposeNet.TextAlign.Start.get -> ComposeNet.TextAlign
-static ComposeNet.TextAlign.Unspecified.get -> ComposeNet.TextAlign
+static ComposeNet.TextAlign.Center.get -> ComposeNet.TextAlign!
+static ComposeNet.TextAlign.End.get -> ComposeNet.TextAlign!
+static ComposeNet.TextAlign.Justify.get -> ComposeNet.TextAlign!
+static ComposeNet.TextAlign.Left.get -> ComposeNet.TextAlign!
+static ComposeNet.TextAlign.Right.get -> ComposeNet.TextAlign!
+static ComposeNet.TextAlign.Start.get -> ComposeNet.TextAlign!
+static ComposeNet.TextAlign.Unspecified.get -> ComposeNet.TextAlign!
 static ComposeNet.TextDecoration.LineThrough.get -> ComposeNet.TextDecoration!
 static ComposeNet.TextDecoration.None.get -> ComposeNet.TextDecoration!
 static ComposeNet.TextDecoration.Underline.get -> ComposeNet.TextDecoration!
+static ComposeNet.TextOverflow.Clip.get -> ComposeNet.TextOverflow
+static ComposeNet.TextOverflow.Ellipsis.get -> ComposeNet.TextOverflow
+static ComposeNet.TextOverflow.MiddleEllipsis.get -> ComposeNet.TextOverflow
+static ComposeNet.TextOverflow.operator !=(ComposeNet.TextOverflow left, ComposeNet.TextOverflow right) -> bool
+static ComposeNet.TextOverflow.operator ==(ComposeNet.TextOverflow left, ComposeNet.TextOverflow right) -> bool
+static ComposeNet.TextOverflow.Pack(ComposeNet.TextOverflow? value) -> int
+static ComposeNet.TextOverflow.StartEllipsis.get -> ComposeNet.TextOverflow
+static ComposeNet.TextOverflow.Visible.get -> ComposeNet.TextOverflow
 virtual ComposeNet.MutableState<T>.Value.get -> T
 virtual ComposeNet.MutableState<T>.Value.set -> void

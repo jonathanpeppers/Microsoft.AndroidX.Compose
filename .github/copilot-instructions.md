@@ -401,20 +401,44 @@ Parameter-level attributes the generator recognizes:
 - `[StateHolder(Remember = nameof(ComposeBridges.X), StateType = typeof(T))]`
   — annotate the `IntPtr` user param that carries a Kotlin
   state-holder handle (e.g. `DatePickerState`,
-  `DateRangePickerState`). The facade gains a defaulted ctor slot
-  `T? state = null` (appended last), calls
-  `ComposeBridges.<Remember>(composer)` at the top of `Render` to
-  obtain the JNI handle, populates `state.Jvm` via
-  `Java.Lang.Object.GetObject<TJvm>(handle, JniHandleOwnership.DoNotTransfer)`
-  the first time it sees a non-null wrapper, and forwards the handle
-  to this parameter. Phase 4 supports only Remember bridges with
-  signature `(IComposer) -> IntPtr` — Remember bridges that take user
-  parameters (e.g. `RememberTimePickerState(int, int, bool, IComposer)`)
-  are blocked on Phase 4b and stay hand-written. The
+  `DateRangePickerState`, `TimePickerState`). The facade gains a
+  defaulted ctor slot `T? state = null` (appended last), calls the
+  named `Remember` bridge at the top of `Render` to obtain the JNI
+  handle, populates `state.Jvm` via
+  `Java.Lang.Object.GetObject<TJvm>(handle, JniHandleOwnership.DoNotTransfer)`,
+  and forwards the handle to this parameter.
+
+  Two shapes are supported:
+
+  - **Phase 4** — zero-user-param Remember
+    (`(IComposer) -> IntPtr`, e.g. `RememberDatePickerState`,
+    `RememberDateRangePickerState`). `_state` stays nullable; `Jvm`
+    is only populated when the caller supplies a non-null wrapper
+    (`if (_state is not null && _state.Jvm is null) …`).
+  - **Phase 4b** — parameterised Remember
+    (`(arg1, arg2, …, IComposer) -> IntPtr`, e.g.
+    `RememberTimePickerState(int initialHour, int initialMinute,
+    bool is24Hour, IComposer)`). Each Remember user param is
+    resolved to a readable instance member (property or field) on
+    `StateType` by PascalCase match first
+    (`initialHour` → `InitialHour`), then `Initial<PascalCase>`
+    fallback (`is24Hour` → `Is24Hour` first, else
+    `InitialIs24Hour`). `_state` is auto-created in the ctor
+    (`_state = state ?? new T()`), so the field is guaranteed
+    non-null inside `Render` and `Jvm` population is unguarded
+    (`if (_state.Jvm is null) …`). The PascalCase-first rule lets a
+    wrapper's live getter that falls back to its initial-value
+    backing field (`Is24Hour => Jvm?.Is24hour() ?? InitialIs24Hour`)
+    be the natural match — at remember-time `Jvm` is null, so it
+    returns the initial value correctly. The Phase 4b shape
+    requires `StateType` to be constructible with no arguments
+    (either a declared parameterless ctor, or a ctor whose every
+    parameter has a `HasExplicitDefaultValue` default).
+
   `StateType` must declare an instance, writable, non-readonly,
   accessible field named `Jvm` whose declared type is the
-  binding-generated state interface (e.g. `IDatePickerState`). Cannot
-  be combined with `[PainterResource]` on the same parameter.
+  binding-generated state interface (e.g. `IDatePickerState`).
+  Cannot be combined with `[PainterResource]` on the same parameter.
 
 Each facade is emitted to a unique hint name
 (`ComposeNet.Facade.<ClassName>.g.cs`) so the `[CallerFilePath]` +
@@ -437,10 +461,15 @@ The generator now supports a wide range of facade shapes (Phases 1,
 - **Phase 4** — `[StateHolder(...)]` state-holder facades that need
   a `RememberXxxState(composer)` round-trip and a `.Jvm` population
   for the caller-supplied wrapper (`DatePicker`, `DateRangePicker`).
-  Limited to Remember bridges with signature `(IComposer) -> IntPtr`;
-  parameterised remembers (`TimePicker`, `TimeInput`, `SearchBar`,
-  `SnackbarHost`, `ModalBottomSheet`, `BottomSheetScaffold`) stay
-  hand-written until Phase 4b.
+- **Phase 4b** — `[StateHolder(...)]` with a parameterised Remember
+  bridge that takes user parameters resolved against `StateType`
+  members (`TimePicker`). The facade auto-creates the wrapper when
+  the caller leaves `state` null, then forwards init-value member
+  reads as the Remember args. `TimeInput`, `SearchBar`,
+  `SnackbarHost`, `ModalBottomSheet`, `BottomSheetScaffold` stay
+  hand-written — they need either a per-instance `confirmValueChange`
+  veto adapter (drawer pattern) or shared-state caching across
+  sibling facades, neither of which Phase 4b models.
 - **Phase 6** — `[ComposeFacade(DefaultColorFromTheme = "...")]`
   for drawer sheets and similar containers that fall back to a
   `ColorScheme` slot when the caller doesn't override.
@@ -506,11 +535,15 @@ can't model:
   permanent drawer doesn't actually need a veto adapter, but it
   shares the hand-written family for consistency.
 - State-holder facades whose `RememberXxxState` bridge takes user
-  parameters (`TimePicker` / `TimeInput` need
-  `initialHour`/`initialMinute`/`is24Hour`; `SearchBar`,
-  `ModalBottomSheet`, `BottomSheetScaffold` similarly). Phase 4
-  supports the zero-user-param shape (`DatePicker`,
-  `DateRangePicker`); parameterised remembers wait for Phase 4b.
+  parameters AND combine that with either a per-instance
+  `confirmValueChange` veto adapter or shared-state caching across
+  sibling facades: `TimeInput` (shares state with `TimePicker`),
+  `SearchBar` (shared-state caching across the bar + view facades),
+  `ModalBottomSheet`, `BottomSheetScaffold` (both need a
+  `confirmValueChange` adapter on top of parameterised Remember).
+  Phase 4 covers the zero-user-param shape (`DatePicker`,
+  `DateRangePicker`); Phase 4b covers the parameterised case where
+  no extra adapter / caching is needed (`TimePicker`).
 - Scope facades whose bodies do non-trivial work beyond
   `RenderContext.PushScope` (`SegmentedButton`,
   `SingleChoice`/`MultiChoiceSegmentedButtonRow`, the segmented

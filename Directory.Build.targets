@@ -32,6 +32,8 @@
     <PackageReference Update="Xamarin.AndroidX.Compose.Material3Android" Version="1.4.0.3" />
     <PackageReference Update="Xamarin.AndroidX.Compose.Runtime" Version="1.11.2.1" />
     <PackageReference Update="Xamarin.AndroidX.Compose.Runtime.Android" Version="1.11.2.1" />
+    <PackageReference Update="Xamarin.AndroidX.Compose.Runtime.Saveable" Version="1.11.2" />
+    <PackageReference Update="Xamarin.AndroidX.Compose.Runtime.Saveable.Android" Version="1.11.2" />
     <PackageReference Update="Xamarin.AndroidX.Compose.UI" Version="1.11.2" />
     <PackageReference Update="Xamarin.AndroidX.Compose.UI.Android" Version="1.11.2" />
     <PackageReference Update="Xamarin.AndroidX.Compose.UI.Graphics" Version="1.11.2.1" />
@@ -40,6 +42,12 @@
     <PackageReference Update="Xamarin.AndroidX.Compose.UI.Text.Android" Version="1.11.2.1" />
     <PackageReference Update="Xamarin.AndroidX.Compose.UI.Unit" Version="1.11.2.1" />
     <PackageReference Update="Xamarin.AndroidX.Compose.UI.Unit.Android" Version="1.11.2.1" />
+
+    <!-- AndroidX Navigation -->
+    <PackageReference Update="Xamarin.AndroidX.Navigation.Common" Version="2.9.8" />
+    <PackageReference Update="Xamarin.AndroidX.Navigation.Runtime" Version="2.9.8" />
+    <PackageReference Update="Xamarin.AndroidX.Navigation.Compose" Version="2.9.8" />
+    <PackageReference Update="Xamarin.AndroidX.Navigation.Compose.Android" Version="2.9.8" />
   </ItemGroup>
 
 </Project>

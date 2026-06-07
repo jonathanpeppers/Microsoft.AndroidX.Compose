@@ -79,6 +79,22 @@ public abstract class ComposeActivity : ComponentActivity
         => Compose.Remember(factory, line, file);
 
     /// <summary>
+    /// Like <see cref="Remember{T}(System.Func{T}, int, string)"/>, but
+    /// the cached value also survives process death / activity
+    /// recreation through Compose's <c>SaveableStateRegistry</c>.
+    /// Mirrors Kotlin's single <c>rememberSaveable&lt;T&gt;</c> entry
+    /// point — works for scalar values and for state-holder wrappers
+    /// (<see cref="MutableState{U}"/> / <see cref="MutableNumberState{U}"/>).
+    /// See <see cref="Compose.RememberSaveable{T}(System.Func{T}, int, string)"/>
+    /// for the full supported-<c>T</c> list.
+    /// </summary>
+    protected T RememberSaveable<T>(
+        System.Func<T> factory,
+        [CallerLineNumber] int line = 0,
+        [CallerFilePath]   string file = "")
+        => Compose.RememberSaveable(factory, line, file);
+
+    /// <summary>
     /// Opts the window into edge-to-edge. Call <c>base.OnCreate</c>
     /// first thing in your subclass override — that runs
     /// <see cref="EdgeToEdge.Enable(ComponentActivity)"/> before

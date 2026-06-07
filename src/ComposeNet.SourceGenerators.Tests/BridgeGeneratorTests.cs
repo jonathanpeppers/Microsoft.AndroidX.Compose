@@ -78,13 +78,16 @@ public class BridgeGeneratorTests
             {
                 public static long Pack(Em? value) => default;
             }
-            public readonly record struct TextAlign(int Value)
-            {
-                public static int Pack(TextAlign? value) => value?.Value ?? 0;
-            }
             public sealed class Shape : Java.Lang.Object { }
             public sealed class FontWeight : Java.Lang.Object { }
+            public sealed class FontStyle : Java.Lang.Object { }
+            public sealed class FontFamily : Java.Lang.Object { }
+            public sealed class TextAlign : Java.Lang.Object { }
             public sealed class TextDecoration : Java.Lang.Object { }
+            public readonly record struct TextOverflow(int Value)
+            {
+                public static int Pack(TextOverflow? value) => value?.Value ?? 0;
+            }
         }
         """;
 
@@ -1132,15 +1135,19 @@ public class BridgeGeneratorTests
     }
 
     [Fact]
-    public void ValueType_SpTextAlign_LowerCorrectly()
+    public void ValueType_SpTextOverflow_LowerCorrectly()
     {
-        // @Composable bridge: (Sp fontSize, TextAlign align, Composer).
+        // @Composable bridge: (Sp fontSize, TextOverflow overflow, Composer).
         // JNI: 2 user slots (J/I) + Composer (L) + 1 $changed (I) + 1 $default (I).
+        // Sp lowers to packed long; TextOverflow lowers to packed int —
+        // both are non-nullable in their real-world Compose @Composable
+        // declarations, so they travel as primitives rather than boxed
+        // references.
         var code = """
             using ComposeNet;
             using AndroidX.Compose.Runtime;
 
-            [assembly: ComposeDefaults("FontDefault", "fontSize", "align")]
+            [assembly: ComposeDefaults("FontDefault", "fontSize", "overflow")]
 
             namespace ComposeNet
             {
@@ -1151,7 +1158,7 @@ public class BridgeGeneratorTests
                         JvmName = "f",
                         Signature = "(JILandroidx/compose/runtime/Composer;II)V",
                         Defaults = typeof(FontDefault))]
-                    public static partial void F(Sp? fontSize, TextAlign? align, IComposer composer);
+                    public static partial void F(Sp? fontSize, TextOverflow? overflow, IComposer composer);
                 }
             }
             """;
@@ -1160,7 +1167,7 @@ public class BridgeGeneratorTests
         Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
         Assert.NotNull(emitted);
         Assert.Contains("global::ComposeNet.Sp.Pack(fontSize)", emitted);
-        Assert.Contains("global::ComposeNet.TextAlign.Pack(align)", emitted);
+        Assert.Contains("global::ComposeNet.TextOverflow.Pack(overflow)", emitted);
     }
 
     [Fact]
@@ -1252,5 +1259,76 @@ public class BridgeGeneratorTests
         Assert.NotNull(emitted);
         Assert.Contains("weight is null ? global::System.IntPtr.Zero : ((global::Java.Lang.Object)weight).Handle", emitted);
         Assert.Contains("if (weight is not null) defaults &= ~(int)global::ComposeNet.WeightedDefault.Weight", emitted);
+    }
+
+    [Fact]
+    public void NullablePrimitive_BoolIntLong_LowerToZeroDefaults()
+    {
+        // bool? / int? / long? params surface as nullable so the caller
+        // can leave the Kotlin default in place (auto-mask bit stays
+        // set). When the caller supplies a value, the mask bit clears
+        // and the value is passed through to the JNI primitive slot.
+        var code = """
+            using ComposeNet;
+            using AndroidX.Compose.Runtime;
+
+            [assembly: ComposeDefaults("PrimDefault",
+                "softWrap", "maxLines", "color")]
+
+            namespace ComposeNet
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(
+                        Class = "x/Y",
+                        JvmName = "f",
+                        Signature = "(ZIJLandroidx/compose/runtime/Composer;II)V",
+                        Defaults = typeof(PrimDefault))]
+                    public static partial void F(bool? softWrap, int? maxLines, long? color, IComposer composer);
+                }
+            }
+            """;
+
+        var (_, diags, emitted) = Run(code);
+        Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+        // Lowering: pass underlying primitive with null → zero literal.
+        Assert.Contains("(softWrap ?? false)", emitted);
+        Assert.Contains("(maxLines ?? 0)", emitted);
+        Assert.Contains("(color ?? 0L)", emitted);
+        // Auto-mask: clear the bit only when a value was supplied.
+        Assert.Contains("if (softWrap is not null) defaults &= ~(int)global::ComposeNet.PrimDefault.SoftWrap", emitted);
+        Assert.Contains("if (maxLines is not null) defaults &= ~(int)global::ComposeNet.PrimDefault.MaxLines", emitted);
+        Assert.Contains("if (color is not null) defaults &= ~(int)global::ComposeNet.PrimDefault.Color", emitted);
+    }
+
+    [Fact]
+    public void NullablePrimitive_FloatDouble_LowerCorrectly()
+    {
+        var code = """
+            using ComposeNet;
+            using AndroidX.Compose.Runtime;
+
+            [assembly: ComposeDefaults("FloatDefault", "ratio", "scale")]
+
+            namespace ComposeNet
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(
+                        Class = "x/Y",
+                        JvmName = "f",
+                        Signature = "(FDLandroidx/compose/runtime/Composer;II)V",
+                        Defaults = typeof(FloatDefault))]
+                    public static partial void F(float? ratio, double? scale, IComposer composer);
+                }
+            }
+            """;
+
+        var (_, diags, emitted) = Run(code);
+        Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+        Assert.Contains("(ratio ?? 0f)", emitted);
+        Assert.Contains("(scale ?? 0d)", emitted);
     }
 }
