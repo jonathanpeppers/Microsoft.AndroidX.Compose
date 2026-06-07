@@ -1163,12 +1163,9 @@ public class MainActivity : ComposeActivity
                 {
                     new Scaffold
                     {
-                        // The main TopAppBar uses the new Subtitle slot
-                        // (routes to the M3 two-line TopAppBar-cJHQLPU overload).
-                        TopBar = new TopAppBar
+                        TopBar = new CenterAlignedTopAppBar
                         {
-                            Title    = new Text(tabNames[tab.Value]),
-                            Subtitle = new Text($"count={count}  ·  sub={sub}"),
+                            Title = new Text(tabNames[tab.Value]),
                         },
                         SnackbarHost = showSnack.Value
                             ? new Snackbar
