@@ -572,6 +572,15 @@ using ComposeNet;
 [assembly: ComposeDefaults("ModifierShadowDefault",
     "!elevation", "shape", "clip")]
 
+// androidx.compose.ui.graphics.GraphicsLayerModifierKt.graphicsLayer-sKFY_QE$default —
+// 13 user params, all defaultable. Caller passes null to skip,
+// non-null to override.
+[assembly: ComposeDefaults("ModifierGraphicsLayerDefault",
+    "scaleX", "scaleY", "alpha",
+    "translationX", "translationY", "shadowElevation",
+    "rotationX", "rotationY", "rotationZ",
+    "cameraDistance", "transformOrigin", "shape", "clip")]
+
 // androidx.compose.material3.NavigationRailKt.NavigationRail-qi6gXK8:
 // 6 user params, bit 5 = content provided.
 [assembly: ComposeDefaults("NavigationRailDefault",

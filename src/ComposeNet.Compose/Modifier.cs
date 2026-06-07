@@ -650,6 +650,59 @@ public sealed class Modifier
     }
 
     /// <summary>
+    /// <c>Modifier.graphicsLayer(...)</c> — applies a draw-time
+    /// graphics layer to the composable. All parameters default to
+    /// <c>null</c>, which lets Compose substitute its own
+    /// per-property defaults (identity for transforms, full opacity
+    /// for <paramref name="alpha"/>, etc.). Supply only the
+    /// properties you want to override.
+    /// </summary>
+    /// <param name="scaleX">Horizontal scale (1.0 = no scaling).</param>
+    /// <param name="scaleY">Vertical scale (1.0 = no scaling).</param>
+    /// <param name="alpha">Opacity in [0, 1].</param>
+    /// <param name="translationX">Horizontal translation in pixels.</param>
+    /// <param name="translationY">Vertical translation in pixels.</param>
+    /// <param name="shadowElevation">Elevation in pixels (use <see cref="Shadow"/> to specify in Dp).</param>
+    /// <param name="rotationX">Rotation around the X axis in degrees.</param>
+    /// <param name="rotationY">Rotation around the Y axis in degrees.</param>
+    /// <param name="rotationZ">Rotation around the Z axis in degrees (clockwise).</param>
+    /// <param name="cameraDistance">Distance of the camera from the rotation pivot, in pixels.</param>
+    /// <param name="transformOrigin">Packed <c>TransformOrigin</c> value (use <see cref="ComposeNet.TransformOrigin.Pack(float, float)"/>); the default is the center (0.5, 0.5).</param>
+    /// <param name="shape">Clip / shadow outline shape (default = rectangle).</param>
+    /// <param name="clip">Whether to clip content to <paramref name="shape"/>.</param>
+    public Modifier GraphicsLayer(
+        float? scaleX = null,
+        float? scaleY = null,
+        float? alpha = null,
+        float? translationX = null,
+        float? translationY = null,
+        float? shadowElevation = null,
+        float? rotationX = null,
+        float? rotationY = null,
+        float? rotationZ = null,
+        float? cameraDistance = null,
+        long? transformOrigin = null,
+        Shape? shape = null,
+        bool? clip = null)
+    {
+        return Append(curr => ComposeBridges.ModifierGraphicsLayer(
+            curr,
+            scaleX,
+            scaleY,
+            alpha,
+            translationX,
+            translationY,
+            shadowElevation,
+            rotationX,
+            rotationY,
+            rotationZ,
+            cameraDistance,
+            transformOrigin,
+            shape?.Handle,
+            clip));
+    }
+
+    /// <summary>
     /// <c>Modifier.imePadding()</c> — pads the composable so it sits
     /// above the soft keyboard (IME) when it's visible. Use under
     /// edge-to-edge to keep input controls visible.
@@ -923,7 +976,7 @@ public sealed class Modifier
     /// that.
     /// </summary>
     public Modifier Semantics(string contentDescription) =>
-        Semantics(mergeDescendants: false, contentDescription);
+        Semantics(mergeDescendants: false, contentDescription, role: null);
 
     /// <summary>
     /// <c>Modifier.semantics(mergeDescendants) { contentDescription = ... }</c> —
@@ -931,13 +984,50 @@ public sealed class Modifier
     /// container that should announce itself instead of its children
     /// (e.g. a card with a label and a value).
     /// </summary>
-    public Modifier Semantics(bool mergeDescendants, string contentDescription)
+    public Modifier Semantics(bool mergeDescendants, string contentDescription) =>
+        Semantics(mergeDescendants, contentDescription, role: null);
+
+    /// <summary>
+    /// <c>Modifier.semantics { role = ... }</c> — tags the node with
+    /// an accessibility <see cref="SemanticsRole"/> (e.g.
+    /// <see cref="SemanticsRole.Button"/>). Useful when wrapping a
+    /// custom composable that's clickable but isn't a real
+    /// <see cref="Button"/>, so TalkBack announces "button" instead
+    /// of just the content description.
+    /// </summary>
+    public Modifier Semantics(SemanticsRole role) =>
+        Semantics(mergeDescendants: false, contentDescription: null, role: role);
+
+    /// <summary>
+    /// <c>Modifier.semantics { contentDescription = ...; role = ... }</c> —
+    /// combine a content description with a role in a single
+    /// semantics block. Either argument may be omitted by passing
+    /// <c>null</c>.
+    /// </summary>
+    public Modifier Semantics(string? contentDescription, SemanticsRole? role) =>
+        Semantics(mergeDescendants: false, contentDescription, role);
+
+    /// <summary>
+    /// <c>Modifier.semantics(mergeDescendants) { contentDescription = ...; role = ... }</c> —
+    /// full form. Pass <c>null</c> for either property to skip it.
+    /// At least one of <paramref name="contentDescription"/> or
+    /// <paramref name="role"/> must be supplied.
+    /// </summary>
+    public Modifier Semantics(bool mergeDescendants, string? contentDescription, SemanticsRole? role)
     {
-        System.ArgumentNullException.ThrowIfNull(contentDescription);
+        if (contentDescription is null && role is null)
+            throw new System.ArgumentException(
+                "At least one of contentDescription or role must be supplied.",
+                nameof(contentDescription));
         var properties = new ComposableLambda1(arg =>
         {
             if (arg is Java.Lang.Object obj)
-                ComposeBridges.SemanticsSetContentDescription(obj.Handle, contentDescription);
+            {
+                if (contentDescription is not null)
+                    ComposeBridges.SemanticsSetContentDescription(obj.Handle, contentDescription);
+                if (role is not null)
+                    ComposeBridges.SemanticsSetRole(obj.Handle, (int)role.Value);
+            }
         });
         return Append(curr =>
             ComposeBridges.ModifierSemantics(curr, mergeDescendants, properties));
@@ -950,13 +1040,31 @@ public sealed class Modifier
     /// should appear as a single accessibility node with a curated
     /// description, hiding implementation details.
     /// </summary>
-    public Modifier ClearAndSetSemantics(string contentDescription)
+    public Modifier ClearAndSetSemantics(string contentDescription) =>
+        ClearAndSetSemantics(contentDescription, role: null);
+
+    /// <summary>
+    /// <c>Modifier.clearAndSetSemantics { contentDescription = ...; role = ... }</c> —
+    /// combine a content description with a <see cref="SemanticsRole"/>
+    /// in a single clear-and-set block. At least one of
+    /// <paramref name="contentDescription"/> or <paramref name="role"/>
+    /// must be supplied.
+    /// </summary>
+    public Modifier ClearAndSetSemantics(string? contentDescription, SemanticsRole? role)
     {
-        System.ArgumentNullException.ThrowIfNull(contentDescription);
+        if (contentDescription is null && role is null)
+            throw new System.ArgumentException(
+                "At least one of contentDescription or role must be supplied.",
+                nameof(contentDescription));
         var properties = new ComposableLambda1(arg =>
         {
             if (arg is Java.Lang.Object obj)
-                ComposeBridges.SemanticsSetContentDescription(obj.Handle, contentDescription);
+            {
+                if (contentDescription is not null)
+                    ComposeBridges.SemanticsSetContentDescription(obj.Handle, contentDescription);
+                if (role is not null)
+                    ComposeBridges.SemanticsSetRole(obj.Handle, (int)role.Value);
+            }
         });
         return Append(curr =>
             ComposeBridges.ModifierClearAndSetSemantics(curr, properties));

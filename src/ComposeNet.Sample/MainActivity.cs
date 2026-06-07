@@ -560,6 +560,59 @@ public class MainActivity : ComposeActivity
                                 },
                             },
                             new Button(onClick: () => dragX63.Value = 0f) { new Text("Reset drag") },
+                            // Semantics(role) — TalkBack announces the
+                            // custom Box as a "button" thanks to the
+                            // SemanticsRole tag, even though it's not a
+                            // real Button. The combined overload also
+                            // sets a content description.
+                            new Text("Semantics(role) — custom 'button':"),
+                            new Box
+                            {
+                                Modifier.Companion
+                                    .FillMaxWidth()
+                                    .Height(48)
+                                    .Background(Color.FromRgb(0xB3, 0xE5, 0xFC))
+                                    .Clickable(() => taps63.Value++)
+                                    .Semantics("Custom tap target", SemanticsRole.Button)
+                                    .Padding(12),
+                                new Text("Tap me — announced as 'button'"),
+                            },
+                            // GraphicsLayer — drag-driven rotation, with
+                            // a non-default TransformOrigin so the tile
+                            // rotates around its top-left corner instead
+                            // of its center. Drag the purple square
+                            // above (or tap reset) to change dragX63.
+                            new Text($"GraphicsLayer (rotation = drag offset, pivot = top-left):"),
+                            new Row
+                            {
+                                Modifier.Companion.FillMaxWidth().Height(96).Padding(4),
+                                new Box
+                                {
+                                    Modifier.Companion
+                                        .Size(64)
+                                        .GraphicsLayer(
+                                            rotationZ:       dragX63.Value,
+                                            alpha:           0.6f + 0.4f * System.MathF.Min(1f, System.MathF.Abs(dragX63.Value) / 90f),
+                                            transformOrigin: TransformOrigin.Pack(0f, 0f))
+                                        .Background(Color.FromRgb(0xAB, 0x47, 0xBC)),
+                                    new Text("⟲") { Modifier = Modifier.Companion.Padding(20) },
+                                },
+                                new Spacer { Modifier = Modifier.Companion.WidthIn(16, null) },
+                                // Same source value, but the second tile
+                                // pivots around its center (the default)
+                                // and scales asymmetrically.
+                                new Box
+                                {
+                                    Modifier.Companion
+                                        .Size(64)
+                                        .GraphicsLayer(
+                                            rotationZ: -dragX63.Value,
+                                            scaleX:    1.0f + dragX63.Value / 200f,
+                                            scaleY:    1.0f - dragX63.Value / 400f)
+                                        .Background(Color.FromRgb(0x66, 0xBB, 0x6A)),
+                                    new Text("↔") { Modifier = Modifier.Companion.Padding(20) },
+                                },
+                            },
                         },
                         _ => new Column
                         {

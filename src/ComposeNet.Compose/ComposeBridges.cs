@@ -1911,6 +1911,43 @@ internal static partial class ComposeBridges
         Defaults  = typeof(ModifierShadowDefault))]
     internal static partial IntPtr ModifierShadow(IntPtr modifier, float elevation, IntPtr? shape);
 
+    // androidx.compose.ui.graphics.GraphicsLayerModifierKt.graphicsLayer-sKFY_QE$default —
+    // (Modifier, F scaleX, F scaleY, F alpha, F translationX, F
+    // translationY, F shadowElevation, F rotationX, F rotationY,
+    // F rotationZ, F cameraDistance, J transformOrigin, Shape shape,
+    // Z clip). 13 user params, all defaultable. Mangled because
+    // `transformOrigin` is `@JvmInline value class TransformOrigin`
+    // packed as a `long`. The C# wrapper uses `float?`/`long?`/
+    // `IntPtr?`/`bool?` so the auto-mask clears each bit when a
+    // value is supplied. This is the simplest of the three
+    // graphicsLayer overloads — it omits the `RenderEffect`,
+    // `ambientShadowColor`, `spotShadowColor`, and
+    // `compositingStrategy` parameters introduced in later
+    // versions. Most user code only touches alpha / rotation /
+    // scale, which this overload covers.
+    [ComposeBridge(
+        Class     = "androidx/compose/ui/graphics/GraphicsLayerModifierKt",
+        JvmName   = "graphicsLayer-sKFY_QE$default",
+        Signature = "(Landroidx/compose/ui/Modifier;FFFFFFFFFFJ" +
+                    "Landroidx/compose/ui/graphics/Shape;Z" +
+                    "ILjava/lang/Object;)Landroidx/compose/ui/Modifier;",
+        Defaults  = typeof(ModifierGraphicsLayerDefault))]
+    internal static partial IntPtr ModifierGraphicsLayer(
+        IntPtr modifier,
+        float? scaleX,
+        float? scaleY,
+        float? alpha,
+        float? translationX,
+        float? translationY,
+        float? shadowElevation,
+        float? rotationX,
+        float? rotationY,
+        float? rotationZ,
+        float? cameraDistance,
+        long? transformOrigin,
+        IntPtr? shape,
+        bool? clip);
+
     // androidx.compose.foundation.layout.WindowInsetsPadding_androidKt —
     // additional inset-padding helpers. Same shape as the existing
     // safeDrawingPadding / systemBarsPadding bridges.
@@ -2227,6 +2264,18 @@ internal static partial class ComposeBridges
         Signature = "(Landroidx/compose/ui/semantics/SemanticsPropertyReceiver;" +
                     "Ljava/lang/String;)V")]
     internal static partial void SemanticsSetContentDescription(IntPtr receiver, string description);
+
+    // androidx.compose.ui.semantics.SemanticsPropertiesKt.setRole-kuIjeqM(
+    //   SemanticsPropertyReceiver, int) — JVM-mangled because the
+    // Kotlin source signature takes a `Role` value class whose
+    // underlying type is `int`. Same lambda-receiver invocation shape
+    // as SetContentDescription. The int comes from
+    // <see cref="ComposeNet.SemanticsRole"/>.
+    [ComposeBridge(
+        Class     = "androidx/compose/ui/semantics/SemanticsPropertiesKt",
+        JvmName   = "setRole-kuIjeqM",
+        Signature = "(Landroidx/compose/ui/semantics/SemanticsPropertyReceiver;I)V")]
+    internal static partial void SemanticsSetRole(IntPtr receiver, int role);
 
     // Shape factories — additional overloads of RoundedCornerShape /
     // CutCornerShape beyond the existing Dp variant. The Int (percent)
