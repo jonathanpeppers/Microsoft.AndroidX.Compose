@@ -8,4 +8,27 @@ namespace ComposeNet;
 /// Behavior mirrors <see cref="ModalNavigationDrawer"/> for the state
 /// holder and <c>ConfirmStateChange</c> veto.
 /// </summary>
-public sealed partial class DismissibleNavigationDrawer;
+public sealed partial class DismissibleNavigationDrawer
+{
+    /// <summary>
+    /// Convenience: when <c>true</c>, the drawer starts in the
+    /// <see cref="AndroidX.Compose.Material3.DrawerValue.Open"/> state
+    /// on first composition. Mirrors Kotlin
+    /// <c>rememberDrawerState(initialValue = DrawerValue.Open)</c>.
+    /// </summary>
+    /// <remarks>
+    /// Setting this constructs a default <see cref="DrawerStateHolder"/>
+    /// with the requested initial value. If the caller also passes an
+    /// explicit holder to the constructor, the init setter overwrites
+    /// it — pass the holder directly (with the desired
+    /// <c>InitialValue</c>) when you need to share state across
+    /// recompositions.
+    /// </remarks>
+    public bool InitiallyOpen
+    {
+        get => _drawerState?.InitialValue == AndroidX.Compose.Material3.DrawerValue.Open;
+        init => _drawerState = new DrawerStateHolder(
+            value ? AndroidX.Compose.Material3.DrawerValue.Open!
+                  : AndroidX.Compose.Material3.DrawerValue.Closed!);
+    }
+}

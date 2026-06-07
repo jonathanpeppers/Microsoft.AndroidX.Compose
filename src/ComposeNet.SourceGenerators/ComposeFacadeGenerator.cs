@@ -911,11 +911,17 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         sb.Append("    public sealed partial class ").Append(className).Append(" : ").AppendLine(baseClass);
         sb.AppendLine("    {");
 
-        // Backing fields for ctor slots.
+        // Backing fields for ctor slots. StateHolder fields are
+        // emitted writable (no `readonly`) so that hand-written
+        // partial declarations of the same facade can pre-populate
+        // them via `init`-only properties — useful for thin
+        // convenience accessors like `InitiallyOpen = true` over the
+        // state holder's constructor argument.
         foreach (var s in ctorSlots)
         {
             var typeRef = CtorFieldType(s);
-            sb.Append("        readonly ").Append(typeRef).Append(" _").Append(CtorIdentifier(s)).AppendLine(";");
+            var modifier = s.Kind == FacadeSlotKind.StateHolder ? "" : "readonly ";
+            sb.Append("        ").Append(modifier).Append(typeRef).Append(" _").Append(CtorIdentifier(s)).AppendLine(";");
         }
 
         // Phase 10 — per-instance JCW veto adapter fields. One per

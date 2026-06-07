@@ -1435,8 +1435,11 @@ public class FacadeGeneratorTests
         Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
         Assert.NotNull(emitted);
 
-        // Ctor: state slot LAST, with default = null.
-        Assert.Contains("readonly global::ComposeNet.DatePickerState? _state;", emitted);
+        // Ctor: state slot LAST, with default = null. The field is
+        // emitted writable (no `readonly`) so partials can override
+        // it via init-only convenience setters.
+        Assert.Contains("global::ComposeNet.DatePickerState? _state;", emitted);
+        Assert.DoesNotContain("readonly global::ComposeNet.DatePickerState? _state;", emitted);
         Assert.Contains("public DatePicker(global::ComposeNet.DatePickerState? state = null)", emitted);
 
         // Render: Remember + .Jvm population.
@@ -1671,8 +1674,11 @@ public class FacadeGeneratorTests
 
         // Ctor: parameterised StateHolder auto-creates the wrapper when
         // the caller passes null, so the field is guaranteed non-null
-        // even though the ctor param keeps its = null default.
-        Assert.Contains("readonly global::ComposeNet.TimePickerState? _state;", emitted);
+        // even though the ctor param keeps its = null default. The
+        // field is emitted writable (no `readonly`) so partials can
+        // override it via init-only convenience setters.
+        Assert.Contains("global::ComposeNet.TimePickerState? _state;", emitted);
+        Assert.DoesNotContain("readonly global::ComposeNet.TimePickerState? _state;", emitted);
         Assert.Contains("public TimePicker(global::ComposeNet.TimePickerState? state = null)", emitted);
         Assert.Contains("_state = state ?? new global::ComposeNet.TimePickerState();", emitted);
 
@@ -1827,8 +1833,11 @@ public class FacadeGeneratorTests
         Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
         Assert.NotNull(emitted);
 
-        // Phase 4 field stays nullable (no auto-create in ctor).
-        Assert.Contains("readonly global::ComposeNet.DatePickerState? _state;", emitted);
+        // Phase 4 field stays nullable (no auto-create in ctor). The
+        // field is emitted writable (no `readonly`) so partials can
+        // override it via init-only convenience setters.
+        Assert.Contains("global::ComposeNet.DatePickerState? _state;", emitted);
+        Assert.DoesNotContain("readonly global::ComposeNet.DatePickerState? _state;", emitted);
         Assert.DoesNotContain("_state = state ?? new global::ComposeNet.DatePickerState();", emitted);
 
         // Cache-hit branch — guarded with explicit null check on _state.

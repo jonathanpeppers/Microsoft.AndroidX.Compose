@@ -161,6 +161,8 @@ ComposeNet.DismissibleNavigationDrawer.Content.set -> void
 ComposeNet.DismissibleNavigationDrawer.DismissibleNavigationDrawer(ComposeNet.DrawerStateHolder? drawerState = null) -> void
 ComposeNet.DismissibleNavigationDrawer.Drawer.get -> ComposeNet.ComposableNode?
 ComposeNet.DismissibleNavigationDrawer.Drawer.set -> void
+ComposeNet.DismissibleNavigationDrawer.InitiallyOpen.get -> bool
+ComposeNet.DismissibleNavigationDrawer.InitiallyOpen.init -> void
 ComposeNet.DisposableEffect
 ComposeNet.DisposableEffect.DisposableEffect(object? key1, object? key2, object? key3, System.Func<AndroidX.Compose.Runtime.DisposableEffectScope!, System.Action!>! effect) -> void
 ComposeNet.DisposableEffect.DisposableEffect(object? key1, object? key2, System.Func<AndroidX.Compose.Runtime.DisposableEffectScope!, System.Action!>! effect) -> void
@@ -450,6 +452,8 @@ ComposeNet.ModalNavigationDrawer.Content.get -> ComposeNet.ComposableNode?
 ComposeNet.ModalNavigationDrawer.Content.set -> void
 ComposeNet.ModalNavigationDrawer.Drawer.get -> ComposeNet.ComposableNode?
 ComposeNet.ModalNavigationDrawer.Drawer.set -> void
+ComposeNet.ModalNavigationDrawer.InitiallyOpen.get -> bool
+ComposeNet.ModalNavigationDrawer.InitiallyOpen.init -> void
 ComposeNet.ModalNavigationDrawer.ModalNavigationDrawer(ComposeNet.DrawerStateHolder? drawerState = null) -> void
 ComposeNet.ModalWideNavigationRail
 ComposeNet.ModalWideNavigationRail.Header.get -> ComposeNet.ComposableNode?
