@@ -22,7 +22,7 @@ public static class HomeScreen
         {
             TopBar = new CenterAlignedTopAppBar
             {
-                Title = new Image(Resource.Drawable.ic_jetnews_wordmark, "JetNews")
+                Title = new Icon(Resource.Drawable.ic_jetnews_wordmark, "JetNews")
                 {
                     Modifier = Modifier.Companion.Height(24),
                 },
