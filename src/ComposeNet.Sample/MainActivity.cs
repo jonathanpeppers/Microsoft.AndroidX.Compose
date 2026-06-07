@@ -2,6 +2,7 @@ using Android.OS;
 using AndroidX.Compose.Material3;
 using AndroidX.Compose.UI.Graphics;
 using ComposeNet;
+using ComposeResources = ComposeNet.Resources;
 
 namespace ComposeNet.Sample;
 
@@ -230,7 +231,9 @@ public class MainActivity : ComposeActivity
                         0 => (ComposableNode)new Column
                         {
                             Modifier.Companion.VerticalScroll(greetingScroll),
-                            new Text("Hello from .NET"),
+                            // Issue #146: pull the greeting text from
+                            // values/strings.xml instead of hardcoding it.
+                            new Text(ComposeResources.StringResource(Resource.String.greeting)),
                             new OutlinedTextField(name),
                             new Text($"Hi {(string.IsNullOrEmpty(name.Value) ? "stranger" : name.Value)}"),
                             // Value-type demo (issue #65): typed Sp / FontWeight /
@@ -374,12 +377,16 @@ public class MainActivity : ComposeActivity
                             {
                                 new Image(Resource.Drawable.ic_star, "Star icon"),
                                 new Spacer { Modifier = Modifier.Companion.FillMaxWidth(0.05f) },
+                                new Image(ComposeResources.PainterResource(Resource.Drawable.ic_star),
+                                          "Star icon (via Painter handle)"),
+                                new Spacer { Modifier = Modifier.Companion.FillMaxWidth(0.05f) },
                                 new Column
                                 {
                                     new Button(onClick: () => count++) { new Text("Tap to increment") },
                                     new IconButton(onClick: () => count--) { new Text("−") },
                                 },
                             },
+                            new Text(ComposeResources.StringResource(Resource.String.counter_caption)),
                         },
                         2 => (ComposableNode)new Column
                         {

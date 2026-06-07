@@ -2,6 +2,7 @@ using Android.Runtime;
 using AndroidX.Compose.Material3;
 using AndroidX.Compose.Runtime;
 using AndroidX.Compose.UI.Graphics.Vector;
+using Painter = AndroidX.Compose.UI.Graphics.Painter.Painter;
 
 namespace ComposeNet;
 
@@ -10,7 +11,7 @@ namespace ComposeNet;
 /// typically inside a <see cref="Button"/>, <see cref="IconButton"/>,
 /// or a <see cref="NavigationBarItem"/>.
 ///
-/// Two source types are supported:
+/// Three source types are supported:
 /// <list type="bullet">
 /// <item><description>An <see cref="ImageVector"/> obtained from a
 /// Compose icon library — uses the directly-bound
@@ -19,12 +20,16 @@ namespace ComposeNet;
 /// inside <see cref="Render"/> via <c>painterResource(id)</c> and then
 /// drawn through a JNI bridge to the stripped
 /// <c>IconKt.Icon-ww6aTOc(Painter, ...)</c> overload.</description></item>
+/// <item><description>A pre-resolved <see cref="Painter"/> (e.g. from
+/// <see cref="Resources.PainterResource"/>) — the caller-owned handle
+/// is forwarded directly through the same JNI bridge.</description></item>
 /// </list>
 /// </summary>
 public sealed class Icon : ComposableNode
 {
     readonly ImageVector? _vector;
     readonly int? _resourceId;
+    readonly Painter? _painter;
     readonly string? _contentDescription;
 
     /// <summary>
@@ -44,6 +49,14 @@ public sealed class Icon : ComposableNode
     public Icon(int drawableResourceId, string? contentDescription)
     {
         _resourceId = drawableResourceId;
+        _contentDescription = contentDescription;
+    }
+
+    /// <summary>Render a pre-resolved <see cref="Painter"/> (typically from <see cref="Resources.PainterResource"/>).</summary>
+    public Icon(Painter painter, string? contentDescription)
+    {
+        System.ArgumentNullException.ThrowIfNull(painter);
+        _painter = painter;
         _contentDescription = contentDescription;
     }
 
@@ -79,7 +92,28 @@ public sealed class Icon : ComposableNode
             return;
         }
 
-        // Painter overload — resolve the drawable inside the composition
+        if (_painter is not null)
+        {
+            // Caller owns the Painter peer; pass its global-ref handle
+            // directly and keep the wrapper alive across the bridge call.
+            try
+            {
+                ComposeBridges.IconPainter(
+                    painter:            ((IJavaObject)_painter).Handle,
+                    contentDescription: _contentDescription,
+                    modifier:           modifier,
+                    tint:               tint,
+                    defaults:           defaults,
+                    composer:           composer);
+            }
+            finally
+            {
+                System.GC.KeepAlive(_painter);
+            }
+            return;
+        }
+
+        // Resource-id path — resolve the drawable inside the composition
         // (painterResource is itself @Composable) and forward via JNI.
         // The bridge enum (`IconPainterDefault`) has the same bit layout
         // as `IconDefault` for the user-visible bits (ContentDescription,
