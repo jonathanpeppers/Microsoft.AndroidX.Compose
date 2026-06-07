@@ -9,23 +9,37 @@ namespace ComposeNet;
 /// content. <c>p0</c> is the receiver scope (RowScope/ColumnScope),
 /// <c>p1</c> is the composer, <c>p2</c> is <c>$changed</c>.
 ///
-/// Two ctors: the <c>Action&lt;IComposer&gt;</c> form discards the scope
-/// (used wherever children don't need to know it — Column, Box, Button);
-/// the <c>Action&lt;IntPtr, IComposer&gt;</c> form receives the raw scope
-/// handle, used by container composables whose children are
-/// extension-receiver composables (<c>RowScope.NavigationBarItem</c>).
-/// The scope is published via <see cref="RenderContext"/> so the child
-/// <c>Render</c> can read it.
+/// Three ctors:
+/// <list type="bullet">
+///   <item><description><c>Action&lt;IComposer&gt;</c> discards the scope —
+///     used wherever children don't need to know it (Column, Box,
+///     Button).</description></item>
+///   <item><description><c>Action&lt;IntPtr, IComposer&gt;</c> receives the
+///     raw scope handle, used by container composables whose children
+///     are extension-receiver composables (<c>RowScope.NavigationBarItem</c>).
+///     The scope is published via <see cref="RenderContext"/> so the
+///     child <c>Render</c> can read it.</description></item>
+///   <item><description><c>Action&lt;Java.Lang.Object?, IComposer&gt;</c>
+///     receives the boxed <c>p0</c> as a <see cref="Java.Lang.Object"/>.
+///     Used by value-typed Function3 slots — e.g.
+///     <c>Crossfade</c>'s <c>content: @Composable (T) -&gt; Unit</c>
+///     where <c>p0</c> is the boxed targetState rather than a scope
+///     receiver — so the body can unbox to the user-facing
+///     <c>T</c>.</description></item>
+/// </list>
 /// </summary>
 [Register("composenet/compose/ComposableLambda3")]
 internal sealed class ComposableLambda3 : Java.Lang.Object, IFunction3
 {
-    readonly System.Action<IntPtr, IComposer> _body;
+    readonly System.Action<Java.Lang.Object?, IComposer> _body;
 
     public ComposableLambda3(System.Action<IComposer> body)
-        : this((_, c) => body(c)) { }
+        : this((Java.Lang.Object? _, IComposer c) => body(c)) { }
 
-    public ComposableLambda3(System.Action<IntPtr, IComposer> body) => _body = body;
+    public ComposableLambda3(System.Action<IntPtr, IComposer> body)
+        : this((Java.Lang.Object? p0, IComposer c) => body(p0?.Handle ?? IntPtr.Zero, c)) { }
+
+    public ComposableLambda3(System.Action<Java.Lang.Object?, IComposer> body) => _body = body;
 
     // Kotlin Function3<Scope, Composer, Int, Unit> contractually returns
     // Unit.INSTANCE. See ComposableLambda0 / issue #43 for the rationale.
@@ -34,7 +48,7 @@ internal sealed class ComposableLambda3 : Java.Lang.Object, IFunction3
         System.ArgumentNullException.ThrowIfNull(p1);
         var composer = Android.Runtime.Extensions.JavaCast<IComposer>(p1);
         using var _ = ComposeContext.Push(composer);
-        _body(p0?.Handle ?? IntPtr.Zero, composer);
+        _body(p0, composer);
         return global::Kotlin.Unit.Instance!;
     }
 }

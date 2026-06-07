@@ -24,6 +24,10 @@
     <PackageReference Update="Xamarin.AndroidX.Activity.Compose" Version="1.13.0" />
 
     <!-- AndroidX Compose -->
+    <PackageReference Update="Xamarin.AndroidX.Compose.Animation" Version="1.11.2" />
+    <PackageReference Update="Xamarin.AndroidX.Compose.Animation.Android" Version="1.11.2.1" />
+    <PackageReference Update="Xamarin.AndroidX.Compose.Animation.Core" Version="1.11.2" />
+    <PackageReference Update="Xamarin.AndroidX.Compose.Animation.Core.Android" Version="1.11.2.1" />
     <PackageReference Update="Xamarin.AndroidX.Compose.Foundation" Version="1.11.2.1" />
     <PackageReference Update="Xamarin.AndroidX.Compose.Foundation.Android" Version="1.11.2.1" />
     <PackageReference Update="Xamarin.AndroidX.Compose.Foundation.Layout" Version="1.11.2" />
