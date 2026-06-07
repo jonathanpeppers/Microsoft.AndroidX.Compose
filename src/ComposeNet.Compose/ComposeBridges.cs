@@ -278,7 +278,7 @@ internal static partial class ComposeBridges
     public static partial void Text(
         string text,
         IModifier? modifier,
-        long? color,
+        Color? color,
         Sp? fontSize,
         FontStyle? fontStyle,
         FontWeight? fontWeight,

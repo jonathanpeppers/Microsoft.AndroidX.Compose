@@ -70,6 +70,10 @@ public class BridgeGeneratorTests
             {
                 public static float Pack(Dp? value) => value?.Value ?? 0f;
             }
+            public readonly record struct Color(ulong PackedValue)
+            {
+                public static implicit operator long(Color c) => (long)c.PackedValue;
+            }
             public readonly record struct Sp(float Value)
             {
                 public static long Pack(Sp? value) => default;

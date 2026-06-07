@@ -151,7 +151,7 @@ ComposeNet.DateRangePickerState.SelectedStartDateMillis.get -> long?
 ComposeNet.DateRangePickerState.SelectedStartDateMillis.set -> void
 ComposeNet.DateRangePickerState.SetSelection(long? startDateMillis, long? endDateMillis) -> void
 ComposeNet.DismissibleDrawerSheet
-ComposeNet.DismissibleDrawerSheet.ContainerColor.get -> long
+ComposeNet.DismissibleDrawerSheet.ContainerColor.get -> ComposeNet.Color
 ComposeNet.DismissibleDrawerSheet.ContainerColor.set -> void
 ComposeNet.DismissibleDrawerSheet.DismissibleDrawerSheet() -> void
 ComposeNet.DismissibleNavigationDrawer
@@ -418,7 +418,7 @@ ComposeNet.ModalBottomSheet.DragHandle.get -> ComposeNet.ComposableNode?
 ComposeNet.ModalBottomSheet.DragHandle.set -> void
 ComposeNet.ModalBottomSheet.ModalBottomSheet(System.Action! onDismissRequest) -> void
 ComposeNet.ModalDrawerSheet
-ComposeNet.ModalDrawerSheet.ContainerColor.get -> long
+ComposeNet.ModalDrawerSheet.ContainerColor.get -> ComposeNet.Color
 ComposeNet.ModalDrawerSheet.ContainerColor.set -> void
 ComposeNet.ModalDrawerSheet.ModalDrawerSheet() -> void
 ComposeNet.ModalNavigationDrawer
@@ -439,11 +439,11 @@ ComposeNet.Modifier
 ComposeNet.Modifier.AbsoluteOffset(ComposeNet.Dp? x = null, ComposeNet.Dp? y = null) -> ComposeNet.Modifier!
 ComposeNet.Modifier.Alpha(float alpha) -> ComposeNet.Modifier!
 ComposeNet.Modifier.AspectRatio(float ratio, bool matchHeightConstraintsFirst = false) -> ComposeNet.Modifier!
-ComposeNet.Modifier.Background(long color, ComposeNet.Shape? shape) -> ComposeNet.Modifier!
-ComposeNet.Modifier.Background(long color) -> ComposeNet.Modifier!
-ComposeNet.Modifier.Border(ComposeNet.Dp width, long color, ComposeNet.Dp cornerRadius) -> ComposeNet.Modifier!
-ComposeNet.Modifier.Border(ComposeNet.Dp width, long color, ComposeNet.Shape? shape) -> ComposeNet.Modifier!
-ComposeNet.Modifier.Border(ComposeNet.Dp width, long color) -> ComposeNet.Modifier!
+ComposeNet.Modifier.Background(ComposeNet.Color color, ComposeNet.Shape? shape) -> ComposeNet.Modifier!
+ComposeNet.Modifier.Background(ComposeNet.Color color) -> ComposeNet.Modifier!
+ComposeNet.Modifier.Border(ComposeNet.Dp width, ComposeNet.Color color, ComposeNet.Dp cornerRadius) -> ComposeNet.Modifier!
+ComposeNet.Modifier.Border(ComposeNet.Dp width, ComposeNet.Color color, ComposeNet.Shape? shape) -> ComposeNet.Modifier!
+ComposeNet.Modifier.Border(ComposeNet.Dp width, ComposeNet.Color color) -> ComposeNet.Modifier!
 ComposeNet.Modifier.Clickable(System.Action! onClick) -> ComposeNet.Modifier!
 ComposeNet.Modifier.Clip(ComposeNet.Dp cornerRadius) -> ComposeNet.Modifier!
 ComposeNet.Modifier.Clip(ComposeNet.Shape! shape) -> ComposeNet.Modifier!
@@ -600,7 +600,7 @@ ComposeNet.PagerState.PagerState(System.Func<int>! pageCount, int initialPage = 
 ComposeNet.PagerState.SettledPage.get -> int
 ComposeNet.PagerState.TargetPage.get -> int
 ComposeNet.PermanentDrawerSheet
-ComposeNet.PermanentDrawerSheet.ContainerColor.get -> long
+ComposeNet.PermanentDrawerSheet.ContainerColor.get -> ComposeNet.Color
 ComposeNet.PermanentDrawerSheet.ContainerColor.set -> void
 ComposeNet.PermanentDrawerSheet.PermanentDrawerSheet() -> void
 ComposeNet.PermanentNavigationDrawer
@@ -749,7 +749,7 @@ ComposeNet.TabRow.TabRow(int selectedTabIndex) -> void
 ComposeNet.Text
 ComposeNet.Text.Align.get -> ComposeNet.TextAlign?
 ComposeNet.Text.Align.set -> void
-ComposeNet.Text.Color.get -> long?
+ComposeNet.Text.Color.get -> ComposeNet.Color?
 ComposeNet.Text.Color.set -> void
 ComposeNet.Text.Decoration.get -> ComposeNet.TextDecoration?
 ComposeNet.Text.Decoration.set -> void
