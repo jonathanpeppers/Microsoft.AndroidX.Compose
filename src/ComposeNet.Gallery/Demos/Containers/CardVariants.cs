@@ -11,10 +11,38 @@ public static class CardVariants
         CategoryId:  "containers",
         Title:       "Card variants",
         Description: "Card (tonal), ElevatedCard (shadow), OutlinedCard (border).",
-        Build:       () => new Column
+        Build:       () => new Column(verticalArrangement: Arrangement.SpacedBy(12))
         {
-            new Card { new Text("Card (tonal)") },
-            new ElevatedCard { new Text("ElevatedCard (shadow)") },
-            new OutlinedCard { new Text("OutlinedCard (border)") },
+            Modifier.Companion.FillMaxWidth(),
+            new Card
+            {
+                Modifier.Companion.FillMaxWidth(),
+                new Column
+                {
+                    Modifier.Companion.Padding(16),
+                    new Text("Card (tonal)"),
+                    new Text("Default Material 3 Card — uses surfaceVariant for the background."),
+                },
+            },
+            new ElevatedCard
+            {
+                Modifier.Companion.FillMaxWidth(),
+                new Column
+                {
+                    Modifier.Companion.Padding(16),
+                    new Text("ElevatedCard (shadow)"),
+                    new Text("Lifts off the surface with a soft drop shadow."),
+                },
+            },
+            new OutlinedCard
+            {
+                Modifier.Companion.FillMaxWidth(),
+                new Column
+                {
+                    Modifier.Companion.Padding(16),
+                    new Text("OutlinedCard (border)"),
+                    new Text("Stroked outline, no fill or elevation."),
+                },
+            },
         });
 }

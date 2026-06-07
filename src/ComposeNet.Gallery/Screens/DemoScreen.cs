@@ -1,3 +1,4 @@
+using AndroidX.Compose.Runtime;
 using ComposeNet.Gallery.Registry;
 
 namespace ComposeNet.Gallery.Screens;
@@ -42,15 +43,31 @@ public static class DemoScreen
             },
             new HorizontalDivider(),
 
-            // Demo body. Wrapping in a Column with vertical scroll
-            // would be tempting, but many demos need full available
-            // height (e.g. LazyColumn, Carousels) — let the demo own
-            // its own scrolling.
-            new Box
-            {
-                Modifier.Companion.FillMaxSize().Padding(16),
-                new DemoContent(demo.Build),
-            },
+            // Vertical scroll wrapper around the demo body so demos that
+            // are taller than the viewport stay reachable, with consistent
+            // gutter padding across the catalog. Demos that need full
+            // height (LazyColumn, Carousels) supply their own Modifier.
+            new ScrollableDemoBody(demo.Build),
         };
+    }
+
+    sealed class ScrollableDemoBody : ComposableNode
+    {
+        readonly System.Func<ComposableNode> _build;
+
+        public ScrollableDemoBody(System.Func<ComposableNode> build) => _build = build;
+
+        public override void Render(IComposer composer)
+        {
+            var scroll = Compose.Remember(() => new ScrollState());
+            new Column(verticalArrangement: Arrangement.SpacedBy(12))
+            {
+                Modifier.Companion
+                    .FillMaxSize()
+                    .VerticalScroll(scroll)
+                    .Padding(16),
+                new DemoContent(_build),
+            }.Render(composer);
+        }
     }
 }
