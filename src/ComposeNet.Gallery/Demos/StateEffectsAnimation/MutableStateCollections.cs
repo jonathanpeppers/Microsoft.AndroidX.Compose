@@ -9,7 +9,7 @@ public static class MutableStateCollections
     /// <summary>Registry entry exposed via <see cref="Catalog.Demos"/>.</summary>
     public static Demo Demo => new(
         Id:          "state-mutable-collections",
-        CategoryId:  "state",
+        CategoryId:  "state-effects",
         Title:       "MutableStateList + Map",
         Description: "Snapshot-tracked List and Map; mutate them and dependent reads recompose automatically.",
         Build:       () =>

@@ -8,7 +8,7 @@ public static class LargeFlexibleTopAppBarDemo
     /// <summary>Registry entry exposed via <see cref="Catalog.Demos"/>.</summary>
     public static Demo Demo => new(
         Id:          "appbars-large-flexible",
-        CategoryId:  "appbars",
+        CategoryId:  "app-bars-tabs",
         Title:       "LargeFlexibleTopAppBar",
         Description: "Big title for hero screens; supports Title / Subtitle / Actions.",
         Build:       () =>

@@ -8,7 +8,7 @@ public static class DerivedStateDemo
     /// <summary>Registry entry exposed via <see cref="Catalog.Demos"/>.</summary>
     public static Demo Demo => new(
         Id:          "state-derivedstate",
-        CategoryId:  "state",
+        CategoryId:  "state-effects",
         Title:       "DerivedStateOf",
         Description: "derived.Value reads list.Count inside DerivedStateOf, so anything that reads derived recomposes only when the count actually changes.",
         Build:       () =>

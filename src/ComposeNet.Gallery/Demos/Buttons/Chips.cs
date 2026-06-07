@@ -15,21 +15,25 @@ public static class Chips
         {
             var count = Compose.Remember(() => new MutableNumberState<int>(0));
             var liked = Compose.Remember(() => new MutableState<bool>(false));
-            return new Column
+            return new Column(verticalArrangement: Arrangement.SpacedBy(8))
             {
                 new Text($"Count: {count}, liked: {liked.Value}"),
-                new AssistChip(onClick: () => count++)
-                    { Label = new Text("Assist (+1)") },
-                new ElevatedAssistChip(onClick: () => count++)
-                    { Label = new Text("Elevated assist (+1)") },
-                new FilterChip(selected: liked.Value, onClick: () => liked.Value = !liked.Value)
-                    { Label = new Text(liked.Value ? "Liked" : "Like") },
-                new ElevatedFilterChip(selected: liked.Value, onClick: () => liked.Value = !liked.Value)
-                    { Label = new Text(liked.Value ? "Elevated liked" : "Elevated like") },
-                new SuggestionChip(onClick: () => count.Value = 0)
-                    { Label = new Text("Reset") },
-                new ElevatedSuggestionChip(onClick: () => count.Value = 0)
-                    { Label = new Text("Elevated reset") },
+                new FlowRow
+                {
+                    Modifier.Companion.FillMaxWidth(),
+                    new AssistChip(onClick: () => count++)
+                        { Label = new Text("Assist (+1)") },
+                    new ElevatedAssistChip(onClick: () => count++)
+                        { Label = new Text("Elevated assist (+1)") },
+                    new FilterChip(selected: liked.Value, onClick: () => liked.Value = !liked.Value)
+                        { Label = new Text(liked.Value ? "Liked" : "Like") },
+                    new ElevatedFilterChip(selected: liked.Value, onClick: () => liked.Value = !liked.Value)
+                        { Label = new Text(liked.Value ? "Elevated liked" : "Elevated like") },
+                    new SuggestionChip(onClick: () => count.Value = 0)
+                        { Label = new Text("Reset") },
+                    new ElevatedSuggestionChip(onClick: () => count.Value = 0)
+                        { Label = new Text("Elevated reset") },
+                },
             };
         });
 }

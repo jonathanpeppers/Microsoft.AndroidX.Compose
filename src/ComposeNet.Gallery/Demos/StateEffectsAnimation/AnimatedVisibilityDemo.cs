@@ -8,7 +8,7 @@ public static class AnimatedVisibilityDemo
     /// <summary>Registry entry exposed via <see cref="Catalog.Demos"/>.</summary>
     public static Demo Demo => new(
         Id:          "anim-visibility",
-        CategoryId:  "state",
+        CategoryId:  "state-effects",
         Title:       "AnimatedVisibility",
         Description: "Toggle a card in and out. Compose applies a default fade + expand transition.",
         Build:       () =>

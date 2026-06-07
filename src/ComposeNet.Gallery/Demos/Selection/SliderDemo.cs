@@ -10,7 +10,7 @@ public static class SliderDemo
         Id:          "selection-slider",
         CategoryId:  "selection",
         Title:       "Slider",
-        Description: "Continuous Slider mapped to a MutableNumberState&lt;float&gt;.",
+        Description: "Continuous Slider mapped to a MutableNumberState<float>.",
         Build:       () =>
         {
             var value = Compose.Remember(() => new MutableNumberState<float>(0.4f));

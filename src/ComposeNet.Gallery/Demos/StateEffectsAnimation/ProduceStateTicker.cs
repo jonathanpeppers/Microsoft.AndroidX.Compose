@@ -8,7 +8,7 @@ public static class ProduceStateTicker
     /// <summary>Registry entry exposed via <see cref="Catalog.Demos"/>.</summary>
     public static Demo Demo => new(
         Id:          "state-producestate-ticker",
-        CategoryId:  "state",
+        CategoryId:  "state-effects",
         Title:       "ProduceState ticker",
         Description: "A 1Hz tick loop publishes into a Compose State. Bumping the seed cancels the current loop and restarts it from 0.",
         Build:       () =>

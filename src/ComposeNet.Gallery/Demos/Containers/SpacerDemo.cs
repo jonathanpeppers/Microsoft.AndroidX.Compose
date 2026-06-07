@@ -14,14 +14,38 @@ public static class SpacerDemo
         Description: "Spacer with explicit Height / Width for fixed gaps.",
         Build:       () => new Column
         {
-            new Text("Above 32-dp Spacer"),
+            new Text("32-dp vertical Spacer between the two blocks:"),
+            new Box
+            {
+                Modifier.Companion
+                    .Height(40)
+                    .FillMaxWidth()
+                    .Background(Color.FromRgb(0xB3, 0xE5, 0xFC)),
+            },
             new Spacer { Modifier = Modifier.Companion.Height(32) },
-            new Text("Below 32-dp Spacer"),
+            new Box
+            {
+                Modifier.Companion
+                    .Height(40)
+                    .FillMaxWidth()
+                    .Background(Color.FromRgb(0xC8, 0xE6, 0xC9)),
+            },
+            new Text("48-dp horizontal Spacer between the two blocks:"),
             new Row
             {
-                new Text("Left"),
+                new Box
+                {
+                    Modifier.Companion
+                        .Size(56)
+                        .Background(Color.FromRgb(0xFF, 0xE0, 0xB2)),
+                },
                 new Spacer { Modifier = Modifier.Companion.Width(48) },
-                new Text("Right (after 48-dp Spacer)"),
+                new Box
+                {
+                    Modifier.Companion
+                        .Size(56)
+                        .Background(Color.FromRgb(0xCE, 0x93, 0xD8)),
+                },
             },
         });
 }

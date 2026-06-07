@@ -14,21 +14,27 @@ public static class ModalDrawerDemo
         Build:       () =>
         {
             var count = Compose.Remember(() => new MutableNumberState<int>(0));
-            return new ModalNavigationDrawer
+            // Drawers fill their parent. Bound them so they don't fight the
+            // gallery's outer scroll for height.
+            return new Box
             {
-                Drawer = new ModalDrawerSheet
+                Modifier.Companion.Height(320),
+                new ModalNavigationDrawer
                 {
-                    new Text("Modal drawer"),
-                    new Text("• Inbox"),
-                    new Text("• Sent"),
-                    new Text("• Drafts"),
-                },
-                Content = new Column
-                {
-                    new Text("Main content"),
-                    new Text("Swipe right from edge →"),
-                    new Text($"Count: {count}"),
-                    new Button(onClick: () => count++) { new Text("+1") },
+                    Drawer = new ModalDrawerSheet
+                    {
+                        new Text("Modal drawer"),
+                        new Text("• Inbox"),
+                        new Text("• Sent"),
+                        new Text("• Drafts"),
+                    },
+                    Content = new Column
+                    {
+                        new Text("Main content"),
+                        new Text("Swipe right from edge →"),
+                        new Text($"Count: {count}"),
+                        new Button(onClick: () => count++) { new Text("+1") },
+                    },
                 },
             };
         });

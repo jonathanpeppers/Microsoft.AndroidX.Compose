@@ -47,7 +47,7 @@ public static class ToggleableSelectableSemantics
                         .Clickable(() => taps.Value++)
                         .Semantics("Custom tap target", SemanticsRole.Button)
                         .Padding(12),
-                    new Text("Tap me — announced as 'button'"),
+                    new Text("Tap me — announced as 'button'") { Color = Color.Black },
                 },
             };
         });

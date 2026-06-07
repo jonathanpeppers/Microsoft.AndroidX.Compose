@@ -8,7 +8,7 @@ public static class LaunchedEffectDemo
     /// <summary>Registry entry exposed via <see cref="Catalog.Demos"/>.</summary>
     public static Demo Demo => new(
         Id:          "effects-launchedeffect",
-        CategoryId:  "state",
+        CategoryId:  "state-effects",
         Title:       "LaunchedEffect",
         Description: "Background tick loop scoped to this composition. Bumping the key cancels and restarts it.",
         Build:       () =>

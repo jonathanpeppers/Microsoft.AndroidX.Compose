@@ -8,7 +8,7 @@ public static class BottomAppBarWithFab
     /// <summary>Registry entry exposed via <see cref="Catalog.Demos"/>.</summary>
     public static Demo Demo => new(
         Id:          "appbars-bottom-fab",
-        CategoryId:  "appbars",
+        CategoryId:  "app-bars-tabs",
         Title:       "BottomAppBar — with FAB",
         Description: "BottomAppBar exposes a FloatingActionButton slot for the primary action.",
         Build:       () =>

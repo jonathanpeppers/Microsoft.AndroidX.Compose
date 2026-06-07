@@ -30,6 +30,8 @@ public static class GalleryApp
         var nav    = Compose.Remember(() => new NavController());
         var drawer = Compose.Remember(() => new DrawerStateHolder(AndroidX.Compose.Material3.DrawerValue.Closed));
 
+        MainActivity.Nav = nav;
+
         return new MaterialTheme
         {
             new Surface

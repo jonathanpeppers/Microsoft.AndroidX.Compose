@@ -8,7 +8,7 @@ public static class SecondaryScrollableTabRowDemo
     /// <summary>Registry entry exposed via <see cref="Catalog.Demos"/>.</summary>
     public static Demo Demo => new(
         Id:          "appbars-secondary-scrollable-tabrow",
-        CategoryId:  "appbars",
+        CategoryId:  "app-bars-tabs",
         Title:       "SecondaryScrollableTabRow",
         Description: "M3 secondary tab row variant; same selection model as PrimaryScrollableTabRow.",
         Build:       () =>

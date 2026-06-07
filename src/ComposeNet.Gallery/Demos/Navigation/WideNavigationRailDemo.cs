@@ -17,8 +17,12 @@ public static class WideNavigationRailDemo
             return new Column
             {
                 new Text($"WideNavigationRail (selected: {idx})"),
-                new Row
+                // The rail wants to fill its parent vertically. The DemoScreen
+                // wrapper provides infinite height (vertical scroll), so we
+                // bound it with a fixed-height Box.
+                new Box
                 {
+                    Modifier.Companion.Height(320),
                     new WideNavigationRail
                     {
                         new WideNavigationRailItem(selected: idx.Value == 0, onClick: () => idx.Value = 0)

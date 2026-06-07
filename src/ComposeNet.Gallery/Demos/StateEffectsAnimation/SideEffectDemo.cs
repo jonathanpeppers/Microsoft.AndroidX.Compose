@@ -8,7 +8,7 @@ public static class SideEffectDemo
     /// <summary>Registry entry exposed via <see cref="Catalog.Demos"/>.</summary>
     public static Demo Demo => new(
         Id:          "effects-sideeffect",
-        CategoryId:  "state",
+        CategoryId:  "state-effects",
         Title:       "SideEffect",
         Description: "Writes a log line after every successful recomposition. Filter logcat for 'ComposeNet.Gallery' to see it.",
         Build:       () =>

@@ -8,7 +8,7 @@ public static class BottomAppBarActions
     /// <summary>Registry entry exposed via <see cref="Catalog.Demos"/>.</summary>
     public static Demo Demo => new(
         Id:          "appbars-bottom-actions",
-        CategoryId:  "appbars",
+        CategoryId:  "app-bars-tabs",
         Title:       "BottomAppBar — actions",
         Description: "Action icons laid out left-to-right; no FAB slot.",
         Build:       () =>

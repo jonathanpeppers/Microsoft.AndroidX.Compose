@@ -8,7 +8,7 @@ public static class CenterAlignedTopAppBarDemo
     /// <summary>Registry entry exposed via <see cref="Catalog.Demos"/>.</summary>
     public static Demo Demo => new(
         Id:          "appbars-center-top",
-        CategoryId:  "appbars",
+        CategoryId:  "app-bars-tabs",
         Title:       "CenterAlignedTopAppBar",
         Description: "Centered title with leading nav icon and trailing action.",
         Build:       () => new CenterAlignedTopAppBar

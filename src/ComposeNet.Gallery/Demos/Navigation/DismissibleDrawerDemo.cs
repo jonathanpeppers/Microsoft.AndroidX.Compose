@@ -15,22 +15,26 @@ public static class DismissibleDrawerDemo
         Build:       () =>
         {
             var count = Compose.Remember(() => new MutableNumberState<int>(0));
-            return new DismissibleNavigationDrawer
+            return new Box
             {
-                InitialValue = DrawerValue.Open!,
-                Drawer = new DismissibleDrawerSheet
+                Modifier.Companion.Height(320),
+                new DismissibleNavigationDrawer
                 {
-                    new Text("Dismissible drawer"),
-                    new Text("• Inbox"),
-                    new Text("• Sent"),
-                    new Text("• Drafts"),
-                },
-                Content = new Column
-                {
-                    new Text("Main content"),
-                    new Text("Swipe horizontally to toggle"),
-                    new Text($"Count: {count}"),
-                    new Button(onClick: () => count++) { new Text("+1") },
+                    InitialValue = DrawerValue.Open!,
+                    Drawer = new DismissibleDrawerSheet
+                    {
+                        new Text("Dismissible drawer"),
+                        new Text("• Inbox"),
+                        new Text("• Sent"),
+                        new Text("• Drafts"),
+                    },
+                    Content = new Column
+                    {
+                        new Text("Main content"),
+                        new Text("Swipe horizontally to toggle"),
+                        new Text($"Count: {count}"),
+                        new Button(onClick: () => count++) { new Text("+1") },
+                    },
                 },
             };
         });

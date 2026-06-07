@@ -44,7 +44,10 @@ public static class ShapesAndShadow
                     .Background(Color.FromRgb(0xFF, 0xE0, 0xB2), Shape.RoundedCorners(16))
                     .Border(2, Color.FromRgb(0xEF, 0x6C, 0x00), Shape.RoundedCorners(16))
                     .Padding(16),
-                new Text("Shadow + Border + Background on Shape.RoundedCorners(16)"),
+                new Text("Shadow + Border + Background on Shape.RoundedCorners(16)")
+                {
+                    Color = Color.Black,
+                },
             },
             new Text("AspectRatio (16:9, height-first):"),
             new Box
@@ -54,7 +57,11 @@ public static class ShapesAndShadow
                     .Height(80)
                     .AspectRatio(16f / 9f, matchHeightConstraintsFirst: true)
                     .Background(Color.FromRgb(0xCC, 0xC2, 0xDC)),
-                new Text("16:9 (height-first)") { Modifier = Modifier.Companion.Padding(8) },
+                new Text("16:9 (height-first)")
+                {
+                    Color    = Color.Black,
+                    Modifier = Modifier.Companion.Padding(8),
+                },
             },
         });
 }

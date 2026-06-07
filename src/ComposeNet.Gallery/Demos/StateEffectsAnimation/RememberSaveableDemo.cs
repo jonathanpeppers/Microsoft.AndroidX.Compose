@@ -8,7 +8,7 @@ public static class RememberSaveableDemo
     /// <summary>Registry entry exposed via <see cref="Catalog.Demos"/>.</summary>
     public static Demo Demo => new(
         Id:          "state-remembersaveable",
-        CategoryId:  "state",
+        CategoryId:  "state-effects",
         Title:       "RememberSaveable",
         Description: "Values stay put across configuration changes (rotate the device, toggle dark mode).",
         Build:       () =>

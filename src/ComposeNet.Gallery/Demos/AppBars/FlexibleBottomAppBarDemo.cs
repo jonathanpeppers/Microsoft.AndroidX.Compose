@@ -8,7 +8,7 @@ public static class FlexibleBottomAppBarDemo
     /// <summary>Registry entry exposed via <see cref="Catalog.Demos"/>.</summary>
     public static Demo Demo => new(
         Id:          "appbars-bottom-flexible",
-        CategoryId:  "appbars",
+        CategoryId:  "app-bars-tabs",
         Title:       "FlexibleBottomAppBar",
         Description: "Flexible variant of BottomAppBar; content drives the bar's height.",
         Build:       () =>

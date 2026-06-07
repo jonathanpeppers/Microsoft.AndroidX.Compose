@@ -8,7 +8,7 @@ public static class DisposableEffectDemo
     /// <summary>Registry entry exposed via <see cref="Catalog.Demos"/>.</summary>
     public static Demo Demo => new(
         Id:          "effects-disposableeffect",
-        CategoryId:  "state",
+        CategoryId:  "state-effects",
         Title:       "DisposableEffect",
         Description: "Fake 'register external listener' pattern. The cleanup callback bumps a counter on every key change / leaving composition.",
         Build:       () =>

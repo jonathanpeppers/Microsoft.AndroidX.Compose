@@ -14,20 +14,24 @@ public static class PermanentDrawerDemo
         Build:       () =>
         {
             var count = Compose.Remember(() => new MutableNumberState<int>(0));
-            return new PermanentNavigationDrawer
+            return new Box
             {
-                Drawer = new PermanentDrawerSheet
+                Modifier.Companion.Height(320),
+                new PermanentNavigationDrawer
                 {
-                    new Text("Permanent drawer"),
-                    new Text("• Inbox"),
-                    new Text("• Sent"),
-                    new Text("• Drafts"),
-                },
-                Content = new Column
-                {
-                    new Text("Main content"),
-                    new Text($"Count: {count}"),
-                    new Button(onClick: () => count++) { new Text("+1") },
+                    Drawer = new PermanentDrawerSheet
+                    {
+                        new Text("Permanent drawer"),
+                        new Text("• Inbox"),
+                        new Text("• Sent"),
+                        new Text("• Drafts"),
+                    },
+                    Content = new Column
+                    {
+                        new Text("Main content"),
+                        new Text($"Count: {count}"),
+                        new Button(onClick: () => count++) { new Text("+1") },
+                    },
                 },
             };
         });

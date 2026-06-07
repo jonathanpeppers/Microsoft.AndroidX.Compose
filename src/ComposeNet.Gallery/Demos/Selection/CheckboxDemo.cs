@@ -10,7 +10,7 @@ public static class CheckboxDemo
         Id:          "selection-checkbox",
         CategoryId:  "selection",
         Title:       "Checkbox",
-        Description: "Plain two-state checkbox bound to a MutableState&lt;bool&gt;.",
+        Description: "Plain two-state checkbox bound to a MutableState<bool>.",
         Build:       () =>
         {
             var on = Compose.Remember(() => new MutableState<bool>(false));

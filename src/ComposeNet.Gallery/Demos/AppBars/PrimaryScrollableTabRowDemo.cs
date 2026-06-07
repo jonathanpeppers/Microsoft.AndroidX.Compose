@@ -8,7 +8,7 @@ public static class PrimaryScrollableTabRowDemo
     /// <summary>Registry entry exposed via <see cref="Catalog.Demos"/>.</summary>
     public static Demo Demo => new(
         Id:          "appbars-primary-scrollable-tabrow",
-        CategoryId:  "appbars",
+        CategoryId:  "app-bars-tabs",
         Title:       "PrimaryScrollableTabRow",
         Description: "Scrolls horizontally when tabs overflow; mixes Tab, LeadingIconTab, CustomTab.",
         Build:       () =>
