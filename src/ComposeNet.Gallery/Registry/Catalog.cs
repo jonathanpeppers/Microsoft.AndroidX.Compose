@@ -68,6 +68,16 @@ public static class Catalog
         D.Selection.RangeSliderDemo.Demo,
         D.Selection.SingleChoiceSegmentedButtons.Demo,
         D.Selection.MultiChoiceSegmentedButtons.Demo,
+
+        // ---- Containers ----
+        D.Containers.CardVariants.Demo,
+        D.Containers.SurfaceDemo.Demo,
+        D.Containers.BoxAlignment.Demo,
+        D.Containers.ColumnRowArrangements.Demo,
+        D.Containers.SpacerDemo.Demo,
+        D.Containers.DividerDemo.Demo,
+        D.Containers.FlowRowFlowColumn.Demo,
+        D.Containers.BoxWithConstraintsDemo.Demo,
     ];
 
     /// <summary>
