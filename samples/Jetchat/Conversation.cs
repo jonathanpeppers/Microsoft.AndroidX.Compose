@@ -16,6 +16,7 @@ public static class Conversation
     static readonly Color MeBubbleColor       = Color.FromRgb(0xD0, 0xE4, 0xFF);
     static readonly Color OtherBubbleColor    = Color.FromRgb(0xED, 0xED, 0xED);
     static readonly Color DrawerSelectedColor = Color.FromRgb(0xD0, 0xE4, 0xFF);
+    static readonly Color BubbleTextColor     = Color.FromRgb(0x1F, 0x1F, 0x1F);
 
     /// <summary>Materialize the conversation tree for one composition pass.</summary>
     public static ComposableNode Build(ConversationUiState ui, MutableState<string> input, ScrollState drawerScroll) =>
@@ -127,6 +128,7 @@ public static class Conversation
                 BuildAuthorAndTimestamp(m, alignEnd: true),
                 new Text(m.Content)
                 {
+                    Color = BubbleTextColor,
                     Modifier = Modifier.Companion
                         .Padding(top: 4, bottom: 0, start: 0, end: 0)
                         .Clip(12)
@@ -158,6 +160,7 @@ public static class Conversation
             contentCol.Add(BuildAuthorAndTimestamp(m, alignEnd: false));
         contentCol.Add(new Text(m.Content)
         {
+            Color = BubbleTextColor,
             Modifier = Modifier.Companion
                 .Padding(top: 4, bottom: 0, start: 0, end: 16)
                 .Clip(12)
