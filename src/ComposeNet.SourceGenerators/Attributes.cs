@@ -250,12 +250,22 @@ internal static class Attributes
             /// </summary>
             /// <remarks>
             /// <para><b>Remember</b>: the <c>nameof(ComposeBridges.X)</c>
-            /// of a static partial bridge on <c>ComposeBridges</c> with
-            /// signature <c>(IComposer composer) -&gt; IntPtr</c>. Phase
-            /// 4 supports only zero-user-param remembers; bridges that
-            /// take initialization values (e.g.
-            /// <c>RememberTimePickerState(int, int, bool, composer)</c>)
-            /// stay hand-written until Phase 4b.</para>
+            /// of a static partial bridge on <c>ComposeBridges</c> whose
+            /// last parameter is an <c>IComposer</c> and that returns
+            /// <c>IntPtr</c>. The remaining (leading) parameters are
+            /// treated as init values — each one is read off the
+            /// caller-supplied <c>StateType</c> wrapper at render time.
+            /// Phase 4 covers the zero-user-param shape (e.g.
+            /// <c>RememberDatePickerState(IComposer) -&gt; IntPtr</c>);
+            /// Phase 4b adds support for parameterised remembers (e.g.
+            /// <c>RememberTimePickerState(int, int, bool, IComposer)</c>).
+            /// Each Remember user param must resolve to a readable
+            /// instance member on <see cref="StateType"/>: the generator
+            /// looks up the PascalCased name first (e.g.
+            /// <c>initialHour</c> → <c>InitialHour</c>) and falls back
+            /// to <c>Initial&lt;PascalCase&gt;</c> for the Kotlin
+            /// convention where <c>initialX</c> remember args correspond
+            /// to live wrapper property <c>X</c>.</para>
             /// <para><b>StateType</b>: the C# wrapper class that exposes
             /// the state-holder's properties. It must declare an
             /// instance, writable, non-readonly field named <c>Jvm</c>
@@ -263,7 +273,11 @@ internal static class Attributes
             /// (e.g. <c>IDatePickerState</c>) — the generator emits
             /// <c>state.Jvm = Java.Lang.Object.GetObject&lt;IXxxState&gt;
             /// (handle, JniHandleOwnership.DoNotTransfer)!</c> the first
-            /// time <c>Render</c> sees a non-null wrapper.</para>
+            /// time <c>Render</c> sees a non-null wrapper. For Phase 4b
+            /// (parameterised Remember) the type must also be
+            /// constructible with no arguments (parameterless ctor or
+            /// all-defaulted-params ctor) so the facade can auto-create
+            /// a default wrapper when the caller passes <c>null</c>.</para>
             /// </remarks>
             [global::System.AttributeUsage(global::System.AttributeTargets.Parameter,
                                            AllowMultiple = false)]
