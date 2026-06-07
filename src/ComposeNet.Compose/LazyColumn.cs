@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Android.Runtime;
 using AndroidX.Compose.Foundation.Lazy;
+using AndroidX.Compose.Foundation.Layout;
 using AndroidX.Compose.Runtime;
 
 namespace ComposeNet;
@@ -27,11 +28,20 @@ namespace ComposeNet;
 /// <see cref="LazyListState"/>) to read scroll position or drive
 /// programmatic scrolling. When left null Compose creates its own
 /// internal state via the Kotlin default <c>rememberLazyListState()</c>.
+///
+/// When placed as the body of a <see cref="Scaffold"/>, the
+/// scaffold-supplied <c>PaddingValues</c> is forwarded into Kotlin's
+/// own <c>contentPadding</c> parameter (NOT applied as
+/// <c>Modifier.padding</c>) so the list itself fills the scaffold body
+/// — items scroll under top app bars, bottom app bars, and system
+/// chrome (gesture nav) like upstream M3 templates, and the first /
+/// last items remain reachable above and below them.
 /// </summary>
 public sealed class LazyColumn<T> : ComposableNode
 {
     readonly IReadOnlyList<T> _items;
     readonly Func<T, ComposableNode> _itemContent;
+    IPaddingValues? _runtimeContentPadding;
 
     public LazyColumn(IReadOnlyList<T> items, Func<T, ComposableNode> itemContent)
     {
@@ -62,6 +72,53 @@ public sealed class LazyColumn<T> : ComposableNode
     /// </remarks>
     public bool ReverseLayout { get; set; }
 
+    /// <summary>
+    /// Optional fixed content padding applied inside the list (not as a
+    /// modifier on the list frame). Items can scroll behind this area
+    /// but the first/last items stay fully reachable. Takes precedence
+    /// over a <see cref="Scaffold"/>-supplied <c>PaddingValues</c> when
+    /// both are present.
+    /// </summary>
+    public IPaddingValues? ContentPadding { get; set; }
+
+    /// <summary>
+    /// When a parent layout (typically <see cref="Scaffold"/>) hands us
+    /// a runtime <c>PaddingValues</c>, route it into LazyColumn's own
+    /// <c>contentPadding:</c> parameter instead of letting the base
+    /// implementation prepend a <c>Modifier.padding</c> op. This gives
+    /// the "items scroll under the top/bottom bars" behavior Material's
+    /// templates rely on while keeping the first and last item
+    /// reachable above and below the chrome.
+    /// </summary>
+    internal override void Render(IComposer composer, IntPtr paddingHandle)
+    {
+        if (paddingHandle == IntPtr.Zero)
+        {
+            Render(composer);
+            return;
+        }
+
+        // DoNotTransfer because the Scaffold content lambda owns the
+        // local ref for the duration of this call. We wrap, JavaCast to
+        // the interface, then dispose immediately — the cast holds its
+        // own peer reference, so the temporary Java.Lang.Object wrapper
+        // doesn't need to outlive this method.
+        IPaddingValues pv;
+        using (var pvObj = new Java.Lang.Object(paddingHandle, JniHandleOwnership.DoNotTransfer))
+            pv = pvObj.JavaCast<IPaddingValues>();
+
+        var prev = _runtimeContentPadding;
+        _runtimeContentPadding = pv;
+        try
+        {
+            Render(composer);
+        }
+        finally
+        {
+            _runtimeContentPadding = prev;
+        }
+    }
+
     public override void Render(IComposer composer)
     {
         var modifier = BuildModifier();
@@ -86,19 +143,22 @@ public sealed class LazyColumn<T> : ComposableNode
                 }));
         });
 
+        var contentPadding = ContentPadding ?? _runtimeContentPadding;
+
         int defaults = (int)LazyColumnDefault.All;
-        if (modifier is not null) defaults &= ~(int)LazyColumnDefault.Modifier;
-        if (State    is not null) defaults &= ~(int)LazyColumnDefault.State;
+        if (modifier       is not null) defaults &= ~(int)LazyColumnDefault.Modifier;
+        if (State          is not null) defaults &= ~(int)LazyColumnDefault.State;
+        if (contentPadding is not null) defaults &= ~(int)LazyColumnDefault.ContentPadding;
         // Bool params lower to a single $default bit. Kotlin's default
         // is false, so only clear the bit when the caller asked for
         // true — otherwise let Kotlin substitute its own false and
         // save the explicit-pass round trip.
-        if (ReverseLayout)        defaults &= ~(int)LazyColumnDefault.ReverseLayout;
+        if (ReverseLayout)              defaults &= ~(int)LazyColumnDefault.ReverseLayout;
 
         LazyDslKt.LazyColumn(
             modifier:            modifier,
             state:               State,
-            contentPadding:      null,
+            contentPadding:      contentPadding,
             reverseLayout:       ReverseLayout,
             verticalArrangement: null,
             horizontalAlignment: null,

@@ -411,6 +411,8 @@ ComposeNet.LaunchedEffect.LaunchedEffect(object? key1, object? key2, System.Func
 ComposeNet.LaunchedEffect.LaunchedEffect(object? key1, System.Func<System.Threading.CancellationToken, System.Threading.Tasks.Task!>! body) -> void
 ComposeNet.LazyColumn<T>
 ComposeNet.LazyColumn<T>.LazyColumn(System.Collections.Generic.IReadOnlyList<T>! items, System.Func<T, ComposeNet.ComposableNode!>! itemContent) -> void
+ComposeNet.LazyColumn<T>.ContentPadding.get -> AndroidX.Compose.Foundation.Layout.IPaddingValues?
+ComposeNet.LazyColumn<T>.ContentPadding.set -> void
 ComposeNet.LazyColumn<T>.ReverseLayout.get -> bool
 ComposeNet.LazyColumn<T>.ReverseLayout.set -> void
 ComposeNet.LazyColumn<T>.State.get -> AndroidX.Compose.Foundation.Lazy.LazyListState?

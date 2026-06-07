@@ -37,9 +37,9 @@ public static class HomeScreen
             Body = BuildBody(feed, bookmarks, onSelectPost),
         };
 
-    static Column BuildBody(PostsFeed feed,
-                            MutableStateList<string> bookmarks,
-                            Action<string> onSelectPost)
+    static LazyColumn<HomeRow> BuildBody(PostsFeed feed,
+                                         MutableStateList<string> bookmarks,
+                                         Action<string> onSelectPost)
     {
         var rows = new List<HomeRow>
         {
@@ -60,15 +60,11 @@ public static class HomeScreen
         foreach (var p in feed.Recent)
             rows.Add(new HomeRow.Recommended(p));
 
-        return new Column
+        return new LazyColumn<HomeRow>(
+            items: rows,
+            itemContent: row => BuildRow(row, bookmarks, onSelectPost))
         {
-            Modifier.Companion.FillMaxSize(),
-            new LazyColumn<HomeRow>(
-                items: rows,
-                itemContent: row => BuildRow(row, bookmarks, onSelectPost))
-            {
-                Modifier = Modifier.Companion.FillMaxSize(),
-            },
+            Modifier = Modifier.Companion.FillMaxSize(),
         };
     }
 
