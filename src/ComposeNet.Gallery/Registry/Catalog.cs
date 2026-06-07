@@ -123,6 +123,16 @@ public static class Catalog
         // ---- Search ----
         D.Search.SearchBarPair.Demo,
         D.Search.DockedSearchBarDemo.Demo,
+
+        // ---- Modifiers ----
+        D.Modifiers.ShapesAndShadow.Demo,
+        D.Modifiers.RotateScaleAlpha.Demo,
+        D.Modifiers.ToggleableSelectableSemantics.Demo,
+        D.Modifiers.FocusRequesterDemo.Demo,
+        D.Modifiers.CombinedClickableDemo.Demo,
+        D.Modifiers.DraggableOffsetDemo.Demo,
+        D.Modifiers.GraphicsLayerDemo.Demo,
+        D.Modifiers.FlowRowScopeDispatch.Demo,
     ];
 
     /// <summary>
