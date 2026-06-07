@@ -78,6 +78,14 @@ public static class Catalog
         D.Containers.DividerDemo.Demo,
         D.Containers.FlowRowFlowColumn.Demo,
         D.Containers.BoxWithConstraintsDemo.Demo,
+
+        // ---- Lists & grids ----
+        D.ListsGrids.LazyColumnLong.Demo,
+        D.ListsGrids.LazyRowDemo.Demo,
+        D.ListsGrids.LazyVerticalGridFixed.Demo,
+        D.ListsGrids.LazyVerticalGridAdaptive.Demo,
+        D.ListsGrids.LazyVerticalStaggeredGridDemo.Demo,
+        D.ListsGrids.PullToRefreshBoxDemo.Demo,
     ];
 
     /// <summary>
