@@ -742,6 +742,7 @@ ComposeNet.RangeSlider
 ComposeNet.RangeSlider.RangeSlider((float Start, float End) value, System.Action<(float Start, float End)>! onValueChange) -> void
 ComposeNet.Resource
 ComposeNet.Resource.Resource() -> void
+ComposeNet.Resources
 ComposeNet.Row
 ComposeNet.Row.Row() -> void
 ComposeNet.Row.Row(ComposeNet.Arrangement? horizontalArrangement) -> void
@@ -1256,6 +1257,17 @@ static ComposeNet.MaterialTheme.LightColorScheme() -> AndroidX.Compose.Material3
 static ComposeNet.Modifier.Companion.get -> ComposeNet.Modifier!
 static ComposeNet.MutableNumberState<T>.operator --(ComposeNet.MutableNumberState<T>! s) -> ComposeNet.MutableNumberState<T>!
 static ComposeNet.MutableNumberState<T>.operator ++(ComposeNet.MutableNumberState<T>! s) -> ComposeNet.MutableNumberState<T>!
+static ComposeNet.Resources.BooleanResource(int id) -> bool
+static ComposeNet.Resources.ColorResource(int id) -> long
+static ComposeNet.Resources.DimensionResource(int id) -> ComposeNet.Dp
+static ComposeNet.Resources.IntegerArrayResource(int id) -> int[]!
+static ComposeNet.Resources.IntegerResource(int id) -> int
+static ComposeNet.Resources.PainterResource(int id) -> AndroidX.Compose.UI.Graphics.Painter.Painter!
+static ComposeNet.Resources.PluralStringResource(int id, int count) -> string!
+static ComposeNet.Resources.PluralStringResource(int id, int count, params object?[]! formatArgs) -> string!
+static ComposeNet.Resources.StringArrayResource(int id) -> string![]!
+static ComposeNet.Resources.StringResource(int id) -> string!
+static ComposeNet.Resources.StringResource(int id, params object?[]! formatArgs) -> string!
 static ComposeNet.Shape.Circle() -> ComposeNet.Shape!
 static ComposeNet.Shape.CutCorners(ComposeNet.Dp cornerSize) -> ComposeNet.Shape!
 static ComposeNet.Shape.CutCornersPercent(int percent) -> ComposeNet.Shape!
