@@ -25,7 +25,7 @@ internal static class HomeCards
             {
                 Modifier = Modifier.Companion
                     .FillMaxWidth()
-                    .Height(180)
+                    .AspectRatio(992f / 296f)
                     .Clip(16),
             },
             new Spacer(Modifier.Companion.Height(16)),
@@ -79,26 +79,29 @@ internal static class HomeCards
     public static Card BuildPopular(Post post, Action<string> onSelectPost) =>
         new()
         {
-            Modifier.Companion.Width(280).Clickable(() => onSelectPost(post.Id)),
+            Modifier.Companion.Width(280).Height(220).Clickable(() => onSelectPost(post.Id)),
             new Column
             {
+                Modifier.Companion.FillMaxSize(),
                 new Image(post.HeroId, "")
                 {
-                    Modifier = Modifier.Companion.FillMaxWidth().Height(100),
+                    Modifier = Modifier.Companion
+                        .FillMaxWidth()
+                        .AspectRatio(992f / 296f),
                 },
                 new Column
                 {
-                    Modifier.Companion.Padding(16),
+                    Modifier.Companion.FillMaxSize().Padding(16),
                     new Text(post.Title)
                     {
-                        FontSize   = 18,
+                        FontSize   = 16,
                         FontWeight = FontWeight.SemiBold,
                         MaxLines   = 2,
                     },
-                    new Spacer(Modifier.Companion.Height(8)),
+                    new Spacer(Modifier.Companion.Weight(1f, fill: true)),
                     new Text(post.Metadata.Author)
                     {
-                        FontSize = 14,
+                        FontSize = 13,
                         MaxLines = 1,
                     },
                     new Text($"{post.Metadata.Date} · {post.Metadata.ReadTimeMinutes} min read")

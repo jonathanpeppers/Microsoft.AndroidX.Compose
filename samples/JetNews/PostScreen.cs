@@ -65,8 +65,7 @@ public static class PostScreen
             {
                 Modifier = Modifier.Companion
                     .FillMaxWidth()
-                    .Height(180)
-                    .Clip(16),
+                    .AspectRatio(992f / 296f),
             },
             new Column
             {

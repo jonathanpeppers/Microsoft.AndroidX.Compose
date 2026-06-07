@@ -427,6 +427,8 @@ ComposeNet.LazyRow<T>
 ComposeNet.LazyRow<T>.LazyRow(System.Collections.Generic.IReadOnlyList<T>! items, System.Func<T, ComposeNet.ComposableNode!>! itemContent) -> void
 ComposeNet.LazyRow<T>.State.get -> AndroidX.Compose.Foundation.Lazy.LazyListState?
 ComposeNet.LazyRow<T>.State.set -> void
+ComposeNet.LazyRow<T>.HorizontalArrangement.get -> ComposeNet.Arrangement?
+ComposeNet.LazyRow<T>.HorizontalArrangement.set -> void
 ComposeNet.LazyVerticalGrid<T>
 ComposeNet.LazyVerticalGrid<T>.LazyVerticalGrid(AndroidX.Compose.Foundation.Lazy.Grid.IGridCells! columns, System.Collections.Generic.IReadOnlyList<T>! items, System.Func<T, ComposeNet.ComposableNode!>! itemContent) -> void
 ComposeNet.LazyVerticalGrid<T>.State.get -> AndroidX.Compose.Foundation.Lazy.Grid.LazyGridState?
