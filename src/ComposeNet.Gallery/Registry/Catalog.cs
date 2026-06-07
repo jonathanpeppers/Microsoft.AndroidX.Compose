@@ -145,6 +145,14 @@ public static class Catalog
         D.StateEffectsAnimation.AnimatedVisibilityDemo.Demo,
         D.StateEffectsAnimation.CrossfadeDemo.Demo,
         D.StateEffectsAnimation.AnimatedContentDemo.Demo,
+
+        // ---- CompositionLocal & misc ----
+        D.LocalsMisc.LocalContextDemo.Demo,
+        D.LocalsMisc.CustomCompositionLocalDemo.Demo,
+        D.LocalsMisc.CircularProgressIndicatorDemo.Demo,
+        D.LocalsMisc.LinearProgressIndicatorDemo.Demo,
+        D.LocalsMisc.ImageDemo.Demo,
+        D.LocalsMisc.IconDemo.Demo,
     ];
 
     /// <summary>
