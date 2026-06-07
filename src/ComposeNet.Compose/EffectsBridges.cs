@@ -9,15 +9,6 @@ namespace ComposeNet;
 // `Xamarin.AndroidX.Compose.Runtime.Android` NuGet, so we don't need
 // `[ComposeBridge]` shims for them. What we *do* need is:
 //
-//  - `kotlin.ResultKt.createFailure(Throwable)` — to construct the
-//    `kotlin.Result$Failure` instance we pass to
-//    `Continuation.ResumeWith(Object)` when an async C# `Task` faults.
-//    `Result` is a `@JvmInline value class`, so every helper on
-//    `ResultKt` carries a mangled JVM name (`createFailure-impl`) that
-//    the binder strips — same root cause as
-//    dotnet/java-interop#1440. When that lands we can replace this
-//    with a clean call into the bound `ResultKt`.
-//
 //  - `IntrinsicsKt.COROUTINE_SUSPENDED` — exposed by the binding, but
 //    we cache its handle as a global ref the first time so the
 //    hot path inside `LaunchedEffectBody.Invoke` doesn't allocate a
@@ -26,51 +17,11 @@ namespace ComposeNet;
 //  - `BoxKey(object?)` — non-generic equivalent of
 //    `MutableState<T>.ToJava`, so the public C# effect APIs can take
 //    `object?` keys and box primitives once per render.
+//
+// `kotlin.Result` plumbing (constructing/reading `Result.Failure`)
+// lives in <see cref="KotlinResult"/>, shared with `SuspendBridge`.
 internal static partial class ComposeBridges
 {
-    static System.IntPtr s_resultKtClass;
-    static System.IntPtr s_resultKtCreateFailure;
-
-    /// <summary>
-    /// Construct a <c>kotlin.Result.Failure(throwable)</c> instance —
-    /// the boxed-failure form a <see cref="Kotlin.Coroutines.IContinuation"/>
-    /// expects when something goes wrong inside its suspend body.
-    /// </summary>
-    /// <returns>
-    /// A managed peer wrapping the Kotlin failure object. The caller
-    /// passes this directly to <c>continuation.ResumeWith(result)</c>.
-    /// </returns>
-    internal static unsafe Java.Lang.Object KotlinResultFailure(Java.Lang.Throwable throwable)
-    {
-        System.ArgumentNullException.ThrowIfNull(throwable);
-
-        if (s_resultKtCreateFailure == System.IntPtr.Zero)
-        {
-            s_resultKtClass = JNIEnv.FindClass("kotlin/ResultKt");
-            s_resultKtCreateFailure = JNIEnv.GetStaticMethodID(
-                s_resultKtClass,
-                "createFailure",
-                "(Ljava/lang/Throwable;)Ljava/lang/Object;");
-        }
-
-        try
-        {
-            JValue* args = stackalloc JValue[1];
-            args[0] = new JValue(throwable);
-            var handle = JNIEnv.CallStaticObjectMethod(
-                s_resultKtClass, s_resultKtCreateFailure, args);
-            // Transfer the local ref into a managed peer; the caller
-            // hands the peer to Continuation.ResumeWith which keeps it
-            // alive until the coroutine actually resumes.
-            return Java.Lang.Object.GetObject<Java.Lang.Object>(
-                handle, JniHandleOwnership.TransferLocalRef)!;
-        }
-        finally
-        {
-            System.GC.KeepAlive(throwable);
-        }
-    }
-
     /// <summary>
     /// Cached <c>kotlin.Unit.INSTANCE</c> returned wrapped in a managed
     /// peer for use as a successful-completion result from

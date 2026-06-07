@@ -166,7 +166,7 @@ internal sealed class LaunchedEffectBody : Java.Lang.Object, IFunction2
                     var inner = t.Exception?.GetBaseException()
                         ?? new System.Exception("LaunchedEffect Task faulted with no exception");
                     var throwable = ToThrowable(inner);
-                    result = ComposeBridges.KotlinResultFailure(throwable);
+                    result = KotlinResult.CreateFailure(throwable);
                 }
                 else if (t.IsCanceled)
                 {
@@ -178,7 +178,7 @@ internal sealed class LaunchedEffectBody : Java.Lang.Object, IFunction2
                     // on JVM, so the simpler Java type is fine.
                     var ce = new Java.Util.Concurrent.CancellationException(
                         "LaunchedEffect Task was cancelled");
-                    result = ComposeBridges.KotlinResultFailure(ce);
+                    result = KotlinResult.CreateFailure(ce);
                 }
                 else
                 {
