@@ -432,6 +432,57 @@ public class FacadeGeneratorTests
     }
 
     [Fact]
+    public void HybridContainer_ContainerTrueWithFn2Body_EmitsContainerWithNamedSlot()
+    {
+        // Mirrors the ModalWideNavigationRail shape (issue #121): a
+        // non-`@Composable` IFunction2 body slot + a nullable IFunction2?
+        // header slot. Container = true is required because there's no
+        // IFunction3 body for the Scope path to latch onto. The facade
+        // must still derive from ComposableContainer (collection-init
+        // syntax), wrap children via Wrap2, and surface the nullable
+        // Fn2 slot as a named property.
+        var code = """
+            using AndroidX.Compose.Runtime;
+            using AndroidX.Compose.UI;
+            using ComposeNet;
+            using Kotlin.Jvm.Functions;
+
+            [assembly: ComposeDefaults("RailDefault",
+                "modifier", "header", "!content")]
+
+            namespace ComposeNet
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(Class="x/y/RailKt", JvmName="Rail",
+                                   Signature="(Landroidx/compose/ui/Modifier;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;II)V",
+                                   Defaults=typeof(RailDefault))]
+                    [ComposeFacade(Container = true)]
+                    public static partial void Rail(
+                        IModifier? modifier, IFunction2? header, IFunction2 content, IComposer composer);
+                }
+            }
+            """;
+
+        var (output, diags, emitted) = Run(code, "Rail");
+        Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+        // Derives from ComposableContainer so collection-init syntax works
+        // ("new Rail { new WideNavigationRailItem(...), ... }").
+        Assert.Contains(": global::ComposeNet.ComposableContainer", emitted);
+        // Non-nullable IFunction2 body wraps children via Wrap2 (no
+        // Fn3 / no PushScope — Container=true uses the Fn2 path).
+        Assert.Contains("Wrap2(composer, c => RenderChildren(c))", emitted);
+        Assert.DoesNotContain("PushScope", emitted);
+        // Nullable IFunction2? slot surfaces as a named property, not a
+        // ctor primitive.
+        Assert.Contains("public global::ComposeNet.ComposableNode? Header { get; set; }", emitted);
+
+        var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
+        Assert.Empty(errors);
+    }
+
+    [Fact]
     public void JavaEnumPrimitive_SurfacedAsCtorParam()
     {
         // Simulates ToggleableState — a class derived from Java.Lang.Enum.

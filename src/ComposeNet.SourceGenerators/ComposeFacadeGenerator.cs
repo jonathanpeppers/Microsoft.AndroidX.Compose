@@ -669,7 +669,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             sb.Append("        readonly ").Append(typeRef).Append(" _").Append(CtorIdentifier(s)).AppendLine(";");
         }
 
-        // Phase 4b — per-instance JCW veto adapter fields. One per
+        // Phase 9 — per-instance JCW veto adapter fields. One per
         // [ConfirmStateChange] across all StateHolder slots. Stable
         // JNI identity for Kotlin's `remember` cache key.
         foreach (var s in slots.Where(s => s.Kind == FacadeSlotKind.StateHolder))
@@ -707,7 +707,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
               .Append(PropertyName(s)).AppendLine(" { get; set; }");
         }
 
-        // Phase 4b — public `Func<T, bool>?` properties for each
+        // Phase 9 — public `Func<T, bool>?` properties for each
         // [ConfirmStateChange] adapter. Null = "always allow"; the
         // adapter's Invoke reads this property each call.
         foreach (var s in slots.Where(s => s.Kind == FacadeSlotKind.StateHolder))
@@ -789,7 +789,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             var jvmFqn = s.StateJvmType!.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat
                 .WithMiscellaneousOptions(SymbolDisplayMiscellaneousOptions.UseSpecialTypes));
 
-            // Phase 4b — assign the developer-supplied delegate onto each
+            // Phase 9 — assign the developer-supplied delegate onto each
             // per-instance JCW adapter BEFORE the Remember call so the
             // adapter is wired up by the time Kotlin invokes it. Skip on
             // SharedState cache-hit paths because the assignment is
@@ -1321,7 +1321,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         SyntaxFacts.GetKeywordKind(name) == SyntaxKind.None ? name : "@" + name;
 
     /// <summary>
-    /// Phase 4b — validate a <c>[ConfirmStateChange]</c> attribute on a
+    /// Phase 9 — validate a <c>[ConfirmStateChange]</c> attribute on a
     /// Remember-bridge user param and produce its emission metadata.
     /// Reports CN3010 on any failure and returns <c>null</c>.
     /// </summary>
@@ -1495,7 +1495,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
     }
 
     /// <summary>
-    /// Phase 4b — metadata for a <c>[ConfirmStateChange(typeof(T))]</c>
+    /// Phase 9 — metadata for a <c>[ConfirmStateChange(typeof(T))]</c>
     /// Remember-bridge parameter. The facade allocates one JCW
     /// instance per node (<c>readonly</c> field
     /// <c>_&lt;FieldIdentifier&gt;</c>), exposes a developer-mutable
@@ -1593,7 +1593,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         /// </summary>
         public bool SharedState { get; }
         /// <summary>
-        /// Phase 4b — zero or more <c>[ConfirmStateChange]</c> Remember
+        /// Phase 9 — zero or more <c>[ConfirmStateChange]</c> Remember
         /// params hoisted to per-node JCW adapter fields with stable
         /// JNI identity.
         /// </summary>
