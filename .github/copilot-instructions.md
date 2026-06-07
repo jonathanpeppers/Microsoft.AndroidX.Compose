@@ -886,6 +886,16 @@ returns `AndroidUiDispatcher.Main`, which supplies the
 `MonotonicFrameClock` required by animation suspends that use
 `withFrameNanos`.
 
+Both `SuspendBridge.Invoke` overloads accept a trailing optional
+`CancellationToken cancellationToken = default`. When the token fires
+the returned task transitions to **Canceled** (`OperationCanceledException`
+at the awaiter) but the underlying Kotlin suspend body continues to
+its natural completion — there is no `Job` wired into
+`SuspendContinuation.Context` yet, so we cannot ask Kotlin to stop.
+The eventual resume's boxed result is disposed silently. Surface the
+parameter on every new `*Async` facade method and document the
+"awaiter-only" semantics; true Kotlin-side cancel is a follow-up.
+
 ### Adding a new `*Async` method
 
 1. Add a hand-written bridge to `SuspendBridges.cs`. It returns the
@@ -958,21 +968,25 @@ returns `AndroidUiDispatcher.Main`, which supplies the
    ```
 
 2. Add the public facade method and route the bridge through
-   `SuspendBridge.Invoke`:
+   `SuspendBridge.Invoke`. Always surface a trailing
+   `CancellationToken cancellationToken = default` parameter and
+   forward it as the last argument:
    ```csharp
-   public Task<float> DoThingAsync(int value) =>
+   public Task<float> DoThingAsync(int value, CancellationToken cancellationToken = default) =>
        SuspendBridge.Invoke<float>(
            cont => ComposeBridges.MyStateDoThing(
                ((Java.Lang.Object)Jvm).Handle, value, cont),
            static boxed => boxed is Java.Lang.Float f
                ? f.FloatValue()
                : throw new InvalidCastException(
-                   $"Expected java.lang.Float; got '{boxed?.Class?.Name ?? "null"}'"));
+                   $"Expected java.lang.Float; got '{boxed?.Class?.Name ?? "null"}'"),
+           cancellationToken);
 
-   public Task AnimateAsync(int value) =>
+   public Task AnimateAsync(int value, CancellationToken cancellationToken = default) =>
        SuspendBridge.Invoke(cont =>
            ComposeBridges.MyStateAnimate(
-               ((Java.Lang.Object)Jvm).Handle, value, cont));
+               ((Java.Lang.Object)Jvm).Handle, value, cont),
+           cancellationToken);
    ```
 3. Add the new public member(s) to `PublicAPI.Unshipped.txt`.
 
