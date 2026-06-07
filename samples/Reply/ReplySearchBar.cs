@@ -39,10 +39,9 @@ public sealed class ReplySearchBar : ComposableNode
                         Color    = new Color(scheme.OnSurface),
                         Modifier = Modifier.Companion.Padding(start: 16, end: 0, top: 0, bottom: 0).Weight(1f),
                     },
-                    new Icon(Resource.Drawable.ic_search, "Search")
-                    {
-                        TintArgb = scheme.OnSurface,
-                    },
+                    ReplyProfileImage.Build(
+                        drawableResource: Resource.Drawable.avatar_6,
+                        description:      "Profile"),
                 },
             };
         });

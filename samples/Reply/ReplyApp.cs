@@ -32,7 +32,7 @@ public static class ReplyApp
                     onNavigate:   destination =>
                     {
                         currentRoute.Value = destination.Route;
-                        nav.Navigate(destination.Route);
+                        new ReplyNavigationActions(nav).NavigateTo(destination);
                     }),
                 Body = BuildNavHost(nav, currentRoute, openedEmailId, selectedEmailIds),
             },

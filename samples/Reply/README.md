@@ -19,7 +19,11 @@ phone layout** built from the same Material 3 building blocks.
   - `LocalAccountsDataProvider` — default account + 10 contacts
   - `LocalEmailsDataProvider` — 12 emails with thread replies,
     matching upstream string content
-- Routes: `inbox`, `articles`, `dm`, `groups`, `email/{emailId}`
+- Routes: `Inbox`, `Articles`, `DirectMessages`, `Groups`,
+  `EmailDetail/{emailId}` (the four top-level routes mirror upstream's
+  `Route` sealed interface; `EmailDetail` is added for the single-pane
+  port since upstream uses pane navigation, not a `NavHost` route, for
+  the detail view)
 - Top-level destinations + `ReplyNavigationActions` wrapper
 - `ReplyBottomNavigationBar` — 4 `NavigationBarItem`s
 - `ReplyInboxScreen` — `LazyColumn` of `ReplyEmailListItem`s with a
