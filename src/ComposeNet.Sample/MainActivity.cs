@@ -28,10 +28,13 @@ public class MainActivity : ComposeActivity
         base.OnCreate(savedInstanceState);
         SetContent(() =>
         {
-            var count       = Remember(() => new MutableNumberState<int>(0));
-            var name        = Remember(() => new MutableState<string>(""));
-            var liked       = Remember(() => new MutableState<bool>(false));
-            var tab         = Remember(() => new MutableNumberState<int>(0));
+            // These four use RememberSaveable so their values survive
+            // process death / activity recreation (e.g. rotation when
+            // the activity doesn't override android:configChanges).
+            var count       = RememberSaveable(() => new MutableNumberState<int>(0));
+            var name        = RememberSaveable(() => new MutableState<string>(""));
+            var liked       = RememberSaveable(() => new MutableState<bool>(false));
+            var tab         = RememberSaveable(() => new MutableNumberState<int>(0));
             var sub         = Remember(() => new MutableNumberState<int>(0));
             var showAlert   = Remember(() => new MutableState<bool>(false));
             var showSheet   = Remember(() => new MutableState<bool>(false));

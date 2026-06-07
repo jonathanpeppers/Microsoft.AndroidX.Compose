@@ -84,6 +84,7 @@ ComposeNet.Compose
 ComposeNet.ComposeActivity
 ComposeNet.ComposeActivity.ComposeActivity() -> void
 ComposeNet.ComposeActivity.Remember<T>(System.Func<T>! factory, int line = 0, string! file = "") -> T
+ComposeNet.ComposeActivity.RememberSaveable<T>(System.Func<T>! factory, int line = 0, string! file = "") -> T
 ComposeNet.ComposeActivity.SetContent(System.Func<ComposeNet.ComposableNode!>! content) -> void
 ComposeNet.CustomTab
 ComposeNet.CustomTab.CustomTab(bool selected, System.Action! onClick) -> void
@@ -814,6 +815,7 @@ static ComposeNet.Arrangement.SpaceEvenly.get -> ComposeNet.Arrangement!
 static ComposeNet.Arrangement.Start.get -> ComposeNet.Arrangement!
 static ComposeNet.Arrangement.Top.get -> ComposeNet.Arrangement!
 static ComposeNet.Compose.Remember<T>(System.Func<T>! factory, int line = 0, string! file = "") -> T
+static ComposeNet.Compose.RememberSaveable<T>(System.Func<T>! factory, int line = 0, string! file = "") -> T
 static ComposeNet.Dp.implicit operator ComposeNet.Dp(float value) -> ComposeNet.Dp
 static ComposeNet.Dp.implicit operator ComposeNet.Dp(int value) -> ComposeNet.Dp
 static ComposeNet.Dp.operator !=(ComposeNet.Dp left, ComposeNet.Dp right) -> bool

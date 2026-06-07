@@ -60,7 +60,7 @@ internal static class ComposableLambdas
         [CallerLineNumber] int line = 0,
         [CallerFilePath] string file = "")
         => (IFunction2)ComposableLambdaKt.ComposableLambda(
-            composer, HashCode.Combine(line, file), tracked: true,
+            composer, SourceLocationKey.Compute(line, file), tracked: true,
             block: new ComposableLambda2(body));
 
     /// <summary>
@@ -75,7 +75,7 @@ internal static class ComposableLambdas
         [CallerLineNumber] int line = 0,
         [CallerFilePath] string file = "")
         => (IFunction3)ComposableLambdaKt.ComposableLambda(
-            composer, HashCode.Combine(line, file), tracked: true,
+            composer, SourceLocationKey.Compute(line, file), tracked: true,
             block: new ComposableLambda3(body));
 
     /// <summary>
@@ -92,7 +92,7 @@ internal static class ComposableLambdas
         [CallerLineNumber] int line = 0,
         [CallerFilePath] string file = "")
         => (IFunction3)ComposableLambdaKt.ComposableLambda(
-            composer, HashCode.Combine(line, file), tracked: true,
+            composer, SourceLocationKey.Compute(line, file), tracked: true,
             block: new ComposableLambda3(body));
 
     /// <summary>
@@ -118,7 +118,7 @@ internal static class ComposableLambdas
         [CallerLineNumber] int line = 0,
         [CallerFilePath] string file = "")
         => (IFunction4)ComposableLambdaKt.ComposableLambdaInstance(
-            key: HashCode.Combine(line, file), tracked: true,
+            key: SourceLocationKey.Compute(line, file), tracked: true,
             block: new ComposableLambda4(body));
 
     /// <summary>
@@ -148,6 +148,6 @@ internal static class ComposableLambdas
         [CallerLineNumber] int line = 0,
         [CallerFilePath] string file = "")
         => (IFunction4)ComposableLambdaKt.ComposableLambda(
-            composer, HashCode.Combine(line, file), tracked: true,
+            composer, SourceLocationKey.Compute(line, file), tracked: true,
             block: new ComposableLambda4(body));
 }
