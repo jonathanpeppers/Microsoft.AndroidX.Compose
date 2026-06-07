@@ -59,6 +59,13 @@ public class MainActivity : ComposeActivity
             var focusStatus63   = Remember(() => new MutableState<string>("not focused"));
             var selectedRow63   = Remember(() => new MutableNumberState<int>(0));
             var taps63          = Remember(() => new MutableNumberState<int>(0));
+            // Issue #63 follow-up: Modifier.Draggable demo state.
+            // dragX63 holds the running offset in pixels; the
+            // RememberDraggableState callback closes over it so the
+            // Java DraggableState identity stays stable across
+            // recompositions while the offset still updates.
+            var dragX63         = Remember(() => new MutableState<float>(0f));
+            var dragState63     = Compose.RememberDraggableState(delta => dragX63.Value += delta);
 
             var checkbox    = Remember(() => new MutableState<bool>(true));
             var switchOn    = Remember(() => new MutableState<bool>(false));
@@ -390,6 +397,79 @@ public class MainActivity : ComposeActivity
                                 new Text("Row 2") { Modifier = Modifier.Companion
                                     .FillMaxWidth().Selectable(selectedRow63.Value == 2, () => selectedRow63.Value = 2).Padding(6) },
                             },
+                            // Issue #63 follow-up — FlowRow scope dispatch:
+                            // chips wrap onto multiple lines once the row
+                            // runs out of horizontal space. Each chip uses
+                            // Modifier.Align(Alignment.Vertical.CenterVertically),
+                            // which is a RowScope-only modifier — proves
+                            // FlowRow forwards the RowScope receiver
+                            // through ScopeKind.Row dispatch.
+                            new Text("FlowRow chips (#63 wraps when wide):"),
+                            new FlowRow
+                            {
+                                Modifier.Companion.FillMaxWidth().Padding(4),
+                                new AssistChip(onClick: () => taps63.Value++)
+                                {
+                                    Label    = new Text("Apple"),
+                                    Modifier = Modifier.Companion.Align(Alignment.Vertical.CenterVertically).Padding(2),
+                                },
+                                new AssistChip(onClick: () => taps63.Value++)
+                                {
+                                    Label    = new Text("Banana"),
+                                    Modifier = Modifier.Companion.Align(Alignment.Vertical.CenterVertically).Padding(2),
+                                },
+                                new AssistChip(onClick: () => taps63.Value++)
+                                {
+                                    Label    = new Text("Cherry"),
+                                    Modifier = Modifier.Companion.Align(Alignment.Vertical.CenterVertically).Padding(2),
+                                },
+                                new AssistChip(onClick: () => taps63.Value++)
+                                {
+                                    Label    = new Text("Durian"),
+                                    Modifier = Modifier.Companion.Align(Alignment.Vertical.CenterVertically).Padding(2),
+                                },
+                                new AssistChip(onClick: () => taps63.Value++)
+                                {
+                                    Label    = new Text("Elderberry"),
+                                    Modifier = Modifier.Companion.Align(Alignment.Vertical.CenterVertically).Padding(2),
+                                },
+                                new AssistChip(onClick: () => taps63.Value++)
+                                {
+                                    Label    = new Text("Fig"),
+                                    Modifier = Modifier.Companion.Align(Alignment.Vertical.CenterVertically).Padding(2),
+                                },
+                                new AssistChip(onClick: () => taps63.Value++)
+                                {
+                                    Label    = new Text("Grape"),
+                                    Modifier = Modifier.Companion.Align(Alignment.Vertical.CenterVertically).Padding(2),
+                                },
+                            },
+                            // Issue #63 follow-up — Modifier.Draggable:
+                            // touch and drag the purple square left or
+                            // right. The DraggableState's onDelta
+                            // callback accumulates the raw pixel delta
+                            // into dragX63, which Modifier.Offset then
+                            // reads back as a Dp value. Convenience
+                            // inset modifier (.SafeContentPadding) is
+                            // applied to the surrounding container so
+                            // we exercise that bridge too — it's a
+                            // no-op without edge-to-edge but proves
+                            // the JNI call doesn't throw.
+                            new Text($"Drag offset: {dragX63.Value:F0}px") { Modifier = Modifier.Companion.SafeContentPadding() },
+                            new Box
+                            {
+                                Modifier.Companion.FillMaxWidth().Height(72).Padding(4)
+                                    .Border(1, ColorKt.Color(red: 0xB0, green: 0xB0, blue: 0xB0, alpha: 0xFF)),
+                                new Box
+                                {
+                                    Modifier.Companion
+                                        .Offset(x: dragX63.Value)
+                                        .Size(56)
+                                        .Background(ColorKt.Color(red: 0xCE, green: 0x93, blue: 0xD8, alpha: 0xFF))
+                                        .Draggable(dragState63, Orientation.Horizontal),
+                                },
+                            },
+                            new Button(onClick: () => dragX63.Value = 0f) { new Text("Reset drag") },
                                 // Secure text inputs — exercise both
                                 // SecureTextField (filled) and
                                 // OutlinedSecureTextField. The two state
