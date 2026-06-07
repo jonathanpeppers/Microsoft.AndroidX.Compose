@@ -172,6 +172,9 @@ ComposeNet.DropdownMenuItem.LeadingIcon.get -> ComposeNet.ComposableNode?
 ComposeNet.DropdownMenuItem.LeadingIcon.set -> void
 ComposeNet.DropdownMenuItem.TrailingIcon.get -> ComposeNet.ComposableNode?
 ComposeNet.DropdownMenuItem.TrailingIcon.set -> void
+ComposeNet.DraggableState
+ComposeNet.DraggableState.DispatchRawDelta(float delta) -> void
+ComposeNet.DraggableState.DraggableState(System.Action<float>! onDelta) -> void
 ComposeNet.ElevatedAssistChip
 ComposeNet.ElevatedAssistChip.ElevatedAssistChip(System.Action! onClick) -> void
 ComposeNet.ElevatedAssistChip.Label.get -> ComposeNet.ComposableNode?
@@ -437,6 +440,7 @@ ComposeNet.Modifier.Background(long color) -> ComposeNet.Modifier!
 ComposeNet.Modifier.Border(ComposeNet.Dp width, long color, ComposeNet.Dp cornerRadius) -> ComposeNet.Modifier!
 ComposeNet.Modifier.Border(ComposeNet.Dp width, long color, ComposeNet.Shape? shape) -> ComposeNet.Modifier!
 ComposeNet.Modifier.Border(ComposeNet.Dp width, long color) -> ComposeNet.Modifier!
+ComposeNet.Modifier.CaptionBarPadding() -> ComposeNet.Modifier!
 ComposeNet.Modifier.ClearAndSetSemantics(string! contentDescription) -> ComposeNet.Modifier!
 ComposeNet.Modifier.Clickable(System.Action! onClick) -> ComposeNet.Modifier!
 ComposeNet.Modifier.Clip(ComposeNet.Dp cornerRadius) -> ComposeNet.Modifier!
@@ -444,6 +448,7 @@ ComposeNet.Modifier.Clip(ComposeNet.Shape! shape) -> ComposeNet.Modifier!
 ComposeNet.Modifier.CombinedClickable(System.Action! onClick, System.Action? onLongClick = null, System.Action? onDoubleClick = null) -> ComposeNet.Modifier!
 ComposeNet.Modifier.DefaultMinSize(ComposeNet.Dp? minWidth = null, ComposeNet.Dp? minHeight = null) -> ComposeNet.Modifier!
 ComposeNet.Modifier.DisplayCutoutPadding() -> ComposeNet.Modifier!
+ComposeNet.Modifier.Draggable(ComposeNet.DraggableState! state, ComposeNet.Orientation orientation, bool enabled = true) -> ComposeNet.Modifier!
 ComposeNet.Modifier.FillMaxHeight(float fraction = 1) -> ComposeNet.Modifier!
 ComposeNet.Modifier.FillMaxSize(float fraction = 1) -> ComposeNet.Modifier!
 ComposeNet.Modifier.FillMaxWidth(float fraction = 1) -> ComposeNet.Modifier!
@@ -454,6 +459,7 @@ ComposeNet.Modifier.Height(ComposeNet.Dp height) -> ComposeNet.Modifier!
 ComposeNet.Modifier.HeightIn(ComposeNet.Dp? min = null, ComposeNet.Dp? max = null) -> ComposeNet.Modifier!
 ComposeNet.Modifier.HorizontalScroll(ComposeNet.ScrollState! state, bool enabled = true, bool reverseScrolling = false) -> ComposeNet.Modifier!
 ComposeNet.Modifier.ImePadding() -> ComposeNet.Modifier!
+ComposeNet.Modifier.MandatorySystemGesturesPadding() -> ComposeNet.Modifier!
 ComposeNet.Modifier.MatchParentSize() -> ComposeNet.Modifier!
 ComposeNet.Modifier.NavigationBarsPadding() -> ComposeNet.Modifier!
 ComposeNet.Modifier.Offset(ComposeNet.Dp? x = null, ComposeNet.Dp? y = null) -> ComposeNet.Modifier!
@@ -466,7 +472,9 @@ ComposeNet.Modifier.RequiredSize(ComposeNet.Dp size) -> ComposeNet.Modifier!
 ComposeNet.Modifier.RequiredSize(ComposeNet.Dp width, ComposeNet.Dp height) -> ComposeNet.Modifier!
 ComposeNet.Modifier.RequiredWidth(ComposeNet.Dp width) -> ComposeNet.Modifier!
 ComposeNet.Modifier.Rotate(float degrees) -> ComposeNet.Modifier!
+ComposeNet.Modifier.SafeContentPadding() -> ComposeNet.Modifier!
 ComposeNet.Modifier.SafeDrawingPadding() -> ComposeNet.Modifier!
+ComposeNet.Modifier.SafeGesturesPadding() -> ComposeNet.Modifier!
 ComposeNet.Modifier.Scale(float scale) -> ComposeNet.Modifier!
 ComposeNet.Modifier.Scale(float scaleX, float scaleY) -> ComposeNet.Modifier!
 ComposeNet.Modifier.Selectable(bool selected, System.Action! onClick) -> ComposeNet.Modifier!
@@ -478,10 +486,12 @@ ComposeNet.Modifier.Size(ComposeNet.Dp width, ComposeNet.Dp height) -> ComposeNe
 ComposeNet.Modifier.SizeIn(ComposeNet.Dp? minWidth = null, ComposeNet.Dp? minHeight = null, ComposeNet.Dp? maxWidth = null, ComposeNet.Dp? maxHeight = null) -> ComposeNet.Modifier!
 ComposeNet.Modifier.StatusBarsPadding() -> ComposeNet.Modifier!
 ComposeNet.Modifier.SystemBarsPadding() -> ComposeNet.Modifier!
+ComposeNet.Modifier.SystemGesturesPadding() -> ComposeNet.Modifier!
 ComposeNet.Modifier.TestTag(string! tag) -> ComposeNet.Modifier!
 ComposeNet.Modifier.Then(ComposeNet.Modifier! other) -> ComposeNet.Modifier!
 ComposeNet.Modifier.Toggleable(bool value, System.Action<bool>! onValueChange) -> ComposeNet.Modifier!
 ComposeNet.Modifier.VerticalScroll(ComposeNet.ScrollState! state, bool enabled = true, bool reverseScrolling = false) -> ComposeNet.Modifier!
+ComposeNet.Modifier.WaterfallPadding() -> ComposeNet.Modifier!
 ComposeNet.Modifier.Weight(float weight, bool fill = true) -> ComposeNet.Modifier!
 ComposeNet.Modifier.Width(ComposeNet.Dp width) -> ComposeNet.Modifier!
 ComposeNet.Modifier.WidthIn(ComposeNet.Dp? min = null, ComposeNet.Dp? max = null) -> ComposeNet.Modifier!
@@ -543,6 +553,9 @@ ComposeNet.ObservableList<T>.Remove(T item) -> bool
 ComposeNet.ObservableList<T>.RemoveAt(int index) -> void
 ComposeNet.ObservableList<T>.this[int index].get -> T
 ComposeNet.ObservableList<T>.this[int index].set -> void
+ComposeNet.Orientation
+ComposeNet.Orientation.Horizontal = 1 -> ComposeNet.Orientation
+ComposeNet.Orientation.Vertical = 0 -> ComposeNet.Orientation
 ComposeNet.OutlinedButton
 ComposeNet.OutlinedButton.OutlinedButton(System.Action! onClick) -> void
 ComposeNet.OutlinedCard
@@ -917,6 +930,7 @@ static ComposeNet.Arrangement.SpaceEvenly.get -> ComposeNet.Arrangement!
 static ComposeNet.Arrangement.Start.get -> ComposeNet.Arrangement!
 static ComposeNet.Arrangement.Top.get -> ComposeNet.Arrangement!
 static ComposeNet.Compose.Remember<T>(System.Func<T>! factory, int line = 0, string! file = "") -> T
+static ComposeNet.Compose.RememberDraggableState(System.Action<float>! onDelta, int line = 0, string! file = "") -> ComposeNet.DraggableState!
 static ComposeNet.Compose.RememberSaveable<T>(System.Func<T>! factory, int line = 0, string! file = "") -> T
 static ComposeNet.Dp.implicit operator ComposeNet.Dp(float value) -> ComposeNet.Dp
 static ComposeNet.Dp.implicit operator ComposeNet.Dp(int value) -> ComposeNet.Dp

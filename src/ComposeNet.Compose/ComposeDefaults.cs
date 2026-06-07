@@ -443,6 +443,17 @@ using ComposeNet;
 [assembly: ComposeDefaults("ModifierSemanticsDefault",
     "mergeDescendants", "!properties")]
 
+// androidx.compose.foundation.gestures.DraggableKt.draggable$default —
+// non-@Composable Modifier extension. 8 Kotlin params after the
+// receiver: state, orientation, enabled, interactionSource,
+// startDragImmediately, onDragStarted, onDragStopped, reverseDirection.
+// C# wrapper supplies state/orientation/enabled (bits 0/1/2 cleared);
+// the remaining five slots fall through to Kotlin's defaults.
+[assembly: ComposeDefaults("ModifierDraggableDefault",
+    "!state", "!orientation", "!enabled",
+    "interactionSource", "startDragImmediately",
+    "onDragStarted", "onDragStopped", "reverseDirection")]
+
 // androidx.compose.foundation.ScrollKt.verticalScroll$default —
 // non-@Composable Modifier extension. 4 Kotlin params after the
 // receiver: state, enabled, flingBehavior, reverseScrolling. The C#

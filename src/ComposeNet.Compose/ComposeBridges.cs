@@ -1769,6 +1769,42 @@ internal static partial class ComposeBridges
         Signature = "(Landroidx/compose/ui/Modifier;)Landroidx/compose/ui/Modifier;")]
     internal static partial IntPtr ModifierDisplayCutoutPadding(IntPtr modifier);
 
+    [ComposeBridge(
+        Class     = "androidx/compose/foundation/layout/WindowInsetsPadding_androidKt",
+        JvmName   = "captionBarPadding",
+        Signature = "(Landroidx/compose/ui/Modifier;)Landroidx/compose/ui/Modifier;")]
+    internal static partial IntPtr ModifierCaptionBarPadding(IntPtr modifier);
+
+    [ComposeBridge(
+        Class     = "androidx/compose/foundation/layout/WindowInsetsPadding_androidKt",
+        JvmName   = "mandatorySystemGesturesPadding",
+        Signature = "(Landroidx/compose/ui/Modifier;)Landroidx/compose/ui/Modifier;")]
+    internal static partial IntPtr ModifierMandatorySystemGesturesPadding(IntPtr modifier);
+
+    [ComposeBridge(
+        Class     = "androidx/compose/foundation/layout/WindowInsetsPadding_androidKt",
+        JvmName   = "safeContentPadding",
+        Signature = "(Landroidx/compose/ui/Modifier;)Landroidx/compose/ui/Modifier;")]
+    internal static partial IntPtr ModifierSafeContentPadding(IntPtr modifier);
+
+    [ComposeBridge(
+        Class     = "androidx/compose/foundation/layout/WindowInsetsPadding_androidKt",
+        JvmName   = "safeGesturesPadding",
+        Signature = "(Landroidx/compose/ui/Modifier;)Landroidx/compose/ui/Modifier;")]
+    internal static partial IntPtr ModifierSafeGesturesPadding(IntPtr modifier);
+
+    [ComposeBridge(
+        Class     = "androidx/compose/foundation/layout/WindowInsetsPadding_androidKt",
+        JvmName   = "systemGesturesPadding",
+        Signature = "(Landroidx/compose/ui/Modifier;)Landroidx/compose/ui/Modifier;")]
+    internal static partial IntPtr ModifierSystemGesturesPadding(IntPtr modifier);
+
+    [ComposeBridge(
+        Class     = "androidx/compose/foundation/layout/WindowInsetsPadding_androidKt",
+        JvmName   = "waterfallPadding",
+        Signature = "(Landroidx/compose/ui/Modifier;)Landroidx/compose/ui/Modifier;")]
+    internal static partial IntPtr ModifierWaterfallPadding(IntPtr modifier);
+
     // androidx.compose.ui.platform.TestTagKt.testTag(Modifier, String) —
     // attaches a test tag for UI testing frameworks.
     [ComposeBridge(
@@ -1869,6 +1905,27 @@ internal static partial class ComposeBridges
         Defaults  = typeof(ModifierToggleableDefault))]
     internal static partial IntPtr ModifierToggleable(
         IntPtr modifier, bool value, IFunction1 onValueChange);
+
+    // androidx.compose.foundation.gestures.DraggableKt.draggable$default —
+    // non-@Composable Modifier extension. 8 Kotlin params after the
+    // receiver: state, orientation, enabled, interactionSource,
+    // startDragImmediately, onDragStarted, onDragStopped,
+    // reverseDirection. The C# wrapper always supplies state /
+    // orientation / enabled (bits 0/1/2 cleared); the other five slots
+    // (interactionSource + the two suspend Function3s + the two
+    // booleans) stay defaulted in v1.
+    [ComposeBridge(
+        Class     = "androidx/compose/foundation/gestures/DraggableKt",
+        JvmName   = "draggable$default",
+        Signature = "(Landroidx/compose/ui/Modifier;" +
+                    "Landroidx/compose/foundation/gestures/DraggableState;" +
+                    "Landroidx/compose/foundation/gestures/Orientation;Z" +
+                    "Landroidx/compose/foundation/interaction/MutableInteractionSource;Z" +
+                    "Lkotlin/jvm/functions/Function3;Lkotlin/jvm/functions/Function3;Z" +
+                    "ILjava/lang/Object;)Landroidx/compose/ui/Modifier;",
+        Defaults  = typeof(ModifierDraggableDefault))]
+    internal static partial IntPtr ModifierDraggable(
+        IntPtr modifier, IntPtr state, IntPtr orientation, bool enabled);
 
     // androidx.compose.ui.semantics.SemanticsModifierKt.semantics$default —
     // 2 Kotlin params after the receiver: mergeDescendants (Bool),
@@ -2946,7 +3003,7 @@ internal static partial class ComposeBridges
     // `maxItemsInEachRow`/`maxItemsInEachColumn` is the Kotlin `maxLines`
     // Int. The `maxLines` slot in C# is the JVM `$changed` int; `_changed`
     // is `$default`.
-    [ComposeFacade(Defaults = typeof(FlowRowDefault))]
+    [ComposeFacade(Defaults = typeof(FlowRowDefault), Scope = "Row")]
     public static partial void FlowRow(IModifier? modifier, IFunction3 content, int defaults, IComposer composer);
 
     public static partial void FlowRow(IModifier? modifier, IFunction3 content, int defaults, IComposer composer)
@@ -2962,7 +3019,7 @@ internal static partial class ComposeBridges
             maxLines:              0,
             _changed:              defaults);
 
-    [ComposeFacade(Defaults = typeof(FlowColumnDefault))]
+    [ComposeFacade(Defaults = typeof(FlowColumnDefault), Scope = "Column")]
     public static partial void FlowColumn(IModifier? modifier, IFunction3 content, int defaults, IComposer composer);
 
     public static partial void FlowColumn(IModifier? modifier, IFunction3 content, int defaults, IComposer composer)

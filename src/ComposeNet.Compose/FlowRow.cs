@@ -16,8 +16,12 @@ namespace ComposeNet;
 /// </code>
 ///
 /// v1 wires up the simplest 7-param Kotlin overload (no
-/// <c>FlowRowOverflow</c> handle and no scope-receiver helpers). The
-/// scope-only <c>Modifier.weight</c> extension and overflow indicator
-/// slot are intentional follow-ups.
+/// <c>FlowRowOverflow</c> handle and no scope-receiver helpers for
+/// <c>fillMaxRowHeight</c>). Because <c>FlowRowScope</c> extends
+/// <c>RowScope</c>, scope-aware modifiers like
+/// <see cref="Modifier.Weight(float, bool)"/> and
+/// <see cref="Modifier.Align(Alignment.Vertical)"/> work on children
+/// here exactly as they do inside a plain <see cref="Row"/>. The
+/// overflow indicator slot remains a follow-up.
 /// </summary>
 public sealed partial class FlowRow;
