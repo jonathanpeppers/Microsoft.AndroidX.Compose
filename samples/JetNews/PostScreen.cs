@@ -61,12 +61,12 @@ public static class PostScreen
         new()
         {
             Modifier.Companion.FillMaxWidth(),
-            new Box
+            new Image(post.HeroId, "")
             {
-                Modifier.Companion
+                Modifier = Modifier.Companion
                     .FillMaxWidth()
                     .Height(180)
-                    .Background(post.HeroColor),
+                    .Clip(16),
             },
             new Column
             {

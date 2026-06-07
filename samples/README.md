@@ -65,7 +65,11 @@ Closed gaps that previously appeared here (now usable in samples):
 
 These samples are C# ports inspired by Google's [android/compose-samples](https://github.com/android/compose-samples), which is licensed under the [Apache License 2.0](https://github.com/android/compose-samples/blob/main/LICENSE). No upstream Kotlin source code is copied into this repo — the ports re-implement the same UI in C# against this repo's `ComposeNet.Compose` facade.
 
-The four per-author avatar PNGs in [`samples/Jetchat/Resources/drawable-nodpi/`](Jetchat/Resources/drawable-nodpi/) (`avatar_ali.png`, `avatar_aubrey.png`, `avatar_taylor.png`, `avatar_jordan.png`) were generated with [DiceBear](https://www.dicebear.com)'s `lorelei` style and are released under [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) (no attribution required, but credit appreciated). All other sample drawables and string content under each `samples/<Name>/` folder are original to this repo.
+The four per-author avatar PNGs in [`samples/Jetchat/Resources/drawable-nodpi/`](Jetchat/Resources/drawable-nodpi/) (`avatar_ali.png`, `avatar_aubrey.png`, `avatar_taylor.png`, `avatar_jordan.png`) were generated with [DiceBear](https://www.dicebear.com)'s `lorelei` style and are released under [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) (no attribution required, but credit appreciated).
+
+The 12 article photos in [`samples/JetNews/Resources/drawable-nodpi/`](JetNews/Resources/drawable-nodpi/) (`post_1.png`/`post_1_thumb.png` through `post_6.png`/`post_6_thumb.png`) and the wordmark vector [`samples/JetNews/Resources/drawable/ic_jetnews_wordmark.xml`](JetNews/Resources/drawable/ic_jetnews_wordmark.xml) are copied verbatim from [android/compose-samples](https://github.com/android/compose-samples/tree/main/JetNews/app/src/main/res) under the [Apache License 2.0](https://github.com/android/compose-samples/blob/main/LICENSE).
+
+All other sample drawables and string content under each `samples/<Name>/` folder are original to this repo.
 
 ## Conventions
 

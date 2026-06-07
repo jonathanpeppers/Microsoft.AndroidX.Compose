@@ -22,10 +22,9 @@ public static class HomeScreen
         {
             TopBar = new CenterAlignedTopAppBar
             {
-                Title = new Text("JetNews")
+                Title = new Image(Resource.Drawable.ic_jetnews_wordmark, "JetNews")
                 {
-                    FontSize   = 18,
-                    FontWeight = FontWeight.SemiBold,
+                    Modifier = Modifier.Companion.Height(24),
                 },
                 Actions = new Row
                 {
@@ -44,15 +43,18 @@ public static class HomeScreen
     {
         var rows = new List<HomeRow>
         {
+            new HomeRow.SectionHeader("Top stories for you"),
             new HomeRow.Highlight(feed.Highlighted),
-            new HomeRow.SectionHeader("Recommended for you"),
+            new HomeRow.Divider(),
         };
+
         foreach (var p in feed.Recommended)
             rows.Add(new HomeRow.Recommended(p));
+        rows.Add(new HomeRow.Divider());
 
         rows.Add(new HomeRow.SectionHeader("Popular on JetNews"));
-        foreach (var p in feed.Popular)
-            rows.Add(new HomeRow.Recommended(p));
+        rows.Add(new HomeRow.PopularCarousel(feed.Popular));
+        rows.Add(new HomeRow.Divider());
 
         rows.Add(new HomeRow.SectionHeader("Based on your history"));
         foreach (var p in feed.Recent)
@@ -78,16 +80,29 @@ public static class HomeScreen
             HomeRow.Highlight h        => HomeCards.BuildHighlight(h.Post, bookmarks, onSelectPost),
             HomeRow.SectionHeader s    => BuildSectionHeader(s.Label),
             HomeRow.Recommended r      => HomeCards.BuildSimple(r.Post, bookmarks, onSelectPost),
+            HomeRow.PopularCarousel pc => BuildPopularCarousel(pc.Posts, onSelectPost),
+            HomeRow.Divider            => new HorizontalDivider
+            {
+                Modifier = Modifier.Companion.Padding(horizontal: 14, vertical: 0),
+            },
             _ => new Spacer(),
+        };
+
+    static LazyRow<Post> BuildPopularCarousel(IReadOnlyList<Post> posts,
+                                              Action<string> onSelectPost) =>
+        new(items: posts,
+            itemContent: p => HomeCards.BuildPopular(p, onSelectPost))
+        {
+            Modifier = Modifier.Companion.FillMaxWidth().Padding(horizontal: 16, vertical: 0),
         };
 
     static Box BuildSectionHeader(string label) =>
         new()
         {
-            Modifier.Companion.FillMaxWidth().Padding(horizontal: 16, vertical: 12),
+            Modifier.Companion.FillMaxWidth().Padding(start: 16, end: 16, top: 16, bottom: 8),
             new Text(label)
             {
-                FontSize   = 14,
+                FontSize   = 16,
                 FontWeight = FontWeight.SemiBold,
             },
         };

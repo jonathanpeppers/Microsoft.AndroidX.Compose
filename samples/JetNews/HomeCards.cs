@@ -1,53 +1,49 @@
 using System;
+using System.Collections.Generic;
 using ComposeNet;
 
 namespace ComposeNet.Samples.JetNews;
 
 /// <summary>
-/// Card factories for the home feed. The "highlighted" card is the
-/// large header-style card at the top of the feed; "simple" cards are
-/// the smaller rows in the recommended/popular/recent lists.
+/// Card factories for the home feed. Three shapes mirror upstream's
+/// <c>PostCardTop</c> (highlighted hero), <c>PostCardSimple</c>
+/// (recommended row with thumbnail), and <c>PostCardPopular</c>
+/// (280-wide carousel card).
 /// </summary>
 internal static class HomeCards
 {
-    static readonly Color SubtleText = Color.FromHex("#666666");
-
-    public static Card BuildHighlight(Post post,
-                                      MutableStateList<string> bookmarks,
-                                      Action<string> onSelectPost) =>
+    public static Column BuildHighlight(Post post,
+                                        MutableStateList<string> bookmarks,
+                                        Action<string> onSelectPost) =>
         new()
         {
             Modifier.Companion
                 .FillMaxWidth()
-                .Padding(horizontal: 16, vertical: 8)
+                .Padding(16)
                 .Clickable(() => onSelectPost(post.Id)),
-            new Column
+            new Image(post.HeroId, "")
             {
-                Modifier.Companion.FillMaxWidth(),
-                new Box
-                {
-                    Modifier.Companion
-                        .FillMaxWidth()
-                        .Height(180)
-                        .Background(post.HeroColor),
-                },
-                new Column
-                {
-                    Modifier.Companion.FillMaxWidth().Padding(16),
-                    new Text(post.Title)
-                    {
-                        FontSize   = 20,
-                        FontWeight = FontWeight.SemiBold,
-                    },
-                    new Spacer(Modifier.Companion.Height(4)),
-                    new Text(post.Subtitle)
-                    {
-                        FontSize = 14,
-                        Color    = SubtleText,
-                    },
-                    new Spacer(Modifier.Companion.Height(8)),
-                    BuildMeta(post),
-                },
+                Modifier = Modifier.Companion
+                    .FillMaxWidth()
+                    .Height(180)
+                    .Clip(16),
+            },
+            new Spacer(Modifier.Companion.Height(16)),
+            new Text(post.Title)
+            {
+                FontSize   = 22,
+                FontWeight = FontWeight.SemiBold,
+                Modifier   = Modifier.Companion.Padding(bottom: 8, start: 0, end: 0, top: 0),
+            },
+            new Text(post.Metadata.Author)
+            {
+                FontSize   = 14,
+                FontWeight = FontWeight.Medium,
+                Modifier   = Modifier.Companion.Padding(bottom: 4, start: 0, end: 0, top: 0),
+            },
+            new Text($"{post.Metadata.Date} · {post.Metadata.ReadTimeMinutes} min read")
+            {
+                FontSize = 12,
             },
         };
 
@@ -58,44 +54,58 @@ internal static class HomeCards
         {
             Modifier.Companion
                 .FillMaxWidth()
-                .Padding(horizontal: 16, vertical: 8)
                 .Clickable(() => onSelectPost(post.Id)),
-            new Box
+            new Image(post.ThumbId, "")
             {
-                Modifier.Companion
-                    .Size(56)
-                    .Clip(8)
-                    .Background(post.HeroColor),
+                Modifier = Modifier.Companion.Padding(16).Size(40).Clip(8),
             },
-            new Spacer(Modifier.Companion.Width(12)),
             new Column
             {
-                Modifier.Companion.Weight(1f, fill: true),
+                Modifier.Companion.Weight(1f, fill: true).Padding(vertical: 10, horizontal: 0),
                 new Text(post.Title)
                 {
                     FontSize   = 16,
                     FontWeight = FontWeight.Medium,
-                    MaxLines   = 2,
+                    MaxLines   = 3,
                 },
-                new Spacer(Modifier.Companion.Height(4)),
                 new Text($"{post.Metadata.Author} · {post.Metadata.ReadTimeMinutes} min read")
                 {
-                    FontSize = 12,
-                    Color    = SubtleText,
+                    FontSize = 14,
                 },
             },
             BookmarkButton.Build(post.Id, bookmarks),
         };
 
-    static Row BuildMeta(Post post) =>
+    public static Card BuildPopular(Post post, Action<string> onSelectPost) =>
         new()
         {
-            Modifier.Companion.FillMaxWidth(),
-            new Text($"{post.Metadata.Author} · {post.Metadata.Date} · {post.Metadata.ReadTimeMinutes} min read")
+            Modifier.Companion.Width(280).Clickable(() => onSelectPost(post.Id)),
+            new Column
             {
-                FontSize = 12,
-                Color    = SubtleText,
-                Modifier = Modifier.Companion.Weight(1f, fill: true),
+                new Image(post.HeroId, "")
+                {
+                    Modifier = Modifier.Companion.FillMaxWidth().Height(100),
+                },
+                new Column
+                {
+                    Modifier.Companion.Padding(16),
+                    new Text(post.Title)
+                    {
+                        FontSize   = 18,
+                        FontWeight = FontWeight.SemiBold,
+                        MaxLines   = 2,
+                    },
+                    new Spacer(Modifier.Companion.Height(8)),
+                    new Text(post.Metadata.Author)
+                    {
+                        FontSize = 14,
+                        MaxLines = 1,
+                    },
+                    new Text($"{post.Metadata.Date} · {post.Metadata.ReadTimeMinutes} min read")
+                    {
+                        FontSize = 12,
+                    },
+                },
             },
         };
 }

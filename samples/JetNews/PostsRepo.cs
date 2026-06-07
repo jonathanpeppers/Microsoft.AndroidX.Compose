@@ -16,7 +16,8 @@ public static class PostsRepo
         Title:    "Hello, ComposeNet",
         Subtitle: "Jetpack Compose UI, hosted from C# on .NET-for-Android.",
         Metadata: new PostMetadata("Jordan Lee", "Apr 14", 4),
-        HeroColor: Color.FromHex("#4A6FA5"),
+        HeroId:   Resource.Drawable.post_1,
+        ThumbId:  Resource.Drawable.post_1_thumb,
         Paragraphs: new Paragraph[]
         {
             new(ParagraphType.Title,   "Hello, ComposeNet"),
@@ -47,7 +48,8 @@ public static class PostsRepo
         Title:    "Why the bindings stay Kotlin-free",
         Subtitle: "One binding generator, zero Kotlin sources in the repo.",
         Metadata: new PostMetadata("Jordan Lee", "Apr 12", 5),
-        HeroColor: Color.FromHex("#7C5295"),
+        HeroId:   Resource.Drawable.post_2,
+        ThumbId:  Resource.Drawable.post_2_thumb,
         Paragraphs: new Paragraph[]
         {
             new(ParagraphType.Title,   "Why the bindings stay Kotlin-free"),
@@ -71,7 +73,8 @@ public static class PostsRepo
         Title:    "Generating the facade",
         Subtitle: "Phase 1-10 of ComposeFacadeGenerator, the recipe for one-line wrappers.",
         Metadata: new PostMetadata("Jordan Lee", "Apr 10", 6),
-        HeroColor: Color.FromHex("#2E8B57"),
+        HeroId:   Resource.Drawable.post_3,
+        ThumbId:  Resource.Drawable.post_3_thumb,
         Paragraphs: new Paragraph[]
         {
             new(ParagraphType.Title,   "Generating the facade"),
@@ -97,7 +100,8 @@ public static class PostsRepo
         Title:    "Material 3 in C#",
         Subtitle: "Color, typography, and shape reads land alongside the dynamic palette.",
         Metadata: new PostMetadata("Jordan Lee", "Apr 8", 3),
-        HeroColor: Color.FromHex("#C75450"),
+        HeroId:   Resource.Drawable.post_4,
+        ThumbId:  Resource.Drawable.post_4_thumb,
         Paragraphs: new Paragraph[]
         {
             new(ParagraphType.Title,   "Material 3 in C#"),
@@ -120,7 +124,8 @@ public static class PostsRepo
         Title:    "Navigation with NavHost",
         Subtitle: "Compose Navigation routes mapped onto a C# collection-initializer.",
         Metadata: new PostMetadata("Jordan Lee", "Apr 5", 3),
-        HeroColor: Color.FromHex("#D69E2E"),
+        HeroId:   Resource.Drawable.post_5,
+        ThumbId:  Resource.Drawable.post_5_thumb,
         Paragraphs: new Paragraph[]
         {
             new(ParagraphType.Title,   "Navigation with NavHost"),
@@ -141,7 +146,8 @@ public static class PostsRepo
         Title:    "State holders without coroutines",
         Subtitle: "MutableState, MutableStateList, and RememberSaveable in C#.",
         Metadata: new PostMetadata("Jordan Lee", "Apr 2", 4),
-        HeroColor: Color.FromHex("#5B7C99"),
+        HeroId:   Resource.Drawable.post_6,
+        ThumbId:  Resource.Drawable.post_6_thumb,
         Paragraphs: new Paragraph[]
         {
             new(ParagraphType.Title,   "State holders without coroutines"),

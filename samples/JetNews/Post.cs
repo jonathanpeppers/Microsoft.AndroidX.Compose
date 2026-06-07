@@ -14,15 +14,13 @@ namespace ComposeNet.Samples.JetNews;
 /// <param name="Subtitle">One-line teaser shown beneath the title.</param>
 /// <param name="Metadata">Author / date / read time.</param>
 /// <param name="Paragraphs">Body content, rendered top-to-bottom.</param>
-/// <param name="HeroColor">
-/// Solid hero-image color. The upstream sample uses real photo PNGs
-/// — see <c>README.md</c> for why this port uses solid colored cards
-/// instead.
-/// </param>
+/// <param name="HeroId">Drawable resource id for the full-size hero image.</param>
+/// <param name="ThumbId">Drawable resource id for the 40×40 list thumbnail.</param>
 public sealed record Post(
     string Id,
     string Title,
     string Subtitle,
     PostMetadata Metadata,
     IReadOnlyList<Paragraph> Paragraphs,
-    ComposeNet.Color HeroColor);
+    int HeroId,
+    int ThumbId);
