@@ -89,7 +89,6 @@ hasn't been ported to it yet, notes "feasible — not yet wired"):
 | `LazyColumn(reverseLayout = true)` so newest messages sit at the bottom | not yet exposed on the `LazyColumn` facade |
 | Image / sticker / file message attachments inside bubbles | requires composable image-loader plumbing |
 | User profile screen                       | wire up via `NavHost` / `NavController` (now bound via [#60](https://github.com/jonathanpeppers/compose-net/issues/60)) — not yet wired |
-| IME-synchronized scroll-to-bottom         | [#69](https://github.com/jonathanpeppers/compose-net/issues/69) (`imePadding`) |
 | `MaterialTheme.colorScheme.*` reads for the "me" bubble + drawer selection + tonal text colors (`onSurfaceVariant`) | **feasible — not yet wired**. `MaterialTheme.CurrentColorScheme(composer)` landed in [#61](https://github.com/jonathanpeppers/compose-net/issues/61) (PR #133); Jetchat still uses hardcoded `Color.FromRgb(...)` values |
 | `MaterialTheme.typography.*` reads | **feasible — not yet wired**. `MaterialTheme.CurrentTypography(composer)` landed alongside #61; Jetchat still hard-codes M3 sp/weight values |
 | Asymmetric `RoundedCornerShape(topStart, …)` on bubbles | `Modifier.Clip(Dp)` only takes a single radius; full asymmetric `Shape` API still needs [#64](https://github.com/jonathanpeppers/compose-net/issues/64) drawing primitives |
