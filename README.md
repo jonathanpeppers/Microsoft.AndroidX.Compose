@@ -99,7 +99,7 @@ The translation is mechanical — `new` instead of bare calls, commas instead of
 | `count++`                                     | `count++` (operator on `MutableNumberState<T>`)               |
 | `"Count: $count"`                             | `$"Count: {count}"` (via `MutableState<T>.ToString`)          |
 
-That's the entire [`MainActivity.cs`](src/ComposeNet.Sample/MainActivity.cs) — ~27 lines including ceremony, 13 for the composition itself.
+That's an end-to-end Material 3 counter app in ~13 lines of composition — start from this shape when adding a new screen. The actual [`src/ComposeNet.Sample/MainActivity.cs`](src/ComposeNet.Sample/MainActivity.cs) in the repo is a much larger **kitchen-sink demo** that exercises every facade in a tabbed `Scaffold`; for a single-screen real-app example see [`samples/Jetchat`](samples/Jetchat).
 
 ## What's wrapped today
 
@@ -107,24 +107,29 @@ The facade [`ComposeNet.Compose`](src/ComposeNet.Compose) covers the common Mate
 
 | Category                | Composables |
 | ----------------------- | ----------- |
-| Theme & layout          | `MaterialTheme`, `Column`, `Row`, `Box`, `Spacer`, `Scaffold`, `HorizontalDivider`, `VerticalDivider` |
-| Lazy lists              | `LazyColumn<T>`, `LazyRow<T>`, `LazyVerticalGrid<T>`, `LazyHorizontalGrid<T>` (+ `GridCells`) |
+| Theme & layout          | `MaterialTheme` (parameterizable `ColorScheme`/`Typography`/`Shapes`/`Dark`/`UseDynamicColor`, plus `CurrentColorScheme`/`CurrentTypography`/`CurrentShapes` reads), `Column`, `Row` (`Arrangement`), `Box`, `Spacer`, `Scaffold`, `HorizontalDivider`, `VerticalDivider`, `BoxWithConstraints` |
+| Lazy lists & paging     | `LazyColumn<T>`, `LazyRow<T>`, `LazyVerticalGrid<T>`, `LazyHorizontalGrid<T>`, `LazyVerticalStaggeredGrid<T>`, `LazyHorizontalStaggeredGrid<T>` (+ `GridCells`/`StaggeredGridCells`), `HorizontalPager`, `VerticalPager` (+ `PagerState`), `FlowRow`, `FlowColumn` |
+| Carousels & pull        | `HorizontalMultiBrowseCarousel`, `HorizontalCenteredHeroCarousel`, `HorizontalUncontainedCarousel`, `PullToRefreshBox` (+ `PullToRefreshState`) |
 | Surfaces                | `Surface`, `Card`, `ElevatedCard`, `OutlinedCard` |
-| App bars                | `TopAppBar` family (Center/Medium/Large/Flexible), `BottomAppBar`, `FlexibleBottomAppBar` |
+| App bars                | `TopAppBar` family (Center/Medium/Large/Flexible — with optional subtitles via Phase 9 branching), `BottomAppBar`, `FlexibleBottomAppBar` |
 | Tabs                    | `TabRow` family (Primary/Secondary, scrollable variants), `Tab`, `LeadingIconTab`, `CustomTab` |
-| Buttons                 | `Button`, `IconButton`, `FloatingActionButton` |
-| Text & input            | `Text`, `TextField`, `OutlinedTextField` |
-| Media                   | `Image`, `Icon` |
+| Buttons                 | `Button`, `OutlinedButton`, `TextButton`, `ElevatedButton`, `FilledTonalButton`, `IconButton`, `OutlinedIconButton`, `FilledIconButton`, `FilledTonalIconButton`, full `IconToggleButton` family, `FloatingActionButton` (+ `Small`/`Large`/`Extended` variants) |
+| Text & input            | `Text` (`TextStyle`/`FontWeight`/`FontStyle`/`FontFamily`/`TextDecoration`/`TextAlign`/`TextOverflow`), `TextField`, `OutlinedTextField`, `SecureTextField`, `OutlinedSecureTextField` |
+| Media                   | `Image`, `Icon` (drawable-resource and `ImageVector` overloads) |
 | Chips                   | `AssistChip`, `FilterChip`, `InputChip`, `SuggestionChip` (+ `Elevated*` variants) |
-| Selection               | `Checkbox`, `TriStateCheckbox`, `RadioButton`, `Switch`, `Slider`, `RangeSlider`, `SegmentedButton` |
+| Selection               | `Checkbox`, `TriStateCheckbox`, `RadioButton`, `Switch`, `Slider`, `RangeSlider`, `SegmentedButton`, `SingleChoiceSegmentedButtonRow`, `MultiChoiceSegmentedButtonRow` |
 | Progress & feedback     | `CircularProgressIndicator`, `LinearProgressIndicator`, `ListItem`, `Badge`, `BadgedBox` |
-| Menus & search          | `DropdownMenu` + `DropdownMenuItem`, `SearchBar` family (Top, ExpandedDocked, ExpandedFullScreen) |
-| Navigation              | `NavigationBar`, `NavigationRail`, `WideNavigationRail`, `ModalWideNavigationRail` (+ items) |
-| Drawers                 | `ModalNavigationDrawer`, `DismissibleNavigationDrawer`, `PermanentNavigationDrawer` |
-| Sheets & pickers        | `ModalBottomSheet`, `BottomSheetScaffold`, `DatePicker`/`DatePickerDialog`, `TimePicker`/`TimePickerDialog` |
+| Menus & search          | `DropdownMenu` + `DropdownMenuItem`, `ExposedDropdownMenuBox` + `ExposedDropdownMenu`, `SearchBar` family (Top, ExpandedDocked, ExpandedFullScreen, `DockedSearchBar`) |
+| Navigation              | `NavHost`, `NavController`, `NavBackStackEntry`, `NavigationBar`, `NavigationRail`, `WideNavigationRail`, `ModalWideNavigationRail` (+ items) |
+| Drawers                 | `ModalNavigationDrawer`, `DismissibleNavigationDrawer`, `PermanentNavigationDrawer` (+ matching sheets, generated via Phase 10 `[ConfirmStateChange]`) |
+| Sheets & pickers        | `ModalBottomSheet`, `BottomSheetScaffold`, `DatePicker`/`DatePickerDialog`, `DateRangePicker`/`DateRangePickerDialog`, `TimePicker`/`TimeInput`/`TimePickerDialog` |
 | Overlays                | `AlertDialog`, `Snackbar` + `SnackbarHost`, `Tooltip` |
-| Modifier chains         | `Padding`, `FillMaxWidth/Height/Size`, `Width`, `Height`, `Size`, `SafeDrawingPadding`, `SystemBarsPadding` |
-| State                   | `Remember` (+ keyed `Remember(factory, key1, …)`, `RememberKeyed`), `RememberSaveable` (+ keyed), `MutableState<T>`, `MutableNumberState<T>`, `MutableStateList<T>`, `MutableStateMap<K,V>`, `DerivedStateOf`, `ProduceState`, plus `DatePickerState`, `TimePickerState`, `SearchBarState`, `SnackbarHostState` |
+| Animation               | `AnimatedVisibility`, `AnimatedContent`, `Crossfade` |
+| Effects                 | `Compose.LaunchedEffect`, `Compose.DisposableEffect`, `Compose.SideEffect` |
+| Modifier chains         | `Padding`, `FillMaxWidth/Height/Size`, `Width`, `Height`, `Size`, `AspectRatio`, `Offset`, `Alpha`, `Background`, `Border`, `Clip`, `Clickable`, `Weight`, `VerticalScroll`/`HorizontalScroll` (+ `ScrollState`), `Draggable` (+ `DraggableState`), focus/semantics/gestures, `SafeDrawingPadding`, `SystemBarsPadding` |
+| Value types             | `Color` (+ `FromRgb`/`FromArgb`/`FromHex` and theme reads), `Dp`, `Sp`, `FontWeight`, `TextAlign`, `Shape` |
+| State                   | `Remember` (+ keyed `Remember(factory, key1, …)`, `RememberKeyed`), `RememberSaveable` (+ keyed), `MutableState<T>`, `MutableNumberState<T>`, `MutableStateList<T>`, `MutableStateMap<K,V>`, `DerivedStateOf`, `ProduceState`, plus `DatePickerState`, `DateRangePickerState`, `TimePickerState`, `SearchBarState`, `SnackbarHostState`, `ScrollState`, `PagerState`, `PullToRefreshState`, `DraggableState`, `DrawerStateHolder`, `WideNavigationRailState`, `FocusRequester`/`FocusState` |
+| Async                   | `SuspendBridge` — Kotlin `suspend` functions surfaced as C# `Task` / `Task<T>` (drives `ScrollState.ScrollToAsync`, `LazyListState.AnimateScrollToItemAsync`, `SnackbarHostState.ShowSnackbarAsync`, etc.) |
 
 ## Samples
 
@@ -132,7 +137,7 @@ The facade [`ComposeNet.Compose`](src/ComposeNet.Compose) covers the common Mate
 
 ## Status
 
-The sample builds, deploys to an Android 16 (API 36) emulator, and renders a real Material 3 UI end-to-end: dynamic Material You colors, edge-to-edge layout, an interactive `Button` that increments `MutableNumberState<int>` and recomposes the count.
+The sample builds, deploys to an Android 16 (API 36) emulator, and renders a real Material 3 UI end-to-end: dynamic Material You colors via parameterizable `MaterialTheme`, edge-to-edge layout, an interactive `Button` that increments `MutableNumberState<int>` and recomposes the count. The kitchen-sink demo in [`src/ComposeNet.Sample`](src/ComposeNet.Sample) exercises the full facade across a tabbed `Scaffold` (text styling, lists, pickers, dialogs, sheets, navigation, animation, effects, search, dropdowns, draggable modifiers, …).
 
 The facade and sample reference the official `Xamarin.AndroidX.Compose.*` 1.11.2.x and `Xamarin.AndroidX.Compose.Material3` 1.4.0.x NuGets directly — the per-binding projects this repo originally needed have been deleted.
 

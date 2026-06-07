@@ -40,23 +40,25 @@ that needs the same primitive.
 
 | Issue | Area                        | Blocks (in samples) |
 |------:|-----------------------------|--------------------|
-| [#51](https://github.com/jonathanpeppers/compose-net/issues/51)  | `Pager`, `FlowRow`/`FlowColumn`, `BoxWithConstraints`, remaining Lazy variants | **JetNews** carousel, **Jetsnack** chip wrapping. |
-| [#53](https://github.com/jonathanpeppers/compose-net/issues/53)  | `PullToRefreshBox` | News-feed refresh in **JetNews** / **Reply**. |
-| [#58](https://github.com/jonathanpeppers/compose-net/issues/58)  | `Text` styling — `TextStyle`, `FontWeight`, `AnnotatedString`, `KeyboardOptions`, `supportingText`, leading/trailing icons | **Jetchat** bold author names; every sample's typography. |
-| [#61](https://github.com/jonathanpeppers/compose-net/issues/61)  | Theming — parameterize `MaterialTheme`, `ColorScheme` / `Typography` / `Shapes`, `MaterialTheme.colorScheme.*` reads, Material Icons | **Jetchat** primary-tinted "me" bubble, every sample's app-bar icons. |
-| [#62](https://github.com/jonathanpeppers/compose-net/issues/62)  | State primitives — `rememberSaveable`, `mutableStateListOf`/`MapOf`, `derivedStateOf` | Rotation-stable state in every sample. |
-| [#63](https://github.com/jonathanpeppers/compose-net/issues/63)  | `Modifier` surface — gestures, focus, semantics, `weight` / `align` extras (`verticalScroll` / `horizontalScroll` ✅ landed in #94 and exercised by **Jetchat**'s drawer panel) | Drag/drop everywhere. |
-| [#64](https://github.com/jonathanpeppers/compose-net/issues/64)  | Drawing primitives — `Canvas`, `drawBehind`, `Brush`, `Path`, `Shape` factories | Custom visuals in **JetLagged**. |
-| [#65](https://github.com/jonathanpeppers/compose-net/issues/65)  | C# value types for inline classes (`Color`, `Dp`, `Sp`, `FontWeight`, `TextAlign`, `Shape`) | Asymmetric `RoundedCornerShape(topStart, topEnd, …)` on **Jetchat** bubbles; ergonomic API everywhere. |
+| [#64](https://github.com/jonathanpeppers/compose-net/issues/64)  | Drawing primitives — `Canvas`, `drawBehind`, `Brush`, `Path`, `Shape` factories | Custom visuals in **JetLagged**; asymmetric `RoundedCornerShape(topStart, topEnd, …)` on **Jetchat** bubbles. |
 | [#69](https://github.com/jonathanpeppers/compose-net/issues/69)  | WindowInsets padding modifiers (`imePadding`, `navigationBarsPadding`, `statusBarsPadding`, …) | IME-synced input row in **Jetchat**. |
-| [#70](https://github.com/jonathanpeppers/compose-net/issues/70)  | `Row` / `Column` `Arrangement` parameter (`Start`, `End`, `Center`, `SpaceBetween`, `SpaceAround`, `spacedBy`) | Right-aligned "me" bubbles in **Jetchat** (currently faked with `Spacer().Weight(1f)`). |
+| [#59](https://github.com/jonathanpeppers/compose-net/issues/59)  | `CompositionLocal` / `CompositionLocalProvider` (`LocalContext`, `LocalDensity`, `LocalContentColor`, `LocalTextStyle`, …) | Idiomatic theming and density reads across every sample. |
+| [#20](https://github.com/jonathanpeppers/compose-net/issues/20)  | Edge-to-edge bootstrapping | Status/nav-bar overlap on every sample. |
+
+Closed gaps that previously appeared here (now usable in samples):
+**#51** Pager / FlowRow / FlowColumn / BoxWithConstraints / LazyStaggeredGrid,
+**#53** PullToRefreshBox, **#58** Text styling + TextField config,
+**#61** Theming reads + `Color` value type + parameterized `MaterialTheme`,
+**#62** State primitives (`RememberSaveable` / `mutableStateListOf` / `mutableStateMapOf` / `derivedStateOf`),
+**#63** Modifier surface (Background/Border/Clickable/Size/Width/Height/AspectRatio/Offset/Alpha/Clip/Weight + scroll + focus + semantics + Draggable),
+**#65** Compose value types (`Color`/`Dp`/`Sp`/`FontWeight`/`TextAlign`),
+**#70** Row/Column `Arrangement`.
 
 ## Attribution
 
 These samples are C# ports inspired by Google's [android/compose-samples](https://github.com/android/compose-samples), which is licensed under the [Apache License 2.0](https://github.com/android/compose-samples/blob/main/LICENSE). No upstream Kotlin source code is copied into this repo — the ports re-implement the same UI in C# against this repo's `ComposeNet.Compose` facade.
 
 The four per-author avatar PNGs in [`samples/Jetchat/Resources/drawable-nodpi/`](Jetchat/Resources/drawable-nodpi/) (`avatar_ali.png`, `avatar_aubrey.png`, `avatar_taylor.png`, `avatar_jordan.png`) were generated with [DiceBear](https://www.dicebear.com)'s `lorelei` style and are released under [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) (no attribution required, but credit appreciated). All other sample drawables and string content under each `samples/<Name>/` folder are original to this repo.
-| [#20](https://github.com/jonathanpeppers/compose-net/issues/20)  | Edge-to-edge bootstrapping | Status/nav-bar overlap on every sample. |
 
 ## Conventions
 
