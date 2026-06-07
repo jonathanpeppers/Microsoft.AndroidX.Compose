@@ -393,8 +393,10 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
                 return null;
             }
 
-            // Validate the Remember bridge resolves to a static
-            // `(IComposer) -> IntPtr` method on ComposeNet.ComposeBridges.
+            // Validate the Remember bridge resolves to a static method on
+            // ComposeNet.ComposeBridges whose last parameter is an
+            // IComposer and that returns IntPtr. Any number of leading
+            // user parameters is allowed (Phase 4 = zero, Phase 4b = N).
             var bridgesType = c.Compilation.GetTypeByMetadataName("ComposeNet.ComposeBridges");
             if (bridgesType is null)
             {
