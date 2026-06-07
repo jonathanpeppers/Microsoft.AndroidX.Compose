@@ -6,6 +6,8 @@ Upstream is labelled **Medium complexity**; this port targets the
 phone-only single-pane flow and leans on the same data-shape ideas
 without copying any Kotlin source.
 
+<img src="../docs/jetnews.png" alt="JetNews running on an Android device" width="320" />
+
 Run with:
 
 ```pwsh
