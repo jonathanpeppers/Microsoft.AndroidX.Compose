@@ -23,7 +23,7 @@ Status legend: ✅ done · 🚧 in progress · ⬜️ not started · ❌ blocked
 |----------------------:|-------------|:------:|-------|
 | Low                   | **Jetchat** | ✅      | Simplified single-channel chat with navigation drawer (`composers` / `droidcon-nyc`), top-bar search/info action icons, distinct-per-author avatars (DiceBear `lorelei`, CC0), and a `LazyColumn`-backed message log. Programmatic drawer open + multi-channel routing still pending. See `Jetchat/README.md`. |
 | Medium                | JetNews     | ✅      | Simplified phone-only single-pane port — three screens (Home / Article / Interests), navigation drawer with two destinations, `PrimaryTabRow` on Interests, per-post bookmark toggle, six condensed seed posts with solid-color hero panels. Adaptive list-detail layout, inline paragraph spans, `nestedScroll` top-bar elevation, drawer auto-close, and real hero PNGs are all pending. See `JetNews/README.md`. |
-| Medium                | Reply       | ⬜️     | Needs adaptive layouts (window-size classes). |
+| Medium                | Reply       | ✅      | Simplified phone-only single-pane port — bottom-nav scaffold with 4 destinations, inbox `LazyColumn` of cards with `AnimatedContent`-swapped selected avatar and `CombinedClickable` (tap/long-press) multi-select, email-detail `Scaffold` with thread cards, Articles/DMs/Groups stub screens. Adaptive layouts (#143), TwoPane / fold awareness (#168), `NavigationDrawerItem` (#163), `BackHandler` (#166), `NavOptions` (#169), `DockedSearchBar` (#167), `LazyListState` scroll-direction reads (#164), and `semantics { selected }` (#165) are all pending. See `Reply/README.md`. |
 | Medium-High           | Jetsnack    | ⬜️     | Heavy custom layouts and animation. |
 | High                  | Jetcaster   | ⬜️     | Coroutines, DataStore, Hilt, media playback. |
 | High                  | JetLagged   | ⬜️     | Custom drawing + heavy animation. |
@@ -51,6 +51,13 @@ that needs the same primitive.
 | [#144](https://github.com/jonathanpeppers/compose-net/issues/144) | Custom `Layout {}` primitive — Measurable / Placeable / MeasureScope | `InterestsAdaptiveContentLayout` in **JetNews**, custom carousels in **Jetsnack**, asymmetric chat bubbles in **Jetchat**. |
 | [#145](https://github.com/jonathanpeppers/compose-net/issues/145) | `ContentScale` + `Alignment` slots on the `Image` facade | Hero images on cards in **JetNews** (currently solid-color `Box` placeholders). |
 | [#146](https://github.com/jonathanpeppers/compose-net/issues/146) | `stringResource(id)` lookup | Localizable UI strings in every sample (all currently inline literals). |
+| [#163](https://github.com/jonathanpeppers/compose-net/issues/163) | `NavigationDrawerItem` facade | Drawer rows in **JetNews** (hand-rolled) and **Reply** expanded layout. |
+| [#164](https://github.com/jonathanpeppers/compose-net/issues/164) | `LazyListState` scroll-direction / visible-item properties (`lastScrolledBackward`, `canScrollBackward`, `firstVisibleItemIndex`, …) | Search-bar lift animation in **Reply**, jump-to-bottom FAB in **Jetchat**. |
+| [#165](https://github.com/jonathanpeppers/compose-net/issues/165) | Typed `semantics` properties (`Selected`, `Role`, `OnClick` label, …) | Accessibility on multi-select cards in **Reply**, tab role on bottom-nav items. |
+| [#166](https://github.com/jonathanpeppers/compose-net/issues/166) | `BackHandler {}` from `androidx.activity.compose` | Detail-pane / multi-select collapse on system back in **Reply**. |
+| [#167](https://github.com/jonathanpeppers/compose-net/issues/167) | `DockedSearchBar` facade | Inbox search overlay in **Reply**. |
+| [#168](https://github.com/jonathanpeppers/compose-net/issues/168) | `TwoPane` / `NavigableListDetailPaneScaffold` + Jetpack `WindowManager` (`WindowLayoutInfo`/`FoldingFeature`) | Adaptive list-detail with fold avoidance in **Reply**. |
+| [#169](https://github.com/jonathanpeppers/compose-net/issues/169) | `NavOptions` (`popUpTo` + `launchSingleTop` + `restoreState`) | Bottom-nav tab semantics in **Reply** (per-tab back-stack state). |
 
 Closed gaps that previously appeared here (now usable in samples):
 **#51** Pager / FlowRow / FlowColumn / BoxWithConstraints / LazyStaggeredGrid,
@@ -68,6 +75,8 @@ These samples are C# ports inspired by Google's [android/compose-samples](https:
 The four per-author avatar PNGs in [`samples/Jetchat/Resources/drawable-nodpi/`](Jetchat/Resources/drawable-nodpi/) (`avatar_ali.png`, `avatar_aubrey.png`, `avatar_taylor.png`, `avatar_jordan.png`) were generated with [DiceBear](https://www.dicebear.com)'s `lorelei` style and are released under [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) (no attribution required, but credit appreciated).
 
 The 12 article photos in [`samples/JetNews/Resources/drawable-nodpi/`](JetNews/Resources/drawable-nodpi/) (`post_1.png`/`post_1_thumb.png` through `post_6.png`/`post_6_thumb.png`) and the wordmark vector [`samples/JetNews/Resources/drawable/ic_jetnews_wordmark.xml`](JetNews/Resources/drawable/ic_jetnews_wordmark.xml) are copied verbatim from [android/compose-samples](https://github.com/android/compose-samples/tree/main/JetNews/app/src/main/res) under the [Apache License 2.0](https://github.com/android/compose-samples/blob/main/LICENSE).
+
+The 12 icon vector drawables in [`samples/Reply/Resources/drawable/`](Reply/Resources/drawable/) and the 12 avatar JPGs + 4 paris photos in [`samples/Reply/Resources/drawable-nodpi/`](Reply/Resources/drawable-nodpi/) are copied verbatim from [android/compose-samples](https://github.com/android/compose-samples/tree/main/Reply/app/src/main/res) under the [Apache License 2.0](https://github.com/android/compose-samples/blob/main/LICENSE). The data-layer string content for **Reply** (email subjects/bodies, account names, attachment descriptions) is also copied verbatim from upstream's `LocalEmailsDataProvider.kt` / `LocalAccountsDataProvider.kt` under the same license.
 
 All other sample drawables and string content under each `samples/<Name>/` folder are original to this repo.
 
