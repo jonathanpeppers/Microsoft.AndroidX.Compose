@@ -116,6 +116,7 @@ public class MainActivity : ComposeActivity
             // VerticalScroll modifier and the SuspendBridge demo buttons
             // that programmatically scroll back to the top.
             var buttonsScroll = Remember(() => new ScrollState());
+            var greetingScroll = Remember(() => new ScrollState());
 
             // Compose Navigation demo state (issue #60). The NavController
             // is the externally-driven entry point — Button onClicks call
@@ -162,6 +163,7 @@ public class MainActivity : ComposeActivity
                     {
                         0 => (ComposableNode)new Column
                         {
+                            Modifier.Companion.VerticalScroll(greetingScroll),
                             new Text("Hello from .NET"),
                             new OutlinedTextField(name),
                             new Text($"Hi {(string.IsNullOrEmpty(name.Value) ? "stranger" : name.Value)}"),
@@ -272,18 +274,28 @@ public class MainActivity : ComposeActivity
                             // via FocusRequester + OnFocusChanged + Focusable, and
                             // CombinedClickable + Selectable + Semantics.
                             new Text("Issue #63 modifiers:"),
+                            // Box with three corner-aligned labels (TopStart, Center,
+                            // BottomEnd). The fourth child is an explicit colored
+                            // Box that uses MatchParentSize() to fill the parent —
+                            // the parent draws underneath the labels, which sit on
+                            // top of it. This is the standard "background overlay"
+                            // use of MatchParentSize.
                             new Box
                             {
                                 Modifier.Companion
                                     .FillMaxWidth()
                                     .Height(72)
                                     .Border(1, ColorKt.Color(red: 0x90, green: 0x90, blue: 0x90, alpha: 0xFF)),
+                                new Box
+                                {
+                                    Modifier.Companion
+                                        .MatchParentSize()
+                                        .Background(ColorKt.Color(red: 0xFF, green: 0xF0, blue: 0xE0, alpha: 0xFF))
+                                        .Semantics("Background overlay that fills the box"),
+                                },
                                 new Text("TopStart")    { Modifier = Modifier.Companion.Align(Alignment.TopStart) },
                                 new Text("Center")      { Modifier = Modifier.Companion.Align(Alignment.Center) },
                                 new Text("BottomEnd")   { Modifier = Modifier.Companion.Align(Alignment.BottomEnd) },
-                                new Text("MatchParent") { Modifier = Modifier.Companion
-                                    .MatchParentSize()
-                                    .Semantics("Background overlay that fills the box") },
                             },
                             // Toggleable row — whole row is a single accessibility
                             // node that announces "Liked" / "Not liked".

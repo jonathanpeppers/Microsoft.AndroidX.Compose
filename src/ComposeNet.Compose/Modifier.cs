@@ -758,8 +758,9 @@ public sealed class Modifier
         System.ArgumentNullException.ThrowIfNull(onFocusChanged);
         var f1 = new ComposableLambda1(arg =>
         {
-            if (arg is AndroidX.Compose.UI.Focus.IFocusState fs)
-                onFocusChanged(FocusState.From(fs));
+            if (arg is null) return;
+            var fs = Android.Runtime.Extensions.JavaCast<AndroidX.Compose.UI.Focus.IFocusState>(arg);
+            onFocusChanged(FocusState.From(fs));
         });
         return Append(curr => ComposeBridges.ModifierOnFocusChanged(curr, f1));
     }
