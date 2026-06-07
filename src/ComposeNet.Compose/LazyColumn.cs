@@ -45,6 +45,23 @@ public sealed class LazyColumn<T> : ComposableNode
     /// </summary>
     public LazyListState? State { get; set; }
 
+    /// <summary>
+    /// When <see langword="true"/>, items are stacked from the bottom up
+    /// — the first item rendered sits at the bottom of the viewport and
+    /// scroll offset 0 corresponds to the end of the list. Mirrors
+    /// Kotlin's <c>reverseLayout</c> parameter. Defaults to
+    /// <see langword="false"/> (normal top-down layout).
+    /// </summary>
+    /// <remarks>
+    /// Reverse layout is the canonical pattern for chat / message
+    /// timelines where newly appended items should appear at the bottom
+    /// and the scroll position should pin to the latest message. Pair
+    /// with <c>items.Reverse()</c> at the data layer if your underlying
+    /// collection is in chronological order — Compose lays items out
+    /// bottom-first when this flag is set.
+    /// </remarks>
+    public bool ReverseLayout { get; set; }
+
     public override void Render(IComposer composer)
     {
         var modifier = BuildModifier();
@@ -77,7 +94,7 @@ public sealed class LazyColumn<T> : ComposableNode
             modifier:            modifier,
             state:               State,
             contentPadding:      null,
-            reverseLayout:       false,
+            reverseLayout:       ReverseLayout,
             verticalArrangement: null,
             horizontalAlignment: null,
             flingBehavior:       null,

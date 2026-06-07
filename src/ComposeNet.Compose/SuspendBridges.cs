@@ -16,6 +16,10 @@ internal static partial class ComposeBridges
     static System.IntPtr s_scrollStateScrollTo_method;
     static System.IntPtr s_scrollStateAnimateScrollTo_class;
     static System.IntPtr s_scrollStateAnimateScrollTo_method;
+    static System.IntPtr s_drawerStateOpen_class;
+    static System.IntPtr s_drawerStateOpen_method;
+    static System.IntPtr s_drawerStateClose_class;
+    static System.IntPtr s_drawerStateClose_method;
     static System.IntPtr s_androidUiDispatcherMain_handle;
 
     // androidx.compose.foundation.ScrollState.scrollTo(int value, Continuation): Object
@@ -112,6 +116,64 @@ internal static partial class ComposeBridges
                 s_scrollStateAnimateScrollTo_class,
                 s_scrollStateAnimateScrollTo_method,
                 args);
+        }
+        finally
+        {
+            System.GC.KeepAlive(cont);
+        }
+    }
+
+    // androidx.compose.material3.DrawerState.open(Continuation): Object
+    //
+    // The single-arg suspend wrapper is exposed in the binding (returns
+    // Java.Lang.Object), but we call it via raw JNI so the returned
+    // handle stays as a plain IntPtr — SuspendBridge needs raw-handle
+    // semantics to avoid the peer-cache pitfall around
+    // COROUTINE_SUSPENDED. Same pattern as ScrollStateScrollTo.
+    internal static unsafe System.IntPtr DrawerStateOpen(
+        System.IntPtr state, SuspendContinuation cont)
+    {
+        if (s_drawerStateOpen_method == System.IntPtr.Zero)
+        {
+            s_drawerStateOpen_class = JNIEnv.FindClass("androidx/compose/material3/DrawerState");
+            s_drawerStateOpen_method = JNIEnv.GetMethodID(
+                s_drawerStateOpen_class,
+                "open",
+                "(Lkotlin/coroutines/Continuation;)Ljava/lang/Object;");
+        }
+
+        try
+        {
+            JValue* args = stackalloc JValue[1];
+            args[0] = new JValue(cont.Handle);
+            return JNIEnv.CallObjectMethod(state, s_drawerStateOpen_method, args);
+        }
+        finally
+        {
+            System.GC.KeepAlive(cont);
+        }
+    }
+
+    // androidx.compose.material3.DrawerState.close(Continuation): Object
+    //
+    // Mirror of DrawerStateOpen for the close-drawer suspend call.
+    internal static unsafe System.IntPtr DrawerStateClose(
+        System.IntPtr state, SuspendContinuation cont)
+    {
+        if (s_drawerStateClose_method == System.IntPtr.Zero)
+        {
+            s_drawerStateClose_class = JNIEnv.FindClass("androidx/compose/material3/DrawerState");
+            s_drawerStateClose_method = JNIEnv.GetMethodID(
+                s_drawerStateClose_class,
+                "close",
+                "(Lkotlin/coroutines/Continuation;)Ljava/lang/Object;");
+        }
+
+        try
+        {
+            JValue* args = stackalloc JValue[1];
+            args[0] = new JValue(cont.Handle);
+            return JNIEnv.CallObjectMethod(state, s_drawerStateClose_method, args);
         }
         finally
         {

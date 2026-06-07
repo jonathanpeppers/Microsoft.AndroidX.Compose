@@ -1,6 +1,6 @@
 # Jetchat (compose-net port)
 
-A simplified C# port of the official Compose sample
+A C# port of the official Compose sample
 [android/compose-samples ▸ Jetchat](https://github.com/android/compose-samples/tree/main/Jetchat).
 The upstream sample is labeled **Low complexity** and is the smallest
 of the six showcase apps, which makes it the natural first target for
@@ -18,19 +18,32 @@ dotnet build samples/Jetchat -t:Run
 
 - `MaterialTheme` wrapping the whole tree — picks up the device
   wallpaper-derived dynamic color scheme on Android 12+ (Material You).
+- **Live `MaterialTheme.colorScheme.*` reads** via the new `Composed`
+  composer-aware wrapper. Bubble, drawer-selection, divider, top-bar
+  subtitle, timestamp and member-count colors all flow from the active
+  scheme (`Primary`, `PrimaryContainer`, `SurfaceVariant`,
+  `OnSurfaceVariant`, `Surface`, `OnSurface`) instead of hardcoded hex.
+- **Hamburger nav** — `IconButton` in the top app bar fires
+  `DrawerStateHolder.OpenAsync()`; tapping a channel in the drawer
+  fires `CloseAsync()`. Both go through new `SuspendBridge` plumbing
+  around `DrawerState.open()` / `close()`.
 - **Navigation drawer** — `ModalNavigationDrawer` + `ModalDrawerSheet`
-  hosting upstream's `JetchatDrawerContent` shape: header logo +
-  "Jetchat", divider, "Chats" section with `composers` and
-  `droidcon-nyc` rows, divider, "Recent Profiles" section. Tapping a
-  channel updates the selected highlight and the top-bar title. The
-  drawer column is wrapped in `Modifier.VerticalScroll(rememberedScrollState)`
-  so the panel scrolls if it overflows on small heights — same pattern
-  upstream uses.
+  with header logo + brand, divider, "Chats" section, divider, "Recent
+  Profiles" section. The drawer column is wrapped in
+  `Modifier.VerticalScroll(rememberedScrollState)` so it scrolls when
+  it overflows on small heights.
+- **Multi-channel state** — `ConversationUiState` holds a
+  `Dictionary<string, ChannelState>` keyed by channel name. Tapping a
+  drawer row swaps the active channel; the title, member count, and
+  message list all recompose against the newly selected channel's
+  `MutableStateList<Message>`. Two channels are seeded
+  (`composers`, `droidcon-nyc`) with distinct message logs.
 - `Scaffold` + `CenterAlignedTopAppBar` with a two-line title showing
   the current channel name and member count, plus trailing **search**
-  and **info** action icons — same `Actions` slot upstream's
-  `ChannelNameBar` puts them in. Icons are real drawable resources
-  rendered through the Phase 7 `[PainterResource]` `Icon` facade.
+  and **info** action icons. Search / info open a
+  **FunctionalityNotAvailable `AlertDialog`** — the same affordance
+  upstream's `FunctionalityNotAvailablePopup` provides for unbound
+  features.
 - Drawable-resource avatars rendered via the Phase 7
   `Image(int drawableResourceId, …)` facade, the same shape as
   upstream's `painterResource(R.drawable.someone_else)` calls. Where
@@ -39,208 +52,156 @@ dotnet build samples/Jetchat -t:Run
   with [DiceBear](https://www.dicebear.com)'s `lorelei` style
   ([CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) —
   deterministic from the author's name).
+- **`LazyColumn(reverseLayout = true)`** — newest message at index 0
+  sits at the bottom of the viewport, matching upstream's scroll-from-
+  bottom behaviour. The new `ReverseLayout` property landed in this
+  port.
+- **Asymmetric chat bubbles** via the new
+  `Shape.RoundedCorners(Dp, Dp, Dp, Dp)` factory: outgoing messages
+  use `(20, 4, 20, 20)` to flatten the top-right corner; incoming
+  messages use `(4, 20, 20, 20)` to flatten the top-left corner
+  pointing at the avatar — same shape upstream's `ChatItemBubble`
+  draws.
 - A "Today" day-separator row (`HorizontalDivider` + `Text` +
-  `HorizontalDivider`) above the message list.
+  `HorizontalDivider`) above the message list, with divider color
+  pulled from the active scheme.
 - Message bubbles with a 40 dp circular avatar tile (16 dp horizontal
   padding around it, mirroring upstream's 74 dp avatar+padding
   reservation) and a rounded coloured bubble for the message body.
-- **Typography parity via the new `Text` styling surface** (#73 /
-  #58) — author names ride at 16 sp / `FontWeight.Medium` (Material
-  3's `titleMedium`), timestamps at 12 sp (`bodySmall`), the "Today"
-  separator at 11 sp / Medium / 1 sp letter-spacing (`labelSmall`,
-  rounded from M3's 0.5 sp because `Sp` only takes integers), the
-  top-bar channel name at 16 sp / Medium with a 12 sp member-count
-  subtitle, and drawer brand / section / chat labels at the
-  matching M3 sizes. Theme-aware reads (`MaterialTheme.typography.*`
-  + tonal `onSurfaceVariant` color) aren't bound yet — see
-  [#58](https://github.com/jonathanpeppers/compose-net/issues/58)
-  / [#61](https://github.com/jonathanpeppers/compose-net/issues/61).
+- **Typography parity via the `Text` styling surface** — author names
+  at 16 sp / `FontWeight.Medium` (M3 `titleMedium`), timestamps at
+  12 sp (`bodySmall`), the "Today" separator at 11 sp / Medium /
+  1 sp letter-spacing (`labelSmall`, rounded from 0.5 sp because
+  `Sp` only takes integers), top-bar channel name at 16 sp / Medium
+  with a 12 sp member-count subtitle, and drawer brand / section /
+  chat labels at the matching M3 sizes.
 - **Streak-aware avatars + per-author spacing** — when a sender
-  posts multiple messages in a row, only the first shows the avatar
-  tile; subsequent messages indent with a 72 dp `Spacer` so the
-  bubbles still align. Author boundaries get an extra 4 dp of top
-  padding (8 dp first-in-chain vs 4 dp within a streak) — mirrors
-  upstream's `spaceBetweenAuthors` modifier, with the
-  forward-vs-reverse-layout flag inverted (we use `!isStreak` where
-  upstream uses `isLastMessageByAuthor`).
+  posts multiple messages in a row, only the chronologically-last
+  one shows the avatar tile; subsequent messages indent with a 72 dp
+  `Spacer` so the bubbles still align. Author boundaries get an
+  extra 4 dp of top padding (8 dp first-in-chain vs 4 dp within a
+  streak). Because we use `reverseLayout = true` the streak walk
+  mirrors upstream's `isLastMessageByAuthor` directly.
 - **`isUserMe` right-alignment** for the local user via
-  `new Row(Arrangement.End)` (#100) — distinct blue bubble, no
-  avatar tile, pushed to the right edge with proper Compose
-  arrangement instead of the previous `Spacer().Weight(1f)` hack.
-- A pinned input row at the bottom: a `TextField` that grows to fill
-  available width via `Modifier.Weight(1f)`, plus an `IconButton` send
-  control. Newly sent messages are stamped `"now"` (matching
-  upstream's `R.string.now`) instead of a wall-clock time.
-- Reactive message list via `MutableStateList<Message>` — tapping send
-  appends a message and the UI recomposes.
-- Reactive channel selection via `MutableState<string>` — drawer taps
-  flow into the title and bold the selected chat row in the drawer.
+  `new Row(Arrangement.End)` — distinct primary-colored bubble, no
+  avatar tile, pushed to the right edge.
+- A pinned input row at the bottom in a `Surface(tonalElevation=2)`:
+  a `TextField` that grows to fill available width via
+  `Modifier.Weight(1f)`, plus a `Send` `TextButton` whose label
+  color flips to `onSurfaceVariant` when the input is empty (the
+  underlying facade doesn't expose an `Enabled` flag yet, so
+  `Send` is a no-op on empty text via early-return).
+- **5 input-selector icons** — emoji, @ mention, image, location,
+  video call — same row upstream's `UserInputSelector` provides.
+  Each is a toggleable `IconButton` whose background fills with
+  `secondaryContainer` and whose tint flips to `onSecondaryContainer`
+  when selected, matching upstream's selection visual. Selecting the
+  emoji button opens a placeholder panel below the input area;
+  selecting @ / image / location / video opens a
+  `FunctionalityNotAvailable` panel — the same fallback upstream
+  uses for the unbound selector pages.
+- **IME + navigation-bar safe insets** on the input area via
+  `Modifier.NavigationBarsPadding().ImePadding()` so the keyboard
+  pushes the input row up without obscuring it.
+- Reactive message list via `MutableStateList<Message>` — tapping
+  send appends to the active channel and the UI recomposes.
+- Reactive channel selection via `MutableState<string>` — drawer
+  taps flow into the title, the member count, the message list, and
+  the bolded selected chat row.
+- Newly sent messages stamp `"now"` (matching upstream's
+  `R.string.now` resource value).
 
-## What's omitted
+## What's still omitted
 
-Each row links to the upstream issue tracking the missing facade
-feature (or, for items where the facade primitive landed but Jetchat
-hasn't been ported to it yet, notes "feasible — not yet wired"):
+These need work upstream of the sample — either a new facade
+feature, a new package reference, or simply more sample plumbing:
 
-| Upstream feature                          | Tracking issue |
-|-------------------------------------------|----------------|
-| Hamburger nav icon that programmatically opens the drawer | the `DrawerStateHolder` wrapper exists and `SuspendBridge` plumbing (#97) is in place, but the suspend `Open()`/`Close()` haven't been surfaced yet — edge-swipe still works |
-| Multi-channel message lists (the drawer changes the title but not the messages — we only seed one conversation) | requires extending the sample's seed data, not blocked by facade |
-| `LazyColumn(reverseLayout = true)` so newest messages sit at the bottom | not yet exposed on the `LazyColumn` facade |
-| Image / sticker / file message attachments inside bubbles | requires composable image-loader plumbing |
-| User profile screen                       | wire up via `NavHost` / `NavController` (now bound via [#60](https://github.com/jonathanpeppers/compose-net/issues/60)) — not yet wired |
-| `MaterialTheme.colorScheme.*` reads for the "me" bubble + drawer selection + tonal text colors (`onSurfaceVariant`) | **feasible — not yet wired**. `MaterialTheme.CurrentColorScheme(composer)` landed in [#61](https://github.com/jonathanpeppers/compose-net/issues/61) (PR #133); Jetchat still uses hardcoded `Color.FromRgb(...)` values |
-| `MaterialTheme.typography.*` reads | **feasible — not yet wired**. `MaterialTheme.CurrentTypography(composer)` landed alongside #61; Jetchat still hard-codes M3 sp/weight values |
-| Asymmetric `RoundedCornerShape(topStart, …)` on bubbles | `Modifier.Clip(Dp)` only takes a single radius; full asymmetric `Shape` API still needs [#64](https://github.com/jonathanpeppers/compose-net/issues/64) drawing primitives |
-| Search / info popups behind the action icons (`FunctionalityNotAvailablePopup`) | requires popup APIs not yet bound; the icons are wired but the onClick is a no-op |
+| Upstream feature                          | Why it's not here |
+|-------------------------------------------|--------------------|
+| `JumpToBottom` FAB (slides in when scrolled away from bottom) | needs a `LazyListState` facade wrapper plus a suspend bridge over `animateScrollToItem`. `LazyListStateKt.RememberLazyListState` is bindable — confirmed during this port; the wrapper just hasn't been built yet. |
+| `BackHandler` to dismiss the expanded input panel via system back | `androidx.activity.compose.BackHandlerKt` lives in `Xamarin.AndroidX.Activity.Compose` which isn't currently referenced. Adding the NuGet + a `[ComposeBridge]` would unblock it. |
+| `ClickableText` URL / `@mention` link parsing inside message bodies | needs `AnnotatedString` + `ClickableText` bindings (multi-span text styling). |
+| Image / sticker / file message attachments inside bubbles | requires a composable image-loader pipeline (e.g. Coil). |
+| User profile screen (`ProfileScreen` reached via `NavHost`) | `NavController` / `NavHost` bindings landed in #60 but the screen + nav graph aren't wired up here. Explicitly out of scope for this port. |
+| App-widget discoverability (`@JetchatAppWidget`) | explicitly out of scope. |
+| Drag-and-drop image target on the conversation area | explicitly out of scope. |
+| Sticky day-headers spanning multiple dates (e.g. "20 Aug" alongside "Today") | needs the `LazyListScope.item { … }` DSL exposed on the `LazyColumn` facade so a per-day header can be emitted between message groups. Only "Today" is rendered. |
+| `Sp(float)` for exact M3 letter-spacing (0.5 / 0.1 sp values) | `Sp` is integer-only; `labelSmall` rounds 0.5 → 1, `titleSmall` rounds 0.1 → 0 (dropped). |
+| `FocusRequester` programmatic focus into the emoji panel | the panel opens correctly but doesn't grab focus on expand. |
 
 ## Facade features added for this port
 
-Phase 1 of this branch landed the facade gaps Jetchat needed, and a
-later round (Jun 5) closed three more — all now in use here:
+In addition to the earlier round that landed during the first
+iteration (sizing modifiers, `Background` / `Border` / `Clickable` /
+`Clip` / `Weight`, `MutableStateList<T>`, drawable-resource
+`Image` / `Icon`, `Modifier.VerticalScroll`, `ModalNavigationDrawer`),
+this completion round added:
 
-- **Sizing modifiers**: `Modifier.Size(int)`, `Size(int, int)`,
-  `Width(int)`, `Height(int)`.
-- **Background / Border / Clickable**: surfaced existing bridges as
-  public `Modifier` methods (`Background(Color)` / `Border(Dp, Color, Dp = 0)`
-  taking a `ComposeNet.Color` value built via `Color.FromRgb(...)`, and
-  `Clickable(Action)`).
-- **Shape clipping**: `Modifier.Clip(int cornerDp)` — two-step JNI
-  helper that constructs a `RoundedCornerShape` and applies
-  `ClipKt.clip` in one fluent op.
-- **Weight modifier**: `Modifier.Weight(float, bool fill = true)` —
-  dispatches to `RowScope` / `ColumnScope` `weight$default` based on
-  the enclosing `RenderContext.CurrentScopeKind`. The input row, the
-  message list's vertical fill, and the day-separator dividers all use
-  it.
-- **`MutableStateList<T>`**: a managed `IList<T>` that participates in
-  Compose's snapshot system without needing a `SnapshotStateList`
-  binding. Backs the message log.
-- **Drawable-resource `Image` / `Icon`** (PR #86, Phase 7
-  `[PainterResource]` facade): `new Image(int)` and
-  `new Icon(int, string?)` over `painterResource(id)`. Drives every
-  drawable in the drawer + the search/info top-bar actions + the
-  message-row avatars.
-- **`Modifier.VerticalScroll(ScrollState)`** (PR #94): the drawer
-  panel uses it so an overflowing list of channels / profiles scrolls
-  the same way upstream's `verticalScroll(rememberScrollState())` does.
-- **`ModalNavigationDrawer` + `ModalDrawerSheet`** (already bound
-  pre-port; first wired up by this sample): swipe-from-left opens the
-  drawer; the panel falls back to
-  `MaterialTheme.colorScheme.secondaryContainer` for its container
-  color via the Phase 6 `DefaultColorFromTheme` facade attribute.
+- **`Composed`** — a `ComposableNode` wrapper around
+  `Func<IComposer, ComposableNode>` so sample code can read
+  `MaterialTheme.CurrentColorScheme(c)` /
+  `MaterialTheme.CurrentTypography(c)` from inside a tree builder
+  without needing a `partial class : ComposableNode` subclass.
+- **`LazyColumn<T>.ReverseLayout`** — surfaces the
+  `reverseLayout` parameter that's been on the underlying
+  `LazyColumn` Kotlin composable from day one.
+- **`DrawerStateHolder.OpenAsync()` / `CloseAsync()`** — `Task`-
+  returning helpers backed by new raw-JNI suspend bridges over
+  `DrawerState.open()` / `close()`, wired through the existing
+  `SuspendBridge` continuation infrastructure.
+- **`Shape.RoundedCorners(Dp, Dp, Dp, Dp)`** — asymmetric corner
+  factory that calls
+  `RoundedCornerShapeKt.RoundedCornerShape(float, float, float, float)`
+  directly. (The 4-arg `(Dp, Dp, Dp, Dp)` overload is bindable;
+  only the single-radius `(Dp)` overload is mangled.)
 
 ## Implementation notes
 
-These notes track the technical reasoning behind specific deviations
-from upstream's `Conversation.kt`, and the facade gaps that would let
-us close them. Filed here instead of inline in `Conversation.cs` so
-the C# source stays close in shape to the Kotlin original.
+### Why `Composed` instead of a `ComposableNode` subclass
 
-### Hard-coded colors instead of `MaterialTheme.colorScheme.*` reads — [#61]
+As of #132, `ComposableNode.Render(IComposer)` is `public abstract`
+and `ComposableContainer.Children` / `RenderChildren` are
+`protected`, so subclassing from outside the facade assembly is
+fully supported. `Composed(Func<IComposer, ComposableNode>)` is
+the more concise alternative when all you want is to read
+`MaterialTheme.CurrentColorScheme(c)` /
+`MaterialTheme.CurrentTypography(c)` from inside an existing builder
+without writing a whole new class — the body lambda runs every
+composition pass with the live `IComposer`, computes whatever
+scheme / typography slots it needs, and returns the subtree built
+against them. The Jetchat sample uses it at the top of `Build` so
+the entire tree gets recomputed against the active scheme.
 
-`MaterialTheme.CurrentColorScheme(composer)` shipped in PR #133 and
-the color reads (`.Primary`, `.PrimaryContainer`, `.SurfaceVariant`,
-`.OnSurfaceVariant`, …) are now usable from any `Render` body.
-Jetchat hasn't been migrated yet — until then the sample hard-codes:
+### Why hamburger nav fires `_ = drawerState.OpenAsync()`
 
-| Slot                          | Hex          | Approximates upstream's |
-|-------------------------------|--------------|--------------------------|
-| `MeBubbleColor`               | `#D0E4FF`    | `primaryContainer`       |
-| `OtherBubbleColor`            | `#EDEDED`    | `surfaceVariant`         |
-| `DrawerSelectedColor`         | `#D0E4FF`    | `primaryContainer`       |
+`DrawerStateHolder.OpenAsync()` returns `Task`, and `IconButton`'s
+`onClick` is `Action` (not `Func<Task>`). The fire-and-forget
+discard is intentional — the suspend bridge runs on
+`AndroidUiDispatcher.Main` and any exception inside the suspend
+faults the returned task synchronously, but the click handler has
+no way to surface that. `OpenAsync` throws
+`InvalidOperationException` only if `Jvm` is null, which is
+impossible by the time a click can fire (the field is populated on
+the first render of `ModalNavigationDrawer`, which is unavoidable
+before any user input).
 
-Timestamps and member-count subtitles also keep the default content
-color instead of `onSurfaceVariant`.
+### `reverseLayout = true` streak walk
 
-### Hard-coded sp / weight values instead of `MaterialTheme.typography.*` reads — [#58]
+With `reverseLayout = true`, item index 0 sits at the bottom of
+the viewport. The sample reverses the message list before passing
+it to `LazyColumn` so the newest message ends up at index 0. The
+streak walk runs back-to-front
+(`for (int i = src.Count - 1; i >= 0; i--)`) and emits messages in
+chronological order with `IsStreak = prev?.Author == m.Author`
+meaning "this message is followed in time by another from the same
+author" — so the avatar appears on the chronologically-last
+message of each chain, matching the Slack / iMessage convention
+upstream uses.
 
-`MaterialTheme.CurrentTypography(composer)` is available alongside the
-color reads above. Jetchat hasn't been migrated to it yet — the sample
-still sets `FontSize` / `FontWeight` directly to the M3 spec values
-for each role:
+### Send is a no-op on empty input (no `TextButton.Enabled`)
 
-| Upstream role     | Where used                           | sp | Weight       | Letter-spacing |
-|-------------------|--------------------------------------|----|--------------|----------------|
-| `titleMedium`     | author names, channel title          | 16 | Medium       | (default)      |
-| `bodySmall`       | timestamps, member-count subtitle    | 12 | Normal       | (default)      |
-| `labelSmall`      | "Today" day separator                | 11 | Medium       | **1** (rounded; spec is 0.5) |
-| `titleSmall`      | drawer section labels                | 14 | Medium       | **dropped** (spec is 0.1, would round to 0) |
-| `bodyLarge`       | drawer chat / profile rows           | 16 | Normal       | (default)      |
-| custom brand      | drawer "Jetchat" header              | 18 | SemiBold     | — (upstream is also hand-tuned)
-
-`Sp` currently only takes an `int` constructor (`new Sp(11)` / implicit
-`int → Sp`). Adding `Sp(float)` would let labelSmall hit 0.5 sp and
-titleSmall hit 0.1 sp.
-
-### Single-radius bubbles instead of `RoundedCornerShape(topStart, …)`
-
-Upstream's chat bubbles use `RoundedCornerShape(4.dp, 20.dp, 20.dp, 20.dp)`
-to flatten the corner that visually meets the avatar. `Modifier.Clip(Dp)`
-only takes one radius, so all four corners are 12 dp here. Closing the
-gap needs the asymmetric `RoundedCornerShape` factory exposed through a
-public `Shape` API.
-
-### `!isStreak` ↔ upstream's `isLastMessageByAuthor`
-
-Upstream's `LazyColumn` is `reverseLayout = true`, so "last message
-by this author" in chronological order is the *first* message rendered
-visually. Our `LazyColumn` is forward-layout (no `reverseLayout` slot
-exposed yet), and we pre-compute `isStreak = (m.Author == lastAuthor)`
-during enumeration. The semantic in both cases is identical: "this is
-the first message visually rendered for this author chain — apply the
-8 dp `spaceBetweenAuthors` top padding and show the avatar tile."
-
-### 72 dp streak `Spacer` (upstream uses 74 dp)
-
-Upstream reserves `42.dp + 16.dp + 16.dp = 74.dp` for the avatar slot
-(42 dp avatar + 16 dp horizontal padding on each side). This sample
-uses a 40 dp avatar (matching `androidx.compose.material3.Icon`'s
-default tap target), so the streak `Spacer` is `40 + 16 + 16 = 72.dp`.
-
-### `"now"` literal instead of formatted clock time
-
-Newly sent messages stamp `"now"` to match upstream's
-`R.string.now` resource value. Earlier revisions used a wall-clock
-`HH:mm` formatter — the literal is faithful to the original.
-
-### Search / info icon onClicks are no-ops
-
-Upstream wires the icons to a `FunctionalityNotAvailablePopup`. The
-icons are real affordances (correct drawables, real ripple via
-`IconButton`), but the `onClick` is `NoOp` until popup APIs are bound.
-
-### No hamburger nav icon — drawer opens via edge-swipe only
-
-Programmatic drawer open requires a C# wrapper around
-`DrawerState.open()` / `close()`. The `DrawerStateHolder` wrapper
-type is in place (PR #131, Phase 10 `[ConfirmStateChange]` migration
-of the drawer family) and `SuspendBridge` plumbing (#97) already
-powers other `*Async` calls — what's still missing is the suspend
-bridge exposing `DrawerState.open` / `close` to C#. A no-op
-hamburger button would be a misleading affordance, so it's omitted
-entirely until the wrapper lands.
-
-### Static builder instead of `ComposableNode` subclass
-
-`Conversation.Build` is a `static` method that allocates a fresh
-`ComposableNode` tree per composition pass. As of #132,
-`ComposableNode.Render(IComposer)` is `public abstract` and
-`ComposableContainer.Children` / `RenderChildren` are `protected`, so
-a sample-side subclass with its own `Render` override is now possible
-— converting `Conversation` to a subclass would let it participate in
-the slot table directly and avoid the per-composition tree allocation
-(Tier 1.5 cost). Left as a follow-up; the static builder still
-renders correctly.
-
-### Single-channel seed data
-
-Tapping `composers` / `droidcon-nyc` updates the title and selection
-highlight but the message list itself is shared across channels.
-Multi-channel state would refactor `MutableStateList<Message>` into a
-`Dictionary<string, MutableStateList<Message>>` or similar — out of
-scope for this port; the upstream sample's seed data lives in a
-separate `JetchatViewModel` + Hilt-injected fake repository.
-
-[#58]: https://github.com/jonathanpeppers/compose-net/issues/58
-[#61]: https://github.com/jonathanpeppers/compose-net/issues/61
+`TextButton`'s facade ctor doesn't expose an `Enabled` flag yet.
+The sample mirrors disabled-state visuals by flipping the label
+color from `Primary` to `OnSurfaceVariant` when the input is
+whitespace, and the `Send` handler early-returns on
+`IsNullOrWhiteSpace`.
