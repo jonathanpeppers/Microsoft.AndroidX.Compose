@@ -15,7 +15,7 @@ namespace ComposeNet;
 /// <para>
 /// Hold a single instance per logical navigation graph (typically one
 /// per <see cref="NavHost"/>) inside a
-/// <see cref="ComposeActivity.Remember{T}"/> callback so the controller
+/// <see cref="ComposeActivity.Remember{T}(System.Func{T}, int, string)"/> callback so the controller
 /// survives recompositions:
 /// </para>
 /// <code>

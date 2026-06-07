@@ -11,7 +11,7 @@ namespace ComposeNet;
 /// the binding can consume.
 ///
 /// Used wherever a Kotlin API takes a <c>() -&gt; T</c> producer of
-/// a non-<c>Unit</c> value, e.g. <see cref="Compose.RememberSaveable{T}"/>
+/// a non-<c>Unit</c> value, e.g. <see cref="Compose.RememberSaveable{T}(System.Func{T}, int, string)"/>
 /// for the value the saveable registry should cache.
 /// </summary>
 [Register("composenet/compose/ObjectFunction0")]

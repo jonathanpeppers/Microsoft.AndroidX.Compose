@@ -1778,6 +1778,230 @@ internal static partial class ComposeBridges
                     "Landroidx/compose/ui/Modifier;")]
     internal static partial IntPtr ModifierTestTag(IntPtr modifier, string tag);
 
+    // androidx.compose.foundation.FocusableKt.focusable$default —
+    // non-@Composable Modifier extension. Kotlin params after the
+    // receiver: enabled (Boolean), interactionSource (MutableInteractionSource).
+    // The C# wrapper always supplies enabled; interactionSource is left
+    // to Kotlin's default (Compose allocates one per-call).
+    [ComposeBridge(
+        Class     = "androidx/compose/foundation/FocusableKt",
+        JvmName   = "focusable$default",
+        Signature = "(Landroidx/compose/ui/Modifier;Z" +
+                    "Landroidx/compose/foundation/interaction/MutableInteractionSource;" +
+                    "ILjava/lang/Object;)Landroidx/compose/ui/Modifier;",
+        Defaults  = typeof(ModifierFocusableDefault))]
+    internal static partial IntPtr ModifierFocusable(IntPtr modifier, bool enabled);
+
+    // androidx.compose.foundation.FocusableKt.focusGroup(Modifier) —
+    // groups focusable descendants so two-dimensional focus search
+    // treats them as a single unit. No defaults.
+    [ComposeBridge(
+        Class     = "androidx/compose/foundation/FocusableKt",
+        JvmName   = "focusGroup",
+        Signature = "(Landroidx/compose/ui/Modifier;)Landroidx/compose/ui/Modifier;")]
+    internal static partial IntPtr ModifierFocusGroup(IntPtr modifier);
+
+    // androidx.compose.ui.focus.FocusChangedModifierKt.onFocusChanged —
+    // (Modifier, Function1<FocusState, Unit>). No defaults — the
+    // listener is always supplied by the caller.
+    [ComposeBridge(
+        Class     = "androidx/compose/ui/focus/FocusChangedModifierKt",
+        JvmName   = "onFocusChanged",
+        Signature = "(Landroidx/compose/ui/Modifier;Lkotlin/jvm/functions/Function1;)" +
+                    "Landroidx/compose/ui/Modifier;")]
+    internal static partial IntPtr ModifierOnFocusChanged(IntPtr modifier, IFunction1 onFocusChanged);
+
+    // androidx.compose.ui.focus.FocusRequesterModifierKt.focusRequester —
+    // (Modifier, FocusRequester). No defaults.
+    [ComposeBridge(
+        Class     = "androidx/compose/ui/focus/FocusRequesterModifierKt",
+        JvmName   = "focusRequester",
+        Signature = "(Landroidx/compose/ui/Modifier;Landroidx/compose/ui/focus/FocusRequester;)" +
+                    "Landroidx/compose/ui/Modifier;")]
+    internal static partial IntPtr ModifierFocusRequester(IntPtr modifier, IntPtr focusRequester);
+
+    // androidx.compose.foundation.ClickableKt.combinedClickable-cJG_KMw$default —
+    // the no-MutableInteractionSource overload. 7 Kotlin params after
+    // the receiver: enabled, onClickLabel, role, onLongClickLabel,
+    // onLongClick, onDoubleClick, onClick. C# wrapper always supplies
+    // onClick (bit 6 cleared); other bits are toggled per-call based
+    // on which arguments the caller passed.
+    [ComposeBridge(
+        Class     = "androidx/compose/foundation/ClickableKt",
+        JvmName   = "combinedClickable-cJG_KMw$default",
+        Signature = "(Landroidx/compose/ui/Modifier;ZLjava/lang/String;" +
+                    "Landroidx/compose/ui/semantics/Role;Ljava/lang/String;" +
+                    "Lkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function0;" +
+                    "Lkotlin/jvm/functions/Function0;ILjava/lang/Object;)" +
+                    "Landroidx/compose/ui/Modifier;",
+        Defaults  = typeof(ModifierCombinedClickableDefault))]
+    internal static partial IntPtr ModifierCombinedClickable(
+        IntPtr modifier,
+        IFunction0? onLongClick,
+        IFunction0? onDoubleClick,
+        IFunction0  onClick);
+
+    // androidx.compose.foundation.selection.SelectableKt.selectable-XHw0xAI$default —
+    // 4 Kotlin params after the receiver: selected, enabled, role, onClick.
+    // C# wrapper always supplies selected + onClick.
+    [ComposeBridge(
+        Class     = "androidx/compose/foundation/selection/SelectableKt",
+        JvmName   = "selectable-XHw0xAI$default",
+        Signature = "(Landroidx/compose/ui/Modifier;ZZ" +
+                    "Landroidx/compose/ui/semantics/Role;" +
+                    "Lkotlin/jvm/functions/Function0;ILjava/lang/Object;)" +
+                    "Landroidx/compose/ui/Modifier;",
+        Defaults  = typeof(ModifierSelectableDefault))]
+    internal static partial IntPtr ModifierSelectable(
+        IntPtr modifier, bool selected, IFunction0 onClick);
+
+    // androidx.compose.foundation.selection.ToggleableKt.toggleable-XHw0xAI$default —
+    // 4 Kotlin params after the receiver: value (Bool), enabled, role,
+    // onValueChange (Function1<Boolean, Unit>). C# wrapper always
+    // supplies value + onValueChange.
+    [ComposeBridge(
+        Class     = "androidx/compose/foundation/selection/ToggleableKt",
+        JvmName   = "toggleable-XHw0xAI$default",
+        Signature = "(Landroidx/compose/ui/Modifier;ZZ" +
+                    "Landroidx/compose/ui/semantics/Role;" +
+                    "Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)" +
+                    "Landroidx/compose/ui/Modifier;",
+        Defaults  = typeof(ModifierToggleableDefault))]
+    internal static partial IntPtr ModifierToggleable(
+        IntPtr modifier, bool value, IFunction1 onValueChange);
+
+    // androidx.compose.ui.semantics.SemanticsModifierKt.semantics$default —
+    // 2 Kotlin params after the receiver: mergeDescendants (Bool),
+    // properties (Function1<SemanticsPropertyReceiver, Unit>). The C#
+    // wrapper always supplies the properties lambda.
+    [ComposeBridge(
+        Class     = "androidx/compose/ui/semantics/SemanticsModifierKt",
+        JvmName   = "semantics$default",
+        Signature = "(Landroidx/compose/ui/Modifier;Z" +
+                    "Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)" +
+                    "Landroidx/compose/ui/Modifier;",
+        Defaults  = typeof(ModifierSemanticsDefault))]
+    internal static partial IntPtr ModifierSemantics(
+        IntPtr modifier, bool mergeDescendants, IFunction1 properties);
+
+    // androidx.compose.ui.semantics.SemanticsModifierKt.clearAndSetSemantics —
+    // (Modifier, Function1<SemanticsPropertyReceiver, Unit>). No defaults.
+    [ComposeBridge(
+        Class     = "androidx/compose/ui/semantics/SemanticsModifierKt",
+        JvmName   = "clearAndSetSemantics",
+        Signature = "(Landroidx/compose/ui/Modifier;" +
+                    "Lkotlin/jvm/functions/Function1;)" +
+                    "Landroidx/compose/ui/Modifier;")]
+    internal static partial IntPtr ModifierClearAndSetSemantics(IntPtr modifier, IFunction1 properties);
+
+    // BoxScope / RowScope / ColumnScope `align` and `matchParentSize`
+    // are abstract interface methods on the scope class (no static
+    // $default helper exists — the methods themselves don't have
+    // defaults). The [ComposeBridge] generator's static/ctor/instance-
+    // field shapes don't fit, so we hand-write the JNI lookup +
+    // CallObjectMethod here. The scope handle comes from
+    // RenderContext.CurrentScope, set by the enclosing Box/Row/Column
+    // facade for the duration of its content lambda.
+    static IntPtr s_boxScopeClass;
+    static IntPtr s_boxScopeAlignMethodId;
+    static IntPtr s_boxScopeMatchParentSizeMethodId;
+
+    internal static unsafe IntPtr BoxScopeAlign(IntPtr boxScope, IntPtr modifier, IntPtr alignment)
+    {
+        if (s_boxScopeAlignMethodId == IntPtr.Zero)
+        {
+            s_boxScopeClass = JNIEnv.FindClass("androidx/compose/foundation/layout/BoxScope");
+            s_boxScopeAlignMethodId = JNIEnv.GetMethodID(
+                s_boxScopeClass, "align",
+                "(Landroidx/compose/ui/Modifier;Landroidx/compose/ui/Alignment;)Landroidx/compose/ui/Modifier;");
+        }
+        var args = stackalloc JValue[2];
+        args[0] = new JValue(modifier);
+        args[1] = new JValue(alignment);
+        return JNIEnv.CallObjectMethod(boxScope, s_boxScopeAlignMethodId, args);
+    }
+
+    internal static unsafe IntPtr BoxScopeMatchParentSize(IntPtr boxScope, IntPtr modifier)
+    {
+        if (s_boxScopeMatchParentSizeMethodId == IntPtr.Zero)
+        {
+            if (s_boxScopeClass == IntPtr.Zero)
+                s_boxScopeClass = JNIEnv.FindClass("androidx/compose/foundation/layout/BoxScope");
+            s_boxScopeMatchParentSizeMethodId = JNIEnv.GetMethodID(
+                s_boxScopeClass, "matchParentSize",
+                "(Landroidx/compose/ui/Modifier;)Landroidx/compose/ui/Modifier;");
+        }
+        var args = stackalloc JValue[1];
+        args[0] = new JValue(modifier);
+        return JNIEnv.CallObjectMethod(boxScope, s_boxScopeMatchParentSizeMethodId, args);
+    }
+
+    static IntPtr s_rowScopeClass;
+    static IntPtr s_rowScopeAlignMethodId;
+
+    internal static unsafe IntPtr RowScopeAlignVertical(IntPtr rowScope, IntPtr modifier, IntPtr verticalAlignment)
+    {
+        if (s_rowScopeAlignMethodId == IntPtr.Zero)
+        {
+            s_rowScopeClass = JNIEnv.FindClass("androidx/compose/foundation/layout/RowScope");
+            s_rowScopeAlignMethodId = JNIEnv.GetMethodID(
+                s_rowScopeClass, "align",
+                "(Landroidx/compose/ui/Modifier;Landroidx/compose/ui/Alignment$Vertical;)Landroidx/compose/ui/Modifier;");
+        }
+        var args = stackalloc JValue[2];
+        args[0] = new JValue(modifier);
+        args[1] = new JValue(verticalAlignment);
+        return JNIEnv.CallObjectMethod(rowScope, s_rowScopeAlignMethodId, args);
+    }
+
+    static IntPtr s_columnScopeClass;
+    static IntPtr s_columnScopeAlignMethodId;
+
+    internal static unsafe IntPtr ColumnScopeAlignHorizontal(IntPtr columnScope, IntPtr modifier, IntPtr horizontalAlignment)
+    {
+        if (s_columnScopeAlignMethodId == IntPtr.Zero)
+        {
+            s_columnScopeClass = JNIEnv.FindClass("androidx/compose/foundation/layout/ColumnScope");
+            s_columnScopeAlignMethodId = JNIEnv.GetMethodID(
+                s_columnScopeClass, "align",
+                "(Landroidx/compose/ui/Modifier;Landroidx/compose/ui/Alignment$Horizontal;)Landroidx/compose/ui/Modifier;");
+        }
+        var args = stackalloc JValue[2];
+        args[0] = new JValue(modifier);
+        args[1] = new JValue(horizontalAlignment);
+        return JNIEnv.CallObjectMethod(columnScope, s_columnScopeAlignMethodId, args);
+    }
+
+    // androidx.compose.ui.focus.FocusRequester.requestFocus()V —
+    // the no-arg overload the binding doesn't surface (it only exposed
+    // the parameterised `requestFocus-3ESFkO8(int):Boolean`). Wrapped
+    // hand-written because [ComposeBridge] doesn't support instance
+    // method calls.
+    static IntPtr s_focusRequesterClass;
+    static IntPtr s_focusRequesterRequestFocusMethodId;
+
+    internal static void FocusRequesterRequestFocus(IntPtr focusRequester)
+    {
+        if (s_focusRequesterRequestFocusMethodId == IntPtr.Zero)
+        {
+            s_focusRequesterClass = JNIEnv.FindClass("androidx/compose/ui/focus/FocusRequester");
+            s_focusRequesterRequestFocusMethodId = JNIEnv.GetMethodID(
+                s_focusRequesterClass, "requestFocus", "()V");
+        }
+        JNIEnv.CallVoidMethod(focusRequester, s_focusRequesterRequestFocusMethodId);
+    }
+
+    // androidx.compose.ui.semantics.SemanticsPropertiesKt.setContentDescription(
+    //   SemanticsPropertyReceiver, String) — called from inside the
+    // Function1 body built by Modifier.Semantics(string)/.ClearAndSetSemantics(string).
+    // Static helper, no $default — wrap with the bridge generator.
+    [ComposeBridge(
+        Class     = "androidx/compose/ui/semantics/SemanticsPropertiesKt",
+        JvmName   = "setContentDescription",
+        Signature = "(Landroidx/compose/ui/semantics/SemanticsPropertyReceiver;" +
+                    "Ljava/lang/String;)V")]
+    internal static partial void SemanticsSetContentDescription(IntPtr receiver, string description);
+
     // Shape factories — additional overloads of RoundedCornerShape /
     // CutCornerShape beyond the existing Dp variant. The Int (percent)
     // overloads aren't mangled because Int isn't an inline class. The
@@ -1817,6 +2041,9 @@ internal static partial class ComposeBridges
         JvmName   = "TopAppBar-GHTll3U",
         Signature = TopAppBarSig,
         Defaults  = typeof(TopAppBarDefault))]
+    [ComposeFacade(
+        BranchOn        = "Subtitle",
+        AlternateBridge = nameof(TopAppBarWithSubtitle))]
     public static partial void TopAppBar(
         IFunction2  title,
         IModifier?  modifier,
@@ -1854,7 +2081,9 @@ internal static partial class ComposeBridges
         JvmName   = "MediumTopAppBar-oKE7A98",
         Signature = TwoRowsTopAppBarSig,
         Defaults  = typeof(TwoRowsTopAppBarDefault))]
-    [ComposeFacade]
+    [ComposeFacade(
+        BranchOn        = "Subtitle",
+        AlternateBridge = nameof(MediumFlexibleTopAppBar))]
     public static partial void MediumTopAppBar(
         IFunction2  title,
         IModifier?  modifier,
@@ -1868,7 +2097,9 @@ internal static partial class ComposeBridges
         JvmName   = "LargeTopAppBar-oKE7A98",
         Signature = TwoRowsTopAppBarSig,
         Defaults  = typeof(TwoRowsTopAppBarDefault))]
-    [ComposeFacade]
+    [ComposeFacade(
+        BranchOn        = "Subtitle",
+        AlternateBridge = nameof(LargeFlexibleTopAppBar))]
     public static partial void LargeTopAppBar(
         IFunction2  title,
         IModifier?  modifier,
@@ -2560,7 +2791,7 @@ internal static partial class ComposeBridges
     // call to the binding — no overload resolution magic, every arg
     // hand-picked.
 
-    [ComposeFacade(Defaults = typeof(BoxDefault))]
+    [ComposeFacade(Defaults = typeof(BoxDefault), Scope = "Box")]
     public static partial void Box(IModifier? modifier, IFunction3 content, int defaults, IComposer composer);
 
     public static partial void Box(IModifier? modifier, IFunction3 content, int defaults, IComposer composer)
