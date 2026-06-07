@@ -133,6 +133,164 @@ public sealed class MaterialTheme : ComposableContainer
     public static ColorScheme DarkColorScheme() => ComposeBridges.DefaultDarkColorScheme();
 
     /// <summary>
+    /// Build a custom Material 3 light <see cref="ColorScheme"/> with
+    /// the supplied per-slot color overrides. Any parameter left at
+    /// <see langword="null"/> falls back to the corresponding M3 tonal
+    /// palette token default.
+    /// </summary>
+    /// <remarks>
+    /// Mirror of Kotlin's
+    /// <c>lightColorScheme(primary = …, onPrimary = …, …)</c> builder.
+    /// </remarks>
+    public static ColorScheme LightColorScheme(
+        Color? primary = null, Color? onPrimary = null,
+        Color? primaryContainer = null, Color? onPrimaryContainer = null,
+        Color? inversePrimary = null,
+        Color? secondary = null, Color? onSecondary = null,
+        Color? secondaryContainer = null, Color? onSecondaryContainer = null,
+        Color? tertiary = null, Color? onTertiary = null,
+        Color? tertiaryContainer = null, Color? onTertiaryContainer = null,
+        Color? background = null, Color? onBackground = null,
+        Color? surface = null, Color? onSurface = null,
+        Color? surfaceVariant = null, Color? onSurfaceVariant = null,
+        Color? surfaceTint = null,
+        Color? inverseSurface = null, Color? inverseOnSurface = null,
+        Color? error = null, Color? onError = null,
+        Color? errorContainer = null, Color? onErrorContainer = null,
+        Color? outline = null, Color? outlineVariant = null,
+        Color? scrim = null,
+        Color? surfaceBright = null,
+        Color? surfaceContainer = null, Color? surfaceContainerHigh = null,
+        Color? surfaceContainerHighest = null, Color? surfaceContainerLow = null,
+        Color? surfaceContainerLowest = null,
+        Color? surfaceDim = null,
+        Color? primaryFixed = null, Color? primaryFixedDim = null,
+        Color? onPrimaryFixed = null, Color? onPrimaryFixedVariant = null,
+        Color? secondaryFixed = null, Color? secondaryFixedDim = null,
+        Color? onSecondaryFixed = null, Color? onSecondaryFixedVariant = null,
+        Color? tertiaryFixed = null, Color? tertiaryFixedDim = null,
+        Color? onTertiaryFixed = null, Color? onTertiaryFixedVariant = null) =>
+        BuildColorScheme(light: true,
+            primary, onPrimary, primaryContainer, onPrimaryContainer, inversePrimary,
+            secondary, onSecondary, secondaryContainer, onSecondaryContainer,
+            tertiary, onTertiary, tertiaryContainer, onTertiaryContainer,
+            background, onBackground, surface, onSurface, surfaceVariant, onSurfaceVariant,
+            surfaceTint, inverseSurface, inverseOnSurface,
+            error, onError, errorContainer, onErrorContainer,
+            outline, outlineVariant, scrim,
+            surfaceBright, surfaceContainer, surfaceContainerHigh, surfaceContainerHighest,
+            surfaceContainerLow, surfaceContainerLowest, surfaceDim,
+            primaryFixed, primaryFixedDim, onPrimaryFixed, onPrimaryFixedVariant,
+            secondaryFixed, secondaryFixedDim, onSecondaryFixed, onSecondaryFixedVariant,
+            tertiaryFixed, tertiaryFixedDim, onTertiaryFixed, onTertiaryFixedVariant);
+
+    /// <summary>
+    /// Build a custom Material 3 dark <see cref="ColorScheme"/> with
+    /// the supplied per-slot color overrides. Any parameter left at
+    /// <see langword="null"/> falls back to the corresponding M3 tonal
+    /// palette token default.
+    /// </summary>
+    /// <remarks>
+    /// Mirror of Kotlin's
+    /// <c>darkColorScheme(primary = …, onPrimary = …, …)</c> builder.
+    /// </remarks>
+    public static ColorScheme DarkColorScheme(
+        Color? primary = null, Color? onPrimary = null,
+        Color? primaryContainer = null, Color? onPrimaryContainer = null,
+        Color? inversePrimary = null,
+        Color? secondary = null, Color? onSecondary = null,
+        Color? secondaryContainer = null, Color? onSecondaryContainer = null,
+        Color? tertiary = null, Color? onTertiary = null,
+        Color? tertiaryContainer = null, Color? onTertiaryContainer = null,
+        Color? background = null, Color? onBackground = null,
+        Color? surface = null, Color? onSurface = null,
+        Color? surfaceVariant = null, Color? onSurfaceVariant = null,
+        Color? surfaceTint = null,
+        Color? inverseSurface = null, Color? inverseOnSurface = null,
+        Color? error = null, Color? onError = null,
+        Color? errorContainer = null, Color? onErrorContainer = null,
+        Color? outline = null, Color? outlineVariant = null,
+        Color? scrim = null,
+        Color? surfaceBright = null,
+        Color? surfaceContainer = null, Color? surfaceContainerHigh = null,
+        Color? surfaceContainerHighest = null, Color? surfaceContainerLow = null,
+        Color? surfaceContainerLowest = null,
+        Color? surfaceDim = null,
+        Color? primaryFixed = null, Color? primaryFixedDim = null,
+        Color? onPrimaryFixed = null, Color? onPrimaryFixedVariant = null,
+        Color? secondaryFixed = null, Color? secondaryFixedDim = null,
+        Color? onSecondaryFixed = null, Color? onSecondaryFixedVariant = null,
+        Color? tertiaryFixed = null, Color? tertiaryFixedDim = null,
+        Color? onTertiaryFixed = null, Color? onTertiaryFixedVariant = null) =>
+        BuildColorScheme(light: false,
+            primary, onPrimary, primaryContainer, onPrimaryContainer, inversePrimary,
+            secondary, onSecondary, secondaryContainer, onSecondaryContainer,
+            tertiary, onTertiary, tertiaryContainer, onTertiaryContainer,
+            background, onBackground, surface, onSurface, surfaceVariant, onSurfaceVariant,
+            surfaceTint, inverseSurface, inverseOnSurface,
+            error, onError, errorContainer, onErrorContainer,
+            outline, outlineVariant, scrim,
+            surfaceBright, surfaceContainer, surfaceContainerHigh, surfaceContainerHighest,
+            surfaceContainerLow, surfaceContainerLowest, surfaceDim,
+            primaryFixed, primaryFixedDim, onPrimaryFixed, onPrimaryFixedVariant,
+            secondaryFixed, secondaryFixedDim, onSecondaryFixed, onSecondaryFixedVariant,
+            tertiaryFixed, tertiaryFixedDim, onTertiaryFixed, onTertiaryFixedVariant);
+
+    static ColorScheme BuildColorScheme(bool light,
+        Color? primary, Color? onPrimary, Color? primaryContainer, Color? onPrimaryContainer, Color? inversePrimary,
+        Color? secondary, Color? onSecondary, Color? secondaryContainer, Color? onSecondaryContainer,
+        Color? tertiary, Color? onTertiary, Color? tertiaryContainer, Color? onTertiaryContainer,
+        Color? background, Color? onBackground, Color? surface, Color? onSurface, Color? surfaceVariant, Color? onSurfaceVariant,
+        Color? surfaceTint, Color? inverseSurface, Color? inverseOnSurface,
+        Color? error, Color? onError, Color? errorContainer, Color? onErrorContainer,
+        Color? outline, Color? outlineVariant, Color? scrim,
+        Color? surfaceBright, Color? surfaceContainer, Color? surfaceContainerHigh, Color? surfaceContainerHighest,
+        Color? surfaceContainerLow, Color? surfaceContainerLowest, Color? surfaceDim,
+        Color? primaryFixed, Color? primaryFixedDim, Color? onPrimaryFixed, Color? onPrimaryFixedVariant,
+        Color? secondaryFixed, Color? secondaryFixedDim, Color? onSecondaryFixed, Color? onSecondaryFixedVariant,
+        Color? tertiaryFixed, Color? tertiaryFixedDim, Color? onTertiaryFixed, Color? onTertiaryFixedVariant)
+    {
+        // Slot order matches Kotlin's lightColorScheme/darkColorScheme
+        // parameter list (also matches the bound binding signatures).
+        Color?[] slots = new Color?[]
+        {
+            primary, onPrimary, primaryContainer, onPrimaryContainer, inversePrimary,
+            secondary, onSecondary, secondaryContainer, onSecondaryContainer,
+            tertiary, onTertiary, tertiaryContainer, onTertiaryContainer,
+            background, onBackground, surface, onSurface, surfaceVariant, onSurfaceVariant,
+            surfaceTint, inverseSurface, inverseOnSurface,
+            error, onError, errorContainer, onErrorContainer,
+            outline, outlineVariant, scrim,
+            surfaceBright, surfaceContainer, surfaceContainerHigh, surfaceContainerHighest,
+            surfaceContainerLow, surfaceContainerLowest, surfaceDim,
+            primaryFixed, primaryFixedDim, onPrimaryFixed, onPrimaryFixedVariant,
+            secondaryFixed, secondaryFixedDim, onSecondaryFixed, onSecondaryFixedVariant,
+            tertiaryFixed, tertiaryFixedDim, onTertiaryFixed, onTertiaryFixedVariant,
+        };
+
+        long[] colors = new long[slots.Length];
+        int mask0 = 0;
+        int mask1 = 0;
+        for (int i = 0; i < slots.Length; i++)
+        {
+            if (slots[i] is Color c)
+            {
+                colors[i] = c;
+            }
+            else
+            {
+                // Bit set => Kotlin uses the per-slot default.
+                if (i < 32) mask0 |= 1 << i;
+                else        mask1 |= 1 << (i - 32);
+            }
+        }
+
+        return light
+            ? ComposeBridges.CustomLightColorScheme(colors, mask0, mask1)
+            : ComposeBridges.CustomDarkColorScheme(colors, mask0, mask1);
+    }
+
+    /// <summary>
     /// Build a dynamic (Material You) light color scheme from the
     /// supplied context, or
     /// <see cref="Android.App.Application.Context"/> when <paramref name="context"/>
@@ -151,12 +309,117 @@ public sealed class MaterialTheme : ComposableContainer
         DynamicTonalPaletteKt.DynamicDarkColorScheme(context ?? Android.App.Application.Context);
 
     /// <summary>
+    /// Build a Material 3 <see cref="Shapes"/> with per-slot
+    /// overrides. Any parameter left at <see langword="null"/> falls
+    /// back to the corresponding M3 baseline shape default.
+    /// </summary>
+    /// <remarks>
+    /// Mirror of Kotlin's
+    /// <c>Shapes(extraSmall = …, small = …, medium = …, large = …, extraLarge = …)</c>
+    /// constructor. Use <see cref="Shape.RoundedCorners(Dp)"/> /
+    /// <see cref="Shape.RoundedPercent(int)"/> /
+    /// <see cref="Shape.CutCorners(Dp)"/> to build the per-slot
+    /// values.
+    /// </remarks>
+    public static Shapes BuildShapes(
+        Shape? extraSmall = null,
+        Shape? small = null,
+        Shape? medium = null,
+        Shape? large = null,
+        Shape? extraLarge = null)
+    {
+        int defaults = 0;
+        if (extraSmall is null) defaults |= 1 << 0;
+        if (small      is null) defaults |= 1 << 1;
+        if (medium     is null) defaults |= 1 << 2;
+        if (large      is null) defaults |= 1 << 3;
+        if (extraLarge is null) defaults |= 1 << 4;
+
+        return ComposeBridges.BuildShapes(
+            extraSmall is null ? System.IntPtr.Zero : ((Java.Lang.Object)extraSmall).Handle,
+            small      is null ? System.IntPtr.Zero : ((Java.Lang.Object)small).Handle,
+            medium     is null ? System.IntPtr.Zero : ((Java.Lang.Object)medium).Handle,
+            large      is null ? System.IntPtr.Zero : ((Java.Lang.Object)large).Handle,
+            extraLarge is null ? System.IntPtr.Zero : ((Java.Lang.Object)extraLarge).Handle,
+            defaults);
+    }
+
+    /// <summary>
     /// Compose's <c>isSystemInDarkTheme()</c>: <see langword="true"/>
     /// when the device is currently in dark mode. Must be called from
     /// inside a composable's <c>Render</c> body.
     /// </summary>
     public static bool IsSystemInDarkTheme(IComposer composer) =>
         DarkThemeKt.IsSystemInDarkTheme(composer, 0);
+
+    /// <summary>
+    /// Build a Material 3 <see cref="Typography"/> with per-slot text
+    /// style overrides. Any <see langword="null"/> slot falls back to
+    /// the M3 baseline token for that role.
+    /// </summary>
+    /// <remarks>
+    /// Mirror of Kotlin's
+    /// <c>Typography(displayLarge = …, …)</c> constructor with all 15
+    /// slots optional. Build each <see cref="TextStyle"/> with the
+    /// builder properties (<c>Color</c>, <c>FontSize</c>,
+    /// <c>FontWeight</c>, …); unset properties on the
+    /// <see cref="TextStyle"/> inherit from the M3 default.
+    /// </remarks>
+    public static Typography BuildTypography(
+        TextStyle? displayLarge = null,
+        TextStyle? displayMedium = null,
+        TextStyle? displaySmall = null,
+        TextStyle? headlineLarge = null,
+        TextStyle? headlineMedium = null,
+        TextStyle? headlineSmall = null,
+        TextStyle? titleLarge = null,
+        TextStyle? titleMedium = null,
+        TextStyle? titleSmall = null,
+        TextStyle? bodyLarge = null,
+        TextStyle? bodyMedium = null,
+        TextStyle? bodySmall = null,
+        TextStyle? labelLarge = null,
+        TextStyle? labelMedium = null,
+        TextStyle? labelSmall = null)
+    {
+        int defaults = 0;
+        if (displayLarge    is null) defaults |= 1 <<  0;
+        if (displayMedium   is null) defaults |= 1 <<  1;
+        if (displaySmall    is null) defaults |= 1 <<  2;
+        if (headlineLarge   is null) defaults |= 1 <<  3;
+        if (headlineMedium  is null) defaults |= 1 <<  4;
+        if (headlineSmall   is null) defaults |= 1 <<  5;
+        if (titleLarge      is null) defaults |= 1 <<  6;
+        if (titleMedium     is null) defaults |= 1 <<  7;
+        if (titleSmall      is null) defaults |= 1 <<  8;
+        if (bodyLarge       is null) defaults |= 1 <<  9;
+        if (bodyMedium      is null) defaults |= 1 << 10;
+        if (bodySmall       is null) defaults |= 1 << 11;
+        if (labelLarge      is null) defaults |= 1 << 12;
+        if (labelMedium     is null) defaults |= 1 << 13;
+        if (labelSmall      is null) defaults |= 1 << 14;
+
+        return ComposeBridges.BuildTypography(
+            BuildOrZero(displayLarge),
+            BuildOrZero(displayMedium),
+            BuildOrZero(displaySmall),
+            BuildOrZero(headlineLarge),
+            BuildOrZero(headlineMedium),
+            BuildOrZero(headlineSmall),
+            BuildOrZero(titleLarge),
+            BuildOrZero(titleMedium),
+            BuildOrZero(titleSmall),
+            BuildOrZero(bodyLarge),
+            BuildOrZero(bodyMedium),
+            BuildOrZero(bodySmall),
+            BuildOrZero(labelLarge),
+            BuildOrZero(labelMedium),
+            BuildOrZero(labelSmall),
+            defaults);
+
+        static System.IntPtr BuildOrZero(TextStyle? ts) =>
+            ts is null ? System.IntPtr.Zero : ((Java.Lang.Object)ts.Build()).Handle;
+    }
 
     /// <summary>
     /// Read the active <see cref="ColorScheme"/> from the current
