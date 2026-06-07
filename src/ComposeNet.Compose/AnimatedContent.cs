@@ -89,7 +89,5 @@ public sealed class AnimatedContent<T> : ComposableNode
             _composer:        composer,
             p8:               0,            // $changed
             _changed:         defaults);    // $default
-
-        System.GC.KeepAlive(boxed);
     }
 }

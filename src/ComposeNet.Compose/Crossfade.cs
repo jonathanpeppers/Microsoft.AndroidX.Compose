@@ -92,12 +92,5 @@ public sealed class Crossfade<T> : ComposableNode
             _composer:     composer,
             p6:            0,           // $changed
             _changed:      defaults);   // $default
-
-        // Boxed Java.Lang.Integer/Boolean/etc allocated by ToJava: keep
-        // alive until after the binding call returns. The bound method
-        // already KeepAlive's its `targetState` parameter, but boxed is
-        // a fresh allocation we own — extending its lifetime past the
-        // GC.KeepAlive call below is sufficient.
-        System.GC.KeepAlive(boxed);
     }
 }
