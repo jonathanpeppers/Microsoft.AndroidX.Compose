@@ -12,19 +12,6 @@ each thread explaining what changed and **why** (or why no change was
 needed). The reasoning is the point — a reply that just says "done" is a
 failure mode.
 
-## When to use this skill
-
-Trigger whenever the user wants to deal with reviewer feedback on the
-PR associated with the current session/branch. Examples:
-
-- "review the comments on this PR"
-- "address the review feedback"
-- "go through the PR comments and reply"
-- "respond to the reviewer"
-- "handle the open threads"
-
-If the current branch has no PR, say so and stop — don't invent one.
-
 ## Workflow
 
 ### 1. Locate the PR for this branch
