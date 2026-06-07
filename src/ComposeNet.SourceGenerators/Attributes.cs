@@ -278,6 +278,20 @@ internal static class Attributes
             /// constructible with no arguments (parameterless ctor or
             /// all-defaulted-params ctor) so the facade can auto-create
             /// a default wrapper when the caller passes <c>null</c>.</para>
+            /// <para><b>SharedState</b> (Phase 4c): when <c>true</c>,
+            /// the generated <c>Render</c> preamble checks whether
+            /// <c>_state.Jvm</c> is already populated (from an earlier
+            /// sibling render that received the same wrapper instance)
+            /// and skips the <c>RememberXxxState</c> call in that case,
+            /// reusing the cached JNI handle directly. This lets two or
+            /// more sibling facades share the same state-holder peer
+            /// (e.g. a <see cref="TimePicker"/> and a
+            /// <see cref="TimeInput"/> driven by the same
+            /// <see cref="TimePickerState"/>). Defaults to <c>false</c>
+            /// — every render calls Remember and Compose's slot-table
+            /// caches per-call-site. Opt in only when the facade is
+            /// designed to be paired with at least one sibling that
+            /// uses the same <see cref="StateType"/>.</para>
             /// </remarks>
             [global::System.AttributeUsage(global::System.AttributeTargets.Parameter,
                                            AllowMultiple = false)]
@@ -286,6 +300,7 @@ internal static class Attributes
                 public StateHolderAttribute() { }
                 public string Remember { get; set; } = "";
                 public global::System.Type StateType { get; set; } = null!;
+                public bool SharedState { get; set; }
             }
         }
         """;
