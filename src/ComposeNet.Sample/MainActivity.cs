@@ -104,6 +104,13 @@ public class MainActivity : ComposeActivity
             // filter without binding InputTransformation.
             var searchQuery   = Remember(() => new MutableState<string>(""));
 
+            // Pager tab: PagerState exposes CurrentPage to a reactive
+            // indicator rendered after the pager. The same items array
+            // is closed over by both the state's pageCount lambda and
+            // the pager facade so the two stay in sync.
+            var pagerItems = new[] { 0, 1, 2 };
+            var pagerState = Remember(() => new PagerState(pageCount: () => pagerItems.Length));
+
             // Lazy tab: pull-to-refresh demo state. `refreshing` drives the
             // PullToRefreshBox indicator; `refreshTick` bumps once per
             // completed refresh so the rows visibly change. The reload
@@ -126,7 +133,7 @@ public class MainActivity : ComposeActivity
             // controller into NavController.Jvm on first NavHost render.
             var navController = Remember(() => new NavController());
 
-            string[] tabNames = { "Basics", "Buttons", "Cards", "Drawer", "Selection", "Pickers", "Misc", "App bars", "Lazy", "Carousels", "Nav" };
+            string[] tabNames = { "Basics", "Buttons", "Cards", "Drawer", "Selection", "Pickers", "Misc", "App bars", "Lazy", "Carousels", "Pager", "Nav" };
 
             // Per-tab content. Only the current tab's column is added to
             // the screen — keeps the sample short enough to fit on one
@@ -960,6 +967,85 @@ public class MainActivity : ComposeActivity
                 },
                 10 => new Column
                 {
+                    // HorizontalPager swiping between 3 demo screens —
+                    // the headline showcase from issue #51. Each page
+                    // gets its own pastel slot so swipes feel obvious.
+                    new Text("HorizontalPager (swipe between 3 screens)"),
+                    new HorizontalPager<int>(
+                        items:       pagerItems,
+                        itemContent: i => new Box
+                        {
+                            Modifier.Companion
+                                .FillMaxSize()
+                                .Clip(20)
+                                .Background(CarouselPalette[i % CarouselPalette.Length]),
+                            new Text($"Screen {i + 1}")
+                            {
+                                Modifier = Modifier.Companion.Padding(16),
+                            },
+                        })
+                    {
+                        State    = pagerState,
+                        Modifier = Modifier.Companion.FillMaxWidth().Height(200),
+                    },
+                    new Text($"Page {pagerState.CurrentPage + 1} of {pagerState.PageCount}"),
+                    new HorizontalDivider { Modifier = Modifier.Companion.Padding(0, 8) },
+
+                    // FlowRow — chip-style group that wraps when it
+                    // runs out of horizontal space. Each chip is a
+                    // padded Card so the wrap behaviour is visible
+                    // without a Material 3 chip facade.
+                    new Text("FlowRow (wraps when out of width)"),
+                    new FlowRow
+                    {
+                        Modifier.Companion.FillMaxWidth().Padding(4),
+                        new Card { Modifier.Companion.Padding(4), new Text("Music") },
+                        new Card { Modifier.Companion.Padding(4), new Text("Movies") },
+                        new Card { Modifier.Companion.Padding(4), new Text("Podcasts") },
+                        new Card { Modifier.Companion.Padding(4), new Text("News") },
+                        new Card { Modifier.Companion.Padding(4), new Text("Sports") },
+                        new Card { Modifier.Companion.Padding(4), new Text("Books") },
+                        new Card { Modifier.Companion.Padding(4), new Text("Games") },
+                        new Card { Modifier.Companion.Padding(4), new Text("Photography") },
+                    },
+                    new HorizontalDivider { Modifier = Modifier.Companion.Padding(0, 8) },
+
+                    // BoxWithConstraints — hands the available layout
+                    // dp back as a callback so the child layout can
+                    // branch on width (the idiomatic Compose alternative
+                    // to runtime device-class checks).
+                    new Text("BoxWithConstraints (reports its own width in dp)"),
+                    new BoxWithConstraints(c => new Text(
+                        $"Max width = {c.MaxWidth:0.#} dp, max height = {c.MaxHeight:0.#} dp"))
+                    {
+                        Modifier = Modifier.Companion.FillMaxWidth().Padding(8),
+                    },
+                    new HorizontalDivider { Modifier = Modifier.Companion.Padding(0, 8) },
+
+                    // LazyVerticalStaggeredGrid — each cell is a Card
+                    // with a deliberately varying height (cycled from a
+                    // small table) so the staggered effect is obvious.
+                    new Text("LazyVerticalStaggeredGrid (Adaptive 120dp)"),
+                    new LazyVerticalStaggeredGrid<int>(
+                        columns:     StaggeredGridCells.Adaptive(120f),
+                        items:       System.Linq.Enumerable.Range(0, 30).ToList(),
+                        itemContent: i => new Card
+                        {
+                            Modifier.Companion
+                                .Padding(4)
+                                .Height(60 + (i % 5) * 30)
+                                .Background(CarouselPalette[i % CarouselPalette.Length]),
+                            new Text($"#{i:D2}")
+                            {
+                                Modifier = Modifier.Companion.Padding(8),
+                            },
+                        })
+                    {
+                        Modifier = Modifier.Companion.FillMaxWidth().Height(300),
+                    },
+                },
+                11 => new Column
+                {
                     // Compose Navigation demo (issue #60). NavHost holds a
                     // graph of `Composable("route") { ... }` destinations and
                     // switches the visible one based on the bound NavController's
@@ -1249,12 +1335,9 @@ public class MainActivity : ComposeActivity
                 {
                     new Scaffold
                     {
-                        // The main TopAppBar uses the new Subtitle slot
-                        // (routes to the M3 two-line TopAppBar-cJHQLPU overload).
-                        TopBar = new TopAppBar
+                        TopBar = new CenterAlignedTopAppBar
                         {
-                            Title    = new Text(tabNames[tab.Value]),
-                            Subtitle = new Text($"count={count}  ·  sub={sub}"),
+                            Title = new Text(tabNames[tab.Value]),
                         },
                         SnackbarHost = showSnack.Value
                             ? new Snackbar
@@ -1325,6 +1408,11 @@ public class MainActivity : ComposeActivity
                                     Icon = new Text("🎠"),
                                 },
                                 new Tab(selected: tab.Value == 10, onClick: () => tab.Value = 10)
+                                {
+                                    Text = new Text("Pager"),
+                                    Icon = new Text("📑"),
+                                },
+                                new Tab(selected: tab.Value == 11, onClick: () => tab.Value = 11)
                                 {
                                     Text = new Text("Nav"),
                                     Icon = new Text("🧭"),

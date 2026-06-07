@@ -40,6 +40,23 @@ using ComposeNet;
 [assembly: ComposeDefaults("ColumnDefault", "modifier", "verticalArrangement", "horizontalAlignment", "!content")]
 [assembly: ComposeDefaults("RowDefault", "modifier", "horizontalArrangement", "verticalAlignment", "!content")]
 [assembly: ComposeDefaults("BoxDefault", "modifier", "contentAlignment", "propagateMinConstraints", "!content")]
+
+// androidx.compose.foundation.layout.BoxWithConstraintsKt — same shape
+// as Box, but the content lambda receives a BoxWithConstraintsScope.
+[assembly: ComposeDefaults("BoxWithConstraintsDefault", "modifier", "contentAlignment", "propagateMinConstraints", "!content")]
+
+// androidx.compose.foundation.layout.FlowLayoutKt — the simpler
+// FlowRow / FlowColumn overloads (no FlowRowOverflow / FlowColumnOverflow
+// slot) lower to 7 user params + content. The trailing `maxItemsInEachRow`
+// / `maxLines` (resp. `maxItemsInEachColumn` / `maxLines`) Ints can't be
+// auto-masked from a nullable C# slot, so the v1 facade leaves both bits
+// set and lets Kotlin substitute Int.MAX_VALUE.
+[assembly: ComposeDefaults("FlowRowDefault",
+    "modifier", "horizontalArrangement", "verticalArrangement",
+    "itemVerticalAlignment", "maxItemsInEachRow", "maxLines", "!content")]
+[assembly: ComposeDefaults("FlowColumnDefault",
+    "modifier", "verticalArrangement", "horizontalArrangement",
+    "itemHorizontalAlignment", "maxItemsInEachColumn", "maxLines", "!content")]
 [assembly: ComposeDefaults<DividerKt>("HorizontalDivider", "HorizontalDividerDefault")]
 [assembly: ComposeDefaults<DividerKt>("VerticalDivider", "VerticalDividerDefault")]
 [assembly: ComposeDefaults<IconKt>("Icon", "IconDefault")]
@@ -61,6 +78,38 @@ using ComposeNet;
 // IconDefault.ImageVector / IconDefault.ContentDescription).
 [assembly: ComposeDefaults<LazyGridDslKt>("LazyVerticalGrid", "LazyVerticalGridDefault")]
 [assembly: ComposeDefaults<LazyGridDslKt>("LazyHorizontalGrid", "LazyHorizontalGridDefault")]
+
+// androidx.compose.foundation.lazy.staggeredgrid.LazyStaggeredGridDslKt —
+// LazyVerticalStaggeredGrid / LazyHorizontalStaggeredGrid take a required
+// first `columns` / `rows` IStaggeredGridCells param (Bit 0 is always
+// cleared; the facade always provides it). The remaining params are all
+// optional; bit positions follow Kotlin source order.
+[assembly: ComposeDefaults("LazyVerticalStaggeredGridDefault",
+    "columns", "modifier", "state", "contentPadding", "reverseLayout",
+    "verticalItemSpacing", "horizontalArrangement", "flingBehavior",
+    "userScrollEnabled", "overscrollEffect", "!content")]
+[assembly: ComposeDefaults("LazyHorizontalStaggeredGridDefault",
+    "rows", "modifier", "state", "contentPadding", "reverseLayout",
+    "verticalArrangement", "horizontalItemSpacing", "flingBehavior",
+    "userScrollEnabled", "overscrollEffect", "!content")]
+
+// androidx.compose.foundation.pager.PagerKt — HorizontalPager /
+// VerticalPager take a required first PagerState (always provided by the
+// facade) and a required trailing pageContent IFunction4 (also always
+// provided). The 13 optional params in between are all candidates for
+// the $default mask.
+[assembly: ComposeDefaults("HorizontalPagerDefault",
+    "!state", "modifier", "contentPadding", "pageSize",
+    "beyondViewportPageCount", "pageSpacing", "verticalAlignment",
+    "flingBehavior", "userScrollEnabled", "reverseLayout", "key",
+    "pageNestedScrollConnection", "snapPosition", "overscrollEffect",
+    "!pageContent")]
+[assembly: ComposeDefaults("VerticalPagerDefault",
+    "!state", "modifier", "contentPadding", "pageSize",
+    "beyondViewportPageCount", "pageSpacing", "horizontalAlignment",
+    "flingBehavior", "userScrollEnabled", "reverseLayout", "key",
+    "pageNestedScrollConnection", "snapPosition", "overscrollEffect",
+    "!pageContent")]
 
 // androidx.compose.foundation.ImageKt.Image (Painter overload): all four
 // `Image` Kotlin overloads share the JVM name `Image` and only differ by
@@ -221,6 +270,11 @@ using ComposeNet;
 // 4 user params; bit 0 (state) always provided.
 [assembly: ComposeDefaults("TimePickerDefault",
     "!state", "modifier", "colors", "layoutType")]
+
+// androidx.compose.material3.TimePickerKt.TimeInput:
+// 3 user params; bit 0 (state) always provided.
+[assembly: ComposeDefaults("TimeInputDefault",
+    "!state", "modifier", "colors")]
 
 // androidx.compose.material3.TimePickerDialogKt.TimePickerDialog-FItCLgY:
 // 10 user params; bits 0 (onDismissRequest), 1 (confirmButton),
