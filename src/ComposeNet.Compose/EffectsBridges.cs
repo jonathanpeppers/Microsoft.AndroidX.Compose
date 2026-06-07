@@ -9,11 +9,6 @@ namespace ComposeNet;
 // `Xamarin.AndroidX.Compose.Runtime.Android` NuGet, so we don't need
 // `[ComposeBridge]` shims for them. What we *do* need is:
 //
-//  - `IntrinsicsKt.COROUTINE_SUSPENDED` — exposed by the binding, but
-//    we cache its handle as a global ref the first time so the
-//    hot path inside `LaunchedEffectBody.Invoke` doesn't allocate a
-//    fresh peer wrapper per call.
-//
 //  - `BoxKey(object?)` — non-generic equivalent of
 //    `MutableState<T>.ToJava`, so the public C# effect APIs can take
 //    `object?` keys and box primitives once per render.
@@ -22,14 +17,6 @@ namespace ComposeNet;
 // lives in <see cref="KotlinResult"/>, shared with `SuspendBridge`.
 internal static partial class ComposeBridges
 {
-    /// <summary>
-    /// Cached <c>kotlin.Unit.INSTANCE</c> returned wrapped in a managed
-    /// peer for use as a successful-completion result from
-    /// <see cref="Kotlin.Jvm.Functions.IFunction2.Invoke"/> on
-    /// <see cref="LaunchedEffectBody"/>.
-    /// </summary>
-    internal static Java.Lang.Object KotlinUnit => global::Kotlin.Unit.Instance!;
-
     /// <summary>
     /// Non-generic mirror of <see cref="MutableState{T}.ToJava"/> for
     /// boxing an opaque <see cref="object"/> key into the
