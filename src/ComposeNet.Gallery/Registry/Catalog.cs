@@ -102,6 +102,14 @@ public static class Catalog
         D.AppBars.FlexibleBottomAppBarDemo.Demo,
         D.AppBars.PrimaryScrollableTabRowDemo.Demo,
         D.AppBars.SecondaryScrollableTabRowDemo.Demo,
+
+        // ---- Navigation ----
+        D.Navigation.NavHostRouteArgs.Demo,
+        D.Navigation.ModalDrawerDemo.Demo,
+        D.Navigation.DismissibleDrawerDemo.Demo,
+        D.Navigation.PermanentDrawerDemo.Demo,
+        D.Navigation.WideNavigationRailDemo.Demo,
+        D.Navigation.ModalWideNavigationRailDemo.Demo,
     ];
 
     /// <summary>
