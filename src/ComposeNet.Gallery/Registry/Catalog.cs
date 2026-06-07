@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using D = ComposeNet.Gallery.Demos;
 
 namespace ComposeNet.Gallery.Registry;
 
@@ -40,9 +41,13 @@ public static class Catalog
     /// </summary>
     public static readonly IReadOnlyList<Demo> Demos =
     [
-        // Demos register themselves here as they're ported. Empty
-        // categories render an explanatory placeholder on the
-        // category screen.
+        // ---- Buttons ----
+        D.Buttons.FillStyles.Demo,
+        D.Buttons.IconButtons.Demo,
+        D.Buttons.IconToggleButtons.Demo,
+        D.Buttons.Chips.Demo,
+        D.Buttons.FloatingActionButtons.Demo,
+        D.Buttons.Tooltips.Demo,
     ];
 
     /// <summary>

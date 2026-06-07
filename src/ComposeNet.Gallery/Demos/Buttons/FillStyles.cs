@@ -1,0 +1,27 @@
+using ComposeNet.Gallery.Registry;
+
+namespace ComposeNet.Gallery.Demos.Buttons;
+
+/// <summary>The five Material 3 filled-style button variants side by side.</summary>
+public static class FillStyles
+{
+    /// <summary>Registry entry exposed via <see cref="Catalog.Demos"/>.</summary>
+    public static Demo Demo => new(
+        Id:          "buttons-fill-styles",
+        CategoryId:  "buttons",
+        Title:       "Fill styles",
+        Description: "Filled, Elevated, Filled tonal, Outlined, and Text buttons.",
+        Build:       () =>
+        {
+            var count = Compose.Remember(() => new MutableNumberState<int>(0));
+            return new Column
+            {
+                new Text($"Tapped: {count}"),
+                new Button(onClick: () => count++) { new Text("Filled") },
+                new ElevatedButton(onClick: () => count++) { new Text("Elevated") },
+                new FilledTonalButton(onClick: () => count++) { new Text("Filled tonal") },
+                new OutlinedButton(onClick: () => count++) { new Text("Outlined") },
+                new TextButton(onClick: () => count++) { new Text("Text") },
+            };
+        });
+}
