@@ -6,7 +6,7 @@ namespace ComposeNet.Samples.Jetchat;
 /// Holds the chat's mutable message log, the currently selected
 /// channel, and channel metadata. Mirrors upstream's
 /// <c>ConversationUiState</c>, but uses our
-/// <see cref="ObservableList{T}"/> instead of Kotlin's
+/// <see cref="MutableStateList{T}"/> instead of Kotlin's
 /// <c>SnapshotStateList</c> (which isn't bound). The
 /// <see cref="CurrentChannel"/> property is backed by a
 /// <see cref="MutableState{T}"/> so drawer taps trigger recomposition
@@ -18,7 +18,7 @@ public sealed class ConversationUiState
     readonly MutableState<string> _currentChannel;
 
     public int ChannelMembers { get; }
-    public ObservableList<Message> Messages { get; }
+    public MutableStateList<Message> Messages { get; }
 
     /// <summary>
     /// Currently selected channel, displayed in the top app bar and
@@ -36,7 +36,7 @@ public sealed class ConversationUiState
     {
         _currentChannel = new MutableState<string>(channelName);
         ChannelMembers = channelMembers;
-        Messages = new ObservableList<Message>(initial);
+        Messages = new MutableStateList<Message>(initial);
     }
 
     /// <summary>Append a new user-authored message to the log.</summary>

@@ -10,7 +10,7 @@ namespace ComposeNet;
 /// </summary>
 /// <remarks>
 /// <para>
-/// Construct one inside a <see cref="Compose.Remember{T}"/> callback so
+/// Construct one inside a <see cref="Compose.Remember{T}(System.Func{T}, int, string)"/> callback so
 /// the same state survives recompositions:
 /// <code>
 /// var offset = RememberSaveable(() =&gt; new MutableNumberState&lt;float&gt;(0f));

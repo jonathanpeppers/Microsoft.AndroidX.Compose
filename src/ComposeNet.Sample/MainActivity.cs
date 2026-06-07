@@ -133,7 +133,44 @@ public class MainActivity : ComposeActivity
             // controller into NavController.Jvm on first NavHost render.
             var navController = Remember(() => new NavController());
 
-            string[] tabNames = { "Basics", "Buttons", "Cards", "Drawer", "Selection", "Pickers", "Misc", "App bars", "Lazy", "Carousels", "Pager", "Nav" };
+            // State primitives demo (issue #62). Bumping `seed` via the
+            // "New seed" button resets the keyed counter back to its
+            // initial value and cancels-and-restarts the ProduceState
+            // producer with a fresh CancellationToken (the producer
+            // explicitly resets state.Value = 0 at the top of the
+            // lambda; Kotlin's produceState semantics preserve state
+            // across key changes by default). `wordMap` and `wordList`
+            // show the dictionary- and list-shaped observables.
+            // `derived` reads `wordList.Count` so Compose recomposes
+            // anything that reads `derived.Value` whenever the list
+            // mutates — wrapped in Remember so the same DerivedState
+            // instance survives recomposition (otherwise we'd allocate
+            // a new Kotlin IState every pass).
+            var seed       = Remember(() => new MutableNumberState<int>(0));
+            var keyedCount = Remember(() => new MutableNumberState<int>(0), seed.Value);
+            var wordList   = Remember(() => new MutableStateList<string> { "alpha", "beta" });
+            var wordMap    = Remember(() => new MutableStateMap<string, int> { ["alpha"] = 1, ["beta"] = 2 });
+            var derived    = Remember(() => Compose.DerivedStateOf(() => wordList.Count));
+            var ticker = Compose.ProduceState<int>(0, seed.Value, async (state, ct) =>
+            {
+                state.Value = 0;
+                while (!ct.IsCancellationRequested)
+                {
+                    try { await System.Threading.Tasks.Task.Delay(1000, ct); }
+                    catch (System.OperationCanceledException) { return; }
+                    state.Value = state.Value + 1;
+                }
+            });
+
+            // Effects tab (issue #57): demonstrate LaunchedEffect, DisposableEffect,
+            // SideEffect. ticks is incremented from a LaunchedEffect's Task body;
+            // disposeCount bumps on every DisposableEffect cleanup; effectKey
+            // restarts everything when bumped.
+            var ticks       = Remember(() => new MutableNumberState<int>(0));
+            var effectKey   = Remember(() => new MutableNumberState<int>(0));
+            var disposeCount = Remember(() => new MutableNumberState<int>(0));
+
+            string[] tabNames = { "Basics", "Buttons", "Cards", "Drawer", "Selection", "Pickers", "Misc", "App bars", "Lazy", "Carousels", "Pager", "Nav", "State", "Effects" };
 
             // Per-tab content. Only the current tab's column is added to
             // the screen — keeps the sample short enough to fit on one
@@ -1107,6 +1144,122 @@ public class MainActivity : ComposeActivity
                         }),
                     },
                 },
+                12 => new Column
+                {
+                    Modifier.Companion.Padding(16),
+                    new Text("State primitives (issue #62)"),
+                    new HorizontalDivider { Modifier = Modifier.Companion.Padding(0, 8) },
+                    new Text($"Seed: {seed.Value}"),
+                    new Text($"Keyed counter: {keyedCount.Value}"),
+                    new Text($"ProduceState ticker: {ticker.Value}s"),
+                    new Row
+                    {
+                        new Button(onClick: () => keyedCount.Value++)
+                        {
+                            new Text("count++"),
+                        },
+                        new Spacer { Modifier = Modifier.Companion.Padding(4) },
+                        new Button(onClick: () => seed.Value++)
+                        {
+                            new Text("New seed (resets keyed + ticker)"),
+                        },
+                    },
+                    new HorizontalDivider { Modifier = Modifier.Companion.Padding(0, 8) },
+                    new Text($"DerivedState (wordList.Count): {derived.Value}"),
+                    new Text($"List: [{string.Join(", ", wordList)}]"),
+                    new Row
+                    {
+                        new Button(onClick: () => wordList.Add($"item{wordList.Count}"))
+                        {
+                            new Text("Add to list"),
+                        },
+                        new Spacer { Modifier = Modifier.Companion.Padding(4) },
+                        new Button(onClick: () => { if (wordList.Count > 0) wordList.RemoveAt(wordList.Count - 1); })
+                        {
+                            new Text("Remove last"),
+                        },
+                    },
+                    new HorizontalDivider { Modifier = Modifier.Companion.Padding(0, 8) },
+                    new Text($"Map: {{{string.Join(", ", wordMap.Select(kv => $"{kv.Key}={kv.Value}"))}}}"),
+                    new Row
+                    {
+                        new Button(onClick: () =>
+                        {
+                            var key = $"k{wordMap.Count}";
+                            wordMap[key] = wordMap.Count + 1;
+                        })
+                        {
+                            new Text("Add to map"),
+                        },
+                        new Spacer { Modifier = Modifier.Companion.Padding(4) },
+                        new Button(onClick: () => wordMap.Clear())
+                        {
+                            new Text("Clear map"),
+                        },
+                    },
+                },
+                13 => new Column
+                {
+                    // Effects (issue #57) — Compose's three side-effect APIs.
+                    // - SideEffect runs after every successful recomposition.
+                    // - DisposableEffect runs once per (key change | enter
+                    //   composition) and calls its cleanup on (key change |
+                    //   leave composition).
+                    // - LaunchedEffect launches a C# Task tied to the
+                    //   composition's coroutine scope. Cancellation flows
+                    //   through the supplied CancellationToken.
+                    Modifier.Companion.Padding(16),
+
+                    new Text($"Ticks (LaunchedEffect): {ticks.Value}"),
+                    new Text($"Disposable cleanups: {disposeCount.Value}"),
+                    new Text($"Effect key: {effectKey.Value}"),
+                    new Text("SideEffect: see logcat (filter: ComposeNet.Sample)"),
+
+                    new HorizontalDivider { Modifier = Modifier.Companion.Padding(0, 8) },
+
+                    // SideEffect — runs after every successful recomposition
+                    // of this Column. We log to debug rather than write to
+                    // a MutableState (writing snapshot state from a
+                    // SideEffect that the same composition reads would
+                    // create an infinite recomposition loop).
+                    new SideEffect(() =>
+                        Android.Util.Log.Debug("ComposeNet.Sample",
+                            $"SideEffect ran (effectKey={effectKey.Value}, ticks={ticks.Value})")),
+
+                    // LaunchedEffect — async tick loop scoped to the
+                    // composition. The Task body honors `ct` via
+                    // Task.Delay(ms, ct), so changing effectKey cancels
+                    // and restarts the loop.
+                    new LaunchedEffect(effectKey.Value, async ct =>
+                    {
+                        try
+                        {
+                            while (!ct.IsCancellationRequested)
+                            {
+                                await System.Threading.Tasks.Task.Delay(1000, ct);
+                                ticks.Value++;
+                            }
+                        }
+                        catch (System.OperationCanceledException) { }
+                    }),
+
+                    // DisposableEffect — fake "register external listener"
+                    // pattern. The cleanup callback bumps a counter so we
+                    // can verify it ran on key change / leaving composition.
+                    new DisposableEffect(effectKey.Value, scope =>
+                    {
+                        return () => disposeCount.Value++;
+                    }),
+
+                    new Button(onClick: () => effectKey.Value++)
+                    {
+                        new Text("Restart effects (key++)"),
+                    },
+                    new Button(onClick: () => { ticks.Value = 0; disposeCount.Value = 0; })
+                    {
+                        new Text("Reset counters"),
+                    },
+                },
                 _ => new Column
                 {
                     // Lazy lists — bound through LazyDslKt / LazyGridDslKt.
@@ -1416,6 +1569,16 @@ public class MainActivity : ComposeActivity
                                 {
                                     Text = new Text("Nav"),
                                     Icon = new Text("🧭"),
+                                },
+                                new Tab(selected: tab.Value == 12, onClick: () => tab.Value = 12)
+                                {
+                                    Text = new Text("State"),
+                                    Icon = new Text("🧠"),
+                                },
+                                new Tab(selected: tab.Value == 13, onClick: () => tab.Value = 13)
+                                {
+                                    Text = new Text("Effects"),
+                                    Icon = new Text("⚡"),
                                 },
                             },
                             tabContent,

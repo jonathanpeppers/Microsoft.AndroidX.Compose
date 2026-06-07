@@ -107,7 +107,7 @@ declarative attribute can be swapped one-for-one to the generic form.
 | Kotlin                                  | C# today                                                       | Cost |
 | --------------------------------------- | -------------------------------------------------------------- | ---- |
 | Skipping / recomposition optimization   | `$changed = 0` everywhere → full subtree recomposes on every state change | Correctness ✅, perf 🙁 |
-| Slot-table-backed `remember`            | `Remember(() => …)` with `[CallerLineNumber]` keying into an activity-scoped cache | Works for top-level state; nested-scope / keyed `remember(key1, key2)` is Tier 2 |
+| Slot-table-backed `remember`            | `Remember(() => …)` with `[CallerLineNumber]` keying into an activity-scoped cache; `Remember(factory, key1, …)` (1–3 keys or `RememberKeyed(factory, keys[])`) resets the slot on key change | Lifetime is per call site, not per nested-scope as in Kotlin |
 | `@Composable` type-system enforcement   | None — calling a non-composable from a composable context fails at runtime, not compile-time | Footgun |
 | Per-call-site allocation                | Every recomposition allocates fresh `ComposableNode` objects (no slot-table reuse on the C# side) | Tier 2 codegen fixes |
 
@@ -164,8 +164,23 @@ class.
   `Modifier` class via a one-time JNI fetch of the `$$INSTANCE` field
   — invisible to callers. See [NOTES.md](NOTES.md) open issue #1 for
   the upstream-friendly fix.
-- **`remember(keys, …)` not yet supported.** Top-level `Remember(() =>
-  state)` works (state is keyed by `[CallerLineNumber]` into an
-  activity-scoped cache), but Compose's keyed/nested `remember` —
-  reset-on-key-change semantics, slot-table-scoped lifetime — needs a
-  real slot table on the C# side and is parked for Tier 2.
+- **`remember(keys, …)` is supported.** Use the keyed overloads
+  `Remember(factory, key1)`, `Remember(factory, key1, key2)`,
+  `Remember(factory, key1, key2, key3)`, or
+  `RememberKeyed(factory, object?[] keys)` — same shape for
+  `RememberSaveable`. Compose resets the slot when any key changes
+  (structural equality). The slot key still comes from
+  `[CallerLineNumber]/[CallerFilePath]`, so the slot's identity is
+  per call site (not per nested scope as in Kotlin). For
+  rotation/process-death survival use `RememberSaveable` — keys are
+  forwarded to Kotlin's `rememberSaveable(vararg inputs)` array so
+  the saveable registry uses the same invalidation semantics.
+- **State primitives.** `MutableStateList<T>`, `MutableStateMap<K,V>`,
+  `Compose.DerivedStateOf<T>(Func<T>)`, and
+  `Compose.ProduceState<T>(initialValue, [keys…], producer)` are
+  available. `ProduceState` is implemented purely in C# via an
+  `IRememberObserver` JCW — the producer is a plain
+  `Func<MutableState<T>, CancellationToken, Task>`, not a Kotlin
+  suspend lambda. Tracked in #62. Still missing:
+  `snapshotFlow { … }` (Flow → `IAsyncEnumerable` bridge) and custom
+  `Saver<T, S>` (only `autoSaver` is exposed today).

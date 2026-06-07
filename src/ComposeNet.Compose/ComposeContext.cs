@@ -4,7 +4,7 @@ namespace ComposeNet;
 
 /// <summary>
 /// Holds the active <see cref="IComposer"/> for the current composition pass
-/// so APIs like <see cref="Compose.Remember{T}"/> can reach it without every
+/// so APIs like <see cref="Compose.Remember{T}(System.Func{T}, int, string)"/> can reach it without every
 /// helper composable having to thread <c>composer</c> through its signature.
 ///
 /// Compose's composition runs synchronously on a single thread per pass, so

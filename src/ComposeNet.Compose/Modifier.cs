@@ -342,7 +342,7 @@ public sealed class Modifier
     /// (e.g. a regular <see cref="Column"/> or <see cref="Box"/>)
     /// vertically scrollable when its content overflows. Hold the
     /// <paramref name="state"/> across recompositions with
-    /// <see cref="ComposeActivity.Remember{T}"/>:
+    /// <see cref="ComposeActivity.Remember{T}(System.Func{T}, int, string)"/>:
     /// <code>
     /// var scroll = Remember(() =&gt; new ScrollState());
     /// new Column { Modifier.Companion.VerticalScroll(scroll), /* children */ };
@@ -412,7 +412,7 @@ public sealed class Modifier
     /// </summary>
     /// <param name="state">State holder that receives drag deltas.
     /// Build via <c>new DraggableState(delta =&gt; ...)</c> inside a
-    /// <see cref="Compose.Remember{T}"/> call, or via
+    /// <see cref="Compose.Remember{T}(System.Func{T}, int, string)"/> call, or via
     /// <see cref="Compose.RememberDraggableState(System.Action{float}, int, string)"/>
     /// for stable Java identity across recompositions when the
     /// callback closure changes.</param>
