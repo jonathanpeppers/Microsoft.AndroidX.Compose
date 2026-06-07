@@ -20,6 +20,13 @@ public static class JetnewsApp
     /// item highlighting. Updated in tandem with
     /// <see cref="NavController.Navigate(string)"/> calls.
     /// </param>
+    /// <param name="drawerState">
+    /// State holder for the <see cref="ModalNavigationDrawer"/>.
+    /// Threaded through so the Home / Interests top-bar hamburger
+    /// icons can fire <see cref="DrawerStateHolder.OpenAsync"/> and
+    /// the drawer items can fire
+    /// <see cref="DrawerStateHolder.CloseAsync"/>.
+    /// </param>
     /// <param name="bookmarks">Post ids the user has bookmarked.</param>
     /// <param name="selectedTopics">
     /// "Section/Topic" keys for topics the user has subscribed to (e.g.
@@ -34,6 +41,7 @@ public static class JetnewsApp
     public static ComposableNode Build(
         NavController nav,
         MutableState<string> currentRoute,
+        DrawerStateHolder drawerState,
         MutableStateList<string> bookmarks,
         MutableStateList<string> selectedTopics,
         MutableStateList<string> selectedPeople,
@@ -41,16 +49,17 @@ public static class JetnewsApp
         MutableState<int> interestsTab) =>
         new MaterialTheme
         {
-            new ModalNavigationDrawer
+            new ModalNavigationDrawer(drawerState)
             {
-                Drawer  = JetnewsDrawer.Build(nav, currentRoute),
-                Content = BuildNavHost(nav, currentRoute, bookmarks, selectedTopics, selectedPeople, selectedPublications, interestsTab),
+                Drawer  = JetnewsDrawer.Build(nav, currentRoute, drawerState),
+                Content = BuildNavHost(nav, currentRoute, drawerState, bookmarks, selectedTopics, selectedPeople, selectedPublications, interestsTab),
             },
         };
 
     static NavHost BuildNavHost(
         NavController nav,
         MutableState<string> currentRoute,
+        DrawerStateHolder drawerState,
         MutableStateList<string> bookmarks,
         MutableStateList<string> selectedTopics,
         MutableStateList<string> selectedPeople,
@@ -61,14 +70,14 @@ public static class JetnewsApp
         {
             new Composable(Routes.Home)
             {
-                HomeScreen.Build(PostsRepo.Feed, bookmarks, postId =>
+                HomeScreen.Build(PostsRepo.Feed, bookmarks, drawerState, postId =>
                 {
                     nav.Navigate(Routes.Post(postId));
                 }),
             },
             new Composable(Routes.Interests)
             {
-                InterestsScreen.Build(selectedTopics, selectedPeople, selectedPublications, interestsTab),
+                InterestsScreen.Build(selectedTopics, selectedPeople, selectedPublications, interestsTab, drawerState),
             },
             new Composable(Routes.PostPattern, entry =>
             {
