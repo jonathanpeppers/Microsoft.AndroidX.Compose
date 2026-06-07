@@ -88,7 +88,6 @@ feature:
 | `LazyColumn(reverseLayout = true)` so newest messages sit at the bottom | not yet exposed on the `LazyColumn` facade |
 | Image / sticker / file message attachments inside bubbles | requires composable image-loader plumbing |
 | User profile screen                       | depends on `androidx.navigation.compose` binding |
-| IME-synchronized scroll-to-bottom         | [#69](https://github.com/jonathanpeppers/compose-net/issues/69) (`imePadding`) |
 | `MaterialTheme.colorScheme.primary` reads for the "me" bubble + drawer selection + tonal text colors (`onSurfaceVariant`) | [#61](https://github.com/jonathanpeppers/compose-net/issues/61) |
 | `MaterialTheme.typography.*` reads (we approximate the M3 sp/weight values directly until these land) | [#58](https://github.com/jonathanpeppers/compose-net/issues/58) |
 | Asymmetric `RoundedCornerShape(topStart, …)` on bubbles | `Modifier.Clip(Dp)` only takes a single radius; full `Shape` API tracked under [#65](https://github.com/jonathanpeppers/compose-net/issues/65)'s follow-up surface |

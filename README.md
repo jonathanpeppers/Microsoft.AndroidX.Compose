@@ -123,7 +123,7 @@ The facade [`ComposeNet.Compose`](src/ComposeNet.Compose) covers the common Mate
 | Drawers                 | `ModalNavigationDrawer`, `DismissibleNavigationDrawer`, `PermanentNavigationDrawer` |
 | Sheets & pickers        | `ModalBottomSheet`, `BottomSheetScaffold`, `DatePicker`/`DatePickerDialog`, `TimePicker`/`TimePickerDialog` |
 | Overlays                | `AlertDialog`, `Snackbar` + `SnackbarHost`, `Tooltip` |
-| Modifier chains         | `Padding`, `FillMaxWidth/Height/Size`, `Width`, `Height`, `Size`, `SafeDrawingPadding`, `SystemBarsPadding` |
+| Modifier chains         | `Padding`, `FillMaxWidth/Height/Size`, `Width`, `Height`, `Size`, `SafeDrawingPadding`, `SystemBarsPadding`, plus per-inset `ImePadding`, `NavigationBarsPadding`, `StatusBarsPadding`, `CaptionBarPadding`, `DisplayCutoutPadding`, `WaterfallPadding`, `SystemGesturesPadding`, `MandatorySystemGesturesPadding`, `SafeContentPadding`, `SafeGesturesPadding` |
 | State                   | `Remember` (+ keyed `Remember(factory, key1, …)`, `RememberKeyed`), `RememberSaveable` (+ keyed), `MutableState<T>`, `MutableNumberState<T>`, `MutableStateList<T>`, `MutableStateMap<K,V>`, `DerivedStateOf`, `ProduceState`, plus `DatePickerState`, `TimePickerState`, `SearchBarState`, `SnackbarHostState` |
 
 ## Samples

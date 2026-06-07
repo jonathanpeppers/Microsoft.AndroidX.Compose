@@ -66,7 +66,7 @@ public static class Conversation
     static Column BuildBody(ConversationUiState ui, MutableState<string> input) =>
         new()
         {
-            Modifier.Companion.FillMaxSize(),
+            Modifier.Companion.FillMaxSize().ImePadding().NavigationBarsPadding(),
             BuildMessages(ui),
             BuildInputRow(ui, input),
         };
