@@ -79,18 +79,19 @@ dotnet build samples/Jetchat -t:Run
 ## What's omitted
 
 Each row links to the upstream issue tracking the missing facade
-feature:
+feature (or, for items where the facade primitive landed but Jetchat
+hasn't been ported to it yet, notes "feasible — not yet wired"):
 
 | Upstream feature                          | Tracking issue |
 |-------------------------------------------|----------------|
-| Hamburger nav icon that programmatically opens the drawer | needs a `DrawerState` wrapper + suspend bridges (the `SuspendBridge` plumbing landed in #97 but the drawer-state type isn't exposed yet) — edge-swipe still works |
+| Hamburger nav icon that programmatically opens the drawer | the `DrawerStateHolder` wrapper exists and `SuspendBridge` plumbing (#97) is in place, but the suspend `Open()`/`Close()` haven't been surfaced yet — edge-swipe still works |
 | Multi-channel message lists (the drawer changes the title but not the messages — we only seed one conversation) | requires extending the sample's seed data, not blocked by facade |
 | `LazyColumn(reverseLayout = true)` so newest messages sit at the bottom | not yet exposed on the `LazyColumn` facade |
 | Image / sticker / file message attachments inside bubbles | requires composable image-loader plumbing |
-| User profile screen                       | depends on `androidx.navigation.compose` binding |
-| `MaterialTheme.colorScheme.primary` reads for the "me" bubble + drawer selection + tonal text colors (`onSurfaceVariant`) | [#61](https://github.com/jonathanpeppers/compose-net/issues/61) |
-| `MaterialTheme.typography.*` reads (we approximate the M3 sp/weight values directly until these land) | [#58](https://github.com/jonathanpeppers/compose-net/issues/58) |
-| Asymmetric `RoundedCornerShape(topStart, …)` on bubbles | `Modifier.Clip(Dp)` only takes a single radius; full `Shape` API tracked under [#65](https://github.com/jonathanpeppers/compose-net/issues/65)'s follow-up surface |
+| User profile screen                       | wire up via `NavHost` / `NavController` (now bound via [#60](https://github.com/jonathanpeppers/compose-net/issues/60)) — not yet wired |
+| `MaterialTheme.colorScheme.*` reads for the "me" bubble + drawer selection + tonal text colors (`onSurfaceVariant`) | **feasible — not yet wired**. `MaterialTheme.CurrentColorScheme(composer)` landed in [#61](https://github.com/jonathanpeppers/compose-net/issues/61) (PR #133); Jetchat still uses hardcoded `Color.FromRgb(...)` values |
+| `MaterialTheme.typography.*` reads | **feasible — not yet wired**. `MaterialTheme.CurrentTypography(composer)` landed alongside #61; Jetchat still hard-codes M3 sp/weight values |
+| Asymmetric `RoundedCornerShape(topStart, …)` on bubbles | `Modifier.Clip(Dp)` only takes a single radius; full asymmetric `Shape` API still needs [#64](https://github.com/jonathanpeppers/compose-net/issues/64) drawing primitives |
 | Search / info popups behind the action icons (`FunctionalityNotAvailablePopup`) | requires popup APIs not yet bound; the icons are wired but the onClick is a no-op |
 
 ## Facade features added for this port
@@ -138,11 +139,10 @@ the C# source stays close in shape to the Kotlin original.
 
 ### Hard-coded colors instead of `MaterialTheme.colorScheme.*` reads — [#61]
 
-User code can't read `MaterialTheme.colorScheme.primary` /
-`primaryContainer` / `surfaceVariant` / `onSurfaceVariant` etc. yet —
-only the source generator's `[ComposeFacade(DefaultColorFromTheme=…)]`
-path consumes them, and it's internal. Until #61 lands the sample
-hard-codes:
+`MaterialTheme.CurrentColorScheme(composer)` shipped in PR #133 and
+the color reads (`.Primary`, `.PrimaryContainer`, `.SurfaceVariant`,
+`.OnSurfaceVariant`, …) are now usable from any `Render` body.
+Jetchat hasn't been migrated yet — until then the sample hard-codes:
 
 | Slot                          | Hex          | Approximates upstream's |
 |-------------------------------|--------------|--------------------------|
@@ -155,9 +155,10 @@ color instead of `onSurfaceVariant`.
 
 ### Hard-coded sp / weight values instead of `MaterialTheme.typography.*` reads — [#58]
 
-Same shape as the color gap: typography reads aren't exposed yet.
-The sample sets `FontSize` / `FontWeight` directly to the M3 spec
-values for each role:
+`MaterialTheme.CurrentTypography(composer)` is available alongside the
+color reads above. Jetchat hasn't been migrated to it yet — the sample
+still sets `FontSize` / `FontWeight` directly to the M3 spec values
+for each role:
 
 | Upstream role     | Where used                           | sp | Weight       | Letter-spacing |
 |-------------------|--------------------------------------|----|--------------|----------------|
@@ -211,12 +212,14 @@ icons are real affordances (correct drawables, real ripple via
 
 ### No hamburger nav icon — drawer opens via edge-swipe only
 
-Programmatic drawer open requires a `DrawerState` C# wrapper plus
-suspend bridges around `DrawerState.open()` / `close()`. The
-`SuspendBridge` plumbing landed in #97 and is already used by
-`ScrollState.scrollTo` + `animateScrollToItem`, so this is the next
-state-holder to expose. A no-op hamburger button would be a misleading
-affordance, so it's omitted entirely until the wrapper lands.
+Programmatic drawer open requires a C# wrapper around
+`DrawerState.open()` / `close()`. The `DrawerStateHolder` wrapper
+type is in place (PR #131, Phase 10 `[ConfirmStateChange]` migration
+of the drawer family) and `SuspendBridge` plumbing (#97) already
+powers other `*Async` calls — what's still missing is the suspend
+bridge exposing `DrawerState.open` / `close` to C#. A no-op
+hamburger button would be a misleading affordance, so it's omitted
+entirely until the wrapper lands.
 
 ### Static builder instead of `ComposableNode` subclass
 
