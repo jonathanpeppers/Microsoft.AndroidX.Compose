@@ -28,10 +28,13 @@ public class MainActivity : ComposeActivity
         base.OnCreate(savedInstanceState);
         SetContent(() =>
         {
-            var count       = Remember(() => new MutableNumberState<int>(0));
-            var name        = Remember(() => new MutableState<string>(""));
-            var liked       = Remember(() => new MutableState<bool>(false));
-            var tab         = Remember(() => new MutableNumberState<int>(0));
+            // These four use RememberSaveable so their values survive
+            // process death / activity recreation (e.g. rotation when
+            // the activity doesn't override android:configChanges).
+            var count       = RememberSaveable(() => new MutableNumberState<int>(0));
+            var name        = RememberSaveable(() => new MutableState<string>(""));
+            var liked       = RememberSaveable(() => new MutableState<bool>(false));
+            var tab         = RememberSaveable(() => new MutableNumberState<int>(0));
             var sub         = Remember(() => new MutableNumberState<int>(0));
             var showAlert   = Remember(() => new MutableState<bool>(false));
             var showSheet   = Remember(() => new MutableState<bool>(false));
@@ -111,7 +114,15 @@ public class MainActivity : ComposeActivity
             // that programmatically scroll back to the top.
             var buttonsScroll = Remember(() => new ScrollState());
 
-            string[] tabNames = { "Basics", "Buttons", "Cards", "Drawer", "Selection", "Pickers", "Misc", "App bars", "Lazy", "Carousels", "Pager" };
+            // Compose Navigation demo state (issue #60). The NavController
+            // is the externally-driven entry point — Button onClicks call
+            // .Navigate("...") / .PopBackStack() on it. Held in Remember
+            // so it survives recompositions; Kotlin's rememberNavController
+            // (via the ComposeBridges helper) stamps the underlying
+            // controller into NavController.Jvm on first NavHost render.
+            var navController = Remember(() => new NavController());
+
+            string[] tabNames = { "Basics", "Buttons", "Cards", "Drawer", "Selection", "Pickers", "Misc", "App bars", "Lazy", "Carousels", "Pager", "Nav" };
 
             // Per-tab content. Only the current tab's column is added to
             // the screen — keeps the sample short enough to fit on one
@@ -944,6 +955,69 @@ public class MainActivity : ComposeActivity
                         Modifier = Modifier.Companion.FillMaxWidth().Height(300),
                     },
                 },
+                11 => new Column
+                {
+                    // Compose Navigation demo (issue #60). NavHost holds a
+                    // graph of `Composable("route") { ... }` destinations and
+                    // switches the visible one based on the bound NavController's
+                    // back stack. Each route subcomposes its own children
+                    // independently — unlike a normal switch-on-state UI, the
+                    // destinations don't share a composition with the host.
+                    //
+                    // The "user/{id}" route demos the dynamic-content factory
+                    // overload (Composable(route, entry => ...)) — we read
+                    // the {id} placeholder out of NavBackStackEntry.Arguments.
+                    new Text("Compose Navigation"),
+                    new Text("Tap a button to navigate. The Up button uses navController.NavigateUp()."),
+                    new HorizontalDivider { Modifier = Modifier.Companion.Padding(0, 8) },
+                    new NavHost(startDestination: "home", navController: navController)
+                    {
+                        Modifier.Companion.FillMaxWidth().Height(360),
+
+                        new Composable("home")
+                        {
+                            new Column
+                            {
+                                Modifier.Companion.Padding(16),
+                                new Text("🏠 Home"),
+                                new Button(onClick: () => navController.Navigate("detail"))
+                                {
+                                    new Text("Go to detail"),
+                                },
+                                new Button(onClick: () => navController.Navigate("user/42"))
+                                {
+                                    new Text("Open user 42"),
+                                },
+                            },
+                        },
+                        new Composable("detail")
+                        {
+                            new Column
+                            {
+                                Modifier.Companion.Padding(16),
+                                new Text("📄 Detail"),
+                                new Button(onClick: () => navController.Navigate("user/7"))
+                                {
+                                    new Text("Drill down to user 7"),
+                                },
+                                new Button(onClick: () => navController.PopBackStack())
+                                {
+                                    new Text("Back"),
+                                },
+                            },
+                        },
+                        new Composable("user/{id}", entry => new Column
+                        {
+                            Modifier.Companion.Padding(16),
+                            new Text($"👤 User #{entry.Arguments?.GetString("id") ?? "?"}"),
+                            new Text($"Route: {entry.Route ?? "(unknown)"}"),
+                            new Button(onClick: () => navController.NavigateUp())
+                            {
+                                new Text("Up"),
+                            },
+                        }),
+                    },
+                },
                 _ => new Column
                 {
                     // Lazy lists — bound through LazyDslKt / LazyGridDslKt.
@@ -1246,6 +1320,11 @@ public class MainActivity : ComposeActivity
                                 {
                                     Text = new Text("Carousels"),
                                     Icon = new Text("🎠"),
+                                },
+                                new Tab(selected: tab.Value == 10, onClick: () => tab.Value = 10)
+                                {
+                                    Text = new Text("Nav"),
+                                    Icon = new Text("🧭"),
                                 },
                             },
                             tabContent,

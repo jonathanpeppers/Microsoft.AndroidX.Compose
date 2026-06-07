@@ -23,6 +23,8 @@
     <PackageReference Include="Xamarin.AndroidX.Activity.Compose" />
     <PackageReference Include="Xamarin.AndroidX.Compose.Runtime" />
     <PackageReference Include="Xamarin.AndroidX.Compose.Runtime.Android" />
+    <PackageReference Include="Xamarin.AndroidX.Compose.Runtime.Saveable" />
+    <PackageReference Include="Xamarin.AndroidX.Compose.Runtime.Saveable.Android" />
     <PackageReference Include="Xamarin.AndroidX.Compose.UI" />
     <PackageReference Include="Xamarin.AndroidX.Compose.UI.Android" />
     <PackageReference Include="Xamarin.AndroidX.Compose.UI.Graphics" />
@@ -37,5 +39,9 @@
     <PackageReference Include="Xamarin.AndroidX.Compose.Foundation.Layout.Android" />
     <PackageReference Include="Xamarin.AndroidX.Compose.Material3" />
     <PackageReference Include="Xamarin.AndroidX.Compose.Material3Android" />
+    <PackageReference Include="Xamarin.AndroidX.Navigation.Common" />
+    <PackageReference Include="Xamarin.AndroidX.Navigation.Runtime" />
+    <PackageReference Include="Xamarin.AndroidX.Navigation.Compose" />
+    <PackageReference Include="Xamarin.AndroidX.Navigation.Compose.Android" />
   </ItemGroup>
 </Project>

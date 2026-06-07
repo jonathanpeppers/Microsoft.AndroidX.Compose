@@ -78,6 +78,12 @@ ComposeNet.CircularProgressIndicator.TrackColorArgb.set -> void
 ComposeNet.Column
 ComposeNet.Column.Column() -> void
 ComposeNet.Column.Column(ComposeNet.Arrangement? verticalArrangement) -> void
+ComposeNet.Composable
+ComposeNet.Composable.Add(ComposeNet.ComposableNode? child) -> void
+ComposeNet.Composable.Add(ComposeNet.Modifier! modifier) -> void
+ComposeNet.Composable.Composable(string! route) -> void
+ComposeNet.Composable.Composable(string! route, System.Func<ComposeNet.NavBackStackEntry!, ComposeNet.ComposableNode!>! content) -> void
+ComposeNet.Composable.Route.get -> string!
 ComposeNet.ComposableContainer
 ComposeNet.ComposableContainer.Add(ComposeNet.ComposableNode? child) -> void
 ComposeNet.ComposableContainer.Add(ComposeNet.Modifier! modifier) -> void
@@ -92,6 +98,7 @@ ComposeNet.Compose
 ComposeNet.ComposeActivity
 ComposeNet.ComposeActivity.ComposeActivity() -> void
 ComposeNet.ComposeActivity.Remember<T>(System.Func<T>! factory, int line = 0, string! file = "") -> T
+ComposeNet.ComposeActivity.RememberSaveable<T>(System.Func<T>! factory, int line = 0, string! file = "") -> T
 ComposeNet.ComposeActivity.SetContent(System.Func<ComposeNet.ComposableNode!>! content) -> void
 ComposeNet.CustomTab
 ComposeNet.CustomTab.CustomTab(bool selected, System.Action! onClick) -> void
@@ -461,6 +468,22 @@ ComposeNet.MutableNumberState<T>
 ComposeNet.MutableNumberState<T>.MutableNumberState(T initial) -> void
 ComposeNet.MutableState<T>
 ComposeNet.MutableState<T>.MutableState(T initial) -> void
+ComposeNet.NavBackStackEntry
+ComposeNet.NavBackStackEntry.Arguments.get -> Android.OS.Bundle?
+ComposeNet.NavBackStackEntry.Route.get -> string?
+ComposeNet.NavController
+ComposeNet.NavController.CurrentBackStackEntry.get -> ComposeNet.NavBackStackEntry?
+ComposeNet.NavController.NavController() -> void
+ComposeNet.NavController.Navigate(string! route) -> void
+ComposeNet.NavController.NavigateUp() -> bool
+ComposeNet.NavController.PopBackStack() -> bool
+ComposeNet.NavController.PopBackStack(string! route, bool inclusive) -> bool
+ComposeNet.NavHost
+ComposeNet.NavHost.Add(ComposeNet.Composable? route) -> void
+ComposeNet.NavHost.Add(ComposeNet.Modifier! modifier) -> void
+ComposeNet.NavHost.NavController.get -> ComposeNet.NavController!
+ComposeNet.NavHost.NavHost(string! startDestination, ComposeNet.NavController? navController = null) -> void
+ComposeNet.NavHost.StartDestination.get -> string!
 ComposeNet.NavigationBar
 ComposeNet.NavigationBar.NavigationBar() -> void
 ComposeNet.NavigationBarItem
@@ -850,6 +873,7 @@ static ComposeNet.Arrangement.SpaceEvenly.get -> ComposeNet.Arrangement!
 static ComposeNet.Arrangement.Start.get -> ComposeNet.Arrangement!
 static ComposeNet.Arrangement.Top.get -> ComposeNet.Arrangement!
 static ComposeNet.Compose.Remember<T>(System.Func<T>! factory, int line = 0, string! file = "") -> T
+static ComposeNet.Compose.RememberSaveable<T>(System.Func<T>! factory, int line = 0, string! file = "") -> T
 static ComposeNet.Dp.implicit operator ComposeNet.Dp(float value) -> ComposeNet.Dp
 static ComposeNet.Dp.implicit operator ComposeNet.Dp(int value) -> ComposeNet.Dp
 static ComposeNet.Dp.operator !=(ComposeNet.Dp left, ComposeNet.Dp right) -> bool

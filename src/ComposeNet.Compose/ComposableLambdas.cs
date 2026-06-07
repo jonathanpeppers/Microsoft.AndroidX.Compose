@@ -60,7 +60,7 @@ internal static class ComposableLambdas
         [CallerLineNumber] int line = 0,
         [CallerFilePath] string file = "")
         => (IFunction2)ComposableLambdaKt.ComposableLambda(
-            composer, HashCode.Combine(line, file), tracked: true,
+            composer, SourceLocationKey.Compute(line, file), tracked: true,
             block: new ComposableLambda2(body));
 
     /// <summary>
@@ -75,7 +75,7 @@ internal static class ComposableLambdas
         [CallerLineNumber] int line = 0,
         [CallerFilePath] string file = "")
         => (IFunction3)ComposableLambdaKt.ComposableLambda(
-            composer, HashCode.Combine(line, file), tracked: true,
+            composer, SourceLocationKey.Compute(line, file), tracked: true,
             block: new ComposableLambda3(body));
 
     /// <summary>
@@ -92,7 +92,7 @@ internal static class ComposableLambdas
         [CallerLineNumber] int line = 0,
         [CallerFilePath] string file = "")
         => (IFunction3)ComposableLambdaKt.ComposableLambda(
-            composer, HashCode.Combine(line, file), tracked: true,
+            composer, SourceLocationKey.Compute(line, file), tracked: true,
             block: new ComposableLambda3(body));
 
     /// <summary>
@@ -118,8 +118,36 @@ internal static class ComposableLambdas
         [CallerLineNumber] int line = 0,
         [CallerFilePath] string file = "")
         => (IFunction4)ComposableLambdaKt.ComposableLambdaInstance(
-            key: HashCode.Combine(line, file), tracked: true,
+            key: SourceLocationKey.Compute(line, file), tracked: true,
             block: new ComposableLambda4(body));
+
+    /// <summary>
+    /// Build an identity-stable <see cref="IFunction3"/> wrapper for the
+    /// <c>Function3&lt;NavBackStackEntry, Composer, Int, Unit&gt;</c>
+    /// @Composable shape used by <c>NavHost</c>'s per-route
+    /// <c>composable("route") { ... }</c> destination content. <c>p0</c>
+    /// is the current <see cref="AndroidX.Navigation.NavBackStackEntry"/>
+    /// handle, <c>p1</c> is the destination's composer, <c>p2</c> is
+    /// <c>$changed</c>.
+    ///
+    /// <para>Uses <c>ComposableLambdaInstance</c> (not
+    /// <c>ComposableLambda</c>) because the navigation builder DSL runs
+    /// once at NavHost graph construction, but the destination's
+    /// content lambda is invoked LATER inside the route's own
+    /// subcomposition (every time the user navigates to the route, or
+    /// the entry recomposes). The outer NavHost composer captured at
+    /// graph-build time is no longer active by then, so we can't look
+    /// up a slot-table entry — the <c>Instance</c> factory allocates a
+    /// fresh wrapper without one, exactly mirroring what Kotlin's
+    /// <c>composable("route") { ... }</c> expands to.</para>
+    /// </summary>
+    public static IFunction3 InstantiateNavComposable(
+        Action<IntPtr, IComposer> body,
+        [CallerLineNumber] int line = 0,
+        [CallerFilePath] string file = "")
+        => (IFunction3)ComposableLambdaKt.ComposableLambdaInstance(
+            key: HashCode.Combine(line, file), tracked: true,
+            block: new ComposableLambda3(body));
 
     /// <summary>
     /// Wrap an <c>Action&lt;IntPtr, Java.Lang.Object?, IComposer&gt;</c>
@@ -148,6 +176,6 @@ internal static class ComposableLambdas
         [CallerLineNumber] int line = 0,
         [CallerFilePath] string file = "")
         => (IFunction4)ComposableLambdaKt.ComposableLambda(
-            composer, HashCode.Combine(line, file), tracked: true,
+            composer, SourceLocationKey.Compute(line, file), tracked: true,
             block: new ComposableLambda4(body));
 }

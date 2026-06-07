@@ -393,8 +393,10 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
                 return null;
             }
 
-            // Validate the Remember bridge resolves to a static
-            // `(IComposer) -> IntPtr` method on ComposeNet.ComposeBridges.
+            // Validate the Remember bridge resolves to a static method on
+            // ComposeNet.ComposeBridges whose last parameter is an
+            // IComposer and that returns IntPtr. Any number of leading
+            // user parameters is allowed (Phase 4 = zero, Phase 4b = N).
             var bridgesType = c.Compilation.GetTypeByMetadataName("ComposeNet.ComposeBridges");
             if (bridgesType is null)
             {
@@ -411,13 +413,13 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             }
             var rememberFit = rememberMethods.FirstOrDefault(m =>
                 m.IsStatic &&
-                m.Parameters.Length == 1 &&
-                ComposeDefaultsGenerator.IsComposer(m.Parameters[0].Type) &&
+                m.Parameters.Length >= 1 &&
+                ComposeDefaultsGenerator.IsComposer(m.Parameters[m.Parameters.Length - 1].Type) &&
                 m.ReturnType.SpecialType == SpecialType.System_IntPtr);
             if (rememberFit is null)
             {
                 diags.Add(Diagnostic.Create(Diagnostics.FacadeStateHolderInvalid, loc, methodName,
-                    $"[StateHolder] on '{p.Name}': 'ComposeBridges.{remember}' must be a static method with signature '(IComposer) -> IntPtr' (Phase 4 supports only zero-user-param remembers)"));
+                    $"[StateHolder] on '{p.Name}': 'ComposeBridges.{remember}' must be a static method whose last parameter is an IComposer and that returns IntPtr"));
                 return null;
             }
 
@@ -442,10 +444,47 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
                 return null;
             }
 
+            // Phase 4b — Remember has N user params before composer. Each
+            // user param must resolve to a readable instance member on
+            // the StateType (case-insensitive PascalCase match; fall back
+            // to `Initial<PascalCase>` for the Kotlin "initialX → live X"
+            // wrapper convention). Phase 4b also requires an accessible
+            // parameterless construction path on the StateType so the
+            // ctor can auto-create a default wrapper when the caller
+            // passes null.
+            var rememberUserParams = rememberFit.Parameters
+                .Take(rememberFit.Parameters.Length - 1)
+                .ToArray();
+            string[] rememberArgExpressions = System.Array.Empty<string>();
+            if (rememberUserParams.Length > 0)
+            {
+                if (!HasAccessibleParameterlessConstructor(stateType))
+                {
+                    diags.Add(Diagnostic.Create(Diagnostics.FacadeStateHolderInvalid, loc, methodName,
+                        $"[StateHolder] on '{p.Name}': parameterised Remember requires StateType '{stateType.ToDisplayString()}' to be constructible with no arguments (parameterless ctor or all-defaulted-param ctor)"));
+                    return null;
+                }
+
+                rememberArgExpressions = new string[rememberUserParams.Length];
+                for (int i = 0; i < rememberUserParams.Length; i++)
+                {
+                    var up = rememberUserParams[i];
+                    var resolved = ResolveStateMember(stateType, up.Name);
+                    if (resolved is null)
+                    {
+                        diags.Add(Diagnostic.Create(Diagnostics.FacadeStateHolderInvalid, loc, methodName,
+                            $"[StateHolder] on '{p.Name}': cannot resolve Remember parameter '{up.Name}' on StateType '{stateType.ToDisplayString()}'; expected a readable instance member named '{Pascal(up.Name)}' or 'Initial{Pascal(up.Name)}'"));
+                        return null;
+                    }
+                    rememberArgExpressions[i] = "_state!." + resolved;
+                }
+            }
+
             return new FacadeSlot(p, FacadeSlotKind.StateHolder,
                 rememberMethodName: remember,
                 stateWrapperType: stateType,
-                stateJvmType: jvmMember.Type);
+                stateJvmType: jvmMember.Type,
+                rememberArgExpressions: rememberArgExpressions);
         }
 
         // [PainterResource] — annotates the IntPtr bridge param that
@@ -618,7 +657,23 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             sb.AppendLine(")");
             sb.AppendLine("        {");
             foreach (var s in ctorSlots)
-                sb.Append("            _").Append(CtorIdentifier(s)).Append(" = ").Append(EscapeIdent(CtorIdentifier(s))).AppendLine(";");
+            {
+                // Phase 4b — auto-create wrapper instance when the
+                // Remember bridge has user params. The Render body
+                // reads init values off `_state` to pass into Remember,
+                // so the field must be non-null on entry.
+                if (s.IsParameterisedStateHolder)
+                {
+                    var fqType = s.StateWrapperType!.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat
+                        .WithMiscellaneousOptions(SymbolDisplayMiscellaneousOptions.UseSpecialTypes));
+                    sb.Append("            _").Append(CtorIdentifier(s)).Append(" = ")
+                      .Append(EscapeIdent(CtorIdentifier(s))).Append(" ?? new ").Append(fqType).AppendLine("();");
+                }
+                else
+                {
+                    sb.Append("            _").Append(CtorIdentifier(s)).Append(" = ").Append(EscapeIdent(CtorIdentifier(s))).AppendLine(";");
+                }
+            }
             sb.AppendLine("        }");
         }
 
@@ -638,19 +693,36 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         }
 
         // StateHolder preamble — call RememberXxxState and (optionally)
-        // populate the caller-supplied wrapper's Jvm field.
+        // populate the caller-supplied wrapper's Jvm field. Phase 4
+        // (zero-user-param Remember): _state is nullable, Jvm is only
+        // populated when the caller supplied a wrapper. Phase 4b
+        // (parameterised Remember): the ctor guaranteed _state is
+        // non-null, so we read init values off it and skip the
+        // null-guard on the Jvm assignment.
         foreach (var s in slots.Where(s => s.Kind == FacadeSlotKind.StateHolder))
         {
             var id = CtorIdentifier(s);
             var jvmFqn = s.StateJvmType!.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat
                 .WithMiscellaneousOptions(SymbolDisplayMiscellaneousOptions.UseSpecialTypes));
             sb.Append("            var __").Append(s.Param.Name)
-              .Append(" = global::ComposeNet.ComposeBridges.").Append(s.RememberMethodName)
-              .Append('(').Append(composerName).AppendLine(");");
-            sb.Append("            if (_").Append(id).Append(" is not null && _").Append(id).AppendLine(".Jvm is null)");
-            sb.Append("                _").Append(id).Append(".Jvm = global::Java.Lang.Object.GetObject<")
-              .Append(jvmFqn).Append(">(__").Append(s.Param.Name)
-              .AppendLine(", global::Android.Runtime.JniHandleOwnership.DoNotTransfer)!;");
+              .Append(" = global::ComposeNet.ComposeBridges.").Append(s.RememberMethodName).Append('(');
+            foreach (var argExpr in s.RememberArgExpressions)
+                sb.Append(argExpr).Append(", ");
+            sb.Append(composerName).AppendLine(");");
+            if (s.IsParameterisedStateHolder)
+            {
+                sb.Append("            if (_").Append(id).AppendLine(".Jvm is null)");
+                sb.Append("                _").Append(id).Append(".Jvm = global::Java.Lang.Object.GetObject<")
+                  .Append(jvmFqn).Append(">(__").Append(s.Param.Name)
+                  .AppendLine(", global::Android.Runtime.JniHandleOwnership.DoNotTransfer)!;");
+            }
+            else
+            {
+                sb.Append("            if (_").Append(id).Append(" is not null && _").Append(id).AppendLine(".Jvm is null)");
+                sb.Append("                _").Append(id).Append(".Jvm = global::Java.Lang.Object.GetObject<")
+                  .Append(jvmFqn).Append(">(__").Append(s.Param.Name)
+                  .AppendLine(", global::Android.Runtime.JniHandleOwnership.DoNotTransfer)!;");
+            }
         }
 
         // OnClick wrappers — one per line so slot-table keys stay distinct.
@@ -1078,6 +1150,66 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
     static string EscapeIdent(string name) =>
         SyntaxFacts.GetKeywordKind(name) == SyntaxKind.None ? name : "@" + name;
 
+    /// <summary>
+    /// Phase 4b — resolve the wrapper-side member name for a Remember
+    /// bridge user parameter. Tries an exact <see cref="Pascal"/> match
+    /// first, then falls back to <c>Initial&lt;Pascal&gt;</c> for the
+    /// Kotlin convention where <c>initialX</c> remember args correspond
+    /// to live wrapper property <c>X</c>. Looks at both properties and
+    /// fields, accepting any readable, non-static, accessible member.
+    /// Returns the resolved C# identifier or <c>null</c> when no match.
+    /// </summary>
+    static string? ResolveStateMember(INamedTypeSymbol stateType, string paramName)
+    {
+        var pascal = Pascal(paramName);
+        if (FindReadableMember(stateType, pascal) is { } direct) return direct;
+        if (FindReadableMember(stateType, "Initial" + pascal) is { } prefixed) return prefixed;
+        return null;
+    }
+
+    static string? FindReadableMember(INamedTypeSymbol stateType, string name)
+    {
+        // Walk the inheritance chain so inherited members count. We stop
+        // at the first match — properties and fields share a name space
+        // in C#, so a class can't declare both with the same name.
+        for (var t = (INamedTypeSymbol?)stateType; t is not null; t = t.BaseType)
+        {
+            foreach (var m in t.GetMembers(name))
+            {
+                if (m.IsStatic) continue;
+                if (m.DeclaredAccessibility is not (Accessibility.Public or Accessibility.Internal
+                    or Accessibility.ProtectedOrInternal))
+                    continue;
+                if (m is IPropertySymbol prop && prop.GetMethod is not null) return prop.Name;
+                if (m is IFieldSymbol f) return f.Name;
+            }
+        }
+        return null;
+    }
+
+    /// <summary>
+    /// True when <paramref name="stateType"/> exposes an accessible
+    /// (public or internal) parameterless construction path —
+    /// <c>new T()</c> compiles. Counts an explicit parameterless ctor
+    /// as well as an all-defaulted-params ctor (e.g.
+    /// <c>TimePickerState(int initialHour = 12, …)</c>). Also accepts
+    /// the implicit ctor when no instance ctors are declared.
+    /// </summary>
+    static bool HasAccessibleParameterlessConstructor(INamedTypeSymbol stateType)
+    {
+        var ctors = stateType.InstanceConstructors;
+        if (ctors.Length == 0) return true;
+        foreach (var c in ctors)
+        {
+            if (c.DeclaredAccessibility is not (Accessibility.Public or Accessibility.Internal
+                or Accessibility.ProtectedOrInternal))
+                continue;
+            if (c.Parameters.Length == 0) return true;
+            if (c.Parameters.All(p => p.HasExplicitDefaultValue)) return true;
+        }
+        return false;
+    }
+
     static bool HasMethodBody(IMethodSymbol method)
     {
         if (HasBodyInRefs(method)) return true;
@@ -1123,7 +1255,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         public FacadeSlot(IParameterSymbol param, FacadeSlotKind kind,
             ITypeSymbol? callbackType = null, string? slotPropertyName = null,
             string? rememberMethodName = null, INamedTypeSymbol? stateWrapperType = null,
-            ITypeSymbol? stateJvmType = null)
+            ITypeSymbol? stateJvmType = null, string[]? rememberArgExpressions = null)
         {
             Param = param;
             Kind = kind;
@@ -1132,6 +1264,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             RememberMethodName = rememberMethodName;
             StateWrapperType = stateWrapperType;
             StateJvmType = stateJvmType;
+            RememberArgExpressions = rememberArgExpressions ?? System.Array.Empty<string>();
         }
         public IParameterSymbol Param { get; }
         public FacadeSlotKind Kind { get; }
@@ -1140,14 +1273,25 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         public string? RememberMethodName { get; }
         public INamedTypeSymbol? StateWrapperType { get; }
         public ITypeSymbol? StateJvmType { get; }
+        /// <summary>
+        /// Phase 4b — one C# expression per user parameter of the
+        /// <c>Remember*State</c> bridge (composer excluded). Each expression
+        /// reads a member of the caller-supplied state wrapper, e.g.
+        /// <c>_state!.InitialHour</c>. Empty when the Remember bridge has
+        /// zero user params (Phase 4).
+        /// </summary>
+        public string[] RememberArgExpressions { get; }
         public bool HasSlotAttribute => SlotPropertyName is not null;
         public bool IsNullableSlot => Param.NullableAnnotation == NullableAnnotation.Annotated
             && KindIsFnSlot(Kind);
+        public bool IsParameterisedStateHolder =>
+            Kind == FacadeSlotKind.StateHolder && RememberArgExpressions.Length > 0;
         static bool KindIsFnSlot(FacadeSlotKind k) =>
             k is FacadeSlotKind.Content2 or FacadeSlotKind.Content3
               or FacadeSlotKind.NamedFunction2 or FacadeSlotKind.NamedFunction3
               or FacadeSlotKind.RequiredFunction2 or FacadeSlotKind.RequiredFunction3;
         public FacadeSlot WithKind(FacadeSlotKind newKind) =>
-            new(Param, newKind, CallbackType, SlotPropertyName, RememberMethodName, StateWrapperType, StateJvmType);
+            new(Param, newKind, CallbackType, SlotPropertyName, RememberMethodName,
+                StateWrapperType, StateJvmType, RememberArgExpressions);
     }
 }
