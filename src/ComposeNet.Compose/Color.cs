@@ -213,6 +213,12 @@ public readonly struct Color : System.IEquatable<Color>
     public static bool operator !=(Color left, Color right) => !left.Equals(right);
 
     /// <inheritdoc/>
-    public override string ToString() =>
-        $"Color(0x{A:X2}{R:X2}{G:X2}{B:X2})";
+    public override string ToString()
+    {
+        if (PackedValue == Unspecified.PackedValue)
+            return "Color.Unspecified";
+        if ((PackedValue & 0xFFFFFFFFUL) != 0)
+            return $"Color(0x{PackedValue:X16})";
+        return $"Color(0x{A:X2}{R:X2}{G:X2}{B:X2})";
+    }
 }
