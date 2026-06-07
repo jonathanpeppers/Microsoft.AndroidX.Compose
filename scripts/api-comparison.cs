@@ -106,10 +106,16 @@ foreach (var a in artifacts)
     try
     {
         using var zip = ZipFile.OpenRead(jarPath);
+        var extractRoot = Path.GetFullPath(extractDir) + Path.DirectorySeparatorChar;
         foreach (var entry in zip.Entries)
         {
             if (!entry.FullName.EndsWith(".kt", StringComparison.Ordinal)) continue;
-            var dest = Path.Combine(extractDir, entry.FullName.Replace('/', Path.DirectorySeparatorChar));
+            var dest = Path.GetFullPath(Path.Combine(extractDir, entry.FullName.Replace('/', Path.DirectorySeparatorChar)));
+            if (!dest.StartsWith(extractRoot, StringComparison.Ordinal))
+            {
+                Console.WriteLine($"  WARN: skipping zip entry outside extract dir: {entry.FullName}");
+                continue;
+            }
             Directory.CreateDirectory(Path.GetDirectoryName(dest)!);
             entry.ExtractToFile(dest, overwrite: true);
         }
@@ -159,7 +165,8 @@ var csharpByShort = csharpSymbols
 
 var csharpTypes = csharpSymbols
     .Where(s => s.Kind == CSharpKind.Type)
-    .ToDictionary(s => s.ShortName, s => s, StringComparer.OrdinalIgnoreCase);
+    .GroupBy(s => s.ShortName, StringComparer.OrdinalIgnoreCase)
+    .ToDictionary(g => g.Key, g => g.First(), StringComparer.OrdinalIgnoreCase);
 
 // ------------------------------------------------------------
 // 4. Match Kotlin → ComposeNet
