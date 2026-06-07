@@ -96,7 +96,6 @@ internal static class SuspendBridge
         // start a (visible) scroll/animation we'd then have to wait on.
         if (cancellationToken.IsCancellationRequested)
         {
-            cont.ReleaseLifetime();
             cont.Dispose();
             return Task.FromCanceled<T>(cancellationToken);
         }
@@ -112,7 +111,6 @@ internal static class SuspendBridge
             // (e.g. JNI lookup failures, Kotlin throwing inline before
             // creating a Result.Failure) shouldn't surface as
             // synchronous throws from an async-style API.
-            cont.ReleaseLifetime();
             cont.Dispose();
             return Task.FromException<T>(ex);
         }
@@ -132,8 +130,8 @@ internal static class SuspendBridge
                 // Kotlin will resume cont later. Free the local ref to
                 // the sentinel; the cached global lives in
                 // s_suspendedHandle for future comparisons. Leave the
-                // lifetime intact — ReleaseLifetime fires from
-                // ResumeWith when Kotlin actually resumes.
+                // continuation alive — ResumeWith disposes it when
+                // Kotlin actually resumes.
                 JNIEnv.DeleteLocalRef(syncHandle);
             }
             else
@@ -141,10 +139,10 @@ internal static class SuspendBridge
                 // Synchronous completion — funnel through the same
                 // promote-to-global + TCS path as the Kotlin-async
                 // callback (SuspendContinuation.ResumeWith), then
-                // release the lifetime ourselves since Kotlin will
-                // never call ResumeWith on this path.
+                // dispose ourselves since Kotlin will never call
+                // ResumeWith on this path.
                 cont.CompleteWithLocalHandle(syncHandle);
-                cont.ReleaseLifetime();
+                cont.Dispose();
             }
         }
         else
@@ -153,7 +151,7 @@ internal static class SuspendBridge
             // result (rare in practice; most suspends either suspend or
             // return a boxed Unit / boxed primitive).
             cont.CompleteWithLocalHandle(IntPtr.Zero);
-            cont.ReleaseLifetime();
+            cont.Dispose();
         }
 
         return AwaitAndUnbox(cont, unbox);
@@ -184,7 +182,7 @@ internal static class SuspendBridge
         {
             // Belt-and-suspenders: the state machine already roots cont
             // across the await, but this also covers the synchronous-
-            // completion path where ReleaseLifetime already ran (the
+            // completion path where Dispose already ran (the
             // pin is gone, so only the state-machine field keeps cont
             // alive while we touch its TCS).
             GC.KeepAlive(cont);

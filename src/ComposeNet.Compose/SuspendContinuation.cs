@@ -27,11 +27,9 @@ namespace ComposeNet;
 /// <see cref="ResumeWith(Java.Lang.Object)"/> — fire-and-forget callers
 /// (no one holding the returned <see cref="Task"/>) would otherwise
 /// race the GC. The handle is a normal strong reference, not pinned
-/// in memory. <see cref="ReleaseLifetime(bool)"/> is the single
-/// cleanup entry point: it frees the pin, disposes the
-/// <see cref="CancellationTokenRegistration"/>, and is idempotent
-/// (guarded by an interlocked flag) so the overlapping
-/// completion / cancel / dispose paths can't double-free.
+/// in memory. <see cref="Dispose(bool)"/> is the single, idempotent
+/// cleanup entry point: it releases the pin, the
+/// <see cref="CancellationTokenRegistration"/>, and the JNI peer.
 /// </para>
 /// <para>
 /// Cancellation: when a non-default <see cref="CancellationToken"/>
@@ -50,7 +48,7 @@ internal sealed class SuspendContinuation : Java.Lang.Object, IContinuation
 {
     GCHandle _selfPin;
     CancellationTokenRegistration _ctr;
-    int _lifetimeReleased;
+    int _disposed;
 
     /// <summary>
     /// Backing TCS exposed for <see cref="SuspendBridge"/>.
@@ -68,10 +66,10 @@ internal sealed class SuspendContinuation : Java.Lang.Object, IContinuation
         {
             // Allocation-free (state, token) overload: no closure per
             // suspend call. Disposing the registration in
-            // ReleaseLifetime blocks until any in-flight invocation of
+            // Dispose blocks until any in-flight invocation of
             // this callback completes; the callback only touches the
             // (thread-safe) TCS, so there's no deadlock path back into
-            // ReleaseLifetime.
+            // Dispose.
             _ctr = cancellationToken.Register(
                 static (state, token) =>
                 {
@@ -137,7 +135,10 @@ internal sealed class SuspendContinuation : Java.Lang.Object, IContinuation
         }
         finally
         {
-            ReleaseLifetime();
+            // Continuations are single-resume; Kotlin is done with the
+            // JCW now. Standard IDisposable cleanup releases the pin,
+            // the CTR, and the JNI peer all in one shot.
+            Dispose();
         }
     }
 
@@ -176,34 +177,32 @@ internal sealed class SuspendContinuation : Java.Lang.Object, IContinuation
     }
 
     /// <summary>
-    /// Single, idempotent cleanup entry point: frees the GCHandle
-    /// self-pin and disposes the <see cref="CancellationTokenRegistration"/>.
-    /// Called from every completion path (Kotlin resume in
-    /// <see cref="ResumeWith"/>, the sync-completion and sync-throw
-    /// paths in <see cref="SuspendBridge.Invoke{T}"/>, and
-    /// <see cref="Dispose(bool)"/>).
+    /// Releases the GCHandle self-pin, disposes the
+    /// <see cref="CancellationTokenRegistration"/>, and lets
+    /// <see cref="Java.Lang.Object.Dispose(bool)"/> release the JNI
+    /// peer. Idempotent and safe to call from any completion path
+    /// (Kotlin resume in <see cref="ResumeWith"/>, the sync paths in
+    /// <see cref="SuspendBridge.Invoke{T}"/>, the finalizer).
     /// </summary>
-    /// <param name="disposing">
-    /// <see langword="false"/> when called from the finalizer thread
-    /// (via <see cref="Java.Lang.Object.Dispose(bool)"/>): the CTR
-    /// dispose is skipped to avoid blocking the finalizer thread, but
-    /// the GCHandle (which is the thing that prevented finalization in
-    /// the first place) is still released for symmetry. In practice
-    /// every call site uses the default <see langword="true"/>.
-    /// </param>
-    internal void ReleaseLifetime(bool disposing = true)
-    {
-        if (Interlocked.Exchange(ref _lifetimeReleased, 1) != 0)
-            return;
-        if (disposing)
-            _ctr.Dispose();
-        if (_selfPin.IsAllocated)
-            _selfPin.Free();
-    }
-
+    /// <remarks>
+    /// Disposing the JNI peer here is safe because in every code
+    /// path that reaches Dispose, Kotlin is already done with this
+    /// continuation: it either never received it (sync-throw before
+    /// the JNI call), already returned a synchronous result
+    /// (sync-completion), or already invoked <c>resumeWith</c>
+    /// (continuations are single-resume). Calling <c>Dispose</c>
+    /// before the suspend resumes would race Kotlin's JNI hold on
+    /// the JCW — this method is not for that.
+    /// </remarks>
     protected override void Dispose(bool disposing)
     {
-        ReleaseLifetime(disposing);
+        if (Interlocked.Exchange(ref _disposed, 1) == 0)
+        {
+            if (disposing)
+                _ctr.Dispose();
+            if (_selfPin.IsAllocated)
+                _selfPin.Free();
+        }
         base.Dispose(disposing);
     }
 }
