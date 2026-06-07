@@ -32,13 +32,29 @@ internal sealed class DisposableEffectBody : Java.Lang.Object, IFunction1
 
     public Java.Lang.Object Invoke(Java.Lang.Object? p0)
     {
-        // Compose always passes a non-null DisposableEffectScope. The
-        // ?? fallback keeps the static analyzer happy and gives a
-        // recognisable NRE message if Compose ever changes that.
-        var scope = p0 as DisposableEffectScope
-            ?? throw new System.InvalidOperationException(
-                "DisposableEffect body received a non-DisposableEffectScope argument: "
-                + (p0?.Class?.Name ?? "<null>"));
+        // Compose always passes a non-null DisposableEffectScope (the
+        // singleton `InternalDisposableEffectScope`). Use JavaCast<T>
+        // rather than `p0 as DisposableEffectScope` because Mono.Android's
+        // peer cache doesn't know Kotlin's `internal object` subclasses
+        // implement the bound interface — a plain `as` returns null even
+        // when the underlying Java object does implement the interface.
+        if (p0 is null)
+            throw new System.InvalidOperationException(
+                "DisposableEffect body received a null DisposableEffectScope");
+
+        DisposableEffectScope scope;
+        try
+        {
+            scope = p0.JavaCast<DisposableEffectScope>();
+        }
+        catch (System.Exception ex)
+        {
+            throw new System.InvalidOperationException(
+                "DisposableEffect body could not project arg ("
+                + (p0.Class?.Name ?? "<unknown>")
+                + ") as DisposableEffectScope", ex);
+        }
+
         var onDispose = _body(scope)
             ?? throw new System.InvalidOperationException(
                 "DisposableEffect body returned a null onDispose callback. "

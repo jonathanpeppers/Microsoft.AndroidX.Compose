@@ -59,10 +59,29 @@ internal sealed class LaunchedEffectBody : Java.Lang.Object, IFunction2
     {
         // p0 is CoroutineScope (unused — we have a managed Task).
         // p1 is the Continuation<Unit> we resume when the Task ends.
-        var continuation = p1 as IContinuation
-            ?? throw new System.InvalidOperationException(
-                "LaunchedEffect Invoke expected a Continuation arg in slot 1, got "
-                + (p1?.Class?.Name ?? "<null>"));
+        // Kotlin hands us an anonymous synthetic class (e.g.
+        // `IntrinsicsKt__IntrinsicsJvmKt$createCoroutineUnintercepted$$inlined$...$4`)
+        // that does implement `kotlin.coroutines.Continuation` but isn't
+        // in Mono.Android's peer registry, so a plain `as IContinuation`
+        // cast returns null. JavaCast<T> bypasses the managed-type
+        // cache and synthesizes an interface peer from the raw handle,
+        // which is exactly what we need.
+        if (p1 is null)
+            throw new System.InvalidOperationException(
+                "LaunchedEffect Invoke received a null Continuation in slot 1");
+
+        IContinuation continuation;
+        try
+        {
+            continuation = p1.JavaCast<IContinuation>();
+        }
+        catch (System.Exception ex)
+        {
+            throw new System.InvalidOperationException(
+                "LaunchedEffect Invoke could not project slot 1 ("
+                + (p1.Class?.Name ?? "<unknown>")
+                + ") as kotlin.coroutines.Continuation", ex);
+        }
 
         var cts = new System.Threading.CancellationTokenSource();
         var resumed = new ResumeOnceGate();
