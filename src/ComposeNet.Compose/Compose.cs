@@ -295,6 +295,53 @@ public static class Compose
     }
 
     /// <summary>
+    /// Compose's <c>rememberDraggableState(onDelta)</c>: build a
+    /// <see cref="DraggableState"/> whose underlying Kotlin handle is
+    /// cached in the active composer's slot table for the lifetime of
+    /// this call site. The <paramref name="onDelta"/> callback is
+    /// wrapped through Kotlin's <c>rememberUpdatedState</c>, so passing
+    /// a fresh lambda each recomposition is safe — the Java
+    /// <c>DraggableState</c> identity stays stable while the callback
+    /// can capture changing recomposition-time state.
+    ///
+    /// Must be called inside a composition (e.g. inside a
+    /// <c>SetContent</c> body or a <see cref="ComposableNode.Render(IComposer)"/>
+    /// override). Pair with
+    /// <see cref="Modifier.Draggable(DraggableState, ComposeNet.Orientation, bool)"/>
+    /// — the returned state is the value to hand to that modifier.
+    /// </summary>
+    public static DraggableState RememberDraggableState(
+        System.Action<float> onDelta,
+        [CallerLineNumber] int line = 0,
+        [CallerFilePath] string file = "")
+    {
+        System.ArgumentNullException.ThrowIfNull(onDelta);
+        var composer = ComposeContext.Current
+            ?? throw new System.InvalidOperationException(
+                "Compose.RememberDraggableState must be called inside a composition (e.g. inside a SetContent body or a ComposableNode.Render override).");
+
+        composer.StartReplaceableGroup(SourceLocationKey.Compute(line, file));
+        try
+        {
+            var jcw = new ComposableLambda1(boxed =>
+            {
+                var f = boxed as Java.Lang.Float
+                    ?? throw new System.InvalidCastException(
+                        $"Expected java.lang.Float in DraggableState.onDelta; got '{boxed?.Class?.Name ?? "null"}'.");
+                onDelta(f.FloatValue());
+            });
+            var jvm = AndroidX.Compose.Foundation.Gestures.DraggableKt.RememberDraggableState(jcw, composer, 0)
+                ?? throw new System.InvalidOperationException(
+                    "DraggableKt.RememberDraggableState returned null.");
+            return new DraggableState(jvm);
+        }
+        finally
+        {
+            composer.EndReplaceableGroup();
+        }
+    }
+
+    /// <summary>
     /// Compose's <c>SideEffect { … }</c>: runs <paramref name="effect"/>
     /// on every successful recomposition, <b>after</b> the composition
     /// has been applied. Use it to publish managed-side state into

@@ -401,6 +401,42 @@ public sealed class Modifier
     }
 
     /// <summary>
+    /// <c>Modifier.draggable(state, orientation, enabled)</c> — drag
+    /// gesture handler that reports raw drag deltas (in pixels along
+    /// the chosen <see cref="Orientation"/>) to the supplied
+    /// <see cref="DraggableState"/>. Unlike scroll, this modifier does
+    /// not consume the deltas itself — your <c>onDelta</c> callback
+    /// inside <see cref="DraggableState"/> decides what to do with the
+    /// movement (typically: update an offset state that another
+    /// modifier reads).
+    /// </summary>
+    /// <param name="state">State holder that receives drag deltas.
+    /// Build via <c>new DraggableState(delta =&gt; ...)</c> inside a
+    /// <see cref="Compose.Remember{T}(System.Func{T}, int, string)"/> call, or via
+    /// <see cref="Compose.RememberDraggableState(System.Action{float}, int, string)"/>
+    /// for stable Java identity across recompositions when the
+    /// callback closure changes.</param>
+    /// <param name="orientation">Axis the gesture operates on —
+    /// <see cref="Orientation.Vertical"/> for up-down drags,
+    /// <see cref="Orientation.Horizontal"/> for left-right drags.</param>
+    /// <param name="enabled">When <c>false</c>, the modifier ignores
+    /// touch input. Defaults to <c>true</c>.</param>
+    public Modifier Draggable(DraggableState state, Orientation orientation, bool enabled = true)
+    {
+        System.ArgumentNullException.ThrowIfNull(state);
+        var jvm = state.Jvm;
+        var jvmOrientation = orientation == Orientation.Horizontal
+            ? AndroidX.Compose.Foundation.Gestures.Orientation.Horizontal!
+            : AndroidX.Compose.Foundation.Gestures.Orientation.Vertical!;
+        return Append(curr =>
+            ComposeBridges.ModifierDraggable(
+                curr,
+                ((Java.Lang.Object)jvm).Handle,
+                ((Java.Lang.Object)jvmOrientation).Handle,
+                enabled));
+    }
+
+    /// <summary>
     /// <c>Modifier.weight(weight, fill = true)</c> — only valid inside a
     /// <see cref="Row"/> or <see cref="Column"/> (or any container that
     /// publishes <see cref="ScopeKind.Row"/> / <see cref="ScopeKind.Column"/>).
@@ -644,6 +680,58 @@ public sealed class Modifier
     /// </summary>
     public Modifier DisplayCutoutPadding() =>
         Append(curr => ComposeBridges.ModifierDisplayCutoutPadding(curr));
+
+    /// <summary>
+    /// <c>Modifier.captionBarPadding()</c> — pads for the caption bar
+    /// inset (window decorations on freeform / desktop windowing modes).
+    /// On phones without a caption bar this is a no-op.
+    /// </summary>
+    public Modifier CaptionBarPadding() =>
+        Append(curr => ComposeBridges.ModifierCaptionBarPadding(curr));
+
+    /// <summary>
+    /// <c>Modifier.mandatorySystemGesturesPadding()</c> — pads for the
+    /// subset of gesture insets the system always reserves for itself
+    /// (e.g. the bottom home-gesture strip), even when the user opts
+    /// out of edge gestures.
+    /// </summary>
+    public Modifier MandatorySystemGesturesPadding() =>
+        Append(curr => ComposeBridges.ModifierMandatorySystemGesturesPadding(curr));
+
+    /// <summary>
+    /// <c>Modifier.safeContentPadding()</c> — union of
+    /// <see cref="SafeDrawingPadding"/> and
+    /// <see cref="SafeGesturesPadding"/>. Use for content that should
+    /// avoid both visual obstructions and gesture zones.
+    /// </summary>
+    public Modifier SafeContentPadding() =>
+        Append(curr => ComposeBridges.ModifierSafeContentPadding(curr));
+
+    /// <summary>
+    /// <c>Modifier.safeGesturesPadding()</c> — union of
+    /// <see cref="MandatorySystemGesturesPadding"/> +
+    /// <see cref="SystemGesturesPadding"/> + the tappable-element
+    /// insets. Use to keep interactive UI out of the system's gesture
+    /// zones.
+    /// </summary>
+    public Modifier SafeGesturesPadding() =>
+        Append(curr => ComposeBridges.ModifierSafeGesturesPadding(curr));
+
+    /// <summary>
+    /// <c>Modifier.systemGesturesPadding()</c> — pads for the system
+    /// gesture insets (the edge regions where the OS may interpret
+    /// swipes as system gestures such as back / home).
+    /// </summary>
+    public Modifier SystemGesturesPadding() =>
+        Append(curr => ComposeBridges.ModifierSystemGesturesPadding(curr));
+
+    /// <summary>
+    /// <c>Modifier.waterfallPadding()</c> — pads for waterfall display
+    /// insets (the curved edges of waterfall-screen devices). No-op on
+    /// flat-screen phones.
+    /// </summary>
+    public Modifier WaterfallPadding() =>
+        Append(curr => ComposeBridges.ModifierWaterfallPadding(curr));
 
     /// <summary>
     /// <c>Modifier.testTag(tag)</c> — attaches a stable identifier for

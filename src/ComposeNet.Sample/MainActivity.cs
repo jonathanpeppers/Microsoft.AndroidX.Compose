@@ -59,6 +59,17 @@ public class MainActivity : ComposeActivity
             var focusStatus63   = Remember(() => new MutableState<string>("not focused"));
             var selectedRow63   = Remember(() => new MutableNumberState<int>(0));
             var taps63          = Remember(() => new MutableNumberState<int>(0));
+            // Issue #63 follow-up: Modifier.Draggable demo state.
+            // The Draggable callback hands us raw pixel deltas; divide
+            // by the screen density so dragX63 accumulates in Dp,
+            // matching what Modifier.Offset(x: Dp) expects. Otherwise
+            // a 3x-density phone moves the box 3x faster than the
+            // finger. The RememberDraggableState callback closes over
+            // dragX63 so the Java DraggableState identity stays stable
+            // across recompositions while the offset still updates.
+            var dragDensity     = Android.Content.Res.Resources.System!.DisplayMetrics!.Density;
+            var dragX63         = Remember(() => new MutableState<float>(0f));
+            var dragState63     = Compose.RememberDraggableState(delta => dragX63.Value += delta / dragDensity);
 
             var checkbox    = Remember(() => new MutableState<bool>(true));
             var switchOn    = Remember(() => new MutableState<bool>(false));
@@ -124,6 +135,7 @@ public class MainActivity : ComposeActivity
             // that programmatically scroll back to the top.
             var buttonsScroll = Remember(() => new ScrollState());
             var greetingScroll = Remember(() => new ScrollState());
+            var modifiers63Scroll = Remember(() => new ScrollState());
 
             // Compose Navigation demo state (issue #60). The NavController
             // is the externally-driven entry point — Button onClicks call
@@ -201,6 +213,10 @@ public class MainActivity : ComposeActivity
                         {
                             new Text("Custom"),
                             new Text($"count={count}"),
+                        },
+                        new Tab(selected: sub.Value == 4, onClick: () => sub.Value = 4)
+                        {
+                            Text = new Text("#63"),
                         },
                     },
                     sub.Value switch
@@ -313,11 +329,86 @@ public class MainActivity : ComposeActivity
                                     .Clickable(() => count++)
                                     .Padding(horizontal: 16, vertical: 8),
                             },
+                            // Issue #63 demos live in their own sub-tab — see
+                            // sub.Value == 4 below.
+                            new Text("Issue #63 modifiers: see the #63 sub-tab"),
+                            // Secure text inputs — exercise both
+                            // SecureTextField (filled) and
+                            // OutlinedSecureTextField. The two state
+                            // holders are independent; tapping "Sign in"
+                            // snapshots both lengths into signInStatus.
+                            new Text("Secure inputs:"),
+                            new SecureTextField(pwd)
+                            {
+                                Label          = new Text("Password"),
+                                LeadingIcon    = new Text("🔒"),
+                                SupportingText = new Text("Filled"),
+                            },
+                            new OutlinedSecureTextField(pwdConfirm)
+                            {
+                                Label          = new Text("Confirm password"),
+                                LeadingIcon    = new Text("🔒"),
+                                SupportingText = new Text("Outlined"),
+                            },
+                            new Button(onClick: () =>
+                                signInStatus.Value =
+                                    $"len={pwd.Text.Length}/{pwdConfirm.Text.Length}, " +
+                                    $"match={(pwd.Text == pwdConfirm.Text)}")
+                            {
+                                new Text("Sign in"),
+                            },
+                            new Text(string.IsNullOrEmpty(signInStatus.Value)
+                                ? "Tap Sign in to compare"
+                                : signInStatus.Value),
+                        },
+                        1 => new Column
+                        {
+                            new Text($"Count: {count}"),
+                            new Row
+                            {
+                                new Image(Resource.Drawable.ic_star, "Star icon"),
+                                new Spacer { Modifier = Modifier.Companion.FillMaxWidth(0.05f) },
+                                new Column
+                                {
+                                    new Button(onClick: () => count++) { new Text("Tap to increment") },
+                                    new IconButton(onClick: () => count--) { new Text("−") },
+                                },
+                            },
+                        },
+                        2 => (ComposableNode)new Column
+                        {
+                            new ListItem
+                            {
+                                Headline   = new Text("Inbox"),
+                                Supporting = new Text("12 unread messages"),
+                                Leading    = new Text("📥"),
+                                Trailing   = new Badge { new Text("12") },
+                            },
+                            new ListItem
+                            {
+                                Headline   = new Text("Sent"),
+                                Supporting = new Text("Last sent yesterday"),
+                                Leading    = new Text("📤"),
+                            },
+                            new ListItem
+                            {
+                                Headline = new Text("Drafts"),
+                                Leading  = new Text("📝"),
+                                Trailing = new BadgedBox
+                                {
+                                    Badge   = new Badge { new Text("3") },
+                                    Content = new Text("✉"),
+                                },
+                            },
+                        },
+                        4 => (ComposableNode)new Column
+                        {
+                            Modifier.Companion.VerticalScroll(modifiers63Scroll),
                             // Issue #63 modifier demo — scope alignment inside a Box,
                             // Toggleable row with semantic merge, programmatic focus
                             // via FocusRequester + OnFocusChanged + Focusable, and
                             // CombinedClickable + Selectable + Semantics.
-                            new Text("Issue #63 modifiers:"),
+                            new Text("Issue #63 modifiers"),
                             // Box with three corner-aligned labels (TopStart, Center,
                             // BottomEnd). The fourth child is an explicit colored
                             // Box that uses MatchParentSize() to fill the parent —
@@ -390,74 +481,79 @@ public class MainActivity : ComposeActivity
                                 new Text("Row 2") { Modifier = Modifier.Companion
                                     .FillMaxWidth().Selectable(selectedRow63.Value == 2, () => selectedRow63.Value = 2).Padding(6) },
                             },
-                                // Secure text inputs — exercise both
-                                // SecureTextField (filled) and
-                                // OutlinedSecureTextField. The two state
-                                // holders are independent; tapping "Sign in"
-                                // snapshots both lengths into signInStatus.
-                                new Text("Secure inputs:"),
-                                new SecureTextField(pwd)
-                                {
-                                    Label          = new Text("Password"),
-                                    LeadingIcon    = new Text("🔒"),
-                                    SupportingText = new Text("Filled"),
-                                },
-                                new OutlinedSecureTextField(pwdConfirm)
-                                {
-                                    Label          = new Text("Confirm password"),
-                                    LeadingIcon    = new Text("🔒"),
-                                    SupportingText = new Text("Outlined"),
-                                },
-                                new Button(onClick: () =>
-                                    signInStatus.Value =
-                                        $"len={pwd.Text.Length}/{pwdConfirm.Text.Length}, " +
-                                        $"match={(pwd.Text == pwdConfirm.Text)}")
-                                {
-                                    new Text("Sign in"),
-                                },
-                                new Text(string.IsNullOrEmpty(signInStatus.Value)
-                                    ? "Tap Sign in to compare"
-                                    : signInStatus.Value),
-                            },
-                        1 => new Column
-                        {
-                            new Text($"Count: {count}"),
-                            new Row
+                            // Issue #63 follow-up — FlowRow scope dispatch:
+                            // chips wrap onto multiple lines once the row
+                            // runs out of horizontal space. Each chip uses
+                            // Modifier.Align(Alignment.Vertical.CenterVertically),
+                            // which is a RowScope-only modifier — proves
+                            // FlowRow forwards the RowScope receiver
+                            // through ScopeKind.Row dispatch.
+                            new Text("FlowRow chips (wraps when wide):"),
+                            new FlowRow
                             {
-                                new Image(Resource.Drawable.ic_star, "Star icon"),
-                                new Spacer { Modifier = Modifier.Companion.FillMaxWidth(0.05f) },
-                                new Column
+                                Modifier.Companion.FillMaxWidth().Padding(4),
+                                new AssistChip(onClick: () => taps63.Value++)
                                 {
-                                    new Button(onClick: () => count++) { new Text("Tap to increment") },
-                                    new IconButton(onClick: () => count--) { new Text("−") },
+                                    Label    = new Text("Apple"),
+                                    Modifier = Modifier.Companion.Align(Alignment.Vertical.CenterVertically).Padding(2),
+                                },
+                                new AssistChip(onClick: () => taps63.Value++)
+                                {
+                                    Label    = new Text("Banana"),
+                                    Modifier = Modifier.Companion.Align(Alignment.Vertical.CenterVertically).Padding(2),
+                                },
+                                new AssistChip(onClick: () => taps63.Value++)
+                                {
+                                    Label    = new Text("Cherry"),
+                                    Modifier = Modifier.Companion.Align(Alignment.Vertical.CenterVertically).Padding(2),
+                                },
+                                new AssistChip(onClick: () => taps63.Value++)
+                                {
+                                    Label    = new Text("Durian"),
+                                    Modifier = Modifier.Companion.Align(Alignment.Vertical.CenterVertically).Padding(2),
+                                },
+                                new AssistChip(onClick: () => taps63.Value++)
+                                {
+                                    Label    = new Text("Elderberry"),
+                                    Modifier = Modifier.Companion.Align(Alignment.Vertical.CenterVertically).Padding(2),
+                                },
+                                new AssistChip(onClick: () => taps63.Value++)
+                                {
+                                    Label    = new Text("Fig"),
+                                    Modifier = Modifier.Companion.Align(Alignment.Vertical.CenterVertically).Padding(2),
+                                },
+                                new AssistChip(onClick: () => taps63.Value++)
+                                {
+                                    Label    = new Text("Grape"),
+                                    Modifier = Modifier.Companion.Align(Alignment.Vertical.CenterVertically).Padding(2),
                                 },
                             },
-                        },
-                        2 => (ComposableNode)new Column
-                        {
-                            new ListItem
+                            // Issue #63 follow-up — Modifier.Draggable:
+                            // touch and drag the purple square left or
+                            // right. The DraggableState's onDelta
+                            // callback accumulates the raw pixel delta
+                            // into dragX63, which Modifier.Offset then
+                            // reads back as a Dp value. Convenience
+                            // inset modifier (.SafeContentPadding) is
+                            // applied to the offset Text so we exercise
+                            // that bridge too — it's a no-op without
+                            // edge-to-edge but proves the JNI call
+                            // doesn't throw.
+                            new Text($"Drag offset: {dragX63.Value:F0}dp") { Modifier = Modifier.Companion.SafeContentPadding() },
+                            new Box
                             {
-                                Headline   = new Text("Inbox"),
-                                Supporting = new Text("12 unread messages"),
-                                Leading    = new Text("📥"),
-                                Trailing   = new Badge { new Text("12") },
-                            },
-                            new ListItem
-                            {
-                                Headline   = new Text("Sent"),
-                                Supporting = new Text("Last sent yesterday"),
-                                Leading    = new Text("📤"),
-                            },
-                            new ListItem
-                            {
-                                Headline = new Text("Drafts"),
-                                Leading  = new Text("📝"),
-                                Trailing = new BadgedBox
+                                Modifier.Companion.FillMaxWidth().Height(72).Padding(4)
+                                    .Border(1, ColorKt.Color(red: 0xB0, green: 0xB0, blue: 0xB0, alpha: 0xFF)),
+                                new Box
                                 {
-                                    Badge   = new Badge { new Text("3") },
-                                    Content = new Text("✉"),
+                                    Modifier.Companion
+                                        .Offset(x: dragX63.Value)
+                                        .Size(56)
+                                        .Background(ColorKt.Color(red: 0xCE, green: 0x93, blue: 0xD8, alpha: 0xFF))
+                                        .Draggable(dragState63, Orientation.Horizontal),
                                 },
                             },
+                            new Button(onClick: () => dragX63.Value = 0f) { new Text("Reset drag") },
                         },
                         _ => new Column
                         {
