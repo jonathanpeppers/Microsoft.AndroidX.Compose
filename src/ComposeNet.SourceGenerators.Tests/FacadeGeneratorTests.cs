@@ -2299,4 +2299,229 @@ public class FacadeGeneratorTests
         var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
         Assert.Empty(errors);
     }
+
+    // ─── [ConfirmStateChange] — per-instance JNI veto adapter ─────────
+
+    /// <summary>Shared snippet stubbing a DrawerState-style state class
+    /// plus the convention-named JCW adapter
+    /// (<c>&lt;TName&gt;ConfirmStateChange</c>) the generator looks up
+    /// from a <c>[ConfirmStateChange(typeof(T))]</c> attribute.</summary>
+    const string DrawerStateStubs = """
+        namespace AndroidX.Compose.Material3
+        {
+            public enum DrawerValue { Closed, Open }
+            public interface IDrawerState { }
+        }
+        namespace ComposeNet
+        {
+            public sealed class DrawerStateHolder
+            {
+                internal AndroidX.Compose.Material3.IDrawerState? Jvm;
+                public AndroidX.Compose.Material3.DrawerValue InitialValue { get; }
+                public DrawerStateHolder() { }
+            }
+            public sealed class DrawerValueConfirmStateChange : Kotlin.Jvm.Functions.IFunction1
+            {
+                public System.Func<AndroidX.Compose.Material3.DrawerValue, bool>? Callback { get; set; }
+            }
+        }
+        """;
+
+    const string DrawerSig =
+        "(Lkotlin/jvm/functions/Function2;Landroidx/compose/ui/Modifier;Landroidx/compose/material3/DrawerState;ZJLkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;II)V";
+
+    [Fact]
+    public void ConfirmStateChange_GeneratesAdapterFieldPropertyAndPreamble()
+    {
+        // Happy path: a Remember bridge takes an IFunction1?
+        // `confirmStateChange` param annotated with
+        // [ConfirmStateChange(typeof(DrawerValue))]. The facade should:
+        //   - allocate a single readonly adapter field
+        //   - expose a Func<DrawerValue, bool>? ConfirmStateChange prop
+        //   - assign Callback = ConfirmStateChange in the Render
+        //     preamble BEFORE calling Remember
+        //   - forward _confirmStateChangeAdapter to the Remember bridge
+        //     as the IFunction1? slot
+        var code = $$"""
+            using AndroidX.Compose.Runtime;
+            using AndroidX.Compose.UI;
+            using ComposeNet;
+            using Kotlin.Jvm.Functions;
+            using System;
+
+            [assembly: ComposeDefaults("DrawerDefault",
+                "!drawerContent", "modifier", "!drawerState", "gesturesEnabled", "scrimColor", "!content")]
+
+            {{DrawerStateStubs}}
+
+            namespace ComposeNet
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(Class="androidx/compose/material3/NavigationDrawerKt",
+                                   JvmName="ModalNavigationDrawer",
+                                   Signature="{{DrawerSig}}",
+                                   Defaults=typeof(DrawerDefault))]
+                    [ComposeFacade]
+                    public static partial void Drawer(
+                        IFunction2 drawerContent,
+                        IModifier? modifier,
+                        [StateHolder(Remember = nameof(RememberDrawerState),
+                                     StateType = typeof(DrawerStateHolder))]
+                        IntPtr drawerState,
+                        IFunction2 content,
+                        int defaults,
+                        IComposer composer);
+
+                    public static IntPtr RememberDrawerState(
+                        AndroidX.Compose.Material3.DrawerValue initialValue,
+                        [ConfirmStateChange(typeof(AndroidX.Compose.Material3.DrawerValue))]
+                        IFunction1? confirmStateChange,
+                        IComposer composer) => default;
+                }
+            }
+            """;
+
+        var (output, diags, emitted) = Run(code, "Drawer");
+        Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+
+        // (a) adapter field allocated once.
+        Assert.Contains(
+            "readonly global::ComposeNet.DrawerValueConfirmStateChange _confirmStateChangeAdapter = new global::ComposeNet.DrawerValueConfirmStateChange();",
+            emitted);
+        // (b) ConfirmStateChange property surfaces with the right type.
+        Assert.Contains(
+            "public global::System.Func<global::AndroidX.Compose.Material3.DrawerValue, bool>? ConfirmStateChange { get; set; }",
+            emitted);
+        // (c) Render preamble assigns the user delegate into the adapter.
+        Assert.Contains(
+            "_confirmStateChangeAdapter.Callback = ConfirmStateChange;",
+            emitted);
+        // (d) Remember call forwards the adapter into the IFunction1? slot.
+        Assert.Contains(
+            "global::ComposeNet.ComposeBridges.RememberDrawerState(_drawerState!.InitialValue, _confirmStateChangeAdapter, composer)",
+            emitted);
+
+        var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
+        Assert.Empty(errors);
+    }
+
+    [Fact]
+    public void ConfirmStateChange_OnNonIFunction1_FailsCN3010()
+    {
+        // Put [ConfirmStateChange] on a primitive param — generator
+        // must reject with CN3010 because the slot is meant for an
+        // IFunction1 veto adapter.
+        var code = $$"""
+            using AndroidX.Compose.Runtime;
+            using AndroidX.Compose.UI;
+            using ComposeNet;
+            using Kotlin.Jvm.Functions;
+            using System;
+
+            [assembly: ComposeDefaults("DrawerDefault",
+                "!drawerContent", "modifier", "!drawerState", "gesturesEnabled", "scrimColor", "!content")]
+
+            {{DrawerStateStubs}}
+
+            namespace ComposeNet
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(Class="androidx/compose/material3/NavigationDrawerKt",
+                                   JvmName="ModalNavigationDrawer",
+                                   Signature="{{DrawerSig}}",
+                                   Defaults=typeof(DrawerDefault))]
+                    [ComposeFacade]
+                    public static partial void Drawer(
+                        IFunction2 drawerContent,
+                        IModifier? modifier,
+                        [StateHolder(Remember = nameof(RememberDrawerState),
+                                     StateType = typeof(DrawerStateHolder))]
+                        IntPtr drawerState,
+                        IFunction2 content,
+                        int defaults,
+                        IComposer composer);
+
+                    public static IntPtr RememberDrawerState(
+                        AndroidX.Compose.Material3.DrawerValue initialValue,
+                        [ConfirmStateChange(typeof(AndroidX.Compose.Material3.DrawerValue))]
+                        bool confirmStateChange,
+                        IComposer composer) => default;
+                }
+            }
+            """;
+
+        var (_, diags, emitted) = Run(code, "Drawer");
+        Assert.Null(emitted);
+        Assert.Contains(diags, d => d.Id == "CN3010"
+            && d.GetMessage().Contains("requires a Kotlin.Jvm.Functions.IFunction1"));
+    }
+
+    [Fact]
+    public void ConfirmStateChange_MissingConventionAdapter_FailsCN3010()
+    {
+        // No `ComposeNet.<TName>ConfirmStateChange` class in scope and
+        // no explicit AdapterType — generator must report CN3010 with
+        // a message naming the missing convention class.
+        var code = $$"""
+            using AndroidX.Compose.Runtime;
+            using AndroidX.Compose.UI;
+            using ComposeNet;
+            using Kotlin.Jvm.Functions;
+            using System;
+
+            [assembly: ComposeDefaults("DrawerDefault",
+                "!drawerContent", "modifier", "!drawerState", "gesturesEnabled", "scrimColor", "!content")]
+
+            namespace AndroidX.Compose.Material3
+            {
+                public enum DrawerValue { Closed, Open }
+                public interface IDrawerState { }
+            }
+            namespace ComposeNet
+            {
+                public sealed class DrawerStateHolder
+                {
+                    internal AndroidX.Compose.Material3.IDrawerState? Jvm;
+                    public AndroidX.Compose.Material3.DrawerValue InitialValue { get; }
+                    public DrawerStateHolder() { }
+                }
+                // NOTE: no `DrawerValueConfirmStateChange` class declared.
+            }
+
+            namespace ComposeNet
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(Class="androidx/compose/material3/NavigationDrawerKt",
+                                   JvmName="ModalNavigationDrawer",
+                                   Signature="{{DrawerSig}}",
+                                   Defaults=typeof(DrawerDefault))]
+                    [ComposeFacade]
+                    public static partial void Drawer(
+                        IFunction2 drawerContent,
+                        IModifier? modifier,
+                        [StateHolder(Remember = nameof(RememberDrawerState),
+                                     StateType = typeof(DrawerStateHolder))]
+                        IntPtr drawerState,
+                        IFunction2 content,
+                        int defaults,
+                        IComposer composer);
+
+                    public static IntPtr RememberDrawerState(
+                        AndroidX.Compose.Material3.DrawerValue initialValue,
+                        [ConfirmStateChange(typeof(AndroidX.Compose.Material3.DrawerValue))]
+                        IFunction1? confirmStateChange,
+                        IComposer composer) => default;
+                }
+            }
+            """;
+
+        var (_, diags, emitted) = Run(code, "Drawer");
+        Assert.Null(emitted);
+        Assert.Contains(diags, d => d.Id == "CN3010"
+            && d.GetMessage().Contains("ComposeNet.DrawerValueConfirmStateChange"));
+    }
 }

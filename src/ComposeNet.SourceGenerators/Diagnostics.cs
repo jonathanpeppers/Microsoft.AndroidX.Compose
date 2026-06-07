@@ -163,4 +163,12 @@ internal static class Diagnostics
         category: "ComposeNet",
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);
+
+    public static readonly DiagnosticDescriptor FacadeConfirmStateChangeInvalid = new(
+        id: "CN3010",
+        title: "[ConfirmStateChange] configuration is invalid",
+        messageFormat: "Facade for bridge '{0}': {1}",
+        category: "ComposeNet",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
 }
