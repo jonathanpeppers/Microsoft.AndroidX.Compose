@@ -58,6 +58,16 @@ public static class Catalog
         D.Buttons.Chips.Demo,
         D.Buttons.FloatingActionButtons.Demo,
         D.Buttons.Tooltips.Demo,
+
+        // ---- Selection ----
+        D.Selection.CheckboxDemo.Demo,
+        D.Selection.TriStateCheckboxDemo.Demo,
+        D.Selection.SwitchDemo.Demo,
+        D.Selection.RadioButtonGroup.Demo,
+        D.Selection.SliderDemo.Demo,
+        D.Selection.RangeSliderDemo.Demo,
+        D.Selection.SingleChoiceSegmentedButtons.Demo,
+        D.Selection.MultiChoiceSegmentedButtons.Demo,
     ];
 
     /// <summary>
