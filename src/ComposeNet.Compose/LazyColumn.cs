@@ -89,6 +89,11 @@ public sealed class LazyColumn<T> : ComposableNode
         int defaults = (int)LazyColumnDefault.All;
         if (modifier is not null) defaults &= ~(int)LazyColumnDefault.Modifier;
         if (State    is not null) defaults &= ~(int)LazyColumnDefault.State;
+        // Bool params lower to a single $default bit. Kotlin's default
+        // is false, so only clear the bit when the caller asked for
+        // true — otherwise let Kotlin substitute its own false and
+        // save the explicit-pass round trip.
+        if (ReverseLayout)        defaults &= ~(int)LazyColumnDefault.ReverseLayout;
 
         LazyDslKt.LazyColumn(
             modifier:            modifier,
