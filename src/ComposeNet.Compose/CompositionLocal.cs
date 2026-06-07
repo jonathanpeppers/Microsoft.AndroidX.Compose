@@ -6,33 +6,60 @@ namespace ComposeNet;
 /// <summary>
 /// Type-inferred entry point for creating <see cref="CompositionLocal{T}"/>
 /// instances. Mirrors Kotlin's top-level <c>compositionLocalOf</c> and
-/// <c>staticCompositionLocalOf</c> functions:
+/// <c>staticCompositionLocalOf</c> functions, with both eager value
+/// and lazy factory overloads:
 /// <code>
+/// // Eager: evaluated once at field-init time.
 /// public static readonly CompositionLocal&lt;MyTheme&gt; LocalMyTheme =
-///     CompositionLocal.StaticOf(() =&gt; MyTheme.Default);
+///     CompositionLocal.StaticOf(MyTheme.Default);
+///
+/// // Lazy: evaluated the first time the local is read with no provider in scope.
+/// public static readonly CompositionLocal&lt;MyTheme&gt; LocalMyTheme =
+///     CompositionLocal.StaticOf(() =&gt; new MyTheme(...));
 /// </code>
 /// </summary>
 public static class CompositionLocal
 {
     /// <summary>
-    /// Create a <i>static</i> composition local. Readers do <b>not</b>
-    /// recompose when the provided value changes — instead, the entire
-    /// content lambda of the enclosing
+    /// Create a <i>static</i> composition local with an eager default
+    /// value. Readers do <b>not</b> recompose when the provided value
+    /// changes — instead, the entire content lambda of the enclosing
     /// <see cref="CompositionLocalProvider"/> is recomposed. Use this
     /// for values that rarely change (theme tokens, density-like
     /// configuration) since it avoids the per-reader bookkeeping cost
     /// of the dynamic variant.
+    /// </summary>
+    public static CompositionLocal<T> StaticOf<T>(T defaultValue) =>
+        CompositionLocal<T>.StaticOf(() => defaultValue);
+
+    /// <summary>
+    /// Lazy-default overload of <see cref="StaticOf{T}(T)"/>:
+    /// <paramref name="defaultFactory"/> is invoked the first time the
+    /// local is read with no enclosing
+    /// <see cref="CompositionLocalProvider"/> in scope. Mirrors
+    /// Kotlin's <c>staticCompositionLocalOf { … }</c>.
     /// </summary>
     public static CompositionLocal<T> StaticOf<T>(Func<T> defaultFactory) =>
         CompositionLocal<T>.StaticOf(defaultFactory);
 
     /// <summary>
     /// Create a <i>dynamic</i> composition local backed by
-    /// <c>structuralEqualityPolicy</c>. Only the composables that
-    /// actually read <see cref="CompositionLocal{T}.Current"/> are
-    /// invalidated when the provided value changes (by
+    /// <c>structuralEqualityPolicy</c>, with an eager default value.
+    /// Only the composables that actually read
+    /// <see cref="CompositionLocal{T}.Current"/> are invalidated when
+    /// the provided value changes (by
     /// <see cref="object.Equals(object?)"/>) — the rest of the
     /// provider's subtree is skipped.
+    /// </summary>
+    public static CompositionLocal<T> Of<T>(T defaultValue) =>
+        CompositionLocal<T>.Of(() => defaultValue);
+
+    /// <summary>
+    /// Lazy-default overload of <see cref="Of{T}(T)"/>:
+    /// <paramref name="defaultFactory"/> is invoked the first time the
+    /// local is read with no enclosing
+    /// <see cref="CompositionLocalProvider"/> in scope. Mirrors
+    /// Kotlin's <c>compositionLocalOf { … }</c>.
     /// </summary>
     public static CompositionLocal<T> Of<T>(Func<T> defaultFactory) =>
         CompositionLocal<T>.Of(defaultFactory);
@@ -47,8 +74,8 @@ public static class CompositionLocal
 /// default if none is in scope.
 ///
 /// <para>Instances are usually created once (a <c>static readonly</c>
-/// field) via <see cref="CompositionLocal.StaticOf{T}"/> or
-/// <see cref="CompositionLocal.Of{T}"/>, then provided per-subtree
+/// field) via <see cref="CompositionLocal.StaticOf{T}(T)"/> or
+/// <see cref="CompositionLocal.Of{T}(T)"/>, then provided per-subtree
 /// with <see cref="Provides(T)"/> and read inside a composable's
 /// <c>Render</c> method via
 /// <see cref="GetCurrent(IComposer)"/>.</para>
