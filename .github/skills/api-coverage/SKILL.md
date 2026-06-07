@@ -1,6 +1,6 @@
 ---
 name: api-coverage
-description: Regenerate the Jetpack Compose ⇄ ComposeNet API coverage report by running `scripts/api-comparison.cs`. Use whenever the user asks about Compose API coverage, wants to refresh `docs/api-coverage.md`, asks "how much of Compose do we wrap?", asks which composables are missing, mentions a Compose package version bump and needs the report refreshed, or wants to audit `PublicAPI.Unshipped.txt` against upstream Kotlin source.
+description: Regenerate the Compose ⇄ ComposeNet API coverage report via `scripts/api-comparison.cs`. Use for any Compose coverage question — "how much do we wrap", "what's missing in module X", "is Foo wrapped yet" — or after bumping a `Xamarin.AndroidX.Compose.*` version or adding a facade.
 ---
 
 # API coverage
@@ -14,18 +14,6 @@ declarations, cross-references them with
 report with a coverage % summary, per-module checkbox lists,
 ComposeNet-only types, and a "differences worth investigating"
 appendix.
-
-## When to run it
-
-- After bumping any `Xamarin.AndroidX.Compose.*` version in
-  `Directory.Build.targets` — the report's headline numbers go stale.
-- After adding new facades to `src/ComposeNet.Compose/` and registering
-  them in `PublicAPI.Unshipped.txt` — coverage % should go up.
-- When the user asks "how much of Compose do we cover?", "what's
-  missing in module X?", "is `Foo` wrapped yet?", or any other
-  coverage question.
-- Before publishing a release to capture a fresh snapshot of the
-  surface delta.
 
 ## Workflow
 
