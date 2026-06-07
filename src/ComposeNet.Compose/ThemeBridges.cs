@@ -27,10 +27,10 @@ namespace ComposeNet;
 // pre-bake mask0 = mask1 = -1.
 internal static partial class ComposeBridges
 {
-    // 47 J slots (one per Color param) + II (two $default mask ints,
-    // since 47 > 32 bits) + L (synthetic-overload Object marker).
+    // 48 J slots (one per Color param) + II (two $default mask ints,
+    // since 48 > 32 bits) + L (synthetic-overload Object marker).
     const string ColorSchemeDefaultSig =
-        "(JJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJ" +
+        "(JJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJ" +
         "IILjava/lang/Object;)" +
         "Landroidx/compose/material3/ColorScheme;";
 
@@ -68,17 +68,17 @@ internal static partial class ComposeBridges
             methodCache = JNIEnv.GetStaticMethodID(classCache, jvmName, ColorSchemeDefaultSig);
         }
 
-        // 47 colors + 2 mask ints + 1 marker = 50 JValue slots.
-        JValue* args = stackalloc JValue[50];
-        for (int i = 0; i < 47; i++)
+        // 48 colors + 2 mask ints + 1 marker = 51 JValue slots.
+        JValue* args = stackalloc JValue[51];
+        for (int i = 0; i < 48; i++)
             args[i] = new JValue(0L);
         // Both masks all-bits-set: bit N == 1 tells Kotlin "use the
-        // per-slot default". Bits past position 46 (the last real
+        // per-slot default". Bits past position 47 (the last real
         // parameter) are never tested by the generated $default body,
         // so -1 for both is safe.
-        args[47] = new JValue(-1);
         args[48] = new JValue(-1);
-        args[49] = new JValue(System.IntPtr.Zero);
+        args[49] = new JValue(-1);
+        args[50] = new JValue(System.IntPtr.Zero);
 
         System.IntPtr handle = JNIEnv.CallStaticObjectMethod(classCache, methodCache, args);
         return Java.Lang.Object.GetObject<ColorScheme>(handle, JniHandleOwnership.TransferLocalRef)!;
