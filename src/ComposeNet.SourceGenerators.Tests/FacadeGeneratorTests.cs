@@ -35,6 +35,10 @@ public class FacadeGeneratorTests
                 public static unsafe System.IntPtr NewObject(System.IntPtr cls, System.IntPtr m, Android.Runtime.JValue* args) => default;
             }
             public enum JniHandleOwnership { TransferLocalRef = 0, DoNotTransfer = 1 }
+            public interface IJavaObject
+            {
+                System.IntPtr Handle { get; }
+            }
             public readonly struct JValue
             {
                 public JValue(System.IntPtr v) { } public JValue(bool v) { } public JValue(int v) { }
@@ -43,7 +47,7 @@ public class FacadeGeneratorTests
         }
         namespace Java.Lang
         {
-            public class Object
+            public class Object : Android.Runtime.IJavaObject
             {
                 public System.IntPtr Handle => default;
                 public static T? GetObject<T>(System.IntPtr handle, Android.Runtime.JniHandleOwnership transfer) where T : class => default;
@@ -1642,6 +1646,217 @@ public class FacadeGeneratorTests
 
         var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
         Assert.Empty(errors);
+    }
+
+    // ─── Phase 4c — shared-state caching (StateHolder.SharedState) ────
+
+    [Fact]
+    public void SharedState_Phase4b_GeneratesCachedHandleReuse()
+    {
+        // TimePicker / TimeInput share the same TimePickerState wrapper
+        // across sibling facades. When the first facade renders it
+        // calls Remember and binds Jvm; subsequent siblings must skip
+        // the Remember call and reuse the cached handle.
+        var code = $$"""
+            using AndroidX.Compose.Runtime;
+            using AndroidX.Compose.UI;
+            using ComposeNet;
+            using Kotlin.Jvm.Functions;
+            using System;
+
+            [assembly: ComposeDefaults("TimePickerDefault",
+                "!state", "modifier", "colors", "layoutType")]
+
+            {{TimePickerStateStubs}}
+
+            namespace ComposeNet
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(Class="androidx/compose/material3/TimePickerKt",
+                                   JvmName="TimePicker-mT9BvqQ",
+                                   Signature="{{TimePickerSig}}",
+                                   Defaults=typeof(TimePickerDefault))]
+                    [ComposeFacade]
+                    public static partial void TimePicker(
+                        [StateHolder(Remember = nameof(RememberTimePickerState),
+                                     StateType = typeof(TimePickerState),
+                                     SharedState = true)]
+                        IntPtr state,
+                        IModifier? modifier,
+                        int defaults,
+                        IComposer composer);
+
+                    public static IntPtr RememberTimePickerState(int initialHour, int initialMinute,
+                                                                 bool is24Hour, IComposer composer) => default;
+                }
+            }
+            """;
+
+        var (output, diags, emitted) = Run(code, "TimePicker");
+        Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+
+        // Declares a local IntPtr the bridge will consume.
+        Assert.Contains("global::System.IntPtr __state;", emitted);
+
+        // Cache-hit branch — Jvm already bound by a sibling.
+        Assert.Contains("if (_state!.Jvm is not null)", emitted);
+        Assert.Contains(
+            "__state = ((global::Android.Runtime.IJavaObject)_state.Jvm!).Handle;",
+            emitted);
+
+        // Cache-miss branch — call Remember, populate Jvm so the next
+        // sibling will hit the cached path.
+        Assert.Contains(
+            "__state = global::ComposeNet.ComposeBridges.RememberTimePickerState(_state!.InitialHour, _state!.InitialMinute, _state!.Is24Hour, composer);",
+            emitted);
+        // Phase 4b assigns unguarded (ctor auto-create guarantees non-null).
+        Assert.Contains(
+            "_state.Jvm = global::Java.Lang.Object.GetObject<global::AndroidX.Compose.Material3.ITimePickerState>(__state, global::Android.Runtime.JniHandleOwnership.DoNotTransfer)!;",
+            emitted);
+
+        // Must NOT emit the non-shared "always call Remember" preamble.
+        Assert.DoesNotContain(
+            "var __state = global::ComposeNet.ComposeBridges.RememberTimePickerState",
+            emitted);
+
+        // Bridge call still uses __state.
+        Assert.Contains(
+            "global::ComposeNet.ComposeBridges.TimePicker(__state, __modifier, __defaults, composer);",
+            emitted);
+
+        var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
+        Assert.Empty(errors);
+    }
+
+    [Fact]
+    public void SharedState_Phase4_GeneratesNullableCachedHandleReuse()
+    {
+        // Zero-user-param Remember (DatePicker-style). _state is
+        // nullable because there's no auto-create. SharedState must
+        // skip Remember when the caller supplied a wrapper with a
+        // populated Jvm field.
+        var code = $$"""
+            using AndroidX.Compose.Runtime;
+            using AndroidX.Compose.UI;
+            using ComposeNet;
+            using Kotlin.Jvm.Functions;
+            using System;
+
+            [assembly: ComposeDefaults("DatePickerDefault",
+                "!state", "modifier", "dateFormatter", "colors", "title", "headline", "showModeToggle")]
+
+            {{DatePickerStateStubs}}
+
+            namespace ComposeNet
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(Class="androidx/compose/material3/DatePickerKt",
+                                   JvmName="DatePicker",
+                                   Signature="{{DatePickerSig}}",
+                                   Defaults=typeof(DatePickerDefault))]
+                    [ComposeFacade]
+                    public static partial void DatePicker(
+                        [StateHolder(Remember = nameof(RememberDatePickerState),
+                                     StateType = typeof(DatePickerState),
+                                     SharedState = true)]
+                        IntPtr state,
+                        IModifier? modifier,
+                        int defaults,
+                        IComposer composer);
+
+                    public static IntPtr RememberDatePickerState(IComposer composer) => default;
+                }
+            }
+            """;
+
+        var (output, diags, emitted) = Run(code, "DatePicker");
+        Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+
+        // Phase 4 field stays nullable (no auto-create in ctor).
+        Assert.Contains("readonly global::ComposeNet.DatePickerState? _state;", emitted);
+        Assert.DoesNotContain("_state = state ?? new global::ComposeNet.DatePickerState();", emitted);
+
+        // Cache-hit branch — guarded with explicit null check on _state.
+        Assert.Contains("if (_state is not null && _state.Jvm is not null)", emitted);
+        Assert.Contains(
+            "__state = ((global::Android.Runtime.IJavaObject)_state.Jvm).Handle;",
+            emitted);
+
+        // Cache-miss branch — Remember + null-guarded Jvm assignment.
+        Assert.Contains(
+            "__state = global::ComposeNet.ComposeBridges.RememberDatePickerState(composer);",
+            emitted);
+        Assert.Contains("if (_state is not null)", emitted);
+        Assert.Contains(
+            "_state.Jvm = global::Java.Lang.Object.GetObject<global::AndroidX.Compose.Material3.IDatePickerState>(__state, global::Android.Runtime.JniHandleOwnership.DoNotTransfer)!;",
+            emitted);
+
+        // Must NOT emit the non-shared "always call Remember" preamble.
+        Assert.DoesNotContain(
+            "var __state = global::ComposeNet.ComposeBridges.RememberDatePickerState",
+            emitted);
+
+        var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
+        Assert.Empty(errors);
+    }
+
+    [Fact]
+    public void SharedState_DefaultsFalse_FallsBackToNonSharedPreamble()
+    {
+        // Regression: when SharedState is omitted, the generator emits
+        // the existing "always call Remember" preamble, not the cached
+        // path. Guards against the SharedState branch being accidentally
+        // promoted to the default behavior.
+        var code = $$"""
+            using AndroidX.Compose.Runtime;
+            using AndroidX.Compose.UI;
+            using ComposeNet;
+            using Kotlin.Jvm.Functions;
+            using System;
+
+            [assembly: ComposeDefaults("TimePickerDefault",
+                "!state", "modifier", "colors", "layoutType")]
+
+            {{TimePickerStateStubs}}
+
+            namespace ComposeNet
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(Class="androidx/compose/material3/TimePickerKt",
+                                   JvmName="TimePicker-mT9BvqQ",
+                                   Signature="{{TimePickerSig}}",
+                                   Defaults=typeof(TimePickerDefault))]
+                    [ComposeFacade]
+                    public static partial void TimePicker(
+                        [StateHolder(Remember = nameof(RememberTimePickerState),
+                                     StateType = typeof(TimePickerState))]
+                        IntPtr state,
+                        IModifier? modifier,
+                        int defaults,
+                        IComposer composer);
+
+                    public static IntPtr RememberTimePickerState(int initialHour, int initialMinute,
+                                                                 bool is24Hour, IComposer composer) => default;
+                }
+            }
+            """;
+
+        var (_, diags, emitted) = Run(code, "TimePicker");
+        Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+
+        // Non-shared shape: unconditional Remember call, no cache check.
+        Assert.Contains(
+            "var __state = global::ComposeNet.ComposeBridges.RememberTimePickerState(_state!.InitialHour, _state!.InitialMinute, _state!.Is24Hour, composer);",
+            emitted);
+        Assert.DoesNotContain("global::System.IntPtr __state;", emitted);
+        Assert.DoesNotContain("if (_state!.Jvm is not null)", emitted);
+        Assert.DoesNotContain("if (_state is not null && _state.Jvm is not null)", emitted);
     }
 
     [Fact]

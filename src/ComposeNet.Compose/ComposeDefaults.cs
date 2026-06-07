@@ -271,6 +271,11 @@ using ComposeNet;
 [assembly: ComposeDefaults("TimePickerDefault",
     "!state", "modifier", "colors", "layoutType")]
 
+// androidx.compose.material3.TimePickerKt.TimeInput:
+// 3 user params; bit 0 (state) always provided.
+[assembly: ComposeDefaults("TimeInputDefault",
+    "!state", "modifier", "colors")]
+
 // androidx.compose.material3.TimePickerDialogKt.TimePickerDialog-FItCLgY:
 // 10 user params; bits 0 (onDismissRequest), 1 (confirmButton),
 // 2 (dismissButton), 9 (content) always provided.

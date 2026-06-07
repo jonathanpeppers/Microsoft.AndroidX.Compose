@@ -434,6 +434,19 @@ Parameter-level attributes the generator recognizes:
     requires `StateType` to be constructible with no arguments
     (either a declared parameterless ctor, or a ctor whose every
     parameter has a `HasExplicitDefaultValue` default).
+  - **Phase 4c** — opt in to shared-state caching with
+    `SharedState = true`. When two sibling facades share a single
+    `StateType` wrapper (e.g. `TimePicker` + `TimeInput` reading the
+    same `TimePickerState`), the second facade to render would
+    otherwise call `RememberXxxState` again and overwrite the
+    wrapper's `Jvm` field with a new peer — losing the value the
+    first facade just bound. With `SharedState = true` the Render
+    preamble first checks `_state.Jvm` and reuses the cached JNI
+    handle when present, only calling `Remember` on the first-render
+    (cache-miss) path. Both Phase 4 (nullable `_state`) and Phase 4b
+    (auto-created `_state`) honour the flag — the cache-hit branch
+    just casts to `IJavaObject` and reads `.Handle`; the cache-miss
+    branch is identical to the non-shared path.
 
   `StateType` must declare an instance, writable, non-readonly,
   accessible field named `Jvm` whose declared type is the
@@ -463,13 +476,22 @@ The generator now supports a wide range of facade shapes (Phases 1,
   for the caller-supplied wrapper (`DatePicker`, `DateRangePicker`).
 - **Phase 4b** — `[StateHolder(...)]` with a parameterised Remember
   bridge that takes user parameters resolved against `StateType`
-  members (`TimePicker`). The facade auto-creates the wrapper when
-  the caller leaves `state` null, then forwards init-value member
-  reads as the Remember args. `TimeInput`, `SearchBar`,
-  `SnackbarHost`, `ModalBottomSheet`, `BottomSheetScaffold` stay
-  hand-written — they need either a per-instance `confirmValueChange`
-  veto adapter (drawer pattern) or shared-state caching across
-  sibling facades, neither of which Phase 4b models.
+  members (`TimePicker`, `TimeInput`). The facade auto-creates the
+  wrapper when the caller leaves `state` null, then forwards
+  init-value member reads as the Remember args.
+- **Phase 4c** — `[StateHolder(SharedState = true)]` skips the
+  `Remember` call when a sibling facade already bound the wrapper's
+  `Jvm` field. Use this on every facade that shares a `StateType`
+  with another facade — both `TimePicker` and `TimeInput` opt in so
+  the user can swap between clock and keyboard entry while keeping a
+  single Kotlin state peer; otherwise the second render rebuilds the
+  state and loses the entered value. `SearchBar`, `SnackbarHost`,
+  `ModalBottomSheet`, `BottomSheetScaffold` still stay hand-written
+  — they need either a per-instance `confirmValueChange` veto
+  adapter or shared-state semantics beyond what `SharedState` alone
+  models (e.g. SearchBar's collapsed-bar + expanded-popup pair also
+  needs a hybrid-container generator extension for the expanded
+  variants).
 - **Phase 6** — `[ComposeFacade(DefaultColorFromTheme = "...")]`
   for drawer sheets and similar containers that fall back to a
   `ColorScheme` slot when the caller doesn't override.
@@ -535,15 +557,18 @@ can't model:
   permanent drawer doesn't actually need a veto adapter, but it
   shares the hand-written family for consistency.
 - State-holder facades whose `RememberXxxState` bridge takes user
-  parameters AND combine that with either a per-instance
-  `confirmValueChange` veto adapter or shared-state caching across
-  sibling facades: `TimeInput` (shares state with `TimePicker`),
-  `SearchBar` (shared-state caching across the bar + view facades),
+  parameters AND combine that with a per-instance
+  `confirmValueChange` veto adapter:
   `ModalBottomSheet`, `BottomSheetScaffold` (both need a
   `confirmValueChange` adapter on top of parameterised Remember).
-  Phase 4 covers the zero-user-param shape (`DatePicker`,
-  `DateRangePicker`); Phase 4b covers the parameterised case where
-  no extra adapter / caching is needed (`TimePicker`).
+  `SearchBar` also stays hand-written until the hybrid-container
+  generator extension lands — its expanded variants pair a required
+  `inputField IFunction2` slot with a separate `content IFunction3`,
+  which the generator can't classify yet. Phase 4 covers the
+  zero-user-param shape (`DatePicker`, `DateRangePicker`); Phase 4b
+  covers parameterised Remember (`TimePicker`); Phase 4c adds
+  shared-state caching for sibling facades (`TimePicker` +
+  `TimeInput`).
 - Scope facades whose bodies do non-trivial work beyond
   `RenderContext.PushScope` (`SegmentedButton`,
   `SingleChoice`/`MultiChoiceSegmentedButtonRow`, the segmented

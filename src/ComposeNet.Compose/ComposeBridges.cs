@@ -885,7 +885,23 @@ internal static partial class ComposeBridges
     [ComposeFacade]
     public static partial void TimePicker(
         [StateHolder(Remember = nameof(RememberTimePickerState),
-                     StateType = typeof(TimePickerState))] IntPtr state,
+                     StateType = typeof(TimePickerState),
+                     SharedState = true)] IntPtr state,
+        IModifier? modifier,
+        int defaults, IComposer composer);
+
+    // androidx.compose.material3.TimePickerKt.TimeInput
+    [ComposeBridge(
+        Class     = "androidx/compose/material3/TimePickerKt",
+        JvmName   = "TimeInput",
+        Signature = "(Landroidx/compose/material3/TimePickerState;Landroidx/compose/ui/Modifier;" +
+                    "Landroidx/compose/material3/TimePickerColors;Landroidx/compose/runtime/Composer;II)V",
+        Defaults  = typeof(TimeInputDefault))]
+    [ComposeFacade]
+    public static partial void TimeInput(
+        [StateHolder(Remember = nameof(RememberTimePickerState),
+                     StateType = typeof(TimePickerState),
+                     SharedState = true)] IntPtr state,
         IModifier? modifier,
         int defaults, IComposer composer);
 
