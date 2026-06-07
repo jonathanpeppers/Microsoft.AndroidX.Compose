@@ -11,9 +11,10 @@ namespace ComposeNet.Samples.JetNews;
 /// </summary>
 internal static class PostBody
 {
-    static readonly Color Subtle = Color.FromHex("#666666");
+    static readonly Color Subtle   = Color.FromHex("#666666");
     static readonly Color QuoteBar = Color.FromHex("#BBBBBB");
     static readonly Color CodeBg   = Color.FromHex("#F1F3F5");
+    static readonly Color CodeFg   = Color.FromHex("#1F2328");
 
     public static ComposableNode BuildParagraph(Paragraph p) => p.Type switch
     {
@@ -72,6 +73,7 @@ internal static class PostBody
             {
                 FontSize   = 14,
                 FontFamily = FontFamily.Monospace,
+                Color      = CodeFg,
                 Modifier   = Modifier.Companion
                     .FillMaxWidth()
                     .Clip(6)
