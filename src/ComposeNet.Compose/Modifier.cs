@@ -43,7 +43,7 @@ namespace ComposeNet;
 /// Phase 1 ships <see cref="Padding(ComposeNet.Dp)"/>, the horizontal/vertical
 /// + per-edge overloads, and <see cref="FillMaxWidth"/> /
 /// <see cref="FillMaxHeight"/> / <see cref="FillMaxSize"/>. Phase 2
-/// adds <see cref="Background(long)"/>, <see cref="Border(ComposeNet.Dp, long)"/>,
+/// adds <see cref="Background(Color)"/>, <see cref="Border(ComposeNet.Dp, Color)"/>,
 /// <see cref="Clip(ComposeNet.Dp)"/>, and <see cref="Clickable"/>. Gesture and
 /// size-constraint modifiers land in later phases (issue #21).
 /// </summary>
@@ -215,16 +215,13 @@ public sealed class Modifier
     /// composable using a <c>RectangleShape</c>. Takes a packed Compose
     /// <c>androidx.compose.ui.graphics.Color</c> value (a <c>ULong</c>
     /// surfaced as a <c>long</c> in the binding because Color is a Kotlin
-    /// <c>@JvmInline value class</c>). Build one with
-    /// <see cref="AndroidX.Compose.UI.Graphics.ColorKt.Color(int, int, int, int)"/>
-    /// from per-channel bytes (recommended), or
-    /// <see cref="AndroidX.Compose.UI.Graphics.ColorKt.Color(int)"/> from an
-    /// <c>0xAARRGGBB</c> int — note that opaque-alpha hex literals like
-    /// <c>0xFF1976D2</c> are <c>uint</c> in C#, so they need an
-    /// <c>unchecked((int)0xFF1976D2)</c> cast to compile against the
-    /// <c>int</c> overload.
+    /// <c>@JvmInline value class</c>). Build one via
+    /// <see cref="ComposeNet.Color.FromRgb(byte, byte, byte)"/>,
+    /// <see cref="ComposeNet.Color.FromHex(string)"/>, or one of the
+    /// named constants on <see cref="ComposeNet.Color"/> (e.g.
+    /// <see cref="ComposeNet.Color.Black"/>).
     /// </summary>
-    public Modifier Background(long color) =>
+    public Modifier Background(Color color) =>
         Append(curr => ComposeBridges.ModifierBackground(curr, color, null));
 
     /// <summary>
@@ -237,22 +234,21 @@ public sealed class Modifier
     /// captured by the closure so its Java peer stays alive across
     /// recompositions.
     /// </summary>
-    public Modifier Background(long color, Shape? shape) =>
+    public Modifier Background(Color color, Shape? shape) =>
         Append(curr => ComposeBridges.ModifierBackground(curr, color, shape?.Handle));
 
     /// <summary>
     /// <c>Modifier.border(width, color)</c> — draws a rectangular stroke
     /// around the composable. <paramref name="width"/> is the stroke
-    /// width in density-independent pixels. <paramref name="color"/> is a
-    /// packed Compose <c>Color</c> long (see
-    /// <see cref="Background(long)"/> for how to build one). For rounded
-    /// corners use <see cref="Border(Dp, long, Dp)"/>; for arbitrary
-    /// shapes use <see cref="Border(Dp, long, Shape?)"/>.
+    /// width in density-independent pixels. For rounded corners use
+    /// <see cref="Border(Dp, Color, Dp)"/>; for arbitrary shapes use
+    /// <see cref="Border(Dp, Color, Shape?)"/>.
     /// </summary>
-    public Modifier Border(Dp width, long color)
+    public Modifier Border(Dp width, Color color)
     {
         var w = width.Value;
-        return Append(curr => ComposeBridges.ModifierBorder(curr, w, color, null));
+        long c = color;
+        return Append(curr => ComposeBridges.ModifierBorder(curr, w, c, null));
     }
 
     /// <summary>
@@ -263,19 +259,20 @@ public sealed class Modifier
     /// rectangular stroke gets sliced by a rounded clip and you see
     /// jagged corner stubs).
     /// </summary>
-    public Modifier Border(Dp width, long color, Dp cornerRadius)
+    public Modifier Border(Dp width, Color color, Dp cornerRadius)
     {
         var w = width.Value;
         var r = cornerRadius.Value;
+        long c = color;
         if (r <= 0f)
-            return Append(curr => ComposeBridges.ModifierBorder(curr, w, color, null));
+            return Append(curr => ComposeBridges.ModifierBorder(curr, w, c, null));
 
         return Append(curr =>
         {
             IntPtr shape = ComposeBridges.RoundedCornerShape(r);
             try
             {
-                return ComposeBridges.ModifierBorder(curr, w, color, shape);
+                return ComposeBridges.ModifierBorder(curr, w, c, shape);
             }
             finally
             {
@@ -292,10 +289,11 @@ public sealed class Modifier
     /// <c>RectangleShape</c>. The shape is captured by the closure so its
     /// Java peer stays alive across recompositions.
     /// </summary>
-    public Modifier Border(Dp width, long color, Shape? shape)
+    public Modifier Border(Dp width, Color color, Shape? shape)
     {
         var w = width.Value;
-        return Append(curr => ComposeBridges.ModifierBorder(curr, w, color, shape?.Handle));
+        long c = color;
+        return Append(curr => ComposeBridges.ModifierBorder(curr, w, c, shape?.Handle));
     }
 
     /// <summary>
