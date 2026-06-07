@@ -347,6 +347,8 @@ ComposeNet.LargeTopAppBar.Actions.set -> void
 ComposeNet.LargeTopAppBar.LargeTopAppBar() -> void
 ComposeNet.LargeTopAppBar.NavigationIcon.get -> ComposeNet.ComposableNode?
 ComposeNet.LargeTopAppBar.NavigationIcon.set -> void
+ComposeNet.LargeTopAppBar.Subtitle.get -> ComposeNet.ComposableNode?
+ComposeNet.LargeTopAppBar.Subtitle.set -> void
 ComposeNet.LargeTopAppBar.Title.get -> ComposeNet.ComposableNode?
 ComposeNet.LargeTopAppBar.Title.set -> void
 ComposeNet.LaunchedEffect
@@ -419,6 +421,8 @@ ComposeNet.MediumTopAppBar.Actions.set -> void
 ComposeNet.MediumTopAppBar.MediumTopAppBar() -> void
 ComposeNet.MediumTopAppBar.NavigationIcon.get -> ComposeNet.ComposableNode?
 ComposeNet.MediumTopAppBar.NavigationIcon.set -> void
+ComposeNet.MediumTopAppBar.Subtitle.get -> ComposeNet.ComposableNode?
+ComposeNet.MediumTopAppBar.Subtitle.set -> void
 ComposeNet.MediumTopAppBar.Title.get -> ComposeNet.ComposableNode?
 ComposeNet.MediumTopAppBar.Title.set -> void
 ComposeNet.ModalBottomSheet

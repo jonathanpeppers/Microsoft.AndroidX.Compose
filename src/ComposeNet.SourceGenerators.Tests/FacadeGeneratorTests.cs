@@ -2299,4 +2299,388 @@ public class FacadeGeneratorTests
         var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
         Assert.Empty(errors);
     }
+
+    // ---------------------------------------------------------------
+    // Branching — BranchOn / AlternateBridge (CN3010). The primary
+    // bridge is the smaller one; the alternate is a strict superset
+    // adding exactly one optional slot. The facade exposes the extra
+    // slot as a nullable property and routes to the alternate bridge
+    // when that property is non-null.
+    // ---------------------------------------------------------------
+
+    const string BranchPrimaryAttrs = """
+        [assembly: ComposeDefaults("BarDefault",
+            "!title", "modifier", "navigationIcon", "actions")]
+        [assembly: ComposeDefaults("BarSubtitleDefault",
+            "!title", "!subtitle", "modifier", "navigationIcon", "actions")]
+        """;
+
+    const string BranchBridges = """
+        namespace ComposeNet
+        {
+            public static partial class ComposeBridges
+            {
+                [ComposeBridge(Class="x/Y", JvmName="Bar",
+                               Signature="(Lkotlin/jvm/functions/Function2;Landroidx/compose/ui/Modifier;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;II)V",
+                               Defaults=typeof(BarDefault))]
+                [ComposeFacade(BranchOn="Subtitle", AlternateBridge=nameof(BarWithSubtitle))]
+                public static partial void Bar(
+                    IFunction2  title,
+                    IModifier?  modifier,
+                    IFunction2? navigationIcon,
+                    IFunction3? actions,
+                    int         defaults,
+                    IComposer   composer);
+
+                [ComposeBridge(Class="x/Y", JvmName="BarWithSubtitle",
+                               Signature="(Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;Landroidx/compose/ui/Modifier;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;II)V",
+                               Defaults=typeof(BarSubtitleDefault))]
+                public static partial void BarWithSubtitle(
+                    IFunction2  title,
+                    IFunction2  subtitle,
+                    IModifier?  modifier,
+                    IFunction2? navigationIcon,
+                    IFunction3? actions,
+                    int         defaults,
+                    IComposer   composer);
+            }
+        }
+        """;
+
+    [Fact]
+    public void Branching_EmitsIfElseWithPerBranchMasks()
+    {
+        var code = $$"""
+            using AndroidX.Compose.Runtime;
+            using AndroidX.Compose.UI;
+            using ComposeNet;
+            using Kotlin.Jvm.Functions;
+
+            {{BranchPrimaryAttrs}}
+
+            {{BranchBridges}}
+            """;
+
+        var (output, diags, emitted) = Run(code, "Bar");
+        Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+
+        // The facade exposes Subtitle (PascalCased BranchOn) plus the
+        // three shared optional slots as nullable ComposableNode?
+        // properties — and Title is required.
+        Assert.Contains("public global::ComposeNet.ComposableNode? Title { get; set; }", emitted);
+        Assert.Contains("public global::ComposeNet.ComposableNode? Subtitle { get; set; }", emitted);
+        Assert.Contains("public global::ComposeNet.ComposableNode? NavigationIcon { get; set; }", emitted);
+        Assert.Contains("public global::ComposeNet.ComposableNode? Actions { get; set; }", emitted);
+
+        // Modifier is hoisted (both branches need it for the mask).
+        Assert.Contains("var __modifier = BuildModifier();", emitted);
+
+        // The branched slot's wrapper lives INSIDE the if-branch, not
+        // at the top alongside the shared wrappers.
+        var subtitleWrapIndex = emitted!.IndexOf("var __subtitle =", System.StringComparison.Ordinal);
+        var ifCondIndex = emitted.IndexOf("if (Subtitle is not null)", System.StringComparison.Ordinal);
+        Assert.True(ifCondIndex > 0, "expected `if (Subtitle is not null)`");
+        Assert.True(subtitleWrapIndex > ifCondIndex, "subtitle wrapper must appear inside the if-branch");
+
+        // Per-branch mask + call: alternate uses BarSubtitleDefault,
+        // primary uses BarDefault.
+        Assert.Contains("(int)global::ComposeNet.BarSubtitleDefault.All;", emitted);
+        Assert.Contains("(int)global::ComposeNet.BarDefault.All;", emitted);
+
+        // Alt branch calls the alternate bridge with the alt's actual
+        // parameter order (title, subtitle, modifier, nav, actions).
+        Assert.Contains("global::ComposeNet.ComposeBridges.BarWithSubtitle(__title, __subtitle, __modifier, __navigationIcon, __actions, __defaults, composer);", emitted);
+
+        // Primary branch calls the primary bridge (no subtitle).
+        Assert.Contains("global::ComposeNet.ComposeBridges.Bar(__title, __modifier, __navigationIcon, __actions, __defaults, composer);", emitted);
+
+        var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
+        Assert.Empty(errors);
+    }
+
+    [Fact]
+    public void Branching_WalksAlternateParamOrder()
+    {
+        // Alternate bridge puts the extra slot in a DIFFERENT position
+        // (after modifier, not after title). The emitter must walk
+        // each bridge's actual parameter list — not the slots list —
+        // to keep argument order correct.
+        const string AltAttrs = """
+            [assembly: ComposeDefaults("BarDefault",
+                "!title", "modifier", "navigationIcon", "actions")]
+            [assembly: ComposeDefaults("BarFlexDefault",
+                "!title", "modifier", "subtitle", "navigationIcon", "actions")]
+            """;
+
+        var code = $$"""
+            using AndroidX.Compose.Runtime;
+            using AndroidX.Compose.UI;
+            using ComposeNet;
+            using Kotlin.Jvm.Functions;
+
+            {{AltAttrs}}
+
+            namespace ComposeNet
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(Class="x/Y", JvmName="Bar",
+                                   Signature="(Lkotlin/jvm/functions/Function2;Landroidx/compose/ui/Modifier;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;II)V",
+                                   Defaults=typeof(BarDefault))]
+                    [ComposeFacade(BranchOn="Subtitle", AlternateBridge=nameof(BarFlex))]
+                    public static partial void Bar(
+                        IFunction2  title,
+                        IModifier?  modifier,
+                        IFunction2? navigationIcon,
+                        IFunction3? actions,
+                        int         defaults,
+                        IComposer   composer);
+
+                    [ComposeBridge(Class="x/Y", JvmName="BarFlex",
+                                   Signature="(Lkotlin/jvm/functions/Function2;Landroidx/compose/ui/Modifier;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;III)V",
+                                   Defaults=typeof(BarFlexDefault))]
+                    public static partial void BarFlex(
+                        IFunction2  title,
+                        IModifier?  modifier,
+                        IFunction2? subtitle,
+                        IFunction2? navigationIcon,
+                        IFunction3? actions,
+                        int         defaults,
+                        IComposer   composer);
+                }
+            }
+            """;
+
+        var (output, diags, emitted) = Run(code, "Bar");
+        Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+
+        // Alt branch walks BarFlex's order: title, modifier, subtitle,
+        // navigationIcon, actions — NOT the slots-list order.
+        Assert.Contains("global::ComposeNet.ComposeBridges.BarFlex(__title, __modifier, __subtitle, __navigationIcon, __actions, __defaults, composer);", emitted);
+        // The Subtitle bit IS in BarFlexDefault (not `!`-suppressed),
+        // so the alt-branch mask clears it for the supplied slot.
+        Assert.Contains("__defaults &= ~(int)global::ComposeNet.BarFlexDefault.Subtitle;", emitted);
+
+        var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
+        Assert.Empty(errors);
+    }
+
+    [Fact]
+    public void Branching_MissingAlternate_EmitsCN3010()
+    {
+        var code = """
+            using AndroidX.Compose.Runtime;
+            using AndroidX.Compose.UI;
+            using ComposeNet;
+            using Kotlin.Jvm.Functions;
+
+            [assembly: ComposeDefaults("BarDefault",
+                "!title", "modifier", "navigationIcon", "actions")]
+
+            namespace ComposeNet
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(Class="x/Y", JvmName="Bar",
+                                   Signature="(Lkotlin/jvm/functions/Function2;Landroidx/compose/ui/Modifier;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;II)V",
+                                   Defaults=typeof(BarDefault))]
+                    [ComposeFacade(BranchOn="Subtitle", AlternateBridge="BarWithSubtitleMissing")]
+                    public static partial void Bar(
+                        IFunction2  title,
+                        IModifier?  modifier,
+                        IFunction2? navigationIcon,
+                        IFunction3? actions,
+                        int         defaults,
+                        IComposer   composer);
+                }
+            }
+            """;
+
+        var (_, diags, _) = Run(code, "Bar");
+        Assert.Contains(diags, d => d.Id == "CN3010" && d.GetMessage().Contains("BarWithSubtitleMissing"));
+    }
+
+    [Fact]
+    public void Branching_OnlyOneOfBranchOnAlternateBridge_EmitsCN3010()
+    {
+        // BranchOn without AlternateBridge.
+        var code = """
+            using AndroidX.Compose.Runtime;
+            using AndroidX.Compose.UI;
+            using ComposeNet;
+            using Kotlin.Jvm.Functions;
+
+            [assembly: ComposeDefaults("BarDefault",
+                "!title", "modifier", "navigationIcon", "actions")]
+
+            namespace ComposeNet
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(Class="x/Y", JvmName="Bar",
+                                   Signature="(Lkotlin/jvm/functions/Function2;Landroidx/compose/ui/Modifier;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;II)V",
+                                   Defaults=typeof(BarDefault))]
+                    [ComposeFacade(BranchOn="Subtitle")]
+                    public static partial void Bar(
+                        IFunction2  title,
+                        IModifier?  modifier,
+                        IFunction2? navigationIcon,
+                        IFunction3? actions,
+                        int         defaults,
+                        IComposer   composer);
+                }
+            }
+            """;
+
+        var (_, diags, _) = Run(code, "Bar");
+        Assert.Contains(diags, d => d.Id == "CN3010" && d.GetMessage().Contains("BranchOn and AlternateBridge"));
+    }
+
+    [Fact]
+    public void Branching_BranchOnMismatch_EmitsCN3010()
+    {
+        // Extra param is `subtitle` (Pascal "Subtitle"), but BranchOn
+        // names a different property — should fail with CN3010.
+        var code = """
+            using AndroidX.Compose.Runtime;
+            using AndroidX.Compose.UI;
+            using ComposeNet;
+            using Kotlin.Jvm.Functions;
+
+            [assembly: ComposeDefaults("BarDefault",
+                "!title", "modifier", "navigationIcon", "actions")]
+            [assembly: ComposeDefaults("BarSubtitleDefault",
+                "!title", "!subtitle", "modifier", "navigationIcon", "actions")]
+
+            namespace ComposeNet
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(Class="x/Y", JvmName="Bar",
+                                   Signature="(Lkotlin/jvm/functions/Function2;Landroidx/compose/ui/Modifier;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;II)V",
+                                   Defaults=typeof(BarDefault))]
+                    [ComposeFacade(BranchOn="Caption", AlternateBridge=nameof(BarWithSubtitle))]
+                    public static partial void Bar(
+                        IFunction2  title,
+                        IModifier?  modifier,
+                        IFunction2? navigationIcon,
+                        IFunction3? actions,
+                        int         defaults,
+                        IComposer   composer);
+
+                    [ComposeBridge(Class="x/Y", JvmName="BarWithSubtitle",
+                                   Signature="(Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;Landroidx/compose/ui/Modifier;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;II)V",
+                                   Defaults=typeof(BarSubtitleDefault))]
+                    public static partial void BarWithSubtitle(
+                        IFunction2  title,
+                        IFunction2  subtitle,
+                        IModifier?  modifier,
+                        IFunction2? navigationIcon,
+                        IFunction3? actions,
+                        int         defaults,
+                        IComposer   composer);
+                }
+            }
+            """;
+
+        var (_, diags, _) = Run(code, "Bar");
+        Assert.Contains(diags, d => d.Id == "CN3010" && d.GetMessage().Contains("Caption"));
+    }
+
+    [Fact]
+    public void Branching_AlternateHasMissingPrimaryParam_EmitsCN3010()
+    {
+        // Alternate is missing `actions`, so it's not a strict
+        // superset; CN3010 should fire.
+        var code = """
+            using AndroidX.Compose.Runtime;
+            using AndroidX.Compose.UI;
+            using ComposeNet;
+            using Kotlin.Jvm.Functions;
+
+            [assembly: ComposeDefaults("BarDefault",
+                "!title", "modifier", "navigationIcon", "actions")]
+            [assembly: ComposeDefaults("BarBadDefault",
+                "!title", "!subtitle", "modifier", "navigationIcon")]
+
+            namespace ComposeNet
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(Class="x/Y", JvmName="Bar",
+                                   Signature="(Lkotlin/jvm/functions/Function2;Landroidx/compose/ui/Modifier;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;II)V",
+                                   Defaults=typeof(BarDefault))]
+                    [ComposeFacade(BranchOn="Subtitle", AlternateBridge=nameof(BarBad))]
+                    public static partial void Bar(
+                        IFunction2  title,
+                        IModifier?  modifier,
+                        IFunction2? navigationIcon,
+                        IFunction3? actions,
+                        int         defaults,
+                        IComposer   composer);
+
+                    [ComposeBridge(Class="x/Y", JvmName="BarBad",
+                                   Signature="(Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;Landroidx/compose/ui/Modifier;Lkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;II)V",
+                                   Defaults=typeof(BarBadDefault))]
+                    public static partial void BarBad(
+                        IFunction2  title,
+                        IFunction2  subtitle,
+                        IModifier?  modifier,
+                        IFunction2? navigationIcon,
+                        int         defaults,
+                        IComposer   composer);
+                }
+            }
+            """;
+
+        var (_, diags, _) = Run(code, "Bar");
+        Assert.Contains(diags, d => d.Id == "CN3010" && d.GetMessage().Contains("actions"));
+    }
+
+    [Fact]
+    public void Branching_PrimaryMissingDefaultsParam_EmitsCN3010()
+    {
+        var code = """
+            using AndroidX.Compose.Runtime;
+            using AndroidX.Compose.UI;
+            using ComposeNet;
+            using Kotlin.Jvm.Functions;
+
+            [assembly: ComposeDefaults("BarSubtitleDefault",
+                "!title", "!subtitle", "modifier", "navigationIcon", "actions")]
+
+            namespace ComposeNet
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(Class="x/Y", JvmName="Bar",
+                                   Signature="(Lkotlin/jvm/functions/Function2;Landroidx/compose/ui/Modifier;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;I)V")]
+                    [ComposeFacade(BranchOn="Subtitle", AlternateBridge=nameof(BarWithSubtitle))]
+                    public static partial void Bar(
+                        IFunction2  title,
+                        IModifier?  modifier,
+                        IFunction2? navigationIcon,
+                        IFunction3? actions,
+                        IComposer   composer);
+
+                    [ComposeBridge(Class="x/Y", JvmName="BarWithSubtitle",
+                                   Signature="(Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;Landroidx/compose/ui/Modifier;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;II)V",
+                                   Defaults=typeof(BarSubtitleDefault))]
+                    public static partial void BarWithSubtitle(
+                        IFunction2  title,
+                        IFunction2  subtitle,
+                        IModifier?  modifier,
+                        IFunction2? navigationIcon,
+                        IFunction3? actions,
+                        int         defaults,
+                        IComposer   composer);
+                }
+            }
+            """;
+
+        var (_, diags, _) = Run(code, "Bar");
+        Assert.Contains(diags, d => d.Id == "CN3010" && d.GetMessage().Contains("'int defaults'"));
+    }
 }
