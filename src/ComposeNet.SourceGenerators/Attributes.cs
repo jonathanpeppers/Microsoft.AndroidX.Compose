@@ -202,6 +202,38 @@ internal static class Attributes
                 /// effect.
                 /// </summary>
                 public bool Container { get; set; }
+
+                /// <summary>
+                /// Phase 9 — name of a synthetic facade property that
+                /// drives bridge branching. When the property is non-null
+                /// at render time the generated <c>Render</c> routes to
+                /// the <see cref="AlternateBridge"/> method on
+                /// <c>ComposeBridges</c>; otherwise it calls the primary
+                /// bridge (the one paired with this attribute's
+                /// <see cref="ComposeBridgeAttribute"/>).
+                /// </summary>
+                /// <remarks>
+                /// The property is synthesized from the extra
+                /// <c>IFunction2</c>/<c>IFunction3</c> parameter that the
+                /// alternate bridge has and the primary lacks. The value
+                /// of <c>BranchOn</c> must equal the PascalCased Kotlin
+                /// parameter name of that extra slot. The alternate's
+                /// user parameters must form the primary's user-param
+                /// name set plus exactly one extra slot. Must be paired
+                /// with <see cref="AlternateBridge"/>.
+                /// </remarks>
+                public string? BranchOn { get; set; }
+
+                /// <summary>
+                /// Phase 9 — name of the sibling static partial method on
+                /// <c>ComposeBridges</c> to route to when the facade's
+                /// <see cref="BranchOn"/> property is non-null. The
+                /// alternate must declare its own <see cref="ComposeBridgeAttribute"/>
+                /// with a matching <c>Defaults</c> enum and accept all
+                /// of the primary bridge's user parameters (by name) plus
+                /// exactly one extra slot matching <see cref="BranchOn"/>.
+                /// </summary>
+                public string? AlternateBridge { get; set; }
             }
 
             /// <summary>

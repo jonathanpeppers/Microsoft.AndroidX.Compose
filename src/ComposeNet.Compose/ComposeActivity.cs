@@ -78,6 +78,41 @@ public abstract class ComposeActivity : ComponentActivity
         [CallerFilePath]   string file = "")
         => Compose.Remember(factory, line, file);
 
+    /// <summary>Keyed <c>remember(key1) { factory() }</c>; forwards to <see cref="Compose.Remember{T}(System.Func{T}, object?, int, string)"/>.</summary>
+    protected T Remember<T>(
+        System.Func<T> factory,
+        object? key1,
+        [CallerLineNumber] int line = 0,
+        [CallerFilePath]   string file = "")
+        => Compose.Remember(factory, key1, line, file);
+
+    /// <summary>Keyed <c>remember(key1, key2) { factory() }</c>.</summary>
+    protected T Remember<T>(
+        System.Func<T> factory,
+        object? key1,
+        object? key2,
+        [CallerLineNumber] int line = 0,
+        [CallerFilePath]   string file = "")
+        => Compose.Remember(factory, key1, key2, line, file);
+
+    /// <summary>Keyed <c>remember(key1, key2, key3) { factory() }</c>.</summary>
+    protected T Remember<T>(
+        System.Func<T> factory,
+        object? key1,
+        object? key2,
+        object? key3,
+        [CallerLineNumber] int line = 0,
+        [CallerFilePath]   string file = "")
+        => Compose.Remember(factory, key1, key2, key3, line, file);
+
+    /// <summary>Array-form keyed <c>remember(vararg keys) { factory() }</c>.</summary>
+    protected T RememberKeyed<T>(
+        System.Func<T> factory,
+        object?[] keys,
+        [CallerLineNumber] int line = 0,
+        [CallerFilePath]   string file = "")
+        => Compose.RememberKeyed(factory, keys, line, file);
+
     /// <summary>
     /// Like <see cref="Remember{T}(System.Func{T}, int, string)"/>, but
     /// the cached value also survives process death / activity
@@ -93,6 +128,41 @@ public abstract class ComposeActivity : ComponentActivity
         [CallerLineNumber] int line = 0,
         [CallerFilePath]   string file = "")
         => Compose.RememberSaveable(factory, line, file);
+
+    /// <summary>Keyed <c>rememberSaveable(key1) { factory() }</c>; forwards to <see cref="Compose.RememberSaveable{T}(System.Func{T}, object?, int, string)"/>.</summary>
+    protected T RememberSaveable<T>(
+        System.Func<T> factory,
+        object? key1,
+        [CallerLineNumber] int line = 0,
+        [CallerFilePath]   string file = "")
+        => Compose.RememberSaveable(factory, key1, line, file);
+
+    /// <summary>Keyed <c>rememberSaveable(key1, key2) { factory() }</c>.</summary>
+    protected T RememberSaveable<T>(
+        System.Func<T> factory,
+        object? key1,
+        object? key2,
+        [CallerLineNumber] int line = 0,
+        [CallerFilePath]   string file = "")
+        => Compose.RememberSaveable(factory, key1, key2, line, file);
+
+    /// <summary>Keyed <c>rememberSaveable(key1, key2, key3) { factory() }</c>.</summary>
+    protected T RememberSaveable<T>(
+        System.Func<T> factory,
+        object? key1,
+        object? key2,
+        object? key3,
+        [CallerLineNumber] int line = 0,
+        [CallerFilePath]   string file = "")
+        => Compose.RememberSaveable(factory, key1, key2, key3, line, file);
+
+    /// <summary>Array-form keyed <c>rememberSaveable(vararg inputs) { factory() }</c>.</summary>
+    protected T RememberSaveableKeyed<T>(
+        System.Func<T> factory,
+        object?[] keys,
+        [CallerLineNumber] int line = 0,
+        [CallerFilePath]   string file = "")
+        => Compose.RememberSaveableKeyed(factory, keys, line, file);
 
     /// <summary>
     /// Opts the window into edge-to-edge. Call <c>base.OnCreate</c>

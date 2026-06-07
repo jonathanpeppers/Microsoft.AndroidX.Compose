@@ -544,7 +544,33 @@ The generator now supports a wide range of facade shapes (Phases 1,
   on the bridge's body slot. Required by `ModalWideNavigationRail`,
   whose Kotlin signature takes a plain `IFunction2` content lambda.
 
-- **Phase 9** — `[ConfirmStateChange(typeof(T))]` on an `IFunction1?`
+- **Phase 9** — bridge branching via
+  `[ComposeFacade(BranchOn = "Subtitle", AlternateBridge = nameof(AltBridge))]`
+  (issue #122). One facade routes between two `[ComposeBridge]`
+  methods based on whether a single optional slot is supplied.
+  The partial method carries the **primary** (smaller) bridge — no
+  branched slot. `AlternateBridge` names a sibling
+  `ComposeBridges` method whose user parameters are the primary's
+  set plus exactly one extra `IFunction2`/`IFunction3` slot whose
+  PascalCased name matches `BranchOn`. Both bridges must declare a
+  trailing `int defaults` parameter (the caller-managed-mask shape),
+  and each must reference its own `Defaults = typeof(XxxDefault)`
+  enum so the per-branch mask can be computed independently.
+  The generator emits a single facade that exposes the extra slot
+  as a nullable `ComposableNode?` property and renders
+  `if (Subtitle is not null) { …alt-bridge call… } else { …primary
+  call… }`. Shared lambdas (`__title`, `__navigationIcon`, …) and
+  `__modifier = BuildModifier()` are hoisted ABOVE the if/else;
+  the branched slot's wrapper, the per-branch mask, and each
+  bridge call live INSIDE their respective branches. Parameter
+  order may differ between primary and alternate — the emitter
+  walks each bridge's actual `Parameters` list (not the slots
+  list) to keep arguments correctly positioned. Used for
+  `TopAppBar` (branches to `TopAppBarWithSubtitle`), `MediumTopAppBar`
+  (→ `MediumFlexibleTopAppBar`), `LargeTopAppBar` (→
+  `LargeFlexibleTopAppBar`). Errors are reported as CN3010.
+
+- **Phase 10** — `[ConfirmStateChange(typeof(T))]` on an `IFunction1?`
   parameter of a `[StateHolder]` Remember bridge. Models the
   per-instance JNI veto adapter pattern: Kotlin's
   `rememberDrawerState(confirmStateChange)` (and the rail / sheet
@@ -583,9 +609,6 @@ can't model:
   `[ComposeBridge]` to attach to) — `DropdownMenuItem`, `Icon`
   (`ImageVector` overload). `WideNavigationRailItem` was migrated
   to a Phase 8 wrapper-passthrough in issue #67.
-- Facades that branch between two bridges based on an optional
-  slot (`TopAppBar` — Subtitle toggles between `TopAppBar-GHTll3U`
-  and `MediumFlexibleTopAppBar-eXZ4JBQ`).
 - State-holder facades whose `RememberXxxState` bridge takes user
   parameters AND combine that with a per-instance
   `confirmValueChange` veto adapter:
@@ -598,10 +621,10 @@ can't model:
   zero-user-param shape (`DatePicker`, `DateRangePicker`); Phase 4b
   covers parameterised Remember (`TimePicker`); Phase 4c adds
   shared-state caching for sibling facades (`TimePicker` +
-  `TimeInput`); Phase 9 (issue #121) added per-instance
+  `TimeInput`); Phase 10 (issue #121) added per-instance
   `confirmStateChange` veto adapters for the drawer / rail family
-  via `[ConfirmStateChange(typeof(T))]` — see Phase 9 above. The
-  remaining bottom-sheet holdouts need Phase 9 *combined* with
+  via `[ConfirmStateChange(typeof(T))]` — see Phase 10 above. The
+  remaining bottom-sheet holdouts need Phase 10 *combined* with
   Phase 4b parameterised Remember, which isn't modelled yet.
 - Scope facades whose bodies do non-trivial work beyond
   `RenderContext.PushScope` (`SegmentedButton`,
@@ -616,8 +639,9 @@ Trying to apply `[ComposeFacade]` to an unsupported bridge will
 emit CN3002 (unsupported parameter), CN3003 (scope misuse), CN3005
 (invalid callback type), CN3006 (slot conflict), CN3007 (color
 theme binding failed), CN3008 (painter misuse), CN3009
-(state-holder misuse), or CN3010 (confirmStateChange misuse) at
-build time — back out the attribute and write the facade by hand.
+(state-holder misuse), CN3010 (branching misuse), or CN3011
+(confirmStateChange misuse) at build time — back out the attribute
+and write the facade by hand.
 
 ### Adding a new generated facade
 
@@ -647,7 +671,7 @@ end-to-end recipe is:
    the stub** — without it the generated class has no XML docs.
 4. **Build the sample** (`dotnet build src/ComposeNet.Sample`) to
    verify the bridge + facade compile together. The supported
-   shapes are validated at build time; CN3001-CN3009 will fire if
+   shapes are validated at build time; CN3001-CN3011 will fire if
    the generator can't accept the bridge.
 5. **If CN3002 fires**, the bridge has a parameter outside the
    table above — either an unmarked `IFunction1` callback, a
@@ -673,7 +697,8 @@ end-to-end recipe is:
 | CN3007  | `DefaultColorFromTheme` cannot bind to any `long` user param (or `ColorParameter` is ambiguous / missing). |
 | CN3008  | `[PainterResource]` annotates a non-`IntPtr` parameter.            |
 | CN3009  | `[StateHolder]` is invalid: applied to a non-`IntPtr` param, combined with `[PainterResource]`, missing or unidentifier-valued `Remember` / `StateType`, the named `Remember` method is not a static `(IComposer) -> IntPtr` on `ComposeBridges`, or `StateType` has no accessible writable instance field named `Jvm`. |
-| CN3010  | `[ConfirmStateChange(typeof(T))]` is invalid: not on an `IFunction1` param, missing the `typeof(T)` ctor argument, the convention adapter class `ComposeNet.<TName>ConfirmStateChange` is missing (set `AdapterType = typeof(...)` to override), the adapter doesn't implement `Kotlin.Jvm.Functions.IFunction1`, lacks a public parameterless ctor, or has no writable `Callback` property of type `System.Func<T, bool>?`. |
+| CN3010  | `BranchOn` / `AlternateBridge` is invalid: only one of the two is set, primary or alternate is missing a trailing `int defaults` parameter, the named alternate is not resolvable or ambiguous on `ComposeBridges`, alternate is not a strict superset (missing a primary param or has more than one extra), the extra param's PascalCased name doesn't match `BranchOn`, the extra param isn't `IFunction2`/`IFunction3`, a shared param has incompatible types, branching is used on a hybrid container shape, or the alternate has no resolvable `[ComposeBridge].Defaults` enum. |
+| CN3011  | `[ConfirmStateChange(typeof(T))]` is invalid: not on an `IFunction1` param, missing the `typeof(T)` ctor argument, the convention adapter class `ComposeNet.<TName>ConfirmStateChange` is missing (set `AdapterType = typeof(...)` to override), the adapter doesn't implement `Kotlin.Jvm.Functions.IFunction1`, lacks a public parameterless ctor, or has no writable `Callback` property of type `System.Func<T, bool>?`. |
 
 ### Migration rule
 
@@ -797,7 +822,7 @@ adapter implementation):
    Remember bridge's `IFunction1?` `confirmStateChange` (or
    `confirmValueChange`) parameter with
    `[ConfirmStateChange(typeof(T))]` and stack `[ComposeFacade]` on
-   the facade bridge — Phase 9 above handles the adapter field,
+   the facade bridge — Phase 10 above handles the adapter field,
    property emission, and preamble `Callback` assignment for you.
    Use this for any facade that fits the supported state-holder
    shapes (Phase 4 zero-arg Remember, Phase 4b parameterised

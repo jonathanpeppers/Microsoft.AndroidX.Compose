@@ -100,7 +100,15 @@ ComposeNet.Compose
 ComposeNet.ComposeActivity
 ComposeNet.ComposeActivity.ComposeActivity() -> void
 ComposeNet.ComposeActivity.Remember<T>(System.Func<T>! factory, int line = 0, string! file = "") -> T
+ComposeNet.ComposeActivity.Remember<T>(System.Func<T>! factory, object? key1, int line = 0, string! file = "") -> T
+ComposeNet.ComposeActivity.Remember<T>(System.Func<T>! factory, object? key1, object? key2, int line = 0, string! file = "") -> T
+ComposeNet.ComposeActivity.Remember<T>(System.Func<T>! factory, object? key1, object? key2, object? key3, int line = 0, string! file = "") -> T
+ComposeNet.ComposeActivity.RememberKeyed<T>(System.Func<T>! factory, object?[]! keys, int line = 0, string! file = "") -> T
 ComposeNet.ComposeActivity.RememberSaveable<T>(System.Func<T>! factory, int line = 0, string! file = "") -> T
+ComposeNet.ComposeActivity.RememberSaveable<T>(System.Func<T>! factory, object? key1, int line = 0, string! file = "") -> T
+ComposeNet.ComposeActivity.RememberSaveable<T>(System.Func<T>! factory, object? key1, object? key2, int line = 0, string! file = "") -> T
+ComposeNet.ComposeActivity.RememberSaveable<T>(System.Func<T>! factory, object? key1, object? key2, object? key3, int line = 0, string! file = "") -> T
+ComposeNet.ComposeActivity.RememberSaveableKeyed<T>(System.Func<T>! factory, object?[]! keys, int line = 0, string! file = "") -> T
 ComposeNet.ComposeActivity.SetContent(System.Func<ComposeNet.ComposableNode!>! content) -> void
 ComposeNet.CustomTab
 ComposeNet.CustomTab.CustomTab(bool selected, System.Action! onClick) -> void
@@ -139,6 +147,8 @@ ComposeNet.DateRangePickerState.SelectedEndDateMillis.set -> void
 ComposeNet.DateRangePickerState.SelectedStartDateMillis.get -> long?
 ComposeNet.DateRangePickerState.SelectedStartDateMillis.set -> void
 ComposeNet.DateRangePickerState.SetSelection(long? startDateMillis, long? endDateMillis) -> void
+ComposeNet.DerivedState<T>
+ComposeNet.DerivedState<T>.Value.get -> T
 ComposeNet.DismissibleDrawerSheet
 ComposeNet.DismissibleDrawerSheet.ContainerColor.get -> long
 ComposeNet.DismissibleDrawerSheet.ContainerColor.set -> void
@@ -151,6 +161,10 @@ ComposeNet.DismissibleNavigationDrawer.Content.set -> void
 ComposeNet.DismissibleNavigationDrawer.DismissibleNavigationDrawer(ComposeNet.DrawerStateHolder? drawerState = null) -> void
 ComposeNet.DismissibleNavigationDrawer.Drawer.get -> ComposeNet.ComposableNode?
 ComposeNet.DismissibleNavigationDrawer.Drawer.set -> void
+ComposeNet.DisposableEffect
+ComposeNet.DisposableEffect.DisposableEffect(object? key1, object? key2, object? key3, System.Func<AndroidX.Compose.Runtime.DisposableEffectScope!, System.Action!>! effect) -> void
+ComposeNet.DisposableEffect.DisposableEffect(object? key1, object? key2, System.Func<AndroidX.Compose.Runtime.DisposableEffectScope!, System.Action!>! effect) -> void
+ComposeNet.DisposableEffect.DisposableEffect(object? key1, System.Func<AndroidX.Compose.Runtime.DisposableEffectScope!, System.Action!>! effect) -> void
 ComposeNet.DockedSearchBar
 ComposeNet.DockedSearchBar.DockedSearchBar(bool expanded, System.Action<bool>! onExpandedChange) -> void
 ComposeNet.DockedSearchBar.InputField.get -> ComposeNet.ComposableNode?
@@ -343,8 +357,14 @@ ComposeNet.LargeTopAppBar.Actions.set -> void
 ComposeNet.LargeTopAppBar.LargeTopAppBar() -> void
 ComposeNet.LargeTopAppBar.NavigationIcon.get -> ComposeNet.ComposableNode?
 ComposeNet.LargeTopAppBar.NavigationIcon.set -> void
+ComposeNet.LargeTopAppBar.Subtitle.get -> ComposeNet.ComposableNode?
+ComposeNet.LargeTopAppBar.Subtitle.set -> void
 ComposeNet.LargeTopAppBar.Title.get -> ComposeNet.ComposableNode?
 ComposeNet.LargeTopAppBar.Title.set -> void
+ComposeNet.LaunchedEffect
+ComposeNet.LaunchedEffect.LaunchedEffect(object? key1, object? key2, object? key3, System.Func<System.Threading.CancellationToken, System.Threading.Tasks.Task!>! body) -> void
+ComposeNet.LaunchedEffect.LaunchedEffect(object? key1, object? key2, System.Func<System.Threading.CancellationToken, System.Threading.Tasks.Task!>! body) -> void
+ComposeNet.LaunchedEffect.LaunchedEffect(object? key1, System.Func<System.Threading.CancellationToken, System.Threading.Tasks.Task!>! body) -> void
 ComposeNet.LazyColumn<T>
 ComposeNet.LazyColumn<T>.LazyColumn(System.Collections.Generic.IReadOnlyList<T>! items, System.Func<T, ComposeNet.ComposableNode!>! itemContent) -> void
 ComposeNet.LazyColumn<T>.State.get -> AndroidX.Compose.Foundation.Lazy.LazyListState?
@@ -411,6 +431,8 @@ ComposeNet.MediumTopAppBar.Actions.set -> void
 ComposeNet.MediumTopAppBar.MediumTopAppBar() -> void
 ComposeNet.MediumTopAppBar.NavigationIcon.get -> ComposeNet.ComposableNode?
 ComposeNet.MediumTopAppBar.NavigationIcon.set -> void
+ComposeNet.MediumTopAppBar.Subtitle.get -> ComposeNet.ComposableNode?
+ComposeNet.MediumTopAppBar.Subtitle.set -> void
 ComposeNet.MediumTopAppBar.Title.get -> ComposeNet.ComposableNode?
 ComposeNet.MediumTopAppBar.Title.set -> void
 ComposeNet.ModalBottomSheet
@@ -535,22 +557,41 @@ ComposeNet.NavigationRailItem.Icon.set -> void
 ComposeNet.NavigationRailItem.Label.get -> ComposeNet.ComposableNode?
 ComposeNet.NavigationRailItem.Label.set -> void
 ComposeNet.NavigationRailItem.NavigationRailItem(bool selected, System.Action! onClick) -> void
-ComposeNet.ObservableList<T>
-ComposeNet.ObservableList<T>.Add(T item) -> void
-ComposeNet.ObservableList<T>.Clear() -> void
-ComposeNet.ObservableList<T>.Contains(T item) -> bool
-ComposeNet.ObservableList<T>.CopyTo(T[]! array, int arrayIndex) -> void
-ComposeNet.ObservableList<T>.Count.get -> int
-ComposeNet.ObservableList<T>.GetEnumerator() -> System.Collections.Generic.IEnumerator<T>!
-ComposeNet.ObservableList<T>.IndexOf(T item) -> int
-ComposeNet.ObservableList<T>.Insert(int index, T item) -> void
-ComposeNet.ObservableList<T>.IsReadOnly.get -> bool
-ComposeNet.ObservableList<T>.ObservableList() -> void
-ComposeNet.ObservableList<T>.ObservableList(System.Collections.Generic.IEnumerable<T>! initial) -> void
-ComposeNet.ObservableList<T>.Remove(T item) -> bool
-ComposeNet.ObservableList<T>.RemoveAt(int index) -> void
-ComposeNet.ObservableList<T>.this[int index].get -> T
-ComposeNet.ObservableList<T>.this[int index].set -> void
+ComposeNet.MutableStateList<T>
+ComposeNet.MutableStateList<T>.Add(T item) -> void
+ComposeNet.MutableStateList<T>.Clear() -> void
+ComposeNet.MutableStateList<T>.Contains(T item) -> bool
+ComposeNet.MutableStateList<T>.CopyTo(T[]! array, int arrayIndex) -> void
+ComposeNet.MutableStateList<T>.Count.get -> int
+ComposeNet.MutableStateList<T>.GetEnumerator() -> System.Collections.Generic.IEnumerator<T>!
+ComposeNet.MutableStateList<T>.IndexOf(T item) -> int
+ComposeNet.MutableStateList<T>.Insert(int index, T item) -> void
+ComposeNet.MutableStateList<T>.IsReadOnly.get -> bool
+ComposeNet.MutableStateList<T>.MutableStateList() -> void
+ComposeNet.MutableStateList<T>.MutableStateList(System.Collections.Generic.IEnumerable<T>! initial) -> void
+ComposeNet.MutableStateList<T>.Remove(T item) -> bool
+ComposeNet.MutableStateList<T>.RemoveAt(int index) -> void
+ComposeNet.MutableStateList<T>.this[int index].get -> T
+ComposeNet.MutableStateList<T>.this[int index].set -> void
+ComposeNet.MutableStateMap<TKey, TValue>
+ComposeNet.MutableStateMap<TKey, TValue>.Add(System.Collections.Generic.KeyValuePair<TKey, TValue> item) -> void
+ComposeNet.MutableStateMap<TKey, TValue>.Add(TKey key, TValue value) -> void
+ComposeNet.MutableStateMap<TKey, TValue>.Clear() -> void
+ComposeNet.MutableStateMap<TKey, TValue>.Contains(System.Collections.Generic.KeyValuePair<TKey, TValue> item) -> bool
+ComposeNet.MutableStateMap<TKey, TValue>.ContainsKey(TKey key) -> bool
+ComposeNet.MutableStateMap<TKey, TValue>.CopyTo(System.Collections.Generic.KeyValuePair<TKey, TValue>[]! array, int arrayIndex) -> void
+ComposeNet.MutableStateMap<TKey, TValue>.Count.get -> int
+ComposeNet.MutableStateMap<TKey, TValue>.GetEnumerator() -> System.Collections.Generic.IEnumerator<System.Collections.Generic.KeyValuePair<TKey, TValue>>!
+ComposeNet.MutableStateMap<TKey, TValue>.IsReadOnly.get -> bool
+ComposeNet.MutableStateMap<TKey, TValue>.Keys.get -> System.Collections.Generic.ICollection<TKey>!
+ComposeNet.MutableStateMap<TKey, TValue>.MutableStateMap() -> void
+ComposeNet.MutableStateMap<TKey, TValue>.MutableStateMap(System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<TKey, TValue>>! initial) -> void
+ComposeNet.MutableStateMap<TKey, TValue>.Remove(System.Collections.Generic.KeyValuePair<TKey, TValue> item) -> bool
+ComposeNet.MutableStateMap<TKey, TValue>.Remove(TKey key) -> bool
+ComposeNet.MutableStateMap<TKey, TValue>.this[TKey key].get -> TValue
+ComposeNet.MutableStateMap<TKey, TValue>.this[TKey key].set -> void
+ComposeNet.MutableStateMap<TKey, TValue>.TryGetValue(TKey key, out TValue value) -> bool
+ComposeNet.MutableStateMap<TKey, TValue>.Values.get -> System.Collections.Generic.ICollection<TValue>!
 ComposeNet.OutlinedButton
 ComposeNet.OutlinedButton.OutlinedButton(System.Action! onClick) -> void
 ComposeNet.OutlinedCard
@@ -712,6 +753,8 @@ ComposeNet.SegmentedButton.Icon.set -> void
 ComposeNet.SegmentedButton.SegmentedButton(bool checked, System.Action<bool>! onCheckedChange) -> void
 ComposeNet.SegmentedButton.SegmentedButton(bool selected, System.Action! onClick) -> void
 ComposeNet.Shape
+ComposeNet.SideEffect
+ComposeNet.SideEffect.SideEffect(System.Action! effect) -> void
 ComposeNet.SingleChoiceSegmentedButtonRow
 ComposeNet.SingleChoiceSegmentedButtonRow.SingleChoiceSegmentedButtonRow() -> void
 ComposeNet.Slider
@@ -895,6 +938,7 @@ ComposeNet.WideNavigationRailState.InitialValue.get -> AndroidX.Compose.Material
 ComposeNet.WideNavigationRailState.TargetValue.get -> AndroidX.Compose.Material3.WideNavigationRailValue!
 ComposeNet.WideNavigationRailState.WideNavigationRailState(AndroidX.Compose.Material3.WideNavigationRailValue? initialValue = null) -> void
 override ComposeNet.ComposeActivity.OnCreate(Android.OS.Bundle? savedInstanceState) -> void
+override ComposeNet.DerivedState<T>.ToString() -> string!
 override ComposeNet.Dp.Equals(object? obj) -> bool
 override ComposeNet.Dp.GetHashCode() -> int
 override ComposeNet.Dp.ToString() -> string!
@@ -929,8 +973,29 @@ static ComposeNet.Arrangement.SpacedBy(int dp) -> ComposeNet.Arrangement!
 static ComposeNet.Arrangement.SpaceEvenly.get -> ComposeNet.Arrangement!
 static ComposeNet.Arrangement.Start.get -> ComposeNet.Arrangement!
 static ComposeNet.Arrangement.Top.get -> ComposeNet.Arrangement!
+static ComposeNet.Compose.DerivedStateOf<T>(System.Func<T>! calculation) -> ComposeNet.DerivedState<T>!
+static ComposeNet.Compose.DisposableEffect(object? key1, object? key2, object? key3, System.Func<AndroidX.Compose.Runtime.DisposableEffectScope!, System.Action!>! effect) -> void
+static ComposeNet.Compose.DisposableEffect(object? key1, object? key2, System.Func<AndroidX.Compose.Runtime.DisposableEffectScope!, System.Action!>! effect) -> void
+static ComposeNet.Compose.DisposableEffect(object? key1, System.Func<AndroidX.Compose.Runtime.DisposableEffectScope!, System.Action!>! effect) -> void
+static ComposeNet.Compose.LaunchedEffect(object? key1, object? key2, object? key3, System.Func<System.Threading.CancellationToken, System.Threading.Tasks.Task!>! body) -> void
+static ComposeNet.Compose.LaunchedEffect(object? key1, object? key2, System.Func<System.Threading.CancellationToken, System.Threading.Tasks.Task!>! body) -> void
+static ComposeNet.Compose.LaunchedEffect(object? key1, System.Func<System.Threading.CancellationToken, System.Threading.Tasks.Task!>! body) -> void
+static ComposeNet.Compose.ProduceState<T>(T initialValue, object? key1, object? key2, object? key3, System.Func<ComposeNet.MutableState<T>!, System.Threading.CancellationToken, System.Threading.Tasks.Task!>! producer, int line = 0, string! file = "") -> ComposeNet.MutableState<T>!
+static ComposeNet.Compose.ProduceState<T>(T initialValue, object? key1, object? key2, System.Func<ComposeNet.MutableState<T>!, System.Threading.CancellationToken, System.Threading.Tasks.Task!>! producer, int line = 0, string! file = "") -> ComposeNet.MutableState<T>!
+static ComposeNet.Compose.ProduceState<T>(T initialValue, object? key1, System.Func<ComposeNet.MutableState<T>!, System.Threading.CancellationToken, System.Threading.Tasks.Task!>! producer, int line = 0, string! file = "") -> ComposeNet.MutableState<T>!
+static ComposeNet.Compose.ProduceState<T>(T initialValue, System.Func<ComposeNet.MutableState<T>!, System.Threading.CancellationToken, System.Threading.Tasks.Task!>! producer, int line = 0, string! file = "") -> ComposeNet.MutableState<T>!
+static ComposeNet.Compose.ProduceStateKeyed<T>(T initialValue, object?[]! keys, System.Func<ComposeNet.MutableState<T>!, System.Threading.CancellationToken, System.Threading.Tasks.Task!>! producer, int line = 0, string! file = "") -> ComposeNet.MutableState<T>!
 static ComposeNet.Compose.Remember<T>(System.Func<T>! factory, int line = 0, string! file = "") -> T
+static ComposeNet.Compose.Remember<T>(System.Func<T>! factory, object? key1, int line = 0, string! file = "") -> T
+static ComposeNet.Compose.Remember<T>(System.Func<T>! factory, object? key1, object? key2, int line = 0, string! file = "") -> T
+static ComposeNet.Compose.Remember<T>(System.Func<T>! factory, object? key1, object? key2, object? key3, int line = 0, string! file = "") -> T
+static ComposeNet.Compose.RememberKeyed<T>(System.Func<T>! factory, object?[]! keys, int line = 0, string! file = "") -> T
 static ComposeNet.Compose.RememberSaveable<T>(System.Func<T>! factory, int line = 0, string! file = "") -> T
+static ComposeNet.Compose.RememberSaveable<T>(System.Func<T>! factory, object? key1, int line = 0, string! file = "") -> T
+static ComposeNet.Compose.RememberSaveable<T>(System.Func<T>! factory, object? key1, object? key2, int line = 0, string! file = "") -> T
+static ComposeNet.Compose.RememberSaveable<T>(System.Func<T>! factory, object? key1, object? key2, object? key3, int line = 0, string! file = "") -> T
+static ComposeNet.Compose.RememberSaveableKeyed<T>(System.Func<T>! factory, object?[]! keys, int line = 0, string! file = "") -> T
+static ComposeNet.Compose.SideEffect(System.Action! effect) -> void
 static ComposeNet.Dp.implicit operator ComposeNet.Dp(float value) -> ComposeNet.Dp
 static ComposeNet.Dp.implicit operator ComposeNet.Dp(int value) -> ComposeNet.Dp
 static ComposeNet.Dp.operator !=(ComposeNet.Dp left, ComposeNet.Dp right) -> bool
