@@ -6,6 +6,7 @@
   </Configurations>
   <Folder Name="/Samples/">
     <Project Path="samples/Jetchat/Jetchat.csproj" />
+    <Project Path="samples/JetNews/JetNews.csproj" />
     <Project Path="src/ComposeNet.Sample/ComposeNet.Sample.csproj" />
   </Folder>
   <Project Path="src/ComposeNet.Compose/ComposeNet.Compose.csproj" />

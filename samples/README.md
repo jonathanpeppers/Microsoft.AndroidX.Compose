@@ -22,7 +22,7 @@ Status legend: ✅ done · 🚧 in progress · ⬜️ not started · ❌ blocked
 | Complexity (upstream) | Sample      | Status | Notes |
 |----------------------:|-------------|:------:|-------|
 | Low                   | **Jetchat** | ✅      | Simplified single-channel chat with navigation drawer (`composers` / `droidcon-nyc`), top-bar search/info action icons, distinct-per-author avatars (DiceBear `lorelei`, CC0), and a `LazyColumn`-backed message log. Programmatic drawer open + multi-channel routing still pending. See `Jetchat/README.md`. |
-| Medium                | JetNews     | ⬜️     | Needs image loading and navigation. |
+| Medium                | JetNews     | ✅      | Simplified phone-only single-pane port — three screens (Home / Article / Interests), navigation drawer with two destinations, `PrimaryTabRow` on Interests, per-post bookmark toggle, six condensed seed posts with solid-color hero panels. Adaptive list-detail layout, inline paragraph spans, `nestedScroll` top-bar elevation, drawer auto-close, and real hero PNGs are all pending. See `JetNews/README.md`. |
 | Medium                | Reply       | ⬜️     | Needs adaptive layouts (window-size classes). |
 | Medium-High           | Jetsnack    | ⬜️     | Heavy custom layouts and animation. |
 | High                  | Jetcaster   | ⬜️     | Coroutines, DataStore, Hilt, media playback. |
@@ -44,6 +44,13 @@ that needs the same primitive.
 | [#69](https://github.com/jonathanpeppers/compose-net/issues/69)  | WindowInsets padding modifiers (`imePadding`, `navigationBarsPadding`, `statusBarsPadding`, …) | IME-synced input row in **Jetchat**. |
 | [#59](https://github.com/jonathanpeppers/compose-net/issues/59)  | `CompositionLocal` / `CompositionLocalProvider` (`LocalContext`, `LocalDensity`, `LocalContentColor`, `LocalTextStyle`, …) | Idiomatic theming and density reads across every sample. |
 | [#20](https://github.com/jonathanpeppers/compose-net/issues/20)  | Edge-to-edge bootstrapping | Status/nav-bar overlap on every sample. |
+| [#140](https://github.com/jonathanpeppers/compose-net/issues/140) | `DrawerState.open()` / `close()` suspend bridges | Drawer auto-close on item tap in **Jetchat** + **JetNews**; programmatic hamburger button. |
+| [#141](https://github.com/jonathanpeppers/compose-net/issues/141) | `AnnotatedString` + `SpanStyle` for inline-run text styling | Link / Bold / Italic / Code spans inside paragraphs in **JetNews** article reader. |
+| [#142](https://github.com/jonathanpeppers/compose-net/issues/142) | `Modifier.nestedScroll` + `TopAppBarDefaults` scroll behaviors | Top-bar elevation / collapse on scroll in **JetNews**, **Reply**, **Jetcaster**. |
+| [#143](https://github.com/jonathanpeppers/compose-net/issues/143) | WindowSizeClass / `currentWindowAdaptiveInfo` | Adaptive layouts; blocks **Reply** entirely and the **JetNews** list-detail screen. |
+| [#144](https://github.com/jonathanpeppers/compose-net/issues/144) | Custom `Layout {}` primitive — Measurable / Placeable / MeasureScope | `InterestsAdaptiveContentLayout` in **JetNews**, custom carousels in **Jetsnack**, asymmetric chat bubbles in **Jetchat**. |
+| [#145](https://github.com/jonathanpeppers/compose-net/issues/145) | `ContentScale` + `Alignment` slots on the `Image` facade | Hero images on cards in **JetNews** (currently solid-color `Box` placeholders). |
+| [#146](https://github.com/jonathanpeppers/compose-net/issues/146) | `stringResource(id)` lookup | Localizable UI strings in every sample (all currently inline literals). |
 
 Closed gaps that previously appeared here (now usable in samples):
 **#51** Pager / FlowRow / FlowColumn / BoxWithConstraints / LazyStaggeredGrid,
@@ -58,7 +65,11 @@ Closed gaps that previously appeared here (now usable in samples):
 
 These samples are C# ports inspired by Google's [android/compose-samples](https://github.com/android/compose-samples), which is licensed under the [Apache License 2.0](https://github.com/android/compose-samples/blob/main/LICENSE). No upstream Kotlin source code is copied into this repo — the ports re-implement the same UI in C# against this repo's `ComposeNet.Compose` facade.
 
-The four per-author avatar PNGs in [`samples/Jetchat/Resources/drawable-nodpi/`](Jetchat/Resources/drawable-nodpi/) (`avatar_ali.png`, `avatar_aubrey.png`, `avatar_taylor.png`, `avatar_jordan.png`) were generated with [DiceBear](https://www.dicebear.com)'s `lorelei` style and are released under [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) (no attribution required, but credit appreciated). All other sample drawables and string content under each `samples/<Name>/` folder are original to this repo.
+The four per-author avatar PNGs in [`samples/Jetchat/Resources/drawable-nodpi/`](Jetchat/Resources/drawable-nodpi/) (`avatar_ali.png`, `avatar_aubrey.png`, `avatar_taylor.png`, `avatar_jordan.png`) were generated with [DiceBear](https://www.dicebear.com)'s `lorelei` style and are released under [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) (no attribution required, but credit appreciated).
+
+The 12 article photos in [`samples/JetNews/Resources/drawable-nodpi/`](JetNews/Resources/drawable-nodpi/) (`post_1.png`/`post_1_thumb.png` through `post_6.png`/`post_6_thumb.png`) and the wordmark vector [`samples/JetNews/Resources/drawable/ic_jetnews_wordmark.xml`](JetNews/Resources/drawable/ic_jetnews_wordmark.xml) are copied verbatim from [android/compose-samples](https://github.com/android/compose-samples/tree/main/JetNews/app/src/main/res) under the [Apache License 2.0](https://github.com/android/compose-samples/blob/main/LICENSE).
+
+All other sample drawables and string content under each `samples/<Name>/` folder are original to this repo.
 
 ## Conventions
 

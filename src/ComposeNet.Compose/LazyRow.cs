@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Android.Runtime;
 using AndroidX.Compose.Foundation.Lazy;
 using AndroidX.Compose.Runtime;
+using BindingArrangement = AndroidX.Compose.Foundation.Layout.Arrangement;
 
 namespace ComposeNet;
 
@@ -32,6 +33,16 @@ public sealed class LazyRow<T> : ComposableNode
     /// </summary>
     public LazyListState? State { get; set; }
 
+    /// <summary>
+    /// Optional horizontal arrangement (e.g. <see cref="Arrangement.SpacedBy(int)"/>)
+    /// applied between items. Leave <see langword="null"/> to use Compose's
+    /// default (<c>Arrangement.Start</c>). Must wrap a horizontal-capable
+    /// Compose <see cref="Arrangement"/>; throws
+    /// <see cref="System.ArgumentException"/> at render time for a
+    /// vertical-only value (e.g. <see cref="Arrangement.Top"/>).
+    /// </summary>
+    public Arrangement? HorizontalArrangement { get; set; }
+
     public override void Render(IComposer composer)
     {
         var modifier = BuildModifier();
@@ -49,16 +60,28 @@ public sealed class LazyRow<T> : ComposableNode
                 }));
         });
 
+        BindingArrangement.IHorizontal? horizontal = null;
+        if (HorizontalArrangement is not null)
+        {
+            horizontal = HorizontalArrangement.Horizontal
+                ?? throw new System.ArgumentException(
+                    $"{nameof(HorizontalArrangement)} must wrap a horizontal " +
+                    $"or horizontal-or-vertical Compose Arrangement; got a " +
+                    $"vertical-only value (e.g. Arrangement.Top / Arrangement.Bottom).",
+                    nameof(HorizontalArrangement));
+        }
+
         int defaults = (int)LazyRowDefault.All;
-        if (modifier is not null) defaults &= ~(int)LazyRowDefault.Modifier;
-        if (State    is not null) defaults &= ~(int)LazyRowDefault.State;
+        if (modifier   is not null) defaults &= ~(int)LazyRowDefault.Modifier;
+        if (State      is not null) defaults &= ~(int)LazyRowDefault.State;
+        if (horizontal is not null) defaults &= ~(int)LazyRowDefault.HorizontalArrangement;
 
         LazyDslKt.LazyRow(
             modifier:              modifier,
             state:                 State,
             contentPadding:        null,
             reverseLayout:         false,
-            horizontalArrangement: null,
+            horizontalArrangement: horizontal,
             verticalAlignment:     null,
             flingBehavior:         null,
             userScrollEnabled:     true,

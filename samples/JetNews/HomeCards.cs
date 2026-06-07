@@ -1,0 +1,113 @@
+using System;
+using System.Collections.Generic;
+using ComposeNet;
+
+namespace ComposeNet.Samples.JetNews;
+
+/// <summary>
+/// Card factories for the home feed. Three shapes mirror upstream's
+/// <c>PostCardTop</c> (highlighted hero), <c>PostCardSimple</c>
+/// (recommended row with thumbnail), and <c>PostCardPopular</c>
+/// (280-wide carousel card).
+/// </summary>
+internal static class HomeCards
+{
+    public static Column BuildHighlight(Post post,
+                                        Action<string> onSelectPost) =>
+        new()
+        {
+            Modifier.Companion
+                .FillMaxWidth()
+                .Padding(16)
+                .Clickable(() => onSelectPost(post.Id)),
+            new Image(post.HeroId, "")
+            {
+                Modifier = Modifier.Companion
+                    .FillMaxWidth()
+                    .AspectRatio(992f / 296f)
+                    .Clip(16),
+            },
+            new Spacer(Modifier.Companion.Height(16)),
+            new Text(post.Title)
+            {
+                FontSize   = 22,
+                FontWeight = FontWeight.SemiBold,
+                Modifier   = Modifier.Companion.Padding(bottom: 8, start: 0, end: 0, top: 0),
+            },
+            new Text(post.Metadata.Author)
+            {
+                FontSize   = 14,
+                FontWeight = FontWeight.Medium,
+                Modifier   = Modifier.Companion.Padding(bottom: 4, start: 0, end: 0, top: 0),
+            },
+            new Text($"{post.Metadata.Date} · {post.Metadata.ReadTimeMinutes} min read")
+            {
+                FontSize = 12,
+            },
+        };
+
+    public static Row BuildSimple(Post post,
+                                  MutableStateList<string> bookmarks,
+                                  Action<string> onSelectPost) =>
+        new()
+        {
+            Modifier.Companion
+                .FillMaxWidth()
+                .Clickable(() => onSelectPost(post.Id)),
+            new Image(post.ThumbId, "")
+            {
+                Modifier = Modifier.Companion.Padding(16).Size(40).Clip(8),
+            },
+            new Column
+            {
+                Modifier.Companion.Weight(1f, fill: true).Padding(vertical: 10, horizontal: 0),
+                new Text(post.Title)
+                {
+                    FontSize   = 16,
+                    FontWeight = FontWeight.Medium,
+                    MaxLines   = 3,
+                },
+                new Text($"{post.Metadata.Author} · {post.Metadata.ReadTimeMinutes} min read")
+                {
+                    FontSize = 14,
+                },
+            },
+            BookmarkButton.Build(post.Id, bookmarks),
+        };
+
+    public static Card BuildPopular(Post post, Action<string> onSelectPost) =>
+        new()
+        {
+            Modifier.Companion.Width(280).Height(220).Clickable(() => onSelectPost(post.Id)),
+            new Column
+            {
+                Modifier.Companion.FillMaxSize(),
+                new Image(post.HeroId, "")
+                {
+                    Modifier = Modifier.Companion
+                        .FillMaxWidth()
+                        .AspectRatio(992f / 296f),
+                },
+                new Column
+                {
+                    Modifier.Companion.FillMaxSize().Padding(16),
+                    new Text(post.Title)
+                    {
+                        FontSize   = 16,
+                        FontWeight = FontWeight.SemiBold,
+                        MaxLines   = 2,
+                    },
+                    new Spacer(Modifier.Companion.Weight(1f, fill: true)),
+                    new Text(post.Metadata.Author)
+                    {
+                        FontSize = 13,
+                        MaxLines = 1,
+                    },
+                    new Text($"{post.Metadata.Date} · {post.Metadata.ReadTimeMinutes} min read")
+                    {
+                        FontSize = 12,
+                    },
+                },
+            },
+        };
+}
