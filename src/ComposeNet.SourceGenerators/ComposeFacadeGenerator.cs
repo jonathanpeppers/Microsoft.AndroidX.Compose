@@ -484,7 +484,8 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
                 rememberMethodName: remember,
                 stateWrapperType: stateType,
                 stateJvmType: jvmMember.Type,
-                rememberArgExpressions: rememberArgExpressions);
+                rememberArgExpressions: rememberArgExpressions,
+                sharedState: ReadBool(stateAttr, "SharedState"));
         }
 
         // [PainterResource] — annotates the IntPtr bridge param that
@@ -698,30 +699,43 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         // populated when the caller supplied a wrapper. Phase 4b
         // (parameterised Remember): the ctor guaranteed _state is
         // non-null, so we read init values off it and skip the
-        // null-guard on the Jvm assignment.
+        // null-guard on the Jvm assignment. Phase 4c (SharedState=true):
+        // when _state.Jvm is already populated (because an earlier
+        // sibling render bound the same wrapper), skip the Remember
+        // call entirely and reuse the cached JNI handle — this is what
+        // lets a TimePicker and a TimeInput share state, or the
+        // SearchBar family share a SearchBarState peer across the
+        // collapsed bar + expanded popup.
         foreach (var s in slots.Where(s => s.Kind == FacadeSlotKind.StateHolder))
         {
             var id = CtorIdentifier(s);
             var jvmFqn = s.StateJvmType!.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat
                 .WithMiscellaneousOptions(SymbolDisplayMiscellaneousOptions.UseSpecialTypes));
-            sb.Append("            var __").Append(s.Param.Name)
-              .Append(" = global::ComposeNet.ComposeBridges.").Append(s.RememberMethodName).Append('(');
-            foreach (var argExpr in s.RememberArgExpressions)
-                sb.Append(argExpr).Append(", ");
-            sb.Append(composerName).AppendLine(");");
-            if (s.IsParameterisedStateHolder)
+            if (s.SharedState)
             {
-                sb.Append("            if (_").Append(id).AppendLine(".Jvm is null)");
-                sb.Append("                _").Append(id).Append(".Jvm = global::Java.Lang.Object.GetObject<")
-                  .Append(jvmFqn).Append(">(__").Append(s.Param.Name)
-                  .AppendLine(", global::Android.Runtime.JniHandleOwnership.DoNotTransfer)!;");
+                EmitStateHolderPreambleShared(sb, s, id, jvmFqn, composerName);
             }
             else
             {
-                sb.Append("            if (_").Append(id).Append(" is not null && _").Append(id).AppendLine(".Jvm is null)");
-                sb.Append("                _").Append(id).Append(".Jvm = global::Java.Lang.Object.GetObject<")
-                  .Append(jvmFqn).Append(">(__").Append(s.Param.Name)
-                  .AppendLine(", global::Android.Runtime.JniHandleOwnership.DoNotTransfer)!;");
+                sb.Append("            var __").Append(s.Param.Name)
+                  .Append(" = global::ComposeNet.ComposeBridges.").Append(s.RememberMethodName).Append('(');
+                foreach (var argExpr in s.RememberArgExpressions)
+                    sb.Append(argExpr).Append(", ");
+                sb.Append(composerName).AppendLine(");");
+                if (s.IsParameterisedStateHolder)
+                {
+                    sb.Append("            if (_").Append(id).AppendLine(".Jvm is null)");
+                    sb.Append("                _").Append(id).Append(".Jvm = global::Java.Lang.Object.GetObject<")
+                      .Append(jvmFqn).Append(">(__").Append(s.Param.Name)
+                      .AppendLine(", global::Android.Runtime.JniHandleOwnership.DoNotTransfer)!;");
+                }
+                else
+                {
+                    sb.Append("            if (_").Append(id).Append(" is not null && _").Append(id).AppendLine(".Jvm is null)");
+                    sb.Append("                _").Append(id).Append(".Jvm = global::Java.Lang.Object.GetObject<")
+                      .Append(jvmFqn).Append(">(__").Append(s.Param.Name)
+                      .AppendLine(", global::Android.Runtime.JniHandleOwnership.DoNotTransfer)!;");
+                }
             }
         }
 
@@ -869,6 +883,63 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         sb.Append("            var __").Append(s.Param.Name)
           .Append(" = new global::ComposeNet.ComposableLambda1(v => _")
           .Append(s.Param.Name).Append('(').Append(expr).AppendLine("));");
+    }
+
+    static void EmitStateHolderPreambleShared(StringBuilder sb, FacadeSlot s,
+        string id, string jvmFqn, string composerName)
+    {
+        // Phase 4c: skip the RememberXxxState call when _state.Jvm is
+        // already populated (a sibling facade rendered first and bound
+        // this wrapper to its peer). When the cache miss path runs,
+        // populate _state.Jvm so the next sibling reuses the handle.
+        sb.Append("            global::System.IntPtr __").Append(s.Param.Name).AppendLine(";");
+        if (s.IsParameterisedStateHolder)
+        {
+            // Phase 4b shape: _state is non-null thanks to ctor auto-create.
+            // The `!` on the first dereference flow-narrows _state to
+            // non-null for the rest of the method (matches the existing
+            // non-shared Phase 4b convention).
+            sb.Append("            if (_").Append(id).AppendLine("!.Jvm is not null)");
+            sb.AppendLine("            {");
+            sb.Append("                __").Append(s.Param.Name)
+              .Append(" = ((global::Android.Runtime.IJavaObject)_").Append(id).AppendLine(".Jvm!).Handle;");
+            sb.AppendLine("            }");
+            sb.AppendLine("            else");
+            sb.AppendLine("            {");
+            sb.Append("                __").Append(s.Param.Name)
+              .Append(" = global::ComposeNet.ComposeBridges.").Append(s.RememberMethodName).Append('(');
+            foreach (var argExpr in s.RememberArgExpressions)
+                sb.Append(argExpr).Append(", ");
+            sb.Append(composerName).AppendLine(");");
+            sb.Append("                _").Append(id).Append(".Jvm = global::Java.Lang.Object.GetObject<")
+              .Append(jvmFqn).Append(">(__").Append(s.Param.Name)
+              .AppendLine(", global::Android.Runtime.JniHandleOwnership.DoNotTransfer)!;");
+            sb.AppendLine("            }");
+        }
+        else
+        {
+            // Phase 4 shape: _state may be null; only cache when present.
+            // Use an explicit `if (_state is not null)` so flow narrowing
+            // applies to both branches without sprinkling null-forgiving
+            // operators throughout.
+            sb.Append("            if (_").Append(id).Append(" is not null && _").Append(id).AppendLine(".Jvm is not null)");
+            sb.AppendLine("            {");
+            sb.Append("                __").Append(s.Param.Name)
+              .Append(" = ((global::Android.Runtime.IJavaObject)_").Append(id).AppendLine(".Jvm).Handle;");
+            sb.AppendLine("            }");
+            sb.AppendLine("            else");
+            sb.AppendLine("            {");
+            sb.Append("                __").Append(s.Param.Name)
+              .Append(" = global::ComposeNet.ComposeBridges.").Append(s.RememberMethodName).Append('(');
+            foreach (var argExpr in s.RememberArgExpressions)
+                sb.Append(argExpr).Append(", ");
+            sb.Append(composerName).AppendLine(");");
+            sb.Append("                if (_").Append(id).AppendLine(" is not null)");
+            sb.Append("                    _").Append(id).Append(".Jvm = global::Java.Lang.Object.GetObject<")
+              .Append(jvmFqn).Append(">(__").Append(s.Param.Name)
+              .AppendLine(", global::Android.Runtime.JniHandleOwnership.DoNotTransfer)!;");
+            sb.AppendLine("            }");
+        }
     }
 
     static void EmitDefaultsMask(StringBuilder sb, string indent, DefaultsInfo d,
@@ -1138,6 +1209,13 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         return null;
     }
 
+    static bool ReadBool(AttributeData attr, string name)
+    {
+        foreach (var na in attr.NamedArguments)
+            if (na.Key == name && na.Value.Value is bool b) return b;
+        return false;
+    }
+
     static string? ReadSlotAttribute(IParameterSymbol p, INamedTypeSymbol? slotAttr)
     {
         if (slotAttr is null) return null;
@@ -1255,7 +1333,8 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         public FacadeSlot(IParameterSymbol param, FacadeSlotKind kind,
             ITypeSymbol? callbackType = null, string? slotPropertyName = null,
             string? rememberMethodName = null, INamedTypeSymbol? stateWrapperType = null,
-            ITypeSymbol? stateJvmType = null, string[]? rememberArgExpressions = null)
+            ITypeSymbol? stateJvmType = null, string[]? rememberArgExpressions = null,
+            bool sharedState = false)
         {
             Param = param;
             Kind = kind;
@@ -1265,6 +1344,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             StateWrapperType = stateWrapperType;
             StateJvmType = stateJvmType;
             RememberArgExpressions = rememberArgExpressions ?? System.Array.Empty<string>();
+            SharedState = sharedState;
         }
         public IParameterSymbol Param { get; }
         public FacadeSlotKind Kind { get; }
@@ -1281,6 +1361,13 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         /// zero user params (Phase 4).
         /// </summary>
         public string[] RememberArgExpressions { get; }
+        /// <summary>
+        /// Phase 4c — when <c>true</c>, the generated Render preamble
+        /// checks whether <c>_state.Jvm</c> is already populated (from an
+        /// earlier sibling render) and skips the <c>RememberXxxState</c>
+        /// call in that case, reusing the cached JNI handle.
+        /// </summary>
+        public bool SharedState { get; }
         public bool HasSlotAttribute => SlotPropertyName is not null;
         public bool IsNullableSlot => Param.NullableAnnotation == NullableAnnotation.Annotated
             && KindIsFnSlot(Kind);
@@ -1292,6 +1379,6 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
               or FacadeSlotKind.RequiredFunction2 or FacadeSlotKind.RequiredFunction3;
         public FacadeSlot WithKind(FacadeSlotKind newKind) =>
             new(Param, newKind, CallbackType, SlotPropertyName, RememberMethodName,
-                StateWrapperType, StateJvmType, RememberArgExpressions);
+                StateWrapperType, StateJvmType, RememberArgExpressions, SharedState);
     }
 }

@@ -53,6 +53,13 @@ public class MainActivity : ComposeActivity
             var showModalRail = Remember(() => new MutableState<bool>(false));
             var modalRailIdx  = Remember(() => new MutableNumberState<int>(0));
 
+            // Issue #63: focus/toggle/semantics modifier demo state.
+            var toggle63        = Remember(() => new MutableState<bool>(false));
+            var focusReq63      = Remember(() => new FocusRequester());
+            var focusStatus63   = Remember(() => new MutableState<string>("not focused"));
+            var selectedRow63   = Remember(() => new MutableNumberState<int>(0));
+            var taps63          = Remember(() => new MutableNumberState<int>(0));
+
             var checkbox    = Remember(() => new MutableState<bool>(true));
             var switchOn    = Remember(() => new MutableState<bool>(false));
             var radioPick   = Remember(() => new MutableNumberState<int>(0));
@@ -97,6 +104,13 @@ public class MainActivity : ComposeActivity
             // filter without binding InputTransformation.
             var searchQuery   = Remember(() => new MutableState<string>(""));
 
+            // Pager tab: PagerState exposes CurrentPage to a reactive
+            // indicator rendered after the pager. The same items array
+            // is closed over by both the state's pageCount lambda and
+            // the pager facade so the two stay in sync.
+            var pagerItems = new[] { 0, 1, 2 };
+            var pagerState = Remember(() => new PagerState(pageCount: () => pagerItems.Length));
+
             // Lazy tab: pull-to-refresh demo state. `refreshing` drives the
             // PullToRefreshBox indicator; `refreshTick` bumps once per
             // completed refresh so the rows visibly change. The reload
@@ -109,6 +123,7 @@ public class MainActivity : ComposeActivity
             // VerticalScroll modifier and the SuspendBridge demo buttons
             // that programmatically scroll back to the top.
             var buttonsScroll = Remember(() => new ScrollState());
+            var greetingScroll = Remember(() => new ScrollState());
 
             // Compose Navigation demo state (issue #60). The NavController
             // is the externally-driven entry point — Button onClicks call
@@ -118,9 +133,8 @@ public class MainActivity : ComposeActivity
             // controller into NavController.Jvm on first NavHost render.
             var navController = Remember(() => new NavController());
 
-            // State primitives demo (issue #62). The `seed` value is the
-            // key for the keyed-Remember overload — bumping it via the
-            // "New seed" button resets the wrapped counter back to its
+            // State primitives demo (issue #62). Bumping `seed` via the
+            // "New seed" button resets the keyed counter back to its
             // initial value and cancels-and-restarts the ProduceState
             // producer with a fresh CancellationToken (the producer
             // explicitly resets state.Value = 0 at the top of the
@@ -148,7 +162,7 @@ public class MainActivity : ComposeActivity
                 }
             });
 
-            string[] tabNames = { "Basics", "Buttons", "Cards", "Drawer", "Selection", "Pickers", "Misc", "App bars", "Lazy", "Carousels", "Nav", "State" };
+            string[] tabNames = { "Basics", "Buttons", "Cards", "Drawer", "Selection", "Pickers", "Misc", "App bars", "Lazy", "Carousels", "Pager", "Nav", "State" };
 
             // Per-tab content. Only the current tab's column is added to
             // the screen — keeps the sample short enough to fit on one
@@ -185,6 +199,7 @@ public class MainActivity : ComposeActivity
                     {
                         0 => (ComposableNode)new Column
                         {
+                            Modifier.Companion.VerticalScroll(greetingScroll),
                             new Text("Hello from .NET"),
                             new OutlinedTextField(name),
                             new Text($"Hi {(string.IsNullOrEmpty(name.Value) ? "stranger" : name.Value)}"),
@@ -289,6 +304,83 @@ public class MainActivity : ComposeActivity
                                     .Border(2, ColorKt.Color(red: 0x0D, green: 0x47, blue: 0xA1, alpha: 0xFF), cornerRadius: 12)
                                     .Clickable(() => count++)
                                     .Padding(horizontal: 16, vertical: 8),
+                            },
+                            // Issue #63 modifier demo — scope alignment inside a Box,
+                            // Toggleable row with semantic merge, programmatic focus
+                            // via FocusRequester + OnFocusChanged + Focusable, and
+                            // CombinedClickable + Selectable + Semantics.
+                            new Text("Issue #63 modifiers:"),
+                            // Box with three corner-aligned labels (TopStart, Center,
+                            // BottomEnd). The fourth child is an explicit colored
+                            // Box that uses MatchParentSize() to fill the parent —
+                            // the parent draws underneath the labels, which sit on
+                            // top of it. This is the standard "background overlay"
+                            // use of MatchParentSize.
+                            new Box
+                            {
+                                Modifier.Companion
+                                    .FillMaxWidth()
+                                    .Height(72)
+                                    .Border(1, ColorKt.Color(red: 0x90, green: 0x90, blue: 0x90, alpha: 0xFF)),
+                                new Box
+                                {
+                                    Modifier.Companion
+                                        .MatchParentSize()
+                                        .Background(ColorKt.Color(red: 0xFF, green: 0xF0, blue: 0xE0, alpha: 0xFF))
+                                        .Semantics("Background overlay that fills the box"),
+                                },
+                                new Text("TopStart")    { Modifier = Modifier.Companion.Align(Alignment.TopStart) },
+                                new Text("Center")      { Modifier = Modifier.Companion.Align(Alignment.Center) },
+                                new Text("BottomEnd")   { Modifier = Modifier.Companion.Align(Alignment.BottomEnd) },
+                            },
+                            // Toggleable row — whole row is a single accessibility
+                            // node that announces "Liked" / "Not liked".
+                            new Row
+                            {
+                                Modifier.Companion
+                                    .FillMaxWidth()
+                                    .Toggleable(toggle63.Value, v => toggle63.Value = v)
+                                    .Semantics(mergeDescendants: true, toggle63.Value ? "Liked" : "Not liked")
+                                    .Padding(8),
+                                new Text(toggle63.Value ? "♥ Liked" : "♡ Tap to like"),
+                            },
+                            // Programmatic focus via FocusRequester + Focusable +
+                            // OnFocusChanged. Tapping the button moves focus to the
+                            // first Text; the status line below updates.
+                            new Text($"Focus status: {focusStatus63.Value}"),
+                            new Text("Focus target")
+                            {
+                                Modifier = Modifier.Companion
+                                    .FocusRequester(focusReq63)
+                                    .OnFocusChanged(fs => focusStatus63.Value =
+                                        fs.IsFocused ? "focused" : (fs.HasFocus ? "child has focus" : "not focused"))
+                                    .Focusable()
+                                    .Padding(8)
+                                    .Border(1, ColorKt.Color(red: 0x55, green: 0x55, blue: 0xAA, alpha: 0xFF))
+                                    .Padding(4),
+                            },
+                            new Button(onClick: () => focusReq63.RequestFocus()) { new Text("Request focus") },
+                            // CombinedClickable + Selectable in a small list.
+                            new Text($"Taps (single/long/double): {taps63.Value}"),
+                            new Text("Hold or double-tap me")
+                            {
+                                Modifier = Modifier.Companion
+                                    .FillMaxWidth()
+                                    .CombinedClickable(
+                                        onClick:       () => taps63.Value += 1,
+                                        onLongClick:   () => taps63.Value += 10,
+                                        onDoubleClick: () => taps63.Value += 100)
+                                    .Padding(8),
+                            },
+                            new Column
+                            {
+                                new Text($"Selected row: {selectedRow63.Value}"),
+                                new Text("Row 0") { Modifier = Modifier.Companion
+                                    .FillMaxWidth().Selectable(selectedRow63.Value == 0, () => selectedRow63.Value = 0).Padding(6) },
+                                new Text("Row 1") { Modifier = Modifier.Companion
+                                    .FillMaxWidth().Selectable(selectedRow63.Value == 1, () => selectedRow63.Value = 1).Padding(6) },
+                                new Text("Row 2") { Modifier = Modifier.Companion
+                                    .FillMaxWidth().Selectable(selectedRow63.Value == 2, () => selectedRow63.Value = 2).Padding(6) },
                             },
                                 // Secure text inputs — exercise both
                                 // SecureTextField (filled) and
@@ -904,6 +996,85 @@ public class MainActivity : ComposeActivity
                 },
                 10 => new Column
                 {
+                    // HorizontalPager swiping between 3 demo screens —
+                    // the headline showcase from issue #51. Each page
+                    // gets its own pastel slot so swipes feel obvious.
+                    new Text("HorizontalPager (swipe between 3 screens)"),
+                    new HorizontalPager<int>(
+                        items:       pagerItems,
+                        itemContent: i => new Box
+                        {
+                            Modifier.Companion
+                                .FillMaxSize()
+                                .Clip(20)
+                                .Background(CarouselPalette[i % CarouselPalette.Length]),
+                            new Text($"Screen {i + 1}")
+                            {
+                                Modifier = Modifier.Companion.Padding(16),
+                            },
+                        })
+                    {
+                        State    = pagerState,
+                        Modifier = Modifier.Companion.FillMaxWidth().Height(200),
+                    },
+                    new Text($"Page {pagerState.CurrentPage + 1} of {pagerState.PageCount}"),
+                    new HorizontalDivider { Modifier = Modifier.Companion.Padding(0, 8) },
+
+                    // FlowRow — chip-style group that wraps when it
+                    // runs out of horizontal space. Each chip is a
+                    // padded Card so the wrap behaviour is visible
+                    // without a Material 3 chip facade.
+                    new Text("FlowRow (wraps when out of width)"),
+                    new FlowRow
+                    {
+                        Modifier.Companion.FillMaxWidth().Padding(4),
+                        new Card { Modifier.Companion.Padding(4), new Text("Music") },
+                        new Card { Modifier.Companion.Padding(4), new Text("Movies") },
+                        new Card { Modifier.Companion.Padding(4), new Text("Podcasts") },
+                        new Card { Modifier.Companion.Padding(4), new Text("News") },
+                        new Card { Modifier.Companion.Padding(4), new Text("Sports") },
+                        new Card { Modifier.Companion.Padding(4), new Text("Books") },
+                        new Card { Modifier.Companion.Padding(4), new Text("Games") },
+                        new Card { Modifier.Companion.Padding(4), new Text("Photography") },
+                    },
+                    new HorizontalDivider { Modifier = Modifier.Companion.Padding(0, 8) },
+
+                    // BoxWithConstraints — hands the available layout
+                    // dp back as a callback so the child layout can
+                    // branch on width (the idiomatic Compose alternative
+                    // to runtime device-class checks).
+                    new Text("BoxWithConstraints (reports its own width in dp)"),
+                    new BoxWithConstraints(c => new Text(
+                        $"Max width = {c.MaxWidth:0.#} dp, max height = {c.MaxHeight:0.#} dp"))
+                    {
+                        Modifier = Modifier.Companion.FillMaxWidth().Padding(8),
+                    },
+                    new HorizontalDivider { Modifier = Modifier.Companion.Padding(0, 8) },
+
+                    // LazyVerticalStaggeredGrid — each cell is a Card
+                    // with a deliberately varying height (cycled from a
+                    // small table) so the staggered effect is obvious.
+                    new Text("LazyVerticalStaggeredGrid (Adaptive 120dp)"),
+                    new LazyVerticalStaggeredGrid<int>(
+                        columns:     StaggeredGridCells.Adaptive(120f),
+                        items:       System.Linq.Enumerable.Range(0, 30).ToList(),
+                        itemContent: i => new Card
+                        {
+                            Modifier.Companion
+                                .Padding(4)
+                                .Height(60 + (i % 5) * 30)
+                                .Background(CarouselPalette[i % CarouselPalette.Length]),
+                            new Text($"#{i:D2}")
+                            {
+                                Modifier = Modifier.Companion.Padding(8),
+                            },
+                        })
+                    {
+                        Modifier = Modifier.Companion.FillMaxWidth().Height(300),
+                    },
+                },
+                11 => new Column
+                {
                     // Compose Navigation demo (issue #60). NavHost holds a
                     // graph of `Composable("route") { ... }` destinations and
                     // switches the visible one based on the bound NavController's
@@ -965,7 +1136,7 @@ public class MainActivity : ComposeActivity
                         }),
                     },
                 },
-                11 => new Column
+                12 => new Column
                 {
                     Modifier.Companion.Padding(16),
                     new Text("State primitives (issue #62)"),
@@ -1321,10 +1492,15 @@ public class MainActivity : ComposeActivity
                                 },
                                 new Tab(selected: tab.Value == 10, onClick: () => tab.Value = 10)
                                 {
+                                    Text = new Text("Pager"),
+                                    Icon = new Text("📑"),
+                                },
+                                new Tab(selected: tab.Value == 11, onClick: () => tab.Value = 11)
+                                {
                                     Text = new Text("Nav"),
                                     Icon = new Text("🧭"),
                                 },
-                                new Tab(selected: tab.Value == 11, onClick: () => tab.Value = 11)
+                                new Tab(selected: tab.Value == 12, onClick: () => tab.Value = 12)
                                 {
                                     Text = new Text("State"),
                                     Icon = new Text("🧠"),
