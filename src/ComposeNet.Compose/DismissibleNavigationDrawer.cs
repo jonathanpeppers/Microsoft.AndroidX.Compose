@@ -11,8 +11,7 @@ namespace ComposeNet;
 public sealed partial class DismissibleNavigationDrawer
 {
     /// <summary>
-    /// Convenience: when <c>true</c>, the drawer starts in the
-    /// <see cref="AndroidX.Compose.Material3.DrawerValue.Open"/> state
+    /// Convenience: starting <see cref="AndroidX.Compose.Material3.DrawerValue"/>
     /// on first composition. Mirrors Kotlin
     /// <c>rememberDrawerState(initialValue = DrawerValue.Open)</c>.
     /// </summary>
@@ -24,11 +23,9 @@ public sealed partial class DismissibleNavigationDrawer
     /// <c>InitialValue</c>) when you need to share state across
     /// recompositions.
     /// </remarks>
-    public bool InitiallyOpen
+    public AndroidX.Compose.Material3.DrawerValue? InitialValue
     {
-        get => _drawerState?.InitialValue == AndroidX.Compose.Material3.DrawerValue.Open;
-        init => _drawerState = new DrawerStateHolder(
-            value ? AndroidX.Compose.Material3.DrawerValue.Open!
-                  : AndroidX.Compose.Material3.DrawerValue.Closed!);
+        get => _drawerState?.InitialValue;
+        init => _drawerState = new DrawerStateHolder(value);
     }
 }

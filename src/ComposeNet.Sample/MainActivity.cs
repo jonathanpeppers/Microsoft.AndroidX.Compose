@@ -714,7 +714,7 @@ public class MainActivity : ComposeActivity
                         },
                         1 => new DismissibleNavigationDrawer
                         {
-                            InitiallyOpen = true,
+                            InitialValue = DrawerValue.Open!,
                             Drawer = new DismissibleDrawerSheet
                             {
                                 new Text("Dismissible drawer"),
@@ -725,7 +725,7 @@ public class MainActivity : ComposeActivity
                             Content = new Column
                             {
                                 new Text("Main content"),
-                                new Text("Drawer opens initially via InitiallyOpen = true"),
+                                new Text("Drawer opens initially via InitialValue = DrawerValue.Open"),
                                 new Text("Swipe horizontally to toggle"),
                                 new Text($"Count: {count}"),
                                 new Button(onClick: () => count++) { new Text("+1") },
