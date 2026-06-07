@@ -17,11 +17,33 @@ namespace ComposeNet;
 /// When <see cref="Callback"/> is <c>null</c> the adapter behaves as
 /// the Kotlin default <c>{ true }</c> — every transition is allowed.
 /// </summary>
-[Register("composenet/compose/DrawerConfirmStateChange")]
-internal sealed class DrawerConfirmStateChange : Java.Lang.Object, IFunction1
+/// <remarks>
+/// The name follows the source generator's convention
+/// <c>&lt;TName&gt;ConfirmStateChange</c> so a
+/// <c>[ConfirmStateChange(typeof(DrawerValue))]</c> attribute on a
+/// Remember bridge parameter resolves to this adapter automatically.
+/// Public so generated facade classes (which live alongside this type
+/// in <c>ComposeNet</c>) can declare it as a <c>readonly</c> field;
+/// it is not part of the developer-facing API and should not be
+/// constructed directly.
+/// </remarks>
+[Register("composenet/compose/DrawerValueConfirmStateChange")]
+public sealed class DrawerValueConfirmStateChange : Java.Lang.Object, IFunction1
 {
+    /// <summary>
+    /// Developer-supplied veto delegate, assigned by the generator-
+    /// emitted facade in its <c>Render</c> preamble from the facade's
+    /// <c>ConfirmStateChange</c> property. Treated as
+    /// <c>{ true }</c> when <c>null</c>.
+    /// </summary>
     public System.Func<DrawerValue, bool>? Callback { get; set; }
 
+    /// <summary>
+    /// Kotlin <c>Function1.invoke</c> entry point. Marshals the JNI
+    /// argument to <see cref="DrawerValue"/>, invokes
+    /// <see cref="Callback"/>, and returns a boxed
+    /// <see cref="Java.Lang.Boolean"/>.
+    /// </summary>
     public Java.Lang.Object? Invoke(Java.Lang.Object? p0)
     {
         var cb = Callback;

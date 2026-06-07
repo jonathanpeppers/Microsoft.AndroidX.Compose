@@ -188,6 +188,22 @@ internal static class Attributes
                 public global::System.Type? Defaults { get; set; }
 
                 /// <summary>
+                /// Opt in to hybrid container shape: bridge has exactly
+                /// one non-nullable <c>IFunction2</c> or <c>IFunction3</c>
+                /// body slot plus one or more nullable <c>IFunction2?</c> /
+                /// <c>IFunction3?</c> slots. The non-nullable body slot
+                /// becomes <c>RenderChildren</c> and the facade derives
+                /// from <see cref="ComposableContainer"/>; the nullable
+                /// slots surface as named <see cref="ComposableNode"/>?
+                /// properties (Phase 3 style). For an <c>IFunction3</c>
+                /// body, set <see cref="Scope"/> too if children need
+                /// the published <c>RowScope</c>/<c>ColumnScope</c>. For
+                /// an <c>IFunction2</c> body, <see cref="Scope"/> has no
+                /// effect.
+                /// </summary>
+                public bool Container { get; set; }
+
+                /// <summary>
                 /// Phase 9 — name of a synthetic facade property that
                 /// drives bridge branching. When the property is non-null
                 /// at render time the generated <c>Render</c> routes to
@@ -333,6 +349,44 @@ internal static class Attributes
                 public string Remember { get; set; } = "";
                 public global::System.Type StateType { get; set; } = null!;
                 public bool SharedState { get; set; }
+            }
+
+            /// <summary>
+            /// Annotates an <c>IFunction1</c> parameter on a
+            /// <c>Remember*State(…)</c> helper on <c>ComposeBridges</c>
+            /// to tell <c>ComposeFacadeGenerator</c> that the value is
+            /// a per-instance JNI veto adapter — Kotlin's
+            /// <c>confirmStateChange</c> / <c>confirmValueChange</c>
+            /// callback. The facade allocates the JCW once per node
+            /// (<c>readonly</c> field) and exposes a
+            /// <c>System.Func&lt;T, bool&gt;?</c> property the user
+            /// can mutate freely without invalidating Kotlin's
+            /// <c>remember</c> cache key (which is part of the
+            /// Java identity of the adapter, not the C# delegate).
+            /// </summary>
+            /// <remarks>
+            /// <para>The value type <c>T</c> is what the Kotlin
+            /// callback receives (e.g. <c>DrawerValue</c>,
+            /// <c>SheetValue</c>) and what the developer-facing
+            /// <c>Func&lt;T, bool&gt;</c> takes.</para>
+            /// <para><b>AdapterType</b> — JCW class implementing
+            /// <c>Kotlin.Jvm.Functions.IFunction1</c> with a writable
+            /// <c>System.Func&lt;T, bool&gt;? Callback</c> property the
+            /// generator assigns from the facade's
+            /// <see cref="PropertyName"/>. Must be registered with
+            /// Mono.Android (<c>[Register]</c>) so its Java peer
+            /// identity is stable. Defaults to convention
+            /// <c>ComposeNet.&lt;TName&gt;ConfirmStateChange</c>.</para>
+            /// <para><b>PropertyName</b> — name of the property the
+            /// facade exposes. Defaults to <c>ConfirmStateChange</c>.</para>
+            /// </remarks>
+            [global::System.AttributeUsage(global::System.AttributeTargets.Parameter,
+                                           AllowMultiple = false)]
+            internal sealed class ConfirmStateChangeAttribute : global::System.Attribute
+            {
+                public ConfirmStateChangeAttribute(global::System.Type valueType) { }
+                public global::System.Type? AdapterType { get; set; }
+                public string? PropertyName { get; set; }
             }
         }
         """;

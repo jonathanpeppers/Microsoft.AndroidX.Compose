@@ -535,6 +535,15 @@ The generator now supports a wide range of facade shapes (Phases 1,
   required Function2 is a label, not a content slot). Used for
   `BottomAppBar`.
 
+  **Container = true** (issue #121): the wrapper-passthrough variant
+  of the hybrid-container rule, for bridges whose body slot is a
+  non-`@Composable` `IFunction2` rather than a scope-providing
+  `IFunction3`. Set `[ComposeFacade(Container = true)]` to force the
+  facade to derive from `ComposableContainer` (collection-init
+  syntax) and wrap children via `Wrap2(composer, c => RenderChildren(c))`
+  on the bridge's body slot. Required by `ModalWideNavigationRail`,
+  whose Kotlin signature takes a plain `IFunction2` content lambda.
+
 - **Phase 9** — bridge branching via
   `[ComposeFacade(BranchOn = "Subtitle", AlternateBridge = nameof(AltBridge))]`
   (issue #122). One facade routes between two `[ComposeBridge]`
@@ -561,6 +570,38 @@ The generator now supports a wide range of facade shapes (Phases 1,
   (→ `MediumFlexibleTopAppBar`), `LargeTopAppBar` (→
   `LargeFlexibleTopAppBar`). Errors are reported as CN3010.
 
+- **Phase 10** — `[ConfirmStateChange(typeof(T))]` on an `IFunction1?`
+  parameter of a `[StateHolder]` Remember bridge. Models the
+  per-instance JNI veto adapter pattern: Kotlin's
+  `rememberDrawerState(confirmStateChange)` (and the rail / sheet
+  equivalents) takes a `(T) -> Boolean` callback that's part of the
+  `remember` cache key, so the JNI reference identity must stay
+  stable across recompositions or the cached state holder is dropped.
+  The generator:
+
+  - allocates a single `readonly` JCW adapter field per facade
+    instance (default name `_<camelCase(PropertyName)>Adapter`);
+  - looks up the adapter class by convention
+    `ComposeNet.<TName>ConfirmStateChange`
+    (e.g. `DrawerValueConfirmStateChange`), or via an explicit
+    `AdapterType = typeof(...)` override;
+  - exposes a `Func<T, bool>? ConfirmStateChange { get; set; }`
+    property (renameable via `PropertyName = "..."`);
+  - in the Render preamble — **before** the Remember call —
+    emits `_<adapter>.Callback = ConfirmStateChange;` so a single
+    JCW instance dispatches to whatever delegate the user wired
+    up this render;
+  - excludes the slot from the main bridge call args and the
+    `$default` auto-mask, since it only ever flows through Remember.
+
+  The adapter class must implement `Kotlin.Jvm.Functions.IFunction1`,
+  have a public parameterless ctor, and declare a writable instance
+  property `public Func<T, bool>? Callback { get; set; }`. Used for
+  `ModalNavigationDrawer`, `DismissibleNavigationDrawer`,
+  `PermanentNavigationDrawer` (no `[ConfirmStateChange]` — drawer
+  is always permanent), `ModalWideNavigationRail` (no veto — rail
+  has no confirmStateChange in Kotlin).
+
 Facades that still stay hand-written are the ones the generator
 can't model:
 
@@ -568,17 +609,6 @@ can't model:
   `[ComposeBridge]` to attach to) — `DropdownMenuItem`, `Icon`
   (`ImageVector` overload). `WideNavigationRailItem` was migrated
   to a Phase 8 wrapper-passthrough in issue #67.
-- Drawer facades with a `confirmStateChange` adapter — the
-  per-`ComposableNode`-instance `DrawerConfirmStateChange` Java peer
-  has to live in a field on the facade (it's part of
-  `rememberDrawerState`'s cache key), and the Remember call also
-  consumes a user-supplied `initialValue` primitive. That combined
-  shape (per-instance `IFunction1` adapter + Phase 4b parameterised
-  Remember) isn't modelled by the generator yet:
-  `ModalNavigationDrawer`, `DismissibleNavigationDrawer`,
-  `PermanentNavigationDrawer`, `ModalWideNavigationRail`. The
-  permanent drawer doesn't actually need a veto adapter, but it
-  shares the hand-written family for consistency.
 - State-holder facades whose `RememberXxxState` bridge takes user
   parameters AND combine that with a per-instance
   `confirmValueChange` veto adapter:
@@ -591,7 +621,11 @@ can't model:
   zero-user-param shape (`DatePicker`, `DateRangePicker`); Phase 4b
   covers parameterised Remember (`TimePicker`); Phase 4c adds
   shared-state caching for sibling facades (`TimePicker` +
-  `TimeInput`).
+  `TimeInput`); Phase 10 (issue #121) added per-instance
+  `confirmStateChange` veto adapters for the drawer / rail family
+  via `[ConfirmStateChange(typeof(T))]` — see Phase 10 above. The
+  remaining bottom-sheet holdouts need Phase 10 *combined* with
+  Phase 4b parameterised Remember, which isn't modelled yet.
 - Scope facades whose bodies do non-trivial work beyond
   `RenderContext.PushScope` (`SegmentedButton`,
   `SingleChoice`/`MultiChoiceSegmentedButtonRow`, the segmented
@@ -605,8 +639,9 @@ Trying to apply `[ComposeFacade]` to an unsupported bridge will
 emit CN3002 (unsupported parameter), CN3003 (scope misuse), CN3005
 (invalid callback type), CN3006 (slot conflict), CN3007 (color
 theme binding failed), CN3008 (painter misuse), CN3009
-(state-holder misuse), or CN3010 (branching misuse) at build time —
-back out the attribute and write the facade by hand.
+(state-holder misuse), CN3010 (branching misuse), or CN3011
+(confirmStateChange misuse) at build time — back out the attribute
+and write the facade by hand.
 
 ### Adding a new generated facade
 
@@ -636,7 +671,7 @@ end-to-end recipe is:
    the stub** — without it the generated class has no XML docs.
 4. **Build the sample** (`dotnet build src/ComposeNet.Sample`) to
    verify the bridge + facade compile together. The supported
-   shapes are validated at build time; CN3001-CN3010 will fire if
+   shapes are validated at build time; CN3001-CN3011 will fire if
    the generator can't accept the bridge.
 5. **If CN3002 fires**, the bridge has a parameter outside the
    table above — either an unmarked `IFunction1` callback, a
@@ -663,6 +698,7 @@ end-to-end recipe is:
 | CN3008  | `[PainterResource]` annotates a non-`IntPtr` parameter.            |
 | CN3009  | `[StateHolder]` is invalid: applied to a non-`IntPtr` param, combined with `[PainterResource]`, missing or unidentifier-valued `Remember` / `StateType`, the named `Remember` method is not a static `(IComposer) -> IntPtr` on `ComposeBridges`, or `StateType` has no accessible writable instance field named `Jvm`. |
 | CN3010  | `BranchOn` / `AlternateBridge` is invalid: only one of the two is set, primary or alternate is missing a trailing `int defaults` parameter, the named alternate is not resolvable or ambiguous on `ComposeBridges`, alternate is not a strict superset (missing a primary param or has more than one extra), the extra param's PascalCased name doesn't match `BranchOn`, the extra param isn't `IFunction2`/`IFunction3`, a shared param has incompatible types, branching is used on a hybrid container shape, or the alternate has no resolvable `[ComposeBridge].Defaults` enum. |
+| CN3011  | `[ConfirmStateChange(typeof(T))]` is invalid: not on an `IFunction1` param, missing the `typeof(T)` ctor argument, the convention adapter class `ComposeNet.<TName>ConfirmStateChange` is missing (set `AdapterType = typeof(...)` to override), the adapter doesn't implement `Kotlin.Jvm.Functions.IFunction1`, lacks a public parameterless ctor, or has no writable `Callback` property of type `System.Func<T, bool>?`. |
 
 ### Migration rule
 
@@ -779,23 +815,36 @@ has to stay stable across recompositions or the cache is dropped and
 the state holder is rebuilt (the drawer / sheet forgets whether it
 was open).
 
-The pattern (see `DrawerConfirmStateChange` + `ModalNavigationDrawer`
-for the canonical implementation):
+The pattern (see `DrawerValueConfirmStateChange` for the canonical
+adapter implementation):
 
-1. **Expose the hook as a `Func<T, bool>?` property** on the facade
-   type, defaulting to `null` (= "use Kotlin's default — always
-   allow"). Document what `false` means (veto / block transition).
-2. **Allocate the JNI adapter once per node instance** as a
-   `readonly` field. Never `new` it inside `Render` — that recreates
-   the Java peer on every recomposition and invalidates the
-   `remember` key.
-3. **Read the delegate inside the adapter's `Invoke`** (not at
-   adapter construction), so the developer can mutate the property
-   between renders without re-allocating.
-4. **Treat `null` as "always true"** inside the adapter — no
-   separate singleton fallback is needed; the adapter is already
-   allocated, and a single branch in `Invoke` keeps the JNI reference
-   identical whether or not the developer wired up a callback.
+1. **For new facades, prefer the generator path.** Annotate the
+   Remember bridge's `IFunction1?` `confirmStateChange` (or
+   `confirmValueChange`) parameter with
+   `[ConfirmStateChange(typeof(T))]` and stack `[ComposeFacade]` on
+   the facade bridge — Phase 10 above handles the adapter field,
+   property emission, and preamble `Callback` assignment for you.
+   Use this for any facade that fits the supported state-holder
+   shapes (Phase 4 zero-arg Remember, Phase 4b parameterised
+   Remember without combined veto).
+2. **Hand-written holdouts** (`ModalBottomSheet`, `BottomSheetScaffold`)
+   still follow the same conventions, just written by hand:
+   - **Expose the hook as a `Func<T, bool>?` property** on the
+     facade type, defaulting to `null` (= "use Kotlin's default —
+     always allow"). Document what `false` means (veto / block
+     transition).
+   - **Allocate the JNI adapter once per node instance** as a
+     `readonly` field. Never `new` it inside `Render` — that
+     recreates the Java peer on every recomposition and invalidates
+     the `remember` key.
+   - **Read the delegate inside the adapter's `Invoke`** (not at
+     adapter construction), so the developer can mutate the
+     property between renders without re-allocating.
+   - **Treat `null` as "always true"** inside the adapter — no
+     separate singleton fallback is needed; the adapter is already
+     allocated, and a single branch in `Invoke` keeps the JNI
+     reference identical whether or not the developer wired up a
+     callback.
 
 Do **not** use a static singleton for these callbacks: the singleton
 trick is fine for genuinely stateless stubs that the user can't

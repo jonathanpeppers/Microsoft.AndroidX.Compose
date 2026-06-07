@@ -158,11 +158,11 @@ ComposeNet.DismissibleNavigationDrawer.ConfirmStateChange.get -> System.Func<And
 ComposeNet.DismissibleNavigationDrawer.ConfirmStateChange.set -> void
 ComposeNet.DismissibleNavigationDrawer.Content.get -> ComposeNet.ComposableNode?
 ComposeNet.DismissibleNavigationDrawer.Content.set -> void
-ComposeNet.DismissibleNavigationDrawer.DismissibleNavigationDrawer() -> void
+ComposeNet.DismissibleNavigationDrawer.DismissibleNavigationDrawer(ComposeNet.DrawerStateHolder? drawerState = null) -> void
 ComposeNet.DismissibleNavigationDrawer.Drawer.get -> ComposeNet.ComposableNode?
 ComposeNet.DismissibleNavigationDrawer.Drawer.set -> void
-ComposeNet.DismissibleNavigationDrawer.InitiallyOpen.get -> bool
-ComposeNet.DismissibleNavigationDrawer.InitiallyOpen.set -> void
+ComposeNet.DismissibleNavigationDrawer.InitialValue.get -> AndroidX.Compose.Material3.DrawerValue?
+ComposeNet.DismissibleNavigationDrawer.InitialValue.init -> void
 ComposeNet.DisposableEffect
 ComposeNet.DisposableEffect.DisposableEffect(object? key1, object? key2, object? key3, System.Func<AndroidX.Compose.Runtime.DisposableEffectScope!, System.Action!>! effect) -> void
 ComposeNet.DisposableEffect.DisposableEffect(object? key1, object? key2, System.Func<AndroidX.Compose.Runtime.DisposableEffectScope!, System.Action!>! effect) -> void
@@ -176,6 +176,18 @@ ComposeNet.Dp.Dp() -> void
 ComposeNet.Dp.Dp(float value) -> void
 ComposeNet.Dp.Equals(ComposeNet.Dp other) -> bool
 ComposeNet.Dp.Value.get -> float
+ComposeNet.DrawerStateHolder
+ComposeNet.DrawerStateHolder.CurrentValue.get -> AndroidX.Compose.Material3.DrawerValue!
+ComposeNet.DrawerStateHolder.DrawerStateHolder(AndroidX.Compose.Material3.DrawerValue? initialValue = null) -> void
+ComposeNet.DrawerStateHolder.InitialValue.get -> AndroidX.Compose.Material3.DrawerValue!
+ComposeNet.DrawerStateHolder.IsClosed.get -> bool
+ComposeNet.DrawerStateHolder.IsOpen.get -> bool
+ComposeNet.DrawerStateHolder.TargetValue.get -> AndroidX.Compose.Material3.DrawerValue!
+ComposeNet.DrawerValueConfirmStateChange
+ComposeNet.DrawerValueConfirmStateChange.Callback.get -> System.Func<AndroidX.Compose.Material3.DrawerValue!, bool>?
+ComposeNet.DrawerValueConfirmStateChange.Callback.set -> void
+ComposeNet.DrawerValueConfirmStateChange.DrawerValueConfirmStateChange() -> void
+ComposeNet.DrawerValueConfirmStateChange.Invoke(Java.Lang.Object? p0) -> Java.Lang.Object?
 ComposeNet.DropdownMenu
 ComposeNet.DropdownMenu.DropdownMenu(bool expanded, System.Action! onDismissRequest) -> void
 ComposeNet.DropdownMenuItem
@@ -443,13 +455,13 @@ ComposeNet.ModalNavigationDrawer.Content.get -> ComposeNet.ComposableNode?
 ComposeNet.ModalNavigationDrawer.Content.set -> void
 ComposeNet.ModalNavigationDrawer.Drawer.get -> ComposeNet.ComposableNode?
 ComposeNet.ModalNavigationDrawer.Drawer.set -> void
-ComposeNet.ModalNavigationDrawer.InitiallyOpen.get -> bool
-ComposeNet.ModalNavigationDrawer.InitiallyOpen.set -> void
-ComposeNet.ModalNavigationDrawer.ModalNavigationDrawer() -> void
+ComposeNet.ModalNavigationDrawer.InitialValue.get -> AndroidX.Compose.Material3.DrawerValue?
+ComposeNet.ModalNavigationDrawer.InitialValue.init -> void
+ComposeNet.ModalNavigationDrawer.ModalNavigationDrawer(ComposeNet.DrawerStateHolder? drawerState = null) -> void
 ComposeNet.ModalWideNavigationRail
 ComposeNet.ModalWideNavigationRail.Header.get -> ComposeNet.ComposableNode?
 ComposeNet.ModalWideNavigationRail.Header.set -> void
-ComposeNet.ModalWideNavigationRail.ModalWideNavigationRail() -> void
+ComposeNet.ModalWideNavigationRail.ModalWideNavigationRail(ComposeNet.WideNavigationRailState? state = null) -> void
 ComposeNet.Modifier
 ComposeNet.Modifier.AbsoluteOffset(ComposeNet.Dp? x = null, ComposeNet.Dp? y = null) -> ComposeNet.Modifier!
 ComposeNet.Modifier.Align(ComposeNet.Alignment! alignment) -> ComposeNet.Modifier!
@@ -937,6 +949,11 @@ ComposeNet.WideNavigationRailItem.Icon.set -> void
 ComposeNet.WideNavigationRailItem.Label.get -> ComposeNet.ComposableNode?
 ComposeNet.WideNavigationRailItem.Label.set -> void
 ComposeNet.WideNavigationRailItem.WideNavigationRailItem(bool selected, System.Action! onClick) -> void
+ComposeNet.WideNavigationRailState
+ComposeNet.WideNavigationRailState.CurrentValue.get -> AndroidX.Compose.Material3.WideNavigationRailValue!
+ComposeNet.WideNavigationRailState.InitialValue.get -> AndroidX.Compose.Material3.WideNavigationRailValue!
+ComposeNet.WideNavigationRailState.TargetValue.get -> AndroidX.Compose.Material3.WideNavigationRailValue!
+ComposeNet.WideNavigationRailState.WideNavigationRailState(AndroidX.Compose.Material3.WideNavigationRailValue? initialValue = null) -> void
 override ComposeNet.ComposeActivity.OnCreate(Android.OS.Bundle? savedInstanceState) -> void
 override ComposeNet.DerivedState<T>.ToString() -> string!
 override ComposeNet.Dp.Equals(object? obj) -> bool
