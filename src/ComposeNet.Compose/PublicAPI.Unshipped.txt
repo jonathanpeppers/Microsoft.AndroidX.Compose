@@ -791,10 +791,10 @@ ComposeNet.TextOverflow.TextOverflow() -> void
 ComposeNet.TextOverflow.TextOverflow(int Value) -> void
 ComposeNet.TextOverflow.Value.get -> int
 ComposeNet.TextOverflow.Value.init -> void
-ComposeNet.TimePicker
-ComposeNet.TimePicker.TimePicker(ComposeNet.TimePickerState? state = null) -> void
 ComposeNet.TimeInput
 ComposeNet.TimeInput.TimeInput(ComposeNet.TimePickerState? state = null) -> void
+ComposeNet.TimePicker
+ComposeNet.TimePicker.TimePicker(ComposeNet.TimePickerState? state = null) -> void
 ComposeNet.TimePickerDialog
 ComposeNet.TimePickerDialog.Body.get -> ComposeNet.ComposableNode?
 ComposeNet.TimePickerDialog.Body.set -> void
