@@ -765,13 +765,13 @@ ComposeNet.Scaffold.TopBar.set -> void
 ComposeNet.ScrollableTabRow
 ComposeNet.ScrollableTabRow.ScrollableTabRow(int selectedTabIndex) -> void
 ComposeNet.ScrollState
-ComposeNet.ScrollState.AnimateScrollToAsync(int value) -> System.Threading.Tasks.Task!
+ComposeNet.ScrollState.AnimateScrollToAsync(int value, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
 ComposeNet.ScrollState.CanScrollBackward.get -> bool
 ComposeNet.ScrollState.CanScrollForward.get -> bool
 ComposeNet.ScrollState.IsScrollInProgress.get -> bool
 ComposeNet.ScrollState.MaxValue.get -> int
 ComposeNet.ScrollState.ScrollState(int initial = 0) -> void
-ComposeNet.ScrollState.ScrollToAsync(int value) -> System.Threading.Tasks.Task<float>!
+ComposeNet.ScrollState.ScrollToAsync(int value, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<float>!
 ComposeNet.ScrollState.Value.get -> int
 ComposeNet.ScrollState.ViewportSize.get -> int
 ComposeNet.SearchBar

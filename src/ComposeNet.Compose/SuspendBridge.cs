@@ -33,9 +33,17 @@ namespace ComposeNet;
 /// <c>await</c> captured.
 /// </para>
 /// <para>
-/// v1 does not honour <see cref="CancellationToken"/>. Cancellation
-/// support needs a <c>Job</c>-bearing <see cref="Kotlin.Coroutines.ICoroutineContext"/>
-/// (~50 LOC); deferred to a follow-up issue.
+/// Cancellation: an optional <see cref="CancellationToken"/> cancels
+/// the returned <see cref="Task"/> (transitioning it to
+/// <see cref="TaskStatus.Canceled"/>, so the <c>await</c> throws
+/// <see cref="System.OperationCanceledException"/>) as soon as the
+/// token fires. The Kotlin suspend body keeps running to its natural
+/// completion — we don't yet plumb a <c>Job</c> into
+/// <see cref="SuspendContinuation.Context"/>, so there is no
+/// Kotlin-side cancel. The boxed result of the eventual resume is
+/// disposed silently. True Kotlin-side cancel (calling
+/// <c>job.cancel()</c> so animation/scroll bodies stop at the next
+/// suspend point) is tracked as a follow-up.
 /// </para>
 /// </remarks>
 internal static class SuspendBridge
@@ -61,16 +69,38 @@ internal static class SuspendBridge
     /// <param name="unbox">
     /// Converts the success-value box (e.g. <c>java.lang.Float</c>) to
     /// the target C# type. May be passed <c>null</c> for suspend
-    /// functions that return <c>Unit</c>.
+    /// functions that return <c>Unit</c>. The supplied box is owned
+    /// by <see cref="Invoke{T}"/> and disposed after this delegate
+    /// returns; do not capture or return the box itself.
+    /// </param>
+    /// <param name="cancellationToken">
+    /// Cancels the returned task. See the type-level remarks for the
+    /// (current) semantics: only the C# awaiter sees the cancel; the
+    /// Kotlin suspend body keeps running.
     /// </param>
     public static Task<T> Invoke<T>(
         Func<SuspendContinuation, IntPtr> call,
-        Func<Java.Lang.Object?, T> unbox)
+        Func<Java.Lang.Object?, T> unbox,
+        CancellationToken cancellationToken = default)
     {
         if (call is null) throw new ArgumentNullException(nameof(call));
         if (unbox is null) throw new ArgumentNullException(nameof(unbox));
 
-        var cont = new SuspendContinuation();
+        if (cancellationToken.IsCancellationRequested)
+            return Task.FromCanceled<T>(cancellationToken);
+
+        var cont = new SuspendContinuation(cancellationToken);
+
+        // The ctor's Register call invokes the cancellation callback
+        // synchronously if the token fires between the pre-check above
+        // and registration. Re-check before invoking Kotlin so we don't
+        // start a (visible) scroll/animation we'd then have to wait on.
+        if (cancellationToken.IsCancellationRequested)
+        {
+            cont.Dispose();
+            return Task.FromCanceled<T>(cancellationToken);
+        }
+
         IntPtr syncHandle;
         try
         {
@@ -82,7 +112,6 @@ internal static class SuspendBridge
             // (e.g. JNI lookup failures, Kotlin throwing inline before
             // creating a Result.Failure) shouldn't surface as
             // synchronous throws from an async-style API.
-            cont.AbandonPin();
             cont.Dispose();
             return Task.FromException<T>(ex);
         }
@@ -101,15 +130,20 @@ internal static class SuspendBridge
             {
                 // Kotlin will resume cont later. Free the local ref to
                 // the sentinel; the cached global lives in
-                // s_suspendedHandle for future comparisons.
+                // s_suspendedHandle for future comparisons. Leave the
+                // continuation alive — ResumeWith disposes it when
+                // Kotlin actually resumes.
                 JNIEnv.DeleteLocalRef(syncHandle);
             }
             else
             {
                 // Synchronous completion — funnel through the same
                 // promote-to-global + TCS path as the Kotlin-async
-                // callback (SuspendContinuation.ResumeWith).
+                // callback (SuspendContinuation.ResumeWith), then
+                // dispose ourselves since Kotlin will never call
+                // ResumeWith on this path.
                 cont.CompleteWithLocalHandle(syncHandle);
+                cont.Dispose();
             }
         }
         else
@@ -118,43 +152,54 @@ internal static class SuspendBridge
             // result (rare in practice; most suspends either suspend or
             // return a boxed Unit / boxed primitive).
             cont.CompleteWithLocalHandle(IntPtr.Zero);
+            cont.Dispose();
         }
 
-        return cont.Tcs.Task.ContinueWith(static (t, state) =>
-        {
-            var (unboxFn, cont) = ((Func<Java.Lang.Object?, T>, SuspendContinuation))state!;
-            // Belt-and-suspenders: keep the JCW alive until completion.
-            GC.KeepAlive(cont);
-
-            // GetAwaiter().GetResult() rather than t.Result so a faulted
-            // TCS surfaces the original exception instead of an
-            // AggregateException wrapper.
-            var boxed = t.GetAwaiter().GetResult();
-            try
-            {
-                if (boxed is not null && KotlinResult.IsFailure(boxed.Handle))
-                    throw KotlinResult.ExtractException(boxed);
-                return unboxFn(boxed);
-            }
-            finally
-            {
-                // Release the global ref the JNI callback promoted in
-                // SuspendContinuation.ResumeWith.
-                boxed?.Dispose();
-            }
-        },
-        (unbox, cont),
-        CancellationToken.None,
-        TaskContinuationOptions.ExecuteSynchronously,
-        TaskScheduler.Default);
+        return AwaitAndUnbox(cont, unbox);
     }
 
     /// <summary>
     /// Non-generic overload for suspend functions that return Kotlin
     /// <c>Unit</c> (e.g. <c>ScrollState.animateScrollTo</c>).
     /// </summary>
-    public static Task Invoke(Func<SuspendContinuation, IntPtr> call) =>
-        Invoke<object?>(call, static _ => null);
+    public static Task Invoke(
+        Func<SuspendContinuation, IntPtr> call,
+        CancellationToken cancellationToken = default) =>
+        Invoke<object?>(call, static _ => null, cancellationToken);
+
+    // Awaits the TCS, runs the failure-vs-success split, and disposes
+    // the boxed result. Lives in its own async method so a cancelled
+    // TCS surfaces as a Canceled (not Faulted) Task — the async state
+    // machine routes an uncaught OperationCanceledException straight
+    // into AsyncTaskMethodBuilder.SetCanceled.
+    static async Task<T> AwaitAndUnbox<T>(SuspendContinuation cont, Func<Java.Lang.Object?, T> unbox)
+    {
+        Java.Lang.Object? boxed;
+        try
+        {
+            boxed = await cont.Tcs.Task.ConfigureAwait(false);
+        }
+        finally
+        {
+            // Belt-and-suspenders: the state machine already roots cont
+            // across the await, but this also covers the synchronous-
+            // completion path where Dispose already ran (the
+            // pin is gone, so only the state-machine field keeps cont
+            // alive while we touch its TCS).
+            GC.KeepAlive(cont);
+        }
+
+        try
+        {
+            if (boxed is not null && KotlinResult.IsFailure(boxed.Handle))
+                throw KotlinResult.ExtractException(boxed);
+            return unbox(boxed);
+        }
+        finally
+        {
+            boxed?.Dispose();
+        }
+    }
 
     static bool IsCoroutineSuspended(IntPtr handle)
     {

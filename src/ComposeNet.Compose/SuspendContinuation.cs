@@ -1,4 +1,5 @@
 using System.Runtime.InteropServices;
+using System.Threading;
 using System.Threading.Tasks;
 using Android.Runtime;
 using Kotlin.Coroutines;
@@ -17,7 +18,7 @@ namespace ComposeNet;
 /// <para>
 /// Allocate one instance per suspend call (continuations cannot be
 /// reused). The class is internal — call sites should go through
-/// <see cref="SuspendBridge.Invoke{T}(System.Func{SuspendContinuation, System.IntPtr}, System.Func{Java.Lang.Object?, T})"/>
+/// <see cref="SuspendBridge.Invoke{T}(System.Func{SuspendContinuation, System.IntPtr}, System.Func{Java.Lang.Object?, T}, CancellationToken)"/>
 /// instead of constructing one directly.
 /// </para>
 /// <para>
@@ -26,15 +27,28 @@ namespace ComposeNet;
 /// <see cref="ResumeWith(Java.Lang.Object)"/> — fire-and-forget callers
 /// (no one holding the returned <see cref="Task"/>) would otherwise
 /// race the GC. The handle is a normal strong reference, not pinned
-/// in memory. It is released in <see cref="ResumeWith"/>'s finally,
-/// or by <see cref="Dispose(bool)"/> if the suspend call throws
-/// before suspension.
+/// in memory. <see cref="Dispose(bool)"/> is the single, idempotent
+/// cleanup entry point: it releases the pin, the
+/// <see cref="CancellationTokenRegistration"/>, and the JNI peer.
+/// </para>
+/// <para>
+/// Cancellation: when a non-default <see cref="CancellationToken"/>
+/// is supplied, a registration on the token cancels the backing TCS.
+/// That propagates to the caller's <c>await</c> as
+/// <see cref="System.OperationCanceledException"/> immediately, but
+/// the Kotlin suspend function keeps running to its natural
+/// completion — we don't wire a <c>Job</c> into <see cref="Context"/>
+/// yet. When Kotlin eventually resumes,
+/// <see cref="CompleteWithLocalHandle"/> sees the TCS is already
+/// completed and disposes the boxed result without surfacing it.
 /// </para>
 /// </remarks>
 [Register("composenet/compose/SuspendContinuation")]
 internal sealed class SuspendContinuation : Java.Lang.Object, IContinuation
 {
     GCHandle _selfPin;
+    CancellationTokenRegistration _ctr;
+    bool _disposed;
 
     /// <summary>
     /// Backing TCS exposed for <see cref="SuspendBridge"/>.
@@ -45,9 +59,25 @@ internal sealed class SuspendContinuation : Java.Lang.Object, IContinuation
     public TaskCompletionSource<Java.Lang.Object?> Tcs { get; } =
         new TaskCompletionSource<Java.Lang.Object?>(TaskCreationOptions.RunContinuationsAsynchronously);
 
-    public SuspendContinuation()
+    public SuspendContinuation(CancellationToken cancellationToken = default)
     {
         _selfPin = GCHandle.Alloc(this);
+        if (cancellationToken.CanBeCanceled)
+        {
+            // Allocation-free (state, token) overload: no closure per
+            // suspend call. Disposing the registration in
+            // Dispose blocks until any in-flight invocation of
+            // this callback completes; the callback only touches the
+            // (thread-safe) TCS, so there's no deadlock path back into
+            // Dispose.
+            _ctr = cancellationToken.Register(
+                static (state, token) =>
+                {
+                    var self = (SuspendContinuation)state!;
+                    self.Tcs.TrySetCanceled(token);
+                },
+                this);
+        }
     }
 
     /// <summary>
@@ -105,8 +135,10 @@ internal sealed class SuspendContinuation : Java.Lang.Object, IContinuation
         }
         finally
         {
-            if (_selfPin.IsAllocated)
-                _selfPin.Free();
+            // Continuations are single-resume; Kotlin is done with the
+            // JCW now. Standard IDisposable cleanup releases the pin,
+            // the CTR, and the JNI peer all in one shot.
+            Dispose();
         }
     }
 
@@ -145,21 +177,32 @@ internal sealed class SuspendContinuation : Java.Lang.Object, IContinuation
     }
 
     /// <summary>
-    /// Release the self-pin when the suspend call fails before
-    /// suspension (the Kotlin runtime will never invoke
-    /// <see cref="ResumeWith"/>). Called from <see cref="SuspendBridge"/>
-    /// on the sync-throw path.
+    /// Releases the GCHandle self-pin, disposes the
+    /// <see cref="CancellationTokenRegistration"/>, and lets
+    /// <see cref="Java.Lang.Object.Dispose(bool)"/> release the JNI
+    /// peer. Idempotent and safe to call from any completion path
+    /// (Kotlin resume in <see cref="ResumeWith"/>, the sync paths in
+    /// <see cref="SuspendBridge.Invoke{T}"/>, the finalizer).
     /// </summary>
-    internal void AbandonPin()
-    {
-        if (_selfPin.IsAllocated)
-            _selfPin.Free();
-    }
-
+    /// <remarks>
+    /// Disposing the JNI peer here is safe because in every code
+    /// path that reaches Dispose, Kotlin is already done with this
+    /// continuation: it either never received it (sync-throw before
+    /// the JNI call), already returned a synchronous result
+    /// (sync-completion), or already invoked <c>resumeWith</c>
+    /// (continuations are single-resume). Calling <c>Dispose</c>
+    /// before the suspend resumes would race Kotlin's JNI hold on
+    /// the JCW — this method is not for that.
+    /// </remarks>
     protected override void Dispose(bool disposing)
     {
-        if (_selfPin.IsAllocated)
-            _selfPin.Free();
+        if (!Interlocked.Exchange(ref _disposed, true))
+        {
+            if (disposing)
+                _ctr.Dispose();
+            if (_selfPin.IsAllocated)
+                _selfPin.Free();
+        }
         base.Dispose(disposing);
     }
 }

@@ -1,3 +1,4 @@
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace ComposeNet;
@@ -100,20 +101,28 @@ public sealed class ScrollState
     /// (clamped to <c>[0, MaxValue]</c>). Mirrors Kotlin's
     /// <c>ScrollState.scrollTo(value)</c>.
     /// </summary>
+    /// <param name="value">Target pixel offset.</param>
+    /// <param name="cancellationToken">
+    /// Cancels the returned task with
+    /// <see cref="System.OperationCanceledException"/>. See
+    /// <see cref="SuspendBridge"/> remarks for the current (C#-only)
+    /// cancellation semantics.
+    /// </param>
     /// <returns>
     /// A task whose result is the actual delta the scroll covered (the
     /// Kotlin return) — useful when the requested value was clamped.
     /// Faulted with the wrapped <c>Throwable</c> if Kotlin reports
     /// <c>Result.Failure</c>.
     /// </returns>
-    public Task<float> ScrollToAsync(int value) =>
+    public Task<float> ScrollToAsync(int value, CancellationToken cancellationToken = default) =>
         SuspendBridge.Invoke<float>(
             cont => ComposeBridges.ScrollStateScrollTo(
                 ((Java.Lang.Object)Jvm).Handle, value, cont),
             static boxed => boxed is Java.Lang.Float f
                 ? f.FloatValue()
                 : throw new System.InvalidCastException(
-                    $"Expected java.lang.Float from ScrollState.scrollTo; got '{boxed?.Class?.Name ?? "null"}'"));
+                    $"Expected java.lang.Float from ScrollState.scrollTo; got '{boxed?.Class?.Name ?? "null"}'"),
+            cancellationToken);
 
     /// <summary>
     /// Animate to the given pixel <paramref name="value"/> using the
@@ -121,8 +130,17 @@ public sealed class ScrollState
     /// <c>ScrollState.animateScrollTo(value)</c>; the returned task
     /// completes when the animation lands.
     /// </summary>
-    public Task AnimateScrollToAsync(int value) =>
+    /// <param name="value">Target pixel offset.</param>
+    /// <param name="cancellationToken">
+    /// Cancels the returned task with
+    /// <see cref="System.OperationCanceledException"/>. Note that
+    /// the underlying Kotlin animation keeps running to its natural
+    /// completion — see <see cref="SuspendBridge"/> remarks for the
+    /// current (C#-only) cancellation semantics.
+    /// </param>
+    public Task AnimateScrollToAsync(int value, CancellationToken cancellationToken = default) =>
         SuspendBridge.Invoke(cont =>
             ComposeBridges.ScrollStateAnimateScrollTo(
-                ((Java.Lang.Object)Jvm).Handle, value, cont));
+                ((Java.Lang.Object)Jvm).Handle, value, cont),
+            cancellationToken);
 }
