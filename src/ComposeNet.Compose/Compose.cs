@@ -295,6 +295,215 @@ public static class Compose
     }
 
     /// <summary>
+    /// Compose's <c>SideEffect { … }</c>: runs <paramref name="effect"/>
+    /// on every successful recomposition, <b>after</b> the composition
+    /// has been applied. Use it to publish managed-side state into
+    /// objects that aren't managed by Compose (e.g. logging, analytics,
+    /// pushing a value into a non-Compose Android API).
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <paramref name="effect"/> must <b>not</b> mutate any state that
+    /// the same composition reads — that would invalidate the
+    /// composition Compose just applied and trigger an infinite
+    /// recomposition loop.
+    /// </para>
+    /// <para>
+    /// Stale captures: closures inside <paramref name="effect"/> see
+    /// whatever the C# closure captured during the most recent render
+    /// — <c>SideEffect</c> bodies are recreated every render so this
+    /// is generally what you want.
+    /// </para>
+    /// </remarks>
+    public static void SideEffect(System.Action effect)
+    {
+        System.ArgumentNullException.ThrowIfNull(effect);
+        var composer = ComposeContext.Current
+            ?? throw new System.InvalidOperationException(
+                "Compose.SideEffect must be called inside a composition (e.g. inside a SetContent body or a ComposableNode.Render override).");
+
+        EffectsKt.SideEffect(new ComposableLambda0(effect), composer, _changed: 0);
+    }
+
+    /// <summary>
+    /// Compose's <c>DisposableEffect(key1) { … onDispose { … } }</c>:
+    /// runs <paramref name="effect"/> the first time this call site
+    /// is composed (and again whenever <paramref name="key1"/> changes),
+    /// and calls the returned cleanup <see cref="System.Action"/> on
+    /// key change or when the call site leaves the composition.
+    /// </summary>
+    /// <param name="key1">
+    /// Compose compares this against the previous value using
+    /// <c>Object.equals</c> via the boxed Java value. Supports
+    /// <c>null</c>, any <see cref="Java.Lang.Object"/> peer,
+    /// <see cref="string"/>, and every common .NET primitive.
+    /// </param>
+    /// <param name="effect">
+    /// Setup callback. Must return a non-null cleanup
+    /// <see cref="System.Action"/> — use <c>() =&gt; { }</c> when
+    /// there's nothing to clean up.
+    /// </param>
+    /// <remarks>
+    /// Stale captures: closures inside <paramref name="effect"/> see
+    /// whatever the C# closure captured when the effect was last
+    /// set up. To observe newer values without invalidating the
+    /// effect, hoist them into <see cref="MutableState{T}"/>.
+    /// </remarks>
+    public static void DisposableEffect(
+        object? key1,
+        System.Func<AndroidX.Compose.Runtime.DisposableEffectScope, System.Action> effect)
+    {
+        System.ArgumentNullException.ThrowIfNull(effect);
+        var composer = ComposeContext.Current
+            ?? throw new System.InvalidOperationException(
+                "Compose.DisposableEffect must be called inside a composition.");
+
+        EffectsKt.DisposableEffect(
+            ComposeBridges.BoxKey(key1),
+            new DisposableEffectBody(effect),
+            composer,
+            _changed: 0);
+    }
+
+    /// <summary>
+    /// Two-key overload of
+    /// <see cref="DisposableEffect(object?, System.Func{AndroidX.Compose.Runtime.DisposableEffectScope, System.Action})"/>.
+    /// </summary>
+    public static void DisposableEffect(
+        object? key1,
+        object? key2,
+        System.Func<AndroidX.Compose.Runtime.DisposableEffectScope, System.Action> effect)
+    {
+        System.ArgumentNullException.ThrowIfNull(effect);
+        var composer = ComposeContext.Current
+            ?? throw new System.InvalidOperationException(
+                "Compose.DisposableEffect must be called inside a composition.");
+
+        EffectsKt.DisposableEffect(
+            ComposeBridges.BoxKey(key1),
+            ComposeBridges.BoxKey(key2),
+            new DisposableEffectBody(effect),
+            composer,
+            _changed: 0);
+    }
+
+    /// <summary>
+    /// Three-key overload of
+    /// <see cref="DisposableEffect(object?, System.Func{AndroidX.Compose.Runtime.DisposableEffectScope, System.Action})"/>.
+    /// </summary>
+    public static void DisposableEffect(
+        object? key1,
+        object? key2,
+        object? key3,
+        System.Func<AndroidX.Compose.Runtime.DisposableEffectScope, System.Action> effect)
+    {
+        System.ArgumentNullException.ThrowIfNull(effect);
+        var composer = ComposeContext.Current
+            ?? throw new System.InvalidOperationException(
+                "Compose.DisposableEffect must be called inside a composition.");
+
+        EffectsKt.DisposableEffect(
+            ComposeBridges.BoxKey(key1),
+            ComposeBridges.BoxKey(key2),
+            ComposeBridges.BoxKey(key3),
+            new DisposableEffectBody(effect),
+            composer,
+            _changed: 0);
+    }
+
+    /// <summary>
+    /// Compose's <c>LaunchedEffect(key1) { … }</c>: launches the C#
+    /// <paramref name="body"/> as a coroutine the first time this call
+    /// site is composed (and again whenever <paramref name="key1"/>
+    /// changes). The previous launch is cancelled on key change or
+    /// when the call site leaves the composition — the
+    /// <see cref="System.Threading.CancellationToken"/> passed to
+    /// <paramref name="body"/> is signalled, and the body should
+    /// observe it (e.g. via <see cref="System.Threading.Tasks.Task.Delay(int, System.Threading.CancellationToken)"/>).
+    /// </summary>
+    /// <param name="key1">
+    /// Compose compares this against the previous value using
+    /// <c>Object.equals</c> via the boxed Java value. Pass a stable
+    /// "version" (e.g. <see cref="System.Guid.Empty"/> stringified, or
+    /// the literal <c>"once"</c>) when you want the body to run
+    /// exactly once per call-site lifetime.
+    /// </param>
+    /// <param name="body">
+    /// The async work to run. Honours the supplied
+    /// <see cref="System.Threading.CancellationToken"/> when the
+    /// underlying Kotlin <c>Job</c> is cancelled.
+    /// </param>
+    /// <remarks>
+    /// <para>
+    /// Stale captures: closures inside <paramref name="body"/> see
+    /// whatever the C# closure captured when the launch started. To
+    /// observe newer values without restarting the body, read from
+    /// <see cref="MutableState{T}"/>.
+    /// </para>
+    /// </remarks>
+    public static void LaunchedEffect(
+        object? key1,
+        System.Func<System.Threading.CancellationToken, System.Threading.Tasks.Task> body)
+    {
+        System.ArgumentNullException.ThrowIfNull(body);
+        var composer = ComposeContext.Current
+            ?? throw new System.InvalidOperationException(
+                "Compose.LaunchedEffect must be called inside a composition.");
+
+        EffectsKt.LaunchedEffect(
+            ComposeBridges.BoxKey(key1),
+            new LaunchedEffectBody(body),
+            composer,
+            _changed: 0);
+    }
+
+    /// <summary>
+    /// Two-key overload of
+    /// <see cref="LaunchedEffect(object?, System.Func{System.Threading.CancellationToken, System.Threading.Tasks.Task})"/>.
+    /// </summary>
+    public static void LaunchedEffect(
+        object? key1,
+        object? key2,
+        System.Func<System.Threading.CancellationToken, System.Threading.Tasks.Task> body)
+    {
+        System.ArgumentNullException.ThrowIfNull(body);
+        var composer = ComposeContext.Current
+            ?? throw new System.InvalidOperationException(
+                "Compose.LaunchedEffect must be called inside a composition.");
+
+        EffectsKt.LaunchedEffect(
+            ComposeBridges.BoxKey(key1),
+            ComposeBridges.BoxKey(key2),
+            new LaunchedEffectBody(body),
+            composer,
+            _changed: 0);
+    }
+
+    /// <summary>
+    /// Three-key overload of
+    /// <see cref="LaunchedEffect(object?, System.Func{System.Threading.CancellationToken, System.Threading.Tasks.Task})"/>.
+    /// </summary>
+    public static void LaunchedEffect(
+        object? key1,
+        object? key2,
+        object? key3,
+        System.Func<System.Threading.CancellationToken, System.Threading.Tasks.Task> body)
+    {
+        System.ArgumentNullException.ThrowIfNull(body);
+        var composer = ComposeContext.Current
+            ?? throw new System.InvalidOperationException(
+                "Compose.LaunchedEffect must be called inside a composition.");
+
+        EffectsKt.LaunchedEffect(
+            ComposeBridges.BoxKey(key1),
+            ComposeBridges.BoxKey(key2),
+            ComposeBridges.BoxKey(key3),
+            new LaunchedEffectBody(body),
+            composer,
+            _changed: 0);
+    }
+
+    /// <summary>
     /// Compose's <c>derivedStateOf { calculation() }</c>: returns a
     /// read-only <see cref="DerivedState{T}"/> whose value is lazily
     /// computed by <paramref name="calculation"/>. Compose tracks

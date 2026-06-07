@@ -162,7 +162,15 @@ public class MainActivity : ComposeActivity
                 }
             });
 
-            string[] tabNames = { "Basics", "Buttons", "Cards", "Drawer", "Selection", "Pickers", "Misc", "App bars", "Lazy", "Carousels", "Pager", "Nav", "State" };
+            // Effects tab (issue #57): demonstrate LaunchedEffect, DisposableEffect,
+            // SideEffect. ticks is incremented from a LaunchedEffect's Task body;
+            // disposeCount bumps on every DisposableEffect cleanup; effectKey
+            // restarts everything when bumped.
+            var ticks       = Remember(() => new MutableNumberState<int>(0));
+            var effectKey   = Remember(() => new MutableNumberState<int>(0));
+            var disposeCount = Remember(() => new MutableNumberState<int>(0));
+
+            string[] tabNames = { "Basics", "Buttons", "Cards", "Drawer", "Selection", "Pickers", "Misc", "App bars", "Lazy", "Carousels", "Pager", "Nav", "State", "Effects" };
 
             // Per-tab content. Only the current tab's column is added to
             // the screen — keeps the sample short enough to fit on one
@@ -1190,6 +1198,68 @@ public class MainActivity : ComposeActivity
                         },
                     },
                 },
+                13 => new Column
+                {
+                    // Effects (issue #57) — Compose's three side-effect APIs.
+                    // - SideEffect runs after every successful recomposition.
+                    // - DisposableEffect runs once per (key change | enter
+                    //   composition) and calls its cleanup on (key change |
+                    //   leave composition).
+                    // - LaunchedEffect launches a C# Task tied to the
+                    //   composition's coroutine scope. Cancellation flows
+                    //   through the supplied CancellationToken.
+                    Modifier.Companion.Padding(16),
+
+                    new Text($"Ticks (LaunchedEffect): {ticks.Value}"),
+                    new Text($"Disposable cleanups: {disposeCount.Value}"),
+                    new Text($"Effect key: {effectKey.Value}"),
+                    new Text("SideEffect: see logcat (filter: ComposeNet.Sample)"),
+
+                    new HorizontalDivider { Modifier = Modifier.Companion.Padding(0, 8) },
+
+                    // SideEffect — runs after every successful recomposition
+                    // of this Column. We log to debug rather than write to
+                    // a MutableState (writing snapshot state from a
+                    // SideEffect that the same composition reads would
+                    // create an infinite recomposition loop).
+                    new SideEffect(() =>
+                        Android.Util.Log.Debug("ComposeNet.Sample",
+                            $"SideEffect ran (effectKey={effectKey.Value}, ticks={ticks.Value})")),
+
+                    // LaunchedEffect — async tick loop scoped to the
+                    // composition. The Task body honors `ct` via
+                    // Task.Delay(ms, ct), so changing effectKey cancels
+                    // and restarts the loop.
+                    new LaunchedEffect(effectKey.Value, async ct =>
+                    {
+                        try
+                        {
+                            while (!ct.IsCancellationRequested)
+                            {
+                                await System.Threading.Tasks.Task.Delay(1000, ct);
+                                ticks.Value++;
+                            }
+                        }
+                        catch (System.OperationCanceledException) { }
+                    }),
+
+                    // DisposableEffect — fake "register external listener"
+                    // pattern. The cleanup callback bumps a counter so we
+                    // can verify it ran on key change / leaving composition.
+                    new DisposableEffect(effectKey.Value, scope =>
+                    {
+                        return () => disposeCount.Value++;
+                    }),
+
+                    new Button(onClick: () => effectKey.Value++)
+                    {
+                        new Text("Restart effects (key++)"),
+                    },
+                    new Button(onClick: () => { ticks.Value = 0; disposeCount.Value = 0; })
+                    {
+                        new Text("Reset counters"),
+                    },
+                },
                 _ => new Column
                 {
                     // Lazy lists — bound through LazyDslKt / LazyGridDslKt.
@@ -1504,6 +1574,11 @@ public class MainActivity : ComposeActivity
                                 {
                                     Text = new Text("State"),
                                     Icon = new Text("🧠"),
+                                },
+                                new Tab(selected: tab.Value == 13, onClick: () => tab.Value = 13)
+                                {
+                                    Text = new Text("Effects"),
+                                    Icon = new Text("⚡"),
                                 },
                             },
                             tabContent,
