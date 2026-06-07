@@ -33,7 +33,7 @@ public sealed class AnimatedVisibility : ComposableContainer
     /// <summary>Current visibility passed to the underlying Compose <c>AnimatedVisibility</c>.</summary>
     public bool Visible => _visible;
 
-    internal override void Render(IComposer composer)
+    public override void Render(IComposer composer)
     {
         var modifier = BuildModifier();
         var content  = ComposableLambdas.Wrap3(composer, RenderChildren);

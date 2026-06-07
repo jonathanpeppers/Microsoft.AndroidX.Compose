@@ -32,7 +32,7 @@ public sealed class ModalBottomSheet : ComposableContainer
     /// <summary>Optional drag handle drawn at the top of the sheet.</summary>
     public ComposableNode? DragHandle { get; set; }
 
-    internal override void Render(IComposer composer)
+    public override void Render(IComposer composer)
     {
         // Bound C# call — RememberModalBottomSheetState is NOT stripped.
         // p3 is the (renamed) Composer parameter; _changed = 3 means bits

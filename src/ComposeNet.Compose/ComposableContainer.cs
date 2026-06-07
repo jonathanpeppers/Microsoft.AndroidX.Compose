@@ -33,8 +33,8 @@ public abstract class ComposableContainer : ComposableNode, IEnumerable
     public void Add(Modifier modifier) => Modifier = modifier;
     IEnumerator IEnumerable.GetEnumerator() => _children.GetEnumerator();
 
-    /// <summary>Internal accessor for <c>Render</c> impls.</summary>
-    private protected IReadOnlyList<ComposableNode> Children => _children;
+    /// <summary>Accessor for derived <c>Render</c> impls.</summary>
+    protected IReadOnlyList<ComposableNode> Children => _children;
 
     /// <summary>
     /// Renders this container's children sequentially into
@@ -55,7 +55,7 @@ public abstract class ComposableContainer : ComposableNode, IEnumerable
     /// siblings at the same position keep their identity and slot
     /// state intact — that is intentional Compose positional identity.
     /// </summary>
-    private protected void RenderChildren(IComposer composer)
+    protected void RenderChildren(IComposer composer)
     {
         for (int i = 0; i < _children.Count; i++)
         {

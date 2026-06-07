@@ -188,7 +188,7 @@ public class MainActivity : ComposeActivity
             var animVisible = Remember(() => new MutableState<bool>(true));
             var animStep    = Remember(() => new MutableNumberState<int>(0));
 
-            string[] tabNames = { "Basics", "Buttons", "Cards", "Drawer", "Selection", "Pickers", "Misc", "App bars", "Lazy", "Carousels", "Pager", "Nav", "State", "Effects", "Animation" };
+            string[] tabNames = { "Basics", "Buttons", "Cards", "Drawer", "Selection", "Pickers", "Misc", "App bars", "Lazy", "Carousels", "Pager", "Nav", "State", "Effects", "Animation", "Locals" };
 
             // Per-tab content. Only the current tab's column is added to
             // the screen — keeps the sample short enough to fit on one
@@ -1420,6 +1420,7 @@ public class MainActivity : ComposeActivity
                             new Text($"Frame {i}"),
                         }),
                 },
+                15 => LocalsScreen.Build(),
                 _ => new Column
                 {
                     // Lazy lists — bound through LazyDslKt / LazyGridDslKt.
@@ -1744,6 +1745,11 @@ public class MainActivity : ComposeActivity
                                 {
                                     Text = new Text("Animation"),
                                     Icon = new Text("🎞"),
+                                },
+                                new Tab(selected: tab.Value == 15, onClick: () => tab.Value = 15)
+                                {
+                                    Text = new Text("Locals"),
+                                    Icon = new Text("🌐"),
                                 },
                             },
                             tabContent,

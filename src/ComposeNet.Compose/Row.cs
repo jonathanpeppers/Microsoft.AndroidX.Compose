@@ -56,7 +56,7 @@ public sealed class Row : ComposableContainer
         _horizontalArrangement = horizontalArrangement;
     }
 
-    internal override void Render(IComposer composer)
+    public override void Render(IComposer composer)
     {
         var horizontal = _horizontalArrangement?.Horizontal;
         var modifier = BuildModifier();

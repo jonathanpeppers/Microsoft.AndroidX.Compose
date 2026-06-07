@@ -1,0 +1,13 @@
+  Determining projects to restore...
+  All projects are up-to-date for restore.
+  ComposeNet.SourceGenerators -> C:\Users\jopepper\.copilot\copilot-worktrees\compose-net\jonathanpeppers-refactored-winner\src\ComposeNet.SourceGenerators\bin\Debug\netstandard2.0\ComposeNet.SourceGenerators.dll
+  ComposeNet.Compose -> C:\Users\jopepper\.copilot\copilot-worktrees\compose-net\jonathanpeppers-refactored-winner\src\ComposeNet.Compose\bin\Debug\net10.0-android\ComposeNet.Compose.dll
+  ComposeNet.Sample -> C:\Users\jopepper\.copilot\copilot-worktrees\compose-net\jonathanpeppers-refactored-winner\src\ComposeNet.Sample\bin\Debug\net10.0-android\ComposeNet.Sample.dll
+  ComposeNet.SourceGenerators -> C:\Users\jopepper\.copilot\copilot-worktrees\compose-net\jonathanpeppers-refactored-winner\src\ComposeNet.SourceGenerators\bin\Debug\netstandard2.0\ComposeNet.SourceGenerators.dll
+  ComposeNet.Compose -> C:\Users\jopepper\.copilot\copilot-worktrees\compose-net\jonathanpeppers-refactored-winner\src\ComposeNet.Compose\bin\Debug\net10.0-android\ComposeNet.Compose.dll
+
+Build succeeded.
+    0 Warning(s)
+    0 Error(s)
+
+Time Elapsed 00:00:31.80

@@ -43,7 +43,7 @@ public sealed class VerticalPager<T> : ComposableNode
     /// </summary>
     public PagerState? State { get; set; }
 
-    internal override void Render(IComposer composer)
+    public override void Render(IComposer composer)
     {
         // See HorizontalPager.Render — same eager-vs-remember path.
         AndroidX.Compose.Foundation.Pager.PagerState jvmState;

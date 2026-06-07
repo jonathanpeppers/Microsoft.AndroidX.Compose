@@ -28,7 +28,7 @@ public sealed class ExpandedDockedSearchBar : ComposableContainer
     /// <summary>Required: composable that renders the search input field inside the popup.</summary>
     public ComposableNode? InputField { get; set; }
 
-    internal override void Render(IComposer composer)
+    public override void Render(IComposer composer)
     {
         if (InputField is null)
             throw new System.InvalidOperationException(

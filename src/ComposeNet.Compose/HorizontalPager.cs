@@ -47,7 +47,7 @@ public sealed class HorizontalPager<T> : ComposableNode
     /// </summary>
     public PagerState? State { get; set; }
 
-    internal override void Render(IComposer composer)
+    public override void Render(IComposer composer)
     {
         // When the caller supplies a PagerState wrapper its Jvm is
         // built eagerly in the wrapper's ctor (via the non-@Composable

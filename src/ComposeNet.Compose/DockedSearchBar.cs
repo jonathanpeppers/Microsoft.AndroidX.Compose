@@ -33,7 +33,7 @@ public sealed class DockedSearchBar : ComposableContainer
     /// <summary>Required: composable that renders the search input field at the top of the bar.</summary>
     public ComposableNode? InputField { get; set; }
 
-    internal override void Render(IComposer composer)
+    public override void Render(IComposer composer)
     {
         if (InputField is null)
             throw new System.InvalidOperationException(

@@ -52,7 +52,7 @@ public sealed class AnimatedContent<T> : ComposableNode
     /// <summary>The state value passed to the underlying <c>AnimatedContent</c>.</summary>
     public T TargetState => _targetState;
 
-    internal override void Render(IComposer composer)
+    public override void Render(IComposer composer)
     {
         var modifier = BuildModifier();
         var boxed    = MutableState<T>.ToJava(_targetState);

@@ -81,7 +81,7 @@ public sealed class SearchBarInputField : ComposableNode
     /// </summary>
     public ComposableNode? TrailingIcon { get; set; }
 
-    internal override void Render(IComposer composer)
+    public override void Render(IComposer composer)
     {
         var textPeer     = _textState.Resolve(composer);
         var searchHandle = SearchBar.ResolveStateHandle(_searchState, composer);

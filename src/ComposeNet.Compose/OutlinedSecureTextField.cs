@@ -51,7 +51,7 @@ public sealed class OutlinedSecureTextField : ComposableNode
     /// <summary>Optional supporting text rendered below the field (Kotlin <c>supportingText</c>).</summary>
     public ComposableNode? SupportingText { get; set; }
 
-    internal override void Render(IComposer composer)
+    public override void Render(IComposer composer)
     {
         var statePeer = _state.Resolve(composer);
 

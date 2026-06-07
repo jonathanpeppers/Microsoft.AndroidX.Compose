@@ -48,7 +48,7 @@ public sealed class SegmentedButton : ComposableContainer
     /// <summary>Optional leading icon slot.</summary>
     public ComposableNode? Icon { get; set; }
 
-    internal override void Render(IComposer composer)
+    public override void Render(IComposer composer)
     {
         if (Children.Count == 0)
             throw new System.InvalidOperationException(

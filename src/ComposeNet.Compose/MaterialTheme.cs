@@ -73,11 +73,11 @@ public sealed class MaterialTheme : ComposableContainer
     /// </summary>
     public bool UseDynamicColor { get; set; } = true;
 
-    internal override void Render(IComposer composer)
+    public override void Render(IComposer composer)
     {
         bool dark = Dark ?? DarkThemeKt.IsSystemInDarkTheme(composer, 0);
 
-        ColorScheme scheme = ColorScheme ?? ResolveDefaultScheme(dark);
+        ColorScheme scheme = ColorScheme ?? ResolveDefaultScheme(composer, dark);
 
         // MaterialThemeDefault is generated from `[ComposeDefaults<MaterialThemeKt>]`
         // and contains a bit per optional Kotlin parameter (ColorScheme,
@@ -99,11 +99,16 @@ public sealed class MaterialTheme : ComposableContainer
             _changed:    (int)defaults);
     }
 
-    ColorScheme ResolveDefaultScheme(bool dark)
+    ColorScheme ResolveDefaultScheme(IComposer composer, bool dark)
     {
         if (UseDynamicColor && Build.VERSION.SdkInt >= BuildVersionCodes.S)
         {
-            var ctx = Android.App.Application.Context;
+            // Read the composition-scoped Android context rather than
+            // Android.App.Application.Context, so the theme reflects any
+            // override installed by an enclosing CompositionLocalProvider
+            // (e.g. a contextual content-wrapper) and updates correctly on
+            // activity recreations.
+            var ctx = Locals.LocalContext.GetCurrent(composer);
             return dark
                 ? DynamicTonalPaletteKt.DynamicDarkColorScheme(ctx)
                 : DynamicTonalPaletteKt.DynamicLightColorScheme(ctx);

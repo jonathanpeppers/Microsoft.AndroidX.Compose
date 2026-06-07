@@ -13,7 +13,7 @@ public sealed class SecondaryScrollableTabRow : ComposableContainer
     readonly int _selectedTabIndex;
     public SecondaryScrollableTabRow(int selectedTabIndex) => _selectedTabIndex = selectedTabIndex;
 
-    internal override void Render(IComposer composer)
+    public override void Render(IComposer composer)
     {
         var tabs = ComposableLambdas.Wrap2(composer, c => RenderChildren(c));
         ComposeBridges.SecondaryScrollableTabRow(
