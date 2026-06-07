@@ -27,6 +27,10 @@ public static class JetnewsApp
     /// </param>
     /// <param name="selectedPeople">Names of followed people.</param>
     /// <param name="selectedPublications">Names of subscribed publications.</param>
+    /// <param name="interestsTab">
+    /// Currently selected tab index on the Interests screen (0 = Topics,
+    /// 1 = People, 2 = Publications).
+    /// </param>
     public static ComposableNode Build(
         NavController nav,
         MutableState<string> currentRoute,

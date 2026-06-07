@@ -73,7 +73,7 @@ public static class HomeScreen
                                    Action<string> onSelectPost) =>
         row switch
         {
-            HomeRow.Highlight h        => HomeCards.BuildHighlight(h.Post, bookmarks, onSelectPost),
+            HomeRow.Highlight h        => HomeCards.BuildHighlight(h.Post, onSelectPost),
             HomeRow.SectionHeader s    => BuildSectionHeader(s.Label),
             HomeRow.Recommended r      => HomeCards.BuildSimple(r.Post, bookmarks, onSelectPost),
             HomeRow.PopularCarousel pc => BuildPopularCarousel(pc.Posts, onSelectPost),

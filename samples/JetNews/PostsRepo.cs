@@ -177,7 +177,7 @@ public static class PostsRepo
     {
         foreach (var p in All)
             if (p.Id == id) return p;
-        throw new System.Collections.Generic.KeyNotFoundException(id);
+        throw new KeyNotFoundException(id);
     }
 
     /// <summary>Every post the seed data exposes, in chronological order.</summary>

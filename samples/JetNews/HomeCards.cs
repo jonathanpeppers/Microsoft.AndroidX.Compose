@@ -13,7 +13,6 @@ namespace ComposeNet.Samples.JetNews;
 internal static class HomeCards
 {
     public static Column BuildHighlight(Post post,
-                                        MutableStateList<string> bookmarks,
                                         Action<string> onSelectPost) =>
         new()
         {
