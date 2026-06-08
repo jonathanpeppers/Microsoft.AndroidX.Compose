@@ -132,6 +132,7 @@ public static class Catalog
         D.Modifiers.ShapesAndShadowDemo.Demo,
         D.Modifiers.RotateScaleAlphaDemo.Demo,
         D.Modifiers.ToggleableSelectableSemanticsDemo.Demo,
+        D.Modifiers.SemanticsBuilderDemo.Demo,
         D.Modifiers.FocusRequesterDemo.Demo,
         D.Modifiers.CombinedClickableDemo.Demo,
         D.Modifiers.DraggableOffsetDemo.Demo,
