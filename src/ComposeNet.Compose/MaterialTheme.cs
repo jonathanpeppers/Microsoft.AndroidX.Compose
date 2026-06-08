@@ -268,6 +268,18 @@ public sealed class MaterialTheme : ComposableContainer
             tertiaryFixed, tertiaryFixedDim, onTertiaryFixed, onTertiaryFixedVariant,
         };
 
+        // The other theme masks (ShapesDefault, TypographyDefault) are
+        // emitted by ComposeDefaultsGenerator from declarative
+        // `[assembly: ComposeDefaults(...)]` attributes. ColorScheme
+        // can't ride that path today: the generator emits an int-
+        // backed enum, and Kotlin lowers >32 default slots into a
+        // *pair* of int masks (`II` in the synthetic ctor signature),
+        // not a single int. With 48 slots here we'd silently overflow
+        // bits 32..47. Until the generator grows long-backed enums
+        // and a split-into-(mask0, mask1) helper (tracked separately
+        // — see the BuildColorScheme issue), keep the hand-rolled
+        // pair mask. Mirror of how Kotlin's own synthetic ctor
+        // computes its $default pair.
         long[] colors = new long[slots.Length];
         int mask0 = 0;
         int mask1 = 0;
@@ -328,12 +340,15 @@ public sealed class MaterialTheme : ComposableContainer
         Shape? large = null,
         Shape? extraLarge = null)
     {
-        int defaults = 0;
-        if (extraSmall is null) defaults |= 1 << 0;
-        if (small      is null) defaults |= 1 << 1;
-        if (medium     is null) defaults |= 1 << 2;
-        if (large      is null) defaults |= 1 << 3;
-        if (extraLarge is null) defaults |= 1 << 4;
+        // ShapesDefault is generated from a declarative
+        // `[assembly: ComposeDefaults("ShapesDefault", ...)]`. Bit set =>
+        // Kotlin substitutes the per-slot M3 baseline.
+        var defaults = ShapesDefault.None;
+        if (extraSmall is null) defaults |= ShapesDefault.ExtraSmall;
+        if (small      is null) defaults |= ShapesDefault.Small;
+        if (medium     is null) defaults |= ShapesDefault.Medium;
+        if (large      is null) defaults |= ShapesDefault.Large;
+        if (extraLarge is null) defaults |= ShapesDefault.ExtraLarge;
 
         return ComposeBridges.BuildShapes(
             extraSmall is null ? System.IntPtr.Zero : ((Java.Lang.Object)extraSmall).Handle,
@@ -341,7 +356,7 @@ public sealed class MaterialTheme : ComposableContainer
             medium     is null ? System.IntPtr.Zero : ((Java.Lang.Object)medium).Handle,
             large      is null ? System.IntPtr.Zero : ((Java.Lang.Object)large).Handle,
             extraLarge is null ? System.IntPtr.Zero : ((Java.Lang.Object)extraLarge).Handle,
-            defaults);
+            (int)defaults);
     }
 
     /// <summary>
@@ -382,22 +397,25 @@ public sealed class MaterialTheme : ComposableContainer
         TextStyle? labelMedium = null,
         TextStyle? labelSmall = null)
     {
-        int defaults = 0;
-        if (displayLarge    is null) defaults |= 1 <<  0;
-        if (displayMedium   is null) defaults |= 1 <<  1;
-        if (displaySmall    is null) defaults |= 1 <<  2;
-        if (headlineLarge   is null) defaults |= 1 <<  3;
-        if (headlineMedium  is null) defaults |= 1 <<  4;
-        if (headlineSmall   is null) defaults |= 1 <<  5;
-        if (titleLarge      is null) defaults |= 1 <<  6;
-        if (titleMedium     is null) defaults |= 1 <<  7;
-        if (titleSmall      is null) defaults |= 1 <<  8;
-        if (bodyLarge       is null) defaults |= 1 <<  9;
-        if (bodyMedium      is null) defaults |= 1 << 10;
-        if (bodySmall       is null) defaults |= 1 << 11;
-        if (labelLarge      is null) defaults |= 1 << 12;
-        if (labelMedium     is null) defaults |= 1 << 13;
-        if (labelSmall      is null) defaults |= 1 << 14;
+        // TypographyDefault is generated from a declarative
+        // `[assembly: ComposeDefaults("TypographyDefault", ...)]`.
+        // Bit set => Kotlin substitutes the per-slot M3 baseline token.
+        var defaults = TypographyDefault.None;
+        if (displayLarge    is null) defaults |= TypographyDefault.DisplayLarge;
+        if (displayMedium   is null) defaults |= TypographyDefault.DisplayMedium;
+        if (displaySmall    is null) defaults |= TypographyDefault.DisplaySmall;
+        if (headlineLarge   is null) defaults |= TypographyDefault.HeadlineLarge;
+        if (headlineMedium  is null) defaults |= TypographyDefault.HeadlineMedium;
+        if (headlineSmall   is null) defaults |= TypographyDefault.HeadlineSmall;
+        if (titleLarge      is null) defaults |= TypographyDefault.TitleLarge;
+        if (titleMedium     is null) defaults |= TypographyDefault.TitleMedium;
+        if (titleSmall      is null) defaults |= TypographyDefault.TitleSmall;
+        if (bodyLarge       is null) defaults |= TypographyDefault.BodyLarge;
+        if (bodyMedium      is null) defaults |= TypographyDefault.BodyMedium;
+        if (bodySmall       is null) defaults |= TypographyDefault.BodySmall;
+        if (labelLarge      is null) defaults |= TypographyDefault.LabelLarge;
+        if (labelMedium     is null) defaults |= TypographyDefault.LabelMedium;
+        if (labelSmall      is null) defaults |= TypographyDefault.LabelSmall;
 
         // Materialize every non-null slot into a managed peer up front
         // and root the whole array across the JNI call. If we instead
@@ -433,7 +451,7 @@ public sealed class MaterialTheme : ComposableContainer
                 Handle(built[ 6]), Handle(built[ 7]), Handle(built[ 8]),
                 Handle(built[ 9]), Handle(built[10]), Handle(built[11]),
                 Handle(built[12]), Handle(built[13]), Handle(built[14]),
-                defaults);
+                (int)defaults);
         }
         finally
         {

@@ -32,6 +32,7 @@ public static class Catalog
         new("modifiers",           "Modifiers",              "Shapes, transforms, gestures, semantics",      "🎛️"),
         new("state-effects",       "State, effects, anim.",  "Remember, side effects, animation",            "✨"),
         new("locals-misc",         "CompositionLocal & misc","Locals, progress, image, icon",                "🧩"),
+        new("theming",             "Theming",                "Custom palette, shapes, typography, icons",    "🎨"),
     ];
 
     /// <summary>
@@ -153,6 +154,12 @@ public static class Catalog
         D.LocalsMisc.LinearProgressIndicatorDemo.Demo,
         D.LocalsMisc.ImageDemo.Demo,
         D.LocalsMisc.IconDemo.Demo,
+
+        // ---- Theming ----
+        D.Theming.CustomColorSchemeDemo.Demo,
+        D.Theming.CustomShapesDemo.Demo,
+        D.Theming.CustomTypographyDemo.Demo,
+        D.Theming.MaterialIconsDemo.Demo,
     ];
 
     /// <summary>
