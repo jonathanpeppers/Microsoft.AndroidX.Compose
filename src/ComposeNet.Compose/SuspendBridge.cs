@@ -201,14 +201,14 @@ internal static class SuspendBridge
         }
     }
 
-    static bool IsCoroutineSuspended(IntPtr handle)
+    internal static bool IsCoroutineSuspended(IntPtr handle)
     {
         if (handle == IntPtr.Zero) return false;
         EnsureSuspendedHandle();
         return JNIEnv.IsSameObject(handle, s_suspendedHandle);
     }
 
-    static void EnsureSuspendedHandle()
+    internal static void EnsureSuspendedHandle()
     {
         if (s_suspendedHandle != IntPtr.Zero) return;
         var inst = IntrinsicsKt.COROUTINE_SUSPENDED;

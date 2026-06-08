@@ -701,4 +701,78 @@ public static class Compose
             composer.EndReplaceableGroup();
         }
     }
+
+    /// <summary>
+    /// Bridges Compose's <c>snapshotFlow { producer() }</c> into an
+    /// <see cref="System.Collections.Generic.IAsyncEnumerable{T}"/>.
+    /// Every time any <see cref="MutableState{T}"/> /
+    /// <see cref="MutableNumberState{T}"/> read inside
+    /// <paramref name="producer"/> is written to and the surrounding
+    /// snapshot is applied, the producer re-runs on Compose's main
+    /// dispatcher and the new value flows through the returned
+    /// async sequence. Duplicate consecutive values (compared via
+    /// Java <c>equals</c>) are suppressed by Kotlin's
+    /// <c>snapshotFlow</c> — the C# consumer only sees genuine
+    /// changes.
+    /// </summary>
+    /// <typeparam name="T">
+    /// Value type produced. Must round-trip through
+    /// <see cref="MutableState{T}"/>'s boxing helpers — the
+    /// supported set is .NET primitives (<see cref="byte"/>,
+    /// <see cref="sbyte"/>, <see cref="short"/>, <see cref="ushort"/>,
+    /// <see cref="int"/>, <see cref="uint"/>, <see cref="long"/>,
+    /// <see cref="ulong"/>, <see cref="float"/>, <see cref="double"/>,
+    /// <see cref="bool"/>, <see cref="char"/>), <see cref="string"/>,
+    /// <see cref="Java.Lang.Object"/> peers, and
+    /// <see cref="System.Nullable{T}"/> of any of those primitives.
+    /// Tuples / value tuples / arbitrary CLR structs are not
+    /// supported.
+    /// </typeparam>
+    /// <param name="producer">
+    /// Lambda that reads one or more Compose state values and
+    /// returns a derived value. <strong>Not</strong>
+    /// <c>@Composable</c> — do not call <c>Compose.Remember</c> or
+    /// any other Compose-runtime helper from inside. Reads do not
+    /// have to be wrapped in <see cref="DerivedStateOf{T}"/>;
+    /// <c>snapshotFlow</c> records dependencies automatically via
+    /// snapshot tracking.
+    /// </param>
+    /// <returns>
+    /// An async sequence that yields each new producer value on the
+    /// Compose main thread until the consumer disposes the
+    /// enumerator or cancels the <see cref="System.Threading.CancellationToken"/>
+    /// passed to <c>WithCancellation</c>. Disposing or cancelling
+    /// tears down the underlying Kotlin coroutine and unregisters
+    /// the snapshot-apply observer.
+    /// </returns>
+    /// <remarks>
+    /// <para>
+    /// <strong>Back-pressure:</strong> values are buffered through a
+    /// bounded(1) channel with <c>DropOldest</c> conflation. A slow
+    /// consumer naturally sees only the latest value between reads —
+    /// matching the behaviour of Kotlin's own <c>collect</c> when
+    /// the collector can't keep up. <c>emit</c> never blocks
+    /// Kotlin's dispatcher, so there's no risk of deadlock against a
+    /// C# awaiter resuming on the same main thread.
+    /// </para>
+    /// <para>
+    /// <strong>Canonical use case:</strong> reacting to
+    /// <c>LazyListState</c> scroll position, e.g.
+    /// <c>Compose.SnapshotFlow(() => listState.FirstVisibleItemIndex)</c>,
+    /// to fire analytics or fetch more data when the user scrolls
+    /// past a threshold. Pair with <c>Compose.LaunchedEffect</c> so
+    /// the collection's lifetime is tied to the composition that
+    /// started it.
+    /// </para>
+    /// <para>
+    /// Each call to <see cref="System.Collections.Generic.IAsyncEnumerable{T}.GetAsyncEnumerator"/>
+    /// starts a fresh Kotlin coroutine — the returned enumerable is
+    /// not multicast.
+    /// </para>
+    /// </remarks>
+    public static System.Collections.Generic.IAsyncEnumerable<T> SnapshotFlow<T>(System.Func<T> producer)
+    {
+        System.ArgumentNullException.ThrowIfNull(producer);
+        return new SnapshotFlowEnumerable<T>(producer);
+    }
 }
