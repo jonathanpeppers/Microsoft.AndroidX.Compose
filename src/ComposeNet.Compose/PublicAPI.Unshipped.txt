@@ -33,8 +33,8 @@ ComposeNet.AssistChip.LeadingIcon.set -> void
 ComposeNet.AssistChip.TrailingIcon.get -> ComposeNet.ComposableNode?
 ComposeNet.AssistChip.TrailingIcon.set -> void
 ComposeNet.BackHandler
-ComposeNet.BackHandler.BackHandler(System.Action! onBack) -> void
 ComposeNet.BackHandler.BackHandler(System.Action! onBack, bool enabled) -> void
+ComposeNet.BackHandler.BackHandler(System.Action! onBack) -> void
 ComposeNet.Badge
 ComposeNet.Badge.Badge() -> void
 ComposeNet.BadgedBox
@@ -75,6 +75,8 @@ ComposeNet.CenterAlignedTopAppBar.Actions.set -> void
 ComposeNet.CenterAlignedTopAppBar.CenterAlignedTopAppBar() -> void
 ComposeNet.CenterAlignedTopAppBar.NavigationIcon.get -> ComposeNet.ComposableNode?
 ComposeNet.CenterAlignedTopAppBar.NavigationIcon.set -> void
+ComposeNet.CenterAlignedTopAppBar.ScrollBehavior.get -> ComposeNet.TopAppBarScrollBehavior?
+ComposeNet.CenterAlignedTopAppBar.ScrollBehavior.set -> void
 ComposeNet.CenterAlignedTopAppBar.Title.get -> ComposeNet.ComposableNode?
 ComposeNet.CenterAlignedTopAppBar.Title.set -> void
 ComposeNet.Checkbox
@@ -416,6 +418,8 @@ ComposeNet.LargeFlexibleTopAppBar.Actions.set -> void
 ComposeNet.LargeFlexibleTopAppBar.LargeFlexibleTopAppBar() -> void
 ComposeNet.LargeFlexibleTopAppBar.NavigationIcon.get -> ComposeNet.ComposableNode?
 ComposeNet.LargeFlexibleTopAppBar.NavigationIcon.set -> void
+ComposeNet.LargeFlexibleTopAppBar.ScrollBehavior.get -> ComposeNet.TopAppBarScrollBehavior?
+ComposeNet.LargeFlexibleTopAppBar.ScrollBehavior.set -> void
 ComposeNet.LargeFlexibleTopAppBar.Subtitle.get -> ComposeNet.ComposableNode?
 ComposeNet.LargeFlexibleTopAppBar.Subtitle.set -> void
 ComposeNet.LargeFlexibleTopAppBar.Title.get -> ComposeNet.ComposableNode?
@@ -428,6 +432,8 @@ ComposeNet.LargeTopAppBar.Actions.set -> void
 ComposeNet.LargeTopAppBar.LargeTopAppBar() -> void
 ComposeNet.LargeTopAppBar.NavigationIcon.get -> ComposeNet.ComposableNode?
 ComposeNet.LargeTopAppBar.NavigationIcon.set -> void
+ComposeNet.LargeTopAppBar.ScrollBehavior.get -> ComposeNet.TopAppBarScrollBehavior?
+ComposeNet.LargeTopAppBar.ScrollBehavior.set -> void
 ComposeNet.LargeTopAppBar.Subtitle.get -> ComposeNet.ComposableNode?
 ComposeNet.LargeTopAppBar.Subtitle.set -> void
 ComposeNet.LargeTopAppBar.Title.get -> ComposeNet.ComposableNode?
@@ -509,6 +515,8 @@ ComposeNet.MediumFlexibleTopAppBar.Actions.set -> void
 ComposeNet.MediumFlexibleTopAppBar.MediumFlexibleTopAppBar() -> void
 ComposeNet.MediumFlexibleTopAppBar.NavigationIcon.get -> ComposeNet.ComposableNode?
 ComposeNet.MediumFlexibleTopAppBar.NavigationIcon.set -> void
+ComposeNet.MediumFlexibleTopAppBar.ScrollBehavior.get -> ComposeNet.TopAppBarScrollBehavior?
+ComposeNet.MediumFlexibleTopAppBar.ScrollBehavior.set -> void
 ComposeNet.MediumFlexibleTopAppBar.Subtitle.get -> ComposeNet.ComposableNode?
 ComposeNet.MediumFlexibleTopAppBar.Subtitle.set -> void
 ComposeNet.MediumFlexibleTopAppBar.Title.get -> ComposeNet.ComposableNode?
@@ -519,6 +527,8 @@ ComposeNet.MediumTopAppBar.Actions.set -> void
 ComposeNet.MediumTopAppBar.MediumTopAppBar() -> void
 ComposeNet.MediumTopAppBar.NavigationIcon.get -> ComposeNet.ComposableNode?
 ComposeNet.MediumTopAppBar.NavigationIcon.set -> void
+ComposeNet.MediumTopAppBar.ScrollBehavior.get -> ComposeNet.TopAppBarScrollBehavior?
+ComposeNet.MediumTopAppBar.ScrollBehavior.set -> void
 ComposeNet.MediumTopAppBar.Subtitle.get -> ComposeNet.ComposableNode?
 ComposeNet.MediumTopAppBar.Subtitle.set -> void
 ComposeNet.MediumTopAppBar.Title.get -> ComposeNet.ComposableNode?
@@ -584,6 +594,7 @@ ComposeNet.Modifier.MandatorySystemGesturesPadding() -> ComposeNet.Modifier!
 ComposeNet.Modifier.MatchParentSize() -> ComposeNet.Modifier!
 ComposeNet.Modifier.MinimumInteractiveComponentSize() -> ComposeNet.Modifier!
 ComposeNet.Modifier.NavigationBarsPadding() -> ComposeNet.Modifier!
+ComposeNet.Modifier.NestedScroll(ComposeNet.NestedScrollConnection! connection) -> ComposeNet.Modifier!
 ComposeNet.Modifier.Offset(ComposeNet.Dp? x = null, ComposeNet.Dp? y = null) -> ComposeNet.Modifier!
 ComposeNet.Modifier.OnFocusChanged(System.Action<ComposeNet.FocusState>! onFocusChanged) -> ComposeNet.Modifier!
 ComposeNet.Modifier.Padding(ComposeNet.Dp all) -> ComposeNet.Modifier!
@@ -673,8 +684,8 @@ ComposeNet.NavBackStackEntry.Route.get -> string?
 ComposeNet.NavController
 ComposeNet.NavController.CurrentBackStackEntry.get -> ComposeNet.NavBackStackEntry?
 ComposeNet.NavController.NavController() -> void
-ComposeNet.NavController.Navigate(string! route) -> void
 ComposeNet.NavController.Navigate(string! route, ComposeNet.NavOptions! options) -> void
+ComposeNet.NavController.Navigate(string! route) -> void
 ComposeNet.NavController.NavigateUp() -> bool
 ComposeNet.NavController.PopBackStack() -> bool
 ComposeNet.NavController.PopBackStack(string! route, bool inclusive) -> bool
@@ -684,18 +695,6 @@ ComposeNet.NavHost.Add(ComposeNet.Modifier! modifier) -> void
 ComposeNet.NavHost.NavController.get -> ComposeNet.NavController!
 ComposeNet.NavHost.NavHost(string! startDestination, ComposeNet.NavController? navController = null) -> void
 ComposeNet.NavHost.StartDestination.get -> string!
-ComposeNet.NavOptions
-ComposeNet.NavOptions.LaunchSingleTop.get -> bool
-ComposeNet.NavOptions.LaunchSingleTop.set -> void
-ComposeNet.NavOptions.NavOptions() -> void
-ComposeNet.NavOptions.PopUpToInclusive.get -> bool
-ComposeNet.NavOptions.PopUpToInclusive.set -> void
-ComposeNet.NavOptions.PopUpToRoute.get -> string?
-ComposeNet.NavOptions.PopUpToRoute.set -> void
-ComposeNet.NavOptions.PopUpToSaveState.get -> bool
-ComposeNet.NavOptions.PopUpToSaveState.set -> void
-ComposeNet.NavOptions.RestoreState.get -> bool
-ComposeNet.NavOptions.RestoreState.set -> void
 ComposeNet.NavigationBar
 ComposeNet.NavigationBar.NavigationBar() -> void
 ComposeNet.NavigationBarItem
@@ -720,6 +719,19 @@ ComposeNet.NavigationRailItem.Icon.set -> void
 ComposeNet.NavigationRailItem.Label.get -> ComposeNet.ComposableNode?
 ComposeNet.NavigationRailItem.Label.set -> void
 ComposeNet.NavigationRailItem.NavigationRailItem(bool selected, System.Action! onClick) -> void
+ComposeNet.NavOptions
+ComposeNet.NavOptions.LaunchSingleTop.get -> bool
+ComposeNet.NavOptions.LaunchSingleTop.set -> void
+ComposeNet.NavOptions.NavOptions() -> void
+ComposeNet.NavOptions.PopUpToInclusive.get -> bool
+ComposeNet.NavOptions.PopUpToInclusive.set -> void
+ComposeNet.NavOptions.PopUpToRoute.get -> string?
+ComposeNet.NavOptions.PopUpToRoute.set -> void
+ComposeNet.NavOptions.PopUpToSaveState.get -> bool
+ComposeNet.NavOptions.PopUpToSaveState.set -> void
+ComposeNet.NavOptions.RestoreState.get -> bool
+ComposeNet.NavOptions.RestoreState.set -> void
+ComposeNet.NestedScrollConnection
 ComposeNet.Offset
 ComposeNet.Offset.Equals(ComposeNet.Offset other) -> bool
 ComposeNet.Offset.Offset() -> void
@@ -1083,11 +1095,26 @@ ComposeNet.TopAppBar.Actions.get -> ComposeNet.ComposableNode?
 ComposeNet.TopAppBar.Actions.set -> void
 ComposeNet.TopAppBar.NavigationIcon.get -> ComposeNet.ComposableNode?
 ComposeNet.TopAppBar.NavigationIcon.set -> void
+ComposeNet.TopAppBar.ScrollBehavior.get -> ComposeNet.TopAppBarScrollBehavior?
+ComposeNet.TopAppBar.ScrollBehavior.set -> void
 ComposeNet.TopAppBar.Subtitle.get -> ComposeNet.ComposableNode?
 ComposeNet.TopAppBar.Subtitle.set -> void
 ComposeNet.TopAppBar.Title.get -> ComposeNet.ComposableNode?
 ComposeNet.TopAppBar.Title.set -> void
 ComposeNet.TopAppBar.TopAppBar() -> void
+ComposeNet.TopAppBarDefaults
+ComposeNet.TopAppBarScrollBehavior
+ComposeNet.TopAppBarScrollBehavior.NestedScrollConnection.get -> ComposeNet.NestedScrollConnection!
+ComposeNet.TopAppBarState
+ComposeNet.TopAppBarState.CollapsedFraction.get -> float
+ComposeNet.TopAppBarState.ContentOffset.get -> float
+ComposeNet.TopAppBarState.ContentOffset.set -> void
+ComposeNet.TopAppBarState.HeightOffset.get -> float
+ComposeNet.TopAppBarState.HeightOffset.set -> void
+ComposeNet.TopAppBarState.HeightOffsetLimit.get -> float
+ComposeNet.TopAppBarState.HeightOffsetLimit.set -> void
+ComposeNet.TopAppBarState.OverlappedFraction.get -> float
+ComposeNet.TopAppBarState.TopAppBarState(float initialHeightOffsetLimit = -Infinity, float initialHeightOffset = 0, float initialContentOffset = 0) -> void
 ComposeNet.TopSearchBar
 ComposeNet.TopSearchBar.InputField.get -> ComposeNet.ComposableNode?
 ComposeNet.TopSearchBar.InputField.set -> void
@@ -1734,6 +1761,9 @@ static ComposeNet.TextOverflow.operator ==(ComposeNet.TextOverflow left, Compose
 static ComposeNet.TextOverflow.Pack(ComposeNet.TextOverflow? value) -> int
 static ComposeNet.TextOverflow.StartEllipsis.get -> ComposeNet.TextOverflow
 static ComposeNet.TextOverflow.Visible.get -> ComposeNet.TextOverflow
+static ComposeNet.TopAppBarDefaults.EnterAlwaysScrollBehavior(ComposeNet.TopAppBarState! state, int line = 0, string! file = "") -> ComposeNet.TopAppBarScrollBehavior!
+static ComposeNet.TopAppBarDefaults.ExitUntilCollapsedScrollBehavior(ComposeNet.TopAppBarState! state, int line = 0, string! file = "") -> ComposeNet.TopAppBarScrollBehavior!
+static ComposeNet.TopAppBarDefaults.PinnedScrollBehavior(ComposeNet.TopAppBarState! state, int line = 0, string! file = "") -> ComposeNet.TopAppBarScrollBehavior!
 static ComposeNet.TransformOrigin.Center.get -> long
 static ComposeNet.TransformOrigin.Pack(float pivotFractionX, float pivotFractionY) -> long
 static readonly ComposeNet.Locals.LocalColorScheme -> ComposeNet.CompositionLocal<AndroidX.Compose.Material3.ColorScheme!>!

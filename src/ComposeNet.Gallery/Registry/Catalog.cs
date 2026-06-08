@@ -100,6 +100,8 @@ public static class Catalog
         D.AppBars.CenterAlignedTopAppBarDemo.Demo,
         D.AppBars.MediumFlexibleTopAppBarDemo.Demo,
         D.AppBars.LargeFlexibleTopAppBarDemo.Demo,
+        D.AppBars.PinnedScrollBehaviorDemo.Demo,
+        D.AppBars.EnterAlwaysScrollBehaviorDemo.Demo,
         D.AppBars.BottomAppBarActionsDemo.Demo,
         D.AppBars.BottomAppBarWithFabDemo.Demo,
         D.AppBars.FlexibleBottomAppBarDemo.Demo,

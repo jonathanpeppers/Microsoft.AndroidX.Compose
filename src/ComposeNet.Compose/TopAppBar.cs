@@ -18,5 +18,12 @@ namespace ComposeNet;
 /// single-line <c>TopAppBar-GHTll3U</c> overload. The branching is
 /// driven by the <c>[ComposeFacade(BranchOn=..., AlternateBridge=...)]</c>
 /// attribute on the corresponding bridge in <c>ComposeBridges.cs</c>.
+///
+/// Set <c>ScrollBehavior</c> to a value from
+/// <see cref="TopAppBarDefaults"/> to make the bar elevate / collapse
+/// in response to scrolling. The same behavior's
+/// <see cref="TopAppBarScrollBehavior.NestedScrollConnection"/> must
+/// be wired to the scrolling container via
+/// <see cref="Modifier.NestedScroll(NestedScrollConnection)"/>.
 /// </summary>
 public sealed partial class TopAppBar;

@@ -2199,6 +2199,94 @@ internal static partial class ComposeBridges
                     "Landroidx/compose/ui/Modifier;")]
     internal static partial IntPtr ModifierClearAndSetSemantics(IntPtr modifier, IFunction1 properties);
 
+    // androidx.compose.ui.input.nestedscroll.NestedScrollModifierKt.nestedScroll$default —
+    // non-@Composable Modifier extension. 2 Kotlin params after the
+    // receiver: connection (NestedScrollConnection — always supplied by
+    // the C# wrapper), dispatcher (NestedScrollDispatcher — left
+    // defaulted so Kotlin allocates its own).
+    [ComposeBridge(
+        Class     = "androidx/compose/ui/input/nestedscroll/NestedScrollModifierKt",
+        JvmName   = "nestedScroll$default",
+        Signature = "(Landroidx/compose/ui/Modifier;" +
+                    "Landroidx/compose/ui/input/nestedscroll/NestedScrollConnection;" +
+                    "Landroidx/compose/ui/input/nestedscroll/NestedScrollDispatcher;" +
+                    "ILjava/lang/Object;)Landroidx/compose/ui/Modifier;",
+        Defaults  = typeof(ModifierNestedScrollDefault))]
+    internal static partial IntPtr ModifierNestedScroll(IntPtr modifier, IntPtr connection);
+
+    // androidx.compose.material3.TopAppBarDefaults.pinnedScrollBehavior —
+    // @Composable instance method on the TopAppBarDefaults singleton.
+    // The Material3 binding strips the factory because the return type
+    // TopAppBarScrollBehavior's nested NestedScrollConnection getter
+    // depends on ui-android types that aren't bound. Caller supplies
+    // `state`; `canScroll` is left to Kotlin's `() -> true` default.
+    [ComposeBridge(
+        Class         = "androidx/compose/material3/TopAppBarDefaults",
+        JvmName       = "pinnedScrollBehavior",
+        Signature     = "(Landroidx/compose/material3/TopAppBarState;" +
+                        "Lkotlin/jvm/functions/Function0;" +
+                        "Landroidx/compose/runtime/Composer;II)" +
+                        "Landroidx/compose/material3/TopAppBarScrollBehavior;",
+        InstanceField = "INSTANCE",
+        Defaults      = typeof(TopAppBarPinnedScrollBehaviorDefault))]
+    internal static partial IntPtr TopAppBarDefaultsPinnedScrollBehavior(IntPtr state, IComposer composer);
+
+    // androidx.compose.material3.TopAppBarDefaults.enterAlwaysScrollBehavior —
+    // @Composable instance method on the singleton. 4 user params; the
+    // C# wrapper supplies only `state` and leaves `canScroll`,
+    // `snapAnimationSpec`, `flingAnimationSpec` to Kotlin's defaults.
+    [ComposeBridge(
+        Class         = "androidx/compose/material3/TopAppBarDefaults",
+        JvmName       = "enterAlwaysScrollBehavior",
+        Signature     = "(Landroidx/compose/material3/TopAppBarState;" +
+                        "Lkotlin/jvm/functions/Function0;" +
+                        "Landroidx/compose/animation/core/AnimationSpec;" +
+                        "Landroidx/compose/animation/core/DecayAnimationSpec;" +
+                        "Landroidx/compose/runtime/Composer;II)" +
+                        "Landroidx/compose/material3/TopAppBarScrollBehavior;",
+        InstanceField = "INSTANCE",
+        Defaults      = typeof(TopAppBarEnterAlwaysScrollBehaviorDefault))]
+    internal static partial IntPtr TopAppBarDefaultsEnterAlwaysScrollBehavior(IntPtr state, IComposer composer);
+
+    // androidx.compose.material3.TopAppBarDefaults.exitUntilCollapsedScrollBehavior —
+    // same shape as enterAlwaysScrollBehavior above.
+    [ComposeBridge(
+        Class         = "androidx/compose/material3/TopAppBarDefaults",
+        JvmName       = "exitUntilCollapsedScrollBehavior",
+        Signature     = "(Landroidx/compose/material3/TopAppBarState;" +
+                        "Lkotlin/jvm/functions/Function0;" +
+                        "Landroidx/compose/animation/core/AnimationSpec;" +
+                        "Landroidx/compose/animation/core/DecayAnimationSpec;" +
+                        "Landroidx/compose/runtime/Composer;II)" +
+                        "Landroidx/compose/material3/TopAppBarScrollBehavior;",
+        InstanceField = "INSTANCE",
+        Defaults      = typeof(TopAppBarExitUntilCollapsedScrollBehaviorDefault))]
+    internal static partial IntPtr TopAppBarDefaultsExitUntilCollapsedScrollBehavior(IntPtr state, IComposer composer);
+
+    // androidx.compose.material3.TopAppBarScrollBehavior.getNestedScrollConnection() —
+    // abstract instance method on the interface. The Material3 binding
+    // strips it because the return type NestedScrollConnection lives in
+    // ui-android-nestedscroll, which isn't bound. We look up the method
+    // ID on the interface class once and dispatch via CallObjectMethod
+    // on whichever concrete behavior instance the caller passes.
+    static IntPtr s_topAppBarScrollBehaviorClass;
+    static IntPtr s_topAppBarScrollBehaviorGetNestedScrollConnectionMethodId;
+
+    internal static unsafe IntPtr GetNestedScrollConnection(IntPtr scrollBehavior)
+    {
+        if (s_topAppBarScrollBehaviorGetNestedScrollConnectionMethodId == IntPtr.Zero)
+        {
+            s_topAppBarScrollBehaviorClass = JNIEnv.FindClass(
+                "androidx/compose/material3/TopAppBarScrollBehavior");
+            s_topAppBarScrollBehaviorGetNestedScrollConnectionMethodId = JNIEnv.GetMethodID(
+                s_topAppBarScrollBehaviorClass,
+                "getNestedScrollConnection",
+                "()Landroidx/compose/ui/input/nestedscroll/NestedScrollConnection;");
+        }
+        return JNIEnv.CallObjectMethod(
+            scrollBehavior, s_topAppBarScrollBehaviorGetNestedScrollConnectionMethodId);
+    }
+
     // BoxScope / RowScope / ColumnScope `align` and `matchParentSize`
     // are abstract interface methods on the scope class (no static
     // $default helper exists — the methods themselves don't have
@@ -2404,6 +2492,7 @@ internal static partial class ComposeBridges
         IModifier?  modifier,
         IFunction2? navigationIcon,
         IFunction3? actions,
+        TopAppBarScrollBehavior? scrollBehavior,
         int         defaults,
         IComposer   composer);
 
@@ -2418,6 +2507,7 @@ internal static partial class ComposeBridges
         IModifier?  modifier,
         IFunction2? navigationIcon,
         IFunction3? actions,
+        TopAppBarScrollBehavior? scrollBehavior,
         int         defaults,
         IComposer   composer);
 
@@ -2444,6 +2534,7 @@ internal static partial class ComposeBridges
         IModifier?  modifier,
         IFunction2? navigationIcon,
         IFunction3? actions,
+        TopAppBarScrollBehavior? scrollBehavior,
         int         defaults,
         IComposer   composer);
 
@@ -2460,6 +2551,7 @@ internal static partial class ComposeBridges
         IModifier?  modifier,
         IFunction2? navigationIcon,
         IFunction3? actions,
+        TopAppBarScrollBehavior? scrollBehavior,
         int         defaults,
         IComposer   composer);
 
@@ -2973,6 +3065,7 @@ internal static partial class ComposeBridges
         IModifier?  modifier,
         IFunction2? navigationIcon,
         IFunction3? actions,
+        TopAppBarScrollBehavior? scrollBehavior,
         int         defaults,
         IComposer   composer);
 
@@ -3003,6 +3096,7 @@ internal static partial class ComposeBridges
         IFunction2? subtitle,
         IFunction2? navigationIcon,
         IFunction3? actions,
+        TopAppBarScrollBehavior? scrollBehavior,
         int         defaults,
         IComposer   composer);
 
@@ -3018,6 +3112,7 @@ internal static partial class ComposeBridges
         IFunction2? subtitle,
         IFunction2? navigationIcon,
         IFunction3? actions,
+        TopAppBarScrollBehavior? scrollBehavior,
         int         defaults,
         IComposer   composer);
 

@@ -38,6 +38,7 @@ internal static class ComposeReferenceTypes
         "ComposeNet.Shape",
         "ComposeNet.Alignment",
         "ComposeNet.ContentScale",
+        "ComposeNet.TopAppBarScrollBehavior",
     };
 
     /// <summary>
