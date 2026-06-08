@@ -444,7 +444,7 @@ ComposeNet.LazyColumn<T>.ContentPadding.set -> void
 ComposeNet.LazyColumn<T>.LazyColumn(System.Collections.Generic.IReadOnlyList<T>! items, System.Func<T, ComposeNet.ComposableNode!>! itemContent) -> void
 ComposeNet.LazyColumn<T>.ReverseLayout.get -> bool
 ComposeNet.LazyColumn<T>.ReverseLayout.set -> void
-ComposeNet.LazyColumn<T>.State.get -> AndroidX.Compose.Foundation.Lazy.LazyListState?
+ComposeNet.LazyColumn<T>.State.get -> ComposeNet.LazyListState?
 ComposeNet.LazyColumn<T>.State.set -> void
 ComposeNet.LazyHorizontalGrid<T>
 ComposeNet.LazyHorizontalGrid<T>.LazyHorizontalGrid(AndroidX.Compose.Foundation.Lazy.Grid.IGridCells! rows, System.Collections.Generic.IReadOnlyList<T>! items, System.Func<T, ComposeNet.ComposableNode!>! itemContent) -> void
@@ -458,7 +458,18 @@ ComposeNet.LazyRow<T>
 ComposeNet.LazyRow<T>.HorizontalArrangement.get -> ComposeNet.Arrangement?
 ComposeNet.LazyRow<T>.HorizontalArrangement.set -> void
 ComposeNet.LazyRow<T>.LazyRow(System.Collections.Generic.IReadOnlyList<T>! items, System.Func<T, ComposeNet.ComposableNode!>! itemContent) -> void
-ComposeNet.LazyRow<T>.State.get -> AndroidX.Compose.Foundation.Lazy.LazyListState?
+ComposeNet.LazyListState
+ComposeNet.LazyListState.AnimateScrollToItemAsync(int index, int scrollOffset = 0, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+ComposeNet.LazyListState.CanScrollBackward.get -> bool
+ComposeNet.LazyListState.CanScrollForward.get -> bool
+ComposeNet.LazyListState.FirstVisibleItemIndex.get -> int
+ComposeNet.LazyListState.FirstVisibleItemScrollOffset.get -> int
+ComposeNet.LazyListState.IsScrollInProgress.get -> bool
+ComposeNet.LazyListState.LastScrolledBackward.get -> bool
+ComposeNet.LazyListState.LastScrolledForward.get -> bool
+ComposeNet.LazyListState.LazyListState(int initialFirstVisibleItemIndex = 0, int initialFirstVisibleItemScrollOffset = 0) -> void
+ComposeNet.LazyListState.ScrollToItemAsync(int index, int scrollOffset = 0, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+ComposeNet.LazyRow<T>.State.get -> ComposeNet.LazyListState?
 ComposeNet.LazyRow<T>.State.set -> void
 ComposeNet.LazyVerticalGrid<T>
 ComposeNet.LazyVerticalGrid<T>.LazyVerticalGrid(AndroidX.Compose.Foundation.Lazy.Grid.IGridCells! columns, System.Collections.Generic.IReadOnlyList<T>! items, System.Func<T, ComposeNet.ComposableNode!>! itemContent) -> void
@@ -1346,6 +1357,7 @@ static ComposeNet.Compose.Remember<T>(System.Func<T>! factory, object? key1, obj
 static ComposeNet.Compose.Remember<T>(System.Func<T>! factory, object? key1, object? key2, object? key3, int line = 0, string! file = "") -> T
 static ComposeNet.Compose.RememberDraggableState(System.Action<float>! onDelta, int line = 0, string! file = "") -> ComposeNet.DraggableState!
 static ComposeNet.Compose.RememberKeyed<T>(System.Func<T>! factory, object?[]! keys, int line = 0, string! file = "") -> T
+static ComposeNet.Compose.RememberLazyListState(int initialFirstVisibleItemIndex = 0, int initialFirstVisibleItemScrollOffset = 0, int line = 0, string! file = "") -> ComposeNet.LazyListState!
 static ComposeNet.Compose.RememberSaveable<T>(System.Func<T>! factory, int line = 0, string! file = "") -> T
 static ComposeNet.Compose.RememberSaveable<T>(System.Func<T>! factory, object? key1, int line = 0, string! file = "") -> T
 static ComposeNet.Compose.RememberSaveable<T>(System.Func<T>! factory, object? key1, object? key2, int line = 0, string! file = "") -> T

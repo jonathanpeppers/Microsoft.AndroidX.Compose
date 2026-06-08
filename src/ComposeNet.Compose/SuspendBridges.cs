@@ -228,6 +228,81 @@ internal static partial class ComposeBridges
         return s_androidUiDispatcherMain_handle;
     }
 
+    static System.IntPtr s_lazyListStateScrollToItem_class;
+    static System.IntPtr s_lazyListStateScrollToItem_method;
+    static System.IntPtr s_lazyListStateAnimateScrollToItem_class;
+    static System.IntPtr s_lazyListStateAnimateScrollToItem_method;
+
+    // androidx.compose.foundation.lazy.LazyListState
+    //     .scrollToItem(int index, int scrollOffset, Continuation): Object
+    //
+    // The three-arg suspend overload is bindable (returns
+    // Java.Lang.Object), but we call it via raw JNI so the returned
+    // handle stays as a plain IntPtr — SuspendBridge needs raw-handle
+    // semantics to avoid the peer-cache pitfall around
+    // COROUTINE_SUSPENDED. Same pattern as ScrollStateScrollTo.
+    internal static unsafe System.IntPtr LazyListStateScrollToItem(
+        System.IntPtr state, int index, int scrollOffset, SuspendContinuation cont)
+    {
+        if (s_lazyListStateScrollToItem_method == System.IntPtr.Zero)
+        {
+            s_lazyListStateScrollToItem_class = JNIEnv.FindClass(
+                "androidx/compose/foundation/lazy/LazyListState");
+            s_lazyListStateScrollToItem_method = JNIEnv.GetMethodID(
+                s_lazyListStateScrollToItem_class,
+                "scrollToItem",
+                "(IILkotlin/coroutines/Continuation;)Ljava/lang/Object;");
+        }
+
+        try
+        {
+            JValue* args = stackalloc JValue[3];
+            args[0] = new JValue(index);
+            args[1] = new JValue(scrollOffset);
+            args[2] = new JValue(cont.Handle);
+            return JNIEnv.CallObjectMethod(state, s_lazyListStateScrollToItem_method, args);
+        }
+        finally
+        {
+            System.GC.KeepAlive(cont);
+        }
+    }
+
+    // androidx.compose.foundation.lazy.LazyListState
+    //     .animateScrollToItem(int index, int scrollOffset, Continuation): Object
+    //
+    // Animation suspend method. Requires a MonotonicFrameClock in the
+    // continuation context (calls `withFrameNanos` internally) — that
+    // is supplied by SuspendContinuation.Context which returns
+    // AndroidUiDispatcher.Main. Same raw-handle pattern as
+    // ScrollStateAnimateScrollTo / ScrollStateScrollTo.
+    internal static unsafe System.IntPtr LazyListStateAnimateScrollToItem(
+        System.IntPtr state, int index, int scrollOffset, SuspendContinuation cont)
+    {
+        if (s_lazyListStateAnimateScrollToItem_method == System.IntPtr.Zero)
+        {
+            s_lazyListStateAnimateScrollToItem_class = JNIEnv.FindClass(
+                "androidx/compose/foundation/lazy/LazyListState");
+            s_lazyListStateAnimateScrollToItem_method = JNIEnv.GetMethodID(
+                s_lazyListStateAnimateScrollToItem_class,
+                "animateScrollToItem",
+                "(IILkotlin/coroutines/Continuation;)Ljava/lang/Object;");
+        }
+
+        try
+        {
+            JValue* args = stackalloc JValue[3];
+            args[0] = new JValue(index);
+            args[1] = new JValue(scrollOffset);
+            args[2] = new JValue(cont.Handle);
+            return JNIEnv.CallObjectMethod(state, s_lazyListStateAnimateScrollToItem_method, args);
+        }
+        finally
+        {
+            System.GC.KeepAlive(cont);
+        }
+    }
+
     static System.IntPtr s_detectTapGestures_class;
     static System.IntPtr s_detectTapGestures_method;
 

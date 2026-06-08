@@ -16,8 +16,6 @@ namespace ComposeNet.Samples.Jetchat;
 /// </summary>
 internal static class FakeData
 {
-    // Multi-codepoint Android-13 melting-face + face-in-clouds sequence
-    // — exercises the formatter's grapheme handling.
     const string MeltingFace  = "\uD83E\uDEE0";
     const string FaceInClouds = "\uD83D\uDE36\u200D\uD83C\uDF2B\uFE0F";
     const string Flamingo     = "\uD83E\uDDA9";
@@ -26,20 +24,14 @@ internal static class FakeData
 
     public static List<Message> InitialMessages() => new()
     {
-        // Index 0 — newest. With reverseLayout = true this sits at the
-        // visual bottom of the list.
         new Message("me",              "Take a look at this!",                                                                                                                                  "8:07 PM"),
         new Message("me",              $"Appreciate it {PinkHeart}",                                                                                                                            "8:06 PM"),
-        // The "Today" day-header is emitted just ABOVE this entry
-        // (index 2), so everything from here to the bottom is "today".
         new Message("Taylor Brooks",   "Everything composable carries over.",                                                                                                                   "8:05 PM"),
         new Message("Taylor Brooks",   "@aliconors give `Flow.collectAsStateWithLifecycle()` a try.",                                                                                           "8:05 PM"),
         new Message("John Glenn",      $"Also fairly new to Compose {Flamingo} — the JetNews sample tracks current releases and shows a clean async-loading pattern. {PointRight} https://goo.gle/jetnews", "8:04 PM"),
         new Message("me",              $"Brand new to Compose: every tutorial I find for streaming data into composables looks out of date {MeltingFace} {FaceInClouds}. What's the current recommended approach?", "8:03 PM"),
         new Message("Shangeeth Sivan", "Has anyone tried Glance Widgets yet? It's the newer way to build home-screen widgets on Android.",                                                       "8:08 PM"),
         new Message("Taylor Brooks",   "Hadn't heard of them — when did Glance show up in the platform?",                                                                                        "8:10 PM"),
-        // Index 8 — oldest. The "20 Aug" day-header sits just above
-        // this row at the top of the visual list.
         new Message("John Glenn",      "Pretty recent addition from what I can tell.",                                                                                                          "8:12 PM"),
     };
 }

@@ -82,9 +82,10 @@ dotnet build samples/Jetchat -t:Run
   extra 4 dp of top padding (8 dp first-in-chain vs 4 dp within a
   streak). Because we use `reverseLayout = true` the streak walk
   mirrors upstream's `isLastMessageByAuthor` directly.
-- **`isUserMe` right-alignment** for the local user via
-  `new Row(Arrangement.End)` — distinct primary-colored bubble, no
-  avatar tile, pushed to the right edge.
+- **`isUserMe` differentiation** for the local user via a primary-
+  colored bubble. Layout structure (avatar+spacer + author+text
+  column) is identical for me vs others — same as upstream's
+  `Message`/`AuthorAndTextMessage` row, no right-alignment.
 - A pinned input row at the bottom in a `Surface(tonalElevation=2)`:
   a `TextField` that grows to fill available width via
   `Modifier.Weight(1f)`, plus a `Send` `TextButton` whose label
@@ -205,3 +206,44 @@ The sample mirrors disabled-state visuals by flipping the label
 color from `Primary` to `OnSurfaceVariant` when the input is
 whitespace, and the `Send` handler early-returns on
 `IsNullOrWhiteSpace`.
+
+### Layout and styling decisions vs upstream
+
+Where the port intentionally takes a different path from the Kotlin
+original:
+
+- **Search / Info top-bar icons.** Upstream uses bare `Icon`
+  composables with `.clickable` (not `IconButton`) so the touch
+  target hugs the icon's 24 dp height. The port uses the same
+  shape — `new Icon(... ) { Modifier.Clickable(...).Padding(...).Height(24) }`
+  — to keep the visuals identical.
+- **Avatar double border.** Upstream's `.border(1.5dp, accent,
+  CircleShape).border(3dp, surface, CircleShape).clip(CircleShape)`
+  composes outside-in: the 3 dp surface ring sits between the
+  1.5 dp accent ring and any surrounding background. The port
+  uses the same modifier chain.
+- **Same chat-bubble silhouette** — upstream's
+  `RoundedCornerShape(4, 20, 20, 20)` is the single source of
+  truth and applies to both `me` and other-author bubbles. Only
+  the fill flips (`primary` ↔ `surfaceVariant`).
+- **Inside-streak gap is 4 dp; between-author gap is 8 dp** —
+  matches upstream's per-author `Spacer` heights.
+- **Selector icon highlight.** Upstream paints a 14 dp rounded-
+  square background in `LocalContentColor.current` when an input
+  selector is selected; the port's enclosing `Surface` sets
+  `contentColor = scheme.secondary`, so the highlight matches.
+- **`FunctionalityNotAvailable` collapse.** Upstream has two
+  variants — an `AlertDialog` (DM selector) and a full panel
+  ("Functionality currently not available / Grab a beverage and
+  check back later!"). The port collapses both into one panel for
+  the expanded-selector case; the dialog variant still fires from
+  the search/info icons.
+- **`ModalDrawerSheet` background.** Upstream defaults to
+  `surfaceContainerLow`; this port's facade defaults to
+  `secondaryContainer`, which in Jetchat's dark palette is a
+  saturated blue. The drawer pins to `surface` to match upstream.
+- **Drawer divider alpha.** Upstream tints with
+  `onSurface.copy(alpha = 0.12f)`; the facade layer doesn't model
+  alpha-blended ARGB yet, so the divider falls back to the
+  binding default. Tracked alongside the other parity gaps in
+  *What's still omitted*.

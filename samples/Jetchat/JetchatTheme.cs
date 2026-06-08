@@ -24,8 +24,6 @@ namespace ComposeNet.Samples.Jetchat;
 /// </remarks>
 public static class JetchatTheme
 {
-    // Palette tokens — verbatim from upstream Jetchat theme/Color.kt.
-
     static readonly Color Blue10 = Color.FromHex("#000F5E");
     static readonly Color Blue20 = Color.FromHex("#001E92");
     static readonly Color Blue30 = Color.FromHex("#002ECC");
