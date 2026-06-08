@@ -22,8 +22,8 @@ namespace ComposeNet;
 /// Set <c>ScrollBehavior</c> to a value from
 /// <see cref="TopAppBarDefaults"/> to make the bar elevate / collapse
 /// in response to scrolling. The same behavior's
-/// <see cref="TopAppBarScrollBehavior.NestedScrollConnection"/> must
+/// <see cref="AndroidX.Compose.Material3.ITopAppBarScrollBehavior.NestedScrollConnection"/> must
 /// be wired to the scrolling container via
-/// <see cref="Modifier.NestedScroll(NestedScrollConnection)"/>.
+/// <see cref="Modifier.NestedScroll(AndroidX.Compose.UI.Input.NestedScroll.INestedScrollConnection)"/>.
 /// </summary>
 public sealed partial class TopAppBar;

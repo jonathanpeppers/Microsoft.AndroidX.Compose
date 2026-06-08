@@ -466,17 +466,18 @@ public sealed class Modifier
     /// the parent can consume some of them before the container does.
     /// </summary>
     /// <param name="connection">
-    /// The connection to forward scroll deltas to. Pair with a
-    /// <see cref="TopAppBarScrollBehavior"/> by passing
-    /// <see cref="TopAppBarScrollBehavior.NestedScrollConnection"/>;
+    /// The connection to forward scroll deltas to. Pair with an
+    /// <see cref="AndroidX.Compose.Material3.ITopAppBarScrollBehavior"/>
+    /// by passing
+    /// <see cref="AndroidX.Compose.Material3.ITopAppBarScrollBehavior.NestedScrollConnection"/>;
     /// the scroll behavior is also set as the bar's
     /// <c>ScrollBehavior</c> property so both sides agree on the
-    /// shared <c>TopAppBarState</c>.
+    /// shared <see cref="AndroidX.Compose.Material3.TopAppBarState"/>.
     /// </param>
-    public Modifier NestedScroll(NestedScrollConnection connection)
+    public Modifier NestedScroll(AndroidX.Compose.UI.Input.NestedScroll.INestedScrollConnection connection)
     {
         System.ArgumentNullException.ThrowIfNull(connection);
-        IntPtr handle = connection.Handle;
+        IntPtr handle = ((Java.Lang.Object)connection).Handle;
         return Append(curr =>
         {
             try

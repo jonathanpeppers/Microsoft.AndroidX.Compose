@@ -75,7 +75,7 @@ ComposeNet.CenterAlignedTopAppBar.Actions.set -> void
 ComposeNet.CenterAlignedTopAppBar.CenterAlignedTopAppBar() -> void
 ComposeNet.CenterAlignedTopAppBar.NavigationIcon.get -> ComposeNet.ComposableNode?
 ComposeNet.CenterAlignedTopAppBar.NavigationIcon.set -> void
-ComposeNet.CenterAlignedTopAppBar.ScrollBehavior.get -> ComposeNet.TopAppBarScrollBehavior?
+ComposeNet.CenterAlignedTopAppBar.ScrollBehavior.get -> AndroidX.Compose.Material3.ITopAppBarScrollBehavior?
 ComposeNet.CenterAlignedTopAppBar.ScrollBehavior.set -> void
 ComposeNet.CenterAlignedTopAppBar.Title.get -> ComposeNet.ComposableNode?
 ComposeNet.CenterAlignedTopAppBar.Title.set -> void
@@ -418,7 +418,7 @@ ComposeNet.LargeFlexibleTopAppBar.Actions.set -> void
 ComposeNet.LargeFlexibleTopAppBar.LargeFlexibleTopAppBar() -> void
 ComposeNet.LargeFlexibleTopAppBar.NavigationIcon.get -> ComposeNet.ComposableNode?
 ComposeNet.LargeFlexibleTopAppBar.NavigationIcon.set -> void
-ComposeNet.LargeFlexibleTopAppBar.ScrollBehavior.get -> ComposeNet.TopAppBarScrollBehavior?
+ComposeNet.LargeFlexibleTopAppBar.ScrollBehavior.get -> AndroidX.Compose.Material3.ITopAppBarScrollBehavior?
 ComposeNet.LargeFlexibleTopAppBar.ScrollBehavior.set -> void
 ComposeNet.LargeFlexibleTopAppBar.Subtitle.get -> ComposeNet.ComposableNode?
 ComposeNet.LargeFlexibleTopAppBar.Subtitle.set -> void
@@ -432,7 +432,7 @@ ComposeNet.LargeTopAppBar.Actions.set -> void
 ComposeNet.LargeTopAppBar.LargeTopAppBar() -> void
 ComposeNet.LargeTopAppBar.NavigationIcon.get -> ComposeNet.ComposableNode?
 ComposeNet.LargeTopAppBar.NavigationIcon.set -> void
-ComposeNet.LargeTopAppBar.ScrollBehavior.get -> ComposeNet.TopAppBarScrollBehavior?
+ComposeNet.LargeTopAppBar.ScrollBehavior.get -> AndroidX.Compose.Material3.ITopAppBarScrollBehavior?
 ComposeNet.LargeTopAppBar.ScrollBehavior.set -> void
 ComposeNet.LargeTopAppBar.Subtitle.get -> ComposeNet.ComposableNode?
 ComposeNet.LargeTopAppBar.Subtitle.set -> void
@@ -515,7 +515,7 @@ ComposeNet.MediumFlexibleTopAppBar.Actions.set -> void
 ComposeNet.MediumFlexibleTopAppBar.MediumFlexibleTopAppBar() -> void
 ComposeNet.MediumFlexibleTopAppBar.NavigationIcon.get -> ComposeNet.ComposableNode?
 ComposeNet.MediumFlexibleTopAppBar.NavigationIcon.set -> void
-ComposeNet.MediumFlexibleTopAppBar.ScrollBehavior.get -> ComposeNet.TopAppBarScrollBehavior?
+ComposeNet.MediumFlexibleTopAppBar.ScrollBehavior.get -> AndroidX.Compose.Material3.ITopAppBarScrollBehavior?
 ComposeNet.MediumFlexibleTopAppBar.ScrollBehavior.set -> void
 ComposeNet.MediumFlexibleTopAppBar.Subtitle.get -> ComposeNet.ComposableNode?
 ComposeNet.MediumFlexibleTopAppBar.Subtitle.set -> void
@@ -527,7 +527,7 @@ ComposeNet.MediumTopAppBar.Actions.set -> void
 ComposeNet.MediumTopAppBar.MediumTopAppBar() -> void
 ComposeNet.MediumTopAppBar.NavigationIcon.get -> ComposeNet.ComposableNode?
 ComposeNet.MediumTopAppBar.NavigationIcon.set -> void
-ComposeNet.MediumTopAppBar.ScrollBehavior.get -> ComposeNet.TopAppBarScrollBehavior?
+ComposeNet.MediumTopAppBar.ScrollBehavior.get -> AndroidX.Compose.Material3.ITopAppBarScrollBehavior?
 ComposeNet.MediumTopAppBar.ScrollBehavior.set -> void
 ComposeNet.MediumTopAppBar.Subtitle.get -> ComposeNet.ComposableNode?
 ComposeNet.MediumTopAppBar.Subtitle.set -> void
@@ -594,7 +594,7 @@ ComposeNet.Modifier.MandatorySystemGesturesPadding() -> ComposeNet.Modifier!
 ComposeNet.Modifier.MatchParentSize() -> ComposeNet.Modifier!
 ComposeNet.Modifier.MinimumInteractiveComponentSize() -> ComposeNet.Modifier!
 ComposeNet.Modifier.NavigationBarsPadding() -> ComposeNet.Modifier!
-ComposeNet.Modifier.NestedScroll(ComposeNet.NestedScrollConnection! connection) -> ComposeNet.Modifier!
+ComposeNet.Modifier.NestedScroll(AndroidX.Compose.UI.Input.NestedScroll.INestedScrollConnection! connection) -> ComposeNet.Modifier!
 ComposeNet.Modifier.Offset(ComposeNet.Dp? x = null, ComposeNet.Dp? y = null) -> ComposeNet.Modifier!
 ComposeNet.Modifier.OnFocusChanged(System.Action<ComposeNet.FocusState>! onFocusChanged) -> ComposeNet.Modifier!
 ComposeNet.Modifier.Padding(ComposeNet.Dp all) -> ComposeNet.Modifier!
@@ -731,7 +731,6 @@ ComposeNet.NavOptions.PopUpToSaveState.get -> bool
 ComposeNet.NavOptions.PopUpToSaveState.set -> void
 ComposeNet.NavOptions.RestoreState.get -> bool
 ComposeNet.NavOptions.RestoreState.set -> void
-ComposeNet.NestedScrollConnection
 ComposeNet.Offset
 ComposeNet.Offset.Equals(ComposeNet.Offset other) -> bool
 ComposeNet.Offset.Offset() -> void
@@ -1095,7 +1094,7 @@ ComposeNet.TopAppBar.Actions.get -> ComposeNet.ComposableNode?
 ComposeNet.TopAppBar.Actions.set -> void
 ComposeNet.TopAppBar.NavigationIcon.get -> ComposeNet.ComposableNode?
 ComposeNet.TopAppBar.NavigationIcon.set -> void
-ComposeNet.TopAppBar.ScrollBehavior.get -> ComposeNet.TopAppBarScrollBehavior?
+ComposeNet.TopAppBar.ScrollBehavior.get -> AndroidX.Compose.Material3.ITopAppBarScrollBehavior?
 ComposeNet.TopAppBar.ScrollBehavior.set -> void
 ComposeNet.TopAppBar.Subtitle.get -> ComposeNet.ComposableNode?
 ComposeNet.TopAppBar.Subtitle.set -> void
@@ -1103,8 +1102,6 @@ ComposeNet.TopAppBar.Title.get -> ComposeNet.ComposableNode?
 ComposeNet.TopAppBar.Title.set -> void
 ComposeNet.TopAppBar.TopAppBar() -> void
 ComposeNet.TopAppBarDefaults
-ComposeNet.TopAppBarScrollBehavior
-ComposeNet.TopAppBarScrollBehavior.NestedScrollConnection.get -> ComposeNet.NestedScrollConnection!
 ComposeNet.TopSearchBar
 ComposeNet.TopSearchBar.InputField.get -> ComposeNet.ComposableNode?
 ComposeNet.TopSearchBar.InputField.set -> void
@@ -1751,9 +1748,9 @@ static ComposeNet.TextOverflow.operator ==(ComposeNet.TextOverflow left, Compose
 static ComposeNet.TextOverflow.Pack(ComposeNet.TextOverflow? value) -> int
 static ComposeNet.TextOverflow.StartEllipsis.get -> ComposeNet.TextOverflow
 static ComposeNet.TextOverflow.Visible.get -> ComposeNet.TextOverflow
-static ComposeNet.TopAppBarDefaults.EnterAlwaysScrollBehavior(AndroidX.Compose.Material3.TopAppBarState! state, int line = 0, string! file = "") -> ComposeNet.TopAppBarScrollBehavior!
-static ComposeNet.TopAppBarDefaults.ExitUntilCollapsedScrollBehavior(AndroidX.Compose.Material3.TopAppBarState! state, int line = 0, string! file = "") -> ComposeNet.TopAppBarScrollBehavior!
-static ComposeNet.TopAppBarDefaults.PinnedScrollBehavior(AndroidX.Compose.Material3.TopAppBarState! state, int line = 0, string! file = "") -> ComposeNet.TopAppBarScrollBehavior!
+static ComposeNet.TopAppBarDefaults.EnterAlwaysScrollBehavior(AndroidX.Compose.Material3.TopAppBarState! state, int line = 0, string! file = "") -> AndroidX.Compose.Material3.ITopAppBarScrollBehavior!
+static ComposeNet.TopAppBarDefaults.ExitUntilCollapsedScrollBehavior(AndroidX.Compose.Material3.TopAppBarState! state, int line = 0, string! file = "") -> AndroidX.Compose.Material3.ITopAppBarScrollBehavior!
+static ComposeNet.TopAppBarDefaults.PinnedScrollBehavior(AndroidX.Compose.Material3.TopAppBarState! state, int line = 0, string! file = "") -> AndroidX.Compose.Material3.ITopAppBarScrollBehavior!
 static ComposeNet.TransformOrigin.Center.get -> long
 static ComposeNet.TransformOrigin.Pack(float pivotFractionX, float pivotFractionY) -> long
 static readonly ComposeNet.Locals.LocalColorScheme -> ComposeNet.CompositionLocal<AndroidX.Compose.Material3.ColorScheme!>!

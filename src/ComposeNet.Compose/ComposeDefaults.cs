@@ -1063,13 +1063,6 @@ using ComposeNet;
 // Kotlin allocates a new dispatcher internally).
 [assembly: ComposeDefaults("ModifierNestedScrollDefault", "!connection", "dispatcher")]
 
-// androidx.compose.material3.TopAppBarDefaults.pinnedScrollBehavior —
-// instance method on the TopAppBarDefaults INSTANCE singleton. 2 user
-// params: state (always provided by C# wrapper), canScroll (defaultable
-// `() -> true`).
-[assembly: ComposeDefaults("TopAppBarPinnedScrollBehaviorDefault",
-    "!state", "canScroll")]
-
 // androidx.compose.material3.TopAppBarDefaults.enterAlwaysScrollBehavior —
 // instance method on the INSTANCE singleton. 4 user params: state
 // (always provided), canScroll (defaultable), snapAnimationSpec
