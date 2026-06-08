@@ -3338,6 +3338,42 @@ internal static partial class ComposeBridges
             p7:                0,
             _changed:          defaults);
 
+    // androidx.compose.foundation.text.selection.SelectionContainerKt.SelectionContainer —
+    // `(modifier=Modifier, content)`. The binder exposes the Kt class
+    // and the 5-arg `_composer:/p3:/_changed:` overload directly, so
+    // this is a Phase 8 wrapper-passthrough. The auto-mask clears
+    // SelectionContainerDefault.Modifier when the caller supplies one.
+    [ComposeFacade(Defaults = typeof(SelectionContainerDefault))]
+    public static partial void SelectionContainer(
+        IModifier? modifier,
+        IFunction2 content,
+        int        defaults,
+        IComposer  composer);
+
+    public static partial void SelectionContainer(IModifier? modifier, IFunction2 content, int defaults, IComposer composer)
+        => AndroidX.Compose.Foundation.Text.Selection.SelectionContainerKt.SelectionContainer(
+            modifier:  modifier,
+            content:   content,
+            _composer: composer,
+            p3:        0,
+            _changed:  defaults);
+
+    // androidx.compose.foundation.text.selection.SelectionContainerKt.DisableSelection —
+    // `(content)`. No optional params → no `$default` slot, so no
+    // `Defaults` enum and no `int defaults` user param (mirrors the
+    // Spacer wrapper above). Nests inside a SelectionContainer to opt
+    // a subtree out of selection.
+    [ComposeFacade]
+    public static partial void DisableSelection(
+        IFunction2 content,
+        IComposer  composer);
+
+    public static partial void DisableSelection(IFunction2 content, IComposer composer)
+        => AndroidX.Compose.Foundation.Text.Selection.SelectionContainerKt.DisableSelection(
+            content:   content,
+            _composer: composer,
+            _changed:  0);
+
     // Tracking dotnet/android-libraries#1444: the binder strips every
     // @Composable static from `Xamarin.AndroidX.Navigation.Compose`'s
     // *Kt wrapper classes (NavHostKt, NavGraphBuilderKt,
