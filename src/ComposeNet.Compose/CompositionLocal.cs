@@ -138,32 +138,47 @@ public sealed class CompositionLocal<T>
     public ProvidedValue Provides(T value) =>
         new(_peer.Provides(ToJava(value)!));
 
-    static Java.Lang.Object? ToJava(T value) => value switch
+    // Cached per-T: when T is Nullable<U> (e.g. long?, int?, bool?), this
+    // is typeof(U) so the primitive dispatch in FromJava/ToJava treats
+    // `long?` the same as `long`. For all other T, it's just typeof(T).
+    static readonly Type s_effectiveType = Nullable.GetUnderlyingType(typeof(T)) ?? typeof(T);
+
+    static Java.Lang.Object? ToJava(T value)
     {
-        null               => null,
-        Java.Lang.Object o => o,
-        string s           => new Java.Lang.String(s),
-        bool b             => Java.Lang.Boolean.ValueOf(b),
-        char c             => Java.Lang.Character.ValueOf(c),
-        sbyte sb           => Java.Lang.Byte.ValueOf(sb),
-        byte by            => Java.Lang.Short.ValueOf((short)by),
-        short sh           => Java.Lang.Short.ValueOf(sh),
-        ushort us          => Java.Lang.Integer.ValueOf(us),
-        int i              => Java.Lang.Integer.ValueOf(i),
-        uint ui            => Java.Lang.Long.ValueOf(ui),
-        long l             => Java.Lang.Long.ValueOf(l),
-        ulong ul           => Java.Lang.Long.ValueOf(unchecked((long)ul)),
-        float f            => Java.Lang.Float.ValueOf(f),
-        double d           => Java.Lang.Double.ValueOf(d),
-        _                  => new ManagedBox(value),
-    };
+        if (value is null) return null;
+        // Boxing a non-null Nullable<U> to object yields a boxed U, not a
+        // boxed Nullable<U>, so one switch handles both T == long and
+        // T == long?.
+        object boxed = value!;
+        return boxed switch
+        {
+            Java.Lang.Object o => o,
+            string s           => new Java.Lang.String(s),
+            bool b             => Java.Lang.Boolean.ValueOf(b),
+            char c             => Java.Lang.Character.ValueOf(c),
+            sbyte sb           => Java.Lang.Byte.ValueOf(sb),
+            byte by            => Java.Lang.Short.ValueOf((short)by),
+            short sh           => Java.Lang.Short.ValueOf(sh),
+            ushort us          => Java.Lang.Integer.ValueOf(us),
+            int i              => Java.Lang.Integer.ValueOf(i),
+            uint ui            => Java.Lang.Long.ValueOf(ui),
+            long l             => Java.Lang.Long.ValueOf(l),
+            ulong ul           => Java.Lang.Long.ValueOf(unchecked((long)ul)),
+            float f            => Java.Lang.Float.ValueOf(f),
+            double d           => Java.Lang.Double.ValueOf(d),
+            _                  => new ManagedBox(boxed),
+        };
+    }
 
     static T FromJava(Java.Lang.Object? value)
     {
         if (value is null) return default!;
         if (value is ManagedBox box) return (T)box.Value!;
         if (value is T t) return t;
-        var type = typeof(T);
+        // Use the underlying type when T is Nullable<U> so `long?`
+        // dispatches into the same branch as `long`. `(T)(object)5L`
+        // unboxes directly into Nullable<long> for T == long?.
+        var type = s_effectiveType;
         if (type == typeof(string))  return (T)(object)value.ToString()!;
         if (type == typeof(bool))    return (T)(object)((Java.Lang.Boolean)value).BooleanValue();
         if (type == typeof(char))    return (T)(object)((Java.Lang.Character)value).CharValue();
