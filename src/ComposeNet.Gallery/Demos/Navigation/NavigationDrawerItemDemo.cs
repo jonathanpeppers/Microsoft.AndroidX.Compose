@@ -16,45 +16,35 @@ public static class NavigationDrawerItemDemo
         Build:       () =>
         {
             var selected = Compose.Remember(() => new MutableNumberState<int>(0));
-            return new Box
+            string[] labels = { "Inbox", "Outbox", "Favorites", "Trash" };
+            return new PermanentDrawerSheet
             {
-                Modifier.Companion.Height(360),
-                new PermanentNavigationDrawer
+                new Text("Mail") { Modifier = Modifier.Companion.Padding(horizontal: 28, vertical: 16) },
+                new NavigationDrawerItem(selected: selected.Value == 0, onClick: () => selected.Value = 0)
                 {
-                    Drawer = new PermanentDrawerSheet
-                    {
-                        new Text("Mail"),
-                        new Spacer { Modifier = Modifier.Companion.Height(8) },
-                        new NavigationDrawerItem(selected: selected.Value == 0, onClick: () => selected.Value = 0)
-                        {
-                            Label = new Text("Inbox"),
-                            Icon  = new Text("📥"),
-                            Badge = new Text("24"),
-                        },
-                        new NavigationDrawerItem(selected: selected.Value == 1, onClick: () => selected.Value = 1)
-                        {
-                            Label = new Text("Outbox"),
-                            Icon  = new Text("📤"),
-                        },
-                        new NavigationDrawerItem(selected: selected.Value == 2, onClick: () => selected.Value = 2)
-                        {
-                            Label = new Text("Favorites"),
-                            Icon  = new Text("⭐"),
-                            Badge = new Text("3"),
-                        },
-                        new NavigationDrawerItem(selected: selected.Value == 3, onClick: () => selected.Value = 3)
-                        {
-                            Label = new Text("Trash"),
-                            Icon  = new Text("🗑️"),
-                        },
-                    },
-                    Content = new Column
-                    {
-                        Modifier.Companion.Padding(16),
-                        new Text("Tap an item on the left."),
-                        new Spacer { Modifier = Modifier.Companion.Height(8) },
-                        new Text($"Selected index: {selected}"),
-                    },
+                    Label = new Text("Inbox"),
+                    Icon  = new Text("📥"),
+                    Badge = new Text("24"),
+                },
+                new NavigationDrawerItem(selected: selected.Value == 1, onClick: () => selected.Value = 1)
+                {
+                    Label = new Text("Outbox"),
+                    Icon  = new Text("📤"),
+                },
+                new NavigationDrawerItem(selected: selected.Value == 2, onClick: () => selected.Value = 2)
+                {
+                    Label = new Text("Favorites"),
+                    Icon  = new Text("⭐"),
+                    Badge = new Text("3"),
+                },
+                new NavigationDrawerItem(selected: selected.Value == 3, onClick: () => selected.Value = 3)
+                {
+                    Label = new Text("Trash"),
+                    Icon  = new Text("🗑️"),
+                },
+                new Text($"Selected: {labels[selected.Value]}")
+                {
+                    Modifier = Modifier.Companion.Padding(horizontal: 28, vertical: 16),
                 },
             };
         });
