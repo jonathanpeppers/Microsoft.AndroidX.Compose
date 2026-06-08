@@ -416,6 +416,16 @@ using ComposeNet;
     "!selected", "!onClick", "!icon", "modifier", "enabled", "label",
     "alwaysShowLabel", "colors", "interactionSource")]
 
+// androidx.compose.material3.NavigationDrawerKt.NavigationDrawerItem:
+// 9 user params (no extension receiver). Bits 0 = label, 1 = selected,
+// 2 = onClick are required and always provided by the caller; the
+// optional Icon and Badge slots are toggled per-call by
+// NavigationDrawerItem.Render via the auto-mask. shape, colors, and
+// interactionSource stay defaulted (Kotlin defaults applied).
+[assembly: ComposeDefaults("NavigationDrawerItemDefault",
+    "!label", "!selected", "!onClick", "modifier", "icon", "badge",
+    "shape", "colors", "interactionSource")]
+
 // androidx.compose.foundation.BackgroundKt.background-bw27NRU$default —
 // non-@Composable Modifier extension. Mangled because Color is a
 // @JvmInline value class (ULong). Bit 0 = color (always supplied by
