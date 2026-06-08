@@ -1,9 +1,3 @@
-using System;
-using System.Linq;
-using AndroidX.Compose.Runtime;
-using ComposeNet.Gallery.Registry;
-using ComposeNet.Gallery.Screens;
-
 namespace ComposeNet.Gallery;
 
 /// <summary>

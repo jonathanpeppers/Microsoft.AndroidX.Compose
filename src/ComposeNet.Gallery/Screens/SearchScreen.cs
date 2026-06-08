@@ -76,9 +76,9 @@ public sealed class SearchScreen : ComposableNode
         // ExpandedFullScreenSearchBar requires a sibling SearchBar in
         // the same composition that shares the state — without it the
         // popup has no anchor and the input field never gets focus
-        // when the route opens. Render an invisible-feeling collapsed
-        // SearchBar inside a Box so it still takes layout but stays
-        // off the user's mind.
+        // when the route opens. Render the collapsed SearchBar as the
+        // first child of this Column so it still takes layout but
+        // stays off the user's mind.
         new Column
         {
             Modifier.Companion.FillMaxSize(),
