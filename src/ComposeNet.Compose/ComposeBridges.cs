@@ -1406,7 +1406,7 @@ internal static partial class ComposeBridges
         JvmName   = "ModalDrawerSheet-afqeVBk",
         Signature = DrawerSheetSig,
         Defaults  = typeof(DrawerSheetDefault))]
-    [ComposeFacade(DefaultColorFromTheme = "secondaryContainer")]
+    [ComposeFacade(DefaultColorFromTheme = "surfaceContainerLow")]
     public static partial void ModalDrawerSheet(IFunction3 content, long drawerContainerColor, IComposer composer);
 
     [ComposeBridge(
@@ -1414,7 +1414,7 @@ internal static partial class ComposeBridges
         JvmName   = "DismissibleDrawerSheet-afqeVBk",
         Signature = DrawerSheetSig,
         Defaults  = typeof(DrawerSheetDefault))]
-    [ComposeFacade(DefaultColorFromTheme = "secondaryContainer")]
+    [ComposeFacade(DefaultColorFromTheme = "surface")]
     public static partial void DismissibleDrawerSheet(IFunction3 content, long drawerContainerColor, IComposer composer);
 
     [ComposeBridge(
@@ -1422,7 +1422,7 @@ internal static partial class ComposeBridges
         JvmName   = "PermanentDrawerSheet-afqeVBk",
         Signature = DrawerSheetSig,
         Defaults  = typeof(DrawerSheetDefault))]
-    [ComposeFacade(DefaultColorFromTheme = "secondaryContainer")]
+    [ComposeFacade(DefaultColorFromTheme = "surface")]
     public static partial void PermanentDrawerSheet(IFunction3 content, long drawerContainerColor, IComposer composer);
 
     // androidx.compose.material3.SegmentedButtonKt.SegmentedButton

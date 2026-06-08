@@ -18,8 +18,6 @@ namespace ComposeNet.Samples.JetNews;
 /// </remarks>
 public static class JetnewsDrawer
 {
-    static readonly Color SelectedColor = Color.FromHex("#D0E4FF");
-
     /// <summary>Materialize the drawer sheet.</summary>
     public static ModalDrawerSheet Build(
         NavController        nav,
@@ -31,7 +29,6 @@ public static class JetnewsDrawer
             {
                 Modifier.Companion.FillMaxWidth(),
                 BuildHeader(),
-                new HorizontalDivider(),
                 BuildItem(
                     label:        "Home",
                     iconRes:      Resource.Drawable.ic_home,
@@ -52,59 +49,36 @@ public static class JetnewsDrawer
     static Row BuildHeader() =>
         new()
         {
-            Modifier.Companion.FillMaxWidth().Padding(16),
-            new Icon(Resource.Drawable.ic_jetnews_logo, "JetNews logo")
-            {
-                Modifier = Modifier.Companion.Size(28),
-            },
-            new Spacer(Modifier.Companion.Width(12)),
-            new Text("JetNews")
-            {
-                FontSize   = 22,
-                FontWeight = FontWeight.SemiBold,
-            },
+            Modifier.Companion.FillMaxWidth().Padding(horizontal: 28, vertical: 24),
+            new Icon(Resource.Drawable.ic_jetnews_logo, "JetNews logo"),
+            new Spacer(Modifier.Companion.Width(8)),
+            new Icon(Resource.Drawable.ic_jetnews_wordmark, "JetNews"),
         };
 
-    static Row BuildItem(string label, int iconRes, string route,
-                         NavController nav, MutableState<string> currentRoute,
-                         DrawerStateHolder drawerState)
+    static NavigationDrawerItem BuildItem(string label, int iconRes, string route,
+                                          NavController nav, MutableState<string> currentRoute,
+                                          DrawerStateHolder drawerState)
     {
         bool selected = currentRoute.Value == route;
-
-        var modifier = Modifier.Companion
-            .FillMaxWidth()
-            .Height(56)
-            .Padding(horizontal: 12, vertical: 4)
-            .Clip(28)
-            .Clickable(() =>
+        return new NavigationDrawerItem(
+            selected: selected,
+            onClick:  () =>
             {
                 if (currentRoute.Value != route)
                 {
                     currentRoute.Value = route;
                     nav.Navigate(route);
                 }
-                // Fire-and-forget close even on a re-tap of the
-                // already-active item — matches upstream behaviour
-                // and Jetchat's drawer.
                 _ = drawerState.CloseAsync();
-            });
-        if (selected)
-            modifier = modifier.Background(SelectedColor);
-
-        return new Row
+            })
         {
-            modifier,
-            new Icon(iconRes, label)
-            {
-                Modifier = Modifier.Companion.Padding(16),
-            },
-            new Spacer(Modifier.Companion.Width(12)),
-            new Text(label)
+            Modifier = Modifier.Companion.Padding(horizontal: 12, vertical: 0),
+            Label    = new Text(label)
             {
                 FontSize   = 16,
                 FontWeight = selected ? FontWeight.SemiBold : FontWeight.Normal,
-                Modifier   = Modifier.Companion.Padding(top: 16, bottom: 16, start: 0, end: 0),
             },
+            Icon = new Icon(iconRes, label),
         };
     }
 }
