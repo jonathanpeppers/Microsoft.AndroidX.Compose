@@ -131,6 +131,8 @@ public class FacadeGeneratorTests
             public class TextAlign : Java.Lang.Object { }
             public class TextDecoration : Java.Lang.Object { }
             public class Shape : Java.Lang.Object { }
+            public class Alignment : Java.Lang.Object { }
+            public class ContentScale : Java.Lang.Object { }
             public abstract class ComposableNode
             {
                 public abstract void Render(AndroidX.Compose.Runtime.IComposer composer);
@@ -2996,5 +2998,67 @@ public class FacadeGeneratorTests
 
         var (_, diags, _) = Run(code, "Bar");
         Assert.Contains(diags, d => d.Id == "CN3010" && d.GetMessage().Contains("'int defaults'"));
+    }
+
+    [Fact]
+    public void Image_OptionalAlignmentContentScaleAlphaEmitProperties()
+    {
+        // Issue #145: ContentScale, Alignment, and Alpha should surface
+        // as OptionalValue properties (nullable = "use Kotlin default"),
+        // not ctor params, and the auto-mask should clear each bit only
+        // when the corresponding property is supplied.
+        var code = """
+            using AndroidX.Compose.Runtime;
+            using AndroidX.Compose.UI;
+            using ComposeNet;
+            using Kotlin.Jvm.Functions;
+
+            [assembly: ComposeDefaults("ImageDefault",
+                "!painter", "contentDescription", "modifier",
+                "alignment", "contentScale", "alpha", "colorFilter")]
+
+            namespace ComposeNet
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(
+                        Class="androidx/compose/foundation/ImageKt",
+                        JvmName="Image",
+                        Signature="(Landroidx/compose/ui/graphics/painter/Painter;Ljava/lang/String;Landroidx/compose/ui/Modifier;Landroidx/compose/ui/Alignment;Landroidx/compose/ui/layout/ContentScale;FLandroidx/compose/ui/graphics/ColorFilter;Landroidx/compose/runtime/Composer;II)V",
+                        Defaults=typeof(ImageDefault))]
+                    [ComposeFacade]
+                    public static partial void Image(
+                        [PainterResource] System.IntPtr painter,
+                        string? contentDescription,
+                        IModifier? modifier,
+                        Alignment? alignment,
+                        ContentScale? contentScale,
+                        float? alpha,
+                        int defaults,
+                        IComposer composer);
+                }
+            }
+            """;
+
+        var (output, diags, emitted) = Run(code, "Image");
+        Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+
+        // The three new slots surface as nullable auto-properties, not ctor params.
+        Assert.Contains("public global::ComposeNet.Alignment? Alignment { get; set; }", emitted);
+        Assert.Contains("public global::ComposeNet.ContentScale? ContentScale { get; set; }", emitted);
+        Assert.Contains("public float? Alpha { get; set; }", emitted);
+
+        // Auto-mask clears each bit only when the property is non-null.
+        Assert.Contains("if (Alignment is not null) __defaults &= ~(int)global::ComposeNet.ImageDefault.Alignment;", emitted);
+        Assert.Contains("if (ContentScale is not null) __defaults &= ~(int)global::ComposeNet.ImageDefault.ContentScale;", emitted);
+        Assert.Contains("if (Alpha is not null) __defaults &= ~(int)global::ComposeNet.ImageDefault.Alpha;", emitted);
+
+        // Bridge call forwards each property directly.
+        Assert.Contains("global::ComposeNet.ComposeBridges.Image(", emitted);
+        Assert.Contains(", Alignment, ContentScale, Alpha, __defaults, composer);", emitted);
+
+        var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
+        Assert.Empty(errors);
     }
 }

@@ -157,6 +157,7 @@ public static class Catalog
         D.LocalsMisc.CircularProgressIndicatorDemo.Demo,
         D.LocalsMisc.LinearProgressIndicatorDemo.Demo,
         D.LocalsMisc.ImageDemo.Demo,
+        D.LocalsMisc.ImageContentScaleDemo.Demo,
         D.LocalsMisc.IconDemo.Demo,
 
         // ---- Theming ----

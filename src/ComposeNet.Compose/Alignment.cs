@@ -1,3 +1,4 @@
+using Android.Runtime;
 using AndroidX.Compose.UI;
 
 namespace ComposeNet;
@@ -15,32 +16,48 @@ namespace ComposeNet;
 /// <see cref="Row"/> and the nested <see cref="Horizontal"/> singletons
 /// inside a <see cref="Column"/>.
 /// </summary>
-public sealed class Alignment
+/// <remarks>
+/// Inherits <see cref="Java.Lang.Object"/> so the bridge generator's
+/// reference-type code path
+/// (<c>((Java.Lang.Object)alignment).Handle</c>) can lower an
+/// <see cref="Alignment"/> instance to its underlying Kotlin
+/// <c>Alignment</c> JNI handle — used by facades like
+/// <see cref="Image"/> that take an optional <c>alignment</c> slot.
+/// </remarks>
+public sealed class Alignment : Java.Lang.Object
 {
-    internal IAlignment Java { get; }
+    Alignment(IntPtr handle, JniHandleOwnership transfer)
+        : base(handle, transfer) { }
 
-    Alignment(IAlignment java) => Java = java;
+    // Wrap the bound IAlignment peer's JNI handle in a brand-new
+    // Java.Lang.Object peer so casts to Java.Lang.Object on this
+    // instance return our own (stable) handle. Same approach as Shape.
+    static Alignment From(IAlignment java)
+    {
+        IntPtr handle = ((Java.Lang.Object)java).Handle;
+        return new Alignment(JNIEnv.NewLocalRef(handle), JniHandleOwnership.TransferLocalRef);
+    }
 
     static Alignment? s_topStart, s_topCenter, s_topEnd, s_centerStart, s_center, s_centerEnd, s_bottomStart, s_bottomCenter, s_bottomEnd;
 
     /// <summary><c>Alignment.TopStart</c> — top-left in LTR, top-right in RTL.</summary>
-    public static Alignment TopStart => s_topStart ??= new Alignment(IAlignment.Companion.TopStart);
+    public static Alignment TopStart => s_topStart ??= From(IAlignment.Companion.TopStart);
     /// <summary><c>Alignment.TopCenter</c> — top-center.</summary>
-    public static Alignment TopCenter => s_topCenter ??= new Alignment(IAlignment.Companion.TopCenter);
+    public static Alignment TopCenter => s_topCenter ??= From(IAlignment.Companion.TopCenter);
     /// <summary><c>Alignment.TopEnd</c> — top-right in LTR, top-left in RTL.</summary>
-    public static Alignment TopEnd => s_topEnd ??= new Alignment(IAlignment.Companion.TopEnd);
+    public static Alignment TopEnd => s_topEnd ??= From(IAlignment.Companion.TopEnd);
     /// <summary><c>Alignment.CenterStart</c> — vertically centered, leading edge.</summary>
-    public static Alignment CenterStart => s_centerStart ??= new Alignment(IAlignment.Companion.CenterStart);
+    public static Alignment CenterStart => s_centerStart ??= From(IAlignment.Companion.CenterStart);
     /// <summary><c>Alignment.Center</c> — centered both axes.</summary>
-    public static Alignment Center => s_center ??= new Alignment(IAlignment.Companion.Center);
+    public static Alignment Center => s_center ??= From(IAlignment.Companion.Center);
     /// <summary><c>Alignment.CenterEnd</c> — vertically centered, trailing edge.</summary>
-    public static Alignment CenterEnd => s_centerEnd ??= new Alignment(IAlignment.Companion.CenterEnd);
+    public static Alignment CenterEnd => s_centerEnd ??= From(IAlignment.Companion.CenterEnd);
     /// <summary><c>Alignment.BottomStart</c> — bottom-left in LTR, bottom-right in RTL.</summary>
-    public static Alignment BottomStart => s_bottomStart ??= new Alignment(IAlignment.Companion.BottomStart);
+    public static Alignment BottomStart => s_bottomStart ??= From(IAlignment.Companion.BottomStart);
     /// <summary><c>Alignment.BottomCenter</c> — bottom-center.</summary>
-    public static Alignment BottomCenter => s_bottomCenter ??= new Alignment(IAlignment.Companion.BottomCenter);
+    public static Alignment BottomCenter => s_bottomCenter ??= From(IAlignment.Companion.BottomCenter);
     /// <summary><c>Alignment.BottomEnd</c> — bottom-right in LTR, bottom-left in RTL.</summary>
-    public static Alignment BottomEnd => s_bottomEnd ??= new Alignment(IAlignment.Companion.BottomEnd);
+    public static Alignment BottomEnd => s_bottomEnd ??= From(IAlignment.Companion.BottomEnd);
 
     /// <summary>
     /// Vertical-only alignment singletons (<c>Alignment.Vertical</c>) for
