@@ -122,13 +122,6 @@ public static class Conversation
         LazyListState        messagesScroll) =>
         new Composed(c =>
         {
-            // Drop target for images dragged in from other apps. Hoisted
-            // into `Compose.Remember` so the `DragAndDropTargetElement`
-            // keeps a stable identity across recompositions and Compose's
-            // internal hover/started/ended bookkeeping survives the next
-            // frame. `OnDrop` reads the first ClipData item's URI and
-            // appends a placeholder text message — inline-image rendering
-            // is a separate gap (#156).
             var dndTarget = Compose.Remember(() => new DragAndDropTarget(e =>
             {
                 var clip = e.AndroidDragEvent.ClipData;

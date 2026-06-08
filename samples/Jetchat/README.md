@@ -212,6 +212,18 @@ color from `Primary` to `OnSurfaceVariant` when the input is
 whitespace, and the `Send` handler early-returns on
 `IsNullOrWhiteSpace`.
 
+### Drag-and-drop target hoisting
+
+The `DragAndDropTarget` instance for the conversation surface is
+hoisted into `Compose.Remember` so the underlying
+`DragAndDropTargetElement` keeps a stable identity across
+recompositions; otherwise Compose rebuilds the modifier element
+every frame and its internal hover/started/ended bookkeeping
+resets. `OnDrop` reads the first `ClipData` item's URI and appends
+a `[image dropped: $uri]` placeholder via `ui.AddMessage` — inline-
+image rendering inside the bubble is a separate gap that needs an
+image-loader pipeline.
+
 ### Layout and styling decisions vs upstream
 
 Where the port intentionally takes a different path from the Kotlin
