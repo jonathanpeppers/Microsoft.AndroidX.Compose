@@ -21,10 +21,10 @@ public sealed class ContentScale : Java.Lang.Object
     ContentScale(IntPtr handle, JniHandleOwnership transfer)
         : base(handle, transfer) { }
 
-    static ContentScale Resolve(string getterName)
+    static ContentScale Resolve(string getterName, string returnSig = "Landroidx/compose/ui/layout/ContentScale;")
     {
         IntPtr cls = JNIEnv.FindClass("androidx/compose/ui/layout/ContentScale$Companion");
-        IntPtr mid = JNIEnv.GetMethodID(cls, getterName, "()Landroidx/compose/ui/layout/ContentScale;");
+        IntPtr mid = JNIEnv.GetMethodID(cls, getterName, $"(){returnSig}");
         IntPtr companion = Companion();
         IntPtr value = JNIEnv.CallObjectMethod(companion, mid);
         return new ContentScale(value, JniHandleOwnership.TransferLocalRef);
@@ -97,5 +97,5 @@ public sealed class ContentScale : Java.Lang.Object
     /// <c>ContentScale.None</c> — draw the source at its intrinsic size
     /// (no scaling). Comparable to <c>ImageView.ScaleType.CENTER</c>.
     /// </summary>
-    public static ContentScale None => s_none ??= Resolve("getNone");
+    public static ContentScale None => s_none ??= Resolve("getNone", "Landroidx/compose/ui/layout/FixedScale;");
 }
