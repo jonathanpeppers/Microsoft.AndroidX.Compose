@@ -114,18 +114,46 @@ public static class Conversation
             },
         };
 
-    static Column BuildBody(
+    static ComposableNode BuildBody(
         ConversationUiState  ui,
         MutableState<string> input,
         ColorScheme          scheme,
         MutableState<int>    selectedSelector,
         LazyListState        messagesScroll) =>
-        new()
+        new Composed(c =>
         {
-            Modifier.Companion.FillMaxSize(),
-            BuildMessages(ui, scheme, messagesScroll),
-            BuildInputArea(ui, input, scheme, selectedSelector, messagesScroll),
-        };
+            // Drop target for images dragged in from other apps. Hoisted
+            // into `Compose.Remember` so the `DragAndDropTargetElement`
+            // keeps a stable identity across recompositions and Compose's
+            // internal hover/started/ended bookkeeping survives the next
+            // frame. `OnDrop` reads the first ClipData item's URI and
+            // appends a placeholder text message — inline-image rendering
+            // is a separate gap (#156).
+            var dndTarget = Compose.Remember(() => new DragAndDropTarget(e =>
+            {
+                var clip = e.AndroidDragEvent.ClipData;
+                var uri  = clip is not null && clip.ItemCount > 0
+                    ? clip.GetItemAt(0)?.Uri?.ToString()
+                    : null;
+                ui.AddMessage(new Message(MyName, $"[image dropped: {uri ?? "?"}]", "8:30 PM"));
+                _ = messagesScroll.AnimateScrollToItemAsync(0);
+                return true;
+            }));
+            return new Column
+            {
+                Modifier.Companion.FillMaxSize().DragAndDropTarget(
+                    shouldStartDragAndDrop: e =>
+                    {
+                        foreach (var m in e.MimeTypes)
+                            if (m.StartsWith("image/", System.StringComparison.Ordinal))
+                                return true;
+                        return false;
+                    },
+                    target: dndTarget),
+                BuildMessages(ui, scheme, messagesScroll),
+                BuildInputArea(ui, input, scheme, selectedSelector, messagesScroll),
+            };
+        });
 
     // Flat row stream so LazyColumn<T> can render messages and day
     // headers as a single item list — same shape as upstream's

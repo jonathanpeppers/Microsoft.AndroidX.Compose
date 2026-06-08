@@ -2199,6 +2199,23 @@ internal static partial class ComposeBridges
                     "Landroidx/compose/ui/Modifier;")]
     internal static partial IntPtr ModifierClearAndSetSemantics(IntPtr modifier, IFunction1 properties);
 
+    // androidx.compose.ui.draganddrop.DragAndDropTargetKt.dragAndDropTarget —
+    // non-@Composable Modifier extension. Both Kotlin params are required
+    // (no $default). `shouldStartDragAndDrop` is a `(DragAndDropEvent) -> Boolean`
+    // predicate that Compose calls once per drag-start to decide whether
+    // this target should participate; `target` is the per-instance
+    // `DragAndDropTarget` JCW whose `OnDrop` (and the other no-op
+    // callbacks) the runtime fires while the drag is in progress.
+    [ComposeBridge(
+        Class     = "androidx/compose/ui/draganddrop/DragAndDropTargetKt",
+        JvmName   = "dragAndDropTarget",
+        Signature = "(Landroidx/compose/ui/Modifier;" +
+                    "Lkotlin/jvm/functions/Function1;" +
+                    "Landroidx/compose/ui/draganddrop/DragAndDropTarget;)" +
+                    "Landroidx/compose/ui/Modifier;")]
+    internal static partial IntPtr ModifierDragAndDropTarget(
+        IntPtr modifier, IFunction1 shouldStartDragAndDrop, IntPtr target);
+
     // androidx.compose.ui.input.nestedscroll.NestedScrollModifierKt.nestedScroll$default —
     // non-@Composable Modifier extension. 2 Kotlin params after the
     // receiver: connection (NestedScrollConnection — always supplied by

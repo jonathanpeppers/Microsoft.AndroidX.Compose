@@ -125,7 +125,6 @@ feature, a new package reference, or simply more sample plumbing:
 | Image / sticker / file message attachments inside bubbles | requires a composable image-loader pipeline (e.g. Coil). |
 | User profile screen (`ProfileScreen` reached via `NavHost`) | `NavController` / `NavHost` bindings landed in #60 but the screen + nav graph aren't wired up here. Explicitly out of scope for this port. |
 | App-widget discoverability (`@JetchatAppWidget`) | explicitly out of scope. |
-| Drag-and-drop image target on the conversation area | explicitly out of scope. |
 | Sticky day-headers spanning multiple dates (e.g. "20 Aug" alongside "Today") | needs the `LazyListScope.item { … }` DSL exposed on the `LazyColumn` facade so a per-day header can be emitted between message groups. Only "Today" is rendered. |
 | `Sp(float)` for exact M3 letter-spacing (0.5 / 0.1 sp values) | `Sp` is integer-only; `labelSmall` rounds 0.5 → 1, `titleSmall` rounds 0.1 → 0 (dropped). |
 | `FocusRequester` programmatic focus into the emoji panel | the panel opens correctly but doesn't grab focus on expand. |
@@ -155,6 +154,12 @@ this completion round added:
   `RoundedCornerShapeKt.RoundedCornerShape(float, float, float, float)`
   directly. (The 4-arg `(Dp, Dp, Dp, Dp)` overload is bindable;
   only the single-radius `(Dp)` overload is mangled.)
+- **`Modifier.DragAndDropTarget(...)` + `DragAndDropEvent` +
+  `DragAndDropTarget` facades** — wraps
+  `androidx.compose.ui.draganddrop.dragAndDropTarget` so an external
+  drag of an image onto the conversation surface appends a
+  `[image dropped: $uri]` placeholder message. Image rendering inside
+  the bubble is a separate gap (image-loader pipeline).
 
 ## Implementation notes
 
