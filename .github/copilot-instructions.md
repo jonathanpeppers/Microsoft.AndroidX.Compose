@@ -680,9 +680,13 @@ end-to-end recipe is:
    `[PainterResource]`) or back out the attribute and write the
    facade by hand (delete the stub or expand it into a full
    hand-written class).
-6. **Use the facade from the sample** (`MainActivity.cs` or one of
-   the screen files) and confirm the rendered tree matches what a
-   hand-written facade would have produced.
+6. **Add a gallery demo for the new facade.** Every new public
+   surface — facade, state holder, modifier extension — needs a demo
+   in `src/ComposeNet.Gallery/Demos/<Category>/<Thing>Demo.cs` so the
+   gallery exercises the API end-to-end on-device and a reviewer can
+   try it without reading the source. See the
+   ["Gallery demos"](#gallery-demos-srccomposenetgallerydemos)
+   section below for the file template and `Catalog.cs` wiring.
 
 ### Generator diagnostics
 
@@ -1124,6 +1128,111 @@ When you add or change public API:
 On release, move entries from `Unshipped.txt` to `Shipped.txt`.
 Removing or renaming a public symbol is a breaking change — prefer
 adding new overloads and obsoleting the old ones.
+
+## Gallery demos (`src/ComposeNet.Gallery/Demos/`)
+
+The gallery is the repo's on-device acceptance harness. **Every new
+public surface ships with a demo** — facades, state holders, modifier
+extensions, suspend `*Async` methods, scope helpers, all of it. A
+feature without a demo is unverified: there's no way for a reviewer
+to see it work on a real device, and no way for the next person to
+discover that it exists.
+
+### File layout and naming
+
+- One file per demo at
+  `src/ComposeNet.Gallery/Demos/<CategoryFolder>/<Thing>Demo.cs`.
+- Filename **must** end with `Demo.cs` so a repo-wide grep for a
+  control name (e.g. `Button`, `Card`) doesn't collide with the
+  scenario file. The class name matches: `class ChipsDemo`, not
+  `class Chips`.
+- Namespace mirrors the folder: `ComposeNet.Gallery.Demos.Buttons`.
+- The class is `public static`, with a single `public static Demo
+  Demo => new(...)` property that the registry picks up.
+
+### Canonical template
+
+```csharp
+using ComposeNet.Gallery.Registry;
+
+namespace ComposeNet.Gallery.Demos.Buttons;
+
+/// <summary>One-line description of what this demo exercises.</summary>
+public static class FillStylesDemo
+{
+    /// <summary>Registry entry exposed via <see cref="Catalog.Demos"/>.</summary>
+    public static Demo Demo => new(
+        Id:          "buttons-fill-styles",          // kebab-case, globally unique
+        CategoryId:  "buttons",                      // must match a Catalog.Categories id
+        Title:       "Fill styles",                  // shown on tiles + deep-link target
+        Description: "Filled, Elevated, Filled tonal, Outlined, and Text buttons.",
+        Build:       () =>
+        {
+            var count = Compose.Remember(() => new MutableNumberState<int>(0));
+            return new Column
+            {
+                new Text($"Tapped: {count}"),
+                new Button(onClick: () => count++) { new Text("Filled") },
+                new ElevatedButton(onClick: () => count++) { new Text("Elevated") },
+                // ...
+            };
+        });
+}
+```
+
+### Wiring it up
+
+1. **Pick the category** in `src/ComposeNet.Gallery/Registry/Catalog.cs`
+   — the `Categories` list is the source of truth. If no existing
+   category fits, add a new one (and a folder under `Demos/`).
+2. **Register the demo** in the same file by adding a line under the
+   matching `// ---- <Category> ----` block in `Catalog.Demos`,
+   keeping related entries adjacent so they render in a sensible
+   order on the category screen.
+3. **Match `CategoryId`** in the demo to the `Id` in the category
+   record. A mismatch silently hides the demo from its category page.
+
+### Authoring rules
+
+- **Make it visible.** Pastel `Box(Modifier.Background(color))` tiles
+  inherit `OnSurface` from M3, which renders light-on-dark and
+  becomes unreadable on the gallery's dark theme. Set
+  `Color = Color.Black` explicitly on `Text` inside light tiles, or
+  use `Surface`.
+- **Cap infinite heights.** The demo screen body scrolls vertically,
+  so a child that requests `FillMaxHeight()` (drawers,
+  `WideNavigationRail`, anything `SubcomposeLayout`-backed) hits
+  `IllegalStateException: Size(W x 2147483647)`. Wrap in
+  `Box(Modifier.Height(N))` to give it a bounded slot.
+- **Label every tile.** A row of three identical-looking colored
+  boxes tells the reader nothing — wrap each in a small `Column`
+  with a caption (`"Rotate 15°"`, `"Scale 0.85×"`).
+- **Keep `Build` cheap.** It's invoked from `Compose.Remember` on
+  every navigation; allocate state with `Compose.Remember(() => ...)`
+  inside the lambda, not in the static initializer.
+- **One concept per demo.** If you're tempted to title it
+  "Buttons & chips & FABs", split it. The category page can hold as
+  many tiles as you need.
+
+### Verifying
+
+```pwsh
+dotnet build src/ComposeNet.Gallery -t:Run -c Debug
+```
+
+Then either tap your way to the new tile or deep-link straight to
+it from the host:
+
+```pwsh
+adb shell am start `
+    -n com.companyname.ComposeNet.Gallery/crc64f6e6d73c94e2195e.MainActivity `
+    --es route "demo/<your-demo-id>"
+```
+
+Confirm the demo renders, looks right (contrast, layout, spacing),
+and doesn't crash. Capture a screenshot if the PR description would
+benefit from one — the gallery's whole point is that this is the
+fast path to seeing the change.
 
 ## Style
 
