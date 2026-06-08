@@ -68,6 +68,16 @@ using ComposeNet;
 [assembly: ComposeDefaults<IconKt>("Icon", "IconDefault")]
 [assembly: ComposeDefaults<MaterialThemeKt>("MaterialTheme", "MaterialThemeDefault")]
 
+// androidx.compose.animation.AnimatedVisibilityKt.AnimatedVisibility(bool, ...) —
+// declarative form (not generic) because AnimatedVisibilityKt has multiple
+// overloads (Boolean, MutableTransitionState, Transition<T> extension,
+// RowScope/ColumnScope extensions) and the generic form picks the *longest*
+// overload, which is not necessarily the (boolean visible, ...) one we call.
+// Pinning the parameter list here keeps the bit positions in lockstep with
+// the bytecode of the specific overload `AnimatedVisibility.Render` invokes.
+[assembly: ComposeDefaults("AnimatedVisibilityDefault",
+    "!visible", "modifier", "enter", "exit", "label", "!content")]
+
 // androidx.compose.material3.Shapes — synthetic-default constructor,
 // 5 CornerBasedShape slots. Hand-rolled JNI (ShapesBridges.cs) calls
 // the ctor; this enum names the bits so MaterialTheme.BuildShapes can
