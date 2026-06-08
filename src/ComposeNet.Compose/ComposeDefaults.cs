@@ -539,6 +539,13 @@ using ComposeNet;
 [assembly: ComposeDefaults("ModifierSemanticsDefault",
     "mergeDescendants", "!properties")]
 
+// androidx.compose.ui.semantics.SemanticsPropertiesKt.onClick$default —
+// 2 Kotlin params after the receiver: label (String?, optional — caller
+// may omit to get the platform-default label) and action (Function0,
+// always supplied by the C# wrapper).
+[assembly: ComposeDefaults("SemanticsOnClickDefault",
+    "label", "!action")]
+
 // androidx.compose.foundation.gestures.DraggableKt.draggable$default —
 // non-@Composable Modifier extension. 8 Kotlin params after the
 // receiver: state, orientation, enabled, interactionSource,
