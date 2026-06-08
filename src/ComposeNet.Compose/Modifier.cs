@@ -1091,6 +1091,112 @@ public sealed class Modifier
     }
 
     /// <summary>
+    /// <c>Modifier.pointerInput(Unit) { detectTapGestures(...) }</c> —
+    /// detect the four basic single-pointer tap gestures (tap, press,
+    /// long-press, double-tap) and invoke the supplied C# callbacks on
+    /// the UI thread with the tap position as an <see cref="Offset"/>
+    /// in local layout pixels.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// All four callback parameters are optional; pass only the ones
+    /// you care about. When all four are <c>null</c> this modifier is
+    /// a no-op (but still allocates the per-pointer-input state
+    /// holder, so prefer omitting it entirely in that case).
+    /// </para>
+    /// <para>
+    /// Unlike <see cref="Clickable(System.Action)"/>, this modifier
+    /// supplies <strong>no Material indication / ripple</strong>, no
+    /// accessibility semantics, and no role — it's the low-level
+    /// gesture primitive. Use <see cref="Clickable(System.Action)"/>
+    /// for ordinary clickable surfaces; reach for
+    /// <see cref="DetectTapGestures"/> when you need long-press,
+    /// double-tap, or precise tap positions.
+    /// </para>
+    /// <para>
+    /// <strong>Callback freshness gotcha.</strong> The Kotlin
+    /// <c>pointerInput</c> modifier only restarts its coroutine when
+    /// its key changes — <em>not</em> when the handler instance
+    /// changes. Because all C# callback adapters share the same Java
+    /// class, simply rebuilding this modifier with different lambdas
+    /// will NOT pick up the new callbacks. To refresh, either
+    /// (a) supply a varying <paramref name="key"/> derived from the
+    /// values your callbacks close over, or (b) have the callbacks
+    /// read mutable state via a remembered
+    /// <c>MutableState&lt;T&gt;</c> so they pick up new values on
+    /// each invocation.
+    /// </para>
+    /// </remarks>
+    /// <param name="onTap">Fired once the system confirms the gesture
+    /// is a simple tap (not the start of a long-press or double-tap).</param>
+    /// <param name="onPress">Fired the moment the finger goes down,
+    /// before the system has decided which gesture this will become.
+    /// Useful for "pressed" visual feedback.</param>
+    /// <param name="onLongPress">Fired after the system's
+    /// long-press timeout (typically ~500ms) while the finger is still
+    /// down.</param>
+    /// <param name="onDoubleTap">Fired when a second tap arrives
+    /// within the system double-tap timeout (typically ~300ms) of the
+    /// first.</param>
+    /// <param name="key">Identity key passed to Kotlin's
+    /// <c>pointerInput</c>. Defaults to a stable singleton
+    /// (<c>Kotlin.Unit</c>), so the gesture detector coroutine starts
+    /// once and never restarts. Pass any value whose <c>Equals</c>
+    /// changes when callbacks should reset.</param>
+    public Modifier DetectTapGestures(
+        System.Action<Offset>? onTap = null,
+        System.Action<Offset>? onPress = null,
+        System.Action<Offset>? onLongPress = null,
+        System.Action<Offset>? onDoubleTap = null,
+        object? key = null)
+    {
+        var tapCb = onTap is null ? null : new OffsetCallback(onTap);
+        var pressCb = onPress is null ? null : new OffsetPressCallback(onPress);
+        var longPressCb = onLongPress is null ? null : new OffsetCallback(onLongPress);
+        var doubleTapCb = onDoubleTap is null ? null : new OffsetCallback(onDoubleTap);
+
+        var block = new PointerInputBlock(tapCb, pressCb, longPressCb, doubleTapCb);
+
+        // Resolve `key` to a Java object. Kotlin uses reference equality
+        // for the default-overload form, so we want a stable JNI object
+        // for the "no key" path — Kotlin.Unit.Instance is the canonical
+        // singleton.
+        var keyObj = key switch
+        {
+            null => (Java.Lang.Object)global::Kotlin.Unit.Instance!,
+            Java.Lang.Object jlo => jlo,
+            string s => new Java.Lang.String(s),
+            int i => Java.Lang.Integer.ValueOf(i),
+            long l => Java.Lang.Long.ValueOf(l),
+            bool b => Java.Lang.Boolean.ValueOf(b),
+            _ => new Java.Lang.String(key.ToString() ?? ""),
+        };
+
+        return Append(curr =>
+        {
+            // Construct the Java helper that implements
+            // PointerInputEventHandler, wrapping our Function2 JCW.
+            // The handler is a local ref consumed by ModifierPointerInput
+            // and released when its JNI frame pops.
+            var handlerLocal = System.IntPtr.Zero;
+            try
+            {
+                handlerLocal = ComposeBridges.NewPointerInputEventHandler(
+                    ((Java.Lang.Object)block).Handle);
+                return ComposeBridges.ModifierPointerInput(
+                    curr, keyObj.Handle, handlerLocal);
+            }
+            finally
+            {
+                if (handlerLocal != System.IntPtr.Zero)
+                    Android.Runtime.JNIEnv.DeleteLocalRef(handlerLocal);
+                System.GC.KeepAlive(keyObj);
+                System.GC.KeepAlive(block);
+            }
+        });
+    }
+
+    /// <summary>
     /// <c>Modifier.semantics { ... }</c> — fluent builder form that
     /// exposes all supported semantic properties (selected, role,
     /// content/state description, onClick label) on

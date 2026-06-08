@@ -227,4 +227,76 @@ internal static partial class ComposeBridges
 
         return s_androidUiDispatcherMain_handle;
     }
+
+    static System.IntPtr s_detectTapGestures_class;
+    static System.IntPtr s_detectTapGestures_method;
+
+    // androidx.compose.foundation.gestures.TapGestureDetectorKt
+    //     .detectTapGestures(
+    //         PointerInputScope scope,
+    //         ((Offset) -> Unit)? onDoubleTap = null,
+    //         ((Offset) -> Unit)? onLongPress = null,
+    //         (suspend PressGestureScope.(Offset) -> Unit) onPress = NoPressGesture,
+    //         ((Offset) -> Unit)? onTap = null,
+    //         Continuation cont): Object
+    //
+    // Called via the synthetic $default overload so we can leave any
+    // subset of callbacks at their Kotlin defaults. Unlike the other
+    // bridges in this file, the caller is an IPointerInputEventHandler
+    // JCW whose Kotlin invoke(scope, cont) supplies the OUTER continuation
+    // directly — this is a *tail call* into Kotlin from inside another
+    // suspend body. No SuspendBridge / SuspendContinuation involvement:
+    // the outer continuation IS what we forward, and the raw IntPtr
+    // returned (COROUTINE_SUSPENDED, kotlin.Unit, or kotlin.Result$Failure)
+    // is what we hand back to Kotlin unchanged.
+    //
+    // $default mask bits:
+    //   bit 0 = onDoubleTap, bit 1 = onLongPress,
+    //   bit 2 = onPress,     bit 3 = onTap.
+    // We set the bit whenever the corresponding JCW handle is null, so
+    // Kotlin substitutes its real default (null for the nullable slots,
+    // NoPressGesture for onPress). The synthetic-overload marker (last
+    // Object arg) is always null at every call site.
+    internal static unsafe System.IntPtr DetectTapGestures(
+        System.IntPtr scope,
+        System.IntPtr onDoubleTap,
+        System.IntPtr onLongPress,
+        System.IntPtr onPress,
+        System.IntPtr onTap,
+        System.IntPtr cont)
+    {
+        if (s_detectTapGestures_method == System.IntPtr.Zero)
+        {
+            s_detectTapGestures_class = JNIEnv.FindClass(
+                "androidx/compose/foundation/gestures/TapGestureDetectorKt");
+            s_detectTapGestures_method = JNIEnv.GetStaticMethodID(
+                s_detectTapGestures_class,
+                "detectTapGestures$default",
+                "(Landroidx/compose/ui/input/pointer/PointerInputScope;" +
+                "Lkotlin/jvm/functions/Function1;" +
+                "Lkotlin/jvm/functions/Function1;" +
+                "Lkotlin/jvm/functions/Function3;" +
+                "Lkotlin/jvm/functions/Function1;" +
+                "Lkotlin/coroutines/Continuation;" +
+                "ILjava/lang/Object;)Ljava/lang/Object;");
+        }
+
+        int mask = 0;
+        if (onDoubleTap == System.IntPtr.Zero) mask |= 0b0001;
+        if (onLongPress == System.IntPtr.Zero) mask |= 0b0010;
+        if (onPress == System.IntPtr.Zero) mask |= 0b0100;
+        if (onTap == System.IntPtr.Zero) mask |= 0b1000;
+
+        JValue* args = stackalloc JValue[8];
+        args[0] = new JValue(scope);
+        args[1] = new JValue(onDoubleTap);
+        args[2] = new JValue(onLongPress);
+        args[3] = new JValue(onPress);
+        args[4] = new JValue(onTap);
+        args[5] = new JValue(cont);
+        args[6] = new JValue(mask);
+        args[7] = new JValue(System.IntPtr.Zero);
+        return JNIEnv.CallStaticObjectMethod(
+            s_detectTapGestures_class, s_detectTapGestures_method, args);
+    }
 }
