@@ -426,10 +426,6 @@ public static class Conversation
             BuildProfileItem(selectedMenu, drawerState, "Ali Conors (you)", MeProfileId,        Resource.Drawable.avatar_ali,          scheme),
             BuildProfileItem(selectedMenu, drawerState, "Taylor Brooks",    ColleagueProfileId, Resource.Drawable.avatar_someone_else, scheme),
         };
-        // Settings / Pin Widget section — matches upstream's Build.VERSION.SDK_INT >= O
-        // gate so the row only shows on platforms where AppWidgetManager.requestPinAppWidget
-        // is available (API 26+). Click handlers route through the existing
-        // FunctionalityNotAvailable popup until a real Glance widget lands.
         if (Android.OS.Build.VERSION.SdkInt >= BuildVersionCodes.O)
         {
             column.Add(BuildDividerItem(scheme, sidePadding: 28));

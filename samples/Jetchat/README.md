@@ -214,6 +214,21 @@ color from `Primary` to `OnSurfaceVariant` when the input is
 whitespace, and the `Send` handler early-returns on
 `IsNullOrWhiteSpace`.
 
+### Drawer "Settings" section is gated on API 26
+
+Upstream's `JetchatDrawer.kt` wraps the **Settings** + **Pin Widget
+to home** rows in `if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)`
+because `AppWidgetManager.requestPinAppWidget(...)` requires API 26.
+The port follows the same gate
+(`Android.OS.Build.VERSION.SdkInt >= BuildVersionCodes.O`).
+`Build` is fully qualified to avoid collision with the local
+`Conversation.Build` method. Both row click handlers fire
+`drawerState.CloseAsync()` and then the existing
+`FunctionalityNotAvailable` popup — same affordance the search and
+info top-bar icons use. Hooking the **Pin Widget** row to a real
+`requestPinAppWidget` call is blocked on landing the Glance widget
+itself, tracked in *What's still omitted*.
+
 ### Layout and styling decisions vs upstream
 
 Where the port intentionally takes a different path from the Kotlin
