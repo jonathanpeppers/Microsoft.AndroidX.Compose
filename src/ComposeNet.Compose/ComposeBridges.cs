@@ -3470,16 +3470,6 @@ internal static partial class ComposeBridges
     // `*$default` overload. The first IntPtr (navGraphBuilder) is the
     // extension receiver; route/content are required (suppressed bits);
     // arguments and deepLinks are nullable lists with empty defaults.
-    // androidx.navigation.compose.NavGraphBuilderKt.composable$default
-    // (string-route overload). Kotlin extension on NavGraphBuilder:
-    // `NavGraphBuilder.composable(route, arguments=emptyList(),
-    // deepLinks=emptyList(), content)`. NOT @Composable itself —
-    // invoked synchronously inside NavHost's builder lambda. The
-    // trailing `IL...;` on the JNI sig is `$default` + the synthetic
-    // marker the bridge generator fills with `IntPtr.Zero` for any
-    // `*$default` overload. The first IntPtr (navGraphBuilder) is the
-    // extension receiver; route/content are required (suppressed bits);
-    // arguments and deepLinks are nullable lists with empty defaults.
     [ComposeBridge(
         Class     = "androidx/navigation/compose/NavGraphBuilderKt",
         JvmName   = "composable$default",
