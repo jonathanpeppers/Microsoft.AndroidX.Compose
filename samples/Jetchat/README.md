@@ -111,6 +111,30 @@ dotnet build samples/Jetchat -t:Run
   the bolded selected chat row.
 - Newly sent messages stamp `"now"` (matching upstream's
   `R.string.now` resource value).
+- **`NavController` / `NavHost` routing** between two destinations:
+  a `home` route hosting the conversation and a
+  `profile/{userId}` route hosting `Profile`. Drawer profile rows
+  and message-avatar taps both navigate to the profile route; the
+  topbar's back arrow / system back returns. The drawer lives
+  above the `NavHost` so it stays available on both screens.
+- **Profile screen** (`Profile.cs`) — `Scaffold` with a
+  `CenterAlignedTopAppBar` (back + more-options), a vertically
+  scrolling body wrapped in `BoxWithConstraints` so the hero
+  portrait caps at half the available height, name / status /
+  display-name / position / twitter / timezone / channels rows,
+  and an `ExtendedFloatingActionButton` aligned `BottomEnd` that
+  expands / collapses based on `scrollState.Value == 0` (the M3
+  equivalent of upstream's custom `AnimatingFabContent`). FAB
+  icon and label switch on `ProfileScreenState.IsMe()`:
+  `ic_create` + "Edit profile" for the local user; `ic_chat` +
+  "Message" for a colleague.
+- **`ProfileViewModel`** holds a snapshot-tracked `UserId` and
+  exposes the resolved `ProfileScreenState` as a derived
+  read-only property via `Profiles.GetById(...)`. Drawer /
+  avatar tap handlers update the view-model and call
+  `NavController.Navigate(...)`; the route content reads the
+  user id directly from the `NavBackStackEntry` arguments so no
+  snapshot state is mutated during composition.
 
 ## What's still omitted
 
@@ -123,7 +147,6 @@ feature, a new package reference, or simply more sample plumbing:
 | `BackHandler` to dismiss the expanded input panel via system back | `androidx.activity.compose.BackHandlerKt` lives in `Xamarin.AndroidX.Activity.Compose` which isn't currently referenced. Adding the NuGet + a `[ComposeBridge]` would unblock it. |
 | `ClickableText` URL / `@mention` link parsing inside message bodies | needs `AnnotatedString` + `ClickableText` bindings (multi-span text styling). |
 | Image / sticker / file message attachments inside bubbles | requires a composable image-loader pipeline (e.g. Coil). |
-| User profile screen (`ProfileScreen` reached via `NavHost`) | `NavController` / `NavHost` bindings landed in #60 but the screen + nav graph aren't wired up here. Explicitly out of scope for this port. |
 | App-widget discoverability (`@JetchatAppWidget`) | explicitly out of scope. |
 | Drag-and-drop image target on the conversation area | explicitly out of scope. |
 | Sticky day-headers spanning multiple dates (e.g. "20 Aug" alongside "Today") | needs the `LazyListScope.item { … }` DSL exposed on the `LazyColumn` facade so a per-day header can be emitted between message groups. Only "Today" is rendered. |
