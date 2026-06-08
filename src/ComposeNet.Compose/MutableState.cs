@@ -8,7 +8,7 @@ namespace ComposeNet;
 /// boxed values through the JVM state container so changes are observed
 /// by the Compose runtime and trigger recomposition.
 /// </summary>
-public class MutableState<T> : IMutableStateWrapper
+public class MutableState<T> : IMutableStateWrapper, IState<T>
 {
     internal IMutableState _state;
 

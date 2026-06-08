@@ -158,6 +158,7 @@ public static class Catalog
         D.StateEffectsAnimation.EnterExitTransitionsDemo.Demo,
         D.StateEffectsAnimation.CrossfadeDemo.Demo,
         D.StateEffectsAnimation.AnimatedContentDemo.Demo,
+        D.StateEffectsAnimation.ViewModelStateFlowDemo.Demo,
 
         // ---- CompositionLocal & misc ----
         D.LocalsMisc.LocalContextDemo.Demo,

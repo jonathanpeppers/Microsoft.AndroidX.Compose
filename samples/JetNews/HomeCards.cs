@@ -47,7 +47,7 @@ internal static class HomeCards
         };
 
     public static Row BuildSimple(Post post,
-                                  MutableStateList<string> bookmarks,
+                                  BookmarksViewModel bookmarks,
                                   Action<string> onSelectPost) =>
         new()
         {

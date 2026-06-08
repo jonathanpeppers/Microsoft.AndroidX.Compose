@@ -3587,6 +3587,22 @@ internal static partial class ComposeBridges
             s_pointerInputHandler_class, s_pointerInputHandler_ctor, args);
     }
 
+    // androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner.current
+    // — `@Composable @ReadOnlyComposable` getter on a Kotlin object
+    // singleton. We need this to read the current ViewModelStoreOwner
+    // (NavBackStackEntry inside a NavHost destination, or the
+    // ComponentActivity at the root) so Compose.ViewModel<T> can
+    // hand the right owner to ViewModelProvider. The binding exposes
+    // the singleton (LocalViewModelStoreOwner.Instance) but not the
+    // @Composable getter, so we go through InstanceField + JNI.
+    // Returns null when no owner is installed; the caller throws.
+    [ComposeBridge(
+        Class         = "androidx/lifecycle/viewmodel/compose/LocalViewModelStoreOwner",
+        JvmName       = "getCurrent",
+        Signature     = "(Landroidx/compose/runtime/Composer;I)Landroidx/lifecycle/ViewModelStoreOwner;",
+        InstanceField = "INSTANCE")]
+    public static partial IntPtr LocalViewModelStoreOwnerCurrent(IComposer composer);
+
     // androidx.activity.compose.BackHandlerKt.BackHandler — Kotlin
     // signature `BackHandler(enabled: Boolean = true, onBack: () -> Unit)`.
     // Bridged via raw JNI because `Xamarin.AndroidX.Activity.Compose`
