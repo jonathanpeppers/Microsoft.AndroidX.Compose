@@ -21,7 +21,9 @@ ComposeNet.AnimatedContent<T>
 ComposeNet.AnimatedContent<T>.AnimatedContent(T targetState, System.Func<T, ComposeNet.ComposableNode!>! content) -> void
 ComposeNet.AnimatedContent<T>.TargetState.get -> T
 ComposeNet.AnimatedVisibility
-ComposeNet.AnimatedVisibility.AnimatedVisibility(bool visible) -> void
+ComposeNet.AnimatedVisibility.AnimatedVisibility(bool visible, AndroidX.Compose.Animation.EnterTransition? enter = null, AndroidX.Compose.Animation.ExitTransition? exit = null) -> void
+ComposeNet.AnimatedVisibility.Enter.get -> AndroidX.Compose.Animation.EnterTransition?
+ComposeNet.AnimatedVisibility.Exit.get -> AndroidX.Compose.Animation.ExitTransition?
 ComposeNet.AnimatedVisibility.Visible.get -> bool
 ComposeNet.Arrangement
 ComposeNet.AssistChip
@@ -1093,6 +1095,7 @@ ComposeNet.TopSearchBar.InputField.get -> ComposeNet.ComposableNode?
 ComposeNet.TopSearchBar.InputField.set -> void
 ComposeNet.TopSearchBar.TopSearchBar(ComposeNet.SearchBarState! state) -> void
 ComposeNet.TransformOrigin
+ComposeNet.Transitions
 ComposeNet.TriStateCheckbox
 ComposeNet.TriStateCheckbox.TriStateCheckbox(AndroidX.Compose.UI.State.ToggleableState! state, System.Action! onClick) -> void
 ComposeNet.VerticalDivider
@@ -1743,6 +1746,14 @@ static ComposeNet.TextOverflow.StartEllipsis.get -> ComposeNet.TextOverflow
 static ComposeNet.TextOverflow.Visible.get -> ComposeNet.TextOverflow
 static ComposeNet.TransformOrigin.Center.get -> long
 static ComposeNet.TransformOrigin.Pack(float pivotFractionX, float pivotFractionY) -> long
+static ComposeNet.Transitions.FadeIn(float initialAlpha = 0, AndroidX.Compose.Animation.Core.IFiniteAnimationSpec? animationSpec = null) -> AndroidX.Compose.Animation.EnterTransition!
+static ComposeNet.Transitions.FadeOut(float targetAlpha = 0, AndroidX.Compose.Animation.Core.IFiniteAnimationSpec? animationSpec = null) -> AndroidX.Compose.Animation.ExitTransition!
+static ComposeNet.Transitions.ScaleIn(float initialScale = 0, AndroidX.Compose.Animation.Core.IFiniteAnimationSpec? animationSpec = null) -> AndroidX.Compose.Animation.EnterTransition!
+static ComposeNet.Transitions.ScaleOut(float targetScale = 0, AndroidX.Compose.Animation.Core.IFiniteAnimationSpec? animationSpec = null) -> AndroidX.Compose.Animation.ExitTransition!
+static ComposeNet.Transitions.SlideInHorizontally(System.Func<int, int>? initialOffsetX = null, AndroidX.Compose.Animation.Core.IFiniteAnimationSpec? animationSpec = null) -> AndroidX.Compose.Animation.EnterTransition!
+static ComposeNet.Transitions.SlideInVertically(System.Func<int, int>? initialOffsetY = null, AndroidX.Compose.Animation.Core.IFiniteAnimationSpec? animationSpec = null) -> AndroidX.Compose.Animation.EnterTransition!
+static ComposeNet.Transitions.SlideOutHorizontally(System.Func<int, int>? targetOffsetX = null, AndroidX.Compose.Animation.Core.IFiniteAnimationSpec? animationSpec = null) -> AndroidX.Compose.Animation.ExitTransition!
+static ComposeNet.Transitions.SlideOutVertically(System.Func<int, int>? targetOffsetY = null, AndroidX.Compose.Animation.Core.IFiniteAnimationSpec? animationSpec = null) -> AndroidX.Compose.Animation.ExitTransition!
 static readonly ComposeNet.Locals.LocalColorScheme -> ComposeNet.CompositionLocal<AndroidX.Compose.Material3.ColorScheme!>!
 static readonly ComposeNet.Locals.LocalConfiguration -> ComposeNet.CompositionLocal<Android.Content.Res.Configuration!>!
 static readonly ComposeNet.Locals.LocalContext -> ComposeNet.CompositionLocal<Android.Content.Context!>!
