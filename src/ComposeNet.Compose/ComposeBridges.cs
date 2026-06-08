@@ -177,6 +177,17 @@ internal static partial class ComposeBridges
         Signature = "(Landroidx/compose/ui/Modifier;)Landroidx/compose/ui/Modifier;")]
     internal static partial IntPtr ModifierSystemBarsPadding(IntPtr modifier);
 
+    // androidx.compose.material3.InteractiveComponentSizeKt.minimumInteractiveComponentSize() —
+    // declared in `InteractiveComponentSize.kt`, so the synthetic
+    // Kotlin file-class is `InteractiveComponentSizeKt`. Reserves at
+    // least 48.dp in both dimensions to keep touch targets accessible
+    // on icon-only buttons and compact rows. No Composer, no $default.
+    [ComposeBridge(
+        Class     = "androidx/compose/material3/InteractiveComponentSizeKt",
+        JvmName   = "minimumInteractiveComponentSize",
+        Signature = "(Landroidx/compose/ui/Modifier;)Landroidx/compose/ui/Modifier;")]
+    internal static partial IntPtr ModifierMinimumInteractiveComponentSize(IntPtr modifier);
+
     // androidx.compose.foundation.shape.RoundedCornerShapeKt.RoundedCornerShape-0680j_4(Dp).
     // Mangled because the lone arg is @JvmInline value class Dp (Float).
     // Plain-static shape: no receiver, no $default, no Composer.

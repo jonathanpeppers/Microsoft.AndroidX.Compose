@@ -211,6 +211,26 @@ public sealed class Modifier
         Append(h => ComposeBridges.ModifierSystemBarsPadding(h));
 
     /// <summary>
+    /// <c>Modifier.minimumInteractiveComponentSize()</c> — reserves at
+    /// least 48dp × 48dp around the composable to keep touch targets
+    /// accessible. Add to icon-only buttons, dense list rows, or any
+    /// other small clickable surface so its hit-box meets the Material
+    /// 3 accessibility minimum. Must appear in the chain BEFORE any
+    /// <see cref="Size(Dp)"/> / <see cref="Width(Dp)"/> /
+    /// <see cref="Height(Dp)"/> modifier that would limit the
+    /// composable's constraints, otherwise the reserved space is
+    /// clamped away.
+    /// </summary>
+    /// <remarks>
+    /// This modifier only affects layout — it doesn't enable touch
+    /// expansion (the platform already does that via
+    /// <c>ViewConfiguration</c>). Its job is to make sure neighboring
+    /// composables don't crowd the touch region.
+    /// </remarks>
+    public Modifier MinimumInteractiveComponentSize() =>
+        Append(h => ComposeBridges.ModifierMinimumInteractiveComponentSize(h));
+
+    /// <summary>
     /// <c>Modifier.background(color)</c> — paints a flat fill behind the
     /// composable using a <c>RectangleShape</c>. Takes a packed Compose
     /// <c>androidx.compose.ui.graphics.Color</c> value (a <c>ULong</c>

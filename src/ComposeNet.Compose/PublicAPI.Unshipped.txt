@@ -557,6 +557,7 @@ ComposeNet.Modifier.HorizontalScroll(ComposeNet.ScrollState! state, bool enabled
 ComposeNet.Modifier.ImePadding() -> ComposeNet.Modifier!
 ComposeNet.Modifier.MandatorySystemGesturesPadding() -> ComposeNet.Modifier!
 ComposeNet.Modifier.MatchParentSize() -> ComposeNet.Modifier!
+ComposeNet.Modifier.MinimumInteractiveComponentSize() -> ComposeNet.Modifier!
 ComposeNet.Modifier.NavigationBarsPadding() -> ComposeNet.Modifier!
 ComposeNet.Modifier.Offset(ComposeNet.Dp? x = null, ComposeNet.Dp? y = null) -> ComposeNet.Modifier!
 ComposeNet.Modifier.OnFocusChanged(System.Action<ComposeNet.FocusState>! onFocusChanged) -> ComposeNet.Modifier!

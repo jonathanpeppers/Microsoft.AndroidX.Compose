@@ -135,6 +135,7 @@ public static class Catalog
         D.Modifiers.DraggableOffsetDemo.Demo,
         D.Modifiers.GraphicsLayerDemo.Demo,
         D.Modifiers.FlowRowScopeDispatchDemo.Demo,
+        D.Modifiers.MinimumInteractiveComponentSizeDemo.Demo,
 
         // ---- State, effects, animation ----
         D.StateEffectsAnimation.RememberSaveableDemo.Demo,
