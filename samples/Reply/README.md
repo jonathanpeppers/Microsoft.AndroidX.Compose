@@ -12,6 +12,8 @@ This port keeps the **data layer faithful** (12 emails with thread
 replies, 13 accounts, identical strings) and renders a **single-pane
 phone layout** built from the same Material 3 building blocks.
 
+<img src="../docs/reply.png" alt="Reply running on an Android device" width="320" />
+
 ## What's here
 
 - Faithful port of upstream `data/local/*`:
