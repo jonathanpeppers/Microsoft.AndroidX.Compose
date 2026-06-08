@@ -3,9 +3,7 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
-using Android.Runtime;
 using AndroidX.Compose.Runtime;
-using Kotlin.Coroutines.Intrinsics;
 using Xamarin.KotlinX.Coroutines;
 using Xamarin.KotlinX.Coroutines.Flow;
 
@@ -217,7 +215,7 @@ internal sealed class SnapshotFlowEnumerator<T> : IAsyncEnumerator<T>
         {
             var boxed = flow.Collect(_collectorJcw, _continuation);
             var handle = boxed?.Handle ?? IntPtr.Zero;
-            if (handle != IntPtr.Zero && !IsCoroutineSuspended(handle))
+            if (handle != IntPtr.Zero && !SuspendBridge.IsCoroutineSuspended(handle))
             {
                 synchronouslyCompleted = true;
                 // Only dispose the non-sentinel wrapper. The
@@ -259,26 +257,5 @@ internal sealed class SnapshotFlowEnumerator<T> : IAsyncEnumerator<T>
             return;
         if (_pin.IsAllocated)
             _pin.Free();
-    }
-
-    // Cached global ref to the COROUTINE_SUSPENDED sentinel — same
-    // pattern as SuspendBridge. snapshotFlow's collect always
-    // suspends on first call (it has to register an apply observer
-    // first), so this branch is essentially dead in practice; we
-    // still need it to be correct for the synchronous-fault edge
-    // case where Kotlin throws inline.
-    static IntPtr s_suspendedHandle;
-    static bool IsCoroutineSuspended(IntPtr handle)
-    {
-        if (handle == IntPtr.Zero) return false;
-        if (s_suspendedHandle == IntPtr.Zero)
-        {
-            var inst = IntrinsicsKt.COROUTINE_SUSPENDED;
-            var gref = JNIEnv.NewGlobalRef(inst.Handle);
-            if (Interlocked.CompareExchange(ref s_suspendedHandle, gref, IntPtr.Zero) != IntPtr.Zero)
-                JNIEnv.DeleteGlobalRef(gref);
-            System.GC.KeepAlive(inst);
-        }
-        return JNIEnv.IsSameObject(handle, s_suspendedHandle);
     }
 }
