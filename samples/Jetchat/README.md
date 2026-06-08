@@ -104,10 +104,10 @@ dotnet build samples/Jetchat -t:Run
   Each is a toggleable `IconButton` whose background fills with
   `secondaryContainer` and whose tint flips to `onSecondaryContainer`
   when selected, matching upstream's selection visual. Selecting the
-  emoji button opens a placeholder panel below the input area;
-  selecting @ / image / location / video opens a
-  `FunctionalityNotAvailable` panel — the same fallback upstream
-  uses for the unbound selector pages.
+  emoji button opens the real two-tab emoji panel (Emojis/Stickers,
+  10-column tappable grid — see `EmojiSelector.cs`); selecting @ /
+  image / location / video opens a `FunctionalityNotAvailable` panel —
+  the same fallback upstream uses for the unbound selector pages.
 - **IME + navigation-bar safe insets** on the input area via
   `Modifier.NavigationBarsPadding().ImePadding()` so the keyboard
   pushes the input row up without obscuring it.
