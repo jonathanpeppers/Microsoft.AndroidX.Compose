@@ -539,6 +539,13 @@ using ComposeNet;
 [assembly: ComposeDefaults("ModifierSemanticsDefault",
     "mergeDescendants", "!properties")]
 
+// androidx.compose.ui.semantics.SemanticsPropertiesKt.onClick$default —
+// 2 Kotlin params after the receiver: label (String?, optional — caller
+// may omit to get the platform-default label) and action (Function0,
+// always supplied by the C# wrapper).
+[assembly: ComposeDefaults("SemanticsOnClickDefault",
+    "label", "!action")]
+
 // androidx.compose.foundation.gestures.DraggableKt.draggable$default —
 // non-@Composable Modifier extension. 8 Kotlin params after the
 // receiver: state, orientation, enabled, interactionSource,
@@ -1039,3 +1046,12 @@ using ComposeNet;
 [assembly: ComposeDefaults("PullToRefreshBoxDefault",
     "!isRefreshing", "!onRefresh", "modifier", "!state", "contentAlignment",
     "indicator", "!content")]
+
+// androidx.activity.compose.BackHandlerKt.BackHandler — Kotlin
+// signature `BackHandler(enabled: Boolean = true, onBack: () -> Unit)`.
+// Bit 0 (enabled) is optional with a Kotlin default of true; the C#
+// facade always supplies a bool, so the auto-mask clears the bit and
+// Kotlin uses our value. Bit 1 (onBack) is required (no Kotlin
+// default), `!`-suppressed so the bit stays clear and the caller's
+// lambda is always invoked.
+[assembly: ComposeDefaults("BackHandlerDefault", "enabled", "!onBack")]

@@ -2319,6 +2319,44 @@ internal static partial class ComposeBridges
         Signature = "(Landroidx/compose/ui/semantics/SemanticsPropertyReceiver;I)V")]
     internal static partial void SemanticsSetRole(IntPtr receiver, int role);
 
+    // androidx.compose.ui.semantics.SemanticsPropertiesKt.setSelected(
+    //   SemanticsPropertyReceiver, boolean) — toggles the "selected"
+    // state read by TalkBack on grouped selection nodes (tabs, list
+    // items). No mangling — no value class params. No $default.
+    [ComposeBridge(
+        Class     = "androidx/compose/ui/semantics/SemanticsPropertiesKt",
+        JvmName   = "setSelected",
+        Signature = "(Landroidx/compose/ui/semantics/SemanticsPropertyReceiver;Z)V")]
+    internal static partial void SemanticsSetSelected(IntPtr receiver, bool selected);
+
+    // androidx.compose.ui.semantics.SemanticsPropertiesKt.setStateDescription(
+    //   SemanticsPropertyReceiver, String) — short state hint TalkBack
+    // reads after the content description ("expanded", "3 of 5"). Same
+    // shape as setContentDescription.
+    [ComposeBridge(
+        Class     = "androidx/compose/ui/semantics/SemanticsPropertiesKt",
+        JvmName   = "setStateDescription",
+        Signature = "(Landroidx/compose/ui/semantics/SemanticsPropertyReceiver;" +
+                    "Ljava/lang/String;)V")]
+    internal static partial void SemanticsSetStateDescription(IntPtr receiver, string description);
+
+    // androidx.compose.ui.semantics.SemanticsPropertiesKt.onClick$default(
+    //   SemanticsPropertyReceiver, String?, Function0<Boolean>?,
+    //   int $default, Object marker) — registers a labelled
+    // accessibility click action. Two defaultable Kotlin params:
+    // label (bit 0, may be null = use platform default label) and
+    // action (bit 1, always supplied by the C# wrapper). Auto-mask
+    // shape: `string? label` lowers to the label bit; `IFunction0
+    // action` is suppressed via `!action` in the defaults enum.
+    [ComposeBridge(
+        Class     = "androidx/compose/ui/semantics/SemanticsPropertiesKt",
+        JvmName   = "onClick$default",
+        Signature = "(Landroidx/compose/ui/semantics/SemanticsPropertyReceiver;" +
+                    "Ljava/lang/String;Lkotlin/jvm/functions/Function0;" +
+                    "ILjava/lang/Object;)V",
+        Defaults  = typeof(SemanticsOnClickDefault))]
+    internal static partial void SemanticsOnClick(IntPtr receiver, string? label, IFunction0 action);
+
     // Shape factories — additional overloads of RoundedCornerShape /
     // CutCornerShape beyond the existing Dp variant. The Int (percent)
     // overloads aren't mangled because Int isn't an inline class. The
@@ -3548,4 +3586,25 @@ internal static partial class ComposeBridges
         return JNIEnv.NewObject(
             s_pointerInputHandler_class, s_pointerInputHandler_ctor, args);
     }
+
+    // androidx.activity.compose.BackHandlerKt.BackHandler — Kotlin
+    // signature `BackHandler(enabled: Boolean = true, onBack: () -> Unit)`.
+    // Bridged via raw JNI because `Xamarin.AndroidX.Activity.Compose`
+    // ships an empty stub DLL (no types bound). The trailing `II)V` on
+    // the JNI sig is `$changed, $default` — the primary @Composable
+    // overload, not a `*$default` synthetic. Compose's BackHandler
+    // wraps `onBack` in `rememberUpdatedState` so identity churn from
+    // a fresh ComposableLambda0 per recomposition is safe; the
+    // OnBackPressedDispatcher registration is keyed on lifecycle owner.
+    [ComposeBridge(
+        Class     = "androidx/activity/compose/BackHandlerKt",
+        JvmName   = "BackHandler",
+        Signature = "(ZLkotlin/jvm/functions/Function0;" +
+                    "Landroidx/compose/runtime/Composer;II)V",
+        Defaults  = typeof(BackHandlerDefault))]
+    [ComposeFacade]
+    public static partial void BackHandler(
+        IFunction0 onBack,
+        bool       enabled,
+        IComposer  composer);
 }

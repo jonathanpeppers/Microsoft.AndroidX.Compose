@@ -107,6 +107,7 @@ public static class Catalog
 
         // ---- Navigation ----
         D.Navigation.NavHostRouteArgsDemo.Demo,
+        D.Navigation.BackHandlerDemo.Demo,
         D.Navigation.NavigationDrawerItemDemo.Demo,
         D.Navigation.ModalDrawerDemo.Demo,
         D.Navigation.DismissibleDrawerDemo.Demo,
@@ -131,6 +132,7 @@ public static class Catalog
         D.Modifiers.ShapesAndShadowDemo.Demo,
         D.Modifiers.RotateScaleAlphaDemo.Demo,
         D.Modifiers.ToggleableSelectableSemanticsDemo.Demo,
+        D.Modifiers.SemanticsBuilderDemo.Demo,
         D.Modifiers.FocusRequesterDemo.Demo,
         D.Modifiers.CombinedClickableDemo.Demo,
         D.Modifiers.DetectTapGesturesDemo.Demo,

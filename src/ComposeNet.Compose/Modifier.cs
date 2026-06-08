@@ -1197,6 +1197,73 @@ public sealed class Modifier
     }
 
     /// <summary>
+    /// <c>Modifier.semantics { ... }</c> — fluent builder form that
+    /// exposes all supported semantic properties (selected, role,
+    /// content/state description, onClick label) on
+    /// <see cref="SemanticsScope"/>. Doesn't merge descendant
+    /// semantics; use the overload taking <paramref name="properties"/>
+    /// + <c>mergeDescendants</c> for that.
+    /// </summary>
+    /// <param name="properties">Builder callback. Each chained call on
+    /// the supplied <see cref="SemanticsScope"/> sets one property on
+    /// the underlying Kotlin <c>SemanticsPropertyReceiver</c>.</param>
+    public Modifier Semantics(System.Action<SemanticsScope> properties) =>
+        Semantics(mergeDescendants: false, properties);
+
+    /// <summary>
+    /// <c>Modifier.semantics(mergeDescendants) { ... }</c> — fluent
+    /// builder form. Set <paramref name="mergeDescendants"/> to
+    /// <c>true</c> for a container that should announce itself as a
+    /// single accessibility node instead of exposing its children
+    /// (e.g. a card with a label and a value).
+    /// </summary>
+    /// <param name="mergeDescendants">Whether to merge descendant
+    /// semantics into this node.</param>
+    /// <param name="properties">Builder callback. See
+    /// <see cref="SemanticsScope"/> for available property setters.</param>
+    public Modifier Semantics(bool mergeDescendants, System.Action<SemanticsScope> properties)
+    {
+        System.ArgumentNullException.ThrowIfNull(properties);
+        var lambda = WrapSemanticsBuilder(properties);
+        return Append(curr =>
+            ComposeBridges.ModifierSemantics(curr, mergeDescendants, lambda));
+    }
+
+    /// <summary>
+    /// <c>Modifier.clearAndSetSemantics { ... }</c> — fluent builder
+    /// form. Discards the descendant semantics first, then applies
+    /// the properties set in <paramref name="properties"/>. Use when
+    /// a custom composable should appear as a single accessibility
+    /// node with a curated description, hiding implementation
+    /// details.
+    /// </summary>
+    /// <param name="properties">Builder callback. See
+    /// <see cref="SemanticsScope"/> for available property setters.</param>
+    public Modifier ClearAndSetSemantics(System.Action<SemanticsScope> properties)
+    {
+        System.ArgumentNullException.ThrowIfNull(properties);
+        var lambda = WrapSemanticsBuilder(properties);
+        return Append(curr =>
+            ComposeBridges.ModifierClearAndSetSemantics(curr, lambda));
+    }
+
+    // Shared body for the two builder-form overloads above. Each
+    // invocation of the returned ComposableLambda1 gets a fresh
+    // SemanticsScope bound to the JNI handle Compose hands us, and
+    // the scope is Invalidate()d the moment the user callback returns
+    // so leaked references throw a clear error on reuse.
+    static ComposableLambda1 WrapSemanticsBuilder(System.Action<SemanticsScope> properties) =>
+        new(arg =>
+        {
+            if (arg is Java.Lang.Object obj)
+            {
+                var scope = new SemanticsScope(obj.Handle);
+                try { properties(scope); }
+                finally { scope.Invalidate(); }
+            }
+        });
+
+    /// <summary>
     /// Materialize the chain into a managed <c>IModifier</c> wrapper.
     /// Returns <c>null</c> when the chain is empty (no ops appended) so
     /// callers can keep the Kotlin <c>$default</c> bit set and let
