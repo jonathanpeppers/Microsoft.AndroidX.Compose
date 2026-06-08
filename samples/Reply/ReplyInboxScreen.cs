@@ -32,7 +32,7 @@ public static class ReplyInboxScreen
                         isOpened:         openedEmailId == email.Id,
                         isSelected:       selectedEmailIds.Contains(email.Id)))
             {
-                Modifier = Modifier.Companion.FillMaxSize().Padding(top: 80, bottom: 80, start: 0, end: 0),
+                Modifier = Modifier.Companion.FillMaxWidth().Padding(top: 80, bottom: 0, start: 0, end: 0),
             },
             new ReplySearchBar(),
             new Box
