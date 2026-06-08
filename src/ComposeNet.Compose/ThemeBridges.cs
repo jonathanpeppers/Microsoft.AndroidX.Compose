@@ -49,7 +49,7 @@ internal static partial class ComposeBridges
     internal static ColorScheme DefaultLightColorScheme() => InvokeColorSchemeDefault(
         ref s_lightColorSchemeDefault_class,
         ref s_lightColorSchemeDefault_method,
-        "lightColorScheme$default",
+        "lightColorScheme-_VG5OTI$default",
         colors: null,
         mask0: -1,
         mask1: -1);
@@ -61,7 +61,7 @@ internal static partial class ComposeBridges
     internal static ColorScheme DefaultDarkColorScheme() => InvokeColorSchemeDefault(
         ref s_darkColorSchemeDefault_class,
         ref s_darkColorSchemeDefault_method,
-        "darkColorScheme$default",
+        "darkColorScheme-_VG5OTI$default",
         colors: null,
         mask0: -1,
         mask1: -1);
@@ -78,7 +78,7 @@ internal static partial class ComposeBridges
         InvokeColorSchemeDefault(
             ref s_lightColorSchemeDefault_class,
             ref s_lightColorSchemeDefault_method,
-            "lightColorScheme$default",
+            "lightColorScheme-_VG5OTI$default",
             colors: colors,
             mask0: mask0,
             mask1: mask1);
@@ -90,7 +90,7 @@ internal static partial class ComposeBridges
         InvokeColorSchemeDefault(
             ref s_darkColorSchemeDefault_class,
             ref s_darkColorSchemeDefault_method,
-            "darkColorScheme$default",
+            "darkColorScheme-_VG5OTI$default",
             colors: colors,
             mask0: mask0,
             mask1: mask1);
