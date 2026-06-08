@@ -858,4 +858,59 @@ public static class Compose
         System.ArgumentNullException.ThrowIfNull(producer);
         return new SnapshotFlowEnumerable<T>(producer);
     }
+
+    /// <summary>
+    /// Captures the latest <paramref name="value"/> across recompositions
+    /// and returns a <see cref="System.Func{T}"/> that, when invoked,
+    /// reads the freshest value — even from inside a long-lived effect
+    /// lambda whose closure was captured on first composition.
+    /// </summary>
+    /// <param name="value">
+    /// Value to expose through the returned delegate. Re-passed on every
+    /// recomposition; the underlying snapshot state is overwritten without
+    /// disturbing the slot identity.
+    /// </param>
+    /// <returns>
+    /// A delegate that returns the latest <paramref name="value"/> each
+    /// time it is invoked. The delegate identity is stable across
+    /// recompositions, so it is safe to capture into a
+    /// <c>LaunchedEffect</c> or
+    /// <see cref="DisposableEffect(object?, System.Func{AndroidX.Compose.Runtime.DisposableEffectScope, System.Action})"/>
+    /// body that wants to read the freshest value without restarting on
+    /// every change.
+    /// </returns>
+    /// <remarks>
+    /// Must be called inside a composition (e.g. inside a <c>SetContent</c>
+    /// body or a <see cref="ComposableNode.Render(IComposer)"/> override).
+    /// <para>
+    /// C# parity for Kotlin's
+    /// <c>androidx.compose.runtime.rememberUpdatedState(newValue)</c>. The
+    /// Kotlin form returns a <c>State&lt;T&gt;</c> whose <c>.value</c> auto-
+    /// subscribes any composable read site to invalidation; the C# form
+    /// returns a plain <see cref="System.Func{T}"/> because the canonical
+    /// use case is "read the latest value from inside a non-composable
+    /// effect lambda" — where auto-subscription doesn't apply and a
+    /// delegate is the more natural shape. Reading the delegate inside a
+    /// composable body still works, but won't subscribe that read site to
+    /// invalidations.
+    /// </para>
+    /// </remarks>
+    public static System.Func<T> RememberLatest<T>(T value)
+    {
+        var composer = ComposeContext.Current
+            ?? throw new System.InvalidOperationException(
+                "Compose.RememberLatest must be called inside a composition (e.g. inside a SetContent body or a ComposableNode.Render override).");
+
+        var state = SnapshotStateKt.RememberUpdatedState(MutableState<T>.ToJava(value), composer, _changed: 0);
+        // rememberUpdatedState delegates to mutableStateOf, so the underlying Java
+        // peer always implements IMutableState even though the binding narrows the
+        // return type to IState. A direct C# cast fails (Mono.Android's peer wrapper
+        // for IState doesn't implement IMutableState), so re-resolve through the
+        // peer cache against the underlying handle.
+        var handle = ((Java.Lang.Object)state).Handle;
+        var mutable = Java.Lang.Object.GetObject<IMutableState>(
+            handle, Android.Runtime.JniHandleOwnership.DoNotTransfer)!;
+        var wrapper = new MutableState<T>(mutable);
+        return () => wrapper.Value;
+    }
 }
