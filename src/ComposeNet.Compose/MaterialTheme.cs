@@ -275,11 +275,9 @@ public sealed class MaterialTheme : ComposableContainer
         // backed enum, and Kotlin lowers >32 default slots into a
         // *pair* of int masks (`II` in the synthetic ctor signature),
         // not a single int. With 48 slots here we'd silently overflow
-        // bits 32..47. Until the generator grows long-backed enums
-        // and a split-into-(mask0, mask1) helper (tracked separately
-        // — see the BuildColorScheme issue), keep the hand-rolled
-        // pair mask. Mirror of how Kotlin's own synthetic ctor
-        // computes its $default pair.
+        // bits 32..47. Tracked in #178 — once the generator grows
+        // long-backed enums and a (mask0, mask1) Split helper, swap
+        // this whole block for ColorSchemeDefault.X enum sets.
         long[] colors = new long[slots.Length];
         int mask0 = 0;
         int mask1 = 0;
