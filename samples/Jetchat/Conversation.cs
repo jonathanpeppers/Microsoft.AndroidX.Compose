@@ -40,29 +40,26 @@ public static class Conversation
         DrawerStateHolder    drawerState,
         MutableState<int>    selectedSelector,
         MutableState<bool>   popupOpen) =>
-        new MaterialTheme
+        JetchatTheme.Build(new Composed(c =>
         {
-            new Composed(c =>
+            var scheme = MaterialTheme.CurrentColorScheme(c);
+            var root   = new Column
             {
-                var scheme = MaterialTheme.CurrentColorScheme(c);
-                var root   = new Column
+                Modifier.Companion.FillMaxSize(),
+                new ModalNavigationDrawer(drawerState)
                 {
-                    Modifier.Companion.FillMaxSize(),
-                    new ModalNavigationDrawer(drawerState)
+                    Drawer  = BuildDrawer(ui, selectedMenu, drawerState, drawerScroll, scheme),
+                    Content = new Scaffold
                     {
-                        Drawer  = BuildDrawer(ui, selectedMenu, drawerState, drawerScroll, scheme),
-                        Content = new Scaffold
-                        {
-                            TopBar = BuildTopBar(ui, scheme, drawerState, popupOpen),
-                            Body   = BuildBody(ui, input, scheme, selectedSelector),
-                        },
+                        TopBar = BuildTopBar(ui, scheme, drawerState, popupOpen),
+                        Body   = BuildBody(ui, input, scheme, selectedSelector),
                     },
-                };
-                if (popupOpen.Value)
-                    root.Add(BuildFunctionalityPopup(popupOpen));
-                return root;
-            }),
-        };
+                },
+            };
+            if (popupOpen.Value)
+                root.Add(BuildFunctionalityPopup(popupOpen));
+            return root;
+        }));
 
     static CenterAlignedTopAppBar BuildTopBar(
         ConversationUiState ui,
@@ -73,11 +70,7 @@ public static class Conversation
         {
             NavigationIcon = new IconButton(onClick: () => _ = drawerState.OpenAsync())
             {
-                new Icon(Resource.Drawable.ic_jetchat, "Open navigation drawer")
-                {
-                    Modifier = Modifier.Companion.Size(24),
-                    TintArgb = scheme.Primary,
-                },
+                JetchatIcon.Build("Open navigation drawer", sizeDp: 32),
             },
             Title = new Column
             {
@@ -431,36 +424,37 @@ public static class Conversation
         MutableState<string> selectedMenu,
         DrawerStateHolder    drawerState,
         ScrollState          scroll,
-        ColorScheme          scheme) =>
-        new()
+        ColorScheme          scheme)
+    {
+        // M3's `ModalDrawerSheet` upstream defaults to
+        // `surfaceContainerLow`; our facade defaults to
+        // `secondaryContainer`, which in Jetchat's dark palette is a
+        // very saturated blue. Pin to `surface` to match upstream.
+        var sheet = new ModalDrawerSheet { ContainerColor = new Color(scheme.Surface) };
+        sheet.Add(new Column
         {
-            new Column
-            {
-                Modifier.Companion.FillMaxWidth().VerticalScroll(scroll),
-                // Push everything below the status bar so the system
-                // chrome doesn't overlap the drawer logo.
-                new Spacer(Modifier.Companion.StatusBarsPadding()),
-                BuildDrawerHeader(scheme),
-                BuildDividerItem(scheme, sidePadding: 0),
-                BuildDrawerSectionHeader("Chats", scheme),
-                BuildChatItem(selectedMenu, drawerState, "composers",    scheme),
-                BuildChatItem(selectedMenu, drawerState, "droidcon-nyc", scheme),
-                BuildDividerItem(scheme, sidePadding: 28),
-                BuildDrawerSectionHeader("Recent Profiles", scheme),
-                BuildProfileItem(selectedMenu, drawerState, "Ali Conors (you)", MeProfileId,        Resource.Drawable.avatar_ali,          scheme),
-                BuildProfileItem(selectedMenu, drawerState, "Taylor Brooks",    ColleagueProfileId, Resource.Drawable.avatar_someone_else, scheme),
-            },
-        };
+            Modifier.Companion.FillMaxWidth().VerticalScroll(scroll),
+            // Push everything below the status bar so the system
+            // chrome doesn't overlap the drawer logo.
+            new Spacer(Modifier.Companion.StatusBarsPadding()),
+            BuildDrawerHeader(scheme),
+            BuildDividerItem(scheme, sidePadding: 0),
+            BuildDrawerSectionHeader("Chats", scheme),
+            BuildChatItem(selectedMenu, drawerState, "composers",    scheme),
+            BuildChatItem(selectedMenu, drawerState, "droidcon-nyc", scheme),
+            BuildDividerItem(scheme, sidePadding: 28),
+            BuildDrawerSectionHeader("Recent Profiles", scheme),
+            BuildProfileItem(selectedMenu, drawerState, "Ali Conors (you)", MeProfileId,        Resource.Drawable.avatar_ali,          scheme),
+            BuildProfileItem(selectedMenu, drawerState, "Taylor Brooks",    ColleagueProfileId, Resource.Drawable.avatar_someone_else, scheme),
+        });
+        return sheet;
+    }
 
     static Row BuildDrawerHeader(ColorScheme scheme) =>
         new()
         {
             Modifier.Companion.FillMaxWidth().Padding(16),
-            new Icon(Resource.Drawable.ic_jetchat, null)
-            {
-                Modifier = Modifier.Companion.Size(24),
-                TintArgb = scheme.Primary,
-            },
+            JetchatIcon.Build(contentDescription: null, sizeDp: 24),
             new Spacer(Modifier.Companion.Width(8)),
             new Text("Jetchat")
             {
