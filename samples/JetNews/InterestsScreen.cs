@@ -17,11 +17,16 @@ public static class InterestsScreen
         MutableStateList<string> selectedTopics,
         MutableStateList<string> selectedPeople,
         MutableStateList<string> selectedPublications,
-        MutableState<int>        selectedTab) =>
+        MutableState<int>        selectedTab,
+        DrawerStateHolder        drawerState) =>
         new()
         {
             TopBar = new CenterAlignedTopAppBar
             {
+                NavigationIcon = new IconButton(onClick: () => _ = drawerState.OpenAsync())
+                {
+                    new Icon(Resource.Drawable.ic_menu, "Open navigation drawer"),
+                },
                 Title = new Text("Interests")
                 {
                     FontSize   = 18,

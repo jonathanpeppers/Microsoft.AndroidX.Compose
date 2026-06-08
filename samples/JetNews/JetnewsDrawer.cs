@@ -9,25 +9,22 @@ namespace ComposeNet.Samples.JetNews;
 /// <c>AppDrawer</c>.
 /// </summary>
 /// <remarks>
-/// <para>
-/// Tapping a row navigates to that route AND updates the
+/// Tapping a row navigates to that route, updates the
 /// <see cref="MutableState{T}"/> tracking the active route so the row
-/// can highlight itself.
-/// </para>
-/// <para>
-/// The drawer doesn't auto-close on selection: programmatic
-/// <c>DrawerState.Close()</c> hasn't been bridged yet (the
-/// <c>SuspendBridge</c> plumbing for it would mirror what <c>ScrollState</c>
-/// already does). Users can swipe the drawer closed by hand —
-/// functionality, not finesse.
-/// </para>
+/// can highlight itself, then fires
+/// <see cref="DrawerStateHolder.CloseAsync"/> so the drawer slides
+/// shut behind the navigation — same fire-and-forget pattern Jetchat
+/// uses for its hamburger menu.
 /// </remarks>
 public static class JetnewsDrawer
 {
     static readonly Color SelectedColor = Color.FromHex("#D0E4FF");
 
     /// <summary>Materialize the drawer sheet.</summary>
-    public static ModalDrawerSheet Build(NavController nav, MutableState<string> currentRoute) =>
+    public static ModalDrawerSheet Build(
+        NavController        nav,
+        MutableState<string> currentRoute,
+        DrawerStateHolder    drawerState) =>
         new()
         {
             new Column
@@ -36,17 +33,19 @@ public static class JetnewsDrawer
                 BuildHeader(),
                 new HorizontalDivider(),
                 BuildItem(
-                    label:     "Home",
-                    iconRes:   Resource.Drawable.ic_home,
-                    route:     Routes.Home,
-                    nav:       nav,
-                    currentRoute: currentRoute),
+                    label:        "Home",
+                    iconRes:      Resource.Drawable.ic_home,
+                    route:        Routes.Home,
+                    nav:          nav,
+                    currentRoute: currentRoute,
+                    drawerState:  drawerState),
                 BuildItem(
-                    label:     "Interests",
-                    iconRes:   Resource.Drawable.ic_interests,
-                    route:     Routes.Interests,
-                    nav:       nav,
-                    currentRoute: currentRoute),
+                    label:        "Interests",
+                    iconRes:      Resource.Drawable.ic_interests,
+                    route:        Routes.Interests,
+                    nav:          nav,
+                    currentRoute: currentRoute,
+                    drawerState:  drawerState),
             },
         };
 
@@ -67,7 +66,8 @@ public static class JetnewsDrawer
         };
 
     static Row BuildItem(string label, int iconRes, string route,
-                         NavController nav, MutableState<string> currentRoute)
+                         NavController nav, MutableState<string> currentRoute,
+                         DrawerStateHolder drawerState)
     {
         bool selected = currentRoute.Value == route;
 
@@ -78,9 +78,15 @@ public static class JetnewsDrawer
             .Clip(28)
             .Clickable(() =>
             {
-                if (currentRoute.Value == route) return;
-                currentRoute.Value = route;
-                nav.Navigate(route);
+                if (currentRoute.Value != route)
+                {
+                    currentRoute.Value = route;
+                    nav.Navigate(route);
+                }
+                // Fire-and-forget close even on a re-tap of the
+                // already-active item — matches upstream behaviour
+                // and Jetchat's drawer.
+                _ = drawerState.CloseAsync();
             });
         if (selected)
             modifier = modifier.Background(SelectedColor);

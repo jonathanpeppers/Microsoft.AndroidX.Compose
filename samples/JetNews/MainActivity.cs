@@ -1,4 +1,5 @@
 using Android.OS;
+using AndroidX.Compose.Material3;
 using AndroidX.Compose.Runtime;
 using ComposeNet;
 
@@ -24,6 +25,7 @@ public class MainActivity : ComposeActivity
         {
             var nav                  = Remember(() => new NavController());
             var currentRoute         = Remember(() => new MutableState<string>(Routes.Home));
+            var drawerState          = Remember(() => new DrawerStateHolder(DrawerValue.Closed));
             var bookmarks            = Remember(() => new MutableStateList<string>());
             var selectedTopics       = Remember(() => new MutableStateList<string>());
             var selectedPeople       = Remember(() => new MutableStateList<string>());
@@ -32,6 +34,7 @@ public class MainActivity : ComposeActivity
             return JetnewsApp.Build(
                 nav,
                 currentRoute,
+                drawerState,
                 bookmarks,
                 selectedTopics,
                 selectedPeople,

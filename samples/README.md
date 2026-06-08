@@ -22,7 +22,7 @@ Status legend: ✅ done · 🚧 in progress · ⬜️ not started · ❌ blocked
 | Complexity (upstream) | Sample      | Status | Notes |
 |----------------------:|-------------|:------:|-------|
 | Low                   | **Jetchat** | ✅      | Simplified single-channel chat with navigation drawer (`composers` / `droidcon-nyc`), top-bar search/info action icons, distinct-per-author avatars (DiceBear `lorelei`, CC0), and a `LazyColumn`-backed message log. Programmatic drawer open + multi-channel routing still pending. See `Jetchat/README.md`. |
-| Medium                | JetNews     | ✅      | Simplified phone-only single-pane port — three screens (Home / Article / Interests), navigation drawer with two destinations, `PrimaryTabRow` on Interests, per-post bookmark toggle, six condensed seed posts with solid-color hero panels. Adaptive list-detail layout, inline paragraph spans, `nestedScroll` top-bar elevation, drawer auto-close, and real hero PNGs are all pending. See `JetNews/README.md`. |
+| Medium                | JetNews     | ✅      | Simplified phone-only single-pane port — three screens (Home / Article / Interests), navigation drawer with two destinations and auto-close on item tap, hamburger top-bar toggle, `PrimaryTabRow` on Interests, per-post bookmark toggle, six condensed seed posts with solid-color hero panels. Adaptive list-detail layout, inline paragraph spans, `nestedScroll` top-bar elevation, and real hero PNGs are all pending. See `JetNews/README.md`. |
 | Medium                | Reply       | ✅      | Simplified phone-only single-pane port — bottom-nav scaffold with 4 destinations, inbox `LazyColumn` of cards with `AnimatedContent`-swapped selected avatar and `CombinedClickable` (tap/long-press) multi-select, email-detail `Scaffold` with thread cards, Articles/DMs/Groups stub screens. Adaptive layouts (#143), TwoPane / fold awareness (#168), `NavigationDrawerItem` (#163), `BackHandler` (#166), `NavOptions` (#169), `DockedSearchBar` (#167), `LazyListState` scroll-direction reads (#164), and `semantics { selected }` (#165) are all pending. See `Reply/README.md`. |
 | Medium-High           | Jetsnack    | ⬜️     | Heavy custom layouts and animation. |
 | High                  | Jetcaster   | ⬜️     | Coroutines, DataStore, Hilt, media playback. |
@@ -44,7 +44,6 @@ that needs the same primitive.
 | [#69](https://github.com/jonathanpeppers/compose-net/issues/69)  | WindowInsets padding modifiers (`imePadding`, `navigationBarsPadding`, `statusBarsPadding`, …) | IME-synced input row in **Jetchat**. |
 | [#59](https://github.com/jonathanpeppers/compose-net/issues/59)  | `CompositionLocal` / `CompositionLocalProvider` (`LocalContext`, `LocalDensity`, `LocalContentColor`, `LocalTextStyle`, …) | Idiomatic theming and density reads across every sample. |
 | [#20](https://github.com/jonathanpeppers/compose-net/issues/20)  | Edge-to-edge bootstrapping | Status/nav-bar overlap on every sample. |
-| [#140](https://github.com/jonathanpeppers/compose-net/issues/140) | `DrawerState.open()` / `close()` suspend bridges | Drawer auto-close on item tap in **Jetchat** + **JetNews**; programmatic hamburger button. |
 | [#141](https://github.com/jonathanpeppers/compose-net/issues/141) | `AnnotatedString` + `SpanStyle` for inline-run text styling | Link / Bold / Italic / Code spans inside paragraphs in **JetNews** article reader. |
 | [#142](https://github.com/jonathanpeppers/compose-net/issues/142) | `Modifier.nestedScroll` + `TopAppBarDefaults` scroll behaviors | Top-bar elevation / collapse on scroll in **JetNews**, **Reply**, **Jetcaster**. |
 | [#143](https://github.com/jonathanpeppers/compose-net/issues/143) | WindowSizeClass / `currentWindowAdaptiveInfo` | Adaptive layouts; blocks **Reply** entirely and the **JetNews** list-detail screen. |
@@ -66,7 +65,8 @@ Closed gaps that previously appeared here (now usable in samples):
 **#62** State primitives (`RememberSaveable` / `mutableStateListOf` / `mutableStateMapOf` / `derivedStateOf`),
 **#63** Modifier surface (Background/Border/Clickable/Size/Width/Height/AspectRatio/Offset/Alpha/Clip/Weight + scroll + focus + semantics + Draggable),
 **#65** Compose value types (`Color`/`Dp`/`Sp`/`FontWeight`/`TextAlign`),
-**#70** Row/Column `Arrangement`.
+**#70** Row/Column `Arrangement`,
+**#140** `DrawerState.open()` / `close()` suspend bridges.
 
 ## Attribution
 

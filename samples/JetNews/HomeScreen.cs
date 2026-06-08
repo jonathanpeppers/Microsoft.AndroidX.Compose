@@ -6,8 +6,8 @@ using ComposeNet;
 namespace ComposeNet.Samples.JetNews;
 
 /// <summary>
-/// JetNews home feed — top app bar with a search-only action row, then
-/// a <see cref="LazyColumn{T}"/> with the highlighted post and the
+/// JetNews home feed — top app bar with hamburger / search action row,
+/// then a <see cref="LazyColumn{T}"/> with the highlighted post and the
 /// recommended / popular / recent lists. Each card taps through to the
 /// article screen via the supplied callback.
 /// </summary>
@@ -17,11 +17,16 @@ public static class HomeScreen
     public static Scaffold Build(
         PostsFeed feed,
         MutableStateList<string> bookmarks,
+        DrawerStateHolder drawerState,
         Action<string> onSelectPost) =>
         new()
         {
             TopBar = new CenterAlignedTopAppBar
             {
+                NavigationIcon = new IconButton(onClick: () => _ = drawerState.OpenAsync())
+                {
+                    new Icon(Resource.Drawable.ic_menu, "Open navigation drawer"),
+                },
                 Title = new Icon(Resource.Drawable.ic_jetnews_wordmark, "JetNews")
                 {
                     Modifier = Modifier.Companion.Height(24),

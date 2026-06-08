@@ -22,9 +22,13 @@ dotnet build samples/JetNews -t:Run
 - **Navigation drawer** (`ModalNavigationDrawer` + `ModalDrawerSheet`)
   with a JetNews logo header, divider, and two destination rows
   (Home, Interests) that highlight whichever route is currently
-  active and navigate via the shared `NavController`.
-- **Home feed**: `Scaffold` + `CenterAlignedTopAppBar` (title +
-  search icon action) with a `LazyColumn` that flattens the
+  active and navigate via the shared `NavController`. Tapping a row
+  fires `DrawerStateHolder.CloseAsync()` so the drawer slides shut
+  behind the navigation; tapping the top-bar hamburger fires
+  `OpenAsync()` to slide it back open. Both go through the
+  `SuspendBridge` plumbing around `DrawerState.open()` / `close()`.
+- **Home feed**: `Scaffold` + `CenterAlignedTopAppBar` (hamburger +
+  title + search icon action) with a `LazyColumn` that flattens the
   highlighted post, a "Recommended for you" section, a "Popular on
   JetNews" section, and a "Based on your history" section into a
   single lazy list — same structure upstream's `PostList` produces
@@ -47,9 +51,9 @@ dotnet build samples/JetNews -t:Run
 - **Theme**: `MaterialTheme` wraps the whole tree, so the device's
   Material You dynamic color scheme drives surface / primary / etc.
 - **Resource-backed icons** via the Phase 7 `[PainterResource]`
-  `Icon` facade (search, back, bookmark, bookmark-filled, share,
-  home, interests, check, add, logo) — eleven vector drawables under
-  `Resources/drawable/`.
+  `Icon` facade (menu, search, back, bookmark, bookmark-filled,
+  share, home, interests, check, add, logo) — twelve vector drawables
+  under `Resources/drawable/`.
 
 ## What's omitted
 
@@ -62,7 +66,6 @@ feature.
 | Real hero PNGs in card / article (currently a solid `Box` filled with a per-post `HeroColor`) | [#145](https://github.com/jonathanpeppers/compose-net/issues/145) — `ContentScale.Crop` on the `Image` facade; without it small vector hero images letterbox |
 | Inline-run paragraph styling (Link / Bold / Italic / Code spans inside one paragraph) | [#141](https://github.com/jonathanpeppers/compose-net/issues/141) — `AnnotatedString` + `SpanStyle` |
 | Top-bar elevation / collapse on scroll (`pinnedScrollBehavior`, `enterAlwaysScrollBehavior`) | [#142](https://github.com/jonathanpeppers/compose-net/issues/142) — `Modifier.nestedScroll` + `TopAppBarDefaults` |
-| Drawer auto-close on item tap (drawer stays open; edge-swipe closes) | [#140](https://github.com/jonathanpeppers/compose-net/issues/140) — `DrawerState.open()` / `close()` suspend bridges |
 | Adaptive Topics two-column layout (`InterestsAdaptiveContentLayout`) — port renders one column | [#144](https://github.com/jonathanpeppers/compose-net/issues/144) — custom `Layout {}` primitive |
 | `stringResource(R.string.x)` — port uses inline string literals      | [#146](https://github.com/jonathanpeppers/compose-net/issues/146) |
 | `CompositionLocal` reads (`LocalContext`, `LocalDensity`, …)         | [#59](https://github.com/jonathanpeppers/compose-net/issues/59) |
@@ -103,25 +106,23 @@ the runs. `Quote` skips italic too — `FontStyle.Italic` is
 available, but `Italic` runs *inside* an otherwise-upright paragraph
 still need AnnotatedString.
 
-### Drawer items stay open after tap
+### Drawer items auto-close on tap
 
-`JetnewsDrawer.Build` navigates on tap and updates a
-`MutableState<string>` mirror of the active route, but doesn't
-close the drawer. The `DrawerStateHolder` wrapper landed in PR
-#131 and `SuspendBridge` plumbing is in place — the missing piece
-is the bridge for `DrawerState.close()`. Tracked in
+`JetnewsDrawer.Build` navigates on tap, updates a
+`MutableState<string>` mirror of the active route, and fires
+`DrawerStateHolder.CloseAsync()` so the drawer slides shut behind
+the navigation. Re-tapping the already-active row also closes the
+drawer (no navigation, just dismiss). The top-bar hamburger on
+Home / Interests fires `OpenAsync()` to slide it back open. Both
+go through the `SuspendBridge` plumbing wired up in
 [#140](https://github.com/jonathanpeppers/compose-net/issues/140).
-A no-op auto-close would feel buggy, so the port leaves the user
-to edge-swipe the drawer closed after navigating. Same workaround
-Jetchat ships with.
 
-### Search / share / hamburger icons are visual-only
+### Search / share icons are visual-only
 
-The top-bar search icon, the article bottom-bar share button, and
-the (intentionally omitted) hamburger nav icon all wire to no-op
-`Action` callbacks (or aren't present at all). The icons read as
-real affordances but don't trigger anything. The drawer opens by
-edge-swipe.
+The top-bar search icon and the article bottom-bar share button
+both wire to no-op `Action` callbacks. The icons read as real
+affordances but don't trigger anything — same shape as upstream's
+placeholder handlers.
 
 ### Interests is a single column
 
