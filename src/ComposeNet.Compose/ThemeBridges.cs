@@ -4,27 +4,27 @@ using AndroidX.Compose.Material3;
 namespace ComposeNet;
 
 // Hand-written JNI bridges for Kotlin synthetic `$default` overloads
-// that yield a fully-defaulted Material 3 ColorScheme. Used by
-// MaterialTheme.LightColorScheme() / MaterialTheme.DarkColorScheme() so
-// callers can take the Material 3 baseline palette without having to
-// supply all 47 Color values themselves.
+// that yield a Material 3 ColorScheme. Used by
+// MaterialTheme.LightColorScheme(...) / MaterialTheme.DarkColorScheme(...)
+// so callers can take the Material 3 baseline palette and optionally
+// override individual slots, without having to supply all 48 Color
+// values themselves.
 //
-// `ColorSchemeKt.lightColorScheme(J×47)` and `darkColorScheme(J×47)`
+// `ColorSchemeKt.lightColorScheme(J×48)` and `darkColorScheme(J×48)`
 // ARE bound directly — `Color` is `@JvmInline value class Color(val value: ULong)`
 // which the binder represents as plain `long`, so the JVM names aren't
 // stripped. What ISN'T bound is the synthetic `$default` sibling
 // (Kotlin emits it for any function whose parameters have default
-// values), so a managed caller currently has to pass all 47 colors
-// explicitly. These bridges invoke the synthetic with every bit of the
-// `$default` mask set, telling Kotlin to substitute its real per-slot
-// defaults from the M3 tonal palette tokens.
+// values), so a managed caller currently has to pass all 48 colors
+// explicitly. These bridges invoke the synthetic with a dual-int
+// `$default` mask: bit N == 1 tells Kotlin "use the per-slot default
+// from the M3 tonal palette tokens"; bit N == 0 tells it "use the
+// caller-supplied long at slot N".
 //
 // Why raw JNI instead of `[ComposeBridge]`: the generator's
-// non-`@Composable` shape requires at least one user parameter (it
-// maps each C# param positionally to a JNI slot and computes the
-// auto-mask from nullable / IntPtr.Zero passes). Here every parameter
-// is defaulted, so the easiest path is to hand-roll the JNI call and
-// pre-bake mask0 = mask1 = -1.
+// non-`@Composable` shape supports a single `int $default` slot.
+// `lightColorScheme$default` has 48 colors, requiring TWO `$default`
+// ints (32 bits each), which the generator doesn't model.
 internal static partial class ComposeBridges
 {
     // 48 J slots (one per Color param) + II (two $default mask ints,
@@ -33,6 +33,9 @@ internal static partial class ComposeBridges
         "(JJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJJ" +
         "IILjava/lang/Object;)" +
         "Landroidx/compose/material3/ColorScheme;";
+
+    // Number of Color slots in lightColorScheme / darkColorScheme.
+    internal const int ColorSchemeSlotCount = 48;
 
     static System.IntPtr s_lightColorSchemeDefault_class;
     static System.IntPtr s_lightColorSchemeDefault_method;
@@ -46,7 +49,10 @@ internal static partial class ComposeBridges
     internal static ColorScheme DefaultLightColorScheme() => InvokeColorSchemeDefault(
         ref s_lightColorSchemeDefault_class,
         ref s_lightColorSchemeDefault_method,
-        "lightColorScheme$default");
+        "lightColorScheme-_VG5OTI$default",
+        colors: null,
+        mask0: -1,
+        mask1: -1);
 
     /// <summary>
     /// Build a Material 3 dark <see cref="ColorScheme"/> using every
@@ -55,12 +61,47 @@ internal static partial class ComposeBridges
     internal static ColorScheme DefaultDarkColorScheme() => InvokeColorSchemeDefault(
         ref s_darkColorSchemeDefault_class,
         ref s_darkColorSchemeDefault_method,
-        "darkColorScheme$default");
+        "darkColorScheme-_VG5OTI$default",
+        colors: null,
+        mask0: -1,
+        mask1: -1);
+
+    /// <summary>
+    /// Build a Material 3 light <see cref="ColorScheme"/> from a
+    /// 48-element <paramref name="colors"/> array of packed
+    /// <see cref="Color"/> longs and a dual-int <paramref name="mask0"/> /
+    /// <paramref name="mask1"/> selecting which slots use the
+    /// caller-supplied value (bit clear) vs the Kotlin per-slot
+    /// default (bit set).
+    /// </summary>
+    internal static ColorScheme CustomLightColorScheme(long[] colors, int mask0, int mask1) =>
+        InvokeColorSchemeDefault(
+            ref s_lightColorSchemeDefault_class,
+            ref s_lightColorSchemeDefault_method,
+            "lightColorScheme-_VG5OTI$default",
+            colors: colors,
+            mask0: mask0,
+            mask1: mask1);
+
+    /// <summary>
+    /// Dark-mode counterpart of <see cref="CustomLightColorScheme"/>.
+    /// </summary>
+    internal static ColorScheme CustomDarkColorScheme(long[] colors, int mask0, int mask1) =>
+        InvokeColorSchemeDefault(
+            ref s_darkColorSchemeDefault_class,
+            ref s_darkColorSchemeDefault_method,
+            "darkColorScheme-_VG5OTI$default",
+            colors: colors,
+            mask0: mask0,
+            mask1: mask1);
 
     static unsafe ColorScheme InvokeColorSchemeDefault(
         ref System.IntPtr classCache,
         ref System.IntPtr methodCache,
-        string jvmName)
+        string jvmName,
+        long[]? colors,
+        int mask0,
+        int mask1)
     {
         if (methodCache == System.IntPtr.Zero)
         {
@@ -70,14 +111,27 @@ internal static partial class ComposeBridges
 
         // 48 colors + 2 mask ints + 1 marker = 51 JValue slots.
         JValue* args = stackalloc JValue[51];
-        for (int i = 0; i < 48; i++)
-            args[i] = new JValue(0L);
-        // Both masks all-bits-set: bit N == 1 tells Kotlin "use the
-        // per-slot default". Bits past position 47 (the last real
-        // parameter) are never tested by the generated $default body,
-        // so -1 for both is safe.
-        args[48] = new JValue(-1);
-        args[49] = new JValue(-1);
+        if (colors is null)
+        {
+            for (int i = 0; i < ColorSchemeSlotCount; i++)
+                args[i] = new JValue(0L);
+        }
+        else
+        {
+            if (colors.Length != ColorSchemeSlotCount)
+                throw new System.ArgumentException(
+                    $"colors array must have exactly {ColorSchemeSlotCount} elements; got {colors.Length}.",
+                    nameof(colors));
+            for (int i = 0; i < ColorSchemeSlotCount; i++)
+                args[i] = new JValue(colors[i]);
+        }
+        // mask0 covers slots 0-31, mask1 covers slots 32-47. Bit N == 1
+        // tells Kotlin "use the per-slot default from the M3 tonal
+        // palette tokens"; bit N == 0 tells it "use the caller-supplied
+        // long at slot N". Bits past position 47 (the last real
+        // parameter) are never tested by the generated $default body.
+        args[48] = new JValue(mask0);
+        args[49] = new JValue(mask1);
         args[50] = new JValue(System.IntPtr.Zero);
 
         System.IntPtr handle = JNIEnv.CallStaticObjectMethod(classCache, methodCache, args);

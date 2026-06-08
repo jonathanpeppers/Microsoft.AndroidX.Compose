@@ -1,5 +1,4 @@
 #nullable enable
-
 ~override ComposeNet.TextOverflow.Equals(object obj) -> bool
 ~override ComposeNet.TextOverflow.ToString() -> string
 abstract ComposeNet.ComposableNode.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
@@ -371,6 +370,10 @@ ComposeNet.Icon.TintArgb.get -> long?
 ComposeNet.Icon.TintArgb.set -> void
 ComposeNet.IconButton
 ComposeNet.IconButton.IconButton(System.Action! onClick) -> void
+ComposeNet.Icons
+ComposeNet.Icons.AutoMirrored
+ComposeNet.Icons.AutoMirrored.Filled
+ComposeNet.Icons.Filled
 ComposeNet.IconToggleButton
 ComposeNet.IconToggleButton.IconToggleButton(bool checked, System.Action<bool>! onCheckedChange) -> void
 ComposeNet.Image
@@ -414,9 +417,9 @@ ComposeNet.LaunchedEffect.LaunchedEffect(object? key1, object? key2, object? key
 ComposeNet.LaunchedEffect.LaunchedEffect(object? key1, object? key2, System.Func<System.Threading.CancellationToken, System.Threading.Tasks.Task!>! body) -> void
 ComposeNet.LaunchedEffect.LaunchedEffect(object? key1, System.Func<System.Threading.CancellationToken, System.Threading.Tasks.Task!>! body) -> void
 ComposeNet.LazyColumn<T>
-ComposeNet.LazyColumn<T>.LazyColumn(System.Collections.Generic.IReadOnlyList<T>! items, System.Func<T, ComposeNet.ComposableNode!>! itemContent) -> void
 ComposeNet.LazyColumn<T>.ContentPadding.get -> AndroidX.Compose.Foundation.Layout.IPaddingValues?
 ComposeNet.LazyColumn<T>.ContentPadding.set -> void
+ComposeNet.LazyColumn<T>.LazyColumn(System.Collections.Generic.IReadOnlyList<T>! items, System.Func<T, ComposeNet.ComposableNode!>! itemContent) -> void
 ComposeNet.LazyColumn<T>.ReverseLayout.get -> bool
 ComposeNet.LazyColumn<T>.ReverseLayout.set -> void
 ComposeNet.LazyColumn<T>.State.get -> AndroidX.Compose.Foundation.Lazy.LazyListState?
@@ -430,11 +433,11 @@ ComposeNet.LazyHorizontalStaggeredGrid<T>.LazyHorizontalStaggeredGrid(AndroidX.C
 ComposeNet.LazyHorizontalStaggeredGrid<T>.State.get -> AndroidX.Compose.Foundation.Lazy.Staggeredgrid.LazyStaggeredGridState?
 ComposeNet.LazyHorizontalStaggeredGrid<T>.State.set -> void
 ComposeNet.LazyRow<T>
+ComposeNet.LazyRow<T>.HorizontalArrangement.get -> ComposeNet.Arrangement?
+ComposeNet.LazyRow<T>.HorizontalArrangement.set -> void
 ComposeNet.LazyRow<T>.LazyRow(System.Collections.Generic.IReadOnlyList<T>! items, System.Func<T, ComposeNet.ComposableNode!>! itemContent) -> void
 ComposeNet.LazyRow<T>.State.get -> AndroidX.Compose.Foundation.Lazy.LazyListState?
 ComposeNet.LazyRow<T>.State.set -> void
-ComposeNet.LazyRow<T>.HorizontalArrangement.get -> ComposeNet.Arrangement?
-ComposeNet.LazyRow<T>.HorizontalArrangement.set -> void
 ComposeNet.LazyVerticalGrid<T>
 ComposeNet.LazyVerticalGrid<T>.LazyVerticalGrid(AndroidX.Compose.Foundation.Lazy.Grid.IGridCells! columns, System.Collections.Generic.IReadOnlyList<T>! items, System.Func<T, ComposeNet.ComposableNode!>! itemContent) -> void
 ComposeNet.LazyVerticalGrid<T>.State.get -> AndroidX.Compose.Foundation.Lazy.Grid.LazyGridState?
@@ -974,6 +977,26 @@ ComposeNet.TextOverflow.TextOverflow() -> void
 ComposeNet.TextOverflow.TextOverflow(int Value) -> void
 ComposeNet.TextOverflow.Value.get -> int
 ComposeNet.TextOverflow.Value.init -> void
+ComposeNet.TextStyle
+ComposeNet.TextStyle.Color.get -> ComposeNet.Color?
+ComposeNet.TextStyle.Color.set -> void
+ComposeNet.TextStyle.FontFamily.get -> ComposeNet.FontFamily?
+ComposeNet.TextStyle.FontFamily.set -> void
+ComposeNet.TextStyle.FontSize.get -> ComposeNet.Sp?
+ComposeNet.TextStyle.FontSize.set -> void
+ComposeNet.TextStyle.FontStyle.get -> ComposeNet.FontStyle?
+ComposeNet.TextStyle.FontStyle.set -> void
+ComposeNet.TextStyle.FontWeight.get -> ComposeNet.FontWeight?
+ComposeNet.TextStyle.FontWeight.set -> void
+ComposeNet.TextStyle.LetterSpacing.get -> ComposeNet.Sp?
+ComposeNet.TextStyle.LetterSpacing.set -> void
+ComposeNet.TextStyle.LineHeight.get -> ComposeNet.Sp?
+ComposeNet.TextStyle.LineHeight.set -> void
+ComposeNet.TextStyle.TextAlign.get -> ComposeNet.TextAlign?
+ComposeNet.TextStyle.TextAlign.set -> void
+ComposeNet.TextStyle.TextDecoration.get -> ComposeNet.TextDecoration?
+ComposeNet.TextStyle.TextDecoration.set -> void
+ComposeNet.TextStyle.TextStyle() -> void
 ComposeNet.TimeInput
 ComposeNet.TimeInput.TimeInput(ComposeNet.TimePickerState? state = null) -> void
 ComposeNet.TimePicker
@@ -1018,8 +1041,6 @@ ComposeNet.TopSearchBar.InputField.get -> ComposeNet.ComposableNode?
 ComposeNet.TopSearchBar.InputField.set -> void
 ComposeNet.TopSearchBar.TopSearchBar(ComposeNet.SearchBarState! state) -> void
 ComposeNet.TransformOrigin
-static ComposeNet.TransformOrigin.Center.get -> long
-static ComposeNet.TransformOrigin.Pack(float pivotFractionX, float pivotFractionY) -> long
 ComposeNet.TriStateCheckbox
 ComposeNet.TriStateCheckbox.TriStateCheckbox(AndroidX.Compose.UI.State.ToggleableState! state, System.Action! onClick) -> void
 ComposeNet.VerticalDivider
@@ -1293,14 +1314,38 @@ static ComposeNet.FontWeight.SemiBold.get -> ComposeNet.FontWeight!
 static ComposeNet.FontWeight.Thin.get -> ComposeNet.FontWeight!
 static ComposeNet.GridCells.Adaptive(float minSizeDp) -> AndroidX.Compose.Foundation.Lazy.Grid.IGridCells!
 static ComposeNet.GridCells.Fixed(int count) -> AndroidX.Compose.Foundation.Lazy.Grid.IGridCells!
+static ComposeNet.Icons.AutoMirrored.Filled.ArrowBack.get -> AndroidX.Compose.UI.Graphics.Vector.ImageVector!
+static ComposeNet.Icons.AutoMirrored.Filled.ArrowForward.get -> AndroidX.Compose.UI.Graphics.Vector.ImageVector!
+static ComposeNet.Icons.Filled.Add.get -> AndroidX.Compose.UI.Graphics.Vector.ImageVector!
+static ComposeNet.Icons.Filled.Check.get -> AndroidX.Compose.UI.Graphics.Vector.ImageVector!
+static ComposeNet.Icons.Filled.Close.get -> AndroidX.Compose.UI.Graphics.Vector.ImageVector!
+static ComposeNet.Icons.Filled.Delete.get -> AndroidX.Compose.UI.Graphics.Vector.ImageVector!
+static ComposeNet.Icons.Filled.Edit.get -> AndroidX.Compose.UI.Graphics.Vector.ImageVector!
+static ComposeNet.Icons.Filled.Favorite.get -> AndroidX.Compose.UI.Graphics.Vector.ImageVector!
+static ComposeNet.Icons.Filled.Home.get -> AndroidX.Compose.UI.Graphics.Vector.ImageVector!
+static ComposeNet.Icons.Filled.Info.get -> AndroidX.Compose.UI.Graphics.Vector.ImageVector!
+static ComposeNet.Icons.Filled.Menu.get -> AndroidX.Compose.UI.Graphics.Vector.ImageVector!
+static ComposeNet.Icons.Filled.MoreVert.get -> AndroidX.Compose.UI.Graphics.Vector.ImageVector!
+static ComposeNet.Icons.Filled.Notifications.get -> AndroidX.Compose.UI.Graphics.Vector.ImageVector!
+static ComposeNet.Icons.Filled.Person.get -> AndroidX.Compose.UI.Graphics.Vector.ImageVector!
+static ComposeNet.Icons.Filled.Refresh.get -> AndroidX.Compose.UI.Graphics.Vector.ImageVector!
+static ComposeNet.Icons.Filled.Search.get -> AndroidX.Compose.UI.Graphics.Vector.ImageVector!
+static ComposeNet.Icons.Filled.Settings.get -> AndroidX.Compose.UI.Graphics.Vector.ImageVector!
+static ComposeNet.Icons.Filled.Share.get -> AndroidX.Compose.UI.Graphics.Vector.ImageVector!
+static ComposeNet.Icons.Filled.Star.get -> AndroidX.Compose.UI.Graphics.Vector.ImageVector!
+static ComposeNet.Icons.Filled.Warning.get -> AndroidX.Compose.UI.Graphics.Vector.ImageVector!
+static ComposeNet.MaterialTheme.BuildShapes(ComposeNet.Shape? extraSmall = null, ComposeNet.Shape? small = null, ComposeNet.Shape? medium = null, ComposeNet.Shape? large = null, ComposeNet.Shape? extraLarge = null) -> AndroidX.Compose.Material3.Shapes!
+static ComposeNet.MaterialTheme.BuildTypography(ComposeNet.TextStyle? displayLarge = null, ComposeNet.TextStyle? displayMedium = null, ComposeNet.TextStyle? displaySmall = null, ComposeNet.TextStyle? headlineLarge = null, ComposeNet.TextStyle? headlineMedium = null, ComposeNet.TextStyle? headlineSmall = null, ComposeNet.TextStyle? titleLarge = null, ComposeNet.TextStyle? titleMedium = null, ComposeNet.TextStyle? titleSmall = null, ComposeNet.TextStyle? bodyLarge = null, ComposeNet.TextStyle? bodyMedium = null, ComposeNet.TextStyle? bodySmall = null, ComposeNet.TextStyle? labelLarge = null, ComposeNet.TextStyle? labelMedium = null, ComposeNet.TextStyle? labelSmall = null) -> AndroidX.Compose.Material3.Typography!
 static ComposeNet.MaterialTheme.CurrentColorScheme(AndroidX.Compose.Runtime.IComposer! composer) -> AndroidX.Compose.Material3.ColorScheme!
 static ComposeNet.MaterialTheme.CurrentShapes(AndroidX.Compose.Runtime.IComposer! composer) -> AndroidX.Compose.Material3.Shapes!
 static ComposeNet.MaterialTheme.CurrentTypography(AndroidX.Compose.Runtime.IComposer! composer) -> AndroidX.Compose.Material3.Typography!
 static ComposeNet.MaterialTheme.DarkColorScheme() -> AndroidX.Compose.Material3.ColorScheme!
+static ComposeNet.MaterialTheme.DarkColorScheme(ComposeNet.Color? primary = null, ComposeNet.Color? onPrimary = null, ComposeNet.Color? primaryContainer = null, ComposeNet.Color? onPrimaryContainer = null, ComposeNet.Color? inversePrimary = null, ComposeNet.Color? secondary = null, ComposeNet.Color? onSecondary = null, ComposeNet.Color? secondaryContainer = null, ComposeNet.Color? onSecondaryContainer = null, ComposeNet.Color? tertiary = null, ComposeNet.Color? onTertiary = null, ComposeNet.Color? tertiaryContainer = null, ComposeNet.Color? onTertiaryContainer = null, ComposeNet.Color? background = null, ComposeNet.Color? onBackground = null, ComposeNet.Color? surface = null, ComposeNet.Color? onSurface = null, ComposeNet.Color? surfaceVariant = null, ComposeNet.Color? onSurfaceVariant = null, ComposeNet.Color? surfaceTint = null, ComposeNet.Color? inverseSurface = null, ComposeNet.Color? inverseOnSurface = null, ComposeNet.Color? error = null, ComposeNet.Color? onError = null, ComposeNet.Color? errorContainer = null, ComposeNet.Color? onErrorContainer = null, ComposeNet.Color? outline = null, ComposeNet.Color? outlineVariant = null, ComposeNet.Color? scrim = null, ComposeNet.Color? surfaceBright = null, ComposeNet.Color? surfaceContainer = null, ComposeNet.Color? surfaceContainerHigh = null, ComposeNet.Color? surfaceContainerHighest = null, ComposeNet.Color? surfaceContainerLow = null, ComposeNet.Color? surfaceContainerLowest = null, ComposeNet.Color? surfaceDim = null, ComposeNet.Color? primaryFixed = null, ComposeNet.Color? primaryFixedDim = null, ComposeNet.Color? onPrimaryFixed = null, ComposeNet.Color? onPrimaryFixedVariant = null, ComposeNet.Color? secondaryFixed = null, ComposeNet.Color? secondaryFixedDim = null, ComposeNet.Color? onSecondaryFixed = null, ComposeNet.Color? onSecondaryFixedVariant = null, ComposeNet.Color? tertiaryFixed = null, ComposeNet.Color? tertiaryFixedDim = null, ComposeNet.Color? onTertiaryFixed = null, ComposeNet.Color? onTertiaryFixedVariant = null) -> AndroidX.Compose.Material3.ColorScheme!
 static ComposeNet.MaterialTheme.DynamicDarkColorScheme(Android.Content.Context? context = null) -> AndroidX.Compose.Material3.ColorScheme!
 static ComposeNet.MaterialTheme.DynamicLightColorScheme(Android.Content.Context? context = null) -> AndroidX.Compose.Material3.ColorScheme!
 static ComposeNet.MaterialTheme.IsSystemInDarkTheme(AndroidX.Compose.Runtime.IComposer! composer) -> bool
 static ComposeNet.MaterialTheme.LightColorScheme() -> AndroidX.Compose.Material3.ColorScheme!
+static ComposeNet.MaterialTheme.LightColorScheme(ComposeNet.Color? primary = null, ComposeNet.Color? onPrimary = null, ComposeNet.Color? primaryContainer = null, ComposeNet.Color? onPrimaryContainer = null, ComposeNet.Color? inversePrimary = null, ComposeNet.Color? secondary = null, ComposeNet.Color? onSecondary = null, ComposeNet.Color? secondaryContainer = null, ComposeNet.Color? onSecondaryContainer = null, ComposeNet.Color? tertiary = null, ComposeNet.Color? onTertiary = null, ComposeNet.Color? tertiaryContainer = null, ComposeNet.Color? onTertiaryContainer = null, ComposeNet.Color? background = null, ComposeNet.Color? onBackground = null, ComposeNet.Color? surface = null, ComposeNet.Color? onSurface = null, ComposeNet.Color? surfaceVariant = null, ComposeNet.Color? onSurfaceVariant = null, ComposeNet.Color? surfaceTint = null, ComposeNet.Color? inverseSurface = null, ComposeNet.Color? inverseOnSurface = null, ComposeNet.Color? error = null, ComposeNet.Color? onError = null, ComposeNet.Color? errorContainer = null, ComposeNet.Color? onErrorContainer = null, ComposeNet.Color? outline = null, ComposeNet.Color? outlineVariant = null, ComposeNet.Color? scrim = null, ComposeNet.Color? surfaceBright = null, ComposeNet.Color? surfaceContainer = null, ComposeNet.Color? surfaceContainerHigh = null, ComposeNet.Color? surfaceContainerHighest = null, ComposeNet.Color? surfaceContainerLow = null, ComposeNet.Color? surfaceContainerLowest = null, ComposeNet.Color? surfaceDim = null, ComposeNet.Color? primaryFixed = null, ComposeNet.Color? primaryFixedDim = null, ComposeNet.Color? onPrimaryFixed = null, ComposeNet.Color? onPrimaryFixedVariant = null, ComposeNet.Color? secondaryFixed = null, ComposeNet.Color? secondaryFixedDim = null, ComposeNet.Color? onSecondaryFixed = null, ComposeNet.Color? onSecondaryFixedVariant = null, ComposeNet.Color? tertiaryFixed = null, ComposeNet.Color? tertiaryFixedDim = null, ComposeNet.Color? onTertiaryFixed = null, ComposeNet.Color? onTertiaryFixedVariant = null) -> AndroidX.Compose.Material3.ColorScheme!
 static ComposeNet.Modifier.Companion.get -> ComposeNet.Modifier!
 static ComposeNet.MutableNumberState<T>.operator --(ComposeNet.MutableNumberState<T>! s) -> ComposeNet.MutableNumberState<T>!
 static ComposeNet.MutableNumberState<T>.operator ++(ComposeNet.MutableNumberState<T>! s) -> ComposeNet.MutableNumberState<T>!
@@ -1310,11 +1355,11 @@ static ComposeNet.Resources.DimensionResource(int id) -> ComposeNet.Dp
 static ComposeNet.Resources.IntegerArrayResource(int id) -> int[]!
 static ComposeNet.Resources.IntegerResource(int id) -> int
 static ComposeNet.Resources.PainterResource(int id) -> AndroidX.Compose.UI.Graphics.Painter.Painter!
-static ComposeNet.Resources.PluralStringResource(int id, int count) -> string!
 static ComposeNet.Resources.PluralStringResource(int id, int count, params object?[]! formatArgs) -> string!
+static ComposeNet.Resources.PluralStringResource(int id, int count) -> string!
 static ComposeNet.Resources.StringArrayResource(int id) -> string![]!
-static ComposeNet.Resources.StringResource(int id) -> string!
 static ComposeNet.Resources.StringResource(int id, params object?[]! formatArgs) -> string!
+static ComposeNet.Resources.StringResource(int id) -> string!
 static ComposeNet.Shape.Circle() -> ComposeNet.Shape!
 static ComposeNet.Shape.CutCorners(ComposeNet.Dp cornerSize) -> ComposeNet.Shape!
 static ComposeNet.Shape.CutCornersPercent(int percent) -> ComposeNet.Shape!
@@ -1347,6 +1392,8 @@ static ComposeNet.TextOverflow.operator ==(ComposeNet.TextOverflow left, Compose
 static ComposeNet.TextOverflow.Pack(ComposeNet.TextOverflow? value) -> int
 static ComposeNet.TextOverflow.StartEllipsis.get -> ComposeNet.TextOverflow
 static ComposeNet.TextOverflow.Visible.get -> ComposeNet.TextOverflow
+static ComposeNet.TransformOrigin.Center.get -> long
+static ComposeNet.TransformOrigin.Pack(float pivotFractionX, float pivotFractionY) -> long
 static readonly ComposeNet.Locals.LocalColorScheme -> ComposeNet.CompositionLocal<AndroidX.Compose.Material3.ColorScheme!>!
 static readonly ComposeNet.Locals.LocalConfiguration -> ComposeNet.CompositionLocal<Android.Content.Res.Configuration!>!
 static readonly ComposeNet.Locals.LocalContext -> ComposeNet.CompositionLocal<Android.Content.Context!>!

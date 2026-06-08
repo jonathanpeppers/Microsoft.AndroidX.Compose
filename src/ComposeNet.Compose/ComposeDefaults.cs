@@ -68,6 +68,25 @@ using ComposeNet;
 [assembly: ComposeDefaults<IconKt>("Icon", "IconDefault")]
 [assembly: ComposeDefaults<MaterialThemeKt>("MaterialTheme", "MaterialThemeDefault")]
 
+// androidx.compose.material3.Shapes — synthetic-default constructor,
+// 5 CornerBasedShape slots. Hand-rolled JNI (ShapesBridges.cs) calls
+// the ctor; this enum names the bits so MaterialTheme.BuildShapes can
+// build the $default mask without magic numbers.
+[assembly: ComposeDefaults("ShapesDefault",
+    "extraSmall", "small", "medium", "large", "extraLarge")]
+
+// androidx.compose.material3.Typography — synthetic-default
+// constructor, 15 TextStyle slots in Kotlin source order.
+// Hand-rolled JNI (TypographyBridges.cs) calls the ctor; this enum
+// names the bits so MaterialTheme.BuildTypography can build the
+// $default mask without magic numbers.
+[assembly: ComposeDefaults("TypographyDefault",
+    "displayLarge",  "displayMedium",  "displaySmall",
+    "headlineLarge", "headlineMedium", "headlineSmall",
+    "titleLarge",    "titleMedium",    "titleSmall",
+    "bodyLarge",     "bodyMedium",     "bodySmall",
+    "labelLarge",    "labelMedium",    "labelSmall")]
+
 // androidx.compose.foundation.lazy.LazyDslKt — the LazyColumn / LazyRow
 // @Composable functions take no inline-class params (modifier/state/etc.
 // are all reference types or plain bools), so the binder exposes the
