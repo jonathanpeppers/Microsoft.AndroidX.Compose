@@ -20,7 +20,7 @@ Requires the .NET 10 SDK with the `android` workload and an Android API 34+ emul
 
 ```pwsh
 dotnet workload restore
-dotnet build src/ComposeNet.Sample -t:Run    # deploys to the connected device/emulator
+dotnet build src/ComposeNet.Gallery -t:Run    # deploys to the connected device/emulator
 ```
 
 Generator unit tests run without an Android SDK:
@@ -99,7 +99,7 @@ The translation is mechanical — `new` instead of bare calls, commas instead of
 | `count++`                                     | `count++` (operator on `MutableNumberState<T>`)               |
 | `"Count: $count"`                             | `$"Count: {count}"` (via `MutableState<T>.ToString`)          |
 
-That's an end-to-end Material 3 counter app in ~13 lines of composition — start from this shape when adding a new screen. The actual [`src/ComposeNet.Sample/MainActivity.cs`](src/ComposeNet.Sample/MainActivity.cs) in the repo is a much larger **kitchen-sink demo** that exercises every facade in a tabbed `Scaffold`; for a single-screen real-app example see [`samples/Jetchat`](samples/Jetchat).
+That's an end-to-end Material 3 counter app in ~13 lines of composition — start from this shape when adding a new screen. The actual [`src/ComposeNet.Gallery/MainActivity.cs`](src/ComposeNet.Gallery/MainActivity.cs) in the repo is a much larger **gallery app** that exercises every facade across a navigable catalog with search; for a single-screen real-app example see [`samples/Jetchat`](samples/Jetchat).
 
 ## What's wrapped today
 
@@ -137,7 +137,7 @@ The facade [`ComposeNet.Compose`](src/ComposeNet.Compose) covers the common Mate
 
 ## Status
 
-The sample builds, deploys to an Android 16 (API 36) emulator, and renders a real Material 3 UI end-to-end: dynamic Material You colors via parameterizable `MaterialTheme`, edge-to-edge layout, an interactive `Button` that increments `MutableNumberState<int>` and recomposes the count. The kitchen-sink demo in [`src/ComposeNet.Sample`](src/ComposeNet.Sample) exercises the full facade across a tabbed `Scaffold` (text styling, lists, pickers, dialogs, sheets, navigation, animation, effects, search, dropdowns, draggable modifiers, …).
+The gallery builds, deploys to an Android 16 (API 36) emulator, and renders a real Material 3 UI end-to-end: dynamic Material You colors via parameterizable `MaterialTheme`, edge-to-edge layout, an interactive `Button` that increments `MutableNumberState<int>` and recomposes the count. The catalog app in [`src/ComposeNet.Gallery`](src/ComposeNet.Gallery) exercises the full facade across a category-organized, navigable, searchable surface (text styling, lists, pickers, dialogs, sheets, navigation, animation, effects, search, dropdowns, draggable modifiers, …).
 
 The facade and sample reference the official `Xamarin.AndroidX.Compose.*` 1.11.2.x and `Xamarin.AndroidX.Compose.Material3` 1.4.0.x NuGets directly — the per-binding projects this repo originally needed have been deleted.
 
