@@ -18,15 +18,12 @@ namespace ComposeNet.Samples.Jetchat;
 /// </remarks>
 public static class EmojiSelector
 {
-    /// <summary>Columns per grid row — matches upstream's <c>EMOJI_COLUMNS</c>.</summary>
+    /// <summary>Columns per grid row.</summary>
     public const int EmojiColumns = 10;
 
-    /// <summary>Rows rendered in the grid — matches upstream's hard-coded <c>repeat(4)</c>.</summary>
+    /// <summary>Rows rendered in the grid.</summary>
     public const int EmojiRows = 4;
 
-    // Verbatim from upstream's `private val emojis = listOf(...)`. We
-    // expose the first EmojiColumns * EmojiRows entries via the grid;
-    // the rest are kept available for parity with the Kotlin source.
     static readonly string[] Emojis = new[]
     {
         "\U0001F600", // Grinning Face

@@ -136,6 +136,7 @@ feature, a new package reference, or simply more sample plumbing:
 | Sticky day-headers spanning multiple dates (e.g. "20 Aug" alongside "Today") | needs the `LazyListScope.item { … }` DSL exposed on the `LazyColumn` facade so a per-day header can be emitted between message groups. Only "Today" is rendered. |
 | `Sp(float)` for exact M3 letter-spacing (0.5 / 0.1 sp values) | `Sp` is integer-only; `labelSmall` rounds 0.5 → 1, `titleSmall` rounds 0.1 → 0 (dropped). |
 | `FocusRequester` programmatic focus into the emoji panel | the panel opens correctly but doesn't grab focus on expand. |
+| Full ~80-glyph emoji table | `EmojiSelector.cs` exposes the first 40 glyphs from upstream's `private val emojis = listOf(...)` — the same `EMOJI_COLUMNS × 4` grid Kotlin's `EmojiTable` actually renders. The remaining upstream entries are unused on screen and were dropped. |
 
 ## Facade features added for this port
 
