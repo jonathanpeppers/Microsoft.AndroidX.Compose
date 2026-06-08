@@ -63,4 +63,9 @@
     <PackageReference Include="Xamarin.AndroidX.Navigation.Compose" />
     <PackageReference Include="Xamarin.AndroidX.Navigation.Compose.Android" />
   </ItemGroup>
+  <ItemGroup>
+    <AndroidJavaSource Include="Java\PointerInputEventHandlerImpl.java">
+      <Bind>false</Bind>
+    </AndroidJavaSource>
+  </ItemGroup>
 </Project>

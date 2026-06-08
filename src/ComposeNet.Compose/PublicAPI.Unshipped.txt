@@ -562,6 +562,7 @@ ComposeNet.Modifier.Clip(ComposeNet.Dp cornerRadius) -> ComposeNet.Modifier!
 ComposeNet.Modifier.Clip(ComposeNet.Shape! shape) -> ComposeNet.Modifier!
 ComposeNet.Modifier.CombinedClickable(System.Action! onClick, System.Action? onLongClick = null, System.Action? onDoubleClick = null) -> ComposeNet.Modifier!
 ComposeNet.Modifier.DefaultMinSize(ComposeNet.Dp? minWidth = null, ComposeNet.Dp? minHeight = null) -> ComposeNet.Modifier!
+ComposeNet.Modifier.DetectTapGestures(System.Action<ComposeNet.Offset>? onTap = null, System.Action<ComposeNet.Offset>? onPress = null, System.Action<ComposeNet.Offset>? onLongPress = null, System.Action<ComposeNet.Offset>? onDoubleTap = null, object? key = null) -> ComposeNet.Modifier!
 ComposeNet.Modifier.DisplayCutoutPadding() -> ComposeNet.Modifier!
 ComposeNet.Modifier.Draggable(ComposeNet.DraggableState! state, ComposeNet.Orientation orientation, bool enabled = true) -> ComposeNet.Modifier!
 ComposeNet.Modifier.FillMaxHeight(float fraction = 1) -> ComposeNet.Modifier!
@@ -700,6 +701,12 @@ ComposeNet.NavigationRailItem.Icon.set -> void
 ComposeNet.NavigationRailItem.Label.get -> ComposeNet.ComposableNode?
 ComposeNet.NavigationRailItem.Label.set -> void
 ComposeNet.NavigationRailItem.NavigationRailItem(bool selected, System.Action! onClick) -> void
+ComposeNet.Offset
+ComposeNet.Offset.Equals(ComposeNet.Offset other) -> bool
+ComposeNet.Offset.Offset() -> void
+ComposeNet.Offset.Offset(float x, float y) -> void
+ComposeNet.Offset.X.get -> float
+ComposeNet.Offset.Y.get -> float
 ComposeNet.Orientation
 ComposeNet.Orientation.Horizontal = 1 -> ComposeNet.Orientation
 ComposeNet.Orientation.Vertical = 0 -> ComposeNet.Orientation
@@ -1182,6 +1189,9 @@ override ComposeNet.NavigationBarItem.Render(AndroidX.Compose.Runtime.IComposer!
 override ComposeNet.NavigationDrawerItem.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
 override ComposeNet.NavigationRail.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
 override ComposeNet.NavigationRailItem.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.Offset.Equals(object? obj) -> bool
+override ComposeNet.Offset.GetHashCode() -> int
+override ComposeNet.Offset.ToString() -> string!
 override ComposeNet.OutlinedButton.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
 override ComposeNet.OutlinedCard.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
 override ComposeNet.OutlinedIconButton.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
@@ -1647,6 +1657,10 @@ static ComposeNet.MaterialTheme.LightColorScheme(ComposeNet.Color? primary = nul
 static ComposeNet.Modifier.Companion.get -> ComposeNet.Modifier!
 static ComposeNet.MutableNumberState<T>.operator --(ComposeNet.MutableNumberState<T>! s) -> ComposeNet.MutableNumberState<T>!
 static ComposeNet.MutableNumberState<T>.operator ++(ComposeNet.MutableNumberState<T>! s) -> ComposeNet.MutableNumberState<T>!
+static ComposeNet.Offset.operator !=(ComposeNet.Offset a, ComposeNet.Offset b) -> bool
+static ComposeNet.Offset.operator ==(ComposeNet.Offset a, ComposeNet.Offset b) -> bool
+static ComposeNet.Offset.Unspecified.get -> ComposeNet.Offset
+static ComposeNet.Offset.Zero.get -> ComposeNet.Offset
 static ComposeNet.Resources.BooleanResource(int id) -> bool
 static ComposeNet.Resources.ColorResource(int id) -> long
 static ComposeNet.Resources.DimensionResource(int id) -> ComposeNet.Dp

@@ -133,6 +133,7 @@ public static class Catalog
         D.Modifiers.ToggleableSelectableSemanticsDemo.Demo,
         D.Modifiers.FocusRequesterDemo.Demo,
         D.Modifiers.CombinedClickableDemo.Demo,
+        D.Modifiers.DetectTapGesturesDemo.Demo,
         D.Modifiers.DraggableOffsetDemo.Demo,
         D.Modifiers.GraphicsLayerDemo.Demo,
         D.Modifiers.FlowRowScopeDispatchDemo.Demo,

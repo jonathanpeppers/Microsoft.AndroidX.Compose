@@ -3483,4 +3483,69 @@ internal static partial class ComposeBridges
         Java.Lang.Object? arguments,
         Java.Lang.Object? deepLinks,
         IFunction3       content);
+
+    static IntPtr s_modifierPointerInput_class;
+    static IntPtr s_modifierPointerInput_method;
+
+    // androidx.compose.ui.input.pointer.SuspendingPointerInputFilterKt
+    //     .pointerInput(Modifier, Object key1, PointerInputEventHandler): Modifier
+    //
+    // Hand-written because the [ComposeBridge] generator doesn't know
+    // about non-bound interface types like IPointerInputEventHandler.
+    // Returns a fresh local ref to the chained Modifier; the caller
+    // (Modifier.Append's lambda) DeleteLocalRefs the previous one.
+    internal static unsafe IntPtr ModifierPointerInput(
+        IntPtr modifier, IntPtr key, IntPtr handler)
+    {
+        if (s_modifierPointerInput_method == IntPtr.Zero)
+        {
+            s_modifierPointerInput_class = JNIEnv.FindClass(
+                "androidx/compose/ui/input/pointer/SuspendingPointerInputFilterKt");
+            s_modifierPointerInput_method = JNIEnv.GetStaticMethodID(
+                s_modifierPointerInput_class,
+                "pointerInput",
+                "(Landroidx/compose/ui/Modifier;Ljava/lang/Object;" +
+                "Landroidx/compose/ui/input/pointer/PointerInputEventHandler;)" +
+                "Landroidx/compose/ui/Modifier;");
+        }
+
+        JValue* args = stackalloc JValue[3];
+        args[0] = new JValue(modifier);
+        args[1] = new JValue(key);
+        args[2] = new JValue(handler);
+        return JNIEnv.CallStaticObjectMethod(
+            s_modifierPointerInput_class, s_modifierPointerInput_method, args);
+    }
+
+    static IntPtr s_pointerInputHandler_class;
+    static IntPtr s_pointerInputHandler_ctor;
+
+    // composenet.compose.PointerInputEventHandlerImpl.<init>(Function2)
+    //
+    // Allocates the Java-side helper (shipped via <AndroidJavaSource>)
+    // that implements the bound but otherwise-unreachable
+    // PointerInputEventHandler interface by forwarding invoke(scope,
+    // continuation) to the supplied Function2 handle.
+    //
+    // Returns a fresh local ref to the new PointerInputEventHandlerImpl
+    // instance; caller owns it (typically pass straight through to
+    // ModifierPointerInput, whose CallStaticObjectMethod frame pop
+    // reclaims it).
+    internal static unsafe IntPtr NewPointerInputEventHandler(IntPtr function2)
+    {
+        if (s_pointerInputHandler_ctor == IntPtr.Zero)
+        {
+            s_pointerInputHandler_class = JNIEnv.FindClass(
+                "composenet/compose/PointerInputEventHandlerImpl");
+            s_pointerInputHandler_ctor = JNIEnv.GetMethodID(
+                s_pointerInputHandler_class,
+                "<init>",
+                "(Lkotlin/jvm/functions/Function2;)V");
+        }
+
+        JValue* args = stackalloc JValue[1];
+        args[0] = new JValue(function2);
+        return JNIEnv.NewObject(
+            s_pointerInputHandler_class, s_pointerInputHandler_ctor, args);
+    }
 }
