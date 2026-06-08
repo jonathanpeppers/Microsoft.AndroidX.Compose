@@ -1346,8 +1346,8 @@ static ComposeNet.Compose.Remember<T>(System.Func<T>! factory, object? key1, int
 static ComposeNet.Compose.Remember<T>(System.Func<T>! factory, object? key1, object? key2, int line = 0, string! file = "") -> T
 static ComposeNet.Compose.Remember<T>(System.Func<T>! factory, object? key1, object? key2, object? key3, int line = 0, string! file = "") -> T
 static ComposeNet.Compose.RememberDraggableState(System.Action<float>! onDelta, int line = 0, string! file = "") -> ComposeNet.DraggableState!
-static ComposeNet.Compose.RememberLazyListState(int initialFirstVisibleItemIndex = 0, int initialFirstVisibleItemScrollOffset = 0, int line = 0, string! file = "") -> ComposeNet.LazyListState!
 static ComposeNet.Compose.RememberKeyed<T>(System.Func<T>! factory, object?[]! keys, int line = 0, string! file = "") -> T
+static ComposeNet.Compose.RememberLazyListState(int initialFirstVisibleItemIndex = 0, int initialFirstVisibleItemScrollOffset = 0, int line = 0, string! file = "") -> ComposeNet.LazyListState!
 static ComposeNet.Compose.RememberSaveable<T>(System.Func<T>! factory, int line = 0, string! file = "") -> T
 static ComposeNet.Compose.RememberSaveable<T>(System.Func<T>! factory, object? key1, int line = 0, string! file = "") -> T
 static ComposeNet.Compose.RememberSaveable<T>(System.Func<T>! factory, object? key1, object? key2, int line = 0, string! file = "") -> T

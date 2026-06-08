@@ -18,9 +18,9 @@ namespace ComposeNet;
 /// </summary>
 /// <remarks>
 /// <para>
-/// Construct one inside a
+/// Obtain one via
 /// <see cref="Compose.RememberLazyListState(int, int, int, string)"/>
-/// callback so the scroll position survives recompositions:
+/// so the scroll position survives recompositions:
 /// <code>
 /// var listState = Compose.RememberLazyListState();
 ///
