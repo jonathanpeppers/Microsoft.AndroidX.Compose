@@ -424,26 +424,31 @@ public static class Conversation
         MutableState<string> selectedMenu,
         DrawerStateHolder    drawerState,
         ScrollState          scroll,
-        ColorScheme          scheme) =>
-        new()
+        ColorScheme          scheme)
+    {
+        // M3's `ModalDrawerSheet` upstream defaults to
+        // `surfaceContainerLow`; our facade defaults to
+        // `secondaryContainer`, which in Jetchat's dark palette is a
+        // very saturated blue. Pin to `surface` to match upstream.
+        var sheet = new ModalDrawerSheet { ContainerColor = new Color(scheme.Surface) };
+        sheet.Add(new Column
         {
-            new Column
-            {
-                Modifier.Companion.FillMaxWidth().VerticalScroll(scroll),
-                // Push everything below the status bar so the system
-                // chrome doesn't overlap the drawer logo.
-                new Spacer(Modifier.Companion.StatusBarsPadding()),
-                BuildDrawerHeader(scheme),
-                BuildDividerItem(scheme, sidePadding: 0),
-                BuildDrawerSectionHeader("Chats", scheme),
-                BuildChatItem(selectedMenu, drawerState, "composers",    scheme),
-                BuildChatItem(selectedMenu, drawerState, "droidcon-nyc", scheme),
-                BuildDividerItem(scheme, sidePadding: 28),
-                BuildDrawerSectionHeader("Recent Profiles", scheme),
-                BuildProfileItem(selectedMenu, drawerState, "Ali Conors (you)", MeProfileId,        Resource.Drawable.avatar_ali,          scheme),
-                BuildProfileItem(selectedMenu, drawerState, "Taylor Brooks",    ColleagueProfileId, Resource.Drawable.avatar_someone_else, scheme),
-            },
-        };
+            Modifier.Companion.FillMaxWidth().VerticalScroll(scroll),
+            // Push everything below the status bar so the system
+            // chrome doesn't overlap the drawer logo.
+            new Spacer(Modifier.Companion.StatusBarsPadding()),
+            BuildDrawerHeader(scheme),
+            BuildDividerItem(scheme, sidePadding: 0),
+            BuildDrawerSectionHeader("Chats", scheme),
+            BuildChatItem(selectedMenu, drawerState, "composers",    scheme),
+            BuildChatItem(selectedMenu, drawerState, "droidcon-nyc", scheme),
+            BuildDividerItem(scheme, sidePadding: 28),
+            BuildDrawerSectionHeader("Recent Profiles", scheme),
+            BuildProfileItem(selectedMenu, drawerState, "Ali Conors (you)", MeProfileId,        Resource.Drawable.avatar_ali,          scheme),
+            BuildProfileItem(selectedMenu, drawerState, "Taylor Brooks",    ColleagueProfileId, Resource.Drawable.avatar_someone_else, scheme),
+        });
+        return sheet;
+    }
 
     static Row BuildDrawerHeader(ColorScheme scheme) =>
         new()
