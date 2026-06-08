@@ -2910,6 +2910,52 @@ internal static partial class ComposeBridges
         IFunction3 content,
         IComposer  composer);
 
+    // androidx.compose.material3.SearchBarKt.DockedSearchBar-eWTbjVg — the
+    // even older query-based docked search bar. Self-contained input field
+    // (no separate inputField slot); the caller drives `query` text and the
+    // `active` boolean directly, with `placeholder` / `leadingIcon` /
+    // `trailingIcon` as composable slots and `content` as the docked
+    // results list. Deprecated in M3 1.2 in favor of the boolean-state
+    // overload above, and again in M3 1.4 in favor of the state-based
+    // `SearchBar` + `ExpandedDockedSearchBar` pair, but still ships in
+    // 1.4.0.3 — and it's what compose-samples/Reply uses for the inbox
+    // search affordance (see issue #165). 16 user params, packed into two
+    // `$changed` ints + one `$default` (trailing `III`). Bits 0/1/2/3/4
+    // (query, onQueryChange, onSearch, active, onActiveChange) and bit 15
+    // (content) are always provided. Bits 10–14 (shape, colors,
+    // tonalElevation, shadowElevation, interactionSource) are unmapped
+    // and stay defaulted by Kotlin; bit 6 (enabled) likewise defaults to
+    // Kotlin's `true`.
+    [ComposeBridge(
+        Class     = "androidx/compose/material3/SearchBarKt",
+        JvmName   = "DockedSearchBar-eWTbjVg",
+        Signature = "(Ljava/lang/String;" +
+                    "Lkotlin/jvm/functions/Function1;" +
+                    "Lkotlin/jvm/functions/Function1;Z" +
+                    "Lkotlin/jvm/functions/Function1;" +
+                    "Landroidx/compose/ui/Modifier;Z" +
+                    "Lkotlin/jvm/functions/Function2;" +
+                    "Lkotlin/jvm/functions/Function2;" +
+                    "Lkotlin/jvm/functions/Function2;" +
+                    "Landroidx/compose/ui/graphics/Shape;" +
+                    "Landroidx/compose/material3/SearchBarColors;FF" +
+                    "Landroidx/compose/foundation/interaction/MutableInteractionSource;" +
+                    "Lkotlin/jvm/functions/Function3;" +
+                    "Landroidx/compose/runtime/Composer;III)V",
+        Defaults  = typeof(DockedSearchBarWithQueryDefault))]
+    public static partial void DockedSearchBarWithQuery(
+        string      query,
+        IFunction1  onQueryChange,
+        IFunction1  onSearch,
+        bool        active,
+        IFunction1  onActiveChange,
+        IModifier?  modifier,
+        IFunction2? placeholder,
+        IFunction2? leadingIcon,
+        IFunction2? trailingIcon,
+        IFunction3  content,
+        IComposer   composer);
+
     // androidx.compose.material3.SearchBarDefaults.InputField — state-based
     // overload. The state-aware InputField is what wires focus/click events
     // to SearchBarState (animateToExpanded/Collapsed), so this is what makes

@@ -213,8 +213,15 @@ ComposeNet.DisposableEffect.DisposableEffect(object? key1, object? key2, System.
 ComposeNet.DisposableEffect.DisposableEffect(object? key1, System.Func<AndroidX.Compose.Runtime.DisposableEffectScope!, System.Action!>! effect) -> void
 ComposeNet.DockedSearchBar
 ComposeNet.DockedSearchBar.DockedSearchBar(bool expanded, System.Action<bool>! onExpandedChange) -> void
+ComposeNet.DockedSearchBar.DockedSearchBar(string! query, System.Action<string!>! onQueryChange, System.Action<string!>! onSearch, bool active, System.Action<bool>! onActiveChange) -> void
 ComposeNet.DockedSearchBar.InputField.get -> ComposeNet.ComposableNode?
 ComposeNet.DockedSearchBar.InputField.set -> void
+ComposeNet.DockedSearchBar.LeadingIcon.get -> ComposeNet.ComposableNode?
+ComposeNet.DockedSearchBar.LeadingIcon.set -> void
+ComposeNet.DockedSearchBar.Placeholder.get -> ComposeNet.ComposableNode?
+ComposeNet.DockedSearchBar.Placeholder.set -> void
+ComposeNet.DockedSearchBar.TrailingIcon.get -> ComposeNet.ComposableNode?
+ComposeNet.DockedSearchBar.TrailingIcon.set -> void
 ComposeNet.Dp
 ComposeNet.Dp.Dp() -> void
 ComposeNet.Dp.Dp(float value) -> void

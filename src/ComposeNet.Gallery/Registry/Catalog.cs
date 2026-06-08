@@ -129,6 +129,7 @@ public static class Catalog
         // ---- Search ----
         D.Search.SearchBarPairDemo.Demo,
         D.Search.DockedSearchBarDemo.Demo,
+        D.Search.DockedSearchBarQueryDemo.Demo,
 
         // ---- Modifiers ----
         D.Modifiers.ShapesAndShadowDemo.Demo,
