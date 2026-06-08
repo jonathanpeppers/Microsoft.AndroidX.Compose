@@ -25,9 +25,17 @@ public sealed class GalleryDrawer : ComposableNode
     {
         var sheet = new ModalDrawerSheet
         {
-            Modifier.Companion.Padding(8),
-            new Text("ComposeNet Gallery"),
-            new Spacer { Modifier = Modifier.Companion.Height(8) },
+            // Push the header below the system status bar.
+            Modifier.Companion.StatusBarsPadding(),
+            new Text("ComposeNet Gallery")
+            {
+                FontSize   = 22,
+                FontWeight = ComposeNet.FontWeight.Medium,
+                // M3 nav drawer header uses 28dp horizontal padding;
+                // the vertical padding gives it a clear gap from the
+                // status bar above and the first item below.
+                Modifier   = Modifier.Companion.Padding(28, 18, 28, 12),
+            },
             new HorizontalDivider(),
             new Spacer { Modifier = Modifier.Companion.Height(8) },
             new GalleryDrawerItem("🏠", "Home", () => Navigate("home")),
