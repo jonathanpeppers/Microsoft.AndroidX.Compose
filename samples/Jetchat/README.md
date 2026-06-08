@@ -128,13 +128,24 @@ dotnet build samples/Jetchat -t:Run
   icon and label switch on `ProfileScreenState.IsMe()`:
   `ic_create` + "Edit profile" for the local user; `ic_chat` +
   "Message" for a colleague.
-- **`ProfileViewModel`** holds a snapshot-tracked `UserId` and
-  exposes the resolved `ProfileScreenState` as a derived
-  read-only property via `Profiles.GetById(...)`. Drawer /
-  avatar tap handlers update the view-model and call
-  `NavController.Navigate(...)`; the route content reads the
-  user id directly from the `NavBackStackEntry` arguments so no
-  snapshot state is mutated during composition.
+- **`ProfileViewModel`** tracks the active user id in a
+  `MutableState<string>` and resolves it to a
+  `ProfileScreenState` via `Profiles.GetById(...)`. The route
+  content reads the user id directly from
+  `NavBackStackEntry.Arguments` so the route's display state is
+  driven entirely by the back-stack argument; nothing is mutated
+  during composition. (Upstream uses a `MutableLiveData` here; the
+  port keeps the ID in `MutableState<string>` because Compose's
+  snapshot system in this binding only safely shuttles
+  JVM-convertible values, and the ID is a plain `string`.)
+- **Stack normalization on profile navigation.** When the drawer
+  fires `onProfileClicked` (or `onChatClicked`) while the profile
+  screen is on top of the back stack, `JetchatApp` first calls
+  `nav.PopBackStack(Routes.Home, inclusive: false)` and then
+  navigates. Without that pop, opening the drawer from one
+  profile and tapping a different profile row would push a second
+  `profile/{userId}` entry, so back would return to the previous
+  profile rather than the conversation.
 
 ## What's still omitted
 

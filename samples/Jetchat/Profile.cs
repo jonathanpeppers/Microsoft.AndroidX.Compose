@@ -13,9 +13,8 @@ public static class Profile
 {
     /// <summary>Materialize the profile tree for one composition pass.</summary>
     public static ComposableNode Build(
-        ProfileScreenState  state,
-        DrawerStateHolder   drawerState,
-        System.Action       onBack) =>
+        ProfileScreenState state,
+        System.Action      onBack) =>
         new Composed(c =>
         {
             var scrollState = Compose.Remember(() => new ScrollState());
@@ -90,9 +89,6 @@ public static class Profile
         if (state.Photo is null)
             return new Spacer(Modifier.Companion.Width(0));
 
-        // Cap the hero portrait at half the available height so the
-        // fields below it always get room to render — matches upstream's
-        // heightIn(max = containerHeight / 2).
         float heroMax = containerHeight / 2f;
         if (heroMax < 1f) heroMax = 240f;
         return new Image(state.Photo.Value, "Profile photo")
@@ -119,8 +115,8 @@ public static class Profile
         if (state.TimeZone is not null)
             col.Add(BuildProfileProperty("Timezone", state.TimeZone, scheme));
 
-        // Trailing spacer keeps part of the fields visible above the FAB
-        // even on tall containers — matches upstream's (containerHeight - 320.dp).coerceAtLeast(0.dp).
+        // Add a spacer that always shows part (320.dp) of the fields list regardless of
+        // the device, in order to always leave some content at the top.
         float trailing = containerHeight - 320f;
         if (trailing < 0f) trailing = 0f;
         col.Add(new Spacer(Modifier.Companion.Height((int)trailing)));

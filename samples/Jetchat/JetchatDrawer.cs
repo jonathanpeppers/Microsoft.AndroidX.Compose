@@ -12,9 +12,6 @@ namespace ComposeNet.Samples.Jetchat;
 /// </summary>
 public static class JetchatDrawer
 {
-    const string MeProfileId        = "me";
-    const string ColleagueProfileId = "12345";
-
     /// <summary>
     /// Build the drawer sheet. <paramref name="onChatClicked"/> fires
     /// for chat rows; <paramref name="onProfileClicked"/> fires for the
@@ -41,8 +38,8 @@ public static class JetchatDrawer
             BuildChatItem(selectedMenu, drawerState, "droidcon-nyc", scheme, onChatClicked),
             BuildDivider(scheme, sidePadding: 28),
             BuildSectionHeader("Recent Profiles", scheme),
-            BuildProfileItem(selectedMenu, drawerState, "Ali Conors (you)", MeProfileId,        Resource.Drawable.avatar_ali,          scheme, onProfileClicked),
-            BuildProfileItem(selectedMenu, drawerState, "Taylor Brooks",    ColleagueProfileId, Resource.Drawable.avatar_someone_else, scheme, onProfileClicked),
+            BuildProfileItem(selectedMenu, drawerState, "Ali Conors (you)", Profiles.MeProfile.UserId,        Resource.Drawable.avatar_ali,          scheme, onProfileClicked),
+            BuildProfileItem(selectedMenu, drawerState, "Taylor Brooks",    Profiles.ColleagueProfile.UserId, Resource.Drawable.avatar_someone_else, scheme, onProfileClicked),
         });
         return sheet;
     }

@@ -2,10 +2,7 @@ namespace ComposeNet.Samples.Jetchat;
 
 /// <summary>
 /// Immutable state for the profile screen. C# port of upstream's
-/// <c>com.example.compose.jetchat.profile.ProfileScreenState</c>
-/// — same field set, with <see cref="Photo"/> as a nullable drawable
-/// resource id and <see cref="TimeZone"/> / <see cref="CommonChannels"/>
-/// left <c>null</c> for the local user.
+/// <c>com.example.compose.jetchat.profile.ProfileScreenState</c>.
 /// </summary>
 public sealed record ProfileScreenState(
     string  UserId,

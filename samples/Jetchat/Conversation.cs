@@ -18,12 +18,6 @@ public static class Conversation
     /// <summary>Author tag the local user sends with — matches upstream's <c>R.string.author_me</c>.</summary>
     public const string MyName = "me";
 
-    /// <summary>Userid mapped to the local user's profile.</summary>
-    public const string MeProfileId = "me";
-
-    /// <summary>Userid mapped to the colleague profile (every non-<c>me</c> author).</summary>
-    public const string ColleagueProfileId = "12345";
-
     const int SelEmoji   = 1;
     const int SelDm      = 2;
     const int SelPicture = 3;
@@ -239,7 +233,7 @@ public static class Conversation
     {
         bool isMe = m.Author == MyName;
         long accent = isMe ? scheme.Primary : scheme.Tertiary;
-        string userId = isMe ? MeProfileId : ColleagueProfileId;
+        string userId = isMe ? Profiles.MeProfile.UserId : Profiles.ColleagueProfile.UserId;
         return new Image(m.AuthorImage, "Profile photo")
         {
             Modifier = Modifier.Companion

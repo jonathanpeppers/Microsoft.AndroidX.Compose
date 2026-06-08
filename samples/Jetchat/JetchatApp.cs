@@ -53,9 +53,6 @@ public static class JetchatApp
                     onChatClicked:      channel =>
                     {
                         selectedMenu.Value = channel;
-                        // Make sure tapping a channel always returns to
-                        // the conversation route, even if the profile
-                        // screen is currently on top of the back stack.
                         if (!IsOnHome(nav))
                             nav.PopBackStack(Routes.Home, inclusive: false);
                     },
@@ -63,9 +60,6 @@ public static class JetchatApp
                     {
                         selectedMenu.Value = userId;
                         profileViewModel.SetUserId(userId);
-                        // Normalize the stack before navigating so
-                        // profile -> drawer -> other-profile doesn't
-                        // accumulate stacked profile entries.
                         if (!IsOnHome(nav))
                             nav.PopBackStack(Routes.Home, inclusive: false);
                         nav.Navigate(Routes.Profile(userId));
@@ -90,14 +84,10 @@ public static class JetchatApp
                     },
                     new Composable(Routes.ProfilePattern, entry =>
                     {
-                        // Resolve the profile directly from the route
-                        // argument so we don't mutate snapshot state
-                        // during composition.
                         var userId = entry.Arguments?.GetString("userId");
                         return Profile.Build(
-                            state:       Profiles.GetById(userId),
-                            drawerState: drawerState,
-                            onBack:      () => nav.PopBackStack());
+                            state:  Profiles.GetById(userId),
+                            onBack: () => nav.PopBackStack());
                     }),
                 },
             };
