@@ -55,17 +55,11 @@ public sealed class AnimatedVisibility : ComposableContainer
         var modifier = BuildModifier();
         var content  = ComposableLambdas.Wrap3(composer, RenderChildren);
 
-        // $default bit positions (Kotlin source order):
-        //   0 = visible        (always provided → cleared)
-        //   1 = modifier       (cleared when caller set it)
-        //   2 = enter          (cleared when caller set it)
-        //   3 = exit           (cleared when caller set it)
-        //   4 = label          (left set → use Compose default)
-        //   5 = content        (always provided → cleared)
-        int defaults = 1 << 4;
-        if (modifier is null) defaults |= 1 << 1;
-        if (_enter is null)   defaults |= 1 << 2;
-        if (_exit is null)    defaults |= 1 << 3;
+        // We never pass `label`, so it always stays set.
+        var defaults = AnimatedVisibilityDefault.Label;
+        if (modifier is null) defaults |= AnimatedVisibilityDefault.Modifier;
+        if (_enter is null)   defaults |= AnimatedVisibilityDefault.Enter;
+        if (_exit is null)    defaults |= AnimatedVisibilityDefault.Exit;
 
         AnimatedVisibilityKt.AnimatedVisibility(
             visible:   _visible,
@@ -75,7 +69,7 @@ public sealed class AnimatedVisibility : ComposableContainer
             label:     null,
             content:   content,
             _composer: composer,
-            p7:        0,           // $changed
-            _changed:  defaults);   // $default
+            p7:        0,                // $changed
+            _changed:  (int)defaults);   // $default
     }
 }
