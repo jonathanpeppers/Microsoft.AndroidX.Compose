@@ -6,7 +6,7 @@ namespace ComposeNet;
 /// <summary>
 /// <c>AnimatedVisibility</c> — animates the appearance and disappearance
 /// of its content as <see cref="Visible"/> toggles. By default Compose
-/// fades and expand/shrinks the content; pass <c>enter</c>
+/// fades and expands/shrinks the content; pass <c>enter</c>
 /// and <c>exit</c> to the constructor to choose different
 /// transitions (build them with the <see cref="Transitions"/> factories
 /// — <c>Transitions.FadeIn()</c>, <c>Transitions.SlideInVertically()</c>,

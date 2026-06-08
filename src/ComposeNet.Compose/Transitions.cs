@@ -37,10 +37,6 @@ public static class Transitions
     static IFiniteAnimationSpec DefaultSpec() =>
         AnimationSpecKt.Spring(Spring.DampingRatioNoBouncy, Spring.StiffnessMediumLow, null);
 
-    // TransformOrigin(0.5f, 0.5f) packed as (rawBits(x) << 32) | rawBits(y).
-    // rawBits(0.5f) == 0x3F000000, so Center == 0x3F0000003F000000.
-    const long TransformOriginCenter = 0x3F0000003F000000L;
-
     /// <summary>
     /// Fades the content in from <paramref name="initialAlpha"/> (default
     /// <c>0f</c> = fully transparent) to its final opacity. Mirrors Kotlin
@@ -72,7 +68,7 @@ public static class Transitions
     /// <param name="animationSpec">Optional spec; <see langword="null"/> uses
     /// <c>spring(stiffness = StiffnessMediumLow)</c>.</param>
     public static EnterTransition ScaleIn(float initialScale = 0f, IFiniteAnimationSpec? animationSpec = null) =>
-        EnterExitTransitionKt.ScaleIn(animationSpec ?? DefaultSpec(), initialScale, TransformOriginCenter);
+        EnterExitTransitionKt.ScaleIn(animationSpec ?? DefaultSpec(), initialScale, TransformOrigin.Center);
 
     /// <summary>
     /// Scales the content out from <c>1f</c> to
@@ -84,7 +80,7 @@ public static class Transitions
     /// <param name="animationSpec">Optional spec; <see langword="null"/> uses
     /// <c>spring(stiffness = StiffnessMediumLow)</c>.</param>
     public static ExitTransition ScaleOut(float targetScale = 0f, IFiniteAnimationSpec? animationSpec = null) =>
-        EnterExitTransitionKt.ScaleOut(animationSpec ?? DefaultSpec(), targetScale, TransformOriginCenter);
+        EnterExitTransitionKt.ScaleOut(animationSpec ?? DefaultSpec(), targetScale, TransformOrigin.Center);
 
     /// <summary>
     /// Slides the content in horizontally from <paramref name="initialOffsetX"/>
