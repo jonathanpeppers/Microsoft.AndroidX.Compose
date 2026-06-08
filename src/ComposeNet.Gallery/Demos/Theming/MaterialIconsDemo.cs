@@ -15,7 +15,7 @@ public static class MaterialIconsDemo
         Id:          "theming-material-icons",
         CategoryId:  "theming",
         Title:       "Material Icons",
-        Description: "Icons.Filled.* and Icons.AutoMirrored.Filled.* — vector icons resolved through JNI (no drawable resources required).",
+        Description: "Icons.Filled/Outlined/Rounded/Sharp/TwoTone + Icons.AutoMirrored.* — vector icons resolved through JNI (no drawable resources required).",
         Build:       () =>
         {
             var tapped = Compose.Remember(() => new MutableState<string>("(none)"));
@@ -56,11 +56,24 @@ public static class MaterialIconsDemo
                     Tile("Warning",       Icons.Filled.Warning),
                 },
 
-                new Text("Icons.AutoMirrored.Filled (2 — flip in RTL):") { FontWeight = FontWeight.Bold },
+                new Text("Icons.AutoMirrored.Filled (flip in RTL):") { FontWeight = FontWeight.Bold },
                 new Row(horizontalArrangement: Arrangement.SpacedBy(8))
                 {
                     Tile("ArrowBack",    Icons.AutoMirrored.Filled.ArrowBack),
                     Tile("ArrowForward", Icons.AutoMirrored.Filled.ArrowForward),
+                    Tile("Send",         Icons.AutoMirrored.Filled.Send),
+                    Tile("List",         Icons.AutoMirrored.Filled.List),
+                    Tile("ExitToApp",    Icons.AutoMirrored.Filled.ExitToApp),
+                },
+
+                new Text("Same glyph (Settings) across all 5 variants:") { FontWeight = FontWeight.Bold },
+                new Row(horizontalArrangement: Arrangement.SpacedBy(8))
+                {
+                    Tile("Filled",   Icons.Filled.Settings),
+                    Tile("Outlined", Icons.Outlined.Settings),
+                    Tile("Rounded",  Icons.Rounded.Settings),
+                    Tile("Sharp",    Icons.Sharp.Settings),
+                    Tile("TwoTone",  Icons.TwoTone.Settings),
                 },
             };
         });
