@@ -32,6 +32,13 @@ dotnet build samples/Jetchat -t:Run
   Profiles" section. The drawer column is wrapped in
   `Modifier.VerticalScroll(rememberedScrollState)` so it scrolls when
   it overflows on small heights.
+- **Drawer "Settings" section (API 26+)** — on
+  `Build.VERSION.SdkInt >= BuildVersionCodes.O` an extra section with
+  **Settings** and **Pin Widget to home** rows appears below "Recent
+  Profiles", matching upstream's `JetchatDrawer` API-gated block.
+  Tapping either row closes the drawer and opens the existing
+  `FunctionalityNotAvailable` popup; an actual `requestPinAppWidget`
+  flow is gated behind a future Glance widget (still listed below).
 - **Multi-channel state** — `ConversationUiState` holds a
   `Dictionary<string, ChannelState>` keyed by channel name. Tapping a
   drawer row swaps the active channel; the title, member count, and
@@ -124,7 +131,7 @@ feature, a new package reference, or simply more sample plumbing:
 | `ClickableText` URL / `@mention` link parsing inside message bodies | needs `AnnotatedString` + `ClickableText` bindings (multi-span text styling). |
 | Image / sticker / file message attachments inside bubbles | requires a composable image-loader pipeline (e.g. Coil). |
 | User profile screen (`ProfileScreen` reached via `NavHost`) | `NavController` / `NavHost` bindings landed in #60 but the screen + nav graph aren't wired up here. Explicitly out of scope for this port. |
-| App-widget discoverability (`@JetchatAppWidget`) | explicitly out of scope. |
+| App-widget discoverability (`@JetchatAppWidget`) | the **drawer entry point** exists on API 26+ (see *What's faithful*) but the actual `androidx.glance.appwidget`-backed widget + `AppWidgetManager.requestPinAppWidget(...)` flow is still out of scope — needs the `Xamarin.AndroidX.Glance.AppWidget` package and a `GlanceAppWidget` subclass. |
 | Drag-and-drop image target on the conversation area | explicitly out of scope. |
 | Sticky day-headers spanning multiple dates (e.g. "20 Aug" alongside "Today") | needs the `LazyListScope.item { … }` DSL exposed on the `LazyColumn` facade so a per-day header can be emitted between message groups. Only "Today" is rendered. |
 | `Sp(float)` for exact M3 letter-spacing (0.5 / 0.1 sp values) | `Sp` is integer-only; `labelSmall` rounds 0.5 → 1, `titleSmall` rounds 0.1 → 0 (dropped). |
