@@ -75,6 +75,43 @@ using ComposeNet;
 [assembly: ComposeDefaults("ShapesDefault",
     "extraSmall", "small", "medium", "large", "extraLarge")]
 
+// androidx.compose.material3.ColorScheme — synthetic-default
+// lightColorScheme / darkColorScheme factories, 48 Color slots in
+// Kotlin source order. Hand-rolled JNI (ColorSchemeBridges.cs) calls
+// the pair-of-int factory; this enum names the bits so
+// MaterialTheme.BuildColorScheme can build the $default mask without
+// magic numbers. The slot count (48 > 31) triggers the generator's
+// long-backed enum + Split helper (see #178), and BuildColorScheme
+// calls .Split() to get the (mask0, mask1) pair Kotlin expects.
+[assembly: ComposeDefaults("ColorSchemeDefault",
+    "primary",                "onPrimary",
+    "primaryContainer",       "onPrimaryContainer",
+    "inversePrimary",
+    "secondary",              "onSecondary",
+    "secondaryContainer",     "onSecondaryContainer",
+    "tertiary",               "onTertiary",
+    "tertiaryContainer",      "onTertiaryContainer",
+    "background",             "onBackground",
+    "surface",                "onSurface",
+    "surfaceVariant",         "onSurfaceVariant",
+    "surfaceTint",
+    "inverseSurface",         "inverseOnSurface",
+    "error",                  "onError",
+    "errorContainer",         "onErrorContainer",
+    "outline",                "outlineVariant",
+    "scrim",
+    "surfaceBright",
+    "surfaceContainer",       "surfaceContainerHigh",
+    "surfaceContainerHighest","surfaceContainerLow",
+    "surfaceContainerLowest",
+    "surfaceDim",
+    "primaryFixed",           "primaryFixedDim",
+    "onPrimaryFixed",         "onPrimaryFixedVariant",
+    "secondaryFixed",         "secondaryFixedDim",
+    "onSecondaryFixed",       "onSecondaryFixedVariant",
+    "tertiaryFixed",          "tertiaryFixedDim",
+    "onTertiaryFixed",        "onTertiaryFixedVariant")]
+
 // androidx.compose.material3.Typography — synthetic-default
 // constructor, 15 TextStyle slots in Kotlin source order.
 // Hand-rolled JNI (TypographyBridges.cs) calls the ctor; this enum

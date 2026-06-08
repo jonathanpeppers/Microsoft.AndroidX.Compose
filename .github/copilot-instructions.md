@@ -87,6 +87,55 @@ too — until then, hand the generator the Kotlin parameter names:
   *as enum members* — the call site clears the bit when the user
   supplies the slot.
 
+### Wide masks (> 31 slots) — `: long` + `Split` helper
+
+Kotlin lowers `@Composable` functions with more than 32 defaultable
+parameters into a pair of `int` `$default` slots at the JVM
+boundary (`II` in the signature) — e.g.
+`androidx.compose.material3.lightColorScheme` has 48 slots.
+
+When the slot list passed to `[ComposeDefaults]` exceeds 31
+positional entries the generator switches to a long-backed enum and
+emits a `Split` extension that turns the enum back into the pair of
+ints Kotlin expects:
+
+```csharp
+[assembly: ComposeDefaults("ColorSchemeDefault",
+    "primary", "onPrimary", "primaryContainer", /* …48 names total… */)]
+```
+
+Generates:
+
+```csharp
+[Flags]
+internal enum ColorSchemeDefault : long
+{
+    None             = 0,
+    Primary          = 1L << 0,
+    OnPrimary        = 1L << 1,
+    // …
+    Slot47           = 1L << 47,
+    All              = Primary | OnPrimary | /* … */,
+}
+
+internal static class ColorSchemeDefaultExtensions
+{
+    public static (int Mask0, int Mask1) Split(this ColorSchemeDefault value) =>
+        ((int)((long)value & 0xFFFFFFFFL), (int)(((long)value >> 32) & 0xFFFFFFFFL));
+}
+```
+
+Call sites build the mask the normal way (`defaults |= ColorSchemeDefault.Primary`)
+and `.Split()` immediately before passing the two ints to the JNI
+bridge — never hand-roll `1 << N` or the low/high split. The
+threshold is intentionally 32 slots (not 33), so bit 31 lands as
+`1L << 31` rather than `int.MinValue`. Declarations with ≤ 31
+slots stay byte-for-byte identical to the pre-wide output.
+
+> Caveat: > 63-bit masks are not modelled — no Compose API in scope
+> needs them, and `ulong` extensions would be premature. Add support
+> if/when a real binding surfaces it.
+
 When the upstream binder fix lands, a declarative attribute can be
 swapped to the generic form one-for-one and the comment in
 `ComposeDefaults.cs` can be updated.
