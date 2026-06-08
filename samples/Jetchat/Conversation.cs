@@ -39,7 +39,8 @@ public static class Conversation
         ScrollState          drawerScroll,
         DrawerStateHolder    drawerState,
         MutableState<int>    selectedSelector,
-        MutableState<bool>   popupOpen) =>
+        MutableState<bool>   popupOpen,
+        LazyListState        messagesScroll) =>
         JetchatTheme.Build(new Composed(c =>
         {
             var scheme = MaterialTheme.CurrentColorScheme(c);
@@ -52,7 +53,7 @@ public static class Conversation
                     Content = new Scaffold
                     {
                         TopBar = BuildTopBar(ui, scheme, drawerState, popupOpen),
-                        Body   = BuildBody(ui, input, scheme, selectedSelector),
+                        Body   = BuildBody(ui, input, scheme, selectedSelector, messagesScroll),
                     },
                 },
             };
@@ -126,12 +127,13 @@ public static class Conversation
         ConversationUiState  ui,
         MutableState<string> input,
         ColorScheme          scheme,
-        MutableState<int>    selectedSelector) =>
+        MutableState<int>    selectedSelector,
+        LazyListState        messagesScroll) =>
         new()
         {
             Modifier.Companion.FillMaxSize(),
-            BuildMessages(ui, scheme),
-            BuildInputArea(ui, input, scheme, selectedSelector),
+            BuildMessages(ui, scheme, messagesScroll),
+            BuildInputArea(ui, input, scheme, selectedSelector, messagesScroll),
         };
 
     // Flat row stream for the LazyColumn: either a single message
@@ -144,7 +146,7 @@ public static class Conversation
     sealed record MessageRow(Message Msg, bool IsFirstByAuthor, bool IsLastByAuthor) : ChatRow;
     sealed record HeaderRow(string Label) : ChatRow;
 
-    static ComposableNode BuildMessages(ConversationUiState ui, ColorScheme scheme)
+    static ComposableNode BuildMessages(ConversationUiState ui, ColorScheme scheme, LazyListState messagesScroll)
     {
         var msgs = ui.Messages;
         var rows = new List<ChatRow>(msgs.Count + 2);
@@ -171,17 +173,51 @@ public static class Conversation
             rows.Add(new MessageRow(m, isFirst, isLast));
         }
 
-        return new LazyColumn<ChatRow>(
-            items:       rows,
-            itemContent: row => row switch
-            {
-                MessageRow mr => BuildMessageRow(mr.Msg, mr.IsFirstByAuthor, mr.IsLastByAuthor, scheme),
-                HeaderRow  hr => BuildDayHeader(hr.Label, scheme),
-                _             => new Spacer(Modifier.Companion.Width(0)),
-            })
+        // Wrap the message list in a Box so the JumpToBottom FAB can
+        // overlay the bottom of the visible viewport. The Box (not the
+        // LazyColumn) now takes the .Weight(1f) slot in the outer Body
+        // Column.
+        return new Box
         {
-            Modifier      = Modifier.Companion.FillMaxWidth().Weight(1f, fill: true),
-            ReverseLayout = true,
+            Modifier.Companion.FillMaxWidth().Weight(1f, fill: true),
+
+            new LazyColumn<ChatRow>(
+                items:       rows,
+                itemContent: row => row switch
+                {
+                    MessageRow mr => BuildMessageRow(mr.Msg, mr.IsFirstByAuthor, mr.IsLastByAuthor, scheme),
+                    HeaderRow  hr => BuildDayHeader(hr.Label, scheme),
+                    _             => new Spacer(Modifier.Companion.Width(0)),
+                })
+            {
+                Modifier      = Modifier.Companion.FillMaxSize(),
+                ReverseLayout = true,
+                State         = messagesScroll,
+            },
+
+            // JumpToBottom FAB — composer-aware so it observes the
+            // snapshot-backed scroll state and re-renders when the user
+            // scrolls. In reverse-layout, FirstVisibleItemIndex > 0 (or
+            // any nonzero offset on item 0) means the user has scrolled
+            // up away from the newest message.
+            new Composed(c =>
+            {
+                var visible = messagesScroll.FirstVisibleItemIndex != 0
+                           || messagesScroll.FirstVisibleItemScrollOffset > 0;
+                if (!visible)
+                    return null;
+
+                return new ExtendedFloatingActionButton(
+                    onClick:  () => _ = messagesScroll.AnimateScrollToItemAsync(0),
+                    expanded: false)
+                {
+                    Modifier = Modifier.Companion
+                        .Align(Alignment.BottomCenter)
+                        .Padding(start: 0, top: 0, end: 0, bottom: 16),
+                    Icon = new Icon(Resource.Drawable.ic_arrow_downward, "Jump to bottom"),
+                    Text = new Text("Jump to bottom"),
+                };
+            }),
         };
     }
 
@@ -304,7 +340,8 @@ public static class Conversation
         ConversationUiState  ui,
         MutableState<string> input,
         ColorScheme          scheme,
-        MutableState<int>    selectedSelector) =>
+        MutableState<int>    selectedSelector,
+        LazyListState        messagesScroll) =>
         new()
         {
             // Surface gives the input region its own tonal layer and
@@ -315,7 +352,7 @@ public static class Conversation
             {
                 Modifier.Companion.FillMaxWidth(),
                 BuildTextFieldRow(ui, input),
-                BuildSelectorRow(ui, input, scheme, selectedSelector),
+                BuildSelectorRow(ui, input, scheme, selectedSelector, messagesScroll),
                 BuildSelectorPanel(scheme, selectedSelector),
             },
         };
@@ -334,7 +371,8 @@ public static class Conversation
         ConversationUiState  ui,
         MutableState<string> input,
         ColorScheme          scheme,
-        MutableState<int>    selectedSelector)
+        MutableState<int>    selectedSelector,
+        LazyListState        messagesScroll)
     {
         var row = new Row(Arrangement.SpaceBetween)
         {
@@ -349,7 +387,7 @@ public static class Conversation
             },
         };
         bool enabled = !string.IsNullOrWhiteSpace(input.Value);
-        row.Add(new TextButton(onClick: () => Send(ui, input, selectedSelector))
+        row.Add(new TextButton(onClick: () => Send(ui, input, selectedSelector, messagesScroll))
         {
             new Text("Send")
             {
@@ -563,7 +601,8 @@ public static class Conversation
     static void Send(
         ConversationUiState  ui,
         MutableState<string> input,
-        MutableState<int>    selectedSelector)
+        MutableState<int>    selectedSelector,
+        LazyListState        messagesScroll)
     {
         var text = input.Value ?? string.Empty;
         if (string.IsNullOrWhiteSpace(text)) return;
@@ -571,5 +610,9 @@ public static class Conversation
         input.Value = string.Empty;
         // Dismiss any open input selector panel after sending.
         selectedSelector.Value = 0;
+        // Smoothly scroll back to the newest message after sending so
+        // the user's own message lands in view even if they had
+        // scrolled up to read older history.
+        _ = messagesScroll.AnimateScrollToItemAsync(0);
     }
 }

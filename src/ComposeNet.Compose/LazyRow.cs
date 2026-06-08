@@ -78,7 +78,7 @@ public sealed class LazyRow<T> : ComposableNode
 
         LazyDslKt.LazyRow(
             modifier:              modifier,
-            state:                 State,
+            state:                 State?.Jvm,
             contentPadding:        null,
             reverseLayout:         false,
             horizontalArrangement: horizontal,

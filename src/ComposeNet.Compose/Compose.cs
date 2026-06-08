@@ -342,6 +342,70 @@ public static class Compose
     }
 
     /// <summary>
+    /// Compose's <c>rememberLazyListState(initialFirstVisibleItemIndex,
+    /// initialFirstVisibleItemScrollOffset)</c>: returns a
+    /// <see cref="LazyListState"/> that survives recompositions, cached
+    /// in the active composer's slot table for the lifetime of this
+    /// call site. Hand the returned value to
+    /// <see cref="LazyColumn{T}.State"/> /
+    /// <see cref="LazyRow{T}.State"/> to read scroll position or drive
+    /// programmatic scrolling.
+    ///
+    /// Must be called inside a composition (e.g. inside a
+    /// <c>SetContent</c> body or a
+    /// <see cref="ComposableNode.Render(IComposer)"/> override).
+    /// </summary>
+    /// <param name="initialFirstVisibleItemIndex">
+    /// Item index that should be the first visible item on the very
+    /// first composition. Defaults to <c>0</c>.
+    /// </param>
+    /// <param name="initialFirstVisibleItemScrollOffset">
+    /// Initial scroll offset of the first visible item, in pixels.
+    /// Defaults to <c>0</c>.
+    /// </param>
+    /// <param name="line">
+    /// Compiler-provided source line — used to derive a stable slot
+    /// key. Do not supply explicitly.
+    /// </param>
+    /// <param name="file">
+    /// Compiler-provided source path — used to derive a stable slot
+    /// key. Do not supply explicitly.
+    /// </param>
+    public static LazyListState RememberLazyListState(
+        int initialFirstVisibleItemIndex = 0,
+        int initialFirstVisibleItemScrollOffset = 0,
+        [CallerLineNumber] int line = 0,
+        [CallerFilePath] string file = "")
+    {
+        var composer = ComposeContext.Current
+            ?? throw new System.InvalidOperationException(
+                "Compose.RememberLazyListState must be called inside a composition (e.g. inside a SetContent body or a ComposableNode.Render override).");
+
+        composer.StartReplaceableGroup(SourceLocationKey.Compute(line, file));
+        try
+        {
+            // Binder-generated overload reorders the synthetic `$default`
+            // and `$changed` ints around the real params; use named args
+            // so we don't depend on positional shuffling. `p0` and
+            // `_changed` are both binder-named slot integers — pass 0
+            // for both so Kotlin honours the explicit initial values.
+            var jvm = AndroidX.Compose.Foundation.Lazy.LazyListStateKt.RememberLazyListState(
+                p0:                                  0,
+                initialFirstVisibleItemIndex:        initialFirstVisibleItemIndex,
+                _composer:                           composer,
+                initialFirstVisibleItemScrollOffset: initialFirstVisibleItemScrollOffset,
+                _changed:                            0)
+                ?? throw new System.InvalidOperationException(
+                    "LazyListStateKt.RememberLazyListState returned null.");
+            return new LazyListState(jvm);
+        }
+        finally
+        {
+            composer.EndReplaceableGroup();
+        }
+    }
+
+    /// <summary>
     /// Compose's <c>SideEffect { … }</c>: runs <paramref name="effect"/>
     /// on every successful recomposition, <b>after</b> the composition
     /// has been applied. Use it to publish managed-side state into

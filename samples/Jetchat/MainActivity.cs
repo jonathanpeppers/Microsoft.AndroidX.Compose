@@ -22,7 +22,8 @@ public class MainActivity : ComposeActivity
             var drawerState      = Remember(() => new DrawerStateHolder(DrawerValue.Closed));
             var selectedSelector = Remember(() => new MutableState<int>(0));
             var popupOpen        = Remember(() => new MutableState<bool>(false));
-            return Conversation.Build(ui, input, selectedMenu, drawerScroll, drawerState, selectedSelector, popupOpen);
+            var messagesScroll   = Compose.RememberLazyListState();
+            return Conversation.Build(ui, input, selectedMenu, drawerScroll, drawerState, selectedSelector, popupOpen, messagesScroll);
         });
     }
 }

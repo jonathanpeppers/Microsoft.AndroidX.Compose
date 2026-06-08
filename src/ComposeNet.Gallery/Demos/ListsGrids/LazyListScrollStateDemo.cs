@@ -1,5 +1,4 @@
 using System.Linq;
-using AndroidX.Compose.Foundation.Lazy;
 using ComposeNet.Gallery.Registry;
 
 namespace ComposeNet.Gallery.Demos.ListsGrids;
@@ -8,7 +7,9 @@ namespace ComposeNet.Gallery.Demos.ListsGrids;
 /// LazyColumn with a live readout of <see cref="LazyListState"/>'s
 /// scroll-direction and visible-item properties so a reviewer can
 /// scroll the list and watch the snapshot-backed values update on the
-/// device in real time. Exercises #164.
+/// device in real time. Also exercises
+/// <see cref="LazyListState.ScrollToItemAsync"/> (snap) and
+/// <see cref="LazyListState.AnimateScrollToItemAsync"/> (smooth).
 /// </summary>
 public static class LazyListScrollStateDemo
 {
@@ -16,13 +17,15 @@ public static class LazyListScrollStateDemo
     public static Demo Demo => new(
         Id:          "lists-lazy-list-scroll-state",
         CategoryId:  "lists-grids",
-        Title:       "LazyListState — scroll-direction readout",
+        Title:       "LazyListState — scroll-direction readout + jump",
         Description: "1000-row LazyColumn with a live readout of FirstVisibleItemIndex, " +
                      "FirstVisibleItemScrollOffset, CanScrollBackward/Forward, " +
-                     "LastScrolledBackward/Forward, and IsScrollInProgress.",
+                     "LastScrolledBackward/Forward, and IsScrollInProgress, plus " +
+                     "buttons that snap (ScrollToItemAsync) or animate " +
+                     "(AnimateScrollToItemAsync) back to the top.",
         Build:       () =>
         {
-            var state = Compose.Remember(() => new LazyListState());
+            var state = Compose.RememberLazyListState();
             return new Column(verticalArrangement: Arrangement.SpacedBy(4))
             {
                 Modifier.Companion.FillMaxWidth(),
@@ -40,6 +43,23 @@ public static class LazyListScrollStateDemo
                         new Text($"LastScrolledBackward:         {state.LastScrolledBackward}"),
                         new Text($"LastScrolledForward:          {state.LastScrolledForward}"),
                         new Text($"IsScrollInProgress:           {state.IsScrollInProgress}"),
+                    },
+                },
+
+                new Row(horizontalArrangement: Arrangement.SpacedBy(8))
+                {
+                    Modifier.Companion.FillMaxWidth().Padding(horizontal: 12, vertical: 0),
+                    new Button(onClick: () => _ = state.ScrollToItemAsync(0))
+                    {
+                        new Text("Snap to top"),
+                    },
+                    new Button(onClick: () => _ = state.AnimateScrollToItemAsync(0))
+                    {
+                        new Text("Animate to top"),
+                    },
+                    new Button(onClick: () => _ = state.AnimateScrollToItemAsync(999))
+                    {
+                        new Text("Animate to bottom"),
                     },
                 },
 

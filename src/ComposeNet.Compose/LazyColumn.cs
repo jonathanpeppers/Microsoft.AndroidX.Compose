@@ -157,7 +157,7 @@ public sealed class LazyColumn<T> : ComposableNode
 
         LazyDslKt.LazyColumn(
             modifier:            modifier,
-            state:               State,
+            state:               State?.Jvm,
             contentPadding:      contentPadding,
             reverseLayout:       ReverseLayout,
             verticalArrangement: null,
