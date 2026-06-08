@@ -419,12 +419,14 @@ so `[CallerFilePath]` + `[CallerLineNumber]` slot keys inside
   wrapper, per-branch mask, and each bridge call live INSIDE their respective
   branches. Param order may differ between primary and alternate — emitter
   walks each bridge's actual `Parameters` list. Used for `TopAppBar` (→
-  `TopAppBarWithSubtitle`), `MediumTopAppBar`, `LargeTopAppBar`.
+  `TopAppBarWithSubtitle`), `MediumTopAppBar` (→ `MediumFlexibleTopAppBar`),
+  `LargeTopAppBar` (→ `LargeFlexibleTopAppBar`).
 
 - **Phase 10** — `[ConfirmStateChange(typeof(T))]` (described above). Used for
   `ModalNavigationDrawer`, `DismissibleNavigationDrawer`,
   `PermanentNavigationDrawer` (no `[ConfirmStateChange]` — always permanent),
-  `ModalWideNavigationRail`.
+  `ModalWideNavigationRail` (no veto — rail has no `confirmStateChange` in
+  Kotlin).
 
 ### Hand-written holdouts
 
