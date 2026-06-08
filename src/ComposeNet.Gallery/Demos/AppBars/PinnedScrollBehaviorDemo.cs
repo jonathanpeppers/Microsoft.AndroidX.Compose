@@ -19,7 +19,7 @@ public static class PinnedScrollBehaviorDemo
         Description: "Bar stays pinned but elevates as the LazyColumn scrolls underneath.",
         Build:       () =>
         {
-            var state    = Compose.Remember(() => new TopAppBarState(float.NegativeInfinity, 0f, 0f));
+            var state    = TopAppBarDefaults.RememberTopAppBarState();
             var behavior = TopAppBarDefaults.PinnedScrollBehavior(state);
             return new Column
             {

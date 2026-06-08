@@ -47,6 +47,42 @@ namespace ComposeNet;
 public static class TopAppBarDefaults
 {
     /// <summary>
+    /// Mirrors Kotlin's <c>rememberTopAppBarState(...)</c> — allocates
+    /// a <see cref="TopAppBarState"/> via
+    /// <see cref="Compose.Remember{T}(System.Func{T}, int, string)"/>
+    /// so the same instance survives recompositions, with the three
+    /// initial offsets surfaced as named C# parameters with Kotlin's
+    /// defaults.
+    /// </summary>
+    /// <param name="initialHeightOffsetLimit">
+    /// Initial value of <see cref="TopAppBarState.HeightOffsetLimit"/>
+    /// — the minimum (most-negative) height offset the bar can collapse
+    /// to. Kotlin's default is <see cref="float.NegativeInfinity"/>,
+    /// meaning "let the bar measure its own collapsed height when it
+    /// first composes."
+    /// </param>
+    /// <param name="initialHeightOffset">
+    /// Initial value of <see cref="TopAppBarState.HeightOffset"/> — the
+    /// current offset, between <paramref name="initialHeightOffsetLimit"/>
+    /// (fully collapsed) and <c>0</c> (fully expanded).
+    /// </param>
+    /// <param name="initialContentOffset">
+    /// Initial value of <see cref="TopAppBarState.ContentOffset"/> —
+    /// the cumulative scroll-content offset used to drive the pinned
+    /// bar's elevation tonal overlay.
+    /// </param>
+    public static TopAppBarState RememberTopAppBarState(
+        float initialHeightOffsetLimit = float.NegativeInfinity,
+        float initialHeightOffset = 0f,
+        float initialContentOffset = 0f,
+        [CallerLineNumber] int line = 0,
+        [CallerFilePath] string file = "") =>
+        Compose.Remember(
+            () => new TopAppBarState(
+                initialHeightOffsetLimit, initialHeightOffset, initialContentOffset),
+            line, file);
+
+    /// <summary>
     /// Mirrors Kotlin's
     /// <c>TopAppBarDefaults.pinnedScrollBehavior(state)</c>. The bar
     /// stays in place but tracks the content's scroll offset on

@@ -20,7 +20,7 @@ public static class EnterAlwaysScrollBehaviorDemo
         Description: "Bar collapses on scroll up and snaps back the moment the user scrolls down.",
         Build:       () =>
         {
-            var state    = Compose.Remember(() => new TopAppBarState(float.NegativeInfinity, 0f, 0f));
+            var state    = TopAppBarDefaults.RememberTopAppBarState();
             var behavior = TopAppBarDefaults.EnterAlwaysScrollBehavior(state);
             return new Column
             {

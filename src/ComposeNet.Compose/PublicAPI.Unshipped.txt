@@ -1751,6 +1751,7 @@ static ComposeNet.TextOverflow.Visible.get -> ComposeNet.TextOverflow
 static ComposeNet.TopAppBarDefaults.EnterAlwaysScrollBehavior(AndroidX.Compose.Material3.TopAppBarState! state, int line = 0, string! file = "") -> AndroidX.Compose.Material3.ITopAppBarScrollBehavior!
 static ComposeNet.TopAppBarDefaults.ExitUntilCollapsedScrollBehavior(AndroidX.Compose.Material3.TopAppBarState! state, int line = 0, string! file = "") -> AndroidX.Compose.Material3.ITopAppBarScrollBehavior!
 static ComposeNet.TopAppBarDefaults.PinnedScrollBehavior(AndroidX.Compose.Material3.TopAppBarState! state, int line = 0, string! file = "") -> AndroidX.Compose.Material3.ITopAppBarScrollBehavior!
+static ComposeNet.TopAppBarDefaults.RememberTopAppBarState(float initialHeightOffsetLimit = -Infinity, float initialHeightOffset = 0, float initialContentOffset = 0, int line = 0, string! file = "") -> AndroidX.Compose.Material3.TopAppBarState!
 static ComposeNet.TransformOrigin.Center.get -> long
 static ComposeNet.TransformOrigin.Pack(float pivotFractionX, float pivotFractionY) -> long
 static readonly ComposeNet.Locals.LocalColorScheme -> ComposeNet.CompositionLocal<AndroidX.Compose.Material3.ColorScheme!>!
