@@ -1,4 +1,7 @@
 using AndroidX.Compose.UI.Graphics.Vector;
+using FilledKt = AndroidX.Compose.Material.Icons.Filled;
+using AutoMirroredFilledKt = AndroidX.Compose.Material.Icons.AutoMirrored.Filled;
+using IconsObject = AndroidX.Compose.Material.Icons.Icons;
 
 namespace ComposeNet;
 
@@ -9,13 +12,11 @@ namespace ComposeNet;
 /// for the directional icons that flip in RTL layouts.
 /// </summary>
 /// <remarks>
-/// Each property returns a cached
-/// <see cref="ImageVector"/>; pass it into
-/// <see cref="Icon(ImageVector, string?)"/>.
-/// Backed by the
+/// Each property returns the cached
+/// <see cref="ImageVector"/> exposed by the
 /// <c>Xamarin.AndroidX.Compose.Material.Icons.Core(.Android)</c>
-/// 1.7.8.5 NuGet, which ships only the Java library — getters are
-/// invoked via JNI through <see cref="IconBridge"/>.
+/// 1.7.8.6 bindings; pass it into
+/// <see cref="Icon(ImageVector, string?)"/>.
 /// </remarks>
 public static class Icons
 {
@@ -25,44 +26,42 @@ public static class Icons
     /// </summary>
     public static class Filled
     {
-        const string V = "androidx/compose/material/icons/Icons$Filled";
-
         /// <summary>The Material "Search" filled icon.</summary>
-        public static ImageVector Search        => IconBridge.Get("androidx/compose/material/icons/filled/SearchKt",        "getSearch",        V);
+        public static ImageVector Search        => FilledKt.SearchKt.GetSearch(IconsObject.Instance.Default);
         /// <summary>The Material "Menu" filled icon.</summary>
-        public static ImageVector Menu          => IconBridge.Get("androidx/compose/material/icons/filled/MenuKt",          "getMenu",          V);
+        public static ImageVector Menu          => FilledKt.MenuKt.GetMenu(IconsObject.Instance.Default);
         /// <summary>The Material "Add" filled icon.</summary>
-        public static ImageVector Add           => IconBridge.Get("androidx/compose/material/icons/filled/AddKt",           "getAdd",           V);
+        public static ImageVector Add           => FilledKt.AddKt.GetAdd(IconsObject.Instance.Default);
         /// <summary>The Material "Delete" filled icon.</summary>
-        public static ImageVector Delete        => IconBridge.Get("androidx/compose/material/icons/filled/DeleteKt",        "getDelete",        V);
+        public static ImageVector Delete        => FilledKt.DeleteKt.GetDelete(IconsObject.Instance.Default);
         /// <summary>The Material "Edit" filled icon.</summary>
-        public static ImageVector Edit          => IconBridge.Get("androidx/compose/material/icons/filled/EditKt",          "getEdit",          V);
+        public static ImageVector Edit          => FilledKt.EditKt.GetEdit(IconsObject.Instance.Default);
         /// <summary>The Material "Settings" filled icon.</summary>
-        public static ImageVector Settings      => IconBridge.Get("androidx/compose/material/icons/filled/SettingsKt",      "getSettings",      V);
+        public static ImageVector Settings      => FilledKt.SettingsKt.GetSettings(IconsObject.Instance.Default);
         /// <summary>The Material "More vertical" (overflow) filled icon.</summary>
-        public static ImageVector MoreVert      => IconBridge.Get("androidx/compose/material/icons/filled/MoreVertKt",      "getMoreVert",      V);
+        public static ImageVector MoreVert      => FilledKt.MoreVertKt.GetMoreVert(IconsObject.Instance.Default);
         /// <summary>The Material "Close" / "X" filled icon.</summary>
-        public static ImageVector Close         => IconBridge.Get("androidx/compose/material/icons/filled/CloseKt",         "getClose",         V);
+        public static ImageVector Close         => FilledKt.CloseKt.GetClose(IconsObject.Instance.Default);
         /// <summary>The Material "Check" / tick filled icon.</summary>
-        public static ImageVector Check         => IconBridge.Get("androidx/compose/material/icons/filled/CheckKt",         "getCheck",         V);
+        public static ImageVector Check         => FilledKt.CheckKt.GetCheck(IconsObject.Instance.Default);
         /// <summary>The Material "Star" filled icon.</summary>
-        public static ImageVector Star          => IconBridge.Get("androidx/compose/material/icons/filled/StarKt",          "getStar",          V);
+        public static ImageVector Star          => FilledKt.StarKt.GetStar(IconsObject.Instance.Default);
         /// <summary>The Material "Favorite" (heart) filled icon.</summary>
-        public static ImageVector Favorite      => IconBridge.Get("androidx/compose/material/icons/filled/FavoriteKt",      "getFavorite",      V);
+        public static ImageVector Favorite      => FilledKt.FavoriteKt.GetFavorite(IconsObject.Instance.Default);
         /// <summary>The Material "Share" filled icon.</summary>
-        public static ImageVector Share         => IconBridge.Get("androidx/compose/material/icons/filled/ShareKt",         "getShare",         V);
+        public static ImageVector Share         => FilledKt.ShareKt.GetShare(IconsObject.Instance.Default);
         /// <summary>The Material "Home" filled icon.</summary>
-        public static ImageVector Home          => IconBridge.Get("androidx/compose/material/icons/filled/HomeKt",          "getHome",          V);
+        public static ImageVector Home          => FilledKt.HomeKt.GetHome(IconsObject.Instance.Default);
         /// <summary>The Material "Person" filled icon.</summary>
-        public static ImageVector Person        => IconBridge.Get("androidx/compose/material/icons/filled/PersonKt",        "getPerson",        V);
+        public static ImageVector Person        => FilledKt.PersonKt.GetPerson(IconsObject.Instance.Default);
         /// <summary>The Material "Notifications" (bell) filled icon.</summary>
-        public static ImageVector Notifications => IconBridge.Get("androidx/compose/material/icons/filled/NotificationsKt", "getNotifications", V);
+        public static ImageVector Notifications => FilledKt.NotificationsKt.GetNotifications(IconsObject.Instance.Default);
         /// <summary>The Material "Refresh" filled icon.</summary>
-        public static ImageVector Refresh       => IconBridge.Get("androidx/compose/material/icons/filled/RefreshKt",       "getRefresh",       V);
+        public static ImageVector Refresh       => FilledKt.RefreshKt.GetRefresh(IconsObject.Instance.Default);
         /// <summary>The Material "Info" filled icon.</summary>
-        public static ImageVector Info          => IconBridge.Get("androidx/compose/material/icons/filled/InfoKt",          "getInfo",          V);
+        public static ImageVector Info          => FilledKt.InfoKt.GetInfo(IconsObject.Instance.Default);
         /// <summary>The Material "Warning" (triangle) filled icon.</summary>
-        public static ImageVector Warning       => IconBridge.Get("androidx/compose/material/icons/filled/WarningKt",       "getWarning",       V);
+        public static ImageVector Warning       => FilledKt.WarningKt.GetWarning(IconsObject.Instance.Default);
     }
 
     /// <summary>
@@ -76,12 +75,10 @@ public static class Icons
         /// </summary>
         public static class Filled
         {
-            const string V = "androidx/compose/material/icons/Icons$AutoMirrored$Filled";
-
             /// <summary>The Material "Arrow back" auto-mirrored filled icon.</summary>
-            public static ImageVector ArrowBack    => IconBridge.Get("androidx/compose/material/icons/automirrored/filled/ArrowBackKt",    "getArrowBack",    V);
+            public static ImageVector ArrowBack    => AutoMirroredFilledKt.ArrowBackKt.GetArrowBack(IconsObject.AutoMirrored.Instance.Default);
             /// <summary>The Material "Arrow forward" auto-mirrored filled icon.</summary>
-            public static ImageVector ArrowForward => IconBridge.Get("androidx/compose/material/icons/automirrored/filled/ArrowForwardKt", "getArrowForward", V);
+            public static ImageVector ArrowForward => AutoMirroredFilledKt.ArrowForwardKt.GetArrowForward(IconsObject.AutoMirrored.Instance.Default);
         }
     }
 }

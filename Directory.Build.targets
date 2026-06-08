@@ -34,8 +34,8 @@
     <PackageReference Update="Xamarin.AndroidX.Compose.Foundation.Layout.Android" Version="1.11.2" />
     <PackageReference Update="Xamarin.AndroidX.Compose.Material3" Version="1.4.0.2" />
     <PackageReference Update="Xamarin.AndroidX.Compose.Material3Android" Version="1.4.0.3" />
-    <PackageReference Update="Xamarin.AndroidX.Compose.Material.Icons.Core" Version="1.7.8.5" />
-    <PackageReference Update="Xamarin.AndroidX.Compose.Material.Icons.Core.Android" Version="1.7.8.5" />
+    <PackageReference Update="Xamarin.AndroidX.Compose.Material.Icons.Core" Version="1.7.8.6" />
+    <PackageReference Update="Xamarin.AndroidX.Compose.Material.Icons.Core.Android" Version="1.7.8.6" />
     <PackageReference Update="Xamarin.AndroidX.Compose.Runtime" Version="1.11.2.1" />
     <PackageReference Update="Xamarin.AndroidX.Compose.Runtime.Android" Version="1.11.2.1" />
     <PackageReference Update="Xamarin.AndroidX.Compose.Runtime.Saveable" Version="1.11.2" />
