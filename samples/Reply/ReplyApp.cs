@@ -21,7 +21,7 @@ public static class ReplyApp
     public static ComposableNode Build(
         NavController        nav,
         MutableState<string> currentRoute,
-        MutableState<long?>  openedEmailId,
+        MutableState<long>   openedEmailId,
         MutableStateList<long> selectedEmailIds) =>
         new MaterialTheme
         {
@@ -41,7 +41,7 @@ public static class ReplyApp
     static NavHost BuildNavHost(
         NavController          nav,
         MutableState<string>   currentRoute,
-        MutableState<long?>    openedEmailId,
+        MutableState<long>     openedEmailId,
         MutableStateList<long> selectedEmailIds)
     {
         return new NavHost(startDestination: Route.Inbox, navController: nav)
@@ -79,7 +79,7 @@ public static class ReplyApp
                     email:         email,
                     onBackPressed: () =>
                     {
-                        openedEmailId.Value = null;
+                        openedEmailId.Value = 0L;
                         nav.NavigateUp();
                     });
             }),

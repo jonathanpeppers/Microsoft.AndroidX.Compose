@@ -15,7 +15,7 @@ public static class ReplyInboxScreen
     /// <summary>Build the inbox.</summary>
     public static ComposableNode Build(
         IReadOnlyList<Email>     emails,
-        long?                    openedEmailId,
+        long                     openedEmailId,
         IReadOnlyList<long>      selectedEmailIds,
         System.Action<long>      navigateToDetail,
         System.Action<long>      toggleSelection) =>

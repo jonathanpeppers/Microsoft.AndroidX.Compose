@@ -24,7 +24,7 @@ public class MainActivity : ComposeActivity
         {
             var nav              = Remember(() => new NavController());
             var currentRoute     = Remember(() => new MutableState<string>(Route.Inbox));
-            var openedEmailId    = Remember(() => new MutableState<long?>(null));
+            var openedEmailId    = Remember(() => new MutableState<long>(0L));
             var selectedEmailIds = Remember(() => new MutableStateList<long>());
             return ReplyApp.Build(nav, currentRoute, openedEmailId, selectedEmailIds);
         });
