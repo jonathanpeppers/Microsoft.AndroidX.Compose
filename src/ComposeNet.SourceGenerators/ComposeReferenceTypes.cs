@@ -38,6 +38,7 @@ internal static class ComposeReferenceTypes
         "ComposeNet.Shape",
         "ComposeNet.Alignment",
         "ComposeNet.ContentScale",
+        "AndroidX.Compose.Material3.ITopAppBarScrollBehavior",
     };
 
     /// <summary>

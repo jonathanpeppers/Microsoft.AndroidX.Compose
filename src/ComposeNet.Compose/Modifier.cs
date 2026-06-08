@@ -455,6 +455,43 @@ public sealed class Modifier
     }
 
     /// <summary>
+    /// <c>Modifier.nestedScroll(connection)</c> — bridge a scrollable
+    /// container to a nested-scrolling parent (most commonly a
+    /// Material 3 <see cref="TopAppBar"/> / <see cref="MediumTopAppBar"/>
+    /// / <see cref="LargeTopAppBar"/> that collapses on scroll).
+    /// Apply this modifier to the scrolling container — usually a
+    /// <c>LazyColumn</c>, <c>LazyRow</c>, or a <see cref="Column"/>
+    /// with <c>VerticalScroll(ScrollState)</c> — and Compose will
+    /// route scroll deltas through <paramref name="connection"/> so
+    /// the parent can consume some of them before the container does.
+    /// </summary>
+    /// <param name="connection">
+    /// The connection to forward scroll deltas to. Pair with an
+    /// <see cref="AndroidX.Compose.Material3.ITopAppBarScrollBehavior"/>
+    /// by passing
+    /// <see cref="AndroidX.Compose.Material3.ITopAppBarScrollBehavior.NestedScrollConnection"/>;
+    /// the scroll behavior is also set as the bar's
+    /// <c>ScrollBehavior</c> property so both sides agree on the
+    /// shared <see cref="AndroidX.Compose.Material3.TopAppBarState"/>.
+    /// </param>
+    public Modifier NestedScroll(AndroidX.Compose.UI.Input.NestedScroll.INestedScrollConnection connection)
+    {
+        System.ArgumentNullException.ThrowIfNull(connection);
+        IntPtr handle = ((Java.Lang.Object)connection).Handle;
+        return Append(curr =>
+        {
+            try
+            {
+                return ComposeBridges.ModifierNestedScroll(curr, handle);
+            }
+            finally
+            {
+                System.GC.KeepAlive(connection);
+            }
+        });
+    }
+
+    /// <summary>
     /// <c>Modifier.weight(weight, fill = true)</c> — only valid inside a
     /// <see cref="Row"/> or <see cref="Column"/> (or any container that
     /// publishes <see cref="ScopeKind.Row"/> / <see cref="ScopeKind.Column"/>).

@@ -1077,3 +1077,25 @@ using ComposeNet;
 // default), `!`-suppressed so the bit stays clear and the caller's
 // lambda is always invoked.
 [assembly: ComposeDefaults("BackHandlerDefault", "enabled", "!onBack")]
+
+// androidx.compose.ui.input.nestedscroll.NestedScrollModifierKt.nestedScroll$default —
+// non-@Composable Modifier extension. 2 Kotlin params after the
+// receiver: connection (NestedScrollConnection — always provided by the
+// C# wrapper), dispatcher (NestedScrollDispatcher — optional; null →
+// Kotlin allocates a new dispatcher internally).
+[assembly: ComposeDefaults("ModifierNestedScrollDefault", "!connection", "dispatcher")]
+
+// androidx.compose.material3.TopAppBarDefaults.enterAlwaysScrollBehavior —
+// instance method on the INSTANCE singleton. 4 user params: state
+// (always provided), canScroll (defaultable), snapAnimationSpec
+// (defaultable), flingAnimationSpec (defaultable). The C# wrapper
+// supplies only `state` and leaves the other three to Kotlin's
+// defaults so a single-arg call replicates Kotlin's idiomatic
+// `enterAlwaysScrollBehavior(state)`.
+[assembly: ComposeDefaults("TopAppBarEnterAlwaysScrollBehaviorDefault",
+    "!state", "canScroll", "snapAnimationSpec", "flingAnimationSpec")]
+
+// androidx.compose.material3.TopAppBarDefaults.exitUntilCollapsedScrollBehavior —
+// same shape as enterAlwaysScrollBehavior above.
+[assembly: ComposeDefaults("TopAppBarExitUntilCollapsedScrollBehaviorDefault",
+    "!state", "canScroll", "snapAnimationSpec", "flingAnimationSpec")]
