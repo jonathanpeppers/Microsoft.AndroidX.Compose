@@ -23,7 +23,9 @@ public class MainActivity : ComposeActivity
             var selectedSelector = Remember(() => new MutableState<int>(0));
             var popupOpen        = Remember(() => new MutableState<bool>(false));
             var messagesScroll   = Compose.RememberLazyListState();
-            return Conversation.Build(ui, input, selectedMenu, drawerScroll, drawerState, selectedSelector, popupOpen, messagesScroll);
+            var isRecording      = Remember(() => new MutableState<bool>(false));
+            var swipeOffset      = Remember(() => new MutableNumberState<float>(0f));
+            return Conversation.Build(ui, input, selectedMenu, drawerScroll, drawerState, selectedSelector, popupOpen, messagesScroll, isRecording, swipeOffset);
         });
     }
 }
