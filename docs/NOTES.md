@@ -1,7 +1,7 @@
 # Notes from the Tier 1 attempt
 
-**Status: the sample builds, renders, and is interactive on device.**
-`dotnet build src\ComposeNet.Sample` produces a signed APK that on launch
+**Status: the gallery builds, renders, and is interactive on device.**
+`dotnet build src\ComposeNet.Gallery` produces a signed APK that on launch
 displays a `Column` of three `BasicText` composables ("Hello from .NET",
 "Count: N", "Tap to increment") wired to a `MutableState<Int>`. Tapping
 the third text invokes a C# `Function0` click handler that mutates the
@@ -16,7 +16,7 @@ authored entirely in C# with no Kotlin source files in the repo.**
 The sample now renders a **Material 3 themed UI** entirely from C#:
 
 * Android `Theme.Material.Light` ActionBar at the top showing the app name
-  ("ComposeNet.Sample") — the title bar is the native Material ActionBar,
+  ("ComposeNet Gallery") — the title bar is the native Material ActionBar,
   not a Compose `TopAppBar` (see issue #13).
 * A Compose `MaterialTheme { Column { … } }` body inside a `ComposeView`,
   with proper safe-area padding for the status bar / nav bar.
@@ -79,7 +79,7 @@ The sample now renders a **Material 3 themed UI** entirely from C#:
 | `ComposeNet.Bindings.Foundation.Layout`  | Re-binds `androidx.compose.foundation:foundation-layout-android` 1.9.4 (Box, Column, Row, …). Used by the sample.  |
 | `ComposeNet.Bindings.Foundation`         | Re-binds `androidx.compose.foundation:foundation-android` 1.9.4. Not referenced by sample yet.                     |
 | `ComposeNet.Bindings.Material3`          | Re-binds `androidx.compose.material3:material3-android` 1.3.2. **Used by the sample** (MaterialTheme + Button). |
-| `ComposeNet.Sample`                      | Minimal app. References Runtime + UI + Foundation.Layout. `MainActivity` calls `BoxKt.Box` from C#.                |
+| `ComposeNet.Gallery`                     | Minimal app. References Runtime + UI + Foundation.Layout. `MainActivity` calls `BoxKt.Box` from C#.                |
 
 All five binding projects use `<AndroidMavenLibrary Pack="false">` to download
 the AAR and run the binding generator over it, while relying on the existing
@@ -326,25 +326,25 @@ that AAR.
 ## Build / repro
 
 ```pwsh
-cd src\ComposeNet.Sample
+cd src\ComposeNet.Gallery
 dotnet build
-# → builds the 4 binding projects + sample, produces a signed APK
+# → builds the 4 binding projects + gallery, produces a signed APK
 ```
 
 To inspect the dex:
 
 ```pwsh
-Expand-Archive bin\Debug\net10.0-android\com.companyname.ComposeNet.Sample-Signed.apk -DestinationPath dex-inspect
+Expand-Archive bin\Debug\net10.0-android\com.companyname.ComposeNet.Gallery-Signed.apk -DestinationPath dex-inspect
 $bt = "$env:LOCALAPPDATA\Android\Sdk\build-tools\<latest>\dexdump.exe"
-& $bt dex-inspect\classes.dex | Select-String "androidx/compose/runtime/Composer|composenet/sample/HelloComposable"
+& $bt dex-inspect\classes.dex | Select-String "androidx/compose/runtime/Composer|composenet/gallery/HelloComposable"
 ```
 
 ## Files
 
 ```
 src/
-  ComposeNet.Sample/                          Tier 1.5 app. Uses ComposeNet.Compose facade.
-    ComposeNet.Sample.csproj
+  ComposeNet.Gallery/                         Tier 1.5 app. Uses ComposeNet.Compose facade.
+    ComposeNet.Gallery.csproj
     MainActivity.cs                           ~27 lines total, mirrors Kotlin line-for-line.
   ComposeNet.Compose/                         Tier 1.5 runtime facade (no codegen).
     ComposeNet.Compose.csproj

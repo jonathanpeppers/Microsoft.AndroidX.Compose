@@ -400,11 +400,11 @@ FodyWeavers.xsd
 # JetBrains Rider
 *.sln.iml
 src/ComposeNet.Bindings.Runtime/build.log
-src/ComposeNet.Sample/bin/
-src/ComposeNet.Sample/obj/
+src/ComposeNet.Gallery/bin/
+src/ComposeNet.Gallery/obj/
 src/ComposeNet.Bindings.Runtime/bin/
 src/ComposeNet.Bindings.Runtime/obj/
 
-src/ComposeNet.Sample/log.txt
+src/ComposeNet.Gallery/log.txt
 
-src/ComposeNet.Sample/screen.png
+src/ComposeNet.Gallery/screen.png
