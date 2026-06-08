@@ -313,20 +313,17 @@ public static class Conversation
             new Column
             {
                 Modifier.Companion.FillMaxWidth(),
-                BuildTextFieldRow(ui, input, scheme, isRecording, swipeOffset, messagesScroll, selectedSelector),
+                BuildTextFieldRow(input, scheme, isRecording, swipeOffset),
                 BuildSelectorRow(ui, input, scheme, selectedSelector, messagesScroll),
                 BuildSelectorPanel(scheme, selectedSelector),
             },
         };
 
     static Row BuildTextFieldRow(
-        ConversationUiState       ui,
         MutableState<string>      input,
         ColorScheme               scheme,
         MutableState<bool>        isRecording,
-        MutableNumberState<float> swipeOffset,
-        LazyListState             messagesScroll,
-        MutableState<int>         selectedSelector)
+        MutableNumberState<float> swipeOffset)
     {
         bool textEmpty = string.IsNullOrWhiteSpace(input.Value);
 
@@ -354,7 +351,6 @@ public static class Conversation
                 swipeOffset,
                 onCommit: () =>
                 {
-                    // "Release commits" — finish the (fake) recording.
                     isRecording.Value  = false;
                     swipeOffset.Value  = 0f;
                 },
