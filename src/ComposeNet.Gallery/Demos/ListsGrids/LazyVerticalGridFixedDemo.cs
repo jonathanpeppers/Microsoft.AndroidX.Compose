@@ -3,7 +3,7 @@ using ComposeNet.Gallery.Registry;
 namespace ComposeNet.Gallery.Demos.ListsGrids;
 
 /// <summary>LazyVerticalGrid with a fixed column count.</summary>
-public static class LazyVerticalGridFixed
+public static class LazyVerticalGridFixedDemo
 {
     /// <summary>Registry entry exposed via <see cref="Catalog.Demos"/>.</summary>
     public static Demo Demo => new(

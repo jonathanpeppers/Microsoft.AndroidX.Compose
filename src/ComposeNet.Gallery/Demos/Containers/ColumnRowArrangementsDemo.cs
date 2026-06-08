@@ -3,7 +3,7 @@ using ComposeNet.Gallery.Registry;
 namespace ComposeNet.Gallery.Demos.Containers;
 
 /// <summary>Column and Row Arrangement — SpaceBetween, SpacedBy, etc.</summary>
-public static class ColumnRowArrangements
+public static class ColumnRowArrangementsDemo
 {
     /// <summary>Registry entry exposed via <see cref="Catalog.Demos"/>.</summary>
     public static Demo Demo => new(

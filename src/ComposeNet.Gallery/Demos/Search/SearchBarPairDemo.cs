@@ -3,7 +3,7 @@ using ComposeNet.Gallery.Registry;
 namespace ComposeNet.Gallery.Demos.Search;
 
 /// <summary>SearchBar + ExpandedFullScreenSearchBar pair sharing one state.</summary>
-public static class SearchBarPair
+public static class SearchBarPairDemo
 {
     static readonly string[] Fruits =
     {

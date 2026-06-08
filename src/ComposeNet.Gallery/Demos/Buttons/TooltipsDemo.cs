@@ -3,7 +3,7 @@ using ComposeNet.Gallery.Registry;
 namespace ComposeNet.Gallery.Demos.Buttons;
 
 /// <summary>Long-press tooltip anchored to a button.</summary>
-public static class Tooltips
+public static class TooltipsDemo
 {
     /// <summary>Registry entry exposed via <see cref="Catalog.Demos"/>.</summary>
     public static Demo Demo => new(

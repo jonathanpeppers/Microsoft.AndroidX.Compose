@@ -3,7 +3,7 @@ using ComposeNet.Gallery.Registry;
 namespace ComposeNet.Gallery.Demos.Selection;
 
 /// <summary>RadioButton group with three options.</summary>
-public static class RadioButtonGroup
+public static class RadioButtonGroupDemo
 {
     /// <summary>Registry entry exposed via <see cref="Catalog.Demos"/>.</summary>
     public static Demo Demo => new(

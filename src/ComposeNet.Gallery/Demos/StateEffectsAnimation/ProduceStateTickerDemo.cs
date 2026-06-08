@@ -3,7 +3,7 @@ using ComposeNet.Gallery.Registry;
 namespace ComposeNet.Gallery.Demos.StateEffectsAnimation;
 
 /// <summary>ProduceState — an async producer drives a State&lt;T&gt;; restarts on key change.</summary>
-public static class ProduceStateTicker
+public static class ProduceStateTickerDemo
 {
     /// <summary>Registry entry exposed via <see cref="Catalog.Demos"/>.</summary>
     public static Demo Demo => new(

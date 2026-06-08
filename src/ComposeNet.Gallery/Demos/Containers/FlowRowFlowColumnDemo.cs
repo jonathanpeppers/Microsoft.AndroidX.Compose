@@ -3,7 +3,7 @@ using ComposeNet.Gallery.Registry;
 namespace ComposeNet.Gallery.Demos.Containers;
 
 /// <summary>FlowRow wraps children to a new line when they overflow width.</summary>
-public static class FlowRowFlowColumn
+public static class FlowRowFlowColumnDemo
 {
     /// <summary>Registry entry exposed via <see cref="Catalog.Demos"/>.</summary>
     public static Demo Demo => new(

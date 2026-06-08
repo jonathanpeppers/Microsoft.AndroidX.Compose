@@ -3,7 +3,7 @@ using ComposeNet.Gallery.Registry;
 namespace ComposeNet.Gallery.Demos.Selection;
 
 /// <summary>Single-choice SegmentedButtonRow with three options.</summary>
-public static class SingleChoiceSegmentedButtons
+public static class SingleChoiceSegmentedButtonsDemo
 {
     /// <summary>Registry entry exposed via <see cref="Catalog.Demos"/>.</summary>
     public static Demo Demo => new(

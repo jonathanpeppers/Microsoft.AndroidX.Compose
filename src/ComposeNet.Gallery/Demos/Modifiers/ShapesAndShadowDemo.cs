@@ -4,7 +4,7 @@ using ComposeNet.Gallery.Registry;
 namespace ComposeNet.Gallery.Demos.Modifiers;
 
 /// <summary>Background shapes, shadow, and border modifiers on shared shapes.</summary>
-public static class ShapesAndShadow
+public static class ShapesAndShadowDemo
 {
     /// <summary>Registry entry exposed via <see cref="Catalog.Demos"/>.</summary>
     public static Demo Demo => new(

@@ -3,7 +3,7 @@ using ComposeNet.Gallery.Registry;
 namespace ComposeNet.Gallery.Demos.Containers;
 
 /// <summary>Card, ElevatedCard, OutlinedCard side by side.</summary>
-public static class CardVariants
+public static class CardVariantsDemo
 {
     /// <summary>Registry entry exposed via <see cref="Catalog.Demos"/>.</summary>
     public static Demo Demo => new(

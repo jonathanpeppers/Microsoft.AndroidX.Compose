@@ -3,7 +3,7 @@ using ComposeNet.Gallery.Registry;
 namespace ComposeNet.Gallery.Demos.Buttons;
 
 /// <summary>The Material 3 chip family — Assist / Filter / Suggestion plus Elevated variants.</summary>
-public static class Chips
+public static class ChipsDemo
 {
     /// <summary>Registry entry exposed via <see cref="Catalog.Demos"/>.</summary>
     public static Demo Demo => new(

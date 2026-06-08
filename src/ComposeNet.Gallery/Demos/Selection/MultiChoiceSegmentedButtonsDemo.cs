@@ -3,7 +3,7 @@ using ComposeNet.Gallery.Registry;
 namespace ComposeNet.Gallery.Demos.Selection;
 
 /// <summary>Multi-choice SegmentedButtonRow — each button is independently checkable.</summary>
-public static class MultiChoiceSegmentedButtons
+public static class MultiChoiceSegmentedButtonsDemo
 {
     /// <summary>Registry entry exposed via <see cref="Catalog.Demos"/>.</summary>
     public static Demo Demo => new(

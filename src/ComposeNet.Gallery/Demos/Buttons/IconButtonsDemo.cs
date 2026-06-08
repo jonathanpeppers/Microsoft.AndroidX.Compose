@@ -3,7 +3,7 @@ using ComposeNet.Gallery.Registry;
 namespace ComposeNet.Gallery.Demos.Buttons;
 
 /// <summary>Icon-button fill variants: standard, filled, tonal, outlined.</summary>
-public static class IconButtons
+public static class IconButtonsDemo
 {
     /// <summary>Registry entry exposed via <see cref="Catalog.Demos"/>.</summary>
     public static Demo Demo => new(

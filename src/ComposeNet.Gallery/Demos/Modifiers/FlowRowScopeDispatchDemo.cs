@@ -3,7 +3,7 @@ using ComposeNet.Gallery.Registry;
 namespace ComposeNet.Gallery.Demos.Modifiers;
 
 /// <summary>FlowRow scope dispatch — chips use RowScope-only Modifier.Align.</summary>
-public static class FlowRowScopeDispatch
+public static class FlowRowScopeDispatchDemo
 {
     static readonly string[] Fruits =
     {

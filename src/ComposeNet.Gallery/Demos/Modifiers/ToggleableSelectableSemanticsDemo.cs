@@ -4,7 +4,7 @@ using ComposeNet.Gallery.Registry;
 namespace ComposeNet.Gallery.Demos.Modifiers;
 
 /// <summary>Toggleable + Selectable + Semantics modifiers; whole row collapses into one a11y node.</summary>
-public static class ToggleableSelectableSemantics
+public static class ToggleableSelectableSemanticsDemo
 {
     /// <summary>Registry entry exposed via <see cref="Catalog.Demos"/>.</summary>
     public static Demo Demo => new(

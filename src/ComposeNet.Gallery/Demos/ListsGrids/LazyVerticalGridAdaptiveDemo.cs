@@ -3,7 +3,7 @@ using ComposeNet.Gallery.Registry;
 namespace ComposeNet.Gallery.Demos.ListsGrids;
 
 /// <summary>LazyVerticalGrid sized to fit as many 96-dp columns as available width allows.</summary>
-public static class LazyVerticalGridAdaptive
+public static class LazyVerticalGridAdaptiveDemo
 {
     /// <summary>Registry entry exposed via <see cref="Catalog.Demos"/>.</summary>
     public static Demo Demo => new(

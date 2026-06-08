@@ -4,7 +4,7 @@ using ComposeNet.Gallery.Registry;
 namespace ComposeNet.Gallery.Demos.Modifiers;
 
 /// <summary>Rotate, Scale, and Alpha transform modifiers.</summary>
-public static class RotateScaleAlpha
+public static class RotateScaleAlphaDemo
 {
     /// <summary>Registry entry exposed via <see cref="Catalog.Demos"/>.</summary>
     public static Demo Demo => new(

@@ -3,7 +3,7 @@ using ComposeNet.Gallery.Registry;
 namespace ComposeNet.Gallery.Demos.Navigation;
 
 /// <summary>NavHost demo — three routes including <c>user/{id}</c> with an argument.</summary>
-public static class NavHostRouteArgs
+public static class NavHostRouteArgsDemo
 {
     /// <summary>Registry entry exposed via <see cref="Catalog.Demos"/>.</summary>
     public static Demo Demo => new(

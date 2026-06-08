@@ -3,7 +3,7 @@ using ComposeNet.Gallery.Registry;
 namespace ComposeNet.Gallery.Demos.Buttons;
 
 /// <summary>The FAB family: standard, Small, Large, and Extended.</summary>
-public static class FloatingActionButtons
+public static class FloatingActionButtonsDemo
 {
     /// <summary>Registry entry exposed via <see cref="Catalog.Demos"/>.</summary>
     public static Demo Demo => new(

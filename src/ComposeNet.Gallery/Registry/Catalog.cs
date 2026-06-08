@@ -42,48 +42,48 @@ public static class Catalog
     public static readonly IReadOnlyList<Demo> Demos =
     [
         // ---- Text & inputs ----
-        D.TextInputs.TextStyling.Demo,
-        D.TextInputs.FontWeightStyleFamily.Demo,
-        D.TextInputs.ColorAndAlignment.Demo,
-        D.TextInputs.OverflowAndClamping.Demo,
-        D.TextInputs.TextFieldSlots.Demo,
+        D.TextInputs.TextStylingDemo.Demo,
+        D.TextInputs.FontWeightStyleFamilyDemo.Demo,
+        D.TextInputs.ColorAndAlignmentDemo.Demo,
+        D.TextInputs.OverflowAndClampingDemo.Demo,
+        D.TextInputs.TextFieldSlotsDemo.Demo,
         D.TextInputs.OutlinedTextFieldDemo.Demo,
         D.TextInputs.SecureTextFieldDemo.Demo,
         D.TextInputs.OutlinedSecureTextFieldDemo.Demo,
 
         // ---- Buttons ----
-        D.Buttons.FillStyles.Demo,
-        D.Buttons.IconButtons.Demo,
-        D.Buttons.IconToggleButtons.Demo,
-        D.Buttons.Chips.Demo,
-        D.Buttons.FloatingActionButtons.Demo,
-        D.Buttons.Tooltips.Demo,
+        D.Buttons.FillStylesDemo.Demo,
+        D.Buttons.IconButtonsDemo.Demo,
+        D.Buttons.IconToggleButtonsDemo.Demo,
+        D.Buttons.ChipsDemo.Demo,
+        D.Buttons.FloatingActionButtonsDemo.Demo,
+        D.Buttons.TooltipsDemo.Demo,
 
         // ---- Selection ----
         D.Selection.CheckboxDemo.Demo,
         D.Selection.TriStateCheckboxDemo.Demo,
         D.Selection.SwitchDemo.Demo,
-        D.Selection.RadioButtonGroup.Demo,
+        D.Selection.RadioButtonGroupDemo.Demo,
         D.Selection.SliderDemo.Demo,
         D.Selection.RangeSliderDemo.Demo,
-        D.Selection.SingleChoiceSegmentedButtons.Demo,
-        D.Selection.MultiChoiceSegmentedButtons.Demo,
+        D.Selection.SingleChoiceSegmentedButtonsDemo.Demo,
+        D.Selection.MultiChoiceSegmentedButtonsDemo.Demo,
 
         // ---- Containers ----
-        D.Containers.CardVariants.Demo,
+        D.Containers.CardVariantsDemo.Demo,
         D.Containers.SurfaceDemo.Demo,
-        D.Containers.BoxAlignment.Demo,
-        D.Containers.ColumnRowArrangements.Demo,
+        D.Containers.BoxAlignmentDemo.Demo,
+        D.Containers.ColumnRowArrangementsDemo.Demo,
         D.Containers.SpacerDemo.Demo,
         D.Containers.DividerDemo.Demo,
-        D.Containers.FlowRowFlowColumn.Demo,
+        D.Containers.FlowRowFlowColumnDemo.Demo,
         D.Containers.BoxWithConstraintsDemo.Demo,
 
         // ---- Lists & grids ----
-        D.ListsGrids.LazyColumnLong.Demo,
+        D.ListsGrids.LazyColumnLongDemo.Demo,
         D.ListsGrids.LazyRowDemo.Demo,
-        D.ListsGrids.LazyVerticalGridFixed.Demo,
-        D.ListsGrids.LazyVerticalGridAdaptive.Demo,
+        D.ListsGrids.LazyVerticalGridFixedDemo.Demo,
+        D.ListsGrids.LazyVerticalGridAdaptiveDemo.Demo,
         D.ListsGrids.LazyVerticalStaggeredGridDemo.Demo,
         D.ListsGrids.PullToRefreshBoxDemo.Demo,
 
@@ -97,14 +97,14 @@ public static class Catalog
         D.AppBars.CenterAlignedTopAppBarDemo.Demo,
         D.AppBars.MediumFlexibleTopAppBarDemo.Demo,
         D.AppBars.LargeFlexibleTopAppBarDemo.Demo,
-        D.AppBars.BottomAppBarActions.Demo,
-        D.AppBars.BottomAppBarWithFab.Demo,
+        D.AppBars.BottomAppBarActionsDemo.Demo,
+        D.AppBars.BottomAppBarWithFabDemo.Demo,
         D.AppBars.FlexibleBottomAppBarDemo.Demo,
         D.AppBars.PrimaryScrollableTabRowDemo.Demo,
         D.AppBars.SecondaryScrollableTabRowDemo.Demo,
 
         // ---- Navigation ----
-        D.Navigation.NavHostRouteArgs.Demo,
+        D.Navigation.NavHostRouteArgsDemo.Demo,
         D.Navigation.ModalDrawerDemo.Demo,
         D.Navigation.DismissibleDrawerDemo.Demo,
         D.Navigation.PermanentDrawerDemo.Demo,
@@ -121,23 +121,23 @@ public static class Catalog
         D.DialogsSheets.ExposedDropdownMenuBoxDemo.Demo,
 
         // ---- Search ----
-        D.Search.SearchBarPair.Demo,
+        D.Search.SearchBarPairDemo.Demo,
         D.Search.DockedSearchBarDemo.Demo,
 
         // ---- Modifiers ----
-        D.Modifiers.ShapesAndShadow.Demo,
-        D.Modifiers.RotateScaleAlpha.Demo,
-        D.Modifiers.ToggleableSelectableSemantics.Demo,
+        D.Modifiers.ShapesAndShadowDemo.Demo,
+        D.Modifiers.RotateScaleAlphaDemo.Demo,
+        D.Modifiers.ToggleableSelectableSemanticsDemo.Demo,
         D.Modifiers.FocusRequesterDemo.Demo,
         D.Modifiers.CombinedClickableDemo.Demo,
         D.Modifiers.DraggableOffsetDemo.Demo,
         D.Modifiers.GraphicsLayerDemo.Demo,
-        D.Modifiers.FlowRowScopeDispatch.Demo,
+        D.Modifiers.FlowRowScopeDispatchDemo.Demo,
 
         // ---- State, effects, animation ----
         D.StateEffectsAnimation.RememberSaveableDemo.Demo,
-        D.StateEffectsAnimation.ProduceStateTicker.Demo,
-        D.StateEffectsAnimation.MutableStateCollections.Demo,
+        D.StateEffectsAnimation.ProduceStateTickerDemo.Demo,
+        D.StateEffectsAnimation.MutableStateCollectionsDemo.Demo,
         D.StateEffectsAnimation.DerivedStateDemo.Demo,
         D.StateEffectsAnimation.LaunchedEffectDemo.Demo,
         D.StateEffectsAnimation.DisposableEffectDemo.Demo,

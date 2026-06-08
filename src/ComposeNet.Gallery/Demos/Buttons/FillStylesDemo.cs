@@ -3,7 +3,7 @@ using ComposeNet.Gallery.Registry;
 namespace ComposeNet.Gallery.Demos.Buttons;
 
 /// <summary>The five Material 3 filled-style button variants side by side.</summary>
-public static class FillStyles
+public static class FillStylesDemo
 {
     /// <summary>Registry entry exposed via <see cref="Catalog.Demos"/>.</summary>
     public static Demo Demo => new(

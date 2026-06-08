@@ -4,7 +4,7 @@ using ComposeNet.Gallery.Registry;
 namespace ComposeNet.Gallery.Demos.Containers;
 
 /// <summary>Box stacks children on top of each other.</summary>
-public static class BoxAlignment
+public static class BoxAlignmentDemo
 {
     /// <summary>Registry entry exposed via <see cref="Catalog.Demos"/>.</summary>
     public static Demo Demo => new(

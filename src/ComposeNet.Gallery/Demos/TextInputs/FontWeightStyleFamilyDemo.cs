@@ -3,7 +3,7 @@ using ComposeNet.Gallery.Registry;
 namespace ComposeNet.Gallery.Demos.TextInputs;
 
 /// <summary>FontWeight + FontStyle + FontFamily — covers the three font axes.</summary>
-public static class FontWeightStyleFamily
+public static class FontWeightStyleFamilyDemo
 {
     /// <summary>Registry entry exposed via <see cref="Catalog.Demos"/>.</summary>
     public static Demo Demo => new(

@@ -3,7 +3,7 @@ using ComposeNet.Gallery.Registry;
 namespace ComposeNet.Gallery.Demos.TextInputs;
 
 /// <summary>TextField with every named slot — label, placeholder, leading/trailing icon, supporting text.</summary>
-public static class TextFieldSlots
+public static class TextFieldSlotsDemo
 {
     /// <summary>Registry entry exposed via <see cref="Catalog.Demos"/>.</summary>
     public static Demo Demo => new(

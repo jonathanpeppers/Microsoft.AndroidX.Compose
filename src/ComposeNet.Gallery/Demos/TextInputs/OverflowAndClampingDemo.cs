@@ -3,7 +3,7 @@ using ComposeNet.Gallery.Registry;
 namespace ComposeNet.Gallery.Demos.TextInputs;
 
 /// <summary>MaxLines / MinLines / Overflow / SoftWrap.</summary>
-public static class OverflowAndClamping
+public static class OverflowAndClampingDemo
 {
     /// <summary>Registry entry exposed via <see cref="Catalog.Demos"/>.</summary>
     public static Demo Demo => new(

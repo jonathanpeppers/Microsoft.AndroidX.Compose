@@ -4,7 +4,7 @@ using ComposeNet.Gallery.Registry;
 namespace ComposeNet.Gallery.Demos.ListsGrids;
 
 /// <summary>LazyColumn with 1000 rows inside a PullToRefreshBox.</summary>
-public static class LazyColumnLong
+public static class LazyColumnLongDemo
 {
     /// <summary>Registry entry exposed via <see cref="Catalog.Demos"/>.</summary>
     public static Demo Demo => new(

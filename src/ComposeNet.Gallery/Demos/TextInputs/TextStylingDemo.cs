@@ -3,7 +3,7 @@ using ComposeNet.Gallery.Registry;
 namespace ComposeNet.Gallery.Demos.TextInputs;
 
 /// <summary>Bold, italic, size, decoration, spacing — typed Text properties.</summary>
-public static class TextStyling
+public static class TextStylingDemo
 {
     /// <summary>Registry entry exposed via <see cref="Catalog.Demos"/>.</summary>
     public static Demo Demo => new(

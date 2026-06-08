@@ -3,7 +3,7 @@ using ComposeNet.Gallery.Registry;
 namespace ComposeNet.Gallery.Demos.AppBars;
 
 /// <summary>BottomAppBar with the trailing FloatingActionButton slot.</summary>
-public static class BottomAppBarWithFab
+public static class BottomAppBarWithFabDemo
 {
     /// <summary>Registry entry exposed via <see cref="Catalog.Demos"/>.</summary>
     public static Demo Demo => new(

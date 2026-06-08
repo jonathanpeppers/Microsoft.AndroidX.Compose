@@ -4,7 +4,7 @@ using ComposeNet.Gallery.Registry;
 namespace ComposeNet.Gallery.Demos.StateEffectsAnimation;
 
 /// <summary>MutableStateList + MutableStateMap — reactive collections.</summary>
-public static class MutableStateCollections
+public static class MutableStateCollectionsDemo
 {
     /// <summary>Registry entry exposed via <see cref="Catalog.Demos"/>.</summary>
     public static Demo Demo => new(

@@ -4,7 +4,7 @@ using ComposeNet.Gallery.Registry;
 namespace ComposeNet.Gallery.Demos.TextInputs;
 
 /// <summary>Color + TextAlign on Text.</summary>
-public static class ColorAndAlignment
+public static class ColorAndAlignmentDemo
 {
     /// <summary>Registry entry exposed via <see cref="Catalog.Demos"/>.</summary>
     public static Demo Demo => new(
