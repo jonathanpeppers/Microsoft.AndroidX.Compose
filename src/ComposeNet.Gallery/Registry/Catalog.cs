@@ -105,6 +105,7 @@ public static class Catalog
 
         // ---- Navigation ----
         D.Navigation.NavHostRouteArgsDemo.Demo,
+        D.Navigation.NavigationDrawerItemDemo.Demo,
         D.Navigation.ModalDrawerDemo.Demo,
         D.Navigation.DismissibleDrawerDemo.Demo,
         D.Navigation.PermanentDrawerDemo.Demo,

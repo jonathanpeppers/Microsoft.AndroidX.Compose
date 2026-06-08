@@ -1353,6 +1353,34 @@ internal static partial class ComposeBridges
         int         defaults,
         IComposer   composer);
 
+    // androidx.compose.material3.NavigationDrawerKt.NavigationDrawerItem
+    // (no JVM mangling — no @JvmInline value-class params). label is the
+    // required content slot, icon and badge are optional. shape, colors,
+    // and interactionSource are kept defaulted (their $default bits stay
+    // set; Kotlin supplies its real defaults).
+    [ComposeBridge(
+        Class     = "androidx/compose/material3/NavigationDrawerKt",
+        JvmName   = "NavigationDrawerItem",
+        Signature = "(Lkotlin/jvm/functions/Function2;Z" +
+                    "Lkotlin/jvm/functions/Function0;" +
+                    "Landroidx/compose/ui/Modifier;" +
+                    "Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;" +
+                    "Landroidx/compose/ui/graphics/Shape;" +
+                    "Landroidx/compose/material3/NavigationDrawerItemColors;" +
+                    "Landroidx/compose/foundation/interaction/MutableInteractionSource;" +
+                    "Landroidx/compose/runtime/Composer;II)V",
+        Defaults  = typeof(NavigationDrawerItemDefault))]
+    [ComposeFacade]
+    public static partial void NavigationDrawerItem(
+        IFunction2  label,
+        bool        selected,
+        IFunction0  onClick,
+        IModifier?  modifier,
+        IFunction2? icon,
+        IFunction2? badge,
+        int         defaults,
+        IComposer   composer);
+
     // 3 drawer-sheet variants share the same DrawerSheetDefault enum + signature.
     const string DrawerSheetSig =
         "(Landroidx/compose/ui/Modifier;Landroidx/compose/ui/graphics/Shape;JJF" +
