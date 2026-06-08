@@ -587,10 +587,13 @@ internal static partial class ComposeBridges
     [ComposeFacade]
     public static partial void Image(
         [PainterResource] IntPtr painter,
-        string?    contentDescription,
-        IModifier? modifier,
-        int        defaults,
-        IComposer  composer);
+        string?       contentDescription,
+        IModifier?    modifier,
+        Alignment?    alignment,
+        ContentScale? contentScale,
+        float?        alpha,
+        int           defaults,
+        IComposer     composer);
 
     // androidx.compose.material3.IconKt.Icon-ww6aTOc (Painter overload) —
     // the Painter and ImageBitmap overloads share the mangled JVM name

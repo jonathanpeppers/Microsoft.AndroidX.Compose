@@ -36,6 +36,8 @@ internal static class ComposeReferenceTypes
         "ComposeNet.TextAlign",
         "ComposeNet.TextDecoration",
         "ComposeNet.Shape",
+        "ComposeNet.Alignment",
+        "ComposeNet.ContentScale",
     };
 
     /// <summary>

@@ -810,7 +810,7 @@ public sealed class Modifier
                 throw new System.InvalidOperationException(
                     "Modifier.Align(Alignment) is only valid inside a Box. " +
                     $"Current scope kind: {RenderContext.CurrentScopeKind}.");
-            return ComposeBridges.BoxScopeAlign(scope, curr, ((Java.Lang.Object)alignment.Java).Handle);
+            return ComposeBridges.BoxScopeAlign(scope, curr, ((Java.Lang.Object)alignment).Handle);
         });
     }
 

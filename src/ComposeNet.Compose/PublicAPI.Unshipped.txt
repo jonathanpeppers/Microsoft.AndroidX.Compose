@@ -144,6 +144,7 @@ ComposeNet.CompositionLocal<T>.Provides(T value) -> ComposeNet.ProvidedValue!
 ComposeNet.CompositionLocalProvider
 ComposeNet.CompositionLocalProvider.Add(ComposeNet.ProvidedValue! value) -> void
 ComposeNet.CompositionLocalProvider.CompositionLocalProvider() -> void
+ComposeNet.ContentScale
 ComposeNet.Crossfade<T>
 ComposeNet.Crossfade<T>.Crossfade(T targetState, System.Func<T, ComposeNet.ComposableNode!>! content) -> void
 ComposeNet.Crossfade<T>.TargetState.get -> T
@@ -374,6 +375,12 @@ ComposeNet.IconButton.IconButton(System.Action! onClick) -> void
 ComposeNet.IconToggleButton
 ComposeNet.IconToggleButton.IconToggleButton(bool checked, System.Action<bool>! onCheckedChange) -> void
 ComposeNet.Image
+ComposeNet.Image.Alignment.get -> ComposeNet.Alignment?
+ComposeNet.Image.Alignment.set -> void
+ComposeNet.Image.Alpha.get -> float?
+ComposeNet.Image.Alpha.set -> void
+ComposeNet.Image.ContentScale.get -> ComposeNet.ContentScale?
+ComposeNet.Image.ContentScale.set -> void
 ComposeNet.Image.Image(AndroidX.Compose.UI.Graphics.Painter.Painter! painter, string? contentDescription) -> void
 ComposeNet.Image.Image(int drawableResourceId, string? contentDescription) -> void
 ComposeNet.Image.Image(int drawableResourceId) -> void
@@ -1268,6 +1275,13 @@ static ComposeNet.CompositionLocal.Of<T>(System.Func<T>! defaultFactory) -> Comp
 static ComposeNet.CompositionLocal.StaticOf<T>(System.Func<T>! defaultFactory) -> ComposeNet.CompositionLocal<T>!
 static ComposeNet.CompositionLocal<T>.Of(System.Func<T>! defaultFactory) -> ComposeNet.CompositionLocal<T>!
 static ComposeNet.CompositionLocal<T>.StaticOf(System.Func<T>! defaultFactory) -> ComposeNet.CompositionLocal<T>!
+static ComposeNet.ContentScale.Crop.get -> ComposeNet.ContentScale!
+static ComposeNet.ContentScale.FillBounds.get -> ComposeNet.ContentScale!
+static ComposeNet.ContentScale.FillHeight.get -> ComposeNet.ContentScale!
+static ComposeNet.ContentScale.FillWidth.get -> ComposeNet.ContentScale!
+static ComposeNet.ContentScale.Fit.get -> ComposeNet.ContentScale!
+static ComposeNet.ContentScale.Inside.get -> ComposeNet.ContentScale!
+static ComposeNet.ContentScale.None.get -> ComposeNet.ContentScale!
 static ComposeNet.Dp.implicit operator ComposeNet.Dp(float value) -> ComposeNet.Dp
 static ComposeNet.Dp.implicit operator ComposeNet.Dp(int value) -> ComposeNet.Dp
 static ComposeNet.Dp.operator !=(ComposeNet.Dp left, ComposeNet.Dp right) -> bool
