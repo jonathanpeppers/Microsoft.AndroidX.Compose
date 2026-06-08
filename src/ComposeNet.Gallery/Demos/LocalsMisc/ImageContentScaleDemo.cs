@@ -40,7 +40,7 @@ public static class ImageContentScaleDemo
 
     static ComposableNode ContentScaleTile(string label, ContentScale scale) => new Column
     {
-        new Text(label) { Color = Color.Black },
+        new Text(label),
         new Box
         {
             Modifier.Companion
@@ -58,7 +58,7 @@ public static class ImageContentScaleDemo
 
     static ComposableNode AlignmentTile(string label, Alignment alignment) => new Column
     {
-        new Text(label) { Color = Color.Black },
+        new Text(label),
         new Box
         {
             Modifier.Companion
@@ -77,7 +77,7 @@ public static class ImageContentScaleDemo
 
     static ComposableNode AlphaTile(string label, float alpha) => new Column
     {
-        new Text(label) { Color = Color.Black },
+        new Text(label),
         new Box
         {
             Modifier.Companion
