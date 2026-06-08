@@ -661,6 +661,14 @@ ComposeNet.NavigationBarItem.Icon.set -> void
 ComposeNet.NavigationBarItem.Label.get -> ComposeNet.ComposableNode?
 ComposeNet.NavigationBarItem.Label.set -> void
 ComposeNet.NavigationBarItem.NavigationBarItem(bool selected, System.Action! onClick) -> void
+ComposeNet.NavigationDrawerItem
+ComposeNet.NavigationDrawerItem.Badge.get -> ComposeNet.ComposableNode?
+ComposeNet.NavigationDrawerItem.Badge.set -> void
+ComposeNet.NavigationDrawerItem.Icon.get -> ComposeNet.ComposableNode?
+ComposeNet.NavigationDrawerItem.Icon.set -> void
+ComposeNet.NavigationDrawerItem.Label.get -> ComposeNet.ComposableNode?
+ComposeNet.NavigationDrawerItem.Label.set -> void
+ComposeNet.NavigationDrawerItem.NavigationDrawerItem(bool selected, System.Action! onClick) -> void
 ComposeNet.NavigationRail
 ComposeNet.NavigationRail.NavigationRail() -> void
 ComposeNet.NavigationRailItem
@@ -1127,6 +1135,7 @@ override ComposeNet.MutableState<T>.ToString() -> string!
 override ComposeNet.NavHost.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
 override ComposeNet.NavigationBar.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
 override ComposeNet.NavigationBarItem.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.NavigationDrawerItem.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
 override ComposeNet.NavigationRail.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
 override ComposeNet.NavigationRailItem.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
 override ComposeNet.OutlinedButton.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void

@@ -5,10 +5,10 @@ namespace ComposeNet.Gallery;
 
 /// <summary>
 /// A single tap target inside the gallery's <see cref="GalleryDrawer"/>:
-/// a glyph and a label rendered as a clickable
-/// <see cref="ListItem"/>. Kept simple deliberately — the full Material
-/// <c>NavigationDrawerItem</c> control isn't bound yet, and a plain
-/// list row matches the rest of the gallery's visual language.
+/// a glyph and a label rendered as a Material 3
+/// <see cref="NavigationDrawerItem"/>. The gallery's drawer doesn't
+/// track per-tile selection state, so <c>selected</c> is always
+/// <c>false</c> — the indicator pill is reserved for app-level state.
 /// </summary>
 public sealed class GalleryDrawerItem : ComposableNode
 {
@@ -26,12 +26,10 @@ public sealed class GalleryDrawerItem : ComposableNode
 
     public override void Render(IComposer composer)
     {
-        new ListItem
+        new NavigationDrawerItem(selected: false, onClick: _onClick)
         {
-            Modifier = Modifier.Companion
-                .FillMaxWidth()
-                .Clickable(_onClick),
-            Headline = new Text($"{_glyph}  {_label}"),
+            Label = new Text(_label),
+            Icon  = new Text(_glyph),
         }.Render(composer);
     }
 }
