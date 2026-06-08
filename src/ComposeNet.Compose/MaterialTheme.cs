@@ -399,26 +399,49 @@ public sealed class MaterialTheme : ComposableContainer
         if (labelMedium     is null) defaults |= 1 << 13;
         if (labelSmall      is null) defaults |= 1 << 14;
 
-        return ComposeBridges.BuildTypography(
-            BuildOrZero(displayLarge),
-            BuildOrZero(displayMedium),
-            BuildOrZero(displaySmall),
-            BuildOrZero(headlineLarge),
-            BuildOrZero(headlineMedium),
-            BuildOrZero(headlineSmall),
-            BuildOrZero(titleLarge),
-            BuildOrZero(titleMedium),
-            BuildOrZero(titleSmall),
-            BuildOrZero(bodyLarge),
-            BuildOrZero(bodyMedium),
-            BuildOrZero(bodySmall),
-            BuildOrZero(labelLarge),
-            BuildOrZero(labelMedium),
-            BuildOrZero(labelSmall),
-            defaults);
+        // Materialize every non-null slot into a managed peer up front
+        // and root the whole array across the JNI call. If we instead
+        // inlined `ts.Build().Handle` per arg, the temporary peer
+        // wrappers would be eligible for collection between argument
+        // evaluations — releasing the underlying global ref before
+        // ComposeBridges.BuildTypography reads it. See the GC.KeepAlive
+        // pattern in SuspendBridges.cs and ComposeBridges.cs.
+        var built = new AndroidX.Compose.UI.Text.TextStyle?[]
+        {
+            displayLarge?.Build(),
+            displayMedium?.Build(),
+            displaySmall?.Build(),
+            headlineLarge?.Build(),
+            headlineMedium?.Build(),
+            headlineSmall?.Build(),
+            titleLarge?.Build(),
+            titleMedium?.Build(),
+            titleSmall?.Build(),
+            bodyLarge?.Build(),
+            bodyMedium?.Build(),
+            bodySmall?.Build(),
+            labelLarge?.Build(),
+            labelMedium?.Build(),
+            labelSmall?.Build(),
+        };
 
-        static System.IntPtr BuildOrZero(TextStyle? ts) =>
-            ts is null ? System.IntPtr.Zero : ((Java.Lang.Object)ts.Build()).Handle;
+        try
+        {
+            return ComposeBridges.BuildTypography(
+                Handle(built[ 0]), Handle(built[ 1]), Handle(built[ 2]),
+                Handle(built[ 3]), Handle(built[ 4]), Handle(built[ 5]),
+                Handle(built[ 6]), Handle(built[ 7]), Handle(built[ 8]),
+                Handle(built[ 9]), Handle(built[10]), Handle(built[11]),
+                Handle(built[12]), Handle(built[13]), Handle(built[14]),
+                defaults);
+        }
+        finally
+        {
+            System.GC.KeepAlive(built);
+        }
+
+        static System.IntPtr Handle(AndroidX.Compose.UI.Text.TextStyle? ts) =>
+            ts is null ? System.IntPtr.Zero : ((Java.Lang.Object)ts).Handle;
     }
 
     /// <summary>
