@@ -28,7 +28,7 @@ namespace ComposeNet;
 /// <c>IState</c> must come from a Kotlin <c>derivedStateOf</c> call
 /// to participate correctly in Compose's snapshot system.
 /// </remarks>
-public sealed class DerivedState<T>
+public sealed class DerivedState<T> : IState<T>
 {
     readonly IState _state;
 

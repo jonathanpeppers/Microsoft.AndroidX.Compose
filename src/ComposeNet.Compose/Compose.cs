@@ -922,4 +922,207 @@ public static class Compose
         System.ArgumentNullException.ThrowIfNull(producer);
         return new SnapshotFlowEnumerable<T>(producer);
     }
+
+    /// <summary>
+    /// Acquires (or creates on first composition) the
+    /// <see cref="ComposeNet.ViewModel"/> for this call site — the C#
+    /// parity of Kotlin's
+    /// <c>androidx.lifecycle.viewmodel.compose.viewModel&lt;T&gt;(…)</c>.
+    /// </summary>
+    /// <typeparam name="T">A <see cref="ComposeNet.ViewModel"/> subclass.</typeparam>
+    /// <param name="factory">
+    /// Constructs the view model the first time the host's
+    /// <see cref="AndroidX.Lifecycle.ViewModelStore"/> sees this
+    /// call site's storage key. Invoked synchronously on the
+    /// composition thread — long-running initialisation work
+    /// should be launched via
+    /// <see cref="ComposeNet.ViewModel.LaunchAsync"/> from the
+    /// view-model ctor so it stays tied to
+    /// <see cref="ComposeNet.ViewModel.Scope"/>.
+    /// </param>
+    /// <param name="line">Auto-populated; do not pass.</param>
+    /// <param name="file">Auto-populated; do not pass.</param>
+    /// <remarks>
+    /// <para>
+    /// The view model is owned by the nearest
+    /// <see cref="AndroidX.Lifecycle.IViewModelStoreOwner"/> on
+    /// <c>LocalViewModelStoreOwner</c> — the host
+    /// <see cref="AndroidX.Activity.ComponentActivity"/> at the root,
+    /// or the current
+    /// <see cref="AndroidX.Navigation.NavBackStackEntry"/> inside a
+    /// <see cref="NavHost"/>. It survives recomposition <em>and</em>
+    /// configuration change, and clears exactly when the owner clears
+    /// (the activity finishes, or the destination is popped off the
+    /// back stack).
+    /// </para>
+    /// <para>
+    /// <strong>Storage key:</strong>
+    /// <c>"composenet:" + typeof(T).FullName + ":" + file + ":" + line</c>
+    /// (plus any user keys). Two
+    /// <see cref="ViewModel{T}(System.Func{T}, int, string)"/> calls
+    /// at the same source location share the same VM after
+    /// configuration change — different source locations get
+    /// different VMs even at the same owner. Pass user keys via the
+    /// keyed overloads to invalidate the cached instance when an
+    /// input changes (e.g. a navigation argument).
+    /// </para>
+    /// <para>
+    /// <strong>Factory dependencies and config change:</strong> the
+    /// factory is only invoked the first time the storage key is
+    /// missing from the owner's store. After config change the
+    /// cached VM is returned without re-running the factory, so any
+    /// dependency the factory captures via closure (e.g. a list
+    /// remembered at the activity level) is the one captured on
+    /// <em>first</em> render. If the dependency itself doesn't
+    /// survive config change, the surviving VM ends up pointing at a
+    /// stale instance. Either inject only stable / restored
+    /// dependencies, or move the dependency itself into a parent
+    /// view model.
+    /// </para>
+    /// </remarks>
+    public static T ViewModel<T>(
+        System.Func<T> factory,
+        [CallerLineNumber] int line = 0,
+        [CallerFilePath] string file = "")
+        where T : ComposeNet.ViewModel
+        => ViewModelCore(factory, keys: null, line, file);
+
+    /// <summary>
+    /// Keyed <c>viewModel(key1)</c>: the storage key includes the
+    /// stringified <paramref name="key1"/>, so a different value
+    /// resolves a different cached VM (or creates one on first
+    /// render at that key). Use when the view model's identity
+    /// depends on a navigation argument (e.g. the post id).
+    /// </summary>
+    public static T ViewModel<T>(
+        System.Func<T> factory,
+        object? key1,
+        [CallerLineNumber] int line = 0,
+        [CallerFilePath] string file = "")
+        where T : ComposeNet.ViewModel
+        => ViewModelCore(factory, new[] { key1 }, line, file);
+
+    /// <summary>Keyed <c>viewModel(key1, key2)</c>; see <see cref="ViewModel{T}(System.Func{T}, object?, int, string)"/>.</summary>
+    public static T ViewModel<T>(
+        System.Func<T> factory,
+        object? key1,
+        object? key2,
+        [CallerLineNumber] int line = 0,
+        [CallerFilePath] string file = "")
+        where T : ComposeNet.ViewModel
+        => ViewModelCore(factory, new[] { key1, key2 }, line, file);
+
+    /// <summary>Keyed <c>viewModel(key1, key2, key3)</c>; see <see cref="ViewModel{T}(System.Func{T}, object?, int, string)"/>.</summary>
+    public static T ViewModel<T>(
+        System.Func<T> factory,
+        object? key1,
+        object? key2,
+        object? key3,
+        [CallerLineNumber] int line = 0,
+        [CallerFilePath] string file = "")
+        where T : ComposeNet.ViewModel
+        => ViewModelCore(factory, new[] { key1, key2, key3 }, line, file);
+
+    /// <summary>
+    /// Array-form keyed <c>viewModel(vararg keys)</c> — use when
+    /// the caller has more than three keys or already has them in
+    /// an array.
+    /// </summary>
+    public static T ViewModelKeyed<T>(
+        System.Func<T> factory,
+        object?[] keys,
+        [CallerLineNumber] int line = 0,
+        [CallerFilePath] string file = "")
+        where T : ComposeNet.ViewModel
+        => ViewModelCore(factory, keys ?? throw new System.ArgumentNullException(nameof(keys)), line, file);
+
+    static T ViewModelCore<T>(System.Func<T> factory, object?[]? keys, int line, string file)
+        where T : ComposeNet.ViewModel
+    {
+        if (factory is null) throw new System.ArgumentNullException(nameof(factory));
+        var composer = ComposeContext.Current
+            ?? throw new System.InvalidOperationException(
+                "Compose.ViewModel<T> must be called inside a composition (e.g. inside a SetContent body or a ComposableNode.Render override).");
+
+        // Read LocalViewModelStoreOwner.current from the active
+        // composition. Inside a NavHost destination this is the
+        // current NavBackStackEntry; at the root it's the host
+        // ComponentActivity (installed by setContent). Throwing here
+        // beats silently falling back to composition-scoped lifetime
+        // — the caller has hooked up the wrong host.
+        var ownerHandle = ComposeBridges.LocalViewModelStoreOwnerCurrent(composer);
+        if (ownerHandle == IntPtr.Zero)
+        {
+            throw new System.InvalidOperationException(
+                "Compose.ViewModel<T> requires LocalViewModelStoreOwner to be set. " +
+                "Call from inside ComposeActivity.SetContent or a NavHost destination so the host owner is in scope.");
+        }
+        var owner = Java.Lang.Object.GetObject<AndroidX.Lifecycle.IViewModelStoreOwner>(
+            ownerHandle, Android.Runtime.JniHandleOwnership.TransferLocalRef)
+            ?? throw new System.InvalidOperationException(
+                "LocalViewModelStoreOwner.current returned a non-IViewModelStoreOwner handle.");
+
+        // Build the storage key. Source location + optional user
+        // keys + type name => unique per call site, stable across
+        // recomposition AND configuration change. Two calls on the
+        // same line of the same file are intentionally aliased
+        // (Compose source locations don't disambiguate them either).
+        var key = BuildViewModelKey(typeof(T), file, line, keys);
+
+        var modelClass = Java.Lang.Class.FromType(typeof(T));
+        var lambdaFactory = new LambdaViewModelFactory(factory);
+        var provider = new AndroidX.Lifecycle.ViewModelProvider(owner, lambdaFactory);
+        try
+        {
+            var vm = provider.Get(key, modelClass);
+            return (T)vm;
+        }
+        finally
+        {
+            // The provider keeps its own reference to the factory
+            // until Get returns; afterward the store has the VM
+            // cached and the factory is no longer reachable from
+            // Kotlin. Disposing here releases the JCW promptly
+            // instead of waiting for finalisation.
+            lambdaFactory.Dispose();
+        }
+    }
+
+    static string BuildViewModelKey(System.Type type, string file, int line, object?[]? keys)
+    {
+        var sb = new System.Text.StringBuilder("composenet:")
+            .Append(type.FullName)
+            .Append(':').Append(file)
+            .Append(':').Append(line);
+        if (keys is { Length: > 0 })
+        {
+            for (int i = 0; i < keys.Length; i++)
+            {
+                sb.Append('|');
+                if (keys[i] is { } k) sb.Append(k);
+                else sb.Append("<null>");
+            }
+        }
+        return sb.ToString();
+    }
+
+    /// <summary>
+    /// Convenience factory for a remembered
+    /// <see cref="MutableStateFlow{T}"/> seeded with
+    /// <paramref name="initialValue"/>. The flow is cached for the
+    /// life of the composition slot, just like
+    /// <see cref="Remember{T}(System.Func{T}, int, string)"/>.
+    /// </summary>
+    /// <remarks>
+    /// Composition-scoped flows are an alternative to view-model
+    /// flows for state that doesn't need to outlive the local
+    /// helper composable. View-model flows are still preferred for
+    /// screen-level UI state — they keep the business logic out of
+    /// the composable.
+    /// </remarks>
+    public static MutableStateFlow<T> MutableStateFlowOf<T>(
+        T initialValue,
+        [CallerLineNumber] int line = 0,
+        [CallerFilePath] string file = "")
+        => Remember(() => new MutableStateFlow<T>(initialValue), line, file);
 }

@@ -1406,7 +1406,7 @@ internal static partial class ComposeBridges
         JvmName   = "ModalDrawerSheet-afqeVBk",
         Signature = DrawerSheetSig,
         Defaults  = typeof(DrawerSheetDefault))]
-    [ComposeFacade(DefaultColorFromTheme = "secondaryContainer")]
+    [ComposeFacade(DefaultColorFromTheme = "surfaceContainerLow")]
     public static partial void ModalDrawerSheet(IFunction3 content, long drawerContainerColor, IComposer composer);
 
     [ComposeBridge(
@@ -1414,7 +1414,7 @@ internal static partial class ComposeBridges
         JvmName   = "DismissibleDrawerSheet-afqeVBk",
         Signature = DrawerSheetSig,
         Defaults  = typeof(DrawerSheetDefault))]
-    [ComposeFacade(DefaultColorFromTheme = "secondaryContainer")]
+    [ComposeFacade(DefaultColorFromTheme = "surface")]
     public static partial void DismissibleDrawerSheet(IFunction3 content, long drawerContainerColor, IComposer composer);
 
     [ComposeBridge(
@@ -1422,7 +1422,7 @@ internal static partial class ComposeBridges
         JvmName   = "PermanentDrawerSheet-afqeVBk",
         Signature = DrawerSheetSig,
         Defaults  = typeof(DrawerSheetDefault))]
-    [ComposeFacade(DefaultColorFromTheme = "secondaryContainer")]
+    [ComposeFacade(DefaultColorFromTheme = "surface")]
     public static partial void PermanentDrawerSheet(IFunction3 content, long drawerContainerColor, IComposer composer);
 
     // androidx.compose.material3.SegmentedButtonKt.SegmentedButton
@@ -3686,6 +3686,22 @@ internal static partial class ComposeBridges
         return JNIEnv.NewObject(
             s_pointerInputHandler_class, s_pointerInputHandler_ctor, args);
     }
+
+    // androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner.current
+    // — `@Composable @ReadOnlyComposable` getter on a Kotlin object
+    // singleton. We need this to read the current ViewModelStoreOwner
+    // (NavBackStackEntry inside a NavHost destination, or the
+    // ComponentActivity at the root) so Compose.ViewModel<T> can
+    // hand the right owner to ViewModelProvider. The binding exposes
+    // the singleton (LocalViewModelStoreOwner.Instance) but not the
+    // @Composable getter, so we go through InstanceField + JNI.
+    // Returns null when no owner is installed; the caller throws.
+    [ComposeBridge(
+        Class         = "androidx/lifecycle/viewmodel/compose/LocalViewModelStoreOwner",
+        JvmName       = "getCurrent",
+        Signature     = "(Landroidx/compose/runtime/Composer;I)Landroidx/lifecycle/ViewModelStoreOwner;",
+        InstanceField = "INSTANCE")]
+    public static partial IntPtr LocalViewModelStoreOwnerCurrent(IComposer composer);
 
     // androidx.activity.compose.BackHandlerKt.BackHandler — Kotlin
     // signature `BackHandler(enabled: Boolean = true, onBack: () -> Unit)`.
