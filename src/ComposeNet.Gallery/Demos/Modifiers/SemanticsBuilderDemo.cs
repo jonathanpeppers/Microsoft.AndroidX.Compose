@@ -1,4 +1,3 @@
-using AndroidX.Compose.UI.Graphics;
 using ComposeNet.Gallery.Registry;
 
 namespace ComposeNet.Gallery.Demos.Modifiers;
@@ -58,21 +57,10 @@ public static class SemanticsBuilderDemo
                     new Column
                     {
                         Modifier.Companion.Padding(12),
-                        new Text(selected.Value ? "✓ Alice" : "Alice")
-                        {
-                            Color = selected.Value
-                                ? Color.FromRgb(0x1B, 0x5E, 0x20)
-                                : Color.Black,
-                        },
-                        new Text("Reply samples PR review")
-                        {
-                            Color = Color.Black,
-                        },
+                        new Text(selected.Value ? "✓ Alice" : "Alice"),
+                        new Text("Reply samples PR review"),
                         new Text($"'Open email' triggered {opens} time(s) "
-                               + "via TalkBack actions menu.")
-                        {
-                            Color = Color.Black,
-                        },
+                               + "via TalkBack actions menu."),
                     },
                 },
 
@@ -91,8 +79,8 @@ public static class SemanticsBuilderDemo
                     new Column
                     {
                         Modifier.Companion.Padding(12),
-                        new Text("📬 3 new") { Color = Color.Black },
-                        new Text("Alice, Bob, Carol") { Color = Color.Black },
+                        new Text("📬 3 new"),
+                        new Text("Alice, Bob, Carol"),
                     },
                 },
             };
