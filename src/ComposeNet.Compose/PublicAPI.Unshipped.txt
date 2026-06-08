@@ -1325,6 +1325,13 @@ static ComposeNet.Compose.DisposableEffect(object? key1, System.Func<AndroidX.Co
 static ComposeNet.Compose.LaunchedEffect(object? key1, object? key2, object? key3, System.Func<System.Threading.CancellationToken, System.Threading.Tasks.Task!>! body) -> void
 static ComposeNet.Compose.LaunchedEffect(object? key1, object? key2, System.Func<System.Threading.CancellationToken, System.Threading.Tasks.Task!>! body) -> void
 static ComposeNet.Compose.LaunchedEffect(object? key1, System.Func<System.Threading.CancellationToken, System.Threading.Tasks.Task!>! body) -> void
+static ComposeNet.Compose.MutableDoubleStateOf(double value) -> ComposeNet.MutableNumberState<double>!
+static ComposeNet.Compose.MutableFloatStateOf(float value) -> ComposeNet.MutableNumberState<float>!
+static ComposeNet.Compose.MutableIntStateOf(int value) -> ComposeNet.MutableNumberState<int>!
+static ComposeNet.Compose.MutableLongStateOf(long value) -> ComposeNet.MutableNumberState<long>!
+static ComposeNet.Compose.MutableStateListOf<T>(params T[]! elements) -> ComposeNet.MutableStateList<T>!
+static ComposeNet.Compose.MutableStateMapOf<TKey, TValue>() -> ComposeNet.MutableStateMap<TKey, TValue>!
+static ComposeNet.Compose.MutableStateOf<T>(T value) -> ComposeNet.MutableState<T>!
 static ComposeNet.Compose.ProduceState<T>(T initialValue, object? key1, object? key2, object? key3, System.Func<ComposeNet.MutableState<T>!, System.Threading.CancellationToken, System.Threading.Tasks.Task!>! producer, int line = 0, string! file = "") -> ComposeNet.MutableState<T>!
 static ComposeNet.Compose.ProduceState<T>(T initialValue, object? key1, object? key2, System.Func<ComposeNet.MutableState<T>!, System.Threading.CancellationToken, System.Threading.Tasks.Task!>! producer, int line = 0, string! file = "") -> ComposeNet.MutableState<T>!
 static ComposeNet.Compose.ProduceState<T>(T initialValue, object? key1, System.Func<ComposeNet.MutableState<T>!, System.Threading.CancellationToken, System.Threading.Tasks.Task!>! producer, int line = 0, string! file = "") -> ComposeNet.MutableState<T>!

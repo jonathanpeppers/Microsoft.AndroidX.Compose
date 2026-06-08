@@ -551,6 +551,89 @@ public static class Compose
     }
 
     /// <summary>
+    /// Compose's <c>mutableStateOf(value)</c>: allocates a new
+    /// <see cref="MutableState{T}"/> seeded with <paramref name="value"/>.
+    /// Cache the returned instance via
+    /// <see cref="Remember{T}(System.Func{T}, int, string)"/> so it
+    /// survives recomposition:
+    /// <code>
+    /// var name = Compose.Remember(() =&gt; Compose.MutableStateOf("Ada"));
+    /// new Text(name.Value);
+    /// </code>
+    /// </summary>
+    /// <remarks>
+    /// Kotlin's overload also takes a
+    /// <c>SnapshotMutationPolicy&lt;T&gt;</c>; ComposeNet currently always
+    /// uses <c>structuralEqualityPolicy</c> internally — see
+    /// <see cref="MutableState{T}"/>. The policy parameter will be
+    /// surfaced once the Compose runtime mutation-policy API is
+    /// exposed in C#.
+    /// </remarks>
+    public static MutableState<T> MutableStateOf<T>(T value)
+        => new(value);
+
+    /// <summary>
+    /// Compose's <c>mutableIntStateOf(value)</c>: primitive-specialized
+    /// state-of-int that avoids the <c>Java.Lang.Integer</c> box on every
+    /// read/write. See <see cref="MutableNumberState{T}"/>.
+    /// </summary>
+    public static MutableNumberState<int> MutableIntStateOf(int value)
+        => new(value);
+
+    /// <summary>
+    /// Compose's <c>mutableLongStateOf(value)</c>: primitive-specialized
+    /// state-of-long that avoids the <c>Java.Lang.Long</c> box on every
+    /// read/write. See <see cref="MutableNumberState{T}"/>.
+    /// </summary>
+    public static MutableNumberState<long> MutableLongStateOf(long value)
+        => new(value);
+
+    /// <summary>
+    /// Compose's <c>mutableFloatStateOf(value)</c>: primitive-specialized
+    /// state-of-float that avoids the <c>Java.Lang.Float</c> box on every
+    /// read/write. See <see cref="MutableNumberState{T}"/>.
+    /// </summary>
+    public static MutableNumberState<float> MutableFloatStateOf(float value)
+        => new(value);
+
+    /// <summary>
+    /// Compose's <c>mutableDoubleStateOf(value)</c>: a
+    /// <see cref="MutableNumberState{T}"/> seeded with a <c>double</c>.
+    /// Compose has no primitive <c>MutableDoubleState</c> binding yet, so
+    /// reads/writes still pay one <c>Java.Lang.Double</c> box; the API
+    /// shape mirrors Kotlin so call sites read identically.
+    /// </summary>
+    public static MutableNumberState<double> MutableDoubleStateOf(double value)
+        => new(value);
+
+    /// <summary>
+    /// Compose's <c>mutableStateListOf&lt;T&gt;(vararg elements)</c>: a
+    /// snapshot-tracked observable list that triggers recomposition of
+    /// any reader on mutation. See <see cref="MutableStateList{T}"/>.
+    /// </summary>
+    public static MutableStateList<T> MutableStateListOf<T>(params T[] elements)
+        => elements is null || elements.Length == 0
+            ? new MutableStateList<T>()
+            : new MutableStateList<T>(elements);
+
+    /// <summary>
+    /// Compose's <c>mutableStateMapOf&lt;K, V&gt;()</c>: a
+    /// snapshot-tracked observable map that triggers recomposition of
+    /// any reader on mutation. See <see cref="MutableStateMap{TKey, TValue}"/>.
+    /// </summary>
+    /// <remarks>
+    /// Kotlin also exposes a vararg-pairs overload
+    /// (<c>mutableStateMapOf("k1" to v1, "k2" to v2)</c>); use the
+    /// <see cref="MutableStateMap{TKey, TValue}.MutableStateMap(System.Collections.Generic.IEnumerable{System.Collections.Generic.KeyValuePair{TKey, TValue}})"/>
+    /// constructor or the collection-initializer syntax
+    /// (<c>new MutableStateMap&lt;string, int&gt; { ["k1"] = 1 }</c>) for
+    /// the same effect.
+    /// </remarks>
+    public static MutableStateMap<TKey, TValue> MutableStateMapOf<TKey, TValue>()
+        where TKey : notnull
+        => new();
+
+    /// <summary>
     /// Compose's <c>derivedStateOf { calculation() }</c>: returns a
     /// read-only <see cref="DerivedState{T}"/> whose value is lazily
     /// computed by <paramref name="calculation"/>. Compose tracks

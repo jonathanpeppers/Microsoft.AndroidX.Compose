@@ -148,6 +148,7 @@ public static class Catalog
         D.StateEffectsAnimation.ProduceStateTickerDemo.Demo,
         D.StateEffectsAnimation.SnapshotFlowDemo.Demo,
         D.StateEffectsAnimation.MutableStateCollectionsDemo.Demo,
+        D.StateEffectsAnimation.StateFactoriesDemo.Demo,
         D.StateEffectsAnimation.NullableMutableStateDemo.Demo,
         D.StateEffectsAnimation.DerivedStateDemo.Demo,
         D.StateEffectsAnimation.LaunchedEffectDemo.Demo,
