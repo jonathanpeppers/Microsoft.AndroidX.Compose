@@ -50,6 +50,7 @@ public static class Catalog
         D.TextInputs.OutlinedTextFieldDemo.Demo,
         D.TextInputs.SecureTextFieldDemo.Demo,
         D.TextInputs.OutlinedSecureTextFieldDemo.Demo,
+        D.TextInputs.SelectionDemo.Demo,
 
         // ---- Buttons ----
         D.Buttons.FillStylesDemo.Demo,

@@ -45,6 +45,12 @@ using ComposeNet;
 // as Box, but the content lambda receives a BoxWithConstraintsScope.
 [assembly: ComposeDefaults("BoxWithConstraintsDefault", "modifier", "contentAlignment", "propagateMinConstraints", "!content")]
 
+// androidx.compose.foundation.text.selection.SelectionContainerKt.SelectionContainer —
+// `(modifier=Modifier, content)`. Only `modifier` is defaultable;
+// `content` is always provided. `DisableSelection(content)` takes no
+// optional params, so no `$default` slot and no enum is needed for it.
+[assembly: ComposeDefaults("SelectionContainerDefault", "modifier", "!content")]
+
 // androidx.compose.foundation.layout.FlowLayoutKt — the simpler
 // FlowRow / FlowColumn overloads (no FlowRowOverflow / FlowColumnOverflow
 // slot) lower to 7 user params + content. The trailing `maxItemsInEachRow`

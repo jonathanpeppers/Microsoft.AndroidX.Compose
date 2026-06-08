@@ -186,6 +186,8 @@ ComposeNet.DateRangePickerState.SelectedStartDateMillis.set -> void
 ComposeNet.DateRangePickerState.SetSelection(long? startDateMillis, long? endDateMillis) -> void
 ComposeNet.DerivedState<T>
 ComposeNet.DerivedState<T>.Value.get -> T
+ComposeNet.DisableSelection
+ComposeNet.DisableSelection.DisableSelection() -> void
 ComposeNet.DismissibleDrawerSheet
 ComposeNet.DismissibleDrawerSheet.ContainerColor.get -> ComposeNet.Color
 ComposeNet.DismissibleDrawerSheet.ContainerColor.set -> void
@@ -834,6 +836,8 @@ ComposeNet.SegmentedButton.Icon.get -> ComposeNet.ComposableNode?
 ComposeNet.SegmentedButton.Icon.set -> void
 ComposeNet.SegmentedButton.SegmentedButton(bool checked, System.Action<bool>! onCheckedChange) -> void
 ComposeNet.SegmentedButton.SegmentedButton(bool selected, System.Action! onClick) -> void
+ComposeNet.SelectionContainer
+ComposeNet.SelectionContainer.SelectionContainer() -> void
 ComposeNet.SemanticsRole
 ComposeNet.SemanticsRole.Button = 0 -> ComposeNet.SemanticsRole
 ComposeNet.SemanticsRole.Carousel = 8 -> ComposeNet.SemanticsRole
@@ -1061,6 +1065,7 @@ override ComposeNet.DatePickerDialog.Render(AndroidX.Compose.Runtime.IComposer! 
 override ComposeNet.DateRangePicker.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
 override ComposeNet.DateRangePickerDialog.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
 override ComposeNet.DerivedState<T>.ToString() -> string!
+override ComposeNet.DisableSelection.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
 override ComposeNet.DismissibleDrawerSheet.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
 override ComposeNet.DismissibleNavigationDrawer.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
 override ComposeNet.DisposableEffect.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
@@ -1151,6 +1156,7 @@ override ComposeNet.SecondaryScrollableTabRow.Render(AndroidX.Compose.Runtime.IC
 override ComposeNet.SecondaryTabRow.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
 override ComposeNet.SecureTextField.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
 override ComposeNet.SegmentedButton.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.SelectionContainer.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
 override ComposeNet.SideEffect.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
 override ComposeNet.SingleChoiceSegmentedButtonRow.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
 override ComposeNet.Slider.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
