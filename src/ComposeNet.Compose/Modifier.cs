@@ -1118,15 +1118,7 @@ public sealed class Modifier
     public Modifier Semantics(bool mergeDescendants, System.Action<SemanticsScope> properties)
     {
         System.ArgumentNullException.ThrowIfNull(properties);
-        var lambda = new ComposableLambda1(arg =>
-        {
-            if (arg is Java.Lang.Object obj)
-            {
-                var scope = new SemanticsScope(obj.Handle);
-                try { properties(scope); }
-                finally { scope.Invalidate(); }
-            }
-        });
+        var lambda = WrapSemanticsBuilder(properties);
         return Append(curr =>
             ComposeBridges.ModifierSemantics(curr, mergeDescendants, lambda));
     }
@@ -1144,7 +1136,18 @@ public sealed class Modifier
     public Modifier ClearAndSetSemantics(System.Action<SemanticsScope> properties)
     {
         System.ArgumentNullException.ThrowIfNull(properties);
-        var lambda = new ComposableLambda1(arg =>
+        var lambda = WrapSemanticsBuilder(properties);
+        return Append(curr =>
+            ComposeBridges.ModifierClearAndSetSemantics(curr, lambda));
+    }
+
+    // Shared body for the two builder-form overloads above. Each
+    // invocation of the returned ComposableLambda1 gets a fresh
+    // SemanticsScope bound to the JNI handle Compose hands us, and
+    // the scope is Invalidate()d the moment the user callback returns
+    // so leaked references throw a clear error on reuse.
+    static ComposableLambda1 WrapSemanticsBuilder(System.Action<SemanticsScope> properties) =>
+        new(arg =>
         {
             if (arg is Java.Lang.Object obj)
             {
@@ -1153,9 +1156,6 @@ public sealed class Modifier
                 finally { scope.Invalidate(); }
             }
         });
-        return Append(curr =>
-            ComposeBridges.ModifierClearAndSetSemantics(curr, lambda));
-    }
 
     /// <summary>
     /// Materialize the chain into a managed <c>IModifier</c> wrapper.
