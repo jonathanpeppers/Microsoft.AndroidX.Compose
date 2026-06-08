@@ -1,5 +1,6 @@
 using System.Runtime.CompilerServices;
 using Android.Runtime;
+using AndroidX.Compose.Material3;
 using AndroidX.Compose.Runtime;
 
 namespace ComposeNet;
@@ -22,9 +23,14 @@ namespace ComposeNet;
 /// its identity across recompositions.
 /// </para>
 /// <para>
-/// Canonical usage:
+/// The state argument is the bound
+/// <see cref="TopAppBarState"/> directly — there's no ComposeNet
+/// wrapper because the binding ships the type (with its
+/// <c>(float, float, float)</c> ctor and r/w offset properties)
+/// unmangled. Canonical usage:
 /// <code>
-/// var state = Compose.Remember(() =&gt; new TopAppBarState());
+/// var state = Compose.Remember(() =&gt;
+///     new TopAppBarState(float.NegativeInfinity, 0f, 0f));
 /// var behavior = TopAppBarDefaults.PinnedScrollBehavior(state);
 /// </code>
 /// </para>
@@ -96,8 +102,8 @@ public static class TopAppBarDefaults
         composer.StartReplaceableGroup(SourceLocationKey.Compute(line, file));
         try
         {
-            IntPtr jvmStateHandle = ((Java.Lang.Object)state.Jvm).Handle;
-            IntPtr handle = bridge(jvmStateHandle, composer);
+            IntPtr stateHandle = ((Java.Lang.Object)state).Handle;
+            IntPtr handle = bridge(stateHandle, composer);
             try
             {
                 return new TopAppBarScrollBehavior(handle, JniHandleOwnership.TransferLocalRef);

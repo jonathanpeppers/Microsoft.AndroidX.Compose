@@ -1,4 +1,5 @@
 using System.Linq;
+using AndroidX.Compose.Material3;
 using ComposeNet.Gallery.Registry;
 
 namespace ComposeNet.Gallery.Demos.AppBars;
@@ -18,7 +19,7 @@ public static class PinnedScrollBehaviorDemo
         Description: "Bar stays pinned but elevates as the LazyColumn scrolls underneath.",
         Build:       () =>
         {
-            var state    = Compose.Remember(() => new TopAppBarState());
+            var state    = Compose.Remember(() => new TopAppBarState(float.NegativeInfinity, 0f, 0f));
             var behavior = TopAppBarDefaults.PinnedScrollBehavior(state);
             return new Column
             {

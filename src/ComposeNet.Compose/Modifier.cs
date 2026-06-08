@@ -471,7 +471,7 @@ public sealed class Modifier
     /// <see cref="TopAppBarScrollBehavior.NestedScrollConnection"/>;
     /// the scroll behavior is also set as the bar's
     /// <c>ScrollBehavior</c> property so both sides agree on the
-    /// shared <see cref="TopAppBarState"/>.
+    /// shared <c>TopAppBarState</c>.
     /// </param>
     public Modifier NestedScroll(NestedScrollConnection connection)
     {

@@ -1105,16 +1105,6 @@ ComposeNet.TopAppBar.TopAppBar() -> void
 ComposeNet.TopAppBarDefaults
 ComposeNet.TopAppBarScrollBehavior
 ComposeNet.TopAppBarScrollBehavior.NestedScrollConnection.get -> ComposeNet.NestedScrollConnection!
-ComposeNet.TopAppBarState
-ComposeNet.TopAppBarState.CollapsedFraction.get -> float
-ComposeNet.TopAppBarState.ContentOffset.get -> float
-ComposeNet.TopAppBarState.ContentOffset.set -> void
-ComposeNet.TopAppBarState.HeightOffset.get -> float
-ComposeNet.TopAppBarState.HeightOffset.set -> void
-ComposeNet.TopAppBarState.HeightOffsetLimit.get -> float
-ComposeNet.TopAppBarState.HeightOffsetLimit.set -> void
-ComposeNet.TopAppBarState.OverlappedFraction.get -> float
-ComposeNet.TopAppBarState.TopAppBarState(float initialHeightOffsetLimit = -Infinity, float initialHeightOffset = 0, float initialContentOffset = 0) -> void
 ComposeNet.TopSearchBar
 ComposeNet.TopSearchBar.InputField.get -> ComposeNet.ComposableNode?
 ComposeNet.TopSearchBar.InputField.set -> void
@@ -1761,9 +1751,9 @@ static ComposeNet.TextOverflow.operator ==(ComposeNet.TextOverflow left, Compose
 static ComposeNet.TextOverflow.Pack(ComposeNet.TextOverflow? value) -> int
 static ComposeNet.TextOverflow.StartEllipsis.get -> ComposeNet.TextOverflow
 static ComposeNet.TextOverflow.Visible.get -> ComposeNet.TextOverflow
-static ComposeNet.TopAppBarDefaults.EnterAlwaysScrollBehavior(ComposeNet.TopAppBarState! state, int line = 0, string! file = "") -> ComposeNet.TopAppBarScrollBehavior!
-static ComposeNet.TopAppBarDefaults.ExitUntilCollapsedScrollBehavior(ComposeNet.TopAppBarState! state, int line = 0, string! file = "") -> ComposeNet.TopAppBarScrollBehavior!
-static ComposeNet.TopAppBarDefaults.PinnedScrollBehavior(ComposeNet.TopAppBarState! state, int line = 0, string! file = "") -> ComposeNet.TopAppBarScrollBehavior!
+static ComposeNet.TopAppBarDefaults.EnterAlwaysScrollBehavior(AndroidX.Compose.Material3.TopAppBarState! state, int line = 0, string! file = "") -> ComposeNet.TopAppBarScrollBehavior!
+static ComposeNet.TopAppBarDefaults.ExitUntilCollapsedScrollBehavior(AndroidX.Compose.Material3.TopAppBarState! state, int line = 0, string! file = "") -> ComposeNet.TopAppBarScrollBehavior!
+static ComposeNet.TopAppBarDefaults.PinnedScrollBehavior(AndroidX.Compose.Material3.TopAppBarState! state, int line = 0, string! file = "") -> ComposeNet.TopAppBarScrollBehavior!
 static ComposeNet.TransformOrigin.Center.get -> long
 static ComposeNet.TransformOrigin.Pack(float pivotFractionX, float pivotFractionY) -> long
 static readonly ComposeNet.Locals.LocalColorScheme -> ComposeNet.CompositionLocal<AndroidX.Compose.Material3.ColorScheme!>!

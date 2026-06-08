@@ -5,7 +5,7 @@ namespace ComposeNet;
 /// <see cref="MediumTopAppBar"/> that gives the title a full-width row
 /// when expanded. Same slots as <see cref="TopAppBar"/>. Typically
 /// paired with
-/// <see cref="TopAppBarDefaults.ExitUntilCollapsedScrollBehavior(TopAppBarState, int, string)"/>
+/// <see cref="TopAppBarDefaults.ExitUntilCollapsedScrollBehavior(AndroidX.Compose.Material3.TopAppBarState, int, string)"/>
 /// on its <c>ScrollBehavior</c> slot.
 /// </summary>
 public sealed partial class LargeTopAppBar;
