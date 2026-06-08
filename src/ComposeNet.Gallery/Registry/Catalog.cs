@@ -142,6 +142,7 @@ public static class Catalog
         // ---- State, effects, animation ----
         D.StateEffectsAnimation.RememberSaveableDemo.Demo,
         D.StateEffectsAnimation.ProduceStateTickerDemo.Demo,
+        D.StateEffectsAnimation.SnapshotFlowDemo.Demo,
         D.StateEffectsAnimation.MutableStateCollectionsDemo.Demo,
         D.StateEffectsAnimation.NullableMutableStateDemo.Demo,
         D.StateEffectsAnimation.DerivedStateDemo.Demo,
