@@ -1039,3 +1039,12 @@ using ComposeNet;
 [assembly: ComposeDefaults("PullToRefreshBoxDefault",
     "!isRefreshing", "!onRefresh", "modifier", "!state", "contentAlignment",
     "indicator", "!content")]
+
+// androidx.activity.compose.BackHandlerKt.BackHandler — Kotlin
+// signature `BackHandler(enabled: Boolean = true, onBack: () -> Unit)`.
+// Bit 0 (enabled) is optional with a Kotlin default of true; the C#
+// facade always supplies a bool, so the auto-mask clears the bit and
+// Kotlin uses our value. Bit 1 (onBack) is required (no Kotlin
+// default), `!`-suppressed so the bit stays clear and the caller's
+// lambda is always invoked.
+[assembly: ComposeDefaults("BackHandlerDefault", "enabled", "!onBack")]

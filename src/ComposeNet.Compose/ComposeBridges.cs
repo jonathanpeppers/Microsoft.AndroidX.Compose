@@ -3470,6 +3470,16 @@ internal static partial class ComposeBridges
     // `*$default` overload. The first IntPtr (navGraphBuilder) is the
     // extension receiver; route/content are required (suppressed bits);
     // arguments and deepLinks are nullable lists with empty defaults.
+    // androidx.navigation.compose.NavGraphBuilderKt.composable$default
+    // (string-route overload). Kotlin extension on NavGraphBuilder:
+    // `NavGraphBuilder.composable(route, arguments=emptyList(),
+    // deepLinks=emptyList(), content)`. NOT @Composable itself —
+    // invoked synchronously inside NavHost's builder lambda. The
+    // trailing `IL...;` on the JNI sig is `$default` + the synthetic
+    // marker the bridge generator fills with `IntPtr.Zero` for any
+    // `*$default` overload. The first IntPtr (navGraphBuilder) is the
+    // extension receiver; route/content are required (suppressed bits);
+    // arguments and deepLinks are nullable lists with empty defaults.
     [ComposeBridge(
         Class     = "androidx/navigation/compose/NavGraphBuilderKt",
         JvmName   = "composable$default",
@@ -3483,4 +3493,25 @@ internal static partial class ComposeBridges
         Java.Lang.Object? arguments,
         Java.Lang.Object? deepLinks,
         IFunction3       content);
+
+    // androidx.activity.compose.BackHandlerKt.BackHandler — Kotlin
+    // signature `BackHandler(enabled: Boolean = true, onBack: () -> Unit)`.
+    // Bridged via raw JNI because `Xamarin.AndroidX.Activity.Compose`
+    // ships an empty stub DLL (no types bound). The trailing `II)V` on
+    // the JNI sig is `$changed, $default` — the primary @Composable
+    // overload, not a `*$default` synthetic. Compose's BackHandler
+    // wraps `onBack` in `rememberUpdatedState` so identity churn from
+    // a fresh ComposableLambda0 per recomposition is safe; the
+    // OnBackPressedDispatcher registration is keyed on lifecycle owner.
+    [ComposeBridge(
+        Class     = "androidx/activity/compose/BackHandlerKt",
+        JvmName   = "BackHandler",
+        Signature = "(ZLkotlin/jvm/functions/Function0;" +
+                    "Landroidx/compose/runtime/Composer;II)V",
+        Defaults  = typeof(BackHandlerDefault))]
+    [ComposeFacade]
+    public static partial void BackHandler(
+        IFunction0 onBack,
+        bool       enabled,
+        IComposer  composer);
 }

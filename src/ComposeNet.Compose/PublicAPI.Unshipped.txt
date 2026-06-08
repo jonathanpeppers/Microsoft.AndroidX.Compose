@@ -32,6 +32,9 @@ ComposeNet.AssistChip.LeadingIcon.get -> ComposeNet.ComposableNode?
 ComposeNet.AssistChip.LeadingIcon.set -> void
 ComposeNet.AssistChip.TrailingIcon.get -> ComposeNet.ComposableNode?
 ComposeNet.AssistChip.TrailingIcon.set -> void
+ComposeNet.BackHandler
+ComposeNet.BackHandler.BackHandler(System.Action! onBack) -> void
+ComposeNet.BackHandler.BackHandler(System.Action! onBack, bool enabled) -> void
 ComposeNet.Badge
 ComposeNet.Badge.Badge() -> void
 ComposeNet.BadgedBox
@@ -1077,6 +1080,7 @@ override ComposeNet.AlertDialog.Render(AndroidX.Compose.Runtime.IComposer! compo
 override ComposeNet.AnimatedContent<T>.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
 override ComposeNet.AnimatedVisibility.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
 override ComposeNet.AssistChip.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.BackHandler.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
 override ComposeNet.Badge.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
 override ComposeNet.BadgedBox.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
 override ComposeNet.BottomAppBar.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
