@@ -32,16 +32,24 @@ public sealed class ReplySearchBar : ComposableNode
                     new Icon(Resource.Drawable.ic_search, "Search")
                     {
                         TintArgb = scheme.OnSurface,
+                        Modifier = Modifier.Companion.Align(Alignment.Vertical.CenterVertically),
                     },
                     new Text("Search replies")
                     {
                         FontSize = 14,
                         Color    = new Color(scheme.OnSurface),
-                        Modifier = Modifier.Companion.Padding(start: 16, end: 0, top: 0, bottom: 0).Weight(1f),
+                        Modifier = Modifier.Companion
+                            .Align(Alignment.Vertical.CenterVertically)
+                            .Padding(start: 16, end: 0, top: 0, bottom: 0)
+                            .Weight(1f),
                     },
-                    ReplyProfileImage.Build(
-                        drawableResource: Resource.Drawable.avatar_6,
-                        description:      "Profile"),
+                    new Box
+                    {
+                        Modifier.Companion.Align(Alignment.Vertical.CenterVertically),
+                        ReplyProfileImage.Build(
+                            drawableResource: Resource.Drawable.avatar_6,
+                            description:      "Profile"),
+                    },
                 },
             };
         });
