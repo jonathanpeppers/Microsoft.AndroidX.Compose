@@ -674,6 +674,7 @@ ComposeNet.NavController
 ComposeNet.NavController.CurrentBackStackEntry.get -> ComposeNet.NavBackStackEntry?
 ComposeNet.NavController.NavController() -> void
 ComposeNet.NavController.Navigate(string! route) -> void
+ComposeNet.NavController.Navigate(string! route, ComposeNet.NavOptions! options) -> void
 ComposeNet.NavController.NavigateUp() -> bool
 ComposeNet.NavController.PopBackStack() -> bool
 ComposeNet.NavController.PopBackStack(string! route, bool inclusive) -> bool
@@ -683,6 +684,18 @@ ComposeNet.NavHost.Add(ComposeNet.Modifier! modifier) -> void
 ComposeNet.NavHost.NavController.get -> ComposeNet.NavController!
 ComposeNet.NavHost.NavHost(string! startDestination, ComposeNet.NavController? navController = null) -> void
 ComposeNet.NavHost.StartDestination.get -> string!
+ComposeNet.NavOptions
+ComposeNet.NavOptions.LaunchSingleTop.get -> bool
+ComposeNet.NavOptions.LaunchSingleTop.set -> void
+ComposeNet.NavOptions.NavOptions() -> void
+ComposeNet.NavOptions.PopUpToInclusive.get -> bool
+ComposeNet.NavOptions.PopUpToInclusive.set -> void
+ComposeNet.NavOptions.PopUpToRoute.get -> string?
+ComposeNet.NavOptions.PopUpToRoute.set -> void
+ComposeNet.NavOptions.PopUpToSaveState.get -> bool
+ComposeNet.NavOptions.PopUpToSaveState.set -> void
+ComposeNet.NavOptions.RestoreState.get -> bool
+ComposeNet.NavOptions.RestoreState.set -> void
 ComposeNet.NavigationBar
 ComposeNet.NavigationBar.NavigationBar() -> void
 ComposeNet.NavigationBarItem

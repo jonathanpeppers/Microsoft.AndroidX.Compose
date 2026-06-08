@@ -8,7 +8,7 @@ namespace ComposeNet;
 /// <see cref="NavHost"/> and it will be populated with the underlying
 /// Kotlin controller on first composition (via Kotlin's
 /// <c>rememberNavController()</c>); from then on the navigation methods
-/// — <see cref="Navigate"/>, <c>PopBackStack</c>,
+/// — <see cref="Navigate(string)"/>, <c>PopBackStack</c>,
 /// <see cref="NavigateUp"/> — forward straight to the bound
 /// <see cref="AndroidX.Navigation.NavController"/> binding.
 ///
@@ -44,7 +44,7 @@ public sealed class NavController
     /// <see cref="NavHost.Render"/> on first composition; <c>null</c>
     /// before the host has rendered. Exposed as <c>internal</c> so the
     /// facade can stamp it; user code reaches the controller through
-    /// the <see cref="Navigate"/> / <see cref="PopBackStack()"/> /
+    /// the <see cref="Navigate(string)"/> / <see cref="PopBackStack()"/> /
     /// <see cref="NavigateUp"/> methods.
     /// </summary>
     internal AndroidX.Navigation.NavHostController? Jvm { get; set; }
@@ -63,6 +63,32 @@ public sealed class NavController
     {
         ArgumentNullException.ThrowIfNull(route);
         EnsureJvm().Navigate(route);
+    }
+
+    /// <summary>
+    /// Navigate to <paramref name="route"/> with the back-stack
+    /// behaviour described by <paramref name="options"/> — the
+    /// C# equivalent of Kotlin's
+    /// <c>navController.navigate(route, navOptions { ... })</c>.
+    /// Used to implement the standard Material 3 bottom-navigation
+    /// pattern (<c>popUpTo(startDestinationRoute) { saveState = true }</c>
+    /// + <c>launchSingleTop = true</c> + <c>restoreState = true</c>):
+    ///
+    /// <code>
+    /// nav.Navigate("search", new NavOptions
+    /// {
+    ///     PopUpToRoute     = "home",
+    ///     PopUpToSaveState = true,
+    ///     LaunchSingleTop  = true,
+    ///     RestoreState     = true,
+    /// });
+    /// </code>
+    /// </summary>
+    public void Navigate(string route, NavOptions options)
+    {
+        ArgumentNullException.ThrowIfNull(route);
+        ArgumentNullException.ThrowIfNull(options);
+        EnsureJvm().Navigate(route, options.BuildJvm());
     }
 
     /// <summary>
