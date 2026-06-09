@@ -209,6 +209,7 @@ fit any `[ComposeBridge]` shape.
 | CN2006 | Constructor bridge shape requirements not met.                                                       |
 | CN2007 | Recognized Compose value type used on a no-`$default` bridge.                                        |
 | CN2008 | Value-type parameter lowers to a JNI slot that doesn't match the bridge signature at that position.  |
+| CN2009 | `[ComposeBridge(Suspend = true)]` configuration is invalid (missing/misplaced `IContinuation`, wrong return, etc.). |
 
 **When adding a new diagnostic, update this table (and CN1xxx if relevant).
 Source of truth: `src/Microsoft.AndroidX.Compose.SourceGenerators/Diagnostics.cs`.**
@@ -725,42 +726,49 @@ silently. Surface the parameter on every new `*Async` and document
 
 ### Adding a new `*Async`
 
-1. Hand-write a bridge in `SuspendBridges.cs` returning raw `IntPtr`
-   (`COROUTINE_SUSPENDED` sentinel or sync boxed result).
+1. Add a `[ComposeBridge(Suspend = true)]` partial in `SuspendBridges.cs`.
+   The generator detects the trailing
+   `Kotlin.Coroutines.IContinuation cont` parameter, emits the cached
+   class+method-id boilerplate, the `JValue*` stackalloc, the
+   `((Java.Lang.Object)cont).Handle` slot, and the
+   `try` / `finally { GC.KeepAlive(cont); }`. Two sub-shapes:
 
-   Instance suspend template:
+   **Instance suspend** (Kotlin instance `suspend fun`, no `$default`) —
+   bridge declares the receiver as its first user `IntPtr`; the JNI
+   signature does **not** include it; generator emits
+   `GetMethodID` + `CallObjectMethod(receiver, ...)`:
    ```csharp
-   static IntPtr s_myStateDoThing_class;
-   static IntPtr s_myStateDoThing_method;
-
-   internal static unsafe IntPtr MyStateDoThing(
-       IntPtr state, int value, SuspendContinuation cont)
-   {
-       if (s_myStateDoThing_method == IntPtr.Zero)
-       {
-           s_myStateDoThing_class = JNIEnv.FindClass("my/package/MyState");
-           s_myStateDoThing_method = JNIEnv.GetMethodID(
-               s_myStateDoThing_class, "doThing",
-               "(ILkotlin/coroutines/Continuation;)Ljava/lang/Object;");
-       }
-       try
-       {
-           JValue* args = stackalloc JValue[2];
-           args[0] = new JValue(value);
-           args[1] = new JValue(cont.Handle);
-           return JNIEnv.CallObjectMethod(state, s_myStateDoThing_method, args);
-       }
-       finally { GC.KeepAlive(cont); }
-   }
+   [ComposeBridge(Class = "my/package/MyState",
+                  JvmName = "doThing",
+                  Signature = "(ILkotlin/coroutines/Continuation;)Ljava/lang/Object;")]
+   internal static partial IntPtr MyStateDoThing(IntPtr state, int value, IContinuation cont);
    ```
 
-   Static extension / synthetic `$default`: use `GetStaticMethodID` +
-   `CallStaticObjectMethod`; first JValue is the receiver; trailing args after
-   the continuation are `$default` mask (int) + synthetic marker
-   (`IntPtr.Zero`). See `ScrollStateAnimate` for a worked example.
+   **Static `$default` suspend** (Kotlin extension or instance fn with
+   `@JvmDefault`) — JNI signature follows the synthetic shape
+   `(receiver, ...userParams, Continuation, int $default, Object marker)`;
+   bridge declares the receiver as its first `IntPtr` user param (it
+   occupies JNI slot 0); generator emits `GetStaticMethodID` +
+   `CallStaticObjectMethod`. Always pair with a matching
+   `[assembly: ComposeDefaults(...)]` and `Defaults = typeof(XxxDefault)`:
+   ```csharp
+   [ComposeBridge(Class = "androidx/compose/foundation/ScrollState",
+                  JvmName = "animateScrollTo$default",
+                  Signature = "(Landroidx/compose/foundation/ScrollState;ILandroidx/compose/animation/core/AnimationSpec;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;",
+                  Suspend = true,
+                  Defaults = typeof(ScrollStateAnimateScrollToDefault))]
+   internal static partial IntPtr ScrollStateAnimateScrollTo(
+       IntPtr state, int value, IntPtr? animationSpec, IContinuation cont);
+   ```
 
-2. Add facade method routed through `SuspendBridge.Invoke`. Always surface
-   trailing `CancellationToken cancellationToken = default`:
+   Generator validates: return must be `IntPtr`/`nint`; JNI return must
+   be `Ljava/lang/Object;`; continuation slot must be last (instance) or
+   `sigParams.Count - 3` (static `$default`); cannot combine with
+   `Composer` / constructor (`JvmName = "<init>"`) / `InstanceField`.
+   Violations emit **CN2009**.
+
+2. Add facade method routed through `SuspendBridge.Invoke`. Always
+   surface trailing `CancellationToken cancellationToken = default`:
    ```csharp
    public Task<float> DoThingAsync(int value, CancellationToken cancellationToken = default) =>
        SuspendBridge.Invoke<float>(
@@ -773,32 +781,47 @@ silently. Surface the parameter on every new `*Async` and document
 
 3. Add new public members to `PublicAPI.Unshipped.txt`.
 
+### Hand-written holdouts
+
+Only stay hand-written when no `[ComposeBridge]` shape fits:
+
+- `AndroidUiDispatcherMain` walks a nested `Companion` type via
+  `GetStaticFieldID` → `GetMethodID` → `CallObjectMethod`. It's a
+  static-field-getter chain, not a single method invocation, so it
+  doesn't fit any bridge shape.
+- Continuations synthesized by Kotlin's `createCoroutineUnintercepted`
+  (`PointerInputBlock.Invoke`) aren't in Mono.Android's peer registry;
+  use `cont.JavaCast<IContinuation>()` (mirrors `LaunchedEffectBody`)
+  inside the JCW body before forwarding to a generator-emitted bridge.
+
+If you find a third shape, **extend the generator** — don't grow the
+hand-written list. See `ComposeBridgeGenerator.cs` (suspend dispatch
+introduced for #96).
+
 ### Conventions and footguns
 
 - Bridges **must** return raw `IntPtr` and work in raw handles end-to-end.
-  Do not wrap `COROUTINE_SUSPENDED` with `Java.Lang.Object.GetObject(...,
+  The generator enforces this; the runtime relies on it. Do not wrap
+  `COROUTINE_SUSPENDED` with `Java.Lang.Object.GetObject(..,
   TransferLocalRef)` — Mono's peer cache resolves Kotlin singletons to
   globally-ref-backed wrappers that crash CheckJNI on later dispose.
 - Do not wrap `JNIEnv.FindClass` results in `NewGlobalRef`/`DeleteLocalRef`;
   Mono.Android returns stable globally-registered class refs.
-- Instance bridges: facade passes `((Java.Lang.Object)Jvm).Handle`; bridge's
-  first `IntPtr` is the receiver.
-- Kotlin extension / `$default` synthetic JVM signature:
-  `(receiver, ...userParams, AnimationSpec, Continuation, int $default,
-  Object marker)`. Marker `IntPtr.Zero`; `$default` mask has bits set for
-  defaulted params.
-- The `unbox` lambda receives the boxed `Java.Lang.Object?` Kotlin returned.
-  Use `Java.Lang.Integer.IntValue()`, `Java.Lang.Float.FloatValue()` for boxed
-  primitives; use non-generic `Invoke` for Kotlin `Unit`.
+- Instance suspend bridges: facade passes
+  `((Java.Lang.Object)Jvm).Handle`; bridge's first `IntPtr` is the
+  receiver; the JNI signature does **not** include it.
+- Static `$default` suspend: synthetic JVM signature is
+  `(receiver, ...userParams, Continuation, int $default, Object marker)`.
+  Marker passed as `IntPtr.Zero`; auto-default-mask bits set when the
+  corresponding nullable user param is `null`.
+- The `unbox` lambda receives the boxed `Java.Lang.Object?` Kotlin
+  returned. Use `Java.Lang.Integer.IntValue()`,
+  `Java.Lang.Float.FloatValue()` for boxed primitives; use non-generic
+  `Invoke` for Kotlin `Unit`.
 - Callers handle failures with normal `try`/`catch` around `await`.
-  `SuspendBridge` detects `kotlin.Result$Failure` and faults the task with the
-  underlying `Throwable`.
+  `SuspendBridge` detects `kotlin.Result$Failure` and faults the task
+  with the underlying `Throwable`.
 - One JCW continuation per call. Never reuse `SuspendContinuation`.
-
-Do not add a `[ComposeBridge]` generator path yet; once a third suspend API is
-needed, formalise as `ComposeBridgeAttribute(Suspend = true)`. The
-`Why raw JNI` comments in `SuspendBridges.cs` and `SuspendBridge.cs` explain
-the current `dotnet/java-interop#1440` dependency.
 
 ## Central package versioning
 

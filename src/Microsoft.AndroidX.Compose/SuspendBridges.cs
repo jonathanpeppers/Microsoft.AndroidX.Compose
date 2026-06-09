@@ -1,185 +1,132 @@
 using global::Android.Runtime;
+using global::Kotlin.Coroutines;
 
 namespace Microsoft.AndroidX.Compose;
 
-// Hand-written JNI bridges for Kotlin `suspend` functions that the
-// `[ComposeBridge]` source generator doesn't yet model. v1 ships just
-// the ScrollState entries (`scrollTo` is already exposed via the
-// regular C# binding, so only `animateScrollTo` needs a JNI plumb).
+// JNI bridges for Kotlin `suspend` functions. Bodies are emitted by
+// ComposeBridgeGenerator from `[ComposeBridge(Suspend = true)]`. The
+// trailing `IContinuation cont` parameter is detected as a Kotlin
+// continuation slot; the generator takes care of method-id caching,
+// the JValue array, the receiver/extension-receiver, $default mask
+// auto-build, the synthetic marker (for $default extensions), and
+// `try`/`finally { GC.KeepAlive(cont) }`.
 //
-// When this file grows past ~3 entries, formalise into a
-// `ComposeBridgeAttribute(Suspend = true)` generator path — see issue
-// #96 design notes.
+// Suspend bridges always return raw `IntPtr` — wrapping the
+// COROUTINE_SUSPENDED sentinel via `Java.Lang.Object.GetObject(..,
+// TransferLocalRef)` collides with Mono's peer cache (the cached
+// managed wrapper holds a GLOBAL ref while we'd hand it a LOCAL one)
+// and aborts under CheckJNI. The generator enforces this (CN2009).
+//
+// `AndroidUiDispatcherMain` below stays hand-written because it's a
+// static-field getter chasing a nested Companion type, not a method
+// call — it doesn't fit any `[ComposeBridge]` shape.
 internal static partial class ComposeBridges
 {
-    static IntPtr s_scrollStateScrollTo_class;
-    static IntPtr s_scrollStateScrollTo_method;
-    static IntPtr s_scrollStateAnimateScrollTo_class;
-    static IntPtr s_scrollStateAnimateScrollTo_method;
-    static IntPtr s_drawerStateOpen_class;
-    static IntPtr s_drawerStateOpen_method;
-    static IntPtr s_drawerStateClose_class;
-    static IntPtr s_drawerStateClose_method;
-    static IntPtr s_androidUiDispatcherMain_handle;
-
-    // androidx.compose.foundation.ScrollState.scrollTo(int value, Continuation): Object
+    // androidx.compose.foundation.ScrollState.scrollTo(int, Continuation): Object
     //
-    // The two-arg suspend overload is exposed in the binding (returns
+    // The two-arg suspend overload IS exposed in the binding (returns
     // Java.Lang.Object), but we call it via raw JNI here so the
     // returned handle stays as a plain IntPtr — SuspendBridge needs
-    // raw-handle semantics to avoid the peer-cache pitfall around
-    // COROUTINE_SUSPENDED.
-    internal static unsafe IntPtr ScrollStateScrollTo(
-        IntPtr state, int value, SuspendContinuation cont)
-    {
-        if (s_scrollStateScrollTo_method == IntPtr.Zero)
-        {
-            // JNIEnv.FindClass in Mono.Android already returns a stable,
-            // globally-registered class ref — store it directly. Calling
-            // NewGlobalRef + DeleteLocalRef on top would fire CheckJNI's
-            // "expected Local but found Global" abort. Matches the
-            // pattern emitted by ComposeBridgeGenerator.
-            s_scrollStateScrollTo_class = JNIEnv.FindClass("androidx/compose/foundation/ScrollState");
-            s_scrollStateScrollTo_method = JNIEnv.GetMethodID(
-                s_scrollStateScrollTo_class,
-                "scrollTo",
-                "(ILkotlin/coroutines/Continuation;)Ljava/lang/Object;");
-        }
+    // raw-handle semantics to avoid the COROUTINE_SUSPENDED peer-cache
+    // pitfall.
+    [ComposeBridge(Suspend = true,
+        Class = "androidx/compose/foundation/ScrollState",
+        JvmName = "scrollTo",
+        Signature = "(ILkotlin/coroutines/Continuation;)Ljava/lang/Object;")]
+    internal static partial IntPtr ScrollStateScrollTo(
+        IntPtr state, int value, IContinuation cont);
 
-        try
-        {
-            JValue* args = stackalloc JValue[2];
-            args[0] = new JValue(value);
-            args[1] = new JValue(cont.Handle);
-            return JNIEnv.CallObjectMethod(state, s_scrollStateScrollTo_method, args);
-        }
-        finally
-        {
-            GC.KeepAlive(cont);
-        }
-    }
-
-    // androidx.compose.foundation.ScrollState.animateScrollTo(
-    //     int value, AnimationSpec<Float> = SpringSpec(), Continuation): Object
-    //
-    // The two-arg overload (no `animationSpec`) is stripped from the
-    // binding, so we invoke the synthetic `$default` overload directly:
-    //
-    //   animateScrollTo$default(
-    //       ScrollState this, int value,
-    //       AnimationSpec spec, Continuation cont,
-    //       int $default, Object marker): Object
-    //
-    // Mask = 0b010 (bit 1) → "use Kotlin default for animationSpec".
-    // Marker is always null at every call site (synthetic-overload
-    // requirement). Returns kotlin/Unit on success or COROUTINE_SUSPENDED.
+    // androidx.compose.foundation.ScrollState.animateScrollTo$default(
+    //     ScrollState this, int value, AnimationSpec spec,
+    //     Continuation cont, int $default, Object marker): Object
     //
     // Why raw JNI: animateScrollTo lives in the Kotlin extension class
     // `androidx/compose/foundation/gestures/AnimateScrollExtensionsKt`,
     // which is stripped wholesale from `Xamarin.AndroidX.Compose.Foundation.Android.dll`
-    // (zero `*Animate*` types in that assembly). The cause is the
-    // `AnimationSpec<Float>` parameter — Kotlin's generic + `@JvmInline`
-    // mangling produces a JVM name (`animateScrollTo-XXXXXXXX`) the
-    // generator-bindings parser drops, and the parameterless-default
-    // synthetic gets dropped along with it. Same root cause as the
-    // mangled Compose Material3 overloads tracked by
-    // dotnet/java-interop#1440 — once that lands and the upstream
-    // Compose binding is regenerated, this bridge can be replaced with
-    // a clean call through the bound `AnimateScrollExtensionsKt`.
-    internal static unsafe IntPtr ScrollStateAnimateScrollTo(
-        IntPtr state, int value, SuspendContinuation cont)
-    {
-        if (s_scrollStateAnimateScrollTo_method == IntPtr.Zero)
-        {
-            // JNIEnv.FindClass in Mono.Android returns a stable, globally
-            // registered class ref — store it directly. See
-            // ScrollStateScrollTo for the rationale.
-            s_scrollStateAnimateScrollTo_class = JNIEnv.FindClass("androidx/compose/foundation/ScrollState");
-            s_scrollStateAnimateScrollTo_method = JNIEnv.GetStaticMethodID(
-                s_scrollStateAnimateScrollTo_class,
-                "animateScrollTo$default",
-                "(Landroidx/compose/foundation/ScrollState;I" +
-                "Landroidx/compose/animation/core/AnimationSpec;" +
-                "Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;");
-        }
-
-        try
-        {
-            JValue* args = stackalloc JValue[6];
-            args[0] = new JValue(state);
-            args[1] = new JValue(value);
-            args[2] = new JValue(IntPtr.Zero);   // AnimationSpec — defaulted
-            args[3] = new JValue(cont.Handle);
-            args[4] = new JValue(0b010);                // $default mask: bit 1 = animationSpec
-            args[5] = new JValue(IntPtr.Zero);   // synthetic marker — always null
-            return JNIEnv.CallStaticObjectMethod(
-                s_scrollStateAnimateScrollTo_class,
-                s_scrollStateAnimateScrollTo_method,
-                args);
-        }
-        finally
-        {
-            GC.KeepAlive(cont);
-        }
-    }
+    // — the `AnimationSpec<Float>` parameter triggers Kotlin's generic
+    // + `@JvmInline` mangling (`animateScrollTo-XXXXXXXX`) that the
+    // generator-bindings parser drops. Same root cause as the mangled
+    // Compose Material3 overloads tracked by dotnet/java-interop#1440.
+    //
+    // The single nullable `animationSpec` slot is left to the auto-mask
+    // (passing null → $default bit set → Kotlin substitutes SpringSpec()).
+    [ComposeBridge(Suspend = true,
+        Class = "androidx/compose/foundation/ScrollState",
+        JvmName = "animateScrollTo$default",
+        Signature = "(Landroidx/compose/foundation/ScrollState;ILandroidx/compose/animation/core/AnimationSpec;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;",
+        Defaults = typeof(ScrollStateAnimateScrollToDefault))]
+    internal static partial IntPtr ScrollStateAnimateScrollTo(
+        IntPtr state, int value, IntPtr? animationSpec, IContinuation cont);
 
     // androidx.compose.material3.DrawerState.open(Continuation): Object
-    //
-    // The single-arg suspend wrapper is exposed in the binding (returns
-    // Java.Lang.Object), but we call it via raw JNI so the returned
-    // handle stays as a plain IntPtr — SuspendBridge needs raw-handle
-    // semantics to avoid the peer-cache pitfall around
-    // COROUTINE_SUSPENDED. Same pattern as ScrollStateScrollTo.
-    internal static unsafe IntPtr DrawerStateOpen(
-        IntPtr state, SuspendContinuation cont)
-    {
-        if (s_drawerStateOpen_method == IntPtr.Zero)
-        {
-            s_drawerStateOpen_class = JNIEnv.FindClass("androidx/compose/material3/DrawerState");
-            s_drawerStateOpen_method = JNIEnv.GetMethodID(
-                s_drawerStateOpen_class,
-                "open",
-                "(Lkotlin/coroutines/Continuation;)Ljava/lang/Object;");
-        }
-
-        try
-        {
-            JValue* args = stackalloc JValue[1];
-            args[0] = new JValue(cont.Handle);
-            return JNIEnv.CallObjectMethod(state, s_drawerStateOpen_method, args);
-        }
-        finally
-        {
-            GC.KeepAlive(cont);
-        }
-    }
+    [ComposeBridge(Suspend = true,
+        Class = "androidx/compose/material3/DrawerState",
+        JvmName = "open",
+        Signature = "(Lkotlin/coroutines/Continuation;)Ljava/lang/Object;")]
+    internal static partial IntPtr DrawerStateOpen(IntPtr state, IContinuation cont);
 
     // androidx.compose.material3.DrawerState.close(Continuation): Object
-    //
-    // Mirror of DrawerStateOpen for the close-drawer suspend call.
-    internal static unsafe IntPtr DrawerStateClose(
-        IntPtr state, SuspendContinuation cont)
-    {
-        if (s_drawerStateClose_method == IntPtr.Zero)
-        {
-            s_drawerStateClose_class = JNIEnv.FindClass("androidx/compose/material3/DrawerState");
-            s_drawerStateClose_method = JNIEnv.GetMethodID(
-                s_drawerStateClose_class,
-                "close",
-                "(Lkotlin/coroutines/Continuation;)Ljava/lang/Object;");
-        }
+    [ComposeBridge(Suspend = true,
+        Class = "androidx/compose/material3/DrawerState",
+        JvmName = "close",
+        Signature = "(Lkotlin/coroutines/Continuation;)Ljava/lang/Object;")]
+    internal static partial IntPtr DrawerStateClose(IntPtr state, IContinuation cont);
 
-        try
-        {
-            JValue* args = stackalloc JValue[1];
-            args[0] = new JValue(cont.Handle);
-            return JNIEnv.CallObjectMethod(state, s_drawerStateClose_method, args);
-        }
-        finally
-        {
-            GC.KeepAlive(cont);
-        }
-    }
+    // androidx.compose.foundation.lazy.LazyListState
+    //     .scrollToItem(int index, int scrollOffset, Continuation): Object
+    [ComposeBridge(Suspend = true,
+        Class = "androidx/compose/foundation/lazy/LazyListState",
+        JvmName = "scrollToItem",
+        Signature = "(IILkotlin/coroutines/Continuation;)Ljava/lang/Object;")]
+    internal static partial IntPtr LazyListStateScrollToItem(
+        IntPtr state, int index, int scrollOffset, IContinuation cont);
+
+    // androidx.compose.foundation.lazy.LazyListState
+    //     .animateScrollToItem(int index, int scrollOffset, Continuation): Object
+    //
+    // Requires a MonotonicFrameClock in the continuation context
+    // (calls `withFrameNanos` internally) — supplied by
+    // SuspendContinuation.Context which returns AndroidUiDispatcher.Main.
+    [ComposeBridge(Suspend = true,
+        Class = "androidx/compose/foundation/lazy/LazyListState",
+        JvmName = "animateScrollToItem",
+        Signature = "(IILkotlin/coroutines/Continuation;)Ljava/lang/Object;")]
+    internal static partial IntPtr LazyListStateAnimateScrollToItem(
+        IntPtr state, int index, int scrollOffset, IContinuation cont);
+
+    // androidx.compose.foundation.gestures.TapGestureDetectorKt
+    //     .detectTapGestures$default(
+    //         PointerInputScope scope,
+    //         ((Offset) -> Unit)? onDoubleTap = null,
+    //         ((Offset) -> Unit)? onLongPress = null,
+    //         (suspend PressGestureScope.(Offset) -> Unit) onPress = NoPressGesture,
+    //         ((Offset) -> Unit)? onTap = null,
+    //         Continuation cont, int $default, Object marker): Object
+    //
+    // Unlike the other bridges in this file, the caller (PointerInputBlock)
+    // is itself inside a Kotlin suspend body and supplies the OUTER
+    // continuation directly — this is a *tail call* into Kotlin. No
+    // SuspendBridge / SuspendContinuation involvement; the raw IntPtr
+    // we return (COROUTINE_SUSPENDED, kotlin.Unit, or kotlin.Result$Failure)
+    // is forwarded unchanged.
+    //
+    // Each callback handle is `IntPtr?` so the auto-default-mask flips the
+    // corresponding bit when null — Kotlin substitutes its real default
+    // (null for the nullable slots, NoPressGesture for onPress).
+    [ComposeBridge(Suspend = true,
+        Class = "androidx/compose/foundation/gestures/TapGestureDetectorKt",
+        JvmName = "detectTapGestures$default",
+        Signature = "(Landroidx/compose/ui/input/pointer/PointerInputScope;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function3;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;",
+        Defaults = typeof(DetectTapGesturesDefault))]
+    internal static partial IntPtr DetectTapGestures(
+        IntPtr scope,
+        IntPtr? onDoubleTap,
+        IntPtr? onLongPress,
+        IntPtr? onPress,
+        IntPtr? onTap,
+        IContinuation cont);
+
+    static IntPtr s_androidUiDispatcherMain_handle;
 
     // androidx.compose.ui.platform.AndroidUiDispatcher.Companion.getMain(): kotlin.coroutines.CoroutineContext
     //
@@ -195,6 +142,10 @@ internal static partial class ComposeBridges
     // Must be initialised on a Looper thread the first time, which is
     // naturally satisfied because Compose suspend calls originate from
     // button onClicks running on the main thread.
+    //
+    // Stays hand-written: this is a static-field getter walking a nested
+    // Companion type, not a method call — doesn't fit any
+    // `[ComposeBridge]` shape.
     internal static IntPtr AndroidUiDispatcherMain()
     {
         if (s_androidUiDispatcherMain_handle != IntPtr.Zero)
@@ -226,152 +177,5 @@ internal static partial class ComposeBridges
         }
 
         return s_androidUiDispatcherMain_handle;
-    }
-
-    static IntPtr s_lazyListStateScrollToItem_class;
-    static IntPtr s_lazyListStateScrollToItem_method;
-    static IntPtr s_lazyListStateAnimateScrollToItem_class;
-    static IntPtr s_lazyListStateAnimateScrollToItem_method;
-
-    // androidx.compose.foundation.lazy.LazyListState
-    //     .scrollToItem(int index, int scrollOffset, Continuation): Object
-    //
-    // The three-arg suspend overload is bindable (returns
-    // Java.Lang.Object), but we call it via raw JNI so the returned
-    // handle stays as a plain IntPtr — SuspendBridge needs raw-handle
-    // semantics to avoid the peer-cache pitfall around
-    // COROUTINE_SUSPENDED. Same pattern as ScrollStateScrollTo.
-    internal static unsafe IntPtr LazyListStateScrollToItem(
-        IntPtr state, int index, int scrollOffset, SuspendContinuation cont)
-    {
-        if (s_lazyListStateScrollToItem_method == IntPtr.Zero)
-        {
-            s_lazyListStateScrollToItem_class = JNIEnv.FindClass(
-                "androidx/compose/foundation/lazy/LazyListState");
-            s_lazyListStateScrollToItem_method = JNIEnv.GetMethodID(
-                s_lazyListStateScrollToItem_class,
-                "scrollToItem",
-                "(IILkotlin/coroutines/Continuation;)Ljava/lang/Object;");
-        }
-
-        try
-        {
-            JValue* args = stackalloc JValue[3];
-            args[0] = new JValue(index);
-            args[1] = new JValue(scrollOffset);
-            args[2] = new JValue(cont.Handle);
-            return JNIEnv.CallObjectMethod(state, s_lazyListStateScrollToItem_method, args);
-        }
-        finally
-        {
-            GC.KeepAlive(cont);
-        }
-    }
-
-    // androidx.compose.foundation.lazy.LazyListState
-    //     .animateScrollToItem(int index, int scrollOffset, Continuation): Object
-    //
-    // Animation suspend method. Requires a MonotonicFrameClock in the
-    // continuation context (calls `withFrameNanos` internally) — that
-    // is supplied by SuspendContinuation.Context which returns
-    // AndroidUiDispatcher.Main. Same raw-handle pattern as
-    // ScrollStateAnimateScrollTo / ScrollStateScrollTo.
-    internal static unsafe IntPtr LazyListStateAnimateScrollToItem(
-        IntPtr state, int index, int scrollOffset, SuspendContinuation cont)
-    {
-        if (s_lazyListStateAnimateScrollToItem_method == IntPtr.Zero)
-        {
-            s_lazyListStateAnimateScrollToItem_class = JNIEnv.FindClass(
-                "androidx/compose/foundation/lazy/LazyListState");
-            s_lazyListStateAnimateScrollToItem_method = JNIEnv.GetMethodID(
-                s_lazyListStateAnimateScrollToItem_class,
-                "animateScrollToItem",
-                "(IILkotlin/coroutines/Continuation;)Ljava/lang/Object;");
-        }
-
-        try
-        {
-            JValue* args = stackalloc JValue[3];
-            args[0] = new JValue(index);
-            args[1] = new JValue(scrollOffset);
-            args[2] = new JValue(cont.Handle);
-            return JNIEnv.CallObjectMethod(state, s_lazyListStateAnimateScrollToItem_method, args);
-        }
-        finally
-        {
-            GC.KeepAlive(cont);
-        }
-    }
-
-    static IntPtr s_detectTapGestures_class;
-    static IntPtr s_detectTapGestures_method;
-
-    // androidx.compose.foundation.gestures.TapGestureDetectorKt
-    //     .detectTapGestures(
-    //         PointerInputScope scope,
-    //         ((Offset) -> Unit)? onDoubleTap = null,
-    //         ((Offset) -> Unit)? onLongPress = null,
-    //         (suspend PressGestureScope.(Offset) -> Unit) onPress = NoPressGesture,
-    //         ((Offset) -> Unit)? onTap = null,
-    //         Continuation cont): Object
-    //
-    // Called via the synthetic $default overload so we can leave any
-    // subset of callbacks at their Kotlin defaults. Unlike the other
-    // bridges in this file, the caller is an IPointerInputEventHandler
-    // JCW whose Kotlin invoke(scope, cont) supplies the OUTER continuation
-    // directly — this is a *tail call* into Kotlin from inside another
-    // suspend body. No SuspendBridge / SuspendContinuation involvement:
-    // the outer continuation IS what we forward, and the raw IntPtr
-    // returned (COROUTINE_SUSPENDED, kotlin.Unit, or kotlin.Result$Failure)
-    // is what we hand back to Kotlin unchanged.
-    //
-    // $default mask bits:
-    //   bit 0 = onDoubleTap, bit 1 = onLongPress,
-    //   bit 2 = onPress,     bit 3 = onTap.
-    // We set the bit whenever the corresponding JCW handle is null, so
-    // Kotlin substitutes its real default (null for the nullable slots,
-    // NoPressGesture for onPress). The synthetic-overload marker (last
-    // Object arg) is always null at every call site.
-    internal static unsafe IntPtr DetectTapGestures(
-        IntPtr scope,
-        IntPtr onDoubleTap,
-        IntPtr onLongPress,
-        IntPtr onPress,
-        IntPtr onTap,
-        IntPtr cont)
-    {
-        if (s_detectTapGestures_method == IntPtr.Zero)
-        {
-            s_detectTapGestures_class = JNIEnv.FindClass(
-                "androidx/compose/foundation/gestures/TapGestureDetectorKt");
-            s_detectTapGestures_method = JNIEnv.GetStaticMethodID(
-                s_detectTapGestures_class,
-                "detectTapGestures$default",
-                "(Landroidx/compose/ui/input/pointer/PointerInputScope;" +
-                "Lkotlin/jvm/functions/Function1;" +
-                "Lkotlin/jvm/functions/Function1;" +
-                "Lkotlin/jvm/functions/Function3;" +
-                "Lkotlin/jvm/functions/Function1;" +
-                "Lkotlin/coroutines/Continuation;" +
-                "ILjava/lang/Object;)Ljava/lang/Object;");
-        }
-
-        int mask = 0;
-        if (onDoubleTap == IntPtr.Zero) mask |= 0b0001;
-        if (onLongPress == IntPtr.Zero) mask |= 0b0010;
-        if (onPress == IntPtr.Zero) mask |= 0b0100;
-        if (onTap == IntPtr.Zero) mask |= 0b1000;
-
-        JValue* args = stackalloc JValue[8];
-        args[0] = new JValue(scope);
-        args[1] = new JValue(onDoubleTap);
-        args[2] = new JValue(onLongPress);
-        args[3] = new JValue(onPress);
-        args[4] = new JValue(onTap);
-        args[5] = new JValue(cont);
-        args[6] = new JValue(mask);
-        args[7] = new JValue(IntPtr.Zero);
-        return JNIEnv.CallStaticObjectMethod(
-            s_detectTapGestures_class, s_detectTapGestures_method, args);
     }
 }

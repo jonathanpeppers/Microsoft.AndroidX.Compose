@@ -139,6 +139,6 @@ public sealed class ScrollState
     public Task AnimateScrollToAsync(int value, CancellationToken cancellationToken = default) =>
         SuspendBridge.Invoke(cont =>
             ComposeBridges.ScrollStateAnimateScrollTo(
-                ((Java.Lang.Object)Jvm).Handle, value, cont),
+                ((Java.Lang.Object)Jvm).Handle, value, animationSpec: null, cont),
             cancellationToken);
 }

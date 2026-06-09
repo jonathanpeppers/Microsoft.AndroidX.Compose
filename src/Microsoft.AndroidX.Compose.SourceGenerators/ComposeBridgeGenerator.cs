@@ -74,6 +74,7 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
         string? signature = ReadString(attr, "Signature");
         string? instanceField = ReadString(attr, "InstanceField");
         var defaultsType = ReadType(attr, "Defaults");
+        bool isSuspend = ReadBool(attr, "Suspend");
 
         if (className is null || jvmName is null || signature is null)
         {
@@ -82,7 +83,7 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
             });
         }
 
-        if (!JniSignature.TryParse(signature, out var sigParams, out _, out var sigError))
+        if (!JniSignature.TryParse(signature, out var sigParams, out var jniReturnType, out var sigError))
         {
             return new GenerationResult(null, null, new[] {
                 Diagnostic.Create(Diagnostics.BridgeMalformedSignature, loc, method.Name, sigError ?? "?")
@@ -127,6 +128,40 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
             // the bytecode level even though NewObject hands back a handle).
             if (!signature.EndsWith(")V", StringComparison.Ordinal))
                 return ConstructorError(loc, method.Name, "JNI signature must end with ')V' (constructors return void at the bytecode level)");
+        }
+
+        // Suspend-bridge up-front validation. Catches conflicting flags
+        // before the slot-accounting math runs so callers get a focused
+        // error instead of a downstream signature-mismatch report.
+        IParameterSymbol? continuationParam = null;
+        if (isSuspend)
+        {
+            if (isConstructor)
+                return SuspendError(loc, method.Name, "cannot combine 'Suspend = true' with a '<init>' constructor bridge");
+            if (instanceField is not null)
+                return SuspendError(loc, method.Name, "cannot combine 'Suspend = true' with 'InstanceField'");
+            for (int i = 0; i < method.Parameters.Length; i++)
+            {
+                if (ComposeDefaultsGenerator.IsComposer(method.Parameters[i].Type))
+                    return SuspendError(loc, method.Name, "suspend bridges have no Composer slot — remove the IComposer parameter");
+            }
+            if (method.Parameters.Length == 0 ||
+                !IsContinuationType(method.Parameters[method.Parameters.Length - 1].Type))
+            {
+                return SuspendError(loc, method.Name,
+                    "trailing parameter must be 'Kotlin.Coroutines.IContinuation' (or an implementor such as 'SuspendContinuation')");
+            }
+            continuationParam = method.Parameters[method.Parameters.Length - 1];
+            if (method.ReturnsVoid || method.ReturnType.SpecialType != SpecialType.System_IntPtr)
+            {
+                return SuspendError(loc, method.Name,
+                    "return type must be 'System.IntPtr' — wrapping the result in a Java.Lang.Object peer collides with Mono's peer cache for the COROUTINE_SUSPENDED singleton");
+            }
+            if (jniReturnType != "Ljava/lang/Object;")
+            {
+                return SuspendError(loc, method.Name,
+                    $"JNI return type must be 'Ljava/lang/Object;' (Kotlin suspend functions always return a boxed Object), but signature returns '{jniReturnType}'");
+            }
         }
 
         int composerSigIdx = -1;
@@ -245,7 +280,10 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
 
         // C# parameter walk. For composable shapes the last param must be
         // an IComposer; for extension shapes there is no Composer slot and
-        // the last param is just the trailing user parameter.
+        // the last param is just the trailing user parameter. Suspend
+        // bridges have already had their trailing IContinuation param
+        // captured above; we strip it from csTail here so the rest of the
+        // accounting math treats it parallel to the Composer slot.
         var csParams = method.Parameters;
         IParameterSymbol? composerParam;
         int csTail; // exclusive upper bound of "user-controlled" params before composer
@@ -265,6 +303,9 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
             composerParam = null;
             csTail = csParams.Length;
         }
+
+        if (continuationParam is not null)
+            csTail -= 1;
 
         // Detect optional `int defaults` immediately before composer (or
         // at the very end for extension shapes). Caller-controlled bitmask
@@ -289,8 +330,27 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
         // first sigParam is an object (`L`) AND the first C# param is
         // `IntPtr` — that covers Modifier-chain extensions while leaving
         // non-extension static calls (e.g. `RoundedCornerShape(Dp)`) alone.
+        //
+        // The "instance suspend" shape (Suspend = true, no $default
+        // marker tail) is its own case: the first user IntPtr is the
+        // instance the JNI virtual call dispatches on — it lives OUTSIDE
+        // the JValue[] args, so we track it separately and do not include
+        // it in receiverSlotCount / JNI slot 0 accounting.
         IParameterSymbol? receiverParam = null;
-        if (extensionWithDefault)
+        IParameterSymbol? instanceReceiverParam = null;
+        bool isInstanceSuspend = isSuspend && !extensionWithDefault;
+        if (isInstanceSuspend)
+        {
+            if (userParams.Length == 0 ||
+                userParams[0].Type.SpecialType != SpecialType.System_IntPtr)
+            {
+                return SuspendError(loc, method.Name,
+                    "instance suspend bridges must declare a leading 'IntPtr' parameter for the receiver (the state-holder this suspend method dispatches on)");
+            }
+            instanceReceiverParam = userParams[0];
+            userParams = userParams.Skip(1).ToArray();
+        }
+        else if (extensionWithDefault)
         {
             if (userParams.Length == 0 ||
                 userParams[0].Type.SpecialType != SpecialType.System_IntPtr)
@@ -380,13 +440,36 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
         int receiverSlotCount = receiverParam is null ? 0 : 1;
         int composerSlotCount = hasComposerSlot ? 1 : 0;
         int markerSlotCount = extensionWithDefault ? 1 : 0;
-        int actualUserSlots = sigParams.Count - receiverSlotCount - composerSlotCount - changedSlots - defaultSlotCount - markerSlotCount;
+        int continuationSlotCount = isSuspend ? 1 : 0;
+        int actualUserSlots = sigParams.Count - receiverSlotCount - composerSlotCount - continuationSlotCount - changedSlots - defaultSlotCount - markerSlotCount;
         int expectedUserSlots = hasDefaultSlot ? kotlinNames.Count : userParams.Length;
         if (actualUserSlots != expectedUserSlots)
         {
             diags.Add(Diagnostic.Create(Diagnostics.BridgeSignatureMismatch, loc,
                 method.Name, actualUserSlots, defaultsEnumName ?? "?", expectedUserSlots));
             return new GenerationResult(null, null, diags.ToArray());
+        }
+
+        // Validate the Kotlin Continuation slot lands where we expect:
+        // for instance suspend it is the last JNI parameter; for static
+        // $default suspend it sits immediately before `I L<Object>`
+        // (the trailing `$default` mask + synthetic-overload marker).
+        int continuationSlotIdx = -1;
+        if (isSuspend)
+        {
+            continuationSlotIdx = isInstanceSuspend
+                ? sigParams.Count - 1
+                : sigParams.Count - 3;
+            if (continuationSlotIdx < 0 ||
+                sigParams[continuationSlotIdx].Code != 'L' ||
+                sigParams[continuationSlotIdx].ClassName != "kotlin/coroutines/Continuation" ||
+                sigParams[continuationSlotIdx].ArrayDepth != 0)
+            {
+                return SuspendError(loc, method.Name,
+                    isInstanceSuspend
+                        ? "JNI signature must end with 'Lkotlin/coroutines/Continuation;)Ljava/lang/Object;' for an instance suspend bridge"
+                        : "JNI signature must place 'Lkotlin/coroutines/Continuation;' immediately before the trailing 'IL<Object>' $default+marker pair");
+            }
         }
 
         // CN2008: each recognized Compose value type lowers to a specific
@@ -416,7 +499,8 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
 
         var source = Emit(method, attr, className, jvmName, signature, defaultsEnumName, sigParams,
             kotlinNames, userParams, userBitOf, receiverParam, callerProvidesDefaults, hasDefaultSlot,
-            hasComposerSlot, extensionWithDefault, instanceField, isConstructor);
+            hasComposerSlot, extensionWithDefault, instanceField, isConstructor,
+            isSuspend, isInstanceSuspend, instanceReceiverParam, continuationParam, continuationSlotIdx);
         var hint = $"Microsoft.AndroidX.Compose.{method.ContainingType.Name}.{method.Name}.g.cs";
         return new GenerationResult(source, hint, Array.Empty<Diagnostic>());
     }
@@ -425,6 +509,27 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
         new(null, null, new[] {
             Diagnostic.Create(Diagnostics.BridgeConstructorShape, loc, methodName, message)
         });
+
+    static GenerationResult SuspendError(Location loc, string methodName, string message) =>
+        new(null, null, new[] {
+            Diagnostic.Create(Diagnostics.BridgeSuspendInvalid, loc, methodName, message)
+        });
+
+    // Recognises Kotlin.Coroutines.IContinuation itself or any type that
+    // implements it (covers the runtime's SuspendContinuation JCW).
+    static bool IsContinuationType(ITypeSymbol type)
+    {
+        if (IsExactContinuation(type)) return true;
+        foreach (var iface in type.AllInterfaces)
+        {
+            if (IsExactContinuation(iface)) return true;
+        }
+        return false;
+
+        static bool IsExactContinuation(ITypeSymbol t) =>
+            t.Name == "IContinuation"
+            && t.ContainingNamespace?.ToDisplayString() == "Kotlin.Coroutines";
+    }
 
     /// <summary>
     /// Number of trailing <c>I</c> params that represent <c>$changed</c>
@@ -457,7 +562,12 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
         bool hasComposerSlot,
         bool extensionWithDefault,
         string? instanceField,
-        bool isConstructor)
+        bool isConstructor,
+        bool isSuspend,
+        bool isInstanceSuspend,
+        IParameterSymbol? instanceReceiverParam,
+        IParameterSymbol? continuationParam,
+        int continuationSlotIdx)
     {
         var sb = new StringBuilder();
         sb.AppendLine("// <auto-generated/>");
@@ -497,6 +607,14 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
         if (isConstructor)
         {
             // Constructor ID lookup is GetMethodID with name "<init>".
+            sb.Append("            s_").Append(sym).Append("_method = global::Android.Runtime.JNIEnv.GetMethodID(s_")
+              .Append(sym).Append("_class, \"").Append(jvmName).Append("\", \"").Append(signature).AppendLine("\");");
+        }
+        else if (isInstanceSuspend)
+        {
+            // Instance suspend dispatches on the receiver passed by the
+            // caller — no Kotlin singleton field needed, just a normal
+            // virtual GetMethodID.
             sb.Append("            s_").Append(sym).Append("_method = global::Android.Runtime.JNIEnv.GetMethodID(s_")
               .Append(sym).Append("_class, \"").Append(jvmName).Append("\", \"").Append(signature).AppendLine("\");");
         }
@@ -587,6 +705,19 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
             sb.AppendLine(");");
         }
 
+        // Continuation slot — sits after user params for both suspend
+        // sub-shapes (last slot for instance suspend; before $default+marker
+        // for static $default suspend). We cast through Java.Lang.Object
+        // because every IContinuation implementor in our world subclasses
+        // Java.Lang.Object (SuspendContinuation does so directly).
+        if (continuationParam is not null)
+        {
+            sb.Append("                args[").Append(idx)
+              .Append("] = new global::Android.Runtime.JValue(((global::Java.Lang.Object)")
+              .Append(EscapeIdent(continuationParam.Name)).AppendLine(").Handle);");
+            idx++;
+        }
+
         // Composer (only present in @Composable shapes).
         IParameterSymbol? composer = hasComposerSlot ? method.Parameters[method.Parameters.Length - 1] : null;
         if (composer is not null)
@@ -616,7 +747,9 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
         }
 
         // Call.
-        var callTarget = instanceField is null ? $"s_{sym}_class" : $"s_{sym}_instance";
+        var callTarget = isInstanceSuspend
+            ? EscapeIdent(instanceReceiverParam!.Name)
+            : (instanceField is null ? $"s_{sym}_class" : $"s_{sym}_instance");
         bool returnsValue = !method.ReturnsVoid;
         if (isConstructor)
         {
@@ -634,8 +767,16 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
         }
         else
         {
+            // Instance suspend dispatches on the caller-supplied receiver
+            // handle. Suspend bridges always return raw IntPtr (the
+            // COROUTINE_SUSPENDED sentinel must NOT be wrapped in a peer
+            // — see SuspendBridges.cs file header), so we route through
+            // CallObjectMethod / CallStaticObjectMethod regardless of the
+            // bool returnsValue branch above.
             string callMethod;
-            if (returnsValue)
+            if (isInstanceSuspend)
+                callMethod = "CallObjectMethod";
+            else if (returnsValue)
                 callMethod = instanceField is null ? "CallStaticObjectMethod" : "CallObjectMethod";
             else
                 callMethod = instanceField is null ? "CallStaticVoidMethod" : "CallVoidMethod";
@@ -659,6 +800,8 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
         }
         if (composer is not null)
             sb.Append("            global::System.GC.KeepAlive(").Append(EscapeIdent(composer.Name)).AppendLine(");");
+        if (continuationParam is not null)
+            sb.Append("            global::System.GC.KeepAlive(").Append(EscapeIdent(continuationParam.Name)).AppendLine(");");
         sb.AppendLine("        }");
 
         sb.AppendLine("    }");
@@ -868,5 +1011,14 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
             if (na.Key == name && na.Value.Value is INamedTypeSymbol t) return t;
         }
         return null;
+    }
+
+    static bool ReadBool(AttributeData attr, string name)
+    {
+        foreach (var na in attr.NamedArguments)
+        {
+            if (na.Key == name && na.Value.Value is bool b) return b;
+        }
+        return false;
     }
 }
