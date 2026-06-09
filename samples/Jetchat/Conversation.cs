@@ -9,8 +9,8 @@ namespace ComposeNet.Samples.Jetchat;
 /// Builds the Jetchat conversation tree. C# port of upstream's
 /// <c>ConversationContent</c> + <c>UserInput</c> +
 /// <c>JetchatDrawerContent</c>. See <c>README.md</c> for the remaining
-/// gaps vs the Kotlin original (jump-to-bottom, message formatter,
-/// voice record, profile screen, real emoji table).
+/// gaps vs the Kotlin original (drag-and-drop image target,
+/// voice-record swipe-to-cancel gesture, profile screen).
 /// </summary>
 public static class Conversation
 {
@@ -309,7 +309,7 @@ public static class Conversation
                 Modifier.Companion.FillMaxWidth(),
                 BuildTextFieldRow(ui, input),
                 BuildSelectorRow(ui, input, scheme, selectedSelector, messagesScroll),
-                BuildSelectorPanel(scheme, selectedSelector),
+                BuildSelectorPanel(input, scheme, selectedSelector),
             },
         };
 
@@ -375,10 +375,14 @@ public static class Conversation
         return button;
     }
 
-    static ComposableNode BuildSelectorPanel(ColorScheme scheme, MutableState<int> selectedSelector)
+    static ComposableNode BuildSelectorPanel(
+        MutableState<string> input,
+        ColorScheme          scheme,
+        MutableState<int>    selectedSelector)
     {
         int sel = selectedSelector.Value;
         if (sel == 0) return new Spacer(Modifier.Companion.Width(0));
+        if (sel == SelEmoji) return EmojiSelector.Build(input, scheme);
         string title    = "Functionality currently not available";
         string subtitle = "Grab a beverage and check back later!";
         return new Column
