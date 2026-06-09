@@ -217,6 +217,18 @@ using ComposeNet;
     "lineHeight", "overflow", "softWrap", "maxLines", "minLines",
     "onTextLayout", "style")]
 
+// androidx.compose.material3.TextKt.Text-IbK3jfQ — the AnnotatedString
+// overload. Same shape as TextDefault but with the extra `inlineContent`
+// Map slot between minLines and onTextLayout, for a total of 18 bits.
+// bit 0 = text (always provided); inlineContent, onTextLayout, style
+// are never exposed by the AnnotatedText facade so the auto-mask leaves
+// their default bits set.
+[assembly: ComposeDefaults("AnnotatedTextDefault",
+    "!text", "modifier", "color", "fontSize", "fontStyle",
+    "fontWeight", "fontFamily", "letterSpacing", "decoration", "align",
+    "lineHeight", "overflow", "softWrap", "maxLines", "minLines",
+    "inlineContent", "onTextLayout", "style")]
+
 // androidx.compose.material3.IconButtonKt.IconButton: 6 user params,
 // bit 0 = onClick, bit 5 = content (both provided).
 [assembly: ComposeDefaults("IconButtonDefault",
