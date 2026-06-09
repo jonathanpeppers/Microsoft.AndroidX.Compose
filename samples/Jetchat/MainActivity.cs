@@ -1,4 +1,5 @@
 using Android.OS;
+using Android.Views;
 using AndroidX.Compose.Material3;
 using ComposeNet;
 
@@ -7,7 +8,8 @@ namespace ComposeNet.Samples.Jetchat;
 [Activity(
     Label = "@string/app_name",
     MainLauncher = true,
-    Theme = "@android:style/Theme.Material.Light.NoActionBar")]
+    Theme = "@android:style/Theme.Material.Light.NoActionBar",
+    WindowSoftInputMode = SoftInput.AdjustResize)]
 public class MainActivity : ComposeActivity
 {
     protected override void OnCreate(Bundle? savedInstanceState)
@@ -25,7 +27,21 @@ public class MainActivity : ComposeActivity
             var messagesScroll   = Compose.RememberLazyListState();
             var isRecording      = Remember(() => new MutableState<bool>(false));
             var swipeOffset      = Remember(() => new MutableNumberState<float>(0f));
-            return Conversation.Build(ui, input, selectedMenu, drawerScroll, drawerState, selectedSelector, popupOpen, messagesScroll, isRecording, swipeOffset);
+            var nav              = Remember(() => new NavController());
+            var profileViewModel = Remember(() => new ProfileViewModel());
+            return JetchatApp.Build(
+                nav:              nav,
+                ui:               ui,
+                input:            input,
+                selectedMenu:     selectedMenu,
+                drawerScroll:     drawerScroll,
+                drawerState:      drawerState,
+                selectedSelector: selectedSelector,
+                popupOpen:        popupOpen,
+                messagesScroll:   messagesScroll,
+                isRecording:      isRecording,
+                swipeOffset:      swipeOffset,
+                profileViewModel: profileViewModel);
         });
     }
 }

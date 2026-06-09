@@ -25,6 +25,50 @@ ComposeNet.AnimatedVisibility.AnimatedVisibility(bool visible, AndroidX.Compose.
 ComposeNet.AnimatedVisibility.Enter.get -> AndroidX.Compose.Animation.EnterTransition?
 ComposeNet.AnimatedVisibility.Exit.get -> AndroidX.Compose.Animation.ExitTransition?
 ComposeNet.AnimatedVisibility.Visible.get -> bool
+ComposeNet.AnnotatedString
+ComposeNet.AnnotatedString.AnnotatedString(string! text) -> void
+ComposeNet.AnnotatedString.Length.get -> int
+ComposeNet.AnnotatedString.Text.get -> string!
+ComposeNet.AnnotatedStringBuilder
+ComposeNet.AnnotatedStringBuilder.AddLink(ComposeNet.LinkAnnotation! link, int start, int end) -> void
+ComposeNet.AnnotatedStringBuilder.AddStringAnnotation(string! tag, string! annotation, int start, int end) -> void
+ComposeNet.AnnotatedStringBuilder.AddStyle(ComposeNet.SpanStyle! style, int start, int end) -> void
+ComposeNet.AnnotatedStringBuilder.AnnotatedStringBuilder() -> void
+ComposeNet.AnnotatedStringBuilder.Append(string! text) -> ComposeNet.AnnotatedStringBuilder!
+ComposeNet.AnnotatedStringBuilder.Length.get -> int
+ComposeNet.AnnotatedStringBuilder.Pop() -> void
+ComposeNet.AnnotatedStringBuilder.Pop(int index) -> void
+ComposeNet.AnnotatedStringBuilder.PushLink(ComposeNet.LinkAnnotation! link) -> int
+ComposeNet.AnnotatedStringBuilder.PushStyle(ComposeNet.SpanStyle! style) -> int
+ComposeNet.AnnotatedStringBuilder.ToAnnotatedString() -> ComposeNet.AnnotatedString!
+ComposeNet.AnnotatedText
+ComposeNet.AnnotatedText.Align.get -> ComposeNet.TextAlign?
+ComposeNet.AnnotatedText.Align.set -> void
+ComposeNet.AnnotatedText.AnnotatedText(ComposeNet.AnnotatedString! text) -> void
+ComposeNet.AnnotatedText.Color.get -> ComposeNet.Color?
+ComposeNet.AnnotatedText.Color.set -> void
+ComposeNet.AnnotatedText.Decoration.get -> ComposeNet.TextDecoration?
+ComposeNet.AnnotatedText.Decoration.set -> void
+ComposeNet.AnnotatedText.FontFamily.get -> ComposeNet.FontFamily?
+ComposeNet.AnnotatedText.FontFamily.set -> void
+ComposeNet.AnnotatedText.FontSize.get -> ComposeNet.Sp?
+ComposeNet.AnnotatedText.FontSize.set -> void
+ComposeNet.AnnotatedText.FontStyle.get -> ComposeNet.FontStyle?
+ComposeNet.AnnotatedText.FontStyle.set -> void
+ComposeNet.AnnotatedText.FontWeight.get -> ComposeNet.FontWeight?
+ComposeNet.AnnotatedText.FontWeight.set -> void
+ComposeNet.AnnotatedText.LetterSpacing.get -> ComposeNet.Sp?
+ComposeNet.AnnotatedText.LetterSpacing.set -> void
+ComposeNet.AnnotatedText.LineHeight.get -> ComposeNet.Sp?
+ComposeNet.AnnotatedText.LineHeight.set -> void
+ComposeNet.AnnotatedText.MaxLines.get -> int?
+ComposeNet.AnnotatedText.MaxLines.set -> void
+ComposeNet.AnnotatedText.MinLines.get -> int?
+ComposeNet.AnnotatedText.MinLines.set -> void
+ComposeNet.AnnotatedText.Overflow.get -> ComposeNet.TextOverflow?
+ComposeNet.AnnotatedText.Overflow.set -> void
+ComposeNet.AnnotatedText.SoftWrap.get -> bool?
+ComposeNet.AnnotatedText.SoftWrap.set -> void
 ComposeNet.Arrangement
 ComposeNet.AssistChip
 ComposeNet.AssistChip.AssistChip(System.Action! onClick) -> void
@@ -421,6 +465,9 @@ ComposeNet.InputChip.LeadingIcon.get -> ComposeNet.ComposableNode?
 ComposeNet.InputChip.LeadingIcon.set -> void
 ComposeNet.InputChip.TrailingIcon.get -> ComposeNet.ComposableNode?
 ComposeNet.InputChip.TrailingIcon.set -> void
+ComposeNet.IState<T>
+ComposeNet.IState<T>.Value.get -> T
+ComposeNet.IStateFlow<T>
 ComposeNet.LargeFlexibleTopAppBar
 ComposeNet.LargeFlexibleTopAppBar.Actions.get -> ComposeNet.ComposableNode?
 ComposeNet.LargeFlexibleTopAppBar.Actions.set -> void
@@ -467,10 +514,6 @@ ComposeNet.LazyHorizontalStaggeredGrid<T>
 ComposeNet.LazyHorizontalStaggeredGrid<T>.LazyHorizontalStaggeredGrid(AndroidX.Compose.Foundation.Lazy.Staggeredgrid.IStaggeredGridCells! rows, System.Collections.Generic.IReadOnlyList<T>! items, System.Func<T, ComposeNet.ComposableNode!>! itemContent) -> void
 ComposeNet.LazyHorizontalStaggeredGrid<T>.State.get -> AndroidX.Compose.Foundation.Lazy.Staggeredgrid.LazyStaggeredGridState?
 ComposeNet.LazyHorizontalStaggeredGrid<T>.State.set -> void
-ComposeNet.LazyRow<T>
-ComposeNet.LazyRow<T>.HorizontalArrangement.get -> ComposeNet.Arrangement?
-ComposeNet.LazyRow<T>.HorizontalArrangement.set -> void
-ComposeNet.LazyRow<T>.LazyRow(System.Collections.Generic.IReadOnlyList<T>! items, System.Func<T, ComposeNet.ComposableNode!>! itemContent) -> void
 ComposeNet.LazyListState
 ComposeNet.LazyListState.AnimateScrollToItemAsync(int index, int scrollOffset = 0, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
 ComposeNet.LazyListState.CanScrollBackward.get -> bool
@@ -482,6 +525,10 @@ ComposeNet.LazyListState.LastScrolledBackward.get -> bool
 ComposeNet.LazyListState.LastScrolledForward.get -> bool
 ComposeNet.LazyListState.LazyListState(int initialFirstVisibleItemIndex = 0, int initialFirstVisibleItemScrollOffset = 0) -> void
 ComposeNet.LazyListState.ScrollToItemAsync(int index, int scrollOffset = 0, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+ComposeNet.LazyRow<T>
+ComposeNet.LazyRow<T>.HorizontalArrangement.get -> ComposeNet.Arrangement?
+ComposeNet.LazyRow<T>.HorizontalArrangement.set -> void
+ComposeNet.LazyRow<T>.LazyRow(System.Collections.Generic.IReadOnlyList<T>! items, System.Func<T, ComposeNet.ComposableNode!>! itemContent) -> void
 ComposeNet.LazyRow<T>.State.get -> ComposeNet.LazyListState?
 ComposeNet.LazyRow<T>.State.set -> void
 ComposeNet.LazyVerticalGrid<T>
@@ -504,6 +551,7 @@ ComposeNet.LinearProgressIndicator.ColorArgb.set -> void
 ComposeNet.LinearProgressIndicator.LinearProgressIndicator() -> void
 ComposeNet.LinearProgressIndicator.TrackColorArgb.get -> long?
 ComposeNet.LinearProgressIndicator.TrackColorArgb.set -> void
+ComposeNet.LinkAnnotation
 ComposeNet.ListItem
 ComposeNet.ListItem.Headline.get -> ComposeNet.ComposableNode?
 ComposeNet.ListItem.Headline.set -> void
@@ -663,6 +711,12 @@ ComposeNet.MutableNumberState<T>
 ComposeNet.MutableNumberState<T>.MutableNumberState(T initial) -> void
 ComposeNet.MutableState<T>
 ComposeNet.MutableState<T>.MutableState(T initial) -> void
+ComposeNet.MutableStateFlow<T>
+ComposeNet.MutableStateFlow<T>.MutableStateFlow(T initialValue) -> void
+ComposeNet.MutableStateFlow<T>.TryEmit(T value) -> bool
+ComposeNet.MutableStateFlow<T>.Update(System.Func<T, T>! transform) -> T
+ComposeNet.MutableStateFlow<T>.Value.get -> T
+ComposeNet.MutableStateFlow<T>.Value.set -> void
 ComposeNet.MutableStateList<T>
 ComposeNet.MutableStateList<T>.Add(T item) -> void
 ComposeNet.MutableStateList<T>.Clear() -> void
@@ -973,7 +1027,26 @@ ComposeNet.Sp.Sp(long packedValue) -> void
 ComposeNet.Spacer
 ComposeNet.Spacer.Spacer() -> void
 ComposeNet.Spacer.Spacer(ComposeNet.Modifier! modifier) -> void
+ComposeNet.SpanStyle
+ComposeNet.SpanStyle.Background.get -> ComposeNet.Color?
+ComposeNet.SpanStyle.Background.set -> void
+ComposeNet.SpanStyle.Color.get -> ComposeNet.Color?
+ComposeNet.SpanStyle.Color.set -> void
+ComposeNet.SpanStyle.Decoration.get -> ComposeNet.TextDecoration?
+ComposeNet.SpanStyle.Decoration.set -> void
+ComposeNet.SpanStyle.FontFamily.get -> ComposeNet.FontFamily?
+ComposeNet.SpanStyle.FontFamily.set -> void
+ComposeNet.SpanStyle.FontSize.get -> ComposeNet.Sp?
+ComposeNet.SpanStyle.FontSize.set -> void
+ComposeNet.SpanStyle.FontStyle.get -> ComposeNet.FontStyle?
+ComposeNet.SpanStyle.FontStyle.set -> void
+ComposeNet.SpanStyle.FontWeight.get -> ComposeNet.FontWeight?
+ComposeNet.SpanStyle.FontWeight.set -> void
+ComposeNet.SpanStyle.LetterSpacing.get -> ComposeNet.Sp?
+ComposeNet.SpanStyle.LetterSpacing.set -> void
+ComposeNet.SpanStyle.SpanStyle() -> void
 ComposeNet.StaggeredGridCells
+ComposeNet.StateFlowExtensions
 ComposeNet.SuggestionChip
 ComposeNet.SuggestionChip.Icon.get -> ComposeNet.ComposableNode?
 ComposeNet.SuggestionChip.Icon.set -> void
@@ -1140,6 +1213,11 @@ ComposeNet.VerticalPager<T>
 ComposeNet.VerticalPager<T>.State.get -> ComposeNet.PagerState?
 ComposeNet.VerticalPager<T>.State.set -> void
 ComposeNet.VerticalPager<T>.VerticalPager(System.Collections.Generic.IReadOnlyList<T>! items, System.Func<T, ComposeNet.ComposableNode!>! itemContent) -> void
+ComposeNet.ViewModel
+ComposeNet.ViewModel.IsCleared.get -> bool
+ComposeNet.ViewModel.LaunchAsync(System.Func<System.Threading.CancellationToken, System.Threading.Tasks.Task!>! body) -> System.Threading.Tasks.Task!
+ComposeNet.ViewModel.Scope.get -> System.Threading.CancellationToken
+ComposeNet.ViewModel.ViewModel() -> void
 ComposeNet.WideNavigationRail
 ComposeNet.WideNavigationRail.WideNavigationRail() -> void
 ComposeNet.WideNavigationRailItem
@@ -1156,6 +1234,7 @@ ComposeNet.WideNavigationRailState.WideNavigationRailState(AndroidX.Compose.Mate
 override ComposeNet.AlertDialog.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
 override ComposeNet.AnimatedContent<T>.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
 override ComposeNet.AnimatedVisibility.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override ComposeNet.AnnotatedText.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
 override ComposeNet.AssistChip.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
 override ComposeNet.BackHandler.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
 override ComposeNet.Badge.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
@@ -1364,6 +1443,7 @@ static ComposeNet.Compose.MutableDoubleStateOf(double value) -> ComposeNet.Mutab
 static ComposeNet.Compose.MutableFloatStateOf(float value) -> ComposeNet.MutableNumberState<float>!
 static ComposeNet.Compose.MutableIntStateOf(int value) -> ComposeNet.MutableNumberState<int>!
 static ComposeNet.Compose.MutableLongStateOf(long value) -> ComposeNet.MutableNumberState<long>!
+static ComposeNet.Compose.MutableStateFlowOf<T>(T initialValue, int line = 0, string! file = "") -> ComposeNet.MutableStateFlow<T>!
 static ComposeNet.Compose.MutableStateListOf<T>(params T[]! elements) -> ComposeNet.MutableStateList<T>!
 static ComposeNet.Compose.MutableStateMapOf<TKey, TValue>() -> ComposeNet.MutableStateMap<TKey, TValue>!
 static ComposeNet.Compose.MutableStateOf<T>(T value) -> ComposeNet.MutableState<T>!
@@ -1386,6 +1466,11 @@ static ComposeNet.Compose.RememberSaveable<T>(System.Func<T>! factory, object? k
 static ComposeNet.Compose.RememberSaveableKeyed<T>(System.Func<T>! factory, object?[]! keys, int line = 0, string! file = "") -> T
 static ComposeNet.Compose.SideEffect(System.Action! effect) -> void
 static ComposeNet.Compose.SnapshotFlow<T>(System.Func<T>! producer) -> System.Collections.Generic.IAsyncEnumerable<T>!
+static ComposeNet.Compose.ViewModel<T>(System.Func<T!>! factory, int line = 0, string! file = "") -> T!
+static ComposeNet.Compose.ViewModel<T>(System.Func<T!>! factory, object? key1, int line = 0, string! file = "") -> T!
+static ComposeNet.Compose.ViewModel<T>(System.Func<T!>! factory, object? key1, object? key2, int line = 0, string! file = "") -> T!
+static ComposeNet.Compose.ViewModel<T>(System.Func<T!>! factory, object? key1, object? key2, object? key3, int line = 0, string! file = "") -> T!
+static ComposeNet.Compose.ViewModelKeyed<T>(System.Func<T!>! factory, object?[]! keys, int line = 0, string! file = "") -> T!
 static ComposeNet.CompositionLocal.Of<T>(System.Func<T>! defaultFactory) -> ComposeNet.CompositionLocal<T>!
 static ComposeNet.CompositionLocal.StaticOf<T>(System.Func<T>! defaultFactory) -> ComposeNet.CompositionLocal<T>!
 static ComposeNet.CompositionLocal<T>.Of(System.Func<T>! defaultFactory) -> ComposeNet.CompositionLocal<T>!
@@ -1715,6 +1800,8 @@ static ComposeNet.Icons.TwoTone.ShoppingCart.get -> AndroidX.Compose.UI.Graphics
 static ComposeNet.Icons.TwoTone.Star.get -> AndroidX.Compose.UI.Graphics.Vector.ImageVector!
 static ComposeNet.Icons.TwoTone.ThumbUp.get -> AndroidX.Compose.UI.Graphics.Vector.ImageVector!
 static ComposeNet.Icons.TwoTone.Warning.get -> AndroidX.Compose.UI.Graphics.Vector.ImageVector!
+static ComposeNet.LinkAnnotation.Clickable(string! tag, System.Action<string!>! onClick, ComposeNet.SpanStyle? style = null) -> ComposeNet.LinkAnnotation!
+static ComposeNet.LinkAnnotation.Url(string! url, ComposeNet.SpanStyle? style = null) -> ComposeNet.LinkAnnotation!
 static ComposeNet.MaterialTheme.BuildShapes(ComposeNet.Shape? extraSmall = null, ComposeNet.Shape? small = null, ComposeNet.Shape? medium = null, ComposeNet.Shape? large = null, ComposeNet.Shape? extraLarge = null) -> AndroidX.Compose.Material3.Shapes!
 static ComposeNet.MaterialTheme.BuildTypography(ComposeNet.TextStyle? displayLarge = null, ComposeNet.TextStyle? displayMedium = null, ComposeNet.TextStyle? displaySmall = null, ComposeNet.TextStyle? headlineLarge = null, ComposeNet.TextStyle? headlineMedium = null, ComposeNet.TextStyle? headlineSmall = null, ComposeNet.TextStyle? titleLarge = null, ComposeNet.TextStyle? titleMedium = null, ComposeNet.TextStyle? titleSmall = null, ComposeNet.TextStyle? bodyLarge = null, ComposeNet.TextStyle? bodyMedium = null, ComposeNet.TextStyle? bodySmall = null, ComposeNet.TextStyle? labelLarge = null, ComposeNet.TextStyle? labelMedium = null, ComposeNet.TextStyle? labelSmall = null) -> AndroidX.Compose.Material3.Typography!
 static ComposeNet.MaterialTheme.CurrentColorScheme(AndroidX.Compose.Runtime.IComposer! composer) -> AndroidX.Compose.Material3.ColorScheme!
@@ -1759,6 +1846,8 @@ static ComposeNet.Sp.Zero.get -> ComposeNet.Sp
 static ComposeNet.StaggeredGridCells.Adaptive(float minSizeDp) -> AndroidX.Compose.Foundation.Lazy.Staggeredgrid.IStaggeredGridCells!
 static ComposeNet.StaggeredGridCells.Fixed(int count) -> AndroidX.Compose.Foundation.Lazy.Staggeredgrid.IStaggeredGridCells!
 static ComposeNet.StaggeredGridCells.FixedSize(float sizeDp) -> AndroidX.Compose.Foundation.Lazy.Staggeredgrid.IStaggeredGridCells!
+static ComposeNet.StateFlowExtensions.CollectAsStateWithLifecycle<T>(this ComposeNet.IStateFlow<T>! flow, T initialValue) -> ComposeNet.IState<T>!
+static ComposeNet.StateFlowExtensions.CollectAsStateWithLifecycle<T>(this ComposeNet.IStateFlow<T>! flow) -> ComposeNet.IState<T>!
 static ComposeNet.TextAlign.Center.get -> ComposeNet.TextAlign!
 static ComposeNet.TextAlign.End.get -> ComposeNet.TextAlign!
 static ComposeNet.TextAlign.Justify.get -> ComposeNet.TextAlign!
@@ -1799,3 +1888,5 @@ static readonly ComposeNet.Locals.LocalResources -> ComposeNet.CompositionLocal<
 static readonly ComposeNet.Locals.LocalView -> ComposeNet.CompositionLocal<Android.Views.View!>!
 virtual ComposeNet.MutableState<T>.Value.get -> T
 virtual ComposeNet.MutableState<T>.Value.set -> void
+virtual ComposeNet.ViewModel.OnClearedCore() -> void
+override sealed ComposeNet.ViewModel.OnCleared() -> void

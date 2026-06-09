@@ -8,7 +8,9 @@ namespace ComposeNet;
 ///
 /// <c>ContainerColor</c> defaults to <c>0L</c>, which the facade
 /// resolves to the active
-/// <c>MaterialTheme.colorScheme.secondaryContainer</c> — visibly
-/// distinct from <c>surface</c>; pass any other value to override.
+/// <c>MaterialTheme.colorScheme.surfaceContainerLow</c> — matches
+/// the upstream Kotlin default
+/// (<c>DrawerDefaults.modalContainerColor</c>). Pass any other
+/// value to override.
 /// </summary>
 public sealed partial class ModalDrawerSheet;

@@ -12,7 +12,7 @@ namespace ComposeNet.Samples.JetNews;
 public static class PostScreen
 {
     /// <summary>Materialize the article screen for a single post.</summary>
-    public static Scaffold Build(Post post, MutableStateList<string> bookmarks, Action onBack) =>
+    public static Scaffold Build(Post post, BookmarksViewModel bookmarks, Action onBack) =>
         new()
         {
             TopBar = new TopAppBar
