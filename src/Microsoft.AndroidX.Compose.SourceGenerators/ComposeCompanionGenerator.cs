@@ -207,7 +207,6 @@ public sealed class ComposeCompanionGenerator : IIncrementalGenerator
             getters.Add(new ComposeCompanionEmitter.Getter(
                 propertyName: prop.Name,
                 returnTypeFullyQualified: prop.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat.WithMiscellaneousOptions(SymbolDisplayMiscellaneousOptions.UseSpecialTypes)),
-                returnTypeSimpleName: prop.Type.Name,
                 getterName: getterName,
                 returnDescriptor: returnDescriptor));
         }

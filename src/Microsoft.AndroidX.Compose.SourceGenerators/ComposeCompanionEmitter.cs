@@ -23,11 +23,10 @@ internal static class ComposeCompanionEmitter
     /// </summary>
     public readonly struct Getter
     {
-        public Getter(string propertyName, string returnTypeFullyQualified, string returnTypeSimpleName, string getterName, string? returnDescriptor)
+        public Getter(string propertyName, string returnTypeFullyQualified, string getterName, string? returnDescriptor)
         {
             PropertyName = propertyName;
             ReturnTypeFullyQualified = returnTypeFullyQualified;
-            ReturnTypeSimpleName = returnTypeSimpleName;
             GetterName = getterName;
             ReturnDescriptor = returnDescriptor;
         }
@@ -35,8 +34,6 @@ internal static class ComposeCompanionEmitter
         public string PropertyName { get; }
         /// <summary>e.g. <c>global::Microsoft.AndroidX.Compose.FontWeight</c>.</summary>
         public string ReturnTypeFullyQualified { get; }
-        /// <summary>e.g. <c>FontWeight</c> — used for cache-field naming.</summary>
-        public string ReturnTypeSimpleName { get; }
         /// <summary>Kotlin getter name (e.g. <c>getThin</c> or <c>getCenter-e0LSkKk</c>).</summary>
         public string GetterName { get; }
         /// <summary>Override return descriptor (e.g. <c>Landroidx/.../SystemFontFamily;</c>); null = derive from outer.</summary>
