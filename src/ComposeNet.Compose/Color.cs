@@ -94,7 +94,7 @@ public readonly struct Color : System.IEquatable<Color>
     /// <exception cref="System.FormatException">The string is not a valid color literal.</exception>
     public static Color FromHex(string hex)
     {
-        System.ArgumentNullException.ThrowIfNull(hex);
+        ArgumentNullException.ThrowIfNull(hex);
         var span = hex.AsSpan().Trim();
         if (span.Length > 0 && span[0] == '#') span = span.Slice(1);
         switch (span.Length)

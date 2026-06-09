@@ -30,7 +30,7 @@ internal sealed class NavGraphBuilderLambda : Java.Lang.Object, IFunction1
     // Unit.INSTANCE — see ComposableLambda0/1 for the rationale.
     public Java.Lang.Object Invoke(Java.Lang.Object? p0)
     {
-        System.ArgumentNullException.ThrowIfNull(p0);
+        ArgumentNullException.ThrowIfNull(p0);
         var graphBuilder = Android.Runtime.Extensions.JavaCast<NavGraphBuilder>(p0);
         _body(graphBuilder);
         return global::Kotlin.Unit.Instance!;

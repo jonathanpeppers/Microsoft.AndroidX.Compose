@@ -46,7 +46,7 @@ public sealed class AnimatedContent<T> : ComposableNode
     public AnimatedContent(T targetState, System.Func<T, ComposableNode> content)
     {
         _targetState = targetState;
-        _content     = content ?? throw new System.ArgumentNullException(nameof(content));
+        _content     = content ?? throw new ArgumentNullException(nameof(content));
     }
 
     /// <summary>The state value passed to the underlying <c>AnimatedContent</c>.</summary>

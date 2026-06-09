@@ -98,7 +98,7 @@ public static class TopAppBarDefaults
         [CallerLineNumber] int line = 0,
         [CallerFilePath] string file = "")
     {
-        System.ArgumentNullException.ThrowIfNull(state);
+        ArgumentNullException.ThrowIfNull(state);
         var composer = ComposeContext.Current
             ?? throw new System.InvalidOperationException(
                 "TopAppBarDefaults factories must be called inside a composition (e.g. inside a SetContent body or a ComposableNode.Render override).");
@@ -158,7 +158,7 @@ public static class TopAppBarDefaults
         TopAppBarState state, int line, string file,
         System.Func<IntPtr, IComposer, IntPtr> bridge)
     {
-        System.ArgumentNullException.ThrowIfNull(state);
+        ArgumentNullException.ThrowIfNull(state);
         var composer = ComposeContext.Current
             ?? throw new System.InvalidOperationException(
                 "TopAppBarDefaults factories must be called inside a composition (e.g. inside a SetContent body or a ComposableNode.Render override).");

@@ -68,7 +68,7 @@ public static class Resources
     /// <returns>The formatted localized string for the active configuration.</returns>
     public static string StringResource(int id, params object?[] formatArgs)
     {
-        System.ArgumentNullException.ThrowIfNull(formatArgs);
+        ArgumentNullException.ThrowIfNull(formatArgs);
         var composer = RequireComposer(nameof(StringResource));
         var (boxed, owned) = BoxArgs(formatArgs);
         try
@@ -118,7 +118,7 @@ public static class Resources
     /// </param>
     public static string PluralStringResource(int id, int count, params object?[] formatArgs)
     {
-        System.ArgumentNullException.ThrowIfNull(formatArgs);
+        ArgumentNullException.ThrowIfNull(formatArgs);
         var composer = RequireComposer(nameof(PluralStringResource));
         var (boxed, owned) = BoxArgs(formatArgs);
         try

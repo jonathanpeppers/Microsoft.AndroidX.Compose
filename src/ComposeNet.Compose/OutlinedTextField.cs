@@ -71,7 +71,7 @@ public sealed class OutlinedTextField : ComposableNode
     /// </summary>
     public OutlinedTextField(MutableState<TextFieldValue> state)
     {
-        _tfvState = state ?? throw new System.ArgumentNullException(nameof(state));
+        _tfvState = state ?? throw new ArgumentNullException(nameof(state));
     }
 
     /// <inheritdoc/>

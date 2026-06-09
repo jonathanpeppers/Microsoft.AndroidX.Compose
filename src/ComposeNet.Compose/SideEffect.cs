@@ -25,7 +25,7 @@ public sealed class SideEffect : ComposableNode
     /// every successful recomposition.</summary>
     public SideEffect(System.Action effect)
     {
-        System.ArgumentNullException.ThrowIfNull(effect);
+        ArgumentNullException.ThrowIfNull(effect);
         _effect = effect;
     }
 

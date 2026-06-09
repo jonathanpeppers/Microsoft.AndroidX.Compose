@@ -51,7 +51,7 @@ public sealed class LinkAnnotation
     /// the linked range.</param>
     public static LinkAnnotation Clickable(string tag, System.Action<string> onClick, SpanStyle? style = null)
     {
-        System.ArgumentNullException.ThrowIfNull(onClick);
+        ArgumentNullException.ThrowIfNull(onClick);
         var styles   = style is null ? null : new BindingTextLinkStyles(style.Build(), null, null, null);
         var listener = new LinkClickListener(tag, onClick);
         return new LinkAnnotation(new BindingLink.Clickable(tag, styles, listener));

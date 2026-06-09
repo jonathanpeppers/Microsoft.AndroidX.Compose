@@ -38,7 +38,7 @@ public static class StateFlowExtensions
     /// </remarks>
     public static IState<T> CollectAsStateWithLifecycle<T>(this IStateFlow<T> flow)
     {
-        System.ArgumentNullException.ThrowIfNull(flow);
+        ArgumentNullException.ThrowIfNull(flow);
         // Reading Value here registers the surrounding composition
         // scope with the underlying tick counter, mirroring the
         // dependency-tracking effect of Kotlin's

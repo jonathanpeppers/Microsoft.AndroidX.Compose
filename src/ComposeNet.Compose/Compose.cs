@@ -88,7 +88,7 @@ public static class Compose
         object?[] keys,
         [CallerLineNumber] int line = 0,
         [CallerFilePath] string file = "")
-        => RememberCore(factory, keys ?? throw new System.ArgumentNullException(nameof(keys)), line, file);
+        => RememberCore(factory, keys ?? throw new ArgumentNullException(nameof(keys)), line, file);
 
     static T RememberCore<T>(System.Func<T> factory, object?[]? keys, int line, string file)
     {
@@ -192,7 +192,7 @@ public static class Compose
         object?[] keys,
         [CallerLineNumber] int line = 0,
         [CallerFilePath] string file = "")
-        => RememberSaveableCore(factory, keys ?? throw new System.ArgumentNullException(nameof(keys)), line, file);
+        => RememberSaveableCore(factory, keys ?? throw new ArgumentNullException(nameof(keys)), line, file);
 
     static T RememberSaveableCore<T>(System.Func<T> factory, object?[]? keys, int line, string file)
     {
@@ -315,7 +315,7 @@ public static class Compose
         [CallerLineNumber] int line = 0,
         [CallerFilePath] string file = "")
     {
-        System.ArgumentNullException.ThrowIfNull(onDelta);
+        ArgumentNullException.ThrowIfNull(onDelta);
         var composer = ComposeContext.Current
             ?? throw new System.InvalidOperationException(
                 "Compose.RememberDraggableState must be called inside a composition (e.g. inside a SetContent body or a ComposableNode.Render override).");
@@ -428,7 +428,7 @@ public static class Compose
     /// </remarks>
     public static void SideEffect(System.Action effect)
     {
-        System.ArgumentNullException.ThrowIfNull(effect);
+        ArgumentNullException.ThrowIfNull(effect);
         var composer = ComposeContext.Current
             ?? throw new System.InvalidOperationException(
                 "Compose.SideEffect must be called inside a composition (e.g. inside a SetContent body or a ComposableNode.Render override).");
@@ -464,7 +464,7 @@ public static class Compose
         object? key1,
         System.Func<AndroidX.Compose.Runtime.DisposableEffectScope, System.Action> effect)
     {
-        System.ArgumentNullException.ThrowIfNull(effect);
+        ArgumentNullException.ThrowIfNull(effect);
         var composer = ComposeContext.Current
             ?? throw new System.InvalidOperationException(
                 "Compose.DisposableEffect must be called inside a composition.");
@@ -485,7 +485,7 @@ public static class Compose
         object? key2,
         System.Func<AndroidX.Compose.Runtime.DisposableEffectScope, System.Action> effect)
     {
-        System.ArgumentNullException.ThrowIfNull(effect);
+        ArgumentNullException.ThrowIfNull(effect);
         var composer = ComposeContext.Current
             ?? throw new System.InvalidOperationException(
                 "Compose.DisposableEffect must be called inside a composition.");
@@ -508,7 +508,7 @@ public static class Compose
         object? key3,
         System.Func<AndroidX.Compose.Runtime.DisposableEffectScope, System.Action> effect)
     {
-        System.ArgumentNullException.ThrowIfNull(effect);
+        ArgumentNullException.ThrowIfNull(effect);
         var composer = ComposeContext.Current
             ?? throw new System.InvalidOperationException(
                 "Compose.DisposableEffect must be called inside a composition.");
@@ -556,7 +556,7 @@ public static class Compose
         object? key1,
         System.Func<System.Threading.CancellationToken, System.Threading.Tasks.Task> body)
     {
-        System.ArgumentNullException.ThrowIfNull(body);
+        ArgumentNullException.ThrowIfNull(body);
         var composer = ComposeContext.Current
             ?? throw new System.InvalidOperationException(
                 "Compose.LaunchedEffect must be called inside a composition.");
@@ -577,7 +577,7 @@ public static class Compose
         object? key2,
         System.Func<System.Threading.CancellationToken, System.Threading.Tasks.Task> body)
     {
-        System.ArgumentNullException.ThrowIfNull(body);
+        ArgumentNullException.ThrowIfNull(body);
         var composer = ComposeContext.Current
             ?? throw new System.InvalidOperationException(
                 "Compose.LaunchedEffect must be called inside a composition.");
@@ -600,7 +600,7 @@ public static class Compose
         object? key3,
         System.Func<System.Threading.CancellationToken, System.Threading.Tasks.Task> body)
     {
-        System.ArgumentNullException.ThrowIfNull(body);
+        ArgumentNullException.ThrowIfNull(body);
         var composer = ComposeContext.Current
             ?? throw new System.InvalidOperationException(
                 "Compose.LaunchedEffect must be called inside a composition.");
@@ -741,7 +741,7 @@ public static class Compose
     /// </summary>
     public static DerivedState<T> DerivedStateOf<T>(System.Func<T> calculation)
     {
-        System.ArgumentNullException.ThrowIfNull(calculation);
+        ArgumentNullException.ThrowIfNull(calculation);
         var jcw = new ObjectFunction0(() => MutableState<T>.ToJava(calculation()));
         var state = SnapshotStateKt.DerivedStateOf(jcw);
         return new DerivedState<T>(state);
@@ -839,7 +839,7 @@ public static class Compose
         System.Func<MutableState<T>, System.Threading.CancellationToken, System.Threading.Tasks.Task> producer,
         [CallerLineNumber] int line = 0,
         [CallerFilePath] string file = "")
-        => ProduceStateCore(initialValue, producer, keys ?? throw new System.ArgumentNullException(nameof(keys)), line, file);
+        => ProduceStateCore(initialValue, producer, keys ?? throw new ArgumentNullException(nameof(keys)), line, file);
 
     static MutableState<T> ProduceStateCore<T>(
         T initialValue,
@@ -848,7 +848,7 @@ public static class Compose
         int line,
         string file)
     {
-        System.ArgumentNullException.ThrowIfNull(producer);
+        ArgumentNullException.ThrowIfNull(producer);
         var composer = ComposeContext.Current
             ?? throw new System.InvalidOperationException(
                 "Compose.ProduceState<T> must be called inside a composition (e.g. inside a SetContent body or a ComposableNode.Render override).");
@@ -947,7 +947,7 @@ public static class Compose
     /// </remarks>
     public static System.Collections.Generic.IAsyncEnumerable<T> SnapshotFlow<T>(System.Func<T> producer)
     {
-        System.ArgumentNullException.ThrowIfNull(producer);
+        ArgumentNullException.ThrowIfNull(producer);
         return new SnapshotFlowEnumerable<T>(producer);
     }
 
@@ -1062,12 +1062,12 @@ public static class Compose
         [CallerLineNumber] int line = 0,
         [CallerFilePath] string file = "")
         where T : ComposeNet.ViewModel
-        => ViewModelCore(factory, keys ?? throw new System.ArgumentNullException(nameof(keys)), line, file);
+        => ViewModelCore(factory, keys ?? throw new ArgumentNullException(nameof(keys)), line, file);
 
     static T ViewModelCore<T>(System.Func<T> factory, object?[]? keys, int line, string file)
         where T : ComposeNet.ViewModel
     {
-        System.ArgumentNullException.ThrowIfNull(factory);
+        ArgumentNullException.ThrowIfNull(factory);
         var composer = ComposeContext.Current
             ?? throw new System.InvalidOperationException(
                 "Compose.ViewModel<T> must be called inside a composition (e.g. inside a SetContent body or a ComposableNode.Render override).");

@@ -82,7 +82,7 @@ public sealed class Modifier
     /// </summary>
     public Modifier Then(Modifier other)
     {
-        System.ArgumentNullException.ThrowIfNull(other);
+        ArgumentNullException.ThrowIfNull(other);
         if (other._ops.Length == 0) return this;
         if (_ops.Length == 0) return other;
         var arr = new System.Func<IntPtr, IntPtr>[_ops.Length + other._ops.Length];
@@ -337,7 +337,7 @@ public sealed class Modifier
     /// </summary>
     public Modifier Clip(Shape shape)
     {
-        System.ArgumentNullException.ThrowIfNull(shape);
+        ArgumentNullException.ThrowIfNull(shape);
         return Append(curr => ComposeBridges.ModifierClip(curr, shape.Handle));
     }
 
@@ -348,7 +348,7 @@ public sealed class Modifier
     /// </summary>
     public Modifier Clickable(System.Action onClick)
     {
-        System.ArgumentNullException.ThrowIfNull(onClick);
+        ArgumentNullException.ThrowIfNull(onClick);
 
         var lambda = new ComposableLambda0(onClick);
         return Append(curr => ComposeBridges.ModifierClickable(curr, lambda));
@@ -394,8 +394,8 @@ public sealed class Modifier
         System.Func<DragAndDropEvent, bool> shouldStartDragAndDrop,
         DragAndDropTarget target)
     {
-        System.ArgumentNullException.ThrowIfNull(shouldStartDragAndDrop);
-        System.ArgumentNullException.ThrowIfNull(target);
+        ArgumentNullException.ThrowIfNull(shouldStartDragAndDrop);
+        ArgumentNullException.ThrowIfNull(target);
         var predicate = new ShouldStartDragAndDropCallback(shouldStartDragAndDrop);
         return Append(curr => ComposeBridges.ModifierDragAndDropTarget(curr, predicate, target));
     }
@@ -429,7 +429,7 @@ public sealed class Modifier
     /// content). Defaults to <c>false</c>.</param>
     public Modifier VerticalScroll(ScrollState state, bool enabled = true, bool reverseScrolling = false)
     {
-        System.ArgumentNullException.ThrowIfNull(state);
+        ArgumentNullException.ThrowIfNull(state);
         var jvm = state.Jvm;
         return Append(curr =>
             ComposeBridges.ModifierVerticalScroll(
@@ -456,7 +456,7 @@ public sealed class Modifier
     /// of the viewport. Defaults to <c>false</c>.</param>
     public Modifier HorizontalScroll(ScrollState state, bool enabled = true, bool reverseScrolling = false)
     {
-        System.ArgumentNullException.ThrowIfNull(state);
+        ArgumentNullException.ThrowIfNull(state);
         var jvm = state.Jvm;
         return Append(curr =>
             ComposeBridges.ModifierHorizontalScroll(
@@ -486,7 +486,7 @@ public sealed class Modifier
     /// touch input. Defaults to <c>true</c>.</param>
     public Modifier Draggable(DraggableState state, Orientation orientation, bool enabled = true)
     {
-        System.ArgumentNullException.ThrowIfNull(state);
+        ArgumentNullException.ThrowIfNull(state);
         var jvm = state.Jvm;
         var jvmOrientation = orientation == Orientation.Horizontal
             ? AndroidX.Compose.Foundation.Gestures.Orientation.Horizontal!
@@ -521,7 +521,7 @@ public sealed class Modifier
     /// </param>
     public Modifier NestedScroll(AndroidX.Compose.UI.Input.NestedScroll.INestedScrollConnection connection)
     {
-        System.ArgumentNullException.ThrowIfNull(connection);
+        ArgumentNullException.ThrowIfNull(connection);
         IntPtr handle = ((Java.Lang.Object)connection).Handle;
         return Append(curr =>
         {
@@ -893,7 +893,7 @@ public sealed class Modifier
     /// </summary>
     public Modifier TestTag(string tag)
     {
-        System.ArgumentNullException.ThrowIfNull(tag);
+        ArgumentNullException.ThrowIfNull(tag);
         return Append(curr => ComposeBridges.ModifierTestTag(curr, tag));
     }
 
@@ -904,7 +904,7 @@ public sealed class Modifier
     /// </summary>
     public Modifier Align(Alignment alignment)
     {
-        System.ArgumentNullException.ThrowIfNull(alignment);
+        ArgumentNullException.ThrowIfNull(alignment);
         return Append(curr =>
         {
             IntPtr scope = RenderContext.CurrentScope;
@@ -923,7 +923,7 @@ public sealed class Modifier
     /// </summary>
     public Modifier Align(Alignment.Vertical alignment)
     {
-        System.ArgumentNullException.ThrowIfNull(alignment);
+        ArgumentNullException.ThrowIfNull(alignment);
         return Append(curr =>
         {
             IntPtr scope = RenderContext.CurrentScope;
@@ -942,7 +942,7 @@ public sealed class Modifier
     /// </summary>
     public Modifier Align(Alignment.Horizontal alignment)
     {
-        System.ArgumentNullException.ThrowIfNull(alignment);
+        ArgumentNullException.ThrowIfNull(alignment);
         return Append(curr =>
         {
             IntPtr scope = RenderContext.CurrentScope;
@@ -996,7 +996,7 @@ public sealed class Modifier
     /// </summary>
     public Modifier OnFocusChanged(System.Action<FocusState> onFocusChanged)
     {
-        System.ArgumentNullException.ThrowIfNull(onFocusChanged);
+        ArgumentNullException.ThrowIfNull(onFocusChanged);
         var f1 = new ComposableLambda1(arg =>
         {
             if (arg is null) return;
@@ -1014,7 +1014,7 @@ public sealed class Modifier
     /// </summary>
     public Modifier FocusRequester(FocusRequester requester)
     {
-        System.ArgumentNullException.ThrowIfNull(requester);
+        ArgumentNullException.ThrowIfNull(requester);
         return Append(curr =>
             ComposeBridges.ModifierFocusRequester(curr, ((Java.Lang.Object)requester.Java).Handle));
     }
@@ -1030,7 +1030,7 @@ public sealed class Modifier
         System.Action? onLongClick = null,
         System.Action? onDoubleClick = null)
     {
-        System.ArgumentNullException.ThrowIfNull(onClick);
+        ArgumentNullException.ThrowIfNull(onClick);
         var click = new ComposableLambda0(onClick);
         var longClick = onLongClick is null ? null : new ComposableLambda0(onLongClick);
         var doubleClick = onDoubleClick is null ? null : new ComposableLambda0(onDoubleClick);
@@ -1046,7 +1046,7 @@ public sealed class Modifier
     /// </summary>
     public Modifier Selectable(bool selected, System.Action onClick)
     {
-        System.ArgumentNullException.ThrowIfNull(onClick);
+        ArgumentNullException.ThrowIfNull(onClick);
         var click = new ComposableLambda0(onClick);
         return Append(curr =>
             ComposeBridges.ModifierSelectable(curr, selected, click));
@@ -1060,7 +1060,7 @@ public sealed class Modifier
     /// </summary>
     public Modifier Toggleable(bool value, System.Action<bool> onValueChange)
     {
-        System.ArgumentNullException.ThrowIfNull(onValueChange);
+        ArgumentNullException.ThrowIfNull(onValueChange);
         var f1 = new ComposableLambda1(arg =>
         {
             bool v = arg is Java.Lang.Boolean jb && jb.BooleanValue();
@@ -1305,7 +1305,7 @@ public sealed class Modifier
     /// <see cref="SemanticsScope"/> for available property setters.</param>
     public Modifier Semantics(bool mergeDescendants, System.Action<SemanticsScope> properties)
     {
-        System.ArgumentNullException.ThrowIfNull(properties);
+        ArgumentNullException.ThrowIfNull(properties);
         var lambda = WrapSemanticsBuilder(properties);
         return Append(curr =>
             ComposeBridges.ModifierSemantics(curr, mergeDescendants, lambda));
@@ -1323,7 +1323,7 @@ public sealed class Modifier
     /// <see cref="SemanticsScope"/> for available property setters.</param>
     public Modifier ClearAndSetSemantics(System.Action<SemanticsScope> properties)
     {
-        System.ArgumentNullException.ThrowIfNull(properties);
+        ArgumentNullException.ThrowIfNull(properties);
         var lambda = WrapSemanticsBuilder(properties);
         return Append(curr =>
             ComposeBridges.ModifierClearAndSetSemantics(curr, lambda));

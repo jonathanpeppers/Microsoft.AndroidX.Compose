@@ -21,7 +21,7 @@ public sealed class DragAndDropEvent
 
     internal DragAndDropEvent(AndroidX.Compose.UI.Draganddrop.DragAndDropEvent jvm)
     {
-        System.ArgumentNullException.ThrowIfNull(jvm);
+        ArgumentNullException.ThrowIfNull(jvm);
         Jvm = jvm;
     }
 

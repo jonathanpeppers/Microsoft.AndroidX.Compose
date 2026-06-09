@@ -88,7 +88,7 @@ public sealed class TextField : ComposableNode
     /// </summary>
     public TextField(MutableState<TextFieldValue> state)
     {
-        _tfvState = state ?? throw new System.ArgumentNullException(nameof(state));
+        _tfvState = state ?? throw new ArgumentNullException(nameof(state));
     }
 
     /// <inheritdoc/>

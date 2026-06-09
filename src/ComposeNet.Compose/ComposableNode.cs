@@ -71,7 +71,7 @@ public abstract class ComposableNode
     /// </summary>
     public void PrependModifier(Modifier modifier)
     {
-        System.ArgumentNullException.ThrowIfNull(modifier);
+        ArgumentNullException.ThrowIfNull(modifier);
         _prepended = modifier;
     }
 
@@ -84,7 +84,7 @@ public abstract class ComposableNode
     /// </summary>
     public void AppendModifier(Modifier modifier)
     {
-        System.ArgumentNullException.ThrowIfNull(modifier);
+        ArgumentNullException.ThrowIfNull(modifier);
         _appended = modifier;
     }
 

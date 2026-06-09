@@ -43,7 +43,7 @@ public sealed class AnnotatedStringBuilder
     /// to pop down to a specific level.</returns>
     public int PushStyle(SpanStyle style)
     {
-        System.ArgumentNullException.ThrowIfNull(style);
+        ArgumentNullException.ThrowIfNull(style);
         return _builder.PushStyle(style.Build());
     }
 
@@ -55,7 +55,7 @@ public sealed class AnnotatedStringBuilder
     /// <returns>The stack index of the pushed annotation.</returns>
     public int PushLink(LinkAnnotation link)
     {
-        System.ArgumentNullException.ThrowIfNull(link);
+        ArgumentNullException.ThrowIfNull(link);
         return _builder.PushLink(link.Binding);
     }
 
@@ -79,14 +79,14 @@ public sealed class AnnotatedStringBuilder
     /// <summary>Apply a <see cref="SpanStyle"/> to a specific range.</summary>
     public void AddStyle(SpanStyle style, int start, int end)
     {
-        System.ArgumentNullException.ThrowIfNull(style);
+        ArgumentNullException.ThrowIfNull(style);
         _builder.AddStyle(style.Build(), start, end);
     }
 
     /// <summary>Attach a <see cref="LinkAnnotation"/> to a specific range.</summary>
     public void AddLink(LinkAnnotation link, int start, int end)
     {
-        System.ArgumentNullException.ThrowIfNull(link);
+        ArgumentNullException.ThrowIfNull(link);
         switch (link.Binding)
         {
             case AndroidX.Compose.UI.Text.LinkAnnotation.Url url:

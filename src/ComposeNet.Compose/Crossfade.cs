@@ -53,7 +53,7 @@ public sealed class Crossfade<T> : ComposableNode
     public Crossfade(T targetState, System.Func<T, ComposableNode> content)
     {
         _targetState = targetState;
-        _content     = content ?? throw new System.ArgumentNullException(nameof(content));
+        _content     = content ?? throw new ArgumentNullException(nameof(content));
     }
 
     /// <summary>The state value passed to the underlying <c>Crossfade</c>.</summary>

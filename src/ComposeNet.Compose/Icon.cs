@@ -55,7 +55,7 @@ public sealed class Icon : ComposableNode
     /// <summary>Render a pre-resolved <see cref="Painter"/> (typically from <see cref="Resources.PainterResource"/>).</summary>
     public Icon(Painter painter, string? contentDescription)
     {
-        System.ArgumentNullException.ThrowIfNull(painter);
+        ArgumentNullException.ThrowIfNull(painter);
         _painter = painter;
         _contentDescription = contentDescription;
     }
