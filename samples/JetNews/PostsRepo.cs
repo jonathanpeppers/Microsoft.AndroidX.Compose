@@ -22,25 +22,50 @@ public static class PostsRepo
         {
             new(ParagraphType.Title,   "Hello, ComposeNet"),
             new(ParagraphType.Caption, "An idiomatic-C# facade over the real Jetpack Compose runtime."),
+            // "ComposeNet" → Bold, "Kotlin" → Italic, "compiler interceptors" → Code.
             new(ParagraphType.Text,
                 "ComposeNet hosts Jetpack Compose UI from a .NET-for-Android app. " +
                 "There is no Kotlin in the project, no custom bindings, and no " +
                 "compiler interceptors — every C# composable either calls a " +
-                "generated AndroidX binding method or a tiny JNI bridge."),
+                "generated AndroidX binding method or a tiny JNI bridge.",
+                new Markup[]
+                {
+                    new(MarkupType.Bold,   0,  10),  // ComposeNet
+                    new(MarkupType.Italic, 77, 83),  // Kotlin
+                    new(MarkupType.Code,   127, 148),  // compiler interceptors
+                }),
             new(ParagraphType.Subhead, "How it works"),
+            // "Column", "Text", "Card" all surfaced as Code spans, plus
+            // "[ComposeBridge]" and "@JvmInline".
             new(ParagraphType.Text,
                 "Public facades like Column, Text, and Card derive from " +
                 "ComposableNode and translate their Render(IComposer) body " +
                 "into a chain of bound binding calls. Where Kotlin's @JvmInline " +
                 "value classes confuse the binder, source-generated " +
                 "[ComposeBridge] partial methods drop down to raw JNI for one " +
-                "stripped overload at a time."),
+                "stripped overload at a time.",
+                new Markup[]
+                {
+                    new(MarkupType.Code, 20, 26),    // Column
+                    new(MarkupType.Code, 28, 32),    // Text
+                    new(MarkupType.Code, 38, 42),    // Card
+                    new(MarkupType.Code, 55, 69),    // ComposableNode
+                    new(MarkupType.Code, 90, 112),   // Render(IComposer) body
+                    new(MarkupType.Code, 165, 175),  // @JvmInline
+                    new(MarkupType.Code, 227, 242),  // [ComposeBridge]
+                }),
             new(ParagraphType.Quote,
                 "Compose, but with C# 12 records, nullable refs, and the " +
                 "rest of the .NET tooling you already use."),
+            // "JetNews" → Link (decorative underline), "Jetchat" → Link too.
             new(ParagraphType.Text,
                 "JetNews is the second sample in the repo — see Jetchat for the " +
-                "navigation-drawer baseline and the per-author message bubbles."),
+                "navigation-drawer baseline and the per-author message bubbles.",
+                new Markup[]
+                {
+                    new(MarkupType.Link, 0,  7,  Href: "https://github.com/android/compose-samples/tree/main/JetNews"),
+                    new(MarkupType.Link, 47, 54, Href: "https://github.com/android/compose-samples/tree/main/Jetchat"),
+                }),
         });
 
     static readonly Post _kotlinFreeBindings = new(
@@ -58,7 +83,14 @@ public static class PostsRepo
                 "When an overload is stripped by the binder, the project files an " +
                 "issue against dotnet/android-libraries and works around the gap " +
                 "with a [ComposeBridge]-decorated partial method until the upstream " +
-                "binder fix ships."),
+                "binder fix ships.",
+                new Markup[]
+                {
+                    new(MarkupType.Bold, 0,  10),                                              // ComposeNet
+                    new(MarkupType.Code, 29, 55),                                              // Xamarin.AndroidX.Compose.*
+                    new(MarkupType.Link, 143, 167, Href: "https://github.com/dotnet/android-libraries"),
+                    new(MarkupType.Code, 200, 215),                                            // [ComposeBridge]
+                }),
             new(ParagraphType.Subhead, "The cost of forking bindings"),
             new(ParagraphType.Text,
                 "Forking the bindings would mean carrying a parallel set of " +
@@ -110,7 +142,13 @@ public static class PostsRepo
                 "(composer) read the active theme inside any Render body. On " +
                 "Android 12 and later the default scheme is dynamic — derived from " +
                 "the device wallpaper — so your app picks up Material You without " +
-                "extra plumbing."),
+                "extra plumbing.",
+                new Markup[]
+                {
+                    new(MarkupType.Code,   0,   42),  // MaterialTheme.CurrentColorScheme(composer)
+                    new(MarkupType.Code,   47,  64),  // CurrentTypography
+                    new(MarkupType.Italic, 235, 247), // Material You
+                }),
             new(ParagraphType.Header,  "Custom palettes"),
             new(ParagraphType.Text,
                 "Pass MaterialTheme.LightColorScheme() / DarkColorScheme() with " +
