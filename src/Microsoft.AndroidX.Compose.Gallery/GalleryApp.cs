@@ -14,6 +14,9 @@ namespace Microsoft.AndroidX.Compose.Gallery;
 /// </remarks>
 public static class GalleryApp
 {
+    /// <summary>Logcat tag used by gallery demos that write to the system log.</summary>
+    public const string LogTag = "GALLERY";
+
     /// <summary>
     /// Build the gallery's root composable. Allocates the shared
     /// <see cref="NavController"/> + <see cref="DrawerStateHolder"/>

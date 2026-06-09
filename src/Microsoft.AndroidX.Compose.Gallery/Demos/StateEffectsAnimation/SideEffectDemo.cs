@@ -10,16 +10,16 @@ public static class SideEffectDemo
         Id:          "effects-sideeffect",
         CategoryId:  "state-effects",
         Title:       "SideEffect",
-        Description: "Writes a log line after every successful recomposition. Filter logcat for 'Microsoft.AndroidX.Compose.Gallery' to see it.",
+        Description: $"Writes a log line after every successful recomposition. Filter logcat for '{GalleryApp.LogTag}' to see it.",
         Build:       () =>
         {
             var count = ComposeRuntime.Remember(() => new MutableNumberState<int>(0));
             return new Column
             {
                 new Text($"Count: {count}"),
-                new Text("See logcat (filter: Microsoft.AndroidX.Compose.Gallery) — one line per recomposition."),
+                new Text($"See logcat (filter: {GalleryApp.LogTag}) — one line per recomposition."),
                 new SideEffect(() =>
-                    global::Android.Util.Log.Debug("Microsoft.AndroidX.Compose.Gallery",
+                    global::Android.Util.Log.Debug(GalleryApp.LogTag,
                         $"SideEffect ran (count={count.Value})")),
                 new Button(onClick: () => count++) { new Text("+1 (recompose)") },
             };
