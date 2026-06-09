@@ -943,6 +943,10 @@ Confirm render, contrast, layout, no crash.
   class`, public ctor/method/property gets a `<summary>` (and `<remarks>`
   when there's nuance). Internal helpers get a one-line `//` when non-
   obvious; otherwise leave bare.
+- Use `ArgumentNullException.ThrowIfNull(x)` for parameter null checks —
+  not hand-written `if (x is null) throw new ArgumentNullException(nameof(x));`.
+  Applies to net10.0 / net10.0-android projects only; the netstandard2.0
+  source generator doesn't have `ThrowIfNull`.
 - Don't add markdown planning docs to the repo — use the session artifact
   folder.
 - Commit trailer: `Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>`.
