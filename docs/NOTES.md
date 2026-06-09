@@ -1,7 +1,7 @@
 # Notes from the Tier 1 attempt
 
 **Status: the gallery builds, renders, and is interactive on device.**
-`dotnet build src\ComposeNet.Gallery` produces a signed APK that on launch
+`dotnet build src\Microsoft.AndroidX.Compose.Gallery` produces a signed APK that on launch
 displays a `Column` of three `BasicText` composables ("Hello from .NET",
 "Count: N", "Tap to increment") wired to a `MutableState<Int>`. Tapping
 the third text invokes a C# `Function0` click handler that mutates the
@@ -16,7 +16,7 @@ authored entirely in C# with no Kotlin source files in the repo.**
 The sample now renders a **Material 3 themed UI** entirely from C#:
 
 * Android `Theme.Material.Light` ActionBar at the top showing the app name
-  ("ComposeNet Gallery") — the title bar is the native Material ActionBar,
+  ("Microsoft.AndroidX.Compose Gallery") — the title bar is the native Material ActionBar,
   not a Compose `TopAppBar` (see issue #13).
 * A Compose `MaterialTheme { Column { … } }` body inside a `ComposeView`,
   with proper safe-area padding for the status bar / nav bar.
@@ -74,12 +74,12 @@ The sample now renders a **Material 3 themed UI** entirely from C#:
 
 | Project                                  | What it does                                                                                                       |
 |------------------------------------------|--------------------------------------------------------------------------------------------------------------------|
-| `ComposeNet.Bindings.Runtime`            | Re-binds `androidx.compose.runtime:runtime-android` 1.9.4 from Google Maven (the Xamarin NuGet ships zero types).  |
-| `ComposeNet.Bindings.UI`                 | Re-binds `androidx.compose.ui:ui-android` 1.9.4 (Modifier, ComposeView, AbstractComposeView, layout primitives).    |
-| `ComposeNet.Bindings.Foundation.Layout`  | Re-binds `androidx.compose.foundation:foundation-layout-android` 1.9.4 (Box, Column, Row, …). Used by the sample.  |
-| `ComposeNet.Bindings.Foundation`         | Re-binds `androidx.compose.foundation:foundation-android` 1.9.4. Not referenced by sample yet.                     |
-| `ComposeNet.Bindings.Material3`          | Re-binds `androidx.compose.material3:material3-android` 1.3.2. **Used by the sample** (MaterialTheme + Button). |
-| `ComposeNet.Gallery`                     | Minimal app. References Runtime + UI + Foundation.Layout. `MainActivity` calls `BoxKt.Box` from C#.                |
+| `Microsoft.AndroidX.Compose.Bindings.Runtime`            | Re-binds `androidx.compose.runtime:runtime-android` 1.9.4 from Google Maven (the Xamarin NuGet ships zero types).  |
+| `Microsoft.AndroidX.Compose.Bindings.UI`                 | Re-binds `androidx.compose.ui:ui-android` 1.9.4 (Modifier, ComposeView, AbstractComposeView, layout primitives).    |
+| `Microsoft.AndroidX.Compose.Bindings.Foundation.Layout`  | Re-binds `androidx.compose.foundation:foundation-layout-android` 1.9.4 (Box, Column, Row, …). Used by the sample.  |
+| `Microsoft.AndroidX.Compose.Bindings.Foundation`         | Re-binds `androidx.compose.foundation:foundation-android` 1.9.4. Not referenced by sample yet.                     |
+| `Microsoft.AndroidX.Compose.Bindings.Material3`          | Re-binds `androidx.compose.material3:material3-android` 1.3.2. **Used by the sample** (MaterialTheme + Button). |
+| `Microsoft.AndroidX.Compose.Gallery`                     | Minimal app. References Runtime + UI + Foundation.Layout. `MainActivity` calls `BoxKt.Box` from C#.                |
 
 All five binding projects use `<AndroidMavenLibrary Pack="false">` to download
 the AAR and run the binding generator over it, while relying on the existing
@@ -91,7 +91,7 @@ and calls `BoxKt.Box(modifier, composer, changed)`. The dex contains
 `androidx/compose/foundation/layout/BoxKt`,
 `androidx/compose/ui/Modifier$Companion`,
 `androidx/compose/runtime/Composer`, and our
-`composenet/sample/HelloComposable` ACW.
+`net/sample/HelloComposable` ACW.
 
 ---
 
@@ -107,7 +107,7 @@ Kotlin code can link transitively — they are not callable.
 
 (One exception: `Xamarin.AndroidX.Compose.Material3Android.dll` actually
 contains ~265 bound types. Only the `@Composable` functions were stripped.
-This makes it overlap with our `ComposeNet.Bindings.Material3` and triggers
+This makes it overlap with our `Microsoft.AndroidX.Compose.Bindings.Material3` and triggers
 XA4215 "Java type bound in two assemblies" if you reference both — see
 "Open issues".)
 
@@ -311,7 +311,7 @@ that AAR.
     (system default font, ~14sp, black). `androidx.compose.material3.Text`
     is the styled wrapper, but the `Xamarin.AndroidX.Compose.Material3`
     NuGet ships an empty stub (no managed types), and our local
-    `ComposeNet.Bindings.Material3` binding still hits XA4215
+    `Microsoft.AndroidX.Compose.Bindings.Material3` binding still hits XA4215
     dual-emission against that stub. The cleanest paths forward are
     (a) finish the Metadata.xml `<remove-node>`s on our Material3
     binding so it can coexist with the stub, (b) `ExcludeAssets="compile"`
@@ -326,7 +326,7 @@ that AAR.
 ## Build / repro
 
 ```pwsh
-cd src\ComposeNet.Gallery
+cd src\Microsoft.AndroidX.Compose.Gallery
 dotnet build
 # → builds the 4 binding projects + gallery, produces a signed APK
 ```
@@ -334,20 +334,20 @@ dotnet build
 To inspect the dex:
 
 ```pwsh
-Expand-Archive bin\Debug\net10.0-android\com.companyname.ComposeNet.Gallery-Signed.apk -DestinationPath dex-inspect
+Expand-Archive bin\Debug\net10.0-android\net.compose.gallery-Signed.apk -DestinationPath dex-inspect
 $bt = "$env:LOCALAPPDATA\Android\Sdk\build-tools\<latest>\dexdump.exe"
-& $bt dex-inspect\classes.dex | Select-String "androidx/compose/runtime/Composer|composenet/gallery/HelloComposable"
+& $bt dex-inspect\classes.dex | Select-String "androidx/compose/runtime/Composer|net/gallery/HelloComposable"
 ```
 
 ## Files
 
 ```
 src/
-  ComposeNet.Gallery/                         Tier 1.5 app. Uses ComposeNet.Compose facade.
-    ComposeNet.Gallery.csproj
+  Microsoft.AndroidX.Compose.Gallery/                         Tier 1.5 app. Uses Microsoft.AndroidX.Compose facade.
+    Microsoft.AndroidX.Compose.Gallery.csproj
     MainActivity.cs                           ~27 lines total, mirrors Kotlin line-for-line.
-  ComposeNet.Compose/                         Tier 1.5 runtime facade (no codegen).
-    ComposeNet.Compose.csproj
+  Microsoft.AndroidX.Compose/                         Tier 1.5 runtime facade (no codegen).
+    Microsoft.AndroidX.Compose.csproj
     ComposableNode.cs                         Abstract AST base.
     Composables.cs                            Text / Column / Button / MaterialTheme nodes
                                                 + ComposableContainer base with Add/IEnumerable.
@@ -358,20 +358,20 @@ src/
                                                 (with operator ++/-- via INumber&lt;T&gt;).
     ComposeActivity.cs                        ComponentActivity base providing SetContent +
                                                 Remember + safe-area padding + light status bar.
-  ComposeNet.Bindings.Runtime/                Binds androidx.compose.runtime 1.9.4
-    ComposeNet.Bindings.Runtime.csproj
+  Microsoft.AndroidX.Compose.Bindings.Runtime/                Binds androidx.compose.runtime 1.9.4
+    Microsoft.AndroidX.Compose.Bindings.Runtime.csproj
     Transforms/Metadata.xml
-  ComposeNet.Bindings.UI/                     Binds androidx.compose.ui 1.9.4
-  ComposeNet.Bindings.Foundation/             Binds androidx.compose.foundation 1.9.4
-  ComposeNet.Bindings.Foundation.Layout/      Binds androidx.compose.foundation.layout 1.9.4
-  ComposeNet.Bindings.Material3/              Binds androidx.compose.material3 1.3.2
+  Microsoft.AndroidX.Compose.Bindings.UI/                     Binds androidx.compose.ui 1.9.4
+  Microsoft.AndroidX.Compose.Bindings.Foundation/             Binds androidx.compose.foundation 1.9.4
+  Microsoft.AndroidX.Compose.Bindings.Foundation.Layout/      Binds androidx.compose.foundation.layout 1.9.4
+  Microsoft.AndroidX.Compose.Bindings.Material3/              Binds androidx.compose.material3 1.3.2
 ```
 
 ## Tier 1.5 facade: lessons from making the C# look like Kotlin
 
 After getting the raw bindings working (Tier 1, ~200-line
 `MainActivity.cs` with five hand-written `IFunctionN` ACWs), we built
-a thin runtime facade (`ComposeNet.Compose`) to make the user-facing
+a thin runtime facade (`Microsoft.AndroidX.Compose`) to make the user-facing
 code mirror Kotlin. Notes from that work:
 
 ### 5. Composables as types + collection-initializers gets us trailing-lambda-free nesting

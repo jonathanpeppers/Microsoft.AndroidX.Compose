@@ -1,10 +1,10 @@
-# Jetchat (compose-net port)
+# Jetchat (Microsoft.AndroidX.Compose port)
 
 A C# port of the official Compose sample
 [android/compose-samples ▸ Jetchat](https://github.com/android/compose-samples/tree/main/Jetchat).
 The upstream sample is labeled **Low complexity** and is the smallest
 of the six showcase apps, which makes it the natural first target for
-`ComposeNet.Compose`.
+`Microsoft.AndroidX.Compose`.
 
 <img src="../docs/jetchat.png" alt="Jetchat running on an Android emulator" width="320" />
 
@@ -277,7 +277,7 @@ whitespace, and the `Send` handler early-returns on
 ### Drag-and-drop target hoisting
 
 The `DragAndDropTarget` instance for the conversation surface is
-hoisted into `Compose.Remember` so the underlying
+hoisted into `ComposeRuntime.Remember` so the underlying
 `DragAndDropTargetElement` keeps a stable identity across
 recompositions; otherwise Compose rebuilds the modifier element
 every frame and its internal hover/started/ended bookkeeping

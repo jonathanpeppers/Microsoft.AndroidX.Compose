@@ -1,5 +1,5 @@
 
-namespace ComposeNet.Samples.Jetchat;
+namespace Microsoft.AndroidX.Compose.Samples.Jetchat;
 
 /// <summary>
 /// Seed conversation data for the demo. Same <em>structural</em> shape
@@ -29,7 +29,7 @@ internal static class FakeData
         new Message("Taylor Brooks",   "@aliconors give `Flow.collectAsStateWithLifecycle()` a try.",                                                                                           "8:05 PM"),
         new Message("John Glenn",      $"Also fairly new to Compose {Flamingo} — the JetNews sample tracks current releases and shows a clean async-loading pattern. {PointRight} https://goo.gle/jetnews", "8:04 PM"),
         new Message("me",              $"Brand new to Compose: every tutorial I find for streaming data into composables looks out of date {MeltingFace} {FaceInClouds}. What's the current recommended approach?", "8:03 PM"),
-        new Message("Shangeeth Sivan", "Has anyone tried Glance Widgets yet? It's the newer way to build home-screen widgets on Android.",                                                       "8:08 PM"),
+        new Message("Shangeeth Sivan", "Has anyone tried Glance Widgets yet? It's the newer way to build home-screen widgets on global::Android.",                                                       "8:08 PM"),
         new Message("Taylor Brooks",   "Hadn't heard of them — when did Glance show up in the platform?",                                                                                        "8:10 PM"),
         new Message("John Glenn",      "Pretty recent addition from what I can tell.",                                                                                                          "8:12 PM"),
     };

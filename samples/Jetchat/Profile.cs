@@ -1,6 +1,6 @@
-using AndroidX.Compose.Material3;
+using global::AndroidX.Compose.Material3;
 
-namespace ComposeNet.Samples.Jetchat;
+namespace Microsoft.AndroidX.Compose.Samples.Jetchat;
 
 /// <summary>
 /// Builds the Jetchat profile tree. C# port of upstream's
@@ -16,8 +16,8 @@ public static class Profile
         Action onBack) =>
         new Composed(c =>
         {
-            var scrollState = Compose.Remember(() => new ScrollState());
-            var popupOpen   = Compose.Remember(() => new MutableState<bool>(false));
+            var scrollState = ComposeRuntime.Remember(() => new ScrollState());
+            var popupOpen   = ComposeRuntime.Remember(() => new MutableState<bool>(false));
             var scheme      = MaterialTheme.CurrentColorScheme(c);
 
             var screen = new Scaffold

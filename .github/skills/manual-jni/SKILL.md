@@ -1,17 +1,17 @@
 ---
 name: manual-jni
-description: Regenerate the manual JNI surface report via `scripts/manual-jni-report.cs`. Use to answer which bindings remain hand-written (raw `JNIEnv.*` calls, suspend bridges, Java Callable Wrappers), what blocks moving a hand-written helper to the `[ComposeBridge]` generator, or after adding/removing manual JNI (e.g. a new `[ComposeBridge]` migration, a new suspend bridge, a new `[Register("composenet/…")]` JCW).
+description: Regenerate the manual JNI surface report via `scripts/manual-jni-report.cs`. Use to answer which bindings remain hand-written (raw `JNIEnv.*` calls, suspend bridges, Java Callable Wrappers), what blocks moving a hand-written helper to the `[ComposeBridge]` generator, or after adding/removing manual JNI (e.g. a new `[ComposeBridge]` migration, a new suspend bridge, a new `[Register("net/compose/…")]` JCW).
 ---
 
 # Manual JNI surface
 
 Regenerate `docs/manual-jni.md` — the inventory of every place in
-`src/ComposeNet.Compose/` that still uses **hand-written JNI**
-(`JNIEnv.*` calls, `[Register("composenet/…")]` JCWs) instead of the
+`src/Microsoft.AndroidX.Compose/` that still uses **hand-written JNI**
+(`JNIEnv.*` calls, `[Register("net/compose/…")]` JCWs) instead of the
 source-generated `[ComposeBridge]` / `[ComposeFacade]` machinery. The
 report is produced by a single .NET 10 file-based program at
 `scripts/manual-jni-report.cs`. It scans every `.cs` file under
-`src/ComposeNet.Compose/`, anchors each JNI call to its enclosing
+`src/Microsoft.AndroidX.Compose/`, anchors each JNI call to its enclosing
 member, pulls a "Why not generated?" rationale from existing XML doc
 `<remarks>` and adjacent `// ...` comments, and writes a markdown
 report with summary metrics, per-file member tables, and a JCW
@@ -83,7 +83,7 @@ git commit --amend --no-edit  # or a fresh commit, depending on context
   `[ComposeFacade]` partials in the same file are excluded, then
   enumerates manual entry points in a table: member name, kind,
   line range, JNI call count, "Why not generated?", "Migration".
-- **JCW classes** — every `[Register("composenet/…")]` class in the
+- **JCW classes** — every `[Register("net/compose/…")]` class in the
   project, with its Kotlin interface, source location, and whether
   the JCW body itself contains raw JNI.
 - **Caveats** — heuristic limitations (regex-based detection,
@@ -125,7 +125,7 @@ restructure the declaration to put modifiers on the same line as the
 return type, or extend the modifier soup in `rxMethod` /
 `rxCtor` near the top of the script.
 
-**JCW count looks wrong** — only Compose-net's own `[Register("composenet/…")]`
+**JCW count looks wrong** — only Microsoft.AndroidX.Compose's own `[Register("net/compose/…")]`
 classes are counted. JCWs Mono.Android emits for upstream interfaces
 are deliberately excluded. If a new file registers a JCW under a
 different namespace prefix, update the `rxRegister` regex.
@@ -146,7 +146,7 @@ isn't:
 - Member detection picked up a new declaration that wasn't there
   before. To find which entry shifted, note the line range in the
   diffed row (e.g. `Lines 221–246`) and use
-  `git diff -U0 src/ComposeNet.Compose/<file>.cs | rg -n '^@@'` to
+  `git diff -U0 src/Microsoft.AndroidX.Compose/<file>.cs | rg -n '^@@'` to
   locate the corresponding source change.
 
 If diffs persist with no source change, the script has a bug; look
@@ -159,7 +159,7 @@ on the JCW table, `OrderBy(StartLine)` inside per-file entries).
   and your edit will be lost.
 - Don't run the script from inside a subdirectory; the output path
   (`docs/manual-jni.md`) and source-root path
-  (`src/ComposeNet.Compose`) are relative to the repo root.
+  (`src/Microsoft.AndroidX.Compose`) are relative to the repo root.
 - Don't add a `// Why raw JNI:` banner to a member that already has
   a clear `<summary>` / `<remarks>` block — the script's fallback
   reads adjacent doc comments fine.

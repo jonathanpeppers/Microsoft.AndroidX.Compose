@@ -1,8 +1,8 @@
-namespace ComposeNet.Samples.JetNews;
+namespace Microsoft.AndroidX.Compose.Samples.JetNews;
 
 /// <summary>
 /// Seed posts for the sample. Heavily condensed from the upstream
-/// <c>PostsData.kt</c> (six topical articles — about ComposeNet itself
+/// <c>PostsData.kt</c> (six topical articles — about Microsoft.AndroidX.Compose itself
 /// rather than upstream's Android-development articles, since those
 /// quote real Android team members).
 /// </summary>
@@ -10,24 +10,24 @@ public static class PostsRepo
 {
     static readonly Post _highlighted = new(
         Id:       "compose-net-intro",
-        Title:    "Hello, ComposeNet",
-        Subtitle: "Jetpack Compose UI, hosted from C# on .NET-for-Android.",
+        Title:    "Hello, Microsoft.AndroidX.Compose",
+        Subtitle: "Jetpack Compose UI, hosted from C# on .NET-for-global::Android.",
         Metadata: new PostMetadata("Jordan Lee", "Apr 14", 4),
         HeroId:   Resource.Drawable.post_1,
         ThumbId:  Resource.Drawable.post_1_thumb,
         Paragraphs: new Paragraph[]
         {
-            new(ParagraphType.Title,   "Hello, ComposeNet"),
+            new(ParagraphType.Title,   "Hello, Microsoft.AndroidX.Compose"),
             new(ParagraphType.Caption, "An idiomatic-C# facade over the real Jetpack Compose runtime."),
-            // "ComposeNet" → Bold, "Kotlin" → Italic, "compiler interceptors" → Code.
+            // "Microsoft.AndroidX.Compose" → Bold, "Kotlin" → Italic, "compiler interceptors" → Code.
             new(ParagraphType.Text,
-                "ComposeNet hosts Jetpack Compose UI from a .NET-for-Android app. " +
+                "Microsoft.AndroidX.Compose hosts Jetpack Compose UI from a .NET-for-Android app. " +
                 "There is no Kotlin in the project, no custom bindings, and no " +
                 "compiler interceptors — every C# composable either calls a " +
                 "generated AndroidX binding method or a tiny JNI bridge.",
                 new Markup[]
                 {
-                    new(MarkupType.Bold,   0,  10),  // ComposeNet
+                    new(MarkupType.Bold,   0,  10),  // Microsoft.AndroidX.Compose
                     new(MarkupType.Italic, 77, 83),  // Kotlin
                     new(MarkupType.Code,   127, 148),  // compiler interceptors
                 }),
@@ -76,14 +76,14 @@ public static class PostsRepo
         {
             new(ParagraphType.Title,   "Why the bindings stay Kotlin-free"),
             new(ParagraphType.Text,
-                "ComposeNet uses the official Xamarin.AndroidX.Compose.* NuGets. " +
+                "Microsoft.AndroidX.Compose uses the official Xamarin.AndroidX.Compose.* NuGets. " +
                 "When an overload is stripped by the binder, the project files an " +
                 "issue against dotnet/android-libraries and works around the gap " +
                 "with a [ComposeBridge]-decorated partial method until the upstream " +
                 "binder fix ships.",
                 new Markup[]
                 {
-                    new(MarkupType.Bold, 0,  10),                                              // ComposeNet
+                    new(MarkupType.Bold, 0,  10),                                              // Microsoft.AndroidX.Compose
                     new(MarkupType.Code, 29, 55),                                              // Xamarin.AndroidX.Compose.*
                     new(MarkupType.Link, 143, 167, Href: "https://github.com/dotnet/android-libraries"),
                     new(MarkupType.Code, 200, 215),                                            // [ComposeBridge]
@@ -194,7 +194,7 @@ public static class PostsRepo
                 "so they survive process death."),
             new(ParagraphType.Subhead, "Async paths"),
             new(ParagraphType.Text,
-                "Where Kotlin Compose APIs surface suspend functions, ComposeNet " +
+                "Where Kotlin Compose APIs surface suspend functions, Microsoft.AndroidX.Compose " +
                 "exposes Task / Task<T> via SuspendBridge — see ScrollState." +
                 "ScrollToAsync for the pattern. The Continuation JCW self-roots " +
                 "with a GCHandle and dispatches on the Main UI thread."),

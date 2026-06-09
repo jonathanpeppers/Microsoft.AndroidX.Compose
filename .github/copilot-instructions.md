@@ -1,4 +1,4 @@
-# compose-net — agent instructions
+# Microsoft.AndroidX.Compose — agent instructions
 
 C#-only .NET-for-Android app hosting Jetpack Compose UI via official
 `Xamarin.AndroidX.Compose.*` bindings. No Kotlin sources, no custom bindings,
@@ -11,28 +11,28 @@ follow.
 
 ## Layout
 
-- `src/ComposeNet.Compose/` — public C# facade. **One class per file**, named
+- `src/Microsoft.AndroidX.Compose/` — public C# facade. **One class per file**, named
   after the class. `ComposeBridges.cs` holds raw-JNI bridges;
   `ComposeDefaults.cs` holds *only* assembly attributes driving the generator.
-- `src/ComposeNet.SourceGenerators/` — Roslyn incremental generators
+- `src/Microsoft.AndroidX.Compose.SourceGenerators/` — Roslyn incremental generators
   (`ComposeDefaultsGenerator`, `ComposeBridgeGenerator`,
   `ComposeFacadeGenerator`) emitting `[Flags]` enums for Kotlin `$default`
   bitmasks, JNI bridge bodies, and facade classes.
-- `src/ComposeNet.SourceGenerators.Tests/` — xUnit, no Android SDK needed.
-- `src/ComposeNet.Gallery/` — runnable Android app (on-device demo harness).
+- `src/Microsoft.AndroidX.Compose.SourceGenerators.Tests/` — xUnit, no Android SDK needed.
+- `src/Microsoft.AndroidX.Compose.Gallery/` — runnable Android app (on-device demo harness).
 
 ## Build / test / run
 
 ```pwsh
-dotnet test  src/ComposeNet.SourceGenerators.Tests   # generator unit tests
-dotnet build src/ComposeNet.Compose                  # facade only
-dotnet build src/ComposeNet.Gallery                  # full Android build (needs android workload)
-dotnet build src/ComposeNet.Gallery -t:Run           # deploy to device
+dotnet test  src/Microsoft.AndroidX.Compose.SourceGenerators.Tests   # generator unit tests
+dotnet build src/Microsoft.AndroidX.Compose                  # facade only
+dotnet build src/Microsoft.AndroidX.Compose.Gallery                  # full Android build (needs android workload)
+dotnet build src/Microsoft.AndroidX.Compose.Gallery -t:Run           # deploy to device
 ```
 
-Run generator tests on any change to `ComposeNet.SourceGenerators` or
+Run generator tests on any change to `Microsoft.AndroidX.Compose.SourceGenerators` or
 `ComposeDefaults.cs`. Run the facade build on any change to
-`ComposeNet.Compose`.
+`Microsoft.AndroidX.Compose`.
 
 ## Generated `$default` enums — DO NOT hand-roll
 
@@ -211,7 +211,7 @@ fit any `[ComposeBridge]` shape.
 | CN2008 | Value-type parameter lowers to a JNI slot that doesn't match the bridge signature at that position.  |
 
 **When adding a new diagnostic, update this table (and CN1xxx if relevant).
-Source of truth: `src/ComposeNet.SourceGenerators/Diagnostics.cs`.**
+Source of truth: `src/Microsoft.AndroidX.Compose.SourceGenerators/Diagnostics.cs`.**
 
 **Don't add `[ComposeBridge]` if the binding already exposes the method** —
 call the generated C# entry point instead. **Probe the runtime companion
@@ -221,13 +221,13 @@ façade `…<Module>.dll`) before concluding a symbol isn't bound. See
 
 ### Compose value types — `@JvmInline value class` lowering
 
-Generator registry at `src/ComposeNet.SourceGenerators/ComposeValueTypes.cs`:
+Generator registry at `src/Microsoft.AndroidX.Compose.SourceGenerators/ComposeValueTypes.cs`:
 
 | C# type                 | JNI slot | Lowering                          |
 |-------------------------|----------|-----------------------------------|
-| `ComposeNet.Dp?`        | `F`      | `Dp.Pack(x)`                      |
-| `ComposeNet.Sp?`        | `J`      | `Sp.Pack(x)` (TextUnit, type=0x1) |
-| `ComposeNet.TextAlign?` | `I`      | `TextAlign.Pack(x)`               |
+| `Microsoft.AndroidX.Compose.Dp?`        | `F`      | `Dp.Pack(x)`                      |
+| `Microsoft.AndroidX.Compose.Sp?`        | `J`      | `Sp.Pack(x)` (TextUnit, type=0x1) |
+| `Microsoft.AndroidX.Compose.TextAlign?` | `I`      | `TextAlign.Pack(x)`               |
 
 Recognition keys on **`Nullable<T>`** of the registered type — bare
 non-nullable not recognized. Integrates with auto-default-mask: non-`null`
@@ -259,7 +259,7 @@ public static partial void Button(IFunction0 onClick, IModifier? modifier,
                                   IFunction3 content, IComposer composer);
 
 // In Button.cs (sibling stub — owns docs)
-namespace ComposeNet;
+namespace Microsoft.AndroidX.Compose;
 
 /// <summary>Material 3 filled <see cref="Button"/>.</summary>
 public sealed partial class Button;
@@ -344,7 +344,7 @@ helpers, operators.
   Kotlin's `(T) -> Boolean` callback (part of `remember` cache key). Generator:
   - allocates one `readonly` JCW adapter field per facade instance
     (`_<camelCase(PropertyName)>Adapter`);
-  - looks up adapter class by convention `ComposeNet.<TName>ConfirmStateChange`
+  - looks up adapter class by convention `Microsoft.AndroidX.Compose.<TName>ConfirmStateChange`
     or via explicit `AdapterType = typeof(...)`;
   - exposes `Func<T, bool>? ConfirmStateChange { get; set; }` (renameable via
     `PropertyName`);
@@ -356,7 +356,7 @@ helpers, operators.
   public parameterless ctor, and declare a writable
   `public Func<T, bool>? Callback { get; set; }`.
 
-Each facade emitted to a unique hint name (`ComposeNet.Facade.<ClassName>.g.cs`)
+Each facade emitted to a unique hint name (`Microsoft.AndroidX.Compose.Facade.<ClassName>.g.cs`)
 so `[CallerFilePath]` + `[CallerLineNumber]` slot keys inside
 `ComposableLambdas.Wrap*` stay distinct per facade.
 
@@ -465,16 +465,16 @@ conflict), CN3007 (color theme bind failed), CN3008 (painter misuse), CN3009
 
 1. Add the bridge in `ComposeBridges.cs` (`[ComposeBridge]` + matching
    `[ComposeDefaults]` if `$default` slot). Verify
-   `dotnet build src/ComposeNet.Compose`.
+   `dotnet build src/Microsoft.AndroidX.Compose`.
 2. Stack `[ComposeFacade]`. Pass `Scope = "Row"`/`"Column"` only if content is
    `IFunction3` and child facades need that receiver. Pass
    `ClassName = "MyName"` only when public class name must differ from bridge
    method name (rare).
-3. Create sibling stub at `src/ComposeNet.Compose/<ClassName>.cs` with
+3. Create sibling stub at `src/Microsoft.AndroidX.Compose/<ClassName>.cs` with
    `public sealed partial class <ClassName>;` and a `<summary>`. Use
    `Button.cs`/`IconButton.cs`/`Card.cs` as templates. **Do not omit the
    stub** — without it no XML docs.
-4. Build `dotnet build src/ComposeNet.Gallery` to verify. CN3001-CN3011 fire
+4. Build `dotnet build src/Microsoft.AndroidX.Compose.Gallery` to verify. CN3001-CN3011 fire
    on rejection.
 5. If CN3002 fires, add the right marker attribute
    (`[Callback]`/`[Slot]`/`[PainterResource]`) or back out and write by hand.
@@ -495,13 +495,13 @@ conflict), CN3007 (color theme bind failed), CN3008 (painter misuse), CN3009
 | CN3008 | `[PainterResource]` annotates a non-`IntPtr` parameter.                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 | CN3009 | `[StateHolder]` invalid: non-`IntPtr` param, combined with `[PainterResource]`, missing/non-identifier `Remember`/`StateType`, named `Remember` not a static `(IComposer) -> IntPtr` on `ComposeBridges`, or `StateType` has no accessible writable instance field named `Jvm`.                                                                                                                                                                                                                  |
 | CN3010 | `BranchOn`/`AlternateBridge` invalid: only one set, primary/alternate missing trailing `int defaults`, named alternate not resolvable/ambiguous on `ComposeBridges`, alternate not a strict superset (missing a primary param or > 1 extra), extra param's PascalCased name doesn't match `BranchOn`, extra param isn't `IFunction2`/`IFunction3`, shared param has incompatible types, branching used on hybrid container shape, or alternate has no resolvable `[ComposeBridge].Defaults` enum. |
-| CN3011 | `[ConfirmStateChange(typeof(T))]` invalid: not on `IFunction1` param, missing `typeof(T)` ctor arg, convention adapter `ComposeNet.<TName>ConfirmStateChange` missing (override with `AdapterType = typeof(...)`), adapter doesn't implement `Kotlin.Jvm.Functions.IFunction1`, lacks public parameterless ctor, or no writable `Callback` property of type `System.Func<T, bool>?`.                                                                                                              |
+| CN3011 | `[ConfirmStateChange(typeof(T))]` invalid: not on `IFunction1` param, missing `typeof(T)` ctor arg, convention adapter `Microsoft.AndroidX.Compose.<TName>ConfirmStateChange` missing (override with `AdapterType = typeof(...)`), adapter doesn't implement `Kotlin.Jvm.Functions.IFunction1`, lacks public parameterless ctor, or no writable `Callback` property of type `System.Func<T, bool>?`.                                                                                                              |
 
 ### Migration rule
 
 When adding `[ComposeFacade]` to a hand-written facade, **replace** the
 hand-written file with a 3-line stub
-(`namespace ComposeNet; /// <summary>…</summary> public sealed partial class <Name>;`)
+(`namespace Microsoft.AndroidX.Compose; /// <summary>…</summary> public sealed partial class <Name>;`)
 in the same commit. Stub must not redeclare members the generator emits —
 duplicate-member errors otherwise.
 
@@ -517,7 +517,7 @@ When you need feature X the generator doesn't emit:
 
 1. Add a new slot kind / attribute / codegen branch to the relevant generator.
    Phases 1–10 are precedents.
-2. Add a generator test in `ComposeNet.SourceGenerators.Tests`.
+2. Add a generator test in `Microsoft.AndroidX.Compose.SourceGenerators.Tests`.
 3. Document the new shape in the Phase index; add new CN3xxx diagnostics.
 4. Apply the new attribute to the existing facade.
 
@@ -613,7 +613,7 @@ approval.
   `GC.KeepAlive` for every `IJavaPeerable` arg. Only needed when calling raw
   `JNIEnv.CallStatic*Method` directly inside a hand-written helper.
 
-- File-scoped namespaces (`namespace ComposeNet;`). One blank line separating
+- File-scoped namespaces (`namespace Microsoft.AndroidX.Compose;`). One blank line separating
   `// ---- Section ----` banners. XML doc comments on every public type and
   non-trivial member.
 
@@ -711,7 +711,7 @@ For Kotlin Compose `suspend` functions (e.g. `ScrollState.scrollTo`,
 `SuspendBridge.Invoke` allocates one `SuspendContinuation`, calls the raw JNI
 bridge, and completes the returned task from the sync result or later Kotlin
 resume. `SuspendContinuation` is an internal JCW registered as
-`composenet/compose/SuspendContinuation`; self-roots with a strong `GCHandle`
+`net/compose/SuspendContinuation`; self-roots with a strong `GCHandle`
 per call; `Context` returns `AndroidUiDispatcher.Main` (supplies the
 `MonotonicFrameClock` required by `withFrameNanos`-based animation suspends).
 
@@ -818,18 +818,18 @@ versioning.
 
 ## Public API tracking
 
-`ComposeNet.Compose` uses `Microsoft.CodeAnalysis.PublicApiAnalyzers`. Every
+`Microsoft.AndroidX.Compose` uses `Microsoft.CodeAnalysis.PublicApiAnalyzers`. Every
 public symbol must be in `PublicAPI.Shipped.txt` (released) or
 `PublicAPI.Unshipped.txt` (pending). `RS0016` fires for missing entries,
 `RS0017` for entries no longer in source.
 
 When changing public API:
 
-1. Build `src/ComposeNet.Compose`; note `RS0016`/`RS0017` warnings. IDE code
+1. Build `src/Microsoft.AndroidX.Compose`; note `RS0016`/`RS0017` warnings. IDE code
    fix can update `Unshipped.txt`, **or**
 2. Run:
    ```pwsh
-   dotnet format analyzers src/ComposeNet.Compose --diagnostics RS0016 RS0017 --severity warn
+   dotnet format analyzers src/Microsoft.AndroidX.Compose --diagnostics RS0016 RS0017 --severity warn
    ```
 3. **`dotnet format` skips source-generated files** (`[ComposeFacade]` ctors,
    Android `Resource` under `obj/`). After running, rebuild and add remaining
@@ -840,7 +840,7 @@ When changing public API:
 On release, move entries `Unshipped.txt` → `Shipped.txt`. Removing/renaming
 public symbols is breaking — prefer new overloads + obsoleting old ones.
 
-## Gallery demos (`src/ComposeNet.Gallery/Demos/`)
+## Gallery demos (`src/Microsoft.AndroidX.Compose.Gallery/Demos/`)
 
 On-device acceptance harness. **Every new public surface ships with a demo** —
 facades, state holders, modifier extensions, suspend `*Async`, scope helpers.
@@ -851,16 +851,16 @@ A feature without a demo is unverified.
 - One file per demo at `Demos/<CategoryFolder>/<Thing>Demo.cs`.
 - Filename **must** end with `Demo.cs` (avoids grep collision with control
   files). Class name matches: `class ChipsDemo`, not `class Chips`.
-- Namespace mirrors folder: `ComposeNet.Gallery.Demos.Buttons`.
+- Namespace mirrors folder: `Microsoft.AndroidX.Compose.Gallery.Demos.Buttons`.
 - Class is `public static`; expose `public static Demo Demo => new(...)` for
   the registry.
 
 ### Canonical template
 
 ```csharp
-using ComposeNet.Gallery.Registry;
+using Microsoft.AndroidX.Compose.Gallery.Registry;
 
-namespace ComposeNet.Gallery.Demos.Buttons;
+namespace Microsoft.AndroidX.Compose.Gallery.Demos.Buttons;
 
 /// <summary>One-line description of what this demo exercises.</summary>
 public static class FillStylesDemo
@@ -873,7 +873,7 @@ public static class FillStylesDemo
         Description: "Filled, Elevated, Filled tonal, Outlined, and Text buttons.",
         Build:       () =>
         {
-            var count = Compose.Remember(() => new MutableNumberState<int>(0));
+            var count = ComposeRuntime.Remember(() => new MutableNumberState<int>(0));
             return new Column
             {
                 new Text($"Tapped: {count}"),
@@ -904,22 +904,22 @@ public static class FillStylesDemo
   `Box(Modifier.Height(N))`.
 - **Label every tile.** Three identical-looking colored boxes say nothing —
   wrap each in a small `Column` with a caption.
-- **Keep `Build` cheap.** Invoked from `Compose.Remember` on every
-  navigation. Allocate state with `Compose.Remember(() => ...)` inside the
+- **Keep `Build` cheap.** Invoked from `ComposeRuntime.Remember` on every
+  navigation. Allocate state with `ComposeRuntime.Remember(() => ...)` inside the
   lambda, not in a static initializer.
 - **One concept per demo.** Split "Buttons & chips & FABs".
 
 ### Verifying
 
 ```pwsh
-dotnet build src/ComposeNet.Gallery -t:Run -c Debug
+dotnet build src/Microsoft.AndroidX.Compose.Gallery -t:Run -c Debug
 ```
 
 Deep-link to a specific demo:
 
 ```pwsh
 adb shell am start `
-    -n com.companyname.ComposeNet.Gallery/crc64f6e6d73c94e2195e.MainActivity `
+    -n net.compose.gallery/net.compose.gallery.MainActivity `
     --es route "demo/<your-demo-id>"
 ```
 

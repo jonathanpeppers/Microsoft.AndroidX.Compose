@@ -1,18 +1,18 @@
 ---
 name: api-coverage
-description: Regenerate the Compose ⇄ ComposeNet API coverage report via `scripts/api-comparison.cs`. Use for any Compose coverage question — "how much do we wrap", "what's missing in module X", "is Foo wrapped yet" — or after bumping a `Xamarin.AndroidX.Compose.*` version or adding a facade.
+description: Regenerate the Compose ⇄ Microsoft.AndroidX.Compose API coverage report via `scripts/api-comparison.cs`. Use for any Compose coverage question — "how much do we wrap", "what's missing in module X", "is Foo wrapped yet" — or after bumping a `Xamarin.AndroidX.Compose.*` version or adding a facade.
 ---
 
 # API coverage
 
-Regenerate `docs/api-coverage.md` — the Jetpack Compose ⇄ ComposeNet API
+Regenerate `docs/api-coverage.md` — the Jetpack Compose ⇄ Microsoft.AndroidX.Compose API
 coverage report. The report is produced by a single .NET 10 file-based
 program at `scripts/api-comparison.cs` that downloads upstream AndroidX
 `-sources.jar` files from Google Maven, parses public Kotlin
 declarations, cross-references them with
-`src/ComposeNet.Compose/PublicAPI.Unshipped.txt`, and writes a markdown
+`src/Microsoft.AndroidX.Compose/PublicAPI.Unshipped.txt`, and writes a markdown
 report with a coverage % summary, per-module checkbox lists,
-ComposeNet-only types, and a "differences worth investigating"
+Microsoft.AndroidX.Compose-only types, and a "differences worth investigating"
 appendix.
 
 ## Workflow
@@ -52,7 +52,7 @@ Select-String -Path docs/api-coverage.md -Pattern '^- \*\*' | Select-Object -Fir
 ```
 
 If the totals didn't move when you expected them to (e.g. you added a
-new facade but `Covered by ComposeNet` is unchanged), see
+new facade but `Covered by Microsoft.AndroidX.Compose` is unchanged), see
 **Troubleshooting** below.
 
 ### 3. Commit the regenerated report alongside the change that prompted it
@@ -124,7 +124,7 @@ dotnet run scripts/api-comparison.cs
 - **Per-module sections** — GitHub-renderable task lists
   (`- [x] Button → type match`, `- [ ] BackHandler`). Split into
   `@Composable functions` and `Other top-level functions`.
-- **ComposeNet-only types** — C# types with no Kotlin counterpart in
+- **Microsoft.AndroidX.Compose-only types** — C# types with no Kotlin counterpart in
   scope. Most are intentional infrastructure (`ComposableLambda*`,
   `RenderContext`, state-holder wrappers); a handful (the
   `*Flexible*AppBar` family) wrap `internal fun` Kotlin that's real
@@ -145,5 +145,5 @@ dotnet run scripts/api-comparison.cs
   Kotlin source.
 - Don't run the script from inside a subdirectory; paths in the
   script (`obj/api-coverage`, `docs/api-coverage.md`,
-  `src/ComposeNet.Compose/PublicAPI.Unshipped.txt`) are relative to
+  `src/Microsoft.AndroidX.Compose/PublicAPI.Unshipped.txt`) are relative to
   the repo root.

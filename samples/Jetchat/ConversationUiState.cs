@@ -1,4 +1,4 @@
-namespace ComposeNet.Samples.Jetchat;
+namespace Microsoft.AndroidX.Compose.Samples.Jetchat;
 
 /// <summary>
 /// UI state for the conversation screen. One channel per state object,

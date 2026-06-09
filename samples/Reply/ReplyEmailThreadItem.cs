@@ -1,4 +1,4 @@
-namespace ComposeNet.Samples.Reply;
+namespace Microsoft.AndroidX.Compose.Samples.Reply;
 
 /// <summary>
 /// A single thread item rendered in the email detail screen. Port of
@@ -36,7 +36,7 @@ public static class ReplyEmailThreadItem
             };
         });
 
-    static Row BuildHeaderRow(Email email, AndroidX.Compose.Material3.ColorScheme scheme) =>
+    static Row BuildHeaderRow(Email email, global::AndroidX.Compose.Material3.ColorScheme scheme) =>
         new()
         {
             Modifier.Companion.FillMaxWidth(),
@@ -68,7 +68,7 @@ public static class ReplyEmailThreadItem
             },
         };
 
-    static Row BuildActionRow(AndroidX.Compose.Material3.ColorScheme scheme) =>
+    static Row BuildActionRow(global::AndroidX.Compose.Material3.ColorScheme scheme) =>
         new(Arrangement.SpacedBy(12))
         {
             Modifier.Companion

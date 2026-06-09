@@ -1,5 +1,5 @@
 
-namespace ComposeNet.Samples.JetNews;
+namespace Microsoft.AndroidX.Compose.Samples.JetNews;
 
 /// <summary>
 /// Async data source for the JetNews feed and per-post lookup. The

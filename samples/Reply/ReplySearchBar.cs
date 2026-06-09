@@ -1,6 +1,6 @@
-using AndroidX.Compose.Runtime;
+using global::AndroidX.Compose.Runtime;
 
-namespace ComposeNet.Samples.Reply;
+namespace Microsoft.AndroidX.Compose.Samples.Reply;
 
 /// <summary>
 /// Simplified top "search" entry used by <see cref="ReplyInboxScreen"/>.

@@ -1,7 +1,7 @@
-using Android.Content;
-using AndroidX.Compose.Material3;
+using global::Android.Content;
+using global::AndroidX.Compose.Material3;
 
-namespace ComposeNet.Samples.JetNews;
+namespace Microsoft.AndroidX.Compose.Samples.JetNews;
 
 /// <summary>
 /// JetNews host activity. Subclasses <see cref="ComposeActivity"/>,
@@ -13,6 +13,7 @@ namespace ComposeNet.Samples.JetNews;
     Label        = "@string/app_name",
     MainLauncher = true,
     Theme        = "@android:style/Theme.Material.Light.NoActionBar")]
+[global::Android.Runtime.Register("net/compose/samples/jetnews/MainActivity")]
 public class MainActivity : ComposeActivity
 {
     /// <summary>Build the root composition.</summary>
@@ -26,11 +27,11 @@ public class MainActivity : ComposeActivity
             var drawerState          = Remember(() => new DrawerStateHolder(DrawerValue.Closed));
             // Acquire bookmarks from the activity's ViewModelStore so
             // the toggled set survives configuration change AND is
-            // shared across nav destinations. Compose.ViewModel<T>
+            // shared across nav destinations. ComposeRuntime.ViewModel<T>
             // reads LocalViewModelStoreOwner from the active
             // composition; the root SetContent body sees the host
             // ComponentActivity, so this VM is activity-scoped.
-            var bookmarks            = Compose.ViewModel(() => new BookmarksViewModel());
+            var bookmarks            = ComposeRuntime.ViewModel(() => new BookmarksViewModel());
             var selectedTopics       = Remember(() => new MutableStateList<string>());
             var selectedPeople       = Remember(() => new MutableStateList<string>());
             var selectedPublications = Remember(() => new MutableStateList<string>());

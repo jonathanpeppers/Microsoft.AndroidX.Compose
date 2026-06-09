@@ -1,11 +1,11 @@
-namespace ComposeNet.Samples.JetNews;
+namespace Microsoft.AndroidX.Compose.Samples.JetNews;
 
 /// <summary>
 /// View model holding the user's bookmarked post ids. Lives at the
 /// activity / nav-graph level so both <see cref="HomeScreen"/> and
 /// <see cref="PostScreen"/> see the same toggled set, and so the
 /// list survives configuration change (the activity's
-/// <see cref="AndroidX.Lifecycle.ViewModelStore"/> retains the
+/// <see cref="global::AndroidX.Lifecycle.ViewModelStore"/> retains the
 /// instance across <c>Activity.OnCreate</c> calls).
 /// </summary>
 /// <remarks>

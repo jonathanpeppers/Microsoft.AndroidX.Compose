@@ -399,12 +399,12 @@ FodyWeavers.xsd
 
 # JetBrains Rider
 *.sln.iml
-src/ComposeNet.Bindings.Runtime/build.log
-src/ComposeNet.Gallery/bin/
-src/ComposeNet.Gallery/obj/
-src/ComposeNet.Bindings.Runtime/bin/
-src/ComposeNet.Bindings.Runtime/obj/
+src/Microsoft.AndroidX.Compose.Bindings.Runtime/build.log
+src/Microsoft.AndroidX.Compose.Gallery/bin/
+src/Microsoft.AndroidX.Compose.Gallery/obj/
+src/Microsoft.AndroidX.Compose.Bindings.Runtime/bin/
+src/Microsoft.AndroidX.Compose.Bindings.Runtime/obj/
 
-src/ComposeNet.Gallery/log.txt
+src/Microsoft.AndroidX.Compose.Gallery/log.txt
 
-src/ComposeNet.Gallery/screen.png
+src/Microsoft.AndroidX.Compose.Gallery/screen.png

@@ -1,6 +1,6 @@
-using AndroidX.Compose.Material3;
+using global::AndroidX.Compose.Material3;
 
-namespace ComposeNet.Samples.Jetchat;
+namespace Microsoft.AndroidX.Compose.Samples.Jetchat;
 
 /// <summary>
 /// C# port of upstream's <c>RecordButton.kt</c> + <c>RecordingIndicator</c>.
@@ -14,7 +14,7 @@ public static class RecordButton
     const int PulseDurationMs          = 2000;
 
     static float SwipeToCancelThresholdPx =>
-        SwipeToCancelThresholdDp * Android.Content.Res.Resources.System!.DisplayMetrics!.Density;
+        SwipeToCancelThresholdDp * global::Android.Content.Res.Resources.System!.DisplayMetrics!.Density;
 
     /// <summary>Build the mic button (idle gray icon, or red recording pill).</summary>
     public static ComposableNode BuildButton(
@@ -26,7 +26,7 @@ public static class RecordButton
     {
         bool recording = isRecording.Value;
         float threshold = SwipeToCancelThresholdPx;
-        var dragState  = Compose.RememberDraggableState(delta =>
+        var dragState  = ComposeRuntime.RememberDraggableState(delta =>
         {
             if (!isRecording.Value) return;
             swipeOffset.Value += delta;
@@ -73,12 +73,12 @@ public static class RecordButton
         MutableNumberState<float> swipeOffset,
         ColorScheme               scheme)
     {
-        var pulse   = Compose.Remember(() => new MutableNumberState<float>(1f));
-        var seconds = Compose.Remember(() => new MutableNumberState<int>(0));
+        var pulse   = ComposeRuntime.Remember(() => new MutableNumberState<float>(1f));
+        var seconds = ComposeRuntime.Remember(() => new MutableNumberState<int>(0));
 
         return new Composed(c =>
         {
-            float density   = Android.Content.Res.Resources.System!.DisplayMetrics!.Density;
+            float density   = global::Android.Content.Res.Resources.System!.DisplayMetrics!.Density;
             float threshold = SwipeToCancelThresholdDp * density;
             float offset    = swipeOffset.Value;
             float alphaHint = MathF.Max(0f, 1f - MathF.Abs(offset) / threshold);

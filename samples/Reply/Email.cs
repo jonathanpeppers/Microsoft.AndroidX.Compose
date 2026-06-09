@@ -1,5 +1,5 @@
 
-namespace ComposeNet.Samples.Reply;
+namespace Microsoft.AndroidX.Compose.Samples.Reply;
 
 /// <summary>
 /// A single email. Port of upstream's <c>Email</c> data class.

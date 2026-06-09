@@ -1,5 +1,5 @@
 
-namespace ComposeNet.Samples.Reply;
+namespace Microsoft.AndroidX.Compose.Samples.Reply;
 
 /// <summary>
 /// Static list of <see cref="ReplyTopLevelDestination"/>s surfaced in

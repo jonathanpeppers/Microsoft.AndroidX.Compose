@@ -1,5 +1,5 @@
 
-namespace ComposeNet.Samples.JetNews;
+namespace Microsoft.AndroidX.Compose.Samples.JetNews;
 
 /// <summary>
 /// Static data for the Interests screen — three categories of
