@@ -32,6 +32,13 @@ dotnet build samples/Jetchat -t:Run
   Profiles" section. The drawer column is wrapped in
   `Modifier.VerticalScroll(rememberedScrollState)` so it scrolls when
   it overflows on small heights.
+- **Drawer "Settings" section (API 26+)** — on
+  `OperatingSystem.IsAndroidVersionAtLeast(26)` an extra section with
+  **Settings** and **Pin Widget to home** rows appears below "Recent
+  Profiles", matching upstream's `JetchatDrawer` API-gated block.
+  Tapping either row closes the drawer and opens the existing
+  `FunctionalityNotAvailable` popup; an actual `requestPinAppWidget`
+  flow is gated behind a future Glance widget (still listed below).
 - **Multi-channel state** — `ConversationUiState` holds a
   `Dictionary<string, ChannelState>` keyed by channel name. Tapping a
   drawer row swaps the active channel; the title, member count, and
@@ -124,7 +131,7 @@ feature, a new package reference, or simply more sample plumbing:
 | `ClickableText` URL / `@mention` link parsing inside message bodies | needs `AnnotatedString` + `ClickableText` bindings (multi-span text styling). |
 | Image / sticker / file message attachments inside bubbles | requires a composable image-loader pipeline (e.g. Coil). |
 | User profile screen (`ProfileScreen` reached via `NavHost`) | `NavController` / `NavHost` bindings landed in #60 but the screen + nav graph aren't wired up here. Explicitly out of scope for this port. |
-| App-widget discoverability (`@JetchatAppWidget`) | explicitly out of scope. |
+| App-widget discoverability (`@JetchatAppWidget`) | the **drawer entry point** exists on API 26+ (see *What's faithful*) but the actual `androidx.glance.appwidget`-backed widget + `AppWidgetManager.requestPinAppWidget(...)` flow is still out of scope — needs the `Xamarin.AndroidX.Glance.AppWidget` package and a `GlanceAppWidget` subclass. |
 | Drag-and-drop image target on the conversation area | explicitly out of scope. |
 | Sticky day-headers spanning multiple dates (e.g. "20 Aug" alongside "Today") | needs the `LazyListScope.item { … }` DSL exposed on the `LazyColumn` facade so a per-day header can be emitted between message groups. Only "Today" is rendered. |
 | `Sp(float)` for exact M3 letter-spacing (0.5 / 0.1 sp values) | `Sp` is integer-only; `labelSmall` rounds 0.5 → 1, `titleSmall` rounds 0.1 → 0 (dropped). |
@@ -206,6 +213,21 @@ The sample mirrors disabled-state visuals by flipping the label
 color from `Primary` to `OnSurfaceVariant` when the input is
 whitespace, and the `Send` handler early-returns on
 `IsNullOrWhiteSpace`.
+
+### Drawer "Settings" section is gated on API 26
+
+Upstream's `JetchatDrawer.kt` wraps the **Settings** + **Pin Widget
+to home** rows in `if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)`
+because `AppWidgetManager.requestPinAppWidget(...)` requires API 26.
+The port uses the modern .NET equivalent
+(`OperatingSystem.IsAndroidVersionAtLeast(26)`), which the BCL
+recognises as a platform guard so the rows can call APIs annotated
+`[SupportedOSPlatform("android26.0")]` without an `SYSLIB` warning.
+Both row click handlers fire `drawerState.CloseAsync()` and then the
+existing `FunctionalityNotAvailable` popup — same affordance the
+search and info top-bar icons use. Hooking the **Pin Widget** row to
+a real `requestPinAppWidget` call is blocked on landing the Glance
+widget itself, tracked in *What's still omitted*.
 
 ### Layout and styling decisions vs upstream
 
