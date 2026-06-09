@@ -48,6 +48,7 @@ public static class Catalog
         D.TextInputs.ColorAndAlignmentDemo.Demo,
         D.TextInputs.OverflowAndClampingDemo.Demo,
         D.TextInputs.TextFieldSlotsDemo.Demo,
+        D.TextInputs.TextFieldCursorPlacementDemo.Demo,
         D.TextInputs.OutlinedTextFieldDemo.Demo,
         D.TextInputs.SecureTextFieldDemo.Demo,
         D.TextInputs.OutlinedSecureTextFieldDemo.Demo,

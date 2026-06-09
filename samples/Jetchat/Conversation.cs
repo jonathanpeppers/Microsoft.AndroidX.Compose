@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using AndroidX.Compose.Material3;
+using AndroidX.Compose.UI.Text.Input;
 using ComposeNet;
 
 namespace ComposeNet.Samples.Jetchat;
@@ -27,7 +28,7 @@ public static class Conversation
     /// <summary>Materialize the conversation tree for one composition pass.</summary>
     public static ComposableNode Build(
         ConversationUiState  ui,
-        MutableState<string> input,
+        MutableState<TextFieldValue> input,
         MutableState<string> selectedMenu,
         MutableState<int>    selectedSelector,
         MutableState<bool>   popupOpen,
@@ -110,7 +111,7 @@ public static class Conversation
 
     static Column BuildBody(
         ConversationUiState  ui,
-        MutableState<string> input,
+        MutableState<TextFieldValue> input,
         ColorScheme          scheme,
         MutableState<int>    selectedSelector,
         LazyListState        messagesScroll,
@@ -296,7 +297,7 @@ public static class Conversation
 
     static Surface BuildInputArea(
         ConversationUiState  ui,
-        MutableState<string> input,
+        MutableState<TextFieldValue> input,
         ColorScheme          scheme,
         MutableState<int>    selectedSelector,
         LazyListState        messagesScroll) =>
@@ -312,7 +313,7 @@ public static class Conversation
             },
         };
 
-    static Row BuildTextFieldRow(ConversationUiState ui, MutableState<string> input) =>
+    static Row BuildTextFieldRow(ConversationUiState ui, MutableState<TextFieldValue> input) =>
         new()
         {
             Modifier.Companion.FillMaxWidth().Padding(horizontal: 8, vertical: 4),
@@ -324,7 +325,7 @@ public static class Conversation
 
     static Row BuildSelectorRow(
         ConversationUiState  ui,
-        MutableState<string> input,
+        MutableState<TextFieldValue> input,
         ColorScheme          scheme,
         MutableState<int>    selectedSelector,
         LazyListState        messagesScroll)
@@ -341,7 +342,7 @@ public static class Conversation
                 InputSelectorButton(Resource.Drawable.ic_duo,             "Start videochat",     SelPhone,   selectedSelector, scheme),
             },
         };
-        bool enabled = !string.IsNullOrWhiteSpace(input.Value);
+        bool enabled = !string.IsNullOrWhiteSpace(input.Value?.Text);
         row.Add(new TextButton(onClick: () => Send(ui, input, selectedSelector, messagesScroll))
         {
             new Text("Send")
@@ -375,7 +376,7 @@ public static class Conversation
     }
 
     static ComposableNode BuildSelectorPanel(
-        MutableState<string> input,
+        MutableState<TextFieldValue> input,
         ColorScheme          scheme,
         MutableState<int>    selectedSelector)
     {
@@ -408,14 +409,14 @@ public static class Conversation
 
     static void Send(
         ConversationUiState  ui,
-        MutableState<string> input,
+        MutableState<TextFieldValue> input,
         MutableState<int>    selectedSelector,
         LazyListState        messagesScroll)
     {
-        var text = input.Value ?? string.Empty;
+        var text = input.Value?.Text ?? string.Empty;
         if (string.IsNullOrWhiteSpace(text)) return;
         ui.AddMessage(new Message(MyName, text.Trim(), "8:30 PM"));
-        input.Value = string.Empty;
+        input.Value = Compose.NewTextFieldValue();
         selectedSelector.Value = 0;
         _ = messagesScroll.AnimateScrollToItemAsync(0);
     }

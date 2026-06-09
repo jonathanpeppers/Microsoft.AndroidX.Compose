@@ -1,4 +1,5 @@
 using AndroidX.Compose.Material3;
+using AndroidX.Compose.UI.Text.Input;
 using ComposeNet;
 
 namespace ComposeNet.Samples.Jetchat;
@@ -29,10 +30,10 @@ public static class JetchatApp
 
     /// <summary>Materialize the Jetchat tree for one composition pass.</summary>
     public static ComposableNode Build(
-        NavController        nav,
-        ConversationUiState  ui,
-        MutableState<string> input,
-        MutableState<string> selectedMenu,
+        NavController                nav,
+        ConversationUiState          ui,
+        MutableState<TextFieldValue> input,
+        MutableState<string>         selectedMenu,
         ScrollState          drawerScroll,
         DrawerStateHolder    drawerState,
         MutableState<int>    selectedSelector,
