@@ -16,12 +16,11 @@ namespace ComposeNet.Samples.Jetchat;
 ///   <item>`MyClass.myMethod` — inline code styling</item>
 /// </list>
 /// </summary>
-public static class MessageFormatter
+public static partial class MessageFormatter
 {
     // Regex containing the syntax tokens
-    static readonly Regex SymbolPattern = new(
-        @"(https?://[^\s\t\n]+)|(`[^`]+`)|(@\w+)|(\*[\w]+\*)|(_[\w]+_)|(~[\w]+~)",
-        RegexOptions.Compiled);
+    [GeneratedRegex(@"(https?://[^\s\t\n]+)|(`[^`]+`)|(@\w+)|(\*[\w]+\*)|(_[\w]+_)|(~[\w]+~)")]
+    private static partial Regex SymbolPattern();
 
     // Tag used by addStringAnnotation for @mention click targets.
     const string PersonTag = "PERSON";
@@ -45,7 +44,7 @@ public static class MessageFormatter
 
         int cursor = 0;
         bool any = false;
-        foreach (Match token in SymbolPattern.Matches(text))
+        foreach (Match token in SymbolPattern().Matches(text))
         {
             any = true;
             if (token.Index > cursor)
