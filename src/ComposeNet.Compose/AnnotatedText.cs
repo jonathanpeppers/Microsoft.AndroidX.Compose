@@ -91,6 +91,5 @@ public sealed class AnnotatedText : ComposableNode
             maxLines:      MaxLines,
             minLines:      MinLines,
             composer:      composer);
-        System.GC.KeepAlive(_text);
     }
 }

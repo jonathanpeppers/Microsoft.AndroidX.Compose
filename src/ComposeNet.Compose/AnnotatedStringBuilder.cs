@@ -96,12 +96,9 @@ public sealed class AnnotatedStringBuilder
                 _builder.AddLink(c, start, end);
                 break;
             default:
-                // PushLink + immediate Pop is functionally equivalent
-                // for unknown LinkAnnotation subtypes — keeps us
-                // future-proof if Compose adds new variants.
-                int idx = _builder.PushLink(link.Binding);
-                _builder.Pop(idx);
-                break;
+                throw new System.NotSupportedException(
+                    $"Unknown LinkAnnotation subtype '{link.Binding?.GetType().FullName ?? "null"}'. " +
+                    "Add an explicit AddLink overload when Compose introduces a new variant.");
         }
     }
 
