@@ -1,4 +1,4 @@
-using AndroidX.Compose.Material3;
+﻿using AndroidX.Compose.Material3;
 using ComposeNet;
 
 namespace ComposeNet.Samples.Jetchat;
@@ -26,46 +26,46 @@ public static class EmojiSelector
 
     static readonly string[] Emojis = new[]
     {
-        "\U0001F600", // Grinning Face
-        "\U0001F601", // Grinning Face With Smiling Eyes
-        "\U0001F602", // Face With Tears of Joy
-        "\U0001F603", // Smiling Face With Open Mouth
-        "\U0001F604", // Smiling Face With Open Mouth and Smiling Eyes
-        "\U0001F605", // Smiling Face With Open Mouth and Cold Sweat
-        "\U0001F606", // Smiling Face With Open Mouth and Tightly-Closed Eyes
-        "\U0001F609", // Winking Face
-        "\U0001F60A", // Smiling Face With Smiling Eyes
-        "\U0001F60B", // Face Savouring Delicious Food
-        "\U0001F60E", // Smiling Face With Sunglasses
-        "\U0001F60D", // Smiling Face With Heart-Shaped Eyes
-        "\U0001F618", // Face Throwing a Kiss
-        "\U0001F617", // Kissing Face
-        "\U0001F619", // Kissing Face With Smiling Eyes
-        "\U0001F61A", // Kissing Face With Closed Eyes
-        "\u263A",     // White Smiling Face
-        "\U0001F642", // Slightly Smiling Face
-        "\U0001F917", // Hugging Face
-        "\U0001F607", // Smiling Face With Halo
-        "\U0001F913", // Nerd Face
-        "\U0001F914", // Thinking Face
-        "\U0001F610", // Neutral Face
-        "\U0001F611", // Expressionless Face
-        "\U0001F636", // Face Without Mouth
-        "\U0001F644", // Face With Rolling Eyes
-        "\U0001F60F", // Smirking Face
-        "\U0001F623", // Persevering Face
-        "\U0001F625", // Disappointed but Relieved Face
-        "\U0001F62E", // Face With Open Mouth
-        "\U0001F910", // Zipper-Mouth Face
-        "\U0001F62F", // Hushed Face
-        "\U0001F62A", // Sleepy Face
-        "\U0001F62B", // Tired Face
-        "\U0001F634", // Sleeping Face
-        "\U0001F60C", // Relieved Face
-        "\U0001F61B", // Face With Stuck-Out Tongue
-        "\U0001F61C", // Face With Stuck-Out Tongue and Winking Eye
-        "\U0001F61D", // Face With Stuck-Out Tongue and Tightly-Closed Eyes
-        "\U0001F612", // Unamused Face
+        "😀", // Grinning Face
+        "😁", // Grinning Face With Smiling Eyes
+        "😂", // Face With Tears of Joy
+        "😃", // Smiling Face With Open Mouth
+        "😄", // Smiling Face With Open Mouth and Smiling Eyes
+        "😅", // Smiling Face With Open Mouth and Cold Sweat
+        "😆", // Smiling Face With Open Mouth and Tightly-Closed Eyes
+        "😉", // Winking Face
+        "😊", // Smiling Face With Smiling Eyes
+        "😋", // Face Savouring Delicious Food
+        "😎", // Smiling Face With Sunglasses
+        "😍", // Smiling Face With Heart-Shaped Eyes
+        "😘", // Face Throwing a Kiss
+        "😗", // Kissing Face
+        "😙", // Kissing Face With Smiling Eyes
+        "😚", // Kissing Face With Closed Eyes
+        "☺",     // White Smiling Face
+        "🙂", // Slightly Smiling Face
+        "🤗", // Hugging Face
+        "😇", // Smiling Face With Halo
+        "🤓", // Nerd Face
+        "🤔", // Thinking Face
+        "😐", // Neutral Face
+        "😑", // Expressionless Face
+        "😶", // Face Without Mouth
+        "🙄", // Face With Rolling Eyes
+        "😏", // Smirking Face
+        "😣", // Persevering Face
+        "😥", // Disappointed but Relieved Face
+        "😮", // Face With Open Mouth
+        "🤐", // Zipper-Mouth Face
+        "😯", // Hushed Face
+        "😪", // Sleepy Face
+        "😫", // Tired Face
+        "😴", // Sleeping Face
+        "😌", // Relieved Face
+        "😛", // Face With Stuck-Out Tongue
+        "😜", // Face With Stuck-Out Tongue and Winking Eye
+        "😝", // Face With Stuck-Out Tongue and Tightly-Closed Eyes
+        "😒", // Unamused Face
     };
 
     /// <summary>Build the emoji selector panel.</summary>
