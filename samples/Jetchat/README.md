@@ -109,8 +109,11 @@ dotnet build samples/Jetchat -t:Run
   image / location / video opens a `FunctionalityNotAvailable` panel —
   the same fallback upstream uses for the unbound selector pages.
 - **IME + navigation-bar safe insets** on the input area via
-  `Modifier.NavigationBarsPadding().ImePadding()` so the keyboard
-  pushes the input row up without obscuring it.
+  `Modifier.NavigationBarsPadding().ImePadding()` plus
+  `WindowSoftInputMode = SoftInput.AdjustResize` on the activity, so
+  the keyboard pushes the input row up without obscuring it (and
+  without the system's default `adjustUnspecified` behaviour
+  double-shifting the content under edge-to-edge).
 - Reactive message list via `MutableStateList<Message>` — tapping
   send appends to the active channel and the UI recomposes.
 - Reactive channel selection via `MutableState<string>` — drawer
@@ -137,6 +140,7 @@ feature, a new package reference, or simply more sample plumbing:
 | `Sp(float)` for exact M3 letter-spacing (0.5 / 0.1 sp values) | `Sp` is integer-only; `labelSmall` rounds 0.5 → 1, `titleSmall` rounds 0.1 → 0 (dropped). |
 | `FocusRequester` programmatic focus into the emoji panel | the panel opens correctly but doesn't grab focus on expand. |
 | Full ~80-glyph emoji table | `EmojiSelector.cs` exposes the first 40 glyphs from upstream's `private val emojis = listOf(...)` — the same `EMOJI_COLUMNS × 4` grid Kotlin's `EmojiTable` actually renders. The remaining upstream entries are unused on screen and were dropped. |
+| Emoji-tap places cursor at end of input   | Upstream uses `TextFieldValue` with explicit `selection = TextRange(newText.length)` so each emoji append moves the cursor past the appended glyph. This port's `TextField` facade is bound to `MutableState<string>` (Compose's `String`-overload), which preserves the existing cursor position across external value updates. Tapping an emoji appends the glyph to the buffer but the cursor stays where it was — a `TextFieldValue` / `TextRange` binding is needed for parity. |
 
 ## Facade features added for this port
 
