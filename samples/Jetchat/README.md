@@ -121,6 +121,41 @@ dotnet build samples/Jetchat -t:Run
   the bolded selected chat row.
 - Newly sent messages stamp `"now"` (matching upstream's
   `R.string.now` resource value).
+- **`NavController` / `NavHost` routing** between two destinations:
+  a `home` route hosting the conversation and a
+  `profile/{userId}` route hosting `Profile`. Drawer profile rows
+  and message-avatar taps both navigate to the profile route; the
+  topbar's back arrow / system back returns. The drawer lives
+  above the `NavHost` so it stays available on both screens.
+- **Profile screen** (`Profile.cs`) — `Scaffold` with a
+  `CenterAlignedTopAppBar` (back + more-options), a vertically
+  scrolling body wrapped in `BoxWithConstraints` so the hero
+  portrait caps at half the available height, name / status /
+  display-name / position / twitter / timezone / channels rows,
+  and an `ExtendedFloatingActionButton` aligned `BottomEnd` that
+  expands / collapses based on `scrollState.Value == 0` (the M3
+  equivalent of upstream's custom `AnimatingFabContent`). FAB
+  icon and label switch on `ProfileScreenState.IsMe()`:
+  `ic_create` + "Edit profile" for the local user; `ic_chat` +
+  "Message" for a colleague.
+- **`ProfileViewModel`** tracks the active user id in a
+  `MutableState<string>` and resolves it to a
+  `ProfileScreenState` via `Profiles.GetById(...)`. The route
+  content reads the user id directly from
+  `NavBackStackEntry.Arguments` so the route's display state is
+  driven entirely by the back-stack argument; nothing is mutated
+  during composition. (Upstream uses a `MutableLiveData` here; the
+  port keeps the ID in `MutableState<string>` because Compose's
+  snapshot system in this binding only safely shuttles
+  JVM-convertible values, and the ID is a plain `string`.)
+- **Stack normalization on profile navigation.** When the drawer
+  fires `onProfileClicked` (or `onChatClicked`) while the profile
+  screen is on top of the back stack, `JetchatApp` first calls
+  `nav.PopBackStack(Routes.Home, inclusive: false)` and then
+  navigates. Without that pop, opening the drawer from one
+  profile and tapping a different profile row would push a second
+  `profile/{userId}` entry, so back would return to the previous
+  profile rather than the conversation.
 
 ## What's still omitted
 
@@ -132,7 +167,6 @@ feature, a new package reference, or simply more sample plumbing:
 | `JumpToBottom` FAB (slides in when scrolled away from bottom) | needs a `LazyListState` facade wrapper plus a suspend bridge over `animateScrollToItem`. `LazyListStateKt.RememberLazyListState` is bindable — confirmed during this port; the wrapper just hasn't been built yet. |
 | `BackHandler` to dismiss the expanded input panel via system back | `androidx.activity.compose.BackHandlerKt` lives in `Xamarin.AndroidX.Activity.Compose` which isn't currently referenced. Adding the NuGet + a `[ComposeBridge]` would unblock it. |
 | Image / sticker / file message attachments inside bubbles | requires a composable image-loader pipeline (e.g. Coil). |
-| User profile screen (`ProfileScreen` reached via `NavHost`) | `NavController` / `NavHost` bindings landed in #60 but the screen + nav graph aren't wired up here. Explicitly out of scope for this port. |
 | App-widget discoverability (`@JetchatAppWidget`) | the **drawer entry point** exists on API 26+ (see *What's faithful*) but the actual `androidx.glance.appwidget`-backed widget + `AppWidgetManager.requestPinAppWidget(...)` flow is still out of scope — needs the `Xamarin.AndroidX.Glance.AppWidget` package and a `GlanceAppWidget` subclass. |
 | Drag-and-drop image target on the conversation area | explicitly out of scope. |
 | Sticky day-headers spanning multiple dates (e.g. "20 Aug" alongside "Today") | needs the `LazyListScope.item { … }` DSL exposed on the `LazyColumn` facade so a per-day header can be emitted between message groups. Only "Today" is rendered. |

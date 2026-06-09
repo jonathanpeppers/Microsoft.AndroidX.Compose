@@ -26,7 +26,19 @@ public class MainActivity : ComposeActivity
             var selectedSelector = Remember(() => new MutableState<int>(0));
             var popupOpen        = Remember(() => new MutableState<bool>(false));
             var messagesScroll   = Compose.RememberLazyListState();
-            return Conversation.Build(ui, input, selectedMenu, drawerScroll, drawerState, selectedSelector, popupOpen, messagesScroll);
+            var nav              = Remember(() => new NavController());
+            var profileViewModel = Remember(() => new ProfileViewModel());
+            return JetchatApp.Build(
+                nav:              nav,
+                ui:               ui,
+                input:            input,
+                selectedMenu:     selectedMenu,
+                drawerScroll:     drawerScroll,
+                drawerState:      drawerState,
+                selectedSelector: selectedSelector,
+                popupOpen:        popupOpen,
+                messagesScroll:   messagesScroll,
+                profileViewModel: profileViewModel);
         });
     }
 }
