@@ -27,40 +27,82 @@ public static class HomeScreen
         BookmarksViewModel bookmarks,
         DrawerStateHolder drawerState,
         Action<string> onSelectPost,
+        SnackbarController snackbars,
         IPostsRepository? repository = null)
     {
         var vm = Compose.ViewModel(() => new HomeViewModel(repository));
         var state = vm.UiState.CollectAsStateWithLifecycle().Value;
 
+        // Search-bar toggle: tap the magnifier in the action row to swap
+        // the wordmark title for an inline OutlinedTextField. The search
+        // is purely visual today — wiring it to filter the feed needs
+        // Modifier.interceptKey(Key.Enter), tracked in #159.
+        var searchOpen  = Compose.Remember(() => new MutableState<bool>(false));
+        var searchQuery = Compose.Remember(() => new MutableState<string>(string.Empty));
+        var snackbarMessage = snackbars.Message.Value;
+
         return new Scaffold
         {
-            TopBar = new CenterAlignedTopAppBar
+            TopBar = BuildTopBar(searchOpen, searchQuery, drawerState, vm),
+            SnackbarHost = snackbarMessage is null
+                ? null
+                : new Snackbar { Body = new Text(snackbarMessage) },
+            Body = state switch
             {
-                NavigationIcon = new IconButton(onClick: () => _ = drawerState.OpenAsync())
+                HomeUiState.Loading       => BuildLoading(),
+                HomeUiState.Error e       => BuildError(e.Message, () => _ = vm.RefreshAsync()),
+                HomeUiState.HasPosts h    => BuildBody(h, bookmarks, onSelectPost, vm, snackbars),
+                _                         => new Spacer(),
+            },
+        };
+    }
+
+    static ComposableNode BuildTopBar(
+        MutableState<bool> searchOpen,
+        MutableState<string> searchQuery,
+        DrawerStateHolder drawerState,
+        HomeViewModel vm) =>
+        new CenterAlignedTopAppBar
+        {
+            NavigationIcon = new IconButton(onClick: () => _ = drawerState.OpenAsync())
+            {
+                new Icon(Resource.Drawable.ic_menu, "Open navigation drawer"),
+            },
+            Title = searchOpen.Value
+                ? new OutlinedTextField(searchQuery)
                 {
-                    new Icon(Resource.Drawable.ic_menu, "Open navigation drawer"),
-                },
-                Title = new Icon(Resource.Drawable.ic_jetnews_wordmark, "JetNews")
+                    Modifier    = Modifier.Companion.FillMaxWidth().Padding(horizontal: 8, vertical: 0),
+                    SingleLine  = true,
+                    Placeholder = new Text("Search JetNews"),
+                }
+                : new Icon(Resource.Drawable.ic_jetnews_wordmark, "JetNews")
                 {
                     Modifier = Modifier.Companion.Height(24),
                 },
-                Actions = new Row
+            Actions = searchOpen.Value
+                ? new Row
                 {
+                    new IconButton(onClick: () =>
+                    {
+                        searchQuery.Value = string.Empty;
+                        searchOpen.Value  = false;
+                    })
+                    {
+                        new Icon(Resource.Drawable.ic_close, "Close search"),
+                    },
+                }
+                : new Row
+                {
+                    new IconButton(onClick: () => searchOpen.Value = true)
+                    {
+                        new Icon(Resource.Drawable.ic_search, "Search"),
+                    },
                     new IconButton(onClick: () => _ = vm.RefreshAsync())
                     {
                         new Icon(Resource.Drawable.ic_refresh, "Refresh"),
                     },
                 },
-            },
-            Body = state switch
-            {
-                HomeUiState.Loading       => BuildLoading(),
-                HomeUiState.Error e       => BuildError(e.Message, () => _ = vm.RefreshAsync()),
-                HomeUiState.HasPosts h    => BuildBody(h.Feed, bookmarks, onSelectPost),
-                _                         => new Spacer(),
-            },
         };
-    }
 
     static Box BuildLoading() =>
         new()
@@ -90,10 +132,13 @@ public static class HomeScreen
             },
         };
 
-    static LazyColumn<HomeRow> BuildBody(PostsFeed feed,
-                                         BookmarksViewModel bookmarks,
-                                         Action<string> onSelectPost)
+    static PullToRefreshBox BuildBody(HomeUiState.HasPosts state,
+                                      BookmarksViewModel bookmarks,
+                                      Action<string> onSelectPost,
+                                      HomeViewModel vm,
+                                      SnackbarController snackbars)
     {
+        var feed = state.Feed;
         var rows = new List<HomeRow>
         {
             new HomeRow.SectionHeader("Top stories for you"),
@@ -113,22 +158,38 @@ public static class HomeScreen
         foreach (var p in feed.Recent)
             rows.Add(new HomeRow.Recommended(p));
 
-        return new LazyColumn<HomeRow>(
-            items: rows,
-            itemContent: row => BuildRow(row, bookmarks, onSelectPost))
+        return new PullToRefreshBox(
+            isRefreshing: state.IsRefreshing,
+            onRefresh:    () =>
+            {
+                // Drop the gesture when a refresh is already in flight.
+                // Without this guard a quick second pull could stack
+                // two LoadFeedAsync invocations whose completion order
+                // isn't guaranteed.
+                if (!state.IsRefreshing)
+                    _ = vm.RefreshAsync();
+            })
         {
-            Modifier = Modifier.Companion.FillMaxSize(),
+            Modifier.Companion.FillMaxSize(),
+
+            new LazyColumn<HomeRow>(
+                items: rows,
+                itemContent: row => BuildRow(row, bookmarks, onSelectPost, snackbars))
+            {
+                Modifier = Modifier.Companion.FillMaxSize(),
+            },
         };
     }
 
     static ComposableNode BuildRow(HomeRow row,
                                    BookmarksViewModel bookmarks,
-                                   Action<string> onSelectPost) =>
+                                   Action<string> onSelectPost,
+                                   SnackbarController snackbars) =>
         row switch
         {
             HomeRow.Highlight h        => HomeCards.BuildHighlight(h.Post, onSelectPost),
             HomeRow.SectionHeader s    => BuildSectionHeader(s.Label),
-            HomeRow.Recommended r      => HomeCards.BuildSimple(r.Post, bookmarks, onSelectPost),
+            HomeRow.Recommended r      => HomeCards.BuildSimple(r.Post, bookmarks, onSelectPost, snackbars),
             HomeRow.PopularCarousel pc => BuildPopularCarousel(pc.Posts, onSelectPost),
             HomeRow.Divider            => new HorizontalDivider
             {

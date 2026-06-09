@@ -1,3 +1,4 @@
+using Android.Content;
 using Android.OS;
 using AndroidX.Compose.Material3;
 using AndroidX.Compose.Runtime;
@@ -37,6 +38,7 @@ public class MainActivity : ComposeActivity
             var selectedPeople       = Remember(() => new MutableStateList<string>());
             var selectedPublications = Remember(() => new MutableStateList<string>());
             var interestsTab         = Remember(() => new MutableState<int>(0));
+            var snackbars            = Remember(() => new SnackbarController());
             return JetnewsApp.Build(
                 nav,
                 currentRoute,
@@ -45,7 +47,37 @@ public class MainActivity : ComposeActivity
                 selectedTopics,
                 selectedPeople,
                 selectedPublications,
-                interestsTab);
+                interestsTab,
+                snackbars,
+                onShare: post => SharePost(post, snackbars));
         });
+    }
+
+    void SharePost(Post post, SnackbarController snackbars)
+    {
+        // Build a plain text/plain intent — JetNews has no real article
+        // URL today, so the synthetic developer.android.com path stub
+        // matches the deep-link format upstream JetNews uses for its
+        // app-link demo (see #159's Navigation 3 / DeepLinkPattern bullet).
+        try
+        {
+            var send = new Intent(Intent.ActionSend);
+            send.SetType("text/plain");
+            send.PutExtra(Intent.ExtraSubject, post.Title);
+            send.PutExtra(
+                Intent.ExtraText,
+                $"{post.Title}\nhttps://developer.android.com/jetnews/post/{post.Id}");
+
+            // Wrap in a chooser so the user always sees the system
+            // picker rather than a possibly-stale default share target.
+            var chooser = Intent.CreateChooser(send, "Share article");
+            StartActivity(chooser);
+        }
+        catch (ActivityNotFoundException)
+        {
+            // No share target installed (e.g. minimal emulator image)
+            // — surface a snackbar instead of crashing.
+            snackbars.Show("No app available to share with");
+        }
     }
 }

@@ -304,6 +304,46 @@ internal static partial class ComposeBridges
         int? minLines,
         IComposer composer);
 
+    // androidx.compose.material3.TextKt.Text-IbK3jfQ — the
+    // AnnotatedString overload. Mangled JVM name because Kotlin
+    // value-class params (Color/TextUnit/TextDecoration/TextAlign)
+    // produce a `-XxxxXXX` suffix that strips the overload from the
+    // binding. Has one extra slot vs the string variant: a `Map`
+    // `inlineContent` between minLines and onTextLayout. Hand-paired
+    // with the AnnotatedText facade (Text-generated facade can't host a
+    // second constructor pointing at a different bridge); see
+    // AnnotatedText.cs.
+    [ComposeBridge(
+        Class     = "androidx/compose/material3/TextKt",
+        JvmName   = "Text-IbK3jfQ",
+        Signature = "(Landroidx/compose/ui/text/AnnotatedString;Landroidx/compose/ui/Modifier;JJ" +
+                    "Landroidx/compose/ui/text/font/FontStyle;" +
+                    "Landroidx/compose/ui/text/font/FontWeight;" +
+                    "Landroidx/compose/ui/text/font/FontFamily;J" +
+                    "Landroidx/compose/ui/text/style/TextDecoration;" +
+                    "Landroidx/compose/ui/text/style/TextAlign;JIZII" +
+                    "Ljava/util/Map;Lkotlin/jvm/functions/Function1;" +
+                    "Landroidx/compose/ui/text/TextStyle;" +
+                    "Landroidx/compose/runtime/Composer;III)V",
+        Defaults  = typeof(AnnotatedTextDefault))]
+    public static partial void TextAnnotated(
+        AnnotatedString text,
+        IModifier? modifier,
+        Color? color,
+        Sp? fontSize,
+        FontStyle? fontStyle,
+        FontWeight? fontWeight,
+        FontFamily? fontFamily,
+        Sp? letterSpacing,
+        TextDecoration? decoration,
+        TextAlign? align,
+        Sp? lineHeight,
+        TextOverflow? overflow,
+        bool? softWrap,
+        int? maxLines,
+        int? minLines,
+        IComposer composer);
+
     // androidx.compose.material3.ButtonKt.Button
     [ComposeBridge(
         Class     = "androidx/compose/material3/ButtonKt",
@@ -645,7 +685,6 @@ internal static partial class ComposeBridges
         JvmName   = "TextField",
         Signature = TextFieldStringSig,
         Defaults  = typeof(TextFieldDefault))]
-    [ComposeFacade]
     public static partial void TextField(
         string value,
         [Callback(typeof(string))] IFunction1 onValueChange,
@@ -670,10 +709,79 @@ internal static partial class ComposeBridges
         JvmName   = "OutlinedTextField",
         Signature = TextFieldStringSig,
         Defaults  = typeof(TextFieldDefault))]
-    [ComposeFacade]
     public static partial void OutlinedTextField(
         string value,
         [Callback(typeof(string))] IFunction1 onValueChange,
+        IModifier? modifier,
+        bool? enabled,
+        bool? readOnly,
+        IFunction2? label,
+        IFunction2? placeholder,
+        IFunction2? leadingIcon,
+        IFunction2? trailingIcon,
+        IFunction2? prefix,
+        IFunction2? suffix,
+        IFunction2? supportingText,
+        bool? isError,
+        bool? singleLine,
+        int? maxLines,
+        int? minLines,
+        IComposer composer);
+
+    // androidx.compose.material3.TextFieldKt.TextField (TextFieldValue
+    // overload) and OutlinedTextFieldKt.OutlinedTextField (TextFieldValue
+    // overload). Same 23 user-param shape as the String overload — bit
+    // layout in TextFieldDefault matches one-for-one — except slot 0 is
+    // androidx/compose/ui/text/input/TextFieldValue instead of java/lang/String.
+    // Used by the TextField(MutableState<TextFieldValue>) ctor to drive
+    // caret placement after programmatic edits (see issue #204).
+    const string TextFieldValueSig =
+        "(Landroidx/compose/ui/text/input/TextFieldValue;Lkotlin/jvm/functions/Function1;Landroidx/compose/ui/Modifier;ZZ" +
+        "Landroidx/compose/ui/text/TextStyle;" +
+        "Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;" +
+        "Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;" +
+        "Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;" +
+        "Lkotlin/jvm/functions/Function2;Z" +
+        "Landroidx/compose/ui/text/input/VisualTransformation;" +
+        "Landroidx/compose/foundation/text/KeyboardOptions;" +
+        "Landroidx/compose/foundation/text/KeyboardActions;ZII" +
+        "Landroidx/compose/foundation/interaction/MutableInteractionSource;" +
+        "Landroidx/compose/ui/graphics/Shape;" +
+        "Landroidx/compose/material3/TextFieldColors;" +
+        "Landroidx/compose/runtime/Composer;IIII)V";
+
+    [ComposeBridge(
+        Class     = "androidx/compose/material3/TextFieldKt",
+        JvmName   = "TextField",
+        Signature = TextFieldValueSig,
+        Defaults  = typeof(TextFieldDefault))]
+    public static partial void TextFieldWithValue(
+        AndroidX.Compose.UI.Text.Input.TextFieldValue value,
+        IFunction1 onValueChange,
+        IModifier? modifier,
+        bool? enabled,
+        bool? readOnly,
+        IFunction2? label,
+        IFunction2? placeholder,
+        IFunction2? leadingIcon,
+        IFunction2? trailingIcon,
+        IFunction2? prefix,
+        IFunction2? suffix,
+        IFunction2? supportingText,
+        bool? isError,
+        bool? singleLine,
+        int? maxLines,
+        int? minLines,
+        IComposer composer);
+
+    [ComposeBridge(
+        Class     = "androidx/compose/material3/OutlinedTextFieldKt",
+        JvmName   = "OutlinedTextField",
+        Signature = TextFieldValueSig,
+        Defaults  = typeof(TextFieldDefault))]
+    public static partial void OutlinedTextFieldWithValue(
+        AndroidX.Compose.UI.Text.Input.TextFieldValue value,
+        IFunction1 onValueChange,
         IModifier? modifier,
         bool? enabled,
         bool? readOnly,

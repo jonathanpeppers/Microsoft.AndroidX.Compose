@@ -671,6 +671,34 @@ public static class Compose
         => new(value);
 
     /// <summary>
+    /// Construct an <c>androidx.compose.ui.text.input.TextFieldValue</c>
+    /// — the text + caret-selection + IME-composition triple that drives
+    /// the <see cref="TextField(MutableState{AndroidX.Compose.UI.Text.Input.TextFieldValue})"/>
+    /// overload. Hand-bridged because the Kotlin primary ctor is stripped
+    /// from the binding (the <c>selection: TextRange</c> param is a
+    /// <c>@JvmInline value class</c>; see issue #204). The returned object
+    /// is the bound <c>AndroidX.Compose.UI.Text.Input.TextFieldValue</c>;
+    /// use its <c>Copy(text, selection, composition)</c> method to build
+    /// successor values, e.g. after appending text and moving the caret.
+    /// </summary>
+    /// <param name="text">Buffer content.</param>
+    /// <param name="selection">
+    /// Caret or selection range, packed via
+    /// <c>AndroidX.Compose.UI.Text.TextRangeKt.TextRange(start, end)</c>.
+    /// Defaults to a collapsed range at index 0.
+    /// </param>
+    /// <param name="composition">
+    /// Optional IME composition range. Normally <c>null</c> for
+    /// caller-built values; preserve it round-trip when reacting to
+    /// <c>onValueChange</c>.
+    /// </param>
+    public static AndroidX.Compose.UI.Text.Input.TextFieldValue NewTextFieldValue(
+        string text = "",
+        long selection = 0L,
+        AndroidX.Compose.UI.Text.TextRange? composition = null)
+        => ComposeBridges.NewTextFieldValueImpl(text, selection, composition);
+
+    /// <summary>
     /// Compose's <c>mutableStateListOf&lt;T&gt;(vararg elements)</c>: a
     /// snapshot-tracked observable list that triggers recomposition of
     /// any reader on mutation. See <see cref="MutableStateList{T}"/>.
