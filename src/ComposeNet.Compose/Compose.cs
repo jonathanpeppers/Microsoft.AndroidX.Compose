@@ -741,7 +741,7 @@ public static class Compose
     /// </summary>
     public static DerivedState<T> DerivedStateOf<T>(System.Func<T> calculation)
     {
-        if (calculation is null) throw new System.ArgumentNullException(nameof(calculation));
+        System.ArgumentNullException.ThrowIfNull(calculation);
         var jcw = new ObjectFunction0(() => MutableState<T>.ToJava(calculation()));
         var state = SnapshotStateKt.DerivedStateOf(jcw);
         return new DerivedState<T>(state);
@@ -848,7 +848,7 @@ public static class Compose
         int line,
         string file)
     {
-        if (producer is null) throw new System.ArgumentNullException(nameof(producer));
+        System.ArgumentNullException.ThrowIfNull(producer);
         var composer = ComposeContext.Current
             ?? throw new System.InvalidOperationException(
                 "Compose.ProduceState<T> must be called inside a composition (e.g. inside a SetContent body or a ComposableNode.Render override).");
@@ -1067,7 +1067,7 @@ public static class Compose
     static T ViewModelCore<T>(System.Func<T> factory, object?[]? keys, int line, string file)
         where T : ComposeNet.ViewModel
     {
-        if (factory is null) throw new System.ArgumentNullException(nameof(factory));
+        System.ArgumentNullException.ThrowIfNull(factory);
         var composer = ComposeContext.Current
             ?? throw new System.InvalidOperationException(
                 "Compose.ViewModel<T> must be called inside a composition (e.g. inside a SetContent body or a ComposableNode.Render override).");

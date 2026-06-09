@@ -80,7 +80,7 @@ public sealed class PagerState
     /// </param>
     public PagerState(Func<int> pageCount, int initialPage = 0, float initialPageOffsetFraction = 0f)
     {
-        if (pageCount is null) throw new ArgumentNullException(nameof(pageCount));
+        ArgumentNullException.ThrowIfNull(pageCount);
         _pageCountFn = new ComposableLambda0Int(pageCount);
         Jvm = PagerStateKt.PagerState(
             currentPage:               initialPage,

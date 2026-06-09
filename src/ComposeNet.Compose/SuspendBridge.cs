@@ -83,8 +83,8 @@ internal static class SuspendBridge
         Func<Java.Lang.Object?, T> unbox,
         CancellationToken cancellationToken = default)
     {
-        if (call is null) throw new ArgumentNullException(nameof(call));
-        if (unbox is null) throw new ArgumentNullException(nameof(unbox));
+        ArgumentNullException.ThrowIfNull(call);
+        ArgumentNullException.ThrowIfNull(unbox);
 
         if (cancellationToken.IsCancellationRequested)
             return Task.FromCanceled<T>(cancellationToken);

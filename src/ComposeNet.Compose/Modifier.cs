@@ -348,8 +348,7 @@ public sealed class Modifier
     /// </summary>
     public Modifier Clickable(System.Action onClick)
     {
-        if (onClick is null)
-            throw new System.ArgumentNullException(nameof(onClick));
+        System.ArgumentNullException.ThrowIfNull(onClick);
 
         var lambda = new ComposableLambda0(onClick);
         return Append(curr => ComposeBridges.ModifierClickable(curr, lambda));
