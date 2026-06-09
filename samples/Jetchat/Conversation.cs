@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using Android.OS;
 using AndroidX.Compose.Material3;
 using ComposeNet;
 
@@ -426,7 +425,7 @@ public static class Conversation
             BuildProfileItem(selectedMenu, drawerState, "Ali Conors (you)", MeProfileId,        Resource.Drawable.avatar_ali,          scheme),
             BuildProfileItem(selectedMenu, drawerState, "Taylor Brooks",    ColleagueProfileId, Resource.Drawable.avatar_someone_else, scheme),
         };
-        if (Android.OS.Build.VERSION.SdkInt >= BuildVersionCodes.O)
+        if (OperatingSystem.IsAndroidVersionAtLeast(26))
         {
             column.Add(BuildDividerItem(scheme, sidePadding: 28));
             column.Add(BuildDrawerSectionHeader("Settings", scheme));

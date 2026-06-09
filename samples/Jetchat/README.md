@@ -33,7 +33,7 @@ dotnet build samples/Jetchat -t:Run
   `Modifier.VerticalScroll(rememberedScrollState)` so it scrolls when
   it overflows on small heights.
 - **Drawer "Settings" section (API 26+)** — on
-  `Build.VERSION.SdkInt >= BuildVersionCodes.O` an extra section with
+  `OperatingSystem.IsAndroidVersionAtLeast(26)` an extra section with
   **Settings** and **Pin Widget to home** rows appears below "Recent
   Profiles", matching upstream's `JetchatDrawer` API-gated block.
   Tapping either row closes the drawer and opens the existing
@@ -219,15 +219,15 @@ whitespace, and the `Send` handler early-returns on
 Upstream's `JetchatDrawer.kt` wraps the **Settings** + **Pin Widget
 to home** rows in `if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)`
 because `AppWidgetManager.requestPinAppWidget(...)` requires API 26.
-The port follows the same gate
-(`Android.OS.Build.VERSION.SdkInt >= BuildVersionCodes.O`).
-`Build` is fully qualified to avoid collision with the local
-`Conversation.Build` method. Both row click handlers fire
-`drawerState.CloseAsync()` and then the existing
-`FunctionalityNotAvailable` popup — same affordance the search and
-info top-bar icons use. Hooking the **Pin Widget** row to a real
-`requestPinAppWidget` call is blocked on landing the Glance widget
-itself, tracked in *What's still omitted*.
+The port uses the modern .NET equivalent
+(`OperatingSystem.IsAndroidVersionAtLeast(26)`), which the BCL
+recognises as a platform guard so the rows can call APIs annotated
+`[SupportedOSPlatform("android26.0")]` without an `SYSLIB` warning.
+Both row click handlers fire `drawerState.CloseAsync()` and then the
+existing `FunctionalityNotAvailable` popup — same affordance the
+search and info top-bar icons use. Hooking the **Pin Widget** row to
+a real `requestPinAppWidget` call is blocked on landing the Glance
+widget itself, tracked in *What's still omitted*.
 
 ### Layout and styling decisions vs upstream
 
