@@ -11,16 +11,16 @@ namespace Microsoft.AndroidX.Compose;
 /// scroll APIs (<see cref="ScrollToItemAsync"/> /
 /// <see cref="AnimateScrollToItemAsync"/>) without polluting the
 /// binding surface, and so the Remember helper
-/// (<see cref="ComposeExtensions.RememberLazyListState(int, int, int, string)"/>)
+/// (<see cref="ComposeExtensions.RememberLazyListState(global::AndroidX.Compose.Runtime.IComposer, int, int, int, string)"/>)
 /// can hand back a typed managed object.
 /// </summary>
 /// <remarks>
 /// <para>
 /// Obtain one via
-/// <see cref="ComposeExtensions.RememberLazyListState(int, int, int, string)"/>
+/// <see cref="ComposeExtensions.RememberLazyListState(global::AndroidX.Compose.Runtime.IComposer, int, int, int, string)"/>
 /// so the scroll position survives recompositions:
 /// <code>
-/// var listState = ComposeExtensions.RememberLazyListState();
+/// var listState = composer.RememberLazyListState();
 ///
 /// new LazyColumn&lt;int&gt;(items, i =&gt; new Text($"{i}"))
 /// {

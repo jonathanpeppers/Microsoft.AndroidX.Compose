@@ -20,10 +20,12 @@ namespace Microsoft.AndroidX.Compose;
 /// entry point — no ambient <c>[ThreadStatic]</c> lookup, no base class
 /// required.
 ///
-/// Methods that don't read a slot (<see cref="MutableStateOf{T}"/>,
-/// <see cref="MutableIntStateOf"/>, <see cref="DerivedStateOf{T}"/>,
-/// <see cref="NewTextFieldValue"/>, …) stay as plain statics on this class
-/// — the composer is genuinely irrelevant to them.
+/// Plain statics that don't read a slot (<see cref="NewTextFieldValue(string, long, global::AndroidX.Compose.UI.Text.TextRange?)"/>,
+/// <see cref="DerivedStateOf{T}(Func{T})"/>, …) also expose <c>this IComposer</c>
+/// convenience overloads so call sites inside a composable can keep the
+/// same <c>composer.X(...)</c> shape. The static form stays callable from
+/// non-composable contexts (button callbacks, ViewModels) — exactly the
+/// way Kotlin's <c>TextFieldValue("")</c> ctor isn't <c>@Composable</c>.
 /// </summary>
 public static partial class ComposeExtensions
 {

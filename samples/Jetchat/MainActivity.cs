@@ -20,7 +20,7 @@ public class MainActivity : ComponentActivity
         this.SetContent(c =>
         {
             var ui               = c.Remember(() => new ConversationUiState("#composers", channelMembers: 42, FakeData.InitialMessages()));
-            var input            = c.Remember(() => new MutableState<TextFieldValue>(ComposeExtensions.NewTextFieldValue()));
+            var input            = c.Remember(() => new MutableState<TextFieldValue>(c.NewTextFieldValue()));
             var selectedMenu     = c.Remember(() => new MutableState<string>("composers"));
             var drawerScroll     = c.Remember(() => new ScrollState());
             var drawerState      = c.Remember(() => new DrawerStateHolder(DrawerValue.Closed));

@@ -10,7 +10,7 @@ namespace Microsoft.AndroidX.Compose;
 /// supplies at the root of the composition (no
 /// <c>CompositionLocalProvider</c> required to <em>read</em> them —
 /// they always have a default in scope inside a
-/// <c>ComposeExtensions</c>).
+/// <c>SetContent</c> composition).
 ///
 /// <para>The Kotlin originals are exposed as top-level <c>val</c>s
 /// (e.g. <c>LocalContext</c> in

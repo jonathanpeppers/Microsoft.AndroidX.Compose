@@ -11,7 +11,7 @@ public static class DragAndDropTargetDemo
         CategoryId:  "modifiers",
         Title:       "Drag-and-drop target",
         Description: "A drop zone listening for text or image drags. Background brightens on enter and dims on exit, exercising the OnEntered / OnExited hooks. Each drop appends a row showing the MIME type and payload.",
-        Build:       c => new Composed(c =>
+        Build:       _ => new Composed(c =>
         {
             var drops    = c.Remember(() => new MutableStateList<string>());
             var hovering = c.Remember(() => new MutableState<bool>(false));

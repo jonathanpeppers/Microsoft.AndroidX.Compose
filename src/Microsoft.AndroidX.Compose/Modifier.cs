@@ -369,7 +369,7 @@ public sealed class Modifier
     /// underlying <c>DragAndDropTargetElement</c> keeps a stable identity
     /// across recompositions:
     /// <code>
-    /// var target = ComposeExtensions.Remember(() =&gt; new DragAndDropTarget { OnDrop = e =&gt; { /* ... */ return true; } });
+    /// var target = composer.Remember(() =&gt; new DragAndDropTarget { OnDrop = e =&gt; { /* ... */ return true; } });
     /// new Column
     /// {
     ///     Modifier.Companion.FillMaxSize()
