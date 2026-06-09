@@ -385,8 +385,12 @@ public sealed class Modifier
     /// receive subsequent events on <paramref name="target"/>), <c>false</c>
     /// to ignore it.</param>
     /// <param name="target">Receiver of drag events for this composable. At
-    /// minimum set <see cref="DragAndDropTarget.OnDrop"/>; the other Kotlin
-    /// callbacks default to no-ops in this binding.</param>
+    /// minimum set <see cref="DragAndDropTarget.OnDrop"/>; the optional
+    /// <see cref="DragAndDropTarget.OnEntered"/> /
+    /// <see cref="DragAndDropTarget.OnExited"/> /
+    /// <see cref="DragAndDropTarget.OnStarted"/> /
+    /// <see cref="DragAndDropTarget.OnEnded"/> hooks drive
+    /// hover/session visuals.</param>
     public Modifier DragAndDropTarget(
         System.Func<DragAndDropEvent, bool> shouldStartDragAndDrop,
         DragAndDropTarget target)

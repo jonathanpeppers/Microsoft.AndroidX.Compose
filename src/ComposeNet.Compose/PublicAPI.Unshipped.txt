@@ -235,8 +235,20 @@ ComposeNet.DragAndDropEvent.MimeTypes.get -> System.Collections.Generic.IReadOnl
 ComposeNet.DragAndDropTarget
 ComposeNet.DragAndDropTarget.DragAndDropTarget() -> void
 ComposeNet.DragAndDropTarget.DragAndDropTarget(System.Func<ComposeNet.DragAndDropEvent!, bool>! onDrop) -> void
+ComposeNet.DragAndDropTarget.OnChanged.get -> System.Action<ComposeNet.DragAndDropEvent!>?
+ComposeNet.DragAndDropTarget.OnChanged.set -> void
 ComposeNet.DragAndDropTarget.OnDrop.get -> System.Func<ComposeNet.DragAndDropEvent!, bool>?
 ComposeNet.DragAndDropTarget.OnDrop.set -> void
+ComposeNet.DragAndDropTarget.OnEnded.get -> System.Action<ComposeNet.DragAndDropEvent!>?
+ComposeNet.DragAndDropTarget.OnEnded.set -> void
+ComposeNet.DragAndDropTarget.OnEntered.get -> System.Action<ComposeNet.DragAndDropEvent!>?
+ComposeNet.DragAndDropTarget.OnEntered.set -> void
+ComposeNet.DragAndDropTarget.OnExited.get -> System.Action<ComposeNet.DragAndDropEvent!>?
+ComposeNet.DragAndDropTarget.OnExited.set -> void
+ComposeNet.DragAndDropTarget.OnMoved.get -> System.Action<ComposeNet.DragAndDropEvent!>?
+ComposeNet.DragAndDropTarget.OnMoved.set -> void
+ComposeNet.DragAndDropTarget.OnStarted.get -> System.Action<ComposeNet.DragAndDropEvent!>?
+ComposeNet.DragAndDropTarget.OnStarted.set -> void
 ComposeNet.DraggableState
 ComposeNet.DraggableState.DispatchRawDelta(float delta) -> void
 ComposeNet.DraggableState.DraggableState(System.Action<float>! onDelta) -> void
