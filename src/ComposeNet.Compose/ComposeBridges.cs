@@ -6,6 +6,7 @@ using AndroidX.Compose.Runtime;
 using AndroidX.Compose.UI;
 using AndroidX.Compose.UI.State;
 using Kotlin.Jvm.Functions;
+using Painter = AndroidX.Compose.UI.Graphics.Painter.Painter;
 
 namespace ComposeNet;
 
@@ -637,7 +638,7 @@ internal static partial class ComposeBridges
         Defaults  = typeof(ImageDefault))]
     [ComposeFacade]
     public static partial void Image(
-        [PainterResource] IntPtr painter,
+        [PainterResource] Painter painter,
         string?       contentDescription,
         IModifier?    modifier,
         Alignment?    alignment,
@@ -657,7 +658,7 @@ internal static partial class ComposeBridges
                     "Landroidx/compose/ui/Modifier;JLandroidx/compose/runtime/Composer;II)V",
         Defaults  = typeof(IconPainterDefault))]
     public static partial void IconPainter(
-        IntPtr     painter,
+        Painter    painter,
         string?    contentDescription,
         IModifier? modifier,
         long       tint,
@@ -2337,7 +2338,9 @@ internal static partial class ComposeBridges
                     "Landroidx/compose/ui/input/nestedscroll/NestedScrollDispatcher;" +
                     "ILjava/lang/Object;)Landroidx/compose/ui/Modifier;",
         Defaults  = typeof(ModifierNestedScrollDefault))]
-    internal static partial IntPtr ModifierNestedScroll(IntPtr modifier, IntPtr connection);
+    internal static partial IntPtr ModifierNestedScroll(
+        IntPtr modifier,
+        AndroidX.Compose.UI.Input.NestedScroll.INestedScrollConnection connection);
 
     // androidx.compose.material3.TopAppBarDefaults.enterAlwaysScrollBehavior —
     // @Composable instance method on the singleton. 4 user params; the
@@ -2354,7 +2357,9 @@ internal static partial class ComposeBridges
                         "Landroidx/compose/material3/TopAppBarScrollBehavior;",
         InstanceField = "INSTANCE",
         Defaults      = typeof(TopAppBarEnterAlwaysScrollBehaviorDefault))]
-    internal static partial IntPtr TopAppBarDefaultsEnterAlwaysScrollBehavior(IntPtr state, IComposer composer);
+    internal static partial IntPtr TopAppBarDefaultsEnterAlwaysScrollBehavior(
+        AndroidX.Compose.Material3.TopAppBarState state,
+        IComposer composer);
 
     // androidx.compose.material3.TopAppBarDefaults.exitUntilCollapsedScrollBehavior —
     // same shape as enterAlwaysScrollBehavior above.
@@ -2369,7 +2374,9 @@ internal static partial class ComposeBridges
                         "Landroidx/compose/material3/TopAppBarScrollBehavior;",
         InstanceField = "INSTANCE",
         Defaults      = typeof(TopAppBarExitUntilCollapsedScrollBehaviorDefault))]
-    internal static partial IntPtr TopAppBarDefaultsExitUntilCollapsedScrollBehavior(IntPtr state, IComposer composer);
+    internal static partial IntPtr TopAppBarDefaultsExitUntilCollapsedScrollBehavior(
+        AndroidX.Compose.Material3.TopAppBarState state,
+        IComposer composer);
 
     // BoxScope / RowScope / ColumnScope `align` and `matchParentSize`
     // are abstract interface methods on the scope class (no static

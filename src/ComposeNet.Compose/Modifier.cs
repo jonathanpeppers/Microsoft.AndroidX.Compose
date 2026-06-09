@@ -522,18 +522,7 @@ public sealed class Modifier
     public Modifier NestedScroll(AndroidX.Compose.UI.Input.NestedScroll.INestedScrollConnection connection)
     {
         ArgumentNullException.ThrowIfNull(connection);
-        IntPtr handle = ((Java.Lang.Object)connection).Handle;
-        return Append(curr =>
-        {
-            try
-            {
-                return ComposeBridges.ModifierNestedScroll(curr, handle);
-            }
-            finally
-            {
-                System.GC.KeepAlive(connection);
-            }
-        });
+        return Append(curr => ComposeBridges.ModifierNestedScroll(curr, connection));
     }
 
     /// <summary>

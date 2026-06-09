@@ -94,22 +94,13 @@ public sealed class Icon : ComposableNode
 
         if (_painter is not null)
         {
-            // Caller owns the Painter peer; pass its global-ref handle
-            // directly and keep the wrapper alive across the bridge call.
-            try
-            {
-                ComposeBridges.IconPainter(
-                    painter:            ((IJavaObject)_painter).Handle,
-                    contentDescription: _contentDescription,
-                    modifier:           modifier,
-                    tint:               tint,
-                    defaults:           defaults,
-                    composer:           composer);
-            }
-            finally
-            {
-                System.GC.KeepAlive(_painter);
-            }
+            ComposeBridges.IconPainter(
+                painter:            _painter,
+                contentDescription: _contentDescription,
+                modifier:           modifier,
+                tint:               tint,
+                defaults:           defaults,
+                composer:           composer);
             return;
         }
 
@@ -118,21 +109,19 @@ public sealed class Icon : ComposableNode
         // The bridge enum (`IconPainterDefault`) has the same bit layout
         // as `IconDefault` for the user-visible bits (ContentDescription,
         // Modifier, Tint at bits 1-3), so the same `defaults` mask is
-        // valid for either path.
-        IntPtr painterRef = ComposeBridges.PainterResource(_resourceId!.Value, composer);
-        try
-        {
-            ComposeBridges.IconPainter(
-                painter:            painterRef,
-                contentDescription: _contentDescription,
-                modifier:           modifier,
-                tint:               tint,
-                defaults:           defaults,
-                composer:           composer);
-        }
-        finally
-        {
-            JNIEnv.DeleteLocalRef(painterRef);
-        }
+        // valid for either path. Wrap the local Painter ref into a managed
+        // peer via TransferLocalRef so the bridge's auto-emitted
+        // GC.KeepAlive keeps it alive across the call (and the local ref
+        // is consumed by the wrapper — no DeleteLocalRef needed).
+        var painter = Java.Lang.Object.GetObject<Painter>(
+            ComposeBridges.PainterResource(_resourceId!.Value, composer),
+            JniHandleOwnership.TransferLocalRef)!;
+        ComposeBridges.IconPainter(
+            painter:            painter,
+            contentDescription: _contentDescription,
+            modifier:           modifier,
+            tint:               tint,
+            defaults:           defaults,
+            composer:           composer);
     }
 }

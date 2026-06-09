@@ -784,16 +784,16 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
                 confirmStateChanges: confirmInfos.ToArray());
         }
 
-        // [PainterResource] — annotates the IntPtr bridge param that
-        // takes the resolved Painter handle. The facade exposes a
-        // synthetic `int drawableResourceId` ctor arg in its place.
+        // [PainterResource] — annotates the bridge param that takes
+        // the resolved Painter wrapper. The facade exposes a synthetic
+        // `int drawableResourceId` ctor arg in its place.
         if (c.PainterAttr is not null &&
             p.GetAttributes().Any(a => SymbolEqualityComparer.Default.Equals(a.AttributeClass, c.PainterAttr)))
         {
-            if (p.Type.SpecialType != SpecialType.System_IntPtr)
+            if (!IsPainterType(p.Type))
             {
                 diags.Add(Diagnostic.Create(Diagnostics.FacadePainterMisuse, loc, methodName,
-                    $"[PainterResource] must annotate an 'IntPtr' parameter; '{p.Name}' is '{p.Type.ToDisplayString()}'"));
+                    $"[PainterResource] must annotate an 'AndroidX.Compose.UI.Graphics.Painter.Painter' parameter; '{p.Name}' is '{p.Type.ToDisplayString()}'"));
                 return null;
             }
             return new FacadeSlot(p, FacadeSlotKind.PainterResource);
@@ -1165,34 +1165,32 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
               .Append(composerName).Append(", 0).").Append(Pascal(themeColor)).AppendLine(";");
         }
 
-        // Phase 7 — PainterResource preamble. Resolves the painter
-        // handle two ways: if the caller used the Painter ctor, we
-        // forward the wrapper's global-ref handle directly (no
-        // local-ref ownership). Otherwise we resolve the drawable
-        // resource id inside the composition via painterResource(id)
-        // — that produces a local ref we must clean up in `finally`.
+        // Phase 7 — `[PainterResource]` lowering. If the caller used
+        // the Painter ctor, forward the wrapper itself; the bridge's
+        // auto-`GC.KeepAlive(painter)` covers it. Otherwise we resolve
+        // the drawable resource id inside the composition via
+        // `painterResource(id)` and wrap the local ref into a fresh
+        // managed peer (`TransferLocalRef` consumes the local ref so
+        // there is nothing to `DeleteLocalRef` afterwards).
         var painterIdSlot = slots.FirstOrDefault(s => s.Kind == FacadeSlotKind.PainterResource);
         bool hasPainter = painterIdSlot.Param is not null;
         if (hasPainter)
         {
-            sb.AppendLine("            global::System.IntPtr __painterRef;");
-            sb.AppendLine("            bool __painterOwned;");
+            sb.AppendLine("            global::AndroidX.Compose.UI.Graphics.Painter.Painter __painterPeer;");
             sb.AppendLine("            if (_painter is not null)");
             sb.AppendLine("            {");
-            sb.AppendLine("                __painterRef = ((global::Android.Runtime.IJavaObject)_painter).Handle;");
-            sb.AppendLine("                __painterOwned = false;");
+            sb.AppendLine("                __painterPeer = _painter;");
             sb.AppendLine("            }");
             sb.AppendLine("            else");
             sb.AppendLine("            {");
-            sb.AppendLine("                __painterRef = global::ComposeNet.ComposeBridges.PainterResource(_drawableResourceId, "
+            sb.AppendLine("                var __painterRef = global::ComposeNet.ComposeBridges.PainterResource(_drawableResourceId, "
                 + composerName + ");");
-            sb.AppendLine("                __painterOwned = true;");
+            sb.AppendLine("                __painterPeer = global::Java.Lang.Object.GetObject<global::AndroidX.Compose.UI.Graphics.Painter.Painter>(");
+            sb.AppendLine("                    __painterRef, global::Android.Runtime.JniHandleOwnership.TransferLocalRef)!;");
             sb.AppendLine("            }");
-            sb.AppendLine("            try");
-            sb.AppendLine("            {");
         }
 
-        string indent = hasPainter ? "                " : "            ";
+        string indent = "            ";
 
         // Phase 3 — auto-mask defaults + bridge call.
         if (branchInfo is not null)
@@ -1227,16 +1225,6 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             }
             if (!first) sb.Append(", ");
             sb.Append(composerName).AppendLine(");");
-        }
-
-        if (hasPainter)
-        {
-            sb.AppendLine("            }");
-            sb.AppendLine("            finally");
-            sb.AppendLine("            {");
-            sb.AppendLine("                if (__painterOwned) global::Android.Runtime.JNIEnv.DeleteLocalRef(__painterRef);");
-            sb.AppendLine("                global::System.GC.KeepAlive(_painter);");
-            sb.AppendLine("            }");
         }
 
         sb.AppendLine("        }");
@@ -1460,7 +1448,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             FacadeSlotKind.RequiredFunction3 => "__" + s.Param.Name,
             FacadeSlotKind.Callback         => "__" + s.Param.Name,
             FacadeSlotKind.Primitive        => "_" + s.Param.Name,
-            FacadeSlotKind.PainterResource  => "__painterRef",
+            FacadeSlotKind.PainterResource  => "__painterPeer",
             FacadeSlotKind.ThemeColor       => "__color",
             FacadeSlotKind.ScopeReceiver    => "global::ComposeNet.RenderContext.CurrentScope",
             FacadeSlotKind.StateHolder      => "__" + s.Param.Name,
@@ -1583,6 +1571,11 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         type is INamedTypeSymbol n &&
         n.Name == "IModifier" &&
         n.ContainingNamespace?.ToDisplayString() == "AndroidX.Compose.UI";
+
+    static bool IsPainterType(ITypeSymbol type) =>
+        type is INamedTypeSymbol n &&
+        n.Name == "Painter" &&
+        n.ContainingNamespace?.ToDisplayString() == "AndroidX.Compose.UI.Graphics.Painter";
 
     static int KotlinFunctionArity(ITypeSymbol type)
     {

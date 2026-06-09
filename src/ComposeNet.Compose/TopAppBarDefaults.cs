@@ -113,7 +113,6 @@ public static class TopAppBarDefaults
         }
         finally
         {
-            System.GC.KeepAlive(state);
             composer.EndReplaceableGroup();
         }
     }
@@ -156,7 +155,7 @@ public static class TopAppBarDefaults
 
     static ITopAppBarScrollBehavior Invoke(
         TopAppBarState state, int line, string file,
-        System.Func<IntPtr, IComposer, IntPtr> bridge)
+        System.Func<TopAppBarState, IComposer, IntPtr> bridge)
     {
         ArgumentNullException.ThrowIfNull(state);
         var composer = ComposeContext.Current
@@ -166,8 +165,7 @@ public static class TopAppBarDefaults
         composer.StartReplaceableGroup(SourceLocationKey.Compute(line, file));
         try
         {
-            IntPtr stateHandle = ((Java.Lang.Object)state).Handle;
-            IntPtr handle = bridge(stateHandle, composer);
+            IntPtr handle = bridge(state, composer);
             try
             {
                 return Java.Lang.Object.GetObject<ITopAppBarScrollBehavior>(
@@ -182,7 +180,6 @@ public static class TopAppBarDefaults
         }
         finally
         {
-            System.GC.KeepAlive(state);
             composer.EndReplaceableGroup();
         }
     }

@@ -1063,12 +1063,13 @@ public class FacadeGeneratorTests
     // ---------------------------------------------------------------
 
     [Fact]
-    public void PainterResource_EmitsTryFinallyDeleteLocalRef()
+    public void PainterResource_EmitsTypedPainterPeer()
     {
         var code = """
             using System;
             using AndroidX.Compose.Runtime;
             using AndroidX.Compose.UI;
+            using AndroidX.Compose.UI.Graphics.Painter;
             using ComposeNet;
             using Kotlin.Jvm.Functions;
 
@@ -1082,7 +1083,7 @@ public class FacadeGeneratorTests
                                    Signature="(Landroidx/compose/ui/graphics/painter/Painter;Ljava/lang/String;Landroidx/compose/ui/Modifier;Landroidx/compose/runtime/Composer;II)V",
                                    Defaults=typeof(ImageDefault))]
                     [ComposeFacade]
-                    public static partial void Image([PainterResource] IntPtr painter,
+                    public static partial void Image([PainterResource] Painter painter,
                         string? contentDescription, IModifier? modifier,
                         int defaults, IComposer composer);
                 }
@@ -1104,21 +1105,27 @@ public class FacadeGeneratorTests
         // Painter ctor null-guards and stores into `_painter`.
         Assert.Contains("_painter = painter ?? throw new global::System.ArgumentNullException(nameof(painter));", emitted);
 
-        // Render preamble branches: caller-owned Painter forwards a
-        // global-ref handle; resource-id path resolves a local ref we
-        // must release.
+        // Render preamble: caller-owned Painter is forwarded directly;
+        // resource-id path wraps the local ref into a managed peer via
+        // TransferLocalRef (consumes the local ref — no DeleteLocalRef
+        // needed) so the bridge's auto-emitted GC.KeepAlive covers both
+        // shapes uniformly.
+        Assert.Contains("global::AndroidX.Compose.UI.Graphics.Painter.Painter __painterPeer;", emitted);
         Assert.Contains("if (_painter is not null)", emitted);
-        Assert.Contains("__painterRef = ((global::Android.Runtime.IJavaObject)_painter).Handle;", emitted);
-        Assert.Contains("__painterOwned = false;", emitted);
+        Assert.Contains("__painterPeer = _painter;", emitted);
         Assert.Contains("__painterRef = global::ComposeNet.ComposeBridges.PainterResource(_drawableResourceId, composer);", emitted);
-        Assert.Contains("__painterOwned = true;", emitted);
-        Assert.Contains("try", emitted);
-        Assert.Contains("finally", emitted);
-        Assert.Contains("if (__painterOwned) global::Android.Runtime.JNIEnv.DeleteLocalRef(__painterRef);", emitted);
-        Assert.Contains("global::System.GC.KeepAlive(_painter);", emitted);
+        Assert.Contains("__painterPeer = global::Java.Lang.Object.GetObject<global::AndroidX.Compose.UI.Graphics.Painter.Painter>(", emitted);
+        Assert.Contains("__painterRef, global::Android.Runtime.JniHandleOwnership.TransferLocalRef)!;", emitted);
 
-        // Bridge call inside try block — uses __painterRef for painter arg.
-        Assert.Contains("global::ComposeNet.ComposeBridges.Image(__painterRef", emitted);
+        // No facade-side try/finally + DeleteLocalRef + GC.KeepAlive
+        // anymore — pushed down to the bridge (auto-emits KeepAlive on
+        // typed Painter param) / TransferLocalRef (consumes local ref).
+        Assert.DoesNotContain("__painterOwned", emitted);
+        Assert.DoesNotContain("JNIEnv.DeleteLocalRef(__painterRef)", emitted);
+        Assert.DoesNotContain("global::System.GC.KeepAlive(_painter);", emitted);
+
+        // Bridge call passes typed __painterPeer for the painter arg.
+        Assert.Contains("global::ComposeNet.ComposeBridges.Image(__painterPeer", emitted);
 
         var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
         Assert.Empty(errors);
@@ -1202,6 +1209,7 @@ public class FacadeGeneratorTests
             using System;
             using AndroidX.Compose.Runtime;
             using AndroidX.Compose.UI;
+            using AndroidX.Compose.UI.Graphics.Painter;
             using ComposeNet;
 
             [assembly: ComposeDefaults("FooDefault", "!a", "!b")]
@@ -1214,7 +1222,7 @@ public class FacadeGeneratorTests
                                    Signature="(Landroidx/compose/ui/graphics/painter/Painter;Landroidx/compose/ui/graphics/painter/Painter;Landroidx/compose/runtime/Composer;II)V",
                                    Defaults=typeof(FooDefault))]
                     [ComposeFacade]
-                    public static partial void Foo([PainterResource] IntPtr a, [PainterResource] IntPtr b,
+                    public static partial void Foo([PainterResource] Painter a, [PainterResource] Painter b,
                         int defaults, IComposer composer);
                 }
             }
@@ -3028,7 +3036,7 @@ public class FacadeGeneratorTests
                         Defaults=typeof(ImageDefault))]
                     [ComposeFacade]
                     public static partial void Image(
-                        [PainterResource] System.IntPtr painter,
+                        [PainterResource] global::AndroidX.Compose.UI.Graphics.Painter.Painter painter,
                         string? contentDescription,
                         IModifier? modifier,
                         Alignment? alignment,

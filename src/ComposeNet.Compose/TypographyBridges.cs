@@ -37,33 +37,32 @@ internal static partial class ComposeBridges
 
     /// <summary>
     /// Build a Material 3 <see cref="Typography"/> with per-slot
-    /// overrides. Each <see cref="System.IntPtr"/> is either a
-    /// <c>TextStyle</c> JNI handle to use for that slot, or
-    /// <see cref="System.IntPtr.Zero"/> to fall back to the M3
-    /// baseline default for that slot via Kotlin's synthetic
-    /// <c>$default</c> mechanism.
+    /// overrides. Each <see cref="AndroidX.Compose.UI.Text.TextStyle"/>
+    /// is either a wrapper to use for that slot, or <c>null</c> to fall
+    /// back to the M3 baseline default for that slot via Kotlin's
+    /// synthetic <c>$default</c> mechanism.
     /// </summary>
     /// <param name="defaults">
     /// 15-bit mask: bit N set means "leave slot N at the Kotlin
-    /// default" (the corresponding handle is ignored). Bit 0 is
+    /// default" (the corresponding wrapper is ignored). Bit 0 is
     /// displayLarge, bit 14 is labelSmall.
     /// </param>
     internal static unsafe Typography BuildTypography(
-        System.IntPtr displayLarge,
-        System.IntPtr displayMedium,
-        System.IntPtr displaySmall,
-        System.IntPtr headlineLarge,
-        System.IntPtr headlineMedium,
-        System.IntPtr headlineSmall,
-        System.IntPtr titleLarge,
-        System.IntPtr titleMedium,
-        System.IntPtr titleSmall,
-        System.IntPtr bodyLarge,
-        System.IntPtr bodyMedium,
-        System.IntPtr bodySmall,
-        System.IntPtr labelLarge,
-        System.IntPtr labelMedium,
-        System.IntPtr labelSmall,
+        AndroidX.Compose.UI.Text.TextStyle? displayLarge,
+        AndroidX.Compose.UI.Text.TextStyle? displayMedium,
+        AndroidX.Compose.UI.Text.TextStyle? displaySmall,
+        AndroidX.Compose.UI.Text.TextStyle? headlineLarge,
+        AndroidX.Compose.UI.Text.TextStyle? headlineMedium,
+        AndroidX.Compose.UI.Text.TextStyle? headlineSmall,
+        AndroidX.Compose.UI.Text.TextStyle? titleLarge,
+        AndroidX.Compose.UI.Text.TextStyle? titleMedium,
+        AndroidX.Compose.UI.Text.TextStyle? titleSmall,
+        AndroidX.Compose.UI.Text.TextStyle? bodyLarge,
+        AndroidX.Compose.UI.Text.TextStyle? bodyMedium,
+        AndroidX.Compose.UI.Text.TextStyle? bodySmall,
+        AndroidX.Compose.UI.Text.TextStyle? labelLarge,
+        AndroidX.Compose.UI.Text.TextStyle? labelMedium,
+        AndroidX.Compose.UI.Text.TextStyle? labelSmall,
         int defaults)
     {
         if (s_typographyCtor_method == System.IntPtr.Zero)
@@ -72,26 +71,54 @@ internal static partial class ComposeBridges
             s_typographyCtor_method = JNIEnv.GetMethodID(s_typographyCtor_class, "<init>", TypographyDefaultCtorSig);
         }
 
-        JValue* args = stackalloc JValue[17];
-        args[0]  = new JValue(displayLarge);
-        args[1]  = new JValue(displayMedium);
-        args[2]  = new JValue(displaySmall);
-        args[3]  = new JValue(headlineLarge);
-        args[4]  = new JValue(headlineMedium);
-        args[5]  = new JValue(headlineSmall);
-        args[6]  = new JValue(titleLarge);
-        args[7]  = new JValue(titleMedium);
-        args[8]  = new JValue(titleSmall);
-        args[9]  = new JValue(bodyLarge);
-        args[10] = new JValue(bodyMedium);
-        args[11] = new JValue(bodySmall);
-        args[12] = new JValue(labelLarge);
-        args[13] = new JValue(labelMedium);
-        args[14] = new JValue(labelSmall);
-        args[15] = new JValue(defaults);
-        args[16] = new JValue(System.IntPtr.Zero);
+        try
+        {
+            JValue* args = stackalloc JValue[17];
+            args[0]  = new JValue(Handle(displayLarge));
+            args[1]  = new JValue(Handle(displayMedium));
+            args[2]  = new JValue(Handle(displaySmall));
+            args[3]  = new JValue(Handle(headlineLarge));
+            args[4]  = new JValue(Handle(headlineMedium));
+            args[5]  = new JValue(Handle(headlineSmall));
+            args[6]  = new JValue(Handle(titleLarge));
+            args[7]  = new JValue(Handle(titleMedium));
+            args[8]  = new JValue(Handle(titleSmall));
+            args[9]  = new JValue(Handle(bodyLarge));
+            args[10] = new JValue(Handle(bodyMedium));
+            args[11] = new JValue(Handle(bodySmall));
+            args[12] = new JValue(Handle(labelLarge));
+            args[13] = new JValue(Handle(labelMedium));
+            args[14] = new JValue(Handle(labelSmall));
+            args[15] = new JValue(defaults);
+            args[16] = new JValue(System.IntPtr.Zero);
 
-        System.IntPtr handle = JNIEnv.NewObject(s_typographyCtor_class, s_typographyCtor_method, args);
-        return Java.Lang.Object.GetObject<Typography>(handle, JniHandleOwnership.TransferLocalRef)!;
+            System.IntPtr handle = JNIEnv.NewObject(s_typographyCtor_class, s_typographyCtor_method, args);
+            return Java.Lang.Object.GetObject<Typography>(handle, JniHandleOwnership.TransferLocalRef)!;
+        }
+        finally
+        {
+            // Keep every wrapper alive across the JNI call so its
+            // backing global ref isn't released between the Handle()
+            // reads above and JNIEnv.NewObject. The bridge owns this
+            // responsibility — facade callers shouldn't have to.
+            System.GC.KeepAlive(displayLarge);
+            System.GC.KeepAlive(displayMedium);
+            System.GC.KeepAlive(displaySmall);
+            System.GC.KeepAlive(headlineLarge);
+            System.GC.KeepAlive(headlineMedium);
+            System.GC.KeepAlive(headlineSmall);
+            System.GC.KeepAlive(titleLarge);
+            System.GC.KeepAlive(titleMedium);
+            System.GC.KeepAlive(titleSmall);
+            System.GC.KeepAlive(bodyLarge);
+            System.GC.KeepAlive(bodyMedium);
+            System.GC.KeepAlive(bodySmall);
+            System.GC.KeepAlive(labelLarge);
+            System.GC.KeepAlive(labelMedium);
+            System.GC.KeepAlive(labelSmall);
+        }
+
+        static System.IntPtr Handle(AndroidX.Compose.UI.Text.TextStyle? ts) =>
+            ts is null ? System.IntPtr.Zero : ((Java.Lang.Object)ts).Handle;
     }
 }

@@ -268,15 +268,18 @@ internal static class Attributes
             }
 
             /// <summary>
-            /// Phase 7 — apply to the <c>IntPtr</c> bridge parameter
-            /// that takes the resolved <c>Painter</c> handle. The facade
+            /// Phase 7 — apply to the <c>Painter</c> bridge parameter
+            /// that takes the resolved Painter wrapper. The facade
             /// replaces this parameter with a synthetic ctor argument
             /// <c>int drawableResourceId</c>; <c>Render</c> calls
             /// <c>ComposeBridges.PainterResource(id, composer)</c> to
-            /// resolve the handle, forwards it to the annotated
-            /// parameter, and wraps the bridge invocation in
-            /// <c>try</c> / <c>finally</c> + <c>JNIEnv.DeleteLocalRef</c>.
-            /// At most one bridge parameter may carry <c>[PainterResource]</c>.
+            /// resolve the handle, wraps it into a managed
+            /// <c>Painter</c> peer via
+            /// <c>JniHandleOwnership.TransferLocalRef</c>, and forwards
+            /// it to the annotated parameter. The bridge's
+            /// auto-emitted <c>GC.KeepAlive(painter)</c> keeps the
+            /// peer alive across the call. At most one bridge
+            /// parameter may carry <c>[PainterResource]</c>.
             /// </summary>
             [global::System.AttributeUsage(global::System.AttributeTargets.Parameter,
                                            AllowMultiple = false)]
