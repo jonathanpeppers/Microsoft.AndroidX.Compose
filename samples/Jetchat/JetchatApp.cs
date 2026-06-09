@@ -34,12 +34,14 @@ public static class JetchatApp
         ConversationUiState          ui,
         MutableState<TextFieldValue> input,
         MutableState<string>         selectedMenu,
-        ScrollState          drawerScroll,
-        DrawerStateHolder    drawerState,
-        MutableState<int>    selectedSelector,
-        MutableState<bool>   popupOpen,
-        LazyListState        messagesScroll,
-        ProfileViewModel     profileViewModel) =>
+        ScrollState                  drawerScroll,
+        DrawerStateHolder            drawerState,
+        MutableState<int>            selectedSelector,
+        MutableState<bool>           popupOpen,
+        LazyListState                messagesScroll,
+        MutableState<bool>           isRecording,
+        MutableNumberState<float>    swipeOffset,
+        ProfileViewModel             profileViewModel) =>
         JetchatTheme.Build(new Composed(c =>
         {
             var scheme = MaterialTheme.CurrentColorScheme(c);
@@ -76,6 +78,8 @@ public static class JetchatApp
                             selectedSelector: selectedSelector,
                             popupOpen:        popupOpen,
                             messagesScroll:   messagesScroll,
+                            isRecording:      isRecording,
+                            swipeOffset:      swipeOffset,
                             onOpenDrawer:     () => _ = drawerState.OpenAsync(),
                             onAuthorClicked:  userId =>
                             {

@@ -26,6 +26,8 @@ public class MainActivity : ComposeActivity
             var selectedSelector = Remember(() => new MutableState<int>(0));
             var popupOpen        = Remember(() => new MutableState<bool>(false));
             var messagesScroll   = Compose.RememberLazyListState();
+            var isRecording      = Remember(() => new MutableState<bool>(false));
+            var swipeOffset      = Remember(() => new MutableNumberState<float>(0f));
             var nav              = Remember(() => new NavController());
             var profileViewModel = Remember(() => new ProfileViewModel());
             return JetchatApp.Build(
@@ -38,6 +40,8 @@ public class MainActivity : ComposeActivity
                 selectedSelector: selectedSelector,
                 popupOpen:        popupOpen,
                 messagesScroll:   messagesScroll,
+                isRecording:      isRecording,
+                swipeOffset:      swipeOffset,
                 profileViewModel: profileViewModel);
         });
     }

@@ -27,14 +27,16 @@ public static class Conversation
 
     /// <summary>Materialize the conversation tree for one composition pass.</summary>
     public static ComposableNode Build(
-        ConversationUiState  ui,
+        ConversationUiState          ui,
         MutableState<TextFieldValue> input,
-        MutableState<string> selectedMenu,
-        MutableState<int>    selectedSelector,
-        MutableState<bool>   popupOpen,
-        LazyListState        messagesScroll,
-        Action               onOpenDrawer,
-        Action<string>       onAuthorClicked) =>
+        MutableState<string>         selectedMenu,
+        MutableState<int>            selectedSelector,
+        MutableState<bool>           popupOpen,
+        LazyListState                messagesScroll,
+        MutableState<bool>           isRecording,
+        MutableNumberState<float>    swipeOffset,
+        Action                       onOpenDrawer,
+        Action<string>               onAuthorClicked) =>
         new Composed(c =>
         {
             var scheme = MaterialTheme.CurrentColorScheme(c);
@@ -44,7 +46,7 @@ public static class Conversation
                 new Scaffold
                 {
                     TopBar = BuildTopBar(ui, scheme, onOpenDrawer, popupOpen),
-                    Body   = BuildBody(ui, input, scheme, selectedSelector, messagesScroll, popupOpen, onAuthorClicked),
+                    Body   = BuildBody(ui, input, scheme, selectedSelector, messagesScroll, popupOpen, onAuthorClicked, isRecording, swipeOffset),
                 },
             };
             if (popupOpen.Value)
@@ -110,18 +112,20 @@ public static class Conversation
         };
 
     static Column BuildBody(
-        ConversationUiState  ui,
+        ConversationUiState          ui,
         MutableState<TextFieldValue> input,
-        ColorScheme          scheme,
-        MutableState<int>    selectedSelector,
-        LazyListState        messagesScroll,
-        MutableState<bool>   popupOpen,
-        Action<string>       onAuthorClicked) =>
+        ColorScheme                  scheme,
+        MutableState<int>            selectedSelector,
+        LazyListState                messagesScroll,
+        MutableState<bool>           popupOpen,
+        Action<string>               onAuthorClicked,
+        MutableState<bool>           isRecording,
+        MutableNumberState<float>    swipeOffset) =>
         new()
         {
             Modifier.Companion.FillMaxSize(),
             BuildMessages(ui, scheme, messagesScroll, popupOpen, onAuthorClicked),
-            BuildInputArea(ui, input, scheme, selectedSelector, messagesScroll),
+            BuildInputArea(ui, input, scheme, selectedSelector, messagesScroll, isRecording, swipeOffset),
         };
 
     // Flat row stream so LazyColumn<T> can render messages and day
@@ -296,32 +300,69 @@ public static class Conversation
     }
 
     static Surface BuildInputArea(
-        ConversationUiState  ui,
+        ConversationUiState          ui,
         MutableState<TextFieldValue> input,
-        ColorScheme          scheme,
-        MutableState<int>    selectedSelector,
-        LazyListState        messagesScroll) =>
+        ColorScheme                  scheme,
+        MutableState<int>            selectedSelector,
+        LazyListState                messagesScroll,
+        MutableState<bool>           isRecording,
+        MutableNumberState<float>    swipeOffset) =>
         new()
         {
             Modifier.Companion.FillMaxWidth().NavigationBarsPadding().ImePadding(),
             new Column
             {
                 Modifier.Companion.FillMaxWidth(),
-                BuildTextFieldRow(ui, input),
+                BuildTextFieldRow(input, scheme, isRecording, swipeOffset),
                 BuildSelectorRow(ui, input, scheme, selectedSelector, messagesScroll),
                 BuildSelectorPanel(input, scheme, selectedSelector),
             },
         };
 
-    static Row BuildTextFieldRow(ConversationUiState ui, MutableState<TextFieldValue> input) =>
-        new()
+    static Row BuildTextFieldRow(
+        MutableState<TextFieldValue> input,
+        ColorScheme                  scheme,
+        MutableState<bool>           isRecording,
+        MutableNumberState<float>    swipeOffset)
+    {
+        bool textEmpty = string.IsNullOrWhiteSpace(input.Value.Text);
+
+        var row = new Row
         {
-            Modifier.Companion.FillMaxWidth().Padding(horizontal: 8, vertical: 4),
-            new TextField(input)
+            Modifier.Companion.FillMaxWidth().Height(64),
+            new Box
             {
-                Modifier = Modifier.Companion.Weight(1f, fill: true),
+                Modifier.Companion.Weight(1f, fill: true).FillMaxHeight(),
+                new AnimatedContent<bool>(
+                    targetState: isRecording.Value,
+                    content: recording => recording
+                        ? RecordButton.BuildRecordingIndicator(swipeOffset, scheme)
+                        : new TextField(input)
+                          {
+                              Modifier = Modifier.Companion.FillMaxWidth(),
+                          }),
             },
         };
+
+        if (textEmpty || isRecording.Value)
+        {
+            row.Add(RecordButton.BuildButton(
+                isRecording,
+                swipeOffset,
+                onCommit: () =>
+                {
+                    isRecording.Value  = false;
+                    swipeOffset.Value  = 0f;
+                },
+                onCancel: () =>
+                {
+                    isRecording.Value  = false;
+                    swipeOffset.Value  = 0f;
+                },
+                scheme: scheme));
+        }
+        return row;
+    }
 
     static Row BuildSelectorRow(
         ConversationUiState  ui,

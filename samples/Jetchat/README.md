@@ -114,6 +114,14 @@ dotnet build samples/Jetchat -t:Run
   the keyboard pushes the input row up without obscuring it (and
   without the system's default `adjustUnspecified` behaviour
   double-shifting the content under edge-to-edge).
+- **Voice record mic + recording indicator** — when the text field
+  is empty the trailing send affordance is joined by a mic
+  `IconButton` that swaps the `TextField` for an animated
+  recording overlay (pulsing red dot + MM:SS timer + "Slide to
+  cancel" hint). Tap-to-toggle starts and finishes the recording;
+  dragging the mic horizontally past a 200 dp threshold cancels.
+  The overlay swap rides on the new generic `AnimatedContent<T>`
+  facade. See *What's still omitted* for the gesture-parity gap.
 - Reactive message list via `MutableStateList<Message>` — tapping
   send appends to the active channel and the UI recomposes.
 - Reactive channel selection via `MutableState<string>` — drawer
@@ -172,6 +180,8 @@ feature, a new package reference, or simply more sample plumbing:
 | Sticky day-headers spanning multiple dates (e.g. "20 Aug" alongside "Today") | needs the `LazyListScope.item { … }` DSL exposed on the `LazyColumn` facade so a per-day header can be emitted between message groups. Only "Today" is rendered. |
 | `Sp(float)` for exact M3 letter-spacing (0.5 / 0.1 sp values) | `Sp` is integer-only; `labelSmall` rounds 0.5 → 1, `titleSmall` rounds 0.1 → 0 (dropped). |
 | `FocusRequester` programmatic focus into the emoji panel | the panel opens correctly but doesn't grab focus on expand. |
+| **Voice record button: press-and-hold + release-to-commit gesture** | upstream's `detectDragGesturesAfterLongPress` (and the press-gesture scope's `awaitRelease`) aren't surfaced by the facade layer yet, so the port collapses the gesture to **tap-to-start / tap-to-finish** plus `Modifier.Draggable` for swipe-to-cancel. Behaviour is functionally equivalent; the input affordance is "tap mic, talk, tap mic again" instead of "hold mic, talk, release". |
+| **`infiniteRepeatable(tween(2000))` / `animateFloatAsState` pulse animation** | the indicator's pulsing red dot is driven manually by a `LaunchedEffect` + `Task.Delay` triangle wave (~16 fps) instead of Compose's `rememberInfiniteTransition` + `animateFloat`, since neither facade is bound yet. Visually identical for the 2-second period. |
 | Full ~80-glyph emoji table | `EmojiSelector.cs` exposes the first 40 glyphs from upstream's `private val emojis = listOf(...)` — the same `EMOJI_COLUMNS × 4` grid Kotlin's `EmojiTable` actually renders. The remaining upstream entries are unused on screen and were dropped. |
 
 ## Facade features added for this port
