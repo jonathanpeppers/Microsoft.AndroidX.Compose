@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using Microsoft.CodeAnalysis;
 
-namespace Microsoft.AndroidX.Compose.SourceGenerators;
+namespace AndroidX.Compose.SourceGenerators;
 
 /// <summary>
 /// Registry of Compose <c>@JvmInline value class</c> types whose
@@ -34,30 +34,30 @@ internal static class ComposeValueTypes
         new Dictionary<string, (char, string)>
         {
             // androidx.compose.ui.unit.Dp → JNI float.
-            ["Microsoft.AndroidX.Compose.Dp"] =
-                ('F', "global::Microsoft.AndroidX.Compose.Dp.Pack({0})"),
+            ["AndroidX.Compose.Dp"] =
+                ('F', "global::AndroidX.Compose.Dp.Pack({0})"),
 
             // androidx.compose.ui.unit.TextUnit (sp variant) → JNI long.
-            ["Microsoft.AndroidX.Compose.Sp"] =
-                ('J', "global::Microsoft.AndroidX.Compose.Sp.Pack({0})"),
+            ["AndroidX.Compose.Sp"] =
+                ('J', "global::AndroidX.Compose.Sp.Pack({0})"),
 
             // androidx.compose.ui.text.style.TextOverflow → JNI int.
             // (Compose declares TextOverflow as non-nullable in
             // @Composable signatures, so it lowers as packed `I` rather
             // than the boxed `L` reference seen for nullable inline
             // classes like TextAlign / FontStyle.)
-            ["Microsoft.AndroidX.Compose.TextOverflow"] =
-                ('I', "global::Microsoft.AndroidX.Compose.TextOverflow.Pack({0})"),
+            ["AndroidX.Compose.TextOverflow"] =
+                ('I', "global::AndroidX.Compose.TextOverflow.Pack({0})"),
 
             // androidx.compose.ui.graphics.Color is bound by
             // Xamarin.AndroidX.Compose.UI.Graphics 1.11.2.1, and the
-            // managed-side `Microsoft.AndroidX.Compose.Color` is a value-type wrapper
+            // managed-side `AndroidX.Compose.Color` is a value-type wrapper
             // over the same packed ULong. The Kotlin
             // `@JvmInline value class Color(val value: ULong)` surfaces
             // as a packed `long` at the JNI boundary; the implicit
             // `Color -> long` operator turns the C# struct into the
             // bridge's actual `long` JNI slot.
-            ["Microsoft.AndroidX.Compose.Color"] =
+            ["AndroidX.Compose.Color"] =
                 ('J', "(long)({0}.GetValueOrDefault())"),
         };
 

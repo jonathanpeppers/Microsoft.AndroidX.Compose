@@ -1,10 +1,10 @@
-using Microsoft.AndroidX.Compose.Gallery.Registry;
+using AndroidX.Compose.Gallery.Registry;
 
-namespace Microsoft.AndroidX.Compose.Gallery.Demos.TextInputs;
+namespace AndroidX.Compose.Gallery.Demos.TextInputs;
 
 /// <summary>
 /// <see cref="SelectionContainer"/> + <see cref="DisableSelection"/> —
-/// the only path to user-selectable / copyable Text in Microsoft.AndroidX.Compose.
+/// the only path to user-selectable / copyable Text in AndroidX.Compose.
 /// </summary>
 public static class SelectionDemo
 {

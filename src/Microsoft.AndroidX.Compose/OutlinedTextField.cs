@@ -1,8 +1,8 @@
-using global::Android.Runtime;
-using global::AndroidX.Compose.Runtime;
-using global::AndroidX.Compose.UI.Text.Input;
+using Android.Runtime;
+using AndroidX.Compose.Runtime;
+using AndroidX.Compose.UI.Text.Input;
 
-namespace Microsoft.AndroidX.Compose;
+namespace AndroidX.Compose;
 
 /// <summary>
 /// Material 3 <c>OutlinedTextField</c>. Same construction modes and

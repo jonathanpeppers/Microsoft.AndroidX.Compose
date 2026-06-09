@@ -1,6 +1,6 @@
-using Microsoft.AndroidX.Compose.Gallery.Registry;
+using AndroidX.Compose.Gallery.Registry;
 
-namespace Microsoft.AndroidX.Compose.Gallery.Demos.Selection;
+namespace AndroidX.Compose.Gallery.Demos.Selection;
 
 /// <summary>Continuous Slider bound to a float.</summary>
 public static class SliderDemo

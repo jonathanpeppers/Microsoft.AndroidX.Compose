@@ -1,6 +1,6 @@
-using Microsoft.AndroidX.Compose.Gallery.Registry;
+using AndroidX.Compose.Gallery.Registry;
 
-namespace Microsoft.AndroidX.Compose.Gallery.Demos.Containers;
+namespace AndroidX.Compose.Gallery.Demos.Containers;
 
 /// <summary>Surface — themed background you can nest under any content.</summary>
 public static class SurfaceDemo

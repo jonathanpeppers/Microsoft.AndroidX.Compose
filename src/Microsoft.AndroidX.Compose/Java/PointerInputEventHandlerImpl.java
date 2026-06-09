@@ -18,7 +18,7 @@ import kotlin.jvm.functions.Function2;
  * value-class-mangled type, so we can't implement it directly from C#
  * with the standard Android Callable Wrapper pipeline. Instead we
  * forward to a plain {@code Function2}, which IS bound and easy to
- * implement from C# (see {@code Microsoft.AndroidX.Compose.PointerInputBlock}).</p>
+ * implement from C# (see {@code AndroidX.Compose.PointerInputBlock}).</p>
  */
 final class PointerInputEventHandlerImpl implements PointerInputEventHandler {
     private final Function2<PointerInputScope, Continuation<? super Unit>, Object> block;

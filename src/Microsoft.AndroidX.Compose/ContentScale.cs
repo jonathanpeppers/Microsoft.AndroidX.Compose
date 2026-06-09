@@ -1,6 +1,6 @@
-using global::Android.Runtime;
+using Android.Runtime;
 
-namespace Microsoft.AndroidX.Compose;
+namespace AndroidX.Compose;
 
 /// <summary>
 /// C# wrapper around the <c>androidx.compose.ui.layout.ContentScale</c>

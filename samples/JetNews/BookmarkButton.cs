@@ -1,4 +1,4 @@
-namespace Microsoft.AndroidX.Compose.Samples.JetNews;
+namespace AndroidX.Compose.Samples.JetNews;
 
 /// <summary>
 /// Bookmark toggle. Reads the <see cref="BookmarksViewModel"/> and

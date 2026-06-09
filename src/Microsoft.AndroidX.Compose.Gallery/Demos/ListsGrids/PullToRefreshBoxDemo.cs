@@ -1,7 +1,7 @@
-using global::Android.OS;
-using Microsoft.AndroidX.Compose.Gallery.Registry;
+using Android.OS;
+using AndroidX.Compose.Gallery.Registry;
 
-namespace Microsoft.AndroidX.Compose.Gallery.Demos.ListsGrids;
+namespace AndroidX.Compose.Gallery.Demos.ListsGrids;
 
 /// <summary>PullToRefreshBox — Material 3 pull-down gesture over any scrollable child.</summary>
 public static class PullToRefreshBoxDemo

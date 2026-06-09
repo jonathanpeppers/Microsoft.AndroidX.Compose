@@ -1,5 +1,5 @@
 
-namespace Microsoft.AndroidX.Compose;
+namespace AndroidX.Compose;
 
 /// <summary>
 /// Mutable property bag that mirrors the subset of Kotlin's
@@ -89,7 +89,7 @@ public sealed class NavOptions
     /// every navigate so mutations to the wrapper between calls are
     /// observed by the next navigate.
     /// </summary>
-    internal global::AndroidX.Navigation.NavOptions BuildJvm()
+    internal AndroidX.Navigation.NavOptions BuildJvm()
     {
         // Catch caller bugs early: the route-dependent flags are
         // silently ignored by Kotlin when no popUpTo is set, which
@@ -102,7 +102,7 @@ public sealed class NavOptions
                 "NavOptions.PopUpToInclusive / PopUpToSaveState require PopUpToRoute to be set; otherwise the popUpTo clause is dropped and the flags have no effect.");
         }
 
-        var builder = new global::AndroidX.Navigation.NavOptions.Builder();
+        var builder = new AndroidX.Navigation.NavOptions.Builder();
 
         if (PopUpToRoute is not null)
             builder.SetPopUpTo(PopUpToRoute, PopUpToInclusive, PopUpToSaveState);

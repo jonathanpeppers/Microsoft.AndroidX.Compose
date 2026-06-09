@@ -1,10 +1,10 @@
-using global::Android.Runtime;
+using Android.Runtime;
 
-namespace Microsoft.AndroidX.Compose;
+namespace AndroidX.Compose;
 
 /// <summary>
 /// Builder-style C# wrapper around <c>androidx.compose.ui.text.TextStyle</c>.
-/// Materializes a binding <see cref="global::AndroidX.Compose.UI.Text.TextStyle"/>
+/// Materializes a binding <see cref="AndroidX.Compose.UI.Text.TextStyle"/>
 /// by starting from the Material 3 baseline (<c>TextStyle.Default</c>)
 /// and overriding only the properties the caller set. Nine slots are
 /// exposed (the most common set required by typography customization);
@@ -51,33 +51,33 @@ public sealed class TextStyle
     static int UnboxTextAlign(TextAlign? wrapper, int fallback)
     {
         if (wrapper is null) return fallback;
-        var binding = Java.Lang.Object.GetObject<global::AndroidX.Compose.UI.Text.Style.TextAlign>(wrapper.Handle, JniHandleOwnership.DoNotTransfer);
+        var binding = Java.Lang.Object.GetObject<AndroidX.Compose.UI.Text.Style.TextAlign>(wrapper.Handle, JniHandleOwnership.DoNotTransfer);
         return binding!.Value;
     }
 
     /// <summary>
-    /// Materialize the binding <see cref="global::AndroidX.Compose.UI.Text.TextStyle"/>.
+    /// Materialize the binding <see cref="AndroidX.Compose.UI.Text.TextStyle"/>.
     /// Properties left at <see langword="null"/> on this builder are
     /// copied verbatim from <c>TextStyle.Default</c>; properties the
     /// caller set replace the corresponding slot.
     /// </summary>
-    internal global::AndroidX.Compose.UI.Text.TextStyle Build()
+    internal AndroidX.Compose.UI.Text.TextStyle Build()
     {
         var d = TextStyleCompanion.Default;
         return d.Copy(
             color:                  Color is { } c   ? (long)c            : d.Color,
             fontSize:               FontSize is { } fs ? Sp.Pack(fs)      : d.FontSize,
-            fontWeight:             FontWeight is null ? d.FontWeight     : Cast<global::AndroidX.Compose.UI.Text.Font.FontWeight>(FontWeight),
-            fontStyle:              FontStyle is null  ? d.FontStyle      : Cast<global::AndroidX.Compose.UI.Text.Font.FontStyle>(FontStyle),
+            fontWeight:             FontWeight is null ? d.FontWeight     : Cast<AndroidX.Compose.UI.Text.Font.FontWeight>(FontWeight),
+            fontStyle:              FontStyle is null  ? d.FontStyle      : Cast<AndroidX.Compose.UI.Text.Font.FontStyle>(FontStyle),
             fontSynthesis:          d.FontSynthesis,
-            fontFamily:             FontFamily is null ? d.FontFamily     : Cast<global::AndroidX.Compose.UI.Text.Font.FontFamily>(FontFamily),
+            fontFamily:             FontFamily is null ? d.FontFamily     : Cast<AndroidX.Compose.UI.Text.Font.FontFamily>(FontFamily),
             fontFeatureSettings:    d.FontFeatureSettings,
             letterSpacing:          LetterSpacing is { } ls ? Sp.Pack(ls) : d.LetterSpacing,
             baselineShift:          d.BaselineShift,
             textGeometricTransform: d.TextGeometricTransform,
             localeList:             d.LocaleList,
             background:             d.Background,
-            textDecoration:         TextDecoration is null ? d.TextDecoration : Cast<global::AndroidX.Compose.UI.Text.Style.TextDecoration>(TextDecoration),
+            textDecoration:         TextDecoration is null ? d.TextDecoration : Cast<AndroidX.Compose.UI.Text.Style.TextDecoration>(TextDecoration),
             shadow:                 d.Shadow,
             drawStyle:              d.DrawStyle,
             textAlign:              UnboxTextAlign(TextAlign, d.GetTextAlign()),

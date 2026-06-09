@@ -1,4 +1,4 @@
-namespace Microsoft.AndroidX.Compose.Samples.Reply;
+namespace AndroidX.Compose.Samples.Reply;
 
 /// <summary>
 /// Top-level destination routes recognised by the <see cref="NavHost"/>.

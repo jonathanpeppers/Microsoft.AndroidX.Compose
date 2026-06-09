@@ -1,6 +1,6 @@
-using Microsoft.AndroidX.Compose.Gallery.Registry;
+using AndroidX.Compose.Gallery.Registry;
 
-namespace Microsoft.AndroidX.Compose.Gallery.Demos.Navigation;
+namespace AndroidX.Compose.Gallery.Demos.Navigation;
 
 /// <summary>PermanentNavigationDrawer — always visible; ideal for tablets / foldables.</summary>
 public static class PermanentDrawerDemo

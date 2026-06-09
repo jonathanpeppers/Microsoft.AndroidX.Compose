@@ -1,4 +1,4 @@
-namespace Microsoft.AndroidX.Compose;
+namespace AndroidX.Compose;
 
 /// <summary>
 /// Caller-supplied state holder for <see cref="SnackbarHost"/>. Wraps
@@ -17,5 +17,5 @@ namespace Microsoft.AndroidX.Compose;
 /// </remarks>
 public sealed class SnackbarHostState
 {
-    internal global::AndroidX.Compose.Material3.SnackbarHostState Jvm { get; } = new();
+    internal AndroidX.Compose.Material3.SnackbarHostState Jvm { get; } = new();
 }

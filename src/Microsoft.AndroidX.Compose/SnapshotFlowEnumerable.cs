@@ -1,5 +1,5 @@
 
-namespace Microsoft.AndroidX.Compose;
+namespace AndroidX.Compose;
 
 /// <summary>
 /// Backing implementation for

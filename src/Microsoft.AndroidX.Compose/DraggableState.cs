@@ -1,6 +1,6 @@
-using global::AndroidX.Compose.Foundation.Gestures;
+using AndroidX.Compose.Foundation.Gestures;
 
-namespace Microsoft.AndroidX.Compose;
+namespace AndroidX.Compose;
 
 /// <summary>
 /// Caller-supplied state holder for <see cref="Modifier.Draggable(DraggableState, Orientation, bool)"/>.

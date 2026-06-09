@@ -1,6 +1,6 @@
-using global::Android.Runtime;
+using Android.Runtime;
 
-namespace Microsoft.AndroidX.Compose;
+namespace AndroidX.Compose;
 
 /// <summary>
 /// C# wrapper around <c>androidx.compose.ui.text.style.TextAlign</c>.
@@ -20,7 +20,7 @@ namespace Microsoft.AndroidX.Compose;
 /// from the <c>InlineClass = true</c> on the
 /// <see cref="ComposeCompanionAttribute"/> below.
 ///
-/// Will swap to bound <c>global::AndroidX.Compose.UI.Text.Style.TextAlign</c>
+/// Will swap to bound <c>AndroidX.Compose.UI.Text.Style.TextAlign</c>
 /// once <see href="https://github.com/dotnet/android-libraries/pull/1440"/>
 /// ships and we adopt the next <c>Xamarin.AndroidX.Compose.UI.Text.Android</c>
 /// release.

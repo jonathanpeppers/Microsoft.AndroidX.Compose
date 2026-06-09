@@ -1,4 +1,4 @@
-namespace Microsoft.AndroidX.Compose;
+namespace AndroidX.Compose;
 
 /// <summary>
 /// Material 3 <c>TopAppBar</c>. <c>Title</c> is required;
@@ -22,8 +22,8 @@ namespace Microsoft.AndroidX.Compose;
 /// Set <c>ScrollBehavior</c> to a value from
 /// <see cref="TopAppBarDefaults"/> to make the bar elevate / collapse
 /// in response to scrolling. The same behavior's
-/// <see cref="global::AndroidX.Compose.Material3.ITopAppBarScrollBehavior.NestedScrollConnection"/> must
+/// <see cref="AndroidX.Compose.Material3.ITopAppBarScrollBehavior.NestedScrollConnection"/> must
 /// be wired to the scrolling container via
-/// <see cref="Modifier.NestedScroll(global::AndroidX.Compose.UI.Input.NestedScroll.INestedScrollConnection)"/>.
+/// <see cref="Modifier.NestedScroll(AndroidX.Compose.UI.Input.NestedScroll.INestedScrollConnection)"/>.
 /// </summary>
 public sealed partial class TopAppBar;

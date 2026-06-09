@@ -1,6 +1,6 @@
-using BindingArrangement = global::AndroidX.Compose.Foundation.Layout.Arrangement;
+using BindingArrangement = AndroidX.Compose.Foundation.Layout.Arrangement;
 
-namespace Microsoft.AndroidX.Compose;
+namespace AndroidX.Compose;
 
 /// <summary>
 /// Compose's <c>Arrangement</c> — how a <see cref="Row"/> or

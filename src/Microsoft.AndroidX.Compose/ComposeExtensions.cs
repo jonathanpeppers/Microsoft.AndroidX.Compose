@@ -1,6 +1,6 @@
-using global::AndroidX.Compose.Runtime;
+using AndroidX.Compose.Runtime;
 
-namespace Microsoft.AndroidX.Compose;
+namespace AndroidX.Compose;
 
 /// <summary>
 /// Top-level composition utilities — the C# parity of every helper Kotlin's
@@ -16,11 +16,11 @@ namespace Microsoft.AndroidX.Compose;
 /// <see cref="ComposableLambda2"/> / <see cref="ComposableLambda3"/> /
 /// <see cref="ComposableLambda4"/> adapters, by
 /// <see cref="ComposableNode.Render(IComposer)"/> overrides, and by the
-/// <see cref="SetContent(global::AndroidX.Activity.ComponentActivity, Func{IComposer, ComposableNode})"/>
+/// <see cref="SetContent(AndroidX.Activity.ComponentActivity, Func{IComposer, ComposableNode})"/>
 /// entry point — no ambient <c>[ThreadStatic]</c> lookup, no base class
 /// required.
 ///
-/// Plain statics that don't read a slot (<see cref="NewTextFieldValue(string, long, global::AndroidX.Compose.UI.Text.TextRange?)"/>,
+/// Plain statics that don't read a slot (<see cref="NewTextFieldValue(string, long, AndroidX.Compose.UI.Text.TextRange?)"/>,
 /// <see cref="DerivedStateOf{T}(Func{T})"/>, …) also expose <c>this IComposer</c>
 /// convenience overloads so call sites inside a composable can keep the
 /// same <c>composer.X(...)</c> shape. The static form stays callable from

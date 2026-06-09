@@ -1,9 +1,9 @@
-using global::AndroidX.Compose.Material3;
-using global::AndroidX.Compose.Runtime;
-using global::Android.Runtime;
+using AndroidX.Compose.Material3;
+using AndroidX.Compose.Runtime;
+using Android.Runtime;
 using Kotlin.Ranges;
 
-namespace Microsoft.AndroidX.Compose;
+namespace AndroidX.Compose;
 
 /// <summary>
 /// Material 3 <c>RangeSlider</c>. The current value is a

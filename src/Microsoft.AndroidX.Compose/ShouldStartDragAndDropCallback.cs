@@ -1,7 +1,7 @@
-using global::Android.Runtime;
+using Android.Runtime;
 using Kotlin.Jvm.Functions;
 
-namespace Microsoft.AndroidX.Compose;
+namespace AndroidX.Compose;
 
 // JCW adapter for the `shouldStartDragAndDrop: (DragAndDropEvent) -> Boolean`
 // parameter on `Modifier.dragAndDropTarget(...)`. Wraps a managed
@@ -21,7 +21,7 @@ internal sealed class ShouldStartDragAndDropCallback : Java.Lang.Object, IFuncti
     {
         if (p0 is null)
             return Java.Lang.Boolean.False;
-        var jvm = global::Android.Runtime.Extensions.JavaCast<global::AndroidX.Compose.UI.Draganddrop.DragAndDropEvent>(p0);
+        var jvm = Android.Runtime.Extensions.JavaCast<AndroidX.Compose.UI.Draganddrop.DragAndDropEvent>(p0);
         return _callback(new DragAndDropEvent(jvm)) ? Java.Lang.Boolean.True : Java.Lang.Boolean.False;
     }
 }

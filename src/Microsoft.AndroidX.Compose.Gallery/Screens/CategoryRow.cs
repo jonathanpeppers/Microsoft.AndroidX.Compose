@@ -1,7 +1,7 @@
-using global::AndroidX.Compose.Runtime;
-using Microsoft.AndroidX.Compose.Gallery.Registry;
+using AndroidX.Compose.Runtime;
+using AndroidX.Compose.Gallery.Registry;
 
-namespace Microsoft.AndroidX.Compose.Gallery.Screens;
+namespace AndroidX.Compose.Gallery.Screens;
 
 /// <summary>
 /// One clickable row on <see cref="HomeScreen"/>: shows the category's

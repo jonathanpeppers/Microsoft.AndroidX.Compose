@@ -1,6 +1,6 @@
 using System.Globalization;
 
-namespace Microsoft.AndroidX.Compose;
+namespace AndroidX.Compose;
 
 /// <summary>
 /// C# mirror of Kotlin's

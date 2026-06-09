@@ -1,6 +1,6 @@
-using Microsoft.AndroidX.Compose.Gallery.Registry;
+using AndroidX.Compose.Gallery.Registry;
 
-namespace Microsoft.AndroidX.Compose.Gallery.Demos.TextInputs;
+namespace AndroidX.Compose.Gallery.Demos.TextInputs;
 
 /// <summary>OutlinedSecureTextField — same as SecureTextField but with an outlined chrome.</summary>
 public static class OutlinedSecureTextFieldDemo

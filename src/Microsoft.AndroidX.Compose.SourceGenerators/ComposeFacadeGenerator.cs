@@ -7,11 +7,11 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 
-namespace Microsoft.AndroidX.Compose.SourceGenerators;
+namespace AndroidX.Compose.SourceGenerators;
 
 /// <summary>
 /// Emits user-facing facade classes from <c>[ComposeFacade]</c>-decorated
-/// bridge methods on <c>Microsoft.AndroidX.Compose.ComposeBridges</c>. The bridge owns
+/// bridge methods on <c>AndroidX.Compose.ComposeBridges</c>. The bridge owns
 /// the JNI plumbing; the facade is a thin
 /// <see cref="ComposableNode"/> / <see cref="ComposableContainer"/>
 /// wrapper that builds the bridge's user-controlled args (Action →
@@ -41,14 +41,14 @@ namespace Microsoft.AndroidX.Compose.SourceGenerators;
 [Generator(LanguageNames.CSharp)]
 public sealed class ComposeFacadeGenerator : IIncrementalGenerator
 {
-    const string FacadeAttributeMetadataName = "Microsoft.AndroidX.Compose.ComposeFacadeAttribute";
-    const string BridgeAttributeMetadataName = "Microsoft.AndroidX.Compose.ComposeBridgeAttribute";
-    const string DeclarativeDefaultsAttributeMetadataName = "Microsoft.AndroidX.Compose.ComposeDefaultsAttribute";
-    const string SlotAttributeMetadataName = "Microsoft.AndroidX.Compose.SlotAttribute";
-    const string CallbackAttributeMetadataName = "Microsoft.AndroidX.Compose.CallbackAttribute";
-    const string PainterResourceAttributeMetadataName = "Microsoft.AndroidX.Compose.PainterResourceAttribute";
-    const string StateHolderAttributeMetadataName = "Microsoft.AndroidX.Compose.StateHolderAttribute";
-    const string ConfirmStateChangeAttributeMetadataName = "Microsoft.AndroidX.Compose.ConfirmStateChangeAttribute";
+    const string FacadeAttributeMetadataName = "AndroidX.Compose.ComposeFacadeAttribute";
+    const string BridgeAttributeMetadataName = "AndroidX.Compose.ComposeBridgeAttribute";
+    const string DeclarativeDefaultsAttributeMetadataName = "AndroidX.Compose.ComposeDefaultsAttribute";
+    const string SlotAttributeMetadataName = "AndroidX.Compose.SlotAttribute";
+    const string CallbackAttributeMetadataName = "AndroidX.Compose.CallbackAttribute";
+    const string PainterResourceAttributeMetadataName = "AndroidX.Compose.PainterResourceAttribute";
+    const string StateHolderAttributeMetadataName = "AndroidX.Compose.StateHolderAttribute";
+    const string ConfirmStateChangeAttributeMetadataName = "AndroidX.Compose.ConfirmStateChangeAttribute";
 
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
@@ -130,7 +130,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         // CN3001 — facade must attach to ComposeBridges.
         var container = method.ContainingType;
         if (container.Name != "ComposeBridges" ||
-            container.ContainingNamespace?.ToDisplayString() != "Microsoft.AndroidX.Compose")
+            container.ContainingNamespace?.ToDisplayString() != "AndroidX.Compose")
         {
             return Fail(Diagnostics.FacadeWrongContainingType, loc, method.Name, container.ToDisplayString());
         }
@@ -399,7 +399,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         var source = Emit(className, method.Name, scope, composerParam, slots, hasMultiSlot,
             callerProvidesDefaults, defaultsParam, defaults, defaultsType?.Name, themeColor, colorSlot,
             userParams, branchInfo);
-        var hint = $"Microsoft.AndroidX.Compose.Facade.{className}.g.cs";
+        var hint = $"AndroidX.Compose.Facade.{className}.g.cs";
         return new GenerationResult(source, hint, Array.Empty<Diagnostic>());
     }
 
@@ -440,11 +440,11 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         }
 
         // Resolve alternate method symbol on ComposeBridges.
-        var bridgesType = c.Compilation.GetTypeByMetadataName("Microsoft.AndroidX.Compose.ComposeBridges");
+        var bridgesType = c.Compilation.GetTypeByMetadataName("AndroidX.Compose.ComposeBridges");
         if (bridgesType is null)
         {
             diags.Add(Diagnostic.Create(Diagnostics.FacadeBranchInvalid, loc, primary.Name,
-                "Microsoft.AndroidX.Compose.ComposeBridges not found in compilation"));
+                "AndroidX.Compose.ComposeBridges not found in compilation"));
             return null;
         }
 
@@ -667,14 +667,14 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             }
 
             // Validate the Remember bridge resolves to a static method on
-            // Microsoft.AndroidX.Compose.ComposeBridges whose last parameter is an
+            // AndroidX.Compose.ComposeBridges whose last parameter is an
             // IComposer and that returns IntPtr. Any number of leading
             // user parameters is allowed (Phase 4 = zero, Phase 4b = N).
-            var bridgesType = c.Compilation.GetTypeByMetadataName("Microsoft.AndroidX.Compose.ComposeBridges");
+            var bridgesType = c.Compilation.GetTypeByMetadataName("AndroidX.Compose.ComposeBridges");
             if (bridgesType is null)
             {
                 diags.Add(Diagnostic.Create(Diagnostics.FacadeStateHolderInvalid, loc, methodName,
-                    $"[StateHolder] on '{p.Name}': cannot resolve type 'Microsoft.AndroidX.Compose.ComposeBridges'"));
+                    $"[StateHolder] on '{p.Name}': cannot resolve type 'AndroidX.Compose.ComposeBridges'"));
                 return null;
             }
             var rememberMethods = bridgesType.GetMembers(remember!).OfType<IMethodSymbol>().ToArray();
@@ -887,7 +887,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         // and the Named slots coexist — the class still derives from
         // ComposableContainer and the body wraps RenderChildren.
         bool isContainer = slots.Any(s => s.Kind is FacadeSlotKind.Content2 or FacadeSlotKind.Content3);
-        string baseClass = isContainer ? "global::Microsoft.AndroidX.Compose.ComposableContainer" : "global::Microsoft.AndroidX.Compose.ComposableNode";
+        string baseClass = isContainer ? "global::AndroidX.Compose.ComposableContainer" : "global::AndroidX.Compose.ComposableNode";
 
         // Ctor slots: every non-modifier, non-named-property slot.
         // StateHolder slots go LAST (they have default = null) so all
@@ -903,9 +903,9 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
 
         var sb = new StringBuilder();
         sb.AppendLine("// <auto-generated/>");
-        sb.AppendLine("// Generated by Microsoft.AndroidX.Compose.SourceGenerators.ComposeFacadeGenerator.");
+        sb.AppendLine("// Generated by AndroidX.Compose.SourceGenerators.ComposeFacadeGenerator.");
         sb.AppendLine("#nullable enable");
-        sb.AppendLine("namespace Microsoft.AndroidX.Compose");
+        sb.AppendLine("namespace AndroidX.Compose");
         sb.AppendLine("{");
 
         sb.Append("    public sealed partial class ").Append(className).Append(" : ").AppendLine(baseClass);
@@ -950,14 +950,14 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         // Phase 6 — ContainerColor property + (no theme fallback here; happens in Render).
         if (themeColor is not null && colorSlot is not null)
         {
-            sb.AppendLine("        /// <summary>Optional explicit <see cref=\"global::Microsoft.AndroidX.Compose.Color\"/>. Leave at the default to inherit the active <c>MaterialTheme.colorScheme</c> fallback.</summary>");
-            sb.AppendLine("        public global::Microsoft.AndroidX.Compose.Color ContainerColor { get; set; }");
+            sb.AppendLine("        /// <summary>Optional explicit <see cref=\"global::AndroidX.Compose.Color\"/>. Leave at the default to inherit the active <c>MaterialTheme.colorScheme</c> fallback.</summary>");
+            sb.AppendLine("        public global::AndroidX.Compose.Color ContainerColor { get; set; }");
         }
 
         // Phase 3 — named properties.
         foreach (var s in namedSlots)
         {
-            sb.Append("        public global::Microsoft.AndroidX.Compose.ComposableNode? ").Append(PropertyName(s)).AppendLine(" { get; set; }");
+            sb.Append("        public global::AndroidX.Compose.ComposableNode? ").Append(PropertyName(s)).AppendLine(" { get; set; }");
         }
 
         // OptionalValue — Compose value-class types (Dp?/Sp?/Em?/
@@ -1059,7 +1059,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             else
             {
                 sb.Append("            var __").Append(s.Param.Name)
-                  .Append(" = global::Microsoft.AndroidX.Compose.ComposeBridges.").Append(s.RememberMethodName).Append('(');
+                  .Append(" = global::AndroidX.Compose.ComposeBridges.").Append(s.RememberMethodName).Append('(');
                 foreach (var argExpr in s.RememberArgExpressions)
                     sb.Append(argExpr).Append(", ");
                 sb.Append(composerName).AppendLine(");");
@@ -1084,7 +1084,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         foreach (var s in slots.Where(s => s.Kind == FacadeSlotKind.OnClick))
         {
             sb.Append("            var __").Append(s.Param.Name)
-              .Append(" = new global::Microsoft.AndroidX.Compose.ComposableLambda0(_").Append(s.Param.Name).AppendLine(");");
+              .Append(" = new global::AndroidX.Compose.ComposableLambda0(_").Append(s.Param.Name).AppendLine(");");
         }
 
         // Callback wrappers (Phase 2).
@@ -1123,12 +1123,12 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             if (nullable)
             {
                 sb.Append("            var __").Append(s.Param.Name).Append(" = ").Append(name)
-                  .Append(" is null ? null : global::Microsoft.AndroidX.Compose.ComposableLambdas.").Append(wrap)
+                  .Append(" is null ? null : global::AndroidX.Compose.ComposableLambdas.").Append(wrap)
                   .Append('(').Append(composerName).Append(", c => ").Append(name).AppendLine(".Render(c));");
             }
             else
             {
-                sb.Append("            var __").Append(s.Param.Name).Append(" = global::Microsoft.AndroidX.Compose.ComposableLambdas.")
+                sb.Append("            var __").Append(s.Param.Name).Append(" = global::AndroidX.Compose.ComposableLambdas.")
                   .Append(wrap).Append('(').Append(composerName).Append(", c => ").Append(name).AppendLine("!.Render(c));");
             }
         }
@@ -1138,7 +1138,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         {
             var contentSlot = slots.First(s => s.Kind is FacadeSlotKind.Content2 or FacadeSlotKind.Content3);
             int arity = contentSlot.Kind == FacadeSlotKind.Content3 ? 3 : 2;
-            sb.Append("            var __").Append(contentSlot.Param.Name).Append(" = global::Microsoft.AndroidX.Compose.ComposableLambdas.");
+            sb.Append("            var __").Append(contentSlot.Param.Name).Append(" = global::AndroidX.Compose.ComposableLambdas.");
             if (arity == 2)
             {
                 sb.Append("Wrap2(").Append(composerName).AppendLine(", c => RenderChildren(c));");
@@ -1147,7 +1147,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             {
                 sb.Append("Wrap3(").Append(composerName).AppendLine(", (__scope, c) =>");
                 sb.AppendLine("            {");
-                sb.Append("                using var __scopeFrame = global::Microsoft.AndroidX.Compose.RenderContext.PushScope(__scope, global::Microsoft.AndroidX.Compose.ScopeKind.")
+                sb.Append("                using var __scopeFrame = global::AndroidX.Compose.RenderContext.PushScope(__scope, global::AndroidX.Compose.ScopeKind.")
                   .Append(scope).AppendLine(");");
                 sb.AppendLine("                RenderChildren(c);");
                 sb.AppendLine("            });");
@@ -1183,7 +1183,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             sb.AppendLine("            }");
             sb.AppendLine("            else");
             sb.AppendLine("            {");
-            sb.AppendLine("                var __painterRef = global::Microsoft.AndroidX.Compose.ComposeBridges.PainterResource(_drawableResourceId, "
+            sb.AppendLine("                var __painterRef = global::AndroidX.Compose.ComposeBridges.PainterResource(_drawableResourceId, "
                 + composerName + ");");
             sb.AppendLine("                __painterPeer = global::Java.Lang.Object.GetObject<global::AndroidX.Compose.UI.Graphics.Painter.Painter>(");
             sb.AppendLine("                    __painterRef, global::Android.Runtime.JniHandleOwnership.TransferLocalRef)!;");
@@ -1206,7 +1206,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             }
 
             // Bridge call. Preserve original bridge param order.
-            sb.Append(indent).Append("global::Microsoft.AndroidX.Compose.ComposeBridges.").Append(bridgeMethodName).Append('(');
+            sb.Append(indent).Append("global::AndroidX.Compose.ComposeBridges.").Append(bridgeMethodName).Append('(');
             bool first = true;
             // Walk method.Parameters via slots in their original order; the
             // defaults param (if any) was removed from `slots` so we add it
@@ -1261,7 +1261,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         sb.Append(indent).AppendLine("{");
         var inner = indent + "    ";
         sb.Append(inner).Append("var __").Append(branched.Param.Name)
-          .Append(" = global::Microsoft.AndroidX.Compose.ComposableLambdas.").Append(wrap)
+          .Append(" = global::AndroidX.Compose.ComposableLambdas.").Append(wrap)
           .Append('(').Append(composerName).Append(", c => ")
           .Append(branchPropName).AppendLine("!.Render(c));");
         EmitDefaultsMask(sb, inner, branch.AlternateDefaults, slots, allNamedSlots,
@@ -1285,7 +1285,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         IReadOnlyDictionary<string, FacadeSlot> slotByName,
         string composerName, bool hoistModifier)
     {
-        sb.Append(indent).Append("global::Microsoft.AndroidX.Compose.ComposeBridges.").Append(bridgeMethodName).Append('(');
+        sb.Append(indent).Append("global::AndroidX.Compose.ComposeBridges.").Append(bridgeMethodName).Append('(');
         foreach (var p in bridgeUserParams)
         {
             if (slotByName.TryGetValue(p.Name, out var slot))
@@ -1308,7 +1308,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             _ => "default!",
         };
         sb.Append("            var __").Append(s.Param.Name)
-          .Append(" = new global::Microsoft.AndroidX.Compose.ComposableLambda1(v => _")
+          .Append(" = new global::AndroidX.Compose.ComposableLambda1(v => _")
           .Append(s.Param.Name).Append('(').Append(expr).AppendLine("));");
     }
 
@@ -1334,7 +1334,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             sb.AppendLine("            else");
             sb.AppendLine("            {");
             sb.Append("                __").Append(s.Param.Name)
-              .Append(" = global::Microsoft.AndroidX.Compose.ComposeBridges.").Append(s.RememberMethodName).Append('(');
+              .Append(" = global::AndroidX.Compose.ComposeBridges.").Append(s.RememberMethodName).Append('(');
             foreach (var argExpr in s.RememberArgExpressions)
                 sb.Append(argExpr).Append(", ");
             sb.Append(composerName).AppendLine(");");
@@ -1357,7 +1357,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             sb.AppendLine("            else");
             sb.AppendLine("            {");
             sb.Append("                __").Append(s.Param.Name)
-              .Append(" = global::Microsoft.AndroidX.Compose.ComposeBridges.").Append(s.RememberMethodName).Append('(');
+              .Append(" = global::AndroidX.Compose.ComposeBridges.").Append(s.RememberMethodName).Append('(');
             foreach (var argExpr in s.RememberArgExpressions)
                 sb.Append(argExpr).Append(", ");
             sb.Append(composerName).AppendLine(");");
@@ -1373,7 +1373,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         IReadOnlyList<FacadeSlot> slots, IReadOnlyList<FacadeSlot> namedSlots,
         bool hasModifier, bool hasPainter)
     {
-        sb.Append(indent).Append("int __defaults = (int)global::Microsoft.AndroidX.Compose.").Append(d.EnumName).AppendLine(".All;");
+        sb.Append(indent).Append("int __defaults = (int)global::AndroidX.Compose.").Append(d.EnumName).AppendLine(".All;");
 
         // For each slot the facade DEFINITELY supplies, clear its bit.
         // - Modifier: clear when __modifier != null.
@@ -1389,16 +1389,16 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             switch (s.Kind)
             {
                 case FacadeSlotKind.Modifier:
-                    sb.Append(indent).Append("if (__modifier is not null) __defaults &= ~(int)global::Microsoft.AndroidX.Compose.")
+                    sb.Append(indent).Append("if (__modifier is not null) __defaults &= ~(int)global::AndroidX.Compose.")
                       .Append(d.EnumName).Append('.').Append(bitMember).AppendLine(";");
                     break;
                 case FacadeSlotKind.NamedFunction2:
                 case FacadeSlotKind.NamedFunction3:
-                    sb.Append(indent).Append("if (__").Append(s.Param.Name).Append(" is not null) __defaults &= ~(int)global::Microsoft.AndroidX.Compose.")
+                    sb.Append(indent).Append("if (__").Append(s.Param.Name).Append(" is not null) __defaults &= ~(int)global::AndroidX.Compose.")
                       .Append(d.EnumName).Append('.').Append(bitMember).AppendLine(";");
                     break;
                 case FacadeSlotKind.OptionalValue:
-                    sb.Append(indent).Append("if (").Append(PropertyName(s)).Append(" is not null) __defaults &= ~(int)global::Microsoft.AndroidX.Compose.")
+                    sb.Append(indent).Append("if (").Append(PropertyName(s)).Append(" is not null) __defaults &= ~(int)global::AndroidX.Compose.")
                       .Append(d.EnumName).Append('.').Append(bitMember).AppendLine(";");
                     break;
                 case FacadeSlotKind.RequiredFunction2:
@@ -1407,7 +1407,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
                 case FacadeSlotKind.Primitive:
                 case FacadeSlotKind.ThemeColor:
                 case FacadeSlotKind.StateHolder:
-                    sb.Append(indent).Append("__defaults &= ~(int)global::Microsoft.AndroidX.Compose.")
+                    sb.Append(indent).Append("__defaults &= ~(int)global::AndroidX.Compose.")
                       .Append(d.EnumName).Append('.').Append(bitMember).AppendLine(";");
                     break;
             }
@@ -1450,7 +1450,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             FacadeSlotKind.Primitive        => "_" + s.Param.Name,
             FacadeSlotKind.PainterResource  => "__painterPeer",
             FacadeSlotKind.ThemeColor       => "__color",
-            FacadeSlotKind.ScopeReceiver    => "global::Microsoft.AndroidX.Compose.RenderContext.CurrentScope",
+            FacadeSlotKind.ScopeReceiver    => "global::AndroidX.Compose.RenderContext.CurrentScope",
             FacadeSlotKind.StateHolder      => "__" + s.Param.Name,
             FacadeSlotKind.OptionalValue    => PropertyName(s),
             _ => "default",
@@ -1671,7 +1671,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
 
     static bool IsKnownScopeKind(Compilation compilation, string scope)
     {
-        var enumType = compilation.GetTypeByMetadataName("Microsoft.AndroidX.Compose.ScopeKind");
+        var enumType = compilation.GetTypeByMetadataName("AndroidX.Compose.ScopeKind");
         if (enumType is null) return scope is "Row" or "Column";
         foreach (var m in enumType.GetMembers())
             if (m.Kind == SymbolKind.Field && m.Name == scope)
@@ -1744,7 +1744,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         INamedTypeSymbol? adapterType = ReadType(attr, "AdapterType");
         if (adapterType is null)
         {
-            var conventionName = "Microsoft.AndroidX.Compose." + valueType.Name + "ConfirmStateChange";
+            var conventionName = "AndroidX.Compose." + valueType.Name + "ConfirmStateChange";
             adapterType = c.Compilation.GetTypeByMetadataName(conventionName);
             if (adapterType is null)
             {

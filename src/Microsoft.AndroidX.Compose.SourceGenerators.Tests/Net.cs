@@ -2,7 +2,7 @@ using System.Collections.Immutable;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 
-namespace Microsoft.AndroidX.Compose.SourceGenerators.Tests;
+namespace AndroidX.Compose.SourceGenerators.Tests;
 
 /// <summary>Minimal reference set so the synthetic source compiles.</summary>
 internal static class Net

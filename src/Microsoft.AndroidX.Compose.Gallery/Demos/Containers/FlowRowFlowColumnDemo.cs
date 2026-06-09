@@ -1,6 +1,6 @@
-using Microsoft.AndroidX.Compose.Gallery.Registry;
+using AndroidX.Compose.Gallery.Registry;
 
-namespace Microsoft.AndroidX.Compose.Gallery.Demos.Containers;
+namespace AndroidX.Compose.Gallery.Demos.Containers;
 
 /// <summary>FlowRow wraps children to a new line when they overflow width.</summary>
 public static class FlowRowFlowColumnDemo

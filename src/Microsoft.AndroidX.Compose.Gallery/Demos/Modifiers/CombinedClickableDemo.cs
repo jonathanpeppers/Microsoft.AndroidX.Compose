@@ -1,6 +1,6 @@
-using Microsoft.AndroidX.Compose.Gallery.Registry;
+using AndroidX.Compose.Gallery.Registry;
 
-namespace Microsoft.AndroidX.Compose.Gallery.Demos.Modifiers;
+namespace AndroidX.Compose.Gallery.Demos.Modifiers;
 
 /// <summary>CombinedClickable — onClick (+1), onLongClick (+10), onDoubleClick (+100).</summary>
 public static class CombinedClickableDemo

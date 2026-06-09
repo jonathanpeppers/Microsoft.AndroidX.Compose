@@ -1,6 +1,6 @@
-using Microsoft.AndroidX.Compose.Gallery.Registry;
+using AndroidX.Compose.Gallery.Registry;
 
-namespace Microsoft.AndroidX.Compose.Gallery.Demos.Selection;
+namespace AndroidX.Compose.Gallery.Demos.Selection;
 
 /// <summary>Single-choice SegmentedButtonRow with three options.</summary>
 public static class SingleChoiceSegmentedButtonsDemo

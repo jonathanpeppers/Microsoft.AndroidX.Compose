@@ -1,6 +1,6 @@
-using global::Android.Runtime;
+using Android.Runtime;
 
-namespace Microsoft.AndroidX.Compose;
+namespace AndroidX.Compose;
 
 /// <summary>
 /// Cached accessor for <c>androidx.compose.ui.text.TextStyle.Companion</c> —
@@ -13,11 +13,11 @@ namespace Microsoft.AndroidX.Compose;
 static class TextStyleCompanion
 {
     static IntPtr s_companion_ref;
-    static global::AndroidX.Compose.UI.Text.TextStyle.Companion? s_companion;
-    static global::AndroidX.Compose.UI.Text.TextStyle? s_default;
-    static global::AndroidX.Compose.UI.Text.SpanStyle? s_defaultSpan;
+    static AndroidX.Compose.UI.Text.TextStyle.Companion? s_companion;
+    static AndroidX.Compose.UI.Text.TextStyle? s_default;
+    static AndroidX.Compose.UI.Text.SpanStyle? s_defaultSpan;
 
-    public static global::AndroidX.Compose.UI.Text.TextStyle.Companion Get()
+    public static AndroidX.Compose.UI.Text.TextStyle.Companion Get()
     {
         if (s_companion is not null) return s_companion;
         if (s_companion_ref == IntPtr.Zero)
@@ -28,14 +28,14 @@ static class TextStyleCompanion
             s_companion_ref = JNIEnv.NewGlobalRef(local);
             JNIEnv.DeleteLocalRef(local);
         }
-        s_companion = Java.Lang.Object.GetObject<global::AndroidX.Compose.UI.Text.TextStyle.Companion>(
+        s_companion = Java.Lang.Object.GetObject<AndroidX.Compose.UI.Text.TextStyle.Companion>(
             s_companion_ref, JniHandleOwnership.DoNotTransfer)!;
         return s_companion;
     }
 
-    public static global::AndroidX.Compose.UI.Text.TextStyle Default =>
+    public static AndroidX.Compose.UI.Text.TextStyle Default =>
         s_default ??= Get().Default;
 
-    public static global::AndroidX.Compose.UI.Text.SpanStyle DefaultSpan =>
+    public static AndroidX.Compose.UI.Text.SpanStyle DefaultSpan =>
         s_defaultSpan ??= Default.ToSpanStyle();
 }

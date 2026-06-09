@@ -1,7 +1,7 @@
-using global::Android.OS;
-using Microsoft.AndroidX.Compose.Gallery.Registry;
+using Android.OS;
+using AndroidX.Compose.Gallery.Registry;
 
-namespace Microsoft.AndroidX.Compose.Gallery.Demos.ListsGrids;
+namespace AndroidX.Compose.Gallery.Demos.ListsGrids;
 
 /// <summary>LazyColumn with 1000 rows inside a PullToRefreshBox.</summary>
 public static class LazyColumnLongDemo

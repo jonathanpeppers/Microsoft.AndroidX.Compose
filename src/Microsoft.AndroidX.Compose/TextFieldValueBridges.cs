@@ -1,8 +1,8 @@
-using global::Android.Runtime;
-using global::AndroidX.Compose.UI.Text;
-using global::AndroidX.Compose.UI.Text.Input;
+using Android.Runtime;
+using AndroidX.Compose.UI.Text;
+using AndroidX.Compose.UI.Text.Input;
 
-namespace Microsoft.AndroidX.Compose;
+namespace AndroidX.Compose;
 
 // JNI bridge for the one piece of androidx.compose.ui.text.input.TextFieldValue
 // that the binder strips: the constructor.

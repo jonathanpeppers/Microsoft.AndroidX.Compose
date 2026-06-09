@@ -1,7 +1,7 @@
-using global::AndroidX.Compose.Material3;
-using global::AndroidX.Compose.UI.Platform;
+using AndroidX.Compose.Material3;
+using AndroidX.Compose.UI.Platform;
 
-namespace Microsoft.AndroidX.Compose;
+namespace AndroidX.Compose;
 
 /// <summary>
 /// Static host for the built-in Compose composition locals exposed
@@ -16,7 +16,7 @@ namespace Microsoft.AndroidX.Compose;
 /// (e.g. <c>LocalContext</c> in
 /// <c>androidx.compose.ui.platform.AndroidCompositionLocals.android.kt</c>);
 /// we surface them as properties on a <c>Locals</c> class so a single
-/// <c>using static Microsoft.AndroidX.Compose.Locals;</c> imports them all without
+/// <c>using static AndroidX.Compose.Locals;</c> imports them all without
 /// risking a clash with user types named <c>LocalContext</c>, etc.</para>
 ///
 /// <para><b>Not yet bound.</b> <c>LocalDensity</c>,
@@ -30,23 +30,23 @@ namespace Microsoft.AndroidX.Compose;
 public static class Locals
 {
     /// <summary>
-    /// The Android <see cref="global::Android.Content.Context"/> attached to
+    /// The Android <see cref="Android.Content.Context"/> attached to
     /// the host <c>ComposeView</c>. Equivalent to Kotlin's
     /// <c>LocalContext.current</c>.
     /// </summary>
-    public static readonly CompositionLocal<global::Android.Content.Context> LocalContext =
+    public static readonly CompositionLocal<Android.Content.Context> LocalContext =
         new(AndroidCompositionLocals_androidKt.LocalContext);
 
     /// <summary>
-    /// The current <see cref="global::Android.Content.Res.Configuration"/>,
+    /// The current <see cref="Android.Content.Res.Configuration"/>,
     /// updated when the system delivers a configuration change (locale,
     /// orientation, dark mode, etc.).
     /// </summary>
-    public static readonly CompositionLocal<global::Android.Content.Res.Configuration> LocalConfiguration =
+    public static readonly CompositionLocal<Android.Content.Res.Configuration> LocalConfiguration =
         new(AndroidCompositionLocals_androidKt.LocalConfiguration);
 
     /// <summary>
-    /// The <see cref="global::AndroidX.Lifecycle.ILifecycleOwner"/> that hosts
+    /// The <see cref="AndroidX.Lifecycle.ILifecycleOwner"/> that hosts
     /// the current composition (typically the host activity or
     /// fragment). Use this to scope coroutines / effects to the same
     /// lifecycle as the UI tree.
@@ -62,22 +62,22 @@ public static class Locals
     /// runtime — swap once the upstream binding exposes it.
     /// </remarks>
 #pragma warning disable CS0618 // legacy LocalLifecycleOwner, see <remarks>
-    public static readonly CompositionLocal<global::AndroidX.Lifecycle.ILifecycleOwner> LocalLifecycleOwner =
+    public static readonly CompositionLocal<AndroidX.Lifecycle.ILifecycleOwner> LocalLifecycleOwner =
         new(AndroidCompositionLocals_androidKt.LocalLifecycleOwner);
 #pragma warning restore CS0618
 
     /// <summary>
-    /// The current <see cref="global::Android.Content.Res.Resources"/>,
+    /// The current <see cref="Android.Content.Res.Resources"/>,
     /// already configuration-aware (re-read on configuration change).
     /// </summary>
-    public static readonly CompositionLocal<global::Android.Content.Res.Resources> LocalResources =
+    public static readonly CompositionLocal<Android.Content.Res.Resources> LocalResources =
         new(AndroidCompositionLocals_androidKt.LocalResources);
 
     /// <summary>
-    /// The hosting <see cref="global::Android.Views.View"/> — usually the
+    /// The hosting <see cref="Android.Views.View"/> — usually the
     /// <c>AbstractComposeView</c> embedding this composition.
     /// </summary>
-    public static readonly CompositionLocal<global::Android.Views.View> LocalView =
+    public static readonly CompositionLocal<Android.Views.View> LocalView =
         new(AndroidCompositionLocals_androidKt.LocalView);
 
     /// <summary>

@@ -1,20 +1,20 @@
-using global::Android.Runtime;
-using global::AndroidX.Compose.Foundation.Layout;
-using global::AndroidX.Compose.Foundation.Lazy.Grid;
-using global::AndroidX.Compose.Material3;
-using global::AndroidX.Compose.Runtime;
-using global::AndroidX.Compose.UI;
-using global::AndroidX.Compose.UI.State;
+using Android.Runtime;
+using AndroidX.Compose.Foundation.Layout;
+using AndroidX.Compose.Foundation.Lazy.Grid;
+using AndroidX.Compose.Material3;
+using AndroidX.Compose.Runtime;
+using AndroidX.Compose.UI;
+using AndroidX.Compose.UI.State;
 using Kotlin.Jvm.Functions;
-using Painter = global::AndroidX.Compose.UI.Graphics.Painter.Painter;
+using Painter = AndroidX.Compose.UI.Graphics.Painter.Painter;
 
-namespace Microsoft.AndroidX.Compose;
+namespace AndroidX.Compose;
 
 // Raw-JNI bridges to Compose functions the .NET-for-Android binding generator
 // can't see (Compose @Composable functions don't get $default sibling overloads
 // — the trailing $default bitmask lives on the regular method). The bodies
 // for every method tagged with [ComposeBridge] are emitted by
-// Microsoft.AndroidX.Compose.SourceGenerators.ComposeBridgeGenerator from the attribute
+// AndroidX.Compose.SourceGenerators.ComposeBridgeGenerator from the attribute
 // metadata + (for $default-bearing signatures) the matching [ComposeDefaults]
 // enum names. Plain Kotlin static helpers — no Composer, no $default — don't
 // need a [ComposeDefaults] declaration.
@@ -75,14 +75,14 @@ internal static partial class ComposeBridges
         Class     = "androidx/compose/foundation/lazy/staggeredgrid/StaggeredGridCells$Adaptive",
         JvmName   = "<init>",
         Signature = "(F)V")]
-    internal static partial global::AndroidX.Compose.Foundation.Lazy.Staggeredgrid.IStaggeredGridCells
+    internal static partial AndroidX.Compose.Foundation.Lazy.Staggeredgrid.IStaggeredGridCells
         StaggeredGridCellsAdaptive(float minSizeDp);
 
     [ComposeBridge(
         Class     = "androidx/compose/foundation/lazy/staggeredgrid/StaggeredGridCells$FixedSize",
         JvmName   = "<init>",
         Signature = "(F)V")]
-    internal static partial global::AndroidX.Compose.Foundation.Lazy.Staggeredgrid.IStaggeredGridCells
+    internal static partial AndroidX.Compose.Foundation.Lazy.Staggeredgrid.IStaggeredGridCells
         StaggeredGridCellsFixedSize(float sizeDp);
 
     // androidx.compose.foundation.layout.PaddingKt — the Dp-taking
@@ -757,7 +757,7 @@ internal static partial class ComposeBridges
         Signature = TextFieldValueSig,
         Defaults  = typeof(TextFieldDefault))]
     public static partial void TextFieldWithValue(
-        global::AndroidX.Compose.UI.Text.Input.TextFieldValue value,
+        AndroidX.Compose.UI.Text.Input.TextFieldValue value,
         IFunction1 onValueChange,
         IModifier? modifier,
         bool? enabled,
@@ -781,7 +781,7 @@ internal static partial class ComposeBridges
         Signature = TextFieldValueSig,
         Defaults  = typeof(TextFieldDefault))]
     public static partial void OutlinedTextFieldWithValue(
-        global::AndroidX.Compose.UI.Text.Input.TextFieldValue value,
+        AndroidX.Compose.UI.Text.Input.TextFieldValue value,
         IFunction1 onValueChange,
         IModifier? modifier,
         bool? enabled,
@@ -1156,7 +1156,7 @@ internal static partial class ComposeBridges
         IFunction1 confirmStateChange,
         IComposer composer)
     {
-        var state = global::AndroidX.Compose.Material3.NavigationDrawerKt.RememberDrawerState(
+        var state = AndroidX.Compose.Material3.NavigationDrawerKt.RememberDrawerState(
             initialValue:        initialValue,
             confirmStateChange:  confirmStateChange,
             _composer:           composer,
@@ -1173,7 +1173,7 @@ internal static partial class ComposeBridges
         WideNavigationRailValue initialValue,
         IComposer composer)
     {
-        var state = global::AndroidX.Compose.Material3.WideNavigationRailStateKt.RememberWideNavigationRailState(
+        var state = AndroidX.Compose.Material3.WideNavigationRailStateKt.RememberWideNavigationRailState(
             initialValue: initialValue,
             _composer:    composer,
             p2:           0,
@@ -1735,8 +1735,8 @@ internal static partial class ComposeBridges
         // The bound binding takes a typed DrawerState; reconstitute it
         // from the JNI handle the [StateHolder] handed us.
         var stateObj = Java.Lang.Object.GetObject<DrawerState>(
-            drawerState, global::Android.Runtime.JniHandleOwnership.DoNotTransfer)!;
-        global::AndroidX.Compose.Material3.NavigationDrawerKt.ModalNavigationDrawer(
+            drawerState, Android.Runtime.JniHandleOwnership.DoNotTransfer)!;
+        AndroidX.Compose.Material3.NavigationDrawerKt.ModalNavigationDrawer(
             drawerContent:    drawerContent,
             modifier:         modifier,
             drawerState:      stateObj,
@@ -1769,8 +1769,8 @@ internal static partial class ComposeBridges
         IFunction2 content, int defaults, IComposer composer)
     {
         var stateObj = Java.Lang.Object.GetObject<DrawerState>(
-            drawerState, global::Android.Runtime.JniHandleOwnership.DoNotTransfer)!;
-        global::AndroidX.Compose.Material3.NavigationDrawerKt.DismissibleNavigationDrawer(
+            drawerState, Android.Runtime.JniHandleOwnership.DoNotTransfer)!;
+        AndroidX.Compose.Material3.NavigationDrawerKt.DismissibleNavigationDrawer(
             drawerContent:    drawerContent,
             modifier:         modifier,
             drawerState:      stateObj,
@@ -1793,7 +1793,7 @@ internal static partial class ComposeBridges
         IFunction2 drawerContent, IModifier? modifier,
         IFunction2 content, int defaults, IComposer composer)
     {
-        global::AndroidX.Compose.Material3.NavigationDrawerKt.PermanentNavigationDrawer(
+        AndroidX.Compose.Material3.NavigationDrawerKt.PermanentNavigationDrawer(
             drawerContent: drawerContent,
             modifier:      modifier,
             content:       content,
@@ -2347,7 +2347,7 @@ internal static partial class ComposeBridges
         Defaults  = typeof(ModifierNestedScrollDefault))]
     internal static partial IntPtr ModifierNestedScroll(
         IntPtr modifier,
-        global::AndroidX.Compose.UI.Input.NestedScroll.INestedScrollConnection connection);
+        AndroidX.Compose.UI.Input.NestedScroll.INestedScrollConnection connection);
 
     // androidx.compose.material3.TopAppBarDefaults.enterAlwaysScrollBehavior —
     // @Composable instance method on the singleton. 4 user params; the
@@ -2498,7 +2498,7 @@ internal static partial class ComposeBridges
     // Kotlin source signature takes a `Role` value class whose
     // underlying type is `int`. Same lambda-receiver invocation shape
     // as SetContentDescription. The int comes from
-    // <see cref="Microsoft.AndroidX.Compose.SemanticsRole"/>.
+    // <see cref="AndroidX.Compose.SemanticsRole"/>.
     [ComposeBridge(
         Class     = "androidx/compose/ui/semantics/SemanticsPropertiesKt",
         JvmName   = "setRole-kuIjeqM",
@@ -3404,7 +3404,7 @@ internal static partial class ComposeBridges
     // $default mask and forwards the chosen verticalArrangement here.
     internal static void Column(
         IModifier? modifier,
-        global::AndroidX.Compose.Foundation.Layout.Arrangement.IVertical? verticalArrangement,
+        AndroidX.Compose.Foundation.Layout.Arrangement.IVertical? verticalArrangement,
         IFunction3 content,
         int defaults,
         IComposer composer)
@@ -3422,7 +3422,7 @@ internal static partial class ComposeBridges
     // horizontalArrangement and matching $default mask.
     internal static void Row(
         IModifier? modifier,
-        global::AndroidX.Compose.Foundation.Layout.Arrangement.IHorizontal? horizontalArrangement,
+        AndroidX.Compose.Foundation.Layout.Arrangement.IHorizontal? horizontalArrangement,
         IFunction3 content,
         int defaults,
         IComposer composer)
@@ -3594,7 +3594,7 @@ internal static partial class ComposeBridges
         IComposer   composer);
 
     public static partial void WideNavigationRailItem(bool selected, IFunction0 onClick, IFunction2 icon, IFunction2? label, IModifier? modifier, int defaults, IComposer composer)
-        => global::AndroidX.Compose.Material3.WideNavigationRailKt.WideNavigationRailItem(
+        => AndroidX.Compose.Material3.WideNavigationRailKt.WideNavigationRailItem(
             selected:          selected,
             onClick:           onClick,
             icon:              icon,
@@ -3618,7 +3618,7 @@ internal static partial class ComposeBridges
         IComposer   composer);
 
     public static partial void TriStateCheckbox(ToggleableState state, IFunction0 onClick, IModifier? modifier, int defaults, IComposer composer)
-        => global::AndroidX.Compose.Material3.CheckboxKt.TriStateCheckbox(
+        => AndroidX.Compose.Material3.CheckboxKt.TriStateCheckbox(
             state:             state,
             onClick:           onClick,
             modifier:          modifier,
@@ -3642,7 +3642,7 @@ internal static partial class ComposeBridges
         IComposer  composer);
 
     public static partial void SelectionContainer(IModifier? modifier, IFunction2 content, int defaults, IComposer composer)
-        => global::AndroidX.Compose.Foundation.Text.Selection.SelectionContainerKt.SelectionContainer(
+        => AndroidX.Compose.Foundation.Text.Selection.SelectionContainerKt.SelectionContainer(
             modifier:  modifier,
             content:   content,
             _composer: composer,
@@ -3660,7 +3660,7 @@ internal static partial class ComposeBridges
         IComposer  composer);
 
     public static partial void DisableSelection(IFunction2 content, IComposer composer)
-        => global::AndroidX.Compose.Foundation.Text.Selection.SelectionContainerKt.DisableSelection(
+        => AndroidX.Compose.Foundation.Text.Selection.SelectionContainerKt.DisableSelection(
             content:   content,
             _composer: composer,
             _changed:  0);
@@ -3682,7 +3682,7 @@ internal static partial class ComposeBridges
     static IntPtr s_rememberNavController_method;
     static IntPtr s_rememberNavController_emptyArray;
 
-    internal static unsafe global::AndroidX.Navigation.NavHostController RememberNavController(IComposer composer)
+    internal static unsafe AndroidX.Navigation.NavHostController RememberNavController(IComposer composer)
     {
         if (s_rememberNavController_method == IntPtr.Zero)
         {
@@ -3706,7 +3706,7 @@ internal static partial class ComposeBridges
             args[2] = new JValue(0); // $changed — Compose substitutes its own
             IntPtr handle = JNIEnv.CallStaticObjectMethod(
                 s_rememberNavController_class, s_rememberNavController_method, args);
-            return Java.Lang.Object.GetObject<global::AndroidX.Navigation.NavHostController>(
+            return Java.Lang.Object.GetObject<AndroidX.Navigation.NavHostController>(
                 handle, JniHandleOwnership.TransferLocalRef)!;
         }
         finally
@@ -3730,7 +3730,7 @@ internal static partial class ComposeBridges
                     "Landroidx/compose/runtime/Composer;II)V",
         Defaults  = typeof(NavHostDefault))]
     internal static partial void NavHost(
-        global::AndroidX.Navigation.NavHostController navController,
+        AndroidX.Navigation.NavHostController navController,
         string                                startDestination,
         IModifier?                            modifier,
         string?                               route,

@@ -1,10 +1,10 @@
-using global::Android.OS;
-using global::AndroidX.Compose.Foundation;
-using global::AndroidX.Compose.Material3;
-using global::AndroidX.Compose.Runtime;
-using BindingMaterialTheme = global::AndroidX.Compose.Material3.MaterialTheme;
+using Android.OS;
+using AndroidX.Compose.Foundation;
+using AndroidX.Compose.Material3;
+using AndroidX.Compose.Runtime;
+using BindingMaterialTheme = AndroidX.Compose.Material3.MaterialTheme;
 
-namespace Microsoft.AndroidX.Compose;
+namespace AndroidX.Compose;
 
 /// <summary>
 /// Material 3 <c>MaterialTheme</c> root. Supplies the active
@@ -104,7 +104,7 @@ public sealed class MaterialTheme : ComposableContainer
         if (UseDynamicColor && Build.VERSION.SdkInt >= BuildVersionCodes.S)
         {
             // Read the composition-scoped Android context rather than
-            // global::Android.App.Application.Context, so the theme reflects any
+            // Android.App.Application.Context, so the theme reflects any
             // override installed by an enclosing CompositionLocalProvider
             // (e.g. a contextual content-wrapper) and updates correctly on
             // activity recreations.
@@ -297,8 +297,8 @@ public sealed class MaterialTheme : ComposableContainer
     /// <see cref="Application.Context"/> when <paramref name="context"/>
     /// is <see langword="null"/>. Requires Android 12 (API 31) or later.
     /// </summary>
-    public static ColorScheme DynamicLightColorScheme(global::Android.Content.Context? context = null) =>
-        DynamicTonalPaletteKt.DynamicLightColorScheme(context ?? global::Android.App.Application.Context);
+    public static ColorScheme DynamicLightColorScheme(Android.Content.Context? context = null) =>
+        DynamicTonalPaletteKt.DynamicLightColorScheme(context ?? Android.App.Application.Context);
 
     /// <summary>
     /// Build a dynamic (Material You) dark color scheme from the
@@ -306,8 +306,8 @@ public sealed class MaterialTheme : ComposableContainer
     /// <see cref="Application.Context"/> when <paramref name="context"/>
     /// is <see langword="null"/>. Requires Android 12 (API 31) or later.
     /// </summary>
-    public static ColorScheme DynamicDarkColorScheme(global::Android.Content.Context? context = null) =>
-        DynamicTonalPaletteKt.DynamicDarkColorScheme(context ?? global::Android.App.Application.Context);
+    public static ColorScheme DynamicDarkColorScheme(Android.Content.Context? context = null) =>
+        DynamicTonalPaletteKt.DynamicDarkColorScheme(context ?? Android.App.Application.Context);
 
     /// <summary>
     /// Build a Material 3 <see cref="Shapes"/> with per-slot

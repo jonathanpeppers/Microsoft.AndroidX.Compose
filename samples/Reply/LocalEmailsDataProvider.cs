@@ -1,5 +1,5 @@
 
-namespace Microsoft.AndroidX.Compose.Samples.Reply;
+namespace AndroidX.Compose.Samples.Reply;
 
 /// <summary>
 /// A static data store of <see cref="Email"/>s. Port of upstream's

@@ -1,6 +1,6 @@
-using Microsoft.AndroidX.Compose.Gallery.Registry;
+using AndroidX.Compose.Gallery.Registry;
 
-namespace Microsoft.AndroidX.Compose.Gallery.Demos.Search;
+namespace AndroidX.Compose.Gallery.Demos.Search;
 
 /// <summary>DockedSearchBar — deprecated boolean-state variant; popup docks under the field.</summary>
 public static class DockedSearchBarDemo

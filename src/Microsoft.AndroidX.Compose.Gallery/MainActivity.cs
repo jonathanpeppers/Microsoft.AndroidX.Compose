@@ -1,17 +1,17 @@
-using global::Android.Content;
-using global::Android.OS;
-using global::AndroidX.Activity;
+using Android.Content;
+using Android.OS;
+using AndroidX.Activity;
 
-namespace Microsoft.AndroidX.Compose.Gallery;
+namespace AndroidX.Compose.Gallery;
 
 /// <summary>
 /// The gallery's only activity. Hosts the entire UI under
-/// <see cref="ComposeExtensions.SetContent(ComponentActivity, Func{global::AndroidX.Compose.Runtime.IComposer, ComposableNode})"/>
+/// <see cref="ComposeExtensions.SetContent(ComponentActivity, Func{AndroidX.Compose.Runtime.IComposer, ComposableNode})"/>
 /// into <see cref="GalleryApp.Build"/> — there's no MVVM, no fragment
 /// graph, no XML layout pipeline.
 /// </summary>
-[Activity(Label = "@string/app_name", MainLauncher = true, LaunchMode = global::Android.Content.PM.LaunchMode.SingleTop, Theme = "@android:style/Theme.Material.Light.NoActionBar")]
-[global::Android.Runtime.Register("net/compose/gallery/MainActivity")]
+[Activity(Label = "@string/app_name", MainLauncher = true, LaunchMode = Android.Content.PM.LaunchMode.SingleTop, Theme = "@android:style/Theme.Material.Light.NoActionBar")]
+[Android.Runtime.Register("net/compose/gallery/MainActivity")]
 public class MainActivity : ComponentActivity
 {
     /// <summary>

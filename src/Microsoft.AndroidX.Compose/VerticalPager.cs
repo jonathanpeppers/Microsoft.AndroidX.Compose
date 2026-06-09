@@ -1,8 +1,8 @@
-using global::AndroidX.Compose.Foundation.Pager;
-using global::AndroidX.Compose.Runtime;
+using AndroidX.Compose.Foundation.Pager;
+using AndroidX.Compose.Runtime;
 using Kotlin.Jvm.Functions;
 
-namespace Microsoft.AndroidX.Compose;
+namespace AndroidX.Compose;
 
 /// <summary>
 /// Foundation <c>VerticalPager</c> — vertical mirror of
@@ -46,7 +46,7 @@ public sealed class VerticalPager<T> : ComposableNode
     public override void Render(IComposer composer)
     {
         // See HorizontalPager.Render — same eager-vs-remember path.
-        global::AndroidX.Compose.Foundation.Pager.PagerState jvmState;
+        AndroidX.Compose.Foundation.Pager.PagerState jvmState;
         if (State is not null)
         {
             jvmState = State.Jvm;

@@ -1,7 +1,7 @@
-using global::AndroidX.Compose.Foundation.Text.Input;
-using global::AndroidX.Compose.Runtime;
+using AndroidX.Compose.Foundation.Text.Input;
+using AndroidX.Compose.Runtime;
 
-namespace Microsoft.AndroidX.Compose;
+namespace AndroidX.Compose;
 
 /// <summary>
 /// Caller-supplied state holder for the text inside a

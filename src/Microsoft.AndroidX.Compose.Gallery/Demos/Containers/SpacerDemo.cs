@@ -1,6 +1,6 @@
-using Microsoft.AndroidX.Compose.Gallery.Registry;
+using AndroidX.Compose.Gallery.Registry;
 
-namespace Microsoft.AndroidX.Compose.Gallery.Demos.Containers;
+namespace AndroidX.Compose.Gallery.Demos.Containers;
 
 /// <summary>Spacer — a sized empty slot in a layout.</summary>
 public static class SpacerDemo

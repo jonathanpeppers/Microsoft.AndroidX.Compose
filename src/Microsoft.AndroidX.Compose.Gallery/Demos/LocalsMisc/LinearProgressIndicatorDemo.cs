@@ -1,6 +1,6 @@
-using Microsoft.AndroidX.Compose.Gallery.Registry;
+using AndroidX.Compose.Gallery.Registry;
 
-namespace Microsoft.AndroidX.Compose.Gallery.Demos.LocalsMisc;
+namespace AndroidX.Compose.Gallery.Demos.LocalsMisc;
 
 /// <summary>LinearProgressIndicator — Material 3 indeterminate horizontal bar.</summary>
 public static class LinearProgressIndicatorDemo

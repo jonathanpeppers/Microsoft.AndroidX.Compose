@@ -1,4 +1,4 @@
-namespace Microsoft.AndroidX.Compose;
+namespace AndroidX.Compose;
 
 /// <summary>
 /// C# wrapper around an
@@ -25,9 +25,9 @@ public sealed class NavBackStackEntry
     /// <summary>
     /// The underlying Kotlin <c>NavBackStackEntry</c>.
     /// </summary>
-    internal global::AndroidX.Navigation.NavBackStackEntry Jvm { get; }
+    internal AndroidX.Navigation.NavBackStackEntry Jvm { get; }
 
-    internal NavBackStackEntry(global::AndroidX.Navigation.NavBackStackEntry jvm)
+    internal NavBackStackEntry(AndroidX.Navigation.NavBackStackEntry jvm)
     {
         ArgumentNullException.ThrowIfNull(jvm);
         Jvm = jvm;

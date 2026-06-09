@@ -1,7 +1,7 @@
-using global::AndroidX.Compose.Runtime;
-using Microsoft.AndroidX.Compose.Gallery.Registry;
+using AndroidX.Compose.Runtime;
+using AndroidX.Compose.Gallery.Registry;
 
-namespace Microsoft.AndroidX.Compose.Gallery.Demos.Navigation;
+namespace AndroidX.Compose.Gallery.Demos.Navigation;
 
 /// <summary>
 /// Bottom-navigation demo that exercises the

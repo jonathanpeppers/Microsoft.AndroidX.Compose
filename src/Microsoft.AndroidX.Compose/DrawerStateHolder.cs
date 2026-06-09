@@ -1,6 +1,6 @@
-using global::AndroidX.Compose.Material3;
+using AndroidX.Compose.Material3;
 
-namespace Microsoft.AndroidX.Compose;
+namespace AndroidX.Compose;
 
 /// <summary>
 /// Caller-supplied state holder for <see cref="ModalNavigationDrawer"/>
@@ -14,8 +14,8 @@ namespace Microsoft.AndroidX.Compose;
 /// colliding with the binding's
 /// <see cref="DrawerState"/> class — both
 /// would otherwise resolve to <c>DrawerState</c> when a user imports
-/// <c>using global::AndroidX.Compose.Material3;</c> and
-/// <c>using Microsoft.AndroidX.Compose;</c> at the same time.</para>
+/// <c>using AndroidX.Compose.Material3;</c> and
+/// <c>using AndroidX.Compose;</c> at the same time.</para>
 /// <para>Construct one inside <c>Remember</c> so the same instance
 /// survives recomposition:</para>
 /// <code>

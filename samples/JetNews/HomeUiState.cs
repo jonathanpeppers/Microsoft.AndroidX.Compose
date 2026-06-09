@@ -1,4 +1,4 @@
-namespace Microsoft.AndroidX.Compose.Samples.JetNews;
+namespace AndroidX.Compose.Samples.JetNews;
 
 /// <summary>
 /// UI state for the JetNews home screen — a discriminated union over

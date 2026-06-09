@@ -1,6 +1,6 @@
-using global::AndroidX.Compose.Foundation.Lazy.Grid;
+using AndroidX.Compose.Foundation.Lazy.Grid;
 
-namespace Microsoft.AndroidX.Compose;
+namespace AndroidX.Compose;
 
 /// <summary>
 /// Factory helpers for <see cref="IGridCells"/>, the column/row-count

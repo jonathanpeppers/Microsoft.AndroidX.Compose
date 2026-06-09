@@ -1,7 +1,7 @@
-using global::Android.Runtime;
-using global::Kotlin.Coroutines;
+using Android.Runtime;
+using Kotlin.Coroutines;
 
-namespace Microsoft.AndroidX.Compose;
+namespace AndroidX.Compose;
 
 // JNI bridges for Kotlin `suspend` functions. Bodies are emitted by
 // ComposeBridgeGenerator from `[ComposeBridge(Suspend = true)]`. The

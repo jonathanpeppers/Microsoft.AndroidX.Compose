@@ -1,6 +1,6 @@
-using Microsoft.AndroidX.Compose.Gallery.Registry;
+using AndroidX.Compose.Gallery.Registry;
 
-namespace Microsoft.AndroidX.Compose.Gallery.Screens;
+namespace AndroidX.Compose.Gallery.Screens;
 
 /// <summary>
 /// Full-screen search route. Opens a Material 3
@@ -19,7 +19,7 @@ public sealed class SearchScreen : ComposableNode
     /// <summary>Construct a search screen bound to <paramref name="nav"/>.</summary>
     public SearchScreen(NavController nav) => _nav = nav;
 
-    public override void Render(global::AndroidX.Compose.Runtime.IComposer composer)
+    public override void Render(AndroidX.Compose.Runtime.IComposer composer)
     {
         var searchState = composer.Remember(() => new SearchBarState());
         var inputState  = composer.Remember(() => new SearchBarTextFieldState());

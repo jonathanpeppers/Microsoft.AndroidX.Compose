@@ -1,4 +1,4 @@
-namespace Microsoft.AndroidX.Compose.Samples.Reply;
+namespace AndroidX.Compose.Samples.Reply;
 
 /// <summary>
 /// Email detail screen — a top app bar plus a <see cref="LazyColumn{T}"/>

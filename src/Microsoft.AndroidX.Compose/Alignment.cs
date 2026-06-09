@@ -1,13 +1,13 @@
-using global::Android.Runtime;
-using global::AndroidX.Compose.UI;
+using Android.Runtime;
+using AndroidX.Compose.UI;
 
-namespace Microsoft.AndroidX.Compose;
+namespace AndroidX.Compose;
 
 /// <summary>
 /// C# wrapper around the <c>androidx.compose.ui.Alignment</c> singletons
 /// exposed by Kotlin's <c>Alignment.Companion</c> object. Each public
 /// static property forwards to the bound
-/// <c>global::AndroidX.Compose.UI.IAlignment.Companion</c> singleton and caches
+/// <c>AndroidX.Compose.UI.IAlignment.Companion</c> singleton and caches
 /// the wrapper for the lifetime of the process.
 ///
 /// Use these with <see cref="Modifier.Align(Alignment)"/>

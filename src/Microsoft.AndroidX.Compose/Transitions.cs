@@ -1,7 +1,7 @@
-using global::AndroidX.Compose.Animation;
-using global::AndroidX.Compose.Animation.Core;
+using AndroidX.Compose.Animation;
+using AndroidX.Compose.Animation.Core;
 
-namespace Microsoft.AndroidX.Compose;
+namespace AndroidX.Compose;
 
 /// <summary>
 /// Factory methods that mirror Kotlin's top-level
@@ -27,7 +27,7 @@ namespace Microsoft.AndroidX.Compose;
 /// The <c>expandIn</c>, <c>expandHorizontally</c>, <c>expandVertically</c>,
 /// <c>shrinkOut</c>, <c>shrinkHorizontally</c>, and <c>shrinkVertically</c>
 /// factories aren't surfaced yet — they need
-/// <see cref="global::AndroidX.Compose.UI.IAlignment"/> singletons that aren't
+/// <see cref="AndroidX.Compose.UI.IAlignment"/> singletons that aren't
 /// exposed by the v1 wrappers. Use the bound
 /// <see cref="EnterExitTransitionKt"/> directly if you need them.
 /// </para>

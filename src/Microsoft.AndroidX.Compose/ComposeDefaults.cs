@@ -5,7 +5,7 @@
 // to query them.
 //
 // `ColumnDefault` and `MaterialThemeDefault` are *generated* by
-// Microsoft.AndroidX.Compose.SourceGenerators from the generic `[ComposeDefaults<T>]`
+// AndroidX.Compose.SourceGenerators from the generic `[ComposeDefaults<T>]`
 // attribute below — the binder exposes those Kt classes, so the
 // generator can read parameter names off the longest overload.
 //
@@ -26,10 +26,10 @@
 // `[ComposeDefaults<ButtonKt>("Button", "ButtonDefault")]` etc. and
 // this comment can be deleted.
 
-using global::AndroidX.Compose.Foundation.Lazy;
-using global::AndroidX.Compose.Foundation.Lazy.Grid;
-using global::AndroidX.Compose.Material3;
-using Microsoft.AndroidX.Compose;
+using AndroidX.Compose.Foundation.Lazy;
+using AndroidX.Compose.Foundation.Lazy.Grid;
+using AndroidX.Compose.Material3;
+using AndroidX.Compose;
 
 // Hand-rolled declarative form (instead of generic form) so the
 // ComposeFacadeGenerator can see the bit names — generic-form enums

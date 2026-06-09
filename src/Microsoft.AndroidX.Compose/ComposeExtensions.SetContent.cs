@@ -1,14 +1,14 @@
-using global::Android.Util;
-using global::AndroidX.Activity;
-using global::AndroidX.Compose.Runtime;
-using global::AndroidX.Compose.Runtime.Internal;
-using global::AndroidX.Compose.UI.Platform;
+using Android.Util;
+using AndroidX.Activity;
+using AndroidX.Compose.Runtime;
+using AndroidX.Compose.Runtime.Internal;
+using AndroidX.Compose.UI.Platform;
 
-namespace Microsoft.AndroidX.Compose;
+namespace AndroidX.Compose;
 
 public static partial class ComposeExtensions
 {
-    const string TAG = "Microsoft.AndroidX.Compose";
+    const string TAG = "AndroidX.Compose";
 
     /// <summary>
     /// Sets the activity's content view to a Compose composition that runs

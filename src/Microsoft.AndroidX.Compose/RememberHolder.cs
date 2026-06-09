@@ -1,6 +1,6 @@
-using global::Android.Runtime;
+using Android.Runtime;
 
-namespace Microsoft.AndroidX.Compose;
+namespace AndroidX.Compose;
 
 /// <summary>
 /// Single-field <see cref="Java.Lang.Object"/> wrapper that lets
@@ -10,7 +10,7 @@ namespace Microsoft.AndroidX.Compose;
 ///
 /// Registered with the .NET-for-Android peer cache (<c>[Register]</c>
 /// + the IntPtr/JniHandleOwnership ctor) so that when Compose hands
-/// the slot value back through <see cref="global::AndroidX.Compose.Runtime.IComposer.RememberedValue"/>
+/// the slot value back through <see cref="AndroidX.Compose.Runtime.IComposer.RememberedValue"/>
 /// on a recomposition, the runtime rehydrates the same managed
 /// <c>RememberHolder</c> peer rather than a plain
 /// <see cref="Java.Lang.Object"/> shell — which would lose the

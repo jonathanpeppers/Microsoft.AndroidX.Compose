@@ -1,4 +1,4 @@
-namespace Microsoft.AndroidX.Compose.Samples.Jetchat;
+namespace AndroidX.Compose.Samples.Jetchat;
 
 /// <summary>
 /// Immutable state for the profile screen. C# port of upstream's

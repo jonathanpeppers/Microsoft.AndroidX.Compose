@@ -1,5 +1,5 @@
 
-namespace Microsoft.AndroidX.Compose.Samples.JetNews;
+namespace AndroidX.Compose.Samples.JetNews;
 
 /// <summary>
 /// One news article. A condensed version of the upstream sample's

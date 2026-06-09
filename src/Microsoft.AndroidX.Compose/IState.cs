@@ -1,4 +1,4 @@
-namespace Microsoft.AndroidX.Compose;
+namespace AndroidX.Compose;
 
 /// <summary>
 /// Read-only view onto an observable value. The C# parity of
@@ -9,7 +9,7 @@ namespace Microsoft.AndroidX.Compose;
 /// </summary>
 /// <typeparam name="T">The observed value type.</typeparam>
 /// <remarks>
-/// Implementations in Microsoft.AndroidX.Compose: <see cref="MutableState{T}"/>,
+/// Implementations in AndroidX.Compose: <see cref="MutableState{T}"/>,
 /// <see cref="MutableNumberState{T}"/>, <see cref="DerivedState{T}"/>,
 /// and <see cref="MutableStateFlow{T}"/>. Pass <c>IState&lt;T&gt;</c>
 /// when an API needs a read-only handle that a caller can subscribe

@@ -1,6 +1,6 @@
-using global::AndroidX.Compose.Runtime;
+using AndroidX.Compose.Runtime;
 
-namespace Microsoft.AndroidX.Compose.Gallery;
+namespace AndroidX.Compose.Gallery;
 
 /// <summary>
 /// A single tap target inside the gallery's <see cref="GalleryDrawer"/>:

@@ -1,8 +1,8 @@
-using global::Android.Runtime;
+using Android.Runtime;
 using Kotlin.Coroutines;
 using Xamarin.KotlinX.Coroutines;
 
-namespace Microsoft.AndroidX.Compose;
+namespace AndroidX.Compose;
 
 /// <summary>
 /// JCW implementing Kotlin's <see cref="IContinuation"/> for the
@@ -57,7 +57,7 @@ internal sealed class SnapshotFlowContinuation : Java.Lang.Object, IContinuation
         get
         {
             var mainHandle = ComposeBridges.AndroidUiDispatcherMain();
-            var main = global::Java.Lang.Object.GetObject<ICoroutineContext>(
+            var main = Java.Lang.Object.GetObject<ICoroutineContext>(
                 mainHandle, JniHandleOwnership.DoNotTransfer)!;
             return main.Plus(_job);
         }

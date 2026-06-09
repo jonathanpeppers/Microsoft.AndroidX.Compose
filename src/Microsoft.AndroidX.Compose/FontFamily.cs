@@ -1,6 +1,6 @@
-using global::Android.Runtime;
+using Android.Runtime;
 
-namespace Microsoft.AndroidX.Compose;
+namespace AndroidX.Compose;
 
 /// <summary>
 /// C# wrapper around <c>androidx.compose.ui.text.font.FontFamily</c>.
@@ -19,7 +19,7 @@ namespace Microsoft.AndroidX.Compose;
 /// <c>GenericFontFamily</c>), not the base interface, so the JNI
 /// signatures we look up have to match.
 ///
-/// Will swap to bound <c>global::AndroidX.Compose.UI.Text.Font.FontFamily</c>
+/// Will swap to bound <c>AndroidX.Compose.UI.Text.Font.FontFamily</c>
 /// once <see href="https://github.com/dotnet/android-libraries/pull/1440"/>
 /// ships and we adopt the next <c>Xamarin.AndroidX.Compose.UI.Text.Android</c>
 /// release.

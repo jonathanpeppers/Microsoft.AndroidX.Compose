@@ -1,4 +1,4 @@
-namespace Microsoft.AndroidX.Compose;
+namespace AndroidX.Compose;
 
 /// <summary>
 /// Mirror of Kotlin's <c>androidx.compose.ui.semantics.Role</c> — the

@@ -1,6 +1,6 @@
-using Microsoft.AndroidX.Compose.Gallery.Registry;
+using AndroidX.Compose.Gallery.Registry;
 
-namespace Microsoft.AndroidX.Compose.Gallery.Demos.Search;
+namespace AndroidX.Compose.Gallery.Demos.Search;
 
 /// <summary>SearchBar + ExpandedFullScreenSearchBar pair sharing one state.</summary>
 public static class SearchBarPairDemo

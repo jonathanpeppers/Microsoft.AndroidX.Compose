@@ -1,11 +1,11 @@
 using System.Diagnostics;
-using global::Android.Runtime;
+using Android.Runtime;
 using Kotlin.Coroutines;
 using Kotlin.Coroutines.Intrinsics;
 using Kotlin.Jvm.Functions;
 using Xamarin.KotlinX.Coroutines;
 
-namespace Microsoft.AndroidX.Compose;
+namespace AndroidX.Compose;
 
 /// <summary>
 /// JCW for the suspend lambda Kotlin's <c>LaunchedEffect</c> expects:
@@ -104,7 +104,7 @@ internal sealed class LaunchedEffectBody : Java.Lang.Object, IFunction2
             // Without a Job in the context we can't wire cancellation
             // — but the user's Task can still run. Log and continue.
             Debug.WriteLine(
-                "Microsoft.AndroidX.Compose.LaunchedEffect: failed to register Job completion handler: " + ex);
+                "AndroidX.Compose.LaunchedEffect: failed to register Job completion handler: " + ex);
         }
 
         Task task;
@@ -216,7 +216,7 @@ internal sealed class LaunchedEffectBody : Java.Lang.Object, IFunction2
                     // dispatched continuation impl. Log and swallow —
                     // there's no caller to surface this to.
                     Debug.WriteLine(
-                        "Microsoft.AndroidX.Compose.LaunchedEffect: continuation resume failed: " + ex);
+                        "AndroidX.Compose.LaunchedEffect: continuation resume failed: " + ex);
                 }
             }
             finally

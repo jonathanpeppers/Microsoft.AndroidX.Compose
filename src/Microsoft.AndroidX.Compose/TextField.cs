@@ -1,8 +1,8 @@
-using global::Android.Runtime;
-using global::AndroidX.Compose.Runtime;
-using global::AndroidX.Compose.UI.Text.Input;
+using Android.Runtime;
+using AndroidX.Compose.Runtime;
+using AndroidX.Compose.UI.Text.Input;
 
-namespace Microsoft.AndroidX.Compose;
+namespace AndroidX.Compose;
 
 /// <summary>
 /// Material 3 <c>TextField</c> (filled variant). Three construction
@@ -17,7 +17,7 @@ namespace Microsoft.AndroidX.Compose;
 /// uses Kotlin's <c>TextField(TextFieldValue, …)</c> overload so callers
 /// can place the caret explicitly after programmatic edits (e.g. append
 /// an emoji and move the cursor to the end of the buffer). Build values
-/// via <see cref="ComposeExtensions.NewTextFieldValue(string, long, global::AndroidX.Compose.UI.Text.TextRange?)"/>
+/// via <see cref="ComposeExtensions.NewTextFieldValue(string, long, AndroidX.Compose.UI.Text.TextRange?)"/>
 /// and <c>TextFieldValue.Copy(...)</c>. See issue #204.</item>
 /// </list>
 /// </summary>

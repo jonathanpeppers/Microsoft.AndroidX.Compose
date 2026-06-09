@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 
-namespace Microsoft.AndroidX.Compose.SourceGenerators;
+namespace AndroidX.Compose.SourceGenerators;
 
 /// <summary>
 /// Registry of Compose <em>reference-typed</em> wrapper classes (Kotlin
@@ -19,7 +19,7 @@ namespace Microsoft.AndroidX.Compose.SourceGenerators;
 ///
 /// Explicit registry (not heuristics) so adding a new wrapper is a
 /// single-line opt-in and we don't accidentally classify unrelated
-/// helper types in the <c>Microsoft.AndroidX.Compose</c> namespace as facade properties.
+/// helper types in the <c>AndroidX.Compose</c> namespace as facade properties.
 /// </summary>
 internal static class ComposeReferenceTypes
 {
@@ -30,14 +30,14 @@ internal static class ComposeReferenceTypes
     /// </summary>
     public static readonly IReadOnlyCollection<string> Recognized = new HashSet<string>
     {
-        "Microsoft.AndroidX.Compose.FontWeight",
-        "Microsoft.AndroidX.Compose.FontFamily",
-        "Microsoft.AndroidX.Compose.FontStyle",
-        "Microsoft.AndroidX.Compose.TextAlign",
-        "Microsoft.AndroidX.Compose.TextDecoration",
-        "Microsoft.AndroidX.Compose.Shape",
-        "Microsoft.AndroidX.Compose.Alignment",
-        "Microsoft.AndroidX.Compose.ContentScale",
+        "AndroidX.Compose.FontWeight",
+        "AndroidX.Compose.FontFamily",
+        "AndroidX.Compose.FontStyle",
+        "AndroidX.Compose.TextAlign",
+        "AndroidX.Compose.TextDecoration",
+        "AndroidX.Compose.Shape",
+        "AndroidX.Compose.Alignment",
+        "AndroidX.Compose.ContentScale",
         "AndroidX.Compose.Material3.ITopAppBarScrollBehavior",
     };
 

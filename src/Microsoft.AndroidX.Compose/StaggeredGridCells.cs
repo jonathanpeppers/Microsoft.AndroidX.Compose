@@ -1,6 +1,6 @@
-using global::AndroidX.Compose.Foundation.Lazy.Staggeredgrid;
+using AndroidX.Compose.Foundation.Lazy.Staggeredgrid;
 
-namespace Microsoft.AndroidX.Compose;
+namespace AndroidX.Compose;
 
 /// <summary>
 /// Factory helpers for <see cref="IStaggeredGridCells"/>, the

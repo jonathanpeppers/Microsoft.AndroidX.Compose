@@ -1,5 +1,5 @@
 
-namespace Microsoft.AndroidX.Compose;
+namespace AndroidX.Compose;
 
 /// <summary>
 /// Caller-supplied state holder for <see cref="LazyColumn{T}"/> and
@@ -11,13 +11,13 @@ namespace Microsoft.AndroidX.Compose;
 /// scroll APIs (<see cref="ScrollToItemAsync"/> /
 /// <see cref="AnimateScrollToItemAsync"/>) without polluting the
 /// binding surface, and so the Remember helper
-/// (<see cref="ComposeExtensions.RememberLazyListState(global::AndroidX.Compose.Runtime.IComposer, int, int, int, string)"/>)
+/// (<see cref="ComposeExtensions.RememberLazyListState(AndroidX.Compose.Runtime.IComposer, int, int, int, string)"/>)
 /// can hand back a typed managed object.
 /// </summary>
 /// <remarks>
 /// <para>
 /// Obtain one via
-/// <see cref="ComposeExtensions.RememberLazyListState(global::AndroidX.Compose.Runtime.IComposer, int, int, int, string)"/>
+/// <see cref="ComposeExtensions.RememberLazyListState(AndroidX.Compose.Runtime.IComposer, int, int, int, string)"/>
 /// so the scroll position survives recompositions:
 /// <code>
 /// var listState = composer.RememberLazyListState();
@@ -45,7 +45,7 @@ namespace Microsoft.AndroidX.Compose;
 /// </remarks>
 public sealed class LazyListState
 {
-    internal global::AndroidX.Compose.Foundation.Lazy.LazyListState Jvm { get; }
+    internal AndroidX.Compose.Foundation.Lazy.LazyListState Jvm { get; }
 
     /// <summary>
     /// Create a new <see cref="LazyListState"/> seeded with the given
@@ -65,7 +65,7 @@ public sealed class LazyListState
         int initialFirstVisibleItemIndex = 0,
         int initialFirstVisibleItemScrollOffset = 0)
     {
-        Jvm = new global::AndroidX.Compose.Foundation.Lazy.LazyListState(
+        Jvm = new AndroidX.Compose.Foundation.Lazy.LazyListState(
             initialFirstVisibleItemIndex,
             initialFirstVisibleItemScrollOffset);
     }
@@ -73,7 +73,7 @@ public sealed class LazyListState
     // Internal wrap-around-existing constructor used by
     // ComposeExtensions.RememberLazyListState to surface the Kotlin
     // remember-cached binding instance.
-    internal LazyListState(global::AndroidX.Compose.Foundation.Lazy.LazyListState jvm)
+    internal LazyListState(AndroidX.Compose.Foundation.Lazy.LazyListState jvm)
     {
         Jvm = jvm;
     }

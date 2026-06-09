@@ -1,9 +1,9 @@
-using global::Android.Runtime;
-using global::AndroidX.Compose.Foundation.Lazy;
-using global::AndroidX.Compose.Foundation.Layout;
-using global::AndroidX.Compose.Runtime;
+using Android.Runtime;
+using AndroidX.Compose.Foundation.Lazy;
+using AndroidX.Compose.Foundation.Layout;
+using AndroidX.Compose.Runtime;
 
-namespace Microsoft.AndroidX.Compose;
+namespace AndroidX.Compose;
 
 /// <summary>
 /// Foundation <c>LazyColumn</c> — the lazy equivalent of <see cref="Column"/>.
@@ -124,7 +124,7 @@ public sealed class LazyColumn<T> : ComposableNode
         var modifier = BuildModifier();
         var content  = new ComposableLambda1(scopeObj =>
         {
-            var scope = global::Android.Runtime.Extensions.JavaCast<ILazyListScope>(scopeObj!);
+            var scope = Android.Runtime.Extensions.JavaCast<ILazyListScope>(scopeObj!);
             // contentType is non-nullable in Kotlin (defaults to { null }),
             // so we always provide a stub; key is nullable and we pass null
             // to keep the Compose-default positional keying.

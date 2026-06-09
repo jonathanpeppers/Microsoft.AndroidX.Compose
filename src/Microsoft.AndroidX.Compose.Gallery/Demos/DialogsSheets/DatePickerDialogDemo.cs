@@ -1,6 +1,6 @@
-using Microsoft.AndroidX.Compose.Gallery.Registry;
+using AndroidX.Compose.Gallery.Registry;
 
-namespace Microsoft.AndroidX.Compose.Gallery.Demos.DialogsSheets;
+namespace AndroidX.Compose.Gallery.Demos.DialogsSheets;
 
 /// <summary>DatePickerDialog — calendar picker wrapped in a dialog frame.</summary>
 public static class DatePickerDialogDemo

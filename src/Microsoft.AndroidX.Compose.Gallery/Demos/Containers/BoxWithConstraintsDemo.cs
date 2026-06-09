@@ -1,6 +1,6 @@
-using Microsoft.AndroidX.Compose.Gallery.Registry;
+using AndroidX.Compose.Gallery.Registry;
 
-namespace Microsoft.AndroidX.Compose.Gallery.Demos.Containers;
+namespace AndroidX.Compose.Gallery.Demos.Containers;
 
 /// <summary>BoxWithConstraints reports the available width/height to its content lambda.</summary>
 public static class BoxWithConstraintsDemo

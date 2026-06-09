@@ -4,7 +4,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Xunit;
 
-namespace Microsoft.AndroidX.Compose.SourceGenerators.Tests;
+namespace AndroidX.Compose.SourceGenerators.Tests;
 
 public class BridgeGeneratorTests
 {
@@ -62,7 +62,7 @@ public class BridgeGeneratorTests
         {
             public interface IContinuation { }
         }
-        namespace Microsoft.AndroidX.Compose
+        namespace AndroidX.Compose
         {
             public interface IModifier { }
             public static partial class ComposeBridges
@@ -134,14 +134,14 @@ public class BridgeGeneratorTests
     {
         var code = """
             using global::AndroidX.Compose.Runtime;
-            using Microsoft.AndroidX.Compose;
+            using AndroidX.Compose;
             using Kotlin.Jvm.Functions;
 
             [assembly: ComposeDefaults("ButtonDefault",
                 "!onClick", "modifier", "enabled", "shape", "colors",
                 "elevation", "border", "contentPadding", "interactionSource", "!content")]
 
-            namespace Microsoft.AndroidX.Compose
+            namespace AndroidX.Compose
             {
                 public static partial class ComposeBridges
                 {
@@ -161,8 +161,8 @@ public class BridgeGeneratorTests
         Assert.NotNull(emitted);
         Assert.Contains("FindClass(\"androidx/compose/material3/ButtonKt\")", emitted);
         Assert.Contains("GetStaticMethodID(s_Button_class, \"Button\"", emitted);
-        Assert.Contains("(int)global::Microsoft.AndroidX.Compose.ButtonDefault.All", emitted);
-        Assert.Contains("if (modifier is not null) defaults &= ~(int)global::Microsoft.AndroidX.Compose.ButtonDefault.Modifier;", emitted);
+        Assert.Contains("(int)global::AndroidX.Compose.ButtonDefault.All", emitted);
+        Assert.Contains("if (modifier is not null) defaults &= ~(int)global::AndroidX.Compose.ButtonDefault.Modifier;", emitted);
         Assert.Contains("ModifierHandle(modifier)", emitted);
         Assert.Contains("global::System.GC.KeepAlive(onClick);", emitted);
         Assert.Contains("global::System.GC.KeepAlive(content);", emitted);
@@ -180,14 +180,14 @@ public class BridgeGeneratorTests
     {
         var code = """
             using global::AndroidX.Compose.Runtime;
-            using Microsoft.AndroidX.Compose;
+            using AndroidX.Compose;
             using Kotlin.Jvm.Functions;
 
             [assembly: ComposeDefaults("SurfaceDefault",
                 "modifier", "shape", "color", "contentColor", "tonalElevation",
                 "shadowElevation", "border", "!content")]
 
-            namespace Microsoft.AndroidX.Compose
+            namespace AndroidX.Compose
             {
                 public static partial class ComposeBridges
                 {
@@ -212,7 +212,7 @@ public class BridgeGeneratorTests
     {
         var code = """
             using global::AndroidX.Compose.Runtime;
-            using Microsoft.AndroidX.Compose;
+            using AndroidX.Compose;
             using Kotlin.Jvm.Functions;
 
             [assembly: ComposeDefaults("TextDefault",
@@ -221,7 +221,7 @@ public class BridgeGeneratorTests
                 "lineHeight", "overflow", "softWrap", "maxLines", "minLines",
                 "onTextLayout", "style")]
 
-            namespace Microsoft.AndroidX.Compose
+            namespace AndroidX.Compose
             {
                 public static partial class ComposeBridges
                 {
@@ -248,7 +248,7 @@ public class BridgeGeneratorTests
     {
         var code = """
             using global::AndroidX.Compose.Runtime;
-            using Microsoft.AndroidX.Compose;
+            using AndroidX.Compose;
             using Kotlin.Jvm.Functions;
 
             [assembly: ComposeDefaults("AlertDialogDefault",
@@ -256,7 +256,7 @@ public class BridgeGeneratorTests
                 "icon", "title", "text", "shape", "containerColor", "iconContentColor",
                 "titleContentColor", "textContentColor", "tonalElevation", "properties")]
 
-            namespace Microsoft.AndroidX.Compose
+            namespace AndroidX.Compose
             {
                 public static partial class ComposeBridges
                 {
@@ -276,7 +276,7 @@ public class BridgeGeneratorTests
         var (_, diags, emitted) = Run(code);
         Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
         Assert.NotNull(emitted);
-        Assert.DoesNotContain("(int)global::Microsoft.AndroidX.Compose.AlertDialogDefault.All", emitted);
+        Assert.DoesNotContain("(int)global::AndroidX.Compose.AlertDialogDefault.All", emitted);
         Assert.Contains("args[", emitted);
         Assert.Contains("] = new global::Android.Runtime.JValue(defaults)", emitted);
     }
@@ -286,14 +286,14 @@ public class BridgeGeneratorTests
     {
         var code = """
             using global::AndroidX.Compose.Runtime;
-            using Microsoft.AndroidX.Compose;
+            using AndroidX.Compose;
             using Kotlin.Jvm.Functions;
 
             [assembly: ComposeDefaults("NavigationBarItemDefault",
                 "!selected", "!onClick", "!icon", "modifier", "enabled", "label",
                 "alwaysShowLabel", "colors", "interactionSource")]
 
-            namespace Microsoft.AndroidX.Compose
+            namespace AndroidX.Compose
             {
                 public static partial class ComposeBridges
                 {
@@ -321,12 +321,12 @@ public class BridgeGeneratorTests
     {
         var code = """
             using global::AndroidX.Compose.Runtime;
-            using Microsoft.AndroidX.Compose;
+            using AndroidX.Compose;
             using Kotlin.Jvm.Functions;
 
             [assembly: ComposeDefaults("FooDefault", "modifier")]
 
-            namespace Microsoft.AndroidX.Compose
+            namespace AndroidX.Compose
             {
                 public static partial class ComposeBridges
                 {
@@ -349,12 +349,12 @@ public class BridgeGeneratorTests
     {
         var code = """
             using global::AndroidX.Compose.Runtime;
-            using Microsoft.AndroidX.Compose;
+            using AndroidX.Compose;
             using Kotlin.Jvm.Functions;
 
             [assembly: ComposeDefaults("FooDefault", "modifier")]
 
-            namespace Microsoft.AndroidX.Compose
+            namespace AndroidX.Compose
             {
                 public static partial class ComposeBridges
                 {
@@ -377,14 +377,14 @@ public class BridgeGeneratorTests
     {
         var code = """
             using global::AndroidX.Compose.Runtime;
-            using Microsoft.AndroidX.Compose;
+            using AndroidX.Compose;
             using Kotlin.Jvm.Functions;
 
             [assembly: ComposeDefaults("RememberDatePickerStateDefault",
                 "initialSelectedDateMillis", "initialDisplayedMonthMillis", "yearRange",
                 "initialDisplayMode", "selectableDates")]
 
-            namespace Microsoft.AndroidX.Compose
+            namespace AndroidX.Compose
             {
                 public static partial class ComposeBridges
                 {
@@ -415,9 +415,9 @@ public class BridgeGeneratorTests
         // params, so the Kotlin codegen emits only $changed (no $default).
         var code = """
             using global::AndroidX.Compose.Runtime;
-            using Microsoft.AndroidX.Compose;
+            using AndroidX.Compose;
 
-            namespace Microsoft.AndroidX.Compose
+            namespace AndroidX.Compose
             {
                 public static partial class ComposeBridges
                 {
@@ -462,9 +462,9 @@ public class BridgeGeneratorTests
         // generator would have treated $default as another $changed slot.
         var code = """
             using global::AndroidX.Compose.Runtime;
-            using Microsoft.AndroidX.Compose;
+            using AndroidX.Compose;
 
-            namespace Microsoft.AndroidX.Compose
+            namespace AndroidX.Compose
             {
                 public static partial class ComposeBridges
                 {
@@ -488,11 +488,11 @@ public class BridgeGeneratorTests
         // [ComposeBridge] must not specify Defaults.
         var code = """
             using global::AndroidX.Compose.Runtime;
-            using Microsoft.AndroidX.Compose;
+            using AndroidX.Compose;
 
             [assembly: ComposeDefaults("FooDefault", "id")]
 
-            namespace Microsoft.AndroidX.Compose
+            namespace AndroidX.Compose
             {
                 public static partial class ComposeBridges
                 {
@@ -515,12 +515,12 @@ public class BridgeGeneratorTests
     {
         var code = """
             using global::AndroidX.Compose.Runtime;
-            using Microsoft.AndroidX.Compose;
+            using AndroidX.Compose;
             using Kotlin.Jvm.Functions;
 
             [assembly: ComposeDefaults("RememberPlainTooltipPositionProviderDefault", "spacing")]
 
-            namespace Microsoft.AndroidX.Compose
+            namespace AndroidX.Compose
             {
                 public static partial class ComposeBridges
                 {
@@ -557,13 +557,13 @@ public class BridgeGeneratorTests
         // compiles.
         var code = """
             using global::AndroidX.Compose.Runtime;
-            using Microsoft.AndroidX.Compose;
+            using AndroidX.Compose;
             using Kotlin.Jvm.Functions;
 
             [assembly: ComposeDefaults("CheckedThingDefault",
                 "!checked", "modifier")]
 
-            namespace Microsoft.AndroidX.Compose
+            namespace AndroidX.Compose
             {
                 public static partial class ComposeBridges
                 {
@@ -594,11 +594,11 @@ public class BridgeGeneratorTests
         // a non-@Composable Modifier extension. Tail is `I L<marker>`,
         // no Composer. The marker is always passed null.
         var code = """
-            using Microsoft.AndroidX.Compose;
+            using AndroidX.Compose;
 
             [assembly: ComposeDefaults("ModifierBackgroundDefault", "!color", "shape")]
 
-            namespace Microsoft.AndroidX.Compose
+            namespace AndroidX.Compose
             {
                 public static partial class ComposeBridges
                 {
@@ -631,12 +631,12 @@ public class BridgeGeneratorTests
         Assert.DoesNotContain("KeepAlive(composer)", emitted);
 
         // Auto-mask still emitted: shape is a nullable bit.
-        Assert.Contains("(int)global::Microsoft.AndroidX.Compose.ModifierBackgroundDefault.All", emitted);
+        Assert.Contains("(int)global::AndroidX.Compose.ModifierBackgroundDefault.All", emitted);
         Assert.Contains("ModifierBackgroundDefault.Shape", emitted);
         // IntPtr? is treated as nullable: bit is cleared only when the
         // value is non-null. Otherwise Kotlin sees IntPtr.Zero as a
         // user-supplied value and never falls back to its default.
-        Assert.Contains("if (shape is not null) defaults &= ~(int)global::Microsoft.AndroidX.Compose.ModifierBackgroundDefault.Shape", emitted);
+        Assert.Contains("if (shape is not null) defaults &= ~(int)global::AndroidX.Compose.ModifierBackgroundDefault.Shape", emitted);
 
         // Non-void return.
         Assert.Contains("return global::Android.Runtime.JNIEnv.CallStaticObjectMethod(", emitted);
@@ -651,11 +651,11 @@ public class BridgeGeneratorTests
         // Mirrors androidx.compose.foundation.BorderKt.border-xT4_qwU$default —
         // Modifier extension with width (F), color (J), shape (Shape).
         var code = """
-            using Microsoft.AndroidX.Compose;
+            using AndroidX.Compose;
 
             [assembly: ComposeDefaults("ModifierBorderDefault", "!width", "!color", "shape")]
 
-            namespace Microsoft.AndroidX.Compose
+            namespace AndroidX.Compose
             {
                 public static partial class ComposeBridges
                 {
@@ -692,13 +692,13 @@ public class BridgeGeneratorTests
         // Modifier extension: enabled (Z), onClickLabel (String, nullable),
         // role (Role, nullable), onClick (Function0, required).
         var code = """
-            using Microsoft.AndroidX.Compose;
+            using AndroidX.Compose;
             using Kotlin.Jvm.Functions;
 
             [assembly: ComposeDefaults("ModifierClickableDefault",
                 "enabled", "onClickLabel", "role", "!onClick")]
 
-            namespace Microsoft.AndroidX.Compose
+            namespace AndroidX.Compose
             {
                 public static partial class ComposeBridges
                 {
@@ -749,14 +749,14 @@ public class BridgeGeneratorTests
         // only the first 3 (state, orientation, enabled); the remaining 5
         // slots stay defaulted in v1 (omitted from the C# signature).
         var code = """
-            using Microsoft.AndroidX.Compose;
+            using AndroidX.Compose;
 
             [assembly: ComposeDefaults("ModifierDraggableDefault",
                 "!state", "!orientation", "!enabled",
                 "interactionSource", "startDragImmediately",
                 "onDragStarted", "onDragStopped", "reverseDirection")]
 
-            namespace Microsoft.AndroidX.Compose
+            namespace AndroidX.Compose
             {
                 public static partial class ComposeBridges
                 {
@@ -796,7 +796,7 @@ public class BridgeGeneratorTests
         Assert.Contains("args[10] = new global::Android.Runtime.JValue(global::System.IntPtr.Zero)", emitted);
 
         // Auto-mask seeded with the full bitmask...
-        Assert.Contains("(int)global::Microsoft.AndroidX.Compose.ModifierDraggableDefault.All", emitted);
+        Assert.Contains("(int)global::AndroidX.Compose.ModifierDraggableDefault.All", emitted);
 
         // ...but the !-prefixed required bits are NOT cleared (they stay 0
         // because the `!` form excludes them from `All`). The mask-clearing
@@ -822,11 +822,11 @@ public class BridgeGeneratorTests
         // Same Background shape but the C# stub takes `int defaults` so
         // the auto-mask logic is suppressed.
         var code = """
-            using Microsoft.AndroidX.Compose;
+            using AndroidX.Compose;
 
             [assembly: ComposeDefaults("ModifierBackgroundDefault", "!color", "shape")]
 
-            namespace Microsoft.AndroidX.Compose
+            namespace AndroidX.Compose
             {
                 public static partial class ComposeBridges
                 {
@@ -844,7 +844,7 @@ public class BridgeGeneratorTests
         var (_, diags, emitted) = Run(code);
         Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
         Assert.NotNull(emitted);
-        Assert.DoesNotContain("(int)global::Microsoft.AndroidX.Compose.ModifierBackgroundDefault.All", emitted);
+        Assert.DoesNotContain("(int)global::AndroidX.Compose.ModifierBackgroundDefault.All", emitted);
         Assert.Contains("args[3] = new global::Android.Runtime.JValue(defaults)", emitted);
         Assert.Contains("args[4] = new global::Android.Runtime.JValue(global::System.IntPtr.Zero)", emitted);
     }
@@ -855,9 +855,9 @@ public class BridgeGeneratorTests
         // Mirrors androidx.compose.foundation.layout.SizeKt.fillMaxWidth —
         // plain Kotlin static extension on Modifier, no Composer, no $default.
         var code = """
-            using Microsoft.AndroidX.Compose;
+            using AndroidX.Compose;
 
-            namespace Microsoft.AndroidX.Compose
+            namespace AndroidX.Compose
             {
                 public static partial class ComposeBridges
                 {
@@ -901,9 +901,9 @@ public class BridgeGeneratorTests
         // Mirrors androidx.compose.foundation.layout.WindowInsetsPadding_androidKt.safeDrawingPadding —
         // Modifier extension with no other parameters.
         var code = """
-            using Microsoft.AndroidX.Compose;
+            using AndroidX.Compose;
 
-            namespace Microsoft.AndroidX.Compose
+            namespace AndroidX.Compose
             {
                 public static partial class ComposeBridges
                 {
@@ -936,9 +936,9 @@ public class BridgeGeneratorTests
         // Mirrors androidx.compose.foundation.layout.PaddingKt.padding-qDBjuR0 —
         // Modifier extension with four Dp values.
         var code = """
-            using Microsoft.AndroidX.Compose;
+            using AndroidX.Compose;
 
-            namespace Microsoft.AndroidX.Compose
+            namespace AndroidX.Compose
             {
                 public static partial class ComposeBridges
                 {
@@ -975,9 +975,9 @@ public class BridgeGeneratorTests
         // Mirrors androidx.compose.foundation.shape.RoundedCornerShapeKt.RoundedCornerShape —
         // plain static call with no leading receiver, returns an object.
         var code = """
-            using Microsoft.AndroidX.Compose;
+            using AndroidX.Compose;
 
-            namespace Microsoft.AndroidX.Compose
+            namespace AndroidX.Compose
             {
                 public static partial class ComposeBridges
                 {
@@ -1018,11 +1018,11 @@ public class BridgeGeneratorTests
         // Plain-static shape rejects Defaults via the existing CN2005
         // "signature has no $default slot" check.
         var code = """
-            using Microsoft.AndroidX.Compose;
+            using AndroidX.Compose;
 
             [assembly: ComposeDefaults("FooDefault", "dp")]
 
-            namespace Microsoft.AndroidX.Compose
+            namespace AndroidX.Compose
             {
                 public static partial class ComposeBridges
                 {
@@ -1046,9 +1046,9 @@ public class BridgeGeneratorTests
         // Mirrors androidx.compose.foundation.lazy.grid.GridCells$Adaptive(Dp) —
         // a stripped Kotlin ctor whose single Dp parameter compiles down to F.
         var code = """
-            using Microsoft.AndroidX.Compose;
+            using AndroidX.Compose;
 
-            namespace Microsoft.AndroidX.Compose
+            namespace AndroidX.Compose
             {
                 public interface IGridCells { }
                 public class GridCellsAdaptiveImpl : global::Java.Lang.Object, IGridCells { }
@@ -1083,7 +1083,7 @@ public class BridgeGeneratorTests
 
         // NewObject + GetObject<T> wrap with TransferLocalRef.
         Assert.Contains("global::Android.Runtime.JNIEnv.NewObject(", emitted);
-        Assert.Contains("global::Java.Lang.Object.GetObject<global::Microsoft.AndroidX.Compose.GridCellsAdaptiveImpl>(", emitted);
+        Assert.Contains("global::Java.Lang.Object.GetObject<global::AndroidX.Compose.GridCellsAdaptiveImpl>(", emitted);
         Assert.Contains("global::Android.Runtime.JniHandleOwnership.TransferLocalRef", emitted);
         Assert.DoesNotContain("CallStaticObjectMethod", emitted);
         Assert.DoesNotContain("CallStaticVoidMethod", emitted);
@@ -1096,9 +1096,9 @@ public class BridgeGeneratorTests
     public void Constructor_VoidReturn_ReportsCN2006()
     {
         var code = """
-            using Microsoft.AndroidX.Compose;
+            using AndroidX.Compose;
 
-            namespace Microsoft.AndroidX.Compose
+            namespace AndroidX.Compose
             {
                 public static partial class ComposeBridges
                 {
@@ -1115,9 +1115,9 @@ public class BridgeGeneratorTests
     public void Constructor_WithComposer_ReportsCN2006()
     {
         var code = """
-            using Microsoft.AndroidX.Compose;
+            using AndroidX.Compose;
 
-            namespace Microsoft.AndroidX.Compose
+            namespace AndroidX.Compose
             {
                 public class Thing : global::Java.Lang.Object { }
                 public static partial class ComposeBridges
@@ -1135,11 +1135,11 @@ public class BridgeGeneratorTests
     public void Constructor_WithDefaults_ReportsCN2006()
     {
         var code = """
-            using Microsoft.AndroidX.Compose;
+            using AndroidX.Compose;
 
             [assembly: ComposeDefaults("ThingDefault", "v")]
 
-            namespace Microsoft.AndroidX.Compose
+            namespace AndroidX.Compose
             {
                 public class Thing : global::Java.Lang.Object { }
                 public static partial class ComposeBridges
@@ -1158,9 +1158,9 @@ public class BridgeGeneratorTests
     {
         // JVM ctors must return V at the bytecode level.
         var code = """
-            using Microsoft.AndroidX.Compose;
+            using AndroidX.Compose;
 
-            namespace Microsoft.AndroidX.Compose
+            namespace AndroidX.Compose
             {
                 public class Thing : global::Java.Lang.Object { }
                 public static partial class ComposeBridges
@@ -1185,11 +1185,11 @@ public class BridgeGeneratorTests
         // a raw `long` slot — only Dp and Shape go through the value-type
         // / nullable-ref lowering.
         var code = """
-            using Microsoft.AndroidX.Compose;
+            using AndroidX.Compose;
 
             [assembly: ComposeDefaults("BorderDefault", "width", "!color", "shape")]
 
-            namespace Microsoft.AndroidX.Compose
+            namespace AndroidX.Compose
             {
                 public static partial class ComposeBridges
                 {
@@ -1206,14 +1206,14 @@ public class BridgeGeneratorTests
         var (_, diags, emitted) = Run(code);
         Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
         Assert.NotNull(emitted);
-        Assert.Contains("global::Microsoft.AndroidX.Compose.Dp.Pack(width)", emitted);
+        Assert.Contains("global::AndroidX.Compose.Dp.Pack(width)", emitted);
         // Shape? is a Java.Lang.Object subclass → existing nullable-ref path.
         Assert.Contains("shape is null ? global::System.IntPtr.Zero : ((global::Java.Lang.Object)shape).Handle", emitted);
         // Width and shape get the auto-mask null check; color is '!'d and
         // always passed as a raw long, so no enum member for it.
-        Assert.Contains("if (width is not null) defaults &= ~(int)global::Microsoft.AndroidX.Compose.BorderDefault.Width", emitted);
+        Assert.Contains("if (width is not null) defaults &= ~(int)global::AndroidX.Compose.BorderDefault.Width", emitted);
         Assert.DoesNotContain("BorderDefault.Color", emitted);
-        Assert.Contains("if (shape is not null) defaults &= ~(int)global::Microsoft.AndroidX.Compose.BorderDefault.Shape", emitted);
+        Assert.Contains("if (shape is not null) defaults &= ~(int)global::AndroidX.Compose.BorderDefault.Shape", emitted);
     }
 
     [Fact]
@@ -1226,12 +1226,12 @@ public class BridgeGeneratorTests
         // declarations, so they travel as primitives rather than boxed
         // references.
         var code = """
-            using Microsoft.AndroidX.Compose;
+            using AndroidX.Compose;
             using global::AndroidX.Compose.Runtime;
 
             [assembly: ComposeDefaults("FontDefault", "fontSize", "overflow")]
 
-            namespace Microsoft.AndroidX.Compose
+            namespace AndroidX.Compose
             {
                 public static partial class ComposeBridges
                 {
@@ -1248,8 +1248,8 @@ public class BridgeGeneratorTests
         var (_, diags, emitted) = Run(code);
         Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
         Assert.NotNull(emitted);
-        Assert.Contains("global::Microsoft.AndroidX.Compose.Sp.Pack(fontSize)", emitted);
-        Assert.Contains("global::Microsoft.AndroidX.Compose.TextOverflow.Pack(overflow)", emitted);
+        Assert.Contains("global::AndroidX.Compose.Sp.Pack(fontSize)", emitted);
+        Assert.Contains("global::AndroidX.Compose.TextOverflow.Pack(overflow)", emitted);
     }
 
     [Fact]
@@ -1258,9 +1258,9 @@ public class BridgeGeneratorTests
         // No $default slot → the auto-mask logic that backs value
         // types can't fire, so the generator must reject up front.
         var code = """
-            using Microsoft.AndroidX.Compose;
+            using AndroidX.Compose;
 
-            namespace Microsoft.AndroidX.Compose
+            namespace AndroidX.Compose
             {
                 public static partial class ComposeBridges
                 {
@@ -1285,12 +1285,12 @@ public class BridgeGeneratorTests
         // Sp.Pack(...) into a JValue.i field at runtime. CN2008 makes
         // that misuse a build-time error.
         var code = """
-            using Microsoft.AndroidX.Compose;
+            using AndroidX.Compose;
             using global::AndroidX.Compose.Runtime;
 
             [assembly: ComposeDefaults("WrongDefault", "fontSize")]
 
-            namespace Microsoft.AndroidX.Compose
+            namespace AndroidX.Compose
             {
                 public static partial class ComposeBridges
                 {
@@ -1317,12 +1317,12 @@ public class BridgeGeneratorTests
         // @Composable bridge: (FontWeight, Composer) → 1 user slot + 1
         // $changed + 1 $default.
         var code = """
-            using Microsoft.AndroidX.Compose;
+            using AndroidX.Compose;
             using global::AndroidX.Compose.Runtime;
 
             [assembly: ComposeDefaults("WeightedDefault", "weight")]
 
-            namespace Microsoft.AndroidX.Compose
+            namespace AndroidX.Compose
             {
                 public static partial class ComposeBridges
                 {
@@ -1340,7 +1340,7 @@ public class BridgeGeneratorTests
         Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
         Assert.NotNull(emitted);
         Assert.Contains("weight is null ? global::System.IntPtr.Zero : ((global::Java.Lang.Object)weight).Handle", emitted);
-        Assert.Contains("if (weight is not null) defaults &= ~(int)global::Microsoft.AndroidX.Compose.WeightedDefault.Weight", emitted);
+        Assert.Contains("if (weight is not null) defaults &= ~(int)global::AndroidX.Compose.WeightedDefault.Weight", emitted);
     }
 
     [Fact]
@@ -1351,13 +1351,13 @@ public class BridgeGeneratorTests
         // set). When the caller supplies a value, the mask bit clears
         // and the value is passed through to the JNI primitive slot.
         var code = """
-            using Microsoft.AndroidX.Compose;
+            using AndroidX.Compose;
             using global::AndroidX.Compose.Runtime;
 
             [assembly: ComposeDefaults("PrimDefault",
                 "softWrap", "maxLines", "color")]
 
-            namespace Microsoft.AndroidX.Compose
+            namespace AndroidX.Compose
             {
                 public static partial class ComposeBridges
                 {
@@ -1379,21 +1379,21 @@ public class BridgeGeneratorTests
         Assert.Contains("(maxLines ?? 0)", emitted);
         Assert.Contains("(color ?? 0L)", emitted);
         // Auto-mask: clear the bit only when a value was supplied.
-        Assert.Contains("if (softWrap is not null) defaults &= ~(int)global::Microsoft.AndroidX.Compose.PrimDefault.SoftWrap", emitted);
-        Assert.Contains("if (maxLines is not null) defaults &= ~(int)global::Microsoft.AndroidX.Compose.PrimDefault.MaxLines", emitted);
-        Assert.Contains("if (color is not null) defaults &= ~(int)global::Microsoft.AndroidX.Compose.PrimDefault.Color", emitted);
+        Assert.Contains("if (softWrap is not null) defaults &= ~(int)global::AndroidX.Compose.PrimDefault.SoftWrap", emitted);
+        Assert.Contains("if (maxLines is not null) defaults &= ~(int)global::AndroidX.Compose.PrimDefault.MaxLines", emitted);
+        Assert.Contains("if (color is not null) defaults &= ~(int)global::AndroidX.Compose.PrimDefault.Color", emitted);
     }
 
     [Fact]
     public void NullablePrimitive_FloatDouble_LowerCorrectly()
     {
         var code = """
-            using Microsoft.AndroidX.Compose;
+            using AndroidX.Compose;
             using global::AndroidX.Compose.Runtime;
 
             [assembly: ComposeDefaults("FloatDefault", "ratio", "scale")]
 
-            namespace Microsoft.AndroidX.Compose
+            namespace AndroidX.Compose
             {
                 public static partial class ComposeBridges
                 {
@@ -1425,10 +1425,10 @@ public class BridgeGeneratorTests
         // raw IntPtr return (NO Java.Lang.Object.GetObject wrapping —
         // would crash CheckJNI on the COROUTINE_SUSPENDED singleton).
         var code = """
-            using Microsoft.AndroidX.Compose;
+            using AndroidX.Compose;
             using Kotlin.Coroutines;
 
-            namespace Microsoft.AndroidX.Compose
+            namespace AndroidX.Compose
             {
                 public static partial class ComposeBridges
                 {
@@ -1470,12 +1470,12 @@ public class BridgeGeneratorTests
         // GetStaticMethodID + CallStaticObjectMethod, first user IntPtr
         // is the receiver AND occupies JNI slot 0.
         var code = """
-            using Microsoft.AndroidX.Compose;
+            using AndroidX.Compose;
             using Kotlin.Coroutines;
 
             [assembly: ComposeDefaults("AnimateDefault", "!value", "animationSpec")]
 
-            namespace Microsoft.AndroidX.Compose
+            namespace AndroidX.Compose
             {
                 public static partial class ComposeBridges
                 {
@@ -1502,7 +1502,7 @@ public class BridgeGeneratorTests
         Assert.Contains("args[4] = new global::Android.Runtime.JValue(defaults);", emitted);
         Assert.Contains("args[5] = new global::Android.Runtime.JValue(global::System.IntPtr.Zero);", emitted);
         // Auto-mask: animationSpec nullable IntPtr clears its bit when supplied.
-        Assert.Contains("if (animationSpec is not null) defaults &= ~(int)global::Microsoft.AndroidX.Compose.AnimateDefault.AnimationSpec;", emitted);
+        Assert.Contains("if (animationSpec is not null) defaults &= ~(int)global::AndroidX.Compose.AnimateDefault.AnimationSpec;", emitted);
         // Static call on the class — same as plain extensionWithDefault.
         Assert.Contains("CallStaticObjectMethod(s_DoIt_class", emitted);
         Assert.Contains("global::System.GC.KeepAlive(cont);", emitted);
@@ -1517,9 +1517,9 @@ public class BridgeGeneratorTests
         // No trailing IContinuation param: the generator has nothing
         // to plug into the JNI continuation slot, so we fail fast.
         var code = """
-            using Microsoft.AndroidX.Compose;
+            using AndroidX.Compose;
 
-            namespace Microsoft.AndroidX.Compose
+            namespace AndroidX.Compose
             {
                 public static partial class ComposeBridges
                 {
@@ -1542,10 +1542,10 @@ public class BridgeGeneratorTests
         // COROUTINE_SUSPENDED singleton in a Java.Lang.Object peer
         // collides with Mono's peer cache and CheckJNI later aborts.
         var code = """
-            using Microsoft.AndroidX.Compose;
+            using AndroidX.Compose;
             using Kotlin.Coroutines;
 
-            namespace Microsoft.AndroidX.Compose
+            namespace AndroidX.Compose
             {
                 public static partial class ComposeBridges
                 {
@@ -1567,10 +1567,10 @@ public class BridgeGeneratorTests
         // Kotlin's coroutine machinery always returns Object — anything
         // else means the bytecode signature is wrong for a suspend func.
         var code = """
-            using Microsoft.AndroidX.Compose;
+            using AndroidX.Compose;
             using Kotlin.Coroutines;
 
-            namespace Microsoft.AndroidX.Compose
+            namespace AndroidX.Compose
             {
                 public static partial class ComposeBridges
                 {
@@ -1592,10 +1592,10 @@ public class BridgeGeneratorTests
         // Instance suspend needs an IntPtr receiver to dispatch on.
         // Without one we'd have no `this` for CallObjectMethod.
         var code = """
-            using Microsoft.AndroidX.Compose;
+            using AndroidX.Compose;
             using Kotlin.Coroutines;
 
-            namespace Microsoft.AndroidX.Compose
+            namespace AndroidX.Compose
             {
                 public static partial class ComposeBridges
                 {
@@ -1618,10 +1618,10 @@ public class BridgeGeneratorTests
         // for instance suspend (this signature has an extra trailing 'I'
         // after the continuation slot). Catches typos in mangled sigs.
         var code = """
-            using Microsoft.AndroidX.Compose;
+            using AndroidX.Compose;
             using Kotlin.Coroutines;
 
-            namespace Microsoft.AndroidX.Compose
+            namespace AndroidX.Compose
             {
                 public static partial class ComposeBridges
                 {

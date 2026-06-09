@@ -1,7 +1,7 @@
-using Microsoft.AndroidX.Compose.Gallery.Demos.Shared;
-using Microsoft.AndroidX.Compose.Gallery.Registry;
+using AndroidX.Compose.Gallery.Demos.Shared;
+using AndroidX.Compose.Gallery.Registry;
 
-namespace Microsoft.AndroidX.Compose.Gallery.Demos.CarouselsPaging;
+namespace AndroidX.Compose.Gallery.Demos.CarouselsPaging;
 
 /// <summary>Material 3 uncontained carousel with fixed-width items.</summary>
 public static class HorizontalUncontainedCarouselDemo

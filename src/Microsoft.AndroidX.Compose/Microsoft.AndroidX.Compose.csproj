@@ -6,7 +6,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <IsTrimmable>true</IsTrimmable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <RootNamespace>Microsoft.AndroidX.Compose</RootNamespace>
+    <RootNamespace>AndroidX.Compose</RootNamespace>
     <!--
       RS0026: "Do not add multiple overloads with optional parameters."
       Triggers on our [CallerLineNumber]/[CallerFilePath]-bearing

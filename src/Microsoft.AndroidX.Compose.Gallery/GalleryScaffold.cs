@@ -1,8 +1,8 @@
-using global::AndroidX.Compose.Runtime;
-using Microsoft.AndroidX.Compose.Gallery.Registry;
-using Microsoft.AndroidX.Compose.Gallery.Screens;
+using AndroidX.Compose.Runtime;
+using AndroidX.Compose.Gallery.Registry;
+using AndroidX.Compose.Gallery.Screens;
 
-namespace Microsoft.AndroidX.Compose.Gallery;
+namespace AndroidX.Compose.Gallery;
 
 /// <summary>
 /// The <see cref="Scaffold"/> that wraps the gallery's

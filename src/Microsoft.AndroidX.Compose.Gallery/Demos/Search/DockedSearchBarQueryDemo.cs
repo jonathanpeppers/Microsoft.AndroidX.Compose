@@ -1,6 +1,6 @@
-using Microsoft.AndroidX.Compose.Gallery.Registry;
+using AndroidX.Compose.Gallery.Registry;
 
-namespace Microsoft.AndroidX.Compose.Gallery.Demos.Search;
+namespace AndroidX.Compose.Gallery.Demos.Search;
 
 /// <summary>DockedSearchBar — deprecated query-based variant with built-in input field.</summary>
 public static class DockedSearchBarQueryDemo

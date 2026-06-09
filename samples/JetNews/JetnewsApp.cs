@@ -1,4 +1,4 @@
-namespace Microsoft.AndroidX.Compose.Samples.JetNews;
+namespace AndroidX.Compose.Samples.JetNews;
 
 /// <summary>
 /// Builds the JetNews root composition: a <see cref="MaterialTheme"/>
@@ -42,9 +42,9 @@ public static class JetnewsApp
     /// </param>
     /// <param name="onShare">
     /// Invoked when the user picks "Share anyway" in the article share
-    /// dialog. Typically wired to <see cref="global::Android.Content.Intent.ActionSend"/>
+    /// dialog. Typically wired to <see cref="Android.Content.Intent.ActionSend"/>
     /// from <see cref="MainActivity"/> so the chooser launches with the
-    /// activity as its <see cref="global::Android.Content.Context"/>.
+    /// activity as its <see cref="Android.Content.Context"/>.
     /// </param>
     public static ComposableNode Build(
         NavController nav,

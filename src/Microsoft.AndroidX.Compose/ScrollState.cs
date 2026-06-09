@@ -1,5 +1,5 @@
 
-namespace Microsoft.AndroidX.Compose;
+namespace AndroidX.Compose;
 
 /// <summary>
 /// Caller-supplied state holder for <see cref="Modifier.VerticalScroll"/>
@@ -43,7 +43,7 @@ namespace Microsoft.AndroidX.Compose;
 /// </remarks>
 public sealed class ScrollState
 {
-    internal global::AndroidX.Compose.Foundation.ScrollState Jvm { get; }
+    internal AndroidX.Compose.Foundation.ScrollState Jvm { get; }
 
     /// <summary>
     /// Create a new <see cref="ScrollState"/> with the given initial
@@ -51,7 +51,7 @@ public sealed class ScrollState
     /// </summary>
     public ScrollState(int initial = 0)
     {
-        Jvm = new global::AndroidX.Compose.Foundation.ScrollState(initial);
+        Jvm = new AndroidX.Compose.Foundation.ScrollState(initial);
     }
 
     /// <summary>

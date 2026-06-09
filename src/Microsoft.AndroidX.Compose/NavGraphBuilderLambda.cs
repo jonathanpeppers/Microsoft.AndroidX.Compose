@@ -1,8 +1,8 @@
-using global::Android.Runtime;
-using global::AndroidX.Navigation;
+using Android.Runtime;
+using AndroidX.Navigation;
 using Kotlin.Jvm.Functions;
 
-namespace Microsoft.AndroidX.Compose;
+namespace AndroidX.Compose;
 
 /// <summary>
 /// Function1&lt;NavGraphBuilder, Unit&gt; — the <c>builder</c> argument
@@ -31,7 +31,7 @@ internal sealed class NavGraphBuilderLambda : Java.Lang.Object, IFunction1
     public Java.Lang.Object Invoke(Java.Lang.Object? p0)
     {
         ArgumentNullException.ThrowIfNull(p0);
-        var graphBuilder = global::Android.Runtime.Extensions.JavaCast<NavGraphBuilder>(p0);
+        var graphBuilder = Android.Runtime.Extensions.JavaCast<NavGraphBuilder>(p0);
         _body(graphBuilder);
         return Kotlin.Unit.Instance!;
     }

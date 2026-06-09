@@ -7,7 +7,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 
-namespace Microsoft.AndroidX.Compose.SourceGenerators;
+namespace AndroidX.Compose.SourceGenerators;
 
 /// <summary>
 /// Emits the implementing partial of <c>[ComposeCompanion]</c>-decorated
@@ -22,8 +22,8 @@ namespace Microsoft.AndroidX.Compose.SourceGenerators;
 [Generator(LanguageNames.CSharp)]
 public sealed class ComposeCompanionGenerator : IIncrementalGenerator
 {
-    const string CompanionAttributeMetadataName = "Microsoft.AndroidX.Compose.ComposeCompanionAttribute";
-    const string GetterAttributeMetadataName = "Microsoft.AndroidX.Compose.ComposeCompanionGetterAttribute";
+    const string CompanionAttributeMetadataName = "AndroidX.Compose.ComposeCompanionAttribute";
+    const string GetterAttributeMetadataName = "AndroidX.Compose.ComposeCompanionGetterAttribute";
 
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
@@ -224,7 +224,7 @@ public sealed class ComposeCompanionGenerator : IIncrementalGenerator
             : null;
 
         var source = ComposeCompanionEmitter.Emit(@namespace, classSymbol.Name, outerJniClass, inlineClass, getters);
-        var hint = $"Microsoft.AndroidX.Compose.Companion.{classSymbol.Name}.g.cs";
+        var hint = $"AndroidX.Compose.Companion.{classSymbol.Name}.g.cs";
         return new GenerationResult(source, hint, Array.Empty<Diagnostic>());
     }
 

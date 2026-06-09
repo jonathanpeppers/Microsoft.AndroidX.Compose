@@ -1,7 +1,7 @@
 using System.Runtime.CompilerServices;
-using global::AndroidX.Compose.Runtime;
+using AndroidX.Compose.Runtime;
 
-namespace Microsoft.AndroidX.Compose;
+namespace AndroidX.Compose;
 
 public static partial class ComposeExtensions
 {
@@ -203,15 +203,15 @@ public static partial class ComposeExtensions
             if (handle == IntPtr.Zero)
                 return default!;
             var boxed = Java.Lang.Object.GetObject<Java.Lang.Object>(
-                handle, global::Android.Runtime.JniHandleOwnership.DoNotTransfer);
+                handle, Android.Runtime.JniHandleOwnership.DoNotTransfer);
             return MutableState<T>.FromJava(boxed);
         }
         finally
         {
             if (handle != IntPtr.Zero)
-                global::Android.Runtime.JNIEnv.DeleteLocalRef(handle);
+                Android.Runtime.JNIEnv.DeleteLocalRef(handle);
             if (ownsInputs && inputs != IntPtr.Zero)
-                global::Android.Runtime.JNIEnv.DeleteLocalRef(inputs);
+                Android.Runtime.JNIEnv.DeleteLocalRef(inputs);
         }
     }
 
@@ -240,15 +240,15 @@ public static partial class ComposeExtensions
                 throw new InvalidOperationException(
                     $"RememberSaveable<{typeof(T).Name}>: rememberSaveable returned null.");
             iwrap.State = Java.Lang.Object.GetObject<IMutableState>(
-                handle, global::Android.Runtime.JniHandleOwnership.DoNotTransfer)!;
+                handle, Android.Runtime.JniHandleOwnership.DoNotTransfer)!;
             return wrapper;
         }
         finally
         {
             if (handle != IntPtr.Zero)
-                global::Android.Runtime.JNIEnv.DeleteLocalRef(handle);
+                Android.Runtime.JNIEnv.DeleteLocalRef(handle);
             if (ownsInputs && inputs != IntPtr.Zero)
-                global::Android.Runtime.JNIEnv.DeleteLocalRef(inputs);
+                Android.Runtime.JNIEnv.DeleteLocalRef(inputs);
         }
     }
 }

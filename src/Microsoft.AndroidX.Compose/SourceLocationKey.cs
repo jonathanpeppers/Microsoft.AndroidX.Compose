@@ -1,4 +1,4 @@
-namespace Microsoft.AndroidX.Compose;
+namespace AndroidX.Compose;
 
 /// <summary>
 /// Deterministic slot-table key derived from a <c>[CallerLineNumber]</c>

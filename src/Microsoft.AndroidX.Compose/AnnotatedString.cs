@@ -1,6 +1,6 @@
-using global::Android.Runtime;
+using Android.Runtime;
 
-namespace Microsoft.AndroidX.Compose;
+namespace AndroidX.Compose;
 
 /// <summary>
 /// C# wrapper around <c>androidx.compose.ui.text.AnnotatedString</c> —
@@ -11,9 +11,9 @@ namespace Microsoft.AndroidX.Compose;
 /// </summary>
 /// <remarks>
 /// This is a thin <see cref="Java.Lang.Object"/> shell over the bound
-/// <see cref="global::AndroidX.Compose.UI.Text.AnnotatedString"/>. We don't
+/// <see cref="AndroidX.Compose.UI.Text.AnnotatedString"/>. We don't
 /// expose the binding type directly so the public surface stays in the
-/// <c>Microsoft.AndroidX.Compose</c> namespace alongside <see cref="SpanStyle"/> and
+/// <c>AndroidX.Compose</c> namespace alongside <see cref="SpanStyle"/> and
 /// <see cref="LinkAnnotation"/>, and so future generator-emitted
 /// bridges can accept it via the standard reference-type handle path.
 /// </remarks>
@@ -22,7 +22,7 @@ public sealed class AnnotatedString : Java.Lang.Object
     AnnotatedString(IntPtr handle, JniHandleOwnership transfer)
         : base(handle, transfer) { }
 
-    internal AnnotatedString(global::AndroidX.Compose.UI.Text.AnnotatedString binding)
+    internal AnnotatedString(AndroidX.Compose.UI.Text.AnnotatedString binding)
         : base(binding.Handle, JniHandleOwnership.DoNotTransfer)
     {
         GC.KeepAlive(binding);
@@ -34,8 +34,8 @@ public sealed class AnnotatedString : Java.Lang.Object
     /// Kotlin.
     /// </summary>
     public AnnotatedString(string text)
-        : this(new global::AndroidX.Compose.UI.Text.AnnotatedString(
-            text, new List<global::AndroidX.Compose.UI.Text.AnnotatedString.Range>()))
+        : this(new AndroidX.Compose.UI.Text.AnnotatedString(
+            text, new List<AndroidX.Compose.UI.Text.AnnotatedString.Range>()))
     {
     }
 
@@ -45,6 +45,6 @@ public sealed class AnnotatedString : Java.Lang.Object
     /// <summary>Number of characters in the string.</summary>
     public int Length => Binding().Length;
 
-    global::AndroidX.Compose.UI.Text.AnnotatedString Binding() =>
-        Java.Lang.Object.GetObject<global::AndroidX.Compose.UI.Text.AnnotatedString>(Handle, JniHandleOwnership.DoNotTransfer)!;
+    AndroidX.Compose.UI.Text.AnnotatedString Binding() =>
+        Java.Lang.Object.GetObject<AndroidX.Compose.UI.Text.AnnotatedString>(Handle, JniHandleOwnership.DoNotTransfer)!;
 }

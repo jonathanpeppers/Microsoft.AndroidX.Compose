@@ -1,8 +1,8 @@
 using System.Runtime.InteropServices;
-using global::Android.Runtime;
+using Android.Runtime;
 using Kotlin.Coroutines;
 
-namespace Microsoft.AndroidX.Compose;
+namespace AndroidX.Compose;
 
 /// <summary>
 /// Java Callable Wrapper that lets a Kotlin <c>suspend</c> function
@@ -99,7 +99,7 @@ internal sealed class SuspendContinuation : Java.Lang.Object, IContinuation
         get
         {
             var handle = ComposeBridges.AndroidUiDispatcherMain();
-            return global::Java.Lang.Object.GetObject<ICoroutineContext>(
+            return Java.Lang.Object.GetObject<ICoroutineContext>(
                 handle, JniHandleOwnership.DoNotTransfer)!;
         }
     }
@@ -161,7 +161,7 @@ internal sealed class SuspendContinuation : Java.Lang.Object, IContinuation
         if (handle != IntPtr.Zero)
         {
             var gref = JNIEnv.NewGlobalRef(handle);
-            owned = global::Java.Lang.Object.GetObject<Java.Lang.Object>(gref, JniHandleOwnership.TransferGlobalRef);
+            owned = Java.Lang.Object.GetObject<Java.Lang.Object>(gref, JniHandleOwnership.TransferGlobalRef);
             if (deleteLocal)
                 JNIEnv.DeleteLocalRef(handle);
         }

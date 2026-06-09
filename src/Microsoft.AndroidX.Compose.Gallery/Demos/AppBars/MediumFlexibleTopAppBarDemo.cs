@@ -1,6 +1,6 @@
-using Microsoft.AndroidX.Compose.Gallery.Registry;
+using AndroidX.Compose.Gallery.Registry;
 
-namespace Microsoft.AndroidX.Compose.Gallery.Demos.AppBars;
+namespace AndroidX.Compose.Gallery.Demos.AppBars;
 
 /// <summary>MediumFlexibleTopAppBar with Title + Subtitle.</summary>
 public static class MediumFlexibleTopAppBarDemo

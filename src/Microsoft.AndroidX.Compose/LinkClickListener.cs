@@ -1,6 +1,6 @@
-using global::Android.Runtime;
+using Android.Runtime;
 
-namespace Microsoft.AndroidX.Compose;
+namespace AndroidX.Compose;
 
 /// <summary>
 /// <c>androidx.compose.ui.text.LinkInteractionListener</c> adapter
@@ -11,7 +11,7 @@ namespace Microsoft.AndroidX.Compose;
 /// as long as the annotation does.
 /// </summary>
 [Register("net/compose/LinkClickListener")]
-internal sealed class LinkClickListener : Java.Lang.Object, global::AndroidX.Compose.UI.Text.ILinkInteractionListener
+internal sealed class LinkClickListener : Java.Lang.Object, AndroidX.Compose.UI.Text.ILinkInteractionListener
 {
     readonly string _tag;
     readonly Action<string> _onClick;
@@ -22,5 +22,5 @@ internal sealed class LinkClickListener : Java.Lang.Object, global::AndroidX.Com
         _onClick = onClick;
     }
 
-    public void OnClick(global::AndroidX.Compose.UI.Text.LinkAnnotation? link) => _onClick(_tag);
+    public void OnClick(AndroidX.Compose.UI.Text.LinkAnnotation? link) => _onClick(_tag);
 }

@@ -1,4 +1,4 @@
-namespace Microsoft.AndroidX.Compose;
+namespace AndroidX.Compose;
 
 /// <summary>
 /// Foundation <c>FlowColumn</c> — vertical mirror of <see cref="FlowRow"/>.

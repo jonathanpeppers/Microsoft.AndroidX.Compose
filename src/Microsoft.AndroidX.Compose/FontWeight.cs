@@ -1,6 +1,6 @@
-using global::Android.Runtime;
+using Android.Runtime;
 
-namespace Microsoft.AndroidX.Compose;
+namespace AndroidX.Compose;
 
 /// <summary>
 /// C# wrapper around <c>androidx.compose.ui.text.font.FontWeight</c>.
@@ -16,7 +16,7 @@ namespace Microsoft.AndroidX.Compose;
 /// (<c>x is null ? IntPtr.Zero : x.Handle</c>) then passes the handle
 /// through to the JNI <c>L</c> slot.
 ///
-/// Will swap to bound <c>global::AndroidX.Compose.UI.Text.Font.FontWeight</c>
+/// Will swap to bound <c>AndroidX.Compose.UI.Text.Font.FontWeight</c>
 /// once <see href="https://github.com/dotnet/android-libraries/issues/1439"/>
 /// ships and we adopt <c>Xamarin.AndroidX.Compose.UI.Text.Android</c>
 /// 1.11.2.1+.

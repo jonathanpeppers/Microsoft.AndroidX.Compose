@@ -1,4 +1,4 @@
-namespace Microsoft.AndroidX.Compose;
+namespace AndroidX.Compose;
 
 /// <summary>
 /// A <see cref="CompositionLocal{T}"/> paired with a specific value,
@@ -9,8 +9,8 @@ namespace Microsoft.AndroidX.Compose;
 /// </summary>
 public sealed class ProvidedValue
 {
-    internal global::AndroidX.Compose.Runtime.ProvidedValue Peer { get; }
+    internal AndroidX.Compose.Runtime.ProvidedValue Peer { get; }
 
-    internal ProvidedValue(global::AndroidX.Compose.Runtime.ProvidedValue peer) =>
+    internal ProvidedValue(AndroidX.Compose.Runtime.ProvidedValue peer) =>
         Peer = peer;
 }

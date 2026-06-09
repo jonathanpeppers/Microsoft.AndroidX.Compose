@@ -1,4 +1,4 @@
-namespace Microsoft.AndroidX.Compose;
+namespace AndroidX.Compose;
 
 /// <summary>
 /// C# wrapper around Kotlin's <c>androidx.compose.ui.geometry.Offset</c>.
@@ -22,7 +22,7 @@ namespace Microsoft.AndroidX.Compose;
 /// <see cref="X"/> / <see cref="Y"/>.
 /// </para>
 /// <para>
-/// Will swap to bound <c>global::AndroidX.Compose.UI.Geometry.Offset</c> once
+/// Will swap to bound <c>AndroidX.Compose.UI.Geometry.Offset</c> once
 /// <see href="https://github.com/dotnet/android-libraries/pull/1440"/>
 /// ships and the binder stops stripping inline-class APIs.
 /// </para>

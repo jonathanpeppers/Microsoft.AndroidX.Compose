@@ -1,6 +1,6 @@
-using Microsoft.AndroidX.Compose.Gallery.Registry;
+using AndroidX.Compose.Gallery.Registry;
 
-namespace Microsoft.AndroidX.Compose.Gallery.Demos.DialogsSheets;
+namespace AndroidX.Compose.Gallery.Demos.DialogsSheets;
 
 /// <summary>DateRangePickerDialog — pick a start + end date in one dialog.</summary>
 public static class DateRangePickerDialogDemo

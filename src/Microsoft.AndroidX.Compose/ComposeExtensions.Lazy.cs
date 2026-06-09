@@ -1,7 +1,7 @@
 using System.Runtime.CompilerServices;
-using global::AndroidX.Compose.Runtime;
+using AndroidX.Compose.Runtime;
 
-namespace Microsoft.AndroidX.Compose;
+namespace AndroidX.Compose;
 
 public static partial class ComposeExtensions
 {
@@ -32,7 +32,7 @@ public static partial class ComposeExtensions
                         $"Expected java.lang.Float in DraggableState.onDelta; got '{boxed?.Class?.Name ?? "null"}'.");
                 onDelta(f.FloatValue());
             });
-            var jvm = global::AndroidX.Compose.Foundation.Gestures.DraggableKt.RememberDraggableState(jcw, composer, 0)
+            var jvm = AndroidX.Compose.Foundation.Gestures.DraggableKt.RememberDraggableState(jcw, composer, 0)
                 ?? throw new InvalidOperationException(
                     "DraggableKt.RememberDraggableState returned null.");
             return new DraggableState(jvm);
@@ -62,7 +62,7 @@ public static partial class ComposeExtensions
         composer.StartReplaceableGroup(SourceLocationKey.Compute(line, file));
         try
         {
-            var jvm = global::AndroidX.Compose.Foundation.Lazy.LazyListStateKt.RememberLazyListState(
+            var jvm = AndroidX.Compose.Foundation.Lazy.LazyListStateKt.RememberLazyListState(
                 p0:                                  0,
                 initialFirstVisibleItemIndex:        initialFirstVisibleItemIndex,
                 _composer:                           composer,

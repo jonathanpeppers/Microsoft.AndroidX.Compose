@@ -1,16 +1,16 @@
-using global::Android.Views;
-using global::AndroidX.Activity;
-using global::AndroidX.Compose.Material3;
-using global::AndroidX.Compose.UI.Text.Input;
+using Android.Views;
+using AndroidX.Activity;
+using AndroidX.Compose.Material3;
+using AndroidX.Compose.UI.Text.Input;
 
-namespace Microsoft.AndroidX.Compose.Samples.Jetchat;
+namespace AndroidX.Compose.Samples.Jetchat;
 
 [Activity(
     Label = "@string/app_name",
     MainLauncher = true,
     Theme = "@android:style/Theme.Material.Light.NoActionBar",
     WindowSoftInputMode = SoftInput.AdjustResize)]
-[global::Android.Runtime.Register("net/compose/samples/jetchat/MainActivity")]
+[Android.Runtime.Register("net/compose/samples/jetchat/MainActivity")]
 public class MainActivity : ComponentActivity
 {
     protected override void OnCreate(Bundle? savedInstanceState)

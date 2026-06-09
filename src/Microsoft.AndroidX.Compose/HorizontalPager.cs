@@ -1,8 +1,8 @@
-using global::AndroidX.Compose.Foundation.Pager;
-using global::AndroidX.Compose.Runtime;
+using AndroidX.Compose.Foundation.Pager;
+using AndroidX.Compose.Runtime;
 using Kotlin.Jvm.Functions;
 
-namespace Microsoft.AndroidX.Compose;
+namespace AndroidX.Compose;
 
 /// <summary>
 /// Foundation <c>HorizontalPager</c> — swipes through a fixed list of
@@ -58,7 +58,7 @@ public sealed class HorizontalPager<T> : ComposableNode
         // When State == null we fall back to rememberPagerState so the
         // pager owns an internal scroll-position-preserving state
         // across recompositions.
-        global::AndroidX.Compose.Foundation.Pager.PagerState jvmState;
+        AndroidX.Compose.Foundation.Pager.PagerState jvmState;
         if (State is not null)
         {
             jvmState = State.Jvm;

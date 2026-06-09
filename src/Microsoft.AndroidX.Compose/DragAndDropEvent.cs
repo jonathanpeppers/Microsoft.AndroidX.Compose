@@ -1,6 +1,6 @@
-using global::Android.Views;
+using Android.Views;
 
-namespace Microsoft.AndroidX.Compose;
+namespace AndroidX.Compose;
 
 /// <summary>
 /// Wrapper around Compose's <c>androidx.compose.ui.draganddrop.DragAndDropEvent</c>
@@ -16,9 +16,9 @@ namespace Microsoft.AndroidX.Compose;
 /// </summary>
 public sealed class DragAndDropEvent
 {
-    internal global::AndroidX.Compose.UI.Draganddrop.DragAndDropEvent Jvm { get; }
+    internal AndroidX.Compose.UI.Draganddrop.DragAndDropEvent Jvm { get; }
 
-    internal DragAndDropEvent(global::AndroidX.Compose.UI.Draganddrop.DragAndDropEvent jvm)
+    internal DragAndDropEvent(AndroidX.Compose.UI.Draganddrop.DragAndDropEvent jvm)
     {
         ArgumentNullException.ThrowIfNull(jvm);
         Jvm = jvm;
@@ -32,11 +32,11 @@ public sealed class DragAndDropEvent
     /// <c>View.IOnDragListener</c>.
     /// </summary>
     public DragEvent AndroidDragEvent =>
-        global::AndroidX.Compose.UI.Draganddrop.DragAndDrop_androidKt.ToAndroidDragEvent(Jvm);
+        AndroidX.Compose.UI.Draganddrop.DragAndDrop_androidKt.ToAndroidDragEvent(Jvm);
 
     /// <summary>
     /// MIME types advertised by the drag source via its
-    /// <see cref="global::Android.Content.ClipDescription"/>. Returns an empty list
+    /// <see cref="Android.Content.ClipDescription"/>. Returns an empty list
     /// when the source carries no MIME metadata.
     /// </summary>
     public IReadOnlyList<string> MimeTypes
