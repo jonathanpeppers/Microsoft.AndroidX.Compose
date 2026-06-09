@@ -2307,7 +2307,7 @@ internal static partial class ComposeBridges
                     "Landroidx/compose/ui/Modifier;")]
     internal static partial IntPtr ModifierClearAndSetSemantics(IntPtr modifier, IFunction1 properties);
 
-    // androidx.compose.ui.draganddrop.DragAndDropTargetKt.dragAndDropTarget —
+    // androidx.compose.foundation.draganddrop.DragAndDropTargetKt.dragAndDropTarget —
     // non-@Composable Modifier extension. Both Kotlin params are required
     // (no $default). `shouldStartDragAndDrop` is a `(DragAndDropEvent) -> Boolean`
     // predicate that Compose calls once per drag-start to decide whether
@@ -2315,7 +2315,7 @@ internal static partial class ComposeBridges
     // `DragAndDropTarget` JCW whose `OnDrop` (and the other no-op
     // callbacks) the runtime fires while the drag is in progress.
     [ComposeBridge(
-        Class     = "androidx/compose/ui/draganddrop/DragAndDropTargetKt",
+        Class     = "androidx/compose/foundation/draganddrop/DragAndDropTargetKt",
         JvmName   = "dragAndDropTarget",
         Signature = "(Landroidx/compose/ui/Modifier;" +
                     "Lkotlin/jvm/functions/Function1;" +
