@@ -27,7 +27,7 @@ public static class JetnewsApp
     /// the drawer items can fire
     /// <see cref="DrawerStateHolder.CloseAsync"/>.
     /// </param>
-    /// <param name="bookmarks">Post ids the user has bookmarked.</param>
+    /// <param name="bookmarks">The shared bookmarks view model.</param>
     /// <param name="selectedTopics">
     /// "Section/Topic" keys for topics the user has subscribed to (e.g.
     /// <c>"Android/Jetpack Compose"</c>).
@@ -42,7 +42,7 @@ public static class JetnewsApp
         NavController nav,
         MutableState<string> currentRoute,
         DrawerStateHolder drawerState,
-        MutableStateList<string> bookmarks,
+        BookmarksViewModel bookmarks,
         MutableStateList<string> selectedTopics,
         MutableStateList<string> selectedPeople,
         MutableStateList<string> selectedPublications,
@@ -60,7 +60,7 @@ public static class JetnewsApp
         NavController nav,
         MutableState<string> currentRoute,
         DrawerStateHolder drawerState,
-        MutableStateList<string> bookmarks,
+        BookmarksViewModel bookmarks,
         MutableStateList<string> selectedTopics,
         MutableStateList<string> selectedPeople,
         MutableStateList<string> selectedPublications,
@@ -68,13 +68,11 @@ public static class JetnewsApp
     {
         return new NavHost(startDestination: Routes.Home, navController: nav)
         {
-            new Composable(Routes.Home)
-            {
-                HomeScreen.Build(PostsRepo.Feed, bookmarks, drawerState, postId =>
+            new Composable(Routes.Home, _ =>
+                HomeScreen.Build(bookmarks, drawerState, postId =>
                 {
                     nav.Navigate(Routes.Post(postId));
-                }),
-            },
+                })),
             new Composable(Routes.Interests)
             {
                 InterestsScreen.Build(selectedTopics, selectedPeople, selectedPublications, interestsTab, drawerState),

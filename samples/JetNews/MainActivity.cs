@@ -26,7 +26,13 @@ public class MainActivity : ComposeActivity
             var nav                  = Remember(() => new NavController());
             var currentRoute         = Remember(() => new MutableState<string>(Routes.Home));
             var drawerState          = Remember(() => new DrawerStateHolder(DrawerValue.Closed));
-            var bookmarks            = Remember(() => new MutableStateList<string>());
+            // Acquire bookmarks from the activity's ViewModelStore so
+            // the toggled set survives configuration change AND is
+            // shared across nav destinations. Compose.ViewModel<T>
+            // reads LocalViewModelStoreOwner from the active
+            // composition; the root SetContent body sees the host
+            // ComponentActivity, so this VM is activity-scoped.
+            var bookmarks            = Compose.ViewModel(() => new BookmarksViewModel());
             var selectedTopics       = Remember(() => new MutableStateList<string>());
             var selectedPeople       = Remember(() => new MutableStateList<string>());
             var selectedPublications = Remember(() => new MutableStateList<string>());

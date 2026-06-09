@@ -11,15 +11,28 @@ namespace ComposeNet.Samples.JetNews;
 /// recommended / popular / recent lists. Each card taps through to the
 /// article screen via the supplied callback.
 /// </summary>
+/// <remarks>
+/// Refactored for the UDF pattern: the feed and bookmarks come from a
+/// <see cref="HomeViewModel"/> acquired via
+/// <see cref="Compose.ViewModel{T}(Func{T}, int, string)"/>, and the
+/// body switches on a <see cref="HomeUiState"/> discriminated union
+/// (<see cref="HomeUiState.Loading"/> /
+/// <see cref="HomeUiState.HasPosts"/> /
+/// <see cref="HomeUiState.Error"/>).
+/// </remarks>
 public static class HomeScreen
 {
     /// <summary>Materialize the home screen.</summary>
     public static Scaffold Build(
-        PostsFeed feed,
-        MutableStateList<string> bookmarks,
+        BookmarksViewModel bookmarks,
         DrawerStateHolder drawerState,
-        Action<string> onSelectPost) =>
-        new()
+        Action<string> onSelectPost,
+        IPostsRepository? repository = null)
+    {
+        var vm = Compose.ViewModel(() => new HomeViewModel(repository));
+        var state = vm.UiState.CollectAsStateWithLifecycle().Value;
+
+        return new Scaffold
         {
             TopBar = new CenterAlignedTopAppBar
             {
@@ -33,17 +46,52 @@ public static class HomeScreen
                 },
                 Actions = new Row
                 {
-                    new IconButton(onClick: NoOp)
+                    new IconButton(onClick: () => _ = vm.RefreshAsync())
                     {
-                        new Icon(Resource.Drawable.ic_search, "Search"),
+                        new Icon(Resource.Drawable.ic_refresh, "Refresh"),
                     },
                 },
             },
-            Body = BuildBody(feed, bookmarks, onSelectPost),
+            Body = state switch
+            {
+                HomeUiState.Loading       => BuildLoading(),
+                HomeUiState.Error e       => BuildError(e.Message, () => _ = vm.RefreshAsync()),
+                HomeUiState.HasPosts h    => BuildBody(h.Feed, bookmarks, onSelectPost),
+                _                         => new Spacer(),
+            },
+        };
+    }
+
+    static Box BuildLoading() =>
+        new()
+        {
+            Modifier.Companion.FillMaxSize(),
+            new CircularProgressIndicator
+            {
+                Modifier = Modifier.Companion.Align(Alignment.Center),
+            },
+        };
+
+    static Column BuildError(string message, Action onRetry) =>
+        new()
+        {
+            Modifier.Companion.FillMaxSize().Padding(24),
+            new Text("Couldn't load the feed")
+            {
+                FontSize   = 18,
+                FontWeight = FontWeight.SemiBold,
+            },
+            new Spacer { Modifier = Modifier.Companion.Height(8) },
+            new Text(message),
+            new Spacer { Modifier = Modifier.Companion.Height(16) },
+            new Button(onClick: onRetry)
+            {
+                new Text("Try again"),
+            },
         };
 
     static LazyColumn<HomeRow> BuildBody(PostsFeed feed,
-                                         MutableStateList<string> bookmarks,
+                                         BookmarksViewModel bookmarks,
                                          Action<string> onSelectPost)
     {
         var rows = new List<HomeRow>
@@ -74,7 +122,7 @@ public static class HomeScreen
     }
 
     static ComposableNode BuildRow(HomeRow row,
-                                   MutableStateList<string> bookmarks,
+                                   BookmarksViewModel bookmarks,
                                    Action<string> onSelectPost) =>
         row switch
         {
@@ -108,6 +156,4 @@ public static class HomeScreen
                 FontWeight = FontWeight.SemiBold,
             },
         };
-
-    static void NoOp() { }
 }

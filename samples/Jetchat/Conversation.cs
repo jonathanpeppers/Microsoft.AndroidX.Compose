@@ -44,7 +44,7 @@ public static class Conversation
                 Modifier.Companion.FillMaxSize(),
                 new ModalNavigationDrawer(drawerState)
                 {
-                    Drawer  = BuildDrawer(ui, selectedMenu, drawerState, drawerScroll, scheme),
+                    Drawer  = BuildDrawer(ui, selectedMenu, drawerState, drawerScroll, popupOpen, scheme),
                     Content = new Scaffold
                     {
                         TopBar = BuildTopBar(ui, scheme, drawerState, popupOpen),
@@ -409,10 +409,11 @@ public static class Conversation
         MutableState<string> selectedMenu,
         DrawerStateHolder    drawerState,
         ScrollState          scroll,
+        MutableState<bool>   popupOpen,
         ColorScheme          scheme)
     {
         var sheet = new ModalDrawerSheet { ContainerColor = new Color(scheme.Surface) };
-        sheet.Add(new Column
+        var column = new Column
         {
             Modifier.Companion.FillMaxWidth().VerticalScroll(scroll),
             new Spacer(Modifier.Companion.StatusBarsPadding()),
@@ -425,8 +426,46 @@ public static class Conversation
             BuildDrawerSectionHeader("Recent Profiles", scheme),
             BuildProfileItem(selectedMenu, drawerState, "Ali Conors (you)", MeProfileId,        Resource.Drawable.avatar_ali,          scheme),
             BuildProfileItem(selectedMenu, drawerState, "Taylor Brooks",    ColleagueProfileId, Resource.Drawable.avatar_someone_else, scheme),
-        });
+        };
+        if (OperatingSystem.IsAndroidVersionAtLeast(26))
+        {
+            column.Add(BuildDividerItem(scheme, sidePadding: 28));
+            column.Add(BuildDrawerSectionHeader("Settings", scheme));
+            column.Add(BuildSettingsItem(drawerState, popupOpen, "Settings",           Resource.Drawable.ic_settings, scheme));
+            column.Add(BuildSettingsItem(drawerState, popupOpen, "Pin Widget to home", Resource.Drawable.ic_widgets,  scheme));
+        }
+        sheet.Add(column);
         return sheet;
+    }
+
+    static Row BuildSettingsItem(DrawerStateHolder drawerState, MutableState<bool> popupOpen, string label, int iconRes, ColorScheme scheme)
+    {
+        var modifier = Modifier.Companion
+            .FillMaxWidth()
+            .Height(56)
+            .Padding(horizontal: 12, vertical: 0)
+            .Clip(28)
+            .Clickable(() =>
+            {
+                _ = drawerState.CloseAsync();
+                popupOpen.Value = true;
+            });
+
+        return new Row
+        {
+            modifier,
+            new Icon(iconRes, null)
+            {
+                Modifier = Modifier.Companion.Padding(top: 16, bottom: 16, start: 16, end: 0),
+                TintArgb = scheme.OnSurfaceVariant,
+            },
+            new Text(label)
+            {
+                FontSize = 14,
+                Color    = new Color(scheme.OnSurface),
+                Modifier = Modifier.Companion.Padding(top: 16, bottom: 16, start: 12, end: 0),
+            },
+        };
     }
 
     static Row BuildDrawerHeader(ColorScheme scheme) =>

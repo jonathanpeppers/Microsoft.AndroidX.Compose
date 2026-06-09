@@ -146,10 +146,26 @@ render.
 
 ### State lives at MainActivity scope
 
-All `MutableState` / `MutableStateList` instances (current route,
-bookmarks, three interests selections, interests-tab index) live in
+Most `MutableState` / `MutableStateList` instances (current route,
+three interests selections, interests-tab index) live in
 `MainActivity.OnCreate` via `Remember(...)`. They flow as
 parameters through `JetnewsApp.Build` → per-screen builders. This
 keeps the screen builders pure functions of their inputs and lets
 the same `MutableState` reference survive recompositions and
 navigation transitions.
+
+Bookmarks are an exception: they live in a
+`BookmarksViewModel` acquired via `Compose.ViewModel<T>(…)` at the
+activity scope, so the set survives configuration change (the
+activity's `ViewModelStore` retains the instance across
+`Activity.OnCreate` calls). The home feed and the article screen
+both receive the same `BookmarksViewModel` reference, so toggling a
+bookmark from either screen is observed by the other.
+
+### Per-screen state lives in `HomeViewModel`
+
+The Home feed state is owned by a `HomeViewModel : ComposeNet.ViewModel`
+acquired in `HomeScreen.Build` via `Compose.ViewModel(...)`. The VM
+is rooted in the current `NavBackStackEntry`'s `ViewModelStore`, so
+it survives recomposition and configuration change, and clears
+when the user pops the destination off the back stack.
