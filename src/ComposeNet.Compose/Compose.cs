@@ -225,7 +225,7 @@ public static class Compose
         var handle = ComposeBridges.RememberSaveableSimple(
             inputs,
             jcw,
-            ((Java.Lang.Object)composer).Handle,
+            composer,
             changed: 0);
         try
         {
@@ -241,7 +241,6 @@ public static class Compose
                 Android.Runtime.JNIEnv.DeleteLocalRef(handle);
             if (ownsInputs && inputs != System.IntPtr.Zero)
                 Android.Runtime.JNIEnv.DeleteLocalRef(inputs);
-            System.GC.KeepAlive(composer);
         }
     }
 
@@ -273,7 +272,7 @@ public static class Compose
             inputs,
             ComposeBridges.SaverAutoSaver(),
             jcw,
-            ((Java.Lang.Object)composer).Handle,
+            composer,
             changed: 0);
         try
         {
@@ -290,7 +289,6 @@ public static class Compose
                 Android.Runtime.JNIEnv.DeleteLocalRef(handle);
             if (ownsInputs && inputs != System.IntPtr.Zero)
                 Android.Runtime.JNIEnv.DeleteLocalRef(inputs);
-            System.GC.KeepAlive(composer);
         }
     }
 

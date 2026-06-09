@@ -95,7 +95,7 @@ internal static partial class ComposeBridges
     internal static unsafe System.IntPtr RememberSaveableSimple(
         System.IntPtr inputs,
         ObjectFunction0 init,
-        System.IntPtr composer,
+        AndroidX.Compose.Runtime.IComposer composer,
         int changed)
     {
         if (s_rememberSaveableSimple_method == System.IntPtr.Zero)
@@ -113,7 +113,7 @@ internal static partial class ComposeBridges
             JValue* args = stackalloc JValue[4];
             args[0] = new JValue(inputs);
             args[1] = new JValue(init.Handle);
-            args[2] = new JValue(composer);
+            args[2] = new JValue(((Java.Lang.Object)composer).Handle);
             args[3] = new JValue(changed);
             return JNIEnv.CallStaticObjectMethod(
                 s_rememberSaveableSimple_class,
@@ -123,6 +123,7 @@ internal static partial class ComposeBridges
         finally
         {
             System.GC.KeepAlive(init);
+            System.GC.KeepAlive(composer);
         }
     }
 
@@ -145,7 +146,7 @@ internal static partial class ComposeBridges
         System.IntPtr inputs,
         System.IntPtr stateSaver,
         ObjectFunction0 init,
-        System.IntPtr composer,
+        AndroidX.Compose.Runtime.IComposer composer,
         int changed)
     {
         if (s_rememberSaveableState_method == System.IntPtr.Zero)
@@ -164,7 +165,7 @@ internal static partial class ComposeBridges
             args[0] = new JValue(inputs);
             args[1] = new JValue(stateSaver);
             args[2] = new JValue(init.Handle);
-            args[3] = new JValue(composer);
+            args[3] = new JValue(((Java.Lang.Object)composer).Handle);
             args[4] = new JValue(changed);
             return JNIEnv.CallStaticObjectMethod(
                 s_rememberSaveableState_class,
@@ -174,6 +175,7 @@ internal static partial class ComposeBridges
         finally
         {
             System.GC.KeepAlive(init);
+            System.GC.KeepAlive(composer);
         }
     }
 
