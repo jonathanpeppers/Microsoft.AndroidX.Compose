@@ -251,6 +251,8 @@ Microsoft.AndroidX.Compose.DismissibleNavigationDrawer.Content.set -> void
 Microsoft.AndroidX.Compose.DismissibleNavigationDrawer.DismissibleNavigationDrawer(Microsoft.AndroidX.Compose.DrawerStateHolder? drawerState = null) -> void
 Microsoft.AndroidX.Compose.DismissibleNavigationDrawer.Drawer.get -> Microsoft.AndroidX.Compose.ComposableNode?
 Microsoft.AndroidX.Compose.DismissibleNavigationDrawer.Drawer.set -> void
+Microsoft.AndroidX.Compose.DismissibleNavigationDrawer.GesturesEnabled.get -> bool?
+Microsoft.AndroidX.Compose.DismissibleNavigationDrawer.GesturesEnabled.set -> void
 Microsoft.AndroidX.Compose.DismissibleNavigationDrawer.InitialValue.get -> AndroidX.Compose.Material3.DrawerValue?
 Microsoft.AndroidX.Compose.DismissibleNavigationDrawer.InitialValue.init -> void
 Microsoft.AndroidX.Compose.DisposableEffect
@@ -636,6 +638,8 @@ Microsoft.AndroidX.Compose.ModalNavigationDrawer.Content.get -> Microsoft.Androi
 Microsoft.AndroidX.Compose.ModalNavigationDrawer.Content.set -> void
 Microsoft.AndroidX.Compose.ModalNavigationDrawer.Drawer.get -> Microsoft.AndroidX.Compose.ComposableNode?
 Microsoft.AndroidX.Compose.ModalNavigationDrawer.Drawer.set -> void
+Microsoft.AndroidX.Compose.ModalNavigationDrawer.GesturesEnabled.get -> bool?
+Microsoft.AndroidX.Compose.ModalNavigationDrawer.GesturesEnabled.set -> void
 Microsoft.AndroidX.Compose.ModalNavigationDrawer.InitialValue.get -> AndroidX.Compose.Material3.DrawerValue?
 Microsoft.AndroidX.Compose.ModalNavigationDrawer.InitialValue.init -> void
 Microsoft.AndroidX.Compose.ModalNavigationDrawer.ModalNavigationDrawer(Microsoft.AndroidX.Compose.DrawerStateHolder? drawerState = null) -> void
