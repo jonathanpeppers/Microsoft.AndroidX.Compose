@@ -48,7 +48,7 @@ public static class Conversation
                     Content = new Scaffold
                     {
                         TopBar = BuildTopBar(ui, scheme, drawerState, popupOpen),
-                        Body   = BuildBody(ui, input, scheme, selectedSelector, messagesScroll),
+                        Body   = BuildBody(ui, input, scheme, selectedSelector, messagesScroll, popupOpen),
                     },
                 },
             };
@@ -119,11 +119,12 @@ public static class Conversation
         MutableState<string> input,
         ColorScheme          scheme,
         MutableState<int>    selectedSelector,
-        LazyListState        messagesScroll) =>
+        LazyListState        messagesScroll,
+        MutableState<bool>   popupOpen) =>
         new()
         {
             Modifier.Companion.FillMaxSize(),
-            BuildMessages(ui, scheme, messagesScroll),
+            BuildMessages(ui, scheme, messagesScroll, popupOpen),
             BuildInputArea(ui, input, scheme, selectedSelector, messagesScroll),
         };
 
@@ -134,7 +135,7 @@ public static class Conversation
     sealed record MessageRow(Message Msg, bool IsFirstByAuthor, bool IsLastByAuthor) : ChatRow;
     sealed record HeaderRow(string Label) : ChatRow;
 
-    static ComposableNode BuildMessages(ConversationUiState ui, ColorScheme scheme, LazyListState messagesScroll)
+    static ComposableNode BuildMessages(ConversationUiState ui, ColorScheme scheme, LazyListState messagesScroll, MutableState<bool> popupOpen)
     {
         var msgs = ui.Messages;
         var rows = new List<ChatRow>(msgs.Count + 2);
@@ -162,7 +163,7 @@ public static class Conversation
                 items:       rows,
                 itemContent: row => row switch
                 {
-                    MessageRow mr => BuildMessageRow(mr.Msg, mr.IsFirstByAuthor, mr.IsLastByAuthor, scheme),
+                    MessageRow mr => BuildMessageRow(mr.Msg, mr.IsFirstByAuthor, mr.IsLastByAuthor, scheme, popupOpen),
                     HeaderRow  hr => BuildDayHeader(hr.Label, scheme),
                     _             => new Spacer(Modifier.Companion.Width(0)),
                 })
@@ -218,7 +219,7 @@ public static class Conversation
             },
         };
 
-    static Row BuildMessageRow(Message m, bool isFirstByAuthor, bool isLastByAuthor, ColorScheme scheme)
+    static Row BuildMessageRow(Message m, bool isFirstByAuthor, bool isLastByAuthor, ColorScheme scheme, MutableState<bool> popupOpen)
     {
         var row = new Row
         {
@@ -230,7 +231,7 @@ public static class Conversation
         else
             row.Add(new Spacer(Modifier.Companion.Width(74)));
 
-        row.Add(BuildAuthorAndTextMessage(m, isFirstByAuthor, isLastByAuthor, scheme));
+        row.Add(BuildAuthorAndTextMessage(m, isFirstByAuthor, isLastByAuthor, scheme, popupOpen));
         return row;
     }
 
@@ -249,7 +250,7 @@ public static class Conversation
         };
     }
 
-    static Column BuildAuthorAndTextMessage(Message m, bool isFirstByAuthor, bool isLastByAuthor, ColorScheme scheme)
+    static Column BuildAuthorAndTextMessage(Message m, bool isFirstByAuthor, bool isLastByAuthor, ColorScheme scheme, MutableState<bool> popupOpen)
     {
         var col = new Column
         {
@@ -257,7 +258,7 @@ public static class Conversation
         };
         if (isLastByAuthor)
             col.Add(BuildAuthorNameTimestamp(m, scheme));
-        col.Add(BuildChatItemBubble(m, scheme));
+        col.Add(BuildChatItemBubble(m, scheme, popupOpen));
         col.Add(new Spacer(Modifier.Companion.Height(isFirstByAuthor ? 8 : 4)));
         return col;
     }
@@ -281,12 +282,13 @@ public static class Conversation
             },
         };
 
-    static ComposableNode BuildChatItemBubble(Message m, ColorScheme scheme)
+    static ComposableNode BuildChatItemBubble(Message m, ColorScheme scheme, MutableState<bool> popupOpen)
     {
         bool isMe = m.Author == MyName;
         long bg   = isMe ? scheme.Primary : scheme.SurfaceVariant;
         long fg   = isMe ? scheme.OnPrimary : scheme.OnSurface;
-        return new Text(m.Content)
+        var formatted = MessageFormatter.Format(m.Content, isMe, scheme, _ => popupOpen.Value = true);
+        return new AnnotatedText(formatted)
         {
             Color    = new Color(fg),
             Modifier = Modifier.Companion

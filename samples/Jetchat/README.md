@@ -131,7 +131,6 @@ feature, a new package reference, or simply more sample plumbing:
 |-------------------------------------------|--------------------|
 | `JumpToBottom` FAB (slides in when scrolled away from bottom) | needs a `LazyListState` facade wrapper plus a suspend bridge over `animateScrollToItem`. `LazyListStateKt.RememberLazyListState` is bindable — confirmed during this port; the wrapper just hasn't been built yet. |
 | `BackHandler` to dismiss the expanded input panel via system back | `androidx.activity.compose.BackHandlerKt` lives in `Xamarin.AndroidX.Activity.Compose` which isn't currently referenced. Adding the NuGet + a `[ComposeBridge]` would unblock it. |
-| `ClickableText` URL / `@mention` link parsing inside message bodies | needs `AnnotatedString` + `ClickableText` bindings (multi-span text styling). |
 | Image / sticker / file message attachments inside bubbles | requires a composable image-loader pipeline (e.g. Coil). |
 | User profile screen (`ProfileScreen` reached via `NavHost`) | `NavController` / `NavHost` bindings landed in #60 but the screen + nav graph aren't wired up here. Explicitly out of scope for this port. |
 | App-widget discoverability (`@JetchatAppWidget`) | the **drawer entry point** exists on API 26+ (see *What's faithful*) but the actual `androidx.glance.appwidget`-backed widget + `AppWidgetManager.requestPinAppWidget(...)` flow is still out of scope — needs the `Xamarin.AndroidX.Glance.AppWidget` package and a `GlanceAppWidget` subclass. |
@@ -167,6 +166,14 @@ this completion round added:
   `RoundedCornerShapeKt.RoundedCornerShape(float, float, float, float)`
   directly. (The 4-arg `(Dp, Dp, Dp, Dp)` overload is bindable;
   only the single-radius `(Dp)` overload is mangled.)
+- **`AnnotatedString` / `AnnotatedStringBuilder` / `SpanStyle` /
+  `LinkAnnotation` / `AnnotatedText`** — facade primitives for
+  Compose's rich-text type. `AnnotatedText` is a sibling of the
+  source-generated `Text` facade rather than an extra ctor — the
+  `AnnotatedString` overload's mangled JVM name (`Text-IbK3jfQ`)
+  carries an extra `Map` slot for inline content, and the source-
+  generator path emits one `Render` per facade. Same precedent as
+  `Icon` exposing both vector-asset and resource-id paths.
 
 ## Implementation notes
 
@@ -218,6 +225,29 @@ The sample mirrors disabled-state visuals by flipping the label
 color from `Primary` to `OnSurfaceVariant` when the input is
 whitespace, and the `Send` handler early-returns on
 `IsNullOrWhiteSpace`.
+
+### `MessageFormatter` regex behaviour
+
+`MessageFormatter.Format` runs the same alternation regex as
+upstream — `(https?://[^\s\t\n]+)|(`[^`]+`)|(@\w+)|(\*[\w]+\*)|(_[\w]+_)|(~[\w]+~)`
+— so a URL containing an `@` is consumed greedily as a single URL
+match (the `[^\s\t\n]+` URL run reaches the next whitespace), and
+the `@mention` branch only fires for bare tokens. This matches
+upstream's behaviour even though regex alternation itself isn't
+"longest-first" — the URL pattern simply wins because it's listed
+first and its character class is greedy.
+
+### `@mention` taps fall back to the popup dialog
+
+Upstream wires `authorClicked(...)` to navigate to a profile
+screen. The port doesn't have a profile screen
+(`NavController` / `NavHost` exist in the facade layer but the nav
+graph isn't wired up), so `BuildChatItemBubble` threads the same
+`popupOpen` `MutableState<bool>` already used by the search / info
+top-bar icons down through `BuildBody` → `BuildMessages` →
+`BuildMessageRow` → `BuildAuthorAndTextMessage` → `BuildChatItemBubble`,
+and tapping a mention flips it to `true` to surface the existing
+"Functionality not available" dialog.
 
 ### Drawer "Settings" section is gated on API 26
 
