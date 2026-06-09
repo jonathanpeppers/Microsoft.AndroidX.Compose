@@ -214,7 +214,10 @@ fit any `[ComposeBridge]` shape.
 Source of truth: `src/ComposeNet.SourceGenerators/Diagnostics.cs`.**
 
 **Don't add `[ComposeBridge]` if the binding already exposes the method** —
-call the generated C# entry point instead.
+call the generated C# entry point instead. **Probe the runtime companion
+DLL** (`Xamarin.AndroidX.Compose.<Module>.Android.dll`, not the small
+façade `…<Module>.dll`) before concluding a symbol isn't bound. See
+**Bindings policy** below.
 
 ### Compose value types — `@JvmInline value class` lowering
 
@@ -441,6 +444,16 @@ so `[CallerFilePath]` + `[CallerLineNumber]` slot keys inside
   segmented scrollable tab rows).
 - `Icon` exposes two distinct ctors (`ImageVector` vs. resource-id `Painter`)
   routing to two bridges. Generator emits one ctor + one `Render` per facade.
+- `TextField`, `OutlinedTextField` expose three ctors that route between two
+  physical bridges — the `string` overload and the `TextFieldValue` overload
+  (the latter carries `selection`/`composition` so callers can programmatically
+  move the cursor, e.g. Jetchat's emoji-tap). Ctor-driven bridge selection
+  doesn't fit `BranchOn` (slot-presence based) or `StateHolder` shapes. Same
+  precedent as `Icon`. The `TextFieldValue` overload uses the **bound**
+  `AndroidX.Compose.UI.Text.Input.TextFieldValue` type directly — only the
+  Kotlin ctor needs JNI (mangled because `selection: TextRange` is a
+  `@JvmInline value class`); everything else (`Text`/`Selection`/`Copy(…)`)
+  is exposed by the runtime binding. See issue #204.
 
 Applying `[ComposeFacade]` to an unsupported bridge emits CN3002 (unsupported
 param), CN3003 (scope misuse), CN3005 (invalid callback type), CN3006 (slot
@@ -637,15 +650,57 @@ can't host a per-node mutable delegate without becoming shared state.
 
 Reference official NuGets only: `Xamarin.AndroidX.Compose.*` and
 `Xamarin.AndroidX.Compose.Material3`. **Don't bring back custom `*.Compose.*`
-binding projects.** If a needed Compose API isn't bound:
+binding projects.**
 
-1. File/link a tracking issue against `dotnet/android-libraries` (see #1415–
-   #1418 in `README.md`).
-2. Add a `[ComposeBridge]` partial method.
-3. Add matching `[ComposeDefaults]` **only if** the `@Composable` has a
-   `$default` slot.
-4. When upstream fix ships, delete the bridge and switch the facade to call
-   the generated binding directly.
+### Always check the binding first — in the `.Android` DLL
+
+Before writing a `[ComposeBridge]`, hand-rolling a wrapper, or adding
+a JNI helper: **verify the symbol isn't already bound**. The actual
+binding lives in the runtime companion package
+(`Xamarin.AndroidX.Compose.<Module>.Android.dll`, ~500 KB), not the
+small multi-targeting façade DLL (`Xamarin.AndroidX.Compose.<Module>.dll`,
+~15 KB, 1 type). Issue #204 initially shipped hand-rolled
+`TextFieldValue` + `TextRange` wrappers because only the façade was
+inspected — both types are fully bound in the `.Android` companion.
+
+Use `ilspycmd` (already installed; run `ilspycmd --help`) against the
+`.Android.dll` to check what's exposed. Useful flags: `-t <FQN>` to
+decompile one type, `-l c` to list classes.
+
+### Inline-class lowering — partial bindings
+
+Even when the type is bound, `@JvmInline value class` params produce
+mangled JVM names (`Foo-d9O1mEE`) that strip the corresponding
+overloads. Typical pattern:
+
+- **Bound**: the class itself, static factories on the `*Kt` companion
+  (e.g. `TextRangeKt.TextRange(int, int)`), methods/properties whose
+  signatures don't touch value classes.
+- **Stripped**: constructors taking a value-class param, getters
+  returning a value class, methods whose params include them.
+
+So check both — type AND specific members. If the ctor is stripped
+but everything else is bound, only bridge the ctor; **don't wrap the
+whole type just because one method is missing**.
+
+### When a needed Compose API isn't bound
+
+1. File/link a tracking issue against `dotnet/android-libraries`
+   (see #1415–#1418 in `README.md`).
+2. Add a `[ComposeBridge]` partial (or a hand-written JNI helper in
+   `ComposeBridges` if not a `@Composable`).
+3. Add matching `[ComposeDefaults]` **only if** the `@Composable` has
+   a `$default` slot.
+4. **Pass bound types directly** as `[ComposeBridge]` params — the
+   generator emits `((Java.Lang.Object)param).Handle` for any
+   non-primitive reference type, so
+   `AndroidX.Compose.UI.Text.Input.TextFieldValue value` works the
+   same as a hand-rolled wrapper would.
+5. When upstream fix ships, delete the bridge and switch the facade
+   to call the generated binding directly.
+
+**Don't add `[ComposeBridge]` if the binding already exposes the method** —
+call the generated C# entry point instead.
 
 ## Suspend / async bridges
 

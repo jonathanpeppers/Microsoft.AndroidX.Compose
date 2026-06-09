@@ -685,7 +685,6 @@ internal static partial class ComposeBridges
         JvmName   = "TextField",
         Signature = TextFieldStringSig,
         Defaults  = typeof(TextFieldDefault))]
-    [ComposeFacade]
     public static partial void TextField(
         string value,
         [Callback(typeof(string))] IFunction1 onValueChange,
@@ -710,10 +709,79 @@ internal static partial class ComposeBridges
         JvmName   = "OutlinedTextField",
         Signature = TextFieldStringSig,
         Defaults  = typeof(TextFieldDefault))]
-    [ComposeFacade]
     public static partial void OutlinedTextField(
         string value,
         [Callback(typeof(string))] IFunction1 onValueChange,
+        IModifier? modifier,
+        bool? enabled,
+        bool? readOnly,
+        IFunction2? label,
+        IFunction2? placeholder,
+        IFunction2? leadingIcon,
+        IFunction2? trailingIcon,
+        IFunction2? prefix,
+        IFunction2? suffix,
+        IFunction2? supportingText,
+        bool? isError,
+        bool? singleLine,
+        int? maxLines,
+        int? minLines,
+        IComposer composer);
+
+    // androidx.compose.material3.TextFieldKt.TextField (TextFieldValue
+    // overload) and OutlinedTextFieldKt.OutlinedTextField (TextFieldValue
+    // overload). Same 23 user-param shape as the String overload — bit
+    // layout in TextFieldDefault matches one-for-one — except slot 0 is
+    // androidx/compose/ui/text/input/TextFieldValue instead of java/lang/String.
+    // Used by the TextField(MutableState<TextFieldValue>) ctor to drive
+    // caret placement after programmatic edits (see issue #204).
+    const string TextFieldValueSig =
+        "(Landroidx/compose/ui/text/input/TextFieldValue;Lkotlin/jvm/functions/Function1;Landroidx/compose/ui/Modifier;ZZ" +
+        "Landroidx/compose/ui/text/TextStyle;" +
+        "Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;" +
+        "Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;" +
+        "Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;" +
+        "Lkotlin/jvm/functions/Function2;Z" +
+        "Landroidx/compose/ui/text/input/VisualTransformation;" +
+        "Landroidx/compose/foundation/text/KeyboardOptions;" +
+        "Landroidx/compose/foundation/text/KeyboardActions;ZII" +
+        "Landroidx/compose/foundation/interaction/MutableInteractionSource;" +
+        "Landroidx/compose/ui/graphics/Shape;" +
+        "Landroidx/compose/material3/TextFieldColors;" +
+        "Landroidx/compose/runtime/Composer;IIII)V";
+
+    [ComposeBridge(
+        Class     = "androidx/compose/material3/TextFieldKt",
+        JvmName   = "TextField",
+        Signature = TextFieldValueSig,
+        Defaults  = typeof(TextFieldDefault))]
+    public static partial void TextFieldWithValue(
+        AndroidX.Compose.UI.Text.Input.TextFieldValue value,
+        IFunction1 onValueChange,
+        IModifier? modifier,
+        bool? enabled,
+        bool? readOnly,
+        IFunction2? label,
+        IFunction2? placeholder,
+        IFunction2? leadingIcon,
+        IFunction2? trailingIcon,
+        IFunction2? prefix,
+        IFunction2? suffix,
+        IFunction2? supportingText,
+        bool? isError,
+        bool? singleLine,
+        int? maxLines,
+        int? minLines,
+        IComposer composer);
+
+    [ComposeBridge(
+        Class     = "androidx/compose/material3/OutlinedTextFieldKt",
+        JvmName   = "OutlinedTextField",
+        Signature = TextFieldValueSig,
+        Defaults  = typeof(TextFieldDefault))]
+    public static partial void OutlinedTextFieldWithValue(
+        AndroidX.Compose.UI.Text.Input.TextFieldValue value,
+        IFunction1 onValueChange,
         IModifier? modifier,
         bool? enabled,
         bool? readOnly,

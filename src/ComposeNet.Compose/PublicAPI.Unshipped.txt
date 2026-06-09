@@ -851,6 +851,7 @@ ComposeNet.OutlinedTextField.MaxLines.get -> int?
 ComposeNet.OutlinedTextField.MaxLines.set -> void
 ComposeNet.OutlinedTextField.MinLines.get -> int?
 ComposeNet.OutlinedTextField.MinLines.set -> void
+ComposeNet.OutlinedTextField.OutlinedTextField(ComposeNet.MutableState<AndroidX.Compose.UI.Text.Input.TextFieldValue!>! state) -> void
 ComposeNet.OutlinedTextField.OutlinedTextField(ComposeNet.MutableState<string!>! state) -> void
 ComposeNet.OutlinedTextField.OutlinedTextField(string! value, System.Action<string!>! onValueChange) -> void
 ComposeNet.OutlinedTextField.Placeholder.get -> ComposeNet.ComposableNode?
@@ -1122,6 +1123,7 @@ ComposeNet.TextField.Suffix.get -> ComposeNet.ComposableNode?
 ComposeNet.TextField.Suffix.set -> void
 ComposeNet.TextField.SupportingText.get -> ComposeNet.ComposableNode?
 ComposeNet.TextField.SupportingText.set -> void
+ComposeNet.TextField.TextField(ComposeNet.MutableState<AndroidX.Compose.UI.Text.Input.TextFieldValue!>! state) -> void
 ComposeNet.TextField.TextField(ComposeNet.MutableState<string!>! state) -> void
 ComposeNet.TextField.TextField(string! value, System.Action<string!>! onValueChange) -> void
 ComposeNet.TextField.TrailingIcon.get -> ComposeNet.ComposableNode?
@@ -1388,6 +1390,7 @@ override ComposeNet.VerticalDivider.Render(AndroidX.Compose.Runtime.IComposer! c
 override ComposeNet.VerticalPager<T>.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
 override ComposeNet.WideNavigationRail.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
 override ComposeNet.WideNavigationRailItem.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override sealed ComposeNet.ViewModel.OnCleared() -> void
 static ComposeNet.Alignment.BottomCenter.get -> ComposeNet.Alignment!
 static ComposeNet.Alignment.BottomEnd.get -> ComposeNet.Alignment!
 static ComposeNet.Alignment.BottomStart.get -> ComposeNet.Alignment!
@@ -1447,6 +1450,7 @@ static ComposeNet.Compose.MutableStateFlowOf<T>(T initialValue, int line = 0, st
 static ComposeNet.Compose.MutableStateListOf<T>(params T[]! elements) -> ComposeNet.MutableStateList<T>!
 static ComposeNet.Compose.MutableStateMapOf<TKey, TValue>() -> ComposeNet.MutableStateMap<TKey, TValue>!
 static ComposeNet.Compose.MutableStateOf<T>(T value) -> ComposeNet.MutableState<T>!
+static ComposeNet.Compose.NewTextFieldValue(string! text = "", long selection = 0, AndroidX.Compose.UI.Text.TextRange? composition = null) -> AndroidX.Compose.UI.Text.Input.TextFieldValue!
 static ComposeNet.Compose.ProduceState<T>(T initialValue, object? key1, object? key2, object? key3, System.Func<ComposeNet.MutableState<T>!, System.Threading.CancellationToken, System.Threading.Tasks.Task!>! producer, int line = 0, string! file = "") -> ComposeNet.MutableState<T>!
 static ComposeNet.Compose.ProduceState<T>(T initialValue, object? key1, object? key2, System.Func<ComposeNet.MutableState<T>!, System.Threading.CancellationToken, System.Threading.Tasks.Task!>! producer, int line = 0, string! file = "") -> ComposeNet.MutableState<T>!
 static ComposeNet.Compose.ProduceState<T>(T initialValue, object? key1, System.Func<ComposeNet.MutableState<T>!, System.Threading.CancellationToken, System.Threading.Tasks.Task!>! producer, int line = 0, string! file = "") -> ComposeNet.MutableState<T>!
@@ -1889,4 +1893,3 @@ static readonly ComposeNet.Locals.LocalView -> ComposeNet.CompositionLocal<Andro
 virtual ComposeNet.MutableState<T>.Value.get -> T
 virtual ComposeNet.MutableState<T>.Value.set -> void
 virtual ComposeNet.ViewModel.OnClearedCore() -> void
-override sealed ComposeNet.ViewModel.OnCleared() -> void

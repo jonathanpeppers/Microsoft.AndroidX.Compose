@@ -1,6 +1,7 @@
 using Android.OS;
 using Android.Views;
 using AndroidX.Compose.Material3;
+using AndroidX.Compose.UI.Text.Input;
 using ComposeNet;
 
 namespace ComposeNet.Samples.Jetchat;
@@ -18,7 +19,7 @@ public class MainActivity : ComposeActivity
         SetContent(() =>
         {
             var ui               = Remember(() => new ConversationUiState("#composers", channelMembers: 42, FakeData.InitialMessages()));
-            var input            = Remember(() => new MutableState<string>(""));
+            var input            = Remember(() => new MutableState<TextFieldValue>(Compose.NewTextFieldValue()));
             var selectedMenu     = Remember(() => new MutableState<string>("composers"));
             var drawerScroll     = Remember(() => new ScrollState());
             var drawerState      = Remember(() => new DrawerStateHolder(DrawerValue.Closed));
