@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using AndroidX.Compose.Runtime;
 using ComposeNet;
 
 namespace ComposeNet.Samples.JetNews;
@@ -12,30 +13,99 @@ namespace ComposeNet.Samples.JetNews;
 public static class PostScreen
 {
     /// <summary>Materialize the article screen for a single post.</summary>
-    public static Scaffold Build(Post post, BookmarksViewModel bookmarks, Action onBack) =>
-        new()
+    /// <param name="post">The post being rendered.</param>
+    /// <param name="bookmarks">Shared bookmark set; toggling fires <paramref name="snackbars"/>.</param>
+    /// <param name="onBack">Up-navigation callback, fired by the back arrow.</param>
+    /// <param name="snackbars">Sample-side snackbar controller for transient feedback.</param>
+    /// <param name="onShare">
+    /// Optional callback fired when the user picks "Share" in the
+    /// <see cref="AlertDialog"/> the share button now opens — typically
+    /// fires <see cref="Android.Content.Intent.ActionSend"/>. When
+    /// <c>null</c>, the dialog only shows the "not available" message.
+    /// </param>
+    public static ComposableNode Build(
+        Post post,
+        BookmarksViewModel bookmarks,
+        Action onBack,
+        SnackbarController snackbars,
+        Action<Post>? onShare = null)
+    {
+        var showShareDialog = Compose.Remember(() => new MutableState<bool>(false));
+        var snackbarMessage = snackbars.Message.Value;
+
+        // Wrap the Scaffold + the conditional dialog in a Box so the
+        // dialog renders as an overlay above the chrome regardless of
+        // where it sits in the tree (mirrors AlertDialogDemo's shape).
+        return new Box
         {
-            TopBar = new TopAppBar
+            Modifier.Companion.FillMaxSize(),
+
+            new Scaffold
             {
-                Title = new Text(post.Metadata.Author)
+                TopBar = new TopAppBar
                 {
-                    FontSize   = 16,
-                    FontWeight = FontWeight.Medium,
+                    Title = new Text(post.Metadata.Author)
+                    {
+                        FontSize   = 16,
+                        FontWeight = FontWeight.Medium,
+                    },
+                    NavigationIcon = new IconButton(onClick: onBack)
+                    {
+                        new Icon(Resource.Drawable.ic_arrow_back, "Back"),
+                    },
                 },
-                NavigationIcon = new IconButton(onClick: onBack)
+                BottomBar = new BottomAppBar
                 {
-                    new Icon(Resource.Drawable.ic_arrow_back, "Back"),
+                    BookmarkButton.Build(
+                        post.Id,
+                        bookmarks,
+                        onToggled: isChecked => snackbars.Show(isChecked
+                            ? "Added to bookmarks"
+                            : "Removed from bookmarks")),
+                    new IconButton(onClick: () => showShareDialog.Value = true)
+                    {
+                        new Icon(Resource.Drawable.ic_share, "Share"),
+                    },
                 },
+                SnackbarHost = snackbarMessage is null
+                    ? null
+                    : new Snackbar { Body = new Text(snackbarMessage) },
+                Body = BuildBody(post),
             },
-            BottomBar = new BottomAppBar
+
+            showShareDialog.Value
+                ? BuildShareDialog(post, showShareDialog, snackbars, onShare)
+                : (ComposableNode?)null,
+        };
+    }
+
+    static AlertDialog BuildShareDialog(Post post,
+                                        MutableState<bool> showShareDialog,
+                                        SnackbarController snackbars,
+                                        Action<Post>? onShare) =>
+        new(onDismissRequest: () => showShareDialog.Value = false)
+        {
+            Title = new Text("Share article"),
+            Text  = new Text("Functionality not available 😞"),
+            ConfirmButton = new Button(onClick: () =>
             {
-                BookmarkButton.Build(post.Id, bookmarks),
-                new IconButton(onClick: NoOp)
+                showShareDialog.Value = false;
+                if (onShare is not null)
                 {
-                    new Icon(Resource.Drawable.ic_share, "Share"),
-                },
+                    onShare(post);
+                }
+                else
+                {
+                    snackbars.Show("Sharing isn't wired up in this build");
+                }
+            })
+            {
+                new Text(onShare is null ? "OK" : "Share anyway"),
             },
-            Body = BuildBody(post),
+            DismissButton = new Button(onClick: () => showShareDialog.Value = false)
+            {
+                new Text("Cancel"),
+            },
         };
 
     static LazyColumn<PostRow> BuildBody(Post post)
@@ -93,6 +163,4 @@ public static class PostScreen
                 Modifier = Modifier.Companion.Padding(horizontal: 16, vertical: 8),
             },
         };
-
-    static void NoOp() { }
 }

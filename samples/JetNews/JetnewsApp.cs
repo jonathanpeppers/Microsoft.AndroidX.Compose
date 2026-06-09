@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using AndroidX.Compose.Runtime;
 using ComposeNet;
@@ -38,6 +39,18 @@ public static class JetnewsApp
     /// Currently selected tab index on the Interests screen (0 = Topics,
     /// 1 = People, 2 = Publications).
     /// </param>
+    /// <param name="snackbars">
+    /// App-wide snackbar controller — bookmark toggles and the share
+    /// dialog all route their transient feedback through this single
+    /// instance so navigating between Home and Post doesn't lose a
+    /// queued message mid-fade.
+    /// </param>
+    /// <param name="onShare">
+    /// Invoked when the user picks "Share anyway" in the article share
+    /// dialog. Typically wired to <see cref="Android.Content.Intent.ActionSend"/>
+    /// from <see cref="MainActivity"/> so the chooser launches with the
+    /// activity as its <see cref="Android.Content.Context"/>.
+    /// </param>
     public static ComposableNode Build(
         NavController nav,
         MutableState<string> currentRoute,
@@ -46,13 +59,15 @@ public static class JetnewsApp
         MutableStateList<string> selectedTopics,
         MutableStateList<string> selectedPeople,
         MutableStateList<string> selectedPublications,
-        MutableState<int> interestsTab) =>
+        MutableState<int> interestsTab,
+        SnackbarController snackbars,
+        Action<Post>? onShare = null) =>
         new MaterialTheme
         {
             new ModalNavigationDrawer(drawerState)
             {
                 Drawer  = JetnewsDrawer.Build(nav, currentRoute, drawerState),
-                Content = BuildNavHost(nav, currentRoute, drawerState, bookmarks, selectedTopics, selectedPeople, selectedPublications, interestsTab),
+                Content = BuildNavHost(nav, currentRoute, drawerState, bookmarks, selectedTopics, selectedPeople, selectedPublications, interestsTab, snackbars, onShare),
             },
         };
 
@@ -64,7 +79,9 @@ public static class JetnewsApp
         MutableStateList<string> selectedTopics,
         MutableStateList<string> selectedPeople,
         MutableStateList<string> selectedPublications,
-        MutableState<int> interestsTab)
+        MutableState<int> interestsTab,
+        SnackbarController snackbars,
+        Action<Post>? onShare)
     {
         return new NavHost(startDestination: Routes.Home, navController: nav)
         {
@@ -72,7 +89,7 @@ public static class JetnewsApp
                 HomeScreen.Build(bookmarks, drawerState, postId =>
                 {
                     nav.Navigate(Routes.Post(postId));
-                })),
+                }, snackbars)),
             new Composable(Routes.Interests)
             {
                 InterestsScreen.Build(selectedTopics, selectedPeople, selectedPublications, interestsTab, drawerState),
@@ -83,7 +100,9 @@ public static class JetnewsApp
                 return PostScreen.Build(
                     post:      PostsRepo.Find(id),
                     bookmarks: bookmarks,
-                    onBack:    () => nav.NavigateUp());
+                    onBack:    () => nav.NavigateUp(),
+                    snackbars: snackbars,
+                    onShare:   onShare);
             }),
         };
     }
