@@ -46,25 +46,6 @@ public sealed class SpanStyle
     /// <summary>Text decoration (Underline, LineThrough, etc.). Leave <see langword="null"/> to inherit.</summary>
     public TextDecoration? Decoration { get; set; }
 
-    static IntPtr s_companion_ref;
-    static AndroidX.Compose.UI.Text.SpanStyle? s_default;
-
-    static AndroidX.Compose.UI.Text.SpanStyle GetDefault()
-    {
-        if (s_default is not null) return s_default;
-        if (s_companion_ref == IntPtr.Zero)
-        {
-            IntPtr cls = JNIEnv.FindClass("androidx/compose/ui/text/TextStyle");
-            IntPtr fid = JNIEnv.GetStaticFieldID(cls, "Companion", "Landroidx/compose/ui/text/TextStyle$Companion;");
-            IntPtr local = JNIEnv.GetStaticObjectField(cls, fid);
-            s_companion_ref = JNIEnv.NewGlobalRef(local);
-            JNIEnv.DeleteLocalRef(local);
-        }
-        var companion = Java.Lang.Object.GetObject<AndroidX.Compose.UI.Text.TextStyle.Companion>(s_companion_ref, JniHandleOwnership.DoNotTransfer)!;
-        s_default = companion.Default.ToSpanStyle();
-        return s_default!;
-    }
-
     static T? Cast<T>(Java.Lang.Object? wrapper) where T : Java.Lang.Object =>
         wrapper is null ? null : Java.Lang.Object.GetObject<T>(wrapper.Handle, JniHandleOwnership.DoNotTransfer);
 
@@ -76,7 +57,7 @@ public sealed class SpanStyle
     /// </summary>
     internal AndroidX.Compose.UI.Text.SpanStyle Build()
     {
-        var d = GetDefault();
+        var d = TextStyleCompanion.DefaultSpan;
         return d.Copy(
             color:                  Color is { } c ? (long)c : d.Color,
             fontSize:               FontSize is { } fs ? Sp.Pack(fs) : d.FontSize,
