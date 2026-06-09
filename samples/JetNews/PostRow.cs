@@ -1,4 +1,4 @@
-namespace ComposeNet.Samples.JetNews;
+namespace Microsoft.AndroidX.Compose.Samples.JetNews;
 
 /// <summary>
 /// Discriminator for rows on the article screen — the hero card plus

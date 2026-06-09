@@ -1,4 +1,4 @@
-namespace ComposeNet.Samples.JetNews;
+namespace Microsoft.AndroidX.Compose.Samples.JetNews;
 
 /// <summary>
 /// Inline run style applied to a sub-range of a <see cref="Paragraph"/>.

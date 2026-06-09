@@ -1,4 +1,4 @@
-# compose-net
+# Microsoft.AndroidX.Compose
 
 Build Android UI with **Jetpack Compose** from a .NET for Android app — pure C#, no Kotlin in the project, on top of the existing `Xamarin.AndroidX.Compose.*` bindings.
 
@@ -20,13 +20,13 @@ Requires the .NET 10 SDK with the `android` workload and an Android API 34+ emul
 
 ```pwsh
 dotnet workload restore
-dotnet build src/ComposeNet.Gallery -t:Run    # deploys to the connected device/emulator
+dotnet build src/Microsoft.AndroidX.Compose.Gallery -t:Run    # deploys to the connected device/emulator
 ```
 
 Generator unit tests run without an Android SDK:
 
 ```pwsh
-dotnet test src/ComposeNet.SourceGenerators.Tests
+dotnet test src/Microsoft.AndroidX.Compose.SourceGenerators.Tests
 ```
 
 ## What it looks like
@@ -99,11 +99,11 @@ The translation is mechanical — `new` instead of bare calls, commas instead of
 | `count++`                                     | `count++` (operator on `MutableNumberState<T>`)               |
 | `"Count: $count"`                             | `$"Count: {count}"` (via `MutableState<T>.ToString`)          |
 
-That's an end-to-end Material 3 counter app in ~13 lines of composition — start from this shape when adding a new screen. The actual [`src/ComposeNet.Gallery/MainActivity.cs`](src/ComposeNet.Gallery/MainActivity.cs) in the repo is a much larger **gallery app** that exercises every facade across a navigable catalog with search; for a single-screen real-app example see [`samples/Jetchat`](samples/Jetchat).
+That's an end-to-end Material 3 counter app in ~13 lines of composition — start from this shape when adding a new screen. The actual [`src/Microsoft.AndroidX.Compose.Gallery/MainActivity.cs`](src/Microsoft.AndroidX.Compose.Gallery/MainActivity.cs) in the repo is a much larger **gallery app** that exercises every facade across a navigable catalog with search; for a single-screen real-app example see [`samples/Jetchat`](samples/Jetchat).
 
 ## What's wrapped today
 
-The facade [`ComposeNet.Compose`](src/ComposeNet.Compose) covers the common Material 3 + Foundation surface:
+The facade [`Microsoft.AndroidX.Compose`](src/Microsoft.AndroidX.Compose) covers the common Material 3 + Foundation surface:
 
 | Category                | Composables |
 | ----------------------- | ----------- |
@@ -125,7 +125,7 @@ The facade [`ComposeNet.Compose`](src/ComposeNet.Compose) covers the common Mate
 | Sheets & pickers        | `ModalBottomSheet`, `BottomSheetScaffold`, `DatePicker`/`DatePickerDialog`, `DateRangePicker`/`DateRangePickerDialog`, `TimePicker`/`TimeInput`/`TimePickerDialog` |
 | Overlays                | `AlertDialog`, `Snackbar` + `SnackbarHost`, `Tooltip` |
 | Animation               | `AnimatedVisibility`, `AnimatedContent`, `Crossfade` |
-| Effects                 | `Compose.LaunchedEffect`, `Compose.DisposableEffect`, `Compose.SideEffect` |
+| Effects                 | `ComposeRuntime.LaunchedEffect`, `ComposeRuntime.DisposableEffect`, `ComposeRuntime.SideEffect` |
 | Modifier chains         | `Padding`, `FillMaxWidth/Height/Size`, `Width`, `Height`, `Size`, `AspectRatio`, `Offset`, `Alpha`, `Background`, `Border`, `Clip`, `Clickable`, `Weight`, `VerticalScroll`/`HorizontalScroll` (+ `ScrollState`), `Draggable` (+ `DraggableState`), focus/semantics/gestures, `SafeDrawingPadding`, `SystemBarsPadding`, plus per-inset `ImePadding`, `NavigationBarsPadding`, `StatusBarsPadding`, `CaptionBarPadding`, `DisplayCutoutPadding`, `WaterfallPadding`, `SystemGesturesPadding`, `MandatorySystemGesturesPadding`, `SafeContentPadding`, `SafeGesturesPadding` |
 | Value types             | `Color` (+ `FromRgb`/`FromArgb`/`FromHex` and theme reads), `Dp`, `Sp`, `FontWeight`, `TextAlign`, `Shape` |
 | State                   | `Remember` (+ keyed `Remember(factory, key1, …)`, `RememberKeyed`), `RememberSaveable` (+ keyed), `MutableState<T>`, `MutableNumberState<T>`, `MutableStateList<T>`, `MutableStateMap<K,V>`, `DerivedStateOf`, `ProduceState`, plus `DatePickerState`, `DateRangePickerState`, `TimePickerState`, `SearchBarState`, `SnackbarHostState`, `ScrollState`, `PagerState`, `PullToRefreshState`, `DraggableState`, `DrawerStateHolder`, `WideNavigationRailState`, `FocusRequester`/`FocusState` |
@@ -137,7 +137,7 @@ The facade [`ComposeNet.Compose`](src/ComposeNet.Compose) covers the common Mate
 
 ## Status
 
-The gallery builds, deploys to an Android 16 (API 36) emulator, and renders a real Material 3 UI end-to-end: dynamic Material You colors via parameterizable `MaterialTheme`, edge-to-edge layout, an interactive `Button` that increments `MutableNumberState<int>` and recomposes the count. The catalog app in [`src/ComposeNet.Gallery`](src/ComposeNet.Gallery) exercises the full facade across a category-organized, navigable, searchable surface (text styling, lists, pickers, dialogs, sheets, navigation, animation, effects, search, dropdowns, draggable modifiers, …).
+The gallery builds, deploys to an Android 16 (API 36) emulator, and renders a real Material 3 UI end-to-end: dynamic Material You colors via parameterizable `MaterialTheme`, edge-to-edge layout, an interactive `Button` that increments `MutableNumberState<int>` and recomposes the count. The catalog app in [`src/Microsoft.AndroidX.Compose.Gallery`](src/Microsoft.AndroidX.Compose.Gallery) exercises the full facade across a category-organized, navigable, searchable surface (text styling, lists, pickers, dialogs, sheets, navigation, animation, effects, search, dropdowns, draggable modifiers, …).
 
 The facade and sample reference the official `Xamarin.AndroidX.Compose.*` 1.11.2.x and `Xamarin.AndroidX.Compose.Material3` 1.4.0.x NuGets directly — the per-binding projects this repo originally needed have been deleted.
 

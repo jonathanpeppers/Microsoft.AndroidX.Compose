@@ -1,4 +1,4 @@
-namespace ComposeNet.Samples.JetNews;
+namespace Microsoft.AndroidX.Compose.Samples.JetNews;
 
 /// <summary>
 /// Builds the JetNews navigation drawer — a logo header plus two

@@ -1,5 +1,5 @@
 
-namespace ComposeNet.Samples.Reply;
+namespace Microsoft.AndroidX.Compose.Samples.Reply;
 
 /// <summary>
 /// A static data store of <see cref="Account"/>s. This includes both

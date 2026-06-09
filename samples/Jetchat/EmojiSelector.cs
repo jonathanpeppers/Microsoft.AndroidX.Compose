@@ -1,8 +1,8 @@
-﻿using AndroidX.Compose.Material3;
-using AndroidX.Compose.UI.Text;
-using AndroidX.Compose.UI.Text.Input;
+using global::AndroidX.Compose.Material3;
+using global::AndroidX.Compose.UI.Text;
+using global::AndroidX.Compose.UI.Text.Input;
 
-namespace ComposeNet.Samples.Jetchat;
+namespace Microsoft.AndroidX.Compose.Samples.Jetchat;
 
 /// <summary>
 /// Two-tab emoji / sticker panel that opens below the input row when
@@ -75,7 +75,7 @@ public static class EmojiSelector
     public static ComposableNode Build(MutableState<TextFieldValue> input, ColorScheme scheme) =>
         new Composed(c =>
         {
-            var selected = Compose.Remember(() => new MutableState<int>(0));
+            var selected = ComposeRuntime.Remember(() => new MutableState<int>(0));
             return new Column
             {
                 Modifier.Companion
@@ -127,7 +127,7 @@ public static class EmojiSelector
                             // TextFieldValue.Copy(string, long, TextRange?)
                             // overload so onValueChange round-trips a real
                             // Compose peer.
-                            var current = input.Value ?? Compose.NewTextFieldValue();
+                            var current = input.Value ?? ComposeRuntime.NewTextFieldValue();
                             var newText = current.Text + emoji;
                             input.Value = current.Copy(newText, TextRangeKt.TextRange(newText.Length), composition: null);
                         })

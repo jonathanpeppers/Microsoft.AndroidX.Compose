@@ -93,9 +93,9 @@ Group related comments and apply edits together. Run whatever the repo's
 build/test commands are after the edits — for this repo specifically:
 
 ```pwsh
-dotnet test  src/ComposeNet.SourceGenerators.Tests
-dotnet build src/ComposeNet.Compose
-dotnet build src/ComposeNet.Gallery
+dotnet test  src/Microsoft.AndroidX.Compose.SourceGenerators.Tests
+dotnet build src/Microsoft.AndroidX.Compose
+dotnet build src/Microsoft.AndroidX.Compose.Gallery
 ```
 
 Only run the suites whose inputs you actually changed. See

@@ -1,8 +1,8 @@
-# compose-net samples
+# Microsoft.AndroidX.Compose samples
 
 C# ports of selected apps from
 [android/compose-samples](https://github.com/android/compose-samples)
-to demonstrate the `ComposeNet.Compose` facade running on
+to demonstrate the `Microsoft.AndroidX.Compose` facade running on
 .NET-for-Android. Each port is **simplified** to fit the current facade
 surface — the per-sample `README.md` lists what was kept, what was cut,
 and which facade features had to land first.
@@ -40,23 +40,23 @@ that needs the same primitive.
 
 | Issue | Area                        | Blocks (in samples) |
 |------:|-----------------------------|--------------------|
-| [#64](https://github.com/jonathanpeppers/compose-net/issues/64)  | Drawing primitives — `Canvas`, `drawBehind`, `Brush`, `Path`, `Shape` factories | Custom visuals in **JetLagged**; asymmetric `RoundedCornerShape(topStart, topEnd, …)` on **Jetchat** bubbles. |
-| [#69](https://github.com/jonathanpeppers/compose-net/issues/69)  | WindowInsets padding modifiers (`imePadding`, `navigationBarsPadding`, `statusBarsPadding`, …) | IME-synced input row in **Jetchat**. |
-| [#59](https://github.com/jonathanpeppers/compose-net/issues/59)  | `CompositionLocal` / `CompositionLocalProvider` (`LocalContext`, `LocalDensity`, `LocalContentColor`, `LocalTextStyle`, …) | Idiomatic theming and density reads across every sample. |
-| [#20](https://github.com/jonathanpeppers/compose-net/issues/20)  | Edge-to-edge bootstrapping | Status/nav-bar overlap on every sample. |
-| [#141](https://github.com/jonathanpeppers/compose-net/issues/141) | `AnnotatedString` + `SpanStyle` for inline-run text styling | Link / Bold / Italic / Code spans inside paragraphs in **JetNews** article reader. |
-| [#142](https://github.com/jonathanpeppers/compose-net/issues/142) | `Modifier.nestedScroll` + `TopAppBarDefaults` scroll behaviors | Top-bar elevation / collapse on scroll in **JetNews**, **Reply**, **Jetcaster**. |
-| [#143](https://github.com/jonathanpeppers/compose-net/issues/143) | WindowSizeClass / `currentWindowAdaptiveInfo` | Adaptive layouts; blocks **Reply** entirely and the **JetNews** list-detail screen. |
-| [#144](https://github.com/jonathanpeppers/compose-net/issues/144) | Custom `Layout {}` primitive — Measurable / Placeable / MeasureScope | `InterestsAdaptiveContentLayout` in **JetNews**, custom carousels in **Jetsnack**, asymmetric chat bubbles in **Jetchat**. |
-| [#145](https://github.com/jonathanpeppers/compose-net/issues/145) | `ContentScale` + `Alignment` slots on the `Image` facade | Hero images on cards in **JetNews** (currently solid-color `Box` placeholders). |
-| [#146](https://github.com/jonathanpeppers/compose-net/issues/146) | `stringResource(id)` lookup | Localizable UI strings in every sample (all currently inline literals). |
-| [#163](https://github.com/jonathanpeppers/compose-net/issues/163) | `NavigationDrawerItem` facade | Drawer rows in **JetNews** (hand-rolled) and **Reply** expanded layout. |
-| [#164](https://github.com/jonathanpeppers/compose-net/issues/164) | `LazyListState` scroll-direction / visible-item properties (`lastScrolledBackward`, `canScrollBackward`, `firstVisibleItemIndex`, …) | Search-bar lift animation in **Reply**, jump-to-bottom FAB in **Jetchat**. |
-| [#165](https://github.com/jonathanpeppers/compose-net/issues/165) | Typed `semantics` properties (`Selected`, `Role`, `OnClick` label, …) | Accessibility on multi-select cards in **Reply**, tab role on bottom-nav items. |
-| [#166](https://github.com/jonathanpeppers/compose-net/issues/166) | `BackHandler {}` from `androidx.activity.compose` | Detail-pane / multi-select collapse on system back in **Reply**. |
-| [#167](https://github.com/jonathanpeppers/compose-net/issues/167) | `DockedSearchBar` facade | Inbox search overlay in **Reply**. |
-| [#168](https://github.com/jonathanpeppers/compose-net/issues/168) | `TwoPane` / `NavigableListDetailPaneScaffold` + Jetpack `WindowManager` (`WindowLayoutInfo`/`FoldingFeature`) | Adaptive list-detail with fold avoidance in **Reply**. |
-| [#169](https://github.com/jonathanpeppers/compose-net/issues/169) | `NavOptions` (`popUpTo` + `launchSingleTop` + `restoreState`) | Bottom-nav tab semantics in **Reply** (per-tab back-stack state). |
+| [#64](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/64)  | Drawing primitives — `Canvas`, `drawBehind`, `Brush`, `Path`, `Shape` factories | Custom visuals in **JetLagged**; asymmetric `RoundedCornerShape(topStart, topEnd, …)` on **Jetchat** bubbles. |
+| [#69](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/69)  | WindowInsets padding modifiers (`imePadding`, `navigationBarsPadding`, `statusBarsPadding`, …) | IME-synced input row in **Jetchat**. |
+| [#59](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/59)  | `CompositionLocal` / `CompositionLocalProvider` (`LocalContext`, `LocalDensity`, `LocalContentColor`, `LocalTextStyle`, …) | Idiomatic theming and density reads across every sample. |
+| [#20](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/20)  | Edge-to-edge bootstrapping | Status/nav-bar overlap on every sample. |
+| [#141](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/141) | `AnnotatedString` + `SpanStyle` for inline-run text styling | Link / Bold / Italic / Code spans inside paragraphs in **JetNews** article reader. |
+| [#142](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/142) | `Modifier.nestedScroll` + `TopAppBarDefaults` scroll behaviors | Top-bar elevation / collapse on scroll in **JetNews**, **Reply**, **Jetcaster**. |
+| [#143](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/143) | WindowSizeClass / `currentWindowAdaptiveInfo` | Adaptive layouts; blocks **Reply** entirely and the **JetNews** list-detail screen. |
+| [#144](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/144) | Custom `Layout {}` primitive — Measurable / Placeable / MeasureScope | `InterestsAdaptiveContentLayout` in **JetNews**, custom carousels in **Jetsnack**, asymmetric chat bubbles in **Jetchat**. |
+| [#145](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/145) | `ContentScale` + `Alignment` slots on the `Image` facade | Hero images on cards in **JetNews** (currently solid-color `Box` placeholders). |
+| [#146](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/146) | `stringResource(id)` lookup | Localizable UI strings in every sample (all currently inline literals). |
+| [#163](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/163) | `NavigationDrawerItem` facade | Drawer rows in **JetNews** (hand-rolled) and **Reply** expanded layout. |
+| [#164](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/164) | `LazyListState` scroll-direction / visible-item properties (`lastScrolledBackward`, `canScrollBackward`, `firstVisibleItemIndex`, …) | Search-bar lift animation in **Reply**, jump-to-bottom FAB in **Jetchat**. |
+| [#165](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/165) | Typed `semantics` properties (`Selected`, `Role`, `OnClick` label, …) | Accessibility on multi-select cards in **Reply**, tab role on bottom-nav items. |
+| [#166](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/166) | `BackHandler {}` from `androidx.activity.compose` | Detail-pane / multi-select collapse on system back in **Reply**. |
+| [#167](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/167) | `DockedSearchBar` facade | Inbox search overlay in **Reply**. |
+| [#168](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/168) | `TwoPane` / `NavigableListDetailPaneScaffold` + Jetpack `WindowManager` (`WindowLayoutInfo`/`FoldingFeature`) | Adaptive list-detail with fold avoidance in **Reply**. |
+| [#169](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/169) | `NavOptions` (`popUpTo` + `launchSingleTop` + `restoreState`) | Bottom-nav tab semantics in **Reply** (per-tab back-stack state). |
 
 Closed gaps that previously appeared here (now usable in samples):
 **#51** Pager / FlowRow / FlowColumn / BoxWithConstraints / LazyStaggeredGrid,
@@ -70,7 +70,7 @@ Closed gaps that previously appeared here (now usable in samples):
 
 ## Attribution
 
-These samples are C# ports inspired by Google's [android/compose-samples](https://github.com/android/compose-samples), which is licensed under the [Apache License 2.0](https://github.com/android/compose-samples/blob/main/LICENSE). No upstream Kotlin source code is copied into this repo — the ports re-implement the same UI in C# against this repo's `ComposeNet.Compose` facade.
+These samples are C# ports inspired by Google's [android/compose-samples](https://github.com/android/compose-samples), which is licensed under the [Apache License 2.0](https://github.com/android/compose-samples/blob/main/LICENSE). No upstream Kotlin source code is copied into this repo — the ports re-implement the same UI in C# against this repo's `Microsoft.AndroidX.Compose` facade.
 
 The four per-author avatar PNGs in [`samples/Jetchat/Resources/drawable-nodpi/`](Jetchat/Resources/drawable-nodpi/) (`avatar_ali.png`, `avatar_aubrey.png`, `avatar_taylor.png`, `avatar_jordan.png`) were generated with [DiceBear](https://www.dicebear.com)'s `lorelei` style and are released under [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) (no attribution required, but credit appreciated).
 
@@ -84,7 +84,7 @@ All other sample drawables and string content under each `samples/<Name>/` folde
 
 - Each sample is its own `net10.0-android` Exe project under
   `samples/<Name>/`.
-- `<ProjectReference Include="..\..\src\ComposeNet.Compose\ComposeNet.Compose.csproj" />`.
+- `<ProjectReference Include="..\..\src\Microsoft.AndroidX.Compose\Microsoft.AndroidX.Compose.csproj" />`.
 - Reuse the existing root `Directory.Build.targets` for AndroidX
   version management — do not pin versions per sample.
 - Omit `android:icon=` from `AndroidManifest.xml` so the framework

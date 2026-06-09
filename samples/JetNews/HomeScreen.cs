@@ -1,4 +1,4 @@
-namespace ComposeNet.Samples.JetNews;
+namespace Microsoft.AndroidX.Compose.Samples.JetNews;
 
 /// <summary>
 /// JetNews home feed — top app bar with hamburger / search action row,
@@ -9,7 +9,7 @@ namespace ComposeNet.Samples.JetNews;
 /// <remarks>
 /// Refactored for the UDF pattern: the feed and bookmarks come from a
 /// <see cref="HomeViewModel"/> acquired via
-/// <see cref="Compose.ViewModel{T}(Func{T}, int, string)"/>, and the
+/// <see cref="ComposeRuntime.ViewModel{T}(Func{T}, int, string)"/>, and the
 /// body switches on a <see cref="HomeUiState"/> discriminated union
 /// (<see cref="HomeUiState.Loading"/> /
 /// <see cref="HomeUiState.HasPosts"/> /
@@ -25,15 +25,15 @@ public static class HomeScreen
         SnackbarController snackbars,
         IPostsRepository? repository = null)
     {
-        var vm = Compose.ViewModel(() => new HomeViewModel(repository));
+        var vm = ComposeRuntime.ViewModel(() => new HomeViewModel(repository));
         var state = vm.UiState.CollectAsStateWithLifecycle().Value;
 
         // Search-bar toggle: tap the magnifier in the action row to swap
         // the wordmark title for an inline OutlinedTextField. The search
         // is purely visual today — wiring it to filter the feed needs
         // Modifier.interceptKey(Key.Enter), tracked in #159.
-        var searchOpen  = Compose.Remember(() => new MutableState<bool>(false));
-        var searchQuery = Compose.Remember(() => new MutableState<string>(string.Empty));
+        var searchOpen  = ComposeRuntime.Remember(() => new MutableState<bool>(false));
+        var searchQuery = ComposeRuntime.Remember(() => new MutableState<string>(string.Empty));
         var snackbarMessage = snackbars.Message.Value;
 
         return new Scaffold

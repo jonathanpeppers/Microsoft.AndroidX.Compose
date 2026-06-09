@@ -1,0 +1,59 @@
+using global::AndroidX.Compose.Material3;
+using global::AndroidX.Compose.Runtime;
+
+namespace Microsoft.AndroidX.Compose;
+
+/// <summary>
+/// Material 3 <c>SingleChoiceSegmentedButtonRow</c>. Container for
+/// <see cref="SegmentedButton"/> children that exposes a
+/// <c>SingleChoiceSegmentedButtonRowScope</c> receiver — the scope is
+/// captured here and published via <see cref="RenderContext"/> so child
+/// <see cref="SegmentedButton"/>s can pass it to the underlying
+/// scope-extension Kotlin static.
+/// <code>
+/// new SingleChoiceSegmentedButtonRow
+/// {
+///     new SegmentedButton(selected: tab == 0, onClick: () =&gt; tab.Value = 0) { new Text("Day") },
+///     new SegmentedButton(selected: tab == 1, onClick: () =&gt; tab.Value = 1) { new Text("Week") },
+/// }
+/// </code>
+/// </summary>
+public sealed class SingleChoiceSegmentedButtonRow : ComposableContainer
+{
+    public override void Render(IComposer composer)
+    {
+        var content = ComposableLambdas.Wrap3(composer, (scope, c) =>
+        {
+            using var _    = RenderContext.PushScope(scope, ScopeKind.Other);
+            using var rows = RenderContext.PushRow(Children.Count);
+            for (int i = 0; i < Children.Count; i++)
+            {
+                rows.SetIndex(i);
+                var child = Children[i];
+                c.StartReplaceableGroup(HashCode.Combine(i, child.GetType()));
+                try { child.Render(c); }
+                finally { c.EndReplaceableGroup(); }
+            }
+        });
+
+        var modifier = BuildModifier();
+        int defaults = (int)SegmentedButtonRowDefault.All;
+        if (modifier is not null) defaults &= ~(int)SegmentedButtonRowDefault.Modifier;
+
+        // The bound binding's parameter names are misleading. The JNI
+        // descriptor is `(...;Composer;II)V` — two trailing `I` slots —
+        // and the Kotlin layout for a `@Composable` with defaults is
+        // `(...userParams, Composer, $changed, $default)`. So
+        // positionally `p4` is `$changed` and `_changed` is the
+        // `$default` mask. Pass `0` for `$changed` (pessimistic — every
+        // param treated as new) and the `SegmentedButtonRowDefault`
+        // bitmask for `$default`.
+        SegmentedButtonKt.SingleChoiceSegmentedButtonRow(
+            modifier:  modifier,
+            space:     0f,
+            content:   content,
+            _composer: composer,
+            p4:        0,
+            _changed:  defaults);
+    }
+}

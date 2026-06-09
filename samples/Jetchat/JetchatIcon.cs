@@ -1,6 +1,6 @@
-using AndroidX.Compose.Material3;
+using global::AndroidX.Compose.Material3;
 
-namespace ComposeNet.Samples.Jetchat;
+namespace Microsoft.AndroidX.Compose.Samples.Jetchat;
 
 /// <summary>
 /// Multi-color Jetchat "J" logo composable — C# port of upstream's

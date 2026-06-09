@@ -1,0 +1,15 @@
+<Solution>
+  <Configurations>
+    <Platform Name="Any CPU" />
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Folder Name="/Samples/">
+    <Project Path="samples/Jetchat/Jetchat.csproj" />
+    <Project Path="samples/JetNews/JetNews.csproj" />
+    <Project Path="src/Microsoft.AndroidX.Compose.Gallery/Microsoft.AndroidX.Compose.Gallery.csproj" />
+  </Folder>
+  <Project Path="src/Microsoft.AndroidX.Compose/Microsoft.AndroidX.Compose.csproj" />
+  <Project Path="src/Microsoft.AndroidX.Compose.SourceGenerators.Tests/Microsoft.AndroidX.Compose.SourceGenerators.Tests.csproj" />
+  <Project Path="src/Microsoft.AndroidX.Compose.SourceGenerators/Microsoft.AndroidX.Compose.SourceGenerators.csproj" />
+</Solution>

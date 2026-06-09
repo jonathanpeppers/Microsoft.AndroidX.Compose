@@ -5,15 +5,15 @@
     <OutputType>Exe</OutputType>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <ApplicationId>com.composenet.samples.jetnews</ApplicationId>
+    <ApplicationId>net.compose.samples.jetnews</ApplicationId>
     <ApplicationVersion>1</ApplicationVersion>
     <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <RootNamespace>ComposeNet.Samples.JetNews</RootNamespace>
-    <AssemblyName>ComposeNet.Samples.JetNews</AssemblyName>
+    <RootNamespace>Microsoft.AndroidX.Compose.Samples.JetNews</RootNamespace>
+    <AssemblyName>Microsoft.AndroidX.Compose.Samples.JetNews</AssemblyName>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\src\ComposeNet.Compose\ComposeNet.Compose.csproj" />
+    <ProjectReference Include="..\..\src\Microsoft.AndroidX.Compose\Microsoft.AndroidX.Compose.csproj" />
   </ItemGroup>
   <ItemGroup>
     <!-- ComponentActivity wires up ViewTreeLifecycleOwner / SavedStateRegistryOwner

@@ -1,6 +1,6 @@
-using AndroidX.Compose.Material3;
+using global::AndroidX.Compose.Material3;
 
-namespace ComposeNet.Samples.Jetchat;
+namespace Microsoft.AndroidX.Compose.Samples.Jetchat;
 
 /// <summary>
 /// The activity-wide navigation drawer. Extracted from

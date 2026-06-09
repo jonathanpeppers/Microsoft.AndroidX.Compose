@@ -1,4 +1,4 @@
-namespace ComposeNet.Samples.Reply;
+namespace Microsoft.AndroidX.Compose.Samples.Reply;
 
 /// <summary>
 /// Profile avatar — a circular <see cref="Image"/> sourced from a

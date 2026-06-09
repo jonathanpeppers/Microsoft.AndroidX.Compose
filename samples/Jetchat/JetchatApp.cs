@@ -1,6 +1,6 @@
-using AndroidX.Compose.UI.Text.Input;
+using global::AndroidX.Compose.UI.Text.Input;
 
-namespace ComposeNet.Samples.Jetchat;
+namespace Microsoft.AndroidX.Compose.Samples.Jetchat;
 
 /// <summary>
 /// Top-level Jetchat tree. Wraps the

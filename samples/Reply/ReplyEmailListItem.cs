@@ -1,4 +1,4 @@
-namespace ComposeNet.Samples.Reply;
+namespace Microsoft.AndroidX.Compose.Samples.Reply;
 
 /// <summary>
 /// A single email row in the inbox list. Port of upstream's
@@ -47,7 +47,7 @@ public static class ReplyEmailListItem
             };
         });
 
-    static Row BuildHeaderRow(Email email, bool isSelected, Action<long> toggleSelection, AndroidX.Compose.Material3.ColorScheme scheme)
+    static Row BuildHeaderRow(Email email, bool isSelected, Action<long> toggleSelection, global::AndroidX.Compose.Material3.ColorScheme scheme)
     {
         var avatar = new AnimatedContent<bool>(
             targetState: isSelected,

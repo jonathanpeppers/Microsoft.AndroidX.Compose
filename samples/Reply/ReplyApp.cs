@@ -1,4 +1,4 @@
-namespace ComposeNet.Samples.Reply;
+namespace Microsoft.AndroidX.Compose.Samples.Reply;
 
 /// <summary>
 /// Builds the Reply root composition: a <see cref="MaterialTheme"/>

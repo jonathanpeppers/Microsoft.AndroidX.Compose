@@ -1,4 +1,4 @@
-# JetNews (compose-net port)
+# JetNews (Microsoft.AndroidX.Compose port)
 
 A simplified C# port of
 [android/compose-samples ▸ JetNews](https://github.com/android/compose-samples/tree/main/JetNews).
@@ -62,24 +62,24 @@ feature.
 
 | Upstream feature                                                | Tracking issue |
 |-----------------------------------------------------------------|----------------|
-| Adaptive list-detail two-pane layout on wider devices            | [#143](https://github.com/jonathanpeppers/compose-net/issues/143) (WindowSizeClass), plus a SharedTransitionLayout / ListDetailScene binding |
-| Real hero PNGs in card / article (currently a solid `Box` filled with a per-post `HeroColor`) | [#145](https://github.com/jonathanpeppers/compose-net/issues/145) — `ContentScale.Crop` on the `Image` facade; without it small vector hero images letterbox |
-| Inline-run paragraph styling (Link / Bold / Italic / Code spans inside one paragraph) | [#141](https://github.com/jonathanpeppers/compose-net/issues/141) — `AnnotatedString` + `SpanStyle` |
-| Top-bar elevation / collapse on scroll (`pinnedScrollBehavior`, `enterAlwaysScrollBehavior`) | [#142](https://github.com/jonathanpeppers/compose-net/issues/142) — `Modifier.nestedScroll` + `TopAppBarDefaults` |
-| Adaptive Topics two-column layout (`InterestsAdaptiveContentLayout`) — port renders one column | [#144](https://github.com/jonathanpeppers/compose-net/issues/144) — custom `Layout {}` primitive |
-| `stringResource(R.string.x)` — port uses inline string literals      | [#146](https://github.com/jonathanpeppers/compose-net/issues/146) |
-| `CompositionLocal` reads (`LocalContext`, `LocalDensity`, …)         | [#59](https://github.com/jonathanpeppers/compose-net/issues/59) |
-| `MaterialTheme.colorScheme.*` / `typography.*` reads (port hard-codes hex colors and sp/weight values) | [#58](https://github.com/jonathanpeppers/compose-net/issues/58) / [#61](https://github.com/jonathanpeppers/compose-net/issues/61) — facade lands but JetNews not migrated yet |
-| WindowInsets / edge-to-edge                                          | [#69](https://github.com/jonathanpeppers/compose-net/issues/69), [#20](https://github.com/jonathanpeppers/compose-net/issues/20) |
+| Adaptive list-detail two-pane layout on wider devices            | [#143](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/143) (WindowSizeClass), plus a SharedTransitionLayout / ListDetailScene binding |
+| Real hero PNGs in card / article (currently a solid `Box` filled with a per-post `HeroColor`) | [#145](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/145) — `ContentScale.Crop` on the `Image` facade; without it small vector hero images letterbox |
+| Inline-run paragraph styling (Link / Bold / Italic / Code spans inside one paragraph) | [#141](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/141) — `AnnotatedString` + `SpanStyle` |
+| Top-bar elevation / collapse on scroll (`pinnedScrollBehavior`, `enterAlwaysScrollBehavior`) | [#142](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/142) — `Modifier.nestedScroll` + `TopAppBarDefaults` |
+| Adaptive Topics two-column layout (`InterestsAdaptiveContentLayout`) — port renders one column | [#144](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/144) — custom `Layout {}` primitive |
+| `stringResource(R.string.x)` — port uses inline string literals      | [#146](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/146) |
+| `CompositionLocal` reads (`LocalContext`, `LocalDensity`, …)         | [#59](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/59) |
+| `MaterialTheme.colorScheme.*` / `typography.*` reads (port hard-codes hex colors and sp/weight values) | [#58](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/58) / [#61](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/61) — facade lands but JetNews not migrated yet |
+| WindowInsets / edge-to-edge                                          | [#69](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/69), [#20](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/20) |
 | Snackbar-based error / refresh, search-while-typing, deep links, share intents | not facade gaps — out of scope for the port |
 | ViewModel / Hilt / `kotlinx.coroutines` / `kotlinx.serialization` data layer | replaced by a static `PostsRepo` returning six condensed posts |
 
 ## Implementation notes
 
-### Seed data is original content about ComposeNet itself
+### Seed data is original content about Microsoft.AndroidX.Compose itself
 
 `PostsRepo.cs` ships six articles whose bodies discuss the
-ComposeNet project (binding strategy, Material 3 facade,
+Microsoft.AndroidX.Compose project (binding strategy, Material 3 facade,
 navigation, state holders, …). This sidesteps reproducing
 upstream's Android-team Kotlin blog posts and keeps the sample
 self-documenting.
@@ -92,7 +92,7 @@ the home / article hero region is just a
 This avoids two awkward things at once: bundling several real PNGs
 with copyright / attribution implications, **and** the
 ContentScale-Fit-letterbox look that small vector hero images get
-without [#145](https://github.com/jonathanpeppers/compose-net/issues/145).
+without [#145](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/145).
 Different colors per post still distinguish the rows visually.
 
 ### Paragraph runs are uniform per paragraph
@@ -100,7 +100,7 @@ Different colors per post still distinguish the rows visually.
 Each `Paragraph` carries a single `Type` plus a single `Text` string.
 The upstream `Markup` data class lets one paragraph mix Link /
 Code / Bold / Italic spans inline; without `AnnotatedString`
-([#141](https://github.com/jonathanpeppers/compose-net/issues/141)) the
+([#141](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/141)) the
 port renders each paragraph in a uniform style and silently drops
 the runs. `Quote` skips italic too — `FontStyle.Italic` is
 available, but `Italic` runs *inside* an otherwise-upright paragraph
@@ -115,7 +115,7 @@ the navigation. Re-tapping the already-active row also closes the
 drawer (no navigation, just dismiss). The top-bar hamburger on
 Home / Interests fires `OpenAsync()` to slide it back open. Both
 go through the `SuspendBridge` plumbing wired up in
-[#140](https://github.com/jonathanpeppers/compose-net/issues/140).
+[#140](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/140).
 
 ### Search / share icons are visual-only
 
@@ -129,7 +129,7 @@ placeholder handlers.
 Upstream's `InterestsAdaptiveContentLayout` is a custom `Layout {}`
 that splits topics into multiple columns based on available width.
 Without bound `Layout` primitives
-([#144](https://github.com/jonathanpeppers/compose-net/issues/144))
+([#144](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/144))
 the port renders the Topics tab as a flat single-column list with
 section headers.
 
@@ -140,7 +140,7 @@ a `Build(…)` method returning `ComposableNode`. `Render(IComposer)`
 is `internal` to the facade assembly so a sample-side subclass
 can't override it. Cost: every recomposition allocates the tree
 inside `JetnewsApp.Build`. NavHost caches the per-destination tree
-via `Compose.Remember` (see `NavHost.cs`), so the screen subtrees
+via `ComposeRuntime.Remember` (see `NavHost.cs`), so the screen subtrees
 inside `Composable("home") { … }` etc. are walked only on first
 render.
 
@@ -155,7 +155,7 @@ the same `MutableState` reference survive recompositions and
 navigation transitions.
 
 Bookmarks are an exception: they live in a
-`BookmarksViewModel` acquired via `Compose.ViewModel<T>(…)` at the
+`BookmarksViewModel` acquired via `ComposeRuntime.ViewModel<T>(…)` at the
 activity scope, so the set survives configuration change (the
 activity's `ViewModelStore` retains the instance across
 `Activity.OnCreate` calls). The home feed and the article screen
@@ -164,8 +164,8 @@ bookmark from either screen is observed by the other.
 
 ### Per-screen state lives in `HomeViewModel`
 
-The Home feed state is owned by a `HomeViewModel : ComposeNet.ViewModel`
-acquired in `HomeScreen.Build` via `Compose.ViewModel(...)`. The VM
+The Home feed state is owned by a `HomeViewModel : Microsoft.AndroidX.Compose.ViewModel`
+acquired in `HomeScreen.Build` via `ComposeRuntime.ViewModel(...)`. The VM
 is rooted in the current `NavBackStackEntry`'s `ViewModelStore`, so
 it survives recomposition and configuration change, and clears
 when the user pops the destination off the back stack.

@@ -1,6 +1,6 @@
-using AndroidX.Compose.Material3;
+using global::AndroidX.Compose.Material3;
 
-namespace ComposeNet.Samples.Jetchat;
+namespace Microsoft.AndroidX.Compose.Samples.Jetchat;
 
 /// <summary>
 /// Jetchat's branded Material 3 theme — C# port of upstream's
@@ -141,7 +141,7 @@ public static class JetchatTheme
         new Composed(c =>
         {
             bool dark = MaterialTheme.IsSystemInDarkTheme(c);
-            var scheme = Compose.Remember(
+            var scheme = ComposeRuntime.Remember(
                 () => dark ? BuildDark() : BuildLight(),
                 dark);
             var theme = new MaterialTheme

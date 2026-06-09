@@ -1,5 +1,5 @@
 
-namespace ComposeNet.Samples.JetNews;
+namespace Microsoft.AndroidX.Compose.Samples.JetNews;
 
 /// <summary>
 /// Shape of the home feed: one highlighted post, plus three lists

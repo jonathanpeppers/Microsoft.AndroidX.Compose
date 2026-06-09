@@ -1,4 +1,4 @@
-namespace ComposeNet.Samples.Reply;
+namespace Microsoft.AndroidX.Compose.Samples.Reply;
 
 /// <summary>
 /// A top-level navigation destination — one of the four tabs surfaced

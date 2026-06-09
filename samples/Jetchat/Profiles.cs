@@ -1,4 +1,4 @@
-namespace ComposeNet.Samples.Jetchat;
+namespace Microsoft.AndroidX.Compose.Samples.Jetchat;
 
 /// <summary>
 /// Seed profile data for the demo. Mirrors upstream's

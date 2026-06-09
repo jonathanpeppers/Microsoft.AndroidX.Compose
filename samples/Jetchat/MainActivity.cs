@@ -1,8 +1,8 @@
-using Android.Views;
-using AndroidX.Compose.Material3;
-using AndroidX.Compose.UI.Text.Input;
+using global::Android.Views;
+using global::AndroidX.Compose.Material3;
+using global::AndroidX.Compose.UI.Text.Input;
 
-namespace ComposeNet.Samples.Jetchat;
+namespace Microsoft.AndroidX.Compose.Samples.Jetchat;
 
 [Activity(
     Label = "@string/app_name",
@@ -17,13 +17,13 @@ public class MainActivity : ComposeActivity
         SetContent(() =>
         {
             var ui               = Remember(() => new ConversationUiState("#composers", channelMembers: 42, FakeData.InitialMessages()));
-            var input            = Remember(() => new MutableState<TextFieldValue>(Compose.NewTextFieldValue()));
+            var input            = Remember(() => new MutableState<TextFieldValue>(ComposeRuntime.NewTextFieldValue()));
             var selectedMenu     = Remember(() => new MutableState<string>("composers"));
             var drawerScroll     = Remember(() => new ScrollState());
             var drawerState      = Remember(() => new DrawerStateHolder(DrawerValue.Closed));
             var selectedSelector = Remember(() => new MutableState<int>(0));
             var popupOpen        = Remember(() => new MutableState<bool>(false));
-            var messagesScroll   = Compose.RememberLazyListState();
+            var messagesScroll   = ComposeRuntime.RememberLazyListState();
             var isRecording      = Remember(() => new MutableState<bool>(false));
             var swipeOffset      = Remember(() => new MutableNumberState<float>(0f));
             var nav              = Remember(() => new NavController());

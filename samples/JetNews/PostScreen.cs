@@ -1,4 +1,4 @@
-namespace ComposeNet.Samples.JetNews;
+namespace Microsoft.AndroidX.Compose.Samples.JetNews;
 
 /// <summary>
 /// Article reader. A <see cref="Scaffold"/> with a back-button top app
@@ -15,7 +15,7 @@ public static class PostScreen
     /// <param name="onShare">
     /// Optional callback fired when the user picks "Share" in the
     /// <see cref="AlertDialog"/> the share button now opens — typically
-    /// fires <see cref="Android.Content.Intent.ActionSend"/>. When
+    /// fires <see cref="global::Android.Content.Intent.ActionSend"/>. When
     /// <c>null</c>, the dialog only shows the "not available" message.
     /// </param>
     public static ComposableNode Build(
@@ -25,7 +25,7 @@ public static class PostScreen
         SnackbarController snackbars,
         Action<Post>? onShare = null)
     {
-        var showShareDialog = Compose.Remember(() => new MutableState<bool>(false));
+        var showShareDialog = ComposeRuntime.Remember(() => new MutableState<bool>(false));
         var snackbarMessage = snackbars.Message.Value;
 
         // Wrap the Scaffold + the conditional dialog in a Box so the
