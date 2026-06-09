@@ -408,7 +408,6 @@ public sealed class Modifier
             finally
             {
                 System.GC.KeepAlive(target);
-                System.GC.KeepAlive(predicate);
             }
         });
     }
