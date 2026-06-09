@@ -6,7 +6,7 @@ Build Android UI with **Jetpack Compose** from a .NET for Android app — pure C
   <img src="docs/images/hello-compose-csharp.png" alt="Hello from .NET running Jetpack Compose UI on Android" width="380" />
 </p>
 
-*Material 3 sample on an Android emulator: `Text`, a `Button`, and a counter driven by `mutableStateOf` — all authored from C#.*
+*Material 3 sample inside the gallery's "Hello from .NET" demo: `Text`, a `Button`, and a counter driven by `mutableStateOf` — all authored from C#.*
 
 ## Why
 

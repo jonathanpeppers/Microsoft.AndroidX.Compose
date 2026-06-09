@@ -53,6 +53,7 @@ public static class Catalog
         D.TextInputs.SelectionDemo.Demo,
 
         // ---- Buttons ----
+        D.Buttons.HelloCounterDemo.Demo,
         D.Buttons.FillStylesDemo.Demo,
         D.Buttons.IconButtonsDemo.Demo,
         D.Buttons.IconToggleButtonsDemo.Demo,
