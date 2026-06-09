@@ -1110,3 +1110,20 @@ using Microsoft.AndroidX.Compose;
 // same shape as enterAlwaysScrollBehavior above.
 [assembly: ComposeDefaults("TopAppBarExitUntilCollapsedScrollBehaviorDefault",
     "!state", "canScroll", "snapAnimationSpec", "flingAnimationSpec")]
+
+// androidx.compose.foundation.ScrollState.animateScrollTo$default —
+// suspend extension with one defaultable param. Bit 0 = `value` (always
+// provided, `!`-prefixed); bit 1 = `animationSpec` (null → Kotlin
+// substitutes SpringSpec()). Receiver (ScrollState) and Continuation
+// are NOT in the defaults — they're shape parameters, not defaultable.
+[assembly: ComposeDefaults("ScrollStateAnimateScrollToDefault",
+    "!value", "animationSpec")]
+
+// androidx.compose.foundation.gestures.TapGestureDetectorKt.detectTapGestures$default —
+// suspend extension with four defaultable callback params. All four
+// callbacks are nullable; the auto-default-mask leaves a bit set when
+// the caller passes null so Kotlin substitutes its real default
+// (null for the nullables, NoPressGesture for onPress). Receiver
+// (PointerInputScope) and Continuation are NOT in the defaults.
+[assembly: ComposeDefaults("DetectTapGesturesDefault",
+    "onDoubleTap", "onLongPress", "onPress", "onTap")]

@@ -92,6 +92,14 @@ internal static class Diagnostics
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);
 
+    public static readonly DiagnosticDescriptor BridgeSuspendInvalid = new(
+        id: "CN2009",
+        title: "[ComposeBridge(Suspend = true)] configuration is invalid",
+        messageFormat: "Suspend bridge '{0}': {1}",
+        category: "Microsoft.AndroidX.Compose",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
+
     public static readonly DiagnosticDescriptor FacadeWrongContainingType = new(
         id: "CN3001",
         title: "[ComposeFacade] must be applied to a method on ComposeBridges",

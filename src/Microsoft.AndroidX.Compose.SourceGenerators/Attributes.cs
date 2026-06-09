@@ -83,6 +83,31 @@ internal static class Attributes
             /// the <c>$$INSTANCE</c>-style static field
             /// (e.g. <c>INSTANCE</c>) and the generator emits
             /// <c>GetMethodID</c> + <c>CallObjectMethod</c> instead.</para>
+            /// <para><b>Suspend</b>: opts into the Kotlin <c>suspend</c>
+            /// bridge shape. The trailing C# parameter must be
+            /// <c>Kotlin.Coroutines.IContinuation</c> (or an implementor —
+            /// <c>SuspendContinuation</c> works), the C# return type must
+            /// be <c>System.IntPtr</c> (raw — boxing into a
+            /// <see cref="global::Java.Lang.Object"/> peer would collide
+            /// with Mono's peer cache for the <c>COROUTINE_SUSPENDED</c>
+            /// singleton), and the JNI return type must be
+            /// <c>Ljava/lang/Object;</c>. The generator detects two
+            /// sub-shapes from the JNI signature:
+            /// <list type="bullet">
+            /// <item><description><b>Instance suspend</b> (no trailing
+            /// <c>I L&lt;Object&gt;</c>): the first C# user parameter
+            /// (which must be <c>IntPtr</c>) is the receiver; the bridge
+            /// emits <c>GetMethodID</c> + <c>CallObjectMethod(receiver,
+            /// ...)</c> and the receiver is NOT in the JNI signature.</description></item>
+            /// <item><description><b>Static <c>$default</c> suspend</b>
+            /// (trailing <c>I L&lt;Object&gt;</c>): same shape as
+            /// <see cref="ComposeBridgeAttribute"/>'s extension-with-default
+            /// flow — the first C# user parameter is the receiver AND
+            /// occupies JNI slot 0; the bridge emits
+            /// <c>GetStaticMethodID</c> + <c>CallStaticObjectMethod</c>.</description></item>
+            /// </list>
+            /// Cannot be combined with a Composer slot or a constructor
+            /// <c>JvmName</c>.</para>
             /// </remarks>
             [global::System.AttributeUsage(global::System.AttributeTargets.Method,
                                            AllowMultiple = false)]
@@ -94,6 +119,7 @@ internal static class Attributes
                 public string Signature { get; set; } = "";
                 public global::System.Type? Defaults { get; set; }
                 public string? InstanceField { get; set; }
+                public bool Suspend { get; set; }
             }
 
             /// <summary>

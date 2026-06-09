@@ -1,4 +1,5 @@
 using global::Android.Runtime;
+using Kotlin.Coroutines;
 using Kotlin.Coroutines.Intrinsics;
 using Kotlin.Jvm.Functions;
 
@@ -73,17 +74,34 @@ internal sealed class PointerInputBlock : Java.Lang.Object, IFunction2
                 "PointerInputBlock.Invoke received a null Continuation in slot 1");
 
         var scopeHandle = scope.Handle;
-        var contHandle = cont.Handle;
+
+        // Kotlin's createCoroutineUnintercepted hands us a synthesized
+        // outer continuation whose runtime class isn't in Mono.Android's
+        // peer registry, so a plain `as IContinuation` returns null.
+        // JavaCast<T> synthesizes the interface peer from the raw handle.
+        // Same trick as LaunchedEffectBody.Invoke.
+        IContinuation continuation;
+        try
+        {
+            continuation = cont.JavaCast<IContinuation>();
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException(
+                "PointerInputBlock.Invoke could not project slot 1 ("
+                + (cont.Class?.Name ?? "<unknown>")
+                + ") as kotlin.coroutines.Continuation", ex);
+        }
 
         try
         {
             var resultHandle = ComposeBridges.DetectTapGestures(
                 scopeHandle,
-                _onDoubleTap is null ? IntPtr.Zero : ((Java.Lang.Object)_onDoubleTap).Handle,
-                _onLongPress is null ? IntPtr.Zero : ((Java.Lang.Object)_onLongPress).Handle,
-                _onPress is null ? IntPtr.Zero : ((Java.Lang.Object)_onPress).Handle,
-                _onTap is null ? IntPtr.Zero : ((Java.Lang.Object)_onTap).Handle,
-                contHandle);
+                _onDoubleTap is null ? null : ((Java.Lang.Object)_onDoubleTap).Handle,
+                _onLongPress is null ? null : ((Java.Lang.Object)_onLongPress).Handle,
+                _onPress is null ? null : ((Java.Lang.Object)_onPress).Handle,
+                _onTap is null ? null : ((Java.Lang.Object)_onTap).Handle,
+                continuation);
 
             if (resultHandle == IntPtr.Zero)
                 return null;

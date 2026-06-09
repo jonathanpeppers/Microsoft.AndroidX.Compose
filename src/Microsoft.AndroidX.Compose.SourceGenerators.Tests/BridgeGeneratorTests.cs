@@ -58,6 +58,10 @@ public class BridgeGeneratorTests
             public interface IFunction2 { }
             public interface IFunction3 { }
         }
+        namespace Kotlin.Coroutines
+        {
+            public interface IContinuation { }
+        }
         namespace Microsoft.AndroidX.Compose
         {
             public interface IModifier { }
@@ -1408,5 +1412,228 @@ public class BridgeGeneratorTests
         Assert.NotNull(emitted);
         Assert.Contains("(ratio ?? 0f)", emitted);
         Assert.Contains("(scale ?? 0d)", emitted);
+    }
+
+    // ---------------- Suspend = true -----------------------------------
+
+    [Fact]
+    public void Suspend_InstanceShape_EmitsCallObjectMethodOnReceiver()
+    {
+        // Instance suspend mirrors the hand-written ScrollStateScrollTo
+        // template: GetMethodID + CallObjectMethod, first user param IntPtr
+        // is the dispatch target (NOT in JNI sig), continuation last,
+        // raw IntPtr return (NO Java.Lang.Object.GetObject wrapping —
+        // would crash CheckJNI on the COROUTINE_SUSPENDED singleton).
+        var code = """
+            using Microsoft.AndroidX.Compose;
+            using Kotlin.Coroutines;
+
+            namespace Microsoft.AndroidX.Compose
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(Suspend = true,
+                        Class = "androidx/compose/foundation/ScrollState",
+                        JvmName = "scrollTo",
+                        Signature = "(ILkotlin/coroutines/Continuation;)Ljava/lang/Object;")]
+                    internal static partial System.IntPtr DoIt(System.IntPtr state, int value, IContinuation cont);
+                }
+            }
+            """;
+
+        var (output, diags, emitted) = Run(code);
+        Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+        Assert.Contains("GetMethodID(s_DoIt_class", emitted);
+        Assert.DoesNotContain("GetStaticMethodID(s_DoIt_class", emitted);
+        // No receiver in args[0]; user param value goes to slot 0.
+        Assert.Contains("args[0] = new global::Android.Runtime.JValue(value);", emitted);
+        // Continuation handle goes to slot 1 (last) via Java.Lang.Object cast.
+        Assert.Contains("args[1] = new global::Android.Runtime.JValue(((global::Java.Lang.Object)cont).Handle);", emitted);
+        // Dispatch is virtual on the receiver, not static on the class.
+        Assert.Contains("CallObjectMethod(state, s_DoIt_method, args);", emitted);
+        Assert.DoesNotContain("CallStaticObjectMethod", emitted);
+        // Raw IntPtr return — no peer wrapping.
+        Assert.DoesNotContain("Java.Lang.Object.GetObject", emitted);
+        // KeepAlive the continuation through the call.
+        Assert.Contains("global::System.GC.KeepAlive(cont);", emitted);
+
+        var compileDiags = output.GetDiagnostics();
+        Assert.Empty(compileDiags.Where(d => d.Severity == DiagnosticSeverity.Error));
+    }
+
+    [Fact]
+    public void Suspend_StaticDefaultShape_EmitsReceiverContinuationDefaultsMarker()
+    {
+        // Static $default suspend mirrors ScrollStateAnimateScrollTo:
+        // JNI sig (L<Receiver> ...userArgs Lkotlin/coroutines/Continuation; I L<Object>),
+        // GetStaticMethodID + CallStaticObjectMethod, first user IntPtr
+        // is the receiver AND occupies JNI slot 0.
+        var code = """
+            using Microsoft.AndroidX.Compose;
+            using Kotlin.Coroutines;
+
+            [assembly: ComposeDefaults("AnimateDefault", "!value", "animationSpec")]
+
+            namespace Microsoft.AndroidX.Compose
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(Suspend = true,
+                        Class = "androidx/compose/foundation/ScrollExtensionsKt",
+                        JvmName = "animateScrollTo$default",
+                        Signature = "(Landroidx/compose/foundation/ScrollState;ILandroidx/compose/animation/core/AnimationSpec;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;",
+                        Defaults = typeof(AnimateDefault))]
+                    internal static partial System.IntPtr DoIt(System.IntPtr state, int value, System.IntPtr? animationSpec, IContinuation cont);
+                }
+            }
+            """;
+
+        var (output, diags, emitted) = Run(code);
+        Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+        Assert.Contains("GetStaticMethodID(s_DoIt_class", emitted);
+        // Receiver in args[0], user `value` in args[1], animationSpec in args[2].
+        Assert.Contains("args[0] = new global::Android.Runtime.JValue(state);", emitted);
+        Assert.Contains("args[1] = new global::Android.Runtime.JValue(value);", emitted);
+        Assert.Contains("args[2] = new global::Android.Runtime.JValue((animationSpec ?? global::System.IntPtr.Zero));", emitted);
+        // Continuation in args[3], $default in args[4], marker in args[5].
+        Assert.Contains("args[3] = new global::Android.Runtime.JValue(((global::Java.Lang.Object)cont).Handle);", emitted);
+        Assert.Contains("args[4] = new global::Android.Runtime.JValue(defaults);", emitted);
+        Assert.Contains("args[5] = new global::Android.Runtime.JValue(global::System.IntPtr.Zero);", emitted);
+        // Auto-mask: animationSpec nullable IntPtr clears its bit when supplied.
+        Assert.Contains("if (animationSpec is not null) defaults &= ~(int)global::Microsoft.AndroidX.Compose.AnimateDefault.AnimationSpec;", emitted);
+        // Static call on the class — same as plain extensionWithDefault.
+        Assert.Contains("CallStaticObjectMethod(s_DoIt_class", emitted);
+        Assert.Contains("global::System.GC.KeepAlive(cont);", emitted);
+
+        var compileDiags = output.GetDiagnostics();
+        Assert.Empty(compileDiags.Where(d => d.Severity == DiagnosticSeverity.Error));
+    }
+
+    [Fact]
+    public void Suspend_MissingTrailingContinuation_ReportsCN2009()
+    {
+        // No trailing IContinuation param: the generator has nothing
+        // to plug into the JNI continuation slot, so we fail fast.
+        var code = """
+            using Microsoft.AndroidX.Compose;
+
+            namespace Microsoft.AndroidX.Compose
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(Suspend = true,
+                        Class = "x/Y", JvmName = "f",
+                        Signature = "(I)Ljava/lang/Object;")]
+                    internal static partial System.IntPtr DoIt(System.IntPtr state, int value);
+                }
+            }
+            """;
+
+        var (_, diags, _) = Run(code);
+        Assert.Contains(diags, d => d.Id == "CN2009");
+    }
+
+    [Fact]
+    public void Suspend_NonIntPtrReturn_ReportsCN2009()
+    {
+        // Suspend bridges MUST return raw IntPtr — wrapping the
+        // COROUTINE_SUSPENDED singleton in a Java.Lang.Object peer
+        // collides with Mono's peer cache and CheckJNI later aborts.
+        var code = """
+            using Microsoft.AndroidX.Compose;
+            using Kotlin.Coroutines;
+
+            namespace Microsoft.AndroidX.Compose
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(Suspend = true,
+                        Class = "x/Y", JvmName = "f",
+                        Signature = "(ILkotlin/coroutines/Continuation;)Ljava/lang/Object;")]
+                    internal static partial Java.Lang.Object DoIt(System.IntPtr state, int value, IContinuation cont);
+                }
+            }
+            """;
+
+        var (_, diags, _) = Run(code);
+        Assert.Contains(diags, d => d.Id == "CN2009");
+    }
+
+    [Fact]
+    public void Suspend_WrongJniReturnType_ReportsCN2009()
+    {
+        // Kotlin's coroutine machinery always returns Object — anything
+        // else means the bytecode signature is wrong for a suspend func.
+        var code = """
+            using Microsoft.AndroidX.Compose;
+            using Kotlin.Coroutines;
+
+            namespace Microsoft.AndroidX.Compose
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(Suspend = true,
+                        Class = "x/Y", JvmName = "f",
+                        Signature = "(ILkotlin/coroutines/Continuation;)V")]
+                    internal static partial System.IntPtr DoIt(System.IntPtr state, int value, IContinuation cont);
+                }
+            }
+            """;
+
+        var (_, diags, _) = Run(code);
+        Assert.Contains(diags, d => d.Id == "CN2009");
+    }
+
+    [Fact]
+    public void Suspend_InstanceShape_MissingLeadingIntPtr_ReportsCN2009()
+    {
+        // Instance suspend needs an IntPtr receiver to dispatch on.
+        // Without one we'd have no `this` for CallObjectMethod.
+        var code = """
+            using Microsoft.AndroidX.Compose;
+            using Kotlin.Coroutines;
+
+            namespace Microsoft.AndroidX.Compose
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(Suspend = true,
+                        Class = "x/Y", JvmName = "f",
+                        Signature = "(ILkotlin/coroutines/Continuation;)Ljava/lang/Object;")]
+                    internal static partial System.IntPtr DoIt(int value, IContinuation cont);
+                }
+            }
+            """;
+
+        var (_, diags, _) = Run(code);
+        Assert.Contains(diags, d => d.Id == "CN2009");
+    }
+
+    [Fact]
+    public void Suspend_ContinuationSlotMisplaced_ReportsCN2009()
+    {
+        // Continuation in the wrong JNI position — we expect it last
+        // for instance suspend (this signature has an extra trailing 'I'
+        // after the continuation slot). Catches typos in mangled sigs.
+        var code = """
+            using Microsoft.AndroidX.Compose;
+            using Kotlin.Coroutines;
+
+            namespace Microsoft.AndroidX.Compose
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(Suspend = true,
+                        Class = "x/Y", JvmName = "f",
+                        Signature = "(Lkotlin/coroutines/Continuation;I)Ljava/lang/Object;")]
+                    internal static partial System.IntPtr DoIt(System.IntPtr state, int value, IContinuation cont);
+                }
+            }
+            """;
+
+        var (_, diags, _) = Run(code);
+        Assert.Contains(diags, d => d.Id == "CN2009");
     }
 }
