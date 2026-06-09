@@ -1,4 +1,6 @@
 ﻿using AndroidX.Compose.Material3;
+using AndroidX.Compose.UI.Text;
+using AndroidX.Compose.UI.Text.Input;
 using ComposeNet;
 
 namespace ComposeNet.Samples.Jetchat;
@@ -69,9 +71,9 @@ public static class EmojiSelector
     };
 
     /// <summary>Build the emoji selector panel.</summary>
-    /// <param name="input">Shared text-field state; tapped emojis are appended to <c>input.Value</c>.</param>
+    /// <param name="input">Shared text-field state; tapped emojis are appended to <c>input.Value.Text</c> and the caret is moved to the end.</param>
     /// <param name="scheme">Active Material 3 color scheme — used for the panel background + tab colors.</param>
-    public static ComposableNode Build(MutableState<string> input, ColorScheme scheme) =>
+    public static ComposableNode Build(MutableState<TextFieldValue> input, ColorScheme scheme) =>
         new Composed(c =>
         {
             var selected = Compose.Remember(() => new MutableState<int>(0));
@@ -97,7 +99,7 @@ public static class EmojiSelector
             };
         });
 
-    static Column BuildEmojiGrid(MutableState<string> input, ColorScheme scheme)
+    static Column BuildEmojiGrid(MutableState<TextFieldValue> input, ColorScheme scheme)
     {
         var grid = new Column
         {
@@ -117,7 +119,19 @@ public static class EmojiSelector
                     FontSize = 18,
                     Color    = new Color(scheme.OnSurface),
                     Modifier = Modifier.Companion
-                        .Clickable(() => input.Value = (input.Value ?? string.Empty) + emoji)
+                        .Clickable(() =>
+                        {
+                            // Match upstream Jetchat's TextFieldState.addText:
+                            // append the glyph and move the cursor to the
+                            // end of the new buffer so the next keystroke
+                            // lands after the emoji. Use the bound
+                            // TextFieldValue.Copy(string, long, TextRange?)
+                            // overload so onValueChange round-trips a real
+                            // Compose peer.
+                            var current = input.Value ?? Compose.NewTextFieldValue();
+                            var newText = current.Text + emoji;
+                            input.Value = current.Copy(newText, TextRangeKt.TextRange(newText.Length), composition: null);
+                        })
                         .SizeIn(minWidth: 42, minHeight: 42)
                         .Padding(8),
                 });
