@@ -155,7 +155,7 @@ public static class TopAppBarDefaults
 
     static ITopAppBarScrollBehavior Invoke(
         TopAppBarState state, int line, string file,
-        Func<TopAppBarState, IComposer, nint> bridge)
+        Func<TopAppBarState, IComposer, IntPtr> bridge)
     {
         ArgumentNullException.ThrowIfNull(state);
         var composer = ComposeContext.Current

@@ -13,7 +13,7 @@ public static class HorizontalUncontainedCarouselDemo
         Title:       "HorizontalUncontainedCarousel",
         Description: "Fixed 200dp item width; edge items aren't shrunk to fit.",
         Build:       () => new HorizontalUncontainedCarousel<int>(
-            items: Enumerable.Range(0, 12).ToList(),
+            items:       Enumerable.Range(0, 12).ToList(),
             itemWidth:   200f,
             itemContent: i => new Box
             {

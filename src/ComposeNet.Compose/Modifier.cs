@@ -48,7 +48,7 @@ namespace ComposeNet;
 /// </summary>
 public sealed class Modifier
 {
-    static readonly Func<nint, nint>[] EmptyOps = Array.Empty<Func<nint, nint>>();
+    static readonly Func<IntPtr, IntPtr>[] EmptyOps = Array.Empty<Func<IntPtr, IntPtr>>();
     static readonly Modifier _companion = new Modifier(EmptyOps);
 
     /// <summary>
@@ -58,16 +58,16 @@ public sealed class Modifier
     /// </summary>
     public static Modifier Companion => _companion;
 
-    readonly Func<nint, nint>[] _ops;
+    readonly Func<IntPtr, IntPtr>[] _ops;
 
-    Modifier(Func<nint, nint>[] ops)
+    Modifier(Func<IntPtr, IntPtr>[] ops)
     {
         _ops = ops;
     }
 
-    Modifier Append(Func<nint, nint> op)
+    Modifier Append(Func<IntPtr, IntPtr> op)
     {
-        var arr = new Func<nint, nint>[_ops.Length + 1];
+        var arr = new Func<IntPtr, IntPtr>[_ops.Length + 1];
         Array.Copy(_ops, arr, _ops.Length);
         arr[_ops.Length] = op;
         return new Modifier(arr);
@@ -84,7 +84,7 @@ public sealed class Modifier
         ArgumentNullException.ThrowIfNull(other);
         if (other._ops.Length == 0) return this;
         if (_ops.Length == 0) return other;
-        var arr = new Func<nint, nint>[_ops.Length + other._ops.Length];
+        var arr = new Func<IntPtr, IntPtr>[_ops.Length + other._ops.Length];
         Array.Copy(_ops, arr, _ops.Length);
         Array.Copy(other._ops, 0, arr, _ops.Length, other._ops.Length);
         return new Modifier(arr);

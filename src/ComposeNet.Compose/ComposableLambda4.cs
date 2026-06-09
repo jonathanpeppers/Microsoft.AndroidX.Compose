@@ -16,9 +16,9 @@ namespace ComposeNet;
 [Register("composenet/compose/ComposableLambda4")]
 internal sealed class ComposableLambda4 : Java.Lang.Object, IFunction4
 {
-    readonly Action<nint, Java.Lang.Object?, IComposer> _body;
+    readonly Action<IntPtr, Java.Lang.Object?, IComposer> _body;
 
-    public ComposableLambda4(Action<nint, Java.Lang.Object?, IComposer> body) => _body = body;
+    public ComposableLambda4(Action<IntPtr, Java.Lang.Object?, IComposer> body) => _body = body;
 
     public Java.Lang.Object? Invoke(Java.Lang.Object? p0, Java.Lang.Object? p1, Java.Lang.Object? p2, Java.Lang.Object? p3)
     {

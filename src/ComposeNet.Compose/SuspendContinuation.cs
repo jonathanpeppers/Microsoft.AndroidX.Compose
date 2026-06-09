@@ -16,7 +16,7 @@ namespace ComposeNet;
 /// <para>
 /// Allocate one instance per suspend call (continuations cannot be
 /// reused). The class is internal — call sites should go through
-/// <see cref="SuspendBridge.Invoke{T}(Func{SuspendContinuation, nint}, Func{Java.Lang.Object?, T}, CancellationToken)"/>
+/// <see cref="SuspendBridge.Invoke{T}(Func{SuspendContinuation, IntPtr}, Func{Java.Lang.Object?, T}, CancellationToken)"/>
 /// instead of constructing one directly.
 /// </para>
 /// <para>

@@ -17,7 +17,7 @@ namespace ComposeNet;
 public sealed class OutlinedTextField : ComposableNode
 {
     readonly string?                       _value;
-    readonly Action<string>?        _onValueChange;
+    readonly Action<string>?               _onValueChange;
     readonly MutableState<TextFieldValue>? _tfvState;
 
     /// <summary>Floating label (e.g. <c>new Text("Email")</c>).</summary>

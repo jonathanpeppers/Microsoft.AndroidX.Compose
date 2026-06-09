@@ -36,7 +36,7 @@ internal sealed class ComposableLambda3 : Java.Lang.Object, IFunction3
     public ComposableLambda3(Action<IComposer> body)
         : this((Java.Lang.Object? _, IComposer c) => body(c)) { }
 
-    public ComposableLambda3(Action<nint, IComposer> body)
+    public ComposableLambda3(Action<IntPtr, IComposer> body)
         : this((Java.Lang.Object? p0, IComposer c) => body(p0?.Handle ?? IntPtr.Zero, c)) { }
 
     public ComposableLambda3(Action<Java.Lang.Object?, IComposer> body) => _body = body;

@@ -14,7 +14,7 @@ public static class LazyVerticalStaggeredGridDemo
         Description: "Adaptive 120dp columns; each cell picks a varying height for a true staggered layout.",
         Build:       () => new LazyVerticalStaggeredGrid<int>(
             columns:     StaggeredGridCells.Adaptive(120f),
-            items: Enumerable.Range(0, 30).ToList(),
+            items:       Enumerable.Range(0, 30).ToList(),
             itemContent: i => new Card
             {
                 Modifier.Companion
