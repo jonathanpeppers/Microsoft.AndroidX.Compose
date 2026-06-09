@@ -32,8 +32,10 @@ public sealed class HorizontalMultiBrowseCarousel<T> : ComposableNode
 
     public HorizontalMultiBrowseCarousel(IReadOnlyList<T> items, float preferredItemWidth, Func<T, ComposableNode> itemContent)
     {
-        _items              = items       ?? throw new ArgumentNullException(nameof(items));
-        _itemContent        = itemContent ?? throw new ArgumentNullException(nameof(itemContent));
+        ArgumentNullException.ThrowIfNull(items);
+        _items              = items;
+        ArgumentNullException.ThrowIfNull(itemContent);
+        _itemContent        = itemContent;
         _preferredItemWidth = preferredItemWidth;
     }
 

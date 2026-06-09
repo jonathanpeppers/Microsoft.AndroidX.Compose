@@ -30,7 +30,7 @@ public sealed class DisposableEffect : ComposableNode
         object? key1,
         System.Func<DisposableEffectScope, System.Action> effect)
     {
-        System.ArgumentNullException.ThrowIfNull(effect);
+        ArgumentNullException.ThrowIfNull(effect);
         _key1 = key1; _keyCount = 1; _effect = effect;
     }
 
@@ -40,7 +40,7 @@ public sealed class DisposableEffect : ComposableNode
         object? key2,
         System.Func<DisposableEffectScope, System.Action> effect)
     {
-        System.ArgumentNullException.ThrowIfNull(effect);
+        ArgumentNullException.ThrowIfNull(effect);
         _key1 = key1; _key2 = key2; _keyCount = 2; _effect = effect;
     }
 
@@ -51,7 +51,7 @@ public sealed class DisposableEffect : ComposableNode
         object? key3,
         System.Func<DisposableEffectScope, System.Action> effect)
     {
-        System.ArgumentNullException.ThrowIfNull(effect);
+        ArgumentNullException.ThrowIfNull(effect);
         _key1 = key1; _key2 = key2; _key3 = key3; _keyCount = 3; _effect = effect;
     }
 

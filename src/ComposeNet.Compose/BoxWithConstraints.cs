@@ -35,7 +35,8 @@ public sealed class BoxWithConstraints : ComposableNode
     /// </summary>
     public BoxWithConstraints(Func<BoxConstraints, ComposableNode> content)
     {
-        _content = content ?? throw new ArgumentNullException(nameof(content));
+        ArgumentNullException.ThrowIfNull(content);
+        _content = content;
     }
 
     public override void Render(IComposer composer)

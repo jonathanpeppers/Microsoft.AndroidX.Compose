@@ -64,7 +64,8 @@ public sealed class NavHost : ComposableNode, IEnumerable
     /// </summary>
     public NavHost(string startDestination, NavController? navController = null)
     {
-        _startDestination = startDestination ?? throw new ArgumentNullException(nameof(startDestination));
+        ArgumentNullException.ThrowIfNull(startDestination);
+        _startDestination = startDestination;
         _navController    = navController    ?? new NavController();
     }
 

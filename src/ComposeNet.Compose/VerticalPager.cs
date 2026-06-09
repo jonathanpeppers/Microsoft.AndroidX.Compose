@@ -33,8 +33,10 @@ public sealed class VerticalPager<T> : ComposableNode
     /// </summary>
     public VerticalPager(IReadOnlyList<T> items, Func<T, ComposableNode> itemContent)
     {
-        _items       = items       ?? throw new ArgumentNullException(nameof(items));
-        _itemContent = itemContent ?? throw new ArgumentNullException(nameof(itemContent));
+        ArgumentNullException.ThrowIfNull(items);
+        _items       = items;
+        ArgumentNullException.ThrowIfNull(itemContent);
+        _itemContent = itemContent;
     }
 
     /// <summary>

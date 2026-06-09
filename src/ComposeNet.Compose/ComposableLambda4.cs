@@ -22,7 +22,7 @@ internal sealed class ComposableLambda4 : Java.Lang.Object, IFunction4
 
     public Java.Lang.Object? Invoke(Java.Lang.Object? p0, Java.Lang.Object? p1, Java.Lang.Object? p2, Java.Lang.Object? p3)
     {
-        System.ArgumentNullException.ThrowIfNull(p2);
+        ArgumentNullException.ThrowIfNull(p2);
         var composer = Android.Runtime.Extensions.JavaCast<IComposer>(p2);
         using var _ = ComposeContext.Push(composer);
         _body(p0?.Handle ?? IntPtr.Zero, p1, composer);

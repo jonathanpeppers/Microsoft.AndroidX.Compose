@@ -34,9 +34,12 @@ public sealed class LazyVerticalStaggeredGrid<T> : ComposableNode
     /// </summary>
     public LazyVerticalStaggeredGrid(IStaggeredGridCells columns, IReadOnlyList<T> items, Func<T, ComposableNode> itemContent)
     {
-        _columns     = columns     ?? throw new ArgumentNullException(nameof(columns));
-        _items       = items       ?? throw new ArgumentNullException(nameof(items));
-        _itemContent = itemContent ?? throw new ArgumentNullException(nameof(itemContent));
+        ArgumentNullException.ThrowIfNull(columns);
+        _columns     = columns;
+        ArgumentNullException.ThrowIfNull(items);
+        _items       = items;
+        ArgumentNullException.ThrowIfNull(itemContent);
+        _itemContent = itemContent;
     }
 
     /// <summary>

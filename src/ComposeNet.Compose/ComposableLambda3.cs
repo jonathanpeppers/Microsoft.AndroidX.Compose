@@ -45,7 +45,7 @@ internal sealed class ComposableLambda3 : Java.Lang.Object, IFunction3
     // Unit.INSTANCE. See ComposableLambda0 / issue #43 for the rationale.
     public Java.Lang.Object Invoke(Java.Lang.Object? p0, Java.Lang.Object? p1, Java.Lang.Object? p2)
     {
-        System.ArgumentNullException.ThrowIfNull(p1);
+        ArgumentNullException.ThrowIfNull(p1);
         var composer = Android.Runtime.Extensions.JavaCast<IComposer>(p1);
         using var _ = ComposeContext.Push(composer);
         _body(p0, composer);

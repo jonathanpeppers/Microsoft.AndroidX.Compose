@@ -53,7 +53,8 @@ public sealed class Composable : IEnumerable
     /// </summary>
     public Composable(string route)
     {
-        Route = route ?? throw new ArgumentNullException(nameof(route));
+        ArgumentNullException.ThrowIfNull(route);
+        Route = route;
     }
 
     /// <summary>
@@ -64,8 +65,10 @@ public sealed class Composable : IEnumerable
     /// </summary>
     public Composable(string route, Func<NavBackStackEntry, ComposableNode> content)
     {
-        Route    = route   ?? throw new ArgumentNullException(nameof(route));
-        _factory = content ?? throw new ArgumentNullException(nameof(content));
+        ArgumentNullException.ThrowIfNull(route);
+        Route    = route;
+        ArgumentNullException.ThrowIfNull(content);
+        _factory = content;
     }
 
     /// <summary>The route string used to navigate to this destination.</summary>

@@ -50,7 +50,8 @@ public sealed class Composed : ComposableNode
     /// </summary>
     public Composed(Func<IComposer, ComposableNode?> builder)
     {
-        _builder = builder ?? throw new ArgumentNullException(nameof(builder));
+        ArgumentNullException.ThrowIfNull(builder);
+        _builder = builder;
     }
 
     /// <inheritdoc />

@@ -28,7 +28,7 @@ public sealed class AnnotatedText : ComposableNode
     /// <summary>Construct a rich-text node from an <see cref="AnnotatedString"/>.</summary>
     public AnnotatedText(AnnotatedString text)
     {
-        System.ArgumentNullException.ThrowIfNull(text);
+        ArgumentNullException.ThrowIfNull(text);
         _text = text;
     }
 

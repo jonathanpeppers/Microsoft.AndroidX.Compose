@@ -33,7 +33,7 @@ public sealed class LaunchedEffect : ComposableNode
         object? key1,
         System.Func<System.Threading.CancellationToken, System.Threading.Tasks.Task> body)
     {
-        System.ArgumentNullException.ThrowIfNull(body);
+        ArgumentNullException.ThrowIfNull(body);
         _key1 = key1; _keyCount = 1; _body = body;
     }
 
@@ -43,7 +43,7 @@ public sealed class LaunchedEffect : ComposableNode
         object? key2,
         System.Func<System.Threading.CancellationToken, System.Threading.Tasks.Task> body)
     {
-        System.ArgumentNullException.ThrowIfNull(body);
+        ArgumentNullException.ThrowIfNull(body);
         _key1 = key1; _key2 = key2; _keyCount = 2; _body = body;
     }
 
@@ -54,7 +54,7 @@ public sealed class LaunchedEffect : ComposableNode
         object? key3,
         System.Func<System.Threading.CancellationToken, System.Threading.Tasks.Task> body)
     {
-        System.ArgumentNullException.ThrowIfNull(body);
+        ArgumentNullException.ThrowIfNull(body);
         _key1 = key1; _key2 = key2; _key3 = key3; _keyCount = 3; _body = body;
     }
 

@@ -76,7 +76,7 @@ public sealed class CompositionLocal<T>
     /// </summary>
     public static CompositionLocal<T> StaticOf(Func<T> defaultFactory)
     {
-        if (defaultFactory is null) throw new ArgumentNullException(nameof(defaultFactory));
+        ArgumentNullException.ThrowIfNull(defaultFactory);
         var peer = CompositionLocalKt.StaticCompositionLocalOf(
             new ObjectFunction0(() => ToJava(defaultFactory())));
         return new CompositionLocal<T>(peer);
@@ -89,7 +89,7 @@ public sealed class CompositionLocal<T>
     /// </summary>
     public static CompositionLocal<T> Of(Func<T> defaultFactory)
     {
-        if (defaultFactory is null) throw new ArgumentNullException(nameof(defaultFactory));
+        ArgumentNullException.ThrowIfNull(defaultFactory);
         var peer = CompositionLocalKt.CompositionLocalOf(
             SnapshotStateKt.StructuralEqualityPolicy(),
             new ObjectFunction0(() => ToJava(defaultFactory())));
@@ -104,7 +104,7 @@ public sealed class CompositionLocal<T>
     /// </summary>
     public T GetCurrent(IComposer composer)
     {
-        if (composer is null) throw new ArgumentNullException(nameof(composer));
+        ArgumentNullException.ThrowIfNull(composer);
         return FromJava(_peer.GetCurrent(composer, 0));
     }
 

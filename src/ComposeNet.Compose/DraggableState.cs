@@ -45,7 +45,7 @@ public sealed class DraggableState
     /// </summary>
     public DraggableState(System.Action<float> onDelta)
     {
-        System.ArgumentNullException.ThrowIfNull(onDelta);
+        ArgumentNullException.ThrowIfNull(onDelta);
         var jcw = new ComposableLambda1(boxed =>
         {
             var f = boxed as Java.Lang.Float

@@ -32,7 +32,8 @@ public sealed class NavBackStackEntry
 
     internal NavBackStackEntry(AndroidX.Navigation.NavBackStackEntry jvm)
     {
-        Jvm = jvm ?? throw new ArgumentNullException(nameof(jvm));
+        ArgumentNullException.ThrowIfNull(jvm);
+        Jvm = jvm;
     }
 
     /// <summary>

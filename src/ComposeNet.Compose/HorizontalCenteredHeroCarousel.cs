@@ -30,8 +30,10 @@ public sealed class HorizontalCenteredHeroCarousel<T> : ComposableNode
 
     public HorizontalCenteredHeroCarousel(IReadOnlyList<T> items, Func<T, ComposableNode> itemContent)
     {
-        _items       = items       ?? throw new ArgumentNullException(nameof(items));
-        _itemContent = itemContent ?? throw new ArgumentNullException(nameof(itemContent));
+        ArgumentNullException.ThrowIfNull(items);
+        _items       = items;
+        ArgumentNullException.ThrowIfNull(itemContent);
+        _itemContent = itemContent;
     }
 
     /// <summary>

@@ -106,7 +106,7 @@ public sealed class SemanticsScope
     /// <returns>This scope, to chain further calls.</returns>
     public SemanticsScope ContentDescription(string description)
     {
-        System.ArgumentNullException.ThrowIfNull(description);
+        ArgumentNullException.ThrowIfNull(description);
         ComposeBridges.SemanticsSetContentDescription(Handle, description);
         return this;
     }
@@ -122,7 +122,7 @@ public sealed class SemanticsScope
     /// <returns>This scope, to chain further calls.</returns>
     public SemanticsScope StateDescription(string description)
     {
-        System.ArgumentNullException.ThrowIfNull(description);
+        ArgumentNullException.ThrowIfNull(description);
         ComposeBridges.SemanticsSetStateDescription(Handle, description);
         return this;
     }
@@ -143,7 +143,7 @@ public sealed class SemanticsScope
     /// <returns>This scope, to chain further calls.</returns>
     public SemanticsScope OnClick(string? label, System.Func<bool> action)
     {
-        System.ArgumentNullException.ThrowIfNull(action);
+        ArgumentNullException.ThrowIfNull(action);
         var f0 = new ObjectFunction0(() => action()
             ? (Java.Lang.Object)Java.Lang.Boolean.True!
             : Java.Lang.Boolean.False!);
@@ -163,7 +163,7 @@ public sealed class SemanticsScope
     /// <returns>This scope, to chain further calls.</returns>
     public SemanticsScope OnClick(string? label, System.Action action)
     {
-        System.ArgumentNullException.ThrowIfNull(action);
+        ArgumentNullException.ThrowIfNull(action);
         return OnClick(label, () => { action(); return true; });
     }
 
