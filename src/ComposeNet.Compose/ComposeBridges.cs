@@ -304,6 +304,46 @@ internal static partial class ComposeBridges
         int? minLines,
         IComposer composer);
 
+    // androidx.compose.material3.TextKt.Text-IbK3jfQ — the
+    // AnnotatedString overload. Mangled JVM name because Kotlin
+    // value-class params (Color/TextUnit/TextDecoration/TextAlign)
+    // produce a `-XxxxXXX` suffix that strips the overload from the
+    // binding. Has one extra slot vs the string variant: a `Map`
+    // `inlineContent` between minLines and onTextLayout. Hand-paired
+    // with the AnnotatedText facade (Text-generated facade can't host a
+    // second constructor pointing at a different bridge); see
+    // AnnotatedText.cs.
+    [ComposeBridge(
+        Class     = "androidx/compose/material3/TextKt",
+        JvmName   = "Text-IbK3jfQ",
+        Signature = "(Landroidx/compose/ui/text/AnnotatedString;Landroidx/compose/ui/Modifier;JJ" +
+                    "Landroidx/compose/ui/text/font/FontStyle;" +
+                    "Landroidx/compose/ui/text/font/FontWeight;" +
+                    "Landroidx/compose/ui/text/font/FontFamily;J" +
+                    "Landroidx/compose/ui/text/style/TextDecoration;" +
+                    "Landroidx/compose/ui/text/style/TextAlign;JIZII" +
+                    "Ljava/util/Map;Lkotlin/jvm/functions/Function1;" +
+                    "Landroidx/compose/ui/text/TextStyle;" +
+                    "Landroidx/compose/runtime/Composer;III)V",
+        Defaults  = typeof(AnnotatedTextDefault))]
+    public static partial void TextAnnotated(
+        AnnotatedString text,
+        IModifier? modifier,
+        Color? color,
+        Sp? fontSize,
+        FontStyle? fontStyle,
+        FontWeight? fontWeight,
+        FontFamily? fontFamily,
+        Sp? letterSpacing,
+        TextDecoration? decoration,
+        TextAlign? align,
+        Sp? lineHeight,
+        TextOverflow? overflow,
+        bool? softWrap,
+        int? maxLines,
+        int? minLines,
+        IComposer composer);
+
     // androidx.compose.material3.ButtonKt.Button
     [ComposeBridge(
         Class     = "androidx/compose/material3/ButtonKt",
@@ -1406,7 +1446,7 @@ internal static partial class ComposeBridges
         JvmName   = "ModalDrawerSheet-afqeVBk",
         Signature = DrawerSheetSig,
         Defaults  = typeof(DrawerSheetDefault))]
-    [ComposeFacade(DefaultColorFromTheme = "secondaryContainer")]
+    [ComposeFacade(DefaultColorFromTheme = "surfaceContainerLow")]
     public static partial void ModalDrawerSheet(IFunction3 content, long drawerContainerColor, IComposer composer);
 
     [ComposeBridge(
@@ -1414,7 +1454,7 @@ internal static partial class ComposeBridges
         JvmName   = "DismissibleDrawerSheet-afqeVBk",
         Signature = DrawerSheetSig,
         Defaults  = typeof(DrawerSheetDefault))]
-    [ComposeFacade(DefaultColorFromTheme = "secondaryContainer")]
+    [ComposeFacade(DefaultColorFromTheme = "surface")]
     public static partial void DismissibleDrawerSheet(IFunction3 content, long drawerContainerColor, IComposer composer);
 
     [ComposeBridge(
@@ -1422,7 +1462,7 @@ internal static partial class ComposeBridges
         JvmName   = "PermanentDrawerSheet-afqeVBk",
         Signature = DrawerSheetSig,
         Defaults  = typeof(DrawerSheetDefault))]
-    [ComposeFacade(DefaultColorFromTheme = "secondaryContainer")]
+    [ComposeFacade(DefaultColorFromTheme = "surface")]
     public static partial void PermanentDrawerSheet(IFunction3 content, long drawerContainerColor, IComposer composer);
 
     // androidx.compose.material3.SegmentedButtonKt.SegmentedButton
@@ -3686,6 +3726,22 @@ internal static partial class ComposeBridges
         return JNIEnv.NewObject(
             s_pointerInputHandler_class, s_pointerInputHandler_ctor, args);
     }
+
+    // androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner.current
+    // — `@Composable @ReadOnlyComposable` getter on a Kotlin object
+    // singleton. We need this to read the current ViewModelStoreOwner
+    // (NavBackStackEntry inside a NavHost destination, or the
+    // ComponentActivity at the root) so Compose.ViewModel<T> can
+    // hand the right owner to ViewModelProvider. The binding exposes
+    // the singleton (LocalViewModelStoreOwner.Instance) but not the
+    // @Composable getter, so we go through InstanceField + JNI.
+    // Returns null when no owner is installed; the caller throws.
+    [ComposeBridge(
+        Class         = "androidx/lifecycle/viewmodel/compose/LocalViewModelStoreOwner",
+        JvmName       = "getCurrent",
+        Signature     = "(Landroidx/compose/runtime/Composer;I)Landroidx/lifecycle/ViewModelStoreOwner;",
+        InstanceField = "INSTANCE")]
+    public static partial IntPtr LocalViewModelStoreOwnerCurrent(IComposer composer);
 
     // androidx.activity.compose.BackHandlerKt.BackHandler — Kotlin
     // signature `BackHandler(enabled: Boolean = true, onBack: () -> Unit)`.

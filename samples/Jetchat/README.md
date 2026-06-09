@@ -32,6 +32,13 @@ dotnet build samples/Jetchat -t:Run
   Profiles" section. The drawer column is wrapped in
   `Modifier.VerticalScroll(rememberedScrollState)` so it scrolls when
   it overflows on small heights.
+- **Drawer "Settings" section (API 26+)** — on
+  `OperatingSystem.IsAndroidVersionAtLeast(26)` an extra section with
+  **Settings** and **Pin Widget to home** rows appears below "Recent
+  Profiles", matching upstream's `JetchatDrawer` API-gated block.
+  Tapping either row closes the drawer and opens the existing
+  `FunctionalityNotAvailable` popup; an actual `requestPinAppWidget`
+  flow is gated behind a future Glance widget (still listed below).
 - **Multi-channel state** — `ConversationUiState` holds a
   `Dictionary<string, ChannelState>` keyed by channel name. Tapping a
   drawer row swaps the active channel; the title, member count, and
@@ -97,13 +104,16 @@ dotnet build samples/Jetchat -t:Run
   Each is a toggleable `IconButton` whose background fills with
   `secondaryContainer` and whose tint flips to `onSecondaryContainer`
   when selected, matching upstream's selection visual. Selecting the
-  emoji button opens a placeholder panel below the input area;
-  selecting @ / image / location / video opens a
-  `FunctionalityNotAvailable` panel — the same fallback upstream
-  uses for the unbound selector pages.
+  emoji button opens the real two-tab emoji panel (Emojis/Stickers,
+  10-column tappable grid — see `EmojiSelector.cs`); selecting @ /
+  image / location / video opens a `FunctionalityNotAvailable` panel —
+  the same fallback upstream uses for the unbound selector pages.
 - **IME + navigation-bar safe insets** on the input area via
-  `Modifier.NavigationBarsPadding().ImePadding()` so the keyboard
-  pushes the input row up without obscuring it.
+  `Modifier.NavigationBarsPadding().ImePadding()` plus
+  `WindowSoftInputMode = SoftInput.AdjustResize` on the activity, so
+  the keyboard pushes the input row up without obscuring it (and
+  without the system's default `adjustUnspecified` behaviour
+  double-shifting the content under edge-to-edge).
 - Reactive message list via `MutableStateList<Message>` — tapping
   send appends to the active channel and the UI recomposes.
 - Reactive channel selection via `MutableState<string>` — drawer
@@ -156,13 +166,14 @@ feature, a new package reference, or simply more sample plumbing:
 |-------------------------------------------|--------------------|
 | `JumpToBottom` FAB (slides in when scrolled away from bottom) | needs a `LazyListState` facade wrapper plus a suspend bridge over `animateScrollToItem`. `LazyListStateKt.RememberLazyListState` is bindable — confirmed during this port; the wrapper just hasn't been built yet. |
 | `BackHandler` to dismiss the expanded input panel via system back | `androidx.activity.compose.BackHandlerKt` lives in `Xamarin.AndroidX.Activity.Compose` which isn't currently referenced. Adding the NuGet + a `[ComposeBridge]` would unblock it. |
-| `ClickableText` URL / `@mention` link parsing inside message bodies | needs `AnnotatedString` + `ClickableText` bindings (multi-span text styling). |
 | Image / sticker / file message attachments inside bubbles | requires a composable image-loader pipeline (e.g. Coil). |
-| App-widget discoverability (`@JetchatAppWidget`) | explicitly out of scope. |
+| App-widget discoverability (`@JetchatAppWidget`) | the **drawer entry point** exists on API 26+ (see *What's faithful*) but the actual `androidx.glance.appwidget`-backed widget + `AppWidgetManager.requestPinAppWidget(...)` flow is still out of scope — needs the `Xamarin.AndroidX.Glance.AppWidget` package and a `GlanceAppWidget` subclass. |
 | Drag-and-drop image target on the conversation area | explicitly out of scope. |
 | Sticky day-headers spanning multiple dates (e.g. "20 Aug" alongside "Today") | needs the `LazyListScope.item { … }` DSL exposed on the `LazyColumn` facade so a per-day header can be emitted between message groups. Only "Today" is rendered. |
 | `Sp(float)` for exact M3 letter-spacing (0.5 / 0.1 sp values) | `Sp` is integer-only; `labelSmall` rounds 0.5 → 1, `titleSmall` rounds 0.1 → 0 (dropped). |
 | `FocusRequester` programmatic focus into the emoji panel | the panel opens correctly but doesn't grab focus on expand. |
+| Full ~80-glyph emoji table | `EmojiSelector.cs` exposes the first 40 glyphs from upstream's `private val emojis = listOf(...)` — the same `EMOJI_COLUMNS × 4` grid Kotlin's `EmojiTable` actually renders. The remaining upstream entries are unused on screen and were dropped. |
+| Emoji-tap places cursor at end of input   | Upstream uses `TextFieldValue` with explicit `selection = TextRange(newText.length)` so each emoji append moves the cursor past the appended glyph. This port's `TextField` facade is bound to `MutableState<string>` (Compose's `String`-overload), which preserves the existing cursor position across external value updates. Tapping an emoji appends the glyph to the buffer but the cursor stays where it was — a `TextFieldValue` / `TextRange` binding is needed for parity. Tracked in #204. |
 
 ## Facade features added for this port
 
@@ -189,6 +200,14 @@ this completion round added:
   `RoundedCornerShapeKt.RoundedCornerShape(float, float, float, float)`
   directly. (The 4-arg `(Dp, Dp, Dp, Dp)` overload is bindable;
   only the single-radius `(Dp)` overload is mangled.)
+- **`AnnotatedString` / `AnnotatedStringBuilder` / `SpanStyle` /
+  `LinkAnnotation` / `AnnotatedText`** — facade primitives for
+  Compose's rich-text type. `AnnotatedText` is a sibling of the
+  source-generated `Text` facade rather than an extra ctor — the
+  `AnnotatedString` overload's mangled JVM name (`Text-IbK3jfQ`)
+  carries an extra `Map` slot for inline content, and the source-
+  generator path emits one `Render` per facade. Same precedent as
+  `Icon` exposing both vector-asset and resource-id paths.
 
 ## Implementation notes
 
@@ -240,6 +259,44 @@ The sample mirrors disabled-state visuals by flipping the label
 color from `Primary` to `OnSurfaceVariant` when the input is
 whitespace, and the `Send` handler early-returns on
 `IsNullOrWhiteSpace`.
+
+### `MessageFormatter` regex behaviour
+
+`MessageFormatter.Format` runs the same alternation regex as
+upstream — `(https?://[^\s\t\n]+)|(`[^`]+`)|(@\w+)|(\*[\w]+\*)|(_[\w]+_)|(~[\w]+~)`
+— so a URL containing an `@` is consumed greedily as a single URL
+match (the `[^\s\t\n]+` URL run reaches the next whitespace), and
+the `@mention` branch only fires for bare tokens. This matches
+upstream's behaviour even though regex alternation itself isn't
+"longest-first" — the URL pattern simply wins because it's listed
+first and its character class is greedy.
+
+### `@mention` taps fall back to the popup dialog
+
+Upstream wires `authorClicked(...)` to navigate to a profile
+screen. The port doesn't have a profile screen
+(`NavController` / `NavHost` exist in the facade layer but the nav
+graph isn't wired up), so `BuildChatItemBubble` threads the same
+`popupOpen` `MutableState<bool>` already used by the search / info
+top-bar icons down through `BuildBody` → `BuildMessages` →
+`BuildMessageRow` → `BuildAuthorAndTextMessage` → `BuildChatItemBubble`,
+and tapping a mention flips it to `true` to surface the existing
+"Functionality not available" dialog.
+
+### Drawer "Settings" section is gated on API 26
+
+Upstream's `JetchatDrawer.kt` wraps the **Settings** + **Pin Widget
+to home** rows in `if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)`
+because `AppWidgetManager.requestPinAppWidget(...)` requires API 26.
+The port uses the modern .NET equivalent
+(`OperatingSystem.IsAndroidVersionAtLeast(26)`), which the BCL
+recognises as a platform guard so the rows can call APIs annotated
+`[SupportedOSPlatform("android26.0")]` without an `SYSLIB` warning.
+Both row click handlers fire `drawerState.CloseAsync()` and then the
+existing `FunctionalityNotAvailable` popup — same affordance the
+search and info top-bar icons use. Hooking the **Pin Widget** row to
+a real `requestPinAppWidget` call is blocked on landing the Glance
+widget itself, tracked in *What's still omitted*.
 
 ### Layout and styling decisions vs upstream
 
