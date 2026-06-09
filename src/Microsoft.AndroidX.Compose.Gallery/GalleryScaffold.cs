@@ -15,28 +15,35 @@ public sealed class GalleryScaffold : ComposableNode
 {
     readonly NavController _nav;
     readonly DrawerStateHolder _drawer;
+    readonly MutableState<string> _currentRoute;
 
     /// <summary>Construct the scaffold bound to <paramref name="nav"/> + <paramref name="drawer"/>.</summary>
-    public GalleryScaffold(NavController nav, DrawerStateHolder drawer)
+    /// <param name="nav">The shared <see cref="NavController"/>.</param>
+    /// <param name="drawer">The shared <see cref="DrawerStateHolder"/>.</param>
+    /// <param name="currentRoute">
+    /// The shared route <see cref="MutableState{T}"/> owned by
+    /// <see cref="GalleryApp"/>. Each route's body updates it in a
+    /// <see cref="DisposableEffect"/>; the top app bar reads it to
+    /// decide between hamburger (home) and back arrow (anywhere else),
+    /// and the surrounding drawer reads it to toggle the edge-swipe
+    /// gesture.
+    /// </param>
+    public GalleryScaffold(NavController nav, DrawerStateHolder drawer, MutableState<string> currentRoute)
     {
-        _nav    = nav;
-        _drawer = drawer;
+        _nav          = nav;
+        _drawer       = drawer;
+        _currentRoute = currentRoute;
     }
 
     public override void Render(IComposer composer)
     {
-        // Tracked separately from NavController because the binding doesn't
-        // expose currentBackStackEntryAsState. Each route's body updates
-        // this MutableState in a DisposableEffect; the top app bar reads it
-        // to decide between hamburger (home) and back arrow (anywhere else).
-        var currentRoute = composer.Remember(() => new MutableState<string>("home"));
-        var atRoot       = currentRoute.Value == "home";
+        var atRoot = _currentRoute.Value == "home";
 
         new Scaffold
         {
             TopBar = new CenterAlignedTopAppBar
             {
-                Title = new Text(TitleFor(currentRoute.Value)),
+                Title = new Text(TitleFor(_currentRoute.Value)),
                 NavigationIcon = atRoot
                     ? new IconButton(onClick: () => _ = _drawer.OpenAsync())
                     {
@@ -54,7 +61,7 @@ public sealed class GalleryScaffold : ComposableNode
                     },
                 },
             },
-            Body = BuildNavHost(currentRoute),
+            Body = BuildNavHost(_currentRoute),
         }.Render(composer);
     }
 

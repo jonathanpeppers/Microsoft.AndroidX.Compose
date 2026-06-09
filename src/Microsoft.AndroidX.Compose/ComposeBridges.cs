@@ -1722,12 +1722,14 @@ internal static partial class ComposeBridges
         [StateHolder(Remember = nameof(RememberDrawerState),
                      StateType = typeof(DrawerStateHolder),
                      SharedState = true)] IntPtr drawerState,
+        bool?             gesturesEnabled,
         [Slot("Content")] IFunction2 content,
         int               defaults,
         IComposer         composer);
 
     public static partial void ModalNavigationDrawer(
         IFunction2 drawerContent, IModifier? modifier, IntPtr drawerState,
+        bool? gesturesEnabled,
         IFunction2 content, int defaults, IComposer composer)
     {
         // The bound binding takes a typed DrawerState; reconstitute it
@@ -1738,7 +1740,10 @@ internal static partial class ComposeBridges
             drawerContent:    drawerContent,
             modifier:         modifier,
             drawerState:      stateObj,
-            gesturesEnabled:  true,
+            // gesturesEnabled: null → Kotlin default (true). When the caller
+            // supplies a value, the facade's auto-mask clears the matching
+            // GesturesEnabled bit in `defaults` so Kotlin uses our value.
+            gesturesEnabled:  gesturesEnabled ?? true,
             scrimColor:       0L,
             content:          content,
             _composer:        composer,
@@ -1753,12 +1758,14 @@ internal static partial class ComposeBridges
         [StateHolder(Remember = nameof(RememberDrawerState),
                      StateType = typeof(DrawerStateHolder),
                      SharedState = true)] IntPtr drawerState,
+        bool?             gesturesEnabled,
         [Slot("Content")] IFunction2 content,
         int               defaults,
         IComposer         composer);
 
     public static partial void DismissibleNavigationDrawer(
         IFunction2 drawerContent, IModifier? modifier, IntPtr drawerState,
+        bool? gesturesEnabled,
         IFunction2 content, int defaults, IComposer composer)
     {
         var stateObj = Java.Lang.Object.GetObject<DrawerState>(
@@ -1767,7 +1774,7 @@ internal static partial class ComposeBridges
             drawerContent:    drawerContent,
             modifier:         modifier,
             drawerState:      stateObj,
-            gesturesEnabled:  true,
+            gesturesEnabled:  gesturesEnabled ?? true,
             content:          content,
             _composer:        composer,
             p6:               0,

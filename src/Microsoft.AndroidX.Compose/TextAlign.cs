@@ -16,79 +16,46 @@ namespace Microsoft.AndroidX.Compose;
 /// inline-class's mangled <c>Companion.getCenter-e0LSkKk()I</c>
 /// (and friends) for the packed int, then route it through the
 /// synthesized static <c>TextAlign.box-impl(I)LTextAlign;</c> to wrap.
+/// <c>ComposeCompanionGenerator</c> emits both halves of that dance
+/// from the <c>InlineClass = true</c> on the
+/// <see cref="ComposeCompanionAttribute"/> below.
 ///
 /// Will swap to bound <c>global::AndroidX.Compose.UI.Text.Style.TextAlign</c>
 /// once <see href="https://github.com/dotnet/android-libraries/pull/1440"/>
 /// ships and we adopt the next <c>Xamarin.AndroidX.Compose.UI.Text.Android</c>
 /// release.
 /// </summary>
-public sealed class TextAlign : Java.Lang.Object
+[ComposeCompanion("androidx/compose/ui/text/style/TextAlign", InlineClass = true)]
+public sealed partial class TextAlign : Java.Lang.Object
 {
     TextAlign(IntPtr handle, JniHandleOwnership transfer)
         : base(handle, transfer) { }
 
-    static IntPtr s_companion;
-    static IntPtr s_box;
-
-    static unsafe IntPtr Companion()
-    {
-        if (s_companion == IntPtr.Zero)
-        {
-            IntPtr cls = JNIEnv.FindClass("androidx/compose/ui/text/style/TextAlign");
-            IntPtr fid = JNIEnv.GetStaticFieldID(cls, "Companion", "Landroidx/compose/ui/text/style/TextAlign$Companion;");
-            IntPtr local = JNIEnv.GetStaticObjectField(cls, fid);
-            s_companion = JNIEnv.NewGlobalRef(local);
-            JNIEnv.DeleteLocalRef(local);
-        }
-        return s_companion;
-    }
-
-    static IntPtr BoxMethod()
-    {
-        if (s_box == IntPtr.Zero)
-        {
-            IntPtr cls = JNIEnv.FindClass("androidx/compose/ui/text/style/TextAlign");
-            s_box = JNIEnv.GetStaticMethodID(cls, "box-impl", "(I)Landroidx/compose/ui/text/style/TextAlign;");
-        }
-        return s_box;
-    }
-
-    static unsafe TextAlign Resolve(string mangledGetter)
-    {
-        // 1. Companion.<getter>()I returns the packed int.
-        IntPtr companionCls = JNIEnv.FindClass("androidx/compose/ui/text/style/TextAlign$Companion");
-        IntPtr getter = JNIEnv.GetMethodID(companionCls, mangledGetter, "()I");
-        int packed = JNIEnv.CallIntMethod(Companion(), getter);
-
-        // 2. TextAlign.box-impl(int) -> Landroidx/.../TextAlign;
-        IntPtr cls = JNIEnv.FindClass("androidx/compose/ui/text/style/TextAlign");
-        JValue* args = stackalloc JValue[1];
-        args[0] = new JValue(packed);
-        IntPtr boxed = JNIEnv.CallStaticObjectMethod(cls, BoxMethod(), args);
-        return new TextAlign(boxed, JniHandleOwnership.TransferLocalRef);
-    }
-
-    static TextAlign? s_left, s_right, s_center, s_justify, s_start, s_end, s_unspecified;
-
     /// <summary>Align text to the left edge of the container.</summary>
-    public static TextAlign Left => s_left ??= Resolve("getLeft-e0LSkKk");
+    [ComposeCompanionGetter("getLeft-e0LSkKk")]
+    public static partial TextAlign Left { get; }
 
     /// <summary>Align text to the right edge of the container.</summary>
-    public static TextAlign Right => s_right ??= Resolve("getRight-e0LSkKk");
+    [ComposeCompanionGetter("getRight-e0LSkKk")]
+    public static partial TextAlign Right { get; }
 
     /// <summary>Center text within the container.</summary>
-    public static TextAlign Center => s_center ??= Resolve("getCenter-e0LSkKk");
+    [ComposeCompanionGetter("getCenter-e0LSkKk")]
+    public static partial TextAlign Center { get; }
 
     /// <summary>Stretch lines to fill the container width.</summary>
-    public static TextAlign Justify => s_justify ??= Resolve("getJustify-e0LSkKk");
+    [ComposeCompanionGetter("getJustify-e0LSkKk")]
+    public static partial TextAlign Justify { get; }
 
     /// <summary>Align text to the layout-direction start edge.</summary>
-    public static TextAlign Start => s_start ??= Resolve("getStart-e0LSkKk");
+    [ComposeCompanionGetter("getStart-e0LSkKk")]
+    public static partial TextAlign Start { get; }
 
     /// <summary>Align text to the layout-direction end edge.</summary>
-    public static TextAlign End => s_end ??= Resolve("getEnd-e0LSkKk");
+    [ComposeCompanionGetter("getEnd-e0LSkKk")]
+    public static partial TextAlign End { get; }
 
     /// <summary>The unspecified-alignment sentinel value (Kotlin's default for nullable slots).</summary>
-    public static TextAlign Unspecified => s_unspecified ??= Resolve("getUnspecified-e0LSkKk");
+    [ComposeCompanionGetter("getUnspecified-e0LSkKk")]
+    public static partial TextAlign Unspecified { get; }
 }
-

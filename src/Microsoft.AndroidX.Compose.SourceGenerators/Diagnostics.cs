@@ -187,4 +187,60 @@ internal static class Diagnostics
         category: "Microsoft.AndroidX.Compose",
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);
+
+    public static readonly DiagnosticDescriptor CompanionNotPartial = new(
+        id: "CN4001",
+        title: "[ComposeCompanion] target class must be partial",
+        messageFormat: "Class '{0}' carries [ComposeCompanion] but is not declared 'partial'",
+        category: "Microsoft.AndroidX.Compose",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
+
+    public static readonly DiagnosticDescriptor CompanionMalformedOuter = new(
+        id: "CN4002",
+        title: "[ComposeCompanion] outer JNI class is missing or malformed",
+        messageFormat: "Class '{0}' [ComposeCompanion] requires a non-empty slash-separated outer JNI class name",
+        category: "Microsoft.AndroidX.Compose",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
+
+    public static readonly DiagnosticDescriptor CompanionGetterShape = new(
+        id: "CN4003",
+        title: "[ComposeCompanionGetter] must be on a 'public static partial T { get; }' property",
+        messageFormat: "Property '{0}.{1}' carries [ComposeCompanionGetter] but is not a public static partial get-only declaration",
+        category: "Microsoft.AndroidX.Compose",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
+
+    public static readonly DiagnosticDescriptor CompanionMalformedGetter = new(
+        id: "CN4004",
+        title: "[ComposeCompanionGetter] getter name is missing or empty",
+        messageFormat: "Property '{0}.{1}' [ComposeCompanionGetter] requires a non-empty Kotlin getter name",
+        category: "Microsoft.AndroidX.Compose",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
+
+    public static readonly DiagnosticDescriptor CompanionGetterMissingHost = new(
+        id: "CN4005",
+        title: "[ComposeCompanionGetter] requires the containing class to carry [ComposeCompanion]",
+        messageFormat: "Property '{0}.{1}' carries [ComposeCompanionGetter] but class '{0}' has no [ComposeCompanion]",
+        category: "Microsoft.AndroidX.Compose",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
+
+    public static readonly DiagnosticDescriptor CompanionMissingPeerCtor = new(
+        id: "CN4006",
+        title: "[ComposeCompanionGetter] return type lacks an (IntPtr, JniHandleOwnership) constructor",
+        messageFormat: "Property '{0}.{1}': return type '{2}' must declare an accessible '(System.IntPtr, Android.Runtime.JniHandleOwnership)' constructor so the generated body can wrap the JNI handle",
+        category: "Microsoft.AndroidX.Compose",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
+
+    public static readonly DiagnosticDescriptor CompanionInlineReturnConflict = new(
+        id: "CN4007",
+        title: "[ComposeCompanionGetter(ReturnDescriptor=...)] cannot be combined with [ComposeCompanion(InlineClass = true)]",
+        messageFormat: "Property '{0}.{1}': inline-class companions always box through the outer type via 'box-impl(I)L<outer>;' — remove the per-property ReturnDescriptor",
+        category: "Microsoft.AndroidX.Compose",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
 }
