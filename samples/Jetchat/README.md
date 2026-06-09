@@ -277,7 +277,7 @@ whitespace, and the `Send` handler early-returns on
 ### Drag-and-drop target hoisting
 
 The `DragAndDropTarget` instance for the conversation surface is
-hoisted into `ComposeRuntime.Remember` so the underlying
+hoisted into `composer.Remember` so the underlying
 `DragAndDropTargetElement` keeps a stable identity across
 recompositions; otherwise Compose rebuilds the modifier element
 every frame and its internal hover/started/ended bookkeeping

@@ -11,9 +11,9 @@ public static class ViewModelStateFlowDemo
         CategoryId:  "state-effects",
         Title:       "ViewModel + StateFlow (UDF)",
         Description: "A CounterViewModel exposes a MutableStateFlow<int>; the composable collects it and renders the current value. Increment / Reset post mutations through the VM.",
-        Build:       () =>
+        Build:       c =>
         {
-            var vm = ComposeRuntime.ViewModel(() => new CounterViewModel());
+            var vm = c.ViewModel(() => new CounterViewModel());
             int count = vm.Count.CollectAsStateWithLifecycle().Value;
 
             return new Column

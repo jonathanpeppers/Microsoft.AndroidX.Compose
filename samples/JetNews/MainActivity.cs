@@ -1,10 +1,11 @@
 using global::Android.Content;
+using global::AndroidX.Activity;
 using global::AndroidX.Compose.Material3;
 
 namespace Microsoft.AndroidX.Compose.Samples.JetNews;
 
 /// <summary>
-/// JetNews host activity. Subclasses <see cref="ComposeActivity"/>,
+/// JetNews host activity. Subclasses <see cref="ComponentActivity"/>,
 /// remembers app-wide state (nav controller, current route, bookmark
 /// set, topic/people/publication selections, interests tab index),
 /// then hands off to <see cref="JetnewsApp.Build"/>.
@@ -14,29 +15,30 @@ namespace Microsoft.AndroidX.Compose.Samples.JetNews;
     MainLauncher = true,
     Theme        = "@android:style/Theme.Material.Light.NoActionBar")]
 [global::Android.Runtime.Register("net/compose/samples/jetnews/MainActivity")]
-public class MainActivity : ComposeActivity
+public class MainActivity : ComponentActivity
 {
     /// <summary>Build the root composition.</summary>
     protected override void OnCreate(Bundle? savedInstanceState)
     {
         base.OnCreate(savedInstanceState);
-        SetContent(() =>
+        this.EnableEdgeToEdge();
+        this.SetContent(c =>
         {
-            var nav                  = Remember(() => new NavController());
-            var currentRoute         = Remember(() => new MutableState<string>(Routes.Home));
-            var drawerState          = Remember(() => new DrawerStateHolder(DrawerValue.Closed));
+            var nav                  = c.Remember(() => new NavController());
+            var currentRoute         = c.Remember(() => new MutableState<string>(Routes.Home));
+            var drawerState          = c.Remember(() => new DrawerStateHolder(DrawerValue.Closed));
             // Acquire bookmarks from the activity's ViewModelStore so
             // the toggled set survives configuration change AND is
-            // shared across nav destinations. ComposeRuntime.ViewModel<T>
+            // shared across nav destinations. c.ViewModel<T>
             // reads LocalViewModelStoreOwner from the active
             // composition; the root SetContent body sees the host
             // ComponentActivity, so this VM is activity-scoped.
-            var bookmarks            = ComposeRuntime.ViewModel(() => new BookmarksViewModel());
-            var selectedTopics       = Remember(() => new MutableStateList<string>());
-            var selectedPeople       = Remember(() => new MutableStateList<string>());
-            var selectedPublications = Remember(() => new MutableStateList<string>());
-            var interestsTab         = Remember(() => new MutableState<int>(0));
-            var snackbars            = Remember(() => new SnackbarController());
+            var bookmarks            = c.ViewModel(() => new BookmarksViewModel());
+            var selectedTopics       = c.Remember(() => new MutableStateList<string>());
+            var selectedPeople       = c.Remember(() => new MutableStateList<string>());
+            var selectedPublications = c.Remember(() => new MutableStateList<string>());
+            var interestsTab         = c.Remember(() => new MutableState<int>(0));
+            var snackbars            = c.Remember(() => new SnackbarController());
             return JetnewsApp.Build(
                 nav,
                 currentRoute,

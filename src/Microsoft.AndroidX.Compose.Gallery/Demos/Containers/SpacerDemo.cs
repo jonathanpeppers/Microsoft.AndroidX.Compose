@@ -11,7 +11,7 @@ public static class SpacerDemo
         CategoryId:  "containers",
         Title:       "Spacer",
         Description: "Spacer with explicit Height / Width for fixed gaps.",
-        Build:       () => new Column
+        Build:       _ => new Column
         {
             new Text("32-dp vertical Spacer between the two blocks:"),
             new Box

@@ -1,3 +1,5 @@
+using global::AndroidX.Compose.Runtime;
+
 namespace Microsoft.AndroidX.Compose.Gallery;
 
 /// <summary>
@@ -6,10 +8,10 @@ namespace Microsoft.AndroidX.Compose.Gallery;
 /// (<c>home</c>, <c>category/{id}</c>, <c>demo/{id}</c>, <c>search</c>).
 /// </summary>
 /// <remarks>
-/// Designed to be the sole composition rendered by
-/// <see cref="ComposeActivity.SetContent(Func{ComposableNode})"/>:
+/// Designed to be the sole composition rendered by the
+/// <c>SetContent</c> extension on <see cref="global::AndroidX.Activity.ComponentActivity"/>:
 /// <code>
-/// SetContent(() => GalleryApp.Build());
+/// this.SetContent(GalleryApp.Build);
 /// </code>
 /// </remarks>
 public static class GalleryApp
@@ -20,12 +22,12 @@ public static class GalleryApp
     /// <summary>
     /// Build the gallery's root composable. Allocates the shared
     /// <see cref="NavController"/> + <see cref="DrawerStateHolder"/>
-    /// inside <c>ComposeRuntime.Remember</c> so they survive recomposition.
+    /// inside <c>composer.Remember</c> so they survive recomposition.
     /// </summary>
-    public static ComposableNode Build()
+    public static ComposableNode Build(IComposer composer)
     {
-        var nav    = ComposeRuntime.Remember(() => new NavController());
-        var drawer = ComposeRuntime.Remember(() => new DrawerStateHolder(global::AndroidX.Compose.Material3.DrawerValue.Closed));
+        var nav    = composer.Remember(() => new NavController());
+        var drawer = composer.Remember(() => new DrawerStateHolder(global::AndroidX.Compose.Material3.DrawerValue.Closed));
 
         MainActivity.Nav = nav;
 

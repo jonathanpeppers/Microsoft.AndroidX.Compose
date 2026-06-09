@@ -11,10 +11,10 @@ public static class FocusRequesterDemo
         CategoryId:  "modifiers",
         Title:       "FocusRequester",
         Description: "Tap the button to programmatically focus the bordered Text; OnFocusChanged updates a status line.",
-        Build:       () =>
+        Build:       c =>
         {
-            var focusReq    = ComposeRuntime.Remember(() => new FocusRequester());
-            var focusStatus = ComposeRuntime.Remember(() => new MutableState<string>("not focused"));
+            var focusReq    = c.Remember(() => new FocusRequester());
+            var focusStatus = c.Remember(() => new MutableState<string>("not focused"));
 
             return new Column
             {

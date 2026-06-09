@@ -11,9 +11,9 @@ public static class AnimatedContentDemo
         CategoryId:  "state-effects",
         Title:       "AnimatedContent<int>",
         Description: "Like Crossfade, but with a slide and size change in addition to the fade. Each step uses a different colour so the transition is visible.",
-        Build:       () =>
+        Build:       c =>
         {
-            var step = ComposeRuntime.Remember(() => new MutableNumberState<int>(0));
+            var step = c.Remember(() => new MutableNumberState<int>(0));
             Color[] palette =
             [
                 Color.FromRgb(0xB3, 0xE5, 0xFC),

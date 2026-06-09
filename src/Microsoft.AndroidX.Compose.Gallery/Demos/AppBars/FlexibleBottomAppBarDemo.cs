@@ -11,9 +11,9 @@ public static class FlexibleBottomAppBarDemo
         CategoryId:  "app-bars-tabs",
         Title:       "FlexibleBottomAppBar",
         Description: "Flexible variant of BottomAppBar; content drives the bar's height.",
-        Build:       () =>
+        Build:       c =>
         {
-            var count = ComposeRuntime.Remember(() => new MutableNumberState<int>(0));
+            var count = c.Remember(() => new MutableNumberState<int>(0));
             return new Column
             {
                 new Text($"count = {count}"),

@@ -75,7 +75,7 @@ public static class EmojiSelector
     public static ComposableNode Build(MutableState<TextFieldValue> input, ColorScheme scheme) =>
         new Composed(c =>
         {
-            var selected = ComposeRuntime.Remember(() => new MutableState<int>(0));
+            var selected = c.Remember(() => new MutableState<int>(0));
             return new Column
             {
                 Modifier.Companion
@@ -127,7 +127,7 @@ public static class EmojiSelector
                             // TextFieldValue.Copy(string, long, TextRange?)
                             // overload so onValueChange round-trips a real
                             // Compose peer.
-                            var current = input.Value ?? ComposeRuntime.NewTextFieldValue();
+                            var current = input.Value ?? ComposeExtensions.NewTextFieldValue();
                             var newText = current.Text + emoji;
                             input.Value = current.Copy(newText, TextRangeKt.TextRange(newText.Length), composition: null);
                         })

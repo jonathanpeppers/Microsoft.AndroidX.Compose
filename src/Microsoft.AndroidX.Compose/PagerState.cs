@@ -14,7 +14,7 @@ namespace Microsoft.AndroidX.Compose;
 /// </summary>
 /// <remarks>
 /// <para>
-/// Construct one inside a <see cref="ComposeActivity.Remember{T}(Func{T}, int, string)"/>
+/// Construct one inside a <c>composer.Remember</c>
 /// callback so the page position survives recompositions. The
 /// <c>pageCount</c> lambda must be supplied (the Kotlin
 /// runtime calls it on every measure pass) and should close over a
@@ -42,7 +42,7 @@ namespace Microsoft.AndroidX.Compose;
 /// <para>
 /// Unlike Kotlin's <c>rememberPagerState()</c> (which uses
 /// <c>rememberSaveable</c>), this state is held in the
-/// <see cref="ComposeActivity"/>-scoped Remember cache, so it survives
+/// <c>ComposeExtensions</c>-scoped Remember cache, so it survives
 /// recompositions but not process death / configuration changes. For
 /// most apps that's fine; if you need savable scroll position, track
 /// it yourself with the rest of your view-model state.

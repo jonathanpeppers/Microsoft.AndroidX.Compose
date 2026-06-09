@@ -11,11 +11,11 @@ public static class DraggableOffsetDemo
         CategoryId:  "modifiers",
         Title:       "Draggable + Offset",
         Description: "Touch and drag the purple square horizontally; the DraggableState delta is divided by screen density so dragX accumulates as Dp.",
-        Build:       () =>
+        Build:       c =>
         {
             var density = global::Android.Content.Res.Resources.System!.DisplayMetrics!.Density;
-            var dragX   = ComposeRuntime.Remember(() => new MutableState<float>(0f));
-            var state   = ComposeRuntime.RememberDraggableState(delta => dragX.Value += delta / density);
+            var dragX   = c.Remember(() => new MutableState<float>(0f));
+            var state   = c.RememberDraggableState(delta => dragX.Value += delta / density);
 
             return new Column
             {

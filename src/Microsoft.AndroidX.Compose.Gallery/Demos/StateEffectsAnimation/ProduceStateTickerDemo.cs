@@ -11,10 +11,10 @@ public static class ProduceStateTickerDemo
         CategoryId:  "state-effects",
         Title:       "ProduceState ticker",
         Description: "A 1Hz tick loop publishes into a Compose State. Bumping the seed cancels the current loop and restarts it from 0.",
-        Build:       () =>
+        Build:       c =>
         {
-            var seed   = ComposeRuntime.Remember(() => new MutableNumberState<int>(0));
-            var ticker = ComposeRuntime.ProduceState(0, seed.Value, async (state, ct) =>
+            var seed   = c.Remember(() => new MutableNumberState<int>(0));
+            var ticker = c.ProduceState(0, seed.Value, async (state, ct) =>
             {
                 state.Value = 0;
                 while (!ct.IsCancellationRequested)

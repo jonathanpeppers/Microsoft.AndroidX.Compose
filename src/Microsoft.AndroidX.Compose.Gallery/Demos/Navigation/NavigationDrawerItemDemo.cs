@@ -13,9 +13,9 @@ public static class NavigationDrawerItemDemo
         CategoryId:  "navigation",
         Title:       "NavigationDrawerItem",
         Description: "Selected-state pill, Icon and Badge slots, click handling.",
-        Build:       () =>
+        Build:       c =>
         {
-            var selected = ComposeRuntime.Remember(() => new MutableNumberState<int>(0));
+            var selected = c.Remember(() => new MutableNumberState<int>(0));
             string[] labels = { "Inbox", "Outbox", "Favorites", "Trash" };
             return new PermanentDrawerSheet
             {

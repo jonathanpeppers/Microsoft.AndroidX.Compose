@@ -10,7 +10,7 @@ namespace Microsoft.AndroidX.Compose;
 /// </summary>
 /// <remarks>
 /// <para>
-/// Construct one inside a <see cref="ComposeActivity.Remember{T}(Func{T}, int, string)"/>
+/// Construct one inside a <c>composer.Remember</c>
 /// callback so the scroll position survives recompositions:
 /// <code>
 /// var scroll = Remember(() =&gt; new ScrollState());
@@ -25,7 +25,7 @@ namespace Microsoft.AndroidX.Compose;
 /// <para>
 /// Unlike Kotlin's <c>rememberScrollState()</c> (which uses
 /// <c>rememberSaveable</c>), this state is held in the
-/// <see cref="ComposeActivity"/>-scoped Remember cache, so it survives
+/// <c>ComposeExtensions</c>-scoped Remember cache, so it survives
 /// recompositions but not process death / configuration changes. For
 /// most apps that's fine; if you need savable scroll state, track it
 /// yourself with the rest of your view-model state.

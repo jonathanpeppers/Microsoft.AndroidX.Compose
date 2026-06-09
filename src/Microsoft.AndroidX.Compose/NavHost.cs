@@ -105,7 +105,7 @@ public sealed class NavHost : ComposableNode, IEnumerable
         // If we allocated a fresh NavGraphBuilderLambda on every recomposition,
         // Compose would rebuild the entire graph and reset the back stack to
         // the start destination after every state change. Cache the lambda
-        // in the slot table via ComposeRuntime.Remember so its identity is stable.
+        // in the slot table via ComposeExtensions.Remember so its identity is stable.
         //
         // Compose Navigation invokes the builder ONCE (inside createGraph),
         // so the captured 'this' / '_routes' from the first render are the
@@ -113,7 +113,7 @@ public sealed class NavHost : ComposableNode, IEnumerable
         // re-register routes — that matches Kotlin's behavior where the
         // trailing graph-builder lambda is also captured once.
         var self = this;
-        var builder = ComposeRuntime.Remember(() => new NavGraphBuilderLambda(graphBuilder =>
+        var builder = composer.Remember(() => new NavGraphBuilderLambda(graphBuilder =>
         {
             for (int i = 0; i < self._routes.Count; i++)
                 self._routes[i].RegisterInto(graphBuilder);

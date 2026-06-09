@@ -3,7 +3,7 @@ namespace Microsoft.AndroidX.Compose;
 
 /// <summary>
 /// Backing implementation for
-/// <see cref="ComposeRuntime.SnapshotFlow{T}(Func{T})"/>. Each call to
+/// <see cref="ComposeExtensions.SnapshotFlow{T}(Func{T})"/>. Each call to
 /// <see cref="GetAsyncEnumerator(CancellationToken)"/> spins up a
 /// fresh Kotlin <c>snapshotFlow</c> collection so multiple consumers
 /// of the same producer don't share state.

@@ -11,9 +11,9 @@ public static class BottomAppBarActionsDemo
         CategoryId:  "app-bars-tabs",
         Title:       "BottomAppBar — actions",
         Description: "Action icons laid out left-to-right; no FAB slot.",
-        Build:       () =>
+        Build:       c =>
         {
-            var count = ComposeRuntime.Remember(() => new MutableNumberState<int>(0));
+            var count = c.Remember(() => new MutableNumberState<int>(0));
             return new Column
             {
                 new Text($"count = {count}"),

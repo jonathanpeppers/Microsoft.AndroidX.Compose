@@ -30,7 +30,7 @@ namespace Microsoft.AndroidX.Compose;
 /// <c>collect</c> coroutine, no <c>SharingStarted</c>, no
 /// <c>replayCache</c>, no subscriber count. The only consumption
 /// path is from inside a composition; if you need a true
-/// asynchronous flow, use <see cref="ComposeRuntime.SnapshotFlow{T}"/> over
+/// asynchronous flow, use <see cref="ComposeExtensions.SnapshotFlow{T}"/> over
 /// the underlying state.
 /// </para>
 /// <para>

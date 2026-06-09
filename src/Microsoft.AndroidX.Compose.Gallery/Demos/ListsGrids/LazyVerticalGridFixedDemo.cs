@@ -11,7 +11,7 @@ public static class LazyVerticalGridFixedDemo
         CategoryId:  "lists-grids",
         Title:       "LazyVerticalGrid (Fixed 3)",
         Description: "Three equally sized columns; cells flow top-to-bottom, left-to-right.",
-        Build:       () => new LazyVerticalGrid<int>(
+        Build:       _ => new LazyVerticalGrid<int>(
             columns:     GridCells.Fixed(3),
             items:       Enumerable.Range(0, 60).ToList(),
             itemContent: i => new Card

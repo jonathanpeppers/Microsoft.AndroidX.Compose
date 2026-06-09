@@ -90,9 +90,9 @@ _File also contributes 195 `[ComposeBridge]` + 92 `[ComposeFacade]` generator-em
 | `ModifierPointerInput` | method | 3767–3788 | 3 | androidx.compose.ui.input.pointer.SuspendingPointerInputFilterKt .pointerInput(Modifier, Object key1, PointerInputEventHandler): Modifier Hand-written because the [ComposeBridge] generator doesn't know about non-bound interface types lik... | TODO |
 | `NewPointerInputEventHandler` | method | 3804–3820 | 3 | net.compose.PointerInputEventHandlerImpl.<init>(Function2) Allocates the Java-side helper (shipped via <AndroidJavaSource>) that implements the bound but otherwise-unreachable PointerInputEventHandler interface by forwarding invoke(scope... | TODO |
 
-### `src/Microsoft.AndroidX.Compose/ComposeRuntime.cs`
+### `src/Microsoft.AndroidX.Compose/ComposeExtensions.Remember.cs`
 
-**Purpose.** Top-level composition utilities that need to be callable from anywhere inside a composition pass — not just from `ComposeActivity` subclasses. Use these from extracted helper composables, custom `ComposableNode` subclasses, etc.
+**Purpose.** Top-level composition utilities exposed as extension methods on `IComposer`. Callable from anywhere a composer is in scope (facade `Render(IComposer)`, `SetContent(c => …)` lambda, helper composables, custom `ComposableNode` subclasses, etc.).
 
 **Manual entry points** (2):
 

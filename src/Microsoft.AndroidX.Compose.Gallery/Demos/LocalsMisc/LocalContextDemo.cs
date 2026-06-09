@@ -12,7 +12,7 @@ public static class LocalContextDemo
         CategoryId:  "locals-misc",
         Title:       "Locals.LocalContext",
         Description: "A custom ComposableNode reads Locals.LocalContext.GetCurrent(composer) and prints the host app's package name — the built-in CompositionLocals plumbing reaches user code.",
-        Build:       () => new Column
+        Build:       _ => new Column
         {
             new Text("Built-in Locals.LocalContext read from a user composable:"),
             new PackageLabel(),

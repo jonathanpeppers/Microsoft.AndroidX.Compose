@@ -17,11 +17,11 @@ public static class SearchBarPairDemo
         CategoryId:  "search",
         Title:       "SearchBar + ExpandedFullScreenSearchBar",
         Description: "Both halves share one SearchBarState; Compose toggles the popup based on focus.",
-        Build:       () =>
+        Build:       c =>
         {
-            var state = ComposeRuntime.Remember(() => new SearchBarState());
-            var input = ComposeRuntime.Remember(() => new SearchBarTextFieldState());
-            var query = ComposeRuntime.Remember(() => new MutableState<string>(""));
+            var state = c.Remember(() => new SearchBarState());
+            var input = c.Remember(() => new SearchBarTextFieldState());
+            var query = c.Remember(() => new MutableState<string>(""));
 
             var matches = Array.FindAll(
                 Fruits,

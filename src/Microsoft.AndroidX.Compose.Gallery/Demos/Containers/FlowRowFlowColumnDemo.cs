@@ -11,7 +11,7 @@ public static class FlowRowFlowColumnDemo
         CategoryId:  "containers",
         Title:       "FlowRow / FlowColumn",
         Description: "Wrapping row of chip-styled Cards plus a wrapping column.",
-        Build:       () => new Column
+        Build:       _ => new Column
         {
             new Text("FlowRow (wraps when out of width)"),
             new FlowRow

@@ -11,7 +11,7 @@ public static class CircularProgressIndicatorDemo
         CategoryId:  "locals-misc",
         Title:       "CircularProgressIndicator",
         Description: "Material 3 indeterminate circular spinner.",
-        Build:       () => new Column
+        Build:       _ => new Column
         {
             new Text("Indeterminate circular spinner:"),
             new CircularProgressIndicator(),

@@ -7,7 +7,7 @@ namespace Microsoft.AndroidX.Compose;
 
 /// <summary>
 /// JCW implementing Kotlin's <c>kotlinx.coroutines.flow.FlowCollector</c>
-/// for <see cref="ComposeRuntime.SnapshotFlow{T}(Func{T})"/>. Each
+/// for <see cref="ComposeExtensions.SnapshotFlow{T}(Func{T})"/>. Each
 /// <c>emit(value, continuation)</c> call from Kotlin unboxes the
 /// value, pushes it onto a single-slot bounded
 /// <see cref="Channel{T}"/>, and returns

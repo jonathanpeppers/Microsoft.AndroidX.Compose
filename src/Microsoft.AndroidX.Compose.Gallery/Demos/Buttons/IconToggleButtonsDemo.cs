@@ -11,20 +11,20 @@ public static class IconToggleButtonsDemo
         CategoryId:  "buttons",
         Title:       "Icon toggle buttons",
         Description: "IconToggleButton + filled/tonal/outlined variants.",
-        Build:       () =>
+        Build:       c =>
         {
-            var a = ComposeRuntime.Remember(() => new MutableState<bool>(false));
-            var b = ComposeRuntime.Remember(() => new MutableState<bool>(false));
-            var c = ComposeRuntime.Remember(() => new MutableState<bool>(false));
-            var d = ComposeRuntime.Remember(() => new MutableState<bool>(false));
+            var a = c.Remember(() => new MutableState<bool>(false));
+            var b = c.Remember(() => new MutableState<bool>(false));
+            var ct = c.Remember(() => new MutableState<bool>(false));
+            var d = c.Remember(() => new MutableState<bool>(false));
             return new Row
             {
                 new IconToggleButton(@checked: a.Value, onCheckedChange: v => a.Value = v)
                     { new Text(a.Value ? "★" : "☆") },
                 new FilledIconToggleButton(@checked: b.Value, onCheckedChange: v => b.Value = v)
                     { new Text(b.Value ? "★" : "☆") },
-                new FilledTonalIconToggleButton(@checked: c.Value, onCheckedChange: v => c.Value = v)
-                    { new Text(c.Value ? "◆" : "◇") },
+                new FilledTonalIconToggleButton(@checked: ct.Value, onCheckedChange: v => ct.Value = v)
+                    { new Text(ct.Value ? "◆" : "◇") },
                 new OutlinedIconToggleButton(@checked: d.Value, onCheckedChange: v => d.Value = v)
                     { new Text(d.Value ? "◆" : "◇") },
             };

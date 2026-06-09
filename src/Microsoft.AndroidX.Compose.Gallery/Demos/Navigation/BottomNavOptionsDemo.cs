@@ -13,7 +13,7 @@ namespace Microsoft.AndroidX.Compose.Gallery.Demos.Navigation;
 /// restores any state previously saved for the target tab.
 ///
 /// <para>
-/// Per-tab counters use <see cref="ComposeRuntime.RememberSaveable{T}(Func{T}, int, string)"/>
+/// Per-tab counters use <see cref="ComposeExtensions.RememberSaveable{T}(Func{T}, int, string)"/>
 /// so a reviewer can prove the saved-state round-trip: tap Increment
 /// a few times, switch tabs, come back — the count should still be
 /// there.
@@ -27,12 +27,12 @@ public static class BottomNavOptionsDemo
         CategoryId:  "navigation",
         Title:       "NavOptions — bottom nav (popUpTo + saveState)",
         Description: "Three tabs share one NavController; tapping pops to start with saveState/restoreState so per-tab counters survive switches.",
-        Build:       () =>
+        Build:       c =>
         {
             const string startRoute = "home";
 
-            var nav      = ComposeRuntime.Remember(() => new NavController());
-            var selected = ComposeRuntime.Remember(() => new MutableState<string>(startRoute));
+            var nav      = c.Remember(() => new NavController());
+            var selected = c.Remember(() => new MutableState<string>(startRoute));
 
             return new Column
             {
@@ -107,7 +107,7 @@ public static class BottomNavOptionsDemo
 
         public override void Render(IComposer composer)
         {
-            var count = ComposeRuntime.RememberSaveable(() => new MutableNumberState<int>(0));
+            var count = composer.RememberSaveable(() => new MutableNumberState<int>(0));
 
             new Column(verticalArrangement: Arrangement.SpacedBy(8))
             {

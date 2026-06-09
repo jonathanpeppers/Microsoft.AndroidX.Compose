@@ -11,11 +11,11 @@ public static class DatePickerDialogDemo
         CategoryId:  "dialogs-sheets",
         Title:       "DatePickerDialog",
         Description: "Tap Pick date to open a calendar dialog. Read SelectedDateMillis on confirm.",
-        Build:       () =>
+        Build:       c =>
         {
-            var open   = ComposeRuntime.Remember(() => new MutableState<bool>(false));
-            var picked = ComposeRuntime.Remember(() => new MutableState<string>("(none)"));
-            var state  = ComposeRuntime.Remember(() => new DatePickerState());
+            var open   = c.Remember(() => new MutableState<bool>(false));
+            var picked = c.Remember(() => new MutableState<string>("(none)"));
+            var state  = c.Remember(() => new DatePickerState());
             return new Column
             {
                 new Text($"Picked date: {picked}"),

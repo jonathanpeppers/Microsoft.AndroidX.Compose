@@ -5,7 +5,7 @@ namespace Microsoft.AndroidX.Compose;
 /// / <c>[CallerFilePath]</c> pair. Used by every group/lambda key the
 /// facade hands to Compose so the same call site produces the same
 /// <c>int</c> in every process — a hard requirement for
-/// <see cref="ComposeRuntime.RememberSaveable{T}(Func{T}, int, string)"/>,
+/// <see cref="ComposeExtensions.RememberSaveable{T}(Func{T}, int, string)"/>,
 /// whose <c>SaveableStateRegistry</c> key is built from the full chain
 /// of ancestor group keys leading to the call.
 /// </summary>

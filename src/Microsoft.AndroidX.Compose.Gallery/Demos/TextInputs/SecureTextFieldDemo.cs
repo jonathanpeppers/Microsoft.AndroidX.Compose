@@ -11,9 +11,9 @@ public static class SecureTextFieldDemo
         CategoryId:  "text-inputs",
         Title:       "SecureTextField",
         Description: "Filled-style secure (password) input with mask + clear button.",
-        Build:       () =>
+        Build:       c =>
         {
-            var pwd = ComposeRuntime.Remember(() => new SecureTextFieldState());
+            var pwd = c.Remember(() => new SecureTextFieldState());
             return new Column
             {
                 new SecureTextField(pwd)

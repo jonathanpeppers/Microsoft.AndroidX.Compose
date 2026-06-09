@@ -131,7 +131,7 @@ What they **cannot** do today:
 
 - Write a method that is meaningfully `@Composable`. The Kotlin annotation is `@Retention(BINARY)` and the magic isn't in the annotation — it's in the IR rewrite. A C# method with a `[Register]`'d `@Composable` attribute won't get rewritten, will have the wrong JVM signature, and will throw when called from a composition.
 
-Passing a C# lambda to `setContent` is the realistic interop seam, and the one this repo exercises: the runtime expects a `ComposableLambda` built via `composableLambdaInstance(key, tracked, block)` from `androidx.compose.runtime.internal`, and that we can construct from C#. `ComposeActivity.SetContent(() => …)` is the canonical entry point today.
+Passing a C# lambda to `setContent` is the realistic interop seam, and the one this repo exercises: the runtime expects a `ComposableLambda` built via `composableLambdaInstance(key, tracked, block)` from `androidx.compose.runtime.internal`, and that we can construct from C#. `ComponentActivity.SetContent(c => …)` (an extension method in this repo) is the canonical entry point today.
 
 ## Key references
 

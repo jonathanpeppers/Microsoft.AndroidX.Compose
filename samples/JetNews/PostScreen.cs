@@ -23,56 +23,57 @@ public static class PostScreen
         BookmarksViewModel bookmarks,
         Action onBack,
         SnackbarController snackbars,
-        Action<Post>? onShare = null)
-    {
-        var showShareDialog = ComposeRuntime.Remember(() => new MutableState<bool>(false));
-        var snackbarMessage = snackbars.Message.Value;
-
-        // Wrap the Scaffold + the conditional dialog in a Box so the
-        // dialog renders as an overlay above the chrome regardless of
-        // where it sits in the tree (mirrors AlertDialogDemo's shape).
-        return new Box
+        Action<Post>? onShare = null) =>
+        new Composed(c =>
         {
-            Modifier.Companion.FillMaxSize(),
+            var showShareDialog = c.Remember(() => new MutableState<bool>(false));
+            var snackbarMessage = snackbars.Message.Value;
 
-            new Scaffold
+            // Wrap the Scaffold + the conditional dialog in a Box so the
+            // dialog renders as an overlay above the chrome regardless of
+            // where it sits in the tree (mirrors AlertDialogDemo's shape).
+            return new Box
             {
-                TopBar = new TopAppBar
-                {
-                    Title = new Text(post.Metadata.Author)
-                    {
-                        FontSize   = 16,
-                        FontWeight = FontWeight.Medium,
-                    },
-                    NavigationIcon = new IconButton(onClick: onBack)
-                    {
-                        new Icon(Resource.Drawable.ic_arrow_back, "Back"),
-                    },
-                },
-                BottomBar = new BottomAppBar
-                {
-                    BookmarkButton.Build(
-                        post.Id,
-                        bookmarks,
-                        onToggled: isChecked => snackbars.Show(isChecked
-                            ? "Added to bookmarks"
-                            : "Removed from bookmarks")),
-                    new IconButton(onClick: () => showShareDialog.Value = true)
-                    {
-                        new Icon(Resource.Drawable.ic_share, "Share"),
-                    },
-                },
-                SnackbarHost = snackbarMessage is null
-                    ? null
-                    : new Snackbar { Body = new Text(snackbarMessage) },
-                Body = BuildBody(post),
-            },
+                Modifier.Companion.FillMaxSize(),
 
-            showShareDialog.Value
-                ? BuildShareDialog(post, showShareDialog, snackbars, onShare)
-                : (ComposableNode?)null,
-        };
-    }
+                new Scaffold
+                {
+                    TopBar = new TopAppBar
+                    {
+                        Title = new Text(post.Metadata.Author)
+                        {
+                            FontSize   = 16,
+                            FontWeight = FontWeight.Medium,
+                        },
+                        NavigationIcon = new IconButton(onClick: onBack)
+                        {
+                            new Icon(Resource.Drawable.ic_arrow_back, "Back"),
+                        },
+                    },
+                    BottomBar = new BottomAppBar
+                    {
+                        BookmarkButton.Build(
+                            post.Id,
+                            bookmarks,
+                            onToggled: isChecked => snackbars.Show(isChecked
+                                ? "Added to bookmarks"
+                                : "Removed from bookmarks")),
+                        new IconButton(onClick: () => showShareDialog.Value = true)
+                        {
+                            new Icon(Resource.Drawable.ic_share, "Share"),
+                        },
+                    },
+                    SnackbarHost = snackbarMessage is null
+                        ? null
+                        : new Snackbar { Body = new Text(snackbarMessage) },
+                    Body = BuildBody(post),
+                },
+
+                showShareDialog.Value
+                    ? BuildShareDialog(post, showShareDialog, snackbars, onShare)
+                    : (ComposableNode?)null,
+            };
+        });
 
     static AlertDialog BuildShareDialog(Post post,
                                         MutableState<bool> showShareDialog,

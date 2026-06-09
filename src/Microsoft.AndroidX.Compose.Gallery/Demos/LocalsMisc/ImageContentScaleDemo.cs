@@ -16,7 +16,7 @@ public static class ImageContentScaleDemo
         CategoryId:  "locals-misc",
         Title:       "Image — ContentScale / Alignment / Alpha",
         Description: "Exercises the optional ContentScale, Alignment, and Alpha slots on the Image facade — one tile per ContentScale value, plus alignment and alpha rows.",
-        Build:       () => new Column
+        Build:       _ => new Column
         {
             new Text("ContentScale (24×24 star, 160×80 tile):"),
             ContentScaleTile("Fit", ContentScale.Fit),

@@ -11,9 +11,9 @@ public static class MediumFlexibleTopAppBarDemo
         CategoryId:  "app-bars-tabs",
         Title:       "MediumFlexibleTopAppBar",
         Description: "Two-line app bar — Title + Subtitle.",
-        Build:       () =>
+        Build:       c =>
         {
-            var count = ComposeRuntime.Remember(() => new MutableNumberState<int>(0));
+            var count = c.Remember(() => new MutableNumberState<int>(0));
             return new Column
             {
                 new MediumFlexibleTopAppBar

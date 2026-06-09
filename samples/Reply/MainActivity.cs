@@ -1,7 +1,9 @@
+using global::AndroidX.Activity;
+
 namespace Microsoft.AndroidX.Compose.Samples.Reply;
 
 /// <summary>
-/// Reply host activity. Subclasses <see cref="ComposeActivity"/>,
+/// Reply host activity. Subclasses <see cref="ComponentActivity"/>,
 /// remembers app-wide state (nav controller, current route, opened
 /// email id, multi-select set), then hands off to
 /// <see cref="ReplyApp.Build"/>.
@@ -11,18 +13,19 @@ namespace Microsoft.AndroidX.Compose.Samples.Reply;
     MainLauncher = true,
     Theme        = "@android:style/Theme.Material.Light.NoActionBar")]
 [global::Android.Runtime.Register("net/compose/samples/reply/MainActivity")]
-public class MainActivity : ComposeActivity
+public class MainActivity : ComponentActivity
 {
     /// <summary>Build the root composition.</summary>
     protected override void OnCreate(Bundle? savedInstanceState)
     {
         base.OnCreate(savedInstanceState);
-        SetContent(() =>
+        this.EnableEdgeToEdge();
+        this.SetContent(c =>
         {
-            var nav              = Remember(() => new NavController());
-            var currentRoute     = Remember(() => new MutableState<string>(Route.Inbox));
-            var openedEmailId    = Remember(() => new MutableState<long>(0L));
-            var selectedEmailIds = Remember(() => new MutableStateList<long>());
+            var nav              = c.Remember(() => new NavController());
+            var currentRoute     = c.Remember(() => new MutableState<string>(Route.Inbox));
+            var openedEmailId    = c.Remember(() => new MutableState<long>(0L));
+            var selectedEmailIds = c.Remember(() => new MutableStateList<long>());
             return ReplyApp.Build(nav, currentRoute, openedEmailId, selectedEmailIds);
         });
     }

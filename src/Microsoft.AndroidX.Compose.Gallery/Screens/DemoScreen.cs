@@ -6,7 +6,7 @@ namespace Microsoft.AndroidX.Compose.Gallery.Screens;
 /// <summary>
 /// Single-demo screen — a header card summarising the demo plus the
 /// demo's own composable tree (wrapped in <see cref="DemoContent"/> so
-/// <c>ComposeRuntime.Remember</c> calls inside the demo factory resolve
+/// <c>composer.Remember</c> calls inside the demo factory resolve
 /// against the active composer).
 /// </summary>
 public static class DemoScreen
@@ -53,13 +53,13 @@ public static class DemoScreen
 
     sealed class ScrollableDemoBody : ComposableNode
     {
-        readonly Func<ComposableNode> _build;
+        readonly Func<IComposer, ComposableNode> _build;
 
-        public ScrollableDemoBody(Func<ComposableNode> build) => _build = build;
+        public ScrollableDemoBody(Func<IComposer, ComposableNode> build) => _build = build;
 
         public override void Render(IComposer composer)
         {
-            var scroll = ComposeRuntime.Remember(() => new ScrollState());
+            var scroll = composer.Remember(() => new ScrollState());
             new Column(verticalArrangement: Arrangement.SpacedBy(12))
             {
                 Modifier.Companion

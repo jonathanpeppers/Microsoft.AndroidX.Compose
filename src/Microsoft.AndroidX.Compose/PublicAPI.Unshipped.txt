@@ -170,25 +170,11 @@ Microsoft.AndroidX.Compose.ComposableNode.ComposableNode() -> void
 Microsoft.AndroidX.Compose.ComposableNode.Modifier.get -> Microsoft.AndroidX.Compose.Modifier?
 Microsoft.AndroidX.Compose.ComposableNode.Modifier.set -> void
 Microsoft.AndroidX.Compose.ComposableNode.PrependModifier(Microsoft.AndroidX.Compose.Modifier! modifier) -> void
-Microsoft.AndroidX.Compose.ComposeRuntime
-Microsoft.AndroidX.Compose.ComposeActivity
-Microsoft.AndroidX.Compose.ComposeActivity.ComposeActivity() -> void
-Microsoft.AndroidX.Compose.ComposeActivity.Remember<T>(System.Func<T>! factory, int line = 0, string! file = "") -> T
-Microsoft.AndroidX.Compose.ComposeActivity.Remember<T>(System.Func<T>! factory, object? key1, int line = 0, string! file = "") -> T
-Microsoft.AndroidX.Compose.ComposeActivity.Remember<T>(System.Func<T>! factory, object? key1, object? key2, int line = 0, string! file = "") -> T
-Microsoft.AndroidX.Compose.ComposeActivity.Remember<T>(System.Func<T>! factory, object? key1, object? key2, object? key3, int line = 0, string! file = "") -> T
-Microsoft.AndroidX.Compose.ComposeActivity.RememberKeyed<T>(System.Func<T>! factory, object?[]! keys, int line = 0, string! file = "") -> T
-Microsoft.AndroidX.Compose.ComposeActivity.RememberSaveable<T>(System.Func<T>! factory, int line = 0, string! file = "") -> T
-Microsoft.AndroidX.Compose.ComposeActivity.RememberSaveable<T>(System.Func<T>! factory, object? key1, int line = 0, string! file = "") -> T
-Microsoft.AndroidX.Compose.ComposeActivity.RememberSaveable<T>(System.Func<T>! factory, object? key1, object? key2, int line = 0, string! file = "") -> T
-Microsoft.AndroidX.Compose.ComposeActivity.RememberSaveable<T>(System.Func<T>! factory, object? key1, object? key2, object? key3, int line = 0, string! file = "") -> T
-Microsoft.AndroidX.Compose.ComposeActivity.RememberSaveableKeyed<T>(System.Func<T>! factory, object?[]! keys, int line = 0, string! file = "") -> T
-Microsoft.AndroidX.Compose.ComposeActivity.SetContent(System.Func<Microsoft.AndroidX.Compose.ComposableNode!>! content) -> void
 Microsoft.AndroidX.Compose.Composed
 Microsoft.AndroidX.Compose.Composed.Composed(System.Func<AndroidX.Compose.Runtime.IComposer!, Microsoft.AndroidX.Compose.ComposableNode?>! builder) -> void
+Microsoft.AndroidX.Compose.ComposeExtensions
 Microsoft.AndroidX.Compose.CompositionLocal
 Microsoft.AndroidX.Compose.CompositionLocal<T>
-Microsoft.AndroidX.Compose.CompositionLocal<T>.Current.get -> T
 Microsoft.AndroidX.Compose.CompositionLocal<T>.GetCurrent(AndroidX.Compose.Runtime.IComposer! composer) -> T
 Microsoft.AndroidX.Compose.CompositionLocal<T>.Provides(T value) -> Microsoft.AndroidX.Compose.ProvidedValue!
 Microsoft.AndroidX.Compose.CompositionLocalProvider
@@ -749,6 +735,7 @@ Microsoft.AndroidX.Compose.MutableStateList<T>.IndexOf(T item) -> int
 Microsoft.AndroidX.Compose.MutableStateList<T>.Insert(int index, T item) -> void
 Microsoft.AndroidX.Compose.MutableStateList<T>.IsReadOnly.get -> bool
 Microsoft.AndroidX.Compose.MutableStateList<T>.MutableStateList() -> void
+Microsoft.AndroidX.Compose.MutableStateList<T>.MutableStateList(params T[]! elements) -> void
 Microsoft.AndroidX.Compose.MutableStateList<T>.MutableStateList(System.Collections.Generic.IEnumerable<T>! initial) -> void
 Microsoft.AndroidX.Compose.MutableStateList<T>.Remove(T item) -> bool
 Microsoft.AndroidX.Compose.MutableStateList<T>.RemoveAt(int index) -> void
@@ -923,7 +910,6 @@ Microsoft.AndroidX.Compose.RangeSlider
 Microsoft.AndroidX.Compose.RangeSlider.RangeSlider((float Start, float End) value, System.Action<(float Start, float End)>! onValueChange) -> void
 Microsoft.AndroidX.Compose.Resource
 Microsoft.AndroidX.Compose.Resource.Resource() -> void
-Microsoft.AndroidX.Compose.Resources
 Microsoft.AndroidX.Compose.Row
 Microsoft.AndroidX.Compose.Row.Row() -> void
 Microsoft.AndroidX.Compose.Row.Row(Microsoft.AndroidX.Compose.Arrangement? horizontalArrangement) -> void
@@ -1217,7 +1203,6 @@ Microsoft.AndroidX.Compose.TopAppBar.Subtitle.set -> void
 Microsoft.AndroidX.Compose.TopAppBar.Title.get -> Microsoft.AndroidX.Compose.ComposableNode?
 Microsoft.AndroidX.Compose.TopAppBar.Title.set -> void
 Microsoft.AndroidX.Compose.TopAppBar.TopAppBar() -> void
-Microsoft.AndroidX.Compose.TopAppBarDefaults
 Microsoft.AndroidX.Compose.TopSearchBar
 Microsoft.AndroidX.Compose.TopSearchBar.InputField.get -> Microsoft.AndroidX.Compose.ComposableNode?
 Microsoft.AndroidX.Compose.TopSearchBar.InputField.set -> void
@@ -1275,7 +1260,6 @@ override Microsoft.AndroidX.Compose.Color.Equals(object? obj) -> bool
 override Microsoft.AndroidX.Compose.Color.GetHashCode() -> int
 override Microsoft.AndroidX.Compose.Color.ToString() -> string!
 override Microsoft.AndroidX.Compose.Column.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
-override Microsoft.AndroidX.Compose.ComposeActivity.OnCreate(Android.OS.Bundle? savedInstanceState) -> void
 override Microsoft.AndroidX.Compose.Composed.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
 override Microsoft.AndroidX.Compose.CompositionLocalProvider.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
 override Microsoft.AndroidX.Compose.Crossfade<T>.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
@@ -1456,46 +1440,57 @@ static Microsoft.AndroidX.Compose.Color.Transparent.get -> Microsoft.AndroidX.Co
 static Microsoft.AndroidX.Compose.Color.Unspecified.get -> Microsoft.AndroidX.Compose.Color
 static Microsoft.AndroidX.Compose.Color.White.get -> Microsoft.AndroidX.Compose.Color
 static Microsoft.AndroidX.Compose.Color.Yellow.get -> Microsoft.AndroidX.Compose.Color
-static Microsoft.AndroidX.Compose.ComposeRuntime.DerivedStateOf<T>(System.Func<T>! calculation) -> Microsoft.AndroidX.Compose.DerivedState<T>!
-static Microsoft.AndroidX.Compose.ComposeRuntime.DisposableEffect(object? key1, object? key2, object? key3, System.Func<AndroidX.Compose.Runtime.DisposableEffectScope!, System.Action!>! effect) -> void
-static Microsoft.AndroidX.Compose.ComposeRuntime.DisposableEffect(object? key1, object? key2, System.Func<AndroidX.Compose.Runtime.DisposableEffectScope!, System.Action!>! effect) -> void
-static Microsoft.AndroidX.Compose.ComposeRuntime.DisposableEffect(object? key1, System.Func<AndroidX.Compose.Runtime.DisposableEffectScope!, System.Action!>! effect) -> void
-static Microsoft.AndroidX.Compose.ComposeRuntime.LaunchedEffect(object? key1, object? key2, object? key3, System.Func<System.Threading.CancellationToken, System.Threading.Tasks.Task!>! body) -> void
-static Microsoft.AndroidX.Compose.ComposeRuntime.LaunchedEffect(object? key1, object? key2, System.Func<System.Threading.CancellationToken, System.Threading.Tasks.Task!>! body) -> void
-static Microsoft.AndroidX.Compose.ComposeRuntime.LaunchedEffect(object? key1, System.Func<System.Threading.CancellationToken, System.Threading.Tasks.Task!>! body) -> void
-static Microsoft.AndroidX.Compose.ComposeRuntime.MutableDoubleStateOf(double value) -> Microsoft.AndroidX.Compose.MutableNumberState<double>!
-static Microsoft.AndroidX.Compose.ComposeRuntime.MutableFloatStateOf(float value) -> Microsoft.AndroidX.Compose.MutableNumberState<float>!
-static Microsoft.AndroidX.Compose.ComposeRuntime.MutableIntStateOf(int value) -> Microsoft.AndroidX.Compose.MutableNumberState<int>!
-static Microsoft.AndroidX.Compose.ComposeRuntime.MutableLongStateOf(long value) -> Microsoft.AndroidX.Compose.MutableNumberState<long>!
-static Microsoft.AndroidX.Compose.ComposeRuntime.MutableStateFlowOf<T>(T initialValue, int line = 0, string! file = "") -> Microsoft.AndroidX.Compose.MutableStateFlow<T>!
-static Microsoft.AndroidX.Compose.ComposeRuntime.MutableStateListOf<T>(params T[]! elements) -> Microsoft.AndroidX.Compose.MutableStateList<T>!
-static Microsoft.AndroidX.Compose.ComposeRuntime.MutableStateMapOf<TKey, TValue>() -> Microsoft.AndroidX.Compose.MutableStateMap<TKey, TValue>!
-static Microsoft.AndroidX.Compose.ComposeRuntime.MutableStateOf<T>(T value) -> Microsoft.AndroidX.Compose.MutableState<T>!
-static Microsoft.AndroidX.Compose.ComposeRuntime.NewTextFieldValue(string! text = "", long selection = 0, AndroidX.Compose.UI.Text.TextRange? composition = null) -> AndroidX.Compose.UI.Text.Input.TextFieldValue!
-static Microsoft.AndroidX.Compose.ComposeRuntime.ProduceState<T>(T initialValue, object? key1, object? key2, object? key3, System.Func<Microsoft.AndroidX.Compose.MutableState<T>!, System.Threading.CancellationToken, System.Threading.Tasks.Task!>! producer, int line = 0, string! file = "") -> Microsoft.AndroidX.Compose.MutableState<T>!
-static Microsoft.AndroidX.Compose.ComposeRuntime.ProduceState<T>(T initialValue, object? key1, object? key2, System.Func<Microsoft.AndroidX.Compose.MutableState<T>!, System.Threading.CancellationToken, System.Threading.Tasks.Task!>! producer, int line = 0, string! file = "") -> Microsoft.AndroidX.Compose.MutableState<T>!
-static Microsoft.AndroidX.Compose.ComposeRuntime.ProduceState<T>(T initialValue, object? key1, System.Func<Microsoft.AndroidX.Compose.MutableState<T>!, System.Threading.CancellationToken, System.Threading.Tasks.Task!>! producer, int line = 0, string! file = "") -> Microsoft.AndroidX.Compose.MutableState<T>!
-static Microsoft.AndroidX.Compose.ComposeRuntime.ProduceState<T>(T initialValue, System.Func<Microsoft.AndroidX.Compose.MutableState<T>!, System.Threading.CancellationToken, System.Threading.Tasks.Task!>! producer, int line = 0, string! file = "") -> Microsoft.AndroidX.Compose.MutableState<T>!
-static Microsoft.AndroidX.Compose.ComposeRuntime.ProduceStateKeyed<T>(T initialValue, object?[]! keys, System.Func<Microsoft.AndroidX.Compose.MutableState<T>!, System.Threading.CancellationToken, System.Threading.Tasks.Task!>! producer, int line = 0, string! file = "") -> Microsoft.AndroidX.Compose.MutableState<T>!
-static Microsoft.AndroidX.Compose.ComposeRuntime.Remember<T>(System.Func<T>! factory, int line = 0, string! file = "") -> T
-static Microsoft.AndroidX.Compose.ComposeRuntime.Remember<T>(System.Func<T>! factory, object? key1, int line = 0, string! file = "") -> T
-static Microsoft.AndroidX.Compose.ComposeRuntime.Remember<T>(System.Func<T>! factory, object? key1, object? key2, int line = 0, string! file = "") -> T
-static Microsoft.AndroidX.Compose.ComposeRuntime.Remember<T>(System.Func<T>! factory, object? key1, object? key2, object? key3, int line = 0, string! file = "") -> T
-static Microsoft.AndroidX.Compose.ComposeRuntime.RememberDraggableState(System.Action<float>! onDelta, int line = 0, string! file = "") -> Microsoft.AndroidX.Compose.DraggableState!
-static Microsoft.AndroidX.Compose.ComposeRuntime.RememberKeyed<T>(System.Func<T>! factory, object?[]! keys, int line = 0, string! file = "") -> T
-static Microsoft.AndroidX.Compose.ComposeRuntime.RememberLazyListState(int initialFirstVisibleItemIndex = 0, int initialFirstVisibleItemScrollOffset = 0, int line = 0, string! file = "") -> Microsoft.AndroidX.Compose.LazyListState!
-static Microsoft.AndroidX.Compose.ComposeRuntime.RememberSaveable<T>(System.Func<T>! factory, int line = 0, string! file = "") -> T
-static Microsoft.AndroidX.Compose.ComposeRuntime.RememberSaveable<T>(System.Func<T>! factory, object? key1, int line = 0, string! file = "") -> T
-static Microsoft.AndroidX.Compose.ComposeRuntime.RememberSaveable<T>(System.Func<T>! factory, object? key1, object? key2, int line = 0, string! file = "") -> T
-static Microsoft.AndroidX.Compose.ComposeRuntime.RememberSaveable<T>(System.Func<T>! factory, object? key1, object? key2, object? key3, int line = 0, string! file = "") -> T
-static Microsoft.AndroidX.Compose.ComposeRuntime.RememberSaveableKeyed<T>(System.Func<T>! factory, object?[]! keys, int line = 0, string! file = "") -> T
-static Microsoft.AndroidX.Compose.ComposeRuntime.SideEffect(System.Action! effect) -> void
-static Microsoft.AndroidX.Compose.ComposeRuntime.SnapshotFlow<T>(System.Func<T>! producer) -> System.Collections.Generic.IAsyncEnumerable<T>!
-static Microsoft.AndroidX.Compose.ComposeRuntime.ViewModel<T>(System.Func<T!>! factory, int line = 0, string! file = "") -> T!
-static Microsoft.AndroidX.Compose.ComposeRuntime.ViewModel<T>(System.Func<T!>! factory, object? key1, int line = 0, string! file = "") -> T!
-static Microsoft.AndroidX.Compose.ComposeRuntime.ViewModel<T>(System.Func<T!>! factory, object? key1, object? key2, int line = 0, string! file = "") -> T!
-static Microsoft.AndroidX.Compose.ComposeRuntime.ViewModel<T>(System.Func<T!>! factory, object? key1, object? key2, object? key3, int line = 0, string! file = "") -> T!
-static Microsoft.AndroidX.Compose.ComposeRuntime.ViewModelKeyed<T>(System.Func<T!>! factory, object?[]! keys, int line = 0, string! file = "") -> T!
+static Microsoft.AndroidX.Compose.ComposeExtensions.BooleanResource(this AndroidX.Compose.Runtime.IComposer! composer, int id) -> bool
+static Microsoft.AndroidX.Compose.ComposeExtensions.ColorResource(this AndroidX.Compose.Runtime.IComposer! composer, int id) -> long
+static Microsoft.AndroidX.Compose.ComposeExtensions.DerivedStateOf<T>(System.Func<T>! calculation) -> Microsoft.AndroidX.Compose.DerivedState<T>!
+static Microsoft.AndroidX.Compose.ComposeExtensions.DimensionResource(this AndroidX.Compose.Runtime.IComposer! composer, int id) -> Microsoft.AndroidX.Compose.Dp
+static Microsoft.AndroidX.Compose.ComposeExtensions.DisposableEffect(this AndroidX.Compose.Runtime.IComposer! composer, object? key1, object? key2, object? key3, System.Func<AndroidX.Compose.Runtime.DisposableEffectScope!, System.Action!>! effect) -> void
+static Microsoft.AndroidX.Compose.ComposeExtensions.DisposableEffect(this AndroidX.Compose.Runtime.IComposer! composer, object? key1, object? key2, System.Func<AndroidX.Compose.Runtime.DisposableEffectScope!, System.Action!>! effect) -> void
+static Microsoft.AndroidX.Compose.ComposeExtensions.DisposableEffect(this AndroidX.Compose.Runtime.IComposer! composer, object? key1, System.Func<AndroidX.Compose.Runtime.DisposableEffectScope!, System.Action!>! effect) -> void
+static Microsoft.AndroidX.Compose.ComposeExtensions.EnableEdgeToEdge(this AndroidX.Activity.ComponentActivity! activity) -> void
+static Microsoft.AndroidX.Compose.ComposeExtensions.EnterAlwaysScrollBehavior(this AndroidX.Compose.Runtime.IComposer! composer, AndroidX.Compose.Material3.TopAppBarState! state, int line = 0, string! file = "") -> AndroidX.Compose.Material3.ITopAppBarScrollBehavior!
+static Microsoft.AndroidX.Compose.ComposeExtensions.ExitUntilCollapsedScrollBehavior(this AndroidX.Compose.Runtime.IComposer! composer, AndroidX.Compose.Material3.TopAppBarState! state, int line = 0, string! file = "") -> AndroidX.Compose.Material3.ITopAppBarScrollBehavior!
+static Microsoft.AndroidX.Compose.ComposeExtensions.IntegerArrayResource(this AndroidX.Compose.Runtime.IComposer! composer, int id) -> int[]!
+static Microsoft.AndroidX.Compose.ComposeExtensions.IntegerResource(this AndroidX.Compose.Runtime.IComposer! composer, int id) -> int
+static Microsoft.AndroidX.Compose.ComposeExtensions.LaunchedEffect(this AndroidX.Compose.Runtime.IComposer! composer, object? key1, object? key2, object? key3, System.Func<System.Threading.CancellationToken, System.Threading.Tasks.Task!>! body) -> void
+static Microsoft.AndroidX.Compose.ComposeExtensions.LaunchedEffect(this AndroidX.Compose.Runtime.IComposer! composer, object? key1, object? key2, System.Func<System.Threading.CancellationToken, System.Threading.Tasks.Task!>! body) -> void
+static Microsoft.AndroidX.Compose.ComposeExtensions.LaunchedEffect(this AndroidX.Compose.Runtime.IComposer! composer, object? key1, System.Func<System.Threading.CancellationToken, System.Threading.Tasks.Task!>! body) -> void
+static Microsoft.AndroidX.Compose.ComposeExtensions.MutableStateFlowOf<T>(this AndroidX.Compose.Runtime.IComposer! composer, T initialValue, int line = 0, string! file = "") -> Microsoft.AndroidX.Compose.MutableStateFlow<T>!
+static Microsoft.AndroidX.Compose.ComposeExtensions.NewTextFieldValue(string! text = "", long selection = 0, AndroidX.Compose.UI.Text.TextRange? composition = null) -> AndroidX.Compose.UI.Text.Input.TextFieldValue!
+static Microsoft.AndroidX.Compose.ComposeExtensions.PainterResource(this AndroidX.Compose.Runtime.IComposer! composer, int id) -> AndroidX.Compose.UI.Graphics.Painter.Painter!
+static Microsoft.AndroidX.Compose.ComposeExtensions.PinnedScrollBehavior(this AndroidX.Compose.Runtime.IComposer! composer, AndroidX.Compose.Material3.TopAppBarState! state, int line = 0, string! file = "") -> AndroidX.Compose.Material3.ITopAppBarScrollBehavior!
+static Microsoft.AndroidX.Compose.ComposeExtensions.PluralStringResource(this AndroidX.Compose.Runtime.IComposer! composer, int id, int count, params object?[]! formatArgs) -> string!
+static Microsoft.AndroidX.Compose.ComposeExtensions.PluralStringResource(this AndroidX.Compose.Runtime.IComposer! composer, int id, int count) -> string!
+static Microsoft.AndroidX.Compose.ComposeExtensions.ProduceState<T>(this AndroidX.Compose.Runtime.IComposer! composer, T initialValue, object? key1, object? key2, object? key3, System.Func<Microsoft.AndroidX.Compose.MutableState<T>!, System.Threading.CancellationToken, System.Threading.Tasks.Task!>! producer, int line = 0, string! file = "") -> Microsoft.AndroidX.Compose.MutableState<T>!
+static Microsoft.AndroidX.Compose.ComposeExtensions.ProduceState<T>(this AndroidX.Compose.Runtime.IComposer! composer, T initialValue, object? key1, object? key2, System.Func<Microsoft.AndroidX.Compose.MutableState<T>!, System.Threading.CancellationToken, System.Threading.Tasks.Task!>! producer, int line = 0, string! file = "") -> Microsoft.AndroidX.Compose.MutableState<T>!
+static Microsoft.AndroidX.Compose.ComposeExtensions.ProduceState<T>(this AndroidX.Compose.Runtime.IComposer! composer, T initialValue, object? key1, System.Func<Microsoft.AndroidX.Compose.MutableState<T>!, System.Threading.CancellationToken, System.Threading.Tasks.Task!>! producer, int line = 0, string! file = "") -> Microsoft.AndroidX.Compose.MutableState<T>!
+static Microsoft.AndroidX.Compose.ComposeExtensions.ProduceState<T>(this AndroidX.Compose.Runtime.IComposer! composer, T initialValue, System.Func<Microsoft.AndroidX.Compose.MutableState<T>!, System.Threading.CancellationToken, System.Threading.Tasks.Task!>! producer, int line = 0, string! file = "") -> Microsoft.AndroidX.Compose.MutableState<T>!
+static Microsoft.AndroidX.Compose.ComposeExtensions.ProduceStateKeyed<T>(this AndroidX.Compose.Runtime.IComposer! composer, T initialValue, object?[]! keys, System.Func<Microsoft.AndroidX.Compose.MutableState<T>!, System.Threading.CancellationToken, System.Threading.Tasks.Task!>! producer, int line = 0, string! file = "") -> Microsoft.AndroidX.Compose.MutableState<T>!
+static Microsoft.AndroidX.Compose.ComposeExtensions.Remember<T>(this AndroidX.Compose.Runtime.IComposer! composer, System.Func<T>! factory, int line = 0, string! file = "") -> T
+static Microsoft.AndroidX.Compose.ComposeExtensions.Remember<T>(this AndroidX.Compose.Runtime.IComposer! composer, System.Func<T>! factory, object? key1, int line = 0, string! file = "") -> T
+static Microsoft.AndroidX.Compose.ComposeExtensions.Remember<T>(this AndroidX.Compose.Runtime.IComposer! composer, System.Func<T>! factory, object? key1, object? key2, int line = 0, string! file = "") -> T
+static Microsoft.AndroidX.Compose.ComposeExtensions.Remember<T>(this AndroidX.Compose.Runtime.IComposer! composer, System.Func<T>! factory, object? key1, object? key2, object? key3, int line = 0, string! file = "") -> T
+static Microsoft.AndroidX.Compose.ComposeExtensions.RememberDraggableState(this AndroidX.Compose.Runtime.IComposer! composer, System.Action<float>! onDelta, int line = 0, string! file = "") -> Microsoft.AndroidX.Compose.DraggableState!
+static Microsoft.AndroidX.Compose.ComposeExtensions.RememberKeyed<T>(this AndroidX.Compose.Runtime.IComposer! composer, System.Func<T>! factory, object?[]! keys, int line = 0, string! file = "") -> T
+static Microsoft.AndroidX.Compose.ComposeExtensions.RememberLazyListState(this AndroidX.Compose.Runtime.IComposer! composer, int initialFirstVisibleItemIndex = 0, int initialFirstVisibleItemScrollOffset = 0, int line = 0, string! file = "") -> Microsoft.AndroidX.Compose.LazyListState!
+static Microsoft.AndroidX.Compose.ComposeExtensions.RememberSaveable<T>(this AndroidX.Compose.Runtime.IComposer! composer, System.Func<T>! factory, int line = 0, string! file = "") -> T
+static Microsoft.AndroidX.Compose.ComposeExtensions.RememberSaveable<T>(this AndroidX.Compose.Runtime.IComposer! composer, System.Func<T>! factory, object? key1, int line = 0, string! file = "") -> T
+static Microsoft.AndroidX.Compose.ComposeExtensions.RememberSaveable<T>(this AndroidX.Compose.Runtime.IComposer! composer, System.Func<T>! factory, object? key1, object? key2, int line = 0, string! file = "") -> T
+static Microsoft.AndroidX.Compose.ComposeExtensions.RememberSaveable<T>(this AndroidX.Compose.Runtime.IComposer! composer, System.Func<T>! factory, object? key1, object? key2, object? key3, int line = 0, string! file = "") -> T
+static Microsoft.AndroidX.Compose.ComposeExtensions.RememberSaveableKeyed<T>(this AndroidX.Compose.Runtime.IComposer! composer, System.Func<T>! factory, object?[]! keys, int line = 0, string! file = "") -> T
+static Microsoft.AndroidX.Compose.ComposeExtensions.RememberTopAppBarState(this AndroidX.Compose.Runtime.IComposer! composer, float initialHeightOffsetLimit = -Infinity, float initialHeightOffset = 0, float initialContentOffset = 0, int line = 0, string! file = "") -> AndroidX.Compose.Material3.TopAppBarState!
+static Microsoft.AndroidX.Compose.ComposeExtensions.SetContent(this AndroidX.Activity.ComponentActivity! activity, System.Func<AndroidX.Compose.Runtime.IComposer!, Microsoft.AndroidX.Compose.ComposableNode!>! content) -> void
+static Microsoft.AndroidX.Compose.ComposeExtensions.SetContent(this AndroidX.Compose.UI.Platform.ComposeView! view, System.Func<AndroidX.Compose.Runtime.IComposer!, Microsoft.AndroidX.Compose.ComposableNode!>! content) -> void
+static Microsoft.AndroidX.Compose.ComposeExtensions.SideEffect(this AndroidX.Compose.Runtime.IComposer! composer, System.Action! effect) -> void
+static Microsoft.AndroidX.Compose.ComposeExtensions.SnapshotFlow<T>(System.Func<T>! producer) -> System.Collections.Generic.IAsyncEnumerable<T>!
+static Microsoft.AndroidX.Compose.ComposeExtensions.StringArrayResource(this AndroidX.Compose.Runtime.IComposer! composer, int id) -> string![]!
+static Microsoft.AndroidX.Compose.ComposeExtensions.StringResource(this AndroidX.Compose.Runtime.IComposer! composer, int id, params object?[]! formatArgs) -> string!
+static Microsoft.AndroidX.Compose.ComposeExtensions.StringResource(this AndroidX.Compose.Runtime.IComposer! composer, int id) -> string!
+static Microsoft.AndroidX.Compose.ComposeExtensions.ViewModel<T>(this AndroidX.Compose.Runtime.IComposer! composer, System.Func<T!>! factory, int line = 0, string! file = "") -> T!
+static Microsoft.AndroidX.Compose.ComposeExtensions.ViewModel<T>(this AndroidX.Compose.Runtime.IComposer! composer, System.Func<T!>! factory, object? key1, int line = 0, string! file = "") -> T!
+static Microsoft.AndroidX.Compose.ComposeExtensions.ViewModel<T>(this AndroidX.Compose.Runtime.IComposer! composer, System.Func<T!>! factory, object? key1, object? key2, int line = 0, string! file = "") -> T!
+static Microsoft.AndroidX.Compose.ComposeExtensions.ViewModel<T>(this AndroidX.Compose.Runtime.IComposer! composer, System.Func<T!>! factory, object? key1, object? key2, object? key3, int line = 0, string! file = "") -> T!
+static Microsoft.AndroidX.Compose.ComposeExtensions.ViewModelKeyed<T>(this AndroidX.Compose.Runtime.IComposer! composer, System.Func<T!>! factory, object?[]! keys, int line = 0, string! file = "") -> T!
 static Microsoft.AndroidX.Compose.CompositionLocal.Of<T>(System.Func<T>! defaultFactory) -> Microsoft.AndroidX.Compose.CompositionLocal<T>!
 static Microsoft.AndroidX.Compose.CompositionLocal.StaticOf<T>(System.Func<T>! defaultFactory) -> Microsoft.AndroidX.Compose.CompositionLocal<T>!
 static Microsoft.AndroidX.Compose.CompositionLocal<T>.Of(System.Func<T>! defaultFactory) -> Microsoft.AndroidX.Compose.CompositionLocal<T>!
@@ -1846,17 +1841,6 @@ static Microsoft.AndroidX.Compose.Offset.operator !=(Microsoft.AndroidX.Compose.
 static Microsoft.AndroidX.Compose.Offset.operator ==(Microsoft.AndroidX.Compose.Offset a, Microsoft.AndroidX.Compose.Offset b) -> bool
 static Microsoft.AndroidX.Compose.Offset.Unspecified.get -> Microsoft.AndroidX.Compose.Offset
 static Microsoft.AndroidX.Compose.Offset.Zero.get -> Microsoft.AndroidX.Compose.Offset
-static Microsoft.AndroidX.Compose.Resources.BooleanResource(int id) -> bool
-static Microsoft.AndroidX.Compose.Resources.ColorResource(int id) -> long
-static Microsoft.AndroidX.Compose.Resources.DimensionResource(int id) -> Microsoft.AndroidX.Compose.Dp
-static Microsoft.AndroidX.Compose.Resources.IntegerArrayResource(int id) -> int[]!
-static Microsoft.AndroidX.Compose.Resources.IntegerResource(int id) -> int
-static Microsoft.AndroidX.Compose.Resources.PainterResource(int id) -> AndroidX.Compose.UI.Graphics.Painter.Painter!
-static Microsoft.AndroidX.Compose.Resources.PluralStringResource(int id, int count, params object?[]! formatArgs) -> string!
-static Microsoft.AndroidX.Compose.Resources.PluralStringResource(int id, int count) -> string!
-static Microsoft.AndroidX.Compose.Resources.StringArrayResource(int id) -> string![]!
-static Microsoft.AndroidX.Compose.Resources.StringResource(int id, params object?[]! formatArgs) -> string!
-static Microsoft.AndroidX.Compose.Resources.StringResource(int id) -> string!
 static Microsoft.AndroidX.Compose.Shape.Circle() -> Microsoft.AndroidX.Compose.Shape!
 static Microsoft.AndroidX.Compose.Shape.CutCorners(Microsoft.AndroidX.Compose.Dp cornerSize) -> Microsoft.AndroidX.Compose.Shape!
 static Microsoft.AndroidX.Compose.Shape.CutCornersPercent(int percent) -> Microsoft.AndroidX.Compose.Shape!
@@ -1891,10 +1875,6 @@ static Microsoft.AndroidX.Compose.TextOverflow.operator ==(Microsoft.AndroidX.Co
 static Microsoft.AndroidX.Compose.TextOverflow.Pack(Microsoft.AndroidX.Compose.TextOverflow? value) -> int
 static Microsoft.AndroidX.Compose.TextOverflow.StartEllipsis.get -> Microsoft.AndroidX.Compose.TextOverflow
 static Microsoft.AndroidX.Compose.TextOverflow.Visible.get -> Microsoft.AndroidX.Compose.TextOverflow
-static Microsoft.AndroidX.Compose.TopAppBarDefaults.EnterAlwaysScrollBehavior(AndroidX.Compose.Material3.TopAppBarState! state, int line = 0, string! file = "") -> AndroidX.Compose.Material3.ITopAppBarScrollBehavior!
-static Microsoft.AndroidX.Compose.TopAppBarDefaults.ExitUntilCollapsedScrollBehavior(AndroidX.Compose.Material3.TopAppBarState! state, int line = 0, string! file = "") -> AndroidX.Compose.Material3.ITopAppBarScrollBehavior!
-static Microsoft.AndroidX.Compose.TopAppBarDefaults.PinnedScrollBehavior(AndroidX.Compose.Material3.TopAppBarState! state, int line = 0, string! file = "") -> AndroidX.Compose.Material3.ITopAppBarScrollBehavior!
-static Microsoft.AndroidX.Compose.TopAppBarDefaults.RememberTopAppBarState(float initialHeightOffsetLimit = -Infinity, float initialHeightOffset = 0, float initialContentOffset = 0, int line = 0, string! file = "") -> AndroidX.Compose.Material3.TopAppBarState!
 static Microsoft.AndroidX.Compose.TransformOrigin.Center.get -> long
 static Microsoft.AndroidX.Compose.TransformOrigin.Pack(float pivotFractionX, float pivotFractionY) -> long
 static Microsoft.AndroidX.Compose.Transitions.FadeIn(float initialAlpha = 0, AndroidX.Compose.Animation.Core.IFiniteAnimationSpec? animationSpec = null) -> AndroidX.Compose.Animation.EnterTransition!

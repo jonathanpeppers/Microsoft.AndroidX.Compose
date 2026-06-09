@@ -11,7 +11,7 @@ public static class IconDemo
         CategoryId:  "locals-misc",
         Title:       "Icon",
         Description: "Material 3 Icon takes a drawable resource id and a content description; it's the tinted counterpart to Image.",
-        Build:       () => new Column
+        Build:       _ => new Column
         {
             new Text("Settings:"),
             new Icon(Resource.Drawable.ic_settings, "Settings"),

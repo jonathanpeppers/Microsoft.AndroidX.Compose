@@ -12,7 +12,7 @@ public static class HorizontalCenteredHeroCarouselDemo
         CategoryId:  "carousels-paging",
         Title:       "HorizontalCenteredHeroCarousel",
         Description: "Focused 'hero' item centered; neighbors peek from the edges.",
-        Build:       () => new HorizontalCenteredHeroCarousel<int>(
+        Build:       _ => new HorizontalCenteredHeroCarousel<int>(
             items:       Enumerable.Range(0, 8).ToList(),
             itemContent: i => new Box
             {

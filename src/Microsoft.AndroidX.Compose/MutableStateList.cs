@@ -47,6 +47,9 @@ public sealed class MutableStateList<T> : IList<T>, IReadOnlyList<T>
     /// <summary>Creates an observable list pre-populated with <paramref name="initial"/>.</summary>
     public MutableStateList(IEnumerable<T> initial) => _items = new List<T>(initial);
 
+    /// <summary>Creates an observable list pre-populated with <paramref name="elements"/>.</summary>
+    public MutableStateList(params T[] elements) => _items = elements is null ? new List<T>() : new List<T>(elements);
+
     // Subscribe the current composition scope to mutations.
     void Track() { _ = _tick.Value; }
     // Notify all subscribed scopes that the list has changed.

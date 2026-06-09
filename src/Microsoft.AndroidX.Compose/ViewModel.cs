@@ -11,7 +11,7 @@ namespace Microsoft.AndroidX.Compose;
 /// <remarks>
 /// <para>
 /// Allocate one instance per call site via
-/// <see cref="ComposeRuntime.ViewModel{T}(Func{T}, int, string)"/>.
+/// <see cref="ComposeExtensions.ViewModel{T}(Func{T}, int, string)"/>.
 /// The factory routes through
 /// <see cref="global::AndroidX.Lifecycle.ViewModelProvider"/> on the
 /// nearest <see cref="global::AndroidX.Lifecycle.IViewModelStoreOwner"/>

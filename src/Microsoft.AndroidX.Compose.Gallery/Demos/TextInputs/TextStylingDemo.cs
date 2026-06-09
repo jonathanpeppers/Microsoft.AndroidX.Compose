@@ -11,7 +11,7 @@ public static class TextStylingDemo
         CategoryId:  "text-inputs",
         Title:       "Text styling",
         Description: "FontSize, FontWeight, Decoration, LetterSpacing, LineHeight.",
-        Build:       () => new Column
+        Build:       _ => new Column
         {
             new Text("Large + Bold")
             {

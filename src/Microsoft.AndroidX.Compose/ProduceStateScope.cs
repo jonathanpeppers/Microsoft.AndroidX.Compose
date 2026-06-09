@@ -4,7 +4,7 @@ using global::AndroidX.Compose.Runtime;
 namespace Microsoft.AndroidX.Compose;
 
 /// <summary>
-/// Slot value used by <see cref="ComposeRuntime.ProduceState{T}(T, Func{MutableState{T}, CancellationToken, Task}, int, string)"/>:
+/// Slot value used by <see cref="ComposeExtensions.ProduceState{T}(T, Func{MutableState{T}, CancellationToken, Task}, int, string)"/>:
 /// holds the <see cref="MutableState{T}"/> the caller writes to,
 /// plus the producer task / cancellation lifecycle. Implements
 /// <see cref="IRememberObserver"/> so it starts the producer when
@@ -82,7 +82,7 @@ internal sealed class ProduceStateScope<T> : Java.Lang.Object, IRememberObserver
         var token = _cts.Token;
         var task = _producer(State, token);
         // Surface producer faults to logcat instead of leaving them
-        // as unobserved task exceptions. Match ComposeActivity's
+        // as unobserved task exceptions. Match ComposeExtensions'
         // logging tag so all our diagnostics share a single filter.
         _ = task.ContinueWith(static t =>
         {

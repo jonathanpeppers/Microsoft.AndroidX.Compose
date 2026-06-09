@@ -29,7 +29,7 @@ public class MutableState<T> : IMutableStateWrapper, IState<T>
     /// re-probe its specialized-state <c>_kind</c> when Compose hands
     /// back a (potentially boxed) restored state after a process-death
     /// round-trip through
-    /// <see cref="ComposeRuntime.RememberSaveable{T}(Func{T}, int, string)"/>.
+    /// <see cref="ComposeExtensions.RememberSaveable{T}(Func{T}, int, string)"/>.
     /// </summary>
     internal virtual void SetUnderlyingState(IMutableState state) => _state = state;
 

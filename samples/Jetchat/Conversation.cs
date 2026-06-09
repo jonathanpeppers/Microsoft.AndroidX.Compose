@@ -120,7 +120,7 @@ public static class Conversation
         MutableNumberState<float>    swipeOffset) =>
         new Composed(c =>
         {
-            var dndTarget = ComposeRuntime.Remember(() => new DragAndDropTarget(e =>
+            var dndTarget = c.Remember(() => new DragAndDropTarget(e =>
             {
                 var clip = e.AndroidDragEvent.ClipData;
                 var uri  = clip is not null && clip.ItemCount > 0
@@ -475,7 +475,7 @@ public static class Conversation
         var text = input.Value?.Text ?? string.Empty;
         if (string.IsNullOrWhiteSpace(text)) return;
         ui.AddMessage(new Message(MyName, text.Trim(), "8:30 PM"));
-        input.Value = ComposeRuntime.NewTextFieldValue();
+        input.Value = ComposeExtensions.NewTextFieldValue();
         selectedSelector.Value = 0;
         _ = messagesScroll.AnimateScrollToItemAsync(0);
     }

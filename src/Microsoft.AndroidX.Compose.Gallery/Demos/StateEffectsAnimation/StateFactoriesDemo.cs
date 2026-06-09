@@ -2,7 +2,7 @@ using Microsoft.AndroidX.Compose.Gallery.Registry;
 
 namespace Microsoft.AndroidX.Compose.Gallery.Demos.StateEffectsAnimation;
 
-/// <summary>State factory methods on <see cref="Compose"/> mirroring Kotlin's <c>mutableStateOf</c> family.</summary>
+/// <summary>State factory ctors mirroring Kotlin's <c>mutableStateOf</c> family.</summary>
 public static class StateFactoriesDemo
 {
     /// <summary>Registry entry exposed via <see cref="Catalog.Demos"/>.</summary>
@@ -10,16 +10,16 @@ public static class StateFactoriesDemo
         Id:          "state-factories",
         CategoryId:  "state-effects",
         Title:       "State factories",
-        Description: "ComposeRuntime.MutableStateOf, MutableIntStateOf, MutableLongStateOf, MutableFloatStateOf, MutableDoubleStateOf, MutableStateListOf, MutableStateMapOf — the Kotlin top-level factory family lifted onto Compose.cs.",
-        Build:       () =>
+        Description: "MutableState<T>, MutableNumberState<T> (int/long/float/double), MutableStateList<T>, MutableStateMap<K,V> — the Kotlin top-level factory family expressed as plain C# ctors.",
+        Build:       c =>
         {
-            var name   = ComposeRuntime.Remember(() => ComposeRuntime.MutableStateOf("Ada"));
-            var i      = ComposeRuntime.Remember(() => ComposeRuntime.MutableIntStateOf(0));
-            var l      = ComposeRuntime.Remember(() => ComposeRuntime.MutableLongStateOf(1_000_000_000L));
-            var f      = ComposeRuntime.Remember(() => ComposeRuntime.MutableFloatStateOf(0.5f));
-            var d      = ComposeRuntime.Remember(() => ComposeRuntime.MutableDoubleStateOf(Math.PI));
-            var items  = ComposeRuntime.Remember(() => ComposeRuntime.MutableStateListOf("alpha", "beta"));
-            var prefs  = ComposeRuntime.Remember(() => ComposeRuntime.MutableStateMapOf<string, bool>());
+            var name   = c.Remember(() => new MutableState<string>("Ada"));
+            var i      = c.Remember(() => new MutableNumberState<int>(0));
+            var l      = c.Remember(() => new MutableNumberState<long>(1_000_000_000L));
+            var f      = c.Remember(() => new MutableNumberState<float>(0.5f));
+            var d      = c.Remember(() => new MutableNumberState<double>(Math.PI));
+            var items  = c.Remember(() => new MutableStateList<string>("alpha", "beta"));
+            var prefs  = c.Remember(() => new MutableStateMap<string, bool>());
 
             return new Column
             {

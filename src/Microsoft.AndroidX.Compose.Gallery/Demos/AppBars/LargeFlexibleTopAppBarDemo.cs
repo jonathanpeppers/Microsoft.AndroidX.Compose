@@ -11,9 +11,9 @@ public static class LargeFlexibleTopAppBarDemo
         CategoryId:  "app-bars-tabs",
         Title:       "LargeFlexibleTopAppBar",
         Description: "Big title for hero screens; supports Title / Subtitle / Actions.",
-        Build:       () =>
+        Build:       c =>
         {
-            var count = ComposeRuntime.Remember(() => new MutableNumberState<int>(0));
+            var count = c.Remember(() => new MutableNumberState<int>(0));
             return new LargeFlexibleTopAppBar
             {
                 Title    = new Text("Tickets"),

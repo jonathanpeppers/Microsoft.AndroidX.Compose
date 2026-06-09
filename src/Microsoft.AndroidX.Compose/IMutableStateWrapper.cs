@@ -5,7 +5,7 @@ namespace Microsoft.AndroidX.Compose;
 /// <summary>
 /// Non-generic view onto a <see cref="MutableState{T}"/> /
 /// <see cref="MutableNumberState{T}"/> wrapper. Exists so
-/// <see cref="ComposeRuntime.RememberSaveable{T}(Func{T}, int, string)"/>
+/// <see cref="ComposeExtensions.RememberSaveable{T}(Func{T}, int, string)"/>
 /// can detect "<c>T</c> is a state-holder wrapper" with a cheap
 /// <c>is</c>-check (no reflection, trim-safe), and so the dispatcher
 /// can swap the wrapper's underlying <see cref="IMutableState"/>

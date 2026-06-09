@@ -17,10 +17,10 @@ public static class DockedSearchBarQueryDemo
         CategoryId:  "search",
         Title:       "DockedSearchBar (query-based)",
         Description: "Deprecated query/active overload — the bar renders its own input field.",
-        Build:       () =>
+        Build:       c =>
         {
-            var query  = ComposeRuntime.Remember(() => new MutableState<string>(""));
-            var active = ComposeRuntime.Remember(() => new MutableState<bool>(false));
+            var query  = c.Remember(() => new MutableState<string>(""));
+            var active = c.Remember(() => new MutableState<bool>(false));
 
             var matches = Array.FindAll(
                 Fruits,

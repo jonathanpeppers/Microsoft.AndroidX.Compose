@@ -11,10 +11,10 @@ public static class DropdownMenuDemo
         CategoryId:  "dialogs-sheets",
         Title:       "DropdownMenu",
         Description: "IconButton + DropdownMenu inside a shared Box for anchoring.",
-        Build:       () =>
+        Build:       c =>
         {
-            var open      = ComposeRuntime.Remember(() => new MutableState<bool>(false));
-            var selection = ComposeRuntime.Remember(() => new MutableState<string>("(none)"));
+            var open      = c.Remember(() => new MutableState<bool>(false));
+            var selection = c.Remember(() => new MutableState<string>("(none)"));
             return new Column
             {
                 new Text($"Last menu choice: {selection}"),

@@ -11,10 +11,10 @@ public static class ExposedDropdownMenuBoxDemo
         CategoryId:  "dialogs-sheets",
         Title:       "ExposedDropdownMenuBox",
         Description: "Read-only TextField + ▼ button toggles an anchored popup list.",
-        Build:       () =>
+        Build:       c =>
         {
-            var open     = ComposeRuntime.Remember(() => new MutableState<bool>(false));
-            var selected = ComposeRuntime.Remember(() => new MutableState<string>("Apple"));
+            var open     = c.Remember(() => new MutableState<bool>(false));
+            var selected = c.Remember(() => new MutableState<string>("Apple"));
             return new ExposedDropdownMenuBox(
                 expanded:         open.Value,
                 onExpandedChange: v => open.Value = v)

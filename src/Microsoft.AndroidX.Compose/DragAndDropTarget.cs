@@ -16,7 +16,7 @@ namespace Microsoft.AndroidX.Compose;
 /// default no-op behaviour.
 ///
 /// The Java peer is created once per managed instance, so
-/// <see cref="ComposeRuntime.Remember{T}(Func{T}, int, string)"/> the target
+/// <see cref="ComposeExtensions.Remember{T}(Func{T}, int, string)"/> the target
 /// to keep the modifier-element identity stable across recompositions —
 /// otherwise Compose rebuilds the underlying <c>DragAndDropTargetElement</c>
 /// every frame and any internal hover/started/ended bookkeeping resets.

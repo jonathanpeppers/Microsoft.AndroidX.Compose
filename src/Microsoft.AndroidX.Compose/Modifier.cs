@@ -365,11 +365,11 @@ public sealed class Modifier
     /// to handle the dropped payload.
     ///
     /// Both arguments should be hoisted into
-    /// <see cref="ComposeRuntime.Remember{T}(Func{T}, int, string)"/> so the
+    /// <c>composer.Remember</c> so the
     /// underlying <c>DragAndDropTargetElement</c> keeps a stable identity
     /// across recompositions:
     /// <code>
-    /// var target = ComposeRuntime.Remember(() =&gt; new DragAndDropTarget { OnDrop = e =&gt; { /* ... */ return true; } });
+    /// var target = ComposeExtensions.Remember(() =&gt; new DragAndDropTarget { OnDrop = e =&gt; { /* ... */ return true; } });
     /// new Column
     /// {
     ///     Modifier.Companion.FillMaxSize()
@@ -404,7 +404,7 @@ public sealed class Modifier
     /// (e.g. a regular <see cref="Column"/> or <see cref="Box"/>)
     /// vertically scrollable when its content overflows. Hold the
     /// <paramref name="state"/> across recompositions with
-    /// <see cref="ComposeActivity.Remember{T}(Func{T}, int, string)"/>:
+    /// <c>composer.Remember</c>:
     /// <code>
     /// var scroll = Remember(() =&gt; new ScrollState());
     /// new Column { Modifier.Companion.VerticalScroll(scroll), /* children */ };
@@ -474,8 +474,8 @@ public sealed class Modifier
     /// </summary>
     /// <param name="state">State holder that receives drag deltas.
     /// Build via <c>new DraggableState(delta =&gt; ...)</c> inside a
-    /// <see cref="ComposeRuntime.Remember{T}(Func{T}, int, string)"/> call, or via
-    /// <see cref="ComposeRuntime.RememberDraggableState(Action{float}, int, string)"/>
+    /// <c>composer.Remember</c> call, or via
+    /// <see cref="ComposeExtensions.RememberDraggableState(Action{float}, int, string)"/>
     /// for stable Java identity across recompositions when the
     /// callback closure changes.</param>
     /// <param name="orientation">Axis the gesture operates on —

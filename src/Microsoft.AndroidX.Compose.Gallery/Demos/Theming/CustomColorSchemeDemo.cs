@@ -15,7 +15,7 @@ public static class CustomColorSchemeDemo
         CategoryId:  "theming",
         Title:       "Custom ColorScheme",
         Description: "MaterialTheme.LightColorScheme(primary, secondary, tertiary, ...) — set just the slots you care about; the rest fall back to the Material 3 baseline.",
-        Build:       () =>
+        Build:       _ =>
         {
             // Build the nested MaterialTheme separately so we don't mix
             // property assignments with collection-init items in one

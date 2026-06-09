@@ -11,7 +11,7 @@ public static class SurfaceDemo
         CategoryId:  "containers",
         Title:       "Surface",
         Description: "M3 Surface pulls its container color from MaterialTheme.",
-        Build:       () => new Column
+        Build:       _ => new Column
         {
             new Surface
             {

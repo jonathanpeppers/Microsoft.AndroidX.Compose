@@ -9,7 +9,7 @@ namespace Microsoft.AndroidX.Compose.Samples.JetNews;
 /// <remarks>
 /// Refactored for the UDF pattern: the feed and bookmarks come from a
 /// <see cref="HomeViewModel"/> acquired via
-/// <see cref="ComposeRuntime.ViewModel{T}(Func{T}, int, string)"/>, and the
+/// <see cref="ComposeExtensions.ViewModel{T}(Func{T}, int, string)"/>, and the
 /// body switches on a <see cref="HomeUiState"/> discriminated union
 /// (<see cref="HomeUiState.Loading"/> /
 /// <see cref="HomeUiState.HasPosts"/> /
@@ -18,39 +18,40 @@ namespace Microsoft.AndroidX.Compose.Samples.JetNews;
 public static class HomeScreen
 {
     /// <summary>Materialize the home screen.</summary>
-    public static Scaffold Build(
+    public static ComposableNode Build(
         BookmarksViewModel bookmarks,
         DrawerStateHolder drawerState,
         Action<string> onSelectPost,
         SnackbarController snackbars,
-        IPostsRepository? repository = null)
-    {
-        var vm = ComposeRuntime.ViewModel(() => new HomeViewModel(repository));
-        var state = vm.UiState.CollectAsStateWithLifecycle().Value;
-
-        // Search-bar toggle: tap the magnifier in the action row to swap
-        // the wordmark title for an inline OutlinedTextField. The search
-        // is purely visual today — wiring it to filter the feed needs
-        // Modifier.interceptKey(Key.Enter), tracked in #159.
-        var searchOpen  = ComposeRuntime.Remember(() => new MutableState<bool>(false));
-        var searchQuery = ComposeRuntime.Remember(() => new MutableState<string>(string.Empty));
-        var snackbarMessage = snackbars.Message.Value;
-
-        return new Scaffold
+        IPostsRepository? repository = null) =>
+        new Composed(c =>
         {
-            TopBar = BuildTopBar(searchOpen, searchQuery, drawerState, vm),
-            SnackbarHost = snackbarMessage is null
-                ? null
-                : new Snackbar { Body = new Text(snackbarMessage) },
-            Body = state switch
+            var vm = c.ViewModel(() => new HomeViewModel(repository));
+            var state = vm.UiState.CollectAsStateWithLifecycle().Value;
+
+            // Search-bar toggle: tap the magnifier in the action row to swap
+            // the wordmark title for an inline OutlinedTextField. The search
+            // is purely visual today — wiring it to filter the feed needs
+            // Modifier.interceptKey(Key.Enter), tracked in #159.
+            var searchOpen  = c.Remember(() => new MutableState<bool>(false));
+            var searchQuery = c.Remember(() => new MutableState<string>(string.Empty));
+            var snackbarMessage = snackbars.Message.Value;
+
+            return new Scaffold
             {
-                HomeUiState.Loading       => BuildLoading(),
-                HomeUiState.Error e       => BuildError(e.Message, () => _ = vm.RefreshAsync()),
-                HomeUiState.HasPosts h    => BuildBody(h, bookmarks, onSelectPost, vm, snackbars),
-                _                         => new Spacer(),
-            },
-        };
-    }
+                TopBar = BuildTopBar(searchOpen, searchQuery, drawerState, vm),
+                SnackbarHost = snackbarMessage is null
+                    ? null
+                    : new Snackbar { Body = new Text(snackbarMessage) },
+                Body = state switch
+                {
+                    HomeUiState.Loading       => BuildLoading(),
+                    HomeUiState.Error e       => BuildError(e.Message, () => _ = vm.RefreshAsync()),
+                    HomeUiState.HasPosts h    => BuildBody(h, bookmarks, onSelectPost, vm, snackbars),
+                    _                         => new Spacer(),
+                },
+            };
+        });
 
     static ComposableNode BuildTopBar(
         MutableState<bool> searchOpen,

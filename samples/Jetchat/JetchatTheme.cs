@@ -141,7 +141,7 @@ public static class JetchatTheme
         new Composed(c =>
         {
             bool dark = MaterialTheme.IsSystemInDarkTheme(c);
-            var scheme = ComposeRuntime.Remember(
+            var scheme = c.Remember(
                 () => dark ? BuildDark() : BuildLight(),
                 dark);
             var theme = new MaterialTheme

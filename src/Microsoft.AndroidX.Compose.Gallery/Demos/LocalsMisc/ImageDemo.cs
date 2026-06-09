@@ -11,10 +11,10 @@ public static class ImageDemo
         CategoryId:  "locals-misc",
         Title:       "Image",
         Description: "Resource-id ctor renders a drawable; uses StringResource to pull the caption.",
-        Build:       () => new Column
+        Build:       c => new Column
         {
             new Text("Resource-id ctor:"),
             new Image(Resource.Drawable.ic_star, "Star icon"),
-            new Text(Resources.StringResource(Resource.String.counter_caption)),
+            new Text(c.StringResource(Resource.String.counter_caption)),
         });
 }

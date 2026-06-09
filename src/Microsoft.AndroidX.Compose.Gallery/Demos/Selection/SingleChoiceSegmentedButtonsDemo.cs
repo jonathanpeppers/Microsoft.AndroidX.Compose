@@ -11,9 +11,9 @@ public static class SingleChoiceSegmentedButtonsDemo
         CategoryId:  "selection",
         Title:       "Single-choice segmented buttons",
         Description: "SingleChoiceSegmentedButtonRow with three SegmentedButtons.",
-        Build:       () =>
+        Build:       c =>
         {
-            var picked = ComposeRuntime.Remember(() => new MutableNumberState<int>(0));
+            var picked = c.Remember(() => new MutableNumberState<int>(0));
             return new Column
             {
                 new SingleChoiceSegmentedButtonRow

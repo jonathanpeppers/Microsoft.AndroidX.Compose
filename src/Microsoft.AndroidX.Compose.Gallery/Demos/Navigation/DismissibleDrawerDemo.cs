@@ -12,9 +12,9 @@ public static class DismissibleDrawerDemo
         CategoryId:  "navigation",
         Title:       "DismissibleNavigationDrawer",
         Description: "Drawer pushes the content rather than overlaying. Starts open via InitialValue.",
-        Build:       () =>
+        Build:       c =>
         {
-            var count = ComposeRuntime.Remember(() => new MutableNumberState<int>(0));
+            var count = c.Remember(() => new MutableNumberState<int>(0));
             return new Box
             {
                 Modifier.Companion.Height(320),

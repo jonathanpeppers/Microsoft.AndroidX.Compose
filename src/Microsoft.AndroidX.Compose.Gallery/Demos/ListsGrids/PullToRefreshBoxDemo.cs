@@ -12,10 +12,10 @@ public static class PullToRefreshBoxDemo
         CategoryId:  "lists-grids",
         Title:       "PullToRefreshBox",
         Description: "Wraps a scrollable child and surfaces the M3 pull gesture; faked 1.2s reload.",
-        Build:       () =>
+        Build:       c =>
         {
-            var refreshing = ComposeRuntime.Remember(() => new MutableState<bool>(false));
-            var revision   = ComposeRuntime.Remember(() => new MutableNumberState<int>(0));
+            var refreshing = c.Remember(() => new MutableState<bool>(false));
+            var revision   = c.Remember(() => new MutableNumberState<int>(0));
             return new PullToRefreshBox(
                 isRefreshing: refreshing.Value,
                 onRefresh:    () =>

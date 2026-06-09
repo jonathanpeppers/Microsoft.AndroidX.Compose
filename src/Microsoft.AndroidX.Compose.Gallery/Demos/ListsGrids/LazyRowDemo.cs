@@ -11,7 +11,7 @@ public static class LazyRowDemo
         CategoryId:  "lists-grids",
         Title:       "LazyRow",
         Description: "Horizontally scrolling row that only composes visible items.",
-        Build:       () => new LazyRow<int>(
+        Build:       _ => new LazyRow<int>(
             items:       Enumerable.Range(0, 50).ToList(),
             itemContent: i => new Card
             {

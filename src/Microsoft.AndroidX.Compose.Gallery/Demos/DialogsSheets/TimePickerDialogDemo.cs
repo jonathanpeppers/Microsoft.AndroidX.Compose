@@ -11,11 +11,11 @@ public static class TimePickerDialogDemo
         CategoryId:  "dialogs-sheets",
         Title:       "TimePickerDialog",
         Description: "Confirm reads Hour + Minute from TimePickerState.",
-        Build:       () =>
+        Build:       c =>
         {
-            var open   = ComposeRuntime.Remember(() => new MutableState<bool>(false));
-            var picked = ComposeRuntime.Remember(() => new MutableState<string>("(none)"));
-            var state  = ComposeRuntime.Remember(() => new TimePickerState(initialHour: 9, initialMinute: 30));
+            var open   = c.Remember(() => new MutableState<bool>(false));
+            var picked = c.Remember(() => new MutableState<string>("(none)"));
+            var state  = c.Remember(() => new TimePickerState(initialHour: 9, initialMinute: 30));
             return new Column
             {
                 new Text($"Picked time: {picked}"),

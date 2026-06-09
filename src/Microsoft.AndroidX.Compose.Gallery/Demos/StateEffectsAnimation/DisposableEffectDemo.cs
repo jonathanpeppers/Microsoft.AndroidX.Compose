@@ -11,10 +11,10 @@ public static class DisposableEffectDemo
         CategoryId:  "state-effects",
         Title:       "DisposableEffect",
         Description: "Fake 'register external listener' pattern. The cleanup callback bumps a counter on every key change / leaving composition.",
-        Build:       () =>
+        Build:       c =>
         {
-            var cleanups = ComposeRuntime.Remember(() => new MutableNumberState<int>(0));
-            var key      = ComposeRuntime.Remember(() => new MutableNumberState<int>(0));
+            var cleanups = c.Remember(() => new MutableNumberState<int>(0));
+            var key      = c.Remember(() => new MutableNumberState<int>(0));
 
             return new Column
             {

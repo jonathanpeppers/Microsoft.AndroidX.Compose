@@ -21,10 +21,10 @@ public static class NullableMutableStateDemo
         CategoryId:  "state-effects",
         Title:       "MutableState<long?> + nullable Local",
         Description: "Nullable primitives (long?, int?, bool?) round-trip through MutableState and CompositionLocal without unbox errors. Toggle the selected ID between null and a value.",
-        Build:       () =>
+        Build:       c =>
         {
-            var selectedId = ComposeRuntime.Remember(() => new MutableState<long?>(null));
-            var taps       = ComposeRuntime.Remember(() => new MutableNumberState<int>(0));
+            var selectedId = c.Remember(() => new MutableState<long?>(null));
+            var taps       = c.Remember(() => new MutableNumberState<int>(0));
 
             return new Column
             {

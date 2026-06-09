@@ -11,10 +11,10 @@ public static class RangeSliderDemo
         CategoryId:  "selection",
         Title:       "RangeSlider",
         Description: "Two-thumb slider for a (start, end) interval.",
-        Build:       () =>
+        Build:       c =>
         {
-            var start = ComposeRuntime.Remember(() => new MutableNumberState<float>(0.2f));
-            var end   = ComposeRuntime.Remember(() => new MutableNumberState<float>(0.8f));
+            var start = c.Remember(() => new MutableNumberState<float>(0.2f));
+            var end   = c.Remember(() => new MutableNumberState<float>(0.8f));
             return new Column
             {
                 new RangeSlider(

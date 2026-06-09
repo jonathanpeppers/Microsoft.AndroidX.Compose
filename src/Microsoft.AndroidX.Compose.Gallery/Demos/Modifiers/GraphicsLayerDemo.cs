@@ -11,11 +11,11 @@ public static class GraphicsLayerDemo
         CategoryId:  "modifiers",
         Title:       "GraphicsLayer",
         Description: "Drag-driven rotation + alpha + asymmetric scale, with one tile pivoting at the top-left corner and the other at its center.",
-        Build:       () =>
+        Build:       c =>
         {
             var density = global::Android.Content.Res.Resources.System!.DisplayMetrics!.Density;
-            var dragX   = ComposeRuntime.Remember(() => new MutableState<float>(0f));
-            var state   = ComposeRuntime.RememberDraggableState(delta => dragX.Value += delta / density);
+            var dragX   = c.Remember(() => new MutableState<float>(0f));
+            var state   = c.RememberDraggableState(delta => dragX.Value += delta / density);
 
             return new Column
             {

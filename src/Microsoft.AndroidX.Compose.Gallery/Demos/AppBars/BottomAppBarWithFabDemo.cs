@@ -11,9 +11,9 @@ public static class BottomAppBarWithFabDemo
         CategoryId:  "app-bars-tabs",
         Title:       "BottomAppBar — with FAB",
         Description: "BottomAppBar exposes a FloatingActionButton slot for the primary action.",
-        Build:       () =>
+        Build:       c =>
         {
-            var count = ComposeRuntime.Remember(() => new MutableNumberState<int>(0));
+            var count = c.Remember(() => new MutableNumberState<int>(0));
             return new Column
             {
                 new Text($"count = {count}"),

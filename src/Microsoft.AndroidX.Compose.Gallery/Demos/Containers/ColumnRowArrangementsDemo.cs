@@ -11,7 +11,7 @@ public static class ColumnRowArrangementsDemo
         CategoryId:  "containers",
         Title:       "Column / Row arrangements",
         Description: "Arrangement.SpaceBetween, SpaceAround, SpacedBy applied to Row + Column.",
-        Build:       () => new Column
+        Build:       _ => new Column
         {
             new Text("Row(Arrangement.SpacedBy(12)):"),
             new Row(Arrangement.SpacedBy(12))

@@ -11,9 +11,9 @@ public static class CheckboxDemo
         CategoryId:  "selection",
         Title:       "Checkbox",
         Description: "Plain two-state checkbox bound to a MutableState<bool>.",
-        Build:       () =>
+        Build:       c =>
         {
-            var on = ComposeRuntime.Remember(() => new MutableState<bool>(false));
+            var on = c.Remember(() => new MutableState<bool>(false));
             return new Column
             {
                 new Row

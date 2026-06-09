@@ -3,7 +3,7 @@ using global::AndroidX.Compose.Runtime;
 namespace Microsoft.AndroidX.Compose;
 
 /// <summary>
-/// Tree-syntax wrapper around <see cref="ComposeRuntime.SideEffect(Action)"/>.
+/// Tree-syntax wrapper around <see cref="ComposeExtensions.SideEffect(Action)"/>.
 /// Add to a container to run a callback on every successful
 /// recomposition of that container, after the composition has been
 /// applied. Useful when you'd rather express the effect as a sibling
@@ -30,5 +30,5 @@ public sealed class SideEffect : ComposableNode
     }
 
     public override void Render(IComposer composer)
-        => ComposeRuntime.SideEffect(_effect);
+        => composer.SideEffect(_effect);
 }

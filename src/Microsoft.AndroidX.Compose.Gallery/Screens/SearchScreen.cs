@@ -21,9 +21,9 @@ public sealed class SearchScreen : ComposableNode
 
     public override void Render(global::AndroidX.Compose.Runtime.IComposer composer)
     {
-        var searchState = ComposeRuntime.Remember(() => new SearchBarState());
-        var inputState  = ComposeRuntime.Remember(() => new SearchBarTextFieldState());
-        var query       = ComposeRuntime.Remember(() => new MutableState<string>(""));
+        var searchState = composer.Remember(() => new SearchBarState());
+        var inputState  = composer.Remember(() => new SearchBarTextFieldState());
+        var query       = composer.Remember(() => new MutableState<string>(""));
 
         var matches = Catalog.Search(query.Value).ToList();
 

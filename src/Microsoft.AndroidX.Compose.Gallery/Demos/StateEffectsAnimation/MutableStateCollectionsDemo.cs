@@ -11,10 +11,10 @@ public static class MutableStateCollectionsDemo
         CategoryId:  "state-effects",
         Title:       "MutableStateList + Map",
         Description: "Snapshot-tracked List and Map; mutate them and dependent reads recompose automatically.",
-        Build:       () =>
+        Build:       c =>
         {
-            var list = ComposeRuntime.Remember(() => new MutableStateList<string> { "alpha", "beta" });
-            var map  = ComposeRuntime.Remember(() => new MutableStateMap<string, int> { ["alpha"] = 1, ["beta"] = 2 });
+            var list = c.Remember(() => new MutableStateList<string> { "alpha", "beta" });
+            var map  = c.Remember(() => new MutableStateMap<string, int> { ["alpha"] = 1, ["beta"] = 2 });
 
             return new Column
             {

@@ -11,9 +11,9 @@ public static class CrossfadeDemo
         CategoryId:  "state-effects",
         Title:       "Crossfade<int>",
         Description: "Whenever the int changes, the previous panel fades out as the new one fades in. Each step uses a different colour so the cross-dissolve is visible.",
-        Build:       () =>
+        Build:       c =>
         {
-            var step = ComposeRuntime.Remember(() => new MutableNumberState<int>(0));
+            var step = c.Remember(() => new MutableNumberState<int>(0));
             Color[] palette =
             [
                 Color.FromRgb(0xEF, 0x9A, 0x9A),

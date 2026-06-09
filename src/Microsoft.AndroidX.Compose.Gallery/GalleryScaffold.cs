@@ -29,7 +29,7 @@ public sealed class GalleryScaffold : ComposableNode
         // expose currentBackStackEntryAsState. Each route's body updates
         // this MutableState in a DisposableEffect; the top app bar reads it
         // to decide between hamburger (home) and back arrow (anywhere else).
-        var currentRoute = ComposeRuntime.Remember(() => new MutableState<string>("home"));
+        var currentRoute = composer.Remember(() => new MutableState<string>("home"));
         var atRoot       = currentRoute.Value == "home";
 
         new Scaffold

@@ -16,10 +16,10 @@ public static class SemanticsBuilderDemo
         CategoryId:  "modifiers",
         Title:       "Semantics builder (Selected/Role/OnClick)",
         Description: "Modifier.Semantics(s => s.Selected(..).Role(..).ContentDescription(..).OnClick(\"Open\", ..)). Enable TalkBack to hear the announcements.",
-        Build:       () =>
+        Build:       c =>
         {
-            var selected = ComposeRuntime.Remember(() => new MutableState<bool>(false));
-            var opens    = ComposeRuntime.Remember(() => new MutableNumberState<int>(0));
+            var selected = c.Remember(() => new MutableState<bool>(false));
+            var opens    = c.Remember(() => new MutableNumberState<int>(0));
 
             // The card has TWO accessibility actions:
             //   1. The standard click — toggles selection.

@@ -11,9 +11,9 @@ public static class SecondaryScrollableTabRowDemo
         CategoryId:  "app-bars-tabs",
         Title:       "SecondaryScrollableTabRow",
         Description: "M3 secondary tab row variant; same selection model as PrimaryScrollableTabRow.",
-        Build:       () =>
+        Build:       c =>
         {
-            var sub = ComposeRuntime.Remember(() => new MutableNumberState<int>(0));
+            var sub = c.Remember(() => new MutableNumberState<int>(0));
             return new Column
             {
                 new SecondaryScrollableTabRow(selectedTabIndex: sub.Value)
