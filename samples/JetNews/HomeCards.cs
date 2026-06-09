@@ -48,7 +48,8 @@ internal static class HomeCards
 
     public static Row BuildSimple(Post post,
                                   BookmarksViewModel bookmarks,
-                                  Action<string> onSelectPost) =>
+                                  Action<string> onSelectPost,
+                                  SnackbarController? snackbars = null) =>
         new()
         {
             Modifier.Companion
@@ -72,7 +73,14 @@ internal static class HomeCards
                     FontSize = 14,
                 },
             },
-            BookmarkButton.Build(post.Id, bookmarks),
+            BookmarkButton.Build(
+                post.Id,
+                bookmarks,
+                onToggled: snackbars is null
+                    ? null
+                    : isChecked => snackbars.Show(isChecked
+                        ? "Added to bookmarks"
+                        : "Removed from bookmarks")),
         };
 
     public static Card BuildPopular(Post post, Action<string> onSelectPost) =>
