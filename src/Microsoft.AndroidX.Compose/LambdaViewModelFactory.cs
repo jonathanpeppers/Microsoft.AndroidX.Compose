@@ -14,7 +14,7 @@ namespace Microsoft.AndroidX.Compose;
 /// <remarks>
 /// <para>
 /// One factory instance is allocated per
-/// <see cref="ComposeRuntime.ViewModel{T}(Func{T}, int, string)"/>
+/// <see cref="ComposeExtensions.ViewModel{T}(Func{T}, int, string)"/>
 /// call. The factory is short-lived — Kotlin only retains a
 /// reference to it for the duration of <c>get(key, modelClass)</c>,
 /// after which the constructed VM is cached in the store and the
@@ -26,7 +26,7 @@ namespace Microsoft.AndroidX.Compose;
 /// Both shapes route to the wrapped <see cref="Func{T}"/>; the
 /// supplied <see cref="Java.Lang.Class"/> is intentionally ignored
 /// — the caller already committed to the C# generic <c>T</c> when
-/// they called <see cref="ComposeRuntime.ViewModel{T}(Func{T}, int, string)"/>.
+/// they called <see cref="ComposeExtensions.ViewModel{T}(Func{T}, int, string)"/>.
 /// </para>
 /// </remarks>
 [Register("net/compose/LambdaViewModelFactory")]

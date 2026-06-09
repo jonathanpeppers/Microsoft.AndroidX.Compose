@@ -11,11 +11,14 @@ Composables are **types**, not method calls. Each is a
 `ComposableNode` subclass; containers (`Column`, `MaterialTheme`,
 `Button`) implement `IEnumerable` + `Add(ComposableNode)` so C#
 collection-initializer syntax compiles. The tree built by `SetContent`'s
-lambda is a pure value; `ComposeActivity` walks it and calls
-`Render(IComposer)` on each node, threading the composer at the
-implementation layer — invisible to user code, but explicit (no
-`ThreadStatic`!) the same way Kotlin's compiler plugin makes
-`$composer` an explicit IR parameter.
+lambda is a pure value; the host `ComponentActivity` (or `ComposeView`)
+walks it and calls `Render(IComposer)` on each node, threading the
+composer at the implementation layer the same way Kotlin's compiler
+plugin makes `$composer` an explicit IR parameter — except in this repo
+the composer is also an explicit lambda parameter (`SetContent(c => …)`)
+and an explicit receiver on every composition primitive
+(`c.Remember(…)`, `c.LaunchedEffect(…)`), with no `ThreadStatic` or
+ambient state.
 
 Inside each container's `Render`, JNI bridges declared in
 [`ComposeBridges.cs`](../src/Microsoft.AndroidX.Compose/ComposeBridges.cs) call the
@@ -232,16 +235,16 @@ class.
   forwarded to Kotlin's `rememberSaveable(vararg inputs)` array so
   the saveable registry uses the same invalidation semantics.
 - **State primitives.** `MutableStateList<T>`, `MutableStateMap<K,V>`,
-  `ComposeRuntime.DerivedStateOf<T>(Func<T>)`, and
-  `ComposeRuntime.ProduceState<T>(initialValue, [keys…], producer)` are
+  `composer.DerivedStateOf<T>(Func<T>)`, and
+  `composer.ProduceState<T>(initialValue, [keys…], producer)` are
   available. `ProduceState` is implemented purely in C# via an
   `IRememberObserver` JCW — the producer is a plain
   `Func<MutableState<T>, CancellationToken, Task>`, not a Kotlin
   suspend lambda. Still missing: `snapshotFlow { … }`
   (Flow → `IAsyncEnumerable` bridge) and custom `Saver<T, S>` (only
   `autoSaver` is exposed today).
-- **Effects.** `ComposeRuntime.LaunchedEffect`, `ComposeRuntime.DisposableEffect`,
-  and `ComposeRuntime.SideEffect` are bound (#57 / #128). `LaunchedEffect`
+- **Effects.** `composer.LaunchedEffect`, `composer.DisposableEffect`,
+  and `composer.SideEffect` are bound (#57 / #128). `LaunchedEffect`
   takes a plain `Func<CancellationToken, Task>` and a key list
   (rather than a Kotlin suspend lambda); cancellation happens on key
   change / leaving composition just like Kotlin.

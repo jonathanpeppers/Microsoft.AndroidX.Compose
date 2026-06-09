@@ -11,10 +11,10 @@ public static class MultiChoiceSegmentedButtonsDemo
         CategoryId:  "selection",
         Title:       "Multi-choice segmented buttons",
         Description: "MultiChoiceSegmentedButtonRow with two independently checkable SegmentedButtons.",
-        Build:       () =>
+        Build:       c =>
         {
-            var bold   = ComposeRuntime.Remember(() => new MutableState<bool>(false));
-            var italic = ComposeRuntime.Remember(() => new MutableState<bool>(false));
+            var bold   = c.Remember(() => new MutableState<bool>(false));
+            var italic = c.Remember(() => new MutableState<bool>(false));
             return new Column
             {
                 new MultiChoiceSegmentedButtonRow

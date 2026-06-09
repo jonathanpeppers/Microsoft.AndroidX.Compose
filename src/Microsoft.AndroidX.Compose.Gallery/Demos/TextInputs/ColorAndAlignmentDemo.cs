@@ -11,7 +11,7 @@ public static class ColorAndAlignmentDemo
         CategoryId:  "text-inputs",
         Title:       "Color & alignment",
         Description: "Coloured Text plus Start / Center / End TextAlign.",
-        Build:       () => new Column
+        Build:       _ => new Column
         {
             new Text("Red, centered")
             {

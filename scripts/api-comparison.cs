@@ -697,7 +697,7 @@ static void WriteReport(string path, List<Match> matches, List<CSharpSymbol> csh
     {
         "Microsoft.AndroidX.Compose.Resource",        // Android auto-generated resources class
         "Microsoft.AndroidX.Compose",         // host for Remember/RememberSaveable/Effect statics
-        "Microsoft.AndroidX.Compose.ComposeActivity", // base Activity for SetContent
+        "Microsoft.AndroidX.Compose.ComposeExtensions", // extension methods on IComposer / ComponentActivity / ComposeView
         "Microsoft.AndroidX.Compose.ComposableNode",  // facade base class
         "Microsoft.AndroidX.Compose.ComposableContainer",
         "Microsoft.AndroidX.Compose.RenderContext",

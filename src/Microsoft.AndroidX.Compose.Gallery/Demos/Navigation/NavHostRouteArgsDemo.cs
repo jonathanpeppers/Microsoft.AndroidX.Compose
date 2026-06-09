@@ -11,9 +11,9 @@ public static class NavHostRouteArgsDemo
         CategoryId:  "navigation",
         Title:       "NavHost — route arguments",
         Description: "Three routes; user/{id} reads its parameter from NavBackStackEntry.Arguments.",
-        Build:       () =>
+        Build:       c =>
         {
-            var nav = ComposeRuntime.Remember(() => new NavController());
+            var nav = c.Remember(() => new NavController());
             return new Column
             {
                 new Text("Tap to navigate. Up uses navController.NavigateUp()."),

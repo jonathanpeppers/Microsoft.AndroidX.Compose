@@ -11,7 +11,7 @@ namespace Microsoft.AndroidX.Compose;
 /// the binding can consume.
 ///
 /// Used wherever a Kotlin API takes a <c>() -&gt; T</c> producer of
-/// a non-<c>Unit</c> value, e.g. <see cref="ComposeRuntime.RememberSaveable{T}(Func{T}, int, string)"/>
+/// a non-<c>Unit</c> value, e.g. <see cref="ComposeExtensions.RememberSaveable{T}(Func{T}, int, string)"/>
 /// for the value the saveable registry should cache.
 /// </summary>
 [Register("net/compose/ObjectFunction0")]

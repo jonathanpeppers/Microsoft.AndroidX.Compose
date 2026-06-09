@@ -11,9 +11,9 @@ public static class TextFieldSlotsDemo
         CategoryId:  "text-inputs",
         Title:       "TextField slots",
         Description: "Label, Placeholder, LeadingIcon, TrailingIcon, SupportingText, SingleLine.",
-        Build:       () =>
+        Build:       c =>
         {
-            var name = ComposeRuntime.Remember(() => new MutableState<string>(""));
+            var name = c.Remember(() => new MutableState<string>(""));
             return new Column
             {
                 new TextField(name)

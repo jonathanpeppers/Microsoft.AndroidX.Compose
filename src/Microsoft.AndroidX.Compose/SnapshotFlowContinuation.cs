@@ -7,7 +7,7 @@ namespace Microsoft.AndroidX.Compose;
 /// <summary>
 /// JCW implementing Kotlin's <see cref="IContinuation"/> for the
 /// long-running <c>Flow.collect</c> call that drives
-/// <see cref="ComposeRuntime.SnapshotFlow{T}(Func{T})"/>. Unlike
+/// <see cref="ComposeExtensions.SnapshotFlow{T}(Func{T})"/>. Unlike
 /// <see cref="SuspendContinuation"/>, which models a one-shot suspend
 /// resumed back into a <see cref="TaskCompletionSource{TResult}"/>,
 /// this continuation:

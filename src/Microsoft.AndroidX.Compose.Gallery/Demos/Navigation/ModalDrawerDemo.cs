@@ -11,9 +11,9 @@ public static class ModalDrawerDemo
         CategoryId:  "navigation",
         Title:       "ModalNavigationDrawer",
         Description: "Edge-swipe to reveal; scrim taps dismiss.",
-        Build:       () =>
+        Build:       c =>
         {
-            var count = ComposeRuntime.Remember(() => new MutableNumberState<int>(0));
+            var count = c.Remember(() => new MutableNumberState<int>(0));
             // Drawers fill their parent. Bound them so they don't fight the
             // gallery's outer scroll for height.
             return new Box

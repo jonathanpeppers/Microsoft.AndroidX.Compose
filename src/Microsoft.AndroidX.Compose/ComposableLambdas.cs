@@ -23,7 +23,7 @@ namespace Microsoft.AndroidX.Compose;
 ///     content).</description></item>
 ///   <item><description><c>ComposableLambdaKt.ComposableLambdaInstance(
 ///     key, tracked, block)</c> — used by <see cref="Instantiate4"/> and
-///     by <c>ComposeActivity.SetContent</c>. Allocates a fresh wrapper
+///     by <c>ComposeExtensions.SetContent</c>. Allocates a fresh wrapper
 ///     each call without touching any composer; safe to invoke from
 ///     outside composition. Use for content that runs at measure time
 ///     or in a subcomposition (e.g. <c>LazyListScope.items</c> /

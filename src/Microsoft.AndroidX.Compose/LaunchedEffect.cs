@@ -4,7 +4,7 @@ namespace Microsoft.AndroidX.Compose;
 
 /// <summary>
 /// Tree-syntax wrapper around
-/// <see cref="ComposeRuntime.LaunchedEffect(object?, Func{CancellationToken, Task})"/>.
+/// <see cref="ComposeExtensions.LaunchedEffect(object?, Func{CancellationToken, Task})"/>.
 /// Launches <c>Body</c> as a C# <see cref="Task"/>
 /// on first composition and any time a key changes; cancels the
 /// supplied <see cref="CancellationToken"/> on key
@@ -62,9 +62,9 @@ public sealed class LaunchedEffect : ComposableNode
     {
         switch (_keyCount)
         {
-            case 1: ComposeRuntime.LaunchedEffect(_key1, _body); break;
-            case 2: ComposeRuntime.LaunchedEffect(_key1, _key2, _body); break;
-            default: ComposeRuntime.LaunchedEffect(_key1, _key2, _key3, _body); break;
+            case 1: composer.LaunchedEffect(_key1, _body); break;
+            case 2: composer.LaunchedEffect(_key1, _key2, _body); break;
+            default: composer.LaunchedEffect(_key1, _key2, _key3, _body); break;
         }
     }
 }

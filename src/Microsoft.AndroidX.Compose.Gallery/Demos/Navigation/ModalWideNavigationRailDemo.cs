@@ -11,10 +11,10 @@ public static class ModalWideNavigationRailDemo
         CategoryId:  "navigation",
         Title:       "ModalWideNavigationRail",
         Description: "Overlay rail; tap an item or the Close row to dismiss.",
-        Build:       () =>
+        Build:       c =>
         {
-            var idx     = ComposeRuntime.Remember(() => new MutableNumberState<int>(0));
-            var visible = ComposeRuntime.Remember(() => new MutableState<bool>(false));
+            var idx     = c.Remember(() => new MutableNumberState<int>(0));
+            var visible = c.Remember(() => new MutableState<bool>(false));
             return new Column
             {
                 new Text($"ModalWideNavigationRail (selected: {idx})"),

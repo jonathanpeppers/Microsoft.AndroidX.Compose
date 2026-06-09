@@ -11,7 +11,7 @@ public static class FontWeightStyleFamilyDemo
         CategoryId:  "text-inputs",
         Title:       "FontWeight / Style / Family",
         Description: "Weight (Light…Black), italic FontStyle, and Serif/Monospace families.",
-        Build:       () => new Column
+        Build:       _ => new Column
         {
             new Text("Light")     { FontWeight = FontWeight.Light },
             new Text("Normal")    { FontWeight = FontWeight.Normal },

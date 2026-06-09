@@ -14,7 +14,7 @@ namespace Microsoft.AndroidX.Compose;
 /// <para>
 /// Hold a single instance per logical navigation graph (typically one
 /// per <see cref="NavHost"/>) inside a
-/// <see cref="ComposeActivity.Remember{T}(Func{T}, int, string)"/> callback so the controller
+/// <c>composer.Remember</c> callback so the controller
 /// survives recompositions:
 /// </para>
 /// <code>

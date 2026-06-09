@@ -10,7 +10,7 @@ namespace Microsoft.AndroidX.Compose;
 /// </summary>
 /// <remarks>
 /// <para>
-/// Construct one inside a <see cref="ComposeRuntime.Remember{T}(Func{T}, int, string)"/> callback so
+/// Construct one inside a <see cref="ComposeExtensions.Remember{T}(Func{T}, int, string)"/> callback so
 /// the same state survives recompositions:
 /// <code>
 /// var offset = RememberSaveable(() =&gt; new MutableNumberState&lt;float&gt;(0f));
@@ -25,7 +25,7 @@ namespace Microsoft.AndroidX.Compose;
 /// </para>
 /// <para>
 /// For per-recomposition delegate identity, prefer
-/// <see cref="ComposeRuntime.RememberDraggableState(Action{float}, int, string)"/>
+/// <see cref="ComposeExtensions.RememberDraggableState(Action{float}, int, string)"/>
 /// — Kotlin's <c>rememberDraggableState</c> wraps your callback in a
 /// <c>rememberUpdatedState</c> cell so the underlying Java
 /// <c>DraggableState</c> stays stable while the lambda can change.
@@ -58,7 +58,7 @@ public sealed class DraggableState
                 "DraggableKt.DraggableState returned null.");
     }
 
-    // Constructor used by ComposeRuntime.RememberDraggableState to wrap the
+    // Constructor used by ComposeExtensions.RememberDraggableState to wrap the
     // remember-cached IDraggableState handle that Kotlin built.
     internal DraggableState(IDraggableState jvm)
     {

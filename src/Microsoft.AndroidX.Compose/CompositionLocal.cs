@@ -108,28 +108,6 @@ public sealed class CompositionLocal<T>
     }
 
     /// <summary>
-    /// Ambient form of <see cref="GetCurrent(IComposer)"/> that
-    /// resolves the active composer from
-    /// <c>ComposeContext.Current</c>. Convenient inside lambdas
-    /// passed to wrappers like <see cref="ComposeRuntime.Remember{T}(Func{T}, int, string)"/>
-    /// that already run under a pushed composer; throws when called
-    /// outside of a composition pass.
-    /// </summary>
-    public T Current
-    {
-        get
-        {
-            var composer = ComposeContext.Current
-                ?? throw new InvalidOperationException(
-                    "CompositionLocal<T>.Current was read outside a composition pass. "
-                    + "Pass the IComposer explicitly via GetCurrent(IComposer), "
-                    + "or only read .Current from within a Render(IComposer) body "
-                    + "or an active Composable lambda.");
-            return GetCurrent(composer);
-        }
-    }
-
-    /// <summary>
     /// Pair this local with <paramref name="value"/> for installation
     /// by a <see cref="CompositionLocalProvider"/>. Equivalent to
     /// Kotlin's infix <c>local provides value</c> syntax.

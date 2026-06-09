@@ -1,17 +1,18 @@
 using global::Android.Content;
 using global::Android.OS;
+using global::AndroidX.Activity;
 
 namespace Microsoft.AndroidX.Compose.Gallery;
 
 /// <summary>
-/// The gallery's only activity. Hosts the entire UI under a
-/// <see cref="ComposeActivity.SetContent(Func{ComposableNode})"/>
-/// call into <see cref="GalleryApp.Build"/> — there's no MVVM, no
-/// fragment graph, no XML layout pipeline.
+/// The gallery's only activity. Hosts the entire UI under
+/// <see cref="ComposeExtensions.SetContent(ComponentActivity, Func{global::AndroidX.Compose.Runtime.IComposer, ComposableNode})"/>
+/// into <see cref="GalleryApp.Build"/> — there's no MVVM, no fragment
+/// graph, no XML layout pipeline.
 /// </summary>
 [Activity(Label = "@string/app_name", MainLauncher = true, LaunchMode = global::Android.Content.PM.LaunchMode.SingleTop, Theme = "@android:style/Theme.Material.Light.NoActionBar")]
 [global::Android.Runtime.Register("net/compose/gallery/MainActivity")]
-public class MainActivity : ComposeActivity
+public class MainActivity : ComponentActivity
 {
     /// <summary>
     /// The active root <see cref="NavController"/>, captured by
@@ -23,7 +24,8 @@ public class MainActivity : ComposeActivity
     protected override void OnCreate(Bundle? savedInstanceState)
     {
         base.OnCreate(savedInstanceState);
-        SetContent(GalleryApp.Build);
+        this.EnableEdgeToEdge();
+        this.SetContent(GalleryApp.Build);
         HandleRoute(Intent);
     }
 

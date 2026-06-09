@@ -11,11 +11,11 @@ public static class DateRangePickerDialogDemo
         CategoryId:  "dialogs-sheets",
         Title:       "DateRangePickerDialog",
         Description: "Confirm reads SelectedStartDateMillis + SelectedEndDateMillis.",
-        Build:       () =>
+        Build:       c =>
         {
-            var open   = ComposeRuntime.Remember(() => new MutableState<bool>(false));
-            var picked = ComposeRuntime.Remember(() => new MutableState<string>("(none)"));
-            var state  = ComposeRuntime.Remember(() => new DateRangePickerState());
+            var open   = c.Remember(() => new MutableState<bool>(false));
+            var picked = c.Remember(() => new MutableState<string>("(none)"));
+            var state  = c.Remember(() => new DateRangePickerState());
             return new Column
             {
                 new Text($"Picked range: {picked}"),

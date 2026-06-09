@@ -356,8 +356,9 @@ src/
     ComposeBridges.cs                         Raw-JNI bridges to Material3 Text / Button.
     MutableState.cs                           MutableState<T> + MutableNumberState<T>
                                                 (with operator ++/-- via INumber&lt;T&gt;).
-    ComposeActivity.cs                        ComponentActivity base providing SetContent +
-                                                Remember + safe-area padding + light status bar.
+    ComposeExtensions.SetContent.cs           Extension methods on ComponentActivity /
+                                                ComposeView providing SetContent +
+                                                EnableEdgeToEdge — no subclassing required.
   Microsoft.AndroidX.Compose.Bindings.Runtime/                Binds androidx.compose.runtime 1.9.4
     Microsoft.AndroidX.Compose.Bindings.Runtime.csproj
     Transforms/Metadata.xml
@@ -514,7 +515,7 @@ protected T Remember<T>(Func<T> factory, [CallerLineNumber] int key = 0)
 Good enough for tier 1.5; tier 2 codegen should map `[Composable]`
 locals to real slot-table reads.
 
-### 10. `ComposeActivity` keeps user `OnCreate` looking like Kotlin `onCreate`
+### 10. `ComponentActivity.SetContent` extension keeps user `OnCreate` looking like Kotlin `onCreate`
 
 The user override is:
 
@@ -522,7 +523,8 @@ The user override is:
 protected override void OnCreate(Bundle? state)
 {
     base.OnCreate(state);
-    SetContent(() => /* composition */);
+    this.EnableEdgeToEdge();
+    this.SetContent(c => /* composition */);
 }
 ```
 
@@ -531,14 +533,14 @@ protected override void OnCreate(Bundle? state)
 ```kotlin
 override fun onCreate(state: Bundle?) {
     super.onCreate(state)
+    enableEdgeToEdge()
     setContent { /* composition */ }
 }
 ```
 
-…almost verbatim. `OnCreate` is *not* sealed — the user can do any
-pre/post Android setup just like Kotlin. `SetContent` is an
-`internal-ly-magic` instance method on `ComposeActivity` that handles
-ComposeView creation, safe-area padding, light status-bar config, and
-the `ComposableLambdaKt.ComposableLambdaInstance` wrapping that
-invokes the user lambda on every recomposition.
+…almost verbatim — no subclassing of any custom base required. `SetContent`
+is an extension method on `ComponentActivity` (and on `ComposeView`, for
+View-hierarchy interop) that handles ComposeView creation and the
+`ComposableLambdaKt.ComposableLambdaInstance` wrapping which invokes the
+user lambda — passing in the ambient `IComposer` — on every recomposition.
 

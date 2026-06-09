@@ -11,9 +11,9 @@ public static class OutlinedTextFieldDemo
         CategoryId:  "text-inputs",
         Title:       "OutlinedTextField",
         Description: "Outlined variant with Prefix and Suffix slots.",
-        Build:       () =>
+        Build:       c =>
         {
-            var handle = ComposeRuntime.Remember(() => new MutableState<string>(""));
+            var handle = c.Remember(() => new MutableState<string>(""));
             return new Column
             {
                 new OutlinedTextField(handle)

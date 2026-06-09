@@ -11,10 +11,10 @@ public static class RememberSaveableDemo
         CategoryId:  "state-effects",
         Title:       "RememberSaveable",
         Description: "Values stay put across configuration changes (rotate the device, toggle dark mode).",
-        Build:       () =>
+        Build:       c =>
         {
-            var count = ComposeRuntime.RememberSaveable(() => new MutableNumberState<int>(0));
-            var name  = ComposeRuntime.RememberSaveable(() => new MutableState<string>(""));
+            var count = c.RememberSaveable(() => new MutableNumberState<int>(0));
+            var name  = c.RememberSaveable(() => new MutableState<string>(""));
 
             return new Column
             {

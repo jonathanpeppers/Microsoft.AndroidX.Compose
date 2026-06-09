@@ -17,7 +17,7 @@ namespace Microsoft.AndroidX.Compose;
 /// uses Kotlin's <c>TextField(TextFieldValue, …)</c> overload so callers
 /// can place the caret explicitly after programmatic edits (e.g. append
 /// an emoji and move the cursor to the end of the buffer). Build values
-/// via <see cref="ComposeRuntime.NewTextFieldValue(string, long, global::AndroidX.Compose.UI.Text.TextRange?)"/>
+/// via <see cref="ComposeExtensions.NewTextFieldValue(string, long, global::AndroidX.Compose.UI.Text.TextRange?)"/>
 /// and <c>TextFieldValue.Copy(...)</c>. See issue #204.</item>
 /// </list>
 /// </summary>
@@ -123,7 +123,7 @@ public sealed class TextField : ComposableNode
         var current = state.Value
             ?? throw new InvalidOperationException(
                 $"{nameof(TextField)}: MutableState<TextFieldValue>.Value is null. " +
-                $"Seed with {nameof(Compose)}.{nameof(ComposeRuntime.NewTextFieldValue)}() before first render.");
+                $"Seed with {nameof(Compose)}.{nameof(ComposeExtensions.NewTextFieldValue)}() before first render.");
 
         var __onValueChange = new ComposableLambda1(v =>
         {

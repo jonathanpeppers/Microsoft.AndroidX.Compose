@@ -20,7 +20,7 @@ public static class CustomCompositionLocalDemo
         CategoryId:  "locals-misc",
         Title:       "Custom CompositionLocal<Palette>",
         Description: "Outer reads return the default; CompositionLocalProvider with LocalPalette.Provides(override) flips the override on for the wrapped subtree; siblings after the provider revert.",
-        Build:       () => new Column
+        Build:       _ => new Column
         {
             new Text("Outer (no provider) — default palette:"),
             new ThemeLabel(),

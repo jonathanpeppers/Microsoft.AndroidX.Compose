@@ -17,9 +17,9 @@ public static class FlowRowScopeDispatchDemo
         CategoryId:  "modifiers",
         Title:       "FlowRow scope dispatch",
         Description: "Chips wrap onto multiple lines and each one calls Modifier.Align(Alignment.Vertical.CenterVertically), a RowScope-only modifier — proves FlowRow forwards its RowScope receiver.",
-        Build:       () =>
+        Build:       c =>
         {
-            var taps = ComposeRuntime.Remember(() => new MutableNumberState<int>(0));
+            var taps = c.Remember(() => new MutableNumberState<int>(0));
             var flow = new FlowRow
             {
                 Modifier.Companion.FillMaxWidth().Padding(4),

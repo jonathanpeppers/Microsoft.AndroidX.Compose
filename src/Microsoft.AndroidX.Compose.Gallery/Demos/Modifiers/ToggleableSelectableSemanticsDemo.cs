@@ -11,11 +11,11 @@ public static class ToggleableSelectableSemanticsDemo
         CategoryId:  "modifiers",
         Title:       "Toggleable + Selectable + Semantics",
         Description: "A Row collapsed into one a11y node, three Selectable rows acting as a radio group, and a Box that announces a custom semantic role.",
-        Build:       () =>
+        Build:       c =>
         {
-            var liked       = ComposeRuntime.Remember(() => new MutableState<bool>(false));
-            var selectedRow = ComposeRuntime.Remember(() => new MutableNumberState<int>(0));
-            var taps        = ComposeRuntime.Remember(() => new MutableNumberState<int>(0));
+            var liked       = c.Remember(() => new MutableState<bool>(false));
+            var selectedRow = c.Remember(() => new MutableNumberState<int>(0));
+            var taps        = c.Remember(() => new MutableNumberState<int>(0));
 
             return new Column
             {

@@ -11,7 +11,7 @@ public static class OverflowAndClampingDemo
         CategoryId:  "text-inputs",
         Title:       "Overflow & line clamping",
         Description: "Cap lines, force ellipsis, disable soft wrap.",
-        Build:       () => new Column
+        Build:       _ => new Column
         {
             new Text("Single line, ellipsised when wide — like this one which keeps going and going and going off the edge of the screen.")
             {

@@ -6,7 +6,7 @@ using Xamarin.KotlinX.Coroutines;
 namespace Microsoft.AndroidX.Compose;
 
 /// <summary>
-/// Async iterator for <see cref="ComposeRuntime.SnapshotFlow{T}(Func{T})"/>.
+/// Async iterator for <see cref="ComposeExtensions.SnapshotFlow{T}(Func{T})"/>.
 /// On first <see cref="MoveNextAsync"/> it starts a Kotlin
 /// <c>snapshotFlow(producer).collect(...)</c> coroutine on the
 /// Compose main dispatcher, with a Kotlin <see cref="IJob"/> in the

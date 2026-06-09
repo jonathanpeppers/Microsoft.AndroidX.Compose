@@ -11,9 +11,9 @@ public static class FloatingActionButtonsDemo
         CategoryId:  "buttons",
         Title:       "Floating action buttons",
         Description: "FloatingActionButton, SmallFloatingActionButton, LargeFloatingActionButton, ExtendedFloatingActionButton.",
-        Build:       () =>
+        Build:       c =>
         {
-            var count = ComposeRuntime.Remember(() => new MutableNumberState<int>(0));
+            var count = c.Remember(() => new MutableNumberState<int>(0));
             return new Column(verticalArrangement: Arrangement.SpacedBy(12))
             {
                 new Text($"Tapped: {count}"),

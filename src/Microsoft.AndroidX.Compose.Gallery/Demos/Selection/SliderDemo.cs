@@ -11,9 +11,9 @@ public static class SliderDemo
         CategoryId:  "selection",
         Title:       "Slider",
         Description: "Continuous Slider mapped to a MutableNumberState<float>.",
-        Build:       () =>
+        Build:       c =>
         {
-            var value = ComposeRuntime.Remember(() => new MutableNumberState<float>(0.4f));
+            var value = c.Remember(() => new MutableNumberState<float>(0.4f));
             return new Column
             {
                 new Slider(value: value.Value, onValueChange: v => value.Value = v),

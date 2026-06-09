@@ -11,7 +11,7 @@ public static class LazyVerticalGridAdaptiveDemo
         CategoryId:  "lists-grids",
         Title:       "LazyVerticalGrid (Adaptive 96dp)",
         Description: "Column count chosen at layout time from a minimum cell width.",
-        Build:       () => new LazyVerticalGrid<int>(
+        Build:       _ => new LazyVerticalGrid<int>(
             columns:     GridCells.Adaptive(96f),
             items:       Enumerable.Range(0, 40).ToList(),
             itemContent: i => new Card

@@ -11,11 +11,11 @@ public static class OutlinedSecureTextFieldDemo
         CategoryId:  "text-inputs",
         Title:       "OutlinedSecureTextField",
         Description: "Outlined-style secure input plus a Sign-in button that compares two fields.",
-        Build:       () =>
+        Build:       c =>
         {
-            var pwd     = ComposeRuntime.Remember(() => new SecureTextFieldState());
-            var confirm = ComposeRuntime.Remember(() => new SecureTextFieldState());
-            var status  = ComposeRuntime.Remember(() => new MutableState<string>("Tap Sign in to compare"));
+            var pwd     = c.Remember(() => new SecureTextFieldState());
+            var confirm = c.Remember(() => new SecureTextFieldState());
+            var status  = c.Remember(() => new MutableState<string>("Tap Sign in to compare"));
             return new Column
             {
                 new SecureTextField(pwd)

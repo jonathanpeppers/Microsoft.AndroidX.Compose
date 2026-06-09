@@ -11,9 +11,9 @@ public static class IconButtonsDemo
         CategoryId:  "buttons",
         Title:       "Icon buttons",
         Description: "IconButton, FilledIconButton, FilledTonalIconButton, OutlinedIconButton.",
-        Build:       () =>
+        Build:       c =>
         {
-            var count = ComposeRuntime.Remember(() => new MutableNumberState<int>(0));
+            var count = c.Remember(() => new MutableNumberState<int>(0));
             return new Column
             {
                 new Text($"Tapped: {count}"),

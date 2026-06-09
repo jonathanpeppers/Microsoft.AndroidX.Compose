@@ -1,4 +1,5 @@
 using global::Android.Views;
+using global::AndroidX.Activity;
 using global::AndroidX.Compose.Material3;
 using global::AndroidX.Compose.UI.Text.Input;
 
@@ -10,25 +11,26 @@ namespace Microsoft.AndroidX.Compose.Samples.Jetchat;
     Theme = "@android:style/Theme.Material.Light.NoActionBar",
     WindowSoftInputMode = SoftInput.AdjustResize)]
 [global::Android.Runtime.Register("net/compose/samples/jetchat/MainActivity")]
-public class MainActivity : ComposeActivity
+public class MainActivity : ComponentActivity
 {
     protected override void OnCreate(Bundle? savedInstanceState)
     {
         base.OnCreate(savedInstanceState);
-        SetContent(() =>
+        this.EnableEdgeToEdge();
+        this.SetContent(c =>
         {
-            var ui               = Remember(() => new ConversationUiState("#composers", channelMembers: 42, FakeData.InitialMessages()));
-            var input            = Remember(() => new MutableState<TextFieldValue>(ComposeRuntime.NewTextFieldValue()));
-            var selectedMenu     = Remember(() => new MutableState<string>("composers"));
-            var drawerScroll     = Remember(() => new ScrollState());
-            var drawerState      = Remember(() => new DrawerStateHolder(DrawerValue.Closed));
-            var selectedSelector = Remember(() => new MutableState<int>(0));
-            var popupOpen        = Remember(() => new MutableState<bool>(false));
-            var messagesScroll   = ComposeRuntime.RememberLazyListState();
-            var isRecording      = Remember(() => new MutableState<bool>(false));
-            var swipeOffset      = Remember(() => new MutableNumberState<float>(0f));
-            var nav              = Remember(() => new NavController());
-            var profileViewModel = Remember(() => new ProfileViewModel());
+            var ui               = c.Remember(() => new ConversationUiState("#composers", channelMembers: 42, FakeData.InitialMessages()));
+            var input            = c.Remember(() => new MutableState<TextFieldValue>(c.NewTextFieldValue()));
+            var selectedMenu     = c.Remember(() => new MutableState<string>("composers"));
+            var drawerScroll     = c.Remember(() => new ScrollState());
+            var drawerState      = c.Remember(() => new DrawerStateHolder(DrawerValue.Closed));
+            var selectedSelector = c.Remember(() => new MutableState<int>(0));
+            var popupOpen        = c.Remember(() => new MutableState<bool>(false));
+            var messagesScroll   = c.RememberLazyListState();
+            var isRecording      = c.Remember(() => new MutableState<bool>(false));
+            var swipeOffset      = c.Remember(() => new MutableNumberState<float>(0f));
+            var nav              = c.Remember(() => new NavController());
+            var profileViewModel = c.Remember(() => new ProfileViewModel());
             return JetchatApp.Build(
                 nav:              nav,
                 ui:               ui,

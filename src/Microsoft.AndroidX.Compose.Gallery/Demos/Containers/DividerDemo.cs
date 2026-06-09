@@ -11,7 +11,7 @@ public static class DividerDemo
         CategoryId:  "containers",
         Title:       "Divider",
         Description: "HorizontalDivider between Column rows; VerticalDivider inside a Row.",
-        Build:       () => new Column
+        Build:       _ => new Column
         {
             new Text("Above"),
             new HorizontalDivider { Modifier = Modifier.Companion.Padding(0, 8) },

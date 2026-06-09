@@ -1186,7 +1186,7 @@ bumping a Compose package version. Coverage is symbol-level (short-name match).
 - [x] `DisposableEffect`(5) → type match
 - [ ] `key`(3)
 - [x] `LaunchedEffect`(5) → type match
-- [x] `produceState`(6) → covered by `ComposeRuntime.ProduceState`
+- [x] `produceState`(6) → covered by `ComposeExtensions.ProduceState`
 - [x] `remember`(5) → covered by Compose.* static
 - [ ] `rememberComposableLambda`(3)
 - [ ] `rememberComposableLambdaN`(5)
@@ -1219,7 +1219,7 @@ bumping a Compose package version. Coverage is symbol-level (short-name match).
 - [ ] `compositionLocalWithHostDefaultOf`(1)
 - [ ] `ControlledComposition`(3)
 - [ ] `currentCompositionErrors`(0)
-- [x] `derivedStateOf`(2) → covered by `ComposeRuntime.DerivedStateOf`
+- [x] `derivedStateOf`(2) → covered by `ComposeExtensions.DerivedStateOf`
 - [ ] `enableLiveLiterals`(0)
 - [ ] `CompositionData.findCompositionInstance`(0)
 - [ ] `getCurrentCompositionErrors`(0)
@@ -1237,13 +1237,13 @@ bumping a Compose package version. Coverage is symbol-level (short-name match).
 - [ ] `liveLiteral`(2)
 - [ ] `movableContentOf`(1)
 - [ ] `movableContentWithReceiverOf`(1)
-- [x] `mutableDoubleStateOf`(1) → covered by `ComposeRuntime.MutableDoubleStateOf`
-- [x] `mutableFloatStateOf`(1) → covered by `ComposeRuntime.MutableFloatStateOf`
-- [x] `mutableIntStateOf`(1) → covered by `ComposeRuntime.MutableIntStateOf`
-- [x] `mutableLongStateOf`(1) → covered by `ComposeRuntime.MutableLongStateOf`
-- [x] `mutableStateListOf`(1) → covered by `ComposeRuntime.MutableStateListOf`
-- [x] `mutableStateMapOf`(1) → covered by `ComposeRuntime.MutableStateMapOf`
-- [x] `mutableStateOf`(3) → covered by `ComposeRuntime.MutableStateOf`
+- [x] `mutableDoubleStateOf`(1) → covered by `new MutableNumberState<double>(...)` ctor
+- [x] `mutableFloatStateOf`(1) → covered by `new MutableNumberState<float>(...)` ctor
+- [x] `mutableIntStateOf`(1) → covered by `new MutableNumberState<int>(...)` ctor
+- [x] `mutableLongStateOf`(1) → covered by `new MutableNumberState<long>(...)` ctor
+- [x] `mutableStateListOf`(1) → covered by `new MutableStateList<T>(...)` ctor
+- [x] `mutableStateMapOf`(1) → covered by `new MutableStateMap<K, V>()` ctor
+- [x] `mutableStateOf`(3) → covered by `new MutableState<T>(...)` ctor
 - [ ] `mutableStateSetOf`(1)
 - [ ] `MutableVector`(3)
 - [ ] `mutableVectorOf`(1)
@@ -1261,7 +1261,7 @@ bumping a Compose package version. Coverage is symbol-level (short-name match).
 - [ ] `MutableIntState.setValue`(4)
 - [ ] `MutableLongState.setValue`(4)
 - [ ] `MutableState.setValue`(4) → receiver MutableState present, ext missing
-- [x] `snapshotFlow`(2) *(experimental)* → covered by `ComposeRuntime.SnapshotFlow`
+- [x] `snapshotFlow`(2) *(experimental)* → covered by `ComposeExtensions.SnapshotFlow`
 - [ ] `SnapshotStateList`(2)
 - [ ] `sourceInformation`(2)
 - [ ] `sourceInformationMarkerEnd`(1)

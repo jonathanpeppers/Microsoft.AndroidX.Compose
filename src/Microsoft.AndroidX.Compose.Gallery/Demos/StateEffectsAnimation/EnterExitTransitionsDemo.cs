@@ -11,9 +11,9 @@ public static class EnterExitTransitionsDemo
         CategoryId:  "state-effects",
         Title:       "Enter/Exit transitions",
         Description: "Combine Transitions.FadeIn/Out, ScaleIn/Out, and SlideIn/OutVertically with AnimatedVisibility.",
-        Build:       () =>
+        Build:       c =>
         {
-            var visible = ComposeRuntime.Remember(() => new MutableState<bool>(true));
+            var visible = c.Remember(() => new MutableState<bool>(true));
             return new Column
             {
                 new Button(onClick: () => visible.Value = !visible.Value)

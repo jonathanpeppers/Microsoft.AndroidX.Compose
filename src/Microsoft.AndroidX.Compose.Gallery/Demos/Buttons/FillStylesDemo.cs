@@ -11,9 +11,9 @@ public static class FillStylesDemo
         CategoryId:  "buttons",
         Title:       "Fill styles",
         Description: "Filled, Elevated, Filled tonal, Outlined, and Text buttons.",
-        Build:       () =>
+        Build:       c =>
         {
-            var count = ComposeRuntime.Remember(() => new MutableNumberState<int>(0));
+            var count = c.Remember(() => new MutableNumberState<int>(0));
             return new Column
             {
                 new Text($"Tapped: {count}"),

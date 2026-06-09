@@ -16,9 +16,9 @@ public static class MinimumInteractiveComponentSizeDemo
         CategoryId:  "modifiers",
         Title:       "MinimumInteractiveComponentSize",
         Description: "Reserves 48dp around an icon-only button to keep its touch target accessible.",
-        Build:       () =>
+        Build:       c =>
         {
-            var taps = ComposeRuntime.Remember(() => new MutableNumberState<int>(0));
+            var taps = c.Remember(() => new MutableNumberState<int>(0));
             return new Column
             {
                 new Text($"Tapped: {taps}"),

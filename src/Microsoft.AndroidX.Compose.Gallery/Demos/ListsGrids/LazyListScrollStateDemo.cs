@@ -22,9 +22,9 @@ public static class LazyListScrollStateDemo
                      "LastScrolledBackward/Forward, and IsScrollInProgress, plus " +
                      "buttons that snap (ScrollToItemAsync) or animate " +
                      "(AnimateScrollToItemAsync) back to the top.",
-        Build:       () =>
+        Build:       c =>
         {
-            var state = ComposeRuntime.RememberLazyListState();
+            var state = c.RememberLazyListState();
             return new Column(verticalArrangement: Arrangement.SpacedBy(4))
             {
                 Modifier.Companion.FillMaxWidth(),

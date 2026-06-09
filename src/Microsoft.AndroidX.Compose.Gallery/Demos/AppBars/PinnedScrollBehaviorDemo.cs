@@ -1,10 +1,9 @@
-using global::AndroidX.Compose.Material3;
 using Microsoft.AndroidX.Compose.Gallery.Registry;
 
 namespace Microsoft.AndroidX.Compose.Gallery.Demos.AppBars;
 
 /// <summary>
-/// <see cref="TopAppBarDefaults.PinnedScrollBehavior(TopAppBarState, int, string)"/>
+/// <see cref="ComposeExtensions.PinnedScrollBehavior"/>
 /// paired with a long <c>LazyColumn</c>. The bar stays in place but
 /// elevates its surface as the list scrolls underneath it.
 /// </summary>
@@ -16,10 +15,10 @@ public static class PinnedScrollBehaviorDemo
         CategoryId:  "app-bars-tabs",
         Title:       "TopAppBar — pinned scroll behavior",
         Description: "Bar stays pinned but elevates as the LazyColumn scrolls underneath.",
-        Build:       () =>
+        Build:       c =>
         {
-            var state    = TopAppBarDefaults.RememberTopAppBarState();
-            var behavior = TopAppBarDefaults.PinnedScrollBehavior(state);
+            var state    = c.RememberTopAppBarState();
+            var behavior = c.PinnedScrollBehavior(state);
             return new Column
             {
                 Modifier.Companion.Height(420),

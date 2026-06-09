@@ -4,7 +4,7 @@ namespace Microsoft.AndroidX.Compose;
 
 /// <summary>
 /// Single-field <see cref="Java.Lang.Object"/> wrapper that lets
-/// <see cref="ComposeRuntime.Remember{T}(Func{T}, int, string)"/> store an arbitrary managed
+/// <see cref="ComposeExtensions.Remember{T}(Func{T}, int, string)"/> store an arbitrary managed
 /// <c>T</c> (often a <see cref="MutableState{T}"/>) in Compose's slot
 /// table, which only holds <see cref="Java.Lang.Object"/> references.
 ///
@@ -16,7 +16,7 @@ namespace Microsoft.AndroidX.Compose;
 /// <see cref="Java.Lang.Object"/> shell — which would lose the
 /// <see cref="Value"/> field and force the factory to re-run.
 ///
-/// When a keyed <see cref="ComposeRuntime.Remember{T}(Func{T}, object?, int, string)"/> overload is used,
+/// When a keyed <see cref="ComposeExtensions.Remember{T}(Func{T}, object?, int, string)"/> overload is used,
 /// the supplied keys are cloned into <see cref="Keys"/> so a later
 /// recomposition can compare them via <see cref="KeysEqual"/>; mismatch
 /// invalidates the slot and forces the factory to re-run.

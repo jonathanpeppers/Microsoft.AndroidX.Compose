@@ -60,14 +60,14 @@ class MainActivity : ComponentActivity() {
 ```csharp
 [Activity(Label = "@string/app_name", MainLauncher = true,
           Theme = "@android:style/Theme.Material.Light.NoActionBar")]
-public class MainActivity : ComposeActivity
+public class MainActivity : ComponentActivity
 {
     protected override void OnCreate(Bundle? savedInstanceState)
     {
         base.OnCreate(savedInstanceState);
-        SetContent(() =>
+        this.SetContent(c =>
         {
-            var count = Remember(() => new MutableNumberState<int>(0));
+            var count = c.Remember(() => new MutableNumberState<int>(0));
             return new MaterialTheme
             {
                 new Column
@@ -86,18 +86,18 @@ public class MainActivity : ComposeActivity
 }
 ```
 
-The translation is mechanical — `new` instead of bare calls, commas instead of newlines, `() =>` instead of `{ … }` lambdas:
+The translation is mechanical — `new` instead of bare calls, commas instead of newlines, `c => ` lambdas thread the `IComposer` explicitly (the equivalent of Kotlin's IR-injected `$composer`):
 
-| Kotlin                                        | C# (this repo)                                                |
-| --------------------------------------------- | ------------------------------------------------------------- |
-| `setContent { … }`                            | `SetContent(() => { … })` on `ComposeActivity`                |
-| `Text("Hi")`                                  | `new Text("Hi")`                                              |
-| `Column { … }`                                | `new Column { … }` (collection-initializer)                   |
-| `Button(onClick = { x++ }) { … }`             | `new Button(onClick: () => x++) { … }`                        |
-| `MaterialTheme { … }`                         | `new MaterialTheme { … }`                                     |
-| `var count by remember { mutableStateOf(0) }` | `var count = Remember(() => new MutableNumberState<int>(0))`  |
-| `count++`                                     | `count++` (operator on `MutableNumberState<T>`)               |
-| `"Count: $count"`                             | `$"Count: {count}"` (via `MutableState<T>.ToString`)          |
+| Kotlin                                        | C# (this repo)                                                  |
+| --------------------------------------------- | --------------------------------------------------------------- |
+| `setContent { … }`                            | `this.SetContent(c => { … })` on `ComponentActivity`            |
+| `Text("Hi")`                                  | `new Text("Hi")`                                                |
+| `Column { … }`                                | `new Column { … }` (collection-initializer)                     |
+| `Button(onClick = { x++ }) { … }`             | `new Button(onClick: () => x++) { … }`                          |
+| `MaterialTheme { … }`                         | `new MaterialTheme { … }`                                       |
+| `var count by remember { mutableStateOf(0) }` | `var count = c.Remember(() => new MutableNumberState<int>(0))`  |
+| `count++`                                     | `count++` (operator on `MutableNumberState<T>`)                 |
+| `"Count: $count"`                             | `$"Count: {count}"` (via `MutableState<T>.ToString`)            |
 
 That's an end-to-end Material 3 counter app in ~13 lines of composition — start from this shape when adding a new screen. The actual [`src/Microsoft.AndroidX.Compose.Gallery/MainActivity.cs`](src/Microsoft.AndroidX.Compose.Gallery/MainActivity.cs) in the repo is a much larger **gallery app** that exercises every facade across a navigable catalog with search; for a single-screen real-app example see [`samples/Jetchat`](samples/Jetchat).
 
@@ -125,7 +125,7 @@ The facade [`Microsoft.AndroidX.Compose`](src/Microsoft.AndroidX.Compose) covers
 | Sheets & pickers        | `ModalBottomSheet`, `BottomSheetScaffold`, `DatePicker`/`DatePickerDialog`, `DateRangePicker`/`DateRangePickerDialog`, `TimePicker`/`TimeInput`/`TimePickerDialog` |
 | Overlays                | `AlertDialog`, `Snackbar` + `SnackbarHost`, `Tooltip` |
 | Animation               | `AnimatedVisibility`, `AnimatedContent`, `Crossfade` |
-| Effects                 | `ComposeRuntime.LaunchedEffect`, `ComposeRuntime.DisposableEffect`, `ComposeRuntime.SideEffect` |
+| Effects                 | `composer.LaunchedEffect`, `composer.DisposableEffect`, `composer.SideEffect` |
 | Modifier chains         | `Padding`, `FillMaxWidth/Height/Size`, `Width`, `Height`, `Size`, `AspectRatio`, `Offset`, `Alpha`, `Background`, `Border`, `Clip`, `Clickable`, `Weight`, `VerticalScroll`/`HorizontalScroll` (+ `ScrollState`), `Draggable` (+ `DraggableState`), focus/semantics/gestures, `SafeDrawingPadding`, `SystemBarsPadding`, plus per-inset `ImePadding`, `NavigationBarsPadding`, `StatusBarsPadding`, `CaptionBarPadding`, `DisplayCutoutPadding`, `WaterfallPadding`, `SystemGesturesPadding`, `MandatorySystemGesturesPadding`, `SafeContentPadding`, `SafeGesturesPadding` |
 | Value types             | `Color` (+ `FromRgb`/`FromArgb`/`FromHex` and theme reads), `Dp`, `Sp`, `FontWeight`, `TextAlign`, `Shape` |
 | State                   | `Remember` (+ keyed `Remember(factory, key1, …)`, `RememberKeyed`), `RememberSaveable` (+ keyed), `MutableState<T>`, `MutableNumberState<T>`, `MutableStateList<T>`, `MutableStateMap<K,V>`, `DerivedStateOf`, `ProduceState`, plus `DatePickerState`, `DateRangePickerState`, `TimePickerState`, `SearchBarState`, `SnackbarHostState`, `ScrollState`, `PagerState`, `PullToRefreshState`, `DraggableState`, `DrawerStateHolder`, `WideNavigationRailState`, `FocusRequester`/`FocusState` |

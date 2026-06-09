@@ -11,9 +11,9 @@ public static class SwitchDemo
         CategoryId:  "selection",
         Title:       "Switch",
         Description: "Bool-bound Switch with live status text.",
-        Build:       () =>
+        Build:       c =>
         {
-            var on = ComposeRuntime.Remember(() => new MutableState<bool>(false));
+            var on = c.Remember(() => new MutableState<bool>(false));
             return new Column
             {
                 new Row

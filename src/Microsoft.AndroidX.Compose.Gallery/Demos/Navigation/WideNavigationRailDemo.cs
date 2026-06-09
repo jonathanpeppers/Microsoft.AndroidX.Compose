@@ -11,9 +11,9 @@ public static class WideNavigationRailDemo
         CategoryId:  "navigation",
         Title:       "WideNavigationRail",
         Description: "Persistent vertical rail with three selectable items.",
-        Build:       () =>
+        Build:       c =>
         {
-            var idx = ComposeRuntime.Remember(() => new MutableNumberState<int>(0));
+            var idx = c.Remember(() => new MutableNumberState<int>(0));
             return new Column
             {
                 new Text($"WideNavigationRail (selected: {idx})"),

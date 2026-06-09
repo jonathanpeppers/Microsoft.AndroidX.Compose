@@ -11,7 +11,7 @@ public static class CenterAlignedTopAppBarDemo
         CategoryId:  "app-bars-tabs",
         Title:       "CenterAlignedTopAppBar",
         Description: "Centered title with leading nav icon and trailing action.",
-        Build:       () => new CenterAlignedTopAppBar
+        Build:       _ => new CenterAlignedTopAppBar
         {
             Title          = new Text("Inbox"),
             NavigationIcon = new IconButton(onClick: () => { }) { new Text("☰") },

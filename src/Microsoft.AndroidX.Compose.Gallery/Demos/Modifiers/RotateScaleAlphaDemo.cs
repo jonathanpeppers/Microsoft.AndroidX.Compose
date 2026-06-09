@@ -11,7 +11,7 @@ public static class RotateScaleAlphaDemo
         CategoryId:  "modifiers",
         Title:       "Rotate, scale, alpha",
         Description: "Static transforms applied via Modifier.Rotate / .Scale / .Alpha; each tile also carries a TestTag for UI tests.",
-        Build:       () => new Column
+        Build:       _ => new Column
         {
             new Row(horizontalArrangement: Arrangement.SpacedBy(16))
             {

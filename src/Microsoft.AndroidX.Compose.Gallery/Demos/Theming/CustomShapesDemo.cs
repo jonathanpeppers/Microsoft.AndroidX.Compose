@@ -15,7 +15,7 @@ public static class CustomShapesDemo
         CategoryId:  "theming",
         Title:       "Custom Shapes",
         Description: "MaterialTheme.BuildShapes(extraSmall, small, medium, large, extraLarge) — the 5 M3 shape slots. Cards pull from medium, FAB pulls from large, AssistChip pulls from small.",
-        Build:       () =>
+        Build:       _ =>
         {
             var themed = new MaterialTheme
             {

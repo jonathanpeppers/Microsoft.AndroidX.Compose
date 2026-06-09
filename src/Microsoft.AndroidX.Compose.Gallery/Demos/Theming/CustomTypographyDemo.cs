@@ -16,7 +16,7 @@ public static class CustomTypographyDemo
         CategoryId:  "theming",
         Title:       "Custom Typography",
         Description: "Build TextStyle instances and wire them into MaterialTheme.BuildTypography(...). Components that read MaterialTheme.typography.labelLarge (Button, Chip, FAB) pick up the override automatically.",
-        Build:       () =>
+        Build:       _ =>
         {
             var boldWide = new MaterialTheme
             {

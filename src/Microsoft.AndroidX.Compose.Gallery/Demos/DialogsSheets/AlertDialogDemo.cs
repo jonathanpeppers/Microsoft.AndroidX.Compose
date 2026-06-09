@@ -11,10 +11,10 @@ public static class AlertDialogDemo
         CategoryId:  "dialogs-sheets",
         Title:       "AlertDialog",
         Description: "Modal alert with confirm + dismiss buttons.",
-        Build:       () =>
+        Build:       c =>
         {
-            var open  = ComposeRuntime.Remember(() => new MutableState<bool>(false));
-            var count = ComposeRuntime.Remember(() => new MutableNumberState<int>(0));
+            var open  = c.Remember(() => new MutableState<bool>(false));
+            var count = c.Remember(() => new MutableNumberState<int>(0));
             return new Column
             {
                 new Text($"count = {count}"),

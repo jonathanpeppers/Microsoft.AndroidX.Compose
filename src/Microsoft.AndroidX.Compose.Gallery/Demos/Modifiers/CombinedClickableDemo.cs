@@ -11,9 +11,9 @@ public static class CombinedClickableDemo
         CategoryId:  "modifiers",
         Title:       "CombinedClickable",
         Description: "One gesture modifier that dispatches single / long / double taps to separate callbacks.",
-        Build:       () =>
+        Build:       c =>
         {
-            var taps = ComposeRuntime.Remember(() => new MutableNumberState<int>(0));
+            var taps = c.Remember(() => new MutableNumberState<int>(0));
             return new Column
             {
                 new Text($"Taps (single+1, long+10, double+100): {taps}"),

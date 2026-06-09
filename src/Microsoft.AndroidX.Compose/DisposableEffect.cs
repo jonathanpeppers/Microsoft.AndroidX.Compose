@@ -4,7 +4,7 @@ namespace Microsoft.AndroidX.Compose;
 
 /// <summary>
 /// Tree-syntax wrapper around
-/// <see cref="ComposeRuntime.DisposableEffect(object?, Func{DisposableEffectScope, Action})"/>.
+/// <see cref="ComposeExtensions.DisposableEffect(object?, Func{DisposableEffectScope, Action})"/>.
 /// Re-runs <c>Effect</c> on first composition and any time
 /// <c>Key1</c> / <c>Key2</c> / <c>Key3</c> changes; calls the cleanup
 /// <see cref="Action"/> on key change or when this node leaves
@@ -59,9 +59,9 @@ public sealed class DisposableEffect : ComposableNode
     {
         switch (_keyCount)
         {
-            case 1: ComposeRuntime.DisposableEffect(_key1, _effect); break;
-            case 2: ComposeRuntime.DisposableEffect(_key1, _key2, _effect); break;
-            default: ComposeRuntime.DisposableEffect(_key1, _key2, _key3, _effect); break;
+            case 1: composer.DisposableEffect(_key1, _effect); break;
+            case 2: composer.DisposableEffect(_key1, _key2, _effect); break;
+            default: composer.DisposableEffect(_key1, _key2, _key3, _effect); break;
         }
     }
 }

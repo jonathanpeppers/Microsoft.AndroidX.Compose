@@ -11,9 +11,9 @@ public static class ModalBottomSheetDemo
         CategoryId:  "dialogs-sheets",
         Title:       "ModalBottomSheet",
         Description: "Drag down or tap outside to dismiss.",
-        Build:       () =>
+        Build:       c =>
         {
-            var open = ComposeRuntime.Remember(() => new MutableState<bool>(false));
+            var open = c.Remember(() => new MutableState<bool>(false));
             return new Column
             {
                 new Button(onClick: () => open.Value = true) { new Text("Show sheet") },

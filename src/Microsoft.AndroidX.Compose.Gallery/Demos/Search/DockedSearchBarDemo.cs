@@ -17,10 +17,10 @@ public static class DockedSearchBarDemo
         CategoryId:  "search",
         Title:       "DockedSearchBar",
         Description: "Deprecated boolean-state variant of SearchBar; popup docks under the input.",
-        Build:       () =>
+        Build:       c =>
         {
-            var open  = ComposeRuntime.Remember(() => new MutableState<bool>(false));
-            var query = ComposeRuntime.Remember(() => new MutableState<string>(""));
+            var open  = c.Remember(() => new MutableState<bool>(false));
+            var query = c.Remember(() => new MutableState<string>(""));
 
             var matches = Array.FindAll(
                 Fruits,

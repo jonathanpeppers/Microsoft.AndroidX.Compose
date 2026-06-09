@@ -33,7 +33,7 @@ namespace Microsoft.AndroidX.Compose;
 /// returned subtree is then rendered with the same
 /// <see cref="IComposer"/> instance. The builder is not memoized — if
 /// you need to cache a subtree across recompositions, wrap the
-/// per-render allocation behind <c>ComposeRuntime.Remember(...)</c>.
+/// per-render allocation behind <c>composer.Remember(...)</c>.
 /// </para>
 /// <para>
 /// Returning <see langword="null"/> from the builder is allowed and

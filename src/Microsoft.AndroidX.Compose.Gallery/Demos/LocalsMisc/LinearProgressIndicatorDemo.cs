@@ -11,7 +11,7 @@ public static class LinearProgressIndicatorDemo
         CategoryId:  "locals-misc",
         Title:       "LinearProgressIndicator",
         Description: "Material 3 indeterminate horizontal progress bar.",
-        Build:       () => new Column
+        Build:       _ => new Column
         {
             new Text("Indeterminate horizontal bar:"),
             new LinearProgressIndicator { Modifier = Modifier.Companion.FillMaxWidth() },

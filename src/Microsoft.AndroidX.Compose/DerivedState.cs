@@ -14,7 +14,7 @@ namespace Microsoft.AndroidX.Compose;
 ///
 /// <code>
 /// var name   = Remember(() =&gt; new MutableState&lt;string&gt;("Ada"));
-/// var greet  = Remember(() =&gt; ComposeRuntime.DerivedStateOf(() =&gt; $"Hi, {name.Value}!"));
+/// var greet  = Remember(() =&gt; ComposeExtensions.DerivedStateOf(() =&gt; $"Hi, {name.Value}!"));
 /// // In a Render body:
 /// new Text(greet.Value); // recomposes when name.Value changes
 /// </code>
@@ -23,7 +23,7 @@ namespace Microsoft.AndroidX.Compose;
 /// reads — only re-runs when one of the state values it read changes.
 /// </summary>
 /// <remarks>
-/// Use <see cref="ComposeRuntime.DerivedStateOf{T}(Func{T})"/> to
+/// Use <see cref="ComposeExtensions.DerivedStateOf{T}(Func{T})"/> to
 /// build instances; the constructor is internal because the wrapped
 /// <c>IState</c> must come from a Kotlin <c>derivedStateOf</c> call
 /// to participate correctly in Compose's snapshot system.

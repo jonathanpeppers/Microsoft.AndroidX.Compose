@@ -12,10 +12,10 @@ public static class HorizontalPagerDemo
         CategoryId:  "carousels-paging",
         Title:       "HorizontalPager",
         Description: "Three swipeable screens with a shared PagerState driving the indicator below.",
-        Build:       () =>
+        Build:       c =>
         {
             var items = new[] { 0, 1, 2 };
-            var state = ComposeRuntime.Remember(() => new PagerState(pageCount: () => items.Length));
+            var state = c.Remember(() => new PagerState(pageCount: () => items.Length));
             return new Column
             {
                 new HorizontalPager<int>(

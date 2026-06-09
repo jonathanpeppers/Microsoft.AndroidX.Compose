@@ -3830,7 +3830,7 @@ internal static partial class ComposeBridges
     // — `@Composable @ReadOnlyComposable` getter on a Kotlin object
     // singleton. We need this to read the current ViewModelStoreOwner
     // (NavBackStackEntry inside a NavHost destination, or the
-    // ComponentActivity at the root) so ComposeRuntime.ViewModel<T> can
+    // ComponentActivity at the root) so ComposeExtensions.ViewModel<T> can
     // hand the right owner to ViewModelProvider. The binding exposes
     // the singleton (LocalViewModelStoreOwner.Instance) but not the
     // @Composable getter, so we go through InstanceField + JNI.

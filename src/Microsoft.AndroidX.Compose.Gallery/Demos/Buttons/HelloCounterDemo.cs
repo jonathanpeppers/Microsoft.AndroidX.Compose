@@ -15,9 +15,9 @@ public static class HelloCounterDemo
         CategoryId:  "buttons",
         Title:       "Hello from .NET",
         Description: "Material 3 hello-world from the README: Text + Button + counter via MutableNumberState<int>.",
-        Build:       () =>
+        Build:       c =>
         {
-            var count = ComposeRuntime.Remember(() => new MutableNumberState<int>(0));
+            var count = c.Remember(() => new MutableNumberState<int>(0));
             return new Column
             {
                 new Text("Hello from .NET"),

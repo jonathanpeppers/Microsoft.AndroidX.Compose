@@ -11,9 +11,9 @@ public static class PrimaryScrollableTabRowDemo
         CategoryId:  "app-bars-tabs",
         Title:       "PrimaryScrollableTabRow",
         Description: "Scrolls horizontally when tabs overflow; mixes Tab, LeadingIconTab, CustomTab.",
-        Build:       () =>
+        Build:       c =>
         {
-            var sub = ComposeRuntime.Remember(() => new MutableNumberState<int>(0));
+            var sub = c.Remember(() => new MutableNumberState<int>(0));
             return new Column
             {
                 new PrimaryScrollableTabRow(selectedTabIndex: sub.Value)

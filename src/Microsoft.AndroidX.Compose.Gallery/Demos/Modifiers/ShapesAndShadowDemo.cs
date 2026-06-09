@@ -11,7 +11,7 @@ public static class ShapesAndShadowDemo
         CategoryId:  "modifiers",
         Title:       "Shapes & shadow",
         Description: "Background(color, Shape) for Circle / RoundedPercent / CutCorners, plus shadow + border on a shared shape.",
-        Build:       () => new Column
+        Build:       _ => new Column
         {
             new Text("Background + Shape:"),
             new Row

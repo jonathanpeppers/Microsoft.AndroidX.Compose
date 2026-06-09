@@ -11,10 +11,10 @@ public static class DerivedStateDemo
         CategoryId:  "state-effects",
         Title:       "DerivedStateOf",
         Description: "derived.Value reads list.Count inside DerivedStateOf, so anything that reads derived recomposes only when the count actually changes.",
-        Build:       () =>
+        Build:       c =>
         {
-            var list    = ComposeRuntime.Remember(() => new MutableStateList<string> { "alpha", "beta" });
-            var derived = ComposeRuntime.Remember(() => ComposeRuntime.DerivedStateOf(() => list.Count));
+            var list    = c.Remember(() => new MutableStateList<string> { "alpha", "beta" });
+            var derived = c.Remember(() => ComposeExtensions.DerivedStateOf(() => list.Count));
 
             return new Column
             {

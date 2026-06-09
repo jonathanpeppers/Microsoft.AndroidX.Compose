@@ -598,7 +598,7 @@ approval.
   typed siblings at the same position keep identity and slot state intact.
 
 - The single `ComposableLambdaKt.ComposableLambdaInstance` call in
-  `ComposeActivity.SetContent` is correct there — root content lambda runs
+  `ComposeExtensions.SetContent` is correct there — root content lambda runs
   outside an active composition.
 
 - Multi-slot composables expose **named slot properties** via object-init,
@@ -962,9 +962,9 @@ public static class FillStylesDemo
         CategoryId:  "buttons",                      // must match a Catalog.Categories id
         Title:       "Fill styles",
         Description: "Filled, Elevated, Filled tonal, Outlined, and Text buttons.",
-        Build:       () =>
+        Build:       c =>
         {
-            var count = ComposeRuntime.Remember(() => new MutableNumberState<int>(0));
+            var count = c.Remember(() => new MutableNumberState<int>(0));
             return new Column
             {
                 new Text($"Tapped: {count}"),
@@ -995,8 +995,8 @@ public static class FillStylesDemo
   `Box(Modifier.Height(N))`.
 - **Label every tile.** Three identical-looking colored boxes say nothing —
   wrap each in a small `Column` with a caption.
-- **Keep `Build` cheap.** Invoked from `ComposeRuntime.Remember` on every
-  navigation. Allocate state with `ComposeRuntime.Remember(() => ...)` inside the
+- **Keep `Build` cheap.** Invoked from `composer.Remember` on every
+  navigation. Allocate state with `c.Remember(() => ...)` inside the
   lambda, not in a static initializer.
 - **One concept per demo.** Split "Buttons & chips & FABs".
 

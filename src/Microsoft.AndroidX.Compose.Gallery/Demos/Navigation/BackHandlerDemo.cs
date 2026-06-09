@@ -14,10 +14,10 @@ public static class BackHandlerDemo
         CategoryId:  "navigation",
         Title:       "BackHandler — intercept system back",
         Description: "Toggle interception of the back gesture; the counter ticks each time it's intercepted.",
-        Build:       () =>
+        Build:       c =>
         {
-            var intercept = ComposeRuntime.Remember(() => new MutableState<bool>(true));
-            var pressCount = ComposeRuntime.Remember(() => new MutableNumberState<int>(0));
+            var intercept = c.Remember(() => new MutableState<bool>(true));
+            var pressCount = c.Remember(() => new MutableNumberState<int>(0));
 
             return new Column
             {

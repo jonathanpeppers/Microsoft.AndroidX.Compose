@@ -16,9 +16,9 @@ public static class MaterialIconsDemo
         CategoryId:  "theming",
         Title:       "Material Icons",
         Description: "Icons.Filled/Outlined/Rounded/Sharp/TwoTone + Icons.AutoMirrored.* — vector icons resolved through JNI (no drawable resources required).",
-        Build:       () =>
+        Build:       c =>
         {
-            var tapped = ComposeRuntime.Remember(() => new MutableState<string>("(none)"));
+            var tapped = c.Remember(() => new MutableState<string>("(none)"));
 
             ComposableNode Tile(string name, global::AndroidX.Compose.UI.Graphics.Vector.ImageVector vec) =>
                 new Column

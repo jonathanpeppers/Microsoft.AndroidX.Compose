@@ -22,62 +22,62 @@ public static class RecordButton
         MutableNumberState<float>   swipeOffset,
         Action                      onCommit,
         Action                      onCancel,
-        ColorScheme                 scheme)
-    {
-        bool recording = isRecording.Value;
-        float threshold = SwipeToCancelThresholdPx;
-        var dragState  = ComposeRuntime.RememberDraggableState(delta =>
+        ColorScheme                 scheme) =>
+        new Composed(c =>
         {
-            if (!isRecording.Value) return;
-            swipeOffset.Value += delta;
-            if (swipeOffset.Value <= -threshold)
-                onCancel();
-        });
-
-        Action onClick = () =>
-        {
-            if (isRecording.Value)
-                onCommit();
-            else
-                isRecording.Value = true;
-        };
-
-        var innerModifier = Modifier.Companion.FillMaxSize();
-        if (recording)
-            innerModifier = innerModifier
-                .Background(Color.Red, Shape.RoundedCorners(28, 28, 28, 28))
-                .Draggable(dragState, Orientation.Horizontal);
-        innerModifier = innerModifier.Padding(16);
-
-        return new Box
-        {
-            Modifier.Companion
-                .Align(Alignment.Vertical.CenterVertically)
-                .Size(56)
-                .Clickable(onClick),
-            new Box
+            bool recording = isRecording.Value;
+            float threshold = SwipeToCancelThresholdPx;
+            var dragState  = c.RememberDraggableState(delta =>
             {
-                innerModifier,
-                new Icon(Resource.Drawable.ic_mic, "Record voice message")
+                if (!isRecording.Value) return;
+                swipeOffset.Value += delta;
+                if (swipeOffset.Value <= -threshold)
+                    onCancel();
+            });
+
+            Action onClick = () =>
+            {
+                if (isRecording.Value)
+                    onCommit();
+                else
+                    isRecording.Value = true;
+            };
+
+            var innerModifier = Modifier.Companion.FillMaxSize();
+            if (recording)
+                innerModifier = innerModifier
+                    .Background(Color.Red, Shape.RoundedCorners(28, 28, 28, 28))
+                    .Draggable(dragState, Orientation.Horizontal);
+            innerModifier = innerModifier.Padding(16);
+
+            return new Box
+            {
+                Modifier.Companion
+                    .Align(Alignment.Vertical.CenterVertically)
+                    .Size(56)
+                    .Clickable(onClick),
+                new Box
                 {
-                    TintArgb = recording ? scheme.OnPrimary : scheme.OnSurfaceVariant,
-                    Modifier = Modifier.Companion.FillMaxSize(),
+                    innerModifier,
+                    new Icon(Resource.Drawable.ic_mic, "Record voice message")
+                    {
+                        TintArgb = recording ? scheme.OnPrimary : scheme.OnSurfaceVariant,
+                        Modifier = Modifier.Companion.FillMaxSize(),
+                    },
                 },
-            },
-        };
-    }
+            };
+        });
 
     /// <summary>Build the recording overlay row that replaces the
     /// <see cref="TextField"/> while recording is active.</summary>
     public static ComposableNode BuildRecordingIndicator(
         MutableNumberState<float> swipeOffset,
-        ColorScheme               scheme)
-    {
-        var pulse   = ComposeRuntime.Remember(() => new MutableNumberState<float>(1f));
-        var seconds = ComposeRuntime.Remember(() => new MutableNumberState<int>(0));
-
-        return new Composed(c =>
+        ColorScheme               scheme) =>
+        new Composed(c =>
         {
+            var pulse   = c.Remember(() => new MutableNumberState<float>(1f));
+            var seconds = c.Remember(() => new MutableNumberState<int>(0));
+
             float density   = global::Android.Content.Res.Resources.System!.DisplayMetrics!.Density;
             float threshold = SwipeToCancelThresholdDp * density;
             float offset    = swipeOffset.Value;
@@ -164,5 +164,4 @@ public static class RecordButton
                 },
             };
         });
-    }
 }

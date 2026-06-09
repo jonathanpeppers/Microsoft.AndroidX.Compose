@@ -11,9 +11,9 @@ public static class RadioButtonGroupDemo
         CategoryId:  "selection",
         Title:       "RadioButton group",
         Description: "Single-selection group built from three RadioButtons.",
-        Build:       () =>
+        Build:       c =>
         {
-            var picked = ComposeRuntime.Remember(() => new MutableNumberState<int>(0));
+            var picked = c.Remember(() => new MutableNumberState<int>(0));
             return new Column
             {
                 new Row

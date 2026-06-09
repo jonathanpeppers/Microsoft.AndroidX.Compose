@@ -11,10 +11,10 @@ public static class LaunchedEffectDemo
         CategoryId:  "state-effects",
         Title:       "LaunchedEffect",
         Description: "Background tick loop scoped to this composition. Bumping the key cancels and restarts it.",
-        Build:       () =>
+        Build:       c =>
         {
-            var ticks = ComposeRuntime.Remember(() => new MutableNumberState<int>(0));
-            var key   = ComposeRuntime.Remember(() => new MutableNumberState<int>(0));
+            var ticks = c.Remember(() => new MutableNumberState<int>(0));
+            var key   = c.Remember(() => new MutableNumberState<int>(0));
 
             return new Column
             {

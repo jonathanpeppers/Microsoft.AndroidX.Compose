@@ -140,7 +140,7 @@ a `Build(…)` method returning `ComposableNode`. `Render(IComposer)`
 is `internal` to the facade assembly so a sample-side subclass
 can't override it. Cost: every recomposition allocates the tree
 inside `JetnewsApp.Build`. NavHost caches the per-destination tree
-via `ComposeRuntime.Remember` (see `NavHost.cs`), so the screen subtrees
+via `composer.Remember` (see `NavHost.cs`), so the screen subtrees
 inside `Composable("home") { … }` etc. are walked only on first
 render.
 
@@ -155,7 +155,7 @@ the same `MutableState` reference survive recompositions and
 navigation transitions.
 
 Bookmarks are an exception: they live in a
-`BookmarksViewModel` acquired via `ComposeRuntime.ViewModel<T>(…)` at the
+`BookmarksViewModel` acquired via `composer.ViewModel<T>(…)` at the
 activity scope, so the set survives configuration change (the
 activity's `ViewModelStore` retains the instance across
 `Activity.OnCreate` calls). The home feed and the article screen
@@ -165,7 +165,7 @@ bookmark from either screen is observed by the other.
 ### Per-screen state lives in `HomeViewModel`
 
 The Home feed state is owned by a `HomeViewModel : Microsoft.AndroidX.Compose.ViewModel`
-acquired in `HomeScreen.Build` via `ComposeRuntime.ViewModel(...)`. The VM
+acquired in `HomeScreen.Build` via `composer.ViewModel(...)`. The VM
 is rooted in the current `NavBackStackEntry`'s `ViewModelStore`, so
 it survives recomposition and configuration change, and clears
 when the user pops the destination off the back stack.

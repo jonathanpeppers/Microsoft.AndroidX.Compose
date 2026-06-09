@@ -11,9 +11,9 @@ public static class TooltipsDemo
         CategoryId:  "buttons",
         Title:       "Tooltips",
         Description: "Tooltip wraps an Anchor; the Tip pops on long-press.",
-        Build:       () =>
+        Build:       c =>
         {
-            var count = ComposeRuntime.Remember(() => new MutableNumberState<int>(0));
+            var count = c.Remember(() => new MutableNumberState<int>(0));
             return new Column
             {
                 new Text($"Tapped: {count}"),

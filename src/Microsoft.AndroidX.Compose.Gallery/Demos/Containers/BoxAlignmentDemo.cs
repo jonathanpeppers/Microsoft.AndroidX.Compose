@@ -11,7 +11,7 @@ public static class BoxAlignmentDemo
         CategoryId:  "containers",
         Title:       "Box alignment",
         Description: "Children stack at the same anchor — later children draw above earlier ones.",
-        Build:       () => new Box
+        Build:       _ => new Box
         {
             Modifier.Companion
                 .Size(160)

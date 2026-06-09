@@ -12,9 +12,9 @@ public static class TriStateCheckboxDemo
         CategoryId:  "selection",
         Title:       "TriStateCheckbox",
         Description: "Cycles through On → Off → Indeterminate on tap.",
-        Build:       () =>
+        Build:       c =>
         {
-            var state = ComposeRuntime.Remember(() => new MutableState<ToggleableState>(ToggleableState.Indeterminate!));
+            var state = c.Remember(() => new MutableState<ToggleableState>(ToggleableState.Indeterminate!));
             return new Column
             {
                 new Row

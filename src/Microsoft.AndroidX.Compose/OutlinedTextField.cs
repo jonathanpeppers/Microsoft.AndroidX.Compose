@@ -106,7 +106,7 @@ public sealed class OutlinedTextField : ComposableNode
         var current = state.Value
             ?? throw new InvalidOperationException(
                 $"{nameof(OutlinedTextField)}: MutableState<TextFieldValue>.Value is null. " +
-                $"Seed with {nameof(Compose)}.{nameof(ComposeRuntime.NewTextFieldValue)}() before first render.");
+                $"Seed with {nameof(Compose)}.{nameof(ComposeExtensions.NewTextFieldValue)}() before first render.");
 
         var __onValueChange = new ComposableLambda1(v =>
         {

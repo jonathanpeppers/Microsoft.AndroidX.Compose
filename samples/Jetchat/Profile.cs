@@ -16,8 +16,8 @@ public static class Profile
         Action onBack) =>
         new Composed(c =>
         {
-            var scrollState = ComposeRuntime.Remember(() => new ScrollState());
-            var popupOpen   = ComposeRuntime.Remember(() => new MutableState<bool>(false));
+            var scrollState = c.Remember(() => new ScrollState());
+            var popupOpen   = c.Remember(() => new MutableState<bool>(false));
             var scheme      = MaterialTheme.CurrentColorScheme(c);
 
             var screen = new Scaffold

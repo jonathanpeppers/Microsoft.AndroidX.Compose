@@ -11,7 +11,7 @@ public static class BoxWithConstraintsDemo
         CategoryId:  "containers",
         Title:       "BoxWithConstraints",
         Description: "Reports MaxWidth / MaxHeight in dp — branch your layout on screen size.",
-        Build:       () => new BoxWithConstraints(c => new Text(
+        Build:       c => new BoxWithConstraints(c => new Text(
             $"Max width = {c.MaxWidth:0.#} dp, max height = {c.MaxHeight:0.#} dp"))
         {
             Modifier = Modifier.Companion.FillMaxWidth().Padding(8),

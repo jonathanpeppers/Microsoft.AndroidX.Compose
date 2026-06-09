@@ -20,9 +20,9 @@ public static class TextFieldCursorPlacementDemo
         CategoryId:  "text-inputs",
         Title:       "TextField cursor placement",
         Description: "TextFieldValue overload — append text and pin the caret to the end.",
-        Build:       () =>
+        Build:       c =>
         {
-            var input = ComposeRuntime.Remember(() => new MutableState<TextFieldValue>(ComposeRuntime.NewTextFieldValue()));
+            var input = c.Remember(() => new MutableState<TextFieldValue>(c.NewTextFieldValue()));
             return new Column(verticalArrangement: Arrangement.SpacedBy(12))
             {
                 new Text("Tap an emoji — it appends to the field and the caret moves to the end so the next keystroke lands after it.")
@@ -50,7 +50,7 @@ public static class TextFieldCursorPlacementDemo
         {
             row.Add(new Button(onClick: () =>
             {
-                var current = input.Value ?? ComposeRuntime.NewTextFieldValue();
+                var current = input.Value ?? ComposeExtensions.NewTextFieldValue();
                 var newText = current.Text + emoji;
                 // Copy(text, selection, composition) keeps annotations
                 // intact and lets us pin the caret. TextRangeKt.TextRange
