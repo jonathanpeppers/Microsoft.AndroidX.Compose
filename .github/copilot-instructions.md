@@ -919,7 +919,7 @@ Deep-link to a specific demo:
 
 ```pwsh
 adb shell am start `
-    -n net.compose.gallery/crc64f6e6d73c94e2195e.MainActivity `
+    -n net.compose.gallery/net.compose.gallery.MainActivity `
     --es route "demo/<your-demo-id>"
 ```
 

@@ -10,6 +10,7 @@ namespace Microsoft.AndroidX.Compose.Gallery;
 /// fragment graph, no XML layout pipeline.
 /// </summary>
 [Activity(Label = "@string/app_name", MainLauncher = true, LaunchMode = global::Android.Content.PM.LaunchMode.SingleTop, Theme = "@android:style/Theme.Material.Light.NoActionBar")]
+[global::Android.Runtime.Register("net/compose/gallery/MainActivity")]
 public class MainActivity : ComposeActivity
 {
     /// <summary>

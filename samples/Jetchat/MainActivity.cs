@@ -9,6 +9,7 @@ namespace Microsoft.AndroidX.Compose.Samples.Jetchat;
     MainLauncher = true,
     Theme = "@android:style/Theme.Material.Light.NoActionBar",
     WindowSoftInputMode = SoftInput.AdjustResize)]
+[global::Android.Runtime.Register("net/compose/samples/jetchat/MainActivity")]
 public class MainActivity : ComposeActivity
 {
     protected override void OnCreate(Bundle? savedInstanceState)

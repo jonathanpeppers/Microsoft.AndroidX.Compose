@@ -10,6 +10,7 @@ namespace Microsoft.AndroidX.Compose.Samples.Reply;
     Label        = "@string/app_name",
     MainLauncher = true,
     Theme        = "@android:style/Theme.Material.Light.NoActionBar")]
+[global::Android.Runtime.Register("net/compose/samples/reply/MainActivity")]
 public class MainActivity : ComposeActivity
 {
     /// <summary>Build the root composition.</summary>
