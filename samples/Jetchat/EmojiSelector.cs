@@ -79,7 +79,6 @@ public static class EmojiSelector
             {
                 Modifier.Companion
                     .FillMaxWidth()
-                    .Height(320)
                     .Background(new Color(scheme.SurfaceVariant)),
                 new PrimaryTabRow(selectedTabIndex: selected.Value)
                 {
