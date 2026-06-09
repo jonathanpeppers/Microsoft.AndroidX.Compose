@@ -1,6 +1,6 @@
 ---
 name: manual-jni
-description: Regenerate the manual JNI surface report via `scripts/manual-jni-report.cs`. Use to answer "what's still hand-bound", "what blocks moving X to the generator", or after adding/removing manual JNI (e.g. a new `[ComposeBridge]` migration, a new suspend bridge, a new JCW).
+description: Regenerate the manual JNI surface report via `scripts/manual-jni-report.cs`. Use to answer which bindings remain hand-written (raw `JNIEnv.*` calls, suspend bridges, Java Callable Wrappers), what blocks moving a hand-written helper to the `[ComposeBridge]` generator, or after adding/removing manual JNI (e.g. a new `[ComposeBridge]` migration, a new suspend bridge, a new `[Register("composenet/…")]` JCW).
 ---
 
 # Manual JNI surface
@@ -91,14 +91,17 @@ git commit --amend --no-edit  # or a fresh commit, depending on context
 
 ## Improving "Why not generated?" entries
 
-The script extracts the rationale paragraph from existing source
-comments in this priority order:
+The script extracts the rationale paragraph by walking upward from
+the member declaration (up to 30 lines), matching in this order:
 
-1. `// Why raw JNI:` or `// Why manual:` line immediately above the
-   member.
-2. XML doc `<remarks>` containing the phrase _Why raw JNI_.
-3. Adjacent `///`-doc or `//` comment block above the member.
-4. Falls back to **TODO: document**.
+1. An explicit **Why raw JNI** / **Why manual** marker — either form
+   wins regardless of which comment style hosts it:
+   - `// Why raw JNI: …` / `// Why manual: …` line.
+   - `///` XML doc `<remarks>` paragraph containing _Why raw JNI_.
+2. Otherwise, the adjacent `///`-doc or `//` comment block sitting
+   directly above the declaration is used verbatim.
+3. Falls back to **TODO: document** if there are no comments above
+   the member.
 
 If a member shows **TODO: document** in the table, that's a docs gap
 in the source itself. The fix is in the source file, not the script
@@ -141,7 +144,10 @@ isn't:
 - A non-ASCII char drift (smart quotes, em-dashes) in a source
   comment got mangled by some other tool.
 - Member detection picked up a new declaration that wasn't there
-  before — verify with `git diff src/ComposeNet.Compose/`.
+  before. To find which entry shifted, note the line range in the
+  diffed row (e.g. `Lines 221–246`) and use
+  `git diff -U0 src/ComposeNet.Compose/<file>.cs | rg -n '^@@'` to
+  locate the corresponding source change.
 
 If diffs persist with no source change, the script has a bug; look
 at the order-sensitive sites (`OrderBy(j.ClassName, StringComparer.Ordinal)`
