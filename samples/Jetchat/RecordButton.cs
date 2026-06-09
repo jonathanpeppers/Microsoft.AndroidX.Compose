@@ -18,7 +18,7 @@ public static class RecordButton
     static float SwipeToCancelThresholdPx =>
         SwipeToCancelThresholdDp * Android.Content.Res.Resources.System!.DisplayMetrics!.Density;
 
-    /// <summary>Build the mic <see cref="IconButton"/>.</summary>
+    /// <summary>Build the mic button (idle gray icon, or red recording pill).</summary>
     public static ComposableNode BuildButton(
         MutableState<bool>          isRecording,
         MutableNumberState<float>   swipeOffset,
@@ -36,30 +36,37 @@ public static class RecordButton
                 onCancel();
         });
 
-        var modifier = Modifier.Companion;
-        if (recording)
-        {
-            modifier = modifier
-                .Size(56)
-                .Background(Color.Red, Shape.RoundedCorners(28, 28, 28, 28))
-                .Draggable(dragState, Orientation.Horizontal);
-        }
-
-        var iconButton = new IconButton(onClick: () =>
+        Action onClick = () =>
         {
             if (isRecording.Value)
                 onCommit();
             else
                 isRecording.Value = true;
-        })
+        };
+
+        var innerModifier = Modifier.Companion.FillMaxSize();
+        if (recording)
+            innerModifier = innerModifier
+                .Background(Color.Red, Shape.RoundedCorners(28, 28, 28, 28))
+                .Draggable(dragState, Orientation.Horizontal);
+        innerModifier = innerModifier.Padding(16);
+
+        return new Box
         {
-            new Icon(Resource.Drawable.ic_mic, "Record voice message")
+            Modifier.Companion
+                .Align(Alignment.Vertical.CenterVertically)
+                .Size(56)
+                .Clickable(onClick),
+            new Box
             {
-                TintArgb = recording ? scheme.OnPrimary : scheme.OnSurfaceVariant,
+                innerModifier,
+                new Icon(Resource.Drawable.ic_mic, "Record voice message")
+                {
+                    TintArgb = recording ? scheme.OnPrimary : scheme.OnSurfaceVariant,
+                    Modifier = Modifier.Companion.FillMaxSize(),
+                },
             },
         };
-        iconButton.Modifier = modifier;
-        return iconButton;
     }
 
     /// <summary>Build the recording overlay row that replaces the
@@ -116,21 +123,20 @@ public static class RecordButton
                     catch (OperationCanceledException) { }
                 }),
 
-                new Spacer(Modifier.Companion.Width(16)),
-
                 new Box
                 {
                     Modifier.Companion
-                        .Size(16)
+                        .Align(Alignment.Vertical.CenterVertically)
+                        .Size(56)
+                        .Padding(24)
                         .Scale(pulseValue)
-                        .Background(Color.Red, Shape.RoundedCorners(8, 8, 8, 8)),
+                        .Background(Color.Red, Shape.RoundedCorners(28, 28, 28, 28)),
                 },
-
-                new Spacer(Modifier.Companion.Width(12)),
 
                 new Text(timer)
                 {
-                    FontSize   = 14,
+                    Modifier   = Modifier.Companion.Align(Alignment.Vertical.CenterVertically),
+                    FontSize   = 22,
                     FontWeight = FontWeight.Medium,
                     Color      = new Color(scheme.OnSurface),
                 },
@@ -140,6 +146,7 @@ public static class RecordButton
                 new Row
                 {
                     Modifier.Companion
+                        .Align(Alignment.Vertical.CenterVertically)
                         .Weight(1f, fill: true)
                         .Offset(x: offset / 2f / density)
                         .Alpha(alphaHint),
@@ -147,12 +154,13 @@ public static class RecordButton
                     new Icon(Resource.Drawable.ic_arrow_back, "Slide to cancel")
                     {
                         TintArgb = scheme.OnSurfaceVariant,
-                        Modifier = Modifier.Companion.Size(16),
+                        Modifier = Modifier.Companion.Align(Alignment.Vertical.CenterVertically).Size(24),
                     },
-                    new Spacer(Modifier.Companion.Width(4)),
+                    new Spacer(Modifier.Companion.Width(8)),
                     new Text("Slide to cancel")
                     {
-                        FontSize = 14,
+                        Modifier = Modifier.Companion.Align(Alignment.Vertical.CenterVertically),
+                        FontSize = 16,
                         Color    = new Color(scheme.OnSurfaceVariant),
                     },
                 },

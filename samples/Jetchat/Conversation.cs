@@ -329,10 +329,10 @@ public static class Conversation
 
         var row = new Row
         {
-            Modifier.Companion.FillMaxWidth().Padding(horizontal: 8, vertical: 4),
+            Modifier.Companion.FillMaxWidth().Height(64),
             new Box
             {
-                Modifier.Companion.Weight(1f, fill: true),
+                Modifier.Companion.Weight(1f, fill: true).FillMaxHeight(),
                 new AnimatedContent<bool>(
                     targetState: isRecording.Value,
                     content: recording => recording
