@@ -703,6 +703,73 @@ whole type just because one method is missing**.
 **Don't add `[ComposeBridge]` if the binding already exposes the method** —
 call the generated C# entry point instead.
 
+## `[ComposeCompanion]` — Kotlin Companion singleton wrappers
+
+Surfaces Kotlin `Companion.getXxx()` singletons (`FontWeight.Thin`,
+`ContentScale.Crop`, …) as static C# properties without hand-rolling
+the `FindClass → GetStaticFieldID("Companion") → NewGlobalRef →
+CallObjectMethod` dance per constant.
+
+### Adding a wrapper
+
+1. `Java.Lang.Object` subclass, `partial`, private `(IntPtr,
+   JniHandleOwnership)` ctor.
+2. `[ComposeCompanion("foo/bar/OuterClass")]` on the class — outer JNI
+   name, slash-separated, no `L…;`. Generator appends `$Companion`.
+3. Per singleton: `public static partial T Name { get; }` with
+   `[ComposeCompanionGetter("getName")]`.
+
+```csharp
+[ComposeCompanion("androidx/compose/ui/text/font/FontWeight")]
+public sealed partial class FontWeight : Java.Lang.Object
+{
+    FontWeight(IntPtr handle, JniHandleOwnership transfer) : base(handle, transfer) { }
+
+    /// <summary><c>FontWeight.Thin</c> (W100).</summary>
+    [ComposeCompanionGetter("getThin")]
+    public static partial FontWeight Thin { get; }
+}
+```
+
+Generator emits the lazy `Companion()` accessor + global-ref cache,
+per-property peer cache, a shared `ResolveSimple(getter, descriptor)`
+helper, and each partial-property body.
+
+### Options
+
+- **`InlineClass = true`** on `[ComposeCompanion]` — for `@JvmInline
+  value class` wrappers (`TextAlign`, `FontStyle`) whose getters return
+  packed `int`. Routes through synthesized `box-impl(I)L<outer>;`.
+  Mangled getter names (`getCenter-e0LSkKk`) are forwarded verbatim.
+- **`ReturnDescriptor = "L…;"`** on `[ComposeCompanionGetter]` — when
+  the getter returns a concrete subtype (e.g.
+  `FontFamily.Companion.getSansSerif()` returns `GenericFontFamily`).
+  Incompatible with `InlineClass` (CN4007).
+
+### Notes
+
+- `Companion()` is **not** synchronized — racing first calls leak one
+  global ref but always resolve to the same singleton. Matches the
+  pre-generator code; intentional.
+- Hand-written holdouts: `Alignment.cs` (uses bound
+  `IAlignment.Companion`, no JNI), `TextStyleCompanion.cs` (`static
+  class`, single companion-get).
+
+### Generator diagnostics
+
+| ID     | Meaning                                                                                                                          |
+|--------|----------------------------------------------------------------------------------------------------------------------------------|
+| CN4001 | Host class isn't `partial`.                                                                                                      |
+| CN4002 | `[ComposeCompanion]` `outerJniClass` null/empty.                                                                                 |
+| CN4003 | Getter isn't `public static partial T { get; }` — instance, has setter, missing `partial`, or no getter.                         |
+| CN4004 | `[ComposeCompanionGetter]` `getterName` null/empty.                                                                              |
+| CN4005 | Getter's containing class lacks `[ComposeCompanion]` (orphan; otherwise surfaces only as opaque C# partial-property error).      |
+| CN4006 | Return type lacks accessible `(IntPtr, JniHandleOwnership)` ctor.                                                                |
+| CN4007 | `ReturnDescriptor` set while host has `InlineClass = true`.                                                                      |
+
+Tests in `CompanionGeneratorTests.cs`. **Add a test for any new
+behaviour.**
+
 ## Suspend / async bridges
 
 For Kotlin Compose `suspend` functions (e.g. `ScrollState.scrollTo`,
