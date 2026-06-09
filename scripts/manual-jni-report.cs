@@ -12,9 +12,9 @@
 //      qualified `Android.Runtime.JNIEnv.*`) and Java Callable
 //      Wrappers (`[Register("composenet/...")]` classes).
 //   3. Classifies each JNI call site by nearest enclosing C# member
-//      (method, ctor, property accessor, or class init), skipping
-//      members decorated with `[ComposeBridge]` / `[ComposeFacade]`
-//      because those bodies are emitted by the source generators.
+//      (method or constructor), skipping members decorated with
+//      `[ComposeBridge]` / `[ComposeFacade]` because those bodies are
+//      emitted by the source generators.
 //   4. Pulls a "Purpose" paragraph and a "Why not generated?" rationale
 //      from existing XML doc <remarks>/<summary> blocks and adjacent
 //      `// ...` comments, falling back to "TODO: document" when the
@@ -117,6 +117,11 @@ foreach (var path in files)
 
     var text = File.ReadAllText(path);
     var lines = text.Replace("\r\n", "\n").Split('\n');
+    // Block-comment-masked view used for code-shape analysis (JNI call
+    // sites, member spans, JCW class lookup). Comment-prose extraction
+    // (ExtractPurpose / ExtractWhy / ExtractMigration) keeps reading
+    // `lines` so `///` and `// Why raw JNI` markers stay intact.
+    var codeLines = MaskBlockComments(lines);
 
     // Tally generator-emitted partials regardless of whether the file
     // also contains hand-written JNI.
@@ -125,8 +130,8 @@ foreach (var path in files)
     totalComposeBridge += composeBridgeHere;
     totalComposeFacade += composeFacadeHere;
 
-    var jniSites = FindJniSites(lines, rxJni);
-    var jcws     = FindJcwClasses(lines, rxRegister, rxClassDecl);
+    var jniSites = FindJniSites(codeLines, rxJni);
+    var jcws     = FindJcwClasses(codeLines, rxRegister, rxClassDecl);
     foreach (var j in jcws)
     {
         // Determine whether this JCW class itself contains JNI (used
@@ -145,7 +150,7 @@ foreach (var path in files)
     // emits their bodies, and any "JNI" in source there would be a
     // contract violation we want surfaced separately, not folded into
     // "manual" tallies.
-    var members = ScanMembers(lines, rxCtor, rxMethod, rxGeneratorAttr);
+    var members = ScanMembers(codeLines, rxCtor, rxMethod, rxGeneratorAttr);
 
     var entries = new List<MemberEntry>();
     foreach (var m in members)
@@ -385,11 +390,19 @@ static List<JcwClass> FindJcwClasses(string[] lines, Regex rxRegister, Regex rxC
     for (int i = 0; i < lines.Length; i++)
     {
         if (!rxRegister.IsMatch(lines[i])) continue;
-        // Find the next class declaration (skip other attributes/blank lines).
-        for (int j = i + 1; j < lines.Length && j < i + 10; j++)
+        // Scan forward to the next class declaration, skipping blank
+        // lines, doc comments (`///`), and additional attributes. Stop
+        // at the first non-skippable line — if it's not the class
+        // declaration, we've lost the JCW and bail rather than guess.
+        for (int j = i + 1; j < lines.Length; j++)
         {
+            var t = lines[j].TrimStart();
+            if (t.Length == 0) continue;
+            if (t.StartsWith("//")) continue;             // covers `///`
+            if (t.StartsWith("/*") || t.StartsWith("*"))  continue;
+            if (t.StartsWith("["))  continue;             // another attribute
             var m = rxClassDecl.Match(lines[j]);
-            if (!m.Success) continue;
+            if (!m.Success) break;                        // unexpected: lost the JCW
             var name = m.Groups[1].Value;
             var bases = m.Groups[2].Success ? m.Groups[2].Value.Trim().TrimEnd('{').Trim() : "";
             // Implements = trim "Java.Lang.Object," prefix and pick the
@@ -447,6 +460,14 @@ static List<MemberSpan> ScanMembers(string[] lines, Regex rxCtor, Regex rxMethod
         var raw = lines[i];
         var line = MaskStringsAndChars(StripLineComment(raw));
 
+        // Capture the brace depth at the start of this line. We use it
+        // to gate member detection so only declarations sitting
+        // directly inside a class body (depth == enclosing class
+        // depth + 1) match — guards against method-shaped statements
+        // inside method bodies (local functions, nested lambdas
+        // formatted onto one line, etc.).
+        int depthAtLineStart = depth;
+
         // Track class scope depth so we can detect ctor names by class.
         var classMatch = Regex.Match(line, @"^\s*(?:public|internal|private|protected|sealed|abstract|static|partial|\s)*\bclass\s+(\w+)\b");
         if (classMatch.Success)
@@ -467,11 +488,17 @@ static List<MemberSpan> ScanMembers(string[] lines, Regex rxCtor, Regex rxMethod
             }
         }
 
-        // Member detection — only consider lines at *member* depth
-        // (just inside a class body, depth >= 1). The depth counters
-        // above already advanced past the current line's braces, but
-        // member declarations live on a new line so checking depth
-        // *before* the next line is the right semantic.
+        // Only consider member declarations directly inside a class
+        // body. Inside method bodies depthAtLineStart will be deeper
+        // than classStack.Peek().Depth + 1, so we skip cheaply.
+        bool atMemberDepth = classStack.Count > 0
+            && depthAtLineStart == classStack.Peek().Depth + 1;
+        if (!atMemberDepth)
+        {
+            i++;
+            continue;
+        }
+
         if (HasGeneratorAttrAbove(lines, i, rxGen))
         {
             // Skip the entire generator-decorated declaration. A
@@ -935,28 +962,48 @@ static string Escape(string s) =>
 
 static string StripLineComment(string line)
 {
-    // Conservative — drop everything after `//` not inside a string.
-    // We don't perfectly track strings; close enough for JNI grepping.
-    int i = 0;
-    bool inStr = false;
-    char strCh = '\0';
-    while (i < line.Length)
+    // Find `//` outside of string/char literals. Reuse MaskStringsAndChars
+    // so verbatim (`@"..."`) and raw strings with `//` in the body
+    // (e.g. URLs in resource paths) aren't mistaken for comments.
+    var masked = MaskStringsAndChars(line);
+    int idx = masked.IndexOf("//", StringComparison.Ordinal);
+    return idx < 0 ? line : line.Substring(0, idx);
+}
+
+static string[] MaskBlockComments(string[] lines)
+{
+    // Mask `/* ... */` contents with spaces, preserving line count and
+    // newlines so all downstream line-indexed analysis stays aligned.
+    // Doesn't track string literals — `/*` / `*/` inside a string are
+    // exceedingly rare and the C# tokenizer treats `*/` inside an open
+    // block comment as the close anyway, so this matches spec behavior.
+    var output = new string[lines.Length];
+    bool inBlock = false;
+    for (int i = 0; i < lines.Length; i++)
     {
-        var ch = line[i];
-        if (inStr)
+        var line = lines[i];
+        var sb = new StringBuilder(line.Length);
+        int j = 0;
+        while (j < line.Length)
         {
-            if (ch == '\\' && i + 1 < line.Length) { i += 2; continue; }
-            if (ch == strCh) inStr = false;
+            if (inBlock)
+            {
+                if (j + 1 < line.Length && line[j] == '*' && line[j + 1] == '/')
+                {
+                    sb.Append("  "); j += 2; inBlock = false; continue;
+                }
+                sb.Append(' '); j++;
+                continue;
+            }
+            if (j + 1 < line.Length && line[j] == '/' && line[j + 1] == '*')
+            {
+                sb.Append("  "); j += 2; inBlock = true; continue;
+            }
+            sb.Append(line[j]); j++;
         }
-        else
-        {
-            if (ch == '"' || ch == '\'') { inStr = true; strCh = ch; }
-            else if (ch == '/' && i + 1 < line.Length && line[i + 1] == '/')
-                return line.Substring(0, i);
-        }
-        i++;
+        output[i] = sb.ToString();
     }
-    return line;
+    return output;
 }
 
 // --- Records ----------------------------------------------------------------
