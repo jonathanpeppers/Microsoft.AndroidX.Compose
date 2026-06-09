@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using Android.Views;
 
 namespace ComposeNet;
@@ -7,7 +6,7 @@ namespace ComposeNet;
 /// Wrapper around Compose's <c>androidx.compose.ui.draganddrop.DragAndDropEvent</c>
 /// — the payload passed to <see cref="DragAndDropTarget.OnDrop"/> and to the
 /// <c>shouldStartDragAndDrop</c> predicate on
-/// <see cref="Modifier.DragAndDropTarget(System.Func{ComposeNet.DragAndDropEvent, bool}, ComposeNet.DragAndDropTarget)"/>.
+/// <see cref="Modifier.DragAndDropTarget(Func{DragAndDropEvent, bool}, DragAndDropTarget)"/>.
 ///
 /// <see cref="AndroidDragEvent"/> exposes the underlying <see cref="DragEvent"/>
 /// so callers can read <c>ClipData</c>, <c>ClipDescription</c>, and the drop

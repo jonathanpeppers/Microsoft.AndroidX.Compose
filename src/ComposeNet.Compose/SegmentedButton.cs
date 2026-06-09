@@ -1,4 +1,3 @@
-using System;
 using AndroidX.Compose.Runtime;
 
 namespace ComposeNet;
@@ -28,18 +27,18 @@ namespace ComposeNet;
 public sealed class SegmentedButton : ComposableContainer
 {
     readonly bool _selected;
-    readonly System.Action? _onClick;
-    readonly System.Action<bool>? _onCheckedChange;
+    readonly Action? _onClick;
+    readonly Action<bool>? _onCheckedChange;
 
     /// <summary>Single-choice (radio) ctor for <see cref="SingleChoiceSegmentedButtonRow"/>.</summary>
-    public SegmentedButton(bool selected, System.Action onClick)
+    public SegmentedButton(bool selected, Action onClick)
     {
         _selected = selected;
         _onClick  = onClick;
     }
 
     /// <summary>Multi-choice (toggle) ctor for <see cref="MultiChoiceSegmentedButtonRow"/>.</summary>
-    public SegmentedButton(bool @checked, System.Action<bool> onCheckedChange)
+    public SegmentedButton(bool @checked, Action<bool> onCheckedChange)
     {
         _selected        = @checked;
         _onCheckedChange = onCheckedChange;
@@ -51,7 +50,7 @@ public sealed class SegmentedButton : ComposableContainer
     public override void Render(IComposer composer)
     {
         if (Children.Count == 0)
-            throw new System.InvalidOperationException(
+            throw new InvalidOperationException(
                 "SegmentedButton requires at least one child (the label slot has no Kotlin default).");
 
         var label = ComposableLambdas.Wrap2(composer, c =>
@@ -71,8 +70,8 @@ public sealed class SegmentedButton : ComposableContainer
         var scope = RenderContext.CurrentScope;
         var count = RenderContext.CurrentRowChildCount;
         var index = RenderContext.CurrentRowChildIndex;
-        if (scope == System.IntPtr.Zero || count == 0)
-            throw new System.InvalidOperationException(
+        if (scope == IntPtr.Zero || count == 0)
+            throw new InvalidOperationException(
                 "SegmentedButton must be rendered inside a SingleChoiceSegmentedButtonRow " +
                 "or MultiChoiceSegmentedButtonRow — no row scope/position is on the stack.");
 
@@ -90,7 +89,7 @@ public sealed class SegmentedButton : ComposableContainer
             var cb = new ComposableLambda1(arg =>
             {
                 if (arg is not Java.Lang.Boolean jb)
-                    throw new System.InvalidOperationException(
+                    throw new InvalidOperationException(
                         $"MultiChoiceSegmentedButton.onCheckedChange expected a Java.Lang.Boolean, got '{arg?.GetType().FullName ?? "null"}'.");
                 _onCheckedChange(jb.BooleanValue());
             });

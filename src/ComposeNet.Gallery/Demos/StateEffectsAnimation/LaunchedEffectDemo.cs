@@ -26,11 +26,11 @@ public static class LaunchedEffectDemo
                     {
                         while (!ct.IsCancellationRequested)
                         {
-                            await System.Threading.Tasks.Task.Delay(1000, ct);
+                            await Task.Delay(1000, ct);
                             ticks.Value++;
                         }
                     }
-                    catch (System.OperationCanceledException) { }
+                    catch (OperationCanceledException) { }
                 }),
                 new Button(onClick: () => key++) { new Text("Restart (key++)") },
                 new Button(onClick: () => ticks.Value = 0) { new Text("Reset ticks") },

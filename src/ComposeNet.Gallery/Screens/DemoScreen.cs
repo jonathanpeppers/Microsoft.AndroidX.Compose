@@ -53,9 +53,9 @@ public static class DemoScreen
 
     sealed class ScrollableDemoBody : ComposableNode
     {
-        readonly System.Func<ComposableNode> _build;
+        readonly Func<ComposableNode> _build;
 
-        public ScrollableDemoBody(System.Func<ComposableNode> build) => _build = build;
+        public ScrollableDemoBody(Func<ComposableNode> build) => _build = build;
 
         public override void Render(IComposer composer)
         {

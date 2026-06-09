@@ -34,7 +34,7 @@ public static class LazyColumnLongDemo
                     Modifier.Companion.FillMaxWidth().Height(320),
 
                     new LazyColumn<int>(
-                        items:       System.Linq.Enumerable.Range(0, 1000).ToList(),
+                        items:       Enumerable.Range(0, 1000).ToList(),
                         itemContent: i => new Text($"Row {i:D4} (rev {refreshTick})"))
                     {
                         Modifier = Modifier.Companion.FillMaxSize(),

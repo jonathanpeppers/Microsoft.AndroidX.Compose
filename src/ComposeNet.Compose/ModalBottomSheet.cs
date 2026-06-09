@@ -26,8 +26,8 @@ namespace ComposeNet;
 /// </summary>
 public sealed class ModalBottomSheet : ComposableContainer
 {
-    readonly System.Action _onDismissRequest;
-    public ModalBottomSheet(System.Action onDismissRequest) => _onDismissRequest = onDismissRequest;
+    readonly Action _onDismissRequest;
+    public ModalBottomSheet(Action onDismissRequest) => _onDismissRequest = onDismissRequest;
 
     /// <summary>Optional drag handle drawn at the top of the sheet.</summary>
     public ComposableNode? DragHandle { get; set; }

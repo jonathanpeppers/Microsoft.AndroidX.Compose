@@ -1,4 +1,3 @@
-using System;
 using Android.Runtime;
 using AndroidX.Lifecycle;
 
@@ -7,15 +6,15 @@ namespace ComposeNet;
 /// <summary>
 /// Internal JCW adapter that exposes a <see cref="Func{T}"/> as an
 /// <see cref="ViewModelProvider.IFactory"/> so
-/// <see cref="AndroidX.Lifecycle.ViewModelProvider"/> can construct
+/// <see cref="ViewModelProvider"/> can construct
 /// the view model the first time the host's
-/// <see cref="AndroidX.Lifecycle.ViewModelStore"/> doesn't already
+/// <see cref="ViewModelStore"/> doesn't already
 /// contain the requested key.
 /// </summary>
 /// <remarks>
 /// <para>
 /// One factory instance is allocated per
-/// <see cref="Compose.ViewModel{T}(System.Func{T}, int, string)"/>
+/// <see cref="Compose.ViewModel{T}(Func{T}, int, string)"/>
 /// call. The factory is short-lived — Kotlin only retains a
 /// reference to it for the duration of <c>get(key, modelClass)</c>,
 /// after which the constructed VM is cached in the store and the
@@ -27,7 +26,7 @@ namespace ComposeNet;
 /// Both shapes route to the wrapped <see cref="Func{T}"/>; the
 /// supplied <see cref="Java.Lang.Class"/> is intentionally ignored
 /// — the caller already committed to the C# generic <c>T</c> when
-/// they called <see cref="Compose.ViewModel{T}(System.Func{T}, int, string)"/>.
+/// they called <see cref="Compose.ViewModel{T}(Func{T}, int, string)"/>.
 /// </para>
 /// </remarks>
 [Register("composenet/compose/LambdaViewModelFactory")]

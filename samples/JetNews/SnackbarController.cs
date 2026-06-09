@@ -1,6 +1,4 @@
-using System.Threading;
 using Android.OS;
-using ComposeNet;
 
 namespace ComposeNet.Samples.JetNews;
 
@@ -10,10 +8,10 @@ namespace ComposeNet.Samples.JetNews;
 /// flash a transient message ("Bookmark added", "Share unavailable",
 /// etc.). The bound <c>showSnackbar</c> is a Kotlin <c>suspend</c>
 /// function and isn't exposed through ComposeNet yet — see the
-/// <see cref="ComposeNet.SnackbarHost"/> docs that recommend toggling a
+/// <see cref="SnackbarHost"/> docs that recommend toggling a
 /// <see cref="MutableState{T}"/> + rendering a
-/// <see cref="ComposeNet.Snackbar"/> directly into the
-/// <see cref="ComposeNet.Scaffold.SnackbarHost"/> slot. This class
+/// <see cref="Snackbar"/> directly into the
+/// <see cref="Scaffold.SnackbarHost"/> slot. This class
 /// wraps that workaround behind a <see cref="Show"/> method so callers
 /// can fire-and-forget.
 /// </summary>
@@ -35,7 +33,7 @@ public sealed class SnackbarController
 
     /// <summary>
     /// Display <paramref name="message"/> in any
-    /// <see cref="ComposeNet.SnackbarHost"/>-shaped slot bound to this
+    /// <see cref="SnackbarHost"/>-shaped slot bound to this
     /// controller, then auto-clear it after
     /// <paramref name="durationMs"/>. Calling <see cref="Show"/> again
     /// before the previous timer fires replaces the visible message

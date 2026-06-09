@@ -13,7 +13,7 @@ namespace ComposeNet;
 /// <see cref="IDisposableEffectResult.Dispose"/> on the stored result.
 /// </summary>
 /// <remarks>
-/// The C# body returns a <see cref="System.Action"/> "onDispose"
+/// The C# body returns a <see cref="Action"/> "onDispose"
 /// callback. We wrap that callback in a fresh
 /// <see cref="ComposableLambda0"/> and hand it to
 /// <see cref="DisposableEffectScope.OnDispose(IFunction0)"/>, which
@@ -23,9 +23,9 @@ namespace ComposeNet;
 [Register("composenet/compose/DisposableEffectBody")]
 internal sealed class DisposableEffectBody : Java.Lang.Object, IFunction1
 {
-    readonly System.Func<DisposableEffectScope, System.Action> _body;
+    readonly Func<DisposableEffectScope, Action> _body;
 
-    public DisposableEffectBody(System.Func<DisposableEffectScope, System.Action> body)
+    public DisposableEffectBody(Func<DisposableEffectScope, Action> body)
     {
         _body = body;
     }
@@ -39,7 +39,7 @@ internal sealed class DisposableEffectBody : Java.Lang.Object, IFunction1
         // implement the bound interface — a plain `as` returns null even
         // when the underlying Java object does implement the interface.
         if (p0 is null)
-            throw new System.InvalidOperationException(
+            throw new InvalidOperationException(
                 "DisposableEffect body received a null DisposableEffectScope");
 
         DisposableEffectScope scope;
@@ -47,16 +47,16 @@ internal sealed class DisposableEffectBody : Java.Lang.Object, IFunction1
         {
             scope = p0.JavaCast<DisposableEffectScope>();
         }
-        catch (System.Exception ex)
+        catch (Exception ex)
         {
-            throw new System.InvalidOperationException(
+            throw new InvalidOperationException(
                 "DisposableEffect body could not project arg ("
                 + (p0.Class?.Name ?? "<unknown>")
                 + ") as DisposableEffectScope", ex);
         }
 
         var onDispose = _body(scope)
-            ?? throw new System.InvalidOperationException(
+            ?? throw new InvalidOperationException(
                 "DisposableEffect body returned a null onDispose callback. "
                 + "Return `() => { }` if there's nothing to clean up.");
         return (Java.Lang.Object)scope.OnDispose(new ComposableLambda0(onDispose));

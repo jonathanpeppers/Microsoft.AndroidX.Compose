@@ -1,10 +1,9 @@
-using System.Collections.Generic;
 
 namespace ComposeNet.Samples.JetNews;
 
 /// <summary>
 /// Discriminator for rows in the home feed — used to flatten the
-/// section/header/card layout into a single <see cref="ComposeNet.LazyColumn{T}"/>
+/// section/header/card layout into a single <see cref="LazyColumn{T}"/>
 /// without needing nested lazy scopes.
 /// </summary>
 public abstract record HomeRow
@@ -18,7 +17,7 @@ public abstract record HomeRow
     /// <summary>A standard recommended/recent post row (PostCardSimple layout).</summary>
     public sealed record Recommended(Post Post) : HomeRow;
 
-    /// <summary>Horizontally-scrolling row of <see cref="ComposeNet.Samples.JetNews.HomeCards.BuildPopular"/> cards.</summary>
+    /// <summary>Horizontally-scrolling row of <see cref="HomeCards.BuildPopular"/> cards.</summary>
     public sealed record PopularCarousel(IReadOnlyList<Post> Posts) : HomeRow;
 
     /// <summary>Full-width horizontal divider rendered between major sections.</summary>

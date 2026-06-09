@@ -1,11 +1,10 @@
-using Android.Runtime;
 using JFocusRequester = AndroidX.Compose.UI.Focus.FocusRequester;
 
 namespace ComposeNet;
 
 /// <summary>
 /// C# wrapper around <c>androidx.compose.ui.focus.FocusRequester</c>.
-/// Pair it with <see cref="Modifier.FocusRequester(ComposeNet.FocusRequester)"/>
+/// Pair it with <see cref="Modifier.FocusRequester(FocusRequester)"/>
 /// to install the requester on a focusable node, then call
 /// <see cref="RequestFocus"/> (e.g. from a button click) to programmatically
 /// move focus there.

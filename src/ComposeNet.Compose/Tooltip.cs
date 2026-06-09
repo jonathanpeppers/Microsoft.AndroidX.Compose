@@ -26,7 +26,7 @@ public sealed class Tooltip : ComposableNode
     public override void Render(IComposer composer)
     {
         if (Tip is null || Anchor is null)
-            throw new System.InvalidOperationException(
+            throw new InvalidOperationException(
                 "Tooltip requires both Tip (popup body) and Anchor (visible content).");
 
         var positionProvider = ComposeBridges.RememberPlainTooltipPositionProvider(composer);

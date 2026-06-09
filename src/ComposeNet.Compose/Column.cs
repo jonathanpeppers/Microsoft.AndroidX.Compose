@@ -39,13 +39,13 @@ public sealed class Column : ComposableContainer
     /// or <see cref="Arrangement.SpacedBy(int)"/>). Passing a
     /// horizontal-only arrangement (<see cref="Arrangement.Start"/>,
     /// <see cref="Arrangement.End"/>) throws
-    /// <see cref="System.ArgumentException"/>.
+    /// <see cref="ArgumentException"/>.
     /// </param>
     public Column(Arrangement? verticalArrangement)
     {
         if (verticalArrangement is not null && verticalArrangement.Vertical is null)
         {
-            throw new System.ArgumentException(
+            throw new ArgumentException(
                 $"{nameof(verticalArrangement)} must wrap a vertical " +
                 $"or horizontal-or-vertical Compose Arrangement; got a " +
                 $"horizontal-only value (e.g. Arrangement.Start / Arrangement.End).",

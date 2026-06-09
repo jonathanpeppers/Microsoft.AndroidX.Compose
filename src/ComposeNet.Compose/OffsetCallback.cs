@@ -15,11 +15,11 @@ namespace ComposeNet;
 [Register("composenet/compose/OffsetCallback")]
 internal sealed class OffsetCallback : Java.Lang.Object, IFunction1
 {
-    static System.IntPtr s_unbox;
+    static IntPtr s_unbox;
 
-    readonly System.Action<Offset> _body;
+    readonly Action<Offset> _body;
 
-    public OffsetCallback(System.Action<Offset> body) => _body = body;
+    public OffsetCallback(Action<Offset> body) => _body = body;
 
     public Java.Lang.Object Invoke(Java.Lang.Object? p0)
     {
@@ -30,12 +30,12 @@ internal sealed class OffsetCallback : Java.Lang.Object, IFunction1
             packed = JNIEnv.CallLongMethod(p0.Handle, s_unbox);
         }
         _body(Offset.FromPacked(packed));
-        return global::Kotlin.Unit.Instance!;
+        return Kotlin.Unit.Instance!;
     }
 
     static void EnsureUnboxMethod()
     {
-        if (s_unbox != System.IntPtr.Zero) return;
+        if (s_unbox != IntPtr.Zero) return;
         var cls = JNIEnv.FindClass("androidx/compose/ui/geometry/Offset");
         s_unbox = JNIEnv.GetMethodID(cls, "unbox-impl", "()J");
     }

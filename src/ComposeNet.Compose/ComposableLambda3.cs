@@ -31,15 +31,15 @@ namespace ComposeNet;
 [Register("composenet/compose/ComposableLambda3")]
 internal sealed class ComposableLambda3 : Java.Lang.Object, IFunction3
 {
-    readonly System.Action<Java.Lang.Object?, IComposer> _body;
+    readonly Action<Java.Lang.Object?, IComposer> _body;
 
-    public ComposableLambda3(System.Action<IComposer> body)
+    public ComposableLambda3(Action<IComposer> body)
         : this((Java.Lang.Object? _, IComposer c) => body(c)) { }
 
-    public ComposableLambda3(System.Action<IntPtr, IComposer> body)
+    public ComposableLambda3(Action<nint, IComposer> body)
         : this((Java.Lang.Object? p0, IComposer c) => body(p0?.Handle ?? IntPtr.Zero, c)) { }
 
-    public ComposableLambda3(System.Action<Java.Lang.Object?, IComposer> body) => _body = body;
+    public ComposableLambda3(Action<Java.Lang.Object?, IComposer> body) => _body = body;
 
     // Kotlin Function3<Scope, Composer, Int, Unit> contractually returns
     // Unit.INSTANCE. See ComposableLambda0 / issue #43 for the rationale.
@@ -49,6 +49,6 @@ internal sealed class ComposableLambda3 : Java.Lang.Object, IFunction3
         var composer = Android.Runtime.Extensions.JavaCast<IComposer>(p1);
         using var _ = ComposeContext.Push(composer);
         _body(p0, composer);
-        return global::Kotlin.Unit.Instance!;
+        return Kotlin.Unit.Instance!;
     }
 }

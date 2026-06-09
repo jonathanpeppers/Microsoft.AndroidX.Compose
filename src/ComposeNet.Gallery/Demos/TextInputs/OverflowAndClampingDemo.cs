@@ -16,7 +16,7 @@ public static class OverflowAndClampingDemo
             new Text("Single line, ellipsised when wide — like this one which keeps going and going and going off the edge of the screen.")
             {
                 MaxLines = 1,
-                Overflow = ComposeNet.TextOverflow.Ellipsis,
+                Overflow = TextOverflow.Ellipsis,
                 SoftWrap = false,
             },
             new Text("Two-line cap with MinLines = 2 — short text still reserves the second line."),
@@ -24,7 +24,7 @@ public static class OverflowAndClampingDemo
             {
                 MaxLines = 2,
                 MinLines = 2,
-                Overflow = ComposeNet.TextOverflow.Ellipsis,
+                Overflow = TextOverflow.Ellipsis,
             },
         });
 }

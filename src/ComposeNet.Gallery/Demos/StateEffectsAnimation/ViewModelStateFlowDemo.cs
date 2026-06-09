@@ -1,6 +1,3 @@
-using System;
-using System.Threading;
-using System.Threading.Tasks;
 using ComposeNet.Gallery.Registry;
 
 namespace ComposeNet.Gallery.Demos.StateEffectsAnimation;

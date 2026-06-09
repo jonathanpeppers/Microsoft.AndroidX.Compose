@@ -27,7 +27,7 @@ namespace ComposeNet;
 /// ships and the binder stops stripping inline-class APIs.
 /// </para>
 /// </remarks>
-public readonly struct Offset : System.IEquatable<Offset>
+public readonly struct Offset : IEquatable<Offset>
 {
     readonly long _packed;
 
@@ -36,8 +36,8 @@ public readonly struct Offset : System.IEquatable<Offset>
     {
         // Match Kotlin's `packFloats(x, y)`: X is the high 32 bits, Y the low.
         // Use BitConverter so NaN / +0 / -0 round-trip exactly.
-        long hi = System.BitConverter.SingleToInt32Bits(x) & 0xFFFFFFFFL;
-        long lo = System.BitConverter.SingleToInt32Bits(y) & 0xFFFFFFFFL;
+        long hi = BitConverter.SingleToInt32Bits(x) & 0xFFFFFFFFL;
+        long lo = BitConverter.SingleToInt32Bits(y) & 0xFFFFFFFFL;
         _packed = (hi << 32) | lo;
     }
 
@@ -48,10 +48,10 @@ public readonly struct Offset : System.IEquatable<Offset>
     internal static Offset FromPacked(long packed) => new Offset(packed);
 
     /// <summary>The X coordinate (horizontal, typically pixels).</summary>
-    public float X => System.BitConverter.Int32BitsToSingle((int)((_packed >> 32) & 0xFFFFFFFFL));
+    public float X => BitConverter.Int32BitsToSingle((int)((_packed >> 32) & 0xFFFFFFFFL));
 
     /// <summary>The Y coordinate (vertical, typically pixels).</summary>
-    public float Y => System.BitConverter.Int32BitsToSingle((int)(_packed & 0xFFFFFFFFL));
+    public float Y => BitConverter.Int32BitsToSingle((int)(_packed & 0xFFFFFFFFL));
 
     /// <summary>Origin — <c>(0, 0)</c>.</summary>
     public static Offset Zero => new Offset(0f, 0f);

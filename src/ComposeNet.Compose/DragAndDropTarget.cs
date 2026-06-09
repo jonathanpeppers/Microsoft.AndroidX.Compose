@@ -6,7 +6,7 @@ namespace ComposeNet;
 /// <summary>
 /// <c>androidx.compose.ui.draganddrop.DragAndDropTarget</c> adapter — the
 /// receiver of drag-and-drop callbacks installed by
-/// <see cref="Modifier.DragAndDropTarget(System.Func{ComposeNet.DragAndDropEvent, bool}, ComposeNet.DragAndDropTarget)"/>.
+/// <see cref="Modifier.DragAndDropTarget(Func{DragAndDropEvent, bool}, DragAndDropTarget)"/>.
 /// Mirrors Kotlin's <c>DragAndDropTarget</c> interface as a delegate-bag:
 /// <see cref="OnDrop"/> processes the dropped payload (return <c>true</c>
 /// to consume); the other six callbacks (<see cref="OnStarted"/>,
@@ -16,7 +16,7 @@ namespace ComposeNet;
 /// default no-op behaviour.
 ///
 /// The Java peer is created once per managed instance, so
-/// <see cref="Compose.Remember{T}(System.Func{T}, int, string)"/> the target
+/// <see cref="Compose.Remember{T}(Func{T}, int, string)"/> the target
 /// to keep the modifier-element identity stable across recompositions —
 /// otherwise Compose rebuilds the underlying <c>DragAndDropTargetElement</c>
 /// every frame and any internal hover/started/ended bookkeeping resets.
@@ -33,7 +33,7 @@ public sealed class DragAndDropTarget : Java.Lang.Object, IDragAndDropTarget
     /// drop as unhandled and the system propagates it to the next eligible
     /// listener.
     /// </summary>
-    public System.Func<DragAndDropEvent, bool>? OnDrop { get; set; }
+    public Func<DragAndDropEvent, bool>? OnDrop { get; set; }
 
     /// <summary>
     /// Invoked once when a drag-and-drop session that this target opted
@@ -41,34 +41,34 @@ public sealed class DragAndDropTarget : Java.Lang.Object, IDragAndDropTarget
     /// flip a "drag in progress" state-holder so siblings can reveal
     /// affordances. Mirrors Kotlin <c>onStarted</c>.
     /// </summary>
-    public System.Action<DragAndDropEvent>? OnStarted { get; set; }
+    public Action<DragAndDropEvent>? OnStarted { get; set; }
 
     /// <summary>
     /// Invoked when the dragged item enters this target's bounds — the
     /// canonical place to highlight the drop zone. Mirrors Kotlin
     /// <c>onEntered</c>.
     /// </summary>
-    public System.Action<DragAndDropEvent>? OnEntered { get; set; }
+    public Action<DragAndDropEvent>? OnEntered { get; set; }
 
     /// <summary>
     /// Invoked while the dragged item moves over this target. Mirrors
     /// Kotlin <c>onMoved</c>.
     /// </summary>
-    public System.Action<DragAndDropEvent>? OnMoved { get; set; }
+    public Action<DragAndDropEvent>? OnMoved { get; set; }
 
     /// <summary>
     /// Invoked when the source app modifies the drag's <c>ClipData</c> or
     /// <c>ClipDescription</c> mid-session (e.g. switches MIME types).
     /// Mirrors Kotlin <c>onChanged</c>.
     /// </summary>
-    public System.Action<DragAndDropEvent>? OnChanged { get; set; }
+    public Action<DragAndDropEvent>? OnChanged { get; set; }
 
     /// <summary>
     /// Invoked when the dragged item leaves this target's bounds — the
     /// counterpart to <see cref="OnEntered"/>; clear any hover highlight
     /// here. Mirrors Kotlin <c>onExited</c>.
     /// </summary>
-    public System.Action<DragAndDropEvent>? OnExited { get; set; }
+    public Action<DragAndDropEvent>? OnExited { get; set; }
 
     /// <summary>
     /// Invoked once when the drag-and-drop session ends — fired regardless
@@ -76,13 +76,13 @@ public sealed class DragAndDropTarget : Java.Lang.Object, IDragAndDropTarget
     /// session-scoped state set in <see cref="OnStarted"/>. Mirrors Kotlin
     /// <c>onEnded</c>.
     /// </summary>
-    public System.Action<DragAndDropEvent>? OnEnded { get; set; }
+    public Action<DragAndDropEvent>? OnEnded { get; set; }
 
     /// <summary>Construct an unwired target. Assign at least <see cref="OnDrop"/> before installing it on a modifier chain.</summary>
     public DragAndDropTarget() { }
 
     /// <summary>Convenience ctor that wires <paramref name="onDrop"/> in one expression.</summary>
-    public DragAndDropTarget(System.Func<DragAndDropEvent, bool> onDrop)
+    public DragAndDropTarget(Func<DragAndDropEvent, bool> onDrop)
     {
         OnDrop = onDrop;
     }

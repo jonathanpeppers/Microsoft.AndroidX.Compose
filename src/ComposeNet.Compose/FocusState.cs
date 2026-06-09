@@ -5,7 +5,7 @@ namespace ComposeNet;
 /// <summary>
 /// Immutable snapshot of a Compose <c>FocusState</c>. Produced inside
 /// the callback passed to
-/// <see cref="Modifier.OnFocusChanged(System.Action{ComposeNet.FocusState})"/>
+/// <see cref="Modifier.OnFocusChanged(Action{FocusState})"/>
 /// — Compose reuses one <c>FocusState</c> JNI instance per node and
 /// mutates it across recompositions, so we read all three booleans
 /// once and hand back a value type the caller can keep without worrying

@@ -37,10 +37,10 @@ internal static partial class ComposeBridges
     // Number of Color slots in lightColorScheme / darkColorScheme.
     internal const int ColorSchemeSlotCount = 48;
 
-    static System.IntPtr s_lightColorSchemeDefault_class;
-    static System.IntPtr s_lightColorSchemeDefault_method;
-    static System.IntPtr s_darkColorSchemeDefault_class;
-    static System.IntPtr s_darkColorSchemeDefault_method;
+    static IntPtr s_lightColorSchemeDefault_class;
+    static IntPtr s_lightColorSchemeDefault_method;
+    static IntPtr s_darkColorSchemeDefault_class;
+    static IntPtr s_darkColorSchemeDefault_method;
 
     /// <summary>
     /// Build a Material 3 light <see cref="ColorScheme"/> using every
@@ -96,14 +96,14 @@ internal static partial class ComposeBridges
             mask1: mask1);
 
     static unsafe ColorScheme InvokeColorSchemeDefault(
-        ref System.IntPtr classCache,
-        ref System.IntPtr methodCache,
+        ref IntPtr classCache,
+        ref IntPtr methodCache,
         string jvmName,
         long[]? colors,
         int mask0,
         int mask1)
     {
-        if (methodCache == System.IntPtr.Zero)
+        if (methodCache == IntPtr.Zero)
         {
             classCache = JNIEnv.FindClass("androidx/compose/material3/ColorSchemeKt");
             methodCache = JNIEnv.GetStaticMethodID(classCache, jvmName, ColorSchemeDefaultSig);
@@ -119,7 +119,7 @@ internal static partial class ComposeBridges
         else
         {
             if (colors.Length != ColorSchemeSlotCount)
-                throw new System.ArgumentException(
+                throw new ArgumentException(
                     $"colors array must have exactly {ColorSchemeSlotCount} elements; got {colors.Length}.",
                     nameof(colors));
             for (int i = 0; i < ColorSchemeSlotCount; i++)
@@ -132,9 +132,9 @@ internal static partial class ComposeBridges
         // parameter) are never tested by the generated $default body.
         args[48] = new JValue(mask0);
         args[49] = new JValue(mask1);
-        args[50] = new JValue(System.IntPtr.Zero);
+        args[50] = new JValue(IntPtr.Zero);
 
-        System.IntPtr handle = JNIEnv.CallStaticObjectMethod(classCache, methodCache, args);
+        IntPtr handle = JNIEnv.CallStaticObjectMethod(classCache, methodCache, args);
         return Java.Lang.Object.GetObject<ColorScheme>(handle, JniHandleOwnership.TransferLocalRef)!;
     }
 }

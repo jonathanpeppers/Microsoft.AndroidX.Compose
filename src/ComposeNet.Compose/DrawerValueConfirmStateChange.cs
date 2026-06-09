@@ -36,7 +36,7 @@ public sealed class DrawerValueConfirmStateChange : Java.Lang.Object, IFunction1
     /// <c>ConfirmStateChange</c> property. Treated as
     /// <c>{ true }</c> when <c>null</c>.
     /// </summary>
-    public System.Func<DrawerValue, bool>? Callback { get; set; }
+    public Func<DrawerValue, bool>? Callback { get; set; }
 
     /// <summary>
     /// Kotlin <c>Function1.invoke</c> entry point. Marshals the JNI

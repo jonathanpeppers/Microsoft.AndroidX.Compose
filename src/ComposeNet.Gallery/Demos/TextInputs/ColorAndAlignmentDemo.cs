@@ -1,4 +1,3 @@
-using AndroidX.Compose.UI.Graphics;
 using ComposeNet.Gallery.Registry;
 
 namespace ComposeNet.Gallery.Demos.TextInputs;
@@ -17,19 +16,19 @@ public static class ColorAndAlignmentDemo
             new Text("Red, centered")
             {
                 Color    = Color.FromRgb(0xC6, 0x28, 0x28),
-                Align    = ComposeNet.TextAlign.Center,
+                Align    = TextAlign.Center,
                 Modifier = Modifier.Companion.FillMaxWidth(),
             },
             new Text("Blue, end-aligned")
             {
                 Color    = Color.FromRgb(0x15, 0x65, 0xC0),
-                Align    = ComposeNet.TextAlign.End,
+                Align    = TextAlign.End,
                 Modifier = Modifier.Companion.FillMaxWidth(),
             },
             new Text("Green, start (default)")
             {
                 Color    = Color.FromRgb(0x2E, 0x7D, 0x32),
-                Align    = ComposeNet.TextAlign.Start,
+                Align    = TextAlign.Start,
                 Modifier = Modifier.Companion.FillMaxWidth(),
             },
         });

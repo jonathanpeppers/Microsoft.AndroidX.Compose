@@ -1,4 +1,3 @@
-using AndroidX.Compose.UI.Graphics;
 using ComposeNet.Gallery.Registry;
 
 namespace ComposeNet.Gallery.Demos.Modifiers;
@@ -63,8 +62,8 @@ public static class DragAndDropTargetDemo
                             shouldStartDragAndDrop: e =>
                             {
                                 foreach (var m in e.MimeTypes)
-                                    if (m.StartsWith("image/", System.StringComparison.Ordinal)
-                                        || m.StartsWith("text/", System.StringComparison.Ordinal))
+                                    if (m.StartsWith("image/", StringComparison.Ordinal)
+                                        || m.StartsWith("text/", StringComparison.Ordinal))
                                         return true;
                                 return false;
                             },

@@ -5,15 +5,15 @@ namespace ComposeNet.Gallery.Demos.Navigation;
 
 /// <summary>
 /// Bottom-navigation demo that exercises the
-/// <see cref="ComposeNet.NavOptions"/> overload of
-/// <see cref="NavController.Navigate(string, ComposeNet.NavOptions)"/>.
+/// <see cref="NavOptions"/> overload of
+/// <see cref="NavController.Navigate(string, NavOptions)"/>.
 /// Three top-level tabs — Home, Search, Profile — share a single
 /// <see cref="NavController"/>; each tab tap pops back to the start
 /// destination with <c>saveState = true</c>, launches single-top, and
 /// restores any state previously saved for the target tab.
 ///
 /// <para>
-/// Per-tab counters use <see cref="Compose.RememberSaveable{T}(System.Func{T}, int, string)"/>
+/// Per-tab counters use <see cref="Compose.RememberSaveable{T}(Func{T}, int, string)"/>
 /// so a reviewer can prove the saved-state round-trip: tap Increment
 /// a few times, switch tabs, come back — the count should still be
 /// there.

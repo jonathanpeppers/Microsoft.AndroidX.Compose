@@ -8,7 +8,7 @@ namespace ComposeNet;
 /// (<c>isRefreshing</c>) and clears it when the async reload finishes.
 /// </summary>
 /// <remarks>
-/// Pass an explicit <see cref="ComposeNet.PullToRefreshState"/> to
+/// Pass an explicit <see cref="PullToRefreshState"/> to
 /// observe pull progress (<see cref="PullToRefreshState.DistanceFraction"/> /
 /// <see cref="PullToRefreshState.IsAnimating"/>) for a custom indicator
 /// or analytics; omit it and Compose creates one internally via

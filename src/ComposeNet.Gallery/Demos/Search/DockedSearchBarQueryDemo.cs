@@ -22,10 +22,10 @@ public static class DockedSearchBarQueryDemo
             var query  = Compose.Remember(() => new MutableState<string>(""));
             var active = Compose.Remember(() => new MutableState<bool>(false));
 
-            var matches = System.Array.FindAll(
+            var matches = Array.FindAll(
                 Fruits,
                 f => string.IsNullOrEmpty(query.Value)
-                     || f.Contains(query.Value, System.StringComparison.OrdinalIgnoreCase));
+                     || f.Contains(query.Value, StringComparison.OrdinalIgnoreCase));
 
 #pragma warning disable CS0618 // DockedSearchBar is intentionally exercised here
             var docked = new DockedSearchBar(

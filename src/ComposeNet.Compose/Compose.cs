@@ -21,7 +21,7 @@ public static class Compose
     /// of the file path mixed with the line number — a stable identifier
     /// derived from <see cref="CallerLineNumberAttribute"/> /
     /// <see cref="CallerFilePathAttribute"/> fill-ins, deterministic
-    /// across process restarts (unlike <see cref="System.HashCode"/>,
+    /// across process restarts (unlike <see cref="HashCode"/>,
     /// which is per-process randomized) so the saveable-state registry
     /// can match the recomputed key to its stored value on restore.
     /// Two call sites in different files (or different lines) never
@@ -36,10 +36,10 @@ public static class Compose
     /// Must be called inside a composition (i.e. on the thread currently
     /// running a <see cref="ComposableLambda2"/>/<c>3</c>/<c>4</c> body, or
     /// inside <c>Render</c> on a node reached from one of those). Otherwise
-    /// throws <see cref="System.InvalidOperationException"/>.
+    /// throws <see cref="InvalidOperationException"/>.
     /// </summary>
     public static T Remember<T>(
-        System.Func<T> factory,
+        Func<T> factory,
         [CallerLineNumber] int line = 0,
         [CallerFilePath] string file = "")
         => RememberCore(factory, keys: null, line, file);
@@ -52,7 +52,7 @@ public static class Compose
     /// having to manually clear / rebuild state on every recomposition.
     /// </summary>
     public static T Remember<T>(
-        System.Func<T> factory,
+        Func<T> factory,
         object? key1,
         [CallerLineNumber] int line = 0,
         [CallerFilePath] string file = "")
@@ -60,7 +60,7 @@ public static class Compose
 
     /// <summary>Keyed <c>remember(key1, key2) { factory() }</c>.</summary>
     public static T Remember<T>(
-        System.Func<T> factory,
+        Func<T> factory,
         object? key1,
         object? key2,
         [CallerLineNumber] int line = 0,
@@ -69,7 +69,7 @@ public static class Compose
 
     /// <summary>Keyed <c>remember(key1, key2, key3) { factory() }</c>.</summary>
     public static T Remember<T>(
-        System.Func<T> factory,
+        Func<T> factory,
         object? key1,
         object? key2,
         object? key3,
@@ -84,16 +84,16 @@ public static class Compose
     /// caller mutation doesn't corrupt the "previous keys" comparison.
     /// </summary>
     public static T RememberKeyed<T>(
-        System.Func<T> factory,
+        Func<T> factory,
         object?[] keys,
         [CallerLineNumber] int line = 0,
         [CallerFilePath] string file = "")
         => RememberCore(factory, keys ?? throw new ArgumentNullException(nameof(keys)), line, file);
 
-    static T RememberCore<T>(System.Func<T> factory, object?[]? keys, int line, string file)
+    static T RememberCore<T>(Func<T> factory, object?[]? keys, int line, string file)
     {
         var composer = ComposeContext.Current
-            ?? throw new System.InvalidOperationException(
+            ?? throw new InvalidOperationException(
                 "Compose.Remember<T> must be called inside a composition (e.g. inside a SetContent body or a ComposableNode.Render override).");
 
         composer.StartReplaceableGroup(SourceLocationKey.Compute(line, file));
@@ -116,12 +116,12 @@ public static class Compose
 
     /// <summary>
     /// Compose's <c>rememberSaveable { factory() }</c>: like
-    /// <see cref="Remember{T}(System.Func{T}, int, string)"/>, but the
+    /// <see cref="Remember{T}(Func{T}, int, string)"/>, but the
     /// cached value also survives <b>process death and activity
     /// recreation</b> (e.g. rotation when the activity doesn't override
     /// <c>android:configChanges</c>) via Compose's
     /// <c>SaveableStateRegistry</c>, which serialises into the
-    /// activity's saved-instance <see cref="Android.OS.Bundle"/>.
+    /// activity's saved-instance <see cref="Bundle"/>.
     ///
     /// Mirrors Kotlin's single <c>rememberSaveable&lt;T&gt;</c> entry
     /// point — the same call works for scalar values
@@ -145,7 +145,7 @@ public static class Compose
     /// on restore.
     /// </summary>
     public static T RememberSaveable<T>(
-        System.Func<T> factory,
+        Func<T> factory,
         [CallerLineNumber] int line = 0,
         [CallerFilePath] string file = "")
         => RememberSaveableCore(factory, keys: null, line, file);
@@ -154,10 +154,10 @@ public static class Compose
     /// Keyed <c>rememberSaveable(key1) { factory() }</c>: keys flow into
     /// Kotlin's <c>inputs</c> array so Compose's saveable registry
     /// invalidates the cached value when any key changes — matching the
-    /// in-memory behaviour of the keyed <see cref="Remember{T}(System.Func{T}, object?, int, string)"/>.
+    /// in-memory behaviour of the keyed <see cref="Remember{T}(Func{T}, object?, int, string)"/>.
     /// </summary>
     public static T RememberSaveable<T>(
-        System.Func<T> factory,
+        Func<T> factory,
         object? key1,
         [CallerLineNumber] int line = 0,
         [CallerFilePath] string file = "")
@@ -165,7 +165,7 @@ public static class Compose
 
     /// <summary>Keyed <c>rememberSaveable(key1, key2) { factory() }</c>.</summary>
     public static T RememberSaveable<T>(
-        System.Func<T> factory,
+        Func<T> factory,
         object? key1,
         object? key2,
         [CallerLineNumber] int line = 0,
@@ -174,7 +174,7 @@ public static class Compose
 
     /// <summary>Keyed <c>rememberSaveable(key1, key2, key3) { factory() }</c>.</summary>
     public static T RememberSaveable<T>(
-        System.Func<T> factory,
+        Func<T> factory,
         object? key1,
         object? key2,
         object? key3,
@@ -188,16 +188,16 @@ public static class Compose
     /// keys in an array.
     /// </summary>
     public static T RememberSaveableKeyed<T>(
-        System.Func<T> factory,
+        Func<T> factory,
         object?[] keys,
         [CallerLineNumber] int line = 0,
         [CallerFilePath] string file = "")
         => RememberSaveableCore(factory, keys ?? throw new ArgumentNullException(nameof(keys)), line, file);
 
-    static T RememberSaveableCore<T>(System.Func<T> factory, object?[]? keys, int line, string file)
+    static T RememberSaveableCore<T>(Func<T> factory, object?[]? keys, int line, string file)
     {
         var composer = ComposeContext.Current
-            ?? throw new System.InvalidOperationException(
+            ?? throw new InvalidOperationException(
                 "Compose.RememberSaveable<T> must be called inside a composition (e.g. inside a SetContent body or a ComposableNode.Render override).");
 
         composer.StartReplaceableGroup(SourceLocationKey.Compute(line, file));
@@ -218,7 +218,7 @@ public static class Compose
         }
     }
 
-    static T RememberSaveableScalar<T>(System.Func<T> factory, object?[]? keys, IComposer composer)
+    static T RememberSaveableScalar<T>(Func<T> factory, object?[]? keys, IComposer composer)
     {
         var inputs = ComposeBridges.BuildKeysArray(keys, out var ownsInputs);
         var jcw = new ObjectFunction0(() => MutableState<T>.ToJava(factory()));
@@ -229,7 +229,7 @@ public static class Compose
             changed: 0);
         try
         {
-            if (handle == System.IntPtr.Zero)
+            if (handle == IntPtr.Zero)
                 return default!;
             var boxed = Java.Lang.Object.GetObject<Java.Lang.Object>(
                 handle, Android.Runtime.JniHandleOwnership.DoNotTransfer);
@@ -237,14 +237,14 @@ public static class Compose
         }
         finally
         {
-            if (handle != System.IntPtr.Zero)
+            if (handle != IntPtr.Zero)
                 Android.Runtime.JNIEnv.DeleteLocalRef(handle);
-            if (ownsInputs && inputs != System.IntPtr.Zero)
+            if (ownsInputs && inputs != IntPtr.Zero)
                 Android.Runtime.JNIEnv.DeleteLocalRef(inputs);
         }
     }
 
-    static T RememberSaveableWrapper<T>(System.Func<T> factory, object?[]? keys, IComposer composer)
+    static T RememberSaveableWrapper<T>(Func<T> factory, object?[]? keys, IComposer composer)
     {
         // Cache the C# wrapper across recompositions so we don't
         // allocate a fresh facade + Kotlin IMutableState on every
@@ -254,7 +254,7 @@ public static class Compose
         // rememberSaveable below already invalidates on key change
         // and hands us a fresh IMutableState, which we then swap in.
         var wrapper = Remember(factory)
-            ?? throw new System.InvalidOperationException(
+            ?? throw new InvalidOperationException(
                 $"Compose.RememberSaveable<{typeof(T).Name}>: factory returned null.");
         var iwrap = (IMutableStateWrapper)wrapper;
 
@@ -276,8 +276,8 @@ public static class Compose
             changed: 0);
         try
         {
-            if (handle == System.IntPtr.Zero)
-                throw new System.InvalidOperationException(
+            if (handle == IntPtr.Zero)
+                throw new InvalidOperationException(
                     $"Compose.RememberSaveable<{typeof(T).Name}>: rememberSaveable returned null.");
             iwrap.State = Java.Lang.Object.GetObject<IMutableState>(
                 handle, Android.Runtime.JniHandleOwnership.DoNotTransfer)!;
@@ -285,9 +285,9 @@ public static class Compose
         }
         finally
         {
-            if (handle != System.IntPtr.Zero)
+            if (handle != IntPtr.Zero)
                 Android.Runtime.JNIEnv.DeleteLocalRef(handle);
-            if (ownsInputs && inputs != System.IntPtr.Zero)
+            if (ownsInputs && inputs != IntPtr.Zero)
                 Android.Runtime.JNIEnv.DeleteLocalRef(inputs);
         }
     }
@@ -305,17 +305,17 @@ public static class Compose
     /// Must be called inside a composition (e.g. inside a
     /// <c>SetContent</c> body or a <see cref="ComposableNode.Render(IComposer)"/>
     /// override). Pair with
-    /// <see cref="Modifier.Draggable(DraggableState, ComposeNet.Orientation, bool)"/>
+    /// <see cref="Modifier.Draggable(DraggableState, Orientation, bool)"/>
     /// — the returned state is the value to hand to that modifier.
     /// </summary>
     public static DraggableState RememberDraggableState(
-        System.Action<float> onDelta,
+        Action<float> onDelta,
         [CallerLineNumber] int line = 0,
         [CallerFilePath] string file = "")
     {
         ArgumentNullException.ThrowIfNull(onDelta);
         var composer = ComposeContext.Current
-            ?? throw new System.InvalidOperationException(
+            ?? throw new InvalidOperationException(
                 "Compose.RememberDraggableState must be called inside a composition (e.g. inside a SetContent body or a ComposableNode.Render override).");
 
         composer.StartReplaceableGroup(SourceLocationKey.Compute(line, file));
@@ -324,12 +324,12 @@ public static class Compose
             var jcw = new ComposableLambda1(boxed =>
             {
                 var f = boxed as Java.Lang.Float
-                    ?? throw new System.InvalidCastException(
+                    ?? throw new InvalidCastException(
                         $"Expected java.lang.Float in DraggableState.onDelta; got '{boxed?.Class?.Name ?? "null"}'.");
                 onDelta(f.FloatValue());
             });
             var jvm = AndroidX.Compose.Foundation.Gestures.DraggableKt.RememberDraggableState(jcw, composer, 0)
-                ?? throw new System.InvalidOperationException(
+                ?? throw new InvalidOperationException(
                     "DraggableKt.RememberDraggableState returned null.");
             return new DraggableState(jvm);
         }
@@ -376,7 +376,7 @@ public static class Compose
         [CallerFilePath] string file = "")
     {
         var composer = ComposeContext.Current
-            ?? throw new System.InvalidOperationException(
+            ?? throw new InvalidOperationException(
                 "Compose.RememberLazyListState must be called inside a composition (e.g. inside a SetContent body or a ComposableNode.Render override).");
 
         composer.StartReplaceableGroup(SourceLocationKey.Compute(line, file));
@@ -393,7 +393,7 @@ public static class Compose
                 _composer:                           composer,
                 initialFirstVisibleItemScrollOffset: initialFirstVisibleItemScrollOffset,
                 _changed:                            0)
-                ?? throw new System.InvalidOperationException(
+                ?? throw new InvalidOperationException(
                     "LazyListStateKt.RememberLazyListState returned null.");
             return new LazyListState(jvm);
         }
@@ -424,11 +424,11 @@ public static class Compose
     /// is generally what you want.
     /// </para>
     /// </remarks>
-    public static void SideEffect(System.Action effect)
+    public static void SideEffect(Action effect)
     {
         ArgumentNullException.ThrowIfNull(effect);
         var composer = ComposeContext.Current
-            ?? throw new System.InvalidOperationException(
+            ?? throw new InvalidOperationException(
                 "Compose.SideEffect must be called inside a composition (e.g. inside a SetContent body or a ComposableNode.Render override).");
 
         EffectsKt.SideEffect(new ComposableLambda0(effect), composer, _changed: 0);
@@ -438,7 +438,7 @@ public static class Compose
     /// Compose's <c>DisposableEffect(key1) { … onDispose { … } }</c>:
     /// runs <paramref name="effect"/> the first time this call site
     /// is composed (and again whenever <paramref name="key1"/> changes),
-    /// and calls the returned cleanup <see cref="System.Action"/> on
+    /// and calls the returned cleanup <see cref="Action"/> on
     /// key change or when the call site leaves the composition.
     /// </summary>
     /// <param name="key1">
@@ -449,7 +449,7 @@ public static class Compose
     /// </param>
     /// <param name="effect">
     /// Setup callback. Must return a non-null cleanup
-    /// <see cref="System.Action"/> — use <c>() =&gt; { }</c> when
+    /// <see cref="Action"/> — use <c>() =&gt; { }</c> when
     /// there's nothing to clean up.
     /// </param>
     /// <remarks>
@@ -460,11 +460,11 @@ public static class Compose
     /// </remarks>
     public static void DisposableEffect(
         object? key1,
-        System.Func<AndroidX.Compose.Runtime.DisposableEffectScope, System.Action> effect)
+        Func<DisposableEffectScope, Action> effect)
     {
         ArgumentNullException.ThrowIfNull(effect);
         var composer = ComposeContext.Current
-            ?? throw new System.InvalidOperationException(
+            ?? throw new InvalidOperationException(
                 "Compose.DisposableEffect must be called inside a composition.");
 
         EffectsKt.DisposableEffect(
@@ -476,16 +476,16 @@ public static class Compose
 
     /// <summary>
     /// Two-key overload of
-    /// <see cref="DisposableEffect(object?, System.Func{AndroidX.Compose.Runtime.DisposableEffectScope, System.Action})"/>.
+    /// <see cref="DisposableEffect(object?, Func{DisposableEffectScope, Action})"/>.
     /// </summary>
     public static void DisposableEffect(
         object? key1,
         object? key2,
-        System.Func<AndroidX.Compose.Runtime.DisposableEffectScope, System.Action> effect)
+        Func<DisposableEffectScope, Action> effect)
     {
         ArgumentNullException.ThrowIfNull(effect);
         var composer = ComposeContext.Current
-            ?? throw new System.InvalidOperationException(
+            ?? throw new InvalidOperationException(
                 "Compose.DisposableEffect must be called inside a composition.");
 
         EffectsKt.DisposableEffect(
@@ -498,17 +498,17 @@ public static class Compose
 
     /// <summary>
     /// Three-key overload of
-    /// <see cref="DisposableEffect(object?, System.Func{AndroidX.Compose.Runtime.DisposableEffectScope, System.Action})"/>.
+    /// <see cref="DisposableEffect(object?, Func{DisposableEffectScope, Action})"/>.
     /// </summary>
     public static void DisposableEffect(
         object? key1,
         object? key2,
         object? key3,
-        System.Func<AndroidX.Compose.Runtime.DisposableEffectScope, System.Action> effect)
+        Func<DisposableEffectScope, Action> effect)
     {
         ArgumentNullException.ThrowIfNull(effect);
         var composer = ComposeContext.Current
-            ?? throw new System.InvalidOperationException(
+            ?? throw new InvalidOperationException(
                 "Compose.DisposableEffect must be called inside a composition.");
 
         EffectsKt.DisposableEffect(
@@ -526,20 +526,20 @@ public static class Compose
     /// site is composed (and again whenever <paramref name="key1"/>
     /// changes). The previous launch is cancelled on key change or
     /// when the call site leaves the composition — the
-    /// <see cref="System.Threading.CancellationToken"/> passed to
+    /// <see cref="CancellationToken"/> passed to
     /// <paramref name="body"/> is signalled, and the body should
-    /// observe it (e.g. via <see cref="System.Threading.Tasks.Task.Delay(int, System.Threading.CancellationToken)"/>).
+    /// observe it (e.g. via <see cref="Task.Delay(int, CancellationToken)"/>).
     /// </summary>
     /// <param name="key1">
     /// Compose compares this against the previous value using
     /// <c>Object.equals</c> via the boxed Java value. Pass a stable
-    /// "version" (e.g. <see cref="System.Guid.Empty"/> stringified, or
+    /// "version" (e.g. <see cref="Guid.Empty"/> stringified, or
     /// the literal <c>"once"</c>) when you want the body to run
     /// exactly once per call-site lifetime.
     /// </param>
     /// <param name="body">
     /// The async work to run. Honours the supplied
-    /// <see cref="System.Threading.CancellationToken"/> when the
+    /// <see cref="CancellationToken"/> when the
     /// underlying Kotlin <c>Job</c> is cancelled.
     /// </param>
     /// <remarks>
@@ -552,11 +552,11 @@ public static class Compose
     /// </remarks>
     public static void LaunchedEffect(
         object? key1,
-        System.Func<System.Threading.CancellationToken, System.Threading.Tasks.Task> body)
+        Func<CancellationToken, Task> body)
     {
         ArgumentNullException.ThrowIfNull(body);
         var composer = ComposeContext.Current
-            ?? throw new System.InvalidOperationException(
+            ?? throw new InvalidOperationException(
                 "Compose.LaunchedEffect must be called inside a composition.");
 
         EffectsKt.LaunchedEffect(
@@ -568,16 +568,16 @@ public static class Compose
 
     /// <summary>
     /// Two-key overload of
-    /// <see cref="LaunchedEffect(object?, System.Func{System.Threading.CancellationToken, System.Threading.Tasks.Task})"/>.
+    /// <see cref="LaunchedEffect(object?, Func{CancellationToken, Task})"/>.
     /// </summary>
     public static void LaunchedEffect(
         object? key1,
         object? key2,
-        System.Func<System.Threading.CancellationToken, System.Threading.Tasks.Task> body)
+        Func<CancellationToken, Task> body)
     {
         ArgumentNullException.ThrowIfNull(body);
         var composer = ComposeContext.Current
-            ?? throw new System.InvalidOperationException(
+            ?? throw new InvalidOperationException(
                 "Compose.LaunchedEffect must be called inside a composition.");
 
         EffectsKt.LaunchedEffect(
@@ -590,17 +590,17 @@ public static class Compose
 
     /// <summary>
     /// Three-key overload of
-    /// <see cref="LaunchedEffect(object?, System.Func{System.Threading.CancellationToken, System.Threading.Tasks.Task})"/>.
+    /// <see cref="LaunchedEffect(object?, Func{CancellationToken, Task})"/>.
     /// </summary>
     public static void LaunchedEffect(
         object? key1,
         object? key2,
         object? key3,
-        System.Func<System.Threading.CancellationToken, System.Threading.Tasks.Task> body)
+        Func<CancellationToken, Task> body)
     {
         ArgumentNullException.ThrowIfNull(body);
         var composer = ComposeContext.Current
-            ?? throw new System.InvalidOperationException(
+            ?? throw new InvalidOperationException(
                 "Compose.LaunchedEffect must be called inside a composition.");
 
         EffectsKt.LaunchedEffect(
@@ -616,7 +616,7 @@ public static class Compose
     /// Compose's <c>mutableStateOf(value)</c>: allocates a new
     /// <see cref="MutableState{T}"/> seeded with <paramref name="value"/>.
     /// Cache the returned instance via
-    /// <see cref="Remember{T}(System.Func{T}, int, string)"/> so it
+    /// <see cref="Remember{T}(Func{T}, int, string)"/> so it
     /// survives recomposition:
     /// <code>
     /// var name = Compose.Remember(() =&gt; Compose.MutableStateOf("Ada"));
@@ -714,7 +714,7 @@ public static class Compose
     /// <remarks>
     /// Kotlin also exposes a vararg-pairs overload
     /// (<c>mutableStateMapOf("k1" to v1, "k2" to v2)</c>); use the
-    /// <see cref="MutableStateMap{TKey, TValue}.MutableStateMap(System.Collections.Generic.IEnumerable{System.Collections.Generic.KeyValuePair{TKey, TValue}})"/>
+    /// <see cref="MutableStateMap{TKey, TValue}.MutableStateMap(IEnumerable{KeyValuePair{TKey, TValue}})"/>
     /// constructor or the collection-initializer syntax
     /// (<c>new MutableStateMap&lt;string, int&gt; { ["k1"] = 1 }</c>) for
     /// the same effect.
@@ -729,7 +729,7 @@ public static class Compose
     /// computed by <paramref name="calculation"/>. Compose tracks
     /// which state values <paramref name="calculation"/> reads and
     /// only re-runs it when one of them changes. Cache the returned
-    /// instance via <see cref="Remember{T}(System.Func{T}, int, string)"/>
+    /// instance via <see cref="Remember{T}(Func{T}, int, string)"/>
     /// so it survives recomposition:
     /// <code>
     /// var name  = Remember(() =&gt; new MutableState&lt;string&gt;("Ada"));
@@ -737,7 +737,7 @@ public static class Compose
     /// new Text(greet.Value); // recomposes only when name.Value changes
     /// </code>
     /// </summary>
-    public static DerivedState<T> DerivedStateOf<T>(System.Func<T> calculation)
+    public static DerivedState<T> DerivedStateOf<T>(Func<T> calculation)
     {
         ArgumentNullException.ThrowIfNull(calculation);
         var jcw = new ObjectFunction0(() => MutableState<T>.ToJava(calculation()));
@@ -752,7 +752,7 @@ public static class Compose
     /// <paramref name="initialValue"/>. Starts <paramref name="producer"/>
     /// the first time this call site enters the composition. The
     /// producer receives the state to write to plus a
-    /// <see cref="System.Threading.CancellationToken"/> that fires
+    /// <see cref="CancellationToken"/> that fires
     /// when this call site leaves the composition.
     ///
     /// <code>
@@ -762,8 +762,8 @@ public static class Compose
     ///     {
     ///         while (!ct.IsCancellationRequested)
     ///         {
-    ///             state.Value = System.DateTime.Now.ToLongTimeString();
-    ///             await System.Threading.Tasks.Task.Delay(1000, ct);
+    ///             state.Value = DateTime.Now.ToLongTimeString();
+    ///             await Task.Delay(1000, ct);
     ///         }
     ///     });
     /// new Text(clock.Value);
@@ -779,7 +779,7 @@ public static class Compose
     /// <remarks>
     /// Implemented purely in C# (not via Kotlin's
     /// <c>SnapshotStateKt.ProduceState</c>) to keep the producer a
-    /// plain <see cref="System.Threading.Tasks.Task"/> rather than a
+    /// plain <see cref="Task"/> rather than a
     /// Kotlin suspend lambda. The lifecycle is driven
     /// by an <see cref="IRememberObserver"/> JCW that's the direct
     /// slot value, so Compose's runtime fires
@@ -788,7 +788,7 @@ public static class Compose
     /// </remarks>
     public static MutableState<T> ProduceState<T>(
         T initialValue,
-        System.Func<MutableState<T>, System.Threading.CancellationToken, System.Threading.Tasks.Task> producer,
+        Func<MutableState<T>, CancellationToken, Task> producer,
         [CallerLineNumber] int line = 0,
         [CallerFilePath] string file = "")
         => ProduceStateCore(initialValue, producer, keys: null, line, file);
@@ -801,7 +801,7 @@ public static class Compose
     public static MutableState<T> ProduceState<T>(
         T initialValue,
         object? key1,
-        System.Func<MutableState<T>, System.Threading.CancellationToken, System.Threading.Tasks.Task> producer,
+        Func<MutableState<T>, CancellationToken, Task> producer,
         [CallerLineNumber] int line = 0,
         [CallerFilePath] string file = "")
         => ProduceStateCore(initialValue, producer, new[] { key1 }, line, file);
@@ -811,7 +811,7 @@ public static class Compose
         T initialValue,
         object? key1,
         object? key2,
-        System.Func<MutableState<T>, System.Threading.CancellationToken, System.Threading.Tasks.Task> producer,
+        Func<MutableState<T>, CancellationToken, Task> producer,
         [CallerLineNumber] int line = 0,
         [CallerFilePath] string file = "")
         => ProduceStateCore(initialValue, producer, new[] { key1, key2 }, line, file);
@@ -822,7 +822,7 @@ public static class Compose
         object? key1,
         object? key2,
         object? key3,
-        System.Func<MutableState<T>, System.Threading.CancellationToken, System.Threading.Tasks.Task> producer,
+        Func<MutableState<T>, CancellationToken, Task> producer,
         [CallerLineNumber] int line = 0,
         [CallerFilePath] string file = "")
         => ProduceStateCore(initialValue, producer, new[] { key1, key2, key3 }, line, file);
@@ -834,21 +834,21 @@ public static class Compose
     public static MutableState<T> ProduceStateKeyed<T>(
         T initialValue,
         object?[] keys,
-        System.Func<MutableState<T>, System.Threading.CancellationToken, System.Threading.Tasks.Task> producer,
+        Func<MutableState<T>, CancellationToken, Task> producer,
         [CallerLineNumber] int line = 0,
         [CallerFilePath] string file = "")
         => ProduceStateCore(initialValue, producer, keys ?? throw new ArgumentNullException(nameof(keys)), line, file);
 
     static MutableState<T> ProduceStateCore<T>(
         T initialValue,
-        System.Func<MutableState<T>, System.Threading.CancellationToken, System.Threading.Tasks.Task> producer,
+        Func<MutableState<T>, CancellationToken, Task> producer,
         object?[]? keys,
         int line,
         string file)
     {
         ArgumentNullException.ThrowIfNull(producer);
         var composer = ComposeContext.Current
-            ?? throw new System.InvalidOperationException(
+            ?? throw new InvalidOperationException(
                 "Compose.ProduceState<T> must be called inside a composition (e.g. inside a SetContent body or a ComposableNode.Render override).");
 
         composer.StartReplaceableGroup(SourceLocationKey.Compute(line, file));
@@ -877,7 +877,7 @@ public static class Compose
 
     /// <summary>
     /// Bridges Compose's <c>snapshotFlow { producer() }</c> into an
-    /// <see cref="System.Collections.Generic.IAsyncEnumerable{T}"/>.
+    /// <see cref="IAsyncEnumerable{T}"/>.
     /// Every time any <see cref="MutableState{T}"/> /
     /// <see cref="MutableNumberState{T}"/> read inside
     /// <paramref name="producer"/> is written to and the surrounding
@@ -897,7 +897,7 @@ public static class Compose
     /// <see cref="ulong"/>, <see cref="float"/>, <see cref="double"/>,
     /// <see cref="bool"/>, <see cref="char"/>), <see cref="string"/>,
     /// <see cref="Java.Lang.Object"/> peers, and
-    /// <see cref="System.Nullable{T}"/> of any of those primitives.
+    /// <see cref="Nullable{T}"/> of any of those primitives.
     /// Tuples / value tuples / arbitrary CLR structs are not
     /// supported.
     /// </typeparam>
@@ -913,7 +913,7 @@ public static class Compose
     /// <returns>
     /// An async sequence that yields each new producer value on the
     /// Compose main thread until the consumer disposes the
-    /// enumerator or cancels the <see cref="System.Threading.CancellationToken"/>
+    /// enumerator or cancels the <see cref="CancellationToken"/>
     /// passed to <c>WithCancellation</c>. Disposing or cancelling
     /// tears down the underlying Kotlin coroutine and unregisters
     /// the snapshot-apply observer.
@@ -938,12 +938,12 @@ public static class Compose
     /// started it.
     /// </para>
     /// <para>
-    /// Each call to <see cref="System.Collections.Generic.IAsyncEnumerable{T}.GetAsyncEnumerator"/>
+    /// Each call to <see cref="IAsyncEnumerable{T}.GetAsyncEnumerator"/>
     /// starts a fresh Kotlin coroutine — the returned enumerable is
     /// not multicast.
     /// </para>
     /// </remarks>
-    public static System.Collections.Generic.IAsyncEnumerable<T> SnapshotFlow<T>(System.Func<T> producer)
+    public static IAsyncEnumerable<T> SnapshotFlow<T>(Func<T> producer)
     {
         ArgumentNullException.ThrowIfNull(producer);
         return new SnapshotFlowEnumerable<T>(producer);
@@ -962,9 +962,9 @@ public static class Compose
     /// call site's storage key. Invoked synchronously on the
     /// composition thread — long-running initialisation work
     /// should be launched via
-    /// <see cref="ComposeNet.ViewModel.LaunchAsync"/> from the
+    /// <see cref="ViewModel.LaunchAsync"/> from the
     /// view-model ctor so it stays tied to
-    /// <see cref="ComposeNet.ViewModel.Scope"/>.
+    /// <see cref="ViewModel.Scope"/>.
     /// </param>
     /// <param name="line">Auto-populated; do not pass.</param>
     /// <param name="file">Auto-populated; do not pass.</param>
@@ -985,7 +985,7 @@ public static class Compose
     /// <strong>Storage key:</strong>
     /// <c>"composenet:" + typeof(T).FullName + ":" + file + ":" + line</c>
     /// (plus any user keys). Two
-    /// <see cref="ViewModel{T}(System.Func{T}, int, string)"/> calls
+    /// <see cref="ViewModel{T}(Func{T}, int, string)"/> calls
     /// at the same source location share the same VM after
     /// configuration change — different source locations get
     /// different VMs even at the same owner. Pass user keys via the
@@ -1007,10 +1007,10 @@ public static class Compose
     /// </para>
     /// </remarks>
     public static T ViewModel<T>(
-        System.Func<T> factory,
+        Func<T> factory,
         [CallerLineNumber] int line = 0,
         [CallerFilePath] string file = "")
-        where T : ComposeNet.ViewModel
+        where T : ViewModel
         => ViewModelCore(factory, keys: null, line, file);
 
     /// <summary>
@@ -1021,32 +1021,32 @@ public static class Compose
     /// depends on a navigation argument (e.g. the post id).
     /// </summary>
     public static T ViewModel<T>(
-        System.Func<T> factory,
+        Func<T> factory,
         object? key1,
         [CallerLineNumber] int line = 0,
         [CallerFilePath] string file = "")
-        where T : ComposeNet.ViewModel
+        where T : ViewModel
         => ViewModelCore(factory, new[] { key1 }, line, file);
 
-    /// <summary>Keyed <c>viewModel(key1, key2)</c>; see <see cref="ViewModel{T}(System.Func{T}, object?, int, string)"/>.</summary>
+    /// <summary>Keyed <c>viewModel(key1, key2)</c>; see <see cref="ViewModel{T}(Func{T}, object?, int, string)"/>.</summary>
     public static T ViewModel<T>(
-        System.Func<T> factory,
+        Func<T> factory,
         object? key1,
         object? key2,
         [CallerLineNumber] int line = 0,
         [CallerFilePath] string file = "")
-        where T : ComposeNet.ViewModel
+        where T : ViewModel
         => ViewModelCore(factory, new[] { key1, key2 }, line, file);
 
-    /// <summary>Keyed <c>viewModel(key1, key2, key3)</c>; see <see cref="ViewModel{T}(System.Func{T}, object?, int, string)"/>.</summary>
+    /// <summary>Keyed <c>viewModel(key1, key2, key3)</c>; see <see cref="ViewModel{T}(Func{T}, object?, int, string)"/>.</summary>
     public static T ViewModel<T>(
-        System.Func<T> factory,
+        Func<T> factory,
         object? key1,
         object? key2,
         object? key3,
         [CallerLineNumber] int line = 0,
         [CallerFilePath] string file = "")
-        where T : ComposeNet.ViewModel
+        where T : ViewModel
         => ViewModelCore(factory, new[] { key1, key2, key3 }, line, file);
 
     /// <summary>
@@ -1055,19 +1055,19 @@ public static class Compose
     /// an array.
     /// </summary>
     public static T ViewModelKeyed<T>(
-        System.Func<T> factory,
+        Func<T> factory,
         object?[] keys,
         [CallerLineNumber] int line = 0,
         [CallerFilePath] string file = "")
-        where T : ComposeNet.ViewModel
+        where T : ViewModel
         => ViewModelCore(factory, keys ?? throw new ArgumentNullException(nameof(keys)), line, file);
 
-    static T ViewModelCore<T>(System.Func<T> factory, object?[]? keys, int line, string file)
-        where T : ComposeNet.ViewModel
+    static T ViewModelCore<T>(Func<T> factory, object?[]? keys, int line, string file)
+        where T : ViewModel
     {
         ArgumentNullException.ThrowIfNull(factory);
         var composer = ComposeContext.Current
-            ?? throw new System.InvalidOperationException(
+            ?? throw new InvalidOperationException(
                 "Compose.ViewModel<T> must be called inside a composition (e.g. inside a SetContent body or a ComposableNode.Render override).");
 
         // Read LocalViewModelStoreOwner.current from the active
@@ -1079,13 +1079,13 @@ public static class Compose
         var ownerHandle = ComposeBridges.LocalViewModelStoreOwnerCurrent(composer);
         if (ownerHandle == IntPtr.Zero)
         {
-            throw new System.InvalidOperationException(
+            throw new InvalidOperationException(
                 "Compose.ViewModel<T> requires LocalViewModelStoreOwner to be set. " +
                 "Call from inside ComposeActivity.SetContent or a NavHost destination so the host owner is in scope.");
         }
         var owner = Java.Lang.Object.GetObject<AndroidX.Lifecycle.IViewModelStoreOwner>(
             ownerHandle, Android.Runtime.JniHandleOwnership.TransferLocalRef)
-            ?? throw new System.InvalidOperationException(
+            ?? throw new InvalidOperationException(
                 "LocalViewModelStoreOwner.current returned a non-IViewModelStoreOwner handle.");
 
         // Build the storage key. Source location + optional user
@@ -1114,7 +1114,7 @@ public static class Compose
         }
     }
 
-    static string BuildViewModelKey(System.Type type, string file, int line, object?[]? keys)
+    static string BuildViewModelKey(Type type, string file, int line, object?[]? keys)
     {
         var sb = new System.Text.StringBuilder("composenet:")
             .Append(type.FullName)
@@ -1137,7 +1137,7 @@ public static class Compose
     /// <see cref="MutableStateFlow{T}"/> seeded with
     /// <paramref name="initialValue"/>. The flow is cached for the
     /// life of the composition slot, just like
-    /// <see cref="Remember{T}(System.Func{T}, int, string)"/>.
+    /// <see cref="Remember{T}(Func{T}, int, string)"/>.
     /// </summary>
     /// <remarks>
     /// Composition-scoped flows are an alternative to view-model

@@ -1,5 +1,3 @@
-using ComposeNet;
-
 namespace ComposeNet.Samples.Jetchat;
 
 /// <summary>

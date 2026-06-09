@@ -27,7 +27,7 @@ public static class TextFieldCursorPlacementDemo
             {
                 new Text("Tap an emoji — it appends to the field and the caret moves to the end so the next keystroke lands after it.")
                 {
-                    FontWeight = ComposeNet.FontWeight.Medium,
+                    FontWeight = FontWeight.Medium,
                 },
                 new TextField(input)
                 {

@@ -10,7 +10,7 @@ namespace ComposeNet;
 /// <c>AndroidX.Compose.UI.IAlignment.Companion</c> singleton and caches
 /// the wrapper for the lifetime of the process.
 ///
-/// Use these with <see cref="Modifier.Align(ComposeNet.Alignment)"/>
+/// Use these with <see cref="Modifier.Align(Alignment)"/>
 /// inside a <see cref="Box"/> child to position the child within the
 /// parent. Use the nested <see cref="Vertical"/> singletons inside a
 /// <see cref="Row"/> and the nested <see cref="Horizontal"/> singletons
@@ -61,7 +61,7 @@ public sealed class Alignment : Java.Lang.Object
 
     /// <summary>
     /// Vertical-only alignment singletons (<c>Alignment.Vertical</c>) for
-    /// use with <see cref="Modifier.Align(ComposeNet.Alignment.Vertical)"/>
+    /// use with <see cref="Modifier.Align(Vertical)"/>
     /// inside a <see cref="Row"/>.
     /// </summary>
     public sealed class Vertical
@@ -81,7 +81,7 @@ public sealed class Alignment : Java.Lang.Object
 
     /// <summary>
     /// Horizontal-only alignment singletons (<c>Alignment.Horizontal</c>)
-    /// for use with <see cref="Modifier.Align(ComposeNet.Alignment.Horizontal)"/>
+    /// for use with <see cref="Modifier.Align(Horizontal)"/>
     /// inside a <see cref="Column"/>.
     /// </summary>
     public sealed class Horizontal

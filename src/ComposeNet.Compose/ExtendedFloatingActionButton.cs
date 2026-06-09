@@ -16,7 +16,7 @@ namespace ComposeNet;
 ///
 /// Both <see cref="Icon"/> and <see cref="Text"/> are required — the
 /// underlying Kotlin parameters have no default. Setting either to
-/// <c>null</c> throws <see cref="System.InvalidOperationException"/> at
+/// <c>null</c> throws <see cref="InvalidOperationException"/> at
 /// render time.
 /// </summary>
 public sealed partial class ExtendedFloatingActionButton;

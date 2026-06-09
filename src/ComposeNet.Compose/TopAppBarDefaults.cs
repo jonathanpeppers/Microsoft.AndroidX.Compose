@@ -15,7 +15,7 @@ namespace ComposeNet;
 /// <para>
 /// All factories are <c>@Composable</c> on the Kotlin side and must be
 /// invoked inside a composition (typically inside a
-/// <see cref="Compose.Remember{T}(System.Func{T}, int, string)"/>
+/// <see cref="Compose.Remember{T}(Func{T}, int, string)"/>
 /// lambda or directly inside a <see cref="ComposableNode.Render(IComposer)"/>
 /// override). Each call grabs the active composer from
 /// <see cref="ComposeContext"/> and wraps the bridge call in a stable
@@ -49,7 +49,7 @@ public static class TopAppBarDefaults
     /// <summary>
     /// Mirrors Kotlin's <c>rememberTopAppBarState(...)</c> — allocates
     /// a <see cref="TopAppBarState"/> via
-    /// <see cref="Compose.Remember{T}(System.Func{T}, int, string)"/>
+    /// <see cref="Compose.Remember{T}(Func{T}, int, string)"/>
     /// so the same instance survives recompositions, with the three
     /// initial offsets surfaced as named C# parameters with Kotlin's
     /// defaults.
@@ -91,7 +91,7 @@ public static class TopAppBarDefaults
     /// </summary>
     /// <param name="state">
     /// Caller-owned <see cref="TopAppBarState"/>; typically obtained
-    /// via <see cref="Compose.Remember{T}(System.Func{T}, int, string)"/>.
+    /// via <see cref="Compose.Remember{T}(Func{T}, int, string)"/>.
     /// </param>
     public static ITopAppBarScrollBehavior PinnedScrollBehavior(
         TopAppBarState state,
@@ -100,7 +100,7 @@ public static class TopAppBarDefaults
     {
         ArgumentNullException.ThrowIfNull(state);
         var composer = ComposeContext.Current
-            ?? throw new System.InvalidOperationException(
+            ?? throw new InvalidOperationException(
                 "TopAppBarDefaults factories must be called inside a composition (e.g. inside a SetContent body or a ComposableNode.Render override).");
 
         composer.StartReplaceableGroup(SourceLocationKey.Compute(line, file));
@@ -126,7 +126,7 @@ public static class TopAppBarDefaults
     /// </summary>
     /// <param name="state">
     /// Caller-owned <see cref="TopAppBarState"/>; typically obtained
-    /// via <see cref="Compose.Remember{T}(System.Func{T}, int, string)"/>.
+    /// via <see cref="Compose.Remember{T}(Func{T}, int, string)"/>.
     /// </param>
     public static ITopAppBarScrollBehavior EnterAlwaysScrollBehavior(
         TopAppBarState state,
@@ -145,7 +145,7 @@ public static class TopAppBarDefaults
     /// </summary>
     /// <param name="state">
     /// Caller-owned <see cref="TopAppBarState"/>; typically obtained
-    /// via <see cref="Compose.Remember{T}(System.Func{T}, int, string)"/>.
+    /// via <see cref="Compose.Remember{T}(Func{T}, int, string)"/>.
     /// </param>
     public static ITopAppBarScrollBehavior ExitUntilCollapsedScrollBehavior(
         TopAppBarState state,
@@ -155,11 +155,11 @@ public static class TopAppBarDefaults
 
     static ITopAppBarScrollBehavior Invoke(
         TopAppBarState state, int line, string file,
-        System.Func<TopAppBarState, IComposer, IntPtr> bridge)
+        Func<TopAppBarState, IComposer, nint> bridge)
     {
         ArgumentNullException.ThrowIfNull(state);
         var composer = ComposeContext.Current
-            ?? throw new System.InvalidOperationException(
+            ?? throw new InvalidOperationException(
                 "TopAppBarDefaults factories must be called inside a composition (e.g. inside a SetContent body or a ComposableNode.Render override).");
 
         composer.StartReplaceableGroup(SourceLocationKey.Compute(line, file));

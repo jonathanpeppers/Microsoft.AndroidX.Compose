@@ -3,14 +3,14 @@ using AndroidX.Compose.Foundation.Gestures;
 namespace ComposeNet;
 
 /// <summary>
-/// Caller-supplied state holder for <see cref="Modifier.Draggable(DraggableState, ComposeNet.Orientation, bool)"/>.
+/// Caller-supplied state holder for <see cref="Modifier.Draggable(DraggableState, Orientation, bool)"/>.
 /// Wraps the bound <c>androidx.compose.foundation.gestures.DraggableState</c>
 /// interface. The constructor calls the bound
 /// <c>DraggableKt.DraggableState(onDelta)</c> factory under the hood.
 /// </summary>
 /// <remarks>
 /// <para>
-/// Construct one inside a <see cref="Compose.Remember{T}(System.Func{T}, int, string)"/> callback so
+/// Construct one inside a <see cref="Compose.Remember{T}(Func{T}, int, string)"/> callback so
 /// the same state survives recompositions:
 /// <code>
 /// var offset = RememberSaveable(() =&gt; new MutableNumberState&lt;float&gt;(0f));
@@ -25,7 +25,7 @@ namespace ComposeNet;
 /// </para>
 /// <para>
 /// For per-recomposition delegate identity, prefer
-/// <see cref="Compose.RememberDraggableState(System.Action{float}, int, string)"/>
+/// <see cref="Compose.RememberDraggableState(Action{float}, int, string)"/>
 /// — Kotlin's <c>rememberDraggableState</c> wraps your callback in a
 /// <c>rememberUpdatedState</c> cell so the underlying Java
 /// <c>DraggableState</c> stays stable while the lambda can change.
@@ -43,18 +43,18 @@ public sealed class DraggableState
     /// composables read so the dragged content moves on the next
     /// recomposition.
     /// </summary>
-    public DraggableState(System.Action<float> onDelta)
+    public DraggableState(Action<float> onDelta)
     {
         ArgumentNullException.ThrowIfNull(onDelta);
         var jcw = new ComposableLambda1(boxed =>
         {
             var f = boxed as Java.Lang.Float
-                ?? throw new System.InvalidCastException(
+                ?? throw new InvalidCastException(
                     $"Expected java.lang.Float in DraggableState.onDelta; got '{boxed?.Class?.Name ?? "null"}'.");
             onDelta(f.FloatValue());
         });
         Jvm = DraggableKt.DraggableState(jcw)
-            ?? throw new System.InvalidOperationException(
+            ?? throw new InvalidOperationException(
                 "DraggableKt.DraggableState returned null.");
     }
 

@@ -13,7 +13,7 @@ public static class HorizontalCenteredHeroCarouselDemo
         Title:       "HorizontalCenteredHeroCarousel",
         Description: "Focused 'hero' item centered; neighbors peek from the edges.",
         Build:       () => new HorizontalCenteredHeroCarousel<int>(
-            items:       System.Linq.Enumerable.Range(0, 8).ToList(),
+            items: Enumerable.Range(0, 8).ToList(),
             itemContent: i => new Box
             {
                 Modifier.Companion

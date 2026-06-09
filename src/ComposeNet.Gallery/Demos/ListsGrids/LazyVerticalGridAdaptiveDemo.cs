@@ -13,7 +13,7 @@ public static class LazyVerticalGridAdaptiveDemo
         Description: "Column count chosen at layout time from a minimum cell width.",
         Build:       () => new LazyVerticalGrid<int>(
             columns:     GridCells.Adaptive(96f),
-            items:       System.Linq.Enumerable.Range(0, 40).ToList(),
+            items: Enumerable.Range(0, 40).ToList(),
             itemContent: i => new Card
             {
                 Modifier.Companion.Padding(4),

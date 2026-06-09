@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Android.Runtime;
 using Kotlin.Coroutines;
 using Kotlin.Coroutines.Intrinsics;
@@ -10,7 +11,7 @@ namespace ComposeNet;
 /// JCW for the suspend lambda Kotlin's <c>LaunchedEffect</c> expects:
 /// <c>Function2&lt;CoroutineScope, Continuation&lt;in Unit&gt;, Any?&gt;</c>.
 /// Bridges the Kotlin coroutine to a C# <c>async Task</c> body that
-/// accepts a <see cref="System.Threading.CancellationToken"/>.
+/// accepts a <see cref="CancellationToken"/>.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -20,8 +21,8 @@ namespace ComposeNet;
 /// <see cref="IntrinsicsKt.COROUTINE_SUSPENDED"/> sentinel and resume
 /// the supplied <see cref="IContinuation"/> later. This implementation
 /// always returns the sentinel and resumes from a
-/// <see cref="System.Threading.Tasks.Task.ContinueWith(System.Action{System.Threading.Tasks.Task})"/>
-/// once the C# <see cref="System.Threading.Tasks.Task"/> completes,
+/// <see cref="Task.ContinueWith(Action{Task})"/>
+/// once the C# <see cref="Task"/> completes,
 /// even when the body completes synchronously — that keeps the
 /// resume protocol uniform and lets Kotlin's dispatcher own thread
 /// affinity for the resume side.
@@ -39,7 +40,7 @@ namespace ComposeNet;
 /// <item><description>Once the resulting Task completes (sync or async),
 /// resume the continuation with <c>Unit</c> on success /
 /// <c>Result.Failure(throwable)</c> on fault. An
-/// <see cref="System.Threading.Interlocked.CompareExchange{T}(ref T, T, T)"/>
+/// <see cref="Interlocked.CompareExchange{T}(ref T, T, T)"/>
 /// once-gate keeps the resume from firing twice if the Job is
 /// cancelled while the ContinueWith is still racing.</description></item>
 /// </list>
@@ -47,10 +48,10 @@ namespace ComposeNet;
 [Register("composenet/compose/LaunchedEffectBody")]
 internal sealed class LaunchedEffectBody : Java.Lang.Object, IFunction2
 {
-    readonly System.Func<System.Threading.CancellationToken, System.Threading.Tasks.Task> _body;
+    readonly Func<CancellationToken, Task> _body;
 
     public LaunchedEffectBody(
-        System.Func<System.Threading.CancellationToken, System.Threading.Tasks.Task> body)
+        Func<CancellationToken, Task> body)
     {
         _body = body;
     }
@@ -67,7 +68,7 @@ internal sealed class LaunchedEffectBody : Java.Lang.Object, IFunction2
         // cache and synthesizes an interface peer from the raw handle,
         // which is exactly what we need.
         if (p1 is null)
-            throw new System.InvalidOperationException(
+            throw new InvalidOperationException(
                 "LaunchedEffect Invoke received a null Continuation in slot 1");
 
         IContinuation continuation;
@@ -75,15 +76,15 @@ internal sealed class LaunchedEffectBody : Java.Lang.Object, IFunction2
         {
             continuation = p1.JavaCast<IContinuation>();
         }
-        catch (System.Exception ex)
+        catch (Exception ex)
         {
-            throw new System.InvalidOperationException(
+            throw new InvalidOperationException(
                 "LaunchedEffect Invoke could not project slot 1 ("
                 + (p1.Class?.Name ?? "<unknown>")
                 + ") as kotlin.coroutines.Continuation", ex);
         }
 
-        var cts = new System.Threading.CancellationTokenSource();
+        var cts = new CancellationTokenSource();
         var resumed = new ResumeOnceGate();
 
         // Bind the Job's cancellation → our CTS so the user's Task can
@@ -91,27 +92,27 @@ internal sealed class LaunchedEffectBody : Java.Lang.Object, IFunction2
         // The IDisposableHandle is held strongly through `state` below
         // so it doesn't get yanked by GC before completion.
         var handler = new JobCompletionHandler(cts);
-        Xamarin.KotlinX.Coroutines.IDisposableHandle? completionRegistration = null;
+        IDisposableHandle? completionRegistration = null;
         try
         {
             var job = JobKt.GetJob(continuation.Context);
             completionRegistration = job.InvokeOnCompletion(
                 onCancelling: true, invokeImmediately: true, handler);
         }
-        catch (System.Exception ex)
+        catch (Exception ex)
         {
             // Without a Job in the context we can't wire cancellation
             // — but the user's Task can still run. Log and continue.
-            System.Diagnostics.Debug.WriteLine(
+            Debug.WriteLine(
                 "ComposeNet.LaunchedEffect: failed to register Job completion handler: " + ex);
         }
 
-        System.Threading.Tasks.Task task;
+        Task task;
         try
         {
-            task = _body(cts.Token) ?? System.Threading.Tasks.Task.CompletedTask;
+            task = _body(cts.Token) ?? Task.CompletedTask;
         }
-        catch (System.Exception ex)
+        catch (Exception ex)
         {
             // Synchronous fault from the body (rare — Func<T, Task> bodies
             // typically wrap their work in async). Throw a Java
@@ -141,9 +142,9 @@ internal sealed class LaunchedEffectBody : Java.Lang.Object, IFunction2
                 c.Resume(t);
             },
             ctx,
-            System.Threading.CancellationToken.None,
-            System.Threading.Tasks.TaskContinuationOptions.None,
-            System.Threading.Tasks.TaskScheduler.Default);
+            CancellationToken.None,
+            TaskContinuationOptions.None,
+            TaskScheduler.Default);
 
         return IntrinsicsKt.COROUTINE_SUSPENDED;
     }
@@ -153,16 +154,16 @@ internal sealed class LaunchedEffectBody : Java.Lang.Object, IFunction2
     sealed class ResumeContext
     {
         readonly IContinuation _continuation;
-        readonly System.Threading.CancellationTokenSource _cts;
+        readonly CancellationTokenSource _cts;
         readonly JobCompletionHandler _handler;
-        readonly Xamarin.KotlinX.Coroutines.IDisposableHandle? _completionRegistration;
+        readonly IDisposableHandle? _completionRegistration;
         readonly ResumeOnceGate _gate;
 
         public ResumeContext(
             IContinuation continuation,
-            System.Threading.CancellationTokenSource cts,
+            CancellationTokenSource cts,
             JobCompletionHandler handler,
-            Xamarin.KotlinX.Coroutines.IDisposableHandle? completionRegistration,
+            IDisposableHandle? completionRegistration,
             ResumeOnceGate gate)
         {
             _continuation = continuation;
@@ -172,7 +173,7 @@ internal sealed class LaunchedEffectBody : Java.Lang.Object, IFunction2
             _gate = gate;
         }
 
-        public void Resume(System.Threading.Tasks.Task t)
+        public void Resume(Task t)
         {
             if (!_gate.TryEnter())
                 return;
@@ -183,7 +184,7 @@ internal sealed class LaunchedEffectBody : Java.Lang.Object, IFunction2
                 if (t.IsFaulted)
                 {
                     var inner = t.Exception?.GetBaseException()
-                        ?? new System.Exception("LaunchedEffect Task faulted with no exception");
+                        ?? new Exception("LaunchedEffect Task faulted with no exception");
                     var throwable = ToThrowable(inner);
                     result = KotlinResult.CreateFailure(throwable);
                 }
@@ -201,20 +202,20 @@ internal sealed class LaunchedEffectBody : Java.Lang.Object, IFunction2
                 }
                 else
                 {
-                    result = global::Kotlin.Unit.Instance!;
+                    result = Kotlin.Unit.Instance!;
                 }
 
                 try
                 {
                     _continuation.ResumeWith(result);
                 }
-                catch (System.Exception ex)
+                catch (Exception ex)
                 {
                     // ResumeWith on an already-cancelled continuation
                     // may throw IllegalStateException from Kotlin's
                     // dispatched continuation impl. Log and swallow —
                     // there's no caller to surface this to.
-                    System.Diagnostics.Debug.WriteLine(
+                    Debug.WriteLine(
                         "ComposeNet.LaunchedEffect: continuation resume failed: " + ex);
                 }
             }
@@ -225,15 +226,15 @@ internal sealed class LaunchedEffectBody : Java.Lang.Object, IFunction2
                 // Don't dispose _handler — Kotlin's job machinery may
                 // still hold a reference to it briefly. Let GC reclaim
                 // the JCW once Kotlin drops it.
-                System.GC.KeepAlive(_handler);
+                GC.KeepAlive(_handler);
             }
         }
 
-        static Java.Lang.Throwable ToThrowable(System.Exception ex) =>
+        static Java.Lang.Throwable ToThrowable(Exception ex) =>
             ex switch
             {
                 Java.Lang.Throwable th => th,
-                System.OperationCanceledException =>
+                OperationCanceledException =>
                     new Java.Util.Concurrent.CancellationException(ex.Message ?? "cancelled"),
                 _ => new Java.Lang.RuntimeException(ex.GetType().Name + ": " + ex.Message),
             };
@@ -243,6 +244,6 @@ internal sealed class LaunchedEffectBody : Java.Lang.Object, IFunction2
     {
         int _state; // 0 = pending, 1 = resumed
         public bool TryEnter() =>
-            System.Threading.Interlocked.CompareExchange(ref _state, 1, 0) == 0;
+            Interlocked.CompareExchange(ref _state, 1, 0) == 0;
     }
 }

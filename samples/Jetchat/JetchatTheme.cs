@@ -1,5 +1,4 @@
 using AndroidX.Compose.Material3;
-using ComposeNet;
 
 namespace ComposeNet.Samples.Jetchat;
 

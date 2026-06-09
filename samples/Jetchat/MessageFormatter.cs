@@ -1,7 +1,5 @@
-using System;
 using System.Text.RegularExpressions;
 using AndroidX.Compose.Material3;
-using ComposeNet;
 
 namespace ComposeNet.Samples.Jetchat;
 

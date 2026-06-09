@@ -40,13 +40,13 @@ public sealed class Row : ComposableContainer
     /// or <see cref="Arrangement.SpacedBy(int)"/>). Passing a
     /// vertical-only arrangement (<see cref="Arrangement.Top"/>,
     /// <see cref="Arrangement.Bottom"/>) throws
-    /// <see cref="System.ArgumentException"/>.
+    /// <see cref="ArgumentException"/>.
     /// </param>
     public Row(Arrangement? horizontalArrangement)
     {
         if (horizontalArrangement is not null && horizontalArrangement.Horizontal is null)
         {
-            throw new System.ArgumentException(
+            throw new ArgumentException(
                 $"{nameof(horizontalArrangement)} must wrap a horizontal " +
                 $"or horizontal-or-vertical Compose Arrangement; got a " +
                 $"vertical-only value (e.g. Arrangement.Top / Arrangement.Bottom).",

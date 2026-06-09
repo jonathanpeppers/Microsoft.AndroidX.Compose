@@ -1,5 +1,3 @@
-using System;
-using System.Collections.Generic;
 using AndroidX.Compose.Material3.Carousel;
 using AndroidX.Compose.Runtime;
 using Kotlin.Jvm.Functions;

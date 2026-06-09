@@ -1,12 +1,10 @@
-using System;
-using System.Collections.Generic;
 
 namespace ComposeNet;
 
 /// <summary>
 /// Mutable, snapshot-backed observable value — the C# parity of
 /// Kotlin's <c>kotlinx.coroutines.flow.MutableStateFlow&lt;T&gt;</c>.
-/// Designed to live on a <see cref="ComposeNet.ViewModel"/> and be
+/// Designed to live on a <see cref="ViewModel"/> and be
 /// observed from composables via
 /// <see cref="StateFlowExtensions.CollectAsStateWithLifecycle{T}(IStateFlow{T})"/>.
 /// </summary>

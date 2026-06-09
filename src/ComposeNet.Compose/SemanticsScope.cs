@@ -2,7 +2,7 @@ namespace ComposeNet;
 
 /// <summary>
 /// Fluent receiver passed to
-/// <see cref="Modifier.Semantics(System.Action{SemanticsScope})"/> and
+/// <see cref="Modifier.Semantics(Action{SemanticsScope})"/> and
 /// its overloads. Mirrors Kotlin's
 /// <c>androidx.compose.ui.semantics.SemanticsPropertyReceiver</c> —
 /// the lambda-receiver type Kotlin code sees as
@@ -27,38 +27,38 @@ namespace ComposeNet;
 /// the JNI handle that's live for that call. After the user's
 /// <c>Action&lt;SemanticsScope&gt;</c> returns the scope is
 /// invalidated; capturing it and calling a method later throws
-/// <see cref="System.ObjectDisposedException"/>.
+/// <see cref="ObjectDisposedException"/>.
 /// </summary>
 public sealed class SemanticsScope
 {
-    System.IntPtr _receiver;
+    IntPtr _receiver;
     readonly int _threadId;
     bool _active;
 
-    internal SemanticsScope(System.IntPtr receiver)
+    internal SemanticsScope(IntPtr receiver)
     {
         _receiver = receiver;
-        _threadId = System.Environment.CurrentManagedThreadId;
+        _threadId = Environment.CurrentManagedThreadId;
         _active = true;
     }
 
     internal void Invalidate()
     {
         _active = false;
-        _receiver = System.IntPtr.Zero;
+        _receiver = IntPtr.Zero;
     }
 
-    System.IntPtr Handle
+    IntPtr Handle
     {
         get
         {
             if (!_active)
-                throw new System.ObjectDisposedException(nameof(SemanticsScope),
+                throw new ObjectDisposedException(nameof(SemanticsScope),
                     "SemanticsScope can only be used inside the Action<SemanticsScope> " +
                     "callback passed to Modifier.Semantics(...) / ClearAndSetSemantics(...). " +
                     "Capturing the scope and calling a method later is not supported.");
-            if (System.Environment.CurrentManagedThreadId != _threadId)
-                throw new System.InvalidOperationException(
+            if (Environment.CurrentManagedThreadId != _threadId)
+                throw new InvalidOperationException(
                     "SemanticsScope must be used on the same managed thread that received it. " +
                     "Compose invokes the builder callback synchronously on the composition thread; " +
                     "do not dispatch SemanticsScope calls to a Task / Thread / Dispatcher.");
@@ -141,7 +141,7 @@ public sealed class SemanticsScope
     /// the action from the a11y menu. Must return whether the action
     /// was handled.</param>
     /// <returns>This scope, to chain further calls.</returns>
-    public SemanticsScope OnClick(string? label, System.Func<bool> action)
+    public SemanticsScope OnClick(string? label, Func<bool> action)
     {
         ArgumentNullException.ThrowIfNull(action);
         var f0 = new ObjectFunction0(() => action()
@@ -153,7 +153,7 @@ public sealed class SemanticsScope
 
     /// <summary>
     /// Convenience overload of
-    /// <see cref="OnClick(string?, System.Func{bool})"/> that always
+    /// <see cref="OnClick(string?, Func{bool})"/> that always
     /// reports the action as handled (returns <c>true</c>). Use when
     /// you don't need to defer back to the system's default click.
     /// </summary>
@@ -161,7 +161,7 @@ public sealed class SemanticsScope
     /// <param name="action">Callback invoked when the user triggers
     /// the action.</param>
     /// <returns>This scope, to chain further calls.</returns>
-    public SemanticsScope OnClick(string? label, System.Action action)
+    public SemanticsScope OnClick(string? label, Action action)
     {
         ArgumentNullException.ThrowIfNull(action);
         return OnClick(label, () => { action(); return true; });
@@ -169,19 +169,19 @@ public sealed class SemanticsScope
 
     /// <summary>
     /// Label-less overload of
-    /// <see cref="OnClick(string?, System.Func{bool})"/> — registers
+    /// <see cref="OnClick(string?, Func{bool})"/> — registers
     /// the action with the platform-default label ("activate").
     /// </summary>
     /// <param name="action">Callback returning whether the action was handled.</param>
     /// <returns>This scope, to chain further calls.</returns>
-    public SemanticsScope OnClick(System.Func<bool> action) => OnClick(label: null, action);
+    public SemanticsScope OnClick(Func<bool> action) => OnClick(label: null, action);
 
     /// <summary>
-    /// Label-less <see cref="System.Action"/> overload of
-    /// <see cref="OnClick(string?, System.Func{bool})"/> — always
+    /// Label-less <see cref="Action"/> overload of
+    /// <see cref="OnClick(string?, Func{bool})"/> — always
     /// reports the action as handled.
     /// </summary>
     /// <param name="action">Callback invoked when the user triggers the action.</param>
     /// <returns>This scope, to chain further calls.</returns>
-    public SemanticsScope OnClick(System.Action action) => OnClick(label: null, action);
+    public SemanticsScope OnClick(Action action) => OnClick(label: null, action);
 }

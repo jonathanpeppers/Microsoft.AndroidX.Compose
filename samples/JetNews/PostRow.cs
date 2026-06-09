@@ -3,7 +3,7 @@ namespace ComposeNet.Samples.JetNews;
 /// <summary>
 /// Discriminator for rows on the article screen — the hero card plus
 /// one row per paragraph, flattened into the body
-/// <see cref="ComposeNet.LazyColumn{T}"/>.
+/// <see cref="LazyColumn{T}"/>.
 /// </summary>
 public abstract record PostRow
 {

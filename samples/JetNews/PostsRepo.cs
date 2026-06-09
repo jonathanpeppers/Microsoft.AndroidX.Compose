@@ -1,6 +1,3 @@
-using System.Collections.Generic;
-using ComposeNet;
-
 namespace ComposeNet.Samples.JetNews;
 
 /// <summary>

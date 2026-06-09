@@ -1,5 +1,3 @@
-using System;
-using System.Collections.Generic;
 using Android.Runtime;
 using AndroidX.Compose.Foundation.Lazy;
 using AndroidX.Compose.Foundation.Layout;

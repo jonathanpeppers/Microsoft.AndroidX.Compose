@@ -1,4 +1,3 @@
-using System;
 using AndroidX.Compose.Runtime;
 
 namespace ComposeNet;
@@ -112,7 +111,7 @@ public sealed class CompositionLocal<T>
     /// Ambient form of <see cref="GetCurrent(IComposer)"/> that
     /// resolves the active composer from
     /// <c>ComposeContext.Current</c>. Convenient inside lambdas
-    /// passed to wrappers like <see cref="Compose.Remember{T}(System.Func{T}, int, string)"/>
+    /// passed to wrappers like <see cref="Compose.Remember{T}(Func{T}, int, string)"/>
     /// that already run under a pushed composer; throws when called
     /// outside of a composition pass.
     /// </summary>

@@ -1,5 +1,3 @@
-using System;
-using System.Collections.Generic;
 using AndroidX.Compose.Foundation.Pager;
 using AndroidX.Compose.Runtime;
 using Kotlin.Jvm.Functions;

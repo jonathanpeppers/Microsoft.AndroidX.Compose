@@ -15,17 +15,17 @@ namespace ComposeNet;
 /// <remarks>
 /// <para>
 /// Every method on this class is itself <c>@Composable</c>: it must be called
-/// inside a composition pass — that is, from a <see cref="ComposableNode.Render(AndroidX.Compose.Runtime.IComposer)"/>
+/// inside a composition pass — that is, from a <see cref="ComposableNode.Render(IComposer)"/>
 /// override, a <see cref="ComposableLambda2"/> / <see cref="ComposableLambda3"/> /
 /// <see cref="ComposableLambda4"/> body, or any helper composable reached from one
 /// of those. The active <see cref="IComposer"/> is read from
 /// <see cref="ComposeContext"/> automatically, so callers don't need to thread
 /// <c>composer</c> through their own signatures — exactly the ergonomics
-/// <see cref="Compose.Remember{T}(System.Func{T}, int, string)"/> provides.
+/// <see cref="Compose.Remember{T}(Func{T}, int, string)"/> provides.
 /// </para>
 /// <para>
 /// Calling any of these outside a composition throws
-/// <see cref="System.InvalidOperationException"/>.
+/// <see cref="InvalidOperationException"/>.
 /// </para>
 /// <para>
 /// The Kotlin originals are tagged <c>@ReadOnlyComposable</c>: the result is
@@ -227,13 +227,13 @@ public static class Resources
         var composer = RequireComposer(nameof(PainterResource));
         IntPtr handle = ComposeBridges.PainterResource(id, composer);
         return Java.Lang.Object.GetObject<Painter>(handle, JniHandleOwnership.TransferLocalRef)
-            ?? throw new System.InvalidOperationException(
+            ?? throw new InvalidOperationException(
                 $"painterResource({id}) returned a null Painter handle.");
     }
 
     static IComposer RequireComposer(string memberName)
         => ComposeContext.Current
-            ?? throw new System.InvalidOperationException(
+            ?? throw new InvalidOperationException(
                 $"Resources.{memberName} must be called inside a composition (e.g. inside a SetContent body or a ComposableNode.Render override).");
 
     // Convert a C# format-args array into a Java.Lang.Object[] suitable for

@@ -23,10 +23,10 @@ public static class SearchBarPairDemo
             var input = Compose.Remember(() => new SearchBarTextFieldState());
             var query = Compose.Remember(() => new MutableState<string>(""));
 
-            var matches = System.Array.FindAll(
+            var matches = Array.FindAll(
                 Fruits,
                 f => string.IsNullOrEmpty(query.Value)
-                     || f.Contains(query.Value, System.StringComparison.OrdinalIgnoreCase));
+                     || f.Contains(query.Value, StringComparison.OrdinalIgnoreCase));
 
             var expanded = new ExpandedFullScreenSearchBar(state: state)
             {

@@ -5,7 +5,7 @@ namespace ComposeNet.Gallery;
 
 /// <summary>
 /// The gallery's only activity. Hosts the entire UI under a
-/// <see cref="ComposeActivity.SetContent(System.Func{ComposableNode})"/>
+/// <see cref="ComposeActivity.SetContent(Func{ComposableNode})"/>
 /// call into <see cref="GalleryApp.Build"/> — there's no MVVM, no
 /// fragment graph, no XML layout pipeline.
 /// </summary>

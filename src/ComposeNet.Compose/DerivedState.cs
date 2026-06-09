@@ -23,7 +23,7 @@ namespace ComposeNet;
 /// reads — only re-runs when one of the state values it read changes.
 /// </summary>
 /// <remarks>
-/// Use <see cref="Compose.DerivedStateOf{T}(System.Func{T})"/> to
+/// Use <see cref="Compose.DerivedStateOf{T}(Func{T})"/> to
 /// build instances; the constructor is internal because the wrapped
 /// <c>IState</c> must come from a Kotlin <c>derivedStateOf</c> call
 /// to participate correctly in Compose's snapshot system.

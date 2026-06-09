@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 
 namespace ComposeNet.Samples.Reply;
 
@@ -22,15 +21,15 @@ public sealed class Email
     {
         Id          = id;
         Sender      = sender;
-        Recipients  = recipients  ?? System.Array.Empty<Account>();
+        Recipients  = recipients  ?? Array.Empty<Account>();
         Subject     = subject;
         Body        = body;
-        Attachments = attachments ?? System.Array.Empty<EmailAttachment>();
+        Attachments = attachments ?? Array.Empty<EmailAttachment>();
         IsImportant = isImportant;
         IsStarred   = isStarred;
         Mailbox     = mailbox;
         CreatedAt   = createdAt;
-        Threads     = threads     ?? System.Array.Empty<Email>();
+        Threads     = threads     ?? Array.Empty<Email>();
     }
 
     /// <summary>Stable identity used by <c>LazyColumn</c> keys.</summary>

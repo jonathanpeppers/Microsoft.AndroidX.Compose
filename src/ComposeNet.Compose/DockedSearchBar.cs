@@ -7,12 +7,12 @@ namespace ComposeNet;
 /// class:
 /// <list type="bullet">
 ///   <item><description>
-///     <see cref="DockedSearchBar(bool, System.Action{bool})"/> — the
+///     <see cref="DockedSearchBar(bool, Action{bool})"/> — the
 ///     boolean-state variant (M3 1.2+ form: caller supplies an
 ///     <see cref="InputField"/> slot and toggles <c>expanded</c>).
 ///   </description></item>
 ///   <item><description>
-///     <see cref="DockedSearchBar(string, System.Action{string}, System.Action{string}, bool, System.Action{bool})"/>
+///     <see cref="DockedSearchBar(string, Action{string}, Action{string}, bool, Action{bool})"/>
 ///     — the even older query-based variant (M3 1.0 form: the input
 ///     field is built into the composable; caller supplies
 ///     <see cref="LeadingIcon"/>, <see cref="TrailingIcon"/>, and
@@ -31,21 +31,21 @@ namespace ComposeNet;
 /// inside the bar's <c>content</c> lambda for both overloads (the
 /// underlying Kotlin lambda receives a <c>ColumnScope</c>).
 /// </remarks>
-[System.Obsolete("Use the state-based SearchBar + ExpandedDockedSearchBar pair instead.")]
+[Obsolete("Use the state-based SearchBar + ExpandedDockedSearchBar pair instead.")]
 public sealed class DockedSearchBar : ComposableContainer
 {
     readonly bool _isQueryBased;
 
     // Boolean-state (M3 1.2+) ctor.
     readonly bool _expanded;
-    readonly System.Action<bool>? _onExpandedChange;
+    readonly Action<bool>? _onExpandedChange;
 
     // Query-based (M3 1.0) ctor.
     readonly string? _query;
-    readonly System.Action<string>? _onQueryChange;
-    readonly System.Action<string>? _onSearch;
+    readonly Action<string>? _onQueryChange;
+    readonly Action<string>? _onSearch;
     readonly bool _active;
-    readonly System.Action<bool>? _onActiveChange;
+    readonly Action<bool>? _onActiveChange;
 
     /// <summary>
     /// Constructs the boolean-state variant. The caller toggles
@@ -53,7 +53,7 @@ public sealed class DockedSearchBar : ComposableContainer
     /// <paramref name="onExpandedChange"/> and supplies an
     /// <see cref="InputField"/> slot.
     /// </summary>
-    public DockedSearchBar(bool expanded, System.Action<bool> onExpandedChange)
+    public DockedSearchBar(bool expanded, Action<bool> onExpandedChange)
     {
         _expanded = expanded;
         _onExpandedChange = onExpandedChange;
@@ -70,10 +70,10 @@ public sealed class DockedSearchBar : ComposableContainer
     /// </summary>
     public DockedSearchBar(
         string                query,
-        System.Action<string> onQueryChange,
-        System.Action<string> onSearch,
+        Action<string> onQueryChange,
+        Action<string> onSearch,
         bool                  active,
-        System.Action<bool>   onActiveChange)
+        Action<bool> onActiveChange)
     {
         _isQueryBased = true;
         _query = query;
@@ -119,7 +119,7 @@ public sealed class DockedSearchBar : ComposableContainer
     void RenderBooleanState(IComposer composer)
     {
         if (InputField is null)
-            throw new System.InvalidOperationException(
+            throw new InvalidOperationException(
                 "DockedSearchBar.InputField is required (the Kotlin parameter has no default).");
 
         var inputField       = ComposableLambdas.Wrap2(composer, c => InputField.Render(c));

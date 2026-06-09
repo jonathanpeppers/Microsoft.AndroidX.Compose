@@ -45,12 +45,12 @@ namespace ComposeNet;
 public sealed class Crossfade<T> : ComposableNode
 {
     readonly T _targetState;
-    readonly System.Func<T, ComposableNode> _content;
+    readonly Func<T, ComposableNode> _content;
 
     /// <summary>Build a Crossfade keyed on <paramref name="targetState"/> with per-state content.</summary>
     /// <param name="targetState">The state value that drives the fade.</param>
     /// <param name="content">Builds the <see cref="ComposableNode"/> to display for a given state value. Invoked once per active state during a crossfade transition.</param>
-    public Crossfade(T targetState, System.Func<T, ComposableNode> content)
+    public Crossfade(T targetState, Func<T, ComposableNode> content)
     {
         _targetState = targetState;
         ArgumentNullException.ThrowIfNull(content);

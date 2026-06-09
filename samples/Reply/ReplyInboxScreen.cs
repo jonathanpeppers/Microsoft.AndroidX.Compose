@@ -1,7 +1,3 @@
-using System.Collections.Generic;
-using AndroidX.Compose.Runtime;
-using ComposeNet;
-
 namespace ComposeNet.Samples.Reply;
 
 /// <summary>
@@ -17,8 +13,8 @@ public static class ReplyInboxScreen
         IReadOnlyList<Email>     emails,
         long                     openedEmailId,
         IReadOnlyList<long>      selectedEmailIds,
-        System.Action<long>      navigateToDetail,
-        System.Action<long>      toggleSelection) =>
+        Action<long> navigateToDetail,
+        Action<long> toggleSelection) =>
         new Box
         {
             Modifier.Companion.FillMaxSize(),

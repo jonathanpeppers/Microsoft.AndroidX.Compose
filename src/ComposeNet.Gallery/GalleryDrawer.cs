@@ -30,7 +30,7 @@ public sealed class GalleryDrawer : ComposableNode
             new Text("ComposeNet Gallery")
             {
                 FontSize   = 22,
-                FontWeight = ComposeNet.FontWeight.Medium,
+                FontWeight = FontWeight.Medium,
                 // M3 nav drawer header uses 28dp horizontal padding;
                 // the vertical padding gives it a clear gap from the
                 // status bar above and the first item below.

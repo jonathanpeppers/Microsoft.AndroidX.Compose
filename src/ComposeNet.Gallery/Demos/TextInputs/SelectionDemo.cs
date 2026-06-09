@@ -18,13 +18,13 @@ public static class SelectionDemo
         {
             new Text("1) Outside any SelectionContainer — long-press does nothing.")
             {
-                FontWeight = ComposeNet.FontWeight.Medium,
+                FontWeight = FontWeight.Medium,
             },
             new Text("Plain Text, not selectable."),
 
             new Text("2) Inside SelectionContainer — long-press to select, drag handles, copy.")
             {
-                FontWeight = ComposeNet.FontWeight.Medium,
+                FontWeight = FontWeight.Medium,
             },
             new SelectionContainer
             {
@@ -33,7 +33,7 @@ public static class SelectionDemo
 
             new Text("3) DisableSelection nested inside — the inner Text is skipped.")
             {
-                FontWeight = ComposeNet.FontWeight.Medium,
+                FontWeight = FontWeight.Medium,
             },
             new SelectionContainer
             {

@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-using System.Linq;
 using D = ComposeNet.Gallery.Demos;
 
 namespace ComposeNet.Gallery.Registry;
@@ -215,8 +213,8 @@ public static class Catalog
 
         var needle = query.Trim();
         return Demos.Where(d =>
-            d.Title.Contains(needle, System.StringComparison.OrdinalIgnoreCase) ||
-            d.Description.Contains(needle, System.StringComparison.OrdinalIgnoreCase) ||
-            (FindCategory(d.CategoryId)?.Title.Contains(needle, System.StringComparison.OrdinalIgnoreCase) ?? false));
+            d.Title.Contains(needle, StringComparison.OrdinalIgnoreCase) ||
+            d.Description.Contains(needle, StringComparison.OrdinalIgnoreCase) ||
+            (FindCategory(d.CategoryId)?.Title.Contains(needle, StringComparison.OrdinalIgnoreCase) ?? false));
     }
 }

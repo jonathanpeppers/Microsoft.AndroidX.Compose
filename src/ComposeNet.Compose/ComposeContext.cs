@@ -4,7 +4,7 @@ namespace ComposeNet;
 
 /// <summary>
 /// Holds the active <see cref="IComposer"/> for the current composition pass
-/// so APIs like <see cref="Compose.Remember{T}(System.Func{T}, int, string)"/> can reach it without every
+/// so APIs like <see cref="Compose.Remember{T}(Func{T}, int, string)"/> can reach it without every
 /// helper composable having to thread <c>composer</c> through its signature.
 ///
 /// Compose's composition runs synchronously on a single thread per pass, so
@@ -21,7 +21,7 @@ namespace ComposeNet;
 /// </summary>
 internal static class ComposeContext
 {
-    [System.ThreadStatic]
+    [ThreadStatic]
     static IComposer? t_current;
 
     /// <summary>The composer for the currently running composition pass on this thread, or <c>null</c> if not composing.</summary>
@@ -36,7 +36,7 @@ internal static class ComposeContext
     }
 
     /// <summary>Restores the previous composer on dispose. Used via <c>using var _ = ComposeContext.Push(composer);</c>.</summary>
-    public struct Scope : System.IDisposable
+    public struct Scope : IDisposable
     {
         readonly IComposer? _prev;
         internal Scope(IComposer? prev) => _prev = prev;

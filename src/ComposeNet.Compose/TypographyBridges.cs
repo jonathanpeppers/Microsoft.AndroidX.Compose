@@ -32,8 +32,8 @@ internal static partial class ComposeBridges
         "Landroidx/compose/ui/text/TextStyle;"  + // labelSmall
         "ILkotlin/jvm/internal/DefaultConstructorMarker;)V";
 
-    static System.IntPtr s_typographyCtor_class;
-    static System.IntPtr s_typographyCtor_method;
+    static IntPtr s_typographyCtor_class;
+    static IntPtr s_typographyCtor_method;
 
     /// <summary>
     /// Build a Material 3 <see cref="Typography"/> with per-slot
@@ -65,7 +65,7 @@ internal static partial class ComposeBridges
         AndroidX.Compose.UI.Text.TextStyle? labelSmall,
         int defaults)
     {
-        if (s_typographyCtor_method == System.IntPtr.Zero)
+        if (s_typographyCtor_method == IntPtr.Zero)
         {
             s_typographyCtor_class = JNIEnv.FindClass("androidx/compose/material3/Typography");
             s_typographyCtor_method = JNIEnv.GetMethodID(s_typographyCtor_class, "<init>", TypographyDefaultCtorSig);
@@ -90,9 +90,9 @@ internal static partial class ComposeBridges
             args[13] = new JValue(Handle(labelMedium));
             args[14] = new JValue(Handle(labelSmall));
             args[15] = new JValue(defaults);
-            args[16] = new JValue(System.IntPtr.Zero);
+            args[16] = new JValue(IntPtr.Zero);
 
-            System.IntPtr handle = JNIEnv.NewObject(s_typographyCtor_class, s_typographyCtor_method, args);
+            IntPtr handle = JNIEnv.NewObject(s_typographyCtor_class, s_typographyCtor_method, args);
             return Java.Lang.Object.GetObject<Typography>(handle, JniHandleOwnership.TransferLocalRef)!;
         }
         finally
@@ -101,24 +101,24 @@ internal static partial class ComposeBridges
             // backing global ref isn't released between the Handle()
             // reads above and JNIEnv.NewObject. The bridge owns this
             // responsibility — facade callers shouldn't have to.
-            System.GC.KeepAlive(displayLarge);
-            System.GC.KeepAlive(displayMedium);
-            System.GC.KeepAlive(displaySmall);
-            System.GC.KeepAlive(headlineLarge);
-            System.GC.KeepAlive(headlineMedium);
-            System.GC.KeepAlive(headlineSmall);
-            System.GC.KeepAlive(titleLarge);
-            System.GC.KeepAlive(titleMedium);
-            System.GC.KeepAlive(titleSmall);
-            System.GC.KeepAlive(bodyLarge);
-            System.GC.KeepAlive(bodyMedium);
-            System.GC.KeepAlive(bodySmall);
-            System.GC.KeepAlive(labelLarge);
-            System.GC.KeepAlive(labelMedium);
-            System.GC.KeepAlive(labelSmall);
+            GC.KeepAlive(displayLarge);
+            GC.KeepAlive(displayMedium);
+            GC.KeepAlive(displaySmall);
+            GC.KeepAlive(headlineLarge);
+            GC.KeepAlive(headlineMedium);
+            GC.KeepAlive(headlineSmall);
+            GC.KeepAlive(titleLarge);
+            GC.KeepAlive(titleMedium);
+            GC.KeepAlive(titleSmall);
+            GC.KeepAlive(bodyLarge);
+            GC.KeepAlive(bodyMedium);
+            GC.KeepAlive(bodySmall);
+            GC.KeepAlive(labelLarge);
+            GC.KeepAlive(labelMedium);
+            GC.KeepAlive(labelSmall);
         }
 
-        static System.IntPtr Handle(AndroidX.Compose.UI.Text.TextStyle? ts) =>
-            ts is null ? System.IntPtr.Zero : ((Java.Lang.Object)ts).Handle;
+        static IntPtr Handle(AndroidX.Compose.UI.Text.TextStyle? ts) =>
+            ts is null ? IntPtr.Zero : ((Java.Lang.Object)ts).Handle;
     }
 }

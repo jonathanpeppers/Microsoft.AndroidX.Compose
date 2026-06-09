@@ -26,7 +26,6 @@
 // `[ComposeDefaults<ButtonKt>("Button", "ButtonDefault")]` etc. and
 // this comment can be deleted.
 
-using AndroidX.Compose.Foundation.Layout;
 using AndroidX.Compose.Foundation.Lazy;
 using AndroidX.Compose.Foundation.Lazy.Grid;
 using AndroidX.Compose.Material3;

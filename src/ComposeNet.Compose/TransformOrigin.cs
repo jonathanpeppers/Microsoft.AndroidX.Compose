@@ -34,8 +34,8 @@ public static class TransformOrigin
     /// </summary>
     public static long Pack(float pivotFractionX, float pivotFractionY)
     {
-        long x = unchecked((uint)System.BitConverter.SingleToInt32Bits(pivotFractionX));
-        long y = unchecked((uint)System.BitConverter.SingleToInt32Bits(pivotFractionY));
+        long x = unchecked((uint)BitConverter.SingleToInt32Bits(pivotFractionX));
+        long y = unchecked((uint)BitConverter.SingleToInt32Bits(pivotFractionY));
         return (x << 32) | y;
     }
 }

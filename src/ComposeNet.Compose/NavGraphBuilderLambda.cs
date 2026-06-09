@@ -14,7 +14,7 @@ namespace ComposeNet;
 /// <c>startRestartGroup</c>/<c>endRestartGroup</c> machinery used by
 /// real composables and would corrupt the surrounding composition.
 ///
-/// <para>The body is a plain <see cref="System.Action{NavGraphBuilder}"/>
+/// <para>The body is a plain <see cref="Action{NavGraphBuilder}"/>
 /// that registers each route via Kotlin's <c>composable()</c> extension
 /// (routed through <c>ComposeBridges.NavGraphBuilderComposable</c>).
 /// </para>
@@ -22,9 +22,9 @@ namespace ComposeNet;
 [Register("composenet/compose/NavGraphBuilderLambda")]
 internal sealed class NavGraphBuilderLambda : Java.Lang.Object, IFunction1
 {
-    readonly System.Action<NavGraphBuilder> _body;
+    readonly Action<NavGraphBuilder> _body;
 
-    public NavGraphBuilderLambda(System.Action<NavGraphBuilder> body) => _body = body;
+    public NavGraphBuilderLambda(Action<NavGraphBuilder> body) => _body = body;
 
     // Kotlin Function1<NavGraphBuilder, Unit> contractually returns
     // Unit.INSTANCE — see ComposableLambda0/1 for the rationale.
@@ -33,6 +33,6 @@ internal sealed class NavGraphBuilderLambda : Java.Lang.Object, IFunction1
         ArgumentNullException.ThrowIfNull(p0);
         var graphBuilder = Android.Runtime.Extensions.JavaCast<NavGraphBuilder>(p0);
         _body(graphBuilder);
-        return global::Kotlin.Unit.Instance!;
+        return Kotlin.Unit.Instance!;
     }
 }

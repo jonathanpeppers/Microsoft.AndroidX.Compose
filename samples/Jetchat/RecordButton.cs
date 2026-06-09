@@ -1,6 +1,4 @@
-using System;
 using AndroidX.Compose.Material3;
-using ComposeNet;
 
 namespace ComposeNet.Samples.Jetchat;
 
@@ -83,7 +81,7 @@ public static class RecordButton
             float density   = Android.Content.Res.Resources.System!.DisplayMetrics!.Density;
             float threshold = SwipeToCancelThresholdDp * density;
             float offset    = swipeOffset.Value;
-            float alphaHint = System.MathF.Max(0f, 1f - System.MathF.Abs(offset) / threshold);
+            float alphaHint = MathF.Max(0f, 1f - MathF.Abs(offset) / threshold);
             int   mins      = seconds.Value / 60;
             int   secs      = seconds.Value % 60;
             string timer    = $"{mins:D2}:{secs:D2}";
@@ -99,7 +97,7 @@ public static class RecordButton
                     {
                         while (!ct.IsCancellationRequested)
                         {
-                            await System.Threading.Tasks.Task.Delay(1000, ct);
+                            await Task.Delay(1000, ct);
                             seconds.Value++;
                         }
                     }
@@ -110,14 +108,14 @@ public static class RecordButton
                 {
                     try
                     {
-                        long startMs = System.Environment.TickCount64;
+                        long startMs = Environment.TickCount64;
                         while (!ct.IsCancellationRequested)
                         {
-                            long ms = System.Environment.TickCount64 - startMs;
+                            long ms = Environment.TickCount64 - startMs;
                             float phase = (ms % PulseDurationMs) / (float)PulseDurationMs;
                             float tri = phase < 0.5f ? (1f - phase * 2f) : ((phase - 0.5f) * 2f);
                             pulse.Value = 0.2f + tri * 0.8f;
-                            await System.Threading.Tasks.Task.Delay(PulseFrameDelayMs, ct);
+                            await Task.Delay(PulseFrameDelayMs, ct);
                         }
                     }
                     catch (OperationCanceledException) { }

@@ -1,5 +1,4 @@
 using AndroidX.Compose.Material3;
-using ComposeNet;
 
 namespace ComposeNet.Samples.Jetchat;
 
@@ -23,8 +22,8 @@ public static class JetchatDrawer
         DrawerStateHolder    drawerState,
         ScrollState          scroll,
         ColorScheme          scheme,
-        System.Action<string> onChatClicked,
-        System.Action<string> onProfileClicked)
+        Action<string> onChatClicked,
+        Action<string> onProfileClicked)
     {
         var sheet = new ModalDrawerSheet { ContainerColor = new Color(scheme.Surface) };
         sheet.Add(new Column
@@ -83,7 +82,7 @@ public static class JetchatDrawer
         DrawerStateHolder    drawerState,
         string               channel,
         ColorScheme          scheme,
-        System.Action<string> onChatClicked)
+        Action<string> onChatClicked)
     {
         bool selected = selectedMenu.Value == channel;
         var modifier = Modifier.Companion
@@ -127,7 +126,7 @@ public static class JetchatDrawer
         string               userId,
         int                  avatarRes,
         ColorScheme          scheme,
-        System.Action<string> onProfileClicked)
+        Action<string> onProfileClicked)
     {
         bool selected = selectedMenu.Value == userId;
         var modifier = Modifier.Companion

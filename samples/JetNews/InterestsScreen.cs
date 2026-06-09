@@ -1,7 +1,3 @@
-using System.Collections.Generic;
-using AndroidX.Compose.Runtime;
-using ComposeNet;
-
 namespace ComposeNet.Samples.JetNews;
 
 /// <summary>
@@ -106,7 +102,7 @@ public static class InterestsScreen
             },
         };
 
-    static Row BuildToggleRow(string label, bool selected, System.Action onToggle) =>
+    static Row BuildToggleRow(string label, bool selected, Action onToggle) =>
         new()
         {
             Modifier.Companion

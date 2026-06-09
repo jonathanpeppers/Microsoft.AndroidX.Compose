@@ -1,4 +1,3 @@
-using Android.Runtime;
 using BindingLink = AndroidX.Compose.UI.Text.LinkAnnotation;
 using BindingTextLinkStyles = AndroidX.Compose.UI.Text.TextLinkStyles;
 
@@ -15,7 +14,7 @@ namespace ComposeNet;
 /// <remarks>
 /// Url annotations are handled by Compose itself — tapping opens the
 /// URL via the platform's <c>UriHandler</c>. Clickable annotations
-/// invoke the C# <see cref="System.Action{T}"/> the caller supplied
+/// invoke the C# <see cref="Action{T}"/> the caller supplied
 /// (e.g. to show a profile dialog for an <c>@mention</c>).
 /// </remarks>
 public sealed class LinkAnnotation
@@ -49,7 +48,7 @@ public sealed class LinkAnnotation
     /// <param name="onClick">Callback fired on tap. Receives <paramref name="tag"/>.</param>
     /// <param name="style">Optional default <see cref="SpanStyle"/> for
     /// the linked range.</param>
-    public static LinkAnnotation Clickable(string tag, System.Action<string> onClick, SpanStyle? style = null)
+    public static LinkAnnotation Clickable(string tag, Action<string> onClick, SpanStyle? style = null)
     {
         ArgumentNullException.ThrowIfNull(onClick);
         var styles   = style is null ? null : new BindingTextLinkStyles(style.Build(), null, null, null);

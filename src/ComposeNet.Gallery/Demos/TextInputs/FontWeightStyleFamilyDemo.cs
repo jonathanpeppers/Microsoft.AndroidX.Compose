@@ -13,14 +13,14 @@ public static class FontWeightStyleFamilyDemo
         Description: "Weight (Light…Black), italic FontStyle, and Serif/Monospace families.",
         Build:       () => new Column
         {
-            new Text("Light")     { FontWeight = ComposeNet.FontWeight.Light },
-            new Text("Normal")    { FontWeight = ComposeNet.FontWeight.Normal },
-            new Text("Medium")    { FontWeight = ComposeNet.FontWeight.Medium },
-            new Text("SemiBold")  { FontWeight = ComposeNet.FontWeight.SemiBold },
-            new Text("Bold")      { FontWeight = ComposeNet.FontWeight.Bold },
-            new Text("Black")     { FontWeight = ComposeNet.FontWeight.Black },
-            new Text("Italic")    { FontStyle  = ComposeNet.FontStyle.Italic },
-            new Text("Serif")     { FontFamily = ComposeNet.FontFamily.Serif },
-            new Text("Monospace") { FontFamily = ComposeNet.FontFamily.Monospace },
+            new Text("Light")     { FontWeight = FontWeight.Light },
+            new Text("Normal")    { FontWeight = FontWeight.Normal },
+            new Text("Medium")    { FontWeight = FontWeight.Medium },
+            new Text("SemiBold")  { FontWeight = FontWeight.SemiBold },
+            new Text("Bold")      { FontWeight = FontWeight.Bold },
+            new Text("Black")     { FontWeight = FontWeight.Black },
+            new Text("Italic")    { FontStyle  = FontStyle.Italic },
+            new Text("Serif")     { FontFamily = FontFamily.Serif },
+            new Text("Monospace") { FontFamily = FontFamily.Monospace },
         });
 }

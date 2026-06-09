@@ -11,16 +11,16 @@ namespace ComposeNet;
 /// </summary>
 internal static class RenderContext
 {
-    [System.ThreadStatic]
+    [ThreadStatic]
     static IntPtr s_scope;
 
-    [System.ThreadStatic]
+    [ThreadStatic]
     static ScopeKind s_scopeKind;
 
-    [System.ThreadStatic]
+    [ThreadStatic]
     static int s_rowChildIndex;
 
-    [System.ThreadStatic]
+    [ThreadStatic]
     static int s_rowChildCount;
 
     public static IntPtr CurrentScope => s_scope;
@@ -67,7 +67,7 @@ internal static class RenderContext
         return new RowFrame(prevIndex, prevCount);
     }
 
-    internal readonly struct ScopeFrame : System.IDisposable
+    internal readonly struct ScopeFrame : IDisposable
     {
         readonly IntPtr    _previousScope;
         readonly ScopeKind _previousKind;
@@ -83,7 +83,7 @@ internal static class RenderContext
         }
     }
 
-    internal readonly struct RowFrame : System.IDisposable
+    internal readonly struct RowFrame : IDisposable
     {
         readonly int _prevIndex;
         readonly int _prevCount;

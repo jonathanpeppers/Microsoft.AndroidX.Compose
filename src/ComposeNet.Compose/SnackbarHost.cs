@@ -4,7 +4,7 @@ namespace ComposeNet;
 
 /// <summary>
 /// Material 3 <c>SnackbarHost</c>. Anchors a <see cref="Snackbar"/>
-/// driven by a <see cref="ComposeNet.SnackbarHostState"/>. Typically
+/// driven by a <see cref="SnackbarHostState"/>. Typically
 /// dropped into <see cref="Scaffold.SnackbarHost"/>:
 /// <code>
 /// var hostState = Remember(() =&gt; new SnackbarHostState());
@@ -17,7 +17,7 @@ namespace ComposeNet;
 /// </code>
 /// </summary>
 /// <remarks>
-/// Triggering snackbars via <see cref="ComposeNet.SnackbarHostState"/>
+/// Triggering snackbars via <see cref="SnackbarHostState"/>
 /// requires Kotlin coroutines and isn't yet wired up in this binding.
 /// For most cases, render a <see cref="Snackbar"/> directly into the
 /// <see cref="Scaffold.SnackbarHost"/> slot, gated by a

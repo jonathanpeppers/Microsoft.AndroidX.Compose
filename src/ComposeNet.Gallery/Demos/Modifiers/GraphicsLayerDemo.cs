@@ -1,4 +1,3 @@
-using AndroidX.Compose.UI.Graphics;
 using ComposeNet.Gallery.Registry;
 
 namespace ComposeNet.Gallery.Demos.Modifiers;
@@ -44,7 +43,7 @@ public static class GraphicsLayerDemo
                             .Size(64)
                             .GraphicsLayer(
                                 rotationZ:       dragX.Value,
-                                alpha:           0.6f + 0.4f * System.MathF.Min(1f, System.MathF.Abs(dragX.Value) / 90f),
+                                alpha:           0.6f + 0.4f * MathF.Min(1f, MathF.Abs(dragX.Value) / 90f),
                                 transformOrigin: TransformOrigin.Pack(0f, 0f))
                             .Background(Color.FromRgb(0xAB, 0x47, 0xBC)),
                         new Text("⟲") { Modifier = Modifier.Companion.Padding(20) },

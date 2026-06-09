@@ -35,7 +35,7 @@ namespace ComposeNet;
 /// picks the right Kotlin factory. It's <i>not</i> guaranteed when the
 /// wrapper is built around a state produced elsewhere, such as the
 /// boxed <c>mutableStateOf(restoredValue, policy)</c> that
-/// <see cref="Compose.RememberSaveable{T}(System.Func{T}, int, string)"/> returns after a process
+/// <see cref="Compose.RememberSaveable{T}(Func{T}, int, string)"/> returns after a process
 /// death restore. The instance <c>_kind</c> field is probed from the
 /// supplied state once at construction so the <see cref="Value"/>
 /// getter/setter never attempts an invalid cast.

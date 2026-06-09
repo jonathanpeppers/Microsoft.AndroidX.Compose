@@ -5,7 +5,7 @@ namespace ComposeNet;
 
 /// <summary>
 /// Material 3 <c>DropdownMenuItem</c> — a single selectable row inside a
-/// <see cref="ComposeNet.DropdownMenu"/>. The <c>text</c> composable and
+/// <see cref="DropdownMenu"/>. The <c>text</c> composable and
 /// <c>onClick</c> callback are required (passed as constructor arguments).
 /// </summary>
 /// <remarks>
@@ -20,9 +20,9 @@ namespace ComposeNet;
 public sealed class DropdownMenuItem : ComposableNode
 {
     readonly ComposableNode _text;
-    readonly System.Action  _onClick;
+    readonly Action _onClick;
 
-    public DropdownMenuItem(ComposableNode text, System.Action onClick)
+    public DropdownMenuItem(ComposableNode text, Action onClick)
     {
         _text    = text;
         _onClick = onClick;

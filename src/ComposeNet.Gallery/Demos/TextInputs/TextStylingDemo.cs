@@ -16,18 +16,18 @@ public static class TextStylingDemo
             new Text("Large + Bold")
             {
                 FontSize   = 24,
-                FontWeight = ComposeNet.FontWeight.Bold,
+                FontWeight = FontWeight.Bold,
             },
             new Text("Medium underline")
             {
                 FontSize   = 16,
-                FontWeight = ComposeNet.FontWeight.Medium,
+                FontWeight = FontWeight.Medium,
                 Decoration = TextDecoration.Underline,
             },
             new Text("Light strikethrough")
             {
                 FontSize   = 14,
-                FontWeight = ComposeNet.FontWeight.Light,
+                FontWeight = FontWeight.Light,
                 Decoration = TextDecoration.LineThrough,
             },
             new Text("Wide letter spacing, taller lines — rendered glyphs visibly drift apart and rows breathe.")

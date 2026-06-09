@@ -4,10 +4,10 @@ namespace ComposeNet;
 
 /// <summary>
 /// Tree-syntax wrapper around
-/// <see cref="Compose.DisposableEffect(object?, System.Func{DisposableEffectScope, System.Action})"/>.
+/// <see cref="Compose.DisposableEffect(object?, Func{DisposableEffectScope, Action})"/>.
 /// Re-runs <c>Effect</c> on first composition and any time
 /// <c>Key1</c> / <c>Key2</c> / <c>Key3</c> changes; calls the cleanup
-/// <see cref="System.Action"/> on key change or when this node leaves
+/// <see cref="Action"/> on key change or when this node leaves
 /// the composition.
 /// </summary>
 /// <remarks>
@@ -23,12 +23,12 @@ public sealed class DisposableEffect : ComposableNode
 {
     readonly object? _key1, _key2, _key3;
     readonly int _keyCount;
-    readonly System.Func<DisposableEffectScope, System.Action> _effect;
+    readonly Func<DisposableEffectScope, Action> _effect;
 
     /// <summary>Single-key form.</summary>
     public DisposableEffect(
         object? key1,
-        System.Func<DisposableEffectScope, System.Action> effect)
+        Func<DisposableEffectScope, Action> effect)
     {
         ArgumentNullException.ThrowIfNull(effect);
         _key1 = key1; _keyCount = 1; _effect = effect;
@@ -38,7 +38,7 @@ public sealed class DisposableEffect : ComposableNode
     public DisposableEffect(
         object? key1,
         object? key2,
-        System.Func<DisposableEffectScope, System.Action> effect)
+        Func<DisposableEffectScope, Action> effect)
     {
         ArgumentNullException.ThrowIfNull(effect);
         _key1 = key1; _key2 = key2; _keyCount = 2; _effect = effect;
@@ -49,7 +49,7 @@ public sealed class DisposableEffect : ComposableNode
         object? key1,
         object? key2,
         object? key3,
-        System.Func<DisposableEffectScope, System.Action> effect)
+        Func<DisposableEffectScope, Action> effect)
     {
         ArgumentNullException.ThrowIfNull(effect);
         _key1 = key1; _key2 = key2; _key3 = key3; _keyCount = 3; _effect = effect;

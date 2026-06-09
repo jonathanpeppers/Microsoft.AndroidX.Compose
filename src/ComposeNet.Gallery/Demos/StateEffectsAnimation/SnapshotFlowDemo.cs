@@ -34,7 +34,7 @@ public static class SnapshotFlowDemo
                             seen.Value++;
                         }
                     }
-                    catch (System.OperationCanceledException) { }
+                    catch (OperationCanceledException) { }
                 }),
 
                 new Button(onClick: () => counter++) { new Text("+1") },

@@ -7,7 +7,7 @@ namespace ComposeNet.Gallery;
 /// </summary>
 /// <remarks>
 /// Designed to be the sole composition rendered by
-/// <see cref="ComposeActivity.SetContent(System.Func{ComposableNode})"/>:
+/// <see cref="ComposeActivity.SetContent(Func{ComposableNode})"/>:
 /// <code>
 /// SetContent(() => GalleryApp.Build());
 /// </code>

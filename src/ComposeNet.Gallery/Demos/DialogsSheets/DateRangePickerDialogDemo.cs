@@ -26,7 +26,7 @@ public static class DateRangePickerDialogDemo
                         ConfirmButton = new Button(onClick: () =>
                         {
                             static string Fmt(long? ms) => ms is long m
-                                ? System.DateTimeOffset.FromUnixTimeMilliseconds(m).UtcDateTime.ToString("yyyy-MM-dd")
+                                ? DateTimeOffset.FromUnixTimeMilliseconds(m).UtcDateTime.ToString("yyyy-MM-dd")
                                 : "(none)";
                             picked.Value =
                                 $"{Fmt(state.SelectedStartDateMillis)} → {Fmt(state.SelectedEndDateMillis)}";

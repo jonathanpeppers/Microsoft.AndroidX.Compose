@@ -17,7 +17,7 @@ namespace ComposeNet;
 public sealed class OutlinedTextField : ComposableNode
 {
     readonly string?                       _value;
-    readonly System.Action<string>?        _onValueChange;
+    readonly Action<string>?        _onValueChange;
     readonly MutableState<TextFieldValue>? _tfvState;
 
     /// <summary>Floating label (e.g. <c>new Text("Email")</c>).</summary>
@@ -48,7 +48,7 @@ public sealed class OutlinedTextField : ComposableNode
     public int?            MinLines       { get; set; }
 
     /// <summary>String-overload ctor — pass the current value and a callback.</summary>
-    public OutlinedTextField(string value, System.Action<string> onValueChange)
+    public OutlinedTextField(string value, Action<string> onValueChange)
     {
         _value = value;
         _onValueChange = onValueChange;
@@ -104,7 +104,7 @@ public sealed class OutlinedTextField : ComposableNode
     {
         var state = _tfvState!;
         var current = state.Value
-            ?? throw new System.InvalidOperationException(
+            ?? throw new InvalidOperationException(
                 $"{nameof(OutlinedTextField)}: MutableState<TextFieldValue>.Value is null. " +
                 $"Seed with {nameof(Compose)}.{nameof(Compose.NewTextFieldValue)}() before first render.");
 

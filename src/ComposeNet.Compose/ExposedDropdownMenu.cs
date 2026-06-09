@@ -7,6 +7,6 @@ namespace ComposeNet;
 /// <see cref="ExposedDropdownMenuBox"/>'s scope handle from
 /// <see cref="RenderContext"/>; rendering this outside an
 /// <see cref="ExposedDropdownMenuBox"/> throws
-/// <see cref="System.InvalidOperationException"/>.
+/// <see cref="InvalidOperationException"/>.
 /// </summary>
 public sealed partial class ExposedDropdownMenu;

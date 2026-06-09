@@ -26,7 +26,7 @@ public sealed class BottomSheetScaffold : ComposableContainer
     public override void Render(IComposer composer)
     {
         if (SheetContent is null)
-            throw new System.InvalidOperationException(
+            throw new InvalidOperationException(
                 "BottomSheetScaffold.SheetContent is required.");
 
         // Bound C# call — RememberBottomSheetScaffoldState is NOT stripped.

@@ -97,7 +97,7 @@ public static class Transitions
     /// <c>spring(stiffness = StiffnessMediumLow, visibilityThreshold = IntOffset.VisibilityThreshold)</c>
     /// — the binding doesn't expose the offset-typed default, so the same
     /// float-typed spring is substituted.</param>
-    public static EnterTransition SlideInHorizontally(System.Func<int, int>? initialOffsetX = null, IFiniteAnimationSpec? animationSpec = null) =>
+    public static EnterTransition SlideInHorizontally(Func<int, int>? initialOffsetX = null, IFiniteAnimationSpec? animationSpec = null) =>
         EnterExitTransitionKt.SlideInHorizontally(animationSpec ?? DefaultSpec(), new IntCallback(initialOffsetX ?? (w => -w / 2)));
 
     /// <summary>
@@ -109,7 +109,7 @@ public static class Transitions
     /// starting vertical offset (px). Defaults to half a height upward.</param>
     /// <param name="animationSpec">Optional spec; see
     /// <see cref="SlideInHorizontally"/>.</param>
-    public static EnterTransition SlideInVertically(System.Func<int, int>? initialOffsetY = null, IFiniteAnimationSpec? animationSpec = null) =>
+    public static EnterTransition SlideInVertically(Func<int, int>? initialOffsetY = null, IFiniteAnimationSpec? animationSpec = null) =>
         EnterExitTransitionKt.SlideInVertically(animationSpec ?? DefaultSpec(), new IntCallback(initialOffsetY ?? (h => -h / 2)));
 
     /// <summary>
@@ -122,7 +122,7 @@ public static class Transitions
     /// left.</param>
     /// <param name="animationSpec">Optional spec; see
     /// <see cref="SlideInHorizontally"/>.</param>
-    public static ExitTransition SlideOutHorizontally(System.Func<int, int>? targetOffsetX = null, IFiniteAnimationSpec? animationSpec = null) =>
+    public static ExitTransition SlideOutHorizontally(Func<int, int>? targetOffsetX = null, IFiniteAnimationSpec? animationSpec = null) =>
         EnterExitTransitionKt.SlideOutHorizontally(animationSpec ?? DefaultSpec(), new IntCallback(targetOffsetX ?? (w => -w / 2)));
 
     /// <summary>
@@ -134,6 +134,6 @@ public static class Transitions
     /// ending vertical offset (px). Defaults to half a height upward.</param>
     /// <param name="animationSpec">Optional spec; see
     /// <see cref="SlideInHorizontally"/>.</param>
-    public static ExitTransition SlideOutVertically(System.Func<int, int>? targetOffsetY = null, IFiniteAnimationSpec? animationSpec = null) =>
+    public static ExitTransition SlideOutVertically(Func<int, int>? targetOffsetY = null, IFiniteAnimationSpec? animationSpec = null) =>
         EnterExitTransitionKt.SlideOutVertically(animationSpec ?? DefaultSpec(), new IntCallback(targetOffsetY ?? (h => -h / 2)));
 }

@@ -1,5 +1,3 @@
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace ComposeNet;
 
@@ -12,7 +10,7 @@ namespace ComposeNet;
 /// </summary>
 /// <remarks>
 /// <para>
-/// Construct one inside a <see cref="ComposeActivity.Remember{T}(System.Func{T}, int, string)"/>
+/// Construct one inside a <see cref="ComposeActivity.Remember{T}(Func{T}, int, string)"/>
 /// callback so the scroll position survives recompositions:
 /// <code>
 /// var scroll = Remember(() =&gt; new ScrollState());
@@ -39,7 +37,7 @@ namespace ComposeNet;
 /// Kotlin <c>suspend</c> function through <see cref="Task"/> so they
 /// integrate with C# <c>async</c>/<c>await</c>. The returned task may
 /// complete on the Compose main thread; awaiters resume on whatever
-/// <see cref="System.Threading.SynchronizationContext"/> the
+/// <see cref="SynchronizationContext"/> the
 /// <c>await</c> captured.
 /// </para>
 /// </remarks>
@@ -104,7 +102,7 @@ public sealed class ScrollState
     /// <param name="value">Target pixel offset.</param>
     /// <param name="cancellationToken">
     /// Cancels the returned task with
-    /// <see cref="System.OperationCanceledException"/>. See
+    /// <see cref="OperationCanceledException"/>. See
     /// <see cref="SuspendBridge"/> remarks for the current (C#-only)
     /// cancellation semantics.
     /// </param>
@@ -115,12 +113,12 @@ public sealed class ScrollState
     /// <c>Result.Failure</c>.
     /// </returns>
     public Task<float> ScrollToAsync(int value, CancellationToken cancellationToken = default) =>
-        SuspendBridge.Invoke<float>(
+        SuspendBridge.Invoke(
             cont => ComposeBridges.ScrollStateScrollTo(
                 ((Java.Lang.Object)Jvm).Handle, value, cont),
             static boxed => boxed is Java.Lang.Float f
                 ? f.FloatValue()
-                : throw new System.InvalidCastException(
+                : throw new InvalidCastException(
                     $"Expected java.lang.Float from ScrollState.scrollTo; got '{boxed?.Class?.Name ?? "null"}'"),
             cancellationToken);
 
@@ -133,7 +131,7 @@ public sealed class ScrollState
     /// <param name="value">Target pixel offset.</param>
     /// <param name="cancellationToken">
     /// Cancels the returned task with
-    /// <see cref="System.OperationCanceledException"/>. Note that
+    /// <see cref="OperationCanceledException"/>. Note that
     /// the underlying Kotlin animation keeps running to its natural
     /// completion — see <see cref="SuspendBridge"/> remarks for the
     /// current (C#-only) cancellation semantics.

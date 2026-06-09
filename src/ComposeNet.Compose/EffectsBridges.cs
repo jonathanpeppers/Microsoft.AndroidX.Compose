@@ -1,5 +1,3 @@
-using Android.Runtime;
-
 namespace ComposeNet;
 
 // Raw-JNI helpers for the Compose effect APIs in
@@ -48,7 +46,7 @@ internal static partial class ComposeBridges
         // restart on every recomposition. Refuse and let the caller
         // pick a stable representation (a string, a primitive, or a
         // pre-allocated Java.Lang.Object peer).
-        _                     => throw new System.NotSupportedException(
+        _                     => throw new NotSupportedException(
             $"Compose effect key type '{key.GetType().FullName}' is not supported. "
             + "Use a Java.Lang.Object, string, bool, char, sbyte/byte/short/ushort/int/uint/long/ulong/float/double, "
             + "or convert your key to a stable form (e.g. ToString() or a stable hash).")

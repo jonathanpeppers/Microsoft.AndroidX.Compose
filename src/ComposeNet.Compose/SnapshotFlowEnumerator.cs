@@ -1,16 +1,12 @@
-using System.Collections.Generic;
 using System.Runtime.InteropServices;
-using System.Threading;
 using System.Threading.Channels;
-using System.Threading.Tasks;
 using AndroidX.Compose.Runtime;
 using Xamarin.KotlinX.Coroutines;
-using Xamarin.KotlinX.Coroutines.Flow;
 
 namespace ComposeNet;
 
 /// <summary>
-/// Async iterator for <see cref="Compose.SnapshotFlow{T}(System.Func{T})"/>.
+/// Async iterator for <see cref="Compose.SnapshotFlow{T}(Func{T})"/>.
 /// On first <see cref="MoveNextAsync"/> it starts a Kotlin
 /// <c>snapshotFlow(producer).collect(...)</c> coroutine on the
 /// Compose main dispatcher, with a Kotlin <see cref="IJob"/> in the
@@ -20,7 +16,7 @@ namespace ComposeNet;
 /// </summary>
 internal sealed class SnapshotFlowEnumerator<T> : IAsyncEnumerator<T>
 {
-    readonly System.Func<T> _producer;
+    readonly Func<T> _producer;
     readonly CancellationToken _userToken;
     readonly Channel<T> _channel;
 
@@ -39,7 +35,7 @@ internal sealed class SnapshotFlowEnumerator<T> : IAsyncEnumerator<T>
     bool _disposed;
     T? _current;
 
-    public SnapshotFlowEnumerator(System.Func<T> producer, CancellationToken userToken)
+    public SnapshotFlowEnumerator(Func<T> producer, CancellationToken userToken)
     {
         _producer = producer;
         _userToken = userToken;
@@ -65,7 +61,7 @@ internal sealed class SnapshotFlowEnumerator<T> : IAsyncEnumerator<T>
             {
                 StartCollection();
             }
-            catch (System.Exception ex)
+            catch (Exception ex)
             {
                 // Setup failure — surface to the awaiter and stop
                 // the iteration. Mark started so a subsequent call
@@ -125,7 +121,7 @@ internal sealed class SnapshotFlowEnumerator<T> : IAsyncEnumerator<T>
                 // from CheckJNI.
                 var completedFirst = await Task.WhenAny(
                     cont.Completion,
-                    Task.Delay(System.TimeSpan.FromSeconds(2))).ConfigureAwait(false);
+                    Task.Delay(TimeSpan.FromSeconds(2))).ConfigureAwait(false);
                 if (completedFirst != cont.Completion)
                 {
                     // Kotlin didn't acknowledge cancellation within the
@@ -230,7 +226,7 @@ internal sealed class SnapshotFlowEnumerator<T> : IAsyncEnumerator<T>
                 boxed!.Dispose();
             }
         }
-        catch (System.Exception ex)
+        catch (Exception ex)
         {
             _channel.Writer.TryComplete(ex);
             _continuation.MarkSynchronouslyCompleted();

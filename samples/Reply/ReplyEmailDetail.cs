@@ -1,8 +1,3 @@
-using System;
-using System.Collections.Generic;
-using AndroidX.Compose.Runtime;
-using ComposeNet;
-
 namespace ComposeNet.Samples.Reply;
 
 /// <summary>
@@ -13,7 +8,7 @@ namespace ComposeNet.Samples.Reply;
 public static class ReplyEmailDetail
 {
     /// <summary>Build the email detail screen.</summary>
-    public static ComposableNode Build(Email email, System.Action onBackPressed) =>
+    public static ComposableNode Build(Email email, Action onBackPressed) =>
         new Scaffold
         {
             TopBar = EmailDetailAppBar.Build(email, onBackPressed),

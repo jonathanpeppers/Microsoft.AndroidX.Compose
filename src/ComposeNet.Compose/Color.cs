@@ -30,7 +30,7 @@ namespace ComposeNet;
 /// call site.
 /// </para>
 /// </remarks>
-public readonly struct Color : System.IEquatable<Color>
+public readonly struct Color : IEquatable<Color>
 {
     /// <summary>The underlying 64-bit packed value (matches Kotlin's <c>ULong</c>).</summary>
     public ulong PackedValue { get; }
@@ -90,8 +90,8 @@ public readonly struct Color : System.IEquatable<Color>
     /// or <c>#AARRGGBB</c>, with or without the leading <c>#</c>. <c>#RGB</c>
     /// and <c>#RRGGBB</c> are treated as fully opaque.
     /// </summary>
-    /// <exception cref="System.ArgumentNullException"><paramref name="hex"/> is <see langword="null"/>.</exception>
-    /// <exception cref="System.FormatException">The string is not a valid color literal.</exception>
+    /// <exception cref="ArgumentNullException"><paramref name="hex"/> is <see langword="null"/>.</exception>
+    /// <exception cref="FormatException">The string is not a valid color literal.</exception>
     public static Color FromHex(string hex)
     {
         ArgumentNullException.ThrowIfNull(hex);
@@ -117,7 +117,7 @@ public readonly struct Color : System.IEquatable<Color>
                     return FromArgb(argb);
                 }
             default:
-                throw new System.FormatException(
+                throw new FormatException(
                     $"Color hex literal must be #RGB, #RRGGBB, or #AARRGGBB; got '{hex}'.");
         }
     }
@@ -127,7 +127,7 @@ public readonly struct Color : System.IEquatable<Color>
         >= '0' and <= '9' => c - '0',
         >= 'a' and <= 'f' => c - 'a' + 10,
         >= 'A' and <= 'F' => c - 'A' + 10,
-        _ => throw new System.FormatException($"Invalid hex digit '{c}'."),
+        _ => throw new FormatException($"Invalid hex digit '{c}'."),
     };
 
     /// <summary>

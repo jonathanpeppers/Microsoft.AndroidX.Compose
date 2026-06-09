@@ -22,11 +22,11 @@ namespace ComposeNet;
 public sealed class RangeSlider : ComposableNode
 {
     readonly (float Start, float End) _value;
-    readonly System.Action<(float Start, float End)> _onValueChange;
+    readonly Action<(float Start, float End)> _onValueChange;
 
     public RangeSlider(
         (float Start, float End) value,
-        System.Action<(float Start, float End)> onValueChange)
+        Action<(float Start, float End)> onValueChange)
     {
         _value = value;
         _onValueChange = onValueChange;

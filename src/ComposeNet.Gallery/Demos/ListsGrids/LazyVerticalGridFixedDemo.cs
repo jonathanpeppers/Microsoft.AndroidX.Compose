@@ -13,7 +13,7 @@ public static class LazyVerticalGridFixedDemo
         Description: "Three equally sized columns; cells flow top-to-bottom, left-to-right.",
         Build:       () => new LazyVerticalGrid<int>(
             columns:     GridCells.Fixed(3),
-            items:       System.Linq.Enumerable.Range(0, 60).ToList(),
+            items: Enumerable.Range(0, 60).ToList(),
             itemContent: i => new Card
             {
                 Modifier.Companion.Padding(4),

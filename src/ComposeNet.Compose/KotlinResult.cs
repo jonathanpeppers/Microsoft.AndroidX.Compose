@@ -1,4 +1,3 @@
-using System;
 using Android.Runtime;
 
 namespace ComposeNet;
@@ -19,7 +18,7 @@ namespace ComposeNet;
 /// <c>Continuation.resumeWith</c> (used by
 /// <see cref="LaunchedEffectBody"/> and any other C#→Kotlin suspend
 /// resume site).</description></item>
-/// <item><description><see cref="IsFailure(System.IntPtr)"/> +
+/// <item><description><see cref="IsFailure(IntPtr)"/> +
 /// <see cref="ExtractException(Java.Lang.Object)"/> — peek at a
 /// resumed <c>Result</c> handle to detect a failure box and extract
 /// the underlying <c>Throwable</c> for the awaiting C# task (used by
@@ -69,7 +68,7 @@ internal static class KotlinResult
     /// </summary>
     /// <param name="throwable">
     /// The Java throwable to wrap; non-null. C# exceptions can be
-    /// converted via <see cref="Android.Runtime.JavaProxyThrowable"/>
+    /// converted via <see cref="JavaProxyThrowable"/>
     /// (or any helper that produces a <see cref="Java.Lang.Throwable"/>).
     /// </param>
     /// <returns>
@@ -122,12 +121,12 @@ internal static class KotlinResult
     /// </summary>
     /// <param name="failure">
     /// A peer wrapping a <c>Result.Failure</c> handle. Must have been
-    /// vetted with <see cref="IsFailure(System.IntPtr)"/> first.
+    /// vetted with <see cref="IsFailure(IntPtr)"/> first.
     /// </param>
     /// <returns>
-    /// The wrapped throwable as a <see cref="System.Exception"/>
+    /// The wrapped throwable as a <see cref="Exception"/>
     /// (<see cref="Java.Lang.Throwable"/> derives from
-    /// <see cref="System.Exception"/> on Mono.Android, so callers can
+    /// <see cref="Exception"/> on Mono.Android, so callers can
     /// <c>catch (Exception)</c> or pattern-match on the Java type).
     /// </returns>
     internal static Exception ExtractException(Java.Lang.Object failure)

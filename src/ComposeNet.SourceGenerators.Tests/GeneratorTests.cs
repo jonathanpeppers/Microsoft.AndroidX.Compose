@@ -1,6 +1,5 @@
 using System.Collections.Immutable;
 using System.Linq;
-using ComposeNet.SourceGenerators;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Xunit;

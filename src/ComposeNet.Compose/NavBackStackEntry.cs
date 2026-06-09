@@ -1,6 +1,3 @@
-using System;
-using Android.OS;
-
 namespace ComposeNet;
 
 /// <summary>
@@ -47,7 +44,7 @@ public sealed class NavBackStackEntry
 
     /// <summary>
     /// Route registered for this destination — the same string the
-    /// caller passed to <see cref="Composable.Composable(string)"/>.
+    /// caller passed to <see cref="Composable(string)"/>.
     /// <c>null</c> if the destination was registered without a route
     /// (e.g. by an integer id graph). Mirrors Kotlin's
     /// <c>NavBackStackEntry.destination.route</c>.

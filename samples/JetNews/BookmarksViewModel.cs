@@ -1,6 +1,3 @@
-using System;
-using ComposeNet;
-
 namespace ComposeNet.Samples.JetNews;
 
 /// <summary>

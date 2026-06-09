@@ -1,5 +1,3 @@
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace ComposeNet;
 
@@ -141,7 +139,7 @@ public sealed class LazyListState
     /// </param>
     /// <param name="cancellationToken">
     /// Cancels the returned task with
-    /// <see cref="System.OperationCanceledException"/>. See
+    /// <see cref="OperationCanceledException"/>. See
     /// <see cref="SuspendBridge"/> remarks for the current (C#-only)
     /// cancellation semantics.
     /// </param>
@@ -168,7 +166,7 @@ public sealed class LazyListState
     /// </param>
     /// <param name="cancellationToken">
     /// Cancels the returned task with
-    /// <see cref="System.OperationCanceledException"/>. The underlying
+    /// <see cref="OperationCanceledException"/>. The underlying
     /// Kotlin animation keeps running to its natural completion — see
     /// <see cref="SuspendBridge"/> remarks for the current (C#-only)
     /// cancellation semantics.
