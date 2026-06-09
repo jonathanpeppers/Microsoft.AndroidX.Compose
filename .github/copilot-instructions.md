@@ -703,6 +703,114 @@ whole type just because one method is missing**.
 **Don't add `[ComposeBridge]` if the binding already exposes the method** —
 call the generated C# entry point instead.
 
+## `[ComposeCompanion]` — Kotlin Companion singleton wrappers
+
+Several Compose value/reference wrappers in
+`src/Microsoft.AndroidX.Compose/` exist purely to surface the Kotlin
+`Companion.getXxx()` singletons (`FontWeight.Thin`,
+`TextDecoration.Underline`, `ContentScale.Crop`, etc.) as static C#
+properties. The underlying type isn't bound (Compose's
+`ui-text-android` is shipped as a Java-only stub), so each wrapper would
+otherwise hand-roll the same `FindClass → GetStaticFieldID("Companion")
+→ NewGlobalRef → CallObjectMethod` dance for every constant.
+`ComposeCompanionGenerator` collapses that boilerplate into a one-line
+attribute on a `partial class` plus one `[ComposeCompanionGetter]` per
+property.
+
+### Adding a companion wrapper
+
+1. Subclass `Java.Lang.Object`, declare `partial`, give it a private
+   `(IntPtr, JniHandleOwnership)` constructor.
+2. Apply `[ComposeCompanion("foo/bar/OuterClass")]` — the outer JNI
+   class name (slash-separated, no `L…;` wrap). The generator appends
+   `$Companion` automatically.
+3. Declare each singleton as
+   `public static partial T Name { get; }` with
+   `[ComposeCompanionGetter("getName")]`.
+
+```csharp
+[ComposeCompanion("androidx/compose/ui/text/font/FontWeight")]
+public sealed partial class FontWeight : Java.Lang.Object
+{
+    FontWeight(IntPtr handle, JniHandleOwnership transfer) : base(handle, transfer) { }
+
+    /// <summary><c>FontWeight.Thin</c> (W100).</summary>
+    [ComposeCompanionGetter("getThin")]
+    public static partial FontWeight Thin { get; }
+    // … etc.
+}
+```
+
+The generator emits one `partial class` per host that contains: the
+`s_companion` global-ref cache, per-property `s_<camelCase>` peer
+caches, a lazy `Companion()` accessor matching the hand-rolled pattern,
+a private `__companionJni` const, one shared `ResolveSimple(getter,
+returnDescriptor)` helper, and the implementing partial-property body
+for each declared getter.
+
+### Inline-class variant — `InlineClass = true`
+
+For Kotlin `@JvmInline value class` wrappers (`TextAlign`, `FontStyle`)
+whose companion getters return packed `int` and need to be routed
+through the synthesized static `box-impl(I)L<outer>;`, set
+`InlineClass = true` on `[ComposeCompanion]`. The generator emits a
+`ResolveInline(mangledGetter)` helper that boxes the packed int.
+Getter names are forwarded verbatim — hyphens in the mangled
+Kotlin names (e.g. `getCenter-e0LSkKk`, `getNormal-_-LCdwA`) are
+accepted as-is. The generator does **not** validate that the outer
+class actually has `box-impl` — that's a runtime concern, same as
+existing `[ComposeBridge]` signatures.
+
+### Subtype return descriptors
+
+When a Kotlin getter returns a concrete subtype of the outer class
+(e.g. `FontFamily.Companion.getSansSerif()` returns
+`GenericFontFamily`, not the base `FontFamily`), specify it on the
+getter:
+
+```csharp
+[ComposeCompanionGetter("getSansSerif",
+                        ReturnDescriptor = "Landroidx/compose/ui/text/font/GenericFontFamily;")]
+public static partial FontFamily SansSerif { get; }
+```
+
+`ReturnDescriptor` is incompatible with `InlineClass = true` — inline
+companions always return `I` and box, so a subtype descriptor would be
+meaningless (CN4007).
+
+### Thread-safety footnote
+
+The emitted `Companion()` is *not* synchronized. Two threads racing
+the first call will both do the `FindClass → NewGlobalRef` dance and
+only the last assignment wins — leaking one global ref for the
+process lifetime. This is intentional: matches the pre-generator hand
+written code, avoids a `Monitor.Enter` on a hot path, and there is no
+ABI consequence (the global ref always points at the same singleton).
+
+### What's still hand-written
+
+- `Alignment.cs` — uses bound `IAlignment.Companion` from
+  `Xamarin.AndroidX.Compose.UI`; no JNI plumbing exists.
+- `TextStyleCompanion.cs` — `static class` (not `Java.Lang.Object`
+  subclass) and rest of the file is bound-API forwarding; only one
+  Companion-get-and-cache step, marginal value migrating.
+
+### Generator diagnostics
+
+| ID     | Meaning                                                                                                                                                                                                                                                                                                            |
+|--------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| CN4001 | `[ComposeCompanion]` is on a class that isn't declared `partial`. The generator emits an implementing partial — the host must be partial.                                                                                                                                                                          |
+| CN4002 | `[ComposeCompanion]` was constructed with a null/empty/whitespace `outerJniClass`.                                                                                                                                                                                                                                 |
+| CN4003 | `[ComposeCompanionGetter]` was applied to a property that isn't `public static partial T { get; }` — instance, has a setter, missing `partial`, or has no getter.                                                                                                                                                  |
+| CN4004 | `[ComposeCompanionGetter]` was constructed with a null/empty/whitespace `getterName`.                                                                                                                                                                                                                              |
+| CN4005 | `[ComposeCompanionGetter]` was applied to a property whose containing class lacks `[ComposeCompanion]` — orphaned getter. Without this diagnostic the user would just hit C#'s generic "partial property has no implementing declaration" error and have to guess what was missing.                                |
+| CN4006 | A getter's return type doesn't declare an accessible `(IntPtr, JniHandleOwnership)` constructor. The generated body uses that ctor to wrap the JNI handle; it must compile.                                                                                                                                        |
+| CN4007 | `[ComposeCompanionGetter]` sets `ReturnDescriptor` while the host `[ComposeCompanion]` has `InlineClass = true`. Inline-class companions always return `I` and route through `box-impl`, so a subtype descriptor is meaningless.                                                                                   |
+
+Tests live in `CompanionGeneratorTests.cs` — synthetic compilations,
+same pattern as `BridgeGeneratorTests`. **Add a test for any new
+generator behaviour.**
+
 ## Suspend / async bridges
 
 For Kotlin Compose `suspend` functions (e.g. `ScrollState.scrollTo`,

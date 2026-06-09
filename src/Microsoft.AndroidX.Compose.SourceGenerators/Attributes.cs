@@ -417,6 +417,80 @@ internal static class Attributes
                 public global::System.Type? AdapterType { get; set; }
                 public string? PropertyName { get; set; }
             }
+
+            /// <summary>
+            /// Apply to a <c>partial class</c> deriving from
+            /// <see cref="global::Java.Lang.Object"/> to have
+            /// Microsoft.AndroidX.Compose.SourceGenerators emit a cached
+            /// accessor for the Kotlin <c>Companion</c> singleton and one
+            /// implementing partial property per
+            /// <see cref="ComposeCompanionGetterAttribute"/>. Eliminates the
+            /// repeated raw-JNI plumbing that every Compose value-class /
+            /// reference-class wrapper would otherwise hand-roll.
+            /// </summary>
+            /// <remarks>
+            /// <para><b>outerJniClass</b>: the slash-separated JNI class
+            /// name of the outer Kotlin type — e.g.
+            /// <c>androidx/compose/ui/text/font/FontWeight</c>. The
+            /// generator derives the companion JNI name by appending
+            /// <c>$Companion</c>.</para>
+            /// <para><b>InlineClass</b>: set <c>true</c> when the outer
+            /// type is a Kotlin <c>@JvmInline value class</c> whose
+            /// companion getters return the packed <c>int</c> value
+            /// (Kotlin emits <c>getXxx-mangled()I</c>). The generator
+            /// emits a helper that boxes the result via the synthesized
+            /// static <c>box-impl(I)L&lt;outer&gt;;</c> method to produce
+            /// the boxed reference expected by C# call sites.</para>
+            /// <para>The defining partial declarations live in the user's
+            /// hand-written file (so XML docs stay on the public surface);
+            /// the generator emits the implementing partials, the
+            /// per-property cache fields, the cached <c>Companion()</c>
+            /// accessor, and one shared <c>ResolveSimple</c> or
+            /// <c>ResolveInline</c> helper.</para>
+            /// </remarks>
+            [global::System.AttributeUsage(global::System.AttributeTargets.Class,
+                                           AllowMultiple = false)]
+            internal sealed class ComposeCompanionAttribute : global::System.Attribute
+            {
+                public ComposeCompanionAttribute(string outerJniClass) { }
+                public bool InlineClass { get; set; }
+            }
+
+            /// <summary>
+            /// Apply to a <c>public static partial T PropertyName { get; }</c>
+            /// declaration on a class carrying
+            /// <see cref="ComposeCompanionAttribute"/>. The generator emits
+            /// the implementing partial body that calls the named Kotlin
+            /// getter on the cached Companion and wraps the resulting JNI
+            /// handle in a fresh <c>T</c> peer via
+            /// <c>(IntPtr, JniHandleOwnership.TransferLocalRef)</c>.
+            /// </summary>
+            /// <remarks>
+            /// <para><b>getterName</b>: the exact Kotlin-emitted method
+            /// name on the Companion class (e.g. <c>getThin</c>,
+            /// <c>getCenter-e0LSkKk</c> for inline-class mangled names).
+            /// Hyphens and other non-identifier characters are accepted —
+            /// the generator forwards the string straight to
+            /// <c>JNIEnv.GetMethodID</c>.</para>
+            /// <para><b>ReturnDescriptor</b>: optional JNI return-type
+            /// descriptor (e.g.
+            /// <c>Landroidx/compose/ui/text/font/SystemFontFamily;</c>)
+            /// for getters whose return type is a subtype of the outer
+            /// class. Defaults to <c>L&lt;outerJniClass&gt;;</c>. Must
+            /// not be set when the containing
+            /// <see cref="ComposeCompanionAttribute"/> has
+            /// <c>InlineClass = true</c> — inline-class getters always
+            /// return packed <c>I</c> and the generator routes the
+            /// boxed reference through the synthesized
+            /// <c>box-impl(I)L&lt;outer&gt;;</c>.</para>
+            /// </remarks>
+            [global::System.AttributeUsage(global::System.AttributeTargets.Property,
+                                           AllowMultiple = false)]
+            internal sealed class ComposeCompanionGetterAttribute : global::System.Attribute
+            {
+                public ComposeCompanionGetterAttribute(string getterName) { }
+                public string? ReturnDescriptor { get; set; }
+            }
         }
         """;
 }
