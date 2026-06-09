@@ -142,6 +142,7 @@ public static class Catalog
         D.Modifiers.CombinedClickableDemo.Demo,
         D.Modifiers.DetectTapGesturesDemo.Demo,
         D.Modifiers.DraggableOffsetDemo.Demo,
+        D.Modifiers.DragAndDropTargetDemo.Demo,
         D.Modifiers.GraphicsLayerDemo.Demo,
         D.Modifiers.FlowRowScopeDispatchDemo.Demo,
         D.Modifiers.MinimumInteractiveComponentSizeDemo.Demo,
@@ -161,6 +162,7 @@ public static class Catalog
         D.StateEffectsAnimation.EnterExitTransitionsDemo.Demo,
         D.StateEffectsAnimation.CrossfadeDemo.Demo,
         D.StateEffectsAnimation.AnimatedContentDemo.Demo,
+        D.StateEffectsAnimation.ViewModelStateFlowDemo.Demo,
 
         // ---- CompositionLocal & misc ----
         D.LocalsMisc.LocalContextDemo.Demo,
