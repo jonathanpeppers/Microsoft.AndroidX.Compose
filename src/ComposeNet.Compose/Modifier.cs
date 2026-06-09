@@ -398,18 +398,7 @@ public sealed class Modifier
         System.ArgumentNullException.ThrowIfNull(shouldStartDragAndDrop);
         System.ArgumentNullException.ThrowIfNull(target);
         var predicate = new ShouldStartDragAndDropCallback(shouldStartDragAndDrop);
-        IntPtr targetHandle = ((Java.Lang.Object)target).Handle;
-        return Append(curr =>
-        {
-            try
-            {
-                return ComposeBridges.ModifierDragAndDropTarget(curr, predicate, targetHandle);
-            }
-            finally
-            {
-                System.GC.KeepAlive(target);
-            }
-        });
+        return Append(curr => ComposeBridges.ModifierDragAndDropTarget(curr, predicate, target));
     }
 
     /// <summary>

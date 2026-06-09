@@ -2322,7 +2322,7 @@ internal static partial class ComposeBridges
                     "Landroidx/compose/ui/draganddrop/DragAndDropTarget;)" +
                     "Landroidx/compose/ui/Modifier;")]
     internal static partial IntPtr ModifierDragAndDropTarget(
-        IntPtr modifier, IFunction1 shouldStartDragAndDrop, IntPtr target);
+        IntPtr modifier, IFunction1 shouldStartDragAndDrop, DragAndDropTarget target);
 
     // androidx.compose.ui.input.nestedscroll.NestedScrollModifierKt.nestedScroll$default —
     // non-@Composable Modifier extension. 2 Kotlin params after the
