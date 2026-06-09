@@ -22,6 +22,6 @@ internal sealed class ShouldStartDragAndDropCallback : Java.Lang.Object, IFuncti
         if (p0 is null)
             return Java.Lang.Boolean.False;
         var jvm = Android.Runtime.Extensions.JavaCast<AndroidX.Compose.UI.Draganddrop.DragAndDropEvent>(p0);
-        return _callback(new DragAndDropEvent(jvm!)) ? Java.Lang.Boolean.True : Java.Lang.Boolean.False;
+        return _callback(new DragAndDropEvent(jvm)) ? Java.Lang.Boolean.True : Java.Lang.Boolean.False;
     }
 }

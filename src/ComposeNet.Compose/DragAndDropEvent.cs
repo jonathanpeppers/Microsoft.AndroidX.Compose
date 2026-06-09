@@ -21,6 +21,7 @@ public sealed class DragAndDropEvent
 
     internal DragAndDropEvent(AndroidX.Compose.UI.Draganddrop.DragAndDropEvent jvm)
     {
+        System.ArgumentNullException.ThrowIfNull(jvm);
         Jvm = jvm;
     }
 
@@ -45,10 +46,10 @@ public sealed class DragAndDropEvent
         {
             var desc = AndroidDragEvent.ClipDescription;
             if (desc is null)
-                return System.Array.Empty<string>();
+                return [];
             int count = desc.MimeTypeCount;
             if (count <= 0)
-                return System.Array.Empty<string>();
+                return [];
             var arr = new string[count];
             for (int i = 0; i < count; i++)
                 arr[i] = desc.GetMimeType(i) ?? "";
