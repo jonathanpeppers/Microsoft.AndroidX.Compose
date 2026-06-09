@@ -604,17 +604,11 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
         sb.Append("        if (s_").Append(sym).AppendLine("_method == global::System.IntPtr.Zero)");
         sb.AppendLine("        {");
         sb.Append("            s_").Append(sym).Append("_class = global::Android.Runtime.JNIEnv.FindClass(\"").Append(className).AppendLine("\");");
-        if (isConstructor)
+        if (isConstructor || isInstanceSuspend)
         {
-            // Constructor ID lookup is GetMethodID with name "<init>".
-            sb.Append("            s_").Append(sym).Append("_method = global::Android.Runtime.JNIEnv.GetMethodID(s_")
-              .Append(sym).Append("_class, \"").Append(jvmName).Append("\", \"").Append(signature).AppendLine("\");");
-        }
-        else if (isInstanceSuspend)
-        {
-            // Instance suspend dispatches on the receiver passed by the
-            // caller — no Kotlin singleton field needed, just a normal
-            // virtual GetMethodID.
+            // Both use a virtual GetMethodID with the declared name:
+            // constructors use "<init>" (no special API), instance
+            // suspends dispatch on the caller-supplied receiver.
             sb.Append("            s_").Append(sym).Append("_method = global::Android.Runtime.JNIEnv.GetMethodID(s_")
               .Append(sym).Append("_class, \"").Append(jvmName).Append("\", \"").Append(signature).AppendLine("\");");
         }

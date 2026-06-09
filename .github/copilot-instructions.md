@@ -740,7 +740,8 @@ silently. Surface the parameter on every new `*Async` and document
    ```csharp
    [ComposeBridge(Class = "my/package/MyState",
                   JvmName = "doThing",
-                  Signature = "(ILkotlin/coroutines/Continuation;)Ljava/lang/Object;")]
+                  Signature = "(ILkotlin/coroutines/Continuation;)Ljava/lang/Object;",
+                  Suspend = true)]
    internal static partial IntPtr MyStateDoThing(IntPtr state, int value, IContinuation cont);
    ```
 
