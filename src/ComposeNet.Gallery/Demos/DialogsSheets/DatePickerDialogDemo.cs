@@ -26,7 +26,7 @@ public static class DatePickerDialogDemo
                         ConfirmButton = new Button(onClick: () =>
                         {
                             picked.Value = state.SelectedDateMillis is long ms
-                                ? System.DateTimeOffset.FromUnixTimeMilliseconds(ms).UtcDateTime.ToString("yyyy-MM-dd")
+                                ? DateTimeOffset.FromUnixTimeMilliseconds(ms).UtcDateTime.ToString("yyyy-MM-dd")
                                 : "(none)";
                             open.Value = false;
                         }) { new Text("OK") },

@@ -1,6 +1,4 @@
 using System.Runtime.InteropServices;
-using System.Threading;
-using System.Threading.Tasks;
 using Android.Runtime;
 using Kotlin.Coroutines;
 
@@ -18,7 +16,7 @@ namespace ComposeNet;
 /// <para>
 /// Allocate one instance per suspend call (continuations cannot be
 /// reused). The class is internal — call sites should go through
-/// <see cref="SuspendBridge.Invoke{T}(System.Func{SuspendContinuation, System.IntPtr}, System.Func{Java.Lang.Object?, T}, CancellationToken)"/>
+/// <see cref="SuspendBridge.Invoke{T}(Func{SuspendContinuation, IntPtr}, Func{Java.Lang.Object?, T}, CancellationToken)"/>
 /// instead of constructing one directly.
 /// </para>
 /// <para>
@@ -35,7 +33,7 @@ namespace ComposeNet;
 /// Cancellation: when a non-default <see cref="CancellationToken"/>
 /// is supplied, a registration on the token cancels the backing TCS.
 /// That propagates to the caller's <c>await</c> as
-/// <see cref="System.OperationCanceledException"/> immediately, but
+/// <see cref="OperationCanceledException"/> immediately, but
 /// the Kotlin suspend function keeps running to its natural
 /// completion — we don't wire a <c>Job</c> into <see cref="Context"/>
 /// yet. When Kotlin eventually resumes,
@@ -123,9 +121,9 @@ internal sealed class SuspendContinuation : Java.Lang.Object, IContinuation
         {
             try
             {
-                CompleteWithLocalHandle(boxedResult?.Handle ?? System.IntPtr.Zero, deleteLocal: false);
+                CompleteWithLocalHandle(boxedResult?.Handle ?? IntPtr.Zero, deleteLocal: false);
             }
-            catch (System.Exception ex)
+            catch (Exception ex)
             {
                 // NewGlobalRef / GetObject can throw; without this catch
                 // the TCS would never complete and any awaiter would
@@ -157,10 +155,10 @@ internal sealed class SuspendContinuation : Java.Lang.Object, IContinuation
     /// when called from the JCW marshaller, which owns its own
     /// argument locals.
     /// </param>
-    internal void CompleteWithLocalHandle(System.IntPtr handle, bool deleteLocal = true)
+    internal void CompleteWithLocalHandle(IntPtr handle, bool deleteLocal = true)
     {
         Java.Lang.Object? owned = null;
-        if (handle != System.IntPtr.Zero)
+        if (handle != IntPtr.Zero)
         {
             var gref = JNIEnv.NewGlobalRef(handle);
             owned = global::Java.Lang.Object.GetObject<Java.Lang.Object>(gref, JniHandleOwnership.TransferGlobalRef);

@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-using Android.Runtime;
 using AndroidX.Compose.Foundation.Lazy.Staggeredgrid;
 using AndroidX.Compose.Runtime;
 

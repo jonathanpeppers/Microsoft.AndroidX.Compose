@@ -1,6 +1,3 @@
-using System;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace ComposeNet;
 
@@ -14,7 +11,7 @@ namespace ComposeNet;
 /// <remarks>
 /// <para>
 /// Allocate one instance per call site via
-/// <see cref="Compose.ViewModel{T}(System.Func{T}, int, string)"/>.
+/// <see cref="Compose.ViewModel{T}(Func{T}, int, string)"/>.
 /// The factory routes through
 /// <see cref="AndroidX.Lifecycle.ViewModelProvider"/> on the
 /// nearest <see cref="AndroidX.Lifecycle.IViewModelStoreOwner"/>

@@ -294,7 +294,7 @@ public sealed class MaterialTheme : ComposableContainer
     /// <summary>
     /// Build a dynamic (Material You) light color scheme from the
     /// supplied context, or
-    /// <see cref="Android.App.Application.Context"/> when <paramref name="context"/>
+    /// <see cref="Application.Context"/> when <paramref name="context"/>
     /// is <see langword="null"/>. Requires Android 12 (API 31) or later.
     /// </summary>
     public static ColorScheme DynamicLightColorScheme(Android.Content.Context? context = null) =>
@@ -303,7 +303,7 @@ public sealed class MaterialTheme : ComposableContainer
     /// <summary>
     /// Build a dynamic (Material You) dark color scheme from the
     /// supplied context, or
-    /// <see cref="Android.App.Application.Context"/> when <paramref name="context"/>
+    /// <see cref="Application.Context"/> when <paramref name="context"/>
     /// is <see langword="null"/>. Requires Android 12 (API 31) or later.
     /// </summary>
     public static ColorScheme DynamicDarkColorScheme(Android.Content.Context? context = null) =>
@@ -340,11 +340,11 @@ public sealed class MaterialTheme : ComposableContainer
         if (extraLarge is null) defaults |= ShapesDefault.ExtraLarge;
 
         return ComposeBridges.BuildShapes(
-            extraSmall is null ? System.IntPtr.Zero : ((Java.Lang.Object)extraSmall).Handle,
-            small      is null ? System.IntPtr.Zero : ((Java.Lang.Object)small).Handle,
-            medium     is null ? System.IntPtr.Zero : ((Java.Lang.Object)medium).Handle,
-            large      is null ? System.IntPtr.Zero : ((Java.Lang.Object)large).Handle,
-            extraLarge is null ? System.IntPtr.Zero : ((Java.Lang.Object)extraLarge).Handle,
+            extraSmall is null ? IntPtr.Zero : ((Java.Lang.Object)extraSmall).Handle,
+            small      is null ? IntPtr.Zero : ((Java.Lang.Object)small).Handle,
+            medium     is null ? IntPtr.Zero : ((Java.Lang.Object)medium).Handle,
+            large      is null ? IntPtr.Zero : ((Java.Lang.Object)large).Handle,
+            extraLarge is null ? IntPtr.Zero : ((Java.Lang.Object)extraLarge).Handle,
             (int)defaults);
     }
 

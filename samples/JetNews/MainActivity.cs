@@ -1,8 +1,5 @@
 using Android.Content;
-using Android.OS;
 using AndroidX.Compose.Material3;
-using AndroidX.Compose.Runtime;
-using ComposeNet;
 
 namespace ComposeNet.Samples.JetNews;
 

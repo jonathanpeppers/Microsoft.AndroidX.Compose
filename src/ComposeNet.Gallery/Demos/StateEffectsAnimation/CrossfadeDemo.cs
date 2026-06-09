@@ -1,4 +1,3 @@
-using AndroidX.Compose.UI.Graphics;
 using ComposeNet.Gallery.Registry;
 
 namespace ComposeNet.Gallery.Demos.StateEffectsAnimation;
@@ -15,13 +14,13 @@ public static class CrossfadeDemo
         Build:       () =>
         {
             var step = Compose.Remember(() => new MutableNumberState<int>(0));
-            ComposeNet.Color[] palette =
+            Color[] palette =
             [
-                ComposeNet.Color.FromRgb(0xEF, 0x9A, 0x9A),
-                ComposeNet.Color.FromRgb(0x90, 0xCA, 0xF9),
-                ComposeNet.Color.FromRgb(0xA5, 0xD6, 0xA7),
-                ComposeNet.Color.FromRgb(0xFF, 0xCC, 0x80),
-                ComposeNet.Color.FromRgb(0xCE, 0x93, 0xD8),
+                Color.FromRgb(0xEF, 0x9A, 0x9A),
+                Color.FromRgb(0x90, 0xCA, 0xF9),
+                Color.FromRgb(0xA5, 0xD6, 0xA7),
+                Color.FromRgb(0xFF, 0xCC, 0x80),
+                Color.FromRgb(0xCE, 0x93, 0xD8),
             ];
             return new Column
             {
@@ -40,7 +39,7 @@ public static class CrossfadeDemo
                             .Background(palette[((i % palette.Length) + palette.Length) % palette.Length]),
                         new Text($"Step {i}")
                         {
-                            Color    = ComposeNet.Color.Black,
+                            Color    = Color.Black,
                             Modifier = Modifier.Companion.Padding(16),
                         },
                     }),

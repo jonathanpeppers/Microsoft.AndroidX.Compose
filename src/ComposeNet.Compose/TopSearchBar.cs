@@ -22,7 +22,7 @@ public sealed class TopSearchBar : ComposableNode
     public override void Render(IComposer composer)
     {
         if (InputField is null)
-            throw new System.InvalidOperationException(
+            throw new InvalidOperationException(
                 "TopSearchBar.InputField is required (the Kotlin parameter has no default).");
 
         var stateHandle = SearchBar.ResolveStateHandle(_state, composer);

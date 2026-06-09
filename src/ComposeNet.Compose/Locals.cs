@@ -81,7 +81,7 @@ public static class Locals
         new(AndroidCompositionLocals_androidKt.LocalView);
 
     /// <summary>
-    /// The Material 3 <see cref="AndroidX.Compose.Material3.ColorScheme"/>
+    /// The Material 3 <see cref="ColorScheme"/>
     /// installed by the nearest
     /// <see cref="MaterialTheme"/>. Reading this directly is rarely
     /// necessary — most consumers go through <c>MaterialTheme</c>'s

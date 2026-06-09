@@ -44,7 +44,7 @@ public sealed class Scaffold : ComposableNode
     public override void Render(IComposer composer)
     {
         if (Body is null)
-            throw new System.InvalidOperationException(
+            throw new InvalidOperationException(
                 "Scaffold.Body is required (the Kotlin parameter has no default).");
 
         // Material 3's Scaffold passes PaddingValues as the first arg of

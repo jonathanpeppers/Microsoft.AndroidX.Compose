@@ -1,4 +1,3 @@
-using System.Threading.Tasks;
 using AndroidX.Compose.Material3;
 
 namespace ComposeNet;
@@ -13,7 +12,7 @@ namespace ComposeNet;
 /// <remarks>
 /// <para>This type is named with a <c>Holder</c> suffix to avoid
 /// colliding with the binding's
-/// <see cref="AndroidX.Compose.Material3.DrawerState"/> class — both
+/// <see cref="DrawerState"/> class — both
 /// would otherwise resolve to <c>DrawerState</c> when a user imports
 /// <c>using AndroidX.Compose.Material3;</c> and
 /// <c>using ComposeNet;</c> at the same time.</para>
@@ -80,7 +79,7 @@ public sealed class DrawerStateHolder
     /// Kotlin's <c>DrawerState.open()</c>. Safe to call from a button
     /// <c>onClick</c> — the returned <see cref="Task"/> completes when
     /// the animation lands. Throws
-    /// <see cref="System.InvalidOperationException"/> if invoked before
+    /// <see cref="InvalidOperationException"/> if invoked before
     /// the holder is bound to a live peer (i.e. before the first
     /// composition pass that renders the
     /// <see cref="ModalNavigationDrawer"/> facade).
@@ -88,7 +87,7 @@ public sealed class DrawerStateHolder
     public Task OpenAsync()
     {
         var jvm = Jvm
-            ?? throw new System.InvalidOperationException(
+            ?? throw new InvalidOperationException(
                 "DrawerStateHolder.OpenAsync requires the holder to be bound to a live drawer; call it after the first render.");
         return SuspendBridge.Invoke(cont =>
             ComposeBridges.DrawerStateOpen(((Java.Lang.Object)jvm).Handle, cont));
@@ -102,7 +101,7 @@ public sealed class DrawerStateHolder
     public Task CloseAsync()
     {
         var jvm = Jvm
-            ?? throw new System.InvalidOperationException(
+            ?? throw new InvalidOperationException(
                 "DrawerStateHolder.CloseAsync requires the holder to be bound to a live drawer; call it after the first render.");
         return SuspendBridge.Invoke(cont =>
             ComposeBridges.DrawerStateClose(((Java.Lang.Object)jvm).Handle, cont));

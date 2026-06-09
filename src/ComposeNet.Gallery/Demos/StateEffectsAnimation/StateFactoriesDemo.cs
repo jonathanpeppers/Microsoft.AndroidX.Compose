@@ -1,4 +1,3 @@
-using System.Linq;
 using ComposeNet.Gallery.Registry;
 
 namespace ComposeNet.Gallery.Demos.StateEffectsAnimation;
@@ -18,7 +17,7 @@ public static class StateFactoriesDemo
             var i      = Compose.Remember(() => Compose.MutableIntStateOf(0));
             var l      = Compose.Remember(() => Compose.MutableLongStateOf(1_000_000_000L));
             var f      = Compose.Remember(() => Compose.MutableFloatStateOf(0.5f));
-            var d      = Compose.Remember(() => Compose.MutableDoubleStateOf(System.Math.PI));
+            var d      = Compose.Remember(() => Compose.MutableDoubleStateOf(Math.PI));
             var items  = Compose.Remember(() => Compose.MutableStateListOf("alpha", "beta"));
             var prefs  = Compose.Remember(() => Compose.MutableStateMapOf<string, bool>());
 

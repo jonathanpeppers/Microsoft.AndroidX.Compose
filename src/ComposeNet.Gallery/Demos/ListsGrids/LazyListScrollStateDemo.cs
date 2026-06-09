@@ -1,4 +1,3 @@
-using System.Linq;
 using ComposeNet.Gallery.Registry;
 
 namespace ComposeNet.Gallery.Demos.ListsGrids;

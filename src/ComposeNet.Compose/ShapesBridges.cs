@@ -27,14 +27,14 @@ internal static partial class ComposeBridges
         "Landroidx/compose/foundation/shape/CornerBasedShape;" +
         "ILkotlin/jvm/internal/DefaultConstructorMarker;)V";
 
-    static System.IntPtr s_shapesCtor_class;
-    static System.IntPtr s_shapesCtor_method;
+    static IntPtr s_shapesCtor_class;
+    static IntPtr s_shapesCtor_method;
 
     /// <summary>
     /// Build a Material 3 <see cref="Shapes"/> with per-slot
-    /// overrides. Each <see cref="System.IntPtr"/> is either a
+    /// overrides. Each <see cref="IntPtr"/> is either a
     /// <c>CornerBasedShape</c> JNI handle to use for that slot, or
-    /// <see cref="System.IntPtr.Zero"/> to fall back to the M3
+    /// <see cref="IntPtr.Zero"/> to fall back to the M3
     /// baseline default for that slot via Kotlin's synthetic
     /// <c>$default</c> mechanism.
     /// </summary>
@@ -44,14 +44,14 @@ internal static partial class ComposeBridges
     /// extraSmall, bit 4 is extraLarge.
     /// </param>
     internal static unsafe Shapes BuildShapes(
-        System.IntPtr extraSmall,
-        System.IntPtr small,
-        System.IntPtr medium,
-        System.IntPtr large,
-        System.IntPtr extraLarge,
+        IntPtr extraSmall,
+        IntPtr small,
+        IntPtr medium,
+        IntPtr large,
+        IntPtr extraLarge,
         int defaults)
     {
-        if (s_shapesCtor_method == System.IntPtr.Zero)
+        if (s_shapesCtor_method == IntPtr.Zero)
         {
             s_shapesCtor_class = JNIEnv.FindClass("androidx/compose/material3/Shapes");
             s_shapesCtor_method = JNIEnv.GetMethodID(s_shapesCtor_class, "<init>", ShapesDefaultCtorSig);
@@ -64,9 +64,9 @@ internal static partial class ComposeBridges
         args[3] = new JValue(large);
         args[4] = new JValue(extraLarge);
         args[5] = new JValue(defaults);
-        args[6] = new JValue(System.IntPtr.Zero); // DefaultConstructorMarker
+        args[6] = new JValue(IntPtr.Zero); // DefaultConstructorMarker
 
-        System.IntPtr handle = JNIEnv.NewObject(s_shapesCtor_class, s_shapesCtor_method, args);
+        IntPtr handle = JNIEnv.NewObject(s_shapesCtor_class, s_shapesCtor_method, args);
         return Java.Lang.Object.GetObject<Shapes>(handle, JniHandleOwnership.TransferLocalRef)!;
     }
 }

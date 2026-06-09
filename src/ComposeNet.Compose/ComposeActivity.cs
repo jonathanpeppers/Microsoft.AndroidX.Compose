@@ -1,5 +1,4 @@
 using System.Runtime.CompilerServices;
-using Android.OS;
 using Android.Util;
 using AndroidX.Activity;
 using AndroidX.Compose.Runtime.Internal;
@@ -10,7 +9,7 @@ namespace ComposeNet;
 /// <summary>
 /// Base activity for ComposeNet apps. Mirrors the Kotlin shape:
 /// override <c>OnCreate</c>, call <c>base.OnCreate</c>, then call
-/// <see cref="SetContent(System.Func{ComposableNode})"/> with a lambda
+/// <see cref="SetContent(Func{ComposableNode})"/> with a lambda
 /// returning the composition tree:
 ///
 /// <code>
@@ -67,20 +66,20 @@ public abstract class ComposeActivity : ComponentActivity
     /// <see cref="MutableNumberState{T}"/> instances at the top of a
     /// <see cref="SetContent"/> lambda.
     ///
-    /// Forwards to <see cref="Compose.Remember{T}(System.Func{T}, int, string)"/>,
+    /// Forwards to <see cref="Compose.Remember{T}(Func{T}, int, string)"/>,
     /// which is backed by the active composer's slot table — so the cached
     /// value survives recomposition the same way Kotlin's <c>remember { }</c>
     /// does, and clears with the composition (not the activity).
     /// </summary>
     protected T Remember<T>(
-        System.Func<T> factory,
+        Func<T> factory,
         [CallerLineNumber] int line = 0,
         [CallerFilePath]   string file = "")
         => Compose.Remember(factory, line, file);
 
-    /// <summary>Keyed <c>remember(key1) { factory() }</c>; forwards to <see cref="Compose.Remember{T}(System.Func{T}, object?, int, string)"/>.</summary>
+    /// <summary>Keyed <c>remember(key1) { factory() }</c>; forwards to <see cref="Compose.Remember{T}(Func{T}, object?, int, string)"/>.</summary>
     protected T Remember<T>(
-        System.Func<T> factory,
+        Func<T> factory,
         object? key1,
         [CallerLineNumber] int line = 0,
         [CallerFilePath]   string file = "")
@@ -88,7 +87,7 @@ public abstract class ComposeActivity : ComponentActivity
 
     /// <summary>Keyed <c>remember(key1, key2) { factory() }</c>.</summary>
     protected T Remember<T>(
-        System.Func<T> factory,
+        Func<T> factory,
         object? key1,
         object? key2,
         [CallerLineNumber] int line = 0,
@@ -97,7 +96,7 @@ public abstract class ComposeActivity : ComponentActivity
 
     /// <summary>Keyed <c>remember(key1, key2, key3) { factory() }</c>.</summary>
     protected T Remember<T>(
-        System.Func<T> factory,
+        Func<T> factory,
         object? key1,
         object? key2,
         object? key3,
@@ -107,31 +106,31 @@ public abstract class ComposeActivity : ComponentActivity
 
     /// <summary>Array-form keyed <c>remember(vararg keys) { factory() }</c>.</summary>
     protected T RememberKeyed<T>(
-        System.Func<T> factory,
+        Func<T> factory,
         object?[] keys,
         [CallerLineNumber] int line = 0,
         [CallerFilePath]   string file = "")
         => Compose.RememberKeyed(factory, keys, line, file);
 
     /// <summary>
-    /// Like <see cref="Remember{T}(System.Func{T}, int, string)"/>, but
+    /// Like <see cref="Remember{T}(Func{T}, int, string)"/>, but
     /// the cached value also survives process death / activity
     /// recreation through Compose's <c>SaveableStateRegistry</c>.
     /// Mirrors Kotlin's single <c>rememberSaveable&lt;T&gt;</c> entry
     /// point — works for scalar values and for state-holder wrappers
     /// (<see cref="MutableState{U}"/> / <see cref="MutableNumberState{U}"/>).
-    /// See <see cref="Compose.RememberSaveable{T}(System.Func{T}, int, string)"/>
+    /// See <see cref="Compose.RememberSaveable{T}(Func{T}, int, string)"/>
     /// for the full supported-<c>T</c> list.
     /// </summary>
     protected T RememberSaveable<T>(
-        System.Func<T> factory,
+        Func<T> factory,
         [CallerLineNumber] int line = 0,
         [CallerFilePath]   string file = "")
         => Compose.RememberSaveable(factory, line, file);
 
-    /// <summary>Keyed <c>rememberSaveable(key1) { factory() }</c>; forwards to <see cref="Compose.RememberSaveable{T}(System.Func{T}, object?, int, string)"/>.</summary>
+    /// <summary>Keyed <c>rememberSaveable(key1) { factory() }</c>; forwards to <see cref="Compose.RememberSaveable{T}(Func{T}, object?, int, string)"/>.</summary>
     protected T RememberSaveable<T>(
-        System.Func<T> factory,
+        Func<T> factory,
         object? key1,
         [CallerLineNumber] int line = 0,
         [CallerFilePath]   string file = "")
@@ -139,7 +138,7 @@ public abstract class ComposeActivity : ComponentActivity
 
     /// <summary>Keyed <c>rememberSaveable(key1, key2) { factory() }</c>.</summary>
     protected T RememberSaveable<T>(
-        System.Func<T> factory,
+        Func<T> factory,
         object? key1,
         object? key2,
         [CallerLineNumber] int line = 0,
@@ -148,7 +147,7 @@ public abstract class ComposeActivity : ComponentActivity
 
     /// <summary>Keyed <c>rememberSaveable(key1, key2, key3) { factory() }</c>.</summary>
     protected T RememberSaveable<T>(
-        System.Func<T> factory,
+        Func<T> factory,
         object? key1,
         object? key2,
         object? key3,
@@ -158,7 +157,7 @@ public abstract class ComposeActivity : ComponentActivity
 
     /// <summary>Array-form keyed <c>rememberSaveable(vararg inputs) { factory() }</c>.</summary>
     protected T RememberSaveableKeyed<T>(
-        System.Func<T> factory,
+        Func<T> factory,
         object?[] keys,
         [CallerLineNumber] int line = 0,
         [CallerFilePath]   string file = "")
@@ -182,7 +181,7 @@ public abstract class ComposeActivity : ComponentActivity
     /// runs <paramref name="content"/> on each composition pass and
     /// renders the returned tree.
     /// </summary>
-    protected void SetContent(System.Func<ComposableNode> content)
+    protected void SetContent(Func<ComposableNode> content)
     {
         var view = new ComposeView(this);
 

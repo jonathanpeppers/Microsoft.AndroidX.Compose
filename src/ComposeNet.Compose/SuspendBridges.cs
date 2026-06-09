@@ -12,15 +12,15 @@ namespace ComposeNet;
 // #96 design notes.
 internal static partial class ComposeBridges
 {
-    static System.IntPtr s_scrollStateScrollTo_class;
-    static System.IntPtr s_scrollStateScrollTo_method;
-    static System.IntPtr s_scrollStateAnimateScrollTo_class;
-    static System.IntPtr s_scrollStateAnimateScrollTo_method;
-    static System.IntPtr s_drawerStateOpen_class;
-    static System.IntPtr s_drawerStateOpen_method;
-    static System.IntPtr s_drawerStateClose_class;
-    static System.IntPtr s_drawerStateClose_method;
-    static System.IntPtr s_androidUiDispatcherMain_handle;
+    static IntPtr s_scrollStateScrollTo_class;
+    static IntPtr s_scrollStateScrollTo_method;
+    static IntPtr s_scrollStateAnimateScrollTo_class;
+    static IntPtr s_scrollStateAnimateScrollTo_method;
+    static IntPtr s_drawerStateOpen_class;
+    static IntPtr s_drawerStateOpen_method;
+    static IntPtr s_drawerStateClose_class;
+    static IntPtr s_drawerStateClose_method;
+    static IntPtr s_androidUiDispatcherMain_handle;
 
     // androidx.compose.foundation.ScrollState.scrollTo(int value, Continuation): Object
     //
@@ -29,10 +29,10 @@ internal static partial class ComposeBridges
     // returned handle stays as a plain IntPtr — SuspendBridge needs
     // raw-handle semantics to avoid the peer-cache pitfall around
     // COROUTINE_SUSPENDED.
-    internal static unsafe System.IntPtr ScrollStateScrollTo(
-        System.IntPtr state, int value, SuspendContinuation cont)
+    internal static unsafe IntPtr ScrollStateScrollTo(
+        IntPtr state, int value, SuspendContinuation cont)
     {
-        if (s_scrollStateScrollTo_method == System.IntPtr.Zero)
+        if (s_scrollStateScrollTo_method == IntPtr.Zero)
         {
             // JNIEnv.FindClass in Mono.Android already returns a stable,
             // globally-registered class ref — store it directly. Calling
@@ -55,7 +55,7 @@ internal static partial class ComposeBridges
         }
         finally
         {
-            System.GC.KeepAlive(cont);
+            GC.KeepAlive(cont);
         }
     }
 
@@ -86,10 +86,10 @@ internal static partial class ComposeBridges
     // dotnet/java-interop#1440 — once that lands and the upstream
     // Compose binding is regenerated, this bridge can be replaced with
     // a clean call through the bound `AnimateScrollExtensionsKt`.
-    internal static unsafe System.IntPtr ScrollStateAnimateScrollTo(
-        System.IntPtr state, int value, SuspendContinuation cont)
+    internal static unsafe IntPtr ScrollStateAnimateScrollTo(
+        IntPtr state, int value, SuspendContinuation cont)
     {
-        if (s_scrollStateAnimateScrollTo_method == System.IntPtr.Zero)
+        if (s_scrollStateAnimateScrollTo_method == IntPtr.Zero)
         {
             // JNIEnv.FindClass in Mono.Android returns a stable, globally
             // registered class ref — store it directly. See
@@ -108,10 +108,10 @@ internal static partial class ComposeBridges
             JValue* args = stackalloc JValue[6];
             args[0] = new JValue(state);
             args[1] = new JValue(value);
-            args[2] = new JValue(System.IntPtr.Zero);   // AnimationSpec — defaulted
+            args[2] = new JValue(IntPtr.Zero);   // AnimationSpec — defaulted
             args[3] = new JValue(cont.Handle);
             args[4] = new JValue(0b010);                // $default mask: bit 1 = animationSpec
-            args[5] = new JValue(System.IntPtr.Zero);   // synthetic marker — always null
+            args[5] = new JValue(IntPtr.Zero);   // synthetic marker — always null
             return JNIEnv.CallStaticObjectMethod(
                 s_scrollStateAnimateScrollTo_class,
                 s_scrollStateAnimateScrollTo_method,
@@ -119,7 +119,7 @@ internal static partial class ComposeBridges
         }
         finally
         {
-            System.GC.KeepAlive(cont);
+            GC.KeepAlive(cont);
         }
     }
 
@@ -130,10 +130,10 @@ internal static partial class ComposeBridges
     // handle stays as a plain IntPtr — SuspendBridge needs raw-handle
     // semantics to avoid the peer-cache pitfall around
     // COROUTINE_SUSPENDED. Same pattern as ScrollStateScrollTo.
-    internal static unsafe System.IntPtr DrawerStateOpen(
-        System.IntPtr state, SuspendContinuation cont)
+    internal static unsafe IntPtr DrawerStateOpen(
+        IntPtr state, SuspendContinuation cont)
     {
-        if (s_drawerStateOpen_method == System.IntPtr.Zero)
+        if (s_drawerStateOpen_method == IntPtr.Zero)
         {
             s_drawerStateOpen_class = JNIEnv.FindClass("androidx/compose/material3/DrawerState");
             s_drawerStateOpen_method = JNIEnv.GetMethodID(
@@ -150,17 +150,17 @@ internal static partial class ComposeBridges
         }
         finally
         {
-            System.GC.KeepAlive(cont);
+            GC.KeepAlive(cont);
         }
     }
 
     // androidx.compose.material3.DrawerState.close(Continuation): Object
     //
     // Mirror of DrawerStateOpen for the close-drawer suspend call.
-    internal static unsafe System.IntPtr DrawerStateClose(
-        System.IntPtr state, SuspendContinuation cont)
+    internal static unsafe IntPtr DrawerStateClose(
+        IntPtr state, SuspendContinuation cont)
     {
-        if (s_drawerStateClose_method == System.IntPtr.Zero)
+        if (s_drawerStateClose_method == IntPtr.Zero)
         {
             s_drawerStateClose_class = JNIEnv.FindClass("androidx/compose/material3/DrawerState");
             s_drawerStateClose_method = JNIEnv.GetMethodID(
@@ -177,7 +177,7 @@ internal static partial class ComposeBridges
         }
         finally
         {
-            System.GC.KeepAlive(cont);
+            GC.KeepAlive(cont);
         }
     }
 
@@ -195,9 +195,9 @@ internal static partial class ComposeBridges
     // Must be initialised on a Looper thread the first time, which is
     // naturally satisfied because Compose suspend calls originate from
     // button onClicks running on the main thread.
-    internal static System.IntPtr AndroidUiDispatcherMain()
+    internal static IntPtr AndroidUiDispatcherMain()
     {
-        if (s_androidUiDispatcherMain_handle != System.IntPtr.Zero)
+        if (s_androidUiDispatcherMain_handle != IntPtr.Zero)
             return s_androidUiDispatcherMain_handle;
 
         var dispatcherClass = JNIEnv.FindClass("androidx/compose/ui/platform/AndroidUiDispatcher");
@@ -228,10 +228,10 @@ internal static partial class ComposeBridges
         return s_androidUiDispatcherMain_handle;
     }
 
-    static System.IntPtr s_lazyListStateScrollToItem_class;
-    static System.IntPtr s_lazyListStateScrollToItem_method;
-    static System.IntPtr s_lazyListStateAnimateScrollToItem_class;
-    static System.IntPtr s_lazyListStateAnimateScrollToItem_method;
+    static IntPtr s_lazyListStateScrollToItem_class;
+    static IntPtr s_lazyListStateScrollToItem_method;
+    static IntPtr s_lazyListStateAnimateScrollToItem_class;
+    static IntPtr s_lazyListStateAnimateScrollToItem_method;
 
     // androidx.compose.foundation.lazy.LazyListState
     //     .scrollToItem(int index, int scrollOffset, Continuation): Object
@@ -241,10 +241,10 @@ internal static partial class ComposeBridges
     // handle stays as a plain IntPtr — SuspendBridge needs raw-handle
     // semantics to avoid the peer-cache pitfall around
     // COROUTINE_SUSPENDED. Same pattern as ScrollStateScrollTo.
-    internal static unsafe System.IntPtr LazyListStateScrollToItem(
-        System.IntPtr state, int index, int scrollOffset, SuspendContinuation cont)
+    internal static unsafe IntPtr LazyListStateScrollToItem(
+        IntPtr state, int index, int scrollOffset, SuspendContinuation cont)
     {
-        if (s_lazyListStateScrollToItem_method == System.IntPtr.Zero)
+        if (s_lazyListStateScrollToItem_method == IntPtr.Zero)
         {
             s_lazyListStateScrollToItem_class = JNIEnv.FindClass(
                 "androidx/compose/foundation/lazy/LazyListState");
@@ -264,7 +264,7 @@ internal static partial class ComposeBridges
         }
         finally
         {
-            System.GC.KeepAlive(cont);
+            GC.KeepAlive(cont);
         }
     }
 
@@ -276,10 +276,10 @@ internal static partial class ComposeBridges
     // is supplied by SuspendContinuation.Context which returns
     // AndroidUiDispatcher.Main. Same raw-handle pattern as
     // ScrollStateAnimateScrollTo / ScrollStateScrollTo.
-    internal static unsafe System.IntPtr LazyListStateAnimateScrollToItem(
-        System.IntPtr state, int index, int scrollOffset, SuspendContinuation cont)
+    internal static unsafe IntPtr LazyListStateAnimateScrollToItem(
+        IntPtr state, int index, int scrollOffset, SuspendContinuation cont)
     {
-        if (s_lazyListStateAnimateScrollToItem_method == System.IntPtr.Zero)
+        if (s_lazyListStateAnimateScrollToItem_method == IntPtr.Zero)
         {
             s_lazyListStateAnimateScrollToItem_class = JNIEnv.FindClass(
                 "androidx/compose/foundation/lazy/LazyListState");
@@ -299,12 +299,12 @@ internal static partial class ComposeBridges
         }
         finally
         {
-            System.GC.KeepAlive(cont);
+            GC.KeepAlive(cont);
         }
     }
 
-    static System.IntPtr s_detectTapGestures_class;
-    static System.IntPtr s_detectTapGestures_method;
+    static IntPtr s_detectTapGestures_class;
+    static IntPtr s_detectTapGestures_method;
 
     // androidx.compose.foundation.gestures.TapGestureDetectorKt
     //     .detectTapGestures(
@@ -332,15 +332,15 @@ internal static partial class ComposeBridges
     // Kotlin substitutes its real default (null for the nullable slots,
     // NoPressGesture for onPress). The synthetic-overload marker (last
     // Object arg) is always null at every call site.
-    internal static unsafe System.IntPtr DetectTapGestures(
-        System.IntPtr scope,
-        System.IntPtr onDoubleTap,
-        System.IntPtr onLongPress,
-        System.IntPtr onPress,
-        System.IntPtr onTap,
-        System.IntPtr cont)
+    internal static unsafe IntPtr DetectTapGestures(
+        IntPtr scope,
+        IntPtr onDoubleTap,
+        IntPtr onLongPress,
+        IntPtr onPress,
+        IntPtr onTap,
+        IntPtr cont)
     {
-        if (s_detectTapGestures_method == System.IntPtr.Zero)
+        if (s_detectTapGestures_method == IntPtr.Zero)
         {
             s_detectTapGestures_class = JNIEnv.FindClass(
                 "androidx/compose/foundation/gestures/TapGestureDetectorKt");
@@ -357,10 +357,10 @@ internal static partial class ComposeBridges
         }
 
         int mask = 0;
-        if (onDoubleTap == System.IntPtr.Zero) mask |= 0b0001;
-        if (onLongPress == System.IntPtr.Zero) mask |= 0b0010;
-        if (onPress == System.IntPtr.Zero) mask |= 0b0100;
-        if (onTap == System.IntPtr.Zero) mask |= 0b1000;
+        if (onDoubleTap == IntPtr.Zero) mask |= 0b0001;
+        if (onLongPress == IntPtr.Zero) mask |= 0b0010;
+        if (onPress == IntPtr.Zero) mask |= 0b0100;
+        if (onTap == IntPtr.Zero) mask |= 0b1000;
 
         JValue* args = stackalloc JValue[8];
         args[0] = new JValue(scope);
@@ -370,7 +370,7 @@ internal static partial class ComposeBridges
         args[4] = new JValue(onTap);
         args[5] = new JValue(cont);
         args[6] = new JValue(mask);
-        args[7] = new JValue(System.IntPtr.Zero);
+        args[7] = new JValue(IntPtr.Zero);
         return JNIEnv.CallStaticObjectMethod(
             s_detectTapGestures_class, s_detectTapGestures_method, args);
     }

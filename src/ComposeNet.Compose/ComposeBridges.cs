@@ -1150,8 +1150,8 @@ internal static partial class ComposeBridges
     // this declaration when resolving the Remember parameter to a
     // per-instance JCW field instead of a state-wrapper member.
     public static IntPtr RememberDrawerState(
-        AndroidX.Compose.Material3.DrawerValue initialValue,
-        [ConfirmStateChange(typeof(AndroidX.Compose.Material3.DrawerValue),
+        DrawerValue initialValue,
+        [ConfirmStateChange(typeof(DrawerValue),
             AdapterType = typeof(DrawerValueConfirmStateChange))]
         IFunction1 confirmStateChange,
         IComposer composer)
@@ -1170,7 +1170,7 @@ internal static partial class ComposeBridges
     // from C# via the wrapper's InitialValue property. Kotlin function is
     // bound natively — wrapper-passthrough only.
     public static IntPtr RememberWideNavigationRailState(
-        AndroidX.Compose.Material3.WideNavigationRailValue initialValue,
+        WideNavigationRailValue initialValue,
         IComposer composer)
     {
         var state = AndroidX.Compose.Material3.WideNavigationRailStateKt.RememberWideNavigationRailState(
@@ -1732,7 +1732,7 @@ internal static partial class ComposeBridges
     {
         // The bound binding takes a typed DrawerState; reconstitute it
         // from the JNI handle the [StateHolder] handed us.
-        var stateObj = global::Java.Lang.Object.GetObject<AndroidX.Compose.Material3.DrawerState>(
+        var stateObj = Java.Lang.Object.GetObject<DrawerState>(
             drawerState, global::Android.Runtime.JniHandleOwnership.DoNotTransfer)!;
         AndroidX.Compose.Material3.NavigationDrawerKt.ModalNavigationDrawer(
             drawerContent:    drawerContent,
@@ -1761,7 +1761,7 @@ internal static partial class ComposeBridges
         IFunction2 drawerContent, IModifier? modifier, IntPtr drawerState,
         IFunction2 content, int defaults, IComposer composer)
     {
-        var stateObj = global::Java.Lang.Object.GetObject<AndroidX.Compose.Material3.DrawerState>(
+        var stateObj = Java.Lang.Object.GetObject<DrawerState>(
             drawerState, global::Android.Runtime.JniHandleOwnership.DoNotTransfer)!;
         AndroidX.Compose.Material3.NavigationDrawerKt.DismissibleNavigationDrawer(
             drawerContent:    drawerContent,
@@ -2358,7 +2358,7 @@ internal static partial class ComposeBridges
         InstanceField = "INSTANCE",
         Defaults      = typeof(TopAppBarEnterAlwaysScrollBehaviorDefault))]
     internal static partial IntPtr TopAppBarDefaultsEnterAlwaysScrollBehavior(
-        AndroidX.Compose.Material3.TopAppBarState state,
+        TopAppBarState state,
         IComposer composer);
 
     // androidx.compose.material3.TopAppBarDefaults.exitUntilCollapsedScrollBehavior —
@@ -2375,7 +2375,7 @@ internal static partial class ComposeBridges
         InstanceField = "INSTANCE",
         Defaults      = typeof(TopAppBarExitUntilCollapsedScrollBehaviorDefault))]
     internal static partial IntPtr TopAppBarDefaultsExitUntilCollapsedScrollBehavior(
-        AndroidX.Compose.Material3.TopAppBarState state,
+        TopAppBarState state,
         IComposer composer);
 
     // BoxScope / RowScope / ColumnScope `align` and `matchParentSize`
@@ -2583,7 +2583,7 @@ internal static partial class ComposeBridges
         IModifier?  modifier,
         IFunction2? navigationIcon,
         IFunction3? actions,
-        global::AndroidX.Compose.Material3.ITopAppBarScrollBehavior? scrollBehavior,
+        ITopAppBarScrollBehavior? scrollBehavior,
         int         defaults,
         IComposer   composer);
 
@@ -2598,7 +2598,7 @@ internal static partial class ComposeBridges
         IModifier?  modifier,
         IFunction2? navigationIcon,
         IFunction3? actions,
-        global::AndroidX.Compose.Material3.ITopAppBarScrollBehavior? scrollBehavior,
+        ITopAppBarScrollBehavior? scrollBehavior,
         int         defaults,
         IComposer   composer);
 
@@ -2625,7 +2625,7 @@ internal static partial class ComposeBridges
         IModifier?  modifier,
         IFunction2? navigationIcon,
         IFunction3? actions,
-        global::AndroidX.Compose.Material3.ITopAppBarScrollBehavior? scrollBehavior,
+        ITopAppBarScrollBehavior? scrollBehavior,
         int         defaults,
         IComposer   composer);
 
@@ -2642,7 +2642,7 @@ internal static partial class ComposeBridges
         IModifier?  modifier,
         IFunction2? navigationIcon,
         IFunction3? actions,
-        global::AndroidX.Compose.Material3.ITopAppBarScrollBehavior? scrollBehavior,
+        ITopAppBarScrollBehavior? scrollBehavior,
         int         defaults,
         IComposer   composer);
 
@@ -3202,7 +3202,7 @@ internal static partial class ComposeBridges
         IModifier?  modifier,
         IFunction2? navigationIcon,
         IFunction3? actions,
-        global::AndroidX.Compose.Material3.ITopAppBarScrollBehavior? scrollBehavior,
+        ITopAppBarScrollBehavior? scrollBehavior,
         int         defaults,
         IComposer   composer);
 
@@ -3233,7 +3233,7 @@ internal static partial class ComposeBridges
         IFunction2? subtitle,
         IFunction2? navigationIcon,
         IFunction3? actions,
-        global::AndroidX.Compose.Material3.ITopAppBarScrollBehavior? scrollBehavior,
+        ITopAppBarScrollBehavior? scrollBehavior,
         int         defaults,
         IComposer   composer);
 
@@ -3249,7 +3249,7 @@ internal static partial class ComposeBridges
         IFunction2? subtitle,
         IFunction2? navigationIcon,
         IFunction3? actions,
-        global::AndroidX.Compose.Material3.ITopAppBarScrollBehavior? scrollBehavior,
+        ITopAppBarScrollBehavior? scrollBehavior,
         int         defaults,
         IComposer   composer);
 
@@ -3604,13 +3604,13 @@ internal static partial class ComposeBridges
 
     [ComposeFacade(Defaults = typeof(TriStateCheckboxDefault))]
     public static partial void TriStateCheckbox(
-        AndroidX.Compose.UI.State.ToggleableState state,
+        ToggleableState state,
         IFunction0  onClick,
         IModifier?  modifier,
         int         defaults,
         IComposer   composer);
 
-    public static partial void TriStateCheckbox(AndroidX.Compose.UI.State.ToggleableState state, IFunction0 onClick, IModifier? modifier, int defaults, IComposer composer)
+    public static partial void TriStateCheckbox(ToggleableState state, IFunction0 onClick, IModifier? modifier, int defaults, IComposer composer)
         => AndroidX.Compose.Material3.CheckboxKt.TriStateCheckbox(
             state:             state,
             onClick:           onClick,

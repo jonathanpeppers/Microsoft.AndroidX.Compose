@@ -8,7 +8,7 @@ namespace ComposeNet.Samples.JetNews;
 /// </summary>
 /// <remarks>
 /// Single-value UI state is the canonical UDF idiom: one
-/// <see cref="ComposeNet.MutableStateFlow{T}"/> exposed by the view
+/// <see cref="MutableStateFlow{T}"/> exposed by the view
 /// model holds whichever case is current; the composable matches on
 /// the type and renders the matching surface (loading spinner /
 /// error banner / feed lazy column). Recomposition is automatic when

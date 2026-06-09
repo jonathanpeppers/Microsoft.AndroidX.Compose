@@ -3,7 +3,7 @@ using ComposeNet.Gallery.Registry;
 namespace ComposeNet.Gallery.Demos.Modifiers;
 
 /// <summary>
-/// Fluent <see cref="Modifier.Semantics(System.Action{ComposeNet.SemanticsScope})"/>
+/// Fluent <see cref="Modifier.Semantics(Action{SemanticsScope})"/>
 /// builder demo — exposes Selected, Role, ContentDescription,
 /// StateDescription, and OnClick(label, action) on a single chain.
 /// Models a multi-select email row from the upstream Reply sample.

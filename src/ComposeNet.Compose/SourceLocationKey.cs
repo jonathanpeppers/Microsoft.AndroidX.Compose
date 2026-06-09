@@ -5,12 +5,12 @@ namespace ComposeNet;
 /// / <c>[CallerFilePath]</c> pair. Used by every group/lambda key the
 /// facade hands to Compose so the same call site produces the same
 /// <c>int</c> in every process — a hard requirement for
-/// <see cref="Compose.RememberSaveable{T}(System.Func{T}, int, string)"/>,
+/// <see cref="Compose.RememberSaveable{T}(Func{T}, int, string)"/>,
 /// whose <c>SaveableStateRegistry</c> key is built from the full chain
 /// of ancestor group keys leading to the call.
 /// </summary>
 /// <remarks>
-/// <see cref="System.HashCode.Combine{T1,T2}(T1,T2)"/> and
+/// <see cref="HashCode.Combine{T1,T2}(T1,T2)"/> and
 /// <see cref="string.GetHashCode()"/> are randomized per process on
 /// modern .NET, so they can't be used here — the saved key embedded
 /// in <c>onSaveInstanceState</c> would never match the key recomputed

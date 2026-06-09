@@ -44,7 +44,7 @@ namespace ComposeNet;
 [Register("composenet/compose/PointerInputBlock")]
 internal sealed class PointerInputBlock : Java.Lang.Object, IFunction2
 {
-    static System.IntPtr s_suspendedHandle;
+    static IntPtr s_suspendedHandle;
 
     readonly OffsetCallback? _onTap;
     readonly OffsetPressCallback? _onPress;
@@ -66,10 +66,10 @@ internal sealed class PointerInputBlock : Java.Lang.Object, IFunction2
     public Java.Lang.Object? Invoke(Java.Lang.Object? scope, Java.Lang.Object? cont)
     {
         if (scope is null)
-            throw new System.InvalidOperationException(
+            throw new InvalidOperationException(
                 "PointerInputBlock.Invoke received a null PointerInputScope in slot 0");
         if (cont is null)
-            throw new System.InvalidOperationException(
+            throw new InvalidOperationException(
                 "PointerInputBlock.Invoke received a null Continuation in slot 1");
 
         var scopeHandle = scope.Handle;
@@ -79,13 +79,13 @@ internal sealed class PointerInputBlock : Java.Lang.Object, IFunction2
         {
             var resultHandle = ComposeBridges.DetectTapGestures(
                 scopeHandle,
-                _onDoubleTap is null ? System.IntPtr.Zero : ((Java.Lang.Object)_onDoubleTap).Handle,
-                _onLongPress is null ? System.IntPtr.Zero : ((Java.Lang.Object)_onLongPress).Handle,
-                _onPress is null ? System.IntPtr.Zero : ((Java.Lang.Object)_onPress).Handle,
-                _onTap is null ? System.IntPtr.Zero : ((Java.Lang.Object)_onTap).Handle,
+                _onDoubleTap is null ? IntPtr.Zero : ((Java.Lang.Object)_onDoubleTap).Handle,
+                _onLongPress is null ? IntPtr.Zero : ((Java.Lang.Object)_onLongPress).Handle,
+                _onPress is null ? IntPtr.Zero : ((Java.Lang.Object)_onPress).Handle,
+                _onTap is null ? IntPtr.Zero : ((Java.Lang.Object)_onTap).Handle,
                 contHandle);
 
-            if (resultHandle == System.IntPtr.Zero)
+            if (resultHandle == IntPtr.Zero)
                 return null;
 
             // The COROUTINE_SUSPENDED sentinel is a Kotlin singleton.
@@ -106,23 +106,23 @@ internal sealed class PointerInputBlock : Java.Lang.Object, IFunction2
         }
         finally
         {
-            System.GC.KeepAlive(scope);
-            System.GC.KeepAlive(cont);
-            System.GC.KeepAlive(_onTap);
-            System.GC.KeepAlive(_onPress);
-            System.GC.KeepAlive(_onLongPress);
-            System.GC.KeepAlive(_onDoubleTap);
+            GC.KeepAlive(scope);
+            GC.KeepAlive(cont);
+            GC.KeepAlive(_onTap);
+            GC.KeepAlive(_onPress);
+            GC.KeepAlive(_onLongPress);
+            GC.KeepAlive(_onDoubleTap);
         }
     }
 
     static void EnsureSuspendedHandle()
     {
-        if (s_suspendedHandle != System.IntPtr.Zero) return;
+        if (s_suspendedHandle != IntPtr.Zero) return;
         var inst = IntrinsicsKt.COROUTINE_SUSPENDED;
         var gref = JNIEnv.NewGlobalRef(inst.Handle);
-        if (System.Threading.Interlocked.CompareExchange(
-                ref s_suspendedHandle, gref, System.IntPtr.Zero) != System.IntPtr.Zero)
+        if (Interlocked.CompareExchange(
+                ref s_suspendedHandle, gref, IntPtr.Zero) != IntPtr.Zero)
             JNIEnv.DeleteGlobalRef(gref);
-        System.GC.KeepAlive(inst);
+        GC.KeepAlive(inst);
     }
 }

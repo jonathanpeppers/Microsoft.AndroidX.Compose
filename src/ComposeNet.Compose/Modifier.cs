@@ -1,6 +1,5 @@
 using Android.Runtime;
 using AndroidX.Compose.UI;
-using Java.Interop;
 
 namespace ComposeNet;
 
@@ -40,16 +39,16 @@ namespace ComposeNet;
 /// cheap modifier chains every recomposition is the per-composition
 /// cost the Tier 1.5 facade pays — Tier 2 codegen would skip it.
 ///
-/// Phase 1 ships <see cref="Padding(ComposeNet.Dp)"/>, the horizontal/vertical
+/// Phase 1 ships <see cref="Padding(Dp)"/>, the horizontal/vertical
 /// + per-edge overloads, and <see cref="FillMaxWidth"/> /
 /// <see cref="FillMaxHeight"/> / <see cref="FillMaxSize"/>. Phase 2
-/// adds <see cref="Background(Color)"/>, <see cref="Border(ComposeNet.Dp, Color)"/>,
-/// <see cref="Clip(ComposeNet.Dp)"/>, and <see cref="Clickable"/>. Gesture and
+/// adds <see cref="Background(Color)"/>, <see cref="Border(Dp, Color)"/>,
+/// <see cref="Clip(Dp)"/>, and <see cref="Clickable"/>. Gesture and
 /// size-constraint modifiers land in later phases (issue #21).
 /// </summary>
 public sealed class Modifier
 {
-    static readonly System.Func<IntPtr, IntPtr>[] EmptyOps = System.Array.Empty<System.Func<IntPtr, IntPtr>>();
+    static readonly Func<IntPtr, IntPtr>[] EmptyOps = Array.Empty<Func<IntPtr, IntPtr>>();
     static readonly Modifier _companion = new Modifier(EmptyOps);
 
     /// <summary>
@@ -59,17 +58,17 @@ public sealed class Modifier
     /// </summary>
     public static Modifier Companion => _companion;
 
-    readonly System.Func<IntPtr, IntPtr>[] _ops;
+    readonly Func<IntPtr, IntPtr>[] _ops;
 
-    Modifier(System.Func<IntPtr, IntPtr>[] ops)
+    Modifier(Func<IntPtr, IntPtr>[] ops)
     {
         _ops = ops;
     }
 
-    Modifier Append(System.Func<IntPtr, IntPtr> op)
+    Modifier Append(Func<IntPtr, IntPtr> op)
     {
-        var arr = new System.Func<IntPtr, IntPtr>[_ops.Length + 1];
-        System.Array.Copy(_ops, arr, _ops.Length);
+        var arr = new Func<IntPtr, IntPtr>[_ops.Length + 1];
+        Array.Copy(_ops, arr, _ops.Length);
         arr[_ops.Length] = op;
         return new Modifier(arr);
     }
@@ -85,9 +84,9 @@ public sealed class Modifier
         ArgumentNullException.ThrowIfNull(other);
         if (other._ops.Length == 0) return this;
         if (_ops.Length == 0) return other;
-        var arr = new System.Func<IntPtr, IntPtr>[_ops.Length + other._ops.Length];
-        System.Array.Copy(_ops, arr, _ops.Length);
-        System.Array.Copy(other._ops, 0, arr, _ops.Length, other._ops.Length);
+        var arr = new Func<IntPtr, IntPtr>[_ops.Length + other._ops.Length];
+        Array.Copy(_ops, arr, _ops.Length);
+        Array.Copy(other._ops, 0, arr, _ops.Length, other._ops.Length);
         return new Modifier(arr);
     }
 
@@ -236,10 +235,10 @@ public sealed class Modifier
     /// <c>androidx.compose.ui.graphics.Color</c> value (a <c>ULong</c>
     /// surfaced as a <c>long</c> in the binding because Color is a Kotlin
     /// <c>@JvmInline value class</c>). Build one via
-    /// <see cref="ComposeNet.Color.FromRgb(byte, byte, byte)"/>,
-    /// <see cref="ComposeNet.Color.FromHex(string)"/>, or one of the
-    /// named constants on <see cref="ComposeNet.Color"/> (e.g.
-    /// <see cref="ComposeNet.Color.Black"/>).
+    /// <see cref="Color.FromRgb(byte, byte, byte)"/>,
+    /// <see cref="Color.FromHex(string)"/>, or one of the
+    /// named constants on <see cref="Color"/> (e.g.
+    /// <see cref="Color.Black"/>).
     /// </summary>
     public Modifier Background(Color color) =>
         Append(curr => ComposeBridges.ModifierBackground(curr, color, null));
@@ -248,9 +247,9 @@ public sealed class Modifier
     /// <c>Modifier.background(color, shape)</c> — paints a flat fill
     /// behind the composable, clipped to <paramref name="shape"/>. Pass
     /// <c>null</c> for the default <c>RectangleShape</c>; otherwise build
-    /// a shape via <see cref="ComposeNet.Shape.RoundedCorners(Dp)"/>,
-    /// <see cref="ComposeNet.Shape.Circle"/>,
-    /// <see cref="ComposeNet.Shape.CutCorners(Dp)"/>, etc. The shape is
+    /// a shape via <see cref="Shape.RoundedCorners(Dp)"/>,
+    /// <see cref="Shape.Circle"/>,
+    /// <see cref="Shape.CutCorners(Dp)"/>, etc. The shape is
     /// captured by the closure so its Java peer stays alive across
     /// recompositions.
     /// </summary>
@@ -304,7 +303,7 @@ public sealed class Modifier
 
     /// <summary>
     /// <c>Modifier.border(width, color, shape)</c> — overload taking an
-    /// explicit <see cref="ComposeNet.Shape"/> for non-rounded geometry
+    /// explicit <see cref="Shape"/> for non-rounded geometry
     /// (cut corners, custom shape factories, etc.). Pass <c>null</c> for
     /// <c>RectangleShape</c>. The shape is captured by the closure so its
     /// Java peer stays alive across recompositions.
@@ -330,8 +329,8 @@ public sealed class Modifier
     /// <summary>
     /// <c>Modifier.clip(shape)</c> — clips drawing (and pointer hits)
     /// to the supplied <paramref name="shape"/>. Use with
-    /// <see cref="ComposeNet.Shape.Circle"/> for circular clips,
-    /// <see cref="ComposeNet.Shape.CutCorners(Dp)"/> for chamfered
+    /// <see cref="Shape.Circle"/> for circular clips,
+    /// <see cref="Shape.CutCorners(Dp)"/> for chamfered
     /// corners, or any other shape factory. The shape is captured by
     /// the closure so its Java peer stays alive across recompositions.
     /// </summary>
@@ -346,7 +345,7 @@ public sealed class Modifier
     /// default Material indication / ripple. The click handler runs on
     /// the UI thread.
     /// </summary>
-    public Modifier Clickable(System.Action onClick)
+    public Modifier Clickable(Action onClick)
     {
         ArgumentNullException.ThrowIfNull(onClick);
 
@@ -366,7 +365,7 @@ public sealed class Modifier
     /// to handle the dropped payload.
     ///
     /// Both arguments should be hoisted into
-    /// <see cref="Compose.Remember{T}(System.Func{T}, int, string)"/> so the
+    /// <see cref="Compose.Remember{T}(Func{T}, int, string)"/> so the
     /// underlying <c>DragAndDropTargetElement</c> keeps a stable identity
     /// across recompositions:
     /// <code>
@@ -391,7 +390,7 @@ public sealed class Modifier
     /// <see cref="DragAndDropTarget.OnEnded"/> hooks drive
     /// hover/session visuals.</param>
     public Modifier DragAndDropTarget(
-        System.Func<DragAndDropEvent, bool> shouldStartDragAndDrop,
+        Func<DragAndDropEvent, bool> shouldStartDragAndDrop,
         DragAndDropTarget target)
     {
         ArgumentNullException.ThrowIfNull(shouldStartDragAndDrop);
@@ -405,7 +404,7 @@ public sealed class Modifier
     /// (e.g. a regular <see cref="Column"/> or <see cref="Box"/>)
     /// vertically scrollable when its content overflows. Hold the
     /// <paramref name="state"/> across recompositions with
-    /// <see cref="ComposeActivity.Remember{T}(System.Func{T}, int, string)"/>:
+    /// <see cref="ComposeActivity.Remember{T}(Func{T}, int, string)"/>:
     /// <code>
     /// var scroll = Remember(() =&gt; new ScrollState());
     /// new Column { Modifier.Companion.VerticalScroll(scroll), /* children */ };
@@ -475,8 +474,8 @@ public sealed class Modifier
     /// </summary>
     /// <param name="state">State holder that receives drag deltas.
     /// Build via <c>new DraggableState(delta =&gt; ...)</c> inside a
-    /// <see cref="Compose.Remember{T}(System.Func{T}, int, string)"/> call, or via
-    /// <see cref="Compose.RememberDraggableState(System.Action{float}, int, string)"/>
+    /// <see cref="Compose.Remember{T}(Func{T}, int, string)"/> call, or via
+    /// <see cref="Compose.RememberDraggableState(Action{float}, int, string)"/>
     /// for stable Java identity across recompositions when the
     /// callback closure changes.</param>
     /// <param name="orientation">Axis the gesture operates on —
@@ -543,7 +542,7 @@ public sealed class Modifier
             {
                 ScopeKind.Row    => ComposeBridges.RowScopeModifierWeight(scope, curr, weight, fill),
                 ScopeKind.Column => ComposeBridges.ColumnScopeModifierWeight(scope, curr, weight, fill),
-                _ => throw new System.InvalidOperationException(
+                _ => throw new InvalidOperationException(
                     "Modifier.Weight() can only be used inside a Row, Column, or " +
                     "Row/Column-shaped scope (BottomAppBar, NavigationBar, …). " +
                     $"Current scope kind: {kind}.")
@@ -758,7 +757,7 @@ public sealed class Modifier
     /// <param name="rotationY">Rotation around the Y axis in degrees.</param>
     /// <param name="rotationZ">Rotation around the Z axis in degrees (clockwise).</param>
     /// <param name="cameraDistance">Distance of the camera from the rotation pivot, in pixels.</param>
-    /// <param name="transformOrigin">Packed <c>TransformOrigin</c> value (use <see cref="ComposeNet.TransformOrigin.Pack(float, float)"/>); the default is the center (0.5, 0.5).</param>
+    /// <param name="transformOrigin">Packed <c>TransformOrigin</c> value (use <see cref="TransformOrigin.Pack(float, float)"/>); the default is the center (0.5, 0.5).</param>
     /// <param name="shape">Clip / shadow outline shape (default = rectangle).</param>
     /// <param name="clip">Whether to clip content to <paramref name="shape"/>.</param>
     public Modifier GraphicsLayer(
@@ -898,7 +897,7 @@ public sealed class Modifier
         {
             IntPtr scope = RenderContext.CurrentScope;
             if (RenderContext.CurrentScopeKind != ScopeKind.Box)
-                throw new System.InvalidOperationException(
+                throw new InvalidOperationException(
                     "Modifier.Align(Alignment) is only valid inside a Box. " +
                     $"Current scope kind: {RenderContext.CurrentScopeKind}.");
             return ComposeBridges.BoxScopeAlign(scope, curr, ((Java.Lang.Object)alignment).Handle);
@@ -917,7 +916,7 @@ public sealed class Modifier
         {
             IntPtr scope = RenderContext.CurrentScope;
             if (RenderContext.CurrentScopeKind != ScopeKind.Row)
-                throw new System.InvalidOperationException(
+                throw new InvalidOperationException(
                     "Modifier.Align(Alignment.Vertical) is only valid inside a Row. " +
                     $"Current scope kind: {RenderContext.CurrentScopeKind}.");
             return ComposeBridges.RowScopeAlignVertical(scope, curr, ((Java.Lang.Object)alignment.Java).Handle);
@@ -936,7 +935,7 @@ public sealed class Modifier
         {
             IntPtr scope = RenderContext.CurrentScope;
             if (RenderContext.CurrentScopeKind != ScopeKind.Column)
-                throw new System.InvalidOperationException(
+                throw new InvalidOperationException(
                     "Modifier.Align(Alignment.Horizontal) is only valid inside a Column. " +
                     $"Current scope kind: {RenderContext.CurrentScopeKind}.");
             return ComposeBridges.ColumnScopeAlignHorizontal(scope, curr, ((Java.Lang.Object)alignment.Java).Handle);
@@ -954,7 +953,7 @@ public sealed class Modifier
         {
             IntPtr scope = RenderContext.CurrentScope;
             if (RenderContext.CurrentScopeKind != ScopeKind.Box)
-                throw new System.InvalidOperationException(
+                throw new InvalidOperationException(
                     "Modifier.MatchParentSize() is only valid inside a Box. " +
                     $"Current scope kind: {RenderContext.CurrentScopeKind}.");
             return ComposeBridges.BoxScopeMatchParentSize(scope, curr);
@@ -964,7 +963,7 @@ public sealed class Modifier
     /// <c>Modifier.focusable(enabled = true)</c> — marks the node as a
     /// focus target. Combine with <see cref="FocusRequester(ComposeNet.FocusRequester)"/>
     /// to programmatically move focus, or with
-    /// <see cref="OnFocusChanged(System.Action{ComposeNet.FocusState})"/>
+    /// <see cref="OnFocusChanged(Action{FocusState})"/>
     /// to observe focus changes.
     /// </summary>
     public Modifier Focusable(bool enabled = true) =>
@@ -983,7 +982,7 @@ public sealed class Modifier
     /// (capture / release). The callback receives an immutable
     /// <see cref="FocusState"/> snapshot.
     /// </summary>
-    public Modifier OnFocusChanged(System.Action<FocusState> onFocusChanged)
+    public Modifier OnFocusChanged(Action<FocusState> onFocusChanged)
     {
         ArgumentNullException.ThrowIfNull(onFocusChanged);
         var f1 = new ComposableLambda1(arg =>
@@ -999,7 +998,7 @@ public sealed class Modifier
     /// <c>Modifier.focusRequester(requester)</c> — installs
     /// <paramref name="requester"/> on the node so the caller can
     /// programmatically move focus by calling
-    /// <see cref="ComposeNet.FocusRequester.RequestFocus"/>.
+    /// <see cref="FocusRequester.RequestFocus"/>.
     /// </summary>
     public Modifier FocusRequester(FocusRequester requester)
     {
@@ -1015,9 +1014,9 @@ public sealed class Modifier
     /// back to Kotlin's "ignore that gesture" defaults.
     /// </summary>
     public Modifier CombinedClickable(
-        System.Action onClick,
-        System.Action? onLongClick = null,
-        System.Action? onDoubleClick = null)
+        Action onClick,
+        Action? onLongClick = null,
+        Action? onDoubleClick = null)
     {
         ArgumentNullException.ThrowIfNull(onClick);
         var click = new ComposableLambda0(onClick);
@@ -1033,7 +1032,7 @@ public sealed class Modifier
     /// radio button group). Sets up the right accessibility semantics
     /// and forwards taps to <paramref name="onClick"/>.
     /// </summary>
-    public Modifier Selectable(bool selected, System.Action onClick)
+    public Modifier Selectable(bool selected, Action onClick)
     {
         ArgumentNullException.ThrowIfNull(onClick);
         var click = new ComposableLambda0(onClick);
@@ -1047,7 +1046,7 @@ public sealed class Modifier
     /// right accessibility semantics and forwards taps to
     /// <paramref name="onValueChange"/> with the negated value.
     /// </summary>
-    public Modifier Toggleable(bool value, System.Action<bool> onValueChange)
+    public Modifier Toggleable(bool value, Action<bool> onValueChange)
     {
         ArgumentNullException.ThrowIfNull(onValueChange);
         var f1 = new ComposableLambda1(arg =>
@@ -1107,7 +1106,7 @@ public sealed class Modifier
     public Modifier Semantics(bool mergeDescendants, string? contentDescription, SemanticsRole? role)
     {
         if (contentDescription is null && role is null)
-            throw new System.ArgumentException(
+            throw new ArgumentException(
                 "At least one of contentDescription or role must be supplied.",
                 nameof(contentDescription));
         var properties = new ComposableLambda1(arg =>
@@ -1144,7 +1143,7 @@ public sealed class Modifier
     public Modifier ClearAndSetSemantics(string? contentDescription, SemanticsRole? role)
     {
         if (contentDescription is null && role is null)
-            throw new System.ArgumentException(
+            throw new ArgumentException(
                 "At least one of contentDescription or role must be supplied.",
                 nameof(contentDescription));
         var properties = new ComposableLambda1(arg =>
@@ -1176,10 +1175,10 @@ public sealed class Modifier
     /// holder, so prefer omitting it entirely in that case).
     /// </para>
     /// <para>
-    /// Unlike <see cref="Clickable(System.Action)"/>, this modifier
+    /// Unlike <see cref="Clickable(Action)"/>, this modifier
     /// supplies <strong>no Material indication / ripple</strong>, no
     /// accessibility semantics, and no role — it's the low-level
-    /// gesture primitive. Use <see cref="Clickable(System.Action)"/>
+    /// gesture primitive. Use <see cref="Clickable(Action)"/>
     /// for ordinary clickable surfaces; reach for
     /// <see cref="DetectTapGestures"/> when you need long-press,
     /// double-tap, or precise tap positions.
@@ -1215,10 +1214,10 @@ public sealed class Modifier
     /// once and never restarts. Pass any value whose <c>Equals</c>
     /// changes when callbacks should reset.</param>
     public Modifier DetectTapGestures(
-        System.Action<Offset>? onTap = null,
-        System.Action<Offset>? onPress = null,
-        System.Action<Offset>? onLongPress = null,
-        System.Action<Offset>? onDoubleTap = null,
+        Action<Offset>? onTap = null,
+        Action<Offset>? onPress = null,
+        Action<Offset>? onLongPress = null,
+        Action<Offset>? onDoubleTap = null,
         object? key = null)
     {
         var tapCb = onTap is null ? null : new OffsetCallback(onTap);
@@ -1234,7 +1233,7 @@ public sealed class Modifier
         // singleton.
         var keyObj = key switch
         {
-            null => (Java.Lang.Object)global::Kotlin.Unit.Instance!,
+            null => (Java.Lang.Object)Kotlin.Unit.Instance!,
             Java.Lang.Object jlo => jlo,
             string s => new Java.Lang.String(s),
             int i => Java.Lang.Integer.ValueOf(i),
@@ -1249,7 +1248,7 @@ public sealed class Modifier
             // PointerInputEventHandler, wrapping our Function2 JCW.
             // The handler is a local ref consumed by ModifierPointerInput
             // and released when its JNI frame pops.
-            var handlerLocal = System.IntPtr.Zero;
+            var handlerLocal = IntPtr.Zero;
             try
             {
                 handlerLocal = ComposeBridges.NewPointerInputEventHandler(
@@ -1259,10 +1258,10 @@ public sealed class Modifier
             }
             finally
             {
-                if (handlerLocal != System.IntPtr.Zero)
+                if (handlerLocal != IntPtr.Zero)
                     Android.Runtime.JNIEnv.DeleteLocalRef(handlerLocal);
-                System.GC.KeepAlive(keyObj);
-                System.GC.KeepAlive(block);
+                GC.KeepAlive(keyObj);
+                GC.KeepAlive(block);
             }
         });
     }
@@ -1278,7 +1277,7 @@ public sealed class Modifier
     /// <param name="properties">Builder callback. Each chained call on
     /// the supplied <see cref="SemanticsScope"/> sets one property on
     /// the underlying Kotlin <c>SemanticsPropertyReceiver</c>.</param>
-    public Modifier Semantics(System.Action<SemanticsScope> properties) =>
+    public Modifier Semantics(Action<SemanticsScope> properties) =>
         Semantics(mergeDescendants: false, properties);
 
     /// <summary>
@@ -1292,7 +1291,7 @@ public sealed class Modifier
     /// semantics into this node.</param>
     /// <param name="properties">Builder callback. See
     /// <see cref="SemanticsScope"/> for available property setters.</param>
-    public Modifier Semantics(bool mergeDescendants, System.Action<SemanticsScope> properties)
+    public Modifier Semantics(bool mergeDescendants, Action<SemanticsScope> properties)
     {
         ArgumentNullException.ThrowIfNull(properties);
         var lambda = WrapSemanticsBuilder(properties);
@@ -1310,7 +1309,7 @@ public sealed class Modifier
     /// </summary>
     /// <param name="properties">Builder callback. See
     /// <see cref="SemanticsScope"/> for available property setters.</param>
-    public Modifier ClearAndSetSemantics(System.Action<SemanticsScope> properties)
+    public Modifier ClearAndSetSemantics(Action<SemanticsScope> properties)
     {
         ArgumentNullException.ThrowIfNull(properties);
         var lambda = WrapSemanticsBuilder(properties);
@@ -1323,7 +1322,7 @@ public sealed class Modifier
     // SemanticsScope bound to the JNI handle Compose hands us, and
     // the scope is Invalidate()d the moment the user callback returns
     // so leaked references throw a clear error on reuse.
-    static ComposableLambda1 WrapSemanticsBuilder(System.Action<SemanticsScope> properties) =>
+    static ComposableLambda1 WrapSemanticsBuilder(Action<SemanticsScope> properties) =>
         new(arg =>
         {
             if (arg is Java.Lang.Object obj)

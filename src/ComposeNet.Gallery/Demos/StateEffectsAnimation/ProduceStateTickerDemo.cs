@@ -14,13 +14,13 @@ public static class ProduceStateTickerDemo
         Build:       () =>
         {
             var seed   = Compose.Remember(() => new MutableNumberState<int>(0));
-            var ticker = Compose.ProduceState<int>(0, seed.Value, async (state, ct) =>
+            var ticker = Compose.ProduceState(0, seed.Value, async (state, ct) =>
             {
                 state.Value = 0;
                 while (!ct.IsCancellationRequested)
                 {
-                    try { await System.Threading.Tasks.Task.Delay(1000, ct); }
-                    catch (System.OperationCanceledException) { return; }
+                    try { await Task.Delay(1000, ct); }
+                    catch (OperationCanceledException) { return; }
                     state.Value++;
                 }
             });

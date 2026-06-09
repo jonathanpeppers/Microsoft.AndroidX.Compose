@@ -32,5 +32,5 @@ public sealed partial class BackHandler
     /// (<c>enabled: true</c>). Equivalent to
     /// <c>new BackHandler(onBack, enabled: true)</c>.
     /// </summary>
-    public BackHandler(System.Action onBack) : this(onBack, enabled: true) { }
+    public BackHandler(Action onBack) : this(onBack, enabled: true) { }
 }

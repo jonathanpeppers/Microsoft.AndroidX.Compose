@@ -15,7 +15,7 @@ namespace ComposeNet;
 /// <remarks>
 /// Compose Kotlin source: <c>SearchBarDefaults.InputField(textFieldState,
 /// searchBarState, …)</c>. Without this facade a bare
-/// <see cref="ComposeNet.TextField"/> placed in the input-field slot
+/// <see cref="TextField"/> placed in the input-field slot
 /// will not know how to talk to <see cref="SearchBarState"/> — the bar
 /// would render but never expand.
 ///
@@ -58,7 +58,7 @@ public sealed class SearchBarInputField : ComposableNode
     /// is supplied — required by the Kotlin API which does not tolerate
     /// a null <c>onSearch</c>.
     /// </summary>
-    public System.Action<string>? OnSearch { get; set; }
+    public Action<string>? OnSearch { get; set; }
 
     /// <summary>
     /// Optional placeholder rendered when the field is empty

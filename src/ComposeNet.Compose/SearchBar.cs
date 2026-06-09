@@ -15,7 +15,7 @@ namespace ComposeNet;
 /// default). Use a <see cref="SearchBarInputField"/> so the input
 /// field can wire focus / click events to the
 /// <see cref="SearchBarState"/> internally — a bare
-/// <see cref="ComposeNet.TextField"/> renders but does not expand the
+/// <see cref="TextField"/> renders but does not expand the
 /// popup on tap.
 ///
 /// <code>
@@ -44,7 +44,7 @@ public sealed class SearchBar : ComposableNode
     public override void Render(IComposer composer)
     {
         if (InputField is null)
-            throw new System.InvalidOperationException(
+            throw new InvalidOperationException(
                 "SearchBar.InputField is required (the Kotlin parameter has no default).");
 
         var stateHandle = ResolveStateHandle(_state, composer);

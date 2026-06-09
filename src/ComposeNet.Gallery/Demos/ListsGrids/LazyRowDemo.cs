@@ -12,7 +12,7 @@ public static class LazyRowDemo
         Title:       "LazyRow",
         Description: "Horizontally scrolling row that only composes visible items.",
         Build:       () => new LazyRow<int>(
-            items:       System.Linq.Enumerable.Range(0, 50).ToList(),
+            items:       Enumerable.Range(0, 50).ToList(),
             itemContent: i => new Card
             {
                 Modifier.Companion.Padding(4).Size(80),

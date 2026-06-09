@@ -14,9 +14,9 @@ namespace ComposeNet;
 [Register("composenet/compose/IntCallback")]
 internal sealed class IntCallback : Java.Lang.Object, IFunction1
 {
-    readonly System.Func<int, int> _body;
+    readonly Func<int, int> _body;
 
-    public IntCallback(System.Func<int, int> body) => _body = body;
+    public IntCallback(Func<int, int> body) => _body = body;
 
     public Java.Lang.Object Invoke(Java.Lang.Object? p0)
     {

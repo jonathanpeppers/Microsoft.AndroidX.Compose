@@ -8,16 +8,16 @@ namespace ComposeNet;
 /// <see cref="Xamarin.KotlinX.Coroutines.IJob.InvokeOnCompletion(bool, bool, IFunction1)"/>.
 /// Compose invokes this handler when the launched coroutine's job
 /// transitions into the cancelling state, so we can propagate
-/// cancellation into the C# <see cref="System.Threading.CancellationTokenSource"/>
+/// cancellation into the C# <see cref="CancellationTokenSource"/>
 /// that the user's <c>Func&lt;CancellationToken, Task&gt;</c> body
 /// observes.
 /// </summary>
 [Register("composenet/compose/JobCompletionHandler")]
 internal sealed class JobCompletionHandler : Java.Lang.Object, IFunction1
 {
-    readonly System.Threading.CancellationTokenSource _cts;
+    readonly CancellationTokenSource _cts;
 
-    public JobCompletionHandler(System.Threading.CancellationTokenSource cts)
+    public JobCompletionHandler(CancellationTokenSource cts)
     {
         _cts = cts;
     }
@@ -38,6 +38,6 @@ internal sealed class JobCompletionHandler : Java.Lang.Object, IFunction1
             // never propagate out into the JVM (Kotlin would crash
             // the process with an UnhandledException). Swallow.
         }
-        return global::Kotlin.Unit.Instance!;
+        return Kotlin.Unit.Instance!;
     }
 }

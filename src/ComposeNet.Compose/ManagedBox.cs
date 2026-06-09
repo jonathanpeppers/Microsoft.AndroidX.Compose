@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using Android.Runtime;
 
 namespace ComposeNet;

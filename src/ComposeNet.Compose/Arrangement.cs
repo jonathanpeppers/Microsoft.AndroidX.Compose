@@ -24,27 +24,27 @@ namespace ComposeNet;
 /// — usable in either orientation.</description></item>
 /// </list>
 /// Passing a horizontal-only arrangement to <see cref="Column"/> (or
-/// vice-versa) throws <see cref="System.ArgumentException"/> at the
+/// vice-versa) throws <see cref="ArgumentException"/> at the
 /// container's constructor — the orientation check is fail-fast so
 /// mistakes surface at the call site, not during composition.
 /// </summary>
 public sealed class Arrangement
 {
-    static readonly System.Lazy<Arrangement> _start =
+    static readonly Lazy<Arrangement> _start =
         new(() => new Arrangement(BindingArrangement.Instance.Start));
-    static readonly System.Lazy<Arrangement> _end =
+    static readonly Lazy<Arrangement> _end =
         new(() => new Arrangement(BindingArrangement.Instance.End));
-    static readonly System.Lazy<Arrangement> _top =
+    static readonly Lazy<Arrangement> _top =
         new(() => new Arrangement(BindingArrangement.Instance.Top));
-    static readonly System.Lazy<Arrangement> _bottom =
+    static readonly Lazy<Arrangement> _bottom =
         new(() => new Arrangement(BindingArrangement.Instance.Bottom));
-    static readonly System.Lazy<Arrangement> _center =
+    static readonly Lazy<Arrangement> _center =
         new(() => new Arrangement(BindingArrangement.Instance.Center));
-    static readonly System.Lazy<Arrangement> _spaceBetween =
+    static readonly Lazy<Arrangement> _spaceBetween =
         new(() => new Arrangement(BindingArrangement.Instance.SpaceBetween));
-    static readonly System.Lazy<Arrangement> _spaceAround =
+    static readonly Lazy<Arrangement> _spaceAround =
         new(() => new Arrangement(BindingArrangement.Instance.SpaceAround));
-    static readonly System.Lazy<Arrangement> _spaceEvenly =
+    static readonly Lazy<Arrangement> _spaceEvenly =
         new(() => new Arrangement(BindingArrangement.Instance.SpaceEvenly));
 
     /// <summary>Pack children toward the start of the main axis. Horizontal only.</summary>

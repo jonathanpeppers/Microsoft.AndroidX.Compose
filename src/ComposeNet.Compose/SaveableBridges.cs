@@ -14,17 +14,17 @@ namespace ComposeNet;
 // file can shrink to whatever is still mangled or unbound.
 internal static partial class ComposeBridges
 {
-    static System.IntPtr s_autoSaver_class;
-    static System.IntPtr s_autoSaver_method;
-    static System.IntPtr s_autoSaver_handle;
+    static IntPtr s_autoSaver_class;
+    static IntPtr s_autoSaver_method;
+    static IntPtr s_autoSaver_handle;
 
-    static System.IntPtr s_rememberSaveableSimple_class;
-    static System.IntPtr s_rememberSaveableSimple_method;
+    static IntPtr s_rememberSaveableSimple_class;
+    static IntPtr s_rememberSaveableSimple_method;
 
-    static System.IntPtr s_rememberSaveableState_class;
-    static System.IntPtr s_rememberSaveableState_method;
+    static IntPtr s_rememberSaveableState_class;
+    static IntPtr s_rememberSaveableState_method;
 
-    static System.IntPtr s_emptyObjectArray;
+    static IntPtr s_emptyObjectArray;
 
     // androidx.compose.runtime.saveable.SaverKt.autoSaver(): Saver<T, Object>
     //
@@ -33,12 +33,12 @@ internal static partial class ComposeBridges
     // returns the same singleton on every call from Kotlin, and we
     // need it as the `stateSaver` argument for the MutableState-overload
     // of `rememberSaveable`.
-    internal static System.IntPtr SaverAutoSaver()
+    internal static IntPtr SaverAutoSaver()
     {
-        if (s_autoSaver_handle != System.IntPtr.Zero)
+        if (s_autoSaver_handle != IntPtr.Zero)
             return s_autoSaver_handle;
 
-        if (s_autoSaver_method == System.IntPtr.Zero)
+        if (s_autoSaver_method == IntPtr.Zero)
         {
             s_autoSaver_class = JNIEnv.FindClass("androidx/compose/runtime/saveable/SaverKt");
             s_autoSaver_method = JNIEnv.GetStaticMethodID(
@@ -65,13 +65,13 @@ internal static partial class ComposeBridges
     // is discarded. We always pass an empty array (= "never invalidate
     // on input change"); future overloads with `params object?[]`
     // can build the array on demand.
-    internal static System.IntPtr EmptyObjectArray()
+    internal static IntPtr EmptyObjectArray()
     {
-        if (s_emptyObjectArray != System.IntPtr.Zero)
+        if (s_emptyObjectArray != IntPtr.Zero)
             return s_emptyObjectArray;
 
         var objectClass = Java.Lang.Class.FromType(typeof(Java.Lang.Object));
-        var local = JNIEnv.NewObjectArray(0, objectClass.Handle, System.IntPtr.Zero);
+        var local = JNIEnv.NewObjectArray(0, objectClass.Handle, IntPtr.Zero);
         try
         {
             s_emptyObjectArray = JNIEnv.NewGlobalRef(local);
@@ -92,13 +92,13 @@ internal static partial class ComposeBridges
     // The no-saver overload — Compose internally uses `autoSaver()`,
     // which handles every Bundle-saveable value (primitives, strings,
     // parcelables). Returns a JNI local ref to the boxed result.
-    internal static unsafe System.IntPtr RememberSaveableSimple(
-        System.IntPtr inputs,
+    internal static unsafe IntPtr RememberSaveableSimple(
+        IntPtr inputs,
         ObjectFunction0 init,
         AndroidX.Compose.Runtime.IComposer composer,
         int changed)
     {
-        if (s_rememberSaveableSimple_method == System.IntPtr.Zero)
+        if (s_rememberSaveableSimple_method == IntPtr.Zero)
         {
             s_rememberSaveableSimple_class = JNIEnv.FindClass(
                 "androidx/compose/runtime/saveable/RememberSaveableKt");
@@ -122,8 +122,8 @@ internal static partial class ComposeBridges
         }
         finally
         {
-            System.GC.KeepAlive(init);
-            System.GC.KeepAlive(composer);
+            GC.KeepAlive(init);
+            GC.KeepAlive(composer);
         }
     }
 
@@ -142,14 +142,14 @@ internal static partial class ComposeBridges
     // to be a primitive-specialized `IMutableIntState`/etc. — it's
     // the boxed default unless the caller supplied a custom saver
     // that re-creates the specialized type.
-    internal static unsafe System.IntPtr RememberSaveableMutableState(
-        System.IntPtr inputs,
-        System.IntPtr stateSaver,
+    internal static unsafe IntPtr RememberSaveableMutableState(
+        IntPtr inputs,
+        IntPtr stateSaver,
         ObjectFunction0 init,
         AndroidX.Compose.Runtime.IComposer composer,
         int changed)
     {
-        if (s_rememberSaveableState_method == System.IntPtr.Zero)
+        if (s_rememberSaveableState_method == IntPtr.Zero)
         {
             s_rememberSaveableState_class = JNIEnv.FindClass(
                 "androidx/compose/runtime/saveable/RememberSaveableKt");
@@ -174,8 +174,8 @@ internal static partial class ComposeBridges
         }
         finally
         {
-            System.GC.KeepAlive(init);
-            System.GC.KeepAlive(composer);
+            GC.KeepAlive(init);
+            GC.KeepAlive(composer);
         }
     }
 
@@ -191,7 +191,7 @@ internal static partial class ComposeBridges
     // Null/empty keys array → `EmptyObjectArray()`, a cached global
     // ref — `ownsHandle` is false, signalling the caller MUST NOT
     // delete the returned handle.
-    internal static System.IntPtr BuildKeysArray(object?[]? keys, out bool ownsHandle)
+    internal static IntPtr BuildKeysArray(object?[]? keys, out bool ownsHandle)
     {
         if (keys is null || keys.Length == 0)
         {
@@ -201,13 +201,13 @@ internal static partial class ComposeBridges
 
         ownsHandle = true;
         var objectClass = Java.Lang.Class.FromType(typeof(Java.Lang.Object));
-        var array = JNIEnv.NewObjectArray(keys.Length, objectClass.Handle, System.IntPtr.Zero);
+        var array = JNIEnv.NewObjectArray(keys.Length, objectClass.Handle, IntPtr.Zero);
         for (int i = 0; i < keys.Length; i++)
         {
             var boxed = BoxKey(keys[i], out var ownsBoxed);
             if (boxed is null)
             {
-                JNIEnv.SetObjectArrayElement(array, i, System.IntPtr.Zero);
+                JNIEnv.SetObjectArrayElement(array, i, IntPtr.Zero);
                 continue;
             }
             JNIEnv.SetObjectArrayElement(array, i, boxed.Handle);

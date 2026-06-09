@@ -45,7 +45,7 @@ public abstract class ComposableNode
     /// Set the <see cref="ComposeNet.Modifier"/> to prepend at the
     /// START of this node's modifier chain on the next call to
     /// <see cref="BuildModifier"/>. Each call REPLACES any prior
-    /// prepended modifier — use <see cref="ComposeNet.Modifier.Then"/>
+    /// prepended modifier — use <see cref="Modifier.Then"/>
     /// at the call site to combine multiple ops into one.
     ///
     /// Intended use: a parent layout that needs to pass a runtime
@@ -131,7 +131,7 @@ public abstract class ComposableNode
     /// The C# moral equivalent of an <c>@Composable</c> function body
     /// in Kotlin: anything that runs at composition time — emitting
     /// child nodes, reading <see cref="CompositionLocal{T}.GetCurrent(IComposer)"/>,
-    /// calling <see cref="Compose.Remember{T}(System.Func{T}, int, string)"/>,
+    /// calling <see cref="Compose.Remember{T}(Func{T}, int, string)"/>,
     /// etc. — happens here. To compose a child node from inside a
     /// custom override, build it and call <c>child.Render(composer)</c>
     /// directly; for richer container shapes derive from

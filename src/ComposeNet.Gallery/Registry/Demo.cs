@@ -1,4 +1,3 @@
-using System;
 
 namespace ComposeNet.Gallery.Registry;
 

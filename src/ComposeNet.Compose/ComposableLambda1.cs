@@ -11,14 +11,14 @@ namespace ComposeNet;
 [Register("composenet/compose/ComposableLambda1")]
 internal sealed class ComposableLambda1 : Java.Lang.Object, IFunction1
 {
-    readonly System.Action<Java.Lang.Object?> _body;
-    public ComposableLambda1(System.Action<Java.Lang.Object?> body) => _body = body;
+    readonly Action<Java.Lang.Object?> _body;
+    public ComposableLambda1(Action<Java.Lang.Object?> body) => _body = body;
 
     // Kotlin Function1<T, Unit> contractually returns Unit.INSTANCE. See
     // ComposableLambda0 / issue #43 for the rationale.
     public Java.Lang.Object Invoke(Java.Lang.Object? p0)
     {
         _body(p0);
-        return global::Kotlin.Unit.Instance!;
+        return Kotlin.Unit.Instance!;
     }
 }

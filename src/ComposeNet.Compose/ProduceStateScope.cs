@@ -4,7 +4,7 @@ using AndroidX.Compose.Runtime;
 namespace ComposeNet;
 
 /// <summary>
-/// Slot value used by <see cref="Compose.ProduceState{T}(T, System.Func{MutableState{T}, System.Threading.CancellationToken, System.Threading.Tasks.Task}, int, string)"/>:
+/// Slot value used by <see cref="Compose.ProduceState{T}(T, Func{MutableState{T}, CancellationToken, Task}, int, string)"/>:
 /// holds the <see cref="MutableState{T}"/> the caller writes to,
 /// plus the producer task / cancellation lifecycle. Implements
 /// <see cref="IRememberObserver"/> so it starts the producer when
@@ -24,14 +24,14 @@ internal sealed class ProduceStateScope<T> : Java.Lang.Object, IRememberObserver
     public readonly MutableState<T> State;
     public object?[]? Keys;
 
-    readonly System.Func<MutableState<T>, System.Threading.CancellationToken, System.Threading.Tasks.Task> _producer;
-    System.Threading.CancellationTokenSource? _cts;
+    readonly Func<MutableState<T>, CancellationToken, Task> _producer;
+    CancellationTokenSource? _cts;
     bool _started;
     bool _disposed;
 
     public ProduceStateScope(
         T initial,
-        System.Func<MutableState<T>, System.Threading.CancellationToken, System.Threading.Tasks.Task> producer,
+        Func<MutableState<T>, CancellationToken, Task> producer,
         object?[]? keys)
     {
         State = new MutableState<T>(initial);
@@ -45,7 +45,7 @@ internal sealed class ProduceStateScope<T> : Java.Lang.Object, IRememberObserver
     // create new scope instances this way (Compose hands back the
     // original peer from its slot table), but the runtime requires
     // the constructor to exist.
-    internal ProduceStateScope(System.IntPtr handle, JniHandleOwnership transfer)
+    internal ProduceStateScope(IntPtr handle, JniHandleOwnership transfer)
         : base(handle, transfer)
     {
         // Make non-nullable fields satisfied; this peer will never be
@@ -78,7 +78,7 @@ internal sealed class ProduceStateScope<T> : Java.Lang.Object, IRememberObserver
     {
         if (_started || _disposed) return;
         _started = true;
-        _cts = new System.Threading.CancellationTokenSource();
+        _cts = new CancellationTokenSource();
         var token = _cts.Token;
         var task = _producer(State, token);
         // Surface producer faults to logcat instead of leaving them
@@ -92,7 +92,7 @@ internal sealed class ProduceStateScope<T> : Java.Lang.Object, IRememberObserver
                     "ComposeNet",
                     "ProduceState producer faulted: " + ex);
             }
-        }, System.Threading.Tasks.TaskScheduler.Default);
+        }, TaskScheduler.Default);
     }
 
     void Stop()

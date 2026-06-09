@@ -13,7 +13,7 @@ namespace ComposeNet;
 /// </summary>
 /// <remarks>
 /// <para>
-/// v1 invokes the user's <see cref="System.Action{Offset}"/> body
+/// v1 invokes the user's <see cref="Action{Offset}"/> body
 /// synchronously and immediately returns <c>Kotlin.Unit.Instance</c>
 /// (i.e. the suspend body completes synchronously without ever
 /// suspending). The <c>PressGestureScope</c> receiver (which Kotlin
@@ -31,11 +31,11 @@ namespace ComposeNet;
 [Register("composenet/compose/OffsetPressCallback")]
 internal sealed class OffsetPressCallback : Java.Lang.Object, IFunction3
 {
-    static System.IntPtr s_unbox;
+    static IntPtr s_unbox;
 
-    readonly System.Action<Offset> _body;
+    readonly Action<Offset> _body;
 
-    public OffsetPressCallback(System.Action<Offset> body) => _body = body;
+    public OffsetPressCallback(Action<Offset> body) => _body = body;
 
     public Java.Lang.Object Invoke(Java.Lang.Object? p0, Java.Lang.Object? p1, Java.Lang.Object? p2)
     {
@@ -46,12 +46,12 @@ internal sealed class OffsetPressCallback : Java.Lang.Object, IFunction3
             packed = JNIEnv.CallLongMethod(p1.Handle, s_unbox);
         }
         _body(Offset.FromPacked(packed));
-        return global::Kotlin.Unit.Instance!;
+        return Kotlin.Unit.Instance!;
     }
 
     static void EnsureUnboxMethod()
     {
-        if (s_unbox != System.IntPtr.Zero) return;
+        if (s_unbox != IntPtr.Zero) return;
         var cls = JNIEnv.FindClass("androidx/compose/ui/geometry/Offset");
         s_unbox = JNIEnv.GetMethodID(cls, "unbox-impl", "()J");
     }

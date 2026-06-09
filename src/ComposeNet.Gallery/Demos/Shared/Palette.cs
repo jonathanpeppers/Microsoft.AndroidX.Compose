@@ -1,5 +1,3 @@
-using AndroidX.Compose.UI.Graphics;
-
 namespace ComposeNet.Gallery.Demos.Shared;
 
 /// <summary>Pastel palette reused across carousel/list demos so cells are visually distinct.</summary>

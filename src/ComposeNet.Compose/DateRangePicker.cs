@@ -3,7 +3,7 @@ namespace ComposeNet;
 /// <summary>
 /// Material 3 <c>DateRangePicker</c>. Place inside
 /// <see cref="DatePickerDialog"/>'s body. Pass an explicit
-/// <see cref="ComposeNet.DateRangePickerState"/> to read the picked
+/// <see cref="DateRangePickerState"/> to read the picked
 /// range from a button callback; if none is supplied a fresh state is
 /// created internally and the selection is unobservable. Same shape as
 /// <see cref="DatePicker"/> — see that facade for the broader pattern.

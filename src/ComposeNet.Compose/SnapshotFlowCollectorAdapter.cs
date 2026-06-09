@@ -7,10 +7,10 @@ namespace ComposeNet;
 
 /// <summary>
 /// JCW implementing Kotlin's <c>kotlinx.coroutines.flow.FlowCollector</c>
-/// for <see cref="Compose.SnapshotFlow{T}(System.Func{T})"/>. Each
+/// for <see cref="Compose.SnapshotFlow{T}(Func{T})"/>. Each
 /// <c>emit(value, continuation)</c> call from Kotlin unboxes the
 /// value, pushes it onto a single-slot bounded
-/// <see cref="System.Threading.Channels.Channel{T}"/>, and returns
+/// <see cref="Channel{T}"/>, and returns
 /// <c>Unit.INSTANCE</c> synchronously — i.e. <c>emit</c> never
 /// suspends Kotlin's continuation.
 /// </summary>
@@ -46,7 +46,7 @@ internal sealed class SnapshotFlowCollectorAdapter<T> : Java.Lang.Object, IFlowC
             // oldest entry is silently discarded when full.
             _writer.TryWrite(unboxed);
         }
-        catch (System.Exception ex)
+        catch (Exception ex)
         {
             // A faulting Emit would otherwise propagate into the
             // Kotlin flow as a CancellationException-shaped exit,
@@ -59,6 +59,6 @@ internal sealed class SnapshotFlowCollectorAdapter<T> : Java.Lang.Object, IFlowC
         // tells Kotlin's flow machinery that emit finished without
         // needing to park the continuation. snapshotFlow then loops
         // back to its next snapshot-apply wait.
-        return global::Kotlin.Unit.Instance!;
+        return Kotlin.Unit.Instance!;
     }
 }

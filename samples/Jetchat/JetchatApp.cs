@@ -1,6 +1,4 @@
-using AndroidX.Compose.Material3;
 using AndroidX.Compose.UI.Text.Input;
-using ComposeNet;
 
 namespace ComposeNet.Samples.Jetchat;
 

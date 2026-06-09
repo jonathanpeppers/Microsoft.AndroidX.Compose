@@ -1,4 +1,3 @@
-using AndroidX.Compose.UI.Graphics;
 using ComposeNet.Gallery.Registry;
 
 namespace ComposeNet.Gallery.Demos.StateEffectsAnimation;
@@ -15,13 +14,13 @@ public static class AnimatedContentDemo
         Build:       () =>
         {
             var step = Compose.Remember(() => new MutableNumberState<int>(0));
-            ComposeNet.Color[] palette =
+            Color[] palette =
             [
-                ComposeNet.Color.FromRgb(0xB3, 0xE5, 0xFC),
-                ComposeNet.Color.FromRgb(0xC8, 0xE6, 0xC9),
-                ComposeNet.Color.FromRgb(0xFF, 0xE0, 0xB2),
-                ComposeNet.Color.FromRgb(0xF8, 0xBB, 0xD0),
-                ComposeNet.Color.FromRgb(0xD1, 0xC4, 0xE9),
+                Color.FromRgb(0xB3, 0xE5, 0xFC),
+                Color.FromRgb(0xC8, 0xE6, 0xC9),
+                Color.FromRgb(0xFF, 0xE0, 0xB2),
+                Color.FromRgb(0xF8, 0xBB, 0xD0),
+                Color.FromRgb(0xD1, 0xC4, 0xE9),
             ];
             return new Column
             {
@@ -40,7 +39,7 @@ public static class AnimatedContentDemo
                             .Background(palette[((i % palette.Length) + palette.Length) % palette.Length]),
                         new Text($"Frame {i}")
                         {
-                            Color    = ComposeNet.Color.Black,
+                            Color    = Color.Black,
                             Modifier = Modifier.Companion.Padding(16),
                         },
                     }),

@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 
 namespace ComposeNet.Samples.JetNews;
 
@@ -6,7 +5,7 @@ namespace ComposeNet.Samples.JetNews;
 /// One news article. A condensed version of the upstream sample's
 /// <c>Post</c> model: no <c>Publication</c> reference object, no
 /// inline-markup spans, no per-post bookmark flag (we track bookmarks
-/// externally in a <see cref="ComposeNet.MutableStateList{T}"/> of post
+/// externally in a <see cref="MutableStateList{T}"/> of post
 /// ids).
 /// </summary>
 /// <param name="Id">Stable id used as the navigation route key.</param>

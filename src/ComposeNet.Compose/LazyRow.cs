@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-using Android.Runtime;
 using AndroidX.Compose.Foundation.Lazy;
 using AndroidX.Compose.Runtime;
 using BindingArrangement = AndroidX.Compose.Foundation.Layout.Arrangement;
@@ -40,7 +37,7 @@ public sealed class LazyRow<T> : ComposableNode
     /// applied between items. Leave <see langword="null"/> to use Compose's
     /// default (<c>Arrangement.Start</c>). Must wrap a horizontal-capable
     /// Compose <see cref="Arrangement"/>; throws
-    /// <see cref="System.ArgumentException"/> at render time for a
+    /// <see cref="ArgumentException"/> at render time for a
     /// vertical-only value (e.g. <see cref="Arrangement.Top"/>).
     /// </summary>
     public Arrangement? HorizontalArrangement { get; set; }
@@ -66,7 +63,7 @@ public sealed class LazyRow<T> : ComposableNode
         if (HorizontalArrangement is not null)
         {
             horizontal = HorizontalArrangement.Horizontal
-                ?? throw new System.ArgumentException(
+                ?? throw new ArgumentException(
                     $"{nameof(HorizontalArrangement)} must wrap a horizontal " +
                     $"or horizontal-or-vertical Compose Arrangement; got a " +
                     $"vertical-only value (e.g. Arrangement.Top / Arrangement.Bottom).",

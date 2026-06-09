@@ -1,4 +1,3 @@
-using System;
 using AndroidX.Compose.Runtime;
 
 namespace ComposeNet.Gallery;

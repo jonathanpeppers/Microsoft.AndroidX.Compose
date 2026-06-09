@@ -16,8 +16,8 @@ namespace ComposeNet;
 [Register("composenet/compose/ComposableLambda0Int")]
 internal sealed class ComposableLambda0Int : Java.Lang.Object, IFunction0
 {
-    readonly System.Func<int> _body;
-    public ComposableLambda0Int(System.Func<int> body) => _body = body;
+    readonly Func<int> _body;
+    public ComposableLambda0Int(Func<int> body) => _body = body;
 
     public Java.Lang.Object Invoke() => Java.Lang.Integer.ValueOf(_body());
 }

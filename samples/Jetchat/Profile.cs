@@ -1,5 +1,4 @@
 using AndroidX.Compose.Material3;
-using ComposeNet;
 
 namespace ComposeNet.Samples.Jetchat;
 
@@ -14,7 +13,7 @@ public static class Profile
     /// <summary>Materialize the profile tree for one composition pass.</summary>
     public static ComposableNode Build(
         ProfileScreenState state,
-        System.Action      onBack) =>
+        Action onBack) =>
         new Composed(c =>
         {
             var scrollState = Compose.Remember(() => new ScrollState());
@@ -39,7 +38,7 @@ public static class Profile
 
     static CenterAlignedTopAppBar BuildTopBar(
         ColorScheme         scheme,
-        System.Action       onBack,
+        Action onBack,
         MutableState<bool>  popupOpen) =>
         new()
         {

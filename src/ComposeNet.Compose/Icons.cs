@@ -658,7 +658,7 @@ public static class Icons
             public static ImageVector Send => AndroidX.Compose.Material.Icons.AutoMirrored.TwoTone.SendKt.GetSend(AndroidX.Compose.Material.Icons.Icons.AutoMirrored.TwoTone.Instance);
         }
 
-        /// <summary>Alias for <see cref="AutoMirrored.Filled"/>.</summary>
+        /// <summary>Alias for <see cref="Filled"/>.</summary>
         public static class Default
         {
             /// <inheritdoc cref="Filled.ArrowBack"/>

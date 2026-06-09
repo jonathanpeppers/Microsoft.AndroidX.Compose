@@ -8,7 +8,7 @@ namespace ComposeNet;
 /// Function4&lt;Scope, T, Composer, Integer, Unit&gt; — the shape Compose's
 /// <c>LazyListScope.items</c> and <c>LazyGridScope.items</c> use for
 /// their per-item content lambda. <c>p0</c> is the lazy item / grid item
-/// scope (raw <see cref="System.IntPtr"/>), <c>p1</c> is the boxed
+/// scope (raw <see cref="IntPtr"/>), <c>p1</c> is the boxed
 /// per-item value (an <see cref="Java.Lang.Integer"/> index for the
 /// count-based overload, or the boxed user item for the list-based one),
 /// <c>p2</c> is the composer, <c>p3</c> is <c>$changed</c>.
@@ -16,9 +16,9 @@ namespace ComposeNet;
 [Register("composenet/compose/ComposableLambda4")]
 internal sealed class ComposableLambda4 : Java.Lang.Object, IFunction4
 {
-    readonly System.Action<IntPtr, Java.Lang.Object?, IComposer> _body;
+    readonly Action<IntPtr, Java.Lang.Object?, IComposer> _body;
 
-    public ComposableLambda4(System.Action<IntPtr, Java.Lang.Object?, IComposer> body) => _body = body;
+    public ComposableLambda4(Action<IntPtr, Java.Lang.Object?, IComposer> body) => _body = body;
 
     public Java.Lang.Object? Invoke(Java.Lang.Object? p0, Java.Lang.Object? p1, Java.Lang.Object? p2, Java.Lang.Object? p3)
     {
@@ -26,6 +26,6 @@ internal sealed class ComposableLambda4 : Java.Lang.Object, IFunction4
         var composer = Android.Runtime.Extensions.JavaCast<IComposer>(p2);
         using var _ = ComposeContext.Push(composer);
         _body(p0?.Handle ?? IntPtr.Zero, p1, composer);
-        return global::Kotlin.Unit.Instance!;
+        return Kotlin.Unit.Instance!;
     }
 }

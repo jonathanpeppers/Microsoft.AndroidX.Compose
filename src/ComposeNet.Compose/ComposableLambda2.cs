@@ -12,8 +12,8 @@ namespace ComposeNet;
 [Register("composenet/compose/ComposableLambda2")]
 internal sealed class ComposableLambda2 : Java.Lang.Object, IFunction2
 {
-    readonly System.Action<IComposer> _body;
-    public ComposableLambda2(System.Action<IComposer> body) => _body = body;
+    readonly Action<IComposer> _body;
+    public ComposableLambda2(Action<IComposer> body) => _body = body;
 
     // Kotlin Function2<Composer, Int, Unit> contractually returns
     // Unit.INSTANCE. See ComposableLambda0 / issue #43 for the rationale.
@@ -23,6 +23,6 @@ internal sealed class ComposableLambda2 : Java.Lang.Object, IFunction2
         var composer = Android.Runtime.Extensions.JavaCast<IComposer>(p0);
         using var _ = ComposeContext.Push(composer);
         _body(composer);
-        return global::Kotlin.Unit.Instance!;
+        return Kotlin.Unit.Instance!;
     }
 }

@@ -1,4 +1,3 @@
-using AndroidX.Compose.UI.Graphics;
 using ComposeNet.Gallery.Registry;
 
 namespace ComposeNet.Gallery.Demos.Containers;

@@ -1,8 +1,5 @@
-using System;
-using System.Collections.Generic;
 using AndroidX.Compose.Material3;
 using AndroidX.Compose.UI.Text.Input;
-using ComposeNet;
 
 namespace ComposeNet.Samples.Jetchat;
 
@@ -139,7 +136,7 @@ public static class Conversation
                     shouldStartDragAndDrop: e =>
                     {
                         foreach (var m in e.MimeTypes)
-                            if (m.StartsWith("image/", System.StringComparison.Ordinal))
+                            if (m.StartsWith("image/", StringComparison.Ordinal))
                                 return true;
                         return false;
                     },

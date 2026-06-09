@@ -23,7 +23,7 @@ public sealed class CategoryRow : ComposableNode
 
     public override void Render(IComposer composer)
     {
-        var count = System.Linq.Enumerable.Count(Catalog.DemosByCategory(_category.Id));
+        var count = Enumerable.Count(Catalog.DemosByCategory(_category.Id));
         new Card
         {
             Modifier.Companion

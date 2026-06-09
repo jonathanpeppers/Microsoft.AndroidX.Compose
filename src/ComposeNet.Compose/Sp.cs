@@ -19,7 +19,7 @@ namespace ComposeNet;
 /// construct a typed Sp value.
 /// </para>
 /// </remarks>
-public readonly struct Sp : System.IEquatable<Sp>
+public readonly struct Sp : IEquatable<Sp>
 {
     /// <summary>
     /// The raw packed <c>TextUnit.packedValue</c>. Pass this directly to

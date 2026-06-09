@@ -1,6 +1,3 @@
-using System;
-using System.Threading;
-using System.Threading.Tasks;
 using Android.Runtime;
 using Kotlin.Coroutines.Intrinsics;
 
@@ -36,7 +33,7 @@ namespace ComposeNet;
 /// Cancellation: an optional <see cref="CancellationToken"/> cancels
 /// the returned <see cref="Task"/> (transitioning it to
 /// <see cref="TaskStatus.Canceled"/>, so the <c>await</c> throws
-/// <see cref="System.OperationCanceledException"/>) as soon as the
+/// <see cref="OperationCanceledException"/>) as soon as the
 /// token fires. The Kotlin suspend body keeps running to its natural
 /// completion — we don't yet plumb a <c>Job</c> into
 /// <see cref="SuspendContinuation.Context"/>, so there is no

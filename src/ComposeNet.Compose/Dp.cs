@@ -18,7 +18,7 @@ namespace ComposeNet;
 /// <see cref="Dp(float)"/> constructor or one of the conversion operators.
 /// </para>
 /// </remarks>
-public readonly struct Dp : System.IEquatable<Dp>
+public readonly struct Dp : IEquatable<Dp>
 {
     /// <summary>The underlying density-independent pixel count.</summary>
     public float Value { get; }

@@ -10,9 +10,9 @@ namespace ComposeNet;
 [Register("composenet/compose/ShouldStartDragAndDropCallback")]
 internal sealed class ShouldStartDragAndDropCallback : Java.Lang.Object, IFunction1
 {
-    readonly System.Func<DragAndDropEvent, bool> _callback;
+    readonly Func<DragAndDropEvent, bool> _callback;
 
-    public ShouldStartDragAndDropCallback(System.Func<DragAndDropEvent, bool> callback)
+    public ShouldStartDragAndDropCallback(Func<DragAndDropEvent, bool> callback)
     {
         _callback = callback;
     }

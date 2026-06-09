@@ -1,5 +1,3 @@
-using Android.Runtime;
-
 namespace ComposeNet;
 
 /// <summary>
@@ -96,7 +94,7 @@ public sealed class AnnotatedStringBuilder
                 _builder.AddLink(c, start, end);
                 break;
             default:
-                throw new System.NotSupportedException(
+                throw new NotSupportedException(
                     $"Unknown LinkAnnotation subtype '{link.Binding?.GetType().FullName ?? "null"}'. " +
                     "Add an explicit AddLink overload when Compose introduces a new variant.");
         }

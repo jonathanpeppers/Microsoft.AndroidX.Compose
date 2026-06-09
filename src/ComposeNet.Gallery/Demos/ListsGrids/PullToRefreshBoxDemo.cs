@@ -31,7 +31,7 @@ public static class PullToRefreshBoxDemo
                 Modifier.Companion.FillMaxWidth().Height(320),
 
                 new LazyColumn<int>(
-                    items:       System.Linq.Enumerable.Range(0, 40).ToList(),
+                    items:       Enumerable.Range(0, 40).ToList(),
                     itemContent: i => new Text($"Item {i:D2} (rev {revision})"))
                 {
                     Modifier = Modifier.Companion.FillMaxSize(),

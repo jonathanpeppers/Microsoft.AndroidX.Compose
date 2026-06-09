@@ -57,7 +57,7 @@ public sealed class SearchBarState
 
     /// <summary>
     /// Raw JNI handle of the bound state object, or
-    /// <see cref="System.IntPtr.Zero"/> until the first <see cref="SearchBar"/>
+    /// <see cref="IntPtr.Zero"/> until the first <see cref="SearchBar"/>
     /// render binds this state.
     /// </summary>
     internal IntPtr Handle => Jvm?.Handle ?? IntPtr.Zero;

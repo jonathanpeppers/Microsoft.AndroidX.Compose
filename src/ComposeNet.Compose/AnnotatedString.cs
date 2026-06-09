@@ -25,7 +25,7 @@ public sealed class AnnotatedString : Java.Lang.Object
     internal AnnotatedString(AndroidX.Compose.UI.Text.AnnotatedString binding)
         : base(binding.Handle, JniHandleOwnership.DoNotTransfer)
     {
-        System.GC.KeepAlive(binding);
+        GC.KeepAlive(binding);
     }
 
     /// <summary>
@@ -35,7 +35,7 @@ public sealed class AnnotatedString : Java.Lang.Object
     /// </summary>
     public AnnotatedString(string text)
         : this(new AndroidX.Compose.UI.Text.AnnotatedString(
-            text, new System.Collections.Generic.List<AndroidX.Compose.UI.Text.AnnotatedString.Range>()))
+            text, new List<AndroidX.Compose.UI.Text.AnnotatedString.Range>()))
     {
     }
 

@@ -1,7 +1,3 @@
-using System.Collections.Generic;
-using AndroidX.Compose.Runtime;
-using ComposeNet;
-
 namespace ComposeNet.Samples.Reply;
 
 /// <summary>

@@ -1,5 +1,3 @@
-using System.Threading;
-using System.Threading.Tasks;
 using Android.Runtime;
 using Kotlin.Coroutines;
 using Xamarin.KotlinX.Coroutines;
@@ -9,7 +7,7 @@ namespace ComposeNet;
 /// <summary>
 /// JCW implementing Kotlin's <see cref="IContinuation"/> for the
 /// long-running <c>Flow.collect</c> call that drives
-/// <see cref="Compose.SnapshotFlow{T}(System.Func{T})"/>. Unlike
+/// <see cref="Compose.SnapshotFlow{T}(Func{T})"/>. Unlike
 /// <see cref="SuspendContinuation"/>, which models a one-shot suspend
 /// resumed back into a <see cref="TaskCompletionSource{TResult}"/>,
 /// this continuation:
@@ -68,7 +66,7 @@ internal sealed class SnapshotFlowContinuation : Java.Lang.Object, IContinuation
     /// <summary>
     /// Callback invoked once when Kotlin's collect coroutine
     /// resumes. Receives <c>null</c> for normal completion /
-    /// cancellation, or the underlying <see cref="System.Exception"/>
+    /// cancellation, or the underlying <see cref="Exception"/>
     /// when the flow faulted with anything other than a
     /// <c>CancellationException</c>.
     /// </summary>
@@ -78,7 +76,7 @@ internal sealed class SnapshotFlowContinuation : Java.Lang.Object, IContinuation
     /// continuation, before passing it to <c>flow.Collect</c>). It's
     /// read once on the resume path and isn't expected to change.
     /// </remarks>
-    internal System.Action<System.Exception?>? OnResumed { get; set; }
+    internal Action<Exception?>? OnResumed { get; set; }
 
     /// <summary>
     /// Forces <see cref="Completion"/> to complete without going
@@ -92,13 +90,13 @@ internal sealed class SnapshotFlowContinuation : Java.Lang.Object, IContinuation
     internal void MarkSynchronouslyCompleted()
     {
         try { OnResumed?.Invoke(null); }
-        catch (System.Exception ex) { _tcs.TrySetException(ex); return; }
+        catch (Exception ex) { _tcs.TrySetException(ex); return; }
         _tcs.TrySetResult(null);
     }
 
     public void ResumeWith(Java.Lang.Object p0)
     {
-        System.Exception? error = null;
+        Exception? error = null;
         try
         {
             if (p0 is not null && KotlinResult.IsFailure(p0.Handle))
@@ -111,7 +109,7 @@ internal sealed class SnapshotFlowContinuation : Java.Lang.Object, IContinuation
                     error = ex;
             }
         }
-        catch (System.Exception ex)
+        catch (Exception ex)
         {
             // KotlinResult helpers can throw on malformed boxes.
             // Surface the diagnostic to the awaiter rather than
@@ -123,7 +121,7 @@ internal sealed class SnapshotFlowContinuation : Java.Lang.Object, IContinuation
         {
             OnResumed?.Invoke(error);
         }
-        catch (System.Exception ex)
+        catch (Exception ex)
         {
             // The enumerator's completion handler should be
             // exception-free, but if it ever isn't we still need to
