@@ -17,7 +17,7 @@ public static class HomeScreen
     {
         Modifier.Companion.FillMaxSize().Padding(16),
 
-        new Text("Welcome to Microsoft.AndroidX.Compose Gallery"),
+        new Text("Welcome to .NET Compose Gallery"),
         new Text("Every facade — buttons, lists, dialogs, navigation, animation — laid out by category. Tap a row to jump in, or use the search action in the top bar to look one up."),
         new Spacer { Modifier = Modifier.Companion.Height(16) },
 

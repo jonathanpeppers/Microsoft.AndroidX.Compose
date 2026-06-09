@@ -27,7 +27,7 @@ public sealed class GalleryDrawer : ComposableNode
         {
             // Push the header below the system status bar.
             Modifier.Companion.StatusBarsPadding(),
-            new Text("Microsoft.AndroidX.Compose Gallery")
+            new Text(".NET Compose Gallery")
             {
                 FontSize   = 22,
                 FontWeight = FontWeight.Medium,

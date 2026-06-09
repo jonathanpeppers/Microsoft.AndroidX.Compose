@@ -60,11 +60,11 @@ public sealed class GalleryScaffold : ComposableNode
 
     static string TitleFor(string route) => route switch
     {
-        "home"   => "Microsoft.AndroidX.Compose Gallery",
+        "home"   => ".NET Compose Gallery",
         "search" => "Search",
         var r when r.StartsWith("category/") => Catalog.FindCategory(r["category/".Length..])?.Title ?? "Category",
         var r when r.StartsWith("demo/")     => Catalog.FindDemo(r["demo/".Length..])?.Title ?? "Demo",
-        _ => "Microsoft.AndroidX.Compose Gallery",
+        _ => ".NET Compose Gallery",
     };
 
     NavHost BuildNavHost(MutableState<string> currentRoute)
