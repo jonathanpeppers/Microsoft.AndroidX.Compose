@@ -356,6 +356,52 @@ public sealed class Modifier
     }
 
     /// <summary>
+    /// <c>Modifier.dragAndDropTarget(shouldStartDragAndDrop, target)</c> —
+    /// marks the composable as a drop zone for drags originating from other
+    /// apps or other composables. The
+    /// <paramref name="shouldStartDragAndDrop"/> predicate runs once per
+    /// drag-start; return <c>true</c> to opt this target in for that drag
+    /// (a common gate is <c>e =&gt; e.MimeTypes.Any(m =&gt; m.StartsWith("image/"))</c>).
+    /// While the drag is in progress Compose forwards events to
+    /// <paramref name="target"/>; assign its <see cref="DragAndDropTarget.OnDrop"/>
+    /// to handle the dropped payload.
+    ///
+    /// Both arguments should be hoisted into
+    /// <see cref="Compose.Remember{T}(System.Func{T}, int, string)"/> so the
+    /// underlying <c>DragAndDropTargetElement</c> keeps a stable identity
+    /// across recompositions:
+    /// <code>
+    /// var target = Compose.Remember(() =&gt; new DragAndDropTarget { OnDrop = e =&gt; { /* ... */ return true; } });
+    /// new Column
+    /// {
+    ///     Modifier.Companion.FillMaxSize()
+    ///         .DragAndDropTarget(e =&gt; e.MimeTypes.Any(m =&gt; m.StartsWith("image/")), target),
+    ///     /* children */
+    /// };
+    /// </code>
+    /// </summary>
+    /// <param name="shouldStartDragAndDrop">Predicate invoked when a drag
+    /// begins. Return <c>true</c> to register interest in the drag (and
+    /// receive subsequent events on <paramref name="target"/>), <c>false</c>
+    /// to ignore it.</param>
+    /// <param name="target">Receiver of drag events for this composable. At
+    /// minimum set <see cref="DragAndDropTarget.OnDrop"/>; the optional
+    /// <see cref="DragAndDropTarget.OnEntered"/> /
+    /// <see cref="DragAndDropTarget.OnExited"/> /
+    /// <see cref="DragAndDropTarget.OnStarted"/> /
+    /// <see cref="DragAndDropTarget.OnEnded"/> hooks drive
+    /// hover/session visuals.</param>
+    public Modifier DragAndDropTarget(
+        System.Func<DragAndDropEvent, bool> shouldStartDragAndDrop,
+        DragAndDropTarget target)
+    {
+        System.ArgumentNullException.ThrowIfNull(shouldStartDragAndDrop);
+        System.ArgumentNullException.ThrowIfNull(target);
+        var predicate = new ShouldStartDragAndDropCallback(shouldStartDragAndDrop);
+        return Append(curr => ComposeBridges.ModifierDragAndDropTarget(curr, predicate, target));
+    }
+
+    /// <summary>
     /// <c>Modifier.verticalScroll(state)</c> — makes a non-Lazy parent
     /// (e.g. a regular <see cref="Column"/> or <see cref="Box"/>)
     /// vertically scrollable when its content overflows. Hold the

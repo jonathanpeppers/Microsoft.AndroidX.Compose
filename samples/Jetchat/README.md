@@ -176,7 +176,6 @@ feature, a new package reference, or simply more sample plumbing:
 | `BackHandler` to dismiss the expanded input panel via system back | `androidx.activity.compose.BackHandlerKt` lives in `Xamarin.AndroidX.Activity.Compose` which isn't currently referenced. Adding the NuGet + a `[ComposeBridge]` would unblock it. |
 | Image / sticker / file message attachments inside bubbles | requires a composable image-loader pipeline (e.g. Coil). |
 | App-widget discoverability (`@JetchatAppWidget`) | the **drawer entry point** exists on API 26+ (see *What's faithful*) but the actual `androidx.glance.appwidget`-backed widget + `AppWidgetManager.requestPinAppWidget(...)` flow is still out of scope — needs the `Xamarin.AndroidX.Glance.AppWidget` package and a `GlanceAppWidget` subclass. |
-| Drag-and-drop image target on the conversation area | explicitly out of scope. |
 | Sticky day-headers spanning multiple dates (e.g. "20 Aug" alongside "Today") | needs the `LazyListScope.item { … }` DSL exposed on the `LazyColumn` facade so a per-day header can be emitted between message groups. Only "Today" is rendered. |
 | `Sp(float)` for exact M3 letter-spacing (0.5 / 0.1 sp values) | `Sp` is integer-only; `labelSmall` rounds 0.5 → 1, `titleSmall` rounds 0.1 → 0 (dropped). |
 | `FocusRequester` programmatic focus into the emoji panel | the panel opens correctly but doesn't grab focus on expand. |
@@ -209,6 +208,12 @@ this completion round added:
   `RoundedCornerShapeKt.RoundedCornerShape(float, float, float, float)`
   directly. (The 4-arg `(Dp, Dp, Dp, Dp)` overload is bindable;
   only the single-radius `(Dp)` overload is mangled.)
+- **`Modifier.DragAndDropTarget(...)` + `DragAndDropEvent` +
+  `DragAndDropTarget` facades** — wraps
+  `androidx.compose.ui.draganddrop.dragAndDropTarget` so an external
+  drag of an image onto the conversation surface appends a
+  `[image dropped: $uri]` placeholder message. Image rendering inside
+  the bubble is a separate gap (image-loader pipeline).
 - **`AnnotatedString` / `AnnotatedStringBuilder` / `SpanStyle` /
   `LinkAnnotation` / `AnnotatedText`** — facade primitives for
   Compose's rich-text type. `AnnotatedText` is a sibling of the
@@ -268,6 +273,18 @@ The sample mirrors disabled-state visuals by flipping the label
 color from `Primary` to `OnSurfaceVariant` when the input is
 whitespace, and the `Send` handler early-returns on
 `IsNullOrWhiteSpace`.
+
+### Drag-and-drop target hoisting
+
+The `DragAndDropTarget` instance for the conversation surface is
+hoisted into `Compose.Remember` so the underlying
+`DragAndDropTargetElement` keeps a stable identity across
+recompositions; otherwise Compose rebuilds the modifier element
+every frame and its internal hover/started/ended bookkeeping
+resets. `OnDrop` reads the first `ClipData` item's URI and appends
+a `[image dropped: $uri]` placeholder via `ui.AddMessage` — inline-
+image rendering inside the bubble is a separate gap that needs an
+image-loader pipeline.
 
 ### `MessageFormatter` regex behaviour
 

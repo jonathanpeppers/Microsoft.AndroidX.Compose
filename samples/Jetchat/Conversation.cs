@@ -111,7 +111,7 @@ public static class Conversation
             },
         };
 
-    static Column BuildBody(
+    static ComposableNode BuildBody(
         ConversationUiState          ui,
         MutableState<TextFieldValue> input,
         ColorScheme                  scheme,
@@ -121,12 +121,33 @@ public static class Conversation
         Action<string>               onAuthorClicked,
         MutableState<bool>           isRecording,
         MutableNumberState<float>    swipeOffset) =>
-        new()
+        new Composed(c =>
         {
-            Modifier.Companion.FillMaxSize(),
-            BuildMessages(ui, scheme, messagesScroll, popupOpen, onAuthorClicked),
-            BuildInputArea(ui, input, scheme, selectedSelector, messagesScroll, isRecording, swipeOffset),
-        };
+            var dndTarget = Compose.Remember(() => new DragAndDropTarget(e =>
+            {
+                var clip = e.AndroidDragEvent.ClipData;
+                var uri  = clip is not null && clip.ItemCount > 0
+                    ? clip.GetItemAt(0)?.Uri?.ToString()
+                    : null;
+                ui.AddMessage(new Message(MyName, $"[image dropped: {uri ?? "?"}]", "8:30 PM"));
+                _ = messagesScroll.AnimateScrollToItemAsync(0);
+                return true;
+            }));
+            return new Column
+            {
+                Modifier.Companion.FillMaxSize().DragAndDropTarget(
+                    shouldStartDragAndDrop: e =>
+                    {
+                        foreach (var m in e.MimeTypes)
+                            if (m.StartsWith("image/", System.StringComparison.Ordinal))
+                                return true;
+                        return false;
+                    },
+                    target: dndTarget),
+                BuildMessages(ui, scheme, messagesScroll, popupOpen, onAuthorClicked),
+                BuildInputArea(ui, input, scheme, selectedSelector, messagesScroll, isRecording, swipeOffset),
+            };
+        });
 
     // Flat row stream so LazyColumn<T> can render messages and day
     // headers as a single item list — same shape as upstream's

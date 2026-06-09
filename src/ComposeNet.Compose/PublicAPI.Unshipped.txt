@@ -273,6 +273,26 @@ ComposeNet.Dp.Dp() -> void
 ComposeNet.Dp.Dp(float value) -> void
 ComposeNet.Dp.Equals(ComposeNet.Dp other) -> bool
 ComposeNet.Dp.Value.get -> float
+ComposeNet.DragAndDropEvent
+ComposeNet.DragAndDropEvent.AndroidDragEvent.get -> Android.Views.DragEvent!
+ComposeNet.DragAndDropEvent.MimeTypes.get -> System.Collections.Generic.IReadOnlyList<string!>!
+ComposeNet.DragAndDropTarget
+ComposeNet.DragAndDropTarget.DragAndDropTarget() -> void
+ComposeNet.DragAndDropTarget.DragAndDropTarget(System.Func<ComposeNet.DragAndDropEvent!, bool>! onDrop) -> void
+ComposeNet.DragAndDropTarget.OnChanged.get -> System.Action<ComposeNet.DragAndDropEvent!>?
+ComposeNet.DragAndDropTarget.OnChanged.set -> void
+ComposeNet.DragAndDropTarget.OnDrop.get -> System.Func<ComposeNet.DragAndDropEvent!, bool>?
+ComposeNet.DragAndDropTarget.OnDrop.set -> void
+ComposeNet.DragAndDropTarget.OnEnded.get -> System.Action<ComposeNet.DragAndDropEvent!>?
+ComposeNet.DragAndDropTarget.OnEnded.set -> void
+ComposeNet.DragAndDropTarget.OnEntered.get -> System.Action<ComposeNet.DragAndDropEvent!>?
+ComposeNet.DragAndDropTarget.OnEntered.set -> void
+ComposeNet.DragAndDropTarget.OnExited.get -> System.Action<ComposeNet.DragAndDropEvent!>?
+ComposeNet.DragAndDropTarget.OnExited.set -> void
+ComposeNet.DragAndDropTarget.OnMoved.get -> System.Action<ComposeNet.DragAndDropEvent!>?
+ComposeNet.DragAndDropTarget.OnMoved.set -> void
+ComposeNet.DragAndDropTarget.OnStarted.get -> System.Action<ComposeNet.DragAndDropEvent!>?
+ComposeNet.DragAndDropTarget.OnStarted.set -> void
 ComposeNet.DraggableState
 ComposeNet.DraggableState.DispatchRawDelta(float delta) -> void
 ComposeNet.DraggableState.DraggableState(System.Action<float>! onDelta) -> void
@@ -646,6 +666,7 @@ ComposeNet.Modifier.CombinedClickable(System.Action! onClick, System.Action? onL
 ComposeNet.Modifier.DefaultMinSize(ComposeNet.Dp? minWidth = null, ComposeNet.Dp? minHeight = null) -> ComposeNet.Modifier!
 ComposeNet.Modifier.DetectTapGestures(System.Action<ComposeNet.Offset>? onTap = null, System.Action<ComposeNet.Offset>? onPress = null, System.Action<ComposeNet.Offset>? onLongPress = null, System.Action<ComposeNet.Offset>? onDoubleTap = null, object? key = null) -> ComposeNet.Modifier!
 ComposeNet.Modifier.DisplayCutoutPadding() -> ComposeNet.Modifier!
+ComposeNet.Modifier.DragAndDropTarget(System.Func<ComposeNet.DragAndDropEvent!, bool>! shouldStartDragAndDrop, ComposeNet.DragAndDropTarget! target) -> ComposeNet.Modifier!
 ComposeNet.Modifier.Draggable(ComposeNet.DraggableState! state, ComposeNet.Orientation orientation, bool enabled = true) -> ComposeNet.Modifier!
 ComposeNet.Modifier.FillMaxHeight(float fraction = 1) -> ComposeNet.Modifier!
 ComposeNet.Modifier.FillMaxSize(float fraction = 1) -> ComposeNet.Modifier!
