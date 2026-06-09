@@ -27,9 +27,12 @@ public sealed class LazyHorizontalGrid<T> : ComposableNode
 
     public LazyHorizontalGrid(IGridCells rows, IReadOnlyList<T> items, Func<T, ComposableNode> itemContent)
     {
-        _rows        = rows        ?? throw new ArgumentNullException(nameof(rows));
-        _items       = items       ?? throw new ArgumentNullException(nameof(items));
-        _itemContent = itemContent ?? throw new ArgumentNullException(nameof(itemContent));
+        ArgumentNullException.ThrowIfNull(rows);
+        _rows        = rows;
+        ArgumentNullException.ThrowIfNull(items);
+        _items       = items;
+        ArgumentNullException.ThrowIfNull(itemContent);
+        _itemContent = itemContent;
     }
 
     /// <summary>

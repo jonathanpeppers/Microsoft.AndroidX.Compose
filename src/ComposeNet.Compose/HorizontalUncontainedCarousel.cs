@@ -39,8 +39,10 @@ public sealed class HorizontalUncontainedCarousel<T> : ComposableNode
 
     public HorizontalUncontainedCarousel(IReadOnlyList<T> items, float itemWidth, Func<T, ComposableNode> itemContent)
     {
-        _items       = items       ?? throw new ArgumentNullException(nameof(items));
-        _itemContent = itemContent ?? throw new ArgumentNullException(nameof(itemContent));
+        ArgumentNullException.ThrowIfNull(items);
+        _items       = items;
+        ArgumentNullException.ThrowIfNull(itemContent);
+        _itemContent = itemContent;
         _itemWidth   = itemWidth;
     }
 
