@@ -42,7 +42,7 @@ public static class ReplyApp
     {
         return new NavHost(startDestination: Route.Inbox, navController: nav)
         {
-            new Composable(Route.Inbox)
+            new NavDestination(Route.Inbox)
             {
                 ReplyInboxScreen.Build(
                     emails:           LocalEmailsDataProvider.AllEmails,
@@ -61,10 +61,10 @@ public static class ReplyApp
                             selectedEmailIds.Add(id);
                     }),
             },
-            new Composable(Route.Articles)   { EmptyComingSoon.Build() },
-            new Composable(Route.DirectMessages) { EmptyComingSoon.Build() },
-            new Composable(Route.Groups)     { EmptyComingSoon.Build() },
-            new Composable(Route.EmailDetailPattern, entry =>
+            new NavDestination(Route.Articles)   { EmptyComingSoon.Build() },
+            new NavDestination(Route.DirectMessages) { EmptyComingSoon.Build() },
+            new NavDestination(Route.Groups)     { EmptyComingSoon.Build() },
+            new NavDestination(Route.EmailDetailPattern, entry =>
             {
                 var idStr = entry.Arguments?.GetString("emailId") ?? "0";
                 if (!long.TryParse(idStr, out var id))

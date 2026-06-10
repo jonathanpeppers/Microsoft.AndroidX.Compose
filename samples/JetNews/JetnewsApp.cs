@@ -80,16 +80,16 @@ public static class JetnewsApp
     {
         return new NavHost(startDestination: Routes.Home, navController: nav)
         {
-            new Composable(Routes.Home, _ =>
+            new NavDestination(Routes.Home, _ =>
                 HomeScreen.Build(bookmarks, drawerState, postId =>
                 {
                     nav.Navigate(Routes.Post(postId));
                 }, snackbars)),
-            new Composable(Routes.Interests)
+            new NavDestination(Routes.Interests)
             {
                 InterestsScreen.Build(selectedTopics, selectedPeople, selectedPublications, interestsTab, drawerState),
             },
-            new Composable(Routes.PostPattern, entry =>
+            new NavDestination(Routes.PostPattern, entry =>
             {
                 var id = entry.Arguments?.GetString("postId") ?? string.Empty;
                 return PostScreen.Build(

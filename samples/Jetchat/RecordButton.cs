@@ -136,10 +136,10 @@ public static class RecordButton
                     Modifier   = Modifier.Companion.Align(Alignment.Vertical.CenterVertically),
                     FontSize   = 22,
                     FontWeight = FontWeight.Medium,
-                    Color      = new Color(scheme.OnSurface),
+                    Color      = scheme.OnSurface,
                 },
 
-                new Spacer(Modifier.Companion.Width(16)),
+                Spacer.Width(16),
 
                 new Row
                 {
@@ -154,12 +154,12 @@ public static class RecordButton
                         TintArgb = scheme.OnSurfaceVariant,
                         Modifier = Modifier.Companion.Align(Alignment.Vertical.CenterVertically).Size(24),
                     },
-                    new Spacer(Modifier.Companion.Width(8)),
+                    Spacer.Width(8),
                     new Text("Slide to cancel")
                     {
                         Modifier = Modifier.Companion.Align(Alignment.Vertical.CenterVertically),
                         FontSize = 16,
-                        Color    = new Color(scheme.OnSurfaceVariant),
+                        Color    = scheme.OnSurfaceVariant,
                     },
                 },
             };

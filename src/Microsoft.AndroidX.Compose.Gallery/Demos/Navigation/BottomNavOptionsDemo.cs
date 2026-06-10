@@ -48,9 +48,9 @@ public static class BottomNavOptionsDemo
                     Modifier.Companion.FillMaxWidth().Height(260),
                     new NavHost(startDestination: startRoute, navController: nav)
                     {
-                        new Composable(startRoute,    _ => new CounterPane("🏠 Home")),
-                        new Composable("search",      _ => new CounterPane("🔍 Search")),
-                        new Composable("profile",     _ => new CounterPane("👤 Profile")),
+                        new NavDestination(startRoute,    _ => new CounterPane("🏠 Home")),
+                        new NavDestination("search",      _ => new CounterPane("🔍 Search")),
+                        new NavDestination("profile",     _ => new CounterPane("👤 Profile")),
                     },
                 },
 

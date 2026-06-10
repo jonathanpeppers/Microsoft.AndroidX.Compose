@@ -2,7 +2,6 @@ using Android.OS;
 using AndroidX.Compose.Foundation;
 using AndroidX.Compose.Material3;
 using AndroidX.Compose.Runtime;
-using BindingMaterialTheme = AndroidX.Compose.Material3.MaterialTheme;
 
 namespace AndroidX.Compose;
 
@@ -32,9 +31,9 @@ namespace AndroidX.Compose;
 /// </code>
 /// <para>
 /// Child composables can read the active theme via
-/// <see cref="CurrentColorScheme(IComposer)"/> /
-/// <see cref="CurrentTypography(IComposer)"/> /
-/// <see cref="CurrentShapes(IComposer)"/>.
+/// <see cref="ComposeExtensions.ColorScheme(IComposer)"/> /
+/// <see cref="ComposeExtensions.Typography(IComposer)"/> /
+/// <see cref="ComposeExtensions.Shapes(IComposer)"/>.
 /// </para>
 /// </remarks>
 public sealed class MaterialTheme : ComposableContainer
@@ -425,30 +424,4 @@ public sealed class MaterialTheme : ComposableContainer
             (int)defaults);
     }
 
-    /// <summary>
-    /// Read the active <see cref="ColorScheme"/> from the current
-    /// <c>MaterialTheme</c> ancestor. Mirror of Kotlin's
-    /// <c>MaterialTheme.colorScheme</c>. Must be called from inside a
-    /// composable's <c>Render</c> body.
-    /// </summary>
-    public static ColorScheme CurrentColorScheme(IComposer composer) =>
-        BindingMaterialTheme.Instance.GetColorScheme(composer, 0);
-
-    /// <summary>
-    /// Read the active <see cref="Typography"/> from the current
-    /// <c>MaterialTheme</c> ancestor. Mirror of Kotlin's
-    /// <c>MaterialTheme.typography</c>. Must be called from inside a
-    /// composable's <c>Render</c> body.
-    /// </summary>
-    public static Typography CurrentTypography(IComposer composer) =>
-        BindingMaterialTheme.Instance.GetTypography(composer, 0);
-
-    /// <summary>
-    /// Read the active <see cref="Shapes"/> from the current
-    /// <c>MaterialTheme</c> ancestor. Mirror of Kotlin's
-    /// <c>MaterialTheme.shapes</c>. Must be called from inside a
-    /// composable's <c>Render</c> body.
-    /// </summary>
-    public static Shapes CurrentShapes(IComposer composer) =>
-        BindingMaterialTheme.Instance.GetShapes(composer, 0);
 }

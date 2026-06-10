@@ -15,7 +15,7 @@ public static class ReplyEmailListItem
         bool           isSelected = false) =>
         new Composed(c =>
         {
-            var scheme = MaterialTheme.CurrentColorScheme(c);
+            var scheme = c.ColorScheme();
             long bg =
                 isSelected ? scheme.PrimaryContainer :
                 isOpened   ? scheme.SecondaryContainer :
@@ -25,7 +25,7 @@ public static class ReplyEmailListItem
             {
                 Modifier.Companion
                     .Padding(horizontal: 16, vertical: 4)
-                    .Background(new Color(bg))
+                    .Background(bg)
                     .CombinedClickable(
                         onClick:     () => navigateToDetail(email.Id),
                         onLongClick: () => toggleSelection(email.Id)),
@@ -77,7 +77,7 @@ public static class ReplyEmailListItem
             {
                 Modifier.Companion
                     .Clip(Shape.Circle())
-                    .Background(new Color(scheme.SurfaceVariant)),
+                    .Background(scheme.SurfaceVariant),
                 new Icon(Resource.Drawable.ic_star_border, "Favorite")
                 {
                     TintArgb = scheme.Outline,
