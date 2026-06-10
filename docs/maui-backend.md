@@ -215,6 +215,19 @@ so subsequent handlers don't re-discover them:
 
 ## Proposed repo layout
 
+> **Status:** this is the **original design proposal** kept for
+> historical context. Phase 1 shipped the smaller set listed in
+> "Phase 1 — bootstrap + smallest possible working set ✅ shipped"
+> below — no `MauiComposeActivity`, no custom `ComposeViewHandler`
+> base, no `ModifierBridge` / `DispatcherProvider` / `ComposeTicker` /
+> `ComposeFontManager` / `ComposeAlertManagerSubscription` /
+> `ModalNavigationManager` / `ThemeManager` / `Platform/` folder, and
+> a single `Handlers/<Name>Handler.cs` per control rather than the
+> `.cs` + `.Android.cs` partial split below. Stock MAUI's
+> `MauiAppCompatActivity` + `ViewHandler<TVirtual, ComposeView>` base
+> turned out to be enough. The detailed proposal stays because it
+> outlines what still has to land for the broader phases.
+
 Add a new project alongside the existing facade. Mirrors the maui-labs
 layout 1:1:
 

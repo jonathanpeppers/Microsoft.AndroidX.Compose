@@ -139,10 +139,18 @@ public partial class FooHandler : ViewHandler<IFoo, ComposeView>
 
 1. Create `Handlers/<MauiType>Handler.cs` following the skeleton.
 2. Map each MAUI interface property you care about to a
-   `MutableState<T>` slot. Keep slot types primitive (string, int,
-   long, packed color, bool). Convert packed values
-   (`Microsoft.Maui.Graphics.Color` → packed sRGB ulong) in the
-   `MapXxx` callback, not in the composition.
+   `MutableState<T>` slot. Keep slot types **primitive**: `string`,
+   `bool`, `int`, `long`, `float`, packed color (`long?`),
+   `Java.Lang.Object` subclasses. **Never a user-defined .NET enum**
+   like `Microsoft.Maui.TextAlignment` — `MutableState<T>`'s `ToJava`
+   switch doesn't unwrap them to their underlying primitive and the
+   ctor throws `NotSupportedException` at field-initializer time,
+   crashing the handler before any frame paints. Store the underlying
+   `int` (`MutableState<int>`) and cast back inside `SetContent`. See
+   `LabelHandler._hTextAlign` for the canonical workaround. Convert
+   packed values (`Microsoft.Maui.Graphics.Color` → packed `long?`
+   via `ColorMapping.ToPackedLong`) in the `MapXxx` callback, not in
+   the composition.
 3. The composition reads slots and builds the Compose widget tree.
    Use `Microsoft.AndroidX.Compose`'s existing facades (`Text`,
    `Button`, `Column`, …). **Do not** spin up a fresh `IComposer` —
@@ -161,11 +169,19 @@ public partial class FooHandler : ViewHandler<IFoo, ComposeView>
    new control on `MainPage.xaml` so manual smoke-test deploys
    exercise it.
 7. Build + deploy with `dotnet build
-   src/Microsoft.AndroidX.Compose.Maui.Sample -t:Install`; launch with
-   `adb shell am start -n
-   net.compose.maui.sample/crc645d633bf51a3beaf9.MainActivity`. Confirm
-   `androidx.compose.ui.platform.ComposeView` nodes for your new
-   control in `uiautomator dump`, then exercise it (tap, type, drag).
+   src/Microsoft.AndroidX.Compose.Maui.Sample -t:Install`. Resolve the
+   launchable activity (the JCW class name is a per-assembly hash that
+   changes — never hardcode it):
+
+   ```pwsh
+   adb shell cmd package resolve-activity --brief net.compose.maui.sample
+   # → net.compose.maui.sample/crc6XXXXXXXX.MainActivity
+   adb shell am start -n net.compose.maui.sample/<resolved activity>
+   ```
+
+   Confirm `androidx.compose.ui.platform.ComposeView` nodes for your
+   new control in `uiautomator dump`, then exercise it (tap, type,
+   drag).
 
 ### Event forwarding
 
@@ -175,6 +191,36 @@ order (e.g. `IButton` fires `Pressed → Clicked → Released` on touch),
 typically surfaces only the logical event; behaviors and gesture
 recognizers subscribed to the others break silently if you skip them.
 See `ButtonHandler.OnClicked` for the pattern.
+
+### Mapper rules learned the hard way in Phase 1
+
+These came out of getting Label + Button to render identically to the
+stock template. Apply on every new handler.
+
+- **Suppress `IView.Background` on Compose-skinned widgets that paint
+  their own surface** (`Button`, future `Border`, anything `Card`-/
+  `Surface`-backed). Stock `ViewMapper.MapBackground` paints a
+  `SolidColorBrush` on the outer `ComposeView`, which sits behind
+  Compose's own pill/card and produces a double-background stack.
+  Override with a no-op:
+
+  ```csharp
+  [nameof(IView.Background)] = (h, v) => { /* Compose owns the surface */ }
+  ```
+
+  Leaves with no intrinsic surface (`Label`) should leave the default
+  `ViewMapper` mapping in place.
+
+- **Map `HorizontalLayoutAlignment` → `Modifier.fillMaxWidth()`** when
+  the caller asks to `Fill` (Button) or `Fill`/`Center` (Label).
+  Compose's `Text` only honours `textAlign` when its measured width
+  spans the available space, so `HorizontalTextAlignment="Center"` on
+  a `Headline`/`SubHeadline` `Label` renders left-aligned until the
+  Compose `Text` also fills its slot. Same trick for Material 3
+  `Button`, which hugs its content by default and would otherwise
+  render as a small pill on the left edge for a `HorizontalOptions="Fill"`
+  button. See `LabelHandler.MapHorizontalLayoutAlignment` and
+  `ButtonHandler.MapHorizontalLayoutAlignment`.
 
 ### Color conversion convention
 
