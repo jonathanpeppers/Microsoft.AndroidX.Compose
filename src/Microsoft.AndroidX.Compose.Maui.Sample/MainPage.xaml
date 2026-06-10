@@ -8,11 +8,25 @@
         <VerticalStackLayout
             Padding="30,0"
             Spacing="25">
+            <!-- FileImageSource: takes the IFileImageSource fast path
+                 (resolves to R.drawable.dotnet_bot and renders via
+                 Compose's painterResource(int)). -->
             <Image
                 Source="dotnet_bot.png"
                 HeightRequest="185"
                 Aspect="AspectFit"
                 SemanticProperties.Description="dot net bot in a submarine number ten" />
+
+            <!-- UriImageSource: exercises the general MAUI pipeline.
+                 UriImageSourceService downloads on a worker thread,
+                 the handler wraps the resulting Drawable as a Compose
+                 BitmapPainter. Uses GitHub's Octocat (small, stable,
+                 CDN-cached). -->
+            <Image
+                Source="https://raw.githubusercontent.com/dotnet/brand/main/logo/dotnet-logo.png"
+                HeightRequest="120"
+                Aspect="AspectFit"
+                SemanticProperties.Description="dot net logo loaded over HTTPS" />
 
             <Label
                 Text="Hello, World!"

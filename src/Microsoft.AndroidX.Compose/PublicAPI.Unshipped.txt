@@ -510,6 +510,7 @@ AndroidX.Compose.Image.Alpha.set -> void
 AndroidX.Compose.Image.ContentScale.get -> AndroidX.Compose.ContentScale?
 AndroidX.Compose.Image.ContentScale.set -> void
 AndroidX.Compose.Image.Image(AndroidX.Compose.UI.Graphics.Painter.Painter! painter, string? contentDescription) -> void
+AndroidX.Compose.Image.Image(AndroidX.Compose.UI.Graphics.Painter.Painter! painter) -> void
 AndroidX.Compose.Image.Image(int drawableResourceId, string? contentDescription) -> void
 AndroidX.Compose.Image.Image(int drawableResourceId) -> void
 AndroidX.Compose.InputChip

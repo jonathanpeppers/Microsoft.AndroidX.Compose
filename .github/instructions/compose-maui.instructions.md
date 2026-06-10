@@ -304,27 +304,93 @@ that's internal and bypasses the equality short-circuit. The same
 pattern works for any property pair where MAUI and Compose both
 own the read side (`Slider.Value`, `Switch.IsToggled`).
 
-### `IImage` / file source resolution (`ImageHandler` pattern)
+### `IImage` / image source resolution (`ImageHandler` pattern)
 
-Phase 2 Slice 1 wires `FileImageSource` only. MAUI's `MauiImage`
-build action (the default for files under `Resources/Images/`)
-lower-cases the file name and emits a per-density drawable into the
-APK. Resolve via:
+Hybrid pipeline. Reuse stock dotnet/maui plumbing wherever it fits;
+fork only for the per-density-bucket / vector-drawable fast path.
+
+**Fast path — `IFileImageSource` resolved to a packaged drawable.**
+Use the public `Context.GetDrawableId(file)` from
+`Microsoft.Maui.Platform.ContextExtensions` (it lower-cases the file
+name and asks `Resources.GetIdentifier(name, "drawable", PackageName)`
+— same lookup `FileImageSourceService` does). If `> 0`, push it into
+a `MutableState<int?>` and render via the source-gen `Image(int)`
+ctor, which calls `painterResource(id, composer)` — preserves vector
+drawables and density buckets.
 
 ```csharp
-var name = System.IO.Path.GetFileNameWithoutExtension(file).ToLowerInvariant();
-var id   = ctx.Resources?.GetIdentifier(name, "drawable", ctx.PackageName);
+if (src is IFileImageSource file &&
+    handler.Context.GetDrawableId(file.File ?? string.Empty) is var id && id > 0)
+{
+    handler._loader?.Reset();
+    handler._painter.Value = null;
+    handler._drawableResourceId.Value = id;
+    return;
+}
 ```
 
-`dotnet_bot.png` → `R.drawable.dotnet_bot` → pass to the
-`Image(int painterResourceId)` facade.
+**General path — every other source.** `UriImageSource`,
+`StreamImageSource`, `FontImageSource`, plus files that aren't
+packaged as drawable resources, all go through MAUI's
+`ImageSourcePartLoader(IImageSourcePartSetter)`. Because the platform
+view isn't an `ImageView`, MAUI's `ImageSourcePartExtensions.UpdateSourceAsync`
+takes the `GetDrawableAsync(...)` branch and invokes
+`setImage(drawable)` on our setter. The setter wraps the `Drawable`
+as a Compose `BitmapPainter` and writes it into a second
+`MutableState<Painter?>` slot. The `SetContent` lambda prefers the
+painter slot over the drawable-id slot, so a freshly-loaded URI
+image immediately replaces a stale fast-path render.
 
-URI / stream / font / brush sources need MAUI's
-`IImageSourceService<TSource>` pipeline — they materialize into a
-`Drawable`/`Bitmap` that has to be wrapped as a Compose `Painter`.
-That's a later slice. The handler should `Debug.WriteLine` and
-return `null` (blank surface) for unsupported sources rather than
-crashing.
+`Loader` is lazy — handlers that only ever see file sources never
+allocate the setter at all. The setter holds a `WeakReference<>` back
+to the handler so a stale continuation can't root a disconnected
+handler.
+
+**`Drawable` → Compose `Painter` conversion.** Zero-copy wrap of
+`BitmapDrawable.Bitmap` when present; rasterize once at intrinsic
+size (fallback 1×1) for vector / layer-list / font glyph drawables.
+Pack `IntSize` as `((long)w << 32) | (uint)h` (matches Compose's
+`packInts` lowering for the `@JvmInline value class`). Pass
+`IntOffset.Zero` as `0L` and `FilterQuality.Low` as `1`.
+
+```csharp
+var imageBitmap = AndroidImageBitmap_androidKt.AsImageBitmap(bitmap);
+var srcSize = ((long)bitmap.Width << 32) | (uint)bitmap.Height;
+return BitmapPainterKt.BitmapPainter(imageBitmap, 0L, srcSize, 1);
+```
+
+**Async-void fire-and-forget.** `Microsoft.Maui.TaskExtensions.FireAndForget`
+is **internal**; replicate the same shape inline (await,
+swallow + log on exception). The inner `UpdateSourceAsync` already
+catches `Exception` and routes failure to `setImage(null)`, so the
+catch here is defence-in-depth — it primarily covers
+`ObjectDisposedException` from a disconnected handler.
+
+```csharp
+static async void StartPipelineLoad(ImageHandler handler)
+{
+    try { await handler.Loader.UpdateImageSourceAsync().ConfigureAwait(false); }
+    catch (Exception ex)
+    {
+        System.Diagnostics.Debug.WriteLine(
+            $"[ImageHandler] image source load failed: {ex.Message}");
+    }
+}
+```
+
+**Cancellation.** `_loader?.Reset()` calls `BeginLoad()` +
+`CompleteLoad(null)` under the hood, cancelling the prior token. Do
+it on `DisconnectHandler`, on an empty source, and on a successful
+fast-path resolve so a stale URI continuation can't write into the
+painter slot. The prior task's catch block swallows
+`OperationCanceledException` *without* calling `setImage(null)`, so
+rapid `MapSource` changes don't flash blank — the old painter stays
+until the new one loads.
+
+**Don't add a 1-arg `Image(int)` overload by hand** — `Image.cs`
+already declares both `Image(int)` and `Image(Painter)` stub ctors
+that delegate to the source-gen `Image(int, string?)` /
+`Image(Painter, string?)` ctors. Both are part of the public surface.
 
 ### Color conversion convention
 
