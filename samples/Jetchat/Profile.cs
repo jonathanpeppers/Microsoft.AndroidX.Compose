@@ -18,7 +18,7 @@ public static class Profile
         {
             var scrollState = c.Remember(() => new ScrollState());
             var popupOpen   = c.Remember(() => new MutableState<bool>(false));
-            var scheme      = MaterialTheme.CurrentColorScheme(c);
+            var scheme      = c.ColorScheme();
 
             var screen = new Scaffold
             {

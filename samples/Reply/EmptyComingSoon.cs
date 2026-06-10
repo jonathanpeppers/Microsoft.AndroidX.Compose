@@ -11,7 +11,7 @@ public static class EmptyComingSoon
     public static ComposableNode Build() =>
         new Composed(c =>
         {
-            var scheme = MaterialTheme.CurrentColorScheme(c);
+            var scheme = c.ColorScheme();
             return new Column(verticalArrangement: Arrangement.Center)
             {
                 Modifier.Companion.FillMaxSize().Padding(8),

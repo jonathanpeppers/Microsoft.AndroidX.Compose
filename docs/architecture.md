@@ -215,8 +215,8 @@ class.
   — invisible to callers. See [NOTES.md](NOTES.md) open issue #1 for
   the upstream-friendly fix.
 - **Theming reads landed (#61).** Use
-  `MaterialTheme.CurrentColorScheme(composer)`,
-  `CurrentTypography(composer)`, and `CurrentShapes(composer)` from
+  `composer.ColorScheme()`,
+  `composer.Typography()`, and `composer.Shapes()` from
   inside `Render` to read the active theme; mirror of Kotlin's
   `MaterialTheme.colorScheme / typography / shapes` reads.
   `MaterialTheme` itself takes `ColorScheme`/`Typography`/`Shapes`/`Dark`/`UseDynamicColor`

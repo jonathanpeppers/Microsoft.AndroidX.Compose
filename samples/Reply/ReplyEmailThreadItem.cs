@@ -10,7 +10,7 @@ public static class ReplyEmailThreadItem
     public static ComposableNode Build(Email email) =>
         new Composed(c =>
         {
-            var scheme = MaterialTheme.CurrentColorScheme(c);
+            var scheme = c.ColorScheme();
             return new Card
             {
                 Modifier.Companion

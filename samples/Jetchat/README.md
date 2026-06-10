@@ -193,8 +193,8 @@ this completion round added:
 
 - **`Composed`** — a `ComposableNode` wrapper around
   `Func<IComposer, ComposableNode>` so sample code can read
-  `MaterialTheme.CurrentColorScheme(c)` /
-  `MaterialTheme.CurrentTypography(c)` from inside a tree builder
+  `c.ColorScheme()` /
+  `c.Typography()` from inside a tree builder
   without needing a `partial class : ComposableNode` subclass.
 - **`LazyColumn<T>.ReverseLayout`** — surfaces the
   `reverseLayout` parameter that's been on the underlying
@@ -232,8 +232,8 @@ and `ComposableContainer.Children` / `RenderChildren` are
 `protected`, so subclassing from outside the facade assembly is
 fully supported. `Composed(Func<IComposer, ComposableNode>)` is
 the more concise alternative when all you want is to read
-`MaterialTheme.CurrentColorScheme(c)` /
-`MaterialTheme.CurrentTypography(c)` from inside an existing builder
+`c.ColorScheme()` /
+`c.Typography()` from inside an existing builder
 without writing a whole new class — the body lambda runs every
 composition pass with the live `IComposer`, computes whatever
 scheme / typography slots it needs, and returns the subtree built
