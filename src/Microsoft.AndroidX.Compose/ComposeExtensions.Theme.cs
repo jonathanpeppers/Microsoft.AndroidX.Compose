@@ -12,8 +12,11 @@ public static partial class ComposeExtensions
     /// <c>MaterialTheme.colorScheme</c>. Must be called from inside a
     /// composable's <c>Render</c> body.
     /// </summary>
-    public static ColorScheme ColorScheme(this IComposer composer) =>
-        BindingMaterialTheme.Instance.GetColorScheme(composer, 0);
+    public static ColorScheme ColorScheme(this IComposer composer)
+    {
+        ArgumentNullException.ThrowIfNull(composer);
+        return BindingMaterialTheme.Instance.GetColorScheme(composer, 0);
+    }
 
     /// <summary>
     /// Read the active <see cref="Typography"/> from the current
@@ -21,8 +24,11 @@ public static partial class ComposeExtensions
     /// <c>MaterialTheme.typography</c>. Must be called from inside a
     /// composable's <c>Render</c> body.
     /// </summary>
-    public static Typography Typography(this IComposer composer) =>
-        BindingMaterialTheme.Instance.GetTypography(composer, 0);
+    public static Typography Typography(this IComposer composer)
+    {
+        ArgumentNullException.ThrowIfNull(composer);
+        return BindingMaterialTheme.Instance.GetTypography(composer, 0);
+    }
 
     /// <summary>
     /// Read the active <see cref="Shapes"/> from the current
@@ -30,6 +36,9 @@ public static partial class ComposeExtensions
     /// <c>MaterialTheme.shapes</c>. Must be called from inside a
     /// composable's <c>Render</c> body.
     /// </summary>
-    public static Shapes Shapes(this IComposer composer) =>
-        BindingMaterialTheme.Instance.GetShapes(composer, 0);
+    public static Shapes Shapes(this IComposer composer)
+    {
+        ArgumentNullException.ThrowIfNull(composer);
+        return BindingMaterialTheme.Instance.GetShapes(composer, 0);
+    }
 }
