@@ -45,6 +45,12 @@ public sealed class LazyVerticalStaggeredGrid<T> : ComposableNode
     /// </summary>
     public LazyStaggeredGridState? State { get; set; }
 
+    /// <summary>
+    /// Optional fixed content padding applied inside the grid (not as a
+    /// modifier on the grid frame).
+    /// </summary>
+    public PaddingValues? ContentPadding { get; set; }
+
     public override void Render(IComposer composer)
     {
         var modifier = BuildModifier();
@@ -81,8 +87,9 @@ public sealed class LazyVerticalStaggeredGrid<T> : ComposableNode
         //   9 = overscrollEffect
         //  10 = content               (always provided)
         int defaults = (int)LazyVerticalStaggeredGridDefault.All & ~(int)LazyVerticalStaggeredGridDefault.Columns;
-        if (modifier is not null) defaults &= ~(int)LazyVerticalStaggeredGridDefault.Modifier;
-        if (State    is not null) defaults &= ~(int)LazyVerticalStaggeredGridDefault.State;
+        if (modifier       is not null) defaults &= ~(int)LazyVerticalStaggeredGridDefault.Modifier;
+        if (State          is not null) defaults &= ~(int)LazyVerticalStaggeredGridDefault.State;
+        if (ContentPadding is not null) defaults &= ~(int)LazyVerticalStaggeredGridDefault.ContentPadding;
 
         // 11 user params → Compose splits $changed into two ints
         // (p12, _changed) and $default lives in the trailing _changed1.
@@ -90,7 +97,7 @@ public sealed class LazyVerticalStaggeredGrid<T> : ComposableNode
             columns:               _columns,
             modifier:              modifier,
             state:                 State,
-            contentPadding:        null,
+            contentPadding:        ContentPadding?.Jvm,
             reverseLayout:         false,
             verticalItemSpacing:   0f,
             horizontalArrangement: null,
