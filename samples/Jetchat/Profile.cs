@@ -86,7 +86,7 @@ public static class Profile
     static ComposableNode BuildProfileHeader(ProfileScreenState state, float containerHeight)
     {
         if (state.Photo is null)
-            return new Spacer(Modifier.Companion.Width(0));
+            return Spacer.Width(0);
 
         float heroMax = containerHeight / 2f;
         if (heroMax < 1f) heroMax = 240f;
@@ -105,7 +105,7 @@ public static class Profile
     {
         var col = new Column
         {
-            new Spacer(Modifier.Companion.Height(8)),
+            Spacer.Height(8),
             BuildNameAndPosition(state, scheme),
             BuildProfileProperty("Display name", state.DisplayName, scheme),
             BuildProfileProperty("Status",       state.Status,      scheme),
@@ -118,7 +118,7 @@ public static class Profile
         // the device, in order to always leave some content at the top.
         float trailing = containerHeight - 320f;
         if (trailing < 0f) trailing = 0f;
-        col.Add(new Spacer(Modifier.Companion.Height((int)trailing)));
+        col.Add(Spacer.Height((int)trailing));
         return col;
     }
 

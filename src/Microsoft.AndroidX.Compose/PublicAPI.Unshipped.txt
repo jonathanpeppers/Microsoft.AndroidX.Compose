@@ -1861,6 +1861,11 @@ static AndroidX.Compose.Sp.operator !=(AndroidX.Compose.Sp left, AndroidX.Compos
 static AndroidX.Compose.Sp.operator ==(AndroidX.Compose.Sp left, AndroidX.Compose.Sp right) -> bool
 static AndroidX.Compose.Sp.Pack(AndroidX.Compose.Sp? value) -> long
 static AndroidX.Compose.Sp.Zero.get -> AndroidX.Compose.Sp
+static AndroidX.Compose.Spacer.Height(AndroidX.Compose.Dp dp) -> AndroidX.Compose.Spacer!
+static AndroidX.Compose.Spacer.Size(AndroidX.Compose.Dp dp) -> AndroidX.Compose.Spacer!
+static AndroidX.Compose.Spacer.Size(AndroidX.Compose.Dp width, AndroidX.Compose.Dp height) -> AndroidX.Compose.Spacer!
+static AndroidX.Compose.Spacer.Weight(float weight, bool fill = true) -> AndroidX.Compose.Spacer!
+static AndroidX.Compose.Spacer.Width(AndroidX.Compose.Dp dp) -> AndroidX.Compose.Spacer!
 static AndroidX.Compose.StaggeredGridCells.Adaptive(float minSizeDp) -> AndroidX.Compose.Foundation.Lazy.Staggeredgrid.IStaggeredGridCells!
 static AndroidX.Compose.StaggeredGridCells.Fixed(int count) -> AndroidX.Compose.Foundation.Lazy.Staggeredgrid.IStaggeredGridCells!
 static AndroidX.Compose.StaggeredGridCells.FixedSize(float sizeDp) -> AndroidX.Compose.Foundation.Lazy.Staggeredgrid.IStaggeredGridCells!

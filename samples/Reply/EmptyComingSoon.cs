@@ -22,7 +22,7 @@ public static class EmptyComingSoon
                     Color      = scheme.Primary,
                     Modifier   = Modifier.Companion.FillMaxWidth(),
                 },
-                new Spacer(Modifier.Companion.Height(8)),
+                Spacer.Height(8),
                 new Text("This screen is still under construction. This sample will help you learn about adaptive layouts in Jetpack Compose")
                 {
                     FontSize = 14,

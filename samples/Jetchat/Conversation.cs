@@ -183,7 +183,7 @@ public static class Conversation
                 {
                     MessageRow mr => BuildMessageRow(mr.Msg, mr.IsFirstByAuthor, mr.IsLastByAuthor, scheme, popupOpen, onAuthorClicked),
                     HeaderRow  hr => BuildDayHeader(hr.Label, scheme),
-                    _             => new Spacer(Modifier.Companion.Width(0)),
+                    _             => Spacer.Width(0),
                 })
             {
                 Modifier      = Modifier.Companion.FillMaxSize(),
@@ -247,7 +247,7 @@ public static class Conversation
         if (isLastByAuthor)
             row.Add(BuildAvatar(m, scheme, onAuthorClicked));
         else
-            row.Add(new Spacer(Modifier.Companion.Width(74)));
+            row.Add(Spacer.Width(74));
 
         row.Add(BuildAuthorAndTextMessage(m, isFirstByAuthor, isLastByAuthor, scheme, popupOpen));
         return row;
@@ -279,7 +279,7 @@ public static class Conversation
         if (isLastByAuthor)
             col.Add(BuildAuthorNameTimestamp(m, scheme));
         col.Add(BuildChatItemBubble(m, scheme, popupOpen));
-        col.Add(new Spacer(Modifier.Companion.Height(isFirstByAuthor ? 8 : 4)));
+        col.Add(Spacer.Height(isFirstByAuthor ? 8 : 4));
         return col;
     }
 
@@ -293,7 +293,7 @@ public static class Conversation
                 Color      = scheme.OnSurface,
                 Modifier   = Modifier.Companion.Padding(top: 0, bottom: 8, start: 0, end: 0),
             },
-            new Spacer(Modifier.Companion.Width(8)),
+            Spacer.Width(8),
             new Text(m.Timestamp)
             {
                 FontSize = 12,
@@ -440,14 +440,14 @@ public static class Conversation
         MutableState<int>    selectedSelector)
     {
         int sel = selectedSelector.Value;
-        if (sel == 0) return new Spacer(Modifier.Companion.Width(0));
+        if (sel == 0) return Spacer.Width(0);
         if (sel == SelEmoji) return EmojiSelector.Build(input, scheme);
         string title    = "Functionality currently not available";
         string subtitle = "Grab a beverage and check back later!";
         return new Column
         {
             Modifier.Companion.FillMaxWidth().Height(320).Background(scheme.SurfaceVariant),
-            new Spacer(Modifier.Companion.Height(96)),
+            Spacer.Height(96),
             new Text(title)
             {
                 FontSize   = 16,
@@ -455,7 +455,7 @@ public static class Conversation
                 Color      = scheme.OnSurfaceVariant,
                 Modifier   = Modifier.Companion.Padding(horizontal: 16, vertical: 0),
             },
-            new Spacer(Modifier.Companion.Height(8)),
+            Spacer.Height(8),
             new Text(subtitle)
             {
                 FontSize = 14,
