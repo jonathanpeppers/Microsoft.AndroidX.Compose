@@ -226,8 +226,18 @@ class.
   `DarkColorScheme()` / `DynamicLightColorScheme(...)` /
   `DynamicDarkColorScheme(...)` factories.
 - **`CompositionLocal` / `CompositionLocalProvider` landed (#59).**
-  Use `new CompositionLocalProvider { Provides = …, new …Children }` to
-  push values; the built-in locals `LocalContext`, `LocalConfiguration`,
+  `CompositionLocalProvider` is a `ComposableContainer` — list one or
+  more `LocalFoo.Provides(value)` entries first, then the children that
+  should see them:
+  ```csharp
+  new CompositionLocalProvider {
+      LocalMyTheme.Provides(customTheme),
+      LocalContext.Provides(scopedContext),
+      new Text("inherits theme + context"),
+  }
+  ```
+  Provided values must precede every child in the initializer (enforced
+  at runtime). The built-in locals `LocalContext`, `LocalConfiguration`,
   `LocalResources`, `LocalLifecycleOwner`, `LocalView`, and
   `LocalColorScheme` are exposed as top-level classes.
 - **WindowInsets padding modifiers landed (#69).** `Modifier.ImePadding()`,
