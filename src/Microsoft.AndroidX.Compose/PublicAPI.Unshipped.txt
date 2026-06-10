@@ -528,6 +528,7 @@ AndroidX.Compose.IState<T>
 AndroidX.Compose.IState<T>.Value.get -> T
 AndroidX.Compose.IStateFlow<T>
 AndroidX.Compose.KeyboardOptionsCompanion
+AndroidX.Compose.KeyboardType
 AndroidX.Compose.LargeFlexibleTopAppBar
 AndroidX.Compose.LargeFlexibleTopAppBar.Actions.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.LargeFlexibleTopAppBar.Actions.set -> void
@@ -1914,6 +1915,16 @@ static AndroidX.Compose.Icons.TwoTone.ThumbUp.get -> AndroidX.Compose.UI.Graphic
 static AndroidX.Compose.Icons.TwoTone.Warning.get -> AndroidX.Compose.UI.Graphics.Vector.ImageVector!
 static AndroidX.Compose.KeyboardOptionsCompanion.Default.get -> AndroidX.Compose.Foundation.Text.KeyboardOptions!
 static AndroidX.Compose.KeyboardOptionsCompanion.Get() -> AndroidX.Compose.Foundation.Text.KeyboardOptions.Companion!
+static AndroidX.Compose.KeyboardType.Ascii.get -> int
+static AndroidX.Compose.KeyboardType.Decimal.get -> int
+static AndroidX.Compose.KeyboardType.Email.get -> int
+static AndroidX.Compose.KeyboardType.Number.get -> int
+static AndroidX.Compose.KeyboardType.NumberPassword.get -> int
+static AndroidX.Compose.KeyboardType.Password.get -> int
+static AndroidX.Compose.KeyboardType.Phone.get -> int
+static AndroidX.Compose.KeyboardType.Text.get -> int
+static AndroidX.Compose.KeyboardType.Unspecified.get -> int
+static AndroidX.Compose.KeyboardType.Uri.get -> int
 static AndroidX.Compose.LinkAnnotation.Clickable(string! tag, System.Action<string!>! onClick, AndroidX.Compose.SpanStyle? style = null) -> AndroidX.Compose.LinkAnnotation!
 static AndroidX.Compose.LinkAnnotation.Url(string! url, AndroidX.Compose.SpanStyle? style = null) -> AndroidX.Compose.LinkAnnotation!
 static AndroidX.Compose.LocalColorScheme.Current(AndroidX.Compose.Runtime.IComposer! composer) -> AndroidX.Compose.Material3.ColorScheme!

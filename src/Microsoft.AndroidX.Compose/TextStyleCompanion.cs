@@ -12,7 +12,6 @@ namespace AndroidX.Compose;
 /// </summary>
 static class TextStyleCompanion
 {
-    static IntPtr s_companion_ref;
     static AndroidX.Compose.UI.Text.TextStyle.Companion? s_companion;
     static AndroidX.Compose.UI.Text.TextStyle? s_default;
     static AndroidX.Compose.UI.Text.SpanStyle? s_defaultSpan;
@@ -20,17 +19,24 @@ static class TextStyleCompanion
     public static AndroidX.Compose.UI.Text.TextStyle.Companion Get()
     {
         if (s_companion is not null) return s_companion;
-        if (s_companion_ref == IntPtr.Zero)
+        IntPtr local = IntPtr.Zero;
+        try
         {
-            IntPtr cls   = JNIEnv.FindClass("androidx/compose/ui/text/TextStyle");
-            IntPtr fid   = JNIEnv.GetStaticFieldID(cls, "Companion", "Landroidx/compose/ui/text/TextStyle$Companion;");
-            IntPtr local = JNIEnv.GetStaticObjectField(cls, fid);
-            s_companion_ref = JNIEnv.NewGlobalRef(local);
-            JNIEnv.DeleteLocalRef(local);
+            IntPtr cls = JNIEnv.FindClass("androidx/compose/ui/text/TextStyle");
+            IntPtr fid = JNIEnv.GetStaticFieldID(cls, "Companion",
+                "Landroidx/compose/ui/text/TextStyle$Companion;");
+            local = JNIEnv.GetStaticObjectField(cls, fid);
+            return s_companion = Java.Lang.Object.GetObject<AndroidX.Compose.UI.Text.TextStyle.Companion>(
+                local, JniHandleOwnership.TransferLocalRef)!;
         }
-        s_companion = Java.Lang.Object.GetObject<AndroidX.Compose.UI.Text.TextStyle.Companion>(
-            s_companion_ref, JniHandleOwnership.DoNotTransfer)!;
-        return s_companion;
+        finally
+        {
+            // GetObject(.., TransferLocalRef) consumes `local` on success;
+            // the explicit DeleteLocalRef only runs if the wrapper threw
+            // before taking ownership.
+            if (local != IntPtr.Zero && s_companion is null)
+                JNIEnv.DeleteLocalRef(local);
+        }
     }
 
     public static AndroidX.Compose.UI.Text.TextStyle Default =>

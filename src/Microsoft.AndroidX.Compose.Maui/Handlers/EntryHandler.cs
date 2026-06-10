@@ -5,6 +5,7 @@ using AndroidX.Compose.UI.Text.Input;
 using Microsoft.Maui.Handlers;
 using ComposeColor          = AndroidX.Compose.Color;
 using ComposeFontWeight     = AndroidX.Compose.FontWeight;
+using ComposeKeyboardType   = AndroidX.Compose.KeyboardType;
 using ComposeOutlinedTextField = AndroidX.Compose.OutlinedTextField;
 using ComposeText           = AndroidX.Compose.Text;
 using ComposeTextStyle      = AndroidX.Compose.TextStyle;
@@ -26,19 +27,6 @@ namespace Microsoft.AndroidX.Compose.Maui.Handlers;
 /// </remarks>
 public partial class EntryHandler : ViewHandler<IEntry, ComposeView>
 {
-    /// <summary>Compose Foundation <c>KeyboardType.Text</c> lowered to <c>int</c>.</summary>
-    const int KeyboardTypeText = 1;
-    /// <summary>Compose Foundation <c>KeyboardType.Number</c>.</summary>
-    const int KeyboardTypeNumber = 3;
-    /// <summary>Compose Foundation <c>KeyboardType.Phone</c>.</summary>
-    const int KeyboardTypePhone = 4;
-    /// <summary>Compose Foundation <c>KeyboardType.Uri</c>.</summary>
-    const int KeyboardTypeUri = 5;
-    /// <summary>Compose Foundation <c>KeyboardType.Email</c>.</summary>
-    const int KeyboardTypeEmail = 6;
-    /// <summary>Compose Foundation <c>KeyboardType.Password</c>.</summary>
-    const int KeyboardTypePassword = 7;
-
     /// <summary>
     /// Property mapper that forwards MAUI <see cref="IEntry"/> property
     /// changes to the Compose-backed <see cref="ComposeView"/>.
@@ -66,7 +54,7 @@ public partial class EntryHandler : ViewHandler<IEntry, ComposeView>
     readonly MutableState<bool>   _bold         = new(false);
     readonly MutableState<string> _placeholder  = new(string.Empty);
     readonly MutableState<bool>   _isPassword   = new(false);
-    readonly MutableState<int>    _keyboardType = new(KeyboardTypeText);
+    readonly MutableState<int>    _keyboardType = new(ComposeKeyboardType.Text);
     readonly MutableState<bool>   _readOnly     = new(false);
     readonly MutableState<bool>   _fillWidth    = new(false);
 
@@ -112,8 +100,8 @@ public partial class EntryHandler : ViewHandler<IEntry, ComposeView>
             // default `Text`, so the OS surfaces the right IME (digits,
             // email, etc.). Password buffers + numeric flag both lower
             // through `keyboardType`.
-            var resolvedType = isPassword ? KeyboardTypePassword : keyboardType;
-            if (resolvedType != KeyboardTypeText)
+            var resolvedType = isPassword ? ComposeKeyboardType.Password : keyboardType;
+            if (resolvedType != ComposeKeyboardType.Text)
             {
                 var d = KeyboardOptionsCompanion.Default;
                 field.KeyboardOptions = d.Copy(
@@ -196,25 +184,26 @@ public partial class EntryHandler : ViewHandler<IEntry, ComposeView>
 
     /// <summary>
     /// Resolve a MAUI <see cref="Keyboard"/> to its Compose
-    /// <c>KeyboardType</c> int. Compose's <c>@JvmInline value class
-    /// KeyboardType(Int)</c> lowers each constant to a stable
-    /// sequential int; the values are mirrored on this handler as
-    /// <c>KeyboardType*</c> constants.
+    /// <see cref="ComposeKeyboardType"/> int. Compose's
+    /// <c>@JvmInline value class KeyboardType(Int)</c> lowers each
+    /// constant to a stable sequential int; the named properties on
+    /// <see cref="ComposeKeyboardType"/> read the same Companion
+    /// getters the Kotlin compiler emits.
     /// </summary>
     static int ResolveKeyboardType(Keyboard? keyboard)
     {
-        if (keyboard is null) return KeyboardTypeText;
-        if (keyboard == Keyboard.Numeric)  return KeyboardTypeNumber;
-        if (keyboard == Keyboard.Telephone) return KeyboardTypePhone;
-        if (keyboard == Keyboard.Url)       return KeyboardTypeUri;
-        if (keyboard == Keyboard.Email)     return KeyboardTypeEmail;
+        if (keyboard is null) return ComposeKeyboardType.Text;
+        if (keyboard == Keyboard.Numeric)   return ComposeKeyboardType.Number;
+        if (keyboard == Keyboard.Telephone) return ComposeKeyboardType.Phone;
+        if (keyboard == Keyboard.Url)       return ComposeKeyboardType.Uri;
+        if (keyboard == Keyboard.Email)     return ComposeKeyboardType.Email;
         if (keyboard == Keyboard.Default
             || keyboard == Keyboard.Text
-            || keyboard == Keyboard.Chat) return KeyboardTypeText;
+            || keyboard == Keyboard.Chat) return ComposeKeyboardType.Text;
         // CustomKeyboard / Plain / unknown — fall through to text so the
         // user still gets a working IME instead of a blank surface.
         Debug.WriteLine(
             $"[EntryHandler] Unmapped Keyboard '{keyboard}'; falling back to Text.");
-        return KeyboardTypeText;
+        return ComposeKeyboardType.Text;
     }
 }
