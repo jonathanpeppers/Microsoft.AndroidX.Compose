@@ -66,7 +66,6 @@ feature.
 | Real hero PNGs in card / article (currently a solid `Box` filled with a per-post `HeroColor`) | [#145](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/145) — `ContentScale.Crop` on the `Image` facade; without it small vector hero images letterbox |
 | Inline-run paragraph styling (Link / Bold / Italic / Code spans inside one paragraph) | [#141](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/141) — `AnnotatedString` + `SpanStyle` |
 | Top-bar elevation / collapse on scroll (`pinnedScrollBehavior`, `enterAlwaysScrollBehavior`) | [#142](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/142) — `Modifier.nestedScroll` + `TopAppBarDefaults` |
-| Adaptive Topics two-column layout (`InterestsAdaptiveContentLayout`) — port renders one column | [#144](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/144) — custom `Layout {}` primitive |
 | `stringResource(R.string.x)` — port uses inline string literals      | [#146](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/146) |
 | `CompositionLocal` reads (`LocalContext`, `LocalDensity`, …)         | [#59](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/59) |
 | `MaterialTheme.colorScheme.*` / `typography.*` reads (port hard-codes hex colors and sp/weight values) | [#58](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/58) / [#61](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/61) — facade lands but JetNews not migrated yet |
@@ -123,14 +122,15 @@ both wire to no-op `Action` callbacks. The icons read as real
 affordances but don't trigger anything — same shape as upstream's
 placeholder handlers.
 
-### Interests is a single column
+### Interests is adaptive (1 column ↔ 2 columns at 600 dp)
 
-Upstream's `InterestsAdaptiveContentLayout` is a custom `Layout {}`
-that splits topics into multiple columns based on available width.
-Without bound `Layout` primitives
-([#144](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/144))
-the port renders the Topics tab as a flat single-column list with
-section headers.
+The C# `BuildAdaptiveTopicSection` ports upstream Kotlin
+`InterestsAdaptiveContentLayout` 1:1 on top of the new `Layout` facade
+([#144](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/144)
+— closed). Row-major chunked placement, `itemSpacing = 4 dp`,
+`itemMaxWidth = 450 dp`, density-aware via `MeasureScope.RoundToPx`.
+Portrait shows 1 column; landscape switches to 2 columns above the
+600 dp `multipleColumnsBreakPoint`.
 
 ### Static builders, not `ComposableNode` subclasses
 
