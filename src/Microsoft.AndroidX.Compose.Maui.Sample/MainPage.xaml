@@ -20,8 +20,8 @@
             <!-- UriImageSource: exercises the general MAUI pipeline.
                  UriImageSourceService downloads on a worker thread,
                  the handler wraps the resulting Drawable as a Compose
-                 BitmapPainter. Uses GitHub's Octocat (small, stable,
-                 CDN-cached). -->
+                 BitmapPainter. Uses the .NET brand logo (small,
+                 stable, CDN-cached). -->
             <Image
                 Source="https://raw.githubusercontent.com/dotnet/brand/main/logo/dotnet-logo.png"
                 HeightRequest="120"
