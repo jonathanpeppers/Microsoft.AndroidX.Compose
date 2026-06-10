@@ -32,7 +32,7 @@ public static class ReplyProfileImage
                 new Icon(Resource.Drawable.ic_check, null)
                 {
                     Modifier = Modifier.Size(24),
-                    TintArgb = scheme.OnPrimary,
+                    Tint = scheme.OnPrimary,
                 },
             };
         });
