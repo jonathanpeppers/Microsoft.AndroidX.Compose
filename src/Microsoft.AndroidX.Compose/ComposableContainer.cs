@@ -1,7 +1,7 @@
 using System.Collections;
-using global::AndroidX.Compose.Runtime;
+using AndroidX.Compose.Runtime;
 
-namespace Microsoft.AndroidX.Compose;
+namespace AndroidX.Compose;
 
 /// <summary>
 /// Base class for container composables that take a single content

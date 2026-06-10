@@ -1,8 +1,8 @@
-using global::AndroidX.Compose.Material3.Carousel;
-using global::AndroidX.Compose.Runtime;
+using AndroidX.Compose.Material3.Carousel;
+using AndroidX.Compose.Runtime;
 using Kotlin.Jvm.Functions;
 
-namespace Microsoft.AndroidX.Compose;
+namespace AndroidX.Compose;
 
 /// <summary>
 /// Material 3 <c>HorizontalMultiBrowseCarousel</c> — a horizontal

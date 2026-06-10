@@ -1,9 +1,9 @@
-using Microsoft.AndroidX.Compose.Gallery.Registry;
+using AndroidX.Compose.Gallery.Registry;
 
-namespace Microsoft.AndroidX.Compose.Gallery.Demos.Theming;
+namespace AndroidX.Compose.Gallery.Demos.Theming;
 
 /// <summary>
-/// Builds custom M3 type slots via <c>Microsoft.AndroidX.Compose.TextStyle</c> +
+/// Builds custom M3 type slots via <c>AndroidX.Compose.TextStyle</c> +
 /// <c>MaterialTheme.BuildTypography(...)</c>. Material 3 components
 /// internally consume specific slots (e.g. <c>Button</c> uses
 /// <c>labelLarge</c>); overriding the slot changes the rendered text.

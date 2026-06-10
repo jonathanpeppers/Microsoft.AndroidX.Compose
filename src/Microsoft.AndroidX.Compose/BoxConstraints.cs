@@ -1,4 +1,4 @@
-namespace Microsoft.AndroidX.Compose;
+namespace AndroidX.Compose;
 
 /// <summary>
 /// Constraints surfaced to <see cref="BoxWithConstraints"/>'s content

@@ -1,6 +1,6 @@
 using AndroidX.Compose.Runtime;
 
-namespace Microsoft.AndroidX.Compose.Gallery.Registry;
+namespace AndroidX.Compose.Gallery.Registry;
 
 /// <summary>
 /// One catalog entry — a single self-contained demo of a facade or a

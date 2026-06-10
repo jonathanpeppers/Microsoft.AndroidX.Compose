@@ -1,4 +1,4 @@
-namespace Microsoft.AndroidX.Compose;
+namespace AndroidX.Compose;
 
 // Raw-JNI helpers for the Compose effect APIs in
 // `androidx.compose.runtime.EffectsKt`. The entry points themselves
@@ -55,9 +55,9 @@ internal static partial class ComposeBridges
     /// <summary>
     /// Box an array of <see cref="object"/>? keys into a Java
     /// <c>Object[]</c> for the <c>vararg keys</c> overload of
-    /// <see cref="global::AndroidX.Compose.Runtime.EffectsKt.LaunchedEffect(Java.Lang.Object[], Kotlin.Jvm.Functions.IFunction2, global::AndroidX.Compose.Runtime.IComposer, int)"/>
+    /// <see cref="AndroidX.Compose.Runtime.EffectsKt.LaunchedEffect(Java.Lang.Object[], Kotlin.Jvm.Functions.IFunction2, AndroidX.Compose.Runtime.IComposer, int)"/>
     /// /
-    /// <see cref="global::AndroidX.Compose.Runtime.EffectsKt.DisposableEffect(Java.Lang.Object[], Kotlin.Jvm.Functions.IFunction1, global::AndroidX.Compose.Runtime.IComposer, int)"/>.
+    /// <see cref="AndroidX.Compose.Runtime.EffectsKt.DisposableEffect(Java.Lang.Object[], Kotlin.Jvm.Functions.IFunction1, AndroidX.Compose.Runtime.IComposer, int)"/>.
     /// Currently unused — the 1/2/3-key overloads cover the common
     /// case and avoid the per-render array allocation. Kept here for
     /// the future variadic public overload.

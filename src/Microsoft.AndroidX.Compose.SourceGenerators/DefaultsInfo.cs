@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 
-namespace Microsoft.AndroidX.Compose.SourceGenerators;
+namespace AndroidX.Compose.SourceGenerators;
 
 /// <summary>
 /// Parsed view of a declarative <c>[assembly: ComposeDefaults("EnumName",

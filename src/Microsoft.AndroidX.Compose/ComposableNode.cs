@@ -1,10 +1,10 @@
-using global::AndroidX.Compose.Runtime;
-using global::AndroidX.Compose.UI;
+using AndroidX.Compose.Runtime;
+using AndroidX.Compose.UI;
 
-namespace Microsoft.AndroidX.Compose;
+namespace AndroidX.Compose;
 
 /// <summary>
-/// Base type of every composable in the Microsoft.AndroidX.Compose tree-style facade.
+/// Base type of every composable in the AndroidX.Compose tree-style facade.
 ///
 /// A <see cref="ComposableNode"/> is a passive AST node: building it
 /// (<c>new Text("Hi")</c>, <c>new Column { ... }</c>) does NOT call into
@@ -19,7 +19,7 @@ namespace Microsoft.AndroidX.Compose;
 public abstract class ComposableNode
 {
     /// <summary>
-    /// Optional <see cref="Microsoft.AndroidX.Compose.Modifier"/> chain applied to this
+    /// Optional <see cref="AndroidX.Compose.Modifier"/> chain applied to this
     /// composable. For leaf composables, set via object-initializer:
     /// <code>new Text("Hi") { Modifier = Modifier.Companion.Padding(8) }</code>
     /// For container composables (which use collection-initializer syntax),
@@ -42,7 +42,7 @@ public abstract class ComposableNode
     IntPtr _contentPadding;
 
     /// <summary>
-    /// Set the <see cref="Microsoft.AndroidX.Compose.Modifier"/> to prepend at the
+    /// Set the <see cref="AndroidX.Compose.Modifier"/> to prepend at the
     /// START of this node's modifier chain on the next call to
     /// <see cref="BuildModifier"/>. Each call REPLACES any prior
     /// prepended modifier — use <see cref="Modifier.Then"/>
@@ -53,7 +53,7 @@ public abstract class ComposableNode
     /// For the specific case of forwarding a <c>PaddingValues</c>
     /// handle from <see cref="Scaffold"/> to its body, prefer the
     /// internal <c>Render(IComposer, IntPtr)</c> overload — it skips
-    /// the managed <see cref="Microsoft.AndroidX.Compose.Modifier"/> wrapper altogether
+    /// the managed <see cref="AndroidX.Compose.Modifier"/> wrapper altogether
     /// (see issue #46).
     ///
     /// Caveat: the injected modifier is silently dropped if the child's
@@ -76,7 +76,7 @@ public abstract class ComposableNode
     }
 
     /// <summary>
-    /// Set the <see cref="Microsoft.AndroidX.Compose.Modifier"/> to append at the END
+    /// Set the <see cref="AndroidX.Compose.Modifier"/> to append at the END
     /// of this node's modifier chain on the next call to
     /// <see cref="BuildModifier"/>. Mirror of
     /// <see cref="PrependModifier"/> — see that method for semantics,
@@ -154,7 +154,7 @@ public abstract class ComposableNode
     /// <see cref="BuildModifier"/> on this same node consumes the
     /// handle and prepends a <c>Modifier.padding(contentPadding)</c>
     /// op directly via JNI — no per-measure managed
-    /// <see cref="Microsoft.AndroidX.Compose.Modifier"/> allocations.
+    /// <see cref="AndroidX.Compose.Modifier"/> allocations.
     ///
     /// Container facades whose Kotlin counterpart accepts a
     /// <c>contentPadding</c> parameter directly (<see cref="LazyColumn{T}"/>,

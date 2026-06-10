@@ -1,8 +1,8 @@
-using global::Android.Runtime;
-using global::AndroidX.Compose.Runtime;
+using Android.Runtime;
+using AndroidX.Compose.Runtime;
 using Kotlin.Jvm.Functions;
 
-namespace Microsoft.AndroidX.Compose;
+namespace AndroidX.Compose;
 
 /// <summary>
 /// Function3&lt;Scope, Composer, Integer, Unit&gt; — Column/Row/Box/Button
@@ -46,7 +46,7 @@ internal sealed class ComposableLambda3 : Java.Lang.Object, IFunction3
     public Java.Lang.Object Invoke(Java.Lang.Object? p0, Java.Lang.Object? p1, Java.Lang.Object? p2)
     {
         ArgumentNullException.ThrowIfNull(p1);
-        var composer = global::Android.Runtime.Extensions.JavaCast<IComposer>(p1);
+        var composer = Android.Runtime.Extensions.JavaCast<IComposer>(p1);
         _body(p0, composer);
         return Kotlin.Unit.Instance!;
     }

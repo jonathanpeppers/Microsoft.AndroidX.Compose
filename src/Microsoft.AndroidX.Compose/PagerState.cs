@@ -1,6 +1,6 @@
-using global::AndroidX.Compose.Foundation.Pager;
+using AndroidX.Compose.Foundation.Pager;
 
-namespace Microsoft.AndroidX.Compose;
+namespace AndroidX.Compose;
 
 /// <summary>
 /// Caller-supplied state holder for <see cref="HorizontalPager{T}"/> /
@@ -92,7 +92,7 @@ public sealed class PagerState
     /// built by <c>PagerStateKt.PagerState(...)</c>. Non-null from
     /// construction.
     /// </summary>
-    internal global::AndroidX.Compose.Foundation.Pager.PagerState Jvm { get; }
+    internal AndroidX.Compose.Foundation.Pager.PagerState Jvm { get; }
 
     /// <summary>
     /// Index of the page closest to the snapped position. Mirrors

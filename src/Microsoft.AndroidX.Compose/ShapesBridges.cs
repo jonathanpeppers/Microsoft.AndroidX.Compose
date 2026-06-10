@@ -1,7 +1,7 @@
-using global::Android.Runtime;
-using global::AndroidX.Compose.Material3;
+using Android.Runtime;
+using AndroidX.Compose.Material3;
 
-namespace Microsoft.AndroidX.Compose;
+namespace AndroidX.Compose;
 
 // Hand-written JNI bridge for the Material 3 `Shapes` synthetic
 // default constructor. Used by MaterialTheme.Shapes(...) so callers

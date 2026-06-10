@@ -1,6 +1,6 @@
-using global::AndroidX.Compose.UI.Focus;
+using AndroidX.Compose.UI.Focus;
 
-namespace Microsoft.AndroidX.Compose;
+namespace AndroidX.Compose;
 
 /// <summary>
 /// Immutable snapshot of a Compose <c>FocusState</c>. Produced inside

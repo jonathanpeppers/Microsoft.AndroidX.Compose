@@ -1,6 +1,6 @@
 using System.Collections;
 
-namespace Microsoft.AndroidX.Compose;
+namespace AndroidX.Compose;
 
 /// <summary>
 /// A managed <see cref="IList{T}"/> wrapper that participates in

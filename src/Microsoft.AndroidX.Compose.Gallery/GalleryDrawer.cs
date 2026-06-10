@@ -1,7 +1,7 @@
-using global::AndroidX.Compose.Runtime;
-using Microsoft.AndroidX.Compose.Gallery.Registry;
+using AndroidX.Compose.Runtime;
+using AndroidX.Compose.Gallery.Registry;
 
-namespace Microsoft.AndroidX.Compose.Gallery;
+namespace AndroidX.Compose.Gallery;
 
 /// <summary>
 /// The drawer body that slides in from the left. Lists Home plus every

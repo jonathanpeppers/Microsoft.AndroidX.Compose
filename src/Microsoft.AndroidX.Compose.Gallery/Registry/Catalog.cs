@@ -1,6 +1,6 @@
-using D = Microsoft.AndroidX.Compose.Gallery.Demos;
+using D = AndroidX.Compose.Gallery.Demos;
 
-namespace Microsoft.AndroidX.Compose.Gallery.Registry;
+namespace AndroidX.Compose.Gallery.Registry;
 
 /// <summary>
 /// Global catalog: every <see cref="Demo"/> in the gallery and every

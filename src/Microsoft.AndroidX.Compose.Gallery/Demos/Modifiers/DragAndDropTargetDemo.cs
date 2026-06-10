@@ -1,6 +1,6 @@
-using Microsoft.AndroidX.Compose.Gallery.Registry;
+using AndroidX.Compose.Gallery.Registry;
 
-namespace Microsoft.AndroidX.Compose.Gallery.Demos.Modifiers;
+namespace AndroidX.Compose.Gallery.Demos.Modifiers;
 
 /// <summary>DragAndDropTarget — drop zone that accepts text or image drags from other apps and highlights on hover.</summary>
 public static class DragAndDropTargetDemo

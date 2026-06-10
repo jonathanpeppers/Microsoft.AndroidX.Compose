@@ -1,10 +1,10 @@
 
-namespace Microsoft.AndroidX.Compose;
+namespace AndroidX.Compose;
 
 /// <summary>
-/// Base class for Microsoft.AndroidX.Compose view models. Derives from
-/// <see cref="global::AndroidX.Lifecycle.ViewModel"/> so the host's
-/// <see cref="global::AndroidX.Lifecycle.ViewModelStore"/> owns the
+/// Base class for AndroidX.Compose view models. Derives from
+/// <see cref="AndroidX.Lifecycle.ViewModel"/> so the host's
+/// <see cref="AndroidX.Lifecycle.ViewModelStore"/> owns the
 /// instance — the C# equivalent of subclassing
 /// <c>androidx.lifecycle.ViewModel</c> in Kotlin.
 /// </summary>
@@ -13,11 +13,11 @@ namespace Microsoft.AndroidX.Compose;
 /// Allocate one instance per call site via
 /// <see cref="ComposeExtensions.ViewModel{T}(Func{T}, int, string)"/>.
 /// The factory routes through
-/// <see cref="global::AndroidX.Lifecycle.ViewModelProvider"/> on the
-/// nearest <see cref="global::AndroidX.Lifecycle.IViewModelStoreOwner"/>
-/// (the host <see cref="global::AndroidX.Activity.ComponentActivity"/> at
+/// <see cref="AndroidX.Lifecycle.ViewModelProvider"/> on the
+/// nearest <see cref="AndroidX.Lifecycle.IViewModelStoreOwner"/>
+/// (the host <see cref="AndroidX.Activity.ComponentActivity"/> at
 /// the root, or the current
-/// <see cref="global::AndroidX.Navigation.NavBackStackEntry"/> inside a
+/// <see cref="AndroidX.Navigation.NavBackStackEntry"/> inside a
 /// <see cref="NavHost"/>), so the view model survives recomposition
 /// <em>and</em> configuration change — and is cleared exactly when
 /// the owner clears (the activity is finished, or the destination
@@ -25,7 +25,7 @@ namespace Microsoft.AndroidX.Compose;
 /// </para>
 /// <para>
 /// <strong>OnCleared template:</strong> the framework
-/// <see cref="global::AndroidX.Lifecycle.ViewModel.OnCleared"/> is
+/// <see cref="AndroidX.Lifecycle.ViewModel.OnCleared"/> is
 /// <c>sealed override</c>'d here so cancellation and CTS disposal
 /// always happen, even if a subclass forgets to call
 /// <c>base.OnCleared()</c>. Subclasses override
@@ -48,12 +48,12 @@ namespace Microsoft.AndroidX.Compose;
 /// inherits <see cref="Java.Lang.Object.Dispose()"/> from its
 /// Java peer base, but that disposes the JNI reference — it does
 /// <em>not</em> remove the entry from the
-/// <see cref="global::AndroidX.Lifecycle.ViewModelStore"/>. Treat the
+/// <see cref="AndroidX.Lifecycle.ViewModelStore"/>. Treat the
 /// store owner as the sole authority over view model lifetime
 /// and never call <c>Dispose</c> directly.
 /// </para>
 /// </remarks>
-public abstract class ViewModel : global::AndroidX.Lifecycle.ViewModel
+public abstract class ViewModel : AndroidX.Lifecycle.ViewModel
 {
     readonly CancellationTokenSource _cts = new();
     int _cleared;
@@ -61,7 +61,7 @@ public abstract class ViewModel : global::AndroidX.Lifecycle.ViewModel
     /// <summary>
     /// A <see cref="CancellationToken"/> that fires when the
     /// host clears this view model — i.e. the framework
-    /// <see cref="global::AndroidX.Lifecycle.ViewModel.OnCleared"/>
+    /// <see cref="AndroidX.Lifecycle.ViewModel.OnCleared"/>
     /// callback. The C# equivalent of Kotlin's
     /// <c>viewModelScope.coroutineContext[Job]</c>: pass it to
     /// any long-running task / HTTP call / channel read that
@@ -80,8 +80,8 @@ public abstract class ViewModel : global::AndroidX.Lifecycle.ViewModel
     /// Launches <paramref name="body"/> tied to <see cref="Scope"/>.
     /// The C# equivalent of <c>viewModelScope.launch { … }</c> —
     /// any exception other than <see cref="OperationCanceledException"/>
-    /// is logged via <see cref="global::Android.Util.Log.Error(string?, string?)"/>
-    /// under the <c>Microsoft.AndroidX.Compose</c> tag rather than propagating as
+    /// is logged via <see cref="Android.Util.Log.Error(string?, string?)"/>
+    /// under the <c>AndroidX.Compose</c> tag rather than propagating as
     /// an unobserved task exception. The returned <see cref="Task"/>
     /// is the same task that surface-area callers can <c>await</c>
     /// (e.g. to chain a snackbar dispatch after a refresh
@@ -133,7 +133,7 @@ public abstract class ViewModel : global::AndroidX.Lifecycle.ViewModel
             }
             catch (Exception ex)
             {
-                global::Android.Util.Log.Error("Microsoft.AndroidX.Compose",
+                Android.Util.Log.Error("AndroidX.Compose",
                     $"ViewModel LaunchAsync body faulted: {ex}");
             }
         }
@@ -156,7 +156,7 @@ public abstract class ViewModel : global::AndroidX.Lifecycle.ViewModel
 
     /// <summary>
     /// Sealed override of
-    /// <see cref="global::AndroidX.Lifecycle.ViewModel.OnCleared"/> — runs
+    /// <see cref="AndroidX.Lifecycle.ViewModel.OnCleared"/> — runs
     /// the framework cancellation, then dispatches to
     /// <see cref="OnClearedCore"/>, then disposes the backing
     /// <see cref="CancellationTokenSource"/>. Sealed so subclass
@@ -174,7 +174,7 @@ public abstract class ViewModel : global::AndroidX.Lifecycle.ViewModel
         try { OnClearedCore(); }
         catch (Exception ex)
         {
-            global::Android.Util.Log.Error("Microsoft.AndroidX.Compose",
+            Android.Util.Log.Error("AndroidX.Compose",
                 $"ViewModel ({GetType().Name}) OnClearedCore threw: {ex}");
         }
 

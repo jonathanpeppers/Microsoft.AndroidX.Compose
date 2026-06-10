@@ -1,6 +1,6 @@
-using global::Android.Runtime;
+using Android.Runtime;
 
-namespace Microsoft.AndroidX.Compose;
+namespace AndroidX.Compose;
 
 /// <summary>
 /// C# wrapper around <c>androidx.compose.ui.text.font.FontStyle</c>.
@@ -18,7 +18,7 @@ namespace Microsoft.AndroidX.Compose;
 /// halves are emitted by <c>ComposeCompanionGenerator</c> from the
 /// <c>InlineClass = true</c> on the attribute below.
 ///
-/// Will swap to bound <c>global::AndroidX.Compose.UI.Text.Font.FontStyle</c>
+/// Will swap to bound <c>AndroidX.Compose.UI.Text.Font.FontStyle</c>
 /// once <see href="https://github.com/dotnet/android-libraries/pull/1440"/>
 /// ships.
 /// </summary>

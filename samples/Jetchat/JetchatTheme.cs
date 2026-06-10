@@ -1,6 +1,6 @@
-using global::AndroidX.Compose.Material3;
+using AndroidX.Compose.Material3;
 
-namespace Microsoft.AndroidX.Compose.Samples.Jetchat;
+namespace AndroidX.Compose.Samples.Jetchat;
 
 /// <summary>
 /// Jetchat's branded Material 3 theme — C# port of upstream's

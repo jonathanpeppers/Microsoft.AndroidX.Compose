@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace Microsoft.AndroidX.Compose.SourceGenerators;
+namespace AndroidX.Compose.SourceGenerators;
 
 /// <summary>
 /// JNI method-signature parser.

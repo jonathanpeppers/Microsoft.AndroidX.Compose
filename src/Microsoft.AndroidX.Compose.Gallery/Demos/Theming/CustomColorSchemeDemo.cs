@@ -1,6 +1,6 @@
-using Microsoft.AndroidX.Compose.Gallery.Registry;
+using AndroidX.Compose.Gallery.Registry;
 
-namespace Microsoft.AndroidX.Compose.Gallery.Demos.Theming;
+namespace AndroidX.Compose.Gallery.Demos.Theming;
 
 /// <summary>
 /// Wraps a nested <c>MaterialTheme</c> with a custom palette built via

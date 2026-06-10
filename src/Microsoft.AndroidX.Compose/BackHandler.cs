@@ -1,4 +1,4 @@
-namespace Microsoft.AndroidX.Compose;
+namespace AndroidX.Compose;
 
 /// <summary>
 /// Intercepts the system back press from within a composition. Wraps

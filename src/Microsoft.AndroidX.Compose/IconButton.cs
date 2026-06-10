@@ -1,4 +1,4 @@
-namespace Microsoft.AndroidX.Compose;
+namespace AndroidX.Compose;
 
 /// <summary>
 /// Material 3 <c>IconButton</c>. Children render into a

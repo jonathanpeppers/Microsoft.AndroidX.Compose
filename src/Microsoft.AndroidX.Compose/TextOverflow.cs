@@ -1,4 +1,4 @@
-namespace Microsoft.AndroidX.Compose;
+namespace AndroidX.Compose;
 
 /// <summary>
 /// C# mirror of Kotlin's <c>androidx.compose.ui.text.style.TextOverflow</c>

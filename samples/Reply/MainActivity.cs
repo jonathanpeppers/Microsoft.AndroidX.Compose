@@ -1,6 +1,6 @@
-using global::AndroidX.Activity;
+using AndroidX.Activity;
 
-namespace Microsoft.AndroidX.Compose.Samples.Reply;
+namespace AndroidX.Compose.Samples.Reply;
 
 /// <summary>
 /// Reply host activity. Subclasses <see cref="ComponentActivity"/>,
@@ -12,7 +12,7 @@ namespace Microsoft.AndroidX.Compose.Samples.Reply;
     Label        = "@string/app_name",
     MainLauncher = true,
     Theme        = "@android:style/Theme.Material.Light.NoActionBar")]
-[global::Android.Runtime.Register("net/compose/samples/reply/MainActivity")]
+[Android.Runtime.Register("net/compose/samples/reply/MainActivity")]
 public class MainActivity : ComponentActivity
 {
     /// <summary>Build the root composition.</summary>

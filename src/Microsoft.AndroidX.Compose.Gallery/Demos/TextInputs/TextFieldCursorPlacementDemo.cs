@@ -1,8 +1,8 @@
-using global::AndroidX.Compose.UI.Text;
-using global::AndroidX.Compose.UI.Text.Input;
-using Microsoft.AndroidX.Compose.Gallery.Registry;
+using AndroidX.Compose.UI.Text;
+using AndroidX.Compose.UI.Text.Input;
+using AndroidX.Compose.Gallery.Registry;
 
-namespace Microsoft.AndroidX.Compose.Gallery.Demos.TextInputs;
+namespace AndroidX.Compose.Gallery.Demos.TextInputs;
 
 /// <summary>
 /// <see cref="TextField(MutableState{TextFieldValue})"/> — programmatic

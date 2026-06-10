@@ -1,6 +1,6 @@
-using global::AndroidX.Compose.Runtime;
+using AndroidX.Compose.Runtime;
 
-namespace Microsoft.AndroidX.Compose;
+namespace AndroidX.Compose;
 
 /// <summary>
 /// Container composable that installs one or more
@@ -70,7 +70,7 @@ public sealed class CompositionLocalProvider : ComposableContainer
             return;
         }
 
-        var array = new global::AndroidX.Compose.Runtime.ProvidedValue[_provided.Count];
+        var array = new AndroidX.Compose.Runtime.ProvidedValue[_provided.Count];
         for (int i = 0; i < _provided.Count; i++)
             array[i] = _provided[i].Peer;
 

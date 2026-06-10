@@ -1,7 +1,7 @@
-using global::Android.Runtime;
-using global::AndroidX.Compose.Material3;
+using Android.Runtime;
+using AndroidX.Compose.Material3;
 
-namespace Microsoft.AndroidX.Compose;
+namespace AndroidX.Compose;
 
 // Hand-written JNI bridges for Kotlin synthetic `$default` overloads
 // that yield a Material 3 ColorScheme. Used by

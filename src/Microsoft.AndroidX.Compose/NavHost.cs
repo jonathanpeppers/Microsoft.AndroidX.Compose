@@ -1,17 +1,17 @@
 using System.Collections;
-using global::AndroidX.Compose.Runtime;
+using AndroidX.Compose.Runtime;
 
-namespace Microsoft.AndroidX.Compose;
+namespace AndroidX.Compose;
 
 /// <summary>
 /// Compose Navigation host — the C# moral equivalent of Kotlin's
 /// <c>NavHost(navController, startDestination) { composable("a") { ... } }</c>.
 /// Holds a graph of <see cref="Composable"/> destinations and switches
 /// the visible one based on the bound
-/// <see cref="Microsoft.AndroidX.Compose.NavController"/>'s back stack.
+/// <see cref="AndroidX.Compose.NavController"/>'s back stack.
 ///
 /// <para>
-/// Wire a remembered <see cref="Microsoft.AndroidX.Compose.NavController"/> if you
+/// Wire a remembered <see cref="AndroidX.Compose.NavController"/> if you
 /// want to drive navigation from outside the host (e.g. from button
 /// onClick callbacks); leave it <c>null</c> to let the host create
 /// its own internal controller via Kotlin's
@@ -42,7 +42,7 @@ namespace Microsoft.AndroidX.Compose;
 /// <para>
 /// The host requires <c>Xamarin.AndroidX.Navigation.Compose</c>
 /// — added transitively when you reference
-/// <c>Microsoft.AndroidX.Compose</c>. See dotnet/android-libraries#1444 for
+/// <c>AndroidX.Compose</c>. See dotnet/android-libraries#1444 for
 /// the upstream binder bug that requires the JNI bridges in
 /// <see cref="ComposeBridges"/>.
 /// </para>

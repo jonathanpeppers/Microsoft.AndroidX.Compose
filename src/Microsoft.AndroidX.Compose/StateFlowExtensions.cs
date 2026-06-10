@@ -1,4 +1,4 @@
-namespace Microsoft.AndroidX.Compose;
+namespace AndroidX.Compose;
 
 /// <summary>
 /// Compose-side bridge helpers for
@@ -21,7 +21,7 @@ public static class StateFlowExtensions
     /// <c>collectAsStateWithLifecycle</c> only collects while the
     /// host <c>LifecycleOwner</c> is at least
     /// <c>Lifecycle.State.STARTED</c>, pausing collection on
-    /// background. Microsoft.AndroidX.Compose's flow is snapshot-backed and always
+    /// background. AndroidX.Compose's flow is snapshot-backed and always
     /// "live" — there is no separate coroutine to start or stop —
     /// so this method is effectively
     /// <c>collectAsState</c> with a name that signals intent. The
@@ -52,7 +52,7 @@ public static class StateFlowExtensions
     /// <summary>
     /// Overload accepting an <paramref name="initialValue"/> for
     /// API parity with Kotlin's <c>Flow&lt;T&gt;</c>-typed
-    /// <c>collectAsStateWithLifecycle(initialValue)</c>. Microsoft.AndroidX.Compose
+    /// <c>collectAsStateWithLifecycle(initialValue)</c>. AndroidX.Compose
     /// <see cref="IStateFlow{T}"/> always has a current value, so
     /// the initial value is ignored — the flow's actual current
     /// value wins on first read.

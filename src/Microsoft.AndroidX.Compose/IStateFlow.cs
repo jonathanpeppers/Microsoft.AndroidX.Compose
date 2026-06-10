@@ -1,8 +1,8 @@
-namespace Microsoft.AndroidX.Compose;
+namespace AndroidX.Compose;
 
 /// <summary>
 /// Read-only observable value that always has a current value —
-/// Microsoft.AndroidX.Compose's C# parity for Kotlin's
+/// AndroidX.Compose's C# parity for Kotlin's
 /// <c>kotlinx.coroutines.flow.StateFlow&lt;T&gt;</c>. Exposes
 /// <see cref="IState{T}.Value"/> (always populated) and participates
 /// in Compose's snapshot dependency tracking when read inside a
@@ -13,7 +13,7 @@ namespace Microsoft.AndroidX.Compose;
 /// <para>
 /// <strong>Implementation surface is closed.</strong> The only
 /// supported implementation is the snapshot-backed
-/// <see cref="MutableStateFlow{T}"/>. Microsoft.AndroidX.Compose does not bridge to
+/// <see cref="MutableStateFlow{T}"/>. AndroidX.Compose does not bridge to
 /// real Kotlin <c>StateFlow</c> instances yet — a custom managed
 /// implementation cannot participate in Compose's snapshot tracking
 /// without going through <see cref="MutableState{T}"/> /

@@ -1,5 +1,5 @@
 
-namespace Microsoft.AndroidX.Compose.Samples.JetNews;
+namespace AndroidX.Compose.Samples.JetNews;
 
 /// <summary>
 /// One paragraph of <see cref="Post"/> body content. Inline run styling

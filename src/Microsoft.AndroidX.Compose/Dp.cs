@@ -1,4 +1,4 @@
-namespace Microsoft.AndroidX.Compose;
+namespace AndroidX.Compose;
 
 /// <summary>
 /// Density-independent pixel — C# mirror of Kotlin's
@@ -30,7 +30,7 @@ public readonly struct Dp : IEquatable<Dp>
     }
 
     /// <summary>The zero-dp constant (equivalent to <c>0.dp</c> in Kotlin).</summary>
-    public static Dp Zero => new(global::AndroidX.Compose.UI.Unit.DpKt.GetDp(0));
+    public static Dp Zero => new(AndroidX.Compose.UI.Unit.DpKt.GetDp(0));
 
     /// <summary>Implicit conversion from <see cref="int"/> for ergonomic call sites.</summary>
     public static implicit operator Dp(int value) => new Dp(value);

@@ -1,4 +1,4 @@
-namespace Microsoft.AndroidX.Compose.Samples.JetNews;
+namespace AndroidX.Compose.Samples.JetNews;
 
 /// <summary>
 /// Card factories for the home feed. Three shapes mirror upstream's

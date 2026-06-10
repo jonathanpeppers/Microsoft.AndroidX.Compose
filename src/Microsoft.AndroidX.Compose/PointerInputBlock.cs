@@ -1,9 +1,9 @@
-using global::Android.Runtime;
+using Android.Runtime;
 using Kotlin.Coroutines;
 using Kotlin.Coroutines.Intrinsics;
 using Kotlin.Jvm.Functions;
 
-namespace Microsoft.AndroidX.Compose;
+namespace AndroidX.Compose;
 
 /// <summary>
 /// JCW exposing a <see cref="IFunction2"/> that Compose's

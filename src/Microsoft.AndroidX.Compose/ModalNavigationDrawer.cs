@@ -1,4 +1,4 @@
-namespace Microsoft.AndroidX.Compose;
+namespace AndroidX.Compose;
 
 /// <summary>
 /// Material 3 <c>ModalNavigationDrawer</c> — a phone-sized drawer that
@@ -13,7 +13,7 @@ namespace Microsoft.AndroidX.Compose;
 public sealed partial class ModalNavigationDrawer
 {
     /// <summary>
-    /// Convenience: starting <see cref="global::AndroidX.Compose.Material3.DrawerValue"/>
+    /// Convenience: starting <see cref="AndroidX.Compose.Material3.DrawerValue"/>
     /// on first composition. Mirrors Kotlin
     /// <c>rememberDrawerState(initialValue = DrawerValue.Open)</c>.
     /// </summary>
@@ -25,7 +25,7 @@ public sealed partial class ModalNavigationDrawer
     /// <c>InitialValue</c>) when you need to share state across
     /// recompositions.
     /// </remarks>
-    public global::AndroidX.Compose.Material3.DrawerValue? InitialValue
+    public AndroidX.Compose.Material3.DrawerValue? InitialValue
     {
         get => _drawerState?.InitialValue;
         init => _drawerState = new DrawerStateHolder(value);

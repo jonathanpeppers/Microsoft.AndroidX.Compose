@@ -1,8 +1,8 @@
-using global::Android.Content;
-using global::AndroidX.Activity;
-using global::AndroidX.Compose.Material3;
+using Android.Content;
+using AndroidX.Activity;
+using AndroidX.Compose.Material3;
 
-namespace Microsoft.AndroidX.Compose.Samples.JetNews;
+namespace AndroidX.Compose.Samples.JetNews;
 
 /// <summary>
 /// JetNews host activity. Subclasses <see cref="ComponentActivity"/>,
@@ -14,7 +14,7 @@ namespace Microsoft.AndroidX.Compose.Samples.JetNews;
     Label        = "@string/app_name",
     MainLauncher = true,
     Theme        = "@android:style/Theme.Material.Light.NoActionBar")]
-[global::Android.Runtime.Register("net/compose/samples/jetnews/MainActivity")]
+[Android.Runtime.Register("net/compose/samples/jetnews/MainActivity")]
 public class MainActivity : ComponentActivity
 {
     /// <summary>Build the root composition.</summary>

@@ -1,5 +1,5 @@
 
-namespace Microsoft.AndroidX.Compose.Samples.JetNews;
+namespace AndroidX.Compose.Samples.JetNews;
 
 /// <summary>
 /// Discriminator for rows in the home feed — used to flatten the

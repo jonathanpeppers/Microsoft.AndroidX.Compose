@@ -1,4 +1,4 @@
-namespace Microsoft.AndroidX.Compose;
+namespace AndroidX.Compose;
 
 /// <summary>
 /// Material 3 <c>InputChip</c>. Adds an <c>Avatar</c> slot in

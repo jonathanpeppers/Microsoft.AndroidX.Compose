@@ -1,4 +1,4 @@
-namespace Microsoft.AndroidX.Compose.Samples.JetNews;
+namespace AndroidX.Compose.Samples.JetNews;
 
 /// <summary>
 /// One inline run inside a <see cref="Paragraph"/>'s text — start/end

@@ -1,9 +1,9 @@
-using global::Android.Runtime;
-using global::AndroidX.Compose.Runtime;
-using global::AndroidX.Compose.UI.Graphics.Painter;
-using global::AndroidX.Compose.UI.Res;
+using Android.Runtime;
+using AndroidX.Compose.Runtime;
+using AndroidX.Compose.UI.Graphics.Painter;
+using AndroidX.Compose.UI.Res;
 
-namespace Microsoft.AndroidX.Compose;
+namespace AndroidX.Compose;
 
 /// <summary>
 /// Composable resource accessors — the C# parity of Kotlin's

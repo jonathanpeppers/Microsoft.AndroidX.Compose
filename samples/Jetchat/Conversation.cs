@@ -1,7 +1,7 @@
-using global::AndroidX.Compose.Material3;
-using global::AndroidX.Compose.UI.Text.Input;
+using AndroidX.Compose.Material3;
+using AndroidX.Compose.UI.Text.Input;
 
-namespace Microsoft.AndroidX.Compose.Samples.Jetchat;
+namespace AndroidX.Compose.Samples.Jetchat;
 
 /// <summary>
 /// Builds the Jetchat conversation screen tree. C# port of upstream's

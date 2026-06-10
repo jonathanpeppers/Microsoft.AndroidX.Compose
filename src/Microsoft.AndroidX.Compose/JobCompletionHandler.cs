@@ -1,7 +1,7 @@
-using global::Android.Runtime;
+using Android.Runtime;
 using Kotlin.Jvm.Functions;
 
-namespace Microsoft.AndroidX.Compose;
+namespace AndroidX.Compose;
 
 /// <summary>
 /// JCW for <c>Function1&lt;Throwable?, Unit&gt;</c> registered via

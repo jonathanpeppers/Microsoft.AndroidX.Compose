@@ -1,7 +1,7 @@
-using global::AndroidX.Compose.UI.State;
-using Microsoft.AndroidX.Compose.Gallery.Registry;
+using AndroidX.Compose.UI.State;
+using AndroidX.Compose.Gallery.Registry;
 
-namespace Microsoft.AndroidX.Compose.Gallery.Demos.Selection;
+namespace AndroidX.Compose.Gallery.Demos.Selection;
 
 /// <summary>Three-state checkbox (on / off / indeterminate).</summary>
 public static class TriStateCheckboxDemo

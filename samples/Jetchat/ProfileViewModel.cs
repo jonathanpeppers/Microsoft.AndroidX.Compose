@@ -1,4 +1,4 @@
-namespace Microsoft.AndroidX.Compose.Samples.Jetchat;
+namespace AndroidX.Compose.Samples.Jetchat;
 
 /// <summary>
 /// C# port of upstream's <c>ProfileViewModel</c>. Tracks the active

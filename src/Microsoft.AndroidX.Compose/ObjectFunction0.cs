@@ -1,7 +1,7 @@
-using global::Android.Runtime;
+using Android.Runtime;
 using Kotlin.Jvm.Functions;
 
-namespace Microsoft.AndroidX.Compose;
+namespace AndroidX.Compose;
 
 /// <summary>
 /// JCW that implements Kotlin's <c>Function0&lt;Object&gt;</c> — a

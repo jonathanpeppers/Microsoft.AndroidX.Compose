@@ -1,7 +1,7 @@
-using global::AndroidX.Compose.Runtime;
-using Microsoft.AndroidX.Compose.Gallery.Registry;
+using AndroidX.Compose.Runtime;
+using AndroidX.Compose.Gallery.Registry;
 
-namespace Microsoft.AndroidX.Compose.Gallery.Demos.LocalsMisc;
+namespace AndroidX.Compose.Gallery.Demos.LocalsMisc;
 
 /// <summary>Built-in Locals.LocalContext — read the host Android Context from a custom composable.</summary>
 public static class LocalContextDemo

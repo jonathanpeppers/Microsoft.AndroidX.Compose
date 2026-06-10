@@ -1,32 +1,32 @@
 using System.Runtime.CompilerServices;
-using global::AndroidX.Compose.Runtime;
+using AndroidX.Compose.Runtime;
 
-namespace Microsoft.AndroidX.Compose;
+namespace AndroidX.Compose;
 
 public static partial class ComposeExtensions
 {
     /// <summary>
     /// Acquires (or creates on first composition) the
-    /// <see cref="Microsoft.AndroidX.Compose.ViewModel"/> for this call site — the C#
+    /// <see cref="AndroidX.Compose.ViewModel"/> for this call site — the C#
     /// parity of Kotlin's
     /// <c>androidx.lifecycle.viewmodel.compose.viewModel&lt;T&gt;(…)</c>.
     /// </summary>
-    /// <typeparam name="T">A <see cref="Microsoft.AndroidX.Compose.ViewModel"/> subclass.</typeparam>
+    /// <typeparam name="T">A <see cref="AndroidX.Compose.ViewModel"/> subclass.</typeparam>
     /// <param name="composer">The active composer.</param>
     /// <param name="factory">
     /// Constructs the view model the first time the host's
-    /// <see cref="global::AndroidX.Lifecycle.ViewModelStore"/> sees this
+    /// <see cref="AndroidX.Lifecycle.ViewModelStore"/> sees this
     /// call site's storage key.
     /// </param>
     /// <param name="line">Auto-populated; do not pass.</param>
     /// <param name="file">Auto-populated; do not pass.</param>
     /// <remarks>
     /// The view model is owned by the nearest
-    /// <see cref="global::AndroidX.Lifecycle.IViewModelStoreOwner"/> on
+    /// <see cref="AndroidX.Lifecycle.IViewModelStoreOwner"/> on
     /// <c>LocalViewModelStoreOwner</c> — the host
-    /// <see cref="global::AndroidX.Activity.ComponentActivity"/> at the root,
+    /// <see cref="AndroidX.Activity.ComponentActivity"/> at the root,
     /// or the current
-    /// <see cref="global::AndroidX.Navigation.NavBackStackEntry"/> inside a
+    /// <see cref="AndroidX.Navigation.NavBackStackEntry"/> inside a
     /// <see cref="NavHost"/>.
     /// </remarks>
     public static T ViewModel<T>(
@@ -98,15 +98,15 @@ public static partial class ComposeExtensions
                 "ViewModel<T> requires LocalViewModelStoreOwner to be set. " +
                 "Call from inside ComponentActivity.SetContent or a NavHost destination so the host owner is in scope.");
         }
-        var owner = Java.Lang.Object.GetObject<global::AndroidX.Lifecycle.IViewModelStoreOwner>(
-            ownerHandle, global::Android.Runtime.JniHandleOwnership.TransferLocalRef)
+        var owner = Java.Lang.Object.GetObject<AndroidX.Lifecycle.IViewModelStoreOwner>(
+            ownerHandle, Android.Runtime.JniHandleOwnership.TransferLocalRef)
             ?? throw new InvalidOperationException(
                 "LocalViewModelStoreOwner.current returned a non-IViewModelStoreOwner handle.");
 
         var key = BuildViewModelKey(typeof(T), file, line, keys);
         var modelClass = Java.Lang.Class.FromType(typeof(T));
         var lambdaFactory = new LambdaViewModelFactory(factory);
-        var provider = new global::AndroidX.Lifecycle.ViewModelProvider(owner, lambdaFactory);
+        var provider = new AndroidX.Lifecycle.ViewModelProvider(owner, lambdaFactory);
         try
         {
             var vm = provider.Get(key, modelClass);

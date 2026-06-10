@@ -1,6 +1,6 @@
-using Microsoft.AndroidX.Compose.Gallery.Registry;
+using AndroidX.Compose.Gallery.Registry;
 
-namespace Microsoft.AndroidX.Compose.Gallery.Demos.ListsGrids;
+namespace AndroidX.Compose.Gallery.Demos.ListsGrids;
 
 /// <summary>LazyVerticalGrid with a fixed column count.</summary>
 public static class LazyVerticalGridFixedDemo

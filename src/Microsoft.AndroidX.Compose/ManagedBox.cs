@@ -1,6 +1,6 @@
-using global::Android.Runtime;
+using Android.Runtime;
 
-namespace Microsoft.AndroidX.Compose;
+namespace AndroidX.Compose;
 
 /// <summary>
 /// Wraps an arbitrary managed value as a <see cref="Java.Lang.Object"/>

@@ -1,4 +1,4 @@
-namespace Microsoft.AndroidX.Compose.Gallery.Demos.Shared;
+namespace AndroidX.Compose.Gallery.Demos.Shared;
 
 /// <summary>Pastel palette reused across carousel/list demos so cells are visually distinct.</summary>
 internal static class Palette

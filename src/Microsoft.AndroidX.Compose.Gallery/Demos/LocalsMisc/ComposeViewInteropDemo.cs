@@ -1,8 +1,8 @@
-using global::Android.Content;
-using global::AndroidX.Compose.Runtime;
-using Microsoft.AndroidX.Compose.Gallery.Registry;
+using Android.Content;
+using AndroidX.Compose.Runtime;
+using AndroidX.Compose.Gallery.Registry;
 
-namespace Microsoft.AndroidX.Compose.Gallery.Demos.LocalsMisc;
+namespace AndroidX.Compose.Gallery.Demos.LocalsMisc;
 
 /// <summary>
 /// Showcases the <c>ComposeView</c> interop entry point — hosting

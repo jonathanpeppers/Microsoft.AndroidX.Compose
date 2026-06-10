@@ -1,7 +1,7 @@
-using global::AndroidX.Compose.Runtime;
-using Microsoft.AndroidX.Compose.Gallery.Registry;
+using AndroidX.Compose.Runtime;
+using AndroidX.Compose.Gallery.Registry;
 
-namespace Microsoft.AndroidX.Compose.Gallery.Screens;
+namespace AndroidX.Compose.Gallery.Screens;
 
 /// <summary>
 /// One clickable row in <see cref="CategoryScreen"/>: the demo's title

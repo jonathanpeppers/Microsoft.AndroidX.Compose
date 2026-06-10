@@ -1,6 +1,6 @@
-using Microsoft.AndroidX.Compose.Gallery.Registry;
+using AndroidX.Compose.Gallery.Registry;
 
-namespace Microsoft.AndroidX.Compose.Gallery.Demos.Theming;
+namespace AndroidX.Compose.Gallery.Demos.Theming;
 
 /// <summary>
 /// Material Icons from
@@ -20,7 +20,7 @@ public static class MaterialIconsDemo
         {
             var tapped = c.Remember(() => new MutableState<string>("(none)"));
 
-            ComposableNode Tile(string name, global::AndroidX.Compose.UI.Graphics.Vector.ImageVector vec) =>
+            ComposableNode Tile(string name, AndroidX.Compose.UI.Graphics.Vector.ImageVector vec) =>
                 new Column
                 {
                     new IconButton(onClick: () => tapped.Value = name)

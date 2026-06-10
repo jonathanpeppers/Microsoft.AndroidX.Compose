@@ -1,7 +1,7 @@
-using global::AndroidX.Compose.Material3;
-using global::AndroidX.Compose.Runtime;
+using AndroidX.Compose.Material3;
+using AndroidX.Compose.Runtime;
 
-namespace Microsoft.AndroidX.Compose;
+namespace AndroidX.Compose;
 
 /// <summary>
 /// Material 3 <c>SingleChoiceSegmentedButtonRow</c>. Container for

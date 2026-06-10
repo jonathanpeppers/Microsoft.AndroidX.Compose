@@ -1,4 +1,4 @@
-namespace Microsoft.AndroidX.Compose.Samples.Reply;
+namespace AndroidX.Compose.Samples.Reply;
 
 /// <summary>
 /// Navigation actions wrapper — encapsulates how the rest of the UI

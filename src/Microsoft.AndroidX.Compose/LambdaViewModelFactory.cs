@@ -1,7 +1,7 @@
-using global::Android.Runtime;
-using global::AndroidX.Lifecycle;
+using Android.Runtime;
+using AndroidX.Lifecycle;
 
-namespace Microsoft.AndroidX.Compose;
+namespace AndroidX.Compose;
 
 /// <summary>
 /// Internal JCW adapter that exposes a <see cref="Func{T}"/> as an
@@ -32,9 +32,9 @@ namespace Microsoft.AndroidX.Compose;
 [Register("net/compose/LambdaViewModelFactory")]
 sealed class LambdaViewModelFactory : Java.Lang.Object, ViewModelProvider.IFactory
 {
-    readonly Func<global::AndroidX.Lifecycle.ViewModel> _factory;
+    readonly Func<AndroidX.Lifecycle.ViewModel> _factory;
 
-    public LambdaViewModelFactory(Func<global::AndroidX.Lifecycle.ViewModel> factory)
+    public LambdaViewModelFactory(Func<AndroidX.Lifecycle.ViewModel> factory)
         => _factory = factory;
 
     /// <summary>

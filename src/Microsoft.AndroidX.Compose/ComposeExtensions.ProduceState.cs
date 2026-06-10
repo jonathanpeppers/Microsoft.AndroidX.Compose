@@ -1,7 +1,7 @@
 using System.Runtime.CompilerServices;
-using global::AndroidX.Compose.Runtime;
+using AndroidX.Compose.Runtime;
 
-namespace Microsoft.AndroidX.Compose;
+namespace AndroidX.Compose;
 
 public static partial class ComposeExtensions
 {

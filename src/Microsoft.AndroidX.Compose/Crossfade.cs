@@ -1,7 +1,7 @@
-using global::AndroidX.Compose.Animation;
-using global::AndroidX.Compose.Runtime;
+using AndroidX.Compose.Animation;
+using AndroidX.Compose.Runtime;
 
-namespace Microsoft.AndroidX.Compose;
+namespace AndroidX.Compose;
 
 /// <summary>
 /// <c>Crossfade</c> — fades between content keyed by

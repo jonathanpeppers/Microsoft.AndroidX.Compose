@@ -1,6 +1,6 @@
-using global::AndroidX.Compose.Material3.PullToRefresh;
+using AndroidX.Compose.Material3.PullToRefresh;
 
-namespace Microsoft.AndroidX.Compose;
+namespace AndroidX.Compose;
 
 /// <summary>
 /// Caller-supplied state holder for <see cref="PullToRefreshBox"/>. The

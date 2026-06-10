@@ -1,6 +1,6 @@
-using Microsoft.AndroidX.Compose.Gallery.Registry;
+using AndroidX.Compose.Gallery.Registry;
 
-namespace Microsoft.AndroidX.Compose.Gallery.Demos.ListsGrids;
+namespace AndroidX.Compose.Gallery.Demos.ListsGrids;
 
 /// <summary>
 /// LazyColumn with a live readout of <see cref="LazyListState"/>'s

@@ -4,11 +4,11 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Xunit;
 
-namespace Microsoft.AndroidX.Compose.SourceGenerators.Tests;
+namespace AndroidX.Compose.SourceGenerators.Tests;
 
 /// <summary>
 /// Tests for <see cref="ComposeFacadeGenerator"/>. The synthetic stubs
-/// mirror enough of the Compose / Microsoft.AndroidX.Compose shape (IComposer,
+/// mirror enough of the Compose / AndroidX.Compose shape (IComposer,
 /// IFunctionN, IModifier, ComposableNode, ComposableContainer,
 /// ComposableLambda0, ComposableLambdas, ComposeBridges,
 /// RenderContext/ScopeKind) for the generated facade source to compile.
@@ -86,7 +86,7 @@ public class FacadeGeneratorTests
             public interface IFunction2 { }
             public interface IFunction3 { }
         }
-        namespace Microsoft.AndroidX.Compose
+        namespace AndroidX.Compose
         {
             public enum ScopeKind { None, Row, Column }
             public static class RenderContext
@@ -199,7 +199,7 @@ public class FacadeGeneratorTests
         foreach (var tree in output.SyntaxTrees)
         {
             var path = tree.FilePath;
-            if (path.Contains($"Microsoft.AndroidX.Compose.Facade.{facadeName}.") && path.EndsWith(".g.cs", System.StringComparison.Ordinal))
+            if (path.Contains($"AndroidX.Compose.Facade.{facadeName}.") && path.EndsWith(".g.cs", System.StringComparison.Ordinal))
             {
                 emitted = tree.GetText().ToString();
                 break;
@@ -222,12 +222,12 @@ public class FacadeGeneratorTests
         var code = $$"""
             using global::AndroidX.Compose.Runtime;
             using global::AndroidX.Compose.UI;
-            using Microsoft.AndroidX.Compose;
+            using AndroidX.Compose;
             using Kotlin.Jvm.Functions;
 
             {{ButtonAttrs}}
 
-            namespace Microsoft.AndroidX.Compose
+            namespace AndroidX.Compose
             {
                 public static partial class ComposeBridges
                 {
@@ -243,12 +243,12 @@ public class FacadeGeneratorTests
         var (output, diags, emitted) = Run(code, "Button");
         Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
         Assert.NotNull(emitted);
-        Assert.Contains("public sealed partial class Button : global::Microsoft.AndroidX.Compose.ComposableContainer", emitted);
+        Assert.Contains("public sealed partial class Button : global::AndroidX.Compose.ComposableContainer", emitted);
         Assert.Contains("readonly global::System.Action _onClick;", emitted);
         Assert.Contains("public Button(global::System.Action onClick)", emitted);
-        Assert.Contains("var __onClick = new global::Microsoft.AndroidX.Compose.ComposableLambda0(_onClick);", emitted);
-        Assert.Contains("var __content = global::Microsoft.AndroidX.Compose.ComposableLambdas.Wrap3(composer, c => RenderChildren(c));", emitted);
-        Assert.Contains("global::Microsoft.AndroidX.Compose.ComposeBridges.Button(__onClick, BuildModifier(), __content, composer);", emitted);
+        Assert.Contains("var __onClick = new global::AndroidX.Compose.ComposableLambda0(_onClick);", emitted);
+        Assert.Contains("var __content = global::AndroidX.Compose.ComposableLambdas.Wrap3(composer, c => RenderChildren(c));", emitted);
+        Assert.Contains("global::AndroidX.Compose.ComposeBridges.Button(__onClick, BuildModifier(), __content, composer);", emitted);
 
         var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
         Assert.Empty(errors);
@@ -260,13 +260,13 @@ public class FacadeGeneratorTests
         var code = """
             using global::AndroidX.Compose.Runtime;
             using global::AndroidX.Compose.UI;
-            using Microsoft.AndroidX.Compose;
+            using AndroidX.Compose;
             using Kotlin.Jvm.Functions;
 
             [assembly: ComposeDefaults("CardDefault",
                 "modifier", "shape", "colors", "elevation", "border", "!content")]
 
-            namespace Microsoft.AndroidX.Compose
+            namespace AndroidX.Compose
             {
                 public static partial class ComposeBridges
                 {
@@ -282,9 +282,9 @@ public class FacadeGeneratorTests
         var (output, diags, emitted) = Run(code, "Card");
         Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
         Assert.NotNull(emitted);
-        Assert.Contains("public sealed partial class Card : global::Microsoft.AndroidX.Compose.ComposableContainer", emitted);
+        Assert.Contains("public sealed partial class Card : global::AndroidX.Compose.ComposableContainer", emitted);
         Assert.DoesNotContain("public Card(", emitted);
-        Assert.Contains("global::Microsoft.AndroidX.Compose.ComposeBridges.Card(BuildModifier(), __content, composer);", emitted);
+        Assert.Contains("global::AndroidX.Compose.ComposeBridges.Card(BuildModifier(), __content, composer);", emitted);
 
         var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
         Assert.Empty(errors);
@@ -296,13 +296,13 @@ public class FacadeGeneratorTests
         var code = """
             using global::AndroidX.Compose.Runtime;
             using global::AndroidX.Compose.UI;
-            using Microsoft.AndroidX.Compose;
+            using AndroidX.Compose;
             using Kotlin.Jvm.Functions;
 
             [assembly: ComposeDefaults("TextDefault",
                 "!text", "modifier", "color", "fontSize")]
 
-            namespace Microsoft.AndroidX.Compose
+            namespace AndroidX.Compose
             {
                 public static partial class ComposeBridges
                 {
@@ -318,10 +318,10 @@ public class FacadeGeneratorTests
         var (output, diags, emitted) = Run(code, "Text");
         Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
         Assert.NotNull(emitted);
-        Assert.Contains("public sealed partial class Text : global::Microsoft.AndroidX.Compose.ComposableNode", emitted);
+        Assert.Contains("public sealed partial class Text : global::AndroidX.Compose.ComposableNode", emitted);
         Assert.Contains("readonly string _text;", emitted);
         Assert.Contains("public Text(string text)", emitted);
-        Assert.Contains("global::Microsoft.AndroidX.Compose.ComposeBridges.Text(_text, BuildModifier(), composer);", emitted);
+        Assert.Contains("global::AndroidX.Compose.ComposeBridges.Text(_text, BuildModifier(), composer);", emitted);
 
         var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
         Assert.Empty(errors);
@@ -333,14 +333,14 @@ public class FacadeGeneratorTests
         var code = """
             using global::AndroidX.Compose.Runtime;
             using global::AndroidX.Compose.UI;
-            using Microsoft.AndroidX.Compose;
+            using AndroidX.Compose;
             using Kotlin.Jvm.Functions;
 
             [assembly: ComposeDefaults("SurfaceDefault",
                 "modifier", "shape", "color", "contentColor", "tonalElevation",
                 "shadowElevation", "border", "!content")]
 
-            namespace Microsoft.AndroidX.Compose
+            namespace AndroidX.Compose
             {
                 public static partial class ComposeBridges
                 {
@@ -356,7 +356,7 @@ public class FacadeGeneratorTests
         var (output, diags, emitted) = Run(code, "Surface");
         Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
         Assert.NotNull(emitted);
-        Assert.Contains("var __content = global::Microsoft.AndroidX.Compose.ComposableLambdas.Wrap2(composer, c => RenderChildren(c));", emitted);
+        Assert.Contains("var __content = global::AndroidX.Compose.ComposableLambdas.Wrap2(composer, c => RenderChildren(c));", emitted);
 
         var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
         Assert.Empty(errors);
@@ -368,7 +368,7 @@ public class FacadeGeneratorTests
         var code = """
             using global::AndroidX.Compose.Runtime;
             using global::AndroidX.Compose.UI;
-            using Microsoft.AndroidX.Compose;
+            using AndroidX.Compose;
             using Kotlin.Jvm.Functions;
 
             [assembly: ComposeDefaults("BottomAppBarDefault",
@@ -376,7 +376,7 @@ public class FacadeGeneratorTests
                 "contentColor", "tonalElevation", "contentPadding", "windowInsets",
                 "scrollBehavior")]
 
-            namespace Microsoft.AndroidX.Compose
+            namespace AndroidX.Compose
             {
                 public static partial class ComposeBridges
                 {
@@ -393,13 +393,13 @@ public class FacadeGeneratorTests
         Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
         Assert.NotNull(emitted);
         // Derives from ComposableContainer (container body), not ComposableNode.
-        Assert.Contains(": global::Microsoft.AndroidX.Compose.ComposableContainer", emitted);
+        Assert.Contains(": global::AndroidX.Compose.ComposableContainer", emitted);
         // Required Fn3 stays as container body: RenderChildren + PushScope(Row).
         Assert.Contains("Wrap3(composer, (__scope, c) =>", emitted);
-        Assert.Contains("global::Microsoft.AndroidX.Compose.RenderContext.PushScope(__scope, global::Microsoft.AndroidX.Compose.ScopeKind.Row);", emitted);
+        Assert.Contains("global::AndroidX.Compose.RenderContext.PushScope(__scope, global::AndroidX.Compose.ScopeKind.Row);", emitted);
         Assert.Contains("RenderChildren(c);", emitted);
         // Nullable Fn2 surfaces as a named property.
-        Assert.Contains("public global::Microsoft.AndroidX.Compose.ComposableNode? FloatingActionButton { get; set; }", emitted);
+        Assert.Contains("public global::AndroidX.Compose.ComposableNode? FloatingActionButton { get; set; }", emitted);
 
         var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
         Assert.Empty(errors);
@@ -414,13 +414,13 @@ public class FacadeGeneratorTests
         var code = """
             using global::AndroidX.Compose.Runtime;
             using global::AndroidX.Compose.UI;
-            using Microsoft.AndroidX.Compose;
+            using AndroidX.Compose;
             using Kotlin.Jvm.Functions;
 
             [assembly: ComposeDefaults("FooBarDefault",
                 "!actions", "modifier", "floatingActionButton")]
 
-            namespace Microsoft.AndroidX.Compose
+            namespace AndroidX.Compose
             {
                 public static partial class ComposeBridges
                 {
@@ -437,10 +437,10 @@ public class FacadeGeneratorTests
         Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
         Assert.NotNull(emitted);
         // No Scope → leaf shape: ComposableNode base, no RenderChildren.
-        Assert.Contains(": global::Microsoft.AndroidX.Compose.ComposableNode", emitted);
+        Assert.Contains(": global::AndroidX.Compose.ComposableNode", emitted);
         Assert.DoesNotContain("RenderChildren", emitted);
-        Assert.Contains("public global::Microsoft.AndroidX.Compose.ComposableNode? Actions { get; set; }", emitted);
-        Assert.Contains("public global::Microsoft.AndroidX.Compose.ComposableNode? FloatingActionButton { get; set; }", emitted);
+        Assert.Contains("public global::AndroidX.Compose.ComposableNode? Actions { get; set; }", emitted);
+        Assert.Contains("public global::AndroidX.Compose.ComposableNode? FloatingActionButton { get; set; }", emitted);
     }
 
     [Fact]
@@ -456,13 +456,13 @@ public class FacadeGeneratorTests
         var code = """
             using global::AndroidX.Compose.Runtime;
             using global::AndroidX.Compose.UI;
-            using Microsoft.AndroidX.Compose;
+            using AndroidX.Compose;
             using Kotlin.Jvm.Functions;
 
             [assembly: ComposeDefaults("RailDefault",
                 "modifier", "header", "!content")]
 
-            namespace Microsoft.AndroidX.Compose
+            namespace AndroidX.Compose
             {
                 public static partial class ComposeBridges
                 {
@@ -481,14 +481,14 @@ public class FacadeGeneratorTests
         Assert.NotNull(emitted);
         // Derives from ComposableContainer so collection-init syntax works
         // ("new Rail { new WideNavigationRailItem(...), ... }").
-        Assert.Contains(": global::Microsoft.AndroidX.Compose.ComposableContainer", emitted);
+        Assert.Contains(": global::AndroidX.Compose.ComposableContainer", emitted);
         // Non-nullable IFunction2 body wraps children via Wrap2 (no
         // Fn3 / no PushScope — Container=true uses the Fn2 path).
         Assert.Contains("Wrap2(composer, c => RenderChildren(c))", emitted);
         Assert.DoesNotContain("PushScope", emitted);
         // Nullable IFunction2? slot surfaces as a named property, not a
         // ctor primitive.
-        Assert.Contains("public global::Microsoft.AndroidX.Compose.ComposableNode? Header { get; set; }", emitted);
+        Assert.Contains("public global::AndroidX.Compose.ComposableNode? Header { get; set; }", emitted);
 
         var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
         Assert.Empty(errors);
@@ -502,18 +502,18 @@ public class FacadeGeneratorTests
         var code = """
             using global::AndroidX.Compose.Runtime;
             using global::AndroidX.Compose.UI;
-            using Microsoft.AndroidX.Compose;
+            using AndroidX.Compose;
             using Kotlin.Jvm.Functions;
 
             [assembly: ComposeDefaults("TriStateCheckboxDefault",
                 "!state", "!onClick", "modifier", "enabled", "colors", "interactionSource")]
 
-            namespace Microsoft.AndroidX.Compose.Demo
+            namespace AndroidX.Compose.Demo
             {
                 public class FakeToggleableState : global::Java.Lang.Enum { }
             }
 
-            namespace Microsoft.AndroidX.Compose
+            namespace AndroidX.Compose
             {
                 public static partial class ComposeBridges
                 {
@@ -521,7 +521,7 @@ public class FacadeGeneratorTests
                                    Signature="(Landroidx/compose/ui/state/ToggleableState;Lkotlin/jvm/functions/Function0;Landroidx/compose/ui/Modifier;ZLandroidx/compose/material3/CheckboxColors;Landroidx/compose/foundation/interaction/MutableInteractionSource;Landroidx/compose/runtime/Composer;II)V",
                                    Defaults=typeof(TriStateCheckboxDefault))]
                     [ComposeFacade]
-                    public static partial void TriStateCheckbox(global::Microsoft.AndroidX.Compose.Demo.FakeToggleableState state, IFunction0 onClick, IModifier? modifier, IComposer composer);
+                    public static partial void TriStateCheckbox(global::AndroidX.Compose.Demo.FakeToggleableState state, IFunction0 onClick, IModifier? modifier, IComposer composer);
                 }
             }
             """;
@@ -530,8 +530,8 @@ public class FacadeGeneratorTests
         Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
         Assert.NotNull(emitted);
         // Java enum surfaces as a ctor field + ctor param + bridge arg pass-through.
-        Assert.Contains("readonly global::Microsoft.AndroidX.Compose.Demo.FakeToggleableState _state;", emitted);
-        Assert.Contains("global::Microsoft.AndroidX.Compose.Demo.FakeToggleableState state", emitted);
+        Assert.Contains("readonly global::AndroidX.Compose.Demo.FakeToggleableState _state;", emitted);
+        Assert.Contains("global::AndroidX.Compose.Demo.FakeToggleableState state", emitted);
         Assert.Contains("ComposeBridges.TriStateCheckbox(_state,", emitted);
 
         // Sanity-check: the synthetic compilation must actually compile —
@@ -548,13 +548,13 @@ public class FacadeGeneratorTests
         var code = """
             using global::AndroidX.Compose.Runtime;
             using global::AndroidX.Compose.UI;
-            using Microsoft.AndroidX.Compose;
+            using AndroidX.Compose;
             using Kotlin.Jvm.Functions;
 
             [assembly: ComposeDefaults("NavigationBarDefault",
                 "modifier", "containerColor", "contentColor", "tonalElevation", "windowInsets", "!content")]
 
-            namespace Microsoft.AndroidX.Compose
+            namespace AndroidX.Compose
             {
                 public static partial class ComposeBridges
                 {
@@ -571,7 +571,7 @@ public class FacadeGeneratorTests
         Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
         Assert.NotNull(emitted);
         Assert.Contains("Wrap3(composer, (__scope, c) =>", emitted);
-        Assert.Contains("global::Microsoft.AndroidX.Compose.RenderContext.PushScope(__scope, global::Microsoft.AndroidX.Compose.ScopeKind.Row);", emitted);
+        Assert.Contains("global::AndroidX.Compose.RenderContext.PushScope(__scope, global::AndroidX.Compose.ScopeKind.Row);", emitted);
 
         var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
         Assert.Empty(errors);
@@ -583,13 +583,13 @@ public class FacadeGeneratorTests
         var code = $$"""
             using global::AndroidX.Compose.Runtime;
             using global::AndroidX.Compose.UI;
-            using Microsoft.AndroidX.Compose;
+            using AndroidX.Compose;
             using Kotlin.Jvm.Functions;
 
             [assembly: ComposeDefaults("CheckboxDefault",
                 "!checked", "!onCheckedChange", "modifier", "enabled", "colors", "interactionSource")]
 
-            namespace Microsoft.AndroidX.Compose
+            namespace AndroidX.Compose
             {
                 public static partial class ComposeBridges
                 {
@@ -613,14 +613,14 @@ public class FacadeGeneratorTests
         var code = """
             using global::AndroidX.Compose.Runtime;
             using global::AndroidX.Compose.UI;
-            using Microsoft.AndroidX.Compose;
+            using AndroidX.Compose;
             using Kotlin.Jvm.Functions;
 
             [assembly: ComposeDefaults("AlertDialogDefault",
                 "!onDismissRequest", "!confirmButton", "modifier", "dismissButton", "icon", "title", "text",
                 "shape", "containerColor", "iconContentColor", "titleContentColor", "textContentColor", "tonalElevation", "properties")]
 
-            namespace Microsoft.AndroidX.Compose
+            namespace AndroidX.Compose
             {
                 public static partial class ComposeBridges
                 {
@@ -639,16 +639,16 @@ public class FacadeGeneratorTests
         Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
         Assert.NotNull(emitted);
         // Leaf (not a container): required ConfirmButton property + null-check.
-        Assert.Contains("public sealed partial class AlertDialog : global::Microsoft.AndroidX.Compose.ComposableNode", emitted);
-        Assert.Contains("public global::Microsoft.AndroidX.Compose.ComposableNode? ConfirmButton { get; set; }", emitted);
-        Assert.Contains("public global::Microsoft.AndroidX.Compose.ComposableNode? DismissButton { get; set; }", emitted);
+        Assert.Contains("public sealed partial class AlertDialog : global::AndroidX.Compose.ComposableNode", emitted);
+        Assert.Contains("public global::AndroidX.Compose.ComposableNode? ConfirmButton { get; set; }", emitted);
+        Assert.Contains("public global::AndroidX.Compose.ComposableNode? DismissButton { get; set; }", emitted);
         Assert.Contains("if (ConfirmButton is null)", emitted);
         // OnDismissRequest is a System.Action ctor param.
         Assert.Contains("public AlertDialog(global::System.Action onDismissRequest)", emitted);
         // Auto-mask logic touches each enum member the slot bit corresponds to.
-        Assert.Contains("int __defaults = (int)global::Microsoft.AndroidX.Compose.AlertDialogDefault.All;", emitted);
-        Assert.Contains("if (__modifier is not null) __defaults &= ~(int)global::Microsoft.AndroidX.Compose.AlertDialogDefault.Modifier;", emitted);
-        Assert.Contains("if (__dismissButton is not null) __defaults &= ~(int)global::Microsoft.AndroidX.Compose.AlertDialogDefault.DismissButton;", emitted);
+        Assert.Contains("int __defaults = (int)global::AndroidX.Compose.AlertDialogDefault.All;", emitted);
+        Assert.Contains("if (__modifier is not null) __defaults &= ~(int)global::AndroidX.Compose.AlertDialogDefault.Modifier;", emitted);
+        Assert.Contains("if (__dismissButton is not null) __defaults &= ~(int)global::AndroidX.Compose.AlertDialogDefault.DismissButton;", emitted);
 
         var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
         Assert.Empty(errors);
@@ -660,14 +660,14 @@ public class FacadeGeneratorTests
         var code = """
             using global::AndroidX.Compose.Runtime;
             using global::AndroidX.Compose.UI;
-            using Microsoft.AndroidX.Compose;
+            using AndroidX.Compose;
             using Kotlin.Jvm.Functions;
 
             [assembly: ComposeDefaults("SurfaceDefault",
                 "modifier", "shape", "color", "contentColor", "tonalElevation",
                 "shadowElevation", "border", "!content")]
 
-            namespace Microsoft.AndroidX.Compose
+            namespace AndroidX.Compose
             {
                 public static partial class ComposeBridges
                 {
@@ -690,13 +690,13 @@ public class FacadeGeneratorTests
         var code = """
             using global::AndroidX.Compose.Runtime;
             using global::AndroidX.Compose.UI;
-            using Microsoft.AndroidX.Compose;
+            using AndroidX.Compose;
             using Kotlin.Jvm.Functions;
 
             [assembly: ComposeDefaults("CardDefault",
                 "modifier", "shape", "colors", "elevation", "border", "!content")]
 
-            namespace Microsoft.AndroidX.Compose
+            namespace AndroidX.Compose
             {
                 public static partial class ComposeBridges
                 {
@@ -719,10 +719,10 @@ public class FacadeGeneratorTests
         var code = """
             using global::AndroidX.Compose.Runtime;
             using global::AndroidX.Compose.UI;
-            using Microsoft.AndroidX.Compose;
+            using AndroidX.Compose;
             using Kotlin.Jvm.Functions;
 
-            namespace Microsoft.AndroidX.Compose
+            namespace AndroidX.Compose
             {
                 public static partial class NotComposeBridges
                 {
@@ -742,10 +742,10 @@ public class FacadeGeneratorTests
         var code = """
             using global::AndroidX.Compose.Runtime;
             using global::AndroidX.Compose.UI;
-            using Microsoft.AndroidX.Compose;
+            using AndroidX.Compose;
             using Kotlin.Jvm.Functions;
 
-            namespace Microsoft.AndroidX.Compose
+            namespace AndroidX.Compose
             {
                 public static partial class ComposeBridges
                 {
@@ -765,12 +765,12 @@ public class FacadeGeneratorTests
         var code = $$"""
             using global::AndroidX.Compose.Runtime;
             using global::AndroidX.Compose.UI;
-            using Microsoft.AndroidX.Compose;
+            using AndroidX.Compose;
             using Kotlin.Jvm.Functions;
 
             {{ButtonAttrs}}
 
-            namespace Microsoft.AndroidX.Compose
+            namespace AndroidX.Compose
             {
                 public static partial class ComposeBridges
                 {
@@ -789,8 +789,8 @@ public class FacadeGeneratorTests
         Assert.Contains("public sealed partial class MyButton", emitted);
         // Critical: bridge call must use the real bridge method name "Button",
         // not the override "MyButton" (which doesn't exist on ComposeBridges).
-        Assert.Contains("global::Microsoft.AndroidX.Compose.ComposeBridges.Button(", emitted);
-        Assert.DoesNotContain("global::Microsoft.AndroidX.Compose.ComposeBridges.MyButton(", emitted);
+        Assert.Contains("global::AndroidX.Compose.ComposeBridges.Button(", emitted);
+        Assert.DoesNotContain("global::AndroidX.Compose.ComposeBridges.MyButton(", emitted);
 
         var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
         Assert.Empty(errors);
@@ -806,13 +806,13 @@ public class FacadeGeneratorTests
         var code = """
             using global::AndroidX.Compose.Runtime;
             using global::AndroidX.Compose.UI;
-            using Microsoft.AndroidX.Compose;
+            using AndroidX.Compose;
             using Kotlin.Jvm.Functions;
 
             [assembly: ComposeDefaults("IconToggleButtonDefault",
                 "!checked", "!onCheckedChange", "modifier", "enabled", "colors", "interactionSource", "!content")]
 
-            namespace Microsoft.AndroidX.Compose
+            namespace AndroidX.Compose
             {
                 public static partial class ComposeBridges
                 {
@@ -831,7 +831,7 @@ public class FacadeGeneratorTests
         Assert.NotNull(emitted);
         Assert.Contains("readonly global::System.Action<bool> _onCheckedChange;", emitted);
         Assert.Contains("public IconToggleButton(bool @checked, global::System.Action<bool> onCheckedChange)", emitted);
-        Assert.Contains("new global::Microsoft.AndroidX.Compose.ComposableLambda1(v => _onCheckedChange(v is global::Java.Lang.Boolean __b && __b.BooleanValue()));", emitted);
+        Assert.Contains("new global::AndroidX.Compose.ComposableLambda1(v => _onCheckedChange(v is global::Java.Lang.Boolean __b && __b.BooleanValue()));", emitted);
 
         var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
         Assert.Empty(errors);
@@ -843,13 +843,13 @@ public class FacadeGeneratorTests
         var code = """
             using global::AndroidX.Compose.Runtime;
             using global::AndroidX.Compose.UI;
-            using Microsoft.AndroidX.Compose;
+            using AndroidX.Compose;
             using Kotlin.Jvm.Functions;
 
             [assembly: ComposeDefaults("TextFieldDefault",
                 "!value", "!onValueChange", "modifier")]
 
-            namespace Microsoft.AndroidX.Compose
+            namespace AndroidX.Compose
             {
                 public static partial class ComposeBridges
                 {
@@ -868,7 +868,7 @@ public class FacadeGeneratorTests
         Assert.NotNull(emitted);
         Assert.Contains("readonly global::System.Action<string> _onValueChange;", emitted);
         Assert.Contains("public TextField(string value, global::System.Action<string> onValueChange)", emitted);
-        Assert.Contains("new global::Microsoft.AndroidX.Compose.ComposableLambda1(v => _onValueChange(v?.ToString() ?? string.Empty));", emitted);
+        Assert.Contains("new global::AndroidX.Compose.ComposableLambda1(v => _onValueChange(v?.ToString() ?? string.Empty));", emitted);
 
         var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
         Assert.Empty(errors);
@@ -880,12 +880,12 @@ public class FacadeGeneratorTests
         var code = """
             using global::AndroidX.Compose.Runtime;
             using global::AndroidX.Compose.UI;
-            using Microsoft.AndroidX.Compose;
+            using AndroidX.Compose;
             using Kotlin.Jvm.Functions;
 
             [assembly: ComposeDefaults("FooDefault", "!a", "!cb", "modifier")]
 
-            namespace Microsoft.AndroidX.Compose
+            namespace AndroidX.Compose
             {
                 public static partial class ComposeBridges
                 {
@@ -912,14 +912,14 @@ public class FacadeGeneratorTests
         var code = """
             using global::AndroidX.Compose.Runtime;
             using global::AndroidX.Compose.UI;
-            using Microsoft.AndroidX.Compose;
+            using AndroidX.Compose;
             using Kotlin.Jvm.Functions;
 
             [assembly: ComposeDefaults("ListItemDefault",
                 "!headlineContent", "modifier", "overlineContent", "supportingContent",
                 "leadingContent", "trailingContent", "colors", "tonalElevation", "shadowElevation")]
 
-            namespace Microsoft.AndroidX.Compose
+            namespace AndroidX.Compose
             {
                 public static partial class ComposeBridges
                 {
@@ -942,11 +942,11 @@ public class FacadeGeneratorTests
         var (output, diags, emitted) = Run(code, "ListItem");
         Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
         Assert.NotNull(emitted);
-        Assert.Contains("public global::Microsoft.AndroidX.Compose.ComposableNode? Headline { get; set; }", emitted);
-        Assert.Contains("public global::Microsoft.AndroidX.Compose.ComposableNode? Overline { get; set; }", emitted);
-        Assert.Contains("public global::Microsoft.AndroidX.Compose.ComposableNode? Trailing { get; set; }", emitted);
+        Assert.Contains("public global::AndroidX.Compose.ComposableNode? Headline { get; set; }", emitted);
+        Assert.Contains("public global::AndroidX.Compose.ComposableNode? Overline { get; set; }", emitted);
+        Assert.Contains("public global::AndroidX.Compose.ComposableNode? Trailing { get; set; }", emitted);
         Assert.Contains("if (Headline is null)", emitted);
-        Assert.Contains("if (__overlineContent is not null) __defaults &= ~(int)global::Microsoft.AndroidX.Compose.ListItemDefault.OverlineContent;", emitted);
+        Assert.Contains("if (__overlineContent is not null) __defaults &= ~(int)global::AndroidX.Compose.ListItemDefault.OverlineContent;", emitted);
 
         var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
         Assert.Empty(errors);
@@ -958,12 +958,12 @@ public class FacadeGeneratorTests
         var code = """
             using global::AndroidX.Compose.Runtime;
             using global::AndroidX.Compose.UI;
-            using Microsoft.AndroidX.Compose;
+            using AndroidX.Compose;
             using Kotlin.Jvm.Functions;
 
             [assembly: ComposeDefaults("BadgedBoxDefault", "!badge", "modifier", "!content")]
 
-            namespace Microsoft.AndroidX.Compose
+            namespace AndroidX.Compose
             {
                 public static partial class ComposeBridges
                 {
@@ -981,9 +981,9 @@ public class FacadeGeneratorTests
         Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
         Assert.NotNull(emitted);
         // Two required Function3 slots → both surface as properties, not RenderChildren.
-        Assert.Contains("public sealed partial class BadgedBox : global::Microsoft.AndroidX.Compose.ComposableNode", emitted);
-        Assert.Contains("public global::Microsoft.AndroidX.Compose.ComposableNode? Badge { get; set; }", emitted);
-        Assert.Contains("public global::Microsoft.AndroidX.Compose.ComposableNode? Content { get; set; }", emitted);
+        Assert.Contains("public sealed partial class BadgedBox : global::AndroidX.Compose.ComposableNode", emitted);
+        Assert.Contains("public global::AndroidX.Compose.ComposableNode? Badge { get; set; }", emitted);
+        Assert.Contains("public global::AndroidX.Compose.ComposableNode? Content { get; set; }", emitted);
         Assert.Contains("if (Badge is null)", emitted);
         Assert.Contains("if (Content is null)", emitted);
 
@@ -1001,12 +1001,12 @@ public class FacadeGeneratorTests
         var code = """
             using global::AndroidX.Compose.Runtime;
             using global::AndroidX.Compose.UI;
-            using Microsoft.AndroidX.Compose;
+            using AndroidX.Compose;
             using Kotlin.Jvm.Functions;
 
             [assembly: ComposeDefaults("DrawerSheetDefault", "!content", "drawerContainerColor")]
 
-            namespace Microsoft.AndroidX.Compose
+            namespace AndroidX.Compose
             {
                 public static partial class ComposeBridges
                 {
@@ -1022,9 +1022,9 @@ public class FacadeGeneratorTests
         var (output, diags, emitted) = Run(code, "ModalDrawerSheet");
         Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
         Assert.NotNull(emitted);
-        Assert.Contains("public global::Microsoft.AndroidX.Compose.Color ContainerColor { get; set; }", emitted);
+        Assert.Contains("public global::AndroidX.Compose.Color ContainerColor { get; set; }", emitted);
         Assert.Contains("long __color = (long)ContainerColor != 0L ? (long)ContainerColor : global::AndroidX.Compose.Material3.MaterialTheme.Instance.GetColorScheme(composer, 0).SecondaryContainer;", emitted);
-        Assert.Contains("global::Microsoft.AndroidX.Compose.ComposeBridges.ModalDrawerSheet(__content, __color, composer);", emitted);
+        Assert.Contains("global::AndroidX.Compose.ComposeBridges.ModalDrawerSheet(__content, __color, composer);", emitted);
 
         var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
         Assert.Empty(errors);
@@ -1036,12 +1036,12 @@ public class FacadeGeneratorTests
         var code = """
             using global::AndroidX.Compose.Runtime;
             using global::AndroidX.Compose.UI;
-            using Microsoft.AndroidX.Compose;
+            using AndroidX.Compose;
             using Kotlin.Jvm.Functions;
 
             [assembly: ComposeDefaults("CardDefault", "modifier", "!content")]
 
-            namespace Microsoft.AndroidX.Compose
+            namespace AndroidX.Compose
             {
                 public static partial class ComposeBridges
                 {
@@ -1070,12 +1070,12 @@ public class FacadeGeneratorTests
             using global::AndroidX.Compose.Runtime;
             using global::AndroidX.Compose.UI;
             using global::AndroidX.Compose.UI.Graphics.Painter;
-            using Microsoft.AndroidX.Compose;
+            using AndroidX.Compose;
             using Kotlin.Jvm.Functions;
 
             [assembly: ComposeDefaults("ImageDefault", "!painter", "contentDescription", "modifier")]
 
-            namespace Microsoft.AndroidX.Compose
+            namespace AndroidX.Compose
             {
                 public static partial class ComposeBridges
                 {
@@ -1113,7 +1113,7 @@ public class FacadeGeneratorTests
         Assert.Contains("global::AndroidX.Compose.UI.Graphics.Painter.Painter __painterPeer;", emitted);
         Assert.Contains("if (_painter is not null)", emitted);
         Assert.Contains("__painterPeer = _painter;", emitted);
-        Assert.Contains("__painterRef = global::Microsoft.AndroidX.Compose.ComposeBridges.PainterResource(_drawableResourceId, composer);", emitted);
+        Assert.Contains("__painterRef = global::AndroidX.Compose.ComposeBridges.PainterResource(_drawableResourceId, composer);", emitted);
         Assert.Contains("__painterPeer = global::Java.Lang.Object.GetObject<global::AndroidX.Compose.UI.Graphics.Painter.Painter>(", emitted);
         Assert.Contains("__painterRef, global::Android.Runtime.JniHandleOwnership.TransferLocalRef)!;", emitted);
 
@@ -1125,7 +1125,7 @@ public class FacadeGeneratorTests
         Assert.DoesNotContain("global::System.GC.KeepAlive(_painter);", emitted);
 
         // Bridge call passes typed __painterPeer for the painter arg.
-        Assert.Contains("global::Microsoft.AndroidX.Compose.ComposeBridges.Image(__painterPeer", emitted);
+        Assert.Contains("global::AndroidX.Compose.ComposeBridges.Image(__painterPeer", emitted);
 
         var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
         Assert.Empty(errors);
@@ -1138,14 +1138,14 @@ public class FacadeGeneratorTests
             using System;
             using global::AndroidX.Compose.Runtime;
             using global::AndroidX.Compose.UI;
-            using Microsoft.AndroidX.Compose;
+            using AndroidX.Compose;
             using Kotlin.Jvm.Functions;
 
             [assembly: ComposeDefaults("NavigationBarItemDefault",
                 "!selected", "!onClick", "!icon", "modifier",
                 "enabled", "label", "alwaysShowLabel", "colors", "interactionSource")]
 
-            namespace Microsoft.AndroidX.Compose
+            namespace AndroidX.Compose
             {
                 public static partial class ComposeBridges
                 {
@@ -1165,11 +1165,11 @@ public class FacadeGeneratorTests
         Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
         Assert.NotNull(emitted);
         // ScopeReceiver is bound to RenderContext.CurrentScope (no ctor slot).
-        Assert.Contains("global::Microsoft.AndroidX.Compose.ComposeBridges.NavigationBarItem(global::Microsoft.AndroidX.Compose.RenderContext.CurrentScope,", emitted);
+        Assert.Contains("global::AndroidX.Compose.ComposeBridges.NavigationBarItem(global::AndroidX.Compose.RenderContext.CurrentScope,", emitted);
         // Required Function2 (icon) becomes a named property (auto multi-slot).
-        Assert.Contains("public global::Microsoft.AndroidX.Compose.ComposableNode? Icon", emitted);
+        Assert.Contains("public global::AndroidX.Compose.ComposableNode? Icon", emitted);
         // Optional Function2 (label) becomes a named property.
-        Assert.Contains("public global::Microsoft.AndroidX.Compose.ComposableNode? Label", emitted);
+        Assert.Contains("public global::AndroidX.Compose.ComposableNode? Label", emitted);
         // Ctor exposes only selected + onClick (rowScope is auto-bound).
         Assert.Contains("public NavigationBarItem(bool selected, global::System.Action onClick)", emitted);
 
@@ -1184,10 +1184,10 @@ public class FacadeGeneratorTests
             using System;
             using global::AndroidX.Compose.Runtime;
             using global::AndroidX.Compose.UI;
-            using Microsoft.AndroidX.Compose;
+            using AndroidX.Compose;
             using Kotlin.Jvm.Functions;
 
-            namespace Microsoft.AndroidX.Compose
+            namespace AndroidX.Compose
             {
                 public static partial class ComposeBridges
                 {
@@ -1210,11 +1210,11 @@ public class FacadeGeneratorTests
             using global::AndroidX.Compose.Runtime;
             using global::AndroidX.Compose.UI;
             using global::AndroidX.Compose.UI.Graphics.Painter;
-            using Microsoft.AndroidX.Compose;
+            using AndroidX.Compose;
 
             [assembly: ComposeDefaults("FooDefault", "!a", "!b")]
 
-            namespace Microsoft.AndroidX.Compose
+            namespace AndroidX.Compose
             {
                 public static partial class ComposeBridges
                 {
@@ -1238,10 +1238,10 @@ public class FacadeGeneratorTests
             using System;
             using global::AndroidX.Compose.Runtime;
             using global::AndroidX.Compose.UI;
-            using Microsoft.AndroidX.Compose;
+            using AndroidX.Compose;
             using Kotlin.Jvm.Functions;
 
-            namespace Microsoft.AndroidX.Compose
+            namespace AndroidX.Compose
             {
                 public static partial class ComposeBridges
                 {
@@ -1267,12 +1267,12 @@ public class FacadeGeneratorTests
         var code = """
             using global::AndroidX.Compose.Runtime;
             using global::AndroidX.Compose.UI;
-            using Microsoft.AndroidX.Compose;
+            using AndroidX.Compose;
             using Kotlin.Jvm.Functions;
 
             [assembly: ComposeDefaults("BoxDefault", "modifier", "contentAlignment", "propagateMinConstraints", "!content")]
 
-            namespace Microsoft.AndroidX.Compose
+            namespace AndroidX.Compose
             {
                 public static partial class ComposeBridges
                 {
@@ -1289,11 +1289,11 @@ public class FacadeGeneratorTests
         var (_, diags, emitted) = Run(code, "Box");
         Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
         Assert.NotNull(emitted);
-        Assert.Contains("public sealed partial class Box : global::Microsoft.AndroidX.Compose.ComposableContainer", emitted);
-        Assert.Contains("global::Microsoft.AndroidX.Compose.ComposeBridges.Box(", emitted);
+        Assert.Contains("public sealed partial class Box : global::AndroidX.Compose.ComposableContainer", emitted);
+        Assert.Contains("global::AndroidX.Compose.ComposeBridges.Box(", emitted);
         // Auto-mask emits because the wrapper takes `int defaults`.
-        Assert.Contains("(int)global::Microsoft.AndroidX.Compose.BoxDefault.All", emitted);
-        Assert.Contains("if (__modifier is not null) __defaults &= ~(int)global::Microsoft.AndroidX.Compose.BoxDefault.Modifier", emitted);
+        Assert.Contains("(int)global::AndroidX.Compose.BoxDefault.All", emitted);
+        Assert.Contains("if (__modifier is not null) __defaults &= ~(int)global::AndroidX.Compose.BoxDefault.Modifier", emitted);
     }
 
     [Fact]
@@ -1305,10 +1305,10 @@ public class FacadeGeneratorTests
         var code = """
             using global::AndroidX.Compose.Runtime;
             using global::AndroidX.Compose.UI;
-            using Microsoft.AndroidX.Compose;
+            using AndroidX.Compose;
             using Kotlin.Jvm.Functions;
 
-            namespace Microsoft.AndroidX.Compose
+            namespace AndroidX.Compose
             {
                 public static partial class ComposeBridges
                 {
@@ -1322,8 +1322,8 @@ public class FacadeGeneratorTests
         var (_, diags, emitted) = Run(code, "Spacer");
         Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
         Assert.NotNull(emitted);
-        Assert.Contains("public sealed partial class Spacer : global::Microsoft.AndroidX.Compose.ComposableNode", emitted);
-        Assert.Contains("global::Microsoft.AndroidX.Compose.ComposeBridges.Spacer(", emitted);
+        Assert.Contains("public sealed partial class Spacer : global::AndroidX.Compose.ComposableNode", emitted);
+        Assert.Contains("global::AndroidX.Compose.ComposeBridges.Spacer(", emitted);
         Assert.DoesNotContain("__defaults", emitted);
     }
 
@@ -1336,14 +1336,14 @@ public class FacadeGeneratorTests
         var code = """
             using global::AndroidX.Compose.Runtime;
             using global::AndroidX.Compose.UI;
-            using Microsoft.AndroidX.Compose;
+            using AndroidX.Compose;
             using Kotlin.Jvm.Functions;
 
             namespace MyApp { public enum MyState { On, Off, Mixed } }
 
             [assembly: ComposeDefaults("TriDefault", "!state", "!onClick", "modifier")]
 
-            namespace Microsoft.AndroidX.Compose
+            namespace AndroidX.Compose
             {
                 public static partial class ComposeBridges
                 {
@@ -1359,7 +1359,7 @@ public class FacadeGeneratorTests
         var (_, diags, emitted) = Run(code, "TriStateCheckbox");
         Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
         Assert.NotNull(emitted);
-        Assert.Contains("public sealed partial class TriStateCheckbox : global::Microsoft.AndroidX.Compose.ComposableNode", emitted);
+        Assert.Contains("public sealed partial class TriStateCheckbox : global::AndroidX.Compose.ComposableNode", emitted);
         // Enum becomes a positional ctor primitive.
         Assert.Contains("readonly global::MyApp.MyState _state", emitted);
         Assert.Contains("global::MyApp.MyState state", emitted);
@@ -1377,7 +1377,7 @@ public class FacadeGeneratorTests
         var code = """
             using global::AndroidX.Compose.Runtime;
             using global::AndroidX.Compose.UI;
-            using Microsoft.AndroidX.Compose;
+            using AndroidX.Compose;
             using Kotlin.Jvm.Functions;
             using System;
 
@@ -1392,7 +1392,7 @@ public class FacadeGeneratorTests
                 }
             }
 
-            namespace Microsoft.AndroidX.Compose
+            namespace AndroidX.Compose
             {
                 public static partial class ComposeBridges
                 {
@@ -1421,7 +1421,7 @@ public class FacadeGeneratorTests
         {
             public interface IDatePickerState { }
         }
-        namespace Microsoft.AndroidX.Compose
+        namespace AndroidX.Compose
         {
             public sealed class DatePickerState
             {
@@ -1439,7 +1439,7 @@ public class FacadeGeneratorTests
         var code = $$"""
             using global::AndroidX.Compose.Runtime;
             using global::AndroidX.Compose.UI;
-            using Microsoft.AndroidX.Compose;
+            using AndroidX.Compose;
             using Kotlin.Jvm.Functions;
             using System;
 
@@ -1448,7 +1448,7 @@ public class FacadeGeneratorTests
 
             {{DatePickerStateStubs}}
 
-            namespace Microsoft.AndroidX.Compose
+            namespace AndroidX.Compose
             {
                 public static partial class ComposeBridges
                 {
@@ -1477,13 +1477,13 @@ public class FacadeGeneratorTests
         // Ctor: state slot LAST, with default = null. The field is
         // emitted writable (no `readonly`) so partials can override
         // it via init-only convenience setters.
-        Assert.Contains("global::Microsoft.AndroidX.Compose.DatePickerState? _state;", emitted);
-        Assert.DoesNotContain("readonly global::Microsoft.AndroidX.Compose.DatePickerState? _state;", emitted);
-        Assert.Contains("public DatePicker(global::Microsoft.AndroidX.Compose.DatePickerState? state = null)", emitted);
+        Assert.Contains("global::AndroidX.Compose.DatePickerState? _state;", emitted);
+        Assert.DoesNotContain("readonly global::AndroidX.Compose.DatePickerState? _state;", emitted);
+        Assert.Contains("public DatePicker(global::AndroidX.Compose.DatePickerState? state = null)", emitted);
 
         // Render: Remember + .Jvm population.
         Assert.Contains(
-            "var __state = global::Microsoft.AndroidX.Compose.ComposeBridges.RememberDatePickerState(composer);",
+            "var __state = global::AndroidX.Compose.ComposeBridges.RememberDatePickerState(composer);",
             emitted);
         Assert.Contains("if (_state is not null && _state.Jvm is null)", emitted);
         Assert.Contains(
@@ -1492,7 +1492,7 @@ public class FacadeGeneratorTests
 
         // Bridge call uses __state in the IntPtr slot.
         Assert.Contains(
-            "global::Microsoft.AndroidX.Compose.ComposeBridges.DatePicker(__state, __modifier, __defaults, composer);",
+            "global::AndroidX.Compose.ComposeBridges.DatePicker(__state, __modifier, __defaults, composer);",
             emitted);
 
         var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
@@ -1505,7 +1505,7 @@ public class FacadeGeneratorTests
         var code = $$"""
             using global::AndroidX.Compose.Runtime;
             using global::AndroidX.Compose.UI;
-            using Microsoft.AndroidX.Compose;
+            using AndroidX.Compose;
             using Kotlin.Jvm.Functions;
 
             [assembly: ComposeDefaults("DatePickerDefault",
@@ -1513,7 +1513,7 @@ public class FacadeGeneratorTests
 
             {{DatePickerStateStubs}}
 
-            namespace Microsoft.AndroidX.Compose
+            namespace AndroidX.Compose
             {
                 public static partial class ComposeBridges
                 {
@@ -1547,7 +1547,7 @@ public class FacadeGeneratorTests
         var code = $$"""
             using global::AndroidX.Compose.Runtime;
             using global::AndroidX.Compose.UI;
-            using Microsoft.AndroidX.Compose;
+            using AndroidX.Compose;
             using Kotlin.Jvm.Functions;
             using System;
 
@@ -1555,9 +1555,9 @@ public class FacadeGeneratorTests
                 "!state", "modifier", "dateFormatter", "colors", "title", "headline", "showModeToggle")]
 
             namespace AndroidX.Compose.Material3 { public interface IDatePickerState { } }
-            namespace Microsoft.AndroidX.Compose { public sealed class BadState { } }
+            namespace AndroidX.Compose { public sealed class BadState { } }
 
-            namespace Microsoft.AndroidX.Compose
+            namespace AndroidX.Compose
             {
                 public static partial class ComposeBridges
                 {
@@ -1593,7 +1593,7 @@ public class FacadeGeneratorTests
         var code = $$"""
             using global::AndroidX.Compose.Runtime;
             using global::AndroidX.Compose.UI;
-            using Microsoft.AndroidX.Compose;
+            using AndroidX.Compose;
             using Kotlin.Jvm.Functions;
             using System;
 
@@ -1602,7 +1602,7 @@ public class FacadeGeneratorTests
 
             {{DatePickerStateStubs}}
 
-            namespace Microsoft.AndroidX.Compose
+            namespace AndroidX.Compose
             {
                 public static partial class ComposeBridges
                 {
@@ -1627,7 +1627,7 @@ public class FacadeGeneratorTests
         Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
         Assert.NotNull(emitted);
         Assert.Contains(
-            "__defaults &= ~(int)global::Microsoft.AndroidX.Compose.DatePickerDefault.State;",
+            "__defaults &= ~(int)global::AndroidX.Compose.DatePickerDefault.State;",
             emitted);
     }
 
@@ -1645,7 +1645,7 @@ public class FacadeGeneratorTests
                 bool Is24hour();
             }
         }
-        namespace Microsoft.AndroidX.Compose
+        namespace AndroidX.Compose
         {
             public sealed class TimePickerState
             {
@@ -1675,7 +1675,7 @@ public class FacadeGeneratorTests
         var code = $$"""
             using global::AndroidX.Compose.Runtime;
             using global::AndroidX.Compose.UI;
-            using Microsoft.AndroidX.Compose;
+            using AndroidX.Compose;
             using Kotlin.Jvm.Functions;
             using System;
 
@@ -1684,7 +1684,7 @@ public class FacadeGeneratorTests
 
             {{TimePickerStateStubs}}
 
-            namespace Microsoft.AndroidX.Compose
+            namespace AndroidX.Compose
             {
                 public static partial class ComposeBridges
                 {
@@ -1716,17 +1716,17 @@ public class FacadeGeneratorTests
         // even though the ctor param keeps its = null default. The
         // field is emitted writable (no `readonly`) so partials can
         // override it via init-only convenience setters.
-        Assert.Contains("global::Microsoft.AndroidX.Compose.TimePickerState? _state;", emitted);
-        Assert.DoesNotContain("readonly global::Microsoft.AndroidX.Compose.TimePickerState? _state;", emitted);
-        Assert.Contains("public TimePicker(global::Microsoft.AndroidX.Compose.TimePickerState? state = null)", emitted);
-        Assert.Contains("_state = state ?? new global::Microsoft.AndroidX.Compose.TimePickerState();", emitted);
+        Assert.Contains("global::AndroidX.Compose.TimePickerState? _state;", emitted);
+        Assert.DoesNotContain("readonly global::AndroidX.Compose.TimePickerState? _state;", emitted);
+        Assert.Contains("public TimePicker(global::AndroidX.Compose.TimePickerState? state = null)", emitted);
+        Assert.Contains("_state = state ?? new global::AndroidX.Compose.TimePickerState();", emitted);
 
         // Render: Remember called with wrapper-sourced init args.
         // InitialHour/InitialMinute resolve via Pascal match;
         // is24Hour falls back to Is24Hour (live getter), which returns
         // InitialIs24Hour while Jvm is still null on first render.
         Assert.Contains(
-            "var __state = global::Microsoft.AndroidX.Compose.ComposeBridges.RememberTimePickerState(_state!.InitialHour, _state!.InitialMinute, _state!.Is24Hour, composer);",
+            "var __state = global::AndroidX.Compose.ComposeBridges.RememberTimePickerState(_state!.InitialHour, _state!.InitialMinute, _state!.Is24Hour, composer);",
             emitted);
         // Unguarded Jvm population — Phase 4b knows _state is non-null.
         Assert.Contains("if (_state.Jvm is null)", emitted);
@@ -1737,7 +1737,7 @@ public class FacadeGeneratorTests
 
         // Bridge call uses __state in the IntPtr slot.
         Assert.Contains(
-            "global::Microsoft.AndroidX.Compose.ComposeBridges.TimePicker(__state, __modifier, __defaults, composer);",
+            "global::AndroidX.Compose.ComposeBridges.TimePicker(__state, __modifier, __defaults, composer);",
             emitted);
 
         var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
@@ -1756,7 +1756,7 @@ public class FacadeGeneratorTests
         var code = $$"""
             using global::AndroidX.Compose.Runtime;
             using global::AndroidX.Compose.UI;
-            using Microsoft.AndroidX.Compose;
+            using AndroidX.Compose;
             using Kotlin.Jvm.Functions;
             using System;
 
@@ -1765,7 +1765,7 @@ public class FacadeGeneratorTests
 
             {{TimePickerStateStubs}}
 
-            namespace Microsoft.AndroidX.Compose
+            namespace AndroidX.Compose
             {
                 public static partial class ComposeBridges
                 {
@@ -1805,7 +1805,7 @@ public class FacadeGeneratorTests
         // Cache-miss branch — call Remember, populate Jvm so the next
         // sibling will hit the cached path.
         Assert.Contains(
-            "__state = global::Microsoft.AndroidX.Compose.ComposeBridges.RememberTimePickerState(_state!.InitialHour, _state!.InitialMinute, _state!.Is24Hour, composer);",
+            "__state = global::AndroidX.Compose.ComposeBridges.RememberTimePickerState(_state!.InitialHour, _state!.InitialMinute, _state!.Is24Hour, composer);",
             emitted);
         // Phase 4b assigns unguarded (ctor auto-create guarantees non-null).
         Assert.Contains(
@@ -1814,12 +1814,12 @@ public class FacadeGeneratorTests
 
         // Must NOT emit the non-shared "always call Remember" preamble.
         Assert.DoesNotContain(
-            "var __state = global::Microsoft.AndroidX.Compose.ComposeBridges.RememberTimePickerState",
+            "var __state = global::AndroidX.Compose.ComposeBridges.RememberTimePickerState",
             emitted);
 
         // Bridge call still uses __state.
         Assert.Contains(
-            "global::Microsoft.AndroidX.Compose.ComposeBridges.TimePicker(__state, __modifier, __defaults, composer);",
+            "global::AndroidX.Compose.ComposeBridges.TimePicker(__state, __modifier, __defaults, composer);",
             emitted);
 
         var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
@@ -1836,7 +1836,7 @@ public class FacadeGeneratorTests
         var code = $$"""
             using global::AndroidX.Compose.Runtime;
             using global::AndroidX.Compose.UI;
-            using Microsoft.AndroidX.Compose;
+            using AndroidX.Compose;
             using Kotlin.Jvm.Functions;
             using System;
 
@@ -1845,7 +1845,7 @@ public class FacadeGeneratorTests
 
             {{DatePickerStateStubs}}
 
-            namespace Microsoft.AndroidX.Compose
+            namespace AndroidX.Compose
             {
                 public static partial class ComposeBridges
                 {
@@ -1875,9 +1875,9 @@ public class FacadeGeneratorTests
         // Phase 4 field stays nullable (no auto-create in ctor). The
         // field is emitted writable (no `readonly`) so partials can
         // override it via init-only convenience setters.
-        Assert.Contains("global::Microsoft.AndroidX.Compose.DatePickerState? _state;", emitted);
-        Assert.DoesNotContain("readonly global::Microsoft.AndroidX.Compose.DatePickerState? _state;", emitted);
-        Assert.DoesNotContain("_state = state ?? new global::Microsoft.AndroidX.Compose.DatePickerState();", emitted);
+        Assert.Contains("global::AndroidX.Compose.DatePickerState? _state;", emitted);
+        Assert.DoesNotContain("readonly global::AndroidX.Compose.DatePickerState? _state;", emitted);
+        Assert.DoesNotContain("_state = state ?? new global::AndroidX.Compose.DatePickerState();", emitted);
 
         // Cache-hit branch — guarded with explicit null check on _state.
         Assert.Contains("if (_state is not null && _state.Jvm is not null)", emitted);
@@ -1887,7 +1887,7 @@ public class FacadeGeneratorTests
 
         // Cache-miss branch — Remember + null-guarded Jvm assignment.
         Assert.Contains(
-            "__state = global::Microsoft.AndroidX.Compose.ComposeBridges.RememberDatePickerState(composer);",
+            "__state = global::AndroidX.Compose.ComposeBridges.RememberDatePickerState(composer);",
             emitted);
         Assert.Contains("if (_state is not null)", emitted);
         Assert.Contains(
@@ -1896,7 +1896,7 @@ public class FacadeGeneratorTests
 
         // Must NOT emit the non-shared "always call Remember" preamble.
         Assert.DoesNotContain(
-            "var __state = global::Microsoft.AndroidX.Compose.ComposeBridges.RememberDatePickerState",
+            "var __state = global::AndroidX.Compose.ComposeBridges.RememberDatePickerState",
             emitted);
 
         var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
@@ -1913,7 +1913,7 @@ public class FacadeGeneratorTests
         var code = $$"""
             using global::AndroidX.Compose.Runtime;
             using global::AndroidX.Compose.UI;
-            using Microsoft.AndroidX.Compose;
+            using AndroidX.Compose;
             using Kotlin.Jvm.Functions;
             using System;
 
@@ -1922,7 +1922,7 @@ public class FacadeGeneratorTests
 
             {{TimePickerStateStubs}}
 
-            namespace Microsoft.AndroidX.Compose
+            namespace AndroidX.Compose
             {
                 public static partial class ComposeBridges
                 {
@@ -1951,7 +1951,7 @@ public class FacadeGeneratorTests
 
         // Non-shared shape: unconditional Remember call, no cache check.
         Assert.Contains(
-            "var __state = global::Microsoft.AndroidX.Compose.ComposeBridges.RememberTimePickerState(_state!.InitialHour, _state!.InitialMinute, _state!.Is24Hour, composer);",
+            "var __state = global::AndroidX.Compose.ComposeBridges.RememberTimePickerState(_state!.InitialHour, _state!.InitialMinute, _state!.Is24Hour, composer);",
             emitted);
         Assert.DoesNotContain("global::System.IntPtr __state;", emitted);
         Assert.DoesNotContain("if (_state!.Jvm is not null)", emitted);
@@ -1967,7 +1967,7 @@ public class FacadeGeneratorTests
         var code = $$"""
             using global::AndroidX.Compose.Runtime;
             using global::AndroidX.Compose.UI;
-            using Microsoft.AndroidX.Compose;
+            using AndroidX.Compose;
             using Kotlin.Jvm.Functions;
             using System;
 
@@ -1976,7 +1976,7 @@ public class FacadeGeneratorTests
 
             {{TimePickerStateStubs}}
 
-            namespace Microsoft.AndroidX.Compose
+            namespace AndroidX.Compose
             {
                 public static partial class ComposeBridges
                 {
@@ -2012,14 +2012,14 @@ public class FacadeGeneratorTests
         var code = $$"""
             using global::AndroidX.Compose.Runtime;
             using global::AndroidX.Compose.UI;
-            using Microsoft.AndroidX.Compose;
+            using AndroidX.Compose;
             using Kotlin.Jvm.Functions;
             using System;
 
             [assembly: ComposeDefaults("TimePickerDefault",
                 "!state", "modifier", "colors", "layoutType")]
             namespace AndroidX.Compose.Material3 { public interface ITimePickerState { } }
-            namespace Microsoft.AndroidX.Compose
+            namespace AndroidX.Compose
             {
                 public sealed class TimePickerState
                 {
@@ -2031,7 +2031,7 @@ public class FacadeGeneratorTests
                 }
             }
 
-            namespace Microsoft.AndroidX.Compose
+            namespace AndroidX.Compose
             {
                 public static partial class ComposeBridges
                 {
@@ -2070,7 +2070,7 @@ public class FacadeGeneratorTests
         var code = $$"""
             using global::AndroidX.Compose.Runtime;
             using global::AndroidX.Compose.UI;
-            using Microsoft.AndroidX.Compose;
+            using AndroidX.Compose;
             using Kotlin.Jvm.Functions;
             using System;
 
@@ -2079,7 +2079,7 @@ public class FacadeGeneratorTests
 
             {{DatePickerStateStubs}}
 
-            namespace Microsoft.AndroidX.Compose
+            namespace AndroidX.Compose
             {
                 public static partial class ComposeBridges
                 {
@@ -2119,13 +2119,13 @@ public class FacadeGeneratorTests
         var code = """
             using global::AndroidX.Compose.Runtime;
             using global::AndroidX.Compose.UI;
-            using Microsoft.AndroidX.Compose;
+            using AndroidX.Compose;
             using Kotlin.Jvm.Functions;
 
             [assembly: ComposeDefaults("TextDefault",
                 "!text", "modifier", "fontSize")]
 
-            namespace Microsoft.AndroidX.Compose
+            namespace AndroidX.Compose
             {
                 public static partial class ComposeBridges
                 {
@@ -2142,9 +2142,9 @@ public class FacadeGeneratorTests
         Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
         Assert.NotNull(emitted);
         // Property emitted as nullable Sp.
-        Assert.Contains("public global::Microsoft.AndroidX.Compose.Sp? FontSize { get; set; }", emitted);
+        Assert.Contains("public global::AndroidX.Compose.Sp? FontSize { get; set; }", emitted);
         // Bridge call passes property through (no ctor slot, no field).
-        Assert.Contains("global::Microsoft.AndroidX.Compose.ComposeBridges.Text(_text, BuildModifier(), FontSize, composer);", emitted);
+        Assert.Contains("global::AndroidX.Compose.ComposeBridges.Text(_text, BuildModifier(), FontSize, composer);", emitted);
         // Not a ctor parameter.
         Assert.DoesNotContain("Sp? fontSize", emitted);
 
@@ -2158,13 +2158,13 @@ public class FacadeGeneratorTests
         var code = """
             using global::AndroidX.Compose.Runtime;
             using global::AndroidX.Compose.UI;
-            using Microsoft.AndroidX.Compose;
+            using AndroidX.Compose;
             using Kotlin.Jvm.Functions;
 
             [assembly: ComposeDefaults("TextDefault",
                 "!text", "modifier", "fontWeight")]
 
-            namespace Microsoft.AndroidX.Compose
+            namespace AndroidX.Compose
             {
                 public static partial class ComposeBridges
                 {
@@ -2181,8 +2181,8 @@ public class FacadeGeneratorTests
         Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
         Assert.NotNull(emitted);
         // Reference-typed wrapper surfaces as a nullable property.
-        Assert.Contains("public global::Microsoft.AndroidX.Compose.FontWeight? FontWeight { get; set; }", emitted);
-        Assert.Contains("global::Microsoft.AndroidX.Compose.ComposeBridges.Text(_text, BuildModifier(), FontWeight, composer);", emitted);
+        Assert.Contains("public global::AndroidX.Compose.FontWeight? FontWeight { get; set; }", emitted);
+        Assert.Contains("global::AndroidX.Compose.ComposeBridges.Text(_text, BuildModifier(), FontWeight, composer);", emitted);
 
         var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
         Assert.Empty(errors);
@@ -2198,12 +2198,12 @@ public class FacadeGeneratorTests
         var code = """
             using global::AndroidX.Compose.Runtime;
             using global::AndroidX.Compose.UI;
-            using Microsoft.AndroidX.Compose;
+            using AndroidX.Compose;
             using Kotlin.Jvm.Functions;
 
             [assembly: ComposeDefaults("TextDefault", "!text", "modifier", "fontWeight")]
 
-            namespace Microsoft.AndroidX.Compose
+            namespace AndroidX.Compose
             {
                 public static partial class ComposeBridges
                 {
@@ -2226,13 +2226,13 @@ public class FacadeGeneratorTests
         var code = """
             using global::AndroidX.Compose.Runtime;
             using global::AndroidX.Compose.UI;
-            using Microsoft.AndroidX.Compose;
+            using AndroidX.Compose;
             using Kotlin.Jvm.Functions;
 
             [assembly: ComposeDefaults("TextDefault",
                 "!text", "modifier", "fontSize", "fontWeight", "letterSpacing", "decoration", "lineHeight")]
 
-            namespace Microsoft.AndroidX.Compose
+            namespace AndroidX.Compose
             {
                 public static partial class ComposeBridges
                 {
@@ -2253,14 +2253,14 @@ public class FacadeGeneratorTests
         var (output, diags, emitted) = Run(code, "Text");
         Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
         Assert.NotNull(emitted);
-        Assert.Contains("public global::Microsoft.AndroidX.Compose.Sp? FontSize { get; set; }", emitted);
-        Assert.Contains("public global::Microsoft.AndroidX.Compose.FontWeight? FontWeight { get; set; }", emitted);
-        Assert.Contains("public global::Microsoft.AndroidX.Compose.Sp? LetterSpacing { get; set; }", emitted);
-        Assert.Contains("public global::Microsoft.AndroidX.Compose.TextDecoration? Decoration { get; set; }", emitted);
-        Assert.Contains("public global::Microsoft.AndroidX.Compose.Sp? LineHeight { get; set; }", emitted);
+        Assert.Contains("public global::AndroidX.Compose.Sp? FontSize { get; set; }", emitted);
+        Assert.Contains("public global::AndroidX.Compose.FontWeight? FontWeight { get; set; }", emitted);
+        Assert.Contains("public global::AndroidX.Compose.Sp? LetterSpacing { get; set; }", emitted);
+        Assert.Contains("public global::AndroidX.Compose.TextDecoration? Decoration { get; set; }", emitted);
+        Assert.Contains("public global::AndroidX.Compose.Sp? LineHeight { get; set; }", emitted);
         // PascalCased property names flow through the bridge call.
         Assert.Contains(
-            "global::Microsoft.AndroidX.Compose.ComposeBridges.Text(_text, BuildModifier(), FontSize, FontWeight, LetterSpacing, Decoration, LineHeight, composer);",
+            "global::AndroidX.Compose.ComposeBridges.Text(_text, BuildModifier(), FontSize, FontWeight, LetterSpacing, Decoration, LineHeight, composer);",
             emitted);
 
         var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
@@ -2276,13 +2276,13 @@ public class FacadeGeneratorTests
         var code = """
             using global::AndroidX.Compose.Runtime;
             using global::AndroidX.Compose.UI;
-            using Microsoft.AndroidX.Compose;
+            using AndroidX.Compose;
             using Kotlin.Jvm.Functions;
 
             [assembly: ComposeDefaults("FooDefault",
                 "!a", "overflow", "size")]
 
-            namespace Microsoft.AndroidX.Compose
+            namespace AndroidX.Compose
             {
                 public static partial class ComposeBridges
                 {
@@ -2298,8 +2298,8 @@ public class FacadeGeneratorTests
         var (output, diags, emitted) = Run(code, "Foo");
         Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
         Assert.NotNull(emitted);
-        Assert.Contains("public global::Microsoft.AndroidX.Compose.TextOverflow? Overflow { get; set; }", emitted);
-        Assert.Contains("public global::Microsoft.AndroidX.Compose.Dp? Size { get; set; }", emitted);
+        Assert.Contains("public global::AndroidX.Compose.TextOverflow? Overflow { get; set; }", emitted);
+        Assert.Contains("public global::AndroidX.Compose.Dp? Size { get; set; }", emitted);
 
         var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
         Assert.Empty(errors);
@@ -2314,13 +2314,13 @@ public class FacadeGeneratorTests
         var code = """
             using global::AndroidX.Compose.Runtime;
             using global::AndroidX.Compose.UI;
-            using Microsoft.AndroidX.Compose;
+            using AndroidX.Compose;
             using Kotlin.Jvm.Functions;
 
             [assembly: ComposeDefaults("BarDefault",
                 "!a", "modifier", "fontSize", "fontWeight")]
 
-            namespace Microsoft.AndroidX.Compose
+            namespace AndroidX.Compose
             {
                 public static partial class ComposeBridges
                 {
@@ -2340,10 +2340,10 @@ public class FacadeGeneratorTests
         Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
         Assert.NotNull(emitted);
         Assert.Contains(
-            "if (FontSize is not null) __defaults &= ~(int)global::Microsoft.AndroidX.Compose.BarDefault.FontSize;",
+            "if (FontSize is not null) __defaults &= ~(int)global::AndroidX.Compose.BarDefault.FontSize;",
             emitted);
         Assert.Contains(
-            "if (FontWeight is not null) __defaults &= ~(int)global::Microsoft.AndroidX.Compose.BarDefault.FontWeight;",
+            "if (FontWeight is not null) __defaults &= ~(int)global::AndroidX.Compose.BarDefault.FontWeight;",
             emitted);
         var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
         Assert.Empty(errors);
@@ -2359,13 +2359,13 @@ public class FacadeGeneratorTests
         var code = """
             using global::AndroidX.Compose.Runtime;
             using global::AndroidX.Compose.UI;
-            using Microsoft.AndroidX.Compose;
+            using AndroidX.Compose;
             using Kotlin.Jvm.Functions;
 
             [assembly: ComposeDefaults("PrimDefault",
                 "!text", "modifier", "softWrap", "maxLines", "color")]
 
-            namespace Microsoft.AndroidX.Compose
+            namespace AndroidX.Compose
             {
                 public static partial class ComposeBridges
                 {
@@ -2389,7 +2389,7 @@ public class FacadeGeneratorTests
         Assert.Contains("public int? MaxLines { get; set; }", emitted);
         Assert.Contains("public long? Color { get; set; }", emitted);
         // The bridge call passes the property names through.
-        Assert.Contains("global::Microsoft.AndroidX.Compose.ComposeBridges.F(_text, BuildModifier(), SoftWrap, MaxLines, Color, composer);", emitted);
+        Assert.Contains("global::AndroidX.Compose.ComposeBridges.F(_text, BuildModifier(), SoftWrap, MaxLines, Color, composer);", emitted);
         // Not surfaced as ctor parameters.
         Assert.DoesNotContain("bool? softWrap", emitted);
         Assert.DoesNotContain("int? maxLines", emitted);
@@ -2411,7 +2411,7 @@ public class FacadeGeneratorTests
             public enum DrawerValue { Closed, Open }
             public interface IDrawerState { }
         }
-        namespace Microsoft.AndroidX.Compose
+        namespace AndroidX.Compose
         {
             public sealed class DrawerStateHolder
             {
@@ -2444,7 +2444,7 @@ public class FacadeGeneratorTests
         var code = $$"""
             using global::AndroidX.Compose.Runtime;
             using global::AndroidX.Compose.UI;
-            using Microsoft.AndroidX.Compose;
+            using AndroidX.Compose;
             using Kotlin.Jvm.Functions;
             using System;
 
@@ -2453,7 +2453,7 @@ public class FacadeGeneratorTests
 
             {{DrawerStateStubs}}
 
-            namespace Microsoft.AndroidX.Compose
+            namespace AndroidX.Compose
             {
                 public static partial class ComposeBridges
                 {
@@ -2487,7 +2487,7 @@ public class FacadeGeneratorTests
 
         // (a) adapter field allocated once.
         Assert.Contains(
-            "readonly global::Microsoft.AndroidX.Compose.DrawerValueConfirmStateChange _confirmStateChangeAdapter = new global::Microsoft.AndroidX.Compose.DrawerValueConfirmStateChange();",
+            "readonly global::AndroidX.Compose.DrawerValueConfirmStateChange _confirmStateChangeAdapter = new global::AndroidX.Compose.DrawerValueConfirmStateChange();",
             emitted);
         // (b) ConfirmStateChange property surfaces with the right type.
         Assert.Contains(
@@ -2499,7 +2499,7 @@ public class FacadeGeneratorTests
             emitted);
         // (d) Remember call forwards the adapter into the IFunction1? slot.
         Assert.Contains(
-            "global::Microsoft.AndroidX.Compose.ComposeBridges.RememberDrawerState(_drawerState!.InitialValue, _confirmStateChangeAdapter, composer)",
+            "global::AndroidX.Compose.ComposeBridges.RememberDrawerState(_drawerState!.InitialValue, _confirmStateChangeAdapter, composer)",
             emitted);
 
         var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
@@ -2515,7 +2515,7 @@ public class FacadeGeneratorTests
         var code = $$"""
             using global::AndroidX.Compose.Runtime;
             using global::AndroidX.Compose.UI;
-            using Microsoft.AndroidX.Compose;
+            using AndroidX.Compose;
             using Kotlin.Jvm.Functions;
             using System;
 
@@ -2524,7 +2524,7 @@ public class FacadeGeneratorTests
 
             {{DrawerStateStubs}}
 
-            namespace Microsoft.AndroidX.Compose
+            namespace AndroidX.Compose
             {
                 public static partial class ComposeBridges
                 {
@@ -2561,13 +2561,13 @@ public class FacadeGeneratorTests
     [Fact]
     public void ConfirmStateChange_MissingConventionAdapter_FailsCN3011()
     {
-        // No `Microsoft.AndroidX.Compose.<TName>ConfirmStateChange` class in scope and
+        // No `AndroidX.Compose.<TName>ConfirmStateChange` class in scope and
         // no explicit AdapterType — generator must report CN3011 with
         // a message naming the missing convention class.
         var code = $$"""
             using global::AndroidX.Compose.Runtime;
             using global::AndroidX.Compose.UI;
-            using Microsoft.AndroidX.Compose;
+            using AndroidX.Compose;
             using Kotlin.Jvm.Functions;
             using System;
 
@@ -2579,7 +2579,7 @@ public class FacadeGeneratorTests
                 public enum DrawerValue { Closed, Open }
                 public interface IDrawerState { }
             }
-            namespace Microsoft.AndroidX.Compose
+            namespace AndroidX.Compose
             {
                 public sealed class DrawerStateHolder
                 {
@@ -2590,7 +2590,7 @@ public class FacadeGeneratorTests
                 // NOTE: no `DrawerValueConfirmStateChange` class declared.
             }
 
-            namespace Microsoft.AndroidX.Compose
+            namespace AndroidX.Compose
             {
                 public static partial class ComposeBridges
                 {
@@ -2621,7 +2621,7 @@ public class FacadeGeneratorTests
         var (_, diags, emitted) = Run(code, "Drawer");
         Assert.Null(emitted);
         Assert.Contains(diags, d => d.Id == "CN3011"
-            && d.GetMessage().Contains("Microsoft.AndroidX.Compose.DrawerValueConfirmStateChange"));
+            && d.GetMessage().Contains("AndroidX.Compose.DrawerValueConfirmStateChange"));
     }
 
     // ---------------------------------------------------------------
@@ -2640,7 +2640,7 @@ public class FacadeGeneratorTests
         """;
 
     const string BranchBridges = """
-        namespace Microsoft.AndroidX.Compose
+        namespace AndroidX.Compose
         {
             public static partial class ComposeBridges
             {
@@ -2677,7 +2677,7 @@ public class FacadeGeneratorTests
         var code = $$"""
             using global::AndroidX.Compose.Runtime;
             using global::AndroidX.Compose.UI;
-            using Microsoft.AndroidX.Compose;
+            using AndroidX.Compose;
             using Kotlin.Jvm.Functions;
 
             {{BranchPrimaryAttrs}}
@@ -2692,10 +2692,10 @@ public class FacadeGeneratorTests
         // The facade exposes Subtitle (PascalCased BranchOn) plus the
         // three shared optional slots as nullable ComposableNode?
         // properties — and Title is required.
-        Assert.Contains("public global::Microsoft.AndroidX.Compose.ComposableNode? Title { get; set; }", emitted);
-        Assert.Contains("public global::Microsoft.AndroidX.Compose.ComposableNode? Subtitle { get; set; }", emitted);
-        Assert.Contains("public global::Microsoft.AndroidX.Compose.ComposableNode? NavigationIcon { get; set; }", emitted);
-        Assert.Contains("public global::Microsoft.AndroidX.Compose.ComposableNode? Actions { get; set; }", emitted);
+        Assert.Contains("public global::AndroidX.Compose.ComposableNode? Title { get; set; }", emitted);
+        Assert.Contains("public global::AndroidX.Compose.ComposableNode? Subtitle { get; set; }", emitted);
+        Assert.Contains("public global::AndroidX.Compose.ComposableNode? NavigationIcon { get; set; }", emitted);
+        Assert.Contains("public global::AndroidX.Compose.ComposableNode? Actions { get; set; }", emitted);
 
         // Modifier is hoisted (both branches need it for the mask).
         Assert.Contains("var __modifier = BuildModifier();", emitted);
@@ -2709,15 +2709,15 @@ public class FacadeGeneratorTests
 
         // Per-branch mask + call: alternate uses BarSubtitleDefault,
         // primary uses BarDefault.
-        Assert.Contains("(int)global::Microsoft.AndroidX.Compose.BarSubtitleDefault.All;", emitted);
-        Assert.Contains("(int)global::Microsoft.AndroidX.Compose.BarDefault.All;", emitted);
+        Assert.Contains("(int)global::AndroidX.Compose.BarSubtitleDefault.All;", emitted);
+        Assert.Contains("(int)global::AndroidX.Compose.BarDefault.All;", emitted);
 
         // Alt branch calls the alternate bridge with the alt's actual
         // parameter order (title, subtitle, modifier, nav, actions).
-        Assert.Contains("global::Microsoft.AndroidX.Compose.ComposeBridges.BarWithSubtitle(__title, __subtitle, __modifier, __navigationIcon, __actions, __defaults, composer);", emitted);
+        Assert.Contains("global::AndroidX.Compose.ComposeBridges.BarWithSubtitle(__title, __subtitle, __modifier, __navigationIcon, __actions, __defaults, composer);", emitted);
 
         // Primary branch calls the primary bridge (no subtitle).
-        Assert.Contains("global::Microsoft.AndroidX.Compose.ComposeBridges.Bar(__title, __modifier, __navigationIcon, __actions, __defaults, composer);", emitted);
+        Assert.Contains("global::AndroidX.Compose.ComposeBridges.Bar(__title, __modifier, __navigationIcon, __actions, __defaults, composer);", emitted);
 
         var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
         Assert.Empty(errors);
@@ -2740,12 +2740,12 @@ public class FacadeGeneratorTests
         var code = $$"""
             using global::AndroidX.Compose.Runtime;
             using global::AndroidX.Compose.UI;
-            using Microsoft.AndroidX.Compose;
+            using AndroidX.Compose;
             using Kotlin.Jvm.Functions;
 
             {{AltAttrs}}
 
-            namespace Microsoft.AndroidX.Compose
+            namespace AndroidX.Compose
             {
                 public static partial class ComposeBridges
                 {
@@ -2782,10 +2782,10 @@ public class FacadeGeneratorTests
 
         // Alt branch walks BarFlex's order: title, modifier, subtitle,
         // navigationIcon, actions — NOT the slots-list order.
-        Assert.Contains("global::Microsoft.AndroidX.Compose.ComposeBridges.BarFlex(__title, __modifier, __subtitle, __navigationIcon, __actions, __defaults, composer);", emitted);
+        Assert.Contains("global::AndroidX.Compose.ComposeBridges.BarFlex(__title, __modifier, __subtitle, __navigationIcon, __actions, __defaults, composer);", emitted);
         // The Subtitle bit IS in BarFlexDefault (not `!`-suppressed),
         // so the alt-branch mask clears it for the supplied slot.
-        Assert.Contains("__defaults &= ~(int)global::Microsoft.AndroidX.Compose.BarFlexDefault.Subtitle;", emitted);
+        Assert.Contains("__defaults &= ~(int)global::AndroidX.Compose.BarFlexDefault.Subtitle;", emitted);
 
         var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
         Assert.Empty(errors);
@@ -2797,13 +2797,13 @@ public class FacadeGeneratorTests
         var code = """
             using global::AndroidX.Compose.Runtime;
             using global::AndroidX.Compose.UI;
-            using Microsoft.AndroidX.Compose;
+            using AndroidX.Compose;
             using Kotlin.Jvm.Functions;
 
             [assembly: ComposeDefaults("BarDefault",
                 "!title", "modifier", "navigationIcon", "actions")]
 
-            namespace Microsoft.AndroidX.Compose
+            namespace AndroidX.Compose
             {
                 public static partial class ComposeBridges
                 {
@@ -2833,13 +2833,13 @@ public class FacadeGeneratorTests
         var code = """
             using global::AndroidX.Compose.Runtime;
             using global::AndroidX.Compose.UI;
-            using Microsoft.AndroidX.Compose;
+            using AndroidX.Compose;
             using Kotlin.Jvm.Functions;
 
             [assembly: ComposeDefaults("BarDefault",
                 "!title", "modifier", "navigationIcon", "actions")]
 
-            namespace Microsoft.AndroidX.Compose
+            namespace AndroidX.Compose
             {
                 public static partial class ComposeBridges
                 {
@@ -2870,7 +2870,7 @@ public class FacadeGeneratorTests
         var code = """
             using global::AndroidX.Compose.Runtime;
             using global::AndroidX.Compose.UI;
-            using Microsoft.AndroidX.Compose;
+            using AndroidX.Compose;
             using Kotlin.Jvm.Functions;
 
             [assembly: ComposeDefaults("BarDefault",
@@ -2878,7 +2878,7 @@ public class FacadeGeneratorTests
             [assembly: ComposeDefaults("BarSubtitleDefault",
                 "!title", "!subtitle", "modifier", "navigationIcon", "actions")]
 
-            namespace Microsoft.AndroidX.Compose
+            namespace AndroidX.Compose
             {
                 public static partial class ComposeBridges
                 {
@@ -2921,7 +2921,7 @@ public class FacadeGeneratorTests
         var code = """
             using global::AndroidX.Compose.Runtime;
             using global::AndroidX.Compose.UI;
-            using Microsoft.AndroidX.Compose;
+            using AndroidX.Compose;
             using Kotlin.Jvm.Functions;
 
             [assembly: ComposeDefaults("BarDefault",
@@ -2929,7 +2929,7 @@ public class FacadeGeneratorTests
             [assembly: ComposeDefaults("BarBadDefault",
                 "!title", "!subtitle", "modifier", "navigationIcon")]
 
-            namespace Microsoft.AndroidX.Compose
+            namespace AndroidX.Compose
             {
                 public static partial class ComposeBridges
                 {
@@ -2969,13 +2969,13 @@ public class FacadeGeneratorTests
         var code = """
             using global::AndroidX.Compose.Runtime;
             using global::AndroidX.Compose.UI;
-            using Microsoft.AndroidX.Compose;
+            using AndroidX.Compose;
             using Kotlin.Jvm.Functions;
 
             [assembly: ComposeDefaults("BarSubtitleDefault",
                 "!title", "!subtitle", "modifier", "navigationIcon", "actions")]
 
-            namespace Microsoft.AndroidX.Compose
+            namespace AndroidX.Compose
             {
                 public static partial class ComposeBridges
                 {
@@ -3018,14 +3018,14 @@ public class FacadeGeneratorTests
         var code = """
             using global::AndroidX.Compose.Runtime;
             using global::AndroidX.Compose.UI;
-            using Microsoft.AndroidX.Compose;
+            using AndroidX.Compose;
             using Kotlin.Jvm.Functions;
 
             [assembly: ComposeDefaults("ImageDefault",
                 "!painter", "contentDescription", "modifier",
                 "alignment", "contentScale", "alpha", "colorFilter")]
 
-            namespace Microsoft.AndroidX.Compose
+            namespace AndroidX.Compose
             {
                 public static partial class ComposeBridges
                 {
@@ -3053,17 +3053,17 @@ public class FacadeGeneratorTests
         Assert.NotNull(emitted);
 
         // The three new slots surface as nullable auto-properties, not ctor params.
-        Assert.Contains("public global::Microsoft.AndroidX.Compose.Alignment? Alignment { get; set; }", emitted);
-        Assert.Contains("public global::Microsoft.AndroidX.Compose.ContentScale? ContentScale { get; set; }", emitted);
+        Assert.Contains("public global::AndroidX.Compose.Alignment? Alignment { get; set; }", emitted);
+        Assert.Contains("public global::AndroidX.Compose.ContentScale? ContentScale { get; set; }", emitted);
         Assert.Contains("public float? Alpha { get; set; }", emitted);
 
         // Auto-mask clears each bit only when the property is non-null.
-        Assert.Contains("if (Alignment is not null) __defaults &= ~(int)global::Microsoft.AndroidX.Compose.ImageDefault.Alignment;", emitted);
-        Assert.Contains("if (ContentScale is not null) __defaults &= ~(int)global::Microsoft.AndroidX.Compose.ImageDefault.ContentScale;", emitted);
-        Assert.Contains("if (Alpha is not null) __defaults &= ~(int)global::Microsoft.AndroidX.Compose.ImageDefault.Alpha;", emitted);
+        Assert.Contains("if (Alignment is not null) __defaults &= ~(int)global::AndroidX.Compose.ImageDefault.Alignment;", emitted);
+        Assert.Contains("if (ContentScale is not null) __defaults &= ~(int)global::AndroidX.Compose.ImageDefault.ContentScale;", emitted);
+        Assert.Contains("if (Alpha is not null) __defaults &= ~(int)global::AndroidX.Compose.ImageDefault.Alpha;", emitted);
 
         // Bridge call forwards each property directly.
-        Assert.Contains("global::Microsoft.AndroidX.Compose.ComposeBridges.Image(", emitted);
+        Assert.Contains("global::AndroidX.Compose.ComposeBridges.Image(", emitted);
         Assert.Contains(", Alignment, ContentScale, Alpha, __defaults, composer);", emitted);
 
         var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();

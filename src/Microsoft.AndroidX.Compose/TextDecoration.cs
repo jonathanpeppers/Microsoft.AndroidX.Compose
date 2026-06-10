@@ -1,6 +1,6 @@
-using global::Android.Runtime;
+using Android.Runtime;
 
-namespace Microsoft.AndroidX.Compose;
+namespace AndroidX.Compose;
 
 /// <summary>
 /// C# wrapper around <c>androidx.compose.ui.text.style.TextDecoration</c>.
@@ -10,7 +10,7 @@ namespace Microsoft.AndroidX.Compose;
 /// — <c>ui-text-android</c> ships as a Java-library-only stub today, so
 /// we resolve via JNI (boilerplate emitted by
 /// <c>ComposeCompanionGenerator</c>). Will swap to bound
-/// <c>global::AndroidX.Compose.UI.Text.Style.TextDecoration</c> once
+/// <c>AndroidX.Compose.UI.Text.Style.TextDecoration</c> once
 /// <see href="https://github.com/dotnet/android-libraries/issues/1439"/>
 /// ships.
 /// </summary>

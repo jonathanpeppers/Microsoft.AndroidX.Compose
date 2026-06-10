@@ -1,4 +1,4 @@
-namespace Microsoft.AndroidX.Compose.Gallery.Registry;
+namespace AndroidX.Compose.Gallery.Registry;
 
 /// <summary>
 /// One row on the gallery's home screen and one filter bucket in

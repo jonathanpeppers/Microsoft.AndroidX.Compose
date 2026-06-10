@@ -1,6 +1,6 @@
-using Microsoft.AndroidX.Compose.Gallery.Registry;
+using AndroidX.Compose.Gallery.Registry;
 
-namespace Microsoft.AndroidX.Compose.Gallery.Demos.StateEffectsAnimation;
+namespace AndroidX.Compose.Gallery.Demos.StateEffectsAnimation;
 
 /// <summary>State factory ctors mirroring Kotlin's <c>mutableStateOf</c> family.</summary>
 public static class StateFactoriesDemo

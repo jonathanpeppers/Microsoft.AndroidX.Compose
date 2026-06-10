@@ -1,6 +1,6 @@
-using global::AndroidX.Compose.Runtime;
+using AndroidX.Compose.Runtime;
 
-namespace Microsoft.AndroidX.Compose;
+namespace AndroidX.Compose;
 
 /// <summary>
 /// Material 3 <see cref="Text"/> rendering an <see cref="AnnotatedString"/> —

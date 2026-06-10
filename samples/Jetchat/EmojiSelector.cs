@@ -1,8 +1,8 @@
-using global::AndroidX.Compose.Material3;
-using global::AndroidX.Compose.UI.Text;
-using global::AndroidX.Compose.UI.Text.Input;
+using AndroidX.Compose.Material3;
+using AndroidX.Compose.UI.Text;
+using AndroidX.Compose.UI.Text.Input;
 
-namespace Microsoft.AndroidX.Compose.Samples.Jetchat;
+namespace AndroidX.Compose.Samples.Jetchat;
 
 /// <summary>
 /// Two-tab emoji / sticker panel that opens below the input row when

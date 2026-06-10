@@ -1,6 +1,6 @@
-using Microsoft.AndroidX.Compose.Gallery.Registry;
+using AndroidX.Compose.Gallery.Registry;
 
-namespace Microsoft.AndroidX.Compose.Gallery.Demos.Modifiers;
+namespace AndroidX.Compose.Gallery.Demos.Modifiers;
 
 /// <summary>GraphicsLayer — rotationZ, scale, alpha, plus a non-default TransformOrigin.</summary>
 public static class GraphicsLayerDemo
@@ -13,7 +13,7 @@ public static class GraphicsLayerDemo
         Description: "Drag-driven rotation + alpha + asymmetric scale, with one tile pivoting at the top-left corner and the other at its center.",
         Build:       c =>
         {
-            var density = global::Android.Content.Res.Resources.System!.DisplayMetrics!.Density;
+            var density = Android.Content.Res.Resources.System!.DisplayMetrics!.Density;
             var dragX   = c.Remember(() => new MutableState<float>(0f));
             var state   = c.RememberDraggableState(delta => dragX.Value += delta / density);
 

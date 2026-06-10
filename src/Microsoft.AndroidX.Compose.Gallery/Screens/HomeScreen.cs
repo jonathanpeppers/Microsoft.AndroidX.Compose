@@ -1,6 +1,6 @@
-using Microsoft.AndroidX.Compose.Gallery.Registry;
+using AndroidX.Compose.Gallery.Registry;
 
-namespace Microsoft.AndroidX.Compose.Gallery.Screens;
+namespace AndroidX.Compose.Gallery.Screens;
 
 /// <summary>
 /// The gallery's landing screen. Shows a welcome card followed by a

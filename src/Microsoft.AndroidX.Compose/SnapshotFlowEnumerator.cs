@@ -1,9 +1,9 @@
 using System.Runtime.InteropServices;
 using System.Threading.Channels;
-using global::AndroidX.Compose.Runtime;
+using AndroidX.Compose.Runtime;
 using Xamarin.KotlinX.Coroutines;
 
-namespace Microsoft.AndroidX.Compose;
+namespace AndroidX.Compose;
 
 /// <summary>
 /// Async iterator for <see cref="ComposeExtensions.SnapshotFlow{T}(Func{T})"/>.
@@ -128,8 +128,8 @@ internal sealed class SnapshotFlowEnumerator<T> : IAsyncEnumerator<T>
                     // grace window. Log and keep going; the JCWs stay
                     // rooted via _pin until the resume eventually
                     // fires, which is leak-not-crash.
-                    global::Android.Util.Log.Warn(
-                        "Microsoft.AndroidX.Compose",
+                    Android.Util.Log.Warn(
+                        "AndroidX.Compose",
                         "SnapshotFlow: Kotlin coroutine didn't unwind within 2s after cancellation; JCWs will stay rooted until the eventual resume.");
                     return;
                 }

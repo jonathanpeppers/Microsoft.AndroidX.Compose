@@ -1,4 +1,4 @@
-namespace Microsoft.AndroidX.Compose.Samples.Jetchat;
+namespace AndroidX.Compose.Samples.Jetchat;
 
 /// <summary>
 /// A single chat message. Mirrors upstream's

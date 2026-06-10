@@ -1,6 +1,6 @@
-using Microsoft.AndroidX.Compose.Gallery.Registry;
+using AndroidX.Compose.Gallery.Registry;
 
-namespace Microsoft.AndroidX.Compose.Gallery.Demos.Buttons;
+namespace AndroidX.Compose.Gallery.Demos.Buttons;
 
 /// <summary>The FAB family: standard, Small, Large, and Extended.</summary>
 public static class FloatingActionButtonsDemo

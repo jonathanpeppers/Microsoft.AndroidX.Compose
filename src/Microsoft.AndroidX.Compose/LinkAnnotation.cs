@@ -1,7 +1,7 @@
-using BindingLink = global::AndroidX.Compose.UI.Text.LinkAnnotation;
-using BindingTextLinkStyles = global::AndroidX.Compose.UI.Text.TextLinkStyles;
+using BindingLink = AndroidX.Compose.UI.Text.LinkAnnotation;
+using BindingTextLinkStyles = AndroidX.Compose.UI.Text.TextLinkStyles;
 
-namespace Microsoft.AndroidX.Compose;
+namespace AndroidX.Compose;
 
 /// <summary>
 /// C# wrapper around <c>androidx.compose.ui.text.LinkAnnotation</c> —

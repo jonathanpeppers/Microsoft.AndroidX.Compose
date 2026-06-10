@@ -1,6 +1,6 @@
-using Microsoft.AndroidX.Compose.Gallery.Registry;
+using AndroidX.Compose.Gallery.Registry;
 
-namespace Microsoft.AndroidX.Compose.Gallery.Screens;
+namespace AndroidX.Compose.Gallery.Screens;
 
 /// <summary>
 /// Lists every demo in a single category. Empty categories render a

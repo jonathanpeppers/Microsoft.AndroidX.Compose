@@ -1,7 +1,7 @@
-using global::Android.Runtime;
+using Android.Runtime;
 using Kotlin.Coroutines.Intrinsics;
 
-namespace Microsoft.AndroidX.Compose;
+namespace AndroidX.Compose;
 
 /// <summary>
 /// Shared plumbing for calling Kotlin <c>suspend</c> functions from

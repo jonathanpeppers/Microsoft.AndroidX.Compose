@@ -1,4 +1,4 @@
-namespace Microsoft.AndroidX.Compose.Samples.JetNews;
+namespace AndroidX.Compose.Samples.JetNews;
 
 /// <summary>
 /// JetNews home feed — top app bar with hamburger / search action row,

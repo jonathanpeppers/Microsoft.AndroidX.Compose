@@ -1,8 +1,8 @@
-using global::Android.Runtime;
-using global::AndroidX.Compose.Runtime;
+using Android.Runtime;
+using AndroidX.Compose.Runtime;
 using Kotlin.Jvm.Functions;
 
-namespace Microsoft.AndroidX.Compose;
+namespace AndroidX.Compose;
 
 /// <summary>
 /// Function4&lt;Scope, T, Composer, Integer, Unit&gt; — the shape Compose's
@@ -23,7 +23,7 @@ internal sealed class ComposableLambda4 : Java.Lang.Object, IFunction4
     public Java.Lang.Object? Invoke(Java.Lang.Object? p0, Java.Lang.Object? p1, Java.Lang.Object? p2, Java.Lang.Object? p3)
     {
         ArgumentNullException.ThrowIfNull(p2);
-        var composer = global::Android.Runtime.Extensions.JavaCast<IComposer>(p2);
+        var composer = Android.Runtime.Extensions.JavaCast<IComposer>(p2);
         _body(p0?.Handle ?? IntPtr.Zero, p1, composer);
         return Kotlin.Unit.Instance!;
     }

@@ -1,6 +1,6 @@
-using global::AndroidX.Compose.Runtime;
+using AndroidX.Compose.Runtime;
 
-namespace Microsoft.AndroidX.Compose.Gallery;
+namespace AndroidX.Compose.Gallery;
 
 /// <summary>
 /// Top-level composition for the gallery: theme, drawer, scaffold,
@@ -9,7 +9,7 @@ namespace Microsoft.AndroidX.Compose.Gallery;
 /// </summary>
 /// <remarks>
 /// Designed to be the sole composition rendered by the
-/// <c>SetContent</c> extension on <see cref="global::AndroidX.Activity.ComponentActivity"/>:
+/// <c>SetContent</c> extension on <see cref="AndroidX.Activity.ComponentActivity"/>:
 /// <code>
 /// this.SetContent(GalleryApp.Build);
 /// </code>
@@ -27,7 +27,7 @@ public static class GalleryApp
     public static ComposableNode Build(IComposer composer)
     {
         var nav          = composer.Remember(() => new NavController());
-        var drawer       = composer.Remember(() => new DrawerStateHolder(global::AndroidX.Compose.Material3.DrawerValue.Closed));
+        var drawer       = composer.Remember(() => new DrawerStateHolder(AndroidX.Compose.Material3.DrawerValue.Closed));
         // Shared by GalleryScaffold (drives back-arrow / title) and the
         // drawer below (drives edge-swipe). Lives here so both see the
         // same MutableState; each route's body updates it in a

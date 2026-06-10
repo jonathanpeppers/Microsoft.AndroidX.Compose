@@ -1,4 +1,4 @@
-namespace Microsoft.AndroidX.Compose;
+namespace AndroidX.Compose;
 
 /// <summary>
 /// Scale-independent pixel — C# mirror of Kotlin's
@@ -43,7 +43,7 @@ public readonly struct Sp : IEquatable<Sp>
     /// the bound <c>TextUnitKt.GetSp(int)</c> factory.
     /// </summary>
     public Sp(int sp)
-        : this(global::AndroidX.Compose.UI.Unit.TextUnitKt.GetSp(sp))
+        : this(AndroidX.Compose.UI.Unit.TextUnitKt.GetSp(sp))
     {
     }
 

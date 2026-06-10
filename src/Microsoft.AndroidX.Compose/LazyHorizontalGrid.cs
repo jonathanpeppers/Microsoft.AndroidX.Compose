@@ -1,7 +1,7 @@
-using global::AndroidX.Compose.Foundation.Lazy.Grid;
-using global::AndroidX.Compose.Runtime;
+using AndroidX.Compose.Foundation.Lazy.Grid;
+using AndroidX.Compose.Runtime;
 
-namespace Microsoft.AndroidX.Compose;
+namespace AndroidX.Compose;
 
 /// <summary>
 /// Foundation <c>LazyHorizontalGrid</c> — lazy 2D grid that scrolls
@@ -43,7 +43,7 @@ public sealed class LazyHorizontalGrid<T> : ComposableNode
         var modifier = BuildModifier();
         var content  = new ComposableLambda1(scopeObj =>
         {
-            var scope = global::Android.Runtime.Extensions.JavaCast<ILazyGridScope>(scopeObj!);
+            var scope = Android.Runtime.Extensions.JavaCast<ILazyGridScope>(scopeObj!);
             scope.Items(
                 _items.Count,
                 key:         null,

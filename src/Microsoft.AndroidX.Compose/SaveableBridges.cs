@@ -1,6 +1,6 @@
-using global::Android.Runtime;
+using Android.Runtime;
 
-namespace Microsoft.AndroidX.Compose;
+namespace AndroidX.Compose;
 
 // Hand-written raw-JNI bridges for the
 // `androidx.compose.runtime.saveable` package. The Xamarin
@@ -95,7 +95,7 @@ internal static partial class ComposeBridges
     internal static unsafe IntPtr RememberSaveableSimple(
         IntPtr inputs,
         ObjectFunction0 init,
-        global::AndroidX.Compose.Runtime.IComposer composer,
+        AndroidX.Compose.Runtime.IComposer composer,
         int changed)
     {
         if (s_rememberSaveableSimple_method == IntPtr.Zero)
@@ -146,7 +146,7 @@ internal static partial class ComposeBridges
         IntPtr inputs,
         IntPtr stateSaver,
         ObjectFunction0 init,
-        global::AndroidX.Compose.Runtime.IComposer composer,
+        AndroidX.Compose.Runtime.IComposer composer,
         int changed)
     {
         if (s_rememberSaveableState_method == IntPtr.Zero)

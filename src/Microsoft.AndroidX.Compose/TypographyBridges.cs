@@ -1,7 +1,7 @@
-using global::Android.Runtime;
-using global::AndroidX.Compose.Material3;
+using Android.Runtime;
+using AndroidX.Compose.Material3;
 
-namespace Microsoft.AndroidX.Compose;
+namespace AndroidX.Compose;
 
 // Hand-written JNI bridge for the Material 3 `Typography` synthetic
 // default constructor. Used by MaterialTheme.BuildTypography(...) so
@@ -37,7 +37,7 @@ internal static partial class ComposeBridges
 
     /// <summary>
     /// Build a Material 3 <see cref="Typography"/> with per-slot
-    /// overrides. Each <see cref="global::AndroidX.Compose.UI.Text.TextStyle"/>
+    /// overrides. Each <see cref="AndroidX.Compose.UI.Text.TextStyle"/>
     /// is either a wrapper to use for that slot, or <c>null</c> to fall
     /// back to the M3 baseline default for that slot via Kotlin's
     /// synthetic <c>$default</c> mechanism.
@@ -48,21 +48,21 @@ internal static partial class ComposeBridges
     /// displayLarge, bit 14 is labelSmall.
     /// </param>
     internal static unsafe Typography BuildTypography(
-        global::AndroidX.Compose.UI.Text.TextStyle? displayLarge,
-        global::AndroidX.Compose.UI.Text.TextStyle? displayMedium,
-        global::AndroidX.Compose.UI.Text.TextStyle? displaySmall,
-        global::AndroidX.Compose.UI.Text.TextStyle? headlineLarge,
-        global::AndroidX.Compose.UI.Text.TextStyle? headlineMedium,
-        global::AndroidX.Compose.UI.Text.TextStyle? headlineSmall,
-        global::AndroidX.Compose.UI.Text.TextStyle? titleLarge,
-        global::AndroidX.Compose.UI.Text.TextStyle? titleMedium,
-        global::AndroidX.Compose.UI.Text.TextStyle? titleSmall,
-        global::AndroidX.Compose.UI.Text.TextStyle? bodyLarge,
-        global::AndroidX.Compose.UI.Text.TextStyle? bodyMedium,
-        global::AndroidX.Compose.UI.Text.TextStyle? bodySmall,
-        global::AndroidX.Compose.UI.Text.TextStyle? labelLarge,
-        global::AndroidX.Compose.UI.Text.TextStyle? labelMedium,
-        global::AndroidX.Compose.UI.Text.TextStyle? labelSmall,
+        AndroidX.Compose.UI.Text.TextStyle? displayLarge,
+        AndroidX.Compose.UI.Text.TextStyle? displayMedium,
+        AndroidX.Compose.UI.Text.TextStyle? displaySmall,
+        AndroidX.Compose.UI.Text.TextStyle? headlineLarge,
+        AndroidX.Compose.UI.Text.TextStyle? headlineMedium,
+        AndroidX.Compose.UI.Text.TextStyle? headlineSmall,
+        AndroidX.Compose.UI.Text.TextStyle? titleLarge,
+        AndroidX.Compose.UI.Text.TextStyle? titleMedium,
+        AndroidX.Compose.UI.Text.TextStyle? titleSmall,
+        AndroidX.Compose.UI.Text.TextStyle? bodyLarge,
+        AndroidX.Compose.UI.Text.TextStyle? bodyMedium,
+        AndroidX.Compose.UI.Text.TextStyle? bodySmall,
+        AndroidX.Compose.UI.Text.TextStyle? labelLarge,
+        AndroidX.Compose.UI.Text.TextStyle? labelMedium,
+        AndroidX.Compose.UI.Text.TextStyle? labelSmall,
         int defaults)
     {
         if (s_typographyCtor_method == IntPtr.Zero)
@@ -118,7 +118,7 @@ internal static partial class ComposeBridges
             GC.KeepAlive(labelSmall);
         }
 
-        static IntPtr Handle(global::AndroidX.Compose.UI.Text.TextStyle? ts) =>
+        static IntPtr Handle(AndroidX.Compose.UI.Text.TextStyle? ts) =>
             ts is null ? IntPtr.Zero : ((Java.Lang.Object)ts).Handle;
     }
 }

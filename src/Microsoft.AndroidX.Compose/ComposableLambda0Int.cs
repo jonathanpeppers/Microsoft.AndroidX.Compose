@@ -1,7 +1,7 @@
-using global::Android.Runtime;
+using Android.Runtime;
 using Kotlin.Jvm.Functions;
 
-namespace Microsoft.AndroidX.Compose;
+namespace AndroidX.Compose;
 
 /// <summary>
 /// Function0&lt;Integer&gt; — a no-arg Kotlin lambda returning a boxed

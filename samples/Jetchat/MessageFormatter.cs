@@ -1,7 +1,7 @@
 using System.Text.RegularExpressions;
-using global::AndroidX.Compose.Material3;
+using AndroidX.Compose.Material3;
 
-namespace Microsoft.AndroidX.Compose.Samples.Jetchat;
+namespace AndroidX.Compose.Samples.Jetchat;
 
 /// <summary>
 /// Format a message following Markdown-lite syntax:

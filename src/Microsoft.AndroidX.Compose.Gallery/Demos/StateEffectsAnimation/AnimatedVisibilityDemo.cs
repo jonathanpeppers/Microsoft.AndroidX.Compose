@@ -1,6 +1,6 @@
-using Microsoft.AndroidX.Compose.Gallery.Registry;
+using AndroidX.Compose.Gallery.Registry;
 
-namespace Microsoft.AndroidX.Compose.Gallery.Demos.StateEffectsAnimation;
+namespace AndroidX.Compose.Gallery.Demos.StateEffectsAnimation;
 
 /// <summary>AnimatedVisibility — fade and expand a child in/out as a bool toggles.</summary>
 public static class AnimatedVisibilityDemo

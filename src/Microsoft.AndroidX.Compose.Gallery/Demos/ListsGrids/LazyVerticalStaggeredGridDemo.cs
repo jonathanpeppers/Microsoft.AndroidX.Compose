@@ -1,7 +1,7 @@
-using Microsoft.AndroidX.Compose.Gallery.Demos.Shared;
-using Microsoft.AndroidX.Compose.Gallery.Registry;
+using AndroidX.Compose.Gallery.Demos.Shared;
+using AndroidX.Compose.Gallery.Registry;
 
-namespace Microsoft.AndroidX.Compose.Gallery.Demos.ListsGrids;
+namespace AndroidX.Compose.Gallery.Demos.ListsGrids;
 
 /// <summary>LazyVerticalStaggeredGrid — cells of varying heights stagger across columns.</summary>
 public static class LazyVerticalStaggeredGridDemo

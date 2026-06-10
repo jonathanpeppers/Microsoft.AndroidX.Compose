@@ -1,6 +1,6 @@
-using Microsoft.AndroidX.Compose.Gallery.Registry;
+using AndroidX.Compose.Gallery.Registry;
 
-namespace Microsoft.AndroidX.Compose.Gallery.Demos.StateEffectsAnimation;
+namespace AndroidX.Compose.Gallery.Demos.StateEffectsAnimation;
 
 /// <summary>LaunchedEffect — launches a Task tied to composition; cancels on key change / dispose.</summary>
 public static class LaunchedEffectDemo

@@ -1,7 +1,7 @@
-using global::Android.Runtime;
-using global::AndroidX.Compose.UI.Draganddrop;
+using Android.Runtime;
+using AndroidX.Compose.UI.Draganddrop;
 
-namespace Microsoft.AndroidX.Compose;
+namespace AndroidX.Compose;
 
 /// <summary>
 /// <c>androidx.compose.ui.draganddrop.DragAndDropTarget</c> adapter — the
@@ -87,7 +87,7 @@ public sealed class DragAndDropTarget : Java.Lang.Object, IDragAndDropTarget
         OnDrop = onDrop;
     }
 
-    bool IDragAndDropTarget.OnDrop(global::AndroidX.Compose.UI.Draganddrop.DragAndDropEvent p0)
+    bool IDragAndDropTarget.OnDrop(AndroidX.Compose.UI.Draganddrop.DragAndDropEvent p0)
     {
         var cb = OnDrop;
         if (cb is null)
@@ -95,21 +95,21 @@ public sealed class DragAndDropTarget : Java.Lang.Object, IDragAndDropTarget
         return cb(new DragAndDropEvent(p0));
     }
 
-    void IDragAndDropTarget.OnStarted(global::AndroidX.Compose.UI.Draganddrop.DragAndDropEvent p0) =>
+    void IDragAndDropTarget.OnStarted(AndroidX.Compose.UI.Draganddrop.DragAndDropEvent p0) =>
         OnStarted?.Invoke(new DragAndDropEvent(p0));
 
-    void IDragAndDropTarget.OnEntered(global::AndroidX.Compose.UI.Draganddrop.DragAndDropEvent p0) =>
+    void IDragAndDropTarget.OnEntered(AndroidX.Compose.UI.Draganddrop.DragAndDropEvent p0) =>
         OnEntered?.Invoke(new DragAndDropEvent(p0));
 
-    void IDragAndDropTarget.OnMoved(global::AndroidX.Compose.UI.Draganddrop.DragAndDropEvent p0) =>
+    void IDragAndDropTarget.OnMoved(AndroidX.Compose.UI.Draganddrop.DragAndDropEvent p0) =>
         OnMoved?.Invoke(new DragAndDropEvent(p0));
 
-    void IDragAndDropTarget.OnChanged(global::AndroidX.Compose.UI.Draganddrop.DragAndDropEvent p0) =>
+    void IDragAndDropTarget.OnChanged(AndroidX.Compose.UI.Draganddrop.DragAndDropEvent p0) =>
         OnChanged?.Invoke(new DragAndDropEvent(p0));
 
-    void IDragAndDropTarget.OnExited(global::AndroidX.Compose.UI.Draganddrop.DragAndDropEvent p0) =>
+    void IDragAndDropTarget.OnExited(AndroidX.Compose.UI.Draganddrop.DragAndDropEvent p0) =>
         OnExited?.Invoke(new DragAndDropEvent(p0));
 
-    void IDragAndDropTarget.OnEnded(global::AndroidX.Compose.UI.Draganddrop.DragAndDropEvent p0) =>
+    void IDragAndDropTarget.OnEnded(AndroidX.Compose.UI.Draganddrop.DragAndDropEvent p0) =>
         OnEnded?.Invoke(new DragAndDropEvent(p0));
 }

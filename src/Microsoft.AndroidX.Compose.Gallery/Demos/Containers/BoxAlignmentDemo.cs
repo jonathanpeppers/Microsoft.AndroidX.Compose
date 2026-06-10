@@ -1,6 +1,6 @@
-using Microsoft.AndroidX.Compose.Gallery.Registry;
+using AndroidX.Compose.Gallery.Registry;
 
-namespace Microsoft.AndroidX.Compose.Gallery.Demos.Containers;
+namespace AndroidX.Compose.Gallery.Demos.Containers;
 
 /// <summary>Box stacks children on top of each other.</summary>
 public static class BoxAlignmentDemo

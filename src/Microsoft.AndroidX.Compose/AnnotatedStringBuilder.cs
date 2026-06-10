@@ -1,4 +1,4 @@
-namespace Microsoft.AndroidX.Compose;
+namespace AndroidX.Compose;
 
 /// <summary>
 /// Mutable builder for <see cref="AnnotatedString"/>. Mirrors Kotlin's
@@ -19,7 +19,7 @@ namespace Microsoft.AndroidX.Compose;
 /// </example>
 public sealed class AnnotatedStringBuilder
 {
-    readonly global::AndroidX.Compose.UI.Text.AnnotatedString.Builder _builder = new();
+    readonly AndroidX.Compose.UI.Text.AnnotatedString.Builder _builder = new();
 
     /// <summary>Current length of the builder's text buffer.</summary>
     public int Length => _builder.Length;
@@ -87,10 +87,10 @@ public sealed class AnnotatedStringBuilder
         ArgumentNullException.ThrowIfNull(link);
         switch (link.Binding)
         {
-            case global::AndroidX.Compose.UI.Text.LinkAnnotation.Url url:
+            case AndroidX.Compose.UI.Text.LinkAnnotation.Url url:
                 _builder.AddLink(url, start, end);
                 break;
-            case global::AndroidX.Compose.UI.Text.LinkAnnotation.Clickable c:
+            case AndroidX.Compose.UI.Text.LinkAnnotation.Clickable c:
                 _builder.AddLink(c, start, end);
                 break;
             default:

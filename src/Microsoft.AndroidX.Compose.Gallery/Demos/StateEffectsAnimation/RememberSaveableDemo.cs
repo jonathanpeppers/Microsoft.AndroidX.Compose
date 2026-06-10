@@ -1,6 +1,6 @@
-using Microsoft.AndroidX.Compose.Gallery.Registry;
+using AndroidX.Compose.Gallery.Registry;
 
-namespace Microsoft.AndroidX.Compose.Gallery.Demos.StateEffectsAnimation;
+namespace AndroidX.Compose.Gallery.Demos.StateEffectsAnimation;
 
 /// <summary>RememberSaveable — values survive Activity recreation (rotation, dark/light).</summary>
 public static class RememberSaveableDemo

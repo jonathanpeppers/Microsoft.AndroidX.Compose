@@ -1,8 +1,8 @@
-using global::Android.Runtime;
-using global::AndroidX.Compose.Runtime;
+using Android.Runtime;
+using AndroidX.Compose.Runtime;
 using Kotlin.Jvm.Functions;
 
-namespace Microsoft.AndroidX.Compose;
+namespace AndroidX.Compose;
 
 /// <summary>
 /// JCW for Compose's <c>DisposableEffect</c> body —

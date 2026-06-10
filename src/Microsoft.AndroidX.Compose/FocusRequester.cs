@@ -1,6 +1,6 @@
-using JFocusRequester = global::AndroidX.Compose.UI.Focus.FocusRequester;
+using JFocusRequester = AndroidX.Compose.UI.Focus.FocusRequester;
 
-namespace Microsoft.AndroidX.Compose;
+namespace AndroidX.Compose;
 
 /// <summary>
 /// C# wrapper around <c>androidx.compose.ui.focus.FocusRequester</c>.

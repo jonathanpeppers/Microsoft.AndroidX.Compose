@@ -1,7 +1,7 @@
-using global::Android.Runtime;
-using global::AndroidX.Compose.Foundation.Shape;
+using Android.Runtime;
+using AndroidX.Compose.Foundation.Shape;
 
-namespace Microsoft.AndroidX.Compose;
+namespace AndroidX.Compose;
 
 /// <summary>
 /// C# wrapper around <c>androidx.compose.ui.graphics.Shape</c>.

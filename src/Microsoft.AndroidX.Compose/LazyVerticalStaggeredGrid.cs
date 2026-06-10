@@ -1,7 +1,7 @@
-using global::AndroidX.Compose.Foundation.Lazy.Staggeredgrid;
-using global::AndroidX.Compose.Runtime;
+using AndroidX.Compose.Foundation.Lazy.Staggeredgrid;
+using AndroidX.Compose.Runtime;
 
-namespace Microsoft.AndroidX.Compose;
+namespace AndroidX.Compose;
 
 /// <summary>
 /// Foundation <c>LazyVerticalStaggeredGrid</c> — a 2D grid that scrolls
@@ -50,7 +50,7 @@ public sealed class LazyVerticalStaggeredGrid<T> : ComposableNode
         var modifier = BuildModifier();
         var content  = new ComposableLambda1(scopeObj =>
         {
-            var scope = global::Android.Runtime.Extensions.JavaCast<ILazyStaggeredGridScope>(scopeObj!);
+            var scope = Android.Runtime.Extensions.JavaCast<ILazyStaggeredGridScope>(scopeObj!);
             // span: null = 1 cell per item (the Compose default); itemContent
             // runs at measure time inside the staggered grid's
             // SubcomposeLayout, so route through Instantiate4 (the

@@ -1,8 +1,8 @@
-using global::Android.Views;
-using global::AndroidX.Activity;
-using global::AndroidX.Compose.UI.Platform;
+using Android.Views;
+using AndroidX.Activity;
+using AndroidX.Compose.UI.Platform;
 
-namespace Microsoft.AndroidX.Compose.Gallery;
+namespace AndroidX.Compose.Gallery;
 
 /// <summary>
 /// Demonstrates the <see cref="ComposeView"/> interop entry point —
@@ -11,12 +11,12 @@ namespace Microsoft.AndroidX.Compose.Gallery;
 /// with a native <see cref="TextView"/> on top and a
 /// <see cref="ComposeView"/> underneath, then attaches a Compose
 /// composition via
-/// <see cref="ComposeExtensions.SetContent(ComposeView, Func{global::AndroidX.Compose.Runtime.IComposer, ComposableNode})"/>.
+/// <see cref="ComposeExtensions.SetContent(ComposeView, Func{AndroidX.Compose.Runtime.IComposer, ComposableNode})"/>.
 /// Mirrors the Kotlin pattern used when adding Compose to a legacy
 /// <c>View</c>-based screen.
 /// </summary>
 [Activity(Label = "ComposeView interop", Theme = "@android:style/Theme.Material.Light.NoActionBar")]
-[global::Android.Runtime.Register("net/compose/gallery/ComposeViewActivity")]
+[Android.Runtime.Register("net/compose/gallery/ComposeViewActivity")]
 public class ComposeViewActivity : ComponentActivity
 {
     /// <inheritdoc/>
@@ -27,7 +27,7 @@ public class ComposeViewActivity : ComponentActivity
 
         var root = new LinearLayout(this)
         {
-            Orientation     = global::Android.Widget.Orientation.Vertical,
+            Orientation     = Android.Widget.Orientation.Vertical,
             LayoutParameters = new ViewGroup.LayoutParams(
                 ViewGroup.LayoutParams.MatchParent,
                 ViewGroup.LayoutParams.MatchParent),

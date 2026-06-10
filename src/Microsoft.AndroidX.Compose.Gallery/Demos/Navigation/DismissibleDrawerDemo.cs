@@ -1,7 +1,7 @@
-using global::AndroidX.Compose.Material3;
-using Microsoft.AndroidX.Compose.Gallery.Registry;
+using AndroidX.Compose.Material3;
+using AndroidX.Compose.Gallery.Registry;
 
-namespace Microsoft.AndroidX.Compose.Gallery.Demos.Navigation;
+namespace AndroidX.Compose.Gallery.Demos.Navigation;
 
 /// <summary>DismissibleNavigationDrawer — pushes content sideways; initially open.</summary>
 public static class DismissibleDrawerDemo

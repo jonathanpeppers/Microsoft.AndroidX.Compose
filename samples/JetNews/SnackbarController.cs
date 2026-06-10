@@ -1,13 +1,13 @@
-using global::Android.OS;
+using Android.OS;
 
-namespace Microsoft.AndroidX.Compose.Samples.JetNews;
+namespace AndroidX.Compose.Samples.JetNews;
 
 /// <summary>
 /// Sample-side bridge that emulates Material's
 /// <c>SnackbarHostState.showSnackbar</c> for screens that just need to
 /// flash a transient message ("Bookmark added", "Share unavailable",
 /// etc.). The bound <c>showSnackbar</c> is a Kotlin <c>suspend</c>
-/// function and isn't exposed through Microsoft.AndroidX.Compose yet — see the
+/// function and isn't exposed through AndroidX.Compose yet — see the
 /// <see cref="SnackbarHost"/> docs that recommend toggling a
 /// <see cref="MutableState{T}"/> + rendering a
 /// <see cref="Snackbar"/> directly into the

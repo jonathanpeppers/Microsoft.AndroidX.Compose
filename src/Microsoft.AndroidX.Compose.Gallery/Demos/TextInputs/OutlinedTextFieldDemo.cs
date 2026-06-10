@@ -1,6 +1,6 @@
-using Microsoft.AndroidX.Compose.Gallery.Registry;
+using AndroidX.Compose.Gallery.Registry;
 
-namespace Microsoft.AndroidX.Compose.Gallery.Demos.TextInputs;
+namespace AndroidX.Compose.Gallery.Demos.TextInputs;
 
 /// <summary>OutlinedTextField — adds Prefix / Suffix that don't fit on the filled variant.</summary>
 public static class OutlinedTextFieldDemo

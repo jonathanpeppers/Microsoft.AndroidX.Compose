@@ -1,6 +1,6 @@
-using Microsoft.AndroidX.Compose.Gallery.Registry;
+using AndroidX.Compose.Gallery.Registry;
 
-namespace Microsoft.AndroidX.Compose.Gallery.Demos.StateEffectsAnimation;
+namespace AndroidX.Compose.Gallery.Demos.StateEffectsAnimation;
 
 /// <summary>SideEffect — runs after every successful recomposition; logs to logcat.</summary>
 public static class SideEffectDemo
@@ -19,7 +19,7 @@ public static class SideEffectDemo
                 new Text($"Count: {count}"),
                 new Text($"See logcat (filter: {GalleryApp.LogTag}) — one line per recomposition."),
                 new SideEffect(() =>
-                    global::Android.Util.Log.Debug(GalleryApp.LogTag,
+                    Android.Util.Log.Debug(GalleryApp.LogTag,
                         $"SideEffect ran (count={count.Value})")),
                 new Button(onClick: () => count++) { new Text("+1 (recompose)") },
             };

@@ -1,7 +1,7 @@
-using global::Android.Runtime;
-using global::AndroidX.Compose.Runtime;
+using Android.Runtime;
+using AndroidX.Compose.Runtime;
 
-namespace Microsoft.AndroidX.Compose;
+namespace AndroidX.Compose;
 
 /// <summary>
 /// Slot value used by <see cref="ComposeExtensions.ProduceState{T}(T, Func{MutableState{T}, CancellationToken, Task}, int, string)"/>:
@@ -88,8 +88,8 @@ internal sealed class ProduceStateScope<T> : Java.Lang.Object, IRememberObserver
         {
             if (t.Exception is { } ex)
             {
-                global::Android.Util.Log.Error(
-                    "Microsoft.AndroidX.Compose",
+                Android.Util.Log.Error(
+                    "AndroidX.Compose",
                     "ProduceState producer faulted: " + ex);
             }
         }, TaskScheduler.Default);

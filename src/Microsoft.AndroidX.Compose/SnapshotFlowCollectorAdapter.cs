@@ -1,9 +1,9 @@
 using System.Threading.Channels;
-using global::Android.Runtime;
+using Android.Runtime;
 using Kotlin.Coroutines;
 using Xamarin.KotlinX.Coroutines.Flow;
 
-namespace Microsoft.AndroidX.Compose;
+namespace AndroidX.Compose;
 
 /// <summary>
 /// JCW implementing Kotlin's <c>kotlinx.coroutines.flow.FlowCollector</c>

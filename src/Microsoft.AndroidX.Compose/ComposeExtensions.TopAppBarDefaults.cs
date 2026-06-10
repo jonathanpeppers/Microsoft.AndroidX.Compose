@@ -1,9 +1,9 @@
 using System.Runtime.CompilerServices;
-using global::Android.Runtime;
-using global::AndroidX.Compose.Material3;
-using global::AndroidX.Compose.Runtime;
+using Android.Runtime;
+using AndroidX.Compose.Material3;
+using AndroidX.Compose.Runtime;
 
-namespace Microsoft.AndroidX.Compose;
+namespace AndroidX.Compose;
 
 /// <summary>
 /// Static factories mirroring Kotlin's
@@ -56,7 +56,7 @@ public static partial class ComposeExtensions
         {
             // canScroll: null → Kotlin's `() -> true` default; bit 1 in
             // `$default` flags that we're omitting it.
-            return global::AndroidX.Compose.Material3.TopAppBarDefaults.Instance
+            return AndroidX.Compose.Material3.TopAppBarDefaults.Instance
                 .PinnedScrollBehavior(state, canScroll: null, composer, 0, 0b10);
         }
         finally

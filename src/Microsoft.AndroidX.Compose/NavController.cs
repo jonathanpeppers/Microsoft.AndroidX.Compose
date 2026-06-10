@@ -1,5 +1,5 @@
 
-namespace Microsoft.AndroidX.Compose;
+namespace AndroidX.Compose;
 
 /// <summary>
 /// Caller-supplied wrapper around an
@@ -9,7 +9,7 @@ namespace Microsoft.AndroidX.Compose;
 /// <c>rememberNavController()</c>); from then on the navigation methods
 /// — <see cref="Navigate(string)"/>, <c>PopBackStack</c>,
 /// <see cref="NavigateUp"/> — forward straight to the bound
-/// <see cref="global::AndroidX.Navigation.NavController"/> binding.
+/// <see cref="AndroidX.Navigation.NavController"/> binding.
 ///
 /// <para>
 /// Hold a single instance per logical navigation graph (typically one
@@ -46,9 +46,9 @@ public sealed class NavController
     /// the <see cref="Navigate(string)"/> / <see cref="PopBackStack()"/> /
     /// <see cref="NavigateUp"/> methods.
     /// </summary>
-    internal global::AndroidX.Navigation.NavHostController? Jvm { get; set; }
+    internal AndroidX.Navigation.NavHostController? Jvm { get; set; }
 
-    global::AndroidX.Navigation.NavHostController EnsureJvm() =>
+    AndroidX.Navigation.NavHostController EnsureJvm() =>
         Jvm ?? throw new InvalidOperationException(
             "NavController has not been bound to a NavHost yet. Pass it to a NavHost and wait for the first composition before calling navigation methods.");
 

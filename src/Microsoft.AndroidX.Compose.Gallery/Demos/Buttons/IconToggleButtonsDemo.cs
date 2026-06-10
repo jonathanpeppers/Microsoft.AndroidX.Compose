@@ -1,6 +1,6 @@
-using Microsoft.AndroidX.Compose.Gallery.Registry;
+using AndroidX.Compose.Gallery.Registry;
 
-namespace Microsoft.AndroidX.Compose.Gallery.Demos.Buttons;
+namespace AndroidX.Compose.Gallery.Demos.Buttons;
 
 /// <summary>Two-state icon buttons that swap glyph when checked.</summary>
 public static class IconToggleButtonsDemo

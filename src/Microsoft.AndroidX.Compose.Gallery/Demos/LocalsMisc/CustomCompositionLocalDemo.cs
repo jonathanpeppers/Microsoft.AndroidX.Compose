@@ -1,7 +1,7 @@
-using global::AndroidX.Compose.Runtime;
-using Microsoft.AndroidX.Compose.Gallery.Registry;
+using AndroidX.Compose.Runtime;
+using AndroidX.Compose.Gallery.Registry;
 
-namespace Microsoft.AndroidX.Compose.Gallery.Demos.LocalsMisc;
+namespace AndroidX.Compose.Gallery.Demos.LocalsMisc;
 
 /// <summary>Custom typed CompositionLocal&lt;T&gt; — provide an override and watch a nested subtree pick it up.</summary>
 public static class CustomCompositionLocalDemo

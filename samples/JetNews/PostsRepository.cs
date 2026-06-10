@@ -1,5 +1,5 @@
 
-namespace Microsoft.AndroidX.Compose.Samples.JetNews;
+namespace AndroidX.Compose.Samples.JetNews;
 
 /// <summary>
 /// In-memory <see cref="IPostsRepository"/> implementation that

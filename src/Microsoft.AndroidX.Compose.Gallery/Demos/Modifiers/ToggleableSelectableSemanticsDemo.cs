@@ -1,6 +1,6 @@
-using Microsoft.AndroidX.Compose.Gallery.Registry;
+using AndroidX.Compose.Gallery.Registry;
 
-namespace Microsoft.AndroidX.Compose.Gallery.Demos.Modifiers;
+namespace AndroidX.Compose.Gallery.Demos.Modifiers;
 
 /// <summary>Toggleable + Selectable + Semantics modifiers; whole row collapses into one a11y node.</summary>
 public static class ToggleableSelectableSemanticsDemo

@@ -1,10 +1,10 @@
-using global::Android.Runtime;
-using global::AndroidX.Compose.Material3;
-using global::AndroidX.Compose.Runtime;
-using global::AndroidX.Compose.UI.Graphics.Vector;
-using Painter = global::AndroidX.Compose.UI.Graphics.Painter.Painter;
+using Android.Runtime;
+using AndroidX.Compose.Material3;
+using AndroidX.Compose.Runtime;
+using AndroidX.Compose.UI.Graphics.Vector;
+using Painter = AndroidX.Compose.UI.Graphics.Painter.Painter;
 
-namespace Microsoft.AndroidX.Compose;
+namespace AndroidX.Compose;
 
 /// <summary>
 /// Material 3 <c>Icon</c> — renders a small image used for affordance,

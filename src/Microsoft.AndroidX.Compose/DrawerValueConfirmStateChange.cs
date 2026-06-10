@@ -1,8 +1,8 @@
-using global::Android.Runtime;
-using global::AndroidX.Compose.Material3;
+using Android.Runtime;
+using AndroidX.Compose.Material3;
 using Kotlin.Jvm.Functions;
 
-namespace Microsoft.AndroidX.Compose;
+namespace AndroidX.Compose;
 
 /// <summary>
 /// <c>Function1&lt;DrawerValue, Boolean&gt;</c> adapter used as the
@@ -23,7 +23,7 @@ namespace Microsoft.AndroidX.Compose;
 /// <c>[ConfirmStateChange(typeof(DrawerValue))]</c> attribute on a
 /// Remember bridge parameter resolves to this adapter automatically.
 /// Public so generated facade classes (which live alongside this type
-/// in <c>Microsoft.AndroidX.Compose</c>) can declare it as a <c>readonly</c> field;
+/// in <c>AndroidX.Compose</c>) can declare it as a <c>readonly</c> field;
 /// it is not part of the developer-facing API and should not be
 /// constructed directly.
 /// </remarks>
@@ -49,7 +49,7 @@ public sealed class DrawerValueConfirmStateChange : Java.Lang.Object, IFunction1
         var cb = Callback;
         if (cb is null)
             return Java.Lang.Boolean.True;
-        var value = global::Android.Runtime.Extensions.JavaCast<DrawerValue>(p0!);
+        var value = Android.Runtime.Extensions.JavaCast<DrawerValue>(p0!);
         return cb(value) ? Java.Lang.Boolean.True : Java.Lang.Boolean.False;
     }
 }

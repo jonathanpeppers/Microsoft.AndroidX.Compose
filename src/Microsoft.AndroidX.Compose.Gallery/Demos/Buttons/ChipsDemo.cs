@@ -1,6 +1,6 @@
-using Microsoft.AndroidX.Compose.Gallery.Registry;
+using AndroidX.Compose.Gallery.Registry;
 
-namespace Microsoft.AndroidX.Compose.Gallery.Demos.Buttons;
+namespace AndroidX.Compose.Gallery.Demos.Buttons;
 
 /// <summary>The Material 3 chip family — Assist / Filter / Suggestion plus Elevated variants.</summary>
 public static class ChipsDemo

@@ -1,6 +1,6 @@
-using Microsoft.AndroidX.Compose.Gallery.Registry;
+using AndroidX.Compose.Gallery.Registry;
 
-namespace Microsoft.AndroidX.Compose.Gallery.Demos.DialogsSheets;
+namespace AndroidX.Compose.Gallery.Demos.DialogsSheets;
 
 /// <summary>AlertDialog — Title, Text body, Confirm + Dismiss buttons.</summary>
 public static class AlertDialogDemo

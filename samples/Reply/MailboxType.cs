@@ -1,4 +1,4 @@
-namespace Microsoft.AndroidX.Compose.Samples.Reply;
+namespace AndroidX.Compose.Samples.Reply;
 
 /// <summary>
 /// An enum to define different types of email folders or categories.

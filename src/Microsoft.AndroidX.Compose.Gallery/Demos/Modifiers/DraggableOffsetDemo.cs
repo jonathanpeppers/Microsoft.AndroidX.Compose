@@ -1,6 +1,6 @@
-using Microsoft.AndroidX.Compose.Gallery.Registry;
+using AndroidX.Compose.Gallery.Registry;
 
-namespace Microsoft.AndroidX.Compose.Gallery.Demos.Modifiers;
+namespace AndroidX.Compose.Gallery.Demos.Modifiers;
 
 /// <summary>Draggable + Offset — finger drag accumulates into a Dp value.</summary>
 public static class DraggableOffsetDemo
@@ -13,7 +13,7 @@ public static class DraggableOffsetDemo
         Description: "Touch and drag the purple square horizontally; the DraggableState delta is divided by screen density so dragX accumulates as Dp.",
         Build:       c =>
         {
-            var density = global::Android.Content.Res.Resources.System!.DisplayMetrics!.Density;
+            var density = Android.Content.Res.Resources.System!.DisplayMetrics!.Density;
             var dragX   = c.Remember(() => new MutableState<float>(0f));
             var state   = c.RememberDraggableState(delta => dragX.Value += delta / density);
 

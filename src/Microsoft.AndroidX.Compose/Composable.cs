@@ -1,8 +1,8 @@
 using System.Collections;
-using global::Android.Runtime;
-using global::AndroidX.Navigation;
+using Android.Runtime;
+using AndroidX.Navigation;
 
-namespace Microsoft.AndroidX.Compose;
+namespace AndroidX.Compose;
 
 /// <summary>
 /// A single destination registered with a <see cref="NavHost"/>. The
@@ -120,7 +120,7 @@ public sealed class Composable : IEnumerable
             {
                 var entry = entryHandle == IntPtr.Zero
                     ? null
-                    : Java.Lang.Object.GetObject<global::AndroidX.Navigation.NavBackStackEntry>(
+                    : Java.Lang.Object.GetObject<AndroidX.Navigation.NavBackStackEntry>(
                         entryHandle, JniHandleOwnership.DoNotTransfer);
                 var wrapper = entry is null ? null : new NavBackStackEntry(entry);
                 if (wrapper is null)

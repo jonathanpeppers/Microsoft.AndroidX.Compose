@@ -1,8 +1,8 @@
-using global::AndroidX.Compose.Foundation.Lazy;
-using global::AndroidX.Compose.Runtime;
-using BindingArrangement = global::AndroidX.Compose.Foundation.Layout.Arrangement;
+using AndroidX.Compose.Foundation.Lazy;
+using AndroidX.Compose.Runtime;
+using BindingArrangement = AndroidX.Compose.Foundation.Layout.Arrangement;
 
-namespace Microsoft.AndroidX.Compose;
+namespace AndroidX.Compose;
 
 /// <summary>
 /// Foundation <c>LazyRow</c> — horizontal mirror of <see cref="LazyColumn{T}"/>.
@@ -47,7 +47,7 @@ public sealed class LazyRow<T> : ComposableNode
         var modifier = BuildModifier();
         var content  = new ComposableLambda1(scopeObj =>
         {
-            var scope = global::Android.Runtime.Extensions.JavaCast<ILazyListScope>(scopeObj!);
+            var scope = Android.Runtime.Extensions.JavaCast<ILazyListScope>(scopeObj!);
             scope.Items(
                 _items.Count,
                 key:         null,

@@ -9,8 +9,6 @@
     <ApplicationVersion>1</ApplicationVersion>
     <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <RootNamespace>Microsoft.AndroidX.Compose.Samples.JetNews</RootNamespace>
-    <AssemblyName>Microsoft.AndroidX.Compose.Samples.JetNews</AssemblyName>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\Microsoft.AndroidX.Compose\Microsoft.AndroidX.Compose.csproj" />

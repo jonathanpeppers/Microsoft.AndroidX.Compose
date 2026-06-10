@@ -1,7 +1,7 @@
-using global::Android.Runtime;
-using global::AndroidX.Compose.UI;
+using Android.Runtime;
+using AndroidX.Compose.UI;
 
-namespace Microsoft.AndroidX.Compose;
+namespace AndroidX.Compose;
 
 /// <summary>
 /// C# mirror of Kotlin's <c>androidx.compose.ui.Modifier</c> chain.
@@ -488,8 +488,8 @@ public sealed class Modifier
         ArgumentNullException.ThrowIfNull(state);
         var jvm = state.Jvm;
         var jvmOrientation = orientation == Orientation.Horizontal
-            ? global::AndroidX.Compose.Foundation.Gestures.Orientation.Horizontal!
-            : global::AndroidX.Compose.Foundation.Gestures.Orientation.Vertical!;
+            ? AndroidX.Compose.Foundation.Gestures.Orientation.Horizontal!
+            : AndroidX.Compose.Foundation.Gestures.Orientation.Vertical!;
         return Append(curr =>
             ComposeBridges.ModifierDraggable(
                 curr,
@@ -511,14 +511,14 @@ public sealed class Modifier
     /// </summary>
     /// <param name="connection">
     /// The connection to forward scroll deltas to. Pair with an
-    /// <see cref="global::AndroidX.Compose.Material3.ITopAppBarScrollBehavior"/>
+    /// <see cref="AndroidX.Compose.Material3.ITopAppBarScrollBehavior"/>
     /// by passing
-    /// <see cref="global::AndroidX.Compose.Material3.ITopAppBarScrollBehavior.NestedScrollConnection"/>;
+    /// <see cref="AndroidX.Compose.Material3.ITopAppBarScrollBehavior.NestedScrollConnection"/>;
     /// the scroll behavior is also set as the bar's
     /// <c>ScrollBehavior</c> property so both sides agree on the
-    /// shared <see cref="global::AndroidX.Compose.Material3.TopAppBarState"/>.
+    /// shared <see cref="AndroidX.Compose.Material3.TopAppBarState"/>.
     /// </param>
-    public Modifier NestedScroll(global::AndroidX.Compose.UI.Input.NestedScroll.INestedScrollConnection connection)
+    public Modifier NestedScroll(AndroidX.Compose.UI.Input.NestedScroll.INestedScrollConnection connection)
     {
         ArgumentNullException.ThrowIfNull(connection);
         return Append(curr => ComposeBridges.ModifierNestedScroll(curr, connection));
@@ -961,7 +961,7 @@ public sealed class Modifier
 
     /// <summary>
     /// <c>Modifier.focusable(enabled = true)</c> — marks the node as a
-    /// focus target. Combine with <see cref="FocusRequester(Microsoft.AndroidX.Compose.FocusRequester)"/>
+    /// focus target. Combine with <see cref="FocusRequester(AndroidX.Compose.FocusRequester)"/>
     /// to programmatically move focus, or with
     /// <see cref="OnFocusChanged(Action{FocusState})"/>
     /// to observe focus changes.
@@ -988,7 +988,7 @@ public sealed class Modifier
         var f1 = new ComposableLambda1(arg =>
         {
             if (arg is null) return;
-            var fs = global::Android.Runtime.Extensions.JavaCast<global::AndroidX.Compose.UI.Focus.IFocusState>(arg);
+            var fs = Android.Runtime.Extensions.JavaCast<AndroidX.Compose.UI.Focus.IFocusState>(arg);
             onFocusChanged(FocusState.From(fs));
         });
         return Append(curr => ComposeBridges.ModifierOnFocusChanged(curr, f1));
@@ -1259,7 +1259,7 @@ public sealed class Modifier
             finally
             {
                 if (handlerLocal != IntPtr.Zero)
-                    global::Android.Runtime.JNIEnv.DeleteLocalRef(handlerLocal);
+                    Android.Runtime.JNIEnv.DeleteLocalRef(handlerLocal);
                 GC.KeepAlive(keyObj);
                 GC.KeepAlive(block);
             }

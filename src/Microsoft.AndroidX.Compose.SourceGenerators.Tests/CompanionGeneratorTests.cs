@@ -4,7 +4,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Xunit;
 
-namespace Microsoft.AndroidX.Compose.SourceGenerators.Tests;
+namespace AndroidX.Compose.SourceGenerators.Tests;
 
 public class CompanionGeneratorTests
 {
@@ -48,7 +48,7 @@ public class CompanionGeneratorTests
     // isolation so we feed the attribute decls directly to the
     // compilation.
     const string AttributeSource = """
-        namespace Microsoft.AndroidX.Compose
+        namespace AndroidX.Compose
         {
             [global::System.AttributeUsage(global::System.AttributeTargets.Class, AllowMultiple = false)]
             internal sealed class ComposeCompanionAttribute : global::System.Attribute
@@ -103,8 +103,8 @@ public class CompanionGeneratorTests
     public void Simple_EmitsCompanionAccessorAndProperty()
     {
         var code = """
-            using Microsoft.AndroidX.Compose;
-            namespace Microsoft.AndroidX.Compose
+            using AndroidX.Compose;
+            namespace AndroidX.Compose
             {
                 [ComposeCompanion("androidx/compose/ui/text/font/FontWeight")]
                 public sealed partial class FontWeight : Java.Lang.Object
@@ -145,8 +145,8 @@ public class CompanionGeneratorTests
     public void CustomReturnDescriptor_PassesThroughToResolveSimple()
     {
         var code = """
-            using Microsoft.AndroidX.Compose;
-            namespace Microsoft.AndroidX.Compose
+            using AndroidX.Compose;
+            namespace AndroidX.Compose
             {
                 [ComposeCompanion("androidx/compose/ui/text/font/FontFamily")]
                 public sealed partial class FontFamily : Java.Lang.Object
@@ -173,8 +173,8 @@ public class CompanionGeneratorTests
     public void InlineClass_EmitsBoxImplBranch()
     {
         var code = """
-            using Microsoft.AndroidX.Compose;
-            namespace Microsoft.AndroidX.Compose
+            using AndroidX.Compose;
+            namespace AndroidX.Compose
             {
                 [ComposeCompanion("androidx/compose/ui/text/style/TextAlign", InlineClass = true)]
                 public sealed partial class TextAlign : Java.Lang.Object
@@ -205,8 +205,8 @@ public class CompanionGeneratorTests
     public void NonPartialClass_ReportsCN4001()
     {
         var code = """
-            using Microsoft.AndroidX.Compose;
-            namespace Microsoft.AndroidX.Compose
+            using AndroidX.Compose;
+            namespace AndroidX.Compose
             {
                 [ComposeCompanion("foo/Bar")]
                 public sealed class NotPartial : Java.Lang.Object
@@ -223,8 +223,8 @@ public class CompanionGeneratorTests
     public void EmptyOuter_ReportsCN4002()
     {
         var code = """
-            using Microsoft.AndroidX.Compose;
-            namespace Microsoft.AndroidX.Compose
+            using AndroidX.Compose;
+            namespace AndroidX.Compose
             {
                 [ComposeCompanion("")]
                 public sealed partial class EmptyOuter : Java.Lang.Object
@@ -241,8 +241,8 @@ public class CompanionGeneratorTests
     public void GetterOnNonPartialProperty_ReportsCN4003()
     {
         var code = """
-            using Microsoft.AndroidX.Compose;
-            namespace Microsoft.AndroidX.Compose
+            using AndroidX.Compose;
+            namespace AndroidX.Compose
             {
                 [ComposeCompanion("foo/Bar")]
                 public sealed partial class Host : Java.Lang.Object
@@ -262,8 +262,8 @@ public class CompanionGeneratorTests
     public void EmptyGetterName_ReportsCN4004()
     {
         var code = """
-            using Microsoft.AndroidX.Compose;
-            namespace Microsoft.AndroidX.Compose
+            using AndroidX.Compose;
+            namespace AndroidX.Compose
             {
                 [ComposeCompanion("foo/Bar")]
                 public sealed partial class Host : Java.Lang.Object
@@ -283,8 +283,8 @@ public class CompanionGeneratorTests
     public void OrphanedGetter_ReportsCN4005()
     {
         var code = """
-            using Microsoft.AndroidX.Compose;
-            namespace Microsoft.AndroidX.Compose
+            using AndroidX.Compose;
+            namespace AndroidX.Compose
             {
                 public sealed partial class NoHost : Java.Lang.Object
                 {
@@ -303,8 +303,8 @@ public class CompanionGeneratorTests
     public void ReturnTypeWithoutPeerCtor_ReportsCN4006()
     {
         var code = """
-            using Microsoft.AndroidX.Compose;
-            namespace Microsoft.AndroidX.Compose
+            using AndroidX.Compose;
+            namespace AndroidX.Compose
             {
                 public class NoCtor : Java.Lang.Object
                 {
@@ -329,8 +329,8 @@ public class CompanionGeneratorTests
     public void InlineClassWithReturnDescriptor_ReportsCN4007()
     {
         var code = """
-            using Microsoft.AndroidX.Compose;
-            namespace Microsoft.AndroidX.Compose
+            using AndroidX.Compose;
+            namespace AndroidX.Compose
             {
                 [ComposeCompanion("foo/Bar", InlineClass = true)]
                 public sealed partial class Host : Java.Lang.Object
@@ -352,8 +352,8 @@ public class CompanionGeneratorTests
         // Hyphens in Kotlin-mangled inline-class getter names must NOT be
         // rejected by the generator's name validation.
         var code = """
-            using Microsoft.AndroidX.Compose;
-            namespace Microsoft.AndroidX.Compose
+            using AndroidX.Compose;
+            namespace AndroidX.Compose
             {
                 [ComposeCompanion("androidx/compose/ui/text/font/FontStyle", InlineClass = true)]
                 public sealed partial class FontStyle : Java.Lang.Object

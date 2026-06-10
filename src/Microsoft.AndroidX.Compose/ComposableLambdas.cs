@@ -1,9 +1,9 @@
 using System.Runtime.CompilerServices;
-using global::AndroidX.Compose.Runtime;
-using global::AndroidX.Compose.Runtime.Internal;
+using AndroidX.Compose.Runtime;
+using AndroidX.Compose.Runtime.Internal;
 using Kotlin.Jvm.Functions;
 
-namespace Microsoft.AndroidX.Compose;
+namespace AndroidX.Compose;
 
 /// <summary>
 /// Helpers that wrap <see cref="ComposableLambda2"/> /
@@ -150,7 +150,7 @@ internal static class ComposableLambdas
     /// <c>Function3&lt;NavBackStackEntry, Composer, Int, Unit&gt;</c>
     /// @Composable shape used by <c>NavHost</c>'s per-route
     /// <c>composable("route") { ... }</c> destination content. <c>p0</c>
-    /// is the current <see cref="global::AndroidX.Navigation.NavBackStackEntry"/>
+    /// is the current <see cref="AndroidX.Navigation.NavBackStackEntry"/>
     /// handle, <c>p1</c> is the destination's composer, <c>p2</c> is
     /// <c>$changed</c>.
     ///

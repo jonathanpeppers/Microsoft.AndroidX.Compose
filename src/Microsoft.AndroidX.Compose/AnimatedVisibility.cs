@@ -1,7 +1,7 @@
-using global::AndroidX.Compose.Animation;
-using global::AndroidX.Compose.Runtime;
+using AndroidX.Compose.Animation;
+using AndroidX.Compose.Runtime;
 
-namespace Microsoft.AndroidX.Compose;
+namespace AndroidX.Compose;
 
 /// <summary>
 /// <c>AnimatedVisibility</c> — animates the appearance and disappearance
@@ -18,7 +18,7 @@ namespace Microsoft.AndroidX.Compose;
 /// receiver. The scope's helpers (<c>Modifier.animateEnterExit</c>) are
 /// not exposed in v1 — children render with the discarded scope.
 /// Mirror of the bound
-/// <see cref="AnimatedVisibilityKt.AnimatedVisibility(bool, global::AndroidX.Compose.UI.IModifier?, EnterTransition?, ExitTransition?, string?, Kotlin.Jvm.Functions.IFunction3, IComposer?, int, int)"/>
+/// <see cref="AnimatedVisibilityKt.AnimatedVisibility(bool, AndroidX.Compose.UI.IModifier?, EnterTransition?, ExitTransition?, string?, Kotlin.Jvm.Functions.IFunction3, IComposer?, int, int)"/>
 /// overload — no JNI bridge. Enter and exit must be ctor parameters
 /// (not init-only properties) because <see cref="AnimatedVisibility"/>
 /// is a <see cref="ComposableContainer"/> — C# disallows mixing

@@ -5,7 +5,7 @@ using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
 
-namespace Microsoft.AndroidX.Compose.SourceGenerators;
+namespace AndroidX.Compose.SourceGenerators;
 
 /// <summary>
 /// Generates <c>[Flags]</c> enum bodies that name each bit in a Kotlin
@@ -15,8 +15,8 @@ namespace Microsoft.AndroidX.Compose.SourceGenerators;
 [Generator(LanguageNames.CSharp)]
 public sealed class ComposeDefaultsGenerator : IIncrementalGenerator
 {
-    const string GenericAttributeMetadataName = "Microsoft.AndroidX.Compose.ComposeDefaultsAttribute`1";
-    const string DeclarativeAttributeMetadataName = "Microsoft.AndroidX.Compose.ComposeDefaultsAttribute";
+    const string GenericAttributeMetadataName = "AndroidX.Compose.ComposeDefaultsAttribute`1";
+    const string DeclarativeAttributeMetadataName = "AndroidX.Compose.ComposeDefaultsAttribute";
     const string ComposerNamespace = "AndroidX.Compose.Runtime";
     const string ComposerName = "IComposer";
     const string KotlinFunctionNamespace = "Kotlin.Jvm.Functions";
@@ -121,7 +121,7 @@ public sealed class ComposeDefaultsGenerator : IIncrementalGenerator
         var slots = ComposeDefaultsEmitter.SlotsFromSymbol(method, composerIndex);
         var sourceComment = $"{containingType.ToDisplayString()}.{method.Name}";
         var source = ComposeDefaultsEmitter.Emit(enumName, sourceComment, slots);
-        return new GenerationResult(source, $"Microsoft.AndroidX.Compose.{enumName}.g.cs", Array.Empty<Diagnostic>());
+        return new GenerationResult(source, $"AndroidX.Compose.{enumName}.g.cs", Array.Empty<Diagnostic>());
     }
 
     static GenerationResult BuildFromNames(AttributeData attr)
@@ -150,7 +150,7 @@ public sealed class ComposeDefaultsGenerator : IIncrementalGenerator
 
         var slots = ComposeDefaultsEmitter.SlotsFromNames(names);
         var source = ComposeDefaultsEmitter.Emit(enumName, $"declarative names for '{enumName}'", slots);
-        return new GenerationResult(source, $"Microsoft.AndroidX.Compose.{enumName}.g.cs", Array.Empty<Diagnostic>());
+        return new GenerationResult(source, $"AndroidX.Compose.{enumName}.g.cs", Array.Empty<Diagnostic>());
     }
 
     internal static bool IsComposer(ITypeSymbol type) =>

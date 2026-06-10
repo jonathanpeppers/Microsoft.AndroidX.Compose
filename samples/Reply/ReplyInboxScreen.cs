@@ -1,4 +1,4 @@
-namespace Microsoft.AndroidX.Compose.Samples.Reply;
+namespace AndroidX.Compose.Samples.Reply;
 
 /// <summary>
 /// Inbox screen — a <see cref="LazyColumn{T}"/> of
