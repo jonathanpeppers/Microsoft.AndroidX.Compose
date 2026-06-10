@@ -157,6 +157,7 @@ AndroidX.Compose.Column.Column(AndroidX.Compose.Arrangement? verticalArrangement
 AndroidX.Compose.ComposableContainer
 AndroidX.Compose.ComposableContainer.Add(AndroidX.Compose.ComposableNode? child) -> void
 AndroidX.Compose.ComposableContainer.Add(AndroidX.Compose.Modifier! modifier) -> void
+AndroidX.Compose.ComposableContainer.Add(System.Func<AndroidX.Compose.Runtime.IComposer!, AndroidX.Compose.ComposableNode?>! builder) -> void
 AndroidX.Compose.ComposableContainer.Children.get -> System.Collections.Generic.IReadOnlyList<AndroidX.Compose.ComposableNode!>!
 AndroidX.Compose.ComposableContainer.ComposableContainer() -> void
 AndroidX.Compose.ComposableContainer.RenderChildren(AndroidX.Compose.Runtime.IComposer! composer) -> void
@@ -1436,6 +1437,7 @@ static AndroidX.Compose.ComposeExtensions.ViewModel<T>(this AndroidX.Compose.Run
 static AndroidX.Compose.ComposeExtensions.ViewModel<T>(this AndroidX.Compose.Runtime.IComposer! composer, System.Func<T!>! factory, object? key1, object? key2, int line = 0, string! file = "") -> T!
 static AndroidX.Compose.ComposeExtensions.ViewModel<T>(this AndroidX.Compose.Runtime.IComposer! composer, System.Func<T!>! factory, object? key1, object? key2, object? key3, int line = 0, string! file = "") -> T!
 static AndroidX.Compose.ComposeExtensions.ViewModelKeyed<T>(this AndroidX.Compose.Runtime.IComposer! composer, System.Func<T!>! factory, object?[]! keys, int line = 0, string! file = "") -> T!
+static AndroidX.Compose.Composed.implicit operator AndroidX.Compose.Composed!(System.Func<AndroidX.Compose.Runtime.IComposer!, AndroidX.Compose.ComposableNode?>! builder) -> AndroidX.Compose.Composed!
 static AndroidX.Compose.CompositionLocal.Of<T>(System.Func<T>! defaultFactory) -> AndroidX.Compose.CompositionLocal<T>!
 static AndroidX.Compose.CompositionLocal.StaticOf<T>(System.Func<T>! defaultFactory) -> AndroidX.Compose.CompositionLocal<T>!
 static AndroidX.Compose.CompositionLocal<T>.Of(System.Func<T>! defaultFactory) -> AndroidX.Compose.CompositionLocal<T>!

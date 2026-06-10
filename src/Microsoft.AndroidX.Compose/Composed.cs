@@ -53,6 +53,27 @@ public sealed class Composed : ComposableNode
         _builder = builder;
     }
 
+    /// <summary>
+    /// Implicit conversion from a composer-aware builder lambda to a
+    /// <see cref="Composed"/>, so callers can drop the explicit
+    /// <c>new Composed(...)</c> wrapper whenever the target type is
+    /// known to be <see cref="Composed"/>:
+    /// <code>
+    /// Composed node = c =&gt; new Text(c.ColorScheme().OnSurface.ToString());
+    /// </code>
+    /// <para>
+    /// Note: C# only considers user-defined implicit conversions when the
+    /// expression already has a target type that is a delegate
+    /// (<see cref="Func{T, TResult}"/> here). A bare lambda assigned to
+    /// <see cref="ComposableNode"/> still needs an explicit
+    /// <c>new Composed(...)</c> wrapper — collection-initializer support
+    /// for the bare-lambda form is provided separately via
+    /// <see cref="ComposableContainer.Add(System.Func{AndroidX.Compose.Runtime.IComposer, AndroidX.Compose.ComposableNode?})"/>.
+    /// </para>
+    /// </summary>
+    public static implicit operator Composed(Func<IComposer, ComposableNode?> builder) =>
+        new(builder);
+
     /// <inheritdoc />
     public override void Render(IComposer composer)
     {
