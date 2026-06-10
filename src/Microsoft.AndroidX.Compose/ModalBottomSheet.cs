@@ -32,6 +32,11 @@ public sealed class ModalBottomSheet : ComposableContainer
     /// <summary>Optional drag handle drawn at the top of the sheet.</summary>
     public ComposableNode? DragHandle { get; set; }
 
+    /// <summary>Optional <see cref="AndroidX.Compose.Shape"/> used for the
+    /// sheet's container. Defaults to the Material 3 bottom-sheet shape
+    /// when left <c>null</c>.</summary>
+    public Shape? Shape { get; set; }
+
     public override void Render(IComposer composer)
     {
         // Bound C# call — RememberModalBottomSheetState is NOT stripped.
@@ -54,12 +59,14 @@ public sealed class ModalBottomSheet : ComposableContainer
         var modifier = BuildModifier();
         if (modifier   is not null) defaults &= ~(int)ModalBottomSheetDefault.Modifier;
         if (dragHandle is not null) defaults &= ~(int)ModalBottomSheetDefault.DragHandle;
+        if (Shape      is not null) defaults &= ~(int)ModalBottomSheetDefault.Shape;
 
         ComposeBridges.ModalBottomSheet(
             onDismissRequest: onDismiss,
             modifier:         modifier,
             sheetState:       ((Java.Lang.Object)sheetState).Handle,
             dragHandle:       dragHandle,
+            shape:            Shape,
             content:          content,
             defaults:         defaults,
             composer:         composer);

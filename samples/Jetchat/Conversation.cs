@@ -312,7 +312,7 @@ public static class Conversation
         {
             Color    = fg,
             Modifier = Modifier
-                .Background(bg, Shape.RoundedCorners(4, 20, 20, 20))
+                .Background(bg, new RoundedCornerShape(4.Dp(), 20.Dp(), 20.Dp(), 20.Dp()))
                 .Padding(horizontal: 16, vertical: 16),
         };
     }
@@ -430,7 +430,7 @@ public static class Conversation
             },
         };
         if (selected)
-            button.Modifier = Modifier.Background(scheme.Secondary, Shape.RoundedCorners(14, 14, 14, 14));
+            button.Modifier = Modifier.Background(scheme.Secondary, new RoundedCornerShape(14.Dp()));
         return button;
     }
 

@@ -73,6 +73,7 @@ public static class Catalog
 
         // ---- Containers ----
         D.Containers.CardVariantsDemo.Demo,
+        D.Containers.RoundedCornerShapeDemo.Demo,
         D.Containers.SurfaceDemo.Demo,
         D.Containers.BoxAlignmentDemo.Demo,
         D.Containers.ColumnRowArrangementsDemo.Demo,

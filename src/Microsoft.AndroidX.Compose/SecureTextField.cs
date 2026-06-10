@@ -24,7 +24,7 @@ namespace AndroidX.Compose;
 /// <c>prefix</c>, <c>suffix</c>, <c>inputTransformation</c>,
 /// <c>textObfuscationMode</c>, <c>textObfuscationCharacter</c>,
 /// <c>keyboardOptions</c>, <c>onKeyboardAction</c>, <c>onTextLayout</c>,
-/// <c>shape</c>, <c>colors</c>, <c>contentPadding</c>,
+/// <c>colors</c>, <c>contentPadding</c>,
 /// <c>interactionSource</c> — fall back to their Compose defaults
 /// (which configure a <c>RevealLastTyped</c> obfuscation mode and a
 /// password-typed IME).</para>
@@ -66,6 +66,9 @@ public sealed class SecureTextField : ComposableNode
     /// <summary>Optional supporting text rendered below the field (Kotlin <c>supportingText</c>).</summary>
     public ComposableNode? SupportingText { get; set; }
 
+    /// <summary>Optional shape applied to the field's container (Kotlin <c>shape</c>).</summary>
+    public Shape? Shape { get; set; }
+
     public override void Render(IComposer composer)
     {
         var statePeer = _state.Resolve(composer);
@@ -105,6 +108,7 @@ public sealed class SecureTextField : ComposableNode
             trailingIcon:   trailingIcon,
             supportingText: supportingText,
             isError:        IsError,
+            shape:          Shape,
             composer:       composer);
     }
 }

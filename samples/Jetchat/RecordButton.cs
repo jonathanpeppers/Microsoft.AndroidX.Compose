@@ -46,7 +46,7 @@ public static class RecordButton
             var innerModifier = Modifier.FillMaxSize();
             if (recording)
                 innerModifier = innerModifier
-                    .Background(Color.Red, Shape.RoundedCorners(28, 28, 28, 28))
+                    .Background(Color.Red, new RoundedCornerShape(28.Dp()))
                     .Draggable(dragState, Orientation.Horizontal);
             innerModifier = innerModifier.Padding(16);
 
@@ -128,7 +128,7 @@ public static class RecordButton
                         .Size(56)
                         .Padding(24)
                         .Scale(pulseValue)
-                        .Background(Color.Red, Shape.RoundedCorners(28, 28, 28, 28)),
+                        .Background(Color.Red, new RoundedCornerShape(28.Dp())),
                 },
 
                 new Text(timer)

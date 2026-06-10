@@ -1,5 +1,4 @@
 using Android.Runtime;
-using AndroidX.Compose.Foundation.Shape;
 
 namespace AndroidX.Compose;
 
@@ -17,9 +16,9 @@ namespace AndroidX.Compose;
 /// the factory delegates to the existing
 /// <c>ComposeBridges.RoundedCornerShape</c> bridge.
 /// </summary>
-public sealed class Shape : Java.Lang.Object
+public class Shape : Java.Lang.Object
 {
-    Shape(IntPtr handle, JniHandleOwnership transfer)
+    private protected Shape(IntPtr handle, JniHandleOwnership transfer)
         : base(handle, transfer) { }
 
     /// <summary>
@@ -48,10 +47,9 @@ public sealed class Shape : Java.Lang.Object
     /// </remarks>
     public static Shape RoundedCorners(Dp topStart, Dp topEnd, Dp bottomEnd, Dp bottomStart)
     {
-        var rounded = RoundedCornerShapeKt.RoundedCornerShape(
+        IntPtr handle = ComposeBridges.RoundedCornerShape4(
             topStart.Value, topEnd.Value, bottomEnd.Value, bottomStart.Value);
-        IntPtr handle = ((Java.Lang.Object)rounded).Handle;
-        return new Shape(JNIEnv.NewLocalRef(handle), JniHandleOwnership.TransferLocalRef);
+        return new Shape(handle, JniHandleOwnership.TransferLocalRef);
     }
 
     /// <summary>

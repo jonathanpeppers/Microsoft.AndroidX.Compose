@@ -81,6 +81,7 @@ public static class PostScreen
                                         Action<Post>? onShare) =>
         new(onDismissRequest: () => showShareDialog.Value = false)
         {
+            Shape = new RoundedCornerShape(20.Dp()),
             Title = new Text("Share article"),
             Text  = new Text("Functionality not available 😞"),
             ConfirmButton = new Button(onClick: () =>

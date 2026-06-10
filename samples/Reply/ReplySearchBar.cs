@@ -22,7 +22,7 @@ public sealed class ReplySearchBar : ComposableNode
                 Modifier
                     .FillMaxWidth()
                     .Padding(horizontal: 16, vertical: 8)
-                    .Clip(Shape.RoundedCorners(28))
+                    .Clip(new RoundedCornerShape(28.Dp()))
                     .Background(scheme.SurfaceVariant),
                 new Row
                 {
