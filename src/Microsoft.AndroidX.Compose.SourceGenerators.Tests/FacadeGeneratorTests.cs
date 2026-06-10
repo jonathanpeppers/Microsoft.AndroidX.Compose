@@ -333,6 +333,130 @@ public class FacadeGeneratorTests
         Assert.Empty(errors);
     }
 
+    [Theory]
+    [InlineData("bool",   "true",                     "true")]
+    [InlineData("bool",   "false",                    "false")]
+    [InlineData("int",    "42",                       "42")]
+    [InlineData("long",   "100L",                     "100L")]
+    [InlineData("float",  "1.5f",                     "1.5f")]
+    [InlineData("double", "2.5",                      "2.5")]
+    [InlineData("string", "\"hello\"",                "\"hello\"")]
+    [InlineData("string?", "null",                    "null")]
+    public void PrimitiveCtorParam_HonoursExplicitDefaultValue(string type, string sourceDefault, string emittedDefault)
+    {
+        // The bridge `Render` itself never needs the trailing C# default
+        // — but the partial-method declaration must be valid C# (optional
+        // params must be trailing), so the test bridge defaults the
+        // trailing `IComposer composer` to `null!` and the (optional)
+        // user param goes between modifier and composer.
+        var code = $$"""
+            using global::AndroidX.Compose.Runtime;
+            using global::AndroidX.Compose.UI;
+            using AndroidX.Compose;
+            using Kotlin.Jvm.Functions;
+
+            [assembly: ComposeDefaults("WidgetDefault",
+                "modifier", "value")]
+
+            namespace AndroidX.Compose
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(Class="my/pkg/WidgetKt", JvmName="Widget",
+                                   Signature="(Landroidx/compose/ui/Modifier;ILandroidx/compose/runtime/Composer;II)V",
+                                   Defaults=typeof(WidgetDefault))]
+                    [ComposeFacade]
+                    public static partial void Widget(IModifier? modifier, {{type}} value = {{sourceDefault}}, IComposer composer = null!);
+                }
+            }
+            """;
+
+        var (output, diags, emitted) = Run(code, "Widget");
+        Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+        // Ctor surfaces the user param with the propagated default.
+        Assert.Contains($"public Widget({type} value = {emittedDefault})", emitted);
+    }
+
+    [Fact]
+    public void PrimitiveCtorParam_WithoutDefault_StaysRequired()
+    {
+        // Regression guard: when the bridge declares a primitive WITHOUT
+        // an explicit default, the generated facade ctor must keep it
+        // required (no trailing `=`). Mirrors Text_LeafWithPrimitiveCtorParam
+        // but asserted on the negative — the literal " = " (with spaces
+        // around equals) does not appear inside the ctor parameter list.
+        var code = """
+            using global::AndroidX.Compose.Runtime;
+            using global::AndroidX.Compose.UI;
+            using AndroidX.Compose;
+            using Kotlin.Jvm.Functions;
+
+            [assembly: ComposeDefaults("WidgetDefault",
+                "modifier", "!value")]
+
+            namespace AndroidX.Compose
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(Class="my/pkg/WidgetKt", JvmName="Widget",
+                                   Signature="(Landroidx/compose/ui/Modifier;ILandroidx/compose/runtime/Composer;II)V",
+                                   Defaults=typeof(WidgetDefault))]
+                    [ComposeFacade]
+                    public static partial void Widget(IModifier? modifier, int value, IComposer composer);
+                }
+            }
+            """;
+
+        var (output, diags, emitted) = Run(code, "Widget");
+        Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+        Assert.Contains("public Widget(int value)", emitted);
+        Assert.DoesNotContain("public Widget(int value = ", emitted);
+    }
+
+    [Fact]
+    public void PrimitiveCtorParam_DefaultedSortsAfterRequired()
+    {
+        // Bridge declares: required `string text`, then defaulted
+        // `bool enabled = true`. Without re-sorting the ctor params
+        // would be `(string text, bool enabled = true)` which is OK
+        // here, but the test also asserts the defaulted slot stays
+        // before the (always-defaulted) StateHolder. Since we have no
+        // StateHolder in this test, just confirm the two surface in
+        // declaration order with the trailing default.
+        var code = """
+            using global::AndroidX.Compose.Runtime;
+            using global::AndroidX.Compose.UI;
+            using AndroidX.Compose;
+            using Kotlin.Jvm.Functions;
+
+            [assembly: ComposeDefaults("LabelDefault",
+                "!text", "modifier", "enabled")]
+
+            namespace AndroidX.Compose
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(Class="my/pkg/LabelKt", JvmName="Label",
+                                   Signature="(Ljava/lang/String;Landroidx/compose/ui/Modifier;ZLandroidx/compose/runtime/Composer;II)V",
+                                   Defaults=typeof(LabelDefault))]
+                    [ComposeFacade]
+                    public static partial void Label(string text, IModifier? modifier, bool enabled = true, IComposer composer = null!);
+                }
+            }
+            """;
+
+        var (output, diags, emitted) = Run(code, "Label");
+        Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+        // Required `text` first; defaulted `enabled` last with the propagated default.
+        Assert.Contains("public Label(string text, bool enabled = true)", emitted);
+        // Both ctor params surface as readonly backing fields.
+        Assert.Contains("readonly string _text;", emitted);
+        Assert.Contains("readonly bool _enabled;", emitted);
+    }
+
     [Fact]
     public void Surface_ContainerWithWrap2()
     {
@@ -1567,6 +1691,64 @@ public class FacadeGeneratorTests
         // Bridge call uses __state in the IntPtr slot.
         Assert.Contains(
             "global::AndroidX.Compose.ComposeBridges.DatePicker(__state, __modifier, __defaults, composer);",
+            emitted);
+
+        var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
+        Assert.Empty(errors);
+    }
+
+    [Fact]
+    public void StateHolder_SortsBeforeDefaultedPrimitive_PreservesPositionalBinding()
+    {
+        // Regression for PR #240: when a bridge mixes a [StateHolder] slot
+        // with a defaulted-primitive slot (e.g. `bool showModeToggle = true`)
+        // the generated ctor MUST emit StateHolder first, defaulted-primitive
+        // second — otherwise `new Foo(stateHolder)` positional call sites
+        // (Jetnews/Jetchat sample apps) silently rebind to the bool and the
+        // compiler complains "cannot convert from StateHolder to bool".
+        var code = $$"""
+            using global::AndroidX.Compose.Runtime;
+            using global::AndroidX.Compose.UI;
+            using AndroidX.Compose;
+            using Kotlin.Jvm.Functions;
+            using System;
+
+            [assembly: ComposeDefaults("DatePickerDefault",
+                "!state", "modifier", "dateFormatter", "colors", "title", "headline", "showModeToggle")]
+
+            {{DatePickerStateStubs}}
+
+            namespace AndroidX.Compose
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(Class="androidx/compose/material3/DatePickerKt",
+                                   JvmName="DatePicker",
+                                   Signature="{{DatePickerSig}}",
+                                   Defaults=typeof(DatePickerDefault))]
+                    [ComposeFacade]
+                    public static partial void DatePicker(
+                        [StateHolder(Remember = nameof(RememberDatePickerState),
+                                     StateType = typeof(DatePickerState))]
+                        IntPtr state,
+                        IModifier? modifier,
+                        bool showModeToggle = true,
+                        int defaults = 0,
+                        IComposer composer = null!);
+
+                    public static IntPtr RememberDatePickerState(IComposer composer) => default;
+                }
+            }
+            """;
+
+        var (output, diags, emitted) = Run(code, "DatePicker");
+        Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+
+        // The whole point: StateHolder FIRST, primitive SECOND. Any other
+        // ordering breaks positional `new DatePicker(myState)` calls.
+        Assert.Contains(
+            "public DatePicker(global::AndroidX.Compose.DatePickerState? state = null, bool showModeToggle = true)",
             emitted);
 
         var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
