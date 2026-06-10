@@ -152,12 +152,6 @@ AndroidX.Compose.Color.WithOpacity(float opacity) -> AndroidX.Compose.Color
 AndroidX.Compose.Column
 AndroidX.Compose.Column.Column() -> void
 AndroidX.Compose.Column.Column(AndroidX.Compose.Arrangement? verticalArrangement) -> void
-AndroidX.Compose.Composable
-AndroidX.Compose.Composable.Add(AndroidX.Compose.ComposableNode? child) -> void
-AndroidX.Compose.Composable.Add(AndroidX.Compose.Modifier! modifier) -> void
-AndroidX.Compose.Composable.Composable(string! route, System.Func<AndroidX.Compose.NavBackStackEntry!, AndroidX.Compose.ComposableNode!>! content) -> void
-AndroidX.Compose.Composable.Composable(string! route) -> void
-AndroidX.Compose.Composable.Route.get -> string!
 AndroidX.Compose.ComposableContainer
 AndroidX.Compose.ComposableContainer.Add(AndroidX.Compose.ComposableNode? child) -> void
 AndroidX.Compose.ComposableContainer.Add(AndroidX.Compose.Modifier! modifier) -> void
@@ -775,8 +769,14 @@ AndroidX.Compose.NavController.Navigate(string! route) -> void
 AndroidX.Compose.NavController.NavigateUp() -> bool
 AndroidX.Compose.NavController.PopBackStack() -> bool
 AndroidX.Compose.NavController.PopBackStack(string! route, bool inclusive) -> bool
+AndroidX.Compose.NavDestination
+AndroidX.Compose.NavDestination.Add(AndroidX.Compose.ComposableNode? child) -> void
+AndroidX.Compose.NavDestination.Add(AndroidX.Compose.Modifier! modifier) -> void
+AndroidX.Compose.NavDestination.NavDestination(string! route, System.Func<AndroidX.Compose.NavBackStackEntry!, AndroidX.Compose.ComposableNode!>! content) -> void
+AndroidX.Compose.NavDestination.NavDestination(string! route) -> void
+AndroidX.Compose.NavDestination.Route.get -> string!
 AndroidX.Compose.NavHost
-AndroidX.Compose.NavHost.Add(AndroidX.Compose.Composable? route) -> void
+AndroidX.Compose.NavHost.Add(AndroidX.Compose.NavDestination? route) -> void
 AndroidX.Compose.NavHost.Add(AndroidX.Compose.Modifier! modifier) -> void
 AndroidX.Compose.NavHost.NavController.get -> AndroidX.Compose.NavController!
 AndroidX.Compose.NavHost.NavHost(string! startDestination, AndroidX.Compose.NavController? navController = null) -> void

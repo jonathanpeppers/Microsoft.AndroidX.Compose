@@ -167,13 +167,13 @@ public static class PostsRepo
             new(ParagraphType.Text,
                 "Allocate a NavController inside Remember, hand it to a NavHost, " +
                 "and add destinations as collection-initializer children. " +
-                "Static destinations are Composable(\"home\") { children }; dynamic " +
+                "Static destinations are NavDestination(\"home\") { children }; dynamic " +
                 "destinations take a Func<NavBackStackEntry, ComposableNode> " +
                 "factory so they can read route placeholders."),
             new(ParagraphType.CodeBlock,
                 "new NavHost(startDestination: \"home\", navController: nav)"),
             new(ParagraphType.CodeBlock,
-                "    { new Composable(\"home\") { ... } }"),
+                "    { new NavDestination(\"home\") { ... } }"),
         });
 
     static readonly Post _stateHolders = new(
