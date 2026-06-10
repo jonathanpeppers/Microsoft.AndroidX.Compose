@@ -43,14 +43,14 @@ public static class ImageContentScaleDemo
         new Text(label),
         new Box
         {
-            Modifier.Companion
+            Modifier
                 .Border(1, Color.Gray)
                 .Background(Color.LightGray)
                 .Width(160)
                 .Height(80),
             new Image(Resource.Drawable.ic_star, $"Star — {label}")
             {
-                Modifier      = Modifier.Companion.FillMaxSize(),
+                Modifier      = Modifier.FillMaxSize(),
                 ContentScale  = scale,
             },
         },
@@ -61,14 +61,14 @@ public static class ImageContentScaleDemo
         new Text(label),
         new Box
         {
-            Modifier.Companion
+            Modifier
                 .Border(1, Color.Gray)
                 .Background(Color.LightGray)
                 .Width(160)
                 .Height(80),
             new Image(Resource.Drawable.ic_star, $"Star — {label}")
             {
-                Modifier      = Modifier.Companion.FillMaxSize(),
+                Modifier      = Modifier.FillMaxSize(),
                 ContentScale  = ContentScale.None,
                 Alignment     = alignment,
             },
@@ -80,14 +80,14 @@ public static class ImageContentScaleDemo
         new Text(label),
         new Box
         {
-            Modifier.Companion
+            Modifier
                 .Border(1, Color.Gray)
                 .Background(Color.LightGray)
                 .Width(160)
                 .Height(80),
             new Image(Resource.Drawable.ic_star, $"Star — {label}")
             {
-                Modifier      = Modifier.Companion.FillMaxSize(),
+                Modifier      = Modifier.FillMaxSize(),
                 ContentScale  = ContentScale.Fit,
                 Alpha         = alpha,
             },

@@ -20,7 +20,7 @@ public static class ChipsDemo
                 new Text($"Count: {count}, liked: {liked.Value}"),
                 new FlowRow
                 {
-                    Modifier.Companion.FillMaxWidth(),
+                    Modifier.FillMaxWidth(),
                     new AssistChip(onClick: () => count++)
                         { Label = new Text("Assist (+1)") },
                     new ElevatedAssistChip(onClick: () => count++)

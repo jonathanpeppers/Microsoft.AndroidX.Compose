@@ -21,7 +21,7 @@ public static class PinnedScrollBehaviorDemo
             var behavior = c.PinnedScrollBehavior(state);
             return new Column
             {
-                Modifier.Companion.Height(420),
+                Modifier.Height(420),
 
                 new TopAppBar
                 {
@@ -37,7 +37,7 @@ public static class PinnedScrollBehaviorDemo
                     items:       Enumerable.Range(0, 100).ToList(),
                     itemContent: i => new Text($"Row {i:D3}"))
                 {
-                    Modifier = Modifier.Companion
+                    Modifier = Modifier
                         .FillMaxSize()
                         .NestedScroll(behavior.NestedScrollConnection),
                 },

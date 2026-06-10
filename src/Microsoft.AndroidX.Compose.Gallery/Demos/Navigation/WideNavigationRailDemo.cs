@@ -22,7 +22,7 @@ public static class WideNavigationRailDemo
                 // bound it with a fixed-height Box.
                 new Box
                 {
-                    Modifier.Companion.Height(320),
+                    Modifier.Height(320),
                     new WideNavigationRail
                     {
                         new WideNavigationRailItem(selected: idx.Value == 0, onClick: () => idx.Value = 0)

@@ -78,7 +78,7 @@ public static class EmojiSelector
             var selected = c.MutableStateOf(0);
             return new Column
             {
-                Modifier.Companion
+                Modifier
                     .FillMaxWidth()
                     .Background(scheme.SurfaceVariant),
                 new PrimaryTabRow(selectedTabIndex: selected.Value)
@@ -102,13 +102,13 @@ public static class EmojiSelector
     {
         var grid = new Column
         {
-            Modifier.Companion.FillMaxWidth().Padding(8),
+            Modifier.FillMaxWidth().Padding(8),
         };
         for (int row = 0; row < EmojiRows; row++)
         {
             var rowNode = new Row(Arrangement.SpaceEvenly)
             {
-                Modifier.Companion.FillMaxWidth(),
+                Modifier.FillMaxWidth(),
             };
             for (int col = 0; col < EmojiColumns; col++)
             {
@@ -117,7 +117,7 @@ public static class EmojiSelector
                 {
                     FontSize = 18,
                     Color    = scheme.OnSurface,
-                    Modifier = Modifier.Companion
+                    Modifier = Modifier
                         .Clickable(() =>
                         {
                             // Match upstream Jetchat's TextFieldState.addText:
@@ -143,7 +143,7 @@ public static class EmojiSelector
     static Column BuildStickerPlaceholder(ColorScheme scheme) =>
         new()
         {
-            Modifier.Companion.FillMaxWidth().Padding(horizontal: 16, vertical: 48),
+            Modifier.FillMaxWidth().Padding(horizontal: 16, vertical: 48),
             new Text("Stickers not yet implemented in this port.")
             {
                 FontSize = 14,

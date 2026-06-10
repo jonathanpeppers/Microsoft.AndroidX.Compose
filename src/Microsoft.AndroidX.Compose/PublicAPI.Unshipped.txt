@@ -1,7 +1,4 @@
 #nullable enable
-~override AndroidX.Compose.TextOverflow.Equals(object obj) -> bool
-~override AndroidX.Compose.TextOverflow.ToString() -> string
-abstract AndroidX.Compose.ComposableNode.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
 AndroidX.Compose.AlertDialog
 AndroidX.Compose.AlertDialog.AlertDialog(System.Action! onDismissRequest) -> void
 AndroidX.Compose.AlertDialog.ConfirmButton.get -> AndroidX.Compose.ComposableNode?
@@ -79,8 +76,8 @@ AndroidX.Compose.AssistChip.LeadingIcon.set -> void
 AndroidX.Compose.AssistChip.TrailingIcon.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.AssistChip.TrailingIcon.set -> void
 AndroidX.Compose.BackHandler
-AndroidX.Compose.BackHandler.BackHandler(System.Action! onBack, bool enabled) -> void
 AndroidX.Compose.BackHandler.BackHandler(System.Action! onBack) -> void
+AndroidX.Compose.BackHandler.BackHandler(System.Action! onBack, bool enabled) -> void
 AndroidX.Compose.Badge
 AndroidX.Compose.Badge.Badge() -> void
 AndroidX.Compose.BadgedBox
@@ -166,9 +163,9 @@ AndroidX.Compose.ComposableNode.ComposableNode() -> void
 AndroidX.Compose.ComposableNode.Modifier.get -> AndroidX.Compose.Modifier?
 AndroidX.Compose.ComposableNode.Modifier.set -> void
 AndroidX.Compose.ComposableNode.PrependModifier(AndroidX.Compose.Modifier! modifier) -> void
+AndroidX.Compose.ComposeExtensions
 AndroidX.Compose.Composed
 AndroidX.Compose.Composed.Composed(System.Func<AndroidX.Compose.Runtime.IComposer!, AndroidX.Compose.ComposableNode?>! builder) -> void
-AndroidX.Compose.ComposeExtensions
 AndroidX.Compose.CompositionLocal
 AndroidX.Compose.CompositionLocal<T>
 AndroidX.Compose.CompositionLocal<T>.Current(AndroidX.Compose.Runtime.IComposer! composer) -> T
@@ -238,9 +235,9 @@ AndroidX.Compose.DismissibleNavigationDrawer.GesturesEnabled.set -> void
 AndroidX.Compose.DismissibleNavigationDrawer.InitialValue.get -> AndroidX.Compose.Material3.DrawerValue?
 AndroidX.Compose.DismissibleNavigationDrawer.InitialValue.init -> void
 AndroidX.Compose.DisposableEffect
-AndroidX.Compose.DisposableEffect.DisposableEffect(object? key1, object? key2, object? key3, System.Func<AndroidX.Compose.Runtime.DisposableEffectScope!, System.Action!>! effect) -> void
-AndroidX.Compose.DisposableEffect.DisposableEffect(object? key1, object? key2, System.Func<AndroidX.Compose.Runtime.DisposableEffectScope!, System.Action!>! effect) -> void
 AndroidX.Compose.DisposableEffect.DisposableEffect(object? key1, System.Func<AndroidX.Compose.Runtime.DisposableEffectScope!, System.Action!>! effect) -> void
+AndroidX.Compose.DisposableEffect.DisposableEffect(object? key1, object? key2, System.Func<AndroidX.Compose.Runtime.DisposableEffectScope!, System.Action!>! effect) -> void
+AndroidX.Compose.DisposableEffect.DisposableEffect(object? key1, object? key2, object? key3, System.Func<AndroidX.Compose.Runtime.DisposableEffectScope!, System.Action!>! effect) -> void
 AndroidX.Compose.DockedSearchBar
 AndroidX.Compose.DockedSearchBar.DockedSearchBar(bool expanded, System.Action<bool>! onExpandedChange) -> void
 AndroidX.Compose.DockedSearchBar.DockedSearchBar(string! query, System.Action<string!>! onQueryChange, System.Action<string!>! onSearch, bool active, System.Action<bool>! onActiveChange) -> void
@@ -425,6 +422,9 @@ AndroidX.Compose.HorizontalUncontainedCarousel<T>.State.get -> AndroidX.Compose.
 AndroidX.Compose.HorizontalUncontainedCarousel<T>.State.set -> void
 AndroidX.Compose.HorizontalUncontainedCarousel<T>.UserScrollEnabled.get -> bool?
 AndroidX.Compose.HorizontalUncontainedCarousel<T>.UserScrollEnabled.set -> void
+AndroidX.Compose.IState<T>
+AndroidX.Compose.IState<T>.Value.get -> T
+AndroidX.Compose.IStateFlow<T>
 AndroidX.Compose.Icon
 AndroidX.Compose.Icon.Icon(AndroidX.Compose.UI.Graphics.Painter.Painter! painter, string? contentDescription) -> void
 AndroidX.Compose.Icon.Icon(AndroidX.Compose.UI.Graphics.Vector.ImageVector! imageVector, string? contentDescription) -> void
@@ -433,6 +433,8 @@ AndroidX.Compose.Icon.TintArgb.get -> long?
 AndroidX.Compose.Icon.TintArgb.set -> void
 AndroidX.Compose.IconButton
 AndroidX.Compose.IconButton.IconButton(System.Action! onClick) -> void
+AndroidX.Compose.IconToggleButton
+AndroidX.Compose.IconToggleButton.IconToggleButton(bool checked, System.Action<bool>! onCheckedChange) -> void
 AndroidX.Compose.Icons
 AndroidX.Compose.Icons.AutoMirrored
 AndroidX.Compose.Icons.AutoMirrored.Default
@@ -447,8 +449,6 @@ AndroidX.Compose.Icons.Outlined
 AndroidX.Compose.Icons.Rounded
 AndroidX.Compose.Icons.Sharp
 AndroidX.Compose.Icons.TwoTone
-AndroidX.Compose.IconToggleButton
-AndroidX.Compose.IconToggleButton.IconToggleButton(bool checked, System.Action<bool>! onCheckedChange) -> void
 AndroidX.Compose.Image
 AndroidX.Compose.Image.Alignment.get -> AndroidX.Compose.Alignment?
 AndroidX.Compose.Image.Alignment.set -> void
@@ -457,8 +457,8 @@ AndroidX.Compose.Image.Alpha.set -> void
 AndroidX.Compose.Image.ContentScale.get -> AndroidX.Compose.ContentScale?
 AndroidX.Compose.Image.ContentScale.set -> void
 AndroidX.Compose.Image.Image(AndroidX.Compose.UI.Graphics.Painter.Painter! painter, string? contentDescription) -> void
-AndroidX.Compose.Image.Image(int drawableResourceId, string? contentDescription) -> void
 AndroidX.Compose.Image.Image(int drawableResourceId) -> void
+AndroidX.Compose.Image.Image(int drawableResourceId, string? contentDescription) -> void
 AndroidX.Compose.InputChip
 AndroidX.Compose.InputChip.Avatar.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.InputChip.Avatar.set -> void
@@ -469,9 +469,6 @@ AndroidX.Compose.InputChip.LeadingIcon.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.InputChip.LeadingIcon.set -> void
 AndroidX.Compose.InputChip.TrailingIcon.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.InputChip.TrailingIcon.set -> void
-AndroidX.Compose.IState<T>
-AndroidX.Compose.IState<T>.Value.get -> T
-AndroidX.Compose.IStateFlow<T>
 AndroidX.Compose.LargeFlexibleTopAppBar
 AndroidX.Compose.LargeFlexibleTopAppBar.Actions.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.LargeFlexibleTopAppBar.Actions.set -> void
@@ -499,9 +496,9 @@ AndroidX.Compose.LargeTopAppBar.Subtitle.set -> void
 AndroidX.Compose.LargeTopAppBar.Title.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.LargeTopAppBar.Title.set -> void
 AndroidX.Compose.LaunchedEffect
-AndroidX.Compose.LaunchedEffect.LaunchedEffect(object? key1, object? key2, object? key3, System.Func<System.Threading.CancellationToken, System.Threading.Tasks.Task!>! body) -> void
-AndroidX.Compose.LaunchedEffect.LaunchedEffect(object? key1, object? key2, System.Func<System.Threading.CancellationToken, System.Threading.Tasks.Task!>! body) -> void
 AndroidX.Compose.LaunchedEffect.LaunchedEffect(object? key1, System.Func<System.Threading.CancellationToken, System.Threading.Tasks.Task!>! body) -> void
+AndroidX.Compose.LaunchedEffect.LaunchedEffect(object? key1, object? key2, System.Func<System.Threading.CancellationToken, System.Threading.Tasks.Task!>! body) -> void
+AndroidX.Compose.LaunchedEffect.LaunchedEffect(object? key1, object? key2, object? key3, System.Func<System.Threading.CancellationToken, System.Threading.Tasks.Task!>! body) -> void
 AndroidX.Compose.LazyColumn<T>
 AndroidX.Compose.LazyColumn<T>.ContentPadding.get -> AndroidX.Compose.Foundation.Layout.IPaddingValues?
 AndroidX.Compose.LazyColumn<T>.ContentPadding.set -> void
@@ -635,88 +632,8 @@ AndroidX.Compose.ModalWideNavigationRail.Header.get -> AndroidX.Compose.Composab
 AndroidX.Compose.ModalWideNavigationRail.Header.set -> void
 AndroidX.Compose.ModalWideNavigationRail.ModalWideNavigationRail(AndroidX.Compose.WideNavigationRailState? state = null) -> void
 AndroidX.Compose.Modifier
-AndroidX.Compose.Modifier.AbsoluteOffset(AndroidX.Compose.Dp? x = null, AndroidX.Compose.Dp? y = null) -> AndroidX.Compose.Modifier!
-AndroidX.Compose.Modifier.Align(AndroidX.Compose.Alignment! alignment) -> AndroidX.Compose.Modifier!
-AndroidX.Compose.Modifier.Align(AndroidX.Compose.Alignment.Horizontal! alignment) -> AndroidX.Compose.Modifier!
-AndroidX.Compose.Modifier.Align(AndroidX.Compose.Alignment.Vertical! alignment) -> AndroidX.Compose.Modifier!
-AndroidX.Compose.Modifier.Alpha(float alpha) -> AndroidX.Compose.Modifier!
-AndroidX.Compose.Modifier.AspectRatio(float ratio, bool matchHeightConstraintsFirst = false) -> AndroidX.Compose.Modifier!
-AndroidX.Compose.Modifier.Background(AndroidX.Compose.Color color, AndroidX.Compose.Shape? shape) -> AndroidX.Compose.Modifier!
-AndroidX.Compose.Modifier.Background(AndroidX.Compose.Color color) -> AndroidX.Compose.Modifier!
-AndroidX.Compose.Modifier.Border(AndroidX.Compose.Dp width, AndroidX.Compose.Color color, AndroidX.Compose.Dp cornerRadius) -> AndroidX.Compose.Modifier!
-AndroidX.Compose.Modifier.Border(AndroidX.Compose.Dp width, AndroidX.Compose.Color color, AndroidX.Compose.Shape? shape) -> AndroidX.Compose.Modifier!
-AndroidX.Compose.Modifier.Border(AndroidX.Compose.Dp width, AndroidX.Compose.Color color) -> AndroidX.Compose.Modifier!
-AndroidX.Compose.Modifier.CaptionBarPadding() -> AndroidX.Compose.Modifier!
-AndroidX.Compose.Modifier.ClearAndSetSemantics(string! contentDescription) -> AndroidX.Compose.Modifier!
-AndroidX.Compose.Modifier.ClearAndSetSemantics(string? contentDescription, AndroidX.Compose.SemanticsRole? role) -> AndroidX.Compose.Modifier!
-AndroidX.Compose.Modifier.ClearAndSetSemantics(System.Action<AndroidX.Compose.SemanticsScope!>! properties) -> AndroidX.Compose.Modifier!
-AndroidX.Compose.Modifier.Clickable(System.Action! onClick) -> AndroidX.Compose.Modifier!
-AndroidX.Compose.Modifier.Clip(AndroidX.Compose.Dp cornerRadius) -> AndroidX.Compose.Modifier!
-AndroidX.Compose.Modifier.Clip(AndroidX.Compose.Shape! shape) -> AndroidX.Compose.Modifier!
-AndroidX.Compose.Modifier.CombinedClickable(System.Action! onClick, System.Action? onLongClick = null, System.Action? onDoubleClick = null) -> AndroidX.Compose.Modifier!
-AndroidX.Compose.Modifier.DefaultMinSize(AndroidX.Compose.Dp? minWidth = null, AndroidX.Compose.Dp? minHeight = null) -> AndroidX.Compose.Modifier!
-AndroidX.Compose.Modifier.DetectTapGestures(System.Action<AndroidX.Compose.Offset>? onTap = null, System.Action<AndroidX.Compose.Offset>? onPress = null, System.Action<AndroidX.Compose.Offset>? onLongPress = null, System.Action<AndroidX.Compose.Offset>? onDoubleTap = null, object? key = null) -> AndroidX.Compose.Modifier!
-AndroidX.Compose.Modifier.DisplayCutoutPadding() -> AndroidX.Compose.Modifier!
-AndroidX.Compose.Modifier.DragAndDropTarget(System.Func<AndroidX.Compose.DragAndDropEvent!, bool>! shouldStartDragAndDrop, AndroidX.Compose.DragAndDropTarget! target) -> AndroidX.Compose.Modifier!
-AndroidX.Compose.Modifier.Draggable(AndroidX.Compose.DraggableState! state, AndroidX.Compose.Orientation orientation, bool enabled = true) -> AndroidX.Compose.Modifier!
-AndroidX.Compose.Modifier.FillMaxHeight(float fraction = 1) -> AndroidX.Compose.Modifier!
-AndroidX.Compose.Modifier.FillMaxSize(float fraction = 1) -> AndroidX.Compose.Modifier!
-AndroidX.Compose.Modifier.FillMaxWidth(float fraction = 1) -> AndroidX.Compose.Modifier!
-AndroidX.Compose.Modifier.Focusable(bool enabled = true) -> AndroidX.Compose.Modifier!
-AndroidX.Compose.Modifier.FocusGroup() -> AndroidX.Compose.Modifier!
-AndroidX.Compose.Modifier.FocusRequester(AndroidX.Compose.FocusRequester! requester) -> AndroidX.Compose.Modifier!
-AndroidX.Compose.Modifier.GraphicsLayer(float? scaleX = null, float? scaleY = null, float? alpha = null, float? translationX = null, float? translationY = null, float? shadowElevation = null, float? rotationX = null, float? rotationY = null, float? rotationZ = null, float? cameraDistance = null, long? transformOrigin = null, AndroidX.Compose.Shape? shape = null, bool? clip = null) -> AndroidX.Compose.Modifier!
-AndroidX.Compose.Modifier.Height(AndroidX.Compose.Dp height) -> AndroidX.Compose.Modifier!
-AndroidX.Compose.Modifier.HeightIn(AndroidX.Compose.Dp? min = null, AndroidX.Compose.Dp? max = null) -> AndroidX.Compose.Modifier!
-AndroidX.Compose.Modifier.HorizontalScroll(AndroidX.Compose.ScrollState! state, bool enabled = true, bool reverseScrolling = false) -> AndroidX.Compose.Modifier!
-AndroidX.Compose.Modifier.ImePadding() -> AndroidX.Compose.Modifier!
-AndroidX.Compose.Modifier.MandatorySystemGesturesPadding() -> AndroidX.Compose.Modifier!
-AndroidX.Compose.Modifier.MatchParentSize() -> AndroidX.Compose.Modifier!
-AndroidX.Compose.Modifier.MinimumInteractiveComponentSize() -> AndroidX.Compose.Modifier!
-AndroidX.Compose.Modifier.NavigationBarsPadding() -> AndroidX.Compose.Modifier!
-AndroidX.Compose.Modifier.NestedScroll(AndroidX.Compose.UI.Input.NestedScroll.INestedScrollConnection! connection) -> AndroidX.Compose.Modifier!
-AndroidX.Compose.Modifier.Offset(AndroidX.Compose.Dp? x = null, AndroidX.Compose.Dp? y = null) -> AndroidX.Compose.Modifier!
-AndroidX.Compose.Modifier.OnFocusChanged(System.Action<AndroidX.Compose.FocusState>! onFocusChanged) -> AndroidX.Compose.Modifier!
-AndroidX.Compose.Modifier.Padding(AndroidX.Compose.Dp all) -> AndroidX.Compose.Modifier!
-AndroidX.Compose.Modifier.Padding(AndroidX.Compose.Dp horizontal, AndroidX.Compose.Dp vertical) -> AndroidX.Compose.Modifier!
-AndroidX.Compose.Modifier.Padding(AndroidX.Compose.Dp start, AndroidX.Compose.Dp top, AndroidX.Compose.Dp end, AndroidX.Compose.Dp bottom) -> AndroidX.Compose.Modifier!
-AndroidX.Compose.Modifier.RequiredHeight(AndroidX.Compose.Dp height) -> AndroidX.Compose.Modifier!
-AndroidX.Compose.Modifier.RequiredSize(AndroidX.Compose.Dp size) -> AndroidX.Compose.Modifier!
-AndroidX.Compose.Modifier.RequiredSize(AndroidX.Compose.Dp width, AndroidX.Compose.Dp height) -> AndroidX.Compose.Modifier!
-AndroidX.Compose.Modifier.RequiredWidth(AndroidX.Compose.Dp width) -> AndroidX.Compose.Modifier!
-AndroidX.Compose.Modifier.Rotate(float degrees) -> AndroidX.Compose.Modifier!
-AndroidX.Compose.Modifier.SafeContentPadding() -> AndroidX.Compose.Modifier!
-AndroidX.Compose.Modifier.SafeDrawingPadding() -> AndroidX.Compose.Modifier!
-AndroidX.Compose.Modifier.SafeGesturesPadding() -> AndroidX.Compose.Modifier!
-AndroidX.Compose.Modifier.Scale(float scale) -> AndroidX.Compose.Modifier!
-AndroidX.Compose.Modifier.Scale(float scaleX, float scaleY) -> AndroidX.Compose.Modifier!
-AndroidX.Compose.Modifier.Selectable(bool selected, System.Action! onClick) -> AndroidX.Compose.Modifier!
-AndroidX.Compose.Modifier.Semantics(AndroidX.Compose.SemanticsRole role) -> AndroidX.Compose.Modifier!
-AndroidX.Compose.Modifier.Semantics(bool mergeDescendants, string! contentDescription) -> AndroidX.Compose.Modifier!
-AndroidX.Compose.Modifier.Semantics(bool mergeDescendants, string? contentDescription, AndroidX.Compose.SemanticsRole? role) -> AndroidX.Compose.Modifier!
-AndroidX.Compose.Modifier.Semantics(bool mergeDescendants, System.Action<AndroidX.Compose.SemanticsScope!>! properties) -> AndroidX.Compose.Modifier!
-AndroidX.Compose.Modifier.Semantics(string! contentDescription) -> AndroidX.Compose.Modifier!
-AndroidX.Compose.Modifier.Semantics(string? contentDescription, AndroidX.Compose.SemanticsRole? role) -> AndroidX.Compose.Modifier!
-AndroidX.Compose.Modifier.Semantics(System.Action<AndroidX.Compose.SemanticsScope!>! properties) -> AndroidX.Compose.Modifier!
-AndroidX.Compose.Modifier.Shadow(AndroidX.Compose.Dp elevation, AndroidX.Compose.Shape? shape = null) -> AndroidX.Compose.Modifier!
-AndroidX.Compose.Modifier.Size(AndroidX.Compose.Dp size) -> AndroidX.Compose.Modifier!
-AndroidX.Compose.Modifier.Size(AndroidX.Compose.Dp width, AndroidX.Compose.Dp height) -> AndroidX.Compose.Modifier!
-AndroidX.Compose.Modifier.SizeIn(AndroidX.Compose.Dp? minWidth = null, AndroidX.Compose.Dp? minHeight = null, AndroidX.Compose.Dp? maxWidth = null, AndroidX.Compose.Dp? maxHeight = null) -> AndroidX.Compose.Modifier!
-AndroidX.Compose.Modifier.StatusBarsPadding() -> AndroidX.Compose.Modifier!
-AndroidX.Compose.Modifier.SystemBarsPadding() -> AndroidX.Compose.Modifier!
-AndroidX.Compose.Modifier.SystemGesturesPadding() -> AndroidX.Compose.Modifier!
-AndroidX.Compose.Modifier.TestTag(string! tag) -> AndroidX.Compose.Modifier!
 AndroidX.Compose.Modifier.Then(AndroidX.Compose.Modifier! other) -> AndroidX.Compose.Modifier!
-AndroidX.Compose.Modifier.Toggleable(bool value, System.Action<bool>! onValueChange) -> AndroidX.Compose.Modifier!
-AndroidX.Compose.Modifier.VerticalScroll(AndroidX.Compose.ScrollState! state, bool enabled = true, bool reverseScrolling = false) -> AndroidX.Compose.Modifier!
-AndroidX.Compose.Modifier.WaterfallPadding() -> AndroidX.Compose.Modifier!
-AndroidX.Compose.Modifier.Weight(float weight, bool fill = true) -> AndroidX.Compose.Modifier!
-AndroidX.Compose.Modifier.Width(AndroidX.Compose.Dp width) -> AndroidX.Compose.Modifier!
-AndroidX.Compose.Modifier.WidthIn(AndroidX.Compose.Dp? min = null, AndroidX.Compose.Dp? max = null) -> AndroidX.Compose.Modifier!
-AndroidX.Compose.Modifier.WrapContentHeight(bool unbounded = false) -> AndroidX.Compose.Modifier!
-AndroidX.Compose.Modifier.WrapContentSize(bool unbounded = false) -> AndroidX.Compose.Modifier!
-AndroidX.Compose.Modifier.WrapContentWidth(bool unbounded = false) -> AndroidX.Compose.Modifier!
-AndroidX.Compose.Modifier.ZIndex(float z) -> AndroidX.Compose.Modifier!
+AndroidX.Compose.ModifierExtensions
 AndroidX.Compose.MultiChoiceSegmentedButtonRow
 AndroidX.Compose.MultiChoiceSegmentedButtonRow.MultiChoiceSegmentedButtonRow() -> void
 AndroidX.Compose.MutableNumberState<T>
@@ -740,8 +657,8 @@ AndroidX.Compose.MutableStateList<T>.IndexOf(T item) -> int
 AndroidX.Compose.MutableStateList<T>.Insert(int index, T item) -> void
 AndroidX.Compose.MutableStateList<T>.IsReadOnly.get -> bool
 AndroidX.Compose.MutableStateList<T>.MutableStateList() -> void
-AndroidX.Compose.MutableStateList<T>.MutableStateList(params T[]! elements) -> void
 AndroidX.Compose.MutableStateList<T>.MutableStateList(System.Collections.Generic.IEnumerable<T>! initial) -> void
+AndroidX.Compose.MutableStateList<T>.MutableStateList(params T[]! elements) -> void
 AndroidX.Compose.MutableStateList<T>.Remove(T item) -> bool
 AndroidX.Compose.MutableStateList<T>.RemoveAt(int index) -> void
 AndroidX.Compose.MutableStateList<T>.this[int index].get -> T
@@ -761,33 +678,45 @@ AndroidX.Compose.MutableStateMap<TKey, TValue>.MutableStateMap() -> void
 AndroidX.Compose.MutableStateMap<TKey, TValue>.MutableStateMap(System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<TKey, TValue>>! initial) -> void
 AndroidX.Compose.MutableStateMap<TKey, TValue>.Remove(System.Collections.Generic.KeyValuePair<TKey, TValue> item) -> bool
 AndroidX.Compose.MutableStateMap<TKey, TValue>.Remove(TKey key) -> bool
-AndroidX.Compose.MutableStateMap<TKey, TValue>.this[TKey key].get -> TValue
-AndroidX.Compose.MutableStateMap<TKey, TValue>.this[TKey key].set -> void
 AndroidX.Compose.MutableStateMap<TKey, TValue>.TryGetValue(TKey key, out TValue value) -> bool
 AndroidX.Compose.MutableStateMap<TKey, TValue>.Values.get -> System.Collections.Generic.ICollection<TValue>!
+AndroidX.Compose.MutableStateMap<TKey, TValue>.this[TKey key].get -> TValue
+AndroidX.Compose.MutableStateMap<TKey, TValue>.this[TKey key].set -> void
 AndroidX.Compose.NavBackStackEntry
 AndroidX.Compose.NavBackStackEntry.Arguments.get -> Android.OS.Bundle?
 AndroidX.Compose.NavBackStackEntry.Route.get -> string?
 AndroidX.Compose.NavController
 AndroidX.Compose.NavController.CurrentBackStackEntry.get -> AndroidX.Compose.NavBackStackEntry?
 AndroidX.Compose.NavController.NavController() -> void
-AndroidX.Compose.NavController.Navigate(string! route, AndroidX.Compose.NavOptions! options) -> void
 AndroidX.Compose.NavController.Navigate(string! route) -> void
+AndroidX.Compose.NavController.Navigate(string! route, AndroidX.Compose.NavOptions! options) -> void
 AndroidX.Compose.NavController.NavigateUp() -> bool
 AndroidX.Compose.NavController.PopBackStack() -> bool
 AndroidX.Compose.NavController.PopBackStack(string! route, bool inclusive) -> bool
 AndroidX.Compose.NavDestination
 AndroidX.Compose.NavDestination.Add(AndroidX.Compose.ComposableNode? child) -> void
 AndroidX.Compose.NavDestination.Add(AndroidX.Compose.Modifier! modifier) -> void
-AndroidX.Compose.NavDestination.NavDestination(string! route, System.Func<AndroidX.Compose.NavBackStackEntry!, AndroidX.Compose.ComposableNode!>! content) -> void
 AndroidX.Compose.NavDestination.NavDestination(string! route) -> void
+AndroidX.Compose.NavDestination.NavDestination(string! route, System.Func<AndroidX.Compose.NavBackStackEntry!, AndroidX.Compose.ComposableNode!>! content) -> void
 AndroidX.Compose.NavDestination.Route.get -> string!
 AndroidX.Compose.NavHost
-AndroidX.Compose.NavHost.Add(AndroidX.Compose.NavDestination? route) -> void
 AndroidX.Compose.NavHost.Add(AndroidX.Compose.Modifier! modifier) -> void
+AndroidX.Compose.NavHost.Add(AndroidX.Compose.NavDestination? route) -> void
 AndroidX.Compose.NavHost.NavController.get -> AndroidX.Compose.NavController!
 AndroidX.Compose.NavHost.NavHost(string! startDestination, AndroidX.Compose.NavController? navController = null) -> void
 AndroidX.Compose.NavHost.StartDestination.get -> string!
+AndroidX.Compose.NavOptions
+AndroidX.Compose.NavOptions.LaunchSingleTop.get -> bool
+AndroidX.Compose.NavOptions.LaunchSingleTop.set -> void
+AndroidX.Compose.NavOptions.NavOptions() -> void
+AndroidX.Compose.NavOptions.PopUpToInclusive.get -> bool
+AndroidX.Compose.NavOptions.PopUpToInclusive.set -> void
+AndroidX.Compose.NavOptions.PopUpToRoute.get -> string?
+AndroidX.Compose.NavOptions.PopUpToRoute.set -> void
+AndroidX.Compose.NavOptions.PopUpToSaveState.get -> bool
+AndroidX.Compose.NavOptions.PopUpToSaveState.set -> void
+AndroidX.Compose.NavOptions.RestoreState.get -> bool
+AndroidX.Compose.NavOptions.RestoreState.set -> void
 AndroidX.Compose.NavigationBar
 AndroidX.Compose.NavigationBar.NavigationBar() -> void
 AndroidX.Compose.NavigationBarItem
@@ -812,18 +741,6 @@ AndroidX.Compose.NavigationRailItem.Icon.set -> void
 AndroidX.Compose.NavigationRailItem.Label.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.NavigationRailItem.Label.set -> void
 AndroidX.Compose.NavigationRailItem.NavigationRailItem(bool selected, System.Action! onClick) -> void
-AndroidX.Compose.NavOptions
-AndroidX.Compose.NavOptions.LaunchSingleTop.get -> bool
-AndroidX.Compose.NavOptions.LaunchSingleTop.set -> void
-AndroidX.Compose.NavOptions.NavOptions() -> void
-AndroidX.Compose.NavOptions.PopUpToInclusive.get -> bool
-AndroidX.Compose.NavOptions.PopUpToInclusive.set -> void
-AndroidX.Compose.NavOptions.PopUpToRoute.get -> string?
-AndroidX.Compose.NavOptions.PopUpToRoute.set -> void
-AndroidX.Compose.NavOptions.PopUpToSaveState.get -> bool
-AndroidX.Compose.NavOptions.PopUpToSaveState.set -> void
-AndroidX.Compose.NavOptions.RestoreState.get -> bool
-AndroidX.Compose.NavOptions.RestoreState.set -> void
 AndroidX.Compose.Offset
 AndroidX.Compose.Offset.Equals(AndroidX.Compose.Offset other) -> bool
 AndroidX.Compose.Offset.Offset() -> void
@@ -936,8 +853,6 @@ AndroidX.Compose.Scaffold.SnackbarHost.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.Scaffold.SnackbarHost.set -> void
 AndroidX.Compose.Scaffold.TopBar.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.Scaffold.TopBar.set -> void
-AndroidX.Compose.ScrollableTabRow
-AndroidX.Compose.ScrollableTabRow.ScrollableTabRow(int selectedTabIndex) -> void
 AndroidX.Compose.ScrollState
 AndroidX.Compose.ScrollState.AnimateScrollToAsync(int value, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
 AndroidX.Compose.ScrollState.CanScrollBackward.get -> bool
@@ -948,6 +863,8 @@ AndroidX.Compose.ScrollState.ScrollState(int initial = 0) -> void
 AndroidX.Compose.ScrollState.ScrollToAsync(int value, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<float>!
 AndroidX.Compose.ScrollState.Value.get -> int
 AndroidX.Compose.ScrollState.ViewportSize.get -> int
+AndroidX.Compose.ScrollableTabRow
+AndroidX.Compose.ScrollableTabRow.ScrollableTabRow(int selectedTabIndex) -> void
 AndroidX.Compose.SearchBar
 AndroidX.Compose.SearchBar.InputField.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.SearchBar.InputField.set -> void
@@ -1009,10 +926,10 @@ AndroidX.Compose.SemanticsRole.Tab = 4 -> AndroidX.Compose.SemanticsRole
 AndroidX.Compose.SemanticsRole.ValuePicker = 7 -> AndroidX.Compose.SemanticsRole
 AndroidX.Compose.SemanticsScope
 AndroidX.Compose.SemanticsScope.ContentDescription(string! description) -> AndroidX.Compose.SemanticsScope!
-AndroidX.Compose.SemanticsScope.OnClick(string? label, System.Action! action) -> AndroidX.Compose.SemanticsScope!
-AndroidX.Compose.SemanticsScope.OnClick(string? label, System.Func<bool>! action) -> AndroidX.Compose.SemanticsScope!
 AndroidX.Compose.SemanticsScope.OnClick(System.Action! action) -> AndroidX.Compose.SemanticsScope!
 AndroidX.Compose.SemanticsScope.OnClick(System.Func<bool>! action) -> AndroidX.Compose.SemanticsScope!
+AndroidX.Compose.SemanticsScope.OnClick(string? label, System.Action! action) -> AndroidX.Compose.SemanticsScope!
+AndroidX.Compose.SemanticsScope.OnClick(string? label, System.Func<bool>! action) -> AndroidX.Compose.SemanticsScope!
 AndroidX.Compose.SemanticsScope.Role(AndroidX.Compose.SemanticsRole role) -> AndroidX.Compose.SemanticsScope!
 AndroidX.Compose.SemanticsScope.Selected(bool isSelected) -> AndroidX.Compose.SemanticsScope!
 AndroidX.Compose.SemanticsScope.StateDescription(string! description) -> AndroidX.Compose.SemanticsScope!
@@ -1250,6 +1167,7 @@ AndroidX.Compose.WideNavigationRailState.CurrentValue.get -> AndroidX.Compose.Ma
 AndroidX.Compose.WideNavigationRailState.InitialValue.get -> AndroidX.Compose.Material3.WideNavigationRailValue!
 AndroidX.Compose.WideNavigationRailState.TargetValue.get -> AndroidX.Compose.Material3.WideNavigationRailValue!
 AndroidX.Compose.WideNavigationRailState.WideNavigationRailState(AndroidX.Compose.Material3.WideNavigationRailValue? initialValue = null) -> void
+abstract AndroidX.Compose.ComposableNode.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
 override AndroidX.Compose.AlertDialog.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
 override AndroidX.Compose.AnimatedContent<T>.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
 override AndroidX.Compose.AnimatedVisibility.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
@@ -1425,8 +1343,8 @@ static AndroidX.Compose.Arrangement.Center.get -> AndroidX.Compose.Arrangement!
 static AndroidX.Compose.Arrangement.End.get -> AndroidX.Compose.Arrangement!
 static AndroidX.Compose.Arrangement.SpaceAround.get -> AndroidX.Compose.Arrangement!
 static AndroidX.Compose.Arrangement.SpaceBetween.get -> AndroidX.Compose.Arrangement!
-static AndroidX.Compose.Arrangement.SpacedBy(int dp) -> AndroidX.Compose.Arrangement!
 static AndroidX.Compose.Arrangement.SpaceEvenly.get -> AndroidX.Compose.Arrangement!
+static AndroidX.Compose.Arrangement.SpacedBy(int dp) -> AndroidX.Compose.Arrangement!
 static AndroidX.Compose.Arrangement.Start.get -> AndroidX.Compose.Arrangement!
 static AndroidX.Compose.Arrangement.Top.get -> AndroidX.Compose.Arrangement!
 static AndroidX.Compose.Color.Black.get -> AndroidX.Compose.Color
@@ -1439,34 +1357,34 @@ static AndroidX.Compose.Color.FromHex(string! hex) -> AndroidX.Compose.Color
 static AndroidX.Compose.Color.FromRgb(byte red, byte green, byte blue) -> AndroidX.Compose.Color
 static AndroidX.Compose.Color.Gray.get -> AndroidX.Compose.Color
 static AndroidX.Compose.Color.Green.get -> AndroidX.Compose.Color
-static AndroidX.Compose.Color.implicit operator AndroidX.Compose.Color(long packedValue) -> AndroidX.Compose.Color
-static AndroidX.Compose.Color.implicit operator long(AndroidX.Compose.Color c) -> long
 static AndroidX.Compose.Color.LightGray.get -> AndroidX.Compose.Color
 static AndroidX.Compose.Color.Magenta.get -> AndroidX.Compose.Color
-static AndroidX.Compose.Color.operator !=(AndroidX.Compose.Color left, AndroidX.Compose.Color right) -> bool
-static AndroidX.Compose.Color.operator ==(AndroidX.Compose.Color left, AndroidX.Compose.Color right) -> bool
 static AndroidX.Compose.Color.Red.get -> AndroidX.Compose.Color
 static AndroidX.Compose.Color.Transparent.get -> AndroidX.Compose.Color
 static AndroidX.Compose.Color.Unspecified.get -> AndroidX.Compose.Color
 static AndroidX.Compose.Color.White.get -> AndroidX.Compose.Color
 static AndroidX.Compose.Color.Yellow.get -> AndroidX.Compose.Color
+static AndroidX.Compose.Color.implicit operator AndroidX.Compose.Color(long packedValue) -> AndroidX.Compose.Color
+static AndroidX.Compose.Color.implicit operator long(AndroidX.Compose.Color c) -> long
+static AndroidX.Compose.Color.operator !=(AndroidX.Compose.Color left, AndroidX.Compose.Color right) -> bool
+static AndroidX.Compose.Color.operator ==(AndroidX.Compose.Color left, AndroidX.Compose.Color right) -> bool
 static AndroidX.Compose.ComposeExtensions.BooleanResource(this AndroidX.Compose.Runtime.IComposer! composer, int id) -> bool
 static AndroidX.Compose.ComposeExtensions.ColorResource(this AndroidX.Compose.Runtime.IComposer! composer, int id) -> long
 static AndroidX.Compose.ComposeExtensions.ColorScheme(this AndroidX.Compose.Runtime.IComposer! composer) -> AndroidX.Compose.Material3.ColorScheme!
 static AndroidX.Compose.ComposeExtensions.DerivedStateOf<T>(System.Func<T>! calculation) -> AndroidX.Compose.DerivedState<T>!
 static AndroidX.Compose.ComposeExtensions.DerivedStateOf<T>(this AndroidX.Compose.Runtime.IComposer! composer, System.Func<T>! calculation) -> AndroidX.Compose.DerivedState<T>!
 static AndroidX.Compose.ComposeExtensions.DimensionResource(this AndroidX.Compose.Runtime.IComposer! composer, int id) -> AndroidX.Compose.Dp
-static AndroidX.Compose.ComposeExtensions.DisposableEffect(this AndroidX.Compose.Runtime.IComposer! composer, object? key1, object? key2, object? key3, System.Func<AndroidX.Compose.Runtime.DisposableEffectScope!, System.Action!>! effect) -> void
-static AndroidX.Compose.ComposeExtensions.DisposableEffect(this AndroidX.Compose.Runtime.IComposer! composer, object? key1, object? key2, System.Func<AndroidX.Compose.Runtime.DisposableEffectScope!, System.Action!>! effect) -> void
 static AndroidX.Compose.ComposeExtensions.DisposableEffect(this AndroidX.Compose.Runtime.IComposer! composer, object? key1, System.Func<AndroidX.Compose.Runtime.DisposableEffectScope!, System.Action!>! effect) -> void
+static AndroidX.Compose.ComposeExtensions.DisposableEffect(this AndroidX.Compose.Runtime.IComposer! composer, object? key1, object? key2, System.Func<AndroidX.Compose.Runtime.DisposableEffectScope!, System.Action!>! effect) -> void
+static AndroidX.Compose.ComposeExtensions.DisposableEffect(this AndroidX.Compose.Runtime.IComposer! composer, object? key1, object? key2, object? key3, System.Func<AndroidX.Compose.Runtime.DisposableEffectScope!, System.Action!>! effect) -> void
 static AndroidX.Compose.ComposeExtensions.EnableEdgeToEdge(this AndroidX.Activity.ComponentActivity! activity) -> void
 static AndroidX.Compose.ComposeExtensions.EnterAlwaysScrollBehavior(this AndroidX.Compose.Runtime.IComposer! composer, AndroidX.Compose.Material3.TopAppBarState! state, int line = 0, string! file = "") -> AndroidX.Compose.Material3.ITopAppBarScrollBehavior!
 static AndroidX.Compose.ComposeExtensions.ExitUntilCollapsedScrollBehavior(this AndroidX.Compose.Runtime.IComposer! composer, AndroidX.Compose.Material3.TopAppBarState! state, int line = 0, string! file = "") -> AndroidX.Compose.Material3.ITopAppBarScrollBehavior!
 static AndroidX.Compose.ComposeExtensions.IntegerArrayResource(this AndroidX.Compose.Runtime.IComposer! composer, int id) -> int[]!
 static AndroidX.Compose.ComposeExtensions.IntegerResource(this AndroidX.Compose.Runtime.IComposer! composer, int id) -> int
-static AndroidX.Compose.ComposeExtensions.LaunchedEffect(this AndroidX.Compose.Runtime.IComposer! composer, object? key1, object? key2, object? key3, System.Func<System.Threading.CancellationToken, System.Threading.Tasks.Task!>! body) -> void
-static AndroidX.Compose.ComposeExtensions.LaunchedEffect(this AndroidX.Compose.Runtime.IComposer! composer, object? key1, object? key2, System.Func<System.Threading.CancellationToken, System.Threading.Tasks.Task!>! body) -> void
 static AndroidX.Compose.ComposeExtensions.LaunchedEffect(this AndroidX.Compose.Runtime.IComposer! composer, object? key1, System.Func<System.Threading.CancellationToken, System.Threading.Tasks.Task!>! body) -> void
+static AndroidX.Compose.ComposeExtensions.LaunchedEffect(this AndroidX.Compose.Runtime.IComposer! composer, object? key1, object? key2, System.Func<System.Threading.CancellationToken, System.Threading.Tasks.Task!>! body) -> void
+static AndroidX.Compose.ComposeExtensions.LaunchedEffect(this AndroidX.Compose.Runtime.IComposer! composer, object? key1, object? key2, object? key3, System.Func<System.Threading.CancellationToken, System.Threading.Tasks.Task!>! body) -> void
 static AndroidX.Compose.ComposeExtensions.MutableStateFlowOf<T>(this AndroidX.Compose.Runtime.IComposer! composer, T initialValue, int line = 0, string! file = "") -> AndroidX.Compose.MutableStateFlow<T>!
 static AndroidX.Compose.ComposeExtensions.MutableStateOf(this AndroidX.Compose.Runtime.IComposer! composer, double initial, int line = 0, string! file = "") -> AndroidX.Compose.MutableNumberState<double>!
 static AndroidX.Compose.ComposeExtensions.MutableStateOf(this AndroidX.Compose.Runtime.IComposer! composer, float initial, int line = 0, string! file = "") -> AndroidX.Compose.MutableNumberState<float>!
@@ -1477,12 +1395,12 @@ static AndroidX.Compose.ComposeExtensions.NewTextFieldValue(string! text = "", l
 static AndroidX.Compose.ComposeExtensions.NewTextFieldValue(this AndroidX.Compose.Runtime.IComposer! composer, string! text = "", long selection = 0, AndroidX.Compose.UI.Text.TextRange? composition = null) -> AndroidX.Compose.UI.Text.Input.TextFieldValue!
 static AndroidX.Compose.ComposeExtensions.PainterResource(this AndroidX.Compose.Runtime.IComposer! composer, int id) -> AndroidX.Compose.UI.Graphics.Painter.Painter!
 static AndroidX.Compose.ComposeExtensions.PinnedScrollBehavior(this AndroidX.Compose.Runtime.IComposer! composer, AndroidX.Compose.Material3.TopAppBarState! state, int line = 0, string! file = "") -> AndroidX.Compose.Material3.ITopAppBarScrollBehavior!
-static AndroidX.Compose.ComposeExtensions.PluralStringResource(this AndroidX.Compose.Runtime.IComposer! composer, int id, int count, params object?[]! formatArgs) -> string!
 static AndroidX.Compose.ComposeExtensions.PluralStringResource(this AndroidX.Compose.Runtime.IComposer! composer, int id, int count) -> string!
-static AndroidX.Compose.ComposeExtensions.ProduceState<T>(this AndroidX.Compose.Runtime.IComposer! composer, T initialValue, object? key1, object? key2, object? key3, System.Func<AndroidX.Compose.MutableState<T>!, System.Threading.CancellationToken, System.Threading.Tasks.Task!>! producer, int line = 0, string! file = "") -> AndroidX.Compose.MutableState<T>!
-static AndroidX.Compose.ComposeExtensions.ProduceState<T>(this AndroidX.Compose.Runtime.IComposer! composer, T initialValue, object? key1, object? key2, System.Func<AndroidX.Compose.MutableState<T>!, System.Threading.CancellationToken, System.Threading.Tasks.Task!>! producer, int line = 0, string! file = "") -> AndroidX.Compose.MutableState<T>!
-static AndroidX.Compose.ComposeExtensions.ProduceState<T>(this AndroidX.Compose.Runtime.IComposer! composer, T initialValue, object? key1, System.Func<AndroidX.Compose.MutableState<T>!, System.Threading.CancellationToken, System.Threading.Tasks.Task!>! producer, int line = 0, string! file = "") -> AndroidX.Compose.MutableState<T>!
+static AndroidX.Compose.ComposeExtensions.PluralStringResource(this AndroidX.Compose.Runtime.IComposer! composer, int id, int count, params object?[]! formatArgs) -> string!
 static AndroidX.Compose.ComposeExtensions.ProduceState<T>(this AndroidX.Compose.Runtime.IComposer! composer, T initialValue, System.Func<AndroidX.Compose.MutableState<T>!, System.Threading.CancellationToken, System.Threading.Tasks.Task!>! producer, int line = 0, string! file = "") -> AndroidX.Compose.MutableState<T>!
+static AndroidX.Compose.ComposeExtensions.ProduceState<T>(this AndroidX.Compose.Runtime.IComposer! composer, T initialValue, object? key1, System.Func<AndroidX.Compose.MutableState<T>!, System.Threading.CancellationToken, System.Threading.Tasks.Task!>! producer, int line = 0, string! file = "") -> AndroidX.Compose.MutableState<T>!
+static AndroidX.Compose.ComposeExtensions.ProduceState<T>(this AndroidX.Compose.Runtime.IComposer! composer, T initialValue, object? key1, object? key2, System.Func<AndroidX.Compose.MutableState<T>!, System.Threading.CancellationToken, System.Threading.Tasks.Task!>! producer, int line = 0, string! file = "") -> AndroidX.Compose.MutableState<T>!
+static AndroidX.Compose.ComposeExtensions.ProduceState<T>(this AndroidX.Compose.Runtime.IComposer! composer, T initialValue, object? key1, object? key2, object? key3, System.Func<AndroidX.Compose.MutableState<T>!, System.Threading.CancellationToken, System.Threading.Tasks.Task!>! producer, int line = 0, string! file = "") -> AndroidX.Compose.MutableState<T>!
 static AndroidX.Compose.ComposeExtensions.ProduceStateKeyed<T>(this AndroidX.Compose.Runtime.IComposer! composer, T initialValue, object?[]! keys, System.Func<AndroidX.Compose.MutableState<T>!, System.Threading.CancellationToken, System.Threading.Tasks.Task!>! producer, int line = 0, string! file = "") -> AndroidX.Compose.MutableState<T>!
 static AndroidX.Compose.ComposeExtensions.Remember<T>(this AndroidX.Compose.Runtime.IComposer! composer, System.Func<T>! factory, int line = 0, string! file = "") -> T
 static AndroidX.Compose.ComposeExtensions.Remember<T>(this AndroidX.Compose.Runtime.IComposer! composer, System.Func<T>! factory, object? key1, int line = 0, string! file = "") -> T
@@ -1503,8 +1421,8 @@ static AndroidX.Compose.ComposeExtensions.Shapes(this AndroidX.Compose.Runtime.I
 static AndroidX.Compose.ComposeExtensions.SideEffect(this AndroidX.Compose.Runtime.IComposer! composer, System.Action! effect) -> void
 static AndroidX.Compose.ComposeExtensions.SnapshotFlow<T>(System.Func<T>! producer) -> System.Collections.Generic.IAsyncEnumerable<T>!
 static AndroidX.Compose.ComposeExtensions.StringArrayResource(this AndroidX.Compose.Runtime.IComposer! composer, int id) -> string![]!
-static AndroidX.Compose.ComposeExtensions.StringResource(this AndroidX.Compose.Runtime.IComposer! composer, int id, params object?[]! formatArgs) -> string!
 static AndroidX.Compose.ComposeExtensions.StringResource(this AndroidX.Compose.Runtime.IComposer! composer, int id) -> string!
+static AndroidX.Compose.ComposeExtensions.StringResource(this AndroidX.Compose.Runtime.IComposer! composer, int id, params object?[]! formatArgs) -> string!
 static AndroidX.Compose.ComposeExtensions.Typography(this AndroidX.Compose.Runtime.IComposer! composer) -> AndroidX.Compose.Material3.Typography!
 static AndroidX.Compose.ComposeExtensions.ViewModel<T>(this AndroidX.Compose.Runtime.IComposer! composer, System.Func<T!>! factory, int line = 0, string! file = "") -> T!
 static AndroidX.Compose.ComposeExtensions.ViewModel<T>(this AndroidX.Compose.Runtime.IComposer! composer, System.Func<T!>! factory, object? key1, int line = 0, string! file = "") -> T!
@@ -1522,12 +1440,12 @@ static AndroidX.Compose.ContentScale.FillWidth.get -> AndroidX.Compose.ContentSc
 static AndroidX.Compose.ContentScale.Fit.get -> AndroidX.Compose.ContentScale!
 static AndroidX.Compose.ContentScale.Inside.get -> AndroidX.Compose.ContentScale!
 static AndroidX.Compose.ContentScale.None.get -> AndroidX.Compose.ContentScale!
+static AndroidX.Compose.Dp.Pack(AndroidX.Compose.Dp? value) -> float
+static AndroidX.Compose.Dp.Zero.get -> AndroidX.Compose.Dp
 static AndroidX.Compose.Dp.implicit operator AndroidX.Compose.Dp(float value) -> AndroidX.Compose.Dp
 static AndroidX.Compose.Dp.implicit operator AndroidX.Compose.Dp(int value) -> AndroidX.Compose.Dp
 static AndroidX.Compose.Dp.operator !=(AndroidX.Compose.Dp left, AndroidX.Compose.Dp right) -> bool
 static AndroidX.Compose.Dp.operator ==(AndroidX.Compose.Dp left, AndroidX.Compose.Dp right) -> bool
-static AndroidX.Compose.Dp.Pack(AndroidX.Compose.Dp? value) -> float
-static AndroidX.Compose.Dp.Zero.get -> AndroidX.Compose.Dp
 static AndroidX.Compose.FontFamily.Cursive.get -> AndroidX.Compose.FontFamily!
 static AndroidX.Compose.FontFamily.Default.get -> AndroidX.Compose.FontFamily!
 static AndroidX.Compose.FontFamily.Monospace.get -> AndroidX.Compose.FontFamily!
@@ -1863,25 +1781,187 @@ static AndroidX.Compose.MaterialTheme.DynamicLightColorScheme(Android.Content.Co
 static AndroidX.Compose.MaterialTheme.IsSystemInDarkTheme(AndroidX.Compose.Runtime.IComposer! composer) -> bool
 static AndroidX.Compose.MaterialTheme.LightColorScheme() -> AndroidX.Compose.Material3.ColorScheme!
 static AndroidX.Compose.MaterialTheme.LightColorScheme(AndroidX.Compose.Color? primary = null, AndroidX.Compose.Color? onPrimary = null, AndroidX.Compose.Color? primaryContainer = null, AndroidX.Compose.Color? onPrimaryContainer = null, AndroidX.Compose.Color? inversePrimary = null, AndroidX.Compose.Color? secondary = null, AndroidX.Compose.Color? onSecondary = null, AndroidX.Compose.Color? secondaryContainer = null, AndroidX.Compose.Color? onSecondaryContainer = null, AndroidX.Compose.Color? tertiary = null, AndroidX.Compose.Color? onTertiary = null, AndroidX.Compose.Color? tertiaryContainer = null, AndroidX.Compose.Color? onTertiaryContainer = null, AndroidX.Compose.Color? background = null, AndroidX.Compose.Color? onBackground = null, AndroidX.Compose.Color? surface = null, AndroidX.Compose.Color? onSurface = null, AndroidX.Compose.Color? surfaceVariant = null, AndroidX.Compose.Color? onSurfaceVariant = null, AndroidX.Compose.Color? surfaceTint = null, AndroidX.Compose.Color? inverseSurface = null, AndroidX.Compose.Color? inverseOnSurface = null, AndroidX.Compose.Color? error = null, AndroidX.Compose.Color? onError = null, AndroidX.Compose.Color? errorContainer = null, AndroidX.Compose.Color? onErrorContainer = null, AndroidX.Compose.Color? outline = null, AndroidX.Compose.Color? outlineVariant = null, AndroidX.Compose.Color? scrim = null, AndroidX.Compose.Color? surfaceBright = null, AndroidX.Compose.Color? surfaceContainer = null, AndroidX.Compose.Color? surfaceContainerHigh = null, AndroidX.Compose.Color? surfaceContainerHighest = null, AndroidX.Compose.Color? surfaceContainerLow = null, AndroidX.Compose.Color? surfaceContainerLowest = null, AndroidX.Compose.Color? surfaceDim = null, AndroidX.Compose.Color? primaryFixed = null, AndroidX.Compose.Color? primaryFixedDim = null, AndroidX.Compose.Color? onPrimaryFixed = null, AndroidX.Compose.Color? onPrimaryFixedVariant = null, AndroidX.Compose.Color? secondaryFixed = null, AndroidX.Compose.Color? secondaryFixedDim = null, AndroidX.Compose.Color? onSecondaryFixed = null, AndroidX.Compose.Color? onSecondaryFixedVariant = null, AndroidX.Compose.Color? tertiaryFixed = null, AndroidX.Compose.Color? tertiaryFixedDim = null, AndroidX.Compose.Color? onTertiaryFixed = null, AndroidX.Compose.Color? onTertiaryFixedVariant = null) -> AndroidX.Compose.Material3.ColorScheme!
+static AndroidX.Compose.Modifier.AbsoluteOffset(AndroidX.Compose.Dp? x = null, AndroidX.Compose.Dp? y = null) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.Modifier.Align(AndroidX.Compose.Alignment! alignment) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.Modifier.Align(AndroidX.Compose.Alignment.Horizontal! alignment) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.Modifier.Align(AndroidX.Compose.Alignment.Vertical! alignment) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.Modifier.Alpha(float alpha) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.Modifier.AspectRatio(float ratio, bool matchHeightConstraintsFirst = false) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.Modifier.Background(AndroidX.Compose.Color color) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.Modifier.Background(AndroidX.Compose.Color color, AndroidX.Compose.Shape? shape) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.Modifier.Border(AndroidX.Compose.Dp width, AndroidX.Compose.Color color) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.Modifier.Border(AndroidX.Compose.Dp width, AndroidX.Compose.Color color, AndroidX.Compose.Dp cornerRadius) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.Modifier.Border(AndroidX.Compose.Dp width, AndroidX.Compose.Color color, AndroidX.Compose.Shape? shape) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.Modifier.CaptionBarPadding() -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.Modifier.ClearAndSetSemantics(System.Action<AndroidX.Compose.SemanticsScope!>! properties) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.Modifier.ClearAndSetSemantics(string! contentDescription) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.Modifier.ClearAndSetSemantics(string? contentDescription, AndroidX.Compose.SemanticsRole? role) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.Modifier.Clickable(System.Action! onClick) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.Modifier.Clip(AndroidX.Compose.Dp cornerRadius) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.Modifier.Clip(AndroidX.Compose.Shape! shape) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.Modifier.CombinedClickable(System.Action! onClick, System.Action? onLongClick = null, System.Action? onDoubleClick = null) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.Modifier.Companion.get -> AndroidX.Compose.Modifier!
-static AndroidX.Compose.MutableNumberState<T>.operator --(AndroidX.Compose.MutableNumberState<T>! s) -> AndroidX.Compose.MutableNumberState<T>!
+static AndroidX.Compose.Modifier.DefaultMinSize(AndroidX.Compose.Dp? minWidth = null, AndroidX.Compose.Dp? minHeight = null) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.Modifier.DetectTapGestures(System.Action<AndroidX.Compose.Offset>? onTap = null, System.Action<AndroidX.Compose.Offset>? onPress = null, System.Action<AndroidX.Compose.Offset>? onLongPress = null, System.Action<AndroidX.Compose.Offset>? onDoubleTap = null, object? key = null) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.Modifier.DisplayCutoutPadding() -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.Modifier.DragAndDropTarget(System.Func<AndroidX.Compose.DragAndDropEvent!, bool>! shouldStartDragAndDrop, AndroidX.Compose.DragAndDropTarget! target) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.Modifier.Draggable(AndroidX.Compose.DraggableState! state, AndroidX.Compose.Orientation orientation, bool enabled = true) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.Modifier.FillMaxHeight(float fraction = 1) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.Modifier.FillMaxSize(float fraction = 1) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.Modifier.FillMaxWidth(float fraction = 1) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.Modifier.FocusGroup() -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.Modifier.FocusRequester(AndroidX.Compose.FocusRequester! requester) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.Modifier.Focusable(bool enabled = true) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.Modifier.GraphicsLayer(float? scaleX = null, float? scaleY = null, float? alpha = null, float? translationX = null, float? translationY = null, float? shadowElevation = null, float? rotationX = null, float? rotationY = null, float? rotationZ = null, float? cameraDistance = null, long? transformOrigin = null, AndroidX.Compose.Shape? shape = null, bool? clip = null) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.Modifier.Height(AndroidX.Compose.Dp height) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.Modifier.HeightIn(AndroidX.Compose.Dp? min = null, AndroidX.Compose.Dp? max = null) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.Modifier.HorizontalScroll(AndroidX.Compose.ScrollState! state, bool enabled = true, bool reverseScrolling = false) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.Modifier.ImePadding() -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.Modifier.MandatorySystemGesturesPadding() -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.Modifier.MatchParentSize() -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.Modifier.MinimumInteractiveComponentSize() -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.Modifier.NavigationBarsPadding() -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.Modifier.NestedScroll(AndroidX.Compose.UI.Input.NestedScroll.INestedScrollConnection! connection) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.Modifier.Offset(AndroidX.Compose.Dp? x = null, AndroidX.Compose.Dp? y = null) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.Modifier.OnFocusChanged(System.Action<AndroidX.Compose.FocusState>! onFocusChanged) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.Modifier.Padding(AndroidX.Compose.Dp all) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.Modifier.Padding(AndroidX.Compose.Dp horizontal, AndroidX.Compose.Dp vertical) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.Modifier.Padding(AndroidX.Compose.Dp start, AndroidX.Compose.Dp top, AndroidX.Compose.Dp end, AndroidX.Compose.Dp bottom) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.Modifier.RequiredHeight(AndroidX.Compose.Dp height) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.Modifier.RequiredSize(AndroidX.Compose.Dp size) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.Modifier.RequiredSize(AndroidX.Compose.Dp width, AndroidX.Compose.Dp height) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.Modifier.RequiredWidth(AndroidX.Compose.Dp width) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.Modifier.Rotate(float degrees) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.Modifier.SafeContentPadding() -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.Modifier.SafeDrawingPadding() -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.Modifier.SafeGesturesPadding() -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.Modifier.Scale(float scale) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.Modifier.Scale(float scaleX, float scaleY) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.Modifier.Selectable(bool selected, System.Action! onClick) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.Modifier.Semantics(AndroidX.Compose.SemanticsRole role) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.Modifier.Semantics(System.Action<AndroidX.Compose.SemanticsScope!>! properties) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.Modifier.Semantics(bool mergeDescendants, System.Action<AndroidX.Compose.SemanticsScope!>! properties) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.Modifier.Semantics(bool mergeDescendants, string! contentDescription) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.Modifier.Semantics(bool mergeDescendants, string? contentDescription, AndroidX.Compose.SemanticsRole? role) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.Modifier.Semantics(string! contentDescription) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.Modifier.Semantics(string? contentDescription, AndroidX.Compose.SemanticsRole? role) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.Modifier.Shadow(AndroidX.Compose.Dp elevation, AndroidX.Compose.Shape? shape = null) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.Modifier.Size(AndroidX.Compose.Dp size) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.Modifier.Size(AndroidX.Compose.Dp width, AndroidX.Compose.Dp height) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.Modifier.SizeIn(AndroidX.Compose.Dp? minWidth = null, AndroidX.Compose.Dp? minHeight = null, AndroidX.Compose.Dp? maxWidth = null, AndroidX.Compose.Dp? maxHeight = null) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.Modifier.StatusBarsPadding() -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.Modifier.SystemBarsPadding() -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.Modifier.SystemGesturesPadding() -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.Modifier.TestTag(string! tag) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.Modifier.Toggleable(bool value, System.Action<bool>! onValueChange) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.Modifier.VerticalScroll(AndroidX.Compose.ScrollState! state, bool enabled = true, bool reverseScrolling = false) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.Modifier.WaterfallPadding() -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.Modifier.Weight(float weight, bool fill = true) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.Modifier.Width(AndroidX.Compose.Dp width) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.Modifier.WidthIn(AndroidX.Compose.Dp? min = null, AndroidX.Compose.Dp? max = null) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.Modifier.WrapContentHeight(bool unbounded = false) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.Modifier.WrapContentSize(bool unbounded = false) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.Modifier.WrapContentWidth(bool unbounded = false) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.Modifier.ZIndex(float z) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.ModifierExtensions.AbsoluteOffset(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.Dp? x = null, AndroidX.Compose.Dp? y = null) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.ModifierExtensions.Align(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.Alignment! alignment) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.ModifierExtensions.Align(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.Alignment.Horizontal! alignment) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.ModifierExtensions.Align(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.Alignment.Vertical! alignment) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.ModifierExtensions.Alpha(this AndroidX.Compose.Modifier! modifier, float alpha) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.ModifierExtensions.AspectRatio(this AndroidX.Compose.Modifier! modifier, float ratio, bool matchHeightConstraintsFirst = false) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.ModifierExtensions.Background(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.Color color) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.ModifierExtensions.Background(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.Color color, AndroidX.Compose.Shape? shape) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.ModifierExtensions.Border(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.Dp width, AndroidX.Compose.Color color) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.ModifierExtensions.Border(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.Dp width, AndroidX.Compose.Color color, AndroidX.Compose.Dp cornerRadius) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.ModifierExtensions.Border(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.Dp width, AndroidX.Compose.Color color, AndroidX.Compose.Shape? shape) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.ModifierExtensions.CaptionBarPadding(this AndroidX.Compose.Modifier! modifier) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.ModifierExtensions.ClearAndSetSemantics(this AndroidX.Compose.Modifier! modifier, System.Action<AndroidX.Compose.SemanticsScope!>! properties) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.ModifierExtensions.ClearAndSetSemantics(this AndroidX.Compose.Modifier! modifier, string! contentDescription) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.ModifierExtensions.ClearAndSetSemantics(this AndroidX.Compose.Modifier! modifier, string? contentDescription, AndroidX.Compose.SemanticsRole? role) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.ModifierExtensions.Clickable(this AndroidX.Compose.Modifier! modifier, System.Action! onClick) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.ModifierExtensions.Clip(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.Dp cornerRadius) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.ModifierExtensions.Clip(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.Shape! shape) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.ModifierExtensions.CombinedClickable(this AndroidX.Compose.Modifier! modifier, System.Action! onClick, System.Action? onLongClick = null, System.Action? onDoubleClick = null) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.ModifierExtensions.DefaultMinSize(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.Dp? minWidth = null, AndroidX.Compose.Dp? minHeight = null) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.ModifierExtensions.DetectTapGestures(this AndroidX.Compose.Modifier! modifier, System.Action<AndroidX.Compose.Offset>? onTap = null, System.Action<AndroidX.Compose.Offset>? onPress = null, System.Action<AndroidX.Compose.Offset>? onLongPress = null, System.Action<AndroidX.Compose.Offset>? onDoubleTap = null, object? key = null) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.ModifierExtensions.DisplayCutoutPadding(this AndroidX.Compose.Modifier! modifier) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.ModifierExtensions.DragAndDropTarget(this AndroidX.Compose.Modifier! modifier, System.Func<AndroidX.Compose.DragAndDropEvent!, bool>! shouldStartDragAndDrop, AndroidX.Compose.DragAndDropTarget! target) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.ModifierExtensions.Draggable(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.DraggableState! state, AndroidX.Compose.Orientation orientation, bool enabled = true) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.ModifierExtensions.FillMaxHeight(this AndroidX.Compose.Modifier! modifier, float fraction = 1) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.ModifierExtensions.FillMaxSize(this AndroidX.Compose.Modifier! modifier, float fraction = 1) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.ModifierExtensions.FillMaxWidth(this AndroidX.Compose.Modifier! modifier, float fraction = 1) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.ModifierExtensions.FocusGroup(this AndroidX.Compose.Modifier! modifier) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.ModifierExtensions.FocusRequester(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.FocusRequester! requester) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.ModifierExtensions.Focusable(this AndroidX.Compose.Modifier! modifier, bool enabled = true) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.ModifierExtensions.GraphicsLayer(this AndroidX.Compose.Modifier! modifier, float? scaleX = null, float? scaleY = null, float? alpha = null, float? translationX = null, float? translationY = null, float? shadowElevation = null, float? rotationX = null, float? rotationY = null, float? rotationZ = null, float? cameraDistance = null, long? transformOrigin = null, AndroidX.Compose.Shape? shape = null, bool? clip = null) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.ModifierExtensions.Height(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.Dp height) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.ModifierExtensions.HeightIn(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.Dp? min = null, AndroidX.Compose.Dp? max = null) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.ModifierExtensions.HorizontalScroll(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.ScrollState! state, bool enabled = true, bool reverseScrolling = false) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.ModifierExtensions.ImePadding(this AndroidX.Compose.Modifier! modifier) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.ModifierExtensions.MandatorySystemGesturesPadding(this AndroidX.Compose.Modifier! modifier) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.ModifierExtensions.MatchParentSize(this AndroidX.Compose.Modifier! modifier) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.ModifierExtensions.MinimumInteractiveComponentSize(this AndroidX.Compose.Modifier! modifier) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.ModifierExtensions.NavigationBarsPadding(this AndroidX.Compose.Modifier! modifier) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.ModifierExtensions.NestedScroll(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.UI.Input.NestedScroll.INestedScrollConnection! connection) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.ModifierExtensions.Offset(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.Dp? x = null, AndroidX.Compose.Dp? y = null) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.ModifierExtensions.OnFocusChanged(this AndroidX.Compose.Modifier! modifier, System.Action<AndroidX.Compose.FocusState>! onFocusChanged) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.ModifierExtensions.Padding(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.Dp all) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.ModifierExtensions.Padding(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.Dp horizontal, AndroidX.Compose.Dp vertical) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.ModifierExtensions.Padding(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.Dp start, AndroidX.Compose.Dp top, AndroidX.Compose.Dp end, AndroidX.Compose.Dp bottom) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.ModifierExtensions.RequiredHeight(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.Dp height) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.ModifierExtensions.RequiredSize(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.Dp size) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.ModifierExtensions.RequiredSize(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.Dp width, AndroidX.Compose.Dp height) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.ModifierExtensions.RequiredWidth(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.Dp width) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.ModifierExtensions.Rotate(this AndroidX.Compose.Modifier! modifier, float degrees) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.ModifierExtensions.SafeContentPadding(this AndroidX.Compose.Modifier! modifier) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.ModifierExtensions.SafeDrawingPadding(this AndroidX.Compose.Modifier! modifier) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.ModifierExtensions.SafeGesturesPadding(this AndroidX.Compose.Modifier! modifier) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.ModifierExtensions.Scale(this AndroidX.Compose.Modifier! modifier, float scale) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.ModifierExtensions.Scale(this AndroidX.Compose.Modifier! modifier, float scaleX, float scaleY) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.ModifierExtensions.Selectable(this AndroidX.Compose.Modifier! modifier, bool selected, System.Action! onClick) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.ModifierExtensions.Semantics(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.SemanticsRole role) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.ModifierExtensions.Semantics(this AndroidX.Compose.Modifier! modifier, System.Action<AndroidX.Compose.SemanticsScope!>! properties) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.ModifierExtensions.Semantics(this AndroidX.Compose.Modifier! modifier, bool mergeDescendants, System.Action<AndroidX.Compose.SemanticsScope!>! properties) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.ModifierExtensions.Semantics(this AndroidX.Compose.Modifier! modifier, bool mergeDescendants, string! contentDescription) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.ModifierExtensions.Semantics(this AndroidX.Compose.Modifier! modifier, bool mergeDescendants, string? contentDescription, AndroidX.Compose.SemanticsRole? role) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.ModifierExtensions.Semantics(this AndroidX.Compose.Modifier! modifier, string! contentDescription) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.ModifierExtensions.Semantics(this AndroidX.Compose.Modifier! modifier, string? contentDescription, AndroidX.Compose.SemanticsRole? role) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.ModifierExtensions.Shadow(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.Dp elevation, AndroidX.Compose.Shape? shape = null) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.ModifierExtensions.Size(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.Dp size) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.ModifierExtensions.Size(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.Dp width, AndroidX.Compose.Dp height) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.ModifierExtensions.SizeIn(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.Dp? minWidth = null, AndroidX.Compose.Dp? minHeight = null, AndroidX.Compose.Dp? maxWidth = null, AndroidX.Compose.Dp? maxHeight = null) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.ModifierExtensions.StatusBarsPadding(this AndroidX.Compose.Modifier! modifier) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.ModifierExtensions.SystemBarsPadding(this AndroidX.Compose.Modifier! modifier) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.ModifierExtensions.SystemGesturesPadding(this AndroidX.Compose.Modifier! modifier) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.ModifierExtensions.TestTag(this AndroidX.Compose.Modifier! modifier, string! tag) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.ModifierExtensions.Toggleable(this AndroidX.Compose.Modifier! modifier, bool value, System.Action<bool>! onValueChange) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.ModifierExtensions.VerticalScroll(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.ScrollState! state, bool enabled = true, bool reverseScrolling = false) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.ModifierExtensions.WaterfallPadding(this AndroidX.Compose.Modifier! modifier) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.ModifierExtensions.Weight(this AndroidX.Compose.Modifier! modifier, float weight, bool fill = true) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.ModifierExtensions.Width(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.Dp width) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.ModifierExtensions.WidthIn(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.Dp? min = null, AndroidX.Compose.Dp? max = null) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.ModifierExtensions.WrapContentHeight(this AndroidX.Compose.Modifier! modifier, bool unbounded = false) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.ModifierExtensions.WrapContentSize(this AndroidX.Compose.Modifier! modifier, bool unbounded = false) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.ModifierExtensions.WrapContentWidth(this AndroidX.Compose.Modifier! modifier, bool unbounded = false) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.ModifierExtensions.ZIndex(this AndroidX.Compose.Modifier! modifier, float z) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.MutableNumberState<T>.operator ++(AndroidX.Compose.MutableNumberState<T>! s) -> AndroidX.Compose.MutableNumberState<T>!
+static AndroidX.Compose.MutableNumberState<T>.operator --(AndroidX.Compose.MutableNumberState<T>! s) -> AndroidX.Compose.MutableNumberState<T>!
 static AndroidX.Compose.MutableState<T>.implicit operator T(AndroidX.Compose.MutableState<T>! state) -> T
-static AndroidX.Compose.Offset.operator !=(AndroidX.Compose.Offset a, AndroidX.Compose.Offset b) -> bool
-static AndroidX.Compose.Offset.operator ==(AndroidX.Compose.Offset a, AndroidX.Compose.Offset b) -> bool
 static AndroidX.Compose.Offset.Unspecified.get -> AndroidX.Compose.Offset
 static AndroidX.Compose.Offset.Zero.get -> AndroidX.Compose.Offset
+static AndroidX.Compose.Offset.operator !=(AndroidX.Compose.Offset a, AndroidX.Compose.Offset b) -> bool
+static AndroidX.Compose.Offset.operator ==(AndroidX.Compose.Offset a, AndroidX.Compose.Offset b) -> bool
 static AndroidX.Compose.Shape.Circle() -> AndroidX.Compose.Shape!
 static AndroidX.Compose.Shape.CutCorners(AndroidX.Compose.Dp cornerSize) -> AndroidX.Compose.Shape!
 static AndroidX.Compose.Shape.CutCornersPercent(int percent) -> AndroidX.Compose.Shape!
 static AndroidX.Compose.Shape.RoundedCorners(AndroidX.Compose.Dp cornerRadius) -> AndroidX.Compose.Shape!
 static AndroidX.Compose.Shape.RoundedCorners(AndroidX.Compose.Dp topStart, AndroidX.Compose.Dp topEnd, AndroidX.Compose.Dp bottomEnd, AndroidX.Compose.Dp bottomStart) -> AndroidX.Compose.Shape!
 static AndroidX.Compose.Shape.RoundedPercent(int percent) -> AndroidX.Compose.Shape!
+static AndroidX.Compose.Sp.Pack(AndroidX.Compose.Sp? value) -> long
+static AndroidX.Compose.Sp.Zero.get -> AndroidX.Compose.Sp
 static AndroidX.Compose.Sp.implicit operator AndroidX.Compose.Sp(int value) -> AndroidX.Compose.Sp
 static AndroidX.Compose.Sp.operator !=(AndroidX.Compose.Sp left, AndroidX.Compose.Sp right) -> bool
 static AndroidX.Compose.Sp.operator ==(AndroidX.Compose.Sp left, AndroidX.Compose.Sp right) -> bool
-static AndroidX.Compose.Sp.Pack(AndroidX.Compose.Sp? value) -> long
-static AndroidX.Compose.Sp.Zero.get -> AndroidX.Compose.Sp
 static AndroidX.Compose.Spacer.Height(AndroidX.Compose.Dp dp) -> AndroidX.Compose.Spacer!
 static AndroidX.Compose.Spacer.Size(AndroidX.Compose.Dp dp) -> AndroidX.Compose.Spacer!
 static AndroidX.Compose.Spacer.Size(AndroidX.Compose.Dp width, AndroidX.Compose.Dp height) -> AndroidX.Compose.Spacer!
@@ -1890,8 +1970,8 @@ static AndroidX.Compose.Spacer.Width(AndroidX.Compose.Dp dp) -> AndroidX.Compose
 static AndroidX.Compose.StaggeredGridCells.Adaptive(float minSizeDp) -> AndroidX.Compose.Foundation.Lazy.Staggeredgrid.IStaggeredGridCells!
 static AndroidX.Compose.StaggeredGridCells.Fixed(int count) -> AndroidX.Compose.Foundation.Lazy.Staggeredgrid.IStaggeredGridCells!
 static AndroidX.Compose.StaggeredGridCells.FixedSize(float sizeDp) -> AndroidX.Compose.Foundation.Lazy.Staggeredgrid.IStaggeredGridCells!
-static AndroidX.Compose.StateFlowExtensions.CollectAsStateWithLifecycle<T>(this AndroidX.Compose.IStateFlow<T>! flow, T initialValue) -> AndroidX.Compose.IState<T>!
 static AndroidX.Compose.StateFlowExtensions.CollectAsStateWithLifecycle<T>(this AndroidX.Compose.IStateFlow<T>! flow) -> AndroidX.Compose.IState<T>!
+static AndroidX.Compose.StateFlowExtensions.CollectAsStateWithLifecycle<T>(this AndroidX.Compose.IStateFlow<T>! flow, T initialValue) -> AndroidX.Compose.IState<T>!
 static AndroidX.Compose.TextAlign.Center.get -> AndroidX.Compose.TextAlign!
 static AndroidX.Compose.TextAlign.End.get -> AndroidX.Compose.TextAlign!
 static AndroidX.Compose.TextAlign.Justify.get -> AndroidX.Compose.TextAlign!
@@ -1905,11 +1985,11 @@ static AndroidX.Compose.TextDecoration.Underline.get -> AndroidX.Compose.TextDec
 static AndroidX.Compose.TextOverflow.Clip.get -> AndroidX.Compose.TextOverflow
 static AndroidX.Compose.TextOverflow.Ellipsis.get -> AndroidX.Compose.TextOverflow
 static AndroidX.Compose.TextOverflow.MiddleEllipsis.get -> AndroidX.Compose.TextOverflow
-static AndroidX.Compose.TextOverflow.operator !=(AndroidX.Compose.TextOverflow left, AndroidX.Compose.TextOverflow right) -> bool
-static AndroidX.Compose.TextOverflow.operator ==(AndroidX.Compose.TextOverflow left, AndroidX.Compose.TextOverflow right) -> bool
 static AndroidX.Compose.TextOverflow.Pack(AndroidX.Compose.TextOverflow? value) -> int
 static AndroidX.Compose.TextOverflow.StartEllipsis.get -> AndroidX.Compose.TextOverflow
 static AndroidX.Compose.TextOverflow.Visible.get -> AndroidX.Compose.TextOverflow
+static AndroidX.Compose.TextOverflow.operator !=(AndroidX.Compose.TextOverflow left, AndroidX.Compose.TextOverflow right) -> bool
+static AndroidX.Compose.TextOverflow.operator ==(AndroidX.Compose.TextOverflow left, AndroidX.Compose.TextOverflow right) -> bool
 static AndroidX.Compose.TransformOrigin.Center.get -> long
 static AndroidX.Compose.TransformOrigin.Pack(float pivotFractionX, float pivotFractionY) -> long
 static AndroidX.Compose.Transitions.FadeIn(float initialAlpha = 0, AndroidX.Compose.Animation.Core.IFiniteAnimationSpec? animationSpec = null) -> AndroidX.Compose.Animation.EnterTransition!
@@ -1923,3 +2003,5 @@ static AndroidX.Compose.Transitions.SlideOutVertically(System.Func<int, int>? ta
 virtual AndroidX.Compose.MutableState<T>.Value.get -> T
 virtual AndroidX.Compose.MutableState<T>.Value.set -> void
 virtual AndroidX.Compose.ViewModel.OnClearedCore() -> void
+~override AndroidX.Compose.TextOverflow.Equals(object obj) -> bool
+~override AndroidX.Compose.TextOverflow.ToString() -> string

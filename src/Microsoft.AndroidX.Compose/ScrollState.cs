@@ -17,7 +17,7 @@ namespace AndroidX.Compose;
 ///
 /// new Column
 /// {
-///     Modifier.Companion.VerticalScroll(scroll),
+///     Modifier.VerticalScroll(scroll),
 ///     // ... potentially-tall column children ...
 /// }
 /// </code>

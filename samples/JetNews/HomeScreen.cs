@@ -67,13 +67,13 @@ public static class HomeScreen
             Title = searchOpen.Value
                 ? new OutlinedTextField(searchQuery)
                 {
-                    Modifier    = Modifier.Companion.FillMaxWidth().Padding(horizontal: 8, vertical: 0),
+                    Modifier    = Modifier.FillMaxWidth().Padding(horizontal: 8, vertical: 0),
                     SingleLine  = true,
                     Placeholder = new Text("Search JetNews"),
                 }
                 : new Icon(Resource.Drawable.ic_jetnews_wordmark, "JetNews")
                 {
-                    Modifier = Modifier.Companion.Height(24),
+                    Modifier = Modifier.Height(24),
                 },
             Actions = searchOpen.Value
                 ? new Row
@@ -103,25 +103,25 @@ public static class HomeScreen
     static Box BuildLoading() =>
         new()
         {
-            Modifier.Companion.FillMaxSize(),
+            Modifier.FillMaxSize(),
             new CircularProgressIndicator
             {
-                Modifier = Modifier.Companion.Align(Alignment.Center),
+                Modifier = Modifier.Align(Alignment.Center),
             },
         };
 
     static Column BuildError(string message, Action onRetry) =>
         new()
         {
-            Modifier.Companion.FillMaxSize().Padding(24),
+            Modifier.FillMaxSize().Padding(24),
             new Text("Couldn't load the feed")
             {
                 FontSize   = 18,
                 FontWeight = FontWeight.SemiBold,
             },
-            new Spacer { Modifier = Modifier.Companion.Height(8) },
+            new Spacer { Modifier = Modifier.Height(8) },
             new Text(message),
-            new Spacer { Modifier = Modifier.Companion.Height(16) },
+            new Spacer { Modifier = Modifier.Height(16) },
             new Button(onClick: onRetry)
             {
                 new Text("Try again"),
@@ -166,13 +166,13 @@ public static class HomeScreen
                     _ = vm.RefreshAsync();
             })
         {
-            Modifier.Companion.FillMaxSize(),
+            Modifier.FillMaxSize(),
 
             new LazyColumn<HomeRow>(
                 items: rows,
                 itemContent: row => BuildRow(row, bookmarks, onSelectPost, snackbars))
             {
-                Modifier = Modifier.Companion.FillMaxSize(),
+                Modifier = Modifier.FillMaxSize(),
             },
         };
     }
@@ -189,7 +189,7 @@ public static class HomeScreen
             HomeRow.PopularCarousel pc => BuildPopularCarousel(pc.Posts, onSelectPost),
             HomeRow.Divider            => new HorizontalDivider
             {
-                Modifier = Modifier.Companion.Padding(horizontal: 14, vertical: 0),
+                Modifier = Modifier.Padding(horizontal: 14, vertical: 0),
             },
             _ => new Spacer(),
         };
@@ -199,14 +199,14 @@ public static class HomeScreen
         new(items: posts,
             itemContent: p => HomeCards.BuildPopular(p, onSelectPost))
         {
-            Modifier              = Modifier.Companion.FillMaxWidth().Height(244).Padding(start: 16, top: 4, end: 16, bottom: 16),
+            Modifier              = Modifier.FillMaxWidth().Height(244).Padding(start: 16, top: 4, end: 16, bottom: 16),
             HorizontalArrangement = Arrangement.SpacedBy(8),
         };
 
     static Box BuildSectionHeader(string label) =>
         new()
         {
-            Modifier.Companion.FillMaxWidth().Padding(start: 16, end: 16, top: 16, bottom: 8),
+            Modifier.FillMaxWidth().Padding(start: 16, end: 16, top: 16, bottom: 8),
             new Text(label)
             {
                 FontSize   = 16,

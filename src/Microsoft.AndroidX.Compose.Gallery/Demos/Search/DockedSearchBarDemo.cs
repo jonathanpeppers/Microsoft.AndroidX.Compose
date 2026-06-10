@@ -43,9 +43,9 @@ public static class DockedSearchBarDemo
             };
 #pragma warning restore CS0618
             foreach (var f in matches)
-                docked.Add(new Text(f) { Modifier = Modifier.Companion.Padding(16, 12) });
+                docked.Add(new Text(f) { Modifier = Modifier.Padding(16, 12) });
             if (matches.Length == 0)
-                docked.Add(new Text("(no matches)") { Modifier = Modifier.Companion.Padding(16, 12) });
+                docked.Add(new Text("(no matches)") { Modifier = Modifier.Padding(16, 12) });
 
             return new Column
             {

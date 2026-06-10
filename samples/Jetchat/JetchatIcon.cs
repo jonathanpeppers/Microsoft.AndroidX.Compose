@@ -36,15 +36,15 @@ public static class JetchatIcon
             var scheme = c.ColorScheme();
             return new Box
             {
-                Modifier.Companion.Size(sizeDp),
+                Modifier.Size(sizeDp),
                 new Icon(Resource.Drawable.ic_jetchat_back, null)
                 {
-                    Modifier = Modifier.Companion.Size(sizeDp),
+                    Modifier = Modifier.Size(sizeDp),
                     TintArgb = scheme.PrimaryContainer,
                 },
                 new Icon(Resource.Drawable.ic_jetchat_front, contentDescription)
                 {
-                    Modifier = Modifier.Companion.Size(sizeDp),
+                    Modifier = Modifier.Size(sizeDp),
                     TintArgb = scheme.Primary,
                 },
             };

@@ -24,7 +24,7 @@ public static class AnimatedVisibilityDemo
                 {
                     new Card
                     {
-                        Modifier.Companion.Padding(8),
+                        Modifier.Padding(8),
                         new Text("👋 I fade in and out"),
                     },
                 },

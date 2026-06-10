@@ -21,10 +21,10 @@ public abstract class ComposableNode
     /// <summary>
     /// Optional <see cref="AndroidX.Compose.Modifier"/> chain applied to this
     /// composable. For leaf composables, set via object-initializer:
-    /// <code>new Text("Hi") { Modifier = Modifier.Companion.Padding(8) }</code>
+    /// <code>new Text("Hi") { Modifier = Modifier.Padding(8) }</code>
     /// For container composables (which use collection-initializer syntax),
     /// add the modifier inline alongside the children:
-    /// <code>new Column { Modifier.Companion.Padding(16), new Text("Hi") }</code>
+    /// <code>new Column { Modifier.Padding(16), new Text("Hi") }</code>
     /// Composables without a Kotlin <c>modifier</c> parameter
     /// (e.g. <see cref="MaterialTheme"/>) ignore this property.
     /// </summary>

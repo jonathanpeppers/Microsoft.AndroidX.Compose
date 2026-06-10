@@ -16,7 +16,7 @@ public static class PermanentDrawerDemo
             var count = c.MutableStateOf(0);
             return new Box
             {
-                Modifier.Companion.Height(320),
+                Modifier.Height(320),
                 new PermanentNavigationDrawer
                 {
                     Drawer = new PermanentDrawerSheet

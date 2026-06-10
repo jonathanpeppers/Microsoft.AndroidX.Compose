@@ -14,6 +14,6 @@ public static class BoxWithConstraintsDemo
         Build:       c => new BoxWithConstraints(c => new Text(
             $"Max width = {c.MaxWidth:0.#} dp, max height = {c.MaxHeight:0.#} dp"))
         {
-            Modifier = Modifier.Companion.FillMaxWidth().Padding(8),
+            Modifier = Modifier.FillMaxWidth().Padding(8),
         });
 }

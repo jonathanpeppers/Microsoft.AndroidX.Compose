@@ -15,17 +15,17 @@ public static class HomeScreen
     /// </summary>
     public static ComposableNode Build(NavController nav) => new Column
     {
-        Modifier.Companion.FillMaxSize().Padding(16),
+        Modifier.FillMaxSize().Padding(16),
 
         new Text("Welcome to .NET Compose Gallery"),
         new Text("Every facade — buttons, lists, dialogs, navigation, animation — laid out by category. Tap a row to jump in, or use the search action in the top bar to look one up."),
-        new Spacer { Modifier = Modifier.Companion.Height(16) },
+        new Spacer { Modifier = Modifier.Height(16) },
 
         new LazyColumn<Category>(
             items:       Catalog.Categories.ToList(),
             itemContent: cat => new CategoryRow(cat, nav))
         {
-            Modifier = Modifier.Companion.FillMaxSize(),
+            Modifier = Modifier.FillMaxSize(),
         },
     };
 }

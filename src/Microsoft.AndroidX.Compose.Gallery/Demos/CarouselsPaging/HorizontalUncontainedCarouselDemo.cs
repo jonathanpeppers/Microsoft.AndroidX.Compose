@@ -17,14 +17,14 @@ public static class HorizontalUncontainedCarouselDemo
             itemWidth:   200f,
             itemContent: i => new Box
             {
-                Modifier.Companion
+                Modifier
                     .FillMaxSize()
                     .Clip(20)
                     .Background(Palette.Pastels[i % Palette.Pastels.Length]),
-                new Text($"Item {i}") { Modifier = Modifier.Companion.Padding(16) },
+                new Text($"Item {i}") { Modifier = Modifier.Padding(16) },
             })
         {
-            Modifier    = Modifier.Companion.FillMaxWidth().Height(160),
+            Modifier    = Modifier.FillMaxWidth().Height(160),
             ItemSpacing = 8f,
         });
 }

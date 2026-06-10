@@ -31,7 +31,7 @@ public static class CustomCompositionLocalDemo
                 LocalPalette.Provides(OverridePalette),
                 new Column
                 {
-                    Modifier.Companion.Padding(8),
+                    Modifier.Padding(8),
                     new ThemeLabel(),
                     new ThemeLabel(),
                 },

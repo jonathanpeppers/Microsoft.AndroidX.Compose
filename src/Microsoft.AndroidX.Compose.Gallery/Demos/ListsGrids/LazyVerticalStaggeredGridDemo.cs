@@ -17,16 +17,16 @@ public static class LazyVerticalStaggeredGridDemo
             items:       Enumerable.Range(0, 30).ToList(),
             itemContent: i => new Card
             {
-                Modifier.Companion
+                Modifier
                     .Padding(4)
                     .Height(60 + (i % 5) * 30)
                     .Background(Palette.Pastels[i % Palette.Pastels.Length]),
                 new Text($"#{i:D2}")
                 {
-                    Modifier = Modifier.Companion.Padding(8),
+                    Modifier = Modifier.Padding(8),
                 },
             })
         {
-            Modifier = Modifier.Companion.FillMaxWidth().Height(360),
+            Modifier = Modifier.FillMaxWidth().Height(360),
         });
 }

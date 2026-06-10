@@ -16,10 +16,10 @@ public static class LazyVerticalGridFixedDemo
             items:       Enumerable.Range(0, 60).ToList(),
             itemContent: i => new Card
             {
-                Modifier.Companion.Padding(4),
+                Modifier.Padding(4),
                 new Text($"Cell {i}"),
             })
         {
-            Modifier = Modifier.Companion.FillMaxWidth().Height(320),
+            Modifier = Modifier.FillMaxWidth().Height(320),
         });
 }

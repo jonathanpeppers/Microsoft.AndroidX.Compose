@@ -16,15 +16,15 @@ public static class FlowRowFlowColumnDemo
             new Text("FlowRow (wraps when out of width)"),
             new FlowRow
             {
-                Modifier.Companion.FillMaxWidth().Padding(4),
-                new Card { Modifier.Companion.Padding(4), new Text("Music") },
-                new Card { Modifier.Companion.Padding(4), new Text("Movies") },
-                new Card { Modifier.Companion.Padding(4), new Text("Podcasts") },
-                new Card { Modifier.Companion.Padding(4), new Text("News") },
-                new Card { Modifier.Companion.Padding(4), new Text("Sports") },
-                new Card { Modifier.Companion.Padding(4), new Text("Books") },
-                new Card { Modifier.Companion.Padding(4), new Text("Games") },
-                new Card { Modifier.Companion.Padding(4), new Text("Photography") },
+                Modifier.FillMaxWidth().Padding(4),
+                new Card { Modifier.Padding(4), new Text("Music") },
+                new Card { Modifier.Padding(4), new Text("Movies") },
+                new Card { Modifier.Padding(4), new Text("Podcasts") },
+                new Card { Modifier.Padding(4), new Text("News") },
+                new Card { Modifier.Padding(4), new Text("Sports") },
+                new Card { Modifier.Padding(4), new Text("Books") },
+                new Card { Modifier.Padding(4), new Text("Games") },
+                new Card { Modifier.Padding(4), new Text("Photography") },
             },
         });
 }

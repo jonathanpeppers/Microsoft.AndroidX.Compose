@@ -48,7 +48,7 @@ public class ComposeViewActivity : ComponentActivity
             {
                 new Column
                 {
-                    Modifier.Companion.FillMaxWidth(),
+                    Modifier.FillMaxWidth(),
                     new Text("Compose content hosted by the ComposeView above:"),
                     new Text($"Tapped: {taps}"),
                     new Button(onClick: () => taps++) { new Text("Increment from Compose") },

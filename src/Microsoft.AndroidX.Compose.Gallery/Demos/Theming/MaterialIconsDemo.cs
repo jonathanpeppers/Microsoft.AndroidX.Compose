@@ -35,7 +35,7 @@ public static class MaterialIconsDemo
                 new Text("Icons.Filled (18):") { FontWeight = FontWeight.Bold },
                 new FlowRow
                 {
-                    Modifier.Companion.FillMaxWidth(),
+                    Modifier.FillMaxWidth(),
                     Tile("Search",        Icons.Filled.Search),
                     Tile("Menu",          Icons.Filled.Menu),
                     Tile("Add",           Icons.Filled.Add),

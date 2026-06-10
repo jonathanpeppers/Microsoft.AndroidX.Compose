@@ -18,26 +18,26 @@ public static class ShapesAndShadowDemo
             {
                 new Box
                 {
-                    Modifier.Companion.Size(56).Background(Color.FromRgb(0xD0, 0xBC, 0xFF), Shape.Circle()),
-                    new Text("●") { Modifier = Modifier.Companion.Padding(16) },
+                    Modifier.Size(56).Background(Color.FromRgb(0xD0, 0xBC, 0xFF), Shape.Circle()),
+                    new Text("●") { Modifier = Modifier.Padding(16) },
                 },
-                new Spacer { Modifier = Modifier.Companion.WidthIn(8, null) },
+                new Spacer { Modifier = Modifier.WidthIn(8, null) },
                 new Box
                 {
-                    Modifier.Companion.Size(56).Background(Color.FromRgb(0xB3, 0xE5, 0xFC), Shape.RoundedPercent(25)),
-                    new Text("◼") { Modifier = Modifier.Companion.Padding(16) },
+                    Modifier.Size(56).Background(Color.FromRgb(0xB3, 0xE5, 0xFC), Shape.RoundedPercent(25)),
+                    new Text("◼") { Modifier = Modifier.Padding(16) },
                 },
-                new Spacer { Modifier = Modifier.Companion.WidthIn(8, null) },
+                new Spacer { Modifier = Modifier.WidthIn(8, null) },
                 new Box
                 {
-                    Modifier.Companion.Size(56).Background(Color.FromRgb(0xC8, 0xE6, 0xC9), Shape.CutCorners(10)),
-                    new Text("◆") { Modifier = Modifier.Companion.Padding(16) },
+                    Modifier.Size(56).Background(Color.FromRgb(0xC8, 0xE6, 0xC9), Shape.CutCorners(10)),
+                    new Text("◆") { Modifier = Modifier.Padding(16) },
                 },
             },
             new Text("Shadow + Border + Background (shared shape):"),
             new Box
             {
-                Modifier.Companion
+                Modifier
                     .Padding(8)
                     .Shadow(8, Shape.RoundedCorners(16))
                     .Background(Color.FromRgb(0xFF, 0xE0, 0xB2), Shape.RoundedCorners(16))
@@ -51,7 +51,7 @@ public static class ShapesAndShadowDemo
             new Text("AspectRatio (16:9, height-first):"),
             new Box
             {
-                Modifier.Companion
+                Modifier
                     .FillMaxWidth()
                     .Height(80)
                     .AspectRatio(16f / 9f, matchHeightConstraintsFirst: true)
@@ -59,7 +59,7 @@ public static class ShapesAndShadowDemo
                 new Text("16:9 (height-first)")
                 {
                     Color    = Color.Black,
-                    Modifier = Modifier.Companion.Padding(8),
+                    Modifier = Modifier.Padding(8),
                 },
             },
         });

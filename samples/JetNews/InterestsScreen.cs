@@ -39,7 +39,7 @@ public static class InterestsScreen
         MutableStateList<string> selectedPublications) =>
         new()
         {
-            Modifier.Companion.FillMaxSize(),
+            Modifier.FillMaxSize(),
             new PrimaryTabRow(selectedTabIndex: selectedTab.Value)
             {
                 BuildTab(selectedTab, 0, "Topics"),
@@ -64,7 +64,7 @@ public static class InterestsScreen
 
     static Column BuildTopics(MutableStateList<string> selected)
     {
-        var col = new Column { Modifier.Companion.FillMaxWidth() };
+        var col = new Column { Modifier.FillMaxWidth() };
         foreach (var section in InterestsRepo.Topics)
         {
             col.Add(BuildSectionHeader(section.Key));
@@ -75,7 +75,7 @@ public static class InterestsScreen
             }
             col.Add(new HorizontalDivider
             {
-                Modifier = Modifier.Companion.Padding(horizontal: 16, vertical: 8),
+                Modifier = Modifier.Padding(horizontal: 16, vertical: 8),
             });
         }
         return col;
@@ -87,13 +87,13 @@ public static class InterestsScreen
             itemContent: item =>
                 BuildToggleRow(item, selected.Contains(item), () => Toggle(selected, item)))
         {
-            Modifier = Modifier.Companion.FillMaxSize(),
+            Modifier = Modifier.FillMaxSize(),
         };
 
     static Box BuildSectionHeader(string label) =>
         new()
         {
-            Modifier.Companion.FillMaxWidth().Padding(horizontal: 16, vertical: 12),
+            Modifier.FillMaxWidth().Padding(horizontal: 16, vertical: 12),
             new Text(label)
             {
                 FontSize   = 14,
@@ -105,14 +105,14 @@ public static class InterestsScreen
     static Row BuildToggleRow(string label, bool selected, Action onToggle) =>
         new()
         {
-            Modifier.Companion
+            Modifier
                 .FillMaxWidth()
                 .Padding(horizontal: 16, vertical: 12)
                 .Clickable(onToggle),
             new Text(label)
             {
                 FontSize = 16,
-                Modifier = Modifier.Companion.Weight(1f, fill: true),
+                Modifier = Modifier.Weight(1f, fill: true),
             },
             new Icon(
                 selected ? Resource.Drawable.ic_check : Resource.Drawable.ic_add,

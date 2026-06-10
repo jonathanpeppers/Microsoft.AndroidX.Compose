@@ -27,14 +27,14 @@ public static class LazyListScrollStateDemo
             var state = c.RememberLazyListState();
             return new Column(verticalArrangement: Arrangement.SpacedBy(4))
             {
-                Modifier.Companion.FillMaxWidth(),
+                Modifier.FillMaxWidth(),
 
                 new Surface
                 {
-                    Modifier.Companion.FillMaxWidth(),
+                    Modifier.FillMaxWidth(),
                     new Column(verticalArrangement: Arrangement.SpacedBy(2))
                     {
-                        Modifier.Companion.Padding(12),
+                        Modifier.Padding(12),
                         new Text($"FirstVisibleItemIndex:        {state.FirstVisibleItemIndex}"),
                         new Text($"FirstVisibleItemScrollOffset: {state.FirstVisibleItemScrollOffset}"),
                         new Text($"CanScrollBackward:            {state.CanScrollBackward}"),
@@ -47,7 +47,7 @@ public static class LazyListScrollStateDemo
 
                 new Row(horizontalArrangement: Arrangement.SpacedBy(8))
                 {
-                    Modifier.Companion.FillMaxWidth().Padding(horizontal: 12, vertical: 0),
+                    Modifier.FillMaxWidth().Padding(horizontal: 12, vertical: 0),
                     new Button(onClick: () => _ = state.ScrollToItemAsync(0))
                     {
                         new Text("Snap to top"),
@@ -64,13 +64,13 @@ public static class LazyListScrollStateDemo
 
                 new Box
                 {
-                    Modifier.Companion.FillMaxWidth().Height(360),
+                    Modifier.FillMaxWidth().Height(360),
 
                     new LazyColumn<int>(
                         items:       Enumerable.Range(0, 1000).ToList(),
                         itemContent: i => new Text($"Row {i:D4}"))
                     {
-                        Modifier = Modifier.Companion.FillMaxSize(),
+                        Modifier = Modifier.FillMaxSize(),
                         State    = state,
                     },
                 },
