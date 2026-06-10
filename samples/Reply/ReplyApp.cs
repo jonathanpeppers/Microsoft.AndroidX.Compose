@@ -8,8 +8,13 @@ namespace AndroidX.Compose.Samples.Reply;
 /// <remarks>
 /// Upstream Reply uses <c>NavigationSuiteScaffoldLayout</c> +
 /// <c>WindowSizeClass</c> to pick between bottom nav (compact), nav
-/// rail (medium), and permanent drawer (expanded). That adaptive
-/// scaffold isn't bound yet (#143), so this port pins to bottom nav.
+/// rail (medium), and permanent drawer (expanded). The
+/// <c>WindowSizeClass</c> read itself is now available (issue #143 —
+/// see <c>composer.CurrentWindowAdaptiveInfo()</c>), but
+/// <c>NavigationSuiteScaffold</c> lives in the
+/// <c>Xamarin.AndroidX.Compose.Material3.Adaptive.NavigationSuite</c>
+/// package which isn't referenced yet, so this port still pins to
+/// bottom nav.
 /// </remarks>
 public static class ReplyApp
 {

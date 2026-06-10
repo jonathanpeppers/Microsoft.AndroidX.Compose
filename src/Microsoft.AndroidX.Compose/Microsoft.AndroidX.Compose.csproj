@@ -34,6 +34,8 @@
   <ItemGroup>
     <PackageReference Include="Xamarin.AndroidX.Activity" />
     <PackageReference Include="Xamarin.AndroidX.Activity.Compose" />
+    <PackageReference Include="Xamarin.AndroidX.Core" />
+    <PackageReference Include="Xamarin.AndroidX.Core.Core.Ktx" />
     <PackageReference Include="Xamarin.AndroidX.Lifecycle.Runtime.Compose" />
     <PackageReference Include="Xamarin.AndroidX.Lifecycle.Runtime.Compose.Android" />
     <PackageReference Include="Xamarin.AndroidX.Compose.Animation" />
@@ -58,6 +60,8 @@
     <PackageReference Include="Xamarin.AndroidX.Compose.Foundation.Layout.Android" />
     <PackageReference Include="Xamarin.AndroidX.Compose.Material3" />
     <PackageReference Include="Xamarin.AndroidX.Compose.Material3Android" />
+    <PackageReference Include="Xamarin.AndroidX.Compose.Material3.Adaptive" />
+    <PackageReference Include="Xamarin.AndroidX.Compose.Material3.AdaptiveAndroid" />
     <PackageReference Include="Xamarin.AndroidX.Compose.Material.Icons.Core" />
     <PackageReference Include="Xamarin.AndroidX.Compose.Material.Icons.Core.Android" />
     <PackageReference Include="Xamarin.AndroidX.Navigation.Common" />

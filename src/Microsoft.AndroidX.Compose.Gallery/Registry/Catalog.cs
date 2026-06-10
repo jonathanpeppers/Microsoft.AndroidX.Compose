@@ -173,6 +173,7 @@ public static class Catalog
         D.LocalsMisc.BuiltInCompositionLocalsDemo.Demo,
         D.LocalsMisc.CustomCompositionLocalDemo.Demo,
         D.LocalsMisc.ComposeViewInteropDemo.Demo,
+        D.LocalsMisc.WindowSizeClassDemo.Demo,
         D.LocalsMisc.CircularProgressIndicatorDemo.Demo,
         D.LocalsMisc.LinearProgressIndicatorDemo.Demo,
         D.LocalsMisc.ImageDemo.Demo,

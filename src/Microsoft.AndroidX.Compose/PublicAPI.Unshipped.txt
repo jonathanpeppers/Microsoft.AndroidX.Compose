@@ -1489,6 +1489,7 @@ static AndroidX.Compose.ComposeExtensions.CollectAsStateWithLifecycle<T>(this Xa
 static AndroidX.Compose.ComposeExtensions.CollectAsStateWithLifecycle<T>(this Xamarin.KotlinX.Coroutines.Flow.IStateFlow! stateFlow, AndroidX.Compose.Runtime.IComposer! composer) -> AndroidX.Compose.CollectedState<T>!
 static AndroidX.Compose.ComposeExtensions.ColorResource(this AndroidX.Compose.Runtime.IComposer! composer, int id) -> long
 static AndroidX.Compose.ComposeExtensions.ColorScheme(this AndroidX.Compose.Runtime.IComposer! composer) -> AndroidX.Compose.Material3.ColorScheme!
+static AndroidX.Compose.ComposeExtensions.CurrentWindowAdaptiveInfo(this AndroidX.Compose.Runtime.IComposer! composer, bool supportLargeAndXLargeWidth = false) -> AndroidX.Compose.Material3.Adaptive.WindowAdaptiveInfo!
 static AndroidX.Compose.ComposeExtensions.DerivedStateOf<T>(System.Func<T>! calculation) -> AndroidX.Compose.DerivedState<T>!
 static AndroidX.Compose.ComposeExtensions.DerivedStateOf<T>(this AndroidX.Compose.Runtime.IComposer! composer, System.Func<T>! calculation) -> AndroidX.Compose.DerivedState<T>!
 static AndroidX.Compose.ComposeExtensions.DimensionResource(this AndroidX.Compose.Runtime.IComposer! composer, int id) -> AndroidX.Compose.Dp
