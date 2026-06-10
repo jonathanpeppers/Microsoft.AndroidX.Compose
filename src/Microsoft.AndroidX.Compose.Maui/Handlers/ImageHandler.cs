@@ -46,16 +46,8 @@ public partial class ImageHandler : ViewHandler<MauiIImage, ComposeView>
     public static CommandMapper<MauiIImage, ImageHandler> CommandMapper =
         new(ViewCommandMapper);
 
-    // ContentScale wrapped as an int index so MutableState picks the
-    // primitive path (the wrapper type is a Java.Lang.Object subclass,
-    // and Compose snapshots compare by reference — picking the actual
-    // ContentScale instance inside SetContent avoids recompose churn).
-    const int ContentScaleFit        = 0;
-    const int ContentScaleCrop       = 1;
-    const int ContentScaleFillBounds = 2;
-
-    readonly MutableState<int?> _resourceId  = new((int?)null);
-    readonly MutableState<int>  _contentScale = new(ContentScaleFit);
+    readonly MutableState<int?>          _resourceId  = new((int?)null);
+    readonly MutableState<ContentScale>  _contentScale = new(ContentScale.Fit);
 
     /// <summary>Construct a handler with the default mappers.</summary>
     public ImageHandler() : base(Mapper, CommandMapper) { }
@@ -72,15 +64,9 @@ public partial class ImageHandler : ViewHandler<MauiIImage, ComposeView>
         {
             if (_resourceId.Value is not int id)
                 return new Box(); // Empty placeholder while no source resolved.
-            var scale = _contentScale.Value switch
-            {
-                ContentScaleCrop       => ContentScale.Crop,
-                ContentScaleFillBounds => ContentScale.FillBounds,
-                _                      => ContentScale.Fit,
-            };
             return new ComposeImage(id)
             {
-                ContentScale = scale,
+                ContentScale = _contentScale.Value,
             };
         });
         return view;
@@ -104,15 +90,23 @@ public partial class ImageHandler : ViewHandler<MauiIImage, ComposeView>
         handler._resourceId.Value = handler.ResolveDrawableId(image.Source);
     }
 
-    /// <summary>Map <see cref="MauiIImage.Aspect"/> to a Compose <c>ContentScale</c> index.</summary>
+    /// <summary>
+    /// Map <see cref="MauiIImage.Aspect"/> to a Compose
+    /// <see cref="ContentScale"/>. The
+    /// <see cref="ComposeCompanionAttribute"/>-generated property getters
+    /// on <see cref="ContentScale"/> cache the singleton peer per slot,
+    /// so reference equality across compositions is stable and Compose's
+    /// snapshot system avoids recompose churn even though the
+    /// <c>MutableState&lt;ContentScale&gt;</c> takes the boxed path.
+    /// </summary>
     public static void MapAspect(ImageHandler handler, MauiIImage image) =>
         handler._contentScale.Value = image.Aspect switch
         {
-            Aspect.AspectFill => ContentScaleCrop,
-            Aspect.Fill       => ContentScaleFillBounds,
+            Aspect.AspectFill => ContentScale.Crop,
+            Aspect.Fill       => ContentScale.FillBounds,
             // AspectFit + Center both map to Fit — Compose's `Fit`
             // already preserves aspect ratio and centers the result.
-            _                 => ContentScaleFit,
+            _                 => ContentScale.Fit,
         };
 
     int? ResolveDrawableId(IImageSource? source)
