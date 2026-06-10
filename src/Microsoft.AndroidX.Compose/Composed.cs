@@ -7,7 +7,7 @@ namespace AndroidX.Compose;
 /// construction until <see cref="Render(IComposer)"/> runs. The wrapped
 /// <see cref="Func{T, TResult}"/> receives the active
 /// <see cref="IComposer"/> so the builder can read snapshot-state
-/// values, call <see cref="MaterialTheme.CurrentColorScheme(IComposer)"/>,
+/// values, call <see cref="ComposeExtensions.ColorScheme(IComposer)"/>,
 /// or invoke any other API that takes an <see cref="IComposer"/>.
 /// </summary>
 /// <remarks>
@@ -21,7 +21,7 @@ namespace AndroidX.Compose;
 /// <code>
 /// new Composed(c =&gt;
 /// {
-///     var scheme = MaterialTheme.CurrentColorScheme(c);
+///     var scheme = c.ColorScheme();
 ///     return new Text("Hello")
 ///     {
 ///         Color = Color.FromArgb(scheme.OnSurfaceVariant),

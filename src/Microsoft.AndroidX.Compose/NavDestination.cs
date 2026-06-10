@@ -18,13 +18,13 @@ namespace AndroidX.Compose;
 /// </para>
 /// <code>
 /// // Static — same children every time the route is shown
-/// new Composable("home")
+/// new NavDestination("home")
 /// {
 ///     new Text("Home"),
 /// }
 ///
 /// // Dynamic — read the {id} placeholder from the back-stack entry
-/// new Composable("user/{id}", entry =&gt;
+/// new NavDestination("user/{id}", entry =&gt;
 /// {
 ///     var id = entry.Arguments?.GetString("id") ?? "?";
 ///     return new Text($"User #{id}");
@@ -33,13 +33,17 @@ namespace AndroidX.Compose;
 ///
 /// <para>
 /// Mirrors Kotlin's <c>NavGraphBuilder.composable(route) { backStackEntry -&gt; ... }</c>.
+/// Named <c>NavDestination</c> rather than <c>Composable</c> to avoid
+/// confusion with the unrelated <see cref="ComposableNode"/> base class
+/// and Kotlin's <c>@Composable</c> annotation — this type isn't a UI
+/// node, it's a route registration.
 /// Add instances to a <see cref="NavHost"/> via collection-initializer
 /// — they're not normal <see cref="ComposableNode"/>s, since their
 /// content is composed inside the NavHost's per-route subcomposition,
 /// not the surrounding tree.
 /// </para>
 /// </summary>
-public sealed class Composable : IEnumerable
+public sealed class NavDestination : IEnumerable
 {
     readonly List<ComposableNode> _staticChildren = new();
     readonly Func<NavBackStackEntry, ComposableNode>? _factory;
@@ -48,7 +52,7 @@ public sealed class Composable : IEnumerable
     /// Register a destination with a static child tree. Add children
     /// via collection-initializer syntax.
     /// </summary>
-    public Composable(string route)
+    public NavDestination(string route)
     {
         ArgumentNullException.ThrowIfNull(route);
         Route = route;
@@ -60,7 +64,7 @@ public sealed class Composable : IEnumerable
     /// route placeholders (e.g. <c>{id}</c> in <c>"user/{id}"</c>)
     /// from the entry's <see cref="NavBackStackEntry.Arguments"/>.
     /// </summary>
-    public Composable(string route, Func<NavBackStackEntry, ComposableNode> content)
+    public NavDestination(string route, Func<NavBackStackEntry, ComposableNode> content)
     {
         ArgumentNullException.ThrowIfNull(route);
         Route    = route;
@@ -80,7 +84,7 @@ public sealed class Composable : IEnumerable
     {
         if (_factory is not null)
             throw new InvalidOperationException(
-                "Composable was constructed with a dynamic content factory; collection-init children are not supported.");
+                "NavDestination was constructed with a dynamic content factory; collection-init children are not supported.");
         if (child is not null)
             _staticChildren.Add(child);
     }
@@ -103,7 +107,7 @@ public sealed class Composable : IEnumerable
     IEnumerator IEnumerable.GetEnumerator() => _staticChildren.GetEnumerator();
 
     // Register this route into the surrounding NavHost's NavGraphBuilder.
-    // Called once per Composable per NavHost composition pass — Kotlin
+    // Called once per NavDestination per NavHost composition pass — Kotlin
     // composable() runs synchronously inside the builder lambda, so the
     // outer NavHost composer is still active here. The destination's
     // content lambda, however, is invoked LATER inside the route's own

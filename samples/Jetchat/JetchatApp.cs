@@ -42,7 +42,7 @@ public static class JetchatApp
         ProfileViewModel             profileViewModel) =>
         JetchatTheme.Build(new Composed(c =>
         {
-            var scheme = MaterialTheme.CurrentColorScheme(c);
+            var scheme = c.ColorScheme();
             return new ModalNavigationDrawer(drawerState)
             {
                 Drawer  = JetchatDrawer.Build(
@@ -67,7 +67,7 @@ public static class JetchatApp
                     }),
                 Content = new NavHost(startDestination: Routes.Home, navController: nav)
                 {
-                    new Composable(Routes.Home)
+                    new NavDestination(Routes.Home)
                     {
                         Conversation.Build(
                             ui:               ui,
@@ -85,7 +85,7 @@ public static class JetchatApp
                                 nav.Navigate(Routes.Profile(userId));
                             }),
                     },
-                    new Composable(Routes.ProfilePattern, entry =>
+                    new NavDestination(Routes.ProfilePattern, entry =>
                     {
                         var userId = entry.Arguments?.GetString("userId");
                         return Profile.Build(

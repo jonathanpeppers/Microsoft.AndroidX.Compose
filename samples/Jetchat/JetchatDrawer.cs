@@ -25,7 +25,7 @@ public static class JetchatDrawer
         Action<string> onChatClicked,
         Action<string> onProfileClicked)
     {
-        var sheet = new ModalDrawerSheet { ContainerColor = new Color(scheme.Surface) };
+        var sheet = new ModalDrawerSheet { ContainerColor = scheme.Surface };
         sheet.Add(new Column
         {
             Modifier.Companion.FillMaxWidth().VerticalScroll(scroll),
@@ -48,12 +48,12 @@ public static class JetchatDrawer
         {
             Modifier.Companion.FillMaxWidth().Padding(16),
             JetchatIcon.Build(contentDescription: null, sizeDp: 24),
-            new Spacer(Modifier.Companion.Width(8)),
+            Spacer.Width(8),
             new Text("Jetchat")
             {
                 FontSize   = 18,
                 FontWeight = FontWeight.SemiBold,
-                Color      = new Color(scheme.OnSurface),
+                Color      = scheme.OnSurface,
             },
         };
 
@@ -72,7 +72,7 @@ public static class JetchatDrawer
             new Text(label)
             {
                 FontSize = 14,
-                Color    = new Color(scheme.OnSurfaceVariant),
+                Color    = scheme.OnSurfaceVariant,
                 Modifier = Modifier.Companion.Padding(top: 16, bottom: 0, start: 0, end: 0),
             },
         };
@@ -96,7 +96,7 @@ public static class JetchatDrawer
                 _ = drawerState.CloseAsync();
             });
         if (selected)
-            modifier = modifier.Background(new Color(scheme.PrimaryContainer));
+            modifier = modifier.Background(scheme.PrimaryContainer);
 
         long iconTint  = selected ? scheme.Primary : scheme.OnSurfaceVariant;
         long textColor = selected ? scheme.Primary : scheme.OnSurface;
@@ -113,7 +113,7 @@ public static class JetchatDrawer
             {
                 FontSize   = 14,
                 FontWeight = selected ? FontWeight.SemiBold : FontWeight.Normal,
-                Color      = new Color(textColor),
+                Color      = textColor,
                 Modifier   = Modifier.Companion.Padding(top: 16, bottom: 16, start: 12, end: 0),
             },
         };
@@ -140,7 +140,7 @@ public static class JetchatDrawer
                 _ = drawerState.CloseAsync();
             });
         if (selected)
-            modifier = modifier.Background(new Color(scheme.PrimaryContainer));
+            modifier = modifier.Background(scheme.PrimaryContainer);
 
         return new Row
         {
@@ -155,7 +155,7 @@ public static class JetchatDrawer
             new Text(name)
             {
                 FontSize = 14,
-                Color    = new Color(scheme.OnSurface),
+                Color    = scheme.OnSurface,
                 Modifier = Modifier.Companion.Padding(top: 16, bottom: 16, start: 12, end: 0),
             },
         };

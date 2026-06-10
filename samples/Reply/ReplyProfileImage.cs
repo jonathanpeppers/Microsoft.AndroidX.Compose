@@ -22,13 +22,13 @@ public static class ReplyProfileImage
     public static ComposableNode BuildSelected() =>
         new Composed(c =>
         {
-            var scheme = MaterialTheme.CurrentColorScheme(c);
+            var scheme = c.ColorScheme();
             return new Box
             {
                 Modifier.Companion
                     .Size(40)
                     .Clip(Shape.Circle())
-                    .Background(new Color(scheme.Primary)),
+                    .Background(scheme.Primary),
                 new Icon(Resource.Drawable.ic_check, null)
                 {
                     Modifier = Modifier.Companion.Size(24),

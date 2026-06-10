@@ -80,7 +80,7 @@ internal static class PostBody
             {
                 Modifier.Companion.Width(4).Height(40).Background(QuoteBar),
             },
-            new Spacer(Modifier.Companion.Width(12)),
+            Spacer.Width(12),
             Styled(p,
                 fontSize:  16,
                 fontStyle: FontStyle.Italic),
