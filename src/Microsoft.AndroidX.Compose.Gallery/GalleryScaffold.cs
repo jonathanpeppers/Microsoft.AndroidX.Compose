@@ -78,12 +78,12 @@ public sealed class GalleryScaffold : ComposableNode
     {
         var host = new NavHost(startDestination: "home", navController: _nav)
         {
-            new Composable("home", _ => new Column
+            new NavDestination("home", _ => new Column
             {
                 new DisposableEffect("home", _ => { currentRoute.Value = "home"; return () => { }; }),
                 HomeScreen.Build(_nav),
             }),
-            new Composable("category/{id}", entry =>
+            new NavDestination("category/{id}", entry =>
             {
                 var id = entry.Arguments?.GetString("id");
                 var category = Catalog.FindCategory(id);
@@ -99,7 +99,7 @@ public sealed class GalleryScaffold : ComposableNode
                         : CategoryScreen.Build(category, _nav),
                 };
             }),
-            new Composable("demo/{id}", entry =>
+            new NavDestination("demo/{id}", entry =>
             {
                 var id = entry.Arguments?.GetString("id");
                 var demo = Catalog.FindDemo(id);
@@ -115,7 +115,7 @@ public sealed class GalleryScaffold : ComposableNode
                         : DemoScreen.Build(demo),
                 };
             }),
-            new Composable("search", _ => new Column
+            new NavDestination("search", _ => new Column
             {
                 new DisposableEffect("search", _ => { currentRoute.Value = "search"; return () => { }; }),
                 new SearchScreen(_nav),
