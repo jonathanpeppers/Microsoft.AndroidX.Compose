@@ -23,9 +23,12 @@ public static class ModifierExtensions
     }
 
     /// <summary>
-    /// <c>Modifier.padding(horizontal: Dp, vertical: Dp)</c>.
+    /// <c>Modifier.padding(horizontal: Dp, vertical: Dp)</c>. Each edge
+    /// defaults to <c>0.dp</c>, so callers can name just the axis they
+    /// care about (e.g. <c>Modifier.Padding(horizontal: 16)</c>) and
+    /// mirror Kotlin's <c>modifier.padding(horizontal = 16.dp)</c>.
     /// </summary>
-    public static Modifier Padding(this Modifier modifier, Dp horizontal, Dp vertical)
+    public static Modifier Padding(this Modifier modifier, Dp horizontal = default, Dp vertical = default)
     {
         var h = horizontal.Value;
         var v = vertical.Value;
@@ -34,8 +37,11 @@ public static class ModifierExtensions
 
     /// <summary>
     /// <c>Modifier.padding(start: Dp, top: Dp, end: Dp, bottom: Dp)</c>.
+    /// Each edge defaults to <c>0.dp</c>, so callers can name just the
+    /// edges they want (e.g. <c>Modifier.Padding(top: 8)</c>) and mirror
+    /// Kotlin's <c>modifier.padding(top = 8.dp)</c>.
     /// </summary>
-    public static Modifier Padding(this Modifier modifier, Dp start, Dp top, Dp end, Dp bottom)
+    public static Modifier Padding(this Modifier modifier, Dp start = default, Dp top = default, Dp end = default, Dp bottom = default)
     {
         var s = start.Value;
         var t = top.Value;

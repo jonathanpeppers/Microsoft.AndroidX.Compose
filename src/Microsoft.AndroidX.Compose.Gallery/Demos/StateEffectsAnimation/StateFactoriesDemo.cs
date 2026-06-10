@@ -27,7 +27,7 @@ public static class StateFactoriesDemo
                 new Button(onClick: () => name.Value = name.Value == "Ada" ? "Grace" : "Ada")
                     { new Text("Toggle name") },
 
-                new HorizontalDivider { Modifier = Modifier.Padding(0, 8) },
+                new HorizontalDivider { Modifier = Modifier.Padding(vertical: 8) },
 
                 new Text($"int: {i}    long: {l}    float: {f:F2}    double: {d:F4}"),
                 new Row
@@ -41,7 +41,7 @@ public static class StateFactoriesDemo
                     new Button(onClick: () => d.Value /= 2) { new Text("d /= 2") },
                 },
 
-                new HorizontalDivider { Modifier = Modifier.Padding(0, 8) },
+                new HorizontalDivider { Modifier = Modifier.Padding(vertical: 8) },
 
                 new Text($"MutableStateListOf ({items.Count}): [{string.Join(", ", items)}]"),
                 new Row
@@ -52,7 +52,7 @@ public static class StateFactoriesDemo
                         { new Text("Remove") },
                 },
 
-                new HorizontalDivider { Modifier = Modifier.Padding(0, 8) },
+                new HorizontalDivider { Modifier = Modifier.Padding(vertical: 8) },
 
                 new Text($"MutableStateMapOf: {{{string.Join(", ", prefs.Select(kv => $"{kv.Key}={kv.Value}"))}}}"),
                 new Row

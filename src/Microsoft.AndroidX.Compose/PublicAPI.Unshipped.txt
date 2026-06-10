@@ -1843,8 +1843,8 @@ static AndroidX.Compose.Modifier.NestedScroll(AndroidX.Compose.UI.Input.NestedSc
 static AndroidX.Compose.Modifier.Offset(AndroidX.Compose.Dp? x = null, AndroidX.Compose.Dp? y = null) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.Modifier.OnFocusChanged(System.Action<AndroidX.Compose.FocusState>! onFocusChanged) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.Modifier.Padding(AndroidX.Compose.Dp all) -> AndroidX.Compose.Modifier!
-static AndroidX.Compose.Modifier.Padding(AndroidX.Compose.Dp horizontal, AndroidX.Compose.Dp vertical) -> AndroidX.Compose.Modifier!
-static AndroidX.Compose.Modifier.Padding(AndroidX.Compose.Dp start, AndroidX.Compose.Dp top, AndroidX.Compose.Dp end, AndroidX.Compose.Dp bottom) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.Modifier.Padding(AndroidX.Compose.Dp horizontal = default(AndroidX.Compose.Dp), AndroidX.Compose.Dp vertical = default(AndroidX.Compose.Dp)) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.Modifier.Padding(AndroidX.Compose.Dp start = default(AndroidX.Compose.Dp), AndroidX.Compose.Dp top = default(AndroidX.Compose.Dp), AndroidX.Compose.Dp end = default(AndroidX.Compose.Dp), AndroidX.Compose.Dp bottom = default(AndroidX.Compose.Dp)) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.Modifier.RequiredHeight(AndroidX.Compose.Dp height) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.Modifier.RequiredSize(AndroidX.Compose.Dp size) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.Modifier.RequiredSize(AndroidX.Compose.Dp width, AndroidX.Compose.Dp height) -> AndroidX.Compose.Modifier!
@@ -1924,8 +1924,8 @@ static AndroidX.Compose.ModifierExtensions.NestedScroll(this AndroidX.Compose.Mo
 static AndroidX.Compose.ModifierExtensions.Offset(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.Dp? x = null, AndroidX.Compose.Dp? y = null) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.ModifierExtensions.OnFocusChanged(this AndroidX.Compose.Modifier! modifier, System.Action<AndroidX.Compose.FocusState>! onFocusChanged) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.ModifierExtensions.Padding(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.Dp all) -> AndroidX.Compose.Modifier!
-static AndroidX.Compose.ModifierExtensions.Padding(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.Dp horizontal, AndroidX.Compose.Dp vertical) -> AndroidX.Compose.Modifier!
-static AndroidX.Compose.ModifierExtensions.Padding(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.Dp start, AndroidX.Compose.Dp top, AndroidX.Compose.Dp end, AndroidX.Compose.Dp bottom) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.ModifierExtensions.Padding(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.Dp horizontal = default(AndroidX.Compose.Dp), AndroidX.Compose.Dp vertical = default(AndroidX.Compose.Dp)) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.ModifierExtensions.Padding(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.Dp start = default(AndroidX.Compose.Dp), AndroidX.Compose.Dp top = default(AndroidX.Compose.Dp), AndroidX.Compose.Dp end = default(AndroidX.Compose.Dp), AndroidX.Compose.Dp bottom = default(AndroidX.Compose.Dp)) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.ModifierExtensions.RequiredHeight(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.Dp height) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.ModifierExtensions.RequiredSize(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.Dp size) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.ModifierExtensions.RequiredSize(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.Dp width, AndroidX.Compose.Dp height) -> AndroidX.Compose.Modifier!

@@ -38,7 +38,7 @@ public sealed class ReplySearchBar : ComposableNode
                         Color    = scheme.OnSurface,
                         Modifier = Modifier
                             .Align(Alignment.Vertical.CenterVertically)
-                            .Padding(start: 16, end: 0, top: 0, bottom: 0)
+                            .Padding(start: 16)
                             .Weight(1f),
                     },
                     new Box

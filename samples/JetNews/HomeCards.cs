@@ -28,13 +28,13 @@ internal static class HomeCards
             {
                 FontSize   = 22,
                 FontWeight = FontWeight.SemiBold,
-                Modifier   = Modifier.Padding(bottom: 8, start: 0, end: 0, top: 0),
+                Modifier   = Modifier.Padding(bottom: 8),
             },
             new Text(post.Metadata.Author)
             {
                 FontSize   = 14,
                 FontWeight = FontWeight.Medium,
-                Modifier   = Modifier.Padding(bottom: 4, start: 0, end: 0, top: 0),
+                Modifier   = Modifier.Padding(bottom: 4),
             },
             new Text($"{post.Metadata.Date} · {post.Metadata.ReadTimeMinutes} min read")
             {
@@ -57,7 +57,7 @@ internal static class HomeCards
             },
             new Column
             {
-                Modifier.Weight(1f, fill: true).Padding(vertical: 10, horizontal: 0),
+                Modifier.Weight(1f, fill: true).Padding(vertical: 10),
                 new Text(post.Title)
                 {
                     FontSize   = 16,

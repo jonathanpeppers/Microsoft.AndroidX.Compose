@@ -24,7 +24,7 @@ public static class ReplyEmailThreadItem
                     {
                         FontSize  = 14,
                         Color     = scheme.Outline,
-                        Modifier  = Modifier.Padding(top: 12, bottom: 8, start: 0, end: 0),
+                        Modifier  = Modifier.Padding(top: 12, bottom: 8),
                     },
                     new Text(email.Body)
                     {
@@ -73,7 +73,7 @@ public static class ReplyEmailThreadItem
         {
             Modifier
                 .FillMaxWidth()
-                .Padding(top: 20, bottom: 8, start: 0, end: 0),
+                .Padding(top: 20, bottom: 8),
             new Button(onClick: NoOp)
             {
                 Modifier.Weight(1f),

@@ -28,7 +28,7 @@ public sealed class CategoryRow : ComposableNode
         {
             Modifier
                 .FillMaxWidth()
-                .Padding(0, 4)
+                .Padding(vertical: 4)
                 .Clickable(() => _nav.Navigate($"category/{_category.Id}")),
             new ListItem
             {

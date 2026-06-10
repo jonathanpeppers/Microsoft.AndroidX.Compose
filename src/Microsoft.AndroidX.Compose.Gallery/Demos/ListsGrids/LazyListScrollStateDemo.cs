@@ -47,7 +47,7 @@ public static class LazyListScrollStateDemo
 
                 new Row(horizontalArrangement: Arrangement.SpacedBy(8.Dp()))
                 {
-                    Modifier.FillMaxWidth().Padding(horizontal: 12, vertical: 0),
+                    Modifier.FillMaxWidth().Padding(horizontal: 12),
                     new Button(onClick: () => _ = state.ScrollToItemAsync(0))
                     {
                         new Text("Snap to top"),

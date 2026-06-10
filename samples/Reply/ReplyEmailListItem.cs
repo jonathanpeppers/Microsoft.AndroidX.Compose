@@ -36,7 +36,7 @@ public static class ReplyEmailListItem
                     new Text(email.Subject)
                     {
                         FontSize = 16,
-                        Modifier = Modifier.Padding(top: 12, bottom: 8, start: 0, end: 0),
+                        Modifier = Modifier.Padding(top: 12, bottom: 8),
                     },
                     new Text(email.Body)
                     {
