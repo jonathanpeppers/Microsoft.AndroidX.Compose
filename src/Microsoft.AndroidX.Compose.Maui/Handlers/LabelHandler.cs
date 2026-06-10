@@ -3,6 +3,8 @@ using AndroidX.Compose.UI.Platform;
 using Microsoft.Maui.Handlers;
 using ComposeColor = AndroidX.Compose.Color;
 using ComposeText = AndroidX.Compose.Text;
+using ComposeTextAlign = AndroidX.Compose.TextAlign;
+using ComposeFontWeight = AndroidX.Compose.FontWeight;
 
 namespace Microsoft.AndroidX.Compose.Maui.Handlers;
 
@@ -14,10 +16,11 @@ namespace Microsoft.AndroidX.Compose.Maui.Handlers;
 /// </summary>
 /// <remarks>
 /// Each instance owns a <see cref="ComposeView"/> hosting one composition.
-/// The composition reads two <see cref="MutableState{T}"/> slots
-/// (text and optional packed color) so MAUI property changes propagate
-/// through the standard mapper pipeline and trigger recomposition on the
-/// next frame without rebuilding the view.
+/// The composition reads <see cref="MutableState{T}"/> slots
+/// (text, color, font size/weight, horizontal text alignment, fill-width
+/// flag) so MAUI property changes propagate through the standard mapper
+/// pipeline and trigger recomposition on the next frame without
+/// rebuilding the view.
 /// </remarks>
 public partial class LabelHandler : ViewHandler<ILabel, ComposeView>
 {
@@ -25,19 +28,35 @@ public partial class LabelHandler : ViewHandler<ILabel, ComposeView>
     /// Property mapper that forwards MAUI <see cref="ILabel"/> property
     /// changes to the Compose-backed <see cref="ComposeView"/>.
     /// </summary>
-    public static IPropertyMapper<ILabel, ILabelHandler> Mapper =
-        new PropertyMapper<ILabel, ILabelHandler>(ViewHandler.ViewMapper)
+    /// <remarks>
+    /// Typed against this concrete handler (not <c>ILabelHandler</c>) because
+    /// <see cref="PropertyMapper{TVirtualView, TViewHandler}"/> casts the
+    /// handler arg of every mapper callback to <c>TViewHandler</c>, and this
+    /// class doesn't implement the stock MAUI <c>ILabelHandler</c> interface.
+    /// </remarks>
+    public static IPropertyMapper<ILabel, LabelHandler> Mapper =
+        new PropertyMapper<ILabel, LabelHandler>(ViewHandler.ViewMapper)
         {
-            [nameof(IText.Text)]           = MapText,
-            [nameof(ITextStyle.TextColor)] = MapTextColor,
+            [nameof(IText.Text)]                  = MapText,
+            [nameof(ITextStyle.TextColor)]        = MapTextColor,
+            [nameof(ITextStyle.Font)]             = MapFont,
+            [nameof(ILabel.HorizontalTextAlignment)] = MapHorizontalTextAlignment,
+            [nameof(IView.HorizontalLayoutAlignment)] = MapHorizontalLayoutAlignment,
         };
 
     /// <summary>Command mapper (inherits view-level commands; no extras).</summary>
-    public static CommandMapper<ILabel, ILabelHandler> CommandMapper =
+    public static CommandMapper<ILabel, LabelHandler> CommandMapper =
         new(ViewCommandMapper);
 
-    readonly MutableState<string> _text  = new(string.Empty);
-    readonly MutableState<long?>  _color = new((long?)null);
+    readonly MutableState<string>      _text      = new(string.Empty);
+    readonly MutableState<long?>       _color     = new((long?)null);
+    readonly MutableState<int?>        _fontSize  = new((int?)null);
+    readonly MutableState<bool>        _bold      = new(false);
+    // Stored as the underlying int so MutableState picks the primitive
+    // (IMutableIntState) path; the generic boxed path doesn't recognise
+    // user-defined enums and would throw NotSupportedException at ctor time.
+    readonly MutableState<int>         _hTextAlign = new((int)TextAlignment.Start);
+    readonly MutableState<bool>        _fillWidth = new(false);
 
     /// <summary>Construct a handler with the default mappers.</summary>
     public LabelHandler() : base(Mapper, CommandMapper) { }
@@ -53,10 +72,25 @@ public partial class LabelHandler : ViewHandler<ILabel, ComposeView>
         view.SetContent(_ =>
         {
             var packed = _color.Value;
-            return new ComposeText(_text.Value)
+            var size   = _fontSize.Value;
+            var bold   = _bold.Value;
+            var fill   = _fillWidth.Value;
+            var align  = (TextAlignment)_hTextAlign.Value;
+            var text = new ComposeText(_text.Value)
             {
-                Color = packed.HasValue ? new ComposeColor(packed.Value) : null,
+                Color      = packed.HasValue ? new ComposeColor(packed.Value) : null,
+                FontSize   = size.HasValue ? new Sp(size.Value) : null,
+                FontWeight = bold ? ComposeFontWeight.Bold : null,
+                Align      = align switch
+                {
+                    TextAlignment.Center => ComposeTextAlign.Center,
+                    TextAlignment.End    => ComposeTextAlign.End,
+                    _                    => null,
+                },
             };
+            if (fill)
+                text.PrependModifier(Modifier.FillMaxWidth());
+            return text;
         });
         return view;
     }
@@ -69,28 +103,43 @@ public partial class LabelHandler : ViewHandler<ILabel, ComposeView>
     }
 
     /// <summary>Map <see cref="IText.Text"/> to the Compose text slot.</summary>
-    public static void MapText(ILabelHandler handler, ILabel label)
-    {
-        if (handler is LabelHandler self)
-            self._text.Value = label.Text ?? string.Empty;
-    }
+    public static void MapText(LabelHandler handler, ILabel label) =>
+        handler._text.Value = label.Text ?? string.Empty;
 
     /// <summary>Map <see cref="ITextStyle.TextColor"/> to the Compose color slot.</summary>
-    public static void MapTextColor(ILabelHandler handler, ILabel label)
+    public static void MapTextColor(LabelHandler handler, ILabel label) =>
+        handler._color.Value = ColorMapping.ToPackedLong(label.TextColor);
+
+    /// <summary>Map <see cref="ITextStyle.Font"/> (size + weight) to Compose slots.</summary>
+    /// <remarks>
+    /// MAUI <c>Font</c> aggregates <c>Family</c>, <c>Size</c> (sp), and
+    /// <c>FontAttributes</c>. Only size and bold are wired in Phase 1;
+    /// custom font families and italic land in a later phase
+    /// (see <c>.github/instructions/compose-maui.instructions.md</c>).
+    /// </remarks>
+    public static void MapFont(LabelHandler handler, ILabel label)
     {
-        if (handler is LabelHandler self)
-            self._color.Value = label.TextColor is { } c
-                ? unchecked((long)ToPackedColor(c))
-                : null;
+        var font = label.Font;
+        handler._fontSize.Value = font.Size > 0 ? (int)font.Size : null;
+        handler._bold.Value     = (font.Weight & Microsoft.Maui.FontWeight.Bold) == Microsoft.Maui.FontWeight.Bold;
     }
 
-    static ulong ToPackedColor(Microsoft.Maui.Graphics.Color c)
-    {
-        byte a = (byte)(Math.Clamp(c.Alpha, 0f, 1f) * 255f);
-        byte r = (byte)(Math.Clamp(c.Red,   0f, 1f) * 255f);
-        byte g = (byte)(Math.Clamp(c.Green, 0f, 1f) * 255f);
-        byte b = (byte)(Math.Clamp(c.Blue,  0f, 1f) * 255f);
-        uint argb = ((uint)a << 24) | ((uint)r << 16) | ((uint)g << 8) | b;
-        return (ulong)argb << 32;
-    }
+    /// <summary>Map <see cref="ILabel.HorizontalTextAlignment"/> to Compose <c>textAlign</c>.</summary>
+    public static void MapHorizontalTextAlignment(LabelHandler handler, ILabel label) =>
+        handler._hTextAlign.Value = (int)label.HorizontalTextAlignment;
+
+    /// <summary>
+    /// Map <see cref="IView.HorizontalLayoutAlignment"/> to
+    /// <c>Modifier.fillMaxWidth()</c> when the label asks to fill or
+    /// center within its slot. Compose's <c>Text</c> only honours
+    /// <c>textAlign</c> when its measured width spans the available
+    /// space, so this is needed for the <c>Headline</c>/<c>SubHeadline</c>
+    /// styles (which set <c>HorizontalOptions="Center"</c>) to render
+    /// centered like stock MAUI.
+    /// </summary>
+    public static void MapHorizontalLayoutAlignment(LabelHandler handler, ILabel label) =>
+        handler._fillWidth.Value = label.HorizontalLayoutAlignment
+            is Microsoft.Maui.Primitives.LayoutAlignment.Fill
+            or Microsoft.Maui.Primitives.LayoutAlignment.Center;
+
 }

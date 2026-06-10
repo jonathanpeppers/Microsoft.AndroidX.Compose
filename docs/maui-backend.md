@@ -60,34 +60,37 @@ src/<Name>/
 1. Consumer's `App.xaml.cs` (or equivalent) calls
    `MauiApp.CreateBuilder().UseAndroidXCompose<App>().Build()`.
 2. `UseAndroidXCompose<TApp>()` calls `SetupDefaults()` which:
-
-Registers every handler via `builder.ConfigureMauiHandlers(...)`
+   - Registers every handler via `builder.ConfigureMauiHandlers(...)`
      mapping MAUI control types to platform handler types
-     (`handlers.AddHandler<Button, ButtonHandler>()`).Registers `IDispatcherProvider`, `Ticker`, `IFontManager`,
+     (`handlers.AddHandler<Button, ButtonHandler>()`).
+   - Registers `IDispatcherProvider`, `Ticker`, `IFontManager`,
      `IEmbeddedFontLoader`, `IFontRegistrar`, alert subscription, theme
-     manager, lifecycle.Calls `RemapForControls()` which uses
+     manager, lifecycle.
+   - Calls `RemapForControls()` which uses
      `ViewHandler.ViewMapper.ModifyMapping(nameof(IView.Width), ...)`
-     to bridge cross-platform properties (\`IView.Width/Height/Background/
-     Margin/Visibility/Opacity/IsEnabled/Translation/Scale/Rotation/Shadow/
-     Clip\`) onto the actual platform widget type. The base MAUI mapper
-     targets WinUI types; backends override every entry.
-3. Each handler is a \`partial class XxxHandler : <Backend>ViewHandler<IXxx,
-   TPlatform>\` with:
-
-**`XxxHandler.cs`** — pure cross-platform: the \`PropertyMapper<IXxx,
-     XxxHandler> `listing` [nameof(IButton.Text)] = MapText\`, the
-     `CommandMapper`, and two `()`/`(mapper, commandMapper)` ctors. Only
-     references MAUI abstractions.**`XxxHandler.<Platform>.cs`** — `CreatePlatformView()`, \`Connect/
-     DisconnectHandler `(wire native events), and the` static MapText(...)\`
-     etc. methods that mutate the platform widget. Uses `using` aliases
-     to disambiguate (e.g. `using WButton = System.Windows.Controls.Button`)
-     because MAUI and the platform share type names.
-4. `<Backend>ViewHandler<TVirtual, TPlatform>` is the \*\*critical
-   adapter\*\*. Cross-platform `ViewHandler` has no-op `PlatformArrange` and
-   returns `Size.Zero` from `GetDesiredSize`. The backend overrides them
-   to call native measure/arrange:
-
-On WPF: `platformView.Measure(...)` / `platformView.Arrange(...)`.On Android (today, MAUI stock): `View.Measure(widthSpec, heightSpec)`
+     to bridge cross-platform properties (`IView.Width`/`Height`/
+     `Background`/`Margin`/`Visibility`/`Opacity`/`IsEnabled`/
+     `Translation`/`Scale`/`Rotation`/`Shadow`/`Clip`) onto the actual
+     platform widget type. The base MAUI mapper targets WinUI types;
+     backends override every entry.
+3. Each handler is a `partial class XxxHandler : <Backend>ViewHandler<IXxx, TPlatform>` with:
+   - **`XxxHandler.cs`** — pure cross-platform: the
+     `PropertyMapper<IXxx, XxxHandler>` listing
+     `[nameof(IButton.Text)] = MapText`, the `CommandMapper`, and two
+     `()`/`(mapper, commandMapper)` ctors. Only references MAUI
+     abstractions.
+   - **`XxxHandler.<Platform>.cs`** — `CreatePlatformView()`,
+     `ConnectHandler`/`DisconnectHandler` (wire native events), and the
+     `static MapText(...)` etc. methods that mutate the platform
+     widget. Uses `using` aliases to disambiguate (e.g.
+     `using WButton = System.Windows.Controls.Button`) because MAUI and
+     the platform share type names.
+4. `<Backend>ViewHandler<TVirtual, TPlatform>` is the **critical
+   adapter**. Cross-platform `ViewHandler` has no-op `PlatformArrange`
+   and returns `Size.Zero` from `GetDesiredSize`. The backend overrides
+   them to call native measure/arrange:
+   - On WPF: `platformView.Measure(...)` / `platformView.Arrange(...)`.
+   - On Android (today, MAUI stock): `View.Measure(widthSpec, heightSpec)`
      / `View.Layout(l, t, r, b)`.
 5. **Layouts** reuse MAUI's cross-platform `ILayoutManager` (Grid / Stack /
    Flex / Absolute). The only platform-specific piece is a `LayoutPanel`:
@@ -95,8 +98,8 @@ On WPF: `platformView.Measure(...)` / `platformView.Arrange(...)`.On Android (t
    Android `ViewGroup`) whose `MeasureOverride` / `ArrangeOverride`
    delegates to MAUI's `LayoutManager` which in turn measures/arranges
    each child native control.
-6. \*\*Modal navigation, alerts, font registration, animation ticking,
-   gestures, theme\*\* are each implemented as small platform glue classes
+6. **Modal navigation, alerts, font registration, animation ticking,
+   gestures, theme** are each implemented as small platform glue classes
    talking to MAUI's published interfaces (`IModalNavigationManager`,
    `IFontManager`, `Microsoft.Maui.Animations.Ticker`, etc.).
 
@@ -108,13 +111,13 @@ each — small, focused, single responsibility.
 ## Why Compose maps cleanly onto the same shape
 
 The MAUI handler protocol is **imperative + mutation** (`MapText` reaches
-into `handler.PlatformView.Content = ...`). Compose is \*\*declarative +
-recomposition\*\* — you don't mutate a `Button`, you call the
+into `handler.PlatformView.Content = ...`). Compose is **declarative +
+recomposition** — you don't mutate a `Button`, you call the
 `Button(text=...)` function every recomposition.
 
 The bridge is `ComposeView` (already used throughout this library —
-`samples/Jetchat`, every gallery demo). `ComposeView` is an \*\*Android
-View\*\* (`ViewGroup` subclass) that owns a private composition. Set its
+`samples/Jetchat`, every gallery demo). `ComposeView` is an **Android
+View** (`ViewGroup` subclass) that owns a private composition. Set its
 content once with `view.SetContent(c => ...)` and the composition lambda
 re-runs whenever any `MutableState<T>` read inside it changes.
 
@@ -156,13 +159,59 @@ stock backend. Inside, Compose owns the rendering. Mappers write to
 
 | Strategy | Pros | Cons |
 | --- | --- | --- |
-| **Per-handler `ComposeView`** ✅ | Trivially maps to existing handler shape; works with MAUI layout system unchanged; matches WPF/AppKit/GTK precedent; ships fast | Each leaf has its own composer + recomposer + snapshot subscription; no cross-sibling animations; M3 theming has to be re-installed per island |
-| Single root composition | Idiomatic Compose; one theme, semantics tree, lazy lists work across siblings; shared snapshot graph; better perf at scale | Need a `RenderContext`/`ComposableNode` graph mirroring MAUI's VisualTree; reimplement MAUI layout in Compose `Layout {}`; much bigger lift |
+| **Option 1 — per-handler `ComposeView`** ✅ adopted Phase 1 | Trivially maps to existing handler shape; works with MAUI layout system unchanged; matches WPF/AppKit/GTK precedent; ships fast | Each leaf has its own composer + recomposer + snapshot subscription; no cross-sibling animations; M3 theming has to be re-installed per island |
+| Option 2 — single root composition | Idiomatic Compose; one theme, semantics tree, lazy lists work across siblings; shared snapshot graph; better perf at scale | Need a `RenderContext`/`ComposableNode` graph mirroring MAUI's VisualTree; reimplement MAUI layout in Compose `Layout {}`; much bigger lift |
 
-**Plan**: ship the per-handler model first (Phase 1 — matches
-maui-labs precedent), keep the single-root composition as an opt-in
-optimization (Phase 2). The handler API doesn't change between the two
-modes — only the bootstrapping does.
+**Plan**: shipped the per-handler model in Phase 1 (matches maui-labs
+precedent); the single-root composition stays as an opt-in optimisation
+in a later phase. The handler API doesn't change between the two modes —
+only the bootstrapping does.
+
+#### Phase 1 Option 1 mapper rules (lessons learned)
+
+Per-leaf `ComposeView` rendering only matches stock MAUI's defaults
+once a handful of fix-ups are applied in the mappers. Document these
+so subsequent handlers don't re-discover them:
+
+- **Suppress MAUI background painting on Compose-skinned widgets.**
+  Material 3 composables like `Button`, `Card`, `Surface` paint their
+  own pill/card surface. If `IView.Background` runs as well, MAUI
+  drops a `SolidColorBrush` drawable onto the outer `ComposeView` and
+  you see a wide rectangle behind the small Material pill. Override
+  the entry with a no-op:
+
+  ```csharp
+  [nameof(IView.Background)] = (h, v) => { /* Compose owns the surface */ }
+  ```
+
+  Apply to any handler whose composable owns its visual surface
+  (`Button`, future `Border`, `Card`-backed controls). Leaves with no
+  intrinsic surface (`Label`) should let the default `ViewMapper`
+  mapping run.
+
+- **Map `HorizontalLayoutAlignment` → `Modifier.fillMaxWidth()`** when
+  the caller asks to fill or centre. Compose's `Text` only honours
+  `textAlign` when its measured width spans the available space, so
+  `HorizontalTextAlignment="Center"` on a stock MAUI `Label` (e.g. a
+  `Headline`/`SubHeadline` style) renders left-aligned until the
+  Compose `Text` also fills its slot.
+
+- **`MutableState<T>` only handles primitives, `string`, and
+  `Java.Lang.Object` subclasses.** A `MutableState<TextAlignment>`
+  (MAUI enum) throws `NotSupportedException` at field-initializer
+  time — crashes the app before any frame paints. Store the enum's
+  backing primitive (`MutableState<int>`) and cast back inside
+  `SetContent`. This is now codified in
+  [`compose-maui.instructions.md`][instructions].
+
+- **Centralise MAUI `Color` → Compose packed `long` conversion** in
+  [`ColorMapping.ToPackedLong`][colormapping] so every mapper goes
+  through `AndroidX.Compose.Color`'s own packing (round-to-nearest,
+  no truncation off-by-one) instead of hand-rolling the bit twiddling
+  per handler.
+
+[instructions]: ../.github/instructions/compose-maui.instructions.md
+[colormapping]: ../src/Microsoft.AndroidX.Compose.Maui/ColorMapping.cs
 
 ## Proposed repo layout
 
@@ -221,27 +270,52 @@ is **only** glue.
 
 ## Handler scope — phased plan
 
-### Phase 1 — bootstrap + smallest possible working set (target: "Hello, MAUI on Compose")
+### Phase 1 — bootstrap + smallest possible working set ✅ shipped
 
-Just enough to render a single-page MAUI app with a button and a label.
+Goal: render a single-page MAUI app with a button and a label using the
+Compose backend.
 
-- `Microsoft.AndroidX.Compose.Maui.csproj` (net10.0-android), project ref.
-- `ComposeViewHandler<TVirtual, TPlatform>` — overrides `PlatformArrange`,
-  `GetDesiredSize`. Most of this can copy from MAUI's own Android handler
-  base since `ComposeView` *is* `Android.Views.View`.
-- `MauiComposeActivity` — `ComponentActivity` (not `AppCompatActivity`)
-  that hosts the MAUI window's root view inside a `ComposeView`.
-- `AppHostBuilderExtensions.UseAndroidXCompose<TApp>()` +
-  `SetupDefaults()` + `RemapForControls()`.
-- Handlers: `ApplicationHandler`, `WindowHandler`, `PageHandler`,
-  `LayoutHandler` (Grid + StackLayout via MAUI's `ILayoutManager`),
-  `LabelHandler`, `ButtonHandler`.
-- `ComposeLayoutViewGroup` / `ComposeContentViewGroup` — Android
-  `ViewGroup` subclasses delegating to `ILayoutManager`.
-- `DispatcherProvider`, `ComposeTicker`.
-- Sample app: `Microsoft.AndroidX.Compose.Maui.Sample` — one ContentPage
-  with `Label` + counter `Button`, deployed via
+**Delivered:**
+
+- `Microsoft.AndroidX.Compose.Maui.csproj` (net10.0-android), project ref
+  to the facade.
+- `Hosting/AppHostBuilderExtensions.UseAndroidXCompose()` overlay over
+  `UseMauiApp<TApp>()` that overwrites stock Android handler
+  registrations for the controls we own.
+- `Handlers/LabelHandler.cs`, `Handlers/ButtonHandler.cs` —
+  per-leaf `ComposeView` (Option 1) backed by `MutableState<T>` slots
+  for text/colour/font/alignment/fill-width. Mappers documented in the
+  [Option 1 mapper rules](#phase-1-option-1-mapper-rules-lessons-learned)
+  section above.
+- `ColorMapping` helper — centralises every MAUI → Compose colour
+  conversion through `AndroidX.Compose.Color`'s ARGB ctor.
+- `Microsoft.AndroidX.Compose.Maui.Sample` — `dotnet new maui` shape
+  (Shell + `Styles.xaml` + `Resources/Fonts/Images`) with
+  `.UseAndroidXCompose()` flipped on, deployable via
   `dotnet build src/Microsoft.AndroidX.Compose.Maui.Sample -t:Run`.
+  Visually matches stock-MAUI defaults.
+
+**Deferred to a future phase** (not blocking Phase 1):
+
+- `ComposeViewHandler<TVirtual, TPlatform>` base class with a custom
+  `PlatformArrange` / `GetDesiredSize`. Stock MAUI's `ViewHandler<,>`
+  on `net10.0-android` is good enough today because `ComposeView`
+  measures itself like any `Android.Views.View`.
+- `MauiComposeActivity` / `ComponentActivity` host. The sample still
+  uses MAUI's stock `MauiAppCompatActivity` because per-leaf
+  `ComposeView` works inside it.
+- `PageHandler`, `LayoutHandler`, `ApplicationHandler`,
+  `WindowHandler`, `ComposeLayoutViewGroup` / `ComposeContentViewGroup`,
+  `DispatcherProvider`, `ComposeTicker`. All stock-MAUI handlers; we
+  only swap leaves where Compose provides a clear win
+  (Material 3 surfaces).
+- `BackgroundColor` mapping on `Button` — needs a `ButtonColors`
+  bridge in the facade (current `Button` facade only exposes
+  `Shape`/`ContentPadding`). Accept M3 primary-purple default for now.
+- Custom `FontFamily`, italic, `FontAttributes.Italic`, decoration,
+  line-height passthrough.
+- Image handler — stock MAUI handler keeps rendering
+  `dotnet_bot.png`; replacing with Compose's `Image` lands later.
 
 ### Phase 2 — input + visual breadth (target: "Control Gallery parity for leaves")
 
@@ -253,7 +327,7 @@ The list mirrors the WPF backend's leaf controls:
 `SearchBar`, `Border`, `BoxView`, `ContentView`, `ScrollView`,
 `RefreshView`, `IndicatorView`.
 
-Each is a \~150-line handler pair backed by the existing facade
+Each is a ~150-line handler pair backed by the existing facade
 (`Button`, `Text`, `TextField`, `OutlinedTextField`, `Switch`,
 `Slider`, `CircularProgressIndicator`, `LinearProgressIndicator`,
 `Checkbox`, `RadioButton`, `Image`, `Icon`, `BoxView`-equivalent,
