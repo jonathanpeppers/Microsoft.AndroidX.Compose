@@ -230,16 +230,16 @@ public partial class ImageHandler : ViewHandler<MauiIImage, ComposeView>
         var imageBitmap = AndroidImageBitmap_androidKt.AsImageBitmap(bitmap);
         // IntSize packs width in the upper 32 bits and height in the
         // lower 32 (matches Compose's `packInts` lowering for the
-        // @JvmInline value class). IntOffset.Zero == 0L for the
-        // srcOffset slot. FilterQuality.Low (== 1) is Compose's
-        // default for BitmapPainter and avoids needless filtering for
-        // 1:1 source/destination samples.
+        // @JvmInline value class). IntOffset.Zero == 0L for srcOffset.
+        // FilterQuality.Low (== 1) is Compose's BitmapPainter default
+        // and avoids needless filtering for 1:1 source/destination
+        // samples.
         var srcSize = ((long)bitmap.Width << 32) | (uint)bitmap.Height;
         return BitmapPainterKt.BitmapPainter(
-            imageBitmap,
-            /* srcOffset     */ 0L,
-            /* srcSize       */ srcSize,
-            /* filterQuality */ 1);
+            image:         imageBitmap,
+            srcOffset:     0L,
+            srcSize:       srcSize,
+            filterQuality: 1);
     }
 
     /// <summary>

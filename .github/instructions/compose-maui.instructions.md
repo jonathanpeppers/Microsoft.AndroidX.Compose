@@ -356,7 +356,8 @@ Pack `IntSize` as `((long)w << 32) | (uint)h` (matches Compose's
 ```csharp
 var imageBitmap = AndroidImageBitmap_androidKt.AsImageBitmap(bitmap);
 var srcSize = ((long)bitmap.Width << 32) | (uint)bitmap.Height;
-return BitmapPainterKt.BitmapPainter(imageBitmap, 0L, srcSize, 1);
+return BitmapPainterKt.BitmapPainter(
+    image: imageBitmap, srcOffset: 0L, srcSize: srcSize, filterQuality: 1);
 ```
 
 **Async-void fire-and-forget.** `Microsoft.Maui.TaskExtensions.FireAndForget`
