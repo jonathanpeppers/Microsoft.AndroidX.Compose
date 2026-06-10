@@ -54,8 +54,17 @@
     <!-- AndroidX Navigation -->
     <PackageReference Update="Xamarin.AndroidX.Navigation.Common" Version="2.9.8" />
     <PackageReference Update="Xamarin.AndroidX.Navigation.Runtime" Version="2.9.8" />
+    <PackageReference Update="Xamarin.AndroidX.Navigation.Fragment" Version="2.9.8" />
+    <PackageReference Update="Xamarin.AndroidX.Navigation.UI" Version="2.9.8" />
     <PackageReference Update="Xamarin.AndroidX.Navigation.Compose" Version="2.9.8" />
     <PackageReference Update="Xamarin.AndroidX.Navigation.Compose.Android" Version="2.9.8" />
+    <PackageReference Update="Xamarin.AndroidX.Lifecycle.LiveData" Version="2.10.0.2" />
+    <PackageReference Update="Xamarin.AndroidX.Lifecycle.LiveData.Core.Ktx" Version="2.10.0.2" />
+    <PackageReference Update="Xamarin.AndroidX.Fragment.Ktx" Version="1.8.9.2" />
+    <PackageReference Update="Xamarin.AndroidX.Emoji2.ViewsHelper" Version="1.6.0.2" />
+
+    <!-- .NET MAUI (for Microsoft.AndroidX.Compose.Maui backend) -->
+    <PackageReference Update="Microsoft.Maui.Controls" Version="10.0.20" />
   </ItemGroup>
 
 </Project>
