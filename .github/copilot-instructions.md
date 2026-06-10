@@ -718,6 +718,58 @@ whole type just because one method is missing**.
 5. When upstream fix ships, delete the bridge and switch the facade
    to call the generated binding directly.
 
+### Hand-written JNI: always wrap local refs in `try`/`finally`
+
+Anywhere you call `JNIEnv.GetStaticObjectField`, `CallObjectMethod`,
+`NewObject`, `NewString`, etc. and get back a local ref, the
+`DeleteLocalRef` (or the call that consumes the ref, like
+`Java.Lang.Object.GetObject(local, TransferLocalRef)`) **must** sit in
+a `finally` so an exception thrown between the local-ref allocation and
+its consumer doesn't leak the ref. The local-ref table is small (~512
+slots on most VMs) and a leaked ref can crash the process under
+CheckJNI.
+
+Canonical pattern for "fetch + cache a Companion singleton":
+
+```csharp
+static SomeCompanion? s_companion;
+
+static SomeCompanion Companion()
+{
+    if (s_companion is not null) return s_companion;
+    IntPtr local = IntPtr.Zero;
+    try
+    {
+        IntPtr cls = JNIEnv.FindClass("foo/bar/Outer");
+        IntPtr fid = JNIEnv.GetStaticFieldID(cls, "Companion",
+            "Lfoo/bar/Outer$Companion;");
+        local = JNIEnv.GetStaticObjectField(cls, fid);
+        return s_companion = Java.Lang.Object.GetObject<SomeCompanion>(
+            local, JniHandleOwnership.TransferLocalRef)!;
+    }
+    finally
+    {
+        // GetObject(.., TransferLocalRef) consumes `local` on success;
+        // the explicit DeleteLocalRef only runs if the wrapper threw
+        // before taking ownership.
+        if (local != IntPtr.Zero && s_companion is null)
+            JNIEnv.DeleteLocalRef(local);
+    }
+}
+```
+
+Examples in the repo: `KeyboardOptionsCompanion.cs`,
+`KeyboardType.cs`, `TextStyleCompanion.cs`. Also applies to
+hand-written helpers in `ComposeBridges.cs` and modifier extensions
+that allocate local refs from `Call*ObjectMethod` /
+`NewObject` / `JValue.NewString`.
+
+For class refs, **don't** wrap `JNIEnv.FindClass` results in
+`NewGlobalRef`/`DeleteLocalRef` — Mono.Android returns stable
+globally-registered class refs (re-stated from the suspend-bridge
+section).
+
+
 **Don't add `[ComposeBridge]` if the binding already exposes the method** —
 call the generated C# entry point instead.
 

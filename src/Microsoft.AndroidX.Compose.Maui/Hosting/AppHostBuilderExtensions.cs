@@ -1,5 +1,7 @@
 using Microsoft.AndroidX.Compose.Maui.Handlers;
 using MauiButton = Microsoft.Maui.Controls.Button;
+using MauiEntry = Microsoft.Maui.Controls.Entry;
+using MauiImage = Microsoft.Maui.Controls.Image;
 using MauiLabel = Microsoft.Maui.Controls.Label;
 
 namespace Microsoft.AndroidX.Compose.Maui.Hosting;
@@ -33,6 +35,8 @@ public static class AppHostBuilderExtensions
         {
             handlers.AddHandler<MauiLabel, LabelHandler>();
             handlers.AddHandler<MauiButton, ButtonHandler>();
+            handlers.AddHandler<MauiEntry, EntryHandler>();
+            handlers.AddHandler<MauiImage, ImageHandler>();
         });
 
         return builder;

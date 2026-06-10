@@ -1344,6 +1344,48 @@ public class BridgeGeneratorTests
     }
 
     [Fact]
+    public void RefType_BoundType_FullyQualifiedNamespace_GoesThroughGenericNullableRefPath()
+    {
+        // Phase 2 MAUI: bound Compose types from sub-namespaces
+        // (e.g. AndroidX.Compose.Material3.ButtonColors,
+        // AndroidX.Compose.UI.Text.TextStyle) reach the bridge as
+        // fully-qualified Java.Lang.Object subclasses. Generator
+        // routes them through the same reference-type code path as
+        // hand-written wrappers (FontWeight, Shape, …) — null →
+        // IntPtr.Zero + leave default bit, non-null → Handle + clear bit.
+        var code = """
+            using AndroidX.Compose;
+            using global::AndroidX.Compose.Runtime;
+
+            [assembly: ComposeDefaults("BcDefault", "colors")]
+
+            namespace AndroidX.Compose.Material3
+            {
+                public sealed class ButtonColors : global::Java.Lang.Object { }
+            }
+
+            namespace AndroidX.Compose
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(
+                        Class = "androidx/compose/material3/ButtonKt",
+                        JvmName = "Button",
+                        Signature = "(Landroidx/compose/material3/ButtonColors;Landroidx/compose/runtime/Composer;II)V",
+                        Defaults = typeof(BcDefault))]
+                    public static partial void F(global::AndroidX.Compose.Material3.ButtonColors? colors, IComposer composer);
+                }
+            }
+            """;
+
+        var (_, diags, emitted) = Run(code);
+        Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+        Assert.Contains("colors is null ? global::System.IntPtr.Zero : ((global::Java.Lang.Object)colors).Handle", emitted);
+        Assert.Contains("if (colors is not null) defaults &= ~(int)global::AndroidX.Compose.BcDefault.Colors", emitted);
+    }
+
+    [Fact]
     public void NullablePrimitive_BoolIntLong_LowerToZeroDefaults()
     {
         // bool? / int? / long? params surface as nullable so the caller

@@ -25,9 +25,52 @@
                 SemanticProperties.HeadingLevel="Level2"
                 SemanticProperties.Description="Welcome to dot net MAUI on Jetpack Compose" />
 
+            <Entry
+                x:Name="NameEntry"
+                Placeholder="Type your name"
+                TextChanged="OnNameTextChanged"
+                HorizontalOptions="Fill" />
+
+            <Label
+                x:Name="GreetingLabel"
+                Text="Greeting will appear here."
+                HorizontalOptions="Fill" />
+
+            <Entry
+                x:Name="SecretEntry"
+                Placeholder="Password (masked)"
+                IsPassword="True"
+                HorizontalOptions="Fill" />
+
+            <Entry
+                x:Name="DigitsEntry"
+                Placeholder="Numeric IME"
+                Keyboard="Numeric"
+                HorizontalOptions="Fill" />
+
+            <!-- Exercises MapTextColor + MapFont (size + bold) on the
+                 input — analogue of the gallery's TextStyleOverrideDemo. -->
+            <Entry
+                x:Name="StyledEntry"
+                Text="Big bold blue"
+                TextColor="#2196F3"
+                FontSize="22"
+                FontAttributes="Bold"
+                HorizontalOptions="Fill" />
+
+            <!-- Exercises MapIsReadOnly — focus + selection still work,
+                 keyboard suppressed. -->
+            <Entry
+                x:Name="ReadOnlyEntry"
+                Text="Read-only (no keyboard)"
+                IsReadOnly="True"
+                HorizontalOptions="Fill" />
+
             <Button
                 x:Name="CounterBtn"
                 Text="Click me"
+                BackgroundColor="{StaticResource Primary}"
+                TextColor="White"
                 SemanticProperties.Hint="Counts the number of times you click"
                 Clicked="OnCounterClicked"
                 HorizontalOptions="Fill" />

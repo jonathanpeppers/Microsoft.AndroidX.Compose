@@ -379,7 +379,8 @@ internal static partial class ComposeBridges
         Defaults  = typeof(ButtonDefault))]
     [ComposeFacade]
     public static partial void Button(IFunction0 onClick, IModifier? modifier,
-                                      Shape? shape, PaddingValues? contentPadding,
+                                      Shape? shape, AndroidX.Compose.Material3.ButtonColors? colors,
+                                      PaddingValues? contentPadding,
                                       IFunction3 content, IComposer composer);
 
     // androidx.compose.material3.ButtonKt.OutlinedButton — same Kotlin
@@ -397,7 +398,8 @@ internal static partial class ComposeBridges
         Defaults  = typeof(ButtonDefault))]
     [ComposeFacade]
     public static partial void OutlinedButton(IFunction0 onClick, IModifier? modifier,
-                                              Shape? shape, PaddingValues? contentPadding,
+                                              Shape? shape, AndroidX.Compose.Material3.ButtonColors? colors,
+                                              PaddingValues? contentPadding,
                                               IFunction3 content, IComposer composer);
 
     // androidx.compose.material3.ButtonKt.TextButton — same shape as Button.
@@ -413,7 +415,8 @@ internal static partial class ComposeBridges
         Defaults  = typeof(ButtonDefault))]
     [ComposeFacade]
     public static partial void TextButton(IFunction0 onClick, IModifier? modifier,
-                                          Shape? shape, PaddingValues? contentPadding,
+                                          Shape? shape, AndroidX.Compose.Material3.ButtonColors? colors,
+                                          PaddingValues? contentPadding,
                                           IFunction3 content, IComposer composer);
 
     // androidx.compose.material3.ButtonKt.ElevatedButton — same shape as Button.
@@ -429,7 +432,8 @@ internal static partial class ComposeBridges
         Defaults  = typeof(ButtonDefault))]
     [ComposeFacade]
     public static partial void ElevatedButton(IFunction0 onClick, IModifier? modifier,
-                                              Shape? shape, PaddingValues? contentPadding,
+                                              Shape? shape, AndroidX.Compose.Material3.ButtonColors? colors,
+                                              PaddingValues? contentPadding,
                                               IFunction3 content, IComposer composer);
 
     // androidx.compose.material3.ButtonKt.FilledTonalButton — same shape as Button.
@@ -445,7 +449,8 @@ internal static partial class ComposeBridges
         Defaults  = typeof(ButtonDefault))]
     [ComposeFacade]
     public static partial void FilledTonalButton(IFunction0 onClick, IModifier? modifier,
-                                                 Shape? shape, PaddingValues? contentPadding,
+                                                 Shape? shape, AndroidX.Compose.Material3.ButtonColors? colors,
+                                                 PaddingValues? contentPadding,
                                                  IFunction3 content, IComposer composer);
 
     // androidx.compose.material3.IconButtonKt.IconButton
@@ -725,6 +730,7 @@ internal static partial class ComposeBridges
         IModifier? modifier,
         bool? enabled,
         bool? readOnly,
+        AndroidX.Compose.UI.Text.TextStyle? textStyle,
         IFunction2? label,
         IFunction2? placeholder,
         IFunction2? leadingIcon,
@@ -733,6 +739,8 @@ internal static partial class ComposeBridges
         IFunction2? suffix,
         IFunction2? supportingText,
         bool? isError,
+        AndroidX.Compose.UI.Text.Input.IVisualTransformation? visualTransformation,
+        AndroidX.Compose.Foundation.Text.KeyboardOptions? keyboardOptions,
         bool? singleLine,
         int? maxLines,
         int? minLines,
@@ -750,6 +758,7 @@ internal static partial class ComposeBridges
         IModifier? modifier,
         bool? enabled,
         bool? readOnly,
+        AndroidX.Compose.UI.Text.TextStyle? textStyle,
         IFunction2? label,
         IFunction2? placeholder,
         IFunction2? leadingIcon,
@@ -758,6 +767,8 @@ internal static partial class ComposeBridges
         IFunction2? suffix,
         IFunction2? supportingText,
         bool? isError,
+        AndroidX.Compose.UI.Text.Input.IVisualTransformation? visualTransformation,
+        AndroidX.Compose.Foundation.Text.KeyboardOptions? keyboardOptions,
         bool? singleLine,
         int? maxLines,
         int? minLines,
@@ -797,6 +808,7 @@ internal static partial class ComposeBridges
         IModifier? modifier,
         bool? enabled,
         bool? readOnly,
+        AndroidX.Compose.UI.Text.TextStyle? textStyle,
         IFunction2? label,
         IFunction2? placeholder,
         IFunction2? leadingIcon,
@@ -805,6 +817,8 @@ internal static partial class ComposeBridges
         IFunction2? suffix,
         IFunction2? supportingText,
         bool? isError,
+        AndroidX.Compose.UI.Text.Input.IVisualTransformation? visualTransformation,
+        AndroidX.Compose.Foundation.Text.KeyboardOptions? keyboardOptions,
         bool? singleLine,
         int? maxLines,
         int? minLines,
@@ -822,6 +836,7 @@ internal static partial class ComposeBridges
         IModifier? modifier,
         bool? enabled,
         bool? readOnly,
+        AndroidX.Compose.UI.Text.TextStyle? textStyle,
         IFunction2? label,
         IFunction2? placeholder,
         IFunction2? leadingIcon,
@@ -830,6 +845,8 @@ internal static partial class ComposeBridges
         IFunction2? suffix,
         IFunction2? supportingText,
         bool? isError,
+        AndroidX.Compose.UI.Text.Input.IVisualTransformation? visualTransformation,
+        AndroidX.Compose.Foundation.Text.KeyboardOptions? keyboardOptions,
         bool? singleLine,
         int? maxLines,
         int? minLines,
