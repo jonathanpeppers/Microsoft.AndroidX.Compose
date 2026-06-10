@@ -1,7 +1,6 @@
 using Android.Views;
 using AndroidX.Activity;
 using AndroidX.Compose.Material3;
-using AndroidX.Compose.UI.Text.Input;
 
 namespace AndroidX.Compose.Samples.Jetchat;
 
@@ -20,15 +19,15 @@ public class MainActivity : ComponentActivity
         this.SetContent(c =>
         {
             var ui               = c.Remember(() => new ConversationUiState("#composers", channelMembers: 42, FakeData.InitialMessages()));
-            var input            = c.Remember(() => new MutableState<TextFieldValue>(c.NewTextFieldValue()));
-            var selectedMenu     = c.Remember(() => new MutableState<string>("composers"));
+            var input            = c.MutableStateOf(c.NewTextFieldValue());
+            var selectedMenu     = c.MutableStateOf("composers");
             var drawerScroll     = c.Remember(() => new ScrollState());
             var drawerState      = c.Remember(() => new DrawerStateHolder(DrawerValue.Closed));
-            var selectedSelector = c.Remember(() => new MutableState<int>(0));
-            var popupOpen        = c.Remember(() => new MutableState<bool>(false));
+            var selectedSelector = c.MutableStateOf(0);
+            var popupOpen        = c.MutableStateOf(false);
             var messagesScroll   = c.RememberLazyListState();
-            var isRecording      = c.Remember(() => new MutableState<bool>(false));
-            var swipeOffset      = c.Remember(() => new MutableNumberState<float>(0f));
+            var isRecording      = c.MutableStateOf(false);
+            var swipeOffset      = c.MutableStateOf(0f);
             var nav              = c.Remember(() => new NavController());
             var profileViewModel = c.Remember(() => new ProfileViewModel());
             return JetchatApp.Build(

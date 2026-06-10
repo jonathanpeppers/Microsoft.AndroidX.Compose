@@ -13,7 +13,7 @@ public static class WideNavigationRailDemo
         Description: "Persistent vertical rail with three selectable items.",
         Build:       c =>
         {
-            var idx = c.Remember(() => new MutableNumberState<int>(0));
+            var idx = c.MutableStateOf(0);
             return new Column
             {
                 new Text($"WideNavigationRail (selected: {idx})"),

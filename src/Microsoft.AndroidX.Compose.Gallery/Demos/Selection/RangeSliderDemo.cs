@@ -13,8 +13,8 @@ public static class RangeSliderDemo
         Description: "Two-thumb slider for a (start, end) interval.",
         Build:       c =>
         {
-            var start = c.Remember(() => new MutableNumberState<float>(0.2f));
-            var end   = c.Remember(() => new MutableNumberState<float>(0.8f));
+            var start = c.MutableStateOf(0.2f);
+            var end   = c.MutableStateOf(0.8f);
             return new Column
             {
                 new RangeSlider(

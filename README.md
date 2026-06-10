@@ -67,7 +67,7 @@ public class MainActivity : ComponentActivity
         base.OnCreate(savedInstanceState);
         this.SetContent(c =>
         {
-            var count = c.Remember(() => new MutableNumberState<int>(0));
+            var count = c.MutableStateOf(0);
             return new MaterialTheme
             {
                 new Column
@@ -95,9 +95,10 @@ The translation is mechanical — `new` instead of bare calls, commas instead of
 | `Column { … }`                                | `new Column { … }` (collection-initializer)                     |
 | `Button(onClick = { x++ }) { … }`             | `new Button(onClick: () => x++) { … }`                          |
 | `MaterialTheme { … }`                         | `new MaterialTheme { … }`                                       |
-| `var count by remember { mutableStateOf(0) }` | `var count = c.Remember(() => new MutableNumberState<int>(0))`  |
-| `count++`                                     | `count++` (operator on `MutableNumberState<T>`)                 |
+| `var count by remember { mutableStateOf(0) }` | `var count = c.MutableStateOf(0)`                               |
+| `count++`                                     | `count++` (operator on `MutableNumberState<T>`, picked by overload resolution for `int`/`long`/`float`/`double`) |
 | `"Count: $count"`                             | `$"Count: {count}"` (via `MutableState<T>.ToString`)            |
+| `if (count > 0) …`                            | `if (count > 0) …` (implicit `MutableState<T>` → `T`)           |
 
 That's an end-to-end Material 3 counter app in ~13 lines of composition — start from this shape when adding a new screen. The actual [`src/Microsoft.AndroidX.Compose.Gallery/MainActivity.cs`](src/Microsoft.AndroidX.Compose.Gallery/MainActivity.cs) in the repo is a much larger **gallery app** that exercises every facade across a navigable catalog with search; for a single-screen real-app example see [`samples/Jetchat`](samples/Jetchat).
 

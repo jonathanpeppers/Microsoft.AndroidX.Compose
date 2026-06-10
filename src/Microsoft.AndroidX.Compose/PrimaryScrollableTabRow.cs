@@ -1,5 +1,3 @@
-using AndroidX.Compose.Runtime;
-
 namespace AndroidX.Compose;
 
 /// <summary>
@@ -8,19 +6,4 @@ namespace AndroidX.Compose;
 /// width and the row scrolls horizontally — useful for primary
 /// destinations when there are too many tabs to fit on one screen.
 /// </summary>
-public sealed class PrimaryScrollableTabRow : ComposableContainer
-{
-    readonly int _selectedTabIndex;
-    public PrimaryScrollableTabRow(int selectedTabIndex) => _selectedTabIndex = selectedTabIndex;
-
-    public override void Render(IComposer composer)
-    {
-        var tabs = ComposableLambdas.Wrap2(composer, c => RenderChildren(c));
-        ComposeBridges.PrimaryScrollableTabRow(
-            selectedTabIndex: _selectedTabIndex,
-            modifier:         BuildModifier(),
-            scrollState:      null,
-            tabs:             tabs,
-            composer:         composer);
-    }
-}
+public sealed partial class PrimaryScrollableTabRow;

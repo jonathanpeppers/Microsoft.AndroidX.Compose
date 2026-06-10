@@ -13,7 +13,7 @@ public static class CombinedClickableDemo
         Description: "One gesture modifier that dispatches single / long / double taps to separate callbacks.",
         Build:       c =>
         {
-            var taps = c.Remember(() => new MutableNumberState<int>(0));
+            var taps = c.MutableStateOf(0);
             return new Column
             {
                 new Text($"Taps (single+1, long+10, double+100): {taps}"),

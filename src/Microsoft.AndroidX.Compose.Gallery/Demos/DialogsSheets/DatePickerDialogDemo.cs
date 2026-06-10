@@ -13,8 +13,8 @@ public static class DatePickerDialogDemo
         Description: "Tap Pick date to open a calendar dialog. Read SelectedDateMillis on confirm.",
         Build:       c =>
         {
-            var open   = c.Remember(() => new MutableState<bool>(false));
-            var picked = c.Remember(() => new MutableState<string>("(none)"));
+            var open   = c.MutableStateOf(false);
+            var picked = c.MutableStateOf("(none)");
             var state  = c.Remember(() => new DatePickerState());
             return new Column
             {

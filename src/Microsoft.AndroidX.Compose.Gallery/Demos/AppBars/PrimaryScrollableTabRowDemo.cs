@@ -13,7 +13,7 @@ public static class PrimaryScrollableTabRowDemo
         Description: "Scrolls horizontally when tabs overflow; mixes Tab, LeadingIconTab, CustomTab.",
         Build:       c =>
         {
-            var sub = c.Remember(() => new MutableNumberState<int>(0));
+            var sub = c.MutableStateOf(0);
             return new Column
             {
                 new PrimaryScrollableTabRow(selectedTabIndex: sub.Value)

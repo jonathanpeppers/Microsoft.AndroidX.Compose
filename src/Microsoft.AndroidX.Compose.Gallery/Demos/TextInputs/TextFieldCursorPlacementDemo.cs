@@ -22,7 +22,7 @@ public static class TextFieldCursorPlacementDemo
         Description: "TextFieldValue overload — append text and pin the caret to the end.",
         Build:       c =>
         {
-            var input = c.Remember(() => new MutableState<TextFieldValue>(c.NewTextFieldValue()));
+            var input = c.MutableStateOf(c.NewTextFieldValue());
             return new Column(verticalArrangement: Arrangement.SpacedBy(12))
             {
                 new Text("Tap an emoji — it appends to the field and the caret moves to the end so the next keystroke lands after it.")

@@ -156,6 +156,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         string? themeColor = ReadString(attr, "DefaultColorFromTheme");
         string? colorParameter = ReadString(attr, "ColorParameter");
         bool containerOptIn = ReadBool(attr, "Container");
+        bool indexedChildren = ReadBool(attr, "IndexedChildren");
         string? branchOn = ReadString(attr, "BranchOn");
         string? alternateBridgeName = ReadString(attr, "AlternateBridge");
 
@@ -352,6 +353,24 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
                 $"[PainterResource] may only be applied to one bridge parameter, found {painterCount}"));
         }
 
+        // IndexedChildren only makes sense on a container shape (Phase 1
+        // pure container, or the hybrid container with named slots). The
+        // emitted body calls RenderChildrenIndexed instead of
+        // RenderChildren, so a leaf facade with no content body has
+        // nowhere for the indexed loop to live.
+        if (indexedChildren)
+        {
+            bool hasBodySlot = slots.Any(s =>
+                (s.Kind is FacadeSlotKind.Content2 or FacadeSlotKind.Content3) &&
+                s.Param.NullableAnnotation != NullableAnnotation.Annotated &&
+                !s.HasSlotAttribute);
+            if (!hasBodySlot)
+            {
+                diags.Add(Diagnostic.Create(Diagnostics.FacadeSlotConflict, loc, method.Name,
+                    "IndexedChildren=true requires a container body (a non-nullable IFunction2/IFunction3 content parameter)"));
+            }
+        }
+
         // Phase 3 sanity — if the bridge takes a caller-controlled
         // `int defaults`, we must know its enum (`Defaults = typeof(...)`
         // + matching `[assembly: ComposeDefaults(...)]`) or the emitted
@@ -398,7 +417,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
 
         var source = Emit(className, method.Name, scope, composerParam, slots, hasMultiSlot,
             callerProvidesDefaults, defaultsParam, defaults, defaultsType?.Name, themeColor, colorSlot,
-            userParams, branchInfo);
+            userParams, branchInfo, indexedChildren);
         var hint = $"AndroidX.Compose.Facade.{className}.g.cs";
         return new GenerationResult(source, hint, Array.Empty<Diagnostic>());
     }
@@ -877,7 +896,8 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         DefaultsInfo? defaults, string? defaultsEnumName,
         string? themeColor, FacadeSlot? colorSlot,
         IReadOnlyList<IParameterSymbol> primaryUserParams,
-        BranchInfo? branchInfo)
+        BranchInfo? branchInfo,
+        bool indexedChildren)
     {
         // After classification, only the container's body survives as
         // Content2/3 (multi-slot leafs re-classified to Named/Required).
@@ -1136,12 +1156,13 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         // Content wrapper (Phase 1 only — multi-slot already handled).
         if (isContainer)
         {
+            string renderChildrenCall = indexedChildren ? "RenderChildrenIndexed(c)" : "RenderChildren(c)";
             var contentSlot = slots.First(s => s.Kind is FacadeSlotKind.Content2 or FacadeSlotKind.Content3);
             int arity = contentSlot.Kind == FacadeSlotKind.Content3 ? 3 : 2;
             sb.Append("            var __").Append(contentSlot.Param.Name).Append(" = global::AndroidX.Compose.ComposableLambdas.");
             if (arity == 2)
             {
-                sb.Append("Wrap2(").Append(composerName).AppendLine(", c => RenderChildren(c));");
+                sb.Append("Wrap2(").Append(composerName).Append(", c => ").Append(renderChildrenCall).AppendLine(");");
             }
             else if (!string.IsNullOrEmpty(scope))
             {
@@ -1149,12 +1170,12 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
                 sb.AppendLine("            {");
                 sb.Append("                using var __scopeFrame = global::AndroidX.Compose.RenderContext.PushScope(__scope, global::AndroidX.Compose.ScopeKind.")
                   .Append(scope).AppendLine(");");
-                sb.AppendLine("                RenderChildren(c);");
+                sb.Append("                ").Append(renderChildrenCall).AppendLine(";");
                 sb.AppendLine("            });");
             }
             else
             {
-                sb.Append("Wrap3(").Append(composerName).AppendLine(", c => RenderChildren(c));");
+                sb.Append("Wrap3(").Append(composerName).Append(", c => ").Append(renderChildrenCall).AppendLine(");");
             }
         }
 

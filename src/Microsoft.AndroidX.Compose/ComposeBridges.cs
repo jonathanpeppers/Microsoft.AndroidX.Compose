@@ -3629,6 +3629,83 @@ internal static partial class ComposeBridges
             p7:                0,
             _changed:          defaults);
 
+    // Phase 8 wrapper-passthrough for the segmented-button row
+    // containers. The generator's IndexedChildren=true emits the
+    // PushRow + per-child SetIndex publishing required by the child
+    // SegmentedButton's ItemShape computation. Inner call is the bound
+    // binding directly (the binder exposes the *Kt static for these
+    // unmangled overloads), so the facade must supply the $default mask
+    // explicitly via the trailing `int defaults` slot.
+    [ComposeFacade(Defaults = typeof(SegmentedButtonRowDefault), Scope = "Other", IndexedChildren = true)]
+    public static partial void SingleChoiceSegmentedButtonRow(
+        IModifier? modifier,
+        IFunction3 content,
+        int        defaults,
+        IComposer  composer);
+
+    public static partial void SingleChoiceSegmentedButtonRow(IModifier? modifier, IFunction3 content, int defaults, IComposer composer)
+        => SegmentedButtonKt.SingleChoiceSegmentedButtonRow(
+            modifier:  modifier,
+            space:     0f,
+            content:   content,
+            _composer: composer,
+            p4:        0,
+            _changed:  defaults);
+
+    [ComposeFacade(Defaults = typeof(SegmentedButtonRowDefault), Scope = "Other", IndexedChildren = true)]
+    public static partial void MultiChoiceSegmentedButtonRow(
+        IModifier? modifier,
+        IFunction3 content,
+        int        defaults,
+        IComposer  composer);
+
+    public static partial void MultiChoiceSegmentedButtonRow(IModifier? modifier, IFunction3 content, int defaults, IComposer composer)
+        => SegmentedButtonKt.MultiChoiceSegmentedButtonRow(
+            modifier:  modifier,
+            space:     0f,
+            content:   content,
+            _composer: composer,
+            p4:        0,
+            _changed:  defaults);
+
+    // Phase 8 wrapper-passthrough for the scrollable tab rows. The
+    // existing 5-param [ComposeBridge] overloads above (search for
+    // `PrimaryScrollableTabRow-qhFBPw4`) expose an `IntPtr? scrollState`
+    // slot the facade always passes as null — the bound binding's
+    // auto-mask handles the corresponding $default bit. These 4-param
+    // overloads forward to those bridges; the generator emits the
+    // facade class as a same-name overload selection at compile time
+    // (no `ClassName` redirect needed).
+    [ComposeFacade]
+    public static partial void PrimaryScrollableTabRow(
+        int        selectedTabIndex,
+        IModifier? modifier,
+        IFunction2 tabs,
+        IComposer  composer);
+
+    public static partial void PrimaryScrollableTabRow(int selectedTabIndex, IModifier? modifier, IFunction2 tabs, IComposer composer)
+        => PrimaryScrollableTabRow(
+            selectedTabIndex: selectedTabIndex,
+            modifier:         modifier,
+            scrollState:      null,
+            tabs:             tabs,
+            composer:         composer);
+
+    [ComposeFacade]
+    public static partial void SecondaryScrollableTabRow(
+        int        selectedTabIndex,
+        IModifier? modifier,
+        IFunction2 tabs,
+        IComposer  composer);
+
+    public static partial void SecondaryScrollableTabRow(int selectedTabIndex, IModifier? modifier, IFunction2 tabs, IComposer composer)
+        => SecondaryScrollableTabRow(
+            selectedTabIndex: selectedTabIndex,
+            modifier:         modifier,
+            scrollState:      null,
+            tabs:             tabs,
+            composer:         composer);
+
     // androidx.compose.foundation.text.selection.SelectionContainerKt.SelectionContainer —
     // `(modifier=Modifier, content)`. The binder exposes the Kt class
     // and the 5-arg `_composer:/p3:/_changed:` overload directly, so

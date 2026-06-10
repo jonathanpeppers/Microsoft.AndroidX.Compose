@@ -13,11 +13,11 @@ public static class StateFactoriesDemo
         Description: "MutableState<T>, MutableNumberState<T> (int/long/float/double), MutableStateList<T>, MutableStateMap<K,V> — the Kotlin top-level factory family expressed as plain C# ctors.",
         Build:       c =>
         {
-            var name   = c.Remember(() => new MutableState<string>("Ada"));
-            var i      = c.Remember(() => new MutableNumberState<int>(0));
-            var l      = c.Remember(() => new MutableNumberState<long>(1_000_000_000L));
-            var f      = c.Remember(() => new MutableNumberState<float>(0.5f));
-            var d      = c.Remember(() => new MutableNumberState<double>(Math.PI));
+            var name   = c.MutableStateOf("Ada");
+            var i      = c.MutableStateOf(0);
+            var l      = c.MutableStateOf(1_000_000_000L);
+            var f      = c.MutableStateOf(0.5f);
+            var d      = c.MutableStateOf(Math.PI);
             var items  = c.Remember(() => new MutableStateList<string>("alpha", "beta"));
             var prefs  = c.Remember(() => new MutableStateMap<string, bool>());
 

@@ -23,8 +23,8 @@ public static class NullableMutableStateDemo
         Description: "Nullable primitives (long?, int?, bool?) round-trip through MutableState and CompositionLocal without unbox errors. Toggle the selected ID between null and a value.",
         Build:       c =>
         {
-            var selectedId = c.Remember(() => new MutableState<long?>(null));
-            var taps       = c.Remember(() => new MutableNumberState<int>(0));
+            var selectedId = c.MutableStateOf<long?>(null);
+            var taps       = c.MutableStateOf(0);
 
             return new Column
             {

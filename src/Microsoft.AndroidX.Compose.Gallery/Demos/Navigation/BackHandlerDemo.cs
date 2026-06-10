@@ -16,8 +16,8 @@ public static class BackHandlerDemo
         Description: "Toggle interception of the back gesture; the counter ticks each time it's intercepted.",
         Build:       c =>
         {
-            var intercept = c.Remember(() => new MutableState<bool>(true));
-            var pressCount = c.Remember(() => new MutableNumberState<int>(0));
+            var intercept = c.MutableStateOf(true);
+            var pressCount = c.MutableStateOf(0);
 
             return new Column
             {

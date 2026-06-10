@@ -13,7 +13,7 @@ public static class ModalDrawerDemo
         Description: "Edge-swipe to reveal; scrim taps dismiss.",
         Build:       c =>
         {
-            var count = c.Remember(() => new MutableNumberState<int>(0));
+            var count = c.MutableStateOf(0);
             // Drawers fill their parent. Bound them so they don't fight the
             // gallery's outer scroll for height.
             return new Box

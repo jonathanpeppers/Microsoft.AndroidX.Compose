@@ -13,8 +13,8 @@ public static class DetectTapGesturesDemo
         Description: "Low-level pointer-input modifier: tap, press, long-press, double-tap — each reports the hit Offset.",
         Build:       c =>
         {
-            var lastEvent = c.Remember(() => new MutableState<string>("(none)"));
-            var taps = c.Remember(() => new MutableNumberState<int>(0));
+            var lastEvent = c.MutableStateOf("(none)");
+            var taps = c.MutableStateOf(0);
 
             string Fmt(string label, Offset offset) =>
                 $"{label} at ({offset.X:F0}, {offset.Y:F0})";

@@ -13,8 +13,8 @@ public static class LaunchedEffectDemo
         Description: "Background tick loop scoped to this composition. Bumping the key cancels and restarts it.",
         Build:       c =>
         {
-            var ticks = c.Remember(() => new MutableNumberState<int>(0));
-            var key   = c.Remember(() => new MutableNumberState<int>(0));
+            var ticks = c.MutableStateOf(0);
+            var key   = c.MutableStateOf(0);
 
             return new Column
             {

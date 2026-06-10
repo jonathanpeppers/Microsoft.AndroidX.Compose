@@ -13,7 +13,7 @@ public static class FillStylesDemo
         Description: "Filled, Elevated, Filled tonal, Outlined, and Text buttons.",
         Build:       c =>
         {
-            var count = c.Remember(() => new MutableNumberState<int>(0));
+            var count = c.MutableStateOf(0);
             return new Column
             {
                 new Text($"Tapped: {count}"),

@@ -13,8 +13,8 @@ public static class ModalWideNavigationRailDemo
         Description: "Overlay rail; tap an item or the Close row to dismiss.",
         Build:       c =>
         {
-            var idx     = c.Remember(() => new MutableNumberState<int>(0));
-            var visible = c.Remember(() => new MutableState<bool>(false));
+            var idx     = c.MutableStateOf(0);
+            var visible = c.MutableStateOf(false);
             return new Column
             {
                 new Text($"ModalWideNavigationRail (selected: {idx})"),

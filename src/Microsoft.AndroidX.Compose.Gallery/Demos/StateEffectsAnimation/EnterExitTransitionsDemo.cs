@@ -13,7 +13,7 @@ public static class EnterExitTransitionsDemo
         Description: "Combine Transitions.FadeIn/Out, ScaleIn/Out, and SlideIn/OutVertically with AnimatedVisibility.",
         Build:       c =>
         {
-            var visible = c.Remember(() => new MutableState<bool>(true));
+            var visible = c.MutableStateOf(true);
             return new Column
             {
                 new Button(onClick: () => visible.Value = !visible.Value)

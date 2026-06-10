@@ -26,7 +26,7 @@ public static class PostScreen
         Action<Post>? onShare = null) =>
         new Composed(c =>
         {
-            var showShareDialog = c.Remember(() => new MutableState<bool>(false));
+            var showShareDialog = c.MutableStateOf(false);
             var snackbarMessage = snackbars.Message.Value;
 
             // Wrap the Scaffold + the conditional dialog in a Box so the

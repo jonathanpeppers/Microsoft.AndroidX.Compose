@@ -13,7 +13,7 @@ public static class ModalBottomSheetDemo
         Description: "Drag down or tap outside to dismiss.",
         Build:       c =>
         {
-            var open = c.Remember(() => new MutableState<bool>(false));
+            var open = c.MutableStateOf(false);
             return new Column
             {
                 new Button(onClick: () => open.Value = true) { new Text("Show sheet") },

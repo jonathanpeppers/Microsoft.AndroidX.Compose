@@ -13,7 +13,7 @@ public static class IconButtonsDemo
         Description: "IconButton, FilledIconButton, FilledTonalIconButton, OutlinedIconButton.",
         Build:       c =>
         {
-            var count = c.Remember(() => new MutableNumberState<int>(0));
+            var count = c.MutableStateOf(0);
             return new Column
             {
                 new Text($"Tapped: {count}"),

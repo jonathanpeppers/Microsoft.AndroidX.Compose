@@ -75,7 +75,7 @@ public static class EmojiSelector
     public static ComposableNode Build(MutableState<TextFieldValue> input, ColorScheme scheme) =>
         new Composed(c =>
         {
-            var selected = c.Remember(() => new MutableState<int>(0));
+            var selected = c.MutableStateOf(0);
             return new Column
             {
                 Modifier

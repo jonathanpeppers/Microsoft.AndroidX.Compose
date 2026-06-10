@@ -13,9 +13,9 @@ public static class ToggleableSelectableSemanticsDemo
         Description: "A Row collapsed into one a11y node, three Selectable rows acting as a radio group, and a Box that announces a custom semantic role.",
         Build:       c =>
         {
-            var liked       = c.Remember(() => new MutableState<bool>(false));
-            var selectedRow = c.Remember(() => new MutableNumberState<int>(0));
-            var taps        = c.Remember(() => new MutableNumberState<int>(0));
+            var liked       = c.MutableStateOf(false);
+            var selectedRow = c.MutableStateOf(0);
+            var taps        = c.MutableStateOf(0);
 
             return new Column
             {

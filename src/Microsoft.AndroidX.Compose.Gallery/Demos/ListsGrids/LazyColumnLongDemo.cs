@@ -14,8 +14,8 @@ public static class LazyColumnLongDemo
         Description: "Only the visible window is composed; PullToRefreshBox surfaces the Material 3 pull gesture.",
         Build:       c =>
         {
-            var refreshing  = c.Remember(() => new MutableState<bool>(false));
-            var refreshTick = c.Remember(() => new MutableNumberState<int>(0));
+            var refreshing  = c.MutableStateOf(false);
+            var refreshTick = c.MutableStateOf(0);
             return new Column
             {
                 new Text($"LazyColumn (1000 rows) — pull to refresh, rev {refreshTick}"),

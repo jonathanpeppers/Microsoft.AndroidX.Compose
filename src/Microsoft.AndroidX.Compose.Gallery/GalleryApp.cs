@@ -32,7 +32,7 @@ public static class GalleryApp
         // drawer below (drives edge-swipe). Lives here so both see the
         // same MutableState; each route's body updates it in a
         // DisposableEffect.
-        var currentRoute = composer.Remember(() => new MutableState<string>("home"));
+        var currentRoute = composer.MutableStateOf("home");
 
         MainActivity.Nav = nav;
 

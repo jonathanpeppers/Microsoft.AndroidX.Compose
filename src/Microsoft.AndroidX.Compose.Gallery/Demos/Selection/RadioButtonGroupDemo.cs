@@ -13,7 +13,7 @@ public static class RadioButtonGroupDemo
         Description: "Single-selection group built from three RadioButtons.",
         Build:       c =>
         {
-            var picked = c.Remember(() => new MutableNumberState<int>(0));
+            var picked = c.MutableStateOf(0);
             return new Column
             {
                 new Row

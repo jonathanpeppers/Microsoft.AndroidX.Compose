@@ -13,7 +13,7 @@ public static class SecondaryScrollableTabRowDemo
         Description: "M3 secondary tab row variant; same selection model as PrimaryScrollableTabRow.",
         Build:       c =>
         {
-            var sub = c.Remember(() => new MutableNumberState<int>(0));
+            var sub = c.MutableStateOf(0);
             return new Column
             {
                 new SecondaryScrollableTabRow(selectedTabIndex: sub.Value)

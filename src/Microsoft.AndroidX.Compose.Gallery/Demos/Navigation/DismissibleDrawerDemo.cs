@@ -14,7 +14,7 @@ public static class DismissibleDrawerDemo
         Description: "Drawer pushes the content rather than overlaying. Starts open via InitialValue.",
         Build:       c =>
         {
-            var count = c.Remember(() => new MutableNumberState<int>(0));
+            var count = c.MutableStateOf(0);
             return new Box
             {
                 Modifier.Height(320),
