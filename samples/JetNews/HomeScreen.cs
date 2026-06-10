@@ -67,7 +67,7 @@ public static class HomeScreen
             Title = searchOpen.Value
                 ? new OutlinedTextField(searchQuery)
                 {
-                    Modifier    = Modifier.FillMaxWidth().Padding(horizontal: 8, vertical: 0),
+                    Modifier    = Modifier.FillMaxWidth().Padding(horizontal: 8),
                     SingleLine  = true,
                     Placeholder = new Text("Search JetNews"),
                 }
@@ -189,7 +189,7 @@ public static class HomeScreen
             HomeRow.PopularCarousel pc => BuildPopularCarousel(pc.Posts, onSelectPost),
             HomeRow.Divider            => new HorizontalDivider
             {
-                Modifier = Modifier.Padding(horizontal: 14, vertical: 0),
+                Modifier = Modifier.Padding(horizontal: 14),
             },
             _ => new Spacer(),
         };

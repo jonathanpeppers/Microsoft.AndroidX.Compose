@@ -14,13 +14,13 @@ public static class DividerDemo
         Build:       _ => new Column
         {
             new Text("Above"),
-            new HorizontalDivider { Modifier = Modifier.Padding(0, 8) },
+            new HorizontalDivider { Modifier = Modifier.Padding(vertical: 8) },
             new Text("Below"),
             new Spacer { Modifier = Modifier.Height(16) },
             new Row
             {
                 new Text("Left"),
-                new VerticalDivider { Modifier = Modifier.Padding(8, 0) },
+                new VerticalDivider { Modifier = Modifier.Padding(horizontal: 8) },
                 new Text("Right"),
             },
         });

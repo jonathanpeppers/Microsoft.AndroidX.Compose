@@ -44,6 +44,12 @@ public sealed class LazyHorizontalStaggeredGrid<T> : ComposableNode
     /// </summary>
     public LazyStaggeredGridState? State { get; set; }
 
+    /// <summary>
+    /// Optional fixed content padding applied inside the grid (not as a
+    /// modifier on the grid frame).
+    /// </summary>
+    public PaddingValues? ContentPadding { get; set; }
+
     public override void Render(IComposer composer)
     {
         var modifier = BuildModifier();
@@ -75,14 +81,15 @@ public sealed class LazyHorizontalStaggeredGrid<T> : ComposableNode
         //   9 = overscrollEffect
         //  10 = content               (always provided)
         int defaults = (int)LazyHorizontalStaggeredGridDefault.All & ~(int)LazyHorizontalStaggeredGridDefault.Rows;
-        if (modifier is not null) defaults &= ~(int)LazyHorizontalStaggeredGridDefault.Modifier;
-        if (State    is not null) defaults &= ~(int)LazyHorizontalStaggeredGridDefault.State;
+        if (modifier       is not null) defaults &= ~(int)LazyHorizontalStaggeredGridDefault.Modifier;
+        if (State          is not null) defaults &= ~(int)LazyHorizontalStaggeredGridDefault.State;
+        if (ContentPadding is not null) defaults &= ~(int)LazyHorizontalStaggeredGridDefault.ContentPadding;
 
         LazyStaggeredGridDslKt.LazyHorizontalStaggeredGrid(
             rows:                  _rows,
             modifier:              modifier,
             state:                 State,
-            contentPadding:        null,
+            contentPadding:        ContentPadding?.Jvm,
             reverseLayout:         false,
             verticalArrangement:   null,
             horizontalItemSpacing: 0f,

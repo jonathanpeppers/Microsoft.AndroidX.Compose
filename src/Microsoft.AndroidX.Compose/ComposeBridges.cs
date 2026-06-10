@@ -379,7 +379,7 @@ internal static partial class ComposeBridges
         Defaults  = typeof(ButtonDefault))]
     [ComposeFacade]
     public static partial void Button(IFunction0 onClick, IModifier? modifier,
-                                      Shape? shape,
+                                      Shape? shape, PaddingValues? contentPadding,
                                       IFunction3 content, IComposer composer);
 
     // androidx.compose.material3.ButtonKt.OutlinedButton — same Kotlin
@@ -397,7 +397,7 @@ internal static partial class ComposeBridges
         Defaults  = typeof(ButtonDefault))]
     [ComposeFacade]
     public static partial void OutlinedButton(IFunction0 onClick, IModifier? modifier,
-                                              Shape? shape,
+                                              Shape? shape, PaddingValues? contentPadding,
                                               IFunction3 content, IComposer composer);
 
     // androidx.compose.material3.ButtonKt.TextButton — same shape as Button.
@@ -413,7 +413,7 @@ internal static partial class ComposeBridges
         Defaults  = typeof(ButtonDefault))]
     [ComposeFacade]
     public static partial void TextButton(IFunction0 onClick, IModifier? modifier,
-                                          Shape? shape,
+                                          Shape? shape, PaddingValues? contentPadding,
                                           IFunction3 content, IComposer composer);
 
     // androidx.compose.material3.ButtonKt.ElevatedButton — same shape as Button.
@@ -429,7 +429,7 @@ internal static partial class ComposeBridges
         Defaults  = typeof(ButtonDefault))]
     [ComposeFacade]
     public static partial void ElevatedButton(IFunction0 onClick, IModifier? modifier,
-                                              Shape? shape,
+                                              Shape? shape, PaddingValues? contentPadding,
                                               IFunction3 content, IComposer composer);
 
     // androidx.compose.material3.ButtonKt.FilledTonalButton — same shape as Button.
@@ -445,7 +445,7 @@ internal static partial class ComposeBridges
         Defaults  = typeof(ButtonDefault))]
     [ComposeFacade]
     public static partial void FilledTonalButton(IFunction0 onClick, IModifier? modifier,
-                                                 Shape? shape,
+                                                 Shape? shape, PaddingValues? contentPadding,
                                                  IFunction3 content, IComposer composer);
 
     // androidx.compose.material3.IconButtonKt.IconButton

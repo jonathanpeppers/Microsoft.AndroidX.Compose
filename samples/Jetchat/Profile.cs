@@ -125,26 +125,26 @@ public static class Profile
     static Column BuildNameAndPosition(ProfileScreenState state, ColorScheme scheme) =>
         new()
         {
-            Modifier.Padding(horizontal: 16, vertical: 0),
+            Modifier.Padding(horizontal: 16),
             new Text(state.Name)
             {
                 FontSize   = 24,
                 FontWeight = FontWeight.Medium,
                 Color      = scheme.OnSurface,
-                Modifier   = Modifier.Padding(top: 8, bottom: 0, start: 0, end: 0),
+                Modifier   = Modifier.Padding(top: 8),
             },
             new Text(state.Position)
             {
                 FontSize = 16,
                 Color    = scheme.OnSurfaceVariant,
-                Modifier = Modifier.Padding(top: 4, bottom: 20, start: 0, end: 0),
+                Modifier = Modifier.Padding(top: 4, bottom: 20),
             },
         };
 
     static Column BuildProfileProperty(string label, string value, ColorScheme scheme, bool isLink = false) =>
         new()
         {
-            Modifier.Padding(start: 16, end: 16, top: 0, bottom: 16),
+            Modifier.Padding(start: 16, end: 16, bottom: 16),
             new HorizontalDivider
             {
                 Color = scheme.OnSurface,
@@ -153,13 +153,13 @@ public static class Profile
             {
                 FontSize = 12,
                 Color    = scheme.OnSurfaceVariant,
-                Modifier = Modifier.Padding(top: 8, bottom: 0, start: 0, end: 0),
+                Modifier = Modifier.Padding(top: 8),
             },
             new Text(value)
             {
                 FontSize = 16,
                 Color    = isLink ? scheme.Primary : scheme.OnSurface,
-                Modifier = Modifier.Padding(top: 4, bottom: 0, start: 0, end: 0),
+                Modifier = Modifier.Padding(top: 4),
             },
         };
 

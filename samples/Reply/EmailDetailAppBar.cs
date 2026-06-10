@@ -25,7 +25,7 @@ public static class EmailDetailAppBar
                     {
                         FontSize = 12,
                         Color    = scheme.Outline,
-                        Modifier = Modifier.Padding(top: 4, bottom: 0, start: 0, end: 0),
+                        Modifier = Modifier.Padding(top: 4),
                     },
                 };
             }),

@@ -42,7 +42,7 @@ public static class DragAndDropTargetDemo
             var rows = new Column();
             rows.Add(new Text($"Drops received: {drops.Count}"));
             for (int i = 0; i < drops.Count; i++)
-                rows.Add(new Text(drops[i]) { Modifier = Modifier.Padding(0, 2) });
+                rows.Add(new Text(drops[i]) { Modifier = Modifier.Padding(vertical: 2) });
 
             var fill = hovering.Value
                 ? Color.FromRgb(0xCE, 0x93, 0xD8)

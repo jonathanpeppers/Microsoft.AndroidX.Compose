@@ -135,6 +135,7 @@ public class FacadeGeneratorTests
             public class TextAlign : Java.Lang.Object { }
             public class TextDecoration : Java.Lang.Object { }
             public class Shape : Java.Lang.Object { }
+            public class PaddingValues : Java.Lang.Object { }
             public class Alignment : Java.Lang.Object { }
             public class ContentScale : Java.Lang.Object { }
             public abstract class ComposableNode
@@ -2296,6 +2297,42 @@ public class FacadeGeneratorTests
         Assert.Contains("public global::AndroidX.Compose.Shape? Shape { get; set; }", emitted);
         // The bridge call forwards `Shape` positionally — between BuildModifier() and __content.
         Assert.Contains("global::AndroidX.Compose.ComposeBridges.Card(BuildModifier(), Shape, __content, composer);", emitted);
+
+        var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
+        Assert.Empty(errors);
+    }
+
+    [Fact]
+    public void OptionalValue_PaddingValuesEmitsNullableReferenceProperty()
+    {
+        var code = """
+            using global::AndroidX.Compose.Runtime;
+            using global::AndroidX.Compose.UI;
+            using AndroidX.Compose;
+            using Kotlin.Jvm.Functions;
+
+            [assembly: ComposeDefaults("TextDefault",
+                "!text", "modifier", "contentPadding")]
+
+            namespace AndroidX.Compose
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(Class="androidx/compose/material3/TextKt", JvmName="Text",
+                                   Signature="(Ljava/lang/String;Landroidx/compose/ui/Modifier;Landroidx/compose/foundation/layout/PaddingValues;Landroidx/compose/runtime/Composer;II)V",
+                                   Defaults=typeof(TextDefault))]
+                    [ComposeFacade]
+                    public static partial void Text(string text, IModifier? modifier, PaddingValues? contentPadding, IComposer composer);
+                }
+            }
+            """;
+
+        var (output, diags, emitted) = Run(code, "Text");
+        Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+        // Reference-typed wrapper surfaces as a nullable property.
+        Assert.Contains("public global::AndroidX.Compose.PaddingValues? ContentPadding { get; set; }", emitted);
+        Assert.Contains("global::AndroidX.Compose.ComposeBridges.Text(_text, BuildModifier(), ContentPadding, composer);", emitted);
 
         var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
         Assert.Empty(errors);

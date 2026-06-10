@@ -47,6 +47,14 @@ public sealed class HorizontalPager<T> : ComposableNode
     /// </summary>
     public PagerState? State { get; set; }
 
+    /// <summary>
+    /// Optional fixed content padding applied inside the pager.
+    /// Useful for letting pages peek (i.e. visible side gutters that
+    /// reveal slivers of the previous and next pages) without
+    /// shrinking the page bounds via <see cref="Modifier"/>.
+    /// </summary>
+    public PaddingValues? ContentPadding { get; set; }
+
     public override void Render(IComposer composer)
     {
         // When the caller supplies a PagerState wrapper its Jvm is
@@ -91,12 +99,13 @@ public sealed class HorizontalPager<T> : ComposableNode
         // substitutes its real defaults; we clear bits only for the
         // params this v1 facade exposes.
         int defaults = (int)HorizontalPagerDefault.All;
-        if (modifier is not null) defaults &= ~(int)HorizontalPagerDefault.Modifier;
+        if (modifier       is not null) defaults &= ~(int)HorizontalPagerDefault.Modifier;
+        if (ContentPadding is not null) defaults &= ~(int)HorizontalPagerDefault.ContentPadding;
 
         PagerKt.HorizontalPager(
             state:                       jvmState,
             modifier:                    modifier,
-            contentPadding:              null,
+            contentPadding:              ContentPadding?.Jvm,
             pageSize:                    null,
             p4:                          0,    // beyondViewportPageCount
             pageSpacing:                 0f,

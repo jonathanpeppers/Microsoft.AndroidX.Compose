@@ -69,7 +69,7 @@ public static class JetnewsDrawer
                 _ = drawerState.CloseAsync();
             })
         {
-            Modifier = Modifier.Padding(horizontal: 12, vertical: 0),
+            Modifier = Modifier.Padding(horizontal: 12),
             Label    = new Text(label)
             {
                 FontSize   = 16,

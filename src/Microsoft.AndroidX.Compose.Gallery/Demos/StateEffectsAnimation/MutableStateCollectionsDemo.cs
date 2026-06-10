@@ -26,7 +26,7 @@ public static class MutableStateCollectionsDemo
                     new Button(onClick: () => { if (list.Count > 0) list.RemoveAt(list.Count - 1); })
                         { new Text("Remove last") },
                 },
-                new HorizontalDivider { Modifier = Modifier.Padding(0, 8) },
+                new HorizontalDivider { Modifier = Modifier.Padding(vertical: 8) },
                 new Text($"Map: {{{string.Join(", ", map.Select(kv => $"{kv.Key}={kv.Value}"))}}}"),
                 new Row
                 {

@@ -23,9 +23,12 @@ public static class ModifierExtensions
     }
 
     /// <summary>
-    /// <c>Modifier.padding(horizontal: Dp, vertical: Dp)</c>.
+    /// <c>Modifier.padding(horizontal: Dp, vertical: Dp)</c>. Each edge
+    /// defaults to <c>0.dp</c>, so callers can name just the axis they
+    /// care about (e.g. <c>someModifier.Padding(horizontal: 16)</c>) and
+    /// mirror Kotlin's <c>modifier.padding(horizontal = 16.dp)</c>.
     /// </summary>
-    public static Modifier Padding(this Modifier modifier, Dp horizontal, Dp vertical)
+    public static Modifier Padding(this Modifier modifier, Dp horizontal = default, Dp vertical = default)
     {
         var h = horizontal.Value;
         var v = vertical.Value;
@@ -34,14 +37,32 @@ public static class ModifierExtensions
 
     /// <summary>
     /// <c>Modifier.padding(start: Dp, top: Dp, end: Dp, bottom: Dp)</c>.
+    /// Each edge defaults to <c>0.dp</c>, so callers can name just the
+    /// edges they want (e.g. <c>someModifier.Padding(top: 8)</c>) and mirror
+    /// Kotlin's <c>modifier.padding(top = 8.dp)</c>.
     /// </summary>
-    public static Modifier Padding(this Modifier modifier, Dp start, Dp top, Dp end, Dp bottom)
+    public static Modifier Padding(this Modifier modifier, Dp start = default, Dp top = default, Dp end = default, Dp bottom = default)
     {
         var s = start.Value;
         var t = top.Value;
         var e = end.Value;
         var b = bottom.Value;
         return modifier.Append(curr => ComposeBridges.ModifierPaddingLTRB(curr, s, t, e, b));
+    }
+
+    /// <summary>
+    /// <c>Modifier.padding(paddingValues: PaddingValues)</c> — apply a
+    /// pre-built <see cref="PaddingValues"/> as a single
+    /// <c>Modifier.padding</c> op. Useful for forwarding the
+    /// <c>PaddingValues</c> a parent <see cref="Scaffold"/> hands its
+    /// content lambda into a non-list child that should pad rather
+    /// than route into a native <c>contentPadding</c> slot.
+    /// </summary>
+    public static Modifier Padding(this Modifier modifier, PaddingValues paddingValues)
+    {
+        ArgumentNullException.ThrowIfNull(paddingValues);
+        var pv = paddingValues;
+        return modifier.Append(curr => ComposeBridges.ModifierPaddingValues(curr, ((Java.Lang.Object)pv).Handle));
     }
 
     /// <summary>

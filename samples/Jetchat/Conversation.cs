@@ -74,7 +74,7 @@ public static class Conversation
                 {
                     FontSize = 12,
                     Color    = scheme.OnSurfaceVariant,
-                    Modifier = Modifier.Padding(top: 2, bottom: 0, start: 0, end: 0),
+                    Modifier = Modifier.Padding(top: 2),
                 },
             },
             Actions = new Row
@@ -193,7 +193,7 @@ public static class Conversation
 
             // Jump to bottom button shows up when the user has scrolled
             // away from the newest message (index 0 in reverse layout).
-            new Composed(c =>
+            c =>
             {
                 var visible = messagesScroll.FirstVisibleItemIndex != 0
                            || messagesScroll.FirstVisibleItemScrollOffset > 0;
@@ -206,11 +206,11 @@ public static class Conversation
                 {
                     Modifier = Modifier
                         .Align(Alignment.BottomCenter)
-                        .Padding(start: 0, top: 0, end: 0, bottom: 16),
+                        .Padding(bottom: 16),
                     Icon = new Icon(Resource.Drawable.ic_arrow_downward, "Jump to bottom"),
                     Text = new Text("Jump to bottom"),
                 };
-            }),
+            },
         };
     }
 
@@ -228,7 +228,7 @@ public static class Conversation
                 FontSize   = 11,
                 FontWeight = FontWeight.Medium,
                 Color      = scheme.OnSurfaceVariant,
-                Modifier   = Modifier.Padding(horizontal: 16, vertical: 0),
+                Modifier   = Modifier.Padding(horizontal: 16),
             },
             new HorizontalDivider
             {
@@ -241,7 +241,7 @@ public static class Conversation
     {
         var row = new Row
         {
-            Modifier.Padding(top: isLastByAuthor ? 8 : 0, bottom: 0, start: 0, end: 0),
+            Modifier.Padding(top: isLastByAuthor ? 8 : 0),
         };
 
         if (isLastByAuthor)
@@ -261,7 +261,7 @@ public static class Conversation
         return new Image(m.AuthorImage, "Profile photo")
         {
             Modifier = Modifier
-                .Padding(horizontal: 16, vertical: 0)
+                .Padding(horizontal: 16)
                 .Size(42)
                 .Border(1.5f, accent,         Shape.Circle())
                 .Border(3,    scheme.Surface, Shape.Circle())
@@ -274,7 +274,7 @@ public static class Conversation
     {
         var col = new Column
         {
-            Modifier.Padding(top: 0, bottom: 0, start: 0, end: 16).Weight(1f, fill: true),
+            Modifier.Padding(end: 16).Weight(1f, fill: true),
         };
         if (isLastByAuthor)
             col.Add(BuildAuthorNameTimestamp(m, scheme));
@@ -291,14 +291,14 @@ public static class Conversation
                 FontSize   = 16,
                 FontWeight = FontWeight.Medium,
                 Color      = scheme.OnSurface,
-                Modifier   = Modifier.Padding(top: 0, bottom: 8, start: 0, end: 0),
+                Modifier   = Modifier.Padding(bottom: 8),
             },
             Spacer.Width(8),
             new Text(m.Timestamp)
             {
                 FontSize = 12,
                 Color    = scheme.OnSurfaceVariant,
-                Modifier = Modifier.Padding(top: 0, bottom: 8, start: 0, end: 0),
+                Modifier = Modifier.Padding(bottom: 8),
             },
         };
 
@@ -453,14 +453,14 @@ public static class Conversation
                 FontSize   = 16,
                 FontWeight = FontWeight.Medium,
                 Color      = scheme.OnSurfaceVariant,
-                Modifier   = Modifier.Padding(horizontal: 16, vertical: 0),
+                Modifier   = Modifier.Padding(horizontal: 16),
             },
             Spacer.Height(8),
             new Text(subtitle)
             {
                 FontSize = 14,
                 Color    = scheme.OnSurfaceVariant,
-                Modifier = Modifier.Padding(horizontal: 16, vertical: 0),
+                Modifier = Modifier.Padding(horizontal: 16),
             },
         };
     }
