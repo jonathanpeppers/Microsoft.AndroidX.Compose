@@ -22,6 +22,8 @@
     <!-- AndroidX core / activity / lifecycle -->
     <PackageReference Update="Xamarin.AndroidX.Activity" Version="1.13.0" />
     <PackageReference Update="Xamarin.AndroidX.Activity.Compose" Version="1.13.0" />
+    <PackageReference Update="Xamarin.AndroidX.Lifecycle.Runtime.Compose" Version="2.10.0.2" />
+    <PackageReference Update="Xamarin.AndroidX.Lifecycle.Runtime.Compose.Android" Version="2.10.0.3" />
 
     <!-- AndroidX Compose -->
     <PackageReference Update="Xamarin.AndroidX.Compose.Animation" Version="1.11.2" />
