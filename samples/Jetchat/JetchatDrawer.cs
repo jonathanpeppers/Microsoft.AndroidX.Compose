@@ -48,7 +48,7 @@ public static class JetchatDrawer
         {
             Modifier.Companion.FillMaxWidth().Padding(16),
             JetchatIcon.Build(contentDescription: null, sizeDp: 24),
-            new Spacer(Modifier.Companion.Width(8)),
+            Spacer.Width(8),
             new Text("Jetchat")
             {
                 FontSize   = 18,

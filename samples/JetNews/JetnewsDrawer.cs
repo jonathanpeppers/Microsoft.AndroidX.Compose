@@ -48,7 +48,7 @@ public static class JetnewsDrawer
         {
             Modifier.Companion.FillMaxWidth().Padding(horizontal: 28, vertical: 24),
             new Icon(Resource.Drawable.ic_jetnews_logo, "JetNews logo"),
-            new Spacer(Modifier.Companion.Width(8)),
+            Spacer.Width(8),
             new Icon(Resource.Drawable.ic_jetnews_wordmark, "JetNews"),
         };
 
