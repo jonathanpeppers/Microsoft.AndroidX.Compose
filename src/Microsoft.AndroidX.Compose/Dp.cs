@@ -18,7 +18,7 @@ namespace AndroidX.Compose;
 /// <see cref="Dp(float)"/> constructor or one of the conversion operators.
 /// </para>
 /// </remarks>
-public readonly struct Dp : IEquatable<Dp>
+public readonly struct Dp : IEquatable<Dp>, IComparable<Dp>
 {
     /// <summary>The underlying density-independent pixel count.</summary>
     public float Value { get; }
@@ -47,11 +47,50 @@ public readonly struct Dp : IEquatable<Dp>
     /// <inheritdoc/>
     public override int GetHashCode() => Value.GetHashCode();
 
+    /// <inheritdoc/>
+    public int CompareTo(Dp other) => Value.CompareTo(other.Value);
+
     /// <summary>Equality operator.</summary>
     public static bool operator ==(Dp left, Dp right) => left.Equals(right);
 
     /// <summary>Inequality operator.</summary>
     public static bool operator !=(Dp left, Dp right) => !left.Equals(right);
+
+    /// <summary>Add two <see cref="Dp"/> values.</summary>
+    public static Dp operator +(Dp a, Dp b) => new(a.Value + b.Value);
+
+    /// <summary>Subtract one <see cref="Dp"/> value from another.</summary>
+    public static Dp operator -(Dp a, Dp b) => new(a.Value - b.Value);
+
+    /// <summary>Scale a <see cref="Dp"/> value by a scalar factor.</summary>
+    public static Dp operator *(Dp a, float scalar) => new(a.Value * scalar);
+
+    /// <summary>Scale a <see cref="Dp"/> value by a scalar factor.</summary>
+    public static Dp operator *(float scalar, Dp a) => new(a.Value * scalar);
+
+    /// <summary>Divide a <see cref="Dp"/> value by a scalar factor.</summary>
+    public static Dp operator /(Dp a, float scalar) => new(a.Value / scalar);
+
+    /// <summary>
+    /// Divide one <see cref="Dp"/> by another and get the dimensionless ratio
+    /// (mirrors Kotlin's <c>Dp.div(Dp): Float</c>).
+    /// </summary>
+    public static float operator /(Dp a, Dp b) => a.Value / b.Value;
+
+    /// <summary>Negate a <see cref="Dp"/> value.</summary>
+    public static Dp operator -(Dp a) => new(-a.Value);
+
+    /// <summary>Less-than comparison.</summary>
+    public static bool operator <(Dp a, Dp b) => a.Value < b.Value;
+
+    /// <summary>Greater-than comparison.</summary>
+    public static bool operator >(Dp a, Dp b) => a.Value > b.Value;
+
+    /// <summary>Less-than-or-equal comparison.</summary>
+    public static bool operator <=(Dp a, Dp b) => a.Value <= b.Value;
+
+    /// <summary>Greater-than-or-equal comparison.</summary>
+    public static bool operator >=(Dp a, Dp b) => a.Value >= b.Value;
 
     /// <inheritdoc/>
     public override string ToString() => $"{Value}.dp";

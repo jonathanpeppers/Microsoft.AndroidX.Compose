@@ -109,7 +109,7 @@ public static class BottomNavOptionsDemo
         {
             var count = composer.RememberSaveable(() => new MutableNumberState<int>(0));
 
-            new Column(verticalArrangement: Arrangement.SpacedBy(8))
+            new Column(verticalArrangement: Arrangement.SpacedBy(8.Dp()))
             {
                 Modifier.Companion.Padding(16),
                 new Text(_title),

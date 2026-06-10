@@ -25,14 +25,14 @@ public static class LazyListScrollStateDemo
         Build:       c =>
         {
             var state = c.RememberLazyListState();
-            return new Column(verticalArrangement: Arrangement.SpacedBy(4))
+            return new Column(verticalArrangement: Arrangement.SpacedBy(4.Dp()))
             {
                 Modifier.Companion.FillMaxWidth(),
 
                 new Surface
                 {
                     Modifier.Companion.FillMaxWidth(),
-                    new Column(verticalArrangement: Arrangement.SpacedBy(2))
+                    new Column(verticalArrangement: Arrangement.SpacedBy(2.Dp()))
                     {
                         Modifier.Companion.Padding(12),
                         new Text($"FirstVisibleItemIndex:        {state.FirstVisibleItemIndex}"),
@@ -45,7 +45,7 @@ public static class LazyListScrollStateDemo
                     },
                 },
 
-                new Row(horizontalArrangement: Arrangement.SpacedBy(8))
+                new Row(horizontalArrangement: Arrangement.SpacedBy(8.Dp()))
                 {
                     Modifier.Companion.FillMaxWidth().Padding(horizontal: 12, vertical: 0),
                     new Button(onClick: () => _ = state.ScrollToItemAsync(0))

@@ -200,7 +200,7 @@ public static class HomeScreen
             itemContent: p => HomeCards.BuildPopular(p, onSelectPost))
         {
             Modifier              = Modifier.Companion.FillMaxWidth().Height(244).Padding(start: 16, top: 4, end: 16, bottom: 16),
-            HorizontalArrangement = Arrangement.SpacedBy(8),
+            HorizontalArrangement = Arrangement.SpacedBy(8.Dp()),
         };
 
     static Box BuildSectionHeader(string label) =>

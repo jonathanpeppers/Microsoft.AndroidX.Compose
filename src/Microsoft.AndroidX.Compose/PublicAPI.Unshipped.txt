@@ -257,10 +257,12 @@ AndroidX.Compose.DockedSearchBar.Placeholder.set -> void
 AndroidX.Compose.DockedSearchBar.TrailingIcon.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.DockedSearchBar.TrailingIcon.set -> void
 AndroidX.Compose.Dp
+AndroidX.Compose.Dp.CompareTo(AndroidX.Compose.Dp other) -> int
 AndroidX.Compose.Dp.Dp() -> void
 AndroidX.Compose.Dp.Dp(float value) -> void
 AndroidX.Compose.Dp.Equals(AndroidX.Compose.Dp other) -> bool
 AndroidX.Compose.Dp.Value.get -> float
+AndroidX.Compose.DpExtensions
 AndroidX.Compose.DragAndDropEvent
 AndroidX.Compose.DragAndDropEvent.AndroidDragEvent.get -> Android.Views.DragEvent!
 AndroidX.Compose.DragAndDropEvent.MimeTypes.get -> System.Collections.Generic.IReadOnlyList<string!>!
@@ -690,10 +692,10 @@ AndroidX.Compose.Modifier.SafeGesturesPadding() -> AndroidX.Compose.Modifier!
 AndroidX.Compose.Modifier.Scale(float scale) -> AndroidX.Compose.Modifier!
 AndroidX.Compose.Modifier.Scale(float scaleX, float scaleY) -> AndroidX.Compose.Modifier!
 AndroidX.Compose.Modifier.Selectable(bool selected, System.Action! onClick) -> AndroidX.Compose.Modifier!
+AndroidX.Compose.Modifier.Semantics(AndroidX.Compose.SemanticsRole role) -> AndroidX.Compose.Modifier!
 AndroidX.Compose.Modifier.Semantics(bool mergeDescendants, string! contentDescription) -> AndroidX.Compose.Modifier!
 AndroidX.Compose.Modifier.Semantics(bool mergeDescendants, string? contentDescription, AndroidX.Compose.SemanticsRole? role) -> AndroidX.Compose.Modifier!
 AndroidX.Compose.Modifier.Semantics(bool mergeDescendants, System.Action<AndroidX.Compose.SemanticsScope!>! properties) -> AndroidX.Compose.Modifier!
-AndroidX.Compose.Modifier.Semantics(AndroidX.Compose.SemanticsRole role) -> AndroidX.Compose.Modifier!
 AndroidX.Compose.Modifier.Semantics(string! contentDescription) -> AndroidX.Compose.Modifier!
 AndroidX.Compose.Modifier.Semantics(string? contentDescription, AndroidX.Compose.SemanticsRole? role) -> AndroidX.Compose.Modifier!
 AndroidX.Compose.Modifier.Semantics(System.Action<AndroidX.Compose.SemanticsScope!>! properties) -> AndroidX.Compose.Modifier!
@@ -1031,6 +1033,7 @@ AndroidX.Compose.SnackbarHost.SnackbarHost(AndroidX.Compose.SnackbarHostState! h
 AndroidX.Compose.SnackbarHostState
 AndroidX.Compose.SnackbarHostState.SnackbarHostState() -> void
 AndroidX.Compose.Sp
+AndroidX.Compose.Sp.CompareTo(AndroidX.Compose.Sp other) -> int
 AndroidX.Compose.Sp.Equals(AndroidX.Compose.Sp other) -> bool
 AndroidX.Compose.Sp.PackedValue.get -> long
 AndroidX.Compose.Sp.Sp() -> void
@@ -1057,6 +1060,7 @@ AndroidX.Compose.SpanStyle.FontWeight.set -> void
 AndroidX.Compose.SpanStyle.LetterSpacing.get -> AndroidX.Compose.Sp?
 AndroidX.Compose.SpanStyle.LetterSpacing.set -> void
 AndroidX.Compose.SpanStyle.SpanStyle() -> void
+AndroidX.Compose.SpExtensions
 AndroidX.Compose.StaggeredGridCells
 AndroidX.Compose.StateFlowExtensions
 AndroidX.Compose.SuggestionChip
@@ -1420,6 +1424,7 @@ static AndroidX.Compose.Arrangement.Center.get -> AndroidX.Compose.Arrangement!
 static AndroidX.Compose.Arrangement.End.get -> AndroidX.Compose.Arrangement!
 static AndroidX.Compose.Arrangement.SpaceAround.get -> AndroidX.Compose.Arrangement!
 static AndroidX.Compose.Arrangement.SpaceBetween.get -> AndroidX.Compose.Arrangement!
+static AndroidX.Compose.Arrangement.SpacedBy(AndroidX.Compose.Dp dp) -> AndroidX.Compose.Arrangement!
 static AndroidX.Compose.Arrangement.SpacedBy(int dp) -> AndroidX.Compose.Arrangement!
 static AndroidX.Compose.Arrangement.SpaceEvenly.get -> AndroidX.Compose.Arrangement!
 static AndroidX.Compose.Arrangement.Start.get -> AndroidX.Compose.Arrangement!
@@ -1510,10 +1515,23 @@ static AndroidX.Compose.ContentScale.Inside.get -> AndroidX.Compose.ContentScale
 static AndroidX.Compose.ContentScale.None.get -> AndroidX.Compose.ContentScale!
 static AndroidX.Compose.Dp.implicit operator AndroidX.Compose.Dp(float value) -> AndroidX.Compose.Dp
 static AndroidX.Compose.Dp.implicit operator AndroidX.Compose.Dp(int value) -> AndroidX.Compose.Dp
+static AndroidX.Compose.Dp.operator -(AndroidX.Compose.Dp a, AndroidX.Compose.Dp b) -> AndroidX.Compose.Dp
+static AndroidX.Compose.Dp.operator -(AndroidX.Compose.Dp a) -> AndroidX.Compose.Dp
 static AndroidX.Compose.Dp.operator !=(AndroidX.Compose.Dp left, AndroidX.Compose.Dp right) -> bool
+static AndroidX.Compose.Dp.operator *(AndroidX.Compose.Dp a, float scalar) -> AndroidX.Compose.Dp
+static AndroidX.Compose.Dp.operator *(float scalar, AndroidX.Compose.Dp a) -> AndroidX.Compose.Dp
+static AndroidX.Compose.Dp.operator /(AndroidX.Compose.Dp a, AndroidX.Compose.Dp b) -> float
+static AndroidX.Compose.Dp.operator /(AndroidX.Compose.Dp a, float scalar) -> AndroidX.Compose.Dp
+static AndroidX.Compose.Dp.operator +(AndroidX.Compose.Dp a, AndroidX.Compose.Dp b) -> AndroidX.Compose.Dp
+static AndroidX.Compose.Dp.operator <(AndroidX.Compose.Dp a, AndroidX.Compose.Dp b) -> bool
+static AndroidX.Compose.Dp.operator <=(AndroidX.Compose.Dp a, AndroidX.Compose.Dp b) -> bool
 static AndroidX.Compose.Dp.operator ==(AndroidX.Compose.Dp left, AndroidX.Compose.Dp right) -> bool
+static AndroidX.Compose.Dp.operator >(AndroidX.Compose.Dp a, AndroidX.Compose.Dp b) -> bool
+static AndroidX.Compose.Dp.operator >=(AndroidX.Compose.Dp a, AndroidX.Compose.Dp b) -> bool
 static AndroidX.Compose.Dp.Pack(AndroidX.Compose.Dp? value) -> float
 static AndroidX.Compose.Dp.Zero.get -> AndroidX.Compose.Dp
+static AndroidX.Compose.DpExtensions.Dp(this float value) -> AndroidX.Compose.Dp
+static AndroidX.Compose.DpExtensions.Dp(this int value) -> AndroidX.Compose.Dp
 static AndroidX.Compose.FontFamily.Cursive.get -> AndroidX.Compose.FontFamily!
 static AndroidX.Compose.FontFamily.Default.get -> AndroidX.Compose.FontFamily!
 static AndroidX.Compose.FontFamily.Monospace.get -> AndroidX.Compose.FontFamily!
@@ -1854,10 +1872,19 @@ static AndroidX.Compose.Shape.RoundedCorners(AndroidX.Compose.Dp cornerRadius) -
 static AndroidX.Compose.Shape.RoundedCorners(AndroidX.Compose.Dp topStart, AndroidX.Compose.Dp topEnd, AndroidX.Compose.Dp bottomEnd, AndroidX.Compose.Dp bottomStart) -> AndroidX.Compose.Shape!
 static AndroidX.Compose.Shape.RoundedPercent(int percent) -> AndroidX.Compose.Shape!
 static AndroidX.Compose.Sp.implicit operator AndroidX.Compose.Sp(int value) -> AndroidX.Compose.Sp
+static AndroidX.Compose.Sp.operator -(AndroidX.Compose.Sp a) -> AndroidX.Compose.Sp
 static AndroidX.Compose.Sp.operator !=(AndroidX.Compose.Sp left, AndroidX.Compose.Sp right) -> bool
+static AndroidX.Compose.Sp.operator *(AndroidX.Compose.Sp a, float scalar) -> AndroidX.Compose.Sp
+static AndroidX.Compose.Sp.operator *(float scalar, AndroidX.Compose.Sp a) -> AndroidX.Compose.Sp
+static AndroidX.Compose.Sp.operator /(AndroidX.Compose.Sp a, float scalar) -> AndroidX.Compose.Sp
+static AndroidX.Compose.Sp.operator <(AndroidX.Compose.Sp a, AndroidX.Compose.Sp b) -> bool
+static AndroidX.Compose.Sp.operator <=(AndroidX.Compose.Sp a, AndroidX.Compose.Sp b) -> bool
 static AndroidX.Compose.Sp.operator ==(AndroidX.Compose.Sp left, AndroidX.Compose.Sp right) -> bool
+static AndroidX.Compose.Sp.operator >(AndroidX.Compose.Sp a, AndroidX.Compose.Sp b) -> bool
+static AndroidX.Compose.Sp.operator >=(AndroidX.Compose.Sp a, AndroidX.Compose.Sp b) -> bool
 static AndroidX.Compose.Sp.Pack(AndroidX.Compose.Sp? value) -> long
 static AndroidX.Compose.Sp.Zero.get -> AndroidX.Compose.Sp
+static AndroidX.Compose.SpExtensions.Sp(this int value) -> AndroidX.Compose.Sp
 static AndroidX.Compose.StaggeredGridCells.Adaptive(float minSizeDp) -> AndroidX.Compose.Foundation.Lazy.Staggeredgrid.IStaggeredGridCells!
 static AndroidX.Compose.StaggeredGridCells.Fixed(int count) -> AndroidX.Compose.Foundation.Lazy.Staggeredgrid.IStaggeredGridCells!
 static AndroidX.Compose.StaggeredGridCells.FixedSize(float sizeDp) -> AndroidX.Compose.Foundation.Lazy.Staggeredgrid.IStaggeredGridCells!

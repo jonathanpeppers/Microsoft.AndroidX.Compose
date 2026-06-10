@@ -13,7 +13,7 @@ public static class RotateScaleAlphaDemo
         Description: "Static transforms applied via Modifier.Rotate / .Scale / .Alpha; each tile also carries a TestTag for UI tests.",
         Build:       _ => new Column
         {
-            new Row(horizontalArrangement: Arrangement.SpacedBy(16))
+            new Row(horizontalArrangement: Arrangement.SpacedBy(16.Dp()))
             {
                 new Column
                 {

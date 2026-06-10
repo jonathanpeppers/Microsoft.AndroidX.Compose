@@ -25,17 +25,17 @@ public static class CustomShapesDemo
                     large:  Shape.RoundedCorners(24)),
                 UseDynamicColor = false,
             };
-            themed.Add(new Column(verticalArrangement: Arrangement.SpacedBy(12))
+            themed.Add(new Column(verticalArrangement: Arrangement.SpacedBy(12.Dp()))
             {
                 new Card { new Text("Card now uses cut corners (medium)") { Modifier = Modifier.Companion.Padding(16) } },
-                new Row(horizontalArrangement: Arrangement.SpacedBy(8))
+                new Row(horizontalArrangement: Arrangement.SpacedBy(8.Dp()))
                 {
                     new AssistChip(onClick: () => { }) { Label = new Text("Pill chip (small=50%)") },
                 },
                 new FloatingActionButton(onClick: () => { }) { new Text("FAB — large=24 dp") },
             });
 
-            return new Column(verticalArrangement: Arrangement.SpacedBy(16))
+            return new Column(verticalArrangement: Arrangement.SpacedBy(16.Dp()))
             {
                 new Text("Default M3 shapes:"),
                 new Card { new Text("Card — Shapes.Medium (12 dp)") { Modifier = Modifier.Companion.Padding(16) } },

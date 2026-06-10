@@ -23,7 +23,7 @@ public static class MinimumInteractiveComponentSizeDemo
             {
                 new Text($"Tapped: {taps}"),
                 new Text("Yellow tiles show the 48dp touch region reserved around each button."),
-                new Row(horizontalArrangement: Arrangement.SpacedBy(24))
+                new Row(horizontalArrangement: Arrangement.SpacedBy(24.Dp()))
                 {
                     new Column
                     {
