@@ -18,7 +18,7 @@ public static class ModalDrawerDemo
             // gallery's outer scroll for height.
             return new Box
             {
-                Modifier.Companion.Height(320),
+                Modifier.Height(320),
                 new ModalNavigationDrawer
                 {
                     Drawer = new ModalDrawerSheet

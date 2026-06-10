@@ -26,18 +26,18 @@ public static class DemoScreen
 
         return new Column
         {
-            Modifier.Companion.FillMaxSize(),
+            Modifier.FillMaxSize(),
 
             // Header sits above the demo body so the demo doesn't have
             // to repeat its own description.
             new Surface
             {
-                Modifier.Companion.FillMaxWidth(),
+                Modifier.FillMaxWidth(),
                 new Column
                 {
-                    Modifier.Companion.Padding(16),
+                    Modifier.Padding(16),
                     new Text(breadcrumb),
-                    new Spacer { Modifier = Modifier.Companion.Height(4) },
+                    new Spacer { Modifier = Modifier.Height(4) },
                     new Text(demo.Description),
                 },
             },
@@ -62,7 +62,7 @@ public static class DemoScreen
             var scroll = composer.Remember(() => new ScrollState());
             new Column(verticalArrangement: Arrangement.SpacedBy(12))
             {
-                Modifier.Companion
+                Modifier
                     .FillMaxSize()
                     .VerticalScroll(scroll)
                     .Padding(16),

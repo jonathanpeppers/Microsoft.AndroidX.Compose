@@ -22,7 +22,7 @@ public static class ToggleableSelectableSemanticsDemo
                 new Text("Toggleable row (announced as one a11y node):"),
                 new Row
                 {
-                    Modifier.Companion
+                    Modifier
                         .FillMaxWidth()
                         .Toggleable(liked.Value, v => liked.Value = v)
                         .Semantics(mergeDescendants: true, liked.Value ? "Liked" : "Not liked")
@@ -30,16 +30,16 @@ public static class ToggleableSelectableSemanticsDemo
                     new Text(liked.Value ? "♥ Liked" : "♡ Tap to like"),
                 },
                 new Text($"Selectable group — selected row: {selectedRow}"),
-                new Text("Row 0") { Modifier = Modifier.Companion
+                new Text("Row 0") { Modifier = Modifier
                     .FillMaxWidth().Selectable(selectedRow.Value == 0, () => selectedRow.Value = 0).Padding(6) },
-                new Text("Row 1") { Modifier = Modifier.Companion
+                new Text("Row 1") { Modifier = Modifier
                     .FillMaxWidth().Selectable(selectedRow.Value == 1, () => selectedRow.Value = 1).Padding(6) },
-                new Text("Row 2") { Modifier = Modifier.Companion
+                new Text("Row 2") { Modifier = Modifier
                     .FillMaxWidth().Selectable(selectedRow.Value == 2, () => selectedRow.Value = 2).Padding(6) },
                 new Text($"Semantics(role) custom 'button' (taps: {taps}):"),
                 new Box
                 {
-                    Modifier.Companion
+                    Modifier
                         .FillMaxWidth()
                         .Height(48)
                         .Background(Color.FromRgb(0xB3, 0xE5, 0xFC))

@@ -19,14 +19,14 @@ public static class DraggableOffsetDemo
 
             return new Column
             {
-                new Text($"Drag offset: {dragX.Value:F0}dp") { Modifier = Modifier.Companion.SafeContentPadding() },
+                new Text($"Drag offset: {dragX.Value:F0}dp") { Modifier = Modifier.SafeContentPadding() },
                 new Box
                 {
-                    Modifier.Companion.FillMaxWidth().Height(72).Padding(4)
+                    Modifier.FillMaxWidth().Height(72).Padding(4)
                         .Border(1, Color.FromRgb(0xB0, 0xB0, 0xB0)),
                     new Box
                     {
-                        Modifier.Companion
+                        Modifier
                             .Offset(x: dragX.Value)
                             .Size(56)
                             .Background(Color.FromRgb(0xCE, 0x93, 0xD8))

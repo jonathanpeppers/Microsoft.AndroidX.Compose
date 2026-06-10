@@ -23,7 +23,7 @@ public abstract class ComposableContainer : ComposableNode, IEnumerable
     /// <summary>
     /// Collection-initializer overload that lets callers set
     /// <see cref="ComposableNode.Modifier"/> inline alongside children:
-    /// <code>new Column { Modifier.Companion.Padding(16), new Text("Hi") }</code>
+    /// <code>new Column { Modifier.Padding(16), new Text("Hi") }</code>
     /// (C# disallows mixing object-initializer assignments with
     /// collection-initializer items in the same braces, so the modifier
     /// is set via <c>Add</c> instead.)

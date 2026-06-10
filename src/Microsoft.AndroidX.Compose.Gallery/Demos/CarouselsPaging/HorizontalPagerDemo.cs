@@ -22,18 +22,18 @@ public static class HorizontalPagerDemo
                     items:       items,
                     itemContent: i => new Box
                     {
-                        Modifier.Companion
+                        Modifier
                             .FillMaxSize()
                             .Clip(20)
                             .Background(Palette.Pastels[i % Palette.Pastels.Length]),
                         new Text($"Screen {i + 1}")
                         {
-                            Modifier = Modifier.Companion.Padding(16),
+                            Modifier = Modifier.Padding(16),
                         },
                     })
                 {
                     State    = state,
-                    Modifier = Modifier.Companion.FillMaxWidth().Height(200),
+                    Modifier = Modifier.FillMaxWidth().Height(200),
                 },
                 new Text($"Page {state.CurrentPage + 1} of {state.PageCount}"),
             };

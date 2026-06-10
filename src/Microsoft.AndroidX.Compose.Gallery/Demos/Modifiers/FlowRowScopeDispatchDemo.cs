@@ -22,14 +22,14 @@ public static class FlowRowScopeDispatchDemo
             var taps = c.Remember(() => new MutableNumberState<int>(0));
             var flow = new FlowRow
             {
-                Modifier.Companion.FillMaxWidth().Padding(4),
+                Modifier.FillMaxWidth().Padding(4),
             };
             foreach (var f in Fruits)
             {
                 flow.Add(new AssistChip(onClick: () => taps.Value++)
                 {
                     Label    = new Text(f),
-                    Modifier = Modifier.Companion.Align(Alignment.Vertical.CenterVertically).Padding(2),
+                    Modifier = Modifier.Align(Alignment.Vertical.CenterVertically).Padding(2),
                 });
             }
             return new Column

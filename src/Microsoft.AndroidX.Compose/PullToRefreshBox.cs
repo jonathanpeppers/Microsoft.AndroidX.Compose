@@ -27,7 +27,7 @@ namespace AndroidX.Compose;
 /// {
 ///     new LazyColumn&lt;int&gt;(items: rows, itemContent: i =&gt; new Text($"Row {i}"))
 ///     {
-///         Modifier = Modifier.Companion.FillMaxSize(),
+///         Modifier = Modifier.FillMaxSize(),
 ///     },
 /// }
 /// </code>

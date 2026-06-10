@@ -15,7 +15,7 @@ public static class EmailDetailAppBar
                 var scheme = MaterialTheme.CurrentColorScheme(c);
                 return new Column
                 {
-                    Modifier.Companion.FillMaxWidth(),
+                    Modifier.FillMaxWidth(),
                     new Text(email.Subject)
                     {
                         FontSize = 16,
@@ -25,16 +25,16 @@ public static class EmailDetailAppBar
                     {
                         FontSize = 12,
                         Color    = new Color(scheme.Outline),
-                        Modifier = Modifier.Companion.Padding(top: 4, bottom: 0, start: 0, end: 0),
+                        Modifier = Modifier.Padding(top: 4, bottom: 0, start: 0, end: 0),
                     },
                 };
             }),
             NavigationIcon = new FilledIconButton(onClick: onBackPressed)
             {
-                Modifier.Companion.Padding(8),
+                Modifier.Padding(8),
                 new Icon(Resource.Drawable.ic_arrow_back, "Back")
                 {
-                    Modifier = Modifier.Companion.Size(14),
+                    Modifier = Modifier.Size(14),
                 },
             },
             Actions = new Composed(c =>

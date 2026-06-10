@@ -34,7 +34,7 @@ public static class PostScreen
             // where it sits in the tree (mirrors AlertDialogDemo's shape).
             return new Box
             {
-                Modifier.Companion.FillMaxSize(),
+                Modifier.FillMaxSize(),
 
                 new Scaffold
                 {
@@ -112,7 +112,7 @@ public static class PostScreen
 
         return new LazyColumn<PostRow>(items: rows, itemContent: BuildRow)
         {
-            Modifier = Modifier.Companion.FillMaxSize(),
+            Modifier = Modifier.FillMaxSize(),
         };
     }
 
@@ -126,28 +126,28 @@ public static class PostScreen
     static Column BuildHero(Post post) =>
         new()
         {
-            Modifier.Companion.FillMaxWidth(),
+            Modifier.FillMaxWidth(),
             new Image(post.HeroId, "")
             {
-                Modifier = Modifier.Companion
+                Modifier = Modifier
                     .FillMaxWidth()
                     .AspectRatio(992f / 296f),
             },
             new Column
             {
-                Modifier.Companion.FillMaxWidth().Padding(16),
+                Modifier.FillMaxWidth().Padding(16),
                 new Text(post.Title)
                 {
                     FontSize   = 22,
                     FontWeight = FontWeight.SemiBold,
                 },
-                new Spacer(Modifier.Companion.Height(4)),
+                new Spacer(Modifier.Height(4)),
                 new Text(post.Subtitle)
                 {
                     FontSize = 14,
                     Color    = Color.FromHex("#666666"),
                 },
-                new Spacer(Modifier.Companion.Height(8)),
+                new Spacer(Modifier.Height(8)),
                 new Text($"{post.Metadata.Author} · {post.Metadata.Date} · {post.Metadata.ReadTimeMinutes} min read")
                 {
                     FontSize = 12,
@@ -156,7 +156,7 @@ public static class PostScreen
             },
             new HorizontalDivider
             {
-                Modifier = Modifier.Companion.Padding(horizontal: 16, vertical: 8),
+                Modifier = Modifier.Padding(horizontal: 16, vertical: 8),
             },
         };
 }

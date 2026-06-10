@@ -20,9 +20,9 @@ public static class CategoryScreen
         {
             return new Column
             {
-                Modifier.Companion.FillMaxSize().Padding(24),
+                Modifier.FillMaxSize().Padding(24),
                 new Text(category.Title),
-                new Spacer { Modifier = Modifier.Companion.Height(8) },
+                new Spacer { Modifier = Modifier.Height(8) },
                 new Text("No demos in this category yet."),
                 new Text("(See README.md for the porting status.)"),
             };
@@ -32,7 +32,7 @@ public static class CategoryScreen
             items:       demos,
             itemContent: d => new DemoRow(d, nav))
         {
-            Modifier = Modifier.Companion.FillMaxSize(),
+            Modifier = Modifier.FillMaxSize(),
         };
     }
 }

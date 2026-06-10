@@ -15,10 +15,10 @@ public static class LazyRowDemo
             items:       Enumerable.Range(0, 50).ToList(),
             itemContent: i => new Card
             {
-                Modifier.Companion.Padding(4).Size(80),
+                Modifier.Padding(4).Size(80),
                 new Text($"#{i}"),
             })
         {
-            Modifier = Modifier.Companion.FillMaxWidth(),
+            Modifier = Modifier.FillMaxWidth(),
         });
 }

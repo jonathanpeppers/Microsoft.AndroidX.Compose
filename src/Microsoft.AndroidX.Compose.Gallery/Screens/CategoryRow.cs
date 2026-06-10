@@ -26,7 +26,7 @@ public sealed class CategoryRow : ComposableNode
         var count = Enumerable.Count(Catalog.DemosByCategory(_category.Id));
         new Card
         {
-            Modifier.Companion
+            Modifier
                 .FillMaxWidth()
                 .Padding(0, 4)
                 .Clickable(() => _nav.Navigate($"category/{_category.Id}")),

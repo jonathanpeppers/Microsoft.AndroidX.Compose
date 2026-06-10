@@ -10,7 +10,7 @@ public static class ReplyProfileImage
     public static Image Build(int drawableResource, string description) =>
         new(drawableResource, description)
         {
-            Modifier = Modifier.Companion
+            Modifier = Modifier
                 .Size(40)
                 .Clip(Shape.Circle()),
         };
@@ -25,13 +25,13 @@ public static class ReplyProfileImage
             var scheme = MaterialTheme.CurrentColorScheme(c);
             return new Box
             {
-                Modifier.Companion
+                Modifier
                     .Size(40)
                     .Clip(Shape.Circle())
                     .Background(new Color(scheme.Primary)),
                 new Icon(Resource.Drawable.ic_check, null)
                 {
-                    Modifier = Modifier.Companion.Size(24),
+                    Modifier = Modifier.Size(24),
                     TintArgb = scheme.OnPrimary,
                 },
             };

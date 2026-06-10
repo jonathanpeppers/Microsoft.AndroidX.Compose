@@ -22,11 +22,11 @@ public static class MutableStateCollectionsDemo
                 new Row
                 {
                     new Button(onClick: () => list.Add($"item{list.Count}")) { new Text("Add") },
-                    new Spacer { Modifier = Modifier.Companion.Padding(4) },
+                    new Spacer { Modifier = Modifier.Padding(4) },
                     new Button(onClick: () => { if (list.Count > 0) list.RemoveAt(list.Count - 1); })
                         { new Text("Remove last") },
                 },
-                new HorizontalDivider { Modifier = Modifier.Companion.Padding(0, 8) },
+                new HorizontalDivider { Modifier = Modifier.Padding(0, 8) },
                 new Text($"Map: {{{string.Join(", ", map.Select(kv => $"{kv.Key}={kv.Value}"))}}}"),
                 new Row
                 {
@@ -35,7 +35,7 @@ public static class MutableStateCollectionsDemo
                         var key = $"k{map.Count}";
                         map[key] = map.Count + 1;
                     }) { new Text("Add") },
-                    new Spacer { Modifier = Modifier.Companion.Padding(4) },
+                    new Spacer { Modifier = Modifier.Padding(4) },
                     new Button(onClick: () => map.Clear()) { new Text("Clear") },
                 },
             };

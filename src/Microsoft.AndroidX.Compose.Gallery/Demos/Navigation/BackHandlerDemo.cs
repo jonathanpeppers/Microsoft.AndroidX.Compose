@@ -21,27 +21,27 @@ public static class BackHandlerDemo
 
             return new Column
             {
-                Modifier.Companion.Padding(16),
+                Modifier.Padding(16),
 
                 new BackHandler(
                     onBack:  () => pressCount++,
                     enabled: intercept.Value),
 
                 new Text("BackHandler is registered while this screen is active."),
-                new Spacer(Modifier.Companion.Height(12)),
+                new Spacer(Modifier.Height(12)),
 
                 new Row
                 {
                     new Switch(@checked: intercept.Value, onCheckedChange: v => intercept.Value = v),
-                    new Spacer(Modifier.Companion.Width(12)),
+                    new Spacer(Modifier.Width(12)),
                     new Text(intercept.Value
                         ? "Intercepting — system back is consumed"
                         : "Letting back through — pops the gallery screen"),
                 },
-                new Spacer(Modifier.Companion.Height(16)),
+                new Spacer(Modifier.Height(16)),
 
                 new Text($"Back presses intercepted: {pressCount}"),
-                new Spacer(Modifier.Companion.Height(16)),
+                new Spacer(Modifier.Height(16)),
 
                 new Text("Try pressing the system back button or swiping from the edge:"),
                 new Text("• With the switch ON the counter ticks and you stay on this screen."),

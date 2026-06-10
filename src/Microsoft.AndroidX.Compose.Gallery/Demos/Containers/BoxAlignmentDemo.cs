@@ -13,26 +13,26 @@ public static class BoxAlignmentDemo
         Description: "Children stack at the same anchor — later children draw above earlier ones.",
         Build:       _ => new Box
         {
-            Modifier.Companion
+            Modifier
                 .Size(160)
                 .Background(Color.FromRgb(0xB3, 0xE5, 0xFC)),
             new Box
             {
-                Modifier.Companion
+                Modifier
                     .Size(120)
                     .Padding(8)
                     .Background(Color.FromRgb(0x81, 0xD4, 0xFA)),
             },
             new Box
             {
-                Modifier.Companion
+                Modifier
                     .Size(80)
                     .Padding(16)
                     .Background(Color.FromRgb(0x4F, 0xC3, 0xF7)),
             },
             new Text("Front")
             {
-                Modifier = Modifier.Companion.Padding(28),
+                Modifier = Modifier.Padding(28),
             },
         });
 }

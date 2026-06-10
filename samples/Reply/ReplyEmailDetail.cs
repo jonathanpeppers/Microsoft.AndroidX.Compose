@@ -16,7 +16,7 @@ public static class ReplyEmailDetail
                 items:       email.Threads,
                 itemContent: e => ReplyEmailThreadItem.Build(e))
             {
-                Modifier = Modifier.Companion.FillMaxSize(),
+                Modifier = Modifier.FillMaxSize(),
             },
         };
 }

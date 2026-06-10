@@ -59,7 +59,7 @@ public sealed class SearchScreen : ComposableNode
                 var category = Catalog.FindCategory(d.CategoryId);
                 expanded.Add(new ListItem
                 {
-                    Modifier = Modifier.Companion
+                    Modifier = Modifier
                         .FillMaxWidth()
                         .Clickable(() =>
                         {
@@ -80,7 +80,7 @@ public sealed class SearchScreen : ComposableNode
         // stays off the user's mind.
         new Column
         {
-            Modifier.Companion.FillMaxSize(),
+            Modifier.FillMaxSize(),
             new SearchBar(state: searchState)
             {
                 InputField = new SearchBarInputField(inputState, searchState)

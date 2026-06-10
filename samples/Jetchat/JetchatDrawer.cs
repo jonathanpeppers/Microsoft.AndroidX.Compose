@@ -28,8 +28,8 @@ public static class JetchatDrawer
         var sheet = new ModalDrawerSheet { ContainerColor = new Color(scheme.Surface) };
         sheet.Add(new Column
         {
-            Modifier.Companion.FillMaxWidth().VerticalScroll(scroll),
-            new Spacer(Modifier.Companion.StatusBarsPadding()),
+            Modifier.FillMaxWidth().VerticalScroll(scroll),
+            new Spacer(Modifier.StatusBarsPadding()),
             BuildHeader(scheme),
             BuildDivider(scheme, sidePadding: 0),
             BuildSectionHeader("Chats", scheme),
@@ -46,9 +46,9 @@ public static class JetchatDrawer
     static Row BuildHeader(ColorScheme scheme) =>
         new()
         {
-            Modifier.Companion.FillMaxWidth().Padding(16),
+            Modifier.FillMaxWidth().Padding(16),
             JetchatIcon.Build(contentDescription: null, sizeDp: 24),
-            new Spacer(Modifier.Companion.Width(8)),
+            new Spacer(Modifier.Width(8)),
             new Text("Jetchat")
             {
                 FontSize   = 18,
@@ -61,19 +61,19 @@ public static class JetchatDrawer
         new()
         {
             Modifier = sidePadding > 0
-                ? Modifier.Companion.Padding(horizontal: sidePadding, vertical: 0)
+                ? Modifier.Padding(horizontal: sidePadding, vertical: 0)
                 : null,
         };
 
     static Box BuildSectionHeader(string label, ColorScheme scheme) =>
         new()
         {
-            Modifier.Companion.FillMaxWidth().Height(52).Padding(horizontal: 28, vertical: 0),
+            Modifier.FillMaxWidth().Height(52).Padding(horizontal: 28, vertical: 0),
             new Text(label)
             {
                 FontSize = 14,
                 Color    = new Color(scheme.OnSurfaceVariant),
-                Modifier = Modifier.Companion.Padding(top: 16, bottom: 0, start: 0, end: 0),
+                Modifier = Modifier.Padding(top: 16, bottom: 0, start: 0, end: 0),
             },
         };
 
@@ -85,7 +85,7 @@ public static class JetchatDrawer
         Action<string> onChatClicked)
     {
         bool selected = selectedMenu.Value == channel;
-        var modifier = Modifier.Companion
+        var modifier = Modifier
             .FillMaxWidth()
             .Height(56)
             .Padding(horizontal: 12, vertical: 0)
@@ -106,7 +106,7 @@ public static class JetchatDrawer
             modifier,
             new Icon(Resource.Drawable.ic_jetchat, null)
             {
-                Modifier = Modifier.Companion.Padding(top: 16, bottom: 16, start: 16, end: 0),
+                Modifier = Modifier.Padding(top: 16, bottom: 16, start: 16, end: 0),
                 TintArgb = iconTint,
             },
             new Text(channel)
@@ -114,7 +114,7 @@ public static class JetchatDrawer
                 FontSize   = 14,
                 FontWeight = selected ? FontWeight.SemiBold : FontWeight.Normal,
                 Color      = new Color(textColor),
-                Modifier   = Modifier.Companion.Padding(top: 16, bottom: 16, start: 12, end: 0),
+                Modifier   = Modifier.Padding(top: 16, bottom: 16, start: 12, end: 0),
             },
         };
     }
@@ -129,7 +129,7 @@ public static class JetchatDrawer
         Action<string> onProfileClicked)
     {
         bool selected = selectedMenu.Value == userId;
-        var modifier = Modifier.Companion
+        var modifier = Modifier
             .FillMaxWidth()
             .Height(56)
             .Padding(horizontal: 12, vertical: 0)
@@ -147,7 +147,7 @@ public static class JetchatDrawer
             modifier,
             new Image(avatarRes, "Profile photo")
             {
-                Modifier = Modifier.Companion
+                Modifier = Modifier
                     .Padding(top: 16, bottom: 16, start: 16, end: 0)
                     .Size(24)
                     .Clip(12),
@@ -156,7 +156,7 @@ public static class JetchatDrawer
             {
                 FontSize = 14,
                 Color    = new Color(scheme.OnSurface),
-                Modifier = Modifier.Companion.Padding(top: 16, bottom: 16, start: 12, end: 0),
+                Modifier = Modifier.Padding(top: 16, bottom: 16, start: 12, end: 0),
             },
         };
     }

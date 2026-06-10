@@ -16,14 +16,14 @@ public static class HorizontalCenteredHeroCarouselDemo
             items:       Enumerable.Range(0, 8).ToList(),
             itemContent: i => new Box
             {
-                Modifier.Companion
+                Modifier
                     .FillMaxSize()
                     .Clip(24)
                     .Background(Palette.Pastels[i % Palette.Pastels.Length]),
-                new Text($"Hero {i}") { Modifier = Modifier.Companion.Padding(16) },
+                new Text($"Hero {i}") { Modifier = Modifier.Padding(16) },
             })
         {
-            Modifier    = Modifier.Companion.FillMaxWidth().Height(220),
+            Modifier    = Modifier.FillMaxWidth().Height(220),
             ItemSpacing = 8f,
         });
 }

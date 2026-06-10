@@ -31,13 +31,13 @@ public static class LazyColumnLongDemo
                         }, 1200);
                     })
                 {
-                    Modifier.Companion.FillMaxWidth().Height(320),
+                    Modifier.FillMaxWidth().Height(320),
 
                     new LazyColumn<int>(
                         items:       Enumerable.Range(0, 1000).ToList(),
                         itemContent: i => new Text($"Row {i:D4} (rev {refreshTick})"))
                     {
-                        Modifier = Modifier.Companion.FillMaxSize(),
+                        Modifier = Modifier.FillMaxSize(),
                     },
                 },
             };

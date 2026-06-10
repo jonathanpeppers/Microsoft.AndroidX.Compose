@@ -17,10 +17,10 @@ public static class SurfaceDemo
             {
                 new Text("Inside a Surface — picks up the theme's surface color."),
             },
-            new Spacer { Modifier = Modifier.Companion.Height(8) },
+            new Spacer { Modifier = Modifier.Height(8) },
             new Surface
             {
-                Modifier.Companion.Padding(16),
+                Modifier.Padding(16),
                 new Text("Surface + outer padding"),
             },
         });

@@ -33,14 +33,14 @@ public static class CrossfadeDemo
                     targetState: step.Value,
                     content:     i => new Box
                     {
-                        Modifier.Companion
+                        Modifier
                             .FillMaxWidth()
                             .Height(96)
                             .Background(palette[((i % palette.Length) + palette.Length) % palette.Length]),
                         new Text($"Step {i}")
                         {
                             Color    = Color.Black,
-                            Modifier = Modifier.Companion.Padding(16),
+                            Modifier = Modifier.Padding(16),
                         },
                     }),
             };

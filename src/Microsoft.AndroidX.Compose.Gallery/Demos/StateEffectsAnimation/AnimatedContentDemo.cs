@@ -33,14 +33,14 @@ public static class AnimatedContentDemo
                     targetState: step.Value,
                     content:     i => new Box
                     {
-                        Modifier.Companion
+                        Modifier
                             .FillMaxWidth()
                             .Height(96)
                             .Background(palette[((i % palette.Length) + palette.Length) % palette.Length]),
                         new Text($"Frame {i}")
                         {
                             Color    = Color.Black,
-                            Modifier = Modifier.Companion.Padding(16),
+                            Modifier = Modifier.Padding(16),
                         },
                     }),
             };

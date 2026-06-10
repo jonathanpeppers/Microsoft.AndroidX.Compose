@@ -38,9 +38,9 @@ public static class SearchBarPairDemo
                 },
             };
             foreach (var f in matches)
-                expanded.Add(new Text(f) { Modifier = Modifier.Companion.Padding(16, 12) });
+                expanded.Add(new Text(f) { Modifier = Modifier.Padding(16, 12) });
             if (matches.Length == 0)
-                expanded.Add(new Text("(no matches)") { Modifier = Modifier.Companion.Padding(16, 12) });
+                expanded.Add(new Text("(no matches)") { Modifier = Modifier.Padding(16, 12) });
 
             return new Column
             {

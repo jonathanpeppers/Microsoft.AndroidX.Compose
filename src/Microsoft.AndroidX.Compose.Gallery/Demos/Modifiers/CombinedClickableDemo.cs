@@ -19,7 +19,7 @@ public static class CombinedClickableDemo
                 new Text($"Taps (single+1, long+10, double+100): {taps}"),
                 new Text("Tap, hold, or double-tap me")
                 {
-                    Modifier = Modifier.Companion
+                    Modifier = Modifier
                         .FillMaxWidth()
                         .CombinedClickable(
                             onClick:       () => taps.Value += 1,

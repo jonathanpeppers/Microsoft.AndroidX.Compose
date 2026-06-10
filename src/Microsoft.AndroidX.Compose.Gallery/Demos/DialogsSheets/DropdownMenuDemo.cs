@@ -21,7 +21,7 @@ public static class DropdownMenuDemo
                 new Row
                 {
                     new Text("Tap ⋮ for actions:"),
-                    new Spacer { Modifier = Modifier.Companion.Width(8) },
+                    new Spacer { Modifier = Modifier.Width(8) },
                     new Box
                     {
                         new IconButton(onClick: () => open.Value = true) { new Text("⋮") },

@@ -14,6 +14,6 @@ public static class LinearProgressIndicatorDemo
         Build:       _ => new Column
         {
             new Text("Indeterminate horizontal bar:"),
-            new LinearProgressIndicator { Modifier = Modifier.Companion.FillMaxWidth() },
+            new LinearProgressIndicator { Modifier = Modifier.FillMaxWidth() },
         });
 }

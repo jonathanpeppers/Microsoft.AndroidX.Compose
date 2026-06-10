@@ -21,7 +21,7 @@ public static class FocusRequesterDemo
                 new Text($"Focus status: {focusStatus}"),
                 new Text("Focus target")
                 {
-                    Modifier = Modifier.Companion
+                    Modifier = Modifier
                         .FocusRequester(focusReq)
                         .OnFocusChanged(fs => focusStatus.Value =
                             fs.IsFocused ? "focused" : (fs.HasFocus ? "child has focus" : "not focused"))

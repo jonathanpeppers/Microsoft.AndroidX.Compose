@@ -14,7 +14,7 @@ namespace AndroidX.Compose;
 ///     items:       photos,
 ///     itemContent: p =&gt; new Image(p.Url))
 /// {
-///     Modifier = Modifier.Companion.FillMaxSize(),
+///     Modifier = Modifier.FillMaxSize(),
 /// }
 /// </code>
 /// </summary>

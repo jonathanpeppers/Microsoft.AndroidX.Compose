@@ -17,7 +17,7 @@ public static class ReplyInboxScreen
         Action<long> toggleSelection) =>
         new Box
         {
-            Modifier.Companion.FillMaxSize(),
+            Modifier.FillMaxSize(),
             new LazyColumn<Email>(
                 items: emails,
                 itemContent: email =>
@@ -28,12 +28,12 @@ public static class ReplyInboxScreen
                         isOpened:         openedEmailId == email.Id,
                         isSelected:       selectedEmailIds.Contains(email.Id)))
             {
-                Modifier = Modifier.Companion.FillMaxWidth().Padding(top: 80, bottom: 0, start: 0, end: 0),
+                Modifier = Modifier.FillMaxWidth().Padding(top: 80, bottom: 0, start: 0, end: 0),
             },
             new ReplySearchBar(),
             new Box
             {
-                Modifier.Companion
+                Modifier
                     .Align(Alignment.BottomEnd)
                     .Padding(16),
                 new ExtendedFloatingActionButton(onClick: NoOp, expanded: true)

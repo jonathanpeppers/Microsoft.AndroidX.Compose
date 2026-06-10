@@ -21,12 +21,12 @@ public static class DetectTapGesturesDemo
 
             return new Column
             {
-                Modifier.Companion.FillMaxWidth().Padding(8),
+                Modifier.FillMaxWidth().Padding(8),
                 new Text("Tap, hold, or double-tap the surface below"),
                 new Text($"Taps: {taps}    Last: {lastEvent.Value}"),
                 new Box
                 {
-                    Modifier.Companion
+                    Modifier
                         .FillMaxWidth()
                         .Height(160)
                         .Background(Color.FromArgb(0xFFC8E6C9))

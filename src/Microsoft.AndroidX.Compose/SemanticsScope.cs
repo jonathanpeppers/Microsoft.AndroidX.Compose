@@ -14,7 +14,7 @@ namespace AndroidX.Compose;
 /// <c>this</c>, so a single call can chain several properties:
 ///
 /// <code>
-/// Modifier.Companion.Semantics(s =&gt; s
+/// Modifier.Semantics(s =&gt; s
 ///     .Selected(isSelected)
 ///     .Role(SemanticsRole.Tab)
 ///     .ContentDescription("Email from " + sender)

@@ -32,38 +32,38 @@ internal static class PostBody
     static ComposableNode Title(Paragraph p) => Styled(p,
         fontSize: 22,
         fontWeight: FontWeight.SemiBold,
-        modifier:  Modifier.Companion.Padding(horizontal: 16, vertical: 8));
+        modifier:  Modifier.Padding(horizontal: 16, vertical: 8));
 
     static ComposableNode Caption(Paragraph p) => Styled(p,
         fontSize: 13,
         color:    Subtle,
-        modifier: Modifier.Companion.Padding(horizontal: 16, vertical: 4));
+        modifier: Modifier.Padding(horizontal: 16, vertical: 4));
 
     static ComposableNode Header(Paragraph p) => Styled(p,
         fontSize:   20,
         fontWeight: FontWeight.SemiBold,
-        modifier:   Modifier.Companion.Padding(start: 16, top: 16, end: 16, bottom: 4));
+        modifier:   Modifier.Padding(start: 16, top: 16, end: 16, bottom: 4));
 
     static ComposableNode Subhead(Paragraph p) => Styled(p,
         fontSize:   18,
         fontWeight: FontWeight.Medium,
-        modifier:   Modifier.Companion.Padding(start: 16, top: 12, end: 16, bottom: 4));
+        modifier:   Modifier.Padding(start: 16, top: 12, end: 16, bottom: 4));
 
     static ComposableNode Body(Paragraph p) => Styled(p,
         fontSize: 16,
-        modifier: Modifier.Companion.Padding(horizontal: 16, vertical: 4));
+        modifier: Modifier.Padding(horizontal: 16, vertical: 4));
 
     static Row CodeBlock(Paragraph p) =>
         new()
         {
-            Modifier.Companion
+            Modifier
                 .FillMaxWidth()
                 .Padding(horizontal: 16, vertical: 4),
             Styled(p,
                 fontSize:   14,
                 fontFamily: FontFamily.Monospace,
                 color:      CodeFg,
-                modifier:   Modifier.Companion
+                modifier:   Modifier
                     .FillMaxWidth()
                     .Clip(6)
                     .Background(CodeBg)
@@ -73,14 +73,14 @@ internal static class PostBody
     static Row Quote(Paragraph p) =>
         new()
         {
-            Modifier.Companion
+            Modifier
                 .FillMaxWidth()
                 .Padding(start: 16, top: 8, end: 16, bottom: 8),
             new Box
             {
-                Modifier.Companion.Width(4).Height(40).Background(QuoteBar),
+                Modifier.Width(4).Height(40).Background(QuoteBar),
             },
-            new Spacer(Modifier.Companion.Width(12)),
+            new Spacer(Modifier.Width(12)),
             Styled(p,
                 fontSize:  16,
                 fontStyle: FontStyle.Italic),
@@ -89,13 +89,13 @@ internal static class PostBody
     static Row Bullet(Paragraph p) =>
         new()
         {
-            Modifier.Companion
+            Modifier
                 .FillMaxWidth()
                 .Padding(start: 16, top: 4, end: 16, bottom: 4),
             new Text("•")
             {
                 FontSize = 16,
-                Modifier = Modifier.Companion.Padding(end: 8, top: 0, start: 0, bottom: 0),
+                Modifier = Modifier.Padding(end: 8, top: 0, start: 0, bottom: 0),
             },
             Styled(p, fontSize: 16),
         };

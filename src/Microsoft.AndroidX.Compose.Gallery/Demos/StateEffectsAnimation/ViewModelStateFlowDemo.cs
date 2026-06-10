@@ -18,13 +18,13 @@ public static class ViewModelStateFlowDemo
 
             return new Column
             {
-                Modifier.Companion.Padding(16),
+                Modifier.Padding(16),
                 new Text($"Count: {count}")
                 {
                     FontSize   = 22,
                     FontWeight = FontWeight.SemiBold,
                 },
-                new Spacer { Modifier = Modifier.Companion.Height(12) },
+                new Spacer { Modifier = Modifier.Height(12) },
                 new Row(horizontalArrangement: Arrangement.SpacedBy(8))
                 {
                     new Button(onClick: () => vm.Increment()) { new Text("Increment") },

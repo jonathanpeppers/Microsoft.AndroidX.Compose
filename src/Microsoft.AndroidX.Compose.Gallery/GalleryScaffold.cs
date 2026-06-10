@@ -126,9 +126,9 @@ public sealed class GalleryScaffold : ComposableNode
 
     static ComposableNode MissingScreen(string message) => new Column
     {
-        Modifier.Companion.FillMaxSize().Padding(24),
+        Modifier.FillMaxSize().Padding(24),
         new Text("404 — not found"),
-        new Spacer { Modifier = Modifier.Companion.Height(8) },
+        new Spacer { Modifier = Modifier.Height(8) },
         new Text(message),
     };
 }

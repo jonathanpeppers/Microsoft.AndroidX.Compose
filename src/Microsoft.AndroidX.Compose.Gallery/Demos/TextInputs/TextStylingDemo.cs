@@ -35,7 +35,7 @@ public static class TextStylingDemo
                 FontSize      = 14,
                 LetterSpacing = 2,
                 LineHeight    = 22,
-                Modifier      = Modifier.Companion.Padding(8),
+                Modifier      = Modifier.Padding(8),
             },
         });
 }

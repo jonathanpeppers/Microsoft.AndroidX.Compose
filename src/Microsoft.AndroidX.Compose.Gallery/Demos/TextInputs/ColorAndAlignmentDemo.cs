@@ -17,19 +17,19 @@ public static class ColorAndAlignmentDemo
             {
                 Color    = Color.FromRgb(0xC6, 0x28, 0x28),
                 Align    = TextAlign.Center,
-                Modifier = Modifier.Companion.FillMaxWidth(),
+                Modifier = Modifier.FillMaxWidth(),
             },
             new Text("Blue, end-aligned")
             {
                 Color    = Color.FromRgb(0x15, 0x65, 0xC0),
                 Align    = TextAlign.End,
-                Modifier = Modifier.Companion.FillMaxWidth(),
+                Modifier = Modifier.FillMaxWidth(),
             },
             new Text("Green, start (default)")
             {
                 Color    = Color.FromRgb(0x2E, 0x7D, 0x32),
                 Align    = TextAlign.Start,
-                Modifier = Modifier.Companion.FillMaxWidth(),
+                Modifier = Modifier.FillMaxWidth(),
             },
         });
 }

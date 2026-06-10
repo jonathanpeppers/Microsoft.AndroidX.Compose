@@ -12,29 +12,29 @@ internal static class HomeCards
                                         Action<string> onSelectPost) =>
         new()
         {
-            Modifier.Companion
+            Modifier
                 .FillMaxWidth()
                 .Padding(16)
                 .Clickable(() => onSelectPost(post.Id)),
             new Image(post.HeroId, "")
             {
-                Modifier = Modifier.Companion
+                Modifier = Modifier
                     .FillMaxWidth()
                     .AspectRatio(992f / 296f)
                     .Clip(16),
             },
-            new Spacer(Modifier.Companion.Height(16)),
+            new Spacer(Modifier.Height(16)),
             new Text(post.Title)
             {
                 FontSize   = 22,
                 FontWeight = FontWeight.SemiBold,
-                Modifier   = Modifier.Companion.Padding(bottom: 8, start: 0, end: 0, top: 0),
+                Modifier   = Modifier.Padding(bottom: 8, start: 0, end: 0, top: 0),
             },
             new Text(post.Metadata.Author)
             {
                 FontSize   = 14,
                 FontWeight = FontWeight.Medium,
-                Modifier   = Modifier.Companion.Padding(bottom: 4, start: 0, end: 0, top: 0),
+                Modifier   = Modifier.Padding(bottom: 4, start: 0, end: 0, top: 0),
             },
             new Text($"{post.Metadata.Date} · {post.Metadata.ReadTimeMinutes} min read")
             {
@@ -48,16 +48,16 @@ internal static class HomeCards
                                   SnackbarController? snackbars = null) =>
         new()
         {
-            Modifier.Companion
+            Modifier
                 .FillMaxWidth()
                 .Clickable(() => onSelectPost(post.Id)),
             new Image(post.ThumbId, "")
             {
-                Modifier = Modifier.Companion.Padding(16).Size(40).Clip(8),
+                Modifier = Modifier.Padding(16).Size(40).Clip(8),
             },
             new Column
             {
-                Modifier.Companion.Weight(1f, fill: true).Padding(vertical: 10, horizontal: 0),
+                Modifier.Weight(1f, fill: true).Padding(vertical: 10, horizontal: 0),
                 new Text(post.Title)
                 {
                     FontSize   = 16,
@@ -82,26 +82,26 @@ internal static class HomeCards
     public static Card BuildPopular(Post post, Action<string> onSelectPost) =>
         new()
         {
-            Modifier.Companion.Width(280).Height(220).Clickable(() => onSelectPost(post.Id)),
+            Modifier.Width(280).Height(220).Clickable(() => onSelectPost(post.Id)),
             new Column
             {
-                Modifier.Companion.FillMaxSize(),
+                Modifier.FillMaxSize(),
                 new Image(post.HeroId, "")
                 {
-                    Modifier = Modifier.Companion
+                    Modifier = Modifier
                         .FillMaxWidth()
                         .AspectRatio(992f / 296f),
                 },
                 new Column
                 {
-                    Modifier.Companion.FillMaxSize().Padding(16),
+                    Modifier.FillMaxSize().Padding(16),
                     new Text(post.Title)
                     {
                         FontSize   = 16,
                         FontWeight = FontWeight.SemiBold,
                         MaxLines   = 2,
                     },
-                    new Spacer(Modifier.Companion.Weight(1f, fill: true)),
+                    new Spacer(Modifier.Weight(1f, fill: true)),
                     new Text(post.Metadata.Author)
                     {
                         FontSize = 13,

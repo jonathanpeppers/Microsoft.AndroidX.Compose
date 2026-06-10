@@ -19,7 +19,7 @@ public static class NavigationDrawerItemDemo
             string[] labels = { "Inbox", "Outbox", "Favorites", "Trash" };
             return new PermanentDrawerSheet
             {
-                new Text("Mail") { Modifier = Modifier.Companion.Padding(horizontal: 28, vertical: 16) },
+                new Text("Mail") { Modifier = Modifier.Padding(horizontal: 28, vertical: 16) },
                 new NavigationDrawerItem(selected: selected.Value == 0, onClick: () => selected.Value = 0)
                 {
                     Label = new Text("Inbox"),
@@ -44,7 +44,7 @@ public static class NavigationDrawerItemDemo
                 },
                 new Text($"Selected: {labels[selected.Value]}")
                 {
-                    Modifier = Modifier.Companion.Padding(horizontal: 28, vertical: 16),
+                    Modifier = Modifier.Padding(horizontal: 28, vertical: 16),
                 },
             };
         });

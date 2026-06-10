@@ -28,7 +28,7 @@ public static class Profile
 
             var root = new Column
             {
-                Modifier.Companion.FillMaxSize(),
+                Modifier.FillMaxSize(),
                 screen,
             };
             if (popupOpen.Value)
@@ -54,7 +54,7 @@ public static class Profile
             {
                 new Icon(Resource.Drawable.ic_more_vert, "More options")
                 {
-                    Modifier = Modifier.Companion
+                    Modifier = Modifier
                         .Clickable(() => popupOpen.Value = true)
                         .Padding(horizontal: 12, vertical: 16)
                         .Height(24),
@@ -70,12 +70,12 @@ public static class Profile
         ColorScheme         scheme) =>
         new BoxWithConstraints(constraints => new Box
         {
-            Modifier.Companion.FillMaxSize(),
+            Modifier.FillMaxSize(),
             new Surface
             {
                 new Column
                 {
-                    Modifier.Companion.FillMaxSize().VerticalScroll(scrollState),
+                    Modifier.FillMaxSize().VerticalScroll(scrollState),
                     BuildProfileHeader(state, constraints.MaxHeight),
                     BuildUserInfoFields(state, constraints.MaxHeight, scheme),
                 },
@@ -86,13 +86,13 @@ public static class Profile
     static ComposableNode BuildProfileHeader(ProfileScreenState state, float containerHeight)
     {
         if (state.Photo is null)
-            return new Spacer(Modifier.Companion.Width(0));
+            return new Spacer(Modifier.Width(0));
 
         float heroMax = containerHeight / 2f;
         if (heroMax < 1f) heroMax = 240f;
         return new Image(state.Photo.Value, "Profile photo")
         {
-            Modifier = Modifier.Companion
+            Modifier = Modifier
                 .HeightIn(max: heroMax)
                 .FillMaxWidth()
                 .Padding(horizontal: 16, vertical: 16)
@@ -105,7 +105,7 @@ public static class Profile
     {
         var col = new Column
         {
-            new Spacer(Modifier.Companion.Height(8)),
+            new Spacer(Modifier.Height(8)),
             BuildNameAndPosition(state, scheme),
             BuildProfileProperty("Display name", state.DisplayName, scheme),
             BuildProfileProperty("Status",       state.Status,      scheme),
@@ -118,33 +118,33 @@ public static class Profile
         // the device, in order to always leave some content at the top.
         float trailing = containerHeight - 320f;
         if (trailing < 0f) trailing = 0f;
-        col.Add(new Spacer(Modifier.Companion.Height((int)trailing)));
+        col.Add(new Spacer(Modifier.Height((int)trailing)));
         return col;
     }
 
     static Column BuildNameAndPosition(ProfileScreenState state, ColorScheme scheme) =>
         new()
         {
-            Modifier.Companion.Padding(horizontal: 16, vertical: 0),
+            Modifier.Padding(horizontal: 16, vertical: 0),
             new Text(state.Name)
             {
                 FontSize   = 24,
                 FontWeight = FontWeight.Medium,
                 Color      = new Color(scheme.OnSurface),
-                Modifier   = Modifier.Companion.Padding(top: 8, bottom: 0, start: 0, end: 0),
+                Modifier   = Modifier.Padding(top: 8, bottom: 0, start: 0, end: 0),
             },
             new Text(state.Position)
             {
                 FontSize = 16,
                 Color    = new Color(scheme.OnSurfaceVariant),
-                Modifier = Modifier.Companion.Padding(top: 4, bottom: 20, start: 0, end: 0),
+                Modifier = Modifier.Padding(top: 4, bottom: 20, start: 0, end: 0),
             },
         };
 
     static Column BuildProfileProperty(string label, string value, ColorScheme scheme, bool isLink = false) =>
         new()
         {
-            Modifier.Companion.Padding(start: 16, end: 16, top: 0, bottom: 16),
+            Modifier.Padding(start: 16, end: 16, top: 0, bottom: 16),
             new HorizontalDivider
             {
                 ColorArgb = scheme.OnSurface,
@@ -153,13 +153,13 @@ public static class Profile
             {
                 FontSize = 12,
                 Color    = new Color(scheme.OnSurfaceVariant),
-                Modifier = Modifier.Companion.Padding(top: 8, bottom: 0, start: 0, end: 0),
+                Modifier = Modifier.Padding(top: 8, bottom: 0, start: 0, end: 0),
             },
             new Text(value)
             {
                 FontSize = 16,
                 Color    = isLink ? new Color(scheme.Primary) : new Color(scheme.OnSurface),
-                Modifier = Modifier.Companion.Padding(top: 4, bottom: 0, start: 0, end: 0),
+                Modifier = Modifier.Padding(top: 4, bottom: 0, start: 0, end: 0),
             },
         };
 
@@ -178,7 +178,7 @@ public static class Profile
             onClick:  () => popupOpen.Value = true,
             expanded: expanded)
         {
-            Modifier = Modifier.Companion
+            Modifier = Modifier
                 .Align(Alignment.BottomEnd)
                 .Padding(16)
                 .NavigationBarsPadding()

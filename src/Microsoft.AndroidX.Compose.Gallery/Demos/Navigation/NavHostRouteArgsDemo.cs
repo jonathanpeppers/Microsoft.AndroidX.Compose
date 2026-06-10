@@ -19,13 +19,13 @@ public static class NavHostRouteArgsDemo
                 new Text("Tap to navigate. Up uses navController.NavigateUp()."),
                 new NavHost(startDestination: "home", navController: nav)
                 {
-                    Modifier.Companion.FillMaxWidth().Height(360),
+                    Modifier.FillMaxWidth().Height(360),
 
                     new Composable("home")
                     {
                         new Column
                         {
-                            Modifier.Companion.Padding(16),
+                            Modifier.Padding(16),
                             new Text("🏠 Home"),
                             new Button(onClick: () => nav.Navigate("detail")) { new Text("Go to detail") },
                             new Button(onClick: () => nav.Navigate("user/42")) { new Text("Open user 42") },
@@ -35,7 +35,7 @@ public static class NavHostRouteArgsDemo
                     {
                         new Column
                         {
-                            Modifier.Companion.Padding(16),
+                            Modifier.Padding(16),
                             new Text("📄 Detail"),
                             new Button(onClick: () => nav.Navigate("user/7")) { new Text("Drill down to user 7") },
                             new Button(onClick: () => nav.PopBackStack()) { new Text("Back") },
@@ -43,7 +43,7 @@ public static class NavHostRouteArgsDemo
                     },
                     new Composable("user/{id}", entry => new Column
                     {
-                        Modifier.Companion.Padding(16),
+                        Modifier.Padding(16),
                         new Text($"👤 User #{entry.Arguments?.GetString("id") ?? "?"}"),
                         new Text($"Route: {entry.Route ?? "(unknown)"}"),
                         new Button(onClick: () => nav.NavigateUp()) { new Text("Up") },
