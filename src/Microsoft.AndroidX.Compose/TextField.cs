@@ -65,9 +65,9 @@ public sealed class TextField : ComposableNode
     /// <summary>Optional shape applied to the field's container (Kotlin <c>shape</c>).</summary>
     public Shape?          Shape          { get; set; }
     /// <summary>Optional <c>TextStyle</c> override (Kotlin <c>textStyle</c>) — controls text color, size, weight, etc.</summary>
-    public AndroidX.Compose.UI.Text.TextStyle? TextStyle { get; set; }
+    public TextStyle? TextStyle { get; set; }
     /// <summary>Optional visual transformation (Kotlin <c>visualTransformation</c>) — use <c>PasswordVisualTransformation</c> for password fields.</summary>
-    public AndroidX.Compose.UI.Text.Input.VisualTransformation? VisualTransformation { get; set; }
+    public AndroidX.Compose.UI.Text.Input.IVisualTransformation? VisualTransformation { get; set; }
     /// <summary>Optional keyboard options (Kotlin <c>keyboardOptions</c>) — controls IME type, capitalization, autocorrect.</summary>
     public AndroidX.Compose.Foundation.Text.KeyboardOptions? KeyboardOptions { get; set; }
 
@@ -120,7 +120,7 @@ public sealed class TextField : ComposableNode
         var __suffix         = Suffix         is null ? null : ComposableLambdas.Wrap2(composer, c => Suffix.Render(c));
         var __supportingText = SupportingText is null ? null : ComposableLambdas.Wrap2(composer, c => SupportingText.Render(c));
         ComposeBridges.TextField(_value!, __onValueChange, BuildModifier(),
-            Enabled, ReadOnly, TextStyle, __label, __placeholder, __leadingIcon, __trailingIcon,
+            Enabled, ReadOnly, TextStyle?.Build(), __label, __placeholder, __leadingIcon, __trailingIcon,
             __prefix, __suffix, __supportingText, IsError,
             VisualTransformation, KeyboardOptions,
             SingleLine, MaxLines, MinLines,
@@ -152,7 +152,7 @@ public sealed class TextField : ComposableNode
         var __suffix         = Suffix         is null ? null : ComposableLambdas.Wrap2(composer, c => Suffix.Render(c));
         var __supportingText = SupportingText is null ? null : ComposableLambdas.Wrap2(composer, c => SupportingText.Render(c));
         ComposeBridges.TextFieldWithValue(current, __onValueChange, BuildModifier(),
-            Enabled, ReadOnly, TextStyle, __label, __placeholder, __leadingIcon, __trailingIcon,
+            Enabled, ReadOnly, TextStyle?.Build(), __label, __placeholder, __leadingIcon, __trailingIcon,
             __prefix, __suffix, __supportingText, IsError,
             VisualTransformation, KeyboardOptions,
             SingleLine, MaxLines, MinLines,

@@ -86,7 +86,7 @@ public class FacadeGeneratorTests
         }
         namespace AndroidX.Compose.UI.Text.Input
         {
-            public class VisualTransformation : Java.Lang.Object { }
+            public interface IVisualTransformation { }
         }
         namespace AndroidX.Compose.Foundation.Text
         {
@@ -2615,7 +2615,7 @@ public class FacadeGeneratorTests
     [Fact]
     public void OptionalValue_VisualTransformationEmitsNullableReferenceProperty()
     {
-        // Phase 2 MAUI: VisualTransformation? on the TextField bridge
+        // Phase 2 MAUI: IVisualTransformation? on the TextField bridge
         // surfaces as a nullable property and forwards positionally.
         // MAUI's EntryHandler routes IsPassword to PasswordVisualTransformation.
         var code = """
@@ -2636,7 +2636,7 @@ public class FacadeGeneratorTests
                                    Signature="(Ljava/lang/String;Landroidx/compose/ui/Modifier;Landroidx/compose/ui/text/input/VisualTransformation;Landroidx/compose/runtime/Composer;II)V",
                                    Defaults=typeof(TfDefault))]
                     [ComposeFacade]
-                    public static partial void Tf(string value, IModifier? modifier, VisualTransformation? visualTransformation, IComposer composer);
+                    public static partial void Tf(string value, IModifier? modifier, IVisualTransformation? visualTransformation, IComposer composer);
                 }
             }
             """;
@@ -2644,7 +2644,7 @@ public class FacadeGeneratorTests
         var (output, diags, emitted) = Run(code, "Tf");
         Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
         Assert.NotNull(emitted);
-        Assert.Contains("public global::AndroidX.Compose.UI.Text.Input.VisualTransformation? VisualTransformation { get; set; }", emitted);
+        Assert.Contains("public global::AndroidX.Compose.UI.Text.Input.IVisualTransformation? VisualTransformation { get; set; }", emitted);
         Assert.Contains("global::AndroidX.Compose.ComposeBridges.Tf(_value, BuildModifier(), VisualTransformation, composer);", emitted);
 
         var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();

@@ -51,10 +51,14 @@ public static class Catalog
         D.TextInputs.SecureTextFieldDemo.Demo,
         D.TextInputs.OutlinedSecureTextFieldDemo.Demo,
         D.TextInputs.SelectionDemo.Demo,
+        D.TextInputs.TextStyleOverrideDemo.Demo,
+        D.TextInputs.PasswordFieldDemo.Demo,
+        D.TextInputs.NumericKeyboardDemo.Demo,
 
         // ---- Buttons ----
         D.Buttons.HelloCounterDemo.Demo,
         D.Buttons.FillStylesDemo.Demo,
+        D.Buttons.ColorOverridesDemo.Demo,
         D.Buttons.IconButtonsDemo.Demo,
         D.Buttons.IconToggleButtonsDemo.Demo,
         D.Buttons.ChipsDemo.Demo,

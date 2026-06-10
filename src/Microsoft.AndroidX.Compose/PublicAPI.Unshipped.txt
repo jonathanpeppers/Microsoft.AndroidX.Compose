@@ -527,6 +527,7 @@ AndroidX.Compose.InputChip.TrailingIcon.set -> void
 AndroidX.Compose.IState<T>
 AndroidX.Compose.IState<T>.Value.get -> T
 AndroidX.Compose.IStateFlow<T>
+AndroidX.Compose.KeyboardOptionsCompanion
 AndroidX.Compose.LargeFlexibleTopAppBar
 AndroidX.Compose.LargeFlexibleTopAppBar.Actions.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.LargeFlexibleTopAppBar.Actions.set -> void
@@ -892,11 +893,11 @@ AndroidX.Compose.OutlinedTextField.Suffix.get -> AndroidX.Compose.ComposableNode
 AndroidX.Compose.OutlinedTextField.Suffix.set -> void
 AndroidX.Compose.OutlinedTextField.SupportingText.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.OutlinedTextField.SupportingText.set -> void
-AndroidX.Compose.OutlinedTextField.TextStyle.get -> AndroidX.Compose.UI.Text.TextStyle?
+AndroidX.Compose.OutlinedTextField.TextStyle.get -> AndroidX.Compose.TextStyle?
 AndroidX.Compose.OutlinedTextField.TextStyle.set -> void
 AndroidX.Compose.OutlinedTextField.TrailingIcon.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.OutlinedTextField.TrailingIcon.set -> void
-AndroidX.Compose.OutlinedTextField.VisualTransformation.get -> AndroidX.Compose.UI.Text.Input.VisualTransformation?
+AndroidX.Compose.OutlinedTextField.VisualTransformation.get -> AndroidX.Compose.UI.Text.Input.IVisualTransformation?
 AndroidX.Compose.OutlinedTextField.VisualTransformation.set -> void
 AndroidX.Compose.PaddingValues
 AndroidX.Compose.PaddingValues.Bottom.get -> AndroidX.Compose.Dp
@@ -1189,11 +1190,11 @@ AndroidX.Compose.TextField.SupportingText.set -> void
 AndroidX.Compose.TextField.TextField(AndroidX.Compose.MutableState<AndroidX.Compose.UI.Text.Input.TextFieldValue!>! state) -> void
 AndroidX.Compose.TextField.TextField(AndroidX.Compose.MutableState<string!>! state) -> void
 AndroidX.Compose.TextField.TextField(string! value, System.Action<string!>! onValueChange) -> void
-AndroidX.Compose.TextField.TextStyle.get -> AndroidX.Compose.UI.Text.TextStyle?
+AndroidX.Compose.TextField.TextStyle.get -> AndroidX.Compose.TextStyle?
 AndroidX.Compose.TextField.TextStyle.set -> void
 AndroidX.Compose.TextField.TrailingIcon.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.TextField.TrailingIcon.set -> void
-AndroidX.Compose.TextField.VisualTransformation.get -> AndroidX.Compose.UI.Text.Input.VisualTransformation?
+AndroidX.Compose.TextField.VisualTransformation.get -> AndroidX.Compose.UI.Text.Input.IVisualTransformation?
 AndroidX.Compose.TextField.VisualTransformation.set -> void
 AndroidX.Compose.TextOverflow
 AndroidX.Compose.TextOverflow.Deconstruct(out int Value) -> void
@@ -1505,6 +1506,7 @@ static AndroidX.Compose.Color.White.get -> AndroidX.Compose.Color
 static AndroidX.Compose.Color.Yellow.get -> AndroidX.Compose.Color
 static AndroidX.Compose.Composed.implicit operator AndroidX.Compose.Composed!(System.Func<AndroidX.Compose.Runtime.IComposer!, AndroidX.Compose.ComposableNode?>! builder) -> AndroidX.Compose.Composed!
 static AndroidX.Compose.ComposeExtensions.BooleanResource(this AndroidX.Compose.Runtime.IComposer! composer, int id) -> bool
+static AndroidX.Compose.ComposeExtensions.ButtonColors(this AndroidX.Compose.Runtime.IComposer! composer, long? containerColor = null, long? contentColor = null, long? disabledContainerColor = null, long? disabledContentColor = null, int line = 0, string! file = "") -> AndroidX.Compose.Material3.ButtonColors!
 static AndroidX.Compose.ComposeExtensions.CollectAsStateWithLifecycle<T>(this Xamarin.KotlinX.Coroutines.Flow.IFlow! flow, T initialValue, AndroidX.Compose.Runtime.IComposer! composer) -> AndroidX.Compose.CollectedState<T>!
 static AndroidX.Compose.ComposeExtensions.CollectAsStateWithLifecycle<T>(this Xamarin.KotlinX.Coroutines.Flow.IStateFlow! stateFlow, AndroidX.Compose.Runtime.IComposer! composer) -> AndroidX.Compose.CollectedState<T>!
 static AndroidX.Compose.ComposeExtensions.ColorResource(this AndroidX.Compose.Runtime.IComposer! composer, int id) -> long
@@ -1910,6 +1912,8 @@ static AndroidX.Compose.Icons.TwoTone.ShoppingCart.get -> AndroidX.Compose.UI.Gr
 static AndroidX.Compose.Icons.TwoTone.Star.get -> AndroidX.Compose.UI.Graphics.Vector.ImageVector!
 static AndroidX.Compose.Icons.TwoTone.ThumbUp.get -> AndroidX.Compose.UI.Graphics.Vector.ImageVector!
 static AndroidX.Compose.Icons.TwoTone.Warning.get -> AndroidX.Compose.UI.Graphics.Vector.ImageVector!
+static AndroidX.Compose.KeyboardOptionsCompanion.Default.get -> AndroidX.Compose.Foundation.Text.KeyboardOptions!
+static AndroidX.Compose.KeyboardOptionsCompanion.Get() -> AndroidX.Compose.Foundation.Text.KeyboardOptions.Companion!
 static AndroidX.Compose.LinkAnnotation.Clickable(string! tag, System.Action<string!>! onClick, AndroidX.Compose.SpanStyle? style = null) -> AndroidX.Compose.LinkAnnotation!
 static AndroidX.Compose.LinkAnnotation.Url(string! url, AndroidX.Compose.SpanStyle? style = null) -> AndroidX.Compose.LinkAnnotation!
 static AndroidX.Compose.LocalColorScheme.Current(AndroidX.Compose.Runtime.IComposer! composer) -> AndroidX.Compose.Material3.ColorScheme!

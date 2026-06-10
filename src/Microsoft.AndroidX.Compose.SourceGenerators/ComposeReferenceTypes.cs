@@ -42,7 +42,7 @@ internal static class ComposeReferenceTypes
         "AndroidX.Compose.Material3.ITopAppBarScrollBehavior",
         "AndroidX.Compose.Material3.ButtonColors",
         "AndroidX.Compose.UI.Text.TextStyle",
-        "AndroidX.Compose.UI.Text.Input.VisualTransformation",
+        "AndroidX.Compose.UI.Text.Input.IVisualTransformation",
         "AndroidX.Compose.Foundation.Text.KeyboardOptions",
     };
 
