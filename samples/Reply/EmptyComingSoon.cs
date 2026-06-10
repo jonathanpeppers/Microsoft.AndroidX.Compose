@@ -19,14 +19,14 @@ public static class EmptyComingSoon
                 {
                     FontSize   = 18,
                     FontWeight = FontWeight.SemiBold,
-                    Color      = new Color(scheme.Primary),
+                    Color      = scheme.Primary,
                     Modifier   = Modifier.Companion.FillMaxWidth(),
                 },
                 new Spacer(Modifier.Companion.Height(8)),
                 new Text("This screen is still under construction. This sample will help you learn about adaptive layouts in Jetpack Compose")
                 {
                     FontSize = 14,
-                    Color    = new Color(scheme.OnSurfaceVariant),
+                    Color    = scheme.OnSurfaceVariant,
                     Modifier = Modifier.Companion.Padding(horizontal: 16, vertical: 0),
                 },
             };

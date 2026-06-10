@@ -152,6 +152,29 @@ public readonly struct Color : IEquatable<Color>
     /// </summary>
     public static implicit operator long(Color c) => unchecked((long)c.PackedValue);
 
+    /// <summary>
+    /// Implicit conversion from the packed <see cref="long"/> the Compose
+    /// bindings surface (the Kotlin
+    /// <c>@JvmInline value class Color(val value: ULong)</c> lowers to a
+    /// packed long across JNI). Lets callers pass <c>scheme.OnSurface</c>
+    /// directly anywhere a <see cref="Color"/> is expected without
+    /// wrapping in <c>new Color(...)</c>.
+    /// </summary>
+    public static implicit operator Color(long packedValue) => new(packedValue);
+
+    /// <summary>
+    /// Whether this color carries a real value. Matches Kotlin's
+    /// <c>Color.isSpecified</c> &#8212; useful for "fall back to theme"
+    /// branches where <see cref="Unspecified"/> is the sentinel.
+    /// </summary>
+    public bool IsSpecified => PackedValue != Unspecified.PackedValue;
+
+    /// <summary>
+    /// Inverse of <see cref="IsSpecified"/> &#8212; matches Kotlin's
+    /// <c>Color.isUnspecified</c>.
+    /// </summary>
+    public bool IsUnspecified => PackedValue == Unspecified.PackedValue;
+
     // ----- Named constants matching androidx.compose.ui.graphics.Color.Companion -----
 
     /// <summary>Fully-opaque black (<c>#FF000000</c>).</summary>
