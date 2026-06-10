@@ -77,7 +77,7 @@ public abstract class ComposableContainer : ComposableNode, IEnumerable
     /// <see cref="RenderChildren"/> — see that method for the
     /// positional-identity rationale.
     /// </summary>
-    protected void RenderChildrenIndexed(IComposer composer)
+    private protected void RenderChildrenIndexed(IComposer composer)
     {
         using var rows = RenderContext.PushRow(_children.Count);
         for (int i = 0; i < _children.Count; i++)

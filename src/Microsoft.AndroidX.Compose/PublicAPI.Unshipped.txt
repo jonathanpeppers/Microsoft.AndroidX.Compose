@@ -164,7 +164,6 @@ AndroidX.Compose.ComposableContainer.Add(AndroidX.Compose.Modifier! modifier) ->
 AndroidX.Compose.ComposableContainer.Children.get -> System.Collections.Generic.IReadOnlyList<AndroidX.Compose.ComposableNode!>!
 AndroidX.Compose.ComposableContainer.ComposableContainer() -> void
 AndroidX.Compose.ComposableContainer.RenderChildren(AndroidX.Compose.Runtime.IComposer! composer) -> void
-AndroidX.Compose.ComposableContainer.RenderChildrenIndexed(AndroidX.Compose.Runtime.IComposer! composer) -> void
 AndroidX.Compose.ComposableNode
 AndroidX.Compose.ComposableNode.AppendModifier(AndroidX.Compose.Modifier! modifier) -> void
 AndroidX.Compose.ComposableNode.ComposableNode() -> void

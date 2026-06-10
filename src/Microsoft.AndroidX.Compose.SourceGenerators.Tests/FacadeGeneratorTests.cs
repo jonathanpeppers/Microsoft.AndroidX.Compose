@@ -145,7 +145,7 @@ public class FacadeGeneratorTests
             public abstract class ComposableContainer : ComposableNode
             {
                 protected void RenderChildren(global::AndroidX.Compose.Runtime.IComposer composer) { }
-                protected void RenderChildrenIndexed(global::AndroidX.Compose.Runtime.IComposer composer) { }
+                private protected void RenderChildrenIndexed(global::AndroidX.Compose.Runtime.IComposer composer) { }
             }
             public sealed class ComposableLambda0 : Kotlin.Jvm.Functions.IFunction0
             {
