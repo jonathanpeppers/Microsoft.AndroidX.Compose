@@ -63,4 +63,30 @@ public abstract class ComposableContainer : ComposableNode, IEnumerable
             finally { composer.EndReplaceableGroup(); }
         }
     }
+
+    /// <summary>
+    /// Renders this container's children sequentially while publishing
+    /// the per-child row position via
+    /// <see cref="RenderContext.PushRow"/> + <c>SetIndex</c>. Child
+    /// composables (e.g. <see cref="SegmentedButton"/>) read
+    /// <see cref="RenderContext.CurrentRowChildIndex"/> and
+    /// <see cref="RenderContext.CurrentRowChildCount"/> to compute
+    /// Kotlin defaults that depend on their position in the row
+    /// (start/end shape, etc.). Each child still gets the same
+    /// per-position <c>StartReplaceableGroup</c> key as
+    /// <see cref="RenderChildren"/> — see that method for the
+    /// positional-identity rationale.
+    /// </summary>
+    protected void RenderChildrenIndexed(IComposer composer)
+    {
+        using var rows = RenderContext.PushRow(_children.Count);
+        for (int i = 0; i < _children.Count; i++)
+        {
+            rows.SetIndex(i);
+            var child = _children[i];
+            composer.StartReplaceableGroup(HashCode.Combine(i, child.GetType()));
+            try { child.Render(composer); }
+            finally { composer.EndReplaceableGroup(); }
+        }
+    }
 }

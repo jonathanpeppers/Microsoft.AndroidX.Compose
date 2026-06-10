@@ -88,12 +88,16 @@ public class FacadeGeneratorTests
         }
         namespace AndroidX.Compose
         {
-            public enum ScopeKind { None, Row, Column }
+            public enum ScopeKind { None, Row, Column, Box, Other }
             public static class RenderContext
             {
                 public ref struct ScopeFrame { public void Dispose() { } }
+                public ref struct RowFrame { public void SetIndex(int i) { } public void Dispose() { } }
                 public static ScopeFrame PushScope(System.IntPtr scope, ScopeKind kind) => default;
+                public static RowFrame PushRow(int count) => default;
                 public static System.IntPtr CurrentScope => default;
+                public static int CurrentRowChildIndex => default;
+                public static int CurrentRowChildCount => default;
             }
             public readonly struct Dp
             {
@@ -141,6 +145,7 @@ public class FacadeGeneratorTests
             public abstract class ComposableContainer : ComposableNode
             {
                 protected void RenderChildren(global::AndroidX.Compose.Runtime.IComposer composer) { }
+                protected void RenderChildrenIndexed(global::AndroidX.Compose.Runtime.IComposer composer) { }
             }
             public sealed class ComposableLambda0 : Kotlin.Jvm.Functions.IFunction0
             {
@@ -711,6 +716,74 @@ public class FacadeGeneratorTests
 
         var (_, diags, _) = Run(code, "Card");
         Assert.Contains(diags, d => d.Id == "CN3003" && d.GetMessage().Contains("Diagonal"));
+    }
+
+    [Fact]
+    public void IndexedChildrenContainer_EmitsRenderChildrenIndexed()
+    {
+        var code = """
+            using global::AndroidX.Compose.Runtime;
+            using global::AndroidX.Compose.UI;
+            using AndroidX.Compose;
+            using Kotlin.Jvm.Functions;
+
+            [assembly: ComposeDefaults("SegmentedButtonRowDefault",
+                "modifier", "space", "!content")]
+
+            namespace AndroidX.Compose
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(Class="androidx/compose/material3/SegmentedButtonKt", JvmName="SingleChoiceSegmentedButtonRow",
+                                   Signature="(Landroidx/compose/ui/Modifier;FLkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;II)V",
+                                   Defaults=typeof(SegmentedButtonRowDefault))]
+                    [ComposeFacade(Scope = "Other", IndexedChildren = true)]
+                    public static partial void SingleChoiceSegmentedButtonRow(IModifier? modifier, IFunction3 content, IComposer composer);
+                }
+            }
+            """;
+
+        var (output, diags, emitted) = Run(code, "SingleChoiceSegmentedButtonRow");
+        Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+        // Scope still pushed.
+        Assert.Contains("Wrap3(composer, (__scope, c) =>", emitted);
+        Assert.Contains("global::AndroidX.Compose.RenderContext.PushScope(__scope, global::AndroidX.Compose.ScopeKind.Other);", emitted);
+        // Per-child indexed loop instead of plain RenderChildren.
+        Assert.Contains("RenderChildrenIndexed(c);", emitted);
+        Assert.DoesNotContain("RenderChildren(c);", emitted);
+
+        var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
+        Assert.Empty(errors);
+    }
+
+    [Fact]
+    public void IndexedChildrenOnLeaf_EmitsCN3006()
+    {
+        // Leaf bridge with no IFunction2/IFunction3 body — IndexedChildren has nowhere to apply.
+        var code = """
+            using global::AndroidX.Compose.Runtime;
+            using global::AndroidX.Compose.UI;
+            using AndroidX.Compose;
+            using Kotlin.Jvm.Functions;
+
+            [assembly: ComposeDefaults("SpacerDefault", "modifier")]
+
+            namespace AndroidX.Compose
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(Class="androidx/compose/foundation/layout/SpacerKt", JvmName="Spacer",
+                                   Signature="(Landroidx/compose/ui/Modifier;Landroidx/compose/runtime/Composer;II)V",
+                                   Defaults=typeof(SpacerDefault))]
+                    [ComposeFacade(IndexedChildren = true)]
+                    public static partial void IndexedSpacer(IModifier? modifier, IComposer composer);
+                }
+            }
+            """;
+
+        var (_, diags, _) = Run(code, "IndexedSpacer");
+        Assert.Contains(diags, d => d.Id == "CN3006" && d.GetMessage().Contains("IndexedChildren"));
     }
 
     [Fact]
