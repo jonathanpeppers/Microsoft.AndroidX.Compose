@@ -31,14 +31,30 @@ public static class BottomNavOptionsDemo
         {
             const string startRoute = "home";
 
-            var nav      = c.Remember(() => new NavController());
-            var selected = c.MutableStateOf(startRoute);
+            var nav             = c.Remember(() => new NavController());
+            var selected        = c.MutableStateOf(startRoute);
+            var enabled         = c.MutableStateOf(true);
+            var alwaysShowLabel = c.MutableStateOf(true);
 
             return new Column
             {
                 Modifier.FillMaxWidth(),
 
                 new Text("Tap Search or Profile, hit Increment a few times, switch to another tab and come back — the counter survives via popUpTo(saveState) + restoreState. (Selection follows taps; back-stack changes via the system Back button don't update the highlight in this v1 demo.)"),
+
+                new Row(horizontalArrangement: Arrangement.SpacedBy(16), verticalAlignment: Alignment.Vertical.CenterVertically)
+                {
+                    new Row(horizontalArrangement: Arrangement.SpacedBy(8), verticalAlignment: Alignment.Vertical.CenterVertically)
+                    {
+                        new Switch(@checked: enabled.Value, onCheckedChange: v => enabled.Value = v),
+                        new Text(enabled.Value ? "Enabled" : "Disabled"),
+                    },
+                    new Row(horizontalArrangement: Arrangement.SpacedBy(8), verticalAlignment: Alignment.Vertical.CenterVertically)
+                    {
+                        new Switch(@checked: alwaysShowLabel.Value, onCheckedChange: v => alwaysShowLabel.Value = v),
+                        new Text(alwaysShowLabel.Value ? "AlwaysShowLabel" : "Selected-only label"),
+                    },
+                },
 
                 // Bounded NavHost so the inner subcomposition has a
                 // finite slot to lay out into; the NavigationBar below
@@ -57,22 +73,28 @@ public static class BottomNavOptionsDemo
                 new NavigationBar
                 {
                     new NavigationBarItem(
-                        selected: selected.Value == startRoute,
-                        onClick:  () => GoToTab(nav, selected, startRoute, startRoute))
+                        selected:        selected.Value == startRoute,
+                        onClick:         () => GoToTab(nav, selected, startRoute, startRoute),
+                        enabled:         enabled.Value,
+                        alwaysShowLabel: alwaysShowLabel.Value)
                     {
                         Icon  = new Text("🏠"),
                         Label = new Text("Home"),
                     },
                     new NavigationBarItem(
-                        selected: selected.Value == "search",
-                        onClick:  () => GoToTab(nav, selected, "search", startRoute))
+                        selected:        selected.Value == "search",
+                        onClick:         () => GoToTab(nav, selected, "search", startRoute),
+                        enabled:         enabled.Value,
+                        alwaysShowLabel: alwaysShowLabel.Value)
                     {
                         Icon  = new Text("🔍"),
                         Label = new Text("Search"),
                     },
                     new NavigationBarItem(
-                        selected: selected.Value == "profile",
-                        onClick:  () => GoToTab(nav, selected, "profile", startRoute))
+                        selected:        selected.Value == "profile",
+                        onClick:         () => GoToTab(nav, selected, "profile", startRoute),
+                        enabled:         enabled.Value,
+                        alwaysShowLabel: alwaysShowLabel.Value)
                     {
                         Icon  = new Text("👤"),
                         Label = new Text("Profile"),

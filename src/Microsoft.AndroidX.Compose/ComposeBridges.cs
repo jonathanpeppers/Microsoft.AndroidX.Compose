@@ -1488,8 +1488,10 @@ internal static partial class ComposeBridges
         IFunction2  icon,
         IModifier?  modifier,
         IFunction2? label,
-        int         defaults,
-        IComposer   composer);
+        bool        enabled         = true,
+        bool        alwaysShowLabel = true,
+        int         defaults        = 0,
+        IComposer   composer        = null!);
 
     // androidx.compose.material3.NavigationRailKt.NavigationRail-qi6gXK8
     [ComposeBridge(
@@ -3465,17 +3467,18 @@ internal static partial class ComposeBridges
 
     // Internal forwarder for Row — see the Column helper above for why
     // this isn't an auto-generated facade. Row.cs supplies the typed
-    // horizontalArrangement and matching $default mask.
+    // horizontalArrangement / verticalAlignment and matching $default mask.
     internal static void Row(
         IModifier? modifier,
         AndroidX.Compose.Foundation.Layout.Arrangement.IHorizontal? horizontalArrangement,
+        IAlignmentVertical? verticalAlignment,
         IFunction3 content,
         int defaults,
         IComposer composer)
         => RowKt.Row(
             modifier:              modifier,
             horizontalArrangement: horizontalArrangement,
-            verticalAlignment:     null,
+            verticalAlignment:     verticalAlignment,
             content:               content,
             _composer:             composer,
             p5:                    0,
@@ -3501,15 +3504,16 @@ internal static partial class ComposeBridges
         [Callback(typeof(bool))]
         IFunction1                 onCheckedChange,
         IModifier?                 modifier,
-        int                        defaults,
-        IComposer                  composer);
+        bool                       enabled  = true,
+        int                        defaults = 0,
+        IComposer                  composer = null!);
 
-    public static partial void Checkbox(bool @checked, IFunction1 onCheckedChange, IModifier? modifier, int defaults, IComposer composer)
+    public static partial void Checkbox(bool @checked, IFunction1 onCheckedChange, IModifier? modifier, bool enabled, int defaults, IComposer composer)
         => CheckboxKt.Checkbox(
             @checked:          @checked,
             onCheckedChange:   onCheckedChange,
             modifier:          modifier,
-            enabled:           true,
+            enabled:           enabled,
             colors:            null,
             interactionSource: null,
             _composer:         composer,
@@ -3522,16 +3526,17 @@ internal static partial class ComposeBridges
         [Callback(typeof(bool))]
         IFunction1                 onCheckedChange,
         IModifier?                 modifier,
-        int                        defaults,
-        IComposer                  composer);
+        bool                       enabled  = true,
+        int                        defaults = 0,
+        IComposer                  composer = null!);
 
-    public static partial void Switch(bool @checked, IFunction1 onCheckedChange, IModifier? modifier, int defaults, IComposer composer)
+    public static partial void Switch(bool @checked, IFunction1 onCheckedChange, IModifier? modifier, bool enabled, int defaults, IComposer composer)
         => SwitchKt.Switch(
             @checked:          @checked,
             onCheckedChange:   onCheckedChange,
             modifier:          modifier,
             thumbContent:      null,
-            enabled:           true,
+            enabled:           enabled,
             colors:            null,
             interactionSource: null,
             _composer:         composer,
@@ -3543,15 +3548,16 @@ internal static partial class ComposeBridges
         bool        selected,
         IFunction0  onClick,
         IModifier?  modifier,
-        int         defaults,
-        IComposer   composer);
+        bool        enabled  = true,
+        int         defaults = 0,
+        IComposer   composer = null!);
 
-    public static partial void RadioButton(bool selected, IFunction0 onClick, IModifier? modifier, int defaults, IComposer composer)
+    public static partial void RadioButton(bool selected, IFunction0 onClick, IModifier? modifier, bool enabled, int defaults, IComposer composer)
         => RadioButtonKt.RadioButton(
             selected:          selected,
             onClick:           onClick,
             modifier:          modifier,
-            enabled:           true,
+            enabled:           enabled,
             colors:            null,
             interactionSource: null,
             _composer:         composer,
@@ -3564,17 +3570,24 @@ internal static partial class ComposeBridges
         [Callback(typeof(float))]
         IFunction1                  onValueChange,
         IModifier?                  modifier,
-        int                         defaults,
-        IComposer                   composer);
+        bool                        enabled  = true,
+        int                         steps    = 0,
+        int                         defaults = 0,
+        IComposer                   composer = null!);
 
-    public static partial void Slider(float value, IFunction1 onValueChange, IModifier? modifier, int defaults, IComposer composer)
+    // Slot rename pattern: C# `p5` is the real Kotlin `steps` Int; C# named
+    // `steps:` is the JVM `$changed` recomposition int; `_changed` is `$default`.
+    // Cross-check with RangeSlider above, which uses the same SliderKt
+    // overload (both pass `steps: 0` for $changed and route the user-facing
+    // steps through `p5:`).
+    public static partial void Slider(float value, IFunction1 onValueChange, IModifier? modifier, bool enabled, int steps, int defaults, IComposer composer)
         => SliderKt.Slider(
             value:                  value,
             onValueChange:          onValueChange,
             modifier:               modifier,
-            enabled:                true,
+            enabled:                enabled,
             valueRange:             null,
-            p5:                     0,
+            p5:                     steps,
             onValueChangeFinished:  null,
             colors:                 null,
             interactionSource:      null,
@@ -3636,10 +3649,11 @@ internal static partial class ComposeBridges
         IFunction2  icon,
         IFunction2? label,
         IModifier?  modifier,
-        int         defaults,
-        IComposer   composer);
+        bool        enabled  = true,
+        int         defaults = 0,
+        IComposer   composer = null!);
 
-    public static partial void WideNavigationRailItem(bool selected, IFunction0 onClick, IFunction2 icon, IFunction2? label, IModifier? modifier, int defaults, IComposer composer)
+    public static partial void WideNavigationRailItem(bool selected, IFunction0 onClick, IFunction2 icon, IFunction2? label, IModifier? modifier, bool enabled, int defaults, IComposer composer)
         => AndroidX.Compose.Material3.WideNavigationRailKt.WideNavigationRailItem(
             selected:          selected,
             onClick:           onClick,
@@ -3647,7 +3661,7 @@ internal static partial class ComposeBridges
             label:             label,
             railExpanded:      false,
             modifier:          modifier,
-            enabled:           true,
+            enabled:           enabled,
             p7:                0,
             colors:            null,
             interactionSource: null,
@@ -3660,15 +3674,16 @@ internal static partial class ComposeBridges
         ToggleableState state,
         IFunction0  onClick,
         IModifier?  modifier,
-        int         defaults,
-        IComposer   composer);
+        bool        enabled  = true,
+        int         defaults = 0,
+        IComposer   composer = null!);
 
-    public static partial void TriStateCheckbox(ToggleableState state, IFunction0 onClick, IModifier? modifier, int defaults, IComposer composer)
+    public static partial void TriStateCheckbox(ToggleableState state, IFunction0 onClick, IModifier? modifier, bool enabled, int defaults, IComposer composer)
         => AndroidX.Compose.Material3.CheckboxKt.TriStateCheckbox(
             state:             state,
             onClick:           onClick,
             modifier:          modifier,
-            enabled:           true,
+            enabled:           enabled,
             colors:            null,
             interactionSource: null,
             _composer:         composer,
