@@ -50,8 +50,8 @@ links back to the tracking issues.
 
 | Upstream feature | Status | Tracking issue |
 |------------------|--------|----------------|
-| `NavigationSuiteScaffold` + `WindowSizeClass` (compact → medium → expanded switchover) | dropped — pinned to bottom nav | [#143](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/143) |
-| `NavigationRail` / `PermanentNavigationDrawer` / `ModalNavigationDrawer` content for medium and expanded sizes | dropped — bottom nav only | [#143](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/143) |
+| `NavigationSuiteScaffold` (compact → medium → expanded switchover) | dropped — pinned to bottom nav | `Xamarin.AndroidX.Compose.Material3.Adaptive.NavigationSuite` not yet referenced; would also need [#163](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/163). The size-class read itself ([#143](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/143)) shipped — see `composer.CurrentWindowAdaptiveInfo()`. |
+| `NavigationRail` / `PermanentNavigationDrawer` / `ModalNavigationDrawer` content for medium and expanded sizes | dropped — bottom nav only | [#163](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/163) (drawer-row facade) — branching on `WindowSizeClass` is unblocked by [#143](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/143). |
 | `accompanist.adaptive.TwoPane` + `WindowLayoutInfo`/`FoldingFeature` (list-detail with fold avoidance) | dropped — single-pane | [#168](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/168) |
 | `NavigationDrawerItem` rows inside `ModalDrawerSheet` | not used (no drawer in single-pane port) | [#163](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/163) |
 | `BackHandler {}` to collapse multi-select / detail | dropped — system back falls through to the navigator | [#166](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/166) |

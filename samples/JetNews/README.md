@@ -62,7 +62,7 @@ feature.
 
 | Upstream feature                                                | Tracking issue |
 |-----------------------------------------------------------------|----------------|
-| Adaptive list-detail two-pane layout on wider devices            | [#143](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/143) (WindowSizeClass), plus a SharedTransitionLayout / ListDetailScene binding |
+| Adaptive list-detail two-pane layout on wider devices            | `SharedTransitionLayout` / `ListDetailScene` binding (the `WindowSizeClass` read itself shipped in [#143](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/143) — see `composer.CurrentWindowAdaptiveInfo()`) |
 | Real hero PNGs in card / article (currently a solid `Box` filled with a per-post `HeroColor`) | [#145](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/145) — `ContentScale.Crop` on the `Image` facade; without it small vector hero images letterbox |
 | Inline-run paragraph styling (Link / Bold / Italic / Code spans inside one paragraph) | [#141](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/141) — `AnnotatedString` + `SpanStyle` |
 | Top-bar elevation / collapse on scroll (`pinnedScrollBehavior`, `enterAlwaysScrollBehavior`) | [#142](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/142) — `Modifier.nestedScroll` + `TopAppBarDefaults` |

@@ -46,7 +46,6 @@ that needs the same primitive.
 | [#20](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/20)  | Edge-to-edge bootstrapping | Status/nav-bar overlap on every sample. |
 | [#141](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/141) | `AnnotatedString` + `SpanStyle` for inline-run text styling | Link / Bold / Italic / Code spans inside paragraphs in **JetNews** article reader. |
 | [#142](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/142) | `Modifier.nestedScroll` + `TopAppBarDefaults` scroll behaviors | Top-bar elevation / collapse on scroll in **JetNews**, **Reply**, **Jetcaster**. |
-| [#143](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/143) | WindowSizeClass / `currentWindowAdaptiveInfo` | Adaptive layouts; blocks **Reply** entirely and the **JetNews** list-detail screen. |
 | [#144](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/144) | Custom `Layout {}` primitive — Measurable / Placeable / MeasureScope | `InterestsAdaptiveContentLayout` in **JetNews**, custom carousels in **Jetsnack**, asymmetric chat bubbles in **Jetchat**. |
 | [#145](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/145) | `ContentScale` + `Alignment` slots on the `Image` facade | Hero images on cards in **JetNews** (currently solid-color `Box` placeholders). |
 | [#146](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/146) | `stringResource(id)` lookup | Localizable UI strings in every sample (all currently inline literals). |
@@ -66,7 +65,8 @@ Closed gaps that previously appeared here (now usable in samples):
 **#63** Modifier surface (Background/Border/Clickable/Size/Width/Height/AspectRatio/Offset/Alpha/Clip/Weight + scroll + focus + semantics + Draggable),
 **#65** Compose value types (`Color`/`Dp`/`Sp`/`FontWeight`/`TextAlign`),
 **#70** Row/Column `Arrangement`,
-**#140** `DrawerState.open()` / `close()` suspend bridges.
+**#140** `DrawerState.open()` / `close()` suspend bridges,
+**#143** `WindowSizeClass` predicates + `currentWindowAdaptiveInfo()` extension (NavigationSuiteScaffold, SharedTransitionLayout, and ListDetailScene bindings still missing — see [#168](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/168) for the fold-aware TwoPane piece).
 
 ## Attribution
 
