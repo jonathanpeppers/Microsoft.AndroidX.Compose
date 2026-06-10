@@ -23,7 +23,7 @@ public static class TextFieldCursorPlacementDemo
         Build:       c =>
         {
             var input = c.MutableStateOf(c.NewTextFieldValue());
-            return new Column(verticalArrangement: Arrangement.SpacedBy(12))
+            return new Column(verticalArrangement: Arrangement.SpacedBy(12.Dp()))
             {
                 new Text("Tap an emoji — it appends to the field and the caret moves to the end so the next keystroke lands after it.")
                 {
@@ -35,7 +35,7 @@ public static class TextFieldCursorPlacementDemo
                     Placeholder = new Text("Type something…"),
                     SingleLine  = true,
                 },
-                new Row(horizontalArrangement: Arrangement.SpacedBy(8))
+                new Row(horizontalArrangement: Arrangement.SpacedBy(8.Dp()))
                 {
                     BuildEmojiRow(input),
                 },
@@ -45,7 +45,7 @@ public static class TextFieldCursorPlacementDemo
 
     static Row BuildEmojiRow(MutableState<TextFieldValue> input)
     {
-        var row = new Row(horizontalArrangement: Arrangement.SpacedBy(8));
+        var row = new Row(horizontalArrangement: Arrangement.SpacedBy(8.Dp()));
         foreach (var emoji in Emojis)
         {
             row.Add(new Button(onClick: () =>

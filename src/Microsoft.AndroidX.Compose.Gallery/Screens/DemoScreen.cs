@@ -60,7 +60,7 @@ public static class DemoScreen
         public override void Render(IComposer composer)
         {
             var scroll = composer.Remember(() => new ScrollState());
-            new Column(verticalArrangement: Arrangement.SpacedBy(12))
+            new Column(verticalArrangement: Arrangement.SpacedBy(12.Dp()))
             {
                 Modifier
                     .FillMaxSize()

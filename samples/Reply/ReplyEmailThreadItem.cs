@@ -69,7 +69,7 @@ public static class ReplyEmailThreadItem
         };
 
     static Row BuildActionRow(AndroidX.Compose.Material3.ColorScheme scheme) =>
-        new(Arrangement.SpacedBy(12))
+        new(Arrangement.SpacedBy(12.Dp()))
         {
             Modifier
                 .FillMaxWidth()
