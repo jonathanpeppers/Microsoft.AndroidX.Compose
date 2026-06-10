@@ -39,7 +39,7 @@ public static class Conversation
             var scheme = c.ColorScheme();
             var root   = new Column
             {
-                Modifier.Companion.FillMaxSize(),
+                Modifier.FillMaxSize(),
                 new Scaffold
                 {
                     TopBar = BuildTopBar(ui, scheme, onOpenDrawer, popupOpen),
@@ -74,14 +74,14 @@ public static class Conversation
                 {
                     FontSize = 12,
                     Color    = scheme.OnSurfaceVariant,
-                    Modifier = Modifier.Companion.Padding(top: 2, bottom: 0, start: 0, end: 0),
+                    Modifier = Modifier.Padding(top: 2, bottom: 0, start: 0, end: 0),
                 },
             },
             Actions = new Row
             {
                 new Icon(Resource.Drawable.ic_search, "Search")
                 {
-                    Modifier = Modifier.Companion
+                    Modifier = Modifier
                         .Clickable(() => popupOpen.Value = true)
                         .Padding(horizontal: 12, vertical: 16)
                         .Height(24),
@@ -89,7 +89,7 @@ public static class Conversation
                 },
                 new Icon(Resource.Drawable.ic_info, "Information")
                 {
-                    Modifier = Modifier.Companion
+                    Modifier = Modifier
                         .Clickable(() => popupOpen.Value = true)
                         .Padding(horizontal: 12, vertical: 16)
                         .Height(24),
@@ -132,7 +132,7 @@ public static class Conversation
             }));
             return new Column
             {
-                Modifier.Companion.FillMaxSize().DragAndDropTarget(
+                Modifier.FillMaxSize().DragAndDropTarget(
                     shouldStartDragAndDrop: e =>
                     {
                         foreach (var m in e.MimeTypes)
@@ -175,7 +175,7 @@ public static class Conversation
 
         return new Box
         {
-            Modifier.Companion.FillMaxWidth().Weight(1f, fill: true),
+            Modifier.FillMaxWidth().Weight(1f, fill: true),
 
             new LazyColumn<ChatRow>(
                 items:       rows,
@@ -186,7 +186,7 @@ public static class Conversation
                     _             => Spacer.Width(0),
                 })
             {
-                Modifier      = Modifier.Companion.FillMaxSize(),
+                Modifier      = Modifier.FillMaxSize(),
                 ReverseLayout = true,
                 State         = messagesScroll,
             },
@@ -204,7 +204,7 @@ public static class Conversation
                     onClick:  () => _ = messagesScroll.AnimateScrollToItemAsync(0),
                     expanded: false)
                 {
-                    Modifier = Modifier.Companion
+                    Modifier = Modifier
                         .Align(Alignment.BottomCenter)
                         .Padding(start: 0, top: 0, end: 0, bottom: 16),
                     Icon = new Icon(Resource.Drawable.ic_arrow_downward, "Jump to bottom"),
@@ -217,10 +217,10 @@ public static class Conversation
     static Row BuildDayHeader(string label, ColorScheme scheme) =>
         new()
         {
-            Modifier.Companion.Padding(horizontal: 16, vertical: 8).Height(16),
+            Modifier.Padding(horizontal: 16, vertical: 8).Height(16),
             new HorizontalDivider
             {
-                Modifier  = Modifier.Companion.Weight(1f),
+                Modifier  = Modifier.Weight(1f),
                 ColorArgb = scheme.OnSurface,
             },
             new Text(label)
@@ -228,11 +228,11 @@ public static class Conversation
                 FontSize   = 11,
                 FontWeight = FontWeight.Medium,
                 Color      = scheme.OnSurfaceVariant,
-                Modifier   = Modifier.Companion.Padding(horizontal: 16, vertical: 0),
+                Modifier   = Modifier.Padding(horizontal: 16, vertical: 0),
             },
             new HorizontalDivider
             {
-                Modifier  = Modifier.Companion.Weight(1f),
+                Modifier  = Modifier.Weight(1f),
                 ColorArgb = scheme.OnSurface,
             },
         };
@@ -241,7 +241,7 @@ public static class Conversation
     {
         var row = new Row
         {
-            Modifier.Companion.Padding(top: isLastByAuthor ? 8 : 0, bottom: 0, start: 0, end: 0),
+            Modifier.Padding(top: isLastByAuthor ? 8 : 0, bottom: 0, start: 0, end: 0),
         };
 
         if (isLastByAuthor)
@@ -260,7 +260,7 @@ public static class Conversation
         string userId = isMe ? Profiles.MeProfile.UserId : Profiles.ColleagueProfile.UserId;
         return new Image(m.AuthorImage, "Profile photo")
         {
-            Modifier = Modifier.Companion
+            Modifier = Modifier
                 .Padding(horizontal: 16, vertical: 0)
                 .Size(42)
                 .Border(1.5f, accent,         Shape.Circle())
@@ -274,7 +274,7 @@ public static class Conversation
     {
         var col = new Column
         {
-            Modifier.Companion.Padding(top: 0, bottom: 0, start: 0, end: 16).Weight(1f, fill: true),
+            Modifier.Padding(top: 0, bottom: 0, start: 0, end: 16).Weight(1f, fill: true),
         };
         if (isLastByAuthor)
             col.Add(BuildAuthorNameTimestamp(m, scheme));
@@ -291,14 +291,14 @@ public static class Conversation
                 FontSize   = 16,
                 FontWeight = FontWeight.Medium,
                 Color      = scheme.OnSurface,
-                Modifier   = Modifier.Companion.Padding(top: 0, bottom: 8, start: 0, end: 0),
+                Modifier   = Modifier.Padding(top: 0, bottom: 8, start: 0, end: 0),
             },
             Spacer.Width(8),
             new Text(m.Timestamp)
             {
                 FontSize = 12,
                 Color    = scheme.OnSurfaceVariant,
-                Modifier = Modifier.Companion.Padding(top: 0, bottom: 8, start: 0, end: 0),
+                Modifier = Modifier.Padding(top: 0, bottom: 8, start: 0, end: 0),
             },
         };
 
@@ -311,7 +311,7 @@ public static class Conversation
         return new AnnotatedText(formatted)
         {
             Color    = fg,
-            Modifier = Modifier.Companion
+            Modifier = Modifier
                 .Background(bg, Shape.RoundedCorners(4, 20, 20, 20))
                 .Padding(horizontal: 16, vertical: 16),
         };
@@ -327,10 +327,10 @@ public static class Conversation
         MutableNumberState<float>    swipeOffset) =>
         new()
         {
-            Modifier.Companion.FillMaxWidth().NavigationBarsPadding().ImePadding(),
+            Modifier.FillMaxWidth().NavigationBarsPadding().ImePadding(),
             new Column
             {
-                Modifier.Companion.FillMaxWidth(),
+                Modifier.FillMaxWidth(),
                 BuildTextFieldRow(input, scheme, isRecording, swipeOffset),
                 BuildSelectorRow(ui, input, scheme, selectedSelector, messagesScroll),
                 BuildSelectorPanel(input, scheme, selectedSelector),
@@ -347,17 +347,17 @@ public static class Conversation
 
         var row = new Row
         {
-            Modifier.Companion.FillMaxWidth().Height(64),
+            Modifier.FillMaxWidth().Height(64),
             new Box
             {
-                Modifier.Companion.Weight(1f, fill: true).FillMaxHeight(),
+                Modifier.Weight(1f, fill: true).FillMaxHeight(),
                 new AnimatedContent<bool>(
                     targetState: isRecording.Value,
                     content: recording => recording
                         ? RecordButton.BuildRecordingIndicator(swipeOffset, scheme)
                         : new TextField(input)
                           {
-                              Modifier = Modifier.Companion.FillMaxWidth(),
+                              Modifier = Modifier.FillMaxWidth(),
                           }),
             },
         };
@@ -391,7 +391,7 @@ public static class Conversation
     {
         var row = new Row(Arrangement.SpaceBetween)
         {
-            Modifier.Companion.FillMaxWidth().Padding(horizontal: 4, vertical: 4),
+            Modifier.FillMaxWidth().Padding(horizontal: 4, vertical: 4),
             new Row
             {
                 InputSelectorButton(Resource.Drawable.ic_mood,            "Show Emoji selector", SelEmoji,   selectedSelector, scheme),
@@ -430,7 +430,7 @@ public static class Conversation
             },
         };
         if (selected)
-            button.Modifier = Modifier.Companion.Background(scheme.Secondary, Shape.RoundedCorners(14, 14, 14, 14));
+            button.Modifier = Modifier.Background(scheme.Secondary, Shape.RoundedCorners(14, 14, 14, 14));
         return button;
     }
 
@@ -446,21 +446,21 @@ public static class Conversation
         string subtitle = "Grab a beverage and check back later!";
         return new Column
         {
-            Modifier.Companion.FillMaxWidth().Height(320).Background(scheme.SurfaceVariant),
+            Modifier.FillMaxWidth().Height(320).Background(scheme.SurfaceVariant),
             Spacer.Height(96),
             new Text(title)
             {
                 FontSize   = 16,
                 FontWeight = FontWeight.Medium,
                 Color      = scheme.OnSurfaceVariant,
-                Modifier   = Modifier.Companion.Padding(horizontal: 16, vertical: 0),
+                Modifier   = Modifier.Padding(horizontal: 16, vertical: 0),
             },
             Spacer.Height(8),
             new Text(subtitle)
             {
                 FontSize = 14,
                 Color    = scheme.OnSurfaceVariant,
-                Modifier = Modifier.Companion.Padding(horizontal: 16, vertical: 0),
+                Modifier = Modifier.Padding(horizontal: 16, vertical: 0),
             },
         };
     }

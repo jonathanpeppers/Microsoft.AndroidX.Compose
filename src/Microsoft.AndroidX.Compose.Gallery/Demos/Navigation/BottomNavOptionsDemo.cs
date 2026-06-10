@@ -36,7 +36,7 @@ public static class BottomNavOptionsDemo
 
             return new Column
             {
-                Modifier.Companion.FillMaxWidth(),
+                Modifier.FillMaxWidth(),
 
                 new Text("Tap Search or Profile, hit Increment a few times, switch to another tab and come back — the counter survives via popUpTo(saveState) + restoreState. (Selection follows taps; back-stack changes via the system Back button don't update the highlight in this v1 demo.)"),
 
@@ -45,7 +45,7 @@ public static class BottomNavOptionsDemo
                 // it picks up its natural M3 height.
                 new Box
                 {
-                    Modifier.Companion.FillMaxWidth().Height(260),
+                    Modifier.FillMaxWidth().Height(260),
                     new NavHost(startDestination: startRoute, navController: nav)
                     {
                         new NavDestination(startRoute,    _ => new CounterPane("🏠 Home")),
@@ -111,7 +111,7 @@ public static class BottomNavOptionsDemo
 
             new Column(verticalArrangement: Arrangement.SpacedBy(8.Dp()))
             {
-                Modifier.Companion.Padding(16),
+                Modifier.Padding(16),
                 new Text(_title),
                 new Text($"Tapped {count.Value} times"),
                 new Button(onClick: () => count++)

@@ -16,15 +16,15 @@ public static class SpacerDemo
             new Text("32-dp vertical Spacer between the two blocks:"),
             new Box
             {
-                Modifier.Companion
+                Modifier
                     .Height(40)
                     .FillMaxWidth()
                     .Background(Color.FromRgb(0xB3, 0xE5, 0xFC)),
             },
-            new Spacer { Modifier = Modifier.Companion.Height(32) },
+            new Spacer { Modifier = Modifier.Height(32) },
             new Box
             {
-                Modifier.Companion
+                Modifier
                     .Height(40)
                     .FillMaxWidth()
                     .Background(Color.FromRgb(0xC8, 0xE6, 0xC9)),
@@ -34,14 +34,14 @@ public static class SpacerDemo
             {
                 new Box
                 {
-                    Modifier.Companion
+                    Modifier
                         .Size(56)
                         .Background(Color.FromRgb(0xFF, 0xE0, 0xB2)),
                 },
-                new Spacer { Modifier = Modifier.Companion.Width(48) },
+                new Spacer { Modifier = Modifier.Width(48) },
                 new Box
                 {
-                    Modifier.Companion
+                    Modifier
                         .Size(56)
                         .Background(Color.FromRgb(0xCE, 0x93, 0xD8)),
                 },

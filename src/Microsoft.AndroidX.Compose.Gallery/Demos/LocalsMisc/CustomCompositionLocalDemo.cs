@@ -31,7 +31,7 @@ public static class CustomCompositionLocalDemo
                 LocalPalette.Provides(OverridePalette),
                 new Column
                 {
-                    Modifier.Companion.Padding(8),
+                    Modifier.Padding(8),
                     new ThemeLabel(),
                     new ThemeLabel(),
                 },
@@ -45,7 +45,7 @@ public static class CustomCompositionLocalDemo
     {
         public override void Render(IComposer composer)
         {
-            var palette = LocalPalette.GetCurrent(composer);
+            var palette = LocalPalette.Current(composer);
             new Text($"  Palette: {palette.Name} (0x{palette.PrimaryHex:X8})").Render(composer);
         }
     }

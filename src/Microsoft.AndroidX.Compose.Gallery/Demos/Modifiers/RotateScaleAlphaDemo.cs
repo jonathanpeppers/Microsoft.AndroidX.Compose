@@ -19,12 +19,12 @@ public static class RotateScaleAlphaDemo
                 {
                     new Box
                     {
-                        Modifier.Companion
+                        Modifier
                             .TestTag("rotate-tile")
                             .Size(56)
                             .Rotate(15f)
                             .Background(Color.FromRgb(0xEF, 0xB8, 0xC8)),
-                        new Text("⟲") { Color = Color.Black, Modifier = Modifier.Companion.Padding(16) },
+                        new Text("⟲") { Color = Color.Black, Modifier = Modifier.Padding(16) },
                     },
                     new Text("Rotate 15°"),
                 },
@@ -32,12 +32,12 @@ public static class RotateScaleAlphaDemo
                 {
                     new Box
                     {
-                        Modifier.Companion
+                        Modifier
                             .TestTag("scale-tile")
                             .Size(56)
                             .Scale(0.85f, 1.15f)
                             .Background(Color.FromRgb(0xFF, 0xCD, 0xD2)),
-                        new Text("↕") { Color = Color.Black, Modifier = Modifier.Companion.Padding(16) },
+                        new Text("↕") { Color = Color.Black, Modifier = Modifier.Padding(16) },
                     },
                     new Text("Scale 0.85×1.15"),
                 },
@@ -45,12 +45,12 @@ public static class RotateScaleAlphaDemo
                 {
                     new Box
                     {
-                        Modifier.Companion
+                        Modifier
                             .TestTag("alpha-tile")
                             .Size(56)
                             .Alpha(0.4f)
                             .Background(Color.FromRgb(0xD7, 0xCC, 0xC8)),
-                        new Text("◐") { Color = Color.Black, Modifier = Modifier.Companion.Padding(16) },
+                        new Text("◐") { Color = Color.Black, Modifier = Modifier.Padding(16) },
                     },
                     new Text("Alpha 0.4"),
                 },

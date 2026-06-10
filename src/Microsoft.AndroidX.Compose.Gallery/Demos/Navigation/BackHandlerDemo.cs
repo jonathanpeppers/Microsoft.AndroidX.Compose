@@ -21,7 +21,7 @@ public static class BackHandlerDemo
 
             return new Column
             {
-                Modifier.Companion.Padding(16),
+                Modifier.Padding(16),
 
                 new BackHandler(
                     onBack:  () => pressCount++,

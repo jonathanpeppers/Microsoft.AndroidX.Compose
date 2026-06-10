@@ -17,7 +17,7 @@ public static class DismissibleDrawerDemo
             var count = c.MutableStateOf(0);
             return new Box
             {
-                Modifier.Companion.Height(320),
+                Modifier.Height(320),
                 new DismissibleNavigationDrawer
                 {
                     InitialValue = DrawerValue.Open!,

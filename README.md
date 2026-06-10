@@ -72,7 +72,7 @@ public class MainActivity : ComponentActivity
             {
                 new Column
                 {
-                    Modifier.Companion.SafeDrawingPadding(),
+                    Modifier.SafeDrawingPadding(),
                     new Text("Hello from .NET"),
                     new Text($"Count: {count}"),
                     new Button(onClick: () => count++)

@@ -38,11 +38,11 @@ public static class NullableMutableStateDemo
                         selectedId.Value = 100L + taps.Value;
                     })
                     { new Text("Select next") },
-                    new Spacer { Modifier = Modifier.Companion.Padding(4) },
+                    new Spacer { Modifier = Modifier.Padding(4) },
                     new Button(onClick: () => selectedId.Value = null)
                         { new Text("Clear") },
                 },
-                new HorizontalDivider { Modifier = Modifier.Companion.Padding(0, 8) },
+                new HorizontalDivider { Modifier = Modifier.Padding(0, 8) },
                 new Text("Below: a CompositionLocal<long?> reads null by default, then a provider supplies the current selectedId:"),
                 new SelectedIdLabel(),
                 new CompositionLocalProvider
@@ -50,7 +50,7 @@ public static class NullableMutableStateDemo
                     LocalSelectedId.Provides(selectedId.Value),
                     new Column
                     {
-                        Modifier.Companion.Padding(8),
+                        Modifier.Padding(8),
                         new SelectedIdLabel(),
                     },
                 },
@@ -61,7 +61,7 @@ public static class NullableMutableStateDemo
     {
         public override void Render(IComposer composer)
         {
-            var id = LocalSelectedId.GetCurrent(composer);
+            var id = LocalSelectedId.Current(composer);
             new Text($"  LocalSelectedId.Current: {id?.ToString() ?? "<null>"}").Render(composer);
         }
     }

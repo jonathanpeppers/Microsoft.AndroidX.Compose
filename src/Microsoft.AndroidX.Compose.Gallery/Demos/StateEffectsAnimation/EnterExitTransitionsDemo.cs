@@ -26,7 +26,7 @@ public static class EnterExitTransitionsDemo
                 {
                     new Card
                     {
-                        Modifier.Companion.Padding(8),
+                        Modifier.Padding(8),
                         new Text("I fade"),
                     },
                 },
@@ -36,7 +36,7 @@ public static class EnterExitTransitionsDemo
                 {
                     new Card
                     {
-                        Modifier.Companion.Padding(8),
+                        Modifier.Padding(8),
                         new Text("I scale"),
                     },
                 },
@@ -46,7 +46,7 @@ public static class EnterExitTransitionsDemo
                 {
                     new Card
                     {
-                        Modifier.Companion.Padding(8),
+                        Modifier.Padding(8),
                         new Text("I slide vertically"),
                     },
                 },
@@ -56,7 +56,7 @@ public static class EnterExitTransitionsDemo
                 {
                     new Card
                     {
-                        Modifier.Companion.Padding(8),
+                        Modifier.Padding(8),
                         new Text("I slide horizontally"),
                     },
                 },

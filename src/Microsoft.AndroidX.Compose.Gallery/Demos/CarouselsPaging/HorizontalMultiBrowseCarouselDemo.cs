@@ -17,14 +17,14 @@ public static class HorizontalMultiBrowseCarouselDemo
             preferredItemWidth: 240f,
             itemContent:        i => new Box
             {
-                Modifier.Companion
+                Modifier
                     .FillMaxSize()
                     .Clip(20)
                     .Background(Palette.Pastels[i % Palette.Pastels.Length]),
-                new Text($"#{i:D2}") { Modifier = Modifier.Companion.Padding(16) },
+                new Text($"#{i:D2}") { Modifier = Modifier.Padding(16) },
             })
         {
-            Modifier    = Modifier.Companion.FillMaxWidth().Height(180),
+            Modifier    = Modifier.FillMaxWidth().Height(180),
             ItemSpacing = 8f,
         });
 }

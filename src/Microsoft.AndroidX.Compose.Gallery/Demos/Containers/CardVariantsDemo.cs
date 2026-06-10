@@ -13,33 +13,33 @@ public static class CardVariantsDemo
         Description: "Card (tonal), ElevatedCard (shadow), OutlinedCard (border).",
         Build:       _ => new Column(verticalArrangement: Arrangement.SpacedBy(12.Dp()))
         {
-            Modifier.Companion.FillMaxWidth(),
+            Modifier.FillMaxWidth(),
             new Card
             {
-                Modifier.Companion.FillMaxWidth(),
+                Modifier.FillMaxWidth(),
                 new Column
                 {
-                    Modifier.Companion.Padding(16),
+                    Modifier.Padding(16),
                     new Text("Card (tonal)"),
                     new Text("Default Material 3 Card — uses surfaceVariant for the background."),
                 },
             },
             new ElevatedCard
             {
-                Modifier.Companion.FillMaxWidth(),
+                Modifier.FillMaxWidth(),
                 new Column
                 {
-                    Modifier.Companion.Padding(16),
+                    Modifier.Padding(16),
                     new Text("ElevatedCard (shadow)"),
                     new Text("Lifts off the surface with a soft drop shadow."),
                 },
             },
             new OutlinedCard
             {
-                Modifier.Companion.FillMaxWidth(),
+                Modifier.FillMaxWidth(),
                 new Column
                 {
-                    Modifier.Companion.Padding(16),
+                    Modifier.Padding(16),
                     new Text("OutlinedCard (border)"),
                     new Text("Stroked outline, no fill or elevation."),
                 },

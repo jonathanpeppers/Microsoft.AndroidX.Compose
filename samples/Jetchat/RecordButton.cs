@@ -43,7 +43,7 @@ public static class RecordButton
                     isRecording.Value = true;
             };
 
-            var innerModifier = Modifier.Companion.FillMaxSize();
+            var innerModifier = Modifier.FillMaxSize();
             if (recording)
                 innerModifier = innerModifier
                     .Background(Color.Red, Shape.RoundedCorners(28, 28, 28, 28))
@@ -52,7 +52,7 @@ public static class RecordButton
 
             return new Box
             {
-                Modifier.Companion
+                Modifier
                     .Align(Alignment.Vertical.CenterVertically)
                     .Size(56)
                     .Clickable(onClick),
@@ -62,7 +62,7 @@ public static class RecordButton
                     new Icon(Resource.Drawable.ic_mic, "Record voice message")
                     {
                         TintArgb = recording ? scheme.OnPrimary : scheme.OnSurfaceVariant,
-                        Modifier = Modifier.Companion.FillMaxSize(),
+                        Modifier = Modifier.FillMaxSize(),
                     },
                 },
             };
@@ -89,7 +89,7 @@ public static class RecordButton
 
             return new Row
             {
-                Modifier.Companion.FillMaxSize(),
+                Modifier.FillMaxSize(),
 
                 new LaunchedEffect(key1: "recording-timer", async ct =>
                 {
@@ -123,7 +123,7 @@ public static class RecordButton
 
                 new Box
                 {
-                    Modifier.Companion
+                    Modifier
                         .Align(Alignment.Vertical.CenterVertically)
                         .Size(56)
                         .Padding(24)
@@ -133,7 +133,7 @@ public static class RecordButton
 
                 new Text(timer)
                 {
-                    Modifier   = Modifier.Companion.Align(Alignment.Vertical.CenterVertically),
+                    Modifier   = Modifier.Align(Alignment.Vertical.CenterVertically),
                     FontSize   = 22,
                     FontWeight = FontWeight.Medium,
                     Color      = scheme.OnSurface,
@@ -143,7 +143,7 @@ public static class RecordButton
 
                 new Row
                 {
-                    Modifier.Companion
+                    Modifier
                         .Align(Alignment.Vertical.CenterVertically)
                         .Weight(1f, fill: true)
                         .Offset(x: offset / 2f / density)
@@ -152,12 +152,12 @@ public static class RecordButton
                     new Icon(Resource.Drawable.ic_arrow_back, "Slide to cancel")
                     {
                         TintArgb = scheme.OnSurfaceVariant,
-                        Modifier = Modifier.Companion.Align(Alignment.Vertical.CenterVertically).Size(24),
+                        Modifier = Modifier.Align(Alignment.Vertical.CenterVertically).Size(24),
                     },
                     Spacer.Width(8),
                     new Text("Slide to cancel")
                     {
-                        Modifier = Modifier.Companion.Align(Alignment.Vertical.CenterVertically),
+                        Modifier = Modifier.Align(Alignment.Vertical.CenterVertically),
                         FontSize = 16,
                         Color    = scheme.OnSurfaceVariant,
                     },

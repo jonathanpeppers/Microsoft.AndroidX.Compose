@@ -23,7 +23,7 @@ public static class DerivedStateDemo
                 new Row
                 {
                     new Button(onClick: () => list.Add($"item{list.Count}")) { new Text("Add") },
-                    new Spacer { Modifier = Modifier.Companion.Padding(4) },
+                    new Spacer { Modifier = Modifier.Padding(4) },
                     new Button(onClick: () => { if (list.Count > 0) list.RemoveAt(list.Count - 1); })
                         { new Text("Remove last") },
                 },

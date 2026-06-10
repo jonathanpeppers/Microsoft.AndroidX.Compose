@@ -50,7 +50,7 @@ public static class CompositionLocal
 /// <see cref="CompositionLocal.Of{T}"/>, then provided per-subtree
 /// with <see cref="Provides(T)"/> and read inside a composable's
 /// <c>Render</c> method via
-/// <see cref="GetCurrent(IComposer)"/>.</para>
+/// <see cref="Current(IComposer)"/>.</para>
 ///
 /// <para><b>Boxing.</b> Reference values that already derive from
 /// <see cref="Java.Lang.Object"/> are passed through unchanged; the
@@ -101,7 +101,7 @@ public sealed class CompositionLocal<T>
     /// <see cref="IComposer"/> handed to the enclosing
     /// <c>Render</c> method.
     /// </summary>
-    public T GetCurrent(IComposer composer)
+    public T Current(IComposer composer)
     {
         ArgumentNullException.ThrowIfNull(composer);
         return FromJava(_peer.GetCurrent(composer, 0));

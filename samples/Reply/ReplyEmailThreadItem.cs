@@ -13,18 +13,18 @@ public static class ReplyEmailThreadItem
             var scheme = c.ColorScheme();
             return new Card
             {
-                Modifier.Companion
+                Modifier
                     .Padding(horizontal: 16, vertical: 4)
                     .Background(scheme.SurfaceVariant),
                 new Column
                 {
-                    Modifier.Companion.FillMaxWidth().Padding(20),
+                    Modifier.FillMaxWidth().Padding(20),
                     BuildHeaderRow(email, scheme),
                     new Text(email.Subject)
                     {
                         FontSize  = 14,
                         Color     = scheme.Outline,
-                        Modifier  = Modifier.Companion.Padding(top: 12, bottom: 8, start: 0, end: 0),
+                        Modifier  = Modifier.Padding(top: 12, bottom: 8, start: 0, end: 0),
                     },
                     new Text(email.Body)
                     {
@@ -39,11 +39,11 @@ public static class ReplyEmailThreadItem
     static Row BuildHeaderRow(Email email, AndroidX.Compose.Material3.ColorScheme scheme) =>
         new()
         {
-            Modifier.Companion.FillMaxWidth(),
+            Modifier.FillMaxWidth(),
             ReplyProfileImage.Build(email.Sender.Avatar, email.Sender.FullName),
             new Column
             {
-                Modifier.Companion
+                Modifier
                     .Weight(1f)
                     .Padding(horizontal: 12, vertical: 4),
                 new Text(email.Sender.FirstName)
@@ -58,7 +58,7 @@ public static class ReplyEmailThreadItem
             },
             new IconButton(onClick: NoOp)
             {
-                Modifier.Companion
+                Modifier
                     .Clip(Shape.Circle())
                     .Background(scheme.SurfaceVariant),
                 new Icon(Resource.Drawable.ic_star_border, "Favorite")
@@ -71,12 +71,12 @@ public static class ReplyEmailThreadItem
     static Row BuildActionRow(AndroidX.Compose.Material3.ColorScheme scheme) =>
         new(Arrangement.SpacedBy(12.Dp()))
         {
-            Modifier.Companion
+            Modifier
                 .FillMaxWidth()
                 .Padding(top: 20, bottom: 8, start: 0, end: 0),
             new Button(onClick: NoOp)
             {
-                Modifier.Companion.Weight(1f),
+                Modifier.Weight(1f),
                 new Text("Reply")
                 {
                     Color = scheme.OnSurface,
@@ -84,7 +84,7 @@ public static class ReplyEmailThreadItem
             },
             new Button(onClick: NoOp)
             {
-                Modifier.Companion.Weight(1f),
+                Modifier.Weight(1f),
                 new Text("Reply All")
                 {
                     Color = scheme.OnSurface,

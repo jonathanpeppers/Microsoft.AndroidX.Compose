@@ -30,11 +30,11 @@ public static class MinimumInteractiveComponentSizeDemo
                         new Text("Without"),
                         new Box
                         {
-                            Modifier.Companion
+                            Modifier
                                 .Background(Color.FromHex("#FFF59D")),
                             new IconButton(onClick: () => taps++)
                             {
-                                Modifier.Companion.Size(24),
+                                Modifier.Size(24),
                                 new Text("☆") { Color = Color.Black },
                             },
                         },
@@ -44,11 +44,11 @@ public static class MinimumInteractiveComponentSizeDemo
                         new Text("With"),
                         new Box
                         {
-                            Modifier.Companion
+                            Modifier
                                 .Background(Color.FromHex("#FFF59D")),
                             new IconButton(onClick: () => taps++)
                             {
-                                Modifier.Companion
+                                Modifier
                                     .MinimumInteractiveComponentSize()
                                     .Size(24),
                                 new Text("★") { Color = Color.Black },

@@ -13,7 +13,7 @@ namespace AndroidX.Compose;
 /// </para>
 /// <para>
 /// Implicit conversions from <see cref="int"/> and <see cref="float"/> mean
-/// existing call sites like <c>Modifier.Companion.Padding(16)</c> continue to
+/// existing call sites like <c>Modifier.Padding(16)</c> continue to
 /// compile unchanged. To explicitly construct a <c>Dp</c>, use the
 /// <see cref="Dp(float)"/> constructor or one of the conversion operators.
 /// </para>

@@ -40,7 +40,7 @@ public static class SemanticsBuilderDemo
 
                 new Card
                 {
-                    Modifier.Companion
+                    Modifier
                         .FillMaxWidth()
                         .Padding(8)
                         .Clickable(() => selected.Value = !selected.Value)
@@ -56,7 +56,7 @@ public static class SemanticsBuilderDemo
                             })),
                     new Column
                     {
-                        Modifier.Companion.Padding(12),
+                        Modifier.Padding(12),
                         new Text(selected.Value ? "✓ Alice" : "Alice"),
                         new Text("Reply samples PR review"),
                         new Text($"'Open email' triggered {opens} time(s) "
@@ -70,7 +70,7 @@ public static class SemanticsBuilderDemo
                 // of walking into each child Text.
                 new Card
                 {
-                    Modifier.Companion
+                    Modifier
                         .FillMaxWidth()
                         .Padding(8)
                         .ClearAndSetSemantics(s => s
@@ -78,7 +78,7 @@ public static class SemanticsBuilderDemo
                             .ContentDescription("Three new messages, double-tap to open inbox")),
                     new Column
                     {
-                        Modifier.Companion.Padding(12),
+                        Modifier.Padding(12),
                         new Text("📬 3 new"),
                         new Text("Alice, Bob, Carol"),
                     },

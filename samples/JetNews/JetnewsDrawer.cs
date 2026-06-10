@@ -24,7 +24,7 @@ public static class JetnewsDrawer
         {
             new Column
             {
-                Modifier.Companion.FillMaxWidth(),
+                Modifier.FillMaxWidth(),
                 BuildHeader(),
                 BuildItem(
                     label:        "Home",
@@ -46,7 +46,7 @@ public static class JetnewsDrawer
     static Row BuildHeader() =>
         new()
         {
-            Modifier.Companion.FillMaxWidth().Padding(horizontal: 28, vertical: 24),
+            Modifier.FillMaxWidth().Padding(horizontal: 28, vertical: 24),
             new Icon(Resource.Drawable.ic_jetnews_logo, "JetNews logo"),
             Spacer.Width(8),
             new Icon(Resource.Drawable.ic_jetnews_wordmark, "JetNews"),
@@ -69,7 +69,7 @@ public static class JetnewsDrawer
                 _ = drawerState.CloseAsync();
             })
         {
-            Modifier = Modifier.Companion.Padding(horizontal: 12, vertical: 0),
+            Modifier = Modifier.Padding(horizontal: 12, vertical: 0),
             Label    = new Text(label)
             {
                 FontSize   = 16,

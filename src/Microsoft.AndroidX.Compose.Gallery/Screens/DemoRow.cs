@@ -24,7 +24,7 @@ public sealed class DemoRow : ComposableNode
     {
         new ListItem
         {
-            Modifier = Modifier.Companion
+            Modifier = Modifier
                 .FillMaxWidth()
                 .Clickable(() => _nav.Navigate($"demo/{_demo.Id}")),
             Headline   = new Text(_demo.Title),

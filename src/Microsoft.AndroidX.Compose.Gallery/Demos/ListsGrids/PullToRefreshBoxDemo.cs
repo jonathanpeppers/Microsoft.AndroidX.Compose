@@ -28,13 +28,13 @@ public static class PullToRefreshBoxDemo
                     }, 1200);
                 })
             {
-                Modifier.Companion.FillMaxWidth().Height(320),
+                Modifier.FillMaxWidth().Height(320),
 
                 new LazyColumn<int>(
                     items:       Enumerable.Range(0, 40).ToList(),
                     itemContent: i => new Text($"Item {i:D2} (rev {revision})"))
                 {
-                    Modifier = Modifier.Companion.FillMaxSize(),
+                    Modifier = Modifier.FillMaxSize(),
                 },
             };
         });

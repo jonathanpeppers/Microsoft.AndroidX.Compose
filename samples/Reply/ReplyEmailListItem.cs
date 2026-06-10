@@ -23,7 +23,7 @@ public static class ReplyEmailListItem
 
             return new Card
             {
-                Modifier.Companion
+                Modifier
                     .Padding(horizontal: 16, vertical: 4)
                     .Background(bg)
                     .CombinedClickable(
@@ -31,12 +31,12 @@ public static class ReplyEmailListItem
                         onLongClick: () => toggleSelection(email.Id)),
                 new Column
                 {
-                    Modifier.Companion.FillMaxWidth().Padding(20),
+                    Modifier.FillMaxWidth().Padding(20),
                     BuildHeaderRow(email, isSelected, toggleSelection, scheme),
                     new Text(email.Subject)
                     {
                         FontSize = 16,
-                        Modifier = Modifier.Companion.Padding(top: 12, bottom: 8, start: 0, end: 0),
+                        Modifier = Modifier.Padding(top: 12, bottom: 8, start: 0, end: 0),
                     },
                     new Text(email.Body)
                     {
@@ -57,11 +57,11 @@ public static class ReplyEmailListItem
 
         return new Row
         {
-            Modifier.Companion.FillMaxWidth(),
+            Modifier.FillMaxWidth(),
             avatar,
             new Column
             {
-                Modifier.Companion
+                Modifier
                     .Weight(1f)
                     .Padding(horizontal: 12, vertical: 4),
                 new Text(email.Sender.FirstName)
@@ -75,7 +75,7 @@ public static class ReplyEmailListItem
             },
             new IconButton(onClick: NoOp)
             {
-                Modifier.Companion
+                Modifier
                     .Clip(Shape.Circle())
                     .Background(scheme.SurfaceVariant),
                 new Icon(Resource.Drawable.ic_star_border, "Favorite")

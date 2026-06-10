@@ -40,7 +40,7 @@ public static class GalleryApp
         {
             new Surface
             {
-                Modifier.Companion.FillMaxSize(),
+                Modifier.FillMaxSize(),
                 new ModalNavigationDrawer(drawerState: drawer)
                 {
                     Drawer          = new GalleryDrawer(nav, drawer),

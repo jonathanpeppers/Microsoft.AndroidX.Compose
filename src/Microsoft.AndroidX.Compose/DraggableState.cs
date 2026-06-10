@@ -18,7 +18,7 @@ namespace AndroidX.Compose;
 ///
 /// new Box
 /// {
-///     Modifier.Companion.Draggable(drag, Orientation.Horizontal),
+///     Modifier.Draggable(drag, Orientation.Horizontal),
 ///     // ... draggable content ...
 /// }
 /// </code>

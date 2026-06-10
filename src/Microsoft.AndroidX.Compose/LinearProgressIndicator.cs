@@ -7,7 +7,7 @@ namespace AndroidX.Compose;
 /// Material 3 indeterminate <c>LinearProgressIndicator</c>. Use to show
 /// loading state when the duration is unknown:
 /// <code>
-/// new LinearProgressIndicator { Modifier = Modifier.Companion.FillMaxWidth() }
+/// new LinearProgressIndicator { Modifier = Modifier.FillMaxWidth() }
 /// </code>
 /// The determinate (progress-driven) overload is not yet wrapped — the
 /// progress callback parameter requires a state-reading <c>Function0&lt;Float&gt;</c>

@@ -21,13 +21,13 @@ public static class ColumnRowArrangementsDemo
             new Text("Row(Arrangement.SpaceBetween):"),
             new Row(Arrangement.SpaceBetween)
             {
-                Modifier.Companion.FillMaxWidth(),
+                Modifier.FillMaxWidth(),
                 new Text("A"), new Text("B"), new Text("C"),
             },
             new Text("Row(Arrangement.SpaceAround):"),
             new Row(Arrangement.SpaceAround)
             {
-                Modifier.Companion.FillMaxWidth(),
+                Modifier.FillMaxWidth(),
                 new Text("A"), new Text("B"), new Text("C"),
             },
         });
