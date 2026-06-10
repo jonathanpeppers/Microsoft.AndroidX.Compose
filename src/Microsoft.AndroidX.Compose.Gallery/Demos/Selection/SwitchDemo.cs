@@ -10,15 +10,21 @@ public static class SwitchDemo
         Id:          "selection-switch",
         CategoryId:  "selection",
         Title:       "Switch",
-        Description: "Bool-bound Switch with live status text.",
+        Description: "Bool-bound Switch with live status text. The enabled toggle disables the lower switch.",
         Build:       c =>
         {
-            var on = c.MutableStateOf(false);
+            var on      = c.MutableStateOf(false);
+            var enabled = c.MutableStateOf(true);
             return new Column
             {
                 new Row
                 {
-                    new Switch(@checked: on.Value, onCheckedChange: v => on.Value = v),
+                    new Switch(@checked: enabled.Value, onCheckedChange: v => enabled.Value = v),
+                    new Text(enabled.Value ? "Enabled" : "Disabled"),
+                },
+                new Row
+                {
+                    new Switch(@checked: on.Value, onCheckedChange: v => on.Value = v, enabled: enabled.Value),
                     new Text(on.Value ? "On" : "Off"),
                 },
             };

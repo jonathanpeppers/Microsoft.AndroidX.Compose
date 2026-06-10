@@ -11,12 +11,18 @@ public static class TriStateCheckboxDemo
         Id:          "selection-tristate-checkbox",
         CategoryId:  "selection",
         Title:       "TriStateCheckbox",
-        Description: "Cycles through On → Off → Indeterminate on tap.",
+        Description: "Cycles through On → Off → Indeterminate on tap. The enabled toggle disables the cycling checkbox.",
         Build:       c =>
         {
-            var state = c.MutableStateOf(ToggleableState.Indeterminate!);
+            var state   = c.MutableStateOf(ToggleableState.Indeterminate!);
+            var enabled = c.MutableStateOf(true);
             return new Column
             {
+                new Row
+                {
+                    new Switch(@checked: enabled.Value, onCheckedChange: v => enabled.Value = v),
+                    new Text(enabled.Value ? "Enabled" : "Disabled"),
+                },
                 new Row
                 {
                     new TriStateCheckbox(
@@ -25,7 +31,8 @@ public static class TriStateCheckboxDemo
                             ? ToggleableState.Off
                             : state.Value == ToggleableState.Off
                                 ? ToggleableState.Indeterminate
-                                : ToggleableState.On)!),
+                                : ToggleableState.On)!,
+                        enabled: enabled.Value),
                     new Text(state.Value.ToString() ?? "?"),
                 },
             };
