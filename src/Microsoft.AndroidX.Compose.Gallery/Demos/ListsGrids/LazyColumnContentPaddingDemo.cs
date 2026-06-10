@@ -24,7 +24,7 @@ public static class LazyColumnContentPaddingDemo
                 new Text("No ContentPadding (items hug the edges):"),
                 new Box
                 {
-                    Modifier.FillMaxWidth().Height(140).Background(0xFFFFE0B2),
+                    Modifier.FillMaxWidth().Height(140).Background(Color.FromRgb(0xFF, 0xE0, 0xB2)),
 
                     new LazyColumn<int>(
                         items:       items,
@@ -39,7 +39,7 @@ public static class LazyColumnContentPaddingDemo
                 new Text("ContentPadding = PaddingValues(start: 16, top: 24, end: 16, bottom: 24):"),
                 new Box
                 {
-                    Modifier.FillMaxWidth().Height(140).Background(0xFFC8E6C9),
+                    Modifier.FillMaxWidth().Height(140).Background(Color.FromRgb(0xC8, 0xE6, 0xC9)),
 
                     new LazyColumn<int>(
                         items:       items,
