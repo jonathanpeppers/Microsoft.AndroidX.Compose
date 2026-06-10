@@ -20,8 +20,9 @@ namespace AndroidX.Compose;
 /// <item><description><see cref="Start"/> / <see cref="End"/> — horizontal-only.</description></item>
 /// <item><description><see cref="Top"/> / <see cref="Bottom"/> — vertical-only.</description></item>
 /// <item><description><see cref="Center"/>, <see cref="SpaceBetween"/>,
-/// <see cref="SpaceAround"/>, <see cref="SpaceEvenly"/>, <see cref="SpacedBy(int)"/>
-/// — usable in either orientation.</description></item>
+/// <see cref="SpaceAround"/>, <see cref="SpaceEvenly"/>,
+/// <see cref="SpacedBy(int)"/> / <see cref="SpacedBy(Dp)"/> — usable in
+/// either orientation.</description></item>
 /// </list>
 /// Passing a horizontal-only arrangement to <see cref="Column"/> (or
 /// vice-versa) throws <see cref="ArgumentException"/> at the
@@ -86,8 +87,23 @@ public sealed class Arrangement
     /// Replaces the common <c>Spacer().Width(dp)</c> /
     /// <c>Spacer().Height(dp)</c> idiom between every pair of children.
     /// </summary>
+    /// <remarks>
+    /// Kept alongside <see cref="SpacedBy(Dp)"/> so a literal call like
+    /// <c>SpacedBy(8)</c> still resolves to the <see cref="int"/> overload
+    /// without going through the implicit <c>int → Dp</c> conversion.
+    /// </remarks>
     public static Arrangement SpacedBy(int dp) =>
         new(BindingArrangement.Instance.SpacedBy((float)dp));
+
+    /// <summary>
+    /// Place children with <paramref name="dp"/> of space between
+    /// consecutive items. Either orientation. Accepts a typed
+    /// <see cref="Dp"/> — useful when a layout constant is already hoisted
+    /// (<c>Arrangement.SpacedBy(padding)</c>) or when constructed via
+    /// arithmetic (<c>Arrangement.SpacedBy(basePad * 2)</c>).
+    /// </summary>
+    public static Arrangement SpacedBy(Dp dp) =>
+        new(BindingArrangement.Instance.SpacedBy(dp.Value));
 
     internal BindingArrangement.IHorizontal? Horizontal { get; }
     internal BindingArrangement.IVertical? Vertical { get; }

@@ -19,7 +19,7 @@ namespace AndroidX.Compose;
 /// construct a typed Sp value.
 /// </para>
 /// </remarks>
-public readonly struct Sp : IEquatable<Sp>
+public readonly struct Sp : IEquatable<Sp>, IComparable<Sp>
 {
     /// <summary>
     /// The raw packed <c>TextUnit.packedValue</c>. Pass this directly to
@@ -67,6 +67,52 @@ public readonly struct Sp : IEquatable<Sp>
 
     /// <summary>Inequality operator.</summary>
     public static bool operator !=(Sp left, Sp right) => !left.Equals(right);
+
+    /// <inheritdoc/>
+    /// <remarks>
+    /// Delegates to Kotlin's <c>TextUnit.compareTo</c>. Defined for same-tag
+    /// values (all <see cref="Sp"/> instances are Sp-tagged, so this is
+    /// always safe between two <see cref="Sp"/> values).
+    /// </remarks>
+    public int CompareTo(Sp other) =>
+        AndroidX.Compose.UI.Unit.TextUnit.CompareTo(PackedValue, other.PackedValue);
+
+    /// <summary>
+    /// Scale an <see cref="Sp"/> value by a scalar factor. Mirrors Kotlin's
+    /// <c>TextUnit.times(Float)</c>.
+    /// </summary>
+    public static Sp operator *(Sp a, float scalar) =>
+        new(AndroidX.Compose.UI.Unit.TextUnit.Times(a.PackedValue, scalar));
+
+    /// <summary>Scale an <see cref="Sp"/> value by a scalar factor.</summary>
+    public static Sp operator *(float scalar, Sp a) =>
+        new(AndroidX.Compose.UI.Unit.TextUnit.Times(a.PackedValue, scalar));
+
+    /// <summary>
+    /// Divide an <see cref="Sp"/> value by a scalar factor. Mirrors Kotlin's
+    /// <c>TextUnit.div(Float)</c>.
+    /// </summary>
+    public static Sp operator /(Sp a, float scalar) =>
+        new(AndroidX.Compose.UI.Unit.TextUnit.Div(a.PackedValue, scalar));
+
+    /// <summary>
+    /// Negate an <see cref="Sp"/> value. Mirrors Kotlin's
+    /// <c>TextUnit.unaryMinus()</c>.
+    /// </summary>
+    public static Sp operator -(Sp a) =>
+        new(AndroidX.Compose.UI.Unit.TextUnit.UnaryMinus(a.PackedValue));
+
+    /// <summary>Less-than comparison.</summary>
+    public static bool operator <(Sp a, Sp b) => a.CompareTo(b) < 0;
+
+    /// <summary>Greater-than comparison.</summary>
+    public static bool operator >(Sp a, Sp b) => a.CompareTo(b) > 0;
+
+    /// <summary>Less-than-or-equal comparison.</summary>
+    public static bool operator <=(Sp a, Sp b) => a.CompareTo(b) <= 0;
+
+    /// <summary>Greater-than-or-equal comparison.</summary>
+    public static bool operator >=(Sp a, Sp b) => a.CompareTo(b) >= 0;
 
     /// <inheritdoc/>
     public override string ToString() => $"Sp(0x{PackedValue:X16})";

@@ -33,10 +33,10 @@ public sealed class Icon : ComposableNode
     readonly string? _contentDescription;
 
     /// <summary>
-    /// Optional ARGB color packed into a Compose <c>Color</c> long.
-    /// Leave null to inherit the surrounding Material content color.
+    /// Optional fill color. Leave null to inherit the surrounding
+    /// Material content color (Compose's <c>LocalContentColor</c>).
     /// </summary>
-    public long? TintArgb { get; set; }
+    public Color? Tint { get; set; }
 
     /// <summary>Render an <see cref="ImageVector"/> (e.g. from a Compose icon library).</summary>
     public Icon(ImageVector imageVector, string? contentDescription)
@@ -75,9 +75,9 @@ public sealed class Icon : ComposableNode
                        & ~(int)IconDefault.ImageVector
                        & ~(int)IconDefault.ContentDescription;
         if (modifier is not null) defaults &= ~(int)IconDefault.Modifier;
-        if (TintArgb.HasValue)    defaults &= ~(int)IconDefault.Tint;
+        if (Tint.HasValue)        defaults &= ~(int)IconDefault.Tint;
 
-        long tint = TintArgb ?? 0L;
+        long tint = Tint is { } c ? c : 0L;
 
         if (_vector is not null)
         {

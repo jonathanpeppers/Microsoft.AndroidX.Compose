@@ -76,6 +76,7 @@ public static class Catalog
         D.Containers.SurfaceDemo.Demo,
         D.Containers.BoxAlignmentDemo.Demo,
         D.Containers.ColumnRowArrangementsDemo.Demo,
+        D.Containers.DpArithmeticDemo.Demo,
         D.Containers.SpacerDemo.Demo,
         D.Containers.DividerDemo.Demo,
         D.Containers.FlowRowFlowColumnDemo.Demo,

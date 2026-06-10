@@ -24,7 +24,7 @@ public static class AnimatedContentDemo
             ];
             return new Column
             {
-                new Row(horizontalArrangement: Arrangement.SpacedBy(8))
+                new Row(horizontalArrangement: Arrangement.SpacedBy(8.Dp()))
                 {
                     new Button(onClick: () => step--) { new Text("−") },
                     new Button(onClick: () => step++) { new Text("+") },

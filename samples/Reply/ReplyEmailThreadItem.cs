@@ -63,13 +63,13 @@ public static class ReplyEmailThreadItem
                     .Background(scheme.SurfaceVariant),
                 new Icon(Resource.Drawable.ic_star_border, "Favorite")
                 {
-                    TintArgb = scheme.Outline,
+                    Tint = scheme.Outline,
                 },
             },
         };
 
     static Row BuildActionRow(AndroidX.Compose.Material3.ColorScheme scheme) =>
-        new(Arrangement.SpacedBy(12))
+        new(Arrangement.SpacedBy(12.Dp()))
         {
             Modifier
                 .FillMaxWidth()

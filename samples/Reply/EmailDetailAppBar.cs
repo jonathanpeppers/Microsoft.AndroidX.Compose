@@ -44,7 +44,7 @@ public static class EmailDetailAppBar
                 {
                     new Icon(Resource.Drawable.ic_more_vert, "More options")
                     {
-                        TintArgb = scheme.OnSurfaceVariant,
+                        Tint = scheme.OnSurfaceVariant,
                     },
                 };
             }),
