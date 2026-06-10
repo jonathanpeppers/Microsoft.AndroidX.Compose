@@ -15,7 +15,9 @@ public static class ColorOverridesDemo
         Id:          "buttons-color-overrides",
         CategoryId:  "buttons",
         Title:       "Color overrides",
-        Description: "Override containerColor via ButtonColors slot (MAUI Primary #512BD4).",
+        Description: "Override containerColor + contentColor via the ButtonColors slot. " +
+                     "M3's contentColorFor(arbitraryColor) returns Color.Unspecified for non-theme " +
+                     "tokens, so a custom containerColor needs an explicit contentColor too.",
         Build:       c =>
         {
             Button MakeFilled(string text, AndroidX.Compose.Material3.ButtonColors? colors = null)
@@ -34,10 +36,12 @@ public static class ColorOverridesDemo
             {
                 new Text("Default colors"),
                 MakeFilled("Filled (theme default)"),
-                new Text("Container = MAUI Primary"),
+                new Text("Container = MAUI Primary + white content"),
                 MakeFilled("Filled (#512BD4)",
-                    c.ButtonColors(containerColor: Color.FromRgb(0x51, 0x2B, 0xD4))),
-                new Text("Container = teal, content = white"),
+                    c.ButtonColors(
+                        containerColor: Color.FromRgb(0x51, 0x2B, 0xD4),
+                        contentColor:   Color.White)),
+                new Text("Container = teal + white content"),
                 MakeFilled("Filled (teal + white)",
                     c.ButtonColors(
                         containerColor: Color.FromRgb(0x00, 0x79, 0x6B),
