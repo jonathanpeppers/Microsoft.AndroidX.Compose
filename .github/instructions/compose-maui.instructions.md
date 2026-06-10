@@ -178,27 +178,27 @@ See `ButtonHandler.OnClicked` for the pattern.
 
 ### Color conversion convention
 
-`Microsoft.Maui.Graphics.Color` carries four floats in [0,1].
+`Microsoft.Maui.Graphics.Color` carries four floats in `[0, 1]`.
 `AndroidX.Compose.Color` wraps Compose's packed `ULong` sRGB layout.
-Pack as:
+**Always go through `ColorMapping` — never hand-pack the bytes.**
+`AndroidX.Compose.Color`'s `(byte alpha, byte red, byte green, byte blue)`
+ctor already owns the ARGB layout, and `ColorMapping.ToByte` does
+round-to-nearest (`* 255f + 0.5f`) so we don't drop one quantization
+level on every channel.
 
 ```csharp
-static ulong ToPackedColor(Microsoft.Maui.Graphics.Color c)
-{
-    byte a = (byte)(Math.Clamp(c.Alpha, 0f, 1f) * 255f);
-    byte r = (byte)(Math.Clamp(c.Red,   0f, 1f) * 255f);
-    byte g = (byte)(Math.Clamp(c.Green, 0f, 1f) * 255f);
-    byte b = (byte)(Math.Clamp(c.Blue,  0f, 1f) * 255f);
-    uint argb = ((uint)a << 24) | ((uint)r << 16) | ((uint)g << 8) | b;
-    return (ulong)argb << 32;
-}
+// In your mapper:
+handler._color.Value = ColorMapping.ToPackedLong(label.TextColor);
 ```
 
-Store the result as `long?` (nullable to model "no color set"), cast
-through `unchecked((long)...)` to avoid sign-bit issues, and
-reconstitute `new AndroidX.Compose.Color(packed.Value)` inside the
-composition. See `LabelHandler.MapTextColor` for the canonical
-implementation.
+`ToPackedLong` returns `long?` (nullable to model "no color set" so a
+mapper can clear the slot by passing `null`). Store it as a
+`MutableState<long?>` field on the handler and reconstitute
+`new AndroidX.Compose.Color(packed.Value)` inside the composition.
+See `LabelHandler.MapTextColor` for the canonical wiring and
+`ColorMapping.cs` for the helper itself. If you need the unwrapped
+`AndroidX.Compose.Color` (e.g. building a `ButtonColors` slot), use
+`ColorMapping.ToCompose(mauiColor)` directly.
 
 ### What we don't override
 
