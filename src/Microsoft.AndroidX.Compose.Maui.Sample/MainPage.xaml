@@ -25,9 +25,34 @@
                 SemanticProperties.HeadingLevel="Level2"
                 SemanticProperties.Description="Welcome to dot net MAUI on Jetpack Compose" />
 
+            <Entry
+                x:Name="NameEntry"
+                Placeholder="Type your name"
+                TextChanged="OnNameTextChanged"
+                HorizontalOptions="Fill" />
+
+            <Label
+                x:Name="GreetingLabel"
+                Text="Greeting will appear here."
+                HorizontalOptions="Fill" />
+
+            <Entry
+                x:Name="SecretEntry"
+                Placeholder="Password (masked)"
+                IsPassword="True"
+                HorizontalOptions="Fill" />
+
+            <Entry
+                x:Name="DigitsEntry"
+                Placeholder="Numeric IME"
+                Keyboard="Numeric"
+                HorizontalOptions="Fill" />
+
             <Button
                 x:Name="CounterBtn"
                 Text="Click me"
+                BackgroundColor="{StaticResource Primary}"
+                TextColor="White"
                 SemanticProperties.Hint="Counts the number of times you click"
                 Clicked="OnCounterClicked"
                 HorizontalOptions="Fill" />
