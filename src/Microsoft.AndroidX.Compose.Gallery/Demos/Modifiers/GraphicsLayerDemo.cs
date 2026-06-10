@@ -14,7 +14,7 @@ public static class GraphicsLayerDemo
         Build:       c =>
         {
             var density = Android.Content.Res.Resources.System!.DisplayMetrics!.Density;
-            var dragX   = c.Remember(() => new MutableState<float>(0f));
+            var dragX   = c.MutableStateOf(0f);
             var state   = c.RememberDraggableState(delta => dragX.Value += delta / density);
 
             return new Column

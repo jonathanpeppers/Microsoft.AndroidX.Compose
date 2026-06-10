@@ -13,8 +13,8 @@ public static class DisposableEffectDemo
         Description: "Fake 'register external listener' pattern. The cleanup callback bumps a counter on every key change / leaving composition.",
         Build:       c =>
         {
-            var cleanups = c.Remember(() => new MutableNumberState<int>(0));
-            var key      = c.Remember(() => new MutableNumberState<int>(0));
+            var cleanups = c.MutableStateOf(0);
+            var key      = c.MutableStateOf(0);
 
             return new Column
             {

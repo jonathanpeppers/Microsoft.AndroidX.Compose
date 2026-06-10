@@ -32,7 +32,7 @@ public static class BottomNavOptionsDemo
             const string startRoute = "home";
 
             var nav      = c.Remember(() => new NavController());
-            var selected = c.Remember(() => new MutableState<string>(startRoute));
+            var selected = c.MutableStateOf(startRoute);
 
             return new Column
             {

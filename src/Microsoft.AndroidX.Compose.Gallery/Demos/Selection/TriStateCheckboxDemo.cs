@@ -14,7 +14,7 @@ public static class TriStateCheckboxDemo
         Description: "Cycles through On → Off → Indeterminate on tap.",
         Build:       c =>
         {
-            var state = c.Remember(() => new MutableState<ToggleableState>(ToggleableState.Indeterminate!));
+            var state = c.MutableStateOf(ToggleableState.Indeterminate!);
             return new Column
             {
                 new Row

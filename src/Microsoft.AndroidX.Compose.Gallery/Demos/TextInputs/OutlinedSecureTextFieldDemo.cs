@@ -15,7 +15,7 @@ public static class OutlinedSecureTextFieldDemo
         {
             var pwd     = c.Remember(() => new SecureTextFieldState());
             var confirm = c.Remember(() => new SecureTextFieldState());
-            var status  = c.Remember(() => new MutableState<string>("Tap Sign in to compare"));
+            var status  = c.MutableStateOf("Tap Sign in to compare");
             return new Column
             {
                 new SecureTextField(pwd)

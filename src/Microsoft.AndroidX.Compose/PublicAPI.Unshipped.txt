@@ -1336,8 +1336,6 @@ override AndroidX.Compose.ModalDrawerSheet.Render(AndroidX.Compose.Runtime.IComp
 override AndroidX.Compose.ModalNavigationDrawer.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
 override AndroidX.Compose.ModalWideNavigationRail.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
 override AndroidX.Compose.MultiChoiceSegmentedButtonRow.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
-override AndroidX.Compose.MutableNumberState<T>.Value.get -> T
-override AndroidX.Compose.MutableNumberState<T>.Value.set -> void
 override AndroidX.Compose.MutableState<T>.ToString() -> string!
 override AndroidX.Compose.NavHost.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
 override AndroidX.Compose.NavigationBar.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
@@ -1465,6 +1463,11 @@ static AndroidX.Compose.ComposeExtensions.LaunchedEffect(this AndroidX.Compose.R
 static AndroidX.Compose.ComposeExtensions.LaunchedEffect(this AndroidX.Compose.Runtime.IComposer! composer, object? key1, object? key2, System.Func<System.Threading.CancellationToken, System.Threading.Tasks.Task!>! body) -> void
 static AndroidX.Compose.ComposeExtensions.LaunchedEffect(this AndroidX.Compose.Runtime.IComposer! composer, object? key1, System.Func<System.Threading.CancellationToken, System.Threading.Tasks.Task!>! body) -> void
 static AndroidX.Compose.ComposeExtensions.MutableStateFlowOf<T>(this AndroidX.Compose.Runtime.IComposer! composer, T initialValue, int line = 0, string! file = "") -> AndroidX.Compose.MutableStateFlow<T>!
+static AndroidX.Compose.ComposeExtensions.MutableStateOf(this AndroidX.Compose.Runtime.IComposer! composer, double initial, int line = 0, string! file = "") -> AndroidX.Compose.MutableNumberState<double>!
+static AndroidX.Compose.ComposeExtensions.MutableStateOf(this AndroidX.Compose.Runtime.IComposer! composer, float initial, int line = 0, string! file = "") -> AndroidX.Compose.MutableNumberState<float>!
+static AndroidX.Compose.ComposeExtensions.MutableStateOf(this AndroidX.Compose.Runtime.IComposer! composer, int initial, int line = 0, string! file = "") -> AndroidX.Compose.MutableNumberState<int>!
+static AndroidX.Compose.ComposeExtensions.MutableStateOf(this AndroidX.Compose.Runtime.IComposer! composer, long initial, int line = 0, string! file = "") -> AndroidX.Compose.MutableNumberState<long>!
+static AndroidX.Compose.ComposeExtensions.MutableStateOf<T>(this AndroidX.Compose.Runtime.IComposer! composer, T initial, int line = 0, string! file = "") -> AndroidX.Compose.MutableState<T>!
 static AndroidX.Compose.ComposeExtensions.NewTextFieldValue(string! text = "", long selection = 0, AndroidX.Compose.UI.Text.TextRange? composition = null) -> AndroidX.Compose.UI.Text.Input.TextFieldValue!
 static AndroidX.Compose.ComposeExtensions.NewTextFieldValue(this AndroidX.Compose.Runtime.IComposer! composer, string! text = "", long selection = 0, AndroidX.Compose.UI.Text.TextRange? composition = null) -> AndroidX.Compose.UI.Text.Input.TextFieldValue!
 static AndroidX.Compose.ComposeExtensions.PainterResource(this AndroidX.Compose.Runtime.IComposer! composer, int id) -> AndroidX.Compose.UI.Graphics.Painter.Painter!
@@ -1846,6 +1849,7 @@ static AndroidX.Compose.MaterialTheme.LightColorScheme(AndroidX.Compose.Color? p
 static AndroidX.Compose.Modifier.Companion.get -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.MutableNumberState<T>.operator --(AndroidX.Compose.MutableNumberState<T>! s) -> AndroidX.Compose.MutableNumberState<T>!
 static AndroidX.Compose.MutableNumberState<T>.operator ++(AndroidX.Compose.MutableNumberState<T>! s) -> AndroidX.Compose.MutableNumberState<T>!
+static AndroidX.Compose.MutableState<T>.implicit operator T(AndroidX.Compose.MutableState<T>! state) -> T
 static AndroidX.Compose.Offset.operator !=(AndroidX.Compose.Offset a, AndroidX.Compose.Offset b) -> bool
 static AndroidX.Compose.Offset.operator ==(AndroidX.Compose.Offset a, AndroidX.Compose.Offset b) -> bool
 static AndroidX.Compose.Offset.Unspecified.get -> AndroidX.Compose.Offset

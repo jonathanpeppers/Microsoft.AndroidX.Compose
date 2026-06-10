@@ -1,37 +1,86 @@
+using System.Runtime.CompilerServices;
 using AndroidX.Compose.Runtime;
 
 namespace AndroidX.Compose;
 
 /// <summary>
 /// Generic typed wrapper around <see cref="IMutableState"/>. Reads/writes
-/// boxed values through the JVM state container so changes are observed
-/// by the Compose runtime and trigger recomposition.
+/// values through the JVM state container so changes are observed by the
+/// Compose runtime and trigger recomposition.
 /// </summary>
+/// <remarks>
+/// <para>
+/// For <c>int</c>, <c>long</c>, and <c>float</c>, the ctor picks a
+/// primitive-specialized Compose state
+/// (<see cref="IMutableIntState"/>, <see cref="IMutableLongState"/>,
+/// <see cref="IMutableFloatState"/>) so reads/writes avoid the
+/// <c>Java.Lang.Integer</c>/<c>Long</c>/<c>Float</c> allocation that the
+/// generic boxed path pays on every access. All other primitives that
+/// <see cref="MutableState{T}"/> can box (<c>sbyte</c>, <c>byte</c>,
+/// <c>short</c>, <c>ushort</c>, <c>uint</c>, <c>ulong</c>, <c>double</c>,
+/// <c>bool</c>, <c>char</c>, <c>string</c>, <c>Nullable&lt;T&gt;</c> of any
+/// of those) fall through to the boxed path. Reference types deriving from
+/// <see cref="Java.Lang.Object"/> are stored as-is.
+/// </para>
+/// <para>
+/// The primitive-specialized fast path requires the underlying
+/// <see cref="IMutableState"/> to actually be a primitive subtype. That's
+/// true when constructed via <c>new MutableState&lt;int&gt;(0)</c> — the
+/// ctor picks the right Kotlin factory. It's <i>not</i> guaranteed when
+/// the wrapper is built around a state produced elsewhere, such as the
+/// boxed <c>mutableStateOf(restoredValue, policy)</c> that
+/// <see cref="ComposeExtensions.RememberSaveable{T}(System.Func{T}, int, string)"/>
+/// returns after a process-death restore. The instance <c>_kind</c> field
+/// is probed from the supplied state once at construction (and re-probed
+/// on every <see cref="SetUnderlyingState"/> swap) so the <see cref="Value"/>
+/// getter/setter never attempts an invalid cast.
+/// </para>
+/// </remarks>
 public class MutableState<T> : IMutableStateWrapper, IState<T>
 {
+    enum Kind { Other, Int, Long, Float }
+
     internal IMutableState _state;
-
-    public MutableState(T initial)
-    {
-        _state = SnapshotStateKt.MutableStateOf(
-            ToJava(initial),
-            SnapshotStateKt.StructuralEqualityPolicy());
-    }
-
-    // Subclass hook: lets MutableNumberState<int|long|float> inject a
-    // primitive-specialized IMutableState (MutableIntState etc.) so its
-    // overridden Value getter/setter can bypass the boxed slow path.
-    internal MutableState(IMutableState state) => _state = state;
+    Kind _kind;
 
     /// <summary>
-    /// Subclass hook for <see cref="IMutableStateWrapper.State"/>'s
-    /// setter. <see cref="MutableNumberState{T}"/> overrides this to
-    /// re-probe its specialized-state <c>_kind</c> when Compose hands
-    /// back a (potentially boxed) restored state after a process-death
-    /// round-trip through
-    /// <see cref="ComposeExtensions.RememberSaveable{T}(Func{T}, int, string)"/>.
+    /// Wrap a fresh Compose state initialized with <paramref name="initial"/>.
+    /// Picks the primitive-specialized
+    /// <see cref="IMutableIntState"/>/<see cref="IMutableLongState"/>/<see cref="IMutableFloatState"/>
+    /// when <typeparamref name="T"/> is <c>int</c>/<c>long</c>/<c>float</c>;
+    /// otherwise creates a boxed <c>mutableStateOf</c> with structural
+    /// equality.
     /// </summary>
-    internal virtual void SetUnderlyingState(IMutableState state) => _state = state;
+    public MutableState(T initial)
+    {
+        _state = CreateState(initial);
+        _kind = ProbeKind(_state);
+    }
+
+    // Subclass hook: lets a wrapper be built around a pre-existing
+    // IMutableState (e.g. one Compose handed back after RememberSaveable
+    // restoration). Probes _kind so the fast-path dispatch in Value stays
+    // correct regardless of who built the state.
+    internal MutableState(IMutableState state)
+    {
+        _state = state;
+        _kind = ProbeKind(state);
+    }
+
+    /// <summary>
+    /// Subclass hook for <see cref="IMutableStateWrapper.State"/>'s setter.
+    /// Swaps the underlying <see cref="IMutableState"/> and re-probes the
+    /// primitive-fast-path <c>_kind</c> field so subsequent
+    /// <see cref="Value"/> reads/writes target the right specialised getter.
+    /// Compose calls this through the <see cref="IMutableStateWrapper.State"/>
+    /// setter after <c>rememberSaveable</c> hands back a (potentially boxed)
+    /// restored state on first composition.
+    /// </summary>
+    internal virtual void SetUnderlyingState(IMutableState state)
+    {
+        _state = state;
+        _kind = ProbeKind(state);
+    }
 
     IMutableState IMutableStateWrapper.State
     {
@@ -39,10 +88,70 @@ public class MutableState<T> : IMutableStateWrapper, IState<T>
         set => SetUnderlyingState(value);
     }
 
+    /// <summary>
+    /// The current value. Reading inside a composition subscribes the
+    /// surrounding scope to changes; writing triggers recomposition of any
+    /// scope that previously read the value. For
+    /// <c>int</c>/<c>long</c>/<c>float</c>-typed instances, reads/writes
+    /// route through the primitive Compose state without any boxing.
+    /// </summary>
     public virtual T Value
     {
-        get => FromJava(_state.Value);
-        set => _state.Value = ToJava(value);
+        get
+        {
+            switch (_kind)
+            {
+                case Kind.Int:
+                    int i = ((IMutableIntState)_state).IntValue;
+                    return Unsafe.As<int, T>(ref i);
+                case Kind.Long:
+                    long l = ((IMutableLongState)_state).LongValue;
+                    return Unsafe.As<long, T>(ref l);
+                case Kind.Float:
+                    float f = ((IMutableFloatState)_state).FloatValue;
+                    return Unsafe.As<float, T>(ref f);
+                default:
+                    return FromJava(_state.Value);
+            }
+        }
+        set
+        {
+            switch (_kind)
+            {
+                case Kind.Int:
+                    ((IMutableIntState)_state).IntValue = Unsafe.As<T, int>(ref value);
+                    break;
+                case Kind.Long:
+                    ((IMutableLongState)_state).LongValue = Unsafe.As<T, long>(ref value);
+                    break;
+                case Kind.Float:
+                    ((IMutableFloatState)_state).FloatValue = Unsafe.As<T, float>(ref value);
+                    break;
+                default:
+                    _state.Value = ToJava(value);
+                    break;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Implicit conversion to the wrapped value so call sites read
+    /// idiomatically — e.g. <c>if (count &gt; 0)</c>, <c>int total = count;</c>,
+    /// <c>(int)Math.Sqrt(count)</c> — without sprinkling <c>.Value</c>
+    /// everywhere. Mirrors Kotlin's <c>by remember { mutableStateOf(...) }</c>
+    /// property-delegate ergonomics.
+    /// </summary>
+    /// <remarks>
+    /// String interpolation (<c>$"...{state}..."</c>) keeps calling
+    /// <see cref="ToString"/> — interpolation boxes its arguments as
+    /// <c>object</c>, and the C# compiler does <i>not</i> apply user-defined
+    /// conversions when boxing — so this operator does not change
+    /// interpolation behavior.
+    /// </remarks>
+    public static implicit operator T(MutableState<T> state)
+    {
+        ArgumentNullException.ThrowIfNull(state);
+        return state.Value;
     }
 
     /// <summary>
@@ -51,6 +160,27 @@ public class MutableState<T> : IMutableStateWrapper, IState<T>
     /// (a null value renders as <c>"null"</c>).
     /// </summary>
     public override string ToString() => Value?.ToString() ?? "null";
+
+    static IMutableState CreateState(T initial)
+    {
+        if (typeof(T) == typeof(int))
+            return SnapshotIntStateKt.MutableIntStateOf(Unsafe.As<T, int>(ref initial));
+        if (typeof(T) == typeof(long))
+            return SnapshotLongStateKt.MutableLongStateOf(Unsafe.As<T, long>(ref initial));
+        if (typeof(T) == typeof(float))
+            return PrimitiveSnapshotStateKt.MutableFloatStateOf(Unsafe.As<T, float>(ref initial));
+        return SnapshotStateKt.MutableStateOf(
+            ToJava(initial),
+            SnapshotStateKt.StructuralEqualityPolicy());
+    }
+
+    static Kind ProbeKind(IMutableState state) => state switch
+    {
+        IMutableIntState   => Kind.Int,
+        IMutableLongState  => Kind.Long,
+        IMutableFloatState => Kind.Float,
+        _                  => Kind.Other,
+    };
 
     // Cached per-T: when T is Nullable<U> (e.g. long?, int?, bool?), this
     // is typeof(U) so the primitive dispatch in FromJava/ToJava treats
@@ -115,3 +245,4 @@ public class MutableState<T> : IMutableStateWrapper, IState<T>
             $"MutableState<{typeof(T).Name}>: don't know how to unwrap {value.GetType().Name}");
     }
 }
+

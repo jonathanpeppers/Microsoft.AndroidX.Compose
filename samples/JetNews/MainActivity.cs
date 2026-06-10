@@ -25,7 +25,7 @@ public class MainActivity : ComponentActivity
         this.SetContent(c =>
         {
             var nav                  = c.Remember(() => new NavController());
-            var currentRoute         = c.Remember(() => new MutableState<string>(Routes.Home));
+            var currentRoute         = c.MutableStateOf(Routes.Home);
             var drawerState          = c.Remember(() => new DrawerStateHolder(DrawerValue.Closed));
             // Acquire bookmarks from the activity's ViewModelStore so
             // the toggled set survives configuration change AND is
@@ -37,7 +37,7 @@ public class MainActivity : ComponentActivity
             var selectedTopics       = c.Remember(() => new MutableStateList<string>());
             var selectedPeople       = c.Remember(() => new MutableStateList<string>());
             var selectedPublications = c.Remember(() => new MutableStateList<string>());
-            var interestsTab         = c.Remember(() => new MutableState<int>(0));
+            var interestsTab         = c.MutableStateOf(0);
             var snackbars            = c.Remember(() => new SnackbarController());
             return JetnewsApp.Build(
                 nav,

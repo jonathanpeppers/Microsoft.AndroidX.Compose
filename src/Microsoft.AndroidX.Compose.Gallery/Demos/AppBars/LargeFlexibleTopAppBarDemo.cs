@@ -13,7 +13,7 @@ public static class LargeFlexibleTopAppBarDemo
         Description: "Big title for hero screens; supports Title / Subtitle / Actions.",
         Build:       c =>
         {
-            var count = c.Remember(() => new MutableNumberState<int>(0));
+            var count = c.MutableStateOf(0);
             return new LargeFlexibleTopAppBar
             {
                 Title    = new Text("Tickets"),

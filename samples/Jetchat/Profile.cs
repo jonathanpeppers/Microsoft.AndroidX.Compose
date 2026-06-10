@@ -17,7 +17,7 @@ public static class Profile
         new Composed(c =>
         {
             var scrollState = c.Remember(() => new ScrollState());
-            var popupOpen   = c.Remember(() => new MutableState<bool>(false));
+            var popupOpen   = c.MutableStateOf(false);
             var scheme      = c.ColorScheme();
 
             var screen = new Scaffold

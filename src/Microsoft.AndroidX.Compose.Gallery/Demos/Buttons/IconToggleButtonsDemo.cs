@@ -13,10 +13,10 @@ public static class IconToggleButtonsDemo
         Description: "IconToggleButton + filled/tonal/outlined variants.",
         Build:       c =>
         {
-            var a = c.Remember(() => new MutableState<bool>(false));
-            var b = c.Remember(() => new MutableState<bool>(false));
-            var ct = c.Remember(() => new MutableState<bool>(false));
-            var d = c.Remember(() => new MutableState<bool>(false));
+            var a = c.MutableStateOf(false);
+            var b = c.MutableStateOf(false);
+            var ct = c.MutableStateOf(false);
+            var d = c.MutableStateOf(false);
             return new Row
             {
                 new IconToggleButton(@checked: a.Value, onCheckedChange: v => a.Value = v)

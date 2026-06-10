@@ -43,7 +43,7 @@ public class ComposeViewActivity : ComponentActivity
         var compose = new ComposeView(this);
         compose.SetContent(c =>
         {
-            var taps = c.Remember(() => new MutableNumberState<int>(0));
+            var taps = c.MutableStateOf(0);
             return new MaterialTheme
             {
                 new Column

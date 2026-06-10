@@ -75,8 +75,8 @@ public static class RecordButton
         ColorScheme               scheme) =>
         new Composed(c =>
         {
-            var pulse   = c.Remember(() => new MutableNumberState<float>(1f));
-            var seconds = c.Remember(() => new MutableNumberState<int>(0));
+            var pulse   = c.MutableStateOf(1f);
+            var seconds = c.MutableStateOf(0);
 
             float density   = Android.Content.Res.Resources.System!.DisplayMetrics!.Density;
             float threshold = SwipeToCancelThresholdDp * density;

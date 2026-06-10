@@ -13,7 +13,7 @@ public static class TextFieldSlotsDemo
         Description: "Label, Placeholder, LeadingIcon, TrailingIcon, SupportingText, SingleLine.",
         Build:       c =>
         {
-            var name = c.Remember(() => new MutableState<string>(""));
+            var name = c.MutableStateOf("");
             return new Column
             {
                 new TextField(name)

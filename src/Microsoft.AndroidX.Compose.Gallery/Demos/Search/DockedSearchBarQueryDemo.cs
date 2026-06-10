@@ -19,8 +19,8 @@ public static class DockedSearchBarQueryDemo
         Description: "Deprecated query/active overload — the bar renders its own input field.",
         Build:       c =>
         {
-            var query  = c.Remember(() => new MutableState<string>(""));
-            var active = c.Remember(() => new MutableState<bool>(false));
+            var query  = c.MutableStateOf("");
+            var active = c.MutableStateOf(false);
 
             var matches = Array.FindAll(
                 Fruits,

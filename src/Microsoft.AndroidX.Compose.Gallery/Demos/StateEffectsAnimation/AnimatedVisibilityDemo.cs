@@ -13,7 +13,7 @@ public static class AnimatedVisibilityDemo
         Description: "Toggle a card in and out. Compose applies a default fade + expand transition.",
         Build:       c =>
         {
-            var visible = c.Remember(() => new MutableState<bool>(true));
+            var visible = c.MutableStateOf(true);
             return new Column
             {
                 new Button(onClick: () => visible.Value = !visible.Value)

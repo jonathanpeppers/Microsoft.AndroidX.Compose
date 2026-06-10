@@ -13,7 +13,7 @@ public static class CheckboxDemo
         Description: "Plain two-state checkbox bound to a MutableState<bool>.",
         Build:       c =>
         {
-            var on = c.Remember(() => new MutableState<bool>(false));
+            var on = c.MutableStateOf(false);
             return new Column
             {
                 new Row

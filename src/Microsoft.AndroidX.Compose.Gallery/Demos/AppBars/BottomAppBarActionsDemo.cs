@@ -13,7 +13,7 @@ public static class BottomAppBarActionsDemo
         Description: "Action icons laid out left-to-right; no FAB slot.",
         Build:       c =>
         {
-            var count = c.Remember(() => new MutableNumberState<int>(0));
+            var count = c.MutableStateOf(0);
             return new Column
             {
                 new Text($"count = {count}"),

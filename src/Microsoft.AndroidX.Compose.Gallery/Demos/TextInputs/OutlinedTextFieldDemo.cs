@@ -13,7 +13,7 @@ public static class OutlinedTextFieldDemo
         Description: "Outlined variant with Prefix and Suffix slots.",
         Build:       c =>
         {
-            var handle = c.Remember(() => new MutableState<string>(""));
+            var handle = c.MutableStateOf("");
             return new Column
             {
                 new OutlinedTextField(handle)

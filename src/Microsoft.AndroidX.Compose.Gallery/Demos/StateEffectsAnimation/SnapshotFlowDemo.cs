@@ -13,9 +13,9 @@ public static class SnapshotFlowDemo
         Description: "ComposeExtensions.SnapshotFlow(producer) yields a new value on every snapshot apply. Tap +1 a few times — 'observed' tracks live. Tap Burst x10 — Kotlin's snapshot conflation means you usually only see the final value, demonstrating the bounded(1) DropOldest semantics.",
         Build:       c =>
         {
-            var counter  = c.Remember(() => new MutableNumberState<int>(0));
-            var observed = c.Remember(() => new MutableNumberState<int>(0));
-            var seen     = c.Remember(() => new MutableNumberState<int>(0));
+            var counter  = c.MutableStateOf(0);
+            var observed = c.MutableStateOf(0);
+            var seen     = c.MutableStateOf(0);
 
             return new Column
             {
