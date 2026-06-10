@@ -21,7 +21,7 @@ namespace AndroidX.Compose;
 /// <code>
 /// var drawer = Remember(() =&gt; new DrawerStateHolder(DrawerValue.Closed));
 ///
-/// new ModalNavigationDrawer(state: drawer)
+/// new ModalNavigationDrawer(drawerState: drawer)
 /// {
 ///     Drawer  = new ModalDrawerSheet { … },
 ///     Content = new Column { … },

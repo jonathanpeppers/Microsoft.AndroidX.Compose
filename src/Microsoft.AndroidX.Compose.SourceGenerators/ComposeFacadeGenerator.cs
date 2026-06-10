@@ -910,11 +910,17 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         string baseClass = isContainer ? "global::AndroidX.Compose.ComposableContainer" : "global::AndroidX.Compose.ComposableNode";
 
         // Ctor slots: every non-modifier, non-named-property slot.
-        // StateHolder slots go LAST (they have default = null) so all
-        // required slots come first and stay positional.
+        // Defaulted slots go LAST so all required slots come first and
+        // stay positional. StateHolder is always defaulted (= null);
+        // Primitive slots that propagate `HasExplicitDefaultValue` from
+        // the bridge declaration are defaulted too. StateHolder remains
+        // last within the defaulted group so existing positional call
+        // sites (e.g. `new Foo(stateHolder)`) keep binding to the
+        // state-holder slot.
         var ctorSlotsAll = slots.Where(s => IsCtorSlot(s)).ToArray();
         var ctorSlots = ctorSlotsAll
-            .Where(s => s.Kind != FacadeSlotKind.StateHolder)
+            .Where(s => !HasFacadeCtorDefault(s))
+            .Concat(ctorSlotsAll.Where(s => HasFacadeCtorDefault(s) && s.Kind != FacadeSlotKind.StateHolder))
             .Concat(ctorSlotsAll.Where(s => s.Kind == FacadeSlotKind.StateHolder))
             .ToArray();
         // Named-property slots (Phase 3).
@@ -1481,6 +1487,68 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         s.Kind is FacadeSlotKind.OnClick or FacadeSlotKind.Primitive or FacadeSlotKind.Callback
             or FacadeSlotKind.PainterResource or FacadeSlotKind.StateHolder;
 
+    /// <summary>
+    /// True when the slot surfaces as a defaulted ctor parameter on the
+    /// generated facade — either a <see cref="FacadeSlotKind.StateHolder"/>
+    /// (always <c>= null</c>) or a <see cref="FacadeSlotKind.Primitive"/>
+    /// whose bridge parameter carries an explicit default value. Used to
+    /// push defaulted slots after required slots so the ctor compiles
+    /// (C# requires optional params to trail required ones).
+    /// </summary>
+    static bool HasFacadeCtorDefault(FacadeSlot s) =>
+        s.Kind == FacadeSlotKind.StateHolder ||
+        (s.Kind == FacadeSlotKind.Primitive && s.Param.HasExplicitDefaultValue);
+
+    /// <summary>
+    /// Format an <see cref="IParameterSymbol.ExplicitDefaultValue"/> as
+    /// a C# literal for emission in a generated ctor parameter list.
+    /// Handles the primitive types accepted by
+    /// <see cref="IsPrimitiveCtorType"/> (<c>bool</c>, <c>int</c>,
+    /// <c>long</c>, <c>float</c>, <c>double</c>, <c>string</c>) plus
+    /// enum members. Falls back to <c>default</c> for shapes that
+    /// shouldn't reach here (the caller already guards with
+    /// <see cref="IParameterSymbol.HasExplicitDefaultValue"/>).
+    /// </summary>
+    static string FormatPrimitiveDefaultLiteral(IParameterSymbol p)
+    {
+        var value = p.ExplicitDefaultValue;
+        if (value is null) return "null";
+        return value switch
+        {
+            bool b   => b ? "true" : "false",
+            string s => SymbolDisplay.FormatLiteral(s, quote: true),
+            int i    => i.ToString(System.Globalization.CultureInfo.InvariantCulture),
+            long l   => l.ToString(System.Globalization.CultureInfo.InvariantCulture) + "L",
+            float f  => FormatFloatLiteral(f),
+            double d => FormatDoubleLiteral(d),
+            _        => "default",
+        };
+    }
+
+    static string FormatFloatLiteral(float f)
+    {
+        if (float.IsNaN(f))              return "float.NaN";
+        if (float.IsPositiveInfinity(f)) return "float.PositiveInfinity";
+        if (float.IsNegativeInfinity(f)) return "float.NegativeInfinity";
+        // "R" round-trips the value; append "f" suffix so it's a float
+        // literal (otherwise C# parses as double).
+        return f.ToString("R", System.Globalization.CultureInfo.InvariantCulture) + "f";
+    }
+
+    static string FormatDoubleLiteral(double d)
+    {
+        if (double.IsNaN(d))              return "double.NaN";
+        if (double.IsPositiveInfinity(d)) return "double.PositiveInfinity";
+        if (double.IsNegativeInfinity(d)) return "double.NegativeInfinity";
+        var text = d.ToString("R", System.Globalization.CultureInfo.InvariantCulture);
+        // Force `double` interpretation when no decimal point / exponent
+        // appears (e.g. "2" → "2d") so the literal can't be mistaken for
+        // an int by the C# parser.
+        if (text.IndexOfAny(new[] { '.', 'e', 'E' }) < 0)
+            text += "d";
+        return text;
+    }
+
     // Phase 7 — PainterResource ctor variant. The generator emits one
     // ctor per shape: `Id` takes an `int drawableResourceId` (Render
     // resolves it via painterResource), `Painter` takes a pre-resolved
@@ -1504,6 +1572,8 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
                 sb.Append(CtorParamType(s)).Append(' ').Append(EscapeIdent(CtorIdentifier(s)));
                 if (s.Kind == FacadeSlotKind.StateHolder)
                     sb.Append(" = null");
+                else if (s.Kind == FacadeSlotKind.Primitive && s.Param.HasExplicitDefaultValue)
+                    sb.Append(" = ").Append(FormatPrimitiveDefaultLiteral(s.Param));
             }
         }
         sb.AppendLine(")");

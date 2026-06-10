@@ -41,17 +41,18 @@ public static class GalleryApp
             new Surface
             {
                 Modifier.FillMaxSize(),
-                new ModalNavigationDrawer(drawerState: drawer)
+                // Match the top-app-bar affordance: edge-swipe to open
+                // the drawer only when the hamburger is showing (i.e. at
+                // the home destination). On sub-pages the bar shows a
+                // back arrow, so swipe-to-open would contradict the
+                // visible nav contract and step on the system
+                // back-gesture.
+                new ModalNavigationDrawer(
+                    gesturesEnabled: currentRoute.Value == "home",
+                    drawerState:     drawer)
                 {
-                    Drawer          = new GalleryDrawer(nav, drawer),
-                    Content         = new GalleryScaffold(nav, drawer, currentRoute),
-                    // Match the top-app-bar affordance: edge-swipe to open
-                    // the drawer only when the hamburger is showing
-                    // (i.e. at the home destination). On sub-pages the
-                    // bar shows a back arrow, so swipe-to-open would
-                    // contradict the visible nav contract and step on
-                    // the system back-gesture.
-                    GesturesEnabled = currentRoute.Value == "home",
+                    Drawer  = new GalleryDrawer(nav, drawer),
+                    Content = new GalleryScaffold(nav, drawer, currentRoute),
                 },
             },
         };

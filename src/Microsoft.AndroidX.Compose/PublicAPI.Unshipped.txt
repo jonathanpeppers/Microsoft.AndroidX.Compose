@@ -245,11 +245,9 @@ AndroidX.Compose.DismissibleNavigationDrawer.ConfirmStateChange.get -> System.Fu
 AndroidX.Compose.DismissibleNavigationDrawer.ConfirmStateChange.set -> void
 AndroidX.Compose.DismissibleNavigationDrawer.Content.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.DismissibleNavigationDrawer.Content.set -> void
-AndroidX.Compose.DismissibleNavigationDrawer.DismissibleNavigationDrawer(AndroidX.Compose.DrawerStateHolder? drawerState = null) -> void
+AndroidX.Compose.DismissibleNavigationDrawer.DismissibleNavigationDrawer(bool gesturesEnabled = true, AndroidX.Compose.DrawerStateHolder? drawerState = null) -> void
 AndroidX.Compose.DismissibleNavigationDrawer.Drawer.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.DismissibleNavigationDrawer.Drawer.set -> void
-AndroidX.Compose.DismissibleNavigationDrawer.GesturesEnabled.get -> bool?
-AndroidX.Compose.DismissibleNavigationDrawer.GesturesEnabled.set -> void
 AndroidX.Compose.DismissibleNavigationDrawer.InitialValue.get -> AndroidX.Compose.Material3.DrawerValue?
 AndroidX.Compose.DismissibleNavigationDrawer.InitialValue.init -> void
 AndroidX.Compose.DisposableEffect
@@ -692,11 +690,9 @@ AndroidX.Compose.ModalNavigationDrawer.Content.get -> AndroidX.Compose.Composabl
 AndroidX.Compose.ModalNavigationDrawer.Content.set -> void
 AndroidX.Compose.ModalNavigationDrawer.Drawer.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.ModalNavigationDrawer.Drawer.set -> void
-AndroidX.Compose.ModalNavigationDrawer.GesturesEnabled.get -> bool?
-AndroidX.Compose.ModalNavigationDrawer.GesturesEnabled.set -> void
 AndroidX.Compose.ModalNavigationDrawer.InitialValue.get -> AndroidX.Compose.Material3.DrawerValue?
 AndroidX.Compose.ModalNavigationDrawer.InitialValue.init -> void
-AndroidX.Compose.ModalNavigationDrawer.ModalNavigationDrawer(AndroidX.Compose.DrawerStateHolder? drawerState = null) -> void
+AndroidX.Compose.ModalNavigationDrawer.ModalNavigationDrawer(bool gesturesEnabled = true, AndroidX.Compose.DrawerStateHolder? drawerState = null) -> void
 AndroidX.Compose.ModalWideNavigationRail
 AndroidX.Compose.ModalWideNavigationRail.Header.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.ModalWideNavigationRail.Header.set -> void
