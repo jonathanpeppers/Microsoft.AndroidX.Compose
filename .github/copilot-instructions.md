@@ -385,7 +385,12 @@ so `[CallerFilePath]` + `[CallerLineNumber]` slot keys inside
   `Defaults = typeof(XDefault)` must reference a declarative-form
   `[assembly: ComposeDefaults(...)]` (the bit-name map). Used for `Box`,
   `Column`, `Row`, `Spacer`, `Checkbox`, `Switch`, `RadioButton`, `Slider`,
-  `WideNavigationRailItem`, `TriStateCheckbox`.
+  `WideNavigationRailItem`, `TriStateCheckbox`,
+  `SingleChoiceSegmentedButtonRow`, `MultiChoiceSegmentedButtonRow` (the
+  last two via `IndexedChildren = true`; see below). Same-name 4-param
+  overloads on `ComposeBridges` forward to existing 5-param
+  `[ComposeBridge]` JNI bridges with `scrollState: null` for
+  `PrimaryScrollableTabRow`, `SecondaryScrollableTabRow`.
 
   **Java enum primitives**: primitive-ctor slot detector also accepts
   reference types deriving transitively from `Java.Lang.Enum`. Compose
@@ -408,6 +413,18 @@ so `[CallerFilePath]` + `[CallerLineNumber]` slot keys inside
   `ComposableContainer` and wrap children via
   `Wrap2(composer, c => RenderChildren(c))`. Required by
   `ModalWideNavigationRail`.
+
+  **`IndexedChildren = true`** — for container facades whose children read
+  their row position (e.g. `SegmentedButton` reads
+  `RenderContext.CurrentRowChildIndex/Count` to compute its `start`/
+  `middle`/`end` shape). The generated `Wrap2`/`Wrap3` body calls
+  `RenderChildrenIndexed(c)` instead of `RenderChildren(c)`; the helper
+  publishes a `PushRow + SetIndex` frame per child (still wraps each in
+  the same `StartReplaceableGroup` as `RenderChildren`). Requires a
+  container body (Phase 1 pure container OR Phase 8 hybrid container);
+  CN3006 fires on a leaf. Combine with `Scope` when the container also
+  publishes a Kotlin extension-receiver scope (see
+  `SingleChoiceSegmentedButtonRow`, `MultiChoiceSegmentedButtonRow`).
 
 - **Phase 9** — `BranchOn`/`AlternateBridge`: one facade routes between two
   `[ComposeBridge]` methods based on whether a single optional slot is
@@ -441,8 +458,9 @@ so `[CallerFilePath]` + `[CallerLineNumber]` slot keys inside
   `SearchBar` until hybrid-container extension lands. These need Phase 10 +
   Phase 4b combined — not yet modelled.
 - Scope facades doing non-trivial work beyond `RenderContext.PushScope`
-  (`SegmentedButton`, `SingleChoice`/`MultiChoiceSegmentedButtonRow`,
-  segmented scrollable tab rows).
+  (`SegmentedButton` — two ctors route to two physical bridges plus a
+  custom `shape = ItemShape(...)` arg computed from the published
+  row-position; doesn't fit `BranchOn` or any other phase).
 - `Icon` exposes two distinct ctors (`ImageVector` vs. resource-id `Painter`)
   routing to two bridges. Generator emits one ctor + one `Render` per facade.
 - `TextField`, `OutlinedTextField` expose three ctors that route between two
@@ -491,7 +509,7 @@ conflict), CN3007 (color theme bind failed), CN3008 (painter misuse), CN3009
 | CN3003 | `Scope` is set but bridge has no `IFunction3` content slot.                                                                                                                                                                                                                                                                                                                                                                                                                                      |
 | CN3004 | `[ComposeFacade]` without an accompanying `[ComposeBridge]`.                                                                                                                                                                                                                                                                                                                                                                                                                                     |
 | CN3005 | `[Callback(typeof(T))]` target type unsupported (must be `bool`/`string`/`float`).                                                                                                                                                                                                                                                                                                                                                                                                               |
-| CN3006 | `[Slot]` conflicts with classified shape, `[Callback]` on non-`IFunction1`, multiple `[PainterResource]` on one bridge, or `int defaults` declared without resolvable `Defaults` enum.                                                                                                                                                                                                                                                                                                           |
+| CN3006 | `[Slot]` conflicts with classified shape, `[Callback]` on non-`IFunction1`, multiple `[PainterResource]` on one bridge, `int defaults` declared without resolvable `Defaults` enum, or `IndexedChildren = true` on a facade without a non-nullable IFunction2/IFunction3 container body.                                                                                                                                                                                                       |
 | CN3007 | `DefaultColorFromTheme` cannot bind to any `long` user param (or `ColorParameter` ambiguous/missing).                                                                                                                                                                                                                                                                                                                                                                                            |
 | CN3008 | `[PainterResource]` annotates a non-`IntPtr` parameter.                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 | CN3009 | `[StateHolder]` invalid: non-`IntPtr` param, combined with `[PainterResource]`, missing/non-identifier `Remember`/`StateType`, named `Remember` not a static `(IComposer) -> IntPtr` on `ComposeBridges`, or `StateType` has no accessible writable instance field named `Jvm`.                                                                                                                                                                                                                  |
@@ -586,12 +604,12 @@ approval.
   composition.
 
 - **Sibling `Render()` calls in a loop need per-position slot keys.**
-  `ComposableContainer.RenderChildren` wraps each child in
+  `ComposableContainer.RenderChildren` and `RenderChildrenIndexed` wrap
+  each child in
   `composer.StartReplaceableGroup(HashCode.Combine(i, child.GetType()))` /
   `EndReplaceableGroup()`. Custom loops calling `Children[i].Render(c)`
-  directly (segmented-row scope loops in `SingleChoiceSegmentedButtonRow`,
-  `MultiChoiceSegmentedButtonRow`, `SegmentedButton`'s label slot) must do
-  the same. The type component stops a sibling that swaps subclass-at-the-same-
+  directly (e.g. `SegmentedButton`'s label slot) must do the same. The
+  type component stops a sibling that swaps subclass-at-the-same-
   position (e.g. tab nav flipping `PullToRefreshBox` for
   `HorizontalUncontainedCarousel`) from re-entering the prior occupant's group
   — otherwise `ClassCastException` from Compose's `rememberSaveable`. Same-
