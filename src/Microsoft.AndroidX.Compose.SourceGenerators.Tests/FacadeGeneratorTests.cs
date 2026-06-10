@@ -1698,6 +1698,64 @@ public class FacadeGeneratorTests
     }
 
     [Fact]
+    public void StateHolder_SortsBeforeDefaultedPrimitive_PreservesPositionalBinding()
+    {
+        // Regression for PR #240: when a bridge mixes a [StateHolder] slot
+        // with a defaulted-primitive slot (e.g. `bool showModeToggle = true`)
+        // the generated ctor MUST emit StateHolder first, defaulted-primitive
+        // second — otherwise `new Foo(stateHolder)` positional call sites
+        // (Jetnews/Jetchat sample apps) silently rebind to the bool and the
+        // compiler complains "cannot convert from StateHolder to bool".
+        var code = $$"""
+            using global::AndroidX.Compose.Runtime;
+            using global::AndroidX.Compose.UI;
+            using AndroidX.Compose;
+            using Kotlin.Jvm.Functions;
+            using System;
+
+            [assembly: ComposeDefaults("DatePickerDefault",
+                "!state", "modifier", "dateFormatter", "colors", "title", "headline", "showModeToggle")]
+
+            {{DatePickerStateStubs}}
+
+            namespace AndroidX.Compose
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(Class="androidx/compose/material3/DatePickerKt",
+                                   JvmName="DatePicker",
+                                   Signature="{{DatePickerSig}}",
+                                   Defaults=typeof(DatePickerDefault))]
+                    [ComposeFacade]
+                    public static partial void DatePicker(
+                        [StateHolder(Remember = nameof(RememberDatePickerState),
+                                     StateType = typeof(DatePickerState))]
+                        IntPtr state,
+                        IModifier? modifier,
+                        bool showModeToggle = true,
+                        int defaults = 0,
+                        IComposer composer = null!);
+
+                    public static IntPtr RememberDatePickerState(IComposer composer) => default;
+                }
+            }
+            """;
+
+        var (output, diags, emitted) = Run(code, "DatePicker");
+        Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+
+        // The whole point: StateHolder FIRST, primitive SECOND. Any other
+        // ordering breaks positional `new DatePicker(myState)` calls.
+        Assert.Contains(
+            "public DatePicker(global::AndroidX.Compose.DatePickerState? state = null, bool showModeToggle = true)",
+            emitted);
+
+        var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
+        Assert.Empty(errors);
+    }
+
+    [Fact]
     public void StateHolder_OnNonIntPtr_FailsCN3009()
     {
         var code = $$"""

@@ -910,18 +910,18 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         string baseClass = isContainer ? "global::AndroidX.Compose.ComposableContainer" : "global::AndroidX.Compose.ComposableNode";
 
         // Ctor slots: every non-modifier, non-named-property slot.
-        // Defaulted slots go LAST so all required slots come first and
-        // stay positional. StateHolder is always defaulted (= null);
-        // Primitive slots that propagate `HasExplicitDefaultValue` from
-        // the bridge declaration are defaulted too. StateHolder remains
-        // last within the defaulted group so existing positional call
-        // sites (e.g. `new Foo(stateHolder)`) keep binding to the
-        // state-holder slot.
+        // Required slots come first. Among defaulted slots, StateHolder
+        // comes BEFORE defaulted-primitive slots so legacy positional
+        // call sites that pass a state holder as the single argument
+        // (e.g. `new Foo(stateHolder)`) continue to bind to the
+        // state-holder slot. Reversing this order would silently
+        // shift positional binding to a primitive slot and break
+        // callers — see PR #240 / Jetnews + Jetchat regression.
         var ctorSlotsAll = slots.Where(s => IsCtorSlot(s)).ToArray();
         var ctorSlots = ctorSlotsAll
             .Where(s => !HasFacadeCtorDefault(s))
-            .Concat(ctorSlotsAll.Where(s => HasFacadeCtorDefault(s) && s.Kind != FacadeSlotKind.StateHolder))
             .Concat(ctorSlotsAll.Where(s => s.Kind == FacadeSlotKind.StateHolder))
+            .Concat(ctorSlotsAll.Where(s => HasFacadeCtorDefault(s) && s.Kind != FacadeSlotKind.StateHolder))
             .ToArray();
         // Named-property slots (Phase 3).
         var namedSlots = slots.Where(s => s.Kind is FacadeSlotKind.NamedFunction2 or FacadeSlotKind.NamedFunction3

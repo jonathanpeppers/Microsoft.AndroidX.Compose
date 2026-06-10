@@ -245,7 +245,7 @@ AndroidX.Compose.DismissibleNavigationDrawer.ConfirmStateChange.get -> System.Fu
 AndroidX.Compose.DismissibleNavigationDrawer.ConfirmStateChange.set -> void
 AndroidX.Compose.DismissibleNavigationDrawer.Content.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.DismissibleNavigationDrawer.Content.set -> void
-AndroidX.Compose.DismissibleNavigationDrawer.DismissibleNavigationDrawer(bool gesturesEnabled = true, AndroidX.Compose.DrawerStateHolder? drawerState = null) -> void
+AndroidX.Compose.DismissibleNavigationDrawer.DismissibleNavigationDrawer(AndroidX.Compose.DrawerStateHolder? drawerState = null, bool gesturesEnabled = true) -> void
 AndroidX.Compose.DismissibleNavigationDrawer.Drawer.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.DismissibleNavigationDrawer.Drawer.set -> void
 AndroidX.Compose.DismissibleNavigationDrawer.InitialValue.get -> AndroidX.Compose.Material3.DrawerValue?
@@ -692,7 +692,7 @@ AndroidX.Compose.ModalNavigationDrawer.Drawer.get -> AndroidX.Compose.Composable
 AndroidX.Compose.ModalNavigationDrawer.Drawer.set -> void
 AndroidX.Compose.ModalNavigationDrawer.InitialValue.get -> AndroidX.Compose.Material3.DrawerValue?
 AndroidX.Compose.ModalNavigationDrawer.InitialValue.init -> void
-AndroidX.Compose.ModalNavigationDrawer.ModalNavigationDrawer(bool gesturesEnabled = true, AndroidX.Compose.DrawerStateHolder? drawerState = null) -> void
+AndroidX.Compose.ModalNavigationDrawer.ModalNavigationDrawer(AndroidX.Compose.DrawerStateHolder? drawerState = null, bool gesturesEnabled = true) -> void
 AndroidX.Compose.ModalWideNavigationRail
 AndroidX.Compose.ModalWideNavigationRail.Header.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.ModalWideNavigationRail.Header.set -> void
