@@ -107,7 +107,7 @@ public sealed class MaterialTheme : ComposableContainer
             // override installed by an enclosing CompositionLocalProvider
             // (e.g. a contextual content-wrapper) and updates correctly on
             // activity recreations.
-            var ctx = Locals.LocalContext.GetCurrent(composer);
+            var ctx = LocalContext.Current(composer);
             return dark
                 ? DynamicTonalPaletteKt.DynamicDarkColorScheme(ctx)
                 : DynamicTonalPaletteKt.DynamicLightColorScheme(ctx);

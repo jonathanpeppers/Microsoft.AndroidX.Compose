@@ -10,7 +10,7 @@ namespace AndroidX.Compose;
 /// <code>
 /// new CompositionLocalProvider {
 ///     LocalMyTheme.Provides(customTheme),
-///     Locals.LocalContext.Provides(scopedContext),
+///     LocalContext.Provides(scopedContext),
 ///     new Text("inherits theme + context"),
 /// }
 /// </code>

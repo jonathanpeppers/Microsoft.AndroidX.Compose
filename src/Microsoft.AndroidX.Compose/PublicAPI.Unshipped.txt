@@ -171,7 +171,7 @@ AndroidX.Compose.Composed.Composed(System.Func<AndroidX.Compose.Runtime.ICompose
 AndroidX.Compose.ComposeExtensions
 AndroidX.Compose.CompositionLocal
 AndroidX.Compose.CompositionLocal<T>
-AndroidX.Compose.CompositionLocal<T>.GetCurrent(AndroidX.Compose.Runtime.IComposer! composer) -> T
+AndroidX.Compose.CompositionLocal<T>.Current(AndroidX.Compose.Runtime.IComposer! composer) -> T
 AndroidX.Compose.CompositionLocal<T>.Provides(T value) -> AndroidX.Compose.ProvidedValue!
 AndroidX.Compose.CompositionLocalProvider
 AndroidX.Compose.CompositionLocalProvider.Add(AndroidX.Compose.ProvidedValue! value) -> void
@@ -568,7 +568,12 @@ AndroidX.Compose.ListItem.Supporting.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.ListItem.Supporting.set -> void
 AndroidX.Compose.ListItem.Trailing.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.ListItem.Trailing.set -> void
-AndroidX.Compose.Locals
+AndroidX.Compose.LocalColorScheme
+AndroidX.Compose.LocalConfiguration
+AndroidX.Compose.LocalContext
+AndroidX.Compose.LocalLifecycleOwner
+AndroidX.Compose.LocalResources
+AndroidX.Compose.LocalView
 AndroidX.Compose.MaterialTheme
 AndroidX.Compose.MaterialTheme.ColorScheme.get -> AndroidX.Compose.Material3.ColorScheme?
 AndroidX.Compose.MaterialTheme.ColorScheme.set -> void
@@ -1837,6 +1842,18 @@ static AndroidX.Compose.Icons.TwoTone.ThumbUp.get -> AndroidX.Compose.UI.Graphic
 static AndroidX.Compose.Icons.TwoTone.Warning.get -> AndroidX.Compose.UI.Graphics.Vector.ImageVector!
 static AndroidX.Compose.LinkAnnotation.Clickable(string! tag, System.Action<string!>! onClick, AndroidX.Compose.SpanStyle? style = null) -> AndroidX.Compose.LinkAnnotation!
 static AndroidX.Compose.LinkAnnotation.Url(string! url, AndroidX.Compose.SpanStyle? style = null) -> AndroidX.Compose.LinkAnnotation!
+static AndroidX.Compose.LocalColorScheme.Current(AndroidX.Compose.Runtime.IComposer! composer) -> AndroidX.Compose.Material3.ColorScheme!
+static AndroidX.Compose.LocalColorScheme.Provides(AndroidX.Compose.Material3.ColorScheme! value) -> AndroidX.Compose.ProvidedValue!
+static AndroidX.Compose.LocalConfiguration.Current(AndroidX.Compose.Runtime.IComposer! composer) -> Android.Content.Res.Configuration!
+static AndroidX.Compose.LocalConfiguration.Provides(Android.Content.Res.Configuration! value) -> AndroidX.Compose.ProvidedValue!
+static AndroidX.Compose.LocalContext.Current(AndroidX.Compose.Runtime.IComposer! composer) -> Android.Content.Context!
+static AndroidX.Compose.LocalContext.Provides(Android.Content.Context! value) -> AndroidX.Compose.ProvidedValue!
+static AndroidX.Compose.LocalLifecycleOwner.Current(AndroidX.Compose.Runtime.IComposer! composer) -> AndroidX.Lifecycle.ILifecycleOwner!
+static AndroidX.Compose.LocalLifecycleOwner.Provides(AndroidX.Lifecycle.ILifecycleOwner! value) -> AndroidX.Compose.ProvidedValue!
+static AndroidX.Compose.LocalResources.Current(AndroidX.Compose.Runtime.IComposer! composer) -> Android.Content.Res.Resources!
+static AndroidX.Compose.LocalResources.Provides(Android.Content.Res.Resources! value) -> AndroidX.Compose.ProvidedValue!
+static AndroidX.Compose.LocalView.Current(AndroidX.Compose.Runtime.IComposer! composer) -> Android.Views.View!
+static AndroidX.Compose.LocalView.Provides(Android.Views.View! value) -> AndroidX.Compose.ProvidedValue!
 static AndroidX.Compose.MaterialTheme.BuildShapes(AndroidX.Compose.Shape? extraSmall = null, AndroidX.Compose.Shape? small = null, AndroidX.Compose.Shape? medium = null, AndroidX.Compose.Shape? large = null, AndroidX.Compose.Shape? extraLarge = null) -> AndroidX.Compose.Material3.Shapes!
 static AndroidX.Compose.MaterialTheme.BuildTypography(AndroidX.Compose.TextStyle? displayLarge = null, AndroidX.Compose.TextStyle? displayMedium = null, AndroidX.Compose.TextStyle? displaySmall = null, AndroidX.Compose.TextStyle? headlineLarge = null, AndroidX.Compose.TextStyle? headlineMedium = null, AndroidX.Compose.TextStyle? headlineSmall = null, AndroidX.Compose.TextStyle? titleLarge = null, AndroidX.Compose.TextStyle? titleMedium = null, AndroidX.Compose.TextStyle? titleSmall = null, AndroidX.Compose.TextStyle? bodyLarge = null, AndroidX.Compose.TextStyle? bodyMedium = null, AndroidX.Compose.TextStyle? bodySmall = null, AndroidX.Compose.TextStyle? labelLarge = null, AndroidX.Compose.TextStyle? labelMedium = null, AndroidX.Compose.TextStyle? labelSmall = null) -> AndroidX.Compose.Material3.Typography!
 static AndroidX.Compose.MaterialTheme.DarkColorScheme() -> AndroidX.Compose.Material3.ColorScheme!
@@ -1903,12 +1920,6 @@ static AndroidX.Compose.Transitions.SlideInHorizontally(System.Func<int, int>? i
 static AndroidX.Compose.Transitions.SlideInVertically(System.Func<int, int>? initialOffsetY = null, AndroidX.Compose.Animation.Core.IFiniteAnimationSpec? animationSpec = null) -> AndroidX.Compose.Animation.EnterTransition!
 static AndroidX.Compose.Transitions.SlideOutHorizontally(System.Func<int, int>? targetOffsetX = null, AndroidX.Compose.Animation.Core.IFiniteAnimationSpec? animationSpec = null) -> AndroidX.Compose.Animation.ExitTransition!
 static AndroidX.Compose.Transitions.SlideOutVertically(System.Func<int, int>? targetOffsetY = null, AndroidX.Compose.Animation.Core.IFiniteAnimationSpec? animationSpec = null) -> AndroidX.Compose.Animation.ExitTransition!
-static readonly AndroidX.Compose.Locals.LocalColorScheme -> AndroidX.Compose.CompositionLocal<AndroidX.Compose.Material3.ColorScheme!>!
-static readonly AndroidX.Compose.Locals.LocalConfiguration -> AndroidX.Compose.CompositionLocal<Android.Content.Res.Configuration!>!
-static readonly AndroidX.Compose.Locals.LocalContext -> AndroidX.Compose.CompositionLocal<Android.Content.Context!>!
-static readonly AndroidX.Compose.Locals.LocalLifecycleOwner -> AndroidX.Compose.CompositionLocal<AndroidX.Lifecycle.ILifecycleOwner!>!
-static readonly AndroidX.Compose.Locals.LocalResources -> AndroidX.Compose.CompositionLocal<Android.Content.Res.Resources!>!
-static readonly AndroidX.Compose.Locals.LocalView -> AndroidX.Compose.CompositionLocal<Android.Views.View!>!
 virtual AndroidX.Compose.MutableState<T>.Value.get -> T
 virtual AndroidX.Compose.MutableState<T>.Value.set -> void
 virtual AndroidX.Compose.ViewModel.OnClearedCore() -> void

@@ -36,7 +36,7 @@ public static class ComposeViewInteropDemo
         });
 
     /// <summary>
-    /// Reads <c>Locals.LocalContext</c> to get the host activity, then
+    /// Reads <see cref="LocalContext"/> to get the host activity, then
     /// renders a <see cref="Button"/> that launches
     /// <see cref="ComposeViewActivity"/> via an explicit
     /// <see cref="Intent"/>.
@@ -45,7 +45,7 @@ public static class ComposeViewInteropDemo
     {
         public override void Render(IComposer composer)
         {
-            var ctx = Locals.LocalContext.GetCurrent(composer);
+            var ctx = LocalContext.Current(composer);
             new Button(onClick: () =>
             {
                 var intent = new Intent(ctx, typeof(ComposeViewActivity));
