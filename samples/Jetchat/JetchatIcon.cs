@@ -33,7 +33,7 @@ public static class JetchatIcon
     public static ComposableNode Build(string? contentDescription, int sizeDp = 32) =>
         new Composed(c =>
         {
-            var scheme = MaterialTheme.CurrentColorScheme(c);
+            var scheme = c.ColorScheme();
             return new Box
             {
                 Modifier.Companion.Size(sizeDp),

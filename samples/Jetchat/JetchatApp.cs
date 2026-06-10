@@ -42,7 +42,7 @@ public static class JetchatApp
         ProfileViewModel             profileViewModel) =>
         JetchatTheme.Build(new Composed(c =>
         {
-            var scheme = MaterialTheme.CurrentColorScheme(c);
+            var scheme = c.ColorScheme();
             return new ModalNavigationDrawer(drawerState)
             {
                 Drawer  = JetchatDrawer.Build(

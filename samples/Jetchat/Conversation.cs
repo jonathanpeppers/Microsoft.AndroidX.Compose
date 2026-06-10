@@ -36,7 +36,7 @@ public static class Conversation
         Action<string>               onAuthorClicked) =>
         new Composed(c =>
         {
-            var scheme = MaterialTheme.CurrentColorScheme(c);
+            var scheme = c.ColorScheme();
             var root   = new Column
             {
                 Modifier.Companion.FillMaxSize(),

@@ -12,7 +12,7 @@ public static class EmailDetailAppBar
         {
             Title = new Composed(c =>
             {
-                var scheme = MaterialTheme.CurrentColorScheme(c);
+                var scheme = c.ColorScheme();
                 return new Column
                 {
                     Modifier.Companion.FillMaxWidth(),
@@ -39,7 +39,7 @@ public static class EmailDetailAppBar
             },
             Actions = new Composed(c =>
             {
-                var scheme = MaterialTheme.CurrentColorScheme(c);
+                var scheme = c.ColorScheme();
                 return new IconButton(onClick: NoOp)
                 {
                     new Icon(Resource.Drawable.ic_more_vert, "More options")

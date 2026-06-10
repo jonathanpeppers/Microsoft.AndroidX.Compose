@@ -15,7 +15,7 @@ public static class ReplyEmailListItem
         bool           isSelected = false) =>
         new Composed(c =>
         {
-            var scheme = MaterialTheme.CurrentColorScheme(c);
+            var scheme = c.ColorScheme();
             long bg =
                 isSelected ? scheme.PrimaryContainer :
                 isOpened   ? scheme.SecondaryContainer :

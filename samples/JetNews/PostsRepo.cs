@@ -135,16 +135,15 @@ public static class PostsRepo
         {
             new(ParagraphType.Title,   "Material 3 in C#"),
             new(ParagraphType.Text,
-                "MaterialTheme.CurrentColorScheme(composer) and CurrentTypography " +
-                "(composer) read the active theme inside any Render body. On " +
-                "Android 12 and later the default scheme is dynamic — derived from " +
-                "the device wallpaper — so your app picks up Material You without " +
-                "extra plumbing.",
+                "composer.ColorScheme() and composer.Typography() read the active " +
+                "theme inside any Render body. On Android 12 and later the default " +
+                "scheme is dynamic — derived from the device wallpaper — so your " +
+                "app picks up Material You without extra plumbing.",
                 new Markup[]
                 {
-                    new(MarkupType.Code,   0,   42),  // MaterialTheme.CurrentColorScheme(composer)
-                    new(MarkupType.Code,   47,  64),  // CurrentTypography
-                    new(MarkupType.Italic, 235, 247), // Material You
+                    new(MarkupType.Code,   0,   22),  // composer.ColorScheme()
+                    new(MarkupType.Code,   27,  48),  // composer.Typography()
+                    new(MarkupType.Italic, 208, 220), // Material You
                 }),
             new(ParagraphType.Header,  "Custom palettes"),
             new(ParagraphType.Text,
