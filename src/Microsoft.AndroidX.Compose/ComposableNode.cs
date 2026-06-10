@@ -130,7 +130,7 @@ public abstract class ComposableNode
     ///
     /// The C# moral equivalent of an <c>@Composable</c> function body
     /// in Kotlin: anything that runs at composition time — emitting
-    /// child nodes, reading <see cref="CompositionLocal{T}.GetCurrent(IComposer)"/>,
+    /// child nodes, reading <see cref="CompositionLocal{T}.Current(IComposer)"/>,
     /// calling <see cref="ComposeExtensions.Remember{T}(Func{T}, int, string)"/>,
     /// etc. — happens here. To compose a child node from inside a
     /// custom override, build it and call <c>child.Render(composer)</c>

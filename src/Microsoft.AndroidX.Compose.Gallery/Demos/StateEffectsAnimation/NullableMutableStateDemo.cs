@@ -61,7 +61,7 @@ public static class NullableMutableStateDemo
     {
         public override void Render(IComposer composer)
         {
-            var id = LocalSelectedId.GetCurrent(composer);
+            var id = LocalSelectedId.Current(composer);
             new Text($"  LocalSelectedId.Current: {id?.ToString() ?? "<null>"}").Render(composer);
         }
     }

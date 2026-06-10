@@ -3,18 +3,18 @@ using AndroidX.Compose.Gallery.Registry;
 
 namespace AndroidX.Compose.Gallery.Demos.LocalsMisc;
 
-/// <summary>Built-in Locals.LocalContext — read the host Android Context from a custom composable.</summary>
+/// <summary>Built-in LocalContext — read the host Android Context from a custom composable.</summary>
 public static class LocalContextDemo
 {
     /// <summary>Registry entry exposed via <see cref="Catalog.Demos"/>.</summary>
     public static Demo Demo => new(
         Id:          "locals-context",
         CategoryId:  "locals-misc",
-        Title:       "Locals.LocalContext",
-        Description: "A custom ComposableNode reads Locals.LocalContext.GetCurrent(composer) and prints the host app's package name — the built-in CompositionLocals plumbing reaches user code.",
+        Title:       "LocalContext",
+        Description: "A custom ComposableNode reads LocalContext.Current(composer) and prints the host app's package name — the built-in CompositionLocals plumbing reaches user code.",
         Build:       _ => new Column
         {
-            new Text("Built-in Locals.LocalContext read from a user composable:"),
+            new Text("Built-in LocalContext read from a user composable:"),
             new PackageLabel(),
         });
 
@@ -22,7 +22,7 @@ public static class LocalContextDemo
     {
         public override void Render(IComposer composer)
         {
-            var ctx = Locals.LocalContext.GetCurrent(composer);
+            var ctx = LocalContext.Current(composer);
             new Text($"  PackageName = {ctx.PackageName}").Render(composer);
         }
     }
