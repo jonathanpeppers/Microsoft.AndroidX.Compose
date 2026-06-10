@@ -25,7 +25,7 @@ public static class ViewModelStateFlowDemo
                     FontWeight = FontWeight.SemiBold,
                 },
                 new Spacer { Modifier = Modifier.Height(12) },
-                new Row(horizontalArrangement: Arrangement.SpacedBy(8))
+                new Row(horizontalArrangement: Arrangement.SpacedBy(8.Dp()))
                 {
                     new Button(onClick: () => vm.Increment()) { new Text("Increment") },
                     new Button(onClick: () => vm.Reset())     { new Text("Reset") },

@@ -11,7 +11,7 @@ public static class CardVariantsDemo
         CategoryId:  "containers",
         Title:       "Card variants",
         Description: "Card (tonal), ElevatedCard (shadow), OutlinedCard (border).",
-        Build:       _ => new Column(verticalArrangement: Arrangement.SpacedBy(12))
+        Build:       _ => new Column(verticalArrangement: Arrangement.SpacedBy(12.Dp()))
         {
             Modifier.FillMaxWidth(),
             new Card

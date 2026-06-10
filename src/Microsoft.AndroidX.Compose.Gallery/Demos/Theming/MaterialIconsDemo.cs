@@ -28,7 +28,7 @@ public static class MaterialIconsDemo
                     new Text(name) { FontSize = new Sp(10) },
                 };
 
-            return new Column(verticalArrangement: Arrangement.SpacedBy(12))
+            return new Column(verticalArrangement: Arrangement.SpacedBy(12.Dp()))
             {
                 new Text($"Last tapped: {tapped}"),
 
@@ -57,7 +57,7 @@ public static class MaterialIconsDemo
                 },
 
                 new Text("Icons.AutoMirrored.Filled (flip in RTL):") { FontWeight = FontWeight.Bold },
-                new Row(horizontalArrangement: Arrangement.SpacedBy(8))
+                new Row(horizontalArrangement: Arrangement.SpacedBy(8.Dp()))
                 {
                     Tile("ArrowBack",    Icons.AutoMirrored.Filled.ArrowBack),
                     Tile("ArrowForward", Icons.AutoMirrored.Filled.ArrowForward),
@@ -67,7 +67,7 @@ public static class MaterialIconsDemo
                 },
 
                 new Text("Same glyph (Settings) across all 5 variants:") { FontWeight = FontWeight.Bold },
-                new Row(horizontalArrangement: Arrangement.SpacedBy(8))
+                new Row(horizontalArrangement: Arrangement.SpacedBy(8.Dp()))
                 {
                     Tile("Filled",   Icons.Filled.Settings),
                     Tile("Outlined", Icons.Outlined.Settings),

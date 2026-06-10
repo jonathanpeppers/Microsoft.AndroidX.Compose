@@ -15,14 +15,14 @@ namespace AndroidX.Compose;
 /// </summary>
 public sealed class CircularProgressIndicator : ComposableNode
 {
-    /// <summary>Optional ARGB color (packed Compose <c>Color</c> long). Leave null for the Material default.</summary>
-    public long? ColorArgb { get; set; }
+    /// <summary>Optional explicit color. Leave null to use the Material default.</summary>
+    public Color? Color { get; set; }
 
     /// <summary>Optional stroke width in Dp. Leave null for the Material default.</summary>
     public float? StrokeWidthDp { get; set; }
 
-    /// <summary>Optional track ARGB color (packed Compose <c>Color</c> long). Leave null for the Material default.</summary>
-    public long? TrackColorArgb { get; set; }
+    /// <summary>Optional explicit track color. Leave null to use the Material default.</summary>
+    public Color? TrackColor { get; set; }
 
     public override void Render(IComposer composer)
     {
@@ -30,15 +30,15 @@ public sealed class CircularProgressIndicator : ComposableNode
 
         int defaults = (int)CircularProgressIndicatorDefault.All;
         if (modifier is not null)        defaults &= ~(int)CircularProgressIndicatorDefault.Modifier;
-        if (ColorArgb.HasValue)          defaults &= ~(int)CircularProgressIndicatorDefault.Color;
+        if (Color.HasValue)              defaults &= ~(int)CircularProgressIndicatorDefault.Color;
         if (StrokeWidthDp.HasValue)      defaults &= ~(int)CircularProgressIndicatorDefault.StrokeWidth;
-        if (TrackColorArgb.HasValue)     defaults &= ~(int)CircularProgressIndicatorDefault.TrackColor;
+        if (TrackColor.HasValue)         defaults &= ~(int)CircularProgressIndicatorDefault.TrackColor;
 
         ProgressIndicatorKt.CircularProgressIndicator(
             modifier:    modifier,
-            color:       ColorArgb       ?? 0L,
+            color:       Color      is { } c ? c : 0L,
             strokeWidth: StrokeWidthDp   ?? 0f,
-            trackColor:  TrackColorArgb  ?? 0L,
+            trackColor:  TrackColor is { } t ? t : 0L,
             p4:          0,
             gapSize:     0f,
             _composer:   composer,

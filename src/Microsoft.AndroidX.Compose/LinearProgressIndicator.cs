@@ -15,11 +15,11 @@ namespace AndroidX.Compose;
 /// </summary>
 public sealed class LinearProgressIndicator : ComposableNode
 {
-    /// <summary>Optional ARGB color (packed Compose <c>Color</c> long). Leave null for the Material default.</summary>
-    public long? ColorArgb { get; set; }
+    /// <summary>Optional explicit color. Leave null to use the Material default.</summary>
+    public Color? Color { get; set; }
 
-    /// <summary>Optional track ARGB color (packed Compose <c>Color</c> long). Leave null for the Material default.</summary>
-    public long? TrackColorArgb { get; set; }
+    /// <summary>Optional explicit track color. Leave null to use the Material default.</summary>
+    public Color? TrackColor { get; set; }
 
     public override void Render(IComposer composer)
     {
@@ -27,13 +27,13 @@ public sealed class LinearProgressIndicator : ComposableNode
 
         int defaults = (int)LinearProgressIndicatorDefault.All;
         if (modifier is not null)        defaults &= ~(int)LinearProgressIndicatorDefault.Modifier;
-        if (ColorArgb.HasValue)          defaults &= ~(int)LinearProgressIndicatorDefault.Color;
-        if (TrackColorArgb.HasValue)     defaults &= ~(int)LinearProgressIndicatorDefault.TrackColor;
+        if (Color.HasValue)              defaults &= ~(int)LinearProgressIndicatorDefault.Color;
+        if (TrackColor.HasValue)         defaults &= ~(int)LinearProgressIndicatorDefault.TrackColor;
 
         ProgressIndicatorKt.LinearProgressIndicator(
             modifier:   modifier,
-            color:      ColorArgb       ?? 0L,
-            trackColor: TrackColorArgb  ?? 0L,
+            color:      Color      is { } c ? c : 0L,
+            trackColor: TrackColor is { } t ? t : 0L,
             p3:         0,
             gapSize:    0f,
             _composer:  composer,

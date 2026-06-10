@@ -29,7 +29,7 @@ public static class CustomTypographyDemo
                     }),
                 UseDynamicColor = false,
             };
-            boldWide.Add(new Column(verticalArrangement: Arrangement.SpacedBy(8))
+            boldWide.Add(new Column(verticalArrangement: Arrangement.SpacedBy(8.Dp()))
             {
                 new Button(onClick: () => { })            { new Text("Click me") },
                 new FilledTonalButton(onClick: () => { }) { new Text("Tonal") },
@@ -49,7 +49,7 @@ public static class CustomTypographyDemo
             };
             italicCondensed.Add(new Button(onClick: () => { }) { new Text("Condensed italic") });
 
-            return new Column(verticalArrangement: Arrangement.SpacedBy(12))
+            return new Column(verticalArrangement: Arrangement.SpacedBy(12.Dp()))
             {
                 new Text("Default M3 Button text (labelLarge):"),
                 new Button(onClick: () => { }) { new Text("Click me") },

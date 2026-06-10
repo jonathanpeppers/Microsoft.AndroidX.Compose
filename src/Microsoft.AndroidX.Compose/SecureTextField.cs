@@ -24,7 +24,7 @@ namespace AndroidX.Compose;
 /// <c>prefix</c>, <c>suffix</c>, <c>inputTransformation</c>,
 /// <c>textObfuscationMode</c>, <c>textObfuscationCharacter</c>,
 /// <c>keyboardOptions</c>, <c>onKeyboardAction</c>, <c>onTextLayout</c>,
-/// <c>shape</c>, <c>colors</c>, <c>contentPadding</c>,
+/// <c>colors</c>, <c>contentPadding</c>,
 /// <c>interactionSource</c> — fall back to their Compose defaults
 /// (which configure a <c>RevealLastTyped</c> obfuscation mode and a
 /// password-typed IME).</para>

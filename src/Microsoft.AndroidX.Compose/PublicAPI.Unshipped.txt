@@ -137,12 +137,12 @@ AndroidX.Compose.Checkbox
 AndroidX.Compose.Checkbox.Checkbox(bool checked, System.Action<bool>! onCheckedChange) -> void
 AndroidX.Compose.CircularProgressIndicator
 AndroidX.Compose.CircularProgressIndicator.CircularProgressIndicator() -> void
-AndroidX.Compose.CircularProgressIndicator.ColorArgb.get -> long?
-AndroidX.Compose.CircularProgressIndicator.ColorArgb.set -> void
+AndroidX.Compose.CircularProgressIndicator.Color.get -> AndroidX.Compose.Color?
+AndroidX.Compose.CircularProgressIndicator.Color.set -> void
 AndroidX.Compose.CircularProgressIndicator.StrokeWidthDp.get -> float?
 AndroidX.Compose.CircularProgressIndicator.StrokeWidthDp.set -> void
-AndroidX.Compose.CircularProgressIndicator.TrackColorArgb.get -> long?
-AndroidX.Compose.CircularProgressIndicator.TrackColorArgb.set -> void
+AndroidX.Compose.CircularProgressIndicator.TrackColor.get -> AndroidX.Compose.Color?
+AndroidX.Compose.CircularProgressIndicator.TrackColor.set -> void
 AndroidX.Compose.Color
 AndroidX.Compose.Color.A.get -> byte
 AndroidX.Compose.Color.B.get -> byte
@@ -263,10 +263,12 @@ AndroidX.Compose.DockedSearchBar.Placeholder.set -> void
 AndroidX.Compose.DockedSearchBar.TrailingIcon.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.DockedSearchBar.TrailingIcon.set -> void
 AndroidX.Compose.Dp
+AndroidX.Compose.Dp.CompareTo(AndroidX.Compose.Dp other) -> int
 AndroidX.Compose.Dp.Dp() -> void
 AndroidX.Compose.Dp.Dp(float value) -> void
 AndroidX.Compose.Dp.Equals(AndroidX.Compose.Dp other) -> bool
 AndroidX.Compose.Dp.Value.get -> float
+AndroidX.Compose.DpExtensions
 AndroidX.Compose.DragAndDropEvent
 AndroidX.Compose.DragAndDropEvent.AndroidDragEvent.get -> Android.Views.DragEvent!
 AndroidX.Compose.DragAndDropEvent.MimeTypes.get -> System.Collections.Generic.IReadOnlyList<string!>!
@@ -436,8 +438,8 @@ AndroidX.Compose.HorizontalCenteredHeroCarousel<T>.State.set -> void
 AndroidX.Compose.HorizontalCenteredHeroCarousel<T>.UserScrollEnabled.get -> bool?
 AndroidX.Compose.HorizontalCenteredHeroCarousel<T>.UserScrollEnabled.set -> void
 AndroidX.Compose.HorizontalDivider
-AndroidX.Compose.HorizontalDivider.ColorArgb.get -> long?
-AndroidX.Compose.HorizontalDivider.ColorArgb.set -> void
+AndroidX.Compose.HorizontalDivider.Color.get -> AndroidX.Compose.Color?
+AndroidX.Compose.HorizontalDivider.Color.set -> void
 AndroidX.Compose.HorizontalDivider.HorizontalDivider() -> void
 AndroidX.Compose.HorizontalDivider.ThicknessDp.get -> float?
 AndroidX.Compose.HorizontalDivider.ThicknessDp.set -> void
@@ -465,8 +467,8 @@ AndroidX.Compose.Icon
 AndroidX.Compose.Icon.Icon(AndroidX.Compose.UI.Graphics.Painter.Painter! painter, string? contentDescription) -> void
 AndroidX.Compose.Icon.Icon(AndroidX.Compose.UI.Graphics.Vector.ImageVector! imageVector, string? contentDescription) -> void
 AndroidX.Compose.Icon.Icon(int drawableResourceId, string? contentDescription) -> void
-AndroidX.Compose.Icon.TintArgb.get -> long?
-AndroidX.Compose.Icon.TintArgb.set -> void
+AndroidX.Compose.Icon.Tint.get -> AndroidX.Compose.Color?
+AndroidX.Compose.Icon.Tint.set -> void
 AndroidX.Compose.IconButton
 AndroidX.Compose.IconButton.IconButton(System.Action! onClick) -> void
 AndroidX.Compose.Icons
@@ -590,11 +592,11 @@ AndroidX.Compose.LeadingIconTab.LeadingIconTab(bool selected, System.Action! onC
 AndroidX.Compose.LeadingIconTab.Text.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.LeadingIconTab.Text.set -> void
 AndroidX.Compose.LinearProgressIndicator
-AndroidX.Compose.LinearProgressIndicator.ColorArgb.get -> long?
-AndroidX.Compose.LinearProgressIndicator.ColorArgb.set -> void
+AndroidX.Compose.LinearProgressIndicator.Color.get -> AndroidX.Compose.Color?
+AndroidX.Compose.LinearProgressIndicator.Color.set -> void
 AndroidX.Compose.LinearProgressIndicator.LinearProgressIndicator() -> void
-AndroidX.Compose.LinearProgressIndicator.TrackColorArgb.get -> long?
-AndroidX.Compose.LinearProgressIndicator.TrackColorArgb.set -> void
+AndroidX.Compose.LinearProgressIndicator.TrackColor.get -> AndroidX.Compose.Color?
+AndroidX.Compose.LinearProgressIndicator.TrackColor.set -> void
 AndroidX.Compose.LinkAnnotation
 AndroidX.Compose.ListItem
 AndroidX.Compose.ListItem.Headline.get -> AndroidX.Compose.ComposableNode?
@@ -1025,6 +1027,7 @@ AndroidX.Compose.SnackbarHost.SnackbarHost(AndroidX.Compose.SnackbarHostState! h
 AndroidX.Compose.SnackbarHostState
 AndroidX.Compose.SnackbarHostState.SnackbarHostState() -> void
 AndroidX.Compose.Sp
+AndroidX.Compose.Sp.CompareTo(AndroidX.Compose.Sp other) -> int
 AndroidX.Compose.Sp.Equals(AndroidX.Compose.Sp other) -> bool
 AndroidX.Compose.Sp.PackedValue.get -> long
 AndroidX.Compose.Sp.Sp() -> void
@@ -1051,6 +1054,7 @@ AndroidX.Compose.SpanStyle.FontWeight.set -> void
 AndroidX.Compose.SpanStyle.LetterSpacing.get -> AndroidX.Compose.Sp?
 AndroidX.Compose.SpanStyle.LetterSpacing.set -> void
 AndroidX.Compose.SpanStyle.SpanStyle() -> void
+AndroidX.Compose.SpExtensions
 AndroidX.Compose.StaggeredGridCells
 AndroidX.Compose.StateFlowExtensions
 AndroidX.Compose.SuggestionChip
@@ -1218,8 +1222,8 @@ AndroidX.Compose.Transitions
 AndroidX.Compose.TriStateCheckbox
 AndroidX.Compose.TriStateCheckbox.TriStateCheckbox(AndroidX.Compose.UI.State.ToggleableState! state, System.Action! onClick) -> void
 AndroidX.Compose.VerticalDivider
-AndroidX.Compose.VerticalDivider.ColorArgb.get -> long?
-AndroidX.Compose.VerticalDivider.ColorArgb.set -> void
+AndroidX.Compose.VerticalDivider.Color.get -> AndroidX.Compose.Color?
+AndroidX.Compose.VerticalDivider.Color.set -> void
 AndroidX.Compose.VerticalDivider.ThicknessDp.get -> float?
 AndroidX.Compose.VerticalDivider.ThicknessDp.set -> void
 AndroidX.Compose.VerticalDivider.VerticalDivider() -> void
@@ -1420,6 +1424,7 @@ static AndroidX.Compose.Arrangement.Center.get -> AndroidX.Compose.Arrangement!
 static AndroidX.Compose.Arrangement.End.get -> AndroidX.Compose.Arrangement!
 static AndroidX.Compose.Arrangement.SpaceAround.get -> AndroidX.Compose.Arrangement!
 static AndroidX.Compose.Arrangement.SpaceBetween.get -> AndroidX.Compose.Arrangement!
+static AndroidX.Compose.Arrangement.SpacedBy(AndroidX.Compose.Dp dp) -> AndroidX.Compose.Arrangement!
 static AndroidX.Compose.Arrangement.SpacedBy(int dp) -> AndroidX.Compose.Arrangement!
 static AndroidX.Compose.Arrangement.SpaceEvenly.get -> AndroidX.Compose.Arrangement!
 static AndroidX.Compose.Arrangement.Start.get -> AndroidX.Compose.Arrangement!
@@ -1519,10 +1524,23 @@ static AndroidX.Compose.ContentScale.Inside.get -> AndroidX.Compose.ContentScale
 static AndroidX.Compose.ContentScale.None.get -> AndroidX.Compose.ContentScale!
 static AndroidX.Compose.Dp.implicit operator AndroidX.Compose.Dp(float value) -> AndroidX.Compose.Dp
 static AndroidX.Compose.Dp.implicit operator AndroidX.Compose.Dp(int value) -> AndroidX.Compose.Dp
+static AndroidX.Compose.Dp.operator -(AndroidX.Compose.Dp a, AndroidX.Compose.Dp b) -> AndroidX.Compose.Dp
+static AndroidX.Compose.Dp.operator -(AndroidX.Compose.Dp a) -> AndroidX.Compose.Dp
 static AndroidX.Compose.Dp.operator !=(AndroidX.Compose.Dp left, AndroidX.Compose.Dp right) -> bool
+static AndroidX.Compose.Dp.operator *(AndroidX.Compose.Dp a, float scalar) -> AndroidX.Compose.Dp
+static AndroidX.Compose.Dp.operator *(float scalar, AndroidX.Compose.Dp a) -> AndroidX.Compose.Dp
+static AndroidX.Compose.Dp.operator /(AndroidX.Compose.Dp a, AndroidX.Compose.Dp b) -> float
+static AndroidX.Compose.Dp.operator /(AndroidX.Compose.Dp a, float scalar) -> AndroidX.Compose.Dp
+static AndroidX.Compose.Dp.operator +(AndroidX.Compose.Dp a, AndroidX.Compose.Dp b) -> AndroidX.Compose.Dp
+static AndroidX.Compose.Dp.operator <(AndroidX.Compose.Dp a, AndroidX.Compose.Dp b) -> bool
+static AndroidX.Compose.Dp.operator <=(AndroidX.Compose.Dp a, AndroidX.Compose.Dp b) -> bool
 static AndroidX.Compose.Dp.operator ==(AndroidX.Compose.Dp left, AndroidX.Compose.Dp right) -> bool
+static AndroidX.Compose.Dp.operator >(AndroidX.Compose.Dp a, AndroidX.Compose.Dp b) -> bool
+static AndroidX.Compose.Dp.operator >=(AndroidX.Compose.Dp a, AndroidX.Compose.Dp b) -> bool
 static AndroidX.Compose.Dp.Pack(AndroidX.Compose.Dp? value) -> float
 static AndroidX.Compose.Dp.Zero.get -> AndroidX.Compose.Dp
+static AndroidX.Compose.DpExtensions.Dp(this float value) -> AndroidX.Compose.Dp
+static AndroidX.Compose.DpExtensions.Dp(this int value) -> AndroidX.Compose.Dp
 static AndroidX.Compose.FontFamily.Cursive.get -> AndroidX.Compose.FontFamily!
 static AndroidX.Compose.FontFamily.Default.get -> AndroidX.Compose.FontFamily!
 static AndroidX.Compose.FontFamily.Monospace.get -> AndroidX.Compose.FontFamily!
@@ -2035,8 +2053,16 @@ static AndroidX.Compose.Shape.RoundedCorners(AndroidX.Compose.Dp cornerRadius) -
 static AndroidX.Compose.Shape.RoundedCorners(AndroidX.Compose.Dp topStart, AndroidX.Compose.Dp topEnd, AndroidX.Compose.Dp bottomEnd, AndroidX.Compose.Dp bottomStart) -> AndroidX.Compose.Shape!
 static AndroidX.Compose.Shape.RoundedPercent(int percent) -> AndroidX.Compose.Shape!
 static AndroidX.Compose.Sp.implicit operator AndroidX.Compose.Sp(int value) -> AndroidX.Compose.Sp
+static AndroidX.Compose.Sp.operator -(AndroidX.Compose.Sp a) -> AndroidX.Compose.Sp
 static AndroidX.Compose.Sp.operator !=(AndroidX.Compose.Sp left, AndroidX.Compose.Sp right) -> bool
+static AndroidX.Compose.Sp.operator *(AndroidX.Compose.Sp a, float scalar) -> AndroidX.Compose.Sp
+static AndroidX.Compose.Sp.operator *(float scalar, AndroidX.Compose.Sp a) -> AndroidX.Compose.Sp
+static AndroidX.Compose.Sp.operator /(AndroidX.Compose.Sp a, float scalar) -> AndroidX.Compose.Sp
+static AndroidX.Compose.Sp.operator <(AndroidX.Compose.Sp a, AndroidX.Compose.Sp b) -> bool
+static AndroidX.Compose.Sp.operator <=(AndroidX.Compose.Sp a, AndroidX.Compose.Sp b) -> bool
 static AndroidX.Compose.Sp.operator ==(AndroidX.Compose.Sp left, AndroidX.Compose.Sp right) -> bool
+static AndroidX.Compose.Sp.operator >(AndroidX.Compose.Sp a, AndroidX.Compose.Sp b) -> bool
+static AndroidX.Compose.Sp.operator >=(AndroidX.Compose.Sp a, AndroidX.Compose.Sp b) -> bool
 static AndroidX.Compose.Sp.Pack(AndroidX.Compose.Sp? value) -> long
 static AndroidX.Compose.Sp.Zero.get -> AndroidX.Compose.Sp
 static AndroidX.Compose.Spacer.Height(AndroidX.Compose.Dp dp) -> AndroidX.Compose.Spacer!
@@ -2044,6 +2070,7 @@ static AndroidX.Compose.Spacer.Size(AndroidX.Compose.Dp dp) -> AndroidX.Compose.
 static AndroidX.Compose.Spacer.Size(AndroidX.Compose.Dp width, AndroidX.Compose.Dp height) -> AndroidX.Compose.Spacer!
 static AndroidX.Compose.Spacer.Weight(float weight, bool fill = true) -> AndroidX.Compose.Spacer!
 static AndroidX.Compose.Spacer.Width(AndroidX.Compose.Dp dp) -> AndroidX.Compose.Spacer!
+static AndroidX.Compose.SpExtensions.Sp(this int value) -> AndroidX.Compose.Sp
 static AndroidX.Compose.StaggeredGridCells.Adaptive(float minSizeDp) -> AndroidX.Compose.Foundation.Lazy.Staggeredgrid.IStaggeredGridCells!
 static AndroidX.Compose.StaggeredGridCells.Fixed(int count) -> AndroidX.Compose.Foundation.Lazy.Staggeredgrid.IStaggeredGridCells!
 static AndroidX.Compose.StaggeredGridCells.FixedSize(float sizeDp) -> AndroidX.Compose.Foundation.Lazy.Staggeredgrid.IStaggeredGridCells!
