@@ -145,6 +145,8 @@ AndroidX.Compose.Color.Color(long packedValue) -> void
 AndroidX.Compose.Color.Color(ulong packedValue) -> void
 AndroidX.Compose.Color.Equals(AndroidX.Compose.Color other) -> bool
 AndroidX.Compose.Color.G.get -> byte
+AndroidX.Compose.Color.IsSpecified.get -> bool
+AndroidX.Compose.Color.IsUnspecified.get -> bool
 AndroidX.Compose.Color.PackedValue.get -> ulong
 AndroidX.Compose.Color.R.get -> byte
 AndroidX.Compose.Color.WithAlpha(byte alpha) -> AndroidX.Compose.Color
@@ -1434,6 +1436,7 @@ static AndroidX.Compose.Color.FromHex(string! hex) -> AndroidX.Compose.Color
 static AndroidX.Compose.Color.FromRgb(byte red, byte green, byte blue) -> AndroidX.Compose.Color
 static AndroidX.Compose.Color.Gray.get -> AndroidX.Compose.Color
 static AndroidX.Compose.Color.Green.get -> AndroidX.Compose.Color
+static AndroidX.Compose.Color.implicit operator AndroidX.Compose.Color(long packedValue) -> AndroidX.Compose.Color
 static AndroidX.Compose.Color.implicit operator long(AndroidX.Compose.Color c) -> long
 static AndroidX.Compose.Color.LightGray.get -> AndroidX.Compose.Color
 static AndroidX.Compose.Color.Magenta.get -> AndroidX.Compose.Color

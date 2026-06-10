@@ -28,7 +28,7 @@ public static class ReplyProfileImage
                 Modifier.Companion
                     .Size(40)
                     .Clip(Shape.Circle())
-                    .Background(new Color(scheme.Primary)),
+                    .Background(scheme.Primary),
                 new Icon(Resource.Drawable.ic_check, null)
                 {
                     Modifier = Modifier.Companion.Size(24),

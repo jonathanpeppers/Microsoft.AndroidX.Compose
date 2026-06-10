@@ -136,7 +136,7 @@ public static class RecordButton
                     Modifier   = Modifier.Companion.Align(Alignment.Vertical.CenterVertically),
                     FontSize   = 22,
                     FontWeight = FontWeight.Medium,
-                    Color      = new Color(scheme.OnSurface),
+                    Color      = scheme.OnSurface,
                 },
 
                 Spacer.Width(16),
@@ -159,7 +159,7 @@ public static class RecordButton
                     {
                         Modifier = Modifier.Companion.Align(Alignment.Vertical.CenterVertically),
                         FontSize = 16,
-                        Color    = new Color(scheme.OnSurfaceVariant),
+                        Color    = scheme.OnSurfaceVariant,
                     },
                 },
             };
