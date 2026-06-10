@@ -21,6 +21,28 @@ public abstract class ComposableContainer : ComposableNode, IEnumerable
     }
 
     /// <summary>
+    /// Collection-initializer overload that lets callers drop a
+    /// composer-aware builder lambda inline as a child:
+    /// <code>
+    /// new Column
+    /// {
+    ///     c =&gt; new Text(c.ColorScheme().OnSurface.ToString()),
+    /// }
+    /// </code>
+    /// The lambda is wrapped in a <see cref="Composed"/> node, so it
+    /// runs once per composition pass and may return <see langword="null"/>
+    /// to skip rendering. This overload exists alongside the implicit
+    /// conversion on <see cref="Composed"/> because C# can only target-
+    /// type a bare lambda when the call-site parameter is itself a
+    /// delegate — the implicit operator is otherwise invisible.
+    /// </summary>
+    public void Add(Func<IComposer, ComposableNode?> builder)
+    {
+        ArgumentNullException.ThrowIfNull(builder);
+        _children.Add(new Composed(builder));
+    }
+
+    /// <summary>
     /// Collection-initializer overload that lets callers set
     /// <see cref="ComposableNode.Modifier"/> inline alongside children:
     /// <code>new Column { Modifier.Padding(16), new Text("Hi") }</code>
