@@ -41,32 +41,37 @@ that needs the same primitive.
 | Issue | Area                        | Blocks (in samples) |
 |------:|-----------------------------|--------------------|
 | [#64](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/64)  | Drawing primitives — `Canvas`, `drawBehind`, `Brush`, `Path`, `Shape` factories | Custom visuals in **JetLagged**; asymmetric `RoundedCornerShape(topStart, topEnd, …)` on **Jetchat** bubbles. |
-| [#69](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/69)  | WindowInsets padding modifiers (`imePadding`, `navigationBarsPadding`, `statusBarsPadding`, …) | IME-synced input row in **Jetchat**. |
-| [#59](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/59)  | `CompositionLocal` / `CompositionLocalProvider` (`LocalContext`, `LocalDensity`, `LocalContentColor`, `LocalTextStyle`, …) | Idiomatic theming and density reads across every sample. |
 | [#20](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/20)  | Edge-to-edge bootstrapping | Status/nav-bar overlap on every sample. |
-| [#141](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/141) | `AnnotatedString` + `SpanStyle` for inline-run text styling | Link / Bold / Italic / Code spans inside paragraphs in **JetNews** article reader. |
-| [#142](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/142) | `Modifier.nestedScroll` + `TopAppBarDefaults` scroll behaviors | Top-bar elevation / collapse on scroll in **JetNews**, **Reply**, **Jetcaster**. |
 | [#144](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/144) | Custom `Layout {}` primitive — Measurable / Placeable / MeasureScope | `InterestsAdaptiveContentLayout` in **JetNews**, custom carousels in **Jetsnack**, asymmetric chat bubbles in **Jetchat**. |
-| [#145](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/145) | `ContentScale` + `Alignment` slots on the `Image` facade | Hero images on cards in **JetNews** (currently solid-color `Box` placeholders). |
-| [#146](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/146) | `stringResource(id)` lookup | Localizable UI strings in every sample (all currently inline literals). |
-| [#163](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/163) | `NavigationDrawerItem` facade | Drawer rows in **JetNews** (hand-rolled) and **Reply** expanded layout. |
-| [#164](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/164) | `LazyListState` scroll-direction / visible-item properties (`lastScrolledBackward`, `canScrollBackward`, `firstVisibleItemIndex`, …) | Search-bar lift animation in **Reply**, jump-to-bottom FAB in **Jetchat**. |
-| [#165](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/165) | Typed `semantics` properties (`Selected`, `Role`, `OnClick` label, …) | Accessibility on multi-select cards in **Reply**, tab role on bottom-nav items. |
-| [#166](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/166) | `BackHandler {}` from `androidx.activity.compose` | Detail-pane / multi-select collapse on system back in **Reply**. |
-| [#167](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/167) | `DockedSearchBar` facade | Inbox search overlay in **Reply**. |
 | [#168](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/168) | `TwoPane` / `NavigableListDetailPaneScaffold` + Jetpack `WindowManager` (`WindowLayoutInfo`/`FoldingFeature`) | Adaptive list-detail with fold avoidance in **Reply**. |
-| [#169](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/169) | `NavOptions` (`popUpTo` + `launchSingleTop` + `restoreState`) | Bottom-nav tab semantics in **Reply** (per-tab back-stack state). |
 
 Closed gaps that previously appeared here (now usable in samples):
 **#51** Pager / FlowRow / FlowColumn / BoxWithConstraints / LazyStaggeredGrid,
-**#53** PullToRefreshBox, **#58** Text styling + TextField config,
+**#53** PullToRefreshBox,
+**#58** Text styling + TextField config,
+**#59** `CompositionLocal` + built-in `LocalContext` / `LocalDensity` / `LocalContentColor` / `LocalTextStyle`,
 **#61** Theming reads + `Color` value type + parameterized `MaterialTheme`,
 **#62** State primitives (`RememberSaveable` / `mutableStateListOf` / `mutableStateMapOf` / `derivedStateOf`),
 **#63** Modifier surface (Background/Border/Clickable/Size/Width/Height/AspectRatio/Offset/Alpha/Clip/Weight + scroll + focus + semantics + Draggable),
 **#65** Compose value types (`Color`/`Dp`/`Sp`/`FontWeight`/`TextAlign`),
+**#69** WindowInsets padding modifiers (`imePadding` / `navigationBarsPadding` / `statusBarsPadding` / `displayCutoutPadding` / …),
 **#70** Row/Column `Arrangement`,
 **#140** `DrawerState.open()` / `close()` suspend bridges,
-**#143** `WindowSizeClass` predicates + `currentWindowAdaptiveInfo()` extension (NavigationSuiteScaffold, SharedTransitionLayout, and ListDetailScene bindings still missing — see [#168](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/168) for the fold-aware TwoPane piece).
+**#141** `AnnotatedString` + `SpanStyle` for inline-run text styling,
+**#142** `Modifier.nestedScroll` + `TopAppBarDefaults` scroll behaviors,
+**#143** `WindowSizeClass` predicates + `currentWindowAdaptiveInfo()` extension (NavigationSuiteScaffold, SharedTransitionLayout, and ListDetailScene bindings still missing — see [#168](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/168) for the fold-aware TwoPane piece),
+**#145** `ContentScale` + `Alignment` slots on the `Image` facade,
+**#146** `stringResource(id)` lookup,
+**#163** `NavigationDrawerItem` facade,
+**#164** `LazyListState` scroll-direction / visible-item properties,
+**#165** `DockedSearchBar` facade,
+**#166** `BackHandler {}` from `androidx.activity.compose`,
+**#167** Typed `semantics` properties (`Selected`, `Role`, `OnClick` label, …),
+**#169** `NavOptions` (`popUpTo` + `launchSingleTop` + `restoreState`).
+
+Per-sample READMEs may still note these features as deferred — closing
+the facade gap unblocks the sample, but each port has to be updated
+separately to actually consume the new binding.
 
 ## Attribution
 
