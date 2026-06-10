@@ -43,6 +43,7 @@ public partial class ButtonHandler : ViewHandler<IButton, ComposeView>
         new PropertyMapper<IButton, ButtonHandler>(ViewHandler.ViewMapper)
         {
             [nameof(IText.Text)]                      = MapText,
+            [nameof(ITextStyle.TextColor)]            = MapTextColor,
             [nameof(IView.Background)]                = MapBackground,
             [nameof(IView.HorizontalLayoutAlignment)] = MapHorizontalLayoutAlignment,
         };
@@ -51,9 +52,10 @@ public partial class ButtonHandler : ViewHandler<IButton, ComposeView>
     public static CommandMapper<IButton, ButtonHandler> CommandMapper =
         new(ViewCommandMapper);
 
-    readonly MutableState<string> _text          = new(string.Empty);
+    readonly MutableState<string> _text           = new(string.Empty);
     readonly MutableState<long?>  _containerColor = new((long?)null);
-    readonly MutableState<bool>   _fillWidth     = new(false);
+    readonly MutableState<long?>  _contentColor   = new((long?)null);
+    readonly MutableState<bool>   _fillWidth      = new(false);
 
     /// <summary>Construct a handler with the default mappers.</summary>
     public ButtonHandler() : base(Mapper, CommandMapper) { }
@@ -68,13 +70,16 @@ public partial class ButtonHandler : ViewHandler<IButton, ComposeView>
         var view = new ComposeView(Context);
         view.SetContent(c =>
         {
-            var packed = _containerColor.Value;
+            var container = _containerColor.Value;
+            var content   = _contentColor.Value;
             var button = new ComposeButton(onClick: OnClicked)
             {
                 new Text(_text.Value),
             };
-            if (packed is { } value)
-                button.Colors = c.ButtonColors(containerColor: value);
+            if (container is not null || content is not null)
+                button.Colors = c.ButtonColors(
+                    containerColor: container,
+                    contentColor:   content);
             if (_fillWidth.Value)
                 button.PrependModifier(Modifier.FillMaxWidth());
             return button;
@@ -100,6 +105,22 @@ public partial class ButtonHandler : ViewHandler<IButton, ComposeView>
         virtualView.Pressed();
         virtualView.Clicked();
         virtualView.Released();
+    }
+
+    /// <summary>
+    /// Map <see cref="ITextStyle.TextColor"/> to the Compose <c>ButtonColors</c>
+    /// <c>contentColor</c> slot. Necessary in addition to
+    /// <see cref="MapBackground"/> because M3's
+    /// <c>contentColorFor(arbitraryColor)</c> returns
+    /// <c>Color.Unspecified</c> when the supplied container colour
+    /// isn't one of the theme's tokens — so a Compose <c>Text</c>
+    /// inside the button reads transparent and disappears against the
+    /// MAUI-supplied background.
+    /// </summary>
+    public static void MapTextColor(ButtonHandler handler, IButton button)
+    {
+        if (button is ITextStyle textStyle)
+            handler._contentColor.Value = ColorMapping.ToPackedLong(textStyle.TextColor);
     }
 
     /// <summary>Map <see cref="IText.Text"/> to the Compose text slot.</summary>
