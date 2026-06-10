@@ -38,6 +38,13 @@ public sealed class LazyVerticalGrid<T> : ComposableNode
     /// </summary>
     public LazyGridState? State { get; set; }
 
+    /// <summary>
+    /// Optional fixed content padding applied inside the grid (not as a
+    /// modifier on the grid frame). Items can scroll behind this area
+    /// but the first/last items stay fully reachable.
+    /// </summary>
+    public PaddingValues? ContentPadding { get; set; }
+
     public override void Render(IComposer composer)
     {
         var modifier = BuildModifier();
@@ -60,8 +67,9 @@ public sealed class LazyVerticalGrid<T> : ComposableNode
         // Start from "use all defaults", then clear the columns bit
         // (always supplied) and any other params the caller customized.
         int defaults = (int)LazyVerticalGridDefault.All & ~(int)LazyVerticalGridDefault.Columns;
-        if (modifier is not null) defaults &= ~(int)LazyVerticalGridDefault.Modifier;
-        if (State    is not null) defaults &= ~(int)LazyVerticalGridDefault.State;
+        if (modifier       is not null) defaults &= ~(int)LazyVerticalGridDefault.Modifier;
+        if (State          is not null) defaults &= ~(int)LazyVerticalGridDefault.State;
+        if (ContentPadding is not null) defaults &= ~(int)LazyVerticalGridDefault.ContentPadding;
 
         // 11 user params → Compose splits $changed into two ints
         // (p12, _changed) and $default lives in the trailing _changed1.
@@ -69,7 +77,7 @@ public sealed class LazyVerticalGrid<T> : ComposableNode
             columns:               _columns,
             modifier:              modifier,
             state:                 State,
-            contentPadding:        null,
+            contentPadding:        ContentPadding?.Jvm,
             reverseLayout:         false,
             verticalArrangement:   null,
             horizontalArrangement: null,

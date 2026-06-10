@@ -42,6 +42,13 @@ public sealed class LazyRow<T> : ComposableNode
     /// </summary>
     public Arrangement? HorizontalArrangement { get; set; }
 
+    /// <summary>
+    /// Optional fixed content padding applied inside the row (not as a
+    /// modifier on the row frame). Items can scroll behind this area but
+    /// the first/last items stay fully reachable.
+    /// </summary>
+    public PaddingValues? ContentPadding { get; set; }
+
     public override void Render(IComposer composer)
     {
         var modifier = BuildModifier();
@@ -73,12 +80,13 @@ public sealed class LazyRow<T> : ComposableNode
         int defaults = (int)LazyRowDefault.All;
         if (modifier   is not null) defaults &= ~(int)LazyRowDefault.Modifier;
         if (State      is not null) defaults &= ~(int)LazyRowDefault.State;
+        if (ContentPadding is not null) defaults &= ~(int)LazyRowDefault.ContentPadding;
         if (horizontal is not null) defaults &= ~(int)LazyRowDefault.HorizontalArrangement;
 
         LazyDslKt.LazyRow(
             modifier:              modifier,
             state:                 State?.Jvm,
-            contentPadding:        null,
+            contentPadding:        ContentPadding?.Jvm,
             reverseLayout:         false,
             horizontalArrangement: horizontal,
             verticalAlignment:     null,

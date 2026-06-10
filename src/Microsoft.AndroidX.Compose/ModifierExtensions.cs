@@ -51,6 +51,21 @@ public static class ModifierExtensions
     }
 
     /// <summary>
+    /// <c>Modifier.padding(paddingValues: PaddingValues)</c> — apply a
+    /// pre-built <see cref="PaddingValues"/> as a single
+    /// <c>Modifier.padding</c> op. Useful for forwarding the
+    /// <c>PaddingValues</c> a parent <see cref="Scaffold"/> hands its
+    /// content lambda into a non-list child that should pad rather
+    /// than route into a native <c>contentPadding</c> slot.
+    /// </summary>
+    public static Modifier Padding(this Modifier modifier, PaddingValues paddingValues)
+    {
+        ArgumentNullException.ThrowIfNull(paddingValues);
+        var pv = paddingValues;
+        return modifier.Append(curr => ComposeBridges.ModifierPaddingValues(curr, ((Java.Lang.Object)pv).Handle));
+    }
+
+    /// <summary>
     /// <c>Modifier.fillMaxWidth(fraction)</c>. Defaults to filling
     /// the entire available width (<paramref name="fraction"/> = 1).
     /// </summary>

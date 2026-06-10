@@ -38,6 +38,12 @@ public sealed class LazyHorizontalGrid<T> : ComposableNode
     /// </summary>
     public LazyGridState? State { get; set; }
 
+    /// <summary>
+    /// Optional fixed content padding applied inside the grid (not as a
+    /// modifier on the grid frame).
+    /// </summary>
+    public PaddingValues? ContentPadding { get; set; }
+
     public override void Render(IComposer composer)
     {
         var modifier = BuildModifier();
@@ -57,14 +63,15 @@ public sealed class LazyHorizontalGrid<T> : ComposableNode
         });
 
         int defaults = (int)LazyHorizontalGridDefault.All & ~(int)LazyHorizontalGridDefault.Rows;
-        if (modifier is not null) defaults &= ~(int)LazyHorizontalGridDefault.Modifier;
-        if (State    is not null) defaults &= ~(int)LazyHorizontalGridDefault.State;
+        if (modifier       is not null) defaults &= ~(int)LazyHorizontalGridDefault.Modifier;
+        if (State          is not null) defaults &= ~(int)LazyHorizontalGridDefault.State;
+        if (ContentPadding is not null) defaults &= ~(int)LazyHorizontalGridDefault.ContentPadding;
 
         LazyGridDslKt.LazyHorizontalGrid(
             rows:                  _rows,
             modifier:              modifier,
             state:                 State,
-            contentPadding:        null,
+            contentPadding:        ContentPadding?.Jvm,
             reverseLayout:         false,
             horizontalArrangement: null,
             verticalArrangement:   null,

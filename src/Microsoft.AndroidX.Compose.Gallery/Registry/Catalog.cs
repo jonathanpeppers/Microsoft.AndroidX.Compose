@@ -84,6 +84,7 @@ public static class Catalog
 
         // ---- Lists & grids ----
         D.ListsGrids.LazyColumnLongDemo.Demo,
+        D.ListsGrids.LazyColumnContentPaddingDemo.Demo,
         D.ListsGrids.LazyListScrollStateDemo.Demo,
         D.ListsGrids.LazyRowDemo.Demo,
         D.ListsGrids.LazyVerticalGridFixedDemo.Demo,
@@ -164,6 +165,7 @@ public static class Catalog
         D.StateEffectsAnimation.CrossfadeDemo.Demo,
         D.StateEffectsAnimation.AnimatedContentDemo.Demo,
         D.StateEffectsAnimation.ViewModelStateFlowDemo.Demo,
+        D.StateEffectsAnimation.KotlinStateFlowDemo.Demo,
 
         // ---- CompositionLocal & misc ----
         D.LocalsMisc.LocalContextDemo.Demo,

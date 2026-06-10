@@ -79,7 +79,7 @@ public sealed class LazyColumn<T> : ComposableNode
     /// over a <see cref="Scaffold"/>-supplied <c>PaddingValues</c> when
     /// both are present.
     /// </summary>
-    public IPaddingValues? ContentPadding { get; set; }
+    public PaddingValues? ContentPadding { get; set; }
 
     /// <summary>
     /// When a parent layout (typically <see cref="Scaffold"/>) hands us
@@ -143,7 +143,7 @@ public sealed class LazyColumn<T> : ComposableNode
                 }));
         });
 
-        var contentPadding = ContentPadding ?? _runtimeContentPadding;
+        var contentPadding = ContentPadding?.Jvm ?? _runtimeContentPadding;
 
         int defaults = (int)LazyColumnDefault.All;
         if (modifier       is not null) defaults &= ~(int)LazyColumnDefault.Modifier;

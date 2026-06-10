@@ -43,6 +43,13 @@ public sealed class VerticalPager<T> : ComposableNode
     /// </summary>
     public PagerState? State { get; set; }
 
+    /// <summary>
+    /// Optional fixed content padding applied inside the pager (lets
+    /// adjacent pages peek without shrinking the page bounds via
+    /// <see cref="Modifier"/>).
+    /// </summary>
+    public PaddingValues? ContentPadding { get; set; }
+
     public override void Render(IComposer composer)
     {
         // See HorizontalPager.Render — same eager-vs-remember path.
@@ -71,12 +78,13 @@ public sealed class VerticalPager<T> : ComposableNode
         });
 
         int defaults = (int)VerticalPagerDefault.All;
-        if (modifier is not null) defaults &= ~(int)VerticalPagerDefault.Modifier;
+        if (modifier       is not null) defaults &= ~(int)VerticalPagerDefault.Modifier;
+        if (ContentPadding is not null) defaults &= ~(int)VerticalPagerDefault.ContentPadding;
 
         PagerKt.VerticalPager(
             state:                       jvmState,
             modifier:                    modifier,
-            contentPadding:              null,
+            contentPadding:              ContentPadding?.Jvm,
             pageSize:                    null,
             p4:                          0,    // beyondViewportPageCount
             pageSpacing:                 0f,
