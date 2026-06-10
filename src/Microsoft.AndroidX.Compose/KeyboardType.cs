@@ -60,32 +60,32 @@ public static class KeyboardType
     }
 
     /// <summary>The unspecified-keyboard-type sentinel (Kotlin's default).</summary>
-    public static int Unspecified => Companion().Unspecified_PjHm6EE;
+    public static int Unspecified { get; } = Companion().Unspecified_PjHm6EE;
 
     /// <summary>Plain text keyboard — the default IME on most fields.</summary>
-    public static int Text => Companion().Text_PjHm6EE;
+    public static int Text { get; } = Companion().Text_PjHm6EE;
 
     /// <summary>ASCII-only keyboard.</summary>
-    public static int Ascii => Companion().Ascii_PjHm6EE;
+    public static int Ascii { get; } = Companion().Ascii_PjHm6EE;
 
     /// <summary>Numeric-only keyboard (digits, minus, decimal).</summary>
-    public static int Number => Companion().Number_PjHm6EE;
+    public static int Number { get; } = Companion().Number_PjHm6EE;
 
     /// <summary>Telephone-number keyboard (digits + <c>+ * #</c>).</summary>
-    public static int Phone => Companion().Phone_PjHm6EE;
+    public static int Phone { get; } = Companion().Phone_PjHm6EE;
 
     /// <summary>URI-entry keyboard (<c>/ . :</c>).</summary>
-    public static int Uri => Companion().Uri_PjHm6EE;
+    public static int Uri { get; } = Companion().Uri_PjHm6EE;
 
     /// <summary>Email-address keyboard (<c>@ .</c>).</summary>
-    public static int Email => Companion().Email_PjHm6EE;
+    public static int Email { get; } = Companion().Email_PjHm6EE;
 
     /// <summary>Password keyboard — masks input, suppresses suggestions.</summary>
-    public static int Password => Companion().Password_PjHm6EE;
+    public static int Password { get; } = Companion().Password_PjHm6EE;
 
     /// <summary>Numeric password keyboard — digit-only password (e.g. PINs).</summary>
-    public static int NumberPassword => Companion().NumberPassword_PjHm6EE;
+    public static int NumberPassword { get; } = Companion().NumberPassword_PjHm6EE;
 
     /// <summary>Decimal-number keyboard (digits + decimal separator).</summary>
-    public static int Decimal => Companion().Decimal_PjHm6EE;
+    public static int Decimal { get; } = Companion().Decimal_PjHm6EE;
 }
