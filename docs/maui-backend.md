@@ -382,14 +382,9 @@ visible input/leaf controls so MAUI sample pages start to look right.
   `contentColorFor(arbitraryColor)` returns `Color.Unspecified` when
   the container colour isn't a theme token, so a Compose `Text`
   inside the button reads transparent and disappears against the
-  caller-supplied background:
-
-  | Without `MapTextColor` (`maui-phase2-button-broken.png`) | With `MapTextColor` (`maui-phase2-button-fixed.png`) |
-  | --- | --- |
-  | ![broken](maui-phase2-button-broken.png) | ![fixed](maui-phase2-button-fixed.png) |
-  | MAUI Primary container correct; "Click me" invisible. | White text legible on `#512BD4`. |
-
-  Captured live on a Pixel 6 against `net.compose.maui.sample`.
+  caller-supplied background. Both mappers ship in this slice so
+  MAUI Primary `#512BD4` + white text round-trip correctly on the
+  sample's first frame.
 
 - **`EntryHandler` over `OutlinedTextField`.** Mappers: `Text`,
   `TextColor`, `Font` (size + bold), `Placeholder`, `IsPassword`,
@@ -404,8 +399,6 @@ visible input/leaf controls so MAUI sample pages start to look right.
   [`KeyboardOptionsCompanion.cs`][kopts-companion] for why the JNI
   bootstrap exists (filed under [`dotnet/android-libraries`][andx-libs]
   follow-up).
-
-  ![entry typed](maui-phase2-entry-typed.png)
 
 - **`ImageHandler` over Compose `Image`.** `FileImageSource` only
   for this slice. Resolves the file name to an Android drawable via
@@ -423,6 +416,8 @@ visible input/leaf controls so MAUI sample pages start to look right.
   `TextChanged` → label echo, password, numeric) and pins the
   counter button to MAUI Primary so the new `MapBackground` /
   `MapTextColor` path is exercised end-to-end.
+
+  ![MAUI sample](maui-phase2-sample.png)
 
 **Generator-side adds** (shared with the gallery side of this PR):
 
