@@ -192,35 +192,139 @@ typically surfaces only the logical event; behaviors and gesture
 recognizers subscribed to the others break silently if you skip them.
 See `ButtonHandler.OnClicked` for the pattern.
 
-### Mapper rules learned the hard way in Phase 1
+### Mapper rules learned the hard way
 
-These came out of getting Label + Button to render identically to the
-stock template. Apply on every new handler.
+These came out of getting Label / Button / Entry / Image to render
+identically to the stock template. Apply on every new handler.
 
-- **Suppress `IView.Background` on Compose-skinned widgets that paint
-  their own surface** (`Button`, future `Border`, anything `Card`-/
-  `Surface`-backed). Stock `ViewMapper.MapBackground` paints a
-  `SolidColorBrush` on the outer `ComposeView`, which sits behind
-  Compose's own pill/card and produces a double-background stack.
-  Override with a no-op:
+- **Don't replicate `MapBackground` with a no-op — map it onto the
+  composable's own colour slot.** Compose Material 3 widgets paint
+  their own pill / card / surface, so a default
+  `ViewMapper.MapBackground` painting a `SolidPaint` on the outer
+  `ComposeView` produces a wide rectangle behind the smaller M3 pill.
+  The first instinct (Phase 1) was to **suppress** the entry with a
+  `(h, v) => { }` no-op. That works for "match stock M3 theme" but
+  loses the caller's `BackgroundColor=` entirely — a MAUI button with
+  `BackgroundColor="Primary"` then renders in M3 primary
+  (`#6750A4`) instead of MAUI Primary (`#512BD4`).
+
+  The right pattern is to **route the colour into the composable's
+  own slot**. For `Button`, that's `ButtonColors.containerColor` via
+  `composer.ButtonColors(containerColor: ...)`. The mapper extracts
+  the packed `long?` from a `SolidPaint`; gradients / images / `null`
+  leave the slot unset so M3's theme default applies:
 
   ```csharp
-  [nameof(IView.Background)] = (h, v) => { /* Compose owns the surface */ }
+  public static void MapBackground(ButtonHandler handler, IButton button) =>
+      handler._containerColor.Value = button.Background is SolidPaint solid
+          ? ColorMapping.ToPackedLong(solid.Color)
+          : null;
   ```
 
-  Leaves with no intrinsic surface (`Label`) should leave the default
-  `ViewMapper` mapping in place.
+  Then inside `SetContent(c => ...)`:
+
+  ```csharp
+  if (container is not null || content is not null)
+      button.Colors = c.ButtonColors(
+          containerColor: container,
+          contentColor:   content);
+  ```
+
+  The `c => ...` signature (not `_ =>`) is important — you need the
+  composer for `composer.ButtonColors(...)` to allocate inside the
+  current composition. See `ButtonHandler.cs` for the canonical
+  pairing. The same pattern extends to any future Compose-skinned
+  widget with a `*Colors` slot (`Card`, `Surface`, `TextField`).
+
+- **`MapBackground` and `MapTextColor` come as a pair on coloured
+  surfaces.** M3's `contentColorFor(arbitraryColor)` returns
+  `Color.Unspecified` when the container colour isn't one of the
+  theme's tokens — so a Compose `Text` inside a button with
+  `BackgroundColor="#512BD4"` reads transparent and disappears.
+  Always map `TextColor` (when `IButton is ITextStyle`) into the
+  matching `contentColor` slot:
+
+  ```csharp
+  public static void MapTextColor(ButtonHandler handler, IButton button)
+  {
+      if (button is ITextStyle textStyle)
+          handler._contentColor.Value = ColorMapping.ToPackedLong(textStyle.TextColor);
+  }
+  ```
+
+  Apply to any handler whose composable owns its own surface (any
+  `*Colors`-bearing Material 3 widget). Leaves with no intrinsic
+  surface (`Label`) don't need it.
 
 - **Map `HorizontalLayoutAlignment` → `Modifier.fillMaxWidth()`** when
-  the caller asks to `Fill` (Button) or `Fill`/`Center` (Label).
-  Compose's `Text` only honours `textAlign` when its measured width
-  spans the available space, so `HorizontalTextAlignment="Center"` on
-  a `Headline`/`SubHeadline` `Label` renders left-aligned until the
-  Compose `Text` also fills its slot. Same trick for Material 3
-  `Button`, which hugs its content by default and would otherwise
-  render as a small pill on the left edge for a `HorizontalOptions="Fill"`
-  button. See `LabelHandler.MapHorizontalLayoutAlignment` and
-  `ButtonHandler.MapHorizontalLayoutAlignment`.
+  the caller asks to `Fill` (Button, Entry) or `Fill`/`Center`
+  (Label). Compose's `Text` only honours `textAlign` when its
+  measured width spans the available space, so
+  `HorizontalTextAlignment="Center"` on a `Headline`/`SubHeadline`
+  `Label` renders left-aligned until the Compose `Text` also fills
+  its slot. Same trick for Material 3 `Button` (hugs its content by
+  default, would otherwise render as a small pill on the left edge
+  for `HorizontalOptions="Fill"`) and `OutlinedTextField` (otherwise
+  renders as a tiny pill on the left for an Entry with
+  `HorizontalOptions="Fill"`). See `LabelHandler.MapHorizontalLayoutAlignment`,
+  `ButtonHandler.MapHorizontalLayoutAlignment`,
+  `EntryHandler.MapHorizontalLayoutAlignment`.
+
+### Two-way input — the feedback-loop guard
+
+`Entry`-style handlers wire MAUI → Compose **and** Compose → MAUI.
+The MAUI `Text` mapper writes the Compose state from `view.Text`;
+the Compose `onValueChange` writes back to `view.Text` so MAUI's
+`TextChanged` event and bound `Command` fire. If you naively forward
+both directions you get either a feedback loop (Compose write →
+MAUI `TextChanged` → MAUI mapper → Compose write → ...) or dropped
+keystrokes (Compose doesn't see your write until the next frame, so
+the rendered value snaps back to the old state).
+
+The pattern (see `EntryHandler.OnValueChanged`):
+
+```csharp
+void OnValueChanged(string newValue)
+{
+    // 1. Update Compose state synchronously so the rendered value
+    //    stays pinned to what the user typed.
+    _text.Value = newValue;
+    // 2. Update VirtualView.Text. Triggers MAUI's TextChanged event
+    //    + property pipeline (data binding, behaviors, validation),
+    //    which re-enters MapText with the same string. That's a
+    //    no-op on MutableState<string>'s equality check — no loop.
+    if (VirtualView is { } entry)
+        entry.Text = newValue;
+}
+```
+
+No explicit `_suppressMauiWrite` flag needed — the `MutableState<T>`
+equality check breaks the cycle. **Don't use `entry.SetValueFromRenderer(...)`**;
+that's internal and bypasses the equality short-circuit. The same
+pattern works for any property pair where MAUI and Compose both
+own the read side (`Slider.Value`, `Switch.IsToggled`).
+
+### `IImage` / file source resolution (`ImageHandler` pattern)
+
+Phase 2 Slice 1 wires `FileImageSource` only. MAUI's `MauiImage`
+build action (the default for files under `Resources/Images/`)
+lower-cases the file name and emits a per-density drawable into the
+APK. Resolve via:
+
+```csharp
+var name = System.IO.Path.GetFileNameWithoutExtension(file).ToLowerInvariant();
+var id   = ctx.Resources?.GetIdentifier(name, "drawable", ctx.PackageName);
+```
+
+`dotnet_bot.png` → `R.drawable.dotnet_bot` → pass to the
+`Image(int painterResourceId)` facade.
+
+URI / stream / font / brush sources need MAUI's
+`IImageSourceService<TSource>` pipeline — they materialize into a
+`Drawable`/`Bitmap` that has to be wrapped as a Compose `Painter`.
+That's a later slice. The handler should `Debug.WriteLine` and
+return `null` (blank surface) for unsupported sources rather than
+crashing.
 
 ### Color conversion convention
 

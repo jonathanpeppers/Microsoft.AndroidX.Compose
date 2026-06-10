@@ -332,7 +332,7 @@ Compose backend.
 
 ### Phase 2 — input + visual breadth (target: "Control Gallery parity for leaves")
 
-The list mirrors the WPF backend's leaf controls:
+The full leaf list (delivered across multiple slices):
 
 `Entry`, `Editor`, `Image` (file/uri/stream/font sources), `ImageButton`,
 `CheckBox`, `Switch`, `Slider`, `ProgressBar`, `ActivityIndicator`,
@@ -340,7 +340,7 @@ The list mirrors the WPF backend's leaf controls:
 `SearchBar`, `Border`, `BoxView`, `ContentView`, `ScrollView`,
 `RefreshView`, `IndicatorView`.
 
-Each is a ~150-line handler pair backed by the existing facade
+Each is a ~150-line handler backed by the existing facade
 (`Button`, `Text`, `TextField`, `OutlinedTextField`, `Switch`,
 `Slider`, `CircularProgressIndicator`, `LinearProgressIndicator`,
 `Checkbox`, `RadioButton`, `Image`, `Icon`, `BoxView`-equivalent,
@@ -349,6 +349,130 @@ Each is a ~150-line handler pair backed by the existing facade
 Also in Phase 2: `ComposeAlertManagerSubscription` (intercept
 `AlertManager` → render via `AlertDialog`), `ComposeFontManager`,
 `ThemeManager`, `ModifierBridge` for visibility/opacity/transforms/clip/shadow.
+
+#### Phase 2 Slice 1 — `Button.MapBackground`, `EntryHandler`, `ImageHandler` ✅ shipped
+
+Goal: close the visible regression from Phase 1 (sample's button was
+M3 `#6750A4`; should be MAUI Primary `#512BD4`) and add the two most
+visible input/leaf controls so MAUI sample pages start to look right.
+
+**Delivered:**
+
+- **`Button.Colors` slot wired through the generator.** Added
+  `colors: ButtonColors?` between `shape` and `elevation` on all 5
+  Material 3 button bridges (`Button`, `ElevatedButton`,
+  `FilledTonalButton`, `OutlinedButton`, `TextButton`) in
+  `ComposeBridges.cs`, with matching `[assembly: ComposeDefaults]`
+  entries reordered to match the Kotlin bytecode signature.
+  Generator picks up `ButtonColors?` as a normal reference-type slot
+  (`ComposeReferenceTypes.cs`), so `[ComposeFacade]` emits
+  `public ButtonColors? Colors { get; set; }` on each generated
+  facade class — no new attribute or codegen branch needed. Sibling
+  `composer.ButtonColors(containerColor:, contentColor:, ...)`
+  extension in `ComposeExtensions.ButtonDefaults.cs` so call sites
+  don't hand-build the `$default` bitmask; goes through bound
+  `ButtonDefaults.Instance.ButtonColors(...)`. Gallery demo:
+  `Buttons/ColorOverridesDemo.cs`.
+
+- **`ButtonHandler.MapBackground` + `MapTextColor`.** Replaces
+  Phase 1's `(h, v) => { /* no-op */ }` placeholder. Extracts
+  `SolidPaint.Color` → packed `long?` →
+  `c.ButtonColors(containerColor: …)`. Also maps `ITextStyle.TextColor`
+  → `contentColor`. **Both mappers are required.** M3's
+  `contentColorFor(arbitraryColor)` returns `Color.Unspecified` when
+  the container colour isn't a theme token, so a Compose `Text`
+  inside the button reads transparent and disappears against the
+  caller-supplied background:
+
+  | Without `MapTextColor` (`maui-phase2-button-broken.png`) | With `MapTextColor` (`maui-phase2-button-fixed.png`) |
+  | --- | --- |
+  | ![broken](maui-phase2-button-broken.png) | ![fixed](maui-phase2-button-fixed.png) |
+  | MAUI Primary container correct; "Click me" invisible. | White text legible on `#512BD4`. |
+
+  Captured live on a Pixel 6 against `net.compose.maui.sample`.
+
+- **`EntryHandler` over `OutlinedTextField`.** Mappers: `Text`,
+  `TextColor`, `Font` (size + bold), `Placeholder`, `IsPassword`,
+  `Keyboard`, `IsReadOnly`, `HorizontalLayoutAlignment` →
+  `FillMaxWidth`. Two-way binding via Compose `onValueChange` →
+  `VirtualView.Text`; the re-entry through `MapText` is broken by
+  `MutableState<string>`'s equality check (no `_suppressMauiWrite`
+  flag needed). `IsPassword` selects
+  `PasswordVisualTransformation('•')`. `Keyboard` (MAUI) lowers to a
+  Compose `KeyboardType` int forwarded to
+  `KeyboardOptionsCompanion.Default.Copy(...)` — see
+  [`KeyboardOptionsCompanion.cs`][kopts-companion] for why the JNI
+  bootstrap exists (filed under [`dotnet/android-libraries`][andx-libs]
+  follow-up).
+
+  ![entry typed](maui-phase2-entry-typed.png)
+
+- **`ImageHandler` over Compose `Image`.** `FileImageSource` only
+  for this slice. Resolves the file name to an Android drawable via
+  `Context.Resources.GetIdentifier(name.ToLowerInvariant(), "drawable",
+  PackageName)` — the common case for MAUI apps with images under
+  `Resources/Images/`. `Aspect` maps `AspectFit` → `ContentScale.Fit`,
+  `AspectFill` → `Crop`, `Fill` → `FillBounds`. URI / stream / font
+  sources `Debug.WriteLine` and bail (blank surface), tracked in the
+  Phase 2 follow-up below.
+
+- **`AppHostBuilderExtensions.UseAndroidXCompose()`** now registers
+  `EntryHandler` + `ImageHandler` alongside the Phase 1 pair.
+
+- Sample `MainPage.xaml` extended with three Entries (plain w/
+  `TextChanged` → label echo, password, numeric) and pins the
+  counter button to MAUI Primary so the new `MapBackground` /
+  `MapTextColor` path is exercised end-to-end.
+
+**Generator-side adds** (shared with the gallery side of this PR):
+
+- `TextField` + `OutlinedTextField` gained `TextStyle?`,
+  `IVisualTransformation?`, and `KeyboardOptions?` slots so the new
+  password / keyboard / colour-override mappers have somewhere to
+  write. Gallery demos in `TextInputs/`.
+- `KeyboardOptionsCompanion` (public) — JNI bootstrap for
+  `KeyboardOptions.Companion` because Mono's binder skips the
+  static `Companion` field accessor on Kotlin `object` companions.
+  Same pattern as `TextStyleCompanion`. Fix-up tracked against
+  `dotnet/android-libraries` Metadata.xml.
+
+[kopts-companion]: ../src/Microsoft.AndroidX.Compose/KeyboardOptionsCompanion.cs
+[andx-libs]: https://github.com/dotnet/android-libraries
+
+##### Lessons learned (Slice 1)
+
+- **Don't suppress `MapBackground` — route it onto the composable's
+  own colour slot.** Phase 1's no-op pattern was a regression: the
+  caller's `BackgroundColor=` got dropped silently. The right
+  pattern is "extract the SolidPaint, pack it, write it into the
+  *Colors slot via a `composer.XxxColors(...)` helper".
+- **`*Colors` slots come in container/content pairs.** Set one
+  without the other and M3's `contentColorFor` returns
+  `Color.Unspecified` — text disappears. Always map `TextColor` →
+  `contentColor` next to `Background` → `containerColor`.
+- **The Compose `onValueChange` → `VirtualView.Text` write does
+  *not* need a feedback-loop guard flag.** `MutableState<T>`'s
+  equality short-circuit breaks the re-entry. (`SetValueFromRenderer`
+  is internal and bypasses the equality check — avoid.)
+- **Mono's binder generates Kotlin `object` companion classes but
+  skips the outer-class `Companion` field accessor.** Until that
+  fix-up lands upstream, JNI bootstrap with a static cached global
+  ref is the only path. Adopted from `TextStyleCompanion`'s Phase 1
+  pattern.
+
+**Deferred to a future Phase 2 slice:**
+
+- `Editor` (multi-line `OutlinedTextField`).
+- `CheckBox`, `Switch`, `Slider`, `ProgressBar`,
+  `ActivityIndicator`, `RadioButton`, `Stepper`, `Picker`,
+  `DatePicker`, `TimePicker`, `SearchBar`, `Border`, `BoxView`,
+  `ContentView`, `ScrollView`, `RefreshView`, `IndicatorView`,
+  `ImageButton`.
+- Non-file image sources (URI / stream / font / brush) via MAUI's
+  `IImageSourceService<TSource>` pipeline.
+- `ComposeAlertManagerSubscription`, `ComposeFontManager`,
+  `ThemeManager`, `ModifierBridge`.
+- Option 2 ("one ComposeView per page") rewrite.
 
 ### Phase 3 — collection + container (target: list-driven apps)
 
