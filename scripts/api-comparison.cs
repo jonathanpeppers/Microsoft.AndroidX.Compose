@@ -21,15 +21,9 @@
 // Re-run after bumping a Compose package version in Directory.Build.targets
 // and the report auto-refreshes.
 
-using System;
-using System.Collections.Generic;
-using System.IO;
 using System.IO.Compression;
-using System.Linq;
-using System.Net.Http;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 
 const string CacheRoot       = "obj/api-coverage";
 const string SourcesDir      = CacheRoot + "/sources";
