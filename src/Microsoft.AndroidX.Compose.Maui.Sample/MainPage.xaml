@@ -74,16 +74,6 @@
                 SemanticProperties.Hint="Counts the number of times you click"
                 Clicked="OnCounterClicked"
                 HorizontalOptions="Fill" />
-
-            <!-- Exercises ContentScale.Crop on the same image source
-                 to prove the Aspect mapper differentiates from the
-                 AspectFit case above. Cropped to a strip so the
-                 visual difference is obvious. -->
-            <Image
-                Source="dotnet_bot.png"
-                HeightRequest="80"
-                Aspect="AspectFill"
-                SemanticProperties.Description="cropped dot net bot strip" />
         </VerticalStackLayout>
     </ScrollView>
 
