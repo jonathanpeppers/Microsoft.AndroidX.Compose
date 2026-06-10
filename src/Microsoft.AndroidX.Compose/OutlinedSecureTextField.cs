@@ -51,6 +51,9 @@ public sealed class OutlinedSecureTextField : ComposableNode
     /// <summary>Optional supporting text rendered below the field (Kotlin <c>supportingText</c>).</summary>
     public ComposableNode? SupportingText { get; set; }
 
+    /// <summary>Optional shape applied to the field's outlined container (Kotlin <c>shape</c>).</summary>
+    public Shape? Shape { get; set; }
+
     public override void Render(IComposer composer)
     {
         var statePeer = _state.Resolve(composer);
@@ -90,6 +93,7 @@ public sealed class OutlinedSecureTextField : ComposableNode
             trailingIcon:   trailingIcon,
             supportingText: supportingText,
             isError:        IsError,
+            shape:          Shape,
             composer:       composer);
     }
 }

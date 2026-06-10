@@ -46,6 +46,8 @@ public sealed class OutlinedTextField : ComposableNode
     public int?            MaxLines       { get; set; }
     /// <summary>Minimum number of visible lines.</summary>
     public int?            MinLines       { get; set; }
+    /// <summary>Optional shape applied to the field's outlined container (Kotlin <c>shape</c>).</summary>
+    public Shape?          Shape          { get; set; }
 
     /// <summary>String-overload ctor — pass the current value and a callback.</summary>
     public OutlinedTextField(string value, Action<string> onValueChange)
@@ -97,6 +99,7 @@ public sealed class OutlinedTextField : ComposableNode
         ComposeBridges.OutlinedTextField(_value!, __onValueChange, BuildModifier(),
             Enabled, ReadOnly, __label, __placeholder, __leadingIcon, __trailingIcon,
             __prefix, __suffix, __supportingText, IsError, SingleLine, MaxLines, MinLines,
+            Shape,
             composer);
     }
 
@@ -123,6 +126,7 @@ public sealed class OutlinedTextField : ComposableNode
         ComposeBridges.OutlinedTextFieldWithValue(current, __onValueChange, BuildModifier(),
             Enabled, ReadOnly, __label, __placeholder, __leadingIcon, __trailingIcon,
             __prefix, __suffix, __supportingText, IsError, SingleLine, MaxLines, MinLines,
+            Shape,
             composer);
     }
 }

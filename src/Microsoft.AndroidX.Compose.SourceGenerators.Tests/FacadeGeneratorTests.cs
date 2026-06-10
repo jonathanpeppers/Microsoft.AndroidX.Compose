@@ -2262,6 +2262,46 @@ public class FacadeGeneratorTests
     }
 
     [Fact]
+    public void OptionalValue_ShapeEmitsNullableReferenceProperty()
+    {
+        // Regression: Shape? on a Card-style facade should classify as
+        // OptionalValue, surface as a `Shape? Shape { get; set; }`
+        // auto-property, and forward through the bridge call positionally.
+        // Auto-mask must clear CardDefault.Shape when the caller assigns.
+        var code = """
+            using global::AndroidX.Compose.Runtime;
+            using global::AndroidX.Compose.UI;
+            using AndroidX.Compose;
+            using Kotlin.Jvm.Functions;
+
+            [assembly: ComposeDefaults("CardDefault",
+                "modifier", "shape", "!content")]
+
+            namespace AndroidX.Compose
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(Class="androidx/compose/material3/CardKt", JvmName="Card",
+                                   Signature="(Landroidx/compose/ui/Modifier;Landroidx/compose/ui/graphics/Shape;Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;II)V",
+                                   Defaults=typeof(CardDefault))]
+                    [ComposeFacade]
+                    public static partial void Card(IModifier? modifier, Shape? shape, IFunction3 content, IComposer composer);
+                }
+            }
+            """;
+
+        var (output, diags, emitted) = Run(code, "Card");
+        Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+        Assert.Contains("public global::AndroidX.Compose.Shape? Shape { get; set; }", emitted);
+        // The bridge call forwards `Shape` positionally — between BuildModifier() and __content.
+        Assert.Contains("global::AndroidX.Compose.ComposeBridges.Card(BuildModifier(), Shape, __content, composer);", emitted);
+
+        var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
+        Assert.Empty(errors);
+    }
+
+    [Fact]
     public void OptionalValue_NonNullableReferenceWrapperIsRejected()
     {
         // Non-nullable FontWeight (no `?`) must not classify as
