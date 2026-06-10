@@ -26,11 +26,7 @@
 // scripts/api-comparison.cs. The repo's "one type per file" discipline
 // makes regex sufficient.
 
-using System;
-using System.Collections.Generic;
 using System.Globalization;
-using System.IO;
-using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 
