@@ -193,7 +193,7 @@ public static class Conversation
 
             // Jump to bottom button shows up when the user has scrolled
             // away from the newest message (index 0 in reverse layout).
-            new Composed(c =>
+            c =>
             {
                 var visible = messagesScroll.FirstVisibleItemIndex != 0
                            || messagesScroll.FirstVisibleItemScrollOffset > 0;
@@ -210,7 +210,7 @@ public static class Conversation
                     Icon = new Icon(Resource.Drawable.ic_arrow_downward, "Jump to bottom"),
                     Text = new Text("Jump to bottom"),
                 };
-            }),
+            },
         };
     }
 
