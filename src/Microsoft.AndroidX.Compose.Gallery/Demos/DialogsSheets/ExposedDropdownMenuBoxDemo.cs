@@ -13,8 +13,8 @@ public static class ExposedDropdownMenuBoxDemo
         Description: "Read-only TextField + ▼ button toggles an anchored popup list.",
         Build:       c =>
         {
-            var open     = c.Remember(() => new MutableState<bool>(false));
-            var selected = c.Remember(() => new MutableState<string>("Apple"));
+            var open     = c.MutableStateOf(false);
+            var selected = c.MutableStateOf("Apple");
             return new ExposedDropdownMenuBox(
                 expanded:         open.Value,
                 onExpandedChange: v => open.Value = v)

@@ -13,8 +13,8 @@ public static class TimePickerDialogDemo
         Description: "Confirm reads Hour + Minute from TimePickerState.",
         Build:       c =>
         {
-            var open   = c.Remember(() => new MutableState<bool>(false));
-            var picked = c.Remember(() => new MutableState<string>("(none)"));
+            var open   = c.MutableStateOf(false);
+            var picked = c.MutableStateOf("(none)");
             var state  = c.Remember(() => new TimePickerState(initialHour: 9, initialMinute: 30));
             return new Column
             {

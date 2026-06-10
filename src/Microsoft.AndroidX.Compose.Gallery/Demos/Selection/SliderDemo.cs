@@ -13,7 +13,7 @@ public static class SliderDemo
         Description: "Continuous Slider mapped to a MutableNumberState<float>.",
         Build:       c =>
         {
-            var value = c.Remember(() => new MutableNumberState<float>(0.4f));
+            var value = c.MutableStateOf(0.4f);
             return new Column
             {
                 new Slider(value: value.Value, onValueChange: v => value.Value = v),

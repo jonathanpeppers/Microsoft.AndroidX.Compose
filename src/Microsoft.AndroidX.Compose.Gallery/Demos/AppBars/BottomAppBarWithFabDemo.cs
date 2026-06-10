@@ -13,7 +13,7 @@ public static class BottomAppBarWithFabDemo
         Description: "BottomAppBar exposes a FloatingActionButton slot for the primary action.",
         Build:       c =>
         {
-            var count = c.Remember(() => new MutableNumberState<int>(0));
+            var count = c.MutableStateOf(0);
             return new Column
             {
                 new Text($"count = {count}"),

@@ -13,7 +13,7 @@ public static class AnimatedContentDemo
         Description: "Like Crossfade, but with a slide and size change in addition to the fade. Each step uses a different colour so the transition is visible.",
         Build:       c =>
         {
-            var step = c.Remember(() => new MutableNumberState<int>(0));
+            var step = c.MutableStateOf(0);
             Color[] palette =
             [
                 Color.FromRgb(0xB3, 0xE5, 0xFC),

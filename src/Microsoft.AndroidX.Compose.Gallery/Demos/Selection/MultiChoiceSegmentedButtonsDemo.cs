@@ -13,8 +13,8 @@ public static class MultiChoiceSegmentedButtonsDemo
         Description: "MultiChoiceSegmentedButtonRow with two independently checkable SegmentedButtons.",
         Build:       c =>
         {
-            var bold   = c.Remember(() => new MutableState<bool>(false));
-            var italic = c.Remember(() => new MutableState<bool>(false));
+            var bold   = c.MutableStateOf(false);
+            var italic = c.MutableStateOf(false);
             return new Column
             {
                 new MultiChoiceSegmentedButtonRow

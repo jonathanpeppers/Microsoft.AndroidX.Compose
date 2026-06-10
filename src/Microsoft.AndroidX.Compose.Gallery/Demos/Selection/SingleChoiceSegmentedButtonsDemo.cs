@@ -13,7 +13,7 @@ public static class SingleChoiceSegmentedButtonsDemo
         Description: "SingleChoiceSegmentedButtonRow with three SegmentedButtons.",
         Build:       c =>
         {
-            var picked = c.Remember(() => new MutableNumberState<int>(0));
+            var picked = c.MutableStateOf(0);
             return new Column
             {
                 new SingleChoiceSegmentedButtonRow

@@ -14,7 +14,7 @@ public static class DragAndDropTargetDemo
         Build:       _ => new Composed(c =>
         {
             var drops    = c.Remember(() => new MutableStateList<string>());
-            var hovering = c.Remember(() => new MutableState<bool>(false));
+            var hovering = c.MutableStateOf(false);
             var target = c.Remember(() => new DragAndDropTarget
             {
                 OnEntered = _ => hovering.Value = true,

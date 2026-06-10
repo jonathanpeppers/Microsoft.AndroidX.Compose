@@ -33,8 +33,8 @@ public static class HomeScreen
             // the wordmark title for an inline OutlinedTextField. The search
             // is purely visual today — wiring it to filter the feed needs
             // Modifier.interceptKey(Key.Enter), tracked in #159.
-            var searchOpen  = c.Remember(() => new MutableState<bool>(false));
-            var searchQuery = c.Remember(() => new MutableState<string>(string.Empty));
+            var searchOpen  = c.MutableStateOf(false);
+            var searchQuery = c.MutableStateOf(string.Empty);
             var snackbarMessage = snackbars.Message.Value;
 
             return new Scaffold

@@ -13,8 +13,8 @@ public static class ChipsDemo
         Description: "AssistChip, FilterChip, SuggestionChip (plus Elevated variants).",
         Build:       c =>
         {
-            var count = c.Remember(() => new MutableNumberState<int>(0));
-            var liked = c.Remember(() => new MutableState<bool>(false));
+            var count = c.MutableStateOf(0);
+            var liked = c.MutableStateOf(false);
             return new Column(verticalArrangement: Arrangement.SpacedBy(8))
             {
                 new Text($"Count: {count}, liked: {liked.Value}"),

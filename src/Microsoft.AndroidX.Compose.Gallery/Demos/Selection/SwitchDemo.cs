@@ -13,7 +13,7 @@ public static class SwitchDemo
         Description: "Bool-bound Switch with live status text.",
         Build:       c =>
         {
-            var on = c.Remember(() => new MutableState<bool>(false));
+            var on = c.MutableStateOf(false);
             return new Column
             {
                 new Row
