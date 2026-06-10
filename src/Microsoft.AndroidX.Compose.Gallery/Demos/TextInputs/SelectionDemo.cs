@@ -14,7 +14,7 @@ public static class SelectionDemo
         CategoryId:  "text-inputs",
         Title:       "Selectable text",
         Description: "SelectionContainer makes Text selectable; DisableSelection opts a subtree out.",
-        Build:       _ => new Column(verticalArrangement: Arrangement.SpacedBy(16))
+        Build:       _ => new Column(verticalArrangement: Arrangement.SpacedBy(16.Dp()))
         {
             new Text("1) Outside any SelectionContainer — long-press does nothing.")
             {

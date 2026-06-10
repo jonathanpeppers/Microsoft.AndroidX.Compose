@@ -36,17 +36,17 @@ public static class CustomColorSchemeDemo
                     outline:              Color.FromRgb(0x00, 0x79, 0x6B)),
                 UseDynamicColor = false,
             };
-            themed.Add(new Row(horizontalArrangement: Arrangement.SpacedBy(8))
+            themed.Add(new Row(horizontalArrangement: Arrangement.SpacedBy(8.Dp()))
             {
                 new Button(onClick: () => { })            { new Text("Primary") },
                 new FilledTonalButton(onClick: () => { }) { new Text("Tonal") },
                 new OutlinedButton(onClick: () => { })    { new Text("Outline") },
             });
 
-            return new Column(verticalArrangement: Arrangement.SpacedBy(12))
+            return new Column(verticalArrangement: Arrangement.SpacedBy(12.Dp()))
             {
                 new Text("Default M3 baseline:"),
-                new Row(horizontalArrangement: Arrangement.SpacedBy(8))
+                new Row(horizontalArrangement: Arrangement.SpacedBy(8.Dp()))
                 {
                     new Button(onClick: () => { })            { new Text("Primary") },
                     new FilledTonalButton(onClick: () => { }) { new Text("Tonal") },

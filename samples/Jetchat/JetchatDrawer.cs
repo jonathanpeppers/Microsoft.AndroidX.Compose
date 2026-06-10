@@ -107,7 +107,7 @@ public static class JetchatDrawer
             new Icon(Resource.Drawable.ic_jetchat, null)
             {
                 Modifier = Modifier.Padding(top: 16, bottom: 16, start: 16, end: 0),
-                TintArgb = iconTint,
+                Tint = iconTint,
             },
             new Text(channel)
             {

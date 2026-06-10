@@ -15,7 +15,7 @@ public static class ChipsDemo
         {
             var count = c.MutableStateOf(0);
             var liked = c.MutableStateOf(false);
-            return new Column(verticalArrangement: Arrangement.SpacedBy(8))
+            return new Column(verticalArrangement: Arrangement.SpacedBy(8.Dp()))
             {
                 new Text($"Count: {count}, liked: {liked.Value}"),
                 new FlowRow

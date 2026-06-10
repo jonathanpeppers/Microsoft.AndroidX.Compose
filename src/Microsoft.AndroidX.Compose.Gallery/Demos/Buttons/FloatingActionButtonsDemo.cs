@@ -14,12 +14,12 @@ public static class FloatingActionButtonsDemo
         Build:       c =>
         {
             var count = c.MutableStateOf(0);
-            return new Column(verticalArrangement: Arrangement.SpacedBy(12))
+            return new Column(verticalArrangement: Arrangement.SpacedBy(12.Dp()))
             {
                 new Text($"Tapped: {count}"),
                 new FloatingActionButton(onClick: () => count++)
                     { new Text("✕") },
-                new Row(horizontalArrangement: Arrangement.SpacedBy(12))
+                new Row(horizontalArrangement: Arrangement.SpacedBy(12.Dp()))
                 {
                     new SmallFloatingActionButton(onClick: () => count++) { new Text("+") },
                     new LargeFloatingActionButton(onClick: () => count++) { new Text("+") },

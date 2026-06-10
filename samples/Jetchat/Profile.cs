@@ -46,7 +46,7 @@ public static class Profile
             {
                 new Icon(Resource.Drawable.ic_arrow_back, "Back")
                 {
-                    TintArgb = scheme.OnSurfaceVariant,
+                    Tint = scheme.OnSurfaceVariant,
                 },
             },
             Title   = new Text(""),
@@ -58,7 +58,7 @@ public static class Profile
                         .Clickable(() => popupOpen.Value = true)
                         .Padding(horizontal: 12, vertical: 16)
                         .Height(24),
-                    TintArgb = scheme.OnSurfaceVariant,
+                    Tint = scheme.OnSurfaceVariant,
                 },
             },
         };
@@ -147,7 +147,7 @@ public static class Profile
             Modifier.Padding(start: 16, end: 16, top: 0, bottom: 16),
             new HorizontalDivider
             {
-                ColorArgb = scheme.OnSurface,
+                Color = scheme.OnSurface,
             },
             new Text(label)
             {
@@ -186,7 +186,7 @@ public static class Profile
                 .WidthIn(min: 48),
             Icon = new Icon(iconRes, label)
             {
-                TintArgb = scheme.OnTertiaryContainer,
+                Tint = scheme.OnTertiaryContainer,
             },
             Text = new Text(label)
             {
