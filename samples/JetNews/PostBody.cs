@@ -95,7 +95,7 @@ internal static class PostBody
             new Text("•")
             {
                 FontSize = 16,
-                Modifier = Modifier.Padding(end: 8, top: 0, start: 0, bottom: 0),
+                Modifier = Modifier.Padding(end: 8),
             },
             Styled(p, fontSize: 16),
         };

@@ -42,7 +42,7 @@ public static class NullableMutableStateDemo
                     new Button(onClick: () => selectedId.Value = null)
                         { new Text("Clear") },
                 },
-                new HorizontalDivider { Modifier = Modifier.Padding(0, 8) },
+                new HorizontalDivider { Modifier = Modifier.Padding(vertical: 8) },
                 new Text("Below: a CompositionLocal<long?> reads null by default, then a provider supplies the current selectedId:"),
                 new SelectedIdLabel(),
                 new CompositionLocalProvider

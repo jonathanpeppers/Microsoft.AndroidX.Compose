@@ -91,11 +91,11 @@ public sealed class Modifier
     /// <inheritdoc cref="ModifierExtensions.Padding(Dp)"/>
     public static Modifier Padding(Dp all) => _companion.Padding(all);
 
-    /// <inheritdoc cref="ModifierExtensions.Padding(Dp, Dp)"/>
-    public static Modifier Padding(Dp horizontal, Dp vertical) => _companion.Padding(horizontal, vertical);
+    /// <inheritdoc cref="ModifierExtensions.Padding(Modifier, Dp, Dp)"/>
+    public static Modifier Padding(Dp horizontal = default, Dp vertical = default) => _companion.Padding(horizontal, vertical);
 
-    /// <inheritdoc cref="ModifierExtensions.Padding(Dp, Dp, Dp, Dp)"/>
-    public static Modifier Padding(Dp start, Dp top, Dp end, Dp bottom) => _companion.Padding(start, top, end, bottom);
+    /// <inheritdoc cref="ModifierExtensions.Padding(Modifier, Dp, Dp, Dp, Dp)"/>
+    public static Modifier Padding(Dp start = default, Dp top = default, Dp end = default, Dp bottom = default) => _companion.Padding(start, top, end, bottom);
 
     /// <inheritdoc cref="ModifierExtensions.Padding(PaddingValues)"/>
     public static Modifier Padding(PaddingValues paddingValues) => _companion.Padding(paddingValues);

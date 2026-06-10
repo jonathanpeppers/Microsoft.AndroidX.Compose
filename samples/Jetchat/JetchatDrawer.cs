@@ -61,19 +61,19 @@ public static class JetchatDrawer
         new()
         {
             Modifier = sidePadding > 0
-                ? Modifier.Padding(horizontal: sidePadding, vertical: 0)
+                ? Modifier.Padding(horizontal: sidePadding)
                 : null,
         };
 
     static Box BuildSectionHeader(string label, ColorScheme scheme) =>
         new()
         {
-            Modifier.FillMaxWidth().Height(52).Padding(horizontal: 28, vertical: 0),
+            Modifier.FillMaxWidth().Height(52).Padding(horizontal: 28),
             new Text(label)
             {
                 FontSize = 14,
                 Color    = scheme.OnSurfaceVariant,
-                Modifier = Modifier.Padding(top: 16, bottom: 0, start: 0, end: 0),
+                Modifier = Modifier.Padding(top: 16),
             },
         };
 
@@ -88,7 +88,7 @@ public static class JetchatDrawer
         var modifier = Modifier
             .FillMaxWidth()
             .Height(56)
-            .Padding(horizontal: 12, vertical: 0)
+            .Padding(horizontal: 12)
             .Clip(28)
             .Clickable(() =>
             {
@@ -106,7 +106,7 @@ public static class JetchatDrawer
             modifier,
             new Icon(Resource.Drawable.ic_jetchat, null)
             {
-                Modifier = Modifier.Padding(top: 16, bottom: 16, start: 16, end: 0),
+                Modifier = Modifier.Padding(top: 16, bottom: 16, start: 16),
                 Tint = iconTint,
             },
             new Text(channel)
@@ -114,7 +114,7 @@ public static class JetchatDrawer
                 FontSize   = 14,
                 FontWeight = selected ? FontWeight.SemiBold : FontWeight.Normal,
                 Color      = textColor,
-                Modifier   = Modifier.Padding(top: 16, bottom: 16, start: 12, end: 0),
+                Modifier   = Modifier.Padding(top: 16, bottom: 16, start: 12),
             },
         };
     }
@@ -132,7 +132,7 @@ public static class JetchatDrawer
         var modifier = Modifier
             .FillMaxWidth()
             .Height(56)
-            .Padding(horizontal: 12, vertical: 0)
+            .Padding(horizontal: 12)
             .Clip(28)
             .Clickable(() =>
             {
@@ -148,7 +148,7 @@ public static class JetchatDrawer
             new Image(avatarRes, "Profile photo")
             {
                 Modifier = Modifier
-                    .Padding(top: 16, bottom: 16, start: 16, end: 0)
+                    .Padding(top: 16, bottom: 16, start: 16)
                     .Size(24)
                     .Clip(12),
             },
@@ -156,7 +156,7 @@ public static class JetchatDrawer
             {
                 FontSize = 14,
                 Color    = scheme.OnSurface,
-                Modifier = Modifier.Padding(top: 16, bottom: 16, start: 12, end: 0),
+                Modifier = Modifier.Padding(top: 16, bottom: 16, start: 12),
             },
         };
     }

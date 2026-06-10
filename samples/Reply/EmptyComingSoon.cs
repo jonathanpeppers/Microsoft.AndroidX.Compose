@@ -27,7 +27,7 @@ public static class EmptyComingSoon
                 {
                     FontSize = 14,
                     Color    = scheme.OnSurfaceVariant,
-                    Modifier = Modifier.Padding(horizontal: 16, vertical: 0),
+                    Modifier = Modifier.Padding(horizontal: 16),
                 },
             };
         });

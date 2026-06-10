@@ -39,7 +39,7 @@ public sealed class GalleryDrawer : ComposableNode
             new HorizontalDivider(),
             new Spacer { Modifier = Modifier.Height(8) },
             new GalleryDrawerItem("🏠", "Home", () => Navigate("home")),
-            new HorizontalDivider { Modifier = Modifier.Padding(0, 8) },
+            new HorizontalDivider { Modifier = Modifier.Padding(vertical: 8) },
         };
 
         foreach (var category in Catalog.Categories)
