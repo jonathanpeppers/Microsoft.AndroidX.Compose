@@ -29,7 +29,7 @@ public sealed class ReplySearchBar : ComposableNode
                     Modifier.FillMaxWidth().Padding(horizontal: 16, vertical: 12),
                     new Icon(Resource.Drawable.ic_search, "Search")
                     {
-                        TintArgb = scheme.OnSurface,
+                        Tint = scheme.OnSurface,
                         Modifier = Modifier.Align(Alignment.Vertical.CenterVertically),
                     },
                     new Text("Search replies")

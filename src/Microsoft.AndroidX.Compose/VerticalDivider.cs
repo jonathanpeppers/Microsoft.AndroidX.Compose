@@ -12,8 +12,8 @@ public sealed class VerticalDivider : ComposableNode
     /// <summary>Optional explicit thickness in Dp. Leave null to use the Material default.</summary>
     public float? ThicknessDp { get; set; }
 
-    /// <summary>Optional explicit ARGB color (packed into a Compose <c>Color</c> long). Leave null to use the Material default.</summary>
-    public long? ColorArgb { get; set; }
+    /// <summary>Optional explicit color. Leave null to use the Material default.</summary>
+    public Color? Color { get; set; }
 
     public override void Render(IComposer composer)
     {
@@ -22,12 +22,12 @@ public sealed class VerticalDivider : ComposableNode
         int defaults = (int)VerticalDividerDefault.All;
         if (modifier is not null)        defaults &= ~(int)VerticalDividerDefault.Modifier;
         if (ThicknessDp.HasValue)        defaults &= ~(int)VerticalDividerDefault.Thickness;
-        if (ColorArgb.HasValue)          defaults &= ~(int)VerticalDividerDefault.Color;
+        if (Color.HasValue)              defaults &= ~(int)VerticalDividerDefault.Color;
 
         DividerKt.VerticalDivider(
             modifier:  modifier,
             thickness: ThicknessDp ?? 0f,
-            color:     ColorArgb   ?? 0L,
+            color:     Color is { } c ? c : 0L,
             _composer: composer,
             p4:        0,
             _changed:  defaults);

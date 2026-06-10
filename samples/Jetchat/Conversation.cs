@@ -85,7 +85,7 @@ public static class Conversation
                         .Clickable(() => popupOpen.Value = true)
                         .Padding(horizontal: 12, vertical: 16)
                         .Height(24),
-                    TintArgb = scheme.OnSurfaceVariant,
+                    Tint = scheme.OnSurfaceVariant,
                 },
                 new Icon(Resource.Drawable.ic_info, "Information")
                 {
@@ -93,7 +93,7 @@ public static class Conversation
                         .Clickable(() => popupOpen.Value = true)
                         .Padding(horizontal: 12, vertical: 16)
                         .Height(24),
-                    TintArgb = scheme.OnSurfaceVariant,
+                    Tint = scheme.OnSurfaceVariant,
                 },
             },
         };
@@ -221,7 +221,7 @@ public static class Conversation
             new HorizontalDivider
             {
                 Modifier  = Modifier.Weight(1f),
-                ColorArgb = scheme.OnSurface,
+                Color = scheme.OnSurface,
             },
             new Text(label)
             {
@@ -233,7 +233,7 @@ public static class Conversation
             new HorizontalDivider
             {
                 Modifier  = Modifier.Weight(1f),
-                ColorArgb = scheme.OnSurface,
+                Color = scheme.OnSurface,
             },
         };
 
@@ -426,7 +426,7 @@ public static class Conversation
         {
             new Icon(drawableId, contentDescription)
             {
-                TintArgb = selected ? scheme.OnSecondary : scheme.OnSurface,
+                Tint = selected ? scheme.OnSecondary : scheme.OnSurface,
             },
         };
         if (selected)

@@ -63,7 +63,7 @@ public static class ReplyEmailThreadItem
                     .Background(scheme.SurfaceVariant),
                 new Icon(Resource.Drawable.ic_star_border, "Favorite")
                 {
-                    TintArgb = scheme.Outline,
+                    Tint = scheme.Outline,
                 },
             },
         };
