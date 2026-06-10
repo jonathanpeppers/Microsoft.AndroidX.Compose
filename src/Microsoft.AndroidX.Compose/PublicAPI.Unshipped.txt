@@ -204,6 +204,18 @@ AndroidX.Compose.ConfirmStateChangeAdapter<T>.Callback.get -> System.Func<T!, bo
 AndroidX.Compose.ConfirmStateChangeAdapter<T>.Callback.set -> void
 AndroidX.Compose.ConfirmStateChangeAdapter<T>.ConfirmStateChangeAdapter() -> void
 AndroidX.Compose.ConfirmStateChangeAdapter<T>.Invoke(Java.Lang.Object? p0) -> Java.Lang.Object?
+AndroidX.Compose.Constraints
+AndroidX.Compose.Constraints.ConstrainHeight(int height) -> int
+AndroidX.Compose.Constraints.Constraints() -> void
+AndroidX.Compose.Constraints.ConstrainWidth(int width) -> int
+AndroidX.Compose.Constraints.HasBoundedHeight.get -> bool
+AndroidX.Compose.Constraints.HasBoundedWidth.get -> bool
+AndroidX.Compose.Constraints.MaxHeight.get -> int
+AndroidX.Compose.Constraints.MaxWidth.get -> int
+AndroidX.Compose.Constraints.MinHeight.get -> int
+AndroidX.Compose.Constraints.MinWidth.get -> int
+AndroidX.Compose.Constraints.WithMaxHeight(int maxHeight) -> AndroidX.Compose.Constraints
+AndroidX.Compose.Constraints.WithMaxWidth(int maxWidth) -> AndroidX.Compose.Constraints
 AndroidX.Compose.ContentScale
 AndroidX.Compose.Crossfade<T>
 AndroidX.Compose.Crossfade<T>.Crossfade(T targetState, System.Func<T, AndroidX.Compose.ComposableNode!>! content) -> void
@@ -597,6 +609,8 @@ AndroidX.Compose.LaunchedEffect
 AndroidX.Compose.LaunchedEffect.LaunchedEffect(object? key1, object? key2, object? key3, System.Func<System.Threading.CancellationToken, System.Threading.Tasks.Task!>! body) -> void
 AndroidX.Compose.LaunchedEffect.LaunchedEffect(object? key1, object? key2, System.Func<System.Threading.CancellationToken, System.Threading.Tasks.Task!>! body) -> void
 AndroidX.Compose.LaunchedEffect.LaunchedEffect(object? key1, System.Func<System.Threading.CancellationToken, System.Threading.Tasks.Task!>! body) -> void
+AndroidX.Compose.Layout
+AndroidX.Compose.Layout.Layout(System.Func<AndroidX.Compose.MeasureScope!, System.Collections.Generic.IReadOnlyList<AndroidX.Compose.Measurable!>!, AndroidX.Compose.Constraints, AndroidX.Compose.MeasureResult!>! measurePolicy) -> void
 AndroidX.Compose.LazyColumn<T>
 AndroidX.Compose.LazyColumn<T>.ContentPadding.get -> AndroidX.Compose.PaddingValues?
 AndroidX.Compose.LazyColumn<T>.ContentPadding.set -> void
@@ -699,6 +713,14 @@ AndroidX.Compose.MaterialTheme.Typography.get -> AndroidX.Compose.Material3.Typo
 AndroidX.Compose.MaterialTheme.Typography.set -> void
 AndroidX.Compose.MaterialTheme.UseDynamicColor.get -> bool
 AndroidX.Compose.MaterialTheme.UseDynamicColor.set -> void
+AndroidX.Compose.Measurable
+AndroidX.Compose.Measurable.Measure(AndroidX.Compose.Constraints constraints) -> AndroidX.Compose.UI.Layout.Placeable!
+AndroidX.Compose.MeasureResult
+AndroidX.Compose.MeasureScope
+AndroidX.Compose.MeasureScope.Density.get -> float
+AndroidX.Compose.MeasureScope.FontScale.get -> float
+AndroidX.Compose.MeasureScope.Layout(int width, int height, System.Action<AndroidX.Compose.PlacementScope!>! placementBlock) -> AndroidX.Compose.MeasureResult!
+AndroidX.Compose.MeasureScope.RoundToPx(float dp) -> int
 AndroidX.Compose.MediumFlexibleTopAppBar
 AndroidX.Compose.MediumFlexibleTopAppBar.Actions.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.MediumFlexibleTopAppBar.Actions.set -> void
@@ -973,6 +995,9 @@ AndroidX.Compose.PermanentNavigationDrawer.Content.set -> void
 AndroidX.Compose.PermanentNavigationDrawer.Drawer.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.PermanentNavigationDrawer.Drawer.set -> void
 AndroidX.Compose.PermanentNavigationDrawer.PermanentNavigationDrawer() -> void
+AndroidX.Compose.PlacementScope
+AndroidX.Compose.PlacementScope.Place(AndroidX.Compose.UI.Layout.Placeable! placeable, int x, int y, float zIndex = 0) -> void
+AndroidX.Compose.PlacementScope.PlaceRelative(AndroidX.Compose.UI.Layout.Placeable! placeable, int x, int y, float zIndex = 0) -> void
 AndroidX.Compose.PrimaryScrollableTabRow
 AndroidX.Compose.PrimaryScrollableTabRow.PrimaryScrollableTabRow(int selectedTabIndex) -> void
 AndroidX.Compose.PrimaryTabRow
@@ -1470,6 +1495,7 @@ override AndroidX.Compose.LargeFlexibleTopAppBar.Render(AndroidX.Compose.Runtime
 override AndroidX.Compose.LargeFloatingActionButton.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
 override AndroidX.Compose.LargeTopAppBar.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
 override AndroidX.Compose.LaunchedEffect.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override AndroidX.Compose.Layout.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
 override AndroidX.Compose.LazyColumn<T>.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
 override AndroidX.Compose.LazyHorizontalGrid<T>.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
 override AndroidX.Compose.LazyHorizontalStaggeredGrid<T>.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
@@ -1683,6 +1709,9 @@ static AndroidX.Compose.CompositionLocal.Of<T>(System.Func<T>! defaultFactory) -
 static AndroidX.Compose.CompositionLocal.StaticOf<T>(System.Func<T>! defaultFactory) -> AndroidX.Compose.CompositionLocal<T>!
 static AndroidX.Compose.CompositionLocal<T>.Of(System.Func<T>! defaultFactory) -> AndroidX.Compose.CompositionLocal<T>!
 static AndroidX.Compose.CompositionLocal<T>.StaticOf(System.Func<T>! defaultFactory) -> AndroidX.Compose.CompositionLocal<T>!
+static AndroidX.Compose.Constraints.Create(int minWidth, int maxWidth, int minHeight, int maxHeight) -> AndroidX.Compose.Constraints
+static AndroidX.Compose.Constraints.FixedHeight(int height) -> AndroidX.Compose.Constraints
+static AndroidX.Compose.Constraints.FixedWidth(int width) -> AndroidX.Compose.Constraints
 static AndroidX.Compose.ContentScale.Crop.get -> AndroidX.Compose.ContentScale!
 static AndroidX.Compose.ContentScale.FillBounds.get -> AndroidX.Compose.ContentScale!
 static AndroidX.Compose.ContentScale.FillHeight.get -> AndroidX.Compose.ContentScale!
