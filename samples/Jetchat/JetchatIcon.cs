@@ -40,12 +40,12 @@ public static class JetchatIcon
                 new Icon(Resource.Drawable.ic_jetchat_back, null)
                 {
                     Modifier = Modifier.Size(sizeDp),
-                    TintArgb = scheme.PrimaryContainer,
+                    Tint = scheme.PrimaryContainer,
                 },
                 new Icon(Resource.Drawable.ic_jetchat_front, contentDescription)
                 {
                     Modifier = Modifier.Size(sizeDp),
-                    TintArgb = scheme.Primary,
+                    Tint = scheme.Primary,
                 },
             };
         });
