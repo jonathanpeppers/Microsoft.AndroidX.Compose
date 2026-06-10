@@ -23,7 +23,7 @@ internal static class HomeCards
                     .AspectRatio(992f / 296f)
                     .Clip(16),
             },
-            new Spacer(Modifier.Height(16)),
+            Spacer.Height(16),
             new Text(post.Title)
             {
                 FontSize   = 22,
@@ -101,7 +101,7 @@ internal static class HomeCards
                         FontWeight = FontWeight.SemiBold,
                         MaxLines   = 2,
                     },
-                    new Spacer(Modifier.Weight(1f, fill: true)),
+                    Spacer.Weight(1f),
                     new Text(post.Metadata.Author)
                     {
                         FontSize = 13,

@@ -141,13 +141,13 @@ public static class PostScreen
                     FontSize   = 22,
                     FontWeight = FontWeight.SemiBold,
                 },
-                new Spacer(Modifier.Height(4)),
+                Spacer.Height(4),
                 new Text(post.Subtitle)
                 {
                     FontSize = 14,
                     Color    = Color.FromHex("#666666"),
                 },
-                new Spacer(Modifier.Height(8)),
+                Spacer.Height(8),
                 new Text($"{post.Metadata.Author} · {post.Metadata.Date} · {post.Metadata.ReadTimeMinutes} min read")
                 {
                     FontSize = 12,

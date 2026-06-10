@@ -6,7 +6,7 @@ namespace AndroidX.Compose;
 /// <summary>
 /// Compose Navigation host — the C# moral equivalent of Kotlin's
 /// <c>NavHost(navController, startDestination) { composable("a") { ... } }</c>.
-/// Holds a graph of <see cref="Composable"/> destinations and switches
+/// Holds a graph of <see cref="NavDestination"/> destinations and switches
 /// the visible one based on the bound
 /// <see cref="AndroidX.Compose.NavController"/>'s back stack.
 ///
@@ -22,14 +22,14 @@ namespace AndroidX.Compose;
 ///
 /// new NavHost(startDestination: "home", navController: nav)
 /// {
-///     new Composable("home")
+///     new NavDestination("home")
 ///     {
 ///         new Button(onClick: () =&gt; nav.Navigate("detail"))
 ///         {
 ///             new Text("Go to detail"),
 ///         },
 ///     },
-///     new Composable("detail")
+///     new NavDestination("detail")
 ///     {
 ///         new Button(onClick: () =&gt; nav.PopBackStack())
 ///         {
@@ -51,7 +51,7 @@ public sealed class NavHost : ComposableNode, IEnumerable
 {
     readonly string _startDestination;
     readonly NavController _navController;
-    readonly List<Composable> _routes = new();
+    readonly List<NavDestination> _routes = new();
 
     /// <summary>
     /// Create a navigation host that starts at <paramref name="startDestination"/>.
@@ -74,7 +74,7 @@ public sealed class NavHost : ComposableNode, IEnumerable
     public NavController NavController => _navController;
 
     /// <summary>Add a destination via collection-initializer syntax.</summary>
-    public void Add(Composable? route)
+    public void Add(NavDestination? route)
     {
         if (route is not null)
             _routes.Add(route);

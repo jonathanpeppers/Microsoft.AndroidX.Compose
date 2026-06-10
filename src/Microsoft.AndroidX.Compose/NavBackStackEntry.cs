@@ -10,10 +10,10 @@ namespace AndroidX.Compose;
 /// <c>NavDestination</c>.
 ///
 /// <para>
-/// Usage with the dynamic-content overload of <see cref="Composable"/>:
+/// Usage with the dynamic-content overload of <see cref="NavDestination"/>:
 /// </para>
 /// <code>
-/// new Composable("user/{id}", entry =&gt;
+/// new NavDestination("user/{id}", entry =&gt;
 /// {
 ///     var id = entry.Arguments?.GetString("id") ?? "?";
 ///     return new Text($"User #{id}");
@@ -44,7 +44,7 @@ public sealed class NavBackStackEntry
 
     /// <summary>
     /// Route registered for this destination — the same string the
-    /// caller passed to <see cref="Composable(string)"/>.
+    /// caller passed to <see cref="NavDestination(string)"/>.
     /// <c>null</c> if the destination was registered without a route
     /// (e.g. by an integer id graph). Mirrors Kotlin's
     /// <c>NavBackStackEntry.destination.route</c>.

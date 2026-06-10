@@ -12,19 +12,19 @@ public static class EmailDetailAppBar
         {
             Title = new Composed(c =>
             {
-                var scheme = MaterialTheme.CurrentColorScheme(c);
+                var scheme = c.ColorScheme();
                 return new Column
                 {
                     Modifier.FillMaxWidth(),
                     new Text(email.Subject)
                     {
                         FontSize = 16,
-                        Color    = new Color(scheme.OnSurfaceVariant),
+                        Color    = scheme.OnSurfaceVariant,
                     },
                     new Text($"{email.Threads.Count} Messages")
                     {
                         FontSize = 12,
-                        Color    = new Color(scheme.Outline),
+                        Color    = scheme.Outline,
                         Modifier = Modifier.Padding(top: 4, bottom: 0, start: 0, end: 0),
                     },
                 };
@@ -39,7 +39,7 @@ public static class EmailDetailAppBar
             },
             Actions = new Composed(c =>
             {
-                var scheme = MaterialTheme.CurrentColorScheme(c);
+                var scheme = c.ColorScheme();
                 return new IconButton(onClick: NoOp)
                 {
                     new Icon(Resource.Drawable.ic_more_vert, "More options")

@@ -22,14 +22,14 @@ namespace AndroidX.Compose;
 ///
 /// new NavHost(startDestination: "home", navController: nav)
 /// {
-///     new Composable("home")
+///     new NavDestination("home")
 ///     {
 ///         new Button(onClick: () =&gt; nav.Navigate("detail"))
 ///         {
 ///             new Text("Go to detail"),
 ///         },
 ///     },
-///     new Composable("detail")
+///     new NavDestination("detail")
 ///     {
 ///         new Text("Detail screen"),
 ///     },
@@ -55,7 +55,7 @@ public sealed class NavController
     /// <summary>
     /// Navigate to <paramref name="route"/>. Equivalent to
     /// Kotlin's <c>navController.navigate(route)</c>. The route must
-    /// be registered via a <see cref="Composable"/> child of the
+    /// be registered via a <see cref="NavDestination"/> child of the
     /// owning <see cref="NavHost"/>.
     /// </summary>
     public void Navigate(string route)

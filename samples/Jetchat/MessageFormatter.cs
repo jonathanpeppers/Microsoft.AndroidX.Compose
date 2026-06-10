@@ -37,8 +37,8 @@ public static partial class MessageFormatter
         ArgumentNullException.ThrowIfNull(scheme);
 
         var builder = new AnnotatedStringBuilder();
-        var codeSnippetBackground = new Color(primary ? scheme.Secondary : scheme.Surface);
-        var accent                = new Color(primary ? scheme.InversePrimary : scheme.Primary);
+        long codeSnippetBackground = primary ? scheme.Secondary : scheme.Surface;
+        long accent                = primary ? scheme.InversePrimary : scheme.Primary;
 
         int cursor = 0;
         bool any = false;

@@ -21,7 +21,7 @@ public static class NavHostRouteArgsDemo
                 {
                     Modifier.FillMaxWidth().Height(360),
 
-                    new Composable("home")
+                    new NavDestination("home")
                     {
                         new Column
                         {
@@ -31,7 +31,7 @@ public static class NavHostRouteArgsDemo
                             new Button(onClick: () => nav.Navigate("user/42")) { new Text("Open user 42") },
                         },
                     },
-                    new Composable("detail")
+                    new NavDestination("detail")
                     {
                         new Column
                         {
@@ -41,7 +41,7 @@ public static class NavHostRouteArgsDemo
                             new Button(onClick: () => nav.PopBackStack()) { new Text("Back") },
                         },
                     },
-                    new Composable("user/{id}", entry => new Column
+                    new NavDestination("user/{id}", entry => new Column
                     {
                         Modifier.Padding(16),
                         new Text($"👤 User #{entry.Arguments?.GetString("id") ?? "?"}"),

@@ -11,7 +11,7 @@ public static class EmptyComingSoon
     public static ComposableNode Build() =>
         new Composed(c =>
         {
-            var scheme = MaterialTheme.CurrentColorScheme(c);
+            var scheme = c.ColorScheme();
             return new Column(verticalArrangement: Arrangement.Center)
             {
                 Modifier.FillMaxSize().Padding(8),
@@ -19,14 +19,14 @@ public static class EmptyComingSoon
                 {
                     FontSize   = 18,
                     FontWeight = FontWeight.SemiBold,
-                    Color      = new Color(scheme.Primary),
+                    Color      = scheme.Primary,
                     Modifier   = Modifier.FillMaxWidth(),
                 },
-                new Spacer(Modifier.Height(8)),
+                Spacer.Height(8),
                 new Text("This screen is still under construction. This sample will help you learn about adaptive layouts in Jetpack Compose")
                 {
                     FontSize = 14,
-                    Color    = new Color(scheme.OnSurfaceVariant),
+                    Color    = scheme.OnSurfaceVariant,
                     Modifier = Modifier.Padding(horizontal: 16, vertical: 0),
                 },
             };
