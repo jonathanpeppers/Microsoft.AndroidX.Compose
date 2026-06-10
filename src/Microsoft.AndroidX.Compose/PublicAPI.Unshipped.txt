@@ -132,6 +132,8 @@ AndroidX.Compose.CircularProgressIndicator.StrokeWidthDp.get -> float?
 AndroidX.Compose.CircularProgressIndicator.StrokeWidthDp.set -> void
 AndroidX.Compose.CircularProgressIndicator.TrackColorArgb.get -> long?
 AndroidX.Compose.CircularProgressIndicator.TrackColorArgb.set -> void
+AndroidX.Compose.CollectedState<T>
+AndroidX.Compose.CollectedState<T>.Value.get -> T
 AndroidX.Compose.Color
 AndroidX.Compose.Color.A.get -> byte
 AndroidX.Compose.Color.B.get -> byte
@@ -1185,6 +1187,7 @@ override AndroidX.Compose.Card.Render(AndroidX.Compose.Runtime.IComposer! compos
 override AndroidX.Compose.CenterAlignedTopAppBar.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
 override AndroidX.Compose.Checkbox.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
 override AndroidX.Compose.CircularProgressIndicator.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override AndroidX.Compose.CollectedState<T>.ToString() -> string!
 override AndroidX.Compose.Color.Equals(object? obj) -> bool
 override AndroidX.Compose.Color.GetHashCode() -> int
 override AndroidX.Compose.Color.ToString() -> string!
@@ -1369,6 +1372,8 @@ static AndroidX.Compose.Color.implicit operator long(AndroidX.Compose.Color c) -
 static AndroidX.Compose.Color.operator !=(AndroidX.Compose.Color left, AndroidX.Compose.Color right) -> bool
 static AndroidX.Compose.Color.operator ==(AndroidX.Compose.Color left, AndroidX.Compose.Color right) -> bool
 static AndroidX.Compose.ComposeExtensions.BooleanResource(this AndroidX.Compose.Runtime.IComposer! composer, int id) -> bool
+static AndroidX.Compose.ComposeExtensions.CollectAsStateWithLifecycle<T>(this Xamarin.KotlinX.Coroutines.Flow.IFlow! flow, T initialValue, AndroidX.Compose.Runtime.IComposer! composer) -> AndroidX.Compose.CollectedState<T>!
+static AndroidX.Compose.ComposeExtensions.CollectAsStateWithLifecycle<T>(this Xamarin.KotlinX.Coroutines.Flow.IStateFlow! stateFlow, AndroidX.Compose.Runtime.IComposer! composer) -> AndroidX.Compose.CollectedState<T>!
 static AndroidX.Compose.ComposeExtensions.ColorResource(this AndroidX.Compose.Runtime.IComposer! composer, int id) -> long
 static AndroidX.Compose.ComposeExtensions.ColorScheme(this AndroidX.Compose.Runtime.IComposer! composer) -> AndroidX.Compose.Material3.ColorScheme!
 static AndroidX.Compose.ComposeExtensions.DerivedStateOf<T>(System.Func<T>! calculation) -> AndroidX.Compose.DerivedState<T>!

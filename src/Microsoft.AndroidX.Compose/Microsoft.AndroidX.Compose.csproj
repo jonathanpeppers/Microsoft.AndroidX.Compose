@@ -34,6 +34,8 @@
   <ItemGroup>
     <PackageReference Include="Xamarin.AndroidX.Activity" />
     <PackageReference Include="Xamarin.AndroidX.Activity.Compose" />
+    <PackageReference Include="Xamarin.AndroidX.Lifecycle.Runtime.Compose" />
+    <PackageReference Include="Xamarin.AndroidX.Lifecycle.Runtime.Compose.Android" />
     <PackageReference Include="Xamarin.AndroidX.Compose.Animation" />
     <PackageReference Include="Xamarin.AndroidX.Compose.Animation.Android" />
     <PackageReference Include="Xamarin.AndroidX.Compose.Animation.Core" />

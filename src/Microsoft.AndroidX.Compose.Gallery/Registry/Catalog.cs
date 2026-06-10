@@ -163,6 +163,7 @@ public static class Catalog
         D.StateEffectsAnimation.CrossfadeDemo.Demo,
         D.StateEffectsAnimation.AnimatedContentDemo.Demo,
         D.StateEffectsAnimation.ViewModelStateFlowDemo.Demo,
+        D.StateEffectsAnimation.KotlinStateFlowDemo.Demo,
 
         // ---- CompositionLocal & misc ----
         D.LocalsMisc.LocalContextDemo.Demo,
