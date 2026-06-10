@@ -58,8 +58,28 @@
     <!-- AndroidX Navigation -->
     <PackageReference Update="Xamarin.AndroidX.Navigation.Common" Version="2.9.8" />
     <PackageReference Update="Xamarin.AndroidX.Navigation.Runtime" Version="2.9.8" />
+    <PackageReference Update="Xamarin.AndroidX.Navigation.Fragment" Version="2.9.8" />
+    <PackageReference Update="Xamarin.AndroidX.Navigation.UI" Version="2.9.8" />
     <PackageReference Update="Xamarin.AndroidX.Navigation.Compose" Version="2.9.8" />
     <PackageReference Update="Xamarin.AndroidX.Navigation.Compose.Android" Version="2.9.8" />
+    <PackageReference Update="Xamarin.AndroidX.Lifecycle.LiveData" Version="2.10.0.2" />
+    <PackageReference Update="Xamarin.AndroidX.Lifecycle.LiveData.Core.Ktx" Version="2.10.0.2" />
+    <PackageReference Update="Xamarin.AndroidX.Fragment.Ktx" Version="1.8.9.2" />
+    <PackageReference Update="Xamarin.AndroidX.Emoji2.ViewsHelper" Version="1.6.0.2" />
+
+    <!-- .NET MAUI (for Microsoft.AndroidX.Compose.Maui backend) -->
+    <!--
+      Microsoft.Maui.Controls 10.0.70 calls AccessibilityNodeInfoCompat.set_Checked(bool)
+      (added in MAUI 10.0.70's SemanticExtensions.UpdateSemanticNodeInfo), which crashes at
+      runtime against Xamarin.AndroidX.Core 1.18.0 — that property setter was dropped in 1.18
+      in favor of a CheckedState enum. Xamarin.AndroidX.Compose 1.11.x pins
+      Xamarin.AndroidX.Core to 1.18.0 (include="All"), so we cannot downgrade Core. MAUI
+      10.0.20 doesn't have the new call site and runs cleanly against Core 1.18.0.
+
+      Bump this back once a MAUI release ships compiled against Xamarin.AndroidX.Core 1.18+.
+    -->
+    <PackageReference Update="Microsoft.Maui.Controls" Version="10.0.20" />
+    <PackageReference Update="Microsoft.Extensions.Logging.Debug" Version="10.0.0" />
   </ItemGroup>
 
 </Project>

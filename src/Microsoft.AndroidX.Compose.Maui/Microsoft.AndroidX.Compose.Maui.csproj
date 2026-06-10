@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0-android</TargetFramework>
+    <SupportedOSPlatformVersion>24</SupportedOSPlatformVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>Microsoft.AndroidX.Compose.Maui</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Microsoft.AndroidX.Compose\Microsoft.AndroidX.Compose.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Maui.Controls" />
+    <!--
+      Microsoft.Maui.Controls 10.0.20 pins these AndroidX parent packages
+      to versions whose dependency upper-bounds (e.g. Lifecycle.LiveData
+      2.9.2.1 requires Lifecycle.LiveData.Core < 2.9.3) conflict with the
+      newer transitive AndroidX packages pulled in by
+      Xamarin.AndroidX.Compose 1.11.x. Pull each parent forward to a
+      version whose range aligns with the rest of the repo. Central
+      versions live in Directory.Build.targets.
+
+      MAUI is intentionally pinned to 10.0.20: 10.0.70 added a call to
+      AndroidX.Core.View.Accessibility.AccessibilityNodeInfoCompat.set_Checked(bool),
+      which was removed in Xamarin.AndroidX.Core 1.18.0 (the version
+      Xamarin.AndroidX.Compose 1.11.x pins via include="All"). See the
+      comment on Microsoft.Maui.Controls in Directory.Build.targets.
+    -->
+    <PackageReference Include="Xamarin.AndroidX.Lifecycle.LiveData" />
+    <PackageReference Include="Xamarin.AndroidX.Lifecycle.LiveData.Core.Ktx" />
+    <PackageReference Include="Xamarin.AndroidX.Navigation.Fragment" />
+    <PackageReference Include="Xamarin.AndroidX.Navigation.UI" />
+    <PackageReference Include="Xamarin.AndroidX.Fragment.Ktx" />
+    <PackageReference Include="Xamarin.AndroidX.Emoji2.ViewsHelper" />
+  </ItemGroup>
+</Project>

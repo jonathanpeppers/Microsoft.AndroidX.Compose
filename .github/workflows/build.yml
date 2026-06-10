@@ -18,8 +18,8 @@ jobs:
         with:
           dotnet-version: '10.0.x'
 
-      - name: Install android workload
-        run: dotnet workload install android
+      - name: Install maui-android workload
+        run: dotnet workload install maui-android
 
       - name: Build
         run: dotnet build Microsoft.AndroidX.Compose.slnx -bl:Microsoft.AndroidX.Compose.binlog
