@@ -1,9 +1,9 @@
-using Android.Graphics;
 using Android.Graphics.Drawables;
 using AndroidX.Compose;
 using AndroidX.Compose.UI.Graphics;
 using AndroidX.Compose.UI.Graphics.Painter;
 using AndroidX.Compose.UI.Platform;
+using AndroidX.Core.Graphics.Drawable;
 using Microsoft.Maui.Handlers;
 using Microsoft.Maui.Platform;
 using ComposeImage = AndroidX.Compose.Image;
@@ -212,30 +212,20 @@ public partial class ImageHandler : ViewHandler<MauiIImage, ComposeView>
     }
 
     // Wrap an Android Drawable in a Compose BitmapPainter.
-    // BitmapDrawable gets a zero-copy reference to its already-decoded
-    // bitmap; vector/layer-list/font glyph drawables get rasterized
-    // once at intrinsic size. The BitmapPainter keeps the Compose
-    // ImageBitmap alive, which keeps the underlying Bitmap alive — so
-    // there's no GC race even when we allocate a fresh Bitmap here.
+    //
+    // AndroidX Core's `Drawable.toBitmap` extension does the right thing
+    // for every drawable shape we care about:
+    //   * BitmapDrawable — zero-copy return of its existing bitmap when
+    //     width/height match the intrinsic size.
+    //   * Vector / layer-list / font / shape — allocate a Bitmap of the
+    //     intrinsic size and rasterize once.
+    // Intrinsic dimensions can be `-1` (e.g. ColorDrawable), so clamp to
+    // 1x1 before forwarding — Bitmap.createBitmap(0, 0, ...) throws.
     static ComposePainter DrawableToPainter(Drawable d)
     {
-        Bitmap bitmap;
-        if (d is BitmapDrawable bd && bd.Bitmap is { IsRecycled: false } existing)
-        {
-            bitmap = existing;
-        }
-        else
-        {
-            // Fall back to a 1x1 when the drawable refuses to declare
-            // an intrinsic size (rare; a vector drawable always
-            // exposes one via android:width/android:height).
-            var w = d.IntrinsicWidth  > 0 ? d.IntrinsicWidth  : 1;
-            var h = d.IntrinsicHeight > 0 ? d.IntrinsicHeight : 1;
-            bitmap = Bitmap.CreateBitmap(w, h, Bitmap.Config.Argb8888!)!;
-            using var canvas = new Canvas(bitmap);
-            d.SetBounds(0, 0, w, h);
-            d.Draw(canvas);
-        }
+        var w = d.IntrinsicWidth  > 0 ? d.IntrinsicWidth  : 1;
+        var h = d.IntrinsicHeight > 0 ? d.IntrinsicHeight : 1;
+        var bitmap = DrawableKt.ToBitmap(d, w, h, config: null);
 
         var imageBitmap = AndroidImageBitmap_androidKt.AsImageBitmap(bitmap);
         // IntSize packs width in the upper 32 bits and height in the

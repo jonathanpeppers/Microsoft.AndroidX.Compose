@@ -32,5 +32,12 @@
     <PackageReference Include="Xamarin.AndroidX.Navigation.UI" />
     <PackageReference Include="Xamarin.AndroidX.Fragment.Ktx" />
     <PackageReference Include="Xamarin.AndroidX.Emoji2.ViewsHelper" />
+    <!--
+      For AndroidX.Core.Graphics.Drawable.DrawableKt.ToBitmap(...), used by
+      ImageHandler to wrap the Drawable produced by MAUI's
+      IImageSourceService<TSource> pipeline as a Compose BitmapPainter.
+      Includes a zero-copy fast path for BitmapDrawable.
+    -->
+    <PackageReference Include="Xamarin.AndroidX.Core.Core.Ktx" />
   </ItemGroup>
 </Project>
