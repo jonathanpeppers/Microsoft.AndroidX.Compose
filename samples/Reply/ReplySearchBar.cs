@@ -23,7 +23,7 @@ public sealed class ReplySearchBar : ComposableNode
                     .FillMaxWidth()
                     .Padding(horizontal: 16, vertical: 8)
                     .Clip(Shape.RoundedCorners(28))
-                    .Background(new Color(scheme.SurfaceVariant)),
+                    .Background(scheme.SurfaceVariant),
                 new Row
                 {
                     Modifier.Companion.FillMaxWidth().Padding(horizontal: 16, vertical: 12),
@@ -35,7 +35,7 @@ public sealed class ReplySearchBar : ComposableNode
                     new Text("Search replies")
                     {
                         FontSize = 14,
-                        Color    = new Color(scheme.OnSurface),
+                        Color    = scheme.OnSurface,
                         Modifier = Modifier.Companion
                             .Align(Alignment.Vertical.CenterVertically)
                             .Padding(start: 16, end: 0, top: 0, bottom: 0)
