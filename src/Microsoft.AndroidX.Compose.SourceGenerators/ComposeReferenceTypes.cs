@@ -40,6 +40,10 @@ internal static class ComposeReferenceTypes
         "AndroidX.Compose.ContentScale",
         "AndroidX.Compose.PaddingValues",
         "AndroidX.Compose.Material3.ITopAppBarScrollBehavior",
+        "AndroidX.Compose.Material3.ButtonColors",
+        "AndroidX.Compose.UI.Text.TextStyle",
+        "AndroidX.Compose.UI.Text.Input.VisualTransformation",
+        "AndroidX.Compose.Foundation.Text.KeyboardOptions",
     };
 
     /// <summary>

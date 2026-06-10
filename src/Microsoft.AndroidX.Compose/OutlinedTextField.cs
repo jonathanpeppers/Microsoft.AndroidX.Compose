@@ -48,6 +48,12 @@ public sealed class OutlinedTextField : ComposableNode
     public int?            MinLines       { get; set; }
     /// <summary>Optional shape applied to the field's outlined container (Kotlin <c>shape</c>).</summary>
     public Shape?          Shape          { get; set; }
+    /// <summary>Optional <c>TextStyle</c> override (Kotlin <c>textStyle</c>) — controls text color, size, weight, etc.</summary>
+    public AndroidX.Compose.UI.Text.TextStyle? TextStyle { get; set; }
+    /// <summary>Optional visual transformation (Kotlin <c>visualTransformation</c>) — use <c>PasswordVisualTransformation</c> for password fields.</summary>
+    public AndroidX.Compose.UI.Text.Input.VisualTransformation? VisualTransformation { get; set; }
+    /// <summary>Optional keyboard options (Kotlin <c>keyboardOptions</c>) — controls IME type, capitalization, autocorrect.</summary>
+    public AndroidX.Compose.Foundation.Text.KeyboardOptions? KeyboardOptions { get; set; }
 
     /// <summary>String-overload ctor — pass the current value and a callback.</summary>
     public OutlinedTextField(string value, Action<string> onValueChange)
@@ -97,8 +103,10 @@ public sealed class OutlinedTextField : ComposableNode
         var __suffix         = Suffix         is null ? null : ComposableLambdas.Wrap2(composer, c => Suffix.Render(c));
         var __supportingText = SupportingText is null ? null : ComposableLambdas.Wrap2(composer, c => SupportingText.Render(c));
         ComposeBridges.OutlinedTextField(_value!, __onValueChange, BuildModifier(),
-            Enabled, ReadOnly, __label, __placeholder, __leadingIcon, __trailingIcon,
-            __prefix, __suffix, __supportingText, IsError, SingleLine, MaxLines, MinLines,
+            Enabled, ReadOnly, TextStyle, __label, __placeholder, __leadingIcon, __trailingIcon,
+            __prefix, __suffix, __supportingText, IsError,
+            VisualTransformation, KeyboardOptions,
+            SingleLine, MaxLines, MinLines,
             Shape,
             composer);
     }
@@ -124,8 +132,10 @@ public sealed class OutlinedTextField : ComposableNode
         var __suffix         = Suffix         is null ? null : ComposableLambdas.Wrap2(composer, c => Suffix.Render(c));
         var __supportingText = SupportingText is null ? null : ComposableLambdas.Wrap2(composer, c => SupportingText.Render(c));
         ComposeBridges.OutlinedTextFieldWithValue(current, __onValueChange, BuildModifier(),
-            Enabled, ReadOnly, __label, __placeholder, __leadingIcon, __trailingIcon,
-            __prefix, __suffix, __supportingText, IsError, SingleLine, MaxLines, MinLines,
+            Enabled, ReadOnly, TextStyle, __label, __placeholder, __leadingIcon, __trailingIcon,
+            __prefix, __suffix, __supportingText, IsError,
+            VisualTransformation, KeyboardOptions,
+            SingleLine, MaxLines, MinLines,
             Shape,
             composer);
     }

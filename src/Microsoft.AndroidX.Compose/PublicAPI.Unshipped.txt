@@ -117,6 +117,8 @@ AndroidX.Compose.BoxWithConstraints
 AndroidX.Compose.BoxWithConstraints.BoxWithConstraints(System.Func<AndroidX.Compose.BoxConstraints, AndroidX.Compose.ComposableNode!>! content) -> void
 AndroidX.Compose.Button
 AndroidX.Compose.Button.Button(System.Action! onClick) -> void
+AndroidX.Compose.Button.Colors.get -> AndroidX.Compose.Material3.ButtonColors?
+AndroidX.Compose.Button.Colors.set -> void
 AndroidX.Compose.Button.ContentPadding.get -> AndroidX.Compose.PaddingValues?
 AndroidX.Compose.Button.ContentPadding.set -> void
 AndroidX.Compose.Button.Shape.get -> AndroidX.Compose.Shape?
@@ -330,6 +332,8 @@ AndroidX.Compose.ElevatedAssistChip.Shape.set -> void
 AndroidX.Compose.ElevatedAssistChip.TrailingIcon.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.ElevatedAssistChip.TrailingIcon.set -> void
 AndroidX.Compose.ElevatedButton
+AndroidX.Compose.ElevatedButton.Colors.get -> AndroidX.Compose.Material3.ButtonColors?
+AndroidX.Compose.ElevatedButton.Colors.set -> void
 AndroidX.Compose.ElevatedButton.ContentPadding.get -> AndroidX.Compose.PaddingValues?
 AndroidX.Compose.ElevatedButton.ContentPadding.set -> void
 AndroidX.Compose.ElevatedButton.ElevatedButton(System.Action! onClick) -> void
@@ -386,6 +390,8 @@ AndroidX.Compose.FilledIconToggleButton.FilledIconToggleButton(bool checked, Sys
 AndroidX.Compose.FilledIconToggleButton.Shape.get -> AndroidX.Compose.Shape?
 AndroidX.Compose.FilledIconToggleButton.Shape.set -> void
 AndroidX.Compose.FilledTonalButton
+AndroidX.Compose.FilledTonalButton.Colors.get -> AndroidX.Compose.Material3.ButtonColors?
+AndroidX.Compose.FilledTonalButton.Colors.set -> void
 AndroidX.Compose.FilledTonalButton.ContentPadding.get -> AndroidX.Compose.PaddingValues?
 AndroidX.Compose.FilledTonalButton.ContentPadding.set -> void
 AndroidX.Compose.FilledTonalButton.FilledTonalButton(System.Action! onClick) -> void
@@ -817,6 +823,8 @@ AndroidX.Compose.Orientation
 AndroidX.Compose.Orientation.Horizontal = 1 -> AndroidX.Compose.Orientation
 AndroidX.Compose.Orientation.Vertical = 0 -> AndroidX.Compose.Orientation
 AndroidX.Compose.OutlinedButton
+AndroidX.Compose.OutlinedButton.Colors.get -> AndroidX.Compose.Material3.ButtonColors?
+AndroidX.Compose.OutlinedButton.Colors.set -> void
 AndroidX.Compose.OutlinedButton.ContentPadding.get -> AndroidX.Compose.PaddingValues?
 AndroidX.Compose.OutlinedButton.ContentPadding.set -> void
 AndroidX.Compose.OutlinedButton.OutlinedButton(System.Action! onClick) -> void
@@ -857,6 +865,8 @@ AndroidX.Compose.OutlinedTextField.Enabled.get -> bool?
 AndroidX.Compose.OutlinedTextField.Enabled.set -> void
 AndroidX.Compose.OutlinedTextField.IsError.get -> bool?
 AndroidX.Compose.OutlinedTextField.IsError.set -> void
+AndroidX.Compose.OutlinedTextField.KeyboardOptions.get -> AndroidX.Compose.Foundation.Text.KeyboardOptions?
+AndroidX.Compose.OutlinedTextField.KeyboardOptions.set -> void
 AndroidX.Compose.OutlinedTextField.Label.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.OutlinedTextField.Label.set -> void
 AndroidX.Compose.OutlinedTextField.LeadingIcon.get -> AndroidX.Compose.ComposableNode?
@@ -882,8 +892,12 @@ AndroidX.Compose.OutlinedTextField.Suffix.get -> AndroidX.Compose.ComposableNode
 AndroidX.Compose.OutlinedTextField.Suffix.set -> void
 AndroidX.Compose.OutlinedTextField.SupportingText.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.OutlinedTextField.SupportingText.set -> void
+AndroidX.Compose.OutlinedTextField.TextStyle.get -> AndroidX.Compose.UI.Text.TextStyle?
+AndroidX.Compose.OutlinedTextField.TextStyle.set -> void
 AndroidX.Compose.OutlinedTextField.TrailingIcon.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.OutlinedTextField.TrailingIcon.set -> void
+AndroidX.Compose.OutlinedTextField.VisualTransformation.get -> AndroidX.Compose.UI.Text.Input.VisualTransformation?
+AndroidX.Compose.OutlinedTextField.VisualTransformation.set -> void
 AndroidX.Compose.PaddingValues
 AndroidX.Compose.PaddingValues.Bottom.get -> AndroidX.Compose.Dp
 AndroidX.Compose.PaddingValues.PaddingValues(AndroidX.Compose.Dp all) -> void
@@ -933,8 +947,8 @@ AndroidX.Compose.RoundedCornerShape.RoundedCornerShape(int cornerPercent) -> voi
 AndroidX.Compose.RoundedCornerShape.RoundedCornerShape(int topStartPercent, int topEndPercent, int bottomEndPercent, int bottomStartPercent) -> void
 AndroidX.Compose.Row
 AndroidX.Compose.Row.Row() -> void
-AndroidX.Compose.Row.Row(AndroidX.Compose.Arrangement? horizontalArrangement) -> void
 AndroidX.Compose.Row.Row(AndroidX.Compose.Arrangement? horizontalArrangement, AndroidX.Compose.Alignment.Vertical? verticalAlignment) -> void
+AndroidX.Compose.Row.Row(AndroidX.Compose.Arrangement? horizontalArrangement) -> void
 AndroidX.Compose.Scaffold
 AndroidX.Compose.Scaffold.Body.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.Scaffold.Body.set -> void
@@ -1135,6 +1149,8 @@ AndroidX.Compose.Text.SoftWrap.set -> void
 AndroidX.Compose.Text.Text(string! text) -> void
 AndroidX.Compose.TextAlign
 AndroidX.Compose.TextButton
+AndroidX.Compose.TextButton.Colors.get -> AndroidX.Compose.Material3.ButtonColors?
+AndroidX.Compose.TextButton.Colors.set -> void
 AndroidX.Compose.TextButton.ContentPadding.get -> AndroidX.Compose.PaddingValues?
 AndroidX.Compose.TextButton.ContentPadding.set -> void
 AndroidX.Compose.TextButton.Shape.get -> AndroidX.Compose.Shape?
@@ -1146,6 +1162,8 @@ AndroidX.Compose.TextField.Enabled.get -> bool?
 AndroidX.Compose.TextField.Enabled.set -> void
 AndroidX.Compose.TextField.IsError.get -> bool?
 AndroidX.Compose.TextField.IsError.set -> void
+AndroidX.Compose.TextField.KeyboardOptions.get -> AndroidX.Compose.Foundation.Text.KeyboardOptions?
+AndroidX.Compose.TextField.KeyboardOptions.set -> void
 AndroidX.Compose.TextField.Label.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.TextField.Label.set -> void
 AndroidX.Compose.TextField.LeadingIcon.get -> AndroidX.Compose.ComposableNode?
@@ -1171,8 +1189,12 @@ AndroidX.Compose.TextField.SupportingText.set -> void
 AndroidX.Compose.TextField.TextField(AndroidX.Compose.MutableState<AndroidX.Compose.UI.Text.Input.TextFieldValue!>! state) -> void
 AndroidX.Compose.TextField.TextField(AndroidX.Compose.MutableState<string!>! state) -> void
 AndroidX.Compose.TextField.TextField(string! value, System.Action<string!>! onValueChange) -> void
+AndroidX.Compose.TextField.TextStyle.get -> AndroidX.Compose.UI.Text.TextStyle?
+AndroidX.Compose.TextField.TextStyle.set -> void
 AndroidX.Compose.TextField.TrailingIcon.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.TextField.TrailingIcon.set -> void
+AndroidX.Compose.TextField.VisualTransformation.get -> AndroidX.Compose.UI.Text.Input.VisualTransformation?
+AndroidX.Compose.TextField.VisualTransformation.set -> void
 AndroidX.Compose.TextOverflow
 AndroidX.Compose.TextOverflow.Deconstruct(out int Value) -> void
 AndroidX.Compose.TextOverflow.Equals(AndroidX.Compose.TextOverflow other) -> bool
@@ -1481,6 +1503,7 @@ static AndroidX.Compose.Color.Transparent.get -> AndroidX.Compose.Color
 static AndroidX.Compose.Color.Unspecified.get -> AndroidX.Compose.Color
 static AndroidX.Compose.Color.White.get -> AndroidX.Compose.Color
 static AndroidX.Compose.Color.Yellow.get -> AndroidX.Compose.Color
+static AndroidX.Compose.Composed.implicit operator AndroidX.Compose.Composed!(System.Func<AndroidX.Compose.Runtime.IComposer!, AndroidX.Compose.ComposableNode?>! builder) -> AndroidX.Compose.Composed!
 static AndroidX.Compose.ComposeExtensions.BooleanResource(this AndroidX.Compose.Runtime.IComposer! composer, int id) -> bool
 static AndroidX.Compose.ComposeExtensions.CollectAsStateWithLifecycle<T>(this Xamarin.KotlinX.Coroutines.Flow.IFlow! flow, T initialValue, AndroidX.Compose.Runtime.IComposer! composer) -> AndroidX.Compose.CollectedState<T>!
 static AndroidX.Compose.ComposeExtensions.CollectAsStateWithLifecycle<T>(this Xamarin.KotlinX.Coroutines.Flow.IStateFlow! stateFlow, AndroidX.Compose.Runtime.IComposer! composer) -> AndroidX.Compose.CollectedState<T>!
@@ -1545,7 +1568,6 @@ static AndroidX.Compose.ComposeExtensions.ViewModel<T>(this AndroidX.Compose.Run
 static AndroidX.Compose.ComposeExtensions.ViewModel<T>(this AndroidX.Compose.Runtime.IComposer! composer, System.Func<T!>! factory, object? key1, object? key2, int line = 0, string! file = "") -> T!
 static AndroidX.Compose.ComposeExtensions.ViewModel<T>(this AndroidX.Compose.Runtime.IComposer! composer, System.Func<T!>! factory, object? key1, object? key2, object? key3, int line = 0, string! file = "") -> T!
 static AndroidX.Compose.ComposeExtensions.ViewModelKeyed<T>(this AndroidX.Compose.Runtime.IComposer! composer, System.Func<T!>! factory, object?[]! keys, int line = 0, string! file = "") -> T!
-static AndroidX.Compose.Composed.implicit operator AndroidX.Compose.Composed!(System.Func<AndroidX.Compose.Runtime.IComposer!, AndroidX.Compose.ComposableNode?>! builder) -> AndroidX.Compose.Composed!
 static AndroidX.Compose.CompositionLocal.Of<T>(System.Func<T>! defaultFactory) -> AndroidX.Compose.CompositionLocal<T>!
 static AndroidX.Compose.CompositionLocal.StaticOf<T>(System.Func<T>! defaultFactory) -> AndroidX.Compose.CompositionLocal<T>!
 static AndroidX.Compose.CompositionLocal<T>.Of(System.Func<T>! defaultFactory) -> AndroidX.Compose.CompositionLocal<T>!

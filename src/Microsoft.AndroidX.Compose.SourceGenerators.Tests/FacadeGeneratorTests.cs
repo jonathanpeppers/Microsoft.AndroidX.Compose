@@ -78,6 +78,19 @@ public class FacadeGeneratorTests
             {
                 public ColorScheme GetColorScheme(global::AndroidX.Compose.Runtime.IComposer c, int n) => null!;
             }
+            public sealed class ButtonColors : Java.Lang.Object { }
+        }
+        namespace AndroidX.Compose.UI.Text
+        {
+            public sealed class TextStyle : Java.Lang.Object { }
+        }
+        namespace AndroidX.Compose.UI.Text.Input
+        {
+            public class VisualTransformation : Java.Lang.Object { }
+        }
+        namespace AndroidX.Compose.Foundation.Text
+        {
+            public sealed class KeyboardOptions : Java.Lang.Object { }
         }
         namespace Kotlin.Jvm.Functions
         {
@@ -2515,6 +2528,164 @@ public class FacadeGeneratorTests
         // Reference-typed wrapper surfaces as a nullable property.
         Assert.Contains("public global::AndroidX.Compose.PaddingValues? ContentPadding { get; set; }", emitted);
         Assert.Contains("global::AndroidX.Compose.ComposeBridges.Text(_text, BuildModifier(), ContentPadding, composer);", emitted);
+
+        var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
+        Assert.Empty(errors);
+    }
+
+    [Fact]
+    public void OptionalValue_ButtonColorsEmitsNullableReferenceProperty()
+    {
+        // Phase 2 MAUI: ButtonColors? on the Button bridge surfaces as
+        // a nullable property and forwards positionally. MAUI's
+        // ButtonHandler builds one from MAUI Primary and assigns it
+        // so the M3 default container color is overridden.
+        var code = """
+            using global::AndroidX.Compose.Runtime;
+            using global::AndroidX.Compose.UI;
+            using AndroidX.Compose;
+            using AndroidX.Compose.Material3;
+            using Kotlin.Jvm.Functions;
+
+            [assembly: ComposeDefaults("ButtonDefault",
+                "!onClick", "modifier", "colors", "!content")]
+
+            namespace AndroidX.Compose
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(Class="androidx/compose/material3/ButtonKt", JvmName="Button",
+                                   Signature="(Lkotlin/jvm/functions/Function0;Landroidx/compose/ui/Modifier;Landroidx/compose/material3/ButtonColors;Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;II)V",
+                                   Defaults=typeof(ButtonDefault))]
+                    [ComposeFacade]
+                    public static partial void Button(IFunction0 onClick, IModifier? modifier, ButtonColors? colors, IFunction3 content, IComposer composer);
+                }
+            }
+            """;
+
+        var (output, diags, emitted) = Run(code, "Button");
+        Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+        Assert.Contains("public global::AndroidX.Compose.Material3.ButtonColors? Colors { get; set; }", emitted);
+        Assert.Contains("global::AndroidX.Compose.ComposeBridges.Button(__onClick, BuildModifier(), Colors, __content, composer);", emitted);
+
+        var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
+        Assert.Empty(errors);
+    }
+
+    [Fact]
+    public void OptionalValue_TextStyleEmitsNullableReferenceProperty()
+    {
+        // Phase 2 MAUI: TextStyle? on the TextField bridge surfaces
+        // as a nullable property and forwards positionally. MAUI's
+        // EntryHandler builds one from MAUI TextColor/Font and assigns.
+        var code = """
+            using global::AndroidX.Compose.Runtime;
+            using global::AndroidX.Compose.UI;
+            using AndroidX.Compose;
+            using AndroidX.Compose.UI.Text;
+            using Kotlin.Jvm.Functions;
+
+            [assembly: ComposeDefaults("TfDefault",
+                "!value", "modifier", "textStyle")]
+
+            namespace AndroidX.Compose
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(Class="androidx/compose/material3/TextFieldKt", JvmName="Tf",
+                                   Signature="(Ljava/lang/String;Landroidx/compose/ui/Modifier;Landroidx/compose/ui/text/TextStyle;Landroidx/compose/runtime/Composer;II)V",
+                                   Defaults=typeof(TfDefault))]
+                    [ComposeFacade]
+                    public static partial void Tf(string value, IModifier? modifier, TextStyle? textStyle, IComposer composer);
+                }
+            }
+            """;
+
+        var (output, diags, emitted) = Run(code, "Tf");
+        Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+        Assert.Contains("public global::AndroidX.Compose.UI.Text.TextStyle? TextStyle { get; set; }", emitted);
+        Assert.Contains("global::AndroidX.Compose.ComposeBridges.Tf(_value, BuildModifier(), TextStyle, composer);", emitted);
+
+        var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
+        Assert.Empty(errors);
+    }
+
+    [Fact]
+    public void OptionalValue_VisualTransformationEmitsNullableReferenceProperty()
+    {
+        // Phase 2 MAUI: VisualTransformation? on the TextField bridge
+        // surfaces as a nullable property and forwards positionally.
+        // MAUI's EntryHandler routes IsPassword to PasswordVisualTransformation.
+        var code = """
+            using global::AndroidX.Compose.Runtime;
+            using global::AndroidX.Compose.UI;
+            using AndroidX.Compose;
+            using AndroidX.Compose.UI.Text.Input;
+            using Kotlin.Jvm.Functions;
+
+            [assembly: ComposeDefaults("TfDefault",
+                "!value", "modifier", "visualTransformation")]
+
+            namespace AndroidX.Compose
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(Class="androidx/compose/material3/TextFieldKt", JvmName="Tf",
+                                   Signature="(Ljava/lang/String;Landroidx/compose/ui/Modifier;Landroidx/compose/ui/text/input/VisualTransformation;Landroidx/compose/runtime/Composer;II)V",
+                                   Defaults=typeof(TfDefault))]
+                    [ComposeFacade]
+                    public static partial void Tf(string value, IModifier? modifier, VisualTransformation? visualTransformation, IComposer composer);
+                }
+            }
+            """;
+
+        var (output, diags, emitted) = Run(code, "Tf");
+        Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+        Assert.Contains("public global::AndroidX.Compose.UI.Text.Input.VisualTransformation? VisualTransformation { get; set; }", emitted);
+        Assert.Contains("global::AndroidX.Compose.ComposeBridges.Tf(_value, BuildModifier(), VisualTransformation, composer);", emitted);
+
+        var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
+        Assert.Empty(errors);
+    }
+
+    [Fact]
+    public void OptionalValue_KeyboardOptionsEmitsNullableReferenceProperty()
+    {
+        // Phase 2 MAUI: KeyboardOptions? on the TextField bridge
+        // surfaces as a nullable property and forwards positionally.
+        // MAUI's EntryHandler maps MAUI Keyboard enum to KeyboardType
+        // via KeyboardOptions.Default.Copy.
+        var code = """
+            using global::AndroidX.Compose.Runtime;
+            using global::AndroidX.Compose.UI;
+            using AndroidX.Compose;
+            using AndroidX.Compose.Foundation.Text;
+            using Kotlin.Jvm.Functions;
+
+            [assembly: ComposeDefaults("TfDefault",
+                "!value", "modifier", "keyboardOptions")]
+
+            namespace AndroidX.Compose
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(Class="androidx/compose/material3/TextFieldKt", JvmName="Tf",
+                                   Signature="(Ljava/lang/String;Landroidx/compose/ui/Modifier;Landroidx/compose/foundation/text/KeyboardOptions;Landroidx/compose/runtime/Composer;II)V",
+                                   Defaults=typeof(TfDefault))]
+                    [ComposeFacade]
+                    public static partial void Tf(string value, IModifier? modifier, KeyboardOptions? keyboardOptions, IComposer composer);
+                }
+            }
+            """;
+
+        var (output, diags, emitted) = Run(code, "Tf");
+        Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+        Assert.Contains("public global::AndroidX.Compose.Foundation.Text.KeyboardOptions? KeyboardOptions { get; set; }", emitted);
+        Assert.Contains("global::AndroidX.Compose.ComposeBridges.Tf(_value, BuildModifier(), KeyboardOptions, composer);", emitted);
 
         var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
         Assert.Empty(errors);
