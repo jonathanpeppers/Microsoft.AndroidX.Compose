@@ -13,8 +13,8 @@ public static class DateRangePickerDialogDemo
         Description: "Confirm reads SelectedStartDateMillis + SelectedEndDateMillis.",
         Build:       c =>
         {
-            var open   = c.Remember(() => new MutableState<bool>(false));
-            var picked = c.Remember(() => new MutableState<string>("(none)"));
+            var open   = c.MutableStateOf(false);
+            var picked = c.MutableStateOf("(none)");
             var state  = c.Remember(() => new DateRangePickerState());
             return new Column
             {

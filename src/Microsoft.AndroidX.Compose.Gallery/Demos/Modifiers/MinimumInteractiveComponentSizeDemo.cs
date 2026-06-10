@@ -18,7 +18,7 @@ public static class MinimumInteractiveComponentSizeDemo
         Description: "Reserves 48dp around an icon-only button to keep its touch target accessible.",
         Build:       c =>
         {
-            var taps = c.Remember(() => new MutableNumberState<int>(0));
+            var taps = c.MutableStateOf(0);
             return new Column
             {
                 new Text($"Tapped: {taps}"),

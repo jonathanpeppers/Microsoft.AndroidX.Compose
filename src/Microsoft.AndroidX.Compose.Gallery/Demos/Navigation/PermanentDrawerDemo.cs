@@ -13,7 +13,7 @@ public static class PermanentDrawerDemo
         Description: "Drawer is always shown beside the content.",
         Build:       c =>
         {
-            var count = c.Remember(() => new MutableNumberState<int>(0));
+            var count = c.MutableStateOf(0);
             return new Box
             {
                 Modifier.Companion.Height(320),

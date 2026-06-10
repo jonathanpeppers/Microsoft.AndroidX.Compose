@@ -13,8 +13,8 @@ public static class AlertDialogDemo
         Description: "Modal alert with confirm + dismiss buttons.",
         Build:       c =>
         {
-            var open  = c.Remember(() => new MutableState<bool>(false));
-            var count = c.Remember(() => new MutableNumberState<int>(0));
+            var open  = c.MutableStateOf(false);
+            var count = c.MutableStateOf(0);
             return new Column
             {
                 new Text($"count = {count}"),

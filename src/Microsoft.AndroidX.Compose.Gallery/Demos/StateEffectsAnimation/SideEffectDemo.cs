@@ -13,7 +13,7 @@ public static class SideEffectDemo
         Description: $"Writes a log line after every successful recomposition. Filter logcat for '{GalleryApp.LogTag}' to see it.",
         Build:       c =>
         {
-            var count = c.Remember(() => new MutableNumberState<int>(0));
+            var count = c.MutableStateOf(0);
             return new Column
             {
                 new Text($"Count: {count}"),

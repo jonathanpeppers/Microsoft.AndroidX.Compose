@@ -14,7 +14,7 @@ public static class FocusRequesterDemo
         Build:       c =>
         {
             var focusReq    = c.Remember(() => new FocusRequester());
-            var focusStatus = c.Remember(() => new MutableState<string>("not focused"));
+            var focusStatus = c.MutableStateOf("not focused");
 
             return new Column
             {

@@ -23,8 +23,8 @@ public class MainActivity : ComponentActivity
         this.SetContent(c =>
         {
             var nav              = c.Remember(() => new NavController());
-            var currentRoute     = c.Remember(() => new MutableState<string>(Route.Inbox));
-            var openedEmailId    = c.Remember(() => new MutableState<long>(0L));
+            var currentRoute     = c.MutableStateOf(Route.Inbox);
+            var openedEmailId    = c.MutableStateOf(0L);
             var selectedEmailIds = c.Remember(() => new MutableStateList<long>());
             return ReplyApp.Build(nav, currentRoute, openedEmailId, selectedEmailIds);
         });

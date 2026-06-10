@@ -260,6 +260,24 @@ internal static class Attributes
                 /// exactly one extra slot matching <see cref="BranchOn"/>.
                 /// </summary>
                 public string? AlternateBridge { get; set; }
+
+                /// <summary>
+                /// Opt in to publishing a per-child row position for the
+                /// generated container body. The emitted <c>Wrap2</c> /
+                /// <c>Wrap3</c> content lambda calls
+                /// <c>RenderChildrenIndexed(c)</c> instead of
+                /// <c>RenderChildren(c)</c>, which wraps every child
+                /// in <c>RenderContext.PushRow(Children.Count)</c> +
+                /// <c>SetIndex(i)</c> so a child composable
+                /// (e.g. <see cref="SegmentedButton"/>) can read its
+                /// position from <see cref="RenderContext.CurrentRowChildIndex"/>
+                /// / <see cref="RenderContext.CurrentRowChildCount"/> to
+                /// compute Kotlin defaults that depend on position
+                /// (start/end shape, divider placement, ...). Only valid
+                /// on a container facade — fails CN3006 if the bridge
+                /// has no <c>IFunction2</c>/<c>IFunction3</c> body slot.
+                /// </summary>
+                public bool IndexedChildren { get; set; }
             }
 
             /// <summary>

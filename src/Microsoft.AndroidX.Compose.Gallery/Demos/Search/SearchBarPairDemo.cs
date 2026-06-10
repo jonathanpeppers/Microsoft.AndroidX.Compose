@@ -21,7 +21,7 @@ public static class SearchBarPairDemo
         {
             var state = c.Remember(() => new SearchBarState());
             var input = c.Remember(() => new SearchBarTextFieldState());
-            var query = c.Remember(() => new MutableState<string>(""));
+            var query = c.MutableStateOf("");
 
             var matches = Array.FindAll(
                 Fruits,

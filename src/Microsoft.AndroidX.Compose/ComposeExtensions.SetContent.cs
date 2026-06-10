@@ -24,7 +24,7 @@ public static partial class ComposeExtensions
     ///     this.EnableEdgeToEdge();
     ///     this.SetContent(c =&gt;
     ///     {
-    ///         var count = c.Remember(() =&gt; new MutableNumberState&lt;int&gt;(0));
+    ///         var count = c.MutableStateOf(0);
     ///         return new MaterialTheme { new Text($"Count: {count}") };
     ///     });
     /// }

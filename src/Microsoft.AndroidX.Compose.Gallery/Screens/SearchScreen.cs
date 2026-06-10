@@ -23,7 +23,7 @@ public sealed class SearchScreen : ComposableNode
     {
         var searchState = composer.Remember(() => new SearchBarState());
         var inputState  = composer.Remember(() => new SearchBarTextFieldState());
-        var query       = composer.Remember(() => new MutableState<string>(""));
+        var query       = composer.MutableStateOf("");
 
         var matches = Catalog.Search(query.Value).ToList();
 

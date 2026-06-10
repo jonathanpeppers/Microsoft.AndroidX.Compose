@@ -19,8 +19,8 @@ public static class DockedSearchBarDemo
         Description: "Deprecated boolean-state variant of SearchBar; popup docks under the input.",
         Build:       c =>
         {
-            var open  = c.Remember(() => new MutableState<bool>(false));
-            var query = c.Remember(() => new MutableState<string>(""));
+            var open  = c.MutableStateOf(false);
+            var query = c.MutableStateOf("");
 
             var matches = Array.FindAll(
                 Fruits,

@@ -13,8 +13,8 @@ public static class DropdownMenuDemo
         Description: "IconButton + DropdownMenu inside a shared Box for anchoring.",
         Build:       c =>
         {
-            var open      = c.Remember(() => new MutableState<bool>(false));
-            var selection = c.Remember(() => new MutableState<string>("(none)"));
+            var open      = c.MutableStateOf(false);
+            var selection = c.MutableStateOf("(none)");
             return new Column
             {
                 new Text($"Last menu choice: {selection}"),

@@ -13,7 +13,7 @@ public static class MediumFlexibleTopAppBarDemo
         Description: "Two-line app bar — Title + Subtitle.",
         Build:       c =>
         {
-            var count = c.Remember(() => new MutableNumberState<int>(0));
+            var count = c.MutableStateOf(0);
             return new Column
             {
                 new MediumFlexibleTopAppBar
