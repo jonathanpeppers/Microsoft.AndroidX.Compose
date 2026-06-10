@@ -80,4 +80,29 @@ public sealed class Composed : ComposableNode
         var node = _builder(composer);
         node?.Render(composer);
     }
+
+    /// <summary>
+    /// Forward a parent-supplied <c>PaddingValues</c> handle (e.g. from
+    /// <see cref="Scaffold"/>'s content lambda) through to the node the
+    /// builder produces, so the inner node's <c>BuildModifier</c> picks
+    /// it up as if it had been the body itself.
+    ///
+    /// The base <see cref="ComposableNode"/> implementation stashes the
+    /// handle on the receiving node and consumes it in
+    /// <c>BuildModifier</c> — but <see cref="Composed"/> never calls
+    /// <c>BuildModifier</c> on itself; it just delegates to the
+    /// builder's result. Without this override the padding is dropped
+    /// on the floor and the inner content renders behind the top /
+    /// bottom bars.
+    /// </summary>
+    internal override void Render(IComposer composer, IntPtr contentPadding)
+    {
+        var node = _builder(composer);
+        if (node is null)
+            return;
+        if (contentPadding == IntPtr.Zero)
+            node.Render(composer);
+        else
+            node.Render(composer, contentPadding);
+    }
 }
