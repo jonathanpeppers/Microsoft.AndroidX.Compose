@@ -84,6 +84,7 @@ public static class Catalog
 
         // ---- Lists & grids ----
         D.ListsGrids.LazyColumnLongDemo.Demo,
+        D.ListsGrids.LazyColumnContentPaddingDemo.Demo,
         D.ListsGrids.LazyListScrollStateDemo.Demo,
         D.ListsGrids.LazyRowDemo.Demo,
         D.ListsGrids.LazyVerticalGridFixedDemo.Demo,

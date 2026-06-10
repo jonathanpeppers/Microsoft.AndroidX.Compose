@@ -113,6 +113,8 @@ AndroidX.Compose.BoxWithConstraints
 AndroidX.Compose.BoxWithConstraints.BoxWithConstraints(System.Func<AndroidX.Compose.BoxConstraints, AndroidX.Compose.ComposableNode!>! content) -> void
 AndroidX.Compose.Button
 AndroidX.Compose.Button.Button(System.Action! onClick) -> void
+AndroidX.Compose.Button.ContentPadding.get -> AndroidX.Compose.PaddingValues?
+AndroidX.Compose.Button.ContentPadding.set -> void
 AndroidX.Compose.Card
 AndroidX.Compose.Card.Card() -> void
 AndroidX.Compose.CenterAlignedTopAppBar
@@ -318,6 +320,8 @@ AndroidX.Compose.ElevatedAssistChip.LeadingIcon.set -> void
 AndroidX.Compose.ElevatedAssistChip.TrailingIcon.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.ElevatedAssistChip.TrailingIcon.set -> void
 AndroidX.Compose.ElevatedButton
+AndroidX.Compose.ElevatedButton.ContentPadding.get -> AndroidX.Compose.PaddingValues?
+AndroidX.Compose.ElevatedButton.ContentPadding.set -> void
 AndroidX.Compose.ElevatedButton.ElevatedButton(System.Action! onClick) -> void
 AndroidX.Compose.ElevatedCard
 AndroidX.Compose.ElevatedCard.ElevatedCard() -> void
@@ -358,6 +362,8 @@ AndroidX.Compose.FilledIconButton.FilledIconButton(System.Action! onClick) -> vo
 AndroidX.Compose.FilledIconToggleButton
 AndroidX.Compose.FilledIconToggleButton.FilledIconToggleButton(bool checked, System.Action<bool>! onCheckedChange) -> void
 AndroidX.Compose.FilledTonalButton
+AndroidX.Compose.FilledTonalButton.ContentPadding.get -> AndroidX.Compose.PaddingValues?
+AndroidX.Compose.FilledTonalButton.ContentPadding.set -> void
 AndroidX.Compose.FilledTonalButton.FilledTonalButton(System.Action! onClick) -> void
 AndroidX.Compose.FilledTonalIconButton
 AndroidX.Compose.FilledTonalIconButton.FilledTonalIconButton(System.Action! onClick) -> void
@@ -419,6 +425,8 @@ AndroidX.Compose.HorizontalMultiBrowseCarousel<T>.State.set -> void
 AndroidX.Compose.HorizontalMultiBrowseCarousel<T>.UserScrollEnabled.get -> bool?
 AndroidX.Compose.HorizontalMultiBrowseCarousel<T>.UserScrollEnabled.set -> void
 AndroidX.Compose.HorizontalPager<T>
+AndroidX.Compose.HorizontalPager<T>.ContentPadding.get -> AndroidX.Compose.PaddingValues?
+AndroidX.Compose.HorizontalPager<T>.ContentPadding.set -> void
 AndroidX.Compose.HorizontalPager<T>.HorizontalPager(System.Collections.Generic.IReadOnlyList<T>! items, System.Func<T, AndroidX.Compose.ComposableNode!>! itemContent) -> void
 AndroidX.Compose.HorizontalPager<T>.State.get -> AndroidX.Compose.PagerState?
 AndroidX.Compose.HorizontalPager<T>.State.set -> void
@@ -508,7 +516,7 @@ AndroidX.Compose.LaunchedEffect.LaunchedEffect(object? key1, object? key2, objec
 AndroidX.Compose.LaunchedEffect.LaunchedEffect(object? key1, object? key2, System.Func<System.Threading.CancellationToken, System.Threading.Tasks.Task!>! body) -> void
 AndroidX.Compose.LaunchedEffect.LaunchedEffect(object? key1, System.Func<System.Threading.CancellationToken, System.Threading.Tasks.Task!>! body) -> void
 AndroidX.Compose.LazyColumn<T>
-AndroidX.Compose.LazyColumn<T>.ContentPadding.get -> AndroidX.Compose.Foundation.Layout.IPaddingValues?
+AndroidX.Compose.LazyColumn<T>.ContentPadding.get -> AndroidX.Compose.PaddingValues?
 AndroidX.Compose.LazyColumn<T>.ContentPadding.set -> void
 AndroidX.Compose.LazyColumn<T>.LazyColumn(System.Collections.Generic.IReadOnlyList<T>! items, System.Func<T, AndroidX.Compose.ComposableNode!>! itemContent) -> void
 AndroidX.Compose.LazyColumn<T>.ReverseLayout.get -> bool
@@ -516,10 +524,14 @@ AndroidX.Compose.LazyColumn<T>.ReverseLayout.set -> void
 AndroidX.Compose.LazyColumn<T>.State.get -> AndroidX.Compose.LazyListState?
 AndroidX.Compose.LazyColumn<T>.State.set -> void
 AndroidX.Compose.LazyHorizontalGrid<T>
+AndroidX.Compose.LazyHorizontalGrid<T>.ContentPadding.get -> AndroidX.Compose.PaddingValues?
+AndroidX.Compose.LazyHorizontalGrid<T>.ContentPadding.set -> void
 AndroidX.Compose.LazyHorizontalGrid<T>.LazyHorizontalGrid(AndroidX.Compose.Foundation.Lazy.Grid.IGridCells! rows, System.Collections.Generic.IReadOnlyList<T>! items, System.Func<T, AndroidX.Compose.ComposableNode!>! itemContent) -> void
 AndroidX.Compose.LazyHorizontalGrid<T>.State.get -> AndroidX.Compose.Foundation.Lazy.Grid.LazyGridState?
 AndroidX.Compose.LazyHorizontalGrid<T>.State.set -> void
 AndroidX.Compose.LazyHorizontalStaggeredGrid<T>
+AndroidX.Compose.LazyHorizontalStaggeredGrid<T>.ContentPadding.get -> AndroidX.Compose.PaddingValues?
+AndroidX.Compose.LazyHorizontalStaggeredGrid<T>.ContentPadding.set -> void
 AndroidX.Compose.LazyHorizontalStaggeredGrid<T>.LazyHorizontalStaggeredGrid(AndroidX.Compose.Foundation.Lazy.Staggeredgrid.IStaggeredGridCells! rows, System.Collections.Generic.IReadOnlyList<T>! items, System.Func<T, AndroidX.Compose.ComposableNode!>! itemContent) -> void
 AndroidX.Compose.LazyHorizontalStaggeredGrid<T>.State.get -> AndroidX.Compose.Foundation.Lazy.Staggeredgrid.LazyStaggeredGridState?
 AndroidX.Compose.LazyHorizontalStaggeredGrid<T>.State.set -> void
@@ -535,16 +547,22 @@ AndroidX.Compose.LazyListState.LastScrolledForward.get -> bool
 AndroidX.Compose.LazyListState.LazyListState(int initialFirstVisibleItemIndex = 0, int initialFirstVisibleItemScrollOffset = 0) -> void
 AndroidX.Compose.LazyListState.ScrollToItemAsync(int index, int scrollOffset = 0, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
 AndroidX.Compose.LazyRow<T>
+AndroidX.Compose.LazyRow<T>.ContentPadding.get -> AndroidX.Compose.PaddingValues?
+AndroidX.Compose.LazyRow<T>.ContentPadding.set -> void
 AndroidX.Compose.LazyRow<T>.HorizontalArrangement.get -> AndroidX.Compose.Arrangement?
 AndroidX.Compose.LazyRow<T>.HorizontalArrangement.set -> void
 AndroidX.Compose.LazyRow<T>.LazyRow(System.Collections.Generic.IReadOnlyList<T>! items, System.Func<T, AndroidX.Compose.ComposableNode!>! itemContent) -> void
 AndroidX.Compose.LazyRow<T>.State.get -> AndroidX.Compose.LazyListState?
 AndroidX.Compose.LazyRow<T>.State.set -> void
 AndroidX.Compose.LazyVerticalGrid<T>
+AndroidX.Compose.LazyVerticalGrid<T>.ContentPadding.get -> AndroidX.Compose.PaddingValues?
+AndroidX.Compose.LazyVerticalGrid<T>.ContentPadding.set -> void
 AndroidX.Compose.LazyVerticalGrid<T>.LazyVerticalGrid(AndroidX.Compose.Foundation.Lazy.Grid.IGridCells! columns, System.Collections.Generic.IReadOnlyList<T>! items, System.Func<T, AndroidX.Compose.ComposableNode!>! itemContent) -> void
 AndroidX.Compose.LazyVerticalGrid<T>.State.get -> AndroidX.Compose.Foundation.Lazy.Grid.LazyGridState?
 AndroidX.Compose.LazyVerticalGrid<T>.State.set -> void
 AndroidX.Compose.LazyVerticalStaggeredGrid<T>
+AndroidX.Compose.LazyVerticalStaggeredGrid<T>.ContentPadding.get -> AndroidX.Compose.PaddingValues?
+AndroidX.Compose.LazyVerticalStaggeredGrid<T>.ContentPadding.set -> void
 AndroidX.Compose.LazyVerticalStaggeredGrid<T>.LazyVerticalStaggeredGrid(AndroidX.Compose.Foundation.Lazy.Staggeredgrid.IStaggeredGridCells! columns, System.Collections.Generic.IReadOnlyList<T>! items, System.Func<T, AndroidX.Compose.ComposableNode!>! itemContent) -> void
 AndroidX.Compose.LazyVerticalStaggeredGrid<T>.State.get -> AndroidX.Compose.Foundation.Lazy.Staggeredgrid.LazyStaggeredGridState?
 AndroidX.Compose.LazyVerticalStaggeredGrid<T>.State.set -> void
@@ -759,6 +777,8 @@ AndroidX.Compose.Orientation
 AndroidX.Compose.Orientation.Horizontal = 1 -> AndroidX.Compose.Orientation
 AndroidX.Compose.Orientation.Vertical = 0 -> AndroidX.Compose.Orientation
 AndroidX.Compose.OutlinedButton
+AndroidX.Compose.OutlinedButton.ContentPadding.get -> AndroidX.Compose.PaddingValues?
+AndroidX.Compose.OutlinedButton.ContentPadding.set -> void
 AndroidX.Compose.OutlinedButton.OutlinedButton(System.Action! onClick) -> void
 AndroidX.Compose.OutlinedCard
 AndroidX.Compose.OutlinedCard.OutlinedCard() -> void
@@ -812,6 +832,12 @@ AndroidX.Compose.OutlinedTextField.SupportingText.get -> AndroidX.Compose.Compos
 AndroidX.Compose.OutlinedTextField.SupportingText.set -> void
 AndroidX.Compose.OutlinedTextField.TrailingIcon.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.OutlinedTextField.TrailingIcon.set -> void
+AndroidX.Compose.PaddingValues
+AndroidX.Compose.PaddingValues.Bottom.get -> AndroidX.Compose.Dp
+AndroidX.Compose.PaddingValues.PaddingValues(AndroidX.Compose.Dp all) -> void
+AndroidX.Compose.PaddingValues.PaddingValues(AndroidX.Compose.Dp horizontal, AndroidX.Compose.Dp vertical) -> void
+AndroidX.Compose.PaddingValues.PaddingValues(AndroidX.Compose.Dp start = default(AndroidX.Compose.Dp), AndroidX.Compose.Dp top = default(AndroidX.Compose.Dp), AndroidX.Compose.Dp end = default(AndroidX.Compose.Dp), AndroidX.Compose.Dp bottom = default(AndroidX.Compose.Dp)) -> void
+AndroidX.Compose.PaddingValues.Top.get -> AndroidX.Compose.Dp
 AndroidX.Compose.PagerState
 AndroidX.Compose.PagerState.CurrentPage.get -> int
 AndroidX.Compose.PagerState.CurrentPageOffsetFraction.get -> float
@@ -1041,6 +1067,8 @@ AndroidX.Compose.Text.SoftWrap.set -> void
 AndroidX.Compose.Text.Text(string! text) -> void
 AndroidX.Compose.TextAlign
 AndroidX.Compose.TextButton
+AndroidX.Compose.TextButton.ContentPadding.get -> AndroidX.Compose.PaddingValues?
+AndroidX.Compose.TextButton.ContentPadding.set -> void
 AndroidX.Compose.TextButton.TextButton(System.Action! onClick) -> void
 AndroidX.Compose.TextDecoration
 AndroidX.Compose.TextField
@@ -1156,6 +1184,8 @@ AndroidX.Compose.VerticalDivider.ThicknessDp.get -> float?
 AndroidX.Compose.VerticalDivider.ThicknessDp.set -> void
 AndroidX.Compose.VerticalDivider.VerticalDivider() -> void
 AndroidX.Compose.VerticalPager<T>
+AndroidX.Compose.VerticalPager<T>.ContentPadding.get -> AndroidX.Compose.PaddingValues?
+AndroidX.Compose.VerticalPager<T>.ContentPadding.set -> void
 AndroidX.Compose.VerticalPager<T>.State.get -> AndroidX.Compose.PagerState?
 AndroidX.Compose.VerticalPager<T>.State.set -> void
 AndroidX.Compose.VerticalPager<T>.VerticalPager(System.Collections.Generic.IReadOnlyList<T>! items, System.Func<T, AndroidX.Compose.ComposableNode!>! itemContent) -> void
@@ -1854,6 +1884,7 @@ static AndroidX.Compose.Modifier.OnFocusChanged(System.Action<AndroidX.Compose.F
 static AndroidX.Compose.Modifier.Padding(AndroidX.Compose.Dp all) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.Modifier.Padding(AndroidX.Compose.Dp horizontal, AndroidX.Compose.Dp vertical) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.Modifier.Padding(AndroidX.Compose.Dp start, AndroidX.Compose.Dp top, AndroidX.Compose.Dp end, AndroidX.Compose.Dp bottom) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.Modifier.Padding(AndroidX.Compose.PaddingValues! paddingValues) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.Modifier.RequiredHeight(AndroidX.Compose.Dp height) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.Modifier.RequiredSize(AndroidX.Compose.Dp size) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.Modifier.RequiredSize(AndroidX.Compose.Dp width, AndroidX.Compose.Dp height) -> AndroidX.Compose.Modifier!
@@ -1935,6 +1966,7 @@ static AndroidX.Compose.ModifierExtensions.OnFocusChanged(this AndroidX.Compose.
 static AndroidX.Compose.ModifierExtensions.Padding(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.Dp all) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.ModifierExtensions.Padding(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.Dp horizontal, AndroidX.Compose.Dp vertical) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.ModifierExtensions.Padding(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.Dp start, AndroidX.Compose.Dp top, AndroidX.Compose.Dp end, AndroidX.Compose.Dp bottom) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.ModifierExtensions.Padding(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.PaddingValues! paddingValues) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.ModifierExtensions.RequiredHeight(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.Dp height) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.ModifierExtensions.RequiredSize(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.Dp size) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.ModifierExtensions.RequiredSize(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.Dp width, AndroidX.Compose.Dp height) -> AndroidX.Compose.Modifier!

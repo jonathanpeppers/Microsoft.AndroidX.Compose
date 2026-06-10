@@ -38,6 +38,7 @@ internal static class ComposeReferenceTypes
         "AndroidX.Compose.Shape",
         "AndroidX.Compose.Alignment",
         "AndroidX.Compose.ContentScale",
+        "AndroidX.Compose.PaddingValues",
         "AndroidX.Compose.Material3.ITopAppBarScrollBehavior",
     };
 
