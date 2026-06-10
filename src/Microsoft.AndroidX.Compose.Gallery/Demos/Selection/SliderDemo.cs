@@ -10,7 +10,7 @@ public static class SliderDemo
         Id:          "selection-slider",
         CategoryId:  "selection",
         Title:       "Slider",
-        Description: "Continuous Slider mapped to a MutableNumberState<float>. The enabled toggle disables the slider; steps = 4 snaps the second one to 5 discrete positions.",
+        Description: "Continuous Slider mapped to a MutableNumberState<float>. The enabled toggle disables the slider; steps = 4 snaps the second one to 6 discrete positions (the 2 endpoints + 4 internal stops).",
         Build:       c =>
         {
             var value   = c.MutableStateOf(0.4f);
@@ -18,7 +18,7 @@ public static class SliderDemo
             var enabled = c.MutableStateOf(true);
             return new Column
             {
-                new Row
+                new Row(horizontalArrangement: Arrangement.SpacedBy(8), verticalAlignment: Alignment.Vertical.CenterVertically)
                 {
                     new Switch(@checked: enabled.Value, onCheckedChange: v => enabled.Value = v),
                     new Text(enabled.Value ? "Enabled" : "Disabled"),

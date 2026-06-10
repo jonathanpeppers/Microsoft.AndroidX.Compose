@@ -17,12 +17,12 @@ public static class RadioButtonGroupDemo
             var enabled = c.MutableStateOf(true);
             return new Column
             {
-                new Row
+                new Row(horizontalArrangement: Arrangement.SpacedBy(8), verticalAlignment: Alignment.Vertical.CenterVertically)
                 {
                     new Switch(@checked: enabled.Value, onCheckedChange: v => enabled.Value = v),
                     new Text(enabled.Value ? "Enabled" : "Disabled"),
                 },
-                new Row
+                new Row(horizontalArrangement: Arrangement.SpacedBy(4), verticalAlignment: Alignment.Vertical.CenterVertically)
                 {
                     new RadioButton(selected: picked.Value == 0, onClick: () => picked.Value = 0, enabled: enabled.Value),
                     new Text("A"),

@@ -934,6 +934,7 @@ AndroidX.Compose.RoundedCornerShape.RoundedCornerShape(int topStartPercent, int 
 AndroidX.Compose.Row
 AndroidX.Compose.Row.Row() -> void
 AndroidX.Compose.Row.Row(AndroidX.Compose.Arrangement? horizontalArrangement) -> void
+AndroidX.Compose.Row.Row(AndroidX.Compose.Arrangement? horizontalArrangement, AndroidX.Compose.Alignment.Vertical? verticalAlignment) -> void
 AndroidX.Compose.Scaffold
 AndroidX.Compose.Scaffold.Body.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.Scaffold.Body.set -> void

@@ -3467,17 +3467,18 @@ internal static partial class ComposeBridges
 
     // Internal forwarder for Row — see the Column helper above for why
     // this isn't an auto-generated facade. Row.cs supplies the typed
-    // horizontalArrangement and matching $default mask.
+    // horizontalArrangement / verticalAlignment and matching $default mask.
     internal static void Row(
         IModifier? modifier,
         AndroidX.Compose.Foundation.Layout.Arrangement.IHorizontal? horizontalArrangement,
+        IAlignmentVertical? verticalAlignment,
         IFunction3 content,
         int defaults,
         IComposer composer)
         => RowKt.Row(
             modifier:              modifier,
             horizontalArrangement: horizontalArrangement,
-            verticalAlignment:     null,
+            verticalAlignment:     verticalAlignment,
             content:               content,
             _composer:             composer,
             p5:                    0,
@@ -3574,6 +3575,11 @@ internal static partial class ComposeBridges
         int                         defaults = 0,
         IComposer                   composer = null!);
 
+    // Slot rename pattern: C# `p5` is the real Kotlin `steps` Int; C# named
+    // `steps:` is the JVM `$changed` recomposition int; `_changed` is `$default`.
+    // Cross-check with RangeSlider above, which uses the same SliderKt
+    // overload (both pass `steps: 0` for $changed and route the user-facing
+    // steps through `p5:`).
     public static partial void Slider(float value, IFunction1 onValueChange, IModifier? modifier, bool enabled, int steps, int defaults, IComposer composer)
         => SliderKt.Slider(
             value:                  value,
@@ -3581,12 +3587,12 @@ internal static partial class ComposeBridges
             modifier:               modifier,
             enabled:                enabled,
             valueRange:             null,
-            p5:                     0,
+            p5:                     steps,
             onValueChangeFinished:  null,
             colors:                 null,
             interactionSource:      null,
             _composer:              composer,
-            steps:                  steps,
+            steps:                  0,
             _changed:               defaults);
 
     // FlowRow / FlowColumn — Phase 8 wrapper-passthrough facades. The

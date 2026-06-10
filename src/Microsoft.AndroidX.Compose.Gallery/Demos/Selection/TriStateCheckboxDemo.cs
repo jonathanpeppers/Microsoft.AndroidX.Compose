@@ -18,12 +18,12 @@ public static class TriStateCheckboxDemo
             var enabled = c.MutableStateOf(true);
             return new Column
             {
-                new Row
+                new Row(horizontalArrangement: Arrangement.SpacedBy(8), verticalAlignment: Alignment.Vertical.CenterVertically)
                 {
                     new Switch(@checked: enabled.Value, onCheckedChange: v => enabled.Value = v),
                     new Text(enabled.Value ? "Enabled" : "Disabled"),
                 },
-                new Row
+                new Row(horizontalArrangement: Arrangement.SpacedBy(8), verticalAlignment: Alignment.Vertical.CenterVertically)
                 {
                     new TriStateCheckbox(
                         state:   state.Value,

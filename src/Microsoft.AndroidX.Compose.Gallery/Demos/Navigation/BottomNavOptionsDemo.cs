@@ -42,12 +42,18 @@ public static class BottomNavOptionsDemo
 
                 new Text("Tap Search or Profile, hit Increment a few times, switch to another tab and come back — the counter survives via popUpTo(saveState) + restoreState. (Selection follows taps; back-stack changes via the system Back button don't update the highlight in this v1 demo.)"),
 
-                new Row
+                new Row(horizontalArrangement: Arrangement.SpacedBy(16), verticalAlignment: Alignment.Vertical.CenterVertically)
                 {
-                    new Switch(@checked: enabled.Value, onCheckedChange: v => enabled.Value = v),
-                    new Text(enabled.Value ? "Enabled" : "Disabled"),
-                    new Switch(@checked: alwaysShowLabel.Value, onCheckedChange: v => alwaysShowLabel.Value = v),
-                    new Text(alwaysShowLabel.Value ? "AlwaysShowLabel" : "Selected-only label"),
+                    new Row(horizontalArrangement: Arrangement.SpacedBy(8), verticalAlignment: Alignment.Vertical.CenterVertically)
+                    {
+                        new Switch(@checked: enabled.Value, onCheckedChange: v => enabled.Value = v),
+                        new Text(enabled.Value ? "Enabled" : "Disabled"),
+                    },
+                    new Row(horizontalArrangement: Arrangement.SpacedBy(8), verticalAlignment: Alignment.Vertical.CenterVertically)
+                    {
+                        new Switch(@checked: alwaysShowLabel.Value, onCheckedChange: v => alwaysShowLabel.Value = v),
+                        new Text(alwaysShowLabel.Value ? "AlwaysShowLabel" : "Selected-only label"),
+                    },
                 },
 
                 // Bounded NavHost so the inner subcomposition has a

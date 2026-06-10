@@ -17,12 +17,12 @@ public static class SwitchDemo
             var enabled = c.MutableStateOf(true);
             return new Column
             {
-                new Row
+                new Row(horizontalArrangement: Arrangement.SpacedBy(8), verticalAlignment: Alignment.Vertical.CenterVertically)
                 {
                     new Switch(@checked: enabled.Value, onCheckedChange: v => enabled.Value = v),
                     new Text(enabled.Value ? "Enabled" : "Disabled"),
                 },
-                new Row
+                new Row(horizontalArrangement: Arrangement.SpacedBy(8), verticalAlignment: Alignment.Vertical.CenterVertically)
                 {
                     new Switch(@checked: on.Value, onCheckedChange: v => on.Value = v, enabled: enabled.Value),
                     new Text(on.Value ? "On" : "Off"),
