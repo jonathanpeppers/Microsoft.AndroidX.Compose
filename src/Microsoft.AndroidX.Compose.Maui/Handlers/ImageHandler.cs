@@ -5,6 +5,7 @@ using AndroidX.Compose.UI.Graphics;
 using AndroidX.Compose.UI.Graphics.Painter;
 using AndroidX.Compose.UI.Platform;
 using AndroidX.Core.Graphics.Drawable;
+using Microsoft.AndroidX.Compose.Maui.Platform;
 using Microsoft.Maui.Handlers;
 using Microsoft.Maui.Platform;
 using ComposeImage = AndroidX.Compose.Image;
@@ -98,14 +99,25 @@ public partial class ImageHandler : ComposeElementHandler<MauiIImage>
     /// <inheritdoc/>
     public override ComposableNode BuildNode(IComposer composer)
     {
+        SubscribeToViewProperties();
+
         // Painter wins over the resource id so a freshly-loaded
         // BitmapPainter immediately replaces any stale fast-path
         // drawable. Both null => empty placeholder.
+        ComposableNode node;
         if (_painter.Value is { } painter)
-            return new ComposeImage(painter) { ContentScale = _contentScale.Value };
-        if (_drawableResourceId.Value is int id)
-            return new ComposeImage(id) { ContentScale = _contentScale.Value };
-        return new Box();
+            node = new ComposeImage(painter) { ContentScale = _contentScale.Value };
+        else if (_drawableResourceId.Value is int id)
+            node = new ComposeImage(id) { ContentScale = _contentScale.Value };
+        else
+            node = new Box();
+
+        // Apply cross-cutting view properties (Opacity / Translation /
+        // Scale / Rotation / IsVisible / Clip / Shadow). The placeholder
+        // Box gets the modifier too, so an Image with Opacity=0 stays
+        // invisible even before the source loads.
+        node.PrependModifier(Modifier.Companion.ApplyViewProperties(VirtualView!));
+        return node;
     }
 
     /// <inheritdoc/>

@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="Microsoft.AndroidX.Compose.Maui.Sample.Pages.ModifiersPage"
+             Title="Modifiers">
+
+    <!--
+        Demonstrates ModifierBridge — the cross-cutting `IView` visual /
+        transform property pipeline. A single `Image` is the target;
+        every toggle button flips one property at a time and the
+        Compose-backed handler picks up the change via the
+        `RemapForCompose` hook installed on `ViewHandler.ViewMapper`.
+
+        The current state of each property is mirrored as the matching
+        button's text so you can read the live values without having
+        to inspect the visual tree.
+    -->
+    <ScrollView>
+        <VerticalStackLayout Padding="24,24"
+                             Spacing="18">
+
+            <Label Text="Modifiers"
+                   Style="{StaticResource Headline}" />
+
+            <Label Text="Toggle each property to see ApplyViewProperties chain Opacity, Translation, Scale, Rotation, IsVisible, Clip, and Shadow onto the Compose-backed Image."
+                   Style="{StaticResource SubHeadline}" />
+
+            <!-- Target — fills a fixed-height slot so transforms stay
+                 in view. The HorizontalStackLayout reserves enough
+                 horizontal space that translating the image right by
+                 60dp doesn't push it off-screen. -->
+            <VerticalStackLayout BackgroundColor="#E0E0E0"
+                                 HeightRequest="240"
+                                 HorizontalOptions="Fill">
+                <Image x:Name="Target"
+                       Source="dotnet_bot.png"
+                       HeightRequest="200"
+                       WidthRequest="200"
+                       HorizontalOptions="Center"
+                       VerticalOptions="Center" />
+            </VerticalStackLayout>
+
+            <Label Text="Tap to toggle"
+                   FontAttributes="Bold"
+                   FontSize="16" />
+
+            <Button x:Name="OpacityBtn"
+                    Text="Opacity: 1.00"
+                    Clicked="OnToggleOpacity" />
+
+            <Button x:Name="ScaleBtn"
+                    Text="Scale: 1.00"
+                    Clicked="OnToggleScale" />
+
+            <Button x:Name="RotationBtn"
+                    Text="Rotation: 0°"
+                    Clicked="OnToggleRotation" />
+
+            <Button x:Name="VisibilityBtn"
+                    Text="IsVisible: True"
+                    Clicked="OnToggleVisibility" />
+
+            <Button x:Name="TranslationBtn"
+                    Text="TranslationX: 0"
+                    Clicked="OnToggleTranslation" />
+
+            <Button x:Name="ClipBtn"
+                    Text="Clip: none"
+                    Clicked="OnToggleClip" />
+
+            <Button x:Name="ShadowBtn"
+                    Text="Shadow: off"
+                    Clicked="OnToggleShadow" />
+
+            <Button Text="Reset all"
+                    BackgroundColor="#F44336"
+                    TextColor="White"
+                    Clicked="OnResetAll" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

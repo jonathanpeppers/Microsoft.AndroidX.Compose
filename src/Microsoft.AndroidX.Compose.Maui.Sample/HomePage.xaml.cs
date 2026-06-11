@@ -60,6 +60,11 @@ public partial class HomePage : ContentPage
                 "File / Uri / Stream / Font image source types.",
                 Color.FromArgb("#E91E63"),
                 "image-sources"),
+            new DemoEntry(
+                "Modifiers",
+                "Opacity, Scale, Rotation, IsVisible, Translation, Clip, Shadow on a single Image.",
+                Color.FromArgb("#FF9800"),
+                "modifiers"),
         };
     }
 
