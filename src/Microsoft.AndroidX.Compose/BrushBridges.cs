@@ -95,7 +95,8 @@ internal static partial class ComposeBridges
     {
         if (s_solidColor_ctor == IntPtr.Zero)
         {
-            s_solidColor_class = JNIEnv.FindClass("androidx/compose/ui/graphics/SolidColor");
+            s_solidColor_class = Java.Lang.Class.FromType(
+                typeof(AndroidX.Compose.UI.Graphics.SolidColor)).Handle;
             s_solidColor_ctor = JNIEnv.GetMethodID(s_solidColor_class, "<init>", "(J)V");
         }
         var args = stackalloc JValue[1];
