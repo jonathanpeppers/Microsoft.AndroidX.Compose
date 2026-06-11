@@ -114,9 +114,11 @@ public partial class PickerHandler : ComposeElementHandler<IPicker>
         // Re-bind the items subscription to the new VirtualView whenever
         // the handler is reused (MAUI sometimes recycles handlers across
         // virtual views; defensive against tear-down/re-attach cycles).
+        // base.SetVirtualView walks the property mapper, which runs
+        // MapItemsSource → UnsubscribeItems(); SubscribeItems(); so we
+        // don't need to manually re-subscribe afterwards.
         UnsubscribeItems();
         base.SetVirtualView(view);
-        SubscribeItems();
     }
 
     /// <inheritdoc/>

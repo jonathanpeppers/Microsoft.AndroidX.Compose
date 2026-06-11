@@ -61,9 +61,14 @@ public partial class HomePage : ContentPage
                 Color.FromArgb("#E91E63"),
                 "image-sources"),
             new DemoEntry(
+                "Toggles",
+                "CheckBox / Switch / RadioButton with two-way binding.",
+                Color.FromArgb("#FF9800"),
+                "toggles"),
+            new DemoEntry(
                 "Pickers",
                 "Picker, DatePicker, TimePicker (state-holder dialogs).",
-                Color.FromArgb("#FF9800"),
+                Color.FromArgb("#FF5722"),
                 "pickers"),
         };
     }

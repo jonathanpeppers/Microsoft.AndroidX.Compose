@@ -1,5 +1,6 @@
 using Microsoft.AndroidX.Compose.Maui.Handlers;
 using MauiButton = Microsoft.Maui.Controls.Button;
+using MauiCheckBox = Microsoft.Maui.Controls.CheckBox;
 using MauiDatePicker = Microsoft.Maui.Controls.DatePicker;
 using MauiEntry = Microsoft.Maui.Controls.Entry;
 using MauiHorizontalStackLayout = Microsoft.Maui.Controls.HorizontalStackLayout;
@@ -7,7 +8,9 @@ using MauiImage = Microsoft.Maui.Controls.Image;
 using MauiLabel = Microsoft.Maui.Controls.Label;
 using MauiPage = Microsoft.Maui.Controls.Page;
 using MauiPicker = Microsoft.Maui.Controls.Picker;
+using MauiRadioButton = Microsoft.Maui.Controls.RadioButton;
 using MauiScrollView = Microsoft.Maui.Controls.ScrollView;
+using MauiSwitch = Microsoft.Maui.Controls.Switch;
 using MauiTimePicker = Microsoft.Maui.Controls.TimePicker;
 using MauiVerticalStackLayout = Microsoft.Maui.Controls.VerticalStackLayout;
 
@@ -44,9 +47,10 @@ public static class AppHostBuilderExtensions
     ///   <item><description>Leaves
     ///     (<see cref="MauiLabel"/> / <see cref="MauiButton"/> /
     ///     <see cref="MauiEntry"/> / <see cref="MauiImage"/> /
-    ///     <see cref="MauiPicker"/> / <see cref="MauiDatePicker"/> /
-    ///     <see cref="MauiTimePicker"/>) fold into the enclosing
-    ///     composition via
+    ///     <see cref="MauiCheckBox"/> / <see cref="MauiSwitch"/> /
+    ///     <see cref="MauiRadioButton"/> / <see cref="MauiPicker"/> /
+    ///     <see cref="MauiDatePicker"/> / <see cref="MauiTimePicker"/>)
+    ///     fold into the enclosing composition via
     ///     <see cref="IComposeHandler"/>.</description></item>
     /// </list>
     ///
@@ -58,7 +62,7 @@ public static class AppHostBuilderExtensions
     /// (the leaf creates its own composition because there's no parent
     /// composer to fold into). When they appear <i>below</i> a
     /// converted parent — or anywhere a non-converted control surfaces
-    /// (CollectionView, BoxView, Switch, customer renderers) — they're
+    /// (CollectionView, BoxView, customer renderers) — they're
     /// hosted via <c>AndroidView { factory = child.ToPlatform(MauiContext) }</c>
     /// inside the page composition, so MAUI's normal handler resolution
     /// keeps working.</para>
@@ -89,6 +93,9 @@ public static class AppHostBuilderExtensions
             handlers.AddHandler<MauiButton,                 ButtonHandler>();
             handlers.AddHandler<MauiEntry,                  EntryHandler>();
             handlers.AddHandler<MauiImage,                  ImageHandler>();
+            handlers.AddHandler<MauiCheckBox,               CheckBoxHandler>();
+            handlers.AddHandler<MauiSwitch,                 SwitchHandler>();
+            handlers.AddHandler<MauiRadioButton,            RadioButtonHandler>();
             handlers.AddHandler<MauiPicker,                 PickerHandler>();
             handlers.AddHandler<MauiDatePicker,             DatePickerHandler>();
             handlers.AddHandler<MauiTimePicker,             TimePickerHandler>();

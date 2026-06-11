@@ -55,8 +55,11 @@ public partial class DatePickerHandler : ComposeElementHandler<IDatePicker>
         new PropertyMapper<IDatePicker, DatePickerHandler>(ViewHandler.ViewMapper)
         {
             [nameof(IDatePicker.Date)]                = MapDate,
-            [nameof(IDatePicker.MinimumDate)]         = MapMinimumDate,
-            [nameof(IDatePicker.MaximumDate)]         = MapMaximumDate,
+            // MinimumDate / MaximumDate are intentionally NOT mapped here —
+            // wiring them through to Compose's DatePickerState requires
+            // lifting `RememberDatePickerState` to a Phase 4b parameterised
+            // wrapper that surfaces `yearRange` (and ideally an
+            // `ISelectableDates` adapter). Tracked as a Slice 5 follow-up.
             [nameof(IDatePicker.Format)]              = MapFormat,
             [nameof(ITextStyle.TextColor)]            = MapTextColor,
             [nameof(ITextStyle.Font)]                 = MapFont,
@@ -68,8 +71,6 @@ public partial class DatePickerHandler : ComposeElementHandler<IDatePicker>
         new(ViewCommandMapper);
 
     readonly MutableState<long?>  _ticks      = new((long?)null);
-    readonly MutableState<long?>  _minTicks   = new((long?)null);
-    readonly MutableState<long?>  _maxTicks   = new((long?)null);
     readonly MutableState<string> _format     = new("d");
     readonly MutableState<long?>  _textColor  = new((long?)null);
     readonly MutableState<int?>   _fontSize   = new((int?)null);
@@ -194,14 +195,6 @@ public partial class DatePickerHandler : ComposeElementHandler<IDatePicker>
     /// <summary>Map <see cref="IDatePicker.Date"/> to the Compose ticks slot.</summary>
     public static void MapDate(DatePickerHandler handler, IDatePicker dp) =>
         handler._ticks.Value = dp.Date is DateTime d ? d.Ticks : null;
-
-    /// <summary>Map <see cref="IDatePicker.MinimumDate"/> to the Compose minimum-ticks slot.</summary>
-    public static void MapMinimumDate(DatePickerHandler handler, IDatePicker dp) =>
-        handler._minTicks.Value = dp.MinimumDate is DateTime d ? d.Ticks : null;
-
-    /// <summary>Map <see cref="IDatePicker.MaximumDate"/> to the Compose maximum-ticks slot.</summary>
-    public static void MapMaximumDate(DatePickerHandler handler, IDatePicker dp) =>
-        handler._maxTicks.Value = dp.MaximumDate is DateTime d ? d.Ticks : null;
 
     /// <summary>Map <see cref="IDatePicker.Format"/> to the formatted-label slot.</summary>
     public static void MapFormat(DatePickerHandler handler, IDatePicker dp) =>
