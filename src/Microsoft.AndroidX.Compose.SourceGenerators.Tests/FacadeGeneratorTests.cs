@@ -3760,4 +3760,44 @@ public class FacadeGeneratorTests
         var (_, diags, _) = Run(code, "Icon");
         Assert.Contains(diags, d => d.Id == "CN3012" && d.Severity == DiagnosticSeverity.Error);
     }
+
+    [Fact]
+    public void Secondary_OnlySecondaryDefaultsWithoutSecondaryCtor_EmitsCN3012()
+    {
+        // SecondaryDefaults set without SecondaryCtor — rejected. Mirror
+        // of Secondary_OnlyOneOfSecondaryCtorSecondaryDefaults_EmitsCN3012;
+        // covers the inverse direction (a typo or refactor that drops the
+        // SecondaryCtor name should fail loudly, not silently no-op).
+        var code = $$"""
+            using global::AndroidX.Compose.Runtime;
+            using global::AndroidX.Compose.UI;
+            using AndroidX.Compose;
+            using Kotlin.Jvm.Functions;
+
+            [assembly: ComposeDefaults("IconPainterDefault",
+                "!painter", "contentDescription", "modifier", "tint")]
+            [assembly: ComposeDefaults("IconDefault",
+                "!imageVector", "contentDescription", "modifier", "tint")]
+
+            namespace AndroidX.Compose
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(Class="x/IconKt", JvmName="Icon-painter",
+                                   Signature="(Landroidx/compose/ui/graphics/painter/Painter;Ljava/lang/String;Landroidx/compose/ui/Modifier;JLandroidx/compose/runtime/Composer;II)V",
+                                   Defaults=typeof(IconPainterDefault))]
+                    [ComposeFacade(ClassName="Icon", SecondaryDefaults=typeof(IconDefault))]
+                    public static partial void IconPainter(
+                        [PainterResource] global::AndroidX.Compose.UI.Graphics.Painter.Painter painter,
+                        string?    contentDescription,
+                        IModifier? modifier,
+                        long?      tint,
+                        int        defaults,
+                        IComposer  composer);
+                }
+            }
+            """;
+        var (_, diags, _) = Run(code, "Icon");
+        Assert.Contains(diags, d => d.Id == "CN3012" && d.Severity == DiagnosticSeverity.Error);
+    }
 }

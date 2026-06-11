@@ -431,12 +431,19 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         // backing field) instead of slot-presence. Used by Icon to add
         // an ImageVector overload alongside the Painter Phase 7 ctors.
         SecondaryCtorInfo? secondaryCtorInfo = null;
-        if (!string.IsNullOrEmpty(secondaryCtorName))
+        if (!string.IsNullOrEmpty(secondaryCtorName) || secondaryDefaultsType is not null)
         {
+            // CN3012 — both must be set together. A typo on one side
+            // would otherwise silently no-op.
+            if (string.IsNullOrEmpty(secondaryCtorName) || secondaryDefaultsType is null)
+            {
+                diags.Add(Diagnostic.Create(Diagnostics.FacadeSecondaryCtorInvalid, loc, method.Name,
+                    "SecondaryCtor and SecondaryDefaults must both be set"));
+            }
             // CN3012 — branching + SecondaryCtor is unsupported (both
             // would prepend their own dispatch in Render; combining them
             // is not modelled).
-            if (branchInfo is not null)
+            else if (branchInfo is not null)
             {
                 diags.Add(Diagnostic.Create(Diagnostics.FacadeSecondaryCtorInvalid, loc, method.Name,
                     "SecondaryCtor cannot be combined with BranchOn/AlternateBridge"));

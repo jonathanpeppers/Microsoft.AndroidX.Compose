@@ -703,9 +703,9 @@ internal static partial class ComposeBridges
         [PainterResource] Painter painter,
         string?    contentDescription,
         IModifier? modifier,
-        long       tint     = 0L,
-        int        defaults = 0,
-        IComposer  composer = null!);
+        long?      tint,
+        int        defaults,
+        IComposer  composer);
 
     // Phase 11 secondary — thin wrapper over the bound
     // androidx.compose.material3.IconKt.Icon(ImageVector, ...)
@@ -714,18 +714,25 @@ internal static partial class ComposeBridges
     // facade can dispatch by ctor. No [ComposeBridge] needed — the
     // ImageVector overload is fully bound; the facade reaches it via
     // SecondaryDefaults pointing at the IconDefault enum.
+    //
+    // `tint` is `long?` (not `long`) so the facade generator
+    // classifies it as OptionalValue and only clears the `$default`
+    // bit when the caller passes a non-null Tint — otherwise Kotlin
+    // falls back to LocalContentColor.current. A non-nullable `long`
+    // would unconditionally clear the bit and pass `0L` (transparent
+    // black) to Kotlin, breaking theme-inherited icon tinting.
     public static void IconImageVector(
         global::AndroidX.Compose.UI.Graphics.Vector.ImageVector imageVector,
         string?    contentDescription,
         IModifier? modifier,
-        long       tint,
+        long?      tint,
         int        defaults,
         IComposer  composer) =>
         IconKt.Icon(
             imageVector:        imageVector,
             contentDescription: contentDescription!,
             modifier:           modifier,
-            tint:               tint,
+            tint:               tint ?? 0L,
             _composer:          composer,
             p5:                 0,
             _changed:           defaults);

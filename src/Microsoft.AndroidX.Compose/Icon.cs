@@ -23,9 +23,9 @@ namespace AndroidX.Compose;
 /// </list>
 /// </summary>
 /// <remarks>
-/// The <c>tint</c> constructor parameter accepts a packed
-/// <see cref="Color"/> (implicit-converted to <c>long</c>). Leave it
-/// at <c>0L</c> to inherit the surrounding Material content color
-/// (Compose's <c>LocalContentColor</c>).
+/// Set the <c>Tint</c> property to a packed <see cref="Color"/>
+/// (implicit-converted to <c>long</c>) to override the icon color.
+/// Leave it unset (<c>null</c>) to inherit the surrounding Material
+/// content color (Compose's <c>LocalContentColor</c>).
 /// </remarks>
 public sealed partial class Icon;
