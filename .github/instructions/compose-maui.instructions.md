@@ -353,9 +353,24 @@ Pack `IntSize` as `((long)w << 32) | (uint)h` (matches Compose's
 `packInts` lowering for the `@JvmInline value class`). Pass
 `IntOffset.Zero` as `0L` and `FilterQuality.Low` as `1`.
 
+`d.IntrinsicWidth` / `d.IntrinsicHeight` are JNI getters — cache
+each in a local before clamping. Reuse those locals (not
+`bitmap.Width` / `bitmap.Height`) when packing `srcSize`:
+`DrawableKt.ToBitmap(d, w, h, config: null)` either zero-copies a
+size-matching `BitmapDrawable` or allocates fresh at exactly
+`(w, h)`, so the bitmap dimensions are guaranteed to equal our
+local `w`/`h` and reading them back would pay two more JNI getters
+for no information.
+
 ```csharp
+int intrinsicW = d.IntrinsicWidth;
+int intrinsicH = d.IntrinsicHeight;
+var w = intrinsicW > 0 ? intrinsicW : 1;
+var h = intrinsicH > 0 ? intrinsicH : 1;
+var bitmap = DrawableKt.ToBitmap(d, w, h, config: null);
+
 var imageBitmap = AndroidImageBitmap_androidKt.AsImageBitmap(bitmap);
-var srcSize = ((long)bitmap.Width << 32) | (uint)bitmap.Height;
+var srcSize = ((long)w << 32) | (uint)h;
 return BitmapPainterKt.BitmapPainter(
     image: imageBitmap, srcOffset: 0L, srcSize: srcSize, filterQuality: 1);
 ```
