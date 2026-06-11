@@ -449,10 +449,33 @@ so `[CallerFilePath]` + `[CallerLineNumber]` slot keys inside
   `ModalWideNavigationRail` (no veto — rail has no `confirmStateChange` in
   Kotlin).
 
+- **Phase 11** — `SecondaryCtor` / `SecondaryDefaults`: one facade exposes
+  two ctors that dispatch to two distinct `ComposeBridges` methods. The
+  primary bridge carries
+  `[ComposeFacade(SecondaryCtor = nameof(SiblingBridge), SecondaryDefaults = typeof(SiblingDefault))]`.
+  The secondary is a static method on `ComposeBridges` (with or without
+  `[ComposeBridge]`) sharing the primary's user-param shape *by name* plus
+  exactly **one** extra non-nullable reference-type slot (the discriminator).
+  The generator emits:
+  - a nullable backing field `readonly TDiscrim? _<discriminator>;`,
+  - an extra ctor whose first arg is the discriminator + remaining primary
+    ctor slots,
+  - a Render preamble `if (_<discriminator> is not null) { build secondary
+    mask with __secDefaults/__secModifier locals → call secondary → return; }`
+    (renamed locals avoid CS0136 shadowing of the primary path's
+    `__modifier` / `__defaults`).
+
+  Both bridges must declare trailing `int defaults`. The secondary's
+  enum bit for the discriminator (if present) is cleared automatically.
+  Mutually exclusive with `BranchOn` / `AlternateBridge` (CN3012). Used
+  for `Icon` (`IconPainter` primary via `[PainterResource]` ctor +
+  `IconImageVector` sibling wrapping the bound `IconKt.Icon(ImageVector,…)`
+  overload).
+
 ### Hand-written holdouts
 
 - Facades calling a bound binding directly with no `[ComposeBridge]` —
-  `DropdownMenuItem`, `Icon` (`ImageVector` overload).
+  `DropdownMenuItem`.
 - State-holder facades whose `RememberXxxState` takes user params AND combine
   with per-instance veto adapter: `ModalBottomSheet`, `BottomSheetScaffold`.
   `SearchBar` until hybrid-container extension lands. These need Phase 10 +
@@ -461,14 +484,12 @@ so `[CallerFilePath]` + `[CallerLineNumber]` slot keys inside
   (`SegmentedButton` — two ctors route to two physical bridges plus a
   custom `shape = ItemShape(...)` arg computed from the published
   row-position; doesn't fit `BranchOn` or any other phase).
-- `Icon` exposes two distinct ctors (`ImageVector` vs. resource-id `Painter`)
-  routing to two bridges. Generator emits one ctor + one `Render` per facade.
 - `TextField`, `OutlinedTextField` expose three ctors that route between two
   physical bridges — the `string` overload and the `TextFieldValue` overload
   (the latter carries `selection`/`composition` so callers can programmatically
   move the cursor, e.g. Jetchat's emoji-tap). Ctor-driven bridge selection
-  doesn't fit `BranchOn` (slot-presence based) or `StateHolder` shapes. Same
-  precedent as `Icon`. The `TextFieldValue` overload uses the **bound**
+  with **three** ctors / **two** bridges doesn't fit Phase 11's
+  one-discriminator shape. The `TextFieldValue` overload uses the **bound**
   `AndroidX.Compose.UI.Text.Input.TextFieldValue` type directly — only the
   Kotlin ctor needs JNI (mangled because `selection: TextRange` is a
   `@JvmInline value class`); everything else (`Text`/`Selection`/`Copy(…)`)
@@ -477,8 +498,8 @@ so `[CallerFilePath]` + `[CallerLineNumber]` slot keys inside
 Applying `[ComposeFacade]` to an unsupported bridge emits CN3002 (unsupported
 param), CN3003 (scope misuse), CN3005 (invalid callback type), CN3006 (slot
 conflict), CN3007 (color theme bind failed), CN3008 (painter misuse), CN3009
-(state-holder misuse), CN3010 (branching misuse), or CN3011
-(confirmStateChange misuse).
+(state-holder misuse), CN3010 (branching misuse), CN3011
+(confirmStateChange misuse), or CN3012 (secondary-ctor misuse).
 
 ### Adding a new generated facade
 
@@ -493,7 +514,7 @@ conflict), CN3007 (color theme bind failed), CN3008 (painter misuse), CN3009
    `public sealed partial class <ClassName>;` and a `<summary>`. Use
    `Button.cs`/`IconButton.cs`/`Card.cs` as templates. **Do not omit the
    stub** — without it no XML docs.
-4. Build `dotnet build src/Microsoft.AndroidX.Compose.Gallery` to verify. CN3001-CN3011 fire
+4. Build `dotnet build src/Microsoft.AndroidX.Compose.Gallery` to verify. CN3001-CN3012 fire
    on rejection.
 5. If CN3002 fires, add the right marker attribute
    (`[Callback]`/`[Slot]`/`[PainterResource]`) or back out and write by hand.
@@ -515,6 +536,7 @@ conflict), CN3007 (color theme bind failed), CN3008 (painter misuse), CN3009
 | CN3009 | `[StateHolder]` invalid: non-`IntPtr` param, combined with `[PainterResource]`, missing/non-identifier `Remember`/`StateType`, named `Remember` not a static `(IComposer) -> IntPtr` on `ComposeBridges`, or `StateType` has no accessible writable instance field named `Jvm`.                                                                                                                                                                                                                  |
 | CN3010 | `BranchOn`/`AlternateBridge` invalid: only one set, primary/alternate missing trailing `int defaults`, named alternate not resolvable/ambiguous on `ComposeBridges`, alternate not a strict superset (missing a primary param or > 1 extra), extra param's PascalCased name doesn't match `BranchOn`, extra param isn't `IFunction2`/`IFunction3`, shared param has incompatible types, branching used on hybrid container shape, or alternate has no resolvable `[ComposeBridge].Defaults` enum. |
 | CN3011 | `[ConfirmStateChange(typeof(T))]` invalid: not on `IFunction1` param, missing `typeof(T)` ctor arg, convention adapter `Microsoft.AndroidX.Compose.<TName>ConfirmStateChange` missing (override with `AdapterType = typeof(...)`), adapter doesn't implement `Kotlin.Jvm.Functions.IFunction1`, lacks public parameterless ctor, or no writable `Callback` property of type `System.Func<T, bool>?`.                                                                                                              |
+| CN3012 | `SecondaryCtor`/`SecondaryDefaults` invalid: only one set, named secondary not resolvable/ambiguous on `ComposeBridges`, secondary missing trailing `int defaults`, secondary's user params don't share names with the primary, the discriminating extra param is value-type / nullable / not a reference type / there's > 1 unique param / there's none, primary has no slot missing from the secondary (no primary-only discriminator), `SecondaryDefaults` enum unresolvable, or combined with `BranchOn`/`AlternateBridge`.                                                                                                                                                                                                                                                                              |
 
 ### Migration rule
 

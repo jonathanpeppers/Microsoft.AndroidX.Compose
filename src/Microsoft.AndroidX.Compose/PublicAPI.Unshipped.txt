@@ -479,11 +479,9 @@ AndroidX.Compose.HorizontalUncontainedCarousel<T>.State.set -> void
 AndroidX.Compose.HorizontalUncontainedCarousel<T>.UserScrollEnabled.get -> bool?
 AndroidX.Compose.HorizontalUncontainedCarousel<T>.UserScrollEnabled.set -> void
 AndroidX.Compose.Icon
-AndroidX.Compose.Icon.Icon(AndroidX.Compose.UI.Graphics.Painter.Painter! painter, string? contentDescription) -> void
-AndroidX.Compose.Icon.Icon(AndroidX.Compose.UI.Graphics.Vector.ImageVector! imageVector, string? contentDescription) -> void
-AndroidX.Compose.Icon.Icon(int drawableResourceId, string? contentDescription) -> void
-AndroidX.Compose.Icon.Tint.get -> AndroidX.Compose.Color?
-AndroidX.Compose.Icon.Tint.set -> void
+AndroidX.Compose.Icon.Icon(AndroidX.Compose.UI.Graphics.Painter.Painter! painter, string? contentDescription, long tint = 0) -> void
+AndroidX.Compose.Icon.Icon(AndroidX.Compose.UI.Graphics.Vector.ImageVector! imageVector, string? contentDescription, long tint = 0) -> void
+AndroidX.Compose.Icon.Icon(int drawableResourceId, string? contentDescription, long tint = 0) -> void
 AndroidX.Compose.IconButton
 AndroidX.Compose.IconButton.IconButton(System.Action! onClick) -> void
 AndroidX.Compose.Icons

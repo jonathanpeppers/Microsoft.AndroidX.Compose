@@ -278,6 +278,37 @@ internal static class Attributes
                 /// has no <c>IFunction2</c>/<c>IFunction3</c> body slot.
                 /// </summary>
                 public bool IndexedChildren { get; set; }
+
+                /// <summary>
+                /// Phase 11 — name of a sibling static method on
+                /// <c>ComposeBridges</c> that the facade exposes as an
+                /// extra ctor dispatching to a second bridge. The
+                /// secondary's user parameters must equal the primary's
+                /// shared (by-name) set plus exactly one extra
+                /// non-nullable reference-type parameter (the
+                /// "discriminator"). The generator adds a
+                /// <c>readonly TDiscrim? _&lt;discriminator&gt;</c>
+                /// backing field, an extra ctor whose first positional
+                /// argument is the discriminator, and prepends a
+                /// <c>if (_&lt;discriminator&gt; is not null) { call
+                /// secondary; return; }</c> branch to <c>Render</c>.
+                /// The primary's body keeps its existing shape (e.g.
+                /// Phase 7 painter-id + painter ctors). Used by
+                /// <see cref="Icon"/> to dispatch between the
+                /// <c>ImageVector</c> overload (directly bound binding)
+                /// and the <c>Painter</c> overload (JNI bridge).
+                /// </summary>
+                public string? SecondaryCtor { get; set; }
+
+                /// <summary>
+                /// Phase 11 — optional <c>$default</c> enum for the
+                /// <see cref="SecondaryCtor"/> bridge. Reads
+                /// <c>[ComposeBridge].Defaults</c> on the secondary
+                /// method first; this property is the fallback when the
+                /// secondary is a Phase 8-style wrapper without
+                /// <c>[ComposeBridge]</c>.
+                /// </summary>
+                public global::System.Type? SecondaryDefaults { get; set; }
             }
 
             /// <summary>

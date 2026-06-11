@@ -695,13 +695,40 @@ internal static partial class ComposeBridges
         Signature = "(Landroidx/compose/ui/graphics/painter/Painter;Ljava/lang/String;" +
                     "Landroidx/compose/ui/Modifier;JLandroidx/compose/runtime/Composer;II)V",
         Defaults  = typeof(IconPainterDefault))]
+    [ComposeFacade(
+        ClassName         = "Icon",
+        SecondaryCtor     = nameof(IconImageVector),
+        SecondaryDefaults = typeof(IconDefault))]
     public static partial void IconPainter(
-        Painter    painter,
+        [PainterResource] Painter painter,
+        string?    contentDescription,
+        IModifier? modifier,
+        long       tint     = 0L,
+        int        defaults = 0,
+        IComposer  composer = null!);
+
+    // Phase 11 secondary — thin wrapper over the bound
+    // androidx.compose.material3.IconKt.Icon(ImageVector, ...)
+    // overload. Mirrors IconPainter's user-param shape but swaps the
+    // discriminator (Painter → ImageVector) so the generated Icon
+    // facade can dispatch by ctor. No [ComposeBridge] needed — the
+    // ImageVector overload is fully bound; the facade reaches it via
+    // SecondaryDefaults pointing at the IconDefault enum.
+    public static void IconImageVector(
+        global::AndroidX.Compose.UI.Graphics.Vector.ImageVector imageVector,
         string?    contentDescription,
         IModifier? modifier,
         long       tint,
         int        defaults,
-        IComposer  composer);
+        IComposer  composer) =>
+        IconKt.Icon(
+            imageVector:        imageVector,
+            contentDescription: contentDescription!,
+            modifier:           modifier,
+            tint:               tint,
+            _composer:          composer,
+            p5:                 0,
+            _changed:           defaults);
 
     // androidx.compose.material3.TextFieldKt.TextField (String overload)
     const string TextFieldStringSig =
