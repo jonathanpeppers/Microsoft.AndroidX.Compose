@@ -61,7 +61,7 @@ public partial class LayoutHandler : ComposeElementHandler<ILayout>
         new(ViewCommandMapper);
 
     readonly MutableState<int> _childrenVersion = new(0);
-    readonly MutableState<int> _spacing = new(0);
+    readonly MutableState<float> _spacing = new(0f);
     // Thickness is a MAUI struct; not a Java type, primitive, or
     // Nullable<primitive>, so MutableState<Thickness> throws
     // NotSupportedException at construction. Use a version counter
@@ -110,7 +110,7 @@ public partial class LayoutHandler : ComposeElementHandler<ILayout>
         _ = _childrenVersion.Value; // subscribe — a tree mutation bumps this
         var padding = layout is IPadding pad ? pad.Padding : Thickness.Zero;
 
-        var arrangement = spacing > 0 ? Arrangement.SpacedBy(spacing) : null;
+        var arrangement = spacing > 0f ? Arrangement.SpacedBy(new Dp(spacing)) : null;
 
         ComposableContainer container = vertical
             ? new Column(verticalArrangement: arrangement)
@@ -151,7 +151,7 @@ public partial class LayoutHandler : ComposeElementHandler<ILayout>
     public static void MapSpacing(LayoutHandler handler, ILayout layout)
     {
         if (layout is IStackLayout stack)
-            handler._spacing.Value = (int)stack.Spacing;
+            handler._spacing.Value = (float)stack.Spacing;
     }
 
     /// <summary>

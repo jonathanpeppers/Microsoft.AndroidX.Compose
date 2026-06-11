@@ -1,8 +1,6 @@
 using Android.Content;
-using Android.Runtime;
 using AndroidX.Compose.Runtime;
 using AndroidX.Compose.UI.ViewInterop;
-using Kotlin.Jvm.Functions;
 using AView = Android.Views.View;
 
 namespace AndroidX.Compose;
@@ -16,10 +14,10 @@ namespace AndroidX.Compose;
 /// <c>ToPlatform()</c> result, …).
 /// </summary>
 /// <remarks>
-/// <para>The <see cref="Factory"/> lambda runs <em>once</em> per
+/// <para>The <c>factory</c> lambda runs <em>once</em> per
 /// composition slot — Compose caches the materialised view and
-/// reuses it across recompositions. The <see cref="Update"/> lambda,
-/// if supplied, runs on each recomposition so callers can push fresh
+/// reuses it across recompositions. The <c>update</c> lambda, if
+/// supplied, runs on each recomposition so callers can push fresh
 /// property values into the cached view.</para>
 ///
 /// <para>The Kotlin signature takes a <c>(Context) -&gt; T</c>
@@ -77,44 +75,5 @@ public sealed class AndroidView : ComposableNode
             // `$default`.)
             p4:        0,
             _changed:  defaults);
-    }
-}
-
-/// <summary>
-/// <c>Function1&lt;Context, View&gt;</c> JCW used by
-/// <see cref="AndroidView"/> as Compose's <c>factory</c> argument.
-/// </summary>
-[Register("net/compose/AndroidViewFactoryAdapter")]
-internal sealed class AndroidViewFactoryAdapter : Java.Lang.Object, IFunction1
-{
-    readonly Func<Context, AView> _factory;
-
-    public AndroidViewFactoryAdapter(Func<Context, AView> factory) => _factory = factory;
-
-    public Java.Lang.Object Invoke(Java.Lang.Object? p0) =>
-        _factory((Context)p0!);
-}
-
-/// <summary>
-/// <c>Function1&lt;View, Unit&gt;</c> JCW used by
-/// <see cref="AndroidView"/> as Compose's optional <c>update</c>
-/// argument.
-/// </summary>
-[Register("net/compose/AndroidViewUpdateAdapter")]
-internal sealed class AndroidViewUpdateAdapter : Java.Lang.Object, IFunction1
-{
-    static Java.Lang.Object? s_unit;
-
-    readonly Action<AView> _update;
-
-    public AndroidViewUpdateAdapter(Action<AView> update) => _update = update;
-
-    public Java.Lang.Object Invoke(Java.Lang.Object? p0)
-    {
-        _update((AView)p0!);
-        // Kotlin `Unit`. Returning null would fault inside Compose's
-        // adapter; a singleton wrapper keeps allocations off the hot
-        // recomposition path.
-        return s_unit ??= Kotlin.Unit.Instance!;
     }
 }

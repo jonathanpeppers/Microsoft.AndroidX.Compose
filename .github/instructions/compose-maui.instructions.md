@@ -139,14 +139,30 @@ public partial class FooHandler : ComposeElementHandler<IFoo>
 }
 ```
 
-`ComposeElementHandler<T>` is a `ViewHandler<T, AView>` whose
-`CreatePlatformView()` returns a tiny marker `Android.Views.View`
-(MAUI requires a non-null `PlatformView` for attach / focus /
-animation bookkeeping; the marker satisfies the contract without
-being added to any `ViewGroup`). All actual rendering happens via
-`BuildNode` inside the page's single composition. There is no
-`ComposeView` per handler, no per-handler composer, no per-handler
-`DisposeComposition`.
+`ComposeElementHandler<T>` is a `ViewHandler<T, ComposeView>` — it
+owns one `ComposeView` per handler instance as its `PlatformView`.
+This is **dual-mode** by design:
+
+- **Compose-aware path** (the common one): when a child of
+  `PageHandler`/`LayoutHandler`/`ScrollViewHandler` is one of our
+  `IComposeHandler`s, `ComposeWalker` calls `BuildNode(IComposer)`
+  directly and folds the result into the page's single composition.
+  The handler's own `ComposeView` is never attached to a window, so
+  `SetContent`'s composition never spins up — zero per-handler
+  overhead.
+- **Fallback path**: when our leaf ends up inside a stock parent
+  (e.g. a `CollectionView` item template, a `Border`), MAUI calls
+  `ToPlatform()` and attaches the leaf's `ComposeView` directly.
+  `SetContent(BuildNode)` is lazy — it kicks the composition off only
+  once attached, so the same handler instance renders correctly in
+  both contexts. Mappers write to the same `MutableState<T>` slots
+  either way.
+
+This is why a fully-converted page (Page → VSL → Label/Button) shows
+exactly **one** `ComposeView` in `uiautomator dump`, while a stock
+container hosting a Compose-backed leaf (Border with Image, or
+CollectionView item template with Label) shows one extra `ComposeView`
+per Compose-backed leaf.
 
 ### Container / scope handler
 
@@ -157,12 +173,17 @@ shape but their `BuildNode` walks `IView` children via
 ```csharp
 public override ComposableNode BuildNode(IComposer composer)
 {
-    var container = new Column { Modifier = BuildModifier() };
+    var container = new Column { Modifier = Modifier.Padding(...) };
     foreach (var child in VirtualView!.Children)
         container.Add(c => ComposeWalker.Render(child, c, MauiContext!));
     return container;
 }
 ```
+
+Use the public `Modifier` property directly — `BuildModifier()` is
+`internal` to `Microsoft.AndroidX.Compose` and unreachable from this
+assembly. (See `ScrollViewHandler.cs` for the canonical pattern of
+composing extra modifiers via `Modifier.Then(fillMain)`.)
 
 The walker dispatches each child to `IComposeHandler.BuildNode` or to
 `AndroidView { factory = child.ToPlatform(MauiContext) }` if the
@@ -559,9 +580,12 @@ duplicates the stock behavior without adding anything.
 
 - ❌ `IPropertyMapper<IFoo, IFooHandler>` when `FooHandler` doesn't
   implement `IFooHandler` → `InvalidCastException` at first map.
-- ❌ Putting a `ComposeView` anywhere outside `PageHandler` — one
-  composition per page is the whole point. New leaves go on
-  `ComposeElementHandler<T>` and contribute via `BuildNode`.
+- ❌ Spinning up an extra `ComposeView` outside `PageHandler` —
+  page-level composition is the whole point. New leaves derive from
+  `ComposeElementHandler<T>` (which already owns one `ComposeView`
+  per instance, used only for the stock-parent fallback path) and
+  contribute via `BuildNode`. Don't allocate yet another
+  `ComposeView` from inside a handler or elsewhere.
 - ❌ `MutableState<MauiStruct>` (Thickness, Color, Size, …) or
   `MutableState<MauiEnum>` (TextAlignment, …) →
   `NotSupportedException` at field-initializer time. Use the
