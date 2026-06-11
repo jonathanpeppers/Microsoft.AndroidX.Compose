@@ -70,7 +70,6 @@ feature.
 | `stringResource(R.string.x)` — port uses inline string literals      | [#146](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/146) |
 | `CompositionLocal` reads (`LocalContext`, `LocalDensity`, …)         | [#59](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/59) |
 | `MaterialTheme.colorScheme.*` / `typography.*` reads (port hard-codes hex colors and sp/weight values) | [#58](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/58) / [#61](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/61) — facade lands but JetNews not migrated yet |
-| WindowInsets / edge-to-edge                                          | [#69](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/69), [#20](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/20) |
 | Snackbar-based error / refresh, search-while-typing, deep links, share intents | not facade gaps — out of scope for the port |
 | ViewModel / Hilt / `kotlinx.coroutines` / `kotlinx.serialization` data layer | replaced by a static `PostsRepo` returning six condensed posts |
 
