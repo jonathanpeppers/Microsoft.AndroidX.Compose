@@ -48,6 +48,8 @@ namespace Microsoft.AndroidX.Compose.Maui;
 public abstract class ComposeElementHandler<TVirtualView> : ViewHandler<TVirtualView, ComposeView>, IComposeHandler
     where TVirtualView : class, IView
 {
+    readonly MutableState<int> _viewPropertiesVersion = new(0);
+
     /// <inheritdoc/>
     protected ComposeElementHandler(IPropertyMapper mapper, CommandMapper? commandMapper = null)
         : base(mapper, commandMapper) { }
@@ -84,5 +86,25 @@ public abstract class ComposeElementHandler<TVirtualView> : ViewHandler<TVirtual
     /// invalidates this subtree).
     /// </remarks>
     public abstract ComposableNode BuildNode(IComposer composer);
+
+    /// <summary>
+    /// Subscribe the current composition scope to the shared
+    /// view-properties version slot. Called from
+    /// <c>BuildNode</c> (or inside a deferred <c>Render</c>) so the
+    /// scope re-runs when a property mapper installed by
+    /// <see cref="Hosting.AppHostBuilderExtensions.RemapForCompose"/>
+    /// bumps the counter. The discarded value is intentional — only
+    /// the read matters; Compose registers the dependency.
+    /// </summary>
+    /// <remarks>
+    /// Marked <c>protected internal</c> so nested helper types in
+    /// other handler files (e.g. <c>ScrollViewHandler.ScrollContainer</c>)
+    /// can subscribe directly inside their own deferred
+    /// <c>Render</c> method without exposing the slot.
+    /// </remarks>
+    protected internal void SubscribeToViewProperties() => _ = _viewPropertiesVersion.Value;
+
+    /// <inheritdoc/>
+    void IComposeHandler.BumpViewPropertiesVersion() => _viewPropertiesVersion.Value++;
 }
 

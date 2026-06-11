@@ -1,5 +1,6 @@
 using AndroidX.Compose;
 using AndroidX.Compose.Runtime;
+using Microsoft.AndroidX.Compose.Maui.Platform;
 using Microsoft.Maui.Handlers;
 using ILayout = Microsoft.Maui.ILayout;
 using MauiHorizontalStackLayout = Microsoft.Maui.Controls.HorizontalStackLayout;
@@ -105,6 +106,7 @@ public partial class LayoutHandler : ComposeElementHandler<ILayout>
     {
         // Read live state on the composition thread so changes
         // observed via the mapper slots trigger recomposition.
+        SubscribeToViewProperties();
         var spacing = _spacing.Value;
         _ = _paddingVersion.Value;  // subscribe — padding change bumps this
         _ = _childrenVersion.Value; // subscribe — a tree mutation bumps this
@@ -116,14 +118,23 @@ public partial class LayoutHandler : ComposeElementHandler<ILayout>
             ? new Column(verticalArrangement: arrangement)
             : new Row(horizontalArrangement: arrangement);
 
+        // Build the prepended modifier in one chain:
+        // 1. ApplyViewProperties wraps the OUTER box (Opacity / Scale /
+        //    Rotation / Clip / Shadow / IsVisible affect the entire
+        //    padded layout including its own background-painting slot).
+        // 2. Padding goes innermost so the inner content gets the
+        //    inset, while alpha / clip / shadow trace the outer box.
+        // PrependModifier replaces, so emit a single chained call.
+        var outer = Modifier.Companion.ApplyViewProperties(layout);
         if (padding != Thickness.Zero)
         {
-            container.Modifier = Modifier.Padding(
+            outer = outer.Padding(
                 start:  new Dp((float)padding.Left),
                 top:    new Dp((float)padding.Top),
                 end:    new Dp((float)padding.Right),
                 bottom: new Dp((float)padding.Bottom));
         }
+        container.Modifier = outer;
 
         for (int i = 0; i < layout.Count; i++)
         {

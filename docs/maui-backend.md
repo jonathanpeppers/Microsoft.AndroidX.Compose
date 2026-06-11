@@ -602,6 +602,126 @@ page so cross-sibling animation, semantics, and a single
   consumes pointer events for its own composition. Workaround: put
   a stock leaf in the cell, or convert the container.
 
+#### Phase 2 Slice 8 — `ModifierBridge` ✅ shipped
+
+Goal: forward MAUI's cross-cutting `IView` visual / transform
+properties (`IsVisible`, `Opacity`, `TranslationX/Y`, `Scale` /
+`ScaleX` / `ScaleY`, `Rotation` / `RotationX` / `RotationY`,
+`AnchorX/Y`, `Clip`, `Shadow`) into the Compose composition the
+overridden handlers contribute. Pre-Slice 8 only `Background` /
+`Padding` / `IsEnabled` reached Compose; the rest were silent
+no-ops because every Compose-backed leaf folds into the page
+composition (its `ComposeView` is detached) and stock
+`UpdateOpacity` / `UpdateTranslationX` / … platform-side updates
+pokes a view that never paints.
+
+**Property → Compose modifier table:**
+
+| MAUI property                                                    | Compose translation                                                                                          |
+|------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------|
+| `Visibility != Visible`                                          | `Modifier.Alpha(0f)`                                                                                         |
+| `Opacity` (when < 1)                                             | `Modifier.Alpha((float)Opacity)`                                                                             |
+| `TranslationX/Y`                                                 | `Modifier.Offset(x.dp, y.dp)`                                                                                |
+| `Scale * ScaleX/ScaleY` (multiplied)                             | `Modifier.Scale((float)sx)` (uniform) or `Modifier.Scale(sx, sy)` (asymmetric)                                |
+| `Rotation` only                                                  | `Modifier.Rotate(rotation)` (cheaper, no `GraphicsLayer`)                                                    |
+| `Rotation` + any of `RotationX/Y` / `AnchorX/Y != 0.5`           | `Modifier.GraphicsLayer(rotationX, rotationY, rotationZ, transformOrigin: TransformOrigin.Pack(ax, ay))`     |
+| `Clip` is `RoundRectangleGeometry`                               | `Modifier.Clip(new RoundedCornerShape(corner.dp))` (or per-corner `RoundedCornerShape(topStart, …)`)         |
+| `Clip` is `RectangleGeometry`                                    | `Modifier.Clip(Shape.Rectangle)`                                                                             |
+| `Clip` is `EllipseGeometry` (`RadiusX == RadiusY`)               | `Modifier.Clip(Shape.Circle())`                                                                              |
+| `Clip` arbitrary path / `GeometryGroup`                          | (no-op — bail rather than emit a wrong outline)                                                              |
+| `Shadow` non-null with `Radius > 0`                              | `Modifier.Shadow(radius.dp)` — Compose synthesises offset / opacity from elevation; `Brush` is not modelled. |
+
+**Modifier order** is fixed so cross-cutting visuals trace the
+right outline: **Alpha / Opacity** outermost (so they fade the
+entire visual), then **Offset** (translation), then **Scale**, then
+**Rotate** / `GraphicsLayer`, then **Shadow**, then **Clip**
+innermost (so the clip outline tracks the drawn content rather than
+the post-translate position). The chain is built once in
+`ModifierBridge.ApplyViewProperties(this Modifier, IView)` and
+prepended via `ComposableNode.PrependModifier(...)` by every
+handler's `BuildNode`.
+
+**Recomposition pipeline.** `MutableState<T>` only accepts
+primitives / strings / `Java.Lang.Object` subclasses, so the
+struct-typed properties (`Color`, `Geometry`, `IShadow`, the double
+coords) can't be put into per-property slots. Instead the base
+`ComposeElementHandler<T>` exposes **one shared
+`MutableState<int>` view-properties version slot**; each
+`BuildNode` reads it via `SubscribeToViewProperties()` to register
+a Compose dependency, and `ApplyViewProperties` re-reads the live
+`IView` properties on every recomposition. The slot is bumped from
+`UseAndroidXCompose()` → `RemapForCompose()`, which calls
+`PropertyMapperExtensions.AppendToMapping(...)` on the global
+`ViewHandler.ViewMapper` for each of the 14 cross-cutting
+properties. The appended hook checks `handler is IComposeHandler`
+and calls `BumpViewPropertiesVersion()`; non-Compose handlers
+shrug it off after a single type test. `RemapForCompose` is
+idempotent via a static flag so a host that calls
+`UseAndroidXCompose` twice (test fixtures) doesn't double-register.
+
+**`IsVisible` semantic choice — alpha vs layout-skip.** MAUI's
+`IsVisible == false` on the cross-platform side maps to
+`Visibility.Hidden` on `IView`, which stock backends collapse
+through `View.Visibility = GONE` (the cell drops out of the layout
+slot). Compose modifier-only translation can't drop a node out of
+the parent layout slot, so we use `Modifier.Alpha(0f)` — preserves
+layout space, matches MAUI's `Hidden` (not `Collapsed`) semantics.
+Dropping the node would require a measure-policy short-circuit
+(generic `Layout {}` adapter, on the Phase 5 roadmap).
+
+**3D rotation round-trip (`RotationX/Y`).** Both MAUI and Compose
+take degrees, but Compose's `GraphicsLayer { rotationX, rotationY }`
+applies them through a perspective camera whose `cameraDistance`
+defaults to ~8 × the layout depth in dp. MAUI's stock Android
+backend uses `android.graphics.Camera`, which has a different
+default camera distance. A 60° `RotationX` therefore foreshortens
+slightly differently than the same value rendered by stock MAUI on
+top of Android `View`. The deviation is most apparent above ~30°
+of axis tilt; matching the stock perspective would require porting
+`Camera`'s matrix into Compose space — out of scope for the bridge.
+
+**`Shadow` colour limitation.** MAUI's `Shadow` exposes `Brush`,
+`Offset`, `Opacity`, `Radius`. Compose's `Modifier.Shadow(elevation,
+shape)` only takes elevation + shape — Compose synthesises the
+ambient / spot tint from elevation and the surrounding
+`MaterialTheme`. We forward `Shadow.Radius` as elevation; offset /
+opacity / brush-derived colour aren't surfaced. Documented; a
+follow-up could lower into `GraphicsLayer.shadowElevation` plus a
+custom `Spot`/`AmbientShadowColor` modifier when those land on the
+facade.
+
+**Delivered:**
+
+- `Platform/ModifierBridge.cs` — the `ApplyViewProperties` extension
+  with the property mapping table above.
+- `IComposeHandler.BumpViewPropertiesVersion()` + base-class
+  shared `MutableState<int>` slot + protected-internal
+  `SubscribeToViewProperties()`.
+- `RemapForCompose()` static helper called from
+  `UseAndroidXCompose()` — idempotent, hooks all 14 cross-cutting
+  `IView` properties on `ViewHandler.ViewMapper`.
+- Refactor of every existing handler's `BuildNode` to chain
+  `ApplyViewProperties` on its outermost `PrependModifier` (Label,
+  Button, Entry, Image, Layout, ScrollView). `PageHandler` is
+  intentionally not refactored — its `ComposeView` IS the platform
+  view, so MAUI's stock `UpdateOpacity` / `UpdateTranslationX` /
+  … on the outer view still works.
+- Sample `Pages/ModifiersPage.xaml` + HomePage entry + Shell route
+  cycling each property on a single `Image`.
+
+**Verified:**
+
+- Sample build green (`dotnet build src/Microsoft.AndroidX.Compose.Maui.Sample`).
+- ModifiersPage demos visually flip every property — opacity fades,
+  scale grows, rotation spins, IsVisible hides, translation slides,
+  clip rounds / circles, shadow elevates.
+- No regression on existing demos (Counter / Buttons / Entries) —
+  default property values produce no extra modifier ops since
+  `ApplyViewProperties` short-circuits on identity.
+- Single `androidx.compose.ui.platform.ComposeView` per page
+  preserved (no extra `Box`-per-property; properties chain into the
+  same outermost modifier).
+
 #### Phase 2 Slice 3 — toggle leaves ✅ shipped
 
 Goal: extend Phase 2 input coverage with the three boolean / selected
