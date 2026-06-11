@@ -1,4 +1,5 @@
 using Microsoft.AndroidX.Compose.Maui.Handlers;
+using Microsoft.AndroidX.Compose.Maui.Platform;
 using MauiButton = Microsoft.Maui.Controls.Button;
 using MauiEntry = Microsoft.Maui.Controls.Entry;
 using MauiHorizontalStackLayout = Microsoft.Maui.Controls.HorizontalStackLayout;
@@ -68,6 +69,15 @@ public static class AppHostBuilderExtensions
     public static MauiAppBuilder UseAndroidXCompose(this MauiAppBuilder builder)
     {
         ArgumentNullException.ThrowIfNull(builder);
+
+        // Register a DispatchProxy-backed IAlertManagerSubscription so
+        // MAUI's per-window AlertManager.Subscribe() picks us up
+        // before falling back to AlertRequestHelper. Renders
+        // DisplayAlert / DisplayActionSheet / DisplayPromptAsync via
+        // Compose AlertDialog / ModalBottomSheet instead of stock
+        // AppCompat dialogs. See ComposeAlertManagerSubscription's
+        // remarks for the version-pinning hazard.
+        ComposeAlertManagerSubscription.Register(builder.Services);
 
         builder.ConfigureMauiHandlers(handlers =>
         {

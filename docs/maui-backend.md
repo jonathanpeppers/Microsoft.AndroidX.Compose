@@ -602,6 +602,125 @@ page so cross-sibling animation, semantics, and a single
   consumes pointer events for its own composition. Workaround: put
   a stock leaf in the cell, or convert the container.
 
+#### Phase 2 Slice 9 — `ComposeAlertManagerSubscription` ✅ shipped
+
+`Page.DisplayAlert(...)` / `Page.DisplayActionSheet(...)` /
+`Page.DisplayPromptAsync(...)` route through MAUI's internal
+`AlertManager` on Android. Stock `AlertManager` shows AppCompat
+`AlertDialog.Builder` / `ListView` bottom-sheets that look out of
+place against Compose-skinned pages. Slice 9 intercepts at the DI
+contract layer and renders through Compose `AlertDialog` /
+`ModalBottomSheet` / `OutlinedTextField` overlays.
+
+**Approach: `DispatchProxy` over MAUI's internal
+`AlertManager.IAlertManagerSubscription`.** MAUI's
+`AlertManager.Subscribe()` resolves
+`Services.GetService<IAlertManagerSubscription>()` and **only falls
+back to the stock subscription when DI returns null**. Registering
+our own implementation as that interface short-circuits the stock
+path entirely — no MessagingCenter races, no need to wholesale
+replace `AlertManager` via reflection.
+
+Catch: the interface is `internal`. We can't `: IAlertManagerSubscription`
+at compile time. Instead we mirror maui-labs's WPF
+`WPFAlertManagerSubscription` pattern:
+
+1. Reflectively look up
+   `Microsoft.Maui.Controls.Platform.AlertManager+IAlertManagerSubscription`
+   from the loaded `Microsoft.Maui.Controls` assembly.
+2. Use `System.Reflection.DispatchProxy.Create<TInterface, TProxy>()`
+   to synthesise an instance of that interface backed by our
+   `ComposeAlertManagerSubscription : DispatchProxy` class.
+3. The runtime-emitted subclass routes every interface call into our
+   `Invoke(MethodInfo, object?[])` override, which fans out by
+   method name to `OnAlertRequested` / `OnPromptRequested` /
+   `OnActionSheetRequested` / no-op for `OnPageBusy`.
+4. Register the proxy via
+   `services.AddSingleton(serviceType: <runtime IAlertManagerSubscription>, factory)`.
+
+This binds us to MAUI's internal interface shape — version pinning
+hazard. Pinned to `Microsoft.Maui.Controls` 10.0.20. If the interface
+gains/renames members in a future MAUI, the proxy will throw
+`MissingMethodException` at first call. The contract has been stable
+since net6.0; risk is low but real.
+
+**Render mappings:**
+
+- `AlertArguments(title, message, accept, cancel)` → Compose
+  `AlertDialog(title, text, confirmButton, dismissButton)`. For the
+  three-arg `DisplayAlert(title, message, cancel)` overload — single
+  button — MAUI passes `Accept = null`. Detect that, render `Cancel`
+  as the confirm button label only, omit the dismiss slot. (First
+  bug of the slice: not detecting → "OK / OK" twin buttons.)
+- `ActionSheetArguments(title, cancel, destruction, buttons[])` →
+  Compose `ModalBottomSheet` listing buttons as a
+  `LazyColumn` of `ListItem`s, with `destruction` styled red.
+- `PromptArguments(title, message, accept, cancel, placeholder, maxLength, keyboard, initialValue)`
+  → Compose `AlertDialog` with an `OutlinedTextField` between `text`
+  and `confirmButton`, pre-filled with `InitialValue`.
+
+**Overlay attach/detach lifecycle.** Each handler resolves the
+`Activity` from `sender.Window.Handler.PlatformView` (with a fallback
+to `Platform.CurrentActivity`), creates a fresh `ComposeView`, sets
+content via the existing `ComposeView.SetContent(node => …)`
+extension, and adds the view to the activity's `android.R.id.content`
+`FrameLayout`. The dismiss closure removes the view from its parent
+on the UI thread. `args.Result.TrySetResult(...)` is set **before**
+detach so the awaiting `Task` completes deterministically — even if
+`RemoveView` synchronously re-enters another dialog flow.
+
+`onUnattached` is invoked when `ResolveActivity` fails (rare —
+e.g. background page). It completes the awaiter with the cancel
+value so the caller's `await` doesn't hang.
+
+**Memory leak hazards.** The proxy itself is a process-wide singleton,
+so it's safe to capture services + activity-lookup state. Per-call
+overlay state lives only inside the dismiss closure (lambda-captured
+by the on-confirm/on-cancel handlers); once detached, the
+`ComposeView` and its captured page reference are dropped. No long-
+lived `WeakReference`-to-`Activity` is needed because no field on
+the singleton holds a strong activity reference — every call goes
+`sender.Window` → `Handler.PlatformView`.
+
+**Theme alignment — known mismatch (deferred to Slice 7).** The
+overlay wraps content in the default Compose `MaterialTheme()`
+because the page's theme is currently passed through ad-hoc in
+`PageHandler`. Once `ThemeManager` (Slice 7) ships, the overlay
+will pull from the same `Application` `UserAppTheme` /
+`RequestedTheme` source as the page composer. For now, dialog
+M3 colours match the page theme by visual coincidence (both default
+dynamic colour) but won't track explicit `App.Resources` overrides.
+
+**Action-sheet animation — known polish gap.** `ModalBottomSheet`
+currently dismisses by removing the overlay view — the bottom
+sheet does not animate out. Polishing this requires `sheetState`
+plumbing (suspend `Hide()` then detach inside a continuation). Out
+of scope for Slice 9; tracked separately.
+
+**Lessons learned (Slice 9):**
+
+- **`DispatchProxy.Create<T, TProxy>` requires `TProxy` non-sealed.**
+  Reflection.Emit synthesises a runtime subclass; sealed bases throw
+  `ArgumentException` at the first `Create` call. The error doesn't
+  surface through `JavaProxyThrowable`'s default crash log on
+  Android — only `AndroidRuntime: FATAL EXCEPTION: main` with the
+  proxy class name, no inner detail. Always wrap `DispatchProxy.Create`
+  in a try/catch that explicitly logs `ex.InnerException` via
+  `global::Android.Util.Log` to surface the real reason. (`Android`
+  alone resolves to `Microsoft.Android` once `using Android.App;`
+  is in scope — qualify as `global::Android` for `Android.Util.Log`.)
+- **Fast-Dev (`EmbedAssembliesIntoApk = false`) breaks after a clean
+  uninstall.** `dotnet build -t:Install` complains about a missing
+  `files/.__override__/<arch>/Mono.Android.Runtime.dll` (XA0127). Add
+  `-p:EmbedAssembliesIntoApk=true` to use a fully-bundled APK; the
+  flag is the safest for slice verification.
+- **Multiple `compose-net` apps confuse on-device verification.** The
+  Gallery app and the MAUI sample both use `Title="Compose Gallery"`
+  by default (the MAUI sample inherits MAUI's title from `MainPage`).
+  Always verify foreground via
+  `adb shell dumpsys activity activities | findstr topResumedActivity`
+  before screenshotting.
+
 ### Phase 3 — collection + container (target: list-driven apps)
 
 `CollectionView` → `LazyColumn<T>` / `LazyRow<T>` / `LazyVerticalGrid<T>`

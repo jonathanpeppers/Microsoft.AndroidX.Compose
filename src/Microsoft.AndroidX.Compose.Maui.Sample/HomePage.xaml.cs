@@ -60,6 +60,11 @@ public partial class HomePage : ContentPage
                 "File / Uri / Stream / Font image source types.",
                 Color.FromArgb("#E91E63"),
                 "image-sources"),
+            new DemoEntry(
+                "Alerts",
+                "DisplayAlert / DisplayActionSheet / DisplayPromptAsync over Compose dialogs.",
+                Color.FromArgb("#FF5722"),
+                "alerts"),
         };
     }
 

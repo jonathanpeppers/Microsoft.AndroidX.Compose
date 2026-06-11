@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="Microsoft.AndroidX.Compose.Maui.Sample.Pages.AlertsPage"
+             Title="Alerts">
+
+    <!--
+        Exercises the four `Page.Display*` channels routed through
+        `ComposeAlertManagerSubscription`:
+            * DisplayAlert          -> Compose AlertDialog (confirm + cancel)
+            * DisplayActionSheet    -> Compose ModalBottomSheet
+            * DisplayPromptAsync    -> Compose AlertDialog + OutlinedTextField
+            * DisplayAlert (1-btn)  -> Compose AlertDialog (no DismissButton)
+        Each handler echoes the result into the status label below so
+        the awaiting Task's completion value is observable on-device.
+    -->
+    <ScrollView>
+        <VerticalStackLayout
+            Padding="30,30"
+            Spacing="20">
+
+            <Label
+                Text="Alerts"
+                Style="{StaticResource Headline}" />
+
+            <Label Text="Each button calls `Page.Display*` — the dialogs render through Compose `AlertDialog` / `ModalBottomSheet`, not the stock AppCompat dialogs."
+                   Style="{StaticResource SubHeadline}" />
+
+            <Button x:Name="ShowAlertBtn"
+                    Text="Show Alert (OK / Cancel)"
+                    Clicked="OnShowAlertClicked"
+                    HorizontalOptions="Fill" />
+
+            <Button x:Name="ShowActionSheetBtn"
+                    Text="Action Sheet"
+                    Clicked="OnShowActionSheetClicked"
+                    HorizontalOptions="Fill" />
+
+            <Button x:Name="ShowPromptBtn"
+                    Text="Prompt"
+                    Clicked="OnShowPromptClicked"
+                    HorizontalOptions="Fill" />
+
+            <Button x:Name="ShowSingleButtonBtn"
+                    Text="OK-only Alert"
+                    Clicked="OnShowSingleButtonClicked"
+                    HorizontalOptions="Fill" />
+
+            <Label Text="Last result"
+                   FontAttributes="Bold"
+                   Margin="0,12,0,0" />
+
+            <Label x:Name="ResultLabel"
+                   Text="(no dialog dismissed yet)"
+                   FontSize="14" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>
