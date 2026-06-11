@@ -3,17 +3,20 @@ using Microsoft.AndroidX.Compose.Maui.Platform;
 using MauiActivityIndicator = Microsoft.Maui.Controls.ActivityIndicator;
 using MauiButton = Microsoft.Maui.Controls.Button;
 using MauiCheckBox = Microsoft.Maui.Controls.CheckBox;
+using MauiDatePicker = Microsoft.Maui.Controls.DatePicker;
 using MauiEntry = Microsoft.Maui.Controls.Entry;
 using MauiHorizontalStackLayout = Microsoft.Maui.Controls.HorizontalStackLayout;
 using MauiImage = Microsoft.Maui.Controls.Image;
 using MauiLabel = Microsoft.Maui.Controls.Label;
 using MauiPage = Microsoft.Maui.Controls.Page;
+using MauiPicker = Microsoft.Maui.Controls.Picker;
 using MauiProgressBar = Microsoft.Maui.Controls.ProgressBar;
 using MauiRadioButton = Microsoft.Maui.Controls.RadioButton;
 using MauiScrollView = Microsoft.Maui.Controls.ScrollView;
 using MauiSlider = Microsoft.Maui.Controls.Slider;
 using MauiStepper = Microsoft.Maui.Controls.Stepper;
 using MauiSwitch = Microsoft.Maui.Controls.Switch;
+using MauiTimePicker = Microsoft.Maui.Controls.TimePicker;
 using MauiVerticalStackLayout = Microsoft.Maui.Controls.VerticalStackLayout;
 
 namespace Microsoft.AndroidX.Compose.Maui.Hosting;
@@ -50,7 +53,8 @@ public static class AppHostBuilderExtensions
     ///     (<see cref="MauiLabel"/> / <see cref="MauiButton"/> /
     ///     <see cref="MauiEntry"/> / <see cref="MauiImage"/> /
     ///     <see cref="MauiCheckBox"/> / <see cref="MauiSwitch"/> /
-    ///     <see cref="MauiRadioButton"/> /
+    ///     <see cref="MauiRadioButton"/> / <see cref="MauiPicker"/> /
+    ///     <see cref="MauiDatePicker"/> / <see cref="MauiTimePicker"/> /
     ///     <see cref="MauiSlider"/> / <see cref="MauiStepper"/> /
     ///     <see cref="MauiProgressBar"/> /
     ///     <see cref="MauiActivityIndicator"/>) fold into the
@@ -122,6 +126,9 @@ public static class AppHostBuilderExtensions
             handlers.AddHandler<MauiCheckBox,               CheckBoxHandler>();
             handlers.AddHandler<MauiSwitch,                 SwitchHandler>();
             handlers.AddHandler<MauiRadioButton,            RadioButtonHandler>();
+            handlers.AddHandler<MauiPicker,                 PickerHandler>();
+            handlers.AddHandler<MauiDatePicker,             DatePickerHandler>();
+            handlers.AddHandler<MauiTimePicker,             TimePickerHandler>();
 
             // Phase 2 Slice 4 — value & progress leaves.
             handlers.AddHandler<MauiSlider,                 SliderHandler>();
