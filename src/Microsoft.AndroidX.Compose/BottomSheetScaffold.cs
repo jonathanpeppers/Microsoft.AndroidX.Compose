@@ -81,32 +81,14 @@ public sealed class BottomSheetScaffold : ComposableContainer
         _confirmValueChangeAdapter.Callback = ConfirmValueChange;
 
         SheetState? sheetState = null;
-        if (_sheetState is not null)
+        if (_sheetState is not null || ConfirmValueChange is not null)
         {
-            // SharedState pattern: only the first render allocates the
-            // SheetState peer; subsequent recompositions reuse the
-            // cached Jvm so SheetStateHolder.IsVisible / .CurrentValue
-            // / async helpers see the live state.
-            if (_sheetState.Jvm is null)
-            {
-                sheetState = BottomSheetScaffoldKt.RememberStandardBottomSheetState(
-                    initialValue:        SheetValue.PartiallyExpanded,
-                    confirmValueChange:  _confirmValueChangeAdapter,
-                    skipHiddenState:     !_sheetState.SkipPartiallyExpanded,
-                    _composer:           composer,
-                    p4:                  0,
-                    _changed:            0);
-                _sheetState.Jvm = sheetState;
-            }
-            else
-            {
-                sheetState = _sheetState.Jvm;
-            }
-        }
-        else if (ConfirmValueChange is not null)
-        {
-            // No state holder but the user wants a veto — build a
-            // disposable SheetState we won't expose anywhere.
+            // Always call RememberStandardBottomSheetState on every
+            // recomposition — Kotlin's slot-table-keyed remember{}
+            // returns the same instance, but skipping the call would
+            // shift slot positions for the RememberBottomSheetScaffoldState
+            // call that follows. Cache identity at the wrapper level
+            // (Jvm field) but keep the call shape stable.
             sheetState = BottomSheetScaffoldKt.RememberStandardBottomSheetState(
                 initialValue:        SheetValue.PartiallyExpanded,
                 confirmValueChange:  _confirmValueChangeAdapter,
@@ -114,12 +96,14 @@ public sealed class BottomSheetScaffold : ComposableContainer
                 _composer:           composer,
                 p4:                  0,
                 _changed:            0);
+            if (_sheetState is not null)
+                _sheetState.Jvm = sheetState;
         }
 
         // Bound C# call — RememberBottomSheetScaffoldState is NOT stripped.
-        // _changed bits 0/1 control which optional args Compose treats as
-        // "use default". Passing sheetState non-null clears bit 0; we
-        // never pass a SnackbarHostState so bit 1 stays set.
+        // _changed (= Kotlin's $default) bit 0 = bottomSheetState defaulted,
+        // bit 1 = snackbarHostState defaulted. We never wire snackbar so
+        // bit 1 stays set; bit 0 clears only when we provided a sheetState.
         var changed = sheetState is null ? 3 : 2;
         var scaffoldState = BottomSheetScaffoldKt.RememberBottomSheetScaffoldState(
             bottomSheetState:   sheetState,
