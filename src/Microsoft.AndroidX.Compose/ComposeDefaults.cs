@@ -860,6 +860,20 @@ using AndroidX.Compose;
     "disabledUncheckedThumbColor", "disabledUncheckedTrackColor",
     "disabledUncheckedBorderColor", "disabledUncheckedIconColor")]
 
+// androidx.compose.material3.SliderDefaults.colors(...): 10-slot
+// $default mask covering thumb / activeTrack / activeTick /
+// inactiveTrack / inactiveTick plus the four disabled siblings.
+// Used by `composer.SliderColors(...)` to flip bits as caller-
+// supplied overrides arrive. Order matches the bytecode lowering
+// of the parameterised `colors-q0g_0yA(JJJJJJJJJJ;Composer;III)`
+// factory.
+[assembly: ComposeDefaults("SliderColorsDefault",
+    "thumbColor", "activeTrackColor", "activeTickColor",
+    "inactiveTrackColor", "inactiveTickColor",
+    "disabledThumbColor", "disabledActiveTrackColor",
+    "disabledActiveTickColor", "disabledInactiveTrackColor",
+    "disabledInactiveTickColor")]
+
 // androidx.compose.material3.SliderKt.Slider (simple float overload):
 // 9 user params; bits 0 (value) and 1 (onValueChange) always provided.
 // The longer overload with Function3 thumb/track slots has non-null
