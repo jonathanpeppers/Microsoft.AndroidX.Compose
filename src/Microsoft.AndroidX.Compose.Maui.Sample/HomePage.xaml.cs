@@ -71,6 +71,11 @@ public partial class HomePage : ContentPage
                 Color.FromArgb("#FF9800"),
                 "toggles"),
             new DemoEntry(
+                "Pickers",
+                "Picker, DatePicker, TimePicker (state-holder dialogs).",
+                Color.FromArgb("#FF5722"),
+                "pickers"),
+            new DemoEntry(
                 "Theme",
                 "Light / Dark / Unspecified — flips MaterialTheme via UserAppTheme.",
                 Color.FromArgb("#795548"),
