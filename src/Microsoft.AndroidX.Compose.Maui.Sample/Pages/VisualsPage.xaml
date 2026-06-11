@@ -25,27 +25,33 @@
 
             <Border Stroke="#512BD4"
                     StrokeThickness="2"
-                    StrokeShape="RoundedRectangle 12"
                     Background="#EEE6FF"
                     Padding="16">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="12" />
+                </Border.StrokeShape>
                 <Label Text="Rounded border — purple, radius 12, padding 16."
                        TextColor="#1A1033" />
             </Border>
 
             <Border Stroke="#E91E63"
                     StrokeThickness="3"
-                    StrokeShape="RoundedRectangle 0"
                     Background="#FFF0F4"
                     Padding="20">
+                <Border.StrokeShape>
+                    <Rectangle />
+                </Border.StrokeShape>
                 <Label Text="Square border — pink, no radius."
                        TextColor="#3F0A20" />
             </Border>
 
             <Border Stroke="#009688"
                     StrokeThickness="4"
-                    StrokeShape="RoundedRectangle 32"
                     Background="#E0F2F1"
                     Padding="14">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="32" />
+                </Border.StrokeShape>
                 <Label Text="Pill border — teal, big radius."
                        TextColor="#003E37" />
             </Border>
@@ -73,8 +79,8 @@
             <ContentView Padding="20"
                          BackgroundColor="#F5F5F5">
                 <VerticalStackLayout Spacing="6">
-                    <Label Text="Inside a ContentView." FontAttributes="Bold" />
-                    <Label Text="ContentView simply forwards its child through ComposeWalker without adding a stroke or fill. The grey backing comes from the BackgroundColor mapper." />
+                    <Label Text="Inside a ContentView." FontAttributes="Bold" TextColor="#1F1F1F" />
+                    <Label Text="ContentView simply forwards its child through ComposeWalker without adding a stroke or fill. The grey backing comes from the BackgroundColor mapper." TextColor="#1F1F1F" />
                 </VerticalStackLayout>
             </ContentView>
 

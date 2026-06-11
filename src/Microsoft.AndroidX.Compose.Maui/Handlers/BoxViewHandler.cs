@@ -41,6 +41,11 @@ public partial class BoxViewHandler : ComposeElementHandler<MauiBoxView>
             [nameof(MauiBoxView.Color)]            = MapColor,
             [nameof(MauiBoxView.BackgroundColor)]  = MapBackgroundColor,
             [nameof(MauiBoxView.CornerRadius)]     = MapCornerRadius,
+            // VisualElement.WidthRequest / HeightRequest live on the
+            // Controls layer, not IView. Use string literals so the
+            // mapper still picks up the change notifications.
+            ["WidthRequest"]                       = MapSizeRequest,
+            ["HeightRequest"]                      = MapSizeRequest,
         };
 
     /// <summary>Command mapper (inherits view-level commands; no extras).</summary>
@@ -53,6 +58,9 @@ public partial class BoxViewHandler : ComposeElementHandler<MauiBoxView>
     // re-read VirtualView.CornerRadius live in BuildNode (same trick
     // as LayoutHandler._paddingVersion).
     readonly MutableState<int>   _cornerVersion   = new(0);
+    // WidthRequest / HeightRequest are doubles but the "is set" sentinel
+    // (-1) is convention; bump a version slot and re-read live.
+    readonly MutableState<int>   _sizeVersion     = new(0);
 
     /// <summary>Construct a handler with the default mappers.</summary>
     public BoxViewHandler() : base(Mapper, CommandMapper) { }
@@ -65,6 +73,7 @@ public partial class BoxViewHandler : ComposeElementHandler<MauiBoxView>
     public override ComposableNode BuildNode(IComposer composer)
     {
         _ = _cornerVersion.Value;  // subscribe — CornerRadius change bumps this
+        _ = _sizeVersion.Value;    // subscribe — Width/HeightRequest change bumps this
         var color = _color.Value ?? _backgroundColor.Value;
         var corner = VirtualView?.CornerRadius ?? default;
 
@@ -76,7 +85,28 @@ public partial class BoxViewHandler : ComposeElementHandler<MauiBoxView>
         var radius = (float)Math.Max(0, corner.TopLeft);
         Shape? shape = radius > 0 ? new RoundedCornerShape(new Dp(radius)) : null;
 
-        Modifier? modifier = Modifier.Companion.FillMaxSize();
+        // BoxView is a content-less leaf, so it can't draw anything
+        // unless the modifier chain gives it explicit dimensions:
+        //
+        //   * WidthRequest set + HeightRequest set → Modifier.Size(w, h).
+        //   * WidthRequest set only                → Modifier.Width(w);
+        //     height collapses to 0 in an unbounded parent (Column / Row),
+        //     same behavior as stock MAUI.
+        //   * HeightRequest set only               → FillMaxWidth + Height(h),
+        //     i.e. a horizontal divider that spans the parent.
+        //   * Neither set                          → FillMaxSize, expecting
+        //     a bounded parent. (Default 40 dp behavior is left to MAUI's
+        //     measure pass — won't apply here because we fold into a
+        //     single ComposeView.)
+        var widthReq  = VirtualView?.WidthRequest  ?? -1d;
+        var heightReq = VirtualView?.HeightRequest ?? -1d;
+        Modifier modifier = (widthReq, heightReq) switch
+        {
+            ( >= 0d, >= 0d ) => Modifier.Size(new Dp((float)widthReq), new Dp((float)heightReq)),
+            ( >= 0d, _    ) => Modifier.Width(new Dp((float)widthReq)),
+            ( _,    >= 0d ) => Modifier.FillMaxWidth().Height(new Dp((float)heightReq)),
+            _                => Modifier.FillMaxSize(),
+        };
         if (shape is not null)
             modifier = modifier.Clip(shape);
         if (color.HasValue)
@@ -96,4 +126,8 @@ public partial class BoxViewHandler : ComposeElementHandler<MauiBoxView>
     /// <summary>Bump the corner-radius version slot.</summary>
     public static void MapCornerRadius(BoxViewHandler handler, MauiBoxView _) =>
         handler._cornerVersion.Value++;
+
+    /// <summary>Bump the size-version slot when the virtual view's <c>WidthRequest</c> or <c>HeightRequest</c> changes.</summary>
+    public static void MapSizeRequest(BoxViewHandler handler, MauiBoxView _) =>
+        handler._sizeVersion.Value++;
 }
