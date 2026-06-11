@@ -110,11 +110,14 @@ public partial class RadioButtonHandler : ComposeElementHandler<IRadioButton>
     {
         // The Compose `onClick` only fires for unselected → selected;
         // a tap on an already-checked radio is a no-op (matches Kotlin
-        // `RadioButton`'s own behaviour). Surfacing IsChecked = true
-        // re-enters MapIsChecked via VirtualView, and MAUI's
-        // `RadioButtonGroupController` raises CheckedChanged(false) on
-        // the previous selection automatically — we don't reimplement
-        // group semantics here.
+        // `RadioButton`'s own behaviour). Pin Compose state synchronously
+        // so the rendered ring reflects the user's tap immediately —
+        // matches `CheckBoxHandler.OnCheckedChanged` and
+        // `SwitchHandler.OnCheckedChanged`. Then surface IsChecked = true
+        // so MAUI's `RadioButtonGroupController` raises
+        // CheckedChanged(false) on the previous selection automatically;
+        // we don't reimplement group semantics here.
+        _checked.Value = true;
         if (VirtualView is { } v)
             v.IsChecked = true;
     }

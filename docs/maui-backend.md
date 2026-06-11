@@ -614,10 +614,10 @@ leaves so a settings-style page is fully Compose-backed.
   [`Microsoft.AndroidX.Compose.Checkbox`](../src/Microsoft.AndroidX.Compose/Checkbox.cs)
   facade. Maps `IsChecked` (two-way) and `Foreground` (MAUI's
   `CheckBox.Color` lowers to a `SolidPaint` on `Foreground`; only
-  `SolidPaint` is forwarded). The single tint applies to every
-  `CheckboxColors` slot the user touches — `checkedBoxColor`,
-  `checkedBorderColor`, `checkedCheckmarkColor`, plus the matching
-  unchecked border — via `composer.CheckboxColors(...)`.
+  `SolidPaint` is forwarded). The single tint is forwarded as
+  `composer.CheckboxColors(checkedColor: …)`, which substitutes only
+  `checkedBoxColor` and `checkedBorderColor` (the ring + filled state);
+  the checkmark glyph and unchecked border keep their M3 defaults.
 - **`SwitchHandler`** ([`Handlers/SwitchHandler.cs`](../src/Microsoft.AndroidX.Compose.Maui/Handlers/SwitchHandler.cs))
   — `ComposeElementHandler<ISwitch>` over the
   [`Microsoft.AndroidX.Compose.Switch`](../src/Microsoft.AndroidX.Compose/Switch.cs)

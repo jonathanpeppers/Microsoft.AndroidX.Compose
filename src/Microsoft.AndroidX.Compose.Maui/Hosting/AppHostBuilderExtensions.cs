@@ -58,7 +58,7 @@ public static class AppHostBuilderExtensions
     /// (the leaf creates its own composition because there's no parent
     /// composer to fold into). When they appear <i>below</i> a
     /// converted parent — or anywhere a non-converted control surfaces
-    /// (CollectionView, BoxView, Switch, customer renderers) — they're
+    /// (CollectionView, BoxView, customer renderers) — they're
     /// hosted via <c>AndroidView { factory = child.ToPlatform(MauiContext) }</c>
     /// inside the page composition, so MAUI's normal handler resolution
     /// keeps working.</para>
