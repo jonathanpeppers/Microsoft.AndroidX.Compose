@@ -87,6 +87,15 @@ public static class AppHostBuilderExtensions
     {
         ArgumentNullException.ThrowIfNull(builder);
 
+        // Register a DispatchProxy-backed IAlertManagerSubscription so
+        // MAUI's per-window AlertManager.Subscribe() picks us up
+        // before falling back to AlertRequestHelper. Renders
+        // DisplayAlert / DisplayActionSheet / DisplayPromptAsync via
+        // Compose AlertDialog / ModalBottomSheet instead of stock
+        // AppCompat dialogs. See ComposeAlertManagerSubscription's
+        // remarks for the version-pinning hazard.
+        ComposeAlertManagerSubscription.Register(builder.Services);
+
         // Slice 8: install the cross-cutting view-property bumpers on
         // ViewHandler.ViewMapper *before* per-handler registration so
         // every Compose-backed handler picks up Opacity / Translation

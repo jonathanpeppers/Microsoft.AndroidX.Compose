@@ -95,6 +95,11 @@ public partial class HomePage : ContentPage
                 "Border, BoxView, ContentView modifier-chain demos.",
                 Color.FromArgb("#4CAF50"),
                 "visuals"),
+            new DemoEntry(
+                "Alerts",
+                "DisplayAlert / DisplayActionSheet / DisplayPromptAsync over Compose dialogs.",
+                Color.FromArgb("#FF5722"),
+                "alerts"),
         };
     }
 
