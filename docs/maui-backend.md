@@ -121,27 +121,27 @@ View** (`ViewGroup` subclass) that owns a private composition. Set its
 content once with `view.SetContent(c => ...)` and the composition lambda
 re-runs whenever any `MutableState<T>` read inside it changes.
 
-So per-handler:
+So per-handler (Phase 2 shape — single `ComposeView` per page):
 
 ```csharp
-// ButtonHandler.Android.cs
-sealed partial class ButtonHandler : ComposeViewHandler<IButton, ComposeView>
+// Handlers/ButtonHandler.cs
+public partial class ButtonHandler : ComposeElementHandler<IButton>
 {
-    readonly MutableState<string>  _text     = ...;
-    readonly MutableState<bool>    _enabled  = ...;
-    readonly MutableState<Modifier?> _modifier = ...;
+    readonly MutableState<string>  _text     = new("");
+    readonly MutableState<bool>    _enabled  = new(true);
+    readonly MutableState<long>    _container = new(0L);
     Action? _click;
 
-    protected override ComposeView CreatePlatformView()
+    // Contributes one node into the page's single composition.
+    public override void BuildNode(IComposer composer)
     {
-        var view = new ComposeView(Context);
-        view.SetContent(c => new AndroidX.Compose.Button(
-            onClick: () => _click?.Invoke())
+        composer.Button(
+            onClick: () => _click?.Invoke(),
+            colors:  composer.ButtonColors(containerColor: _container.Value),
+            enabled: _enabled.Value)
         {
-            Modifier = _modifier.Value,
             new Text(_text.Value),
-        });
-        return view;
+        };
     }
 
     public static void MapText(ButtonHandler h, IButton b)  => h._text.Value = b.Text ?? "";
@@ -150,10 +150,7 @@ sealed partial class ButtonHandler : ComposeViewHandler<IButton, ComposeView>
 }
 ```
 
-The handler's `PlatformView` is `Android.Views.View` from MAUI's
-perspective — fits MAUI's layout/measure/arrange exactly the same as the
-stock backend. Inside, Compose owns the rendering. Mappers write to
-`MutableState<T>` slots; Compose recomposes the island automatically.
+The handler's `PlatformView` is a tiny zero-size marker `Android.Views.View` — MAUI's measure/arrange still routes through it for normal layout participation, but it's never drawn. The actual rendering happens via `BuildNode` inside the page's single `ComposeView`, which `PageHandler` owns and `ComposeWalker` walks for it. Mappers write to `MutableState<T>` slots; Compose recomposes the affected sub-tree automatically.
 
 ### One-ComposeView-per-handler vs. single-root composition
 
@@ -223,17 +220,22 @@ so subsequent handlers don't re-discover them:
 ## Proposed repo layout
 
 > **Status:** this is the **original design proposal** kept for
-> historical context. Phase 1 shipped the smaller set listed in
-> "Phase 1 — bootstrap + smallest possible working set ✅ shipped"
-> below — no `MauiComposeActivity`, no custom `ComposeViewHandler`
+> historical context. The shipping shape is much smaller — Phase 1
+> shipped with no `MauiComposeActivity`, no custom `ComposeViewHandler`
 > base, no `ModifierBridge` / `DispatcherProvider` / `ComposeTicker` /
 > `ComposeFontManager` / `ComposeAlertManagerSubscription` /
 > `ModalNavigationManager` / `ThemeManager` / `Platform/` folder, and
 > a single `Handlers/<Name>Handler.cs` per control rather than the
-> `.cs` + `.Android.cs` partial split below. Stock MAUI's
-> `MauiAppCompatActivity` + `ViewHandler<TVirtual, ComposeView>` base
-> turned out to be enough. The detailed proposal stays because it
-> outlines what still has to land for the broader phases.
+> `.cs` + `.Android.cs` partial split below. Phase 2 Slice 2 then
+> collapsed all per-leaf compositions into one `ComposeView` per
+> page; the actual handler base is `ComposeElementHandler<T>` (a
+> marker-view shell whose only job is to contribute a
+> `ComposableNode` via `BuildNode(IComposer)` to the page's single
+> composition), and the only "platform" types that exist are
+> `ComposeWalker.cs`, `IComposeHandler.cs`, and the new
+> `Handlers/PageHandler.cs` / `Handlers/LayoutHandler.cs` /
+> `Handlers/ScrollViewHandler.cs`. The detailed proposal stays
+> because it outlines what still has to land for the broader phases.
 
 Add a new project alongside the existing facade. Mirrors the maui-labs
 layout 1:1:
@@ -317,18 +319,20 @@ Compose backend.
 
 **Deferred to a future phase** (not blocking Phase 1):
 
-- `ComposeViewHandler<TVirtual, TPlatform>` base class with a custom
-  `PlatformArrange` / `GetDesiredSize`. Stock MAUI's `ViewHandler<,>`
-  on `net10.0-android` is good enough today because `ComposeView`
-  measures itself like any `Android.Views.View`.
+- ~~`ComposeViewHandler<TVirtual, TPlatform>` base class with a custom
+  `PlatformArrange` / `GetDesiredSize`.~~ Phase 2 went the other way:
+  collapsed all per-leaf compositions into one `ComposeView` per page,
+  owned by `PageHandler`. Leaves derive from `ComposeElementHandler<T>`
+  (a marker-view shell whose only job is to contribute a `ComposableNode`
+  via `BuildNode(IComposer)` to the page's composition).
 - `MauiComposeActivity` / `ComponentActivity` host. The sample still
-  uses MAUI's stock `MauiAppCompatActivity` because per-leaf
-  `ComposeView` works inside it.
-- `PageHandler`, `LayoutHandler`, `ApplicationHandler`,
-  `WindowHandler`, `ComposeLayoutViewGroup` / `ComposeContentViewGroup`,
-  `DispatcherProvider`, `ComposeTicker`. All stock-MAUI handlers; we
-  only swap leaves where Compose provides a clear win
-  (Material 3 surfaces).
+  uses MAUI's stock `MauiAppCompatActivity` because `ComposeView`
+  works inside it.
+- ~~`PageHandler`, `LayoutHandler`~~ — both now overridden in Phase 2.
+  `ApplicationHandler`, `WindowHandler`,
+  `ComposeLayoutViewGroup` / `ComposeContentViewGroup`,
+  `DispatcherProvider`, `ComposeTicker` all still stock — Phase 2's
+  page-level composition runs inside `MauiAppCompatActivity` unchanged.
 - `BackgroundColor` mapping on `Button` — needs a `ButtonColors`
   bridge in the facade (current `Button` facade only exposes
   `Shape`/`ContentPadding`). Accept M3 primary-purple default for now.
@@ -485,13 +489,91 @@ visible input/leaf controls so MAUI sample pages start to look right.
   `ImageButton`.
 - `ComposeAlertManagerSubscription`, `ComposeFontManager`,
   `ThemeManager`, `ModifierBridge`.
-- Option 2 ("one ComposeView per page") rewrite.
 
 **Landed since Slice 1:**
 
 - ✅ **Non-file image sources** (URI / stream / font) via MAUI's
   `IImageSourceService<TSource>` pipeline — see the hybrid
   `ImageHandler` description above.
+- ✅ **Single `ComposeView` per page** (Slice 2 — see below).
+
+#### Phase 2 Slice 2 — Single `ComposeView` per page ✅ shipped
+
+Goal: collapse all per-leaf compositions into one composition per
+page so cross-sibling animation, semantics, and a single
+`MaterialTheme` work the way Compose expects.
+
+**Delivered:**
+
+- **`PageHandler`** — overridden, inherits `ViewHandler<IContentView,
+  ComposeView>` directly (not `ContentViewHandler`). The
+  `ComposeView` *is* the platform view; standard Android measure-spec
+  sizes it via `MATCH_PARENT` to fill Shell's Fragment container.
+  Sole owner of the page's composition; calls
+  `compose.SetContent(c => Box{Modifier.FillMaxSize()}.Add(ComposeWalker.Render(content, c, MauiContext)))`.
+  Trade-off: `ContentPage.Padding` / `BackgroundColor` from stock
+  `ContentViewHandler` mappers don't flow — apply via Compose modifiers.
+- **`IComposeHandler` + `ComposeElementHandler<T>`** — handler
+  contract for Compose-aware leaves and containers. The shell
+  `PlatformView` is a tiny zero-size marker `Android.Views.View`
+  participating in MAUI measure/arrange; the visible rendering
+  happens through `BuildNode(IComposer)`.
+- **`ComposeWalker`** — given a MAUI child, dispatches to
+  `IComposeHandler.BuildNode` if the handler is one of ours, else
+  wraps the child in Compose's `AndroidView { factory = child.ToPlatform(MauiContext) }`
+  so unknown / unconverted controls bubble up through standard MAUI
+  handler resolution and render correctly inside the page composition.
+- **Rewrote leaves** — `LabelHandler`, `ButtonHandler`, `EntryHandler`,
+  `ImageHandler` now derive from `ComposeElementHandler<T>` and
+  contribute a `ComposableNode` via `BuildNode`.
+- **`LayoutHandler` (overridden)** — registered for
+  `Microsoft.Maui.Controls.VerticalStackLayout` →
+  Compose `Column`, `Microsoft.Maui.Controls.HorizontalStackLayout`
+  → Compose `Row`. `Grid`, `AbsoluteLayout`, `FlexLayout`,
+  `StackLayout` stay on MAUI's stock `LayoutHandler` and host via
+  `AndroidView` interop.
+- **`ScrollViewHandler` (overridden)** — wraps content in
+  `Modifier.verticalScroll` / `horizontalScroll` driven by Compose's
+  `rememberScrollState`.
+- **`AndroidView` (public facade in `Microsoft.AndroidX.Compose`)** —
+  Compose ↔ Android view interop wrapper used by the walker for the
+  fallback path.
+
+**Verified on device:**
+
+- Fully-converted pages (Page → VSL/HSL/ScrollView → Label/Button/Entry/Image)
+  render with **exactly one** `androidx.compose.ui.platform.ComposeView`
+  node per `adb shell uiautomator dump`. Confirmed on Counter, Buttons,
+  Labels, Entries, ImageSources sample pages.
+- Pages with stock containers in the middle (e.g. `<Border>` wrapping
+  Compose-backed `<Image>` on `ImageAspectsPage`, or HomePage's
+  `CollectionView` item template) get one extra `ComposeView` per
+  Compose-backed leaf hosted inside the stock container. Documented
+  expected behaviour: a Compose-backed leaf inside a stock container
+  has no parent composer to fold into.
+
+**Lessons learned (Slice 2):**
+
+- **`MutableState<T>` only handles primitives, `string`, `bool`,
+  `char`, `Java.Lang.Object` subclasses, and `Nullable<T>` of those
+  primitives.** MAUI structs (`Thickness`, `Size`, `Rect`, `Color`)
+  and user-defined .NET enums (`TextAlignment`) all throw
+  `NotSupportedException` at ctor time. Workarounds:
+  *version-counter* (`MutableState<int>`, bump in mapper, read live
+  `VirtualView.<prop>` inside `BuildNode`) for structs; cast through
+  the backing primitive (`MutableState<int>` for an enum) when the
+  shape is small.
+- **Stock `ContentViewGroup` ignores Android `LayoutParams`.** Its
+  `OnMeasure` / `OnLayout` route through `CrossPlatformLayout =
+  VirtualView`, which measures `PresentedContent`'s stock view —
+  not whatever child you `AddView` into it. Owning the platform
+  view directly (Page → `ComposeView` not Page → `ContentViewGroup`
+  with a `ComposeView` child) is the only way to get standard
+  Android measure-spec sizing.
+- **Compose-backed leaf inside a stock `CollectionView` item template
+  swallows `TapGestureRecognizer` on parent containers.** `ComposeView`
+  consumes pointer events for its own composition. Workaround: put
+  a stock leaf in the cell, or convert the container.
 
 ### Phase 3 — collection + container (target: list-driven apps)
 
@@ -501,11 +583,12 @@ chosen by `ItemsLayout`. `ListView` → same. `CarouselView` →
 `SwipeView` → `Modifier.Swipeable` (or `SwipeToDismissBox` if/when
 wrapped).
 
-This phase is also where it gets clear whether per-handler ComposeView
-scales — lazy lists with 10000 items shouldn't allocate 10000 composers.
-Likely the `CollectionViewHandler` becomes a single `LazyColumn<T>`
-whose items render *managed* `ComposableNode`s built from MAUI's
-`DataTemplate`, sidestepping per-cell `ComposeView` islands.
+This phase is also where lazy-list scaling lands. With the Phase 2
+single-ComposeView-per-page model in place, `CollectionViewHandler`
+becomes a single Compose `LazyColumn<T>` whose items render *managed*
+`ComposableNode`s built from MAUI's `DataTemplate` — directly inside
+the page's composition, no per-cell `ComposeView` islands, snapshot
+graph + theming inherited from the page root.
 
 ### Phase 4 — navigation (target: real apps)
 
@@ -571,14 +654,15 @@ delegate, but some essentials might need Compose-aware UIs like
    anything else.
 
 3. **One ComposeView per handler — is the per-island theme acceptable
-   for v1?** Each island needs its own `MaterialTheme` wrapper around
-   the facade. Either every handler wraps in `MaterialTheme { ... }`
-   (heavy; theme can't be customized per-app), or the host
-   `MauiComposeActivity` installs a single root `MaterialTheme` and
-   each `ComposeView` is wrapped in a thin reader composable that
-   inherits the host theme via `CompositionLocal` (need to verify this
-   works across separate ComposeView instances — it may NOT, in which
-   case we ship per-island theming for v1 with single-root as Phase 2).
+   for v1?** ✅ **Resolved in Phase 2 Slice 2** by going to a single
+   `ComposeView` per page. The page-level composition lives inside
+   one `ComposeView`, which means there's exactly one Compose
+   `MaterialTheme` scope (currently the M3 default) for the entire
+   page; every `ComposableNode` contributed by
+   `IComposeHandler.BuildNode` inherits it via `CompositionLocal`.
+   Wiring an explicit `MaterialTheme { ... }` wrapper bridged from
+   MAUI's `Application.Resources` colour palette is a follow-up; the
+   per-island wrapping problem is gone.
 
 4. **Layout sizing** — Compose composables size themselves; MAUI wants
    you to honor an explicit `widthSpec`/`heightSpec`. Need to

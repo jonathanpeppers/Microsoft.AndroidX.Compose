@@ -16,17 +16,21 @@ builder
 ```
 
 `UseAndroidXCompose()` overwrites the Android registrations for the
-controls the backend currently owns (Label, Button). Everything else
-falls back to MAUI's stock handler, so the rest of the page renders
-through normal AppCompat views.
+controls the backend currently owns (Label, Button, Entry, Image,
+VerticalStackLayout, HorizontalStackLayout, ScrollView, ContentPage).
+Everything else falls back to MAUI's stock handler — and is hosted
+inside the page's Compose tree via `AndroidView` interop, so the
+rest of the page renders through normal AppCompat views with no
+extra wiring.
 
 ## Side-by-side with `dotnet new maui`
 
-Same APK shape, same fonts, same status bar, same splash. The only
-intentional visible delta in Phase 1 is the **Button container color** —
-Compose Material 3 ships `#6750A4` and we don't yet wire up MAUI's
-`Primary` resource (`#512BD4`). That's tracked as a Phase 2 follow-up
-in [`docs/maui-backend.md`](../../docs/maui-backend.md).
+Same APK shape, same fonts, same status bar, same splash. The
+side-by-side images below are from the original Phase 1 visual
+parity check (counter button paints M3 mauve `#6750A4` instead of
+MAUI Primary `#512BD4` — bridging MAUI's `Application.Resources`
+colour palette into a Compose `MaterialTheme` is a follow-up
+tracked in [`docs/maui-backend.md`](../../docs/maui-backend.md)).
 
 | Compose backend (this sample)                                 | Stock MAUI template (`dotnet new maui`)                              |
 | :-----------------------------------------------------------: | :-------------------------------------------------------------------: |
