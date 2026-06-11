@@ -250,6 +250,75 @@ public static class ModifierExtensions
     }
 
     /// <summary>
+    /// <c>Modifier.background(brush, shape, alpha)</c> — paints a
+    /// <see cref="Brush"/> (gradient, solid color, or any other
+    /// <see cref="Brush"/> subclass) behind the composable, clipped to
+    /// <paramref name="shape"/>. Pass <c>null</c> for the default
+    /// <see cref="Shape.Rectangle"/>; supply <paramref name="alpha"/>
+    /// to fade the brush (1f = fully opaque, 0f = invisible).
+    /// </summary>
+    /// <remarks>
+    /// The brush is captured by the closure so its Java peer stays
+    /// alive across recompositions. For static brushes prefer
+    /// constructing once outside the composition (or wrapping the
+    /// factory call in <c>composer.Remember(() =&gt; ...)</c>) so the
+    /// Java instance is reused frame-to-frame.
+    /// </remarks>
+    public static Modifier Background(
+        this Modifier modifier, Brush brush, Shape? shape = null, float alpha = 1f)
+    {
+        ArgumentNullException.ThrowIfNull(brush);
+        var brushHandle = ((Java.Lang.Object)brush).Handle;
+        var a = alpha;
+        return modifier.Append(curr =>
+        {
+            try
+            {
+                return ComposeBridges.ModifierBackgroundBrush(
+                    curr, brushHandle, shape?.Handle, a);
+            }
+            finally
+            {
+                GC.KeepAlive(brush);
+                GC.KeepAlive(shape);
+            }
+        });
+    }
+
+    /// <summary>
+    /// <c>Modifier.border(width, brush, shape)</c> — draws a stroke
+    /// painted by the supplied <see cref="Brush"/> around the
+    /// composable, clipped to <paramref name="shape"/>. Pass
+    /// <c>null</c> for the default <see cref="Shape.Rectangle"/>.
+    /// </summary>
+    /// <remarks>
+    /// The brush is captured by the closure so its Java peer stays
+    /// alive across recompositions — see
+    /// <see cref="Background(Modifier, Brush, Shape?, float)"/> for
+    /// the same notes around per-recomposition allocation.
+    /// </remarks>
+    public static Modifier Border(
+        this Modifier modifier, Dp width, Brush brush, Shape? shape = null)
+    {
+        ArgumentNullException.ThrowIfNull(brush);
+        var w = width.Value;
+        var brushHandle = ((Java.Lang.Object)brush).Handle;
+        return modifier.Append(curr =>
+        {
+            try
+            {
+                return ComposeBridges.ModifierBorderBrush(
+                    curr, w, brushHandle, shape?.Handle);
+            }
+            finally
+            {
+                GC.KeepAlive(brush);
+                GC.KeepAlive(shape);
+            }
+        });
+    }
+
+    /// <summary>
     /// <c>Modifier.clip(RoundedCornerShape(<paramref name="cornerRadius"/>))</c> —
     /// rounds the four corners by the same radius and clips drawing to the
     /// resulting shape. Pass <c>0</c> for no rounding (rectangle clip).
