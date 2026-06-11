@@ -27,7 +27,7 @@
                        TextColor="White"
                        FontSize="28"
                        FontAttributes="Bold" />
-                <Label                 Text="Each row exercises one of the eight Compose-backed handlers (Button, Entry, Image, Label, Slider, Stepper, ProgressBar, ActivityIndicator) wired by UseAndroidXCompose()."
+                <Label                 Text="Each row exercises one of the eleven Compose-backed handlers (Button, Entry, Image, Label, CheckBox, Switch, RadioButton, Slider, Stepper, ProgressBar, ActivityIndicator) wired by UseAndroidXCompose()."
                        TextColor="White"
                        Opacity="0.85"
                        FontSize="13" />

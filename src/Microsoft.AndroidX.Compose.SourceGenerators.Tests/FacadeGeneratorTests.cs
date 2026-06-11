@@ -3131,6 +3131,106 @@ public class FacadeGeneratorTests
             && d.GetMessage().Contains("AndroidX.Compose.DrawerValueConfirmStateChange"));
     }
 
+    [Fact]
+    public void ConfirmStateChange_PlusParameterisedRemember_PlusSharedState_ComposesAllThree()
+    {
+        // ModalBottomSheet shape: Phase 4b parameterised Remember
+        // (skipPartiallyExpanded) + Phase 4c SharedState (cached Jvm
+        // reuse) + Phase 10 ConfirmStateChange veto adapter, with a
+        // PropertyName override (ConfirmValueChange instead of the
+        // default ConfirmStateChange). Verifies the three features
+        // compose without conflict.
+        var code = $$"""
+            using global::AndroidX.Compose.Runtime;
+            using global::AndroidX.Compose.UI;
+            using AndroidX.Compose;
+            using Kotlin.Jvm.Functions;
+            using System;
+
+            [assembly: ComposeDefaults("ModalBottomSheetDefault",
+                "!onDismissRequest", "modifier", "!sheetState", "dragHandle", "shape", "!content")]
+
+            namespace AndroidX.Compose.Material3
+            {
+                public enum SheetValue { Hidden, Expanded, PartiallyExpanded }
+                public interface ISheetState { }
+            }
+            namespace AndroidX.Compose
+            {
+                public sealed class SheetStateHolder
+                {
+                    internal global::AndroidX.Compose.Material3.ISheetState? Jvm;
+                    public bool SkipPartiallyExpanded { get; }
+                    public SheetStateHolder(bool skipPartiallyExpanded = false) { }
+                }
+                public sealed class SheetValueConfirmStateChange : Kotlin.Jvm.Functions.IFunction1
+                {
+                    public System.Func<global::AndroidX.Compose.Material3.SheetValue, bool>? Callback { get; set; }
+                }
+            }
+
+            namespace AndroidX.Compose
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(Class="androidx/compose/material3/ModalBottomSheet_androidKt",
+                                   JvmName="ModalBottomSheet-dYc4hso",
+                                   Signature="(Lkotlin/jvm/functions/Function0;Landroidx/compose/ui/Modifier;Landroidx/compose/material3/SheetState;Lkotlin/jvm/functions/Function2;Landroidx/compose/ui/graphics/Shape;Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;II)V",
+                                   Defaults=typeof(ModalBottomSheetDefault))]
+                    [ComposeFacade(Scope = "Column")]
+                    public static partial void ModalBottomSheet(
+                        IFunction0 onDismissRequest,
+                        IModifier? modifier,
+                        [StateHolder(Remember = nameof(RememberSheetState),
+                                     StateType = typeof(SheetStateHolder),
+                                     SharedState = true)]
+                        IntPtr sheetState,
+                        IFunction2? dragHandle,
+                        global::AndroidX.Compose.Shape? shape,
+                        IFunction3 content,
+                        int defaults,
+                        IComposer composer);
+
+                    public static IntPtr RememberSheetState(
+                        bool skipPartiallyExpanded,
+                        [ConfirmStateChange(typeof(global::AndroidX.Compose.Material3.SheetValue),
+                            AdapterType = typeof(SheetValueConfirmStateChange),
+                            PropertyName = "ConfirmValueChange")]
+                        IFunction1 confirmValueChange,
+                        IComposer composer) => default;
+                }
+            }
+            """;
+
+        var (output, diags, emitted) = Run(code, "ModalBottomSheet");
+        Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+
+        // (a) Per-instance veto adapter field allocated once.
+        Assert.Contains(
+            "readonly global::AndroidX.Compose.SheetValueConfirmStateChange _confirmValueChangeAdapter = new global::AndroidX.Compose.SheetValueConfirmStateChange();",
+            emitted);
+        // (b) PropertyName override surfaces as ConfirmValueChange (not
+        //     the default ConfirmStateChange).
+        Assert.Contains(
+            "public global::System.Func<global::AndroidX.Compose.Material3.SheetValue, bool>? ConfirmValueChange { get; set; }",
+            emitted);
+        Assert.DoesNotContain("public global::System.Func<global::AndroidX.Compose.Material3.SheetValue, bool>? ConfirmStateChange", emitted);
+        // (c) Render preamble assigns the user delegate into the adapter.
+        Assert.Contains("_confirmValueChangeAdapter.Callback = ConfirmValueChange;", emitted);
+        // (d) SharedState cache-hit branch — Jvm already bound.
+        Assert.Contains("if (_sheetState!.Jvm is not null)", emitted);
+        // (e) Cache-miss branch calls Remember with SkipPartiallyExpanded
+        //     resolved from the wrapper member AND the per-instance JCW
+        //     adapter forwarded as the IFunction1 slot.
+        Assert.Contains(
+            "global::AndroidX.Compose.ComposeBridges.RememberSheetState(_sheetState!.SkipPartiallyExpanded, _confirmValueChangeAdapter, composer)",
+            emitted);
+
+        var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
+        Assert.Empty(errors);
+    }
+
     // ---------------------------------------------------------------
     // Branching — BranchOn / AlternateBridge (CN3010). The primary
     // bridge is the smaller one; the alternate is a strict superset
