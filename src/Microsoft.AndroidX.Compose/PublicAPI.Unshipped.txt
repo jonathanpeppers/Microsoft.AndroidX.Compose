@@ -2138,6 +2138,7 @@ static AndroidX.Compose.MutableNumberState<T>.operator ++(AndroidX.Compose.Mutab
 static AndroidX.Compose.MutableState<T>.implicit operator T(AndroidX.Compose.MutableState<T>! state) -> T
 static AndroidX.Compose.Offset.operator !=(AndroidX.Compose.Offset a, AndroidX.Compose.Offset b) -> bool
 static AndroidX.Compose.Offset.operator ==(AndroidX.Compose.Offset a, AndroidX.Compose.Offset b) -> bool
+static AndroidX.Compose.Offset.Infinite.get -> AndroidX.Compose.Offset
 static AndroidX.Compose.Offset.Unspecified.get -> AndroidX.Compose.Offset
 static AndroidX.Compose.Offset.Zero.get -> AndroidX.Compose.Offset
 static AndroidX.Compose.Shape.Circle() -> AndroidX.Compose.Shape!

@@ -57,6 +57,15 @@ public readonly struct Offset : IEquatable<Offset>
     public static Offset Zero => new Offset(0f, 0f);
 
     /// <summary>
+    /// The <c>Offset.Infinite</c> sentinel — Compose uses
+    /// <c>(+∞, +∞)</c> as the "fill the whole drawing region"
+    /// endpoint (e.g. the default <c>end</c> of
+    /// <c>Brush.linearGradient</c>, which resolves to the
+    /// bottom-right corner at draw time).
+    /// </summary>
+    public static Offset Infinite => new Offset(float.PositiveInfinity, float.PositiveInfinity);
+
+    /// <summary>
     /// The <c>Offset.Unspecified</c> sentinel — Compose uses this to
     /// mean "no value". Equal-by-value to Kotlin's
     /// <c>Offset.Unspecified</c> (packed value <c>0x7FC000007FC00000</c>,

@@ -28,9 +28,9 @@ namespace AndroidX.Compose;
 /// composition build a fresh instance each pass.
 /// </para>
 /// </remarks>
-public class Brush : Java.Lang.Object
+public sealed class Brush : Java.Lang.Object
 {
-    private protected Brush(IntPtr handle, JniHandleOwnership transfer)
+    Brush(IntPtr handle, JniHandleOwnership transfer)
         : base(handle, transfer) { }
 
     /// <summary>
@@ -71,13 +71,15 @@ public class Brush : Java.Lang.Object
     }
 
     /// <summary>
-    /// Convenience overload — <c>LinearGradient(colors, Offset.Zero,
-    /// new Offset(0f, Single.PositiveInfinity), Clamp)</c>. Produces a
-    /// top-to-bottom vertical fade matching Kotlin's
-    /// <c>Brush.linearGradient(colors)</c> default.
+    /// Convenience overload — matches Kotlin's
+    /// <c>Brush.linearGradient(colors)</c> default of
+    /// <c>start = Offset.Zero, end = Offset.Infinite,
+    /// tileMode = Clamp</c>. <see cref="Offset.Infinite"/> resolves to
+    /// the bottom-right corner of the drawing region at paint time, so
+    /// this produces a top-left-to-bottom-right diagonal gradient.
     /// </summary>
     public static Brush LinearGradient(params Color[] colors) =>
-        LinearGradient(colors, Offset.Zero, new Offset(0f, float.PositiveInfinity), TileMode.Clamp);
+        LinearGradient(colors, Offset.Zero, Offset.Infinite, TileMode.Clamp);
 
     /// <summary>
     /// <c>Brush.horizontalGradient(colors, startX, endX, tileMode)</c>
