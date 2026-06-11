@@ -33,4 +33,26 @@ internal interface IComposeHandler
     /// <see cref="ComposeWalker.Render(Microsoft.Maui.IView, IComposer, IMauiContext)"/>.
     /// </summary>
     ComposableNode BuildNode(IComposer composer);
+
+    /// <summary>
+    /// Bump the per-handler view-properties version slot so the
+    /// next composition pass re-reads the live <see cref="IView"/>
+    /// transform / visibility / clip / shadow values via
+    /// <see cref="Platform.ModifierBridge.ApplyViewProperties"/>.
+    /// Called from <see cref="Hosting.AppHostBuilderExtensions.RemapForCompose"/>
+    /// hooks installed on <c>ViewHandler.ViewMapper</c>.
+    /// </summary>
+    /// <remarks>
+    /// MAUI's <see cref="IView"/> transform properties are all
+    /// struct- or geometry-typed (<c>double</c> coords, <c>Visibility</c>
+    /// enum, <c>IShape</c>, <c>IShadow</c>) — none of which fit
+    /// <c>MutableState&lt;T&gt;</c>'s primitive-or-Java-peer
+    /// constraint. The version-counter pattern (mirror of
+    /// <see cref="Handlers.LayoutHandler.MapPadding"/>'s
+    /// <c>_paddingVersion</c>) replaces a per-property slot with a
+    /// single <c>MutableState&lt;int&gt;</c> bumped on any change;
+    /// <see cref="ComposableNode"/>s subscribe by reading it inside
+    /// <c>BuildNode</c> and live-read the value at composition time.
+    /// </remarks>
+    void BumpViewPropertiesVersion();
 }

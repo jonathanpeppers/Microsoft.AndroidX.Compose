@@ -61,6 +61,11 @@ public partial class HomePage : ContentPage
                 Color.FromArgb("#E91E63"),
                 "image-sources"),
             new DemoEntry(
+                "Modifiers",
+                "Opacity, Scale, Rotation, IsVisible, Translation, Clip, Shadow on a single Image.",
+                Color.FromArgb("#FF5722"),
+                "modifiers"),
+            new DemoEntry(
                 "Toggles",
                 "CheckBox / Switch / RadioButton with two-way binding.",
                 Color.FromArgb("#FF9800"),

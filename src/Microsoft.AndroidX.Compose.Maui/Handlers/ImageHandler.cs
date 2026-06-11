@@ -2,6 +2,7 @@ using AndroidX.Compose;
 using AndroidX.Compose.Runtime;
 using AndroidX.Compose.UI.Platform;
 using Microsoft.AndroidX.Compose.Maui.Loaders;
+using Microsoft.AndroidX.Compose.Maui.Platform;
 using Microsoft.Maui.Handlers;
 using ComposeImage = AndroidX.Compose.Image;
 using MauiIImage   = Microsoft.Maui.IImage;
@@ -89,18 +90,30 @@ public partial class ImageHandler : ComposeElementHandler<MauiIImage>
     /// <inheritdoc/>
     public override ComposableNode BuildNode(IComposer composer)
     {
+        SubscribeToViewProperties();
+
+        // Apply cross-cutting view properties (Opacity / Translation /
+        // Scale / Rotation / IsVisible / Clip / Shadow) on top of the
+        // FillMaxSize sizing modifier so the Image honours the layout
+        // box MAUI sized for it. The placeholder Box gets the modifier
+        // too so an Image with Opacity=0 stays invisible even before
+        // the source loads.
+        var modifier = s_fillMaxSize.ApplyViewProperties(VirtualView!);
         var cs = _contentScale.Value;
+
         // Painter wins over the resource id so a freshly-loaded
         // BitmapPainter immediately replaces any stale fast-path
         // drawable. Both null => empty placeholder.
         if (_loader is { } loader)
         {
             if (loader.Painter.Value is { } painter)
-                return new ComposeImage(painter) { ContentScale = cs, Modifier = s_fillMaxSize };
+                return new ComposeImage(painter) { ContentScale = cs, Modifier = modifier };
             if (loader.DrawableResourceId.Value is int id)
-                return new ComposeImage(id) { ContentScale = cs, Modifier = s_fillMaxSize };
+                return new ComposeImage(id) { ContentScale = cs, Modifier = modifier };
         }
-        return new Box();
+        var placeholder = new Box();
+        placeholder.PrependModifier(modifier);
+        return placeholder;
     }
 
     /// <inheritdoc/>
