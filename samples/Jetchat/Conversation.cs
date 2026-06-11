@@ -215,9 +215,13 @@ public static class Conversation
     }
 
     static Row BuildDayHeader(string label, ColorScheme scheme) =>
-        new()
+        new(horizontalArrangement: null, verticalAlignment: Alignment.Vertical.CenterVertically)
         {
-            Modifier.Padding(horizontal: 16, vertical: 8).Height(16),
+            // No fixed Height: the row auto-sizes to the 11sp/Medium text
+            // bounds (~15 dp incl. descender). A previous .Height(16) clipped
+            // the descender of glyphs like "Today" / "y" once the system
+            // dark scheme drew them tightly against the divider line.
+            Modifier.Padding(horizontal: 16, vertical: 8),
             new HorizontalDivider
             {
                 Modifier  = Modifier.Weight(1f),
