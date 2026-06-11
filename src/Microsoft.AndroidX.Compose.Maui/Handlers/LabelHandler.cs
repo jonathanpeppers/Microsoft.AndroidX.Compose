@@ -1,5 +1,6 @@
 using AndroidX.Compose;
 using AndroidX.Compose.Runtime;
+using Microsoft.AndroidX.Compose.Maui.Platform;
 using Microsoft.Maui.Handlers;
 using ComposeColor = AndroidX.Compose.Color;
 using ComposeText = AndroidX.Compose.Text;
@@ -70,6 +71,12 @@ public partial class LabelHandler : ComposeElementHandler<ILabel>
     /// <inheritdoc/>
     public override ComposableNode BuildNode(IComposer composer)
     {
+        // Subscribe to the shared view-properties version slot so any
+        // ApplyViewProperties-relevant property change (Opacity,
+        // Translation, Scale, Rotation, IsVisible, Clip, Shadow)
+        // forces a recomposition through the IComposeHandler bumper.
+        SubscribeToViewProperties();
+
         var packed = _color.Value;
         var size   = _fontSize.Value;
         var bold   = _bold.Value;
@@ -87,8 +94,13 @@ public partial class LabelHandler : ComposeElementHandler<ILabel>
                 _                    => null,
             },
         };
-        if (fill)
-            text.PrependModifier(Modifier.FillMaxWidth());
+        // Single PrependModifier call combining the layout-fill (if
+        // applicable) with the cross-cutting view properties — calling
+        // PrependModifier twice would replace, not merge, so this
+        // builds the chain once.
+        var outer = (fill ? Modifier.FillMaxWidth() : Modifier.Companion)
+            .ApplyViewProperties(VirtualView!);
+        text.PrependModifier(outer);
         return text;
     }
 

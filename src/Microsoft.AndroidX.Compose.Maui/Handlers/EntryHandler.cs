@@ -2,6 +2,7 @@ using System.Diagnostics;
 using AndroidX.Compose;
 using AndroidX.Compose.Runtime;
 using AndroidX.Compose.UI.Text.Input;
+using Microsoft.AndroidX.Compose.Maui.Platform;
 using Microsoft.Maui.Handlers;
 using ComposeColor          = AndroidX.Compose.Color;
 using ComposeFontWeight     = AndroidX.Compose.FontWeight;
@@ -71,6 +72,8 @@ public partial class EntryHandler : ComposeElementHandler<IEntry>
     /// <inheritdoc/>
     public override ComposableNode BuildNode(IComposer composer)
     {
+        SubscribeToViewProperties();
+
         var packed       = _color.Value;
         var size         = _fontSize.Value;
         var bold         = _bold.Value;
@@ -110,8 +113,11 @@ public partial class EntryHandler : ComposeElementHandler<IEntry>
                 d.PlatformImeOptions, d.ShowKeyboardOnFocus, d.HintLocales);
         }
 
-        if (fill)
-            field.PrependModifier(Modifier.FillMaxWidth());
+        // Single chained PrependModifier — combines layout-fill with
+        // the cross-cutting view properties.
+        var outer = (fill ? Modifier.FillMaxWidth() : Modifier.Companion)
+            .ApplyViewProperties(VirtualView!);
+        field.PrependModifier(outer);
         return field;
     }
 

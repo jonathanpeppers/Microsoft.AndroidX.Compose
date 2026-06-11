@@ -1,6 +1,7 @@
 using AndroidX.Compose;
 using AndroidX.Compose.Material3;
 using AndroidX.Compose.Runtime;
+using Microsoft.AndroidX.Compose.Maui.Platform;
 using Microsoft.Maui.Handlers;
 using ComposeButton = AndroidX.Compose.Button;
 
@@ -69,6 +70,8 @@ public partial class ButtonHandler : ComposeElementHandler<IButton>
     /// <inheritdoc/>
     public override ComposableNode BuildNode(IComposer composer)
     {
+        SubscribeToViewProperties();
+
         var container = _containerColor.Value;
         var content   = _contentColor.Value;
         var button = new ComposeButton(onClick: OnClicked)
@@ -79,8 +82,12 @@ public partial class ButtonHandler : ComposeElementHandler<IButton>
             button.Colors = composer.ButtonColors(
                 containerColor: container,
                 contentColor:   content);
-        if (_fillWidth.Value)
-            button.PrependModifier(Modifier.FillMaxWidth());
+        // Single chained PrependModifier — combines the layout-fill
+        // (when set) with the cross-cutting view properties (Opacity,
+        // Translation, Scale, Rotation, IsVisible, Clip, Shadow).
+        var outer = (_fillWidth.Value ? Modifier.FillMaxWidth() : Modifier.Companion)
+            .ApplyViewProperties(VirtualView!);
+        button.PrependModifier(outer);
         return button;
     }
 
