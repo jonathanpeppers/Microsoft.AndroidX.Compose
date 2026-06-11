@@ -703,7 +703,7 @@ internal static partial class ComposeBridges
         [PainterResource] Painter painter,
         string?    contentDescription,
         IModifier? modifier,
-        long?      tint,
+        Color?     tint,
         int        defaults,
         IComposer  composer);
 
@@ -715,24 +715,26 @@ internal static partial class ComposeBridges
     // ImageVector overload is fully bound; the facade reaches it via
     // SecondaryDefaults pointing at the IconDefault enum.
     //
-    // `tint` is `long?` (not `long`) so the facade generator
-    // classifies it as OptionalValue and only clears the `$default`
-    // bit when the caller passes a non-null Tint — otherwise Kotlin
-    // falls back to LocalContentColor.current. A non-nullable `long`
-    // would unconditionally clear the bit and pass `0L` (transparent
-    // black) to Kotlin, breaking theme-inherited icon tinting.
+    // `tint` is `Color?` (a registered Compose value type, lowered to
+    // the JNI `J` slot via the implicit `Color -> long` conversion) so
+    // the facade generator classifies it as OptionalValue and only
+    // clears the `$default` bit when the caller assigns a non-null
+    // Tint — otherwise Kotlin falls back to `LocalContentColor.current`.
+    // A non-nullable `long` (or `Color`) would unconditionally clear
+    // the bit and pass `0L` (transparent black) to Kotlin, breaking
+    // theme-inherited icon tinting.
     public static void IconImageVector(
         global::AndroidX.Compose.UI.Graphics.Vector.ImageVector imageVector,
         string?    contentDescription,
         IModifier? modifier,
-        long?      tint,
+        Color?     tint,
         int        defaults,
         IComposer  composer) =>
         IconKt.Icon(
             imageVector:        imageVector,
             contentDescription: contentDescription!,
             modifier:           modifier,
-            tint:               tint ?? 0L,
+            tint:               tint.GetValueOrDefault(),
             _composer:          composer,
             p5:                 0,
             _changed:           defaults);
