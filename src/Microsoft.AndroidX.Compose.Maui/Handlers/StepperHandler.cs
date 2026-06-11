@@ -2,7 +2,6 @@ using System.Globalization;
 using AndroidX.Compose;
 using AndroidX.Compose.Runtime;
 using Microsoft.Maui.Handlers;
-using ComposeColor       = AndroidX.Compose.Color;
 using ComposeIconButton  = AndroidX.Compose.IconButton;
 using ComposeRow         = AndroidX.Compose.Row;
 using ComposeText        = AndroidX.Compose.Text;
@@ -33,7 +32,13 @@ namespace Microsoft.AndroidX.Compose.Maui.Handlers;
 ///
 /// <para>The decrement / increment buttons clamp at the configured
 /// <see cref="IRange.Minimum"/> / <see cref="IRange.Maximum"/>; clicks
-/// outside the range silently no-op. The Material icon set bound by
+/// outside the range silently no-op. Glyphs render at the active
+/// theme's <c>onSurface</c> content colour at every value (no
+/// per-bound dimming): the M3 <c>IconButton</c> facade doesn't expose
+/// the <c>enabled</c> slot, and a hand-rolled
+/// <c>0x61000000</c> overlay reads as nearly black on a dark theme
+/// — see the SlidersPage screenshot from #262 review.
+/// The Material icon set bound by
 /// <c>Xamarin.AndroidX.Compose.Material.Icons.Core</c> doesn't include
 /// <c>Remove</c>, so the buttons use literal "−" / "+" text labels —
 /// they render at the same baseline as a Material icon and look
@@ -77,21 +82,12 @@ public partial class StepperHandler : ComposeElementHandler<IStepper>
         var min      = _min.Value;
         var max      = _max.Value;
         var interval = _interval.Value;
-        var atMin    = value <= min;
-        var atMax    = value >= max;
 
         return new ComposeRow
         {
             new ComposeIconButton(onClick: Decrement)
             {
-                new ComposeText("−")
-                {
-                    // Greyed glyph at the lower bound mirrors the
-                    // Material disabled-state alpha (~38% opacity)
-                    // without paying for an `enabled` slot on the
-                    // bridge — the click handler still no-ops below.
-                    Color = atMin ? ComposeColor.FromArgb(0x61, 0x00, 0x00, 0x00) : null,
-                },
+                new ComposeText("−"),
             },
             new ComposeText(value.ToString(CultureInfo.CurrentCulture))
             {
@@ -99,10 +95,7 @@ public partial class StepperHandler : ComposeElementHandler<IStepper>
             },
             new ComposeIconButton(onClick: Increment)
             {
-                new ComposeText("+")
-                {
-                    Color = atMax ? ComposeColor.FromArgb(0x61, 0x00, 0x00, 0x00) : null,
-                },
+                new ComposeText("+"),
             },
         };
 
