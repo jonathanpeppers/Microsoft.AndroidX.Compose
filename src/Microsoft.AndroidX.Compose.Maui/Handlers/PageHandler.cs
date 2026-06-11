@@ -112,7 +112,7 @@ public partial class PageHandler : ViewHandler<IContentView, ComposeView>
             compose.SetContent(_ =>
             {
                 var empty = new MaterialTheme { Dark = theme.IsDark.Value, UseDynamicColor = false };
-                empty.Add(new Box());
+                empty.Add(new Surface { Modifier = Modifier.FillMaxSize() });
                 return empty;
             });
             return;
@@ -121,7 +121,15 @@ public partial class PageHandler : ViewHandler<IContentView, ComposeView>
         compose.SetContent(c =>
         {
             var node = ComposeWalker.Render(content, c, context);
-            var root = new Box { Modifier = Modifier.FillMaxSize() };
+            // Wrap the page tree in an M3 Surface (no Box) so the active
+            // colour scheme paints `surface` as the background AND
+            // propagates `LocalContentColor = onSurface` down the tree.
+            // Plain Box leaves LocalContentColor at its default
+            // (Color.Black), which on a dark theme renders IconButton
+            // glyphs and any other LocalContentColor-driven Text as
+            // black-on-dark — invisible. See StepperHandler / #262
+            // review screenshot.
+            var root = new Surface { Modifier = Modifier.FillMaxSize() };
             root.Add(node);
             // Reading IsDark.Value here ties this composition to the
             // singleton state. UseDynamicColor=false because Material

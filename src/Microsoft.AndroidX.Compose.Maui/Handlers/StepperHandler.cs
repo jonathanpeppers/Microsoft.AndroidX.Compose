@@ -83,7 +83,9 @@ public partial class StepperHandler : ComposeElementHandler<IStepper>
         var max      = _max.Value;
         var interval = _interval.Value;
 
-        return new ComposeRow
+        return new ComposeRow(
+            horizontalArrangement: null,
+            verticalAlignment:     Alignment.Vertical.CenterVertically)
         {
             new ComposeIconButton(onClick: Decrement)
             {
