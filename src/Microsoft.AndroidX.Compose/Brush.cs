@@ -1,4 +1,5 @@
 using Android.Runtime;
+using BoundBrush = AndroidX.Compose.UI.Graphics.Brush;
 
 namespace AndroidX.Compose;
 
@@ -63,11 +64,10 @@ public class Brush : Java.Lang.Object
         Offset end,
         TileMode tileMode = TileMode.Clamp)
     {
-        ArgumentNullException.ThrowIfNull(colors);
-        long[] packed = PackColors(colors);
-        IntPtr handle = ComposeBridges.BrushLinearGradient(
-            packed, start.Packed, end.Packed, (int)tileMode);
-        return new Brush(handle, JniHandleOwnership.TransferLocalRef);
+        var list = ComposeBridges.ToColorList(colors);
+        var bound = ComposeBridges.BrushCompanion().LinearGradient_mHitzGk(
+            list, start.Packed, end.Packed, (int)tileMode);
+        return FromBound(bound);
     }
 
     /// <summary>
@@ -90,11 +90,10 @@ public class Brush : Java.Lang.Object
         float endX = float.PositiveInfinity,
         TileMode tileMode = TileMode.Clamp)
     {
-        ArgumentNullException.ThrowIfNull(colors);
-        long[] packed = PackColors(colors);
-        IntPtr handle = ComposeBridges.BrushHorizontalGradient(
-            packed, startX, endX, (int)tileMode);
-        return new Brush(handle, JniHandleOwnership.TransferLocalRef);
+        var list = ComposeBridges.ToColorList(colors);
+        var bound = ComposeBridges.BrushCompanion().HorizontalGradient_8A_3gB4(
+            list, startX, endX, (int)tileMode);
+        return FromBound(bound);
     }
 
     /// <summary>
@@ -115,11 +114,10 @@ public class Brush : Java.Lang.Object
         float endY = float.PositiveInfinity,
         TileMode tileMode = TileMode.Clamp)
     {
-        ArgumentNullException.ThrowIfNull(colors);
-        long[] packed = PackColors(colors);
-        IntPtr handle = ComposeBridges.BrushVerticalGradient(
-            packed, startY, endY, (int)tileMode);
-        return new Brush(handle, JniHandleOwnership.TransferLocalRef);
+        var list = ComposeBridges.ToColorList(colors);
+        var bound = ComposeBridges.BrushCompanion().VerticalGradient_8A_3gB4(
+            list, startY, endY, (int)tileMode);
+        return FromBound(bound);
     }
 
     /// <summary>
@@ -142,11 +140,10 @@ public class Brush : Java.Lang.Object
         float radius = float.PositiveInfinity,
         TileMode tileMode = TileMode.Clamp)
     {
-        ArgumentNullException.ThrowIfNull(colors);
-        long[] packed = PackColors(colors);
-        IntPtr handle = ComposeBridges.BrushRadialGradient(
-            packed, center.Packed, radius, (int)tileMode);
-        return new Brush(handle, JniHandleOwnership.TransferLocalRef);
+        var list = ComposeBridges.ToColorList(colors);
+        var bound = ComposeBridges.BrushCompanion().RadialGradient_P_Vx_Ks(
+            list, center.Packed, radius, (int)tileMode);
+        return FromBound(bound);
     }
 
     /// <summary>
@@ -164,10 +161,10 @@ public class Brush : Java.Lang.Object
     /// </summary>
     public static Brush SweepGradient(Color[] colors, Offset center)
     {
-        ArgumentNullException.ThrowIfNull(colors);
-        long[] packed = PackColors(colors);
-        IntPtr handle = ComposeBridges.BrushSweepGradient(packed, center.Packed);
-        return new Brush(handle, JniHandleOwnership.TransferLocalRef);
+        var list = ComposeBridges.ToColorList(colors);
+        var bound = ComposeBridges.BrushCompanion().SweepGradient_Uv8p0NA(
+            list, center.Packed);
+        return FromBound(bound);
     }
 
     /// <summary>
@@ -177,14 +174,21 @@ public class Brush : Java.Lang.Object
     public static Brush SweepGradient(params Color[] colors) =>
         SweepGradient(colors, Offset.Unspecified);
 
-    static long[] PackColors(Color[] colors)
+    // Take ownership of a bound Brush peer's handle and wrap it in our
+    // facade type. The bound peer goes out of scope after this call, so
+    // we use DoNotTransfer + GC.KeepAlive to keep the JNI handle alive
+    // until our wrapper has taken its own managed reference.
+    static Brush FromBound(BoundBrush bound)
     {
-        if (colors.Length == 0)
-            throw new ArgumentException(
-                "Gradient must have at least one color stop.", nameof(colors));
-        long[] packed = new long[colors.Length];
-        for (int i = 0; i < colors.Length; i++)
-            packed[i] = colors[i];
-        return packed;
+        try
+        {
+            return new Brush(
+                ((Java.Lang.Object)bound).Handle,
+                JniHandleOwnership.DoNotTransfer);
+        }
+        finally
+        {
+            GC.KeepAlive(bound);
+        }
     }
 }

@@ -109,10 +109,20 @@ public class Shape : Java.Lang.Object
 
     static Shape RectangleShapeFactory()
     {
-        // The Java side hands us a stable, shared singleton; wrap it
-        // without taking ownership of the local ref it doesn't issue —
-        // the cached global ref in ComposeBridges keeps it alive.
-        IntPtr global = ComposeBridges.RectangleShape();
-        return new Shape(global, JniHandleOwnership.DoNotTransfer);
+        // `RectangleShapeKt.RectangleShape` is bound — it returns the
+        // shared Kotlin singleton. Wrap its handle in our facade type
+        // without transferring ownership; the bound peer keeps the
+        // underlying JNI ref alive.
+        var bound = AndroidX.Compose.UI.Graphics.RectangleShapeKt.RectangleShape;
+        try
+        {
+            return new Shape(
+                ((Java.Lang.Object)bound).Handle,
+                JniHandleOwnership.DoNotTransfer);
+        }
+        finally
+        {
+            GC.KeepAlive(bound);
+        }
     }
 }
