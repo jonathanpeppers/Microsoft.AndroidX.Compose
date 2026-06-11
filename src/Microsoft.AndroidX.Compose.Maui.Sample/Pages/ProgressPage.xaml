@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="Microsoft.AndroidX.Compose.Maui.Sample.Pages.ProgressPage"
+             Title="Progress &amp; activity">
+
+    <!--
+        Exercises every mapper on `ProgressBarHandler` and
+        `ActivityIndicatorHandler`:
+            ProgressBar:
+              * Progress       -> MapProgress (driven live by a Slider)
+              * ProgressColor  -> MapProgressColor.
+            ActivityIndicator:
+              * IsRunning      -> MapIsRunning (toggles emission of the
+                                  Compose `CircularProgressIndicator`)
+              * Color          -> MapColor.
+
+        Slice 3 hasn't shipped a Compose-backed Switch / CheckBox yet,
+        so the activity indicator is toggled with a plain MAUI Button —
+        the indicator's MAUI handler is Compose-backed even though the
+        toggle isn't.
+    -->
+    <ScrollView>
+        <VerticalStackLayout
+            Padding="30,30"
+            Spacing="24">
+
+            <Label
+                Text="Progress &amp; activity"
+                Style="{StaticResource Headline}" />
+
+            <Label Text="-- ProgressBar bound to a Slider --"
+                   FontAttributes="Bold" />
+
+            <Slider
+                x:Name="ProgressDriver"
+                Minimum="0"
+                Maximum="1"
+                Value="0.4"
+                ValueChanged="OnDriverChanged" />
+
+            <Label
+                x:Name="ProgressLabel"
+                Text="progress = 0.40" />
+
+            <ProgressBar
+                x:Name="DefaultProgress"
+                Progress="0.4" />
+
+            <Label Text="Colored progress (ProgressColor=#E91E63)."
+                   FontAttributes="Bold" />
+
+            <ProgressBar
+                x:Name="ColoredProgress"
+                Progress="0.4"
+                ProgressColor="#E91E63" />
+
+            <Label Text="-- ActivityIndicator (toggle to mount/unmount) --"
+                   FontAttributes="Bold" />
+
+            <HorizontalStackLayout Spacing="16">
+                <Button x:Name="ToggleButton"
+                        Text="Start"
+                        Clicked="OnToggleClicked" />
+                <ActivityIndicator
+                    x:Name="DemoIndicator"
+                    IsRunning="False"
+                    Color="#2196F3"
+                    HeightRequest="40"
+                    WidthRequest="40"
+                    VerticalOptions="Center" />
+                <Label
+                    x:Name="IndicatorStatusLabel"
+                    Text="Stopped (no Compose CircularProgressIndicator in tree)"
+                    VerticalOptions="Center" />
+            </HorizontalStackLayout>
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

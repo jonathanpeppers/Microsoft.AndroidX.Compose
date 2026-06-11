@@ -4,17 +4,27 @@ using AndroidX.Compose.Runtime;
 namespace AndroidX.Compose;
 
 /// <summary>
-/// Material 3 indeterminate <c>LinearProgressIndicator</c>. Use to show
-/// loading state when the duration is unknown:
+/// Material 3 <c>LinearProgressIndicator</c>. Defaults to the
+/// indeterminate animation; set <see cref="Progress"/> to a non-null
+/// 0..1 value to render the determinate (progress-driven) overload:
 /// <code>
 /// new LinearProgressIndicator { Modifier = Modifier.FillMaxWidth() }
+/// new LinearProgressIndicator { Progress = 0.45f }
 /// </code>
-/// The determinate (progress-driven) overload is not yet wrapped — the
-/// progress callback parameter requires a state-reading <c>Function0&lt;Float&gt;</c>
-/// adapter that hasn't been added yet.
+/// The full state-reading <c>() -&gt; Float</c> overload (lambda-driven
+/// progress) isn't wrapped — set <see cref="Progress"/> from a
+/// <c>MutableState</c> in your render and Compose will recompose this
+/// node at the next frame.
 /// </summary>
 public sealed class LinearProgressIndicator : ComposableNode
 {
+    /// <summary>
+    /// Optional progress in [0, 1]. When non-null, renders the
+    /// determinate overload (filled bar at the given fraction);
+    /// when null, renders the indeterminate animation.
+    /// </summary>
+    public float? Progress { get; set; }
+
     /// <summary>Optional explicit color. Leave null to use the Material default.</summary>
     public Color? Color { get; set; }
 
@@ -25,10 +35,38 @@ public sealed class LinearProgressIndicator : ComposableNode
     {
         var modifier = BuildModifier();
 
-        int defaults = (int)LinearProgressIndicatorDefault.All;
-        if (modifier is not null)        defaults &= ~(int)LinearProgressIndicatorDefault.Modifier;
-        if (Color.HasValue)              defaults &= ~(int)LinearProgressIndicatorDefault.Color;
-        if (TrackColor.HasValue)         defaults &= ~(int)LinearProgressIndicatorDefault.TrackColor;
+        if (Progress is { } progress)
+        {
+            // Determinate overload: (Float, Modifier?, J color, J trackColor,
+            //                        I strokeCap; Composer; I $changed, I $default).
+            // Default bits: 0=progress (always provided), 1=modifier, 2=color,
+            //               3=trackColor, 4=strokeCap. Mask = 0b11111 = 31.
+            int defaults = 0b11111;
+            defaults &= ~0b00001;                                    // progress always set
+            if (modifier is not null)        defaults &= ~0b00010;   // modifier
+            if (Color.HasValue)              defaults &= ~0b00100;   // color
+            if (TrackColor.HasValue)         defaults &= ~0b01000;   // trackColor
+
+#pragma warning disable CS0618 // Float-progress overload is deprecated in Compose
+                               // 1.7+ in favour of the lambda overload, but the
+                               // lambda variant is not yet wrapped here.
+            ProgressIndicatorKt.LinearProgressIndicator(
+                progress:   progress,
+                modifier:   modifier,
+                color:      Color      is { } pc ? pc : 0L,
+                trackColor: TrackColor is { } pt ? pt : 0L,
+                p4:         0,
+                _composer:  composer,
+                strokeCap:  0,
+                _changed:   defaults);
+#pragma warning restore CS0618
+            return;
+        }
+
+        int indeterminateDefaults = (int)LinearProgressIndicatorDefault.All;
+        if (modifier is not null)        indeterminateDefaults &= ~(int)LinearProgressIndicatorDefault.Modifier;
+        if (Color.HasValue)              indeterminateDefaults &= ~(int)LinearProgressIndicatorDefault.Color;
+        if (TrackColor.HasValue)         indeterminateDefaults &= ~(int)LinearProgressIndicatorDefault.TrackColor;
 
         ProgressIndicatorKt.LinearProgressIndicator(
             modifier:   modifier,
@@ -38,6 +76,6 @@ public sealed class LinearProgressIndicator : ComposableNode
             gapSize:    0f,
             _composer:  composer,
             strokeCap:  0,
-            _changed:   defaults);
+            _changed:   indeterminateDefaults);
     }
 }

@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="Microsoft.AndroidX.Compose.Maui.Sample.Pages.SlidersPage"
+             Title="Sliders &amp; steppers">
+
+    <!--
+        Exercises every mapper on `SliderHandler` and `StepperHandler`:
+            Slider:
+              * Value                    -> MapValue (two-way; bound label echoes)
+              * Minimum / Maximum        -> MapMinimum / MapMaximum
+                                            (drives the Compose `valueRange` slot)
+              * MinimumTrackColor /
+                MaximumTrackColor /
+                ThumbColor               -> SliderColors (custom palette).
+            Stepper:
+              * Value                    -> MapValue (two-way via the - / + buttons)
+              * Minimum / Maximum        -> MapMinimum / MapMaximum
+                                            (clicks at the bound silently no-op)
+              * Increment                -> MapInterval (step size).
+    -->
+    <ScrollView>
+        <VerticalStackLayout
+            Padding="30,30"
+            Spacing="20">
+
+            <Label
+                Text="Sliders &amp; steppers"
+                Style="{StaticResource Headline}" />
+
+            <Label Text="-- Default M3 slider, bounds [0, 1] --"
+                   FontAttributes="Bold" />
+
+            <Slider
+                x:Name="DefaultSlider"
+                Minimum="0"
+                Maximum="1"
+                Value="0.25"
+                ValueChanged="OnDefaultSliderChanged" />
+
+            <Label
+                x:Name="DefaultValueLabel"
+                Text="value = 0.25" />
+
+            <Label Text="-- Custom bounds + colored track / thumb --"
+                   FontAttributes="Bold" />
+
+            <Slider
+                x:Name="ColoredSlider"
+                Minimum="-50"
+                Maximum="50"
+                Value="0"
+                ThumbColor="#E91E63"
+                MinimumTrackColor="#E91E63"
+                MaximumTrackColor="#FFCDD2"
+                ValueChanged="OnColoredSliderChanged" />
+
+            <Label
+                x:Name="ColoredValueLabel"
+                Text="value = 0" />
+
+            <Label Text="-- Stepper bound to a label (Increment=2) --"
+                   FontAttributes="Bold" />
+
+            <HorizontalStackLayout Spacing="16"
+                                   HorizontalOptions="Start">
+                <Stepper
+                    x:Name="DemoStepper"
+                    Minimum="0"
+                    Maximum="20"
+                    Increment="2"
+                    Value="6"
+                    ValueChanged="OnStepperChanged" />
+                <Label
+                    x:Name="StepperValueLabel"
+                    Text="6"
+                    FontSize="20"
+                    FontAttributes="Bold"
+                    VerticalOptions="Center" />
+            </HorizontalStackLayout>
+
+            <Label Text="-- Reset --"
+                   FontAttributes="Bold" />
+
+            <Button Text="Reset all values"
+                    HorizontalOptions="Start"
+                    Clicked="OnResetClicked" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

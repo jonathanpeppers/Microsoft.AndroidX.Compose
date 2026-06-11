@@ -60,6 +60,16 @@ public partial class HomePage : ContentPage
                 "File / Uri / Stream / Font image source types.",
                 Color.FromArgb("#E91E63"),
                 "image-sources"),
+            new DemoEntry(
+                "Sliders & steppers",
+                "Slider + Stepper, two-way binding, custom colors.",
+                Color.FromArgb("#FF9800"),
+                "sliders"),
+            new DemoEntry(
+                "Progress & activity",
+                "ProgressBar driven by a slider; ActivityIndicator toggle.",
+                Color.FromArgb("#FFC107"),
+                "progress"),
         };
     }
 

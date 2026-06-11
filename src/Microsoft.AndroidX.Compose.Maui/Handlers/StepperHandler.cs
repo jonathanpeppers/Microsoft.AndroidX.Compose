@@ -1,0 +1,142 @@
+using System.Globalization;
+using AndroidX.Compose;
+using AndroidX.Compose.Runtime;
+using Microsoft.Maui.Handlers;
+using ComposeColor       = AndroidX.Compose.Color;
+using ComposeIconButton  = AndroidX.Compose.IconButton;
+using ComposeRow         = AndroidX.Compose.Row;
+using ComposeText        = AndroidX.Compose.Text;
+using ComposeTextAlign   = AndroidX.Compose.TextAlign;
+
+namespace Microsoft.AndroidX.Compose.Maui.Handlers;
+
+/// <summary>
+/// MAUI <see cref="Microsoft.Maui.Controls.Stepper"/> handler that
+/// renders through Jetpack Compose. Material 3 has no first-class
+/// <c>Stepper</c>, so the handler synthesizes one from a
+/// <see cref="ComposeRow"/> containing two <see cref="ComposeIconButton"/>s
+/// (<c>−</c> / <c>+</c>) flanking a centred <see cref="ComposeText"/>
+/// label that shows the current value. Replaces MAUI's stock
+/// <c>android.widget.LinearLayout</c>-based handler when the consumer
+/// calls <see cref="Hosting.AppHostBuilderExtensions.UseAndroidXCompose"/>.
+/// </summary>
+/// <remarks>
+/// <para>Folds into the page's single composition via
+/// <see cref="ComposeElementHandler{TVirtualView}"/> /
+/// <see cref="IComposeHandler"/>. The two-way value pipeline mirrors
+/// <see cref="EntryHandler.OnValueChanged"/>: each button click
+/// updates the local <see cref="MutableState{T}"/> first (so the
+/// rendered value tracks the user's tap immediately) and then writes
+/// to <see cref="IRange.Value"/>; MAUI's standard property pipeline
+/// re-enters <see cref="MapValue"/> with the same double, which is a
+/// no-op on <c>MutableState&lt;double&gt;</c> — no feedback loop.</para>
+///
+/// <para>The decrement / increment buttons clamp at the configured
+/// <see cref="IRange.Minimum"/> / <see cref="IRange.Maximum"/>; clicks
+/// outside the range silently no-op. The Material icon set bound by
+/// <c>Xamarin.AndroidX.Compose.Material.Icons.Core</c> doesn't include
+/// <c>Remove</c>, so the buttons use literal "−" / "+" text labels —
+/// they render at the same baseline as a Material icon and look
+/// identical inside the M3 <c>IconButton</c> tap target.</para>
+/// </remarks>
+public partial class StepperHandler : ComposeElementHandler<IStepper>
+{
+    /// <summary>
+    /// Property mapper that forwards MAUI <see cref="IStepper"/> property
+    /// changes to the Compose-backed <see cref="ComposeView"/>.
+    /// </summary>
+    public static IPropertyMapper<IStepper, StepperHandler> Mapper =
+        new PropertyMapper<IStepper, StepperHandler>(ViewHandler.ViewMapper)
+        {
+            [nameof(IRange.Value)]      = MapValue,
+            [nameof(IRange.Minimum)]    = MapMinimum,
+            [nameof(IRange.Maximum)]    = MapMaximum,
+            [nameof(IStepper.Interval)] = MapInterval,
+        };
+
+    /// <summary>Command mapper (inherits view-level commands; no extras).</summary>
+    public static CommandMapper<IStepper, StepperHandler> CommandMapper =
+        new(ViewCommandMapper);
+
+    readonly MutableState<double> _value    = new(0d);
+    readonly MutableState<double> _min      = new(0d);
+    readonly MutableState<double> _max      = new(100d);
+    readonly MutableState<double> _interval = new(1d);
+
+    /// <summary>Construct a handler with the default mappers.</summary>
+    public StepperHandler() : base(Mapper, CommandMapper) { }
+
+    /// <summary>Construct a handler with custom mappers.</summary>
+    public StepperHandler(IPropertyMapper? mapper, CommandMapper? commandMapper = null)
+        : base(mapper ?? Mapper, commandMapper ?? CommandMapper) { }
+
+    /// <inheritdoc/>
+    public override ComposableNode BuildNode(IComposer composer)
+    {
+        var value    = _value.Value;
+        var min      = _min.Value;
+        var max      = _max.Value;
+        var interval = _interval.Value;
+        var atMin    = value <= min;
+        var atMax    = value >= max;
+
+        return new ComposeRow
+        {
+            new ComposeIconButton(onClick: Decrement)
+            {
+                new ComposeText("−")
+                {
+                    // Greyed glyph at the lower bound mirrors the
+                    // Material disabled-state alpha (~38% opacity)
+                    // without paying for an `enabled` slot on the
+                    // bridge — the click handler still no-ops below.
+                    Color = atMin ? ComposeColor.FromArgb(0x61, 0x00, 0x00, 0x00) : null,
+                },
+            },
+            new ComposeText(value.ToString(CultureInfo.CurrentCulture))
+            {
+                Align = ComposeTextAlign.Center,
+            },
+            new ComposeIconButton(onClick: Increment)
+            {
+                new ComposeText("+")
+                {
+                    Color = atMax ? ComposeColor.FromArgb(0x61, 0x00, 0x00, 0x00) : null,
+                },
+            },
+        };
+
+        void Decrement() => Apply(value - interval);
+        void Increment() => Apply(value + interval);
+
+        void Apply(double next)
+        {
+            var clamped = Math.Clamp(next, min, max);
+            if (clamped == value) return;
+            // Update Compose state synchronously so the rendered label
+            // reflects the new value before MAUI's bound bindings have
+            // a chance to round-trip. MAUI's two-way pipeline re-enters
+            // MapValue with the same double — a no-op on
+            // MutableState<double>, so no feedback loop.
+            _value.Value = clamped;
+            if (VirtualView is { } stepper)
+                stepper.Value = clamped;
+        }
+    }
+
+    /// <summary>Map <see cref="IRange.Value"/> to the Compose label slot.</summary>
+    public static void MapValue(StepperHandler handler, IStepper stepper) =>
+        handler._value.Value = stepper.Value;
+
+    /// <summary>Map <see cref="IRange.Minimum"/> to the local minimum bound.</summary>
+    public static void MapMinimum(StepperHandler handler, IStepper stepper) =>
+        handler._min.Value = stepper.Minimum;
+
+    /// <summary>Map <see cref="IRange.Maximum"/> to the local maximum bound.</summary>
+    public static void MapMaximum(StepperHandler handler, IStepper stepper) =>
+        handler._max.Value = stepper.Maximum;
+
+    /// <summary>Map <see cref="IStepper.Interval"/> to the increment / decrement step size.</summary>
+    public static void MapInterval(StepperHandler handler, IStepper stepper) =>
+        handler._interval.Value = stepper.Interval;
+}

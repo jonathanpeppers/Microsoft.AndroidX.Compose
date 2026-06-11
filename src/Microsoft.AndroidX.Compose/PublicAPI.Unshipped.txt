@@ -626,6 +626,8 @@ AndroidX.Compose.LinearProgressIndicator
 AndroidX.Compose.LinearProgressIndicator.Color.get -> AndroidX.Compose.Color?
 AndroidX.Compose.LinearProgressIndicator.Color.set -> void
 AndroidX.Compose.LinearProgressIndicator.LinearProgressIndicator() -> void
+AndroidX.Compose.LinearProgressIndicator.Progress.get -> float?
+AndroidX.Compose.LinearProgressIndicator.Progress.set -> void
 AndroidX.Compose.LinearProgressIndicator.TrackColor.get -> AndroidX.Compose.Color?
 AndroidX.Compose.LinearProgressIndicator.TrackColor.set -> void
 AndroidX.Compose.LinkAnnotation
@@ -1057,7 +1059,11 @@ AndroidX.Compose.SideEffect.SideEffect(System.Action! effect) -> void
 AndroidX.Compose.SingleChoiceSegmentedButtonRow
 AndroidX.Compose.SingleChoiceSegmentedButtonRow.SingleChoiceSegmentedButtonRow() -> void
 AndroidX.Compose.Slider
+AndroidX.Compose.Slider.Colors.get -> AndroidX.Compose.Material3.SliderColors?
+AndroidX.Compose.Slider.Colors.set -> void
 AndroidX.Compose.Slider.Slider(float value, System.Action<float>! onValueChange, bool enabled = true, int steps = 0) -> void
+AndroidX.Compose.Slider.ValueRange.get -> Kotlin.Ranges.IClosedFloatingPointRange?
+AndroidX.Compose.Slider.ValueRange.set -> void
 AndroidX.Compose.SmallFloatingActionButton
 AndroidX.Compose.SmallFloatingActionButton.Shape.get -> AndroidX.Compose.Shape?
 AndroidX.Compose.SmallFloatingActionButton.Shape.set -> void
@@ -1584,6 +1590,7 @@ static AndroidX.Compose.ComposeExtensions.SetContent(this AndroidX.Activity.Comp
 static AndroidX.Compose.ComposeExtensions.SetContent(this AndroidX.Compose.UI.Platform.ComposeView! view, System.Func<AndroidX.Compose.Runtime.IComposer!, AndroidX.Compose.ComposableNode!>! content) -> void
 static AndroidX.Compose.ComposeExtensions.Shapes(this AndroidX.Compose.Runtime.IComposer! composer) -> AndroidX.Compose.Material3.Shapes!
 static AndroidX.Compose.ComposeExtensions.SideEffect(this AndroidX.Compose.Runtime.IComposer! composer, System.Action! effect) -> void
+static AndroidX.Compose.ComposeExtensions.SliderColors(this AndroidX.Compose.Runtime.IComposer! composer, long? thumbColor = null, long? activeTrackColor = null, long? activeTickColor = null, long? inactiveTrackColor = null, long? inactiveTickColor = null, long? disabledThumbColor = null, long? disabledActiveTrackColor = null, long? disabledActiveTickColor = null, long? disabledInactiveTrackColor = null, long? disabledInactiveTickColor = null, int line = 0, string! file = "") -> AndroidX.Compose.Material3.SliderColors!
 static AndroidX.Compose.ComposeExtensions.SnapshotFlow<T>(System.Func<T>! producer) -> System.Collections.Generic.IAsyncEnumerable<T>!
 static AndroidX.Compose.ComposeExtensions.StringArrayResource(this AndroidX.Compose.Runtime.IComposer! composer, int id) -> string![]!
 static AndroidX.Compose.ComposeExtensions.StringResource(this AndroidX.Compose.Runtime.IComposer! composer, int id, params object?[]! formatArgs) -> string!
@@ -2060,13 +2067,13 @@ static AndroidX.Compose.ModifierExtensions.Align(this AndroidX.Compose.Modifier!
 static AndroidX.Compose.ModifierExtensions.Align(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.Alignment.Vertical! alignment) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.ModifierExtensions.Alpha(this AndroidX.Compose.Modifier! modifier, float alpha) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.ModifierExtensions.AspectRatio(this AndroidX.Compose.Modifier! modifier, float ratio, bool matchHeightConstraintsFirst = false) -> AndroidX.Compose.Modifier!
-static AndroidX.Compose.ModifierExtensions.Background(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.UI.Graphics.Brush! brush, AndroidX.Compose.Shape? shape = null, float alpha = 1) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.ModifierExtensions.Background(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.Color color, AndroidX.Compose.Shape? shape) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.ModifierExtensions.Background(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.Color color) -> AndroidX.Compose.Modifier!
-static AndroidX.Compose.ModifierExtensions.Border(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.Dp width, AndroidX.Compose.UI.Graphics.Brush! brush, AndroidX.Compose.Shape? shape = null) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.ModifierExtensions.Background(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.UI.Graphics.Brush! brush, AndroidX.Compose.Shape? shape = null, float alpha = 1) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.ModifierExtensions.Border(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.Dp width, AndroidX.Compose.Color color, AndroidX.Compose.Dp cornerRadius) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.ModifierExtensions.Border(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.Dp width, AndroidX.Compose.Color color, AndroidX.Compose.Shape? shape) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.ModifierExtensions.Border(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.Dp width, AndroidX.Compose.Color color) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.ModifierExtensions.Border(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.Dp width, AndroidX.Compose.UI.Graphics.Brush! brush, AndroidX.Compose.Shape? shape = null) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.ModifierExtensions.CaptionBarPadding(this AndroidX.Compose.Modifier! modifier) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.ModifierExtensions.ClearAndSetSemantics(this AndroidX.Compose.Modifier! modifier, string! contentDescription) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.ModifierExtensions.ClearAndSetSemantics(this AndroidX.Compose.Modifier! modifier, string? contentDescription, AndroidX.Compose.SemanticsRole? role) -> AndroidX.Compose.Modifier!
@@ -2141,9 +2148,9 @@ static AndroidX.Compose.ModifierExtensions.ZIndex(this AndroidX.Compose.Modifier
 static AndroidX.Compose.MutableNumberState<T>.operator --(AndroidX.Compose.MutableNumberState<T>! s) -> AndroidX.Compose.MutableNumberState<T>!
 static AndroidX.Compose.MutableNumberState<T>.operator ++(AndroidX.Compose.MutableNumberState<T>! s) -> AndroidX.Compose.MutableNumberState<T>!
 static AndroidX.Compose.MutableState<T>.implicit operator T(AndroidX.Compose.MutableState<T>! state) -> T
+static AndroidX.Compose.Offset.Infinite.get -> AndroidX.Compose.Offset
 static AndroidX.Compose.Offset.operator !=(AndroidX.Compose.Offset a, AndroidX.Compose.Offset b) -> bool
 static AndroidX.Compose.Offset.operator ==(AndroidX.Compose.Offset a, AndroidX.Compose.Offset b) -> bool
-static AndroidX.Compose.Offset.Infinite.get -> AndroidX.Compose.Offset
 static AndroidX.Compose.Offset.Unspecified.get -> AndroidX.Compose.Offset
 static AndroidX.Compose.Offset.Zero.get -> AndroidX.Compose.Offset
 static AndroidX.Compose.Shape.Circle() -> AndroidX.Compose.Shape!

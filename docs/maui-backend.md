@@ -602,6 +602,88 @@ page so cross-sibling animation, semantics, and a single
   consumes pointer events for its own composition. Workaround: put
   a stock leaf in the cell, or convert the container.
 
+#### Phase 2 Slice 4 — value & progress leaves ✅ shipped
+
+Adds four more Compose-backed handlers to `UseAndroidXCompose()`,
+covering MAUI's small-but-essential value/progress family:
+
+- `MauiSlider` → `SliderHandler` over the `Microsoft.AndroidX.Compose.Slider`
+  facade. Two-way (`onValueChange` mutates `VirtualView.Value`),
+  honours `Minimum`/`Maximum` via `IClosedFloatingPointRange`, and
+  themes via the `SliderColors` slot
+  (`MinimumTrackColor`/`MaximumTrackColor`/`ThumbColor`).
+- `MauiProgressBar` → `ProgressBarHandler` over the determinate
+  `LinearProgressIndicator(progress)` overload. Read-only
+  (MAUI → Compose). `ProgressColor` → `color` slot.
+- `MauiActivityIndicator` → `ActivityIndicatorHandler` over the
+  indeterminate `CircularProgressIndicator()`. Conditional emit:
+  empty `Box` when `IsRunning=false`, the spinning indicator when
+  `true` — modelled with `MutableState<bool>` so toggling re-runs
+  composition.
+- `MauiStepper` → `StepperHandler` synthesized from `Row` + two
+  `IconButton`s (text-glyph `−` / `+`) + `Text(value)`. M3 has no
+  first-class Stepper, so this is the first non-1:1 mapping in the
+  backend. Two-way: each `IconButton` mutates `VirtualView.Value`;
+  the at-bound button greys its glyph (38 % black) and disables.
+
+**Facade extensions landed alongside the handlers:**
+
+- `Microsoft.AndroidX.Compose.Slider` gained
+  `IClosedFloatingPointRange? valueRange` and `SliderColors? colors`
+  ctor parameters via Phase 8 wrapper-passthrough on `ComposeBridges`.
+  The `composer.SliderColors(...)` extension (10-slot color factory)
+  ships in `ComposeExtensions.SliderDefaults.cs`.
+- `Microsoft.AndroidX.Compose.LinearProgressIndicator` gained a
+  `float? Progress` property routing into the determinate
+  `LinearProgressIndicator(progress: Single, …)` overload (the
+  current bound determinate path is the deprecated overload — the new
+  recommended `LinearProgressIndicator(progress: () -> Float, …)`
+  isn't bound yet, tracked separately).
+- `IClosedFloatingPointRange` and `SliderColors` are now in
+  `ComposeReferenceTypes.Recognized`, so generator-emitted bridge
+  bodies pass them as `((Java.Lang.Object)x).Handle` automatically.
+
+**Lessons learned (Slice 4):**
+
+- **`MutableState<T>` rule 2 (primitives only) bites Stepper.**
+  `MutableState<double>` works (it's a primitive), but the at-bound
+  greyed-glyph `Color` cannot be put in `MutableState<Color>` —
+  `Color` is a struct. Workaround: read `VirtualView.Value` live
+  inside `BuildNode` and recompute the disabled-glyph color
+  per-pass. Same trick the Slice 2 retrospective notes for
+  `Thickness`/`Size`/etc.
+- **Read-only handlers don't need a feedback-loop guard.**
+  `ProgressBarHandler` and `ActivityIndicatorHandler` are
+  MAUI → Compose only — no `onValueChange` callback to recurse.
+  The two-way pair (`SliderHandler`, `StepperHandler`) follow the
+  `EntryHandler` `_isUpdating` pattern verbatim: set the flag
+  before writing back to `VirtualView.<prop>`, clear in `finally`.
+- **Indeterminate spinners model best as a conditional emit.**
+  `ActivityIndicatorHandler` doesn't render a hidden indicator —
+  when `IsRunning=false` the `BuildNode` branches to an empty
+  `Box`. Removing the spinner from the composition is what stops
+  Compose's animation clock; toggling `Visible`/`Alpha` would keep
+  the recomposer ticking forever.
+- **M3 has no Stepper; synthesise from primitives.** Building a
+  Stepper from `Row` + 2 `IconButton`s + `Text` is the first
+  handler in the backend without a 1:1 Compose mapping. The
+  pattern (synthesise a `ComposableNode` tree of primitives inside
+  `BuildNode`, share state via `MutableState<T>`) generalises to
+  the rest of MAUI's Composite controls (`SearchBar`, `RefreshView`,
+  `IndicatorView` etc.) which Phase 3+ will need.
+- **`material-icons-core` doesn't include `Remove`/`Minus`.** Used
+  Unicode `−` (U+2212 MINUS SIGN) and `+` as `Text` labels inside
+  the `IconButton`s. Switch to `Icons.Default.Remove` if/when
+  `material-icons-extended` is brought in (it adds ~250 kB to the
+  APK, currently not justified by Slice 4 alone).
+- **The Compose `Slider` facade's `colors` slot uses
+  trailing-`int $default`** (not the leading-`int` convention seen
+  on `Button.Colors`). Both work because every unsupplied slot
+  maps to `Color.Unspecified` (== `0L`) which Compose treats as
+  "use the theme default" — but the auto-default-mask machinery
+  still needs the trailing convention to land bits in the right
+  slot. Documented on `composer.SliderColors(...)`.
+
 ### Phase 3 — collection + container (target: list-driven apps)
 
 `CollectionView` → `LazyColumn<T>` / `LazyRow<T>` / `LazyVerticalGrid<T>`

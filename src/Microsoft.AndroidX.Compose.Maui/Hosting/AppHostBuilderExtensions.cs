@@ -1,11 +1,15 @@
 using Microsoft.AndroidX.Compose.Maui.Handlers;
+using MauiActivityIndicator = Microsoft.Maui.Controls.ActivityIndicator;
 using MauiButton = Microsoft.Maui.Controls.Button;
 using MauiEntry = Microsoft.Maui.Controls.Entry;
 using MauiHorizontalStackLayout = Microsoft.Maui.Controls.HorizontalStackLayout;
 using MauiImage = Microsoft.Maui.Controls.Image;
 using MauiLabel = Microsoft.Maui.Controls.Label;
 using MauiPage = Microsoft.Maui.Controls.Page;
+using MauiProgressBar = Microsoft.Maui.Controls.ProgressBar;
 using MauiScrollView = Microsoft.Maui.Controls.ScrollView;
+using MauiSlider = Microsoft.Maui.Controls.Slider;
+using MauiStepper = Microsoft.Maui.Controls.Stepper;
 using MauiVerticalStackLayout = Microsoft.Maui.Controls.VerticalStackLayout;
 
 namespace Microsoft.AndroidX.Compose.Maui.Hosting;
@@ -40,8 +44,11 @@ public static class AppHostBuilderExtensions
     ///     <c>Modifier.verticalScroll</c> / <c>horizontalScroll</c>.</description></item>
     ///   <item><description>Leaves
     ///     (<see cref="MauiLabel"/> / <see cref="MauiButton"/> /
-    ///     <see cref="MauiEntry"/> / <see cref="MauiImage"/>) fold
-    ///     into the enclosing composition via
+    ///     <see cref="MauiEntry"/> / <see cref="MauiImage"/> /
+    ///     <see cref="MauiSlider"/> / <see cref="MauiStepper"/> /
+    ///     <see cref="MauiProgressBar"/> /
+    ///     <see cref="MauiActivityIndicator"/>) fold into the
+    ///     enclosing composition via
     ///     <see cref="IComposeHandler"/>.</description></item>
     /// </list>
     ///
@@ -84,6 +91,12 @@ public static class AppHostBuilderExtensions
             handlers.AddHandler<MauiButton,                 ButtonHandler>();
             handlers.AddHandler<MauiEntry,                  EntryHandler>();
             handlers.AddHandler<MauiImage,                  ImageHandler>();
+
+            // Phase 2 Slice 4 — value & progress leaves.
+            handlers.AddHandler<MauiSlider,                 SliderHandler>();
+            handlers.AddHandler<MauiStepper,                StepperHandler>();
+            handlers.AddHandler<MauiProgressBar,            ProgressBarHandler>();
+            handlers.AddHandler<MauiActivityIndicator,      ActivityIndicatorHandler>();
         });
 
         return builder;

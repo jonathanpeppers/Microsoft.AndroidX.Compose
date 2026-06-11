@@ -6,6 +6,7 @@ using AndroidX.Compose.Runtime;
 using AndroidX.Compose.UI;
 using AndroidX.Compose.UI.State;
 using Kotlin.Jvm.Functions;
+using Kotlin.Ranges;
 using Painter = AndroidX.Compose.UI.Graphics.Painter.Painter;
 
 namespace AndroidX.Compose;
@@ -3656,6 +3657,8 @@ internal static partial class ComposeBridges
         [Callback(typeof(float))]
         IFunction1                  onValueChange,
         IModifier?                  modifier,
+        IClosedFloatingPointRange?  valueRange,
+        SliderColors?               colors,
         bool                        enabled  = true,
         int                         steps    = 0,
         int                         defaults = 0,
@@ -3666,16 +3669,16 @@ internal static partial class ComposeBridges
     // Cross-check with RangeSlider above, which uses the same SliderKt
     // overload (both pass `steps: 0` for $changed and route the user-facing
     // steps through `p5:`).
-    public static partial void Slider(float value, IFunction1 onValueChange, IModifier? modifier, bool enabled, int steps, int defaults, IComposer composer)
+    public static partial void Slider(float value, IFunction1 onValueChange, IModifier? modifier, IClosedFloatingPointRange? valueRange, SliderColors? colors, bool enabled, int steps, int defaults, IComposer composer)
         => SliderKt.Slider(
             value:                  value,
             onValueChange:          onValueChange,
             modifier:               modifier,
             enabled:                enabled,
-            valueRange:             null,
+            valueRange:             valueRange,
             p5:                     steps,
             onValueChangeFinished:  null,
-            colors:                 null,
+            colors:                 colors,
             interactionSource:      null,
             _composer:              composer,
             steps:                  0,
