@@ -14,6 +14,12 @@ namespace AndroidX.Compose;
 //   - `androidx.compose.ui.graphics.SolidColor.<init>(J)V` — same
 //     reason; the ctor takes a value-class `Color`.
 //
+// Tracking upstream: dotnet/android-libraries#1470 covers the stripped
+// ctor case (with `SolidColor.<init>(J)V` as the canonical repro);
+// dotnet/java-interop#1431 / #1440 cover the corresponding stripped
+// methods. Once one of those is resolved (or a `metadata.xml`
+// `<add-node>` workaround is accepted) this file can shrink.
+//
 // Everything else (`Brush.Companion`'s gradient factories,
 // `RectangleShapeKt.RectangleShape`) is bound and called directly
 // from `Brush` / `Shape`.
