@@ -215,9 +215,11 @@ public static class Conversation
     }
 
     static Row BuildDayHeader(string label, ColorScheme scheme) =>
-        new()
+        new(horizontalArrangement: null, verticalAlignment: Alignment.Vertical.CenterVertically)
         {
-            Modifier.Padding(horizontal: 16, vertical: 8).Height(16),
+            // Deliberate deviation from upstream Kotlin's `.height(16.dp)`,
+            // which clips the descender of "Today" / "y" against the divider.
+            Modifier.Padding(horizontal: 16, vertical: 8),
             new HorizontalDivider
             {
                 Modifier  = Modifier.Weight(1f),

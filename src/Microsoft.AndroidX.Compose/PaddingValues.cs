@@ -89,6 +89,19 @@ public sealed class PaddingValues : Java.Lang.Object
         => JNIEnv.NewLocalRef(((Java.Lang.Object)result).Handle);
 
     /// <summary>
+    /// Wrap a runtime <c>PaddingValues</c> JNI handle handed to us by a
+    /// parent layout (e.g. <see cref="Scaffold"/>'s content lambda)
+    /// without taking ownership of the reference. The resulting wrapper
+    /// is only valid for the synchronous duration of the parent's
+    /// content lambda — long enough for descendants to read
+    /// <see cref="LazyColumn{T}.ContentPadding"/> during the same
+    /// composition pass, but it must not be captured into long-lived
+    /// state.
+    /// </summary>
+    internal static PaddingValues Wrap(IntPtr handle) =>
+        new PaddingValues(handle, JniHandleOwnership.DoNotTransfer);
+
+    /// <summary>
     /// The underlying bound <see cref="IPaddingValues"/> peer. Used by
     /// hand-written facades that call the bound binding directly
     /// (e.g. <c>LazyDslKt.LazyColumn(contentPadding: ...)</c>);

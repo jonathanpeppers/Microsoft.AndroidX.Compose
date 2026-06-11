@@ -43,11 +43,11 @@ public static class HomeScreen
                 SnackbarHost = snackbarMessage is null
                     ? null
                     : new Snackbar { Body = new Text(snackbarMessage) },
-                Body = state switch
+                BodyContent = padding => state switch
                 {
                     HomeUiState.Loading       => BuildLoading(),
                     HomeUiState.Error e       => BuildError(e.Message, () => _ = vm.RefreshAsync()),
-                    HomeUiState.HasPosts h    => BuildBody(h, bookmarks, onSelectPost, vm, snackbars),
+                    HomeUiState.HasPosts h    => BuildBody(h, bookmarks, onSelectPost, vm, snackbars, padding),
                     _                         => new Spacer(),
                 },
             };
@@ -132,7 +132,8 @@ public static class HomeScreen
                                       BookmarksViewModel bookmarks,
                                       Action<string> onSelectPost,
                                       HomeViewModel vm,
-                                      SnackbarController snackbars)
+                                      SnackbarController snackbars,
+                                      PaddingValues padding)
     {
         var feed = state.Feed;
         var rows = new List<HomeRow>
@@ -172,7 +173,11 @@ public static class HomeScreen
                 items: rows,
                 itemContent: row => BuildRow(row, bookmarks, onSelectPost, snackbars))
             {
-                Modifier = Modifier.FillMaxSize(),
+                // Route Scaffold padding into the list itself so items
+                // scroll under the top app bar and the gesture pill,
+                // matching Material's "edge-to-edge" templates.
+                ContentPadding = padding,
+                Modifier       = Modifier.FillMaxSize(),
             },
         };
     }

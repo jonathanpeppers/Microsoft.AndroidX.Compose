@@ -39,5 +39,26 @@ namespace AndroidX.Compose;
 /// state), and forwards the handle into the
 /// <c>androidx.compose.material3.pulltorefresh.PullToRefreshKt.PullToRefreshBox</c>
 /// composable.
+///
+/// PullToRefreshBox is transparent to scaffold padding: it does NOT
+/// participate in <see cref="ComposableNode.Render(AndroidX.Compose.Runtime.IComposer, IntPtr)"/>'s
+/// implicit forwarding because there is no single correct destination
+/// (caller may want the spinner inset OR the items inset, and the
+/// answer differs per screen). Mirror Kotlin's idiom and route
+/// padding explicitly via <see cref="Scaffold.BodyContent"/>:
+/// <code>
+/// new Scaffold
+/// {
+///     TopBar      = ...,
+///     BodyContent = padding =&gt; new PullToRefreshBox(...)
+///     {
+///         new LazyColumn&lt;Row&gt;(items, itemContent: r =&gt; ...)
+///         {
+///             ContentPadding = padding,
+///             Modifier       = Modifier.FillMaxSize(),
+///         },
+///     },
+/// }
+/// </code>
 /// </remarks>
 public sealed partial class PullToRefreshBox;
