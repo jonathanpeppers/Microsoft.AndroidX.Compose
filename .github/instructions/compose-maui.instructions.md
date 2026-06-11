@@ -360,29 +360,28 @@ return BitmapPainterKt.BitmapPainter(
     image: imageBitmap, srcOffset: 0L, srcSize: srcSize, filterQuality: 1);
 ```
 
-**Async-void fire-and-forget.** `Microsoft.Maui.TaskExtensions.FireAndForget`
-is **internal**; replicate the same shape inline (await,
-swallow + log on exception) as a local async-void function inside
-`MapSource`. The inner `UpdateSourceAsync` already catches
-`Exception` and routes failure to `setImage(null)`, so the catch
-here is defence-in-depth — it primarily covers
-`ObjectDisposedException` from a disconnected handler.
+**Async-void mapper.** `Microsoft.Maui.TaskExtensions.FireAndForget`
+is **internal**, so we can't follow MAUI's stock pattern of
+`UpdateImageSourceAsync().FireAndForget(handler)` after a sync
+mapper. Instead, declare `MapSource` itself `async void` —
+`PropertyMapper<,>` stores mapper delegates as `Action<,>` and
+invokes them synchronously without awaiting, so an `async void`
+mapper has the same fire-and-forget shape from MAUI's POV. The
+inner `UpdateSourceAsync` already catches `Exception` and routes
+failure to `setImage(null)`, so the catch here is defence-in-depth
+— primarily covers `ObjectDisposedException` from a disconnected
+handler.
 
 ```csharp
-public static void MapSource(ImageHandler handler, MauiIImage image)
+public static async void MapSource(ImageHandler handler, MauiIImage image)
 {
-    // ...fast-path branches above...
+    // ...fast-path branches with sync `return` above...
     handler._drawableResourceId.Value = null;
-    StartPipelineLoad();
-
-    async void StartPipelineLoad()
+    try { await handler.Loader.UpdateImageSourceAsync().ConfigureAwait(false); }
+    catch (Exception ex)
     {
-        try { await handler.Loader.UpdateImageSourceAsync().ConfigureAwait(false); }
-        catch (Exception ex)
-        {
-            System.Diagnostics.Debug.WriteLine(
-                $"[ImageHandler] image source load failed: {ex.Message}");
-        }
+        System.Diagnostics.Debug.WriteLine(
+            $"[ImageHandler] image source load failed: {ex.Message}");
     }
 }
 ```

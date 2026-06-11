@@ -129,7 +129,14 @@ public partial class ImageHandler : ViewHandler<MauiIImage, ComposeView>
     /// <see cref="IImageSourceService{TSource}"/> pipeline (general
     /// path).
     /// </summary>
-    public static void MapSource(ImageHandler handler, MauiIImage image)
+    /// <remarks>
+    /// Declared <c>async void</c> deliberately. <see cref="PropertyMapper"/>
+    /// stores mapper delegates as <see cref="Action{T1, T2}"/> and
+    /// invokes them synchronously without awaiting, so the
+    /// fire-and-forget shape matches what MAUI's stock handlers do via
+    /// the internal <c>TaskExtensions.FireAndForget</c> helper.
+    /// </remarks>
+    public static async void MapSource(ImageHandler handler, MauiIImage image)
     {
         var src = image.Source;
 
@@ -163,28 +170,19 @@ public partial class ImageHandler : ViewHandler<MauiIImage, ComposeView>
         // Drawable. The setter writes the resulting BitmapPainter
         // into _painter (or null on cancel/error).
         //
-        // MAUI's stock handlers fire-and-forget through the internal
-        // `TaskExtensions.FireAndForget`; replicate the same shape
-        // (await, swallow + log) inline via a local async-void
-        // function so we don't depend on internals. The inner
-        // UpdateSourceAsync already catches Exception and routes
-        // failure to setImage(null), so this catch is defence-in-
-        // depth — primarily covering ObjectDisposedException from a
-        // disconnected handler.
+        // The inner UpdateSourceAsync already catches Exception and
+        // routes failure to setImage(null), so this catch is
+        // defence-in-depth — primarily covering ObjectDisposedException
+        // from a disconnected handler.
         handler._drawableResourceId.Value = null;
-        StartPipelineLoad();
-
-        async void StartPipelineLoad()
+        try
         {
-            try
-            {
-                await handler.Loader.UpdateImageSourceAsync().ConfigureAwait(false);
-            }
-            catch (System.Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine(
-                    $"[ImageHandler] image source load failed: {ex.Message}");
-            }
+            await handler.Loader.UpdateImageSourceAsync().ConfigureAwait(false);
+        }
+        catch (System.Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine(
+                $"[ImageHandler] image source load failed: {ex.Message}");
         }
     }
 
