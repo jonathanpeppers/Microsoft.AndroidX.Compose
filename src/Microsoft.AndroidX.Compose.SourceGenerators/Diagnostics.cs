@@ -188,6 +188,14 @@ internal static class Diagnostics
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);
 
+    public static readonly DiagnosticDescriptor FacadeSecondaryCtorInvalid = new(
+        id: "CN3012",
+        title: "[ComposeFacade(SecondaryCtor=...)] is invalid",
+        messageFormat: "Facade for bridge '{0}': {1}",
+        category: "AndroidX.Compose",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
+
     public static readonly DiagnosticDescriptor CompanionNotPartial = new(
         id: "CN4001",
         title: "[ComposeCompanion] target class must be partial",

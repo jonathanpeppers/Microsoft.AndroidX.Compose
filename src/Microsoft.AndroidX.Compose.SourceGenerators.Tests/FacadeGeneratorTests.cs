@@ -62,6 +62,10 @@ public class FacadeGeneratorTests
         {
             public abstract class Painter : Java.Lang.Object { }
         }
+        namespace AndroidX.Compose.UI.Graphics.Vector
+        {
+            public sealed class ImageVector : Java.Lang.Object { }
+        }
         namespace AndroidX.Compose.Material3
         {
             public sealed class ColorScheme
@@ -3571,5 +3575,229 @@ public class FacadeGeneratorTests
 
         var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
         Assert.Empty(errors);
+    }
+
+    // ---------------------------------------------------------------
+    // Phase 11 — SecondaryCtor / SecondaryDefaults (CN3012). The
+    // primary bridge is paired with a sibling on ComposeBridges whose
+    // one unique reference-type parameter becomes an additional
+    // ctor on the generated facade; Render branches on whether the
+    // discriminator field is non-null.
+    // ---------------------------------------------------------------
+
+    const string SecondaryAttrs = """
+        [assembly: ComposeDefaults("IconPainterDefault",
+            "!painter", "contentDescription", "modifier", "tint")]
+        [assembly: ComposeDefaults("IconDefault",
+            "imageVector", "contentDescription", "modifier", "tint")]
+        """;
+
+    const string SecondaryBridges = """
+        namespace AndroidX.Compose
+        {
+            public static partial class ComposeBridges
+            {
+                [ComposeBridge(Class="x/IconKt", JvmName="Icon-painter",
+                               Signature="(Landroidx/compose/ui/graphics/painter/Painter;Ljava/lang/String;Landroidx/compose/ui/Modifier;JLandroidx/compose/runtime/Composer;II)V",
+                               Defaults=typeof(IconPainterDefault))]
+                [ComposeFacade(ClassName="Icon", SecondaryCtor=nameof(IconImageVector), SecondaryDefaults=typeof(IconDefault))]
+                public static partial void IconPainter(
+                    [PainterResource] global::AndroidX.Compose.UI.Graphics.Painter.Painter painter,
+                    string?    contentDescription,
+                    IModifier? modifier,
+                    long       tint,
+                    int        defaults,
+                    IComposer  composer);
+
+                public static void IconImageVector(
+                    global::AndroidX.Compose.UI.Graphics.Vector.ImageVector imageVector,
+                    string?    contentDescription,
+                    IModifier? modifier,
+                    long       tint,
+                    int        defaults,
+                    IComposer  composer) { }
+            }
+        }
+        """;
+
+    [Fact]
+    public void Secondary_EmitsExtraCtorAndDispatchBranch()
+    {
+        var code = $$"""
+            using global::AndroidX.Compose.Runtime;
+            using global::AndroidX.Compose.UI;
+            using AndroidX.Compose;
+            using Kotlin.Jvm.Functions;
+
+            {{SecondaryAttrs}}
+
+            {{SecondaryBridges}}
+            """;
+
+        var (output, diags, emitted) = Run(code, "Icon");
+        Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+
+        // ClassName override.
+        Assert.Contains("public sealed partial class Icon : global::AndroidX.Compose.ComposableNode", emitted);
+
+        // Discriminator field — nullable backing field for the
+        // secondary-only parameter.
+        Assert.Contains("readonly global::AndroidX.Compose.UI.Graphics.Vector.ImageVector? _imageVector;", emitted);
+
+        // Both primary and secondary ctors exist. Primary has Painter
+        // (via [PainterResource] → also exposes int drawableResourceId
+        // ctor); secondary takes ImageVector.
+        Assert.Contains("public Icon(global::AndroidX.Compose.UI.Graphics.Vector.ImageVector imageVector,", emitted);
+        Assert.Contains("public Icon(int drawableResourceId,", emitted);
+        Assert.Contains("public Icon(global::AndroidX.Compose.UI.Graphics.Painter.Painter painter,", emitted);
+
+        // Render dispatch: secondary branch runs first, with renamed
+        // locals (__secModifier / __secDefaults) to avoid CS0136
+        // shadowing of the primary path's __modifier / __defaults.
+        Assert.Contains("if (_imageVector is not null)", emitted);
+        Assert.Contains("var __secModifier = BuildModifier();", emitted);
+        Assert.Contains("int __secDefaults = (int)global::AndroidX.Compose.IconDefault.All;", emitted);
+
+        // The discriminator's own enum bit is cleared.
+        Assert.Contains("__secDefaults &= ~(int)global::AndroidX.Compose.IconDefault.ImageVector;", emitted);
+
+        // The secondary call passes the field (with `!`) and the
+        // shared slot expressions in the secondary's parameter order.
+        Assert.Contains("global::AndroidX.Compose.ComposeBridges.IconImageVector(_imageVector!,", emitted);
+        Assert.Contains(", __secDefaults, composer);", emitted);
+
+        // Early return so the primary body doesn't run.
+        Assert.Contains("return;", emitted);
+
+        var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
+        Assert.Empty(errors);
+    }
+
+    [Fact]
+    public void Secondary_MissingDefaultsParam_EmitsCN3012()
+    {
+        // Secondary bridge has no trailing `int defaults` — rejected.
+        var code = $$"""
+            using global::AndroidX.Compose.Runtime;
+            using global::AndroidX.Compose.UI;
+            using AndroidX.Compose;
+            using Kotlin.Jvm.Functions;
+
+            [assembly: ComposeDefaults("IconPainterDefault",
+                "!painter", "contentDescription", "modifier", "tint")]
+            [assembly: ComposeDefaults("IconDefault",
+                "imageVector", "contentDescription", "modifier", "tint")]
+
+            namespace AndroidX.Compose
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(Class="x/IconKt", JvmName="Icon-painter",
+                                   Signature="(Landroidx/compose/ui/graphics/painter/Painter;Ljava/lang/String;Landroidx/compose/ui/Modifier;JLandroidx/compose/runtime/Composer;II)V",
+                                   Defaults=typeof(IconPainterDefault))]
+                    [ComposeFacade(ClassName="Icon", SecondaryCtor=nameof(IconImageVector), SecondaryDefaults=typeof(IconDefault))]
+                    public static partial void IconPainter(
+                        [PainterResource] global::AndroidX.Compose.UI.Graphics.Painter.Painter painter,
+                        string?    contentDescription,
+                        IModifier? modifier,
+                        long       tint,
+                        int        defaults,
+                        IComposer  composer);
+
+                    public static void IconImageVector(
+                        global::AndroidX.Compose.UI.Graphics.Vector.ImageVector imageVector,
+                        string?    contentDescription,
+                        IModifier? modifier,
+                        long       tint,
+                        IComposer  composer) { }
+                }
+            }
+            """;
+        var (_, diags, _) = Run(code, "Icon");
+        Assert.Contains(diags, d => d.Id == "CN3012" && d.Severity == DiagnosticSeverity.Error);
+    }
+
+    [Fact]
+    public void Secondary_OnlyOneOfSecondaryCtorSecondaryDefaults_EmitsCN3012()
+    {
+        // SecondaryCtor without SecondaryDefaults — rejected.
+        var code = $$"""
+            using global::AndroidX.Compose.Runtime;
+            using global::AndroidX.Compose.UI;
+            using AndroidX.Compose;
+            using Kotlin.Jvm.Functions;
+
+            [assembly: ComposeDefaults("IconPainterDefault",
+                "!painter", "contentDescription", "modifier", "tint")]
+
+            namespace AndroidX.Compose
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(Class="x/IconKt", JvmName="Icon-painter",
+                                   Signature="(Landroidx/compose/ui/graphics/painter/Painter;Ljava/lang/String;Landroidx/compose/ui/Modifier;JLandroidx/compose/runtime/Composer;II)V",
+                                   Defaults=typeof(IconPainterDefault))]
+                    [ComposeFacade(ClassName="Icon", SecondaryCtor=nameof(IconImageVector))]
+                    public static partial void IconPainter(
+                        [PainterResource] global::AndroidX.Compose.UI.Graphics.Painter.Painter painter,
+                        string?    contentDescription,
+                        IModifier? modifier,
+                        long       tint,
+                        int        defaults,
+                        IComposer  composer);
+
+                    public static void IconImageVector(
+                        global::AndroidX.Compose.UI.Graphics.Vector.ImageVector imageVector,
+                        string?    contentDescription,
+                        IModifier? modifier,
+                        long       tint,
+                        int        defaults,
+                        IComposer  composer) { }
+                }
+            }
+            """;
+        var (_, diags, _) = Run(code, "Icon");
+        Assert.Contains(diags, d => d.Id == "CN3012" && d.Severity == DiagnosticSeverity.Error);
+    }
+
+    [Fact]
+    public void Secondary_OnlySecondaryDefaultsWithoutSecondaryCtor_EmitsCN3012()
+    {
+        // SecondaryDefaults set without SecondaryCtor — rejected. Mirror
+        // of Secondary_OnlyOneOfSecondaryCtorSecondaryDefaults_EmitsCN3012;
+        // covers the inverse direction (a typo or refactor that drops the
+        // SecondaryCtor name should fail loudly, not silently no-op).
+        var code = $$"""
+            using global::AndroidX.Compose.Runtime;
+            using global::AndroidX.Compose.UI;
+            using AndroidX.Compose;
+            using Kotlin.Jvm.Functions;
+
+            [assembly: ComposeDefaults("IconPainterDefault",
+                "!painter", "contentDescription", "modifier", "tint")]
+            [assembly: ComposeDefaults("IconDefault",
+                "!imageVector", "contentDescription", "modifier", "tint")]
+
+            namespace AndroidX.Compose
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(Class="x/IconKt", JvmName="Icon-painter",
+                                   Signature="(Landroidx/compose/ui/graphics/painter/Painter;Ljava/lang/String;Landroidx/compose/ui/Modifier;JLandroidx/compose/runtime/Composer;II)V",
+                                   Defaults=typeof(IconPainterDefault))]
+                    [ComposeFacade(ClassName="Icon", SecondaryDefaults=typeof(IconDefault))]
+                    public static partial void IconPainter(
+                        [PainterResource] global::AndroidX.Compose.UI.Graphics.Painter.Painter painter,
+                        string?    contentDescription,
+                        IModifier? modifier,
+                        long?      tint,
+                        int        defaults,
+                        IComposer  composer);
+                }
+            }
+            """;
+        var (_, diags, _) = Run(code, "Icon");
+        Assert.Contains(diags, d => d.Id == "CN3012" && d.Severity == DiagnosticSeverity.Error);
     }
 }

@@ -44,6 +44,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
     const string FacadeAttributeMetadataName = "AndroidX.Compose.ComposeFacadeAttribute";
     const string BridgeAttributeMetadataName = "AndroidX.Compose.ComposeBridgeAttribute";
     const string DeclarativeDefaultsAttributeMetadataName = "AndroidX.Compose.ComposeDefaultsAttribute";
+    const string GenericDefaultsAttributeMetadataName = "AndroidX.Compose.ComposeDefaultsAttribute`1";
     const string SlotAttributeMetadataName = "AndroidX.Compose.SlotAttribute";
     const string CallbackAttributeMetadataName = "AndroidX.Compose.CallbackAttribute";
     const string PainterResourceAttributeMetadataName = "AndroidX.Compose.PainterResourceAttribute";
@@ -69,6 +70,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             var facadeAttr = compilation.GetTypeByMetadataName(FacadeAttributeMetadataName);
             var bridgeAttr = compilation.GetTypeByMetadataName(BridgeAttributeMetadataName);
             var declarativeAttr = compilation.GetTypeByMetadataName(DeclarativeDefaultsAttributeMetadataName);
+            var genericDefaultsAttr = compilation.GetTypeByMetadataName(GenericDefaultsAttributeMetadataName);
             var slotAttr = compilation.GetTypeByMetadataName(SlotAttributeMetadataName);
             var callbackAttr = compilation.GetTypeByMetadataName(CallbackAttributeMetadataName);
             var painterAttr = compilation.GetTypeByMetadataName(PainterResourceAttributeMetadataName);
@@ -81,7 +83,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
                 .FirstOrDefault(a => SymbolEqualityComparer.Default.Equals(a.AttributeClass, facadeAttr));
             if (attr is null) return;
 
-            var ctxObj = new Context(method, attr, bridgeAttr, declarativeAttr, slotAttr, callbackAttr, painterAttr, stateHolderAttr, confirmAttr, compilation);
+            var ctxObj = new Context(method, attr, bridgeAttr, declarativeAttr, genericDefaultsAttr, slotAttr, callbackAttr, painterAttr, stateHolderAttr, confirmAttr, compilation);
             var result = Build(ctxObj);
             foreach (var diag in result.Diagnostics)
                 spc.ReportDiagnostic(diag);
@@ -96,6 +98,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         public AttributeData Attr { get; }
         public INamedTypeSymbol? BridgeAttr { get; }
         public INamedTypeSymbol? DeclarativeAttr { get; }
+        public INamedTypeSymbol? GenericDefaultsAttr { get; }
         public INamedTypeSymbol? SlotAttr { get; }
         public INamedTypeSymbol? CallbackAttr { get; }
         public INamedTypeSymbol? PainterAttr { get; }
@@ -104,7 +107,8 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         public Compilation Compilation { get; }
 
         public Context(IMethodSymbol method, AttributeData attr, INamedTypeSymbol? bridgeAttr,
-            INamedTypeSymbol? declarativeAttr, INamedTypeSymbol? slotAttr, INamedTypeSymbol? callbackAttr,
+            INamedTypeSymbol? declarativeAttr, INamedTypeSymbol? genericDefaultsAttr,
+            INamedTypeSymbol? slotAttr, INamedTypeSymbol? callbackAttr,
             INamedTypeSymbol? painterAttr, INamedTypeSymbol? stateHolderAttr,
             INamedTypeSymbol? confirmStateChangeAttr, Compilation compilation)
         {
@@ -112,6 +116,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             Attr = attr;
             BridgeAttr = bridgeAttr;
             DeclarativeAttr = declarativeAttr;
+            GenericDefaultsAttr = genericDefaultsAttr;
             SlotAttr = slotAttr;
             CallbackAttr = callbackAttr;
             PainterAttr = painterAttr;
@@ -159,6 +164,8 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         bool indexedChildren = ReadBool(attr, "IndexedChildren");
         string? branchOn = ReadString(attr, "BranchOn");
         string? alternateBridgeName = ReadString(attr, "AlternateBridge");
+        string? secondaryCtorName = ReadString(attr, "SecondaryCtor");
+        INamedTypeSymbol? secondaryDefaultsType = ReadType(attr, "SecondaryDefaults");
 
         // Composer is the trailing param for @Composable bridges (the only
         // shape facade generation supports).
@@ -181,12 +188,17 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         if (defaultsType is not null)
         {
             // Try declarative form first; fall back to walking the enum
-            // directly (covers generic-form-generated enums).
+            // directly (covers generic-form-generated enums when this
+            // generator runs AFTER ComposeDefaultsGenerator has emitted
+            // the type). Final fallback reconstructs slot info from the
+            // generic-form assembly attribute itself — required when the
+            // sibling generator hasn't run yet in the current pipeline pass.
             if (c.DeclarativeAttr is not null)
             {
                 defaults = DefaultsInfo.TryRead(c.Compilation, c.DeclarativeAttr, defaultsType.Name);
             }
             defaults ??= DefaultsInfo.TryReadFromEnum(defaultsType);
+            defaults ??= DefaultsInfo.TryReadFromGenericAttribute(c.Compilation, c.GenericDefaultsAttr, defaultsType.Name);
         }
 
         // Look up a sibling "defaults: int" param the caller manages. If
@@ -412,12 +424,43 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             }
         }
 
+        // Phase 11 — SecondaryCtor: an extra ctor on the facade that
+        // dispatches to a second bridge (with its own Defaults enum)
+        // when its discriminating reference-type field is non-null.
+        // Modelled on BranchOn, but discriminates by ctor (nullable
+        // backing field) instead of slot-presence. Used by Icon to add
+        // an ImageVector overload alongside the Painter Phase 7 ctors.
+        SecondaryCtorInfo? secondaryCtorInfo = null;
+        if (!string.IsNullOrEmpty(secondaryCtorName) || secondaryDefaultsType is not null)
+        {
+            // CN3012 — both must be set together. A typo on one side
+            // would otherwise silently no-op.
+            if (string.IsNullOrEmpty(secondaryCtorName) || secondaryDefaultsType is null)
+            {
+                diags.Add(Diagnostic.Create(Diagnostics.FacadeSecondaryCtorInvalid, loc, method.Name,
+                    "SecondaryCtor and SecondaryDefaults must both be set"));
+            }
+            // CN3012 — branching + SecondaryCtor is unsupported (both
+            // would prepend their own dispatch in Render; combining them
+            // is not modelled).
+            else if (branchInfo is not null)
+            {
+                diags.Add(Diagnostic.Create(Diagnostics.FacadeSecondaryCtorInvalid, loc, method.Name,
+                    "SecondaryCtor cannot be combined with BranchOn/AlternateBridge"));
+            }
+            else
+            {
+                secondaryCtorInfo = BuildSecondaryCtorInfo(c, method, secondaryCtorName!,
+                    secondaryDefaultsType, loc, userParams, slots, callerProvidesDefaults, diags);
+            }
+        }
+
         if (diags.Count > 0)
             return new GenerationResult(null, null, diags);
 
         var source = Emit(className, method.Name, scope, composerParam, slots, hasMultiSlot,
             callerProvidesDefaults, defaultsParam, defaults, defaultsType?.Name, themeColor, colorSlot,
-            userParams, branchInfo, indexedChildren);
+            userParams, branchInfo, indexedChildren, secondaryCtorInfo);
         var hint = $"AndroidX.Compose.Facade.{className}.g.cs";
         return new GenerationResult(source, hint, Array.Empty<Diagnostic>());
     }
@@ -582,6 +625,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         if (c.DeclarativeAttr is not null)
             altDefaults = DefaultsInfo.TryRead(c.Compilation, c.DeclarativeAttr, altDefaultsType.Name);
         altDefaults ??= DefaultsInfo.TryReadFromEnum(altDefaultsType);
+        altDefaults ??= DefaultsInfo.TryReadFromGenericAttribute(c.Compilation, c.GenericDefaultsAttr, altDefaultsType.Name);
         if (altDefaults is null)
         {
             diags.Add(Diagnostic.Create(Diagnostics.FacadeBranchInvalid, loc, primary.Name,
@@ -635,6 +679,179 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         public FacadeSlot BranchedSlot { get; }
         /// <summary>The PascalCased property name on the facade (e.g. "Subtitle").</summary>
         public string BranchProperty { get; }
+    }
+
+    /// <summary>
+    /// Phase 11 — metadata for a <c>[ComposeFacade(SecondaryCtor=...)]</c>
+    /// secondary bridge. The generator emits an extra ctor on the facade
+    /// whose first positional argument is the secondary's discriminator
+    /// (a non-nullable reference-type parameter the primary does not
+    /// have). Render() prepends a branch:
+    /// <c>if (_&lt;discriminator&gt; is not null) { ...secondary call...;
+    /// return; }</c>.
+    /// </summary>
+    internal sealed class SecondaryCtorInfo
+    {
+        public SecondaryCtorInfo(IMethodSymbol method, IReadOnlyList<IParameterSymbol> userParams,
+            IParameterSymbol discriminator, DefaultsInfo defaults, string defaultsEnumName)
+        {
+            Method = method;
+            UserParams = userParams;
+            Discriminator = discriminator;
+            Defaults = defaults;
+            DefaultsEnumName = defaultsEnumName;
+        }
+        public IMethodSymbol Method { get; }
+        /// <summary>Secondary's user parameters in declaration order, excluding trailing IComposer and `int defaults`.</summary>
+        public IReadOnlyList<IParameterSymbol> UserParams { get; }
+        /// <summary>The single secondary-unique param that drives ctor dispatch.</summary>
+        public IParameterSymbol Discriminator { get; }
+        public DefaultsInfo Defaults { get; }
+        public string DefaultsEnumName { get; }
+    }
+
+    static SecondaryCtorInfo? BuildSecondaryCtorInfo(Context c, IMethodSymbol primary,
+        string secondaryName, INamedTypeSymbol? secondaryDefaultsType, Location loc,
+        IReadOnlyList<IParameterSymbol> primaryUserParams,
+        IReadOnlyList<FacadeSlot> primarySlots,
+        bool primaryCallerProvidesDefaults,
+        List<Diagnostic> diags)
+    {
+        // CN3012 — primary must use the caller-managed-defaults shape so
+        // the secondary's per-call mask has somewhere to land.
+        if (!primaryCallerProvidesDefaults)
+        {
+            diags.Add(Diagnostic.Create(Diagnostics.FacadeSecondaryCtorInvalid, loc, primary.Name,
+                "SecondaryCtor requires the primary bridge to declare a trailing 'int defaults' parameter"));
+            return null;
+        }
+
+        var bridgesType = c.Compilation.GetTypeByMetadataName("AndroidX.Compose.ComposeBridges");
+        if (bridgesType is null)
+        {
+            diags.Add(Diagnostic.Create(Diagnostics.FacadeSecondaryCtorInvalid, loc, primary.Name,
+                "AndroidX.Compose.ComposeBridges not found in compilation"));
+            return null;
+        }
+
+        var allOverloads = bridgesType.GetMembers(secondaryName).OfType<IMethodSymbol>()
+            .Where(m => m.IsStatic).ToArray();
+        var candidates = allOverloads.Where(m =>
+            m.Parameters.Length >= 1 &&
+            ComposeDefaultsGenerator.IsComposer(m.Parameters[m.Parameters.Length - 1].Type)).ToArray();
+
+        if (candidates.Length == 0)
+        {
+            diags.Add(Diagnostic.Create(Diagnostics.FacadeSecondaryCtorInvalid, loc, primary.Name,
+                $"no static @Composable method 'ComposeBridges.{secondaryName}' with a trailing IComposer parameter was found"));
+            return null;
+        }
+        if (candidates.Length > 1)
+        {
+            diags.Add(Diagnostic.Create(Diagnostics.FacadeSecondaryCtorInvalid, loc, primary.Name,
+                $"SecondaryCtor='{secondaryName}' is ambiguous — {candidates.Length} matching overloads of ComposeBridges.{secondaryName} found"));
+            return null;
+        }
+
+        var secondary = candidates[0];
+        // Strip trailing composer + (required) `int defaults`.
+        var secAll = secondary.Parameters;
+        var secUser = secAll.Take(secAll.Length - 1).ToArray();
+        if (secUser.Length == 0 ||
+            secUser[secUser.Length - 1].Type.SpecialType != SpecialType.System_Int32 ||
+            secUser[secUser.Length - 1].Name != "defaults")
+        {
+            diags.Add(Diagnostic.Create(Diagnostics.FacadeSecondaryCtorInvalid, loc, primary.Name,
+                $"secondary 'ComposeBridges.{secondaryName}' must declare a trailing 'int defaults' parameter"));
+            return null;
+        }
+        secUser = secUser.Take(secUser.Length - 1).ToArray();
+
+        // Discover the discriminator — the single secondary-unique
+        // user param (not present by name in primary). All other
+        // secondary params must match a primary param by name with a
+        // compatible type.
+        var primaryNames = new HashSet<string>(primaryUserParams.Select(p => p.Name), StringComparer.Ordinal);
+        var extras = secUser.Where(p => !primaryNames.Contains(p.Name)).ToArray();
+        if (extras.Length != 1)
+        {
+            diags.Add(Diagnostic.Create(Diagnostics.FacadeSecondaryCtorInvalid, loc, primary.Name,
+                $"secondary 'ComposeBridges.{secondaryName}' must add exactly one parameter vs primary; found {extras.Length} ({string.Join(", ", extras.Select(e => e.Name))})"));
+            return null;
+        }
+        var discriminator = extras[0];
+
+        // Discriminator must be a non-nullable reference type so the
+        // facade's `_field is not null` check works as a discriminator.
+        if (!discriminator.Type.IsReferenceType ||
+            discriminator.NullableAnnotation == NullableAnnotation.Annotated)
+        {
+            diags.Add(Diagnostic.Create(Diagnostics.FacadeSecondaryCtorInvalid, loc, primary.Name,
+                $"discriminator parameter '{discriminator.Name}' must be a non-nullable reference type; was '{discriminator.Type.ToDisplayString()}'"));
+            return null;
+        }
+
+        // Shared params (by name) must have compatible types.
+        foreach (var sp in secUser)
+        {
+            if (sp.Name == discriminator.Name) continue;
+            var pp = primaryUserParams.First(a => a.Name == sp.Name);
+            if (!AreCompatibleSharedParams(pp, sp))
+            {
+                diags.Add(Diagnostic.Create(Diagnostics.FacadeSecondaryCtorInvalid, loc, primary.Name,
+                    $"shared parameter '{sp.Name}' has incompatible types between primary ({pp.Type.ToDisplayString()}) and secondary ({sp.Type.ToDisplayString()})"));
+                return null;
+            }
+        }
+
+        // Primary's discriminator slot (e.g. PainterResource) has no
+        // analog in secondary — every primary user param missing from
+        // secondary should be such a slot. We don't strictly require
+        // PainterResource specifically (kept general for future use),
+        // but at least one primary param must be unique-to-primary
+        // (otherwise primary and secondary have identical user-param
+        // shape and there's no reason to introduce a second bridge).
+        var primaryUnique = primaryUserParams.Where(p =>
+            !secUser.Any(s => s.Name == p.Name)).ToArray();
+        if (primaryUnique.Length == 0)
+        {
+            diags.Add(Diagnostic.Create(Diagnostics.FacadeSecondaryCtorInvalid, loc, primary.Name,
+                $"primary and secondary have identical user-parameter names; SecondaryCtor requires at least one primary-only slot (e.g. [PainterResource])"));
+            return null;
+        }
+
+        // Resolve secondary's Defaults enum: prefer its own
+        // [ComposeBridge].Defaults; fall back to the primary's
+        // [ComposeFacade(SecondaryDefaults=typeof(...))].
+        INamedTypeSymbol? defaultsType = null;
+        if (c.BridgeAttr is not null)
+        {
+            var secBridgeAttr = secondary.GetAttributes()
+                .FirstOrDefault(a => SymbolEqualityComparer.Default.Equals(a.AttributeClass, c.BridgeAttr));
+            if (secBridgeAttr is not null)
+                defaultsType = ReadType(secBridgeAttr, "Defaults");
+        }
+        defaultsType ??= secondaryDefaultsType;
+        if (defaultsType is null)
+        {
+            diags.Add(Diagnostic.Create(Diagnostics.FacadeSecondaryCtorInvalid, loc, primary.Name,
+                $"secondary 'ComposeBridges.{secondaryName}' has no '[ComposeBridge].Defaults' enum and no 'SecondaryDefaults = typeof(...)' fallback on [ComposeFacade]"));
+            return null;
+        }
+        DefaultsInfo? defaults = null;
+        if (c.DeclarativeAttr is not null)
+            defaults = DefaultsInfo.TryRead(c.Compilation, c.DeclarativeAttr, defaultsType.Name);
+        defaults ??= DefaultsInfo.TryReadFromEnum(defaultsType);
+        defaults ??= DefaultsInfo.TryReadFromGenericAttribute(c.Compilation, c.GenericDefaultsAttr, defaultsType.Name);
+        if (defaults is null)
+        {
+            diags.Add(Diagnostic.Create(Diagnostics.FacadeSecondaryCtorInvalid, loc, primary.Name,
+                $"could not resolve [assembly: ComposeDefaults(\"{defaultsType.Name}\", ...)] for the secondary bridge"));
+            return null;
+        }
+
+        return new SecondaryCtorInfo(secondary, secUser, discriminator,
+            defaults.Value, defaultsType.Name);
     }
 
     static FacadeSlot? Classify(IParameterSymbol p, Context c, string methodName, Location loc, List<Diagnostic> diags)
@@ -897,7 +1114,8 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         string? themeColor, FacadeSlot? colorSlot,
         IReadOnlyList<IParameterSymbol> primaryUserParams,
         BranchInfo? branchInfo,
-        bool indexedChildren)
+        bool indexedChildren,
+        SecondaryCtorInfo? secondaryCtorInfo)
     {
         // After classification, only the container's body survives as
         // Content2/3 (multi-slot leafs re-classified to Named/Required).
@@ -957,6 +1175,18 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             {
                 sb.AppendLine("        readonly global::AndroidX.Compose.UI.Graphics.Painter.Painter? _painter;");
             }
+        }
+
+        // Phase 11 — discriminator field for SecondaryCtor. Nullable
+        // reference field so the Render preamble can branch on
+        // `_<discriminator> is not null` to dispatch to the secondary
+        // bridge. Exactly one of the primary's ctor slots or this field
+        // is populated per instance.
+        if (secondaryCtorInfo is not null)
+        {
+            var discTypeFqn = SecondaryFieldType(secondaryCtorInfo);
+            sb.Append("        readonly ").Append(discTypeFqn).Append(" _")
+              .Append(secondaryCtorInfo.Discriminator.Name).AppendLine(";");
         }
 
         // Phase 10 — per-instance JCW veto adapter fields. One per
@@ -1030,11 +1260,28 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             }
         }
 
+        // Phase 11 — secondary ctor. The discriminator parameter
+        // replaces the primary's discriminator slot (e.g.
+        // PainterResource); all other secondary-shared primitive ctor
+        // slots are reused with their primary positions and defaults.
+        if (secondaryCtorInfo is not null)
+        {
+            EmitSecondaryCtor(sb, className, ctorSlots, secondaryCtorInfo);
+        }
+
         // Render
         var composerName = EscapeIdent(composerParam.Name);
         sb.Append("        public override void Render(global::AndroidX.Compose.Runtime.IComposer ")
           .Append(composerName).AppendLine(")");
         sb.AppendLine("        {");
+
+        // Phase 11 — secondary dispatch. Runs BEFORE any primary-only
+        // preamble (PainterResource resolution etc.) so it can return
+        // early when the caller used the secondary ctor.
+        if (secondaryCtorInfo is not null)
+        {
+            EmitSecondaryDispatch(sb, slots, secondaryCtorInfo, composerName);
+        }
 
         // Required-named-slot null checks.
         foreach (var s in namedSlots.Where(s => s.Kind is FacadeSlotKind.RequiredFunction2 or FacadeSlotKind.RequiredFunction3))
@@ -1398,12 +1645,13 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
 
     static void EmitDefaultsMask(StringBuilder sb, string indent, DefaultsInfo d,
         IReadOnlyList<FacadeSlot> slots, IReadOnlyList<FacadeSlot> namedSlots,
-        bool hasModifier, bool hasPainter)
+        bool hasModifier, bool hasPainter,
+        string defaultsVar = "__defaults", string modifierVar = "__modifier")
     {
-        sb.Append(indent).Append("int __defaults = (int)global::AndroidX.Compose.").Append(d.EnumName).AppendLine(".All;");
+        sb.Append(indent).Append("int ").Append(defaultsVar).Append(" = (int)global::AndroidX.Compose.").Append(d.EnumName).AppendLine(".All;");
 
         // For each slot the facade DEFINITELY supplies, clear its bit.
-        // - Modifier: clear when __modifier != null.
+        // - Modifier: clear when modifier local != null.
         // - Primitive / Callback / OnClick: bit is `!`-suppressed by
         //   convention (caller-owned); skip silently when absent.
         // - Named optional slot: clear when property non-null.
@@ -1416,16 +1664,16 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             switch (s.Kind)
             {
                 case FacadeSlotKind.Modifier:
-                    sb.Append(indent).Append("if (__modifier is not null) __defaults &= ~(int)global::AndroidX.Compose.")
+                    sb.Append(indent).Append("if (").Append(modifierVar).Append(" is not null) ").Append(defaultsVar).Append(" &= ~(int)global::AndroidX.Compose.")
                       .Append(d.EnumName).Append('.').Append(bitMember).AppendLine(";");
                     break;
                 case FacadeSlotKind.NamedFunction2:
                 case FacadeSlotKind.NamedFunction3:
-                    sb.Append(indent).Append("if (__").Append(s.Param.Name).Append(" is not null) __defaults &= ~(int)global::AndroidX.Compose.")
+                    sb.Append(indent).Append("if (__").Append(s.Param.Name).Append(" is not null) ").Append(defaultsVar).Append(" &= ~(int)global::AndroidX.Compose.")
                       .Append(d.EnumName).Append('.').Append(bitMember).AppendLine(";");
                     break;
                 case FacadeSlotKind.OptionalValue:
-                    sb.Append(indent).Append("if (").Append(PropertyName(s)).Append(" is not null) __defaults &= ~(int)global::AndroidX.Compose.")
+                    sb.Append(indent).Append("if (").Append(PropertyName(s)).Append(" is not null) ").Append(defaultsVar).Append(" &= ~(int)global::AndroidX.Compose.")
                       .Append(d.EnumName).Append('.').Append(bitMember).AppendLine(";");
                     break;
                 case FacadeSlotKind.RequiredFunction2:
@@ -1434,7 +1682,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
                 case FacadeSlotKind.Primitive:
                 case FacadeSlotKind.ThemeColor:
                 case FacadeSlotKind.StateHolder:
-                    sb.Append(indent).Append("__defaults &= ~(int)global::AndroidX.Compose.")
+                    sb.Append(indent).Append(defaultsVar).Append(" &= ~(int)global::AndroidX.Compose.")
                       .Append(d.EnumName).Append('.').Append(bitMember).AppendLine(";");
                     break;
             }
@@ -1554,6 +1802,172 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
     // resolves it via painterResource), `Painter` takes a pre-resolved
     // Painter (Render forwards the wrapper's handle directly).
     enum PainterCtorShape { Id, Painter }
+
+    /// <summary>
+    /// Phase 11 — fully-qualified type name for the secondary
+    /// discriminator's nullable backing field.
+    /// </summary>
+    static string SecondaryFieldType(SecondaryCtorInfo info)
+    {
+        var format = SymbolDisplayFormat.FullyQualifiedFormat
+            .WithMiscellaneousOptions(SymbolDisplayMiscellaneousOptions.UseSpecialTypes);
+        var rendered = info.Discriminator.Type.ToDisplayString(format);
+        if (!rendered.EndsWith("?")) rendered += "?";
+        return rendered;
+    }
+
+    /// <summary>
+    /// Phase 11 — emit the secondary ctor. Signature: discriminator
+    /// first (as a non-nullable parameter), then every primary ctor
+    /// slot that isn't the primary-only discriminator slot
+    /// (e.g. PainterResource). The discriminator field is stored; all
+    /// other ctor slots are stored as if the primary ctor had been
+    /// invoked (so the Render preamble can reuse the same field
+    /// expressions for shared properties).
+    /// </summary>
+    static void EmitSecondaryCtor(StringBuilder sb, string className,
+        FacadeSlot[] ctorSlots, SecondaryCtorInfo info)
+    {
+        // Discriminator's parameter type, non-nullable, fully qualified.
+        var format = SymbolDisplayFormat.FullyQualifiedFormat
+            .WithMiscellaneousOptions(SymbolDisplayMiscellaneousOptions.UseSpecialTypes);
+        var discType = info.Discriminator.Type.ToDisplayString(format);
+        var discName = info.Discriminator.Name;
+
+        // Which primary ctor slots survive into the secondary ctor?
+        // Everything except the primary-only discriminator slot — which
+        // is the slot whose param name does NOT appear in the
+        // secondary's user-param list.
+        var secondaryParamNames = new HashSet<string>(
+            info.UserParams.Select(p => p.Name), StringComparer.Ordinal);
+
+        bool ShouldEmit(FacadeSlot s) =>
+            secondaryParamNames.Contains(s.Param.Name);
+
+        var emittedSlots = ctorSlots.Where(ShouldEmit).ToArray();
+        var skippedSlots = ctorSlots.Where(s => !ShouldEmit(s)).ToArray();
+
+        sb.Append("        public ").Append(className).Append('(');
+        sb.Append(discType).Append(' ').Append(EscapeIdent(discName));
+        foreach (var s in emittedSlots)
+        {
+            sb.Append(", ");
+            sb.Append(CtorParamType(s)).Append(' ').Append(EscapeIdent(CtorIdentifier(s)));
+            if (s.Kind == FacadeSlotKind.StateHolder)
+                sb.Append(" = null");
+            else if (s.Kind == FacadeSlotKind.Primitive && s.Param.HasExplicitDefaultValue)
+                sb.Append(" = ").Append(FormatPrimitiveDefaultLiteral(s.Param));
+        }
+        sb.AppendLine(")");
+        sb.AppendLine("        {");
+        sb.Append("            _").Append(discName).Append(" = ").Append(EscapeIdent(discName))
+          .Append(" ?? throw new global::System.ArgumentNullException(nameof(").Append(EscapeIdent(discName)).AppendLine("));");
+
+        // Store the emitted slots in their fields. Same logic as
+        // EmitFacadeCtor's body for non-PainterResource non-stateholder
+        // slots.
+        foreach (var s in emittedSlots)
+        {
+            if (s.IsParameterisedStateHolder)
+            {
+                var fqType = s.StateWrapperType!.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat
+                    .WithMiscellaneousOptions(SymbolDisplayMiscellaneousOptions.UseSpecialTypes));
+                sb.Append("            _").Append(CtorIdentifier(s)).Append(" = ")
+                  .Append(EscapeIdent(CtorIdentifier(s))).Append(" ?? new ").Append(fqType).AppendLine("();");
+            }
+            else
+            {
+                sb.Append("            _").Append(CtorIdentifier(s)).Append(" = ")
+                  .Append(EscapeIdent(CtorIdentifier(s))).AppendLine(";");
+            }
+        }
+        // Skipped slots (primary-only, e.g. PainterResource id) get
+        // default values — the discriminator dispatch in Render won't
+        // touch them, so leaving them at default is fine for readonly
+        // fields. C# zero-inits implicitly, so no explicit assignment
+        // needed.
+        _ = skippedSlots;
+
+        sb.AppendLine("        }");
+    }
+
+    /// <summary>
+    /// Phase 11 — emit the secondary dispatch branch at the top of
+    /// Render. When the discriminator field is non-null, build the
+    /// secondary's defaults mask (using its own enum) and call the
+    /// secondary bridge with shared property expressions, then return.
+    /// All preamble that follows (PainterResource resolution, etc.)
+    /// runs only on the primary path.
+    /// </summary>
+    static void EmitSecondaryDispatch(StringBuilder sb,
+        IReadOnlyList<FacadeSlot> slots, SecondaryCtorInfo info, string composerName)
+    {
+        var discName = info.Discriminator.Name;
+        sb.Append("            if (_").Append(discName).AppendLine(" is not null)");
+        sb.AppendLine("            {");
+
+        // Modifier hoist scoped to this block. Use a distinct local
+        // name to avoid CS0136 with the outer primary path's
+        // `__modifier` declared later in the same Render method.
+        var modifierSlot = slots.FirstOrDefault(s => s.Kind == FacadeSlotKind.Modifier);
+        bool hasModifier = modifierSlot.Param is not null;
+        if (hasModifier)
+        {
+            sb.AppendLine("                var __secModifier = BuildModifier();");
+        }
+
+        // Defaults mask using the SECONDARY's enum, into __secDefaults
+        // (again scoped distinctly from the primary's __defaults).
+        var allNamedSlots = slots.Where(s => s.Kind is FacadeSlotKind.NamedFunction2 or FacadeSlotKind.NamedFunction3
+            or FacadeSlotKind.RequiredFunction2 or FacadeSlotKind.RequiredFunction3).ToArray();
+        EmitDefaultsMask(sb, "                ", info.Defaults, slots, allNamedSlots,
+            hasModifier: hasModifier, hasPainter: false,
+            defaultsVar: "__secDefaults", modifierVar: "__secModifier");
+
+        // The discriminator IS always supplied on this path — clear
+        // its own enum bit if the secondary's defaults enum has one
+        // named after it (e.g. IconDefault.ImageVector for `imageVector`).
+        var discBit = info.Defaults.FindByKotlinName(discName);
+        if (discBit is { } discSlot && discSlot.EnumMember is { } discBitMember)
+        {
+            sb.Append("                __secDefaults &= ~(int)global::AndroidX.Compose.")
+              .Append(info.DefaultsEnumName).Append('.').Append(discBitMember).AppendLine(";");
+        }
+
+        // Build the secondary bridge call. The discriminator slot
+        // uses the `_<discName>` field (with `!` since we just
+        // null-checked it); shared params map to the primary's slot
+        // expressions via slotByName.
+        var slotByName = new Dictionary<string, FacadeSlot>(StringComparer.Ordinal);
+        foreach (var s in slots)
+            slotByName[s.Param.Name] = s;
+
+        sb.Append("                global::AndroidX.Compose.ComposeBridges.").Append(info.Method.Name).Append('(');
+        for (int i = 0; i < info.UserParams.Count; i++)
+        {
+            var p = info.UserParams[i];
+            if (i > 0) sb.Append(", ");
+            if (p.Name == discName)
+            {
+                sb.Append("_").Append(discName).Append('!');
+            }
+            else if (slotByName.TryGetValue(p.Name, out var slot))
+            {
+                // Re-route Modifier slot expressions to __secModifier.
+                if (slot.Kind == FacadeSlotKind.Modifier && hasModifier)
+                    sb.Append("__secModifier");
+                else
+                    sb.Append(BridgeArgExpr(slot, hoistModifier: false));
+            }
+            else
+            {
+                sb.Append("default");
+            }
+        }
+        sb.Append(", __secDefaults, ").Append(composerName).AppendLine(");");
+        sb.AppendLine("                return;");
+        sb.AppendLine("            }");
+    }
 
     static void EmitFacadeCtor(StringBuilder sb, string className,
         FacadeSlot[] ctorSlots, PainterCtorShape painterShape)
