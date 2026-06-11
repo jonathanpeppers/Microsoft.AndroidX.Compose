@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using AndroidX.Compose;
 using AndroidX.Compose.Runtime;
 using AndroidX.Compose.UI.Text.Input;
@@ -162,7 +161,7 @@ public partial class EntryHandler : ComposeElementHandler<IEntry>
 
     /// <summary>Map <see cref="ITextInput.Keyboard"/> to a Compose <c>KeyboardType</c> int.</summary>
     public static void MapKeyboard(EntryHandler handler, IEntry entry) =>
-        handler._keyboardType.Value = ResolveKeyboardType(entry.Keyboard);
+        handler._keyboardType.Value = KeyboardMapping.Resolve(entry.Keyboard, nameof(EntryHandler));
 
     /// <summary>Map <see cref="ITextInput.IsReadOnly"/> to the Compose <c>readOnly</c> slot.</summary>
     public static void MapIsReadOnly(EntryHandler handler, IEntry entry) =>
@@ -178,29 +177,4 @@ public partial class EntryHandler : ComposeElementHandler<IEntry>
     public static void MapHorizontalLayoutAlignment(EntryHandler handler, IEntry entry) =>
         handler._fillWidth.Value = entry.HorizontalLayoutAlignment
             == Microsoft.Maui.Primitives.LayoutAlignment.Fill;
-
-    /// <summary>
-    /// Resolve a MAUI <see cref="Keyboard"/> to its Compose
-    /// <see cref="ComposeKeyboardType"/> int. Compose's
-    /// <c>@JvmInline value class KeyboardType(Int)</c> lowers each
-    /// constant to a stable sequential int; the named properties on
-    /// <see cref="ComposeKeyboardType"/> read the same Companion
-    /// getters the Kotlin compiler emits.
-    /// </summary>
-    static int ResolveKeyboardType(Keyboard? keyboard)
-    {
-        if (keyboard is null) return ComposeKeyboardType.Text;
-        if (keyboard == Keyboard.Numeric)   return ComposeKeyboardType.Number;
-        if (keyboard == Keyboard.Telephone) return ComposeKeyboardType.Phone;
-        if (keyboard == Keyboard.Url)       return ComposeKeyboardType.Uri;
-        if (keyboard == Keyboard.Email)     return ComposeKeyboardType.Email;
-        if (keyboard == Keyboard.Default
-            || keyboard == Keyboard.Text
-            || keyboard == Keyboard.Chat) return ComposeKeyboardType.Text;
-        // CustomKeyboard / Plain / unknown — fall through to text so the
-        // user still gets a working IME instead of a blank surface.
-        Debug.WriteLine(
-            $"[EntryHandler] Unmapped Keyboard '{keyboard}'; falling back to Text.");
-        return ComposeKeyboardType.Text;
-    }
 }

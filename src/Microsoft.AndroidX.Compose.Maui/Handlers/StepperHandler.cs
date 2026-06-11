@@ -1,11 +1,9 @@
-using System.Globalization;
 using AndroidX.Compose;
 using AndroidX.Compose.Runtime;
 using Microsoft.Maui.Handlers;
 using ComposeIconButton  = AndroidX.Compose.IconButton;
 using ComposeRow         = AndroidX.Compose.Row;
 using ComposeText        = AndroidX.Compose.Text;
-using ComposeTextAlign   = AndroidX.Compose.TextAlign;
 
 namespace Microsoft.AndroidX.Compose.Maui.Handlers;
 
@@ -14,8 +12,7 @@ namespace Microsoft.AndroidX.Compose.Maui.Handlers;
 /// renders through Jetpack Compose. Material 3 has no first-class
 /// <c>Stepper</c>, so the handler synthesizes one from a
 /// <see cref="ComposeRow"/> containing two <see cref="ComposeIconButton"/>s
-/// (<c>−</c> / <c>+</c>) flanking a centred <see cref="ComposeText"/>
-/// label that shows the current value. Replaces MAUI's stock
+/// (<c>−</c> / <c>+</c>). Replaces MAUI's stock
 /// <c>android.widget.LinearLayout</c>-based handler when the consumer
 /// calls <see cref="Hosting.AppHostBuilderExtensions.UseAndroidXCompose"/>.
 /// </summary>
@@ -25,10 +22,18 @@ namespace Microsoft.AndroidX.Compose.Maui.Handlers;
 /// <see cref="IComposeHandler"/>. The two-way value pipeline mirrors
 /// <see cref="EntryHandler.OnValueChanged"/>: each button click
 /// updates the local <see cref="MutableState{T}"/> first (so the
-/// rendered value tracks the user's tap immediately) and then writes
+/// handler tracks the user's tap immediately) and then writes
 /// to <see cref="IRange.Value"/>; MAUI's standard property pipeline
 /// re-enters <see cref="MapValue"/> with the same double, which is a
 /// no-op on <c>MutableState&lt;double&gt;</c> — no feedback loop.</para>
+///
+/// <para>Renders only <c>−</c> and <c>+</c> with no inline value Text,
+/// matching MAUI's stock <c>Stepper</c> visual semantics. Consumers
+/// expose the current value via a sibling <c>Label</c> bound to
+/// <see cref="IRange.Value"/> (see <c>SlidersPage</c> for the canonical
+/// pattern). An inline value would double-render whenever the page
+/// also binds a Label, and looks misaligned because the two text
+/// nodes have different font sizes / styles.</para>
 ///
 /// <para>The decrement / increment buttons clamp at the configured
 /// <see cref="IRange.Minimum"/> / <see cref="IRange.Maximum"/>; clicks
@@ -91,10 +96,6 @@ public partial class StepperHandler : ComposeElementHandler<IStepper>
             {
                 new ComposeText("−"),
             },
-            new ComposeText(value.ToString(CultureInfo.CurrentCulture))
-            {
-                Align = ComposeTextAlign.Center,
-            },
             new ComposeIconButton(onClick: Increment)
             {
                 new ComposeText("+"),
@@ -108,9 +109,9 @@ public partial class StepperHandler : ComposeElementHandler<IStepper>
         {
             var clamped = Math.Clamp(next, min, max);
             if (clamped == value) return;
-            // Update Compose state synchronously so the rendered label
-            // reflects the new value before MAUI's bound bindings have
-            // a chance to round-trip. MAUI's two-way pipeline re-enters
+            // Update Compose state synchronously so subsequent renders
+            // see the new value before MAUI's bound bindings have a
+            // chance to round-trip. MAUI's two-way pipeline re-enters
             // MapValue with the same double — a no-op on
             // MutableState<double>, so no feedback loop.
             _value.Value = clamped;
@@ -119,7 +120,7 @@ public partial class StepperHandler : ComposeElementHandler<IStepper>
         }
     }
 
-    /// <summary>Map <see cref="IRange.Value"/> to the Compose label slot.</summary>
+    /// <summary>Map <see cref="IRange.Value"/> to the local mutable state slot.</summary>
     public static void MapValue(StepperHandler handler, IStepper stepper) =>
         handler._value.Value = stepper.Value;
 
