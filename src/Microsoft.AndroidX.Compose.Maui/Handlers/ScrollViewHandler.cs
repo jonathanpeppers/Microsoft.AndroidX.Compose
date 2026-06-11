@@ -1,5 +1,6 @@
 using AndroidX.Compose;
 using AndroidX.Compose.Runtime;
+using Microsoft.AndroidX.Compose.Maui.Platform;
 using Microsoft.Maui.Handlers;
 
 namespace Microsoft.AndroidX.Compose.Maui.Handlers;
@@ -55,7 +56,7 @@ public partial class ScrollViewHandler : ComposeElementHandler<IScrollView>
         var context = MauiContext
             ?? throw new InvalidOperationException("MauiContext not set on ScrollViewHandler.");
 
-        return new ScrollContainer(scroll, _orientation, context);
+        return new ScrollContainer(this, scroll, _orientation, context);
     }
 
     /// <summary>Map <see cref="IScrollView.Orientation"/> to the cached enum slot.</summary>
@@ -72,12 +73,18 @@ public partial class ScrollViewHandler : ComposeElementHandler<IScrollView>
     /// </summary>
     sealed class ScrollContainer : ComposableNode
     {
+        readonly ScrollViewHandler _owner;
         readonly IScrollView _scroll;
         readonly MutableState<int> _orientation;
         readonly IMauiContext _context;
 
-        public ScrollContainer(IScrollView scroll, MutableState<int> orientation, IMauiContext context)
+        public ScrollContainer(
+            ScrollViewHandler owner,
+            IScrollView scroll,
+            MutableState<int> orientation,
+            IMauiContext context)
         {
+            _owner = owner;
             _scroll = scroll;
             _orientation = orientation;
             _context = context;
@@ -85,6 +92,12 @@ public partial class ScrollViewHandler : ComposeElementHandler<IScrollView>
 
         public override void Render(IComposer composer)
         {
+            // Subscribe inside Render so the deferred composition
+            // scope (the actual scope that builds the modifier chain)
+            // observes view-property bumps, not the parent-only scope
+            // that called BuildNode.
+            _owner.SubscribeToViewProperties();
+
             var orientation = (ScrollOrientation)_orientation.Value;
             var state = composer.Remember(() => new ScrollState());
 
@@ -97,7 +110,13 @@ public partial class ScrollViewHandler : ComposeElementHandler<IScrollView>
             // BuildModifier() is internal to Microsoft.AndroidX.Compose;
             // from this assembly we read the public Modifier property
             // (consumers don't call PrependModifier on internal nodes).
-            var modifier = Modifier is null ? fillMain : Modifier.Then(fillMain);
+            // Cross-cutting view properties go OUTERMOST (before the
+            // scroll modifier) so opacity / clip / shadow trace the
+            // ScrollView's bounding box, not the inner scrolling
+            // surface — matches MAUI's stock semantics where Opacity
+            // fades the entire scroll region as one.
+            var outer = Modifier.Companion.ApplyViewProperties(_scroll).Then(fillMain);
+            var modifier = Modifier is null ? outer : Modifier.Then(outer);
 
             var box = new Box { Modifier = modifier };
             var content = _scroll.PresentedContent;
