@@ -8,6 +8,9 @@ AndroidX.Compose.AlertDialog.ConfirmButton.get -> AndroidX.Compose.ComposableNod
 AndroidX.Compose.AlertDialog.ConfirmButton.set -> void
 AndroidX.Compose.AlertDialog.DismissButton.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.AlertDialog.DismissButton.set -> void
+AndroidX.Compose.AndroidView
+AndroidX.Compose.AndroidView.AndroidView(System.Func<Android.Content.Context!, Android.Views.View!>! factory, System.Action<Android.Views.View!>? update = null) -> void
+override AndroidX.Compose.AndroidView.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
 AndroidX.Compose.AlertDialog.Icon.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.AlertDialog.Icon.set -> void
 AndroidX.Compose.AlertDialog.Shape.get -> AndroidX.Compose.Shape?

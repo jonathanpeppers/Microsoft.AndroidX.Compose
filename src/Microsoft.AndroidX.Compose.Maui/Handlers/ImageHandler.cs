@@ -1,5 +1,6 @@
 using Android.Graphics.Drawables;
 using AndroidX.Compose;
+using AndroidX.Compose.Runtime;
 using AndroidX.Compose.UI.Graphics;
 using AndroidX.Compose.UI.Graphics.Painter;
 using AndroidX.Compose.UI.Platform;
@@ -18,6 +19,9 @@ namespace Microsoft.AndroidX.Compose.Maui.Handlers;
 /// (<see cref="ComposeImage"/>). Replaces MAUI's stock
 /// <c>AppCompatImageView</c>-based handler when the consumer calls
 /// <see cref="Hosting.AppHostBuilderExtensions.UseAndroidXCompose"/>.
+/// Folds into the page's single composition via
+/// <see cref="ComposeElementHandler{TVirtualView}"/> /
+/// <see cref="IComposeHandler"/>.
 /// </summary>
 /// <remarks>
 /// <para>Source resolution is hybrid:</para>
@@ -47,7 +51,7 @@ namespace Microsoft.AndroidX.Compose.Maui.Handlers;
 ///   </item>
 /// </list>
 /// </remarks>
-public partial class ImageHandler : ViewHandler<MauiIImage, ComposeView>
+public partial class ImageHandler : ComposeElementHandler<MauiIImage>
 {
     /// <summary>
     /// Property mapper that forwards MAUI <see cref="MauiIImage"/> property
@@ -92,21 +96,16 @@ public partial class ImageHandler : ViewHandler<MauiIImage, ComposeView>
         : base(mapper ?? Mapper, commandMapper ?? CommandMapper) { }
 
     /// <inheritdoc/>
-    protected override ComposeView CreatePlatformView()
+    public override ComposableNode BuildNode(IComposer composer)
     {
-        var view = new ComposeView(Context);
-        view.SetContent(_ =>
-        {
-            // Painter wins over the resource id so a freshly-loaded
-            // BitmapPainter immediately replaces any stale fast-path
-            // drawable. Both null => empty placeholder.
-            if (_painter.Value is { } painter)
-                return new ComposeImage(painter) { ContentScale = _contentScale.Value };
-            if (_drawableResourceId.Value is int id)
-                return new ComposeImage(id) { ContentScale = _contentScale.Value };
-            return new Box();
-        });
-        return view;
+        // Painter wins over the resource id so a freshly-loaded
+        // BitmapPainter immediately replaces any stale fast-path
+        // drawable. Both null => empty placeholder.
+        if (_painter.Value is { } painter)
+            return new ComposeImage(painter) { ContentScale = _contentScale.Value };
+        if (_drawableResourceId.Value is int id)
+            return new ComposeImage(id) { ContentScale = _contentScale.Value };
+        return new Box();
     }
 
     /// <inheritdoc/>
@@ -118,7 +117,6 @@ public partial class ImageHandler : ViewHandler<MauiIImage, ComposeView>
         _loader?.Reset();
         _drawableResourceId.Value = null;
         _painter.Value = null;
-        platformView.DisposeComposition();
         base.DisconnectHandler(platformView);
     }
 

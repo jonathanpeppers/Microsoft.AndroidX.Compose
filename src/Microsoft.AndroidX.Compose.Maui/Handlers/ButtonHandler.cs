@@ -1,6 +1,6 @@
 using AndroidX.Compose;
 using AndroidX.Compose.Material3;
-using AndroidX.Compose.UI.Platform;
+using AndroidX.Compose.Runtime;
 using Microsoft.Maui.Handlers;
 using ComposeButton = AndroidX.Compose.Button;
 
@@ -13,11 +13,13 @@ namespace Microsoft.AndroidX.Compose.Maui.Handlers;
 /// <see cref="Hosting.AppHostBuilderExtensions.UseAndroidXCompose"/>.
 /// </summary>
 /// <remarks>
-/// The Compose <c>onClick</c> lambda forwards to <see cref="IButton.Clicked"/>
-/// so MAUI's standard <c>Clicked</c> event and bound <c>Command</c> fire
-/// as expected.
+/// Folds into the page's single composition via
+/// <see cref="ComposeElementHandler{TVirtualView}"/> /
+/// <see cref="IComposeHandler"/>. The Compose <c>onClick</c> lambda
+/// forwards to <see cref="IButton.Clicked"/> so MAUI's standard
+/// <c>Clicked</c> event and bound <c>Command</c> fire as expected.
 /// </remarks>
-public partial class ButtonHandler : ViewHandler<IButton, ComposeView>
+public partial class ButtonHandler : ComposeElementHandler<IButton>
 {
     /// <summary>
     /// Property mapper that forwards MAUI <see cref="IButton"/> property
@@ -65,33 +67,21 @@ public partial class ButtonHandler : ViewHandler<IButton, ComposeView>
         : base(mapper ?? Mapper, commandMapper ?? CommandMapper) { }
 
     /// <inheritdoc/>
-    protected override ComposeView CreatePlatformView()
+    public override ComposableNode BuildNode(IComposer composer)
     {
-        var view = new ComposeView(Context);
-        view.SetContent(c =>
+        var container = _containerColor.Value;
+        var content   = _contentColor.Value;
+        var button = new ComposeButton(onClick: OnClicked)
         {
-            var container = _containerColor.Value;
-            var content   = _contentColor.Value;
-            var button = new ComposeButton(onClick: OnClicked)
-            {
-                new Text(_text.Value),
-            };
-            if (container is not null || content is not null)
-                button.Colors = c.ButtonColors(
-                    containerColor: container,
-                    contentColor:   content);
-            if (_fillWidth.Value)
-                button.PrependModifier(Modifier.FillMaxWidth());
-            return button;
-        });
-        return view;
-    }
-
-    /// <inheritdoc/>
-    protected override void DisconnectHandler(ComposeView platformView)
-    {
-        platformView.DisposeComposition();
-        base.DisconnectHandler(platformView);
+            new Text(_text.Value),
+        };
+        if (container is not null || content is not null)
+            button.Colors = composer.ButtonColors(
+                containerColor: container,
+                contentColor:   content);
+        if (_fillWidth.Value)
+            button.PrependModifier(Modifier.FillMaxWidth());
+        return button;
     }
 
     void OnClicked()

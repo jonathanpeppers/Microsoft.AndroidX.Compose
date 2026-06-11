@@ -1,6 +1,6 @@
 using System.Diagnostics;
 using AndroidX.Compose;
-using AndroidX.Compose.UI.Platform;
+using AndroidX.Compose.Runtime;
 using AndroidX.Compose.UI.Text.Input;
 using Microsoft.Maui.Handlers;
 using ComposeColor          = AndroidX.Compose.Color;
@@ -20,12 +20,15 @@ namespace Microsoft.AndroidX.Compose.Maui.Handlers;
 /// <see cref="Hosting.AppHostBuilderExtensions.UseAndroidXCompose"/>.
 /// </summary>
 /// <remarks>
-/// Uses <c>OutlinedTextField</c> rather than the filled <c>TextField</c>
-/// variant because it matches MAUI's stock Entry chrome more closely
-/// (clear bordered outline, no shaded background fill, label that
-/// floats above the border when the field gains focus).
+/// Folds into the page's single composition via
+/// <see cref="ComposeElementHandler{TVirtualView}"/> /
+/// <see cref="IComposeHandler"/>. Uses <c>OutlinedTextField</c>
+/// rather than the filled <c>TextField</c> variant because it
+/// matches MAUI's stock Entry chrome more closely (clear bordered
+/// outline, no shaded background fill, label that floats above the
+/// border when the field gains focus).
 /// </remarks>
-public partial class EntryHandler : ViewHandler<IEntry, ComposeView>
+public partial class EntryHandler : ComposeElementHandler<IEntry>
 {
     /// <summary>
     /// Property mapper that forwards MAUI <see cref="IEntry"/> property
@@ -66,62 +69,50 @@ public partial class EntryHandler : ViewHandler<IEntry, ComposeView>
         : base(mapper ?? Mapper, commandMapper ?? CommandMapper) { }
 
     /// <inheritdoc/>
-    protected override ComposeView CreatePlatformView()
+    public override ComposableNode BuildNode(IComposer composer)
     {
-        var view = new ComposeView(Context);
-        view.SetContent(_ =>
+        var packed       = _color.Value;
+        var size         = _fontSize.Value;
+        var bold         = _bold.Value;
+        var placeholder  = _placeholder.Value;
+        var isPassword   = _isPassword.Value;
+        var keyboardType = _keyboardType.Value;
+        var readOnly     = _readOnly.Value;
+        var fill         = _fillWidth.Value;
+
+        var field = new ComposeOutlinedTextField(_text.Value, OnValueChanged)
         {
-            var packed       = _color.Value;
-            var size         = _fontSize.Value;
-            var bold         = _bold.Value;
-            var placeholder  = _placeholder.Value;
-            var isPassword   = _isPassword.Value;
-            var keyboardType = _keyboardType.Value;
-            var readOnly     = _readOnly.Value;
-            var fill         = _fillWidth.Value;
-
-            var field = new ComposeOutlinedTextField(_text.Value, OnValueChanged)
+            ReadOnly   = readOnly,
+            SingleLine = true,
+        };
+        if (!string.IsNullOrEmpty(placeholder))
+            field.Placeholder = new ComposeText(placeholder);
+        if (packed.HasValue || size.HasValue || bold)
+            field.TextStyle = new ComposeTextStyle
             {
-                ReadOnly   = readOnly,
-                SingleLine = true,
+                Color      = packed.HasValue ? new ComposeColor(packed.Value) : null,
+                FontSize   = size.HasValue   ? new Sp(size.Value) : null,
+                FontWeight = bold ? ComposeFontWeight.Bold : null,
             };
-            if (!string.IsNullOrEmpty(placeholder))
-                field.Placeholder = new ComposeText(placeholder);
-            if (packed.HasValue || size.HasValue || bold)
-                field.TextStyle = new ComposeTextStyle
-                {
-                    Color      = packed.HasValue ? new ComposeColor(packed.Value) : null,
-                    FontSize   = size.HasValue   ? new Sp(size.Value) : null,
-                    FontWeight = bold ? ComposeFontWeight.Bold : null,
-                };
-            if (isPassword)
-                field.VisualTransformation = new PasswordVisualTransformation('•');
-            // Always set KeyboardOptions when the resolved type isn't the
-            // default `Text`, so the OS surfaces the right IME (digits,
-            // email, etc.). Password buffers + numeric flag both lower
-            // through `keyboardType`.
-            var resolvedType = isPassword ? ComposeKeyboardType.Password : keyboardType;
-            if (resolvedType != ComposeKeyboardType.Text)
-            {
-                var d = KeyboardOptionsCompanion.Default;
-                field.KeyboardOptions = d.Copy(
-                    d.Capitalization, d.AutoCorrectEnabled,
-                    resolvedType, d.ImeAction,
-                    d.PlatformImeOptions, d.ShowKeyboardOnFocus, d.HintLocales);
-            }
+        if (isPassword)
+            field.VisualTransformation = new PasswordVisualTransformation('•');
+        // Always set KeyboardOptions when the resolved type isn't the
+        // default `Text`, so the OS surfaces the right IME (digits,
+        // email, etc.). Password buffers + numeric flag both lower
+        // through `keyboardType`.
+        var resolvedType = isPassword ? ComposeKeyboardType.Password : keyboardType;
+        if (resolvedType != ComposeKeyboardType.Text)
+        {
+            var d = KeyboardOptionsCompanion.Default;
+            field.KeyboardOptions = d.Copy(
+                d.Capitalization, d.AutoCorrectEnabled,
+                resolvedType, d.ImeAction,
+                d.PlatformImeOptions, d.ShowKeyboardOnFocus, d.HintLocales);
+        }
 
-            if (fill)
-                field.PrependModifier(Modifier.FillMaxWidth());
-            return field;
-        });
-        return view;
-    }
-
-    /// <inheritdoc/>
-    protected override void DisconnectHandler(ComposeView platformView)
-    {
-        platformView.DisposeComposition();
-        base.DisconnectHandler(platformView);
+        if (fill)
+            field.PrependModifier(Modifier.FillMaxWidth());
+        return field;
     }
 
     void OnValueChanged(string newValue)

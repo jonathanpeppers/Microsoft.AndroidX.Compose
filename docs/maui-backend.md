@@ -159,13 +159,20 @@ stock backend. Inside, Compose owns the rendering. Mappers write to
 
 | Strategy | Pros | Cons |
 | --- | --- | --- |
-| **Option 1 — per-handler `ComposeView`** ✅ adopted Phase 1 | Trivially maps to existing handler shape; works with MAUI layout system unchanged; matches WPF/AppKit/GTK precedent; ships fast | Each leaf has its own composer + recomposer + snapshot subscription; no cross-sibling animations; M3 theming has to be re-installed per island |
-| Option 2 — single root composition | Idiomatic Compose; one theme, semantics tree, lazy lists work across siblings; shared snapshot graph; better perf at scale | Need a `RenderContext`/`ComposableNode` graph mirroring MAUI's VisualTree; reimplement MAUI layout in Compose `Layout {}`; much bigger lift |
+| Option 1 — per-handler `ComposeView` (shipped Phase 1) | Trivially maps to existing handler shape; works with MAUI layout system unchanged; matches WPF/AppKit/GTK precedent; ships fast | Each leaf has its own composer + recomposer + snapshot subscription; no cross-sibling animations; M3 theming has to be re-installed per island |
+| **Option 2 — single root composition per page** ✅ adopted Phase 2 | One composer / recomposer / snapshot graph per page; cross-sibling animations work; one M3 `MaterialTheme` per page; on-tree `LazyColumn` / `LazyRow` would Just Work | Needs an `IComposeHandler` + `ComposableNode` graph mirroring MAUI's VisualTree; layouts not in our converted set (Grid, AbsoluteLayout, FlexLayout) host via `AndroidView` interop; full `Layout {}`-with-`CrossPlatformMeasure` adapter still TODO |
 
-**Plan**: shipped the per-handler model in Phase 1 (matches maui-labs
-precedent); the single-root composition stays as an opt-in optimisation
-in a later phase. The handler API doesn't change between the two modes —
-only the bootstrapping does.
+**Status**: shipped. `PageHandler` is the only handler that creates a
+`ComposeView`. Every other handler (`LayoutHandler`,
+`ScrollViewHandler`, `LabelHandler`, `ButtonHandler`, `EntryHandler`,
+`ImageHandler`) implements `IComposeHandler` and contributes a
+`ComposableNode` via `BuildNode(IComposer)` to the page's composition.
+Unknown / unconverted controls bubble up through `ComposeWalker.Render`
+which wraps them in Compose's `AndroidView { factory = child.ToPlatform(MauiContext) }`.
+The handler API for new leaves is `ComposeElementHandler<T>` +
+`BuildNode` — no `CreatePlatformView`, no `DisposeComposition`, no
+per-leaf `ComposeView`. See `compose-maui.instructions.md` for the
+canonical handler shape.
 
 #### Phase 1 Option 1 mapper rules (lessons learned)
 
