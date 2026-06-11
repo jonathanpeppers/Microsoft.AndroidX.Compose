@@ -51,13 +51,66 @@ align Compose 1.11.x's chain with MAUI 10.0.20's transitive demands
 `Emoji2.ViewsHelper`). Don't trim them — they're load-bearing for
 NU1107/NU1608.
 
+## Architecture — one `ComposeView` per page
+
+`Microsoft.AndroidX.Compose.Maui` rewires MAUI's Android handler chain
+so that the page is the composition boundary, not the leaf:
+
+- `PageHandler` is the **only** handler that creates a `ComposeView`.
+  It's a `ViewHandler<IContentView, ComposeView>` (not the stock
+  `ContentViewHandler` which lives on `ContentViewGroup` and routes
+  measure/arrange through `ICrossPlatformLayout`). Standard Android
+  measure-spec sizes the `ComposeView` to fill whatever container
+  Shell / Navigation puts the page in; Compose owns layout for
+  everything below.
+- `LayoutHandler` (`VerticalStackLayout`, `HorizontalStackLayout`),
+  `ScrollViewHandler`, and every leaf (`LabelHandler`, `ButtonHandler`,
+  `EntryHandler`, `ImageHandler`) implement `IComposeHandler` and
+  derive from `ComposeElementHandler<T>`. They contribute a
+  `ComposableNode` to the page's composer via
+  `BuildNode(IComposer)` — **zero per-leaf `ComposeView`s** in fully
+  converted subtrees.
+- Anything not in our handler list (Grid, AbsoluteLayout, FlexLayout,
+  CollectionView, BoxView, Switch, customer renderers) keeps its
+  stock handler and is hosted via Compose's `AndroidView { factory }`
+  interop from inside the same composition. The walker
+  (`ComposeWalker.Render`) does the dispatch.
+
+```mermaid
+flowchart TD
+    PH["PageHandler (overridden) → ComposeView"] --> Comp[single composition for the page]
+    Comp --> Walker[ComposeWalker.Render: child.Handler?]
+    Walker -- IComposeHandler --> Node[BuildNode → Column/Row/Text/Button/…]
+    Walker -- stock handler --> AV["AndroidView { factory: child.ToPlatform(MauiContext) }"]
+    AV --> Stock[stock MAUI handler → real Android View]
+    Node --> Recurse((recurse via ComposeWalker.Render))
+```
+
+**Consumer-facing invariant.** `UseAndroidXCompose()` is the only
+Compose surface the consumer touches. Their XAML / C# stays pure MAUI;
+they don't pick a "Compose root", don't see `ComposeView`, don't import
+`Microsoft.AndroidX.Compose`. The page handler installs the single
+`ComposeView` and the walker bridges everything else.
+
+**uiautomator-dump invariant.** A page whose root content uses only our
+converted handlers (Page → VSL/HSL/ScrollView → Label/Button/Entry/Image)
+contains exactly **one** `androidx.compose.ui.platform.ComposeView` node.
+A page whose root content uses an unconverted container (`Grid`,
+`CollectionView`) may contain additional `ComposeView` nodes — one per
+Compose-backed leaf inside a stock container, because such leaves can't
+fold into a parent composer that doesn't exist.
+
 ## Canonical handler shape
 
-Every handler follows the same skeleton. Concrete examples in
-`Handlers/LabelHandler.cs` and `Handlers/ButtonHandler.cs`.
+Two skeletons depending on whether the handler contributes to the page
+composition (`IComposeHandler` path) or owns the page composition
+(`PageHandler`). Concrete examples in `Handlers/LabelHandler.cs`,
+`Handlers/ButtonHandler.cs`, `Handlers/LayoutHandler.cs`.
+
+### Page-content handler — `ComposeElementHandler<T>` + `BuildNode`
 
 ```csharp
-public partial class FooHandler : ViewHandler<IFoo, ComposeView>
+public partial class FooHandler : ComposeElementHandler<IFoo>
 {
     public static IPropertyMapper<IFoo, FooHandler> Mapper =
         new PropertyMapper<IFoo, FooHandler>(ViewHandler.ViewMapper)
@@ -77,25 +130,66 @@ public partial class FooHandler : ViewHandler<IFoo, ComposeView>
     public FooHandler(IPropertyMapper? mapper, CommandMapper? commandMapper = null)
         : base(mapper ?? Mapper, commandMapper ?? CommandMapper) { }
 
-    protected override ComposeView CreatePlatformView()
-    {
-        var view = new ComposeView(Context);
-        view.SetContent(_ => new Foo(/* read _text.Value etc. */));
-        return view;
-    }
-
-    protected override void DisconnectHandler(ComposeView platformView)
-    {
-        platformView.DisposeComposition();
-        base.DisconnectHandler(platformView);
-    }
+    /// <inheritdoc/>
+    public override ComposableNode BuildNode(IComposer composer)
+        => new Foo(/* read _text.Value etc. */);
 
     public static void MapText(FooHandler handler, IFoo foo) =>
         handler._text.Value = foo.Text ?? string.Empty;
 }
 ```
 
-### Rules the skeleton encodes
+`ComposeElementHandler<T>` is a `ViewHandler<T, ComposeView>` — it
+owns one `ComposeView` per handler instance as its `PlatformView`.
+This is **dual-mode** by design:
+
+- **Compose-aware path** (the common one): when a child of
+  `PageHandler`/`LayoutHandler`/`ScrollViewHandler` is one of our
+  `IComposeHandler`s, `ComposeWalker` calls `BuildNode(IComposer)`
+  directly and folds the result into the page's single composition.
+  The handler's own `ComposeView` is never attached to a window, so
+  `SetContent`'s composition never spins up — zero per-handler
+  overhead.
+- **Fallback path**: when our leaf ends up inside a stock parent
+  (e.g. a `CollectionView` item template, a `Border`), MAUI calls
+  `ToPlatform()` and attaches the leaf's `ComposeView` directly.
+  `SetContent(BuildNode)` is lazy — it kicks the composition off only
+  once attached, so the same handler instance renders correctly in
+  both contexts. Mappers write to the same `MutableState<T>` slots
+  either way.
+
+This is why a fully-converted page (Page → VSL → Label/Button) shows
+exactly **one** `ComposeView` in `uiautomator dump`, while a stock
+container hosting a Compose-backed leaf (Border with Image, or
+CollectionView item template with Label) shows one extra `ComposeView`
+per Compose-backed leaf.
+
+### Container / scope handler
+
+Containers (`LayoutHandler`, `ScrollViewHandler`) follow the same
+shape but their `BuildNode` walks `IView` children via
+`ComposeWalker.Render`:
+
+```csharp
+public override ComposableNode BuildNode(IComposer composer)
+{
+    var container = new Column { Modifier = Modifier.Padding(...) };
+    foreach (var child in VirtualView!.Children)
+        container.Add(c => ComposeWalker.Render(child, c, MauiContext!));
+    return container;
+}
+```
+
+Use the public `Modifier` property directly — `BuildModifier()` is
+`internal` to `Microsoft.AndroidX.Compose` and unreachable from this
+assembly. (See `ScrollViewHandler.cs` for the canonical pattern of
+composing extra modifiers via `Modifier.Then(fillMain)`.)
+
+The walker dispatches each child to `IComposeHandler.BuildNode` or to
+`AndroidView { factory = child.ToPlatform(MauiContext) }` if the
+child's handler isn't ours.
+
+### Rules the skeletons encode
 
 1. **Type the mapper against the concrete handler, not the interface.**
    `PropertyMapper<TVirtualView, TViewHandler>.UpdateProperty` casts the
@@ -106,56 +200,62 @@ public partial class FooHandler : ViewHandler<IFoo, ComposeView>
    `IPropertyMapper<IFoo, FooHandler>` and the cast lands on the
    concrete type for free. (This is the WPF backend's pattern.)
 
-2. **One `MutableState<T>` per Compose-readable slot.** The composition
-   captured by `SetContent` reads slots; mapper callbacks write them.
-   Compose's snapshot system schedules a recomposition on the next
-   frame — no manual invalidation needed.
+2. **One `MutableState<T>` per Compose-readable slot.** `BuildNode`
+   reads slots; mapper callbacks write them. Compose's snapshot system
+   schedules a recomposition on the next frame — no manual invalidation
+   needed. **`MutableState<T>` only supports a fixed set of `T`** —
+   `Java.Lang.Object` subclasses, `string`, `bool`, `char`, primitives,
+   and `Nullable<T>` of primitives. MAUI structs (`Thickness`, `Size`,
+   `Rect`, `Color`, …) and user-defined .NET enums throw
+   `NotSupportedException` at field-initializer time. For structs use
+   the **version-counter pattern**: `MutableState<int> _padVersion` +
+   read the live value off `VirtualView` inside `BuildNode`. For enums
+   use `MutableState<int>` and cast back. See
+   `LayoutHandler._paddingVersion` and `LabelHandler._hTextAlign`.
 
-3. **`ComposeView` is the platform view for every handler.**
-   `ViewHandler<TVirtualView, Android.Views.View>` already implements
-   `PlatformArrange(Rect)` (calls `View.Layout`) and
-   `GetDesiredSize(double, double)` (calls `View.Measure`) on Android
-   for any `TPlatform : Android.Views.View`. `ComposeView` IS an
-   Android `View`, so no override needed.
+3. **`BuildNode` is the render entry point** for `IComposeHandler`s
+   (every handler except `PageHandler`). The composer is the page's
+   composer; reading `MutableState<T>` slots inside `BuildNode`
+   registers the right slot-table dependencies. Don't allocate a fresh
+   `IComposer` — there is one and only one per page.
 
-4. **Always `DisposeComposition()` in `DisconnectHandler`.** Compose
-   holds onto the composer until the host view is detached; without
-   explicit disposal the composer leaks and recomposes after the MAUI
-   element is gone. Call `base.DisconnectHandler(platformView)` after.
+4. **`PageHandler` owns the single `ComposeView`**, and is therefore the
+   only handler that:
+   - Inherits `ViewHandler<IContentView, ComposeView>` directly.
+   - Overrides `CreatePlatformView()` to return a `ComposeView`.
+   - Calls `DisposeComposition()` in `DisconnectHandler`.
+
+   The page's composition root wraps the walker output in a
+   `new Box { Modifier = Modifier.FillMaxSize() }` so an `AndroidView`
+   fallback at the root (Grid, FlexLayout, …) fills the page instead
+   of collapsing to wrap-content.
 
 5. **Inherit from `ViewHandler.ViewMapper` / `ViewCommandMapper`** so
-   our mapper picks up the standard view-level mappings
-   (Background, Opacity, IsEnabled, etc.) without rewriting them.
+   the standard view-level mappings (Background, Opacity, IsEnabled, …)
+   come for free. Exception: when the underlying composable owns its
+   own surface (Material 3 widgets with `*Colors` slots), route
+   `IView.Background` into the composable's colour slot instead — see
+   `ButtonHandler.MapBackground`.
 
 6. **`PropertyMapper` auto-runs every entry once at attach.** Initial
    values flow through your `MapXxx` callbacks for free — you don't
-   have to read `VirtualView` in `CreatePlatformView`.
+   have to read `VirtualView` in `BuildNode`. (Except for struct-typed
+   live reads — see rule 2.)
 
 7. **Constructors come in pairs.** Parameterless for DI, then a
    `(IPropertyMapper?, CommandMapper?)` overload for consumers who
    want to extend the mapper. Standard MAUI handler convention.
 
-### Adding a new handler
+### Adding a new page-content handler
 
-1. Create `Handlers/<MauiType>Handler.cs` following the skeleton.
+1. Create `Handlers/<MauiType>Handler.cs` following the
+   `ComposeElementHandler<T>` skeleton.
 2. Map each MAUI interface property you care about to a
-   `MutableState<T>` slot. Keep slot types **primitive**: `string`,
-   `bool`, `int`, `long`, `float`, packed color (`long?`),
-   `Java.Lang.Object` subclasses. **Never a user-defined .NET enum**
-   like `Microsoft.Maui.TextAlignment` — `MutableState<T>`'s `ToJava`
-   switch doesn't unwrap them to their underlying primitive and the
-   ctor throws `NotSupportedException` at field-initializer time,
-   crashing the handler before any frame paints. Store the underlying
-   `int` (`MutableState<int>`) and cast back inside `SetContent`. See
-   `LabelHandler._hTextAlign` for the canonical workaround. Convert
-   packed values (`Microsoft.Maui.Graphics.Color` → packed `long?`
-   via `ColorMapping.ToPackedLong`) in the `MapXxx` callback, not in
-   the composition.
-3. The composition reads slots and builds the Compose widget tree.
+   `MutableState<T>` slot. See rule 2 above for `T` restrictions.
+3. `BuildNode` reads slots and builds the Compose widget tree.
    Use `Microsoft.AndroidX.Compose`'s existing facades (`Text`,
-   `Button`, `Column`, …). **Do not** spin up a fresh `IComposer` —
-   `SetContent` provides one and `MutableState<T>` reads register the
-   right slot-table dependencies.
+   `Button`, `Column`, …). For containers, walk children via
+   `ComposeWalker.Render(child, composer, MauiContext!)`.
 4. Register the handler in `Hosting/AppHostBuilderExtensions.cs`:
 
    ```csharp
@@ -165,9 +265,8 @@ public partial class FooHandler : ViewHandler<IFoo, ComposeView>
    where `MauiFoo` is the cross-platform MAUI control
    (e.g. `Microsoft.Maui.Controls.Slider`).
 5. Add a Phase entry in `docs/maui-backend.md`.
-6. **Add a demo in `Microsoft.AndroidX.Compose.Maui.Sample`.** Drop the
-   new control on `MainPage.xaml` so manual smoke-test deploys
-   exercise it.
+6. **Add a demo in `Microsoft.AndroidX.Compose.Maui.Sample`** so manual
+   smoke-test deploys exercise the new handler.
 7. Build + deploy with `dotnet build
    src/Microsoft.AndroidX.Compose.Maui.Sample -t:Install`. Resolve the
    launchable activity (the JCW class name is a per-assembly hash that
@@ -179,8 +278,8 @@ public partial class FooHandler : ViewHandler<IFoo, ComposeView>
    adb shell am start -n net.compose.maui.sample/<resolved activity>
    ```
 
-   Confirm `androidx.compose.ui.platform.ComposeView` nodes for your
-   new control in `uiautomator dump`, then exercise it (tap, type,
+   Confirm exactly one `androidx.compose.ui.platform.ComposeView` per
+   converted page via `uiautomator dump`, then exercise it (tap, type,
    drag).
 
 ### Event forwarding
@@ -439,16 +538,36 @@ See `LabelHandler.MapTextColor` for the canonical wiring and
 `AndroidX.Compose.Color` (e.g. building a `ButtonColors` slot), use
 `ColorMapping.ToCompose(mauiColor)` directly.
 
-### What we don't override
+### What we override (and what we don't)
 
-Stock MAUI handlers already work for layout/container types
-(`ContentPage`, `VerticalStackLayout`, `Grid`, `Border`, `ScrollView`)
-because they target `Android.Views.ViewGroup` subclasses that hosting
-`ComposeView` children just fine. **Only override leaves** — the
-controls a user actually sees as "this is a button / label / slider /
-…". Same goes for `ApplicationHandler`, `WindowHandler`, `PageHandler`,
-`LayoutHandler`. Don't add them to `UseAndroidXCompose()` unless you
-have a reason that requires Compose at the container layer.
+`UseAndroidXCompose()` registers handlers for:
+
+- **`Microsoft.Maui.Controls.Page`** → `PageHandler` (the only handler
+  that creates a `ComposeView`).
+- **`VerticalStackLayout`**, **`HorizontalStackLayout`** → `LayoutHandler`
+  (`Column` / `Row`).
+- **`ScrollView`** → `ScrollViewHandler`
+  (`Modifier.verticalScroll` / `horizontalScroll`).
+- **Leaves**: `Label`, `Button`, `Entry`, `Image`.
+
+We do **not** override `Grid`, `AbsoluteLayout`, `FlexLayout`,
+`StackLayout`, `Border`, `ContentView`, or any of the non-converted
+controls (`CollectionView`, `BoxView`, `Switch`, third-party
+renderers). MAUI registers a single `LayoutHandler` for the abstract
+`Microsoft.Maui.Controls.Layout` base — the concrete subtype (Grid,
+FlexLayout, …) lives in the layout's `CrossPlatformLayout`
+(`ILayoutManager`). Registering for VSL / HSL specifically means our
+handler only intercepts those two concrete types; everything else
+keeps the stock `LayoutHandler` and is hosted via `AndroidView`
+fallback from inside the parent composition (when the parent is one
+of ours) or stays fully stock (when the parent is also stock).
+
+Don't add new handlers to `UseAndroidXCompose()` unless they're either:
+- A leaf with a clear Compose Material 3 equivalent (`Slider`,
+  `Switch`, `CheckBox`, `ProgressBar`).
+- A container whose layout maps cleanly to a Compose container
+  without needing the generic `Layout {}`-with-`CrossPlatformMeasure`
+  adapter (which is still TODO).
 
 ### Activity
 
@@ -461,13 +580,23 @@ duplicates the stock behavior without adding anything.
 
 - ❌ `IPropertyMapper<IFoo, IFooHandler>` when `FooHandler` doesn't
   implement `IFooHandler` → `InvalidCastException` at first map.
-- ❌ Constructing a new `ComposeView` inside a mapper callback →
-  defeats recomposition; the view is the platform view, created once
-  per handler attach.
-- ❌ Reading `VirtualView` inside the `SetContent` lambda → mixes the
-  composition's snapshot system with MAUI's mutable element graph.
-  Push state into `MutableState<T>` slots first.
-- ❌ Skipping `DisposeComposition()` in `DisconnectHandler` → leak.
+- ❌ Spinning up an extra `ComposeView` outside `PageHandler` —
+  page-level composition is the whole point. New leaves derive from
+  `ComposeElementHandler<T>` (which already owns one `ComposeView`
+  per instance, used only for the stock-parent fallback path) and
+  contribute via `BuildNode`. Don't allocate yet another
+  `ComposeView` from inside a handler or elsewhere.
+- ❌ `MutableState<MauiStruct>` (Thickness, Color, Size, …) or
+  `MutableState<MauiEnum>` (TextAlignment, …) →
+  `NotSupportedException` at field-initializer time. Use the
+  version-counter pattern (struct) or store the underlying `int` and
+  cast back inside `BuildNode` (enum).
+- ❌ Reading `VirtualView` inside `BuildNode` for properties that
+  flow through the mapper pipeline → mixes the composition's snapshot
+  system with MAUI's mutable element graph. Push state into
+  `MutableState<T>` slots first. Exception: struct-typed live reads
+  paired with a version counter (see `LayoutHandler.BuildStack`'s
+  `VirtualView.Padding` read).
 - ❌ Calling `UseAndroidXCompose()` **before** `UseMauiApp<TApp>()` →
   stock handlers register after ours and win. Order is enforced by
   `Last AddHandler wins` in MAUI's `MauiServiceCollection`.

@@ -1,5 +1,5 @@
 using AndroidX.Compose;
-using AndroidX.Compose.UI.Platform;
+using AndroidX.Compose.Runtime;
 using Microsoft.Maui.Handlers;
 using ComposeColor = AndroidX.Compose.Color;
 using ComposeText = AndroidX.Compose.Text;
@@ -15,14 +15,16 @@ namespace Microsoft.AndroidX.Compose.Maui.Handlers;
 /// <see cref="Hosting.AppHostBuilderExtensions.UseAndroidXCompose"/>.
 /// </summary>
 /// <remarks>
-/// Each instance owns a <see cref="ComposeView"/> hosting one composition.
-/// The composition reads <see cref="MutableState{T}"/> slots
-/// (text, color, font size/weight, horizontal text alignment, fill-width
-/// flag) so MAUI property changes propagate through the standard mapper
-/// pipeline and trigger recomposition on the next frame without
-/// rebuilding the view.
+/// Folds into the page's single composition via
+/// <see cref="ComposeElementHandler{TVirtualView}"/> /
+/// <see cref="IComposeHandler"/>. The label reads
+/// <see cref="MutableState{T}"/> slots (text, color, font size/weight,
+/// horizontal text alignment, fill-width flag) so MAUI property
+/// changes propagate through the standard mapper pipeline and
+/// trigger recomposition on the next frame without rebuilding the
+/// platform view.
 /// </remarks>
-public partial class LabelHandler : ViewHandler<ILabel, ComposeView>
+public partial class LabelHandler : ComposeElementHandler<ILabel>
 {
     /// <summary>
     /// Property mapper that forwards MAUI <see cref="ILabel"/> property
@@ -66,40 +68,28 @@ public partial class LabelHandler : ViewHandler<ILabel, ComposeView>
         : base(mapper ?? Mapper, commandMapper ?? CommandMapper) { }
 
     /// <inheritdoc/>
-    protected override ComposeView CreatePlatformView()
+    public override ComposableNode BuildNode(IComposer composer)
     {
-        var view = new ComposeView(Context);
-        view.SetContent(_ =>
+        var packed = _color.Value;
+        var size   = _fontSize.Value;
+        var bold   = _bold.Value;
+        var fill   = _fillWidth.Value;
+        var align  = (TextAlignment)_hTextAlign.Value;
+        var text = new ComposeText(_text.Value)
         {
-            var packed = _color.Value;
-            var size   = _fontSize.Value;
-            var bold   = _bold.Value;
-            var fill   = _fillWidth.Value;
-            var align  = (TextAlignment)_hTextAlign.Value;
-            var text = new ComposeText(_text.Value)
+            Color      = packed.HasValue ? new ComposeColor(packed.Value) : null,
+            FontSize   = size.HasValue ? new Sp(size.Value) : null,
+            FontWeight = bold ? ComposeFontWeight.Bold : null,
+            Align      = align switch
             {
-                Color      = packed.HasValue ? new ComposeColor(packed.Value) : null,
-                FontSize   = size.HasValue ? new Sp(size.Value) : null,
-                FontWeight = bold ? ComposeFontWeight.Bold : null,
-                Align      = align switch
-                {
-                    TextAlignment.Center => ComposeTextAlign.Center,
-                    TextAlignment.End    => ComposeTextAlign.End,
-                    _                    => null,
-                },
-            };
-            if (fill)
-                text.PrependModifier(Modifier.FillMaxWidth());
-            return text;
-        });
-        return view;
-    }
-
-    /// <inheritdoc/>
-    protected override void DisconnectHandler(ComposeView platformView)
-    {
-        platformView.DisposeComposition();
-        base.DisconnectHandler(platformView);
+                TextAlignment.Center => ComposeTextAlign.Center,
+                TextAlignment.End    => ComposeTextAlign.End,
+                _                    => null,
+            },
+        };
+        if (fill)
+            text.PrependModifier(Modifier.FillMaxWidth());
+        return text;
     }
 
     /// <summary>Map <see cref="IText.Text"/> to the Compose text slot.</summary>

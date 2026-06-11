@@ -19,6 +19,8 @@ AndroidX.Compose.AlertDialog.Title.set -> void
 AndroidX.Compose.Alignment
 AndroidX.Compose.Alignment.Horizontal
 AndroidX.Compose.Alignment.Vertical
+AndroidX.Compose.AndroidView
+AndroidX.Compose.AndroidView.AndroidView(System.Func<Android.Content.Context!, Android.Views.View!>! factory, System.Action<Android.Views.View!>? update = null) -> void
 AndroidX.Compose.AnimatedContent<T>
 AndroidX.Compose.AnimatedContent<T>.AnimatedContent(T targetState, System.Func<T, AndroidX.Compose.ComposableNode!>! content) -> void
 AndroidX.Compose.AnimatedContent<T>.TargetState.get -> T
@@ -1313,6 +1315,7 @@ AndroidX.Compose.WideNavigationRailState.InitialValue.get -> AndroidX.Compose.Ma
 AndroidX.Compose.WideNavigationRailState.TargetValue.get -> AndroidX.Compose.Material3.WideNavigationRailValue!
 AndroidX.Compose.WideNavigationRailState.WideNavigationRailState(AndroidX.Compose.Material3.WideNavigationRailValue? initialValue = null) -> void
 override AndroidX.Compose.AlertDialog.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override AndroidX.Compose.AndroidView.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
 override AndroidX.Compose.AnimatedContent<T>.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
 override AndroidX.Compose.AnimatedVisibility.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
 override AndroidX.Compose.AnnotatedText.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
