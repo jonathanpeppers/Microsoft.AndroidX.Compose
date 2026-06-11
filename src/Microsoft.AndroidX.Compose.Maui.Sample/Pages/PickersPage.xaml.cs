@@ -8,8 +8,8 @@ using System.ComponentModel;
 /// <see cref="Microsoft.AndroidX.Compose.Maui.Handlers.DatePickerHandler"/>,
 /// and <see cref="Microsoft.AndroidX.Compose.Maui.Handlers.TimePickerHandler"/>:
 /// ItemsSource + SelectedIndex (Picker, two-way echo via SelectedIndexChanged),
-/// Date + MinimumDate + MaximumDate + Format (DatePicker, two-way echo via
-/// DateSelected), Time + Format (TimePicker, two-way echo via the
+/// Date + Format (DatePicker, two-way echo via DateSelected),
+/// Time + Format (TimePicker, two-way echo via the
 /// <c>PropertyChanged</c> event surfaced by <see cref="BindableObject"/>),
 /// and a Reset button that pushes new values back through the handlers.
 /// </summary>
@@ -23,8 +23,13 @@ public partial class PickersPage : ContentPage
     {
         InitializeComponent();
 
-        // Clamp the date picker to ±2 years from today so the
-        // MinimumDate / MaximumDate mappers are easy to verify.
+        // Seed the date picker with today so the trigger label has
+        // something useful to display before the user opens the dialog.
+        // MinimumDate / MaximumDate are not yet plumbed through to
+        // Compose's DatePickerState (Phase 4 zero-user-param Remember
+        // doesn't surface yearRange yet — see issue #264). We still
+        // set them here on the MAUI side so the regression is obvious
+        // when the Phase 4b lift lands.
         var today = DateTime.Today;
         BirthDate.MinimumDate = today.AddYears(-2);
         BirthDate.MaximumDate = today.AddYears(2);
