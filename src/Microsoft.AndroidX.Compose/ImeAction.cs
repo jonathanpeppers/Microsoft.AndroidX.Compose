@@ -18,7 +18,20 @@ namespace AndroidX.Compose;
 /// (e.g. <c>KeyboardOptions.Copy(int keyboardType, int imeAction, …)</c>)
 /// takes a raw <c>int</c> at the JNI boundary, so this type
 /// intentionally exposes the raw int directly — no <c>box-impl</c>
-/// indirection required. The same pattern as
+/// indirection required.
+///
+/// Internals: <see cref="AndroidX.Compose.UI.Text.Input.ImeAction"/>
+/// <em>and</em> its nested <see cref="BoundCompanion"/> are fully bound
+/// (every <c>Search-eUduSuo</c>-style getter surfaces as an <c>int</c>
+/// property on the Companion peer). The only thing missing is a
+/// <c>static Companion Companion { get; }</c> accessor on the outer
+/// class — Mono's binder skips it for Kotlin <c>object</c> companions
+/// on <c>@JvmInline value class</c> outers
+/// (<see href="https://github.com/dotnet/android-libraries/issues/1467"/>).
+/// So we bootstrap the singleton handle exactly once via JNI
+/// (<c>GetStaticObjectField</c>), wrap it as the bound Companion peer,
+/// and every constant accessor below routes through that peer's
+/// generated <c>InvokeNonvirtualInt32Method</c>. Same pattern as
 /// <see cref="KeyboardType"/>.
 /// </summary>
 public static class ImeAction
