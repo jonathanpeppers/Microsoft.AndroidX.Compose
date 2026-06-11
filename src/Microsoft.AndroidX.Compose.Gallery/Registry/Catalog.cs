@@ -130,6 +130,8 @@ public static class Catalog
         // ---- Dialogs & sheets ----
         D.DialogsSheets.AlertDialogDemo.Demo,
         D.DialogsSheets.ModalBottomSheetDemo.Demo,
+        D.DialogsSheets.ModalBottomSheetVetoDemo.Demo,
+        D.DialogsSheets.BottomSheetScaffoldDemo.Demo,
         D.DialogsSheets.DatePickerDialogDemo.Demo,
         D.DialogsSheets.DateRangePickerDialogDemo.Demo,
         D.DialogsSheets.TimePickerDialogDemo.Demo,

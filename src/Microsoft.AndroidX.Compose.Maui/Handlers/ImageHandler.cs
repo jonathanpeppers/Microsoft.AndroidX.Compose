@@ -96,28 +96,42 @@ public partial class ImageHandler : ComposeElementHandler<MauiIImage>
     public ImageHandler(IPropertyMapper? mapper, CommandMapper? commandMapper = null)
         : base(mapper ?? Mapper, commandMapper ?? CommandMapper) { }
 
+    // Without a sizing modifier, Compose's `Image` measures itself
+    // against the painter's intrinsic size and `ContentScale` has no
+    // visible effect (the layout box exactly matches the scaled
+    // painter, so Fit / Crop / FillBounds all produce the same
+    // result). `Modifier.fillMaxSize()` makes the Image honour the
+    // layout box MAUI sized for the platform view — which is what
+    // `HeightRequest` / `WidthRequest` on the `<Image>` virtual view
+    // feed into. The `Modifier` chain itself is an immutable POCO
+    // (just an op array); we cache one instance and share it across
+    // every handler / Render pass.
+    static readonly Modifier s_fillMaxSize = Modifier.FillMaxSize();
+
     /// <inheritdoc/>
     public override ComposableNode BuildNode(IComposer composer)
     {
         SubscribeToViewProperties();
 
+        // Apply cross-cutting view properties (Opacity / Translation /
+        // Scale / Rotation / IsVisible / Clip / Shadow) on top of the
+        // FillMaxSize sizing modifier so the Image honours the layout
+        // box MAUI sized for it. The placeholder Box gets the modifier
+        // too so an Image with Opacity=0 stays invisible even before
+        // the source loads.
+        var modifier = s_fillMaxSize.ApplyViewProperties(VirtualView!);
+        var cs = _contentScale.Value;
+
         // Painter wins over the resource id so a freshly-loaded
         // BitmapPainter immediately replaces any stale fast-path
         // drawable. Both null => empty placeholder.
-        ComposableNode node;
         if (_painter.Value is { } painter)
-            node = new ComposeImage(painter) { ContentScale = _contentScale.Value };
-        else if (_drawableResourceId.Value is int id)
-            node = new ComposeImage(id) { ContentScale = _contentScale.Value };
-        else
-            node = new Box();
-
-        // Apply cross-cutting view properties (Opacity / Translation /
-        // Scale / Rotation / IsVisible / Clip / Shadow). The placeholder
-        // Box gets the modifier too, so an Image with Opacity=0 stays
-        // invisible even before the source loads.
-        node.PrependModifier(Modifier.Companion.ApplyViewProperties(VirtualView!));
-        return node;
+            return new ComposeImage(painter) { ContentScale = cs, Modifier = modifier };
+        if (_drawableResourceId.Value is int id)
+            return new ComposeImage(id) { ContentScale = cs, Modifier = modifier };
+        var placeholder = new Box();
+        placeholder.PrependModifier(modifier);
+        return placeholder;
     }
 
     /// <inheritdoc/>

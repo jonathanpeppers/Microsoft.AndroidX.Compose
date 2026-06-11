@@ -1,5 +1,6 @@
 using AndroidX.Compose;
 using AndroidX.Compose.UI.Platform;
+using Microsoft.AndroidX.Compose.Maui.Platform;
 using Microsoft.Maui.Handlers;
 using StockPageHandler = Microsoft.Maui.Handlers.PageHandler;
 
@@ -78,7 +79,13 @@ public partial class PageHandler : ViewHandler<IContentView, ComposeView>
     /// <summary>
     /// Push the page's <see cref="IContentView.PresentedContent"/>
     /// through <see cref="ComposeWalker"/> and install the resulting
-    /// node into <see cref="PlatformView"/>'s composition.
+    /// node into <see cref="PlatformView"/>'s composition. The walker
+    /// output is wrapped in a <see cref="MaterialTheme"/> driven by
+    /// the DI-registered <see cref="ThemeManager"/> so MAUI's
+    /// <see cref="Microsoft.Maui.Controls.Application.RequestedTheme"/>
+    /// (and its <see cref="Microsoft.Maui.Controls.Application.UserAppTheme"/>
+    /// override) flips every Compose-backed page between light and
+    /// dark Material 3 colour schemes.
     /// </summary>
     public static void MapContent(PageHandler handler, IContentView page)
     {
@@ -89,10 +96,25 @@ public partial class PageHandler : ViewHandler<IContentView, ComposeView>
             ?? throw new InvalidOperationException(
                 "MauiContext should have been set by the base ViewHandler.");
 
+        // Resolve the singleton ThemeManager. Use GetRequiredService
+        // so a missing UseAndroidXCompose() registration fails fast
+        // with a clear message — silently allocating a transient on
+        // every MapContent invocation would leak the
+        // RequestedThemeChanged subscription. Reading IsDark.Value
+        // inside SetContent's lambda registers a snapshot read so
+        // flipping the MAUI theme triggers recomposition without the
+        // consumer reaching into Compose.
+        var theme = context.Services.GetRequiredService<ThemeManager>();
+
         var content = page.PresentedContent;
         if (content is null)
         {
-            compose.SetContent(_ => new Box());
+            compose.SetContent(_ =>
+            {
+                var empty = new MaterialTheme { Dark = theme.IsDark.Value, UseDynamicColor = false };
+                empty.Add(new Box());
+                return empty;
+            });
             return;
         }
 
@@ -101,7 +123,19 @@ public partial class PageHandler : ViewHandler<IContentView, ComposeView>
             var node = ComposeWalker.Render(content, c, context);
             var root = new Box { Modifier = Modifier.FillMaxSize() };
             root.Add(node);
-            return root;
+            // Reading IsDark.Value here ties this composition to the
+            // singleton state. UseDynamicColor=false because Material
+            // You would otherwise pull a wallpaper-derived palette and
+            // ignore MAUI's signal entirely. C# disallows mixing
+            // property assignments with collection-init items in one
+            // initializer block (CS0747), so build then Add.
+            var themed = new MaterialTheme
+            {
+                Dark            = theme.IsDark.Value,
+                UseDynamicColor = false,
+            };
+            themed.Add(root);
+            return themed;
         });
     }
 

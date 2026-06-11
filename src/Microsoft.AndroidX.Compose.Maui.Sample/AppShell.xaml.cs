@@ -22,5 +22,7 @@ public partial class AppShell : Shell
         Routing.RegisterRoute("image-aspects",  typeof(ImageAspectsPage));
         Routing.RegisterRoute("image-sources",  typeof(ImageSourcesPage));
         Routing.RegisterRoute("modifiers",      typeof(ModifiersPage));
+        Routing.RegisterRoute("toggles",        typeof(TogglesPage));
+        Routing.RegisterRoute("theme",          typeof(ThemePage));
     }
 }

@@ -63,8 +63,18 @@ public partial class HomePage : ContentPage
             new DemoEntry(
                 "Modifiers",
                 "Opacity, Scale, Rotation, IsVisible, Translation, Clip, Shadow on a single Image.",
-                Color.FromArgb("#FF9800"),
+                Color.FromArgb("#FF5722"),
                 "modifiers"),
+            new DemoEntry(
+                "Toggles",
+                "CheckBox / Switch / RadioButton with two-way binding.",
+                Color.FromArgb("#FF9800"),
+                "toggles"),
+            new DemoEntry(
+                "Theme",
+                "Light / Dark / Unspecified — flips MaterialTheme via UserAppTheme.",
+                Color.FromArgb("#795548"),
+                "theme"),
         };
     }
 

@@ -63,7 +63,7 @@ namespace Microsoft.AndroidX.Compose.Maui.Platform;
 /// Android's <c>android.graphics.Camera</c> matrix into Compose
 /// space — out of scope for the bridge.</para>
 /// </remarks>
-public static class ModifierBridge
+internal static class ModifierBridge
 {
     /// <summary>
     /// Chain Compose modifier ops onto <paramref name="modifier"/> for
@@ -84,7 +84,7 @@ public static class ModifierBridge
     /// (so they affect the entire visual including any clip / shadow
     /// outline), shadow and clip go innermost (so they outline the
     /// drawn content rather than the post-translate position).</returns>
-    public static Modifier ApplyViewProperties(this Modifier modifier, IView view)
+    internal static Modifier ApplyViewProperties(this Modifier modifier, IView view)
     {
         ArgumentNullException.ThrowIfNull(modifier);
         ArgumentNullException.ThrowIfNull(view);
@@ -162,6 +162,15 @@ public static class ModifierBridge
             modifier = modifier.Rotate((float)rotation);
         }
 
+        // -- Clip + Shadow share a translated shape so the shadow
+        //    outline matches the clip (otherwise a rounded clip with
+        //    a default-rectangular shadow produces a visible hard-edge
+        //    halo behind round-cornered content). Compute once, pass
+        //    to both.
+        ComposeShape? clipShape = view.Clip is IShape clip
+            ? TranslateClipToShape(clip)
+            : null;
+
         // -- Shadow. Innermost so it outlines the drawn content.
         //    Compose's Modifier.Shadow only exposes elevation + shape;
         //    MAUI's Brush / Offset / Opacity beyond the elevation tint
@@ -169,16 +178,14 @@ public static class ModifierBridge
         //    elevation + the surrounding theme).
         if (view.Shadow is { } shadow && shadow.Radius > 0)
         {
-            modifier = modifier.Shadow(new Dp(shadow.Radius));
+            modifier = modifier.Shadow(new Dp(shadow.Radius), clipShape);
         }
 
         // -- Clip. Apply last so the clip outline tracks the content
         //    rather than the post-translate / post-rotate bounds.
-        if (view.Clip is IShape clip)
+        if (clipShape is not null)
         {
-            var shape = TranslateClipToShape(clip);
-            if (shape is not null)
-                modifier = modifier.Clip(shape);
+            modifier = modifier.Clip(clipShape);
         }
 
         return modifier;

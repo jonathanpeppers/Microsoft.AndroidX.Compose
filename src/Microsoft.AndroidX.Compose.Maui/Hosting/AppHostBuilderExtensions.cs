@@ -1,11 +1,15 @@
 using Microsoft.AndroidX.Compose.Maui.Handlers;
+using Microsoft.AndroidX.Compose.Maui.Platform;
 using MauiButton = Microsoft.Maui.Controls.Button;
+using MauiCheckBox = Microsoft.Maui.Controls.CheckBox;
 using MauiEntry = Microsoft.Maui.Controls.Entry;
 using MauiHorizontalStackLayout = Microsoft.Maui.Controls.HorizontalStackLayout;
 using MauiImage = Microsoft.Maui.Controls.Image;
 using MauiLabel = Microsoft.Maui.Controls.Label;
 using MauiPage = Microsoft.Maui.Controls.Page;
+using MauiRadioButton = Microsoft.Maui.Controls.RadioButton;
 using MauiScrollView = Microsoft.Maui.Controls.ScrollView;
+using MauiSwitch = Microsoft.Maui.Controls.Switch;
 using MauiVerticalStackLayout = Microsoft.Maui.Controls.VerticalStackLayout;
 
 namespace Microsoft.AndroidX.Compose.Maui.Hosting;
@@ -40,8 +44,10 @@ public static class AppHostBuilderExtensions
     ///     <c>Modifier.verticalScroll</c> / <c>horizontalScroll</c>.</description></item>
     ///   <item><description>Leaves
     ///     (<see cref="MauiLabel"/> / <see cref="MauiButton"/> /
-    ///     <see cref="MauiEntry"/> / <see cref="MauiImage"/>) fold
-    ///     into the enclosing composition via
+    ///     <see cref="MauiEntry"/> / <see cref="MauiImage"/> /
+    ///     <see cref="MauiCheckBox"/> / <see cref="MauiSwitch"/> /
+    ///     <see cref="MauiRadioButton"/>) fold into the enclosing
+    ///     composition via
     ///     <see cref="IComposeHandler"/>.</description></item>
     /// </list>
     ///
@@ -53,7 +59,7 @@ public static class AppHostBuilderExtensions
     /// (the leaf creates its own composition because there's no parent
     /// composer to fold into). When they appear <i>below</i> a
     /// converted parent — or anywhere a non-converted control surfaces
-    /// (CollectionView, BoxView, Switch, customer renderers) — they're
+    /// (CollectionView, BoxView, customer renderers) — they're
     /// hosted via <c>AndroidView { factory = child.ToPlatform(MauiContext) }</c>
     /// inside the page composition, so MAUI's normal handler resolution
     /// keeps working.</para>
@@ -76,6 +82,12 @@ public static class AppHostBuilderExtensions
         // through the shared mapper. Idempotent.
         RemapForCompose();
 
+        // Process-wide bridge between MAUI's RequestedTheme /
+        // UserAppTheme and the Compose-side MaterialTheme. Resolved
+        // by PageHandler.MapContent — see ThemeManager for resolution
+        // rules and trade-offs.
+        builder.Services.AddSingleton<ThemeManager>();
+
         builder.ConfigureMauiHandlers(handlers =>
         {
             // Root: the only handler that creates a ComposeView.
@@ -91,6 +103,9 @@ public static class AppHostBuilderExtensions
             handlers.AddHandler<MauiButton,                 ButtonHandler>();
             handlers.AddHandler<MauiEntry,                  EntryHandler>();
             handlers.AddHandler<MauiImage,                  ImageHandler>();
+            handlers.AddHandler<MauiCheckBox,               CheckBoxHandler>();
+            handlers.AddHandler<MauiSwitch,                 SwitchHandler>();
+            handlers.AddHandler<MauiRadioButton,            RadioButtonHandler>();
         });
 
         return builder;
@@ -131,7 +146,7 @@ public static class AppHostBuilderExtensions
     /// <c>UpdateOpacity</c> still executes against the (detached)
     /// <c>ComposeView</c>.</para>
     /// </remarks>
-    public static void RemapForCompose()
+    static void RemapForCompose()
     {
         if (s_remapped) return;
         s_remapped = true;

@@ -72,6 +72,34 @@ internal static partial class ComposeBridges
         Signature = "(Lkotlin/coroutines/Continuation;)Ljava/lang/Object;")]
     internal static partial IntPtr DrawerStateClose(IntPtr state, IContinuation cont);
 
+    // androidx.compose.material3.SheetState.show(Continuation): Object
+    [ComposeBridge(Suspend = true,
+        Class = "androidx/compose/material3/SheetState",
+        JvmName = "show",
+        Signature = "(Lkotlin/coroutines/Continuation;)Ljava/lang/Object;")]
+    internal static partial IntPtr SheetStateShow(IntPtr state, IContinuation cont);
+
+    // androidx.compose.material3.SheetState.hide(Continuation): Object
+    [ComposeBridge(Suspend = true,
+        Class = "androidx/compose/material3/SheetState",
+        JvmName = "hide",
+        Signature = "(Lkotlin/coroutines/Continuation;)Ljava/lang/Object;")]
+    internal static partial IntPtr SheetStateHide(IntPtr state, IContinuation cont);
+
+    // androidx.compose.material3.SheetState.expand(Continuation): Object
+    [ComposeBridge(Suspend = true,
+        Class = "androidx/compose/material3/SheetState",
+        JvmName = "expand",
+        Signature = "(Lkotlin/coroutines/Continuation;)Ljava/lang/Object;")]
+    internal static partial IntPtr SheetStateExpand(IntPtr state, IContinuation cont);
+
+    // androidx.compose.material3.SheetState.partialExpand(Continuation): Object
+    [ComposeBridge(Suspend = true,
+        Class = "androidx/compose/material3/SheetState",
+        JvmName = "partialExpand",
+        Signature = "(Lkotlin/coroutines/Continuation;)Ljava/lang/Object;")]
+    internal static partial IntPtr SheetStatePartialExpand(IntPtr state, IContinuation cont);
+
     // androidx.compose.foundation.lazy.LazyListState
     //     .scrollToItem(int index, int scrollOffset, Continuation): Object
     [ComposeBridge(Suspend = true,

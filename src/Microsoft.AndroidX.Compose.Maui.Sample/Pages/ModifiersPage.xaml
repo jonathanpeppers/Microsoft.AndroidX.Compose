@@ -26,9 +26,10 @@
                    Style="{StaticResource SubHeadline}" />
 
             <!-- Target — fills a fixed-height slot so transforms stay
-                 in view. The HorizontalStackLayout reserves enough
-                 horizontal space that translating the image right by
-                 60dp doesn't push it off-screen. -->
+                 in view. The VerticalStackLayout's HorizontalOptions=
+                 "Fill" reserves enough horizontal space that
+                 translating the image right by 60dp doesn't push it
+                 off-screen. -->
             <VerticalStackLayout BackgroundColor="#E0E0E0"
                                  HeightRequest="240"
                                  HorizontalOptions="Fill">
