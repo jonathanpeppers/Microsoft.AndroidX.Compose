@@ -602,6 +602,98 @@ page so cross-sibling animation, semantics, and a single
   consumes pointer events for its own composition. Workaround: put
   a stock leaf in the cell, or convert the container.
 
+#### Phase 2 Slice 5 — picker family
+
+**Goal:** re-skin MAUI's `Picker`, `DatePicker`, and `TimePicker` over
+Compose's modal pickers. This is the first MAUI slice to lean on
+**state-holder** facades (`DatePickerState` Phase 4, `TimePickerState`
+Phase 4b) — the sticking points all came from the gap between
+short-lived MAUI events (`DateSelected`, `Time` `PropertyChanged`,
+`SelectedIndexChanged`) and Compose's "remember once, mutate state
+forever" model.
+
+**Delivered:**
+
+- `Microsoft.AndroidX.Compose.Maui.Handlers.PickerHandler` over
+  `ExposedDropdownMenuBox` + `OutlinedTextField` (read-only) +
+  `ExposedDropdownMenu` of `DropdownMenuItem`s. Watches
+  `IPicker.Items` (`INotifyCollectionChanged`-aware) so external
+  mutations to the bound list bump a version counter and rebuild the
+  menu. Mappers: `ItemsSource`, `SelectedIndex`, `Title`, `TitleColor`,
+  `TextColor`, `FontSize`, `FontAttributes`, `HorizontalLayoutAlignment`.
+- `Microsoft.AndroidX.Compose.Maui.Handlers.DatePickerHandler` over a
+  trigger-style `OutlinedButton` (label = formatted date) that opens
+  `DatePickerDialog { DatePicker(state) }` on tap. Confirm reads
+  `DatePickerState.SelectedDateMillis`. Mappers: `Date`, `MinimumDate`,
+  `MaximumDate`, `Format`, `TextColor`.
+- `Microsoft.AndroidX.Compose.Maui.Handlers.TimePickerHandler` over an
+  `OutlinedButton` + `TimePickerDialog { TimePicker(state) }` of the
+  same shape. Confirm reads `state.Hour` / `state.Minute`. Mappers:
+  `Time`, `Format`, `TextColor`.
+- Three `handlers.AddHandler<>` lines in `AppHostBuilderExtensions`.
+- `PickersPage` sample page + `HomePage` / `AppShell` wiring.
+
+No facade extensions were needed — `DatePickerDialog`,
+`TimePickerDialog`, `ExposedDropdownMenuBox`, `ExposedDropdownMenu`,
+`DropdownMenuItem`, `OutlinedButton` are all already
+`[ComposeFacade]`-generated.
+
+**Lessons learned (Slice 5):**
+
+- **`MutableState<DateTime>` / `MutableState<TimeSpan>` are impossible**
+  for the same reason as Slice 2 — neither is a `Java.Lang.Object`
+  subclass nor a recognised primitive. The handler stores the value
+  as `MutableState<long?>` of `Ticks` and reconstitutes the struct
+  inside `BuildNode`. Min/Max bounds use the same pattern.
+- **`MutableState<IList>` is also impossible.** `Picker.Items` is
+  surfaced as a version-counter (`MutableState<int>`) bumped from
+  both `MapItemsSource` (when the bound source is replaced) and
+  `INotifyCollectionChanged.CollectionChanged` (when the same source
+  mutates in place). The handler reads `VirtualView.Items` live
+  inside `BuildNode`. Subscriptions live and die with `SetVirtualView`
+  / `DisconnectHandler` so we never leak a CollectionChanged handler
+  past the virtual view.
+- **`DatePickerState.Jvm` is `internal`**, so the MAUI handler can't
+  null-check it before pushing values into the wrapper. The state's
+  setter (`SelectedDateMillis = ms`) is already a silent no-op until
+  Compose binds the JVM peer on the first call to `DatePicker(state)`.
+  We seed the state from `MutableState<long?> _ticks` inside a
+  `LaunchedEffect` *sibling* to the `DatePickerDialog` — by the time
+  the effect runs, `Jvm` is non-null and the assignment lands.
+- **`TimePickerState` is Phase 4b** — the wrapper takes
+  `initialHour`, `initialMinute`, `is24Hour` as ctor args. We re-key
+  `c.Remember(factory, ticks, is24Hour)` so external `Time` writes
+  from MAUI refresh the wrapper on the next composition (between
+  dialog opens). Inside an open dialog Compose's own `remember`
+  contract still holds — the user's drags don't tear down the
+  wrapper.
+- **Two-way feedback loop** matches `EntryHandler`: write the new
+  value into the local `MutableState` first (so the equality
+  short-circuit on the next `Map*` call breaks the loop), then
+  forward to `VirtualView.<prop>`. The MAUI side fires its own
+  `PropertyChanged` on the way back in, but the mapper sees the value
+  it already stored and stops.
+
+**Verified on device** (Pickers sample page):
+
+- `Picker` opens its dropdown, selecting an item updates the trigger
+  text, `SelectedIndexChanged` fires once, and the echo `Label`
+  reflects the chosen string.
+- `DatePicker` opens the modal calendar, the prior selection is
+  pre-highlighted (Slice's confirmed `LaunchedEffect`-keyed seeding
+  works), confirming writes back through `DateSelected`, and the
+  ±2y `MinimumDate` / `MaximumDate` clamp greys out unreachable
+  months.
+- `TimePicker` opens the clock face at `7:30` (default) the first
+  time, then at the most-recently-confirmed value on subsequent
+  opens. `Time` `PropertyChanged` echoes once per confirm.
+- Reset button writes through all three handlers; subsequent dialog
+  opens display the reset values.
+- `adb shell uiautomator dump` shows **exactly one**
+  `androidx.compose.ui.platform.ComposeView` node on `PickersPage`
+  itself. The picker dialogs are separate windows (own
+  `ComposeView`), as expected for modal Compose surfaces.
+
 ### Phase 3 — collection + container (target: list-driven apps)
 
 `CollectionView` → `LazyColumn<T>` / `LazyRow<T>` / `LazyVerticalGrid<T>`

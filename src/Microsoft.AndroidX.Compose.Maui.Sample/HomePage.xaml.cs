@@ -60,6 +60,11 @@ public partial class HomePage : ContentPage
                 "File / Uri / Stream / Font image source types.",
                 Color.FromArgb("#E91E63"),
                 "image-sources"),
+            new DemoEntry(
+                "Pickers",
+                "Picker, DatePicker, TimePicker (state-holder dialogs).",
+                Color.FromArgb("#FF9800"),
+                "pickers"),
         };
     }
 

@@ -1,11 +1,14 @@
 using Microsoft.AndroidX.Compose.Maui.Handlers;
 using MauiButton = Microsoft.Maui.Controls.Button;
+using MauiDatePicker = Microsoft.Maui.Controls.DatePicker;
 using MauiEntry = Microsoft.Maui.Controls.Entry;
 using MauiHorizontalStackLayout = Microsoft.Maui.Controls.HorizontalStackLayout;
 using MauiImage = Microsoft.Maui.Controls.Image;
 using MauiLabel = Microsoft.Maui.Controls.Label;
 using MauiPage = Microsoft.Maui.Controls.Page;
+using MauiPicker = Microsoft.Maui.Controls.Picker;
 using MauiScrollView = Microsoft.Maui.Controls.ScrollView;
+using MauiTimePicker = Microsoft.Maui.Controls.TimePicker;
 using MauiVerticalStackLayout = Microsoft.Maui.Controls.VerticalStackLayout;
 
 namespace Microsoft.AndroidX.Compose.Maui.Hosting;
@@ -40,8 +43,10 @@ public static class AppHostBuilderExtensions
     ///     <c>Modifier.verticalScroll</c> / <c>horizontalScroll</c>.</description></item>
     ///   <item><description>Leaves
     ///     (<see cref="MauiLabel"/> / <see cref="MauiButton"/> /
-    ///     <see cref="MauiEntry"/> / <see cref="MauiImage"/>) fold
-    ///     into the enclosing composition via
+    ///     <see cref="MauiEntry"/> / <see cref="MauiImage"/> /
+    ///     <see cref="MauiPicker"/> / <see cref="MauiDatePicker"/> /
+    ///     <see cref="MauiTimePicker"/>) fold into the enclosing
+    ///     composition via
     ///     <see cref="IComposeHandler"/>.</description></item>
     /// </list>
     ///
@@ -84,6 +89,9 @@ public static class AppHostBuilderExtensions
             handlers.AddHandler<MauiButton,                 ButtonHandler>();
             handlers.AddHandler<MauiEntry,                  EntryHandler>();
             handlers.AddHandler<MauiImage,                  ImageHandler>();
+            handlers.AddHandler<MauiPicker,                 PickerHandler>();
+            handlers.AddHandler<MauiDatePicker,             DatePickerHandler>();
+            handlers.AddHandler<MauiTimePicker,             TimePickerHandler>();
         });
 
         return builder;

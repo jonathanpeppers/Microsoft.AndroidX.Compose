@@ -27,7 +27,7 @@
                        TextColor="White"
                        FontSize="28"
                        FontAttributes="Bold" />
-                <Label Text="Each row exercises one of the four Compose-backed handlers (Button, Entry, Image, Label) wired by UseAndroidXCompose()."
+                <Label Text="Each row exercises one of the seven Compose-backed handlers (Button, DatePicker, Entry, Image, Label, Picker, TimePicker) wired by UseAndroidXCompose()."
                        TextColor="White"
                        Opacity="0.85"
                        FontSize="13" />
