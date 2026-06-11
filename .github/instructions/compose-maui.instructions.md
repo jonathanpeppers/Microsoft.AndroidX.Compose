@@ -362,19 +362,27 @@ return BitmapPainterKt.BitmapPainter(
 
 **Async-void fire-and-forget.** `Microsoft.Maui.TaskExtensions.FireAndForget`
 is **internal**; replicate the same shape inline (await,
-swallow + log on exception). The inner `UpdateSourceAsync` already
-catches `Exception` and routes failure to `setImage(null)`, so the
-catch here is defence-in-depth — it primarily covers
+swallow + log on exception) as a local async-void function inside
+`MapSource`. The inner `UpdateSourceAsync` already catches
+`Exception` and routes failure to `setImage(null)`, so the catch
+here is defence-in-depth — it primarily covers
 `ObjectDisposedException` from a disconnected handler.
 
 ```csharp
-static async void StartPipelineLoad(ImageHandler handler)
+public static void MapSource(ImageHandler handler, MauiIImage image)
 {
-    try { await handler.Loader.UpdateImageSourceAsync().ConfigureAwait(false); }
-    catch (Exception ex)
+    // ...fast-path branches above...
+    handler._drawableResourceId.Value = null;
+    StartPipelineLoad();
+
+    async void StartPipelineLoad()
     {
-        System.Diagnostics.Debug.WriteLine(
-            $"[ImageHandler] image source load failed: {ex.Message}");
+        try { await handler.Loader.UpdateImageSourceAsync().ConfigureAwait(false); }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine(
+                $"[ImageHandler] image source load failed: {ex.Message}");
+        }
     }
 }
 ```

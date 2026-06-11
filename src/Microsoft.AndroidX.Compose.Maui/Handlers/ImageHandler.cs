@@ -162,27 +162,29 @@ public partial class ImageHandler : ViewHandler<MauiIImage, ComposeView>
         // FontImageSourceService all materialize the source into a
         // Drawable. The setter writes the resulting BitmapPainter
         // into _painter (or null on cancel/error).
+        //
+        // MAUI's stock handlers fire-and-forget through the internal
+        // `TaskExtensions.FireAndForget`; replicate the same shape
+        // (await, swallow + log) inline via a local async-void
+        // function so we don't depend on internals. The inner
+        // UpdateSourceAsync already catches Exception and routes
+        // failure to setImage(null), so this catch is defence-in-
+        // depth — primarily covering ObjectDisposedException from a
+        // disconnected handler.
         handler._drawableResourceId.Value = null;
-        StartPipelineLoad(handler);
-    }
+        StartPipelineLoad();
 
-    // MAUI's stock handlers use the internal `TaskExtensions.FireAndForget`
-    // helper; replicate the same shape (await, swallow + log on
-    // exception) inline so we don't depend on internals.
-    // ImageSourcePartLoader.UpdateImageSourceAsync's inner
-    // UpdateSourceAsync already catches Exception and routes failure to
-    // setImage(null), so this catch is defence-in-depth — primarily
-    // covering ObjectDisposedException from a disconnected handler.
-    static async void StartPipelineLoad(ImageHandler handler)
-    {
-        try
+        async void StartPipelineLoad()
         {
-            await handler.Loader.UpdateImageSourceAsync().ConfigureAwait(false);
-        }
-        catch (System.Exception ex)
-        {
-            System.Diagnostics.Debug.WriteLine(
-                $"[ImageHandler] image source load failed: {ex.Message}");
+            try
+            {
+                await handler.Loader.UpdateImageSourceAsync().ConfigureAwait(false);
+            }
+            catch (System.Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine(
+                    $"[ImageHandler] image source load failed: {ex.Message}");
+            }
         }
     }
 
