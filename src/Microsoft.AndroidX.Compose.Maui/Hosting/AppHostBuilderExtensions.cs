@@ -1,4 +1,5 @@
 using Microsoft.AndroidX.Compose.Maui.Handlers;
+using Microsoft.AndroidX.Compose.Maui.Platform;
 using MauiBorder = Microsoft.Maui.Controls.Border;
 using MauiBoxView = Microsoft.Maui.Controls.BoxView;
 using MauiButton = Microsoft.Maui.Controls.Button;
@@ -85,6 +86,12 @@ public static class AppHostBuilderExtensions
     public static MauiAppBuilder UseAndroidXCompose(this MauiAppBuilder builder)
     {
         ArgumentNullException.ThrowIfNull(builder);
+
+        // Process-wide bridge between MAUI's RequestedTheme /
+        // UserAppTheme and the Compose-side MaterialTheme. Resolved
+        // by PageHandler.MapContent — see ThemeManager for resolution
+        // rules and trade-offs.
+        builder.Services.AddSingleton<ThemeManager>();
 
         builder.ConfigureMauiHandlers(handlers =>
         {

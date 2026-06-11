@@ -66,6 +66,11 @@ public partial class HomePage : ContentPage
                 Color.FromArgb("#FF9800"),
                 "toggles"),
             new DemoEntry(
+                "Theme",
+                "Light / Dark / Unspecified — flips MaterialTheme via UserAppTheme.",
+                Color.FromArgb("#795548"),
+                "theme"),
+            new DemoEntry(
                 "Editor",
                 "Multi-line text input, word counter, read-only, max length.",
                 Color.FromArgb("#FFC107"),
@@ -73,7 +78,7 @@ public partial class HomePage : ContentPage
             new DemoEntry(
                 "Search",
                 "SearchBar + filtered list + IME-Search event.",
-                Color.FromArgb("#795548"),
+                Color.FromArgb("#8D6E63"),
                 "search"),
             new DemoEntry(
                 "Image buttons",
@@ -85,7 +90,6 @@ public partial class HomePage : ContentPage
                 "Border, BoxView, ContentView modifier-chain demos.",
                 Color.FromArgb("#4CAF50"),
                 "visuals"),
-
         };
     }
 
