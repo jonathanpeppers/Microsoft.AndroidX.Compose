@@ -75,6 +75,8 @@
                 <Label
                     x:Name="StepperValueLabel"
                     Text="6"
+                    FontSize="20"
+                    FontAttributes="Bold"
                     VerticalOptions="Center" />
             </HorizontalStackLayout>
 

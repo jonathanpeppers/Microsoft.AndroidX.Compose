@@ -3571,13 +3571,14 @@ internal static partial class ComposeBridges
     internal static void Column(
         IModifier? modifier,
         AndroidX.Compose.Foundation.Layout.Arrangement.IVertical? verticalArrangement,
+        IAlignmentHorizontal? horizontalAlignment,
         IFunction3 content,
         int defaults,
         IComposer composer)
         => ColumnKt.Column(
             modifier:            modifier,
             verticalArrangement: verticalArrangement,
-            horizontalAlignment: null,
+            horizontalAlignment: horizontalAlignment,
             content:             content,
             _composer:           composer,
             p5:                  0,

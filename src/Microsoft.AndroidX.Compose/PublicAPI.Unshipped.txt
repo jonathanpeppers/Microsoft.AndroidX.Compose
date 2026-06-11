@@ -175,6 +175,7 @@ AndroidX.Compose.Color.WithOpacity(float opacity) -> AndroidX.Compose.Color
 AndroidX.Compose.Column
 AndroidX.Compose.Column.Column() -> void
 AndroidX.Compose.Column.Column(AndroidX.Compose.Arrangement? verticalArrangement) -> void
+AndroidX.Compose.Column.Column(AndroidX.Compose.Arrangement? verticalArrangement, AndroidX.Compose.Alignment.Horizontal? horizontalAlignment) -> void
 AndroidX.Compose.ComposableContainer
 AndroidX.Compose.ComposableContainer.Add(AndroidX.Compose.ComposableNode? child) -> void
 AndroidX.Compose.ComposableContainer.Add(AndroidX.Compose.Modifier! modifier) -> void

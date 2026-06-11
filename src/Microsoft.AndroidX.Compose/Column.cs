@@ -17,12 +17,14 @@ namespace AndroidX.Compose;
 public sealed class Column : ComposableContainer
 {
     readonly Arrangement? _verticalArrangement;
+    readonly Alignment.Horizontal? _horizontalAlignment;
 
     /// <summary>
     /// Lay out children top-to-bottom with Compose's default
-    /// vertical arrangement (<c>Arrangement.Top</c>).
+    /// vertical arrangement (<c>Arrangement.Top</c>) and default
+    /// horizontal alignment (<c>Alignment.Start</c>).
     /// </summary>
-    public Column() : this(null) { }
+    public Column() : this(null, null) { }
 
     /// <summary>
     /// Lay out children top-to-bottom using
@@ -41,7 +43,29 @@ public sealed class Column : ComposableContainer
     /// <see cref="Arrangement.End"/>) throws
     /// <see cref="ArgumentException"/>.
     /// </param>
-    public Column(Arrangement? verticalArrangement)
+    public Column(Arrangement? verticalArrangement) : this(verticalArrangement, null) { }
+
+    /// <summary>
+    /// Lay out children top-to-bottom using
+    /// <paramref name="verticalArrangement"/> and
+    /// <paramref name="horizontalAlignment"/>. Either may be
+    /// <see langword="null"/> to keep Compose's default for that axis
+    /// (<c>Arrangement.Top</c> / <c>Alignment.Start</c>).
+    /// </summary>
+    /// <param name="verticalArrangement">
+    /// One of the <see cref="Arrangement"/> static factories — see the
+    /// single-argument constructor for the full list of permitted
+    /// values.
+    /// </param>
+    /// <param name="horizontalAlignment">
+    /// One of the <see cref="Alignment.Horizontal"/> singletons
+    /// (<see cref="Alignment.Horizontal.Start"/>,
+    /// <see cref="Alignment.Horizontal.CenterHorizontally"/>,
+    /// <see cref="Alignment.Horizontal.End"/>). Controls how children
+    /// narrower than the Column's measured width are placed along its
+    /// horizontal axis.
+    /// </param>
+    public Column(Arrangement? verticalArrangement, Alignment.Horizontal? horizontalAlignment)
     {
         if (verticalArrangement is not null && verticalArrangement.Vertical is null)
         {
@@ -53,16 +77,19 @@ public sealed class Column : ComposableContainer
         }
 
         _verticalArrangement = verticalArrangement;
+        _horizontalAlignment = horizontalAlignment;
     }
 
     public override void Render(IComposer composer)
     {
         var vertical = _verticalArrangement?.Vertical;
+        var horizontal = _horizontalAlignment?.Java;
         var modifier = BuildModifier();
 
         int defaults = (int)ColumnDefault.All;
-        if (modifier is not null) defaults &= ~(int)ColumnDefault.Modifier;
-        if (vertical is not null) defaults &= ~(int)ColumnDefault.VerticalArrangement;
+        if (modifier is not null)   defaults &= ~(int)ColumnDefault.Modifier;
+        if (vertical is not null)   defaults &= ~(int)ColumnDefault.VerticalArrangement;
+        if (horizontal is not null) defaults &= ~(int)ColumnDefault.HorizontalAlignment;
 
         var content = ComposableLambdas.Wrap3(composer, (scope, c) =>
         {
@@ -70,6 +97,6 @@ public sealed class Column : ComposableContainer
             RenderChildren(c);
         });
 
-        ComposeBridges.Column(modifier, vertical, content, defaults, composer);
+        ComposeBridges.Column(modifier, vertical, horizontal, content, defaults, composer);
     }
 }
