@@ -144,7 +144,7 @@ public partial class LayoutHandler : ComposeElementHandler<ILayout>
     /// </summary>
     public static void MapChildren(LayoutHandler handler, ILayout layout)
     {
-        unchecked { handler._childrenVersion.Value = handler._childrenVersion.Value + 1; }
+        handler._childrenVersion.Value++;
     }
 
     /// <summary>Map <see cref="IStackLayout.Spacing"/> to the spacing slot (dp).</summary>
@@ -157,10 +157,11 @@ public partial class LayoutHandler : ComposeElementHandler<ILayout>
     /// <summary>
     /// Bump the padding-version slot so any composition reading
     /// <see cref="IPadding.Padding"/> on the live <c>VirtualView</c>
-    /// recomposes.
+    /// recomposes. Wraps silently around <see cref="int.MaxValue"/>;
+    /// the only thing Compose checks is value-not-equal-to-previous.
     /// </summary>
     public static void MapPadding(LayoutHandler handler, ILayout layout)
     {
-        unchecked { handler._paddingVersion.Value = handler._paddingVersion.Value + 1; }
+        handler._paddingVersion.Value++;
     }
 }
