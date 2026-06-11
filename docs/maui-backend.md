@@ -602,6 +602,86 @@ page so cross-sibling animation, semantics, and a single
   consumes pointer events for its own composition. Workaround: put
   a stock leaf in the cell, or convert the container.
 
+#### Phase 2 Slice 7 — `ThemeManager` (Application.RequestedTheme → MaterialTheme) ✅ shipped
+
+Goal: bridge MAUI's theme signal (`Application.RequestedTheme` /
+`UserAppTheme`) into the Compose `MaterialTheme` scope owned by
+`PageHandler`, so a MAUI app that flips itself to dark via
+`App.Current.UserAppTheme = AppTheme.Dark` actually flips the Compose-
+backed surfaces along with it.
+
+**Delivered:**
+
+- **`Platform/ThemeManager.cs`** — registered as a DI singleton via
+  `UseAndroidXCompose()`. Exposes a single process-wide
+  `MutableState<bool> IsDark`. On construction (and on every
+  `Application.Current.RequestedThemeChanged`), it resolves the active
+  theme in this order:
+  1. `Application.Current.UserAppTheme` (if not `Unspecified`).
+  2. `Application.Current.RequestedTheme` (MAUI's resolved value —
+     also encodes the OS preference).
+  3. `Android.App.Application.Context.Resources.Configuration.UiMode &
+     UiMode.NightMask` (last-resort raw Android signal).
+- **`PageHandler.MapContent`** — resolves `ThemeManager` from
+  `handler.MauiContext.Services` and wraps the walker output in
+  `new MaterialTheme { Dark = theme.IsDark.Value, UseDynamicColor = false }`
+  inside `compose.SetContent`. Reading `IsDark.Value` inside the
+  `SetContent` lambda registers a Compose snapshot subscription —
+  every page composition recomposes when `IsDark` flips. `MaterialTheme`
+  is a `ComposableContainer`, so the page's root walked node is added
+  via `themed.Add(root)` (the C# initializer rule CS0747 forbids mixing
+  property assignments with collection-init items in the same `{ }`
+  block).
+
+**Sample:**
+
+- `Pages/ThemePage.xaml` — three buttons set `Application.UserAppTheme`
+  to `Light`, `Dark`, `Unspecified`. A status label echoes both
+  `UserAppTheme` and `RequestedTheme` so you can see MAUI's resolved
+  view of the world. The page itself plus a default M3 button, an
+  `Entry`, and a caller-pinned-color button serve as visual probes.
+
+**Decisions:**
+
+- **Scope: dark/light only.** MAUI's `Primary` / `Secondary` /
+  `Tertiary` `Color` resources are *not* bridged into a custom
+  `colorScheme` overlay. The trade-off: a single MAUI brand colour
+  doesn't supply the full M3 surface palette
+  (`primaryContainer`, `onPrimary`, `surfaceVariant`, …); seeding only
+  `primary` from MAUI risks contrast bugs and partial theming. The
+  better contract is "MAUI tells us light vs dark; M3 picks the
+  scheme." Consumers who want full M3 theming can pass a custom
+  `ColorScheme` directly via the existing `MaterialTheme` facade.
+- **`UseDynamicColor = false`.** Material You wallpaper-derived palettes
+  override the `Dark` flag's effect. The slice is meant to honour MAUI's
+  signal exactly; dynamic colour is a follow-up flag.
+- **One state object, many compositions.** Compose supports multiple
+  compositions subscribing to a single `MutableState`. A process-wide
+  `MutableState<bool> IsDark` shared across every `PageHandler` instance
+  is correct — every Compose-backed page recomposes when it flips, no
+  per-page bookkeeping needed.
+
+**Lessons learned (Slice 7):**
+
+- **`Application.UserAppTheme` vs `RequestedTheme`.** `UserAppTheme` is
+  the in-app override the developer sets; `RequestedTheme` is MAUI's
+  resolved value (UserAppTheme wins; otherwise falls through to the
+  platform). We read `UserAppTheme` first explicitly for clarity, then
+  `RequestedTheme`, then fall back to Android's raw `Configuration.UiMode`
+  in case MAUI's `Application.Current` isn't ready yet (early ctor calls
+  before `MainPage` is set).
+- **Why route through MAUI's `RequestedThemeChanged` rather than
+  Compose's `LocalConfiguration`.** `UserAppTheme` doesn't always flip
+  the Android `Configuration` — it's a MAUI-internal preference. A
+  Compose-only listener (`LocalConfiguration.current.uiMode`) misses
+  in-app overrides and only catches OS-level changes. MAUI's event is
+  the union signal; we route through it.
+- **No new public Compose facade needed.** `MaterialTheme.LightColorScheme()` /
+  `DarkColorScheme()` were already exposed by the Compose facade; the
+  `Dark` property on `MaterialTheme` was already there. The slice is
+  pure plumbing — no new `[ComposeBridge]` / `[ComposeFacade]` /
+  `PublicAPI.Unshipped.txt` updates.
+
 ### Phase 3 — collection + container (target: list-driven apps)
 
 `CollectionView` → `LazyColumn<T>` / `LazyRow<T>` / `LazyVerticalGrid<T>`
@@ -684,12 +764,14 @@ delegate, but some essentials might need Compose-aware UIs like
    for v1?** ✅ **Resolved in Phase 2 Slice 2** by going to a single
    `ComposeView` per page. The page-level composition lives inside
    one `ComposeView`, which means there's exactly one Compose
-   `MaterialTheme` scope (currently the M3 default) for the entire
-   page; every `ComposableNode` contributed by
-   `IComposeHandler.BuildNode` inherits it via `CompositionLocal`.
-   Wiring an explicit `MaterialTheme { ... }` wrapper bridged from
-   MAUI's `Application.Resources` colour palette is a follow-up; the
-   per-island wrapping problem is gone.
+   `MaterialTheme` scope for the entire page; every `ComposableNode`
+   contributed by `IComposeHandler.BuildNode` inherits it via
+   `CompositionLocal`. Phase 2 Slice 7 wires the explicit
+   `MaterialTheme { Dark = theme.IsDark.Value, ... }` wrapper bridged
+   from MAUI's `Application.RequestedTheme` so dark/light flips
+   propagate; per-resource colour-palette bridging
+   (MAUI `Primary`/`Secondary`/`Tertiary` → custom `ColorScheme`)
+   stays a documented follow-up.
 
 4. **Layout sizing** — Compose composables size themselves; MAUI wants
    you to honor an explicit `widthSpec`/`heightSpec`. Need to

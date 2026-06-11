@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="Microsoft.AndroidX.Compose.Maui.Sample.Pages.ThemePage"
+             Title="Theme">
+
+    <!--
+        Exercises Phase 2 Slice 7 (ThemeManager). Tapping the three
+        buttons sets `Application.UserAppTheme`, which raises
+        `RequestedThemeChanged`; ThemeManager bridges that into a
+        process-wide MutableState<bool> read by every PageHandler's
+        SetContent lambda. Confirms:
+
+          * Buttons / Entry / Label flip to dark/light Material 3 surface.
+          * The Compose `MaterialTheme.colorScheme.background` reads the
+            matching theme.
+          * Navigating back to a previously visited page picks up the
+            new theme on its next composition (no special hook needed).
+    -->
+    <ScrollView>
+        <VerticalStackLayout Padding="30,30"
+                             Spacing="20">
+
+            <Label Text="Theme"
+                   Style="{StaticResource Headline}" />
+
+            <Label Text="Tap a button below to flip MAUI's UserAppTheme. The whole page (and every other Compose-backed page in the app) recomposes against the matching Material 3 ColorScheme."
+                   Style="{StaticResource SubHeadline}" />
+
+            <Label x:Name="StatusLabel"
+                   Text=""
+                   FontSize="14" />
+
+            <Button Text="Light"
+                    Clicked="OnLightClicked"
+                    HorizontalOptions="Fill" />
+
+            <Button Text="Dark"
+                    Clicked="OnDarkClicked"
+                    HorizontalOptions="Fill" />
+
+            <Button Text="Unspecified (follow system)"
+                    Clicked="OnUnspecifiedClicked"
+                    HorizontalOptions="Fill" />
+
+            <BoxView HeightRequest="1"
+                     Color="{AppThemeBinding Light={StaticResource Gray300}, Dark={StaticResource Gray500}}"
+                     Margin="0,8" />
+
+            <Label Text="-- Sample widgets --"
+                   FontAttributes="Bold" />
+
+            <Label Text="A coloured label and entry below should swap their background / on-surface colors when you flip the theme."
+                   FontSize="13" />
+
+            <Entry Placeholder="Type something…"
+                   HorizontalOptions="Fill" />
+
+            <!-- Default M3 button — no BackgroundColor set so it picks
+                 up Primary from the active scheme. Flipping the theme
+                 swaps light primary (#6750A4) ↔ dark primary (#D0BCFF). -->
+            <Button Text="Default M3 button (theme-driven)"
+                    HorizontalOptions="Fill"
+                    Clicked="OnSampleButtonClicked" />
+
+            <!-- Caller-supplied colour: stays put across themes (wins
+                 over MaterialTheme), proves MapBackground still routes
+                 explicitly-set colours into the Compose Colors slot. -->
+            <Button Text="Caller-pinned background (#512BD4)"
+                    BackgroundColor="#512BD4"
+                    TextColor="White"
+                    HorizontalOptions="Fill"
+                    Clicked="OnSampleButtonClicked" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

@@ -60,6 +60,11 @@ public partial class HomePage : ContentPage
                 "File / Uri / Stream / Font image source types.",
                 Color.FromArgb("#E91E63"),
                 "image-sources"),
+            new DemoEntry(
+                "Theme",
+                "Light / Dark / Unspecified — flips MaterialTheme via UserAppTheme.",
+                Color.FromArgb("#795548"),
+                "theme"),
         };
     }
 
