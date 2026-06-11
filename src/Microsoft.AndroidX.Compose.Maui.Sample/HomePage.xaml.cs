@@ -70,6 +70,11 @@ public partial class HomePage : ContentPage
                 "Picker, DatePicker, TimePicker (state-holder dialogs).",
                 Color.FromArgb("#FF5722"),
                 "pickers"),
+            new DemoEntry(
+                "Theme",
+                "Light / Dark / Unspecified — flips MaterialTheme via UserAppTheme.",
+                Color.FromArgb("#795548"),
+                "theme"),
         };
     }
 

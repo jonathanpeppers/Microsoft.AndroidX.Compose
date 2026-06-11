@@ -1,4 +1,5 @@
 using Microsoft.AndroidX.Compose.Maui.Handlers;
+using Microsoft.AndroidX.Compose.Maui.Platform;
 using MauiButton = Microsoft.Maui.Controls.Button;
 using MauiCheckBox = Microsoft.Maui.Controls.CheckBox;
 using MauiDatePicker = Microsoft.Maui.Controls.DatePicker;
@@ -77,6 +78,12 @@ public static class AppHostBuilderExtensions
     public static MauiAppBuilder UseAndroidXCompose(this MauiAppBuilder builder)
     {
         ArgumentNullException.ThrowIfNull(builder);
+
+        // Process-wide bridge between MAUI's RequestedTheme /
+        // UserAppTheme and the Compose-side MaterialTheme. Resolved
+        // by PageHandler.MapContent — see ThemeManager for resolution
+        // rules and trade-offs.
+        builder.Services.AddSingleton<ThemeManager>();
 
         builder.ConfigureMauiHandlers(handlers =>
         {
