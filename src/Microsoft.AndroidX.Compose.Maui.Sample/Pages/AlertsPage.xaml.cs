@@ -60,6 +60,21 @@ public partial class AlertsPage : ContentPage
         ResultLabel.Text = $"DisplayPromptAsync → {name ?? "(null — cancel)"}";
     }
 
+    async void OnShowNumericPromptClicked(object? sender, EventArgs e)
+    {
+        // Exercise MaxLength + Keyboard forwarding — the IME should
+        // surface the digit pad and the field caps at 4 chars.
+        var pin = await DisplayPromptAsync(
+            "PIN",
+            "Enter a 4-digit PIN (numeric keyboard, max 4 chars):",
+            "OK",
+            "Cancel",
+            "0000",
+            4,
+            Keyboard.Numeric);
+        ResultLabel.Text = $"DisplayPromptAsync (numeric, len ≤ 4) → {pin ?? "(null — cancel)"}";
+    }
+
     async void OnShowSingleButtonClicked(object? sender, EventArgs e)
     {
         // void DisplayAlertAsync(string title, string message, string cancel)

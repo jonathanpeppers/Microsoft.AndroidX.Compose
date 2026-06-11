@@ -41,6 +41,11 @@
                     Clicked="OnShowPromptClicked"
                     HorizontalOptions="Fill" />
 
+            <Button x:Name="ShowNumericPromptBtn"
+                    Text="Prompt — Numeric IME, MaxLength 4"
+                    Clicked="OnShowNumericPromptClicked"
+                    HorizontalOptions="Fill" />
+
             <Button x:Name="ShowSingleButtonBtn"
                     Text="OK-only Alert"
                     Clicked="OnShowSingleButtonClicked"

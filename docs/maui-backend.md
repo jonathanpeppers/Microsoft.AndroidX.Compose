@@ -846,20 +846,21 @@ since net6.0; risk is low but real.
   bug of the slice: not detecting → "OK / OK" twin buttons.)
 - `ActionSheetArguments(title, cancel, destruction, buttons[])` →
   Compose `ModalBottomSheet` listing buttons as a
-  `LazyColumn` of `ListItem`s, with `destruction` styled red.
+  `Column` of `ListItem`s, with `destruction` styled red.
 - `PromptArguments(title, message, accept, cancel, placeholder, maxLength, keyboard, initialValue)`
   → Compose `AlertDialog` with an `OutlinedTextField` between `text`
   and `confirmButton`, pre-filled with `InitialValue`.
 
 **Overlay attach/detach lifecycle.** Each handler resolves the
-`Activity` from `sender.Window.Handler.PlatformView` (with a fallback
-to `Platform.CurrentActivity`), creates a fresh `ComposeView`, sets
-content via the existing `ComposeView.SetContent(node => …)`
-extension, and adds the view to the activity's `android.R.id.content`
-`FrameLayout`. The dismiss closure removes the view from its parent
-on the UI thread. `args.Result.TrySetResult(...)` is set **before**
-detach so the awaiting `Task` completes deterministically — even if
-`RemoveView` synchronously re-enters another dialog flow.
+`Activity` from `sender.Handler?.MauiContext?.Context.GetActivity()`
+(returning `null` if the page isn't attached to a handler yet),
+creates a fresh `ComposeView`, sets content via the existing
+`ComposeView.SetContent(node => …)` extension, and adds the view to
+the activity's `android.R.id.content` `FrameLayout`. The dismiss
+closure removes the view from its parent on the UI thread.
+`args.Result.TrySetResult(...)` is set **before** detach so the
+awaiting `Task` completes deterministically — even if `RemoveView`
+synchronously re-enters another dialog flow.
 
 `onUnattached` is invoked when `ResolveActivity` fails (rare —
 e.g. background page). It completes the awaiter with the cancel
@@ -872,7 +873,7 @@ by the on-confirm/on-cancel handlers); once detached, the
 `ComposeView` and its captured page reference are dropped. No long-
 lived `WeakReference`-to-`Activity` is needed because no field on
 the singleton holds a strong activity reference — every call goes
-`sender.Window` → `Handler.PlatformView`.
+through the live `sender.Handler?.MauiContext?.Context` chain.
 
 **Theme alignment — known mismatch (deferred to Slice 7).** The
 overlay wraps content in the default Compose `MaterialTheme()`

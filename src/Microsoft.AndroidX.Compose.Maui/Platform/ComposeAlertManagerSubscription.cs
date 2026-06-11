@@ -9,6 +9,8 @@ using Microsoft.Maui.Platform;
 using ComposeAlertDialog       = AndroidX.Compose.AlertDialog;
 using ComposeColor             = AndroidX.Compose.Color;
 using ComposeColumn            = AndroidX.Compose.Column;
+using ComposeKeyboardOptions   = AndroidX.Compose.Foundation.Text.KeyboardOptions;
+using ComposeKeyboardType      = AndroidX.Compose.KeyboardType;
 using ComposeListItem          = AndroidX.Compose.ListItem;
 using ComposeMaterialTheme     = AndroidX.Compose.MaterialTheme;
 using ComposeModalBottomSheet  = AndroidX.Compose.ModalBottomSheet;
@@ -274,6 +276,24 @@ public class ComposeAlertManagerSubscription : DispatchProxy
         // ensures recomposition fires on each keystroke.
         var text = new MutableState<string>(args.InitialValue ?? string.Empty);
 
+        // Enforce MaxLength here (Compose's OutlinedTextField has no
+        // native max-length property) and write through to the
+        // MutableState. MAUI's contract: -1 = unlimited; <= 0 also
+        // treated as unlimited so the field stays usable.
+        var maxLength = args.MaxLength;
+        void OnTextChanged(string newValue)
+        {
+            if (maxLength > 0 && newValue.Length > maxLength)
+                newValue = newValue.Substring(0, maxLength);
+            text.Value = newValue;
+        }
+
+        // Map MAUI's Keyboard enum to a Compose KeyboardOptions so
+        // the IME surfaces digits / email layout / etc. Mirrors
+        // EntryHandler.ResolveKeyboardType — kept inline because
+        // the ResolveKeyboardType helper isn't exposed publicly.
+        var keyboardOptions = ResolveKeyboardOptions(args.Keyboard);
+
         ShowOnUiThread(activity, (overlay, dismiss) =>
         {
             void Confirm() { args.Result.TrySetResult(text.Value); dismiss(); }
@@ -286,9 +306,12 @@ public class ComposeAlertManagerSubscription : DispatchProxy
             if (!string.IsNullOrEmpty(args.Message))
                 body.Add(new ComposeText(args.Message));
 
-            var field = new ComposeOutlinedTextField(text)
+            // Use the (string, Action<string>) ctor so OnTextChanged
+            // can intercept and truncate before writing to the state.
+            var field = new ComposeOutlinedTextField(text.Value, OnTextChanged)
             {
-                SingleLine = true,
+                SingleLine      = true,
+                KeyboardOptions = keyboardOptions,
             };
             if (!string.IsNullOrEmpty(args.Placeholder))
                 field.Placeholder = new ComposeText(args.Placeholder);
@@ -381,6 +404,42 @@ public class ComposeAlertManagerSubscription : DispatchProxy
             sheet.Add(column);
             return sheet;
         }, onUnattached: () => args.Result.TrySetResult(args.Cancel ?? string.Empty));
+    }
+
+    /// <summary>
+    /// Map MAUI's <see cref="Keyboard"/> to a Compose
+    /// <see cref="ComposeKeyboardOptions"/> so the IME surfaces the
+    /// right layout. <see langword="null"/> result means "use Kotlin
+    /// default" (plain text).
+    /// </summary>
+    /// <remarks>
+    /// Mirrors <c>EntryHandler.ResolveKeyboardType</c>. Kept local
+    /// because that helper is private.
+    /// </remarks>
+    static ComposeKeyboardOptions? ResolveKeyboardOptions(Keyboard? keyboard)
+    {
+        int type;
+        if (keyboard is null
+            || keyboard == Keyboard.Default
+            || keyboard == Keyboard.Text
+            || keyboard == Keyboard.Chat)
+        {
+            return null;
+        }
+        else if (keyboard == Keyboard.Numeric)   type = ComposeKeyboardType.Number;
+        else if (keyboard == Keyboard.Telephone) type = ComposeKeyboardType.Phone;
+        else if (keyboard == Keyboard.Url)       type = ComposeKeyboardType.Uri;
+        else if (keyboard == Keyboard.Email)     type = ComposeKeyboardType.Email;
+        else
+        {
+            return null;
+        }
+
+        var d = KeyboardOptionsCompanion.Default;
+        return d.Copy(
+            d.Capitalization, d.AutoCorrectEnabled,
+            type, d.ImeAction,
+            d.PlatformImeOptions, d.ShowKeyboardOnFocus, d.HintLocales);
     }
 
     /// <summary>
