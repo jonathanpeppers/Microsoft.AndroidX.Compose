@@ -805,6 +805,7 @@ internal static partial class ComposeBridges
         bool? isError,
         AndroidX.Compose.UI.Text.Input.IVisualTransformation? visualTransformation,
         AndroidX.Compose.Foundation.Text.KeyboardOptions? keyboardOptions,
+        AndroidX.Compose.Foundation.Text.KeyboardActions? keyboardActions,
         bool? singleLine,
         int? maxLines,
         int? minLines,

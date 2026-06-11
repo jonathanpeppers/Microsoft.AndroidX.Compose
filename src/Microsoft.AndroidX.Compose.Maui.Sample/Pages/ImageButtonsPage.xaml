@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="Microsoft.AndroidX.Compose.Maui.Sample.Pages.ImageButtonsPage"
+             Title="Image buttons">
+
+    <!--
+        Exercises ImageButtonHandler:
+            * Source (FileImageSource / UriImageSource / FontImageSource)
+              flowing through the shared ImageSourceLoader pipeline.
+            * Pressed / Released / Clicked event order
+              (verified via Debug.WriteLine in the code-behind).
+            * BorderColor / BorderWidth / CornerRadius / Padding.
+    -->
+    <ScrollView>
+        <VerticalStackLayout
+            Padding="30,30"
+            Spacing="22">
+
+            <Label
+                Text="Image buttons"
+                Style="{StaticResource Headline}" />
+
+            <Label Text="Tap any of the three image buttons; the counter increments and the event log shows Pressed -> Clicked -> Released."
+                   FontAttributes="Bold" />
+
+            <HorizontalStackLayout Spacing="20"
+                                   HorizontalOptions="Center">
+
+                <ImageButton x:Name="FileButton"
+                             Source="dotnet_bot.png"
+                             Aspect="AspectFit"
+                             HeightRequest="80"
+                             WidthRequest="80"
+                             BorderColor="#512BD4"
+                             BorderWidth="2"
+                             CornerRadius="12"
+                             Padding="6"
+                             Pressed="OnAnyPressed"
+                             Released="OnAnyReleased"
+                             Clicked="OnAnyClicked" />
+
+                <ImageButton x:Name="UriButton"
+                             Source="https://raw.githubusercontent.com/dotnet/brand/main/logo/dotnet-logo.png"
+                             Aspect="AspectFit"
+                             HeightRequest="80"
+                             WidthRequest="80"
+                             BorderColor="#009688"
+                             BorderWidth="2"
+                             CornerRadius="40"
+                             Padding="6"
+                             Pressed="OnAnyPressed"
+                             Released="OnAnyReleased"
+                             Clicked="OnAnyClicked" />
+
+                <ImageButton x:Name="FontButton"
+                             Aspect="AspectFit"
+                             HeightRequest="80"
+                             WidthRequest="80"
+                             BorderColor="#E91E63"
+                             BorderWidth="2"
+                             CornerRadius="0"
+                             Padding="6"
+                             Pressed="OnAnyPressed"
+                             Released="OnAnyReleased"
+                             Clicked="OnAnyClicked">
+                    <ImageButton.Source>
+                        <FontImageSource Glyph="A"
+                                         FontFamily="OpenSansSemibold"
+                                         Color="#E91E63"
+                                         Size="48" />
+                    </ImageButton.Source>
+                </ImageButton>
+
+            </HorizontalStackLayout>
+
+            <Label x:Name="ClickCountLabel"
+                   Text="Total clicks: 0"
+                   FontAttributes="Bold" />
+
+            <Label Text="Event log (most recent at top):"
+                   FontAttributes="Bold" />
+            <Label x:Name="EventLog"
+                   Text="(no events yet)"
+                   FontSize="13" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

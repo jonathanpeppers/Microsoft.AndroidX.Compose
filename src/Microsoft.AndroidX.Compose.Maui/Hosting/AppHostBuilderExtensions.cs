@@ -1,11 +1,17 @@
 using Microsoft.AndroidX.Compose.Maui.Handlers;
+using MauiBorder = Microsoft.Maui.Controls.Border;
+using MauiBoxView = Microsoft.Maui.Controls.BoxView;
 using MauiButton = Microsoft.Maui.Controls.Button;
+using MauiContentView = Microsoft.Maui.Controls.ContentView;
+using MauiEditor = Microsoft.Maui.Controls.Editor;
 using MauiEntry = Microsoft.Maui.Controls.Entry;
 using MauiHorizontalStackLayout = Microsoft.Maui.Controls.HorizontalStackLayout;
 using MauiImage = Microsoft.Maui.Controls.Image;
+using MauiImageButton = Microsoft.Maui.Controls.ImageButton;
 using MauiLabel = Microsoft.Maui.Controls.Label;
 using MauiPage = Microsoft.Maui.Controls.Page;
 using MauiScrollView = Microsoft.Maui.Controls.ScrollView;
+using MauiSearchBar = Microsoft.Maui.Controls.SearchBar;
 using MauiVerticalStackLayout = Microsoft.Maui.Controls.VerticalStackLayout;
 
 namespace Microsoft.AndroidX.Compose.Maui.Hosting;
@@ -40,9 +46,16 @@ public static class AppHostBuilderExtensions
     ///     <c>Modifier.verticalScroll</c> / <c>horizontalScroll</c>.</description></item>
     ///   <item><description>Leaves
     ///     (<see cref="MauiLabel"/> / <see cref="MauiButton"/> /
-    ///     <see cref="MauiEntry"/> / <see cref="MauiImage"/>) fold
+    ///     <see cref="MauiEntry"/> / <see cref="MauiEditor"/> /
+    ///     <see cref="MauiSearchBar"/> / <see cref="MauiImage"/> /
+    ///     <see cref="MauiImageButton"/>) fold
     ///     into the enclosing composition via
     ///     <see cref="IComposeHandler"/>.</description></item>
+    ///   <item><description>Visual containers
+    ///     (<see cref="MauiBorder"/> / <see cref="MauiBoxView"/> /
+    ///     <see cref="MauiContentView"/>) render through Compose's
+    ///     <c>Box</c> with stroke / fill / clip modifier
+    ///     chains.</description></item>
     /// </list>
     ///
     /// <para>Layout types not in the list above (Grid, AbsoluteLayout,
@@ -83,7 +96,17 @@ public static class AppHostBuilderExtensions
             handlers.AddHandler<MauiLabel,                  LabelHandler>();
             handlers.AddHandler<MauiButton,                 ButtonHandler>();
             handlers.AddHandler<MauiEntry,                  EntryHandler>();
+            handlers.AddHandler<MauiEditor,                 EditorHandler>();
+            handlers.AddHandler<MauiSearchBar,              SearchBarHandler>();
             handlers.AddHandler<MauiImage,                  ImageHandler>();
+            handlers.AddHandler<MauiImageButton,            ImageButtonHandler>();
+
+            // Visual containers — render through Compose Box.
+            handlers.AddHandler<MauiBorder,                 BorderHandler>();
+            handlers.AddHandler<MauiBoxView,                BoxViewHandler>();
+            // ContentView collides with stock MAUI's ContentViewHandler;
+            // last AddHandler wins, so register ours last.
+            handlers.AddHandler<MauiContentView,            ContentViewHandler>();
         });
 
         return builder;

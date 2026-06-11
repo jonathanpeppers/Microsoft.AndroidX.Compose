@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="Microsoft.AndroidX.Compose.Maui.Sample.Pages.SearchPage"
+             Title="Search">
+
+    <!--
+        Exercises SearchBarHandler:
+            * Text                  -> two-way (filters the list)
+            * Placeholder           -> hint
+            * SearchCommand         -> fired on IME-Search
+            * SearchCommandParameter -> echoed in the result label
+        The result list is rendered as a VerticalStackLayout of
+        labels (CollectionView is Phase 3).
+    -->
+    <ScrollView>
+        <VerticalStackLayout
+            Padding="30,30"
+            Spacing="16">
+
+            <Label
+                Text="Search"
+                Style="{StaticResource Headline}" />
+
+            <SearchBar x:Name="Search"
+                       Placeholder="Search fruit…"
+                       TextChanged="OnSearchTextChanged"
+                       SearchButtonPressed="OnSearchButtonPressed" />
+
+            <Label x:Name="LastImeLabel"
+                   Text="(IME-Search not yet pressed.)"
+                   FontAttributes="Italic" />
+
+            <Label Text="Results:"
+                   FontAttributes="Bold" />
+
+            <VerticalStackLayout x:Name="Results"
+                                 Spacing="6" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

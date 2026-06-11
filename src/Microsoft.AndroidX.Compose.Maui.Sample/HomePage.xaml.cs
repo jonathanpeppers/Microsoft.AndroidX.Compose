@@ -60,6 +60,26 @@ public partial class HomePage : ContentPage
                 "File / Uri / Stream / Font image source types.",
                 Color.FromArgb("#E91E63"),
                 "image-sources"),
+            new DemoEntry(
+                "Editor",
+                "Multi-line text input, word counter, read-only, max length.",
+                Color.FromArgb("#FF9800"),
+                "editor"),
+            new DemoEntry(
+                "Search",
+                "SearchBar + filtered list + IME-Search event.",
+                Color.FromArgb("#795548"),
+                "search"),
+            new DemoEntry(
+                "Image buttons",
+                "File / Uri / Font sources, Pressed -> Clicked -> Released log.",
+                Color.FromArgb("#607D8B"),
+                "image-buttons"),
+            new DemoEntry(
+                "Visuals",
+                "Border, BoxView, ContentView modifier-chain demos.",
+                Color.FromArgb("#4CAF50"),
+                "visuals"),
         };
     }
 

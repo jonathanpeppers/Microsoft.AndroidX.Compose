@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="Microsoft.AndroidX.Compose.Maui.Sample.Pages.EditorPage"
+             Title="Editor">
+
+    <!--
+        Multi-line text input — exercises EditorHandler:
+            * Text             -> two-way echo via TextChanged
+            * Placeholder      -> hint when empty
+            * Multi-line       -> singleLine: false on the
+                                   underlying OutlinedTextField
+            * MaxLength        -> enforced by the facade
+            * AutoSize         -> grows vertically with content
+    -->
+    <ScrollView>
+        <VerticalStackLayout
+            Padding="30,30"
+            Spacing="20">
+
+            <Label
+                Text="Editor"
+                Style="{StaticResource Headline}" />
+
+            <Label Text="Type a few paragraphs — line wraps and the editor grows."
+                   FontAttributes="Bold" />
+
+            <Editor x:Name="NoteEditor"
+                    Placeholder="Write a note…"
+                    AutoSize="TextChanges"
+                    HeightRequest="180"
+                    TextChanged="OnNoteTextChanged" />
+
+            <Label x:Name="WordCountLabel"
+                   Text="Words: 0   Characters: 0"
+                   FontAttributes="Bold" />
+
+            <Label Text="Read-only editor (focusable but no soft keyboard)."
+                   FontAttributes="Bold" />
+            <Editor Text="Read-only editor — multi-line content can still scroll inside the box."
+                    IsReadOnly="True"
+                    HeightRequest="120" />
+
+            <Label Text="Capped at 30 characters."
+                   FontAttributes="Bold" />
+            <Editor Placeholder="Up to 30 chars"
+                    MaxLength="30"
+                    HeightRequest="100" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>
