@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="Microsoft.AndroidX.Compose.Maui.Sample.Pages.EntriesPage"
+             Title="Entries">
+
+    <!--
+        Exercises every mapper on `EntryHandler`:
+            * Text                       -> MapText (two-way echo via TextChanged)
+            * Placeholder                -> MapPlaceholder
+            * IsPassword                 -> MapIsPassword (PasswordVisualTransformation)
+            * Keyboard                   -> MapKeyboard (KeyboardType int)
+            * IsReadOnly                 -> MapIsReadOnly
+            * TextColor + FontSize +
+              FontAttributes (Bold)      -> MapTextColor + MapFont
+            * HorizontalLayoutAlignment  -> MapHorizontalLayoutAlignment
+              (toggles `Modifier.fillMaxWidth()`).
+    -->
+    <ScrollView>
+        <VerticalStackLayout
+            Padding="30,30"
+            Spacing="20">
+
+            <Label
+                Text="Entries"
+                Style="{StaticResource Headline}" />
+
+            <Label Text="Plain entry — type below; the greeting label echoes."
+                   FontAttributes="Bold" />
+
+            <Entry
+                x:Name="NameEntry"
+                Placeholder="Type your name"
+                TextChanged="OnNameTextChanged"
+                HorizontalOptions="Fill" />
+
+            <Label
+                x:Name="GreetingLabel"
+                Text="Greeting will appear here." />
+
+            <Label Text="Password (masked input)."
+                   FontAttributes="Bold" />
+            <Entry
+                Placeholder="Password (masked)"
+                IsPassword="True"
+                HorizontalOptions="Fill" />
+
+            <Label Text="Specialised IMEs."
+                   FontAttributes="Bold" />
+            <Entry Placeholder="Numeric IME"  Keyboard="Numeric"   HorizontalOptions="Fill" />
+            <Entry Placeholder="Email IME"    Keyboard="Email"     HorizontalOptions="Fill" />
+            <Entry Placeholder="URL IME"      Keyboard="Url"       HorizontalOptions="Fill" />
+            <Entry Placeholder="Telephone"    Keyboard="Telephone" HorizontalOptions="Fill" />
+
+            <Label Text="Custom font + color (TextColor / FontSize / FontAttributes=Bold)."
+                   FontAttributes="Bold" />
+            <Entry
+                Text="Big bold blue"
+                TextColor="#2196F3"
+                FontSize="22"
+                FontAttributes="Bold"
+                HorizontalOptions="Fill" />
+
+            <Label Text="Read-only — focusable but no soft keyboard."
+                   FontAttributes="Bold" />
+            <Entry
+                Text="Read-only (no keyboard)"
+                IsReadOnly="True"
+                HorizontalOptions="Fill" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

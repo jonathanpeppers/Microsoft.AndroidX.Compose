@@ -400,14 +400,27 @@ visible input/leaf controls so MAUI sample pages start to look right.
   bootstrap exists (filed under [`dotnet/android-libraries`][andx-libs]
   follow-up).
 
-- **`ImageHandler` over Compose `Image`.** `FileImageSource` only
-  for this slice. Resolves the file name to an Android drawable via
-  `Context.Resources.GetIdentifier(name.ToLowerInvariant(), "drawable",
-  PackageName)` — the common case for MAUI apps with images under
-  `Resources/Images/`. `Aspect` maps `AspectFit` → `ContentScale.Fit`,
-  `AspectFill` → `Crop`, `Fill` → `FillBounds`. URI / stream / font
-  sources `Debug.WriteLine` and bail (blank surface), tracked in the
-  Phase 2 follow-up below.
+- **`ImageHandler` over Compose `Image`.** Hybrid source pipeline:
+  - **Fast path** — `IFileImageSource` whose file name resolves to a
+    packaged drawable via `Context.GetDrawableId(file)` goes through
+    Compose's `painterResource(int)` directly. Keeps vector drawables
+    + per-density buckets intact and skips a `Drawable` → `Bitmap`
+    round trip.
+  - **General path** — every other source (`UriImageSource`,
+    `StreamImageSource`, `FontImageSource`, plus files that aren't
+    packaged as drawable resources) routes through MAUI's own
+    `ImageSourcePartLoader` + `IImageSourceServiceProvider` pipeline.
+    Because the platform view isn't an `ImageView`, MAUI takes the
+    `GetDrawableAsync(...)` branch and invokes our
+    `IImageSourcePartSetter`, which wraps the produced `Drawable` as
+    a Compose `BitmapPainter` (`AndroidImageBitmap_androidKt.AsImageBitmap`
+    + `BitmapPainterKt.BitmapPainter`) and writes it into the
+    `Image(Painter)` ctor.
+
+  `Aspect` maps `AspectFit` → `ContentScale.Fit`, `AspectFill` →
+  `Crop`, `Fill` → `FillBounds`.
+
+  ![MAUI image source pipeline (file + URI)](maui-image-source-pipeline.png)
 
 - **`AppHostBuilderExtensions.UseAndroidXCompose()`** now registers
   `EntryHandler` + `ImageHandler` alongside the Phase 1 pair.
@@ -463,11 +476,15 @@ visible input/leaf controls so MAUI sample pages start to look right.
   `DatePicker`, `TimePicker`, `SearchBar`, `Border`, `BoxView`,
   `ContentView`, `ScrollView`, `RefreshView`, `IndicatorView`,
   `ImageButton`.
-- Non-file image sources (URI / stream / font / brush) via MAUI's
-  `IImageSourceService<TSource>` pipeline.
 - `ComposeAlertManagerSubscription`, `ComposeFontManager`,
   `ThemeManager`, `ModifierBridge`.
 - Option 2 ("one ComposeView per page") rewrite.
+
+**Landed since Slice 1:**
+
+- ✅ **Non-file image sources** (URI / stream / font) via MAUI's
+  `IImageSourceService<TSource>` pipeline — see the hybrid
+  `ImageHandler` description above.
 
 ### Phase 3 — collection + container (target: list-driven apps)
 

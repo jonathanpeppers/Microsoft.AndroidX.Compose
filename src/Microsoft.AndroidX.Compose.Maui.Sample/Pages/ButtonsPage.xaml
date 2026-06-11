@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="Microsoft.AndroidX.Compose.Maui.Sample.Pages.ButtonsPage"
+             Title="Buttons">
+
+    <!--
+        Exercises every mapper on `ButtonHandler`:
+            * Text                       -> MapText
+            * TextColor                  -> MapTextColor (Compose contentColor)
+            * Background (SolidPaint)    -> MapBackground (Compose containerColor)
+            * HorizontalLayoutAlignment  -> MapHorizontalLayoutAlignment
+              (toggles `Modifier.fillMaxWidth()`).
+    -->
+    <ScrollView>
+        <VerticalStackLayout
+            Padding="30,30"
+            Spacing="20">
+
+            <Label
+                Text="Buttons"
+                Style="{StaticResource Headline}" />
+
+            <Label
+                Text="-- Default vs themed colors --"
+                FontAttributes="Bold" />
+
+            <!-- Hugs content; default M3 colors. -->
+            <Button Text="Default (hugs content)"
+                    HorizontalOptions="Start"
+                    Clicked="OnButtonClicked" />
+
+            <Button Text="MAUI Primary"
+                    BackgroundColor="{StaticResource Primary}"
+                    TextColor="White"
+                    HorizontalOptions="Start"
+                    Clicked="OnButtonClicked" />
+
+            <Button Text="Custom container + content"
+                    BackgroundColor="#FFCDD2"
+                    TextColor="#B71C1C"
+                    HorizontalOptions="Start"
+                    Clicked="OnButtonClicked" />
+
+            <Label
+                Text="-- HorizontalOptions=Fill (Modifier.fillMaxWidth) --"
+                FontAttributes="Bold" />
+
+            <Button Text="Filled width"
+                    BackgroundColor="{StaticResource Primary}"
+                    TextColor="White"
+                    HorizontalOptions="Fill"
+                    Clicked="OnButtonClicked" />
+
+            <Button Text="Filled, default M3 colors"
+                    HorizontalOptions="Fill"
+                    Clicked="OnButtonClicked" />
+
+            <Label
+                Text="-- Click count --"
+                FontAttributes="Bold" />
+
+            <Label
+                x:Name="ClickCountLabel"
+                Text="No clicks yet" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

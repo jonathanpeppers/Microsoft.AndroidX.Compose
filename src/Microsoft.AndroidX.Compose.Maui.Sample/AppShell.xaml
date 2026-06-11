@@ -4,11 +4,20 @@
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:local="clr-namespace:Microsoft.AndroidX.Compose.Maui.Sample"
-    Title="Microsoft.AndroidX.Compose.Maui.Sample">
+    Title="Compose Gallery"
+    FlyoutBehavior="Disabled">
 
+    <!--
+        Single-content Shell. The home page is `HomePage`, a list of
+        demos; each row routes to a registered detail page via
+        `Shell.GoToAsync(...)` (routes registered in `AppShell.xaml.cs`).
+        FlyoutBehavior=Disabled hides the default hamburger / drawer —
+        the gallery navigates exclusively via the home list, with the
+        Shell back button on each detail page.
+    -->
     <ShellContent
-        Title="Home"
-        ContentTemplate="{DataTemplate local:MainPage}"
-        Route="MainPage" />
+        Title="Compose Gallery"
+        ContentTemplate="{DataTemplate local:HomePage}"
+        Route="home" />
 
 </Shell>

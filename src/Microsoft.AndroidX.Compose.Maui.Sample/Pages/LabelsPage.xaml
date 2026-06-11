@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="Microsoft.AndroidX.Compose.Maui.Sample.Pages.LabelsPage"
+             Title="Labels">
+
+    <!--
+        Exercises the `LabelHandler` mappers in isolation:
+            * Text                          -> MapText
+            * TextColor                     -> MapTextColor
+            * Font (Size + FontAttributes)  -> MapFont
+            * HorizontalTextAlignment       -> MapHorizontalTextAlignment
+            * HorizontalOptions             -> MapHorizontalLayoutAlignment
+        Phase 1 only — `FontFamily` + italic are deferred (see
+        compose-maui.instructions.md), so neither is exercised here.
+    -->
+    <ScrollView>
+        <VerticalStackLayout
+            Padding="30,30"
+            Spacing="20">
+
+            <Label
+                Text="Labels"
+                Style="{StaticResource Headline}" />
+
+            <Label Text="Default label (theme color, base size)." />
+
+            <Label Text="Bold label."
+                   FontAttributes="Bold" />
+
+            <Label Text="Custom font size (24sp)."
+                   FontSize="24" />
+
+            <Label Text="Custom text color (Material blue)."
+                   TextColor="#2196F3" />
+
+            <Label Text="Bold + sized + colored."
+                   FontAttributes="Bold"
+                   FontSize="20"
+                   TextColor="#E91E63" />
+
+            <Label Text="-- HorizontalTextAlignment --"
+                   FontAttributes="Bold" />
+
+            <Label Text="Start aligned"
+                   HorizontalTextAlignment="Start"
+                   HorizontalOptions="Fill" />
+            <Label Text="Center aligned"
+                   HorizontalTextAlignment="Center"
+                   HorizontalOptions="Fill" />
+            <Label Text="End aligned"
+                   HorizontalTextAlignment="End"
+                   HorizontalOptions="Fill" />
+
+            <Label Text="Hello,&#10;Multi-line label.&#10;Line 3." />
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

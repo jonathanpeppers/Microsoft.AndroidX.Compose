@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:local="clr-namespace:Microsoft.AndroidX.Compose.Maui.Sample"
+             x:Class="Microsoft.AndroidX.Compose.Maui.Sample.HomePage"
+             Title="Compose Gallery"
+             Shell.NavBarIsVisible="True">
+
+    <!--
+        Catalog of Compose-backed handler demos, modelled on the
+        Compose Gallery (`Microsoft.AndroidX.Compose.Gallery`). Each row
+        navigates via Shell.GoToAsync to the matching demo page, which
+        is registered in `AppShell.xaml.cs`.
+    -->
+    <Grid RowDefinitions="Auto,*">
+
+        <!-- Header -->
+        <Grid Grid.Row="0"
+              Padding="24,32,24,24"
+              BackgroundColor="{StaticResource Primary}">
+            <VerticalStackLayout Spacing="6">
+                <Label Text=".NET MAUI on Jetpack Compose"
+                       TextColor="White"
+                       FontSize="14"
+                       Opacity="0.85" />
+                <Label Text="Control gallery"
+                       TextColor="White"
+                       FontSize="28"
+                       FontAttributes="Bold" />
+                <Label Text="Each row exercises one of the four Compose-backed handlers (Button, Entry, Image, Label) wired by UseAndroidXCompose()."
+                       TextColor="White"
+                       Opacity="0.85"
+                       FontSize="13" />
+            </VerticalStackLayout>
+        </Grid>
+
+        <!-- Demo list -->
+        <CollectionView Grid.Row="1"
+                        x:Name="DemoList"
+                        SelectionMode="Single"
+                        SelectionChanged="OnDemoSelected">
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="local:DemoEntry">
+                    <Grid Padding="24,18"
+                          ColumnDefinitions="Auto,*,Auto"
+                          ColumnSpacing="16">
+                        <BoxView Grid.Column="0"
+                                 WidthRequest="6"
+                                 HeightRequest="42"
+                                 CornerRadius="3"
+                                 Color="{Binding Accent}"
+                                 VerticalOptions="Center" />
+                        <VerticalStackLayout Grid.Column="1"
+                                             Spacing="2"
+                                             VerticalOptions="Center">
+                            <Label Text="{Binding Title}"
+                                   FontSize="17"
+                                   FontAttributes="Bold" />
+                            <Label Text="{Binding Subtitle}"
+                                   FontSize="13"
+                                   TextColor="{AppThemeBinding Light={StaticResource Gray500}, Dark={StaticResource Gray300}}" />
+                        </VerticalStackLayout>
+                        <Label Grid.Column="2"
+                               Text="›"
+                               FontSize="28"
+                               TextColor="{AppThemeBinding Light={StaticResource Gray400}, Dark={StaticResource Gray500}}"
+                               VerticalOptions="Center" />
+                    </Grid>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+
+    </Grid>
+
+</ContentPage>

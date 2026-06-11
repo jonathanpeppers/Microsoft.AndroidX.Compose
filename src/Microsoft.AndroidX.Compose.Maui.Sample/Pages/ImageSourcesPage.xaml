@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="Microsoft.AndroidX.Compose.Maui.Sample.Pages.ImageSourcesPage"
+             Title="Image: Sources">
+
+    <!--
+        Exercises every MAUI `ImageSource` subtype routed through the
+        Compose `ImageHandler`:
+            * FileImageSource  -> drawable fast path
+              (Context.GetDrawableId + painterResource(int)).
+            * UriImageSource   -> MAUI ImageSourcePartLoader pipeline
+              (UriImageSourceService downloads on a worker thread,
+              we wrap the Drawable as a Compose BitmapPainter).
+            * StreamImageSource -> same pipeline, factory delegate
+              opens an app-package raw asset via FileSystem APIs.
+            * FontImageSource  -> same pipeline; the registered
+              OpenSansSemibold font glyph is rasterised by MAUI's
+              FontImageSourceService.
+    -->
+    <ScrollView>
+        <VerticalStackLayout
+            Padding="30,30"
+            Spacing="22">
+
+            <Label
+                Text="Image: Source types"
+                Style="{StaticResource Headline}" />
+
+            <Label Text="FileImageSource (drawable resource — fast path)"
+                   FontAttributes="Bold" />
+            <Image Source="dotnet_bot.png"
+                   HeightRequest="160"
+                   Aspect="AspectFit" />
+
+            <Label Text="UriImageSource (HTTPS download)"
+                   FontAttributes="Bold" />
+            <Image Source="https://raw.githubusercontent.com/dotnet/brand/main/logo/dotnet-logo.png"
+                   HeightRequest="120"
+                   Aspect="AspectFit" />
+
+            <Label Text="StreamImageSource (MemoryStream / app-package asset)"
+                   FontAttributes="Bold" />
+            <Image x:Name="StreamImage"
+                   HeightRequest="160"
+                   Aspect="AspectFit" />
+
+            <Label Text="FontImageSource (OpenSansSemibold glyph)"
+                   FontAttributes="Bold" />
+            <Image HeightRequest="96" Aspect="AspectFit">
+                <Image.Source>
+                    <FontImageSource Glyph="A"
+                                     FontFamily="OpenSansSemibold"
+                                     Color="#512BD4"
+                                     Size="64" />
+                </Image.Source>
+            </Image>
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

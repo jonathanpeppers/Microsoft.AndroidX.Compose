@@ -1,18 +1,25 @@
+using Microsoft.AndroidX.Compose.Maui.Sample.Pages;
+
 namespace Microsoft.AndroidX.Compose.Maui.Sample;
 
 /// <summary>
-/// Root MAUI <see cref="Shell"/>. Matches the <c>dotnet new maui</c>
-/// template so the <c>Style TargetType="Shell"</c> resource in
-/// <c>Resources/Styles/Styles.xaml</c> applies (white bar + black title
-/// text in light mode). The <c>NavigationPage</c> style in that file uses
-/// a near-white <c>BarTextColor</c> for light mode and is unusable in
-/// practice — the template has been Shell-only for many releases.
+/// Root MAUI <see cref="Shell"/>. Hosts a single <c>HomePage</c> as
+/// the gallery index; demo pages are registered as routes here so
+/// <see cref="HomePage"/> can navigate via
+/// <see cref="Shell.GoToAsync(string)"/> with the demo's route name.
 /// </summary>
 public partial class AppShell : Shell
 {
-    /// <summary>Construct the shell.</summary>
+    /// <summary>Construct the shell + register demo routes.</summary>
     public AppShell()
     {
         InitializeComponent();
+
+        Routing.RegisterRoute("counter",        typeof(CounterPage));
+        Routing.RegisterRoute("buttons",        typeof(ButtonsPage));
+        Routing.RegisterRoute("labels",         typeof(LabelsPage));
+        Routing.RegisterRoute("entries",        typeof(EntriesPage));
+        Routing.RegisterRoute("image-aspects",  typeof(ImageAspectsPage));
+        Routing.RegisterRoute("image-sources",  typeof(ImageSourcesPage));
     }
 }
