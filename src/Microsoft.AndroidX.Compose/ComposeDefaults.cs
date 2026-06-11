@@ -510,11 +510,25 @@ using AndroidX.Compose;
 // when defaulted).
 [assembly: ComposeDefaults("ModifierBackgroundDefault", "!color", "shape")]
 
+// androidx.compose.foundation.BackgroundKt.background$default —
+// Brush-typed overload. Bit 0 = brush (always supplied), bit 1 = shape
+// (Compose substitutes RectangleShape when defaulted), bit 2 = alpha
+// (always supplied; the C# wrapper defaults to 1f to match Kotlin).
+[assembly: ComposeDefaults("ModifierBackgroundBrushDefault",
+    "!brush", "shape", "!alpha")]
+
 // androidx.compose.foundation.BorderKt.border-xT4_qwU$default —
 // non-@Composable Modifier extension. Both width (Dp) and color
 // (Color) are @JvmInline value classes, hence the mangled name.
 // Bits 0/1 = width/color (always supplied), bit 2 = shape.
 [assembly: ComposeDefaults("ModifierBorderDefault", "!width", "!color", "shape")]
+
+// androidx.compose.foundation.BorderKt.border-ziNgDLE$default —
+// Brush-typed overload. width is a Dp inline-class param (hence the
+// mangled name); brush is a regular object reference. Bits 0/1 =
+// width/brush (always supplied), bit 2 = shape.
+[assembly: ComposeDefaults("ModifierBorderBrushDefault",
+    "!width", "!brush", "shape")]
 
 // androidx.compose.foundation.ClickableKt.clickable-XHw0xAI$default —
 // non-@Composable Modifier extension. Bit 3 (onClick) is always

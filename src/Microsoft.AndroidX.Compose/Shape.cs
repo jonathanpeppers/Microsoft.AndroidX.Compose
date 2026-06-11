@@ -91,4 +91,38 @@ public class Shape : Java.Lang.Object
         IntPtr handle = ComposeBridges.CutCornerShapePercent(percent);
         return new Shape(handle, JniHandleOwnership.TransferLocalRef);
     }
+
+    /// <summary>
+    /// <c>androidx.compose.ui.graphics.RectangleShape</c> — Compose's
+    /// canonical "no clipping, just a rectangle" shape singleton. Pass
+    /// this anywhere a <see cref="Shape"/> is expected when you want
+    /// the default (rectangular) outline — useful when overriding a
+    /// facade's default rounded shape, or when supplying a
+    /// <c>Modifier.Background(Brush, Shape)</c> with no rounding.
+    /// </summary>
+    /// <remarks>
+    /// The underlying Kotlin value is a singleton, so this property
+    /// always returns the same Java peer (held as a global ref behind
+    /// the scenes).
+    /// </remarks>
+    public static Shape Rectangle { get; } = RectangleShapeFactory();
+
+    static Shape RectangleShapeFactory()
+    {
+        // `RectangleShapeKt.RectangleShape` is bound — it returns the
+        // shared Kotlin singleton. Wrap its handle in our facade type
+        // without transferring ownership; the bound peer keeps the
+        // underlying JNI ref alive.
+        var bound = AndroidX.Compose.UI.Graphics.RectangleShapeKt.RectangleShape;
+        try
+        {
+            return new Shape(
+                ((Java.Lang.Object)bound).Handle,
+                JniHandleOwnership.DoNotTransfer);
+        }
+        finally
+        {
+            GC.KeepAlive(bound);
+        }
+    }
 }

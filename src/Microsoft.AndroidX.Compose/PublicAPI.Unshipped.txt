@@ -115,6 +115,7 @@ AndroidX.Compose.BoxConstraints.MinHeight.get -> float
 AndroidX.Compose.BoxConstraints.MinWidth.get -> float
 AndroidX.Compose.BoxWithConstraints
 AndroidX.Compose.BoxWithConstraints.BoxWithConstraints(System.Func<AndroidX.Compose.BoxConstraints, AndroidX.Compose.ComposableNode!>! content) -> void
+AndroidX.Compose.Brush
 AndroidX.Compose.Button
 AndroidX.Compose.Button.Button(System.Action! onClick) -> void
 AndroidX.Compose.Button.Colors.get -> AndroidX.Compose.Material3.ButtonColors?
@@ -1227,6 +1228,11 @@ AndroidX.Compose.TextStyle.TextAlign.set -> void
 AndroidX.Compose.TextStyle.TextDecoration.get -> AndroidX.Compose.TextDecoration?
 AndroidX.Compose.TextStyle.TextDecoration.set -> void
 AndroidX.Compose.TextStyle.TextStyle() -> void
+AndroidX.Compose.TileMode
+AndroidX.Compose.TileMode.Clamp = 0 -> AndroidX.Compose.TileMode
+AndroidX.Compose.TileMode.Decal = 3 -> AndroidX.Compose.TileMode
+AndroidX.Compose.TileMode.Mirror = 2 -> AndroidX.Compose.TileMode
+AndroidX.Compose.TileMode.Repeated = 1 -> AndroidX.Compose.TileMode
 AndroidX.Compose.TimeInput
 AndroidX.Compose.TimeInput.TimeInput(AndroidX.Compose.TimePickerState? state = null) -> void
 AndroidX.Compose.TimePicker
@@ -1487,6 +1493,17 @@ static AndroidX.Compose.Arrangement.SpacedBy(int dp) -> AndroidX.Compose.Arrange
 static AndroidX.Compose.Arrangement.SpaceEvenly.get -> AndroidX.Compose.Arrangement!
 static AndroidX.Compose.Arrangement.Start.get -> AndroidX.Compose.Arrangement!
 static AndroidX.Compose.Arrangement.Top.get -> AndroidX.Compose.Arrangement!
+static AndroidX.Compose.Brush.HorizontalGradient(AndroidX.Compose.Color[]! colors, float startX = 0, float endX = Infinity, AndroidX.Compose.TileMode tileMode = AndroidX.Compose.TileMode.Clamp) -> AndroidX.Compose.UI.Graphics.Brush!
+static AndroidX.Compose.Brush.HorizontalGradient(params AndroidX.Compose.Color[]! colors) -> AndroidX.Compose.UI.Graphics.Brush!
+static AndroidX.Compose.Brush.LinearGradient(AndroidX.Compose.Color[]! colors, AndroidX.Compose.Offset start, AndroidX.Compose.Offset end, AndroidX.Compose.TileMode tileMode = AndroidX.Compose.TileMode.Clamp) -> AndroidX.Compose.UI.Graphics.Brush!
+static AndroidX.Compose.Brush.LinearGradient(params AndroidX.Compose.Color[]! colors) -> AndroidX.Compose.UI.Graphics.Brush!
+static AndroidX.Compose.Brush.RadialGradient(AndroidX.Compose.Color[]! colors, AndroidX.Compose.Offset center, float radius = Infinity, AndroidX.Compose.TileMode tileMode = AndroidX.Compose.TileMode.Clamp) -> AndroidX.Compose.UI.Graphics.Brush!
+static AndroidX.Compose.Brush.RadialGradient(params AndroidX.Compose.Color[]! colors) -> AndroidX.Compose.UI.Graphics.Brush!
+static AndroidX.Compose.Brush.SolidColor(AndroidX.Compose.Color color) -> AndroidX.Compose.UI.Graphics.Brush!
+static AndroidX.Compose.Brush.SweepGradient(AndroidX.Compose.Color[]! colors, AndroidX.Compose.Offset center) -> AndroidX.Compose.UI.Graphics.Brush!
+static AndroidX.Compose.Brush.SweepGradient(params AndroidX.Compose.Color[]! colors) -> AndroidX.Compose.UI.Graphics.Brush!
+static AndroidX.Compose.Brush.VerticalGradient(AndroidX.Compose.Color[]! colors, float startY = 0, float endY = Infinity, AndroidX.Compose.TileMode tileMode = AndroidX.Compose.TileMode.Clamp) -> AndroidX.Compose.UI.Graphics.Brush!
+static AndroidX.Compose.Brush.VerticalGradient(params AndroidX.Compose.Color[]! colors) -> AndroidX.Compose.UI.Graphics.Brush!
 static AndroidX.Compose.Color.Black.get -> AndroidX.Compose.Color
 static AndroidX.Compose.Color.Blue.get -> AndroidX.Compose.Color
 static AndroidX.Compose.Color.Cyan.get -> AndroidX.Compose.Color
@@ -2040,8 +2057,10 @@ static AndroidX.Compose.ModifierExtensions.Align(this AndroidX.Compose.Modifier!
 static AndroidX.Compose.ModifierExtensions.Align(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.Alignment.Vertical! alignment) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.ModifierExtensions.Alpha(this AndroidX.Compose.Modifier! modifier, float alpha) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.ModifierExtensions.AspectRatio(this AndroidX.Compose.Modifier! modifier, float ratio, bool matchHeightConstraintsFirst = false) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.ModifierExtensions.Background(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.UI.Graphics.Brush! brush, AndroidX.Compose.Shape? shape = null, float alpha = 1) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.ModifierExtensions.Background(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.Color color, AndroidX.Compose.Shape? shape) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.ModifierExtensions.Background(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.Color color) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.ModifierExtensions.Border(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.Dp width, AndroidX.Compose.UI.Graphics.Brush! brush, AndroidX.Compose.Shape? shape = null) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.ModifierExtensions.Border(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.Dp width, AndroidX.Compose.Color color, AndroidX.Compose.Dp cornerRadius) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.ModifierExtensions.Border(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.Dp width, AndroidX.Compose.Color color, AndroidX.Compose.Shape? shape) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.ModifierExtensions.Border(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.Dp width, AndroidX.Compose.Color color) -> AndroidX.Compose.Modifier!
@@ -2121,11 +2140,13 @@ static AndroidX.Compose.MutableNumberState<T>.operator ++(AndroidX.Compose.Mutab
 static AndroidX.Compose.MutableState<T>.implicit operator T(AndroidX.Compose.MutableState<T>! state) -> T
 static AndroidX.Compose.Offset.operator !=(AndroidX.Compose.Offset a, AndroidX.Compose.Offset b) -> bool
 static AndroidX.Compose.Offset.operator ==(AndroidX.Compose.Offset a, AndroidX.Compose.Offset b) -> bool
+static AndroidX.Compose.Offset.Infinite.get -> AndroidX.Compose.Offset
 static AndroidX.Compose.Offset.Unspecified.get -> AndroidX.Compose.Offset
 static AndroidX.Compose.Offset.Zero.get -> AndroidX.Compose.Offset
 static AndroidX.Compose.Shape.Circle() -> AndroidX.Compose.Shape!
 static AndroidX.Compose.Shape.CutCorners(AndroidX.Compose.Dp cornerSize) -> AndroidX.Compose.Shape!
 static AndroidX.Compose.Shape.CutCornersPercent(int percent) -> AndroidX.Compose.Shape!
+static AndroidX.Compose.Shape.Rectangle.get -> AndroidX.Compose.Shape!
 static AndroidX.Compose.Shape.RoundedCorners(AndroidX.Compose.Dp cornerRadius) -> AndroidX.Compose.Shape!
 static AndroidX.Compose.Shape.RoundedCorners(AndroidX.Compose.Dp topStart, AndroidX.Compose.Dp topEnd, AndroidX.Compose.Dp bottomEnd, AndroidX.Compose.Dp bottomStart) -> AndroidX.Compose.Shape!
 static AndroidX.Compose.Shape.RoundedPercent(int percent) -> AndroidX.Compose.Shape!
