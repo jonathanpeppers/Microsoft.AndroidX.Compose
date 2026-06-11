@@ -100,7 +100,9 @@ AndroidX.Compose.BottomAppBar.BottomAppBar() -> void
 AndroidX.Compose.BottomAppBar.FloatingActionButton.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.BottomAppBar.FloatingActionButton.set -> void
 AndroidX.Compose.BottomSheetScaffold
-AndroidX.Compose.BottomSheetScaffold.BottomSheetScaffold() -> void
+AndroidX.Compose.BottomSheetScaffold.BottomSheetScaffold(AndroidX.Compose.SheetStateHolder? sheetState = null) -> void
+AndroidX.Compose.BottomSheetScaffold.ConfirmValueChange.get -> System.Func<AndroidX.Compose.Material3.SheetValue!, bool>?
+AndroidX.Compose.BottomSheetScaffold.ConfirmValueChange.set -> void
 AndroidX.Compose.BottomSheetScaffold.SheetContent.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.BottomSheetScaffold.SheetContent.set -> void
 AndroidX.Compose.BottomSheetScaffold.SheetDragHandle.get -> AndroidX.Compose.ComposableNode?
@@ -142,6 +144,8 @@ AndroidX.Compose.CenterAlignedTopAppBar.Title.get -> AndroidX.Compose.Composable
 AndroidX.Compose.CenterAlignedTopAppBar.Title.set -> void
 AndroidX.Compose.Checkbox
 AndroidX.Compose.Checkbox.Checkbox(bool checked, System.Action<bool>! onCheckedChange, bool enabled = true) -> void
+AndroidX.Compose.Checkbox.Colors.get -> AndroidX.Compose.Material3.CheckboxColors?
+AndroidX.Compose.Checkbox.Colors.set -> void
 AndroidX.Compose.CircularProgressIndicator
 AndroidX.Compose.CircularProgressIndicator.CircularProgressIndicator() -> void
 AndroidX.Compose.CircularProgressIndicator.Color.get -> AndroidX.Compose.Color?
@@ -684,9 +688,11 @@ AndroidX.Compose.MediumTopAppBar.Subtitle.set -> void
 AndroidX.Compose.MediumTopAppBar.Title.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.MediumTopAppBar.Title.set -> void
 AndroidX.Compose.ModalBottomSheet
+AndroidX.Compose.ModalBottomSheet.ConfirmValueChange.get -> System.Func<AndroidX.Compose.Material3.SheetValue!, bool>?
+AndroidX.Compose.ModalBottomSheet.ConfirmValueChange.set -> void
 AndroidX.Compose.ModalBottomSheet.DragHandle.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.ModalBottomSheet.DragHandle.set -> void
-AndroidX.Compose.ModalBottomSheet.ModalBottomSheet(System.Action! onDismissRequest) -> void
+AndroidX.Compose.ModalBottomSheet.ModalBottomSheet(System.Action! onDismissRequest, AndroidX.Compose.SheetStateHolder? sheetState = null) -> void
 AndroidX.Compose.ModalBottomSheet.Shape.get -> AndroidX.Compose.Shape?
 AndroidX.Compose.ModalBottomSheet.Shape.set -> void
 AndroidX.Compose.ModalDrawerSheet
@@ -1052,6 +1058,23 @@ AndroidX.Compose.SemanticsScope.Role(AndroidX.Compose.SemanticsRole role) -> And
 AndroidX.Compose.SemanticsScope.Selected(bool isSelected) -> AndroidX.Compose.SemanticsScope!
 AndroidX.Compose.SemanticsScope.StateDescription(string! description) -> AndroidX.Compose.SemanticsScope!
 AndroidX.Compose.Shape
+AndroidX.Compose.SheetStateHolder
+AndroidX.Compose.SheetStateHolder.CurrentValue.get -> AndroidX.Compose.Material3.SheetValue!
+AndroidX.Compose.SheetStateHolder.ExpandAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+AndroidX.Compose.SheetStateHolder.HasExpandedState.get -> bool
+AndroidX.Compose.SheetStateHolder.HasPartiallyExpandedState.get -> bool
+AndroidX.Compose.SheetStateHolder.HideAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+AndroidX.Compose.SheetStateHolder.IsVisible.get -> bool
+AndroidX.Compose.SheetStateHolder.PartialExpandAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+AndroidX.Compose.SheetStateHolder.SheetStateHolder(bool skipPartiallyExpanded = false) -> void
+AndroidX.Compose.SheetStateHolder.ShowAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+AndroidX.Compose.SheetStateHolder.SkipPartiallyExpanded.get -> bool
+AndroidX.Compose.SheetStateHolder.TargetValue.get -> AndroidX.Compose.Material3.SheetValue!
+AndroidX.Compose.SheetValueConfirmStateChange
+AndroidX.Compose.SheetValueConfirmStateChange.Callback.get -> System.Func<AndroidX.Compose.Material3.SheetValue!, bool>?
+AndroidX.Compose.SheetValueConfirmStateChange.Callback.set -> void
+AndroidX.Compose.SheetValueConfirmStateChange.Invoke(Java.Lang.Object? p0) -> Java.Lang.Object?
+AndroidX.Compose.SheetValueConfirmStateChange.SheetValueConfirmStateChange() -> void
 AndroidX.Compose.SideEffect
 AndroidX.Compose.SideEffect.SideEffect(System.Action! effect) -> void
 AndroidX.Compose.SingleChoiceSegmentedButtonRow
@@ -1118,6 +1141,8 @@ AndroidX.Compose.Surface.Shape.get -> AndroidX.Compose.Shape?
 AndroidX.Compose.Surface.Shape.set -> void
 AndroidX.Compose.Surface.Surface() -> void
 AndroidX.Compose.Switch
+AndroidX.Compose.Switch.Colors.get -> AndroidX.Compose.Material3.SwitchColors?
+AndroidX.Compose.Switch.Colors.set -> void
 AndroidX.Compose.Switch.Switch(bool checked, System.Action<bool>! onCheckedChange, bool enabled = true) -> void
 AndroidX.Compose.Tab
 AndroidX.Compose.Tab.Icon.get -> AndroidX.Compose.ComposableNode?
@@ -1531,6 +1556,7 @@ static AndroidX.Compose.Color.Yellow.get -> AndroidX.Compose.Color
 static AndroidX.Compose.Composed.implicit operator AndroidX.Compose.Composed!(System.Func<AndroidX.Compose.Runtime.IComposer!, AndroidX.Compose.ComposableNode?>! builder) -> AndroidX.Compose.Composed!
 static AndroidX.Compose.ComposeExtensions.BooleanResource(this AndroidX.Compose.Runtime.IComposer! composer, int id) -> bool
 static AndroidX.Compose.ComposeExtensions.ButtonColors(this AndroidX.Compose.Runtime.IComposer! composer, long? containerColor = null, long? contentColor = null, long? disabledContainerColor = null, long? disabledContentColor = null, int line = 0, string! file = "") -> AndroidX.Compose.Material3.ButtonColors!
+static AndroidX.Compose.ComposeExtensions.CheckboxColors(this AndroidX.Compose.Runtime.IComposer! composer, long? checkedColor = null, long? uncheckedColor = null, long? checkmarkColor = null, int line = 0, string! file = "") -> AndroidX.Compose.Material3.CheckboxColors!
 static AndroidX.Compose.ComposeExtensions.CollectAsStateWithLifecycle<T>(this Xamarin.KotlinX.Coroutines.Flow.IFlow! flow, T initialValue, AndroidX.Compose.Runtime.IComposer! composer) -> AndroidX.Compose.CollectedState<T>!
 static AndroidX.Compose.ComposeExtensions.CollectAsStateWithLifecycle<T>(this Xamarin.KotlinX.Coroutines.Flow.IStateFlow! stateFlow, AndroidX.Compose.Runtime.IComposer! composer) -> AndroidX.Compose.CollectedState<T>!
 static AndroidX.Compose.ComposeExtensions.ColorResource(this AndroidX.Compose.Runtime.IComposer! composer, int id) -> long
@@ -1588,6 +1614,7 @@ static AndroidX.Compose.ComposeExtensions.SnapshotFlow<T>(System.Func<T>! produc
 static AndroidX.Compose.ComposeExtensions.StringArrayResource(this AndroidX.Compose.Runtime.IComposer! composer, int id) -> string![]!
 static AndroidX.Compose.ComposeExtensions.StringResource(this AndroidX.Compose.Runtime.IComposer! composer, int id, params object?[]! formatArgs) -> string!
 static AndroidX.Compose.ComposeExtensions.StringResource(this AndroidX.Compose.Runtime.IComposer! composer, int id) -> string!
+static AndroidX.Compose.ComposeExtensions.SwitchColors(this AndroidX.Compose.Runtime.IComposer! composer, long? checkedThumbColor = null, long? checkedTrackColor = null, long? uncheckedThumbColor = null, long? uncheckedTrackColor = null, int line = 0, string! file = "") -> AndroidX.Compose.Material3.SwitchColors!
 static AndroidX.Compose.ComposeExtensions.Typography(this AndroidX.Compose.Runtime.IComposer! composer) -> AndroidX.Compose.Material3.Typography!
 static AndroidX.Compose.ComposeExtensions.ViewModel<T>(this AndroidX.Compose.Runtime.IComposer! composer, System.Func<T!>! factory, int line = 0, string! file = "") -> T!
 static AndroidX.Compose.ComposeExtensions.ViewModel<T>(this AndroidX.Compose.Runtime.IComposer! composer, System.Func<T!>! factory, object? key1, int line = 0, string! file = "") -> T!

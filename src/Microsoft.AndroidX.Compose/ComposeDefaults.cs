@@ -843,6 +843,23 @@ using AndroidX.Compose;
     "!checked", "!onCheckedChange", "modifier", "thumbContent",
     "enabled", "colors", "interactionSource")]
 
+// androidx.compose.material3.SwitchDefaults.colors(...): 16-slot
+// $default mask covering thumb/track/border/icon for each of the
+// checked, unchecked, disabled-checked, and disabled-unchecked
+// states. Used by `composer.SwitchColors(...)` to flip individual
+// bits as caller-supplied overrides arrive. Order matches the
+// bytecode lowering (every parameter is a `@JvmInline value class
+// Color` lowered to `long`, so the 16-slot factory is fully bound).
+[assembly: ComposeDefaults("SwitchColorsDefault",
+    "checkedThumbColor", "checkedTrackColor",
+    "checkedBorderColor", "checkedIconColor",
+    "uncheckedThumbColor", "uncheckedTrackColor",
+    "uncheckedBorderColor", "uncheckedIconColor",
+    "disabledCheckedThumbColor", "disabledCheckedTrackColor",
+    "disabledCheckedBorderColor", "disabledCheckedIconColor",
+    "disabledUncheckedThumbColor", "disabledUncheckedTrackColor",
+    "disabledUncheckedBorderColor", "disabledUncheckedIconColor")]
+
 // androidx.compose.material3.SliderKt.Slider (simple float overload):
 // 9 user params; bits 0 (value) and 1 (onValueChange) always provided.
 // The longer overload with Function3 thumb/track slots has non-null

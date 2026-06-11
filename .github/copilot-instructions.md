@@ -371,8 +371,16 @@ so `[CallerFilePath]` + `[CallerLineNumber]` slot keys inside
   (`AlertDialog`, `AssistChip`, `ListItem`, `Snackbar`, `BadgedBox`, `Tab`,
   `NavigationBarItem`, top-app-bar family).
 - **Phase 4 / 4b / 4c** — `[StateHolder]` shapes above (`DatePicker`,
-  `DateRangePicker`, `TimePicker`, `TimeInput`). `SearchBar`, `SnackbarHost`,
-  `ModalBottomSheet`, `BottomSheetScaffold` stay hand-written.
+  `DateRangePicker`, `TimePicker`, `TimeInput`, `ModalBottomSheet`).
+  `ModalBottomSheet` exercises Phase 4b (parameterised
+  `RememberSheetState(skipPartiallyExpanded, confirmValueChange,
+  composer)`) + Phase 4c (`SharedState = true`) + Phase 10
+  `[ConfirmStateChange]` simultaneously — the canonical example of all
+  three composing. `BottomSheetScaffold` and `SearchBar` stay hand-
+  written (two non-nullable `IFunction3` slots — needs hybrid-container
+  generator extension). `SnackbarHost` stays hand-written (its body
+  `IFunction3` forwards `p0` to a sibling `Snackbar` bridge — no
+  current generator option models that).
 - **Phase 6** — `DefaultColorFromTheme` for drawer sheets/containers falling
   back to a `ColorScheme` slot.
 - **Phase 7** — `[PainterResource]` resource-id facades (`Image`, Painter
@@ -476,10 +484,14 @@ so `[CallerFilePath]` + `[CallerLineNumber]` slot keys inside
 
 - Facades calling a bound binding directly with no `[ComposeBridge]` —
   `DropdownMenuItem`.
-- State-holder facades whose `RememberXxxState` takes user params AND combine
-  with per-instance veto adapter: `ModalBottomSheet`, `BottomSheetScaffold`.
-  `SearchBar` until hybrid-container extension lands. These need Phase 10 +
-  Phase 4b combined — not yet modelled.
+- State-holder facades that need two non-nullable content slots
+  (hybrid-container with `[Slot]` siblings — not yet modelled):
+  `BottomSheetScaffold` (`sheetContent` + `content`) and the `SearchBar`
+  family (`inputField` + `content`). `SnackbarHost` stays hand-written
+  because its body `IFunction3`'s first arg (`SnackbarData`) is forwarded
+  to a sibling bridge — no current generator option models that. (Phase
+  4b + 4c + 10 combined — parameterised Remember + SharedState +
+  per-instance veto adapter — does work, see `ModalBottomSheet`.)
 - Scope facades doing non-trivial work beyond `RenderContext.PushScope`
   (`SegmentedButton` — two ctors route to two physical bridges plus a
   custom `shape = ItemShape(...)` arg computed from the published
@@ -671,7 +683,7 @@ Pattern (canonical: `DrawerValueConfirmStateChange`):
 
 1. **For new facades, prefer the generator path** —
    `[ConfirmStateChange(typeof(T))]` + `[ComposeFacade]` (Phase 10).
-2. **Hand-written holdouts** (`ModalBottomSheet`, `BottomSheetScaffold`) by
+2. **Hand-written holdouts** (`BottomSheetScaffold`) by
    convention:
    - Expose hook as `Func<T, bool>?` property, default `null` (= "use Kotlin's
      default — always allow"). Document `false` = veto.
