@@ -1,6 +1,7 @@
 using AndroidX.Compose;
 using AndroidX.Compose.Runtime;
 using AndroidX.Compose.UI.Platform;
+using Microsoft.AndroidX.Compose.Maui.Platform;
 using Microsoft.Maui.Handlers;
 using ComposeColor          = AndroidX.Compose.Color;
 using ComposeDatePicker     = AndroidX.Compose.DatePicker;
@@ -113,8 +114,13 @@ public partial class DatePickerHandler : ComposeElementHandler<IDatePicker>
             {
                 BuildLabel(label, packed, size, bold),
             };
-            if (fill)
-                trigger.PrependModifier(Modifier.FillMaxWidth());
+            // Combines the layout-fill (when set) with the cross-cutting view
+            // properties (Opacity, Translation, Scale, Rotation, IsVisible,
+            // Clip, Shadow). The dialog is a separate window, so ViewProperties
+            // only applies to the trigger button.
+            var outer = (fill ? Modifier.FillMaxWidth() : Modifier.Companion)
+                .ApplyViewProperties(VirtualView!);
+            trigger.PrependModifier(outer);
 
             var dialog = isOpen
                 ? new ComposeDatePickerDialog(onDismissRequest: () => _open.Value = false)

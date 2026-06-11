@@ -2,6 +2,7 @@ using System.Collections.Specialized;
 using AndroidX.Compose;
 using AndroidX.Compose.Runtime;
 using AndroidX.Compose.UI.Platform;
+using Microsoft.AndroidX.Compose.Maui.Platform;
 using Microsoft.Maui.Handlers;
 using ComposeColor          = AndroidX.Compose.Color;
 using ComposeFontWeight     = AndroidX.Compose.FontWeight;
@@ -169,8 +170,14 @@ public partial class PickerHandler : ComposeElementHandler<IPicker>
                 FontWeight = bold ? ComposeFontWeight.Bold : null,
             };
         }
-        if (fill)
-            trigger.PrependModifier(Modifier.FillMaxWidth());
+        // Combines the layout-fill (when set) with the cross-cutting view
+        // properties (Opacity, Translation, Scale, Rotation, IsVisible,
+        // Clip, Shadow). The dropdown menu is rendered into the same
+        // ComposeView, so the modifier wraps the ExposedDropdownMenuBox via
+        // its trigger anchor.
+        var outer = (fill ? Modifier.FillMaxWidth() : Modifier.Companion)
+            .ApplyViewProperties(VirtualView!);
+        trigger.PrependModifier(outer);
 
         var menu = new ExposedDropdownMenu(
             expanded:         isOpen,
