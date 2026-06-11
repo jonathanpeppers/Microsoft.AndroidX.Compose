@@ -65,6 +65,11 @@ public partial class HomePage : ContentPage
                 "CheckBox / Switch / RadioButton with two-way binding.",
                 Color.FromArgb("#FF9800"),
                 "toggles"),
+            new DemoEntry(
+                "Theme",
+                "Light / Dark / Unspecified — flips MaterialTheme via UserAppTheme.",
+                Color.FromArgb("#795548"),
+                "theme"),
         };
     }
 
