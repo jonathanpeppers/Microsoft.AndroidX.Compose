@@ -39,13 +39,13 @@ public sealed class LinearProgressIndicator : ComposableNode
         {
             // Determinate overload: (Float, Modifier?, J color, J trackColor,
             //                        I strokeCap; Composer; I $changed, I $default).
-            // Default bits: 0=progress (always provided), 1=modifier, 2=color,
-            //               3=trackColor, 4=strokeCap. Mask = 0b11111 = 31.
-            int defaults = 0b11111;
-            defaults &= ~0b00001;                                    // progress always set
-            if (modifier is not null)        defaults &= ~0b00010;   // modifier
-            if (Color.HasValue)              defaults &= ~0b00100;   // color
-            if (TrackColor.HasValue)         defaults &= ~0b01000;   // trackColor
+            // Generated `LinearProgressIndicatorDeterminateDefault` enum
+            // covers slots 1..4 (progress on bit 0 is always provided
+            // and skipped via the `!` prefix in `ComposeDefaults.cs`).
+            var defaults = LinearProgressIndicatorDeterminateDefault.All;
+            if (modifier is not null)        defaults &= ~LinearProgressIndicatorDeterminateDefault.Modifier;
+            if (Color.HasValue)              defaults &= ~LinearProgressIndicatorDeterminateDefault.Color;
+            if (TrackColor.HasValue)         defaults &= ~LinearProgressIndicatorDeterminateDefault.TrackColor;
 
 #pragma warning disable CS0618 // Float-progress overload is deprecated in Compose
                                // 1.7+ in favour of the lambda overload, but the
@@ -58,15 +58,15 @@ public sealed class LinearProgressIndicator : ComposableNode
                 p4:         0,
                 _composer:  composer,
                 strokeCap:  0,
-                _changed:   defaults);
+                _changed:   (int)defaults);
 #pragma warning restore CS0618
             return;
         }
 
-        int indeterminateDefaults = (int)LinearProgressIndicatorDefault.All;
-        if (modifier is not null)        indeterminateDefaults &= ~(int)LinearProgressIndicatorDefault.Modifier;
-        if (Color.HasValue)              indeterminateDefaults &= ~(int)LinearProgressIndicatorDefault.Color;
-        if (TrackColor.HasValue)         indeterminateDefaults &= ~(int)LinearProgressIndicatorDefault.TrackColor;
+        var indeterminateDefaults = LinearProgressIndicatorDefault.All;
+        if (modifier is not null)        indeterminateDefaults &= ~LinearProgressIndicatorDefault.Modifier;
+        if (Color.HasValue)              indeterminateDefaults &= ~LinearProgressIndicatorDefault.Color;
+        if (TrackColor.HasValue)         indeterminateDefaults &= ~LinearProgressIndicatorDefault.TrackColor;
 
         ProgressIndicatorKt.LinearProgressIndicator(
             modifier:   modifier,
@@ -76,6 +76,6 @@ public sealed class LinearProgressIndicator : ComposableNode
             gapSize:    0f,
             _composer:  composer,
             strokeCap:  0,
-            _changed:   indeterminateDefaults);
+            _changed:   (int)indeterminateDefaults);
     }
 }

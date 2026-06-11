@@ -808,6 +808,13 @@ using AndroidX.Compose;
 [assembly: ComposeDefaults("LinearProgressIndicatorDefault",
     "modifier", "color", "trackColor", "strokeCap", "gapSize")]
 
+// androidx.compose.material3.ProgressIndicatorKt.LinearProgressIndicator-2cYBFYY
+// (deprecated determinate float-progress overload). 5 user params:
+// progress is always provided so bit 0 stays cleared via the `!`
+// prefix; modifier/color/trackColor/strokeCap are optional.
+[assembly: ComposeDefaults("LinearProgressIndicatorDeterminateDefault",
+    "!progress", "modifier", "color", "trackColor", "strokeCap")]
+
 // androidx.compose.material3.ProgressIndicatorKt.CircularProgressIndicator-4lLiAd8
 // (indeterminate). 6 user params, all optional.
 [assembly: ComposeDefaults("CircularProgressIndicatorDefault",
