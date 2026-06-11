@@ -602,6 +602,126 @@ page so cross-sibling animation, semantics, and a single
   consumes pointer events for its own composition. Workaround: put
   a stock leaf in the cell, or convert the container.
 
+#### Phase 2 Slice 8 — `ModifierBridge` ✅ shipped
+
+Goal: forward MAUI's cross-cutting `IView` visual / transform
+properties (`IsVisible`, `Opacity`, `TranslationX/Y`, `Scale` /
+`ScaleX` / `ScaleY`, `Rotation` / `RotationX` / `RotationY`,
+`AnchorX/Y`, `Clip`, `Shadow`) into the Compose composition the
+overridden handlers contribute. Pre-Slice 8 only `Background` /
+`Padding` / `IsEnabled` reached Compose; the rest were silent
+no-ops because every Compose-backed leaf folds into the page
+composition (its `ComposeView` is detached) and stock
+`UpdateOpacity` / `UpdateTranslationX` / … platform-side updates
+pokes a view that never paints.
+
+**Property → Compose modifier table:**
+
+| MAUI property                                                    | Compose translation                                                                                          |
+|------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------|
+| `Visibility != Visible`                                          | `Modifier.Alpha(0f)`                                                                                         |
+| `Opacity` (when < 1)                                             | `Modifier.Alpha((float)Opacity)`                                                                             |
+| `TranslationX/Y`                                                 | `Modifier.Offset(x.dp, y.dp)`                                                                                |
+| `Scale * ScaleX/ScaleY` (multiplied)                             | `Modifier.Scale((float)sx)` (uniform) or `Modifier.Scale(sx, sy)` (asymmetric)                                |
+| `Rotation` only                                                  | `Modifier.Rotate(rotation)` (cheaper, no `GraphicsLayer`)                                                    |
+| `Rotation` + any of `RotationX/Y` / `AnchorX/Y != 0.5`           | `Modifier.GraphicsLayer(rotationX, rotationY, rotationZ, transformOrigin: TransformOrigin.Pack(ax, ay))`     |
+| `Clip` is `RoundRectangleGeometry`                               | `Modifier.Clip(new RoundedCornerShape(corner.dp))` (or per-corner `RoundedCornerShape(topStart, …)`)         |
+| `Clip` is `RectangleGeometry`                                    | `Modifier.Clip(Shape.Rectangle)`                                                                             |
+| `Clip` is `EllipseGeometry` (`RadiusX == RadiusY`)               | `Modifier.Clip(Shape.Circle())`                                                                              |
+| `Clip` arbitrary path / `GeometryGroup`                          | (no-op — bail rather than emit a wrong outline)                                                              |
+| `Shadow` non-null with `Radius > 0`                              | `Modifier.Shadow(radius.dp)` — Compose synthesises offset / opacity from elevation; `Brush` is not modelled. |
+
+**Modifier order** is fixed so cross-cutting visuals trace the
+right outline: **Alpha / Opacity** outermost (so they fade the
+entire visual), then **Offset** (translation), then **Scale**, then
+**Rotate** / `GraphicsLayer`, then **Shadow**, then **Clip**
+innermost (so the clip outline tracks the drawn content rather than
+the post-translate position). The chain is built once in
+`ModifierBridge.ApplyViewProperties(this Modifier, IView)` and
+prepended via `ComposableNode.PrependModifier(...)` by every
+handler's `BuildNode`.
+
+**Recomposition pipeline.** `MutableState<T>` only accepts
+primitives / strings / `Java.Lang.Object` subclasses, so the
+struct-typed properties (`Color`, `Geometry`, `IShadow`, the double
+coords) can't be put into per-property slots. Instead the base
+`ComposeElementHandler<T>` exposes **one shared
+`MutableState<int>` view-properties version slot**; each
+`BuildNode` reads it via `SubscribeToViewProperties()` to register
+a Compose dependency, and `ApplyViewProperties` re-reads the live
+`IView` properties on every recomposition. The slot is bumped from
+`UseAndroidXCompose()` → `RemapForCompose()`, which calls
+`PropertyMapperExtensions.AppendToMapping(...)` on the global
+`ViewHandler.ViewMapper` for each of the 14 cross-cutting
+properties. The appended hook checks `handler is IComposeHandler`
+and calls `BumpViewPropertiesVersion()`; non-Compose handlers
+shrug it off after a single type test. `RemapForCompose` is
+idempotent via a static flag so a host that calls
+`UseAndroidXCompose` twice (test fixtures) doesn't double-register.
+
+**`IsVisible` semantic choice — alpha vs layout-skip.** MAUI's
+`IsVisible == false` on the cross-platform side maps to
+`Visibility.Hidden` on `IView`, which stock backends collapse
+through `View.Visibility = GONE` (the cell drops out of the layout
+slot). Compose modifier-only translation can't drop a node out of
+the parent layout slot, so we use `Modifier.Alpha(0f)` — preserves
+layout space, matches MAUI's `Hidden` (not `Collapsed`) semantics.
+Dropping the node would require a measure-policy short-circuit
+(generic `Layout {}` adapter, on the Phase 5 roadmap).
+
+**3D rotation round-trip (`RotationX/Y`).** Both MAUI and Compose
+take degrees, but Compose's `GraphicsLayer { rotationX, rotationY }`
+applies them through a perspective camera whose `cameraDistance`
+defaults to ~8 × the layout depth in dp. MAUI's stock Android
+backend uses `android.graphics.Camera`, which has a different
+default camera distance. A 60° `RotationX` therefore foreshortens
+slightly differently than the same value rendered by stock MAUI on
+top of Android `View`. The deviation is most apparent above ~30°
+of axis tilt; matching the stock perspective would require porting
+`Camera`'s matrix into Compose space — out of scope for the bridge.
+
+**`Shadow` colour limitation.** MAUI's `Shadow` exposes `Brush`,
+`Offset`, `Opacity`, `Radius`. Compose's `Modifier.Shadow(elevation,
+shape)` only takes elevation + shape — Compose synthesises the
+ambient / spot tint from elevation and the surrounding
+`MaterialTheme`. We forward `Shadow.Radius` as elevation; offset /
+opacity / brush-derived colour aren't surfaced. Documented; a
+follow-up could lower into `GraphicsLayer.shadowElevation` plus a
+custom `Spot`/`AmbientShadowColor` modifier when those land on the
+facade.
+
+**Delivered:**
+
+- `Platform/ModifierBridge.cs` — the `ApplyViewProperties` extension
+  with the property mapping table above.
+- `IComposeHandler.BumpViewPropertiesVersion()` + base-class
+  shared `MutableState<int>` slot + protected-internal
+  `SubscribeToViewProperties()`.
+- `RemapForCompose()` static helper called from
+  `UseAndroidXCompose()` — idempotent, hooks all 14 cross-cutting
+  `IView` properties on `ViewHandler.ViewMapper`.
+- Refactor of every existing handler's `BuildNode` to chain
+  `ApplyViewProperties` on its outermost `PrependModifier` (Label,
+  Button, Entry, Image, Layout, ScrollView). `PageHandler` is
+  intentionally not refactored — its `ComposeView` IS the platform
+  view, so MAUI's stock `UpdateOpacity` / `UpdateTranslationX` /
+  … on the outer view still works.
+- Sample `Pages/ModifiersPage.xaml` + HomePage entry + Shell route
+  cycling each property on a single `Image`.
+
+**Verified:**
+
+- Sample build green (`dotnet build src/Microsoft.AndroidX.Compose.Maui.Sample`).
+- ModifiersPage demos visually flip every property — opacity fades,
+  scale grows, rotation spins, IsVisible hides, translation slides,
+  clip rounds / circles, shadow elevates.
+- No regression on existing demos (Counter / Buttons / Entries) —
+  default property values produce no extra modifier ops since
+  `ApplyViewProperties` short-circuits on identity.
+- Single `androidx.compose.ui.platform.ComposeView` per page
+  preserved (no extra `Box`-per-property; properties chain into the
+  same outermost modifier).
+
 #### Phase 2 Slice 3 — toggle leaves ✅ shipped
 
 Goal: extend Phase 2 input coverage with the three boolean / selected
@@ -895,6 +1015,125 @@ backed surfaces along with it.
   `Dark` property on `MaterialTheme` was already there. The slice is
   pure plumbing — no new `[ComposeBridge]` / `[ComposeFacade]` /
   `PublicAPI.Unshipped.txt` updates.
+#### Phase 2 Slice 9 — `ComposeAlertManagerSubscription` ✅ shipped
+
+`Page.DisplayAlert(...)` / `Page.DisplayActionSheet(...)` /
+`Page.DisplayPromptAsync(...)` route through MAUI's internal
+`AlertManager` on Android. Stock `AlertManager` shows AppCompat
+`AlertDialog.Builder` / `ListView` bottom-sheets that look out of
+place against Compose-skinned pages. Slice 9 intercepts at the DI
+contract layer and renders through Compose `AlertDialog` /
+`ModalBottomSheet` / `OutlinedTextField` overlays.
+
+**Approach: `DispatchProxy` over MAUI's internal
+`AlertManager.IAlertManagerSubscription`.** MAUI's
+`AlertManager.Subscribe()` resolves
+`Services.GetService<IAlertManagerSubscription>()` and **only falls
+back to the stock subscription when DI returns null**. Registering
+our own implementation as that interface short-circuits the stock
+path entirely — no MessagingCenter races, no need to wholesale
+replace `AlertManager` via reflection.
+
+Catch: the interface is `internal`. We can't `: IAlertManagerSubscription`
+at compile time. Instead we mirror maui-labs's WPF
+`WPFAlertManagerSubscription` pattern:
+
+1. Reflectively look up
+   `Microsoft.Maui.Controls.Platform.AlertManager+IAlertManagerSubscription`
+   from the loaded `Microsoft.Maui.Controls` assembly.
+2. Use `System.Reflection.DispatchProxy.Create<TInterface, TProxy>()`
+   to synthesise an instance of that interface backed by our
+   `ComposeAlertManagerSubscription : DispatchProxy` class.
+3. The runtime-emitted subclass routes every interface call into our
+   `Invoke(MethodInfo, object?[])` override, which fans out by
+   method name to `OnAlertRequested` / `OnPromptRequested` /
+   `OnActionSheetRequested` / no-op for `OnPageBusy`.
+4. Register the proxy via
+   `services.AddSingleton(serviceType: <runtime IAlertManagerSubscription>, factory)`.
+
+This binds us to MAUI's internal interface shape — version pinning
+hazard. Pinned to `Microsoft.Maui.Controls` 10.0.20. If the interface
+gains/renames members in a future MAUI, the proxy will throw
+`MissingMethodException` at first call. The contract has been stable
+since net6.0; risk is low but real.
+
+**Render mappings:**
+
+- `AlertArguments(title, message, accept, cancel)` → Compose
+  `AlertDialog(title, text, confirmButton, dismissButton)`. For the
+  three-arg `DisplayAlert(title, message, cancel)` overload — single
+  button — MAUI passes `Accept = null`. Detect that, render `Cancel`
+  as the confirm button label only, omit the dismiss slot. (First
+  bug of the slice: not detecting → "OK / OK" twin buttons.)
+- `ActionSheetArguments(title, cancel, destruction, buttons[])` →
+  Compose `ModalBottomSheet` listing buttons as a
+  `Column` of `ListItem`s, with `destruction` styled red.
+- `PromptArguments(title, message, accept, cancel, placeholder, maxLength, keyboard, initialValue)`
+  → Compose `AlertDialog` with an `OutlinedTextField` between `text`
+  and `confirmButton`, pre-filled with `InitialValue`.
+
+**Overlay attach/detach lifecycle.** Each handler resolves the
+`Activity` from `sender.Handler?.MauiContext?.Context.GetActivity()`
+(returning `null` if the page isn't attached to a handler yet),
+creates a fresh `ComposeView`, sets content via the existing
+`ComposeView.SetContent(node => …)` extension, and adds the view to
+the activity's `android.R.id.content` `FrameLayout`. The dismiss
+closure removes the view from its parent on the UI thread.
+`args.Result.TrySetResult(...)` is set **before** detach so the
+awaiting `Task` completes deterministically — even if `RemoveView`
+synchronously re-enters another dialog flow.
+
+`onUnattached` is invoked when `ResolveActivity` fails (rare —
+e.g. background page). It completes the awaiter with the cancel
+value so the caller's `await` doesn't hang.
+
+**Memory leak hazards.** The proxy itself is a process-wide singleton,
+so it's safe to capture services + activity-lookup state. Per-call
+overlay state lives only inside the dismiss closure (lambda-captured
+by the on-confirm/on-cancel handlers); once detached, the
+`ComposeView` and its captured page reference are dropped. No long-
+lived `WeakReference`-to-`Activity` is needed because no field on
+the singleton holds a strong activity reference — every call goes
+through the live `sender.Handler?.MauiContext?.Context` chain.
+
+**Theme alignment — known mismatch (deferred to Slice 7).** The
+overlay wraps content in the default Compose `MaterialTheme()`
+because the page's theme is currently passed through ad-hoc in
+`PageHandler`. Once `ThemeManager` (Slice 7) ships, the overlay
+will pull from the same `Application` `UserAppTheme` /
+`RequestedTheme` source as the page composer. For now, dialog
+M3 colours match the page theme by visual coincidence (both default
+dynamic colour) but won't track explicit `App.Resources` overrides.
+
+**Action-sheet animation — known polish gap.** `ModalBottomSheet`
+currently dismisses by removing the overlay view — the bottom
+sheet does not animate out. Polishing this requires `sheetState`
+plumbing (suspend `Hide()` then detach inside a continuation). Out
+of scope for Slice 9; tracked separately.
+
+**Lessons learned (Slice 9):**
+
+- **`DispatchProxy.Create<T, TProxy>` requires `TProxy` non-sealed.**
+  Reflection.Emit synthesises a runtime subclass; sealed bases throw
+  `ArgumentException` at the first `Create` call. The error doesn't
+  surface through `JavaProxyThrowable`'s default crash log on
+  Android — only `AndroidRuntime: FATAL EXCEPTION: main` with the
+  proxy class name, no inner detail. Always wrap `DispatchProxy.Create`
+  in a try/catch that explicitly logs `ex.InnerException` via
+  `global::Android.Util.Log` to surface the real reason. (`Android`
+  alone resolves to `Microsoft.Android` once `using Android.App;`
+  is in scope — qualify as `global::Android` for `Android.Util.Log`.)
+- **Fast-Dev (`EmbedAssembliesIntoApk = false`) breaks after a clean
+  uninstall.** `dotnet build -t:Install` complains about a missing
+  `files/.__override__/<arch>/Mono.Android.Runtime.dll` (XA0127). Add
+  `-p:EmbedAssembliesIntoApk=true` to use a fully-bundled APK; the
+  flag is the safest for slice verification.
+- **Multiple `compose-net` apps confuse on-device verification.** The
+  Gallery app and the MAUI sample both use `Title="Compose Gallery"`
+  by default (the MAUI sample inherits MAUI's title from `MainPage`).
+  Always verify foreground via
+  `adb shell dumpsys activity activities | findstr topResumedActivity`
+  before screenshotting.
 
 ### Phase 3 — collection + container (target: list-driven apps)
 
