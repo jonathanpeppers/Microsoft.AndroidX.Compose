@@ -223,8 +223,11 @@ public partial class ImageHandler : ViewHandler<MauiIImage, ComposeView>
     // 1x1 before forwarding — Bitmap.createBitmap(0, 0, ...) throws.
     static ComposePainter DrawableToPainter(Drawable d)
     {
-        var w = d.IntrinsicWidth  > 0 ? d.IntrinsicWidth  : 1;
-        var h = d.IntrinsicHeight > 0 ? d.IntrinsicHeight : 1;
+        // d.IntrinsicWidth/Height are JNI getters, so read each once.
+        int intrinsicW = d.IntrinsicWidth;
+        int intrinsicH = d.IntrinsicHeight;
+        var w = intrinsicW > 0 ? intrinsicW : 1;
+        var h = intrinsicH > 0 ? intrinsicH : 1;
         var bitmap = DrawableKt.ToBitmap(d, w, h, config: null);
 
         var imageBitmap = AndroidImageBitmap_androidKt.AsImageBitmap(bitmap);
@@ -233,8 +236,12 @@ public partial class ImageHandler : ViewHandler<MauiIImage, ComposeView>
         // @JvmInline value class). IntOffset.Zero == 0L for srcOffset.
         // FilterQuality.Low (== 1) is Compose's BitmapPainter default
         // and avoids needless filtering for 1:1 source/destination
-        // samples.
-        var srcSize = ((long)bitmap.Width << 32) | (uint)bitmap.Height;
+        // samples. ToBitmap returns the existing BitmapDrawable.Bitmap
+        // when its dimensions match (which they do — we asked for the
+        // intrinsic size) or allocates a fresh bitmap of (w, h), so
+        // reuse our local w/h instead of paying two more JNI getters
+        // for bitmap.Width/Height.
+        var srcSize = ((long)w << 32) | (uint)h;
         return BitmapPainterKt.BitmapPainter(
             image:         imageBitmap,
             srcOffset:     0L,
