@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using AndroidX.Compose;
 using AndroidX.Compose.Runtime;
 using Microsoft.Maui.Handlers;
@@ -160,7 +159,7 @@ public partial class EditorHandler : ComposeElementHandler<IEditor>
 
     /// <summary>Map <see cref="ITextInput.Keyboard"/> to a Compose <c>KeyboardType</c> int.</summary>
     public static void MapKeyboard(EditorHandler handler, IEditor editor) =>
-        handler._keyboardType.Value = ResolveKeyboardType(editor.Keyboard);
+        handler._keyboardType.Value = KeyboardMapping.Resolve(editor.Keyboard, nameof(EditorHandler));
 
     /// <summary>Map <see cref="ITextInput.IsReadOnly"/> to the Compose <c>readOnly</c> slot.</summary>
     public static void MapIsReadOnly(EditorHandler handler, IEditor editor) =>
@@ -178,19 +177,4 @@ public partial class EditorHandler : ComposeElementHandler<IEditor>
     public static void MapHorizontalLayoutAlignment(EditorHandler handler, IEditor editor) =>
         handler._fillWidth.Value = editor.HorizontalLayoutAlignment
             == Microsoft.Maui.Primitives.LayoutAlignment.Fill;
-
-    static int ResolveKeyboardType(Keyboard? keyboard)
-    {
-        if (keyboard is null) return ComposeKeyboardType.Text;
-        if (keyboard == Keyboard.Numeric)   return ComposeKeyboardType.Number;
-        if (keyboard == Keyboard.Telephone) return ComposeKeyboardType.Phone;
-        if (keyboard == Keyboard.Url)       return ComposeKeyboardType.Uri;
-        if (keyboard == Keyboard.Email)     return ComposeKeyboardType.Email;
-        if (keyboard == Keyboard.Default
-            || keyboard == Keyboard.Text
-            || keyboard == Keyboard.Chat) return ComposeKeyboardType.Text;
-        Debug.WriteLine(
-            $"[EditorHandler] Unmapped Keyboard '{keyboard}'; falling back to Text.");
-        return ComposeKeyboardType.Text;
-    }
 }

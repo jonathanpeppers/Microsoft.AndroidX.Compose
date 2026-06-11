@@ -1,6 +1,8 @@
 using AndroidX.Compose;
 using AndroidX.Compose.Runtime;
 using Microsoft.Maui.Handlers;
+using ComposeColor      = AndroidX.Compose.Color;
+using MauiVisualElement = Microsoft.Maui.Controls.VisualElement;
 
 namespace Microsoft.AndroidX.Compose.Maui.Handlers;
 
@@ -20,6 +22,14 @@ namespace Microsoft.AndroidX.Compose.Maui.Handlers;
 /// — Compose-backed pages then folds <c>ContentView</c> into the
 /// single composition; mixed pages still get the stock platform
 /// view.</para>
+///
+/// <para><see cref="MauiVisualElement.BackgroundColor"/> is mapped
+/// onto the wrapping <c>Box</c>'s <c>Modifier.Background(color)</c>
+/// rather than going through <see cref="ViewHandler.MapBackground"/>:
+/// on the Compose-aware <see cref="IComposeHandler.BuildNode"/> path
+/// the handler's own <see cref="ComposeView"/> never gets attached,
+/// so the stock background mapper would write a colour to a detached
+/// view (the parent renders the wrapping <c>Box</c> directly).</para>
 /// </remarks>
 public partial class ContentViewHandler : ComposeElementHandler<IContentView>
 {
@@ -30,8 +40,9 @@ public partial class ContentViewHandler : ComposeElementHandler<IContentView>
     public static IPropertyMapper<IContentView, ContentViewHandler> Mapper =
         new PropertyMapper<IContentView, ContentViewHandler>(ViewHandler.ViewMapper)
         {
-            ["Content"]                  = MapContent,
-            [nameof(IPadding.Padding)]   = MapPadding,
+            ["Content"]                                  = MapContent,
+            [nameof(IPadding.Padding)]                   = MapPadding,
+            [nameof(MauiVisualElement.BackgroundColor)]  = MapBackgroundColor,
         };
 
     /// <summary>Command mapper (inherits view-level commands; no extras).</summary>
@@ -40,8 +51,9 @@ public partial class ContentViewHandler : ComposeElementHandler<IContentView>
 
     // Padding/Content can't live in MutableState<T> directly — bump
     // version slots and re-read live (same trick as LayoutHandler).
-    readonly MutableState<int> _paddingVersion = new(0);
-    readonly MutableState<int> _contentVersion = new(0);
+    readonly MutableState<int>   _paddingVersion  = new(0);
+    readonly MutableState<int>   _contentVersion  = new(0);
+    readonly MutableState<long?> _backgroundColor = new((long?)null);
 
     /// <summary>Construct a handler with the default mappers.</summary>
     public ContentViewHandler() : base(Mapper, CommandMapper) { }
@@ -63,6 +75,8 @@ public partial class ContentViewHandler : ComposeElementHandler<IContentView>
         var padding = (view as IPadding)?.Padding ?? Thickness.Zero;
 
         Modifier modifier = Modifier.Companion.FillMaxSize();
+        if (_backgroundColor.Value is long bg)
+            modifier = modifier.Background(new ComposeColor(bg));
         if (padding != Thickness.Zero)
         {
             modifier = modifier.Padding(
@@ -85,4 +99,14 @@ public partial class ContentViewHandler : ComposeElementHandler<IContentView>
     /// <summary>Bump the padding version slot.</summary>
     public static void MapPadding(ContentViewHandler handler, IContentView _) =>
         handler._paddingVersion.Value++;
+
+    /// <summary>
+    /// Map <see cref="MauiVisualElement.BackgroundColor"/> onto the
+    /// wrapping <c>Box</c>'s <c>Modifier.Background(...)</c>. Reads
+    /// the colour off the concrete <see cref="MauiVisualElement"/>
+    /// (the property doesn't surface on <see cref="IView"/>).
+    /// </summary>
+    public static void MapBackgroundColor(ContentViewHandler handler, IContentView view) =>
+        handler._backgroundColor.Value =
+            ColorMapping.ToPackedLong((view as MauiVisualElement)?.BackgroundColor);
 }

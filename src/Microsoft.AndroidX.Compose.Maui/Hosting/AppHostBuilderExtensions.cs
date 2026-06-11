@@ -2,6 +2,7 @@ using Microsoft.AndroidX.Compose.Maui.Handlers;
 using MauiBorder = Microsoft.Maui.Controls.Border;
 using MauiBoxView = Microsoft.Maui.Controls.BoxView;
 using MauiButton = Microsoft.Maui.Controls.Button;
+using MauiCheckBox = Microsoft.Maui.Controls.CheckBox;
 using MauiContentView = Microsoft.Maui.Controls.ContentView;
 using MauiEditor = Microsoft.Maui.Controls.Editor;
 using MauiEntry = Microsoft.Maui.Controls.Entry;
@@ -10,8 +11,10 @@ using MauiImage = Microsoft.Maui.Controls.Image;
 using MauiImageButton = Microsoft.Maui.Controls.ImageButton;
 using MauiLabel = Microsoft.Maui.Controls.Label;
 using MauiPage = Microsoft.Maui.Controls.Page;
+using MauiRadioButton = Microsoft.Maui.Controls.RadioButton;
 using MauiScrollView = Microsoft.Maui.Controls.ScrollView;
 using MauiSearchBar = Microsoft.Maui.Controls.SearchBar;
+using MauiSwitch = Microsoft.Maui.Controls.Switch;
 using MauiVerticalStackLayout = Microsoft.Maui.Controls.VerticalStackLayout;
 
 namespace Microsoft.AndroidX.Compose.Maui.Hosting;
@@ -48,8 +51,9 @@ public static class AppHostBuilderExtensions
     ///     (<see cref="MauiLabel"/> / <see cref="MauiButton"/> /
     ///     <see cref="MauiEntry"/> / <see cref="MauiEditor"/> /
     ///     <see cref="MauiSearchBar"/> / <see cref="MauiImage"/> /
-    ///     <see cref="MauiImageButton"/>) fold
-    ///     into the enclosing composition via
+    ///     <see cref="MauiImageButton"/> / <see cref="MauiCheckBox"/> /
+    ///     <see cref="MauiSwitch"/> / <see cref="MauiRadioButton"/>)
+    ///     fold into the enclosing composition via
     ///     <see cref="IComposeHandler"/>.</description></item>
     ///   <item><description>Visual containers
     ///     (<see cref="MauiBorder"/> / <see cref="MauiBoxView"/> /
@@ -66,7 +70,7 @@ public static class AppHostBuilderExtensions
     /// (the leaf creates its own composition because there's no parent
     /// composer to fold into). When they appear <i>below</i> a
     /// converted parent — or anywhere a non-converted control surfaces
-    /// (CollectionView, BoxView, Switch, customer renderers) — they're
+    /// (CollectionView, BoxView, customer renderers) — they're
     /// hosted via <c>AndroidView { factory = child.ToPlatform(MauiContext) }</c>
     /// inside the page composition, so MAUI's normal handler resolution
     /// keeps working.</para>
@@ -100,6 +104,9 @@ public static class AppHostBuilderExtensions
             handlers.AddHandler<MauiSearchBar,              SearchBarHandler>();
             handlers.AddHandler<MauiImage,                  ImageHandler>();
             handlers.AddHandler<MauiImageButton,            ImageButtonHandler>();
+            handlers.AddHandler<MauiCheckBox,               CheckBoxHandler>();
+            handlers.AddHandler<MauiSwitch,                 SwitchHandler>();
+            handlers.AddHandler<MauiRadioButton,            RadioButtonHandler>();
 
             // Visual containers — render through Compose Box.
             handlers.AddHandler<MauiBorder,                 BorderHandler>();

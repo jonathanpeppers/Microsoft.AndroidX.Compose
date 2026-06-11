@@ -884,6 +884,7 @@ internal static partial class ComposeBridges
         bool? isError,
         AndroidX.Compose.UI.Text.Input.IVisualTransformation? visualTransformation,
         AndroidX.Compose.Foundation.Text.KeyboardOptions? keyboardOptions,
+        AndroidX.Compose.Foundation.Text.KeyboardActions? keyboardActions,
         bool? singleLine,
         int? maxLines,
         int? minLines,
@@ -992,9 +993,13 @@ internal static partial class ComposeBridges
                     "Landroidx/compose/material3/ModalBottomSheetProperties;" +
                     "Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;III)V",
         Defaults  = typeof(ModalBottomSheetDefault))]
+    [ComposeFacade(Scope = "Column")]
     public static partial void ModalBottomSheet(
         IFunction0  onDismissRequest,
         IModifier?  modifier,
+        [StateHolder(Remember = nameof(RememberSheetState),
+                     StateType = typeof(SheetStateHolder),
+                     SharedState = true)]
         IntPtr      sheetState,
         IFunction2? dragHandle,
         Shape?      shape,
@@ -1273,6 +1278,31 @@ internal static partial class ComposeBridges
             _composer:    composer,
             p2:           0,
             _changed:     0);
+        return ((Java.Lang.Object)state).Handle;
+    }
+
+    // androidx.compose.material3.ModalBottomSheetKt.rememberModalBottomSheetState.
+    // Bound binding — wrapper-passthrough only. SkipPartiallyExpanded
+    // comes from the SheetStateHolder wrapper's like-named property
+    // (Phase 4b parameterised Remember). The veto adapter is wired by
+    // the facade generator: it reads [ConfirmStateChange] off this
+    // declaration and allocates a per-instance JCW field whose JNI
+    // identity stays stable across recompositions (so `remember` cache
+    // key holds and the sheet keeps its position).
+    public static IntPtr RememberSheetState(
+        bool skipPartiallyExpanded,
+        [ConfirmStateChange(typeof(global::AndroidX.Compose.Material3.SheetValue),
+            AdapterType = typeof(SheetValueConfirmStateChange),
+            PropertyName = "ConfirmValueChange")]
+        IFunction1 confirmValueChange,
+        IComposer composer)
+    {
+        var state = AndroidX.Compose.Material3.ModalBottomSheetKt.RememberModalBottomSheetState(
+            skipPartiallyExpanded: skipPartiallyExpanded,
+            confirmValueChange:    confirmValueChange,
+            _composer:             composer,
+            p3:                    0,
+            _changed:              0);
         return ((Java.Lang.Object)state).Handle;
     }
 
@@ -3592,16 +3622,17 @@ internal static partial class ComposeBridges
         IFunction1                 onCheckedChange,
         IModifier?                 modifier,
         bool                       enabled  = true,
+        AndroidX.Compose.Material3.CheckboxColors? colors = null,
         int                        defaults = 0,
         IComposer                  composer = null!);
 
-    public static partial void Checkbox(bool @checked, IFunction1 onCheckedChange, IModifier? modifier, bool enabled, int defaults, IComposer composer)
+    public static partial void Checkbox(bool @checked, IFunction1 onCheckedChange, IModifier? modifier, bool enabled, AndroidX.Compose.Material3.CheckboxColors? colors, int defaults, IComposer composer)
         => CheckboxKt.Checkbox(
             @checked:          @checked,
             onCheckedChange:   onCheckedChange,
             modifier:          modifier,
             enabled:           enabled,
-            colors:            null,
+            colors:            colors,
             interactionSource: null,
             _composer:         composer,
             p7:                0,
@@ -3614,17 +3645,18 @@ internal static partial class ComposeBridges
         IFunction1                 onCheckedChange,
         IModifier?                 modifier,
         bool                       enabled  = true,
+        AndroidX.Compose.Material3.SwitchColors? colors = null,
         int                        defaults = 0,
         IComposer                  composer = null!);
 
-    public static partial void Switch(bool @checked, IFunction1 onCheckedChange, IModifier? modifier, bool enabled, int defaults, IComposer composer)
+    public static partial void Switch(bool @checked, IFunction1 onCheckedChange, IModifier? modifier, bool enabled, AndroidX.Compose.Material3.SwitchColors? colors, int defaults, IComposer composer)
         => SwitchKt.Switch(
             @checked:          @checked,
             onCheckedChange:   onCheckedChange,
             modifier:          modifier,
             thumbContent:      null,
             enabled:           enabled,
-            colors:            null,
+            colors:            colors,
             interactionSource: null,
             _composer:         composer,
             p8:                0,

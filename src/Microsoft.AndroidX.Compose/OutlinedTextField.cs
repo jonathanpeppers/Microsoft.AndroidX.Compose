@@ -136,7 +136,7 @@ public sealed class OutlinedTextField : ComposableNode
         ComposeBridges.OutlinedTextFieldWithValue(current, __onValueChange, BuildModifier(),
             Enabled, ReadOnly, TextStyle?.Build(), __label, __placeholder, __leadingIcon, __trailingIcon,
             __prefix, __suffix, __supportingText, IsError,
-            VisualTransformation, KeyboardOptions,
+            VisualTransformation, KeyboardOptions, KeyboardActions,
             SingleLine, MaxLines, MinLines,
             Shape,
             composer);

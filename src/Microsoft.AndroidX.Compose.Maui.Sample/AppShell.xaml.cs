@@ -21,6 +21,7 @@ public partial class AppShell : Shell
         Routing.RegisterRoute("entries",        typeof(EntriesPage));
         Routing.RegisterRoute("image-aspects",  typeof(ImageAspectsPage));
         Routing.RegisterRoute("image-sources",  typeof(ImageSourcesPage));
+        Routing.RegisterRoute("toggles",        typeof(TogglesPage));
         Routing.RegisterRoute("editor",         typeof(EditorPage));
         Routing.RegisterRoute("search",         typeof(SearchPage));
         Routing.RegisterRoute("image-buttons",  typeof(ImageButtonsPage));

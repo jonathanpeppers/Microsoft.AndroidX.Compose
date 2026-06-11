@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using AndroidX.Compose;
 using AndroidX.Compose.Runtime;
 using Microsoft.Maui.Handlers;
@@ -158,7 +157,7 @@ public partial class SearchBarHandler : ComposeElementHandler<ISearchBar>
 
     /// <summary>Map <see cref="ITextInput.Keyboard"/> to a Compose <c>KeyboardType</c> int.</summary>
     public static void MapKeyboard(SearchBarHandler handler, ISearchBar searchBar) =>
-        handler._keyboardType.Value = ResolveKeyboardType(searchBar.Keyboard);
+        handler._keyboardType.Value = KeyboardMapping.Resolve(searchBar.Keyboard, nameof(SearchBarHandler));
 
     /// <summary>Map <see cref="ITextInput.IsReadOnly"/> to the Compose <c>readOnly</c> slot.</summary>
     public static void MapIsReadOnly(SearchBarHandler handler, ISearchBar searchBar) =>
@@ -172,19 +171,4 @@ public partial class SearchBarHandler : ComposeElementHandler<ISearchBar>
     public static void MapHorizontalLayoutAlignment(SearchBarHandler handler, ISearchBar searchBar) =>
         handler._fillWidth.Value = searchBar.HorizontalLayoutAlignment
             == Microsoft.Maui.Primitives.LayoutAlignment.Fill;
-
-    static int ResolveKeyboardType(Keyboard? keyboard)
-    {
-        if (keyboard is null) return ComposeKeyboardType.Text;
-        if (keyboard == Keyboard.Numeric)   return ComposeKeyboardType.Number;
-        if (keyboard == Keyboard.Telephone) return ComposeKeyboardType.Phone;
-        if (keyboard == Keyboard.Url)       return ComposeKeyboardType.Uri;
-        if (keyboard == Keyboard.Email)     return ComposeKeyboardType.Email;
-        if (keyboard == Keyboard.Default
-            || keyboard == Keyboard.Text
-            || keyboard == Keyboard.Chat) return ComposeKeyboardType.Text;
-        Debug.WriteLine(
-            $"[SearchBarHandler] Unmapped Keyboard '{keyboard}'; falling back to Text.");
-        return ComposeKeyboardType.Text;
-    }
 }

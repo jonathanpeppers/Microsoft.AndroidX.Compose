@@ -602,6 +602,119 @@ page so cross-sibling animation, semantics, and a single
   consumes pointer events for its own composition. Workaround: put
   a stock leaf in the cell, or convert the container.
 
+#### Phase 2 Slice 3 — toggle leaves ✅ shipped
+
+Goal: extend Phase 2 input coverage with the three boolean / selected
+leaves so a settings-style page is fully Compose-backed.
+
+**Delivered:**
+
+- **`CheckBoxHandler`** ([`Handlers/CheckBoxHandler.cs`](../src/Microsoft.AndroidX.Compose.Maui/Handlers/CheckBoxHandler.cs))
+  — `ComposeElementHandler<ICheckBox>` over the
+  [`Microsoft.AndroidX.Compose.Checkbox`](../src/Microsoft.AndroidX.Compose/Checkbox.cs)
+  facade. Maps `IsChecked` (two-way) and `Foreground` (MAUI's
+  `CheckBox.Color` lowers to a `SolidPaint` on `Foreground`; only
+  `SolidPaint` is forwarded). The single tint is forwarded as
+  `composer.CheckboxColors(checkedColor: …)`, which substitutes only
+  `checkedBoxColor` and `checkedBorderColor` (the ring + filled state);
+  the checkmark glyph and unchecked border keep their M3 defaults.
+- **`SwitchHandler`** ([`Handlers/SwitchHandler.cs`](../src/Microsoft.AndroidX.Compose.Maui/Handlers/SwitchHandler.cs))
+  — `ComposeElementHandler<ISwitch>` over the
+  [`Microsoft.AndroidX.Compose.Switch`](../src/Microsoft.AndroidX.Compose/Switch.cs)
+  facade. Maps `IsOn` (two-way), `TrackColor` (drives
+  `checkedTrackColor` + `uncheckedTrackColor`), `ThumbColor` (drives
+  `checkedThumbColor` + `uncheckedThumbColor`). Same colour applies in
+  both states to mirror MAUI's stock `SwitchHandler` rendering.
+- **`RadioButtonHandler`** ([`Handlers/RadioButtonHandler.cs`](../src/Microsoft.AndroidX.Compose.Maui/Handlers/RadioButtonHandler.cs))
+  — `ComposeElementHandler<IRadioButton>` over the
+  [`Microsoft.AndroidX.Compose.RadioButton`](../src/Microsoft.AndroidX.Compose/RadioButton.cs)
+  facade. Maps `IsChecked` (two-way), `Content` (string-only — read
+  off `Microsoft.Maui.Controls.RadioButton` since `IRadioButton`
+  doesn't expose `Content`), `TextColor`, `Font` (size + bold). Builds
+  `Row { RadioButton(selected, onClick), Text(label) }` so the visual
+  matches MAUI's stock `AppCompatRadioButton`. `RadioButtonGroup`
+  semantics are *not* reimplemented — MAUI's
+  `RadioButtonGroupController` automatically raises
+  `CheckedChanged(false)` on the previous selection when one in a
+  group flips on; the handler just surfaces `IsChecked` honestly.
+- **Compose facades extended** — added `Colors { get; set; }` slot to
+  `Checkbox` and `Switch` mirroring `Button.Colors`. New
+  [`composer.CheckboxColors(...)`](../src/Microsoft.AndroidX.Compose/ComposeExtensions.CheckboxDefaults.cs)
+  / [`composer.SwitchColors(...)`](../src/Microsoft.AndroidX.Compose/ComposeExtensions.SwitchDefaults.cs)
+  factories build the per-control colour state-holder. `Checkbox`
+  routes through `CheckboxDefaults.Colors(composer, 0)` + `.Copy(...)`
+  because the parameterised 12-arg factory is binder-stripped (mangled
+  `colors-Q...`); `Switch`'s 16-arg parameterised factory IS bound, so
+  builds the `$default` mask directly.
+- **`UseAndroidXCompose()`** registers the three new handlers under
+  the existing leaves block ([`AppHostBuilderExtensions.cs`](../src/Microsoft.AndroidX.Compose.Maui/Hosting/AppHostBuilderExtensions.cs)).
+- **`TogglesPage`** in the sample
+  ([`Pages/TogglesPage.xaml`](../src/Microsoft.AndroidX.Compose.Maui.Sample/Pages/TogglesPage.xaml))
+  exercises every mapper: default + tinted CheckBox, default + tinted
+  Switch, RadioButton group with three options. Each section has an
+  echo `Label` updated from `CheckedChanged` / `Toggled` so manual
+  taps verify the Compose → MAUI write-back round-trips.
+
+**Verified on device:**
+
+- `TogglesPage` renders with exactly **one**
+  `androidx.compose.ui.platform.ComposeView` per `adb shell
+  uiautomator dump`. All three control kinds are exposed with
+  semantic `clickable=true checkable=true` so accessibility services
+  see them as toggles, not opaque views.
+- Echo labels flip on tap, confirming the two-way `MutableState<bool>`
+  feedback loop short-circuits without a `_suppressMauiWrite` guard
+  flag (matches `EntryHandler`'s pattern).
+
+**Lessons learned (Slice 3):**
+
+- **Two-way binding for `bool` state needs no guard flag.**
+  `MutableState<bool>` short-circuits on equality (`SnapshotMutationPolicy.StructuralEquality`),
+  so the round-trip `Compose onCheckedChange → write VirtualView.IsChecked
+  → MapIsChecked → set MutableState.Value` settles in one cycle. Same
+  pattern as `EntryHandler.OnValueChanged` — copied verbatim.
+- **`ICheckBox.Foreground` (not `Color`).** MAUI's `CheckBox.Color`
+  XAML attribute lowers to a `Paint` on the
+  [`IShape.Foreground`](https://learn.microsoft.com/dotnet/api/microsoft.maui.ishape.foreground)
+  interface property. Map `Foreground` and forward only `SolidPaint`
+  through `ColorMapping.ToPackedLong`; gradients fall back to default
+  M3 chrome.
+- **`ISwitch.IsOn` (not `IsToggled`).** `IsToggled` is the property
+  name on the concrete `Microsoft.Maui.Controls.Switch` control;
+  `ISwitch` (the handler interface) exposes it as `IsOn`. The mapper
+  key uses `nameof(ISwitch.IsOn)`.
+- **Kotlin `CheckboxColors.Copy(...)` is the only path for partial
+  override.** The parameterised 12-arg `CheckboxDefaults.colors(...)`
+  factory ships in Material3 but is binder-stripped because every
+  param is a `Color` (`@JvmInline value class` lowers to a mangled
+  JVM name like `colors-rGdcdEs`). Workaround: call the bound zero-arg
+  `Colors(composer, 0)` to get a defaulted instance, then thread
+  through `.Copy(...)` reading every default and substituting any
+  non-null overrides. `SwitchColors`'s 16-arg factory IS bound — `long`
+  packs `Color` into a primitive — so it builds the `$default` mask
+  directly. Documented the difference in the two extension factories.
+- **`IRadioButton.Content` lives on the concrete control, not the
+  interface.** `Microsoft.Maui.Controls.RadioButton.Content` is
+  `BindableProperty.Create(typeof(object), …)`. The mapper casts
+  `VirtualView` to `Microsoft.Maui.Controls.RadioButton` and forwards
+  `Content?.ToString()`; `View`-typed content (`ContentPresenter`-style)
+  isn't supported in this slice — pass a string.
+- **Don't reimplement `RadioButtonGroup` semantics.** MAUI's
+  `RadioButtonGroupController` handles unchecking the previous
+  selection automatically when one radio in a `GroupName` flips on;
+  the handler just surfaces `IsChecked`. The Compose `RadioButton`
+  composable's `onClick` only fires for unselected → selected (the
+  Kotlin contract), so a tap on an already-checked radio is a no-op
+  and the controller never sees a spurious `false` round-trip.
+- **Stale `Generated/` folder bites the facade generator.** A previous
+  `EmitCompilerGeneratedFiles=true` build wrote `Microsoft.AndroidX.Compose/Generated/`
+  with stale facade ctor bodies that compiled alongside the regenerated
+  `obj/Debug/.../Generated/...` files. Symptom: `bool enabled = true`
+  default silently dropped from `Checkbox` / `Switch` ctors. Fix:
+  `Remove-Item -Recurse Generated/ obj/` then rebuild without the flag.
+  Lesson: don't enable `EmitCompilerGeneratedFiles` in a working tree
+  while iterating on generators.
+
 #### Phase 2 Slice 6 — editor + search + image button + visual containers ✅ shipped
 
 Goal: cover the rest of the "leaf widget" Maui surface (multi-line
@@ -662,22 +775,38 @@ Phase 2 Slice 1 inlined the entire image-source resolver — drawable-id
 fast path, then the `IImageSourcePartLoader` general path — into
 `ImageHandler.MapSource`. `ImageButtonHandler` needs the exact same
 pipeline. Refactored both to call into a new
-`Microsoft.AndroidX.Compose.Maui.Loaders.ImageSourceLoader.LoadAsync`
-helper (single ~180-line file) that:
+`Microsoft.AndroidX.Compose.Maui.Loaders.ImageSourceLoader` helper
+(single ~180-line file) that:
 
-1. tries `Microsoft.AndroidX.Compose.Maui.Resource.Resolve(file)` for
-   the drawable-resource fast path (`PainterResource`-equivalent in
-   Compose),
-2. falls back to MAUI's `IImageSourcePartLoader` (Uri / Stream / Font
+1. tries the `IMauiContext.Context.GetDrawableId(file.File)` drawable
+   fast path (mirrors MAUI's `FileImageSourceService` —
+   `Resources.GetIdentifier(name, "drawable", PackageName)`),
+2. falls back to MAUI's `IImageSourcePartLoader` (URI / Stream / Font
    image-source types) by handing it a tiny `ComposeImageSetter`
-   `IImageSourcePartSetter` adapter that pushes the resulting
-   `Drawable` back into the caller via a delegate.
+   `IImageSourcePartSetter` adapter that wraps the resulting
+   `Drawable` as a Compose `BitmapPainter`.
 
-Both handlers now look like:
+The loader owns two `MutableState` slots (`DrawableResourceId` /
+`Painter`); handlers read them inside `BuildNode` so the composition
+recomposes when a fresh source resolves. Each handler holds the
+loader lazily — never allocated when no `Source` is set:
 
 ```csharp
-ImageSourceLoader.LoadAsync(Source, MauiContext, drawable =>
-    _drawable.Value = drawable);
+ImageSourceLoader Loader =>
+    _loader ??= new ImageSourceLoader(this, () => VirtualView as IImageSourcePart);
+
+async void MapSource(IImageHandler handler, IImage image) =>
+    await Loader.LoadAsync(image.Source);
+
+public override ComposableNode BuildNode(IComposer composer)
+{
+    if (_loader is { } loader)
+    {
+        if (loader.Painter.Value is { } painter) return new ComposeImage(painter) { ... };
+        if (loader.DrawableResourceId.Value is int id) return new ComposeImage(id) { ... };
+    }
+    return new Box();
+}
 ```
 
 Refactor (over paste-and-adapt) was the right call because the

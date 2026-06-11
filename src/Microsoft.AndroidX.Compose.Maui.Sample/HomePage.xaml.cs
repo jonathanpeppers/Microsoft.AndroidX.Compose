@@ -61,9 +61,14 @@ public partial class HomePage : ContentPage
                 Color.FromArgb("#E91E63"),
                 "image-sources"),
             new DemoEntry(
+                "Toggles",
+                "CheckBox / Switch / RadioButton with two-way binding.",
+                Color.FromArgb("#FF9800"),
+                "toggles"),
+            new DemoEntry(
                 "Editor",
                 "Multi-line text input, word counter, read-only, max length.",
-                Color.FromArgb("#FF9800"),
+                Color.FromArgb("#FFC107"),
                 "editor"),
             new DemoEntry(
                 "Search",
@@ -80,6 +85,7 @@ public partial class HomePage : ContentPage
                 "Border, BoxView, ContentView modifier-chain demos.",
                 Color.FromArgb("#4CAF50"),
                 "visuals"),
+
         };
     }
 
