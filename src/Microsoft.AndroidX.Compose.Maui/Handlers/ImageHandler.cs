@@ -95,16 +95,29 @@ public partial class ImageHandler : ComposeElementHandler<MauiIImage>
     public ImageHandler(IPropertyMapper? mapper, CommandMapper? commandMapper = null)
         : base(mapper ?? Mapper, commandMapper ?? CommandMapper) { }
 
+    // Without a sizing modifier, Compose's `Image` measures itself
+    // against the painter's intrinsic size and `ContentScale` has no
+    // visible effect (the layout box exactly matches the scaled
+    // painter, so Fit / Crop / FillBounds all produce the same
+    // result). `Modifier.fillMaxSize()` makes the Image honour the
+    // layout box MAUI sized for the platform view — which is what
+    // `HeightRequest` / `WidthRequest` on the `<Image>` virtual view
+    // feed into. The `Modifier` chain itself is an immutable POCO
+    // (just an op array); we cache one instance and share it across
+    // every handler / Render pass.
+    static readonly Modifier s_fillMaxSize = Modifier.FillMaxSize();
+
     /// <inheritdoc/>
     public override ComposableNode BuildNode(IComposer composer)
     {
+        var cs = _contentScale.Value;
         // Painter wins over the resource id so a freshly-loaded
         // BitmapPainter immediately replaces any stale fast-path
         // drawable. Both null => empty placeholder.
         if (_painter.Value is { } painter)
-            return new ComposeImage(painter) { ContentScale = _contentScale.Value };
+            return new ComposeImage(painter) { ContentScale = cs, Modifier = s_fillMaxSize };
         if (_drawableResourceId.Value is int id)
-            return new ComposeImage(id) { ContentScale = _contentScale.Value };
+            return new ComposeImage(id) { ContentScale = cs, Modifier = s_fillMaxSize };
         return new Box();
     }
 
