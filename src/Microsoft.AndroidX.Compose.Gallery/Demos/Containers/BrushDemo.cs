@@ -1,4 +1,5 @@
 using AndroidX.Compose.Gallery.Registry;
+using BoundBrush = AndroidX.Compose.UI.Graphics.Brush;
 
 namespace AndroidX.Compose.Gallery.Demos.Containers;
 
@@ -20,7 +21,7 @@ public static class BrushDemo
         var yellow = new Color(0xFF, 0xFF, 0xFF, 0x00);
         var orange = new Color(0xFF, 0xFF, 0x88, 0x00);
 
-        Box Tile(Brush brush, Shape? shape = null) =>
+        Box Tile(BoundBrush brush, Shape? shape = null) =>
             new()
             {
                 Modifier.FillMaxWidth()
