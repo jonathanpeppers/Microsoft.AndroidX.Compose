@@ -75,6 +75,11 @@ public partial class HomePage : ContentPage
                 "Light / Dark / Unspecified — flips MaterialTheme via UserAppTheme.",
                 Color.FromArgb("#795548"),
                 "theme"),
+            new DemoEntry(
+                "Alerts",
+                "DisplayAlert / DisplayActionSheet / DisplayPromptAsync over Compose dialogs.",
+                Color.FromArgb("#FF5722"),
+                "alerts"),
         };
     }
 

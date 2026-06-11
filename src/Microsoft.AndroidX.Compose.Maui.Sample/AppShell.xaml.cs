@@ -24,5 +24,6 @@ public partial class AppShell : Shell
         Routing.RegisterRoute("modifiers",      typeof(ModifiersPage));
         Routing.RegisterRoute("toggles",        typeof(TogglesPage));
         Routing.RegisterRoute("theme",          typeof(ThemePage));
+        Routing.RegisterRoute("alerts",         typeof(AlertsPage));
     }
 }
