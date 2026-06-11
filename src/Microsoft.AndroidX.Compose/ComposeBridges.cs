@@ -1005,7 +1005,6 @@ internal static partial class ComposeBridges
         int         defaults,
         IComposer   composer);
 
-
     // androidx.compose.material3.BottomSheetScaffoldKt.BottomSheetScaffold-sdMYb0k
     [ComposeBridge(
         Class     = "androidx/compose/material3/BottomSheetScaffoldKt",
