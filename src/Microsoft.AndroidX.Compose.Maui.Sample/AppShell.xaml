@@ -3,39 +3,21 @@
     x:Class="Microsoft.AndroidX.Compose.Maui.Sample.AppShell"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-    xmlns:pages="clr-namespace:Microsoft.AndroidX.Compose.Maui.Sample.Pages"
-    Title="AndroidX.Compose backend"
-    FlyoutBehavior="Flyout">
+    xmlns:local="clr-namespace:Microsoft.AndroidX.Compose.Maui.Sample"
+    Title="Compose Gallery"
+    FlyoutBehavior="Disabled">
 
     <!--
-        Control gallery — one FlyoutItem per Compose-backed handler
-        scenario. The Shell chrome itself (toolbar, hamburger menu)
-        keeps stock MAUI rendering since `UseAndroidXCompose()` only
-        replaces leaf controls (Button, Entry, Image, Label).
+        Single-content Shell. The home page is `HomePage`, a list of
+        demos; each row routes to a registered detail page via
+        `Shell.GoToAsync(...)` (routes registered in `AppShell.xaml.cs`).
+        FlyoutBehavior=Disabled hides the default hamburger / drawer —
+        the gallery navigates exclusively via the home list, with the
+        Shell back button on each detail page.
     -->
-
-    <FlyoutItem Title="Counter" Route="counter">
-        <ShellContent ContentTemplate="{DataTemplate pages:CounterPage}" />
-    </FlyoutItem>
-
-    <FlyoutItem Title="Buttons" Route="buttons">
-        <ShellContent ContentTemplate="{DataTemplate pages:ButtonsPage}" />
-    </FlyoutItem>
-
-    <FlyoutItem Title="Labels" Route="labels">
-        <ShellContent ContentTemplate="{DataTemplate pages:LabelsPage}" />
-    </FlyoutItem>
-
-    <FlyoutItem Title="Entries" Route="entries">
-        <ShellContent ContentTemplate="{DataTemplate pages:EntriesPage}" />
-    </FlyoutItem>
-
-    <FlyoutItem Title="Image: Aspects" Route="image-aspects">
-        <ShellContent ContentTemplate="{DataTemplate pages:ImageAspectsPage}" />
-    </FlyoutItem>
-
-    <FlyoutItem Title="Image: Sources" Route="image-sources">
-        <ShellContent ContentTemplate="{DataTemplate pages:ImageSourcesPage}" />
-    </FlyoutItem>
+    <ShellContent
+        Title="Compose Gallery"
+        ContentTemplate="{DataTemplate local:HomePage}"
+        Route="home" />
 
 </Shell>

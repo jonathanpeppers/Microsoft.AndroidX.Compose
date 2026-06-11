@@ -1,0 +1,77 @@
+namespace Microsoft.AndroidX.Compose.Maui.Sample;
+
+/// <summary>
+/// One catalog entry surfaced on <see cref="HomePage"/>. Bound directly
+/// from XAML via <c>x:DataType</c> so each row resolves <c>Title</c>,
+/// <c>Subtitle</c>, <c>Accent</c>, and <c>Route</c> at compile time.
+/// </summary>
+/// <param name="Title">Bold row title (e.g. "Counter").</param>
+/// <param name="Subtitle">Single-line description shown beneath the title.</param>
+/// <param name="Accent">Color for the leading 6dp accent strip.</param>
+/// <param name="Route">Shell route (e.g. <c>counter</c>) registered in
+/// <c>AppShell.xaml.cs</c> via <c>Routing.RegisterRoute</c>.</param>
+public sealed record DemoEntry(
+    string Title,
+    string Subtitle,
+    Color Accent,
+    string Route);
+
+/// <summary>
+/// Gallery home page — a flat list of every demo wired into the sample.
+/// Tapping a row pushes the corresponding page onto Shell's nav stack via
+/// <see cref="Shell.GoToAsync(string)"/>.
+/// </summary>
+public partial class HomePage : ContentPage
+{
+    /// <summary>Build the page and seed the demo list.</summary>
+    public HomePage()
+    {
+        InitializeComponent();
+
+        DemoList.ItemsSource = new[]
+        {
+            new DemoEntry(
+                "Counter",
+                "Button + Label, dynamic text update on click.",
+                Color.FromArgb("#512BD4"),
+                "counter"),
+            new DemoEntry(
+                "Buttons",
+                "Default vs themed colors, hug vs fill width.",
+                Color.FromArgb("#673AB7"),
+                "buttons"),
+            new DemoEntry(
+                "Labels",
+                "Color, size, bold, alignment, multi-line.",
+                Color.FromArgb("#3F51B5"),
+                "labels"),
+            new DemoEntry(
+                "Entries",
+                "Plain, password, IMEs, styled, read-only.",
+                Color.FromArgb("#2196F3"),
+                "entries"),
+            new DemoEntry(
+                "Image: Aspects",
+                "AspectFit / AspectFill / Fill / Center side-by-side.",
+                Color.FromArgb("#009688"),
+                "image-aspects"),
+            new DemoEntry(
+                "Image: Sources",
+                "File / Uri / Stream / Font image source types.",
+                Color.FromArgb("#E91E63"),
+                "image-sources"),
+        };
+    }
+
+    async void OnDemoSelected(object? sender, SelectionChangedEventArgs e)
+    {
+        if (e.CurrentSelection.FirstOrDefault() is not DemoEntry entry)
+            return;
+
+        // Clear selection immediately so the row doesn't stay highlighted
+        // when the user navigates back.
+        DemoList.SelectedItem = null;
+
+        await Shell.Current.GoToAsync(entry.Route);
+    }
+}
