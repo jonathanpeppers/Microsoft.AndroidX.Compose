@@ -15,12 +15,19 @@ public partial class ThemePage : ContentPage
     {
         InitializeComponent();
         UpdateStatus();
-        if (Application.Current is { } app)
-            app.RequestedThemeChanged += OnRequestedThemeChanged;
     }
 
     void OnRequestedThemeChanged(object? sender, AppThemeChangedEventArgs e) =>
         UpdateStatus();
+
+    /// <inheritdoc/>
+    protected override void OnAppearing()
+    {
+        base.OnAppearing();
+        if (Application.Current is { } app)
+            app.RequestedThemeChanged += OnRequestedThemeChanged;
+        UpdateStatus();
+    }
 
     /// <inheritdoc/>
     protected override void OnDisappearing()

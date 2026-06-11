@@ -96,13 +96,15 @@ public partial class PageHandler : ViewHandler<IContentView, ComposeView>
             ?? throw new InvalidOperationException(
                 "MauiContext should have been set by the base ViewHandler.");
 
-        // Resolve the singleton ThemeManager once per attach. Falls
-        // back to a transient instance if DI isn't wired (defensive —
-        // UseAndroidXCompose() always registers it). Reading
-        // theme.IsDark.Value inside SetContent's lambda registers a
-        // snapshot read so flipping the MAUI theme triggers a
-        // recomposition without the consumer reaching into Compose.
-        var theme = context.Services.GetService<ThemeManager>() ?? new ThemeManager();
+        // Resolve the singleton ThemeManager. Use GetRequiredService
+        // so a missing UseAndroidXCompose() registration fails fast
+        // with a clear message — silently allocating a transient on
+        // every MapContent invocation would leak the
+        // RequestedThemeChanged subscription. Reading IsDark.Value
+        // inside SetContent's lambda registers a snapshot read so
+        // flipping the MAUI theme triggers recomposition without the
+        // consumer reaching into Compose.
+        var theme = context.Services.GetRequiredService<ThemeManager>();
 
         var content = page.PresentedContent;
         if (content is null)
