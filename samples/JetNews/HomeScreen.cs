@@ -43,12 +43,6 @@ public static class HomeScreen
                 SnackbarHost = snackbarMessage is null
                     ? null
                     : new Snackbar { Body = new Text(snackbarMessage) },
-                // BodyContent rather than Body: PullToRefreshBox is a
-                // transparent wrapper around the LazyColumn, so the
-                // scaffold-supplied padding has to be routed past the
-                // pull-box into the list's ContentPadding for items to
-                // scroll under the top app bar and gesture pill. Mirrors
-                // Kotlin's `Scaffold { padding -> PullToRefreshBox { ... } }`.
                 BodyContent = padding => state switch
                 {
                     HomeUiState.Loading       => BuildLoading(),
