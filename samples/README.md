@@ -40,7 +40,7 @@ that needs the same primitive.
 
 | Issue | Area                        | Blocks (in samples) |
 |------:|-----------------------------|--------------------|
-| [#64](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/64)  | Drawing primitives — `Canvas`, `drawBehind`, `Brush`, `Path`, `Shape` factories | Custom visuals in **JetLagged**; asymmetric `RoundedCornerShape(topStart, topEnd, …)` on **Jetchat** bubbles. |
+| [#64](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/64)  | Drawing primitives — `Canvas`, `drawBehind`, `Path`, asymmetric `RoundedCornerShape(topStart, topEnd, …)` factories (gradient `Brush` factories already shipped — see closed gaps) | Custom visuals in **JetLagged**; asymmetric `RoundedCornerShape(topStart, topEnd, …)` on **Jetchat** bubbles. |
 | [#20](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/20)  | Edge-to-edge bootstrapping | Status/nav-bar overlap on every sample. |
 | [#144](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/144) | Custom `Layout {}` primitive — Measurable / Placeable / MeasureScope | `InterestsAdaptiveContentLayout` in **JetNews**, custom carousels in **Jetsnack**, asymmetric chat bubbles in **Jetchat**. |
 | [#168](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/168) | `TwoPane` / `NavigableListDetailPaneScaffold` + Jetpack `WindowManager` (`WindowLayoutInfo`/`FoldingFeature`) | Adaptive list-detail with fold avoidance in **Reply**. |
@@ -53,6 +53,7 @@ Closed gaps that previously appeared here (now usable in samples):
 **#61** Theming reads + `Color` value type + parameterized `MaterialTheme`,
 **#62** State primitives (`RememberSaveable` / `mutableStateListOf` / `mutableStateMapOf` / `derivedStateOf`),
 **#63** Modifier surface (Background/Border/Clickable/Size/Width/Height/AspectRatio/Offset/Alpha/Clip/Weight + scroll + focus + semantics + Draggable),
+**#64 (partial)** `Brush` gradient factories + brush-typed `Modifier.Background` / `Border` + `Offset` / `TileMode` (`Canvas` / `drawBehind` / `Path` / asymmetric `RoundedCornerShape` still pending — see open gaps above),
 **#65** Compose value types (`Color`/`Dp`/`Sp`/`FontWeight`/`TextAlign`),
 **#69** WindowInsets padding modifiers (`imePadding` / `navigationBarsPadding` / `statusBarsPadding` / `displayCutoutPadding` / …),
 **#70** Row/Column `Arrangement`,
