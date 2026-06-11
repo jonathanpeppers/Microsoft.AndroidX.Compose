@@ -81,6 +81,26 @@ public partial class HomePage : ContentPage
                 Color.FromArgb("#795548"),
                 "theme"),
             new DemoEntry(
+                "Editor",
+                "Multi-line text input, word counter, read-only, max length.",
+                Color.FromArgb("#FFC107"),
+                "editor"),
+            new DemoEntry(
+                "Search",
+                "SearchBar + filtered list + IME-Search event.",
+                Color.FromArgb("#8D6E63"),
+                "search"),
+            new DemoEntry(
+                "Image buttons",
+                "File / Uri / Font sources, Pressed -> Clicked -> Released log.",
+                Color.FromArgb("#607D8B"),
+                "image-buttons"),
+            new DemoEntry(
+                "Visuals",
+                "Border, BoxView, ContentView modifier-chain demos.",
+                Color.FromArgb("#4CAF50"),
+                "visuals"),
+            new DemoEntry(
                 "Alerts",
                 "DisplayAlert / DisplayActionSheet / DisplayPromptAsync over Compose dialogs.",
                 Color.FromArgb("#FF5722"),

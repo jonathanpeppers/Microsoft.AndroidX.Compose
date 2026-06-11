@@ -535,7 +535,9 @@ AndroidX.Compose.InputChip.TrailingIcon.set -> void
 AndroidX.Compose.IState<T>
 AndroidX.Compose.IState<T>.Value.get -> T
 AndroidX.Compose.IStateFlow<T>
+AndroidX.Compose.ImeAction
 AndroidX.Compose.KeyboardOptionsCompanion
+AndroidX.Compose.KeyboardActionsHelper
 AndroidX.Compose.KeyboardType
 AndroidX.Compose.LargeFlexibleTopAppBar
 AndroidX.Compose.LargeFlexibleTopAppBar.Actions.get -> AndroidX.Compose.ComposableNode?
@@ -877,6 +879,8 @@ AndroidX.Compose.OutlinedTextField.Enabled.get -> bool?
 AndroidX.Compose.OutlinedTextField.Enabled.set -> void
 AndroidX.Compose.OutlinedTextField.IsError.get -> bool?
 AndroidX.Compose.OutlinedTextField.IsError.set -> void
+AndroidX.Compose.OutlinedTextField.KeyboardActions.get -> AndroidX.Compose.Foundation.Text.KeyboardActions?
+AndroidX.Compose.OutlinedTextField.KeyboardActions.set -> void
 AndroidX.Compose.OutlinedTextField.KeyboardOptions.get -> AndroidX.Compose.Foundation.Text.KeyboardOptions?
 AndroidX.Compose.OutlinedTextField.KeyboardOptions.set -> void
 AndroidX.Compose.OutlinedTextField.Label.get -> AndroidX.Compose.ComposableNode?
@@ -1963,8 +1967,18 @@ static AndroidX.Compose.Icons.TwoTone.ShoppingCart.get -> AndroidX.Compose.UI.Gr
 static AndroidX.Compose.Icons.TwoTone.Star.get -> AndroidX.Compose.UI.Graphics.Vector.ImageVector!
 static AndroidX.Compose.Icons.TwoTone.ThumbUp.get -> AndroidX.Compose.UI.Graphics.Vector.ImageVector!
 static AndroidX.Compose.Icons.TwoTone.Warning.get -> AndroidX.Compose.UI.Graphics.Vector.ImageVector!
+static AndroidX.Compose.ImeAction.Default.get -> int
+static AndroidX.Compose.ImeAction.Done.get -> int
+static AndroidX.Compose.ImeAction.Go.get -> int
+static AndroidX.Compose.ImeAction.Next.get -> int
+static AndroidX.Compose.ImeAction.None.get -> int
+static AndroidX.Compose.ImeAction.Previous.get -> int
+static AndroidX.Compose.ImeAction.Search.get -> int
+static AndroidX.Compose.ImeAction.Send.get -> int
+static AndroidX.Compose.ImeAction.Unspecified.get -> int
 static AndroidX.Compose.KeyboardOptionsCompanion.Default.get -> AndroidX.Compose.Foundation.Text.KeyboardOptions!
 static AndroidX.Compose.KeyboardOptionsCompanion.Get() -> AndroidX.Compose.Foundation.Text.KeyboardOptions.Companion!
+static AndroidX.Compose.KeyboardActionsHelper.Create(System.Action? onDone = null, System.Action? onGo = null, System.Action? onNext = null, System.Action? onPrevious = null, System.Action? onSearch = null, System.Action? onSend = null) -> AndroidX.Compose.Foundation.Text.KeyboardActions!
 static AndroidX.Compose.KeyboardType.Ascii.get -> int
 static AndroidX.Compose.KeyboardType.Decimal.get -> int
 static AndroidX.Compose.KeyboardType.Email.get -> int

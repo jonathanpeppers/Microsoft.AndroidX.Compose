@@ -835,6 +835,183 @@ leaves so a settings-style page is fully Compose-backed.
   Lesson: don't enable `EmitCompilerGeneratedFiles` in a working tree
   while iterating on generators.
 
+#### Phase 2 Slice 6 — editor + search + image button + visual containers ✅ shipped
+
+Goal: cover the rest of the "leaf widget" Maui surface (multi-line
+text input, search input, tappable image, and four visual-container
+shapes — `Border`, `BoxView`, `ContentView`) so a typical settings /
+form / browse page can render entirely inside one composition.
+
+**Delivered (six new handlers):**
+
+- **`EditorHandler`** — multi-line `OutlinedTextField`. Mirrors
+  `EntryHandler` but with `singleLine: false` and a tall default
+  min-height so wrapped text shows as the user types. Two-way
+  `MutableState<string>` binding for `Text`; standard `Placeholder`,
+  `TextColor`, `Font`, `IsReadOnly`, `Keyboard`, `MaxLength`. `AutoSize`
+  is honored via the same `KeyboardOptions`/`KeyboardActions` shape
+  `EntryHandler` already uses (no separate facade needed).
+- **`SearchBarHandler`** — `OutlinedTextField` + leading search
+  `Icon`, IME action set to `ImeAction.Search`. `OutlinedTextField`
+  is a much better fit than the M3 `SearchBar` facade because MAUI's
+  `SearchBar` is single-row + inline command-button, not the modal
+  search-overlay shape `SearchBar` is designed for. Wires
+  `SearchCommand` (+ `SearchCommandParameter`) onto
+  `KeyboardActions.OnSearch` so the soft-keyboard "search" key fires
+  it; also fires on `SearchButtonPressed`.
+- **`ImageButtonHandler`** — `IconButton` wrapping an `Image(Painter)`
+  produced by `ImageSourceLoader` (see refactor note below). Border /
+  corner-radius / padding / aspect / IsLoading map onto
+  `Modifier.Border(...).Clip(...)` and the `Image.ContentScale` slot.
+  `Pressed` / `Released` / `Clicked` events all fire on the IconButton
+  `onClick` callback in that order, matching `ButtonHandler`'s
+  pressed-released-clicked sequence (no separate
+  `Modifier.PointerInput` plumbing — MAUI consumers don't distinguish
+  press from click on an `ImageButton`, so the simpler model is fine
+  for v1).
+- **`BorderHandler`** — `Box` with
+  `Modifier.Border(stroke).Background(background).Clip(shape)`.
+  `StrokeShape` (`RoundedRectangle` / `Rectangle` / `Ellipse`)
+  versions through a `MutableState<int>` counter so the
+  `Modifier`-chain rebuilds cleanly. Single content slot walked via
+  `ComposeWalker.Render` so a `<Border>` wrapping converted
+  `<Label>` / `<Image>` etc. folds into the page composition.
+- **`BoxViewHandler`** — `Box` with
+  `Modifier.Background(color).Clip(shape)`. `Color` and
+  `BackgroundColor` both map (BoxView's quirk: `Color` is the fill,
+  `BackgroundColor` is layered behind on the `VisualElement` level).
+  `CornerRadius` (when set) → `RoundedCornerShape`. Pure rectangle
+  / rounded-rectangle leaf — the simplest non-trivial Slice 6 handler.
+- **`ContentViewHandler`** — passthrough container.
+  `Box(Modifier.FillMaxSize())` wrapping `ComposeWalker.Render(PresentedContent, ...)`.
+  `Padding` flows in via the wrapping Box. Note: collides with
+  stock MAUI's `ContentViewHandler`. We register last in
+  `UseAndroidXCompose()` so ours wins; documented in the
+  `AppHostBuilderExtensions` XML doc.
+
+**Image-source pipeline refactor:**
+
+Phase 2 Slice 1 inlined the entire image-source resolver — drawable-id
+fast path, then the `IImageSourcePartLoader` general path — into
+`ImageHandler.MapSource`. `ImageButtonHandler` needs the exact same
+pipeline. Refactored both to call into a new
+`Microsoft.AndroidX.Compose.Maui.Loaders.ImageSourceLoader` helper
+(single ~180-line file) that:
+
+1. tries the `IMauiContext.Context.GetDrawableId(file.File)` drawable
+   fast path (mirrors MAUI's `FileImageSourceService` —
+   `Resources.GetIdentifier(name, "drawable", PackageName)`),
+2. falls back to MAUI's `IImageSourcePartLoader` (URI / Stream / Font
+   image-source types) by handing it a tiny `ComposeImageSetter`
+   `IImageSourcePartSetter` adapter that wraps the resulting
+   `Drawable` as a Compose `BitmapPainter`.
+
+The loader owns two `MutableState` slots (`DrawableResourceId` /
+`Painter`); handlers read them inside `BuildNode` so the composition
+recomposes when a fresh source resolves. Each handler holds the
+loader lazily — never allocated when no `Source` is set:
+
+```csharp
+ImageSourceLoader Loader =>
+    _loader ??= new ImageSourceLoader(this, () => VirtualView as IImageSourcePart);
+
+async void MapSource(IImageHandler handler, IImage image) =>
+    await Loader.LoadAsync(image.Source);
+
+public override ComposableNode BuildNode(IComposer composer)
+{
+    if (_loader is { } loader)
+    {
+        if (loader.Painter.Value is { } painter) return new ComposeImage(painter) { ... };
+        if (loader.DrawableResourceId.Value is int id) return new ComposeImage(id) { ... };
+    }
+    return new Box();
+}
+```
+
+Refactor (over paste-and-adapt) was the right call because the
+async/cancellation logic around `IImageSourcePartLoader` is delicate
+enough that two divergent copies would inevitably drift.
+
+**Sample pages added (`src/Microsoft.AndroidX.Compose.Maui.Sample/Pages`):**
+
+- **`EditorPage.xaml`** — multi-line editor + word-count label +
+  read-only / max-length toggle.
+- **`SearchPage.xaml`** — search bar + filtered fruit list rendered
+  as `VerticalStackLayout` of labels (no `CollectionView` — that's
+  Phase 3) + IME-Search counter.
+- **`ImageButtonsPage.xaml`** — three image buttons (file / Uri /
+  font source) sharing the `ImageHandler` source pipeline + tap
+  counter + Pressed/Released/Clicked log.
+- **`VisualsPage.xaml`** — three Border variants
+  (sharp / rounded / ellipse) wrapping labels, five pastel BoxView
+  rectangles, and a ContentView passthrough.
+
+`HomePage.xaml.cs` and `AppShell.xaml.cs` updated with four new
+`DemoEntry` rows + matching `RegisterRoute` calls.
+
+**Lessons learned (Slice 6):**
+
+- **`Microsoft.Maui.Controls.Border.Stroke` is `Brush`, but
+  `IBorderStroke.Stroke` is `Paint`.** Pattern-matching `is SolidPaint`
+  to extract the color requires casting through the *interface*:
+  `((IStroke)border).Stroke is SolidPaint sp`. This mirrors how
+  `Button.MapBackground` reads `(IButton)button` — interface-level
+  `Paint` lets us share one `is SolidPaint` extractor for every
+  Stroke / Background.
+- **`IView.BackgroundColor` doesn't exist.** `BackgroundColor` lives
+  on `Microsoft.Maui.Controls.VisualElement`, not the `IView`
+  interface. Use `[nameof(VisualElement.BackgroundColor)]` (or, for
+  `BoxView`, `[nameof(BoxView.BackgroundColor)]`) for mapper keys
+  and read via concrete-type cast inside the mapper body.
+- **`Color` ambiguity when both `AndroidX.Compose.Color` and
+  `Microsoft.Maui.Graphics.Color` are visible.** Resolve once
+  per file with `using ComposeColor = AndroidX.Compose.Color;` and
+  use `ComposeColor` for the Compose ctor calls.
+  `using static` doesn't help — both types own a `FromArgb`-like
+  factory.
+- **`Microsoft.Maui.Controls.Border.PresentedContent` is on the
+  `IContentView` interface, not the concrete class.** Cast through
+  it: `((IContentView)border).PresentedContent`. Same trick as the
+  `IStroke.Stroke` cast — we lean on the MAUI interface surface to
+  get at the cross-platform property without duplicating it on the
+  concrete type.
+- **MAUI's XAML source generator chokes on
+  `xmlns:shapes="clr-namespace:Microsoft.Maui.Controls.Shapes"` +
+  `<shapes:RoundedRectangle CornerRadius="12" />` inside a
+  `<Border.StrokeShape>` element.** Throws MAUIG1001. Workaround:
+  use the compact attribute syntax
+  `<Border StrokeShape="RoundedRectangle 12">` — the same
+  `IShapeTypeConverter` MAUI uses for all the other shape attributes.
+  Filed informally; matches an existing
+  `dotnet/maui` issue around source-gen + element-syntax shapes.
+- **`<see cref="Debug.WriteLine"/>` is ambiguous** — `Debug` ships
+  three `WriteLine` overloads. Use the specific signature in the
+  cref: `<see cref="Debug.WriteLine(string)"/>`.
+- **`dotnet build -t:Install` for the sample produces a Fast-Deploy
+  APK** — that crashes with `monodroid: No assemblies found in
+  '/data/user/0/.../files/.__override__/arm64-v8a'` SIGABRT on
+  device unless a Visual Studio "deploy" step uploads the
+  out-of-band assemblies. For headless `adb`-only verification, use
+  `dotnet build -t:Install -p:EmbedAssembliesIntoApk=true` (or
+  `adb install` against `bin/.../net.compose.maui.sample-Signed.apk`).
+- **The `ImageHandler` → `ImageSourceLoader` refactor was driven by
+  Slice 6, but pays off later too** — Phase 5's `GraphicsViewHandler`
+  and Phase 4's icon-tab handlers will both want the same
+  drawable-id fast path. Centralising it now means one bug-fix
+  surface area instead of three.
+
+**Verified on device:**
+
+- Sample app builds clean (`dotnet build src/Microsoft.AndroidX.Compose.Maui.Sample`,
+  zero warnings) and deploys via
+  `adb install --no-incremental net.compose.maui.sample-Signed.apk`.
+- Home page renders all four new rows alongside the existing six
+  (Counter, Buttons, Labels, Entries, Image: Aspects, Image: Sources)
+  + (Editor, Search, Image buttons, Visuals).
+- Generator tests still green:
+  `dotnet test src/Microsoft.AndroidX.Compose.SourceGenerators.Tests` =
+  154 passed, 0 failed.
 #### Phase 2 Slice 5 — picker family
 
 **Goal:** re-skin MAUI's `Picker`, `DatePicker`, and `TimePicker` over

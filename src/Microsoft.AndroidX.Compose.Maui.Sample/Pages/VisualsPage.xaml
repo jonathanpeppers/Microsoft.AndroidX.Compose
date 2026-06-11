@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="Microsoft.AndroidX.Compose.Maui.Sample.Pages.VisualsPage"
+             Title="Visuals">
+
+    <!--
+        Exercises three visual handlers:
+            * BorderHandler   -> Box + Modifier.Border().Background().Clip()
+            * BoxViewHandler  -> Box + Modifier.Background().Clip()
+            * ContentViewHandler -> passthrough Box(FillMaxSize)
+    -->
+    <ScrollView>
+        <VerticalStackLayout
+            Padding="30,30"
+            Spacing="22">
+
+            <Label
+                Text="Visuals"
+                Style="{StaticResource Headline}" />
+
+            <!-- Border showcase -->
+            <Label Text="Border — stroke, corner radius, background."
+                   FontAttributes="Bold" />
+
+            <Border Stroke="#512BD4"
+                    StrokeThickness="2"
+                    Background="#EEE6FF"
+                    Padding="16">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="12" />
+                </Border.StrokeShape>
+                <Label Text="Rounded border — purple, radius 12, padding 16."
+                       TextColor="#1A1033" />
+            </Border>
+
+            <Border Stroke="#E91E63"
+                    StrokeThickness="3"
+                    Background="#FFF0F4"
+                    Padding="20">
+                <Border.StrokeShape>
+                    <Rectangle />
+                </Border.StrokeShape>
+                <Label Text="Square border — pink, no radius."
+                       TextColor="#3F0A20" />
+            </Border>
+
+            <Border Stroke="#009688"
+                    StrokeThickness="4"
+                    Background="#E0F2F1"
+                    Padding="14">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="32" />
+                </Border.StrokeShape>
+                <Label Text="Pill border — teal, big radius."
+                       TextColor="#003E37" />
+            </Border>
+
+            <!-- BoxView showcase -->
+            <Label Text="BoxView — pastel rectangles."
+                   FontAttributes="Bold" />
+
+            <HorizontalStackLayout Spacing="10">
+                <BoxView Color="#FFCDD2" WidthRequest="56" HeightRequest="56" CornerRadius="0"  />
+                <BoxView Color="#F8BBD0" WidthRequest="56" HeightRequest="56" CornerRadius="6"  />
+                <BoxView Color="#E1BEE7" WidthRequest="56" HeightRequest="56" CornerRadius="14" />
+                <BoxView Color="#C5CAE9" WidthRequest="56" HeightRequest="56" CornerRadius="28" />
+                <BoxView Color="#BBDEFB" WidthRequest="56" HeightRequest="56" CornerRadius="56" />
+            </HorizontalStackLayout>
+
+            <BoxView Color="#FFE082"
+                     HeightRequest="6"
+                     CornerRadius="3" />
+
+            <!-- ContentView passthrough -->
+            <Label Text="ContentView — passthrough container."
+                   FontAttributes="Bold" />
+
+            <ContentView Padding="20"
+                         BackgroundColor="#F5F5F5">
+                <VerticalStackLayout Spacing="6">
+                    <Label Text="Inside a ContentView." FontAttributes="Bold" TextColor="#1F1F1F" />
+                    <Label Text="ContentView simply forwards its child through ComposeWalker without adding a stroke or fill. The grey backing comes from the BackgroundColor mapper." TextColor="#1F1F1F" />
+                </VerticalStackLayout>
+            </ContentView>
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>
+

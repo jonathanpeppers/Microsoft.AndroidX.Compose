@@ -54,6 +54,8 @@ public sealed class OutlinedTextField : ComposableNode
     public AndroidX.Compose.UI.Text.Input.IVisualTransformation? VisualTransformation { get; set; }
     /// <summary>Optional keyboard options (Kotlin <c>keyboardOptions</c>) — controls IME type, capitalization, autocorrect.</summary>
     public AndroidX.Compose.Foundation.Text.KeyboardOptions? KeyboardOptions { get; set; }
+    /// <summary>Optional keyboard-action callbacks (Kotlin <c>keyboardActions</c>) — fires <c>onSearch</c>/<c>onDone</c>/<c>onSend</c>/etc. when the user taps the IME action key.</summary>
+    public AndroidX.Compose.Foundation.Text.KeyboardActions? KeyboardActions { get; set; }
 
     /// <summary>String-overload ctor — pass the current value and a callback.</summary>
     public OutlinedTextField(string value, Action<string> onValueChange)
@@ -105,7 +107,7 @@ public sealed class OutlinedTextField : ComposableNode
         ComposeBridges.OutlinedTextField(_value!, __onValueChange, BuildModifier(),
             Enabled, ReadOnly, TextStyle?.Build(), __label, __placeholder, __leadingIcon, __trailingIcon,
             __prefix, __suffix, __supportingText, IsError,
-            VisualTransformation, KeyboardOptions,
+            VisualTransformation, KeyboardOptions, KeyboardActions,
             SingleLine, MaxLines, MinLines,
             Shape,
             composer);
@@ -134,7 +136,7 @@ public sealed class OutlinedTextField : ComposableNode
         ComposeBridges.OutlinedTextFieldWithValue(current, __onValueChange, BuildModifier(),
             Enabled, ReadOnly, TextStyle?.Build(), __label, __placeholder, __leadingIcon, __trailingIcon,
             __prefix, __suffix, __supportingText, IsError,
-            VisualTransformation, KeyboardOptions,
+            VisualTransformation, KeyboardOptions, KeyboardActions,
             SingleLine, MaxLines, MinLines,
             Shape,
             composer);
