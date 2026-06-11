@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:sys="clr-namespace:System;assembly=netstandard"
+             x:Class="Microsoft.AndroidX.Compose.Maui.Sample.Pages.PickersPage"
+             Title="Pickers">
+
+    <!--
+        Exercises every mapper on `PickerHandler`, `DatePickerHandler`,
+        and `TimePickerHandler`:
+            * Picker.ItemsSource             -> MapItemsSource (version-counter rebuild)
+            * Picker.SelectedIndex / Item    -> MapSelectedIndex (two-way echo via SelectedIndexChanged)
+            * Picker.Title                   -> MapTitle (floating label)
+            * DatePicker.Date                -> MapDate (DateSelected echoes the formatted date)
+            * DatePicker.MinimumDate /
+              MaximumDate                    -> not yet wired (Phase 4b RememberDatePickerState lift required; tracked in #264)
+            * TimePicker.Time                -> MapTime (PropertyChanged echoes time)
+            * Format / TextColor / FontSize /
+              FontAttributes (Bold)          -> MapFormat / MapTextColor / MapFont
+            * HorizontalLayoutAlignment      -> MapHorizontalLayoutAlignment
+              (toggles `Modifier.fillMaxWidth()` on the trigger).
+    -->
+    <ContentPage.Resources>
+        <x:Array x:Key="Fruits" Type="{x:Type sys:String}">
+            <sys:String>Apple</sys:String>
+            <sys:String>Banana</sys:String>
+            <sys:String>Cherry</sys:String>
+            <sys:String>Date</sys:String>
+            <sys:String>Elderberry</sys:String>
+        </x:Array>
+    </ContentPage.Resources>
+
+    <ScrollView>
+        <VerticalStackLayout
+            Padding="30,30"
+            Spacing="20">
+
+            <Label
+                Text="Pickers"
+                Style="{StaticResource Headline}" />
+
+            <Label Text="Picker (dropdown menu) — pick a fruit; the label below echoes."
+                   FontAttributes="Bold" />
+
+            <Picker
+                x:Name="FruitPicker"
+                Title="Pick a fruit"
+                ItemsSource="{StaticResource Fruits}"
+                SelectedIndexChanged="OnFruitChanged"
+                HorizontalOptions="Fill" />
+
+            <Label
+                x:Name="FruitEcho"
+                Text="No fruit picked yet." />
+
+            <Label Text="DatePicker (modal calendar) — opens a Compose DatePickerDialog; selection writes back via DateSelected."
+                   FontAttributes="Bold" />
+
+            <DatePicker
+                x:Name="BirthDate"
+                Format="MMM d, yyyy"
+                DateSelected="OnDateSelected"
+                HorizontalOptions="Fill" />
+
+            <Label
+                x:Name="DateEcho"
+                Text="No date picked yet." />
+
+            <Label Text="TimePicker (modal clock) — 24-hour format selected by 'HH:mm'."
+                   FontAttributes="Bold" />
+
+            <TimePicker
+                x:Name="AlarmTime"
+                Format="HH:mm"
+                HorizontalOptions="Fill" />
+
+            <Label
+                x:Name="TimeEcho"
+                Text="No time picked yet." />
+
+            <Button
+                Text="Reset"
+                Clicked="OnResetClicked"
+                HorizontalOptions="Fill" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

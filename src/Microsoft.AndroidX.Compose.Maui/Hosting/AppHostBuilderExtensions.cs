@@ -5,6 +5,7 @@ using MauiBoxView = Microsoft.Maui.Controls.BoxView;
 using MauiButton = Microsoft.Maui.Controls.Button;
 using MauiCheckBox = Microsoft.Maui.Controls.CheckBox;
 using MauiContentView = Microsoft.Maui.Controls.ContentView;
+using MauiDatePicker = Microsoft.Maui.Controls.DatePicker;
 using MauiEditor = Microsoft.Maui.Controls.Editor;
 using MauiEntry = Microsoft.Maui.Controls.Entry;
 using MauiHorizontalStackLayout = Microsoft.Maui.Controls.HorizontalStackLayout;
@@ -12,10 +13,12 @@ using MauiImage = Microsoft.Maui.Controls.Image;
 using MauiImageButton = Microsoft.Maui.Controls.ImageButton;
 using MauiLabel = Microsoft.Maui.Controls.Label;
 using MauiPage = Microsoft.Maui.Controls.Page;
+using MauiPicker = Microsoft.Maui.Controls.Picker;
 using MauiRadioButton = Microsoft.Maui.Controls.RadioButton;
 using MauiScrollView = Microsoft.Maui.Controls.ScrollView;
 using MauiSearchBar = Microsoft.Maui.Controls.SearchBar;
 using MauiSwitch = Microsoft.Maui.Controls.Switch;
+using MauiTimePicker = Microsoft.Maui.Controls.TimePicker;
 using MauiVerticalStackLayout = Microsoft.Maui.Controls.VerticalStackLayout;
 
 namespace Microsoft.AndroidX.Compose.Maui.Hosting;
@@ -53,7 +56,9 @@ public static class AppHostBuilderExtensions
     ///     <see cref="MauiEntry"/> / <see cref="MauiEditor"/> /
     ///     <see cref="MauiSearchBar"/> / <see cref="MauiImage"/> /
     ///     <see cref="MauiImageButton"/> / <see cref="MauiCheckBox"/> /
-    ///     <see cref="MauiSwitch"/> / <see cref="MauiRadioButton"/>)
+    ///     <see cref="MauiSwitch"/> / <see cref="MauiRadioButton"/> /
+    ///     <see cref="MauiPicker"/> / <see cref="MauiDatePicker"/> /
+    ///     <see cref="MauiTimePicker"/>)
     ///     fold into the enclosing composition via
     ///     <see cref="IComposeHandler"/>.</description></item>
     ///   <item><description>Visual containers
@@ -130,6 +135,9 @@ public static class AppHostBuilderExtensions
             handlers.AddHandler<MauiCheckBox,               CheckBoxHandler>();
             handlers.AddHandler<MauiSwitch,                 SwitchHandler>();
             handlers.AddHandler<MauiRadioButton,            RadioButtonHandler>();
+            handlers.AddHandler<MauiPicker,                 PickerHandler>();
+            handlers.AddHandler<MauiDatePicker,             DatePickerHandler>();
+            handlers.AddHandler<MauiTimePicker,             TimePickerHandler>();
 
             // Visual containers — render through Compose Box.
             handlers.AddHandler<MauiBorder,                 BorderHandler>();
