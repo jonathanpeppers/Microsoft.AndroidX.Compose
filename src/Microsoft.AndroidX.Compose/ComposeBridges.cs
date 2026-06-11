@@ -3591,16 +3591,17 @@ internal static partial class ComposeBridges
         IFunction1                 onCheckedChange,
         IModifier?                 modifier,
         bool                       enabled  = true,
+        AndroidX.Compose.Material3.CheckboxColors? colors = null,
         int                        defaults = 0,
         IComposer                  composer = null!);
 
-    public static partial void Checkbox(bool @checked, IFunction1 onCheckedChange, IModifier? modifier, bool enabled, int defaults, IComposer composer)
+    public static partial void Checkbox(bool @checked, IFunction1 onCheckedChange, IModifier? modifier, bool enabled, AndroidX.Compose.Material3.CheckboxColors? colors, int defaults, IComposer composer)
         => CheckboxKt.Checkbox(
             @checked:          @checked,
             onCheckedChange:   onCheckedChange,
             modifier:          modifier,
             enabled:           enabled,
-            colors:            null,
+            colors:            colors,
             interactionSource: null,
             _composer:         composer,
             p7:                0,
@@ -3613,17 +3614,18 @@ internal static partial class ComposeBridges
         IFunction1                 onCheckedChange,
         IModifier?                 modifier,
         bool                       enabled  = true,
+        AndroidX.Compose.Material3.SwitchColors? colors = null,
         int                        defaults = 0,
         IComposer                  composer = null!);
 
-    public static partial void Switch(bool @checked, IFunction1 onCheckedChange, IModifier? modifier, bool enabled, int defaults, IComposer composer)
+    public static partial void Switch(bool @checked, IFunction1 onCheckedChange, IModifier? modifier, bool enabled, AndroidX.Compose.Material3.SwitchColors? colors, int defaults, IComposer composer)
         => SwitchKt.Switch(
             @checked:          @checked,
             onCheckedChange:   onCheckedChange,
             modifier:          modifier,
             thumbContent:      null,
             enabled:           enabled,
-            colors:            null,
+            colors:            colors,
             interactionSource: null,
             _composer:         composer,
             p8:                0,

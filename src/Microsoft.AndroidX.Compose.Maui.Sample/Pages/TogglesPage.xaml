@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="Microsoft.AndroidX.Compose.Maui.Sample.Pages.TogglesPage"
+             Title="Toggles">
+
+    <!--
+        Exercises every mapper on the three new toggle handlers:
+            * CheckBoxHandler    -> IsChecked, Color (-> Foreground -> CheckboxColors)
+            * SwitchHandler      -> IsOn, OnColor (-> SwitchColors checkedTrack),
+                                    ThumbColor (-> SwitchColors checkedThumb)
+            * RadioButtonHandler -> IsChecked, Content (-> Compose Text inside a Row),
+                                    TextColor, FontSize.
+
+        Each section has an echo Label updated from the control's
+        CheckedChanged / Toggled event so manual taps verify the
+        Compose -> MAUI write-back round-trips.
+    -->
+    <ScrollView>
+        <VerticalStackLayout
+            Padding="30,30"
+            Spacing="20">
+
+            <Label
+                Text="Toggles"
+                Style="{StaticResource Headline}" />
+
+            <Label Text="CheckBox — default + colored."
+                   FontAttributes="Bold" />
+
+            <HorizontalStackLayout Spacing="12">
+                <CheckBox
+                    x:Name="DefaultCheck"
+                    IsChecked="True"
+                    CheckedChanged="OnDefaultCheckChanged" />
+                <Label Text="Default" VerticalOptions="Center" />
+            </HorizontalStackLayout>
+
+            <HorizontalStackLayout Spacing="12">
+                <CheckBox
+                    x:Name="ColoredCheck"
+                    Color="#E91E63"
+                    CheckedChanged="OnColoredCheckChanged" />
+                <Label Text="Pink" VerticalOptions="Center" />
+            </HorizontalStackLayout>
+
+            <Label
+                x:Name="CheckEcho"
+                Text="Default: True · Pink: False" />
+
+            <Label Text="Switch — default + tinted on/off."
+                   FontAttributes="Bold" />
+
+            <HorizontalStackLayout Spacing="12">
+                <Switch
+                    x:Name="DefaultSwitch"
+                    IsToggled="True"
+                    Toggled="OnDefaultSwitchToggled" />
+                <Label Text="Default" VerticalOptions="Center" />
+            </HorizontalStackLayout>
+
+            <HorizontalStackLayout Spacing="12">
+                <Switch
+                    x:Name="TintedSwitch"
+                    OnColor="#4CAF50"
+                    ThumbColor="#FFEB3B"
+                    Toggled="OnTintedSwitchToggled" />
+                <Label Text="Tinted" VerticalOptions="Center" />
+            </HorizontalStackLayout>
+
+            <Label
+                x:Name="SwitchEcho"
+                Text="Default: True · Tinted: False" />
+
+            <Label Text="RadioButton — three options in a group."
+                   FontAttributes="Bold" />
+
+            <RadioButton
+                Content="Apple"
+                Value="apple"
+                GroupName="fruit"
+                IsChecked="True"
+                CheckedChanged="OnFruitChanged" />
+            <RadioButton
+                Content="Banana"
+                Value="banana"
+                GroupName="fruit"
+                CheckedChanged="OnFruitChanged" />
+            <RadioButton
+                Content="Cherry"
+                Value="cherry"
+                GroupName="fruit"
+                TextColor="#C2185B"
+                FontSize="18"
+                FontAttributes="Bold"
+                CheckedChanged="OnFruitChanged" />
+
+            <Label
+                x:Name="FruitEcho"
+                Text="Selected: apple" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>
