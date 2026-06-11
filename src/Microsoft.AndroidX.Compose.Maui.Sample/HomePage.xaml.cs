@@ -60,6 +60,11 @@ public partial class HomePage : ContentPage
                 "File / Uri / Stream / Font image source types.",
                 Color.FromArgb("#E91E63"),
                 "image-sources"),
+            new DemoEntry(
+                "Toggles",
+                "CheckBox / Switch / RadioButton with two-way binding.",
+                Color.FromArgb("#FF9800"),
+                "toggles"),
         };
     }
 
