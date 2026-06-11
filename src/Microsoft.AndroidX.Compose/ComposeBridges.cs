@@ -991,15 +991,20 @@ internal static partial class ComposeBridges
                     "Landroidx/compose/material3/ModalBottomSheetProperties;" +
                     "Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;III)V",
         Defaults  = typeof(ModalBottomSheetDefault))]
+    [ComposeFacade(Scope = "Column")]
     public static partial void ModalBottomSheet(
         IFunction0  onDismissRequest,
         IModifier?  modifier,
+        [StateHolder(Remember = nameof(RememberSheetState),
+                     StateType = typeof(SheetStateHolder),
+                     SharedState = true)]
         IntPtr      sheetState,
         IFunction2? dragHandle,
         Shape?      shape,
         IFunction3  content,
         int         defaults,
         IComposer   composer);
+
 
     // androidx.compose.material3.BottomSheetScaffoldKt.BottomSheetScaffold-sdMYb0k
     [ComposeBridge(
@@ -1272,6 +1277,31 @@ internal static partial class ComposeBridges
             _composer:    composer,
             p2:           0,
             _changed:     0);
+        return ((Java.Lang.Object)state).Handle;
+    }
+
+    // androidx.compose.material3.ModalBottomSheetKt.rememberModalBottomSheetState.
+    // Bound binding — wrapper-passthrough only. SkipPartiallyExpanded
+    // comes from the SheetStateHolder wrapper's like-named property
+    // (Phase 4b parameterised Remember). The veto adapter is wired by
+    // the facade generator: it reads [ConfirmStateChange] off this
+    // declaration and allocates a per-instance JCW field whose JNI
+    // identity stays stable across recompositions (so `remember` cache
+    // key holds and the sheet keeps its position).
+    public static IntPtr RememberSheetState(
+        bool skipPartiallyExpanded,
+        [ConfirmStateChange(typeof(global::AndroidX.Compose.Material3.SheetValue),
+            AdapterType = typeof(SheetValueConfirmStateChange),
+            PropertyName = "ConfirmValueChange")]
+        IFunction1 confirmValueChange,
+        IComposer composer)
+    {
+        var state = AndroidX.Compose.Material3.ModalBottomSheetKt.RememberModalBottomSheetState(
+            skipPartiallyExpanded: skipPartiallyExpanded,
+            confirmValueChange:    confirmValueChange,
+            _composer:             composer,
+            p3:                    0,
+            _changed:              0);
         return ((Java.Lang.Object)state).Handle;
     }
 
