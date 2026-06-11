@@ -52,8 +52,7 @@ public sealed class AndroidView : ComposableNode
     public override void Render(IComposer composer)
     {
         var modifier   = BuildModifier();
-        var hasUpdate  = _update is not null;
-        var updateJcw  = hasUpdate ? new AndroidViewUpdateAdapter(_update!) : null;
+        var updateJcw  = _update is null ? null : new AndroidViewUpdateAdapter(_update);
         var factoryJcw = new AndroidViewFactoryAdapter(_factory);
 
         // Bit positions in AndroidView's $default mask:
@@ -61,8 +60,8 @@ public sealed class AndroidView : ComposableNode
         //   1 = modifier
         //   2 = update
         int defaults = 0;
-        if (modifier is null) defaults |= 1 << 1;
-        if (!hasUpdate)       defaults |= 1 << 2;
+        if (modifier is null)  defaults |= 1 << 1;
+        if (updateJcw is null) defaults |= 1 << 2;
 
         AndroidView_androidKt.AndroidView(
             factory:   factoryJcw,
