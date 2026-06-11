@@ -955,6 +955,8 @@ AndroidX.Compose.Row.Row(AndroidX.Compose.Arrangement? horizontalArrangement) ->
 AndroidX.Compose.Scaffold
 AndroidX.Compose.Scaffold.Body.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.Scaffold.Body.set -> void
+AndroidX.Compose.Scaffold.BodyContent.get -> System.Func<AndroidX.Compose.PaddingValues!, AndroidX.Compose.ComposableNode!>?
+AndroidX.Compose.Scaffold.BodyContent.set -> void
 AndroidX.Compose.Scaffold.BottomBar.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.Scaffold.BottomBar.set -> void
 AndroidX.Compose.Scaffold.FloatingActionButton.get -> AndroidX.Compose.ComposableNode?

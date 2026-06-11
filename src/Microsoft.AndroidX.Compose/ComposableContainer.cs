@@ -14,18 +14,6 @@ public abstract class ComposableContainer : ComposableNode, IEnumerable
 {
     readonly List<ComposableNode> _children = new();
 
-    // When a subclass (typically a "transparent" wrapper like PullToRefreshBox)
-    // receives a runtime PaddingValues handle via Render(IComposer, IntPtr)
-    // but wants the inner scrollable to consume it instead of padding the
-    // wrapper itself, it stashes the handle here. The next RenderChildren
-    // call routes it into the FIRST child's IntPtr Render overload — so
-    // LazyColumn picks it up as `contentPadding:` and its items scroll under
-    // the scaffold's top/bottom bars instead of stopping at them.
-    IntPtr _firstChildContentPadding;
-
-    internal void SetFirstChildContentPadding(IntPtr handle) =>
-        _firstChildContentPadding = handle;
-
     public void Add(ComposableNode? child)
     {
         if (child is not null)
@@ -89,20 +77,11 @@ public abstract class ComposableContainer : ComposableNode, IEnumerable
     /// </summary>
     protected void RenderChildren(IComposer composer)
     {
-        var firstChildContentPadding = _firstChildContentPadding;
-        _firstChildContentPadding = IntPtr.Zero;
-
         for (int i = 0; i < _children.Count; i++)
         {
             var child = _children[i];
             composer.StartReplaceableGroup(HashCode.Combine(i, child.GetType()));
-            try
-            {
-                if (i == 0 && firstChildContentPadding != IntPtr.Zero)
-                    child.Render(composer, firstChildContentPadding);
-                else
-                    child.Render(composer);
-            }
+            try { child.Render(composer); }
             finally { composer.EndReplaceableGroup(); }
         }
     }
