@@ -1902,7 +1902,7 @@ internal static partial class ComposeBridges
                     "Landroidx/compose/ui/Modifier;",
         Defaults  = typeof(ModifierBackgroundBrushDefault))]
     internal static partial IntPtr ModifierBackgroundBrush(
-        IntPtr modifier, IntPtr brush, IntPtr? shape, float alpha);
+        IntPtr modifier, Brush brush, Shape? shape, float alpha);
 
     // androidx.compose.foundation.BorderKt.border-xT4_qwU$default —
     // (Modifier, Dp width, Color, Shape). Both width and color are
@@ -1930,7 +1930,7 @@ internal static partial class ComposeBridges
                     "Landroidx/compose/ui/Modifier;",
         Defaults  = typeof(ModifierBorderBrushDefault))]
     internal static partial IntPtr ModifierBorderBrush(
-        IntPtr modifier, float width, IntPtr brush, IntPtr? shape);
+        IntPtr modifier, float width, Brush brush, Shape? shape);
 
     // androidx.compose.foundation.ClickableKt.clickable-XHw0xAI$default —
     // (Modifier, Boolean enabled, String onClickLabel, Role role,

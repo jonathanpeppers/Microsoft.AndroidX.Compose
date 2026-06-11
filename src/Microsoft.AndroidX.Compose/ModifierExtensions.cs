@@ -268,21 +268,7 @@ public static class ModifierExtensions
         this Modifier modifier, Brush brush, Shape? shape = null, float alpha = 1f)
     {
         ArgumentNullException.ThrowIfNull(brush);
-        var brushHandle = ((Java.Lang.Object)brush).Handle;
-        var a = alpha;
-        return modifier.Append(curr =>
-        {
-            try
-            {
-                return ComposeBridges.ModifierBackgroundBrush(
-                    curr, brushHandle, shape?.Handle, a);
-            }
-            finally
-            {
-                GC.KeepAlive(brush);
-                GC.KeepAlive(shape);
-            }
-        });
+        return modifier.Append(curr => ComposeBridges.ModifierBackgroundBrush(curr, brush, shape, alpha));
     }
 
     /// <summary>
@@ -302,20 +288,7 @@ public static class ModifierExtensions
     {
         ArgumentNullException.ThrowIfNull(brush);
         var w = width.Value;
-        var brushHandle = ((Java.Lang.Object)brush).Handle;
-        return modifier.Append(curr =>
-        {
-            try
-            {
-                return ComposeBridges.ModifierBorderBrush(
-                    curr, w, brushHandle, shape?.Handle);
-            }
-            finally
-            {
-                GC.KeepAlive(brush);
-                GC.KeepAlive(shape);
-            }
-        });
+        return modifier.Append(curr => ComposeBridges.ModifierBorderBrush(curr, w, brush, shape));
     }
 
     /// <summary>
