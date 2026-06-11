@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="Microsoft.AndroidX.Compose.Maui.Sample.Pages.ImageAspectsPage"
+             Title="Image: Aspects">
+
+    <!--
+        Renders the same `dotnet_bot.png` once per `Aspect` value so the
+        difference between AspectFit / AspectFill / Fill / Center is
+        visible side-by-side. Each tile is constrained to a fixed-size
+        slot with a coloured background so the layout box (and any
+        letterboxing / cropping) is obvious.
+
+        `ImageHandler` maps Aspect via:
+            AspectFit   -> Compose ContentScale.Fit       (default)
+            AspectFill  -> Compose ContentScale.Crop
+            Fill        -> Compose ContentScale.FillBounds
+            Center      -> falls through to Fit (no `None` slot in M3
+                           shipping API; documented in the handler).
+    -->
+    <ScrollView>
+        <VerticalStackLayout
+            Padding="30,30"
+            Spacing="20">
+
+            <Label
+                Text="Image: Aspect modes"
+                Style="{StaticResource Headline}" />
+
+            <Label Text="Same source rendered with each `Aspect` enum value."
+                   Style="{StaticResource SubHeadline}" />
+
+            <Label Text="AspectFit (preserves aspect; letterboxes)"
+                   FontAttributes="Bold" />
+            <Border BackgroundColor="#E0E0E0" StrokeThickness="0">
+                <Image Source="dotnet_bot.png"
+                       HeightRequest="180"
+                       Aspect="AspectFit" />
+            </Border>
+
+            <Label Text="AspectFill (preserves aspect; crops)"
+                   FontAttributes="Bold" />
+            <Border BackgroundColor="#E0E0E0" StrokeThickness="0">
+                <Image Source="dotnet_bot.png"
+                       HeightRequest="180"
+                       Aspect="AspectFill" />
+            </Border>
+
+            <Label Text="Fill (stretches to fit; ignores aspect)"
+                   FontAttributes="Bold" />
+            <Border BackgroundColor="#E0E0E0" StrokeThickness="0">
+                <Image Source="dotnet_bot.png"
+                       HeightRequest="180"
+                       Aspect="Fill" />
+            </Border>
+
+            <Label Text="Center (no scaling — Compose has no None slot, so handler falls back to Fit)"
+                   FontAttributes="Bold" />
+            <Border BackgroundColor="#E0E0E0" StrokeThickness="0">
+                <Image Source="dotnet_bot.png"
+                       HeightRequest="180"
+                       Aspect="Center" />
+            </Border>
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

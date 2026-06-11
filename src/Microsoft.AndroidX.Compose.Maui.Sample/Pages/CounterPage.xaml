@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="Microsoft.AndroidX.Compose.Maui.Sample.Pages.CounterPage"
+             Title="Counter">
+
+    <!--
+        Classic `dotnet new maui` counter scenario, preserved as a baseline
+        smoke test for `ButtonHandler` (Clicked event + Text mapping) and
+        `LabelHandler` (Text mapping). Each tap routes through MAUI's
+        property pipeline so a `Text` write on the button after click
+        triggers `MapText` on the Compose-backed handler.
+    -->
+    <ScrollView>
+        <VerticalStackLayout
+            Padding="30,30"
+            Spacing="25">
+
+            <Label
+                Text="Counter"
+                Style="{StaticResource Headline}"
+                SemanticProperties.HeadingLevel="Level1" />
+
+            <Label
+                Text="Tap the button to increment a counter. Exercises Button.Clicked + dynamic Text update on both Button and Label."
+                Style="{StaticResource SubHeadline}"
+                SemanticProperties.HeadingLevel="Level2" />
+
+            <Label
+                x:Name="CountLabel"
+                Text="Tapped 0 times"
+                FontSize="20"
+                HorizontalTextAlignment="Center"
+                HorizontalOptions="Fill" />
+
+            <Button
+                x:Name="CounterBtn"
+                Text="Click me"
+                BackgroundColor="{StaticResource Primary}"
+                TextColor="White"
+                SemanticProperties.Hint="Counts the number of times you click"
+                Clicked="OnCounterClicked"
+                HorizontalOptions="Fill" />
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>
