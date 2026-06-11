@@ -61,6 +61,11 @@ public partial class HomePage : ContentPage
                 Color.FromArgb("#E91E63"),
                 "image-sources"),
             new DemoEntry(
+                "Toggles",
+                "CheckBox / Switch / RadioButton with two-way binding.",
+                Color.FromArgb("#FF9800"),
+                "toggles"),
+            new DemoEntry(
                 "Theme",
                 "Light / Dark / Unspecified — flips MaterialTheme via UserAppTheme.",
                 Color.FromArgb("#795548"),
