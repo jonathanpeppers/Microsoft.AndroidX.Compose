@@ -39,13 +39,15 @@ public static partial class ComposeExtensions
         ArgumentNullException.ThrowIfNull(composer);
 
         // Default mask: every bit set = "use Kotlin's default for that
-        // slot". Clear a bit when the caller passes a value. Matches
-        // the slot order on the bound `colors(...)` overload.
-        int defaults = 0xFFFF;
-        if (checkedThumbColor   is not null) defaults &= ~(1 <<  0);
-        if (checkedTrackColor   is not null) defaults &= ~(1 <<  1);
-        if (uncheckedThumbColor is not null) defaults &= ~(1 <<  4);
-        if (uncheckedTrackColor is not null) defaults &= ~(1 <<  5);
+        // slot". Clear a bit when the caller passes a value. The enum
+        // is generated from the declarative `[assembly: ComposeDefaults]`
+        // entry; member ordering matches the slot order on the bound
+        // `colors(...)` overload.
+        var defaults = SwitchColorsDefault.All;
+        if (checkedThumbColor   is not null) defaults &= ~SwitchColorsDefault.CheckedThumbColor;
+        if (checkedTrackColor   is not null) defaults &= ~SwitchColorsDefault.CheckedTrackColor;
+        if (uncheckedThumbColor is not null) defaults &= ~SwitchColorsDefault.UncheckedThumbColor;
+        if (uncheckedTrackColor is not null) defaults &= ~SwitchColorsDefault.UncheckedTrackColor;
 
         composer.StartReplaceableGroup(SourceLocationKey.Compute(line, file));
         try
@@ -68,7 +70,7 @@ public static partial class ComposeExtensions
                 disabledUncheckedBorderColor: 0L,
                 disabledUncheckedIconColor:   0L,
                 _composer: composer,
-                p17:       defaults,
+                p17:       (int)defaults,
                 _changed:  0,
                 _changed1: 0);
         }
