@@ -53,6 +53,7 @@ public partial class LayoutHandler : ComposeElementHandler<ILayout>
             // invalidates the layout's container subtree (Compose
             // smart-skips siblings whose state is unchanged).
             ["Children"]                          = MapChildren,
+            ["ClipsToBounds"]                     = MapClipsToBounds,
             [nameof(IStackLayout.Spacing)]        = MapSpacing,
             [nameof(IPadding.Padding)]            = MapPadding,
         };
@@ -63,6 +64,7 @@ public partial class LayoutHandler : ComposeElementHandler<ILayout>
 
     readonly MutableState<int> _childrenVersion = new(0);
     readonly MutableState<float> _spacing = new(0f);
+    readonly MutableState<bool> _clipsToBounds = new(false);
     // Thickness is a MAUI struct; not a Java type, primitive, or
     // Nullable<primitive>, so MutableState<Thickness> throws
     // NotSupportedException at construction. Use a version counter
@@ -131,10 +133,15 @@ public partial class LayoutHandler : ComposeElementHandler<ILayout>
         // 1. ApplyViewProperties wraps the OUTER box (Opacity / Scale /
         //    Rotation / Clip / Shadow / IsVisible affect the entire
         //    padded layout including its own background-painting slot).
-        // 2. Padding goes innermost so the inner content gets the
+        // 2. ClipsToBounds = true clips children to the layout's
+        //    rectangle (Compose draws children outside their parent's
+        //    bounds by default — this matches MAUI's Layout.IsClippedToBounds).
+        // 3. Padding goes innermost so the inner content gets the
         //    inset, while alpha / clip / shadow trace the outer box.
         // PrependModifier replaces, so emit a single chained call.
         var outer = Modifier.Companion.ApplyViewProperties(layout).ApplyGestures(layout, context).ApplySemantics(layout);
+        if (_clipsToBounds.Value)
+            outer = outer.Clip(Shape.Rectangle);
         if (padding != Thickness.Zero)
         {
             outer = outer.Padding(
@@ -166,6 +173,16 @@ public partial class LayoutHandler : ComposeElementHandler<ILayout>
     {
         handler._childrenVersion.Value++;
     }
+
+    /// <summary>
+    /// Map <see cref="ILayout.ClipsToBounds"/> to a
+    /// <c>Modifier.Clip(RectangleShape)</c> on the outer container.
+    /// When <see langword="true"/>, children that overflow the
+    /// layout's measured bounds are clipped — matches MAUI's
+    /// <c>Layout.IsClippedToBounds</c> contract.
+    /// </summary>
+    public static void MapClipsToBounds(LayoutHandler handler, ILayout layout) =>
+        handler._clipsToBounds.Value = layout.ClipsToBounds;
 
     /// <summary>Map <see cref="IStackLayout.Spacing"/> to the spacing slot (dp).</summary>
     public static void MapSpacing(LayoutHandler handler, ILayout layout)

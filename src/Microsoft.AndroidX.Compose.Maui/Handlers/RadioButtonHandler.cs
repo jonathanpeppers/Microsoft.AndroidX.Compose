@@ -60,6 +60,14 @@ public partial class RadioButtonHandler : ComposeElementHandler<IRadioButton>
             [nameof(MauiRadioButton.Content)]     = MapContent,
             [nameof(ITextStyle.TextColor)]        = MapTextColor,
             [nameof(ITextStyle.Font)]             = MapFont,
+            [nameof(ITextStyle.CharacterSpacing)] = MapCharacterSpacing,
+            // TODO: IButtonStroke.{StrokeColor, StrokeThickness,
+            // CornerRadius} — Material 3's RadioButton renders a fixed
+            // 20dp circle with no public hook for an outer border or
+            // corner radius (the chrome is wholly owned by the
+            // composable's internal Canvas drawing). Wiring would
+            // require a hand-rolled custom radio composable rather than
+            // a public-facade extension. Out of scope for this PR.
         };
 
     /// <summary>Command mapper (inherits view-level commands; no extras).</summary>
@@ -71,6 +79,7 @@ public partial class RadioButtonHandler : ComposeElementHandler<IRadioButton>
     readonly MutableState<long?>  _color    = new((long?)null);
     readonly MutableState<int?>   _fontSize = new((int?)null);
     readonly MutableState<bool>   _bold     = new(false);
+    readonly MutableState<float?> _letterSpacing = new((float?)null);
 
     /// <summary>Construct a handler with the default mappers.</summary>
     public RadioButtonHandler() : base(Mapper, CommandMapper) { }
@@ -88,6 +97,7 @@ public partial class RadioButtonHandler : ComposeElementHandler<IRadioButton>
         var packed = _color.Value;
         var size   = _fontSize.Value;
         var bold   = _bold.Value;
+        var spacing = _letterSpacing.Value;
         var label  = _label.Value;
 
         var radio = new ComposeRadioButton(selected: _checked.Value, onClick: OnSelected);
@@ -105,6 +115,8 @@ public partial class RadioButtonHandler : ComposeElementHandler<IRadioButton>
             text.FontSize = new Sp(size.Value);
         if (bold)
             text.FontWeight = ComposeFontWeight.Bold;
+        if (spacing.HasValue)
+            text.LetterSpacing = new Sp(1) * spacing.Value;
 
         var row = new Row(horizontalArrangement: null,
                           verticalAlignment: Alignment.Vertical.CenterVertically)
@@ -165,4 +177,14 @@ public partial class RadioButtonHandler : ComposeElementHandler<IRadioButton>
         handler._bold.Value     = (font.Weight & Microsoft.Maui.FontWeight.Bold)
             == Microsoft.Maui.FontWeight.Bold;
     }
+
+    /// <summary>
+    /// Map <see cref="ITextStyle.CharacterSpacing"/> to the Compose
+    /// label's <c>letterSpacing</c> slot (sp). MAUI's value is em-ish;
+    /// the multiplication operator on <see cref="Sp"/> packs a
+    /// fractional Sp without losing the signal that an
+    /// <c>int</c>-only constructor would round to zero.
+    /// </summary>
+    public static void MapCharacterSpacing(RadioButtonHandler handler, IRadioButton rb) =>
+        handler._letterSpacing.Value = rb.CharacterSpacing > 0 ? (float)rb.CharacterSpacing : null;
 }

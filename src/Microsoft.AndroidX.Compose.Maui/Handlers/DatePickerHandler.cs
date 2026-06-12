@@ -72,8 +72,10 @@ public partial class DatePickerHandler : ComposeElementHandler<IDatePicker>
             [nameof(IDatePicker.MinimumDate)]         = MapMinimumDate,
             [nameof(IDatePicker.MaximumDate)]         = MapMaximumDate,
             [nameof(IDatePicker.Format)]              = MapFormat,
+            [nameof(IDatePicker.IsOpen)]              = MapIsOpen,
             [nameof(ITextStyle.TextColor)]            = MapTextColor,
             [nameof(ITextStyle.Font)]                 = MapFont,
+            [nameof(ITextStyle.CharacterSpacing)]     = MapCharacterSpacing,
             [nameof(IView.HorizontalLayoutAlignment)] = MapHorizontalLayoutAlignment,
         };
 
@@ -88,6 +90,7 @@ public partial class DatePickerHandler : ComposeElementHandler<IDatePicker>
     readonly MutableState<long?>  _textColor  = new((long?)null);
     readonly MutableState<int?>   _fontSize   = new((int?)null);
     readonly MutableState<bool>   _bold       = new(false);
+    readonly MutableState<float?> _letterSpacing = new((float?)null);
     readonly MutableState<bool>   _open       = new(false);
     readonly MutableState<bool>   _fillWidth  = new(false);
 
@@ -123,6 +126,7 @@ public partial class DatePickerHandler : ComposeElementHandler<IDatePicker>
             var packed   = _textColor.Value;
             var size     = _fontSize.Value;
             var bold     = _bold.Value;
+            var spacing  = _letterSpacing.Value;
             var fill     = _fillWidth.Value;
             var isOpen   = _open.Value;
 
@@ -150,9 +154,9 @@ public partial class DatePickerHandler : ComposeElementHandler<IDatePicker>
                 ? new DateTime(ticksValue).ToString(format)
                 : "Pick a date";
 
-            var trigger = new ComposeOutlinedButton(onClick: () => _open.Value = true)
+            var trigger = new ComposeOutlinedButton(onClick: () => SetOpen(virtualView, true))
             {
-                BuildLabel(label, packed, size, bold),
+                BuildLabel(label, packed, size, bold, spacing),
             };
             // Combines the layout-fill (when set) with the cross-cutting view
             // properties (Opacity, Translation, Scale, Rotation, IsVisible,
@@ -165,7 +169,7 @@ public partial class DatePickerHandler : ComposeElementHandler<IDatePicker>
             trigger.PrependModifier(outer);
 
             var dialog = isOpen
-                ? new ComposeDatePickerDialog(onDismissRequest: () => _open.Value = false)
+                ? new ComposeDatePickerDialog(onDismissRequest: () => SetOpen(virtualView, false))
                 {
                     ConfirmButton = new TextButton(onClick: () =>
                     {
@@ -186,10 +190,10 @@ public partial class DatePickerHandler : ComposeElementHandler<IDatePicker>
                             if (VirtualView is { } dp)
                                 dp.Date = picked;
                         }
-                        _open.Value = false;
+                        SetOpen(virtualView, false);
                     })
                     { new ComposeText("OK") },
-                    DismissButton = new TextButton(onClick: () => _open.Value = false)
+                    DismissButton = new TextButton(onClick: () => SetOpen(virtualView, false))
                     {
                         new ComposeText("Cancel"),
                     },
@@ -228,7 +232,19 @@ public partial class DatePickerHandler : ComposeElementHandler<IDatePicker>
         });
     }
 
-    static ComposableNode BuildLabel(string text, long? packed, int? size, bool bold)
+    /// <summary>
+    /// Toggle the dialog and propagate the new state back to MAUI's
+    /// <see cref="IDatePicker.IsOpen"/> two-way binding. The mapper
+    /// re-fires with the same value and the <see cref="MutableState{T}"/>
+    /// equality short-circuit breaks the loop.
+    /// </summary>
+    void SetOpen(IDatePicker dp, bool isOpen)
+    {
+        _open.Value = isOpen;
+        dp.IsOpen   = isOpen;
+    }
+
+    static ComposableNode BuildLabel(string text, long? packed, int? size, bool bold, float? letterSpacing)
     {
         var node = new ComposeText(text);
         if (packed.HasValue)
@@ -237,6 +253,8 @@ public partial class DatePickerHandler : ComposeElementHandler<IDatePicker>
             node.FontSize = new Sp(size.Value);
         if (bold)
             node.FontWeight = ComposeFontWeight.Bold;
+        if (letterSpacing.HasValue)
+            node.LetterSpacing = new Sp(1) * letterSpacing.Value;
         return node;
     }
 
@@ -309,6 +327,25 @@ public partial class DatePickerHandler : ComposeElementHandler<IDatePicker>
         handler._bold.Value     = (font.Weight & Microsoft.Maui.FontWeight.Bold)
             == Microsoft.Maui.FontWeight.Bold;
     }
+
+    /// <summary>
+    /// Map <see cref="ITextStyle.CharacterSpacing"/> (em units in MAUI)
+    /// to the Compose <c>letterSpacing</c> slot in <see cref="Sp"/>.
+    /// MAUI emits double; <c>0</c> clears the slot (Compose falls back
+    /// to the Material default).
+    /// </summary>
+    public static void MapCharacterSpacing(DatePickerHandler handler, IDatePicker dp) =>
+        handler._letterSpacing.Value = dp.CharacterSpacing > 0 ? (float)dp.CharacterSpacing : null;
+
+    /// <summary>
+    /// Map <see cref="IDatePicker.IsOpen"/> to the Compose dialog's
+    /// open slot. Setting this property externally pops up (or
+    /// dismisses) the dialog without a tap on the trigger button —
+    /// matches stock MAUI's <c>ShowPickerDialog</c> /
+    /// <c>HidePickerDialog</c> command bridge.
+    /// </summary>
+    public static void MapIsOpen(DatePickerHandler handler, IDatePicker dp) =>
+        handler._open.Value = dp.IsOpen;
 
     /// <summary>
     /// Map <see cref="IView.HorizontalLayoutAlignment"/> to

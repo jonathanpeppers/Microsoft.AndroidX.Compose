@@ -52,6 +52,10 @@ public partial class ImageButtonHandler : ComposeElementHandler<MauiIImageButton
             [nameof(IButtonStroke.StrokeThickness)]      = MapStrokeThickness,
             [nameof(IButtonStroke.CornerRadius)]         = MapCornerRadius,
             [nameof(IPadding.Padding)]                   = MapPadding,
+            // TODO: IImage.IsAnimationPlaying — same caveat as
+            // ImageHandler. Compose animates GIFs/WebPs only through
+            // coil-compose, which isn't wired into ImageSourceLoader.
+            // Leaving unmapped so the coverage report flags the gap.
         };
 
     /// <summary>Command mapper (inherits view-level commands; no extras).</summary>

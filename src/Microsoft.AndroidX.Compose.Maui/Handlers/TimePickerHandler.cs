@@ -53,8 +53,10 @@ public partial class TimePickerHandler : ComposeElementHandler<ITimePicker>
         {
             [nameof(ITimePicker.Time)]                = MapTime,
             [nameof(ITimePicker.Format)]              = MapFormat,
+            [nameof(ITimePicker.IsOpen)]              = MapIsOpen,
             [nameof(ITextStyle.TextColor)]            = MapTextColor,
             [nameof(ITextStyle.Font)]                 = MapFont,
+            [nameof(ITextStyle.CharacterSpacing)]     = MapCharacterSpacing,
             [nameof(IView.HorizontalLayoutAlignment)] = MapHorizontalLayoutAlignment,
         };
 
@@ -67,6 +69,7 @@ public partial class TimePickerHandler : ComposeElementHandler<ITimePicker>
     readonly MutableState<long?>  _textColor  = new((long?)null);
     readonly MutableState<int?>   _fontSize   = new((int?)null);
     readonly MutableState<bool>   _bold       = new(false);
+    readonly MutableState<float?> _letterSpacing = new((float?)null);
     readonly MutableState<bool>   _open       = new(false);
     readonly MutableState<bool>   _fillWidth  = new(false);
 
@@ -90,6 +93,7 @@ public partial class TimePickerHandler : ComposeElementHandler<ITimePicker>
             var packed  = _textColor.Value;
             var size    = _fontSize.Value;
             var bold    = _bold.Value;
+            var spacing = _letterSpacing.Value;
             var fill    = _fillWidth.Value;
             var isOpen  = _open.Value;
 
@@ -116,9 +120,9 @@ public partial class TimePickerHandler : ComposeElementHandler<ITimePicker>
                 ticks,
                 is24Hour);
 
-            var trigger = new ComposeOutlinedButton(onClick: () => _open.Value = true)
+            var trigger = new ComposeOutlinedButton(onClick: () => SetOpen(virtualView, true))
             {
-                BuildLabel(label, packed, size, bold),
+                BuildLabel(label, packed, size, bold, spacing),
             };
             // Combines the layout-fill (when set) with the cross-cutting view
             // properties (Opacity, Translation, Scale, Rotation, IsVisible,
@@ -131,7 +135,7 @@ public partial class TimePickerHandler : ComposeElementHandler<ITimePicker>
             trigger.PrependModifier(outer);
 
             var dialog = isOpen
-                ? new ComposeTimePickerDialog(onDismissRequest: () => _open.Value = false)
+                ? new ComposeTimePickerDialog(onDismissRequest: () => SetOpen(virtualView, false))
                 {
                     Title         = new ComposeText("Pick a time"),
                     ConfirmButton = new TextButton(onClick: () =>
@@ -140,10 +144,10 @@ public partial class TimePickerHandler : ComposeElementHandler<ITimePicker>
                         _ticks.Value = picked.Ticks;
                         if (VirtualView is { } tp)
                             tp.Time = picked;
-                        _open.Value = false;
+                        SetOpen(virtualView, false);
                     })
                     { new ComposeText("OK") },
-                    DismissButton = new TextButton(onClick: () => _open.Value = false)
+                    DismissButton = new TextButton(onClick: () => SetOpen(virtualView, false))
                     {
                         new ComposeText("Cancel"),
                     },
@@ -159,7 +163,17 @@ public partial class TimePickerHandler : ComposeElementHandler<ITimePicker>
         });
     }
 
-    static ComposableNode BuildLabel(string text, long? packed, int? size, bool bold)
+    /// <summary>
+    /// Toggle the dialog and propagate the new state back to MAUI's
+    /// <see cref="ITimePicker.IsOpen"/> two-way binding.
+    /// </summary>
+    void SetOpen(ITimePicker tp, bool isOpen)
+    {
+        _open.Value = isOpen;
+        tp.IsOpen   = isOpen;
+    }
+
+    static ComposableNode BuildLabel(string text, long? packed, int? size, bool bold, float? letterSpacing)
     {
         var node = new ComposeText(text);
         if (packed.HasValue)
@@ -168,6 +182,8 @@ public partial class TimePickerHandler : ComposeElementHandler<ITimePicker>
             node.FontSize = new Sp(size.Value);
         if (bold)
             node.FontWeight = ComposeFontWeight.Bold;
+        if (letterSpacing.HasValue)
+            node.LetterSpacing = new Sp(1) * letterSpacing.Value;
         return node;
     }
 
@@ -194,6 +210,21 @@ public partial class TimePickerHandler : ComposeElementHandler<ITimePicker>
         handler._bold.Value     = (font.Weight & Microsoft.Maui.FontWeight.Bold)
             == Microsoft.Maui.FontWeight.Bold;
     }
+
+    /// <summary>
+    /// Map <see cref="ITextStyle.CharacterSpacing"/> to the Compose
+    /// <c>letterSpacing</c> slot in <see cref="Sp"/>.
+    /// </summary>
+    public static void MapCharacterSpacing(TimePickerHandler handler, ITimePicker tp) =>
+        handler._letterSpacing.Value = tp.CharacterSpacing > 0 ? (float)tp.CharacterSpacing : null;
+
+    /// <summary>
+    /// Map <see cref="ITimePicker.IsOpen"/> to the Compose dialog's
+    /// open slot — external pushes pop / dismiss the dialog without a
+    /// trigger tap.
+    /// </summary>
+    public static void MapIsOpen(TimePickerHandler handler, ITimePicker tp) =>
+        handler._open.Value = tp.IsOpen;
 
     /// <summary>
     /// Map <see cref="IView.HorizontalLayoutAlignment"/> to

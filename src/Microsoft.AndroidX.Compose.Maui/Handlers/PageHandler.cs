@@ -50,6 +50,7 @@ public partial class PageHandler : ViewHandler<IContentView, ComposeView>
         new PropertyMapper<IContentView, PageHandler>(ViewHandler.ViewMapper)
         {
             ["Content"] = MapContent,
+            ["Title"]   = MapTitle,
         };
 
     /// <summary>Command mapper (inherits the base view commands; no extras).</summary>
@@ -154,5 +155,19 @@ public partial class PageHandler : ViewHandler<IContentView, ComposeView>
     {
         platformView.DisposeComposition();
         base.DisconnectHandler(platformView);
+    }
+
+    /// <summary>
+    /// Map <see cref="Microsoft.Maui.Controls.Page.Title"/>. The Compose
+    /// handler is registered against <see cref="IContentView"/> (which has
+    /// no <c>Title</c>); the Activity/Shell action-bar title is owned by
+    /// the navigation host, not the page view. Stock MAUI's
+    /// <c>PageHandler.MapTitle</c> is itself a deliberate no-op for the same
+    /// reason — Shell / NavigationPage push titles down through their own
+    /// handlers. We register the key purely for parity so MAUI's batched
+    /// property pipeline doesn't log "missing mapper" warnings.
+    /// </summary>
+    public static void MapTitle(PageHandler handler, IContentView page)
+    {
     }
 }
