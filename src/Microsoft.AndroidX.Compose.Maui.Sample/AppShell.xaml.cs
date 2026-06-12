@@ -36,5 +36,6 @@ public partial class AppShell : Shell
         Routing.RegisterRoute("refresh",        typeof(RefreshPage));
         Routing.RegisterRoute("indicator",      typeof(IndicatorPage));
         Routing.RegisterRoute("semantics",      typeof(SemanticsPage));
+        Routing.RegisterRoute("navigation",     typeof(NavigationDemoPage));
     }
 }

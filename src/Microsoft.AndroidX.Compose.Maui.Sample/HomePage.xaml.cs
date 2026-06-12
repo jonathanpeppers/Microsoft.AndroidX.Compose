@@ -135,6 +135,11 @@ public partial class HomePage : ContentPage
                 "SemanticProperties.Description / Hint / HeadingLevel + AutomationId routed to Compose `Modifier.Semantics { … }`.",
                 Color.FromArgb("#3F51B5"),
                 "semantics"),
+            new DemoEntry(
+                "Navigation",
+                "Push / pop a modal `NavigationPage` rendered through Compose's Material 3 `Scaffold` + `TopAppBar`.",
+                Color.FromArgb("#1565C0"),
+                "navigation"),
         };
     }
 

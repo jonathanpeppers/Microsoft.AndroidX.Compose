@@ -1890,17 +1890,83 @@ graph + theming inherited from the page root.
 
 ### Phase 4 — navigation (target: real apps)
 
-- `NavigationViewHandler` → Compose `NavHost` + `NavController` (already
-  wrapped). Push/pop maps to `navController.Navigate` / `PopBackStack`.
-- `TabbedViewHandler` → `NavigationBar` (bottom) or `TabRow` (top
-  depending on `BarPosition`).
-- `FlyoutViewHandler` → `ModalNavigationDrawer`.
-- `ShellHandler` → `Scaffold` + `ModalNavigationDrawer` + `NavigationBar`
-    - `NavHost` (URI-routed). This is the biggest single handler — keep
-  scope tight, target Shell's tabbed shape first, flyout second, routing
-  third.
-- `ModalNavigationManager` — overlay `ComposeView` on the activity's
-  decor view; animate with `AnimatedVisibility`.
+#### Slice 1 — `NavigationPageHandler` ✅ shipped
+
+`Microsoft.Maui.Controls.NavigationPage` is the simplest of the four
+navigation surfaces and lands first. Stock MAUI registers
+`NavigationPage → NavigationViewHandler` (the handler hosts pushed
+pages in `Fragment`s under a `FragmentContainerView` + AppCompat
+toolbar). `UseAndroidXCompose()` now overrides that mapping with
+`NavigationPageHandler`, which owns a single root `ComposeView` and
+renders the stack through Material 3 `Scaffold` + `TopAppBar`:
+
+- The current top page is hosted by a long-lived
+  `AndroidView { factory = … FrameLayout … }` whose `update` lambda
+  swaps the hosted `view.ToPlatform(context)` whenever the navigation
+  stack changes. Compose caches the `FrameLayout` across
+  recompositions, so push / pop only churns the inner child; the
+  popped page's `IElementHandler` is **not** disconnected, so popping
+  back reuses the same `PlatformView`.
+- `IStackNavigation.RequestNavigation` is wired through the
+  `CommandMapper["RequestNavigation"] = MapRequestNavigation` entry.
+  It snapshots `request.NavigationStack`, bumps a
+  `MutableState<int> _stackVersion` counter (read inside the body
+  builder so writes trigger recomposition), then calls
+  `view.NavigationFinished(...)` synchronously so MAUI's
+  cross-platform `NavigationProxy` completes the outstanding
+  `PushAsync` / `PopAsync` `Task`.
+- The top app bar reads `Page.Title` and renders an
+  `IconButton(onClick: PopAsync)` back arrow whenever the stack
+  depth is &gt; 1. Hardware back falls back to MAUI's standard
+  `Window.HandleBackButton` plumbing — that round-trips through
+  `IStackNavigation.RequestNavigation`, so no extra wiring needed.
+- `NavigationRequest.Animated` is captured but ignored for v1.
+  Wrapping the body swap in Compose's `AnimatedContent` (slide /
+  fade) is a follow-up — needs a state-holder facade for
+  `AnimatedContent` first.
+
+The sample's "Navigation" demo pushes a modal `NavigationPage`
+hosting `NavStackPage` (in-code, no XAML per depth level) so the
+gallery can verify push / pop / hardware-back / top-bar back
+arrow without converting the Shell host itself.
+
+#### Slices 2-5 — deferred follow-ups
+
+All three remaining navigation surfaces work **functionally** via
+stock today (each registers against its concrete type, so our
+`PageHandler` doesn't accidentally intercept them). The pages they
+host already get our converted leaves. The remaining gap is purely
+visual chrome:
+
+- **Slice 2 — `TabbedPageHandler`** (`TabbedPage` →
+  `NavigationBar` for `BarPosition.Bottom`, `TabRow` for
+  `BarPosition.Top`). Stock = AppCompat `BottomNavigationView`.
+  Compose-side facades (`NavigationBar`, `NavigationBarItem`,
+  `TabRow`) already shipped. Two-way `CurrentPage` binding +
+  per-tab content swap via the same `AndroidView` host pattern
+  Slice 1 uses.
+- **Slice 3 — `FlyoutPageHandler`** (`FlyoutPage` →
+  `ModalNavigationDrawer`). Stock = `DrawerLayout`. The
+  `ModalNavigationDrawer` facade + `[ConfirmStateChange]` adapter
+  pattern (Phase 10 + 4c, see `ModalBottomSheet`) are in place;
+  hand-write a drawer state holder wired to `IFlyoutView`'s
+  `IsPresented`.
+- **Slice 4 — `ShellHandler`** (closes #248). Stock `ShellRenderer`
+  works; the issue is its built-in `FlyoutItem` template uses MAUI
+  `Label`s, which our `LabelHandler` renders **without** any
+  Material chrome (no padding, font, ripple) — bare text. The
+  cleanest narrow fix is per-leaf "host context detection" inside
+  `LabelHandler` (when the leaf's parent chain goes through
+  `BaseShellItem`, switch to a `ListItem`-styled Compose body)
+  rather than rebuilding Shell on Compose. A full Shell handler
+  (`Scaffold` + `ModalNavigationDrawer` + `NavigationBar` +
+  URI-routed `NavHost`) is a multi-week effort and stays scoped
+  out.
+- **Slice 5 — `ModalNavigationManager`**. Needs a DispatchProxy
+  intercept on MAUI's per-window `IModalNavigationManager`,
+  similar to the `ComposeAlertManagerSubscription` pattern (Phase
+  2 Slice 9). Modal page rendered into a Compose `Dialog` /
+  fullscreen surface above the decor view's `ComposeView`.
 
 ### Phase 5 — graphics, gestures, shapes, BlazorWebView, infra
 
