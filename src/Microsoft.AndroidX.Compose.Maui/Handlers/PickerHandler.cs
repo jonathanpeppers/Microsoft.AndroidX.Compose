@@ -125,13 +125,15 @@ public partial class PickerHandler : ComposeElementHandler<IPicker>
     /// <inheritdoc/>
     public override ComposableNode BuildNode(IComposer composer)
     {
+        var virtualView = VirtualView
+            ?? throw new InvalidOperationException("VirtualView not set on PickerHandler.");
+
         // Subscribe to the version slot so external Items mutations
         // recompose this subtree even when the live IList reference
         // is identity-stable.
         _ = _itemsVersion.Value;
 
-        var picker = VirtualView
-            ?? throw new InvalidOperationException("VirtualView not set on PickerHandler.");
+        var picker = virtualView;
         var items = picker.Items;
         var selectedIndex = _selectedIndex.Value;
         var title = _title.Value;
@@ -176,7 +178,8 @@ public partial class PickerHandler : ComposeElementHandler<IPicker>
         // ComposeView, so the modifier wraps the ExposedDropdownMenuBox via
         // its trigger anchor.
         var outer = (fill ? Modifier.FillMaxWidth() : Modifier.Companion)
-            .ApplyViewProperties(VirtualView!);
+            .ApplyViewProperties(virtualView)
+            .ApplyGestures(virtualView, MauiContext);
         trigger.PrependModifier(outer);
 
         var menu = new ExposedDropdownMenu(

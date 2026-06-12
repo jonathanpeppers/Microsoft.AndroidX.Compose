@@ -2,6 +2,7 @@ using AndroidX.Compose;
 using AndroidX.Compose.Material3;
 using AndroidX.Compose.Runtime;
 using Kotlin.Ranges;
+using Microsoft.AndroidX.Compose.Maui.Platform;
 using Microsoft.Maui.Handlers;
 using ComposeSlider = AndroidX.Compose.Slider;
 
@@ -76,6 +77,9 @@ public partial class SliderHandler : ComposeElementHandler<ISlider>
     /// <inheritdoc/>
     public override ComposableNode BuildNode(IComposer composer)
     {
+        var virtualView = VirtualView
+            ?? throw new InvalidOperationException("VirtualView not set on SliderHandler.");
+
         var min        = _min.Value;
         var max        = _max.Value;
         var thumb      = _thumbColor.Value;
@@ -98,7 +102,7 @@ public partial class SliderHandler : ComposeElementHandler<ISlider>
                 activeTrackColor:   minTrack,
                 inactiveTrackColor: maxTrack);
 
-        slider.PrependModifier(Modifier.FillMaxWidth());
+        slider.PrependModifier(Modifier.FillMaxWidth().ApplyGestures(virtualView, MauiContext));
         return slider;
     }
 

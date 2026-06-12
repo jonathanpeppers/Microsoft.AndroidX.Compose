@@ -1,5 +1,6 @@
 using AndroidX.Compose;
 using AndroidX.Compose.Runtime;
+using Microsoft.AndroidX.Compose.Maui.Platform;
 using Microsoft.Maui.Handlers;
 using ComposeColor      = AndroidX.Compose.Color;
 using MauiVisualElement = Microsoft.Maui.Controls.VisualElement;
@@ -85,6 +86,7 @@ public partial class ContentViewHandler : ComposeElementHandler<IContentView>
                 end:    new Dp((float)padding.Right),
                 bottom: new Dp((float)padding.Bottom));
         }
+        modifier = modifier.ApplyGestures(view, context);
 
         var box = new Box { Modifier = modifier };
         if (view.PresentedContent is { } content)

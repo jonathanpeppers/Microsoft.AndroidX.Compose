@@ -134,7 +134,7 @@ public partial class LayoutHandler : ComposeElementHandler<ILayout>
         // 2. Padding goes innermost so the inner content gets the
         //    inset, while alpha / clip / shadow trace the outer box.
         // PrependModifier replaces, so emit a single chained call.
-        var outer = Modifier.Companion.ApplyViewProperties(layout);
+        var outer = Modifier.Companion.ApplyViewProperties(layout).ApplyGestures(layout, context);
         if (padding != Thickness.Zero)
         {
             outer = outer.Padding(

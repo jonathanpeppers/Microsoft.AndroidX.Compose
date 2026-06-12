@@ -1,5 +1,6 @@
 using AndroidX.Compose;
 using AndroidX.Compose.Runtime;
+using Microsoft.AndroidX.Compose.Maui.Platform;
 using Microsoft.Maui.Handlers;
 using ComposeColor      = AndroidX.Compose.Color;
 using ComposeFontWeight = AndroidX.Compose.FontWeight;
@@ -81,14 +82,21 @@ public partial class RadioButtonHandler : ComposeElementHandler<IRadioButton>
     /// <inheritdoc/>
     public override ComposableNode BuildNode(IComposer composer)
     {
+        var virtualView = VirtualView
+            ?? throw new InvalidOperationException("VirtualView not set on RadioButtonHandler.");
+
         var packed = _color.Value;
         var size   = _fontSize.Value;
         var bold   = _bold.Value;
         var label  = _label.Value;
 
         var radio = new ComposeRadioButton(selected: _checked.Value, onClick: OnSelected);
+        var gestureModifier = Modifier.Companion.ApplyGestures(virtualView, MauiContext);
         if (string.IsNullOrEmpty(label))
+        {
+            radio.PrependModifier(gestureModifier);
             return radio;
+        }
 
         var text = new ComposeText(label);
         if (packed.HasValue)
@@ -98,12 +106,14 @@ public partial class RadioButtonHandler : ComposeElementHandler<IRadioButton>
         if (bold)
             text.FontWeight = ComposeFontWeight.Bold;
 
-        return new Row(horizontalArrangement: null,
-                       verticalAlignment: Alignment.Vertical.CenterVertically)
+        var row = new Row(horizontalArrangement: null,
+                          verticalAlignment: Alignment.Vertical.CenterVertically)
         {
             radio,
             text,
         };
+        row.Modifier = gestureModifier;
+        return row;
     }
 
     void OnSelected()

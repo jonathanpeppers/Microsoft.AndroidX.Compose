@@ -1,5 +1,6 @@
 using AndroidX.Compose;
 using AndroidX.Compose.Runtime;
+using Microsoft.AndroidX.Compose.Maui.Platform;
 using Microsoft.Maui.Handlers;
 using ComposeColor      = AndroidX.Compose.Color;
 using MauiBorder        = Microsoft.Maui.Controls.Border;
@@ -81,12 +82,13 @@ public partial class BorderHandler : ComposeElementHandler<MauiBorder>
         var context = MauiContext
             ?? throw new InvalidOperationException("MauiContext not set on BorderHandler.");
 
-        var border  = (Microsoft.Maui.Controls.Border?)VirtualView;
-        var padding = (VirtualView as IPadding)?.Padding ?? Thickness.Zero;
+        var border = (Microsoft.Maui.Controls.Border?)VirtualView
+            ?? throw new InvalidOperationException("VirtualView not set on BorderHandler.");
+        var padding = (border as IPadding)?.Padding ?? Thickness.Zero;
         var width   = _strokeWidth.Value;
         var stroke  = _strokeColor.Value;
         var bg      = _backgroundColor.Value;
-        var shape   = ResolveShape(border?.StrokeShape);
+        var shape   = ResolveShape(border.StrokeShape);
 
         Modifier? modifier = null;
         if (shape is not null)
@@ -107,8 +109,8 @@ public partial class BorderHandler : ComposeElementHandler<MauiBorder>
         }
 
         var box = new Box();
-        if (modifier is not null)
-            box.Modifier = modifier;
+        modifier = (modifier ?? Modifier.Companion).ApplyGestures(border, context);
+        box.Modifier = modifier;
 
         // Walk the Border's content (IContentView.PresentedContent)
         // through the same ComposeWalker pipeline used by Page /

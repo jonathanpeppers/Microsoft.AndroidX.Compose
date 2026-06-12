@@ -1,5 +1,6 @@
 using AndroidX.Compose;
 using AndroidX.Compose.Runtime;
+using Microsoft.AndroidX.Compose.Maui.Platform;
 using Microsoft.Maui.Handlers;
 using ComposeColor              = AndroidX.Compose.Color;
 using ComposeFontWeight         = AndroidX.Compose.FontWeight;
@@ -73,6 +74,9 @@ public partial class SearchBarHandler : ComposeElementHandler<ISearchBar>
     /// <inheritdoc/>
     public override ComposableNode BuildNode(IComposer composer)
     {
+        var virtualView = VirtualView
+            ?? throw new InvalidOperationException("VirtualView not set on SearchBarHandler.");
+
         var packed       = _color.Value;
         var size         = _fontSize.Value;
         var bold         = _bold.Value;
@@ -112,8 +116,9 @@ public partial class SearchBarHandler : ComposeElementHandler<ISearchBar>
         field.KeyboardActions = KeyboardActionsHelper.Create(
             onSearch: OnSearchInvoked);
 
-        if (fill)
-            field.PrependModifier(Modifier.FillMaxWidth());
+        var modifier = (fill ? Modifier.FillMaxWidth() : Modifier.Companion)
+            .ApplyGestures(virtualView, MauiContext);
+        field.PrependModifier(modifier);
         return field;
     }
 

@@ -1203,11 +1203,118 @@ public static class ModifierExtensions
         var doubleTapCb = onDoubleTap is null ? null : new OffsetCallback(onDoubleTap);
 
         var block = new PointerInputBlock(tapCb, pressCb, longPressCb, doubleTapCb);
+        return AppendPointerInput(modifier, key, block);
+    }
 
-        // Resolve `key` to a Java object. Kotlin uses reference equality
-        // for the default-overload form, so we want a stable JNI object
-        // for the "no key" path — Kotlin.Unit.Instance is the canonical
-        // singleton.
+    /// <summary>
+    /// <c>Modifier.pointerInput(key) { detectDragGestures(...) }</c> —
+    /// detect single-pointer drag gestures (touch-down, drag, lift).
+    /// Each callback receives positions / deltas in local layout
+    /// pixels.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <paramref name="onDrag"/> is required; the start / end / cancel
+    /// callbacks are optional and default to no-ops on the Kotlin
+    /// side. The drag delta in <paramref name="onDrag"/> is the
+    /// per-frame movement, not the cumulative pan; callers tracking
+    /// totals across the gesture maintain a running sum keyed by
+    /// <paramref name="onDragStart"/> / <paramref name="onDragEnd"/>.
+    /// </para>
+    /// <para>
+    /// The same callback-freshness gotcha as
+    /// <see cref="DetectTapGestures(Modifier, Action{Offset}?, Action{Offset}?, Action{Offset}?, Action{Offset}?, object?)"/>
+    /// applies — vary <paramref name="key"/> to restart the gesture
+    /// coroutine with new lambdas, otherwise the captured callbacks
+    /// from the first composition stay live.
+    /// </para>
+    /// </remarks>
+    /// <param name="onDragStart">Fired once at the moment a drag is
+    /// recognised (after the system's touch-slop threshold). Position
+    /// is the pointer location at touch-down.</param>
+    /// <param name="onDragEnd">Fired when the gesture completes
+    /// (pointer lifted within the view).</param>
+    /// <param name="onDragCancel">Fired when the gesture is cancelled
+    /// (a parent intercepted, multi-touch confused the detector,
+    /// etc.).</param>
+    /// <param name="onDrag">Required. Fired once per pointer move with
+    /// the per-frame delta. Use <see cref="Offset.X"/> /
+    /// <see cref="Offset.Y"/> as <c>float</c> pixel deltas.</param>
+    /// <param name="key">Identity key — same semantics as on
+    /// <see cref="DetectTapGestures(Modifier, Action{Offset}?, Action{Offset}?, Action{Offset}?, Action{Offset}?, object?)"/>.</param>
+    public static Modifier DetectDragGestures(this Modifier modifier,
+        Action<Offset> onDrag,
+        Action<Offset>? onDragStart = null,
+        Action? onDragEnd = null,
+        Action? onDragCancel = null,
+        object? key = null)
+    {
+        ArgumentNullException.ThrowIfNull(onDrag);
+
+        var startCb  = onDragStart  is null ? null : new OffsetCallback(onDragStart);
+        var endCb    = onDragEnd    is null ? null : new UnitCallback(onDragEnd);
+        var cancelCb = onDragCancel is null ? null : new UnitCallback(onDragCancel);
+        var dragCb   = new DragCallback(onDrag);
+
+        var block = new DragGestureBlock(startCb, endCb, cancelCb, dragCb);
+        return AppendPointerInput(modifier, key, block);
+    }
+
+    /// <summary>
+    /// <c>Modifier.pointerInput(key) { detectTransformGestures(...) }</c>
+    /// — detect multi-pointer transform gestures (pinch zoom, two-
+    /// finger pan, rotate). The single <paramref name="onGesture"/>
+    /// callback receives the centroid, cumulative pan delta, zoom
+    /// multiplier, and rotation in degrees on every pointer move.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Compose's <c>detectTransformGestures</c> applies the per-frame
+    /// deltas continuously — there are no separate start / end
+    /// callbacks. The caller maintains its own state holder if it
+    /// wants to detect "pinch starts" (e.g. by latching on the first
+    /// non-1.0 zoom value).
+    /// </para>
+    /// <para>
+    /// The same callback-freshness gotcha as the other
+    /// <c>Modifier.detect*Gestures</c> extensions applies; vary
+    /// <paramref name="key"/> to restart with new lambdas.
+    /// </para>
+    /// </remarks>
+    /// <param name="onGesture">Required. Receives
+    /// <c>(centroid, pan, zoom, rotation)</c>. <c>centroid</c> is the
+    /// average position of all active pointers; <c>pan</c> is the
+    /// per-frame pan delta; <c>zoom</c> is the per-frame multiplier
+    /// (1.0 means no zoom this frame); <c>rotation</c> is the
+    /// per-frame rotation in degrees.</param>
+    /// <param name="panZoomLock">When <see langword="true"/>, locks
+    /// out rotation while the user is panning or zooming — useful
+    /// for image / map viewers that don't want stray rotations.
+    /// Defaults to <see langword="false"/> matching Kotlin.</param>
+    /// <param name="key">Identity key — see
+    /// <see cref="DetectTapGestures(Modifier, Action{Offset}?, Action{Offset}?, Action{Offset}?, Action{Offset}?, object?)"/>.</param>
+    public static Modifier DetectTransformGestures(this Modifier modifier,
+        Action<Offset, Offset, float, float> onGesture,
+        bool panZoomLock = false,
+        object? key = null)
+    {
+        ArgumentNullException.ThrowIfNull(onGesture);
+
+        var gestureCb = new TransformGestureCallback(onGesture);
+        var block = new TransformGestureBlock(panZoomLock, gestureCb);
+        return AppendPointerInput(modifier, key, block);
+    }
+
+    // Shared plumbing for DetectTapGestures / DetectDragGestures /
+    // DetectTransformGestures: resolve the user-supplied `key` to a
+    // Java object (Kotlin uses reference equality for the default-
+    // overload form, so we want a stable JNI object for the "no key"
+    // path — Kotlin.Unit.Instance is the canonical singleton), then
+    // wrap the gesture-block JCW in a PointerInputEventHandler and
+    // apply Modifier.pointerInput(key, handler). Both keyObj and the
+    // block are kept alive across the JNI call via GC.KeepAlive.
+    static Modifier AppendPointerInput(Modifier modifier, object? key, Java.Lang.Object block)
+    {
         var keyObj = key switch
         {
             null => (Java.Lang.Object)Kotlin.Unit.Instance!,
@@ -1221,15 +1328,10 @@ public static class ModifierExtensions
 
         return modifier.Append(curr =>
         {
-            // Construct the Java helper that implements
-            // PointerInputEventHandler, wrapping our Function2 JCW.
-            // The handler is a local ref consumed by ModifierPointerInput
-            // and released when its JNI frame pops.
             var handlerLocal = IntPtr.Zero;
             try
             {
-                handlerLocal = ComposeBridges.NewPointerInputEventHandler(
-                    ((Java.Lang.Object)block).Handle);
+                handlerLocal = ComposeBridges.NewPointerInputEventHandler(block.Handle);
                 return ComposeBridges.ModifierPointerInput(
                     curr, keyObj.Handle, handlerLocal);
             }

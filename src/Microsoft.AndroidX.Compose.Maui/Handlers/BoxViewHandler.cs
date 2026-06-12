@@ -1,5 +1,6 @@
 using AndroidX.Compose;
 using AndroidX.Compose.Runtime;
+using Microsoft.AndroidX.Compose.Maui.Platform;
 using Microsoft.Maui.Handlers;
 using ComposeColor = AndroidX.Compose.Color;
 using MauiBoxView  = Microsoft.Maui.Controls.BoxView;
@@ -72,10 +73,13 @@ public partial class BoxViewHandler : ComposeElementHandler<MauiBoxView>
     /// <inheritdoc/>
     public override ComposableNode BuildNode(IComposer composer)
     {
+        var virtualView = VirtualView
+            ?? throw new InvalidOperationException("VirtualView not set on BoxViewHandler.");
+
         _ = _cornerVersion.Value;  // subscribe — CornerRadius change bumps this
         _ = _sizeVersion.Value;    // subscribe — Width/HeightRequest change bumps this
         var color = _color.Value ?? _backgroundColor.Value;
-        var corner = VirtualView?.CornerRadius ?? default;
+        var corner = virtualView.CornerRadius;
 
         // Single-radius reduction — BoxView.CornerRadius applies the
         // same value to all four corners. MAUI's CornerRadius struct
@@ -98,8 +102,8 @@ public partial class BoxViewHandler : ComposeElementHandler<MauiBoxView>
         //     a bounded parent. (Default 40 dp behavior is left to MAUI's
         //     measure pass — won't apply here because we fold into a
         //     single ComposeView.)
-        var widthReq  = VirtualView?.WidthRequest  ?? -1d;
-        var heightReq = VirtualView?.HeightRequest ?? -1d;
+        var widthReq  = virtualView.WidthRequest;
+        var heightReq = virtualView.HeightRequest;
         Modifier modifier = (widthReq, heightReq) switch
         {
             ( >= 0d, >= 0d ) => Modifier.Size(new Dp((float)widthReq), new Dp((float)heightReq)),
@@ -111,6 +115,7 @@ public partial class BoxViewHandler : ComposeElementHandler<MauiBoxView>
             modifier = modifier.Clip(shape);
         if (color.HasValue)
             modifier = modifier.Background(new ComposeColor(color.Value), shape);
+        modifier = modifier.ApplyGestures(virtualView, MauiContext);
 
         return new Box { Modifier = modifier };
     }

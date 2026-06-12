@@ -1,6 +1,7 @@
 using AndroidX.Compose;
 using AndroidX.Compose.Material3;
 using AndroidX.Compose.Runtime;
+using Microsoft.AndroidX.Compose.Maui.Platform;
 using Microsoft.Maui.Handlers;
 using ComposeCheckbox = AndroidX.Compose.Checkbox;
 
@@ -61,11 +62,15 @@ public partial class CheckBoxHandler : ComposeElementHandler<ICheckBox>
     /// <inheritdoc/>
     public override ComposableNode BuildNode(IComposer composer)
     {
+        var virtualView = VirtualView
+            ?? throw new InvalidOperationException("VirtualView not set on CheckBoxHandler.");
+
         var color = _color.Value;
         var box   = new ComposeCheckbox(@checked: _checked.Value,
                                         onCheckedChange: OnCheckedChanged);
         if (color is not null)
             box.Colors = composer.CheckboxColors(checkedColor: color);
+        box.PrependModifier(Modifier.Companion.ApplyGestures(virtualView, MauiContext));
         return box;
     }
 

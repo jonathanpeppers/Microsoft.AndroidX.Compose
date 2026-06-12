@@ -1,5 +1,6 @@
 using AndroidX.Compose;
 using AndroidX.Compose.Runtime;
+using Microsoft.AndroidX.Compose.Maui.Platform;
 using Microsoft.Maui.Handlers;
 using ComposeIconButton  = AndroidX.Compose.IconButton;
 using ComposeRow         = AndroidX.Compose.Row;
@@ -83,12 +84,15 @@ public partial class StepperHandler : ComposeElementHandler<IStepper>
     /// <inheritdoc/>
     public override ComposableNode BuildNode(IComposer composer)
     {
+        var virtualView = VirtualView
+            ?? throw new InvalidOperationException("VirtualView not set on StepperHandler.");
+
         var value    = _value.Value;
         var min      = _min.Value;
         var max      = _max.Value;
         var interval = _interval.Value;
 
-        return new ComposeRow(
+        var row = new ComposeRow(
             horizontalArrangement: null,
             verticalAlignment:     Alignment.Vertical.CenterVertically)
         {
@@ -101,6 +105,8 @@ public partial class StepperHandler : ComposeElementHandler<IStepper>
                 new ComposeText("+"),
             },
         };
+        row.Modifier = Modifier.Companion.ApplyGestures(virtualView, MauiContext);
+        return row;
 
         void Decrement() => Apply(value - interval);
         void Increment() => Apply(value + interval);

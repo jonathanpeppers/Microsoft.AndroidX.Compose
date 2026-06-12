@@ -1,5 +1,6 @@
 using AndroidX.Compose;
 using AndroidX.Compose.Runtime;
+using Microsoft.AndroidX.Compose.Maui.Platform;
 using Microsoft.Maui.Handlers;
 using ComposeCircularProgressIndicator = AndroidX.Compose.CircularProgressIndicator;
 using ComposeColor = AndroidX.Compose.Color;
@@ -56,13 +57,18 @@ public partial class ActivityIndicatorHandler : ComposeElementHandler<IActivityI
     /// <inheritdoc/>
     public override ComposableNode BuildNode(IComposer composer)
     {
+        var virtualView = VirtualView
+            ?? throw new InvalidOperationException("VirtualView not set on ActivityIndicatorHandler.");
+
+        var gestureModifier = Modifier.Companion.ApplyGestures(virtualView, MauiContext);
         if (!_isRunning.Value)
-            return new Box();
+            return new Box { Modifier = gestureModifier };
 
         var packed = _color.Value;
         return new ComposeCircularProgressIndicator
         {
             Color = packed.HasValue ? new ComposeColor(packed.Value) : null,
+            Modifier = gestureModifier,
         };
     }
 

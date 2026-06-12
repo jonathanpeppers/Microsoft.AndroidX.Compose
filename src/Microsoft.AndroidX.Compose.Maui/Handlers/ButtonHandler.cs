@@ -70,6 +70,9 @@ public partial class ButtonHandler : ComposeElementHandler<IButton>
     /// <inheritdoc/>
     public override ComposableNode BuildNode(IComposer composer)
     {
+        var virtualView = VirtualView
+            ?? throw new InvalidOperationException("VirtualView not set on ButtonHandler.");
+
         SubscribeToViewProperties();
 
         var container = _containerColor.Value;
@@ -86,7 +89,8 @@ public partial class ButtonHandler : ComposeElementHandler<IButton>
         // (when set) with the cross-cutting view properties (Opacity,
         // Translation, Scale, Rotation, IsVisible, Clip, Shadow).
         var outer = (_fillWidth.Value ? Modifier.FillMaxWidth() : Modifier.Companion)
-            .ApplyViewProperties(VirtualView!);
+            .ApplyViewProperties(virtualView)
+            .ApplyGestures(virtualView, MauiContext);
         button.PrependModifier(outer);
         return button;
     }

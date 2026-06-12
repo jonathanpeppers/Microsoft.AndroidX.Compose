@@ -154,6 +154,53 @@ internal static partial class ComposeBridges
         IntPtr? onTap,
         IContinuation cont);
 
+    // androidx.compose.foundation.gestures.DragGestureDetectorKt
+    //     .detectDragGestures$default(
+    //         PointerInputScope scope,
+    //         ((Offset) -> Unit) onDragStart = {},
+    //         (() -> Unit)      onDragEnd   = {},
+    //         (() -> Unit)      onDragCancel = {},
+    //         ((PointerInputChange, Offset) -> Unit) onDrag,
+    //         Continuation cont, int $default, Object marker): Object
+    //
+    // Same tail-call shape as detectTapGestures — DragGestureBlock is
+    // the outer Function2 invoked from `pointerInput`, and forwards
+    // its OUTER continuation here. Three of the four callbacks are
+    // defaultable; auto-default-mask leaves a bit set when null is
+    // passed (Kotlin substitutes its empty-lambda default). onDrag
+    // is required and not in the default mask.
+    [ComposeBridge(Suspend = true,
+        Class = "androidx/compose/foundation/gestures/DragGestureDetectorKt",
+        JvmName = "detectDragGestures$default",
+        Signature = "(Landroidx/compose/ui/input/pointer/PointerInputScope;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;",
+        Defaults = typeof(DetectDragGesturesDefault))]
+    internal static partial IntPtr DetectDragGestures(
+        IntPtr scope,
+        IntPtr? onDragStart,
+        IntPtr? onDragEnd,
+        IntPtr? onDragCancel,
+        IntPtr  onDrag,
+        IContinuation cont);
+
+    // androidx.compose.foundation.gestures.TransformGestureDetectorKt
+    //     .detectTransformGestures$default(
+    //         PointerInputScope scope,
+    //         boolean panZoomLock = false,
+    //         ((Offset, Offset, Float, Float) -> Unit) onGesture,
+    //         Continuation cont, int $default, Object marker): Object
+    //
+    // panZoomLock is the only defaultable param. onGesture is required.
+    [ComposeBridge(Suspend = true,
+        Class = "androidx/compose/foundation/gestures/TransformGestureDetectorKt",
+        JvmName = "detectTransformGestures$default",
+        Signature = "(Landroidx/compose/ui/input/pointer/PointerInputScope;ZLkotlin/jvm/functions/Function4;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;",
+        Defaults = typeof(DetectTransformGesturesDefault))]
+    internal static partial IntPtr DetectTransformGestures(
+        IntPtr scope,
+        bool   panZoomLock,
+        IntPtr onGesture,
+        IContinuation cont);
+
     static IntPtr s_androidUiDispatcherMain_handle;
 
     // androidx.compose.ui.platform.AndroidUiDispatcher.Companion.getMain(): kotlin.coroutines.CoroutineContext

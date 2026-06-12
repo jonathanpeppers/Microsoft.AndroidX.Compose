@@ -66,7 +66,9 @@ public partial class PageHandler : ViewHandler<IContentView, ComposeView>
     /// <inheritdoc/>
     protected override ComposeView CreatePlatformView()
     {
-        var compose = new ComposeView(Context!);
+        var context = Context
+            ?? throw new InvalidOperationException("Context not set on PageHandler.");
+        var compose = new ComposeView(context);
         // Force MATCH_PARENT so whichever container Shell / Navigation
         // attaches the page to (FrameLayout, ViewPager, …) sizes us
         // to fill, regardless of its own LayoutParams defaults.

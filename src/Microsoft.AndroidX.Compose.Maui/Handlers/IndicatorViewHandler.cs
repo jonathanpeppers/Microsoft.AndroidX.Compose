@@ -112,9 +112,11 @@ public partial class IndicatorViewHandler : ComposeElementHandler<MauiIndicatorV
                               : new RoundedCornerShape(50);
 
         long inactiveColor = _indicatorColor.Value
-            ?? ColorMapping.ToPackedLong(Microsoft.Maui.Graphics.Colors.LightGrey)!.Value;
+            ?? ColorMapping.ToPackedLong(Microsoft.Maui.Graphics.Colors.LightGrey)
+            ?? throw new InvalidOperationException("Failed to pack LightGrey color.");
         long activeColor   = _selectedColor.Value
-            ?? ColorMapping.ToPackedLong(Microsoft.Maui.Graphics.Colors.Black)!.Value;
+            ?? ColorMapping.ToPackedLong(Microsoft.Maui.Graphics.Colors.Black)
+            ?? throw new InvalidOperationException("Failed to pack Black color.");
 
         if (view.IndicatorTemplate is not null)
         {

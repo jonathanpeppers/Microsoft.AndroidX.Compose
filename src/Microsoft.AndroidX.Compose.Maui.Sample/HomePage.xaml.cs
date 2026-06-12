@@ -116,6 +116,11 @@ public partial class HomePage : ContentPage
                 Color.FromArgb("#FF5722"),
                 "alerts"),
             new DemoEntry(
+                "Gestures",
+                "Tap / Pan / Pinch / Swipe on Compose-folded leaves.",
+                Color.FromArgb("#009688"),
+                "gestures"),
+            new DemoEntry(
                 "Refresh",
                 "RefreshView (pull-to-refresh) over Compose's PullToRefreshBox.",
                 Color.FromArgb("#00BCD4"),

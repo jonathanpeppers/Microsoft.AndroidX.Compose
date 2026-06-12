@@ -132,7 +132,11 @@ public partial class FooHandler : ComposeElementHandler<IFoo>
 
     /// <inheritdoc/>
     public override ComposableNode BuildNode(IComposer composer)
-        => new Foo(/* read _text.Value etc. */);
+    {
+        var virtualView = VirtualView
+            ?? throw new InvalidOperationException("VirtualView not set on FooHandler.");
+        return new Foo(/* read _text.Value etc. */);
+    }
 
     public static void MapText(FooHandler handler, IFoo foo) =>
         handler._text.Value = foo.Text ?? string.Empty;
@@ -606,6 +610,29 @@ duplicates the stock behavior without adding anything.
 - One handler class per file, file name = class name.
 - File-scoped namespaces.
 - XML docs on every public type and member.
-- `ArgumentNullException.ThrowIfNull(x)` for parameter null checks.
+- `ArgumentNullException.ThrowIfNull(x)` for **method/ctor parameter**
+  null checks only.
+- **Never use the `!` (null-forgiving postfix) operator.** No
+  carve-outs. For handler property accesses (`VirtualView`,
+  `MauiContext`, `Context`, `PlatformView`), Android framework getters,
+  `TaskCompletionSource<T?>` null forwards, and every other
+  non-parameter site, use `?? throw new InvalidOperationException(...)`
+  with a message that names what's missing and which handler is
+  affected. Canonical `BuildNode` preamble:
+  ```csharp
+  public override ComposableNode BuildNode(IComposer composer)
+  {
+      var virtualView = VirtualView
+          ?? throw new InvalidOperationException("VirtualView not set on FooHandler.");
+      var context = MauiContext
+          ?? throw new InvalidOperationException("MauiContext not set on FooHandler.");
+      // …read virtualView.* and pass to ApplyGestures / ApplySemantics …
+  }
+  ```
+  Don't write `VirtualView!.WidthRequest` or
+  `ArgumentNullException.ThrowIfNull(virtualView)` for an inherited
+  property — the named-exception form tells the user *which* contract
+  was broken, not just a variable name. Reserve `ThrowIfNull` for
+  genuine parameters (`public Foo(IBar bar) { ArgumentNullException.ThrowIfNull(bar); }`).
 - Don't add `// ---- Section ----` banners — one file per type makes
   them noise.

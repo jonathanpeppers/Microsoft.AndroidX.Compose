@@ -71,6 +71,9 @@ public partial class LabelHandler : ComposeElementHandler<ILabel>
     /// <inheritdoc/>
     public override ComposableNode BuildNode(IComposer composer)
     {
+        var virtualView = VirtualView
+            ?? throw new InvalidOperationException("VirtualView not set on LabelHandler.");
+
         // Subscribe to the shared view-properties version slot so any
         // ApplyViewProperties-relevant property change (Opacity,
         // Translation, Scale, Rotation, IsVisible, Clip, Shadow)
@@ -99,7 +102,8 @@ public partial class LabelHandler : ComposeElementHandler<ILabel>
         // PrependModifier twice would replace, not merge, so this
         // builds the chain once.
         var outer = (fill ? Modifier.FillMaxWidth() : Modifier.Companion)
-            .ApplyViewProperties(VirtualView!);
+            .ApplyViewProperties(virtualView)
+            .ApplyGestures(virtualView, MauiContext);
         text.PrependModifier(outer);
         return text;
     }

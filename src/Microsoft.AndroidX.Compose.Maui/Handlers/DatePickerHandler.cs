@@ -106,6 +106,9 @@ public partial class DatePickerHandler : ComposeElementHandler<IDatePicker>
     /// <inheritdoc/>
     public override ComposableNode BuildNode(IComposer composer)
     {
+        var virtualView = VirtualView
+            ?? throw new InvalidOperationException("VirtualView not set on DatePickerHandler.");
+
         // Composer-aware: the DatePickerState wrapper has to live across
         // recompositions or the dialog forgets the current selection,
         // which means it goes through `composer.Remember(...)` rather
@@ -156,7 +159,8 @@ public partial class DatePickerHandler : ComposeElementHandler<IDatePicker>
             // Clip, Shadow). The dialog is a separate window, so ViewProperties
             // only applies to the trigger button.
             var outer = (fill ? Modifier.FillMaxWidth() : Modifier.Companion)
-                .ApplyViewProperties(VirtualView!);
+                .ApplyViewProperties(virtualView)
+                .ApplyGestures(virtualView, MauiContext);
             trigger.PrependModifier(outer);
 
             var dialog = isOpen
@@ -286,8 +290,11 @@ public partial class DatePickerHandler : ComposeElementHandler<IDatePicker>
                            0, 0, 0, TimeSpan.Zero).ToUnixTimeMilliseconds();
 
     /// <summary>Map <see cref="IDatePicker.Format"/> to the formatted-label slot.</summary>
-    public static void MapFormat(DatePickerHandler handler, IDatePicker dp) =>
-        handler._format.Value = string.IsNullOrEmpty(dp.Format) ? "d" : dp.Format!;
+    public static void MapFormat(DatePickerHandler handler, IDatePicker dp)
+    {
+        var format = dp.Format;
+        handler._format.Value = string.IsNullOrEmpty(format) ? "d" : format;
+    }
 
     /// <summary>Map <see cref="ITextStyle.TextColor"/> to the Compose <c>TextStyle.Color</c> slot.</summary>
     public static void MapTextColor(DatePickerHandler handler, IDatePicker dp) =>

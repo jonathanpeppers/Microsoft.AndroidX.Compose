@@ -325,6 +325,12 @@ public sealed class Modifier
     /// <inheritdoc cref="ModifierExtensions.DetectTapGestures(Action{Offset}?, Action{Offset}?, Action{Offset}?, Action{Offset}?, object?)"/>
     public static Modifier DetectTapGestures(Action<Offset>? onTap = null, Action<Offset>? onPress = null, Action<Offset>? onLongPress = null, Action<Offset>? onDoubleTap = null, object? key = null) => _companion.DetectTapGestures(onTap, onPress, onLongPress, onDoubleTap, key);
 
+    /// <inheritdoc cref="ModifierExtensions.DetectDragGestures(Modifier, Action{Offset}, Action{Offset}?, Action?, Action?, object?)"/>
+    public static Modifier DetectDragGestures(Action<Offset> onDrag, Action<Offset>? onDragStart = null, Action? onDragEnd = null, Action? onDragCancel = null, object? key = null) => _companion.DetectDragGestures(onDrag, onDragStart, onDragEnd, onDragCancel, key);
+
+    /// <inheritdoc cref="ModifierExtensions.DetectTransformGestures(Modifier, Action{Offset, Offset, float, float}, bool, object?)"/>
+    public static Modifier DetectTransformGestures(Action<Offset, Offset, float, float> onGesture, bool panZoomLock = false, object? key = null) => _companion.DetectTransformGestures(onGesture, panZoomLock, key);
+
     /// <inheritdoc cref="ModifierExtensions.Semantics(Action{SemanticsScope})"/>
     public static Modifier Semantics(Action<SemanticsScope> properties) => _companion.Semantics(properties);
 
