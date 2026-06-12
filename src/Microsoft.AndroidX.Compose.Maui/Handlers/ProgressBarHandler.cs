@@ -1,5 +1,6 @@
 using AndroidX.Compose;
 using AndroidX.Compose.Runtime;
+using Microsoft.AndroidX.Compose.Maui.Platform;
 using Microsoft.Maui.Handlers;
 using ComposeColor = AndroidX.Compose.Color;
 using ComposeLinearProgressIndicator = AndroidX.Compose.LinearProgressIndicator;
@@ -65,7 +66,7 @@ public partial class ProgressBarHandler : ComposeElementHandler<IProgress>
             Progress = _progress.Value,
             Color    = packed.HasValue ? new ComposeColor(packed.Value) : null,
         };
-        bar.PrependModifier(Modifier.FillMaxWidth());
+        bar.PrependModifier(Modifier.FillMaxWidth().ApplyGestures(VirtualView!, MauiContext));
         return bar;
     }
 

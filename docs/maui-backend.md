@@ -1336,6 +1336,143 @@ covering MAUI's small-but-essential value/progress family:
   backend. Two-way: each `IconButton` mutates `VirtualView.Value`;
   the at-bound button greys its glyph (38 % black) and disables.
 
+#### Phase 2 Slice 10 — `GestureBridge` ✅ shipped
+
+**Problem.** MAUI's
+`Microsoft.Maui.Controls.Platform.GesturePlatformManager` captures
+`handler.ToPlatform()` in its constructor and wires
+`_control.Touch += OnPlatformViewTouched` on it. For our
+Compose-folded leaves the `PlatformView` is a `ComposeView` that's
+**not attached** on the common path — `PageHandler` owns the only
+attached `ComposeView` and the leaf is contributed via
+`BuildNode(IComposer)`. Touch events flow through the page's
+attached `ComposeView` via Compose's pointer-input system; they
+never reach the detached leaf View's `.Touch` event. Net effect:
+any `TapGestureRecognizer` / `PanGestureRecognizer` /
+`PinchGestureRecognizer` / `SwipeGestureRecognizer` /
+`PointerGestureRecognizer` attached to a Compose-backed leaf
+(Label / Image / BoxView / Border / etc.) **silently does nothing**
+when that leaf is folded into a Compose-backed parent (the common
+case after Slice 2).
+
+The stock-container fallback path is unaffected: when the leaf
+lands inside a stock container (a CollectionView item template
+before lazy-list scaling lands; a Microsoft.Maui.Controls.Border
+on a build that predates Slice 6 BorderHandler), its `ComposeView`
+**is** attached, so MAUI's stock `GesturePlatformManager` wiring
+still works.
+
+**Solution.** A `Modifier ApplyGestures(this Modifier, IView, IMauiContext)`
+extension on `Microsoft.AndroidX.Compose.Maui.Platform.GestureBridge` that
+walks `view.GestureRecognizers` and chains a matching
+`Modifier.PointerInput { ... }` per recognizer. Every existing
+Compose-backed handler's `BuildNode` chains
+`.ApplyGestures(VirtualView!, MauiContext)` after
+`.ApplyViewProperties(VirtualView!)` so gestures sit **on top of**
+the transform layer.
+
+**MAUI gesture → Compose `PointerInput` mapping table:**
+
+| MAUI recognizer            | Compose primitive                     | Fire callback                                                          |
+|----------------------------|---------------------------------------|------------------------------------------------------------------------|
+| `TapGestureRecognizer`     | `detectTapGestures(onTap = …)`        | `TapGestureRecognizer.SendTapped(view)` (internal — `[UnsafeAccessor]`) |
+| `PanGestureRecognizer`     | `detectDragGestures(onStart/onDrag/onEnd)` | `IPanGestureController.SendPanStarted/SendPan(view, totalX, totalY, gestureId)/SendPanCompleted` |
+| `PinchGestureRecognizer`   | `detectTransformGestures(onGesture)`  | `IPinchGestureController.SendPinchStarted(view, pivot)/SendPinch(view, scaleDelta, pivot)` |
+| `SwipeGestureRecognizer`   | `detectHorizontalDragGestures` / `detectVerticalDragGestures` | `SwipeGestureRecognizer.SendSwiped(view, SwipeDirection)` (public — direction synthesized from velocity sign + magnitude threshold) |
+| `PointerGestureRecognizer` | `detectTapGestures(onPress + onTap)`  | `SendPointerPressed/Released(view, …)` (internal — `[UnsafeAccessor]`) |
+
+**`Modifier.PointerInput(key)` key strategy.** Compose's
+`pointerInput(key)` only restarts the gesture coroutine on **key
+change**. Add/remove of a `GestureRecognizer` at runtime needs to
+re-key the modifier so Compose tears down the old gesture handler
+and starts the new one. The bridge keys on a hash combining
+`view.GestureRecognizers.Count` plus `RuntimeHelpers.GetHashCode(r)`
+for each recognizer in iteration order — boxed as
+`Java.Lang.Integer.ValueOf(hash)` so Compose's `.equals()`-based
+key compare stably matches across recompositions when nothing
+changed. We deliberately **do not** key on `view` itself: that
+would pin the gesture handler to the first composition and runtime
+swaps would never restart.
+
+**Multi-pointer gesture id correlation.**
+`PanGestureRecognizer.SendPan` takes a `gestureId: int` so MAUI can
+correlate multiple in-flight pans (multi-finger lists, drag-and-
+drop targets). The bridge allocates ids via
+`Interlocked.Increment(ref s_panGestureCounter)` — a process-wide
+monotonic counter so ids never collide across handler instances.
+Each `detectDragGestures` invocation reserves one id at
+`onDragStart` and reuses it through `onDrag` and `onDragEnd`,
+matching the lifecycle MAUI's stock `PanGestureHandler` follows.
+
+**Pan totals.** `IPanGestureController.SendPan` takes **cumulative
+totals** from the gesture start, not per-frame deltas (matches
+stock MAUI). The bridge accumulates each `Offset` returned by
+`detectDragGestures` `onDrag` into a per-gesture `(totalX, totalY)`
+accumulator, then divides by the device density to convert from
+Compose's pixel coordinates to MAUI's DIP coordinates before
+firing.
+
+**Pinch end semantics.** `detectTransformGestures` has no separate
+end event — it returns to its `awaitEachGesture` loop when the
+last pointer lifts. v1 latches `started=true` on first
+`onGesture` call and emits `SendPinchStarted` then `SendPinch` per
+frame. The matching `SendPinchEnded` would require dropping
+`detectTransformGestures` for a hand-rolled `awaitEachGesture` —
+deferred. In practice handlers don't observe `Ended` separately
+(scale persists after release with the running multiplier).
+
+**PointerGestureRecognizer on touch hardware.** Only `Pressed` /
+`Released` fire reasonably on touch input; `Move` / `Enter` /
+`Exit` are mouse-only on Android. v1 routes `Pressed` via
+`detectTapGestures.onPress`, `Released` via `onTap`. Hover-style
+events stay deferred until we wire `awaitEachGesture` directly.
+
+**Fire-API visibility.** Most fire APIs are public
+(`PanGestureController.SendPan`, `PinchGestureController.SendPinch`,
+`SwipeGestureRecognizer.SendSwiped`); `TapGestureRecognizer.SendTapped`
+and `PointerGestureRecognizer.SendPointerPressed/Released` are
+**internal**. The bridge declares `[UnsafeAccessor]` shims (no
+`InternalsVisibleTo` round-trip on
+`Microsoft.Maui.Controls`) — same trick MAUI's stock
+`GesturePlatformManager` does internally.
+
+**Trade-off: Compose's own gesture detectors on `Button` / `Slider`.**
+The `Modifier.PointerInput` chain delegates to recognizer-fire
+callbacks; it doesn't consume the pointer event. Compose's own
+in-composition gestures (`Button`'s `clickable`, `Slider`'s drag,
+`Switch`'s toggle, `TextField`'s focus + caret drag) still win for
+their respective composables — they sit at a deeper level of the
+modifier chain and consume the pointer events first. The bridge
+wins for declarative `GestureRecognizers` attached to composables
+that don't have a built-in gesture detector (Label / Image /
+BoxView / Border / Layout). Both work simultaneously: tapping a
+`Button` fires `Clicked` AND any `TapGestureRecognizer` attached
+to that Button.
+
+**Facade extensions landed alongside the bridge:**
+
+- `Modifier.DetectDragGestures(onDragStart, onDrag, onDragEnd, onDragCancel)`
+  — async drag-detection over
+  `androidx.compose.foundation.gestures.DragGestureDetectorKt.detectDragGestures$default`.
+  `[ComposeBridge(Suspend = true)]` + matching
+  `[assembly: ComposeDefaults("DetectDragGesturesDefault", …)]`.
+- `Modifier.DetectTransformGestures(panZoomLock, onGesture)` —
+  multi-pointer pinch / pan / rotate over
+  `TransformGestureDetectorKt.detectTransformGestures$default`. Same
+  shape.
+- Compose-side gallery demos under
+  `src/Microsoft.AndroidX.Compose.Gallery/Demos/Modifiers/` — each
+  exercises the bare facade modifier without the MAUI wrapping so
+  Slice 10's underlying primitives are themselves verifiable.
+
+**Verification.** `dotnet build src/Microsoft.AndroidX.Compose`,
+generator tests, and
+`dotnet build src/Microsoft.AndroidX.Compose.Maui.Sample` are clean.
+On-device verification of the new `GesturesPage` demo (Tap / Pan /
+Pinch / Swipe) runs against a shared device; fall back to
+build-clean + visual review of `GestureBridge.cs` and the 22
+handler `BuildNode` call sites if `adb install` keeps racing.
+
 **Facade extensions landed alongside the handlers:**
 
 - `Microsoft.AndroidX.Compose.Slider` gained

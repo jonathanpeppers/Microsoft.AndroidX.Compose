@@ -32,5 +32,6 @@ public partial class AppShell : Shell
         Routing.RegisterRoute("image-buttons",  typeof(ImageButtonsPage));
         Routing.RegisterRoute("visuals",        typeof(VisualsPage));
         Routing.RegisterRoute("alerts",         typeof(AlertsPage));
+        Routing.RegisterRoute("gestures",       typeof(GesturesPage));
     }
 }

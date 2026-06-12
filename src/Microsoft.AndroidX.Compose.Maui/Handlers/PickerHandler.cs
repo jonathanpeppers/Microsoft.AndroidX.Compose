@@ -176,7 +176,8 @@ public partial class PickerHandler : ComposeElementHandler<IPicker>
         // ComposeView, so the modifier wraps the ExposedDropdownMenuBox via
         // its trigger anchor.
         var outer = (fill ? Modifier.FillMaxWidth() : Modifier.Companion)
-            .ApplyViewProperties(VirtualView!);
+            .ApplyViewProperties(VirtualView!)
+            .ApplyGestures(VirtualView!, MauiContext);
         trigger.PrependModifier(outer);
 
         var menu = new ExposedDropdownMenu(

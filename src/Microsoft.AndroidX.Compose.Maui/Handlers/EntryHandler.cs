@@ -115,7 +115,8 @@ public partial class EntryHandler : ComposeElementHandler<IEntry>
         // Single chained PrependModifier — combines layout-fill with
         // the cross-cutting view properties.
         var outer = (fill ? Modifier.FillMaxWidth() : Modifier.Companion)
-            .ApplyViewProperties(VirtualView!);
+            .ApplyViewProperties(VirtualView!)
+            .ApplyGestures(VirtualView!, MauiContext);
         field.PrependModifier(outer);
         return field;
     }

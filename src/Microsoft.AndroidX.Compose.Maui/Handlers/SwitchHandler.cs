@@ -1,6 +1,7 @@
 using AndroidX.Compose;
 using AndroidX.Compose.Material3;
 using AndroidX.Compose.Runtime;
+using Microsoft.AndroidX.Compose.Maui.Platform;
 using Microsoft.Maui.Handlers;
 using ComposeSwitch = AndroidX.Compose.Switch;
 
@@ -73,6 +74,7 @@ public partial class SwitchHandler : ComposeElementHandler<ISwitch>
                 checkedTrackColor:   track,
                 uncheckedThumbColor: thumb,
                 uncheckedTrackColor: track);
+        sw.PrependModifier(Modifier.Companion.ApplyGestures(VirtualView!, MauiContext));
         return sw;
     }
 

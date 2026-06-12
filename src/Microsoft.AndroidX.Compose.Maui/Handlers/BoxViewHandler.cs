@@ -1,5 +1,6 @@
 using AndroidX.Compose;
 using AndroidX.Compose.Runtime;
+using Microsoft.AndroidX.Compose.Maui.Platform;
 using Microsoft.Maui.Handlers;
 using ComposeColor = AndroidX.Compose.Color;
 using MauiBoxView  = Microsoft.Maui.Controls.BoxView;
@@ -111,6 +112,7 @@ public partial class BoxViewHandler : ComposeElementHandler<MauiBoxView>
             modifier = modifier.Clip(shape);
         if (color.HasValue)
             modifier = modifier.Background(new ComposeColor(color.Value), shape);
+        modifier = modifier.ApplyGestures(VirtualView!, MauiContext);
 
         return new Box { Modifier = modifier };
     }

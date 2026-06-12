@@ -1179,3 +1179,20 @@ using AndroidX.Compose;
 // (PointerInputScope) and Continuation are NOT in the defaults.
 [assembly: ComposeDefaults("DetectTapGesturesDefault",
     "onDoubleTap", "onLongPress", "onPress", "onTap")]
+
+// androidx.compose.foundation.gestures.DragGestureDetectorKt.detectDragGestures$default —
+// suspend extension with three defaultable callback params
+// (onDragStart / onDragEnd / onDragCancel — all `() -> Unit` style
+// no-op defaults) plus a required onDrag. Receiver
+// (PointerInputScope) and Continuation are NOT in the defaults; the
+// required onDrag (the only Function2 slot) is excluded too.
+[assembly: ComposeDefaults("DetectDragGesturesDefault",
+    "onDragStart", "onDragEnd", "onDragCancel", "!onDrag")]
+
+// androidx.compose.foundation.gestures.TransformGestureDetectorKt.detectTransformGestures$default —
+// only `panZoomLock` is defaultable (false), but it's a primitive
+// boolean (auto-mask can't flip its bit because primitives are
+// never null). We always pass it explicitly, so suppress the enum
+// entry. onGesture is required.
+[assembly: ComposeDefaults("DetectTransformGesturesDefault",
+    "!panZoomLock", "!onGesture")]

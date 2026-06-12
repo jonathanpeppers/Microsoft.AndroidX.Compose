@@ -1,5 +1,6 @@
 using AndroidX.Compose;
 using AndroidX.Compose.Runtime;
+using Microsoft.AndroidX.Compose.Maui.Platform;
 using Microsoft.Maui.Handlers;
 using ComposeColor             = AndroidX.Compose.Color;
 using ComposeFontWeight        = AndroidX.Compose.FontWeight;
@@ -116,6 +117,7 @@ public partial class EditorHandler : ComposeElementHandler<IEditor>
         var modifier = Modifier.HeightIn(min: new Dp(96));
         if (fill)
             modifier = modifier.FillMaxWidth();
+        modifier = modifier.ApplyGestures(VirtualView!, MauiContext);
         field.PrependModifier(modifier);
         return field;
     }

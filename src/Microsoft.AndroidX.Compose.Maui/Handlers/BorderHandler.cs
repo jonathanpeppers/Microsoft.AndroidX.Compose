@@ -1,5 +1,6 @@
 using AndroidX.Compose;
 using AndroidX.Compose.Runtime;
+using Microsoft.AndroidX.Compose.Maui.Platform;
 using Microsoft.Maui.Handlers;
 using ComposeColor      = AndroidX.Compose.Color;
 using MauiBorder        = Microsoft.Maui.Controls.Border;
@@ -107,8 +108,8 @@ public partial class BorderHandler : ComposeElementHandler<MauiBorder>
         }
 
         var box = new Box();
-        if (modifier is not null)
-            box.Modifier = modifier;
+        modifier = (modifier ?? Modifier.Companion).ApplyGestures(border!, context);
+        box.Modifier = modifier;
 
         // Walk the Border's content (IContentView.PresentedContent)
         // through the same ComposeWalker pipeline used by Page /

@@ -1,6 +1,7 @@
 using AndroidX.Compose;
 using AndroidX.Compose.Material3;
 using AndroidX.Compose.Runtime;
+using Microsoft.AndroidX.Compose.Maui.Platform;
 using Microsoft.Maui.Handlers;
 using ComposeCheckbox = AndroidX.Compose.Checkbox;
 
@@ -66,6 +67,7 @@ public partial class CheckBoxHandler : ComposeElementHandler<ICheckBox>
                                         onCheckedChange: OnCheckedChanged);
         if (color is not null)
             box.Colors = composer.CheckboxColors(checkedColor: color);
+        box.PrependModifier(Modifier.Companion.ApplyGestures(VirtualView!, MauiContext));
         return box;
     }
 

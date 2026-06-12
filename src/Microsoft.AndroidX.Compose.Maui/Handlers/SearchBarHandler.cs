@@ -1,5 +1,6 @@
 using AndroidX.Compose;
 using AndroidX.Compose.Runtime;
+using Microsoft.AndroidX.Compose.Maui.Platform;
 using Microsoft.Maui.Handlers;
 using ComposeColor              = AndroidX.Compose.Color;
 using ComposeFontWeight         = AndroidX.Compose.FontWeight;
@@ -112,8 +113,9 @@ public partial class SearchBarHandler : ComposeElementHandler<ISearchBar>
         field.KeyboardActions = KeyboardActionsHelper.Create(
             onSearch: OnSearchInvoked);
 
-        if (fill)
-            field.PrependModifier(Modifier.FillMaxWidth());
+        var modifier = (fill ? Modifier.FillMaxWidth() : Modifier.Companion)
+            .ApplyGestures(VirtualView!, MauiContext);
+        field.PrependModifier(modifier);
         return field;
     }
 

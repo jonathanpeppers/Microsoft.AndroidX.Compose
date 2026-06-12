@@ -2,6 +2,7 @@ using AndroidX.Compose;
 using AndroidX.Compose.Runtime;
 using AndroidX.Compose.UI.Platform;
 using Microsoft.AndroidX.Compose.Maui.Loaders;
+using Microsoft.AndroidX.Compose.Maui.Platform;
 using Microsoft.Maui.Handlers;
 using ComposeColor      = AndroidX.Compose.Color;
 using ComposeIconButton = AndroidX.Compose.IconButton;
@@ -125,8 +126,8 @@ public partial class ImageButtonHandler : ComposeElementHandler<MauiIImageButton
         }
 
         var button = new ComposeIconButton(OnClicked) { imageNode };
-        if (modifier is not null)
-            button.Modifier = modifier;
+        modifier = (modifier ?? Modifier.Companion).ApplyGestures(VirtualView!, MauiContext);
+        button.Modifier = modifier;
         return button;
     }
 

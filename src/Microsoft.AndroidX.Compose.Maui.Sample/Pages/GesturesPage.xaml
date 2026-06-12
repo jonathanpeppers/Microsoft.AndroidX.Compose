@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="Microsoft.AndroidX.Compose.Maui.Sample.Pages.GesturesPage"
+             Title="Gestures">
+
+    <!--
+        Exercises the GestureBridge — every recognizer attaches to a
+        Compose-folded leaf, so the recognizer's fire callback is wired
+        through Compose's pointer-input system instead of MAUI's
+        stock `View.Touch` event (which never fires for detached
+        Compose leaves; see Phase 2 Slice 10 in docs/maui-backend.md).
+
+            * Tap   -> TapGestureRecognizer  on a Label
+            * Pan   -> PanGestureRecognizer  on a BoxView
+            * Pinch -> PinchGestureRecognizer on an Image
+            * Swipe -> SwipeGestureRecognizer on a Label (Left + Right)
+    -->
+    <ScrollView>
+        <VerticalStackLayout
+            Padding="30,30"
+            Spacing="24">
+
+            <Label
+                Text="Gestures"
+                Style="{StaticResource Headline}" />
+
+            <!-- ===== Tap ===== -->
+            <Label
+                Text="TapGestureRecognizer — tap the rectangle to bump the counter."
+                FontAttributes="Bold" />
+
+            <Label
+                x:Name="TapTarget"
+                Text="Tap me"
+                HorizontalTextAlignment="Center"
+                FontSize="20"
+                Padding="24,32"
+                BackgroundColor="#512BD4"
+                TextColor="White">
+                <Label.GestureRecognizers>
+                    <TapGestureRecognizer Tapped="OnTapped" />
+                </Label.GestureRecognizers>
+            </Label>
+
+            <Label
+                x:Name="TapEcho"
+                Text="Taps: 0" />
+
+            <!-- ===== Pan ===== -->
+            <Label
+                Text="PanGestureRecognizer — drag the box; the offset persists when you let go."
+                FontAttributes="Bold" />
+
+            <Grid HeightRequest="220" BackgroundColor="#1A000000">
+                <BoxView
+                    x:Name="PanTarget"
+                    Color="#E91E63"
+                    CornerRadius="12"
+                    WidthRequest="80"
+                    HeightRequest="80"
+                    HorizontalOptions="Center"
+                    VerticalOptions="Center">
+                    <BoxView.GestureRecognizers>
+                        <PanGestureRecognizer PanUpdated="OnPanUpdated" />
+                    </BoxView.GestureRecognizers>
+                </BoxView>
+            </Grid>
+
+            <Label
+                x:Name="PanEcho"
+                Text="dx: 0 · dy: 0" />
+
+            <!-- ===== Pinch ===== -->
+            <Label
+                Text="PinchGestureRecognizer — pinch the image to scale (two fingers)."
+                FontAttributes="Bold" />
+
+            <Grid HeightRequest="220" BackgroundColor="#1A000000">
+                <Image
+                    x:Name="PinchTarget"
+                    Source="dotnet_bot.png"
+                    Aspect="AspectFit"
+                    Scale="1"
+                    HorizontalOptions="Center"
+                    VerticalOptions="Center">
+                    <Image.GestureRecognizers>
+                        <PinchGestureRecognizer PinchUpdated="OnPinchUpdated" />
+                    </Image.GestureRecognizers>
+                </Image>
+            </Grid>
+
+            <Label
+                x:Name="PinchEcho"
+                Text="Scale: 1.00" />
+
+            <!-- ===== Swipe ===== -->
+            <Label
+                Text="SwipeGestureRecognizer — swipe left or right on the bar."
+                FontAttributes="Bold" />
+
+            <Label
+                Text="Swipe me ←→"
+                HorizontalTextAlignment="Center"
+                FontSize="18"
+                Padding="24,32"
+                BackgroundColor="#009688"
+                TextColor="White">
+                <Label.GestureRecognizers>
+                    <SwipeGestureRecognizer Direction="Left"  Swiped="OnSwiped" />
+                    <SwipeGestureRecognizer Direction="Right" Swiped="OnSwiped" />
+                </Label.GestureRecognizers>
+            </Label>
+
+            <Label
+                x:Name="SwipeEcho"
+                Text="Last swipe: (none)" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

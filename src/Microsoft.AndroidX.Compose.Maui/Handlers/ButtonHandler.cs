@@ -86,7 +86,8 @@ public partial class ButtonHandler : ComposeElementHandler<IButton>
         // (when set) with the cross-cutting view properties (Opacity,
         // Translation, Scale, Rotation, IsVisible, Clip, Shadow).
         var outer = (_fillWidth.Value ? Modifier.FillMaxWidth() : Modifier.Companion)
-            .ApplyViewProperties(VirtualView!);
+            .ApplyViewProperties(VirtualView!)
+            .ApplyGestures(VirtualView!, MauiContext);
         button.PrependModifier(outer);
         return button;
     }

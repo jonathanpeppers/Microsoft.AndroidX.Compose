@@ -122,7 +122,8 @@ public partial class TimePickerHandler : ComposeElementHandler<ITimePicker>
             // Clip, Shadow). The dialog is a separate window, so ViewProperties
             // only applies to the trigger button.
             var outer = (fill ? Modifier.FillMaxWidth() : Modifier.Companion)
-                .ApplyViewProperties(VirtualView!);
+                .ApplyViewProperties(VirtualView!)
+                .ApplyGestures(VirtualView!, MauiContext);
             trigger.PrependModifier(outer);
 
             var dialog = isOpen

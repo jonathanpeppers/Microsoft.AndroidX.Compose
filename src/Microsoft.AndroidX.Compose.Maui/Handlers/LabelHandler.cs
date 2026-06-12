@@ -99,7 +99,8 @@ public partial class LabelHandler : ComposeElementHandler<ILabel>
         // PrependModifier twice would replace, not merge, so this
         // builds the chain once.
         var outer = (fill ? Modifier.FillMaxWidth() : Modifier.Companion)
-            .ApplyViewProperties(VirtualView!);
+            .ApplyViewProperties(VirtualView!)
+            .ApplyGestures(VirtualView!, MauiContext);
         text.PrependModifier(outer);
         return text;
     }

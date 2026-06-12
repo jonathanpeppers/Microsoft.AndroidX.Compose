@@ -1,5 +1,6 @@
 using AndroidX.Compose;
 using AndroidX.Compose.Runtime;
+using Microsoft.AndroidX.Compose.Maui.Platform;
 using Microsoft.Maui.Handlers;
 using ComposeColor      = AndroidX.Compose.Color;
 using ComposeFontWeight = AndroidX.Compose.FontWeight;
@@ -87,8 +88,12 @@ public partial class RadioButtonHandler : ComposeElementHandler<IRadioButton>
         var label  = _label.Value;
 
         var radio = new ComposeRadioButton(selected: _checked.Value, onClick: OnSelected);
+        var gestureModifier = Modifier.Companion.ApplyGestures(VirtualView!, MauiContext);
         if (string.IsNullOrEmpty(label))
+        {
+            radio.PrependModifier(gestureModifier);
             return radio;
+        }
 
         var text = new ComposeText(label);
         if (packed.HasValue)
@@ -98,12 +103,14 @@ public partial class RadioButtonHandler : ComposeElementHandler<IRadioButton>
         if (bold)
             text.FontWeight = ComposeFontWeight.Bold;
 
-        return new Row(horizontalArrangement: null,
-                       verticalAlignment: Alignment.Vertical.CenterVertically)
+        var row = new Row(horizontalArrangement: null,
+                          verticalAlignment: Alignment.Vertical.CenterVertically)
         {
             radio,
             text,
         };
+        row.Modifier = gestureModifier;
+        return row;
     }
 
     void OnSelected()
