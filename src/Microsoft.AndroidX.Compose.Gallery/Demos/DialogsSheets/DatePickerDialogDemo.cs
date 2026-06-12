@@ -10,15 +10,24 @@ public static class DatePickerDialogDemo
         Id:          "dialogs-date-picker",
         CategoryId:  "dialogs-sheets",
         Title:       "DatePickerDialog",
-        Description: "Tap Pick date to open a calendar dialog. Read SelectedDateMillis on confirm.",
+        Description: "Tap Pick date to open a calendar dialog. Past + far-future dates are blocked via SelectableDates; read SelectedDateMillis on confirm.",
         Build:       c =>
         {
-            var open   = c.MutableStateOf(false);
-            var picked = c.MutableStateOf("(none)");
-            var state  = c.Remember(() => new DatePickerState());
+            var open      = c.MutableStateOf(false);
+            var picked    = c.MutableStateOf("(none)");
+            // One JCW adapter per demo instance — its identity is part
+            // of the rememberDatePickerState cache key.
+            var bounds    = c.Remember(() => new DateRangeSelectableDates());
+            var todayUtc  = DateTimeOffset.UtcNow.Date;
+            bounds.MinUtcMillis = new DateTimeOffset(todayUtc).ToUnixTimeMilliseconds();
+            bounds.MaxUtcMillis = new DateTimeOffset(todayUtc.AddDays(30)).ToUnixTimeMilliseconds();
+            var state     = c.Remember(() => new DatePickerState(
+                initialSelectedDateMillis: bounds.MinUtcMillis,
+                initialSelectableDates:    bounds));
             return new Column
             {
                 new Text($"Picked date: {picked}"),
+                new Text("(Today through Today+30 are selectable.)"),
                 new Button(onClick: () => open.Value = true) { new Text("Pick date") },
                 open.Value
                     ? new DatePickerDialog(onDismissRequest: () => open.Value = false)

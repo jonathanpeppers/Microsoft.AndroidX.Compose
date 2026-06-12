@@ -115,6 +115,16 @@ public partial class HomePage : ContentPage
                 "DisplayAlert / DisplayActionSheet / DisplayPromptAsync over Compose dialogs.",
                 Color.FromArgb("#FF5722"),
                 "alerts"),
+            new DemoEntry(
+                "Refresh",
+                "RefreshView (pull-to-refresh) over Compose's PullToRefreshBox.",
+                Color.FromArgb("#00BCD4"),
+                "refresh"),
+            new DemoEntry(
+                "Indicator",
+                "IndicatorView dot strip; Prev/Next buttons cycle Position.",
+                Color.FromArgb("#9C27B0"),
+                "indicator"),
         };
     }
 
