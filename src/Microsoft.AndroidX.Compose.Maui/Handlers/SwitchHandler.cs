@@ -77,7 +77,7 @@ public partial class SwitchHandler : ComposeElementHandler<ISwitch>
                 checkedTrackColor:   track,
                 uncheckedThumbColor: thumb,
                 uncheckedTrackColor: track);
-        sw.PrependModifier(Modifier.Companion.ApplyGestures(virtualView, MauiContext));
+        sw.PrependModifier(Modifier.Companion.ApplyGestures(virtualView, MauiContext).ApplySemantics(virtualView));
         return sw;
     }
 

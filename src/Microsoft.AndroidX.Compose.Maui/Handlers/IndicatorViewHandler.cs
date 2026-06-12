@@ -137,7 +137,7 @@ public partial class IndicatorViewHandler : ComposeElementHandler<MauiIndicatorV
             horizontalArrangement: Arrangement.SpacedBy(new Dp((float)Math.Max(4.0, sizeDp / 2.0))),
             verticalAlignment:     global::AndroidX.Compose.Alignment.Vertical.CenterVertically)
         {
-            Modifier = Modifier.Companion.ApplyViewProperties(view),
+            Modifier = Modifier.Companion.ApplyViewProperties(view).ApplySemantics(view),
         };
 
         for (int i = 0; i < count; i++)

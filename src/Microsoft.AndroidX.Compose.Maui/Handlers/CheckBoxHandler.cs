@@ -70,7 +70,7 @@ public partial class CheckBoxHandler : ComposeElementHandler<ICheckBox>
                                         onCheckedChange: OnCheckedChanged);
         if (color is not null)
             box.Colors = composer.CheckboxColors(checkedColor: color);
-        box.PrependModifier(Modifier.Companion.ApplyGestures(virtualView, MauiContext));
+        box.PrependModifier(Modifier.Companion.ApplyGestures(virtualView, MauiContext).ApplySemantics(virtualView));
         return box;
     }
 

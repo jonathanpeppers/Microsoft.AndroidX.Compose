@@ -91,7 +91,7 @@ public partial class RadioButtonHandler : ComposeElementHandler<IRadioButton>
         var label  = _label.Value;
 
         var radio = new ComposeRadioButton(selected: _checked.Value, onClick: OnSelected);
-        var gestureModifier = Modifier.Companion.ApplyGestures(virtualView, MauiContext);
+        var gestureModifier = Modifier.Companion.ApplyGestures(virtualView, MauiContext).ApplySemantics(virtualView);
         if (string.IsNullOrEmpty(label))
         {
             radio.PrependModifier(gestureModifier);

@@ -2718,6 +2718,18 @@ internal static partial class ComposeBridges
                     "Ljava/lang/String;)V")]
     internal static partial void SemanticsSetStateDescription(IntPtr receiver, string description);
 
+    // androidx.compose.ui.semantics.SemanticsPropertiesKt.heading(
+    //   SemanticsPropertyReceiver) — tags the node as a heading for
+    //   TalkBack. Compose's Foundation/Material baseline `heading()` is
+    //   a single boolean (no level), matching MAUI's
+    //   `SemanticHeadingLevel != None` semantic and ViewCompat's
+    //   `setAccessibilityHeading(true)`. No mangling, no $default.
+    [ComposeBridge(
+        Class     = "androidx/compose/ui/semantics/SemanticsPropertiesKt",
+        JvmName   = "heading",
+        Signature = "(Landroidx/compose/ui/semantics/SemanticsPropertyReceiver;)V")]
+    internal static partial void SemanticsSetHeading(IntPtr receiver);
+
     // androidx.compose.ui.semantics.SemanticsPropertiesKt.onClick$default(
     //   SemanticsPropertyReceiver, String?, Function0<Boolean>?,
     //   int $default, Object marker) — registers a labelled

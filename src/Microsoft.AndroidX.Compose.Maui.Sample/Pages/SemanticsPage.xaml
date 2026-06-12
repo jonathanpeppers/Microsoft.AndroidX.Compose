@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="Microsoft.AndroidX.Compose.Maui.Sample.Pages.SemanticsPage"
+             Title="Semantics">
+
+    <!--
+        Exercises the Phase 2 Slice 11 semantics bridge.
+
+        Each leaf below carries one of the four MAUI a11y/automation
+        signals the bridge translates into Compose:
+
+          * SemanticProperties.HeadingLevel -> Modifier.Semantics { heading() }
+          * SemanticProperties.Description  -> contentDescription
+          * SemanticProperties.Hint         -> stateDescription
+                                              (or contentDescription
+                                              when no Description set)
+          * AutomationId                    -> Modifier.TestTag(...)
+
+        Verify on-device:
+
+          1. Settings -> Accessibility -> TalkBack -> On.
+          2. Swipe through the page; "Settings" should announce as
+             "heading"; "Save" should read "Save changes" (Description
+             wins over Text); the Image should read "Cute pet photo".
+          3. `adb shell uiautomator dump /sdcard/d.xml` after deploying;
+             `Select-String 'status-pill'` should find the testTag.
+    -->
+    <ScrollView>
+        <VerticalStackLayout
+            Padding="30,30"
+            Spacing="20">
+
+            <Label
+                Text="Semantics bridge"
+                Style="{StaticResource Headline}" />
+
+            <Label Text="MAUI's `SemanticProperties.*` and `AutomationId` are translated into Compose `Modifier.Semantics { … }` + `Modifier.TestTag(…)` so TalkBack and Appium reach the Compose-folded leaves."
+                   Style="{StaticResource SubHeadline}" />
+
+            <!-- (1) HeadingLevel -> heading() -->
+            <Label Text="Settings"
+                   FontSize="22"
+                   FontAttributes="Bold"
+                   SemanticProperties.HeadingLevel="Level1" />
+
+            <Label Text="`SemanticProperties.HeadingLevel=&quot;Level1&quot;` -> Compose `heading()`. TalkBack announces `heading` after the label text."
+                   FontSize="13" />
+
+            <!-- (2) Description -> contentDescription (wins over Text) -->
+            <Button x:Name="SaveButton"
+                    Text="Save"
+                    SemanticProperties.Description="Save changes"
+                    HorizontalOptions="Fill" />
+
+            <Label Text="Visible label is `Save`; TalkBack reads `Save changes` because `SemanticProperties.Description` overrides Text in screen-reader voice."
+                   FontSize="13" />
+
+            <!-- (3) Description on a graphical leaf -->
+            <Image Source="dotnet_bot.png"
+                   HeightRequest="120"
+                   WidthRequest="120"
+                   HorizontalOptions="Center"
+                   SemanticProperties.Description="Cute pet photo" />
+
+            <Label Text="An Image with no Description is opaque to screen readers. The bridge surfaces the Description as the Compose node's `contentDescription`."
+                   FontSize="13" />
+
+            <!-- (4) AutomationId -> testTag (Appium round-trip) -->
+            <BoxView x:Name="StatusPill"
+                     AutomationId="status-pill"
+                     Color="#4CAF50"
+                     CornerRadius="12"
+                     HeightRequest="24"
+                     WidthRequest="120"
+                     HorizontalOptions="Center" />
+
+            <Label Text="`AutomationId=&quot;status-pill&quot;` -> Compose `testTag(&quot;status-pill&quot;)`. Verify with `adb shell uiautomator dump`; the dump's `resource-id` attribute round-trips the tag for Appium's `FindByAutomationId`."
+                   FontSize="13" />
+
+            <!-- (5) Hint + Description on the same node -->
+            <Entry x:Name="EmailEntry"
+                   Placeholder="you@example.com"
+                   SemanticProperties.Description="Email address"
+                   SemanticProperties.Hint="Required for sign-in" />
+
+            <Label Text="An Entry with both Description and Hint set: `contentDescription = &quot;Email address&quot;`, `stateDescription = &quot;Required for sign-in&quot;` (TalkBack reads stateDescription after contentDescription)."
+                   FontSize="13" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

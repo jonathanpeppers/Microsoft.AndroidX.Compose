@@ -109,7 +109,7 @@ public partial class BorderHandler : ComposeElementHandler<MauiBorder>
         }
 
         var box = new Box();
-        modifier = (modifier ?? Modifier.Companion).ApplyGestures(border, context);
+        modifier = (modifier ?? Modifier.Companion).ApplyGestures(border, context).ApplySemantics(border);
         box.Modifier = modifier;
 
         // Walk the Border's content (IContentView.PresentedContent)

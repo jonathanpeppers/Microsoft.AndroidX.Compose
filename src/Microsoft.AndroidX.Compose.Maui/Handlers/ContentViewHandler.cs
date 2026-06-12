@@ -86,7 +86,7 @@ public partial class ContentViewHandler : ComposeElementHandler<IContentView>
                 end:    new Dp((float)padding.Right),
                 bottom: new Dp((float)padding.Bottom));
         }
-        modifier = modifier.ApplyGestures(view, context);
+        modifier = modifier.ApplyGestures(view, context).ApplySemantics(view);
 
         var box = new Box { Modifier = modifier };
         if (view.PresentedContent is { } content)

@@ -67,6 +67,20 @@ public sealed class SemanticsScope
     }
 
     /// <summary>
+    /// <c>heading()</c> — tags this node as a heading. TalkBack
+    /// announces "heading" alongside the content description and lets
+    /// users navigate between headings via the rotor / swipe gestures.
+    /// Compose's Foundation baseline is a single boolean; we don't
+    /// expose per-level headings.
+    /// </summary>
+    /// <returns>This scope, to chain further calls.</returns>
+    public SemanticsScope Heading()
+    {
+        ComposeBridges.SemanticsSetHeading(Handle);
+        return this;
+    }
+
+    /// <summary>
     /// <c>selected = isSelected</c> — marks the node as part of a
     /// selectable group (tab, list item, chip). TalkBack announces
     /// "selected" / "not selected" alongside the node's content

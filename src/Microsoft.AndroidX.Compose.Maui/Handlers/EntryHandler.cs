@@ -119,7 +119,8 @@ public partial class EntryHandler : ComposeElementHandler<IEntry>
         // the cross-cutting view properties.
         var outer = (fill ? Modifier.FillMaxWidth() : Modifier.Companion)
             .ApplyViewProperties(virtualView)
-            .ApplyGestures(virtualView, MauiContext);
+            .ApplyGestures(virtualView, MauiContext)
+            .ApplySemantics(virtualView);
         field.PrependModifier(outer);
         return field;
     }

@@ -160,7 +160,8 @@ public partial class DatePickerHandler : ComposeElementHandler<IDatePicker>
             // only applies to the trigger button.
             var outer = (fill ? Modifier.FillMaxWidth() : Modifier.Companion)
                 .ApplyViewProperties(virtualView)
-                .ApplyGestures(virtualView, MauiContext);
+                .ApplyGestures(virtualView, MauiContext)
+                .ApplySemantics(virtualView);
             trigger.PrependModifier(outer);
 
             var dialog = isOpen

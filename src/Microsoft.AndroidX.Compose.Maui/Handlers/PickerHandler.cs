@@ -179,7 +179,8 @@ public partial class PickerHandler : ComposeElementHandler<IPicker>
         // its trigger anchor.
         var outer = (fill ? Modifier.FillMaxWidth() : Modifier.Companion)
             .ApplyViewProperties(virtualView)
-            .ApplyGestures(virtualView, MauiContext);
+            .ApplyGestures(virtualView, MauiContext)
+            .ApplySemantics(virtualView);
         trigger.PrependModifier(outer);
 
         var menu = new ExposedDropdownMenu(

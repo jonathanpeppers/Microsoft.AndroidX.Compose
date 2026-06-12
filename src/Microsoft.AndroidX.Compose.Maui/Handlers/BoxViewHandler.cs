@@ -115,7 +115,7 @@ public partial class BoxViewHandler : ComposeElementHandler<MauiBoxView>
             modifier = modifier.Clip(shape);
         if (color.HasValue)
             modifier = modifier.Background(new ComposeColor(color.Value), shape);
-        modifier = modifier.ApplyGestures(virtualView, MauiContext);
+        modifier = modifier.ApplyGestures(virtualView, MauiContext).ApplySemantics(virtualView);
 
         return new Box { Modifier = modifier };
     }

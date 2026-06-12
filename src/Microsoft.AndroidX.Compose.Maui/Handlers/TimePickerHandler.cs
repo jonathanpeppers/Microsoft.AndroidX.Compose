@@ -126,7 +126,8 @@ public partial class TimePickerHandler : ComposeElementHandler<ITimePicker>
             // only applies to the trigger button.
             var outer = (fill ? Modifier.FillMaxWidth() : Modifier.Companion)
                 .ApplyViewProperties(virtualView)
-                .ApplyGestures(virtualView, MauiContext);
+                .ApplyGestures(virtualView, MauiContext)
+                .ApplySemantics(virtualView);
             trigger.PrependModifier(outer);
 
             var dialog = isOpen

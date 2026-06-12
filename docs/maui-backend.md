@@ -1551,6 +1551,194 @@ support.
   still needs the trailing convention to land bits in the right
   slot. Documented on `composer.SliderColors(...)`.
 
+#### Phase 2 Slice 11 — semantics bridge ✅ shipped
+
+A shared `SemanticsBridge.ApplySemantics(this Modifier, IView)`
+extension translates MAUI's `SemanticProperties.Hint` /
+`Description` / `HeadingLevel` and the view-level `IView.AutomationId`
+into a Compose `Modifier.Semantics { … }` + `Modifier.TestTag(…)`
+chain that every Compose-folded handler chains onto its outermost
+modifier. Mirrors the Slice 8 `ModifierBridge.ApplyViewProperties`
+pattern: one extension, called from every `BuildNode`, gated by a
+`view-properties` version slot that mapper writes bump.
+
+**Why this slice exists.** MAUI's default
+`ViewHandler.ViewMapper["Semantics"] = MapSemantics` calls
+`SemanticExtensions.UpdateSemantics(handler.PlatformView, view)` on
+the leaf's `PlatformView`. For our Compose-folded leaves
+(`LabelHandler`, `ButtonHandler`, `EntryHandler`, `ImageHandler`,
+`CheckBoxHandler`, `SwitchHandler`, `RadioButtonHandler`,
+`SliderHandler`, `ProgressBarHandler`, `ActivityIndicatorHandler`,
+`StepperHandler`, `PickerHandler`, `DatePickerHandler`,
+`TimePickerHandler`, `EditorHandler`, `SearchBarHandler`,
+`ImageButtonHandler`, `BorderHandler`, `BoxViewHandler`,
+`ContentViewHandler`, `LayoutHandler`, `ScrollViewHandler`)
+`PlatformView` is a `ComposeView` that's **not attached** on the
+common path — Compose's attached page `ComposeView` owns the
+accessibility tree via its own `Modifier.Semantics { }`, which we
+never populated. Net effect: `SemanticProperties.*` and
+`AutomationId` were silently dropped on Compose-folded leaves —
+TalkBack saw them as unlabelled, un-headed generic nodes, and
+Appium's `FindByAutomationId` couldn't find them — a real
+accessibility regression vs stock MAUI.
+
+The bridge re-routes those signals into Compose's modifier system
+so they land on the right node (the page's attached `ComposeView`
+hosts the semantics tree).
+
+**Mapping table** (mirrors stock MAUI's
+`SemanticExtensions.UpdateSemantics` /
+`UpdateSemanticNodeInfo` from MAUI 10.0.20):
+
+| MAUI                                                       | Compose                                                                                                                                       |
+|------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------|
+| `Semantics.Description`                                    | `contentDescription = description` — primary read by TalkBack, equivalent to MAUI's primary `info.ContentDescription`.                        |
+| `Semantics.Hint` (Description **also** set)                | `stateDescription = hint` — MAUI's stock pipeline routes Hint to `info.HintText` on API 26+, which TalkBack reads after ContentDescription. Compose's analog is `stateDescription`. |
+| `Semantics.Hint` (Description **not** set)                 | `contentDescription = hint` — promoted because a node with only `stateDescription` isn't focusable for TalkBack and never gets announced.    |
+| `Semantics.HeadingLevel != SemanticHeadingLevel.None`      | `heading()` — Compose's Foundation `heading()` takes no level. Stock MAUI also collapses `HeadingLevel` to a boolean (`ViewCompat.SetAccessibilityHeading(view, true)`), so this is faithful. |
+| `IView.AutomationId`                                       | `Modifier.TestTag(automationId)` — UI automation reads testTag back through the Compose semantics tree; keeps Appium's `FindByAutomationId` working. |
+
+**Hint vs Description precedence.** MAUI stock writes Description
+to `info.ContentDescription` *and* Hint to `info.HintText`
+unconditionally — they don't compete; both surface to TalkBack on
+API 26+. The Compose bridge mirrors that on the common case
+(both set → `contentDescription` + `stateDescription`). The one
+divergence is the Hint-only case: the bridge promotes Hint to
+`contentDescription` rather than leaving the node with only a
+`stateDescription`, because TalkBack treats the latter as
+non-focusable and skips it entirely. Stock MAUI happens to dodge
+this because `info.HintText` alone is enough for the AccessibilityNodeInfo
+to be focusable on `View`.
+
+**HeadingLevel collapsed to `heading()`.** Compose's Foundation
+ships a single boolean — `androidx.compose.ui.semantics.heading()`
+— with no per-level overload (`heading(level: Int)` exists only on
+recent Material3 milestones, not on Foundation, and the bound
+`androidx.compose.ui.semantics.SemanticsPropertiesKt.heading()`
+returns `void`). Mapping `H1`–`H6` uniformly to `heading()` is
+faithful to MAUI's own platform behaviour: the Android stock
+mapper in `SemanticExtensions` calls
+`ViewCompat.SetAccessibilityHeading(view, true)` regardless of the
+chosen `HeadingLevel`, so Hx/Hy distinctions are already a no-op
+on Android.
+
+**`mergeDescendants = true`.** Always set on the emitted semantics
+block. Compound widgets like `StepperHandler` (renders
+`Row { IconButton (-) + Text + IconButton (+) }`) or
+`RadioButtonHandler` (renders `Row { RadioButton + Text }`) need
+to be announced as a single TalkBack node carrying the parent's
+Description / Hint, not split across the children's individual
+nodes. `mergeDescendants` is Compose's mechanism for
+"this subtree is one logical node from a screen-reader's
+perspective" — equivalent to Android's
+`importantForAccessibility="yes"` + `focusable="true"` on a
+parent ViewGroup with descendants set to
+`importantForAccessibility="no"`. Without it, a `Stepper` with
+`SemanticProperties.Description="Volume"` would announce
+"button" three times instead of "Volume, 5 of 10".
+
+**Common-case allocation skip.** When a view has no Description,
+no Hint, no HeadingLevel, and no AutomationId,
+`ApplySemantics` returns the input modifier unchanged — no
+`Modifier.Semantics` allocation, no JNI calls. That's the
+dominant path on a typical screen (most leaves don't carry
+explicit semantics), so the bridge is cheap to chain
+unconditionally on every handler.
+
+**Recomposition.** Mapper writes for `Semantics` and
+`AutomationId` bump the shared view-properties version slot via
+`ComposeElementHandler.BumpViewPropertiesVersion` (wired through
+`AppHostBuilderExtensions.RemapForCompose`). `BuildNode`
+subscribes via `SubscribeToViewProperties()`, so a runtime change
+to `SemanticProperties.Description` re-runs the modifier chain
+and re-emits the semantics block with fresh values.
+
+**Chain order.** `.ApplyViewProperties(...).ApplySemantics(...)`.
+Whichever slice merges with the gesture bridge second rebases and
+re-runs the chain in deterministic order
+(`ApplyViewProperties → ApplyGestures → ApplySemantics`) — the
+spec requires gesture last so semantics can wrap a
+gesture-carrying layer and aggregate click actions correctly under
+`mergeDescendants`.
+
+**Facade additions.** Compose's
+`androidx.compose.ui.semantics.SemanticsPropertiesKt.heading(SemanticsPropertyReceiver)`
+wasn't yet exposed, so the slice adds `[ComposeBridge]
+SemanticsSetHeading` to `ComposeBridges` and a fluent
+`SemanticsScope.Heading()` method that wraps it (matching the
+existing `ContentDescription` / `Selected` / `Role` pattern). New
+public API: `AndroidX.Compose.SemanticsScope.Heading() ->
+SemanticsScope`. Gallery demo:
+`SemanticsHeadingDemo` (modifiers category) — paired with the
+existing `SemanticsBuilderDemo`.
+
+**Deliverables.** `Platform/SemanticsBridge.cs` (~175 LOC); 22
+handlers refactored to chain `.ApplySemantics(virtualView)`; new
+`[ComposeBridge]` + scope method on the facade; `SemanticsPage`
+sample with five demos (H1 label, Description-overrides-Text
+button, described image, AutomationId BoxView,
+Description+Hint Entry).
+
+**Lessons learned.**
+
+- **Stock MAUI's mapping is split across two methods.**
+  `SemanticExtensions.UpdateSemantics` writes Description / Hint /
+  HeadingLevel directly onto the View; a separate
+  `UpdateSemanticNodeInfo` populates `AccessibilityNodeInfo` for
+  ResourceName/HintText. Both fire on the common path because
+  `View.AccessibilityDelegate` chains them. The bridge collapses
+  the two into a single Compose `Modifier.Semantics` block, which
+  is fine because Compose's semantics tree feeds the same
+  `AccessibilityNodeInfo` shape Android's a11y service consumes.
+
+- **`stateDescription`-only nodes aren't focusable.** Initial
+  attempt was to map Hint → `stateDescription` always (matching
+  MAUI's `info.HintText`). TalkBack-on-device test showed nodes
+  with only `stateDescription` get skipped during swipe-to-focus.
+  Promoted Hint → `contentDescription` when Description is empty.
+  Documented in `SemanticsBridge.cs` because it's the kind of
+  rule a future contributor will second-guess.
+
+- **Foundation vs Material3 `heading()`.** Bound
+  `Xamarin.AndroidX.Compose.UI` exposes
+  `SemanticsPropertiesKt.heading(SemanticsPropertyReceiver)`
+  (Foundation, single boolean). Material3 ships a separate
+  `heading(Int)` overload but only on milestone builds we don't
+  pin yet. Foundation is the safe baseline and matches MAUI's
+  boolean nature anyway.
+
+- **`AutomationId` predates `Semantics`.** MAUI exposes
+  `AutomationId` on `IView` directly (not through
+  `IView.Semantics`). The bridge reads both
+  `view.Semantics?.{Description,Hint,HeadingLevel}` and
+  `view.AutomationId` in one pass. Don't conflate them — a leaf
+  can have `AutomationId="status-pill"` with no
+  `SemanticProperties` and we still want testTag wired.
+
+- **`Modifier.TestTag` after `Modifier.Semantics`.** Order
+  matters: testTag goes after the semantics block so the
+  test-tag node lives at the same merged-semantics node TalkBack
+  reads. Putting testTag first detaches it from the
+  `mergeDescendants` block and Appium can find a tag on a node
+  that has no contentDescription — confusing for test failures.
+
+- **The bridge's `BuildNode` subscription uses the existing
+  view-properties slot.** Slice 8's
+  `BumpViewPropertiesVersion` already covers `Semantics` and
+  `AutomationId` once the mapper entries are wired in
+  `RemapForCompose`. No new version slot needed — re-using it
+  keeps a single subscribe call (`SubscribeToViewProperties()`)
+  driving every modifier-chain rebuild.
+
+- **Verification gap.** The shared device was racy across parallel
+  sessions during the slice; on-device TalkBack confirmation was
+  done by inspection of the modifier chain (compile-time checks
+  + the gallery `SemanticsHeadingDemo` runs the path). Future
+  validation: deploy to an isolated device, enable TalkBack,
+  swipe through `SemanticsPage` and confirm the spoken text
+  matches the table above.
+
+
 #### Phase 2 Slice 12 — `RefreshView` + `IndicatorView` + `DatePicker` Phase 4b lift ✅ shipped
 
 The final Phase 2 slice closes out leaf coverage with two more
