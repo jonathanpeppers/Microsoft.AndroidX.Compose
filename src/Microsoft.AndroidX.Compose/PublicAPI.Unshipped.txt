@@ -174,8 +174,8 @@ AndroidX.Compose.Color.WithAlpha(byte alpha) -> AndroidX.Compose.Color
 AndroidX.Compose.Color.WithOpacity(float opacity) -> AndroidX.Compose.Color
 AndroidX.Compose.Column
 AndroidX.Compose.Column.Column() -> void
-AndroidX.Compose.Column.Column(AndroidX.Compose.Arrangement? verticalArrangement) -> void
 AndroidX.Compose.Column.Column(AndroidX.Compose.Arrangement? verticalArrangement, AndroidX.Compose.Alignment.Horizontal? horizontalAlignment) -> void
+AndroidX.Compose.Column.Column(AndroidX.Compose.Arrangement? verticalArrangement) -> void
 AndroidX.Compose.ComposableContainer
 AndroidX.Compose.ComposableContainer.Add(AndroidX.Compose.ComposableNode? child) -> void
 AndroidX.Compose.ComposableContainer.Add(AndroidX.Compose.Modifier! modifier) -> void
@@ -199,6 +199,14 @@ AndroidX.Compose.CompositionLocal<T>.Provides(T value) -> AndroidX.Compose.Provi
 AndroidX.Compose.CompositionLocalProvider
 AndroidX.Compose.CompositionLocalProvider.Add(AndroidX.Compose.ProvidedValue! value) -> void
 AndroidX.Compose.CompositionLocalProvider.CompositionLocalProvider() -> void
+AndroidX.Compose.Constraints
+AndroidX.Compose.Constraints.Constraints() -> void
+AndroidX.Compose.Constraints.HasBoundedHeight.get -> bool
+AndroidX.Compose.Constraints.HasBoundedWidth.get -> bool
+AndroidX.Compose.Constraints.MaxHeight.get -> int
+AndroidX.Compose.Constraints.MaxWidth.get -> int
+AndroidX.Compose.Constraints.MinHeight.get -> int
+AndroidX.Compose.Constraints.MinWidth.get -> int
 AndroidX.Compose.ContentScale
 AndroidX.Compose.Crossfade<T>
 AndroidX.Compose.Crossfade<T>.Crossfade(T targetState, System.Func<T, AndroidX.Compose.ComposableNode!>! content) -> void
@@ -220,10 +228,10 @@ AndroidX.Compose.DatePickerState.DatePickerState() -> void
 AndroidX.Compose.DatePickerState.DatePickerState(long? initialSelectedDateMillis = null, Kotlin.Ranges.IntRange? initialYearRange = null, AndroidX.Compose.Material3.ISelectableDates? initialSelectableDates = null) -> void
 AndroidX.Compose.DatePickerState.DisplayedMonthMillis.get -> long
 AndroidX.Compose.DatePickerState.DisplayedMonthMillis.set -> void
-AndroidX.Compose.DatePickerState.InitialDisplayMode.get -> int?
-AndroidX.Compose.DatePickerState.InitialDisplayMode.set -> void
 AndroidX.Compose.DatePickerState.InitialDisplayedMonthMillis.get -> Java.Lang.Long?
 AndroidX.Compose.DatePickerState.InitialDisplayedMonthMillis.set -> void
+AndroidX.Compose.DatePickerState.InitialDisplayMode.get -> int?
+AndroidX.Compose.DatePickerState.InitialDisplayMode.set -> void
 AndroidX.Compose.DatePickerState.InitialSelectableDates.get -> AndroidX.Compose.Material3.ISelectableDates?
 AndroidX.Compose.DatePickerState.InitialSelectableDates.set -> void
 AndroidX.Compose.DatePickerState.InitialSelectedDateMillis.get -> Java.Lang.Long?
@@ -232,18 +240,6 @@ AndroidX.Compose.DatePickerState.InitialYearRange.get -> Kotlin.Ranges.IntRange?
 AndroidX.Compose.DatePickerState.InitialYearRange.set -> void
 AndroidX.Compose.DatePickerState.SelectedDateMillis.get -> long?
 AndroidX.Compose.DatePickerState.SelectedDateMillis.set -> void
-AndroidX.Compose.DateRangeSelectableDates
-AndroidX.Compose.DateRangeSelectableDates.DateRangeSelectableDates() -> void
-AndroidX.Compose.DateRangeSelectableDates.IsSelectableDate(long utcTimeMillis) -> bool
-AndroidX.Compose.DateRangeSelectableDates.IsSelectableYear(int year) -> bool
-AndroidX.Compose.DateRangeSelectableDates.MaxUtcMillis.get -> long?
-AndroidX.Compose.DateRangeSelectableDates.MaxUtcMillis.set -> void
-AndroidX.Compose.DateRangeSelectableDates.MaxYear.get -> int?
-AndroidX.Compose.DateRangeSelectableDates.MaxYear.set -> void
-AndroidX.Compose.DateRangeSelectableDates.MinUtcMillis.get -> long?
-AndroidX.Compose.DateRangeSelectableDates.MinUtcMillis.set -> void
-AndroidX.Compose.DateRangeSelectableDates.MinYear.get -> int?
-AndroidX.Compose.DateRangeSelectableDates.MinYear.set -> void
 AndroidX.Compose.DateRangePicker
 AndroidX.Compose.DateRangePicker.DateRangePicker(AndroidX.Compose.DateRangePickerState? state = null) -> void
 AndroidX.Compose.DateRangePickerDialog
@@ -263,6 +259,18 @@ AndroidX.Compose.DateRangePickerState.SelectedEndDateMillis.set -> void
 AndroidX.Compose.DateRangePickerState.SelectedStartDateMillis.get -> long?
 AndroidX.Compose.DateRangePickerState.SelectedStartDateMillis.set -> void
 AndroidX.Compose.DateRangePickerState.SetSelection(long? startDateMillis, long? endDateMillis) -> void
+AndroidX.Compose.DateRangeSelectableDates
+AndroidX.Compose.DateRangeSelectableDates.DateRangeSelectableDates() -> void
+AndroidX.Compose.DateRangeSelectableDates.IsSelectableDate(long utcTimeMillis) -> bool
+AndroidX.Compose.DateRangeSelectableDates.IsSelectableYear(int year) -> bool
+AndroidX.Compose.DateRangeSelectableDates.MaxUtcMillis.get -> long?
+AndroidX.Compose.DateRangeSelectableDates.MaxUtcMillis.set -> void
+AndroidX.Compose.DateRangeSelectableDates.MaxYear.get -> int?
+AndroidX.Compose.DateRangeSelectableDates.MaxYear.set -> void
+AndroidX.Compose.DateRangeSelectableDates.MinUtcMillis.get -> long?
+AndroidX.Compose.DateRangeSelectableDates.MinUtcMillis.set -> void
+AndroidX.Compose.DateRangeSelectableDates.MinYear.get -> int?
+AndroidX.Compose.DateRangeSelectableDates.MinYear.set -> void
 AndroidX.Compose.DerivedState<T>
 AndroidX.Compose.DerivedState<T>.Value.get -> T
 AndroidX.Compose.DisableSelection
@@ -544,6 +552,7 @@ AndroidX.Compose.Image.Image(AndroidX.Compose.UI.Graphics.Painter.Painter! paint
 AndroidX.Compose.Image.Image(AndroidX.Compose.UI.Graphics.Painter.Painter! painter) -> void
 AndroidX.Compose.Image.Image(int drawableResourceId, string? contentDescription) -> void
 AndroidX.Compose.Image.Image(int drawableResourceId) -> void
+AndroidX.Compose.ImeAction
 AndroidX.Compose.InputChip
 AndroidX.Compose.InputChip.Avatar.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.InputChip.Avatar.set -> void
@@ -559,9 +568,8 @@ AndroidX.Compose.InputChip.TrailingIcon.set -> void
 AndroidX.Compose.IState<T>
 AndroidX.Compose.IState<T>.Value.get -> T
 AndroidX.Compose.IStateFlow<T>
-AndroidX.Compose.ImeAction
-AndroidX.Compose.KeyboardOptionsCompanion
 AndroidX.Compose.KeyboardActionsHelper
+AndroidX.Compose.KeyboardOptionsCompanion
 AndroidX.Compose.KeyboardType
 AndroidX.Compose.LargeFlexibleTopAppBar
 AndroidX.Compose.LargeFlexibleTopAppBar.Actions.get -> AndroidX.Compose.ComposableNode?
@@ -595,6 +603,8 @@ AndroidX.Compose.LaunchedEffect
 AndroidX.Compose.LaunchedEffect.LaunchedEffect(object? key1, object? key2, object? key3, System.Func<System.Threading.CancellationToken, System.Threading.Tasks.Task!>! body) -> void
 AndroidX.Compose.LaunchedEffect.LaunchedEffect(object? key1, object? key2, System.Func<System.Threading.CancellationToken, System.Threading.Tasks.Task!>! body) -> void
 AndroidX.Compose.LaunchedEffect.LaunchedEffect(object? key1, System.Func<System.Threading.CancellationToken, System.Threading.Tasks.Task!>! body) -> void
+AndroidX.Compose.Layout
+AndroidX.Compose.Layout.Layout(System.Func<AndroidX.Compose.MeasureScope!, System.Collections.Generic.IReadOnlyList<AndroidX.Compose.Measurable!>!, AndroidX.Compose.Constraints, AndroidX.Compose.MeasureResult!>! measurePolicy) -> void
 AndroidX.Compose.LazyColumn<T>
 AndroidX.Compose.LazyColumn<T>.ContentPadding.get -> AndroidX.Compose.PaddingValues?
 AndroidX.Compose.LazyColumn<T>.ContentPadding.set -> void
@@ -691,6 +701,11 @@ AndroidX.Compose.MaterialTheme.Typography.get -> AndroidX.Compose.Material3.Typo
 AndroidX.Compose.MaterialTheme.Typography.set -> void
 AndroidX.Compose.MaterialTheme.UseDynamicColor.get -> bool
 AndroidX.Compose.MaterialTheme.UseDynamicColor.set -> void
+AndroidX.Compose.Measurable
+AndroidX.Compose.Measurable.Measure(AndroidX.Compose.Constraints constraints) -> AndroidX.Compose.UI.Layout.Placeable!
+AndroidX.Compose.MeasureResult
+AndroidX.Compose.MeasureScope
+AndroidX.Compose.MeasureScope.Layout(int width, int height, System.Action<AndroidX.Compose.PlacementScope!>! placementBlock) -> AndroidX.Compose.MeasureResult!
 AndroidX.Compose.MediumFlexibleTopAppBar
 AndroidX.Compose.MediumFlexibleTopAppBar.Actions.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.MediumFlexibleTopAppBar.Actions.set -> void
@@ -965,6 +980,9 @@ AndroidX.Compose.PermanentNavigationDrawer.Content.set -> void
 AndroidX.Compose.PermanentNavigationDrawer.Drawer.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.PermanentNavigationDrawer.Drawer.set -> void
 AndroidX.Compose.PermanentNavigationDrawer.PermanentNavigationDrawer() -> void
+AndroidX.Compose.PlacementScope
+AndroidX.Compose.PlacementScope.Place(AndroidX.Compose.UI.Layout.Placeable! placeable, int x, int y, float zIndex = 0) -> void
+AndroidX.Compose.PlacementScope.PlaceRelative(AndroidX.Compose.UI.Layout.Placeable! placeable, int x, int y, float zIndex = 0) -> void
 AndroidX.Compose.PrimaryScrollableTabRow
 AndroidX.Compose.PrimaryScrollableTabRow.PrimaryScrollableTabRow(int selectedTabIndex) -> void
 AndroidX.Compose.PrimaryTabRow
@@ -1451,6 +1469,7 @@ override AndroidX.Compose.LargeFlexibleTopAppBar.Render(AndroidX.Compose.Runtime
 override AndroidX.Compose.LargeFloatingActionButton.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
 override AndroidX.Compose.LargeTopAppBar.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
 override AndroidX.Compose.LaunchedEffect.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override AndroidX.Compose.Layout.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
 override AndroidX.Compose.LazyColumn<T>.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
 override AndroidX.Compose.LazyHorizontalGrid<T>.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
 override AndroidX.Compose.LazyHorizontalStaggeredGrid<T>.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
@@ -1662,6 +1681,9 @@ static AndroidX.Compose.CompositionLocal.Of<T>(System.Func<T>! defaultFactory) -
 static AndroidX.Compose.CompositionLocal.StaticOf<T>(System.Func<T>! defaultFactory) -> AndroidX.Compose.CompositionLocal<T>!
 static AndroidX.Compose.CompositionLocal<T>.Of(System.Func<T>! defaultFactory) -> AndroidX.Compose.CompositionLocal<T>!
 static AndroidX.Compose.CompositionLocal<T>.StaticOf(System.Func<T>! defaultFactory) -> AndroidX.Compose.CompositionLocal<T>!
+static AndroidX.Compose.Constraints.Create(int minWidth, int maxWidth, int minHeight, int maxHeight) -> AndroidX.Compose.Constraints
+static AndroidX.Compose.Constraints.FixedHeight(int height) -> AndroidX.Compose.Constraints
+static AndroidX.Compose.Constraints.FixedWidth(int width) -> AndroidX.Compose.Constraints
 static AndroidX.Compose.ContentScale.Crop.get -> AndroidX.Compose.ContentScale!
 static AndroidX.Compose.ContentScale.FillBounds.get -> AndroidX.Compose.ContentScale!
 static AndroidX.Compose.ContentScale.FillHeight.get -> AndroidX.Compose.ContentScale!
@@ -2009,9 +2031,9 @@ static AndroidX.Compose.ImeAction.Previous.get -> int
 static AndroidX.Compose.ImeAction.Search.get -> int
 static AndroidX.Compose.ImeAction.Send.get -> int
 static AndroidX.Compose.ImeAction.Unspecified.get -> int
+static AndroidX.Compose.KeyboardActionsHelper.Create(System.Action? onDone = null, System.Action? onGo = null, System.Action? onNext = null, System.Action? onPrevious = null, System.Action? onSearch = null, System.Action? onSend = null) -> AndroidX.Compose.Foundation.Text.KeyboardActions!
 static AndroidX.Compose.KeyboardOptionsCompanion.Default.get -> AndroidX.Compose.Foundation.Text.KeyboardOptions!
 static AndroidX.Compose.KeyboardOptionsCompanion.Get() -> AndroidX.Compose.Foundation.Text.KeyboardOptions.Companion!
-static AndroidX.Compose.KeyboardActionsHelper.Create(System.Action? onDone = null, System.Action? onGo = null, System.Action? onNext = null, System.Action? onPrevious = null, System.Action? onSearch = null, System.Action? onSend = null) -> AndroidX.Compose.Foundation.Text.KeyboardActions!
 static AndroidX.Compose.KeyboardType.Ascii.get -> int
 static AndroidX.Compose.KeyboardType.Decimal.get -> int
 static AndroidX.Compose.KeyboardType.Email.get -> int

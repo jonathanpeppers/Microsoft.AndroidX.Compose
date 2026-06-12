@@ -73,5 +73,8 @@
     <AndroidJavaSource Include="Java\PointerInputEventHandlerImpl.java">
       <Bind>false</Bind>
     </AndroidJavaSource>
+    <AndroidJavaSource Include="Java\MeasurePolicyFactory.java">
+      <Bind>false</Bind>
+    </AndroidJavaSource>
   </ItemGroup>
 </Project>

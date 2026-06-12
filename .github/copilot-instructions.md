@@ -506,6 +506,20 @@ so `[CallerFilePath]` + `[CallerLineNumber]` slot keys inside
   Kotlin ctor needs JNI (mangled because `selection: TextRange` is a
   `@JvmInline value class`); everything else (`Text`/`Selection`/`Copy(…)`)
   is exposed by the runtime binding. See issue #204.
+- `Layout` exposes a low-level measure-and-place primitive: ctor takes a
+  user `Func<MeasureScope, IReadOnlyList<Measurable>, Constraints, MeasureResult>`
+  delegate, the `MeasurePolicy` parameter is built once via a tiny Java
+  helper that returns a SAM lambda — `MeasurePolicy` is a Kotlin
+  `fun interface`, so `javac` resolves the single abstract member
+  (`measure-3p2s80s`, mangled because `Constraints` is `@JvmInline value class`)
+  by signature via `LambdaMetafactory` and the source never has to spell the
+  illegal `-` identifier. Default interface methods (the four
+  `IntrinsicMeasureScope.*Intrinsic*` helpers) are inherited correctly by the
+  synthesized class. The SAM instance + JCW lambda are cached via
+  `composer.Remember` so JNI identity stays stable across recompositions.
+  None of (custom user-delegate ctor, wrapper-typed params not in
+  `ComposeValueTypes`, JCW with mutable `Body`) fit any `[ComposeFacade]`
+  phase. See issue #144.
 
 Applying `[ComposeFacade]` to an unsupported bridge emits CN3002 (unsupported
 param), CN3003 (scope misuse), CN3005 (invalid callback type), CN3006 (slot
