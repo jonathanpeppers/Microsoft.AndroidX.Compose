@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:shapes="clr-namespace:Microsoft.Maui.Controls.Shapes;assembly=Microsoft.Maui.Controls"
+             x:Class="Microsoft.AndroidX.Compose.Maui.Sample.Pages.ShapesPage"
+             Title="Shapes">
+
+    <!--
+        Phase 5 investigation page — every concrete `Microsoft.Maui.Controls.Shapes`
+        subclass is dropped into a Compose-backed page so we can verify how the
+        stock `ShapeViewHandler` renders inside an `AndroidView { … }` interop slot.
+
+        No Compose-native shape handler is registered: when the walker meets a
+        shape it falls through `ComposeWalker.Render`'s default branch and hosts
+        the stock `MauiShapeView` (a regular Android `View` that paints itself
+        via `android.graphics.Canvas`) inside a Compose `AndroidView`.
+
+        Expected outcome — the shape paints, sizes via explicit
+        `WidthRequest`/`HeightRequest`, and reacts to `Fill` / `Stroke`
+        property edits. Fail modes to watch for during on-device verification:
+            * Shape collapses to 0×0 because the Compose parent doesn't give
+              `AndroidView` a measured constraint.
+            * `Aspect="*"` / `Stretch` rendering differs from stock MAUI.
+            * Path / Polygon scaling looks off (stretch vs aspect).
+    -->
+    <ScrollView>
+        <VerticalStackLayout
+            Padding="30,30"
+            Spacing="22">
+
+            <Label
+                Text="Shapes"
+                Style="{StaticResource Headline}" />
+
+            <Label
+                Text="Every `Microsoft.Maui.Controls.Shapes` subclass renders through the stock `ShapeViewHandler` → `MauiShapeView` (Android `View` painting via `Canvas`) hosted by Compose `AndroidView`."
+                FontSize="13" />
+
+            <!-- ===== Rectangle ===== -->
+            <Label Text="Rectangle — Fill + Stroke." FontAttributes="Bold" />
+            <shapes:Rectangle
+                Fill="#512BD4"
+                Stroke="Black"
+                StrokeThickness="3"
+                WidthRequest="220"
+                HeightRequest="80"
+                HorizontalOptions="Center" />
+
+            <!-- ===== RoundRectangle ===== -->
+            <Label Text="RoundRectangle — CornerRadius=18." FontAttributes="Bold" />
+            <shapes:RoundRectangle
+                Fill="#3F51B5"
+                Stroke="White"
+                StrokeThickness="2"
+                CornerRadius="18"
+                WidthRequest="220"
+                HeightRequest="80"
+                HorizontalOptions="Center" />
+
+            <!-- ===== Ellipse ===== -->
+            <Label Text="Ellipse — gradient fill." FontAttributes="Bold" />
+            <shapes:Ellipse
+                Stroke="#1F1F1F"
+                StrokeThickness="2"
+                WidthRequest="160"
+                HeightRequest="100"
+                HorizontalOptions="Center">
+                <shapes:Ellipse.Fill>
+                    <LinearGradientBrush EndPoint="1,1">
+                        <GradientStop Color="#E91E63" Offset="0.0" />
+                        <GradientStop Color="#FFEB3B" Offset="1.0" />
+                    </LinearGradientBrush>
+                </shapes:Ellipse.Fill>
+            </shapes:Ellipse>
+
+            <!-- ===== Line ===== -->
+            <Label Text="Line — diagonal stroke." FontAttributes="Bold" />
+            <shapes:Line
+                X1="0"  Y1="0"
+                X2="240" Y2="50"
+                Stroke="#009688"
+                StrokeThickness="6"
+                WidthRequest="240"
+                HeightRequest="50"
+                HorizontalOptions="Center" />
+
+            <!-- ===== Polygon ===== -->
+            <Label Text="Polygon — closed triangle." FontAttributes="Bold" />
+            <shapes:Polygon
+                Points="0,80 60,0 120,80"
+                Fill="#FF9800"
+                Stroke="#E65100"
+                StrokeThickness="3"
+                Aspect="Uniform"
+                WidthRequest="120"
+                HeightRequest="80"
+                HorizontalOptions="Center" />
+
+            <!-- ===== Polyline ===== -->
+            <Label Text="Polyline — open zigzag." FontAttributes="Bold" />
+            <shapes:Polyline
+                Points="0,40 30,0 60,40 90,0 120,40 150,0 180,40"
+                Stroke="#673AB7"
+                StrokeThickness="3"
+                Aspect="Uniform"
+                WidthRequest="240"
+                HeightRequest="50"
+                HorizontalOptions="Center" />
+
+            <!-- ===== Path ===== -->
+            <Label Text="Path — SVG heart." FontAttributes="Bold" />
+            <shapes:Path
+                Data="M 30 18 C 30 9 39 0 48 0 C 57 0 66 9 66 18 C 66 36 48 54 30 60 C 12 54 -6 36 -6 18 C -6 9 3 0 12 0 C 21 0 30 9 30 18 Z"
+                Fill="#E91E63"
+                Stroke="#880E4F"
+                StrokeThickness="2"
+                Aspect="Uniform"
+                WidthRequest="120"
+                HeightRequest="100"
+                HorizontalOptions="Center" />
+
+            <!-- ===== Width-fill checkpoint ===== -->
+            <Label Text="Fill-width Rectangle — checks that AndroidView honours parent constraint." FontAttributes="Bold" />
+            <shapes:Rectangle
+                Fill="#4CAF50"
+                Stroke="#1B5E20"
+                StrokeThickness="2"
+                HeightRequest="32"
+                HorizontalOptions="Fill" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>
