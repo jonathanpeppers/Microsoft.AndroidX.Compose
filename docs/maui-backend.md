@@ -1873,6 +1873,181 @@ handler and the auto-default-mask machinery clears their
   rather than the previous `2000-01-01` default; otherwise MAUI's
   range validator silently rewrote the value back inside bounds.
 
+#### Phase 3 Slice 1 — `CollectionViewHandler` ✅ shipped
+
+Opens Phase 3 with the most-requested handler — `CollectionView` folded
+into the page composition as a Compose lazy list rather than the stock
+per-cell `ComposeView` islands. Wraps the existing `LazyColumn<T>` /
+`LazyRow<T>` / `LazyVerticalGrid<T>` facades with an `ItemsLayout` →
+facade dispatch.
+
+**Investigation finding (worth documenting up front).**
+`CollectionView` *does* already render via the `AndroidView` fallback —
+`HomePage`'s own catalog list relies on that path. `uiautomator dump`
+showed each row carrying its own `androidx.compose.ui.platform.ComposeView`
+node because the cells contain Compose-folded leaves; the page therefore
+ends up with `n + 1` Composer roots (page + one per visible row), each
+re-installing `MaterialTheme` and its own snapshot graph. The handler
+trades that for **one** composer per page — the page's — and inherits
+theme + snapshot state directly.
+
+**Delivered.**
+
+- `MauiCollectionView` → `CollectionViewHandler`:
+  - `LinearItemsLayout` (vertical / horizontal) → `LazyColumn<T>` /
+    `LazyRow<T>`. `ItemSpacing` lowers to `Arrangement.SpacedBy(dp)`
+    on the matching axis.
+  - `GridItemsLayout` → `LazyVerticalGrid<T>` with
+    `GridCells.Fixed(Span)`. `VerticalItemSpacing` /
+    `HorizontalItemSpacing` lower to the new `VerticalArrangement` /
+    `HorizontalArrangement` facade props on `LazyVerticalGrid<T>`.
+    Horizontal `GridItemsLayout` (rare in practice) falls back to
+    `LazyRow<T>` for v1 — a future `LazyHorizontalGrid` wrapper would
+    unlock that without changing the handler.
+  - `ItemTemplate` / `ItemTemplateSelector`: per-item
+    `template.CreateContent()` with `BindingContext = item`, then
+    `ComposeWalker.Render(view, …)` wrapped in a private
+    `DeferredViewNode`. The wrapper exists because lazy-list item
+    realisation happens at measure time (inside `SubcomposeLayout`),
+    not composition time, so the `ComposableLambdas.Instantiate4`
+    factory path that `LazyColumn<T>` already uses is the only safe
+    way to surface a live composer to the item; `DeferredViewNode`
+    defers the actual walk until that lambda fires.
+  - `EmptyView` (string / `IView` / `EmptyViewTemplate`) renders as a
+    centered `Column` with `verticalArrangement: Arrangement.Center` +
+    `horizontalAlignment: CenterHorizontally`. (Compose's `Box` facade
+    is parameterless — no `contentAlignment` ctor — so a `Column` was
+    the simplest single-axis centering primitive.)
+  - Per-item `Modifier.Clickable {}` wires
+    `SelectionMode = Single` / `Multiple` straight through to
+    `view.SelectedItem` / `view.SelectedItems` — `SelectionChanged`
+    + `SelectionChangedCommand` fire from MAUI's
+    `BindableProperty` setter. The wrapper is suppressed when
+    `SelectionMode = None` so non-selectable lists don't pay the
+    extra `Box` layer. Selected-row highlight styling is still
+    follow-up.
+  - `INotifyCollectionChanged`: handler subscribes to the live source
+    in `MapItemsSource` and unsubscribes on swap / `DisconnectHandler`.
+    Add / Remove / Replace / Move / Reset all collapse to a single
+    `MutableState<int> _itemsVersion` bump that causes `BuildNode` to
+    re-snapshot the source and rebuild.
+  - `ItemsLayout` is read live inside `BuildNode` (it's a
+    `BindableObject`; consumers can swap orientation or span at
+    runtime). A second `MutableState<int>` slot bumps on layout change.
+- `LazyColumn<T>` gained `VerticalArrangement` (for `ItemSpacing` on
+  vertical linear lists).
+- `LazyVerticalGrid<T>` gained `VerticalArrangement` +
+  `HorizontalArrangement` (for the two grid spacings). Both new
+  arrangement props validate axis at assignment time and throw
+  `ArgumentException` for cross-axis values
+  (e.g. `Arrangement.Start` on the vertical axis).
+- `CollectionsPage` sample drives three `CollectionView`s off one
+  `ObservableCollection<Fruit>`: vertical list, horizontal chips
+  (`ItemSpacing = 12`), grid (`Span = 3`,
+  `VerticalItemSpacing = HorizontalItemSpacing = 8`). Add / Remove /
+  Clear buttons exercise `INotifyCollectionChanged`; a fourth
+  CollectionView demos the EmptyView toggle.
+
+**Deferred (explicit list — pick up in follow-up slices).**
+
+- Selected-row highlight styling and `SelectionMode.Multiple` UI
+  affordances (checkmark, ripple emphasis). The handler already
+  wires the data path for Single + Multiple selection, but the
+  visual state is a follow-up.
+- `ScrollTo(int)` / `ScrollTo(item)` / `Scrolled` event
+  (`LazyListState.AnimateScrollToItemAsync` already exists; wiring
+  MAUI's `ScrollToRequested` is mechanical).
+- `ItemsUpdatingScrollMode` (`KeepItemsInView` /
+  `KeepScrollOffset` / `KeepLastItemInView`) — needs index-stability
+  tracking on `CollectionChanged`.
+- `RemainingItemsThreshold` / endless-scroll.
+- Grouping (`IsGrouped` / `GroupHeaderTemplate` /
+  `GroupFooterTemplate`).
+- `ListView` (deprecated; defer until a clear ask).
+- `TableView` (rare in modern MAUI).
+- `CarouselView` two-way `Position` ↔ `IndicatorView.Position`
+  (separate slice — needs `PagerState` Phase-4b state-holder with a
+  parameterised `pageCount` Remember).
+- `SwipeView` (`SwipeToDismissBox` doesn't match SwipeView's
+  left/right action panels; needs more bridge work).
+
+**Lessons learned.**
+
+- **The `Wrap*` vs `Instantiate4` distinction is exactly the trap the
+  repo's instructions call out.** Lazy-list item content runs at
+  measure time inside `SubcomposeLayout`, *outside* the composer that
+  built the list. The existing `LazyColumn` / `LazyRow` /
+  `LazyVerticalGrid` facades already use
+  `ComposableLambdas.Instantiate4` (the composer-less factory) for
+  exactly this reason; the handler just contributes a
+  `Func<T, ComposableNode>` that fires inside that lambda. Building
+  the per-item node with `Wrap4(composer, …)` instead would crash with
+  `Expected applyChanges() to have been called`.
+- **`Box`'s facade is parameterless.** The Kotlin
+  `Box(contentAlignment:)` overload is mangled (lowered through
+  `Alignment` value-class lowering) and the C# facade therefore has
+  no `contentAlignment` ctor. Centering inside a Box requires
+  `Modifier.Align(Alignment.Center)` on the child — which needs
+  `BoxScope`, which isn't surfaced cleanly. The simpler workaround is
+  a `Column` with `verticalArrangement: Center` +
+  `horizontalAlignment: CenterHorizontally`; that fits the empty-view
+  shape (single child or text) with no facade churn.
+- **`AndroidX.Compose.Text` collides with `Microsoft.AndroidX.Compose.Text`
+  inside the handler namespace.** Inside
+  `Microsoft.AndroidX.Compose.Maui.Handlers`, bare
+  `AndroidX.Compose.Text` resolves to the (non-existent)
+  `Microsoft.AndroidX.Compose.Text` because of C#'s "innermost
+  namespace wins" rule. Workaround: `using ComposeText =
+  AndroidX.Compose.Text;` alias at the top of the file.
+- **`MutableState<T>` doesn't accept arbitrary structs.** The
+  underlying Compose `MutableState` only round-trips `Java.Lang.Object`
+  subclasses, primitives, strings, and `Nullable<primitive>`. The
+  established workaround on Phase 2 handlers (`SliderHandler`,
+  `LayoutHandler`, etc.) is the **version-counter pattern**: declare
+  a `MutableState<int>` slot, bump it whenever the live MAUI value
+  changes, and read the actual value off `VirtualView` inside
+  `BuildNode`. This slice reuses that pattern for both
+  `ItemsSource`/`CollectionChanged` and `ItemsLayout` changes.
+- **`DataTemplateSelector.SelectTemplate(item, container)` works with
+  `container: null`.** A few MAUI built-in selectors actually look at
+  `container`; for those, the handler still passes `view` so they get
+  the source CollectionView itself.
+- **Per-item handler allocation cost is real, but acceptable for v1.**
+  Each `template.CreateContent()` allocates a fresh `BindableObject`
+  per render of `BuildNode`. Compose's slot table memoises the
+  *rendered* output but not the View / Handler. Memoising keyed on
+  item identity + template type is straightforward follow-up; defer
+  until profiling shows it matters.
+- **Investigation discipline matters more than ever at Phase 3 scope.**
+  Three of the original Phase 3 candidates (`ListView`, `TableView`,
+  `SwipeView`) are deferred outright, and one (`CarouselView`) is its
+  own slice. Shipping `CollectionViewHandler` alone is ~370 LOC of
+  handler + facade-prop additions; bundling the rest would have
+  produced an unreviewable PR.
+- **Globally registering `CollectionViewHandler` regresses any app
+  that depends on `SelectionChanged` for navigation.** The sample's
+  own `HomePage.xaml` uses `CollectionView` + `SelectionMode="Single"`
+  + `SelectionChanged="OnDemoSelected"` for the demo nav list. The
+  first cut of this slice deferred selection — that broke navigation
+  the moment `UseAndroidXCompose` registered the handler globally.
+  Minimal Single/Multiple selection (per-row `Modifier.Clickable {}`
+  → `view.SelectedItem = item` / `view.SelectedItems.Add/Remove`) is
+  therefore **mandatory, not optional**; only the selected-row
+  highlight styling can defer.
+- **`LazyColumn` inside a vertical `ScrollView` requires an explicit
+  height.** Compose's lazy lists check max-height constraints in
+  `CheckScrollableContainerConstraintsKt` and throw
+  `IllegalStateException: Vertically scrollable component was measured
+  with an infinity maximum height constraints` when the parent is also
+  vertically scrollable. The handler now honors
+  `VisualElement.WidthRequest` / `HeightRequest` (mirroring
+  `BoxViewHandler`'s size switch) — `FillMaxSize` only when neither is
+  set, otherwise `Modifier.Size` / `Modifier.Width(.).FillMaxHeight` /
+  `Modifier.FillMaxWidth().Height(.)`. Hosting a `CollectionView`
+  inside a `ScrollView` still requires the consumer to set
+  `HeightRequest` (or use a bounded `Layout` like `Grid` row), the
+  same constraint Compose enforces on raw `LazyColumn`.
+
 ### Phase 3 — collection + container (target: list-driven apps)
 
 `CollectionView` → `LazyColumn<T>` / `LazyRow<T>` / `LazyVerticalGrid<T>`

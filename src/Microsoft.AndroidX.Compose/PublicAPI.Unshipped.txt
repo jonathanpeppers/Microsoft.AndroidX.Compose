@@ -603,6 +603,8 @@ AndroidX.Compose.LazyColumn<T>.ReverseLayout.get -> bool
 AndroidX.Compose.LazyColumn<T>.ReverseLayout.set -> void
 AndroidX.Compose.LazyColumn<T>.State.get -> AndroidX.Compose.LazyListState?
 AndroidX.Compose.LazyColumn<T>.State.set -> void
+AndroidX.Compose.LazyColumn<T>.VerticalArrangement.get -> AndroidX.Compose.Arrangement?
+AndroidX.Compose.LazyColumn<T>.VerticalArrangement.set -> void
 AndroidX.Compose.LazyHorizontalGrid<T>
 AndroidX.Compose.LazyHorizontalGrid<T>.ContentPadding.get -> AndroidX.Compose.PaddingValues?
 AndroidX.Compose.LazyHorizontalGrid<T>.ContentPadding.set -> void
@@ -638,8 +640,12 @@ AndroidX.Compose.LazyVerticalGrid<T>
 AndroidX.Compose.LazyVerticalGrid<T>.ContentPadding.get -> AndroidX.Compose.PaddingValues?
 AndroidX.Compose.LazyVerticalGrid<T>.ContentPadding.set -> void
 AndroidX.Compose.LazyVerticalGrid<T>.LazyVerticalGrid(AndroidX.Compose.Foundation.Lazy.Grid.IGridCells! columns, System.Collections.Generic.IReadOnlyList<T>! items, System.Func<T, AndroidX.Compose.ComposableNode!>! itemContent) -> void
+AndroidX.Compose.LazyVerticalGrid<T>.HorizontalArrangement.get -> AndroidX.Compose.Arrangement?
+AndroidX.Compose.LazyVerticalGrid<T>.HorizontalArrangement.set -> void
 AndroidX.Compose.LazyVerticalGrid<T>.State.get -> AndroidX.Compose.Foundation.Lazy.Grid.LazyGridState?
 AndroidX.Compose.LazyVerticalGrid<T>.State.set -> void
+AndroidX.Compose.LazyVerticalGrid<T>.VerticalArrangement.get -> AndroidX.Compose.Arrangement?
+AndroidX.Compose.LazyVerticalGrid<T>.VerticalArrangement.set -> void
 AndroidX.Compose.LazyVerticalStaggeredGrid<T>
 AndroidX.Compose.LazyVerticalStaggeredGrid<T>.ContentPadding.get -> AndroidX.Compose.PaddingValues?
 AndroidX.Compose.LazyVerticalStaggeredGrid<T>.ContentPadding.set -> void
