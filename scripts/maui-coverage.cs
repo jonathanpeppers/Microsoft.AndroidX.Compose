@@ -158,7 +158,7 @@ static string ResolveMauiCoreDll(string version)
 
     // Prefer the highest net10.0-androidNN.N TFM available.
     var libDir = Path.Combine(pkgDir, "lib");
-    var androidTfms = Directory.GetDirectories(libDir, "net*-android*").OrderDescending().ToList();
+    var androidTfms = OrderTfmsDescending(Directory.GetDirectories(libDir, "net*-android*"));
     if (androidTfms.Count == 0)
         throw new DirectoryNotFoundException($"No net*-android TFM under {libDir}.");
 
@@ -183,8 +183,12 @@ static List<string> ListMauiHandlerTypes(string dll)
     psi.ArgumentList.Add("c");
 
     using var p = Process.Start(psi)!;
-    var output = p.StandardOutput.ReadToEnd();
+    // Drain stderr asynchronously so the child can't block on a full pipe
+    // buffer while we're blocked reading stdout.
+    var errTask = p.StandardError.ReadToEndAsync();
+    var output  = p.StandardOutput.ReadToEnd();
     p.WaitForExit();
+    _ = errTask.GetAwaiter().GetResult();
 
     var handlers = new List<string>();
     foreach (var line in output.Split('\n'))
@@ -193,6 +197,26 @@ static List<string> ListMauiHandlerTypes(string dll)
         if (m.Success) handlers.Add(m.Groups[1].Value);
     }
     return handlers.Distinct().OrderBy(x => x).ToList();
+}
+
+// Order TFM directory paths from highest to lowest version. Default string
+// `OrderDescending()` is lexicographic, so "net9.0-android35.0" sorts above
+// "net10.0-android36.0" — silently picking the older TFM when a package
+// ships both. Parse the version components and compare numerically.
+static List<string> OrderTfmsDescending(IEnumerable<string> tfmPaths)
+{
+    static (int major, int minor, int api, int apiMinor) Parse(string path)
+    {
+        var name = Path.GetFileName(path);
+        var m = Regex.Match(name, @"^net(\d+)\.(\d+)(?:-android(\d+)(?:\.(\d+))?)?");
+        if (!m.Success) return (0, 0, 0, 0);
+        int api      = m.Groups[3].Success ? int.Parse(m.Groups[3].Value) : 0;
+        int apiMinor = m.Groups[4].Success ? int.Parse(m.Groups[4].Value) : 0;
+        return (int.Parse(m.Groups[1].Value), int.Parse(m.Groups[2].Value), api, apiMinor);
+    }
+    return tfmPaths
+        .OrderByDescending(Parse)
+        .ToList();
 }
 
 static void DecompileIfNeeded(string dll, string fqn, string cacheDir, bool optional = false)
@@ -247,7 +271,7 @@ static void DecompileFromControlsIfNeeded(string fqn, string version, string cac
         return;
     }
     var libDir = Path.Combine(pkgDir, "lib");
-    var androidTfms = Directory.GetDirectories(libDir, "net*-android*").OrderDescending().ToList();
+    var androidTfms = OrderTfmsDescending(Directory.GetDirectories(libDir, "net*-android*"));
     if (androidTfms.Count == 0)
     {
         Console.WriteLine($"  WARN: no net*-android TFM under {libDir}.");
@@ -640,7 +664,8 @@ static void WriteReport(
         foreach (var s in notCovered.OrderByDescending(x => x.Total))
         {
             var virtuals = string.Join(", ", stockByVirtualView.GetValueOrDefault(s.Handler.ShortName, new()));
-            sb.AppendLine($"- **`{s.Handler.ShortName}`** ({virtuals}) — {s.Total} stock keys, {s.Category}");
+            var keyWord = s.Total == 1 ? "key" : "keys";
+            sb.AppendLine($"- **`{s.Handler.ShortName}`** ({virtuals}) — {s.Total} stock {keyWord}, {s.Category}");
         }
         sb.AppendLine();
     }
