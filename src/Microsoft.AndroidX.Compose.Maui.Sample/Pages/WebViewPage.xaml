@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="Microsoft.AndroidX.Compose.Maui.Sample.Pages.WebViewPage"
+             Title="WebView">
+
+    <!--
+        Phase 5 investigation page — `WebView` ships with the stock
+        `WebViewHandler` whose platform view is `MauiWebView` (a subclass
+        of Android `WebView`). Hosted through the `AndroidView` fallback in
+        `ComposeWalker`.
+
+        Two scenarios on the same page:
+            * `HtmlWebViewSource` — inline string with bare-bones JS counter.
+            * `UrlWebViewSource`  — about:blank baseline (no network).
+
+        Fail modes to watch for on device:
+            * WebView measures itself but inside a non-fill Compose parent
+              it may collapse — explicit `HeightRequest` avoids that.
+            * JS execution + scrolling should be unaffected (the Android
+              WebView's own touch handling owns the surface).
+    -->
+    <ScrollView>
+        <VerticalStackLayout
+            Padding="30,30"
+            Spacing="22">
+
+            <Label
+                Text="WebView"
+                Style="{StaticResource Headline}" />
+
+            <Label
+                Text="The stock `WebViewHandler` → Android `WebView` should render through the `AndroidView` fallback. Both scenarios use `HeightRequest` to anchor the cell — Compose's `VerticalStackLayout` doesn't constrain unbounded children."
+                FontSize="13" />
+
+            <!-- ===== HTML source ===== -->
+            <Label Text="HtmlWebViewSource — inline string + tiny JS counter." FontAttributes="Bold" />
+
+            <WebView HeightRequest="200">
+                <WebView.Source>
+                    <HtmlWebViewSource>
+                        <HtmlWebViewSource.Html>
+                            <![CDATA[
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  body { font: 14px sans-serif; padding: 16px; color: #1F1F1F; background: #FFFDE7; }
+  button { padding: 8px 14px; margin-top: 8px; }
+</style>
+</head>
+<body>
+<h3>HtmlWebViewSource</h3>
+<p>Inline HTML rendered by Android's WebView, embedded in a Compose <code>AndroidView</code>.</p>
+<p>JS counter: <span id="n">0</span></p>
+<button onclick="document.getElementById('n').innerText=parseInt(document.getElementById('n').innerText)+1">+1</button>
+</body>
+</html>
+                            ]]>
+                        </HtmlWebViewSource.Html>
+                    </HtmlWebViewSource>
+                </WebView.Source>
+            </WebView>
+
+            <!-- ===== URL source ===== -->
+            <Label Text="UrlWebViewSource — about:blank (no network)." FontAttributes="Bold" />
+
+            <WebView Source="about:blank" HeightRequest="120" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

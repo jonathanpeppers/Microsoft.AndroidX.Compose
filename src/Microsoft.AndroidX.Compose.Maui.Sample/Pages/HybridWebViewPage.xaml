@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="Microsoft.AndroidX.Compose.Maui.Sample.Pages.HybridWebViewPage"
+             Title="HybridWebView">
+
+    <!--
+        Phase 5 investigation page — `HybridWebView` (MAUI 9+) ships with
+        `HybridWebViewHandler`. Its platform view is again an Android
+        `WebView`, but it installs a JS bridge that round-trips messages
+        through `HybridWebView.SendRawMessage` / `RawMessageReceived`.
+
+        Hosted through `AndroidView` fallback.
+
+        The page below uses an inline HTML page (no need for a Raw asset)
+        served via `about:blank` — `HybridWebView` requires `HybridRoot`
+        when loading from `Raw/`, but for a "does it boot under Compose"
+        verification we exercise `SendRawMessage` + `RawMessageReceived`
+        on the inline document.
+    -->
+    <ScrollView>
+        <VerticalStackLayout
+            Padding="30,30"
+            Spacing="22">
+
+            <Label
+                Text="HybridWebView"
+                Style="{StaticResource Headline}" />
+
+            <Label
+                Text="`HybridWebView` (MAUI 9+) over the stock handler. Hosted by Compose `AndroidView`. The page below boots from `Raw/hybridroot/index.html`; tap the round-trip button to confirm the JS bridge works inside the fallback."
+                FontSize="13" />
+
+            <HybridWebView
+                x:Name="HybridView"
+                HeightRequest="240"
+                HybridRoot="hybridroot"
+                RawMessageReceived="OnRawMessageReceived" />
+
+            <Button
+                x:Name="SendButton"
+                Text="Send 'ping' from C# → JS"
+                Clicked="OnSendClicked" />
+
+            <Label
+                x:Name="EchoLabel"
+                Text="Awaiting echo from JS…"
+                FontSize="13" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

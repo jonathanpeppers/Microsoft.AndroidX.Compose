@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="Microsoft.AndroidX.Compose.Maui.Sample.Pages.LayoutsPage"
+             Title="Layouts">
+
+    <!--
+        Phase 5 investigation page — exercises the three MAUI layout types
+        that are NOT registered as `IComposeHandler` in
+        `UseAndroidXCompose`: `Grid`, `AbsoluteLayout`, `FlexLayout`. The
+        page itself is rooted in a Compose-backed `VerticalStackLayout`,
+        so each subtree below appears as a child of a Compose `Column`
+        and triggers the `AndroidView` fallback path in `ComposeWalker`.
+
+        Expected outcome — the stock `LayoutHandler` produces a
+        `LayoutViewGroup` (Android `ViewGroup`) whose own
+        `ICrossPlatformLayout.CrossPlatformMeasure` /
+        `CrossPlatformArrange` drives child placement; that group hosts
+        inside Compose `AndroidView` just like any other Android `View`.
+
+        Note: leaf children inside a fallback-hosted Grid/Absolute/Flex
+        are resolved by MAUI's normal handler resolution. Compose-backed
+        leaves register a `ComposeView` as their platform view and run
+        their OWN per-leaf composition there (degraded mode — same shape
+        as Phase 1 islands).
+    -->
+    <ScrollView>
+        <VerticalStackLayout
+            Padding="30,30"
+            Spacing="22">
+
+            <Label
+                Text="Layouts (fallback)"
+                Style="{StaticResource Headline}" />
+
+            <Label
+                Text="Grid / AbsoluteLayout / FlexLayout are NOT registered as `IComposeHandler` — they run through MAUI's stock `LayoutHandler` and host inside Compose via `AndroidView` interop."
+                FontSize="13" />
+
+            <!-- ===== Grid ===== -->
+            <Label Text="Grid — 2 rows × 3 cols, ColumnSpacing/RowSpacing." FontAttributes="Bold" />
+
+            <Grid
+                RowDefinitions="60,60"
+                ColumnDefinitions="*,*,*"
+                RowSpacing="6"
+                ColumnSpacing="6">
+                <BoxView Grid.Row="0" Grid.Column="0" Color="#FFCDD2" />
+                <BoxView Grid.Row="0" Grid.Column="1" Color="#F8BBD0" />
+                <BoxView Grid.Row="0" Grid.Column="2" Color="#E1BEE7" />
+                <BoxView Grid.Row="1" Grid.Column="0" Color="#C5CAE9" />
+                <BoxView Grid.Row="1" Grid.Column="1" Color="#BBDEFB" />
+                <BoxView Grid.Row="1" Grid.Column="2" Color="#B2EBF2" />
+            </Grid>
+
+            <!-- ===== AbsoluteLayout ===== -->
+            <Label Text="AbsoluteLayout — proportional and absolute positioning." FontAttributes="Bold" />
+
+            <AbsoluteLayout HeightRequest="160" BackgroundColor="#FAFAFA">
+                <BoxView
+                    Color="#512BD4"
+                    AbsoluteLayout.LayoutBounds="0,0,80,80"
+                    AbsoluteLayout.LayoutFlags="None" />
+                <BoxView
+                    Color="#009688"
+                    AbsoluteLayout.LayoutBounds="0.5,0.5,80,80"
+                    AbsoluteLayout.LayoutFlags="PositionProportional" />
+                <BoxView
+                    Color="#FF5722"
+                    AbsoluteLayout.LayoutBounds="1,1,80,80"
+                    AbsoluteLayout.LayoutFlags="PositionProportional" />
+                <Label
+                    Text="abs"
+                    TextColor="Black"
+                    AbsoluteLayout.LayoutBounds="0.5,0,0.5,40"
+                    AbsoluteLayout.LayoutFlags="PositionProportional,WidthProportional"
+                    HorizontalTextAlignment="Center" />
+            </AbsoluteLayout>
+
+            <!-- ===== FlexLayout ===== -->
+            <Label Text="FlexLayout — row wrap, justify SpaceBetween." FontAttributes="Bold" />
+
+            <FlexLayout
+                Direction="Row"
+                Wrap="Wrap"
+                JustifyContent="SpaceBetween"
+                AlignItems="Center"
+                BackgroundColor="#FFFDE7"
+                Padding="8">
+                <BoxView Color="#E53935" WidthRequest="48" HeightRequest="48" />
+                <BoxView Color="#FB8C00" WidthRequest="48" HeightRequest="48" />
+                <BoxView Color="#FDD835" WidthRequest="48" HeightRequest="48" />
+                <BoxView Color="#43A047" WidthRequest="48" HeightRequest="48" />
+                <BoxView Color="#1E88E5" WidthRequest="48" HeightRequest="48" />
+                <BoxView Color="#8E24AA" WidthRequest="48" HeightRequest="48" />
+                <BoxView Color="#6D4C41" WidthRequest="48" HeightRequest="48" />
+                <BoxView Color="#546E7A" WidthRequest="48" HeightRequest="48" />
+            </FlexLayout>
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

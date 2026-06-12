@@ -135,6 +135,33 @@ public partial class HomePage : ContentPage
                 "SemanticProperties.Description / Hint / HeadingLevel + AutomationId routed to Compose `Modifier.Semantics { … }`.",
                 Color.FromArgb("#3F51B5"),
                 "semantics"),
+
+            // ---- Phase 5 — AndroidView fallback verification ----
+            new DemoEntry(
+                "Shapes",
+                "Rectangle / Ellipse / Line / Polygon / Polyline / Path / RoundRectangle via stock ShapeViewHandler + AndroidView interop.",
+                Color.FromArgb("#7B1FA2"),
+                "shapes"),
+            new DemoEntry(
+                "GraphicsView",
+                "IDrawable through stock GraphicsViewHandler + AndroidView interop; tap to re-shuffle.",
+                Color.FromArgb("#00897B"),
+                "graphics-view"),
+            new DemoEntry(
+                "WebView",
+                "HtmlWebViewSource + about:blank URL inside Compose AndroidView.",
+                Color.FromArgb("#1976D2"),
+                "web-view"),
+            new DemoEntry(
+                "HybridWebView",
+                "HybridWebView (MAUI 9+) over the stock handler; C#↔JS round-trip.",
+                Color.FromArgb("#0097A7"),
+                "hybrid-web-view"),
+            new DemoEntry(
+                "Layouts (fallback)",
+                "Grid / AbsoluteLayout / FlexLayout hosted via the AndroidView fallback path.",
+                Color.FromArgb("#5D4037"),
+                "layouts"),
         };
     }
 

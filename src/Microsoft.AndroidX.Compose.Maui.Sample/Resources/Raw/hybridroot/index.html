@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Hybrid root</title>
+    <style>
+        body {
+            font: 14px sans-serif;
+            padding: 16px;
+            color: #1F1F1F;
+            background: #E1F5FE;
+        }
+        button {
+            padding: 8px 14px;
+            margin-top: 8px;
+        }
+        pre {
+            background: #FFFFFF;
+            padding: 8px;
+            border: 1px solid #B3E5FC;
+            border-radius: 4px;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <h3>HybridWebView root</h3>
+    <p>Loaded from <code>Raw/hybridroot/index.html</code>. Tap the button or use the C# "Send 'ping' from C# → JS" button above to round-trip through MAUI's hybrid bridge.</p>
+
+    <button id="echo">Send 'pong' from JS → C#</button>
+
+    <pre id="log">Awaiting events…</pre>
+
+    <script>
+        const log = (msg) => {
+            const el = document.getElementById('log');
+            el.innerText = `[${new Date().toLocaleTimeString()}] ${msg}\n` + el.innerText;
+        };
+
+        document.getElementById('echo').addEventListener('click', () => {
+            log('JS → C#: pong');
+            window.HybridWebView.SendRawMessage('pong');
+        });
+
+        // MAUI calls window.HybridWebView.OnRawMessage(payload) for SendRawMessage.
+        window.HybridWebView ||= {};
+        window.HybridWebView.OnRawMessage = (payload) => {
+            log(`C# → JS: ${payload}`);
+            // Echo back so the C# label confirms a round-trip.
+            window.HybridWebView.SendRawMessage(`echo:${payload}`);
+        };
+
+        log('boot');
+    </script>
+</body>
+</html>
