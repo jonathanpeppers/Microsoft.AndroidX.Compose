@@ -74,6 +74,9 @@ public partial class SearchBarHandler : ComposeElementHandler<ISearchBar>
     /// <inheritdoc/>
     public override ComposableNode BuildNode(IComposer composer)
     {
+        var virtualView = VirtualView;
+        ArgumentNullException.ThrowIfNull(virtualView);
+
         var packed       = _color.Value;
         var size         = _fontSize.Value;
         var bold         = _bold.Value;
@@ -114,7 +117,7 @@ public partial class SearchBarHandler : ComposeElementHandler<ISearchBar>
             onSearch: OnSearchInvoked);
 
         var modifier = (fill ? Modifier.FillMaxWidth() : Modifier.Companion)
-            .ApplyGestures(VirtualView!, MauiContext);
+            .ApplyGestures(virtualView, MauiContext);
         field.PrependModifier(modifier);
         return field;
     }

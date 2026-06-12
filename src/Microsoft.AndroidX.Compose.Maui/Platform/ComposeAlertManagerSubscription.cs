@@ -251,7 +251,7 @@ public class ComposeAlertManagerSubscription : DispatchProxy
                 Text          = string.IsNullOrEmpty(args.Message) ? null : new ComposeText(args.Message),
                 ConfirmButton = new ComposeTextButton(onClick: Confirm)
                 {
-                    new ComposeText(singleButton ? (args.Cancel ?? "OK") : args.Accept!),
+                    new ComposeText(singleButton ? (args.Cancel ?? "OK") : (args.Accept ?? string.Empty)),
                 },
                 DismissButton = singleButton || string.IsNullOrEmpty(args.Cancel) ? null
                     : new ComposeTextButton(onClick: Cancel)
@@ -267,7 +267,7 @@ public class ComposeAlertManagerSubscription : DispatchProxy
         var activity = ResolveActivity(sender);
         if (activity is null)
         {
-            args.Result.TrySetResult(null!);
+            args.Result.TrySetResult(null);
             return;
         }
 
@@ -297,7 +297,7 @@ public class ComposeAlertManagerSubscription : DispatchProxy
         ShowOnUiThread(activity, (overlay, dismiss) =>
         {
             void Confirm() { args.Result.TrySetResult(text.Value); dismiss(); }
-            void Cancel()  { args.Result.TrySetResult(null!);      dismiss(); }
+            void Cancel()  { args.Result.TrySetResult(null);      dismiss(); }
 
             // Compose AlertDialog's "text" slot is a single
             // composable — pack the message + the field in a
@@ -331,7 +331,7 @@ public class ComposeAlertManagerSubscription : DispatchProxy
                         new ComposeText(args.Cancel),
                     },
             };
-        }, onUnattached: () => args.Result.TrySetResult(null!));
+        }, onUnattached: () => args.Result.TrySetResult(null));
     }
 
     static void OnActionSheetRequested(MauiPage sender, ActionSheetArguments args)

@@ -82,12 +82,13 @@ public partial class BorderHandler : ComposeElementHandler<MauiBorder>
         var context = MauiContext
             ?? throw new InvalidOperationException("MauiContext not set on BorderHandler.");
 
-        var border  = (Microsoft.Maui.Controls.Border?)VirtualView;
-        var padding = (VirtualView as IPadding)?.Padding ?? Thickness.Zero;
+        var border = (Microsoft.Maui.Controls.Border?)VirtualView;
+        ArgumentNullException.ThrowIfNull(border);
+        var padding = (border as IPadding)?.Padding ?? Thickness.Zero;
         var width   = _strokeWidth.Value;
         var stroke  = _strokeColor.Value;
         var bg      = _backgroundColor.Value;
-        var shape   = ResolveShape(border?.StrokeShape);
+        var shape   = ResolveShape(border.StrokeShape);
 
         Modifier? modifier = null;
         if (shape is not null)
@@ -108,7 +109,7 @@ public partial class BorderHandler : ComposeElementHandler<MauiBorder>
         }
 
         var box = new Box();
-        modifier = (modifier ?? Modifier.Companion).ApplyGestures(border!, context);
+        modifier = (modifier ?? Modifier.Companion).ApplyGestures(border, context);
         box.Modifier = modifier;
 
         // Walk the Border's content (IContentView.PresentedContent)

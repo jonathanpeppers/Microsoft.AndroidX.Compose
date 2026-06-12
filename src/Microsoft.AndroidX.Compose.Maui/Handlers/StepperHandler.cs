@@ -84,6 +84,9 @@ public partial class StepperHandler : ComposeElementHandler<IStepper>
     /// <inheritdoc/>
     public override ComposableNode BuildNode(IComposer composer)
     {
+        var virtualView = VirtualView;
+        ArgumentNullException.ThrowIfNull(virtualView);
+
         var value    = _value.Value;
         var min      = _min.Value;
         var max      = _max.Value;
@@ -102,7 +105,7 @@ public partial class StepperHandler : ComposeElementHandler<IStepper>
                 new ComposeText("+"),
             },
         };
-        row.Modifier = Modifier.Companion.ApplyGestures(VirtualView!, MauiContext);
+        row.Modifier = Modifier.Companion.ApplyGestures(virtualView, MauiContext);
         return row;
 
         void Decrement() => Apply(value - interval);

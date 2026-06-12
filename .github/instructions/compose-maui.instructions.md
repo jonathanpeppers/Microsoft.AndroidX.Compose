@@ -132,7 +132,11 @@ public partial class FooHandler : ComposeElementHandler<IFoo>
 
     /// <inheritdoc/>
     public override ComposableNode BuildNode(IComposer composer)
-        => new Foo(/* read _text.Value etc. */);
+    {
+        var virtualView = VirtualView;
+        ArgumentNullException.ThrowIfNull(virtualView);
+        return new Foo(/* read _text.Value etc. */);
+    }
 
     public static void MapText(FooHandler handler, IFoo foo) =>
         handler._text.Value = foo.Text ?? string.Empty;
@@ -607,5 +611,22 @@ duplicates the stock behavior without adding anything.
 - File-scoped namespaces.
 - XML docs on every public type and member.
 - `ArgumentNullException.ThrowIfNull(x)` for parameter null checks.
+- **Never use the `!` (null-forgiving postfix) operator.** This rule has
+  no carve-outs — handler property accesses, Android framework getters,
+  `TaskCompletionSource<T?>` null forwards, and every other site go
+  through a local + assertion instead. Canonical handler `BuildNode`
+  preamble:
+  ```csharp
+  public override ComposableNode BuildNode(IComposer composer)
+  {
+      var virtualView = VirtualView;
+      ArgumentNullException.ThrowIfNull(virtualView);
+      // …read virtualView.* and pass to ApplyGestures / ApplySemantics …
+  }
+  ```
+  Same shape for `MauiContext` (or `?? throw new InvalidOperationException("MauiContext not set on FooHandler.")`),
+  `Context`, `PlatformView`, etc. Don't write `VirtualView!.WidthRequest`
+  — make the contract explicit and the `NullReferenceException` becomes
+  an `ArgumentNullException` naming the variable.
 - Don't add `// ---- Section ----` banners — one file per type makes
   them noise.

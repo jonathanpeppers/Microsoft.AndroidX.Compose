@@ -71,6 +71,9 @@ public partial class EntryHandler : ComposeElementHandler<IEntry>
     /// <inheritdoc/>
     public override ComposableNode BuildNode(IComposer composer)
     {
+        var virtualView = VirtualView;
+        ArgumentNullException.ThrowIfNull(virtualView);
+
         SubscribeToViewProperties();
 
         var packed       = _color.Value;
@@ -115,8 +118,8 @@ public partial class EntryHandler : ComposeElementHandler<IEntry>
         // Single chained PrependModifier — combines layout-fill with
         // the cross-cutting view properties.
         var outer = (fill ? Modifier.FillMaxWidth() : Modifier.Companion)
-            .ApplyViewProperties(VirtualView!)
-            .ApplyGestures(VirtualView!, MauiContext);
+            .ApplyViewProperties(virtualView)
+            .ApplyGestures(virtualView, MauiContext);
         field.PrependModifier(outer);
         return field;
     }

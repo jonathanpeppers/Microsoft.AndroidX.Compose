@@ -64,6 +64,9 @@ public partial class SwitchHandler : ComposeElementHandler<ISwitch>
     /// <inheritdoc/>
     public override ComposableNode BuildNode(IComposer composer)
     {
+        var virtualView = VirtualView;
+        ArgumentNullException.ThrowIfNull(virtualView);
+
         var track = _trackColor.Value;
         var thumb = _thumbColor.Value;
         var sw = new ComposeSwitch(@checked: _on.Value,
@@ -74,7 +77,7 @@ public partial class SwitchHandler : ComposeElementHandler<ISwitch>
                 checkedTrackColor:   track,
                 uncheckedThumbColor: thumb,
                 uncheckedTrackColor: track);
-        sw.PrependModifier(Modifier.Companion.ApplyGestures(VirtualView!, MauiContext));
+        sw.PrependModifier(Modifier.Companion.ApplyGestures(virtualView, MauiContext));
         return sw;
     }
 

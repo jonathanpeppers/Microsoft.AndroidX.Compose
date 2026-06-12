@@ -62,12 +62,15 @@ public partial class CheckBoxHandler : ComposeElementHandler<ICheckBox>
     /// <inheritdoc/>
     public override ComposableNode BuildNode(IComposer composer)
     {
+        var virtualView = VirtualView;
+        ArgumentNullException.ThrowIfNull(virtualView);
+
         var color = _color.Value;
         var box   = new ComposeCheckbox(@checked: _checked.Value,
                                         onCheckedChange: OnCheckedChanged);
         if (color is not null)
             box.Colors = composer.CheckboxColors(checkedColor: color);
-        box.PrependModifier(Modifier.Companion.ApplyGestures(VirtualView!, MauiContext));
+        box.PrependModifier(Modifier.Companion.ApplyGestures(virtualView, MauiContext));
         return box;
     }
 

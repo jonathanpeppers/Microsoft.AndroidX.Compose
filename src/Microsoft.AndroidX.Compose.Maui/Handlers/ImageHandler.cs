@@ -90,6 +90,9 @@ public partial class ImageHandler : ComposeElementHandler<MauiIImage>
     /// <inheritdoc/>
     public override ComposableNode BuildNode(IComposer composer)
     {
+        var virtualView = VirtualView;
+        ArgumentNullException.ThrowIfNull(virtualView);
+
         SubscribeToViewProperties();
 
         // Apply cross-cutting view properties (Opacity / Translation /
@@ -98,7 +101,7 @@ public partial class ImageHandler : ComposeElementHandler<MauiIImage>
         // box MAUI sized for it. The placeholder Box gets the modifier
         // too so an Image with Opacity=0 stays invisible even before
         // the source loads.
-        var modifier = s_fillMaxSize.ApplyViewProperties(VirtualView!).ApplyGestures(VirtualView!, MauiContext);
+        var modifier = s_fillMaxSize.ApplyViewProperties(virtualView).ApplyGestures(virtualView, MauiContext);
         var cs = _contentScale.Value;
 
         // Painter wins over the resource id so a freshly-loaded

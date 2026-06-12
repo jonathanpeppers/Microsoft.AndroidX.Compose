@@ -77,6 +77,9 @@ public partial class SliderHandler : ComposeElementHandler<ISlider>
     /// <inheritdoc/>
     public override ComposableNode BuildNode(IComposer composer)
     {
+        var virtualView = VirtualView;
+        ArgumentNullException.ThrowIfNull(virtualView);
+
         var min        = _min.Value;
         var max        = _max.Value;
         var thumb      = _thumbColor.Value;
@@ -99,7 +102,7 @@ public partial class SliderHandler : ComposeElementHandler<ISlider>
                 activeTrackColor:   minTrack,
                 inactiveTrackColor: maxTrack);
 
-        slider.PrependModifier(Modifier.FillMaxWidth().ApplyGestures(VirtualView!, MauiContext));
+        slider.PrependModifier(Modifier.FillMaxWidth().ApplyGestures(virtualView, MauiContext));
         return slider;
     }
 

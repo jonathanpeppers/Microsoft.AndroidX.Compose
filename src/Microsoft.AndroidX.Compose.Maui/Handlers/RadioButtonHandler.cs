@@ -82,13 +82,16 @@ public partial class RadioButtonHandler : ComposeElementHandler<IRadioButton>
     /// <inheritdoc/>
     public override ComposableNode BuildNode(IComposer composer)
     {
+        var virtualView = VirtualView;
+        ArgumentNullException.ThrowIfNull(virtualView);
+
         var packed = _color.Value;
         var size   = _fontSize.Value;
         var bold   = _bold.Value;
         var label  = _label.Value;
 
         var radio = new ComposeRadioButton(selected: _checked.Value, onClick: OnSelected);
-        var gestureModifier = Modifier.Companion.ApplyGestures(VirtualView!, MauiContext);
+        var gestureModifier = Modifier.Companion.ApplyGestures(virtualView, MauiContext);
         if (string.IsNullOrEmpty(label))
         {
             radio.PrependModifier(gestureModifier);

@@ -80,6 +80,9 @@ public partial class TimePickerHandler : ComposeElementHandler<ITimePicker>
     /// <inheritdoc/>
     public override ComposableNode BuildNode(IComposer composer)
     {
+        var virtualView = VirtualView;
+        ArgumentNullException.ThrowIfNull(virtualView);
+
         return new Composed(c =>
         {
             var ticks   = _ticks.Value;
@@ -122,8 +125,8 @@ public partial class TimePickerHandler : ComposeElementHandler<ITimePicker>
             // Clip, Shadow). The dialog is a separate window, so ViewProperties
             // only applies to the trigger button.
             var outer = (fill ? Modifier.FillMaxWidth() : Modifier.Companion)
-                .ApplyViewProperties(VirtualView!)
-                .ApplyGestures(VirtualView!, MauiContext);
+                .ApplyViewProperties(virtualView)
+                .ApplyGestures(virtualView, MauiContext);
             trigger.PrependModifier(outer);
 
             var dialog = isOpen
@@ -172,8 +175,11 @@ public partial class TimePickerHandler : ComposeElementHandler<ITimePicker>
         handler._ticks.Value = tp.Time is TimeSpan t ? t.Ticks : null;
 
     /// <summary>Map <see cref="ITimePicker.Format"/> to the formatted-label slot.</summary>
-    public static void MapFormat(TimePickerHandler handler, ITimePicker tp) =>
-        handler._format.Value = string.IsNullOrEmpty(tp.Format) ? "t" : tp.Format!;
+    public static void MapFormat(TimePickerHandler handler, ITimePicker tp)
+    {
+        var format = tp.Format;
+        handler._format.Value = string.IsNullOrEmpty(format) ? "t" : format;
+    }
 
     /// <summary>Map <see cref="ITextStyle.TextColor"/> to the trigger label colour slot.</summary>
     public static void MapTextColor(TimePickerHandler handler, ITimePicker tp) =>

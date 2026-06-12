@@ -214,7 +214,7 @@ internal static class GestureBridge
 
     static Modifier ApplyPan(Modifier modifier, MauiPanRecognizer pan, MauiView view, Java.Lang.Integer key)
     {
-        var density = global::Android.Content.Res.Resources.System!.DisplayMetrics!.Density;
+        var density = GetDensity();
         var controller = (IPanGestureController)pan;
 
         // Per-bridge-instance state. Captured into the closures and
@@ -247,10 +247,20 @@ internal static class GestureBridge
     static int s_panGestureCounter;
     static int AllocateGestureId() => Interlocked.Increment(ref s_panGestureCounter);
 
+    static float GetDensity()
+    {
+        var resources = global::Android.Content.Res.Resources.System;
+        ArgumentNullException.ThrowIfNull(resources);
+        var metrics = resources.DisplayMetrics;
+        ArgumentNullException.ThrowIfNull(metrics);
+        return metrics.Density;
+    }
+
     // -- Pinch --------------------------------------------------------
 
     static Modifier ApplyPinch(Modifier modifier, MauiPinchRecognizer pinch, MauiView view, Java.Lang.Integer key)
     {
+        var density = GetDensity();
         var controller = (IPinchGestureController)pinch;
 
         // Compose's detectTransformGestures fires per-frame zoom
@@ -263,12 +273,26 @@ internal static class GestureBridge
         return modifier.DetectTransformGestures(
             onGesture: (centroid, _, zoom, _) =>
             {
+                // MAUI's IPinchGestureController expects the scale
+                // point as **normalized [0, 1] coordinates** relative
+                // to the view bounds (matching the stock Android
+                // GesturePlatformManager: `(focusX - left) / width`).
+                // Compose hands us `centroid` in raw layout pixels;
+                // view.Width / view.Height are in DIPs, so multiply
+                // by density to compare apples-to-apples and divide.
+                // Falls back to 0 when the view hasn't been laid out
+                // yet (Width <= 0) to avoid NaN/Inf in ScaleOrigin.
+                double widthPx = view.Width * density;
+                double heightPx = view.Height * density;
+                double normX = widthPx > 0 ? centroid.X / widthPx : 0d;
+                double normY = heightPx > 0 ? centroid.Y / heightPx : 0d;
+                var scaleOrigin = new Point(normX, normY);
                 if (!started)
                 {
-                    controller.SendPinchStarted(view, new Point(centroid.X, centroid.Y));
+                    controller.SendPinchStarted(view, scaleOrigin);
                     started = true;
                 }
-                controller.SendPinch(view, zoom, new Point(centroid.X, centroid.Y));
+                controller.SendPinch(view, zoom, scaleOrigin);
             },
             key: key);
     }
@@ -277,7 +301,7 @@ internal static class GestureBridge
 
     static Modifier ApplySwipe(Modifier modifier, MauiSwipeRecognizer swipe, MauiView view, Java.Lang.Integer key)
     {
-        var density = global::Android.Content.Res.Resources.System!.DisplayMetrics!.Density;
+        var density = GetDensity();
 
         // Accumulate per-frame deltas, then synthesize a direction at
         // onDragEnd if the dominant-axis total exceeds the threshold.

@@ -80,6 +80,9 @@ public partial class EditorHandler : ComposeElementHandler<IEditor>
     /// <inheritdoc/>
     public override ComposableNode BuildNode(IComposer composer)
     {
+        var virtualView = VirtualView;
+        ArgumentNullException.ThrowIfNull(virtualView);
+
         var packed       = _color.Value;
         var size         = _fontSize.Value;
         var bold         = _bold.Value;
@@ -117,7 +120,7 @@ public partial class EditorHandler : ComposeElementHandler<IEditor>
         var modifier = Modifier.HeightIn(min: new Dp(96));
         if (fill)
             modifier = modifier.FillMaxWidth();
-        modifier = modifier.ApplyGestures(VirtualView!, MauiContext);
+        modifier = modifier.ApplyGestures(virtualView, MauiContext);
         field.PrependModifier(modifier);
         return field;
     }

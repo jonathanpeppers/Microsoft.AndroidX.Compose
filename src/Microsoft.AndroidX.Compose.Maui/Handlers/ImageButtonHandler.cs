@@ -83,8 +83,11 @@ public partial class ImageButtonHandler : ComposeElementHandler<MauiIImageButton
     /// <inheritdoc/>
     public override ComposableNode BuildNode(IComposer composer)
     {
+        var virtualView = VirtualView;
+        ArgumentNullException.ThrowIfNull(virtualView);
+
         _ = _paddingVersion.Value;  // subscribe — Padding change bumps this
-        var padding = VirtualView is IPadding p ? p.Padding : Thickness.Zero;
+        var padding = virtualView is IPadding p ? p.Padding : Thickness.Zero;
         var stroke  = _strokeColor.Value;
         var width   = _strokeWidth.Value;
         var corner  = _cornerRadius.Value;
@@ -126,7 +129,7 @@ public partial class ImageButtonHandler : ComposeElementHandler<MauiIImageButton
         }
 
         var button = new ComposeIconButton(OnClicked) { imageNode };
-        modifier = (modifier ?? Modifier.Companion).ApplyGestures(VirtualView!, MauiContext);
+        modifier = (modifier ?? Modifier.Companion).ApplyGestures(virtualView, MauiContext);
         button.Modifier = modifier;
         return button;
     }

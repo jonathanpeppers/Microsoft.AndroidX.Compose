@@ -1203,44 +1203,7 @@ public static class ModifierExtensions
         var doubleTapCb = onDoubleTap is null ? null : new OffsetCallback(onDoubleTap);
 
         var block = new PointerInputBlock(tapCb, pressCb, longPressCb, doubleTapCb);
-
-        // Resolve `key` to a Java object. Kotlin uses reference equality
-        // for the default-overload form, so we want a stable JNI object
-        // for the "no key" path — Kotlin.Unit.Instance is the canonical
-        // singleton.
-        var keyObj = key switch
-        {
-            null => (Java.Lang.Object)Kotlin.Unit.Instance!,
-            Java.Lang.Object jlo => jlo,
-            string s => new Java.Lang.String(s),
-            int i => Java.Lang.Integer.ValueOf(i),
-            long l => Java.Lang.Long.ValueOf(l),
-            bool b => Java.Lang.Boolean.ValueOf(b),
-            _ => new Java.Lang.String(key.ToString() ?? ""),
-        };
-
-        return modifier.Append(curr =>
-        {
-            // Construct the Java helper that implements
-            // PointerInputEventHandler, wrapping our Function2 JCW.
-            // The handler is a local ref consumed by ModifierPointerInput
-            // and released when its JNI frame pops.
-            var handlerLocal = IntPtr.Zero;
-            try
-            {
-                handlerLocal = ComposeBridges.NewPointerInputEventHandler(
-                    ((Java.Lang.Object)block).Handle);
-                return ComposeBridges.ModifierPointerInput(
-                    curr, keyObj.Handle, handlerLocal);
-            }
-            finally
-            {
-                if (handlerLocal != IntPtr.Zero)
-                    Android.Runtime.JNIEnv.DeleteLocalRef(handlerLocal);
-                GC.KeepAlive(keyObj);
-                GC.KeepAlive(block);
-            }
-        });
+        return AppendPointerInput(modifier, key, block);
     }
 
     /// <summary>
@@ -1294,36 +1257,7 @@ public static class ModifierExtensions
         var dragCb   = new DragCallback(onDrag);
 
         var block = new DragGestureBlock(startCb, endCb, cancelCb, dragCb);
-
-        var keyObj = key switch
-        {
-            null => (Java.Lang.Object)Kotlin.Unit.Instance!,
-            Java.Lang.Object jlo => jlo,
-            string s => new Java.Lang.String(s),
-            int i => Java.Lang.Integer.ValueOf(i),
-            long l => Java.Lang.Long.ValueOf(l),
-            bool b => Java.Lang.Boolean.ValueOf(b),
-            _ => new Java.Lang.String(key.ToString() ?? ""),
-        };
-
-        return modifier.Append(curr =>
-        {
-            var handlerLocal = IntPtr.Zero;
-            try
-            {
-                handlerLocal = ComposeBridges.NewPointerInputEventHandler(
-                    ((Java.Lang.Object)block).Handle);
-                return ComposeBridges.ModifierPointerInput(
-                    curr, keyObj.Handle, handlerLocal);
-            }
-            finally
-            {
-                if (handlerLocal != IntPtr.Zero)
-                    Android.Runtime.JNIEnv.DeleteLocalRef(handlerLocal);
-                GC.KeepAlive(keyObj);
-                GC.KeepAlive(block);
-            }
-        });
+        return AppendPointerInput(modifier, key, block);
     }
 
     /// <summary>
@@ -1368,7 +1302,19 @@ public static class ModifierExtensions
 
         var gestureCb = new TransformGestureCallback(onGesture);
         var block = new TransformGestureBlock(panZoomLock, gestureCb);
+        return AppendPointerInput(modifier, key, block);
+    }
 
+    // Shared plumbing for DetectTapGestures / DetectDragGestures /
+    // DetectTransformGestures: resolve the user-supplied `key` to a
+    // Java object (Kotlin uses reference equality for the default-
+    // overload form, so we want a stable JNI object for the "no key"
+    // path — Kotlin.Unit.Instance is the canonical singleton), then
+    // wrap the gesture-block JCW in a PointerInputEventHandler and
+    // apply Modifier.pointerInput(key, handler). Both keyObj and the
+    // block are kept alive across the JNI call via GC.KeepAlive.
+    static Modifier AppendPointerInput(Modifier modifier, object? key, Java.Lang.Object block)
+    {
         var keyObj = key switch
         {
             null => (Java.Lang.Object)Kotlin.Unit.Instance!,
@@ -1385,8 +1331,7 @@ public static class ModifierExtensions
             var handlerLocal = IntPtr.Zero;
             try
             {
-                handlerLocal = ComposeBridges.NewPointerInputEventHandler(
-                    ((Java.Lang.Object)block).Handle);
+                handlerLocal = ComposeBridges.NewPointerInputEventHandler(block.Handle);
                 return ComposeBridges.ModifierPointerInput(
                     curr, keyObj.Handle, handlerLocal);
             }

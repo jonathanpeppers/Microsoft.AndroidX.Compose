@@ -57,7 +57,10 @@ public partial class ActivityIndicatorHandler : ComposeElementHandler<IActivityI
     /// <inheritdoc/>
     public override ComposableNode BuildNode(IComposer composer)
     {
-        var gestureModifier = Modifier.Companion.ApplyGestures(VirtualView!, MauiContext);
+        var virtualView = VirtualView;
+        ArgumentNullException.ThrowIfNull(virtualView);
+
+        var gestureModifier = Modifier.Companion.ApplyGestures(virtualView, MauiContext);
         if (!_isRunning.Value)
             return new Box { Modifier = gestureModifier };
 

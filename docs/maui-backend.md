@@ -1378,7 +1378,7 @@ the transform layer.
 | `TapGestureRecognizer`     | `detectTapGestures(onTap = …)`        | `TapGestureRecognizer.SendTapped(view)` (internal — `[UnsafeAccessor]`) |
 | `PanGestureRecognizer`     | `detectDragGestures(onStart/onDrag/onEnd)` | `IPanGestureController.SendPanStarted/SendPan(view, totalX, totalY, gestureId)/SendPanCompleted` |
 | `PinchGestureRecognizer`   | `detectTransformGestures(onGesture)`  | `IPinchGestureController.SendPinchStarted(view, pivot)/SendPinch(view, scaleDelta, pivot)` |
-| `SwipeGestureRecognizer`   | `detectHorizontalDragGestures` / `detectVerticalDragGestures` | `SwipeGestureRecognizer.SendSwiped(view, SwipeDirection)` (public — direction synthesized from velocity sign + magnitude threshold) |
+| `SwipeGestureRecognizer`   | `detectDragGestures(onStart/onDrag/onEnd)` | `SwipeGestureRecognizer.SendSwiped(view, SwipeDirection)` (public — direction synthesized at end-of-drag from the dominant axis + magnitude vs. `Threshold`) |
 | `PointerGestureRecognizer` | `detectTapGestures(onPress + onTap)`  | `SendPointerPressed/Released(view, …)` (internal — `[UnsafeAccessor]`) |
 
 **`Modifier.PointerInput(key)` key strategy.** Compose's

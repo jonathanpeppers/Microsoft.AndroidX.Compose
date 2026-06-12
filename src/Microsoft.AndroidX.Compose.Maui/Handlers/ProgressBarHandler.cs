@@ -60,13 +60,16 @@ public partial class ProgressBarHandler : ComposeElementHandler<IProgress>
     /// <inheritdoc/>
     public override ComposableNode BuildNode(IComposer composer)
     {
+        var virtualView = VirtualView;
+        ArgumentNullException.ThrowIfNull(virtualView);
+
         var packed = _color.Value;
         var bar = new ComposeLinearProgressIndicator
         {
             Progress = _progress.Value,
             Color    = packed.HasValue ? new ComposeColor(packed.Value) : null,
         };
-        bar.PrependModifier(Modifier.FillMaxWidth().ApplyGestures(VirtualView!, MauiContext));
+        bar.PrependModifier(Modifier.FillMaxWidth().ApplyGestures(virtualView, MauiContext));
         return bar;
     }
 
