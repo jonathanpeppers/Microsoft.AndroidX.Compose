@@ -1,6 +1,7 @@
 using AndroidX.Compose;
 using AndroidX.Compose.Runtime;
 using AndroidX.Compose.UI.Platform;
+using Microsoft.AndroidX.Compose.Maui.Platform;
 using Microsoft.Maui.Handlers;
 
 namespace Microsoft.AndroidX.Compose.Maui;
@@ -65,9 +66,52 @@ public abstract class ComposeElementHandler<TVirtualView> : ViewHandler<TVirtual
         // composition when the view is attached to a window. Inside
         // a Compose-aware parent the walker calls BuildNode directly
         // and this composition is never created.
+        //
+        // The wrapping below — MaterialTheme over the leaf's node —
+        // only matters on the standalone-fallback path (the leaf's
+        // ComposeView ends up attached to a stock Android ViewGroup,
+        // e.g. stock Shell's FlyoutItem template renders MAUI Labels
+        // through us with no surrounding Compose parent). Without it
+        // the leaf renders with Compose's pre-theme defaults
+        // (LocalContentColor = Color.Black, no M3 typography), so a
+        // Label drawn on a dark flyout background reads black-on-dark
+        // — invisible. See #248 for the user-visible Shell flyout
+        // symptom this fix targets.
+        //
+        // The wrap is keyed off the singleton ThemeManager so MAUI's
+        // RequestedTheme / UserAppTheme drives both the page-rooted
+        // composition (via PageHandler.MapContent) and this fallback
+        // path consistently. When the service isn't registered (the
+        // host called us without UseAndroidXCompose) we skip the wrap
+        // — BuildNode still runs, just without theming.
         var platformView = PlatformView
             ?? throw new InvalidOperationException("PlatformView not set on ComposeElementHandler.");
-        platformView.SetContent(BuildNode);
+        var theme = MauiContext?.Services.GetService<ThemeManager>();
+        if (theme is null)
+        {
+            platformView.SetContent(BuildNode);
+            return;
+        }
+        platformView.SetContent(c =>
+        {
+            var node = BuildNode(c);
+            // Surface paints the M3 `surface` color behind the leaf
+            // and sets LocalContentColor = onSurface so descendant
+            // Text / IconButton glyphs tint against the active scheme
+            // without the caller specifying TextColor. This matches
+            // the wrap PageHandler.MapContent emits for the page
+            // root; the leaf-level wrap kicks in only when there's
+            // no enclosing Compose composition already providing it.
+            var surface = new Surface();
+            surface.Add(node);
+            var themed = new MaterialTheme
+            {
+                Dark            = theme.IsDark.Value,
+                UseDynamicColor = false,
+            };
+            themed.Add(surface);
+            return themed;
+        });
     }
 
     /// <inheritdoc/>

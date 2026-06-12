@@ -1951,14 +1951,17 @@ visual chrome:
   pattern (Phase 10 + 4c, see `ModalBottomSheet`) are in place;
   hand-write a drawer state holder wired to `IFlyoutView`'s
   `IsPresented`.
-- **Slice 4 — `ShellHandler`** (closes #248). Stock `ShellRenderer`
-  works; the issue is its built-in `FlyoutItem` template uses MAUI
-  `Label`s, which our `LabelHandler` renders **without** any
-  Material chrome (no padding, font, ripple) — bare text. The
-  cleanest narrow fix is per-leaf "host context detection" inside
-  `LabelHandler` (when the leaf's parent chain goes through
-  `BaseShellItem`, switch to a `ListItem`-styled Compose body)
-  rather than rebuilding Shell on Compose. A full Shell handler
+- **Slice 4 — `ShellHandler`** (closes #248). Stock works; the
+  visible regression was that the built-in `FlyoutItem` template's
+  MAUI `Label`s rendered through our `LabelHandler` without an
+  enclosing Compose theme — bare black text on whatever Material
+  background the flyout painted, invisible in dark mode. Slice 1
+  also fixes that root cause: `ComposeElementHandler.SetVirtualView`
+  now wraps the standalone-fallback composition in a
+  `MaterialTheme { Dark = theme.IsDark.Value }` + M3 `Surface`, so
+  every leaf hosted directly inside a stock parent (Shell flyout,
+  custom layouts, …) inherits the active scheme. The flyout itself
+  remains stock `DrawerLayout` chrome; a full Compose Shell handler
   (`Scaffold` + `ModalNavigationDrawer` + `NavigationBar` +
   URI-routed `NavHost`) is a multi-week effort and stays scoped
   out.
