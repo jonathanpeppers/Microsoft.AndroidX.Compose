@@ -37,6 +37,19 @@ namespace Microsoft.AndroidX.Compose.Maui.Handlers;
 /// reconstitute live in <see cref="BuildNode(IComposer)"/>, the same
 /// trick <see cref="LayoutHandler"/> uses for <c>Thickness</c>.</para>
 ///
+/// <para><see cref="IDatePicker.MinimumDate"/> /
+/// <see cref="IDatePicker.MaximumDate"/> map to a single
+/// <see cref="DateRangeSelectableDates"/> JCW adapter, allocated once
+/// per handler as a <c>readonly</c> field — its JNI identity is part of
+/// <c>rememberDatePickerState</c>'s cache key, so re-allocating per
+/// composition would invalidate the wrapper. Mutating the bounds is
+/// cheap; Kotlin re-invokes <c>isSelectableDate</c> on every grid
+/// render. To force the picker to re-key when an external push moves
+/// either bound past the current selection, the
+/// <c>composer.Remember(...)</c> call below is keyed on
+/// <c>(_minTicks, _maxTicks)</c> so a bound change rebuilds the
+/// wrapper and Kotlin re-clamps any out-of-range selection.</para>
+///
 /// <para>Compose's <see cref="DatePickerState"/> wrapper exposes a
 /// <c>Jvm</c> field that's only populated <em>during</em> the first
 /// <see cref="ComposeDatePicker"/> render — writing
@@ -56,11 +69,8 @@ public partial class DatePickerHandler : ComposeElementHandler<IDatePicker>
         new PropertyMapper<IDatePicker, DatePickerHandler>(ViewHandler.ViewMapper)
         {
             [nameof(IDatePicker.Date)]                = MapDate,
-            // MinimumDate / MaximumDate are intentionally NOT mapped here —
-            // wiring them through to Compose's DatePickerState requires
-            // lifting `RememberDatePickerState` to a Phase 4b parameterised
-            // wrapper that surfaces `yearRange` (and ideally an
-            // `ISelectableDates` adapter). Tracked as a Slice 5 follow-up.
+            [nameof(IDatePicker.MinimumDate)]         = MapMinimumDate,
+            [nameof(IDatePicker.MaximumDate)]         = MapMaximumDate,
             [nameof(IDatePicker.Format)]              = MapFormat,
             [nameof(ITextStyle.TextColor)]            = MapTextColor,
             [nameof(ITextStyle.Font)]                 = MapFont,
@@ -72,12 +82,19 @@ public partial class DatePickerHandler : ComposeElementHandler<IDatePicker>
         new(ViewCommandMapper);
 
     readonly MutableState<long?>  _ticks      = new((long?)null);
+    readonly MutableState<long?>  _minTicks   = new((long?)null);
+    readonly MutableState<long?>  _maxTicks   = new((long?)null);
     readonly MutableState<string> _format     = new("d");
     readonly MutableState<long?>  _textColor  = new((long?)null);
     readonly MutableState<int?>   _fontSize   = new((int?)null);
     readonly MutableState<bool>   _bold       = new(false);
     readonly MutableState<bool>   _open       = new(false);
     readonly MutableState<bool>   _fillWidth  = new(false);
+
+    // One adapter per handler — its JNI identity is part of the
+    // rememberDatePickerState cache key, so it must outlive every
+    // recomposition. Mutated by MapMinimumDate / MapMaximumDate.
+    readonly DateRangeSelectableDates _selectableDates = new();
 
     /// <summary>Construct a handler with the default mappers.</summary>
     public DatePickerHandler() : base(Mapper, CommandMapper) { }
@@ -96,18 +113,38 @@ public partial class DatePickerHandler : ComposeElementHandler<IDatePicker>
         // demo's `c => { … }` pattern.
         return new Composed(c =>
         {
-            var state = c.Remember(() => new DatePickerState());
+            var ticks    = _ticks.Value;
+            var minTicks = _minTicks.Value;
+            var maxTicks = _maxTicks.Value;
+            var format   = string.IsNullOrEmpty(_format.Value) ? "d" : _format.Value;
+            var packed   = _textColor.Value;
+            var size     = _fontSize.Value;
+            var bold     = _bold.Value;
+            var fill     = _fillWidth.Value;
+            var isOpen   = _open.Value;
 
-            var ticks   = _ticks.Value;
-            var format  = string.IsNullOrEmpty(_format.Value) ? "d" : _format.Value;
-            var packed  = _textColor.Value;
-            var size    = _fontSize.Value;
-            var bold    = _bold.Value;
-            var fill    = _fillWidth.Value;
-            var isOpen  = _open.Value;
+            // Re-key on (minTicks, maxTicks) so an external Min/Max
+            // push allocates a fresh DatePickerState seeded with the
+            // updated SelectableDates window — Kotlin re-evaluates the
+            // initial selection against the new range and clears it
+            // when out of range.
+            var state = c.Remember(
+                () =>
+                {
+                    var initialMs = ticks is long t
+                        ? new DateTimeOffset(new DateTime(t, DateTimeKind.Local).Date)
+                            .ToUniversalTime()
+                            .ToUnixTimeMilliseconds()
+                        : (long?)null;
+                    return new DatePickerState(
+                        initialSelectedDateMillis: initialMs,
+                        initialSelectableDates:    _selectableDates);
+                },
+                minTicks,
+                maxTicks);
 
-            var label = ticks is long t
-                ? new DateTime(t).ToString(format)
+            var label = ticks is long ticksValue
+                ? new DateTime(ticksValue).ToString(format)
                 : "Pick a date";
 
             var trigger = new ComposeOutlinedButton(onClick: () => _open.Value = true)
@@ -201,6 +238,52 @@ public partial class DatePickerHandler : ComposeElementHandler<IDatePicker>
     /// <summary>Map <see cref="IDatePicker.Date"/> to the Compose ticks slot.</summary>
     public static void MapDate(DatePickerHandler handler, IDatePicker dp) =>
         handler._ticks.Value = dp.Date is DateTime d ? d.Ticks : null;
+
+    /// <summary>
+    /// Map <see cref="IDatePicker.MinimumDate"/> to the
+    /// <see cref="DateRangeSelectableDates"/> lower bound and the
+    /// <c>_minTicks</c> re-keying slot.
+    /// </summary>
+    public static void MapMinimumDate(DatePickerHandler handler, IDatePicker dp)
+    {
+        if (dp.MinimumDate is DateTime min)
+        {
+            handler._selectableDates.MinUtcMillis = ToUtcMillis(min.Date);
+            handler._selectableDates.MinYear      = min.Year;
+            handler._minTicks.Value               = min.Ticks;
+        }
+        else
+        {
+            handler._selectableDates.MinUtcMillis = null;
+            handler._selectableDates.MinYear      = null;
+            handler._minTicks.Value               = null;
+        }
+    }
+
+    /// <summary>
+    /// Map <see cref="IDatePicker.MaximumDate"/> to the
+    /// <see cref="DateRangeSelectableDates"/> upper bound and the
+    /// <c>_maxTicks</c> re-keying slot.
+    /// </summary>
+    public static void MapMaximumDate(DatePickerHandler handler, IDatePicker dp)
+    {
+        if (dp.MaximumDate is DateTime max)
+        {
+            handler._selectableDates.MaxUtcMillis = ToUtcMillis(max.Date);
+            handler._selectableDates.MaxYear      = max.Year;
+            handler._maxTicks.Value               = max.Ticks;
+        }
+        else
+        {
+            handler._selectableDates.MaxUtcMillis = null;
+            handler._selectableDates.MaxYear      = null;
+            handler._maxTicks.Value               = null;
+        }
+    }
+
+    static long ToUtcMillis(DateTime localDate) =>
+        new DateTimeOffset(localDate.Year, localDate.Month, localDate.Day,
+                           0, 0, 0, TimeSpan.Zero).ToUnixTimeMilliseconds();
 
     /// <summary>Map <see cref="IDatePicker.Format"/> to the formatted-label slot.</summary>
     public static void MapFormat(DatePickerHandler handler, IDatePicker dp) =>

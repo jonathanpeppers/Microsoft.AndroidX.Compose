@@ -217,10 +217,33 @@ AndroidX.Compose.DatePickerDialog.DismissButton.get -> AndroidX.Compose.Composab
 AndroidX.Compose.DatePickerDialog.DismissButton.set -> void
 AndroidX.Compose.DatePickerState
 AndroidX.Compose.DatePickerState.DatePickerState() -> void
+AndroidX.Compose.DatePickerState.DatePickerState(long? initialSelectedDateMillis = null, Kotlin.Ranges.IntRange? initialYearRange = null, AndroidX.Compose.Material3.ISelectableDates? initialSelectableDates = null) -> void
 AndroidX.Compose.DatePickerState.DisplayedMonthMillis.get -> long
 AndroidX.Compose.DatePickerState.DisplayedMonthMillis.set -> void
+AndroidX.Compose.DatePickerState.InitialDisplayMode.get -> int?
+AndroidX.Compose.DatePickerState.InitialDisplayMode.set -> void
+AndroidX.Compose.DatePickerState.InitialDisplayedMonthMillis.get -> Java.Lang.Long?
+AndroidX.Compose.DatePickerState.InitialDisplayedMonthMillis.set -> void
+AndroidX.Compose.DatePickerState.InitialSelectableDates.get -> AndroidX.Compose.Material3.ISelectableDates?
+AndroidX.Compose.DatePickerState.InitialSelectableDates.set -> void
+AndroidX.Compose.DatePickerState.InitialSelectedDateMillis.get -> Java.Lang.Long?
+AndroidX.Compose.DatePickerState.InitialSelectedDateMillis.set -> void
+AndroidX.Compose.DatePickerState.InitialYearRange.get -> Kotlin.Ranges.IntRange?
+AndroidX.Compose.DatePickerState.InitialYearRange.set -> void
 AndroidX.Compose.DatePickerState.SelectedDateMillis.get -> long?
 AndroidX.Compose.DatePickerState.SelectedDateMillis.set -> void
+AndroidX.Compose.DateRangeSelectableDates
+AndroidX.Compose.DateRangeSelectableDates.DateRangeSelectableDates() -> void
+AndroidX.Compose.DateRangeSelectableDates.IsSelectableDate(long utcTimeMillis) -> bool
+AndroidX.Compose.DateRangeSelectableDates.IsSelectableYear(int year) -> bool
+AndroidX.Compose.DateRangeSelectableDates.MaxUtcMillis.get -> long?
+AndroidX.Compose.DateRangeSelectableDates.MaxUtcMillis.set -> void
+AndroidX.Compose.DateRangeSelectableDates.MaxYear.get -> int?
+AndroidX.Compose.DateRangeSelectableDates.MaxYear.set -> void
+AndroidX.Compose.DateRangeSelectableDates.MinUtcMillis.get -> long?
+AndroidX.Compose.DateRangeSelectableDates.MinUtcMillis.set -> void
+AndroidX.Compose.DateRangeSelectableDates.MinYear.get -> int?
+AndroidX.Compose.DateRangeSelectableDates.MinYear.set -> void
 AndroidX.Compose.DateRangePicker
 AndroidX.Compose.DateRangePicker.DateRangePicker(AndroidX.Compose.DateRangePickerState? state = null) -> void
 AndroidX.Compose.DateRangePickerDialog

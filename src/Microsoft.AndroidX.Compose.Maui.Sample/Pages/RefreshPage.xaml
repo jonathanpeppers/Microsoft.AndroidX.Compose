@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="Microsoft.AndroidX.Compose.Maui.Sample.Pages.RefreshPage"
+             Title="Refresh">
+
+    <!--
+        Exercises `RefreshViewHandler` over Compose's
+        `PullToRefreshBox`:
+            * IsRefreshing (TwoWay) — MAUI -> Compose flows through MapIsRefreshing;
+              the pull gesture writes IsRefreshing=true through the onRefresh
+              callback and the MutableState<bool> equality short-circuit
+              breaks the feedback loop.
+            * Refreshing event - simulates an async refresh that
+              increments a counter, replaces the items, and clears
+              IsRefreshing back to false on the UI thread.
+            * Content - walked via ComposeWalker.Render so the inner
+              VerticalStackLayout folds into the parent Page composition.
+    -->
+    <RefreshView x:Name="Refresh"
+                 Refreshing="OnRefreshing">
+        <ScrollView>
+            <VerticalStackLayout x:Name="ItemsHost"
+                                 Padding="30,30"
+                                 Spacing="12">
+
+                <Label
+                    Text="Pull to refresh"
+                    Style="{StaticResource Headline}" />
+
+                <Label x:Name="StatusLabel"
+                       Text="Pulled 0 times"
+                       FontAttributes="Bold" />
+
+                <Label
+                    Text="Drag the list down past the threshold to trigger a refresh. The Compose Material 3 spinner appears, the list rebuilds, and the counter in the title increments."
+                    LineBreakMode="WordWrap" />
+
+                <!-- Initial mock items; replaced inside OnRefreshing.   -->
+                <Label x:Name="Item0" Text="• Item 1" />
+                <Label x:Name="Item1" Text="• Item 2" />
+                <Label x:Name="Item2" Text="• Item 3" />
+                <Label x:Name="Item3" Text="• Item 4" />
+                <Label x:Name="Item4" Text="• Item 5" />
+
+            </VerticalStackLayout>
+        </ScrollView>
+    </RefreshView>
+
+</ContentPage>
