@@ -1,5 +1,6 @@
 using Microsoft.AndroidX.Compose.Maui.Handlers;
 using Microsoft.AndroidX.Compose.Maui.Platform;
+using MauiActivityIndicator = Microsoft.Maui.Controls.ActivityIndicator;
 using MauiBorder = Microsoft.Maui.Controls.Border;
 using MauiBoxView = Microsoft.Maui.Controls.BoxView;
 using MauiButton = Microsoft.Maui.Controls.Button;
@@ -14,9 +15,12 @@ using MauiImageButton = Microsoft.Maui.Controls.ImageButton;
 using MauiLabel = Microsoft.Maui.Controls.Label;
 using MauiPage = Microsoft.Maui.Controls.Page;
 using MauiPicker = Microsoft.Maui.Controls.Picker;
+using MauiProgressBar = Microsoft.Maui.Controls.ProgressBar;
 using MauiRadioButton = Microsoft.Maui.Controls.RadioButton;
 using MauiScrollView = Microsoft.Maui.Controls.ScrollView;
 using MauiSearchBar = Microsoft.Maui.Controls.SearchBar;
+using MauiSlider = Microsoft.Maui.Controls.Slider;
+using MauiStepper = Microsoft.Maui.Controls.Stepper;
 using MauiSwitch = Microsoft.Maui.Controls.Switch;
 using MauiTimePicker = Microsoft.Maui.Controls.TimePicker;
 using MauiVerticalStackLayout = Microsoft.Maui.Controls.VerticalStackLayout;
@@ -58,8 +62,11 @@ public static class AppHostBuilderExtensions
     ///     <see cref="MauiImageButton"/> / <see cref="MauiCheckBox"/> /
     ///     <see cref="MauiSwitch"/> / <see cref="MauiRadioButton"/> /
     ///     <see cref="MauiPicker"/> / <see cref="MauiDatePicker"/> /
-    ///     <see cref="MauiTimePicker"/>)
-    ///     fold into the enclosing composition via
+    ///     <see cref="MauiTimePicker"/> /
+    ///     <see cref="MauiSlider"/> / <see cref="MauiStepper"/> /
+    ///     <see cref="MauiProgressBar"/> /
+    ///     <see cref="MauiActivityIndicator"/>) fold into the
+    ///     enclosing composition via
     ///     <see cref="IComposeHandler"/>.</description></item>
     ///   <item><description>Visual containers
     ///     (<see cref="MauiBorder"/> / <see cref="MauiBoxView"/> /
@@ -138,6 +145,12 @@ public static class AppHostBuilderExtensions
             handlers.AddHandler<MauiPicker,                 PickerHandler>();
             handlers.AddHandler<MauiDatePicker,             DatePickerHandler>();
             handlers.AddHandler<MauiTimePicker,             TimePickerHandler>();
+
+            // Phase 2 Slice 4 — value & progress leaves.
+            handlers.AddHandler<MauiSlider,                 SliderHandler>();
+            handlers.AddHandler<MauiStepper,                StepperHandler>();
+            handlers.AddHandler<MauiProgressBar,            ProgressBarHandler>();
+            handlers.AddHandler<MauiActivityIndicator,      ActivityIndicatorHandler>();
 
             // Visual containers — render through Compose Box.
             handlers.AddHandler<MauiBorder,                 BorderHandler>();

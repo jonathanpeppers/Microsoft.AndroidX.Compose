@@ -81,6 +81,16 @@ public partial class HomePage : ContentPage
                 Color.FromArgb("#795548"),
                 "theme"),
             new DemoEntry(
+                "Sliders & steppers",
+                "Slider + Stepper, two-way binding, custom colors.",
+                Color.FromArgb("#03A9F4"),
+                "sliders"),
+            new DemoEntry(
+                "Progress & activity",
+                "ProgressBar driven by a slider; ActivityIndicator toggle.",
+                Color.FromArgb("#FFC107"),
+                "progress"),
+            new DemoEntry(
                 "Editor",
                 "Multi-line text input, word counter, read-only, max length.",
                 Color.FromArgb("#FFC107"),

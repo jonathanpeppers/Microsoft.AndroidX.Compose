@@ -114,9 +114,18 @@ public partial class LayoutHandler : ComposeElementHandler<ILayout>
 
         var arrangement = spacing > 0f ? Arrangement.SpacedBy(new Dp(spacing)) : null;
 
+        // Translate children's per-axis MAUI LayoutAlignment into a
+        // Row.verticalAlignment / Column.horizontalAlignment. We pick a
+        // single Row/Column-wide alignment by surveying the children:
+        // any child requesting Center wins (CenterVertically /
+        // CenterHorizontally), else End wins (Bottom / End-aligned),
+        // else default (Top / Start). True per-child alignment needs
+        // the RowScope.align / ColumnScope.align Modifier (a follow-up).
+        var crossAlign = SurveyCrossAxisAlignment(layout, vertical);
+
         ComposableContainer container = vertical
-            ? new Column(verticalArrangement: arrangement)
-            : new Row(horizontalArrangement: arrangement);
+            ? new Column(verticalArrangement: arrangement, horizontalAlignment: crossAlign.Horizontal)
+            : new Row(horizontalArrangement: arrangement, verticalAlignment: crossAlign.Vertical);
 
         // Build the prepended modifier in one chain:
         // 1. ApplyViewProperties wraps the OUTER box (Opacity / Scale /
@@ -174,5 +183,43 @@ public partial class LayoutHandler : ComposeElementHandler<ILayout>
     public static void MapPadding(LayoutHandler handler, ILayout layout)
     {
         handler._paddingVersion.Value++;
+    }
+
+    // Translate per-axis MAUI LayoutAlignment on direct children into a
+    // single Row.verticalAlignment / Column.horizontalAlignment. Picks
+    // Center if any child requests it, else End/Bottom if any child
+    // requests End, else null (Compose default = Top / Start). True
+    // per-child alignment requires emitting RowScope.align /
+    // ColumnScope.align modifiers — a follow-up.
+    static (Alignment.Vertical? Vertical, Alignment.Horizontal? Horizontal)
+        SurveyCrossAxisAlignment(ILayout layout, bool vertical)
+    {
+        bool anyCenter = false;
+        bool anyEnd = false;
+        for (int i = 0; i < layout.Count; i++)
+        {
+            var child = layout[i];
+            var align = vertical
+                ? child.HorizontalLayoutAlignment
+                : child.VerticalLayoutAlignment;
+            switch (align)
+            {
+                case Microsoft.Maui.Primitives.LayoutAlignment.Center: anyCenter = true; break;
+                case Microsoft.Maui.Primitives.LayoutAlignment.End:    anyEnd = true; break;
+            }
+        }
+
+        if (vertical)
+        {
+            if (anyCenter) return (null, Alignment.Horizontal.CenterHorizontally);
+            if (anyEnd)    return (null, Alignment.Horizontal.End);
+            return (null, null);
+        }
+        else
+        {
+            if (anyCenter) return (Alignment.Vertical.CenterVertically, null);
+            if (anyEnd)    return (Alignment.Vertical.Bottom, null);
+            return (null, null);
+        }
     }
 }

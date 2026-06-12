@@ -808,6 +808,13 @@ using AndroidX.Compose;
 [assembly: ComposeDefaults("LinearProgressIndicatorDefault",
     "modifier", "color", "trackColor", "strokeCap", "gapSize")]
 
+// androidx.compose.material3.ProgressIndicatorKt.LinearProgressIndicator-2cYBFYY
+// (deprecated determinate float-progress overload). 5 user params:
+// progress is always provided so bit 0 stays cleared via the `!`
+// prefix; modifier/color/trackColor/strokeCap are optional.
+[assembly: ComposeDefaults("LinearProgressIndicatorDeterminateDefault",
+    "!progress", "modifier", "color", "trackColor", "strokeCap")]
+
 // androidx.compose.material3.ProgressIndicatorKt.CircularProgressIndicator-4lLiAd8
 // (indeterminate). 6 user params, all optional.
 [assembly: ComposeDefaults("CircularProgressIndicatorDefault",
@@ -859,6 +866,20 @@ using AndroidX.Compose;
     "disabledCheckedBorderColor", "disabledCheckedIconColor",
     "disabledUncheckedThumbColor", "disabledUncheckedTrackColor",
     "disabledUncheckedBorderColor", "disabledUncheckedIconColor")]
+
+// androidx.compose.material3.SliderDefaults.colors(...): 10-slot
+// $default mask covering thumb / activeTrack / activeTick /
+// inactiveTrack / inactiveTick plus the four disabled siblings.
+// Used by `composer.SliderColors(...)` to flip bits as caller-
+// supplied overrides arrive. Order matches the bytecode lowering
+// of the parameterised `colors-q0g_0yA(JJJJJJJJJJ;Composer;III)`
+// factory.
+[assembly: ComposeDefaults("SliderColorsDefault",
+    "thumbColor", "activeTrackColor", "activeTickColor",
+    "inactiveTrackColor", "inactiveTickColor",
+    "disabledThumbColor", "disabledActiveTrackColor",
+    "disabledActiveTickColor", "disabledInactiveTrackColor",
+    "disabledInactiveTickColor")]
 
 // androidx.compose.material3.SliderKt.Slider (simple float overload):
 // 9 user params; bits 0 (value) and 1 (onValueChange) always provided.

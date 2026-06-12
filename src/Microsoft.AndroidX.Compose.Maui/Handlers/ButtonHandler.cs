@@ -146,7 +146,26 @@ public partial class ButtonHandler : ComposeElementHandler<IButton>
     /// default, so without this a button with <c>HorizontalOptions="Fill"</c>
     /// would render as a small pill on the left edge.
     /// </summary>
-    public static void MapHorizontalLayoutAlignment(ButtonHandler handler, IButton button) =>
-        handler._fillWidth.Value = button.HorizontalLayoutAlignment
+    /// <remarks>
+    /// Suppressed when the parent is a
+    /// <see cref="Microsoft.Maui.Controls.HorizontalStackLayout"/>:
+    /// MAUI's stock <c>HorizontalStackLayoutManager</c> arranges
+    /// children left-to-right at their measured width and ignores
+    /// <c>HorizontalOptions=Fill</c> on the main axis (Fill there
+    /// only stretches the cross-axis). Honouring it on the Compose
+    /// side would make the first child's <c>FillMaxWidth</c> consume
+    /// the entire row and squeeze every sibling to zero width — see
+    /// the toggle row on <c>ProgressPage</c>.
+    /// </remarks>
+    public static void MapHorizontalLayoutAlignment(ButtonHandler handler, IButton button)
+    {
+        var fill = button.HorizontalLayoutAlignment
             == Microsoft.Maui.Primitives.LayoutAlignment.Fill;
+        if (fill && button is IView view
+                 && view.Parent is Microsoft.Maui.Controls.HorizontalStackLayout)
+        {
+            fill = false;
+        }
+        handler._fillWidth.Value = fill;
+    }
 }
