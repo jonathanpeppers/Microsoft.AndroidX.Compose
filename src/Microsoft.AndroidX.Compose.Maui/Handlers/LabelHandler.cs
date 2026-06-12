@@ -40,11 +40,20 @@ public partial class LabelHandler : ComposeElementHandler<ILabel>
     public static IPropertyMapper<ILabel, LabelHandler> Mapper =
         new PropertyMapper<ILabel, LabelHandler>(ViewHandler.ViewMapper)
         {
-            [nameof(IText.Text)]                  = MapText,
-            [nameof(ITextStyle.TextColor)]        = MapTextColor,
-            [nameof(ITextStyle.Font)]             = MapFont,
-            [nameof(ILabel.HorizontalTextAlignment)] = MapHorizontalTextAlignment,
+            [nameof(IText.Text)]                      = MapText,
+            [nameof(ITextStyle.TextColor)]            = MapTextColor,
+            [nameof(ITextStyle.CharacterSpacing)]     = MapCharacterSpacing,
+            [nameof(ITextStyle.Font)]                 = MapFont,
+            [nameof(ILabel.HorizontalTextAlignment)]  = MapHorizontalTextAlignment,
+            [nameof(ILabel.LineHeight)]               = MapLineHeight,
+            [nameof(ILabel.TextDecorations)]          = MapTextDecorations,
+            [nameof(IPadding.Padding)]                = MapPadding,
             [nameof(IView.HorizontalLayoutAlignment)] = MapHorizontalLayoutAlignment,
+            // TODO: VerticalTextAlignment — requires wrapping the Text in a
+            // Box whose `contentAlignment` slot is set; our Box facade
+            // currently doesn't expose `contentAlignment` so we can't drive
+            // it without a generator change. In stock MAUI this only has a
+            // visible effect when the Label has an explicit Height anyway.
         };
 
     /// <summary>Command mapper (inherits view-level commands; no extras).</summary>
@@ -60,6 +69,19 @@ public partial class LabelHandler : ComposeElementHandler<ILabel>
     // user-defined enums and would throw NotSupportedException at ctor time.
     readonly MutableState<int>         _hTextAlign = new((int)TextAlignment.Start);
     readonly MutableState<bool>        _fillWidth = new(false);
+    // CharacterSpacing in MAUI is "em"-ish (0..1 typically). Packed via the
+    // Sp(1) * float overload because Sp has no (float) ctor.
+    readonly MutableState<float?>      _letterSpacing = new((float?)null);
+    // LineHeight in MAUI is a multiplier on the default line height; we
+    // expose it as an int sp here for simplicity — null when not set.
+    readonly MutableState<int?>        _lineHeight = new((int?)null);
+    // TextDecorations enum stored as int (Flags: None=0, Underline=1,
+    // Strikethrough=2). MutableState's generic boxed path doesn't recognise
+    // [Flags] enums.
+    readonly MutableState<int>         _decorations = new(0);
+    // Padding live-read in BuildNode; this version slot just bumps to force
+    // a recomposition when MAUI invokes the mapper.
+    readonly MutableState<int>         _paddingVersion = new(0);
 
     /// <summary>Construct a handler with the default mappers.</summary>
     public LabelHandler() : base(Mapper, CommandMapper) { }
@@ -85,6 +107,12 @@ public partial class LabelHandler : ComposeElementHandler<ILabel>
         var bold   = _bold.Value;
         var fill   = _fillWidth.Value;
         var align  = (TextAlignment)_hTextAlign.Value;
+        var letterSpacing = _letterSpacing.Value;
+        var lineHeight    = _lineHeight.Value;
+        var decorations   = (Microsoft.Maui.TextDecorations)_decorations.Value;
+        // Subscribe so padding mapper bumps re-run BuildNode.
+        _ = _paddingVersion.Value;
+        var padding = virtualView.Padding;
         var text = new ComposeText(_text.Value)
         {
             Color      = packed.HasValue ? new ComposeColor(packed.Value) : null,
@@ -96,12 +124,34 @@ public partial class LabelHandler : ComposeElementHandler<ILabel>
                 TextAlignment.End    => ComposeTextAlign.End,
                 _                    => null,
             },
+            LetterSpacing = letterSpacing.HasValue ? new Sp(1) * letterSpacing.Value : null,
+            LineHeight    = lineHeight.HasValue ? new Sp(lineHeight.Value) : null,
+            // Strikethrough takes precedence over Underline when both bits
+            // are set; combining the two would need TextDecoration.Combine
+            // which isn't bound yet.
+            // TODO: expose TextDecoration.Combine to handle the
+            // Underline | Strikethrough combination faithfully.
+            Decoration = decorations switch
+            {
+                Microsoft.Maui.TextDecorations.Strikethrough => TextDecoration.LineThrough,
+                Microsoft.Maui.TextDecorations.Underline     => TextDecoration.Underline,
+                _ when (decorations & Microsoft.Maui.TextDecorations.Strikethrough) != 0
+                    => TextDecoration.LineThrough,
+                _ when (decorations & Microsoft.Maui.TextDecorations.Underline) != 0
+                    => TextDecoration.Underline,
+                _ => null,
+            },
         };
         // Single PrependModifier call combining the layout-fill (if
         // applicable) with the cross-cutting view properties — calling
         // PrependModifier twice would replace, not merge, so this
         // builds the chain once.
         var outer = (fill ? Modifier.FillMaxWidth() : Modifier.Companion)
+            .Padding(
+                new Dp((float)padding.Left),
+                new Dp((float)padding.Top),
+                new Dp((float)padding.Right),
+                new Dp((float)padding.Bottom))
             .ApplyViewProperties(virtualView)
             .ApplyGestures(virtualView, MauiContext)
             .ApplySemantics(virtualView);
@@ -148,5 +198,48 @@ public partial class LabelHandler : ComposeElementHandler<ILabel>
         handler._fillWidth.Value = label.HorizontalLayoutAlignment
             is Microsoft.Maui.Primitives.LayoutAlignment.Fill
             or Microsoft.Maui.Primitives.LayoutAlignment.Center;
+
+    /// <summary>
+    /// Map <see cref="ITextStyle.CharacterSpacing"/> to Compose
+    /// <c>letterSpacing</c>. MAUI's value is in "em-ish" units; we
+    /// pack it via the <see cref="Sp"/> <c>* float</c> overload because
+    /// <see cref="Sp"/> has no <c>(float)</c> constructor.
+    /// </summary>
+    public static void MapCharacterSpacing(LabelHandler handler, ILabel label) =>
+        handler._letterSpacing.Value = label.CharacterSpacing != 0
+            ? (float)label.CharacterSpacing
+            : null;
+
+    /// <summary>Map <see cref="ILabel.LineHeight"/> to Compose <c>lineHeight</c>.</summary>
+    /// <remarks>
+    /// MAUI's <c>LineHeight</c> is a multiplier on the platform default
+    /// line height (-1 = use default). Compose expects an absolute sp.
+    /// We approximate by multiplying against the current font size when
+    /// known; otherwise leave the slot unset.
+    /// </remarks>
+    public static void MapLineHeight(LabelHandler handler, ILabel label)
+    {
+        var lh = label.LineHeight;
+        if (lh <= 0)
+        {
+            handler._lineHeight.Value = null;
+            return;
+        }
+        var size = label.Font.Size > 0 ? label.Font.Size : 14d;
+        handler._lineHeight.Value = (int)Math.Round(size * lh);
+    }
+
+    /// <summary>
+    /// Map <see cref="ILabel.TextDecorations"/> to Compose
+    /// <c>TextDecoration</c>. Only single-flag values render correctly;
+    /// the combined <c>Underline | Strikethrough</c> case falls back to
+    /// <c>Strikethrough</c> (see <see cref="BuildNode"/>).
+    /// </summary>
+    public static void MapTextDecorations(LabelHandler handler, ILabel label) =>
+        handler._decorations.Value = (int)label.TextDecorations;
+
+    /// <summary>Map <see cref="IPadding.Padding"/>. Live-read in <see cref="BuildNode"/>.</summary>
+    public static void MapPadding(LabelHandler handler, ILabel label) =>
+        handler._paddingVersion.Value = handler._paddingVersion.Value + 1;
 
 }
