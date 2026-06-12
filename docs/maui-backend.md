@@ -1919,14 +1919,91 @@ graph + theming inherited from the page root.
   own gesture detectors — `Modifier.PointerInput { }` may need to
   forward gestures to MAUI's `GestureManager`.
 
-### Phase 6 — Essentials (parallel work, optional)
+### Phase 6 — Essentials (no-op: stock implementations work unchanged)
 
-A `Microsoft.AndroidX.Compose.Maui.Essentials` project that maps MAUI's
-`IFilePicker`, `IShare`, `IBattery`, `IConnectivity`, `IPreferences`,
-`ISecureStorage`, `IGeolocation` to Android's stock APIs (mostly
-identical to what MAUI's stock Essentials already does — likely just
-delegate, but some essentials might need Compose-aware UIs like
-`FilePicker` using a Compose `BottomSheet`).
+**Verdict: no Compose-specific build is needed.** `Microsoft.Maui.*`
+Essentials APIs (`IBattery`, `IConnectivity`, `IPreferences`,
+`ISecureStorage`, `IGeolocation`, `IFilePicker`, `IShare`,
+`IClipboard`, `IBrowser`, `IHapticFeedback`, `IVibration`,
+`IFlashlight`, `IEmail`, `ISms`, `IPhoneDialer`, `IMediaPicker`,
+`ILauncher`, `IFileSystem`, `IAppInfo`, `IDeviceInfo`, …) wrap
+platform APIs (`Intent`, `SharedPreferences`,
+`EncryptedSharedPreferences`, `LocationManager`, `ClipboardManager`,
+`Vibrator`, `Camera2`, system services) and are independent of the
+handler chain. `UseAndroidXCompose()` only swaps handler
+registrations — it does not touch the Essentials DI
+registrations — so MAUI's stock Android Essentials
+implementations resolve unchanged and run inside our app.
+
+| API                    | Notes                                                                                                                       |
+|------------------------|-----------------------------------------------------------------------------------------------------------------------------|
+| `AppInfo.Current`      | Name, package, version, build, requested theme.                                                                             |
+| `DeviceInfo.Current`   | Model, manufacturer, platform, version, idiom.                                                                              |
+| `Battery.Default`      | Charge level, state, power source, energy-saver status.                                                                     |
+| `Connectivity.Current` | Requires `ACCESS_NETWORK_STATE`; already declared by `Microsoft.AndroidX.Compose.Maui.Sample`'s manifest.                                  |
+| `FileSystem.Current`   | Cache + app-data directories.                                                                                               |
+| `Preferences`          | Backed by `SharedPreferences`. Synchronous round-trips.                                                                     |
+| `SecureStorage`        | Backed by `EncryptedSharedPreferences`.                                                                                     |
+| `Clipboard`            | Backed by `ClipboardManager`; back-pressure with `Task.Delay(50)` between write and read on slow emulators.                 |
+| `Vibration`            | Requires `VIBRATE`.                                                                                                         |
+| `HapticFeedback`       | No permission.                                                                                                              |
+| `Flashlight`           | Requires `FLASHLIGHT` + `CAMERA` (Camera2 torch path).                                                                      |
+| `Browser`              | `OpenAsync` lands in a Chrome Custom Tab.                                                                                   |
+| `Share`                | `RequestAsync` surfaces the system share sheet.                                                                             |
+| `Email`                | `ComposeAsync`; throws `FeatureNotSupported` if no email client is installed.                                               |
+| `Sms`                  | `ComposeAsync`; throws `FeatureNotSupported` on tablets without SMS.                                                        |
+| `PhoneDialer`          | `Open`; throws `FeatureNotSupported` on devices without dial capability.                                                    |
+| `Launcher`             | `TryOpenAsync(Uri)`; delegates to whatever app claims the scheme.                                                           |
+| `FilePicker`           | `PickAsync` opens the system document picker via `Intent.ActionOpenDocument`.                                               |
+| `MediaPicker`          | `PickPhotosAsync` opens the system photo picker.                                                                            |
+| `Geolocation`          | Needs `ACCESS_FINE_LOCATION` + `ACCESS_COARSE_LOCATION`, runtime-requested through `Permissions.LocationWhenInUse`.         |
+
+Intent-backed APIs (`Browser`, `Share`, `Email`, `Sms`,
+`PhoneDialer`, `Launcher`, `FilePicker`, `MediaPicker`) require no
+permission declaration on their own — they hand control off to a
+system-handled `Intent`. Permissions only need to be declared in
+the consumer app's `AndroidManifest.xml` when they call the
+permission-gated APIs above (`Vibration`, `Flashlight`,
+`Geolocation`).
+
+**Why this is a no-op:**
+
+- `UseAndroidXCompose()` calls `ConfigureMauiHandlers(...)` to
+  overwrite handler registrations. It does not call
+  `ConfigureEssentials(...)` and does not register
+  `Compose<IFilePicker>` / `Compose<IShare>` / etc. proxies in DI.
+- Essentials APIs walk `Microsoft.Maui.ApplicationModel.Platform.CurrentActivity`,
+  which is populated by the
+  `MauiAppCompatActivity`-lifecycle hooks — unchanged by the
+  Compose backend. The activity type stays
+  `MauiAppCompatActivity`; we do not require a `ComponentActivity`
+  / `MauiComposeActivity` swap at the activity layer.
+- The Compose backend keeps MAUI's `IDispatcher` / `MainThread`
+  intact, so callbacks resume on the UI thread the same way they
+  do under stock MAUI.
+
+**When future work might be needed.** The only items that could
+warrant a `Compose*` implementation later are:
+
+1. A `Compose<IFilePicker>` that surfaces a Material 3
+   `ModalBottomSheet` instead of the system
+   `Intent.ActionOpenDocument` picker. The system picker is the
+   platform-correct UX; consider this only when there's a
+   user-experience reason to override it (e.g. theming, in-app
+   document-tab integration).
+2. A `Compose<IShare>` overlay that builds a Compose-native
+   share sheet. The Android system share sheet is integrated
+   with every installed app's share intents; an overlay would
+   need to replicate the whole `Intent` resolution model. Only
+   pursue if a future requirement explicitly asks for it.
+
+Both would be DI-service-hijacks following the
+`ComposeAlertManagerSubscription` pattern in
+`Hosting/AppHostBuilderExtensions.cs` — drop a
+`builder.Services.AddSingleton<IFilePicker, ComposeFilePicker>()`
+inside `UseAndroidXCompose()`, with the implementation rendering
+into a transient `ComposeView` on the activity's content frame
+the same way the alert overlay does.
 
 ## Open design questions (resolve before implementation starts)
 
