@@ -1,4 +1,3 @@
-using System.Windows.Input;
 using AndroidX.Compose;
 using AndroidX.Compose.Runtime;
 using AndroidX.Compose.UI.Platform;
@@ -21,10 +20,12 @@ namespace Microsoft.AndroidX.Compose.Maui.Handlers;
 /// MAUI → Compose flows through <see cref="MapIsRefreshing"/>, and the
 /// pull gesture flows back through the <c>onRefresh</c> callback —
 /// which writes <see cref="IRefreshView.IsRefreshing"/> = <c>true</c>
-/// before invoking <see cref="IRefreshView.Command"/>. The mapper
-/// re-fires with the same value, but the
-/// <see cref="MutableState{T}"/> equality short-circuit breaks the
-/// loop without needing a `_suppressMauiWrite` flag (mirrors
+/// and lets MAUI's <c>OnIsRefreshingPropertyChanged</c> pipeline raise
+/// the <c>Refreshing</c> event and invoke
+/// <see cref="IRefreshView.Command"/>. The mapper re-fires with the
+/// same value, but the <see cref="MutableState{T}"/> equality
+/// short-circuit breaks the loop without needing a
+/// <c>_suppressMauiWrite</c> flag (mirrors
 /// <see cref="EntryHandler.OnValueChanged"/>).</para>
 ///
 /// <para>The consumer is responsible for clearing
@@ -90,21 +91,17 @@ public partial class RefreshViewHandler : ComposeElementHandler<IRefreshView>
             isRefreshing: _isRefreshing.Value,
             onRefresh:    () =>
             {
-                // Mirror MAUI's contract: pulling triggers the refresh
-                // and the consumer (or their Command handler) is
-                // responsible for clearing IsRefreshing when the work
-                // completes. Set both sides; the mapper re-fires with
-                // the same value and the MutableState<bool> equality
-                // short-circuit breaks the loop.
+                // Mirror MAUI's stock Android RefreshView handler: only
+                // write IsRefreshing = true and let MAUI's
+                // OnIsRefreshingPropertyChanged pipeline raise the
+                // Refreshing event AND invoke Command.Execute /
+                // RefreshCommand.Execute. Doing it ourselves here would
+                // double-fire the Command for any Command-bound caller.
+                // The mapper re-fires with the same value and the
+                // MutableState<bool> equality short-circuit breaks the
+                // loop.
                 _isRefreshing.Value = true;
                 view.IsRefreshing   = true;
-
-                if ((view as MauiRefreshView)?.Command is ICommand cmd)
-                {
-                    var arg = (view as MauiRefreshView)?.CommandParameter;
-                    if (cmd.CanExecute(arg))
-                        cmd.Execute(arg);
-                }
             });
 
         // FillMaxSize so the gesture region matches MAUI's full-bleed
