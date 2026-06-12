@@ -105,7 +105,7 @@ public partial class StepperHandler : ComposeElementHandler<IStepper>
                 new ComposeText("+"),
             },
         };
-        row.Modifier = Modifier.Companion.ApplyGestures(virtualView, MauiContext);
+        row.Modifier = Modifier.Companion.ApplyGestures(virtualView, MauiContext).ApplySemantics(virtualView);
         return row;
 
         void Decrement() => Apply(value - interval);

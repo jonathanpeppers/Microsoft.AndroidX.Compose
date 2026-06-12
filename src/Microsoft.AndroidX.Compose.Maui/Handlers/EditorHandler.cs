@@ -120,7 +120,7 @@ public partial class EditorHandler : ComposeElementHandler<IEditor>
         var modifier = Modifier.HeightIn(min: new Dp(96));
         if (fill)
             modifier = modifier.FillMaxWidth();
-        modifier = modifier.ApplyGestures(virtualView, MauiContext);
+        modifier = modifier.ApplyGestures(virtualView, MauiContext).ApplySemantics(virtualView);
         field.PrependModifier(modifier);
         return field;
     }

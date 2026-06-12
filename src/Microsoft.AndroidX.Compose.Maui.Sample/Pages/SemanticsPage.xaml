@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="Microsoft.AndroidX.Compose.Maui.Sample.Pages.SemanticsPage"
+             Title="Semantics">
+
+    <!--
+        Exercises the Phase 2 Slice 11 semantics bridge.
+
+        Each leaf below carries one of the four MAUI a11y/automation
+        signals the bridge translates into Compose:
+
+          * SemanticProperties.HeadingLevel -> Modifier.Semantics { heading() }
+          * SemanticProperties.Description  -> contentDescription
+          * SemanticProperties.Hint         -> stateDescription
+                                              (or contentDescription
+                                              when no Description set)
+          * AutomationId                    -> Modifier.TestTag(...)
+
+        Verify on-device:
+
+          1. Settings -> Accessibility -> TalkBack -> On.
+          2. Swipe through the page; "Settings" should announce as
+             "heading"; "Save" should read "Save changes" (Description
+             wins over Text); the Image should read "Cute pet photo".
+          3. `adb shell uiautomator dump /sdcard/d.xml` after deploying;
+             `Select-String 'status-pill'` should find the testTag.
+    -->
+    <ScrollView>
+        <VerticalStackLayout
+            Padding="30,30"
+            Spacing="16">
+
+            <Label Text="Settings"
+                   FontSize="22"
+                   FontAttributes="Bold"
+                   SemanticProperties.HeadingLevel="Level1" />
+
+            <Button x:Name="SaveButton"
+                    Text="Save"
+                    SemanticProperties.Description="Save changes"
+                    HorizontalOptions="Fill" />
+
+            <Image Source="dotnet_bot.png"
+                   HeightRequest="120"
+                   WidthRequest="120"
+                   HorizontalOptions="Center"
+                   SemanticProperties.Description="Cute pet photo" />
+
+            <BoxView x:Name="StatusPill"
+                     AutomationId="status-pill"
+                     Color="#4CAF50"
+                     CornerRadius="12"
+                     HeightRequest="24"
+                     WidthRequest="120"
+                     HorizontalOptions="Center" />
+
+            <Entry x:Name="EmailEntry"
+                   Placeholder="you@example.com"
+                   SemanticProperties.Description="Email address"
+                   SemanticProperties.Hint="Required for sign-in" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

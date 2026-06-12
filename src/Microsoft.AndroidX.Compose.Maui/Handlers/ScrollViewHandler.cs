@@ -115,7 +115,7 @@ public partial class ScrollViewHandler : ComposeElementHandler<IScrollView>
             // ScrollView's bounding box, not the inner scrolling
             // surface — matches MAUI's stock semantics where Opacity
             // fades the entire scroll region as one.
-            var outer = Modifier.Companion.ApplyViewProperties(_scroll).ApplyGestures(_scroll, _context).Then(fillMain);
+            var outer = Modifier.Companion.ApplyViewProperties(_scroll).ApplyGestures(_scroll, _context).ApplySemantics(_scroll).Then(fillMain);
             var modifier = Modifier is null ? outer : Modifier.Then(outer);
 
             var box = new Box { Modifier = modifier };

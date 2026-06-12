@@ -107,7 +107,7 @@ public partial class RefreshViewHandler : ComposeElementHandler<IRefreshView>
         // FillMaxSize so the gesture region matches MAUI's full-bleed
         // RefreshView semantics, plus ApplyViewProperties for Opacity /
         // Translation / Scale / Rotation / IsVisible / Clip / Shadow.
-        box.PrependModifier(Modifier.FillMaxSize().ApplyViewProperties(view));
+        box.PrependModifier(Modifier.FillMaxSize().ApplyViewProperties(view).ApplySemantics(view));
 
         if (view.Content is { } content)
             box.Add(c => ComposeWalker.Render(content, c, context));

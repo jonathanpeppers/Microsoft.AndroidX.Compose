@@ -102,7 +102,7 @@ public partial class SliderHandler : ComposeElementHandler<ISlider>
                 activeTrackColor:   minTrack,
                 inactiveTrackColor: maxTrack);
 
-        slider.PrependModifier(Modifier.FillMaxWidth().ApplyGestures(virtualView, MauiContext));
+        slider.PrependModifier(Modifier.FillMaxWidth().ApplyGestures(virtualView, MauiContext).ApplySemantics(virtualView));
         return slider;
     }
 

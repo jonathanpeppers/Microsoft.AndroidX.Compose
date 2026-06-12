@@ -59,8 +59,11 @@ public partial class ActivityIndicatorHandler : ComposeElementHandler<IActivityI
     {
         var virtualView = VirtualView
             ?? throw new InvalidOperationException("VirtualView not set on ActivityIndicatorHandler.");
+        SubscribeToViewProperties();
 
-        var gestureModifier = Modifier.Companion.ApplyGestures(virtualView, MauiContext);
+        var gestureModifier = Modifier.Companion
+            .ApplyGestures(virtualView, MauiContext)
+            .ApplySemantics(virtualView);
         if (!_isRunning.Value)
             return new Box { Modifier = gestureModifier };
 

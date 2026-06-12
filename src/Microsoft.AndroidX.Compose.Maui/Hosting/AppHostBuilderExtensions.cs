@@ -239,6 +239,14 @@ public static class AppHostBuilderExtensions
         mapper.AppendToMapping(nameof(IView.AnchorY),       BumpViewProperties);
         mapper.AppendToMapping(nameof(IView.Clip),          BumpViewProperties);
         mapper.AppendToMapping(nameof(IView.Shadow),        BumpViewProperties);
+
+        // Phase 2 Slice 11 — semantics. SemanticProperties.Hint /
+        // Description / HeadingLevel and IView.AutomationId all flow
+        // through `SemanticsBridge.ApplySemantics(view)` on the same
+        // version slot ApplyViewProperties uses, so a runtime mutation
+        // recomposes the leaf and rebuilds the merged-semantics block.
+        mapper.AppendToMapping(nameof(IView.Semantics),     BumpViewProperties);
+        mapper.AppendToMapping(nameof(IView.AutomationId),  BumpViewProperties);
     }
 
     static void BumpViewProperties(IViewHandler handler, IView view)

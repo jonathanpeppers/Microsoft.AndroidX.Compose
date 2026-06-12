@@ -90,7 +90,8 @@ public partial class ButtonHandler : ComposeElementHandler<IButton>
         // Translation, Scale, Rotation, IsVisible, Clip, Shadow).
         var outer = (_fillWidth.Value ? Modifier.FillMaxWidth() : Modifier.Companion)
             .ApplyViewProperties(virtualView)
-            .ApplyGestures(virtualView, MauiContext);
+            .ApplyGestures(virtualView, MauiContext)
+            .ApplySemantics(virtualView);
         button.PrependModifier(outer);
         return button;
     }

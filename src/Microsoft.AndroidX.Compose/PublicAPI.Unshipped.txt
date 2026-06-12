@@ -1080,6 +1080,7 @@ AndroidX.Compose.SemanticsRole.Tab = 4 -> AndroidX.Compose.SemanticsRole
 AndroidX.Compose.SemanticsRole.ValuePicker = 7 -> AndroidX.Compose.SemanticsRole
 AndroidX.Compose.SemanticsScope
 AndroidX.Compose.SemanticsScope.ContentDescription(string! description) -> AndroidX.Compose.SemanticsScope!
+AndroidX.Compose.SemanticsScope.Heading() -> AndroidX.Compose.SemanticsScope!
 AndroidX.Compose.SemanticsScope.OnClick(string? label, System.Action! action) -> AndroidX.Compose.SemanticsScope!
 AndroidX.Compose.SemanticsScope.OnClick(string? label, System.Func<bool>! action) -> AndroidX.Compose.SemanticsScope!
 AndroidX.Compose.SemanticsScope.OnClick(System.Action! action) -> AndroidX.Compose.SemanticsScope!
@@ -1087,6 +1088,7 @@ AndroidX.Compose.SemanticsScope.OnClick(System.Func<bool>! action) -> AndroidX.C
 AndroidX.Compose.SemanticsScope.Role(AndroidX.Compose.SemanticsRole role) -> AndroidX.Compose.SemanticsScope!
 AndroidX.Compose.SemanticsScope.Selected(bool isSelected) -> AndroidX.Compose.SemanticsScope!
 AndroidX.Compose.SemanticsScope.StateDescription(string! description) -> AndroidX.Compose.SemanticsScope!
+AndroidX.Compose.SemanticsScope.TestTagsAsResourceId(bool value) -> AndroidX.Compose.SemanticsScope!
 AndroidX.Compose.Shape
 AndroidX.Compose.SheetStateHolder
 AndroidX.Compose.SheetStateHolder.CurrentValue.get -> AndroidX.Compose.Material3.SheetValue!

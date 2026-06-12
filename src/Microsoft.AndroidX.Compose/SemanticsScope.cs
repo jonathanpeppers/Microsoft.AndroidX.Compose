@@ -67,6 +67,44 @@ public sealed class SemanticsScope
     }
 
     /// <summary>
+    /// <c>heading()</c> — tags this node as a heading. TalkBack
+    /// announces "heading" alongside the content description and lets
+    /// users navigate between headings via the rotor / swipe gestures.
+    /// Compose's Foundation baseline is a single boolean; we don't
+    /// expose per-level headings.
+    /// </summary>
+    /// <returns>This scope, to chain further calls.</returns>
+    public SemanticsScope Heading()
+    {
+        ComposeBridges.SemanticsSetHeading(Handle);
+        return this;
+    }
+
+    /// <summary>
+    /// <c>testTagsAsResourceId = value</c> — opts this subtree into
+    /// surfacing <see cref="Modifier.TestTag(string)"/> through
+    /// Android's <c>AccessibilityNodeInfo.viewIdResourceName</c>.
+    /// Without this flag, UIAutomator / Espresso / Appium-Android
+    /// can't find Compose nodes via <c>By.id(...)</c> — the testTag
+    /// lives only in Compose's semantics tree, invisible to the
+    /// platform a11y APIs that automation harnesses read.
+    /// MAUI Compose-folded handlers set this on every node carrying
+    /// an <c>AutomationId</c> so existing Appium <c>FindByAutomationId</c>
+    /// tests keep working. Property is annotated
+    /// <c>@ExperimentalComposeUiApi</c> upstream but stable in
+    /// practice — it's been the canonical Compose-↔-Espresso bridge
+    /// since 2021.
+    /// </summary>
+    /// <param name="value">Whether testTags on this node and its
+    /// merged descendants should be exposed as resource IDs.</param>
+    /// <returns>This scope, to chain further calls.</returns>
+    public SemanticsScope TestTagsAsResourceId(bool value)
+    {
+        ComposeBridges.SemanticsSetTestTagsAsResourceId(Handle, value);
+        return this;
+    }
+
+    /// <summary>
     /// <c>selected = isSelected</c> — marks the node as part of a
     /// selectable group (tab, list item, chip). TalkBack announces
     /// "selected" / "not selected" alongside the node's content

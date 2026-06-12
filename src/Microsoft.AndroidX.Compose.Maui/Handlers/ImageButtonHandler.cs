@@ -129,7 +129,7 @@ public partial class ImageButtonHandler : ComposeElementHandler<MauiIImageButton
         }
 
         var button = new ComposeIconButton(OnClicked) { imageNode };
-        modifier = (modifier ?? Modifier.Companion).ApplyGestures(virtualView, MauiContext);
+        modifier = (modifier ?? Modifier.Companion).ApplyGestures(virtualView, MauiContext).ApplySemantics(virtualView);
         button.Modifier = modifier;
         return button;
     }

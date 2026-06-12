@@ -130,6 +130,11 @@ public partial class HomePage : ContentPage
                 "IndicatorView dot strip; Prev/Next buttons cycle Position.",
                 Color.FromArgb("#9C27B0"),
                 "indicator"),
+            new DemoEntry(
+                "Semantics",
+                "SemanticProperties.Description / Hint / HeadingLevel + AutomationId routed to Compose `Modifier.Semantics { … }`.",
+                Color.FromArgb("#3F51B5"),
+                "semantics"),
         };
     }
 

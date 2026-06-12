@@ -117,7 +117,8 @@ public partial class SearchBarHandler : ComposeElementHandler<ISearchBar>
             onSearch: OnSearchInvoked);
 
         var modifier = (fill ? Modifier.FillMaxWidth() : Modifier.Companion)
-            .ApplyGestures(virtualView, MauiContext);
+            .ApplyGestures(virtualView, MauiContext)
+            .ApplySemantics(virtualView);
         field.PrependModifier(modifier);
         return field;
     }

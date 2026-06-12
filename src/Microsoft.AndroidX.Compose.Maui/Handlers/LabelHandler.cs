@@ -103,7 +103,8 @@ public partial class LabelHandler : ComposeElementHandler<ILabel>
         // builds the chain once.
         var outer = (fill ? Modifier.FillMaxWidth() : Modifier.Companion)
             .ApplyViewProperties(virtualView)
-            .ApplyGestures(virtualView, MauiContext);
+            .ApplyGestures(virtualView, MauiContext)
+            .ApplySemantics(virtualView);
         text.PrependModifier(outer);
         return text;
     }
