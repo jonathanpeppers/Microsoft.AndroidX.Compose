@@ -1,9 +1,15 @@
 using AndroidX.Compose;
 using AndroidX.Compose.Material3;
 using AndroidX.Compose.Runtime;
+using AndroidX.Compose.UI.Platform;
+using Microsoft.AndroidX.Compose.Maui.Loaders;
 using Microsoft.AndroidX.Compose.Maui.Platform;
 using Microsoft.Maui.Handlers;
-using ComposeButton = AndroidX.Compose.Button;
+using ComposeButton  = AndroidX.Compose.Button;
+using ComposeColor   = AndroidX.Compose.Color;
+using ComposeImage   = AndroidX.Compose.Image;
+using ComposeFontWeight = AndroidX.Compose.FontWeight;
+using ComposeText    = AndroidX.Compose.Text;
 
 namespace Microsoft.AndroidX.Compose.Maui.Handlers;
 
@@ -47,6 +53,13 @@ public partial class ButtonHandler : ComposeElementHandler<IButton>
         {
             [nameof(IText.Text)]                      = MapText,
             [nameof(ITextStyle.TextColor)]            = MapTextColor,
+            [nameof(ITextStyle.CharacterSpacing)]     = MapCharacterSpacing,
+            [nameof(ITextStyle.Font)]                 = MapFont,
+            [nameof(IButtonStroke.CornerRadius)]      = MapCornerRadius,
+            [nameof(IButtonStroke.StrokeColor)]       = MapStrokeColor,
+            [nameof(IButtonStroke.StrokeThickness)]   = MapStrokeThickness,
+            [nameof(IImageSourcePart.Source)]         = MapImageSource,
+            [nameof(IPadding.Padding)]                = MapPadding,
             [nameof(IView.Background)]                = MapBackground,
             [nameof(IView.HorizontalLayoutAlignment)] = MapHorizontalLayoutAlignment,
         };
@@ -59,6 +72,16 @@ public partial class ButtonHandler : ComposeElementHandler<IButton>
     readonly MutableState<long?>  _containerColor = new((long?)null);
     readonly MutableState<long?>  _contentColor   = new((long?)null);
     readonly MutableState<bool>   _fillWidth      = new(false);
+    readonly MutableState<float?> _letterSpacing  = new((float?)null);
+    readonly MutableState<int?>   _fontSize       = new((int?)null);
+    readonly MutableState<bool>   _bold           = new(false);
+    // CornerRadius in MAUI IButtonStroke is an int (DIPs).
+    readonly MutableState<int>    _cornerRadius   = new(-1);
+    readonly MutableState<long?>  _strokeColor    = new((long?)null);
+    readonly MutableState<float>  _strokeThickness = new(0f);
+    // Padding lives as a struct (Thickness); bump on change and live-read.
+    readonly MutableState<int>    _paddingVersion = new(0);
+    ImageSourceLoader? _loader;
 
     /// <summary>Construct a handler with the default mappers.</summary>
     public ButtonHandler() : base(Mapper, CommandMapper) { }
@@ -66,6 +89,12 @@ public partial class ButtonHandler : ComposeElementHandler<IButton>
     /// <summary>Construct a handler with custom mappers.</summary>
     public ButtonHandler(IPropertyMapper? mapper, CommandMapper? commandMapper = null)
         : base(mapper ?? Mapper, commandMapper ?? CommandMapper) { }
+
+    // Lazy — buttons without an ImageSource never allocate the loader.
+    ImageSourceLoader Loader =>
+        _loader ??= new ImageSourceLoader(
+            this,
+            () => (VirtualView as Microsoft.Maui.IImage) as IImageSourcePart);
 
     /// <inheritdoc/>
     public override ComposableNode BuildNode(IComposer composer)
@@ -75,25 +104,70 @@ public partial class ButtonHandler : ComposeElementHandler<IButton>
 
         SubscribeToViewProperties();
 
-        var container = _containerColor.Value;
-        var content   = _contentColor.Value;
-        var button = new ComposeButton(onClick: OnClicked)
+        // Subscribe so padding map bumps re-run BuildNode.
+        _ = _paddingVersion.Value;
+
+        var container       = _containerColor.Value;
+        var content         = _contentColor.Value;
+        var letterSpacing   = _letterSpacing.Value;
+        var fontSize        = _fontSize.Value;
+        var bold            = _bold.Value;
+        var cornerRadius    = _cornerRadius.Value;
+        var strokeColor     = _strokeColor.Value;
+        var strokeThickness = _strokeThickness.Value;
+        var padding         = (virtualView as IPadding)?.Padding ?? Thickness.Zero;
+        var hasCustomText   = letterSpacing.HasValue || fontSize.HasValue || bold;
+
+        var button = new ComposeButton(onClick: OnClicked);
+        // Optional leading image — only added when ImageSource resolved.
+        if (_loader is { } loader)
         {
-            new Text(_text.Value),
+            if (loader.Painter.Value is { } painter)
+                button.Add(new ComposeImage(painter));
+            else if (loader.DrawableResourceId.Value is int id)
+                button.Add(new ComposeImage(id));
+        }
+        var textNode = new ComposeText(_text.Value)
+        {
+            LetterSpacing = letterSpacing.HasValue ? new Sp(1) * letterSpacing.Value : null,
+            FontSize      = fontSize.HasValue ? new Sp(fontSize.Value) : null,
+            FontWeight    = bold ? ComposeFontWeight.Bold : null,
         };
+        button.Add(textNode);
+
         if (container is not null || content is not null)
             button.Colors = composer.ButtonColors(
                 containerColor: container,
                 contentColor:   content);
-        // Single chained PrependModifier — combines the layout-fill
-        // (when set) with the cross-cutting view properties (Opacity,
-        // Translation, Scale, Rotation, IsVisible, Clip, Shadow).
-        var outer = (_fillWidth.Value ? Modifier.FillMaxWidth() : Modifier.Companion)
+        if (cornerRadius >= 0)
+            button.Shape = new RoundedCornerShape(new Dp(cornerRadius));
+        if (padding != Thickness.Zero)
+            button.ContentPadding = new PaddingValues(
+                start:  new Dp((float)padding.Left),
+                top:    new Dp((float)padding.Top),
+                end:    new Dp((float)padding.Right),
+                bottom: new Dp((float)padding.Bottom));
+        // Optional stroke chain — Compose Button has no built-in border slot.
+        // Wrap the outer Modifier with Modifier.Border when a stroke is set.
+        var outer = (_fillWidth.Value ? Modifier.FillMaxWidth() : Modifier.Companion);
+        if (strokeColor.HasValue && strokeThickness > 0f)
+            outer = outer.Border(
+                new Dp(strokeThickness),
+                new ComposeColor(strokeColor.Value),
+                button.Shape);
+        outer = outer
             .ApplyViewProperties(virtualView)
             .ApplyGestures(virtualView, MauiContext)
             .ApplySemantics(virtualView);
         button.PrependModifier(outer);
         return button;
+    }
+
+    /// <inheritdoc/>
+    protected override void DisconnectHandler(ComposeView platformView)
+    {
+        _loader?.Reset();
+        base.DisconnectHandler(platformView);
     }
 
     void OnClicked()
@@ -173,4 +247,76 @@ public partial class ButtonHandler : ComposeElementHandler<IButton>
         }
         handler._fillWidth.Value = fill;
     }
+
+    /// <summary>
+    /// Map <see cref="ITextStyle.CharacterSpacing"/> to the Compose
+    /// <c>Text.LetterSpacing</c> slot on the button's inner label.
+    /// </summary>
+    public static void MapCharacterSpacing(ButtonHandler handler, IButton button)
+    {
+        if (button is ITextStyle ts)
+            handler._letterSpacing.Value = ts.CharacterSpacing != 0
+                ? (float)ts.CharacterSpacing
+                : null;
+    }
+
+    /// <summary>
+    /// Map <see cref="ITextStyle.Font"/> (size + bold) to the Compose
+    /// <c>Text.FontSize</c> and <c>Text.FontWeight</c> slots.
+    /// Custom font families and italic land in a later phase.
+    /// </summary>
+    public static void MapFont(ButtonHandler handler, IButton button)
+    {
+        if (button is not ITextStyle ts) return;
+        handler._fontSize.Value = ts.Font.Size > 0 ? (int)ts.Font.Size : null;
+        handler._bold.Value     = (ts.Font.Weight & Microsoft.Maui.FontWeight.Bold)
+            == Microsoft.Maui.FontWeight.Bold;
+    }
+
+    /// <summary>
+    /// Map <see cref="IButtonStroke.CornerRadius"/> to the Compose
+    /// <c>Button.Shape</c> slot via <see cref="RoundedCornerShape"/>.
+    /// </summary>
+    public static void MapCornerRadius(ButtonHandler handler, IButton button)
+    {
+        if (button is IButtonStroke stroke)
+            handler._cornerRadius.Value = stroke.CornerRadius;
+    }
+
+    /// <summary>
+    /// Map <see cref="IButtonStroke.StrokeColor"/> to the outer
+    /// <c>Modifier.Border</c> chain. Compose's Material 3 <c>Button</c>
+    /// has no built-in border slot, so we draw the stroke around the
+    /// button frame instead.
+    /// </summary>
+    public static void MapStrokeColor(ButtonHandler handler, IButton button)
+    {
+        if (button is IButtonStroke stroke)
+            handler._strokeColor.Value = ColorMapping.ToPackedLong(stroke.StrokeColor);
+    }
+
+    /// <summary>
+    /// Map <see cref="IButtonStroke.StrokeThickness"/> to the outer
+    /// <c>Modifier.Border</c> chain. See <see cref="MapStrokeColor"/>.
+    /// </summary>
+    public static void MapStrokeThickness(ButtonHandler handler, IButton button)
+    {
+        if (button is IButtonStroke stroke)
+            handler._strokeThickness.Value = (float)stroke.StrokeThickness;
+    }
+
+    /// <summary>
+    /// Map <see cref="IPadding.Padding"/> to the Compose
+    /// <c>Button.ContentPadding</c> slot. Live-read in <see cref="BuildNode"/>.
+    /// </summary>
+    public static void MapPadding(ButtonHandler handler, IButton button) =>
+        handler._paddingVersion.Value = handler._paddingVersion.Value + 1;
+
+    /// <summary>
+    /// Map <see cref="IImage.Source"/> through the shared
+    /// <see cref="ImageSourceLoader"/>; the resolved drawable or painter
+    /// is rendered inline as a leading icon inside the button row.
+    /// </summary>
+    public static async void MapImageSource(ButtonHandler handler, IButton button) =>
+        await handler.Loader.LoadAsync((button as Microsoft.Maui.IImage)?.Source).ConfigureAwait(false);
 }

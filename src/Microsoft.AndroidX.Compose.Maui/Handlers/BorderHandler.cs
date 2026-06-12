@@ -45,9 +45,20 @@ public partial class BorderHandler : ComposeElementHandler<MauiBorder>
             [nameof(MauiBorder.Stroke)]                     = MapStroke,
             [nameof(MauiBorder.StrokeThickness)]            = MapStrokeThickness,
             [nameof(MauiBorder.StrokeShape)]                = MapShape,
+            // Stock MAUI exposes the abstract IBorderStroke.Shape key as
+            // a separate string. Aliased here so MAUI's PropertyMapper
+            // looks up "Shape" and routes to the same handler.
+            ["Shape"]                                       = MapShape,
             ["Content"]                                     = MapContent,
             [nameof(IPadding.Padding)]                      = MapPadding,
             [nameof(IView.Background)]                      = MapBackground,
+            // TODO: dashed-stroke / line-cap / line-join / miter-limit
+            // properties have no Compose equivalent on
+            // `Modifier.Border`, which only paints a solid border. A
+            // faithful implementation needs a custom `Modifier.drawWithCache`
+            // shader, which is a much larger refactor.
+            // Stock MAUI keys: StrokeDashOffset, StrokeDashPattern,
+            // StrokeLineCap, StrokeLineJoin, StrokeMiterLimit.
         };
 
     /// <summary>Command mapper (inherits view-level commands; no extras).</summary>
