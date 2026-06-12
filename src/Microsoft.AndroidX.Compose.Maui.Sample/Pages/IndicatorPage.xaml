@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="Microsoft.AndroidX.Compose.Maui.Sample.Pages.IndicatorPage"
+             Title="Indicator">
+
+    <!--
+        Exercises `IndicatorViewHandler` (Row of Compose Box dots):
+            * Count                 -> 5 dots
+            * Position              -> active dot index, cycled by Prev/Next
+            * IndicatorColor        -> inactive dot tint (Gray)
+            * SelectedIndicatorColor-> active dot tint (Blue)
+            * IndicatorSize         -> 10dp
+            * IndicatorsShape       -> Circle (default; the Square button
+                                       toggles to RoundedCornerShape(0)).
+
+        CarouselView <-> IndicatorView two-way binding lands in Phase 3;
+        for now Position is one-way (MAUI -> Compose) and the Prev/Next
+        buttons drive it manually.
+    -->
+    <ScrollView>
+        <VerticalStackLayout
+            Padding="30,30"
+            Spacing="20">
+
+            <Label
+                Text="Indicator dots"
+                Style="{StaticResource Headline}" />
+
+            <Label
+                Text="Five labeled positions; the IndicatorView below shows the active one. Use Prev / Next / Toggle shape to cycle."
+                LineBreakMode="WordWrap" />
+
+            <Label x:Name="PositionLabel"
+                   Text="Position: 0 (Apple)"
+                   FontAttributes="Bold"
+                   HorizontalOptions="Center" />
+
+            <IndicatorView x:Name="Indicator"
+                           Count="5"
+                           IndicatorColor="LightGray"
+                           SelectedIndicatorColor="MediumBlue"
+                           IndicatorSize="10"
+                           IndicatorsShape="Circle"
+                           HorizontalOptions="Center" />
+
+            <HorizontalStackLayout HorizontalOptions="Center" Spacing="10">
+                <Button x:Name="PrevButton" Text="Prev" Clicked="OnPrev" />
+                <Button x:Name="NextButton" Text="Next" Clicked="OnNext" />
+                <Button x:Name="ShapeButton" Text="Toggle shape" Clicked="OnToggleShape" />
+            </HorizontalStackLayout>
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

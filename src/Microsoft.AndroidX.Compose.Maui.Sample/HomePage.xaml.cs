@@ -120,6 +120,16 @@ public partial class HomePage : ContentPage
                 "Tap / Pan / Pinch / Swipe on Compose-folded leaves.",
                 Color.FromArgb("#009688"),
                 "gestures"),
+            new DemoEntry(
+                "Refresh",
+                "RefreshView (pull-to-refresh) over Compose's PullToRefreshBox.",
+                Color.FromArgb("#00BCD4"),
+                "refresh"),
+            new DemoEntry(
+                "Indicator",
+                "IndicatorView dot strip; Prev/Next buttons cycle Position.",
+                Color.FromArgb("#9C27B0"),
+                "indicator"),
         };
     }
 

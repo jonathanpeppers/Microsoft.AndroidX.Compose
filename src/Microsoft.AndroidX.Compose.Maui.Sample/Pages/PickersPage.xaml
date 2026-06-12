@@ -13,7 +13,8 @@
             * Picker.Title                   -> MapTitle (floating label)
             * DatePicker.Date                -> MapDate (DateSelected echoes the formatted date)
             * DatePicker.MinimumDate /
-              MaximumDate                    -> not yet wired (Phase 4b RememberDatePickerState lift required; tracked in #264)
+              MaximumDate                    -> Phase 4b lift (#264) — bridges through SelectableDates
+                                                  so days outside Today..Today+30 are greyed out.
             * TimePicker.Time                -> MapTime (PropertyChanged echoes time)
             * Format / TextColor / FontSize /
               FontAttributes (Bold)          -> MapFormat / MapTextColor / MapFont
@@ -53,7 +54,7 @@
                 x:Name="FruitEcho"
                 Text="No fruit picked yet." />
 
-            <Label Text="DatePicker (modal calendar) — opens a Compose DatePickerDialog; selection writes back via DateSelected."
+            <Label Text="DatePicker (modal calendar) — opens a Compose DatePickerDialog; selection writes back via DateSelected. The Min/Max range is Today..Today+30."
                    FontAttributes="Bold" />
 
             <DatePicker

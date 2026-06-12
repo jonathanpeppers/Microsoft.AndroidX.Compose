@@ -12,11 +12,13 @@ using MauiEntry = Microsoft.Maui.Controls.Entry;
 using MauiHorizontalStackLayout = Microsoft.Maui.Controls.HorizontalStackLayout;
 using MauiImage = Microsoft.Maui.Controls.Image;
 using MauiImageButton = Microsoft.Maui.Controls.ImageButton;
+using MauiIndicatorView = Microsoft.Maui.Controls.IndicatorView;
 using MauiLabel = Microsoft.Maui.Controls.Label;
 using MauiPage = Microsoft.Maui.Controls.Page;
 using MauiPicker = Microsoft.Maui.Controls.Picker;
 using MauiProgressBar = Microsoft.Maui.Controls.ProgressBar;
 using MauiRadioButton = Microsoft.Maui.Controls.RadioButton;
+using MauiRefreshView = Microsoft.Maui.Controls.RefreshView;
 using MauiScrollView = Microsoft.Maui.Controls.ScrollView;
 using MauiSearchBar = Microsoft.Maui.Controls.SearchBar;
 using MauiSlider = Microsoft.Maui.Controls.Slider;
@@ -73,6 +75,13 @@ public static class AppHostBuilderExtensions
     ///     <see cref="MauiContentView"/>) render through Compose's
     ///     <c>Box</c> with stroke / fill / clip modifier
     ///     chains.</description></item>
+    ///   <item><description>Pull-to-refresh + indicator dots
+    ///     (<see cref="MauiRefreshView"/> / <see cref="MauiIndicatorView"/>):
+    ///     <see cref="MauiRefreshView"/> wraps a single child
+    ///     through Material 3 <c>PullToRefreshBox</c>;
+    ///     <see cref="MauiIndicatorView"/> synthesises a Compose
+    ///     <c>Row</c> of dot tiles. CarouselView ↔ IndicatorView
+    ///     two-way wiring lands in Phase 3.</description></item>
     /// </list>
     ///
     /// <para>Layout types not in the list above (Grid, AbsoluteLayout,
@@ -158,6 +167,13 @@ public static class AppHostBuilderExtensions
             // ContentView collides with stock MAUI's ContentViewHandler;
             // last AddHandler wins, so register ours last.
             handlers.AddHandler<MauiContentView,            ContentViewHandler>();
+
+            // Phase 2 Slice 12 — pull-to-refresh + carousel-position
+            // dot strip. RefreshView wraps a single child through
+            // PullToRefreshBox; IndicatorView synthesises a Row of Box
+            // dots. CarouselView two-way wiring lands in Phase 3.
+            handlers.AddHandler<MauiRefreshView,            RefreshViewHandler>();
+            handlers.AddHandler<MauiIndicatorView,          IndicatorViewHandler>();
         });
 
         return builder;

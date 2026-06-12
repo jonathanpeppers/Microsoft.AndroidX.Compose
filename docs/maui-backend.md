@@ -363,7 +363,7 @@ Compose backend.
 - Image handler — stock MAUI handler keeps rendering
   `dotnet_bot.png`; replacing with Compose's `Image` lands later.
 
-### Phase 2 — input + visual breadth (target: "Control Gallery parity for leaves")
+### Phase 2 — input + visual breadth (target: "Control Gallery parity for leaves") ✅ shipped (closed by Slice 12)
 
 The full leaf list (delivered across multiple slices):
 
@@ -1534,6 +1534,108 @@ handler `BuildNode` call sites if `adb install` keeps racing.
   "use the theme default" — but the auto-default-mask machinery
   still needs the trailing convention to land bits in the right
   slot. Documented on `composer.SliderColors(...)`.
+
+#### Phase 2 Slice 12 — `RefreshView` + `IndicatorView` + `DatePicker` Phase 4b lift ✅ shipped
+
+The final Phase 2 slice closes out leaf coverage with two more
+container/composite handlers and lifts `DatePickerHandler` to honour
+`MinimumDate` / `MaximumDate`. Marks **Phase 2 complete** —
+every leaf in the Phase 2 plan list is now wired.
+
+- `MauiRefreshView` → `RefreshViewHandler` over Compose's
+  `Microsoft.AndroidX.Compose.PullToRefreshBox`. `IsRefreshing` is
+  two-way: MAUI → Compose flows through `MapIsRefreshing`; Compose's
+  pull gesture writes `view.IsRefreshing = true` from the `onRefresh`
+  callback before invoking `Command`. The mapper re-fires with the
+  same value but the `MutableState<bool>` equality short-circuit
+  breaks the loop without a `_suppressMauiWrite` flag (mirrors
+  `EntryHandler.OnValueChanged`). `Content` walks via `ComposeWalker`
+  so the inner stack folds into the parent page composition.
+- `MauiIndicatorView` → `IndicatorViewHandler` synthesised from a
+  Compose `Row` of `Box` dot tiles (no first-class M3 indicator
+  primitive). `RoundedCornerShape(50)` for circles, `(0)` for
+  squares. `Position` is one-way (MAUI → Compose) for now — the
+  two-way to `CarouselView.Position` is owned by Phase 3's
+  `CarouselViewHandler`. `IndicatorTemplate` isn't honoured because
+  templated indicators need MAUI's `IndicatorStackLayout` rendering
+  which doesn't fit the single-`ComposeView`-per-page contract;
+  documented as opt-out (skip the `AddHandler` to fall back to stock
+  templating).
+- `DatePickerHandler` lifted from Phase 4 zero-param Remember to
+  Phase 4b parameterised Remember (issue #264). The
+  `RememberDatePickerState` bridge in `ComposeBridges.cs` now
+  surfaces all five Kotlin slots (`initialSelectedDateMillis`,
+  `initialDisplayedMonthMillis`, `yearRange`, `initialDisplayMode`,
+  `selectableDates`); the `DatePickerState` wrapper exposes matching
+  `Initial*` properties so the facade generator's wrapper-resolution
+  rules pick them up by name. A new
+  `Microsoft.AndroidX.Compose.DateRangeSelectableDates` JCW (registered
+  as `net/compose/DateRangeSelectableDates`) implements the Kotlin
+  `androidx.compose.material3.SelectableDates` interface with mutable
+  `Min`/`MaxUtcMillis` + `Min`/`MaxYear` props. `DatePickerHandler`
+  holds **one** adapter instance as a `readonly` field per handler
+  and re-keys the `c.Remember(factory, minTicks, maxTicks)` call so
+  external `MinimumDate` / `MaximumDate` writes invalidate the cached
+  state.
+
+**SelectableDates JCW pattern (matches Phase 10's `ConfirmStateChange`).**
+Holding the adapter as a `readonly` field on the handler keeps the JNI
+peer identity stable across recompositions — required because the
+adapter is part of `rememberDatePickerState`'s `remember` cache key.
+Reallocating it every render would drop the cached state-holder back
+to a fresh `2024-01-01 / IntRange(1900, 2100) / DisplayMode.Picker`
+instance every recomposition. The `MapMinimumDate` / `MapMaximumDate`
+mappers mutate the adapter's properties in-place; Kotlin re-invokes
+`IsSelectableDate` per grid render so changes show up on the next
+recompose. The same shape unblocks a future
+`DateRangePickerHandler` (Phase 3+) which can reuse
+`DateRangeSelectableDates` to clamp the picker range.
+
+**Phase 4b lift trade-off.** The wrapper-member resolution rules
+(see `.github/copilot-instructions.md`) match by name only, not by
+type — so `DatePickerState.InitialSelectedDateMillis` had to be
+typed `Java.Lang.Long?` (matching the JNI slot) rather than the
+user-friendly `long?`. The conversion happens inside the
+`DatePickerState(long? initialSelectedDateMillis, ...)` ctor; users
+get an ergonomic API while the generator still lowers cleanly. The
+bridge generator can't skip non-trailing slots, so even though only
+three of the five Kotlin slots are MAUI-relevant
+(`initialSelectedDateMillis`, `yearRange`, `selectableDates`), the
+bridge surfaces all five — the unused two are left `null` by the
+handler and the auto-default-mask machinery clears their
+`$default` bits.
+
+**Lessons learned (Slice 12):**
+
+- **`view.ToPlatform(MauiContext)` recurses when the registered
+  handler is the one calling it.** The original spec for
+  `IndicatorTemplate` was "fall back to
+  `AndroidView { factory = view.ToPlatform(MauiContext) }`". In
+  practice `ToPlatform` looks up the handler from the registry —
+  which returns ours — and we'd loop. Documented the gap and render
+  dots regardless when the template is non-null; consumers wanting
+  templated indicators skip the `AddHandler` registration entirely.
+- **`IDatePicker.MinimumDate` / `MaximumDate` are `DateTime?`,
+  not `DateTime`.** The interface allows null even though MAUI's
+  `DatePicker` control always populates them. Handlers must
+  null-check before computing `Ticks` for the version slot.
+- **`c.Remember(factory, key1, key2)` re-keying is the correct
+  invalidation hook for state-holder min/max bound changes.** The
+  Compose runtime drops the cached `DatePickerState` when any key
+  shifts and runs the factory again, picking up the seeded
+  `initialSelectedDateMillis` / `initialDisplayedMonthMillis`. The
+  `_ticks` slot (the user-driven Date) is *not* in the key array,
+  so MAUI write-throughs from `dp.Date = picked` survive — they just
+  bump `_ticks.Value` and let the adapter's mutable fields drive
+  greying.
+- **Wrapper-member resolution matches by name, not type.** Surfaced
+  `Java.Lang.Long?` directly on the wrapper to align with the JNI
+  slot type; ergonomic conversion happens in the wrapper's ctor.
+- **MAUI's `DatePicker` clamps `Date` assignments outside the
+  Min/Max range.** The Reset button on the `PickersPage` sample had
+  to use `DateTime.Today` (within the seeded Today..Today+30 window)
+  rather than the previous `2000-01-01` default; otherwise MAUI's
+  range validator silently rewrote the value back inside bounds.
 
 ### Phase 3 — collection + container (target: list-driven apps)
 

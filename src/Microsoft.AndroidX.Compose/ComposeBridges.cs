@@ -1193,6 +1193,26 @@ internal static partial class ComposeBridges
         IComposer   composer);
 
     // androidx.compose.material3.DatePickerKt.rememberDatePickerState-EU0dCGE
+    //
+    // Phase 4b parameterised Remember (issue #264). Every Kotlin user
+    // slot is surfaced — the bridge generator can't skip non-trailing
+    // slots. The auto-default-mask clears bit N for every non-null
+    // param the caller supplied; null leaves the Kotlin default in
+    // place (the matching `RememberDatePickerStateDefault` bit stays
+    // set).
+    //
+    // Wrapper-member resolution (StateType = DatePickerState):
+    //   initialSelectedDateMillis  -> InitialSelectedDateMillis    (Java.Lang.Long?)
+    //   initialDisplayedMonthMillis-> InitialDisplayedMonthMillis  (Java.Lang.Long?)
+    //   yearRange                  -> InitialYearRange             (IntRange?)
+    //   initialDisplayMode         -> InitialDisplayMode           (int?)
+    //   selectableDates            -> InitialSelectableDates       (ISelectableDates?)
+    //
+    // The JNI slot for `Long`/`IntRange`/`SelectableDates` is `L…;`,
+    // so the C# bridge param types must be reference (boxed Long,
+    // IntRange, ISelectableDates). The `initialDisplayMode` slot is
+    // `I` so `int?` is correct (auto-mask passes 0 + sets the bit
+    // when caller leaves it null).
     [ComposeBridge(
         Class     = "androidx/compose/material3/DatePickerKt",
         JvmName   = "rememberDatePickerState-EU0dCGE",
@@ -1200,7 +1220,13 @@ internal static partial class ComposeBridges
                     "Landroidx/compose/material3/SelectableDates;" +
                     "Landroidx/compose/runtime/Composer;II)Landroidx/compose/material3/DatePickerState;",
         Defaults  = typeof(RememberDatePickerStateDefault))]
-    public static partial IntPtr RememberDatePickerState(IComposer composer);
+    public static partial IntPtr RememberDatePickerState(
+        Java.Lang.Long?                                  initialSelectedDateMillis,
+        Java.Lang.Long?                                  initialDisplayedMonthMillis,
+        IntRange?                                        yearRange,
+        int?                                             initialDisplayMode,
+        AndroidX.Compose.Material3.ISelectableDates?     selectableDates,
+        IComposer                                        composer);
 
     // androidx.compose.material3.DateRangePickerKt.DateRangePicker
     [ComposeBridge(

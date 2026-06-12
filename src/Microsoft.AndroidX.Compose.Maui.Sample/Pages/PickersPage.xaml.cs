@@ -16,23 +16,20 @@ using System.ComponentModel;
 public partial class PickersPage : ContentPage
 {
     static readonly TimeSpan s_defaultAlarm = new(7, 30, 0);
-    static readonly DateTime s_defaultDate  = new(2000, 1, 1);
 
     /// <summary>Build the page.</summary>
     public PickersPage()
     {
         InitializeComponent();
 
-        // Seed the date picker with today so the trigger label has
-        // something useful to display before the user opens the dialog.
-        // MinimumDate / MaximumDate are not yet plumbed through to
-        // Compose's DatePickerState (Phase 4 zero-user-param Remember
-        // doesn't surface yearRange yet — see issue #264). We still
-        // set them here on the MAUI side so the regression is obvious
-        // when the Phase 4b lift lands.
+        // Seed the date picker with today and clamp the calendar to
+        // a Today..Today+30 window. Phase 4b's RememberDatePickerState
+        // lift wires MinimumDate / MaximumDate through to Compose's
+        // SelectableDates so days outside this range render greyed
+        // out (issue #264).
         var today = DateTime.Today;
-        BirthDate.MinimumDate = today.AddYears(-2);
-        BirthDate.MaximumDate = today.AddYears(2);
+        BirthDate.MinimumDate = today;
+        BirthDate.MaximumDate = today.AddDays(30);
         BirthDate.Date        = today;
 
         AlarmTime.Time             = s_defaultAlarm;
@@ -62,7 +59,9 @@ public partial class PickersPage : ContentPage
     {
         FruitPicker.SelectedIndex = -1;
         FruitEcho.Text            = "No fruit picked yet.";
-        BirthDate.Date            = s_defaultDate;
+        // Reset within the [Today, Today + 30] window so the assignment
+        // doesn't get clamped by the MAUI DatePicker's range validator.
+        BirthDate.Date            = DateTime.Today;
         DateEcho.Text             = "No date picked yet.";
         AlarmTime.Time            = s_defaultAlarm;
         TimeEcho.Text             = "No time picked yet.";
