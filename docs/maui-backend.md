@@ -1951,17 +1951,25 @@ visual chrome:
   pattern (Phase 10 + 4c, see `ModalBottomSheet`) are in place;
   hand-write a drawer state holder wired to `IFlyoutView`'s
   `IsPresented`.
-- **Slice 4 — `ShellHandler`** (closes #248). Stock `ShellRenderer`
-  works; the issue is its built-in `FlyoutItem` template uses MAUI
-  `Label`s, which our `LabelHandler` renders **without** any
-  Material chrome (no padding, font, ripple) — bare text. The
-  cleanest narrow fix is per-leaf "host context detection" inside
-  `LabelHandler` (when the leaf's parent chain goes through
-  `BaseShellItem`, switch to a `ListItem`-styled Compose body)
-  rather than rebuilding Shell on Compose. A full Shell handler
-  (`Scaffold` + `ModalNavigationDrawer` + `NavigationBar` +
-  URI-routed `NavHost`) is a multi-week effort and stays scoped
-  out.
+- **Slice 4 — `ShellHandler`** (closes #248). Stock works; the
+  visible regression was that the built-in `FlyoutItem` template's
+  MAUI `Label`s rendered through our `LabelHandler` without any
+  enclosing Compose composition — `Color.Unspecified` falls
+  through to `LocalContentColor.current` which defaults to
+  `Color.Black`, so flyout titles disappeared on dark mode. Slice
+  1 fixes that narrowly: `LabelHandler` now resolves
+  `ThemeManager` once during `SetMauiContext` and, when MAUI's
+  `TextColor` is unset, picks `Color.White` on dark / `Color.Black`
+  on light from the cached `IsDark` `MutableState` (snapshot read
+  in `BuildNode` so theme flips recompose). This matches MAUI's
+  own stock `LabelHandler` (which resolves the same defaults from
+  the active configuration's `colorPrimaryText` state list). No
+  base-class wrap, no per-leaf `Surface` (which would paint
+  mismatched tiles on top of stock chrome). The Shell chrome
+  itself remains stock `DrawerLayout`; a full Compose Shell
+  handler (`Scaffold` + `ModalNavigationDrawer` + `NavigationBar`
+  + URI-routed `NavHost`) stays scoped out as a multi-week
+  follow-up.
 - **Slice 5 — `ModalNavigationManager`**. Needs a DispatchProxy
   intercept on MAUI's per-window `IModalNavigationManager`,
   similar to the `ComposeAlertManagerSubscription` pattern (Phase
