@@ -131,6 +131,11 @@ public partial class HomePage : ContentPage
                 Color.FromArgb("#9C27B0"),
                 "indicator"),
             new DemoEntry(
+                "Collections",
+                "CollectionView vertical / horizontal / grid backed by ObservableCollection<T>.",
+                Color.FromArgb("#7E57C2"),
+                "collections"),
+            new DemoEntry(
                 "Semantics",
                 "SemanticProperties.Description / Hint / HeadingLevel + AutomationId routed to Compose `Modifier.Semantics { … }`.",
                 Color.FromArgb("#3F51B5"),
