@@ -1473,6 +1473,22 @@ Pinch / Swipe) runs against a shared device; fall back to
 build-clean + visual review of `GestureBridge.cs` and the 22
 handler `BuildNode` call sites if `adb install` keeps racing.
 
+**Known limitation — multiple homogeneous recognizers on one view.**
+Each recognizer becomes its own `Modifier.PointerInput { detect… }`
+chained on top of the same node. Compose's `detectDragGestures`
+calls `change.consume()` on each pointer movement, and the consume
+flag is shared across sibling `PointerInput` modifiers. The result:
+two `SwipeGestureRecognizer`s on one Label (one for `Left`, one for
+`Right`) only let the first detector see deltas — the second
+detector observes consumed events and never reaches `onDragEnd`.
+**Workaround**: use a single recognizer with combined flags
+(`Direction="Left,Right"`) — that's the canonical MAUI pattern
+anyway. Same caveat applies if you stack two `TapGestureRecognizer`s
+or two `PanGestureRecognizer`s on the same element. A future slice
+could coalesce homogeneous recognizers into a single detector that
+unions their behavior; not currently needed for the demos we
+support.
+
 **Facade extensions landed alongside the handlers:**
 
 - `Microsoft.AndroidX.Compose.Slider` gained

@@ -107,8 +107,7 @@
                 BackgroundColor="#009688"
                 TextColor="White">
                 <Label.GestureRecognizers>
-                    <SwipeGestureRecognizer Direction="Left"  Swiped="OnSwiped" />
-                    <SwipeGestureRecognizer Direction="Right" Swiped="OnSwiped" />
+                    <SwipeGestureRecognizer Direction="Left,Right" Swiped="OnSwiped" />
                 </Label.GestureRecognizers>
             </Label>
 
