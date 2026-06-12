@@ -57,8 +57,8 @@ public partial class ActivityIndicatorHandler : ComposeElementHandler<IActivityI
     /// <inheritdoc/>
     public override ComposableNode BuildNode(IComposer composer)
     {
-        var virtualView = VirtualView;
-        ArgumentNullException.ThrowIfNull(virtualView);
+        var virtualView = VirtualView
+            ?? throw new InvalidOperationException("VirtualView not set on ActivityIndicatorHandler.");
 
         var gestureModifier = Modifier.Companion.ApplyGestures(virtualView, MauiContext);
         if (!_isRunning.Value)

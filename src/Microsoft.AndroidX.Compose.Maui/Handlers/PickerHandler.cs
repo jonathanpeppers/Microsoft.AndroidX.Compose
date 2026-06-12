@@ -125,8 +125,8 @@ public partial class PickerHandler : ComposeElementHandler<IPicker>
     /// <inheritdoc/>
     public override ComposableNode BuildNode(IComposer composer)
     {
-        var virtualView = VirtualView;
-        ArgumentNullException.ThrowIfNull(virtualView);
+        var virtualView = VirtualView
+            ?? throw new InvalidOperationException("VirtualView not set on PickerHandler.");
 
         // Subscribe to the version slot so external Items mutations
         // recompose this subtree even when the live IList reference

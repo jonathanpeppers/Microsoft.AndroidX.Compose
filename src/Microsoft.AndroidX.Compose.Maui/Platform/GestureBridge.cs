@@ -249,10 +249,10 @@ internal static class GestureBridge
 
     static float GetDensity()
     {
-        var resources = global::Android.Content.Res.Resources.System;
-        ArgumentNullException.ThrowIfNull(resources);
-        var metrics = resources.DisplayMetrics;
-        ArgumentNullException.ThrowIfNull(metrics);
+        var resources = global::Android.Content.Res.Resources.System
+            ?? throw new InvalidOperationException("Resources.System not available.");
+        var metrics = resources.DisplayMetrics
+            ?? throw new InvalidOperationException("Resources.System.DisplayMetrics not available.");
         return metrics.Density;
     }
 

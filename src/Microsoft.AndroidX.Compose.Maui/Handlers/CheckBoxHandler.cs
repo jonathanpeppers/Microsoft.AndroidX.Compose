@@ -62,8 +62,8 @@ public partial class CheckBoxHandler : ComposeElementHandler<ICheckBox>
     /// <inheritdoc/>
     public override ComposableNode BuildNode(IComposer composer)
     {
-        var virtualView = VirtualView;
-        ArgumentNullException.ThrowIfNull(virtualView);
+        var virtualView = VirtualView
+            ?? throw new InvalidOperationException("VirtualView not set on CheckBoxHandler.");
 
         var color = _color.Value;
         var box   = new ComposeCheckbox(@checked: _checked.Value,

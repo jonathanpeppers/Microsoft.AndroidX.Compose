@@ -71,8 +71,8 @@ public partial class LabelHandler : ComposeElementHandler<ILabel>
     /// <inheritdoc/>
     public override ComposableNode BuildNode(IComposer composer)
     {
-        var virtualView = VirtualView;
-        ArgumentNullException.ThrowIfNull(virtualView);
+        var virtualView = VirtualView
+            ?? throw new InvalidOperationException("VirtualView not set on LabelHandler.");
 
         // Subscribe to the shared view-properties version slot so any
         // ApplyViewProperties-relevant property change (Opacity,

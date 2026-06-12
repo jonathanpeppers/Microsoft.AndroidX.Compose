@@ -106,8 +106,8 @@ public partial class DatePickerHandler : ComposeElementHandler<IDatePicker>
     /// <inheritdoc/>
     public override ComposableNode BuildNode(IComposer composer)
     {
-        var virtualView = VirtualView;
-        ArgumentNullException.ThrowIfNull(virtualView);
+        var virtualView = VirtualView
+            ?? throw new InvalidOperationException("VirtualView not set on DatePickerHandler.");
 
         // Composer-aware: the DatePickerState wrapper has to live across
         // recompositions or the dialog forgets the current selection,

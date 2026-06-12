@@ -73,8 +73,8 @@ public partial class BoxViewHandler : ComposeElementHandler<MauiBoxView>
     /// <inheritdoc/>
     public override ComposableNode BuildNode(IComposer composer)
     {
-        var virtualView = VirtualView;
-        ArgumentNullException.ThrowIfNull(virtualView);
+        var virtualView = VirtualView
+            ?? throw new InvalidOperationException("VirtualView not set on BoxViewHandler.");
 
         _ = _cornerVersion.Value;  // subscribe — CornerRadius change bumps this
         _ = _sizeVersion.Value;    // subscribe — Width/HeightRequest change bumps this

@@ -82,8 +82,8 @@ public partial class RadioButtonHandler : ComposeElementHandler<IRadioButton>
     /// <inheritdoc/>
     public override ComposableNode BuildNode(IComposer composer)
     {
-        var virtualView = VirtualView;
-        ArgumentNullException.ThrowIfNull(virtualView);
+        var virtualView = VirtualView
+            ?? throw new InvalidOperationException("VirtualView not set on RadioButtonHandler.");
 
         var packed = _color.Value;
         var size   = _fontSize.Value;

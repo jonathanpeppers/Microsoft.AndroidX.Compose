@@ -71,8 +71,8 @@ public partial class EntryHandler : ComposeElementHandler<IEntry>
     /// <inheritdoc/>
     public override ComposableNode BuildNode(IComposer composer)
     {
-        var virtualView = VirtualView;
-        ArgumentNullException.ThrowIfNull(virtualView);
+        var virtualView = VirtualView
+            ?? throw new InvalidOperationException("VirtualView not set on EntryHandler.");
 
         SubscribeToViewProperties();
 

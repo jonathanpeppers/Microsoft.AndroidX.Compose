@@ -82,8 +82,8 @@ public partial class BorderHandler : ComposeElementHandler<MauiBorder>
         var context = MauiContext
             ?? throw new InvalidOperationException("MauiContext not set on BorderHandler.");
 
-        var border = (Microsoft.Maui.Controls.Border?)VirtualView;
-        ArgumentNullException.ThrowIfNull(border);
+        var border = (Microsoft.Maui.Controls.Border?)VirtualView
+            ?? throw new InvalidOperationException("VirtualView not set on BorderHandler.");
         var padding = (border as IPadding)?.Padding ?? Thickness.Zero;
         var width   = _strokeWidth.Value;
         var stroke  = _strokeColor.Value;

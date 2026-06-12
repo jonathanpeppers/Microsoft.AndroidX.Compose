@@ -133,8 +133,8 @@ public partial class FooHandler : ComposeElementHandler<IFoo>
     /// <inheritdoc/>
     public override ComposableNode BuildNode(IComposer composer)
     {
-        var virtualView = VirtualView;
-        ArgumentNullException.ThrowIfNull(virtualView);
+        var virtualView = VirtualView
+            ?? throw new InvalidOperationException("VirtualView not set on FooHandler.");
         return new Foo(/* read _text.Value etc. */);
     }
 
@@ -610,23 +610,29 @@ duplicates the stock behavior without adding anything.
 - One handler class per file, file name = class name.
 - File-scoped namespaces.
 - XML docs on every public type and member.
-- `ArgumentNullException.ThrowIfNull(x)` for parameter null checks.
-- **Never use the `!` (null-forgiving postfix) operator.** This rule has
-  no carve-outs — handler property accesses, Android framework getters,
-  `TaskCompletionSource<T?>` null forwards, and every other site go
-  through a local + assertion instead. Canonical handler `BuildNode`
-  preamble:
+- `ArgumentNullException.ThrowIfNull(x)` for **method/ctor parameter**
+  null checks only.
+- **Never use the `!` (null-forgiving postfix) operator.** No
+  carve-outs. For handler property accesses (`VirtualView`,
+  `MauiContext`, `Context`, `PlatformView`), Android framework getters,
+  `TaskCompletionSource<T?>` null forwards, and every other
+  non-parameter site, use `?? throw new InvalidOperationException(...)`
+  with a message that names what's missing and which handler is
+  affected. Canonical `BuildNode` preamble:
   ```csharp
   public override ComposableNode BuildNode(IComposer composer)
   {
-      var virtualView = VirtualView;
-      ArgumentNullException.ThrowIfNull(virtualView);
+      var virtualView = VirtualView
+          ?? throw new InvalidOperationException("VirtualView not set on FooHandler.");
+      var context = MauiContext
+          ?? throw new InvalidOperationException("MauiContext not set on FooHandler.");
       // …read virtualView.* and pass to ApplyGestures / ApplySemantics …
   }
   ```
-  Same shape for `MauiContext` (or `?? throw new InvalidOperationException("MauiContext not set on FooHandler.")`),
-  `Context`, `PlatformView`, etc. Don't write `VirtualView!.WidthRequest`
-  — make the contract explicit and the `NullReferenceException` becomes
-  an `ArgumentNullException` naming the variable.
+  Don't write `VirtualView!.WidthRequest` or
+  `ArgumentNullException.ThrowIfNull(virtualView)` for an inherited
+  property — the named-exception form tells the user *which* contract
+  was broken, not just a variable name. Reserve `ThrowIfNull` for
+  genuine parameters (`public Foo(IBar bar) { ArgumentNullException.ThrowIfNull(bar); }`).
 - Don't add `// ---- Section ----` banners — one file per type makes
   them noise.

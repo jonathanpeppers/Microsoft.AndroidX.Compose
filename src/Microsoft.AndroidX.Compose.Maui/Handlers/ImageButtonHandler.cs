@@ -83,8 +83,8 @@ public partial class ImageButtonHandler : ComposeElementHandler<MauiIImageButton
     /// <inheritdoc/>
     public override ComposableNode BuildNode(IComposer composer)
     {
-        var virtualView = VirtualView;
-        ArgumentNullException.ThrowIfNull(virtualView);
+        var virtualView = VirtualView
+            ?? throw new InvalidOperationException("VirtualView not set on ImageButtonHandler.");
 
         _ = _paddingVersion.Value;  // subscribe — Padding change bumps this
         var padding = virtualView is IPadding p ? p.Padding : Thickness.Zero;

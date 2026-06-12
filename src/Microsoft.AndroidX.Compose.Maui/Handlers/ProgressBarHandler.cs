@@ -60,8 +60,8 @@ public partial class ProgressBarHandler : ComposeElementHandler<IProgress>
     /// <inheritdoc/>
     public override ComposableNode BuildNode(IComposer composer)
     {
-        var virtualView = VirtualView;
-        ArgumentNullException.ThrowIfNull(virtualView);
+        var virtualView = VirtualView
+            ?? throw new InvalidOperationException("VirtualView not set on ProgressBarHandler.");
 
         var packed = _color.Value;
         var bar = new ComposeLinearProgressIndicator

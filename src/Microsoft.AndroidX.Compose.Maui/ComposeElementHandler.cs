@@ -65,8 +65,8 @@ public abstract class ComposeElementHandler<TVirtualView> : ViewHandler<TVirtual
         // composition when the view is attached to a window. Inside
         // a Compose-aware parent the walker calls BuildNode directly
         // and this composition is never created.
-        var platformView = PlatformView;
-        ArgumentNullException.ThrowIfNull(platformView);
+        var platformView = PlatformView
+            ?? throw new InvalidOperationException("PlatformView not set on ComposeElementHandler.");
         platformView.SetContent(BuildNode);
     }
 

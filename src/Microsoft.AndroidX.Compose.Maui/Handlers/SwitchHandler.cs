@@ -64,8 +64,8 @@ public partial class SwitchHandler : ComposeElementHandler<ISwitch>
     /// <inheritdoc/>
     public override ComposableNode BuildNode(IComposer composer)
     {
-        var virtualView = VirtualView;
-        ArgumentNullException.ThrowIfNull(virtualView);
+        var virtualView = VirtualView
+            ?? throw new InvalidOperationException("VirtualView not set on SwitchHandler.");
 
         var track = _trackColor.Value;
         var thumb = _thumbColor.Value;

@@ -84,8 +84,8 @@ public partial class StepperHandler : ComposeElementHandler<IStepper>
     /// <inheritdoc/>
     public override ComposableNode BuildNode(IComposer composer)
     {
-        var virtualView = VirtualView;
-        ArgumentNullException.ThrowIfNull(virtualView);
+        var virtualView = VirtualView
+            ?? throw new InvalidOperationException("VirtualView not set on StepperHandler.");
 
         var value    = _value.Value;
         var min      = _min.Value;

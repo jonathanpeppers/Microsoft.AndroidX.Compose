@@ -1138,27 +1138,29 @@ Confirm render, contrast, layout, no crash.
   class`, public ctor/method/property gets a `<summary>` (and `<remarks>`
   when there's nuance). Internal helpers get a one-line `//` when non-
   obvious; otherwise leave bare.
-- Use `ArgumentNullException.ThrowIfNull(x)` for parameter null checks —
-  not hand-written `if (x is null) throw new ArgumentNullException(nameof(x));`.
-  Applies to net10.0 / net10.0-android projects only; the netstandard2.0
-  source generator doesn't have `ThrowIfNull`.
-- **Never use the `!` (null-forgiving postfix) operator.** When a property,
-  field, or expression is typed as nullable but the runtime contract
-  guarantees it's non-null at the use site, copy it to a local and assert:
+- Use `ArgumentNullException.ThrowIfNull(x)` for **method/ctor parameter**
+  null checks — not hand-written
+  `if (x is null) throw new ArgumentNullException(nameof(x));`. Applies to
+  net10.0 / net10.0-android projects only; the netstandard2.0 source
+  generator doesn't have `ThrowIfNull`.
+- **Never use the `!` (null-forgiving postfix) operator.** When a
+  property, field, or expression is typed as nullable but the runtime
+  contract guarantees it's non-null at the use site, copy it to a local
+  with `?? throw new InvalidOperationException(...)` carrying a message
+  that names what's missing and where:
   ```csharp
-  var x = SomeProperty;
-  ArgumentNullException.ThrowIfNull(x);
-  // …use x…
+  var virtualView = VirtualView
+      ?? throw new InvalidOperationException("VirtualView not set on FooHandler.");
+  // …use virtualView…
   ```
-  An equivalent `var x = SomeProperty ?? throw new InvalidOperationException("…");`
-  is also acceptable when the local needs a custom error message.
-  This makes the contract explicit, surfaces a clear `ArgumentNullException`
-  with the variable name on violation instead of a bare `NullReferenceException`,
-  and survives later refactors that might invalidate the assumption. The rule
-  applies to handler `BuildNode` accesses (`VirtualView`, `MauiContext`,
-  `Context`, `PlatformView`), Android framework getters (`Resources.System`,
-  `DisplayMetrics`), `TaskCompletionSource<T?>` null forwards, and every
-  other site — there's no carve-out.
+  Pick this form over `ArgumentNullException.ThrowIfNull` for inherited
+  properties (`VirtualView`, `MauiContext`, `Context`, `PlatformView`),
+  Android framework getters (`Resources.System`, `DisplayMetrics`),
+  `TaskCompletionSource<T?>` null forwards, and every other non-parameter
+  site — the "X not set on FooHandler" wording tells the user *which*
+  contract was broken, not just a variable name. Reserve
+  `ArgumentNullException.ThrowIfNull` for genuine method/ctor parameters.
+  This rule has no carve-outs; the goal is consistency across the repo.
 - Don't add markdown planning docs to the repo — use the session artifact
   folder.
 - Commit trailer: `Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>`.

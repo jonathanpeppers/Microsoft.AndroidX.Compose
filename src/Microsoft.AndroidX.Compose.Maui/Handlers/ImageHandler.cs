@@ -90,8 +90,8 @@ public partial class ImageHandler : ComposeElementHandler<MauiIImage>
     /// <inheritdoc/>
     public override ComposableNode BuildNode(IComposer composer)
     {
-        var virtualView = VirtualView;
-        ArgumentNullException.ThrowIfNull(virtualView);
+        var virtualView = VirtualView
+            ?? throw new InvalidOperationException("VirtualView not set on ImageHandler.");
 
         SubscribeToViewProperties();
 
