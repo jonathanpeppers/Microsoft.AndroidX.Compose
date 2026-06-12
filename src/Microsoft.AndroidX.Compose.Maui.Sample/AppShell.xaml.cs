@@ -36,5 +36,14 @@ public partial class AppShell : Shell
         Routing.RegisterRoute("refresh",        typeof(RefreshPage));
         Routing.RegisterRoute("indicator",      typeof(IndicatorPage));
         Routing.RegisterRoute("semantics",      typeof(SemanticsPage));
+
+        // Phase 5 investigation pages — each verifies the AndroidView
+        // fallback path in ComposeWalker rather than a Compose-native
+        // handler. See docs/maui-backend.md (Phase 5).
+        Routing.RegisterRoute("shapes",         typeof(ShapesPage));
+        Routing.RegisterRoute("graphics-view",  typeof(GraphicsViewPage));
+        Routing.RegisterRoute("web-view",       typeof(WebViewPage));
+        Routing.RegisterRoute("hybrid-web-view",typeof(HybridWebViewPage));
+        Routing.RegisterRoute("layouts",        typeof(LayoutsPage));
     }
 }
