@@ -138,11 +138,12 @@ internal static class SemanticsBridge
         var hasContent = !string.IsNullOrEmpty(description)
             || !string.IsNullOrEmpty(hint)
             || heading;
+        var hasAutomationId = !string.IsNullOrEmpty(automationId);
 
-        if (!hasContent && string.IsNullOrEmpty(automationId))
+        if (!hasContent && !hasAutomationId)
             return modifier;
 
-        if (hasContent)
+        if (hasContent || hasAutomationId)
         {
             modifier = modifier.Semantics(mergeDescendants: true, s =>
             {
@@ -162,11 +163,19 @@ internal static class SemanticsBridge
 
                 if (heading)
                     s.Heading();
+
+                // Surface Modifier.TestTag(...) through
+                // AccessibilityNodeInfo.viewIdResourceName so Appium /
+                // UIAutomator's `By.id(automationId)` finds the node.
+                // Compose doesn't expose testTag to platform a11y by
+                // default; this flag flips it on for the subtree.
+                if (hasAutomationId)
+                    s.TestTagsAsResourceId(true);
             });
         }
 
-        if (!string.IsNullOrEmpty(automationId))
-            modifier = modifier.TestTag(automationId);
+        if (hasAutomationId)
+            modifier = modifier.TestTag(automationId!);
 
         return modifier;
     }

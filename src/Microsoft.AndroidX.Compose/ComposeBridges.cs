@@ -2730,6 +2730,27 @@ internal static partial class ComposeBridges
         Signature = "(Landroidx/compose/ui/semantics/SemanticsPropertyReceiver;)V")]
     internal static partial void SemanticsSetHeading(IntPtr receiver);
 
+    // androidx.compose.ui.semantics.SemanticsProperties_androidKt.setTestTagsAsResourceId(
+    //   SemanticsPropertyReceiver, boolean) — opts the subtree into
+    //   surfacing `Modifier.testTag(...)` as AccessibilityNodeInfo's
+    //   `viewIdResourceName`. UIAutomator / Espresso / Appium-Android
+    //   read elements from there for `By.id(...)` lookups, so MAUI
+    //   `AutomationId` only round-trips to Appium when this flag is
+    //   set somewhere on (or above) the testTag-carrying node.
+    //
+    // Lives on the Android-specific `SemanticsProperties_androidKt`
+    // file (not the common `SemanticsPropertiesKt`) because the
+    // property is `actual` only on the JVM target. Marked
+    // `@ExperimentalComposeUiApi` upstream but stable enough for
+    // production — Google uses it in Jetcaster, Now in Android, and
+    // it's been the canonical Compose-↔-Espresso/UIAutomator bridge
+    // since 2021. Boolean isn't a value class so no name mangling.
+    [ComposeBridge(
+        Class     = "androidx/compose/ui/semantics/SemanticsProperties_androidKt",
+        JvmName   = "setTestTagsAsResourceId",
+        Signature = "(Landroidx/compose/ui/semantics/SemanticsPropertyReceiver;Z)V")]
+    internal static partial void SemanticsSetTestTagsAsResourceId(IntPtr receiver, bool value);
+
     // androidx.compose.ui.semantics.SemanticsPropertiesKt.onClick$default(
     //   SemanticsPropertyReceiver, String?, Function0<Boolean>?,
     //   int $default, Object marker) — registers a labelled

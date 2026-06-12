@@ -1596,7 +1596,7 @@ hosts the semantics tree).
 | `Semantics.Hint` (Description **also** set)                | `stateDescription = hint` — MAUI's stock pipeline routes Hint to `info.HintText` on API 26+, which TalkBack reads after ContentDescription. Compose's analog is `stateDescription`. |
 | `Semantics.Hint` (Description **not** set)                 | `contentDescription = hint` — promoted because a node with only `stateDescription` isn't focusable for TalkBack and never gets announced.    |
 | `Semantics.HeadingLevel != SemanticHeadingLevel.None`      | `heading()` — Compose's Foundation `heading()` takes no level. Stock MAUI also collapses `HeadingLevel` to a boolean (`ViewCompat.SetAccessibilityHeading(view, true)`), so this is faithful. |
-| `IView.AutomationId`                                       | `Modifier.TestTag(automationId)` — UI automation reads testTag back through the Compose semantics tree; keeps Appium's `FindByAutomationId` working. |
+| `IView.AutomationId`                                       | `Modifier.Semantics { testTagsAsResourceId = true }` + `Modifier.TestTag(automationId)` — surfaces the tag as `AccessibilityNodeInfo.viewIdResourceName`, which Appium / UIAutomator / Espresso read for `By.id(...)` lookups. The opt-in flag is required: Compose's `testTag` lives only in the semantics tree by default and never reaches the platform a11y APIs Appium consumes. |
 
 **Hint vs Description precedence.** MAUI stock writes Description
 to `info.ContentDescription` *and* Hint to `info.HintText`
@@ -1663,14 +1663,17 @@ gesture-carrying layer and aggregate click actions correctly under
 
 **Facade additions.** Compose's
 `androidx.compose.ui.semantics.SemanticsPropertiesKt.heading(SemanticsPropertyReceiver)`
-wasn't yet exposed, so the slice adds `[ComposeBridge]
-SemanticsSetHeading` to `ComposeBridges` and a fluent
-`SemanticsScope.Heading()` method that wraps it (matching the
-existing `ContentDescription` / `Selected` / `Role` pattern). New
-public API: `AndroidX.Compose.SemanticsScope.Heading() ->
-SemanticsScope`. Gallery demo:
-`SemanticsHeadingDemo` (modifiers category) — paired with the
-existing `SemanticsBuilderDemo`.
+and `androidx.compose.ui.semantics.SemanticsProperties_androidKt.setTestTagsAsResourceId(SemanticsPropertyReceiver, boolean)`
+weren't yet exposed, so the slice adds `[ComposeBridge]
+SemanticsSetHeading` + `SemanticsSetTestTagsAsResourceId` to
+`ComposeBridges` and fluent `SemanticsScope.Heading()` /
+`SemanticsScope.TestTagsAsResourceId(bool)` methods that wrap them
+(matching the existing `ContentDescription` / `Selected` / `Role`
+pattern). New public API:
+`AndroidX.Compose.SemanticsScope.Heading() -> SemanticsScope` and
+`AndroidX.Compose.SemanticsScope.TestTagsAsResourceId(bool) ->
+SemanticsScope`. Gallery demo: `SemanticsHeadingDemo` (modifiers
+category) — paired with the existing `SemanticsBuilderDemo`.
 
 **Deliverables.** `Platform/SemanticsBridge.cs` (~175 LOC); 22
 handlers refactored to chain `.ApplySemantics(virtualView)`; new
@@ -1722,6 +1725,33 @@ Description+Hint Entry).
   `mergeDescendants` block and Appium can find a tag on a node
   that has no contentDescription — confusing for test failures.
 
+- **`testTag` ↔ `resource-id` needs an opt-in flag.** First pass
+  shipped without `testTagsAsResourceId = true`, expecting
+  `Modifier.TestTag("status-pill")` to round-trip to
+  `AccessibilityNodeInfo.viewIdResourceName` automatically. It
+  doesn't — Compose intentionally keeps testTag internal to its own
+  semantics tree, invisible to the Android a11y APIs UIAutomator /
+  Espresso / Appium-Android read. Without the flag, every existing
+  MAUI Appium test suite using `By.id(automationId)` would silently
+  break on Compose-folded leaves (stock MAUI handlers set
+  `View.setId(...)` for the same purpose). The fix is to call
+  `s.TestTagsAsResourceId(true)` inside the semantics block any
+  time `AutomationId` is non-empty — verified on-device:
+  uiautomator dump shows `resource-id="status-pill"` once the flag
+  is set; nothing without it. This is a real regression vs stock
+  MAUI for Appium users, so it belongs in the slice (not a
+  follow-up).
+
+- **`setTestTagsAsResourceId` lives on `SemanticsProperties_androidKt`,
+  not `SemanticsPropertiesKt`.** Burned ~15 min on `NoSuchMethodError`
+  before extracting the AAR's `classes.jar` and running `javap` to
+  find the actual class. The property is declared in
+  `SemanticsProperties.android.kt` (Android-only `actual` declaration)
+  rather than the common `SemanticsProperties.kt`, so it lowers to
+  `androidx.compose.ui.semantics.SemanticsProperties_androidKt`.
+  Documented in the `[ComposeBridge]` comment so the next person
+  doesn't repeat the trip.
+
 - **The bridge's `BuildNode` subscription uses the existing
   view-properties slot.** Slice 8's
   `BumpViewPropertiesVersion` already covers `Semantics` and
@@ -1730,13 +1760,15 @@ Description+Hint Entry).
   keeps a single subscribe call (`SubscribeToViewProperties()`)
   driving every modifier-chain rebuild.
 
-- **Verification gap.** The shared device was racy across parallel
-  sessions during the slice; on-device TalkBack confirmation was
-  done by inspection of the modifier chain (compile-time checks
-  + the gallery `SemanticsHeadingDemo` runs the path). Future
-  validation: deploy to an isolated device, enable TalkBack,
-  swipe through `SemanticsPage` and confirm the spoken text
-  matches the table above.
+- **Verification.** On-device uiautomator-dump verified on
+  emulator (Android 14): `content-desc="Save changes"` on the
+  Button (Description overrides visible "Save"),
+  `content-desc="Cute pet photo"` on the Image,
+  `content-desc="Email address"` on the Entry, and
+  `resource-id="status-pill"` on the BoxView (after the
+  `testTagsAsResourceId` fix). TalkBack-spoken-heading check is
+  TalkBack-only and not in the dump output; verified by inspection
+  of the `Modifier.Semantics { … heading() … }` chain.
 
 
 #### Phase 2 Slice 12 — `RefreshView` + `IndicatorView` + `DatePicker` Phase 4b lift ✅ shipped
