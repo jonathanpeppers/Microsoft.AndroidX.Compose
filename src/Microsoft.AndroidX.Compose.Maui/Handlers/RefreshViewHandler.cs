@@ -54,8 +54,15 @@ public partial class RefreshViewHandler : ComposeElementHandler<IRefreshView>
     public static IPropertyMapper<IRefreshView, RefreshViewHandler> Mapper =
         new PropertyMapper<IRefreshView, RefreshViewHandler>(ViewHandler.ViewMapper)
         {
-            [nameof(IRefreshView.IsRefreshing)] = MapIsRefreshing,
-            ["Content"]                          = MapContent,
+            [nameof(IRefreshView.IsRefreshing)]      = MapIsRefreshing,
+            [nameof(IRefreshView.IsRefreshEnabled)]  = MapIsRefreshEnabled,
+            ["Content"]                              = MapContent,
+            // TODO: IRefreshView.RefreshColor — Compose Material 3's
+            // PullToRefreshBox doesn't currently expose containerColor /
+            // contentColor through our facade (the bound Kotlin overload
+            // takes a PullToRefreshState parameter we don't surface).
+            // Wiring this needs a PullToRefreshBox facade extension —
+            // larger surgery than fits this PR.
         };
 
     /// <summary>Command mapper (inherits view-level commands; no extras).</summary>
@@ -63,6 +70,7 @@ public partial class RefreshViewHandler : ComposeElementHandler<IRefreshView>
         new(ViewCommandMapper);
 
     readonly MutableState<bool> _isRefreshing  = new(false);
+    readonly MutableState<bool> _isEnabled     = new(true);
     // Bumped whenever Content swaps so BuildNode reads the live
     // PresentedContent reference (IView itself doesn't fit in
     // MutableState<T>; same trick as ContentViewHandler).
@@ -87,6 +95,7 @@ public partial class RefreshViewHandler : ComposeElementHandler<IRefreshView>
         var context = MauiContext
             ?? throw new InvalidOperationException("MauiContext not set on RefreshViewHandler.");
 
+        bool isEnabled = _isEnabled.Value;
         var box = new ComposePullToRefreshBox(
             isRefreshing: _isRefreshing.Value,
             onRefresh:    () =>
@@ -100,6 +109,13 @@ public partial class RefreshViewHandler : ComposeElementHandler<IRefreshView>
                 // The mapper re-fires with the same value and the
                 // MutableState<bool> equality short-circuit breaks the
                 // loop.
+                //
+                // When IsRefreshEnabled = false we swallow the pull-down
+                // gesture entirely — stock MAUI sets SwipeRefreshLayout.Enabled
+                // = false which suppresses both the spinner and the
+                // event, matching that behaviour here without needing
+                // the lower-level enabled-flag API on PullToRefreshBox.
+                if (!isEnabled) return;
                 _isRefreshing.Value = true;
                 view.IsRefreshing   = true;
             });
@@ -127,4 +143,14 @@ public partial class RefreshViewHandler : ComposeElementHandler<IRefreshView>
     /// <summary>Bump the content version slot so <see cref="BuildNode"/> re-walks.</summary>
     public static void MapContent(RefreshViewHandler handler, IRefreshView _) =>
         handler._contentVersion.Value++;
+
+    /// <summary>
+    /// Map <see cref="IRefreshView.IsRefreshEnabled"/>. When
+    /// <see langword="false"/> the pull-to-refresh gesture is swallowed
+    /// — the spinner never appears and <c>IsRefreshing = true</c> is
+    /// not written. Matches MAUI's stock Android behaviour of disabling
+    /// the underlying <c>SwipeRefreshLayout</c>.
+    /// </summary>
+    public static void MapIsRefreshEnabled(RefreshViewHandler handler, IRefreshView view) =>
+        handler._isEnabled.Value = view.IsRefreshEnabled;
 }

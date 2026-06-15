@@ -54,6 +54,35 @@
 
             <Label Text="Hello,&#10;Multi-line label.&#10;Line 3." />
 
+            <!-- New mapper coverage from the keys-fill PR. -->
+            <Label Text="-- New mapper coverage --"
+                   FontAttributes="Bold" />
+
+            <Label Text="CharacterSpacing — wide letters."
+                   CharacterSpacing="6" />
+
+            <Label Text="LineHeight — multi-line label, double-line-height."
+                   LineHeight="2.0"
+                   FontSize="16" />
+
+            <Label Text="LineHeight (default) — same content for comparison."
+                   FontSize="16" />
+
+            <Label Text="Padding — pink chip with 12pt internal padding."
+                   Padding="12,6"
+                   BackgroundColor="#FFCDD2"
+                   TextColor="#B71C1C"
+                   HorizontalOptions="Start" />
+
+            <Label Text="TextDecorations=Underline"
+                   TextDecorations="Underline" />
+
+            <Label Text="TextDecorations=Strikethrough"
+                   TextDecorations="Strikethrough" />
+
+            <Label Text="TextDecorations=Underline,Strikethrough"
+                   TextDecorations="Underline,Strikethrough" />
+
         </VerticalStackLayout>
     </ScrollView>
 

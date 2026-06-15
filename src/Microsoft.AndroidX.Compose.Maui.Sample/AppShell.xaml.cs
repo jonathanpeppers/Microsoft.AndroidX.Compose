@@ -37,5 +37,12 @@ public partial class AppShell : Shell
         Routing.RegisterRoute("indicator",      typeof(IndicatorPage));
         Routing.RegisterRoute("collections",    typeof(CollectionsPage));
         Routing.RegisterRoute("semantics",      typeof(SemanticsPage));
+
+        // Phase 5 — pages that exercise self-drawing AndroidView-hosted
+        // controls (Shapes, GraphicsView). Kept as on-device reproducers
+        // for the missing-`Modifier.Size` bug fixed in this slice. See
+        // docs/maui-backend.md (Phase 5).
+        Routing.RegisterRoute("shapes",         typeof(ShapesPage));
+        Routing.RegisterRoute("graphics-view",  typeof(GraphicsViewPage));
     }
 }

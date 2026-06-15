@@ -37,6 +37,43 @@
             <VerticalStackLayout x:Name="Results"
                                  Spacing="6" />
 
+            <!-- New mapper coverage from the keys-fill PR. -->
+            <Label Text="-- New mapper coverage --"
+                   FontAttributes="Bold" />
+
+            <Label Text="CharacterSpacing — wide-set characters." />
+            <SearchBar Text="Spaced out search"
+                       CharacterSpacing="3" />
+
+            <Label Text="HorizontalTextAlignment — Center." />
+            <SearchBar Text="Centered query"
+                       HorizontalTextAlignment="Center" />
+
+            <Label Text="MaxLength — capped at 6 characters." />
+            <SearchBar Placeholder="Max 6 chars"
+                       MaxLength="6" />
+
+            <Label Text="IsSpellCheckEnabled / IsTextPredictionEnabled=False (no autocorrect)." />
+            <SearchBar Placeholder="Type 'teh' — no correction"
+                       IsSpellCheckEnabled="False"
+                       IsTextPredictionEnabled="False" />
+
+            <Label Text="PlaceholderColor — green hint." />
+            <SearchBar Placeholder="Green hint when empty"
+                       PlaceholderColor="#4CAF50" />
+
+            <Label Text="SearchIconColor — magnifier tinted red." />
+            <SearchBar Placeholder="Red magnifier"
+                       SearchIconColor="#F44336" />
+
+            <Label Text="CancelButtonColor — type to reveal a tinted X." />
+            <SearchBar Placeholder="Type, then tap the X"
+                       CancelButtonColor="#9C27B0" />
+
+            <Label Text="ReturnType — IME action (Send shows a paper-plane glyph)." />
+            <SearchBar Placeholder="ReturnType=Send" ReturnType="Send" />
+            <SearchBar Placeholder="ReturnType=Done" ReturnType="Done" />
+
         </VerticalStackLayout>
     </ScrollView>
 

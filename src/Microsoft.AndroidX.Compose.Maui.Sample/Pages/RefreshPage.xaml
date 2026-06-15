@@ -43,6 +43,19 @@
                 <Label x:Name="Item3" Text="• Item 4" />
                 <Label x:Name="Item4" Text="• Item 5" />
 
+                <!-- New mapper coverage: IsRefreshEnabled toggles whether
+                     the pull gesture even kicks off a refresh. -->
+                <Label Text="-- New mapper coverage --"
+                       FontAttributes="Bold" />
+                <Label Text="Toggle below disables/enables IsRefreshEnabled. Pull-to-refresh ignores gestures while disabled." />
+                <Switch x:Name="EnabledSwitch"
+                        IsToggled="True"
+                        Toggled="OnRefreshEnabledToggled"
+                        HorizontalOptions="Start" />
+                <Label x:Name="EnabledLabel"
+                       Text="IsRefreshEnabled = True"
+                       FontAttributes="Italic" />
+
             </VerticalStackLayout>
         </ScrollView>
     </RefreshView>

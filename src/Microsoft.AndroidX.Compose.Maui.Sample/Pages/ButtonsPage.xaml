@@ -64,6 +64,75 @@
                 x:Name="ClickCountLabel"
                 Text="No clicks yet" />
 
+            <!-- New mapper coverage from the keys-fill PR. -->
+            <Label
+                Text="-- New mapper coverage --"
+                FontAttributes="Bold" />
+
+            <Label Text="CharacterSpacing — letters spread out." />
+            <Button Text="Wide letters"
+                    CharacterSpacing="6"
+                    HorizontalOptions="Start"
+                    Clicked="OnButtonClicked" />
+
+            <Label Text="CornerRadius — pill shape (50)." />
+            <Button Text="Pill"
+                    CornerRadius="50"
+                    BackgroundColor="{StaticResource Primary}"
+                    TextColor="White"
+                    HorizontalOptions="Start"
+                    Clicked="OnButtonClicked" />
+
+            <Label Text="CornerRadius — sharp corners (0)." />
+            <Button Text="Sharp"
+                    CornerRadius="0"
+                    BackgroundColor="{StaticResource Primary}"
+                    TextColor="White"
+                    HorizontalOptions="Start"
+                    Clicked="OnButtonClicked" />
+
+            <Label Text="Font — large bold." />
+            <Button Text="Big bold"
+                    FontSize="24"
+                    FontAttributes="Bold"
+                    HorizontalOptions="Start"
+                    Clicked="OnButtonClicked" />
+
+            <Label Text="Padding — generous internal space." />
+            <Button Text="Padded"
+                    Padding="40,20"
+                    BackgroundColor="#FFCDD2"
+                    TextColor="#B71C1C"
+                    HorizontalOptions="Start"
+                    Clicked="OnButtonClicked" />
+
+            <Label Text="StrokeColor + StrokeThickness — outlined button." />
+            <Button Text="Outlined"
+                    BackgroundColor="Transparent"
+                    TextColor="#1976D2"
+                    BorderColor="#1976D2"
+                    BorderWidth="2"
+                    HorizontalOptions="Start"
+                    Clicked="OnButtonClicked" />
+
+            <Label Text="StrokeColor + StrokeThickness — heavy stroke." />
+            <Button Text="Heavy outline"
+                    BackgroundColor="Transparent"
+                    TextColor="#E91E63"
+                    BorderColor="#E91E63"
+                    BorderWidth="4"
+                    CornerRadius="20"
+                    HorizontalOptions="Start"
+                    Clicked="OnButtonClicked" />
+
+            <Label Text="ImageSource — leading icon (dotnet_bot)." />
+            <Button Text="With image"
+                    ImageSource="dotnet_bot.png"
+                    BackgroundColor="{StaticResource Primary}"
+                    TextColor="White"
+                    HorizontalOptions="Start"
+                    Clicked="OnButtonClicked" />
+
         </VerticalStackLayout>
     </ScrollView>
 

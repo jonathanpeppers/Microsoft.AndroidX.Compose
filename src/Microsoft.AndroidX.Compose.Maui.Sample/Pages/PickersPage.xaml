@@ -84,6 +84,38 @@
                 Clicked="OnResetClicked"
                 HorizontalOptions="Fill" />
 
+            <!-- New mapper coverage from the keys-fill PR. -->
+            <Label Text="-- New mapper coverage --"
+                   FontAttributes="Bold" />
+
+            <Label Text="Picker.CharacterSpacing — wide letters."
+                   FontAttributes="Bold" />
+            <Picker Title="Wide picker"
+                    ItemsSource="{StaticResource Fruits}"
+                    CharacterSpacing="3"
+                    HorizontalOptions="Fill" />
+
+            <Label Text="Picker.HorizontalTextAlignment=Center."
+                   FontAttributes="Bold" />
+            <Picker Title="Centered picker"
+                    ItemsSource="{StaticResource Fruits}"
+                    HorizontalTextAlignment="Center"
+                    HorizontalOptions="Fill" />
+
+            <Label Text="DatePicker.CharacterSpacing — wide formatted date."
+                   FontAttributes="Bold" />
+            <DatePicker x:Name="WideDate"
+                        Format="MMM d, yyyy"
+                        CharacterSpacing="3"
+                        HorizontalOptions="Fill" />
+
+            <Label Text="TimePicker.CharacterSpacing — wide HH:mm."
+                   FontAttributes="Bold" />
+            <TimePicker x:Name="WideTime"
+                        Format="HH:mm"
+                        CharacterSpacing="3"
+                        HorizontalOptions="Fill" />
+
         </VerticalStackLayout>
     </ScrollView>
 

@@ -68,6 +68,77 @@
                 IsReadOnly="True"
                 HorizontalOptions="Fill" />
 
+            <!--
+                Section below covers the keys that landed in the
+                "Fill missing MAUI property-mapper keys" PR. Each
+                Entry exercises one specific new mapper so the
+                wire-up can be confirmed by eye.
+            -->
+            <Label Text="-- New mapper coverage --"
+                   FontAttributes="Bold" />
+
+            <Label Text="CharacterSpacing — letters spread apart." />
+            <Entry Text="Spaced out characters"
+                   CharacterSpacing="4"
+                   HorizontalOptions="Fill" />
+
+            <Label Text="HorizontalTextAlignment — Start / Center / End." />
+            <Entry Text="Start aligned"
+                   HorizontalTextAlignment="Start"
+                   HorizontalOptions="Fill" />
+            <Entry Text="Center aligned"
+                   HorizontalTextAlignment="Center"
+                   HorizontalOptions="Fill" />
+            <Entry Text="End aligned"
+                   HorizontalTextAlignment="End"
+                   HorizontalOptions="Fill" />
+
+            <Label Text="MaxLength — capped at 8 characters." />
+            <Entry x:Name="MaxLengthEntry"
+                   Placeholder="Max 8 chars"
+                   MaxLength="8"
+                   TextChanged="OnMaxLengthChanged"
+                   HorizontalOptions="Fill" />
+            <Label x:Name="MaxLengthLabel"
+                   Text="Type — entry will refuse the 9th character."
+                   FontAttributes="Italic" />
+
+            <Label Text="ClearButtonVisibility=WhileEditing — trailing X clears the field." />
+            <Entry Placeholder="Type, then tap the X"
+                   ClearButtonVisibility="WhileEditing"
+                   HorizontalOptions="Fill" />
+
+            <Label Text="ReturnType — IME action key changes per Entry." />
+            <Entry Placeholder="ReturnType=Done"   ReturnType="Done"   HorizontalOptions="Fill" />
+            <Entry Placeholder="ReturnType=Go"     ReturnType="Go"     HorizontalOptions="Fill" />
+            <Entry Placeholder="ReturnType=Next"   ReturnType="Next"   HorizontalOptions="Fill" />
+            <Entry Placeholder="ReturnType=Search" ReturnType="Search" HorizontalOptions="Fill" />
+            <Entry Placeholder="ReturnType=Send"   ReturnType="Send"   HorizontalOptions="Fill" />
+
+            <Label Text="IsSpellCheckEnabled=False / IsTextPredictionEnabled=False — no red squiggles, no autocorrect bar." />
+            <Entry Placeholder="Type a typo: 'teh'"
+                   IsSpellCheckEnabled="False"
+                   IsTextPredictionEnabled="False"
+                   HorizontalOptions="Fill" />
+
+            <Label Text="PlaceholderColor — pink hint." />
+            <Entry Placeholder="Pink hint until you type"
+                   PlaceholderColor="#E91E63"
+                   HorizontalOptions="Fill" />
+
+            <Label Text="CursorPosition + SelectionLength — buttons drive the caret." />
+            <Entry x:Name="CursorEntry"
+                   Text="The quick brown fox"
+                   HorizontalOptions="Fill" />
+            <HorizontalStackLayout Spacing="8">
+                <Button Text="Caret = 0" Clicked="OnCaretToStart" />
+                <Button Text="Caret = end" Clicked="OnCaretToEnd" />
+                <Button Text="Select 'quick'" Clicked="OnSelectQuick" />
+            </HorizontalStackLayout>
+            <Label x:Name="CursorEcho"
+                   Text="Caret: 0 / 19  Selection length: 0"
+                   FontAttributes="Italic" />
+
         </VerticalStackLayout>
     </ScrollView>
 

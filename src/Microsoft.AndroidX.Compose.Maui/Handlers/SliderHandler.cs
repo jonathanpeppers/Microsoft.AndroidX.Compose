@@ -54,6 +54,11 @@ public partial class SliderHandler : ComposeElementHandler<ISlider>
             [nameof(ISlider.MinimumTrackColor)] = MapMinimumTrackColor,
             [nameof(ISlider.MaximumTrackColor)] = MapMaximumTrackColor,
             [nameof(ISlider.ThumbColor)]        = MapThumbColor,
+            // TODO: ISlider.ThumbImageSource — Material 3's Slider draws
+            // its thumb as a fixed circle; supplying a custom drawable
+            // requires the lower-level Slider(state, ..., thumb = { ... })
+            // overload plus piping the resolved Painter through our
+            // ImageSourceLoader. Larger surgery than fits this PR.
         };
 
     /// <summary>Command mapper (inherits view-level commands; no extras).</summary>

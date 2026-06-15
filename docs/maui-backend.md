@@ -2079,29 +2079,230 @@ graph + theming inherited from the page root.
 
 ### Phase 5 — graphics, gestures, shapes, BlazorWebView, infra
 
-- `GraphicsViewHandler` → reuse MAUI's `PlatformGraphicsView` (Android
-  `View` subclass) inside an `AndroidView { ... }` composable, OR map
-  `ICanvas` to Compose's `Canvas` composable.
-- `WebViewHandler` / `HybridWebViewHandler` → Android `WebView` inside
-  `AndroidView { ... }`. `BlazorWebViewHandler` already has an
-  Android-specific implementation in
-  `Microsoft.AspNetCore.Components.WebView.Maui` — reuse, just plug into
-  Compose's interop.
-- Shapes (`Rectangle`/`Ellipse`/`Path`/...) → Compose `Canvas` drawing
-  via `DrawScope`.
-- Gestures: MAUI's gesture recognizers already work on any Android
-  `View`. The challenge is `Tap`/`Pan`/`Pinch` competing with Compose's
-  own gesture detectors — `Modifier.PointerInput { }` may need to
-  forward gestures to MAUI's `GestureManager`.
+#### Phase 5 Slice 1 — AndroidView fallback investigation ✅ shipped
 
-### Phase 6 — Essentials (parallel work, optional)
+Earlier phases (and the Phase 2 Slice 2 single-`ComposeView`-per-page
+refactor in particular) folded the only "real" Compose backend
+behaviour we needed for Phase 5 into `ComposeWalker`'s default
+branch. Anything whose handler is not registered as `IComposeHandler`
+goes through
 
-A `Microsoft.AndroidX.Compose.Maui.Essentials` project that maps MAUI's
-`IFilePicker`, `IShare`, `IBattery`, `IConnectivity`, `IPreferences`,
-`ISecureStorage`, `IGeolocation` to Android's stock APIs (mostly
-identical to what MAUI's stock Essentials already does — likely just
-delegate, but some essentials might need Compose-aware UIs like
-`FilePicker` using a Compose `BottomSheet`).
+```csharp
+return new AndroidView(factory: _ => view.ToPlatform(mauiContext))
+{
+    Modifier = sizeFromWidthHeightRequest,
+};
+```
+
+— MAUI's stock handler still produces an Android `View`, and Compose
+hosts it as `androidx.compose.ui.viewinterop.AndroidView`. MAUI's
+mapper (`ShapeViewHandler`, `GraphicsViewHandler`, `WebViewHandler`,
+…) keeps owning the platform view's measure / arrange / draw /
+lifecycle.
+
+##### Bug found and fixed in this slice
+
+The first cut of the investigation (the version that originally
+landed on this branch) shipped without on-device verification and
+claimed that **every** Phase 5 control worked unchanged via the
+fallback. On-device verification in a follow-up pass proved that
+wrong for self-drawing views: `MauiShapeView` and
+`PlatformGraphicsView` painted nothing — even forcing
+`platformView.SetBackgroundColor(Color.Magenta)` produced an
+invisible View, proving zero size.
+
+Root cause: the fallback never applied a Compose `Modifier.Size` (or
+`.Width` / `.Height`) derived from MAUI's `WidthRequest` /
+`HeightRequest`. Without it Compose handed `AndroidView` an
+unbounded slot, the embedded View measured at wrap-content, and
+self-drawing Views with no intrinsic size collapsed to 0 × 0 and
+their `Drawable` painted nothing. Compose-native handlers like
+`BoxViewHandler` already do this themselves via
+`IComposeHandler.BuildNode`; the fallback was missing the same
+mapping.
+
+The fix sits entirely inside `ComposeWalker.Render` — read
+`WidthRequest` / `HeightRequest` off the `VisualElement` and
+translate to `Modifier.Size` / `Modifier.Width` /
+`Modifier.FillMaxWidth().Height(...)` exactly the way
+`BoxViewHandler` does. No new public surface, no new handler.
+
+##### Per-control matrix
+
+| Control | Handler today | Path | Verdict |
+|---|---|---|---|
+| `Microsoft.Maui.Controls.Shapes.Rectangle` / `RoundRectangle` / `Ellipse` / `Line` / `Polygon` / `Polyline` / `Path` | stock `ShapeViewHandler` → `MauiShapeView` (Android `View` painting via `android.graphics.Canvas`) | `AndroidView` fallback | **Works via fallback** after the size-modifier fix above. Verified on-device on a Pixel 5 (`Pages/ShapesPage.xaml`): all seven shape kinds render, including `LinearGradientBrush` fills and SVG `Path` data. The `Fill-width Rectangle` row at the bottom of the page additionally exercises the `WidthRequest = -1, HeightRequest >= 0` branch (`Modifier.FillMaxWidth().Height(...)`). |
+| `Microsoft.Maui.Controls.GraphicsView` (+ `IDrawable`) | stock `GraphicsViewHandler` → `PlatformGraphicsView` (Android `View` over `Microsoft.Maui.Graphics`'s Android canvas) | `AndroidView` fallback | **Works via fallback** after the size-modifier fix. Verified on-device (`Pages/GraphicsViewPage.xaml`): `IDrawable.Draw` paints the canvas, and `Invalidate()` repaints — tap-to-reshuffle bumps the seed and the line plot redraws. |
+| `Microsoft.Maui.Controls.WebView` | stock `WebViewHandler` → `MauiWebView : android.webkit.WebView` | `AndroidView` fallback | **Works via fallback.** Caller must give the cell explicit `HeightRequest` (a Compose `Column` doesn't constrain unbounded children). Sample page deleted from this slice — the WebView is rich enough to host its own scroll, and the AndroidView host has no Compose-specific interaction; left to consumer apps to verify against their own URLs. |
+| `Microsoft.Maui.Controls.HybridWebView` | stock `HybridWebViewHandler` (MAUI 9+) | `AndroidView` fallback (expected) | **Deferred.** Spot-checked while building the slice; not part of the on-device verification matrix. The handler shape is identical to plain `WebView` so we expect parity, but we have not exercised `SendRawMessage` / `RawMessageReceived` end-to-end yet. |
+| `BlazorWebView` (`Microsoft.AspNetCore.Components.WebView.Maui`) | Android-specific stock handler shipped by the Blazor WebView package | `AndroidView` fallback (consumer adds the package reference) | **Works via fallback by construction** — `BlazorWebViewHandler` derives from `ViewHandler`, produces an Android `WebView`, and registers itself through stock MAUI hosting. The Compose backend does not need to know about Blazor. Not exercised in the sample to avoid pulling the package as a hard dependency. |
+| `Microsoft.Maui.Controls.Grid` / `AbsoluteLayout` / `FlexLayout` / `StackLayout` | stock `LayoutHandler` → `LayoutViewGroup` (already used by `HomePage.xaml` since Phase 1) | `AndroidView` fallback | **Works via fallback.** Children inside the layout resolve through MAUI's normal handler resolution — Compose-backed leaves degrade to per-leaf `ComposeView` islands (Phase 1 shape). Sample page deleted from this slice — these layouts already ship in working form across other sample pages (e.g. `HomePage.xaml`'s `Grid` chrome) and adding a dedicated demo doesn't surface new Compose-specific behaviour. The cross-sibling-animation / per-layout-theming improvement requires the Compose-native `Layout {}` adapter (#144 — see follow-ups). |
+
+##### What's intentionally not in Slice 1
+
+- **Compose-native shape handlers via `Canvas` + `DrawScope`** —
+  parked behind issue #64 (drawing primitives binding). The
+  fallback paints correctly; lifting shapes into the page
+  composition only buys us cross-sibling animations between
+  shapes, which is a thin payoff against the size of #64 (medium-
+  high effort: `DrawScope` is ~30 hashed bridges over packed
+  inline-class params, plus a `Path` builder and `Brush` /
+  `Shape` factories).
+- **Compose-native `GraphicsView` via `Canvas` + `IDrawable` →
+  `DrawScope` shim** — same trade-off as shapes, plus an extra
+  adapter to translate `Microsoft.Maui.Graphics.ICanvas` calls into
+  `DrawScope`. Out of scope until #64 ships.
+- **Custom `Layout {}` adapter (#144)** — would let us register
+  `Grid`, `AbsoluteLayout`, `FlexLayout` as `IComposeHandler`s and
+  fold their measure-policy into the page composition (closing
+  the "per-leaf `ComposeView` island inside a fallback-hosted
+  layout" caveat above). Real bridge + generator work: bind
+  `androidx.compose.ui.layout.Layout`, `Measurable`, `Placeable`,
+  `MeasureScope`, `MeasureResult`, and the `PlacementScope`
+  DSL — out of scope for Slice 1, tracked by #144.
+- **`HybridWebView` on-device verification** — handler shape is
+  identical to plain `WebView`; spot-check deferred to a
+  follow-up because it didn't surface new Compose-specific
+  behaviour worth the device time.
+- **Hardening `Modifier.PointerInput` for MAUI `GestureManager`
+  hand-off** — gestures already work end-to-end through the
+  Phase 2 Slice 10 `GestureBridge` for Compose-backed leaves, and
+  through the embedded Android view's own touch system for
+  fallback leaves. No new work needed at the Phase 5 layer.
+
+**Delivered:**
+
+- `src/Microsoft.AndroidX.Compose.Maui/ComposeWalker.cs` — the
+  fallback path now reads `WidthRequest` / `HeightRequest` off the
+  MAUI `VisualElement` and applies a matching Compose `Modifier`
+  to the `AndroidView`. Internal change; no public-API delta.
+- `src/Microsoft.AndroidX.Compose.Maui.Sample/Pages/ShapesPage.xaml(.cs)`
+  + `GraphicsViewPage.xaml(.cs)` — on-device reproducers for the
+  bug above and proofs of the fix.
+- `AppShell.xaml.cs` routes + `HomePage.xaml.cs` catalog entries
+  for those two pages.
+- This investigation report.
+
+**Verified:**
+
+- `dotnet test src/Microsoft.AndroidX.Compose.SourceGenerators.Tests`
+  = 155 passed.
+- `dotnet build src/Microsoft.AndroidX.Compose` clean.
+- `dotnet build src/Microsoft.AndroidX.Compose.Maui` clean.
+- `dotnet build src/Microsoft.AndroidX.Compose.Maui.Sample` clean
+  (zero warnings, zero errors).
+- `dotnet build src/Microsoft.AndroidX.Compose.Gallery` clean.
+- On-device on a Pixel 5: deployed, exercised `Pages/ShapesPage`
+  (all 7 shape kinds + fill-width Rectangle render) and
+  `Pages/GraphicsViewPage` (canvas paints, tap-to-reshuffle
+  invalidates and repaints).
+
+#### Phase 5 follow-ups (not in Slice 1)
+
+- `GraphicsViewHandler` Compose-native variant routing
+  `IDrawable.Draw` through a `Canvas { … }` composable wrapping
+  `DrawScope` (depends on #64).
+- Compose-native shape handlers (Rectangle / Ellipse / Path / …)
+  via `DrawScope` (depends on #64).
+- Custom `Layout {}` adapter (#144) → `GridHandler`,
+  `AbsoluteLayoutHandler`, `FlexLayoutHandler` that lift those
+  layouts into the page composition for cross-sibling animations
+  and per-layout theming. Most of the cost is the
+  `Measurable`/`Placeable`/`MeasureScope`/`PlacementScope`
+  bridge, not the per-layout adapter.
+- `HybridWebView` on-device spot-check (parity with
+  `WebView` via the same fallback path expected, not yet
+  exercised).
+- Gestures — MAUI's gesture recognizers already work on any
+  Android `View`. The Phase 2 Slice 10 `GestureBridge` covers the
+  Compose-folded leaves; fallback leaves use the embedded view's
+  own touch system. Nothing additional to do at Phase 5.
+
+### Phase 6 — Essentials (no-op: stock implementations work unchanged)
+
+**Verdict: no Compose-specific build is needed.** `Microsoft.Maui.*`
+Essentials APIs (`IBattery`, `IConnectivity`, `IPreferences`,
+`ISecureStorage`, `IGeolocation`, `IFilePicker`, `IShare`,
+`IClipboard`, `IBrowser`, `IHapticFeedback`, `IVibration`,
+`IFlashlight`, `IEmail`, `ISms`, `IPhoneDialer`, `IMediaPicker`,
+`ILauncher`, `IFileSystem`, `IAppInfo`, `IDeviceInfo`, …) wrap
+platform APIs (`Intent`, `SharedPreferences`,
+`EncryptedSharedPreferences`, `LocationManager`, `ClipboardManager`,
+`Vibrator`, `Camera2`, system services) and are independent of the
+handler chain. `UseAndroidXCompose()` only swaps handler
+registrations — it does not touch the Essentials DI
+registrations — so MAUI's stock Android Essentials
+implementations resolve unchanged and run inside our app.
+
+| API                    | Notes                                                                                                                       |
+|------------------------|-----------------------------------------------------------------------------------------------------------------------------|
+| `AppInfo.Current`      | Name, package, version, build, requested theme.                                                                             |
+| `DeviceInfo.Current`   | Model, manufacturer, platform, version, idiom.                                                                              |
+| `Battery.Default`      | Charge level, state, power source, energy-saver status.                                                                     |
+| `Connectivity.Current` | Requires `ACCESS_NETWORK_STATE`; already declared by `Microsoft.AndroidX.Compose.Maui.Sample`'s manifest.                                  |
+| `FileSystem.Current`   | Cache + app-data directories.                                                                                               |
+| `Preferences`          | Backed by `SharedPreferences`. Synchronous round-trips.                                                                     |
+| `SecureStorage`        | Backed by `EncryptedSharedPreferences`.                                                                                     |
+| `Clipboard`            | Backed by `ClipboardManager`; back-pressure with `Task.Delay(50)` between write and read on slow emulators.                 |
+| `Vibration`            | Requires `VIBRATE`.                                                                                                         |
+| `HapticFeedback`       | No permission.                                                                                                              |
+| `Flashlight`           | Requires `FLASHLIGHT` + `CAMERA` (Camera2 torch path).                                                                      |
+| `Browser`              | `OpenAsync` lands in a Chrome Custom Tab.                                                                                   |
+| `Share`                | `RequestAsync` surfaces the system share sheet.                                                                             |
+| `Email`                | `ComposeAsync`; throws `FeatureNotSupported` if no email client is installed.                                               |
+| `Sms`                  | `ComposeAsync`; throws `FeatureNotSupported` on tablets without SMS.                                                        |
+| `PhoneDialer`          | `Open`; throws `FeatureNotSupported` on devices without dial capability.                                                    |
+| `Launcher`             | `TryOpenAsync(Uri)`; delegates to whatever app claims the scheme.                                                           |
+| `FilePicker`           | `PickAsync` opens the system document picker via `Intent.ActionOpenDocument`.                                               |
+| `MediaPicker`          | `PickPhotosAsync` opens the system photo picker.                                                                            |
+| `Geolocation`          | Needs `ACCESS_FINE_LOCATION` + `ACCESS_COARSE_LOCATION`, runtime-requested through `Permissions.LocationWhenInUse`.         |
+
+Intent-backed APIs (`Browser`, `Share`, `Email`, `Sms`,
+`PhoneDialer`, `Launcher`, `FilePicker`, `MediaPicker`) require no
+permission declaration on their own — they hand control off to a
+system-handled `Intent`. Permissions only need to be declared in
+the consumer app's `AndroidManifest.xml` when they call the
+permission-gated APIs above (`Vibration`, `Flashlight`,
+`Geolocation`).
+
+**Why this is a no-op:**
+
+- `UseAndroidXCompose()` calls `ConfigureMauiHandlers(...)` to
+  overwrite handler registrations. It does not call
+  `ConfigureEssentials(...)` and does not register
+  `Compose<IFilePicker>` / `Compose<IShare>` / etc. proxies in DI.
+- Essentials APIs walk `Microsoft.Maui.ApplicationModel.Platform.CurrentActivity`,
+  which is populated by the
+  `MauiAppCompatActivity`-lifecycle hooks — unchanged by the
+  Compose backend. The activity type stays
+  `MauiAppCompatActivity`; we do not require a `ComponentActivity`
+  / `MauiComposeActivity` swap at the activity layer.
+- The Compose backend keeps MAUI's `IDispatcher` / `MainThread`
+  intact, so callbacks resume on the UI thread the same way they
+  do under stock MAUI.
+
+**When future work might be needed.** The only items that could
+warrant a `Compose*` implementation later are:
+
+1. A `Compose<IFilePicker>` that surfaces a Material 3
+   `ModalBottomSheet` instead of the system
+   `Intent.ActionOpenDocument` picker. The system picker is the
+   platform-correct UX; consider this only when there's a
+   user-experience reason to override it (e.g. theming, in-app
+   document-tab integration).
+2. A `Compose<IShare>` overlay that builds a Compose-native
+   share sheet. The Android system share sheet is integrated
+   with every installed app's share intents; an overlay would
+   need to replicate the whole `Intent` resolution model. Only
+   pursue if a future requirement explicitly asks for it.
+
+Both would be DI-service-hijacks following the
+`ComposeAlertManagerSubscription` pattern in
+`Hosting/AppHostBuilderExtensions.cs` — drop a
+`builder.Services.AddSingleton<IFilePicker, ComposeFilePicker>()`
+inside `UseAndroidXCompose()`, with the implementation rendering
+into a transient `ComposeView` on the activity's content frame
+the same way the alert overlay does.
 
 ## Open design questions (resolve before implementation starts)
 

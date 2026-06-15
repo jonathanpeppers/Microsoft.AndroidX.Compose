@@ -69,6 +69,8 @@ public partial class IndicatorViewHandler : ComposeElementHandler<MauiIndicatorV
             [nameof(MauiIndicatorView.SelectedIndicatorColor)] = MapSelectedIndicatorColor,
             [nameof(MauiIndicatorView.IndicatorSize)]          = MapIndicatorSize,
             [nameof(MauiIndicatorView.IndicatorsShape)]        = MapIndicatorsShape,
+            [nameof(MauiIndicatorView.HideSingle)]             = MapHideSingle,
+            [nameof(MauiIndicatorView.MaximumVisible)]         = MapMaximumVisible,
         };
 
     /// <summary>Command mapper (inherits view-level commands; no extras).</summary>
@@ -84,6 +86,8 @@ public partial class IndicatorViewHandler : ComposeElementHandler<MauiIndicatorV
     readonly MutableState<int>   _position             = new(0);
     readonly MutableState<long?> _indicatorColor       = new((long?)null);
     readonly MutableState<long?> _selectedColor        = new((long?)null);
+    readonly MutableState<bool>  _hideSingle           = new(true);
+    readonly MutableState<int>   _maximumVisible       = new(int.MaxValue);
 
     /// <summary>Construct a handler with the default mappers.</summary>
     public IndicatorViewHandler() : base(Mapper, CommandMapper) { }
@@ -106,10 +110,25 @@ public partial class IndicatorViewHandler : ComposeElementHandler<MauiIndicatorV
 
         int    count     = view.Count;
         int    position  = _position.Value;
+        bool   hideSingle = _hideSingle.Value;
+        int    maxVisible = _maximumVisible.Value;
         double sizeDp    = view.IndicatorSize > 0 ? view.IndicatorSize : 6.0;
         var    shape     = view.IndicatorsShape == IndicatorShape.Square
                               ? new RoundedCornerShape(0)
                               : new RoundedCornerShape(50);
+
+        // HideSingle (MAUI default = true): collapse the strip when
+        // there's only one carousel page — there's nothing to indicate.
+        // Returning an empty Row keeps the slot alive so the next
+        // recompose with count >= 2 patches in dots without
+        // re-establishing the parent layout.
+        int visibleCount = hideSingle && count <= 1 ? 0 : count;
+        // MaximumVisible caps how many dots are rendered (stock MAUI
+        // truncates from the tail; we mirror that — a 10-page carousel
+        // with MaximumVisible = 5 shows dots [0..4], the page indicator
+        // for pages 5-9 disappears).
+        if (maxVisible > 0)
+            visibleCount = Math.Min(visibleCount, maxVisible);
 
         long inactiveColor = _indicatorColor.Value
             ?? ColorMapping.ToPackedLong(Microsoft.Maui.Graphics.Colors.LightGrey)
@@ -140,7 +159,7 @@ public partial class IndicatorViewHandler : ComposeElementHandler<MauiIndicatorV
             Modifier = Modifier.Companion.ApplyViewProperties(view).ApplySemantics(view),
         };
 
-        for (int i = 0; i < count; i++)
+        for (int i = 0; i < visibleCount; i++)
         {
             long color   = i == position ? activeColor : inactiveColor;
             row.Add(new Box
@@ -178,4 +197,19 @@ public partial class IndicatorViewHandler : ComposeElementHandler<MauiIndicatorV
     /// <summary>Bump the indicator-shape version slot.</summary>
     public static void MapIndicatorsShape(IndicatorViewHandler handler, MauiIndicatorView _) =>
         handler._shapeVersion.Value++;
+
+    /// <summary>
+    /// Map <see cref="MauiIndicatorView.HideSingle"/>: when
+    /// <see langword="true"/>, the dot strip is suppressed while
+    /// <see cref="MauiIndicatorView.Count"/> is <c>0</c> or <c>1</c>.
+    /// </summary>
+    public static void MapHideSingle(IndicatorViewHandler handler, MauiIndicatorView view) =>
+        handler._hideSingle.Value = view.HideSingle;
+
+    /// <summary>
+    /// Map <see cref="MauiIndicatorView.MaximumVisible"/> to a hard cap on
+    /// the number of dots rendered; tail dots beyond the cap are hidden.
+    /// </summary>
+    public static void MapMaximumVisible(IndicatorViewHandler handler, MauiIndicatorView view) =>
+        handler._maximumVisible.Value = view.MaximumVisible;
 }

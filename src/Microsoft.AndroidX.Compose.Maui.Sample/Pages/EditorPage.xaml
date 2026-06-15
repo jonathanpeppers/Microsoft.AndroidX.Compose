@@ -47,6 +47,49 @@
                     MaxLength="30"
                     HeightRequest="100" />
 
+            <!-- New mapper coverage from the keys-fill PR. -->
+            <Label Text="-- New mapper coverage --"
+                   FontAttributes="Bold" />
+
+            <Label Text="CharacterSpacing — wide-set glyphs." />
+            <Editor Text="Spaced out paragraph used to verify CharacterSpacing maps through to Compose's letterSpacing TextStyle slot."
+                    CharacterSpacing="3"
+                    HeightRequest="120" />
+
+            <Label Text="HorizontalTextAlignment — Center." />
+            <Editor Text="Each line is centered — verify Compose's textAlign mapping for multi-line."
+                    HorizontalTextAlignment="Center"
+                    HeightRequest="100" />
+
+            <Label Text="HorizontalTextAlignment — End." />
+            <Editor Text="Right-aligned multi-line content for the End case."
+                    HorizontalTextAlignment="End"
+                    HeightRequest="100" />
+
+            <Label Text="IsSpellCheckEnabled / IsTextPredictionEnabled = False (no autocorrect, no red squiggles)." />
+            <Editor Placeholder="Type 'teh' — won't be corrected"
+                    IsSpellCheckEnabled="False"
+                    IsTextPredictionEnabled="False"
+                    HeightRequest="80" />
+
+            <Label Text="PlaceholderColor — orange hint." />
+            <Editor Placeholder="Type to clear the orange hint"
+                    PlaceholderColor="#FF9800"
+                    HeightRequest="80" />
+
+            <Label Text="CursorPosition + SelectionLength — programmatic caret control." />
+            <Editor x:Name="CursorEditor"
+                    Text="The quick brown fox jumps over the lazy dog"
+                    HeightRequest="100" />
+            <HorizontalStackLayout Spacing="8">
+                <Button Text="Caret = 0"        Clicked="OnEditorCaretStart" />
+                <Button Text="Caret = end"      Clicked="OnEditorCaretEnd" />
+                <Button Text="Select 'quick'"   Clicked="OnEditorSelectQuick" />
+            </HorizontalStackLayout>
+            <Label x:Name="EditorCursorEcho"
+                   Text="Caret: 0  Selection length: 0"
+                   FontAttributes="Italic" />
+
         </VerticalStackLayout>
     </ScrollView>
 
