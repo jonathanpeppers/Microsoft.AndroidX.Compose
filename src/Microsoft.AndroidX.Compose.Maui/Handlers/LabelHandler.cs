@@ -145,16 +145,19 @@ public partial class LabelHandler : ComposeElementHandler<ILabel>
         // Single PrependModifier call combining the layout-fill (if
         // applicable) with the cross-cutting view properties — calling
         // PrependModifier twice would replace, not merge, so this
-        // builds the chain once.
+        // builds the chain once. View properties are applied on the
+        // outermost modifier (per ModifierBridge convention) so
+        // background/shadow/opacity cover the entire label rectangle;
+        // padding is innermost so it only shrinks the content area.
         var outer = (fill ? Modifier.FillMaxWidth() : Modifier.Companion)
+            .ApplyViewProperties(virtualView)
+            .ApplyGestures(virtualView, MauiContext)
+            .ApplySemantics(virtualView)
             .Padding(
                 new Dp((float)padding.Left),
                 new Dp((float)padding.Top),
                 new Dp((float)padding.Right),
-                new Dp((float)padding.Bottom))
-            .ApplyViewProperties(virtualView)
-            .ApplyGestures(virtualView, MauiContext)
-            .ApplySemantics(virtualView);
+                new Dp((float)padding.Bottom));
         text.PrependModifier(outer);
         return text;
     }

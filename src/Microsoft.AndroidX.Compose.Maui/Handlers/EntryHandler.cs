@@ -392,7 +392,9 @@ public partial class EntryHandler : ComposeElementHandler<IEntry>
                     value = ComposeExtensions.NewTextFieldValue(
                         trunc, TextRangeKt.TextRange(start, end), composition: null);
                 }
-                base.Value = value!;
+                base.Value = value
+                    ?? throw new InvalidOperationException(
+                        "TextFieldValue cannot be null on EntryHandler.TextFieldValueState.");
                 if (!_suppressMirror && _owner.VirtualView is { } entry && value is not null)
                 {
                     var newText = value.Text ?? string.Empty;

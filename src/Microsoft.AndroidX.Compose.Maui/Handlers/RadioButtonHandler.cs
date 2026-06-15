@@ -186,5 +186,5 @@ public partial class RadioButtonHandler : ComposeElementHandler<IRadioButton>
     /// <c>int</c>-only constructor would round to zero.
     /// </summary>
     public static void MapCharacterSpacing(RadioButtonHandler handler, IRadioButton rb) =>
-        handler._letterSpacing.Value = rb.CharacterSpacing > 0 ? (float)rb.CharacterSpacing : null;
+        handler._letterSpacing.Value = rb.CharacterSpacing != 0 ? (float)rb.CharacterSpacing : null;
 }

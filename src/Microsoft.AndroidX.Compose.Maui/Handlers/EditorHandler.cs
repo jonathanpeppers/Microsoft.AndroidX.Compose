@@ -308,7 +308,9 @@ public partial class EditorHandler : ComposeElementHandler<IEditor>
                     value = ComposeExtensions.NewTextFieldValue(
                         trunc, TextRangeKt.TextRange(start, end), composition: null);
                 }
-                base.Value = value!;
+                base.Value = value
+                    ?? throw new InvalidOperationException(
+                        "TextFieldValue cannot be null on EditorHandler.TextFieldValueState.");
                 if (!_suppressMirror && _owner.VirtualView is { } editor && value is not null)
                 {
                     var newText = value.Text ?? string.Empty;

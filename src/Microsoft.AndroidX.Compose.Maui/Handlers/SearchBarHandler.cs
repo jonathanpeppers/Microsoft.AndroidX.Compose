@@ -376,7 +376,9 @@ public partial class SearchBarHandler : ComposeElementHandler<ISearchBar>
                     value = ComposeExtensions.NewTextFieldValue(
                         trunc, TextRangeKt.TextRange(start, end), composition: null);
                 }
-                base.Value = value!;
+                base.Value = value
+                    ?? throw new InvalidOperationException(
+                        "TextFieldValue cannot be null on SearchBarHandler.TextFieldValueState.");
                 if (!_suppressMirror && _owner.VirtualView is { } searchBar && value is not null)
                 {
                     var newText = value.Text ?? string.Empty;

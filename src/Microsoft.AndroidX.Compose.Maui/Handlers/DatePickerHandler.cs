@@ -335,7 +335,7 @@ public partial class DatePickerHandler : ComposeElementHandler<IDatePicker>
     /// to the Material default).
     /// </summary>
     public static void MapCharacterSpacing(DatePickerHandler handler, IDatePicker dp) =>
-        handler._letterSpacing.Value = dp.CharacterSpacing > 0 ? (float)dp.CharacterSpacing : null;
+        handler._letterSpacing.Value = dp.CharacterSpacing != 0 ? (float)dp.CharacterSpacing : null;
 
     /// <summary>
     /// Map <see cref="IDatePicker.IsOpen"/> to the Compose dialog's

@@ -216,7 +216,7 @@ public partial class TimePickerHandler : ComposeElementHandler<ITimePicker>
     /// <c>letterSpacing</c> slot in <see cref="Sp"/>.
     /// </summary>
     public static void MapCharacterSpacing(TimePickerHandler handler, ITimePicker tp) =>
-        handler._letterSpacing.Value = tp.CharacterSpacing > 0 ? (float)tp.CharacterSpacing : null;
+        handler._letterSpacing.Value = tp.CharacterSpacing != 0 ? (float)tp.CharacterSpacing : null;
 
     /// <summary>
     /// Map <see cref="ITimePicker.IsOpen"/> to the Compose dialog's
