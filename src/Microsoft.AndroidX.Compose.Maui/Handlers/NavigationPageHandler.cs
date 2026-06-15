@@ -1,6 +1,7 @@
 using AndroidX.Compose;
 using AndroidX.Compose.Runtime;
 using AndroidX.Compose.UI.Platform;
+using Microsoft.AndroidX.Compose.Maui.Platform;
 using Microsoft.Maui.Handlers;
 using Microsoft.Maui.Platform;
 using AView = Android.Views.View;
@@ -92,6 +93,16 @@ public partial class NavigationPageHandler : ViewHandler<IStackNavigationView, C
     // recomposition.
     IReadOnlyList<IView> _stack = Array.Empty<IView>();
 
+    // Cached singleton resolved at CreatePlatformView time so Build
+    // can wrap its Scaffold in a MaterialTheme that flips with MAUI's
+    // RequestedTheme. The pushed page lives in its own ComposeView
+    // and gets its own MaterialTheme via PageHandler.MapContent —
+    // theming does NOT propagate across separate compositions, so
+    // this handler's chrome (TopAppBar background, title color, back
+    // arrow's LocalContentColor) needs its own wrapper to render
+    // correctly in dark mode (#262 footgun).
+    ThemeManager? _theme;
+
     /// <summary>Construct a handler with the default mappers.</summary>
     public NavigationPageHandler() : base(Mapper, CommandMapper) { }
 
@@ -114,6 +125,16 @@ public partial class NavigationPageHandler : ViewHandler<IStackNavigationView, C
     {
         var context = Context
             ?? throw new InvalidOperationException("Context not set on NavigationPageHandler.");
+        var mauiContext = MauiContext
+            ?? throw new InvalidOperationException("MauiContext not set on NavigationPageHandler.");
+
+        // Resolve once. GetService (not GetRequiredService) so a
+        // consumer who registered this handler manually without
+        // calling UseAndroidXCompose() still works — Build falls
+        // through to a bare Scaffold (matches the leaf-handler
+        // contract used by ComposeElementHandler / LabelHandler).
+        _theme = mauiContext.Services.GetService<ThemeManager>();
+
         var compose = new ComposeView(context)
         {
             LayoutParameters = new AViewGroup.LayoutParams(
@@ -168,11 +189,29 @@ public partial class NavigationPageHandler : ViewHandler<IStackNavigationView, C
             ?? throw new InvalidOperationException(
                 "MauiContext not set on NavigationPageHandler.");
 
-        return new Scaffold
+        var scaffold = new Scaffold
         {
             TopBar = BuildTopBar(current, stack.Count),
             Body   = BuildBody(current, context),
         };
+
+        // Bare Scaffold when ThemeManager wasn't registered (consumer
+        // skipped UseAndroidXCompose). Otherwise wrap so the chrome
+        // tracks MAUI's RequestedTheme. Reading IsDark.Value inside
+        // the composable scope ties this composition to the singleton
+        // state, so theme flips recompose the chrome.
+        if (_theme is null)
+            return scaffold;
+
+        // C# disallows mixing property assignments with collection-init
+        // items in one initializer block (CS0747), so build then Add.
+        var themed = new MaterialTheme
+        {
+            Dark            = _theme.IsDark.Value,
+            UseDynamicColor = false,
+        };
+        themed.Add(scaffold);
+        return themed;
     }
 
     ComposableNode BuildTopBar(IView? current, int stackDepth)
@@ -191,8 +230,12 @@ public partial class NavigationPageHandler : ViewHandler<IStackNavigationView, C
                 // Plain glyph until the M3 ArrowBack icon is wrapped
                 // (tracked alongside #234). Renders with
                 // LocalContentColor = onSurface so it tints correctly
-                // in both light + dark themes via PageHandler's
-                // MaterialTheme wrapper.
+                // in both light + dark themes — the MaterialTheme
+                // wrapper in Build (this handler's own composition)
+                // is what supplies LocalContentColor here, NOT
+                // PageHandler's MaterialTheme: the pushed page lives
+                // in a separate ComposeView and theme contexts don't
+                // propagate across compositions.
                 new Text("\u2190"),
             };
         }
