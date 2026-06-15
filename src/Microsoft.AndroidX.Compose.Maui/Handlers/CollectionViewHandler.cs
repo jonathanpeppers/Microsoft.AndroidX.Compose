@@ -167,7 +167,9 @@ public partial class CollectionViewHandler : ComposeElementHandler<MauiCollectio
 
         // Empty-view fallback. Stock MAUI surfaces EmptyView whenever
         // ItemsSource is null or empty AND EmptyView is set; we match.
-        if ((items.Count == 0 || template is null) && view.EmptyView is not null)
+        // ItemTemplate being null is NOT an empty-state trigger — stock
+        // MAUI falls through to ToString-per-item rendering in that case.
+        if (items.Count == 0 && view.EmptyView is not null)
         {
             return BuildEmptyView(view, context);
         }
@@ -177,7 +179,7 @@ public partial class CollectionViewHandler : ComposeElementHandler<MauiCollectio
         // so the handler degrades gracefully instead of throwing.
         Func<object, ComposableNode> rawItemContent = template is null
             ? item => new ComposeText(item?.ToString() ?? string.Empty)
-            : item => BuildFromTemplate(template, item, context);
+            : item => BuildFromTemplate(template, item, view, context);
 
         // SelectionMode != None: wrap each item in a Clickable Box so
         // tapping a row fires MAUI's SelectionChanged + Command. Single
@@ -333,10 +335,14 @@ public partial class CollectionViewHandler : ComposeElementHandler<MauiCollectio
         return column;
     }
 
-    static ComposableNode BuildFromTemplate(MauiDataTemplate template, object item, IMauiContext context)
+    static ComposableNode BuildFromTemplate(MauiDataTemplate template, object item, MauiCollectionView view, IMauiContext context)
     {
+        // Pass `view` (the source CollectionView) as the container so
+        // DataTemplateSelector subclasses that branch on the host
+        // (e.g. "different template under a CarouselView vs a list")
+        // see the same BindableObject stock MAUI's adapter passes.
         var resolved = template is MauiDataTemplateSel selector
-            ? selector.SelectTemplate(item, container: null)
+            ? selector.SelectTemplate(item, container: view)
             : template;
 
         var content = MaterialiseTemplate(resolved, item);
@@ -412,8 +418,6 @@ public partial class CollectionViewHandler : ComposeElementHandler<MauiCollectio
         return buffer;
     }
 
-    // ----- subscriptions -----
-
     void SubscribeToSource(MauiCollectionView view)
     {
         UnsubscribeFromSource();
@@ -440,8 +444,6 @@ public partial class CollectionViewHandler : ComposeElementHandler<MauiCollectio
         // follow-up that distinguishes between these.
         _itemsVersion.Value++;
     }
-
-    // ----- mappers -----
 
     /// <summary>
     /// Swap the observed <see cref="INotifyCollectionChanged"/> subscription
@@ -484,8 +486,6 @@ public partial class CollectionViewHandler : ComposeElementHandler<MauiCollectio
     public static void MapSizeRequest(CollectionViewHandler handler, MauiCollectionView _) =>
         handler._itemsVersion.Value++;
 
-    // ----- sizing -----
-
     /// <summary>
     /// Apply <see cref="Microsoft.Maui.Controls.VisualElement.WidthRequest"/> /
     /// <see cref="Microsoft.Maui.Controls.VisualElement.HeightRequest"/> to
@@ -512,8 +512,6 @@ public partial class CollectionViewHandler : ComposeElementHandler<MauiCollectio
             _                => modifier.FillMaxSize(),
         };
     }
-
-    // ----- selection -----
 
     static ComposableNode WrapClickable(ComposableNode child, Action onClick)
     {

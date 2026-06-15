@@ -2008,10 +2008,11 @@ theme + snapshot state directly.
   changes, and read the actual value off `VirtualView` inside
   `BuildNode`. This slice reuses that pattern for both
   `ItemsSource`/`CollectionChanged` and `ItemsLayout` changes.
-- **`DataTemplateSelector.SelectTemplate(item, container)` works with
-  `container: null`.** A few MAUI built-in selectors actually look at
-  `container`; for those, the handler still passes `view` so they get
-  the source CollectionView itself.
+- **`DataTemplateSelector.SelectTemplate(item, container)` is called
+  with `view` (the source `CollectionView`) as the container** so
+  selectors that branch on the host (e.g. "different template under a
+  CarouselView vs a list") see the same `BindableObject` stock MAUI's
+  adapter passes.
 - **Per-item handler allocation cost is real, but acceptable for v1.**
   Each `template.CreateContent()` allocates a fresh `BindableObject`
   per render of `BuildNode`. Compose's slot table memoises the
