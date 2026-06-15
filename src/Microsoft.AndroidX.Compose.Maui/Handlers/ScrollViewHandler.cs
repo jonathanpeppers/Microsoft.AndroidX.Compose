@@ -35,12 +35,19 @@ public partial class ScrollViewHandler : ComposeElementHandler<IScrollView>
             [nameof(IScrollView.Orientation)] = MapOrientation,
             [nameof(IScrollView.Content)]     = MapContent,
             // TODO: IScrollView.HorizontalScrollBarVisibility /
-            // VerticalScrollBarVisibility — Compose's
-            // Modifier.verticalScroll / horizontalScroll API doesn't
-            // expose a scrollbar-visibility flag. Suppressing the
-            // overlay scrollbar requires a hand-built rememberScrollState
-            // + custom Scrollbar overlay; revisit when porting
-            // PullToRefresh-style scroll affordances.
+            // VerticalScrollBarVisibility — Compose Foundation 1.9 /
+            // 1.10 / 1.11 (and the Material3 layer on top) don't
+            // expose any public Scrollbar / scrollbar API on Android.
+            // The androidx.compose.foundation.v2.scrollbar extension
+            // exists only on the Multiplatform desktop target;
+            // Modifier.verticalScroll / horizontalScroll have no
+            // scrollbar-visibility flag at all. Wiring even the
+            // Default / Always / Never enum to a visible affordance
+            // therefore requires a hand-built ScrollState +
+            // animated overlay drawn into a sibling Box — meaningful
+            // surgery and a non-trivial new public surface. Leaving
+            // unmapped so the coverage report flags the gap rather
+            // than claiming a no-op wire.
         };
 
     /// <summary>Command mapper (inherits view-level commands; no extras).</summary>
