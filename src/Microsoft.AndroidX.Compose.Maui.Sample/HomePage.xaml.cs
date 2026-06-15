@@ -135,6 +135,26 @@ public partial class HomePage : ContentPage
                 "SemanticProperties.Description / Hint / HeadingLevel + AutomationId routed to Compose `Modifier.Semantics { … }`.",
                 Color.FromArgb("#3F51B5"),
                 "semantics"),
+
+            // ---- Phase 5 — self-drawing AndroidView fallback ----
+            //
+            // These two entries exercise controls (`Shapes`,
+            // `GraphicsView`) whose stock Android view has no intrinsic
+            // size and so collapses to 0 × 0 inside Compose's `AndroidView`
+            // unless the fallback applies a `Modifier.Size` derived from
+            // `WidthRequest`/`HeightRequest`. Kept on the gallery as
+            // on-device reproducers for the bug fixed in this slice; see
+            // `docs/maui-backend.md` Phase 5 for the verdict matrix.
+            new DemoEntry(
+                "Shapes",
+                "Rectangle / Ellipse / Line / Polygon / Polyline / Path / RoundRectangle.",
+                Color.FromArgb("#7B1FA2"),
+                "shapes"),
+            new DemoEntry(
+                "GraphicsView",
+                "IDrawable canvas; tap to re-shuffle.",
+                Color.FromArgb("#00897B"),
+                "graphics-view"),
         };
     }
 
