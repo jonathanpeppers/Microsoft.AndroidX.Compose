@@ -1,6 +1,7 @@
 using AndroidX.Compose;
 using AndroidX.Compose.Runtime;
 using AndroidX.Compose.UI.Platform;
+using Microsoft.AndroidX.Compose.Maui.Platform;
 using Microsoft.Maui.Handlers;
 
 namespace Microsoft.AndroidX.Compose.Maui;
@@ -50,12 +51,41 @@ public abstract class ComposeElementHandler<TVirtualView> : ViewHandler<TVirtual
 {
     readonly MutableState<int> _viewPropertiesVersion = new(0);
 
+    /// <summary>
+    /// The DI-registered <see cref="ThemeManager"/> singleton (or
+    /// <c>null</c> when the consumer skipped
+    /// <see cref="Hosting.AppHostBuilderExtensions.UseAndroidXCompose"/>).
+    /// Cached once per handler from
+    /// <see cref="ViewHandler.MauiContext"/> via
+    /// <see cref="SetMauiContext"/> so subclasses can read
+    /// <see cref="ThemeManager.IsDark"/> inside <see cref="BuildNode"/>
+    /// without paying a DI lookup per recomposition.
+    /// </summary>
+    /// <remarks>
+    /// Reading <see cref="ThemeManager.IsDark"/>'s
+    /// <see cref="MutableState{T}.Value"/> inside the composable scope
+    /// registers a snapshot read, so flipping MAUI's
+    /// <see cref="Microsoft.Maui.Controls.Application.RequestedTheme"/>
+    /// recomposes any subscribing leaf against the new theme.
+    /// </remarks>
+    protected ThemeManager? Theme { get; private set; }
+
     /// <inheritdoc/>
     protected ComposeElementHandler(IPropertyMapper mapper, CommandMapper? commandMapper = null)
         : base(mapper, commandMapper) { }
 
     /// <inheritdoc/>
     protected sealed override ComposeView CreatePlatformView() => new(Context);
+
+    /// <inheritdoc/>
+    public override void SetMauiContext(IMauiContext mauiContext)
+    {
+        base.SetMauiContext(mauiContext);
+        // Re-cache on every SetMauiContext call so the Theme refresh
+        // tracks any context swap MAUI may push through (rare in
+        // practice but contractually allowed).
+        Theme = mauiContext.Services.GetService<ThemeManager>();
+    }
 
     /// <inheritdoc/>
     public override void SetVirtualView(IView view)

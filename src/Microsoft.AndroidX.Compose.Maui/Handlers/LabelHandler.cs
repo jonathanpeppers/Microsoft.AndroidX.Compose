@@ -61,24 +61,12 @@ public partial class LabelHandler : ComposeElementHandler<ILabel>
     readonly MutableState<int>         _hTextAlign = new((int)TextAlignment.Start);
     readonly MutableState<bool>        _fillWidth = new(false);
 
-    // Cached once per handler from MauiContext.Services. null only when
-    // the consumer skipped UseAndroidXCompose; see BuildNode for how
-    // the fallback colour is picked.
-    ThemeManager? _theme;
-
     /// <summary>Construct a handler with the default mappers.</summary>
     public LabelHandler() : base(Mapper, CommandMapper) { }
 
     /// <summary>Construct a handler with custom mappers.</summary>
     public LabelHandler(IPropertyMapper? mapper, CommandMapper? commandMapper = null)
         : base(mapper ?? Mapper, commandMapper ?? CommandMapper) { }
-
-    /// <inheritdoc/>
-    public override void SetMauiContext(IMauiContext mauiContext)
-    {
-        base.SetMauiContext(mauiContext);
-        _theme = mauiContext.Services.GetService<ThemeManager>();
-    }
 
     /// <inheritdoc/>
     public override ComposableNode BuildNode(IComposer composer)
@@ -103,15 +91,16 @@ public partial class LabelHandler : ComposeElementHandler<ILabel>
         //  1. MAUI's `TextColor` is set → use it verbatim (the most
         //     common case; users who care set this explicitly).
         //  2. `TextColor` is null AND we know the app's active theme
-        //     via `ThemeManager` → pick `White` on dark / `Black` on
-        //     light. This mirrors what MAUI's stock `LabelHandler`
-        //     does (it reads `Resources.GetColorStateList` for the
-        //     active configuration) and — critically — fixes #248:
-        //     when our `LabelHandler` runs as a Compose leaf inside
-        //     a stock host (e.g. `Shell`'s built-in `FlyoutItem`
-        //     template), there's no enclosing `MaterialTheme` /
-        //     `Surface` to set `LocalContentColor`. Without an
-        //     explicit color, Compose's `Text` would fall through to
+        //     via the inherited <see cref="Theme"/> cache → pick
+        //     `White` on dark / `Black` on light. This mirrors what
+        //     MAUI's stock `LabelHandler` does (it reads
+        //     `Resources.GetColorStateList` for the active
+        //     configuration) and — critically — fixes #248: when our
+        //     `LabelHandler` runs as a Compose leaf inside a stock
+        //     host (e.g. `Shell`'s built-in `FlyoutItem` template),
+        //     there's no enclosing `MaterialTheme` / `Surface` to set
+        //     `LocalContentColor`. Without an explicit color,
+        //     Compose's `Text` would fall through to
         //     `LocalContentColor.current` which defaults to
         //     `Color.Black` — black-on-dark in dark mode, invisible.
         //  3. No `ThemeManager` registered (consumer skipped
@@ -119,7 +108,7 @@ public partial class LabelHandler : ComposeElementHandler<ILabel>
         //     `Text` keeps its pre-existing inherited-from-
         //     `LocalContentColor` behaviour.
         //
-        // Reading `_theme.IsDark.Value` inside the composable scope
+        // Reading `Theme.IsDark.Value` inside the composable scope
         // registers a snapshot read, so flipping the MAUI theme at
         // runtime recomposes the label against the new fallback.
         ComposeColor? color;
@@ -129,9 +118,9 @@ public partial class LabelHandler : ComposeElementHandler<ILabel>
         }
         else
         {
-            color = _theme is null
+            color = Theme is null
                 ? null
-                : _theme.IsDark.Value ? ComposeColor.White : ComposeColor.Black;
+                : Theme.IsDark.Value ? ComposeColor.White : ComposeColor.Black;
         }
 
         var text = new ComposeText(_text.Value)
