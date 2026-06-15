@@ -39,4 +39,10 @@ public partial class RefreshPage : ContentPage
         // consumer flips IsRefreshing back to false).
         Refresh.IsRefreshing = false;
     }
+
+    void OnRefreshEnabledToggled(object? sender, ToggledEventArgs e)
+    {
+        Refresh.IsRefreshEnabled = e.Value;
+        EnabledLabel.Text = $"IsRefreshEnabled = {e.Value}";
+    }
 }
