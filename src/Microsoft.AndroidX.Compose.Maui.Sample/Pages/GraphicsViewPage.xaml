@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="Microsoft.AndroidX.Compose.Maui.Sample.Pages.GraphicsViewPage"
+             Title="GraphicsView">
+
+    <!--
+        Phase 5 investigation page — `GraphicsView` ships with the stock
+        `GraphicsViewHandler` whose platform view is `PlatformGraphicsView`
+        (an Android `View` subclass that calls `IDrawable.Draw` against a
+        `Microsoft.Maui.Graphics` canvas wrapping `android.graphics.Canvas`).
+
+        We host it through the `AndroidView` fallback in `ComposeWalker`.
+        The drawable below renders a sparkline + filled gradient circle —
+        if the fallback works the figure appears at the requested 320 × 200,
+        re-paints when `Invalidate()` is called, and reacts to taps.
+    -->
+    <ScrollView>
+        <VerticalStackLayout
+            Padding="30,30"
+            Spacing="22">
+
+            <Label
+                Text="GraphicsView"
+                Style="{StaticResource Headline}" />
+
+            <Label
+                Text="`GraphicsView` / `IDrawable` should render via the stock `GraphicsViewHandler` → `PlatformGraphicsView` hosted by Compose `AndroidView`. Tap the canvas to bump the random seed and invalidate."
+                FontSize="13" />
+
+            <Border Padding="0" StrokeThickness="1" Stroke="#1A000000" StrokeShape="RoundRectangle 8">
+                <GraphicsView
+                    x:Name="GraphicsCanvas"
+                    HeightRequest="200"
+                    WidthRequest="320"
+                    HorizontalOptions="Center"
+                    StartInteraction="OnTap" />
+            </Border>
+
+            <Label x:Name="SeedLabel" Text="Seed: 0  ·  Tap to re-shuffle" FontSize="13" HorizontalTextAlignment="Center" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

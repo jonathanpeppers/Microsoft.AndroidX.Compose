@@ -53,6 +53,14 @@ public partial class ImageHandler : ComposeElementHandler<MauiIImage>
         {
             [nameof(IImageSourcePart.Source)] = MapSource,
             [nameof(MauiIImage.Aspect)]       = MapAspect,
+            // TODO: IImage.IsAnimationPlaying — Compose's Image composable
+            // animates GIFs/WebPs only when the painter wraps a Coil
+            // ImageRequest. ImageSourceLoader currently materialises a
+            // static BitmapPainter (or PainterResource for packaged
+            // drawables); routing through coil-compose is a separate
+            // dependency + handler rewrite. Leaving unmapped so the
+            // coverage report flags the gap rather than claiming a no-op
+            // wire.
         };
 
     /// <summary>Command mapper (inherits view-level commands; no extras).</summary>

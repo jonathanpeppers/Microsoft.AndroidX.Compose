@@ -62,8 +62,39 @@ internal static class ComposeWalker
             handler = view.Handler;
         }
 
-        return handler is IComposeHandler compose
-            ? compose.BuildNode(composer)
-            : new AndroidView(_ => view.ToPlatform(mauiContext));
+        if (handler is IComposeHandler compose)
+        {
+            return compose.BuildNode(composer);
+        }
+
+        // Stock-handler fallback: host the platform view inside Compose's
+        // `AndroidView { … }` interop. We have to apply a Compose
+        // `Modifier.Size` (or `Width`/`Height`) from the MAUI virtual
+        // view's `WidthRequest`/`HeightRequest` ourselves — without it
+        // Compose hands the AndroidView an unbounded slot and the hosted
+        // Android `View` measures wrap-content. For self-drawing MAUI
+        // views with no intrinsic size (`MauiShapeView`,
+        // `PlatformGraphicsView`) that collapses to 0×0 and the canvas
+        // paints nothing even though MAUI's mapper (`ShapeViewHandler`,
+        // `GraphicsViewHandler`) ran during `ToPlatform()` and set up a
+        // `Drawable`. Compose-aware handlers (`BoxViewHandler`,
+        // `LabelHandler`, …) apply this themselves via
+        // `IComposeHandler.BuildNode`; the fallback covers everyone else.
+        Modifier? modifier = null;
+        if (view is Microsoft.Maui.Controls.VisualElement ve)
+        {
+            modifier = (ve.WidthRequest, ve.HeightRequest) switch
+            {
+                ( >= 0d, >= 0d ) => Modifier.Size(new Dp((float)ve.WidthRequest), new Dp((float)ve.HeightRequest)),
+                ( >= 0d, _ ) => Modifier.Width(new Dp((float)ve.WidthRequest)),
+                ( _, >= 0d ) => Modifier.FillMaxWidth().Height(new Dp((float)ve.HeightRequest)),
+                _ => null,
+            };
+        }
+
+        return new AndroidView(factory: _ => view.ToPlatform(mauiContext))
+        {
+            Modifier = modifier,
+        };
     }
 }

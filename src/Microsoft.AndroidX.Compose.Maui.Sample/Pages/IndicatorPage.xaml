@@ -50,6 +50,39 @@
                 <Button x:Name="ShapeButton" Text="Toggle shape" Clicked="OnToggleShape" />
             </HorizontalStackLayout>
 
+            <!-- New mapper coverage from the keys-fill PR. -->
+            <Label
+                Text="-- New mapper coverage --"
+                FontAttributes="Bold" />
+
+            <Label Text="HideSingle=True — single dot is hidden." />
+            <IndicatorView Count="1"
+                           HideSingle="True"
+                           IndicatorColor="LightGray"
+                           SelectedIndicatorColor="MediumBlue"
+                           IndicatorSize="10"
+                           HorizontalOptions="Center" />
+            <Label Text="(nothing should appear above this line)"
+                   FontAttributes="Italic"
+                   HorizontalOptions="Center" />
+
+            <Label Text="HideSingle=False — single dot still shown." />
+            <IndicatorView Count="1"
+                           HideSingle="False"
+                           IndicatorColor="LightGray"
+                           SelectedIndicatorColor="MediumBlue"
+                           IndicatorSize="10"
+                           HorizontalOptions="Center" />
+
+            <Label Text="MaximumVisible=3 (Count=10) — only 3 dots render." />
+            <IndicatorView Count="10"
+                           Position="0"
+                           MaximumVisible="3"
+                           IndicatorColor="LightGray"
+                           SelectedIndicatorColor="MediumBlue"
+                           IndicatorSize="10"
+                           HorizontalOptions="Center" />
+
         </VerticalStackLayout>
     </ScrollView>
 
