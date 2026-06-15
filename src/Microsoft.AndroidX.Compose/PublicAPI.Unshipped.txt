@@ -2126,6 +2126,7 @@ static AndroidX.Compose.Modifier.WaterfallPadding() -> AndroidX.Compose.Modifier
 static AndroidX.Compose.Modifier.Weight(float weight, bool fill = true) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.Modifier.Width(AndroidX.Compose.Dp width) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.Modifier.WidthIn(AndroidX.Compose.Dp? min = null, AndroidX.Compose.Dp? max = null) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.Modifier.WrapContentHeight(AndroidX.Compose.Alignment.Vertical! align, bool unbounded = false) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.Modifier.WrapContentHeight(bool unbounded = false) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.Modifier.WrapContentSize(bool unbounded = false) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.Modifier.WrapContentWidth(bool unbounded = false) -> AndroidX.Compose.Modifier!
@@ -2212,6 +2213,7 @@ static AndroidX.Compose.ModifierExtensions.WaterfallPadding(this AndroidX.Compos
 static AndroidX.Compose.ModifierExtensions.Weight(this AndroidX.Compose.Modifier! modifier, float weight, bool fill = true) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.ModifierExtensions.Width(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.Dp width) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.ModifierExtensions.WidthIn(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.Dp? min = null, AndroidX.Compose.Dp? max = null) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.ModifierExtensions.WrapContentHeight(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.Alignment.Vertical! align, bool unbounded = false) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.ModifierExtensions.WrapContentHeight(this AndroidX.Compose.Modifier! modifier, bool unbounded = false) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.ModifierExtensions.WrapContentSize(this AndroidX.Compose.Modifier! modifier, bool unbounded = false) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.ModifierExtensions.WrapContentWidth(this AndroidX.Compose.Modifier! modifier, bool unbounded = false) -> AndroidX.Compose.Modifier!
