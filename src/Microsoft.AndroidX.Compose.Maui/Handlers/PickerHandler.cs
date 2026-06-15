@@ -8,6 +8,7 @@ using ComposeColor          = AndroidX.Compose.Color;
 using ComposeFontWeight     = AndroidX.Compose.FontWeight;
 using ComposeOutlinedTextField = AndroidX.Compose.OutlinedTextField;
 using ComposeText           = AndroidX.Compose.Text;
+using ComposeTextAlign      = AndroidX.Compose.TextAlign;
 using ComposeTextStyle      = AndroidX.Compose.TextStyle;
 using MauiPicker            = Microsoft.Maui.Controls.Picker;
 
@@ -64,12 +65,22 @@ public partial class PickerHandler : ComposeElementHandler<IPicker>
             // the dropdown menu's child list (Compose smart-skips
             // siblings whose state is unchanged).
             ["ItemsSource"]                           = MapItemsSource,
+            // Stock MAUI mapper also exposes an "Items" key that fires
+            // when the IPicker.Items collection is reset; we forward
+            // to the same handler.
+            ["Items"]                                 = MapItemsSource,
             [nameof(IPicker.SelectedIndex)]           = MapSelectedIndex,
             [nameof(IPicker.Title)]                   = MapTitle,
             [nameof(IPicker.TitleColor)]              = MapTitleColor,
             [nameof(ITextStyle.TextColor)]            = MapTextColor,
+            [nameof(ITextStyle.CharacterSpacing)]     = MapCharacterSpacing,
             [nameof(ITextStyle.Font)]                 = MapFont,
+            [nameof(IPicker.HorizontalTextAlignment)] = MapHorizontalTextAlignment,
+            [nameof(IPicker.IsOpen)]                  = MapIsOpen,
             [nameof(IView.HorizontalLayoutAlignment)] = MapHorizontalLayoutAlignment,
+            // TODO: VerticalTextAlignment — see LabelHandler. Requires a
+            // Box wrapper with `contentAlignment` to take visible effect
+            // (and only matters when the picker has an explicit Height).
         };
 
     /// <summary>Command mapper (inherits view-level commands; no extras).</summary>
@@ -85,6 +96,9 @@ public partial class PickerHandler : ComposeElementHandler<IPicker>
     readonly MutableState<bool>    _bold          = new(false);
     readonly MutableState<bool>    _open          = new(false);
     readonly MutableState<bool>    _fillWidth     = new(false);
+    readonly MutableState<float?>  _letterSpacing = new((float?)null);
+    // Stored as the underlying int (see LabelHandler note on enum-backed slots).
+    readonly MutableState<int>     _hTextAlign    = new((int)TextAlignment.Start);
 
     INotifyCollectionChanged? _subscribedItems;
 
@@ -143,6 +157,8 @@ public partial class PickerHandler : ComposeElementHandler<IPicker>
         var bold = _bold.Value;
         var fill = _fillWidth.Value;
         var isOpen = _open.Value;
+        var letterSpacing = _letterSpacing.Value;
+        var hAlign = (TextAlignment)_hTextAlign.Value;
 
         var displayValue = selectedIndex >= 0 && selectedIndex < items.Count
             ? items[selectedIndex] ?? string.Empty
@@ -152,7 +168,7 @@ public partial class PickerHandler : ComposeElementHandler<IPicker>
         {
             ReadOnly   = true,
             SingleLine = true,
-            TrailingIcon = new IconButton(onClick: () => _open.Value = !_open.Value)
+            TrailingIcon = new IconButton(onClick: () => SetOpen(virtualView, !_open.Value))
             {
                 new ComposeText(isOpen ? "▲" : "▼"),
             },
@@ -163,13 +179,20 @@ public partial class PickerHandler : ComposeElementHandler<IPicker>
                 ? new ComposeText(title) { Color = new ComposeColor(packedTitleColor.Value) }
                 : new ComposeText(title);
         }
-        if (packedTextColor.HasValue || size.HasValue || bold)
+        if (packedTextColor.HasValue || size.HasValue || bold || letterSpacing.HasValue || hAlign != TextAlignment.Start)
         {
             trigger.TextStyle = new ComposeTextStyle
             {
-                Color      = packedTextColor.HasValue ? new ComposeColor(packedTextColor.Value) : null,
-                FontSize   = size.HasValue   ? new Sp(size.Value) : null,
-                FontWeight = bold ? ComposeFontWeight.Bold : null,
+                Color         = packedTextColor.HasValue ? new ComposeColor(packedTextColor.Value) : null,
+                FontSize      = size.HasValue   ? new Sp(size.Value) : null,
+                FontWeight    = bold ? ComposeFontWeight.Bold : null,
+                LetterSpacing = letterSpacing.HasValue ? new Sp(1) * letterSpacing.Value : null,
+                TextAlign     = hAlign switch
+                {
+                    TextAlignment.Center => ComposeTextAlign.Center,
+                    TextAlignment.End    => ComposeTextAlign.End,
+                    _                    => null,
+                },
             };
         }
         // Combines the layout-fill (when set) with the cross-cutting view
@@ -185,7 +208,7 @@ public partial class PickerHandler : ComposeElementHandler<IPicker>
 
         var menu = new ExposedDropdownMenu(
             expanded:         isOpen,
-            onDismissRequest: () => _open.Value = false);
+            onDismissRequest: () => SetOpen(virtualView, false));
         for (int i = 0; i < items.Count; i++)
         {
             // Capture i so the click closure points at this row's index.
@@ -198,11 +221,26 @@ public partial class PickerHandler : ComposeElementHandler<IPicker>
 
         return new ExposedDropdownMenuBox(
             expanded:         isOpen,
-            onExpandedChange: v => _open.Value = v)
+            onExpandedChange: v => SetOpen(virtualView, v))
         {
             trigger,
             menu,
         };
+    }
+
+    // Two-way IsOpen helper: writes both the Compose state slot and the
+    // MAUI virtual view in lockstep. MutableState's equality short-circuit
+    // breaks the resulting MapIsOpen feedback loop just like
+    // EntryHandler.OnValueChanged.
+    static void SetOpen(IPicker picker, bool isOpen, PickerHandler? handler = null)
+    {
+        // Best-effort lookup of the handler when caller didn't pass it.
+        // Avoids holding a strong field reference inside lambdas.
+        handler ??= picker.Handler as PickerHandler;
+        if (handler is not null)
+            handler._open.Value = isOpen;
+        if (picker.IsOpen != isOpen)
+            picker.IsOpen = isOpen;
     }
 
     void OnItemSelected(int index)
@@ -295,4 +333,31 @@ public partial class PickerHandler : ComposeElementHandler<IPicker>
     public static void MapHorizontalLayoutAlignment(PickerHandler handler, IPicker picker) =>
         handler._fillWidth.Value = picker.HorizontalLayoutAlignment
             == Microsoft.Maui.Primitives.LayoutAlignment.Fill;
+
+    /// <summary>
+    /// Map <see cref="ITextStyle.CharacterSpacing"/> to the Compose
+    /// <c>TextStyle.LetterSpacing</c> slot on the trigger.
+    /// </summary>
+    public static void MapCharacterSpacing(PickerHandler handler, IPicker picker) =>
+        handler._letterSpacing.Value = picker.CharacterSpacing != 0
+            ? (float)picker.CharacterSpacing
+            : null;
+
+    /// <summary>
+    /// Map <see cref="IPicker.HorizontalTextAlignment"/> to the Compose
+    /// <c>TextStyle.TextAlign</c> slot on the trigger.
+    /// </summary>
+    public static void MapHorizontalTextAlignment(PickerHandler handler, IPicker picker) =>
+        handler._hTextAlign.Value = (int)picker.HorizontalTextAlignment;
+
+    /// <summary>
+    /// Map <see cref="IPicker.IsOpen"/> to the Compose dropdown
+    /// expansion state. Two-way: tap/dismiss both write the virtual
+    /// view's <c>IsOpen</c> back through <see cref="SetOpen"/>.
+    /// </summary>
+    public static void MapIsOpen(PickerHandler handler, IPicker picker)
+    {
+        if (handler._open.Value != picker.IsOpen)
+            handler._open.Value = picker.IsOpen;
+    }
 }

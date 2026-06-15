@@ -21,4 +21,44 @@ public partial class EntriesPage : ContentPage
             ? "Greeting will appear here."
             : $"Hello, {e.NewTextValue}!";
     }
+
+    void OnMaxLengthChanged(object? sender, TextChangedEventArgs e)
+    {
+        var text = e.NewTextValue ?? string.Empty;
+        MaxLengthLabel.Text = text.Length >= 8
+            ? $"At cap ({text.Length}/8) — extra typing rejected."
+            : $"Length: {text.Length}/8";
+    }
+
+    void OnCaretToStart(object? sender, EventArgs e)
+    {
+        CursorEntry.CursorPosition  = 0;
+        CursorEntry.SelectionLength = 0;
+        UpdateCursorEcho();
+    }
+
+    void OnCaretToEnd(object? sender, EventArgs e)
+    {
+        var len = CursorEntry.Text?.Length ?? 0;
+        CursorEntry.CursorPosition  = len;
+        CursorEntry.SelectionLength = 0;
+        UpdateCursorEcho();
+    }
+
+    void OnSelectQuick(object? sender, EventArgs e)
+    {
+        var text = CursorEntry.Text ?? string.Empty;
+        var idx = text.IndexOf("quick", StringComparison.Ordinal);
+        if (idx < 0) return;
+        CursorEntry.CursorPosition  = idx;
+        CursorEntry.SelectionLength = "quick".Length;
+        UpdateCursorEcho();
+    }
+
+    void UpdateCursorEcho()
+    {
+        var len = CursorEntry.Text?.Length ?? 0;
+        CursorEcho.Text =
+            $"Caret: {CursorEntry.CursorPosition} / {len}  Selection length: {CursorEntry.SelectionLength}";
+    }
 }

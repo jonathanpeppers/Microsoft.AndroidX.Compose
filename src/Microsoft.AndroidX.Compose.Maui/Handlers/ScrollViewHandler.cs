@@ -33,6 +33,14 @@ public partial class ScrollViewHandler : ComposeElementHandler<IScrollView>
         new PropertyMapper<IScrollView, ScrollViewHandler>(ViewHandler.ViewMapper)
         {
             [nameof(IScrollView.Orientation)] = MapOrientation,
+            [nameof(IScrollView.Content)]     = MapContent,
+            // TODO: IScrollView.HorizontalScrollBarVisibility /
+            // VerticalScrollBarVisibility — Compose's
+            // Modifier.verticalScroll / horizontalScroll API doesn't
+            // expose a scrollbar-visibility flag. Suppressing the
+            // overlay scrollbar requires a hand-built rememberScrollState
+            // + custom Scrollbar overlay; revisit when porting
+            // PullToRefresh-style scroll affordances.
         };
 
     /// <summary>Command mapper (inherits view-level commands; no extras).</summary>
@@ -40,6 +48,10 @@ public partial class ScrollViewHandler : ComposeElementHandler<IScrollView>
         new(ViewCommandMapper);
 
     readonly MutableState<int> _orientation = new((int)ScrollOrientation.Vertical);
+    // Content swaps don't trigger a property changed on Orientation —
+    // bumping a version slot recomposes BuildNode which re-walks the
+    // new PresentedContent.
+    readonly MutableState<int> _contentVersion = new(0);
 
     /// <summary>Construct a handler with the default mappers.</summary>
     public ScrollViewHandler() : base(Mapper, CommandMapper) { }
@@ -56,12 +68,22 @@ public partial class ScrollViewHandler : ComposeElementHandler<IScrollView>
         var context = MauiContext
             ?? throw new InvalidOperationException("MauiContext not set on ScrollViewHandler.");
 
-        return new ScrollContainer(this, scroll, _orientation, context);
+        return new ScrollContainer(this, scroll, _orientation, _contentVersion, context);
     }
 
     /// <summary>Map <see cref="IScrollView.Orientation"/> to the cached enum slot.</summary>
     public static void MapOrientation(ScrollViewHandler handler, IScrollView view) =>
         handler._orientation.Value = (int)view.Orientation;
+
+    /// <summary>
+    /// Bump the content version slot when
+    /// <see cref="IScrollView.Content"/> swaps so the child walker
+    /// re-renders against the new tree. The new
+    /// <see cref="IScrollView.PresentedContent"/> is read live inside
+    /// <c>ScrollContainer.Render</c>.
+    /// </summary>
+    public static void MapContent(ScrollViewHandler handler, IScrollView _) =>
+        handler._contentVersion.Value++;
 
     /// <summary>
     /// <see cref="ComposableNode"/> implementing the
@@ -76,17 +98,20 @@ public partial class ScrollViewHandler : ComposeElementHandler<IScrollView>
         readonly ScrollViewHandler _owner;
         readonly IScrollView _scroll;
         readonly MutableState<int> _orientation;
+        readonly MutableState<int> _contentVersion;
         readonly IMauiContext _context;
 
         public ScrollContainer(
             ScrollViewHandler owner,
             IScrollView scroll,
             MutableState<int> orientation,
+            MutableState<int> contentVersion,
             IMauiContext context)
         {
             _owner = owner;
             _scroll = scroll;
             _orientation = orientation;
+            _contentVersion = contentVersion;
             _context = context;
         }
 
@@ -99,6 +124,9 @@ public partial class ScrollViewHandler : ComposeElementHandler<IScrollView>
             _owner.SubscribeToViewProperties();
 
             var orientation = (ScrollOrientation)_orientation.Value;
+            // Read the content version so swapping ScrollView.Content
+            // re-runs the walker. Live PresentedContent is read below.
+            _ = _contentVersion.Value;
             var state = composer.Remember(() => new ScrollState());
 
             var fillMain = orientation switch
