@@ -37,6 +37,21 @@ internal static class ColorMapping
         c is null ? null : (long)ToCompose(c);
 
     /// <summary>
+    /// Convert a MAUI <see cref="MauiColor"/> to a packed 32-bit
+    /// <c>0xAARRGGBB</c> integer suitable for
+    /// <see cref="Android.Graphics.Paint.Color"/> /
+    /// <c>Android.Graphics.Color</c>. Alpha defaults to opaque when
+    /// the input is <see langword="null"/>.
+    /// </summary>
+    public static int ToArgb(MauiColor? c) =>
+        c is null
+            ? unchecked((int)0xFF000000)
+            : (ToByte(c.Alpha) << 24) |
+              (ToByte(c.Red)   << 16) |
+              (ToByte(c.Green) <<  8) |
+               ToByte(c.Blue);
+
+    /// <summary>
     /// Convert a normalised <c>0..1</c> channel to an 8-bit value with
     /// round-to-nearest semantics. <c>(byte)(x * 255f)</c> truncates and
     /// drops one possible level (e.g. <c>0.5f</c> becomes <c>127</c>
