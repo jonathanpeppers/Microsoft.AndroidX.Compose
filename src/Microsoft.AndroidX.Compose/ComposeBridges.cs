@@ -1097,7 +1097,7 @@ internal static partial class ComposeBridges
         IFunction3  content,
         int         defaults,
         IComposer   composer, int _changed)
-        => DatePickerDialog(onDismissRequest, confirmButton, modifier, dismissButton, content, defaults, composer);
+        => DatePickerDialog(onDismissRequest, confirmButton, modifier, dismissButton, content, defaults, composer, _changed);
 
     // androidx.compose.material3.TimePickerKt.TimePicker-mT9BvqQ
     [ComposeBridge(

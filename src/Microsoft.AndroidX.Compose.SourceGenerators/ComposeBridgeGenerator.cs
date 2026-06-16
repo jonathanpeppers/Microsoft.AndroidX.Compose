@@ -283,11 +283,6 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
         // the last param is just the trailing user parameter. Suspend
         // bridges have already had their trailing IContinuation param
         // captured above; we strip it from csTail here so the rest of the
-        // C# parameter walk. For composable shapes the last param must be
-        // an IComposer; for extension shapes there is no Composer slot and
-        // the last param is just the trailing user parameter. Suspend
-        // bridges have already had their trailing IContinuation param
-        // captured above; we strip it from csTail here so the rest of the
         // accounting math treats it parallel to the Composer slot.
         //
         // Two valid positions for an optional `int _changed` user param:

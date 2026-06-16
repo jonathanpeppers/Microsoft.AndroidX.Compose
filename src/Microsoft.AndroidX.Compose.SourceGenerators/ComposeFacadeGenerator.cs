@@ -1786,7 +1786,8 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
     static void EmitDefaultsMask(StringBuilder sb, string indent, DefaultsInfo d,
         IReadOnlyList<FacadeSlot> slots, IReadOnlyList<FacadeSlot> namedSlots,
         bool hasModifier, bool hasPainter,
-        string defaultsVar = "__defaults", string modifierVar = "__modifier")    {
+        string defaultsVar = "__defaults", string modifierVar = "__modifier")
+    {
         sb.Append(indent).Append("int ").Append(defaultsVar).Append(" = (int)global::AndroidX.Compose.").Append(d.EnumName).AppendLine(".All;");
 
         // For each slot the facade DEFINITELY supplies, clear its bit.
