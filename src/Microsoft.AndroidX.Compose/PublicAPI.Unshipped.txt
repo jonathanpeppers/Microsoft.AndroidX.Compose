@@ -983,6 +983,8 @@ AndroidX.Compose.PullToRefreshState.DistanceFraction.get -> float
 AndroidX.Compose.PullToRefreshState.IsAnimating.get -> bool
 AndroidX.Compose.PullToRefreshState.PullToRefreshState() -> void
 AndroidX.Compose.RadioButton
+AndroidX.Compose.RadioButton.Colors.get -> AndroidX.Compose.Material3.RadioButtonColors?
+AndroidX.Compose.RadioButton.Colors.set -> void
 AndroidX.Compose.RadioButton.RadioButton(bool selected, System.Action! onClick, bool enabled = true) -> void
 AndroidX.Compose.RangeSlider
 AndroidX.Compose.RangeSlider.RangeSlider((float Start, float End) value, System.Action<(float Start, float End)>! onValueChange) -> void
@@ -1635,6 +1637,7 @@ static AndroidX.Compose.ComposeExtensions.ProduceState<T>(this AndroidX.Compose.
 static AndroidX.Compose.ComposeExtensions.ProduceState<T>(this AndroidX.Compose.Runtime.IComposer! composer, T initialValue, object? key1, System.Func<AndroidX.Compose.MutableState<T>!, System.Threading.CancellationToken, System.Threading.Tasks.Task!>! producer, int line = 0, string! file = "") -> AndroidX.Compose.MutableState<T>!
 static AndroidX.Compose.ComposeExtensions.ProduceState<T>(this AndroidX.Compose.Runtime.IComposer! composer, T initialValue, System.Func<AndroidX.Compose.MutableState<T>!, System.Threading.CancellationToken, System.Threading.Tasks.Task!>! producer, int line = 0, string! file = "") -> AndroidX.Compose.MutableState<T>!
 static AndroidX.Compose.ComposeExtensions.ProduceStateKeyed<T>(this AndroidX.Compose.Runtime.IComposer! composer, T initialValue, object?[]! keys, System.Func<AndroidX.Compose.MutableState<T>!, System.Threading.CancellationToken, System.Threading.Tasks.Task!>! producer, int line = 0, string! file = "") -> AndroidX.Compose.MutableState<T>!
+static AndroidX.Compose.ComposeExtensions.RadioButtonColors(this AndroidX.Compose.Runtime.IComposer! composer, long? selectedColor = null, long? unselectedColor = null, long? disabledSelectedColor = null, long? disabledUnselectedColor = null, int line = 0, string! file = "") -> AndroidX.Compose.Material3.RadioButtonColors!
 static AndroidX.Compose.ComposeExtensions.Remember<T>(this AndroidX.Compose.Runtime.IComposer! composer, System.Func<T>! factory, int line = 0, string! file = "") -> T
 static AndroidX.Compose.ComposeExtensions.Remember<T>(this AndroidX.Compose.Runtime.IComposer! composer, System.Func<T>! factory, object? key1, int line = 0, string! file = "") -> T
 static AndroidX.Compose.ComposeExtensions.Remember<T>(this AndroidX.Compose.Runtime.IComposer! composer, System.Func<T>! factory, object? key1, object? key2, int line = 0, string! file = "") -> T

@@ -3725,20 +3725,21 @@ internal static partial class ComposeBridges
 
     [ComposeFacade(Defaults = typeof(RadioButtonDefault))]
     public static partial void RadioButton(
-        bool        selected,
-        IFunction0  onClick,
-        IModifier?  modifier,
-        bool        enabled  = true,
-        int         defaults = 0,
-        IComposer   composer = null!);
+        bool                                       selected,
+        IFunction0                                 onClick,
+        IModifier?                                 modifier,
+        bool                                       enabled  = true,
+        AndroidX.Compose.Material3.RadioButtonColors? colors = null,
+        int                                        defaults = 0,
+        IComposer                                  composer = null!);
 
-    public static partial void RadioButton(bool selected, IFunction0 onClick, IModifier? modifier, bool enabled, int defaults, IComposer composer)
+    public static partial void RadioButton(bool selected, IFunction0 onClick, IModifier? modifier, bool enabled, AndroidX.Compose.Material3.RadioButtonColors? colors, int defaults, IComposer composer)
         => RadioButtonKt.RadioButton(
             selected:          selected,
             onClick:           onClick,
             modifier:          modifier,
             enabled:           enabled,
-            colors:            null,
+            colors:            colors,
             interactionSource: null,
             _composer:         composer,
             p7:                0,
