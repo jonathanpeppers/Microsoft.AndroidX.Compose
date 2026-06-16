@@ -148,7 +148,7 @@ public partial class BorderHandler : ComposeElementHandler<MauiBorder>
             // the trivial defaults.
             if (HasCustomStrokeGeometry(border))
             {
-                ConfigureStrokeDrawCallback(border, stroke.Value, width);
+                ConfigureStrokeDrawCallback(border, width);
                 modifier = (modifier ?? Modifier.Companion).DrawBehind(_strokeDrawCallback);
             }
             else
@@ -219,7 +219,7 @@ public partial class BorderHandler : ComposeElementHandler<MauiBorder>
                stroke.StrokeMiterLimit != 10f;
     }
 
-    void ConfigureStrokeDrawCallback(MauiBorder border, long strokeColor, float strokeThickness)
+    void ConfigureStrokeDrawCallback(MauiBorder border, float strokeThickness)
     {
         // ARGB int for native Paint — derived directly from the live
         // SolidPaint Color so the dashed path stays in sync with the
@@ -240,12 +240,6 @@ public partial class BorderHandler : ComposeElementHandler<MauiBorder>
         var metrics = global::Android.Content.Res.Resources.System?.DisplayMetrics
             ?? throw new InvalidOperationException("Resources.System.DisplayMetrics not available.");
         _strokeDrawCallback.Density            = metrics.Density;
-
-        // Silence "strokeColor is unused" — it's already derived from
-        // SolidPaint above, but kept on the signature so the caller
-        // can pass through the cached MutableState slot when MAUI's
-        // stroke property cycles through null between updates.
-        _ = strokeColor;
     }
 
     /// <summary>Map <see cref="MauiBorder.Stroke"/> by extracting
