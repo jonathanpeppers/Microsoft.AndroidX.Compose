@@ -638,7 +638,7 @@ public static class ModifierExtensions
     /// content within the parent's allocated height using
     /// <paramref name="align"/> instead of Kotlin's default
     /// <see cref="Alignment.Vertical.CenterVertically"/>. Useful for
-    /// mapping <see cref="Microsoft.Maui.ITextAlignment.VerticalTextAlignment"/>
+    /// mapping <c>Microsoft.Maui.ITextAlignment.VerticalTextAlignment</c>
     /// onto a text composable that needs to top- or bottom-align inside a
     /// fixed-height parent slot.
     /// </summary>

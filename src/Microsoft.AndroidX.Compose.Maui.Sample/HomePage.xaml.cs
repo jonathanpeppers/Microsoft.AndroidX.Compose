@@ -140,6 +140,11 @@ public partial class HomePage : ContentPage
                 "VerticalTextAlignment on Label / Entry / Editor / SearchBar / Picker, exercised inside fixed-height frames.",
                 Color.FromArgb("#9C27B0"),
                 "vertical-align"),
+            new DemoEntry(
+                "Navigation",
+                "Push / pop a modal `NavigationPage` rendered through Compose's Material 3 `Scaffold` + `TopAppBar`.",
+                Color.FromArgb("#1565C0"),
+                "navigation"),
 
             // ---- Phase 5 — self-drawing AndroidView fallback ----
             //

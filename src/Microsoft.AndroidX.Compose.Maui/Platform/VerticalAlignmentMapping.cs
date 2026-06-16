@@ -9,7 +9,7 @@ namespace Microsoft.AndroidX.Compose.Maui.Platform;
 /// <see cref="Alignment.Vertical"/> and the matching
 /// <see cref="ModifierExtensions.WrapContentHeight(Modifier, Alignment.Vertical, bool)"/>
 /// modifier. Used by every Compose-backed text-input handler so the
-/// cross-platform property line up consistently regardless of which
+/// cross-platform property lines up consistently regardless of which
 /// underlying composable the handler renders.
 /// </summary>
 /// <remarks>

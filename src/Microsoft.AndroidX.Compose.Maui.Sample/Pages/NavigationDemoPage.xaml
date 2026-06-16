@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="Microsoft.AndroidX.Compose.Maui.Sample.Pages.NavigationDemoPage"
+             Title="Navigation">
+
+    <!--
+        Phase 4 Slice 1 launcher. The MAUI gallery shell uses stock
+        `ShellRenderer` to host its content (stock still wins the
+        `Shell` registration), so the Compose-backed
+        `NavigationPageHandler` is exercised by pushing a *modal*
+        `NavigationPage` from this page. Inside the modal, push /
+        pop / hardware-back all flow through
+        `IStackNavigation.RequestNavigation` → our handler.
+    -->
+    <ScrollView>
+        <VerticalStackLayout Padding="30,30" Spacing="25">
+
+            <Label Text="Stack navigation"
+                   Style="{StaticResource Headline}"
+                   SemanticProperties.HeadingLevel="Level1" />
+
+            <Label Text="Tap the button below to push a modal `NavigationPage` whose chrome is rendered by the Compose-backed `NavigationPageHandler` (Material 3 `Scaffold` + `TopAppBar`)."
+                   Style="{StaticResource SubHeadline}"
+                   SemanticProperties.HeadingLevel="Level2" />
+
+            <Label Text="Once inside the modal stack:&#x0a;• Tap “Push next” to navigate forward.&#x0a;• Tap the ← arrow in the top bar (or use the hardware back button) to pop.&#x0a;• Tap “Close modal” on any page to dismiss the entire modal stack."
+                   FontSize="13" />
+
+            <Button x:Name="LaunchBtn"
+                    Text="Launch navigation stack"
+                    BackgroundColor="{StaticResource Primary}"
+                    TextColor="White"
+                    HorizontalOptions="Fill"
+                    Clicked="OnLaunchClicked" />
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

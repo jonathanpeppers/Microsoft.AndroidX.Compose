@@ -14,6 +14,7 @@ using MauiImage = Microsoft.Maui.Controls.Image;
 using MauiImageButton = Microsoft.Maui.Controls.ImageButton;
 using MauiIndicatorView = Microsoft.Maui.Controls.IndicatorView;
 using MauiLabel = Microsoft.Maui.Controls.Label;
+using MauiNavigationPage = Microsoft.Maui.Controls.NavigationPage;
 using MauiPage = Microsoft.Maui.Controls.Page;
 using MauiPicker = Microsoft.Maui.Controls.Picker;
 using MauiProgressBar = Microsoft.Maui.Controls.ProgressBar;
@@ -82,6 +83,13 @@ public static class AppHostBuilderExtensions
     ///     <see cref="MauiIndicatorView"/> synthesises a Compose
     ///     <c>Row</c> of dot tiles. CarouselView ↔ IndicatorView
     ///     two-way wiring lands in Phase 3.</description></item>
+    ///   <item><description><see cref="MauiNavigationPage"/> →
+    ///     <see cref="NavigationPageHandler"/> renders the stack
+    ///     through Material 3 <see cref="Scaffold"/> +
+    ///     <see cref="TopAppBar"/> chrome, with hardware-back
+    ///     and back-arrow pop. <c>TabbedPage</c>, <c>FlyoutPage</c>,
+    ///     and <c>Shell</c> remain on stock until later Phase 4
+    ///     slices.</description></item>
     /// </list>
     ///
     /// <para>Layout types not in the list above (Grid, AbsoluteLayout,
@@ -174,6 +182,15 @@ public static class AppHostBuilderExtensions
             // dots. CarouselView two-way wiring lands in Phase 3.
             handlers.AddHandler<MauiRefreshView,            RefreshViewHandler>();
             handlers.AddHandler<MauiIndicatorView,          IndicatorViewHandler>();
+
+            // Phase 4 Slice 1 — stack navigation. Replaces stock
+            // NavigationViewHandler (which hosts pushed pages in
+            // fragments under FragmentContainerView + AppCompat
+            // toolbar) with a Scaffold + TopAppBar shell whose body
+            // hosts the current page via AndroidView. Stock
+            // TabbedPage, FlyoutPage, and Shell still win their
+            // concrete-type registrations until later slices ship.
+            handlers.AddHandler<MauiNavigationPage,         NavigationPageHandler>();
         });
 
         return builder;
