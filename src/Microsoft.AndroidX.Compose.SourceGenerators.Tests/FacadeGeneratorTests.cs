@@ -198,8 +198,9 @@ public class FacadeGeneratorTests
                 public static System.IntPtr PainterResource(int id, global::AndroidX.Compose.Runtime.IComposer composer) => default;
             }
             public enum ChangedBits { Uncertain = 0, Same = 1, Different = 2, Static = 4 }
-            public static class ComposerDiffExtensions
+            public static class ComposeExtensions
             {
+                public static int DiffSlotShift(int paramIndex) => 1 + paramIndex * 3;
                 public static int DiffSlot<T>(this global::AndroidX.Compose.Runtime.IComposer composer, T value, int bitOffset,
                     [System.Runtime.CompilerServices.CallerLineNumber] int line = 0,
                     [System.Runtime.CompilerServices.CallerFilePath] string file = "") => 0;
@@ -3968,12 +3969,12 @@ public class FacadeGeneratorTests
         // __changed mask is computed.
         Assert.Contains("int __changed = 0;", emitted);
         // onClick contributes Static at bit 1 (param 0).
-        Assert.Contains("__changed |= (int)global::AndroidX.Compose.ChangedBits.Static << 1;", emitted);
+        Assert.Contains("__changed |= (int)global::AndroidX.Compose.ChangedBits.Static << global::AndroidX.Compose.ComposeExtensions.DiffSlotShift(0);", emitted);
         // modifier (param 1) contributes a real DiffSlot on the
         // captured key — bit 4.
-        Assert.Contains("__changed |= composer.DiffSlot(__modifierKey, 4);", emitted);
+        Assert.Contains("__changed |= composer.DiffSlot(__modifierKey, global::AndroidX.Compose.ComposeExtensions.DiffSlotShift(1));", emitted);
         // content (param 2) contributes Static at bit 7.
-        Assert.Contains("__changed |= (int)global::AndroidX.Compose.ChangedBits.Static << 7;", emitted);
+        Assert.Contains("__changed |= (int)global::AndroidX.Compose.ChangedBits.Static << global::AndroidX.Compose.ComposeExtensions.DiffSlotShift(2);", emitted);
         // Bridge call uses named composer + _changed args.
         Assert.Contains("composer: composer, _changed: __changed", emitted);
 
@@ -4062,11 +4063,11 @@ public class FacadeGeneratorTests
         Assert.Contains("composer.RememberAction", emitted);
         Assert.Contains("int __changed = 0;", emitted);
         // Param 0 (value, primitive string) → DiffSlot at bit 1.
-        Assert.Contains("__changed |= composer.DiffSlot(_value, 1);", emitted);
+        Assert.Contains("__changed |= composer.DiffSlot(_value, global::AndroidX.Compose.ComposeExtensions.DiffSlotShift(0));", emitted);
         // Param 1 (callback) → Static at bit 4.
-        Assert.Contains("__changed |= (int)global::AndroidX.Compose.ChangedBits.Static << 4;", emitted);
+        Assert.Contains("__changed |= (int)global::AndroidX.Compose.ChangedBits.Static << global::AndroidX.Compose.ComposeExtensions.DiffSlotShift(1);", emitted);
         // Param 2 (modifier) → DiffSlot on __modifierKey at bit 7.
-        Assert.Contains("__changed |= composer.DiffSlot(__modifierKey, 7);", emitted);
+        Assert.Contains("__changed |= composer.DiffSlot(__modifierKey, global::AndroidX.Compose.ComposeExtensions.DiffSlotShift(2));", emitted);
         Assert.Contains("composer: composer, _changed: __changed", emitted);
 
         var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
@@ -4112,19 +4113,19 @@ public class FacadeGeneratorTests
 
         Assert.Contains("int __changed = 0;", emitted);
         // onDismissRequest (param 0) → Static via RememberAction at bit 1.
-        Assert.Contains("__changed |= (int)global::AndroidX.Compose.ChangedBits.Static << 1;", emitted);
+        Assert.Contains("__changed |= (int)global::AndroidX.Compose.ChangedBits.Static << global::AndroidX.Compose.ComposeExtensions.DiffSlotShift(0);", emitted);
         // confirmButton (param 1, RequiredFunction2 — wrapped via Wrap2 → identity-stable) → Static at bit 4.
-        Assert.Contains("__changed |= (int)global::AndroidX.Compose.ChangedBits.Static << 4;", emitted);
+        Assert.Contains("__changed |= (int)global::AndroidX.Compose.ChangedBits.Static << global::AndroidX.Compose.ComposeExtensions.DiffSlotShift(1);", emitted);
         // modifier (param 2) → DiffSlot on __modifierKey at bit 7.
-        Assert.Contains("__changed |= composer.DiffSlot(__modifierKey, 7);", emitted);
+        Assert.Contains("__changed |= composer.DiffSlot(__modifierKey, global::AndroidX.Compose.ComposeExtensions.DiffSlotShift(2));", emitted);
         // dismissButton (param 3, NamedFunction2 nullable) → DiffSlot on the DismissButton property at bit 10.
-        Assert.Contains("__changed |= composer.DiffSlot<object?>(DismissButton, 10);", emitted);
+        Assert.Contains("__changed |= composer.DiffSlot<object?>(DismissButton, global::AndroidX.Compose.ComposeExtensions.DiffSlotShift(3));", emitted);
         // icon (param 4) → bit 13.
-        Assert.Contains("__changed |= composer.DiffSlot<object?>(Icon, 13);", emitted);
+        Assert.Contains("__changed |= composer.DiffSlot<object?>(Icon, global::AndroidX.Compose.ComposeExtensions.DiffSlotShift(4));", emitted);
         // title (param 5) → bit 16.
-        Assert.Contains("__changed |= composer.DiffSlot<object?>(Title, 16);", emitted);
+        Assert.Contains("__changed |= composer.DiffSlot<object?>(Title, global::AndroidX.Compose.ComposeExtensions.DiffSlotShift(5));", emitted);
         // text (param 6) → bit 19.
-        Assert.Contains("__changed |= composer.DiffSlot<object?>(Text, 19);", emitted);
+        Assert.Contains("__changed |= composer.DiffSlot<object?>(Text, global::AndroidX.Compose.ComposeExtensions.DiffSlotShift(6));", emitted);
         Assert.Contains("composer: composer, _changed: __changed", emitted);
 
         var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
@@ -4178,9 +4179,9 @@ public class FacadeGeneratorTests
 
         Assert.Contains("int __changed = 0;", emitted);
         // state (param 0) → DiffSlot on __state (the resolved IntPtr/peer) at bit 1.
-        Assert.Contains("__changed |= composer.DiffSlot(__state, 1);", emitted);
+        Assert.Contains("__changed |= composer.DiffSlot(__state, global::AndroidX.Compose.ComposeExtensions.DiffSlotShift(0));", emitted);
         // modifier (param 1) → bit 4.
-        Assert.Contains("__changed |= composer.DiffSlot(__modifierKey, 4);", emitted);
+        Assert.Contains("__changed |= composer.DiffSlot(__modifierKey, global::AndroidX.Compose.ComposeExtensions.DiffSlotShift(1));", emitted);
         Assert.Contains("composer: composer, _changed: __changed", emitted);
 
         var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
@@ -4225,11 +4226,11 @@ public class FacadeGeneratorTests
 
         Assert.Contains("int __changed = 0;", emitted);
         // painter (param 0) → DiffSlot on _drawableResourceId at bit 1.
-        Assert.Contains("__changed |= composer.DiffSlot(_drawableResourceId, 1);", emitted);
+        Assert.Contains("__changed |= composer.DiffSlot(_drawableResourceId, global::AndroidX.Compose.ComposeExtensions.DiffSlotShift(0));", emitted);
         // contentDescription (param 1, primitive string) → bit 4.
-        Assert.Contains("__changed |= composer.DiffSlot(_contentDescription, 4);", emitted);
+        Assert.Contains("__changed |= composer.DiffSlot(_contentDescription, global::AndroidX.Compose.ComposeExtensions.DiffSlotShift(1));", emitted);
         // modifier (param 2) → bit 7.
-        Assert.Contains("__changed |= composer.DiffSlot(__modifierKey, 7);", emitted);
+        Assert.Contains("__changed |= composer.DiffSlot(__modifierKey, global::AndroidX.Compose.ComposeExtensions.DiffSlotShift(2));", emitted);
         Assert.Contains("composer: composer, _changed: __changed", emitted);
 
         var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
@@ -4272,9 +4273,9 @@ public class FacadeGeneratorTests
 
         Assert.Contains("int __changed = 0;", emitted);
         // modifier (param 0) → __modifierKey at bit 1.
-        Assert.Contains("__changed |= composer.DiffSlot(__modifierKey, 1);", emitted);
+        Assert.Contains("__changed |= composer.DiffSlot(__modifierKey, global::AndroidX.Compose.ComposeExtensions.DiffSlotShift(0));", emitted);
         // content (param 1, RequiredFunction3 → Static via composableLambda) at bit 4.
-        Assert.Contains("__changed |= (int)global::AndroidX.Compose.ChangedBits.Static << 4;", emitted);
+        Assert.Contains("__changed |= (int)global::AndroidX.Compose.ChangedBits.Static << global::AndroidX.Compose.ComposeExtensions.DiffSlotShift(1);", emitted);
         // Bridge call uses named composer + _changed args.
         Assert.Contains("composer: composer, _changed: __changed", emitted);
 

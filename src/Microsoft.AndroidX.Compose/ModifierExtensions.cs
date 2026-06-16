@@ -20,7 +20,7 @@ public static class ModifierExtensions
     {
         var dp = all.Value;
         return modifier.Append(h => ComposeBridges.ModifierPaddingAll(h, dp),
-            new ModifierOpKey("Padding", ValueTuple.Create(dp)));
+            new ModifierOpKey(nameof(Padding), ValueTuple.Create(dp)));
     }
 
     /// <summary>
@@ -75,21 +75,21 @@ public static class ModifierExtensions
     /// </summary>
     public static Modifier FillMaxWidth(this Modifier modifier, float fraction = 1f) =>
         modifier.Append(h => ComposeBridges.ModifierFillMaxWidth(h, fraction),
-            new ModifierOpKey("FillMaxWidth", ValueTuple.Create(fraction)));
+            new ModifierOpKey(nameof(FillMaxWidth), ValueTuple.Create(fraction)));
 
     /// <summary>
     /// <c>Modifier.fillMaxHeight(fraction)</c>.
     /// </summary>
     public static Modifier FillMaxHeight(this Modifier modifier, float fraction = 1f) =>
         modifier.Append(h => ComposeBridges.ModifierFillMaxHeight(h, fraction),
-            new ModifierOpKey("FillMaxHeight", ValueTuple.Create(fraction)));
+            new ModifierOpKey(nameof(FillMaxHeight), ValueTuple.Create(fraction)));
 
     /// <summary>
     /// <c>Modifier.fillMaxSize(fraction)</c> — fills both width and height.
     /// </summary>
     public static Modifier FillMaxSize(this Modifier modifier, float fraction = 1f) =>
         modifier.Append(h => ComposeBridges.ModifierFillMaxSize(h, fraction),
-            new ModifierOpKey("FillMaxSize", ValueTuple.Create(fraction)));
+            new ModifierOpKey(nameof(FillMaxSize), ValueTuple.Create(fraction)));
 
     /// <summary>
     /// <c>Modifier.height(dp)</c> — sets a fixed height in dp.
@@ -101,7 +101,7 @@ public static class ModifierExtensions
     {
         var f = height.Value;
         return modifier.Append(h => ComposeBridges.ModifierHeight(h, f),
-            new ModifierOpKey("Height", ValueTuple.Create(f)));
+            new ModifierOpKey(nameof(Height), ValueTuple.Create(f)));
     }
 
     /// <summary>
@@ -111,7 +111,7 @@ public static class ModifierExtensions
     {
         var f = width.Value;
         return modifier.Append(h => ComposeBridges.ModifierWidth(h, f),
-            new ModifierOpKey("Width", ValueTuple.Create(f)));
+            new ModifierOpKey(nameof(Width), ValueTuple.Create(f)));
     }
 
     /// <summary>
@@ -122,7 +122,7 @@ public static class ModifierExtensions
     {
         var f = size.Value;
         return modifier.Append(h => ComposeBridges.ModifierSizeAll(h, f),
-            new ModifierOpKey("Size", ValueTuple.Create(f)));
+            new ModifierOpKey(nameof(Size), ValueTuple.Create(f)));
     }
 
     /// <summary>
@@ -145,7 +145,7 @@ public static class ModifierExtensions
     /// </summary>
     public static Modifier SafeDrawingPadding(this Modifier modifier) =>
         modifier.Append(h => ComposeBridges.ModifierSafeDrawingPadding(h),
-            new ModifierOpKey("SafeDrawingPadding", null));
+            new ModifierOpKey(nameof(SafeDrawingPadding), null));
 
     /// <summary>
     /// <c>Modifier.systemBarsPadding()</c> — pads for status + nav bars
@@ -154,7 +154,7 @@ public static class ModifierExtensions
     /// </summary>
     public static Modifier SystemBarsPadding(this Modifier modifier) =>
         modifier.Append(h => ComposeBridges.ModifierSystemBarsPadding(h),
-            new ModifierOpKey("SystemBarsPadding", null));
+            new ModifierOpKey(nameof(SystemBarsPadding), null));
 
     /// <summary>
     /// <c>Modifier.minimumInteractiveComponentSize()</c> — reserves at
@@ -175,7 +175,7 @@ public static class ModifierExtensions
     /// </remarks>
     public static Modifier MinimumInteractiveComponentSize(this Modifier modifier) =>
         modifier.Append(h => ComposeBridges.ModifierMinimumInteractiveComponentSize(h),
-            new ModifierOpKey("MinimumInteractiveComponentSize", null));
+            new ModifierOpKey(nameof(MinimumInteractiveComponentSize), null));
 
     /// <summary>
     /// <c>Modifier.background(color)</c> — paints a flat fill behind the
@@ -190,7 +190,7 @@ public static class ModifierExtensions
     /// </summary>
     public static Modifier Background(this Modifier modifier, Color color) =>
         modifier.Append(curr => ComposeBridges.ModifierBackground(curr, color, null),
-            new ModifierOpKey("Background", ValueTuple.Create((long)color)));
+            new ModifierOpKey(nameof(Background), ValueTuple.Create((long)color)));
 
     /// <summary>
     /// <c>Modifier.background(color, shape)</c> — paints a flat fill
@@ -218,7 +218,7 @@ public static class ModifierExtensions
         var w = width.Value;
         long c = color;
         return modifier.Append(curr => ComposeBridges.ModifierBorder(curr, w, c, null),
-            new ModifierOpKey("Border", (w, c)));
+            new ModifierOpKey(nameof(Border), (w, c)));
     }
 
     /// <summary>
@@ -236,7 +236,7 @@ public static class ModifierExtensions
         long c = color;
         if (r <= 0f)
             return modifier.Append(curr => ComposeBridges.ModifierBorder(curr, w, c, null),
-                new ModifierOpKey("Border", (w, c)));
+                new ModifierOpKey(nameof(Border), (w, c)));
 
         return modifier.Append(curr =>
         {
@@ -351,7 +351,7 @@ public static class ModifierExtensions
 
         var lambda = new ComposableLambda0(onClick);
         return modifier.Append(curr => ComposeBridges.ModifierClickable(curr, lambda),
-            new ModifierOpKey("Clickable", ValueTuple.Create<object>(onClick)));
+            new ModifierOpKey(nameof(Clickable), ValueTuple.Create<object>(onClick)));
     }
 
     /// <summary>
@@ -398,7 +398,7 @@ public static class ModifierExtensions
         ArgumentNullException.ThrowIfNull(target);
         var predicate = new ShouldStartDragAndDropCallback(shouldStartDragAndDrop);
         return modifier.Append(curr => ComposeBridges.ModifierDragAndDropTarget(curr, predicate, target),
-            new ModifierOpKey("DragAndDropTarget", ((object)shouldStartDragAndDrop, (object)target)));
+            new ModifierOpKey(nameof(DragAndDropTarget), ((object)shouldStartDragAndDrop, (object)target)));
     }
 
     /// <summary>
@@ -435,7 +435,7 @@ public static class ModifierExtensions
         return modifier.Append(curr =>
             ComposeBridges.ModifierVerticalScroll(
                 curr, ((Java.Lang.Object)jvm).Handle, enabled, reverseScrolling),
-            new ModifierOpKey("VerticalScroll", ((object)state, enabled, reverseScrolling)));
+            new ModifierOpKey(nameof(VerticalScroll), ((object)state, enabled, reverseScrolling)));
     }
 
     /// <summary>
@@ -463,7 +463,7 @@ public static class ModifierExtensions
         return modifier.Append(curr =>
             ComposeBridges.ModifierHorizontalScroll(
                 curr, ((Java.Lang.Object)jvm).Handle, enabled, reverseScrolling),
-            new ModifierOpKey("HorizontalScroll", ((object)state, enabled, reverseScrolling)));
+            new ModifierOpKey(nameof(HorizontalScroll), ((object)state, enabled, reverseScrolling)));
     }
 
     /// <summary>
@@ -500,7 +500,7 @@ public static class ModifierExtensions
                 ((Java.Lang.Object)jvm).Handle,
                 ((Java.Lang.Object)jvmOrientation).Handle,
                 enabled),
-            new ModifierOpKey("Draggable", ((object)state, orientation, enabled)));
+            new ModifierOpKey(nameof(Draggable), ((object)state, orientation, enabled)));
     }
 
     /// <summary>
@@ -527,7 +527,7 @@ public static class ModifierExtensions
     {
         ArgumentNullException.ThrowIfNull(connection);
         return modifier.Append(curr => ComposeBridges.ModifierNestedScroll(curr, connection),
-            new ModifierOpKey("NestedScroll", ValueTuple.Create<object>(connection)));
+            new ModifierOpKey(nameof(NestedScroll), ValueTuple.Create<object>(connection)));
     }
 
     /// <summary>
@@ -553,7 +553,7 @@ public static class ModifierExtensions
                     "Row/Column-shaped scope (BottomAppBar, NavigationBar, …). " +
                     $"Current scope kind: {kind}.")
             };
-        }, new ModifierOpKey("Weight", (weight, fill)));
+        }, new ModifierOpKey(nameof(Weight), (weight, fill)));
     }
 
     /// <summary>
@@ -564,7 +564,7 @@ public static class ModifierExtensions
     /// </summary>
     public static Modifier WidthIn(this Modifier modifier, Dp? min = null, Dp? max = null) =>
         modifier.Append(curr => ComposeBridges.ModifierWidthIn(curr, min, max),
-            new ModifierOpKey("WidthIn", (min?.Value, max?.Value)));
+            new ModifierOpKey(nameof(WidthIn), (min?.Value, max?.Value)));
 
     /// <summary>
     /// <c>Modifier.heightIn(min, max)</c> — adds a min and/or max height
@@ -573,7 +573,7 @@ public static class ModifierExtensions
     /// </summary>
     public static Modifier HeightIn(this Modifier modifier, Dp? min = null, Dp? max = null) =>
         modifier.Append(curr => ComposeBridges.ModifierHeightIn(curr, min, max),
-            new ModifierOpKey("HeightIn", (min?.Value, max?.Value)));
+            new ModifierOpKey(nameof(HeightIn), (min?.Value, max?.Value)));
 
     /// <summary>
     /// <c>Modifier.sizeIn(minWidth, minHeight, maxWidth, maxHeight)</c> —
@@ -582,7 +582,7 @@ public static class ModifierExtensions
     /// </summary>
     public static Modifier SizeIn(this Modifier modifier, Dp? minWidth = null, Dp? minHeight = null, Dp? maxWidth = null, Dp? maxHeight = null) =>
         modifier.Append(curr => ComposeBridges.ModifierSizeIn(curr, minWidth, minHeight, maxWidth, maxHeight),
-            new ModifierOpKey("SizeIn", (minWidth?.Value, minHeight?.Value, maxWidth?.Value, maxHeight?.Value)));
+            new ModifierOpKey(nameof(SizeIn), (minWidth?.Value, minHeight?.Value, maxWidth?.Value, maxHeight?.Value)));
 
     /// <summary>
     /// <c>Modifier.requiredSize(size)</c> — declares an exact size that
@@ -594,7 +594,7 @@ public static class ModifierExtensions
     {
         var dp = size.Value;
         return modifier.Append(curr => ComposeBridges.ModifierRequiredSizeAll(curr, dp),
-            new ModifierOpKey("RequiredSize", ValueTuple.Create(dp)));
+            new ModifierOpKey(nameof(RequiredSize), ValueTuple.Create(dp)));
     }
 
     /// <summary>
@@ -617,7 +617,7 @@ public static class ModifierExtensions
     {
         var w = width.Value;
         return modifier.Append(curr => ComposeBridges.ModifierRequiredWidth(curr, w),
-            new ModifierOpKey("RequiredWidth", ValueTuple.Create(w)));
+            new ModifierOpKey(nameof(RequiredWidth), ValueTuple.Create(w)));
     }
 
     /// <summary>
@@ -628,7 +628,7 @@ public static class ModifierExtensions
     {
         var h = height.Value;
         return modifier.Append(curr => ComposeBridges.ModifierRequiredHeight(curr, h),
-            new ModifierOpKey("RequiredHeight", ValueTuple.Create(h)));
+            new ModifierOpKey(nameof(RequiredHeight), ValueTuple.Create(h)));
     }
 
     /// <summary>
@@ -641,7 +641,7 @@ public static class ModifierExtensions
     /// </summary>
     public static Modifier DefaultMinSize(this Modifier modifier, Dp? minWidth = null, Dp? minHeight = null) =>
         modifier.Append(curr => ComposeBridges.ModifierDefaultMinSize(curr, minWidth, minHeight),
-            new ModifierOpKey("DefaultMinSize", (minWidth?.Value, minHeight?.Value)));
+            new ModifierOpKey(nameof(DefaultMinSize), (minWidth?.Value, minHeight?.Value)));
 
     /// <summary>
     /// <c>Modifier.wrapContentSize(unbounded)</c> — measures content
@@ -652,7 +652,7 @@ public static class ModifierExtensions
     /// </summary>
     public static Modifier WrapContentSize(this Modifier modifier, bool unbounded = false) =>
         modifier.Append(curr => ComposeBridges.ModifierWrapContentSize(curr, unbounded),
-            new ModifierOpKey("WrapContentSize", ValueTuple.Create(unbounded)));
+            new ModifierOpKey(nameof(WrapContentSize), ValueTuple.Create(unbounded)));
 
     /// <summary>
     /// <c>Modifier.wrapContentWidth(unbounded)</c> — same as
@@ -661,7 +661,7 @@ public static class ModifierExtensions
     /// </summary>
     public static Modifier WrapContentWidth(this Modifier modifier, bool unbounded = false) =>
         modifier.Append(curr => ComposeBridges.ModifierWrapContentWidth(curr, unbounded),
-            new ModifierOpKey("WrapContentWidth", ValueTuple.Create(unbounded)));
+            new ModifierOpKey(nameof(WrapContentWidth), ValueTuple.Create(unbounded)));
 
     /// <summary>
     /// <c>Modifier.wrapContentHeight(unbounded)</c> — same as
@@ -670,7 +670,7 @@ public static class ModifierExtensions
     /// </summary>
     public static Modifier WrapContentHeight(this Modifier modifier, bool unbounded = false) =>
         modifier.Append(curr => ComposeBridges.ModifierWrapContentHeight(curr, unbounded),
-            new ModifierOpKey("WrapContentHeight", ValueTuple.Create(unbounded)));
+            new ModifierOpKey(nameof(WrapContentHeight), ValueTuple.Create(unbounded)));
 
     /// <summary>
     /// <c>Modifier.aspectRatio(ratio, matchHeightConstraintsFirst)</c> —
@@ -683,7 +683,7 @@ public static class ModifierExtensions
     /// </summary>
     public static Modifier AspectRatio(this Modifier modifier, float ratio, bool matchHeightConstraintsFirst = false) =>
         modifier.Append(curr => ComposeBridges.ModifierAspectRatio(curr, ratio, matchHeightConstraintsFirst),
-            new ModifierOpKey("AspectRatio", (ratio, matchHeightConstraintsFirst)));
+            new ModifierOpKey(nameof(AspectRatio), (ratio, matchHeightConstraintsFirst)));
 
     /// <summary>
     /// <c>Modifier.offset(x, y)</c> — shifts the composable's draw
@@ -693,7 +693,7 @@ public static class ModifierExtensions
     /// </summary>
     public static Modifier Offset(this Modifier modifier, Dp? x = null, Dp? y = null) =>
         modifier.Append(curr => ComposeBridges.ModifierOffset(curr, x, y),
-            new ModifierOpKey("Offset", (x?.Value, y?.Value)));
+            new ModifierOpKey(nameof(Offset), (x?.Value, y?.Value)));
 
     /// <summary>
     /// <c>Modifier.absoluteOffset(x, y)</c> — like <see cref="Offset"/>
@@ -702,7 +702,7 @@ public static class ModifierExtensions
     /// </summary>
     public static Modifier AbsoluteOffset(this Modifier modifier, Dp? x = null, Dp? y = null) =>
         modifier.Append(curr => ComposeBridges.ModifierAbsoluteOffset(curr, x, y),
-            new ModifierOpKey("AbsoluteOffset", (x?.Value, y?.Value)));
+            new ModifierOpKey(nameof(AbsoluteOffset), (x?.Value, y?.Value)));
 
     /// <summary>
     /// <c>Modifier.zIndex(z)</c> — sets the draw order within a parent
@@ -711,7 +711,7 @@ public static class ModifierExtensions
     /// </summary>
     public static Modifier ZIndex(this Modifier modifier, float z) =>
         modifier.Append(curr => ComposeBridges.ModifierZIndex(curr, z),
-            new ModifierOpKey("ZIndex", ValueTuple.Create(z)));
+            new ModifierOpKey(nameof(ZIndex), ValueTuple.Create(z)));
 
     /// <summary>
     /// <c>Modifier.alpha(alpha)</c> — applies an alpha multiplier to
@@ -721,7 +721,7 @@ public static class ModifierExtensions
     /// </summary>
     public static Modifier Alpha(this Modifier modifier, float alpha) =>
         modifier.Append(curr => ComposeBridges.ModifierAlpha(curr, alpha),
-            new ModifierOpKey("Alpha", ValueTuple.Create(alpha)));
+            new ModifierOpKey(nameof(Alpha), ValueTuple.Create(alpha)));
 
     /// <summary>
     /// <c>Modifier.rotate(degrees)</c> — rotates the composable around
@@ -730,7 +730,7 @@ public static class ModifierExtensions
     /// </summary>
     public static Modifier Rotate(this Modifier modifier, float degrees) =>
         modifier.Append(curr => ComposeBridges.ModifierRotate(curr, degrees),
-            new ModifierOpKey("Rotate", ValueTuple.Create(degrees)));
+            new ModifierOpKey(nameof(Rotate), ValueTuple.Create(degrees)));
 
     /// <summary>
     /// <c>Modifier.scale(scale)</c> — uniform scale around the
@@ -762,7 +762,7 @@ public static class ModifierExtensions
     {
         var e = elevation.Value;
         return modifier.Append(curr => ComposeBridges.ModifierShadow(curr, e, shape?.Handle),
-            new ModifierOpKey("Shadow", (e, (object?)shape)));
+            new ModifierOpKey(nameof(Shadow), (e, (object?)shape)));
     }
 
     /// <summary>
@@ -816,7 +816,7 @@ public static class ModifierExtensions
             transformOrigin,
             shape?.Handle,
             clip),
-            new ModifierOpKey("GraphicsLayer",
+            new ModifierOpKey(nameof(GraphicsLayer),
                 (scaleX, scaleY, alpha, translationX, translationY,
                  shadowElevation, rotationX, rotationY, rotationZ,
                  cameraDistance, transformOrigin, (object?)shape, clip)));
@@ -829,7 +829,7 @@ public static class ModifierExtensions
     /// </summary>
     public static Modifier ImePadding(this Modifier modifier) =>
         modifier.Append(curr => ComposeBridges.ModifierImePadding(curr),
-            new ModifierOpKey("ImePadding", null));
+            new ModifierOpKey(nameof(ImePadding), null));
 
     /// <summary>
     /// <c>Modifier.navigationBarsPadding()</c> — pads for the system
@@ -837,7 +837,7 @@ public static class ModifierExtensions
     /// </summary>
     public static Modifier NavigationBarsPadding(this Modifier modifier) =>
         modifier.Append(curr => ComposeBridges.ModifierNavigationBarsPadding(curr),
-            new ModifierOpKey("NavigationBarsPadding", null));
+            new ModifierOpKey(nameof(NavigationBarsPadding), null));
 
     /// <summary>
     /// <c>Modifier.statusBarsPadding()</c> — pads for the status bar
@@ -845,7 +845,7 @@ public static class ModifierExtensions
     /// </summary>
     public static Modifier StatusBarsPadding(this Modifier modifier) =>
         modifier.Append(curr => ComposeBridges.ModifierStatusBarsPadding(curr),
-            new ModifierOpKey("StatusBarsPadding", null));
+            new ModifierOpKey(nameof(StatusBarsPadding), null));
 
     /// <summary>
     /// <c>Modifier.displayCutoutPadding()</c> — pads for display cutouts
@@ -854,7 +854,7 @@ public static class ModifierExtensions
     /// </summary>
     public static Modifier DisplayCutoutPadding(this Modifier modifier) =>
         modifier.Append(curr => ComposeBridges.ModifierDisplayCutoutPadding(curr),
-            new ModifierOpKey("DisplayCutoutPadding", null));
+            new ModifierOpKey(nameof(DisplayCutoutPadding), null));
 
     /// <summary>
     /// <c>Modifier.captionBarPadding()</c> — pads for the caption bar
@@ -863,7 +863,7 @@ public static class ModifierExtensions
     /// </summary>
     public static Modifier CaptionBarPadding(this Modifier modifier) =>
         modifier.Append(curr => ComposeBridges.ModifierCaptionBarPadding(curr),
-            new ModifierOpKey("CaptionBarPadding", null));
+            new ModifierOpKey(nameof(CaptionBarPadding), null));
 
     /// <summary>
     /// <c>Modifier.mandatorySystemGesturesPadding()</c> — pads for the
@@ -873,7 +873,7 @@ public static class ModifierExtensions
     /// </summary>
     public static Modifier MandatorySystemGesturesPadding(this Modifier modifier) =>
         modifier.Append(curr => ComposeBridges.ModifierMandatorySystemGesturesPadding(curr),
-            new ModifierOpKey("MandatorySystemGesturesPadding", null));
+            new ModifierOpKey(nameof(MandatorySystemGesturesPadding), null));
 
     /// <summary>
     /// <c>Modifier.safeContentPadding()</c> — union of
@@ -883,7 +883,7 @@ public static class ModifierExtensions
     /// </summary>
     public static Modifier SafeContentPadding(this Modifier modifier) =>
         modifier.Append(curr => ComposeBridges.ModifierSafeContentPadding(curr),
-            new ModifierOpKey("SafeContentPadding", null));
+            new ModifierOpKey(nameof(SafeContentPadding), null));
 
     /// <summary>
     /// <c>Modifier.safeGesturesPadding()</c> — union of
@@ -894,7 +894,7 @@ public static class ModifierExtensions
     /// </summary>
     public static Modifier SafeGesturesPadding(this Modifier modifier) =>
         modifier.Append(curr => ComposeBridges.ModifierSafeGesturesPadding(curr),
-            new ModifierOpKey("SafeGesturesPadding", null));
+            new ModifierOpKey(nameof(SafeGesturesPadding), null));
 
     /// <summary>
     /// <c>Modifier.systemGesturesPadding()</c> — pads for the system
@@ -903,7 +903,7 @@ public static class ModifierExtensions
     /// </summary>
     public static Modifier SystemGesturesPadding(this Modifier modifier) =>
         modifier.Append(curr => ComposeBridges.ModifierSystemGesturesPadding(curr),
-            new ModifierOpKey("SystemGesturesPadding", null));
+            new ModifierOpKey(nameof(SystemGesturesPadding), null));
 
     /// <summary>
     /// <c>Modifier.waterfallPadding()</c> — pads for waterfall display
@@ -912,7 +912,7 @@ public static class ModifierExtensions
     /// </summary>
     public static Modifier WaterfallPadding(this Modifier modifier) =>
         modifier.Append(curr => ComposeBridges.ModifierWaterfallPadding(curr),
-            new ModifierOpKey("WaterfallPadding", null));
+            new ModifierOpKey(nameof(WaterfallPadding), null));
 
     /// <summary>
     /// <c>Modifier.testTag(tag)</c> — attaches a stable identifier for
@@ -923,7 +923,7 @@ public static class ModifierExtensions
     {
         ArgumentNullException.ThrowIfNull(tag);
         return modifier.Append(curr => ComposeBridges.ModifierTestTag(curr, tag),
-            new ModifierOpKey("TestTag", ValueTuple.Create(tag)));
+            new ModifierOpKey(nameof(TestTag), ValueTuple.Create(tag)));
     }
 
     /// <summary>
@@ -1009,7 +1009,7 @@ public static class ModifierExtensions
     /// </summary>
     public static Modifier Focusable(this Modifier modifier, bool enabled = true) =>
         modifier.Append(curr => ComposeBridges.ModifierFocusable(curr, enabled),
-            new ModifierOpKey("Focusable", ValueTuple.Create(enabled)));
+            new ModifierOpKey(nameof(Focusable), ValueTuple.Create(enabled)));
 
     /// <summary>
     /// <c>Modifier.focusGroup()</c> — groups focusable descendants so
@@ -1017,7 +1017,7 @@ public static class ModifierExtensions
     /// </summary>
     public static Modifier FocusGroup(this Modifier modifier) =>
         modifier.Append(curr => ComposeBridges.ModifierFocusGroup(curr),
-            new ModifierOpKey("FocusGroup", null));
+            new ModifierOpKey(nameof(FocusGroup), null));
 
     /// <summary>
     /// <c>Modifier.onFocusChanged { ... }</c> — invokes <paramref name="onFocusChanged"/>
@@ -1035,7 +1035,7 @@ public static class ModifierExtensions
             onFocusChanged(FocusState.From(fs));
         });
         return modifier.Append(curr => ComposeBridges.ModifierOnFocusChanged(curr, f1),
-            new ModifierOpKey("OnFocusChanged", ValueTuple.Create<object>(onFocusChanged)));
+            new ModifierOpKey(nameof(OnFocusChanged), ValueTuple.Create<object>(onFocusChanged)));
     }
 
     /// <summary>
@@ -1049,7 +1049,7 @@ public static class ModifierExtensions
         ArgumentNullException.ThrowIfNull(requester);
         return modifier.Append(curr =>
             ComposeBridges.ModifierFocusRequester(curr, ((Java.Lang.Object)requester.Java).Handle),
-            new ModifierOpKey("FocusRequester", ValueTuple.Create<object>(requester)));
+            new ModifierOpKey(nameof(FocusRequester), ValueTuple.Create<object>(requester)));
     }
 
     /// <summary>
@@ -1069,7 +1069,7 @@ public static class ModifierExtensions
         var doubleClick = onDoubleClick is null ? null : new ComposableLambda0(onDoubleClick);
         return modifier.Append(curr =>
             ComposeBridges.ModifierCombinedClickable(curr, longClick, doubleClick, click),
-            new ModifierOpKey("CombinedClickable",
+            new ModifierOpKey(nameof(CombinedClickable),
                 ((object)onClick, (object?)onLongClick, (object?)onDoubleClick)));
     }
 
@@ -1085,7 +1085,7 @@ public static class ModifierExtensions
         var click = new ComposableLambda0(onClick);
         return modifier.Append(curr =>
             ComposeBridges.ModifierSelectable(curr, selected, click),
-            new ModifierOpKey("Selectable", (selected, (object)onClick)));
+            new ModifierOpKey(nameof(Selectable), (selected, (object)onClick)));
     }
 
     /// <summary>
@@ -1104,7 +1104,7 @@ public static class ModifierExtensions
         });
         return modifier.Append(curr =>
             ComposeBridges.ModifierToggleable(curr, value, f1),
-            new ModifierOpKey("Toggleable", (value, (object)onValueChange)));
+            new ModifierOpKey(nameof(Toggleable), (value, (object)onValueChange)));
     }
 
     /// <summary>
@@ -1170,7 +1170,7 @@ public static class ModifierExtensions
         });
         return modifier.Append(curr =>
             ComposeBridges.ModifierSemantics(curr, mergeDescendants, properties),
-            new ModifierOpKey("Semantics", (mergeDescendants, contentDescription, role)));
+            new ModifierOpKey(nameof(Semantics), (mergeDescendants, contentDescription, role)));
     }
 
     /// <summary>
@@ -1208,7 +1208,7 @@ public static class ModifierExtensions
         });
         return modifier.Append(curr =>
             ComposeBridges.ModifierClearAndSetSemantics(curr, properties),
-            new ModifierOpKey("ClearAndSetSemantics", (contentDescription, role)));
+            new ModifierOpKey(nameof(ClearAndSetSemantics), (contentDescription, role)));
     }
 
     /// <summary>

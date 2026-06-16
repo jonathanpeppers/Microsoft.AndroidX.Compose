@@ -1856,7 +1856,8 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
                 bitParamIndex++;
                 continue;
             }
-            string bitOffset = shift.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            string bitOffset = "global::AndroidX.Compose.ComposeExtensions.DiffSlotShift(" +
+            bitParamIndex.ToString(System.Globalization.CultureInfo.InvariantCulture) + ")";
             switch (s.Kind)
             {
                 case FacadeSlotKind.Modifier:
