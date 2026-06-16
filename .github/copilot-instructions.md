@@ -699,6 +699,88 @@ Do **not** use a static singleton — fine for stateless stubs the user can't
 override (`NoOpSearchCallback` — `onSearch` is *not* a `remember` key) but
 can't host a per-node mutable delegate without becoming shared state.
 
+## `$changed` bitmask propagation
+
+Kotlin's compose-compiler emits an `int $changed` JNI slot alongside `$default`
+on every `@Composable`. Three bits per param (Same=0b001 / Different=0b010 /
+Static=0b100), bit 0 reserved for the runtime "force" flag. When every param's
+bits read **Same** the runtime takes the skip path and re-emits cached output
+nodes.
+
+The C# facade computes this mask at Render time. Mechanisms:
+
+- **`composer.DiffSlot<T>(value, bitOffset)`** — per-call-site slot-table diff
+  (same shape as `Remember`). First call stashes; equal repeat returns Same;
+  unequal stashes + returns Different. `null` is a legal value.
+- **`composer.RememberAction(Action)` / `RememberAction<T>(Action<T>)`** —
+  caches one `MutableComposableLambda0/1` JCW per call site with a writable
+  target. Each render rebinds the target instead of allocating a fresh JCW,
+  so the JNI peer's handle is identity-stable; that param's mask bits read
+  Static. Use this for `onClick` / `onValueChange` / `onCheckedChange`.
+- **`Modifier.StructuralKey`** — `Modifier.cs` factories and
+  `ModifierExtensions.cs` ops record `(string OpName, object? Args)` alongside
+  each closure so two chains with the same semantic ops hash equal even when
+  their captured-locals closures don't. Currently the facade generator leaves
+  the modifier slot at Uncertain (`0`) — the Kotlin runtime still does its
+  own input compare. Capturing the structural key into a slot via DiffSlot
+  is a follow-up (would need to flow `_prepended`/`_appended` side-channels
+  too).
+
+### Adding a new `[ComposeBridge]` `@Composable`
+
+Append `int _changed = 0` as the **trailing** partial-method param (after
+`IComposer composer`). The bridge generator writes it into the first JNI
+`$changed` slot in place of literal 0. Without `_changed`, every slot stays
+0 (Uncertain — current pre-bitmask behaviour, never wrong, just slower).
+
+```csharp
+[ComposeBridge(/* … */)]
+public static partial void Button(IFunction0 onClick, /* … */,
+                                  IComposer composer, int _changed = 0);
+```
+
+### `[ComposeFacade]` plumbing
+
+The facade generator emits `__changed` into Render automatically when the
+bridge declares the trailing `int _changed = 0`. Per-slot contribution table:
+
+| Slot kind                         | Contribution                                          |
+|-----------------------------------|-------------------------------------------------------|
+| `IModifier?` (BuildModifier)      | Uncertain (0) — currently deferred                    |
+| `Action` → `IFunction0`           | `Static << bit` (RememberAction-stable peer)          |
+| `Action<T>` → `IFunction1`        | `Static << bit` (RememberAction-stable peer)          |
+| `IFunction2`/`IFunction3` content | `Static << bit` (Wrap2/Wrap3 are identity-stable)     |
+| `IntPtr` scope receiver           | `Static << bit` (consumed by bridge, not param-id)    |
+| `IntPtr` + `[PainterResource]`    | `DiffSlot` on resolved IntPtr                         |
+| `IntPtr` + `[StateHolder]`        | `DiffSlot` on wrapper.Jvm reference                   |
+| Value types / primitives / refs   | `DiffSlot<T>` via `EqualityComparer<T>.Default`       |
+
+Bit position: `bit = 1 + paramIndex * 3` over user params **excluding**
+composer/defaults/scope-receiver/_changed. Up to 10 user params per int —
+no current bridge exceeds that.
+
+The bridge call switches to **named arguments** (`composer: composer,
+_changed: __changed`) when the bridge has the trailing optional, so the
+optional doesn't reorder positionally against composer. Without `_changed`,
+positional emission is preserved (back-compat with all existing pin tests).
+
+### Hand-written facade holdouts
+
+Facades not driven by `[ComposeFacade]` (TextField, BottomSheetScaffold,
+SnackbarHost, SegmentedButton, SearchBar family) currently default
+`_changed: 0` (Uncertain) — back-compat, never incorrect. Opting one in is
+a one-line change: compute a per-param mask in Render via `DiffSlot` /
+`RememberAction`, pass `_changed: __changed` to the bridge.
+
+### Don't regress correctness
+
+When in doubt emit `Uncertain` (0) — the runtime falls back to its own
+input compare. The whole point is to never silently skip a real change.
+A new Modifier extension that captures something not value-equatable
+(delegate, IntPtr from a `[StateHolder]`, …) should record an opaque
+`object` in its `StructuralKey` arg slot — falls back to reference
+equality on that op, returns Different, no skip. Correct.
+
 ## Bindings policy
 
 Reference official NuGets only: `Xamarin.AndroidX.Compose.*` and

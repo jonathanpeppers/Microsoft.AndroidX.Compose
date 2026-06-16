@@ -196,6 +196,21 @@ public class FacadeGeneratorTests
                 public static System.IntPtr ModifierHandle(global::AndroidX.Compose.UI.IModifier? m) => default;
                 public static System.IntPtr PainterResource(int id, global::AndroidX.Compose.Runtime.IComposer composer) => default;
             }
+            public enum ChangedBits { Uncertain = 0, Same = 1, Different = 2, Static = 4 }
+            public static class ComposerDiffExtensions
+            {
+                public static int DiffSlot<T>(this global::AndroidX.Compose.Runtime.IComposer composer, T value, int bitOffset,
+                    [System.Runtime.CompilerServices.CallerLineNumber] int line = 0,
+                    [System.Runtime.CompilerServices.CallerFilePath] string file = "") => 0;
+                public static Kotlin.Jvm.Functions.IFunction0 RememberAction(
+                    this global::AndroidX.Compose.Runtime.IComposer composer, System.Action action,
+                    [System.Runtime.CompilerServices.CallerLineNumber] int line = 0,
+                    [System.Runtime.CompilerServices.CallerFilePath] string file = "") => null!;
+                public static Kotlin.Jvm.Functions.IFunction1 RememberAction<T>(
+                    this global::AndroidX.Compose.Runtime.IComposer composer, System.Action<T> action,
+                    [System.Runtime.CompilerServices.CallerLineNumber] int line = 0,
+                    [System.Runtime.CompilerServices.CallerFilePath] string file = "") => null!;
+            }
         }
         """;
 
@@ -3899,5 +3914,103 @@ public class FacadeGeneratorTests
             """;
         var (_, diags, _) = Run(code, "Icon");
         Assert.Contains(diags, d => d.Id == "CN3012" && d.Severity == DiagnosticSeverity.Error);
+    }
+
+    [Fact]
+    public void Changed_TrailingChangedParam_EmitsMaskAndNamedComposerArg()
+    {
+        // Phase X — the new $changed plumbing. When the bridge declares
+        // an optional trailing `int _changed = 0`, the facade generator:
+        //   * hoists __modifier (so it's available regardless of slot
+        //     classification — the modifier slot itself is left at
+        //     Uncertain in the mask, conservatively),
+        //   * routes Action callbacks through composer.RememberAction
+        //     so the JCW peer's JNI handle stays identity-stable
+        //     across renders (its $changed bit reads Static),
+        //   * computes a per-slot __changed mask, ORing
+        //     ChangedBits.Static for content/onClick slots, and
+        //     leaving 0 for the modifier slot,
+        //   * passes `composer:` and `_changed:` as named args so the
+        //     trailing optional doesn't reorder against composer.
+        var code = $$"""
+            using global::AndroidX.Compose.Runtime;
+            using global::AndroidX.Compose.UI;
+            using AndroidX.Compose;
+            using Kotlin.Jvm.Functions;
+
+            {{ButtonAttrs}}
+
+            namespace AndroidX.Compose
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(Class="androidx/compose/material3/ButtonKt", JvmName="Button",
+                                   Signature="{{ButtonSig}}", Defaults=typeof(ButtonDefault))]
+                    [ComposeFacade]
+                    public static partial void Button(IFunction0 onClick, IModifier? modifier,
+                                                      IFunction3 content, IComposer composer, int _changed = 0);
+                }
+            }
+            """;
+
+        var (output, diags, emitted) = Run(code, "Button");
+        Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+
+        // RememberAction stabilizes the onClick wrapper.
+        Assert.Contains("var __onClick = composer.RememberAction(_onClick);", emitted);
+        // __modifier is hoisted up front (so the rest of Render can
+        // reference it).
+        Assert.Contains("var __modifier = BuildModifier();", emitted);
+        // __changed mask is computed.
+        Assert.Contains("int __changed = 0;", emitted);
+        // onClick contributes Static at bit 1 (param 0).
+        Assert.Contains("__changed |= (int)global::AndroidX.Compose.ChangedBits.Static << 1;", emitted);
+        // content (param 2) contributes Static at bit 7.
+        Assert.Contains("__changed |= (int)global::AndroidX.Compose.ChangedBits.Static << 7;", emitted);
+        // Bridge call uses named composer + _changed args.
+        Assert.Contains("composer: composer, _changed: __changed", emitted);
+
+        var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
+        Assert.Empty(errors);
+    }
+
+    [Fact]
+    public void Changed_NoChangedParam_EmitsLegacyPositionalCall()
+    {
+        // Back-compat — bridges without the trailing `_changed` param
+        // still emit the legacy positional bridge call (no named-arg
+        // overhead, no RememberAction hoist, no __changed local). This
+        // test guards against accidental regression of the old shape.
+        var code = $$"""
+            using global::AndroidX.Compose.Runtime;
+            using global::AndroidX.Compose.UI;
+            using AndroidX.Compose;
+            using Kotlin.Jvm.Functions;
+
+            {{ButtonAttrs}}
+
+            namespace AndroidX.Compose
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(Class="androidx/compose/material3/ButtonKt", JvmName="Button",
+                                   Signature="{{ButtonSig}}", Defaults=typeof(ButtonDefault))]
+                    [ComposeFacade]
+                    public static partial void Button(IFunction0 onClick, IModifier? modifier,
+                                                      IFunction3 content, IComposer composer);
+                }
+            }
+            """;
+
+        var (output, diags, emitted) = Run(code, "Button");
+        Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+        Assert.DoesNotContain("__changed", emitted);
+        Assert.DoesNotContain("RememberAction", emitted);
+        Assert.Contains("global::AndroidX.Compose.ComposeBridges.Button(__onClick, BuildModifier(), __content, composer);", emitted);
+
+        var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
+        Assert.Empty(errors);
     }
 }

@@ -40,7 +40,8 @@ namespace AndroidX.Compose;
 public sealed class Modifier
 {
     static readonly Func<IntPtr, IntPtr>[] EmptyOps = Array.Empty<Func<IntPtr, IntPtr>>();
-    static readonly Modifier _companion = new Modifier(EmptyOps);
+    static readonly ModifierOpKey[] EmptyKeys = Array.Empty<ModifierOpKey>();
+    static readonly Modifier _companion = new Modifier(EmptyOps, EmptyKeys);
 
     /// <summary>
     /// The empty Modifier — entry point for the fluent chain.
@@ -50,19 +51,45 @@ public sealed class Modifier
     public static Modifier Companion => _companion;
 
     readonly Func<IntPtr, IntPtr>[] _ops;
+    readonly ModifierOpKey[] _keys;
 
-    Modifier(Func<IntPtr, IntPtr>[] ops)
+    Modifier(Func<IntPtr, IntPtr>[] ops, ModifierOpKey[] keys)
     {
         _ops = ops;
+        _keys = keys;
     }
 
-    internal Modifier Append(Func<IntPtr, IntPtr> op)
+    /// <summary>
+    /// Append <paramref name="op"/> and a matching structural
+    /// <paramref name="key"/>. Two <see cref="Modifier"/> chains built
+    /// from the same op factories with the same args produce equal
+    /// <see cref="StructuralKey"/> sequences, so
+    /// <see cref="ComposeExtensions.DiffSlot{T}(AndroidX.Compose.Runtime.IComposer, T, int, int, string)"/>
+    /// can read them as <see cref="ChangedBits.Same"/> across
+    /// recompositions and Kotlin can take the skip path.
+    /// </summary>
+    internal Modifier Append(Func<IntPtr, IntPtr> op, ModifierOpKey key)
     {
-        var arr = new Func<IntPtr, IntPtr>[_ops.Length + 1];
-        Array.Copy(_ops, arr, _ops.Length);
-        arr[_ops.Length] = op;
-        return new Modifier(arr);
+        var ops = new Func<IntPtr, IntPtr>[_ops.Length + 1];
+        var keys = new ModifierOpKey[_keys.Length + 1];
+        Array.Copy(_ops, ops, _ops.Length);
+        Array.Copy(_keys, keys, _keys.Length);
+        ops[_ops.Length] = op;
+        keys[_keys.Length] = key;
+        return new Modifier(ops, keys);
     }
+
+    /// <summary>
+    /// Append an op without a structural key; the resulting chain
+    /// always reads as <see cref="ChangedBits.Different"/> on diff
+    /// (conservative — never wrongly skips, may miss a skip
+    /// opportunity). Use the keyed
+    /// <see cref="Append(Func{IntPtr, IntPtr}, ModifierOpKey)"/> overload
+    /// when the op's args are deterministic from the public factory's
+    /// inputs.
+    /// </summary>
+    internal Modifier Append(Func<IntPtr, IntPtr> op) =>
+        Append(op, ModifierOpKey.Opaque);
 
     /// <summary>
     /// Concatenate <paramref name="other"/> onto this chain, returning
@@ -75,11 +102,27 @@ public sealed class Modifier
         ArgumentNullException.ThrowIfNull(other);
         if (other._ops.Length == 0) return this;
         if (_ops.Length == 0) return other;
-        var arr = new Func<IntPtr, IntPtr>[_ops.Length + other._ops.Length];
-        Array.Copy(_ops, arr, _ops.Length);
-        Array.Copy(other._ops, 0, arr, _ops.Length, other._ops.Length);
-        return new Modifier(arr);
+        var ops = new Func<IntPtr, IntPtr>[_ops.Length + other._ops.Length];
+        var keys = new ModifierOpKey[_keys.Length + other._keys.Length];
+        Array.Copy(_ops, ops, _ops.Length);
+        Array.Copy(other._ops, 0, ops, _ops.Length, other._ops.Length);
+        Array.Copy(_keys, keys, _keys.Length);
+        Array.Copy(other._keys, 0, keys, _keys.Length, other._keys.Length);
+        return new Modifier(ops, keys);
     }
+
+    /// <summary>
+    /// Structural fingerprint of every op in this chain in chain order.
+    /// Pass to
+    /// <see cref="ComposeExtensions.DiffSlot{T}(AndroidX.Compose.Runtime.IComposer, T, int, int, string)"/>
+    /// to make the modifier slot's <c>$changed</c> contribution skip
+    /// recomposition when the chain is structurally identical to the
+    /// previous render. Uses a <see cref="ModifierStructuralKey"/>
+    /// wrapper so element-wise equality (including opaque keys, which
+    /// always compare unequal) is preserved.
+    /// </summary>
+    internal ModifierStructuralKey StructuralKey =>
+        new ModifierStructuralKey(_keys);
 
     // ---- Static chain entry points (factories) ----
     //
@@ -347,7 +390,8 @@ public sealed class Modifier
     /// composables that receive a runtime <c>PaddingValues</c> need it.
     /// </summary>
     internal Modifier Padding(IntPtr paddingValues) =>
-        Append(curr => ComposeBridges.ModifierPaddingValues(curr, paddingValues));
+        Append(curr => ComposeBridges.ModifierPaddingValues(curr, paddingValues),
+            new ModifierOpKey("PaddingValuesIntPtr", paddingValues));
 
     /// <summary>
     /// Materialize the chain into a managed <c>IModifier</c> wrapper.
