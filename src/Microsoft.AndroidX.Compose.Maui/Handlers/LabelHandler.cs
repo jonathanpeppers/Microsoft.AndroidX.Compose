@@ -113,9 +113,47 @@ public partial class LabelHandler : ComposeElementHandler<ILabel>
         // Subscribe so padding mapper bumps re-run BuildNode.
         _ = _paddingVersion.Value;
         var padding = virtualView.Padding;
+
+        // Resolve the text color. Three paths:
+        //
+        //  1. MAUI's `TextColor` is set → use it verbatim (the most
+        //     common case; users who care set this explicitly).
+        //  2. `TextColor` is null AND we know the app's active theme
+        //     via the inherited <see cref="Theme"/> cache → pick
+        //     `White` on dark / `Black` on light. This mirrors what
+        //     MAUI's stock `LabelHandler` does (it reads
+        //     `Resources.GetColorStateList` for the active
+        //     configuration) and — critically — fixes #248: when our
+        //     `LabelHandler` runs as a Compose leaf inside a stock
+        //     host (e.g. `Shell`'s built-in `FlyoutItem` template),
+        //     there's no enclosing `MaterialTheme` / `Surface` to set
+        //     `LocalContentColor`. Without an explicit color,
+        //     Compose's `Text` would fall through to
+        //     `LocalContentColor.current` which defaults to
+        //     `Color.Black` — black-on-dark in dark mode, invisible.
+        //  3. No `ThemeManager` registered (consumer skipped
+        //     `UseAndroidXCompose`) → fall through with `null` so
+        //     `Text` keeps its pre-existing inherited-from-
+        //     `LocalContentColor` behaviour.
+        //
+        // Reading `Theme.IsDark.Value` inside the composable scope
+        // registers a snapshot read, so flipping the MAUI theme at
+        // runtime recomposes the label against the new fallback.
+        ComposeColor? color;
+        if (packed.HasValue)
+        {
+            color = new ComposeColor(packed.Value);
+        }
+        else
+        {
+            color = Theme is null
+                ? null
+                : Theme.IsDark.Value ? ComposeColor.White : ComposeColor.Black;
+        }
+
         var text = new ComposeText(_text.Value)
         {
-            Color      = packed.HasValue ? new ComposeColor(packed.Value) : null,
+            Color      = color,
             FontSize   = size.HasValue ? new Sp(size.Value) : null,
             FontWeight = bold ? ComposeFontWeight.Bold : null,
             Align      = align switch
