@@ -150,6 +150,11 @@ public partial class HomePage : ContentPage
                 "Push / pop a modal `NavigationPage` rendered through Compose's Material 3 `Scaffold` + `TopAppBar`.",
                 Color.FromArgb("#1565C0"),
                 "navigation"),
+            new DemoEntry(
+                "ScrollBar visibility",
+                "ScrollView Default / Always / Never overlay scrollbar, vertical + horizontal.",
+                Color.FromArgb("#1976D2"),
+                "scroll-bars"),
 
             // ---- Phase 5 — self-drawing AndroidView fallback ----
             //
