@@ -21,15 +21,15 @@ public sealed class Email
     {
         Id          = id;
         Sender      = sender;
-        Recipients  = recipients  ?? Array.Empty<Account>();
+        Recipients  = recipients  ?? [];
         Subject     = subject;
         Body        = body;
-        Attachments = attachments ?? Array.Empty<EmailAttachment>();
+        Attachments = attachments ?? [];
         IsImportant = isImportant;
         IsStarred   = isStarred;
         Mailbox     = mailbox;
         CreatedAt   = createdAt;
-        Threads     = threads     ?? Array.Empty<Email>();
+        Threads     = threads     ?? [];
     }
 
     /// <summary>Stable identity used by <c>LazyColumn</c> keys.</summary>

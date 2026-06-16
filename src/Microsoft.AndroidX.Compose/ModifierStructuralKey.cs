@@ -15,7 +15,7 @@ internal readonly struct ModifierStructuralKey : IEquatable<ModifierStructuralKe
 
     internal ModifierStructuralKey(ModifierOpKey[] keys)
     {
-        _keys = keys ?? Array.Empty<ModifierOpKey>();
+        _keys = keys ?? [];
     }
 
     /// <summary>Number of ops in the chain.</summary>

@@ -486,7 +486,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             callerProvidesDefaults, callerProvidesChanged, defaultsParam, defaults, defaultsType?.Name, themeColor, colorSlot,
             userParams, branchInfo, indexedChildren, secondaryCtorInfo);
         var hint = $"AndroidX.Compose.Facade.{className}.g.cs";
-        return new GenerationResult(source, hint, Array.Empty<Diagnostic>());
+        return new GenerationResult(source, hint, []);
     }
 
     static BranchInfo? BuildBranchInfo(Context c, IMethodSymbol primary,
@@ -1038,7 +1038,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             var rememberUserParams = rememberFit.Parameters
                 .Take(rememberFit.Parameters.Length - 1)
                 .ToArray();
-            string[] rememberArgExpressions = System.Array.Empty<string>();
+            string[] rememberArgExpressions = [];
             var confirmInfos = new List<ConfirmStateChangeInfo>();
             if (rememberUserParams.Length > 0)
             {
@@ -2726,9 +2726,9 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             RememberMethodName = rememberMethodName;
             StateWrapperType = stateWrapperType;
             StateJvmType = stateJvmType;
-            RememberArgExpressions = rememberArgExpressions ?? System.Array.Empty<string>();
+            RememberArgExpressions = rememberArgExpressions ?? [];
             SharedState = sharedState;
-            ConfirmStateChanges = confirmStateChanges ?? System.Array.Empty<ConfirmStateChangeInfo>();
+            ConfirmStateChanges = confirmStateChanges ?? [];
         }
         public IParameterSymbol Param { get; }
         public FacadeSlotKind Kind { get; }

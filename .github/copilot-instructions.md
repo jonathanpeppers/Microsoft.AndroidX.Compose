@@ -1226,6 +1226,20 @@ Confirm render, contrast, layout, no crash.
   `if (x is null) throw new ArgumentNullException(nameof(x));`. Applies to
   net10.0 / net10.0-android projects only; the netstandard2.0 source
   generator doesn't have `ThrowIfNull`.
+- **Always use collection expressions (`[]`) for empty arrays/lists, never
+  `Array.Empty<T>()`.** All projects target `<LangVersion>latest</LangVersion>`
+  on a modern compiler so the C# 12 collection-expression literal lowers
+  to the same `Array.Empty<T>()` cached singleton at runtime — same byte-
+  for-byte allocation, fewer characters, no `using System;` round-trip
+  for files that only used `Array.Empty`. Same rule for non-empty
+  literals: `[a, b, c]` rather than `new[] { a, b, c }` /
+  `new List<T> { a, b, c }`. Compose chained allocations via the spread
+  operator: `new T[](_keys.Length + 1) { ... ArrayCopy ... }` →
+  `[.._keys, key]`. Two carve-outs: `var x = []` (no target type — keep
+  `Array.Empty<T>()` or annotate) and `params T[] args = []` on
+  netstandard2.0 surfaces (`params` arrays don't yet support the literal
+  there). Sweep the file's `using System;` after removing the last
+  `Array.Empty` consumer; the IDE0005 analyzer will flag stragglers.
 - **Never use the `!` (null-forgiving postfix) operator.** When a
   property, field, or expression is typed as nullable but the runtime
   contract guarantees it's non-null at the use site, copy it to a local

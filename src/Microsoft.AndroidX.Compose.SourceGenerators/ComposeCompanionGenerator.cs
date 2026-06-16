@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -225,7 +224,7 @@ public sealed class ComposeCompanionGenerator : IIncrementalGenerator
 
         var source = ComposeCompanionEmitter.Emit(@namespace, classSymbol.Name, outerJniClass, inlineClass, getters);
         var hint = $"AndroidX.Compose.Companion.{classSymbol.Name}.g.cs";
-        return new GenerationResult(source, hint, Array.Empty<Diagnostic>());
+        return new GenerationResult(source, hint, []);
     }
 
     static bool IsDeclaredPartial(IPropertySymbol prop) =>

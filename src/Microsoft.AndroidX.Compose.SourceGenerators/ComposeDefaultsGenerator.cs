@@ -121,7 +121,7 @@ public sealed class ComposeDefaultsGenerator : IIncrementalGenerator
         var slots = ComposeDefaultsEmitter.SlotsFromSymbol(method, composerIndex);
         var sourceComment = $"{containingType.ToDisplayString()}.{method.Name}";
         var source = ComposeDefaultsEmitter.Emit(enumName, sourceComment, slots);
-        return new GenerationResult(source, $"AndroidX.Compose.{enumName}.g.cs", Array.Empty<Diagnostic>());
+        return new GenerationResult(source, $"AndroidX.Compose.{enumName}.g.cs", []);
     }
 
     static GenerationResult BuildFromNames(AttributeData attr)
@@ -150,7 +150,7 @@ public sealed class ComposeDefaultsGenerator : IIncrementalGenerator
 
         var slots = ComposeDefaultsEmitter.SlotsFromNames(names);
         var source = ComposeDefaultsEmitter.Emit(enumName, $"declarative names for '{enumName}'", slots);
-        return new GenerationResult(source, $"AndroidX.Compose.{enumName}.g.cs", Array.Empty<Diagnostic>());
+        return new GenerationResult(source, $"AndroidX.Compose.{enumName}.g.cs", []);
     }
 
     internal static bool IsComposer(ITypeSymbol type) =>

@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 
 namespace AndroidX.Compose.SourceGenerators;
@@ -18,7 +17,7 @@ internal static class JniSignature
     /// </summary>
     public static bool TryParse(string signature, out IReadOnlyList<JniType> parameters, out string returnType, out string? error)
     {
-        parameters = Array.Empty<JniType>();
+        parameters = [];
         returnType = string.Empty;
         error = null;
 

@@ -399,7 +399,7 @@ public partial class CollectionViewHandler : ComposeElementHandler<MauiCollectio
     static IReadOnlyList<object> Snapshot(IEnumerable? source)
     {
         if (source is null)
-            return Array.Empty<object>();
+            return [];
 
         if (source is IReadOnlyList<object> roList)
             return roList;

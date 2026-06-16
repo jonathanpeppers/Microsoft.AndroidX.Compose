@@ -91,7 +91,7 @@ public partial class NavigationPageHandler : ViewHandler<IStackNavigationView, C
     // RequestNavigation call. Read inside Build *after* registering a
     // snapshot read on _stackVersion so writes here always trigger a
     // recomposition.
-    IReadOnlyList<IView> _stack = Array.Empty<IView>();
+    IReadOnlyList<IView> _stack = [];
 
     // Cached singleton resolved at CreatePlatformView time so Build
     // can wrap its Scaffold in a MaterialTheme that flips with MAUI's

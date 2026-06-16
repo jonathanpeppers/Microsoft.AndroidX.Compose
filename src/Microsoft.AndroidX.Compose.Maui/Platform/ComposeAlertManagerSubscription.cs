@@ -346,7 +346,7 @@ public class ComposeAlertManagerSubscription : DispatchProxy
         // Snapshot the buttons collection — it's `IEnumerable<string>`
         // and we read it from the Compose composition (potentially
         // multiple recompositions).
-        var buttons = (args.Buttons ?? Array.Empty<string>()).ToArray();
+        var buttons = (args.Buttons ?? []).ToArray();
 
         ShowOnUiThread(activity, (overlay, dismiss) =>
         {

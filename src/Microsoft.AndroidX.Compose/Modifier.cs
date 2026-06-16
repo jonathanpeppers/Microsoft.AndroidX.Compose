@@ -40,7 +40,7 @@ namespace AndroidX.Compose;
 public sealed class Modifier
 {
     static readonly Func<IntPtr, IntPtr>[] EmptyOps = Array.Empty<Func<IntPtr, IntPtr>>();
-    static readonly ModifierOpKey[] EmptyKeys = Array.Empty<ModifierOpKey>();
+    static readonly ModifierOpKey[] EmptyKeys = [];
     static readonly Modifier _companion = new Modifier(EmptyOps, EmptyKeys);
 
     /// <summary>

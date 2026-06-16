@@ -265,7 +265,7 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
             var arr = match.ConstructorArguments[1];
             kotlinNames = arr.Kind == TypedConstantKind.Array
                 ? arr.Values.Select(v => v.Value as string ?? string.Empty).ToArray()
-                : Array.Empty<string>();
+                : [];
         }
         else if (defaultsType is not null)
         {
@@ -275,7 +275,7 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
         }
         else
         {
-            kotlinNames = Array.Empty<string>();
+            kotlinNames = [];
         }
 
         // C# parameter walk. For composable shapes the last param must be
@@ -535,7 +535,7 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
             hasComposerSlot, extensionWithDefault, instanceField, isConstructor,
             isSuspend, isInstanceSuspend, instanceReceiverParam, continuationParam, continuationSlotIdx);
         var hint = $"AndroidX.Compose.{method.ContainingType.Name}.{method.Name}.g.cs";
-        return new GenerationResult(source, hint, Array.Empty<Diagnostic>());
+        return new GenerationResult(source, hint, []);
     }
 
     static GenerationResult ConstructorError(Location loc, string methodName, string message) =>
