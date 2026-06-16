@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="Microsoft.AndroidX.Compose.Maui.Sample.Pages.VerticalAlignmentPage"
+             Title="Vertical alignment">
+
+    <!--
+        Exercises `VerticalTextAlignment` on every text-input handler
+        wired in this backend (Label, Entry, Editor, SearchBar, Picker).
+        Each control sits inside a fixed-height pink frame so the
+        difference between Start (top) / Center / End (bottom) is
+        visible at a glance — the natural row height is much smaller
+        than the allocated 96-180 dp box.
+    -->
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="14">
+
+            <Label Text="VerticalTextAlignment"
+                   Style="{StaticResource Headline}" />
+            <Label Text="Each control fills a fixed-height pink frame so Start (top), Center, and End (bottom) are visibly distinct. Default for Label is Start; the rest default to Center."
+                   FontSize="13"
+                   TextColor="{AppThemeBinding Light={StaticResource Gray500}, Dark={StaticResource Gray300}}" />
+
+            <!-- ===== Label ===== -->
+            <Label Text="Label" FontAttributes="Bold" FontSize="16" />
+            <Border Stroke="#E91E63" StrokeThickness="1" Background="#FFE6F0">
+                <Grid HeightRequest="120" ColumnDefinitions="*,*,*" ColumnSpacing="0">
+                    <Label Grid.Column="0"
+                           Text="Start"
+                           VerticalTextAlignment="Start"
+                           HorizontalTextAlignment="Center"
+                           HorizontalOptions="Fill"
+                           VerticalOptions="Fill"
+                           BackgroundColor="#FFF5F5"
+                           TextColor="Black" />
+                    <Label Grid.Column="1"
+                           Text="Center"
+                           VerticalTextAlignment="Center"
+                           HorizontalTextAlignment="Center"
+                           HorizontalOptions="Fill"
+                           VerticalOptions="Fill"
+                           BackgroundColor="#FFEBEE"
+                           TextColor="Black" />
+                    <Label Grid.Column="2"
+                           Text="End"
+                           VerticalTextAlignment="End"
+                           HorizontalTextAlignment="Center"
+                           HorizontalOptions="Fill"
+                           VerticalOptions="Fill"
+                           BackgroundColor="#FFCDD2"
+                           TextColor="Black" />
+                </Grid>
+            </Border>
+
+            <!-- ===== Entry ===== -->
+            <Label Text="Entry" FontAttributes="Bold" FontSize="16" />
+            <Grid ColumnDefinitions="*,*,*" ColumnSpacing="8">
+                <Entry Grid.Column="0"
+                       HeightRequest="120"
+                       VerticalTextAlignment="Start"
+                       Placeholder="Start"
+                       Text="Start" />
+                <Entry Grid.Column="1"
+                       HeightRequest="120"
+                       VerticalTextAlignment="Center"
+                       Placeholder="Center"
+                       Text="Center" />
+                <Entry Grid.Column="2"
+                       HeightRequest="120"
+                       VerticalTextAlignment="End"
+                       Placeholder="End"
+                       Text="End" />
+            </Grid>
+
+            <!-- ===== Editor ===== -->
+            <Label Text="Editor" FontAttributes="Bold" FontSize="16" />
+            <Grid ColumnDefinitions="*,*,*" ColumnSpacing="8">
+                <Editor Grid.Column="0"
+                        HeightRequest="180"
+                        VerticalTextAlignment="Start"
+                        Placeholder="Start"
+                        Text="Start" />
+                <Editor Grid.Column="1"
+                        HeightRequest="180"
+                        VerticalTextAlignment="Center"
+                        Placeholder="Center"
+                        Text="Center" />
+                <Editor Grid.Column="2"
+                        HeightRequest="180"
+                        VerticalTextAlignment="End"
+                        Placeholder="End"
+                        Text="End" />
+            </Grid>
+
+            <!-- ===== SearchBar ===== -->
+            <Label Text="SearchBar" FontAttributes="Bold" FontSize="16" />
+            <SearchBar HeightRequest="120"
+                       VerticalTextAlignment="Start"
+                       Placeholder="Start"
+                       Text="Start" />
+            <SearchBar HeightRequest="120"
+                       VerticalTextAlignment="Center"
+                       Placeholder="Center"
+                       Text="Center" />
+            <SearchBar HeightRequest="120"
+                       VerticalTextAlignment="End"
+                       Placeholder="End"
+                       Text="End" />
+
+            <!-- ===== Picker ===== -->
+            <Label Text="Picker" FontAttributes="Bold" FontSize="16" />
+            <Grid ColumnDefinitions="*,*,*" ColumnSpacing="8">
+                <Picker Grid.Column="0"
+                        HeightRequest="120"
+                        VerticalTextAlignment="Start"
+                        Title="Start" />
+                <Picker Grid.Column="1"
+                        HeightRequest="120"
+                        VerticalTextAlignment="Center"
+                        Title="Center" />
+                <Picker Grid.Column="2"
+                        HeightRequest="120"
+                        VerticalTextAlignment="End"
+                        Title="End" />
+            </Grid>
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

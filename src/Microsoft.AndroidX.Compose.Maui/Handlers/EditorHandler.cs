@@ -63,10 +63,7 @@ public partial class EditorHandler : ComposeElementHandler<IEditor>
             [nameof(ITextInput.CursorPosition)]             = MapCursorPosition,
             [nameof(ITextInput.SelectionLength)]            = MapSelectionLength,
             [nameof(ITextAlignment.HorizontalTextAlignment)] = MapHorizontalTextAlignment,
-            // TODO: VerticalTextAlignment — Compose's Box facade doesn't
-            // expose the `contentAlignment` slot (always passes null), so
-            // we can't wrap the OutlinedTextField and align it. Leaving
-            // unmapped instead of wiring a no-op mapper.
+            [nameof(ITextAlignment.VerticalTextAlignment)]   = MapVerticalTextAlignment,
             [nameof(IView.HorizontalLayoutAlignment)]       = MapHorizontalLayoutAlignment,
         };
 
@@ -86,6 +83,7 @@ public partial class EditorHandler : ComposeElementHandler<IEditor>
     readonly MutableState<int>    _maxLength        = new(-1);
     readonly MutableState<float?> _letterSpacing    = new((float?)null);
     readonly MutableState<int>    _hTextAlign       = new((int)TextAlignment.Start);
+    readonly MutableState<int>    _vTextAlign       = new((int)TextAlignment.Start);
     readonly MutableState<bool>   _fillWidth        = new(false);
 
     /// <summary>Construct a handler with the default mappers.</summary>
@@ -155,10 +153,14 @@ public partial class EditorHandler : ComposeElementHandler<IEditor>
 
         // Tall default — feels like an editor, not a one-line entry.
         // Stack on top of any caller-supplied modifier (Layout chains).
+        var vAlign = (TextAlignment)_vTextAlign.Value;
         var modifier = Modifier.HeightIn(min: new Dp(96));
         if (fill)
             modifier = modifier.FillMaxWidth();
-        modifier = modifier.ApplyGestures(virtualView, MauiContext).ApplySemantics(virtualView);
+        modifier = modifier
+            .ApplyGestures(virtualView, MauiContext)
+            .ApplySemantics(virtualView)
+            .ApplyVerticalTextAlignment(vAlign);
         field.PrependModifier(modifier);
         return field;
     }
@@ -257,6 +259,17 @@ public partial class EditorHandler : ComposeElementHandler<IEditor>
     /// <summary>Map <see cref="ITextAlignment.HorizontalTextAlignment"/> to Compose <c>textAlign</c>.</summary>
     public static void MapHorizontalTextAlignment(EditorHandler handler, IEditor editor) =>
         handler._hTextAlign.Value = (int)editor.HorizontalTextAlignment;
+
+    /// <summary>
+    /// Map <see cref="ITextAlignment.VerticalTextAlignment"/> to a
+    /// <c>Modifier.wrapContentHeight(Alignment.Vertical)</c> on the
+    /// outer modifier so the multi-line text top/center/bottom-aligns
+    /// inside the editor's allocated height. Has a visible effect when
+    /// the editor's height exceeds the natural text height (always for
+    /// editors with an explicit <c>HeightRequest</c>).
+    /// </summary>
+    public static void MapVerticalTextAlignment(EditorHandler handler, IEditor editor) =>
+        handler._vTextAlign.Value = (int)editor.VerticalTextAlignment;
 
     /// <summary>
     /// Map <see cref="IView.HorizontalLayoutAlignment"/> to

@@ -2171,6 +2171,20 @@ internal static partial class ComposeBridges
         Defaults  = typeof(ModifierWrapContentHeightDefault))]
     internal static partial IntPtr ModifierWrapContentHeight(IntPtr modifier, bool unbounded);
 
+    // Sibling of ModifierWrapContentHeight that takes an explicit
+    // Alignment.Vertical. Reuses ModifierWrapContentHeightDefault — slot 0
+    // ("align") clears when the C# caller passes a non-null alignment, so
+    // Kotlin uses our value; null leaves it set so Kotlin's default
+    // (CenterVertically) applies.
+    [ComposeBridge(
+        Class     = "androidx/compose/foundation/layout/SizeKt",
+        JvmName   = "wrapContentHeight$default",
+        Signature = "(Landroidx/compose/ui/Modifier;Landroidx/compose/ui/Alignment$Vertical;ZILjava/lang/Object;)" +
+                    "Landroidx/compose/ui/Modifier;",
+        Defaults  = typeof(ModifierWrapContentHeightDefault))]
+    internal static partial IntPtr ModifierWrapContentHeightAligned(
+        IntPtr modifier, IAlignmentVertical? align, bool unbounded);
+
     // androidx.compose.foundation.layout.AspectRatioKt.aspectRatio$default —
     // (Modifier, Float ratio, Boolean matchHeightConstraintsFirst). Both
     // params are non-inline so the JVM name is unmangled. Both bits are
@@ -3726,20 +3740,21 @@ internal static partial class ComposeBridges
 
     [ComposeFacade(Defaults = typeof(RadioButtonDefault))]
     public static partial void RadioButton(
-        bool        selected,
-        IFunction0  onClick,
-        IModifier?  modifier,
-        bool        enabled  = true,
-        int         defaults = 0,
-        IComposer   composer = null!);
+        bool                                       selected,
+        IFunction0                                 onClick,
+        IModifier?                                 modifier,
+        bool                                       enabled  = true,
+        AndroidX.Compose.Material3.RadioButtonColors? colors = null,
+        int                                        defaults = 0,
+        IComposer                                  composer = null!);
 
-    public static partial void RadioButton(bool selected, IFunction0 onClick, IModifier? modifier, bool enabled, int defaults, IComposer composer)
+    public static partial void RadioButton(bool selected, IFunction0 onClick, IModifier? modifier, bool enabled, AndroidX.Compose.Material3.RadioButtonColors? colors, int defaults, IComposer composer)
         => RadioButtonKt.RadioButton(
             selected:          selected,
             onClick:           onClick,
             modifier:          modifier,
             enabled:           enabled,
-            colors:            null,
+            colors:            colors,
             interactionSource: null,
             _composer:         composer,
             p7:                0,

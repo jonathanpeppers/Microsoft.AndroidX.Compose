@@ -45,15 +45,11 @@ public partial class LabelHandler : ComposeElementHandler<ILabel>
             [nameof(ITextStyle.CharacterSpacing)]     = MapCharacterSpacing,
             [nameof(ITextStyle.Font)]                 = MapFont,
             [nameof(ILabel.HorizontalTextAlignment)]  = MapHorizontalTextAlignment,
+            [nameof(ILabel.VerticalTextAlignment)]    = MapVerticalTextAlignment,
             [nameof(ILabel.LineHeight)]               = MapLineHeight,
             [nameof(ILabel.TextDecorations)]          = MapTextDecorations,
             [nameof(IPadding.Padding)]                = MapPadding,
             [nameof(IView.HorizontalLayoutAlignment)] = MapHorizontalLayoutAlignment,
-            // TODO: VerticalTextAlignment — requires wrapping the Text in a
-            // Box whose `contentAlignment` slot is set; our Box facade
-            // currently doesn't expose `contentAlignment` so we can't drive
-            // it without a generator change. In stock MAUI this only has a
-            // visible effect when the Label has an explicit Height anyway.
         };
 
     /// <summary>Command mapper (inherits view-level commands; no extras).</summary>
@@ -68,6 +64,7 @@ public partial class LabelHandler : ComposeElementHandler<ILabel>
     // (IMutableIntState) path; the generic boxed path doesn't recognise
     // user-defined enums and would throw NotSupportedException at ctor time.
     readonly MutableState<int>         _hTextAlign = new((int)TextAlignment.Start);
+    readonly MutableState<int>         _vTextAlign = new((int)TextAlignment.Start);
     readonly MutableState<bool>        _fillWidth = new(false);
     // CharacterSpacing in MAUI is "em"-ish (0..1 typically). Packed via the
     // Sp(1) * float overload because Sp has no (float) ctor.
@@ -107,15 +104,54 @@ public partial class LabelHandler : ComposeElementHandler<ILabel>
         var bold   = _bold.Value;
         var fill   = _fillWidth.Value;
         var align  = (TextAlignment)_hTextAlign.Value;
+        var vAlign = (TextAlignment)_vTextAlign.Value;
         var letterSpacing = _letterSpacing.Value;
         var lineHeight    = _lineHeight.Value;
         var decorations   = (Microsoft.Maui.TextDecorations)_decorations.Value;
         // Subscribe so padding mapper bumps re-run BuildNode.
         _ = _paddingVersion.Value;
         var padding = virtualView.Padding;
+
+        // Resolve the text color. Three paths:
+        //
+        //  1. MAUI's `TextColor` is set → use it verbatim (the most
+        //     common case; users who care set this explicitly).
+        //  2. `TextColor` is null AND we know the app's active theme
+        //     via the inherited <see cref="Theme"/> cache → pick
+        //     `White` on dark / `Black` on light. This mirrors what
+        //     MAUI's stock `LabelHandler` does (it reads
+        //     `Resources.GetColorStateList` for the active
+        //     configuration) and — critically — fixes #248: when our
+        //     `LabelHandler` runs as a Compose leaf inside a stock
+        //     host (e.g. `Shell`'s built-in `FlyoutItem` template),
+        //     there's no enclosing `MaterialTheme` / `Surface` to set
+        //     `LocalContentColor`. Without an explicit color,
+        //     Compose's `Text` would fall through to
+        //     `LocalContentColor.current` which defaults to
+        //     `Color.Black` — black-on-dark in dark mode, invisible.
+        //  3. No `ThemeManager` registered (consumer skipped
+        //     `UseAndroidXCompose`) → fall through with `null` so
+        //     `Text` keeps its pre-existing inherited-from-
+        //     `LocalContentColor` behaviour.
+        //
+        // Reading `Theme.IsDark.Value` inside the composable scope
+        // registers a snapshot read, so flipping the MAUI theme at
+        // runtime recomposes the label against the new fallback.
+        ComposeColor? color;
+        if (packed.HasValue)
+        {
+            color = new ComposeColor(packed.Value);
+        }
+        else
+        {
+            color = Theme is null
+                ? null
+                : Theme.IsDark.Value ? ComposeColor.White : ComposeColor.Black;
+        }
+
         var text = new ComposeText(_text.Value)
         {
-            Color      = packed.HasValue ? new ComposeColor(packed.Value) : null,
+            Color      = color,
             FontSize   = size.HasValue ? new Sp(size.Value) : null,
             FontWeight = bold ? ComposeFontWeight.Bold : null,
             Align      = align switch
@@ -153,6 +189,7 @@ public partial class LabelHandler : ComposeElementHandler<ILabel>
             .ApplyViewProperties(virtualView)
             .ApplyGestures(virtualView, MauiContext)
             .ApplySemantics(virtualView)
+            .ApplyVerticalTextAlignment(vAlign)
             .Padding(
                 new Dp((float)padding.Left),
                 new Dp((float)padding.Top),
@@ -187,6 +224,17 @@ public partial class LabelHandler : ComposeElementHandler<ILabel>
     /// <summary>Map <see cref="ILabel.HorizontalTextAlignment"/> to Compose <c>textAlign</c>.</summary>
     public static void MapHorizontalTextAlignment(LabelHandler handler, ILabel label) =>
         handler._hTextAlign.Value = (int)label.HorizontalTextAlignment;
+
+    /// <summary>
+    /// Map <see cref="ILabel.VerticalTextAlignment"/> to a
+    /// <c>Modifier.wrapContentHeight(Alignment.Vertical)</c> on the
+    /// outer modifier, so the text top/center/bottom-aligns inside the
+    /// label's allocated height. Visible only when the label has an
+    /// explicit <c>HeightRequest</c> (or fills its parent vertically) —
+    /// matches the stock MAUI behaviour.
+    /// </summary>
+    public static void MapVerticalTextAlignment(LabelHandler handler, ILabel label) =>
+        handler._vTextAlign.Value = (int)label.VerticalTextAlignment;
 
     /// <summary>
     /// Map <see cref="IView.HorizontalLayoutAlignment"/> to

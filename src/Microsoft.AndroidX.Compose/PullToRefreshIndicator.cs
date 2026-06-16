@@ -97,7 +97,7 @@ public sealed class PullToRefreshIndicator : ComposableNode
             color:          Color,
             maxDistance:    MaxDistance?.Value ?? 0f,
             _composer:      composer,
-            p7:             mask,
-            _changed:       0);
+            p7:             0,
+            _changed:       mask);
     }
 }
