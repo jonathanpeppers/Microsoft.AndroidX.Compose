@@ -2181,6 +2181,7 @@ static AndroidX.Compose.ModifierExtensions.DetectTransformGestures(this AndroidX
 static AndroidX.Compose.ModifierExtensions.DisplayCutoutPadding(this AndroidX.Compose.Modifier! modifier) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.ModifierExtensions.DragAndDropTarget(this AndroidX.Compose.Modifier! modifier, System.Func<AndroidX.Compose.DragAndDropEvent!, bool>! shouldStartDragAndDrop, AndroidX.Compose.DragAndDropTarget! target) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.ModifierExtensions.Draggable(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.DraggableState! state, AndroidX.Compose.Orientation orientation, bool enabled = true) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.ModifierExtensions.DrawBehind(this AndroidX.Compose.Modifier! modifier, Kotlin.Jvm.Functions.IFunction1! onDraw) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.ModifierExtensions.FillMaxHeight(this AndroidX.Compose.Modifier! modifier, float fraction = 1) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.ModifierExtensions.FillMaxSize(this AndroidX.Compose.Modifier! modifier, float fraction = 1) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.ModifierExtensions.FillMaxWidth(this AndroidX.Compose.Modifier! modifier, float fraction = 1) -> AndroidX.Compose.Modifier!

@@ -249,6 +249,92 @@ internal static partial class ComposeBridges
         }
     }
 
+    // ---- DrawScope JNI helpers ----
+    //
+    // The Compose `DrawScope` binding has no usable instance methods —
+    // every drawing primitive on it carries an inline-class param
+    // (Color, Offset, Size, CornerRadius, BlendMode), so the binder
+    // strips the lot and the C# IDrawScope interface is empty. The
+    // canvas-getter chain (`getDrawContext().getCanvas()`) avoids the
+    // mangling — neither method takes an inline class — but the binder
+    // still drops them because `IDrawScope` itself isn't surfaced.
+    //
+    // Hand-written below: enough JNI to extract the native
+    // `Android.Graphics.Canvas` and the packed `Size` long from a
+    // DrawScope handle, which is everything a `Modifier.drawBehind`
+    // callback needs to draw via directly-bound `Paint` + `Canvas`.
+
+    static IntPtr s_drawScopeClass;
+    static IntPtr s_drawContextClass;
+    static IntPtr s_drawScopeGetSizeMethodId;
+    static IntPtr s_drawScopeGetDrawContextMethodId;
+    static IntPtr s_drawContextGetCanvasMethodId;
+
+    static void EnsureDrawScopeMethodIds()
+    {
+        if (s_drawScopeGetSizeMethodId != IntPtr.Zero)
+            return;
+        s_drawScopeClass   = JNIEnv.FindClass("androidx/compose/ui/graphics/drawscope/DrawScope");
+        s_drawContextClass = JNIEnv.FindClass("androidx/compose/ui/graphics/drawscope/DrawContext");
+        s_drawScopeGetSizeMethodId        = JNIEnv.GetMethodID(s_drawScopeClass, "getSize-NH-jbRc", "()J");
+        s_drawScopeGetDrawContextMethodId = JNIEnv.GetMethodID(s_drawScopeClass, "getDrawContext", "()Landroidx/compose/ui/graphics/drawscope/DrawContext;");
+        s_drawContextGetCanvasMethodId    = JNIEnv.GetMethodID(s_drawContextClass, "getCanvas",     "()Landroidx/compose/ui/graphics/Canvas;");
+    }
+
+    // Read the modifier's bounds out of a DrawScope. The Kotlin
+    // property `DrawScope.size: Size` is mangled because `Size` is a
+    // `@JvmInline value class` over a packed `long`. Returned as the
+    // raw packed value; callers unpack with
+    // <see cref="UnpackSizeWidth"/> / <see cref="UnpackSizeHeight"/>.
+    internal static long DrawScopeGetSize(IntPtr drawScope)
+    {
+        EnsureDrawScopeMethodIds();
+        return JNIEnv.CallLongMethod(drawScope, s_drawScopeGetSizeMethodId);
+    }
+
+    /// <summary>Unpack a Compose <c>Size</c>'s width — high 32 bits as float.</summary>
+    internal static float UnpackSizeWidth(long packed) =>
+        BitConverter.Int32BitsToSingle((int)((ulong)packed >> 32));
+
+    /// <summary>Unpack a Compose <c>Size</c>'s height — low 32 bits as float.</summary>
+    internal static float UnpackSizeHeight(long packed) =>
+        BitConverter.Int32BitsToSingle((int)((ulong)packed & 0xFFFFFFFFL));
+
+    // Walk DrawScope → DrawContext → Compose Canvas → native
+    // android.graphics.Canvas. Returns null when the DrawScope handle
+    // is null or the canvas chain yields a null intermediate (defensive
+    // — Compose normally guarantees a non-null canvas inside drawBehind).
+    internal static Android.Graphics.Canvas? DrawScopeGetNativeCanvas(IntPtr drawScope)
+    {
+        if (drawScope == IntPtr.Zero)
+            return null;
+        EnsureDrawScopeMethodIds();
+        IntPtr drawContextLocal = JNIEnv.CallObjectMethod(drawScope, s_drawScopeGetDrawContextMethodId);
+        if (drawContextLocal == IntPtr.Zero)
+            return null;
+        IntPtr composeCanvasLocal = IntPtr.Zero;
+        try
+        {
+            composeCanvasLocal = JNIEnv.CallObjectMethod(drawContextLocal, s_drawContextGetCanvasMethodId);
+            if (composeCanvasLocal == IntPtr.Zero)
+                return null;
+            // GetObject(.., DoNotTransfer) — Mono creates its own
+            // global ref internally; we still own `composeCanvasLocal`
+            // and free it in the outer finally.
+            var composeCanvas = Java.Lang.Object.GetObject<AndroidX.Compose.UI.Graphics.ICanvas>(
+                composeCanvasLocal, JniHandleOwnership.DoNotTransfer);
+            return composeCanvas is null
+                ? null
+                : AndroidX.Compose.UI.Graphics.AndroidCanvas_androidKt.GetNativeCanvas(composeCanvas);
+        }
+        finally
+        {
+            if (composeCanvasLocal != IntPtr.Zero)
+                JNIEnv.DeleteLocalRef(composeCanvasLocal);
+            JNIEnv.DeleteLocalRef(drawContextLocal);
+        }
+    }
+
     // androidx.compose.ui.res.PainterResources_androidKt.painterResource —
     // returns a NEW local Painter ref the caller is responsible for
     // DeleteLocalRef'ing once it's been handed to the consuming
@@ -2026,6 +2112,21 @@ internal static partial class ComposeBridges
         Defaults  = typeof(ModifierBorderBrushDefault))]
     internal static partial IntPtr ModifierBorderBrush(
         IntPtr modifier, float width, AndroidX.Compose.UI.Graphics.Brush brush, Shape? shape);
+
+    // androidx.compose.ui.draw.DrawModifierKt.drawBehind —
+    // (Modifier, Function1<DrawScope, Unit>). Plain Kotlin static
+    // extension; the binder strips it because the Function1 generic
+    // erases at JVM level. No $default — caller must always supply
+    // the lambda. The Function1 is invoked by Compose on every redraw
+    // pass with a DrawScope receiver, which the caller can dispatch
+    // off via raw JNI (the Compose DrawScope binding is interface-
+    // only; instance methods are mangled by inline-class params).
+    [ComposeBridge(
+        Class     = "androidx/compose/ui/draw/DrawModifierKt",
+        JvmName   = "drawBehind",
+        Signature = "(Landroidx/compose/ui/Modifier;Lkotlin/jvm/functions/Function1;)" +
+                    "Landroidx/compose/ui/Modifier;")]
+    internal static partial IntPtr ModifierDrawBehind(IntPtr modifier, IFunction1 onDraw);
 
     // androidx.compose.foundation.ClickableKt.clickable-XHw0xAI$default —
     // (Modifier, Boolean enabled, String onClickLabel, Role role,
