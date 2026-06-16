@@ -35,6 +35,7 @@ public partial class AppShell : Shell
         Routing.RegisterRoute("gestures",       typeof(GesturesPage));
         Routing.RegisterRoute("refresh",        typeof(RefreshPage));
         Routing.RegisterRoute("indicator",      typeof(IndicatorPage));
+        Routing.RegisterRoute("collections",    typeof(CollectionsPage));
         Routing.RegisterRoute("semantics",      typeof(SemanticsPage));
         Routing.RegisterRoute("navigation",     typeof(NavigationDemoPage));
 

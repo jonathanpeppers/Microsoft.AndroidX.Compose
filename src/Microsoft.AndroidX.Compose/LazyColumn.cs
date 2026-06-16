@@ -2,6 +2,7 @@ using Android.Runtime;
 using AndroidX.Compose.Foundation.Lazy;
 using AndroidX.Compose.Foundation.Layout;
 using AndroidX.Compose.Runtime;
+using BindingArrangement = AndroidX.Compose.Foundation.Layout.Arrangement;
 
 namespace AndroidX.Compose;
 
@@ -82,6 +83,16 @@ public sealed class LazyColumn<T> : ComposableNode
     public PaddingValues? ContentPadding { get; set; }
 
     /// <summary>
+    /// Optional vertical arrangement (e.g. <see cref="Arrangement.SpacedBy(int)"/>)
+    /// applied between items. Leave <see langword="null"/> to use Compose's
+    /// default (<c>Arrangement.Top</c>). Must wrap a vertical-capable
+    /// Compose <see cref="Arrangement"/>; throws
+    /// <see cref="ArgumentException"/> at render time for a
+    /// horizontal-only value (e.g. <see cref="Arrangement.Start"/>).
+    /// </summary>
+    public Arrangement? VerticalArrangement { get; set; }
+
+    /// <summary>
     /// When a parent layout (typically <see cref="Scaffold"/>) hands us
     /// a runtime <c>PaddingValues</c>, route it into LazyColumn's own
     /// <c>contentPadding:</c> parameter instead of letting the base
@@ -145,10 +156,22 @@ public sealed class LazyColumn<T> : ComposableNode
 
         var contentPadding = ContentPadding?.Jvm ?? _runtimeContentPadding;
 
+        BindingArrangement.IVertical? vertical = null;
+        if (VerticalArrangement is not null)
+        {
+            vertical = VerticalArrangement.Vertical
+                ?? throw new ArgumentException(
+                    $"{nameof(VerticalArrangement)} must wrap a vertical " +
+                    $"or horizontal-or-vertical Compose Arrangement; got a " +
+                    $"horizontal-only value (e.g. Arrangement.Start / Arrangement.End).",
+                    nameof(VerticalArrangement));
+        }
+
         int defaults = (int)LazyColumnDefault.All;
         if (modifier       is not null) defaults &= ~(int)LazyColumnDefault.Modifier;
         if (State          is not null) defaults &= ~(int)LazyColumnDefault.State;
         if (contentPadding is not null) defaults &= ~(int)LazyColumnDefault.ContentPadding;
+        if (vertical       is not null) defaults &= ~(int)LazyColumnDefault.VerticalArrangement;
         // Bool params lower to a single $default bit. Kotlin's default
         // is false, so only clear the bit when the caller asked for
         // true — otherwise let Kotlin substitute its own false and
@@ -160,7 +183,7 @@ public sealed class LazyColumn<T> : ComposableNode
             state:               State?.Jvm,
             contentPadding:      contentPadding,
             reverseLayout:       ReverseLayout,
-            verticalArrangement: null,
+            verticalArrangement: vertical,
             horizontalAlignment: null,
             flingBehavior:       null,
             userScrollEnabled:   true,
