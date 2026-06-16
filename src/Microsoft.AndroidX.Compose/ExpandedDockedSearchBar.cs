@@ -39,10 +39,10 @@ public sealed class ExpandedDockedSearchBar : ComposableContainer
         var content     = ComposableLambdas.Wrap3(composer, c => RenderChildren(c));
         var __modifierKey = BuildModifierStructuralKey();
         int __changed = 0;
-        __changed |= composer.DiffSlot(stateHandle, 1);
-        __changed |= (int)ChangedBits.Static << 4;
-        __changed |= composer.DiffSlot(__modifierKey, 7);
-        __changed |= (int)ChangedBits.Static << 10;
+        __changed |= composer.DiffSlot(stateHandle, ComposeExtensions.DiffSlotShift(0));
+        __changed |= (int)ChangedBits.Static << ComposeExtensions.DiffSlotShift(1);
+        __changed |= composer.DiffSlot(__modifierKey, ComposeExtensions.DiffSlotShift(2));
+        __changed |= (int)ChangedBits.Static << ComposeExtensions.DiffSlotShift(3);
         ComposeBridges.ExpandedDockedSearchBar(stateHandle, inputField, BuildModifier(), content, composer, _changed: __changed);
     }
 }

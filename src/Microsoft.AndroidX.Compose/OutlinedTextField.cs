@@ -110,16 +110,16 @@ public sealed class OutlinedTextField : ComposableNode
         // Remaining 12 params overflow to a second $changed int we
         // don't model — left at 0 (Uncertain), same as the generator.
         int __changed = 0;
-        __changed |= composer.DiffSlot(_value, 1);
-        __changed |= (int)ChangedBits.Static << 4;
-        __changed |= composer.DiffSlot(__modifierKey, 7);
-        __changed |= composer.DiffSlot(Enabled, 10);
-        __changed |= composer.DiffSlot(ReadOnly, 13);
-        __changed |= composer.DiffSlot<object?>(TextStyle, 16);
-        __changed |= composer.DiffSlot<object?>(__label, 19);
-        __changed |= composer.DiffSlot<object?>(__placeholder, 22);
-        __changed |= composer.DiffSlot<object?>(__leadingIcon, 25);
-        __changed |= composer.DiffSlot<object?>(__trailingIcon, 28);
+        __changed |= composer.DiffSlot(_value, ComposeExtensions.DiffSlotShift(0));
+        __changed |= (int)ChangedBits.Static << ComposeExtensions.DiffSlotShift(1);
+        __changed |= composer.DiffSlot(__modifierKey, ComposeExtensions.DiffSlotShift(2));
+        __changed |= composer.DiffSlot(Enabled, ComposeExtensions.DiffSlotShift(3));
+        __changed |= composer.DiffSlot(ReadOnly, ComposeExtensions.DiffSlotShift(4));
+        __changed |= composer.DiffSlot<object?>(TextStyle, ComposeExtensions.DiffSlotShift(5));
+        __changed |= composer.DiffSlot<object?>(__label, ComposeExtensions.DiffSlotShift(6));
+        __changed |= composer.DiffSlot<object?>(__placeholder, ComposeExtensions.DiffSlotShift(7));
+        __changed |= composer.DiffSlot<object?>(__leadingIcon, ComposeExtensions.DiffSlotShift(8));
+        __changed |= composer.DiffSlot<object?>(__trailingIcon, ComposeExtensions.DiffSlotShift(9));
         ComposeBridges.OutlinedTextField(_value!, __onValueChange, BuildModifier(),
             Enabled, ReadOnly, TextStyle?.Build(), __label, __placeholder, __leadingIcon, __trailingIcon,
             __prefix, __suffix, __supportingText, IsError,
@@ -151,16 +151,16 @@ public sealed class OutlinedTextField : ComposableNode
         var __supportingText = SupportingText is null ? null : ComposableLambdas.Wrap2(composer, c => SupportingText.Render(c));
         var __modifierKey = BuildModifierStructuralKey();
         int __changed = 0;
-        __changed |= composer.DiffSlot<object?>(current, 1);
-        __changed |= (int)ChangedBits.Static << 4;
-        __changed |= composer.DiffSlot(__modifierKey, 7);
-        __changed |= composer.DiffSlot(Enabled, 10);
-        __changed |= composer.DiffSlot(ReadOnly, 13);
-        __changed |= composer.DiffSlot<object?>(TextStyle, 16);
-        __changed |= composer.DiffSlot<object?>(__label, 19);
-        __changed |= composer.DiffSlot<object?>(__placeholder, 22);
-        __changed |= composer.DiffSlot<object?>(__leadingIcon, 25);
-        __changed |= composer.DiffSlot<object?>(__trailingIcon, 28);
+        __changed |= composer.DiffSlot<object?>(current, ComposeExtensions.DiffSlotShift(0));
+        __changed |= (int)ChangedBits.Static << ComposeExtensions.DiffSlotShift(1);
+        __changed |= composer.DiffSlot(__modifierKey, ComposeExtensions.DiffSlotShift(2));
+        __changed |= composer.DiffSlot(Enabled, ComposeExtensions.DiffSlotShift(3));
+        __changed |= composer.DiffSlot(ReadOnly, ComposeExtensions.DiffSlotShift(4));
+        __changed |= composer.DiffSlot<object?>(TextStyle, ComposeExtensions.DiffSlotShift(5));
+        __changed |= composer.DiffSlot<object?>(__label, ComposeExtensions.DiffSlotShift(6));
+        __changed |= composer.DiffSlot<object?>(__placeholder, ComposeExtensions.DiffSlotShift(7));
+        __changed |= composer.DiffSlot<object?>(__leadingIcon, ComposeExtensions.DiffSlotShift(8));
+        __changed |= composer.DiffSlot<object?>(__trailingIcon, ComposeExtensions.DiffSlotShift(9));
         ComposeBridges.OutlinedTextFieldWithValue(current, __onValueChange, BuildModifier(),
             Enabled, ReadOnly, TextStyle?.Build(), __label, __placeholder, __leadingIcon, __trailingIcon,
             __prefix, __suffix, __supportingText, IsError,

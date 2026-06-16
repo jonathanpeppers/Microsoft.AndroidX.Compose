@@ -53,9 +53,9 @@ public sealed class SearchBar : ComposableNode
         // bit 1 = state (IntPtr DiffSlot), bit 4 = inputField (Wrap2 → Static),
         // bit 7 = modifier (DiffSlot key).
         int __changed = 0;
-        __changed |= composer.DiffSlot(stateHandle, 1);
-        __changed |= (int)ChangedBits.Static << 4;
-        __changed |= composer.DiffSlot(__modifierKey, 7);
+        __changed |= composer.DiffSlot(stateHandle, ComposeExtensions.DiffSlotShift(0));
+        __changed |= (int)ChangedBits.Static << ComposeExtensions.DiffSlotShift(1);
+        __changed |= composer.DiffSlot(__modifierKey, ComposeExtensions.DiffSlotShift(2));
         ComposeBridges.SearchBar(stateHandle, inputField, BuildModifier(), composer, _changed: __changed);
     }
 

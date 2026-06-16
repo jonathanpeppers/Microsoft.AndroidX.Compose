@@ -48,9 +48,9 @@ public sealed class SnackbarHost : ComposableNode
         // snackbar (composableLambda → Static).
         var __modifierKey = BuildModifierStructuralKey();
         int __changed = 0;
-        __changed |= composer.DiffSlot(_hostState.Jvm, 1);
-        __changed |= composer.DiffSlot(__modifierKey, 4);
-        __changed |= (int)ChangedBits.Static << 7;
+        __changed |= composer.DiffSlot(_hostState.Jvm, ComposeExtensions.DiffSlotShift(0));
+        __changed |= composer.DiffSlot(__modifierKey, ComposeExtensions.DiffSlotShift(1));
+        __changed |= (int)ChangedBits.Static << ComposeExtensions.DiffSlotShift(2);
 
         ComposeBridges.SnackbarHost(
             hostState: ((Java.Lang.Object)_hostState.Jvm).Handle,

@@ -108,12 +108,12 @@ public sealed class SegmentedButton : ComposableContainer
             });
 
             int __changed = 0;
-            __changed |= composer.DiffSlot(_selected, 1);
-            __changed |= (int)ChangedBits.Static << 4;
-            __changed |= composer.DiffSlot(shape, 7);
-            __changed |= (int)ChangedBits.Static << 10;
-            __changed |= composer.DiffSlot(__modifierKey, 13);
-            __changed |= composer.DiffSlot<object?>(icon, 16);
+            __changed |= composer.DiffSlot(_selected, ComposeExtensions.DiffSlotShift(0));
+            __changed |= (int)ChangedBits.Static << ComposeExtensions.DiffSlotShift(1);
+            __changed |= composer.DiffSlot(shape, ComposeExtensions.DiffSlotShift(2));
+            __changed |= (int)ChangedBits.Static << ComposeExtensions.DiffSlotShift(3);
+            __changed |= composer.DiffSlot(__modifierKey, ComposeExtensions.DiffSlotShift(4));
+            __changed |= composer.DiffSlot<object?>(icon, ComposeExtensions.DiffSlotShift(5));
 
             ComposeBridges.MultiChoiceSegmentedButton(
                 multiChoiceScope: scope,
@@ -137,12 +137,12 @@ public sealed class SegmentedButton : ComposableContainer
                 ?? throw new InvalidOperationException("SegmentedButton single-choice ctor requires non-null onClick."));
 
             int __changed = 0;
-            __changed |= composer.DiffSlot(_selected, 1);
-            __changed |= (int)ChangedBits.Static << 4;
-            __changed |= composer.DiffSlot(shape, 7);
-            __changed |= (int)ChangedBits.Static << 10;
-            __changed |= composer.DiffSlot(__modifierKey, 13);
-            __changed |= composer.DiffSlot<object?>(icon, 16);
+            __changed |= composer.DiffSlot(_selected, ComposeExtensions.DiffSlotShift(0));
+            __changed |= (int)ChangedBits.Static << ComposeExtensions.DiffSlotShift(1);
+            __changed |= composer.DiffSlot(shape, ComposeExtensions.DiffSlotShift(2));
+            __changed |= (int)ChangedBits.Static << ComposeExtensions.DiffSlotShift(3);
+            __changed |= composer.DiffSlot(__modifierKey, ComposeExtensions.DiffSlotShift(4));
+            __changed |= composer.DiffSlot<object?>(icon, ComposeExtensions.DiffSlotShift(5));
 
             ComposeBridges.SingleChoiceSegmentedButton(
                 singleChoiceScope: scope,

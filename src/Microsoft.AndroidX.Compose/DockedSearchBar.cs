@@ -132,11 +132,11 @@ public sealed class DockedSearchBar : ComposableContainer
         // bit 7=onExpandedChange (RememberAction → Static),
         // bit 10=modifier (DiffSlot key), bit 13=content (Static).
         int __changed = 0;
-        __changed |= (int)ChangedBits.Static << 1;
-        __changed |= composer.DiffSlot(_expanded, 4);
-        __changed |= (int)ChangedBits.Static << 7;
-        __changed |= composer.DiffSlot(__modifierKey, 10);
-        __changed |= (int)ChangedBits.Static << 13;
+        __changed |= (int)ChangedBits.Static << ComposeExtensions.DiffSlotShift(0);
+        __changed |= composer.DiffSlot(_expanded, ComposeExtensions.DiffSlotShift(1));
+        __changed |= (int)ChangedBits.Static << ComposeExtensions.DiffSlotShift(2);
+        __changed |= composer.DiffSlot(__modifierKey, ComposeExtensions.DiffSlotShift(3));
+        __changed |= (int)ChangedBits.Static << ComposeExtensions.DiffSlotShift(4);
 
         ComposeBridges.DockedSearchBar(
             inputField:       inputField,
@@ -170,16 +170,16 @@ public sealed class DockedSearchBar : ComposableContainer
         // 22=leadingIcon (DiffSlot), 25=trailingIcon (DiffSlot),
         // 28=content (Static).
         int __changed = 0;
-        __changed |= composer.DiffSlot(_query, 1);
-        __changed |= (int)ChangedBits.Static << 4;
-        __changed |= (int)ChangedBits.Static << 7;
-        __changed |= composer.DiffSlot(_active, 10);
-        __changed |= (int)ChangedBits.Static << 13;
-        __changed |= composer.DiffSlot(__modifierKey, 16);
-        __changed |= composer.DiffSlot<object?>(placeholder, 19);
-        __changed |= composer.DiffSlot<object?>(leadingIcon, 22);
-        __changed |= composer.DiffSlot<object?>(trailingIcon, 25);
-        __changed |= (int)ChangedBits.Static << 28;
+        __changed |= composer.DiffSlot(_query, ComposeExtensions.DiffSlotShift(0));
+        __changed |= (int)ChangedBits.Static << ComposeExtensions.DiffSlotShift(1);
+        __changed |= (int)ChangedBits.Static << ComposeExtensions.DiffSlotShift(2);
+        __changed |= composer.DiffSlot(_active, ComposeExtensions.DiffSlotShift(3));
+        __changed |= (int)ChangedBits.Static << ComposeExtensions.DiffSlotShift(4);
+        __changed |= composer.DiffSlot(__modifierKey, ComposeExtensions.DiffSlotShift(5));
+        __changed |= composer.DiffSlot<object?>(placeholder, ComposeExtensions.DiffSlotShift(6));
+        __changed |= composer.DiffSlot<object?>(leadingIcon, ComposeExtensions.DiffSlotShift(7));
+        __changed |= composer.DiffSlot<object?>(trailingIcon, ComposeExtensions.DiffSlotShift(8));
+        __changed |= (int)ChangedBits.Static << ComposeExtensions.DiffSlotShift(9);
 
         ComposeBridges.DockedSearchBarWithQuery(
             query:          _query!,
