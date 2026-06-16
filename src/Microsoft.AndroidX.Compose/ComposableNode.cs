@@ -126,6 +126,27 @@ public abstract class ComposableNode
     }
 
     /// <summary>
+    /// Snapshot the four sources <see cref="BuildModifier"/> consumes
+    /// into a single value-equatable key, WITHOUT consuming them. Used
+    /// by generated facades to feed
+    /// <see cref="ComposeExtensions.DiffSlot{T}(IComposer, T, int, int, string)"/>
+    /// for the modifier slot, so the Kotlin <c>$changed</c> bitmask
+    /// reads <see cref="ChangedBits.Same"/> when the chain didn't
+    /// change since the last render.
+    /// </summary>
+    /// <remarks>
+    /// Must be called BEFORE <see cref="BuildModifier"/> on the same
+    /// render, since <see cref="BuildModifier"/> nulls out
+    /// <see cref="_prepended"/> / <see cref="_appended"/> /
+    /// <see cref="_contentPadding"/> as a side-effect. The generator
+    /// emits the structural-key read first, then the
+    /// <see cref="BuildModifier"/> call — see
+    /// <c>ComposeFacadeGenerator.EmitChangedMask</c>.
+    /// </remarks>
+    internal ComposableNodeModifierKey BuildModifierStructuralKey() =>
+        new ComposableNodeModifierKey(_contentPadding, _prepended, Modifier, _appended);
+
+    /// <summary>
     /// Compose this node's contribution into <paramref name="composer"/>.
     ///
     /// The C# moral equivalent of an <c>@Composable</c> function body

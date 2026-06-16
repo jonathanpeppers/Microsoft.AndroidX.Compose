@@ -22,9 +22,9 @@ public static partial class ComposeExtensions
     /// <see cref="EqualityComparer{T}.Default"/> and return
     /// <see cref="ChangedBits.Same"/> /
     /// <see cref="ChangedBits.Different"/> shifted into the slot for
-    /// <paramref name="paramIndex"/>. First call at a given site
-    /// returns <see cref="ChangedBits.Different"/> (no prior value to
-    /// compare against — the runtime treats that as "must consider").
+    /// the bit position. First call at a given site returns
+    /// <see cref="ChangedBits.Different"/> (no prior value to compare
+    /// against — the runtime treats that as "must consider").
     /// </summary>
     /// <typeparam name="T">
     /// Slot type — typically the structural key of a facade param
@@ -35,16 +35,18 @@ public static partial class ComposeExtensions
     /// </typeparam>
     /// <param name="composer">Active composer.</param>
     /// <param name="value">This composition's value for the param.</param>
-    /// <param name="paramIndex">
-    /// Zero-based position of the param in the bridge's user-param
-    /// list (excluding scope receivers, <c>composer</c>,
-    /// <c>defaults</c>, and <c>_changed</c>) — gives a unique 3-bit
-    /// slot within <c>$changed</c>.
+    /// <param name="bitOffset">
+    /// The bit position within <c>$changed</c> for this param's 3-bit
+    /// slot. Bit 0 is the "force" flag, so param 0 gets bit 1, param 1
+    /// gets bit 4, etc. — matches the value
+    /// <see cref="DiffSlotShift"/> returns for that param's index.
+    /// Caller pre-computes via <c>DiffSlotShift(paramIndex)</c> or
+    /// hardcodes the literal bit position.
     /// </param>
     /// <param name="line">Filled in by the compiler.</param>
     /// <param name="file">Filled in by the compiler.</param>
     /// <returns>
-    /// <c>(int)<see cref="ChangedBits.Same"/> &lt;&lt; <see cref="DiffSlotShift"/>(paramIndex)</c>
+    /// <c>(int)<see cref="ChangedBits.Same"/> &lt;&lt; bitOffset</c>
     /// when the value matches the previous render, otherwise
     /// <c>(int)<see cref="ChangedBits.Different"/> &lt;&lt; …</c>.
     /// Caller ORs it into the <c>$changed</c> bitmask; mismatch with
@@ -54,13 +56,12 @@ public static partial class ComposeExtensions
     internal static int DiffSlot<T>(
         this IComposer composer,
         T? value,
-        int paramIndex,
+        int bitOffset,
         [CallerLineNumber] int line = 0,
         [CallerFilePath] string file = "")
     {
         ArgumentNullException.ThrowIfNull(composer);
 
-        int shift = DiffSlotShift(paramIndex);
         composer.StartReplaceableGroup(SourceLocationKey.Compute(line, file));
         try
         {
@@ -77,13 +78,13 @@ public static partial class ComposeExtensions
                     ? value is not null
                     : value is null;
                 if (sameNullness && EqualityComparer<T?>.Default.Equals(prev, value))
-                    return (int)ChangedBits.Same << shift;
+                    return (int)ChangedBits.Same << bitOffset;
                 existing.Value = boxed;
                 existing.HasValue = value is not null;
-                return (int)ChangedBits.Different << shift;
+                return (int)ChangedBits.Different << bitOffset;
             }
             composer.UpdateRememberedValue(new DiffSlotHolder(boxed, value is not null));
-            return (int)ChangedBits.Different << shift;
+            return (int)ChangedBits.Different << bitOffset;
         }
         finally
         {

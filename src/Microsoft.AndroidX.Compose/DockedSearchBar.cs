@@ -123,9 +123,20 @@ public sealed class DockedSearchBar : ComposableContainer
                 "DockedSearchBar.InputField is required (the Kotlin parameter has no default).");
 
         var inputField       = ComposableLambdas.Wrap2(composer, c => InputField.Render(c));
-        var onExpandedChange = new ComposableLambda1(o =>
+        var onExpandedChange = composer.RememberAction((Java.Lang.Object? o) =>
             _onExpandedChange!(((Java.Lang.Boolean)o!).BooleanValue()));
         var content          = ComposableLambdas.Wrap3(composer, c => RenderChildren(c));
+
+        var __modifierKey = BuildModifierStructuralKey();
+        // bit 1=inputField (Static), bit 4=expanded (bool DiffSlot),
+        // bit 7=onExpandedChange (RememberAction → Static),
+        // bit 10=modifier (DiffSlot key), bit 13=content (Static).
+        int __changed = 0;
+        __changed |= (int)ChangedBits.Static << 1;
+        __changed |= composer.DiffSlot(_expanded, 4);
+        __changed |= (int)ChangedBits.Static << 7;
+        __changed |= composer.DiffSlot(__modifierKey, 10);
+        __changed |= (int)ChangedBits.Static << 13;
 
         ComposeBridges.DockedSearchBar(
             inputField:       inputField,
@@ -133,22 +144,42 @@ public sealed class DockedSearchBar : ComposableContainer
             onExpandedChange: onExpandedChange,
             modifier:         BuildModifier(),
             content:          content,
-            composer:         composer);
+            composer:         composer,
+            _changed:         __changed);
     }
 
     void RenderQueryBased(IComposer composer)
     {
-        var onQueryChange  = new ComposableLambda1(o =>
+        var onQueryChange  = composer.RememberAction((Java.Lang.Object? o) =>
             _onQueryChange!(o?.ToString() ?? string.Empty));
-        var onSearch       = new ComposableLambda1(o =>
+        var onSearch       = composer.RememberAction((Java.Lang.Object? o) =>
             _onSearch!(o?.ToString() ?? string.Empty));
-        var onActiveChange = new ComposableLambda1(o =>
+        var onActiveChange = composer.RememberAction((Java.Lang.Object? o) =>
             _onActiveChange!(((Java.Lang.Boolean)o!).BooleanValue()));
 
         var placeholder  = Placeholder  is null ? null : ComposableLambdas.Wrap2(composer, c => Placeholder.Render(c));
         var leadingIcon  = LeadingIcon  is null ? null : ComposableLambdas.Wrap2(composer, c => LeadingIcon.Render(c));
         var trailingIcon = TrailingIcon is null ? null : ComposableLambdas.Wrap2(composer, c => TrailingIcon.Render(c));
         var content      = ComposableLambdas.Wrap3(composer, c => RenderChildren(c));
+
+        var __modifierKey = BuildModifierStructuralKey();
+        // First 10 user params:
+        // 1=query, 4=onQueryChange (Static), 7=onSearch (Static),
+        // 10=active (DiffSlot), 13=onActiveChange (Static),
+        // 16=modifier (DiffSlot key), 19=placeholder (DiffSlot),
+        // 22=leadingIcon (DiffSlot), 25=trailingIcon (DiffSlot),
+        // 28=content (Static).
+        int __changed = 0;
+        __changed |= composer.DiffSlot(_query, 1);
+        __changed |= (int)ChangedBits.Static << 4;
+        __changed |= (int)ChangedBits.Static << 7;
+        __changed |= composer.DiffSlot(_active, 10);
+        __changed |= (int)ChangedBits.Static << 13;
+        __changed |= composer.DiffSlot(__modifierKey, 16);
+        __changed |= composer.DiffSlot<object?>(placeholder, 19);
+        __changed |= composer.DiffSlot<object?>(leadingIcon, 22);
+        __changed |= composer.DiffSlot<object?>(trailingIcon, 25);
+        __changed |= (int)ChangedBits.Static << 28;
 
         ComposeBridges.DockedSearchBarWithQuery(
             query:          _query!,
@@ -161,6 +192,7 @@ public sealed class DockedSearchBar : ComposableContainer
             leadingIcon:    leadingIcon,
             trailingIcon:   trailingIcon,
             content:        content,
-            composer:       composer);
+            composer:       composer,
+            _changed:       __changed);
     }
 }

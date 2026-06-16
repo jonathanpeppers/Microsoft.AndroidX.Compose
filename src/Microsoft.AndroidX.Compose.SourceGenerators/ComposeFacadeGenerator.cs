@@ -1458,6 +1458,12 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         bool hoistModifier = modifierSlot.Param is not null && (callerProvidesDefaults || branchInfo is not null || callerProvidesChanged);
         if (hoistModifier)
         {
+            // Capture the structural-key snapshot BEFORE BuildModifier
+            // mutates _prepended/_appended/_contentPadding to null. The
+            // mask emitter feeds this into DiffSlot for the modifier
+            // slot.
+            if (callerProvidesChanged)
+                sb.AppendLine("            var __modifierKey = BuildModifierStructuralKey();");
             sb.AppendLine("            var __modifier = BuildModifier();");
         }
 
@@ -1853,14 +1859,16 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             switch (s.Kind)
             {
                 case FacadeSlotKind.Modifier:
-                    // Conservative: leave the modifier slot at 0 (Uncertain).
-                    // BuildModifier() returns IModifier? (the JNI peer) and
-                    // also folds in `_prepended`/`_appended` side-channels
-                    // set by parent layouts — neither is captured by the
-                    // managed Modifier.StructuralKey, so we can't safely
-                    // emit Same here without risk of missing a change. The
-                    // Kotlin runtime still does its own input compare for
-                    // Uncertain bits; we just don't help it skip.
+                    // Snapshot of (contentPadding, _prepended, Modifier,
+                    // _appended) was captured into __modifierKey BEFORE
+                    // BuildModifier consumed those fields. Diff against
+                    // the prior render's snapshot. When all four parts
+                    // are absent the key is constant and DiffSlot
+                    // returns Same after the first pass — the common
+                    // case for thousands of leaf facades, which is the
+                    // whole point.
+                    sb.Append(indent).Append(changedVar).Append(" |= ").Append(composerName)
+                      .Append(".DiffSlot(__modifierKey, ").Append(bitOffset).AppendLine(");");
                     bitParamIndex++;
                     continue;
                 case FacadeSlotKind.OnClick:

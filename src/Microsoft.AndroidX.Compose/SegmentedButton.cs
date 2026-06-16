@@ -65,6 +65,9 @@ public sealed class SegmentedButton : ComposableContainer
         });
         var iconNode = Icon;
         var icon = iconNode is null ? null : ComposableLambdas.Wrap2(composer, c => iconNode.Render(c));
+        // Capture modifier structural key BEFORE BuildModifier consumes
+        // _prepended/_appended/_contentPadding.
+        var __modifierKey = BuildModifierStructuralKey();
         var modifier = BuildModifier();
 
         var scope = RenderContext.CurrentScope;
@@ -80,19 +83,38 @@ public sealed class SegmentedButton : ComposableContainer
         // start/middle/end rounded-corner shape based on (index, count).
         var shape = ComposeBridges.ItemShape(index, count, composer);
 
+        // Both bridges share a common bit layout for their first 6
+        // user params (excluding the scope receiver, which is consumed
+        // by Kotlin and contributes Static):
+        //   bit 1  = selected/checked (primitive DiffSlot)
+        //   bit 4  = onClick/onCheckedChange (RememberAction → Static)
+        //   bit 7  = shape (IntPtr DiffSlot — itemShape returns the
+        //            same handle for the same (index, count))
+        //   bit 10 = label (composableLambda → Static)
+        //   bit 13 = modifier (DiffSlot on structural key)
+        //   bit 16 = icon (Function2? identity diff)
         if (_onCheckedChange is not null)
         {
             int defaults = (int)MultiChoiceSegmentedButtonDefault.All;
             if (modifier is not null) defaults &= ~(int)MultiChoiceSegmentedButtonDefault.Modifier;
             if (icon     is not null) defaults &= ~(int)MultiChoiceSegmentedButtonDefault.Icon;
 
-            var cb = new ComposableLambda1(arg =>
+            var cb = composer.RememberAction((Java.Lang.Object? arg) =>
             {
                 if (arg is not Java.Lang.Boolean jb)
                     throw new InvalidOperationException(
                         $"MultiChoiceSegmentedButton.onCheckedChange expected a Java.Lang.Boolean, got '{arg?.GetType().FullName ?? "null"}'.");
                 _onCheckedChange(jb.BooleanValue());
             });
+
+            int __changed = 0;
+            __changed |= composer.DiffSlot(_selected, 1);
+            __changed |= (int)ChangedBits.Static << 4;
+            __changed |= composer.DiffSlot(shape, 7);
+            __changed |= (int)ChangedBits.Static << 10;
+            __changed |= composer.DiffSlot(__modifierKey, 13);
+            __changed |= composer.DiffSlot<object?>(icon, 16);
+
             ComposeBridges.MultiChoiceSegmentedButton(
                 multiChoiceScope: scope,
                 @checked:         _selected,
@@ -102,7 +124,8 @@ public sealed class SegmentedButton : ComposableContainer
                 modifier:         modifier,
                 icon:             icon,
                 defaults:         defaults,
-                composer:         composer);
+                composer:         composer,
+                _changed:         __changed);
         }
         else
         {
@@ -110,7 +133,17 @@ public sealed class SegmentedButton : ComposableContainer
             if (modifier is not null) defaults &= ~(int)SingleChoiceSegmentedButtonDefault.Modifier;
             if (icon     is not null) defaults &= ~(int)SingleChoiceSegmentedButtonDefault.Icon;
 
-            var click = new ComposableLambda0(_onClick!);
+            var click = composer.RememberAction(_onClick
+                ?? throw new InvalidOperationException("SegmentedButton single-choice ctor requires non-null onClick."));
+
+            int __changed = 0;
+            __changed |= composer.DiffSlot(_selected, 1);
+            __changed |= (int)ChangedBits.Static << 4;
+            __changed |= composer.DiffSlot(shape, 7);
+            __changed |= (int)ChangedBits.Static << 10;
+            __changed |= composer.DiffSlot(__modifierKey, 13);
+            __changed |= composer.DiffSlot<object?>(icon, 16);
+
             ComposeBridges.SingleChoiceSegmentedButton(
                 singleChoiceScope: scope,
                 selected:          _selected,
@@ -120,7 +153,8 @@ public sealed class SegmentedButton : ComposableContainer
                 modifier:          modifier,
                 icon:              icon,
                 defaults:          defaults,
-                composer:          composer);
+                composer:          composer,
+                _changed:          __changed);
         }
     }
 }

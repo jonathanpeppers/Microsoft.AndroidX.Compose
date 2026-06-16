@@ -49,7 +49,14 @@ public sealed class SearchBar : ComposableNode
 
         var stateHandle = ResolveStateHandle(_state, composer);
         var inputField  = ComposableLambdas.Wrap2(composer, c => InputField.Render(c));
-        ComposeBridges.SearchBar(stateHandle, inputField, BuildModifier(), composer);
+        var __modifierKey = BuildModifierStructuralKey();
+        // bit 1 = state (IntPtr DiffSlot), bit 4 = inputField (Wrap2 → Static),
+        // bit 7 = modifier (DiffSlot key).
+        int __changed = 0;
+        __changed |= composer.DiffSlot(stateHandle, 1);
+        __changed |= (int)ChangedBits.Static << 4;
+        __changed |= composer.DiffSlot(__modifierKey, 7);
+        ComposeBridges.SearchBar(stateHandle, inputField, BuildModifier(), composer, _changed: __changed);
     }
 
     // Lazy-resolve the bound JVM peer for the shared SearchBarState. Compose's

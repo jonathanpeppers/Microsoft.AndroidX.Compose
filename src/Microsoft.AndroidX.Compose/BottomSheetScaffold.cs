@@ -121,10 +121,27 @@ public sealed class BottomSheetScaffold : ComposableContainer
             : ComposableLambdas.Wrap2(composer, c => TopBar.Render(c));
 
         int defaults = (int)BottomSheetScaffoldDefault.All;
+        var __modifierKey = BuildModifierStructuralKey();
         var modifier = BuildModifier();
         if (modifier   is not null) defaults &= ~(int)BottomSheetScaffoldDefault.Modifier;
         if (dragHandle is not null) defaults &= ~(int)BottomSheetScaffoldDefault.SheetDragHandle;
         if (topBar     is not null) defaults &= ~(int)BottomSheetScaffoldDefault.TopBar;
+
+        // $changed mask. Bit positions over user params:
+        //   1=sheetContent (Wrap3 → Static), 4=modifier (DiffSlot key),
+        //   7=scaffoldState (Jvm reference DiffSlot — same instance
+        //   across recompositions when state holder is cached),
+        //   10=sheetDragHandle (Function2? identity),
+        //   13=topBar (Function2? identity), 16=snackbarHost (null → Same),
+        //   19=content (Wrap3 → Static).
+        int __changed = 0;
+        __changed |= (int)ChangedBits.Static << 1;
+        __changed |= composer.DiffSlot(__modifierKey, 4);
+        __changed |= composer.DiffSlot(scaffoldState, 7);
+        __changed |= composer.DiffSlot<object?>(dragHandle, 10);
+        __changed |= composer.DiffSlot<object?>(topBar, 13);
+        __changed |= (int)ChangedBits.Same << 16;
+        __changed |= (int)ChangedBits.Static << 19;
 
         ComposeBridges.BottomSheetScaffold(
             sheetContent:    sheet,
@@ -135,6 +152,7 @@ public sealed class BottomSheetScaffold : ComposableContainer
             snackbarHost:    null,
             content:         content,
             defaults:        defaults,
-            composer:        composer);
+            composer:        composer,
+            _changed:        __changed);
     }
 }

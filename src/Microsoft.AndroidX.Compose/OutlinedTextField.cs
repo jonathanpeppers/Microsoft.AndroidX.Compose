@@ -96,7 +96,8 @@ public sealed class OutlinedTextField : ComposableNode
 
     void RenderString(IComposer composer)
     {
-        var __onValueChange = new ComposableLambda1(v => _onValueChange!(v?.ToString() ?? string.Empty));
+        var __onValueChange = composer.RememberAction((Java.Lang.Object? v) =>
+            _onValueChange!(v?.ToString() ?? string.Empty));
         var __label          = Label          is null ? null : ComposableLambdas.Wrap2(composer, c => Label.Render(c));
         var __placeholder    = Placeholder    is null ? null : ComposableLambdas.Wrap2(composer, c => Placeholder.Render(c));
         var __leadingIcon    = LeadingIcon    is null ? null : ComposableLambdas.Wrap2(composer, c => LeadingIcon.Render(c));
@@ -104,13 +105,28 @@ public sealed class OutlinedTextField : ComposableNode
         var __prefix         = Prefix         is null ? null : ComposableLambdas.Wrap2(composer, c => Prefix.Render(c));
         var __suffix         = Suffix         is null ? null : ComposableLambdas.Wrap2(composer, c => Suffix.Render(c));
         var __supportingText = SupportingText is null ? null : ComposableLambdas.Wrap2(composer, c => SupportingText.Render(c));
+        var __modifierKey = BuildModifierStructuralKey();
+        // First 10 user params (Kotlin packs 10 per $changed int).
+        // Remaining 12 params overflow to a second $changed int we
+        // don't model — left at 0 (Uncertain), same as the generator.
+        int __changed = 0;
+        __changed |= composer.DiffSlot(_value, 1);
+        __changed |= (int)ChangedBits.Static << 4;
+        __changed |= composer.DiffSlot(__modifierKey, 7);
+        __changed |= composer.DiffSlot(Enabled, 10);
+        __changed |= composer.DiffSlot(ReadOnly, 13);
+        __changed |= composer.DiffSlot<object?>(TextStyle, 16);
+        __changed |= composer.DiffSlot<object?>(__label, 19);
+        __changed |= composer.DiffSlot<object?>(__placeholder, 22);
+        __changed |= composer.DiffSlot<object?>(__leadingIcon, 25);
+        __changed |= composer.DiffSlot<object?>(__trailingIcon, 28);
         ComposeBridges.OutlinedTextField(_value!, __onValueChange, BuildModifier(),
             Enabled, ReadOnly, TextStyle?.Build(), __label, __placeholder, __leadingIcon, __trailingIcon,
             __prefix, __suffix, __supportingText, IsError,
             VisualTransformation, KeyboardOptions, KeyboardActions,
             SingleLine, MaxLines, MinLines,
             Shape,
-            composer);
+            composer, _changed: __changed);
     }
 
     void RenderWithSelection(IComposer composer)
@@ -121,7 +137,7 @@ public sealed class OutlinedTextField : ComposableNode
                 $"{nameof(OutlinedTextField)}: MutableState<TextFieldValue>.Value is null. " +
                 $"Seed with {nameof(Compose)}.{nameof(ComposeExtensions.NewTextFieldValue)}() before first render.");
 
-        var __onValueChange = new ComposableLambda1(v =>
+        var __onValueChange = composer.RememberAction((Java.Lang.Object? v) =>
         {
             state.Value = Java.Lang.Object.GetObject<TextFieldValue>(
                 v!.Handle, JniHandleOwnership.DoNotTransfer)!;
@@ -133,12 +149,24 @@ public sealed class OutlinedTextField : ComposableNode
         var __prefix         = Prefix         is null ? null : ComposableLambdas.Wrap2(composer, c => Prefix.Render(c));
         var __suffix         = Suffix         is null ? null : ComposableLambdas.Wrap2(composer, c => Suffix.Render(c));
         var __supportingText = SupportingText is null ? null : ComposableLambdas.Wrap2(composer, c => SupportingText.Render(c));
+        var __modifierKey = BuildModifierStructuralKey();
+        int __changed = 0;
+        __changed |= composer.DiffSlot<object?>(current, 1);
+        __changed |= (int)ChangedBits.Static << 4;
+        __changed |= composer.DiffSlot(__modifierKey, 7);
+        __changed |= composer.DiffSlot(Enabled, 10);
+        __changed |= composer.DiffSlot(ReadOnly, 13);
+        __changed |= composer.DiffSlot<object?>(TextStyle, 16);
+        __changed |= composer.DiffSlot<object?>(__label, 19);
+        __changed |= composer.DiffSlot<object?>(__placeholder, 22);
+        __changed |= composer.DiffSlot<object?>(__leadingIcon, 25);
+        __changed |= composer.DiffSlot<object?>(__trailingIcon, 28);
         ComposeBridges.OutlinedTextFieldWithValue(current, __onValueChange, BuildModifier(),
             Enabled, ReadOnly, TextStyle?.Build(), __label, __placeholder, __leadingIcon, __trailingIcon,
             __prefix, __suffix, __supportingText, IsError,
             VisualTransformation, KeyboardOptions, KeyboardActions,
             SingleLine, MaxLines, MinLines,
             Shape,
-            composer);
+            composer, _changed: __changed);
     }
 }

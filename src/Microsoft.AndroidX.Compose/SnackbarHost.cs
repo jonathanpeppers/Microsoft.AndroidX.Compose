@@ -43,10 +43,20 @@ public sealed class SnackbarHost : ComposableNode
             ComposeBridges.SnackbarFromData(data, modifier: null, composer: c);
         });
 
+        // $changed mask: bit 1 = hostState (Jvm reference — DiffSlot),
+        // bit 4 = modifier (DiffSlot on structural key), bit 7 =
+        // snackbar (composableLambda → Static).
+        var __modifierKey = BuildModifierStructuralKey();
+        int __changed = 0;
+        __changed |= composer.DiffSlot(_hostState.Jvm, 1);
+        __changed |= composer.DiffSlot(__modifierKey, 4);
+        __changed |= (int)ChangedBits.Static << 7;
+
         ComposeBridges.SnackbarHost(
             hostState: ((Java.Lang.Object)_hostState.Jvm).Handle,
             modifier:  BuildModifier(),
             snackbar:  snackbar,
-            composer:  composer);
+            composer:  composer,
+            _changed:  __changed);
     }
 }

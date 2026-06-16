@@ -210,6 +210,7 @@ fit any `[ComposeBridge]` shape.
 | CN2007 | Recognized Compose value type used on a no-`$default` bridge.                                        |
 | CN2008 | Value-type parameter lowers to a JNI slot that doesn't match the bridge signature at that position.  |
 | CN2009 | `[ComposeBridge(Suspend = true)]` configuration is invalid (missing/misplaced `IContinuation`, wrong return, etc.). |
+| CN2010 | `[ComposeBridge]` declares an `int _changed` parameter but the JNI signature has no `$changed` slot (only valid on `@Composable` bridges). |
 
 **When adding a new diagnostic, update this table (and CN1xxx if relevant).
 Source of truth: `src/Microsoft.AndroidX.Compose.SourceGenerators/Diagnostics.cs`.**
