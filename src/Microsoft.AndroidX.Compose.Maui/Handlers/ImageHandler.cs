@@ -53,14 +53,23 @@ public partial class ImageHandler : ComposeElementHandler<MauiIImage>
         {
             [nameof(IImageSourcePart.Source)] = MapSource,
             [nameof(MauiIImage.Aspect)]       = MapAspect,
-            // TODO: IImage.IsAnimationPlaying — Compose's Image composable
-            // animates GIFs/WebPs only when the painter wraps a Coil
-            // ImageRequest. ImageSourceLoader currently materialises a
-            // static BitmapPainter (or PainterResource for packaged
-            // drawables); routing through coil-compose is a separate
-            // dependency + handler rewrite. Leaving unmapped so the
-            // coverage report flags the gap rather than claiming a no-op
-            // wire.
+            // TODO: IImage.IsAnimationPlaying — Compose's `Image`
+            // composable takes a `Painter`, not an animated
+            // `Drawable`, and our `ImageSourceLoader` rasterises the
+            // resolved `Drawable` to a static `Bitmap` (via
+            // `DrawableKt.ToBitmap`) before wrapping it in a
+            // `BitmapPainter`. The Android-native `AnimatedImageDrawable`
+            // (API 28+) keeps animating, but the snapshot we hand to
+            // Compose doesn't — its first frame is what gets sampled.
+            // Honouring this property therefore needs either (a) a
+            // hand-rolled `DrawablePainter` JCW subclass of
+            // `androidx.compose.ui.graphics.painter.Painter` whose
+            // `DrawScope.onDraw` forwards into `Drawable.draw(Canvas)`
+            // and toggles `start()` / `stop()` based on the slot, or
+            // (b) routing source resolution through coil-compose's
+            // `AsyncImagePainter`. Both are larger surgery + a real
+            // new dependency. Leaving unmapped so the coverage report
+            // flags the gap rather than claiming a no-op wire.
         };
 
     /// <summary>Command mapper (inherits view-level commands; no extras).</summary>

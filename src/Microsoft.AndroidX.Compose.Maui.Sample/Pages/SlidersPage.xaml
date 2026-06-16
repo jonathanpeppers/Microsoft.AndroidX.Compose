@@ -59,6 +59,21 @@
                 x:Name="ColoredValueLabel"
                 Text="value = 0" />
 
+            <Label Text="-- Slider with ThumbImageSource --"
+                   FontAttributes="Bold" />
+
+            <Slider
+                x:Name="ThumbImageSlider"
+                Minimum="0"
+                Maximum="100"
+                Value="50"
+                ThumbImageSource="dotnet_bot.png"
+                ValueChanged="OnThumbImageSliderChanged" />
+
+            <Label
+                x:Name="ThumbImageValueLabel"
+                Text="value = 50" />
+
             <Label Text="-- Stepper bound to a label (Increment=2) --"
                    FontAttributes="Bold" />
 

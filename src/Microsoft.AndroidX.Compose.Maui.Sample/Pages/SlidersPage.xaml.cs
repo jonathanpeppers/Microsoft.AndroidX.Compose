@@ -30,14 +30,19 @@ public partial class SlidersPage : ContentPage
         ColoredValueLabel.Text =
             $"value = {e.NewValue.ToString("0.0", CultureInfo.InvariantCulture)}";
 
+    void OnThumbImageSliderChanged(object? sender, ValueChangedEventArgs e) =>
+        ThumbImageValueLabel.Text =
+            $"value = {e.NewValue.ToString("0", CultureInfo.InvariantCulture)}";
+
     void OnStepperChanged(object? sender, ValueChangedEventArgs e) =>
         StepperValueLabel.Text =
             e.NewValue.ToString("0", CultureInfo.InvariantCulture);
 
     void OnResetClicked(object? sender, EventArgs e)
     {
-        DefaultSlider.Value = 0.25;
-        ColoredSlider.Value = 0;
-        DemoStepper.Value   = 6;
+        DefaultSlider.Value     = 0.25;
+        ColoredSlider.Value     = 0;
+        ThumbImageSlider.Value  = 50;
+        DemoStepper.Value       = 6;
     }
 }
