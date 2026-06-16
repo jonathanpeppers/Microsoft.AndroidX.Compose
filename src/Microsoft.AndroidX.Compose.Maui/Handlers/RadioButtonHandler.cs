@@ -141,7 +141,12 @@ public partial class RadioButtonHandler : ComposeElementHandler<IRadioButton>
             radio,
             text,
         };
-        row.Modifier = gestureModifier;
+        // Fill the available width so the radio sits at the start of its
+        // layout slot — without it the Row hugs `radio + label` and the
+        // MAUI host centers each row independently, which makes a column
+        // of radios with different label lengths visibly stagger
+        // horizontally. Matches stock MAUI's left-anchored layout.
+        row.Modifier = Modifier.Companion.FillMaxWidth().Then(gestureModifier);
         return row;
     }
 
