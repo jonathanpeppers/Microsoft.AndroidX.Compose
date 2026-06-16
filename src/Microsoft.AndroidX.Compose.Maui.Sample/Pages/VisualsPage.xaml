@@ -56,6 +56,73 @@
                        TextColor="#003E37" />
             </Border>
 
+            <!-- Dashed-stroke geometry showcase -->
+            <Label Text="Border — dashed strokes, caps, joins."
+                   FontAttributes="Bold" />
+
+            <Border Stroke="#3F51B5"
+                    StrokeThickness="3"
+                    StrokeDashArray="4,2"
+                    Background="#E8EAF6"
+                    Padding="16">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="10" />
+                </Border.StrokeShape>
+                <Label Text="Dash pattern 4,2 — indigo."
+                       TextColor="#1A237E" />
+            </Border>
+
+            <Border Stroke="#FF5722"
+                    StrokeThickness="4"
+                    StrokeDashArray="6,3,2,3"
+                    StrokeDashOffset="2"
+                    Background="#FBE9E7"
+                    Padding="16">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="14" />
+                </Border.StrokeShape>
+                <Label Text="Pattern 6,3,2,3 with offset 2 — orange."
+                       TextColor="#BF360C" />
+            </Border>
+
+            <Border Stroke="#673AB7"
+                    StrokeThickness="6"
+                    StrokeDashArray="1,3"
+                    StrokeLineCap="Round"
+                    Background="#EDE7F6"
+                    Padding="16">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="10" />
+                </Border.StrokeShape>
+                <Label Text="Round caps + dotted dash — deep purple."
+                       TextColor="#311B92" />
+            </Border>
+
+            <Border Stroke="#2E7D32"
+                    StrokeThickness="6"
+                    StrokeLineJoin="Bevel"
+                    Background="#E8F5E9"
+                    Padding="16">
+                <Border.StrokeShape>
+                    <Rectangle />
+                </Border.StrokeShape>
+                <Label Text="Bevel join — green, no dash."
+                       TextColor="#1B5E20" />
+            </Border>
+
+            <Border Stroke="#C62828"
+                    StrokeThickness="6"
+                    StrokeLineJoin="Round"
+                    StrokeDashArray="8,4"
+                    Background="#FFEBEE"
+                    Padding="16">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="4" />
+                </Border.StrokeShape>
+                <Label Text="Round join + 8,4 dash — red."
+                       TextColor="#B71C1C" />
+            </Border>
+
             <!-- BoxView showcase -->
             <Label Text="BoxView — pastel rectangles."
                    FontAttributes="Bold" />
