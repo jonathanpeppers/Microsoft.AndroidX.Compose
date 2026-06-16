@@ -10,7 +10,7 @@
             * SwitchHandler      -> IsOn, OnColor (-> SwitchColors checkedTrack),
                                     ThumbColor (-> SwitchColors checkedThumb)
             * RadioButtonHandler -> IsChecked, Content (-> Compose Text inside a Row),
-                                    TextColor, FontSize.
+                                    TextColor, FontSize, StrokeColor.
 
         Each section has an echo Label updated from the control's
         CheckedChanged / Toggled event so manual taps verify the
@@ -72,7 +72,7 @@
                 x:Name="SwitchEcho"
                 Text="Default: True · Tinted: False" />
 
-            <Label Text="RadioButton — three options in a group."
+            <Label Text="RadioButton — three options in a group, plus stroke color."
                    FontAttributes="Bold" />
 
             <RadioButton
@@ -93,6 +93,12 @@
                 TextColor="#C2185B"
                 FontSize="18"
                 FontAttributes="Bold"
+                CheckedChanged="OnFruitChanged" />
+            <RadioButton
+                Content="Dragonfruit (red ring)"
+                Value="dragonfruit"
+                GroupName="fruit"
+                BorderColor="#D32F2F"
                 CheckedChanged="OnFruitChanged" />
 
             <Label

@@ -5,6 +5,7 @@ using MauiBorder = Microsoft.Maui.Controls.Border;
 using MauiBoxView = Microsoft.Maui.Controls.BoxView;
 using MauiButton = Microsoft.Maui.Controls.Button;
 using MauiCheckBox = Microsoft.Maui.Controls.CheckBox;
+using MauiCollectionView = Microsoft.Maui.Controls.CollectionView;
 using MauiContentView = Microsoft.Maui.Controls.ContentView;
 using MauiDatePicker = Microsoft.Maui.Controls.DatePicker;
 using MauiEditor = Microsoft.Maui.Controls.Editor;
@@ -83,6 +84,19 @@ public static class AppHostBuilderExtensions
     ///     <see cref="MauiIndicatorView"/> synthesises a Compose
     ///     <c>Row</c> of dot tiles. CarouselView ↔ IndicatorView
     ///     two-way wiring lands in Phase 3.</description></item>
+    ///   <item><description>Lists
+    ///     (<see cref="MauiCollectionView"/>):
+    ///     <see cref="CollectionViewHandler"/> folds the list into the
+    ///     page composition as a Compose <see cref="LazyColumn{T}"/>,
+    ///     <see cref="LazyRow{T}"/>, or <see cref="LazyVerticalGrid{T}"/>
+    ///     (chosen by
+    ///     <see cref="Microsoft.Maui.Controls.StructuredItemsView.ItemsLayout"/>)
+    ///     instead of MAUI's stock <c>RecyclerView</c>-per-cell-island
+    ///     pattern. Each item template is materialised through
+    ///     <see cref="ComposeWalker"/>, so Compose-folded leaves inside
+    ///     cells inherit the page's <c>MaterialTheme</c> and snapshot
+    ///     graph. Selection / <c>ScrollTo</c> / grouping / sticky
+    ///     headers are follow-up slices.</description></item>
     ///   <item><description><see cref="MauiNavigationPage"/> →
     ///     <see cref="NavigationPageHandler"/> renders the stack
     ///     through Material 3 <see cref="Scaffold"/> +
@@ -182,6 +196,12 @@ public static class AppHostBuilderExtensions
             // dots. CarouselView two-way wiring lands in Phase 3.
             handlers.AddHandler<MauiRefreshView,            RefreshViewHandler>();
             handlers.AddHandler<MauiIndicatorView,          IndicatorViewHandler>();
+
+            // Phase 3 Slice 1 — CollectionView folded into the page
+            // composition as LazyColumn / LazyRow / LazyVerticalGrid
+            // (dispatched by ItemsLayout) instead of the stock
+            // per-cell ComposeView island.
+            handlers.AddHandler<MauiCollectionView,         CollectionViewHandler>();
 
             // Phase 4 Slice 1 — stack navigation. Replaces stock
             // NavigationViewHandler (which hosts pushed pages in
