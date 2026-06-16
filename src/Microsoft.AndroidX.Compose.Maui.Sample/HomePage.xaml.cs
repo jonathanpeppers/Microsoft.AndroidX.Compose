@@ -131,10 +131,25 @@ public partial class HomePage : ContentPage
                 Color.FromArgb("#9C27B0"),
                 "indicator"),
             new DemoEntry(
+                "Collections",
+                "CollectionView vertical / horizontal / grid backed by ObservableCollection<T>.",
+                Color.FromArgb("#7E57C2"),
+                "collections"),
+            new DemoEntry(
                 "Semantics",
                 "SemanticProperties.Description / Hint / HeadingLevel + AutomationId routed to Compose `Modifier.Semantics { … }`.",
                 Color.FromArgb("#3F51B5"),
                 "semantics"),
+            new DemoEntry(
+                "Vertical alignment",
+                "VerticalTextAlignment on Label / Entry / Editor / SearchBar / Picker, exercised inside fixed-height frames.",
+                Color.FromArgb("#9C27B0"),
+                "vertical-align"),
+            new DemoEntry(
+                "Navigation",
+                "Push / pop a modal `NavigationPage` rendered through Compose's Material 3 `Scaffold` + `TopAppBar`.",
+                Color.FromArgb("#1565C0"),
+                "navigation"),
 
             // ---- Phase 5 — self-drawing AndroidView fallback ----
             //

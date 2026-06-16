@@ -202,8 +202,12 @@ public sealed class Modifier
     /// <inheritdoc cref="ModifierExtensions.WrapContentWidth(bool)"/>
     public static Modifier WrapContentWidth(bool unbounded = false) => _companion.WrapContentWidth(unbounded);
 
-    /// <inheritdoc cref="ModifierExtensions.WrapContentHeight(bool)"/>
+    /// <inheritdoc cref="ModifierExtensions.WrapContentHeight(Modifier, bool)"/>
     public static Modifier WrapContentHeight(bool unbounded = false) => _companion.WrapContentHeight(unbounded);
+
+    /// <inheritdoc cref="ModifierExtensions.WrapContentHeight(Modifier, Alignment.Vertical, bool)"/>
+    public static Modifier WrapContentHeight(Alignment.Vertical align, bool unbounded = false) =>
+        _companion.WrapContentHeight(align, unbounded);
 
     /// <inheritdoc cref="ModifierExtensions.AspectRatio(float, bool)"/>
     public static Modifier AspectRatio(float ratio, bool matchHeightConstraintsFirst = false) => _companion.AspectRatio(ratio, matchHeightConstraintsFirst);

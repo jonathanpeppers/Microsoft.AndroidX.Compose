@@ -1,4 +1,5 @@
 using AndroidX.Compose;
+using AndroidX.Compose.Material3;
 using AndroidX.Compose.Runtime;
 using Microsoft.AndroidX.Compose.Maui.Platform;
 using Microsoft.Maui.Handlers;
@@ -56,18 +57,28 @@ public partial class RadioButtonHandler : ComposeElementHandler<IRadioButton>
     public static IPropertyMapper<IRadioButton, RadioButtonHandler> Mapper =
         new PropertyMapper<IRadioButton, RadioButtonHandler>(ViewHandler.ViewMapper)
         {
-            [nameof(IRadioButton.IsChecked)]      = MapIsChecked,
-            [nameof(MauiRadioButton.Content)]     = MapContent,
-            [nameof(ITextStyle.TextColor)]        = MapTextColor,
-            [nameof(ITextStyle.Font)]             = MapFont,
-            [nameof(ITextStyle.CharacterSpacing)] = MapCharacterSpacing,
-            // TODO: IButtonStroke.{StrokeColor, StrokeThickness,
-            // CornerRadius} — Material 3's RadioButton renders a fixed
-            // 20dp circle with no public hook for an outer border or
-            // corner radius (the chrome is wholly owned by the
-            // composable's internal Canvas drawing). Wiring would
-            // require a hand-rolled custom radio composable rather than
-            // a public-facade extension. Out of scope for this PR.
+            [nameof(IRadioButton.IsChecked)]       = MapIsChecked,
+            [nameof(MauiRadioButton.Content)]      = MapContent,
+            [nameof(ITextStyle.TextColor)]         = MapTextColor,
+            [nameof(ITextStyle.Font)]              = MapFont,
+            [nameof(ITextStyle.CharacterSpacing)]  = MapCharacterSpacing,
+            [nameof(IButtonStroke.StrokeColor)]    = MapStrokeColor,
+            // TODO: IButtonStroke.{StrokeThickness, CornerRadius} —
+            // Material 3's RadioButton draws a fixed 20.dp circle whose
+            // ring thickness and shape are baked into the composable's
+            // internal Canvas (`drawCircle` with a hard-coded
+            // `RadioStrokeWidth = 2.dp`); the public surface
+            // (`RadioButtonColors`) only exposes the ring colour, not
+            // its geometry. Honouring these would require replacing
+            // the call to `RadioButtonKt.RadioButton` with a hand-rolled
+            // `Canvas { drawCircle / drawArc }` composable, which loses
+            // Material 3's ripple, state-layer, focus indicator, and
+            // accessibility chrome. A `CornerRadius` override is also
+            // semantically off — XAML callers reaching for it on a
+            // `RadioButton` are typically trying to make a control that
+            // is no longer recognisable as a radio button. Held back
+            // deliberately; revisit if a public M3 API surfaces these
+            // knobs.
         };
 
     /// <summary>Command mapper (inherits view-level commands; no extras).</summary>
@@ -80,6 +91,7 @@ public partial class RadioButtonHandler : ComposeElementHandler<IRadioButton>
     readonly MutableState<int?>   _fontSize = new((int?)null);
     readonly MutableState<bool>   _bold     = new(false);
     readonly MutableState<float?> _letterSpacing = new((float?)null);
+    readonly MutableState<long?>  _strokeColor   = new((long?)null);
 
     /// <summary>Construct a handler with the default mappers.</summary>
     public RadioButtonHandler() : base(Mapper, CommandMapper) { }
@@ -99,8 +111,13 @@ public partial class RadioButtonHandler : ComposeElementHandler<IRadioButton>
         var bold   = _bold.Value;
         var spacing = _letterSpacing.Value;
         var label  = _label.Value;
+        var stroke = _strokeColor.Value;
 
         var radio = new ComposeRadioButton(selected: _checked.Value, onClick: OnSelected);
+        if (stroke is not null)
+            radio.Colors = composer.RadioButtonColors(
+                selectedColor:   stroke,
+                unselectedColor: stroke);
         var gestureModifier = Modifier.Companion.ApplyGestures(virtualView, MauiContext).ApplySemantics(virtualView);
         if (string.IsNullOrEmpty(label))
         {
@@ -124,7 +141,12 @@ public partial class RadioButtonHandler : ComposeElementHandler<IRadioButton>
             radio,
             text,
         };
-        row.Modifier = gestureModifier;
+        // Fill the available width so the radio sits at the start of its
+        // layout slot — without it the Row hugs `radio + label` and the
+        // MAUI host centers each row independently, which makes a column
+        // of radios with different label lengths visibly stagger
+        // horizontally. Matches stock MAUI's left-anchored layout.
+        row.Modifier = Modifier.Companion.FillMaxWidth().Then(gestureModifier);
         return row;
     }
 
@@ -187,4 +209,16 @@ public partial class RadioButtonHandler : ComposeElementHandler<IRadioButton>
     /// </summary>
     public static void MapCharacterSpacing(RadioButtonHandler handler, IRadioButton rb) =>
         handler._letterSpacing.Value = rb.CharacterSpacing != 0 ? (float)rb.CharacterSpacing : null;
+
+    /// <summary>
+    /// Map <see cref="IButtonStroke.StrokeColor"/> to the Compose
+    /// <see cref="RadioButtonColors"/> ring slots — applied to both
+    /// <c>selectedColor</c> and <c>unselectedColor</c> so the user-
+    /// supplied colour is visible whether the radio is on or off
+    /// (matches stock MAUI's <c>UpdateStrokeColor</c>, which tints
+    /// the ring drawable in every check state). The disabled-state
+    /// ring colour stays on the M3 theme default.
+    /// </summary>
+    public static void MapStrokeColor(RadioButtonHandler handler, IRadioButton rb) =>
+        handler._strokeColor.Value = ColorMapping.ToPackedLong(rb.StrokeColor);
 }

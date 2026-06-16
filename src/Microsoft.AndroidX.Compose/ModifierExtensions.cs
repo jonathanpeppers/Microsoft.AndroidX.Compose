@@ -664,6 +664,23 @@ public static class ModifierExtensions
         modifier.Append(curr => ComposeBridges.ModifierWrapContentHeight(curr, unbounded));
 
     /// <summary>
+    /// <c>Modifier.wrapContentHeight(align, unbounded)</c> — overload of
+    /// <see cref="WrapContentHeight(Modifier, bool)"/> that places the
+    /// content within the parent's allocated height using
+    /// <paramref name="align"/> instead of Kotlin's default
+    /// <see cref="Alignment.Vertical.CenterVertically"/>. Useful for
+    /// mapping <c>Microsoft.Maui.ITextAlignment.VerticalTextAlignment</c>
+    /// onto a text composable that needs to top- or bottom-align inside a
+    /// fixed-height parent slot.
+    /// </summary>
+    public static Modifier WrapContentHeight(this Modifier modifier, Alignment.Vertical align, bool unbounded = false)
+    {
+        ArgumentNullException.ThrowIfNull(align);
+        return modifier.Append(curr =>
+            ComposeBridges.ModifierWrapContentHeightAligned(curr, align.Java, unbounded));
+    }
+
+    /// <summary>
     /// <c>Modifier.aspectRatio(ratio, matchHeightConstraintsFirst)</c> —
     /// forces the composable's width-to-height ratio.
     /// <paramref name="ratio"/> is <c>width / height</c>: <c>16f / 9f</c>

@@ -69,9 +69,8 @@ public partial class SearchBarHandler : ComposeElementHandler<ISearchBar>
             [nameof(ITextInput.CursorPosition)]             = MapCursorPosition,
             [nameof(ITextInput.SelectionLength)]            = MapSelectionLength,
             [nameof(ITextAlignment.HorizontalTextAlignment)] = MapHorizontalTextAlignment,
+            [nameof(ITextAlignment.VerticalTextAlignment)]   = MapVerticalTextAlignment,
             [nameof(IView.HorizontalLayoutAlignment)]       = MapHorizontalLayoutAlignment,
-            // TODO: VerticalTextAlignment — see EditorHandler; Box facade
-            // doesn't expose contentAlignment.
         };
 
     /// <summary>Command mapper (inherits view-level commands; no extras).</summary>
@@ -93,6 +92,7 @@ public partial class SearchBarHandler : ComposeElementHandler<ISearchBar>
     readonly MutableState<int>    _maxLength         = new(-1);
     readonly MutableState<float?> _letterSpacing     = new((float?)null);
     readonly MutableState<int>    _hTextAlign        = new((int)TextAlignment.Start);
+    readonly MutableState<int>    _vTextAlign        = new((int)TextAlignment.Center);
     readonly MutableState<bool>   _fillWidth         = new(false);
 
     /// <summary>Construct a handler with the default mappers.</summary>
@@ -127,6 +127,7 @@ public partial class SearchBarHandler : ComposeElementHandler<ISearchBar>
         var imeAction          = _imeAction.Value;
         var letterSpacing      = _letterSpacing.Value;
         var hTextAlign         = (TextAlignment)_hTextAlign.Value;
+        var vTextAlign         = (TextAlignment)_vTextAlign.Value;
         var fill               = _fillWidth.Value;
 
         var field = new ComposeOutlinedTextField(_tfv)
@@ -199,7 +200,8 @@ public partial class SearchBarHandler : ComposeElementHandler<ISearchBar>
 
         var modifier = (fill ? Modifier.FillMaxWidth() : Modifier.Companion)
             .ApplyGestures(virtualView, MauiContext)
-            .ApplySemantics(virtualView);
+            .ApplySemantics(virtualView)
+            .ApplyVerticalTextAlignment(vTextAlign);
         field.PrependModifier(modifier);
         return field;
     }
@@ -326,6 +328,15 @@ public partial class SearchBarHandler : ComposeElementHandler<ISearchBar>
     /// <summary>Map <see cref="ITextAlignment.HorizontalTextAlignment"/> to Compose <c>textAlign</c>.</summary>
     public static void MapHorizontalTextAlignment(SearchBarHandler handler, ISearchBar searchBar) =>
         handler._hTextAlign.Value = (int)searchBar.HorizontalTextAlignment;
+
+    /// <summary>
+    /// Map <see cref="ITextAlignment.VerticalTextAlignment"/> to a
+    /// <c>Modifier.wrapContentHeight(Alignment.Vertical)</c> on the
+    /// outer modifier — useful when the search bar's allocated height
+    /// exceeds its natural row height.
+    /// </summary>
+    public static void MapVerticalTextAlignment(SearchBarHandler handler, ISearchBar searchBar) =>
+        handler._vTextAlign.Value = (int)searchBar.VerticalTextAlignment;
 
     /// <summary>
     /// Map <see cref="IView.HorizontalLayoutAlignment"/> to
