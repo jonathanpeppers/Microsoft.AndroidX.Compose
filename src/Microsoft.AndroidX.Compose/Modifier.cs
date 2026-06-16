@@ -68,16 +68,8 @@ public sealed class Modifier
     /// can read them as <see cref="ChangedBits.Same"/> across
     /// recompositions and Kotlin can take the skip path.
     /// </summary>
-    internal Modifier Append(Func<IntPtr, IntPtr> op, ModifierOpKey key)
-    {
-        var ops = new Func<IntPtr, IntPtr>[_ops.Length + 1];
-        var keys = new ModifierOpKey[_keys.Length + 1];
-        Array.Copy(_ops, ops, _ops.Length);
-        Array.Copy(_keys, keys, _keys.Length);
-        ops[_ops.Length] = op;
-        keys[_keys.Length] = key;
-        return new Modifier(ops, keys);
-    }
+    internal Modifier Append(Func<IntPtr, IntPtr> op, ModifierOpKey key) =>
+        new Modifier([.._ops, op], [.._keys, key]);
 
     /// <summary>
     /// Append an op without a structural key; the resulting chain
@@ -102,13 +94,7 @@ public sealed class Modifier
         ArgumentNullException.ThrowIfNull(other);
         if (other._ops.Length == 0) return this;
         if (_ops.Length == 0) return other;
-        var ops = new Func<IntPtr, IntPtr>[_ops.Length + other._ops.Length];
-        var keys = new ModifierOpKey[_keys.Length + other._keys.Length];
-        Array.Copy(_ops, ops, _ops.Length);
-        Array.Copy(other._ops, 0, ops, _ops.Length, other._ops.Length);
-        Array.Copy(_keys, keys, _keys.Length);
-        Array.Copy(other._keys, 0, keys, _keys.Length, other._keys.Length);
-        return new Modifier(ops, keys);
+        return new Modifier([.._ops, ..other._ops], [.._keys, ..other._keys]);
     }
 
     /// <summary>
