@@ -2,13 +2,11 @@ using AndroidX.Compose;
 using AndroidX.Compose.Material3;
 using AndroidX.Compose.Runtime;
 using AndroidX.Compose.UI.Platform;
-using Kotlin.Jvm.Functions;
 using Kotlin.Ranges;
 using Microsoft.AndroidX.Compose.Maui.Loaders;
 using Microsoft.AndroidX.Compose.Maui.Platform;
 using Microsoft.Maui.Handlers;
 using ComposeImage   = AndroidX.Compose.Image;
-using ComposePainter = AndroidX.Compose.UI.Graphics.Painter.Painter;
 using ComposeSlider  = AndroidX.Compose.Slider;
 
 namespace Microsoft.AndroidX.Compose.Maui.Handlers;
@@ -46,13 +44,11 @@ namespace Microsoft.AndroidX.Compose.Maui.Handlers;
 ///
 /// <para><see cref="ISlider.ThumbImageSource"/> is resolved through
 /// the shared <see cref="ImageSourceLoader"/> (the same helper that
-/// backs <see cref="ImageHandler"/>). When a thumb image is supplied
-/// the handler swaps to a hand-written
-/// <see cref="ComposableNode"/> that calls the lower-level
-/// <c>SliderKt.Slider(..., thumb = { ... })</c> overload directly with
-/// an <see cref="ComposeImage"/> thumb slot — Material 3's stock
-/// <c>Slider</c> draws its thumb as a fixed circle and has no public
-/// way to inject a custom drawable.</para>
+/// backs <see cref="ImageHandler"/>). When the loader resolves a
+/// painter (or drawable id) the handler assigns a
+/// <see cref="ComposeImage"/> to <see cref="ComposeSlider.Thumb"/>;
+/// while the load is in flight (or no source is set) the slider
+/// keeps its default Material 3 thumb circle.</para>
 /// </remarks>
 public partial class SliderHandler : ComposeElementHandler<ISlider>
 {
@@ -104,25 +100,25 @@ public partial class SliderHandler : ComposeElementHandler<ISlider>
         var virtualView = VirtualView
             ?? throw new InvalidOperationException("VirtualView not set on SliderHandler.");
 
-        var min        = _min.Value;
-        var max        = _max.Value;
-        var thumb      = _thumbColor.Value;
-        var minTrack   = _minTrackColor.Value;
-        var maxTrack   = _maxTrackColor.Value;
-
-        // When the consumer set a ThumbImageSource and it resolved to
-        // either a packaged drawable id or a runtime-decoded
-        // BitmapPainter, drop into the hand-written thumb-slot path
-        // so the image actually paints in the thumb slot.
-        if (_thumbLoader is { } loader &&
-            (loader.Painter.Value is not null || loader.DrawableResourceId.Value is not null))
-        {
-            return new ImageThumbSlider(
-                this, virtualView, _value.Value, min, max, thumb, minTrack, maxTrack,
-                loader.DrawableResourceId.Value, loader.Painter.Value);
-        }
+        var min      = _min.Value;
+        var max      = _max.Value;
+        var thumb    = _thumbColor.Value;
+        var minTrack = _minTrackColor.Value;
+        var maxTrack = _maxTrackColor.Value;
 
         var slider = new ComposeSlider(_value.Value, OnValueChanged);
+
+        // ThumbImageSource → ComposeImage in the Thumb slot. Painter
+        // wins over drawable id (matches ImageHandler), so a freshly
+        // loaded BitmapPainter immediately replaces any stale fast-path
+        // resource id.
+        if (_thumbLoader is { } loader)
+        {
+            if (loader.Painter.Value is { } painter)
+                slider.Thumb = new ComposeImage(painter) { Modifier = s_thumbSize };
+            else if (loader.DrawableResourceId.Value is int drawableId)
+                slider.Thumb = new ComposeImage(drawableId) { Modifier = s_thumbSize };
+        }
 
         // Only allocate a Kotlin ClosedFloatingPointRange when the
         // bounds aren't Compose's stock [0, 1] — RangeTo always
@@ -141,6 +137,11 @@ public partial class SliderHandler : ComposeElementHandler<ISlider>
         slider.PrependModifier(Modifier.FillMaxWidth().ApplyGestures(virtualView, MauiContext).ApplySemantics(virtualView));
         return slider;
     }
+
+    // Compose's stock thumb is a 20-dp filled circle; sizing the
+    // image slightly bigger keeps the source bitmap visible without
+    // overflowing the slider's intrinsic height.
+    static readonly Modifier s_thumbSize = Modifier.Size(40);
 
     /// <inheritdoc/>
     protected override void DisconnectHandler(ComposeView platformView)
@@ -190,11 +191,10 @@ public partial class SliderHandler : ComposeElementHandler<ISlider>
     /// <summary>
     /// Map <see cref="ISlider.ThumbImageSource"/> through the shared
     /// <see cref="ImageSourceLoader"/>. When the loader resolves a
-    /// painter or drawable id, <see cref="BuildNode"/> swaps to the
-    /// hand-written <see cref="ImageThumbSlider"/> render path; while
-    /// the load is in flight (or the source is null) the default
-    /// <see cref="ComposeSlider"/> facade keeps drawing the Material
-    /// stock thumb circle.
+    /// painter or drawable id, <see cref="BuildNode"/> assigns a
+    /// <see cref="ComposeImage"/> to <see cref="ComposeSlider.Thumb"/>;
+    /// while the load is in flight (or the source is null) the
+    /// default <see cref="ComposeSlider"/> thumb circle keeps drawing.
     /// </summary>
     /// <remarks>
     /// Declared <c>async void</c> deliberately — mirrors
@@ -222,140 +222,5 @@ public partial class SliderHandler : ComposeElementHandler<ISlider>
         public bool          IsLoading          => false;
 
         public void UpdateIsLoading(bool isLoading) { /* no-op */ }
-    }
-
-    /// <summary>
-    /// Hand-written <see cref="ComposableNode"/> that drives the
-    /// <c>SliderKt.Slider(value, onValueChange, ..., thumb)</c>
-    /// overload directly so the thumb slot can render a caller-supplied
-    /// <see cref="ISlider.ThumbImageSource"/>. Lives here (not as a
-    /// generated facade) because no current <c>[ComposeFacade]</c>
-    /// shape models "swap the thumb slot with an
-    /// <see cref="ComposeImage"/> built from a runtime-resolved
-    /// painter or drawable resource id".
-    /// </summary>
-    sealed class ImageThumbSlider : ComposableNode
-    {
-        // SliderKt.Slider(value, onValueChange, modifier, enabled,
-        //                 onValueChangeFinished, colors, interactionSource,
-        //                 steps, thumb, track, valueRange,
-        //                 _composer, $changed, $changed1, $default)
-        // — $default mask bits 0..10, one per user param above (skipping
-        // _composer and the two $changed slots).
-        const int BitEnabled               = 1 << 3;
-        const int BitOnValueChangeFinished = 1 << 4;
-        const int BitColors                = 1 << 5;
-        const int BitInteractionSource     = 1 << 6;
-        const int BitSteps                 = 1 << 7;
-        const int BitTrack                 = 1 << 9;
-        const int BitValueRange            = 1 << 10;
-
-        // Compose's stock thumb is a 20-dp filled circle; sizing the
-        // image slightly bigger keeps the source bitmap visible without
-        // overflowing the slider's intrinsic height.
-        static readonly Modifier s_thumbSize = Modifier.Size(40);
-
-        readonly SliderHandler   _owner;
-        readonly ISlider         _virtualView;
-        readonly float           _value;
-        readonly float           _min;
-        readonly float           _max;
-        readonly long?           _thumbColor;
-        readonly long?           _minTrack;
-        readonly long?           _maxTrack;
-        readonly int?            _drawableId;
-        readonly ComposePainter? _painter;
-
-        public ImageThumbSlider(
-            SliderHandler   owner,
-            ISlider         virtualView,
-            float           value,
-            float           min,
-            float           max,
-            long?           thumbColor,
-            long?           minTrack,
-            long?           maxTrack,
-            int?            drawableId,
-            ComposePainter? painter)
-        {
-            _owner       = owner;
-            _virtualView = virtualView;
-            _value       = value;
-            _min         = min;
-            _max         = max;
-            _thumbColor  = thumbColor;
-            _minTrack    = minTrack;
-            _maxTrack    = maxTrack;
-            _drawableId  = drawableId;
-            _painter     = painter;
-        }
-
-        public override void Render(IComposer composer)
-        {
-            var onValueChange = new ComposableLambda1(boxed =>
-            {
-                var f = boxed as Java.Lang.Float
-                    ?? throw new InvalidCastException(
-                        $"Expected java.lang.Float in Slider.onValueChange; got '{boxed?.Class?.Name ?? "null"}'.");
-                _owner.OnValueChanged(f.FloatValue());
-            });
-
-            // Thumb slot — Painter wins over drawable id (matches
-            // ImageHandler / ImageButtonHandler), so a freshly-loaded
-            // BitmapPainter immediately replaces any stale fast-path
-            // resource id.
-            var thumbNode = _painter is { } p
-                ? new ComposeImage(p) { Modifier = s_thumbSize }
-                : _drawableId is int id
-                    ? new ComposeImage(id) { Modifier = s_thumbSize }
-                    : (ComposableNode)new Box { Modifier = s_thumbSize };
-            IFunction3 thumb = ComposableLambdas.Wrap3(
-                composer,
-                c => thumbNode.Render(c));
-
-            SliderColors? colors = null;
-            if (_thumbColor is not null || _minTrack is not null || _maxTrack is not null)
-                colors = composer.SliderColors(
-                    thumbColor:         _thumbColor,
-                    activeTrackColor:   _minTrack,
-                    inactiveTrackColor: _maxTrack);
-
-            IClosedFloatingPointRange? valueRange = null;
-            if (_min != 0f || _max != 1f)
-                valueRange = RangesKt.RangeTo(_min, _max);
-
-            var modifier = Modifier.FillMaxWidth()
-                .ApplyGestures(_virtualView, _owner.MauiContext)
-                .ApplySemantics(_virtualView);
-
-            // $default mask — set a bit for every slot we leave at its
-            // Kotlin default (null / 0 / stock theme). value, onValueChange,
-            // modifier and thumb are always supplied so their bits stay
-            // cleared. enabled is supplied explicitly so bit 3 clears.
-            int defaultMask =
-                BitOnValueChangeFinished |
-                BitInteractionSource |
-                BitSteps |
-                BitTrack;
-            if (colors is null)     defaultMask |= BitColors;
-            if (valueRange is null) defaultMask |= BitValueRange;
-
-            SliderKt.Slider(
-                value:                  _value,
-                onValueChange:          onValueChange,
-                modifier:               modifier.Build(),
-                enabled:                true,
-                onValueChangeFinished:  null,
-                colors:                 colors,
-                interactionSource:      null,
-                p7:                     0,
-                thumb:                  thumb,
-                track:                  null,
-                valueRange:             valueRange,
-                _composer:              composer,
-                steps:                  0,
-                _changed:               0,
-                _changed1:              defaultMask);
-        }
     }
 }

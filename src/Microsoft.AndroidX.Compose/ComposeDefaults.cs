@@ -881,14 +881,16 @@ using AndroidX.Compose;
     "disabledActiveTickColor", "disabledInactiveTrackColor",
     "disabledInactiveTickColor")]
 
-// androidx.compose.material3.SliderKt.Slider (simple float overload):
-// 9 user params; bits 0 (value) and 1 (onValueChange) always provided.
-// The longer overload with Function3 thumb/track slots has non-null
-// Kotlin defaults that can't be safely substituted, so we lock in this
-// simpler shape via the declarative form.
+// androidx.compose.material3.SliderKt.Slider (rich float overload with
+// thumb / track slots): 11 user params. Bits 0 (value) and 1
+// (onValueChange) always provided; bit 9 (track) is forced set
+// because Kotlin's default for that slot is a non-null lambda
+// (`SliderDefaults.Track(...)`) we cannot substitute with `null`
+// without an NPE. The simpler 9-param overload is no longer used —
+// this rich shape is required so the facade can expose a `Thumb` slot.
 [assembly: ComposeDefaults("SliderDefault",
-    "!value", "!onValueChange", "modifier", "enabled", "valueRange",
-    "steps", "onValueChangeFinished", "colors", "interactionSource")]
+    "!value", "!onValueChange", "modifier", "enabled", "onValueChangeFinished",
+    "colors", "interactionSource", "steps", "thumb", "track", "valueRange")]
 
 // androidx.compose.material3.SliderKt.RangeSlider (simple
 // ClosedFloatingPointRange overload): 8 user params; bits 0 (value)

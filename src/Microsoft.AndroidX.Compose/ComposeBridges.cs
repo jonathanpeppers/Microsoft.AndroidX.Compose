@@ -1360,7 +1360,7 @@ internal static partial class ComposeBridges
                     "Landroidx/compose/ui/Alignment;Lkotlin/jvm/functions/Function3;" +
                     "Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;II)V",
         Defaults  = typeof(PullToRefreshBoxDefault))]
-    [ComposeFacade]
+    [ComposeFacade(Scope = "Box")]
     public static partial void PullToRefreshBox(
         bool        isRefreshing,
         IFunction0  onRefresh,
@@ -1368,6 +1368,7 @@ internal static partial class ComposeBridges
                      StateType = typeof(PullToRefreshState))]
         IntPtr      state,
         IModifier?  modifier,
+        IFunction3? indicator,
         IFunction3  content,
         int         defaults,
         IComposer   composer);
@@ -3750,6 +3751,8 @@ internal static partial class ComposeBridges
         [Callback(typeof(float))]
         IFunction1                  onValueChange,
         IModifier?                  modifier,
+        [Slot("Thumb")]
+        IFunction3?                 thumb,
         IClosedFloatingPointRange?  valueRange,
         SliderColors?               colors,
         bool                        enabled  = true,
@@ -3757,25 +3760,34 @@ internal static partial class ComposeBridges
         int                         defaults = 0,
         IComposer                   composer = null!);
 
-    // Slot rename pattern: C# `p5` is the real Kotlin `steps` Int; C# named
-    // `steps:` is the JVM `$changed` recomposition int; `_changed` is `$default`.
-    // Cross-check with RangeSlider above, which uses the same SliderKt
-    // overload (both pass `steps: 0` for $changed and route the user-facing
-    // steps through `p5:`).
-    public static partial void Slider(float value, IFunction1 onValueChange, IModifier? modifier, IClosedFloatingPointRange? valueRange, SliderColors? colors, bool enabled, int steps, int defaults, IComposer composer)
+    // Wrapper-passthrough that calls the rich (Float, ..., thumb, track,
+    // valueRange) overload of SliderKt.Slider directly. The 11-user-param
+    // shape lets the facade expose a `Thumb` slot. We never supply
+    // `track:` — Kotlin's default is a stock track lambda — so bit 9
+    // (`track`) is force-OR'd into the $default mask before forwarding.
+    //
+    // Slot rename pattern (matches RangeSlider above):
+    //   C# `p7` = real Kotlin `steps` Int
+    //   C# `steps:` (after `_composer`) = JVM `$changed` int
+    //   C# `_changed` = JVM `$changed1`
+    //   C# `_changed1` = JVM `$default` ← the bitmask we forward
+    public static partial void Slider(float value, IFunction1 onValueChange, IModifier? modifier, IFunction3? thumb, IClosedFloatingPointRange? valueRange, SliderColors? colors, bool enabled, int steps, int defaults, IComposer composer)
         => SliderKt.Slider(
             value:                  value,
             onValueChange:          onValueChange,
             modifier:               modifier,
             enabled:                enabled,
-            valueRange:             valueRange,
-            p5:                     steps,
             onValueChangeFinished:  null,
             colors:                 colors,
             interactionSource:      null,
+            p7:                     steps,
+            thumb:                  thumb,
+            track:                  null,
+            valueRange:             valueRange,
             _composer:              composer,
             steps:                  0,
-            _changed:               defaults);
+            _changed:               0,
+            _changed1:              defaults | (int)SliderDefault.Track);
 
     // FlowRow / FlowColumn — Phase 8 wrapper-passthrough facades. The
     // simpler 7-Kotlin-param overloads (no FlowRowOverflow / FlowColumnOverflow
