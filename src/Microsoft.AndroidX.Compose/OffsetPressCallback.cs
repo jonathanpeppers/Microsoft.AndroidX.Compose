@@ -23,36 +23,20 @@ namespace AndroidX.Compose;
 /// for yet, and the resulting API would be misleadingly async.
 /// </para>
 /// <para>
-/// The boxed <c>Offset</c> argument (<c>p1</c>) is unboxed via the
-/// shared <see cref="OffsetCallback"/> helper's
-/// <c>unbox-impl()J</c> lookup pattern.
+/// The boxed <c>Offset</c> argument (<c>p1</c>) is unboxed via
+/// <see cref="Offset.Unbox"/>.
 /// </para>
 /// </remarks>
 [Register("net/compose/OffsetPressCallback")]
 internal sealed class OffsetPressCallback : Java.Lang.Object, IFunction3
 {
-    static IntPtr s_unbox;
-
     readonly Action<Offset> _body;
 
     public OffsetPressCallback(Action<Offset> body) => _body = body;
 
     public Java.Lang.Object Invoke(Java.Lang.Object? p0, Java.Lang.Object? p1, Java.Lang.Object? p2)
     {
-        long packed = 0L;
-        if (p1 is not null)
-        {
-            EnsureUnboxMethod();
-            packed = JNIEnv.CallLongMethod(p1.Handle, s_unbox);
-        }
-        _body(Offset.FromPacked(packed));
+        _body(Offset.Unbox(p1));
         return Kotlin.Unit.Instance!;
-    }
-
-    static void EnsureUnboxMethod()
-    {
-        if (s_unbox != IntPtr.Zero) return;
-        var cls = JNIEnv.FindClass("androidx/compose/ui/geometry/Offset");
-        s_unbox = JNIEnv.GetMethodID(cls, "unbox-impl", "()J");
     }
 }

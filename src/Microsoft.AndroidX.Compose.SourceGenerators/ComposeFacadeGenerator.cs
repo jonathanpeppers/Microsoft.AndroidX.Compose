@@ -2522,8 +2522,16 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         }
 
         // (f) AdapterType must have an accessible writable `Callback`
-        // property of type Func<T, bool> or Func<T, bool>?.
-        var callbackProp = adapterType.GetMembers("Callback").OfType<IPropertySymbol>().FirstOrDefault();
+        // property of type Func<T, bool> or Func<T, bool>?. Walk the
+        // inheritance chain so a property declared on an abstract
+        // base (e.g. ConfirmStateChangeAdapter<T>) is recognised on
+        // the concrete subclass too.
+        IPropertySymbol? callbackProp = null;
+        for (INamedTypeSymbol? t = adapterType; t is not null; t = t.BaseType)
+        {
+            callbackProp = t.GetMembers("Callback").OfType<IPropertySymbol>().FirstOrDefault();
+            if (callbackProp is not null) break;
+        }
         if (callbackProp is null || callbackProp.SetMethod is null)
         {
             diags.Add(Diagnostic.Create(Diagnostics.FacadeConfirmStateChangeInvalid, loc, methodName,

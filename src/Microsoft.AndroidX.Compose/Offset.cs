@@ -1,5 +1,7 @@
 namespace AndroidX.Compose;
 
+using JNIEnv = Android.Runtime.JNIEnv;
+
 /// <summary>
 /// C# wrapper around Kotlin's <c>androidx.compose.ui.geometry.Offset</c>.
 /// </summary>
@@ -46,6 +48,31 @@ public readonly struct Offset : IEquatable<Offset>
     internal long Packed => _packed;
 
     internal static Offset FromPacked(long packed) => new Offset(packed);
+
+    /// <summary>
+    /// Unbox a Kotlin <c>androidx.compose.ui.geometry.Offset</c>
+    /// JNI peer (received as the boxed argument of an
+    /// <c>IFunction1</c>/<c>IFunction2</c>/<c>IFunction3</c>/<c>IFunction4</c>
+    /// gesture callback) into a managed <see cref="Offset"/>. <c>null</c>
+    /// returns <see cref="Zero"/>. Caches the
+    /// <c>androidx.compose.ui.geometry.Offset.unbox-impl()J</c> method
+    /// id once per process — Mono.Android returns globally-registered
+    /// class refs from <see cref="JNIEnv.FindClass(string)"/> so no
+    /// global-ref bookkeeping is needed.
+    /// </summary>
+    internal static Offset Unbox(Java.Lang.Object? boxed)
+    {
+        if (boxed is null) return Zero;
+        if (s_unboxImpl == IntPtr.Zero)
+        {
+            var cls = JNIEnv.FindClass("androidx/compose/ui/geometry/Offset");
+            s_unboxImpl = JNIEnv.GetMethodID(cls, "unbox-impl", "()J");
+        }
+        return FromPacked(JNIEnv.CallLongMethod(boxed.Handle, s_unboxImpl));
+    }
+
+    static IntPtr s_unboxImpl;
+
 
     /// <summary>The X coordinate (horizontal, typically pixels).</summary>
     public float X => BitConverter.Int32BitsToSingle((int)((_packed >> 32) & 0xFFFFFFFFL));

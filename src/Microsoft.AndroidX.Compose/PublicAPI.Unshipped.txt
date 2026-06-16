@@ -199,6 +199,11 @@ AndroidX.Compose.CompositionLocal<T>.Provides(T value) -> AndroidX.Compose.Provi
 AndroidX.Compose.CompositionLocalProvider
 AndroidX.Compose.CompositionLocalProvider.Add(AndroidX.Compose.ProvidedValue! value) -> void
 AndroidX.Compose.CompositionLocalProvider.CompositionLocalProvider() -> void
+AndroidX.Compose.ConfirmStateChangeAdapter<T>
+AndroidX.Compose.ConfirmStateChangeAdapter<T>.Callback.get -> System.Func<T!, bool>?
+AndroidX.Compose.ConfirmStateChangeAdapter<T>.Callback.set -> void
+AndroidX.Compose.ConfirmStateChangeAdapter<T>.ConfirmStateChangeAdapter() -> void
+AndroidX.Compose.ConfirmStateChangeAdapter<T>.Invoke(Java.Lang.Object? p0) -> Java.Lang.Object?
 AndroidX.Compose.ContentScale
 AndroidX.Compose.Crossfade<T>
 AndroidX.Compose.Crossfade<T>.Crossfade(T targetState, System.Func<T, AndroidX.Compose.ComposableNode!>! content) -> void
@@ -338,10 +343,7 @@ AndroidX.Compose.DrawerStateHolder.IsOpen.get -> bool
 AndroidX.Compose.DrawerStateHolder.OpenAsync() -> System.Threading.Tasks.Task!
 AndroidX.Compose.DrawerStateHolder.TargetValue.get -> AndroidX.Compose.Material3.DrawerValue!
 AndroidX.Compose.DrawerValueConfirmStateChange
-AndroidX.Compose.DrawerValueConfirmStateChange.Callback.get -> System.Func<AndroidX.Compose.Material3.DrawerValue!, bool>?
-AndroidX.Compose.DrawerValueConfirmStateChange.Callback.set -> void
 AndroidX.Compose.DrawerValueConfirmStateChange.DrawerValueConfirmStateChange() -> void
-AndroidX.Compose.DrawerValueConfirmStateChange.Invoke(Java.Lang.Object? p0) -> Java.Lang.Object?
 AndroidX.Compose.DropdownMenu
 AndroidX.Compose.DropdownMenu.DropdownMenu(bool expanded, System.Action! onDismissRequest) -> void
 AndroidX.Compose.DropdownMenuItem
@@ -1111,9 +1113,6 @@ AndroidX.Compose.SheetStateHolder.ShowAsync(System.Threading.CancellationToken c
 AndroidX.Compose.SheetStateHolder.SkipPartiallyExpanded.get -> bool
 AndroidX.Compose.SheetStateHolder.TargetValue.get -> AndroidX.Compose.Material3.SheetValue!
 AndroidX.Compose.SheetValueConfirmStateChange
-AndroidX.Compose.SheetValueConfirmStateChange.Callback.get -> System.Func<AndroidX.Compose.Material3.SheetValue!, bool>?
-AndroidX.Compose.SheetValueConfirmStateChange.Callback.set -> void
-AndroidX.Compose.SheetValueConfirmStateChange.Invoke(Java.Lang.Object? p0) -> Java.Lang.Object?
 AndroidX.Compose.SheetValueConfirmStateChange.SheetValueConfirmStateChange() -> void
 AndroidX.Compose.SideEffect
 AndroidX.Compose.SideEffect.SideEffect(System.Action! effect) -> void
