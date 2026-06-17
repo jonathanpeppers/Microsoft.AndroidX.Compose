@@ -12,11 +12,15 @@ namespace AndroidX.Compose;
 /// observe pull progress (<see cref="PullToRefreshState.DistanceFraction"/> /
 /// <see cref="PullToRefreshState.IsAnimating"/>) for a custom indicator
 /// or analytics; omit it and Compose creates one internally via
-/// <c>rememberPullToRefreshState()</c>. The stock Material 3 spinner is
-/// always used — indicator customization is not yet exposed (the
-/// underlying container + optional <c>Function3</c> slot is the same
-/// hybrid shape the facade generator can't model for <c>BottomAppBar</c>;
-/// see <c>.github/copilot-instructions.md</c>).
+/// <c>rememberPullToRefreshState()</c>. Override the indicator by
+/// assigning <see cref="Indicator"/> — typically a
+/// <see cref="PullToRefreshIndicator"/> bound to the same
+/// <see cref="PullToRefreshState"/> — to recolor the stock spinner
+/// or supply a fully custom one. <see cref="Indicator"/> left
+/// <c>null</c> uses Material 3's default.
+///
+/// The body lambda runs inside Material's <c>Box</c> scope, so children
+/// can use <c>Modifier.Align(...)</c> / <c>Modifier.MatchParentSize()</c>.
 ///
 /// <code>
 /// var refreshing = Remember(() =&gt; new MutableState&lt;bool&gt;(false));
@@ -61,4 +65,4 @@ namespace AndroidX.Compose;
 /// }
 /// </code>
 /// </remarks>
-public sealed partial class PullToRefreshBox;
+public sealed partial class PullToRefreshBox { }

@@ -249,6 +249,92 @@ internal static partial class ComposeBridges
         }
     }
 
+    // ---- DrawScope JNI helpers ----
+    //
+    // The Compose `DrawScope` binding has no usable instance methods —
+    // every drawing primitive on it carries an inline-class param
+    // (Color, Offset, Size, CornerRadius, BlendMode), so the binder
+    // strips the lot and the C# IDrawScope interface is empty. The
+    // canvas-getter chain (`getDrawContext().getCanvas()`) avoids the
+    // mangling — neither method takes an inline class — but the binder
+    // still drops them because `IDrawScope` itself isn't surfaced.
+    //
+    // Hand-written below: enough JNI to extract the native
+    // `Android.Graphics.Canvas` and the packed `Size` long from a
+    // DrawScope handle, which is everything a `Modifier.drawBehind`
+    // callback needs to draw via directly-bound `Paint` + `Canvas`.
+
+    static IntPtr s_drawScopeClass;
+    static IntPtr s_drawContextClass;
+    static IntPtr s_drawScopeGetSizeMethodId;
+    static IntPtr s_drawScopeGetDrawContextMethodId;
+    static IntPtr s_drawContextGetCanvasMethodId;
+
+    static void EnsureDrawScopeMethodIds()
+    {
+        if (s_drawScopeGetSizeMethodId != IntPtr.Zero)
+            return;
+        s_drawScopeClass   = JNIEnv.FindClass("androidx/compose/ui/graphics/drawscope/DrawScope");
+        s_drawContextClass = JNIEnv.FindClass("androidx/compose/ui/graphics/drawscope/DrawContext");
+        s_drawScopeGetSizeMethodId        = JNIEnv.GetMethodID(s_drawScopeClass, "getSize-NH-jbRc", "()J");
+        s_drawScopeGetDrawContextMethodId = JNIEnv.GetMethodID(s_drawScopeClass, "getDrawContext", "()Landroidx/compose/ui/graphics/drawscope/DrawContext;");
+        s_drawContextGetCanvasMethodId    = JNIEnv.GetMethodID(s_drawContextClass, "getCanvas",     "()Landroidx/compose/ui/graphics/Canvas;");
+    }
+
+    // Read the modifier's bounds out of a DrawScope. The Kotlin
+    // property `DrawScope.size: Size` is mangled because `Size` is a
+    // `@JvmInline value class` over a packed `long`. Returned as the
+    // raw packed value; callers unpack with
+    // <see cref="UnpackSizeWidth"/> / <see cref="UnpackSizeHeight"/>.
+    internal static long DrawScopeGetSize(IntPtr drawScope)
+    {
+        EnsureDrawScopeMethodIds();
+        return JNIEnv.CallLongMethod(drawScope, s_drawScopeGetSizeMethodId);
+    }
+
+    /// <summary>Unpack a Compose <c>Size</c>'s width — high 32 bits as float.</summary>
+    internal static float UnpackSizeWidth(long packed) =>
+        BitConverter.Int32BitsToSingle((int)((ulong)packed >> 32));
+
+    /// <summary>Unpack a Compose <c>Size</c>'s height — low 32 bits as float.</summary>
+    internal static float UnpackSizeHeight(long packed) =>
+        BitConverter.Int32BitsToSingle((int)((ulong)packed & 0xFFFFFFFFL));
+
+    // Walk DrawScope → DrawContext → Compose Canvas → native
+    // android.graphics.Canvas. Returns null when the DrawScope handle
+    // is null or the canvas chain yields a null intermediate (defensive
+    // — Compose normally guarantees a non-null canvas inside drawBehind).
+    internal static Android.Graphics.Canvas? DrawScopeGetNativeCanvas(IntPtr drawScope)
+    {
+        if (drawScope == IntPtr.Zero)
+            return null;
+        EnsureDrawScopeMethodIds();
+        IntPtr drawContextLocal = JNIEnv.CallObjectMethod(drawScope, s_drawScopeGetDrawContextMethodId);
+        if (drawContextLocal == IntPtr.Zero)
+            return null;
+        IntPtr composeCanvasLocal = IntPtr.Zero;
+        try
+        {
+            composeCanvasLocal = JNIEnv.CallObjectMethod(drawContextLocal, s_drawContextGetCanvasMethodId);
+            if (composeCanvasLocal == IntPtr.Zero)
+                return null;
+            // GetObject(.., DoNotTransfer) — Mono creates its own
+            // global ref internally; we still own `composeCanvasLocal`
+            // and free it in the outer finally.
+            var composeCanvas = Java.Lang.Object.GetObject<AndroidX.Compose.UI.Graphics.ICanvas>(
+                composeCanvasLocal, JniHandleOwnership.DoNotTransfer);
+            return composeCanvas is null
+                ? null
+                : AndroidX.Compose.UI.Graphics.AndroidCanvas_androidKt.GetNativeCanvas(composeCanvas);
+        }
+        finally
+        {
+            if (composeCanvasLocal != IntPtr.Zero)
+                JNIEnv.DeleteLocalRef(composeCanvasLocal);
+            JNIEnv.DeleteLocalRef(drawContextLocal);
+        }
+    }
+
     // androidx.compose.ui.res.PainterResources_androidKt.painterResource —
     // returns a NEW local Painter ref the caller is responsible for
     // DeleteLocalRef'ing once it's been handed to the consuming
@@ -1360,7 +1446,7 @@ internal static partial class ComposeBridges
                     "Landroidx/compose/ui/Alignment;Lkotlin/jvm/functions/Function3;" +
                     "Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;II)V",
         Defaults  = typeof(PullToRefreshBoxDefault))]
-    [ComposeFacade]
+    [ComposeFacade(Scope = "Box")]
     public static partial void PullToRefreshBox(
         bool        isRefreshing,
         IFunction0  onRefresh,
@@ -1368,6 +1454,7 @@ internal static partial class ComposeBridges
                      StateType = typeof(PullToRefreshState))]
         IntPtr      state,
         IModifier?  modifier,
+        IFunction3? indicator,
         IFunction3  content,
         int         defaults,
         IComposer   composer, int _changed = 0);
@@ -2026,6 +2113,21 @@ internal static partial class ComposeBridges
     internal static partial IntPtr ModifierBorderBrush(
         IntPtr modifier, float width, AndroidX.Compose.UI.Graphics.Brush brush, Shape? shape);
 
+    // androidx.compose.ui.draw.DrawModifierKt.drawBehind —
+    // (Modifier, Function1<DrawScope, Unit>). Plain Kotlin static
+    // extension; the binder strips it because the Function1 generic
+    // erases at JVM level. No $default — caller must always supply
+    // the lambda. The Function1 is invoked by Compose on every redraw
+    // pass with a DrawScope receiver, which the caller can dispatch
+    // off via raw JNI (the Compose DrawScope binding is interface-
+    // only; instance methods are mangled by inline-class params).
+    [ComposeBridge(
+        Class     = "androidx/compose/ui/draw/DrawModifierKt",
+        JvmName   = "drawBehind",
+        Signature = "(Landroidx/compose/ui/Modifier;Lkotlin/jvm/functions/Function1;)" +
+                    "Landroidx/compose/ui/Modifier;")]
+    internal static partial IntPtr ModifierDrawBehind(IntPtr modifier, IFunction1 onDraw);
+
     // androidx.compose.foundation.ClickableKt.clickable-XHw0xAI$default —
     // (Modifier, Boolean enabled, String onClickLabel, Role role,
     // Function0 onClick). Returns a Modifier directly — the lambda is
@@ -2169,6 +2271,20 @@ internal static partial class ComposeBridges
                     "Landroidx/compose/ui/Modifier;",
         Defaults  = typeof(ModifierWrapContentHeightDefault))]
     internal static partial IntPtr ModifierWrapContentHeight(IntPtr modifier, bool unbounded);
+
+    // Sibling of ModifierWrapContentHeight that takes an explicit
+    // Alignment.Vertical. Reuses ModifierWrapContentHeightDefault — slot 0
+    // ("align") clears when the C# caller passes a non-null alignment, so
+    // Kotlin uses our value; null leaves it set so Kotlin's default
+    // (CenterVertically) applies.
+    [ComposeBridge(
+        Class     = "androidx/compose/foundation/layout/SizeKt",
+        JvmName   = "wrapContentHeight$default",
+        Signature = "(Landroidx/compose/ui/Modifier;Landroidx/compose/ui/Alignment$Vertical;ZILjava/lang/Object;)" +
+                    "Landroidx/compose/ui/Modifier;",
+        Defaults  = typeof(ModifierWrapContentHeightDefault))]
+    internal static partial IntPtr ModifierWrapContentHeightAligned(
+        IntPtr modifier, IAlignmentVertical? align, bool unbounded);
 
     // androidx.compose.foundation.layout.AspectRatioKt.aspectRatio$default —
     // (Modifier, Float ratio, Boolean matchHeightConstraintsFirst). Both
@@ -3751,6 +3867,8 @@ internal static partial class ComposeBridges
         [Callback(typeof(float))]
         IFunction1                  onValueChange,
         IModifier?                  modifier,
+        [Slot("Thumb")]
+        IFunction3?                 thumb,
         IClosedFloatingPointRange?  valueRange,
         SliderColors?               colors,
         bool                        enabled  = true,
@@ -3758,25 +3876,34 @@ internal static partial class ComposeBridges
         int                         defaults = 0,
         IComposer                   composer = null!, int _changed = 0);
 
-    // Slot rename pattern: C# `p5` is the real Kotlin `steps` Int; C# named
-    // `steps:` is the JVM `$changed` recomposition int; `_changed` is `$default`.
-    // Cross-check with RangeSlider above, which uses the same SliderKt
-    // overload (both pass `steps: 0` for $changed and route the user-facing
-    // steps through `p5:`).
-    public static partial void Slider(float value, IFunction1 onValueChange, IModifier? modifier, IClosedFloatingPointRange? valueRange, SliderColors? colors, bool enabled, int steps, int defaults, IComposer composer, int _changed)
+    // Wrapper-passthrough that calls the rich (Float, ..., thumb, track,
+    // valueRange) overload of SliderKt.Slider directly. The 11-user-param
+    // shape lets the facade expose a `Thumb` slot. We never supply
+    // `track:` — Kotlin's default is a stock track lambda — so bit 9
+    // (`track`) is force-OR'd into the $default mask before forwarding.
+    //
+    // Slot rename pattern (matches RangeSlider above):
+    //   C# `p7` = real Kotlin `steps` Int
+    //   C# `steps:` (after `_composer`) = JVM `$changed` int
+    //   C# `_changed` = JVM `$changed1`
+    //   C# `_changed1` = JVM `$default` ← the bitmask we forward
+    public static partial void Slider(float value, IFunction1 onValueChange, IModifier? modifier, IFunction3? thumb, IClosedFloatingPointRange? valueRange, SliderColors? colors, bool enabled, int steps, int defaults, IComposer composer, int _changed)
         => SliderKt.Slider(
             value:                  value,
             onValueChange:          onValueChange,
             modifier:               modifier,
             enabled:                enabled,
-            valueRange:             valueRange,
-            p5:                     steps,
             onValueChangeFinished:  null,
             colors:                 colors,
             interactionSource:      null,
+            p7:                     steps,
+            thumb:                  thumb,
+            track:                  null,
+            valueRange:             valueRange,
             _composer:              composer,
-            steps:                  0,
-            _changed:               defaults);
+            steps:                  _changed,
+            _changed:               0,
+            _changed1:              defaults | (int)SliderDefault.Track);
 
     // FlowRow / FlowColumn — Phase 8 wrapper-passthrough facades. The
     // simpler 7-Kotlin-param overloads (no FlowRowOverflow / FlowColumnOverflow

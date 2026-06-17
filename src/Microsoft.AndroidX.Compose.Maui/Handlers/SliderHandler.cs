@@ -1,10 +1,13 @@
 using AndroidX.Compose;
 using AndroidX.Compose.Material3;
 using AndroidX.Compose.Runtime;
+using AndroidX.Compose.UI.Platform;
 using Kotlin.Ranges;
+using Microsoft.AndroidX.Compose.Maui.Loaders;
 using Microsoft.AndroidX.Compose.Maui.Platform;
 using Microsoft.Maui.Handlers;
-using ComposeSlider = AndroidX.Compose.Slider;
+using ComposeImage   = AndroidX.Compose.Image;
+using ComposeSlider  = AndroidX.Compose.Slider;
 
 namespace Microsoft.AndroidX.Compose.Maui.Handlers;
 
@@ -38,6 +41,14 @@ namespace Microsoft.AndroidX.Compose.Maui.Handlers;
 /// MAUI exposes (<c>thumbColor</c>, <c>activeTrackColor</c>,
 /// <c>inactiveTrackColor</c>) are wired — tick colours and the four
 /// disabled siblings stay at the Material default.</para>
+///
+/// <para><see cref="ISlider.ThumbImageSource"/> is resolved through
+/// the shared <see cref="ImageSourceLoader"/> (the same helper that
+/// backs <see cref="ImageHandler"/>). When the loader resolves a
+/// painter (or drawable id) the handler assigns a
+/// <see cref="ComposeImage"/> to <see cref="ComposeSlider.Thumb"/>;
+/// while the load is in flight (or no source is set) the slider
+/// keeps its default Material 3 thumb circle.</para>
 /// </remarks>
 public partial class SliderHandler : ComposeElementHandler<ISlider>
 {
@@ -54,11 +65,7 @@ public partial class SliderHandler : ComposeElementHandler<ISlider>
             [nameof(ISlider.MinimumTrackColor)] = MapMinimumTrackColor,
             [nameof(ISlider.MaximumTrackColor)] = MapMaximumTrackColor,
             [nameof(ISlider.ThumbColor)]        = MapThumbColor,
-            // TODO: ISlider.ThumbImageSource — Material 3's Slider draws
-            // its thumb as a fixed circle; supplying a custom drawable
-            // requires the lower-level Slider(state, ..., thumb = { ... })
-            // overload plus piping the resolved Painter through our
-            // ImageSourceLoader. Larger surgery than fits this PR.
+            [nameof(ISlider.ThumbImageSource)]  = MapThumbImageSource,
         };
 
     /// <summary>Command mapper (inherits view-level commands; no extras).</summary>
@@ -71,6 +78,14 @@ public partial class SliderHandler : ComposeElementHandler<ISlider>
     readonly MutableState<long?> _thumbColor        = new((long?)null);
     readonly MutableState<long?> _minTrackColor     = new((long?)null);
     readonly MutableState<long?> _maxTrackColor     = new((long?)null);
+    ImageSourceLoader?           _thumbLoader;
+
+    // Lazy — sliders without ThumbImageSource set never allocate the
+    // loader or its IImageSourcePart adapter.
+    ImageSourceLoader ThumbLoader =>
+        _thumbLoader ??= new ImageSourceLoader(
+            this,
+            () => VirtualView is ISlider s ? new SliderThumbImageSourcePart(s) : null);
 
     /// <summary>Construct a handler with the default mappers.</summary>
     public SliderHandler() : base(Mapper, CommandMapper) { }
@@ -85,13 +100,25 @@ public partial class SliderHandler : ComposeElementHandler<ISlider>
         var virtualView = VirtualView
             ?? throw new InvalidOperationException("VirtualView not set on SliderHandler.");
 
-        var min        = _min.Value;
-        var max        = _max.Value;
-        var thumb      = _thumbColor.Value;
-        var minTrack   = _minTrackColor.Value;
-        var maxTrack   = _maxTrackColor.Value;
+        var min      = _min.Value;
+        var max      = _max.Value;
+        var thumb    = _thumbColor.Value;
+        var minTrack = _minTrackColor.Value;
+        var maxTrack = _maxTrackColor.Value;
 
         var slider = new ComposeSlider(_value.Value, OnValueChanged);
+
+        // ThumbImageSource → ComposeImage in the Thumb slot. Painter
+        // wins over drawable id (matches ImageHandler), so a freshly
+        // loaded BitmapPainter immediately replaces any stale fast-path
+        // resource id.
+        if (_thumbLoader is { } loader)
+        {
+            if (loader.Painter.Value is { } painter)
+                slider.Thumb = new ComposeImage(painter) { Modifier = s_thumbSize };
+            else if (loader.DrawableResourceId.Value is int drawableId)
+                slider.Thumb = new ComposeImage(drawableId) { Modifier = s_thumbSize };
+        }
 
         // Only allocate a Kotlin ClosedFloatingPointRange when the
         // bounds aren't Compose's stock [0, 1] — RangeTo always
@@ -109,6 +136,18 @@ public partial class SliderHandler : ComposeElementHandler<ISlider>
 
         slider.PrependModifier(Modifier.FillMaxWidth().ApplyGestures(virtualView, MauiContext).ApplySemantics(virtualView));
         return slider;
+    }
+
+    // Compose's stock thumb is a 20-dp filled circle; sizing the
+    // image slightly bigger keeps the source bitmap visible without
+    // overflowing the slider's intrinsic height.
+    static readonly Modifier s_thumbSize = Modifier.Size(40);
+
+    /// <inheritdoc/>
+    protected override void DisconnectHandler(ComposeView platformView)
+    {
+        _thumbLoader?.Reset();
+        base.DisconnectHandler(platformView);
     }
 
     void OnValueChanged(float newValue)
@@ -148,4 +187,40 @@ public partial class SliderHandler : ComposeElementHandler<ISlider>
     /// <summary>Map <see cref="ISlider.ThumbColor"/> to <c>SliderColors.thumbColor</c>.</summary>
     public static void MapThumbColor(SliderHandler handler, ISlider slider) =>
         handler._thumbColor.Value = ColorMapping.ToPackedLong(slider.ThumbColor);
+
+    /// <summary>
+    /// Map <see cref="ISlider.ThumbImageSource"/> through the shared
+    /// <see cref="ImageSourceLoader"/>. When the loader resolves a
+    /// painter or drawable id, <see cref="BuildNode"/> assigns a
+    /// <see cref="ComposeImage"/> to <see cref="ComposeSlider.Thumb"/>;
+    /// while the load is in flight (or the source is null) the
+    /// default <see cref="ComposeSlider"/> thumb circle keeps drawing.
+    /// </summary>
+    /// <remarks>
+    /// Declared <c>async void</c> deliberately — mirrors
+    /// <see cref="ImageHandler.MapSource"/>; see that mapper's remarks
+    /// for the fire-and-forget rationale.
+    /// </remarks>
+    public static async void MapThumbImageSource(SliderHandler handler, ISlider slider) =>
+        await handler.ThumbLoader.LoadAsync(slider.ThumbImageSource).ConfigureAwait(false);
+
+    /// <summary>
+    /// Adapter exposing the slider's <see cref="ISlider.ThumbImageSource"/>
+    /// to <see cref="ImageSourceLoader"/> as an
+    /// <see cref="IImageSourcePart"/>. <see cref="ISlider"/> itself
+    /// doesn't implement <see cref="IImageSourcePart"/> (only the
+    /// stand-alone <see cref="Microsoft.Maui.IImage"/> /
+    /// <see cref="IImageButton"/> virtual views do), so we wrap it.
+    /// </summary>
+    sealed class SliderThumbImageSourcePart : IImageSourcePart
+    {
+        readonly ISlider _slider;
+        public SliderThumbImageSourcePart(ISlider slider) => _slider = slider;
+
+        public IImageSource? Source           => _slider.ThumbImageSource;
+        public bool          IsAnimationPlaying => false;
+        public bool          IsLoading          => false;
+
+        public void UpdateIsLoading(bool isLoading) { /* no-op */ }
+    }
 }

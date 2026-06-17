@@ -18,6 +18,7 @@
               VerticalStackLayout folds into the parent Page composition.
     -->
     <RefreshView x:Name="Refresh"
+                 RefreshColor="#FF6B35"
                  Refreshing="OnRefreshing">
         <ScrollView>
             <VerticalStackLayout x:Name="ItemsHost"
@@ -44,10 +45,12 @@
                 <Label x:Name="Item4" Text="• Item 5" />
 
                 <!-- New mapper coverage: IsRefreshEnabled toggles whether
-                     the pull gesture even kicks off a refresh. -->
+                     the pull gesture even kicks off a refresh.
+                     RefreshColor (above on the RefreshView) tints the
+                     spinner glyph orange. -->
                 <Label Text="-- New mapper coverage --"
                        FontAttributes="Bold" />
-                <Label Text="Toggle below disables/enables IsRefreshEnabled. Pull-to-refresh ignores gestures while disabled." />
+                <Label Text="The spinner glyph is tinted via RefreshColor=&quot;#FF6B35&quot;. The toggle below disables/enables IsRefreshEnabled. Pull-to-refresh ignores gestures while disabled." />
                 <Switch x:Name="EnabledSwitch"
                         IsToggled="True"
                         Toggled="OnRefreshEnabledToggled"

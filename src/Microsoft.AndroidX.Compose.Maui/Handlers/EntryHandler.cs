@@ -64,12 +64,8 @@ public partial class EntryHandler : ComposeElementHandler<IEntry>
             [nameof(ITextInput.CursorPosition)]        = MapCursorPosition,
             [nameof(ITextInput.SelectionLength)]       = MapSelectionLength,
             [nameof(ITextAlignment.HorizontalTextAlignment)] = MapHorizontalTextAlignment,
+            [nameof(ITextAlignment.VerticalTextAlignment)]   = MapVerticalTextAlignment,
             [nameof(IView.HorizontalLayoutAlignment)]  = MapHorizontalLayoutAlignment,
-            // TODO: VerticalTextAlignment — single-line OutlinedTextField has
-            // no meaningful vertical alignment slot; Compose centres the
-            // baseline by default. Stock MAUI Entry only honours this
-            // alignment when the Entry's Height exceeds line height, which
-            // is uncommon. Skip until a multi-line Entry use-case appears.
         };
 
     /// <summary>Command mapper (inherits view-level commands; no extras).</summary>
@@ -89,6 +85,7 @@ public partial class EntryHandler : ComposeElementHandler<IEntry>
     readonly MutableState<int>    _imeAction       = new(ComposeImeAction.Default);
     readonly MutableState<float?> _letterSpacing   = new((float?)null);
     readonly MutableState<int>    _hTextAlign      = new((int)TextAlignment.Start);
+    readonly MutableState<int>    _vTextAlign      = new((int)TextAlignment.Center);
     readonly MutableState<int>    _clearButtonMode = new((int)ClearButtonVisibility.Never);
     readonly MutableState<int>    _maxLength       = new(-1);
     readonly MutableState<bool>   _fillWidth       = new(false);
@@ -197,10 +194,12 @@ public partial class EntryHandler : ComposeElementHandler<IEntry>
 
         // Single chained PrependModifier — combines layout-fill with
         // the cross-cutting view properties.
+        var vAlign = (TextAlignment)_vTextAlign.Value;
         var outer = (fill ? Modifier.FillMaxWidth() : Modifier.Companion)
             .ApplyViewProperties(virtualView)
             .ApplyGestures(virtualView, MauiContext)
-            .ApplySemantics(virtualView);
+            .ApplySemantics(virtualView)
+            .ApplyVerticalTextAlignment(vAlign);
         field.PrependModifier(outer);
         return field;
     }
@@ -329,6 +328,17 @@ public partial class EntryHandler : ComposeElementHandler<IEntry>
     /// <summary>Map <see cref="ITextAlignment.HorizontalTextAlignment"/> to Compose <c>textAlign</c>.</summary>
     public static void MapHorizontalTextAlignment(EntryHandler handler, IEntry entry) =>
         handler._hTextAlign.Value = (int)entry.HorizontalTextAlignment;
+
+    /// <summary>
+    /// Map <see cref="ITextAlignment.VerticalTextAlignment"/> to a
+    /// <c>Modifier.wrapContentHeight(Alignment.Vertical)</c> on the
+    /// outer modifier. Single-line entries clamp to a fixed line
+    /// height and only honour this when the entry's allocated height
+    /// exceeds the natural one (e.g. an explicit <c>HeightRequest</c>),
+    /// matching stock MAUI behaviour.
+    /// </summary>
+    public static void MapVerticalTextAlignment(EntryHandler handler, IEntry entry) =>
+        handler._vTextAlign.Value = (int)entry.VerticalTextAlignment;
 
     /// <summary>
     /// Map <see cref="IView.HorizontalLayoutAlignment"/> to

@@ -39,11 +39,11 @@ namespace Microsoft.AndroidX.Compose.Maui.Handlers;
 /// <see cref="LayoutHandler"/> / <see cref="ContentViewHandler"/>, so
 /// nested Compose-backed views fold into the parent composition.</para>
 ///
-/// <para><see cref="IRefreshView.RefreshColor"/> isn't wired yet: the
-/// current C# <c>PullToRefreshBox</c> facade doesn't expose
-/// <c>containerColor</c> / <c>contentColor</c> slots. Until it does,
-/// the spinner uses Material 3's default theme tint. Tracked as a
-/// follow-up for the next slice.</para>
+/// <para><see cref="IRefreshView.RefreshColor"/> maps to the spinner
+/// glyph color via the public
+/// <see cref="PullToRefreshIndicator"/> facade, which wraps
+/// <c>PullToRefreshDefaults.Instance.Indicator(...)</c>. When unset
+/// the spinner falls back to Material 3's default tint.</para>
 /// </remarks>
 public partial class RefreshViewHandler : ComposeElementHandler<IRefreshView>
 {
@@ -56,25 +56,21 @@ public partial class RefreshViewHandler : ComposeElementHandler<IRefreshView>
         {
             [nameof(IRefreshView.IsRefreshing)]      = MapIsRefreshing,
             [nameof(IRefreshView.IsRefreshEnabled)]  = MapIsRefreshEnabled,
+            [nameof(IRefreshView.RefreshColor)]      = MapRefreshColor,
             ["Content"]                              = MapContent,
-            // TODO: IRefreshView.RefreshColor — Compose Material 3's
-            // PullToRefreshBox doesn't currently expose containerColor /
-            // contentColor through our facade (the bound Kotlin overload
-            // takes a PullToRefreshState parameter we don't surface).
-            // Wiring this needs a PullToRefreshBox facade extension —
-            // larger surgery than fits this PR.
         };
 
     /// <summary>Command mapper (inherits view-level commands; no extras).</summary>
     public static CommandMapper<IRefreshView, RefreshViewHandler> CommandMapper =
         new(ViewCommandMapper);
 
-    readonly MutableState<bool> _isRefreshing  = new(false);
-    readonly MutableState<bool> _isEnabled     = new(true);
+    readonly MutableState<bool>  _isRefreshing   = new(false);
+    readonly MutableState<bool>  _isEnabled      = new(true);
+    readonly MutableState<long?> _refreshColor   = new((long?)null);
     // Bumped whenever Content swaps so BuildNode reads the live
     // PresentedContent reference (IView itself doesn't fit in
     // MutableState<T>; same trick as ContentViewHandler).
-    readonly MutableState<int>  _contentVersion = new(0);
+    readonly MutableState<int>   _contentVersion = new(0);
 
     /// <summary>Construct a handler with the default mappers.</summary>
     public RefreshViewHandler() : base(Mapper, CommandMapper) { }
@@ -95,9 +91,18 @@ public partial class RefreshViewHandler : ComposeElementHandler<IRefreshView>
         var context = MauiContext
             ?? throw new InvalidOperationException("MauiContext not set on RefreshViewHandler.");
 
-        bool isEnabled = _isEnabled.Value;
+        bool isEnabled    = _isEnabled.Value;
+        bool isRefreshing = _isRefreshing.Value;
+
+        // Share one PullToRefreshState wrapper between the box and
+        // the optional Indicator override. The box's Render populates
+        // state.Jvm during the first composition; the indicator
+        // lambda runs inside that same Render afterwards, so it sees
+        // the populated handle.
+        var state = new PullToRefreshState();
+
         var box = new ComposePullToRefreshBox(
-            isRefreshing: _isRefreshing.Value,
+            isRefreshing: isRefreshing,
             onRefresh:    () =>
             {
                 // Mirror MAUI's stock Android RefreshView handler: only
@@ -118,7 +123,19 @@ public partial class RefreshViewHandler : ComposeElementHandler<IRefreshView>
                 if (!isEnabled) return;
                 _isRefreshing.Value = true;
                 view.IsRefreshing   = true;
-            });
+            },
+            state: state);
+
+        // RefreshColor → spinner glyph tint. null/non-SolidPaint
+        // falls through to Material 3's default; non-null swaps in
+        // the public PullToRefreshIndicator facade.
+        if (_refreshColor.Value is long packedColor)
+        {
+            box.Indicator = new PullToRefreshIndicator(state, isRefreshing)
+            {
+                Color = packedColor,
+            };
+        }
 
         // FillMaxSize so the gesture region matches MAUI's full-bleed
         // RefreshView semantics, plus ApplyViewProperties for Opacity /
@@ -153,4 +170,21 @@ public partial class RefreshViewHandler : ComposeElementHandler<IRefreshView>
     /// </summary>
     public static void MapIsRefreshEnabled(RefreshViewHandler handler, IRefreshView view) =>
         handler._isEnabled.Value = view.IsRefreshEnabled;
+
+    /// <summary>
+    /// Map <see cref="IRefreshView.RefreshColor"/> to the spinner
+    /// glyph color. <c>null</c> (or a non-<see cref="SolidPaint"/>
+    /// brush) falls back to Material 3's default theme tint; a
+    /// non-null solid color swaps in a
+    /// <see cref="PullToRefreshIndicator"/> with the packed color.
+    /// </summary>
+    /// <remarks>
+    /// <see cref="IRefreshView.RefreshColor"/> is a
+    /// <see cref="Paint"/> on the interface so consumers can in theory
+    /// bind a gradient brush — but MAUI's stock platform handlers all
+    /// flatten that to a single tint, so we do the same. Gradient
+    /// paints are silently treated as "no color set".
+    /// </remarks>
+    public static void MapRefreshColor(RefreshViewHandler handler, IRefreshView view) =>
+        handler._refreshColor.Value = ColorMapping.ToPackedLong((view.RefreshColor as SolidPaint)?.Color);
 }

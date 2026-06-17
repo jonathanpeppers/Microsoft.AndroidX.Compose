@@ -314,6 +314,38 @@ public static class ModifierExtensions
     }
 
     /// <summary>
+    /// <c>Modifier.drawBehind(onDraw: DrawScope.() -&gt; Unit)</c> —
+    /// installs <paramref name="onDraw"/> as a behind-the-content draw
+    /// callback. Compose invokes the lambda on every draw pass with a
+    /// <c>DrawScope</c> receiver (passed as a Java <c>Object</c> handle
+    /// to the JCW) before painting the modifier's children.
+    /// </summary>
+    /// <remarks>
+    /// <para>The Compose <c>DrawScope</c> binding is interface-only —
+    /// every drawing primitive on it (<c>drawRect</c>, <c>drawRoundRect</c>,
+    /// <c>drawPath</c>, …) carries an inline-class param (<c>Color</c>,
+    /// <c>Offset</c>, <c>Size</c>, <c>CornerRadius</c>, <c>BlendMode</c>),
+    /// so the binder strips them and the C# instance API is empty.
+    /// Callbacks reach into <c>DrawScope.drawContext.canvas.nativeCanvas</c>
+    /// via raw JNI to get an <see cref="Android.Graphics.Canvas"/> and
+    /// draw with the directly-bound <see cref="Android.Graphics.Paint"/>
+    /// API.</para>
+    ///
+    /// <para>The <paramref name="onDraw"/> JCW is captured by the
+    /// closure so its Java peer stays alive across recompositions —
+    /// pass the <em>same</em> JCW instance each pass to keep modifier
+    /// equality stable; allocating a fresh <see cref="IFunction1"/>
+    /// every recomposition rebuilds the underlying
+    /// <c>DrawBehindElement</c> on every frame.</para>
+    /// </remarks>
+    public static Modifier DrawBehind(this Modifier modifier, Kotlin.Jvm.Functions.IFunction1 onDraw)
+    {
+        ArgumentNullException.ThrowIfNull(onDraw);
+        return modifier.Append(curr => ComposeBridges.ModifierDrawBehind(curr, onDraw),
+            new ModifierOpKey(nameof(DrawBehind), ValueTuple.Create<object>(onDraw)));
+    }
+
+    /// <summary>
     /// <c>Modifier.clip(RoundedCornerShape(<paramref name="cornerRadius"/>))</c> —
     /// rounds the four corners by the same radius and clips drawing to the
     /// resulting shape. Pass <c>0</c> for no rounding (rectangle clip).
@@ -671,6 +703,24 @@ public static class ModifierExtensions
     public static Modifier WrapContentHeight(this Modifier modifier, bool unbounded = false) =>
         modifier.Append(curr => ComposeBridges.ModifierWrapContentHeight(curr, unbounded),
             new ModifierOpKey(nameof(WrapContentHeight), ValueTuple.Create(unbounded)));
+
+    /// <summary>
+    /// <c>Modifier.wrapContentHeight(align, unbounded)</c> — overload of
+    /// <see cref="WrapContentHeight(Modifier, bool)"/> that places the
+    /// content within the parent's allocated height using
+    /// <paramref name="align"/> instead of Kotlin's default
+    /// <see cref="Alignment.Vertical.CenterVertically"/>. Useful for
+    /// mapping <c>Microsoft.Maui.ITextAlignment.VerticalTextAlignment</c>
+    /// onto a text composable that needs to top- or bottom-align inside a
+    /// fixed-height parent slot.
+    /// </summary>
+    public static Modifier WrapContentHeight(this Modifier modifier, Alignment.Vertical align, bool unbounded = false)
+    {
+        ArgumentNullException.ThrowIfNull(align);
+        return modifier.Append(curr =>
+            ComposeBridges.ModifierWrapContentHeightAligned(curr, align.Java, unbounded),
+            new ModifierOpKey(nameof(WrapContentHeight), ((object)align, unbounded)));
+    }
 
     /// <summary>
     /// <c>Modifier.aspectRatio(ratio, matchHeightConstraintsFirst)</c> —

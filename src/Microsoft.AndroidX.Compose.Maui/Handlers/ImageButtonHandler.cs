@@ -53,9 +53,18 @@ public partial class ImageButtonHandler : ComposeElementHandler<MauiIImageButton
             [nameof(IButtonStroke.CornerRadius)]         = MapCornerRadius,
             [nameof(IPadding.Padding)]                   = MapPadding,
             // TODO: IImage.IsAnimationPlaying — same caveat as
-            // ImageHandler. Compose animates GIFs/WebPs only through
-            // coil-compose, which isn't wired into ImageSourceLoader.
-            // Leaving unmapped so the coverage report flags the gap.
+            // ImageHandler.MapSource. `ImageSourceLoader` rasterises
+            // the resolved `Drawable` to a static `Bitmap` before
+            // wrapping it as a `BitmapPainter`, so even when the
+            // underlying source is an `AnimatedImageDrawable` the
+            // snapshot in Compose's slot table doesn't animate.
+            // Honouring this property needs either a hand-rolled
+            // `DrawablePainter` JCW whose `DrawScope.onDraw` forwards
+            // into `Drawable.draw(Canvas)` (with `start()` / `stop()`
+            // gated on the slot), or routing source resolution
+            // through coil-compose's `AsyncImagePainter`. Leaving
+            // unmapped so the coverage report flags the gap rather
+            // than claiming a no-op wire.
         };
 
     /// <summary>Command mapper (inherits view-level commands; no extras).</summary>

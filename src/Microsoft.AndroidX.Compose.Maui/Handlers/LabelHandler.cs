@@ -45,15 +45,11 @@ public partial class LabelHandler : ComposeElementHandler<ILabel>
             [nameof(ITextStyle.CharacterSpacing)]     = MapCharacterSpacing,
             [nameof(ITextStyle.Font)]                 = MapFont,
             [nameof(ILabel.HorizontalTextAlignment)]  = MapHorizontalTextAlignment,
+            [nameof(ILabel.VerticalTextAlignment)]    = MapVerticalTextAlignment,
             [nameof(ILabel.LineHeight)]               = MapLineHeight,
             [nameof(ILabel.TextDecorations)]          = MapTextDecorations,
             [nameof(IPadding.Padding)]                = MapPadding,
             [nameof(IView.HorizontalLayoutAlignment)] = MapHorizontalLayoutAlignment,
-            // TODO: VerticalTextAlignment — requires wrapping the Text in a
-            // Box whose `contentAlignment` slot is set; our Box facade
-            // currently doesn't expose `contentAlignment` so we can't drive
-            // it without a generator change. In stock MAUI this only has a
-            // visible effect when the Label has an explicit Height anyway.
         };
 
     /// <summary>Command mapper (inherits view-level commands; no extras).</summary>
@@ -68,6 +64,7 @@ public partial class LabelHandler : ComposeElementHandler<ILabel>
     // (IMutableIntState) path; the generic boxed path doesn't recognise
     // user-defined enums and would throw NotSupportedException at ctor time.
     readonly MutableState<int>         _hTextAlign = new((int)TextAlignment.Start);
+    readonly MutableState<int>         _vTextAlign = new((int)TextAlignment.Start);
     readonly MutableState<bool>        _fillWidth = new(false);
     // CharacterSpacing in MAUI is "em"-ish (0..1 typically). Packed via the
     // Sp(1) * float overload because Sp has no (float) ctor.
@@ -107,6 +104,7 @@ public partial class LabelHandler : ComposeElementHandler<ILabel>
         var bold   = _bold.Value;
         var fill   = _fillWidth.Value;
         var align  = (TextAlignment)_hTextAlign.Value;
+        var vAlign = (TextAlignment)_vTextAlign.Value;
         var letterSpacing = _letterSpacing.Value;
         var lineHeight    = _lineHeight.Value;
         var decorations   = (Microsoft.Maui.TextDecorations)_decorations.Value;
@@ -191,6 +189,7 @@ public partial class LabelHandler : ComposeElementHandler<ILabel>
             .ApplyViewProperties(virtualView)
             .ApplyGestures(virtualView, MauiContext)
             .ApplySemantics(virtualView)
+            .ApplyVerticalTextAlignment(vAlign)
             .Padding(
                 new Dp((float)padding.Left),
                 new Dp((float)padding.Top),
@@ -225,6 +224,17 @@ public partial class LabelHandler : ComposeElementHandler<ILabel>
     /// <summary>Map <see cref="ILabel.HorizontalTextAlignment"/> to Compose <c>textAlign</c>.</summary>
     public static void MapHorizontalTextAlignment(LabelHandler handler, ILabel label) =>
         handler._hTextAlign.Value = (int)label.HorizontalTextAlignment;
+
+    /// <summary>
+    /// Map <see cref="ILabel.VerticalTextAlignment"/> to a
+    /// <c>Modifier.wrapContentHeight(Alignment.Vertical)</c> on the
+    /// outer modifier, so the text top/center/bottom-aligns inside the
+    /// label's allocated height. Visible only when the label has an
+    /// explicit <c>HeightRequest</c> (or fills its parent vertically) —
+    /// matches the stock MAUI behaviour.
+    /// </summary>
+    public static void MapVerticalTextAlignment(LabelHandler handler, ILabel label) =>
+        handler._vTextAlign.Value = (int)label.VerticalTextAlignment;
 
     /// <summary>
     /// Map <see cref="IView.HorizontalLayoutAlignment"/> to

@@ -76,11 +76,9 @@ public partial class PickerHandler : ComposeElementHandler<IPicker>
             [nameof(ITextStyle.CharacterSpacing)]     = MapCharacterSpacing,
             [nameof(ITextStyle.Font)]                 = MapFont,
             [nameof(IPicker.HorizontalTextAlignment)] = MapHorizontalTextAlignment,
+            [nameof(IPicker.VerticalTextAlignment)]   = MapVerticalTextAlignment,
             [nameof(IPicker.IsOpen)]                  = MapIsOpen,
             [nameof(IView.HorizontalLayoutAlignment)] = MapHorizontalLayoutAlignment,
-            // TODO: VerticalTextAlignment — see LabelHandler. Requires a
-            // Box wrapper with `contentAlignment` to take visible effect
-            // (and only matters when the picker has an explicit Height).
         };
 
     /// <summary>Command mapper (inherits view-level commands; no extras).</summary>
@@ -99,6 +97,7 @@ public partial class PickerHandler : ComposeElementHandler<IPicker>
     readonly MutableState<float?>  _letterSpacing = new((float?)null);
     // Stored as the underlying int (see LabelHandler note on enum-backed slots).
     readonly MutableState<int>     _hTextAlign    = new((int)TextAlignment.Start);
+    readonly MutableState<int>     _vTextAlign    = new((int)TextAlignment.Center);
 
     INotifyCollectionChanged? _subscribedItems;
 
@@ -159,6 +158,7 @@ public partial class PickerHandler : ComposeElementHandler<IPicker>
         var isOpen = _open.Value;
         var letterSpacing = _letterSpacing.Value;
         var hAlign = (TextAlignment)_hTextAlign.Value;
+        var vAlign = (TextAlignment)_vTextAlign.Value;
 
         var displayValue = selectedIndex >= 0 && selectedIndex < items.Count
             ? items[selectedIndex] ?? string.Empty
@@ -203,7 +203,8 @@ public partial class PickerHandler : ComposeElementHandler<IPicker>
         var outer = (fill ? Modifier.FillMaxWidth() : Modifier.Companion)
             .ApplyViewProperties(virtualView)
             .ApplyGestures(virtualView, MauiContext)
-            .ApplySemantics(virtualView);
+            .ApplySemantics(virtualView)
+            .ApplyVerticalTextAlignment(vAlign);
         trigger.PrependModifier(outer);
 
         var menu = new ExposedDropdownMenu(
@@ -349,6 +350,15 @@ public partial class PickerHandler : ComposeElementHandler<IPicker>
     /// </summary>
     public static void MapHorizontalTextAlignment(PickerHandler handler, IPicker picker) =>
         handler._hTextAlign.Value = (int)picker.HorizontalTextAlignment;
+
+    /// <summary>
+    /// Map <see cref="IPicker.VerticalTextAlignment"/> to a
+    /// <c>Modifier.wrapContentHeight(Alignment.Vertical)</c> on the
+    /// outer modifier. Visible when the picker's allocated height
+    /// exceeds its natural row height.
+    /// </summary>
+    public static void MapVerticalTextAlignment(PickerHandler handler, IPicker picker) =>
+        handler._vTextAlign.Value = (int)picker.VerticalTextAlignment;
 
     /// <summary>
     /// Map <see cref="IPicker.IsOpen"/> to the Compose dropdown
