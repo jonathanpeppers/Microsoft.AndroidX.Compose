@@ -1017,6 +1017,60 @@ inlined as a literal. The `UpdateScope` lambda re-enters the wrapper
 when Compose triggers a recomposition; the second-pass `DiffSlot`
 calls read each arg as `Same`/`Different` and the skip path takes over.
 
+### Opting in to `$changed` (Kotlin-compatible threading)
+
+Declaring an optional trailing `int _changed = 0` parameter on the
+partial (and the matching `Impl` companion) switches the wrapper to
+the Kotlin-shape `$changed` threading:
+
+```csharp
+[Composable]
+public static partial void Counter(IComposer composer, int count, Action onIncrement, int _changed = 0);
+
+static void CounterImpl(IComposer composer, int count, Action onIncrement, int _changed = 0)
+{
+    // user body — pass _changed: 0 to nested [Composable] calls so the
+    // outer wrapper's diff result flows through.
+}
+```
+
+The generator then emits:
+
+```csharp
+public static partial void Counter(IComposer composer, int count, Action onIncrement, int _changed)
+{
+    var __c = composer.StartRestartGroup(unchecked((int)0xKEY));
+    int __dirty = _changed;
+    if ((_changed & 0x6) == 0) __dirty |= __c.DiffSlot<int>(count, 1);
+    if ((_changed & 0x30) == 0) __dirty |= __c.DiffSlot<System.Action>(onIncrement, 4);
+    if ((__dirty & 0x49) != 0x12 || !__c.Skipping)
+        CounterImpl(__c, count, onIncrement, __dirty);
+    else
+        __c.SkipToGroupEnd();
+    __c.EndRestartGroup()?.UpdateScope(new ComposableLambda2(
+        (__c2, __force) => Counter(__c2, count, onIncrement, __force | 1)));
+}
+```
+
+Three things change vs the legacy shape:
+
+1. `__dirty` is **seeded from `_changed`** instead of `0`, so caller
+   hints flow into the local diff.
+2. **`DiffSlot` is gated**: when the caller already populated a slot's
+   bits (`(_changed & 0bSAME_DIFF_FOR_SLOT) != 0`), the wrapper skips
+   the runtime compare entirely — slot positions that the caller
+   knows are Same/Different short-circuit through.
+3. The skip check is the canonical Kotlin pair: mask
+   `0b001 | sum(0b101 << (1+3*i))` and expected
+   `sum(0b001 << (1+3*i))`. Bit 0 is the runtime's **force flag** —
+   the `UpdateScope` lambda OR-s `1` into `_changed` on recompose so
+   the recomposition pass never gets elided by its own skip check.
+
+Without `_changed`, the wrapper still works (back-compat shape used by
+the 7 existing pin tests) but cannot honour caller-supplied diff bits
+and can be skipped by `composer.Skipping` even when an upstream restart
+requested otherwise. **New Tier 2 composables should opt in.**
+
 ### Coexistence with the tree-style facade
 
 Both styles can call into each other freely:

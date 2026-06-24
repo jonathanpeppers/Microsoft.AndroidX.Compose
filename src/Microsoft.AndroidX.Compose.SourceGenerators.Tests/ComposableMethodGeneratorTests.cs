@@ -53,6 +53,7 @@ public class ComposableMethodGeneratorTests
             public sealed class ComposableLambda2 : Kotlin.Jvm.Functions.IFunction2
             {
                 public ComposableLambda2(System.Action<AndroidX.Compose.Runtime.IComposer> body) { }
+                public ComposableLambda2(System.Action<AndroidX.Compose.Runtime.IComposer, int> body) { }
             }
 
             public static class ComposeExtensions
@@ -242,6 +243,72 @@ public class ComposableMethodGeneratorTests
             """);
 
         Assert.Contains(diags, d => d.Id == "CN5004");
+    }
+
+    [Fact]
+    public void TrailingChangedParam_EmitsKotlinShapeSkipMask()
+    {
+        // Opting in to the Kotlin-shape $changed parameter:
+        //   - __dirty is seeded from _changed (caller's hint)
+        //   - DiffSlot fallback is gated on caller bits being empty
+        //   - skip mask/expected match Kotlin's (mask 0b1011, expected 0b0010 for 1 param)
+        //   - UpdateScope lambda passes scopeChanged | 1 (sets force bit)
+        var (output, diags, emitted) = Run("""
+            namespace App
+            {
+                public static partial class Screens
+                {
+                    [AndroidX.Compose.Composable]
+                    public static partial void Greeting(AndroidX.Compose.Runtime.IComposer composer, string name, int _changed = 0);
+
+                    static void GreetingImpl(AndroidX.Compose.Runtime.IComposer composer, string name, int _changed = 0) { }
+                }
+            }
+            """);
+
+        Assert.Empty(diags);
+        Assert.NotNull(emitted);
+        // Seed __dirty from caller's _changed.
+        Assert.Contains("int __dirty = _changed;", emitted);
+        // Gate DiffSlot on caller's bits being empty for this slot.
+        // Slot mask for param 0 (Same+Different at bits 1+2) = 0b110 = 0x6.
+        Assert.Contains("if ((_changed & 0x6) == 0)", emitted);
+        // Kotlin-shape skip check for one param: mask 0b1011 (0xB), expected 0b0010 (0x2).
+        Assert.Contains("if ((__dirty & 0xB) != 0x2 || !__c.Skipping)", emitted);
+        // Impl call forwards __dirty.
+        Assert.Contains("GreetingImpl(__c, name, __dirty)", emitted);
+        // UpdateScope must observe runtime's force hint and OR-in bit 0.
+        Assert.Contains("(__c2, __force) => Greeting(__c2, name, __force | 1)", emitted);
+        AssertNoCompileErrors(output);
+    }
+
+    [Fact]
+    public void ChangedParam_BackCompat_NoChangedParamUsesSimplerShape()
+    {
+        // Without `int _changed`, the generator keeps the legacy shape:
+        // __dirty starts at 0, every param uses unconditional DiffSlot,
+        // UpdateScope ignores the force hint.
+        var (output, diags, emitted) = Run("""
+            namespace App
+            {
+                public static partial class Screens
+                {
+                    [AndroidX.Compose.Composable]
+                    public static partial void Greeting(AndroidX.Compose.Runtime.IComposer composer, string name);
+
+                    static void GreetingImpl(AndroidX.Compose.Runtime.IComposer composer, string name) { }
+                }
+            }
+            """);
+
+        Assert.Empty(diags);
+        Assert.NotNull(emitted);
+        Assert.Contains("int __dirty = 0;", emitted);
+        // No conditional DiffSlot guard.
+        Assert.DoesNotContain("if ((_changed", emitted);
+        // UpdateScope uses single-arg lambda (no force flag).
+        Assert.Contains("__c2 => Greeting(__c2, name)", emitted);
+        AssertNoCompileErrors(output);
     }
 
     static void AssertNoCompileErrors(Compilation compilation)

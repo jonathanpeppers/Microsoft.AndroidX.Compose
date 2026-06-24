@@ -10,9 +10,9 @@ public static partial class Composables
     /// previous composition.
     /// </summary>
     [Composable]
-    public static partial void Column(IComposer composer, Action<IComposer> content);
+    public static partial void Column(IComposer composer, Action<IComposer> content, int _changed = 0);
 
-    static void ColumnImpl(IComposer composer, Action<IComposer> content)
+    static void ColumnImpl(IComposer composer, Action<IComposer> content, int _changed = 0)
     {
         ArgumentNullException.ThrowIfNull(content);
 

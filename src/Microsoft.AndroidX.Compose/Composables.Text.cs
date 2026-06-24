@@ -10,8 +10,8 @@ public static partial class Composables
     /// from the previous composition.
     /// </summary>
     [Composable]
-    public static partial void Text(IComposer composer, string text);
+    public static partial void Text(IComposer composer, string text, int _changed = 0);
 
-    static void TextImpl(IComposer composer, string text) =>
+    static void TextImpl(IComposer composer, string text, int _changed = 0) =>
         new global::AndroidX.Compose.Text(text).Render(composer);
 }
