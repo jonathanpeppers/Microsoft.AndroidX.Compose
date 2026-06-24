@@ -1,39 +1,44 @@
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
+
+#pragma warning disable RSEXPERIMENTAL002 // GetInterceptableLocation — also used by dotnet/maui's BindingSourceGen
 
 namespace AndroidX.Compose.SourceGenerators;
 
 /// <summary>
-/// Tier 2 source generator. Picks up methods marked with
-/// <c>[AndroidX.Compose.Composable]</c> and emits a partial implementation
-/// that wraps the user-written body (the sibling <c>&lt;Name&gt;Impl</c>
-/// static method) in a Compose restart group with per-parameter
-/// <c>$changed</c> diffing and a skip-when-unchanged path.
+/// Tier 2 source generator. Discovers every call site of a method
+/// marked <c>[AndroidX.Compose.Composable]</c> and emits an
+/// <c>[InterceptsLocation]</c>-decorated wrapper that opens a Compose
+/// restart group, diffs each argument via <c>DiffSlot</c>, skips the
+/// underlying call when nothing changed, and registers an
+/// <c>UpdateScope</c> recompose lambda.
 /// </summary>
 /// <remarks>
 /// <para>
-/// User pattern:
+/// The user-facing surface is a single plain C# method — no <c>partial</c>
+/// modifier, no <c>Impl</c> companion. The same shape as a Kotlin
+/// <c>@Composable</c> function:
 /// </para>
 /// <code>
-/// public static partial class Screens
+/// [Composable]
+/// public static void Greeting(IComposer composer, string name)
 /// {
-///     [Composable]
-///     public static partial void Greeting(IComposer composer, string name);
-///
-///     static void GreetingImpl(IComposer composer, string name)
-///     {
-///         Text(composer, $"Hello {name}");
-///     }
+///     Composables.Text(composer, $"Hello, {name}");
 /// }
+///
+/// Greeting(composer, "world"); // ← intercepted; wrapped in a restart group
 /// </code>
 /// <para>
-/// The generator emits a second <c>partial</c> declaration that fills
-/// in <c>Greeting</c>'s body with the canonical restart-group +
-/// skip prelude. See <see cref="AndroidX.Compose.ComposableAttribute"/>
-/// for the user-facing docs.
+/// Mirrors the pattern used by <c>dotnet/maui</c>'s
+/// <c>BindingSourceGen</c> — generator emits a <c>file</c>-scoped
+/// <c>InterceptsLocationAttribute</c> definition once per generated
+/// file, then one wrapper method per intercepted call site under
+/// <c>Microsoft.AndroidX.Compose.Generated.ComposableInterceptors</c>.
 /// </para>
 /// </remarks>
 [Generator(LanguageNames.CSharp)]
@@ -41,11 +46,12 @@ public sealed class ComposableMethodGenerator : IIncrementalGenerator
 {
     const string ComposableAttributeMetadataName = "AndroidX.Compose.ComposableAttribute";
     const string ComposerFullName = "AndroidX.Compose.Runtime.IComposer";
-    const string ImplSuffix = "Impl";
+    const string GeneratedNamespace = "Microsoft.AndroidX.Compose.Generated";
 
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        var methods = context.SyntaxProvider
+        // ---- Pipeline 1: validate every [Composable] method up front. ----
+        var composableMethods = context.SyntaxProvider
             .ForAttributeWithMetadataName(
                 ComposableAttributeMetadataName,
                 predicate: static (node, _) => node is MethodDeclarationSyntax,
@@ -53,110 +59,132 @@ public sealed class ComposableMethodGenerator : IIncrementalGenerator
             .Where(static m => m is not null)
             .Collect();
 
-        context.RegisterSourceOutput(methods, static (spc, methods) =>
+        context.RegisterSourceOutput(composableMethods, static (spc, methods) =>
         {
             foreach (var method in methods)
-            {
-                var result = Build(method);
-                foreach (var diag in result.Diagnostics)
-                    spc.ReportDiagnostic(diag);
-                if (result.Source is { } src && result.HintName is { } hint)
-                    spc.AddSource(hint, SourceText.From(src, Encoding.UTF8));
-            }
+                ValidateComposable(method, spc);
+        });
+
+        // ---- Pipeline 2: every invocation in user code. ----
+        // We don't filter by attribute presence in the syntax predicate
+        // (the syntax tree alone can't tell us whether the target has
+        // [Composable]) — that's a SemanticModel question handled in
+        // the transform. The predicate is the cheap up-front filter.
+        var callSites = context.SyntaxProvider
+            .CreateSyntaxProvider(
+                predicate: static (node, _) => node is InvocationExpressionSyntax,
+                transform: static (ctx, ct) => TryBuildCallSite(ctx, ct))
+            .Where(static cs => cs is not null)
+            .Select(static (cs, _) => cs!)
+            .Collect();
+
+        context.RegisterSourceOutput(callSites, static (spc, sites) =>
+        {
+            if (sites.IsDefaultOrEmpty)
+                return;
+
+            var sb = new StringBuilder();
+            EmitPreamble(sb);
+            // Stable ordering — by (FilePath, Version, Data) — so the
+            // generator output is byte-identical between rebuilds when
+            // nothing changed.
+            var ordered = sites.OrderBy(s => s.FilePath, System.StringComparer.Ordinal)
+                .ThenBy(s => s.LocationVersion)
+                .ThenBy(s => s.LocationData, System.StringComparer.Ordinal)
+                .ToList();
+
+            int index = 0;
+            foreach (var site in ordered)
+                EmitInterceptor(sb, site, index++);
+
+            EmitPostamble(sb);
+            spc.AddSource("Microsoft.AndroidX.Compose.Composable.Interceptors.g.cs",
+                SourceText.From(sb.ToString(), Encoding.UTF8));
         });
     }
 
-    static GenerationResult Build(IMethodSymbol method)
+    static void ValidateComposable(IMethodSymbol method, SourceProductionContext spc)
     {
         var loc = method.Locations.FirstOrDefault() ?? Location.None;
 
-        if (!method.IsStatic || !IsPartial(method))
+        if (!method.IsStatic)
         {
-            return new GenerationResult(null, null,
-                new[] { Diagnostic.Create(Diagnostics.ComposableNotPartial, loc, method.ToDisplayString()) });
+            spc.ReportDiagnostic(Diagnostic.Create(
+                Diagnostics.ComposableNotStatic, loc, method.ToDisplayString()));
+            return;
         }
-
+        if (method.ReturnType.SpecialType != SpecialType.System_Void)
+        {
+            spc.ReportDiagnostic(Diagnostic.Create(
+                Diagnostics.ComposableReturnsNotVoid, loc, method.ToDisplayString()));
+            return;
+        }
         if (method.Parameters.Length == 0 || !IsComposer(method.Parameters[0].Type))
         {
-            return new GenerationResult(null, null,
-                new[] { Diagnostic.Create(Diagnostics.ComposableMissingComposer, loc, method.ToDisplayString()) });
+            spc.ReportDiagnostic(Diagnostic.Create(
+                Diagnostics.ComposableMissingComposer, loc, method.ToDisplayString()));
+            return;
         }
-
-        var container = method.ContainingType;
-        if (container is null || !IsContainerPartial(container))
-        {
-            return new GenerationResult(null, null,
-                new[] { Diagnostic.Create(Diagnostics.ComposableContainerNotPartial, loc, method.ToDisplayString(), container?.ToDisplayString() ?? "<unknown>") });
-        }
-
-        var implName = method.Name + ImplSuffix;
-        var implCandidates = container.GetMembers(implName)
-            .OfType<IMethodSymbol>()
-            .Where(m => m.IsStatic)
-            .ToList();
-
-        if (implCandidates.Count == 0)
-        {
-            return new GenerationResult(null, null,
-                new[] { Diagnostic.Create(Diagnostics.ComposableMissingImpl, loc, method.ToDisplayString(), implName) });
-        }
-
-        var impl = implCandidates.FirstOrDefault(c => SignatureMatches(method, c));
-        if (impl is null)
-        {
-            return new GenerationResult(null, null,
-                new[] { Diagnostic.Create(Diagnostics.ComposableImplSignatureMismatch, loc, method.ToDisplayString(), implName) });
-        }
-
-        var src = Emit(method);
-        // Disambiguate overloads by hashing the parameter type list into
-        // the hint suffix — two [Composable] overloads with the same
-        // name (e.g. `Counter(IComposer, int)` and `Counter(IComposer,
-        // int, string)`) would otherwise collide on the same `.g.cs`
-        // file name.
-        string overloadSuffix = string.Empty;
-        if (method.Parameters.Length > 0)
-        {
-            var sig = new StringBuilder();
-            foreach (var p in method.Parameters)
-            {
-                sig.Append(p.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat));
-                sig.Append('|');
-            }
-            overloadSuffix = "_" + FnvHash(sig.ToString()).ToString("X8", System.Globalization.CultureInfo.InvariantCulture);
-        }
-        var hint = $"AndroidX.Compose.Composable.{container.ToDisplayString().Replace('.', '_').Replace('<', '_').Replace('>', '_')}.{method.Name}{overloadSuffix}.g.cs";
-        return new GenerationResult(src, hint, []);
     }
 
-    static bool IsPartial(IMethodSymbol method)
+    /// <summary>
+    /// Pull the bits we need out of a candidate invocation: the
+    /// resolved target symbol (so we can spell its containing type
+    /// and parameter list verbatim in the emitted call), and the
+    /// <see cref="InterceptableLocation"/> Roslyn computes for the
+    /// call site. Returns <c>null</c> when the invocation doesn't
+    /// resolve to a <c>[Composable]</c> target.
+    /// </summary>
+    static CallSite? TryBuildCallSite(GeneratorSyntaxContext ctx, System.Threading.CancellationToken ct)
     {
-        foreach (var syntaxRef in method.DeclaringSyntaxReferences)
-        {
-            if (syntaxRef.GetSyntax() is MethodDeclarationSyntax decl)
-            {
-                foreach (var mod in decl.Modifiers)
-                {
-                    if (mod.ValueText == "partial")
-                        return true;
-                }
-            }
-        }
-        return false;
+        var invocation = (InvocationExpressionSyntax)ctx.Node;
+
+        // Skip invocations inside generator-emitted files so we don't
+        // wrap our own wrapper's call to the user method (which would
+        // cause infinite recursion). Roslyn doesn't expose this as a
+        // first-class flag on syntax trees, but the file-path convention
+        // ".g.cs" is universal.
+        var path = invocation.SyntaxTree.FilePath;
+        if (path is { Length: > 0 } && path.EndsWith(".g.cs", System.StringComparison.Ordinal))
+            return null;
+
+        var symbolInfo = ctx.SemanticModel.GetSymbolInfo(invocation, ct);
+        if (symbolInfo.Symbol is not IMethodSymbol target)
+            return null;
+
+        // Lookup [Composable] by metadata name on the resolved method.
+        // Reduced (extension-method-style) calls resolve to the reduced
+        // form; the attribute lives on the original definition.
+        var actual = target.ReducedFrom ?? target.OriginalDefinition;
+        if (!HasComposableAttribute(actual))
+            return null;
+
+        // Must look intact enough to wrap: void return, IComposer first
+        // arg, static. ValidateComposable already flags violations as
+        // CN500x diagnostics; we just guard the emission path here.
+        if (!target.IsStatic ||
+            target.ReturnType.SpecialType != SpecialType.System_Void ||
+            target.Parameters.Length == 0 ||
+            !IsComposer(target.Parameters[0].Type))
+            return null;
+
+        var loc = ctx.SemanticModel.GetInterceptableLocation(invocation, ct);
+        if (loc is null)
+            return null;
+
+        return new CallSite(
+            target,
+            path ?? string.Empty,
+            loc.Version,
+            loc.Data);
     }
 
-    static bool IsContainerPartial(INamedTypeSymbol container)
+    static bool HasComposableAttribute(IMethodSymbol method)
     {
-        foreach (var syntaxRef in container.DeclaringSyntaxReferences)
+        foreach (var attr in method.GetAttributes())
         {
-            if (syntaxRef.GetSyntax() is TypeDeclarationSyntax decl)
-            {
-                foreach (var mod in decl.Modifiers)
-                {
-                    if (mod.ValueText == "partial")
-                        return true;
-                }
-            }
+            if (attr.AttributeClass?.ToDisplayString() == ComposableAttributeMetadataName)
+                return true;
         }
         return false;
     }
@@ -164,305 +192,157 @@ public sealed class ComposableMethodGenerator : IIncrementalGenerator
     static bool IsComposer(ITypeSymbol type) =>
         type.ToDisplayString() == ComposerFullName;
 
-    static bool SignatureMatches(IMethodSymbol decl, IMethodSymbol impl)
+    static void EmitPreamble(StringBuilder sb)
     {
-        if (decl.Parameters.Length != impl.Parameters.Length)
-            return false;
-        for (int i = 0; i < decl.Parameters.Length; i++)
-        {
-            if (!SymbolEqualityComparer.Default.Equals(
-                    decl.Parameters[i].Type, impl.Parameters[i].Type))
-                return false;
-        }
-        return true;
-    }
-
-    static string Emit(IMethodSymbol method)
-    {
-        var container = method.ContainingType!;
-        var ns = container.ContainingNamespace?.IsGlobalNamespace == false
-            ? container.ContainingNamespace.ToDisplayString()
-            : null;
-        var containerKeyword = container.IsRecord
-            ? "record"
-            : container.TypeKind switch
-            {
-                TypeKind.Struct => "struct",
-                _ => "class",
-            };
-
-        // Build the key for this method site. Stable across processes —
-        // FNV-1a over the fully-qualified method name. Matches the
-        // SourceLocationKey contract used elsewhere in the repo.
-        var methodFqn = container.ToDisplayString() + "." + method.Name;
-        int key = FnvHash(methodFqn);
-
-        var composer = method.Parameters[0].Name;
-
-        // Optional trailing `int _changed = 0` parameter — the Kotlin
-        // `$changed` analogue. When present, the wrapper threads
-        // caller-provided change bits into __dirty, skips DiffSlot
-        // fallback for slots the caller already populated, and uses
-        // the Kotlin-correct skip mask/expected pair. When absent
-        // (back-compat shape), the wrapper falls back to "skip iff
-        // every param read Same AND composer is in a skip-eligible
-        // state" with no force-bit awareness.
-        bool hasChangedParam =
-            method.Parameters.Length >= 2 &&
-            method.Parameters[method.Parameters.Length - 1].Name == "_changed" &&
-            method.Parameters[method.Parameters.Length - 1].Type.SpecialType == SpecialType.System_Int32;
-
-        var userParams = hasChangedParam
-            ? method.Parameters.Skip(1).Take(method.Parameters.Length - 2).ToList()
-            : method.Parameters.Skip(1).ToList();
-        var changedParamName = hasChangedParam
-            ? method.Parameters[method.Parameters.Length - 1].Name
-            : null;
-
-        var sb = new StringBuilder();
         sb.AppendLine("// <auto-generated/>");
         sb.AppendLine("#nullable enable");
         sb.AppendLine();
-        sb.AppendLine("using global::AndroidX.Compose;");
-        sb.AppendLine("using global::AndroidX.Compose.Runtime;");
+        sb.AppendLine("namespace System.Runtime.CompilerServices");
+        sb.AppendLine("{");
+        sb.AppendLine("    using System;");
+        sb.AppendLine("    using System.Diagnostics;");
         sb.AppendLine();
-        if (ns is not null)
+        sb.AppendLine("    [Conditional(\"DEBUG\")]");
+        sb.AppendLine("    [AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]");
+        sb.AppendLine("    file sealed class InterceptsLocationAttribute : Attribute");
+        sb.AppendLine("    {");
+        sb.AppendLine("        public InterceptsLocationAttribute(int version, string data)");
+        sb.AppendLine("        {");
+        sb.AppendLine("            _ = version;");
+        sb.AppendLine("            _ = data;");
+        sb.AppendLine("        }");
+        sb.AppendLine("    }");
+        sb.AppendLine("}");
+        sb.AppendLine();
+        sb.Append("namespace ").Append(GeneratedNamespace).AppendLine();
+        sb.AppendLine("{");
+        sb.AppendLine("    using global::AndroidX.Compose;");
+        sb.AppendLine("    using global::AndroidX.Compose.Runtime;");
+        sb.AppendLine();
+        sb.AppendLine("    /// <summary>Generated wrappers for [Composable] call sites.</summary>");
+        sb.AppendLine("    internal static class ComposableInterceptors");
+        sb.AppendLine("    {");
+    }
+
+    static void EmitPostamble(StringBuilder sb)
+    {
+        sb.AppendLine("    }");
+        sb.AppendLine("}");
+    }
+
+    /// <summary>
+    /// Emit one wrapper per intercepted call site. The wrapper opens a
+    /// restart group keyed by the target method's FQN, runs per-param
+    /// <c>DiffSlot</c> into <c>__dirty</c>, branches on the canonical
+    /// skip check, and registers the recompose lambda.
+    /// </summary>
+    static void EmitInterceptor(StringBuilder sb, CallSite site, int index)
+    {
+        var method = site.Target;
+        var methodFqn = method.ContainingType?.ToDisplayString() + "." + method.Name;
+        int key = FnvHash(methodFqn);
+
+        // Same Kotlin-shape mask/expected pair used by the previous
+        // generator revision — `0b001` is the runtime "force" bit, each
+        // user param contributes `0b101 << (1+3*i)` to the mask and
+        // `0b001 << (1+3*i)` to the expected value. Skip when
+        // (__dirty & mask) == expected && composer.Skipping.
+        var userParams = method.Parameters.Skip(1).ToList();
+        long mask = 0b001;
+        long expected = 0;
+        for (int i = 0; i < userParams.Count; i++)
         {
-            sb.Append("namespace ").Append(ns).AppendLine(";");
-            sb.AppendLine();
+            int shift = 1 + i * 3;
+            mask |= 0b101L << shift;
+            expected |= 0b001L << shift;
         }
 
-        // Walk the containing type chain so we can re-open every
-        // partial wrapper. For nested types we currently support one
-        // level (the common case); deeply nested would need recursion.
-        var typeChain = new System.Collections.Generic.List<INamedTypeSymbol>();
-        for (var t = container; t is not null && t.TypeKind != TypeKind.Error && !t.IsImplicitlyDeclared; t = t.ContainingType)
-        {
-            typeChain.Insert(0, t);
-            if (t.ContainingType is null) break;
-        }
+        string wrapperName = "Composable_" + index.ToString(CultureInfo.InvariantCulture)
+            + "_" + FnvHash(site.LocationData + "|" + site.LocationVersion)
+                .ToString("X8", CultureInfo.InvariantCulture);
 
-        int indentLevel = 0;
-        foreach (var t in typeChain)
-        {
-            AppendIndent(sb, indentLevel);
-            sb.Append(t.IsStatic ? "static " : string.Empty);
-            sb.Append("partial ").Append(containerKeyword).Append(' ').Append(t.Name);
-            if (t.TypeParameters.Length > 0)
-            {
-                sb.Append('<');
-                for (int i = 0; i < t.TypeParameters.Length; i++)
-                {
-                    if (i > 0) sb.Append(", ");
-                    sb.Append(t.TypeParameters[i].Name);
-                }
-                sb.Append('>');
-            }
-            sb.AppendLine();
-            AppendIndent(sb, indentLevel);
-            sb.AppendLine("{");
-            indentLevel++;
-        }
+        sb.AppendLine();
+        sb.Append("        // ").Append(method.ToDisplayString()).AppendLine();
+        sb.Append("        // site: ").Append(site.FilePath).AppendLine();
+        sb.Append("        [global::System.Runtime.CompilerServices.InterceptsLocationAttribute(")
+          .Append(site.LocationVersion.ToString(CultureInfo.InvariantCulture))
+          .Append(", @\"")
+          .Append(site.LocationData.Replace("\"", "\"\""))
+          .AppendLine("\")]");
 
-        // Method signature, repeated verbatim from the user's
-        // partial declaration so the compiler sees a matching
-        // implementing part.
-        AppendIndent(sb, indentLevel);
-        sb.Append(AccessibilityKeyword(method.DeclaredAccessibility))
-          .Append("static partial ")
-          .Append(method.ReturnType.ToDisplayString())
-          .Append(' ')
-          .Append(method.Name)
-          .Append('(');
+        // Signature mirrors the target verbatim. Use FullyQualifiedFormat
+        // so a parameter type from any namespace lands as `global::...`.
+        sb.Append("        public static void ").Append(wrapperName).Append('(');
         for (int i = 0; i < method.Parameters.Length; i++)
         {
             if (i > 0) sb.Append(", ");
             var p = method.Parameters[i];
             sb.Append(p.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat))
               .Append(' ').Append(p.Name);
-            // Note: default values live on the partial declaration only —
-            // emitting them on the implementing part trips CS1066.
         }
         sb.AppendLine(")");
-        AppendIndent(sb, indentLevel);
-        sb.AppendLine("{");
+        sb.AppendLine("        {");
 
-        var bodyIndent = indentLevel + 1;
-
-        // var __c = composer.StartRestartGroup(KEY);
-        AppendIndent(sb, bodyIndent);
-        sb.Append("var __c = ").Append(composer).Append(".StartRestartGroup(unchecked((int)0x")
-          .Append(key.ToString("X8", System.Globalization.CultureInfo.InvariantCulture))
+        var composerName = method.Parameters[0].Name;
+        sb.Append("            var __c = ").Append(composerName)
+          .Append(".StartRestartGroup(unchecked((int)0x")
+          .Append(key.ToString("X8", CultureInfo.InvariantCulture))
           .AppendLine("));");
 
-        // int __dirty = _changed;   (or 0 when no _changed param)
-        AppendIndent(sb, bodyIndent);
-        if (hasChangedParam)
-            sb.Append("int __dirty = ").Append(changedParamName).AppendLine(";");
-        else
-            sb.AppendLine("int __dirty = 0;");
-
-        // Per-param: when caller didn't tell us about this slot
-        // (`($changed and 0b110<<shift) == 0`), fall back to DiffSlot.
-        // The `0b110 << shift` mask captures the Same+Different bits
-        // of the slot — if either is set the caller is informing us.
+        sb.AppendLine("            int __dirty = 0;");
         for (int i = 0; i < userParams.Count; i++)
         {
-            var p = userParams[i];
             int bitOffset = 1 + i * 3;
-            AppendIndent(sb, bodyIndent);
-            if (hasChangedParam)
-            {
-                // `if ((_changed & 0bMASK) == 0) __dirty |= __c.DiffSlot(p, bitOffset);`
-                int sameDiffMask = 0b110 << i * 3 + 1 >> 1; // == 0b011 << (1+3*i) hm let me just compute
-                int slotMask = (0b001 | 0b010) << bitOffset; // bits Same+Different of this slot
-                sb.Append("if ((").Append(changedParamName)
-                  .Append(" & 0x")
-                  .Append(slotMask.ToString("X", System.Globalization.CultureInfo.InvariantCulture))
-                  .Append(") == 0) __dirty |= __c.DiffSlot<")
-                  .Append(p.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat))
-                  .Append(">(").Append(p.Name).Append(", ")
-                  .Append(bitOffset.ToString(System.Globalization.CultureInfo.InvariantCulture))
-                  .AppendLine(");");
-            }
-            else
-            {
-                sb.Append("__dirty |= __c.DiffSlot<")
-                  .Append(p.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat))
-                  .Append(">(").Append(p.Name).Append(", ")
-                  .Append(bitOffset.ToString(System.Globalization.CultureInfo.InvariantCulture))
-                  .AppendLine(");");
-            }
+            var p = userParams[i];
+            sb.Append("            __dirty |= __c.DiffSlot<")
+              .Append(p.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat))
+              .Append(">(").Append(p.Name).Append(", ")
+              .Append(bitOffset.ToString(CultureInfo.InvariantCulture))
+              .AppendLine(");");
         }
 
-        // Skip check.
-        //
-        // With `_changed`: Kotlin-correct mask/expected.
-        //   mask     = 0b001 (force) | for each param: 0b101 << (1+3*i)
-        //   expected = for each param: 0b001 << (1+3*i)
-        //   `if ((__dirty & mask) != expected || !__c.Skipping)`
-        //
-        // Without `_changed` (back-compat): "skip iff every param Same".
-        //   `if ((__dirty & differentMask) != 0 || !__c.Skipping)`
-        AppendIndent(sb, bodyIndent);
-        if (hasChangedParam)
+        if (userParams.Count == 0)
         {
-            long mask = 0b001;
-            long expected = 0;
-            for (int i = 0; i < userParams.Count; i++)
-            {
-                int shift = 1 + i * 3;
-                mask |= 0b101L << shift;
-                expected |= 0b001L << shift;
-            }
-            if (userParams.Count == 0)
-            {
-                // mask = 1, expected = 0 → `(__dirty & 1) != 0` ≡ force bit set.
-                sb.AppendLine("if ((__dirty & 0x1) != 0 || !__c.Skipping)");
-            }
-            else
-            {
-                sb.Append("if ((__dirty & 0x")
-                  .Append(mask.ToString("X", System.Globalization.CultureInfo.InvariantCulture))
-                  .Append(") != 0x")
-                  .Append(expected.ToString("X", System.Globalization.CultureInfo.InvariantCulture))
-                  .AppendLine(" || !__c.Skipping)");
-            }
+            sb.AppendLine("            if (!__c.Skipping)");
         }
         else
         {
-            long differentMask = 0;
-            for (int i = 0; i < userParams.Count; i++)
-            {
-                differentMask |= (long)2 << (1 + i * 3);
-            }
-            if (userParams.Count == 0)
-                sb.AppendLine("if (!__c.Skipping)");
-            else
-                sb.Append("if ((__dirty & 0x")
-                  .Append(differentMask.ToString("X", System.Globalization.CultureInfo.InvariantCulture))
-                  .AppendLine(") != 0 || !__c.Skipping)");
+            sb.Append("            if ((__dirty & 0x")
+              .Append(mask.ToString("X", CultureInfo.InvariantCulture))
+              .Append(") != 0x")
+              .Append(expected.ToString("X", CultureInfo.InvariantCulture))
+              .AppendLine(" || !__c.Skipping)");
         }
-
-        AppendIndent(sb, bodyIndent);
-        sb.AppendLine("{");
-        AppendIndent(sb, bodyIndent + 1);
-        sb.Append(method.Name).Append(ImplSuffix).Append("(__c");
+        sb.AppendLine("            {");
+        // Call the user's original method by fully-qualified name. This
+        // call site itself doesn't have [InterceptsLocation] pointing at
+        // it, so it passes through to the user method's body (which is
+        // what we want — that's the actual composable's body running).
+        sb.Append("                ")
+          .Append(method.ContainingType!.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat))
+          .Append('.')
+          .Append(method.Name)
+          .Append("(__c");
         foreach (var p in userParams)
-        {
             sb.Append(", ").Append(p.Name);
-        }
-        if (hasChangedParam)
-        {
-            // Pass __dirty through to the body so it can in turn
-            // forward to nested [Composable] calls. Until the recursive
-            // call rewriter lands the body just ignores it.
-            sb.Append(", __dirty");
-        }
         sb.AppendLine(");");
-        AppendIndent(sb, bodyIndent);
-        sb.AppendLine("}");
-        AppendIndent(sb, bodyIndent);
-        sb.AppendLine("else");
-        AppendIndent(sb, bodyIndent);
-        sb.AppendLine("{");
-        AppendIndent(sb, bodyIndent + 1);
-        sb.AppendLine("__c.SkipToGroupEnd();");
-        AppendIndent(sb, bodyIndent);
-        sb.AppendLine("}");
+        sb.AppendLine("            }");
+        sb.AppendLine("            else");
+        sb.AppendLine("            {");
+        sb.AppendLine("                __c.SkipToGroupEnd();");
+        sb.AppendLine("            }");
 
-        // EndRestartGroup + UpdateScope. With `_changed`, the second
-        // lambda param carries the runtime's "force" hint; we OR-in
-        // bit 0 so the recompose pass is never elided.
-        AppendIndent(sb, bodyIndent);
-        if (hasChangedParam)
-        {
-            sb.Append("__c.EndRestartGroup()?.UpdateScope(new global::AndroidX.Compose.ComposableLambda2((__c2, __force) => ")
-              .Append(method.Name).Append("(__c2");
-            foreach (var p in userParams)
-            {
-                sb.Append(", ").Append(p.Name);
-            }
-            sb.AppendLine(", __force | 1)));");
-        }
-        else
-        {
-            sb.Append("__c.EndRestartGroup()?.UpdateScope(new global::AndroidX.Compose.ComposableLambda2(__c2 => ")
-              .Append(method.Name).Append("(__c2");
-            foreach (var p in userParams)
-            {
-                sb.Append(", ").Append(p.Name);
-            }
-            sb.AppendLine(")));");
-        }
+        // Recompose path. The lambda re-enters THIS wrapper (not the
+        // user method) so the restart group re-opens, args re-diff,
+        // skip-or-call fires the same way.
+        sb.Append("            __c.EndRestartGroup()?.UpdateScope(new global::AndroidX.Compose.ComposableLambda2(__c2 => ")
+          .Append(wrapperName).Append("(__c2");
+        foreach (var p in userParams)
+            sb.Append(", ").Append(p.Name);
+        sb.AppendLine(")));");
 
-        AppendIndent(sb, indentLevel);
-        sb.AppendLine("}");
-
-        for (int i = indentLevel - 1; i >= 0; i--)
-        {
-            AppendIndent(sb, i);
-            sb.AppendLine("}");
-        }
-
-        return sb.ToString();
+        sb.AppendLine("        }");
     }
-
-    static void AppendIndent(StringBuilder sb, int level)
-    {
-        for (int i = 0; i < level; i++) sb.Append("    ");
-    }
-
-    static string AccessibilityKeyword(Accessibility a) => a switch
-    {
-        Accessibility.Public => "public ",
-        Accessibility.Internal => "internal ",
-        Accessibility.Private => "private ",
-        Accessibility.Protected => "protected ",
-        Accessibility.ProtectedAndInternal => "private protected ",
-        Accessibility.ProtectedOrInternal => "protected internal ",
-        _ => string.Empty,
-    };
 
     static int FnvHash(string s)
     {
@@ -475,5 +355,26 @@ public sealed class ComposableMethodGenerator : IIncrementalGenerator
             hash *= prime;
         }
         return unchecked((int)hash);
+    }
+
+    /// <summary>
+    /// One intercepted call site — the resolved target method plus the
+    /// <see cref="InterceptableLocation"/> data the compiler needs to
+    /// rewire that exact call.
+    /// </summary>
+    sealed class CallSite
+    {
+        public CallSite(IMethodSymbol target, string filePath, int locationVersion, string locationData)
+        {
+            Target = target;
+            FilePath = filePath;
+            LocationVersion = locationVersion;
+            LocationData = locationData;
+        }
+
+        public IMethodSymbol Target { get; }
+        public string FilePath { get; }
+        public int LocationVersion { get; }
+        public string LocationData { get; }
     }
 }

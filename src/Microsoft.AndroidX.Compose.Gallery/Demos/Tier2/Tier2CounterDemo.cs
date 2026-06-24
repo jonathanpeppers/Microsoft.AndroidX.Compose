@@ -6,7 +6,7 @@ namespace AndroidX.Compose.Gallery.Demos.Tier2;
 /// <summary>
 /// Tier 2 demo: a counter rendered by a <c>[Composable]</c> static
 /// method. The button click flips a <see cref="MutableNumberState{T}"/>
-/// the body reads; the generator-emitted restart-group wrapper around
+/// the body reads; the generator-emitted call-site interceptor around
 /// <see cref="Counter"/> runs its <see cref="ComposeExtensions.DiffSlot{T}"/>
 /// diff over each parameter and skips re-running the body when nothing
 /// changed.
@@ -20,11 +20,11 @@ namespace AndroidX.Compose.Gallery.Demos.Tier2;
 /// facades for now (until Tier 2 sibling entry points for those
 /// facades land in a follow-up PR), so the on-screen output is
 /// indistinguishable from the equivalent tree-style demo — the
-/// difference is structural: <see cref="CounterImpl"/> only runs
-/// when an input parameter actually changed.
+/// difference is structural: the body only runs when an input
+/// parameter actually changed.
 /// </para>
 /// </remarks>
-public static partial class Tier2CounterDemo
+public static class Tier2CounterDemo
 {
     /// <summary>Registry entry exposed via <see cref="Catalog.Demos"/>.</summary>
     public static Demo Demo => new(
@@ -39,29 +39,18 @@ public static partial class Tier2CounterDemo
         });
 
     /// <summary>
-    /// Tier 2 composable: declarative C# entry point the generator
-    /// wraps with <c>StartRestartGroup</c> + <c>DiffSlot</c> +
-    /// <c>SkipToGroupEnd</c> + <c>EndRestartGroup.UpdateScope</c>.
-    /// The user-written body lives in <see cref="CounterImpl"/>.
+    /// Tier 2 composable — a single plain static method. Every call
+    /// site of <see cref="Counter"/> is intercepted by the source
+    /// generator and rewired to a wrapper that opens a restart group,
+    /// diffs each parameter via <see cref="ComposeExtensions.DiffSlot{T}"/>,
+    /// and calls <c>SkipToGroupEnd</c> when nothing changed.
     /// </summary>
     [Composable]
-    public static partial void Counter(IComposer composer, int count, Action onIncrement);
-
-    /// <summary>
-    /// User-written body for <see cref="Counter"/>. The generator
-    /// detects the <c>Impl</c> suffix and emits the wrapper that
-    /// invokes this method only when at least one parameter changed
-    /// since the previous composition (or the runtime forces a real
-    /// pass).
-    /// </summary>
-    static void CounterImpl(IComposer composer, int count, Action onIncrement)
+    public static void Counter(IComposer composer, int count, Action onIncrement)
     {
-        // Tier 2 all the way down — every call is a [Composable] static
-        // entry point with its own restart group + DiffSlot + skip path.
-        // The Column wrapper skips when `content` identity is stable;
-        // each Text wrapper skips when its `text` arg is value-equal to
-        // the previous composition; the Button wrapper skips when both
-        // `onClick` and `content` identities are stable.
+        // Tier 2 all the way down — every call here is itself an
+        // intercepted [Composable] call site with its own restart
+        // group + DiffSlot + skip path.
         Composables.Column(composer, c =>
         {
             Composables.Text(c, $"Tier 2 count: {count}");

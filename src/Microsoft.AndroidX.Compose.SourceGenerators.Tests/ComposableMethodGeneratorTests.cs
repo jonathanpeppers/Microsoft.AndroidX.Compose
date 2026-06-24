@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using Microsoft.CodeAnalysis;
@@ -8,7 +9,7 @@ namespace AndroidX.Compose.SourceGenerators.Tests;
 
 /// <summary>
 /// Generator tests for <see cref="ComposableMethodGenerator"/> — synthetic
-/// compilations exercising the Tier 2 emission shapes.
+/// compilations exercising the Tier 2 interceptor-emission shapes.
 /// </summary>
 public class ComposableMethodGeneratorTests
 {
@@ -65,25 +66,31 @@ public class ComposableMethodGeneratorTests
         }
         """;
 
+    static readonly CSharpParseOptions ParseOpts =
+        new CSharpParseOptions(LanguageVersion.Preview).WithFeatures(
+            [new KeyValuePair<string, string>(
+                "InterceptorsPreviewNamespaces",
+                "Microsoft.AndroidX.Compose.Generated")]);
+
     static (Compilation Output, ImmutableArray<Diagnostic> Diagnostics, string? Emitted) Run(string userSource)
     {
-        var src = CSharpSyntaxTree.ParseText(Preamble + "\n" + userSource);
+        var src = CSharpSyntaxTree.ParseText(Preamble + "\n" + userSource, ParseOpts);
         var compilation = CSharpCompilation.Create(
             "Tier2Test",
-            new[] { src },
+            [src],
             references: Net.Sdk.References,
             options: new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary,
                 nullableContextOptions: NullableContextOptions.Enable));
 
-        CSharpGeneratorDriver.Create(new ComposableMethodGenerator())
+        CSharpGeneratorDriver.Create([new ComposableMethodGenerator().AsSourceGenerator()],
+                parseOptions: ParseOpts)
             .RunGeneratorsAndUpdateCompilation(compilation, out var output, out var diags);
 
         string? emitted = null;
         foreach (var tree in output.SyntaxTrees)
         {
             var path = tree.FilePath;
-            if (path.Contains("AndroidX.Compose.Composable.", System.StringComparison.Ordinal) &&
-                path.EndsWith(".g.cs", System.StringComparison.Ordinal))
+            if (path.EndsWith("Composable.Interceptors.g.cs", System.StringComparison.Ordinal))
             {
                 emitted = tree.GetText().ToString();
                 break;
@@ -93,47 +100,48 @@ public class ComposableMethodGeneratorTests
     }
 
     [Fact]
-    public void NoParameters_EmitsRestartWrapperWithSkippingOnlyGuard()
+    public void NoUserParams_EmitsRestartWrapperWithSkippingOnlyGuard()
     {
         var (output, diags, emitted) = Run("""
             namespace App
             {
-                public static partial class Screens
+                public static class Screens
                 {
                     [AndroidX.Compose.Composable]
-                    public static partial void Splash(AndroidX.Compose.Runtime.IComposer composer);
+                    public static void Splash(AndroidX.Compose.Runtime.IComposer composer) { }
 
-                    static void SplashImpl(AndroidX.Compose.Runtime.IComposer composer) { }
+                    public static void CallSite(AndroidX.Compose.Runtime.IComposer c) => Splash(c);
                 }
             }
             """);
 
         Assert.Empty(diags);
         Assert.NotNull(emitted);
+        Assert.Contains("[global::System.Runtime.CompilerServices.InterceptsLocationAttribute(", emitted);
         Assert.Contains("StartRestartGroup", emitted);
         // No user params → skip prelude collapses to "if (!__c.Skipping)".
         Assert.Contains("if (!__c.Skipping)", emitted);
-        Assert.Contains("SplashImpl(__c)", emitted);
         Assert.Contains("SkipToGroupEnd", emitted);
         Assert.Contains("EndRestartGroup", emitted);
         Assert.Contains("UpdateScope", emitted);
-        Assert.Contains("ComposableLambda2", emitted);
-        // The whole user compilation + emitted source must compile clean.
+        Assert.Contains("global::AndroidX.Compose.ComposableLambda2", emitted);
+        // Wrapper invokes the original method by fully-qualified name.
+        Assert.Contains("global::App.Screens.Splash(__c)", emitted);
         AssertNoCompileErrors(output);
     }
 
     [Fact]
-    public void OneParam_EmitsDiffSlotAndBodyCall()
+    public void OneParam_EmitsDiffSlotAndSkipMask()
     {
         var (output, diags, emitted) = Run("""
             namespace App
             {
-                public static partial class Screens
+                public static class Screens
                 {
                     [AndroidX.Compose.Composable]
-                    public static partial void Greeting(AndroidX.Compose.Runtime.IComposer composer, string name);
+                    public static void Greeting(AndroidX.Compose.Runtime.IComposer composer, string name) { }
 
-                    static void GreetingImpl(AndroidX.Compose.Runtime.IComposer composer, string name) { }
+                    public static void CallSite(AndroidX.Compose.Runtime.IComposer c) => Greeting(c, "world");
                 }
             }
             """);
@@ -141,24 +149,27 @@ public class ComposableMethodGeneratorTests
         Assert.Empty(diags);
         Assert.NotNull(emitted);
         Assert.Contains("__dirty |= __c.DiffSlot<string>(name, 1)", emitted);
-        Assert.Contains("GreetingImpl(__c, name)", emitted);
-        // Different bit for one param at offset 1 → 0b010 << 1 = 0x4.
-        Assert.Contains("(__dirty & 0x4)", emitted);
+        // Wrapper invokes the user method by fully-qualified name.
+        Assert.Contains("global::App.Screens.Greeting(__c, name)", emitted);
+        // Kotlin-shape skip check for one param:
+        //   mask = 0b001 | (0b101 << 1) = 0xB
+        //   expected = (0b001 << 1) = 0x2
+        Assert.Contains("(__dirty & 0xB) != 0x2", emitted);
         AssertNoCompileErrors(output);
     }
 
     [Fact]
-    public void TwoParams_EmitsTwoDiffSlotsWithCorrectOffsets()
+    public void TwoParams_EmitsTwoDiffSlotsWithCorrectMaskAndExpected()
     {
         var (output, diags, emitted) = Run("""
             namespace App
             {
-                public static partial class Screens
+                public static class Screens
                 {
                     [AndroidX.Compose.Composable]
-                    public static partial void Counter(AndroidX.Compose.Runtime.IComposer composer, int count, string label);
+                    public static void Counter(AndroidX.Compose.Runtime.IComposer composer, int count, string label) { }
 
-                    static void CounterImpl(AndroidX.Compose.Runtime.IComposer composer, int count, string label) { }
+                    public static void CallSite(AndroidX.Compose.Runtime.IComposer c) => Counter(c, 0, "x");
                 }
             }
             """);
@@ -167,22 +178,40 @@ public class ComposableMethodGeneratorTests
         Assert.NotNull(emitted);
         Assert.Contains("__dirty |= __c.DiffSlot<int>(count, 1)", emitted);
         Assert.Contains("__dirty |= __c.DiffSlot<string>(label, 4)", emitted);
-        // differentMask = (0b010 << 1) | (0b010 << 4) = 0x4 | 0x20 = 0x24.
-        Assert.Contains("(__dirty & 0x24)", emitted);
-        Assert.Contains("CounterImpl(__c, count, label)", emitted);
+        // mask = 0b001 | (0b101 << 1) | (0b101 << 4) = 1 | 0xA | 0x50 = 0x5B
+        // expected = (0b001 << 1) | (0b001 << 4) = 0x2 | 0x10 = 0x12
+        Assert.Contains("(__dirty & 0x5B) != 0x12", emitted);
+        Assert.Contains("global::App.Screens.Counter(__c, count, label)", emitted);
         AssertNoCompileErrors(output);
     }
 
     [Fact]
-    public void MissingImpl_ReportsCN5002()
+    public void NotStatic_ReportsCN5001()
     {
         var (_, diags, _) = Run("""
             namespace App
             {
-                public static partial class Screens
+                public class Screens
                 {
                     [AndroidX.Compose.Composable]
-                    public static partial void Foo(AndroidX.Compose.Runtime.IComposer composer);
+                    public void Foo(AndroidX.Compose.Runtime.IComposer composer) { }
+                }
+            }
+            """);
+
+        Assert.Contains(diags, d => d.Id == "CN5001");
+    }
+
+    [Fact]
+    public void NotVoid_ReportsCN5002()
+    {
+        var (_, diags, _) = Run("""
+            namespace App
+            {
+                public static class Screens
+                {
+                    [AndroidX.Compose.Composable]
+                    public static int Foo(AndroidX.Compose.Runtime.IComposer composer) => 0;
                 }
             }
             """);
@@ -196,12 +225,10 @@ public class ComposableMethodGeneratorTests
         var (_, diags, _) = Run("""
             namespace App
             {
-                public static partial class Screens
+                public static class Screens
                 {
                     [AndroidX.Compose.Composable]
-                    public static partial void Foo(int x, AndroidX.Compose.Runtime.IComposer composer);
-
-                    static void FooImpl(int x, AndroidX.Compose.Runtime.IComposer composer) { }
+                    public static void Foo(int x, AndroidX.Compose.Runtime.IComposer composer) { }
                 }
             }
             """);
@@ -210,158 +237,143 @@ public class ComposableMethodGeneratorTests
     }
 
     [Fact]
-    public void NotPartial_ReportsCN5001()
+    public void NoInvocation_NoInterceptorEmitted()
     {
-        var (_, diags, _) = Run("""
-            namespace App
-            {
-                public static partial class Screens
-                {
-                    [AndroidX.Compose.Composable]
-                    public static void Foo(AndroidX.Compose.Runtime.IComposer composer) { }
-                }
-            }
-            """);
-
-        Assert.Contains(diags, d => d.Id == "CN5001");
-    }
-
-    [Fact]
-    public void ImplSignatureMismatch_ReportsCN5004()
-    {
-        var (_, diags, _) = Run("""
-            namespace App
-            {
-                public static partial class Screens
-                {
-                    [AndroidX.Compose.Composable]
-                    public static partial void Foo(AndroidX.Compose.Runtime.IComposer composer, int x);
-
-                    static void FooImpl(AndroidX.Compose.Runtime.IComposer composer, string x) { }
-                }
-            }
-            """);
-
-        Assert.Contains(diags, d => d.Id == "CN5004");
-    }
-
-    [Fact]
-    public void TrailingChangedParam_EmitsKotlinShapeSkipMask()
-    {
-        // Opting in to the Kotlin-shape $changed parameter:
-        //   - __dirty is seeded from _changed (caller's hint)
-        //   - DiffSlot fallback is gated on caller bits being empty
-        //   - skip mask/expected match Kotlin's (mask 0b1011, expected 0b0010 for 1 param)
-        //   - UpdateScope lambda passes scopeChanged | 1 (sets force bit)
+        // A [Composable] method that is never *called* anywhere in user
+        // code still validates (no diagnostics) but produces no
+        // interceptor file — nothing to intercept.
         var (output, diags, emitted) = Run("""
-            namespace App
-            {
-                public static partial class Screens
-                {
-                    [AndroidX.Compose.Composable]
-                    public static partial void Greeting(AndroidX.Compose.Runtime.IComposer composer, string name, int _changed = 0);
-
-                    static void GreetingImpl(AndroidX.Compose.Runtime.IComposer composer, string name, int _changed = 0) { }
-                }
-            }
-            """);
-
-        Assert.Empty(diags);
-        Assert.NotNull(emitted);
-        // Seed __dirty from caller's _changed.
-        Assert.Contains("int __dirty = _changed;", emitted);
-        // Gate DiffSlot on caller's bits being empty for this slot.
-        // Slot mask for param 0 (Same+Different at bits 1+2) = 0b110 = 0x6.
-        Assert.Contains("if ((_changed & 0x6) == 0)", emitted);
-        // Kotlin-shape skip check for one param: mask 0b1011 (0xB), expected 0b0010 (0x2).
-        Assert.Contains("if ((__dirty & 0xB) != 0x2 || !__c.Skipping)", emitted);
-        // Impl call forwards __dirty.
-        Assert.Contains("GreetingImpl(__c, name, __dirty)", emitted);
-        // UpdateScope must observe runtime's force hint and OR-in bit 0.
-        Assert.Contains("(__c2, __force) => Greeting(__c2, name, __force | 1)", emitted);
-        AssertNoCompileErrors(output);
-    }
-
-    [Fact]
-    public void ChangedParam_BackCompat_NoChangedParamUsesSimplerShape()
-    {
-        // Without `int _changed`, the generator keeps the legacy shape:
-        // __dirty starts at 0, every param uses unconditional DiffSlot,
-        // UpdateScope ignores the force hint.
-        var (output, diags, emitted) = Run("""
-            namespace App
-            {
-                public static partial class Screens
-                {
-                    [AndroidX.Compose.Composable]
-                    public static partial void Greeting(AndroidX.Compose.Runtime.IComposer composer, string name);
-
-                    static void GreetingImpl(AndroidX.Compose.Runtime.IComposer composer, string name) { }
-                }
-            }
-            """);
-
-        Assert.Empty(diags);
-        Assert.NotNull(emitted);
-        Assert.Contains("int __dirty = 0;", emitted);
-        // No conditional DiffSlot guard.
-        Assert.DoesNotContain("if ((_changed", emitted);
-        // UpdateScope uses single-arg lambda (no force flag).
-        Assert.Contains("__c2 => Greeting(__c2, name)", emitted);
-        AssertNoCompileErrors(output);
-    }
-
-    [Fact]
-    public void ContainerNotPartial_ReportsCN5005()
-    {
-        var (_, diags, _) = Run("""
             namespace App
             {
                 public static class Screens
                 {
                     [AndroidX.Compose.Composable]
-                    public static partial void Foo(AndroidX.Compose.Runtime.IComposer composer);
-
-                    static void FooImpl(AndroidX.Compose.Runtime.IComposer composer) { }
-                }
-            }
-            """);
-
-        Assert.Contains(diags, d => d.Id == "CN5005");
-    }
-
-    [Fact]
-    public void Overloads_EmitDistinctHintNames()
-    {
-        // Two [Composable] overloads with the same name in the same
-        // containing type used to collide on a single `.g.cs` hint
-        // before parameter-signature disambiguation. Both should now
-        // produce independent generated files.
-        var (output, diags, _) = Run("""
-            namespace App
-            {
-                public static partial class Screens
-                {
-                    [AndroidX.Compose.Composable]
-                    public static partial void Counter(AndroidX.Compose.Runtime.IComposer composer, int count);
-                    static void CounterImpl(AndroidX.Compose.Runtime.IComposer composer, int count) { }
-
-                    [AndroidX.Compose.Composable]
-                    public static partial void Counter(AndroidX.Compose.Runtime.IComposer composer, int count, string label);
-                    static void CounterImpl(AndroidX.Compose.Runtime.IComposer composer, int count, string label) { }
+                    public static void Unused(AndroidX.Compose.Runtime.IComposer composer) { }
                 }
             }
             """);
 
         Assert.Empty(diags);
+        Assert.Null(emitted);
+        AssertNoCompileErrors(output);
+    }
 
-        var emittedPaths = output.SyntaxTrees
-            .Select(t => t.FilePath)
-            .Where(p => p.Contains("AndroidX.Compose.Composable.", System.StringComparison.Ordinal) &&
-                        p.EndsWith(".g.cs", System.StringComparison.Ordinal))
-            .ToList();
-        Assert.Equal(2, emittedPaths.Count);
-        Assert.Equal(2, emittedPaths.Distinct().Count());
+    [Fact]
+    public void InvocationOfNonComposable_NotIntercepted()
+    {
+        // Plain static methods without [Composable] are left alone —
+        // the generator only emits interceptors for [Composable] targets.
+        var (output, diags, emitted) = Run("""
+            namespace App
+            {
+                public static class Screens
+                {
+                    public static void Plain(AndroidX.Compose.Runtime.IComposer composer) { }
+                    public static void CallSite(AndroidX.Compose.Runtime.IComposer c) => Plain(c);
+                }
+            }
+            """);
+
+        Assert.Empty(diags);
+        Assert.Null(emitted);
+        AssertNoCompileErrors(output);
+    }
+
+    [Fact]
+    public void RecursiveComposableCall_BothCallSitesIntercepted()
+    {
+        // A [Composable] method whose body calls another [Composable]
+        // method produces TWO interceptor entries — one per call site.
+        // This is the core property that makes Tier 2 compose all the
+        // way down.
+        var (output, diags, emitted) = Run("""
+            namespace App
+            {
+                public static class Screens
+                {
+                    [AndroidX.Compose.Composable]
+                    public static void Leaf(AndroidX.Compose.Runtime.IComposer composer, string text) { }
+
+                    [AndroidX.Compose.Composable]
+                    public static void Parent(AndroidX.Compose.Runtime.IComposer composer)
+                    {
+                        Leaf(composer, "hello");
+                    }
+
+                    public static void Root(AndroidX.Compose.Runtime.IComposer c) => Parent(c);
+                }
+            }
+            """);
+
+        Assert.Empty(diags);
+        Assert.NotNull(emitted);
+        // Two distinct wrapper methods: one for the Leaf call inside
+        // Parent's body, one for the Parent call from Root.
+        var interceptorCount = System.Text.RegularExpressions.Regex.Matches(
+            emitted, @"public static void Composable_\d+_[0-9A-F]{8}\(").Count;
+        Assert.Equal(2, interceptorCount);
+        Assert.Contains("global::App.Screens.Leaf(__c, text)", emitted);
+        Assert.Contains("global::App.Screens.Parent(__c)", emitted);
+        AssertNoCompileErrors(output);
+    }
+
+    [Fact]
+    public void OverloadedComposable_BothOverloadsIntercepted()
+    {
+        var (output, diags, emitted) = Run("""
+            namespace App
+            {
+                public static class Screens
+                {
+                    [AndroidX.Compose.Composable]
+                    public static void Foo(AndroidX.Compose.Runtime.IComposer composer) { }
+
+                    [AndroidX.Compose.Composable]
+                    public static void Foo(AndroidX.Compose.Runtime.IComposer composer, int n) { }
+
+                    public static void Root(AndroidX.Compose.Runtime.IComposer c)
+                    {
+                        Foo(c);
+                        Foo(c, 1);
+                    }
+                }
+            }
+            """);
+
+        Assert.Empty(diags);
+        Assert.NotNull(emitted);
+        Assert.Contains("global::App.Screens.Foo(__c)", emitted);
+        Assert.Contains("global::App.Screens.Foo(__c, n)", emitted);
+        AssertNoCompileErrors(output);
+    }
+
+    [Fact]
+    public void EmittedInterceptorIsAttributedAndUnderGeneratedNamespace()
+    {
+        // Anchor test for the interceptor shape — emitted file must
+        // declare InterceptsLocationAttribute as a `file`-scoped class
+        // in System.Runtime.CompilerServices, and place wrappers in
+        // the Microsoft.AndroidX.Compose.Generated namespace that's
+        // opted into <InterceptorsPreviewNamespaces>.
+        var (output, diags, emitted) = Run("""
+            namespace App
+            {
+                public static class Screens
+                {
+                    [AndroidX.Compose.Composable]
+                    public static void Foo(AndroidX.Compose.Runtime.IComposer composer) { }
+
+                    public static void CallSite(AndroidX.Compose.Runtime.IComposer c) => Foo(c);
+                }
+            }
+            """);
+
+        Assert.Empty(diags);
+        Assert.NotNull(emitted);
+        Assert.Contains("namespace System.Runtime.CompilerServices", emitted);
+        Assert.Contains("file sealed class InterceptsLocationAttribute", emitted);
+        Assert.Contains("namespace Microsoft.AndroidX.Compose.Generated", emitted);
+        Assert.Contains("internal static class ComposableInterceptors", emitted);
         AssertNoCompileErrors(output);
     }
 

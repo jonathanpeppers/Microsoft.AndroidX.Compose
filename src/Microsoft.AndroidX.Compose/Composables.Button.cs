@@ -11,9 +11,7 @@ public static partial class Composables
     /// previous composition.
     /// </summary>
     [Composable]
-    public static partial void Button(IComposer composer, Action onClick, Action<IComposer> content, int _changed = 0);
-
-    static void ButtonImpl(IComposer composer, Action onClick, Action<IComposer> content, int _changed = 0)
+    public static void Button(IComposer composer, Action onClick, Action<IComposer> content)
     {
         ArgumentNullException.ThrowIfNull(onClick);
         ArgumentNullException.ThrowIfNull(content);

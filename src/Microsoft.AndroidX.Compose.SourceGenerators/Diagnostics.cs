@@ -260,18 +260,18 @@ internal static class Diagnostics
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);
 
-    public static readonly DiagnosticDescriptor ComposableNotPartial = new(
+    public static readonly DiagnosticDescriptor ComposableNotStatic = new(
         id: "CN5001",
-        title: "[Composable] method must be 'static partial'",
-        messageFormat: "Method '{0}' carries [Composable] but is not declared 'static partial' — Tier 2 needs a partial declaration so the generator can emit the restart-group wrapper",
+        title: "[Composable] method must be static",
+        messageFormat: "Method '{0}' carries [Composable] but is not declared 'static' — Tier 2 intercepts call sites to a static method",
         category: "AndroidX.Compose",
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);
 
-    public static readonly DiagnosticDescriptor ComposableMissingImpl = new(
+    public static readonly DiagnosticDescriptor ComposableReturnsNotVoid = new(
         id: "CN5002",
-        title: "[Composable] method is missing its sibling 'Impl' body",
-        messageFormat: "Method '{0}' carries [Composable] but has no sibling static method named '{1}' with a matching parameter list — Tier 2 looks up '{1}' as the user-supplied body the wrapper invokes",
+        title: "[Composable] method must return void",
+        messageFormat: "Method '{0}' carries [Composable] but its return type is not 'void' — Tier 2 currently supports only 'void' composables",
         category: "AndroidX.Compose",
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);
@@ -280,22 +280,6 @@ internal static class Diagnostics
         id: "CN5003",
         title: "[Composable] method must take IComposer as its first parameter",
         messageFormat: "Method '{0}' carries [Composable] but its first parameter is not 'AndroidX.Compose.Runtime.IComposer' — Tier 2 threads the composer explicitly through every composable call",
-        category: "AndroidX.Compose",
-        defaultSeverity: DiagnosticSeverity.Error,
-        isEnabledByDefault: true);
-
-    public static readonly DiagnosticDescriptor ComposableImplSignatureMismatch = new(
-        id: "CN5004",
-        title: "[Composable] companion 'Impl' has a mismatched signature",
-        messageFormat: "Method '{0}' carries [Composable] but the sibling '{1}' parameter list does not match — both must have the same parameter types in the same order, starting with IComposer",
-        category: "AndroidX.Compose",
-        defaultSeverity: DiagnosticSeverity.Error,
-        isEnabledByDefault: true);
-
-    public static readonly DiagnosticDescriptor ComposableContainerNotPartial = new(
-        id: "CN5005",
-        title: "[Composable] method's containing type must be 'partial'",
-        messageFormat: "Method '{0}' carries [Composable] but its containing type '{1}' is not declared 'partial' — the generator needs to extend the type with the wrapper implementation",
         category: "AndroidX.Compose",
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);

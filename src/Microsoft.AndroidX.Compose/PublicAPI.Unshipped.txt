@@ -201,16 +201,11 @@ AndroidX.Compose.ComposableNode.Modifier.get -> AndroidX.Compose.Modifier?
 AndroidX.Compose.ComposableNode.Modifier.set -> void
 AndroidX.Compose.ComposableNode.PrependModifier(AndroidX.Compose.Modifier! modifier) -> void
 AndroidX.Compose.Composables
-static AndroidX.Compose.Composables.Box(AndroidX.Compose.Runtime.IComposer! composer, System.Action<AndroidX.Compose.Runtime.IComposer!>! content, int _changed = 0) -> void
-static AndroidX.Compose.Composables.Box(AndroidX.Compose.Runtime.IComposer! composer, System.Action<AndroidX.Compose.Runtime.IComposer!>! content, int _changed) -> void
-static AndroidX.Compose.Composables.Button(AndroidX.Compose.Runtime.IComposer! composer, System.Action! onClick, System.Action<AndroidX.Compose.Runtime.IComposer!>! content, int _changed = 0) -> void
-static AndroidX.Compose.Composables.Button(AndroidX.Compose.Runtime.IComposer! composer, System.Action! onClick, System.Action<AndroidX.Compose.Runtime.IComposer!>! content, int _changed) -> void
-static AndroidX.Compose.Composables.Column(AndroidX.Compose.Runtime.IComposer! composer, System.Action<AndroidX.Compose.Runtime.IComposer!>! content, int _changed = 0) -> void
-static AndroidX.Compose.Composables.Column(AndroidX.Compose.Runtime.IComposer! composer, System.Action<AndroidX.Compose.Runtime.IComposer!>! content, int _changed) -> void
-static AndroidX.Compose.Composables.Row(AndroidX.Compose.Runtime.IComposer! composer, System.Action<AndroidX.Compose.Runtime.IComposer!>! content, int _changed = 0) -> void
-static AndroidX.Compose.Composables.Row(AndroidX.Compose.Runtime.IComposer! composer, System.Action<AndroidX.Compose.Runtime.IComposer!>! content, int _changed) -> void
-static AndroidX.Compose.Composables.Text(AndroidX.Compose.Runtime.IComposer! composer, string! text, int _changed = 0) -> void
-static AndroidX.Compose.Composables.Text(AndroidX.Compose.Runtime.IComposer! composer, string! text, int _changed) -> void
+static AndroidX.Compose.Composables.Box(AndroidX.Compose.Runtime.IComposer! composer, System.Action<AndroidX.Compose.Runtime.IComposer!>! content) -> void
+static AndroidX.Compose.Composables.Button(AndroidX.Compose.Runtime.IComposer! composer, System.Action! onClick, System.Action<AndroidX.Compose.Runtime.IComposer!>! content) -> void
+static AndroidX.Compose.Composables.Column(AndroidX.Compose.Runtime.IComposer! composer, System.Action<AndroidX.Compose.Runtime.IComposer!>! content) -> void
+static AndroidX.Compose.Composables.Row(AndroidX.Compose.Runtime.IComposer! composer, System.Action<AndroidX.Compose.Runtime.IComposer!>! content) -> void
+static AndroidX.Compose.Composables.Text(AndroidX.Compose.Runtime.IComposer! composer, string! text) -> void
 AndroidX.Compose.Composed
 AndroidX.Compose.Composed.Composed(System.Func<AndroidX.Compose.Runtime.IComposer!, AndroidX.Compose.ComposableNode?>! builder) -> void
 AndroidX.Compose.ComposeExtensions

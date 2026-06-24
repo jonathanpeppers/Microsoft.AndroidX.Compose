@@ -166,29 +166,31 @@ already supports.
 ## Tier 2 — `[Composable]` C# methods
 
 Tier 2 is the C# moral equivalent of Kotlin's compose-compiler plugin:
-a Roslyn incremental source generator
-(`ComposableMethodGenerator`) that wraps user-written `[Composable]`
-`static partial` methods with a Compose restart group, per-parameter
-`$changed` diffing, and a skip-when-unchanged fast path. The result is
-zero per-recomposition `ComposableNode` allocations and a render loop
-shape Compose's runtime can skip the same way it skips a Kotlin
+a Roslyn incremental source generator (`ComposableMethodGenerator`)
+that emits a per-call-site `[InterceptsLocation]` wrapper for every
+invocation of a `[Composable]`-marked static method. The wrapper opens
+a Compose restart group, runs per-parameter `DiffSlot` diffing, and
+skips the underlying call when nothing changed. The result is zero
+per-recomposition `ComposableNode` allocations and a render loop shape
+Compose's runtime can skip the same way it skips a Kotlin
 `@Composable`.
+
+Mirrors the design `dotnet/maui` uses for its
+[`BindingSourceGen`](https://github.com/dotnet/maui/blob/main/src/Controls/src/BindingSourceGen):
+one user method per composable, generator-emitted interceptors at every
+call site, the C# compiler's interceptors preview feature does the
+rewiring at the language level.
 
 ### Authoring shape
 
 ```csharp
-public static partial class Screens
+public static class Screens
 {
     [Composable]
-    public static partial void Greeting(IComposer composer, string name);
-
-    // User-written body. The generator finds the sibling
-    // `<Name>Impl` method and wraps it.
-    static void GreetingImpl(IComposer composer, string name)
+    public static void Greeting(IComposer composer, string name)
     {
-        // Compose the body. Tree-style facades may be called here
-        // for now — Tier 2 sibling entry points for the facade
-        // catalog are a follow-up.
+        // Plain static method. No partial, no Impl companion, no
+        // _changed parameter. Same shape as a Kotlin @Composable.
         var node = new Text($"Hello {name}");
         node.Render(composer);
     }
@@ -197,42 +199,53 @@ public static partial class Screens
 
 ### What the generator emits
 
-For every `[Composable] static partial` declaration the generator
-emits a partial implementation roughly shaped like:
+The generator emits a single
+`Microsoft.AndroidX.Compose.Composable.Interceptors.g.cs` file
+containing one wrapper per intercepted call site, plus a `file`-scoped
+`InterceptsLocationAttribute` definition in
+`System.Runtime.CompilerServices`. For each `Greeting(composer, "x")`
+call site the generator emits roughly:
 
 ```csharp
-public static partial void Greeting(IComposer composer, string name)
+[global::System.Runtime.CompilerServices.InterceptsLocationAttribute(1, @"...base64...")]
+public static void Composable_0_AB12CD34(
+    global::AndroidX.Compose.Runtime.IComposer composer,
+    string name)
 {
     var __c = composer.StartRestartGroup(unchecked((int)0x9A1B2C3D));
     int __dirty = 0;
     __dirty |= __c.DiffSlot<string>(name, 1);
-    if ((__dirty & 0x4) != 0 || !__c.Skipping)
-        GreetingImpl(__c, name);
+    if ((__dirty & 0xB) != 0x2 || !__c.Skipping)
+        global::App.Screens.Greeting(__c, name);
     else
         __c.SkipToGroupEnd();
-    __c.EndRestartGroup()?.UpdateScope(new ComposableLambda2(
-        __c2 => Greeting(__c2, name)));
+    __c.EndRestartGroup()?.UpdateScope(new global::AndroidX.Compose.ComposableLambda2(
+        __c2 => Composable_0_AB12CD34(__c2, name)));
 }
 ```
 
-The key — `0x9A1B2C3D` here — is a FNV-1a hash of the fully-qualified
-method name so it stays stable across processes (matches the
-`SourceLocationKey` contract used by the rest of the repo). Each
-user parameter gets a `DiffSlot<T>(value, offset)` call at the
-canonical bit offset (`1 + paramIndex * 3`); the "any param
-different" mask is computed at generation time and inlined as a
-literal. The `UpdateScope` lambda re-enters the wrapper from the
-Compose runtime, which is how Compose triggers a recomposition — the
-re-entry's own `DiffSlot` calls will then read each arg as
-`Same`/`Different`, and the skip path takes over.
+The C# compiler's interceptors feature rewires each user call site at
+the language level — the user writes `Greeting(composer, "x")` and the
+compiler resolves the invocation to the generator-emitted wrapper.
+The key — `0x9A1B2C3D` — is FNV-1a over the fully-qualified method
+name so it stays stable across processes (matches the
+`SourceLocationKey` contract). Each user parameter gets a
+`DiffSlot<T>(value, offset)` call at the canonical bit offset
+(`1 + paramIndex * 3`); the Kotlin-shape skip pair
+(`mask = 0b001 | sum(0b101 << (1+3*i))`,
+`expected = sum(0b001 << (1+3*i))`) is computed at generation time and
+inlined as a literal. The `UpdateScope` lambda re-enters the wrapper
+(not the user method) so the next composition pass re-opens the same
+restart group, re-diffs, and skips-or-calls the same way.
 
 ### Coexistence with Tier 1.5
 
 Both styles can call into each other freely:
 
 - A tree-style facade's `Render` (or the `SetContent` callback) can
-  invoke a Tier 2 `[Composable]` method directly — the wrapper sets up
-  its own restart group inside the surrounding tree-style render.
+  invoke a Tier 2 `[Composable]` method directly — each call site is
+  intercepted normally and the wrapper sets up its own restart group
+  inside the surrounding tree-style render.
 - A Tier 2 method can construct a tree-style `ComposableNode` and call
   `.Render(composer)` on it. The Tier 2 demo in the gallery
   (`tier2-counter`) does exactly this until sibling Tier 2 entry
@@ -246,11 +259,9 @@ Tier 2; one-shot screens can stay tree-style indefinitely.
 
 | ID     | Meaning                                                          |
 |--------|------------------------------------------------------------------|
-| CN5001 | `[Composable]` method must be `static partial`.                  |
-| CN5002 | `[Composable]` method missing companion `<Name>Impl(...)` body.  |
+| CN5001 | `[Composable]` method must be `static`.                          |
+| CN5002 | `[Composable]` method must return `void`.                        |
 | CN5003 | `[Composable]` method must take `IComposer` as first parameter.  |
-| CN5004 | `[Composable]` companion `<Name>Impl` has a mismatched signature.|
-| CN5005 | `[Composable]` method's containing type must be `partial`.       |
 
 ### Deferred — follow-up issues
 

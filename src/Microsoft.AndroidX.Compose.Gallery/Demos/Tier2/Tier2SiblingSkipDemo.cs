@@ -12,20 +12,20 @@ namespace AndroidX.Compose.Gallery.Demos.Tier2;
 /// <remarks>
 /// <para>
 /// Each sibling increments an in-process execution counter the first
-/// thing inside its <c>Impl</c> body and renders both the input value
-/// and the counter. Tapping the button reruns the parent composable;
-/// the runtime then invokes each sibling's wrapper, which diffs its
+/// thing inside its body and renders both the input value and the
+/// counter. Tapping the button reruns the parent composable; the
+/// runtime then invokes each sibling's interceptor, which diffs its
 /// parameters via <see cref="ComposeExtensions.DiffSlot{T}"/>:
 /// </para>
 /// <list type="bullet">
 ///   <item><description>
 ///     <c>Ticking</c> receives a new <c>int</c> value each pass →
-///     wrapper reads <c>Different</c> → body runs → exec counter
+///     interceptor reads <c>Different</c> → body runs → exec counter
 ///     increments.
 ///   </description></item>
 ///   <item><description>
 ///     <c>Static</c> receives the same constant string each pass →
-///     wrapper reads <c>Same</c> → body is skipped via
+///     interceptor reads <c>Same</c> → body is skipped via
 ///     <c>SkipToGroupEnd</c> → exec counter stays flat.
 ///   </description></item>
 /// </list>
@@ -35,7 +35,7 @@ namespace AndroidX.Compose.Gallery.Demos.Tier2;
 /// would tick together.
 /// </para>
 /// </remarks>
-public static partial class Tier2SiblingSkipDemo
+public static class Tier2SiblingSkipDemo
 {
     static int s_tickingExec;
     static int s_staticExec;
@@ -53,24 +53,22 @@ public static partial class Tier2SiblingSkipDemo
         });
 
     /// <summary>
-    /// Parent <c>[Composable]</c> that hosts both siblings and the
-    /// button that drives the ticking state.
+    /// Parent <c>[Composable]</c> hosting both siblings and the button
+    /// that drives the ticking state.
     /// </summary>
     [Composable]
-    public static partial void Parent(IComposer composer, int tickCount, Action onTick);
-
-    static void ParentImpl(IComposer composer, int tickCount, Action onTick)
+    public static void Parent(IComposer composer, int tickCount, Action onTick)
     {
         Composables.Column(composer, c =>
         {
             // The static sibling receives a literal string that never
-            // changes from one pass to the next, so its wrapper's
+            // changes from one pass to the next, so its interceptor's
             // DiffSlot reads `Same` and the body is skipped.
             Static(c, "constant input — should never re-run");
 
             // The ticking sibling reads the live `tickCount`. Its
-            // wrapper's DiffSlot reads `Different` whenever the user
-            // taps the button, so the body runs every pass.
+            // interceptor's DiffSlot reads `Different` whenever the
+            // user taps the button, so the body runs every pass.
             Ticking(c, tickCount);
 
             Composables.Button(c, onTick, cc => Composables.Text(cc, "Tap to tick"));
@@ -79,13 +77,11 @@ public static partial class Tier2SiblingSkipDemo
 
     /// <summary>
     /// Tier 2 sibling whose only parameter is a constant string. Its
-    /// generator-emitted wrapper should detect the unchanged input
+    /// generator-emitted interceptor should detect the unchanged input
     /// and call <c>SkipToGroupEnd</c> instead of running this body.
     /// </summary>
     [Composable]
-    public static partial void Static(IComposer composer, string label);
-
-    static void StaticImpl(IComposer composer, string label)
+    public static void Static(IComposer composer, string label)
     {
         s_staticExec++;
         Composables.Text(composer, $"Static side: \"{label}\" — exec={s_staticExec}");
@@ -93,14 +89,12 @@ public static partial class Tier2SiblingSkipDemo
 
     /// <summary>
     /// Tier 2 sibling that reads the ticking <see cref="MutableNumberState{T}"/>.
-    /// Its wrapper's DiffSlot reads <c>Different</c> on every tap so
-    /// the body runs every pass and the exec counter tracks the tap
-    /// count exactly.
+    /// Its interceptor's DiffSlot reads <c>Different</c> on every tap
+    /// so the body runs every pass and the exec counter tracks the
+    /// tap count exactly.
     /// </summary>
     [Composable]
-    public static partial void Ticking(IComposer composer, int tickCount);
-
-    static void TickingImpl(IComposer composer, int tickCount)
+    public static void Ticking(IComposer composer, int tickCount)
     {
         s_tickingExec++;
         Composables.Text(composer, $"Ticking side: count={tickCount}, exec={s_tickingExec}");
