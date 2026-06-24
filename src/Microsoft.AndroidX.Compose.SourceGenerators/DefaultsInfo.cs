@@ -62,7 +62,7 @@ internal readonly struct DefaultsInfo
         var arr = match.ConstructorArguments[1];
         var names = arr.Kind == TypedConstantKind.Array
             ? arr.Values.Select(v => v.Value as string ?? string.Empty).ToArray()
-            : Array.Empty<string>();
+            : [];
 
         var slots = new List<DefaultsSlot>(names.Length);
         for (int i = 0; i < names.Length; i++)

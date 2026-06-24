@@ -265,7 +265,7 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
             var arr = match.ConstructorArguments[1];
             kotlinNames = arr.Kind == TypedConstantKind.Array
                 ? arr.Values.Select(v => v.Value as string ?? string.Empty).ToArray()
-                : Array.Empty<string>();
+                : [];
         }
         else if (defaultsType is not null)
         {
@@ -275,7 +275,7 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
         }
         else
         {
-            kotlinNames = Array.Empty<string>();
+            kotlinNames = [];
         }
 
         // C# parameter walk. For composable shapes the last param must be
@@ -284,28 +284,61 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
         // bridges have already had their trailing IContinuation param
         // captured above; we strip it from csTail here so the rest of the
         // accounting math treats it parallel to the Composer slot.
+        //
+        // Two valid positions for an optional `int _changed` user param:
+        //   - trailing after composer: `(... , IComposer c, int _changed = 0)`
+        //     (keeps the partial declaration back-compat with hand-written
+        //     callers that omit the arg — default=0 = Uncertain everywhere)
+        //   - immediately before composer: `(... , int _changed, IComposer c)`
+        // Either way the generator emits the arg into the FIRST $changed
+        // JNI slot in place of literal 0. Only valid on @Composable bridges.
         var csParams = method.Parameters;
+        bool callerProvidesChanged = false;
+        int csEnd = csParams.Length;
+        if (hasComposerSlot && csEnd >= 2 &&
+            csParams[csEnd - 1].Type.SpecialType == SpecialType.System_Int32 &&
+            csParams[csEnd - 1].Name == "_changed" &&
+            ComposeDefaultsGenerator.IsComposer(csParams[csEnd - 2].Type))
+        {
+            callerProvidesChanged = true;
+            csEnd -= 1; // pretend `_changed` isn't there for the rest of the walk
+        }
         IParameterSymbol? composerParam;
         int csTail; // exclusive upper bound of "user-controlled" params before composer
         if (hasComposerSlot)
         {
-            if (csParams.Length == 0 || !ComposeDefaultsGenerator.IsComposer(csParams[csParams.Length - 1].Type))
+            if (csEnd == 0 || !ComposeDefaultsGenerator.IsComposer(csParams[csEnd - 1].Type))
             {
                 return new GenerationResult(null, null, new[] {
                     Diagnostic.Create(Diagnostics.MalformedAttribute, loc, method.Name)
                 });
             }
-            composerParam = csParams[csParams.Length - 1];
-            csTail = csParams.Length - 1;
+            composerParam = csParams[csEnd - 1];
+            csTail = csEnd - 1;
         }
         else
         {
             composerParam = null;
-            csTail = csParams.Length;
+            csTail = csEnd;
         }
 
         if (continuationParam is not null)
             csTail -= 1;
+
+        // Pre-composer position for `_changed` (alternative shape).
+        if (!callerProvidesChanged && csTail > 0 &&
+            csParams[csTail - 1].Type.SpecialType == SpecialType.System_Int32 &&
+            csParams[csTail - 1].Name == "_changed")
+        {
+            if (!hasComposerSlot)
+            {
+                return new GenerationResult(null, null, new[] {
+                    Diagnostic.Create(Diagnostics.BridgeChangedRequiresComposer, loc, method.Name)
+                });
+            }
+            callerProvidesChanged = true;
+            csTail -= 1;
+        }
 
         // Detect optional `int defaults` immediately before composer (or
         // at the very end for extension shapes). Caller-controlled bitmask
@@ -498,11 +531,11 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
             return new GenerationResult(null, null, diags.ToArray());
 
         var source = Emit(method, attr, className, jvmName, signature, defaultsEnumName, sigParams,
-            kotlinNames, userParams, userBitOf, receiverParam, callerProvidesDefaults, hasDefaultSlot,
+            kotlinNames, userParams, userBitOf, receiverParam, callerProvidesDefaults, callerProvidesChanged, hasDefaultSlot,
             hasComposerSlot, extensionWithDefault, instanceField, isConstructor,
             isSuspend, isInstanceSuspend, instanceReceiverParam, continuationParam, continuationSlotIdx);
         var hint = $"AndroidX.Compose.{method.ContainingType.Name}.{method.Name}.g.cs";
-        return new GenerationResult(source, hint, Array.Empty<Diagnostic>());
+        return new GenerationResult(source, hint, []);
     }
 
     static GenerationResult ConstructorError(Location loc, string methodName, string message) =>
@@ -558,6 +591,7 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
         Dictionary<string, int> userBitOf,
         IParameterSymbol? receiverParam,
         bool callerProvidesDefaults,
+        bool callerProvidesChanged,
         bool hasDefaultSlot,
         bool hasComposerSlot,
         bool extensionWithDefault,
@@ -712,18 +746,39 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
             idx++;
         }
 
-        // Composer (only present in @Composable shapes).
-        IParameterSymbol? composer = hasComposerSlot ? method.Parameters[method.Parameters.Length - 1] : null;
+        // Composer (only present in @Composable shapes). Skip the
+        // optional trailing `int _changed` if it's the last parameter.
+        IParameterSymbol? composer = null;
+        if (hasComposerSlot)
+        {
+            int composerIdx = method.Parameters.Length - 1;
+            if (composerIdx >= 0 &&
+                method.Parameters[composerIdx].Type.SpecialType == SpecialType.System_Int32 &&
+                method.Parameters[composerIdx].Name == "_changed")
+            {
+                composerIdx -= 1;
+            }
+            if (composerIdx >= 0)
+                composer = method.Parameters[composerIdx];
+        }
         if (composer is not null)
         {
             sb.Append("                args[").Append(idx).Append("] = new global::Android.Runtime.JValue(((global::Java.Lang.Object)").Append(EscapeIdent(composer.Name)).AppendLine(").Handle);");
             idx++;
         }
 
-        // $changed slots.
+        // $changed slots. When the bridge declares an `int _changed`
+        // partial-method param, emit its value into the FIRST $changed
+        // slot; remaining slots (overflow for >10 user params) stay 0.
+        // Without `_changed`, every slot stays 0 (Uncertain — the runtime
+        // diffs everything itself, current behaviour).
         int changedCount = ChangedSlotCount(sigParams, hasDefaultSlot, hasComposerSlot);
         for (int c = 0; c < changedCount; c++, idx++)
-            sb.Append("                args[").Append(idx).AppendLine("] = new global::Android.Runtime.JValue(0);");
+        {
+            string val = (c == 0 && callerProvidesChanged) ? "_changed" : "0";
+            sb.Append("                args[").Append(idx).Append("] = new global::Android.Runtime.JValue(")
+              .Append(val).AppendLine(");");
+        }
 
         // $default (only when present in the bytecode signature).
         if (hasDefaultSlot)

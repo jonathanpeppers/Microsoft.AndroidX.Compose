@@ -111,7 +111,8 @@ public sealed class TextField : ComposableNode
 
     void RenderString(IComposer composer)
     {
-        var __onValueChange = new ComposableLambda1(v => _onValueChange!(v?.ToString() ?? string.Empty));
+        var __onValueChange = composer.RememberAction((Java.Lang.Object? v) =>
+            _onValueChange!(v?.ToString() ?? string.Empty));
         var __label          = Label          is null ? null : ComposableLambdas.Wrap2(composer, c => Label.Render(c));
         var __placeholder    = Placeholder    is null ? null : ComposableLambdas.Wrap2(composer, c => Placeholder.Render(c));
         var __leadingIcon    = LeadingIcon    is null ? null : ComposableLambdas.Wrap2(composer, c => LeadingIcon.Render(c));
@@ -119,13 +120,30 @@ public sealed class TextField : ComposableNode
         var __prefix         = Prefix         is null ? null : ComposableLambdas.Wrap2(composer, c => Prefix.Render(c));
         var __suffix         = Suffix         is null ? null : ComposableLambdas.Wrap2(composer, c => Suffix.Render(c));
         var __supportingText = SupportingText is null ? null : ComposableLambdas.Wrap2(composer, c => SupportingText.Render(c));
+        // Snapshot the modifier structural key before BuildModifier
+        // consumes _prepended/_appended/_contentPadding.
+        var __modifierKey = BuildModifierStructuralKey();
+        // First 10 user params (Kotlin packs 10 per $changed int).
+        // Params beyond bit 28 land in the next $changed int which we
+        // leave at 0 (Uncertain) — same as ComposeFacadeGenerator.
+        int __changed = 0;
+        __changed |= composer.DiffSlot(_value, ComposeExtensions.DiffSlotShift(0));
+        __changed |= (int)ChangedBits.Static << ComposeExtensions.DiffSlotShift(1);
+        __changed |= composer.DiffSlot(__modifierKey, ComposeExtensions.DiffSlotShift(2));
+        __changed |= composer.DiffSlot(Enabled, ComposeExtensions.DiffSlotShift(3));
+        __changed |= composer.DiffSlot(ReadOnly, ComposeExtensions.DiffSlotShift(4));
+        __changed |= composer.DiffSlot<object?>(TextStyle, ComposeExtensions.DiffSlotShift(5));
+        __changed |= composer.DiffSlot<object?>(__label, ComposeExtensions.DiffSlotShift(6));
+        __changed |= composer.DiffSlot<object?>(__placeholder, ComposeExtensions.DiffSlotShift(7));
+        __changed |= composer.DiffSlot<object?>(__leadingIcon, ComposeExtensions.DiffSlotShift(8));
+        __changed |= composer.DiffSlot<object?>(__trailingIcon, ComposeExtensions.DiffSlotShift(9));
         ComposeBridges.TextField(_value!, __onValueChange, BuildModifier(),
             Enabled, ReadOnly, TextStyle?.Build(), __label, __placeholder, __leadingIcon, __trailingIcon,
             __prefix, __suffix, __supportingText, IsError,
             VisualTransformation, KeyboardOptions,
             SingleLine, MaxLines, MinLines,
             Shape,
-            composer);
+            composer, _changed: __changed);
     }
 
     void RenderWithSelection(IComposer composer)
@@ -136,7 +154,7 @@ public sealed class TextField : ComposableNode
                 $"{nameof(TextField)}: MutableState<TextFieldValue>.Value is null. " +
                 $"Seed with {nameof(Compose)}.{nameof(ComposeExtensions.NewTextFieldValue)}() before first render.");
 
-        var __onValueChange = new ComposableLambda1(v =>
+        var __onValueChange = composer.RememberAction((Java.Lang.Object? v) =>
         {
             // Compose hands us the fresh Kotlin TextFieldValue peer; the
             // peer registry maps it back to the bound binding type so we
@@ -151,12 +169,28 @@ public sealed class TextField : ComposableNode
         var __prefix         = Prefix         is null ? null : ComposableLambdas.Wrap2(composer, c => Prefix.Render(c));
         var __suffix         = Suffix         is null ? null : ComposableLambdas.Wrap2(composer, c => Suffix.Render(c));
         var __supportingText = SupportingText is null ? null : ComposableLambdas.Wrap2(composer, c => SupportingText.Render(c));
+        var __modifierKey = BuildModifierStructuralKey();
+        int __changed = 0;
+        // value bit reuses the TextFieldValue peer's identity. Its
+        // .Handle stays the same as long as the state holder hasn't
+        // been replaced; user keystrokes allocate a fresh peer so
+        // typing reads as Different — exactly what we want.
+        __changed |= composer.DiffSlot<object?>(current, ComposeExtensions.DiffSlotShift(0));
+        __changed |= (int)ChangedBits.Static << ComposeExtensions.DiffSlotShift(1);
+        __changed |= composer.DiffSlot(__modifierKey, ComposeExtensions.DiffSlotShift(2));
+        __changed |= composer.DiffSlot(Enabled, ComposeExtensions.DiffSlotShift(3));
+        __changed |= composer.DiffSlot(ReadOnly, ComposeExtensions.DiffSlotShift(4));
+        __changed |= composer.DiffSlot<object?>(TextStyle, ComposeExtensions.DiffSlotShift(5));
+        __changed |= composer.DiffSlot<object?>(__label, ComposeExtensions.DiffSlotShift(6));
+        __changed |= composer.DiffSlot<object?>(__placeholder, ComposeExtensions.DiffSlotShift(7));
+        __changed |= composer.DiffSlot<object?>(__leadingIcon, ComposeExtensions.DiffSlotShift(8));
+        __changed |= composer.DiffSlot<object?>(__trailingIcon, ComposeExtensions.DiffSlotShift(9));
         ComposeBridges.TextFieldWithValue(current, __onValueChange, BuildModifier(),
             Enabled, ReadOnly, TextStyle?.Build(), __label, __placeholder, __leadingIcon, __trailingIcon,
             __prefix, __suffix, __supportingText, IsError,
             VisualTransformation, KeyboardOptions,
             SingleLine, MaxLines, MinLines,
             Shape,
-            composer);
+            composer, _changed: __changed);
     }
 }

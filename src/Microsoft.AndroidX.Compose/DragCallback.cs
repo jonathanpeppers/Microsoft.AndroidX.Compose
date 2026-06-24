@@ -21,36 +21,20 @@ namespace AndroidX.Compose;
 /// / <c>onDrag</c> / <c>onDragEnd</c>.
 /// </para>
 /// <para>
-/// The boxed <c>Offset</c> argument (<c>p1</c>) is unboxed via the
-/// shared <see cref="OffsetCallback"/> helper's
-/// <c>unbox-impl()J</c> lookup pattern.
+/// The boxed <c>Offset</c> argument (<c>p1</c>) is unboxed via
+/// <see cref="Offset.Unbox"/>.
 /// </para>
 /// </remarks>
 [Register("net/compose/DragCallback")]
 internal sealed class DragCallback : Java.Lang.Object, IFunction2
 {
-    static IntPtr s_unbox;
-
     readonly Action<Offset> _body;
 
     public DragCallback(Action<Offset> body) => _body = body;
 
     public Java.Lang.Object Invoke(Java.Lang.Object? p0, Java.Lang.Object? p1)
     {
-        long packed = 0L;
-        if (p1 is not null)
-        {
-            EnsureUnboxMethod();
-            packed = JNIEnv.CallLongMethod(p1.Handle, s_unbox);
-        }
-        _body(Offset.FromPacked(packed));
+        _body(Offset.Unbox(p1));
         return Kotlin.Unit.Instance!;
-    }
-
-    static void EnsureUnboxMethod()
-    {
-        if (s_unbox != IntPtr.Zero) return;
-        var cls = JNIEnv.FindClass("androidx/compose/ui/geometry/Offset");
-        s_unbox = JNIEnv.GetMethodID(cls, "unbox-impl", "()J");
     }
 }

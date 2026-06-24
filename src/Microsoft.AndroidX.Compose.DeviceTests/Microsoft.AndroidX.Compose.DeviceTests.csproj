@@ -1,0 +1,42 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0-android</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <EnableMSTestRunner>true</EnableMSTestRunner>
+    <SupportedOSPlatformVersion>24</SupportedOSPlatformVersion>
+    <OutputType>Exe</OutputType>
+    <ApplicationId>net.compose.devicetests</ApplicationId>
+    <ApplicationVersion>1</ApplicationVersion>
+    <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <!-- MSTEST0032 fires on Assert.AreEqual(0, (int)ChangedBits.Uncertain)
+         etc. because the analyzer can fold constants — but verifying the
+         enum's wire-format values match Kotlin's compose-compiler ABI is
+         exactly what those tests are for. -->
+    <NoWarn>$(NoWarn);MSTEST0032</NoWarn>
+    <!--
+      Tests cover post-build runtime behaviour we can't assert from source-
+      generator unit tests: Modifier.StructuralKey equality, DiffSlot bit
+      contributions, RememberAction identity stability, ConfirmStateChange
+      JCW veto, and Offset.Unbox JNI marshalling. Run with:
+
+        dotnet build src\Microsoft.AndroidX.Compose.DeviceTests -t:Install
+        adb shell am instrument -w net.compose.devicetests/net.compose.devicetests.TestInstrumentation
+    -->
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MSTest" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Using Include="Microsoft.VisualStudio.TestTools.UnitTesting" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Microsoft.AndroidX.Compose\Microsoft.AndroidX.Compose.csproj" />
+  </ItemGroup>
+
+</Project>

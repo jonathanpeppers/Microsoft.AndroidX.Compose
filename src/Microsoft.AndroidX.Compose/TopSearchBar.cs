@@ -27,6 +27,11 @@ public sealed class TopSearchBar : ComposableNode
 
         var stateHandle = SearchBar.ResolveStateHandle(_state, composer);
         var inputField  = ComposableLambdas.Wrap2(composer, c => InputField.Render(c));
-        ComposeBridges.TopSearchBar(stateHandle, inputField, BuildModifier(), composer);
+        var __modifierKey = BuildModifierStructuralKey();
+        int __changed = 0;
+        __changed |= composer.DiffSlot(stateHandle, ComposeExtensions.DiffSlotShift(0));
+        __changed |= (int)ChangedBits.Static << ComposeExtensions.DiffSlotShift(1);
+        __changed |= composer.DiffSlot(__modifierKey, ComposeExtensions.DiffSlotShift(2));
+        ComposeBridges.TopSearchBar(stateHandle, inputField, BuildModifier(), composer, _changed: __changed);
     }
 }

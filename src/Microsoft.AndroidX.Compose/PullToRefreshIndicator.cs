@@ -89,6 +89,23 @@ public sealed class PullToRefreshIndicator : ComposableNode
         if (Color          == 0L)     mask |= BitColor;
         if (MaxDistance    is null)   mask |= BitMaxDistance;
 
+        // $changed bitmask. Bit positions over user params:
+        //   1  = state          (Jvm reference DiffSlot — stable when caller
+        //                        reuses the same PullToRefreshState wrapper)
+        //   4  = isRefreshing   (bool)
+        //   7  = modifier       (DiffSlot of structural key)
+        //   10 = containerColor (long)
+        //   13 = color          (long)
+        //   16 = maxDistance    (Dp? — null reads as ChangedBits.Same after
+        //                        the first pass via the auto-mask)
+        int __changed = 0;
+        __changed |= composer.DiffSlot(jvm,                            1);
+        __changed |= composer.DiffSlot(_isRefreshing,                  4);
+        __changed |= composer.DiffSlot(BuildModifierStructuralKey(),   7);
+        __changed |= composer.DiffSlot(ContainerColor,                 10);
+        __changed |= composer.DiffSlot(Color,                          13);
+        __changed |= composer.DiffSlot(MaxDistance,                    16);
+
         PullToRefreshDefaults.Instance.Indicator(
             state:          jvm,
             isRefreshing:   _isRefreshing,
@@ -97,7 +114,7 @@ public sealed class PullToRefreshIndicator : ComposableNode
             color:          Color,
             maxDistance:    MaxDistance?.Value ?? 0f,
             _composer:      composer,
-            p7:             0,
+            p7:             __changed,
             _changed:       mask);
     }
 }

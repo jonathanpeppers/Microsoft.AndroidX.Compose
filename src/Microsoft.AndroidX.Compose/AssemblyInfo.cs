@@ -8,3 +8,9 @@ using System.Runtime.CompilerServices;
 // internal to the assembly while still letting the trusted Maui
 // backend depend on them.
 [assembly: InternalsVisibleTo("Microsoft.AndroidX.Compose.Maui")]
+
+// Microsoft.AndroidX.Compose.DeviceTests exercises runtime behaviour
+// of internal-only types — Modifier.StructuralKey / ModifierOpKey /
+// ChangedBits / DiffSlotShift / MutableComposableLambda0 — that we
+// don't want in the public API surface.
+[assembly: InternalsVisibleTo("Microsoft.AndroidX.Compose.DeviceTests")]

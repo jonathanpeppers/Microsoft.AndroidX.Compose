@@ -121,10 +121,26 @@ public sealed class BottomSheetScaffold : ComposableContainer
             : ComposableLambdas.Wrap2(composer, c => TopBar.Render(c));
 
         int defaults = (int)BottomSheetScaffoldDefault.All;
+        var __modifierKey = BuildModifierStructuralKey();
         var modifier = BuildModifier();
         if (modifier   is not null) defaults &= ~(int)BottomSheetScaffoldDefault.Modifier;
         if (dragHandle is not null) defaults &= ~(int)BottomSheetScaffoldDefault.SheetDragHandle;
         if (topBar     is not null) defaults &= ~(int)BottomSheetScaffoldDefault.TopBar;
+
+        // $changed mask: param 0=sheetContent (Wrap3 → Static),
+        // 1=modifier (DiffSlot key), 2=scaffoldState (Jvm reference
+        // DiffSlot — same instance across recompositions when state
+        // holder is cached), 3=sheetDragHandle (Function2? identity),
+        // 4=topBar (Function2? identity), 5=snackbarHost (null → Same),
+        // 6=content (Wrap3 → Static).
+        int __changed = 0;
+        __changed |= (int)ChangedBits.Static << ComposeExtensions.DiffSlotShift(0);
+        __changed |= composer.DiffSlot(__modifierKey, ComposeExtensions.DiffSlotShift(1));
+        __changed |= composer.DiffSlot(scaffoldState, ComposeExtensions.DiffSlotShift(2));
+        __changed |= composer.DiffSlot<object?>(dragHandle, ComposeExtensions.DiffSlotShift(3));
+        __changed |= composer.DiffSlot<object?>(topBar, ComposeExtensions.DiffSlotShift(4));
+        __changed |= (int)ChangedBits.Same << ComposeExtensions.DiffSlotShift(5);
+        __changed |= (int)ChangedBits.Static << ComposeExtensions.DiffSlotShift(6);
 
         ComposeBridges.BottomSheetScaffold(
             sheetContent:    sheet,
@@ -135,6 +151,7 @@ public sealed class BottomSheetScaffold : ComposableContainer
             snackbarHost:    null,
             content:         content,
             defaults:        defaults,
-            composer:        composer);
+            composer:        composer,
+            _changed:        __changed);
     }
 }

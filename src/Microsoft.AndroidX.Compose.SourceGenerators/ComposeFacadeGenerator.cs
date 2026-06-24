@@ -168,15 +168,39 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         INamedTypeSymbol? secondaryDefaultsType = ReadType(attr, "SecondaryDefaults");
 
         // Composer is the trailing param for @Composable bridges (the only
-        // shape facade generation supports).
+        // shape facade generation supports). `int _changed` may sit either
+        // immediately before composer (legacy shape) or trailing after
+        // composer (back-compat shape, with a default so hand-written
+        // callers can omit it).
         var csParams = method.Parameters;
-        if (csParams.Length == 0 || !ComposeDefaultsGenerator.IsComposer(csParams[csParams.Length - 1].Type))
+        bool callerProvidesChanged = false;
+        int csEnd = csParams.Length;
+        if (csEnd >= 2 &&
+            csParams[csEnd - 1].Type.SpecialType == SpecialType.System_Int32 &&
+            csParams[csEnd - 1].Name == "_changed" &&
+            ComposeDefaultsGenerator.IsComposer(csParams[csEnd - 2].Type))
+        {
+            callerProvidesChanged = true;
+            csEnd -= 1;
+        }
+        if (csEnd == 0 || !ComposeDefaultsGenerator.IsComposer(csParams[csEnd - 1].Type))
         {
             return Fail(Diagnostics.FacadeUnsupportedParameter, loc, method.Name, "<composer>",
                 "bridge must be @Composable (trailing IComposer parameter) for facade generation");
         }
-        var composerParam = csParams[csParams.Length - 1];
-        var userParams = csParams.Take(csParams.Length - 1).ToArray();
+        var composerParam = csParams[csEnd - 1];
+        var userParams = csParams.Take(csEnd - 1).ToArray();
+
+        // Pre-composer position for `_changed` (alternate shape).
+        if (!callerProvidesChanged && userParams.Length > 0)
+        {
+            var last = userParams[userParams.Length - 1];
+            if (last.Type.SpecialType == SpecialType.System_Int32 && last.Name == "_changed")
+            {
+                callerProvidesChanged = true;
+                userParams = userParams.Take(userParams.Length - 1).ToArray();
+            }
+        }
 
         // Look up the bridge's Defaults enum so Phase 3 can emit the
         // matching auto-mask code. Bridge-mode reads it from
@@ -459,10 +483,10 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             return new GenerationResult(null, null, diags);
 
         var source = Emit(className, method.Name, scope, composerParam, slots, hasMultiSlot,
-            callerProvidesDefaults, defaultsParam, defaults, defaultsType?.Name, themeColor, colorSlot,
+            callerProvidesDefaults, callerProvidesChanged, defaultsParam, defaults, defaultsType?.Name, themeColor, colorSlot,
             userParams, branchInfo, indexedChildren, secondaryCtorInfo);
         var hint = $"AndroidX.Compose.Facade.{className}.g.cs";
-        return new GenerationResult(source, hint, Array.Empty<Diagnostic>());
+        return new GenerationResult(source, hint, []);
     }
 
     static BranchInfo? BuildBranchInfo(Context c, IMethodSymbol primary,
@@ -516,8 +540,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         // [ComposeBridge] attribute. Filter to the candidate set first
         // (this matches what the StateHolder validator does for Remember).
         var candidates = allOverloads.Where(m =>
-            m.Parameters.Length >= 1 &&
-            ComposeDefaultsGenerator.IsComposer(m.Parameters[m.Parameters.Length - 1].Type) &&
+            IsComposableBridge(m) &&
             (c.BridgeAttr is null ||
              m.GetAttributes().Any(a => SymbolEqualityComparer.Default.Equals(a.AttributeClass, c.BridgeAttr)))
         ).ToArray();
@@ -536,9 +559,27 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         }
 
         var altMethod = candidates[0];
-        // Strip trailing composer + (optional) `int defaults`.
+        // Strip trailing composer + (optional) trailing `int _changed`
+        // (back-compat shape) + (optional) `int defaults`.
         var altAll = altMethod.Parameters;
-        var altUser = altAll.Take(altAll.Length - 1).ToArray();
+        var altUser = altAll.ToArray();
+        // Trailing _changed (after composer)
+        if (altUser.Length >= 2 &&
+            altUser[altUser.Length - 1].Type.SpecialType == SpecialType.System_Int32 &&
+            altUser[altUser.Length - 1].Name == "_changed" &&
+            ComposeDefaultsGenerator.IsComposer(altUser[altUser.Length - 2].Type))
+        {
+            altUser = altUser.Take(altUser.Length - 1).ToArray();
+        }
+        // Composer
+        altUser = altUser.Take(altUser.Length - 1).ToArray();
+        // Pre-composer _changed (alternate shape)
+        if (altUser.Length > 0 &&
+            altUser[altUser.Length - 1].Type.SpecialType == SpecialType.System_Int32 &&
+            altUser[altUser.Length - 1].Name == "_changed")
+        {
+            altUser = altUser.Take(altUser.Length - 1).ToArray();
+        }
         IParameterSymbol? altDefaultsParam = null;
         if (altUser.Length > 0 &&
             altUser[altUser.Length - 1].Type.SpecialType == SpecialType.System_Int32 &&
@@ -638,13 +679,17 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         // the if-condition the emitter produces.
         var branchedSlot = new FacadeSlot(extra, branchedKind, slotPropertyName: branchOn);
 
+        bool altProvidesChanged = altAll.Any(p =>
+            p.Type.SpecialType == SpecialType.System_Int32 && p.Name == "_changed");
+
         return new BranchInfo(
             alternateMethodName: altMethod.Name,
             alternateUserParams: altUser,
             alternateDefaults: altDefaults!.Value,
             alternateDefaultsEnumName: altDefaultsType.Name,
             branchedSlot: branchedSlot,
-            branchProperty: branchOn!);
+            branchProperty: branchOn!,
+            alternateProvidesChanged: altProvidesChanged);
     }
 
     static bool AreCompatibleSharedParams(IParameterSymbol a, IParameterSymbol b)
@@ -662,7 +707,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
     {
         public BranchInfo(string alternateMethodName, IReadOnlyList<IParameterSymbol> alternateUserParams,
             DefaultsInfo alternateDefaults, string alternateDefaultsEnumName,
-            FacadeSlot branchedSlot, string branchProperty)
+            FacadeSlot branchedSlot, string branchProperty, bool alternateProvidesChanged)
         {
             AlternateMethodName = alternateMethodName;
             AlternateUserParams = alternateUserParams;
@@ -670,15 +715,18 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             AlternateDefaultsEnumName = alternateDefaultsEnumName;
             BranchedSlot = branchedSlot;
             BranchProperty = branchProperty;
+            AlternateProvidesChanged = alternateProvidesChanged;
         }
         public string AlternateMethodName { get; }
-        /// <summary>Alternate bridge's user parameters, in declaration order, excluding trailing IComposer and `int defaults`.</summary>
+        /// <summary>Alternate bridge's user parameters, in declaration order, excluding trailing IComposer, `int _changed`, and `int defaults`.</summary>
         public IReadOnlyList<IParameterSymbol> AlternateUserParams { get; }
         public DefaultsInfo AlternateDefaults { get; }
         public string AlternateDefaultsEnumName { get; }
         public FacadeSlot BranchedSlot { get; }
         /// <summary>The PascalCased property name on the facade (e.g. "Subtitle").</summary>
         public string BranchProperty { get; }
+        /// <summary>True when the alternate bridge declares an `int _changed` parameter (so the facade should pass `__changed`).</summary>
+        public bool AlternateProvidesChanged { get; }
     }
 
     /// <summary>
@@ -693,21 +741,25 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
     internal sealed class SecondaryCtorInfo
     {
         public SecondaryCtorInfo(IMethodSymbol method, IReadOnlyList<IParameterSymbol> userParams,
-            IParameterSymbol discriminator, DefaultsInfo defaults, string defaultsEnumName)
+            IParameterSymbol discriminator, DefaultsInfo defaults, string defaultsEnumName,
+            bool secondaryProvidesChanged)
         {
             Method = method;
             UserParams = userParams;
             Discriminator = discriminator;
             Defaults = defaults;
             DefaultsEnumName = defaultsEnumName;
+            SecondaryProvidesChanged = secondaryProvidesChanged;
         }
         public IMethodSymbol Method { get; }
-        /// <summary>Secondary's user parameters in declaration order, excluding trailing IComposer and `int defaults`.</summary>
+        /// <summary>Secondary's user parameters in declaration order, excluding trailing IComposer, `int _changed`, and `int defaults`.</summary>
         public IReadOnlyList<IParameterSymbol> UserParams { get; }
         /// <summary>The single secondary-unique param that drives ctor dispatch.</summary>
         public IParameterSymbol Discriminator { get; }
         public DefaultsInfo Defaults { get; }
         public string DefaultsEnumName { get; }
+        /// <summary>True when the secondary bridge declares an `int _changed` parameter.</summary>
+        public bool SecondaryProvidesChanged { get; }
     }
 
     static SecondaryCtorInfo? BuildSecondaryCtorInfo(Context c, IMethodSymbol primary,
@@ -736,9 +788,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
 
         var allOverloads = bridgesType.GetMembers(secondaryName).OfType<IMethodSymbol>()
             .Where(m => m.IsStatic).ToArray();
-        var candidates = allOverloads.Where(m =>
-            m.Parameters.Length >= 1 &&
-            ComposeDefaultsGenerator.IsComposer(m.Parameters[m.Parameters.Length - 1].Type)).ToArray();
+        var candidates = allOverloads.Where(m => IsComposableBridge(m)).ToArray();
 
         if (candidates.Length == 0)
         {
@@ -754,9 +804,27 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         }
 
         var secondary = candidates[0];
-        // Strip trailing composer + (required) `int defaults`.
+        // Strip trailing composer + (optional) trailing `int _changed` +
+        // (required) `int defaults`.
         var secAll = secondary.Parameters;
-        var secUser = secAll.Take(secAll.Length - 1).ToArray();
+        var secUser = secAll.ToArray();
+        // Trailing _changed (after composer)
+        if (secUser.Length >= 2 &&
+            secUser[secUser.Length - 1].Type.SpecialType == SpecialType.System_Int32 &&
+            secUser[secUser.Length - 1].Name == "_changed" &&
+            ComposeDefaultsGenerator.IsComposer(secUser[secUser.Length - 2].Type))
+        {
+            secUser = secUser.Take(secUser.Length - 1).ToArray();
+        }
+        // Composer
+        secUser = secUser.Take(secUser.Length - 1).ToArray();
+        // Pre-composer _changed (alternate shape)
+        if (secUser.Length > 0 &&
+            secUser[secUser.Length - 1].Type.SpecialType == SpecialType.System_Int32 &&
+            secUser[secUser.Length - 1].Name == "_changed")
+        {
+            secUser = secUser.Take(secUser.Length - 1).ToArray();
+        }
         if (secUser.Length == 0 ||
             secUser[secUser.Length - 1].Type.SpecialType != SpecialType.System_Int32 ||
             secUser[secUser.Length - 1].Name != "defaults")
@@ -850,8 +918,11 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             return null;
         }
 
+        bool secProvidesChanged = secAll.Any(p =>
+            p.Type.SpecialType == SpecialType.System_Int32 && p.Name == "_changed");
+
         return new SecondaryCtorInfo(secondary, secUser, discriminator,
-            defaults.Value, defaultsType.Name);
+            defaults.Value, defaultsType.Name, secProvidesChanged);
     }
 
     static FacadeSlot? Classify(IParameterSymbol p, Context c, string methodName, Location loc, List<Diagnostic> diags)
@@ -922,8 +993,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             }
             var rememberFit = rememberMethods.FirstOrDefault(m =>
                 m.IsStatic &&
-                m.Parameters.Length >= 1 &&
-                ComposeDefaultsGenerator.IsComposer(m.Parameters[m.Parameters.Length - 1].Type) &&
+                IsComposableBridge(m) &&
                 m.ReturnType.SpecialType == SpecialType.System_IntPtr);
             if (rememberFit is null)
             {
@@ -968,7 +1038,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             var rememberUserParams = rememberFit.Parameters
                 .Take(rememberFit.Parameters.Length - 1)
                 .ToArray();
-            string[] rememberArgExpressions = System.Array.Empty<string>();
+            string[] rememberArgExpressions = [];
             var confirmInfos = new List<ConfirmStateChangeInfo>();
             if (rememberUserParams.Length > 0)
             {
@@ -1109,7 +1179,8 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
 
     static string Emit(string className, string bridgeMethodName, string? scope,
         IParameterSymbol composerParam, IReadOnlyList<FacadeSlot> slots,
-        bool isMultiSlot, bool callerProvidesDefaults, IParameterSymbol? defaultsParam,
+        bool isMultiSlot, bool callerProvidesDefaults, bool callerProvidesChanged,
+        IParameterSymbol? defaultsParam,
         DefaultsInfo? defaults, string? defaultsEnumName,
         string? themeColor, FacadeSlot? colorSlot,
         IReadOnlyList<IParameterSymbol> primaryUserParams,
@@ -1354,27 +1425,45 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         }
 
         // OnClick wrappers — one per line so slot-table keys stay distinct.
+        // When _changed plumbing is on, allocate via RememberAction so the
+        // JCW peer's JNI handle stays identity-stable across recompositions
+        // (otherwise its slot reads Different and the runtime never skips).
         foreach (var s in slots.Where(s => s.Kind == FacadeSlotKind.OnClick))
         {
-            sb.Append("            var __").Append(s.Param.Name)
-              .Append(" = new global::AndroidX.Compose.ComposableLambda0(_").Append(s.Param.Name).AppendLine(");");
+            if (callerProvidesChanged)
+            {
+                sb.Append("            var __").Append(s.Param.Name)
+                  .Append(" = ").Append(composerName).Append(".RememberAction(_").Append(s.Param.Name).AppendLine(");");
+            }
+            else
+            {
+                sb.Append("            var __").Append(s.Param.Name)
+                  .Append(" = new global::AndroidX.Compose.ComposableLambda0(_").Append(s.Param.Name).AppendLine(");");
+            }
         }
 
         // Callback wrappers (Phase 2).
         foreach (var s in slots.Where(s => s.Kind == FacadeSlotKind.Callback))
         {
-            EmitCallbackWrapper(sb, s);
+            EmitCallbackWrapper(sb, s, composerName, callerProvidesChanged);
         }
 
         // Modifier evaluation. Only hoist to a local when needed for
         // the auto-mask (callerProvidesDefaults). Otherwise the bridge
         // call uses BuildModifier() inline to keep Phase 1 output stable.
         // Branching always hoists (both branches reference __modifier in
-        // their per-branch mask).
+        // their per-branch mask). When _changed plumbing is on we also
+        // need the local to feed __modifier?.StructuralKey into DiffSlot.
         var modifierSlot = slots.FirstOrDefault(s => s.Kind == FacadeSlotKind.Modifier);
-        bool hoistModifier = modifierSlot.Param is not null && (callerProvidesDefaults || branchInfo is not null);
+        bool hoistModifier = modifierSlot.Param is not null && (callerProvidesDefaults || branchInfo is not null || callerProvidesChanged);
         if (hoistModifier)
         {
+            // Capture the structural-key snapshot BEFORE BuildModifier
+            // mutates _prepended/_appended/_contentPadding to null. The
+            // mask emitter feeds this into DiffSlot for the modifier
+            // slot.
+            if (callerProvidesChanged)
+                sb.AppendLine("            var __modifierKey = BuildModifierStructuralKey();");
             sb.AppendLine("            var __modifier = BuildModifier();");
         }
 
@@ -1470,7 +1559,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         if (branchInfo is not null)
         {
             EmitBranchedRender(sb, indent, bridgeMethodName, slots, primaryUserParams,
-                defaults!.Value, defaultsEnumName!, branchInfo, composerName, hoistModifier);
+                defaults!.Value, defaultsEnumName!, branchInfo, composerName, hoistModifier, callerProvidesChanged);
         }
         else
         {
@@ -1479,7 +1568,15 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
                 EmitDefaultsMask(sb, indent, d, slots, namedSlots, modifierSlot.Param is not null, hasPainter);
             }
 
-            // Bridge call. Preserve original bridge param order.
+            if (callerProvidesChanged)
+            {
+                EmitChangedMask(sb, indent, slots, composerName);
+            }
+
+            // Bridge call. Preserve original bridge param order. When the
+            // bridge takes a back-compat trailing `int _changed = 0`, use
+            // named args so the optional argument doesn't reorder against
+            // composer.
             sb.Append(indent).Append("global::AndroidX.Compose.ComposeBridges.").Append(bridgeMethodName).Append('(');
             bool first = true;
             // Walk method.Parameters via slots in their original order; the
@@ -1498,7 +1595,15 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
                 first = false;
             }
             if (!first) sb.Append(", ");
-            sb.Append(composerName).AppendLine(");");
+            if (callerProvidesChanged)
+            {
+                sb.Append("composer: ").Append(composerName).Append(", _changed: __changed");
+            }
+            else
+            {
+                sb.Append(composerName);
+            }
+            sb.AppendLine(");");
         }
 
         sb.AppendLine("        }");
@@ -1511,7 +1616,8 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         string primaryMethodName, IReadOnlyList<FacadeSlot> slots,
         IReadOnlyList<IParameterSymbol> primaryUserParams,
         DefaultsInfo primaryDefaults, string primaryDefaultsEnumName,
-        BranchInfo branch, string composerName, bool hoistModifier)
+        BranchInfo branch, string composerName, bool hoistModifier,
+        bool callerProvidesChanged)
     {
         // Lookup table from bridge-param-name to facade slot. Built once
         // and reused for both branches' call emission. Names that only
@@ -1540,8 +1646,20 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
           .Append(branchPropName).AppendLine("!.Render(c));");
         EmitDefaultsMask(sb, inner, branch.AlternateDefaults, slots, allNamedSlots,
             hasModifier: hoistModifier, hasPainter: false);
+        if (callerProvidesChanged)
+        {
+            // Build a slot list matching the alternate bridge's user-param
+            // order (not the facade's slot order) so bit positions line up
+            // with what Kotlin assigned.
+            var altSlots = new List<FacadeSlot>(branch.AlternateUserParams.Count);
+            foreach (var p in branch.AlternateUserParams)
+            {
+                if (slotByName.TryGetValue(p.Name, out var s)) altSlots.Add(s);
+            }
+            EmitChangedMask(sb, inner, altSlots, composerName);
+        }
         EmitBridgeCallByParams(sb, inner, branch.AlternateMethodName, branch.AlternateUserParams,
-            slotByName, composerName, hoistModifier);
+            slotByName, composerName, hoistModifier, callerProvidesChanged);
         sb.Append(indent).AppendLine("}");
 
         // Primary branch: branched slot is null.
@@ -1549,15 +1667,24 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         sb.Append(indent).AppendLine("{");
         EmitDefaultsMask(sb, inner, primaryDefaults, slots, allNamedSlots,
             hasModifier: hoistModifier, hasPainter: false);
+        if (callerProvidesChanged)
+        {
+            var primSlots = new List<FacadeSlot>(primaryUserParams.Count);
+            foreach (var p in primaryUserParams)
+            {
+                if (slotByName.TryGetValue(p.Name, out var s)) primSlots.Add(s);
+            }
+            EmitChangedMask(sb, inner, primSlots, composerName);
+        }
         EmitBridgeCallByParams(sb, inner, primaryMethodName, primaryUserParams,
-            slotByName, composerName, hoistModifier);
+            slotByName, composerName, hoistModifier, callerProvidesChanged);
         sb.Append(indent).AppendLine("}");
     }
 
     static void EmitBridgeCallByParams(StringBuilder sb, string indent,
         string bridgeMethodName, IReadOnlyList<IParameterSymbol> bridgeUserParams,
         IReadOnlyDictionary<string, FacadeSlot> slotByName,
-        string composerName, bool hoistModifier)
+        string composerName, bool hoistModifier, bool callerProvidesChanged)
     {
         sb.Append(indent).Append("global::AndroidX.Compose.ComposeBridges.").Append(bridgeMethodName).Append('(');
         foreach (var p in bridgeUserParams)
@@ -1568,10 +1695,14 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
                 sb.Append("default");
             sb.Append(", ");
         }
-        sb.Append("__defaults, ").Append(composerName).AppendLine(");");
+        sb.Append("__defaults, ");
+        if (callerProvidesChanged)
+            sb.Append("composer: ").Append(composerName).AppendLine(", _changed: __changed);");
+        else
+            sb.Append(composerName).AppendLine(");");
     }
 
-    static void EmitCallbackWrapper(StringBuilder sb, FacadeSlot s)
+    static void EmitCallbackWrapper(StringBuilder sb, FacadeSlot s, string composerName, bool stableIdentity)
     {
         var t = s.CallbackType!;
         string expr = t.SpecialType switch
@@ -1581,9 +1712,18 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             SpecialType.System_String  => "v?.ToString() ?? string.Empty",
             _ => "default!",
         };
-        sb.Append("            var __").Append(s.Param.Name)
-          .Append(" = new global::AndroidX.Compose.ComposableLambda1(v => _")
-          .Append(s.Param.Name).Append('(').Append(expr).AppendLine("));");
+        if (stableIdentity)
+        {
+            sb.Append("            var __").Append(s.Param.Name)
+              .Append(" = ").Append(composerName).Append(".RememberAction(v => _")
+              .Append(s.Param.Name).Append('(').Append(expr).AppendLine("));");
+        }
+        else
+        {
+            sb.Append("            var __").Append(s.Param.Name)
+              .Append(" = new global::AndroidX.Compose.ComposableLambda1(v => _")
+              .Append(s.Param.Name).Append('(').Append(expr).AppendLine("));");
+        }
     }
 
     static void EmitStateHolderPreambleShared(StringBuilder sb, FacadeSlot s,
@@ -1686,6 +1826,106 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
                       .Append(d.EnumName).Append('.').Append(bitMember).AppendLine(";");
                     break;
             }
+        }
+    }
+
+    /// <summary>
+    /// Emit the per-slot Kotlin <c>$changed</c> mask. One <c>__changed</c>
+    /// local that ORs together a contribution per slot in the bridge's
+    /// user-param order. Bit position is <c>1 + paramIndex * 3</c> per
+    /// the compose-compiler convention; <see cref="FacadeSlotKind.ScopeReceiver"/>
+    /// slots are skipped because the bridge generator strips the receiver
+    /// before assigning bits.
+    /// </summary>
+    static void EmitChangedMask(StringBuilder sb, string indent,
+        IReadOnlyList<FacadeSlot> slots, string composerName,
+        string changedVar = "__changed")
+    {
+        sb.Append(indent).Append("int ").Append(changedVar).AppendLine(" = 0;");
+        int bitParamIndex = 0;
+        foreach (var s in slots)
+        {
+            if (s.Kind == FacadeSlotKind.ScopeReceiver) continue;
+            int shift = 1 + bitParamIndex * 3;
+            // Cap at 30 bits (10 user params per Kotlin $changed int).
+            // Anything beyond that lands in the next $changed slot which
+            // the bridge generator currently leaves at 0 — leave as
+            // Uncertain rather than corrupting the first int.
+            if (shift > 30 - 2)
+            {
+                bitParamIndex++;
+                continue;
+            }
+            string bitOffset = "global::AndroidX.Compose.ComposeExtensions.DiffSlotShift(" +
+            bitParamIndex.ToString(System.Globalization.CultureInfo.InvariantCulture) + ")";
+            switch (s.Kind)
+            {
+                case FacadeSlotKind.Modifier:
+                    // Snapshot of (contentPadding, _prepended, Modifier,
+                    // _appended) was captured into __modifierKey BEFORE
+                    // BuildModifier consumed those fields. Diff against
+                    // the prior render's snapshot. When all four parts
+                    // are absent the key is constant and DiffSlot
+                    // returns Same after the first pass — the common
+                    // case for thousands of leaf facades, which is the
+                    // whole point.
+                    sb.Append(indent).Append(changedVar).Append(" |= ").Append(composerName)
+                      .Append(".DiffSlot(__modifierKey, ").Append(bitOffset).AppendLine(");");
+                    bitParamIndex++;
+                    continue;
+                case FacadeSlotKind.OnClick:
+                case FacadeSlotKind.Callback:
+                    // RememberAction stabilizes the JCW peer's JNI handle
+                    // across renders; treat as Static.
+                    sb.Append(indent).Append(changedVar).Append(" |= (int)global::AndroidX.Compose.ChangedBits.Static << ")
+                      .Append(bitOffset).AppendLine(";");
+                    break;
+                case FacadeSlotKind.Content2:
+                case FacadeSlotKind.Content3:
+                case FacadeSlotKind.RequiredFunction2:
+                case FacadeSlotKind.RequiredFunction3:
+                    // composableLambda(composer, key, ...) hands back an
+                    // identity-stable wrapper for content lambdas; treat
+                    // as Static.
+                    sb.Append(indent).Append(changedVar).Append(" |= (int)global::AndroidX.Compose.ChangedBits.Static << ")
+                      .Append(bitOffset).AppendLine(";");
+                    break;
+                case FacadeSlotKind.NamedFunction2:
+                case FacadeSlotKind.NamedFunction3:
+                    // Diff the property's identity. When non-null+wrapped
+                    // the wrapper is identity-stable; when null↔null the
+                    // diff returns Same after the first pass.
+                    sb.Append(indent).Append(changedVar).Append(" |= ").Append(composerName)
+                      .Append(".DiffSlot<object?>(").Append(PropertyName(s)).Append(", ").Append(bitOffset).AppendLine(");");
+                    break;
+                case FacadeSlotKind.Primitive:
+                    sb.Append(indent).Append(changedVar).Append(" |= ").Append(composerName)
+                      .Append(".DiffSlot(_").Append(s.Param.Name).Append(", ").Append(bitOffset).AppendLine(");");
+                    break;
+                case FacadeSlotKind.PainterResource:
+                    // Diff the resource id (cheap value-type compare); the
+                    // resolved Painter peer changes handle every render
+                    // even for the same id.
+                    sb.Append(indent).Append(changedVar).Append(" |= ").Append(composerName)
+                      .Append(".DiffSlot(_drawableResourceId, ").Append(bitOffset).AppendLine(");");
+                    break;
+                case FacadeSlotKind.ThemeColor:
+                    sb.Append(indent).Append(changedVar).Append(" |= ").Append(composerName)
+                      .Append(".DiffSlot(__color, ").Append(bitOffset).AppendLine(");");
+                    break;
+                case FacadeSlotKind.StateHolder:
+                    sb.Append(indent).Append(changedVar).Append(" |= ").Append(composerName)
+                      .Append(".DiffSlot(__").Append(s.Param.Name).Append(", ").Append(bitOffset).AppendLine(");");
+                    break;
+                case FacadeSlotKind.OptionalValue:
+                    sb.Append(indent).Append(changedVar).Append(" |= ").Append(composerName)
+                      .Append(".DiffSlot(").Append(PropertyName(s)).Append(", ").Append(bitOffset).AppendLine(");");
+                    break;
+                default:
+                    // Unknown — leave as Uncertain (0) for this slot.
+                    break;
+            }
+            bitParamIndex++;
         }
     }
 
@@ -2282,8 +2522,16 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         }
 
         // (f) AdapterType must have an accessible writable `Callback`
-        // property of type Func<T, bool> or Func<T, bool>?.
-        var callbackProp = adapterType.GetMembers("Callback").OfType<IPropertySymbol>().FirstOrDefault();
+        // property of type Func<T, bool> or Func<T, bool>?. Walk the
+        // inheritance chain so a property declared on an abstract
+        // base (e.g. ConfirmStateChangeAdapter<T>) is recognised on
+        // the concrete subclass too.
+        IPropertySymbol? callbackProp = null;
+        for (INamedTypeSymbol? t = adapterType; t is not null; t = t.BaseType)
+        {
+            callbackProp = t.GetMembers("Callback").OfType<IPropertySymbol>().FirstOrDefault();
+            if (callbackProp is not null) break;
+        }
         if (callbackProp is null || callbackProp.SetMethod is null)
         {
             diags.Add(Diagnostic.Create(Diagnostics.FacadeConfirmStateChangeInvalid, loc, methodName,
@@ -2395,6 +2643,28 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
     }
 
     /// <summary>
+    /// True when <paramref name="m"/> looks like an @Composable bridge —
+    /// the trailing param is an <c>IComposer</c>, OR the trailing param is
+    /// an <c>int _changed</c> with composer one slot earlier (the back-
+    /// compat shape that lets hand-written callers omit the bitmask).
+    /// </summary>
+    static bool IsComposableBridge(IMethodSymbol m)
+    {
+        var ps = m.Parameters;
+        if (ps.Length == 0) return false;
+        var last = ps[ps.Length - 1];
+        if (ComposeDefaultsGenerator.IsComposer(last.Type)) return true;
+        if (ps.Length >= 2 &&
+            last.Type.SpecialType == SpecialType.System_Int32 &&
+            last.Name == "_changed" &&
+            ComposeDefaultsGenerator.IsComposer(ps[ps.Length - 2].Type))
+        {
+            return true;
+        }
+        return false;
+    }
+
+    /// <summary>
     /// Phase 10 — metadata for a <c>[ConfirmStateChange(typeof(T))]</c>
     /// Remember-bridge parameter. The facade allocates one JCW
     /// instance per node (<c>readonly</c> field
@@ -2464,9 +2734,9 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             RememberMethodName = rememberMethodName;
             StateWrapperType = stateWrapperType;
             StateJvmType = stateJvmType;
-            RememberArgExpressions = rememberArgExpressions ?? System.Array.Empty<string>();
+            RememberArgExpressions = rememberArgExpressions ?? [];
             SharedState = sharedState;
-            ConfirmStateChanges = confirmStateChanges ?? System.Array.Empty<ConfirmStateChangeInfo>();
+            ConfirmStateChanges = confirmStateChanges ?? [];
         }
         public IParameterSymbol Param { get; }
         public FacadeSlotKind Kind { get; }

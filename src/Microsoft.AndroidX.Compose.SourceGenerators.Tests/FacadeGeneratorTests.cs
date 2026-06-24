@@ -159,6 +159,7 @@ public class FacadeGeneratorTests
             {
                 public abstract void Render(global::AndroidX.Compose.Runtime.IComposer composer);
                 protected global::AndroidX.Compose.UI.IModifier? BuildModifier() => null;
+                internal object? BuildModifierStructuralKey() => null;
             }
             public abstract class ComposableContainer : ComposableNode
             {
@@ -195,6 +196,22 @@ public class FacadeGeneratorTests
             {
                 public static System.IntPtr ModifierHandle(global::AndroidX.Compose.UI.IModifier? m) => default;
                 public static System.IntPtr PainterResource(int id, global::AndroidX.Compose.Runtime.IComposer composer) => default;
+            }
+            public enum ChangedBits { Uncertain = 0, Same = 1, Different = 2, Static = 4 }
+            public static class ComposeExtensions
+            {
+                public static int DiffSlotShift(int paramIndex) => 1 + paramIndex * 3;
+                public static int DiffSlot<T>(this global::AndroidX.Compose.Runtime.IComposer composer, T value, int bitOffset,
+                    [System.Runtime.CompilerServices.CallerLineNumber] int line = 0,
+                    [System.Runtime.CompilerServices.CallerFilePath] string file = "") => 0;
+                public static Kotlin.Jvm.Functions.IFunction0 RememberAction(
+                    this global::AndroidX.Compose.Runtime.IComposer composer, System.Action action,
+                    [System.Runtime.CompilerServices.CallerLineNumber] int line = 0,
+                    [System.Runtime.CompilerServices.CallerFilePath] string file = "") => null!;
+                public static Kotlin.Jvm.Functions.IFunction1 RememberAction(
+                    this global::AndroidX.Compose.Runtime.IComposer composer, System.Action<global::Java.Lang.Object?> action,
+                    [System.Runtime.CompilerServices.CallerLineNumber] int line = 0,
+                    [System.Runtime.CompilerServices.CallerFilePath] string file = "") => null!;
             }
         }
         """;
@@ -3899,5 +3916,509 @@ public class FacadeGeneratorTests
             """;
         var (_, diags, _) = Run(code, "Icon");
         Assert.Contains(diags, d => d.Id == "CN3012" && d.Severity == DiagnosticSeverity.Error);
+    }
+
+    [Fact]
+    public void Changed_TrailingChangedParam_EmitsMaskAndNamedComposerArg()
+    {
+        // Phase X — the new $changed plumbing. When the bridge declares
+        // an optional trailing `int _changed = 0`, the facade generator:
+        //   * hoists __modifier (so it's available regardless of slot
+        //     classification — the modifier slot itself is left at
+        //     Uncertain in the mask, conservatively),
+        //   * routes Action callbacks through composer.RememberAction
+        //     so the JCW peer's JNI handle stays identity-stable
+        //     across renders (its $changed bit reads Static),
+        //   * computes a per-slot __changed mask, ORing
+        //     ChangedBits.Static for content/onClick slots, and
+        //     leaving 0 for the modifier slot,
+        //   * passes `composer:` and `_changed:` as named args so the
+        //     trailing optional doesn't reorder against composer.
+        var code = $$"""
+            using global::AndroidX.Compose.Runtime;
+            using global::AndroidX.Compose.UI;
+            using AndroidX.Compose;
+            using Kotlin.Jvm.Functions;
+
+            {{ButtonAttrs}}
+
+            namespace AndroidX.Compose
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(Class="androidx/compose/material3/ButtonKt", JvmName="Button",
+                                   Signature="{{ButtonSig}}", Defaults=typeof(ButtonDefault))]
+                    [ComposeFacade]
+                    public static partial void Button(IFunction0 onClick, IModifier? modifier,
+                                                      IFunction3 content, IComposer composer, int _changed = 0);
+                }
+            }
+            """;
+
+        var (output, diags, emitted) = Run(code, "Button");
+        Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+
+        // RememberAction stabilizes the onClick wrapper.
+        Assert.Contains("var __onClick = composer.RememberAction(_onClick);", emitted);
+        // __modifier is hoisted up front (so the rest of Render can
+        // reference it), AND its structural key is captured first
+        // (BuildModifier mutates side-channels).
+        Assert.Contains("var __modifierKey = BuildModifierStructuralKey();", emitted);
+        Assert.Contains("var __modifier = BuildModifier();", emitted);
+        // __changed mask is computed.
+        Assert.Contains("int __changed = 0;", emitted);
+        // onClick contributes Static at bit 1 (param 0).
+        Assert.Contains("__changed |= (int)global::AndroidX.Compose.ChangedBits.Static << global::AndroidX.Compose.ComposeExtensions.DiffSlotShift(0);", emitted);
+        // modifier (param 1) contributes a real DiffSlot on the
+        // captured key — bit 4.
+        Assert.Contains("__changed |= composer.DiffSlot(__modifierKey, global::AndroidX.Compose.ComposeExtensions.DiffSlotShift(1));", emitted);
+        // content (param 2) contributes Static at bit 7.
+        Assert.Contains("__changed |= (int)global::AndroidX.Compose.ChangedBits.Static << global::AndroidX.Compose.ComposeExtensions.DiffSlotShift(2);", emitted);
+        // Bridge call uses named composer + _changed args.
+        Assert.Contains("composer: composer, _changed: __changed", emitted);
+
+        var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
+        Assert.Empty(errors);
+    }
+
+    [Fact]
+    public void Changed_NoChangedParam_EmitsLegacyPositionalCall()
+    {
+        // Back-compat — bridges without the trailing `_changed` param
+        // still emit the legacy positional bridge call (no named-arg
+        // overhead, no RememberAction hoist, no __changed local). This
+        // test guards against accidental regression of the old shape.
+        var code = $$"""
+            using global::AndroidX.Compose.Runtime;
+            using global::AndroidX.Compose.UI;
+            using AndroidX.Compose;
+            using Kotlin.Jvm.Functions;
+
+            {{ButtonAttrs}}
+
+            namespace AndroidX.Compose
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(Class="androidx/compose/material3/ButtonKt", JvmName="Button",
+                                   Signature="{{ButtonSig}}", Defaults=typeof(ButtonDefault))]
+                    [ComposeFacade]
+                    public static partial void Button(IFunction0 onClick, IModifier? modifier,
+                                                      IFunction3 content, IComposer composer);
+                }
+            }
+            """;
+
+        var (output, diags, emitted) = Run(code, "Button");
+        Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+        Assert.DoesNotContain("__changed", emitted);
+        Assert.DoesNotContain("RememberAction", emitted);
+        Assert.Contains("global::AndroidX.Compose.ComposeBridges.Button(__onClick, BuildModifier(), __content, composer);", emitted);
+
+        var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
+        Assert.Empty(errors);
+    }
+
+    // ─── Per-phase $changed mask pin tests ─────────────────────────────
+    // One test per [ComposeFacade] phase that asserts the emitted
+    // __changed plumbing matches the param-classification table in
+    // .github/copilot-instructions.md. Without these, future generator
+    // changes silently regress the new emission.
+
+    [Fact]
+    public void Changed_Phase2_CallbackContributesStaticAtParamBit()
+    {
+        // Phase 2 — IFunction1 + [Callback]. RememberAction stabilizes
+        // the JCW; the mask reads Static.
+        var code = """
+            using global::AndroidX.Compose.Runtime;
+            using global::AndroidX.Compose.UI;
+            using AndroidX.Compose;
+            using Kotlin.Jvm.Functions;
+
+            [assembly: ComposeDefaults("TextFieldDefault",
+                "!value", "!onValueChange", "modifier")]
+
+            namespace AndroidX.Compose
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(Class="androidx/compose/material3/TextFieldKt", JvmName="TextField",
+                                   Signature="(Ljava/lang/String;Lkotlin/jvm/functions/Function1;Landroidx/compose/ui/Modifier;Landroidx/compose/runtime/Composer;II)V",
+                                   Defaults=typeof(TextFieldDefault))]
+                    [ComposeFacade]
+                    public static partial void TextField(string value, [Callback(typeof(string))] IFunction1 onValueChange,
+                        IModifier? modifier, IComposer composer, int _changed = 0);
+                }
+            }
+            """;
+
+        var (output, diags, emitted) = Run(code, "TextField");
+        Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+
+        // RememberAction wraps the Action<string> callback (param 1, bit 4).
+        Assert.Contains("composer.RememberAction", emitted);
+        Assert.Contains("int __changed = 0;", emitted);
+        // Param 0 (value, primitive string) → DiffSlot at bit 1.
+        Assert.Contains("__changed |= composer.DiffSlot(_value, global::AndroidX.Compose.ComposeExtensions.DiffSlotShift(0));", emitted);
+        // Param 1 (callback) → Static at bit 4.
+        Assert.Contains("__changed |= (int)global::AndroidX.Compose.ChangedBits.Static << global::AndroidX.Compose.ComposeExtensions.DiffSlotShift(1);", emitted);
+        // Param 2 (modifier) → DiffSlot on __modifierKey at bit 7.
+        Assert.Contains("__changed |= composer.DiffSlot(__modifierKey, global::AndroidX.Compose.ComposeExtensions.DiffSlotShift(2));", emitted);
+        Assert.Contains("composer: composer, _changed: __changed", emitted);
+
+        var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
+        Assert.Empty(errors);
+    }
+
+    [Fact]
+    public void Changed_Phase3_MultiSlotNamedSlotsContributeDiffSlot()
+    {
+        // Phase 3 — multi-slot leaf (AlertDialog). Required IFunction0
+        // → RememberAction → Static. Required IFunction2 (confirmButton)
+        // → multi-slot promotes it to a NamedFunction2; nullable
+        // IFunction2? slots are NamedFunction2 too. All named slots
+        // diff against their property identity.
+        var code = """
+            using global::AndroidX.Compose.Runtime;
+            using global::AndroidX.Compose.UI;
+            using AndroidX.Compose;
+            using Kotlin.Jvm.Functions;
+
+            [assembly: ComposeDefaults("AlertDialogDefault",
+                "!onDismissRequest", "!confirmButton", "modifier", "dismissButton", "icon", "title", "text",
+                "shape", "containerColor", "iconContentColor", "titleContentColor", "textContentColor", "tonalElevation", "properties")]
+
+            namespace AndroidX.Compose
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(Class="androidx/compose/material3/AndroidAlertDialog_androidKt", JvmName="AlertDialog-Oix01E0",
+                                   Signature="(Lkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function2;Landroidx/compose/ui/Modifier;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;Landroidx/compose/ui/graphics/Shape;JJJJFLandroidx/compose/ui/window/DialogProperties;Landroidx/compose/runtime/Composer;III)V",
+                                   Defaults=typeof(AlertDialogDefault))]
+                    [ComposeFacade]
+                    public static partial void AlertDialog(IFunction0 onDismissRequest, IFunction2 confirmButton,
+                        IModifier? modifier, IFunction2? dismissButton, IFunction2? icon, IFunction2? title, IFunction2? text,
+                        int defaults, IComposer composer, int _changed = 0);
+                }
+            }
+            """;
+
+        var (output, diags, emitted) = Run(code, "AlertDialog");
+        Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+
+        Assert.Contains("int __changed = 0;", emitted);
+        // onDismissRequest (param 0) → Static via RememberAction at bit 1.
+        Assert.Contains("__changed |= (int)global::AndroidX.Compose.ChangedBits.Static << global::AndroidX.Compose.ComposeExtensions.DiffSlotShift(0);", emitted);
+        // confirmButton (param 1, RequiredFunction2 — wrapped via Wrap2 → identity-stable) → Static at bit 4.
+        Assert.Contains("__changed |= (int)global::AndroidX.Compose.ChangedBits.Static << global::AndroidX.Compose.ComposeExtensions.DiffSlotShift(1);", emitted);
+        // modifier (param 2) → DiffSlot on __modifierKey at bit 7.
+        Assert.Contains("__changed |= composer.DiffSlot(__modifierKey, global::AndroidX.Compose.ComposeExtensions.DiffSlotShift(2));", emitted);
+        // dismissButton (param 3, NamedFunction2 nullable) → DiffSlot on the DismissButton property at bit 10.
+        Assert.Contains("__changed |= composer.DiffSlot<object?>(DismissButton, global::AndroidX.Compose.ComposeExtensions.DiffSlotShift(3));", emitted);
+        // icon (param 4) → bit 13.
+        Assert.Contains("__changed |= composer.DiffSlot<object?>(Icon, global::AndroidX.Compose.ComposeExtensions.DiffSlotShift(4));", emitted);
+        // title (param 5) → bit 16.
+        Assert.Contains("__changed |= composer.DiffSlot<object?>(Title, global::AndroidX.Compose.ComposeExtensions.DiffSlotShift(5));", emitted);
+        // text (param 6) → bit 19.
+        Assert.Contains("__changed |= composer.DiffSlot<object?>(Text, global::AndroidX.Compose.ComposeExtensions.DiffSlotShift(6));", emitted);
+        Assert.Contains("composer: composer, _changed: __changed", emitted);
+
+        var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
+        Assert.Empty(errors);
+    }
+
+    [Fact]
+    public void Changed_Phase4_StateHolderDiffsAgainstResolvedJvmHandle()
+    {
+        // Phase 4 — [StateHolder]. The DiffSlot reads the resolved
+        // __<param> local (the IntPtr value or wrapper), not the
+        // user-supplied wrapper field.
+        var code = $$"""
+            using global::AndroidX.Compose.Runtime;
+            using global::AndroidX.Compose.UI;
+            using AndroidX.Compose;
+            using Kotlin.Jvm.Functions;
+            using System;
+
+            [assembly: ComposeDefaults("DatePickerDefault",
+                "!state", "modifier", "dateFormatter", "colors", "title", "headline", "showModeToggle")]
+
+            {{DatePickerStateStubs}}
+
+            namespace AndroidX.Compose
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(Class="androidx/compose/material3/DatePickerKt",
+                                   JvmName="DatePicker",
+                                   Signature="{{DatePickerSig}}",
+                                   Defaults=typeof(DatePickerDefault))]
+                    [ComposeFacade]
+                    public static partial void DatePicker(
+                        [StateHolder(Remember = nameof(RememberDatePickerState),
+                                     StateType = typeof(DatePickerState))]
+                        IntPtr state,
+                        IModifier? modifier,
+                        int defaults,
+                        IComposer composer,
+                        int _changed = 0);
+
+                    public static IntPtr RememberDatePickerState(IComposer composer) => default;
+                }
+            }
+            """;
+
+        var (output, diags, emitted) = Run(code, "DatePicker");
+        Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+
+        Assert.Contains("int __changed = 0;", emitted);
+        // state (param 0) → DiffSlot on __state (the resolved IntPtr/peer) at bit 1.
+        Assert.Contains("__changed |= composer.DiffSlot(__state, global::AndroidX.Compose.ComposeExtensions.DiffSlotShift(0));", emitted);
+        // modifier (param 1) → bit 4.
+        Assert.Contains("__changed |= composer.DiffSlot(__modifierKey, global::AndroidX.Compose.ComposeExtensions.DiffSlotShift(1));", emitted);
+        Assert.Contains("composer: composer, _changed: __changed", emitted);
+
+        var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
+        Assert.Empty(errors);
+    }
+
+    [Fact]
+    public void Changed_Phase7_PainterResourceDiffsAgainstDrawableId()
+    {
+        // Phase 7 — [PainterResource]. The DiffSlot reads
+        // _drawableResourceId (the cheap value-type id), not the
+        // resolved Painter peer (which gets a fresh JNI handle each
+        // render).
+        var code = """
+            using System;
+            using global::AndroidX.Compose.Runtime;
+            using global::AndroidX.Compose.UI;
+            using global::AndroidX.Compose.UI.Graphics.Painter;
+            using AndroidX.Compose;
+            using Kotlin.Jvm.Functions;
+
+            [assembly: ComposeDefaults("ImageDefault", "!painter", "contentDescription", "modifier")]
+
+            namespace AndroidX.Compose
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(Class="androidx/compose/foundation/ImageKt", JvmName="Image",
+                                   Signature="(Landroidx/compose/ui/graphics/painter/Painter;Ljava/lang/String;Landroidx/compose/ui/Modifier;Landroidx/compose/runtime/Composer;II)V",
+                                   Defaults=typeof(ImageDefault))]
+                    [ComposeFacade]
+                    public static partial void Image([PainterResource] Painter painter,
+                        string? contentDescription, IModifier? modifier,
+                        int defaults, IComposer composer, int _changed = 0);
+                }
+            }
+            """;
+
+        var (output, diags, emitted) = Run(code, "Image");
+        Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+
+        Assert.Contains("int __changed = 0;", emitted);
+        // painter (param 0) → DiffSlot on _drawableResourceId at bit 1.
+        Assert.Contains("__changed |= composer.DiffSlot(_drawableResourceId, global::AndroidX.Compose.ComposeExtensions.DiffSlotShift(0));", emitted);
+        // contentDescription (param 1, primitive string) → bit 4.
+        Assert.Contains("__changed |= composer.DiffSlot(_contentDescription, global::AndroidX.Compose.ComposeExtensions.DiffSlotShift(1));", emitted);
+        // modifier (param 2) → bit 7.
+        Assert.Contains("__changed |= composer.DiffSlot(__modifierKey, global::AndroidX.Compose.ComposeExtensions.DiffSlotShift(2));", emitted);
+        Assert.Contains("composer: composer, _changed: __changed", emitted);
+
+        var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
+        Assert.Empty(errors);
+    }
+
+    [Fact]
+    public void Changed_Phase8_WrapperPassthroughEmitsMaskWhenChangedDeclared()
+    {
+        // Phase 8 — wrapper-passthrough Box. Hand-written body delegates
+        // to a bound BoxKt.Box. When the wrapper's signature opts in
+        // with `int _changed = 0`, the facade emits the mask and threads
+        // it through.
+        var code = """
+            using global::AndroidX.Compose.Runtime;
+            using global::AndroidX.Compose.UI;
+            using AndroidX.Compose;
+            using Kotlin.Jvm.Functions;
+
+            [assembly: ComposeDefaults("BoxDefault", "modifier", "contentAlignment", "propagateMinConstraints", "!content")]
+
+            namespace AndroidX.Compose
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeFacade(Defaults = typeof(BoxDefault))]
+                    public static partial void Box(IModifier? modifier, IFunction3 content, int defaults, IComposer composer, int _changed = 0);
+
+                    public static partial void Box(IModifier? modifier, IFunction3 content, int defaults, IComposer composer, int _changed = 0)
+                    {
+                        // body irrelevant to the facade generator
+                    }
+                }
+            }
+            """;
+
+        var (output, diags, emitted) = Run(code, "Box");
+        Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+
+        Assert.Contains("int __changed = 0;", emitted);
+        // modifier (param 0) → __modifierKey at bit 1.
+        Assert.Contains("__changed |= composer.DiffSlot(__modifierKey, global::AndroidX.Compose.ComposeExtensions.DiffSlotShift(0));", emitted);
+        // content (param 1, RequiredFunction3 → Static via composableLambda) at bit 4.
+        Assert.Contains("__changed |= (int)global::AndroidX.Compose.ChangedBits.Static << global::AndroidX.Compose.ComposeExtensions.DiffSlotShift(1);", emitted);
+        // Bridge call uses named composer + _changed args.
+        Assert.Contains("composer: composer, _changed: __changed", emitted);
+
+        var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
+        Assert.Empty(errors);
+    }
+
+    [Fact]
+    public void Changed_Phase9_BranchingEmitsPerBranchMask()
+    {
+        // Phase 9 — branching. Both bridges declare the trailing
+        // `_changed` opt-in. The facade emits __changed masks INSIDE
+        // each branch (because the per-param bit positions differ
+        // between primary and alternate when the alt has an extra
+        // slot inserted in a different position) and threads the
+        // mask through both bridge calls.
+        const string Attrs = """
+            [assembly: ComposeDefaults("BarDefault",
+                "!title", "modifier", "navigationIcon", "actions")]
+            [assembly: ComposeDefaults("BarSubtitleDefault",
+                "!title", "!subtitle", "modifier", "navigationIcon", "actions")]
+            """;
+
+        var code = $$"""
+            using global::AndroidX.Compose.Runtime;
+            using global::AndroidX.Compose.UI;
+            using AndroidX.Compose;
+            using Kotlin.Jvm.Functions;
+
+            {{Attrs}}
+
+            namespace AndroidX.Compose
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(Class="x/Y", JvmName="Bar",
+                                   Signature="(Lkotlin/jvm/functions/Function2;Landroidx/compose/ui/Modifier;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;II)V",
+                                   Defaults=typeof(BarDefault))]
+                    [ComposeFacade(BranchOn="Subtitle", AlternateBridge=nameof(BarWithSubtitle))]
+                    public static partial void Bar(
+                        IFunction2  title,
+                        IModifier?  modifier,
+                        IFunction2? navigationIcon,
+                        IFunction3? actions,
+                        int         defaults,
+                        IComposer   composer,
+                        int         _changed = 0);
+
+                    [ComposeBridge(Class="x/Y", JvmName="BarWithSubtitle",
+                                   Signature="(Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;Landroidx/compose/ui/Modifier;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;II)V",
+                                   Defaults=typeof(BarSubtitleDefault))]
+                    public static partial void BarWithSubtitle(
+                        IFunction2  title,
+                        IFunction2  subtitle,
+                        IModifier?  modifier,
+                        IFunction2? navigationIcon,
+                        IFunction3? actions,
+                        int         defaults,
+                        IComposer   composer,
+                        int         _changed = 0);
+                }
+            }
+            """;
+
+        var (output, diags, emitted) = Run(code, "Bar");
+        Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+
+        // __changed mask declared and threaded through both branches.
+        Assert.Contains("int __changed = 0;", emitted);
+        Assert.Contains("composer: composer, _changed: __changed", emitted);
+        // Both bridge calls use the named-arg form.
+        Assert.Contains("global::AndroidX.Compose.ComposeBridges.BarWithSubtitle(", emitted);
+        Assert.Contains("global::AndroidX.Compose.ComposeBridges.Bar(", emitted);
+
+        var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
+        Assert.Empty(errors);
+    }
+
+    [Fact]
+    public void Changed_Phase11_SecondaryCtorThreadsMaskThroughBothBridges()
+    {
+        // Phase 11 — secondary ctor (Icon). Primary bridge has
+        // [PainterResource]; secondary takes ImageVector. When both
+        // declare `int _changed = 0` the facade emits __changed in
+        // both dispatch paths.
+        const string Attrs = """
+            [assembly: ComposeDefaults("IconPainterDefault",
+                "!painter", "contentDescription", "modifier", "tint")]
+            [assembly: ComposeDefaults("IconDefault",
+                "imageVector", "contentDescription", "modifier", "tint")]
+            """;
+
+        var code = $$"""
+            using global::AndroidX.Compose.Runtime;
+            using global::AndroidX.Compose.UI;
+            using AndroidX.Compose;
+            using Kotlin.Jvm.Functions;
+
+            {{Attrs}}
+
+            namespace AndroidX.Compose
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(Class="x/IconKt", JvmName="Icon-painter",
+                                   Signature="(Landroidx/compose/ui/graphics/painter/Painter;Ljava/lang/String;Landroidx/compose/ui/Modifier;JLandroidx/compose/runtime/Composer;II)V",
+                                   Defaults=typeof(IconPainterDefault))]
+                    [ComposeFacade(ClassName="Icon", SecondaryCtor=nameof(IconImageVector), SecondaryDefaults=typeof(IconDefault))]
+                    public static partial void IconPainter(
+                        [PainterResource] global::AndroidX.Compose.UI.Graphics.Painter.Painter painter,
+                        string?    contentDescription,
+                        IModifier? modifier,
+                        long       tint,
+                        int        defaults,
+                        IComposer  composer,
+                        int        _changed = 0);
+
+                    public static void IconImageVector(
+                        global::AndroidX.Compose.UI.Graphics.Vector.ImageVector imageVector,
+                        string?    contentDescription,
+                        IModifier? modifier,
+                        long       tint,
+                        int        defaults,
+                        IComposer  composer,
+                        int        _changed = 0) { }
+                }
+            }
+            """;
+
+        var (output, diags, emitted) = Run(code, "Icon");
+        Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+
+        // The facade threads a __changed mask through both dispatch
+        // paths (primary + secondary).
+        Assert.Contains("int __changed = 0;", emitted);
+        Assert.Contains("composer: composer, _changed: __changed", emitted);
+        // Both bridge calls present.
+        Assert.Contains("global::AndroidX.Compose.ComposeBridges.IconPainter(", emitted);
+        Assert.Contains("global::AndroidX.Compose.ComposeBridges.IconImageVector(", emitted);
+
+        var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
+        Assert.Empty(errors);
     }
 }

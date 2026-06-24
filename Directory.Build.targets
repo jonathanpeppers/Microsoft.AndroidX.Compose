@@ -16,6 +16,9 @@
     <!-- Roslyn analyzers -->
     <PackageReference Update="Microsoft.CodeAnalysis.PublicApiAnalyzers" Version="4.14.0" />
 
+    <!-- Test runners -->
+    <PackageReference Update="MSTest" Version="4.3.0-preview.26314.12" />
+
     <!-- Kotlin / KotlinX -->
     <PackageReference Update="Xamarin.Kotlin.StdLib" Version="2.3.21" />
 

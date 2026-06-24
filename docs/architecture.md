@@ -158,7 +158,7 @@ already supports.
 
 | Kotlin                                  | C# today                                                       | Cost |
 | --------------------------------------- | -------------------------------------------------------------- | ---- |
-| Skipping / recomposition optimization   | `$changed = 0` everywhere → full subtree recomposes on every state change | Correctness ✅, perf 🙁 |
+| Skipping / recomposition optimization   | Per-param `$changed` bitmask computed at Render time via `composer.DiffSlot` / `composer.RememberAction` / `Modifier.StructuralKey`; bridge generator threads it into the JNI `$changed` slot. Modifier slot still emits Uncertain (Kotlin runtime falls back to its own input compare). | Tier 2 mostly delivered ✅ |
 | Slot-table-backed `remember`            | `Remember(() => …)` with `[CallerLineNumber]` keying into an activity-scoped cache; `Remember(factory, key1, …)` (1–3 keys or `RememberKeyed(factory, keys[])`) resets the slot on key change | Lifetime is per call site, not per nested-scope as in Kotlin |
 | `@Composable` type-system enforcement   | None — calling a non-composable from a composable context fails at runtime, not compile-time | Footgun |
 | Per-call-site allocation                | Every recomposition allocates fresh `ComposableNode` objects (no slot-table reuse on the C# side) | Tier 2 codegen fixes |
@@ -209,9 +209,26 @@ class.
   [dotnet/java-interop#1440] — when it lands every bridge declaration
   in this repo can be deleted in favour of a direct generated binding
   call.
-- **`$changed` bitmasks** — we pass `0` everywhere, so the runtime
-  recomposes the whole subtree on every state change. Correct, not
-  optimal. Proper bitmask computation per arg is Tier 2 territory.
+- **`$changed` bitmasks** — generated facades now compute a per-param
+  `$changed` mask at Render time and thread it through the bridge to
+  the Kotlin runtime's first `$changed` JNI slot. Three mechanisms
+  cooperate:
+  - `composer.DiffSlot<T>(value, bitOffset)` — slot-table-backed
+    structural diff, returns `Same`/`Different` shifted into place.
+  - `composer.RememberAction(action)` — caches one
+    `MutableComposableLambda0/1` JCW per call site with a writable
+    target, so onClick/onValueChange callbacks have a JNI-handle-stable
+    peer; the corresponding param contributes `Static` to the mask.
+  - `Modifier.StructuralKey` — every op factory in `Modifier.cs` /
+    `ModifierExtensions.cs` records a `(string OpName, object? Args)`
+    alongside the closure so two semantically equal chains hash equal.
+    Currently consumed only by tests; the modifier slot itself emits
+    Uncertain (the Kotlin runtime still does its own compare).
+
+  Hand-written facade holdouts (TextField, BottomSheetScaffold,
+  SnackbarHost, SegmentedButton, SearchBar family) still pass `0`
+  (Uncertain) — back-compat default. Adding `_changed:` named arg to
+  their bridge calls is the next follow-up.
 - **`Modifier.Companion` not bound upstream.** Wrapped by the
   `Modifier` class via a one-time JNI fetch of the `$$INSTANCE` field
   — invisible to callers. See [NOTES.md](NOTES.md) open issue #1 for

@@ -345,7 +345,7 @@ internal static partial class ComposeBridges
         Class     = "androidx/compose/ui/res/PainterResources_androidKt",
         JvmName   = "painterResource",
         Signature = "(ILandroidx/compose/runtime/Composer;I)Landroidx/compose/ui/graphics/painter/Painter;")]
-    public static partial IntPtr PainterResource(int id, IComposer composer);
+    public static partial IntPtr PainterResource(int id, IComposer composer, int _changed = 0);
 
     // androidx.compose.foundation.layout.RowScope$DefaultImpls.weight$default —
     // synthetic helper for `fun RowScope.Modifier.weight(weight, fill = true)`.
@@ -411,7 +411,7 @@ internal static partial class ComposeBridges
         bool? softWrap,
         int? maxLines,
         int? minLines,
-        IComposer composer);
+        IComposer composer, int _changed = 0);
 
     // androidx.compose.material3.TextKt.Text-IbK3jfQ — the
     // AnnotatedString overload. Mangled JVM name because Kotlin
@@ -451,7 +451,7 @@ internal static partial class ComposeBridges
         bool? softWrap,
         int? maxLines,
         int? minLines,
-        IComposer composer);
+        IComposer composer, int _changed = 0);
 
     // androidx.compose.material3.ButtonKt.Button
     [ComposeBridge(
@@ -468,7 +468,7 @@ internal static partial class ComposeBridges
     public static partial void Button(IFunction0 onClick, IModifier? modifier,
                                       Shape? shape, AndroidX.Compose.Material3.ButtonColors? colors,
                                       PaddingValues? contentPadding,
-                                      IFunction3 content, IComposer composer);
+                                      IFunction3 content, IComposer composer, int _changed = 0);
 
     // androidx.compose.material3.ButtonKt.OutlinedButton — same Kotlin
     // signature as Button (10 user params with shape/colors/elevation/
@@ -487,7 +487,7 @@ internal static partial class ComposeBridges
     public static partial void OutlinedButton(IFunction0 onClick, IModifier? modifier,
                                               Shape? shape, AndroidX.Compose.Material3.ButtonColors? colors,
                                               PaddingValues? contentPadding,
-                                              IFunction3 content, IComposer composer);
+                                              IFunction3 content, IComposer composer, int _changed = 0);
 
     // androidx.compose.material3.ButtonKt.TextButton — same shape as Button.
     [ComposeBridge(
@@ -504,7 +504,7 @@ internal static partial class ComposeBridges
     public static partial void TextButton(IFunction0 onClick, IModifier? modifier,
                                           Shape? shape, AndroidX.Compose.Material3.ButtonColors? colors,
                                           PaddingValues? contentPadding,
-                                          IFunction3 content, IComposer composer);
+                                          IFunction3 content, IComposer composer, int _changed = 0);
 
     // androidx.compose.material3.ButtonKt.ElevatedButton — same shape as Button.
     [ComposeBridge(
@@ -521,7 +521,7 @@ internal static partial class ComposeBridges
     public static partial void ElevatedButton(IFunction0 onClick, IModifier? modifier,
                                               Shape? shape, AndroidX.Compose.Material3.ButtonColors? colors,
                                               PaddingValues? contentPadding,
-                                              IFunction3 content, IComposer composer);
+                                              IFunction3 content, IComposer composer, int _changed = 0);
 
     // androidx.compose.material3.ButtonKt.FilledTonalButton — same shape as Button.
     [ComposeBridge(
@@ -538,7 +538,7 @@ internal static partial class ComposeBridges
     public static partial void FilledTonalButton(IFunction0 onClick, IModifier? modifier,
                                                  Shape? shape, AndroidX.Compose.Material3.ButtonColors? colors,
                                                  PaddingValues? contentPadding,
-                                                 IFunction3 content, IComposer composer);
+                                                 IFunction3 content, IComposer composer, int _changed = 0);
 
     // androidx.compose.material3.IconButtonKt.IconButton
     [ComposeBridge(
@@ -551,7 +551,7 @@ internal static partial class ComposeBridges
         Defaults  = typeof(IconButtonDefault))]
     [ComposeFacade]
     public static partial void IconButton(IFunction0 onClick, IModifier? modifier,
-                                          IFunction2 content, IComposer composer);
+                                          IFunction2 content, IComposer composer, int _changed = 0);
 
     // androidx.compose.material3.IconButtonKt.FilledIconButton — adds Shape
     // before colors compared to plain IconButton (7 user params).
@@ -567,7 +567,7 @@ internal static partial class ComposeBridges
     [ComposeFacade]
     public static partial void FilledIconButton(IFunction0 onClick, IModifier? modifier,
                                                 Shape? shape,
-                                                IFunction2 content, IComposer composer);
+                                                IFunction2 content, IComposer composer, int _changed = 0);
 
     // androidx.compose.material3.IconButtonKt.FilledTonalIconButton — same
     // signature as FilledIconButton.
@@ -583,7 +583,7 @@ internal static partial class ComposeBridges
     [ComposeFacade]
     public static partial void FilledTonalIconButton(IFunction0 onClick, IModifier? modifier,
                                                      Shape? shape,
-                                                     IFunction2 content, IComposer composer);
+                                                     IFunction2 content, IComposer composer, int _changed = 0);
 
     // androidx.compose.material3.IconButtonKt.OutlinedIconButton — adds
     // BorderStroke between colors and interactionSource (8 user params).
@@ -600,7 +600,7 @@ internal static partial class ComposeBridges
     [ComposeFacade]
     public static partial void OutlinedIconButton(IFunction0 onClick, IModifier? modifier,
                                                   Shape? shape,
-                                                  IFunction2 content, IComposer composer);
+                                                  IFunction2 content, IComposer composer, int _changed = 0);
 
     // androidx.compose.material3.IconButtonKt.IconToggleButton — toggle
     // shape: leading boolean checked + Function1 onCheckedChange instead of
@@ -616,7 +616,7 @@ internal static partial class ComposeBridges
     [ComposeFacade]
     public static partial void IconToggleButton(bool @checked, [Callback(typeof(bool))] IFunction1 onCheckedChange,
                                                 IModifier? modifier, IFunction2 content,
-                                                IComposer composer);
+                                                IComposer composer, int _changed = 0);
 
     // androidx.compose.material3.IconButtonKt.FilledIconToggleButton — adds
     // Shape between enabled and colors compared to plain IconToggleButton
@@ -633,7 +633,7 @@ internal static partial class ComposeBridges
     [ComposeFacade]
     public static partial void FilledIconToggleButton(bool @checked, [Callback(typeof(bool))] IFunction1 onCheckedChange,
                                                       IModifier? modifier, Shape? shape, IFunction2 content,
-                                                      IComposer composer);
+                                                      IComposer composer, int _changed = 0);
 
     // androidx.compose.material3.IconButtonKt.FilledTonalIconToggleButton —
     // same signature as FilledIconToggleButton.
@@ -649,7 +649,7 @@ internal static partial class ComposeBridges
     [ComposeFacade]
     public static partial void FilledTonalIconToggleButton(bool @checked, [Callback(typeof(bool))] IFunction1 onCheckedChange,
                                                            IModifier? modifier, Shape? shape, IFunction2 content,
-                                                           IComposer composer);
+                                                           IComposer composer, int _changed = 0);
 
     // androidx.compose.material3.IconButtonKt.OutlinedIconToggleButton —
     // adds BorderStroke between colors and interactionSource (9 user params).
@@ -666,7 +666,7 @@ internal static partial class ComposeBridges
     [ComposeFacade]
     public static partial void OutlinedIconToggleButton(bool @checked, [Callback(typeof(bool))] IFunction1 onCheckedChange,
                                                         IModifier? modifier, Shape? shape, IFunction2 content,
-                                                        IComposer composer);
+                                                        IComposer composer, int _changed = 0);
 
     // androidx.compose.material3.FloatingActionButtonKt.FloatingActionButton-X-z6DiA
     [ComposeBridge(
@@ -681,7 +681,7 @@ internal static partial class ComposeBridges
     [ComposeFacade]
     public static partial void FloatingActionButton(IFunction0 onClick, IModifier? modifier,
                                                     Shape? shape,
-                                                    IFunction2 content, IComposer composer);
+                                                    IFunction2 content, IComposer composer, int _changed = 0);
 
     // androidx.compose.material3.FloatingActionButtonKt.SmallFloatingActionButton-X-z6DiA
     [ComposeBridge(
@@ -696,7 +696,7 @@ internal static partial class ComposeBridges
     [ComposeFacade]
     public static partial void SmallFloatingActionButton(IFunction0 onClick, IModifier? modifier,
                                                          Shape? shape,
-                                                         IFunction2 content, IComposer composer);
+                                                         IFunction2 content, IComposer composer, int _changed = 0);
 
     // androidx.compose.material3.FloatingActionButtonKt.LargeFloatingActionButton-X-z6DiA
     [ComposeBridge(
@@ -711,7 +711,7 @@ internal static partial class ComposeBridges
     [ComposeFacade]
     public static partial void LargeFloatingActionButton(IFunction0 onClick, IModifier? modifier,
                                                          Shape? shape,
-                                                         IFunction2 content, IComposer composer);
+                                                         IFunction2 content, IComposer composer, int _changed = 0);
 
     // androidx.compose.material3.FloatingActionButtonKt.ExtendedFloatingActionButton-ElI5-7k
     // (icon + text + expanded multi-slot variant — the canonical animated extended FAB)
@@ -733,7 +733,7 @@ internal static partial class ComposeBridges
         IModifier? modifier,
         bool       expanded,
         Shape?     shape,
-        IComposer  composer);
+        IComposer  composer, int _changed = 0);
 
     // androidx.compose.material3.SurfaceKt.Surface-T9BRK9s (non-interactive)
     [ComposeBridge(
@@ -744,7 +744,7 @@ internal static partial class ComposeBridges
                     "Lkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;II)V",
         Defaults  = typeof(SurfaceDefault))]
     [ComposeFacade]
-    public static partial void Surface(IModifier? modifier, Shape? shape, IFunction2 content, IComposer composer);
+    public static partial void Surface(IModifier? modifier, Shape? shape, IFunction2 content, IComposer composer, int _changed = 0);
 
     // androidx.compose.foundation.ImageKt.Image (Painter overload) — all
     // four `Image` Kotlin overloads share the JVM name `Image`, so the
@@ -770,7 +770,7 @@ internal static partial class ComposeBridges
         ContentScale? contentScale,
         float?        alpha,
         int           defaults,
-        IComposer     composer);
+        IComposer     composer, int _changed = 0);
 
     // androidx.compose.material3.IconKt.Icon-ww6aTOc (Painter overload) —
     // the Painter and ImageBitmap overloads share the mangled JVM name
@@ -792,7 +792,7 @@ internal static partial class ComposeBridges
         IModifier? modifier,
         Color?     tint,
         int        defaults,
-        IComposer  composer);
+        IComposer  composer, int _changed = 0);
 
     // Phase 11 secondary — thin wrapper over the bound
     // androidx.compose.material3.IconKt.Icon(ImageVector, ...)
@@ -868,7 +868,7 @@ internal static partial class ComposeBridges
         int? maxLines,
         int? minLines,
         Shape? shape,
-        IComposer composer);
+        IComposer composer, int _changed = 0);
 
     [ComposeBridge(
         Class     = "androidx/compose/material3/OutlinedTextFieldKt",
@@ -897,7 +897,7 @@ internal static partial class ComposeBridges
         int? maxLines,
         int? minLines,
         Shape? shape,
-        IComposer composer);
+        IComposer composer, int _changed = 0);
 
     // androidx.compose.material3.TextFieldKt.TextField (TextFieldValue
     // overload) and OutlinedTextFieldKt.OutlinedTextField (TextFieldValue
@@ -947,7 +947,7 @@ internal static partial class ComposeBridges
         int? maxLines,
         int? minLines,
         Shape? shape,
-        IComposer composer);
+        IComposer composer, int _changed = 0);
 
     [ComposeBridge(
         Class     = "androidx/compose/material3/OutlinedTextFieldKt",
@@ -976,7 +976,7 @@ internal static partial class ComposeBridges
         int? maxLines,
         int? minLines,
         Shape? shape,
-        IComposer composer);
+        IComposer composer, int _changed = 0);
 
     // androidx.compose.material3.SecureTextFieldKt.{SecureTextField,OutlinedSecureTextField}-XvU6IwQ.
     // Both overloads have identical 23-user-param signatures: the
@@ -1025,7 +1025,7 @@ internal static partial class ComposeBridges
         IFunction2? supportingText,
         bool        isError,
         Shape?      shape,
-        IComposer   composer);
+        IComposer   composer, int _changed = 0);
 
     [ComposeBridge(
         Class     = "androidx/compose/material3/SecureTextFieldKt",
@@ -1043,7 +1043,7 @@ internal static partial class ComposeBridges
         IFunction2? supportingText,
         bool        isError,
         Shape?      shape,
-        IComposer   composer);
+        IComposer   composer, int _changed = 0);
 
     // androidx.compose.material3.AndroidAlertDialog_androidKt.AlertDialog-Oix01E0
     [ComposeBridge(
@@ -1068,7 +1068,7 @@ internal static partial class ComposeBridges
         IFunction2? text,
         Shape?      shape,
         int         defaults,
-        IComposer   composer);
+        IComposer   composer, int _changed = 0);
 
     // androidx.compose.material3.ModalBottomSheet_androidKt.ModalBottomSheet-dYc4hso
     [ComposeBridge(
@@ -1092,7 +1092,7 @@ internal static partial class ComposeBridges
         Shape?      shape,
         IFunction3  content,
         int         defaults,
-        IComposer   composer);
+        IComposer   composer, int _changed = 0);
 
     // androidx.compose.material3.BottomSheetScaffoldKt.BottomSheetScaffold-sdMYb0k
     [ComposeBridge(
@@ -1114,7 +1114,7 @@ internal static partial class ComposeBridges
         IFunction3? snackbarHost,
         IFunction3  content,
         int         defaults,
-        IComposer   composer);
+        IComposer   composer, int _changed = 0);
 
     // androidx.compose.material3.ScaffoldKt.Scaffold-TvnljyQ
     [ComposeBridge(
@@ -1136,7 +1136,7 @@ internal static partial class ComposeBridges
         IFunction2? floatingActionButton,
         IFunction3  content,
         int         defaults,
-        IComposer   composer);
+        IComposer   composer, int _changed = 0);
 
     // androidx.compose.material3.DatePickerDialog_androidKt.DatePickerDialog-GmEhDVc
     [ComposeBridge(
@@ -1158,7 +1158,7 @@ internal static partial class ComposeBridges
         [Slot("Body")]
         IFunction3  content,
         int         defaults,
-        IComposer   composer);
+        IComposer   composer, int _changed = 0);
 
     // DateRangePickerDialog is just DatePickerDialog with a DateRangePicker
     // body — same Kotlin composable, same $default bitmask. Wrapper-passthrough
@@ -1173,7 +1173,7 @@ internal static partial class ComposeBridges
         [Slot("Body")]
         IFunction3  content,
         int         defaults,
-        IComposer   composer);
+        IComposer   composer, int _changed = 0);
 
     public static partial void DateRangePickerDialog(
         IFunction0  onDismissRequest,
@@ -1182,8 +1182,8 @@ internal static partial class ComposeBridges
         IFunction2? dismissButton,
         IFunction3  content,
         int         defaults,
-        IComposer   composer)
-        => DatePickerDialog(onDismissRequest, confirmButton, modifier, dismissButton, content, defaults, composer);
+        IComposer   composer, int _changed)
+        => DatePickerDialog(onDismissRequest, confirmButton, modifier, dismissButton, content, defaults, composer, _changed);
 
     // androidx.compose.material3.TimePickerKt.TimePicker-mT9BvqQ
     [ComposeBridge(
@@ -1198,7 +1198,7 @@ internal static partial class ComposeBridges
                      StateType = typeof(TimePickerState),
                      SharedState = true)] IntPtr state,
         IModifier? modifier,
-        int defaults, IComposer composer);
+        int defaults, IComposer composer, int _changed = 0);
 
     // androidx.compose.material3.TimePickerKt.TimeInput
     [ComposeBridge(
@@ -1213,7 +1213,7 @@ internal static partial class ComposeBridges
                      StateType = typeof(TimePickerState),
                      SharedState = true)] IntPtr state,
         IModifier? modifier,
-        int defaults, IComposer composer);
+        int defaults, IComposer composer, int _changed = 0);
 
     // androidx.compose.material3.TimePickerDialogKt.TimePickerDialog-FItCLgY
     [ComposeBridge(
@@ -1237,7 +1237,7 @@ internal static partial class ComposeBridges
         [Slot("Body")]
         IFunction3  content,
         int         defaults,
-        IComposer   composer);
+        IComposer   composer, int _changed = 0);
 
     // androidx.compose.material3.TooltipKt.TooltipBox (7-user-param overload)
     [ComposeBridge(
@@ -1256,7 +1256,7 @@ internal static partial class ComposeBridges
         IModifier? modifier,
         IFunction2 content,
         int        defaults,
-        IComposer  composer);
+        IComposer  composer, int _changed = 0);
 
     // androidx.compose.material3.DatePickerKt.DatePicker
     [ComposeBridge(
@@ -1276,7 +1276,7 @@ internal static partial class ComposeBridges
         IntPtr      state,
         IModifier?  modifier,
         int         defaults,
-        IComposer   composer);
+        IComposer   composer, int _changed = 0);
 
     // androidx.compose.material3.DatePickerKt.rememberDatePickerState-EU0dCGE
     //
@@ -1332,7 +1332,7 @@ internal static partial class ComposeBridges
         IntPtr      state,
         IModifier?  modifier,
         int         defaults,
-        IComposer   composer);
+        IComposer   composer, int _changed = 0);
 
     // androidx.compose.material3.DateRangePickerKt.rememberDateRangePickerState-IlFM19s
     [ComposeBridge(
@@ -1457,7 +1457,7 @@ internal static partial class ComposeBridges
         IFunction3? indicator,
         IFunction3  content,
         int         defaults,
-        IComposer   composer);
+        IComposer   composer, int _changed = 0);
 
     // androidx.compose.material3.pulltorefresh.PullToRefreshKt.rememberPullToRefreshState
     // No-arg @Composable; signature has only the trailing _changed I slot
@@ -1483,7 +1483,7 @@ internal static partial class ComposeBridges
         Signature = CardSig,
         Defaults  = typeof(CardDefault))]
     [ComposeFacade]
-    public static partial void Card(IModifier? modifier, Shape? shape, IFunction3 content, IComposer composer);
+    public static partial void Card(IModifier? modifier, Shape? shape, IFunction3 content, IComposer composer, int _changed = 0);
 
     // androidx.compose.material3.CardKt.OutlinedCard (same shape as Card)
     [ComposeBridge(
@@ -1492,7 +1492,7 @@ internal static partial class ComposeBridges
         Signature = CardSig,
         Defaults  = typeof(CardDefault))]
     [ComposeFacade]
-    public static partial void OutlinedCard(Shape? shape, IFunction3 content, IComposer composer);
+    public static partial void OutlinedCard(Shape? shape, IFunction3 content, IComposer composer, int _changed = 0);
 
     // androidx.compose.material3.CardKt.ElevatedCard (no border)
     [ComposeBridge(
@@ -1503,7 +1503,7 @@ internal static partial class ComposeBridges
                     "Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;II)V",
         Defaults  = typeof(ElevatedCardDefault))]
     [ComposeFacade]
-    public static partial void ElevatedCard(Shape? shape, IFunction3 content, IComposer composer);
+    public static partial void ElevatedCard(Shape? shape, IFunction3 content, IComposer composer, int _changed = 0);
 
     const string AssistChipSig =
         "(Lkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function2;" +
@@ -1529,7 +1529,7 @@ internal static partial class ComposeBridges
         IFunction2? trailingIcon,
         Shape?      shape,
         int         defaults,
-        IComposer   composer);
+        IComposer   composer, int _changed = 0);
 
     [ComposeBridge(
         Class     = "androidx/compose/material3/ChipKt",
@@ -1544,7 +1544,7 @@ internal static partial class ComposeBridges
         IFunction2? trailingIcon,
         Shape?      shape,
         int         defaults,
-        IComposer   composer);
+        IComposer   composer, int _changed = 0);
 
     const string FilterChipSig =
         "(ZLkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function2;" +
@@ -1572,7 +1572,7 @@ internal static partial class ComposeBridges
         IFunction2? trailingIcon,
         Shape?      shape,
         int         defaults,
-        IComposer   composer);
+        IComposer   composer, int _changed = 0);
 
     [ComposeBridge(
         Class     = "androidx/compose/material3/ChipKt",
@@ -1588,7 +1588,7 @@ internal static partial class ComposeBridges
         IFunction2? trailingIcon,
         Shape?      shape,
         int         defaults,
-        IComposer   composer);
+        IComposer   composer, int _changed = 0);
 
     // androidx.compose.material3.ChipKt.InputChip
     [ComposeBridge(
@@ -1615,7 +1615,7 @@ internal static partial class ComposeBridges
         IFunction2? trailingIcon,
         Shape?      shape,
         int         defaults,
-        IComposer   composer);
+        IComposer   composer, int _changed = 0);
 
     const string SuggestionChipSig =
         "(Lkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function2;" +
@@ -1639,7 +1639,7 @@ internal static partial class ComposeBridges
         IFunction2? icon,
         Shape?      shape,
         int         defaults,
-        IComposer   composer);
+        IComposer   composer, int _changed = 0);
 
     [ComposeBridge(
         Class     = "androidx/compose/material3/ChipKt",
@@ -1653,7 +1653,7 @@ internal static partial class ComposeBridges
         IFunction2? icon,
         Shape?      shape,
         int         defaults,
-        IComposer   composer);
+        IComposer   composer, int _changed = 0);
 
     // androidx.compose.material3.NavigationBarKt.NavigationBar-HsRjFd4
     [ComposeBridge(
@@ -1664,7 +1664,7 @@ internal static partial class ComposeBridges
                     "Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;II)V",
         Defaults  = typeof(NavigationBarDefault))]
     [ComposeFacade(Scope = "Row")]
-    public static partial void NavigationBar(IModifier? modifier, IFunction3 content, IComposer composer);
+    public static partial void NavigationBar(IModifier? modifier, IFunction3 content, IComposer composer, int _changed = 0);
 
     // androidx.compose.material3.NavigationBarKt.NavigationBarItem (RowScope receiver)
     [ComposeBridge(
@@ -1689,7 +1689,7 @@ internal static partial class ComposeBridges
         bool        enabled         = true,
         bool        alwaysShowLabel = true,
         int         defaults        = 0,
-        IComposer   composer        = null!);
+        IComposer   composer        = null!, int _changed = 0);
 
     // androidx.compose.material3.NavigationRailKt.NavigationRail-qi6gXK8
     [ComposeBridge(
@@ -1701,7 +1701,7 @@ internal static partial class ComposeBridges
                     "Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;II)V",
         Defaults  = typeof(NavigationRailDefault))]
     [ComposeFacade]
-    public static partial void NavigationRail(IModifier? modifier, IFunction3 content, IComposer composer);
+    public static partial void NavigationRail(IModifier? modifier, IFunction3 content, IComposer composer, int _changed = 0);
 
     // androidx.compose.material3.NavigationRailKt.NavigationRailItem
     [ComposeBridge(
@@ -1722,7 +1722,7 @@ internal static partial class ComposeBridges
         IModifier?  modifier,
         IFunction2? label,
         int         defaults,
-        IComposer   composer);
+        IComposer   composer, int _changed = 0);
 
     // androidx.compose.material3.NavigationDrawerKt.NavigationDrawerItem
     // (no JVM mangling — no @JvmInline value-class params). label is the
@@ -1750,7 +1750,7 @@ internal static partial class ComposeBridges
         IFunction2? icon,
         IFunction2? badge,
         int         defaults,
-        IComposer   composer);
+        IComposer   composer, int _changed = 0);
 
     // 3 drawer-sheet variants share the same DrawerSheetDefault enum + signature.
     const string DrawerSheetSig =
@@ -1764,7 +1764,7 @@ internal static partial class ComposeBridges
         Signature = DrawerSheetSig,
         Defaults  = typeof(DrawerSheetDefault))]
     [ComposeFacade(DefaultColorFromTheme = "surfaceContainerLow")]
-    public static partial void ModalDrawerSheet(IFunction3 content, Shape? shape, long drawerContainerColor, IComposer composer);
+    public static partial void ModalDrawerSheet(IFunction3 content, Shape? shape, long drawerContainerColor, IComposer composer, int _changed = 0);
 
     [ComposeBridge(
         Class     = "androidx/compose/material3/NavigationDrawerKt",
@@ -1772,7 +1772,7 @@ internal static partial class ComposeBridges
         Signature = DrawerSheetSig,
         Defaults  = typeof(DrawerSheetDefault))]
     [ComposeFacade(DefaultColorFromTheme = "surface")]
-    public static partial void DismissibleDrawerSheet(IFunction3 content, Shape? shape, long drawerContainerColor, IComposer composer);
+    public static partial void DismissibleDrawerSheet(IFunction3 content, Shape? shape, long drawerContainerColor, IComposer composer, int _changed = 0);
 
     [ComposeBridge(
         Class     = "androidx/compose/material3/NavigationDrawerKt",
@@ -1780,7 +1780,7 @@ internal static partial class ComposeBridges
         Signature = DrawerSheetSig,
         Defaults  = typeof(DrawerSheetDefault))]
     [ComposeFacade(DefaultColorFromTheme = "surface")]
-    public static partial void PermanentDrawerSheet(IFunction3 content, Shape? shape, long drawerContainerColor, IComposer composer);
+    public static partial void PermanentDrawerSheet(IFunction3 content, Shape? shape, long drawerContainerColor, IComposer composer, int _changed = 0);
 
     // androidx.compose.material3.SegmentedButtonKt.SegmentedButton
     // (SingleChoiceSegmentedButtonRowScope receiver, longer 11-param overload
@@ -1811,7 +1811,7 @@ internal static partial class ComposeBridges
         IModifier?  modifier,
         IFunction2? icon,
         int         defaults,
-        IComposer   composer);
+        IComposer   composer, int _changed = 0);
 
     // androidx.compose.material3.SegmentedButtonKt.SegmentedButton
     // (MultiChoiceSegmentedButtonRowScope receiver, longer 11-param overload).
@@ -1840,7 +1840,7 @@ internal static partial class ComposeBridges
         IModifier?  modifier,
         IFunction2? icon,
         int         defaults,
-        IComposer   composer);
+        IComposer   composer, int _changed = 0);
 
     // androidx.compose.material3.SegmentedButtonDefaults.itemShape — INSTANCE
     // method on the SegmentedButtonDefaults Kotlin `object` singleton, returns
@@ -1881,7 +1881,7 @@ internal static partial class ComposeBridges
                     "Landroidx/compose/runtime/Composer;II)V",
         Defaults  = typeof(WideNavigationRailDefault))]
     [ComposeFacade]
-    public static partial void WideNavigationRail(IModifier? modifier, IFunction2 content, IComposer composer);
+    public static partial void WideNavigationRail(IModifier? modifier, IFunction2 content, IComposer composer, int _changed = 0);
 
     // androidx.compose.material3.WideNavigationRailKt.ModalWideNavigationRail-k3FuEkE.
     // The "-k3FuEkE" hash comes from the @JvmInline value-class Dp param
@@ -1928,7 +1928,7 @@ internal static partial class ComposeBridges
         IFunction2? header,
         IFunction2  content,
         int         defaults,
-        IComposer   composer);
+        IComposer   composer, int _changed = 0);
 
     public static partial void ModalWideNavigationRail(
         IModifier?  modifier,
@@ -1936,7 +1936,7 @@ internal static partial class ComposeBridges
         IFunction2? header,
         IFunction2  content,
         int         defaults,
-        IComposer   composer)
+        IComposer   composer, int _changed)
     {
         // Clear the HideOnCollapse bit so Kotlin uses our hardcoded
         // `true` rather than its own default (which is `false`).
@@ -1973,11 +1973,11 @@ internal static partial class ComposeBridges
         [Slot("Content")] IFunction2 content,
         bool              gesturesEnabled = true,
         int               defaults        = 0,
-        IComposer         composer        = null!);
+        IComposer         composer        = null!, int _changed = 0);
 
     public static partial void ModalNavigationDrawer(
         IFunction2 drawerContent, IModifier? modifier, IntPtr drawerState,
-        IFunction2 content, bool gesturesEnabled, int defaults, IComposer composer)
+        IFunction2 content, bool gesturesEnabled, int defaults, IComposer composer, int _changed)
     {
         // The bound binding takes a typed DrawerState; reconstitute it
         // from the JNI handle the [StateHolder] handed us.
@@ -1994,7 +1994,7 @@ internal static partial class ComposeBridges
             scrimColor:       0L,
             content:          content,
             _composer:        composer,
-            p7:               0,
+            p7:               _changed,
             _changed:         defaults);
     }
 
@@ -2008,11 +2008,11 @@ internal static partial class ComposeBridges
         [Slot("Content")] IFunction2 content,
         bool              gesturesEnabled = true,
         int               defaults        = 0,
-        IComposer         composer        = null!);
+        IComposer         composer        = null!, int _changed = 0);
 
     public static partial void DismissibleNavigationDrawer(
         IFunction2 drawerContent, IModifier? modifier, IntPtr drawerState,
-        IFunction2 content, bool gesturesEnabled, int defaults, IComposer composer)
+        IFunction2 content, bool gesturesEnabled, int defaults, IComposer composer, int _changed)
     {
         var stateObj = Java.Lang.Object.GetObject<DrawerState>(
             drawerState, Android.Runtime.JniHandleOwnership.DoNotTransfer)!;
@@ -2023,7 +2023,7 @@ internal static partial class ComposeBridges
             gesturesEnabled:  gesturesEnabled,
             content:          content,
             _composer:        composer,
-            p6:               0,
+            p6:               _changed,
             _changed:         defaults);
     }
 
@@ -2033,18 +2033,18 @@ internal static partial class ComposeBridges
         IModifier?        modifier,
         [Slot("Content")] IFunction2 content,
         int               defaults,
-        IComposer         composer);
+        IComposer         composer, int _changed = 0);
 
     public static partial void PermanentNavigationDrawer(
         IFunction2 drawerContent, IModifier? modifier,
-        IFunction2 content, int defaults, IComposer composer)
+        IFunction2 content, int defaults, IComposer composer, int _changed)
     {
         AndroidX.Compose.Material3.NavigationDrawerKt.PermanentNavigationDrawer(
             drawerContent: drawerContent,
             modifier:      modifier,
             content:       content,
             _composer:     composer,
-            p4:            0,
+            p4:            _changed,
             _changed:      defaults);
     }
 
@@ -2933,7 +2933,7 @@ internal static partial class ComposeBridges
         IFunction3? actions,
         ITopAppBarScrollBehavior? scrollBehavior,
         int         defaults,
-        IComposer   composer);
+        IComposer   composer, int _changed = 0);
 
     [ComposeBridge(
         Class     = "androidx/compose/material3/AppBarKt",
@@ -2948,7 +2948,7 @@ internal static partial class ComposeBridges
         IFunction3? actions,
         ITopAppBarScrollBehavior? scrollBehavior,
         int         defaults,
-        IComposer   composer);
+        IComposer   composer, int _changed = 0);
 
     // MediumTopAppBar / LargeTopAppBar share `-oKE7A98` (two-row variants
     // take BOTH `collapsedHeight` and `expandedHeight` Dp). 9 user params.
@@ -2975,7 +2975,7 @@ internal static partial class ComposeBridges
         IFunction3? actions,
         ITopAppBarScrollBehavior? scrollBehavior,
         int         defaults,
-        IComposer   composer);
+        IComposer   composer, int _changed = 0);
 
     [ComposeBridge(
         Class     = "androidx/compose/material3/AppBarKt",
@@ -2992,7 +2992,7 @@ internal static partial class ComposeBridges
         IFunction3? actions,
         ITopAppBarScrollBehavior? scrollBehavior,
         int         defaults,
-        IComposer   composer);
+        IComposer   composer, int _changed = 0);
 
     // androidx.compose.material3.TabRowKt — TabRow / PrimaryTabRow /
     // SecondaryTabRow all share `-pAZo6Ak`. 7 user params: selectedTabIndex,
@@ -3015,7 +3015,7 @@ internal static partial class ComposeBridges
         int        selectedTabIndex,
         IModifier? modifier,
         IFunction2 tabs,
-        IComposer  composer);
+        IComposer  composer, int _changed = 0);
 
     [ComposeBridge(
         Class     = "androidx/compose/material3/TabRowKt",
@@ -3027,7 +3027,7 @@ internal static partial class ComposeBridges
         int        selectedTabIndex,
         IModifier? modifier,
         IFunction2 tabs,
-        IComposer  composer);
+        IComposer  composer, int _changed = 0);
 
     [ComposeBridge(
         Class     = "androidx/compose/material3/TabRowKt",
@@ -3039,7 +3039,7 @@ internal static partial class ComposeBridges
         int        selectedTabIndex,
         IModifier? modifier,
         IFunction2 tabs,
-        IComposer  composer);
+        IComposer  composer, int _changed = 0);
 
     // androidx.compose.material3.TabRowKt.ScrollableTabRow-sKfQg0A.
     // 8 user params: same as TabRow plus a leading `edgePadding: Dp`.
@@ -3055,7 +3055,7 @@ internal static partial class ComposeBridges
         int        selectedTabIndex,
         IModifier? modifier,
         IFunction2 tabs,
-        IComposer  composer);
+        IComposer  composer, int _changed = 0);
 
     // androidx.compose.material3.TabKt.Tab-wqdebIU (text/icon overload).
     // 9 user params: selected, onClick, modifier, enabled, text, icon,
@@ -3076,7 +3076,7 @@ internal static partial class ComposeBridges
         IFunction2? text,
         IFunction2? icon,
         int         defaults,
-        IComposer   composer);
+        IComposer   composer, int _changed = 0);
 
     // androidx.compose.material3.TabKt.LeadingIconTab-wqdebIU.
     // 9 user params: selected, onClick, text, icon, modifier, enabled,
@@ -3098,7 +3098,7 @@ internal static partial class ComposeBridges
         IFunction2 text,
         IFunction2 icon,
         IModifier? modifier,
-        IComposer  composer);
+        IComposer  composer, int _changed = 0);
 
     // androidx.compose.material3.SnackbarKt.Snackbar-eQBnUkQ. 10 user
     // params: modifier, action, dismissAction, actionOnNewLine, shape,
@@ -3118,7 +3118,7 @@ internal static partial class ComposeBridges
         IFunction2? dismissAction,
         [Slot("Body")] IFunction2 content,
         int         defaults,
-        IComposer   composer);
+        IComposer   composer, int _changed = 0);
 
     // androidx.compose.material3.SnackbarHostKt.SnackbarHost — UNMANGLED
     // (no inline-class params). 3 user params: hostState, modifier,
@@ -3134,7 +3134,7 @@ internal static partial class ComposeBridges
         IntPtr     hostState,
         IModifier? modifier,
         IFunction3 snackbar,
-        IComposer  composer);
+        IComposer  composer, int _changed = 0);
 
     // androidx.compose.material3.BadgeKt.Badge-eopBjH0. 4 user params:
     // modifier, containerColor, contentColor, content (RowScope-receiver
@@ -3146,7 +3146,7 @@ internal static partial class ComposeBridges
                     "Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;II)V",
         Defaults  = typeof(BadgeDefault))]
     [ComposeFacade(Scope = "Row")]
-    public static partial void Badge(IModifier? modifier, IFunction3 content, IComposer composer);
+    public static partial void Badge(IModifier? modifier, IFunction3 content, IComposer composer, int _changed = 0);
 
     // androidx.compose.material3.BadgeKt.BadgedBox — UNMANGLED. 3 user
     // params: badge (BoxScope-receiver Function3), modifier, content
@@ -3163,7 +3163,7 @@ internal static partial class ComposeBridges
         IFunction3 badge,
         IModifier? modifier,
         IFunction3 content,
-        IComposer  composer);
+        IComposer  composer, int _changed = 0);
 
     // androidx.compose.material3.ListItemKt.ListItem-HXNGIdc. 9 user
     // params: headlineContent, modifier, overlineContent, supportingContent,
@@ -3187,7 +3187,7 @@ internal static partial class ComposeBridges
         [Slot("Leading")]    IFunction2? leadingContent,
         [Slot("Trailing")]   IFunction2? trailingContent,
         int         defaults,
-        IComposer   composer);
+        IComposer   composer, int _changed = 0);
 
     // androidx.compose.material3.AndroidMenu_androidKt.DropdownMenu-IlH_yew —
     // the menu *container* that anchors the (already-bound) DropdownMenuItem.
@@ -3212,7 +3212,7 @@ internal static partial class ComposeBridges
         IFunction0  onDismissRequest,
         IModifier?  modifier,
         IFunction3  content,
-        IComposer   composer);
+        IComposer   composer, int _changed = 0);
 
     // androidx.compose.material3.ExposedDropdownMenuKt.ExposedDropdownMenuBox —
     // textfield-anchored menu container. 4 user params: expanded, onExpandedChange
@@ -3232,7 +3232,7 @@ internal static partial class ComposeBridges
         [Callback(typeof(bool))] IFunction1 onExpandedChange,
         IModifier? modifier,
         IFunction3 content,
-        IComposer  composer);
+        IComposer  composer, int _changed = 0);
 
     // androidx.compose.material3.ExposedDropdownMenuBoxScope.ExposedDropdownMenu
     // (the simplest unmangled overload — boolean + Function0 + Modifier +
@@ -3345,7 +3345,7 @@ internal static partial class ComposeBridges
         IntPtr     state,
         IFunction2 inputField,
         IModifier? modifier,
-        IComposer  composer);
+        IComposer  composer, int _changed = 0);
 
     // androidx.compose.material3.SearchBarKt.TopSearchBar-qKj4JfE — like
     // SearchBar but draws as a scrollable top bar (adds WindowInsets +
@@ -3365,7 +3365,7 @@ internal static partial class ComposeBridges
         IntPtr     state,
         IFunction2 inputField,
         IModifier? modifier,
-        IComposer  composer);
+        IComposer  composer, int _changed = 0);
 
     // androidx.compose.material3.SearchBarKt.ExpandedDockedSearchBar-qKj4JfE —
     // the expanded popup half of a docked SearchBar pair. Renders only when
@@ -3388,7 +3388,7 @@ internal static partial class ComposeBridges
         IFunction2 inputField,
         IModifier? modifier,
         IFunction3 content,
-        IComposer  composer);
+        IComposer  composer, int _changed = 0);
 
     // androidx.compose.material3.SearchBarKt.ExpandedFullScreenSearchBar-_UtchM0 —
     // the full-screen popup half of a SearchBar pair (Dialog-based). 10
@@ -3412,7 +3412,7 @@ internal static partial class ComposeBridges
         IFunction2 inputField,
         IModifier? modifier,
         IFunction3 content,
-        IComposer  composer);
+        IComposer  composer, int _changed = 0);
 
     // androidx.compose.material3.SearchBarKt.DockedSearchBar-EQC0FA8 — the
     // boolean-state docked variant. Deprecated in M3 1.4 in favor of the
@@ -3439,7 +3439,7 @@ internal static partial class ComposeBridges
         IFunction1 onExpandedChange,
         IModifier? modifier,
         IFunction3 content,
-        IComposer  composer);
+        IComposer  composer, int _changed = 0);
 
     // androidx.compose.material3.SearchBarKt.DockedSearchBar-eWTbjVg — the
     // even older query-based docked search bar. Self-contained input field
@@ -3485,7 +3485,7 @@ internal static partial class ComposeBridges
         IFunction2? leadingIcon,
         IFunction2? trailingIcon,
         IFunction3  content,
-        IComposer   composer);
+        IComposer   composer, int _changed = 0);
 
     // androidx.compose.material3.SearchBarDefaults.InputField — state-based
     // overload. The state-aware InputField is what wires focus/click events
@@ -3527,7 +3527,7 @@ internal static partial class ComposeBridges
         IFunction2? placeholder,
         IFunction2? leadingIcon,
         IFunction2? trailingIcon,
-        IComposer   composer);
+        IComposer   composer, int _changed = 0);
 
     // androidx.compose.material3.AppBarKt.TopAppBar-cJHQLPU (subtitle
     // overload). 10 user params: title, subtitle, modifier, navigationIcon,
@@ -3552,7 +3552,7 @@ internal static partial class ComposeBridges
         IFunction3? actions,
         ITopAppBarScrollBehavior? scrollBehavior,
         int         defaults,
-        IComposer   composer);
+        IComposer   composer, int _changed = 0);
 
     // androidx.compose.material3.AppBarKt.{Medium,Large}FlexibleTopAppBar-eXZ4JBQ
     // share the descriptor (trailing `III` because 11 params * 3 bits per
@@ -3583,7 +3583,7 @@ internal static partial class ComposeBridges
         IFunction3? actions,
         ITopAppBarScrollBehavior? scrollBehavior,
         int         defaults,
-        IComposer   composer);
+        IComposer   composer, int _changed = 0);
 
     [ComposeBridge(
         Class     = "androidx/compose/material3/AppBarKt",
@@ -3599,7 +3599,7 @@ internal static partial class ComposeBridges
         IFunction3? actions,
         ITopAppBarScrollBehavior? scrollBehavior,
         int         defaults,
-        IComposer   composer);
+        IComposer   composer, int _changed = 0);
 
     // androidx.compose.material3.AppBarKt.BottomAppBar-qhFBPw4 (actions +
     // FAB + scrollBehavior — the most flexible of the four BottomAppBar
@@ -3621,7 +3621,7 @@ internal static partial class ComposeBridges
         IFunction3  actions,
         IModifier?  modifier,
         IFunction2? floatingActionButton,
-        IComposer   composer);
+        IComposer   composer, int _changed = 0);
 
     // androidx.compose.material3.AppBarKt.FlexibleBottomAppBar-wBhsO_E.
     // 9 user params: modifier, containerColor, contentColor, contentPadding,
@@ -3642,7 +3642,7 @@ internal static partial class ComposeBridges
     public static partial void FlexibleBottomAppBar(
         IModifier? modifier,
         IFunction3 content,
-        IComposer  composer);
+        IComposer  composer, int _changed = 0);
 
     // androidx.compose.material3.TabRowKt.{Primary,Secondary}ScrollableTabRow-qhFBPw4
     // (simpler overload of -cx2KkNY without the TabIndicatorScope-aware
@@ -3665,7 +3665,7 @@ internal static partial class ComposeBridges
         IModifier? modifier,
         IntPtr?    scrollState,
         IFunction2 tabs,
-        IComposer  composer);
+        IComposer  composer, int _changed = 0);
 
     [ComposeBridge(
         Class     = "androidx/compose/material3/TabRowKt",
@@ -3677,7 +3677,7 @@ internal static partial class ComposeBridges
         IModifier? modifier,
         IntPtr?    scrollState,
         IFunction2 tabs,
-        IComposer  composer);
+        IComposer  composer, int _changed = 0);
 
     // androidx.compose.material3.TabKt.Tab-bogVsAg (ColumnScope content
     // lambda overload — alternative to Tab-wqdebIU). 8 user params:
@@ -3696,7 +3696,7 @@ internal static partial class ComposeBridges
         IFunction0 onClick,
         IModifier? modifier,
         IFunction3 content,
-        IComposer  composer);
+        IComposer  composer, int _changed = 0);
 
     // androidx.compose.material3.SnackbarKt.Snackbar-sDKtq54 (SnackbarData
     // overload — fed by SnackbarHost's content lambda when state has
@@ -3716,7 +3716,7 @@ internal static partial class ComposeBridges
     public static partial void SnackbarFromData(
         IntPtr     snackbarData,
         IModifier? modifier,
-        IComposer  composer);
+        IComposer  composer, int _changed = 0);
 
     // Phase 8 — wrapper-passthrough facades. These are [ComposeFacade]-only
     // partial methods with hand-written bodies that delegate to a bound
@@ -3727,16 +3727,16 @@ internal static partial class ComposeBridges
     // hand-picked.
 
     [ComposeFacade(Defaults = typeof(BoxDefault), Scope = "Box")]
-    public static partial void Box(IModifier? modifier, IFunction3 content, int defaults, IComposer composer);
+    public static partial void Box(IModifier? modifier, IFunction3 content, int defaults, IComposer composer, int _changed = 0);
 
-    public static partial void Box(IModifier? modifier, IFunction3 content, int defaults, IComposer composer)
+    public static partial void Box(IModifier? modifier, IFunction3 content, int defaults, IComposer composer, int _changed)
         => BoxKt.Box(
             modifier:                modifier,
             contentAlignment:        null,
             propagateMinConstraints: false,
             content:                 content,
             _composer:               composer,
-            p5:                      0,
+            p5:                      _changed,
             _changed:                defaults);
 
     // Internal forwarder for Column. The public-facing facade
@@ -3782,15 +3782,15 @@ internal static partial class ComposeBridges
     // The wrapper materialises Modifier.Companion when the caller leaves
     // it null so the binding receives a non-null receiver.
     [ComposeFacade]
-    public static partial void Spacer(IModifier? modifier, IComposer composer);
+    public static partial void Spacer(IModifier? modifier, IComposer composer, int _changed = 0);
 
-    public static partial void Spacer(IModifier? modifier, IComposer composer)
+    public static partial void Spacer(IModifier? modifier, IComposer composer, int _changed)
         => SpacerKt.Spacer(
             modifier ?? Java.Lang.Object.GetObject<IModifier>(
                 ModifierCompanionInstance(),
                 JniHandleOwnership.TransferLocalRef)!,
             composer,
-            0);
+            _changed);
 
     [ComposeFacade(Defaults = typeof(CheckboxDefault))]
     public static partial void Checkbox(
@@ -3801,9 +3801,9 @@ internal static partial class ComposeBridges
         bool                       enabled  = true,
         AndroidX.Compose.Material3.CheckboxColors? colors = null,
         int                        defaults = 0,
-        IComposer                  composer = null!);
+        IComposer                  composer = null!, int _changed = 0);
 
-    public static partial void Checkbox(bool @checked, IFunction1 onCheckedChange, IModifier? modifier, bool enabled, AndroidX.Compose.Material3.CheckboxColors? colors, int defaults, IComposer composer)
+    public static partial void Checkbox(bool @checked, IFunction1 onCheckedChange, IModifier? modifier, bool enabled, AndroidX.Compose.Material3.CheckboxColors? colors, int defaults, IComposer composer, int _changed)
         => CheckboxKt.Checkbox(
             @checked:          @checked,
             onCheckedChange:   onCheckedChange,
@@ -3812,7 +3812,7 @@ internal static partial class ComposeBridges
             colors:            colors,
             interactionSource: null,
             _composer:         composer,
-            p7:                0,
+            p7:                _changed,
             _changed:          defaults);
 
     [ComposeFacade(Defaults = typeof(SwitchDefault))]
@@ -3824,9 +3824,9 @@ internal static partial class ComposeBridges
         bool                       enabled  = true,
         AndroidX.Compose.Material3.SwitchColors? colors = null,
         int                        defaults = 0,
-        IComposer                  composer = null!);
+        IComposer                  composer = null!, int _changed = 0);
 
-    public static partial void Switch(bool @checked, IFunction1 onCheckedChange, IModifier? modifier, bool enabled, AndroidX.Compose.Material3.SwitchColors? colors, int defaults, IComposer composer)
+    public static partial void Switch(bool @checked, IFunction1 onCheckedChange, IModifier? modifier, bool enabled, AndroidX.Compose.Material3.SwitchColors? colors, int defaults, IComposer composer, int _changed)
         => SwitchKt.Switch(
             @checked:          @checked,
             onCheckedChange:   onCheckedChange,
@@ -3836,7 +3836,7 @@ internal static partial class ComposeBridges
             colors:            colors,
             interactionSource: null,
             _composer:         composer,
-            p8:                0,
+            p8:                _changed,
             _changed:          defaults);
 
     [ComposeFacade(Defaults = typeof(RadioButtonDefault))]
@@ -3847,9 +3847,9 @@ internal static partial class ComposeBridges
         bool                                       enabled  = true,
         AndroidX.Compose.Material3.RadioButtonColors? colors = null,
         int                                        defaults = 0,
-        IComposer                                  composer = null!);
+        IComposer                                  composer = null!, int _changed = 0);
 
-    public static partial void RadioButton(bool selected, IFunction0 onClick, IModifier? modifier, bool enabled, AndroidX.Compose.Material3.RadioButtonColors? colors, int defaults, IComposer composer)
+    public static partial void RadioButton(bool selected, IFunction0 onClick, IModifier? modifier, bool enabled, AndroidX.Compose.Material3.RadioButtonColors? colors, int defaults, IComposer composer, int _changed)
         => RadioButtonKt.RadioButton(
             selected:          selected,
             onClick:           onClick,
@@ -3858,7 +3858,7 @@ internal static partial class ComposeBridges
             colors:            colors,
             interactionSource: null,
             _composer:         composer,
-            p7:                0,
+            p7:                _changed,
             _changed:          defaults);
 
     [ComposeFacade(Defaults = typeof(SliderDefault))]
@@ -3874,7 +3874,7 @@ internal static partial class ComposeBridges
         bool                        enabled  = true,
         int                         steps    = 0,
         int                         defaults = 0,
-        IComposer                   composer = null!);
+        IComposer                   composer = null!, int _changed = 0);
 
     // Wrapper-passthrough that calls the rich (Float, ..., thumb, track,
     // valueRange) overload of SliderKt.Slider directly. The 11-user-param
@@ -3887,7 +3887,7 @@ internal static partial class ComposeBridges
     //   C# `steps:` (after `_composer`) = JVM `$changed` int
     //   C# `_changed` = JVM `$changed1`
     //   C# `_changed1` = JVM `$default` ← the bitmask we forward
-    public static partial void Slider(float value, IFunction1 onValueChange, IModifier? modifier, IFunction3? thumb, IClosedFloatingPointRange? valueRange, SliderColors? colors, bool enabled, int steps, int defaults, IComposer composer)
+    public static partial void Slider(float value, IFunction1 onValueChange, IModifier? modifier, IFunction3? thumb, IClosedFloatingPointRange? valueRange, SliderColors? colors, bool enabled, int steps, int defaults, IComposer composer, int _changed)
         => SliderKt.Slider(
             value:                  value,
             onValueChange:          onValueChange,
@@ -3901,7 +3901,7 @@ internal static partial class ComposeBridges
             track:                  null,
             valueRange:             valueRange,
             _composer:              composer,
-            steps:                  0,
+            steps:                  _changed,
             _changed:               0,
             _changed1:              defaults | (int)SliderDefault.Track);
 
@@ -3917,9 +3917,9 @@ internal static partial class ComposeBridges
     // Int. The `maxLines` slot in C# is the JVM `$changed` int; `_changed`
     // is `$default`.
     [ComposeFacade(Defaults = typeof(FlowRowDefault), Scope = "Row")]
-    public static partial void FlowRow(IModifier? modifier, IFunction3 content, int defaults, IComposer composer);
+    public static partial void FlowRow(IModifier? modifier, IFunction3 content, int defaults, IComposer composer, int _changed = 0);
 
-    public static partial void FlowRow(IModifier? modifier, IFunction3 content, int defaults, IComposer composer)
+    public static partial void FlowRow(IModifier? modifier, IFunction3 content, int defaults, IComposer composer, int _changed)
         => FlowLayoutKt.FlowRow(
             modifier:              modifier,
             horizontalArrangement: null,
@@ -3929,13 +3929,13 @@ internal static partial class ComposeBridges
             maxItemsInEachRow:     0,
             content:               content,
             _composer:             composer,
-            maxLines:              0,
+            maxLines:              _changed,
             _changed:              defaults);
 
     [ComposeFacade(Defaults = typeof(FlowColumnDefault), Scope = "Column")]
-    public static partial void FlowColumn(IModifier? modifier, IFunction3 content, int defaults, IComposer composer);
+    public static partial void FlowColumn(IModifier? modifier, IFunction3 content, int defaults, IComposer composer, int _changed = 0);
 
-    public static partial void FlowColumn(IModifier? modifier, IFunction3 content, int defaults, IComposer composer)
+    public static partial void FlowColumn(IModifier? modifier, IFunction3 content, int defaults, IComposer composer, int _changed)
         => FlowLayoutKt.FlowColumn(
             modifier:                modifier,
             verticalArrangement:     null,
@@ -3945,7 +3945,7 @@ internal static partial class ComposeBridges
             maxItemsInEachColumn:    0,
             content:                 content,
             _composer:               composer,
-            maxLines:                0,
+            maxLines:                _changed,
             _changed:                defaults);
 
     // WideNavigationRailKt.WideNavigationRailItem-pli-t6k. Bound C# wrapper
@@ -3961,9 +3961,9 @@ internal static partial class ComposeBridges
         IModifier?  modifier,
         bool        enabled  = true,
         int         defaults = 0,
-        IComposer   composer = null!);
+        IComposer   composer = null!, int _changed = 0);
 
-    public static partial void WideNavigationRailItem(bool selected, IFunction0 onClick, IFunction2 icon, IFunction2? label, IModifier? modifier, bool enabled, int defaults, IComposer composer)
+    public static partial void WideNavigationRailItem(bool selected, IFunction0 onClick, IFunction2 icon, IFunction2? label, IModifier? modifier, bool enabled, int defaults, IComposer composer, int _changed)
         => AndroidX.Compose.Material3.WideNavigationRailKt.WideNavigationRailItem(
             selected:          selected,
             onClick:           onClick,
@@ -3976,7 +3976,7 @@ internal static partial class ComposeBridges
             colors:            null,
             interactionSource: null,
             _composer:         composer,
-            iconPosition:      0,
+            iconPosition:      _changed,
             _changed:          defaults);
 
     [ComposeFacade(Defaults = typeof(TriStateCheckboxDefault))]
@@ -3986,9 +3986,9 @@ internal static partial class ComposeBridges
         IModifier?  modifier,
         bool        enabled  = true,
         int         defaults = 0,
-        IComposer   composer = null!);
+        IComposer   composer = null!, int _changed = 0);
 
-    public static partial void TriStateCheckbox(ToggleableState state, IFunction0 onClick, IModifier? modifier, bool enabled, int defaults, IComposer composer)
+    public static partial void TriStateCheckbox(ToggleableState state, IFunction0 onClick, IModifier? modifier, bool enabled, int defaults, IComposer composer, int _changed)
         => AndroidX.Compose.Material3.CheckboxKt.TriStateCheckbox(
             state:             state,
             onClick:           onClick,
@@ -3997,7 +3997,7 @@ internal static partial class ComposeBridges
             colors:            null,
             interactionSource: null,
             _composer:         composer,
-            p7:                0,
+            p7:                _changed,
             _changed:          defaults);
 
     // Phase 8 wrapper-passthrough for the segmented-button row
@@ -4012,15 +4012,15 @@ internal static partial class ComposeBridges
         IModifier? modifier,
         IFunction3 content,
         int        defaults,
-        IComposer  composer);
+        IComposer  composer, int _changed = 0);
 
-    public static partial void SingleChoiceSegmentedButtonRow(IModifier? modifier, IFunction3 content, int defaults, IComposer composer)
+    public static partial void SingleChoiceSegmentedButtonRow(IModifier? modifier, IFunction3 content, int defaults, IComposer composer, int _changed)
         => SegmentedButtonKt.SingleChoiceSegmentedButtonRow(
             modifier:  modifier,
             space:     0f,
             content:   content,
             _composer: composer,
-            p4:        0,
+            p4:        _changed,
             _changed:  defaults);
 
     [ComposeFacade(Defaults = typeof(SegmentedButtonRowDefault), Scope = "Other", IndexedChildren = true)]
@@ -4028,15 +4028,15 @@ internal static partial class ComposeBridges
         IModifier? modifier,
         IFunction3 content,
         int        defaults,
-        IComposer  composer);
+        IComposer  composer, int _changed = 0);
 
-    public static partial void MultiChoiceSegmentedButtonRow(IModifier? modifier, IFunction3 content, int defaults, IComposer composer)
+    public static partial void MultiChoiceSegmentedButtonRow(IModifier? modifier, IFunction3 content, int defaults, IComposer composer, int _changed)
         => SegmentedButtonKt.MultiChoiceSegmentedButtonRow(
             modifier:  modifier,
             space:     0f,
             content:   content,
             _composer: composer,
-            p4:        0,
+            p4:        _changed,
             _changed:  defaults);
 
     // Phase 8 wrapper-passthrough for the scrollable tab rows. The
@@ -4052,9 +4052,9 @@ internal static partial class ComposeBridges
         int        selectedTabIndex,
         IModifier? modifier,
         IFunction2 tabs,
-        IComposer  composer);
+        IComposer  composer, int _changed = 0);
 
-    public static partial void PrimaryScrollableTabRow(int selectedTabIndex, IModifier? modifier, IFunction2 tabs, IComposer composer)
+    public static partial void PrimaryScrollableTabRow(int selectedTabIndex, IModifier? modifier, IFunction2 tabs, IComposer composer, int _changed)
         => PrimaryScrollableTabRow(
             selectedTabIndex: selectedTabIndex,
             modifier:         modifier,
@@ -4067,9 +4067,9 @@ internal static partial class ComposeBridges
         int        selectedTabIndex,
         IModifier? modifier,
         IFunction2 tabs,
-        IComposer  composer);
+        IComposer  composer, int _changed = 0);
 
-    public static partial void SecondaryScrollableTabRow(int selectedTabIndex, IModifier? modifier, IFunction2 tabs, IComposer composer)
+    public static partial void SecondaryScrollableTabRow(int selectedTabIndex, IModifier? modifier, IFunction2 tabs, IComposer composer, int _changed)
         => SecondaryScrollableTabRow(
             selectedTabIndex: selectedTabIndex,
             modifier:         modifier,
@@ -4087,14 +4087,14 @@ internal static partial class ComposeBridges
         IModifier? modifier,
         IFunction2 content,
         int        defaults,
-        IComposer  composer);
+        IComposer  composer, int _changed = 0);
 
-    public static partial void SelectionContainer(IModifier? modifier, IFunction2 content, int defaults, IComposer composer)
+    public static partial void SelectionContainer(IModifier? modifier, IFunction2 content, int defaults, IComposer composer, int _changed)
         => AndroidX.Compose.Foundation.Text.Selection.SelectionContainerKt.SelectionContainer(
             modifier:  modifier,
             content:   content,
             _composer: composer,
-            p3:        0,
+            p3:        _changed,
             _changed:  defaults);
 
     // androidx.compose.foundation.text.selection.SelectionContainerKt.DisableSelection —
@@ -4105,9 +4105,9 @@ internal static partial class ComposeBridges
     [ComposeFacade]
     public static partial void DisableSelection(
         IFunction2 content,
-        IComposer  composer);
+        IComposer  composer, int _changed = 0);
 
-    public static partial void DisableSelection(IFunction2 content, IComposer composer)
+    public static partial void DisableSelection(IFunction2 content, IComposer composer, int _changed)
         => AndroidX.Compose.Foundation.Text.Selection.SelectionContainerKt.DisableSelection(
             content:   content,
             _composer: composer,
@@ -4288,7 +4288,7 @@ internal static partial class ComposeBridges
         JvmName       = "getCurrent",
         Signature     = "(Landroidx/compose/runtime/Composer;I)Landroidx/lifecycle/ViewModelStoreOwner;",
         InstanceField = "INSTANCE")]
-    public static partial IntPtr LocalViewModelStoreOwnerCurrent(IComposer composer);
+    public static partial IntPtr LocalViewModelStoreOwnerCurrent(IComposer composer, int _changed = 0);
 
     // androidx.activity.compose.BackHandlerKt.BackHandler — Kotlin
     // signature `BackHandler(enabled: Boolean = true, onBack: () -> Unit)`.
@@ -4309,6 +4309,6 @@ internal static partial class ComposeBridges
     public static partial void BackHandler(
         IFunction0 onBack,
         bool       enabled,
-        IComposer  composer);
+        IComposer  composer, int _changed = 0);
 }
 

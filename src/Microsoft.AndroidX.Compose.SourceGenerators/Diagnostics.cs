@@ -100,6 +100,14 @@ internal static class Diagnostics
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);
 
+    public static readonly DiagnosticDescriptor BridgeChangedRequiresComposer = new(
+        id: "CN2010",
+        title: "[ComposeBridge] '_changed' parameter requires a @Composable shape",
+        messageFormat: "Bridge '{0}' declares an 'int _changed' parameter but the JNI signature has no $changed slot — '_changed' is only valid on @Composable bridges (those ending in '...IComposer composer')",
+        category: "AndroidX.Compose",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
+
     public static readonly DiagnosticDescriptor FacadeWrongContainingType = new(
         id: "CN3001",
         title: "[ComposeFacade] must be applied to a method on ComposeBridges",
