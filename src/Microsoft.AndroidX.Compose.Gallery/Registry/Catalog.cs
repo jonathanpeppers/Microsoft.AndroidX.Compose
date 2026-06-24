@@ -87,6 +87,7 @@ public static class Catalog
         D.Containers.DividerDemo.Demo,
         D.Containers.FlowRowFlowColumnDemo.Demo,
         D.Containers.BoxWithConstraintsDemo.Demo,
+        D.Containers.CustomLayoutDemo.Demo,
 
         // ---- Lists & grids ----
         D.ListsGrids.LazyColumnLongDemo.Demo,
