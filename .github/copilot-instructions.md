@@ -957,6 +957,130 @@ helper, and each partial-property body.
 Tests in `CompanionGeneratorTests.cs`. **Add a test for any new
 behaviour.**
 
+## Tier 2 — `[Composable]` static methods
+
+User-facing surface for the C# compose-compiler equivalent: a Roslyn
+incremental source generator (`ComposableMethodGenerator`) wraps a
+`[Composable]` `static partial` method with a Compose restart group,
+per-parameter `DiffSlot` diffing, and a skip-when-unchanged fast
+path. Zero `ComposableNode` allocations per recomposition.
+
+### Authoring pattern (canonical)
+
+```csharp
+public static partial class Screens
+{
+    [Composable]
+    public static partial void Counter(IComposer composer, int count, Action onIncrement);
+
+    static void CounterImpl(IComposer composer, int count, Action onIncrement)
+    {
+        // user body
+    }
+}
+```
+
+Rules:
+
+- `[Composable]` method must be `static partial` with `IComposer` as
+  the **first** parameter.
+- The containing type must be `partial`.
+- A sibling static method named `<MethodName>Impl` with the same
+  parameter list must exist — this is the user-written body the
+  wrapper invokes.
+- Both the partial declaration and the `Impl` companion live in
+  `partial` declarations of the same containing type.
+
+The generator emits the partial implementation of the `[Composable]`
+method (typically into `obj/.../AndroidX.Compose.Composable.<Type>.<Name>.g.cs`):
+
+```csharp
+public static partial void Counter(IComposer composer, int count, Action onIncrement)
+{
+    var __c = composer.StartRestartGroup(unchecked((int)0xKEY));
+    int __dirty = 0;
+    __dirty |= __c.DiffSlot<int>(count, 1);
+    __dirty |= __c.DiffSlot<System.Action>(onIncrement, 4);
+    if ((__dirty & 0x24) != 0 || !__c.Skipping)
+        CounterImpl(__c, count, onIncrement);
+    else
+        __c.SkipToGroupEnd();
+    __c.EndRestartGroup()?.UpdateScope(new ComposableLambda2(
+        __c2 => Counter(__c2, count, onIncrement)));
+}
+```
+
+The restart-group key is FNV-1a over the fully-qualified method name
+(stable across processes — matches the `SourceLocationKey` contract).
+The "any param Different" mask is computed at generation time and
+inlined as a literal. The `UpdateScope` lambda re-enters the wrapper
+when Compose triggers a recomposition; the second-pass `DiffSlot`
+calls read each arg as `Same`/`Different` and the skip path takes over.
+
+### Coexistence with the tree-style facade
+
+Both styles can call into each other freely:
+
+- A tree-style facade `Render` (or `SetContent`'s callback) can invoke
+  a Tier 2 `[Composable]` method directly — the wrapper sets up its
+  own restart group inside the surrounding tree-style render.
+- A Tier 2 method can construct a tree-style `ComposableNode` and call
+  `.Render(composer)` on it. The Tier 2 demo
+  (`src/Microsoft.AndroidX.Compose.Gallery/Demos/Tier2/Tier2CounterDemo.cs`)
+  does exactly this until sibling Tier 2 entry points are emitted for
+  the existing facade catalog (follow-up).
+
+There is no migration pressure. Hot composables that recompose often
+are the natural candidates for Tier 2; one-shot screens can stay
+tree-style indefinitely.
+
+### Wiring the generator into a consuming project
+
+The Tier 2 generator ships inside `Microsoft.AndroidX.Compose.SourceGenerators`.
+Consuming projects that author `[Composable]` methods need an
+`Analyzer` project reference *in addition to* the runtime reference:
+
+```xml
+<ProjectReference Include="..\Microsoft.AndroidX.Compose\Microsoft.AndroidX.Compose.csproj" />
+<ProjectReference Include="..\Microsoft.AndroidX.Compose.SourceGenerators\Microsoft.AndroidX.Compose.SourceGenerators.csproj"
+                  OutputItemType="Analyzer"
+                  ReferenceOutputAssembly="false" />
+```
+
+This is intentional — the `Analyzer` reference inside `Microsoft.AndroidX.Compose`
+itself isn't transitively propagated to ProjectReference consumers.
+(Once `Microsoft.AndroidX.Compose` is shipped as a NuGet package the
+generator will flow through the package's `analyzers/dotnet/cs/`
+folder and the explicit reference becomes unnecessary.)
+
+### Generator diagnostics
+
+| ID     | Meaning                                                                                                                 |
+|--------|-------------------------------------------------------------------------------------------------------------------------|
+| CN5001 | `[Composable]` method must be `static partial`.                                                                         |
+| CN5002 | `[Composable]` method missing companion `<Name>Impl(...)` body (or `Impl` companion isn't static).                      |
+| CN5003 | `[Composable]` method must take `AndroidX.Compose.Runtime.IComposer` as its first parameter.                            |
+| CN5004 | `[Composable]` companion `<Name>Impl` parameter list does not match the declaration.                                    |
+| CN5005 | `[Composable]` method's containing type must be `partial`.                                                              |
+
+Tests in `ComposableMethodGeneratorTests.cs`. **Add a test for any new
+behaviour.**
+
+### Deferred (follow-up)
+
+- Sibling static `[Composable]` entry points for every existing
+  facade (extends `ComposeFacadeGenerator`).
+- `$default` parameter injection — lower C# default-parameter syntax
+  into Kotlin-style `$default` bitmask.
+- Analyzer for "non-`[Composable]` calls `[Composable]`" — compile-
+  time enforcement of the colour contract.
+- Lambda hoisting via `RememberAction` / `Wrap2` / `Wrap3` inside the
+  generator-rewritten body (recursive-call composer threading + lambda
+  identity stability).
+- `MovableContent` / `key {}` / `Saver` / stability inference / custom
+  `Layout {}` — explicit non-goals in the MVP, each tracked as its
+  own issue.
+
 ## Suspend / async bridges
 
 For Kotlin Compose `suspend` functions (e.g. `ScrollState.scrollTo`,

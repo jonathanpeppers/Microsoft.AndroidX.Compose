@@ -10,7 +10,7 @@ namespace AndroidX.Compose;
 /// <c>$changed</c>.
 /// </summary>
 [Register("net/compose/ComposableLambda2")]
-internal sealed class ComposableLambda2 : Java.Lang.Object, IFunction2
+public sealed class ComposableLambda2 : Java.Lang.Object, IFunction2
 {
     readonly Action<IComposer> _body;
     public ComposableLambda2(Action<IComposer> body) => _body = body;

@@ -160,8 +160,115 @@ already supports.
 | --------------------------------------- | -------------------------------------------------------------- | ---- |
 | Skipping / recomposition optimization   | Per-param `$changed` bitmask computed at Render time via `composer.DiffSlot` / `composer.RememberAction` / `Modifier.StructuralKey`; bridge generator threads it into the JNI `$changed` slot. Modifier slot still emits Uncertain (Kotlin runtime falls back to its own input compare). | Tier 2 mostly delivered ✅ |
 | Slot-table-backed `remember`            | `Remember(() => …)` with `[CallerLineNumber]` keying into an activity-scoped cache; `Remember(factory, key1, …)` (1–3 keys or `RememberKeyed(factory, keys[])`) resets the slot on key change | Lifetime is per call site, not per nested-scope as in Kotlin |
-| `@Composable` type-system enforcement   | None — calling a non-composable from a composable context fails at runtime, not compile-time | Footgun |
-| Per-call-site allocation                | Every recomposition allocates fresh `ComposableNode` objects (no slot-table reuse on the C# side) | Tier 2 codegen fixes |
+| `@Composable` type-system enforcement   | None — calling a non-composable from a composable context fails at runtime, not compile-time | Footgun (Tier 2 analyzer is a follow-up) |
+| Per-call-site allocation                | Tree-style facade: every recomposition allocates fresh `ComposableNode` objects (no slot-table reuse on the C# side). Tier 2 `[Composable]` static methods: zero `ComposableNode` allocations — direct composer threading. | Resolved for Tier 2 code; tree-style facade keeps allocating until a feature is rewritten ✅ |
+
+## Tier 2 — `[Composable]` C# methods
+
+Tier 2 is the C# moral equivalent of Kotlin's compose-compiler plugin:
+a Roslyn incremental source generator
+(`ComposableMethodGenerator`) that wraps user-written `[Composable]`
+`static partial` methods with a Compose restart group, per-parameter
+`$changed` diffing, and a skip-when-unchanged fast path. The result is
+zero per-recomposition `ComposableNode` allocations and a render loop
+shape Compose's runtime can skip the same way it skips a Kotlin
+`@Composable`.
+
+### Authoring shape
+
+```csharp
+public static partial class Screens
+{
+    [Composable]
+    public static partial void Greeting(IComposer composer, string name);
+
+    // User-written body. The generator finds the sibling
+    // `<Name>Impl` method and wraps it.
+    static void GreetingImpl(IComposer composer, string name)
+    {
+        // Compose the body. Tree-style facades may be called here
+        // for now — Tier 2 sibling entry points for the facade
+        // catalog are a follow-up.
+        var node = new Text($"Hello {name}");
+        node.Render(composer);
+    }
+}
+```
+
+### What the generator emits
+
+For every `[Composable] static partial` declaration the generator
+emits a partial implementation roughly shaped like:
+
+```csharp
+public static partial void Greeting(IComposer composer, string name)
+{
+    var __c = composer.StartRestartGroup(unchecked((int)0x9A1B2C3D));
+    int __dirty = 0;
+    __dirty |= __c.DiffSlot<string>(name, 1);
+    if ((__dirty & 0x4) != 0 || !__c.Skipping)
+        GreetingImpl(__c, name);
+    else
+        __c.SkipToGroupEnd();
+    __c.EndRestartGroup()?.UpdateScope(new ComposableLambda2(
+        __c2 => Greeting(__c2, name)));
+}
+```
+
+The key — `0x9A1B2C3D` here — is a FNV-1a hash of the fully-qualified
+method name so it stays stable across processes (matches the
+`SourceLocationKey` contract used by the rest of the repo). Each
+user parameter gets a `DiffSlot<T>(value, offset)` call at the
+canonical bit offset (`1 + paramIndex * 3`); the "any param
+different" mask is computed at generation time and inlined as a
+literal. The `UpdateScope` lambda re-enters the wrapper from the
+Compose runtime, which is how Compose triggers a recomposition — the
+re-entry's own `DiffSlot` calls will then read each arg as
+`Same`/`Different`, and the skip path takes over.
+
+### Coexistence with Tier 1.5
+
+Both styles can call into each other freely:
+
+- A tree-style facade's `Render` (or the `SetContent` callback) can
+  invoke a Tier 2 `[Composable]` method directly — the wrapper sets up
+  its own restart group inside the surrounding tree-style render.
+- A Tier 2 method can construct a tree-style `ComposableNode` and call
+  `.Render(composer)` on it. The Tier 2 demo in the gallery
+  (`tier2-counter`) does exactly this until sibling Tier 2 entry
+  points are emitted for the existing facade catalog.
+
+There is no migration pressure. Hot composables that recompose often
+(animation, list items, drag handles) are the natural candidates for
+Tier 2; one-shot screens can stay tree-style indefinitely.
+
+### Diagnostics
+
+| ID     | Meaning                                                          |
+|--------|------------------------------------------------------------------|
+| CN5001 | `[Composable]` method must be `static partial`.                  |
+| CN5002 | `[Composable]` method missing companion `<Name>Impl(...)` body.  |
+| CN5003 | `[Composable]` method must take `IComposer` as first parameter.  |
+| CN5004 | `[Composable]` companion `<Name>Impl` has a mismatched signature.|
+| CN5005 | `[Composable]` method's containing type must be `partial`.       |
+
+### Deferred — follow-up issues
+
+- **Sibling static entry points for every existing facade.** Today
+  the facade generator emits a tree-style `ComposableNode` subclass.
+  A future extension will emit a parallel `[Composable]` static entry
+  point so users can call `Button(c, onClick, content: cc => …)`
+  with zero tree allocation.
+- **`$default` parameter injection.** C# already supports default
+  parameter values syntactically; the wrapper currently treats every
+  declared parameter as required. A future pass will lower C# default
+  values into the same `$default` bitmask Kotlin uses.
+- **Analyzer for "non-`[Composable]` calls `[Composable]`."** Today
+  that's only enforced at runtime (calling a composable outside a
+  composition throws). The analyzer was scoped out of the MVP.
+- **`MovableContent` / `key {} ` / `Saver` / `Layout {}` / stability
+  inference.** Explicit non-goals in the Tier 2 MVP — each gets its
+  own follow-up issue.
 
 ### Why it's like this
 

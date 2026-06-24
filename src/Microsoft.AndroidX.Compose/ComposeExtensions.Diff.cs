@@ -13,7 +13,7 @@ public static partial class ComposeExtensions
     /// land in the next int, which the facade generator always emits as
     /// <c>0</c> (Uncertain).
     /// </summary>
-    internal static int DiffSlotShift(int paramIndex) => 1 + paramIndex * 3;
+    public static int DiffSlotShift(int paramIndex) => 1 + paramIndex * 3;
 
     /// <summary>
     /// Compose's per-param <c>$changed</c> contribution backed by the
@@ -53,7 +53,7 @@ public static partial class ComposeExtensions
     /// the runtime's own diff is harmless (Kotlin treats the result
     /// as a hint).
     /// </returns>
-    internal static int DiffSlot<T>(
+    public static int DiffSlot<T>(
         this IComposer composer,
         T? value,
         int bitOffset,

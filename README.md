@@ -102,6 +102,25 @@ The translation is mechanical — `new` instead of bare calls, commas instead of
 
 That's an end-to-end Material 3 counter app in ~13 lines of composition — start from this shape when adding a new screen. The actual [`src/Microsoft.AndroidX.Compose.Gallery/MainActivity.cs`](src/Microsoft.AndroidX.Compose.Gallery/MainActivity.cs) in the repo is a much larger **gallery app** that exercises every facade across a navigable catalog with search; for a single-screen real-app example see [`samples/Jetchat`](samples/Jetchat).
 
+### Tier 2: `[Composable]` static methods
+
+The tree-style facade above is Tier 1.5 — every recomposition allocates a fresh `ComposableNode` tree. Tier 2 is the C# moral equivalent of Kotlin's compose-compiler plugin: an incremental source generator wraps user-written `[Composable] static partial` methods with a Compose restart group, per-parameter `DiffSlot` diffing, and a skip-when-unchanged fast path — zero `ComposableNode` allocations per recomposition.
+
+```csharp
+public static partial class Screens
+{
+    [Composable]
+    public static partial void Counter(IComposer composer, int count, Action onIncrement);
+
+    static void CounterImpl(IComposer composer, int count, Action onIncrement)
+    {
+        // …compose the body, threading composer through nested calls…
+    }
+}
+```
+
+The generator emits the `Counter` implementation: `StartRestartGroup` → per-param `DiffSlot` → skip if every param read `Same` → `EndRestartGroup` + `UpdateScope` for restart. See [docs/architecture.md → Tier 2](docs/architecture.md) for the emission shape, diagnostics (CN5001–CN5005), and the deferred follow-up list (sibling entry points for every existing facade, `$default` injection, analyzer enforcement). The two tiers coexist freely — a Tier 2 method can call into the tree-style catalog and vice versa.
+
 ## What's wrapped today
 
 The facade [`Microsoft.AndroidX.Compose`](src/Microsoft.AndroidX.Compose) covers the common Material 3 + Foundation surface:

@@ -31,6 +31,7 @@ public static class Catalog
         new("state-effects",       "State, effects, anim.",  "Remember, side effects, animation",            "✨"),
         new("locals-misc",         "CompositionLocal & misc","Locals, progress, image, icon",                "🧩"),
         new("theming",             "Theming",                "Custom palette, shapes, typography, icons",    "🎨"),
+        new("tier2",               "Tier 2 [Composable]",    "Zero-alloc static [Composable] methods",       "⚡"),
     ];
 
     /// <summary>
@@ -195,6 +196,9 @@ public static class Catalog
         D.Theming.CustomShapesDemo.Demo,
         D.Theming.CustomTypographyDemo.Demo,
         D.Theming.MaterialIconsDemo.Demo,
+
+        // ---- Tier 2 [Composable] ----
+        D.Tier2.Tier2CounterDemo.Demo,
     ];
 
     /// <summary>
