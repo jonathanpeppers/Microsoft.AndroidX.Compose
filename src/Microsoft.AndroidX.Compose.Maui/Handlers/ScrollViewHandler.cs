@@ -21,33 +21,38 @@ namespace Microsoft.AndroidX.Compose.Maui.Handlers;
 /// <c>IScrollView.ScrollToRequested</c> is wired up in a follow-up
 /// (the bridge type, <see cref="ScrollState"/>, already supports
 /// <c>ScrollToAsync</c> / <c>AnimateScrollToAsync</c>).</para>
+///
+/// <para>The
+/// <see cref="IScrollView.HorizontalScrollBarVisibility"/> /
+/// <see cref="IScrollView.VerticalScrollBarVisibility"/> mappers
+/// route to a hand-drawn overlay thumb because Compose Foundation 1.11
+/// ships no public <c>Scrollbar</c> / <c>Modifier.scrollbar</c> API on
+/// Android (the multiplatform <c>androidx.compose.foundation.v2</c>
+/// extension is desktop-only). See
+/// <see cref="ScrollbarOverlayDrawCallback"/> for the limitations of
+/// that overlay (no auto-hide, thumb-only, fixed neutral tint) — in
+/// particular, <see cref="Microsoft.Maui.ScrollBarVisibility.Default"/>
+/// behaves the same as
+/// <see cref="Microsoft.Maui.ScrollBarVisibility.Always"/>; only
+/// <see cref="Microsoft.Maui.ScrollBarVisibility.Never"/> suppresses
+/// the overlay.</para>
 /// </remarks>
 public partial class ScrollViewHandler : ComposeElementHandler<IScrollView>
 {
     /// <summary>
     /// Property mapper. <see cref="IScrollView.Orientation"/> picks
-    /// the axis; nothing else needs eager mapping because the inner
-    /// content is reached via the walker.
+    /// the axis; the two visibility properties wire to the overlay
+    /// scrollbar (see remarks on the type for why we hand-draw).
+    /// Inner content is reached via the walker, so it doesn't need
+    /// an eager mapper.
     /// </summary>
     public static IPropertyMapper<IScrollView, ScrollViewHandler> Mapper =
         new PropertyMapper<IScrollView, ScrollViewHandler>(ViewHandler.ViewMapper)
         {
-            [nameof(IScrollView.Orientation)] = MapOrientation,
-            [nameof(IScrollView.Content)]     = MapContent,
-            // TODO: IScrollView.HorizontalScrollBarVisibility /
-            // VerticalScrollBarVisibility — Compose Foundation 1.9 /
-            // 1.10 / 1.11 (and the Material3 layer on top) don't
-            // expose any public Scrollbar / scrollbar API on Android.
-            // The androidx.compose.foundation.v2.scrollbar extension
-            // exists only on the Multiplatform desktop target;
-            // Modifier.verticalScroll / horizontalScroll have no
-            // scrollbar-visibility flag at all. Wiring even the
-            // Default / Always / Never enum to a visible affordance
-            // therefore requires a hand-built ScrollState +
-            // animated overlay drawn into a sibling Box — meaningful
-            // surgery and a non-trivial new public surface. Leaving
-            // unmapped so the coverage report flags the gap rather
-            // than claiming a no-op wire.
+            [nameof(IScrollView.Orientation)]                  = MapOrientation,
+            [nameof(IScrollView.Content)]                      = MapContent,
+            [nameof(IScrollView.HorizontalScrollBarVisibility)] = MapHorizontalScrollBarVisibility,
+            [nameof(IScrollView.VerticalScrollBarVisibility)]   = MapVerticalScrollBarVisibility,
         };
 
     /// <summary>Command mapper (inherits view-level commands; no extras).</summary>
@@ -59,6 +64,17 @@ public partial class ScrollViewHandler : ComposeElementHandler<IScrollView>
     // bumping a version slot recomposes BuildNode which re-walks the
     // new PresentedContent.
     readonly MutableState<int> _contentVersion = new(0);
+    // Visibility is stored as int because MutableState<T> only supports
+    // a fixed set of T (primitives / Java.Lang.Object / string). Cast
+    // back to ScrollBarVisibility on read.
+    readonly MutableState<int> _horizontalScrollBarVisibility = new((int)ScrollBarVisibility.Default);
+    readonly MutableState<int> _verticalScrollBarVisibility   = new((int)ScrollBarVisibility.Default);
+
+    // Allocated once per handler instance so the JNI peer (and the
+    // backing Paint) survives every recomposition. Render reconfigures
+    // State / Vertical / Density before each draw — see
+    // BorderHandler._strokeDrawCallback for the canonical pattern.
+    readonly ScrollbarOverlayDrawCallback _scrollbarCallback = new();
 
     /// <summary>Construct a handler with the default mappers.</summary>
     public ScrollViewHandler() : base(Mapper, CommandMapper) { }
@@ -75,7 +91,15 @@ public partial class ScrollViewHandler : ComposeElementHandler<IScrollView>
         var context = MauiContext
             ?? throw new InvalidOperationException("MauiContext not set on ScrollViewHandler.");
 
-        return new ScrollContainer(this, scroll, _orientation, _contentVersion, context);
+        return new ScrollContainer(
+            this,
+            scroll,
+            _orientation,
+            _contentVersion,
+            _horizontalScrollBarVisibility,
+            _verticalScrollBarVisibility,
+            _scrollbarCallback,
+            context);
     }
 
     /// <summary>Map <see cref="IScrollView.Orientation"/> to the cached enum slot.</summary>
@@ -93,6 +117,26 @@ public partial class ScrollViewHandler : ComposeElementHandler<IScrollView>
         handler._contentVersion.Value++;
 
     /// <summary>
+    /// Map <see cref="IScrollView.HorizontalScrollBarVisibility"/> to
+    /// the cached enum slot. <see cref="ScrollBarVisibility.Default"/>
+    /// and <see cref="ScrollBarVisibility.Always"/> both render the
+    /// overlay (no auto-hide animation in our pinned Compose
+    /// Foundation); only <see cref="ScrollBarVisibility.Never"/>
+    /// suppresses it.
+    /// </summary>
+    public static void MapHorizontalScrollBarVisibility(ScrollViewHandler handler, IScrollView view) =>
+        handler._horizontalScrollBarVisibility.Value = (int)view.HorizontalScrollBarVisibility;
+
+    /// <summary>
+    /// Map <see cref="IScrollView.VerticalScrollBarVisibility"/> to the
+    /// cached enum slot. See
+    /// <see cref="MapHorizontalScrollBarVisibility"/> for visibility
+    /// semantics.
+    /// </summary>
+    public static void MapVerticalScrollBarVisibility(ScrollViewHandler handler, IScrollView view) =>
+        handler._verticalScrollBarVisibility.Value = (int)view.VerticalScrollBarVisibility;
+
+    /// <summary>
     /// <see cref="ComposableNode"/> implementing the
     /// scroll-wrapped <see cref="Box"/>. Pulled out so the
     /// <see cref="ScrollState"/> can be <c>Remember</c>ed inside its
@@ -106,6 +150,9 @@ public partial class ScrollViewHandler : ComposeElementHandler<IScrollView>
         readonly IScrollView _scroll;
         readonly MutableState<int> _orientation;
         readonly MutableState<int> _contentVersion;
+        readonly MutableState<int> _hVisibility;
+        readonly MutableState<int> _vVisibility;
+        readonly ScrollbarOverlayDrawCallback _scrollbarCallback;
         readonly IMauiContext _context;
 
         public ScrollContainer(
@@ -113,12 +160,18 @@ public partial class ScrollViewHandler : ComposeElementHandler<IScrollView>
             IScrollView scroll,
             MutableState<int> orientation,
             MutableState<int> contentVersion,
+            MutableState<int> horizontalScrollBarVisibility,
+            MutableState<int> verticalScrollBarVisibility,
+            ScrollbarOverlayDrawCallback scrollbarCallback,
             IMauiContext context)
         {
             _owner = owner;
             _scroll = scroll;
             _orientation = orientation;
             _contentVersion = contentVersion;
+            _hVisibility = horizontalScrollBarVisibility;
+            _vVisibility = verticalScrollBarVisibility;
+            _scrollbarCallback = scrollbarCallback;
             _context = context;
         }
 
@@ -134,30 +187,67 @@ public partial class ScrollViewHandler : ComposeElementHandler<IScrollView>
             // Read the content version so swapping ScrollView.Content
             // re-runs the walker. Live PresentedContent is read below.
             _ = _contentVersion.Value;
+            // Read both visibility slots so a runtime change
+            // recomposes the overlay layer toggle.
+            bool vertical   = orientation != ScrollOrientation.Horizontal;
+            var visibility  = (ScrollBarVisibility)(vertical ? _vVisibility.Value : _hVisibility.Value);
+            bool drawScrollbar = visibility != ScrollBarVisibility.Never;
+
             var state = composer.Remember(() => new ScrollState());
 
-            var fillMain = orientation switch
-            {
-                ScrollOrientation.Horizontal => Modifier.HorizontalScroll(state),
-                _                            => Modifier.VerticalScroll(state),
-            };
+            var scrollMod = vertical
+                ? Modifier.VerticalScroll(state)
+                : Modifier.HorizontalScroll(state);
 
             // BuildModifier() is internal to Microsoft.AndroidX.Compose;
             // from this assembly we read the public Modifier property
             // (consumers don't call PrependModifier on internal nodes).
-            // Cross-cutting view properties go OUTERMOST (before the
-            // scroll modifier) so opacity / clip / shadow trace the
-            // ScrollView's bounding box, not the inner scrolling
-            // surface — matches MAUI's stock semantics where Opacity
-            // fades the entire scroll region as one.
-            var outer = Modifier.Companion.ApplyViewProperties(_scroll).ApplyGestures(_scroll, _context).ApplySemantics(_scroll).Then(fillMain);
-            var modifier = Modifier is null ? outer : Modifier.Then(outer);
+            // Cross-cutting view properties go on the OUTER box so
+            // opacity / clip / shadow trace the ScrollView's bounding
+            // box, not the inner scrolling surface — matches MAUI's
+            // stock semantics where Opacity fades the entire scroll
+            // region as one. The scroll modifier moves to an inner Box
+            // so the overlay scrollbar can sit as a sibling drawn over
+            // the scrolling content.
+            var outer = Modifier.Companion
+                .ApplyViewProperties(_scroll)
+                .ApplyGestures(_scroll, _context)
+                .ApplySemantics(_scroll);
+            var outerModifier = Modifier is null ? outer : Modifier.Then(outer);
 
-            var box = new Box { Modifier = modifier };
+            var outerBox = new Box { Modifier = outerModifier };
+
+            var innerBox = new Box { Modifier = scrollMod };
             var content = _scroll.PresentedContent;
             if (content is not null)
-                box.Add(ComposeWalker.Render(content, composer, _context));
-            box.Render(composer);
+                innerBox.Add(ComposeWalker.Render(content, composer, _context));
+            outerBox.Add(innerBox);
+
+            if (drawScrollbar)
+            {
+                _scrollbarCallback.State    = state;
+                _scrollbarCallback.Vertical = vertical;
+                var metrics = global::Android.Content.Res.Resources.System?.DisplayMetrics
+                    ?? throw new InvalidOperationException("Resources.System.DisplayMetrics not available.");
+                _scrollbarCallback.Density = metrics.Density;
+
+                var thickness = new Dp(ScrollbarOverlayDrawCallback.ThicknessDip);
+                var overlayMod = vertical
+                    ? Modifier.Companion
+                        .Align(Alignment.CenterEnd)
+                        .FillMaxHeight()
+                        .Width(thickness)
+                        .DrawBehind(_scrollbarCallback)
+                    : Modifier.Companion
+                        .Align(Alignment.BottomCenter)
+                        .FillMaxWidth()
+                        .Height(thickness)
+                        .DrawBehind(_scrollbarCallback);
+
+                outerBox.Add(new Box { Modifier = overlayMod });
+            }
+
+            outerBox.Render(composer);
         }
     }
 }

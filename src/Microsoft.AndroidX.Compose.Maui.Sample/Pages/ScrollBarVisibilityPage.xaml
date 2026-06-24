@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="Microsoft.AndroidX.Compose.Maui.Sample.Pages.ScrollBarVisibilityPage"
+             Title="ScrollBar visibility">
+
+    <!--
+        Exercises ScrollViewHandler's `HorizontalScrollBarVisibility` /
+        `VerticalScrollBarVisibility` mappers. Compose Foundation 1.11
+        ships no public Scrollbar / Modifier.scrollbar API on Android,
+        so the handler hand-draws a thin overlay thumb via
+        `Modifier.drawBehind` (see `ScrollbarOverlayDrawCallback`).
+
+        Limitations vs. stock MAUI on Android:
+          * Default == Always — no auto-hide / fade animation
+            (Compose has no equivalent of `View.setScrollbarFadingEnabled`).
+          * Thumb only — no track is drawn.
+          * Tint is a fixed semi-transparent neutral gray, not theme-aware.
+
+        This page lays out three vertical ScrollViews side-by-side
+        showing all three enum values + one wide horizontal ScrollView
+        at the bottom for axis coverage.
+    -->
+
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="16">
+
+            <Label
+                Text="ScrollBar visibility"
+                Style="{StaticResource Headline}"
+                SemanticProperties.HeadingLevel="Level1" />
+
+            <Label
+                Text="Three vertical ScrollViews — Default, Always, Never. Default and Always render an overlay thumb on the right edge; Never suppresses it."
+                Style="{StaticResource SubHeadline}"
+                SemanticProperties.HeadingLevel="Level2" />
+
+            <Grid
+                ColumnDefinitions="*,*,*"
+                ColumnSpacing="8"
+                HeightRequest="320">
+
+                <Border Grid.Column="0" Stroke="LightGray" StrokeThickness="1">
+                    <Grid RowDefinitions="Auto,*">
+                        <Label
+                            Grid.Row="0"
+                            Text="Default"
+                            FontAttributes="Bold"
+                            HorizontalTextAlignment="Center"
+                            Padding="0,4" />
+                        <ScrollView
+                            Grid.Row="1"
+                            VerticalScrollBarVisibility="Default">
+                            <VerticalStackLayout Spacing="6" Padding="8">
+                                <Label Text="Item 1" />
+                                <Label Text="Item 2" />
+                                <Label Text="Item 3" />
+                                <Label Text="Item 4" />
+                                <Label Text="Item 5" />
+                                <Label Text="Item 6" />
+                                <Label Text="Item 7" />
+                                <Label Text="Item 8" />
+                                <Label Text="Item 9" />
+                                <Label Text="Item 10" />
+                                <Label Text="Item 11" />
+                                <Label Text="Item 12" />
+                                <Label Text="Item 13" />
+                                <Label Text="Item 14" />
+                                <Label Text="Item 15" />
+                                <Label Text="Item 16" />
+                                <Label Text="Item 17" />
+                                <Label Text="Item 18" />
+                                <Label Text="Item 19" />
+                                <Label Text="Item 20" />
+                            </VerticalStackLayout>
+                        </ScrollView>
+                    </Grid>
+                </Border>
+
+                <Border Grid.Column="1" Stroke="LightGray" StrokeThickness="1">
+                    <Grid RowDefinitions="Auto,*">
+                        <Label
+                            Grid.Row="0"
+                            Text="Always"
+                            FontAttributes="Bold"
+                            HorizontalTextAlignment="Center"
+                            Padding="0,4" />
+                        <ScrollView
+                            Grid.Row="1"
+                            VerticalScrollBarVisibility="Always">
+                            <VerticalStackLayout Spacing="6" Padding="8">
+                                <Label Text="Item 1" />
+                                <Label Text="Item 2" />
+                                <Label Text="Item 3" />
+                                <Label Text="Item 4" />
+                                <Label Text="Item 5" />
+                                <Label Text="Item 6" />
+                                <Label Text="Item 7" />
+                                <Label Text="Item 8" />
+                                <Label Text="Item 9" />
+                                <Label Text="Item 10" />
+                                <Label Text="Item 11" />
+                                <Label Text="Item 12" />
+                                <Label Text="Item 13" />
+                                <Label Text="Item 14" />
+                                <Label Text="Item 15" />
+                                <Label Text="Item 16" />
+                                <Label Text="Item 17" />
+                                <Label Text="Item 18" />
+                                <Label Text="Item 19" />
+                                <Label Text="Item 20" />
+                            </VerticalStackLayout>
+                        </ScrollView>
+                    </Grid>
+                </Border>
+
+                <Border Grid.Column="2" Stroke="LightGray" StrokeThickness="1">
+                    <Grid RowDefinitions="Auto,*">
+                        <Label
+                            Grid.Row="0"
+                            Text="Never"
+                            FontAttributes="Bold"
+                            HorizontalTextAlignment="Center"
+                            Padding="0,4" />
+                        <ScrollView
+                            Grid.Row="1"
+                            VerticalScrollBarVisibility="Never">
+                            <VerticalStackLayout Spacing="6" Padding="8">
+                                <Label Text="Item 1" />
+                                <Label Text="Item 2" />
+                                <Label Text="Item 3" />
+                                <Label Text="Item 4" />
+                                <Label Text="Item 5" />
+                                <Label Text="Item 6" />
+                                <Label Text="Item 7" />
+                                <Label Text="Item 8" />
+                                <Label Text="Item 9" />
+                                <Label Text="Item 10" />
+                                <Label Text="Item 11" />
+                                <Label Text="Item 12" />
+                                <Label Text="Item 13" />
+                                <Label Text="Item 14" />
+                                <Label Text="Item 15" />
+                                <Label Text="Item 16" />
+                                <Label Text="Item 17" />
+                                <Label Text="Item 18" />
+                                <Label Text="Item 19" />
+                                <Label Text="Item 20" />
+                            </VerticalStackLayout>
+                        </ScrollView>
+                    </Grid>
+                </Border>
+            </Grid>
+
+            <Label
+                Text="Horizontal ScrollView — HorizontalScrollBarVisibility=&quot;Always&quot; renders the overlay thumb on the bottom edge."
+                Style="{StaticResource SubHeadline}"
+                Margin="0,8,0,0"
+                SemanticProperties.HeadingLevel="Level2" />
+
+            <Border Stroke="LightGray" StrokeThickness="1" HeightRequest="120">
+                <ScrollView
+                    Orientation="Horizontal"
+                    HorizontalScrollBarVisibility="Always">
+                    <HorizontalStackLayout Spacing="8" Padding="8">
+                        <Label Text="Column 1 — wide content" WidthRequest="180" VerticalTextAlignment="Center" />
+                        <Label Text="Column 2 — wide content" WidthRequest="180" VerticalTextAlignment="Center" />
+                        <Label Text="Column 3 — wide content" WidthRequest="180" VerticalTextAlignment="Center" />
+                        <Label Text="Column 4 — wide content" WidthRequest="180" VerticalTextAlignment="Center" />
+                        <Label Text="Column 5 — wide content" WidthRequest="180" VerticalTextAlignment="Center" />
+                        <Label Text="Column 6 — wide content" WidthRequest="180" VerticalTextAlignment="Center" />
+                        <Label Text="Column 7 — wide content" WidthRequest="180" VerticalTextAlignment="Center" />
+                        <Label Text="Column 8 — wide content" WidthRequest="180" VerticalTextAlignment="Center" />
+                    </HorizontalStackLayout>
+                </ScrollView>
+            </Border>
+
+            <Label
+                Text="Note: 'Default' currently behaves identically to 'Always' — Compose Foundation 1.11 has no auto-hide animation. Only 'Never' suppresses the overlay."
+                FontSize="12"
+                TextColor="Gray"
+                Margin="0,8,0,0" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>
