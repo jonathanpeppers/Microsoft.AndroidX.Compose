@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="Microsoft.AndroidX.Compose.Maui.Sample.Pages.WebViewPage"
+             Title="WebView">
+
+    <!--
+        Exercises the Compose-backed `WebViewHandler` (subclasses MAUI's
+        stock `Microsoft.Maui.Handlers.WebViewHandler` and folds the
+        platform `MauiWebView` into the page composition via
+        `AndroidView` interop):
+
+            * URL source vs HTML source toggle - flips
+              `WebView.Source` between `UrlWebViewSource` and
+              `HtmlWebViewSource`; the stock `MapSource` runs unchanged.
+            * Back / Forward / Reload - command-mapper plumbing
+              forwards to `MauiWebView.GoBack()` / `GoForward()` /
+              `Reload()`.
+            * EvaluateJavaScriptAsync - returns the page title from
+              the JS engine; result rendered in the status label.
+            * IView modifier propagation (Opacity slider) -
+              `BuildNode` chains `ApplyViewProperties` so cross-cutting
+              transform/visual properties (Opacity, Translation, Scale,
+              Rotation, Clip, Shadow) round-trip through the same
+              MutableState version slot every other Compose-backed
+              handler uses.
+    -->
+    <ScrollView>
+        <VerticalStackLayout Padding="20,20" Spacing="14">
+
+            <Label Text="WebView" Style="{StaticResource Headline}" />
+
+            <Label
+                Text="The WebView below is folded into the page's Compose composition via `AndroidView` interop. Source / UserAgent / Settings / WebViewClient / WebChromeClient mappers and Back / Forward / Reload / Eval commands keep working through MAUI's stock pipeline." />
+
+            <HorizontalStackLayout Spacing="8">
+                <Button x:Name="UrlButton"  Text="Load URL"  Clicked="OnLoadUrlClicked" />
+                <Button x:Name="HtmlButton" Text="Load HTML" Clicked="OnLoadHtmlClicked" />
+            </HorizontalStackLayout>
+
+            <HorizontalStackLayout Spacing="8">
+                <Button Text="Back"    Clicked="OnBackClicked" />
+                <Button Text="Forward" Clicked="OnForwardClicked" />
+                <Button Text="Reload"  Clicked="OnReloadClicked" />
+                <Button Text="Title?"  Clicked="OnEvalClicked" />
+            </HorizontalStackLayout>
+
+            <Label x:Name="StatusLabel"
+                   Text="Press a button to navigate or evaluate JS."
+                   FontAttributes="Italic"
+                   FontSize="13" />
+
+            <!-- Fixed-height WebView slot so it lives inside the
+                 scroll view without claiming infinite height. -->
+            <WebView x:Name="Web"
+                     HeightRequest="320"
+                     Source="https://www.example.com" />
+
+            <Label Text="Opacity slider exercises cross-cutting `Modifier` propagation through `IComposeHandler` — fades the live WebView, not just an outer container."
+                   FontSize="13" />
+            <Slider x:Name="OpacitySlider"
+                    Minimum="0"
+                    Maximum="1"
+                    Value="1"
+                    ValueChanged="OnOpacityChanged" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>
