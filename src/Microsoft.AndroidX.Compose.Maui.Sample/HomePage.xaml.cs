@@ -170,6 +170,11 @@ public partial class HomePage : ContentPage
                 "IDrawable canvas; tap to re-shuffle.",
                 Color.FromArgb("#00897B"),
                 "graphics-view"),
+            new DemoEntry(
+                "WebView",
+                "URL / HTML source, navigation, JS eval, Opacity propagation.",
+                Color.FromArgb("#1976D2"),
+                "webview"),
         };
     }
 

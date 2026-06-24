@@ -28,6 +28,7 @@ using MauiStepper = Microsoft.Maui.Controls.Stepper;
 using MauiSwitch = Microsoft.Maui.Controls.Switch;
 using MauiTimePicker = Microsoft.Maui.Controls.TimePicker;
 using MauiVerticalStackLayout = Microsoft.Maui.Controls.VerticalStackLayout;
+using MauiWebView = Microsoft.Maui.Controls.WebView;
 
 namespace Microsoft.AndroidX.Compose.Maui.Hosting;
 
@@ -211,6 +212,18 @@ public static class AppHostBuilderExtensions
             // TabbedPage, FlyoutPage, and Shell still win their
             // concrete-type registrations until later slices ship.
             handlers.AddHandler<MauiNavigationPage,         NavigationPageHandler>();
+
+            // Phase 5 Slice — embed the platform Android WebView in
+            // the page composition via AndroidView interop. Subclasses
+            // the stock Microsoft.Maui.Handlers.WebViewHandler so all
+            // Source / UserAgent / Settings / WebViewClient /
+            // WebChromeClient mappers + navigation commands + cookie
+            // sync continue to target the real MauiWebView unchanged.
+            // BuildNode adds the Compose-side modifier propagation
+            // (Opacity / Translation / Scale / Rotation / Clip /
+            // Shadow / Semantics) the fallback ComposeWalker path
+            // drops on the floor.
+            handlers.AddHandler<MauiWebView,                WebViewHandler>();
         });
 
         return builder;

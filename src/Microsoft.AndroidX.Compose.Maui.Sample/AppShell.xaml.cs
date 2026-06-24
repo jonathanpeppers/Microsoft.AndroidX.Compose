@@ -46,5 +46,6 @@ public partial class AppShell : Shell
         // docs/maui-backend.md (Phase 5).
         Routing.RegisterRoute("shapes",         typeof(ShapesPage));
         Routing.RegisterRoute("graphics-view",  typeof(GraphicsViewPage));
+        Routing.RegisterRoute("webview",        typeof(WebViewPage));
     }
 }
