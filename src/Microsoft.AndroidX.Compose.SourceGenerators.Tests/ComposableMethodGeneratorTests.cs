@@ -311,6 +311,60 @@ public class ComposableMethodGeneratorTests
         AssertNoCompileErrors(output);
     }
 
+    [Fact]
+    public void ContainerNotPartial_ReportsCN5005()
+    {
+        var (_, diags, _) = Run("""
+            namespace App
+            {
+                public static class Screens
+                {
+                    [AndroidX.Compose.Composable]
+                    public static partial void Foo(AndroidX.Compose.Runtime.IComposer composer);
+
+                    static void FooImpl(AndroidX.Compose.Runtime.IComposer composer) { }
+                }
+            }
+            """);
+
+        Assert.Contains(diags, d => d.Id == "CN5005");
+    }
+
+    [Fact]
+    public void Overloads_EmitDistinctHintNames()
+    {
+        // Two [Composable] overloads with the same name in the same
+        // containing type used to collide on a single `.g.cs` hint
+        // before parameter-signature disambiguation. Both should now
+        // produce independent generated files.
+        var (output, diags, _) = Run("""
+            namespace App
+            {
+                public static partial class Screens
+                {
+                    [AndroidX.Compose.Composable]
+                    public static partial void Counter(AndroidX.Compose.Runtime.IComposer composer, int count);
+                    static void CounterImpl(AndroidX.Compose.Runtime.IComposer composer, int count) { }
+
+                    [AndroidX.Compose.Composable]
+                    public static partial void Counter(AndroidX.Compose.Runtime.IComposer composer, int count, string label);
+                    static void CounterImpl(AndroidX.Compose.Runtime.IComposer composer, int count, string label) { }
+                }
+            }
+            """);
+
+        Assert.Empty(diags);
+
+        var emittedPaths = output.SyntaxTrees
+            .Select(t => t.FilePath)
+            .Where(p => p.Contains("AndroidX.Compose.Composable.", System.StringComparison.Ordinal) &&
+                        p.EndsWith(".g.cs", System.StringComparison.Ordinal))
+            .ToList();
+        Assert.Equal(2, emittedPaths.Count);
+        Assert.Equal(2, emittedPaths.Distinct().Count());
+        AssertNoCompileErrors(output);
+    }
+
     static void AssertNoCompileErrors(Compilation compilation)
     {
         var errors = compilation.GetDiagnostics()

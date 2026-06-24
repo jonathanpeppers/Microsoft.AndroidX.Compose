@@ -109,7 +109,23 @@ public sealed class ComposableMethodGenerator : IIncrementalGenerator
         }
 
         var src = Emit(method);
-        var hint = $"AndroidX.Compose.Composable.{container.ToDisplayString().Replace('.', '_').Replace('<', '_').Replace('>', '_')}.{method.Name}.g.cs";
+        // Disambiguate overloads by hashing the parameter type list into
+        // the hint suffix — two [Composable] overloads with the same
+        // name (e.g. `Counter(IComposer, int)` and `Counter(IComposer,
+        // int, string)`) would otherwise collide on the same `.g.cs`
+        // file name.
+        string overloadSuffix = string.Empty;
+        if (method.Parameters.Length > 0)
+        {
+            var sig = new StringBuilder();
+            foreach (var p in method.Parameters)
+            {
+                sig.Append(p.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat));
+                sig.Append('|');
+            }
+            overloadSuffix = "_" + FnvHash(sig.ToString()).ToString("X8", System.Globalization.CultureInfo.InvariantCulture);
+        }
+        var hint = $"AndroidX.Compose.Composable.{container.ToDisplayString().Replace('.', '_').Replace('<', '_').Replace('>', '_')}.{method.Name}{overloadSuffix}.g.cs";
         return new GenerationResult(src, hint, []);
     }
 
