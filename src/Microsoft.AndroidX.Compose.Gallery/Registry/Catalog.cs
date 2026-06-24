@@ -199,6 +199,7 @@ public static class Catalog
 
         // ---- Tier 2 [Composable] ----
         D.Tier2.Tier2CounterDemo.Demo,
+        D.Tier2.Tier2SiblingSkipDemo.Demo,
     ];
 
     /// <summary>

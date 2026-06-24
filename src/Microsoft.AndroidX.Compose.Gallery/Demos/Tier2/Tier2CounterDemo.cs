@@ -56,21 +56,17 @@ public static partial class Tier2CounterDemo
     /// </summary>
     static void CounterImpl(IComposer composer, int count, Action onIncrement)
     {
-        // For the MVP we render the body through the existing
-        // tree-style facade catalog by constructing a one-shot node
-        // tree and calling Render. Once Tier 2 sibling entry points
-        // are emitted for the facade catalog (follow-up), this body
-        // becomes a sequence of statically-threaded calls with no
-        // ComposableNode allocations.
-        var node = new Column
+        // Tier 2 all the way down — every call is a [Composable] static
+        // entry point with its own restart group + DiffSlot + skip path.
+        // The Column wrapper skips when `content` identity is stable;
+        // each Text wrapper skips when its `text` arg is value-equal to
+        // the previous composition; the Button wrapper skips when both
+        // `onClick` and `content` identities are stable.
+        Composables.Column(composer, c =>
         {
-            new Text($"Tier 2 count: {count}"),
-            new Button(onClick: onIncrement)
-            {
-                new Text("Tap to increment"),
-            },
-        };
-        node.Render(composer);
+            Composables.Text(c, $"Tier 2 count: {count}");
+            Composables.Button(c, onIncrement, cc => Composables.Text(cc, "Tap to increment"));
+        });
     }
 }
 

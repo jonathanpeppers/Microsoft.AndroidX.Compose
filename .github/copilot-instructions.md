@@ -1025,14 +1025,18 @@ Both styles can call into each other freely:
   a Tier 2 `[Composable]` method directly — the wrapper sets up its
   own restart group inside the surrounding tree-style render.
 - A Tier 2 method can construct a tree-style `ComposableNode` and call
-  `.Render(composer)` on it. The Tier 2 demo
-  (`src/Microsoft.AndroidX.Compose.Gallery/Demos/Tier2/Tier2CounterDemo.cs`)
-  does exactly this until sibling Tier 2 entry points are emitted for
-  the existing facade catalog (follow-up).
+  `.Render(composer)` on it. This is how the seed entry points in
+  `AndroidX.Compose.Composables` (`Text`, `Column`, `Row`, `Box`,
+  `Button`) are currently implemented — when their wrapper's skip path
+  fires, the inner `new X(...)` allocation never happens.
 
 There is no migration pressure. Hot composables that recompose often
 are the natural candidates for Tier 2; one-shot screens can stay
-tree-style indefinitely.
+tree-style indefinitely. The proof demo
+(`src/Microsoft.AndroidX.Compose.Gallery/Demos/Tier2/Tier2SiblingSkipDemo.cs`)
+renders two sibling Tier 2 methods side by side and shows that the
+one whose input never changes has its body skipped (its in-process
+execution counter stays flat while its sibling's tracks every tap).
 
 ### Wiring the generator into a consuming project
 
@@ -1068,8 +1072,10 @@ behaviour.**
 
 ### Deferred (follow-up)
 
-- Sibling static `[Composable]` entry points for every existing
-  facade (extends `ComposeFacadeGenerator`).
+- Sibling static `[Composable]` entry points for the **rest** of the
+  facade catalog (the MVP seeds `Text`, `Column`, `Row`, `Box`,
+  `Button`); extend `ComposeFacadeGenerator` to emit them
+  mechanically from the existing `[ComposeFacade]` metadata.
 - `$default` parameter injection — lower C# default-parameter syntax
   into Kotlin-style `$default` bitmask.
 - Analyzer for "non-`[Composable]` calls `[Composable]`" — compile-
