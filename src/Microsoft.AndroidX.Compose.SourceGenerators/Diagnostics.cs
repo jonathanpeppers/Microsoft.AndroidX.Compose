@@ -259,4 +259,28 @@ internal static class Diagnostics
         category: "AndroidX.Compose",
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);
+
+    public static readonly DiagnosticDescriptor ComposableNotStatic = new(
+        id: "CN5001",
+        title: "[Composable] method must be static",
+        messageFormat: "Method '{0}' carries [Composable] but is not declared 'static' — Tier 2 intercepts call sites to a static method",
+        category: "AndroidX.Compose",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
+
+    public static readonly DiagnosticDescriptor ComposableReturnsNotVoid = new(
+        id: "CN5002",
+        title: "[Composable] method must return void",
+        messageFormat: "Method '{0}' carries [Composable] but its return type is not 'void' — Tier 2 currently supports only 'void' composables",
+        category: "AndroidX.Compose",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
+
+    public static readonly DiagnosticDescriptor ComposableMissingComposer = new(
+        id: "CN5003",
+        title: "[Composable] method must take IComposer as its first parameter",
+        messageFormat: "Method '{0}' carries [Composable] but its first parameter is not 'AndroidX.Compose.Runtime.IComposer' — Tier 2 threads the composer explicitly through every composable call",
+        category: "AndroidX.Compose",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
 }

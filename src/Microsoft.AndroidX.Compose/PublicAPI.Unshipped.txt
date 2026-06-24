@@ -142,6 +142,11 @@ AndroidX.Compose.CenterAlignedTopAppBar.ScrollBehavior.get -> AndroidX.Compose.M
 AndroidX.Compose.CenterAlignedTopAppBar.ScrollBehavior.set -> void
 AndroidX.Compose.CenterAlignedTopAppBar.Title.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.CenterAlignedTopAppBar.Title.set -> void
+AndroidX.Compose.ChangedBits
+AndroidX.Compose.ChangedBits.Different = 2 -> AndroidX.Compose.ChangedBits
+AndroidX.Compose.ChangedBits.Same = 1 -> AndroidX.Compose.ChangedBits
+AndroidX.Compose.ChangedBits.Static = 4 -> AndroidX.Compose.ChangedBits
+AndroidX.Compose.ChangedBits.Uncertain = 0 -> AndroidX.Compose.ChangedBits
 AndroidX.Compose.Checkbox
 AndroidX.Compose.Checkbox.Checkbox(bool checked, System.Action<bool>! onCheckedChange, bool enabled = true) -> void
 AndroidX.Compose.Checkbox.Colors.get -> AndroidX.Compose.Material3.CheckboxColors?
@@ -176,6 +181,8 @@ AndroidX.Compose.Column
 AndroidX.Compose.Column.Column() -> void
 AndroidX.Compose.Column.Column(AndroidX.Compose.Arrangement? verticalArrangement, AndroidX.Compose.Alignment.Horizontal? horizontalAlignment) -> void
 AndroidX.Compose.Column.Column(AndroidX.Compose.Arrangement? verticalArrangement) -> void
+AndroidX.Compose.ComposableAttribute
+AndroidX.Compose.ComposableAttribute.ComposableAttribute() -> void
 AndroidX.Compose.ComposableContainer
 AndroidX.Compose.ComposableContainer.Add(AndroidX.Compose.ComposableNode? child) -> void
 AndroidX.Compose.ComposableContainer.Add(AndroidX.Compose.Modifier! modifier) -> void
@@ -183,12 +190,22 @@ AndroidX.Compose.ComposableContainer.Add(System.Func<AndroidX.Compose.Runtime.IC
 AndroidX.Compose.ComposableContainer.Children.get -> System.Collections.Generic.IReadOnlyList<AndroidX.Compose.ComposableNode!>!
 AndroidX.Compose.ComposableContainer.ComposableContainer() -> void
 AndroidX.Compose.ComposableContainer.RenderChildren(AndroidX.Compose.Runtime.IComposer! composer) -> void
+AndroidX.Compose.ComposableLambda2
+AndroidX.Compose.ComposableLambda2.ComposableLambda2(System.Action<AndroidX.Compose.Runtime.IComposer!, int>! body) -> void
+AndroidX.Compose.ComposableLambda2.ComposableLambda2(System.Action<AndroidX.Compose.Runtime.IComposer!>! body) -> void
+AndroidX.Compose.ComposableLambda2.Invoke(Java.Lang.Object? p0, Java.Lang.Object? p1) -> Java.Lang.Object!
 AndroidX.Compose.ComposableNode
 AndroidX.Compose.ComposableNode.AppendModifier(AndroidX.Compose.Modifier! modifier) -> void
 AndroidX.Compose.ComposableNode.ComposableNode() -> void
 AndroidX.Compose.ComposableNode.Modifier.get -> AndroidX.Compose.Modifier?
 AndroidX.Compose.ComposableNode.Modifier.set -> void
 AndroidX.Compose.ComposableNode.PrependModifier(AndroidX.Compose.Modifier! modifier) -> void
+AndroidX.Compose.Composables
+static AndroidX.Compose.Composables.Box(AndroidX.Compose.Runtime.IComposer! composer, System.Action<AndroidX.Compose.Runtime.IComposer!>! content) -> void
+static AndroidX.Compose.Composables.Button(AndroidX.Compose.Runtime.IComposer! composer, System.Action! onClick, System.Action<AndroidX.Compose.Runtime.IComposer!>! content) -> void
+static AndroidX.Compose.Composables.Column(AndroidX.Compose.Runtime.IComposer! composer, System.Action<AndroidX.Compose.Runtime.IComposer!>! content) -> void
+static AndroidX.Compose.Composables.Row(AndroidX.Compose.Runtime.IComposer! composer, System.Action<AndroidX.Compose.Runtime.IComposer!>! content) -> void
+static AndroidX.Compose.Composables.Text(AndroidX.Compose.Runtime.IComposer! composer, string! text) -> void
 AndroidX.Compose.Composed
 AndroidX.Compose.Composed.Composed(System.Func<AndroidX.Compose.Runtime.IComposer!, AndroidX.Compose.ComposableNode?>! builder) -> void
 AndroidX.Compose.ComposeExtensions
@@ -1647,6 +1664,8 @@ static AndroidX.Compose.ComposeExtensions.CurrentWindowAdaptiveInfo(this Android
 static AndroidX.Compose.ComposeExtensions.DerivedStateOf<T>(System.Func<T>! calculation) -> AndroidX.Compose.DerivedState<T>!
 static AndroidX.Compose.ComposeExtensions.DerivedStateOf<T>(this AndroidX.Compose.Runtime.IComposer! composer, System.Func<T>! calculation) -> AndroidX.Compose.DerivedState<T>!
 static AndroidX.Compose.ComposeExtensions.DimensionResource(this AndroidX.Compose.Runtime.IComposer! composer, int id) -> AndroidX.Compose.Dp
+static AndroidX.Compose.ComposeExtensions.DiffSlot<T>(this AndroidX.Compose.Runtime.IComposer! composer, T? value, int bitOffset, int line = 0, string! file = "") -> int
+static AndroidX.Compose.ComposeExtensions.DiffSlotShift(int paramIndex) -> int
 static AndroidX.Compose.ComposeExtensions.DisposableEffect(this AndroidX.Compose.Runtime.IComposer! composer, object? key1, object? key2, object? key3, System.Func<AndroidX.Compose.Runtime.DisposableEffectScope!, System.Action!>! effect) -> void
 static AndroidX.Compose.ComposeExtensions.DisposableEffect(this AndroidX.Compose.Runtime.IComposer! composer, object? key1, object? key2, System.Func<AndroidX.Compose.Runtime.DisposableEffectScope!, System.Action!>! effect) -> void
 static AndroidX.Compose.ComposeExtensions.DisposableEffect(this AndroidX.Compose.Runtime.IComposer! composer, object? key1, System.Func<AndroidX.Compose.Runtime.DisposableEffectScope!, System.Action!>! effect) -> void
@@ -1680,6 +1699,8 @@ static AndroidX.Compose.ComposeExtensions.Remember<T>(this AndroidX.Compose.Runt
 static AndroidX.Compose.ComposeExtensions.Remember<T>(this AndroidX.Compose.Runtime.IComposer! composer, System.Func<T>! factory, object? key1, int line = 0, string! file = "") -> T
 static AndroidX.Compose.ComposeExtensions.Remember<T>(this AndroidX.Compose.Runtime.IComposer! composer, System.Func<T>! factory, object? key1, object? key2, int line = 0, string! file = "") -> T
 static AndroidX.Compose.ComposeExtensions.Remember<T>(this AndroidX.Compose.Runtime.IComposer! composer, System.Func<T>! factory, object? key1, object? key2, object? key3, int line = 0, string! file = "") -> T
+static AndroidX.Compose.ComposeExtensions.RememberAction(this AndroidX.Compose.Runtime.IComposer! composer, System.Action! action, int line = 0, string! file = "") -> Kotlin.Jvm.Functions.IFunction0!
+static AndroidX.Compose.ComposeExtensions.RememberAction(this AndroidX.Compose.Runtime.IComposer! composer, System.Action<Java.Lang.Object?>! action, int line = 0, string! file = "") -> Kotlin.Jvm.Functions.IFunction1!
 static AndroidX.Compose.ComposeExtensions.RememberDraggableState(this AndroidX.Compose.Runtime.IComposer! composer, System.Action<float>! onDelta, int line = 0, string! file = "") -> AndroidX.Compose.DraggableState!
 static AndroidX.Compose.ComposeExtensions.RememberKeyed<T>(this AndroidX.Compose.Runtime.IComposer! composer, System.Func<T>! factory, object?[]! keys, int line = 0, string! file = "") -> T
 static AndroidX.Compose.ComposeExtensions.RememberLazyListState(this AndroidX.Compose.Runtime.IComposer! composer, int initialFirstVisibleItemIndex = 0, int initialFirstVisibleItemScrollOffset = 0, int line = 0, string! file = "") -> AndroidX.Compose.LazyListState!

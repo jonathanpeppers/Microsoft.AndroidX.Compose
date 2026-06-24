@@ -971,6 +971,196 @@ helper, and each partial-property body.
 Tests in `CompanionGeneratorTests.cs`. **Add a test for any new
 behaviour.**
 
+## Tier 2 — `[Composable]` static methods
+
+User-facing surface for the C# compose-compiler equivalent: a Roslyn
+incremental source generator (`ComposableMethodGenerator`) emits a
+per-call-site `[InterceptsLocation]` wrapper that opens a Compose
+restart group, runs per-parameter `DiffSlot` diffing, and skips the
+underlying call when nothing changed. Mirrors `dotnet/maui`'s
+`BindingSourceGen` pattern — one user method, generator-emitted
+wrappers at every call site, redirected by the C# compiler at the
+language level.
+
+### Authoring pattern (canonical)
+
+```csharp
+public static class Screens
+{
+    [Composable]
+    public static void Counter(IComposer composer, int count, Action onIncrement)
+    {
+        // Plain method body — no partial, no Impl companion, no
+        // _changed parameter. Same shape as a Kotlin @Composable
+        // function. Any [Composable] call inside this body is itself
+        // intercepted, so Tier 2 composes cleanly all the way down.
+        Composables.Column(composer, c =>
+        {
+            Composables.Text(c, $"Count: {count}");
+            Composables.Button(c, onIncrement, cc => Composables.Text(cc, "Tap"));
+        });
+    }
+}
+```
+
+Rules:
+
+- `[Composable]` method must be `static` (CN5001) with `IComposer` as
+  the **first** parameter (CN5003) and a `void` return (CN5002).
+- The containing type does **not** need to be `partial`. There is no
+  `Impl` companion, no `_changed` parameter, no `int _default` slot.
+- Each call site of a `[Composable]` method is rewired by the C#
+  compiler to a generator-emitted wrapper under
+  `Microsoft.AndroidX.Compose.Generated.ComposableInterceptors`.
+
+The generator emits a single `Microsoft.AndroidX.Compose.Composable.Interceptors.g.cs`
+file containing one wrapper per intercepted call site. For the
+`Counter(composer, 1, onTick)` call shown above the emitted wrapper
+looks roughly like:
+
+```csharp
+[global::System.Runtime.CompilerServices.InterceptsLocationAttribute(1, @"...base64...")]
+public static void Composable_0_AB12CD34(
+    global::AndroidX.Compose.Runtime.IComposer composer,
+    int count,
+    global::System.Action onIncrement)
+{
+    var __c = composer.StartRestartGroup(unchecked((int)0xKEY));
+    int __dirty = 0;
+    __dirty |= __c.DiffSlot<int>(count, 1);
+    __dirty |= __c.DiffSlot<global::System.Action>(onIncrement, 4);
+    if ((__dirty & 0x5B) != 0x12 || !__c.Skipping)
+    {
+        global::App.Screens.Counter(__c, count, onIncrement);
+    }
+    else
+    {
+        __c.SkipToGroupEnd();
+    }
+    __c.EndRestartGroup()?.UpdateScope(new global::AndroidX.Compose.ComposableLambda2(
+        __c2 => Composable_0_AB12CD34(__c2, count, onIncrement)));
+}
+```
+
+The restart-group key is FNV-1a over the fully-qualified method name
+(stable across processes — matches the `SourceLocationKey` contract).
+The Kotlin-shape mask/expected pair for N user params is
+`mask = 0b001 | sum(0b101 << (1+3*i))` and
+`expected = sum(0b001 << (1+3*i))`; the wrapper takes the skip path
+when `(__dirty & mask) == expected && composer.Skipping`. The
+`UpdateScope` lambda re-enters the wrapper itself (not the user
+method) so the next composition pass re-opens the same restart group,
+re-diffs, and skips-or-calls the same way.
+
+### How interception is wired in
+
+The generator emits the `InterceptsLocationAttribute` definition
+itself, as a `file`-scoped `sealed class` inside
+`System.Runtime.CompilerServices`, with a `[Conditional("DEBUG")]` so
+it doesn't bloat Release metadata. The C# compiler resolves
+interceptors purely from source attributes — the wrapper method's
+`[InterceptsLocation(version, data)]` is enough; the attribute's
+runtime presence is irrelevant.
+
+The preview feature is opted into project-wide by
+`Directory.Build.props`:
+
+```xml
+<InterceptorsPreviewNamespaces>$(InterceptorsPreviewNamespaces);Microsoft.AndroidX.Compose.Generated</InterceptorsPreviewNamespaces>
+```
+
+Any project consuming `[Composable]` methods needs that property set
+(every project under `src/` inherits it via `Directory.Build.props`).
+The generator project itself uses
+`SemanticModel.GetInterceptableLocation(InvocationExpressionSyntax, CancellationToken)`
+(Roslyn 4.11+, gated under `#pragma warning disable RSEXPERIMENTAL002`
+the same way MAUI's BindingSourceGen gates it) to compute the
+`(version, data)` pair the compiler will match against each call site.
+
+### Self-interception guard
+
+The generator filters out invocations whose syntax-tree path ends in
+`.g.cs` before running its semantic-model probe. Without this guard
+the wrapper's own call to the user method would itself match the
+generator's "is this targeting a `[Composable]` method?" predicate,
+get its own interceptor emitted, and recursively the interceptor's
+call to that interceptor, … — infinite recursion at generation time.
+The `UpdateScope` lambda calls *the wrapper itself* by hand-rolled
+name (not the user method), so it never needs interception.
+
+### Coexistence with the tree-style facade
+
+Both styles can call into each other freely:
+
+- A tree-style facade `Render` (or `SetContent`'s callback) can invoke
+  a Tier 2 `[Composable]` method directly — each call site is
+  intercepted normally and the wrapper sets up its own restart group
+  inside the surrounding tree-style render.
+- A Tier 2 method can construct a tree-style `ComposableNode` and call
+  `.Render(composer)` on it. This is how the seed entry points in
+  `AndroidX.Compose.Composables` (`Text`, `Column`, `Row`, `Box`,
+  `Button`) are currently implemented — when the interceptor's skip
+  path fires, the inner `new X(...)` allocation never happens.
+
+There is no migration pressure. Hot composables that recompose often
+are the natural candidates for Tier 2; one-shot screens can stay
+tree-style indefinitely. The proof demo
+(`src/Microsoft.AndroidX.Compose.Gallery/Demos/Tier2/Tier2SiblingSkipDemo.cs`)
+renders two sibling Tier 2 methods side by side and shows that the
+one whose input never changes has its body skipped (its in-process
+execution counter stays flat while its sibling's tracks every tap).
+
+### Wiring the generator into a consuming project
+
+The Tier 2 generator ships inside `Microsoft.AndroidX.Compose.SourceGenerators`.
+Consuming projects that author `[Composable]` methods need an
+`Analyzer` project reference *in addition to* the runtime reference:
+
+```xml
+<ProjectReference Include="..\Microsoft.AndroidX.Compose\Microsoft.AndroidX.Compose.csproj" />
+<ProjectReference Include="..\Microsoft.AndroidX.Compose.SourceGenerators\Microsoft.AndroidX.Compose.SourceGenerators.csproj"
+                  OutputItemType="Analyzer"
+                  ReferenceOutputAssembly="false" />
+```
+
+This is intentional — the `Analyzer` reference inside `Microsoft.AndroidX.Compose`
+itself isn't transitively propagated to ProjectReference consumers.
+(Once `Microsoft.AndroidX.Compose` is shipped as a NuGet package the
+generator will flow through the package's `analyzers/dotnet/cs/`
+folder and the explicit reference becomes unnecessary.)
+
+The consuming project also needs `<InterceptorsPreviewNamespaces>`
+to list `Microsoft.AndroidX.Compose.Generated` — which the repo's
+`Directory.Build.props` already does for every project under `src/`.
+
+### Generator diagnostics
+
+| ID     | Meaning                                                                                                                  |
+|--------|--------------------------------------------------------------------------------------------------------------------------|
+| CN5001 | `[Composable]` method must be `static` (Tier 2 intercepts call sites; intercepted target must be a static method).       |
+| CN5002 | `[Composable]` method must return `void` (Tier 2 currently supports only void composables).                              |
+| CN5003 | `[Composable]` method must take `AndroidX.Compose.Runtime.IComposer` as its first parameter.                             |
+
+Tests in `ComposableMethodGeneratorTests.cs`. **Add a test for any new
+behaviour.**
+
+### Deferred (follow-up)
+
+- Sibling static `[Composable]` entry points for the **rest** of the
+  facade catalog (the MVP seeds `Text`, `Column`, `Row`, `Box`,
+  `Button`); extend `ComposeFacadeGenerator` to emit them
+  mechanically from the existing `[ComposeFacade]` metadata.
+- `$default` parameter injection — lower C# default-parameter syntax
+  into Kotlin-style `$default` bitmask.
+- Analyzer for "non-`[Composable]` calls `[Composable]`" — compile-
+  time enforcement of the colour contract.
+- Lambda hoisting via `RememberAction` / `Wrap2` / `Wrap3` inside the
+  generator-rewritten body (recursive-call composer threading + lambda
+  identity stability).
+- `MovableContent` / `key {}` / `Saver` / stability inference / custom
+  `Layout {}` — explicit non-goals in the MVP, each tracked as its
+  own issue.
+
 ## Suspend / async bridges
 
 For Kotlin Compose `suspend` functions (e.g. `ScrollState.scrollTo`,

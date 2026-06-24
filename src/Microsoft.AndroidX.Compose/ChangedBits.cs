@@ -19,7 +19,7 @@ namespace AndroidX.Compose;
 /// defaultable params; the facade generator falls back to <c>0</c>
 /// (Uncertain) for any overflow ints.
 /// </remarks>
-internal enum ChangedBits
+public enum ChangedBits
 {
     /// <summary>
     /// 0b000 — caller doesn't know whether the param changed; the
