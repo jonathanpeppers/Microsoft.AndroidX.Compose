@@ -6,6 +6,8 @@ using AndroidPaint    = Android.Graphics.Paint;
 using AndroidPath     = Android.Graphics.Path;
 using AndroidRectF    = Android.Graphics.RectF;
 using ComposeBridges  = AndroidX.Compose.ComposeBridges;
+using DrawScopeApi    = AndroidX.Compose.UI.Graphics.Drawscope.IDrawScope;
+using NativeCanvasApi = AndroidX.Compose.UI.Graphics.AndroidCanvas_androidKt;
 using LineCap         = Microsoft.Maui.Graphics.LineCap;
 using LineJoin        = Microsoft.Maui.Graphics.LineJoin;
 using MauiBorderShape = Microsoft.Maui.Controls.Shapes;
@@ -35,9 +37,11 @@ namespace Microsoft.AndroidX.Compose.Maui.Platform;
 /// primitives — every one of those takes an inline-class param
 /// (<c>Color</c>, <c>Offset</c>, <c>Size</c>, <c>CornerRadius</c>,
 /// <c>BlendMode</c>) and is consequently stripped from the binding.
-/// Instead we walk <c>DrawScope.drawContext.canvas</c> down to the
-/// native <see cref="Canvas"/> and draw with directly-bound
-/// <see cref="AndroidPaint"/> + <see cref="DashPathEffect"/> APIs.</para>
+/// Instead we walk <c>DrawScope.DrawContext.Canvas</c> down to the
+/// native <see cref="Canvas"/> via the (now-bound) <c>IDrawScope</c>
+/// interface + <c>AndroidCanvas_androidKt.GetNativeCanvas</c>
+/// extension, and draw with directly-bound <see cref="AndroidPaint"/>
+/// + <see cref="DashPathEffect"/> APIs.</para>
 ///
 /// <para>Public so it can be referenced from a <c>readonly</c> field
 /// on the handler. Not part of the developer-facing API.</para>
@@ -103,11 +107,23 @@ public sealed class BorderStrokeDrawCallback : Java.Lang.Object, IFunction1
         if (p0 is null || StrokeArgb == 0 || StrokeThicknessDip <= 0f || Density <= 0f)
             return unit;
 
-        var nativeCanvas = ComposeBridges.DrawScopeGetNativeCanvas(p0.Handle);
+        // `Xamarin.AndroidX.Compose.UI.Graphics 1.11.2.2` finally binds
+        // `IDrawScope` / `IDrawContext` and the `AndroidCanvas_androidKt`
+        // extension, so the DrawScope → native Canvas walk runs through
+        // managed APIs instead of hand-written JNI.
+        var drawScope = p0.JavaCast<DrawScopeApi>();
+        if (drawScope is null)
+            return unit;
+
+        var composeCanvas = drawScope.DrawContext?.Canvas;
+        if (composeCanvas is null)
+            return unit;
+
+        var nativeCanvas = NativeCanvasApi.GetNativeCanvas(composeCanvas);
         if (nativeCanvas is null)
             return unit;
 
-        long packedSize = ComposeBridges.DrawScopeGetSize(p0.Handle);
+        long packedSize = drawScope.Size;
         float widthPx  = ComposeBridges.UnpackSizeWidth(packedSize);
         float heightPx = ComposeBridges.UnpackSizeHeight(packedSize);
         if (widthPx <= 0f || heightPx <= 0f)
