@@ -86,6 +86,12 @@ public partial class WebViewHandler : StockWebViewHandler, IComposeHandler
             // the same way).
             ["WebViewClient"]                    = MapWebViewClient,
             ["WebChromeClient"]                  = MapWebChromeClient,
+            // VisualElement.WidthRequest / HeightRequest live on the
+            // Controls layer, not IView. Use string literals so the
+            // mapper still picks up the change notifications and
+            // bumps the size-version slot read by BuildNode.
+            ["WidthRequest"]                     = MapSizeRequest,
+            ["HeightRequest"]                    = MapSizeRequest,
         };
 
     /// <summary>
@@ -112,12 +118,15 @@ public partial class WebViewHandler : StockWebViewHandler, IComposeHandler
     // this project — struct-valued properties can't sit in
     // MutableState<T> directly.
     readonly MutableState<int> _viewPropertiesVersion = new(0);
+    // Width/HeightRequest are doubles whose "is set" sentinel is -1;
+    // bump a version slot on change and re-read live in BuildNode.
+    readonly MutableState<int> _sizeVersion = new(0);
 
     /// <summary>Construct a handler with the default mappers.</summary>
     public WebViewHandler() : base(Mapper, CommandMapper) { }
 
     /// <summary>Construct a handler with custom mappers.</summary>
-    public WebViewHandler(IPropertyMapper? mapper = null, CommandMapper? commandMapper = null)
+    public WebViewHandler(IPropertyMapper? mapper, CommandMapper? commandMapper = null)
         : base(mapper ?? Mapper, commandMapper ?? CommandMapper) { }
 
     /// <inheritdoc cref="IComposeHandler.BuildNode(IComposer)"/>
@@ -128,6 +137,7 @@ public partial class WebViewHandler : StockWebViewHandler, IComposeHandler
         // Shadow / Visibility / Semantics / AutomationId change
         // recomposes this leaf.
         _ = _viewPropertiesVersion.Value;
+        _ = _sizeVersion.Value;
 
         var view = VirtualView
             ?? throw new InvalidOperationException("VirtualView not set on WebViewHandler.");
@@ -135,14 +145,18 @@ public partial class WebViewHandler : StockWebViewHandler, IComposeHandler
             ?? throw new InvalidOperationException("PlatformView not set on WebViewHandler.");
 
         // Size from WidthRequest / HeightRequest (same matrix as
-        // ComposeWalker's fallback). Falls back to FillMaxSize so the
-        // WebView occupies whatever bounded slot the parent gives it
-        // (the typical case for a single WebView per page).
-        Modifier modifier = (view.Width, view.Height) switch
+        // ComposeWalker's fallback and BoxViewHandler). VisualElement
+        // is the Controls-layer source of truth — `view.Width` /
+        // `view.Height` are the *arranged* frame, which stays at -1
+        // when Compose owns layout, so reading them would always
+        // fall through to FillMaxSize() and ignore HeightRequest.
+        var widthReq  = view is VisualElement ve1 ? ve1.WidthRequest  : -1d;
+        var heightReq = view is VisualElement ve2 ? ve2.HeightRequest : -1d;
+        Modifier modifier = (widthReq, heightReq) switch
         {
-            ( >= 0d, >= 0d ) => Modifier.Size(new Dp((float)view.Width), new Dp((float)view.Height)),
-            ( >= 0d, _    ) => Modifier.Width(new Dp((float)view.Width)),
-            ( _,    >= 0d ) => Modifier.FillMaxWidth().Height(new Dp((float)view.Height)),
+            ( >= 0d, >= 0d ) => Modifier.Size(new Dp((float)widthReq), new Dp((float)heightReq)),
+            ( >= 0d, _    ) => Modifier.Width(new Dp((float)widthReq)),
+            ( _,    >= 0d ) => Modifier.FillMaxWidth().Height(new Dp((float)heightReq)),
             _                => Modifier.FillMaxSize(),
         };
         modifier = modifier.ApplyViewProperties(view).ApplySemantics(view);
@@ -198,6 +212,10 @@ public partial class WebViewHandler : StockWebViewHandler, IComposeHandler
     /// <summary>Map <see cref="WebChromeClient"/> via the stock handler's <see cref="StockWebViewHandler.MapWebChromeClient"/>.</summary>
     public static void MapWebChromeClient(WebViewHandler handler, IWebView webView) =>
         StockWebViewHandler.MapWebChromeClient(handler, webView);
+
+    /// <summary>Bump the size-version slot when <c>WidthRequest</c> or <c>HeightRequest</c> changes.</summary>
+    public static void MapSizeRequest(WebViewHandler handler, IWebView _) =>
+        handler._sizeVersion.Value++;
 
     /// <summary>Map <see cref="IWebView.GoBack"/> via the stock handler's <see cref="StockWebViewHandler.MapGoBack"/>.</summary>
     public static void MapGoBack(WebViewHandler handler, IWebView webView, object? arg) =>
