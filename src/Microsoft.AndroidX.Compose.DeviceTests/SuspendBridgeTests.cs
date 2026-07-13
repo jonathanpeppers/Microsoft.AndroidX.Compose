@@ -118,6 +118,87 @@ public class SuspendBridgeTests
     }
 
     [TestMethod]
+    public async Task CancellationDuringSynchronousCall_CancelsTask()
+    {
+        using var cts = new CancellationTokenSource();
+
+        var task = SuspendBridge.Invoke(
+            _ =>
+            {
+                cts.Cancel();
+                throw new Java.Util.Concurrent.CancellationException(
+                    "Kotlin call observed its cancelled Job.");
+            },
+            cts.Token);
+
+        await AssertCanceled(task, cts.Token);
+    }
+
+    [TestMethod]
+    [DoNotParallelize]
+    public async Task AnimateScrollToItemCancellation_StopsVisibleScroll()
+    {
+        var context = global::Android.App.Application.Context
+            ?? throw new InvalidOperationException(
+                "Application.Context not set for lazy-list cancellation test.");
+        LazyListCancellationTestActivity.Reset();
+        using var intent = new global::Android.Content.Intent(
+            context,
+            typeof(LazyListCancellationTestActivity));
+        intent.AddFlags(global::Android.Content.ActivityFlags.NewTask);
+        context.StartActivity(intent);
+
+        var activity = await WaitFor(
+            static () => LazyListCancellationTestActivity.Current,
+            static value => value is not null,
+            TimeSpan.FromSeconds(5),
+            "Lazy-list cancellation activity did not start.")
+            ?? throw new InvalidOperationException(
+                "Lazy-list cancellation activity was not available.");
+
+        try
+        {
+            var state = LazyListCancellationTestActivity.State;
+            await WaitFor(
+                () => state.CanScrollForward,
+                static value => value,
+                TimeSpan.FromSeconds(5),
+                "LazyColumn did not finish its first layout.");
+
+            using var cts = new CancellationTokenSource();
+            var animation = state.AnimateScrollToItemAsync(9_999, cancellationToken: cts.Token);
+
+            await WaitFor(
+                () => state.IsScrollInProgress,
+                static value => value,
+                TimeSpan.FromSeconds(2),
+                "LazyColumn animation did not start.");
+
+            cts.Cancel();
+            await AssertCanceled(animation, cts.Token);
+            await WaitFor(
+                () => state.IsScrollInProgress,
+                static value => !value,
+                TimeSpan.FromSeconds(2),
+                "LazyColumn animation did not stop after cancellation.");
+
+            int stoppedIndex = state.FirstVisibleItemIndex;
+            int stoppedOffset = state.FirstVisibleItemScrollOffset;
+            Assert.AreNotEqual(9_999, stoppedIndex);
+
+            await Task.Delay(300);
+
+            Assert.AreEqual(stoppedIndex, state.FirstVisibleItemIndex);
+            Assert.AreEqual(stoppedOffset, state.FirstVisibleItemScrollOffset);
+            Assert.IsFalse(state.IsScrollInProgress);
+        }
+        finally
+        {
+            activity.RunOnUiThread(activity.Finish);
+        }
+    }
+
+    [TestMethod]
     public async Task ResumeAndSynchronousReturn_CompletesOnlyOnce()
     {
         var unit = Kotlin.Unit.Instance
@@ -145,5 +226,26 @@ public class SuspendBridgeTests
         {
             Assert.AreEqual(expectedToken, ex.CancellationToken);
         }
+    }
+
+    static async Task<T> WaitFor<T>(
+        Func<T> read,
+        Func<T, bool> predicate,
+        TimeSpan timeout,
+        string message)
+    {
+        var deadline = DateTime.UtcNow + timeout;
+        T value;
+        do
+        {
+            value = read();
+            if (predicate(value))
+                return value;
+            await Task.Delay(20);
+        }
+        while (DateTime.UtcNow < deadline);
+
+        Assert.Fail(message);
+        return value;
     }
 }

@@ -104,8 +104,13 @@ internal static class SuspendBridge
             // Exceptions thrown before the suspend function suspends
             // (e.g. JNI lookup failures, Kotlin throwing inline before
             // creating a Result.Failure) shouldn't surface as
-            // synchronous throws from an async-style API.
+            // synchronous throws from an async-style API. Cancellation
+            // can also make the Kotlin call throw before it returns the
+            // suspended sentinel; preserve Task cancellation in that race.
+            bool canceled = cancellationToken.IsCancellationRequested;
             cont.Dispose();
+            if (canceled)
+                return Task.FromCanceled<T>(cancellationToken);
             return Task.FromException<T>(ex);
         }
 
