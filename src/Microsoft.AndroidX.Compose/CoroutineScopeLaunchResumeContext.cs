@@ -60,7 +60,6 @@ internal sealed class CoroutineScopeLaunchResumeContext
             finally
             {
                 _cts.Dispose();
-                GC.KeepAlive(_cancellationHandler);
             }
         }
     }
