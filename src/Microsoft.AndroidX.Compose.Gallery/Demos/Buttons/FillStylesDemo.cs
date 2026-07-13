@@ -14,14 +14,21 @@ public static class FillStylesDemo
         Build:       c =>
         {
             var count = c.MutableStateOf(0);
+            var enabled = c.MutableStateOf(true);
             return new Column
             {
                 new Text($"Tapped: {count}"),
-                new Button(onClick: () => count++) { new Text("Filled") },
-                new ElevatedButton(onClick: () => count++) { new Text("Elevated") },
-                new FilledTonalButton(onClick: () => count++) { new Text("Filled tonal") },
-                new OutlinedButton(onClick: () => count++) { new Text("Outlined") },
-                new TextButton(onClick: () => count++) { new Text("Text") },
+                new Row(horizontalArrangement: Arrangement.SpacedBy(8.Dp()),
+                        verticalAlignment: Alignment.Vertical.CenterVertically)
+                {
+                    new Switch(@checked: enabled.Value, onCheckedChange: value => enabled.Value = value),
+                    new Text("Enabled"),
+                },
+                new Button(onClick: () => count++, enabled: enabled.Value) { new Text("Filled") },
+                new ElevatedButton(onClick: () => count++, enabled: enabled.Value) { new Text("Elevated") },
+                new FilledTonalButton(onClick: () => count++, enabled: enabled.Value) { new Text("Filled tonal") },
+                new OutlinedButton(onClick: () => count++, enabled: enabled.Value) { new Text("Outlined") },
+                new TextButton(onClick: () => count++, enabled: enabled.Value) { new Text("Text") },
             };
         });
 }

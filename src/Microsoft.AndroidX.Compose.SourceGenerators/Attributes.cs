@@ -343,6 +343,24 @@ internal static class Attributes
             }
 
             /// <summary>
+            /// Apply to a primitive bridge parameter when the generated
+            /// facade constructor should expose a C# default without making
+            /// the bridge parameter itself optional. This keeps the required
+            /// <c>IComposer</c> parameter non-null and trailing.
+            /// </summary>
+            [global::System.AttributeUsage(global::System.AttributeTargets.Parameter,
+                                           AllowMultiple = false)]
+            internal sealed class FacadeDefaultAttribute : global::System.Attribute
+            {
+                public FacadeDefaultAttribute(bool value) { }
+                public FacadeDefaultAttribute(int value) { }
+                public FacadeDefaultAttribute(long value) { }
+                public FacadeDefaultAttribute(float value) { }
+                public FacadeDefaultAttribute(double value) { }
+                public FacadeDefaultAttribute(string? value) { }
+            }
+
+            /// <summary>
             /// Phase 7 — apply to the <c>Painter</c> bridge parameter
             /// that takes the resolved Painter wrapper. The facade
             /// replaces this parameter with a synthetic ctor argument

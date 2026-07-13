@@ -60,10 +60,8 @@ using AndroidX.Compose;
 
 // androidx.compose.foundation.layout.FlowLayoutKt — the simpler
 // FlowRow / FlowColumn overloads (no FlowRowOverflow / FlowColumnOverflow
-// slot) lower to 7 user params + content. The trailing `maxItemsInEachRow`
-// / `maxLines` (resp. `maxItemsInEachColumn` / `maxLines`) Ints can't be
-// auto-masked from a nullable C# slot, so the v1 facade leaves both bits
-// set and lets Kotlin substitute Int.MAX_VALUE.
+// slot) lower to 7 user params + content. The facade surfaces the trailing
+// max-item and max-line Int slots with Kotlin's Int.MAX_VALUE defaults.
 [assembly: ComposeDefaults("FlowRowDefault",
     "modifier", "horizontalArrangement", "verticalArrangement",
     "itemVerticalAlignment", "maxItemsInEachRow", "maxLines", "!content")]
