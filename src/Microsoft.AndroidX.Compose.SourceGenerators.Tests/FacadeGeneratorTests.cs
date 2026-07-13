@@ -3973,10 +3973,50 @@ public class FacadeGeneratorTests
         // modifier (param 1) contributes a real DiffSlot on the
         // captured key — bit 4.
         Assert.Contains("__changed |= composer.DiffSlot(__modifierKey, global::AndroidX.Compose.ComposeExtensions.DiffSlotShift(1));", emitted);
-        // content (param 2) contributes Static at bit 7.
-        Assert.Contains("__changed |= (int)global::AndroidX.Compose.ChangedBits.Static << global::AndroidX.Compose.ComposeExtensions.DiffSlotShift(2);", emitted);
+        // content is Kotlin param 9 even though omitted defaults leave it
+        // third in the C# bridge declaration.
+        Assert.Contains("__changed |= (int)global::AndroidX.Compose.ChangedBits.Static << global::AndroidX.Compose.ComposeExtensions.DiffSlotShift(9);", emitted);
         // Bridge call uses named composer + _changed args.
         Assert.Contains("composer: composer, _changed: __changed", emitted);
+
+        var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
+        Assert.Empty(errors);
+    }
+
+    [Fact]
+    public void Changed_ReorderedOptionalPrimitive_UsesKotlinDefaultSlotPosition()
+    {
+        var code = """
+            using global::AndroidX.Compose.Runtime;
+            using global::AndroidX.Compose.UI;
+            using AndroidX.Compose;
+            using Kotlin.Jvm.Functions;
+
+            [assembly: ComposeDefaults("WidgetDefault",
+                "!value", "modifier", "enabled", "!content")]
+
+            namespace AndroidX.Compose
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(Class="my/pkg/WidgetKt", JvmName="Widget",
+                                   Signature="(ILandroidx/compose/ui/Modifier;ZLkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;II)V",
+                                   Defaults=typeof(WidgetDefault))]
+                    [ComposeFacade]
+                    public static partial void Widget(
+                        int value, IModifier? modifier, IFunction2 content,
+                        bool enabled = true, IComposer composer = null!, int _changed = 0);
+                }
+            }
+            """;
+
+        var (output, diags, emitted) = Run(code, "Widget");
+        Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+        Assert.Contains("__changed |= composer.DiffSlot(_value, global::AndroidX.Compose.ComposeExtensions.DiffSlotShift(0));", emitted);
+        Assert.Contains("__changed |= composer.DiffSlot(__modifierKey, global::AndroidX.Compose.ComposeExtensions.DiffSlotShift(1));", emitted);
+        Assert.Contains("__changed |= composer.DiffSlot(_enabled, global::AndroidX.Compose.ComposeExtensions.DiffSlotShift(2));", emitted);
+        Assert.Contains("__changed |= (int)global::AndroidX.Compose.ChangedBits.Static << global::AndroidX.Compose.ComposeExtensions.DiffSlotShift(3);", emitted);
 
         var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
         Assert.Empty(errors);
@@ -4274,8 +4314,8 @@ public class FacadeGeneratorTests
         Assert.Contains("int __changed = 0;", emitted);
         // modifier (param 0) → __modifierKey at bit 1.
         Assert.Contains("__changed |= composer.DiffSlot(__modifierKey, global::AndroidX.Compose.ComposeExtensions.DiffSlotShift(0));", emitted);
-        // content (param 1, RequiredFunction3 → Static via composableLambda) at bit 4.
-        Assert.Contains("__changed |= (int)global::AndroidX.Compose.ChangedBits.Static << global::AndroidX.Compose.ComposeExtensions.DiffSlotShift(1);", emitted);
+        // content is Kotlin slot 3, even though C# moves it before optional primitives.
+        Assert.Contains("__changed |= (int)global::AndroidX.Compose.ChangedBits.Static << global::AndroidX.Compose.ComposeExtensions.DiffSlotShift(3);", emitted);
         // Bridge call uses named composer + _changed args.
         Assert.Contains("composer: composer, _changed: __changed", emitted);
 

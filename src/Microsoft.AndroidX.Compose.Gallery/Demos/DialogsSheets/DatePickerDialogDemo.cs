@@ -15,6 +15,7 @@ public static class DatePickerDialogDemo
         {
             var open      = c.MutableStateOf(false);
             var picked    = c.MutableStateOf("(none)");
+            var showModes = c.MutableStateOf(true);
             // One JCW adapter per demo instance — its identity is part
             // of the rememberDatePickerState cache key.
             var bounds    = c.Remember(() => new DateRangeSelectableDates());
@@ -28,6 +29,12 @@ public static class DatePickerDialogDemo
             {
                 new Text($"Picked date: {picked}"),
                 new Text("(Today through Today+30 are selectable.)"),
+                new Row(horizontalArrangement: Arrangement.SpacedBy(8.Dp()),
+                        verticalAlignment: Alignment.Vertical.CenterVertically)
+                {
+                    new Switch(@checked: showModes.Value, onCheckedChange: value => showModes.Value = value),
+                    new Text("Show mode toggle"),
+                },
                 new Button(onClick: () => open.Value = true) { new Text("Pick date") },
                 open.Value
                     ? new DatePickerDialog(onDismissRequest: () => open.Value = false)
@@ -40,7 +47,7 @@ public static class DatePickerDialogDemo
                             open.Value = false;
                         }) { new Text("OK") },
                         DismissButton = new Button(onClick: () => open.Value = false) { new Text("Cancel") },
-                        Body          = new DatePicker(state),
+                        Body          = new DatePicker(state, showModeToggle: showModes.Value),
                     }
                     : (ComposableNode?)null,
             };

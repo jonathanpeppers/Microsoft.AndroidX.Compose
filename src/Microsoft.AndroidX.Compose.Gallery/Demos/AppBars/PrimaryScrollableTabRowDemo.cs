@@ -14,18 +14,25 @@ public static class PrimaryScrollableTabRowDemo
         Build:       c =>
         {
             var sub = c.MutableStateOf(0);
+            var enabled = c.MutableStateOf(true);
             return new Column
             {
+                new Row(horizontalArrangement: Arrangement.SpacedBy(8.Dp()),
+                        verticalAlignment: Alignment.Vertical.CenterVertically)
+                {
+                    new Switch(@checked: enabled.Value, onCheckedChange: value => enabled.Value = value),
+                    new Text("Tabs enabled"),
+                },
                 new PrimaryScrollableTabRow(selectedTabIndex: sub.Value)
                 {
-                    new Tab(selected: sub.Value == 0, onClick: () => sub.Value = 0) { Text = new Text("Greeting") },
-                    new Tab(selected: sub.Value == 1, onClick: () => sub.Value = 1) { Text = new Text("Counter") },
-                    new LeadingIconTab(selected: sub.Value == 2, onClick: () => sub.Value = 2)
+                    new Tab(selected: sub.Value == 0, onClick: () => sub.Value = 0, enabled: enabled.Value) { Text = new Text("Greeting") },
+                    new Tab(selected: sub.Value == 1, onClick: () => sub.Value = 1, enabled: enabled.Value) { Text = new Text("Counter") },
+                    new LeadingIconTab(selected: sub.Value == 2, onClick: () => sub.Value = 2, enabled: enabled.Value)
                     {
                         Text = new Text("List"),
                         Icon = new Text("📋"),
                     },
-                    new CustomTab(selected: sub.Value == 3, onClick: () => sub.Value = 3)
+                    new CustomTab(selected: sub.Value == 3, onClick: () => sub.Value = 3, enabled: enabled.Value)
                     {
                         new Column { new Text("Custom"), new Text("tab") },
                     },

@@ -1570,7 +1570,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
 
             if (callerProvidesChanged)
             {
-                EmitChangedMask(sb, indent, slots, composerName);
+                EmitChangedMask(sb, indent, slots, composerName, defaults);
             }
 
             // Bridge call. Preserve original bridge param order. When the
@@ -1648,15 +1648,15 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             hasModifier: hoistModifier, hasPainter: false);
         if (callerProvidesChanged)
         {
-            // Build a slot list matching the alternate bridge's user-param
-            // order (not the facade's slot order) so bit positions line up
-            // with what Kotlin assigned.
+            // Build the slots used by the alternate bridge. Kotlin bit
+            // positions come from its Defaults map, so C# declaration
+            // order may differ to keep optional parameters trailing.
             var altSlots = new List<FacadeSlot>(branch.AlternateUserParams.Count);
             foreach (var p in branch.AlternateUserParams)
             {
                 if (slotByName.TryGetValue(p.Name, out var s)) altSlots.Add(s);
             }
-            EmitChangedMask(sb, inner, altSlots, composerName);
+            EmitChangedMask(sb, inner, altSlots, composerName, branch.AlternateDefaults);
         }
         EmitBridgeCallByParams(sb, inner, branch.AlternateMethodName, branch.AlternateUserParams,
             slotByName, composerName, hoistModifier, callerProvidesChanged);
@@ -1674,7 +1674,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             {
                 if (slotByName.TryGetValue(p.Name, out var s)) primSlots.Add(s);
             }
-            EmitChangedMask(sb, inner, primSlots, composerName);
+            EmitChangedMask(sb, inner, primSlots, composerName, primaryDefaults);
         }
         EmitBridgeCallByParams(sb, inner, primaryMethodName, primaryUserParams,
             slotByName, composerName, hoistModifier, callerProvidesChanged);
@@ -1831,21 +1831,26 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
 
     /// <summary>
     /// Emit the per-slot Kotlin <c>$changed</c> mask. One <c>__changed</c>
-    /// local that ORs together a contribution per slot in the bridge's
-    /// user-param order. Bit position is <c>1 + paramIndex * 3</c> per
-    /// the compose-compiler convention; <see cref="FacadeSlotKind.ScopeReceiver"/>
-    /// slots are skipped because the bridge generator strips the receiver
-    /// before assigning bits.
+    /// local that ORs together a contribution per surfaced slot. Kotlin
+    /// parameter positions come from <paramref name="defaults"/> when
+    /// available because C# optional parameters may be moved after required
+    /// content slots. Bit position is <c>1 + paramIndex * 3</c> per the
+    /// compose-compiler convention; <see cref="FacadeSlotKind.ScopeReceiver"/>
+    /// slots are skipped because receivers are outside the Kotlin parameter
+    /// list.
     /// </summary>
     static void EmitChangedMask(StringBuilder sb, string indent,
-        IReadOnlyList<FacadeSlot> slots, string composerName,
+        IReadOnlyList<FacadeSlot> slots, string composerName, DefaultsInfo? defaults,
         string changedVar = "__changed")
     {
         sb.Append(indent).Append("int ").Append(changedVar).AppendLine(" = 0;");
-        int bitParamIndex = 0;
+        int fallbackParamIndex = 0;
         foreach (var s in slots)
         {
             if (s.Kind == FacadeSlotKind.ScopeReceiver) continue;
+            int bitParamIndex = defaults?.FindByKotlinName(s.Param.Name)?.Bit
+                ?? fallbackParamIndex;
+            fallbackParamIndex++;
             int shift = 1 + bitParamIndex * 3;
             // Cap at 30 bits (10 user params per Kotlin $changed int).
             // Anything beyond that lands in the next $changed slot which
@@ -1853,7 +1858,6 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             // Uncertain rather than corrupting the first int.
             if (shift > 30 - 2)
             {
-                bitParamIndex++;
                 continue;
             }
             string bitOffset = "global::AndroidX.Compose.ComposeExtensions.DiffSlotShift(" +
@@ -1871,7 +1875,6 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
                     // whole point.
                     sb.Append(indent).Append(changedVar).Append(" |= ").Append(composerName)
                       .Append(".DiffSlot(__modifierKey, ").Append(bitOffset).AppendLine(");");
-                    bitParamIndex++;
                     continue;
                 case FacadeSlotKind.OnClick:
                 case FacadeSlotKind.Callback:
@@ -1925,7 +1928,6 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
                     // Unknown — leave as Uncertain (0) for this slot.
                     break;
             }
-            bitParamIndex++;
         }
     }
 
