@@ -346,13 +346,13 @@ AndroidX.Compose.DraggableState
 AndroidX.Compose.DraggableState.DispatchRawDelta(float delta) -> void
 AndroidX.Compose.DraggableState.DraggableState(System.Action<float>! onDelta) -> void
 AndroidX.Compose.DrawerStateHolder
-AndroidX.Compose.DrawerStateHolder.CloseAsync() -> System.Threading.Tasks.Task!
+AndroidX.Compose.DrawerStateHolder.CloseAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
 AndroidX.Compose.DrawerStateHolder.CurrentValue.get -> AndroidX.Compose.Material3.DrawerValue!
 AndroidX.Compose.DrawerStateHolder.DrawerStateHolder(AndroidX.Compose.Material3.DrawerValue? initialValue = null) -> void
 AndroidX.Compose.DrawerStateHolder.InitialValue.get -> AndroidX.Compose.Material3.DrawerValue!
 AndroidX.Compose.DrawerStateHolder.IsClosed.get -> bool
 AndroidX.Compose.DrawerStateHolder.IsOpen.get -> bool
-AndroidX.Compose.DrawerStateHolder.OpenAsync() -> System.Threading.Tasks.Task!
+AndroidX.Compose.DrawerStateHolder.OpenAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
 AndroidX.Compose.DrawerStateHolder.TargetValue.get -> AndroidX.Compose.Material3.DrawerValue!
 AndroidX.Compose.DrawerValueConfirmStateChange
 AndroidX.Compose.DrawerValueConfirmStateChange.DrawerValueConfirmStateChange() -> void
