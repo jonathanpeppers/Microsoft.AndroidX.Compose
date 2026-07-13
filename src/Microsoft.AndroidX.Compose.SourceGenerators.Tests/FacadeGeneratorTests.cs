@@ -376,13 +376,10 @@ public class FacadeGeneratorTests
     [InlineData("double", "2.5",                      "2.5")]
     [InlineData("string", "\"hello\"",                "\"hello\"")]
     [InlineData("string?", "null",                    "null")]
-    public void PrimitiveCtorParam_HonoursExplicitDefaultValue(string type, string sourceDefault, string emittedDefault)
+    public void PrimitiveCtorParam_HonoursFacadeDefaultAttribute(string type, string sourceDefault, string emittedDefault)
     {
-        // The bridge `Render` itself never needs the trailing C# default
-        // — but the partial-method declaration must be valid C# (optional
-        // params must be trailing), so the test bridge defaults the
-        // trailing `IComposer composer` to `null!` and the (optional)
-        // user param goes between modifier and composer.
+        // The facade owns the public C# default. The bridge parameter and
+        // trailing Composer both remain required.
         var code = $$"""
             using global::AndroidX.Compose.Runtime;
             using global::AndroidX.Compose.UI;
@@ -400,7 +397,7 @@ public class FacadeGeneratorTests
                                    Signature="(Landroidx/compose/ui/Modifier;ILandroidx/compose/runtime/Composer;II)V",
                                    Defaults=typeof(WidgetDefault))]
                     [ComposeFacade]
-                    public static partial void Widget(IModifier? modifier, {{type}} value = {{sourceDefault}}, IComposer composer = null!);
+                    public static partial void Widget(IModifier? modifier, [FacadeDefault({{sourceDefault}})] {{type}} value, IComposer composer);
                 }
             }
             """;

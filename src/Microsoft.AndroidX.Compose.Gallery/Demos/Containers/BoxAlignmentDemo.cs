@@ -19,7 +19,11 @@ public static class BoxAlignmentDemo
                 Modifier
                     .Size(160)
                     .Background(Color.FromRgb(0xB3, 0xE5, 0xFC)),
-                new Text("Front") { Modifier = Modifier.Padding(28) },
+                new Text("Front")
+                {
+                    Color = Color.Black,
+                    Modifier = Modifier.Padding(28),
+                },
             },
             new Text("propagateMinConstraints: true"),
             new Box(propagateMinConstraints: true)
@@ -30,7 +34,7 @@ public static class BoxAlignmentDemo
                 new Box
                 {
                     Modifier.Background(Color.FromRgb(0x4F, 0xC3, 0xF7)),
-                    new Text("Child receives minimums"),
+                    new Text("Child receives minimums") { Color = Color.Black },
                 },
             },
         });

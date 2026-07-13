@@ -47,6 +47,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
     const string GenericDefaultsAttributeMetadataName = "AndroidX.Compose.ComposeDefaultsAttribute`1";
     const string SlotAttributeMetadataName = "AndroidX.Compose.SlotAttribute";
     const string CallbackAttributeMetadataName = "AndroidX.Compose.CallbackAttribute";
+    const string FacadeDefaultAttributeMetadataName = "AndroidX.Compose.FacadeDefaultAttribute";
     const string PainterResourceAttributeMetadataName = "AndroidX.Compose.PainterResourceAttribute";
     const string StateHolderAttributeMetadataName = "AndroidX.Compose.StateHolderAttribute";
     const string ConfirmStateChangeAttributeMetadataName = "AndroidX.Compose.ConfirmStateChangeAttribute";
@@ -1981,27 +1982,49 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
     /// True when the slot surfaces as a defaulted ctor parameter on the
     /// generated facade — either a <see cref="FacadeSlotKind.StateHolder"/>
     /// (always <c>= null</c>) or a <see cref="FacadeSlotKind.Primitive"/>
-    /// whose bridge parameter carries an explicit default value. Used to
+    /// whose bridge parameter carries an explicit C# default or a
+    /// <c>[FacadeDefault]</c> marker. Used to
     /// push defaulted slots after required slots so the ctor compiles
     /// (C# requires optional params to trail required ones).
     /// </summary>
     static bool HasFacadeCtorDefault(FacadeSlot s) =>
         s.Kind == FacadeSlotKind.StateHolder ||
-        (s.Kind == FacadeSlotKind.Primitive && s.Param.HasExplicitDefaultValue);
+        (s.Kind == FacadeSlotKind.Primitive && TryGetFacadeCtorDefault(s.Param, out _));
+
+    static bool TryGetFacadeCtorDefault(IParameterSymbol p, out object? value)
+    {
+        if (p.HasExplicitDefaultValue)
+        {
+            value = p.ExplicitDefaultValue;
+            return true;
+        }
+
+        var attr = p.GetAttributes().FirstOrDefault(a =>
+            a.AttributeClass?.ToDisplayString() == FacadeDefaultAttributeMetadataName);
+        if (attr is not null && attr.ConstructorArguments.Length == 1)
+        {
+            value = attr.ConstructorArguments[0].Value;
+            return true;
+        }
+
+        value = null;
+        return false;
+    }
 
     /// <summary>
-    /// Format an <see cref="IParameterSymbol.ExplicitDefaultValue"/> as
-    /// a C# literal for emission in a generated ctor parameter list.
+    /// Format a bridge parameter's explicit C# default or
+    /// <c>[FacadeDefault]</c> value as a C# literal for emission in a
+    /// generated ctor parameter list.
     /// Handles the primitive types accepted by
     /// <see cref="IsPrimitiveCtorType"/> (<c>bool</c>, <c>int</c>,
     /// <c>long</c>, <c>float</c>, <c>double</c>, <c>string</c>) plus
     /// enum members. Falls back to <c>default</c> for shapes that
     /// shouldn't reach here (the caller already guards with
-    /// <see cref="IParameterSymbol.HasExplicitDefaultValue"/>).
+    /// <see cref="TryGetFacadeCtorDefault"/>).
     /// </summary>
     static string FormatPrimitiveDefaultLiteral(IParameterSymbol p)
     {
-        var value = p.ExplicitDefaultValue;
+        if (!TryGetFacadeCtorDefault(p, out var value)) return "default";
         if (value is null) return "null";
         return value switch
         {
@@ -2097,7 +2120,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             sb.Append(CtorParamType(s)).Append(' ').Append(EscapeIdent(CtorIdentifier(s)));
             if (s.Kind == FacadeSlotKind.StateHolder)
                 sb.Append(" = null");
-            else if (s.Kind == FacadeSlotKind.Primitive && s.Param.HasExplicitDefaultValue)
+            else if (s.Kind == FacadeSlotKind.Primitive && HasFacadeCtorDefault(s))
                 sb.Append(" = ").Append(FormatPrimitiveDefaultLiteral(s.Param));
         }
         sb.AppendLine(")");
@@ -2228,7 +2251,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
                 sb.Append(CtorParamType(s)).Append(' ').Append(EscapeIdent(CtorIdentifier(s)));
                 if (s.Kind == FacadeSlotKind.StateHolder)
                     sb.Append(" = null");
-                else if (s.Kind == FacadeSlotKind.Primitive && s.Param.HasExplicitDefaultValue)
+                else if (s.Kind == FacadeSlotKind.Primitive && HasFacadeCtorDefault(s))
                     sb.Append(" = ").Append(FormatPrimitiveDefaultLiteral(s.Param));
             }
         }
