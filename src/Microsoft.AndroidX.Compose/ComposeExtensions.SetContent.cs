@@ -43,6 +43,23 @@ public static partial class ComposeExtensions
     }
 
     /// <summary>
+    /// Sets the activity's content view to a directly composer-threaded
+    /// Tier 2 composition. Use this overload when the root is a
+    /// <see cref="ComposableAttribute"/> static method.
+    /// </summary>
+    public static void SetContent(
+        this ComponentActivity activity,
+        Action<IComposer> content)
+    {
+        ArgumentNullException.ThrowIfNull(activity);
+        ArgumentNullException.ThrowIfNull(content);
+        var view = new ComposeView(activity);
+        view.SetContent(content);
+        activity.SetContentView(view);
+        Log.Debug(TAG, "ComponentActivity Tier 2 content set");
+    }
+
+    /// <summary>
     /// Installs <paramref name="content"/> as the composition driving this
     /// <see cref="ComposeView"/> — the View-hierarchy entry point. Use when
     /// you're hosting Compose inside an existing Android <c>View</c> tree
@@ -60,6 +77,22 @@ public static partial class ComposeExtensions
             key:     -1,
             tracked: false,
             block:   new ComposableLambda2(composer => content(composer).Render(composer))));
+    }
+
+    /// <summary>
+    /// Installs a directly composer-threaded Tier 2 composition as this
+    /// <see cref="ComposeView"/>'s content.
+    /// </summary>
+    public static void SetContent(
+        this ComposeView view,
+        Action<IComposer> content)
+    {
+        ArgumentNullException.ThrowIfNull(view);
+        ArgumentNullException.ThrowIfNull(content);
+        view.SetContent(ComposableLambdaKt.ComposableLambdaInstance(
+            key:     -1,
+            tracked: false,
+            block:   new ComposableLambda2(content)));
     }
 
     /// <summary>

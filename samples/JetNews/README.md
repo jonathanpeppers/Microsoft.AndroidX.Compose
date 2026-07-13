@@ -138,7 +138,7 @@ Same pattern as Jetchat: each screen is a `public static class` with
 a `Build(…)` method returning `ComposableNode`. `Render(IComposer)`
 is `internal` to the facade assembly so a sample-side subclass
 can't override it. Cost: every recomposition allocates the tree
-inside `JetnewsApp.Build`. NavHost caches the per-destination tree
+inside `JetnewsApp.Content`. NavHost caches the per-destination tree
 via `composer.Remember` (see `NavHost.cs`), so the screen subtrees
 inside `Composable("home") { … }` etc. are walked only on first
 render.
@@ -148,7 +148,7 @@ render.
 Most `MutableState` / `MutableStateList` instances (current route,
 three interests selections, interests-tab index) live in
 `MainActivity.OnCreate` via `Remember(...)`. They flow as
-parameters through `JetnewsApp.Build` → per-screen builders. This
+parameters through `JetnewsApp.Content` → per-screen builders. This
 keeps the screen builders pure functions of their inputs and lets
 the same `MutableState` reference survive recompositions and
 navigation transitions.

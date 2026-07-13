@@ -161,7 +161,7 @@ already supports.
 | Skipping / recomposition optimization   | Per-param `$changed` bitmask computed at Render time via `composer.DiffSlot` / `composer.RememberAction` / `Modifier.StructuralKey`; bridge generator threads it into the JNI `$changed` slot. Modifier slot still emits Uncertain (Kotlin runtime falls back to its own input compare). | Tier 2 mostly delivered ✅ |
 | Slot-table-backed `remember`            | `Remember(() => …)` with `[CallerLineNumber]` keying into an activity-scoped cache; `Remember(factory, key1, …)` (1–3 keys or `RememberKeyed(factory, keys[])`) resets the slot on key change | Lifetime is per call site, not per nested-scope as in Kotlin |
 | `@Composable` type-system enforcement   | None — calling a non-composable from a composable context fails at runtime, not compile-time | Footgun (Tier 2 analyzer is a follow-up) |
-| Per-call-site allocation                | Tree-style facade: every recomposition allocates fresh `ComposableNode` objects (no slot-table reuse on the C# side). Tier 2 `[Composable]` static methods: zero `ComposableNode` allocations — direct composer threading. | Resolved for Tier 2 code; tree-style facade keeps allocating until a feature is rewritten ✅ |
+| Per-call-site allocation                | Tree-style facade: every recomposition allocates fresh `ComposableNode` objects. Tier 2 `[Composable]` methods skip the entire body when unchanged, so skipped calls allocate nothing. Generated catalog entry points currently construct the matching facade only when their body executes; direct bridge emission is the remaining optimization. | Resolved on the skip path; execution-path facade allocation remains |
 
 ## Tier 2 — `[Composable]` C# methods
 
@@ -170,10 +170,11 @@ a Roslyn incremental source generator (`ComposableMethodGenerator`)
 that emits a per-call-site `[InterceptsLocation]` wrapper for every
 invocation of a `[Composable]`-marked static method. The wrapper opens
 a Compose restart group, runs per-parameter `DiffSlot` diffing, and
-skips the underlying call when nothing changed. The result is zero
-per-recomposition `ComposableNode` allocations and a render loop shape
-Compose's runtime can skip the same way it skips a Kotlin
-`@Composable`.
+skips the underlying call when nothing changed. The result is a render-loop shape Compose can skip the same way it
+skips a Kotlin `@Composable`. A skipped method performs no
+`ComposableNode` allocation. Generated catalog entry points currently
+adapt to their matching tree facade when they execute; direct bridge
+emission will remove that execution-path allocation separately.
 
 Mirrors the design `dotnet/maui` uses for its
 [`BindingSourceGen`](https://github.com/dotnet/maui/blob/main/src/Controls/src/BindingSourceGen):
@@ -247,9 +248,17 @@ Both styles can call into each other freely:
   intercepted normally and the wrapper sets up its own restart group
   inside the surrounding tree-style render.
 - A Tier 2 method can construct a tree-style `ComposableNode` and call
-  `.Render(composer)` on it. The Tier 2 demo in the gallery
-  (`tier2-counter`) does exactly this until sibling Tier 2 entry
-  points are emitted for the existing facade catalog.
+  `.Render(composer)` on it.
+- `ComposeFacadeGenerator` emits a sibling method on `Composables` for
+  every supported generated facade. It maps constructor values,
+  modifiers, named slots, optional values, content, and state-holder
+  callbacks back onto the existing facade, then renders it. The
+  interceptor skip path runs before that adapter allocation.
+- `ComponentActivity.SetContent(Action<IComposer>)` and
+  `ComposeView.SetContent(Action<IComposer>)` host a Tier 2 root
+  directly. Jetchat, JetNews, and Reply use this shape for their
+  top-level app composables, matching the corresponding upstream
+  Kotlin boundary.
 
 There is no migration pressure. Hot composables that recompose often
 (animation, list items, drag handles) are the natural candidates for
@@ -265,11 +274,14 @@ Tier 2; one-shot screens can stay tree-style indefinitely.
 
 ### Deferred — follow-up issues
 
-- **Sibling static entry points for every existing facade.** Today
-  the facade generator emits a tree-style `ComposableNode` subclass.
-  A future extension will emit a parallel `[Composable]` static entry
-  point so users can call `Button(c, onClick, content: cc => …)`
-  with zero tree allocation.
+- **Direct bridge bodies for generated facade entry points.** The
+  sibling methods currently instantiate their generated tree facade
+  when they execute. Emitting the same bridge/default-mask plumbing
+  directly will remove that execution-path adapter allocation.
+- **Tier 2 entry points for hand-written holdouts.** `Scaffold`, lazy
+  collections, text fields, search, and other custom rendering shapes
+  are not driven by `[ComposeFacade]` metadata and need dedicated
+  generator modelling.
 - **`$default` parameter injection.** C# already supports default
   parameter values syntactically; the wrapper currently treats every
   declared parameter as required. A future pass will lower C# default

@@ -3,10 +3,10 @@ using AndroidX.Compose.Runtime;
 namespace AndroidX.Compose;
 
 /// <summary>
-/// Tier 2 static entry points that mirror a subset of the
-/// tree-style facade catalog. Each method is a
-/// <see cref="ComposableAttribute"/>-attributed <c>static partial</c>
-/// whose generator-emitted wrapper opens a Compose restart group,
+/// Tier 2 static entry points that mirror the tree-style facade
+/// catalog. <c>ComposeFacadeGenerator</c> emits siblings for generated
+/// facades; generator holdouts remain hand-written. Each method
+/// carries <see cref="ComposableAttribute"/> and its call-site wrapper opens a Compose restart group,
 /// diffs each parameter with
 /// <see cref="ComposeExtensions.DiffSlot{T}"/>, and elides the
 /// body when nothing changed since the previous composition.

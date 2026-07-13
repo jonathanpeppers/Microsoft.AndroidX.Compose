@@ -30,7 +30,8 @@ public class MainActivity : ComponentActivity
             var swipeOffset      = c.MutableStateOf(0f);
             var nav              = c.Remember(() => new NavController());
             var profileViewModel = c.Remember(() => new ProfileViewModel());
-            return JetchatApp.Build(
+            JetchatApp.Content(
+                composer:         c,
                 nav:              nav,
                 ui:               ui,
                 input:            input,

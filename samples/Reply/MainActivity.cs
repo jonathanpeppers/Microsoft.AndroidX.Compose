@@ -6,7 +6,7 @@ namespace AndroidX.Compose.Samples.Reply;
 /// Reply host activity. Subclasses <see cref="ComponentActivity"/>,
 /// remembers app-wide state (nav controller, current route, opened
 /// email id, multi-select set), then hands off to
-/// <see cref="ReplyApp.Build"/>.
+/// <see cref="ReplyApp.Content"/>.
 /// </summary>
 [Activity(
     Label        = "@string/app_name",
@@ -26,7 +26,7 @@ public class MainActivity : ComponentActivity
             var currentRoute     = c.MutableStateOf(Route.Inbox);
             var openedEmailId    = c.MutableStateOf(0L);
             var selectedEmailIds = c.Remember(() => new MutableStateList<long>());
-            return ReplyApp.Build(nav, currentRoute, openedEmailId, selectedEmailIds);
+            ReplyApp.Content(c, nav, currentRoute, openedEmailId, selectedEmailIds);
         });
     }
 }

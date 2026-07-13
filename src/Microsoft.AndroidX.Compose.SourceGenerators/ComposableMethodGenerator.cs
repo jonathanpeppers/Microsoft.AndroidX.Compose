@@ -46,6 +46,11 @@ public sealed class ComposableMethodGenerator : IIncrementalGenerator
 {
     const string ComposableAttributeMetadataName = "AndroidX.Compose.ComposableAttribute";
     const string ComposerFullName = "AndroidX.Compose.Runtime.IComposer";
+    static readonly SymbolDisplayFormat ParameterTypeFormat =
+        SymbolDisplayFormat.FullyQualifiedFormat.WithMiscellaneousOptions(
+            SymbolDisplayFormat.FullyQualifiedFormat.MiscellaneousOptions
+            | SymbolDisplayMiscellaneousOptions.IncludeNullableReferenceTypeModifier
+            | SymbolDisplayMiscellaneousOptions.EscapeKeywordIdentifiers);
     const string GeneratedNamespace = "Microsoft.AndroidX.Compose.Generated";
 
     public void Initialize(IncrementalGeneratorInitializationContext context)
@@ -277,7 +282,7 @@ public sealed class ComposableMethodGenerator : IIncrementalGenerator
         {
             if (i > 0) sb.Append(", ");
             var p = method.Parameters[i];
-            sb.Append(p.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat))
+            sb.Append(p.Type.ToDisplayString(ParameterTypeFormat))
               .Append(' ').Append(p.Name);
         }
         sb.AppendLine(")");
@@ -295,7 +300,7 @@ public sealed class ComposableMethodGenerator : IIncrementalGenerator
             int bitOffset = 1 + i * 3;
             var p = userParams[i];
             sb.Append("            __dirty |= __c.DiffSlot<")
-              .Append(p.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat))
+              .Append(p.Type.ToDisplayString(ParameterTypeFormat))
               .Append(">(").Append(p.Name).Append(", ")
               .Append(bitOffset.ToString(CultureInfo.InvariantCulture))
               .AppendLine(");");

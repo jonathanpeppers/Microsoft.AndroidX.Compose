@@ -186,6 +186,32 @@ public class ComposableMethodGeneratorTests
     }
 
     [Fact]
+    public void NullableReferenceParam_PreservesInterceptorSignature()
+    {
+        var (output, diags, emitted) = Run("""
+            namespace App
+            {
+                public static class Screens
+                {
+                    [AndroidX.Compose.Composable]
+                    public static void Optional(
+                        AndroidX.Compose.Runtime.IComposer composer,
+                        System.Action<string>? callback) { }
+
+                    public static void CallSite(AndroidX.Compose.Runtime.IComposer c) =>
+                        Optional(c, null);
+                }
+            }
+            """);
+
+        Assert.Empty(diags);
+        Assert.NotNull(emitted);
+        Assert.Contains("global::System.Action<string>? callback", emitted);
+        Assert.Contains("DiffSlot<global::System.Action<string>?>(callback, 1)", emitted);
+        AssertNoCompileErrors(output);
+    }
+
+    [Fact]
     public void NotStatic_ReportsCN5001()
     {
         var (_, diags, _) = Run("""

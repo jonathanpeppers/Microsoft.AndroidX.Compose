@@ -1083,10 +1083,21 @@ Both styles can call into each other freely:
   intercepted normally and the wrapper sets up its own restart group
   inside the surrounding tree-style render.
 - A Tier 2 method can construct a tree-style `ComposableNode` and call
-  `.Render(composer)` on it. This is how the seed entry points in
-  `AndroidX.Compose.Composables` (`Text`, `Column`, `Row`, `Box`,
-  `Button`) are currently implemented — when the interceptor's skip
-  path fires, the inner `new X(...)` allocation never happens.
+  `.Render(composer)` on it.
+- `ComposeFacadeGenerator` emits a sibling `[Composable]` method on
+  `AndroidX.Compose.Composables` for every supported generated facade.
+  The method exposes ctor values, modifier, content, named slots,
+  optional values, theme color, and state-confirm callbacks as normal
+  parameters, maps them onto the existing facade, and renders it. Do
+  not hand-write a duplicate entry point; extend the facade generator
+  when a generated shape is wrong.
+- `Column` and `Row` remain hand-written entry points because their
+  facades are generator holdouts. `Text`, `Box`, and `Button` now use
+  the richer catalog-generated methods. The generator detects an
+  existing same-name method and does not emit a duplicate.
+- `SetContent(Action<IComposer>)` hosts a Tier 2 root directly.
+  Jetchat, JetNews, and Reply use this overload and expose their
+  top-level app boundary as a `[Composable] static void` method.
 
 There is no migration pressure. Hot composables that recompose often
 are the natural candidates for Tier 2; one-shot screens can stay
@@ -1132,10 +1143,11 @@ behaviour.**
 
 ### Deferred (follow-up)
 
-- Sibling static `[Composable]` entry points for the **rest** of the
-  facade catalog (the MVP seeds `Text`, `Column`, `Row`, `Box`,
-  `Button`); extend `ComposeFacadeGenerator` to emit them
-  mechanically from the existing `[ComposeFacade]` metadata.
+- Direct `[ComposeBridge]` calls from generated catalog entry points;
+  they currently allocate the corresponding facade only when the
+  interceptor decides the method must execute.
+- Tier 2 modelling for hand-written facade holdouts (`Scaffold`, lazy
+  collections, text fields, search, and other custom shapes).
 - `$default` parameter injection — lower C# default-parameter syntax
   into Kotlin-style `$default` bitmask.
 - Analyzer for "non-`[Composable]` calls `[Composable]`" — compile-

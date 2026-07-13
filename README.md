@@ -121,7 +121,20 @@ public static class Screens
 }
 ```
 
-`Composables.Text`, `Column`, `Row`, `Box`, `Button` are public Tier 2 entry points that mirror the like-named tree-style facades; each is itself a `[Composable]` static method with its own restart group, so a parent's input change cascades through child wrappers and each one independently decides to re-run or skip. See [docs/architecture.md → Tier 2](docs/architecture.md) for the emission shape, the [Composable] sibling skip demo (proof that an unchanged sibling's body never runs), diagnostics (CN5001–CN5003), and the deferred follow-up list (sibling entry points for the rest of the catalog, `$default` injection, analyzer enforcement). The two tiers coexist freely — a Tier 2 method can call into the tree-style catalog and vice versa.
+`ComposeFacadeGenerator` emits public Tier 2 entry points alongside the
+tree-style facade catalog: buttons, cards, app bars, chips, tabs, drawers,
+pickers, navigation components, and other generated facades can all be called
+as `Composables.X(composer, ...)`. Each entry point is itself `[Composable]`,
+so unchanged calls skip before constructing their tree-style adapter. The
+hand-written holdouts (`Scaffold`, lazy collections, text fields, search, and
+similar custom shapes) remain tree-style for now.
+
+The Jetchat, JetNews, and Reply ports use a Tier 2 root matching upstream
+Kotlin's top-level `@Composable` app function and call it through the
+`Action<IComposer>` `SetContent` overload. See
+[docs/architecture.md → Tier 2](docs/architecture.md) for the emission shape,
+the sibling-skip proof demo, diagnostics (CN5001–CN5003), and remaining
+follow-ups. The two tiers coexist freely.
 
 ## What's wrapped today
 
