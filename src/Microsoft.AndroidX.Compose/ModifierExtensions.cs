@@ -1,4 +1,5 @@
 using Android.Runtime;
+using AndroidX.Compose.Foundation.Layout;
 
 namespace AndroidX.Compose;
 
@@ -155,6 +156,102 @@ public static class ModifierExtensions
     public static Modifier SystemBarsPadding(this Modifier modifier) =>
         modifier.Append(h => ComposeBridges.ModifierSystemBarsPadding(h),
             new ModifierOpKey(nameof(SystemBarsPadding), null));
+
+    /// <summary>
+    /// Pads by <paramref name="insets"/>, excluding inset portions already
+    /// consumed by ancestor inset-aware modifiers.
+    /// </summary>
+    public static Modifier WindowInsetsPadding(
+        this Modifier modifier,
+        WindowInsets insets)
+    {
+        ArgumentNullException.ThrowIfNull(insets);
+        return modifier.AppendBound(
+            current => WindowInsetsPaddingKt.WindowInsetsPadding(
+                current,
+                insets.Jvm),
+            new ModifierOpKey(
+                nameof(WindowInsetsPadding),
+                ValueTuple.Create<object>(insets)));
+    }
+
+    /// <summary>
+    /// Marks <paramref name="insets"/> as consumed for descendant
+    /// inset-aware modifiers without adding padding.
+    /// </summary>
+    public static Modifier ConsumeWindowInsets(
+        this Modifier modifier,
+        WindowInsets insets)
+    {
+        ArgumentNullException.ThrowIfNull(insets);
+        return modifier.AppendBound(
+            current => WindowInsetsPaddingKt.ConsumeWindowInsets(
+                current,
+                insets.Jvm),
+            new ModifierOpKey(
+                nameof(ConsumeWindowInsets),
+                ValueTuple.Create<object>(insets)));
+    }
+
+    /// <summary>Sizes the element to the bottom edge of <paramref name="insets"/>.</summary>
+    public static Modifier WindowInsetsBottomHeight(
+        this Modifier modifier,
+        WindowInsets insets)
+    {
+        ArgumentNullException.ThrowIfNull(insets);
+        return modifier.AppendBound(
+            current => WindowInsetsSizeKt.WindowInsetsBottomHeight(
+                current,
+                insets.Jvm),
+            new ModifierOpKey(
+                nameof(WindowInsetsBottomHeight),
+                ValueTuple.Create<object>(insets)));
+    }
+
+    /// <summary>Sizes the element to the top edge of <paramref name="insets"/>.</summary>
+    public static Modifier WindowInsetsTopHeight(
+        this Modifier modifier,
+        WindowInsets insets)
+    {
+        ArgumentNullException.ThrowIfNull(insets);
+        return modifier.AppendBound(
+            current => WindowInsetsSizeKt.WindowInsetsTopHeight(
+                current,
+                insets.Jvm),
+            new ModifierOpKey(
+                nameof(WindowInsetsTopHeight),
+                ValueTuple.Create<object>(insets)));
+    }
+
+    /// <summary>Sizes the element to the start edge of <paramref name="insets"/>.</summary>
+    public static Modifier WindowInsetsStartWidth(
+        this Modifier modifier,
+        WindowInsets insets)
+    {
+        ArgumentNullException.ThrowIfNull(insets);
+        return modifier.AppendBound(
+            current => WindowInsetsSizeKt.WindowInsetsStartWidth(
+                current,
+                insets.Jvm),
+            new ModifierOpKey(
+                nameof(WindowInsetsStartWidth),
+                ValueTuple.Create<object>(insets)));
+    }
+
+    /// <summary>Sizes the element to the end edge of <paramref name="insets"/>.</summary>
+    public static Modifier WindowInsetsEndWidth(
+        this Modifier modifier,
+        WindowInsets insets)
+    {
+        ArgumentNullException.ThrowIfNull(insets);
+        return modifier.AppendBound(
+            current => WindowInsetsSizeKt.WindowInsetsEndWidth(
+                current,
+                insets.Jvm),
+            new ModifierOpKey(
+                nameof(WindowInsetsEndWidth),
+                ValueTuple.Create<object>(insets)));
+    }
 
     /// <summary>
     /// <c>Modifier.minimumInteractiveComponentSize()</c> — reserves at
