@@ -4002,7 +4002,7 @@ public class FacadeGeneratorTests
                     [ComposeFacade]
                     public static partial void Widget(
                         int value, IModifier? modifier, IFunction2 content,
-                        bool enabled = true, IComposer composer = null!, int _changed = 0);
+                        [FacadeDefault(true)] bool enabled, IComposer composer, int _changed = 0);
                 }
             }
             """;
