@@ -130,10 +130,11 @@ public partial class SearchBarHandler : ComposeElementHandler<ISearchBar>
         var vTextAlign         = (TextAlignment)_vTextAlign.Value;
         var fill               = _fillWidth.Value;
 
-        var field = new ComposeOutlinedTextField(_tfv)
+        var field = new ComposeOutlinedTextField(
+            _tfv,
+            readOnly: readOnly,
+            singleLine: true)
         {
-            ReadOnly     = readOnly,
-            SingleLine   = true,
             // Magnifier glass — pure Unicode keeps us off the
             // material-icons NuGet for the MAUI base layer. Coloured
             // via SearchIconColor when set.

@@ -35,6 +35,12 @@ public sealed class TextField : ComposableNode
     readonly string?                       _value;
     readonly Action<string>?               _onValueChange;
     readonly MutableState<TextFieldValue>? _tfvState;
+    readonly bool                          _enabled;
+    readonly bool                          _readOnly;
+    readonly bool                          _isError;
+    readonly bool                          _singleLine;
+    readonly int                           _maxLines;
+    readonly int                           _minLines;
 
     /// <summary>Floating label (e.g. <c>new Text("Email")</c>).</summary>
     public ComposableNode? Label          { get; set; }
@@ -50,18 +56,6 @@ public sealed class TextField : ComposableNode
     public ComposableNode? Suffix         { get; set; }
     /// <summary>Helper text rendered below the field.</summary>
     public ComposableNode? SupportingText { get; set; }
-    /// <summary>Whether the field accepts focus and input.</summary>
-    public bool?           Enabled        { get; set; }
-    /// <summary>Whether the field is read-only.</summary>
-    public bool?           ReadOnly       { get; set; }
-    /// <summary>Whether the field is in an error state.</summary>
-    public bool?           IsError        { get; set; }
-    /// <summary>Whether the field is constrained to one line.</summary>
-    public bool?           SingleLine     { get; set; }
-    /// <summary>Maximum number of visible lines.</summary>
-    public int?            MaxLines       { get; set; }
-    /// <summary>Minimum number of visible lines.</summary>
-    public int?            MinLines       { get; set; }
     /// <summary>Optional shape applied to the field's container (Kotlin <c>shape</c>).</summary>
     public Shape?          Shape          { get; set; }
     /// <summary>Optional <c>TextStyle</c> override (Kotlin <c>textStyle</c>) — controls text color, size, weight, etc.</summary>
@@ -72,18 +66,49 @@ public sealed class TextField : ComposableNode
     public AndroidX.Compose.Foundation.Text.KeyboardOptions? KeyboardOptions { get; set; }
 
     /// <summary>String-overload ctor — pass the current value and a callback.</summary>
-    public TextField(string value, Action<string> onValueChange)
+    public TextField(
+        string value,
+        Action<string> onValueChange,
+        bool enabled = true,
+        bool readOnly = false,
+        bool isError = false,
+        bool singleLine = false,
+        int maxLines = int.MaxValue,
+        int minLines = 1)
     {
+        ArgumentNullException.ThrowIfNull(value);
+        ArgumentNullException.ThrowIfNull(onValueChange);
         _value = value;
         _onValueChange = onValueChange;
+        _enabled = enabled;
+        _readOnly = readOnly;
+        _isError = isError;
+        _singleLine = singleLine;
+        _maxLines = maxLines;
+        _minLines = minLines;
     }
 
     /// <summary>
     /// Bind this <c>TextField</c> to a <see cref="MutableState{T}"/> of
     /// <see cref="string"/> so user edits trigger recomposition automatically.
     /// </summary>
-    public TextField(MutableState<string> state)
-        : this(state.Value ?? string.Empty, v => state.Value = v)
+    public TextField(
+        MutableState<string> state,
+        bool enabled = true,
+        bool readOnly = false,
+        bool isError = false,
+        bool singleLine = false,
+        int maxLines = int.MaxValue,
+        int minLines = 1)
+        : this(
+            CurrentValue(state),
+            v => state.Value = v,
+            enabled,
+            readOnly,
+            isError,
+            singleLine,
+            maxLines,
+            minLines)
     {
     }
 
@@ -94,10 +119,29 @@ public sealed class TextField : ComposableNode
     /// overload so caller-supplied selection state is honoured (e.g. for
     /// "place caret at end after inserting" behaviour).
     /// </summary>
-    public TextField(MutableState<TextFieldValue> state)
+    public TextField(
+        MutableState<TextFieldValue> state,
+        bool enabled = true,
+        bool readOnly = false,
+        bool isError = false,
+        bool singleLine = false,
+        int maxLines = int.MaxValue,
+        int minLines = 1)
     {
         ArgumentNullException.ThrowIfNull(state);
         _tfvState = state;
+        _enabled = enabled;
+        _readOnly = readOnly;
+        _isError = isError;
+        _singleLine = singleLine;
+        _maxLines = maxLines;
+        _minLines = minLines;
+    }
+
+    static string CurrentValue(MutableState<string> state)
+    {
+        ArgumentNullException.ThrowIfNull(state);
+        return state.Value ?? string.Empty;
     }
 
     /// <inheritdoc/>
@@ -111,8 +155,12 @@ public sealed class TextField : ComposableNode
 
     void RenderString(IComposer composer)
     {
+        var value = _value
+            ?? throw new InvalidOperationException($"{nameof(TextField)} string value was not initialized.");
+        var onValueChange = _onValueChange
+            ?? throw new InvalidOperationException($"{nameof(TextField)} value-change callback was not initialized.");
         var __onValueChange = composer.RememberAction((Java.Lang.Object? v) =>
-            _onValueChange!(v?.ToString() ?? string.Empty));
+            onValueChange(v?.ToString() ?? string.Empty));
         var __label          = Label          is null ? null : ComposableLambdas.Wrap2(composer, c => Label.Render(c));
         var __placeholder    = Placeholder    is null ? null : ComposableLambdas.Wrap2(composer, c => Placeholder.Render(c));
         var __leadingIcon    = LeadingIcon    is null ? null : ComposableLambdas.Wrap2(composer, c => LeadingIcon.Render(c));
@@ -127,28 +175,29 @@ public sealed class TextField : ComposableNode
         // Params beyond bit 28 land in the next $changed int which we
         // leave at 0 (Uncertain) — same as ComposeFacadeGenerator.
         int __changed = 0;
-        __changed |= composer.DiffSlot(_value, ComposeExtensions.DiffSlotShift(0));
+        __changed |= composer.DiffSlot(value, ComposeExtensions.DiffSlotShift(0));
         __changed |= (int)ChangedBits.Static << ComposeExtensions.DiffSlotShift(1);
         __changed |= composer.DiffSlot(__modifierKey, ComposeExtensions.DiffSlotShift(2));
-        __changed |= composer.DiffSlot(Enabled, ComposeExtensions.DiffSlotShift(3));
-        __changed |= composer.DiffSlot(ReadOnly, ComposeExtensions.DiffSlotShift(4));
+        __changed |= composer.DiffSlot(_enabled, ComposeExtensions.DiffSlotShift(3));
+        __changed |= composer.DiffSlot(_readOnly, ComposeExtensions.DiffSlotShift(4));
         __changed |= composer.DiffSlot<object?>(TextStyle, ComposeExtensions.DiffSlotShift(5));
         __changed |= composer.DiffSlot<object?>(__label, ComposeExtensions.DiffSlotShift(6));
         __changed |= composer.DiffSlot<object?>(__placeholder, ComposeExtensions.DiffSlotShift(7));
         __changed |= composer.DiffSlot<object?>(__leadingIcon, ComposeExtensions.DiffSlotShift(8));
         __changed |= composer.DiffSlot<object?>(__trailingIcon, ComposeExtensions.DiffSlotShift(9));
-        ComposeBridges.TextField(_value!, __onValueChange, BuildModifier(),
-            Enabled, ReadOnly, TextStyle?.Build(), __label, __placeholder, __leadingIcon, __trailingIcon,
-            __prefix, __suffix, __supportingText, IsError,
+        ComposeBridges.TextField(value, __onValueChange, BuildModifier(),
+            _enabled, _readOnly, TextStyle?.Build(), __label, __placeholder, __leadingIcon, __trailingIcon,
+            __prefix, __suffix, __supportingText, _isError,
             VisualTransformation, KeyboardOptions,
-            SingleLine, MaxLines, MinLines,
+            _singleLine, _maxLines, _minLines,
             Shape,
             composer, _changed: __changed);
     }
 
     void RenderWithSelection(IComposer composer)
     {
-        var state = _tfvState!;
+        var state = _tfvState
+            ?? throw new InvalidOperationException($"{nameof(TextField)} text-field-value state was not initialized.");
         var current = state.Value
             ?? throw new InvalidOperationException(
                 $"{nameof(TextField)}: MutableState<TextFieldValue>.Value is null. " +
@@ -156,11 +205,11 @@ public sealed class TextField : ComposableNode
 
         var __onValueChange = composer.RememberAction((Java.Lang.Object? v) =>
         {
-            // Compose hands us the fresh Kotlin TextFieldValue peer; the
-            // peer registry maps it back to the bound binding type so we
-            // can store it directly.
+            var peer = v
+                ?? throw new InvalidOperationException($"{nameof(TextField)} received a null TextFieldValue peer.");
             state.Value = Java.Lang.Object.GetObject<TextFieldValue>(
-                v!.Handle, JniHandleOwnership.DoNotTransfer)!;
+                peer.Handle, JniHandleOwnership.DoNotTransfer)
+                ?? throw new InvalidOperationException($"{nameof(TextField)} could not resolve the TextFieldValue peer.");
         });
         var __label          = Label          is null ? null : ComposableLambdas.Wrap2(composer, c => Label.Render(c));
         var __placeholder    = Placeholder    is null ? null : ComposableLambdas.Wrap2(composer, c => Placeholder.Render(c));
@@ -178,18 +227,18 @@ public sealed class TextField : ComposableNode
         __changed |= composer.DiffSlot<object?>(current, ComposeExtensions.DiffSlotShift(0));
         __changed |= (int)ChangedBits.Static << ComposeExtensions.DiffSlotShift(1);
         __changed |= composer.DiffSlot(__modifierKey, ComposeExtensions.DiffSlotShift(2));
-        __changed |= composer.DiffSlot(Enabled, ComposeExtensions.DiffSlotShift(3));
-        __changed |= composer.DiffSlot(ReadOnly, ComposeExtensions.DiffSlotShift(4));
+        __changed |= composer.DiffSlot(_enabled, ComposeExtensions.DiffSlotShift(3));
+        __changed |= composer.DiffSlot(_readOnly, ComposeExtensions.DiffSlotShift(4));
         __changed |= composer.DiffSlot<object?>(TextStyle, ComposeExtensions.DiffSlotShift(5));
         __changed |= composer.DiffSlot<object?>(__label, ComposeExtensions.DiffSlotShift(6));
         __changed |= composer.DiffSlot<object?>(__placeholder, ComposeExtensions.DiffSlotShift(7));
         __changed |= composer.DiffSlot<object?>(__leadingIcon, ComposeExtensions.DiffSlotShift(8));
         __changed |= composer.DiffSlot<object?>(__trailingIcon, ComposeExtensions.DiffSlotShift(9));
         ComposeBridges.TextFieldWithValue(current, __onValueChange, BuildModifier(),
-            Enabled, ReadOnly, TextStyle?.Build(), __label, __placeholder, __leadingIcon, __trailingIcon,
-            __prefix, __suffix, __supportingText, IsError,
+            _enabled, _readOnly, TextStyle?.Build(), __label, __placeholder, __leadingIcon, __trailingIcon,
+            __prefix, __suffix, __supportingText, _isError,
             VisualTransformation, KeyboardOptions,
-            SingleLine, MaxLines, MinLines,
+            _singleLine, _maxLines, _minLines,
             Shape,
             composer, _changed: __changed);
     }

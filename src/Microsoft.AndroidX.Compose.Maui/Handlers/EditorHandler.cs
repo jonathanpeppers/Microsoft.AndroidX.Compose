@@ -117,12 +117,7 @@ public partial class EditorHandler : ComposeElementHandler<IEditor>
         var hTextAlign      = (TextAlignment)_hTextAlign.Value;
         var fill            = _fillWidth.Value;
 
-        var field = new ComposeOutlinedTextField(_tfv)
-        {
-            ReadOnly   = readOnly,
-            // Multi-line — the whole point of Editor.
-            SingleLine = false,
-        };
+        var field = new ComposeOutlinedTextField(_tfv, readOnly: readOnly);
         if (!string.IsNullOrEmpty(placeholder))
             field.Placeholder = new ComposeText(placeholder)
             {

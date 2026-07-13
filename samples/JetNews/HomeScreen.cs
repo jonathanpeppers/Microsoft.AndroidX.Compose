@@ -65,10 +65,9 @@ public static class HomeScreen
                 new Icon(Resource.Drawable.ic_menu, "Open navigation drawer"),
             },
             Title = searchOpen.Value
-                ? new OutlinedTextField(searchQuery)
+                ? new OutlinedTextField(searchQuery, singleLine: true)
                 {
                     Modifier    = Modifier.FillMaxWidth().Padding(horizontal: 8),
-                    SingleLine  = true,
                     Placeholder = new Text("Search JetNews"),
                 }
                 : new Icon(Resource.Drawable.ic_jetnews_wordmark, "JetNews")

@@ -10,20 +10,36 @@ public static class TextFieldSlotsDemo
         Id:          "text-textfield-slots",
         CategoryId:  "text-inputs",
         Title:       "TextField slots",
-        Description: "Label, Placeholder, LeadingIcon, TrailingIcon, SupportingText, SingleLine.",
+        Description: "Slots plus constructor-backed Enabled, ReadOnly, and SingleLine defaults.",
         Build:       c =>
         {
-            var name = c.MutableStateOf("");
+            var name     = c.MutableStateOf("");
+            var enabled  = c.MutableStateOf(true);
+            var readOnly = c.MutableStateOf(false);
             return new Column
             {
-                new TextField(name)
+                new TextField(
+                    name,
+                    enabled: enabled.Value,
+                    readOnly: readOnly.Value,
+                    singleLine: true)
                 {
                     Label          = new Text("Your name"),
                     Placeholder    = new Text("Type something…"),
                     LeadingIcon    = new Text("👤"),
                     TrailingIcon   = new Text("✎"),
                     SupportingText = new Text("All five slots filled"),
-                    SingleLine     = true,
+                },
+                new Row(horizontalArrangement: Arrangement.SpacedBy(8.Dp()))
+                {
+                    new Button(onClick: () => enabled.Value = !enabled.Value)
+                    {
+                        new Text(enabled.Value ? "Disable" : "Enable"),
+                    },
+                    new Button(onClick: () => readOnly.Value = !readOnly.Value)
+                    {
+                        new Text(readOnly.Value ? "Make editable" : "Make read-only"),
+                    },
                 },
                 new Text($"Hi {(string.IsNullOrEmpty(name.Value) ? "stranger" : name.Value)}"),
             };
