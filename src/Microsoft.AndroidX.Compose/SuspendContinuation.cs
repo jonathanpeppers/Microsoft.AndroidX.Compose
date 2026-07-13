@@ -1,6 +1,7 @@
 using System.Runtime.InteropServices;
 using Android.Runtime;
 using Kotlin.Coroutines;
+using Xamarin.KotlinX.Coroutines;
 
 namespace AndroidX.Compose;
 
@@ -27,25 +28,29 @@ namespace AndroidX.Compose;
 /// race the GC. The handle is a normal strong reference, not pinned
 /// in memory. <see cref="Dispose(bool)"/> is the single, idempotent
 /// cleanup entry point: it releases the pin, the
-/// <see cref="CancellationTokenRegistration"/>, and the JNI peer.
+/// <see cref="CancellationTokenRegistration"/>, completes and disposes
+/// the job, and releases the continuation's JNI peer.
 /// </para>
 /// <para>
-/// Cancellation: when a non-default <see cref="CancellationToken"/>
-/// is supplied, a registration on the token cancels the backing TCS.
-/// That propagates to the caller's <c>await</c> as
-/// <see cref="OperationCanceledException"/> immediately, but
-/// the Kotlin suspend function keeps running to its natural
-/// completion — we don't wire a <c>Job</c> into <see cref="Context"/>
-/// yet. When Kotlin eventually resumes,
-/// <see cref="CompleteWithLocalHandle"/> sees the TCS is already
-/// completed and disposes the boxed result without surfacing it.
+/// Cancellation: each continuation with a cancellable
+/// <see cref="CancellationToken"/> owns a Kotlin
+/// <see cref="ICompletableJob"/> composed into <see cref="Context"/>. When
+/// the token fires, the callback marks cancellation, cancels that job, and
+/// cancels the backing TCS. Kotlin suspend points observe the cancelled job
+/// and unwind with <c>CancellationException</c>; the caller's <c>await</c>
+/// observes <see cref="OperationCanceledException"/> carrying the original
+/// token. A racing or late Kotlin resume is discarded.
 /// </para>
 /// </remarks>
 [Register("net/compose/SuspendContinuation")]
 internal sealed class SuspendContinuation : Java.Lang.Object, IContinuation
 {
+    readonly ICompletableJob? _job;
+    readonly CancellationToken _cancellationToken;
+    ICoroutineContext? _context;
     GCHandle _selfPin;
     CancellationTokenRegistration _ctr;
+    int _cancellationRequested;
     bool _disposed;
 
     /// <summary>
@@ -59,20 +64,25 @@ internal sealed class SuspendContinuation : Java.Lang.Object, IContinuation
 
     public SuspendContinuation(CancellationToken cancellationToken = default)
     {
+        _cancellationToken = cancellationToken;
+        if (cancellationToken.CanBeCanceled)
+            _job = JobKt.Job(null);
         _selfPin = GCHandle.Alloc(this);
         if (cancellationToken.CanBeCanceled)
         {
             // Allocation-free (state, token) overload: no closure per
             // suspend call. Disposing the registration in
-            // Dispose blocks until any in-flight invocation of
-            // this callback completes; the callback only touches the
-            // (thread-safe) TCS, so there's no deadlock path back into
-            // Dispose.
+            // Dispose blocks until any in-flight invocation completes.
+            // Cancellation marks the continuation before cancelling the
+            // Job so a synchronous Kotlin resume cannot beat the TCS into
+            // a faulted state.
             _ctr = cancellationToken.Register(
                 static (state, token) =>
                 {
-                    var self = (SuspendContinuation)state!;
-                    self.Tcs.TrySetCanceled(token);
+                    var self = state as SuspendContinuation
+                        ?? throw new InvalidOperationException(
+                            "SuspendContinuation cancellation callback received invalid state.");
+                    self.Cancel(token);
                 },
                 this);
         }
@@ -80,12 +90,10 @@ internal sealed class SuspendContinuation : Java.Lang.Object, IContinuation
 
     /// <summary>
     /// Returns the <c>androidx.compose.ui.platform.AndroidUiDispatcher.Main</c>
-    /// context — combines a Compose main-thread dispatcher with a
-    /// <c>MonotonicFrameClock</c>. Required so suspend functions that
-    /// rely on <c>withFrameNanos</c> (the entire animation family —
-    /// <c>animateScrollTo</c>, <c>animateTo</c>, <c>animate</c>) can
-    /// drive frames; otherwise their internal
-    /// <c>coroutineContext[MonotonicFrameClock]</c> lookup throws.
+    /// context combined with this call's Kotlin <see cref="IJob"/>.
+    /// The dispatcher supplies the <c>MonotonicFrameClock</c> required
+    /// by animation suspends; the job propagates C# cancellation into
+    /// Kotlin suspend points.
     /// </summary>
     /// <remarks>
     /// The <c>AndroidUiDispatcher.Companion</c> nested type is bound but
@@ -99,8 +107,14 @@ internal sealed class SuspendContinuation : Java.Lang.Object, IContinuation
         get
         {
             var handle = ComposeBridges.AndroidUiDispatcherMain();
-            return Java.Lang.Object.GetObject<ICoroutineContext>(
-                handle, JniHandleOwnership.DoNotTransfer)!;
+            var main = Java.Lang.Object.GetObject<ICoroutineContext>(
+                handle, JniHandleOwnership.DoNotTransfer)
+                ?? throw new InvalidOperationException(
+                    "AndroidUiDispatcher.Main did not resolve to a CoroutineContext.");
+            var job = _job;
+            if (job is null)
+                return main;
+            return _context ??= main.Plus(job);
         }
     }
 
@@ -135,7 +149,7 @@ internal sealed class SuspendContinuation : Java.Lang.Object, IContinuation
         {
             // Continuations are single-resume; Kotlin is done with the
             // JCW now. Standard IDisposable cleanup releases the pin,
-            // the CTR, and the JNI peer all in one shot.
+            // the CTR, Kotlin Job, and JNI peer all in one shot.
             Dispose();
         }
     }
@@ -165,6 +179,12 @@ internal sealed class SuspendContinuation : Java.Lang.Object, IContinuation
             if (deleteLocal)
                 JNIEnv.DeleteLocalRef(handle);
         }
+        if (Volatile.Read(ref _cancellationRequested) != 0)
+        {
+            Tcs.TrySetCanceled(_cancellationToken);
+            owned?.Dispose();
+            return;
+        }
         if (!Tcs.TrySetResult(owned))
         {
             // Double-resume (Kotlin shouldn't, but be defensive):
@@ -174,9 +194,28 @@ internal sealed class SuspendContinuation : Java.Lang.Object, IContinuation
         }
     }
 
+    void Cancel(CancellationToken cancellationToken)
+    {
+        Interlocked.Exchange(ref _cancellationRequested, 1);
+        var job = _job
+            ?? throw new InvalidOperationException(
+                "SuspendContinuation cancellation callback has no Kotlin Job.");
+        try
+        {
+            job.Cancel(null);
+        }
+        catch (Exception ex)
+        {
+            Android.Util.Log.Error(
+                "AndroidX.Compose",
+                "SuspendContinuation failed to cancel its Kotlin Job: " + ex);
+        }
+        Tcs.TrySetCanceled(cancellationToken);
+    }
+
     /// <summary>
     /// Releases the GCHandle self-pin, disposes the
-    /// <see cref="CancellationTokenRegistration"/>, and lets
+    /// <see cref="CancellationTokenRegistration"/> and Kotlin job, and lets
     /// <see cref="Java.Lang.Object.Dispose(bool)"/> release the JNI
     /// peer. Idempotent and safe to call from any completion path
     /// (Kotlin resume in <see cref="ResumeWith"/>, the sync paths in
@@ -197,7 +236,16 @@ internal sealed class SuspendContinuation : Java.Lang.Object, IContinuation
         if (!Interlocked.Exchange(ref _disposed, true))
         {
             if (disposing)
+            {
                 _ctr.Dispose();
+                _context?.Dispose();
+                var job = _job;
+                if (job is not null)
+                {
+                    job.Complete();
+                    job.Dispose();
+                }
+            }
             if (_selfPin.IsAllocated)
                 _selfPin.Free();
         }

@@ -84,13 +84,18 @@ public sealed class DrawerStateHolder
     /// composition pass that renders the
     /// <see cref="ModalNavigationDrawer"/> facade).
     /// </summary>
-    public Task OpenAsync()
+    /// <param name="cancellationToken">
+    /// Cancels the returned task and stops the underlying Kotlin
+    /// animation at its next cancellable suspend point.
+    /// </param>
+    public Task OpenAsync(CancellationToken cancellationToken = default)
     {
         var jvm = Jvm
             ?? throw new InvalidOperationException(
                 "DrawerStateHolder.OpenAsync requires the holder to be bound to a live drawer; call it after the first render.");
         return SuspendBridge.Invoke(cont =>
-            ComposeBridges.DrawerStateOpen(((Java.Lang.Object)jvm).Handle, cont));
+            ComposeBridges.DrawerStateOpen(((Java.Lang.Object)jvm).Handle, cont),
+            cancellationToken);
     }
 
     /// <summary>
@@ -98,12 +103,17 @@ public sealed class DrawerStateHolder
     /// Kotlin's <c>DrawerState.close()</c>. See
     /// <see cref="OpenAsync"/> for the binding caveat.
     /// </summary>
-    public Task CloseAsync()
+    /// <param name="cancellationToken">
+    /// Cancels the returned task and stops the underlying Kotlin
+    /// animation at its next cancellable suspend point.
+    /// </param>
+    public Task CloseAsync(CancellationToken cancellationToken = default)
     {
         var jvm = Jvm
             ?? throw new InvalidOperationException(
                 "DrawerStateHolder.CloseAsync requires the holder to be bound to a live drawer; call it after the first render.");
         return SuspendBridge.Invoke(cont =>
-            ComposeBridges.DrawerStateClose(((Java.Lang.Object)jvm).Handle, cont));
+            ComposeBridges.DrawerStateClose(((Java.Lang.Object)jvm).Handle, cont),
+            cancellationToken);
     }
 }

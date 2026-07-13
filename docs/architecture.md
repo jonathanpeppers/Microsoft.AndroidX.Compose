@@ -293,13 +293,15 @@ class.
   change / leaving composition just like Kotlin.
 - **Suspend functions.** `SuspendBridge` (PR #97) lets a
   hand-written bridge return Kotlin's `COROUTINE_SUSPENDED` sentinel
-  and complete a `Task<T>` from the eventual resume. Used by
-  `ScrollState.ScrollToAsync` / `LazyListState.AnimateScrollToItemAsync`
-  / `SnackbarHostState.ShowSnackbarAsync` /
-  `DrawerStateHolder.OpenAsync` / `DrawerStateHolder.CloseAsync` (#140)
-  / `DetectTapGestures`. Bottom-sheet `Show()` / `Hide()` suspend
-  bridges aren't surfaced yet — the JCW veto-adapter pattern is in place
-  (Phase 10 `[ConfirmStateChange]`) but the suspend wiring lands next.
+  and complete a `Task<T>` from the eventual resume. Each continuation
+  with a cancellable token owns a bound
+  `kotlinx.coroutines.CompletableJob`, combines it with
+  `AndroidUiDispatcher.Main`, and cancels that job when the token fires,
+  so scroll and animation work stops at the next cancellable suspend
+  point. Used by `ScrollState.ScrollToAsync`,
+  `LazyListState.AnimateScrollToItemAsync`,
+  `DrawerStateHolder.OpenAsync` / `CloseAsync` (#140), and the
+  `SheetStateHolder` animation methods.
 - **Compose Navigation.** `NavHost` / `NavController` /
   `NavBackStackEntry` are bound (#60). Pass route lambdas via
   `NavGraphBuilderLambda`; deep links are not yet exposed.
@@ -319,6 +321,3 @@ class.
 - Adaptive `TwoPane` / `NavigableListDetailPaneScaffold` + Jetpack
   `WindowManager` (`WindowLayoutInfo`/`FoldingFeature`) — see
   [#168](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/168).
-- Programmatic bottom-sheet open via `suspend` — the JCW
-  veto-adapter pattern is in place (Phase 10 `[ConfirmStateChange]`)
-  but `Show()`/`Hide()` aren't surfaced yet.

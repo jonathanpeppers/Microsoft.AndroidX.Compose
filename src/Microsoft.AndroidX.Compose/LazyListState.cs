@@ -138,10 +138,8 @@ public sealed class LazyListState
     /// the first visible item. Defaults to <c>0</c>.
     /// </param>
     /// <param name="cancellationToken">
-    /// Cancels the returned task with
-    /// <see cref="OperationCanceledException"/>. See
-    /// <see cref="SuspendBridge"/> remarks for the current (C#-only)
-    /// cancellation semantics.
+    /// Cancels the returned task and the underlying Kotlin scroll
+    /// operation.
     /// </param>
     public Task ScrollToItemAsync(
         int index,
@@ -165,11 +163,8 @@ public sealed class LazyListState
     /// the first visible item. Defaults to <c>0</c>.
     /// </param>
     /// <param name="cancellationToken">
-    /// Cancels the returned task with
-    /// <see cref="OperationCanceledException"/>. The underlying
-    /// Kotlin animation keeps running to its natural completion — see
-    /// <see cref="SuspendBridge"/> remarks for the current (C#-only)
-    /// cancellation semantics.
+    /// Cancels the returned task and stops the underlying Kotlin
+    /// animation at its next cancellable suspend point.
     /// </param>
     public Task AnimateScrollToItemAsync(
         int index,

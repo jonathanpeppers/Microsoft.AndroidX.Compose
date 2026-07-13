@@ -31,16 +31,13 @@ namespace AndroidX.Compose;
 /// </para>
 /// <para>
 /// Cancellation: an optional <see cref="CancellationToken"/> cancels
-/// the returned <see cref="Task"/> (transitioning it to
-/// <see cref="TaskStatus.Canceled"/>, so the <c>await</c> throws
-/// <see cref="OperationCanceledException"/>) as soon as the
-/// token fires. The Kotlin suspend body keeps running to its natural
-/// completion — we don't yet plumb a <c>Job</c> into
-/// <see cref="SuspendContinuation.Context"/>, so there is no
-/// Kotlin-side cancel. The boxed result of the eventual resume is
-/// disposed silently. True Kotlin-side cancel (calling
-/// <c>job.cancel()</c> so animation/scroll bodies stop at the next
-/// suspend point) is tracked as a follow-up.
+/// both the returned <see cref="Task"/> and the Kotlin <c>Job</c> in
+/// <see cref="SuspendContinuation.Context"/>. The <c>await</c> throws
+/// <see cref="OperationCanceledException"/> carrying the supplied token,
+/// while the Kotlin suspend body stops at its next cancellable suspend
+/// point. A suspend body may still finish if it deliberately catches
+/// <c>CancellationException</c> or runs in a non-cancellable context;
+/// any late resume is discarded.
 /// </para>
 /// </remarks>
 internal static class SuspendBridge
@@ -71,9 +68,8 @@ internal static class SuspendBridge
     /// returns; do not capture or return the box itself.
     /// </param>
     /// <param name="cancellationToken">
-    /// Cancels the returned task. See the type-level remarks for the
-    /// (current) semantics: only the C# awaiter sees the cancel; the
-    /// Kotlin suspend body keeps running.
+    /// Cancels the returned task and its Kotlin coroutine job. See the
+    /// type-level remarks for late-resume behavior.
     /// </param>
     public static Task<T> Invoke<T>(
         Func<SuspendContinuation, IntPtr> call,
