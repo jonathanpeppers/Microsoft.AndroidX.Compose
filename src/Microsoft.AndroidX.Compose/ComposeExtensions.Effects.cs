@@ -20,6 +20,29 @@ public static partial class ComposeExtensions
     }
 
     /// <summary>
+    /// Remembers a composition-owned <see cref="CoroutineScope"/> that can
+    /// launch asynchronous work from non-composable callbacks such as button
+    /// clicks. The scope is cancelled automatically when this call leaves the
+    /// composition.
+    /// </summary>
+    /// <remarks>
+    /// Call <see cref="CoroutineScope.Launch"/> from an event handler and pass
+    /// its cancellation token to Compose <c>*Async</c> APIs. Do not cache the
+    /// returned scope outside the composition that created it.
+    /// </remarks>
+    public static CoroutineScope RememberCoroutineScope(this IComposer composer)
+    {
+        ArgumentNullException.ThrowIfNull(composer);
+
+        // Kotlin source parameters are (getContext), followed by Composer,
+        // $changed, and $default. Bit 0 asks Kotlin to use EmptyCoroutineContext.
+        var scope = EffectsKt.RememberCoroutineScope(null, composer, 0, 1)
+            ?? throw new InvalidOperationException(
+                "rememberCoroutineScope did not return a Kotlin CoroutineScope.");
+        return new CoroutineScope(scope);
+    }
+
+    /// <summary>
     /// Compose's <c>DisposableEffect(key1) { … onDispose { … } }</c>:
     /// runs <paramref name="effect"/> the first time this call site
     /// is composed (and again whenever <paramref name="key1"/> changes),
