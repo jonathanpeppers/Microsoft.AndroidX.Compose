@@ -308,6 +308,10 @@ helpers, operators.
   content lambda.
 - `[Callback(typeof(T))]` — surface `IFunction1` as typed `Action<T>` ctor
   slot. `T` ∈ {`bool`, `string`, `float`}.
+- `[FacadeDefault(value)]` — give a primitive generated-facade constructor
+  slot a C# default while keeping the bridge parameter and trailing
+  `IComposer` required. Use this instead of making bridge parameters optional;
+  it avoids `composer = null!` solely for C# optional-parameter ordering.
 - `[PainterResource]` — annotate `IntPtr` taking the resolved Painter handle.
   Facade exposes synthetic `int painterResourceId` ctor in its place; emits
   `PainterResource(id, composer)` + try/finally + `DeleteLocalRef` preamble.

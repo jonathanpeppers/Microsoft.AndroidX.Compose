@@ -86,6 +86,7 @@ public static class Catalog
         D.Containers.SpacerDemo.Demo,
         D.Containers.DividerDemo.Demo,
         D.Containers.FlowRowFlowColumnDemo.Demo,
+        D.Containers.SnackbarLayoutDemo.Demo,
         D.Containers.BoxWithConstraintsDemo.Demo,
         D.Containers.CustomLayoutDemo.Demo,
 
@@ -126,6 +127,7 @@ public static class Catalog
         D.Navigation.DismissibleDrawerDemo.Demo,
         D.Navigation.PermanentDrawerDemo.Demo,
         D.Navigation.WideNavigationRailDemo.Demo,
+        D.Navigation.NavigationRailOptionsDemo.Demo,
         D.Navigation.ModalWideNavigationRailDemo.Demo,
 
         // ---- Dialogs & sheets ----

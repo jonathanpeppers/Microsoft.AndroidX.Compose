@@ -75,7 +75,7 @@ AndroidX.Compose.AnnotatedText.SoftWrap.get -> bool?
 AndroidX.Compose.AnnotatedText.SoftWrap.set -> void
 AndroidX.Compose.Arrangement
 AndroidX.Compose.AssistChip
-AndroidX.Compose.AssistChip.AssistChip(System.Action! onClick) -> void
+AndroidX.Compose.AssistChip.AssistChip(System.Action! onClick, bool enabled = true) -> void
 AndroidX.Compose.AssistChip.Label.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.AssistChip.Label.set -> void
 AndroidX.Compose.AssistChip.LeadingIcon.get -> AndroidX.Compose.ComposableNode?
@@ -110,7 +110,7 @@ AndroidX.Compose.BottomSheetScaffold.SheetDragHandle.set -> void
 AndroidX.Compose.BottomSheetScaffold.TopBar.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.BottomSheetScaffold.TopBar.set -> void
 AndroidX.Compose.Box
-AndroidX.Compose.Box.Box() -> void
+AndroidX.Compose.Box.Box(bool propagateMinConstraints = false) -> void
 AndroidX.Compose.BoxConstraints
 AndroidX.Compose.BoxConstraints.BoxConstraints() -> void
 AndroidX.Compose.BoxConstraints.MaxHeight.get -> float
@@ -121,7 +121,7 @@ AndroidX.Compose.BoxWithConstraints
 AndroidX.Compose.BoxWithConstraints.BoxWithConstraints(System.Func<AndroidX.Compose.BoxConstraints, AndroidX.Compose.ComposableNode!>! content) -> void
 AndroidX.Compose.Brush
 AndroidX.Compose.Button
-AndroidX.Compose.Button.Button(System.Action! onClick) -> void
+AndroidX.Compose.Button.Button(System.Action! onClick, bool enabled = true) -> void
 AndroidX.Compose.Button.Colors.get -> AndroidX.Compose.Material3.ButtonColors?
 AndroidX.Compose.Button.Colors.set -> void
 AndroidX.Compose.Button.ContentPadding.get -> AndroidX.Compose.PaddingValues?
@@ -221,9 +221,9 @@ AndroidX.Compose.Crossfade<T>
 AndroidX.Compose.Crossfade<T>.Crossfade(T targetState, System.Func<T, AndroidX.Compose.ComposableNode!>! content) -> void
 AndroidX.Compose.Crossfade<T>.TargetState.get -> T
 AndroidX.Compose.CustomTab
-AndroidX.Compose.CustomTab.CustomTab(bool selected, System.Action! onClick) -> void
+AndroidX.Compose.CustomTab.CustomTab(bool selected, System.Action! onClick, bool enabled = true) -> void
 AndroidX.Compose.DatePicker
-AndroidX.Compose.DatePicker.DatePicker(AndroidX.Compose.DatePickerState? state = null) -> void
+AndroidX.Compose.DatePicker.DatePicker(AndroidX.Compose.DatePickerState? state = null, bool showModeToggle = true) -> void
 AndroidX.Compose.DatePickerDialog
 AndroidX.Compose.DatePickerDialog.Body.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.DatePickerDialog.Body.set -> void
@@ -250,7 +250,7 @@ AndroidX.Compose.DatePickerState.InitialYearRange.set -> void
 AndroidX.Compose.DatePickerState.SelectedDateMillis.get -> long?
 AndroidX.Compose.DatePickerState.SelectedDateMillis.set -> void
 AndroidX.Compose.DateRangePicker
-AndroidX.Compose.DateRangePicker.DateRangePicker(AndroidX.Compose.DateRangePickerState? state = null) -> void
+AndroidX.Compose.DateRangePicker.DateRangePicker(AndroidX.Compose.DateRangePickerState? state = null, bool showModeToggle = true) -> void
 AndroidX.Compose.DateRangePickerDialog
 AndroidX.Compose.DateRangePickerDialog.Body.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.DateRangePickerDialog.Body.set -> void
@@ -367,7 +367,7 @@ AndroidX.Compose.DropdownMenuItem.LeadingIcon.set -> void
 AndroidX.Compose.DropdownMenuItem.TrailingIcon.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.DropdownMenuItem.TrailingIcon.set -> void
 AndroidX.Compose.ElevatedAssistChip
-AndroidX.Compose.ElevatedAssistChip.ElevatedAssistChip(System.Action! onClick) -> void
+AndroidX.Compose.ElevatedAssistChip.ElevatedAssistChip(System.Action! onClick, bool enabled = true) -> void
 AndroidX.Compose.ElevatedAssistChip.Label.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.ElevatedAssistChip.Label.set -> void
 AndroidX.Compose.ElevatedAssistChip.LeadingIcon.get -> AndroidX.Compose.ComposableNode?
@@ -381,7 +381,7 @@ AndroidX.Compose.ElevatedButton.Colors.get -> AndroidX.Compose.Material3.ButtonC
 AndroidX.Compose.ElevatedButton.Colors.set -> void
 AndroidX.Compose.ElevatedButton.ContentPadding.get -> AndroidX.Compose.PaddingValues?
 AndroidX.Compose.ElevatedButton.ContentPadding.set -> void
-AndroidX.Compose.ElevatedButton.ElevatedButton(System.Action! onClick) -> void
+AndroidX.Compose.ElevatedButton.ElevatedButton(System.Action! onClick, bool enabled = true) -> void
 AndroidX.Compose.ElevatedButton.Shape.get -> AndroidX.Compose.Shape?
 AndroidX.Compose.ElevatedButton.Shape.set -> void
 AndroidX.Compose.ElevatedCard
@@ -389,7 +389,7 @@ AndroidX.Compose.ElevatedCard.ElevatedCard() -> void
 AndroidX.Compose.ElevatedCard.Shape.get -> AndroidX.Compose.Shape?
 AndroidX.Compose.ElevatedCard.Shape.set -> void
 AndroidX.Compose.ElevatedFilterChip
-AndroidX.Compose.ElevatedFilterChip.ElevatedFilterChip(bool selected, System.Action! onClick) -> void
+AndroidX.Compose.ElevatedFilterChip.ElevatedFilterChip(bool selected, System.Action! onClick, bool enabled = true) -> void
 AndroidX.Compose.ElevatedFilterChip.Label.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.ElevatedFilterChip.Label.set -> void
 AndroidX.Compose.ElevatedFilterChip.LeadingIcon.get -> AndroidX.Compose.ComposableNode?
@@ -399,7 +399,7 @@ AndroidX.Compose.ElevatedFilterChip.Shape.set -> void
 AndroidX.Compose.ElevatedFilterChip.TrailingIcon.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.ElevatedFilterChip.TrailingIcon.set -> void
 AndroidX.Compose.ElevatedSuggestionChip
-AndroidX.Compose.ElevatedSuggestionChip.ElevatedSuggestionChip(System.Action! onClick) -> void
+AndroidX.Compose.ElevatedSuggestionChip.ElevatedSuggestionChip(System.Action! onClick, bool enabled = true) -> void
 AndroidX.Compose.ElevatedSuggestionChip.Icon.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.ElevatedSuggestionChip.Icon.set -> void
 AndroidX.Compose.ElevatedSuggestionChip.Label.get -> AndroidX.Compose.ComposableNode?
@@ -427,11 +427,11 @@ AndroidX.Compose.ExtendedFloatingActionButton.Shape.set -> void
 AndroidX.Compose.ExtendedFloatingActionButton.Text.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.ExtendedFloatingActionButton.Text.set -> void
 AndroidX.Compose.FilledIconButton
-AndroidX.Compose.FilledIconButton.FilledIconButton(System.Action! onClick) -> void
+AndroidX.Compose.FilledIconButton.FilledIconButton(System.Action! onClick, bool enabled = true) -> void
 AndroidX.Compose.FilledIconButton.Shape.get -> AndroidX.Compose.Shape?
 AndroidX.Compose.FilledIconButton.Shape.set -> void
 AndroidX.Compose.FilledIconToggleButton
-AndroidX.Compose.FilledIconToggleButton.FilledIconToggleButton(bool checked, System.Action<bool>! onCheckedChange) -> void
+AndroidX.Compose.FilledIconToggleButton.FilledIconToggleButton(bool checked, System.Action<bool>! onCheckedChange, bool enabled = true) -> void
 AndroidX.Compose.FilledIconToggleButton.Shape.get -> AndroidX.Compose.Shape?
 AndroidX.Compose.FilledIconToggleButton.Shape.set -> void
 AndroidX.Compose.FilledTonalButton
@@ -439,19 +439,19 @@ AndroidX.Compose.FilledTonalButton.Colors.get -> AndroidX.Compose.Material3.Butt
 AndroidX.Compose.FilledTonalButton.Colors.set -> void
 AndroidX.Compose.FilledTonalButton.ContentPadding.get -> AndroidX.Compose.PaddingValues?
 AndroidX.Compose.FilledTonalButton.ContentPadding.set -> void
-AndroidX.Compose.FilledTonalButton.FilledTonalButton(System.Action! onClick) -> void
+AndroidX.Compose.FilledTonalButton.FilledTonalButton(System.Action! onClick, bool enabled = true) -> void
 AndroidX.Compose.FilledTonalButton.Shape.get -> AndroidX.Compose.Shape?
 AndroidX.Compose.FilledTonalButton.Shape.set -> void
 AndroidX.Compose.FilledTonalIconButton
-AndroidX.Compose.FilledTonalIconButton.FilledTonalIconButton(System.Action! onClick) -> void
+AndroidX.Compose.FilledTonalIconButton.FilledTonalIconButton(System.Action! onClick, bool enabled = true) -> void
 AndroidX.Compose.FilledTonalIconButton.Shape.get -> AndroidX.Compose.Shape?
 AndroidX.Compose.FilledTonalIconButton.Shape.set -> void
 AndroidX.Compose.FilledTonalIconToggleButton
-AndroidX.Compose.FilledTonalIconToggleButton.FilledTonalIconToggleButton(bool checked, System.Action<bool>! onCheckedChange) -> void
+AndroidX.Compose.FilledTonalIconToggleButton.FilledTonalIconToggleButton(bool checked, System.Action<bool>! onCheckedChange, bool enabled = true) -> void
 AndroidX.Compose.FilledTonalIconToggleButton.Shape.get -> AndroidX.Compose.Shape?
 AndroidX.Compose.FilledTonalIconToggleButton.Shape.set -> void
 AndroidX.Compose.FilterChip
-AndroidX.Compose.FilterChip.FilterChip(bool selected, System.Action! onClick) -> void
+AndroidX.Compose.FilterChip.FilterChip(bool selected, System.Action! onClick, bool enabled = true) -> void
 AndroidX.Compose.FilterChip.Label.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.FilterChip.Label.set -> void
 AndroidX.Compose.FilterChip.LeadingIcon.get -> AndroidX.Compose.ComposableNode?
@@ -467,9 +467,9 @@ AndroidX.Compose.FloatingActionButton.FloatingActionButton(System.Action! onClic
 AndroidX.Compose.FloatingActionButton.Shape.get -> AndroidX.Compose.Shape?
 AndroidX.Compose.FloatingActionButton.Shape.set -> void
 AndroidX.Compose.FlowColumn
-AndroidX.Compose.FlowColumn.FlowColumn() -> void
+AndroidX.Compose.FlowColumn.FlowColumn(int maxItemsInEachColumn = 2147483647, int maxLines = 2147483647) -> void
 AndroidX.Compose.FlowRow
-AndroidX.Compose.FlowRow.FlowRow() -> void
+AndroidX.Compose.FlowRow.FlowRow(int maxItemsInEachRow = 2147483647, int maxLines = 2147483647) -> void
 AndroidX.Compose.FocusRequester
 AndroidX.Compose.FocusRequester.CaptureFocus() -> bool
 AndroidX.Compose.FocusRequester.FocusRequester() -> void
@@ -530,7 +530,7 @@ AndroidX.Compose.Icon.Icon(int drawableResourceId, string? contentDescription) -
 AndroidX.Compose.Icon.Tint.get -> AndroidX.Compose.Color?
 AndroidX.Compose.Icon.Tint.set -> void
 AndroidX.Compose.IconButton
-AndroidX.Compose.IconButton.IconButton(System.Action! onClick) -> void
+AndroidX.Compose.IconButton.IconButton(System.Action! onClick, bool enabled = true) -> void
 AndroidX.Compose.Icons
 AndroidX.Compose.Icons.AutoMirrored
 AndroidX.Compose.Icons.AutoMirrored.Default
@@ -546,7 +546,7 @@ AndroidX.Compose.Icons.Rounded
 AndroidX.Compose.Icons.Sharp
 AndroidX.Compose.Icons.TwoTone
 AndroidX.Compose.IconToggleButton
-AndroidX.Compose.IconToggleButton.IconToggleButton(bool checked, System.Action<bool>! onCheckedChange) -> void
+AndroidX.Compose.IconToggleButton.IconToggleButton(bool checked, System.Action<bool>! onCheckedChange, bool enabled = true) -> void
 AndroidX.Compose.Image
 AndroidX.Compose.Image.Alignment.get -> AndroidX.Compose.Alignment?
 AndroidX.Compose.Image.Alignment.set -> void
@@ -562,7 +562,7 @@ AndroidX.Compose.ImeAction
 AndroidX.Compose.InputChip
 AndroidX.Compose.InputChip.Avatar.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.InputChip.Avatar.set -> void
-AndroidX.Compose.InputChip.InputChip(bool selected, System.Action! onClick) -> void
+AndroidX.Compose.InputChip.InputChip(bool selected, System.Action! onClick, bool enabled = true) -> void
 AndroidX.Compose.InputChip.Label.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.InputChip.Label.set -> void
 AndroidX.Compose.InputChip.LeadingIcon.get -> AndroidX.Compose.ComposableNode?
@@ -671,7 +671,7 @@ AndroidX.Compose.LazyVerticalStaggeredGrid<T>.State.set -> void
 AndroidX.Compose.LeadingIconTab
 AndroidX.Compose.LeadingIconTab.Icon.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.LeadingIconTab.Icon.set -> void
-AndroidX.Compose.LeadingIconTab.LeadingIconTab(bool selected, System.Action! onClick) -> void
+AndroidX.Compose.LeadingIconTab.LeadingIconTab(bool selected, System.Action! onClick, bool enabled = true) -> void
 AndroidX.Compose.LeadingIconTab.Text.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.LeadingIconTab.Text.set -> void
 AndroidX.Compose.LinearProgressIndicator
@@ -870,7 +870,7 @@ AndroidX.Compose.NavigationRailItem.Icon.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.NavigationRailItem.Icon.set -> void
 AndroidX.Compose.NavigationRailItem.Label.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.NavigationRailItem.Label.set -> void
-AndroidX.Compose.NavigationRailItem.NavigationRailItem(bool selected, System.Action! onClick) -> void
+AndroidX.Compose.NavigationRailItem.NavigationRailItem(bool selected, System.Action! onClick, bool enabled = true, bool alwaysShowLabel = true) -> void
 AndroidX.Compose.NavOptions
 AndroidX.Compose.NavOptions.LaunchSingleTop.get -> bool
 AndroidX.Compose.NavOptions.LaunchSingleTop.set -> void
@@ -897,7 +897,7 @@ AndroidX.Compose.OutlinedButton.Colors.get -> AndroidX.Compose.Material3.ButtonC
 AndroidX.Compose.OutlinedButton.Colors.set -> void
 AndroidX.Compose.OutlinedButton.ContentPadding.get -> AndroidX.Compose.PaddingValues?
 AndroidX.Compose.OutlinedButton.ContentPadding.set -> void
-AndroidX.Compose.OutlinedButton.OutlinedButton(System.Action! onClick) -> void
+AndroidX.Compose.OutlinedButton.OutlinedButton(System.Action! onClick, bool enabled = true) -> void
 AndroidX.Compose.OutlinedButton.Shape.get -> AndroidX.Compose.Shape?
 AndroidX.Compose.OutlinedButton.Shape.set -> void
 AndroidX.Compose.OutlinedCard
@@ -905,11 +905,11 @@ AndroidX.Compose.OutlinedCard.OutlinedCard() -> void
 AndroidX.Compose.OutlinedCard.Shape.get -> AndroidX.Compose.Shape?
 AndroidX.Compose.OutlinedCard.Shape.set -> void
 AndroidX.Compose.OutlinedIconButton
-AndroidX.Compose.OutlinedIconButton.OutlinedIconButton(System.Action! onClick) -> void
+AndroidX.Compose.OutlinedIconButton.OutlinedIconButton(System.Action! onClick, bool enabled = true) -> void
 AndroidX.Compose.OutlinedIconButton.Shape.get -> AndroidX.Compose.Shape?
 AndroidX.Compose.OutlinedIconButton.Shape.set -> void
 AndroidX.Compose.OutlinedIconToggleButton
-AndroidX.Compose.OutlinedIconToggleButton.OutlinedIconToggleButton(bool checked, System.Action<bool>! onCheckedChange) -> void
+AndroidX.Compose.OutlinedIconToggleButton.OutlinedIconToggleButton(bool checked, System.Action<bool>! onCheckedChange, bool enabled = true) -> void
 AndroidX.Compose.OutlinedIconToggleButton.Shape.get -> AndroidX.Compose.Shape?
 AndroidX.Compose.OutlinedIconToggleButton.Shape.set -> void
 AndroidX.Compose.OutlinedSecureTextField
@@ -1160,7 +1160,7 @@ AndroidX.Compose.Snackbar.Body.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.Snackbar.Body.set -> void
 AndroidX.Compose.Snackbar.DismissAction.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.Snackbar.DismissAction.set -> void
-AndroidX.Compose.Snackbar.Snackbar() -> void
+AndroidX.Compose.Snackbar.Snackbar(bool actionOnNewLine = false) -> void
 AndroidX.Compose.SnackbarHost
 AndroidX.Compose.SnackbarHost.SnackbarHost(AndroidX.Compose.SnackbarHostState! hostState) -> void
 AndroidX.Compose.SnackbarHostState
@@ -1203,7 +1203,7 @@ AndroidX.Compose.SuggestionChip.Label.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.SuggestionChip.Label.set -> void
 AndroidX.Compose.SuggestionChip.Shape.get -> AndroidX.Compose.Shape?
 AndroidX.Compose.SuggestionChip.Shape.set -> void
-AndroidX.Compose.SuggestionChip.SuggestionChip(System.Action! onClick) -> void
+AndroidX.Compose.SuggestionChip.SuggestionChip(System.Action! onClick, bool enabled = true) -> void
 AndroidX.Compose.Surface
 AndroidX.Compose.Surface.Shape.get -> AndroidX.Compose.Shape?
 AndroidX.Compose.Surface.Shape.set -> void
@@ -1215,7 +1215,7 @@ AndroidX.Compose.Switch.Switch(bool checked, System.Action<bool>! onCheckedChang
 AndroidX.Compose.Tab
 AndroidX.Compose.Tab.Icon.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.Tab.Icon.set -> void
-AndroidX.Compose.Tab.Tab(bool selected, System.Action! onClick) -> void
+AndroidX.Compose.Tab.Tab(bool selected, System.Action! onClick, bool enabled = true) -> void
 AndroidX.Compose.Tab.Text.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.Tab.Text.set -> void
 AndroidX.Compose.TabRow
@@ -1256,7 +1256,7 @@ AndroidX.Compose.TextButton.ContentPadding.get -> AndroidX.Compose.PaddingValues
 AndroidX.Compose.TextButton.ContentPadding.set -> void
 AndroidX.Compose.TextButton.Shape.get -> AndroidX.Compose.Shape?
 AndroidX.Compose.TextButton.Shape.set -> void
-AndroidX.Compose.TextButton.TextButton(System.Action! onClick) -> void
+AndroidX.Compose.TextButton.TextButton(System.Action! onClick, bool enabled = true) -> void
 AndroidX.Compose.TextDecoration
 AndroidX.Compose.TextField
 AndroidX.Compose.TextField.KeyboardOptions.get -> AndroidX.Compose.Foundation.Text.KeyboardOptions?

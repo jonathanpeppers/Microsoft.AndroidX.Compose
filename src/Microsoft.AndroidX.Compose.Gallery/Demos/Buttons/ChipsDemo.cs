@@ -15,23 +15,32 @@ public static class ChipsDemo
         {
             var count = c.MutableStateOf(0);
             var liked = c.MutableStateOf(false);
+            var enabled = c.MutableStateOf(true);
             return new Column(verticalArrangement: Arrangement.SpacedBy(8.Dp()))
             {
                 new Text($"Count: {count}, liked: {liked.Value}"),
+                new Row(horizontalArrangement: Arrangement.SpacedBy(8.Dp()),
+                        verticalAlignment: Alignment.Vertical.CenterVertically)
+                {
+                    new Switch(@checked: enabled.Value, onCheckedChange: value => enabled.Value = value),
+                    new Text("Enabled"),
+                },
                 new FlowRow
                 {
                     Modifier.FillMaxWidth(),
-                    new AssistChip(onClick: () => count++)
+                    new AssistChip(onClick: () => count++, enabled: enabled.Value)
                         { Label = new Text("Assist (+1)") },
-                    new ElevatedAssistChip(onClick: () => count++)
+                    new ElevatedAssistChip(onClick: () => count++, enabled: enabled.Value)
                         { Label = new Text("Elevated assist (+1)") },
-                    new FilterChip(selected: liked.Value, onClick: () => liked.Value = !liked.Value)
+                    new FilterChip(selected: liked.Value, onClick: () => liked.Value = !liked.Value, enabled: enabled.Value)
                         { Label = new Text(liked.Value ? "Liked" : "Like") },
-                    new ElevatedFilterChip(selected: liked.Value, onClick: () => liked.Value = !liked.Value)
+                    new ElevatedFilterChip(selected: liked.Value, onClick: () => liked.Value = !liked.Value, enabled: enabled.Value)
                         { Label = new Text(liked.Value ? "Elevated liked" : "Elevated like") },
-                    new SuggestionChip(onClick: () => count.Value = 0)
+                    new InputChip(selected: liked.Value, onClick: () => liked.Value = !liked.Value, enabled: enabled.Value)
+                        { Label = new Text("Input") },
+                    new SuggestionChip(onClick: () => count.Value = 0, enabled: enabled.Value)
                         { Label = new Text("Reset") },
-                    new ElevatedSuggestionChip(onClick: () => count.Value = 0)
+                    new ElevatedSuggestionChip(onClick: () => count.Value = 0, enabled: enabled.Value)
                         { Label = new Text("Elevated reset") },
                 },
             };

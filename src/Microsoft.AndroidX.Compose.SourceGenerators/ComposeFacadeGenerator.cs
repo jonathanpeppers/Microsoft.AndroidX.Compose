@@ -47,6 +47,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
     const string GenericDefaultsAttributeMetadataName = "AndroidX.Compose.ComposeDefaultsAttribute`1";
     const string SlotAttributeMetadataName = "AndroidX.Compose.SlotAttribute";
     const string CallbackAttributeMetadataName = "AndroidX.Compose.CallbackAttribute";
+    const string FacadeDefaultAttributeMetadataName = "AndroidX.Compose.FacadeDefaultAttribute";
     const string PainterResourceAttributeMetadataName = "AndroidX.Compose.PainterResourceAttribute";
     const string StateHolderAttributeMetadataName = "AndroidX.Compose.StateHolderAttribute";
     const string ConfirmStateChangeAttributeMetadataName = "AndroidX.Compose.ConfirmStateChangeAttribute";
@@ -1570,7 +1571,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
 
             if (callerProvidesChanged)
             {
-                EmitChangedMask(sb, indent, slots, composerName);
+                EmitChangedMask(sb, indent, slots, composerName, defaults);
             }
 
             // Bridge call. Preserve original bridge param order. When the
@@ -1648,15 +1649,15 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             hasModifier: hoistModifier, hasPainter: false);
         if (callerProvidesChanged)
         {
-            // Build a slot list matching the alternate bridge's user-param
-            // order (not the facade's slot order) so bit positions line up
-            // with what Kotlin assigned.
+            // Build the slots used by the alternate bridge. Kotlin bit
+            // positions come from its Defaults map, so C# declaration
+            // order may differ to keep optional parameters trailing.
             var altSlots = new List<FacadeSlot>(branch.AlternateUserParams.Count);
             foreach (var p in branch.AlternateUserParams)
             {
                 if (slotByName.TryGetValue(p.Name, out var s)) altSlots.Add(s);
             }
-            EmitChangedMask(sb, inner, altSlots, composerName);
+            EmitChangedMask(sb, inner, altSlots, composerName, branch.AlternateDefaults);
         }
         EmitBridgeCallByParams(sb, inner, branch.AlternateMethodName, branch.AlternateUserParams,
             slotByName, composerName, hoistModifier, callerProvidesChanged);
@@ -1674,7 +1675,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             {
                 if (slotByName.TryGetValue(p.Name, out var s)) primSlots.Add(s);
             }
-            EmitChangedMask(sb, inner, primSlots, composerName);
+            EmitChangedMask(sb, inner, primSlots, composerName, primaryDefaults);
         }
         EmitBridgeCallByParams(sb, inner, primaryMethodName, primaryUserParams,
             slotByName, composerName, hoistModifier, callerProvidesChanged);
@@ -1831,21 +1832,26 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
 
     /// <summary>
     /// Emit the per-slot Kotlin <c>$changed</c> mask. One <c>__changed</c>
-    /// local that ORs together a contribution per slot in the bridge's
-    /// user-param order. Bit position is <c>1 + paramIndex * 3</c> per
-    /// the compose-compiler convention; <see cref="FacadeSlotKind.ScopeReceiver"/>
-    /// slots are skipped because the bridge generator strips the receiver
-    /// before assigning bits.
+    /// local that ORs together a contribution per surfaced slot. Kotlin
+    /// parameter positions come from <paramref name="defaults"/> when
+    /// available because C# optional parameters may be moved after required
+    /// content slots. Bit position is <c>1 + paramIndex * 3</c> per the
+    /// compose-compiler convention; <see cref="FacadeSlotKind.ScopeReceiver"/>
+    /// slots are skipped because receivers are outside the Kotlin parameter
+    /// list.
     /// </summary>
     static void EmitChangedMask(StringBuilder sb, string indent,
-        IReadOnlyList<FacadeSlot> slots, string composerName,
+        IReadOnlyList<FacadeSlot> slots, string composerName, DefaultsInfo? defaults,
         string changedVar = "__changed")
     {
         sb.Append(indent).Append("int ").Append(changedVar).AppendLine(" = 0;");
-        int bitParamIndex = 0;
+        int fallbackParamIndex = 0;
         foreach (var s in slots)
         {
             if (s.Kind == FacadeSlotKind.ScopeReceiver) continue;
+            int bitParamIndex = defaults?.FindByKotlinName(s.Param.Name)?.Bit
+                ?? fallbackParamIndex;
+            fallbackParamIndex++;
             int shift = 1 + bitParamIndex * 3;
             // Cap at 30 bits (10 user params per Kotlin $changed int).
             // Anything beyond that lands in the next $changed slot which
@@ -1853,7 +1859,6 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             // Uncertain rather than corrupting the first int.
             if (shift > 30 - 2)
             {
-                bitParamIndex++;
                 continue;
             }
             string bitOffset = "global::AndroidX.Compose.ComposeExtensions.DiffSlotShift(" +
@@ -1871,7 +1876,6 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
                     // whole point.
                     sb.Append(indent).Append(changedVar).Append(" |= ").Append(composerName)
                       .Append(".DiffSlot(__modifierKey, ").Append(bitOffset).AppendLine(");");
-                    bitParamIndex++;
                     continue;
                 case FacadeSlotKind.OnClick:
                 case FacadeSlotKind.Callback:
@@ -1925,7 +1929,6 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
                     // Unknown — leave as Uncertain (0) for this slot.
                     break;
             }
-            bitParamIndex++;
         }
     }
 
@@ -1979,27 +1982,49 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
     /// True when the slot surfaces as a defaulted ctor parameter on the
     /// generated facade — either a <see cref="FacadeSlotKind.StateHolder"/>
     /// (always <c>= null</c>) or a <see cref="FacadeSlotKind.Primitive"/>
-    /// whose bridge parameter carries an explicit default value. Used to
+    /// whose bridge parameter carries an explicit C# default or a
+    /// <c>[FacadeDefault]</c> marker. Used to
     /// push defaulted slots after required slots so the ctor compiles
     /// (C# requires optional params to trail required ones).
     /// </summary>
     static bool HasFacadeCtorDefault(FacadeSlot s) =>
         s.Kind == FacadeSlotKind.StateHolder ||
-        (s.Kind == FacadeSlotKind.Primitive && s.Param.HasExplicitDefaultValue);
+        (s.Kind == FacadeSlotKind.Primitive && TryGetFacadeCtorDefault(s.Param, out _));
+
+    static bool TryGetFacadeCtorDefault(IParameterSymbol p, out object? value)
+    {
+        if (p.HasExplicitDefaultValue)
+        {
+            value = p.ExplicitDefaultValue;
+            return true;
+        }
+
+        var attr = p.GetAttributes().FirstOrDefault(a =>
+            a.AttributeClass?.ToDisplayString() == FacadeDefaultAttributeMetadataName);
+        if (attr is not null && attr.ConstructorArguments.Length == 1)
+        {
+            value = attr.ConstructorArguments[0].Value;
+            return true;
+        }
+
+        value = null;
+        return false;
+    }
 
     /// <summary>
-    /// Format an <see cref="IParameterSymbol.ExplicitDefaultValue"/> as
-    /// a C# literal for emission in a generated ctor parameter list.
+    /// Format a bridge parameter's explicit C# default or
+    /// <c>[FacadeDefault]</c> value as a C# literal for emission in a
+    /// generated ctor parameter list.
     /// Handles the primitive types accepted by
     /// <see cref="IsPrimitiveCtorType"/> (<c>bool</c>, <c>int</c>,
     /// <c>long</c>, <c>float</c>, <c>double</c>, <c>string</c>) plus
     /// enum members. Falls back to <c>default</c> for shapes that
     /// shouldn't reach here (the caller already guards with
-    /// <see cref="IParameterSymbol.HasExplicitDefaultValue"/>).
+    /// <see cref="TryGetFacadeCtorDefault"/>).
     /// </summary>
     static string FormatPrimitiveDefaultLiteral(IParameterSymbol p)
     {
-        var value = p.ExplicitDefaultValue;
+        if (!TryGetFacadeCtorDefault(p, out var value)) return "default";
         if (value is null) return "null";
         return value switch
         {
@@ -2095,7 +2120,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             sb.Append(CtorParamType(s)).Append(' ').Append(EscapeIdent(CtorIdentifier(s)));
             if (s.Kind == FacadeSlotKind.StateHolder)
                 sb.Append(" = null");
-            else if (s.Kind == FacadeSlotKind.Primitive && s.Param.HasExplicitDefaultValue)
+            else if (s.Kind == FacadeSlotKind.Primitive && HasFacadeCtorDefault(s))
                 sb.Append(" = ").Append(FormatPrimitiveDefaultLiteral(s.Param));
         }
         sb.AppendLine(")");
@@ -2226,7 +2251,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
                 sb.Append(CtorParamType(s)).Append(' ').Append(EscapeIdent(CtorIdentifier(s)));
                 if (s.Kind == FacadeSlotKind.StateHolder)
                     sb.Append(" = null");
-                else if (s.Kind == FacadeSlotKind.Primitive && s.Param.HasExplicitDefaultValue)
+                else if (s.Kind == FacadeSlotKind.Primitive && HasFacadeCtorDefault(s))
                     sb.Append(" = ").Append(FormatPrimitiveDefaultLiteral(s.Param));
             }
         }
