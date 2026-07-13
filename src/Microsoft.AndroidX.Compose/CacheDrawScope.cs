@@ -1,3 +1,4 @@
+using Android.Runtime;
 using AndroidX.Compose.UI.Draw;
 
 namespace AndroidX.Compose;
@@ -20,8 +21,8 @@ public sealed class CacheDrawScope
     public void OnDrawBehind(Action<DrawScope> draw)
     {
         ArgumentNullException.ThrowIfNull(draw);
-        _result = ComposeBridges.CacheDrawScopeOnDrawBehind(
-            _jvm.Handle, new DrawScopeCallback(draw));
+        _result = WrapDrawResult(ComposeBridges.CacheDrawScopeOnDrawBehind(
+            _jvm.Handle, new DrawScopeCallback(draw)));
     }
 
     /// <summary>
@@ -31,11 +32,29 @@ public sealed class CacheDrawScope
     public void OnDrawWithContent(Action<ContentDrawScope> draw)
     {
         ArgumentNullException.ThrowIfNull(draw);
-        _result = ComposeBridges.CacheDrawScopeOnDrawWithContent(
-            _jvm.Handle, new ContentDrawScopeCallback(draw));
+        _result = WrapDrawResult(ComposeBridges.CacheDrawScopeOnDrawWithContent(
+            _jvm.Handle, new ContentDrawScopeCallback(draw)));
     }
 
     internal DrawResult TakeResult() =>
         _result ?? throw new InvalidOperationException(
             "DrawWithCache must call OnDrawBehind or OnDrawWithContent.");
+
+    static DrawResult WrapDrawResult(IntPtr handle)
+    {
+        var local = handle;
+        try
+        {
+            var result = Java.Lang.Object.GetObject<DrawResult>(
+                local, JniHandleOwnership.TransferLocalRef);
+            local = IntPtr.Zero;
+            return result ?? throw new InvalidOperationException(
+                "CacheDrawScope returned a null DrawResult.");
+        }
+        finally
+        {
+            if (local != IntPtr.Zero)
+                JNIEnv.DeleteLocalRef(local);
+        }
+    }
 }

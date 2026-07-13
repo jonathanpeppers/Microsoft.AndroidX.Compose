@@ -74,6 +74,7 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
         string? signature = ReadString(attr, "Signature");
         string? instanceField = ReadString(attr, "InstanceField");
         var defaultsType = ReadType(attr, "Defaults");
+        bool isInstance = ReadBool(attr, "Instance");
         bool isSuspend = ReadBool(attr, "Suspend");
 
         if (className is null || jvmName is null || signature is null)
@@ -90,7 +91,7 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
             });
         }
 
-        // Detect the JNI signature "shape". Five supported today:
+        // Detect the JNI signature "shape". Six supported today:
         //   1. ComposableWithDefault — ...Composer;I+ trailing (multiple Is).
         //   2. ComposableNoDefault   — ...Composer;I  trailing (single I).
         //   3. ExtensionWithDefault  — non-@Composable Kotlin extension
@@ -107,6 +108,9 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
         //      Used for stripped Kotlin ctors whose parameters were
         //      mangled by inline-class compilation (e.g.
         //      GridCells.Adaptive(Dp)).
+        //   6. Instance              — ordinary caller-supplied instance
+        //      method. The first C# IntPtr is the dispatch receiver and is
+        //      excluded from the JNI signature/JValue array.
         bool isConstructor = jvmName == "<init>";
         if (isConstructor)
         {
@@ -186,6 +190,13 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
             // C# user param maps positionally to a JNI slot.
             signatureHasDefault = false;
         }
+        else if (isInstance)
+        {
+            // Caller-supplied instance methods are positional. A legitimate
+            // method may itself end in `(int, Object)`, so the static Kotlin
+            // `$default` marker heuristic must not run for this shape.
+            signatureHasDefault = false;
+        }
         else if (hasComposerSlot)
         {
             // Kotlin's @Composable codegen emits ceil(userParams/10) (min 1)
@@ -223,6 +234,20 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
         }
 
         bool hasDefaultSlot = signatureHasDefault;
+
+        if (isInstance)
+        {
+            if (isConstructor)
+                return InstanceError(loc, method.Name, "cannot combine 'Instance = true' with a '<init>' constructor bridge");
+            if (isSuspend)
+                return InstanceError(loc, method.Name, "suspend instance methods infer their receiver shape; remove 'Instance = true'");
+            if (instanceField is not null)
+                return InstanceError(loc, method.Name, "cannot combine 'Instance = true' with 'InstanceField'");
+            if (hasComposerSlot)
+                return InstanceError(loc, method.Name, "caller-supplied instance bridges cannot declare a Composer slot");
+            if (hasDefaultSlot)
+                return InstanceError(loc, method.Name, "caller-supplied instance bridges cannot declare a $default slot");
+        }
 
         // Cross-validate signature against attribute metadata: a mismatch
         // would silently produce a broken bridge (wrong $default slot
@@ -364,21 +389,25 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
         // `IntPtr` — that covers Modifier-chain extensions while leaving
         // non-extension static calls (e.g. `RoundedCornerShape(Dp)`) alone.
         //
-        // The "instance suspend" shape (Suspend = true, no $default
-        // marker tail) is its own case: the first user IntPtr is the
-        // instance the JNI virtual call dispatches on — it lives OUTSIDE
-        // the JValue[] args, so we track it separately and do not include
-        // it in receiverSlotCount / JNI slot 0 accounting.
+        // Caller-supplied instance shapes use the first user IntPtr as the
+        // JNI virtual-call target. It lives OUTSIDE the JValue[] args, so
+        // track it separately and exclude it from JNI slot accounting.
+        // Suspend instance methods infer this shape from Suspend=true with
+        // no $default marker; synchronous methods opt in via Instance=true.
         IParameterSymbol? receiverParam = null;
         IParameterSymbol? instanceReceiverParam = null;
         bool isInstanceSuspend = isSuspend && !extensionWithDefault;
-        if (isInstanceSuspend)
+        bool hasCallerInstance = isInstance || isInstanceSuspend;
+        if (hasCallerInstance)
         {
             if (userParams.Length == 0 ||
                 userParams[0].Type.SpecialType != SpecialType.System_IntPtr)
             {
-                return SuspendError(loc, method.Name,
-                    "instance suspend bridges must declare a leading 'IntPtr' parameter for the receiver (the state-holder this suspend method dispatches on)");
+                return isInstanceSuspend
+                    ? SuspendError(loc, method.Name,
+                        "instance suspend bridges must declare a leading 'IntPtr' parameter for the receiver (the state-holder this suspend method dispatches on)")
+                    : InstanceError(loc, method.Name,
+                        "must declare a leading 'IntPtr' parameter for the receiver");
             }
             instanceReceiverParam = userParams[0];
             userParams = userParams.Skip(1).ToArray();
@@ -533,7 +562,7 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
         var source = Emit(method, attr, className, jvmName, signature, defaultsEnumName, sigParams,
             kotlinNames, userParams, userBitOf, receiverParam, callerProvidesDefaults, callerProvidesChanged, hasDefaultSlot,
             hasComposerSlot, extensionWithDefault, instanceField, isConstructor,
-            isSuspend, isInstanceSuspend, instanceReceiverParam, continuationParam, continuationSlotIdx);
+            isSuspend, hasCallerInstance, instanceReceiverParam, continuationParam, continuationSlotIdx, jniReturnType);
         var hint = $"AndroidX.Compose.{method.ContainingType.Name}.{method.Name}.g.cs";
         return new GenerationResult(source, hint, []);
     }
@@ -546,6 +575,11 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
     static GenerationResult SuspendError(Location loc, string methodName, string message) =>
         new(null, null, new[] {
             Diagnostic.Create(Diagnostics.BridgeSuspendInvalid, loc, methodName, message)
+        });
+
+    static GenerationResult InstanceError(Location loc, string methodName, string message) =>
+        new(null, null, new[] {
+            Diagnostic.Create(Diagnostics.BridgeInstanceInvalid, loc, methodName, message)
         });
 
     // Recognises Kotlin.Coroutines.IContinuation itself or any type that
@@ -598,10 +632,11 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
         string? instanceField,
         bool isConstructor,
         bool isSuspend,
-        bool isInstanceSuspend,
+        bool hasCallerInstance,
         IParameterSymbol? instanceReceiverParam,
         IParameterSymbol? continuationParam,
-        int continuationSlotIdx)
+        int continuationSlotIdx,
+        string jniReturnType)
     {
         var sb = new StringBuilder();
         sb.AppendLine("// <auto-generated/>");
@@ -638,7 +673,7 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
         sb.Append("        if (s_").Append(sym).AppendLine("_method == global::System.IntPtr.Zero)");
         sb.AppendLine("        {");
         sb.Append("            s_").Append(sym).Append("_class = global::Android.Runtime.JNIEnv.FindClass(\"").Append(className).AppendLine("\");");
-        if (isConstructor || isInstanceSuspend)
+        if (isConstructor || hasCallerInstance)
         {
             // Both use a virtual GetMethodID with the declared name:
             // constructors use "<init>" (no special API), instance
@@ -796,8 +831,9 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
         }
 
         // Call.
-        var callTarget = isInstanceSuspend
-            ? EscapeIdent(instanceReceiverParam!.Name)
+        var callTarget = hasCallerInstance
+            ? EscapeIdent((instanceReceiverParam
+                ?? throw new InvalidOperationException("Caller-supplied instance receiver was not resolved.")).Name)
             : (instanceField is null ? $"s_{sym}_class" : $"s_{sym}_instance");
         bool returnsValue = !method.ReturnsVoid;
         if (isConstructor)
@@ -816,19 +852,8 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
         }
         else
         {
-            // Instance suspend dispatches on the caller-supplied receiver
-            // handle. Suspend bridges always return raw IntPtr (the
-            // COROUTINE_SUSPENDED sentinel must NOT be wrapped in a peer
-            // — see SuspendBridges.cs file header), so we route through
-            // CallObjectMethod / CallStaticObjectMethod regardless of the
-            // bool returnsValue branch above.
-            string callMethod;
-            if (isInstanceSuspend)
-                callMethod = "CallObjectMethod";
-            else if (returnsValue)
-                callMethod = instanceField is null ? "CallStaticObjectMethod" : "CallObjectMethod";
-            else
-                callMethod = instanceField is null ? "CallStaticVoidMethod" : "CallVoidMethod";
+            bool virtualCall = hasCallerInstance || instanceField is not null;
+            string callMethod = JniCallMethod(jniReturnType, virtualCall);
             sb.Append("                ");
             if (returnsValue) sb.Append("return ");
             sb.Append("global::Android.Runtime.JNIEnv.").Append(callMethod).Append('(').Append(callTarget)
@@ -856,6 +881,26 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
         sb.AppendLine("    }");
         sb.AppendLine("}");
         return sb.ToString();
+    }
+
+    static string JniCallMethod(string jniReturnType, bool virtualCall)
+    {
+        var prefix = virtualCall ? "Call" : "CallStatic";
+        var suffix = jniReturnType[0] switch
+        {
+            'V' => "Void",
+            'Z' => "Boolean",
+            'B' => "Byte",
+            'C' => "Char",
+            'S' => "Short",
+            'I' => "Int",
+            'J' => "Long",
+            'F' => "Float",
+            'D' => "Double",
+            'L' or '[' => "Object",
+            _ => throw new InvalidOperationException($"Unsupported JNI return type '{jniReturnType}'."),
+        };
+        return prefix + suffix + "Method";
     }
 
     static void EmitMethodSignature(StringBuilder sb, IMethodSymbol method)

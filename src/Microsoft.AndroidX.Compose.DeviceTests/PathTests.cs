@@ -52,4 +52,17 @@ public class PathTests
         Assert.IsFalse(float.IsNaN(position.X));
         Assert.IsFalse(float.IsNaN(position.Y));
     }
+
+    [TestMethod]
+    public void AddRect_UsesComposeCounterClockwiseWinding()
+    {
+        using var path = new ComposePath()
+            .AddRect(new Rect(0f, 0f, 40f, 20f));
+        using var measure = new PathMeasure(path);
+
+        var position = measure.GetPosition(1f);
+
+        Assert.AreEqual(0f, position.X, 0.01f);
+        Assert.IsTrue(position.Y > 0f);
+    }
 }

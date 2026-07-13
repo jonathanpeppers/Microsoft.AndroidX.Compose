@@ -99,7 +99,7 @@ public sealed class Path : IDisposable
     public Path AddRect(Rect rect)
     {
         WithNative(path => path.AddRect(
-            rect.Left, rect.Top, rect.Right, rect.Bottom, Clockwise));
+            rect.Left, rect.Top, rect.Right, rect.Bottom, CounterClockwise));
         return this;
     }
 
@@ -109,7 +109,7 @@ public sealed class Path : IDisposable
         WithNative(path =>
         {
             using var bounds = NativeRect(oval);
-            path.AddOval(bounds, Clockwise);
+            path.AddOval(bounds, CounterClockwise);
         });
         return this;
     }
@@ -121,7 +121,7 @@ public sealed class Path : IDisposable
         {
             using var bounds = NativeRect(rect);
             path.AddRoundRect(
-                bounds, cornerRadius.X, cornerRadius.Y, Clockwise);
+                bounds, cornerRadius.X, cornerRadius.Y, CounterClockwise);
         });
         return this;
     }
@@ -186,7 +186,7 @@ public sealed class Path : IDisposable
     static Android.Graphics.RectF NativeRect(Rect rect) =>
         new(rect.Left, rect.Top, rect.Right, rect.Bottom);
 
-    static NativePath.Direction Clockwise =>
-        NativePath.Direction.Cw
-        ?? throw new InvalidOperationException("Android Path clockwise direction was unavailable.");
+    static NativePath.Direction CounterClockwise =>
+        NativePath.Direction.Ccw
+        ?? throw new InvalidOperationException("Android Path counter-clockwise direction was unavailable.");
 }
