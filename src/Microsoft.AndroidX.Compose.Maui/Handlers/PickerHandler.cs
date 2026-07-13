@@ -164,10 +164,12 @@ public partial class PickerHandler : ComposeElementHandler<IPicker>
             ? items[selectedIndex] ?? string.Empty
             : string.Empty;
 
-        var trigger = new ComposeOutlinedTextField(displayValue, _ => { /* read-only */ })
+        var trigger = new ComposeOutlinedTextField(
+            displayValue,
+            _ => { /* read-only */ },
+            readOnly: true,
+            singleLine: true)
         {
-            ReadOnly   = true,
-            SingleLine = true,
             TrailingIcon = new IconButton(onClick: () => SetOpen(virtualView, !_open.Value))
             {
                 new ComposeText(isOpen ? "▲" : "▼"),

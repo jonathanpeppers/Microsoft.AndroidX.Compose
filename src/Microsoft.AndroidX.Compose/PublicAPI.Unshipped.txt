@@ -931,10 +931,6 @@ AndroidX.Compose.OutlinedSecureTextField.SupportingText.set -> void
 AndroidX.Compose.OutlinedSecureTextField.TrailingIcon.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.OutlinedSecureTextField.TrailingIcon.set -> void
 AndroidX.Compose.OutlinedTextField
-AndroidX.Compose.OutlinedTextField.Enabled.get -> bool?
-AndroidX.Compose.OutlinedTextField.Enabled.set -> void
-AndroidX.Compose.OutlinedTextField.IsError.get -> bool?
-AndroidX.Compose.OutlinedTextField.IsError.set -> void
 AndroidX.Compose.OutlinedTextField.KeyboardActions.get -> AndroidX.Compose.Foundation.Text.KeyboardActions?
 AndroidX.Compose.OutlinedTextField.KeyboardActions.set -> void
 AndroidX.Compose.OutlinedTextField.KeyboardOptions.get -> AndroidX.Compose.Foundation.Text.KeyboardOptions?
@@ -943,23 +939,15 @@ AndroidX.Compose.OutlinedTextField.Label.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.OutlinedTextField.Label.set -> void
 AndroidX.Compose.OutlinedTextField.LeadingIcon.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.OutlinedTextField.LeadingIcon.set -> void
-AndroidX.Compose.OutlinedTextField.MaxLines.get -> int?
-AndroidX.Compose.OutlinedTextField.MaxLines.set -> void
-AndroidX.Compose.OutlinedTextField.MinLines.get -> int?
-AndroidX.Compose.OutlinedTextField.MinLines.set -> void
-AndroidX.Compose.OutlinedTextField.OutlinedTextField(AndroidX.Compose.MutableState<AndroidX.Compose.UI.Text.Input.TextFieldValue!>! state) -> void
-AndroidX.Compose.OutlinedTextField.OutlinedTextField(AndroidX.Compose.MutableState<string!>! state) -> void
-AndroidX.Compose.OutlinedTextField.OutlinedTextField(string! value, System.Action<string!>! onValueChange) -> void
+AndroidX.Compose.OutlinedTextField.OutlinedTextField(AndroidX.Compose.MutableState<AndroidX.Compose.UI.Text.Input.TextFieldValue!>! state, bool enabled = true, bool readOnly = false, bool isError = false, bool singleLine = false, int maxLines = 2147483647, int minLines = 1) -> void
+AndroidX.Compose.OutlinedTextField.OutlinedTextField(AndroidX.Compose.MutableState<string!>! state, bool enabled = true, bool readOnly = false, bool isError = false, bool singleLine = false, int maxLines = 2147483647, int minLines = 1) -> void
+AndroidX.Compose.OutlinedTextField.OutlinedTextField(string! value, System.Action<string!>! onValueChange, bool enabled = true, bool readOnly = false, bool isError = false, bool singleLine = false, int maxLines = 2147483647, int minLines = 1) -> void
 AndroidX.Compose.OutlinedTextField.Placeholder.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.OutlinedTextField.Placeholder.set -> void
 AndroidX.Compose.OutlinedTextField.Prefix.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.OutlinedTextField.Prefix.set -> void
-AndroidX.Compose.OutlinedTextField.ReadOnly.get -> bool?
-AndroidX.Compose.OutlinedTextField.ReadOnly.set -> void
 AndroidX.Compose.OutlinedTextField.Shape.get -> AndroidX.Compose.Shape?
 AndroidX.Compose.OutlinedTextField.Shape.set -> void
-AndroidX.Compose.OutlinedTextField.SingleLine.get -> bool?
-AndroidX.Compose.OutlinedTextField.SingleLine.set -> void
 AndroidX.Compose.OutlinedTextField.Suffix.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.OutlinedTextField.Suffix.set -> void
 AndroidX.Compose.OutlinedTextField.SupportingText.get -> AndroidX.Compose.ComposableNode?
@@ -1271,37 +1259,25 @@ AndroidX.Compose.TextButton.Shape.set -> void
 AndroidX.Compose.TextButton.TextButton(System.Action! onClick) -> void
 AndroidX.Compose.TextDecoration
 AndroidX.Compose.TextField
-AndroidX.Compose.TextField.Enabled.get -> bool?
-AndroidX.Compose.TextField.Enabled.set -> void
-AndroidX.Compose.TextField.IsError.get -> bool?
-AndroidX.Compose.TextField.IsError.set -> void
 AndroidX.Compose.TextField.KeyboardOptions.get -> AndroidX.Compose.Foundation.Text.KeyboardOptions?
 AndroidX.Compose.TextField.KeyboardOptions.set -> void
 AndroidX.Compose.TextField.Label.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.TextField.Label.set -> void
 AndroidX.Compose.TextField.LeadingIcon.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.TextField.LeadingIcon.set -> void
-AndroidX.Compose.TextField.MaxLines.get -> int?
-AndroidX.Compose.TextField.MaxLines.set -> void
-AndroidX.Compose.TextField.MinLines.get -> int?
-AndroidX.Compose.TextField.MinLines.set -> void
 AndroidX.Compose.TextField.Placeholder.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.TextField.Placeholder.set -> void
 AndroidX.Compose.TextField.Prefix.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.TextField.Prefix.set -> void
-AndroidX.Compose.TextField.ReadOnly.get -> bool?
-AndroidX.Compose.TextField.ReadOnly.set -> void
 AndroidX.Compose.TextField.Shape.get -> AndroidX.Compose.Shape?
 AndroidX.Compose.TextField.Shape.set -> void
-AndroidX.Compose.TextField.SingleLine.get -> bool?
-AndroidX.Compose.TextField.SingleLine.set -> void
 AndroidX.Compose.TextField.Suffix.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.TextField.Suffix.set -> void
 AndroidX.Compose.TextField.SupportingText.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.TextField.SupportingText.set -> void
-AndroidX.Compose.TextField.TextField(AndroidX.Compose.MutableState<AndroidX.Compose.UI.Text.Input.TextFieldValue!>! state) -> void
-AndroidX.Compose.TextField.TextField(AndroidX.Compose.MutableState<string!>! state) -> void
-AndroidX.Compose.TextField.TextField(string! value, System.Action<string!>! onValueChange) -> void
+AndroidX.Compose.TextField.TextField(AndroidX.Compose.MutableState<AndroidX.Compose.UI.Text.Input.TextFieldValue!>! state, bool enabled = true, bool readOnly = false, bool isError = false, bool singleLine = false, int maxLines = 2147483647, int minLines = 1) -> void
+AndroidX.Compose.TextField.TextField(AndroidX.Compose.MutableState<string!>! state, bool enabled = true, bool readOnly = false, bool isError = false, bool singleLine = false, int maxLines = 2147483647, int minLines = 1) -> void
+AndroidX.Compose.TextField.TextField(string! value, System.Action<string!>! onValueChange, bool enabled = true, bool readOnly = false, bool isError = false, bool singleLine = false, int maxLines = 2147483647, int minLines = 1) -> void
 AndroidX.Compose.TextField.TextStyle.get -> AndroidX.Compose.TextStyle?
 AndroidX.Compose.TextField.TextStyle.set -> void
 AndroidX.Compose.TextField.TrailingIcon.get -> AndroidX.Compose.ComposableNode?

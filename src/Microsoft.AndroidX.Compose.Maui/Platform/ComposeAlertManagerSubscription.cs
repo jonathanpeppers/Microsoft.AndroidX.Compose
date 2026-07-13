@@ -308,9 +308,11 @@ public class ComposeAlertManagerSubscription : DispatchProxy
 
             // Use the (string, Action<string>) ctor so OnTextChanged
             // can intercept and truncate before writing to the state.
-            var field = new ComposeOutlinedTextField(text.Value, OnTextChanged)
+            var field = new ComposeOutlinedTextField(
+                text.Value,
+                OnTextChanged,
+                singleLine: true)
             {
-                SingleLine      = true,
                 KeyboardOptions = keyboardOptions,
             };
             if (!string.IsNullOrEmpty(args.Placeholder))

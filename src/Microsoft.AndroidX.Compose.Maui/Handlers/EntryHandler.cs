@@ -126,11 +126,10 @@ public partial class EntryHandler : ComposeElementHandler<IEntry>
         var clearButtonMode = (ClearButtonVisibility)_clearButtonMode.Value;
         var fill            = _fillWidth.Value;
 
-        var field = new ComposeOutlinedTextField(_tfv)
-        {
-            ReadOnly   = readOnly,
-            SingleLine = true,
-        };
+        var field = new ComposeOutlinedTextField(
+            _tfv,
+            readOnly: readOnly,
+            singleLine: true);
         if (!string.IsNullOrEmpty(placeholder))
             field.Placeholder = new ComposeText(placeholder)
             {
