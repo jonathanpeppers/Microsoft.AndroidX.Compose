@@ -443,6 +443,48 @@ public static class ModifierExtensions
     }
 
     /// <summary>
+    /// <c>Modifier.drawBehind</c> with a managed <see cref="DrawScope"/> callback.
+    /// </summary>
+    public static Modifier DrawBehind(this Modifier modifier, Action<DrawScope> onDraw)
+    {
+        ArgumentNullException.ThrowIfNull(onDraw);
+        var callback = new DrawScopeCallback(onDraw);
+        return modifier.Append(curr => ComposeBridges.ModifierDrawBehind(curr, callback),
+            new ModifierOpKey(nameof(DrawBehind), ValueTuple.Create<object>(callback)));
+    }
+
+    /// <summary>
+    /// <c>Modifier.drawWithContent</c> — draws before, after, or instead of
+    /// the modified content according to where the callback invokes
+    /// <see cref="ContentDrawScope.DrawContent"/>.
+    /// </summary>
+    public static Modifier DrawWithContent(
+        this Modifier modifier,
+        Action<ContentDrawScope> onDraw)
+    {
+        ArgumentNullException.ThrowIfNull(onDraw);
+        var callback = new ContentDrawScopeCallback(onDraw);
+        return modifier.Append(
+            curr => ComposeBridges.ModifierDrawWithContent(curr, callback),
+            new ModifierOpKey(nameof(DrawWithContent), ValueTuple.Create<object>(callback)));
+    }
+
+    /// <summary>
+    /// <c>Modifier.drawWithCache</c> — builds a cached draw callback when the
+    /// drawing size or observed snapshot state changes.
+    /// </summary>
+    public static Modifier DrawWithCache(
+        this Modifier modifier,
+        Action<CacheDrawScope> onBuildDrawCache)
+    {
+        ArgumentNullException.ThrowIfNull(onBuildDrawCache);
+        var callback = new CacheDrawScopeCallback(onBuildDrawCache);
+        return modifier.Append(
+            curr => ComposeBridges.ModifierDrawWithCache(curr, callback),
+            new ModifierOpKey(nameof(DrawWithCache), ValueTuple.Create<object>(callback)));
+    }
+
+    /// <summary>
     /// <c>Modifier.clip(RoundedCornerShape(<paramref name="cornerRadius"/>))</c> —
     /// rounds the four corners by the same radius and clips drawing to the
     /// resulting shape. Pass <c>0</c> for no rounding (rectangle clip).

@@ -434,6 +434,25 @@ public sealed class Modifier
     /// </summary>
     internal IModifier? Build() => Build(IntPtr.Zero);
 
+    internal static IModifier BuildEmpty()
+    {
+        IntPtr local = IntPtr.Zero;
+        try
+        {
+            local = ComposeBridges.ModifierCompanionInstance();
+            var result = Java.Lang.Object.GetObject<IModifier>(
+                local, JniHandleOwnership.TransferLocalRef);
+            local = IntPtr.Zero;
+            return result ?? throw new InvalidOperationException(
+                "Compose Modifier.Companion could not be resolved.");
+        }
+        finally
+        {
+            if (local != IntPtr.Zero)
+                JNIEnv.DeleteLocalRef(local);
+        }
+    }
+
     /// <summary>
     /// Materialize the chain into a managed <c>IModifier</c> wrapper,
     /// optionally prepending a <c>Modifier.padding(contentPadding)</c>

@@ -83,6 +83,10 @@ internal static class Attributes
             /// the <c>$$INSTANCE</c>-style static field
             /// (e.g. <c>INSTANCE</c>) and the generator emits
             /// <c>GetMethodID</c> + <c>CallObjectMethod</c> instead.</para>
+            /// <para><b>Instance</b>: when <c>true</c>, the first C# parameter
+            /// must be an <c>IntPtr</c> receiver that is excluded from the JNI
+            /// signature and used as the target of <c>Call*Method</c>. This
+            /// models ordinary caller-supplied Kotlin instance methods.</para>
             /// <para><b>Suspend</b>: opts into the Kotlin <c>suspend</c>
             /// bridge shape. The trailing C# parameter must be
             /// <c>Kotlin.Coroutines.IContinuation</c> (or an implementor —
@@ -119,6 +123,7 @@ internal static class Attributes
                 public string Signature { get; set; } = "";
                 public global::System.Type? Defaults { get; set; }
                 public string? InstanceField { get; set; }
+                public bool Instance { get; set; }
                 public bool Suspend { get; set; }
             }
 
@@ -340,6 +345,24 @@ internal static class Attributes
             internal sealed class CallbackAttribute : global::System.Attribute
             {
                 public CallbackAttribute(global::System.Type valueType) { }
+            }
+
+            /// <summary>
+            /// Apply to a primitive bridge parameter when the generated
+            /// facade constructor should expose a C# default without making
+            /// the bridge parameter itself optional. This keeps the required
+            /// <c>IComposer</c> parameter non-null and trailing.
+            /// </summary>
+            [global::System.AttributeUsage(global::System.AttributeTargets.Parameter,
+                                           AllowMultiple = false)]
+            internal sealed class FacadeDefaultAttribute : global::System.Attribute
+            {
+                public FacadeDefaultAttribute(bool value) { }
+                public FacadeDefaultAttribute(int value) { }
+                public FacadeDefaultAttribute(long value) { }
+                public FacadeDefaultAttribute(float value) { }
+                public FacadeDefaultAttribute(double value) { }
+                public FacadeDefaultAttribute(string? value) { }
             }
 
             /// <summary>

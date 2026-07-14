@@ -14,9 +14,9 @@
 //      public declarations (fun, class, interface, object, enum, value, ...).
 //   3. Parses `src/Microsoft.AndroidX.Compose/PublicAPI.Unshipped.txt` to enumerate
 //      the C# facade's public surface.
-//   4. Cross-references Kotlin ⇄ C# by short name with a few heuristics
-//      (Modifier extensions, *Defaults objects, `remember*` ↔ state-holder
-//      ctor, etc.) and writes `docs/api-coverage.md`.
+//   4. Cross-references Kotlin ⇄ C# by declaration kind, receiver, inferred
+//      module ownership, and short name (`remember*` ↔ state-holder ctor,
+//      *Defaults consumption, etc.), then writes `docs/api-coverage.md`.
 //
 // Re-run after bumping a Compose package version in Directory.Build.targets
 // and the report auto-refreshes.
@@ -29,6 +29,7 @@ const string CacheRoot       = "obj/api-coverage";
 const string SourcesDir      = CacheRoot + "/sources";
 const string MavenBase       = "https://dl.google.com/dl/android/maven2";
 const string PublicApiPath   = "src/Microsoft.AndroidX.Compose/PublicAPI.Unshipped.txt";
+const string FacadeSourceRoot = "src/Microsoft.AndroidX.Compose";
 const string ReportPath      = "docs/api-coverage.md";
 
 // (Group, Artifact, Version, DisplayModule). Mirrors Directory.Build.targets;
@@ -162,6 +163,15 @@ var csharpTypes = csharpSymbols
     .GroupBy(s => s.ShortName, StringComparer.OrdinalIgnoreCase)
     .ToDictionary(g => g.Key, g => g.First(), StringComparer.OrdinalIgnoreCase);
 
+var csharpComposableTypes = csharpSymbols
+    .Where(s => s.Kind == CSharpKind.Method &&
+                string.Equals(s.ShortName, "Render", StringComparison.OrdinalIgnoreCase))
+    .Select(s => NormalizeTypeName(s.TypeFqn))
+    .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+var csharpTypeModules = InferCSharpTypeModules(
+    kotlinSymbols, csharpTypes.Keys, csharpComposableTypes, FacadeSourceRoot);
+
 // ------------------------------------------------------------
 // 4. Match Kotlin → Microsoft.AndroidX.Compose
 // ------------------------------------------------------------
@@ -169,7 +179,7 @@ var csharpTypes = csharpSymbols
 var matches = new List<Match>();
 foreach (var k in kotlinSymbols)
 {
-    matches.Add(Classify(k, csharpTypes, csharpByShort));
+    matches.Add(Classify(k, csharpTypes, csharpByShort, csharpTypeModules));
 }
 
 // ------------------------------------------------------------
@@ -460,8 +470,10 @@ static List<CSharpSymbol> ScanPublicApi(string path)
         if (line.StartsWith("#"))            continue;
         // Strip nullability prefix indicator "~".
         if (line.StartsWith("~")) line = line.Substring(1);
-        // Strip "static " prefix used by PublicApiAnalyzers for static members.
-        if (line.StartsWith("static ")) line = line.Substring("static ".Length);
+        // Strip "static " prefix used by PublicApiAnalyzers for static members,
+        // but retain the fact for top-level Kotlin function matching.
+        bool isStatic = line.StartsWith("static ");
+        if (isStatic) line = line.Substring("static ".Length);
         // Strip "abstract " / "virtual " / "override " / "sealed " modifiers
         // that PublicApiAnalyzers sometimes emits on members.
         foreach (var mod in new[] { "abstract ", "virtual ", "override ", "sealed " })
@@ -478,7 +490,7 @@ static List<CSharpSymbol> ScanPublicApi(string path)
         {
             var fqn = head.Trim();
             var shortName = StripGenerics(fqn.Split('.').Last());
-            result.Add(new CSharpSymbol(fqn, shortName, fqn, CSharpKind.Type, line));
+            result.Add(new CSharpSymbol(fqn, shortName, fqn, CSharpKind.Type, line, false, null));
             continue;
         }
 
@@ -493,7 +505,11 @@ static List<CSharpSymbol> ScanPublicApi(string path)
             var kind = string.Equals(typeShort, memberPart, StringComparison.Ordinal)
                 ? CSharpKind.Constructor
                 : CSharpKind.Method;
-            result.Add(new CSharpSymbol(beforeParen, memberPart, typeFqn, kind, line));
+            var extensionReceiver = isStatic
+                ? ParseExtensionReceiver(head.Substring(parenIdx + 1))
+                : null;
+            result.Add(new CSharpSymbol(
+                beforeParen, memberPart, typeFqn, kind, line, isStatic, extensionReceiver));
             continue;
         }
 
@@ -503,7 +519,8 @@ static List<CSharpSymbol> ScanPublicApi(string path)
             int dotIdx = noGetSet.LastIndexOf('.');
             var typeFqn = dotIdx > 0 ? noGetSet.Substring(0, dotIdx) : "";
             var memberPart = StripGenerics(dotIdx > 0 ? noGetSet.Substring(dotIdx + 1) : noGetSet);
-            result.Add(new CSharpSymbol(noGetSet, memberPart, typeFqn, CSharpKind.Property, line));
+            result.Add(new CSharpSymbol(
+                noGetSet, memberPart, typeFqn, CSharpKind.Property, line, isStatic, null));
             continue;
         }
 
@@ -511,9 +528,16 @@ static List<CSharpSymbol> ScanPublicApi(string path)
         var lastDot = head.LastIndexOf('.');
         var member = StripGenerics(lastDot > 0 ? head.Substring(lastDot + 1) : head);
         var typeOnly = lastDot > 0 ? head.Substring(0, lastDot) : "";
-        result.Add(new CSharpSymbol(head, member, typeOnly, CSharpKind.Field, line));
+        result.Add(new CSharpSymbol(
+            head, member, typeOnly, CSharpKind.Field, line, isStatic, null));
     }
     return result;
+}
+
+static string? ParseExtensionReceiver(string parameters)
+{
+    var match = Regex.Match(parameters, @"^\s*this\s+([^\s,]+)");
+    return match.Success ? NormalizeTypeName(match.Groups[1].Value) : null;
 }
 
 static string StripGenerics(string name)
@@ -525,7 +549,8 @@ static string StripGenerics(string name)
 static Match Classify(
     KotlinSymbol k,
     Dictionary<string, CSharpSymbol> csharpTypes,
-    Dictionary<string, List<CSharpSymbol>> csharpByShort)
+    Dictionary<string, List<CSharpSymbol>> csharpByShort,
+    Dictionary<string, HashSet<string>> csharpTypeModules)
 {
     // Skip annotation classes from coverage scoring (they're metadata for the
     // Kotlin compiler plugin, not a user-facing surface to reimplement in C#).
@@ -553,14 +578,25 @@ static Match Classify(
         return new Match(k, MatchStatus.Missing, null, $"no C# {stateName} state holder");
     }
 
-    // Modifier.xxx extension functions → covered by a method on Microsoft.AndroidX.Compose.Modifier.
+    // Scope-receiver composables still surface as facade types: the C# facade
+    // acquires RowScope/ColumnScope/etc. from RenderContext rather than
+    // exposing the Kotlin extension receiver in its public constructor.
+    if (isComposable && k.Kind == "fun" &&
+        csharpTypes.TryGetValue(k.Name, out var composableTypeHit) &&
+        TypeBelongsToModule(composableTypeHit.ShortName, k.Module, csharpTypeModules))
+    {
+        return new Match(k, MatchStatus.Covered, composableTypeHit, "type match");
+    }
+
+    // Modifier.xxx extension functions → covered only by a method whose
+    // declared extension receiver (or containing instance type) is Modifier.
     if (k.Kind == "fun" && k.Receiver == "Modifier")
     {
         if (csharpByShort.TryGetValue(k.Name, out var hits))
         {
-            var hit = hits.FirstOrDefault(h => h.TypeFqn.EndsWith("Modifier", StringComparison.Ordinal))
-                   ?? hits.First();
-            return new Match(k, MatchStatus.Covered, hit, "Modifier extension");
+            var hit = hits.FirstOrDefault(h => ReceiverMatches(k.Receiver, h));
+            if (hit is not null)
+                return new Match(k, MatchStatus.Covered, hit, "Modifier extension");
         }
         return new Match(k, MatchStatus.Missing, null, "no C# Modifier.* method");
     }
@@ -570,7 +606,11 @@ static Match Classify(
     if (k.Kind == "fun" && k.Receiver is not null && k.Receiver != "Modifier")
     {
         if (csharpByShort.TryGetValue(k.Name, out var hits))
-            return new Match(k, MatchStatus.Covered, hits.First(), $"{k.Receiver}.* extension");
+        {
+            var hit = hits.FirstOrDefault(h => ReceiverMatches(k.Receiver, h));
+            if (hit is not null)
+                return new Match(k, MatchStatus.Covered, hit, $"{k.Receiver}.* extension");
+        }
         // Try the receiver as a type — coverage of the *receiver type* counts
         // the extension as covered-by-association.
         if (csharpTypes.ContainsKey(k.Receiver))
@@ -578,9 +618,18 @@ static Match Classify(
         return new Match(k, MatchStatus.Missing, null, $"no C# {k.Receiver}.{k.Name}");
     }
 
-    // Composable function or other top-level declaration → match by short name.
-    if (csharpTypes.TryGetValue(k.Name, out var typeHit))
-        return new Match(k, MatchStatus.Covered, typeHit, "type match");
+    // Composable functions map to facade types. Kotlin types map to C# types
+    // only when the inferred module ownership agrees; this prevents one facade
+    // (e.g. Foundation Canvas) from also covering an unrelated same-name type
+    // in another module (e.g. ui-graphics Canvas).
+    if ((k.Kind is "fun" or "property") || IsKotlinType(k.Kind))
+    {
+        if (csharpTypes.TryGetValue(k.Name, out var typeHit) &&
+            TypeBelongsToModule(typeHit.ShortName, k.Module, csharpTypeModules))
+        {
+            return new Match(k, MatchStatus.Covered, typeHit, "type match");
+        }
+    }
 
     // Method fallback — many lowercase Kotlin functions (derivedStateOf,
     // produceState, rememberCoroutineScope, mutableStateListOf, …) map to a
@@ -588,7 +637,11 @@ static Match Classify(
     // A same-named property is not equivalent to invoking a Kotlin factory.
     if (k.Kind == "fun" && csharpByShort.TryGetValue(k.Name, out var methodHits))
     {
-        var hit = methodHits.FirstOrDefault(h => h.Kind == CSharpKind.Method);
+        var hit = methodHits.FirstOrDefault(h =>
+            (h.Kind is CSharpKind.Method or CSharpKind.Property) &&
+            h.IsStatic &&
+            (h.ExtensionReceiver is null ||
+             string.Equals(h.ExtensionReceiver, "IComposer", StringComparison.OrdinalIgnoreCase)));
         if (hit is not null)
             return new Match(k, MatchStatus.Covered, hit, $"covered by `{hit.TypeFqn.Split('.').Last()}.{hit.ShortName}`");
     }
@@ -608,6 +661,116 @@ static Match Classify(
     return new Match(k, MatchStatus.Missing, null, "no C# match");
 }
 
+static Dictionary<string, HashSet<string>> InferCSharpTypeModules(
+    IReadOnlyList<KotlinSymbol> kotlinSymbols,
+    IEnumerable<string> csharpTypeNames,
+    IReadOnlySet<string> csharpComposableTypes,
+    string facadeSourceRoot)
+{
+    var result = new Dictionary<string, HashSet<string>>(StringComparer.OrdinalIgnoreCase);
+    foreach (var typeName in csharpTypeNames)
+    {
+        var sourceModules = InferSourceModules(typeName, facadeSourceRoot);
+        var composableModules = kotlinSymbols
+            .Where(k => k.Kind == "fun" &&
+                        k.Annotations.Contains("Composable") &&
+                        string.Equals(k.Name, typeName, StringComparison.OrdinalIgnoreCase))
+            .Select(k => k.Module)
+            .ToHashSet(StringComparer.Ordinal);
+        var typeModules = kotlinSymbols
+            .Where(k => IsKotlinType(k.Kind) &&
+                        string.Equals(k.Name, typeName, StringComparison.OrdinalIgnoreCase))
+            .Select(k => k.Module)
+            .ToHashSet(StringComparer.Ordinal);
+
+        // A public Render override is strong evidence that the C# type is a
+        // composable facade; trust same-name composable modules even when the
+        // implementation consumes types from another module. Non-facade types
+        // use same-name Kotlin type ownership, with source imports resolving
+        // factory-vs-composable collisions such as ui-graphics Path vs ui Path.
+        HashSet<string> modules;
+        if (csharpComposableTypes.Contains(typeName) && composableModules.Count > 0)
+        {
+            modules = composableModules;
+        }
+        else
+        {
+            var intersection = typeModules
+                .Where(sourceModules.Contains)
+                .ToHashSet(StringComparer.Ordinal);
+            modules = intersection.Count == 1
+                ? intersection
+                : sourceModules.Count == 1
+                    ? sourceModules
+                    : typeModules;
+        }
+        if (modules.Count > 0)
+            result[typeName] = modules;
+    }
+    return result;
+}
+
+static HashSet<string> InferSourceModules(string typeName, string facadeSourceRoot)
+{
+    var result = new HashSet<string>(StringComparer.Ordinal);
+    var path = Path.Combine(facadeSourceRoot, typeName + ".cs");
+    if (!File.Exists(path))
+        return result;
+
+    var source = string.Join(
+        "\n",
+        File.ReadLines(path)
+            .TakeWhile(line => !line.TrimStart().StartsWith("namespace ", StringComparison.Ordinal)));
+    var moduleMarkers = new (string Marker, string Module)[]
+    {
+        ("AndroidX.Compose.Animation.Core", "animation-core"),
+        ("AndroidX.Compose.Animation", "animation"),
+        ("AndroidX.Compose.Foundation.Layout", "foundation-layout"),
+        ("AndroidX.Compose.Foundation", "foundation"),
+        ("AndroidX.Compose.Material3", "material3"),
+        ("AndroidX.Compose.UI.Graphics", "ui-graphics"),
+        ("AndroidX.Compose.UI.Text", "ui-text"),
+        ("AndroidX.Compose.UI.Unit", "ui-unit"),
+        ("AndroidX.Activity", "activity-compose"),
+        ("AndroidX.Navigation", "navigation-compose"),
+    };
+    foreach (var (marker, module) in moduleMarkers)
+    {
+        if (source.Contains(marker, StringComparison.Ordinal))
+            result.Add(module);
+    }
+    return result;
+}
+
+static bool TypeBelongsToModule(
+    string csharpTypeName,
+    string kotlinModule,
+    Dictionary<string, HashSet<string>> csharpTypeModules) =>
+    !csharpTypeModules.TryGetValue(csharpTypeName, out var modules) ||
+    modules.Contains(kotlinModule);
+
+static bool ReceiverMatches(string kotlinReceiver, CSharpSymbol csharp)
+{
+    var expected = NormalizeTypeName(kotlinReceiver);
+    var actual = csharp.ExtensionReceiver ??
+        NormalizeTypeName(csharp.TypeFqn.Split('.').LastOrDefault() ?? "");
+    return string.Equals(expected, actual, StringComparison.OrdinalIgnoreCase);
+}
+
+static string NormalizeTypeName(string typeName)
+{
+    var normalized = typeName.Trim().TrimEnd('!', '?');
+    int generic = normalized.IndexOf('<');
+    if (generic >= 0)
+        normalized = normalized.Substring(0, generic);
+    return normalized.Split('.').LastOrDefault() ?? normalized;
+}
+
+static bool IsKotlinType(string kind) =>
+    kind is "class" or "abstract class" or "open class" or "sealed class" or
+        "data class" or "interface" or "sealed interface" or "fun interface" or
+        "object" or "enum class" or "value class";
+
 static void WriteReport(string path, List<Match> matches, List<CSharpSymbol> csharpSymbols, List<string> moduleOrder)
 {
     var sb = new StringBuilder();
@@ -617,7 +780,8 @@ static void WriteReport(string path, List<Match> matches, List<CSharpSymbol> csh
     sb.AppendLine();
     sb.AppendLine("Source of truth: AndroidX `-sources.jar` files for the Compose artifact ");
     sb.AppendLine("versions this repo references (see `Directory.Build.targets`). Re-run after ");
-    sb.AppendLine("bumping a Compose package version. Coverage is symbol-level (short-name match).");
+    sb.AppendLine("bumping a Compose package version. Coverage is symbol-level with declaration-kind,");
+    sb.AppendLine("receiver, and inferred module ownership checks before short-name matching.");
     sb.AppendLine();
 
     // Overall totals — exclude NotApplicable (annotations / typealiases).
@@ -755,11 +919,11 @@ static void WriteReport(string path, List<Match> matches, List<CSharpSymbol> csh
     sb.AppendLine();
     sb.AppendLine("## Caveats");
     sb.AppendLine();
-    sb.AppendLine("- Matching is **short-name** based. A Kotlin `Button` matches a C# `Button` ");
-    sb.AppendLine("  regardless of namespace nesting; collisions are possible but rare in Compose.");
+    sb.AppendLine("- Matching starts from short names but also checks declaration kind, extension");
+    sb.AppendLine("  receiver, static-vs-instance shape, and inferred module ownership for C# types.");
     sb.AppendLine("- Overloads on the Kotlin side collapse to one entry (the one with the most params).");
-    sb.AppendLine("- Modifier extensions only match if a method of the same name exists in PublicAPI; ");
-    sb.AppendLine("  the matcher doesn't check the extension's parameter shape.");
+    sb.AppendLine("- Extension methods require the C# instance type or declared `this` receiver to");
+    sb.AppendLine("  match the Kotlin receiver; full parameter-shape equivalence is not checked.");
     sb.AppendLine("- `@ExperimentalFoundationApi`, `@ExperimentalMaterial3Api`, etc. annotations are ");
     sb.AppendLine("  preserved in symbol metadata but don't currently affect scoring.");
     sb.AppendLine("- See `scripts/api-comparison.cs` for the full set of heuristics.");
@@ -818,7 +982,9 @@ record CSharpSymbol(
     string ShortName,
     string TypeFqn,
     CSharpKind Kind,
-    string Raw);
+    string Raw,
+    bool IsStatic,
+    string? ExtensionReceiver);
 
 enum MatchStatus
 {

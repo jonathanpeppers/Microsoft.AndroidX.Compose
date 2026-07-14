@@ -21,6 +21,7 @@ public static class Catalog
         new("buttons",             "Buttons",                "Filled, icon, chip, FAB, tooltip",             "🔘"),
         new("selection",           "Selection",              "Checkbox, switch, slider, segmented",          "☑️"),
         new("containers",          "Containers",             "Card, Surface, Box, Column, Row, Flow",        "📦"),
+        new("drawing",             "Drawing",                "Canvas, DrawScope, Path, Brush",                "🖌️"),
         new("lists-grids",         "Lists & grids",          "LazyColumn, LazyGrid, PullToRefresh",          "📋"),
         new("carousels-paging",    "Carousels & paging",     "HorizontalPager, M3 carousels",                "🎠"),
         new("app-bars-tabs",       "App bars & tabs",        "TopAppBar variants, BottomAppBar, TabRow",     "🧭"),
@@ -86,8 +87,12 @@ public static class Catalog
         D.Containers.SpacerDemo.Demo,
         D.Containers.DividerDemo.Demo,
         D.Containers.FlowRowFlowColumnDemo.Demo,
+        D.Containers.SnackbarLayoutDemo.Demo,
         D.Containers.BoxWithConstraintsDemo.Demo,
         D.Containers.CustomLayoutDemo.Demo,
+
+        // ---- Drawing ----
+        D.Drawing.DrawingPrimitivesDemo.Demo,
 
         // ---- Lists & grids ----
         D.ListsGrids.LazyColumnLongDemo.Demo,
@@ -126,6 +131,7 @@ public static class Catalog
         D.Navigation.DismissibleDrawerDemo.Demo,
         D.Navigation.PermanentDrawerDemo.Demo,
         D.Navigation.WideNavigationRailDemo.Demo,
+        D.Navigation.NavigationRailOptionsDemo.Demo,
         D.Navigation.ModalWideNavigationRailDemo.Demo,
 
         // ---- Dialogs & sheets ----

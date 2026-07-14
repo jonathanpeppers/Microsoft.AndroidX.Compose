@@ -16,9 +16,16 @@ public static class DateRangePickerDialogDemo
             var open   = c.MutableStateOf(false);
             var picked = c.MutableStateOf("(none)");
             var state  = c.Remember(() => new DateRangePickerState());
+            var showModes = c.MutableStateOf(true);
             return new Column
             {
                 new Text($"Picked range: {picked}"),
+                new Row(horizontalArrangement: Arrangement.SpacedBy(8.Dp()),
+                        verticalAlignment: Alignment.Vertical.CenterVertically)
+                {
+                    new Switch(@checked: showModes.Value, onCheckedChange: value => showModes.Value = value),
+                    new Text("Show mode toggle"),
+                },
                 new Button(onClick: () => open.Value = true) { new Text("Pick range") },
                 open.Value
                     ? new DateRangePickerDialog(onDismissRequest: () => open.Value = false)
@@ -33,7 +40,7 @@ public static class DateRangePickerDialogDemo
                             open.Value = false;
                         }) { new Text("OK") },
                         DismissButton = new Button(onClick: () => open.Value = false) { new Text("Cancel") },
-                        Body          = new DateRangePicker(state),
+                        Body          = new DateRangePicker(state, showModeToggle: showModes.Value),
                     }
                     : (ComposableNode?)null,
             };

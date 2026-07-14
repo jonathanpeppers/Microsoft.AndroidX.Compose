@@ -311,12 +311,15 @@ class.
 - **Compose Navigation.** `NavHost` / `NavController` /
   `NavBackStackEntry` are bound (#60). Pass route lambdas via
   `NavGraphBuilderLambda`; deep links are not yet exposed.
+- **Drawing.** `Canvas`, managed `DrawScope` / `ContentDrawScope` /
+  `CacheDrawScope` callbacks, `drawBehind` / `drawWithContent` /
+  `drawWithCache`, mutable `Path`, gradient `Brush` factories, and shape
+  factories are exposed (#64). Core drawing calls and path mutation use the
+  current runtime bindings directly; only the binder-omitted
+  `CacheDrawScope` instance methods use a small raw-JNI helper.
 
 ## Still missing (tracked)
 
-- Drawing primitives: `Canvas`, `Modifier.drawBehind`, `Brush`,
-  `Path`, `Shape` factories beyond `RoundedCornerShape` — see
-  [#64](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/64).
 - M3 Expressive newcomers (SplitButton, ButtonGroup,
   LoadingIndicator) — see
   [#54](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/54).

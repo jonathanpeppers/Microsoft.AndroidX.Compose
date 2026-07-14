@@ -14,15 +14,22 @@ public static class IconButtonsDemo
         Build:       c =>
         {
             var count = c.MutableStateOf(0);
+            var enabled = c.MutableStateOf(true);
             return new Column
             {
                 new Text($"Tapped: {count}"),
+                new Row(horizontalArrangement: Arrangement.SpacedBy(8.Dp()),
+                        verticalAlignment: Alignment.Vertical.CenterVertically)
+                {
+                    new Switch(@checked: enabled.Value, onCheckedChange: value => enabled.Value = value),
+                    new Text("Enabled"),
+                },
                 new Row
                 {
-                    new IconButton(onClick: () => count++) { new Text("☆") },
-                    new FilledIconButton(onClick: () => count++) { new Text("★") },
-                    new FilledTonalIconButton(onClick: () => count++) { new Text("◆") },
-                    new OutlinedIconButton(onClick: () => count++) { new Text("◇") },
+                    new IconButton(onClick: () => count++, enabled: enabled.Value) { new Text("☆") },
+                    new FilledIconButton(onClick: () => count++, enabled: enabled.Value) { new Text("★") },
+                    new FilledTonalIconButton(onClick: () => count++, enabled: enabled.Value) { new Text("◆") },
+                    new OutlinedIconButton(onClick: () => count++, enabled: enabled.Value) { new Text("◇") },
                 },
             };
         });
