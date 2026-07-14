@@ -83,6 +83,10 @@ internal static class Attributes
             /// the <c>$$INSTANCE</c>-style static field
             /// (e.g. <c>INSTANCE</c>) and the generator emits
             /// <c>GetMethodID</c> + <c>CallObjectMethod</c> instead.</para>
+            /// <para><b>Instance</b>: when <c>true</c>, the first C# parameter
+            /// must be an <c>IntPtr</c> receiver that is excluded from the JNI
+            /// signature and used as the target of <c>Call*Method</c>. This
+            /// models ordinary caller-supplied Kotlin instance methods.</para>
             /// <para><b>Suspend</b>: opts into the Kotlin <c>suspend</c>
             /// bridge shape. The trailing C# parameter must be
             /// <c>Kotlin.Coroutines.IContinuation</c> (or an implementor —
@@ -119,6 +123,7 @@ internal static class Attributes
                 public string Signature { get; set; } = "";
                 public global::System.Type? Defaults { get; set; }
                 public string? InstanceField { get; set; }
+                public bool Instance { get; set; }
                 public bool Suspend { get; set; }
             }
 

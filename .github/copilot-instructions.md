@@ -139,6 +139,10 @@ for strings) is emitted by `ComposeBridgeGenerator` from a one-line declaration.
    - **Plain Kotlin static** (no Composer, no `$default`, e.g.
      `Modifier.padding`, `RoundedCornerShape`): positional. First user param is
      receiver iff it's `IntPtr` AND the first JNI sigParam is `L`.
+   - **Plain Kotlin instance** (no Composer, no `$default`): set
+     `Instance = true`; first C# param must be the `IntPtr` dispatch receiver
+     and is excluded from the JNI signature/JValue array. Generator emits
+     `GetMethodID` + the return-type-specific `Call*Method`.
    - **Stripped Kotlin constructor**: set `JvmName = "<init>"`; generator emits
      `GetMethodID` + `NewObject` and wraps the handle via
      `Java.Lang.Object.GetObject<TReturn>(.., TransferLocalRef)`. Signature
@@ -211,6 +215,7 @@ fit any `[ComposeBridge]` shape.
 | CN2008 | Value-type parameter lowers to a JNI slot that doesn't match the bridge signature at that position.  |
 | CN2009 | `[ComposeBridge(Suspend = true)]` configuration is invalid (missing/misplaced `IContinuation`, wrong return, etc.). |
 | CN2010 | `[ComposeBridge]` declares an `int _changed` parameter but the JNI signature has no `$changed` slot (only valid on `@Composable` bridges). |
+| CN2011 | `[ComposeBridge(Instance = true)]` configuration is invalid (missing receiver or incompatible constructor/suspend/singleton/default shape). |
 
 **When adding a new diagnostic, update this table (and CN1xxx if relevant).
 Source of truth: `src/Microsoft.AndroidX.Compose.SourceGenerators/Diagnostics.cs`.**

@@ -2089,6 +2089,33 @@ internal static partial class ComposeBridges
                     "Landroidx/compose/ui/Modifier;")]
     internal static partial IntPtr ModifierDrawBehind(IntPtr modifier, IFunction1 onDraw);
 
+    [ComposeBridge(
+        Class     = "androidx/compose/ui/draw/DrawModifierKt",
+        JvmName   = "drawWithContent",
+        Signature = "(Landroidx/compose/ui/Modifier;Lkotlin/jvm/functions/Function1;)" +
+                    "Landroidx/compose/ui/Modifier;")]
+    internal static partial IntPtr ModifierDrawWithContent(IntPtr modifier, IFunction1 onDraw);
+
+    [ComposeBridge(
+        Class     = "androidx/compose/ui/draw/DrawModifierKt",
+        JvmName   = "drawWithCache",
+        Signature = "(Landroidx/compose/ui/Modifier;Lkotlin/jvm/functions/Function1;)" +
+                    "Landroidx/compose/ui/Modifier;")]
+    internal static partial IntPtr ModifierDrawWithCache(IntPtr modifier, IFunction1 onBuildDrawCache);
+
+    [ComposeBridge(
+        Class     = "androidx/compose/ui/graphics/drawscope/Stroke",
+        JvmName   = "<init>",
+        Signature = "(FFIILandroidx/compose/ui/graphics/PathEffect;" +
+                    "Lkotlin/jvm/internal/DefaultConstructorMarker;)V")]
+    internal static partial AndroidX.Compose.UI.Graphics.Drawscope.Stroke DrawStroke(
+        float width,
+        float miter,
+        int cap,
+        int join,
+        AndroidX.Compose.UI.Graphics.IPathEffect? pathEffect,
+        IntPtr marker);
+
     // androidx.compose.foundation.ClickableKt.clickable-XHw0xAI$default —
     // (Modifier, Boolean enabled, String onClickLabel, Role role,
     // Function0 onClick). Returns a Modifier directly — the lambda is
