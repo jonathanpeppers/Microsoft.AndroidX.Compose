@@ -102,6 +102,15 @@ public sealed class PaddingValues : Java.Lang.Object
         new PaddingValues(handle, JniHandleOwnership.DoNotTransfer);
 
     /// <summary>
+    /// Wrap a bound <see cref="IPaddingValues"/> result while taking an
+    /// independent local reference for this facade wrapper.
+    /// </summary>
+    internal static PaddingValues Wrap(IPaddingValues paddingValues) =>
+        new PaddingValues(
+            BuildHandle(paddingValues),
+            JniHandleOwnership.TransferLocalRef);
+
+    /// <summary>
     /// The underlying bound <see cref="IPaddingValues"/> peer. Used by
     /// hand-written facades that call the bound binding directly
     /// (e.g. <c>LazyDslKt.LazyColumn(contentPadding: ...)</c>);

@@ -1482,6 +1482,24 @@ AndroidX.Compose.ViewModel.IsCleared.get -> bool
 AndroidX.Compose.ViewModel.LaunchAsync(System.Func<System.Threading.CancellationToken, System.Threading.Tasks.Task!>! body) -> System.Threading.Tasks.Task!
 AndroidX.Compose.ViewModel.Scope.get -> System.Threading.CancellationToken
 AndroidX.Compose.ViewModel.ViewModel() -> void
+AndroidX.Compose.WindowInsets
+AndroidX.Compose.WindowInsets.Add(AndroidX.Compose.WindowInsets! insets) -> AndroidX.Compose.WindowInsets!
+AndroidX.Compose.WindowInsets.AsPaddingValues(AndroidX.Compose.Runtime.IComposer! composer) -> AndroidX.Compose.PaddingValues!
+AndroidX.Compose.WindowInsets.Exclude(AndroidX.Compose.WindowInsets! insets) -> AndroidX.Compose.WindowInsets!
+AndroidX.Compose.WindowInsets.Only(AndroidX.Compose.WindowInsetsSides sides) -> AndroidX.Compose.WindowInsets!
+AndroidX.Compose.WindowInsets.Union(AndroidX.Compose.WindowInsets! insets) -> AndroidX.Compose.WindowInsets!
+AndroidX.Compose.WindowInsets.WindowInsets(AndroidX.Compose.Dp left = default(AndroidX.Compose.Dp), AndroidX.Compose.Dp top = default(AndroidX.Compose.Dp), AndroidX.Compose.Dp right = default(AndroidX.Compose.Dp), AndroidX.Compose.Dp bottom = default(AndroidX.Compose.Dp)) -> void
+AndroidX.Compose.WindowInsetsSides
+AndroidX.Compose.WindowInsetsSides.All = AndroidX.Compose.WindowInsetsSides.Horizontal | AndroidX.Compose.WindowInsetsSides.Vertical -> AndroidX.Compose.WindowInsetsSides
+AndroidX.Compose.WindowInsetsSides.Bottom = 32 -> AndroidX.Compose.WindowInsetsSides
+AndroidX.Compose.WindowInsetsSides.End = 6 -> AndroidX.Compose.WindowInsetsSides
+AndroidX.Compose.WindowInsetsSides.Horizontal = AndroidX.Compose.WindowInsetsSides.Right | AndroidX.Compose.WindowInsetsSides.Left -> AndroidX.Compose.WindowInsetsSides
+AndroidX.Compose.WindowInsetsSides.Left = 10 -> AndroidX.Compose.WindowInsetsSides
+AndroidX.Compose.WindowInsetsSides.None = 0 -> AndroidX.Compose.WindowInsetsSides
+AndroidX.Compose.WindowInsetsSides.Right = 5 -> AndroidX.Compose.WindowInsetsSides
+AndroidX.Compose.WindowInsetsSides.Start = 9 -> AndroidX.Compose.WindowInsetsSides
+AndroidX.Compose.WindowInsetsSides.Top = 16 -> AndroidX.Compose.WindowInsetsSides
+AndroidX.Compose.WindowInsetsSides.Vertical = AndroidX.Compose.WindowInsetsSides.Top | AndroidX.Compose.WindowInsetsSides.Bottom -> AndroidX.Compose.WindowInsetsSides
 AndroidX.Compose.WideNavigationRail
 AndroidX.Compose.WideNavigationRail.WideNavigationRail() -> void
 AndroidX.Compose.WideNavigationRailItem
@@ -2207,6 +2225,7 @@ static AndroidX.Compose.Modifier.Clip(AndroidX.Compose.Dp cornerRadius) -> Andro
 static AndroidX.Compose.Modifier.Clip(AndroidX.Compose.Shape! shape) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.Modifier.CombinedClickable(System.Action! onClick, System.Action? onLongClick = null, System.Action? onDoubleClick = null) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.Modifier.Companion.get -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.Modifier.ConsumeWindowInsets(AndroidX.Compose.WindowInsets! insets) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.Modifier.DefaultMinSize(AndroidX.Compose.Dp? minWidth = null, AndroidX.Compose.Dp? minHeight = null) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.Modifier.DetectDragGestures(System.Action<AndroidX.Compose.Offset>! onDrag, System.Action<AndroidX.Compose.Offset>? onDragStart = null, System.Action? onDragEnd = null, System.Action? onDragCancel = null, object? key = null) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.Modifier.DetectTapGestures(System.Action<AndroidX.Compose.Offset>? onTap = null, System.Action<AndroidX.Compose.Offset>? onPress = null, System.Action<AndroidX.Compose.Offset>? onLongPress = null, System.Action<AndroidX.Compose.Offset>? onDoubleTap = null, object? key = null) -> AndroidX.Compose.Modifier!
@@ -2268,6 +2287,11 @@ static AndroidX.Compose.Modifier.WaterfallPadding() -> AndroidX.Compose.Modifier
 static AndroidX.Compose.Modifier.Weight(float weight, bool fill = true) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.Modifier.Width(AndroidX.Compose.Dp width) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.Modifier.WidthIn(AndroidX.Compose.Dp? min = null, AndroidX.Compose.Dp? max = null) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.Modifier.WindowInsetsBottomHeight(AndroidX.Compose.WindowInsets! insets) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.Modifier.WindowInsetsEndWidth(AndroidX.Compose.WindowInsets! insets) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.Modifier.WindowInsetsPadding(AndroidX.Compose.WindowInsets! insets) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.Modifier.WindowInsetsStartWidth(AndroidX.Compose.WindowInsets! insets) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.Modifier.WindowInsetsTopHeight(AndroidX.Compose.WindowInsets! insets) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.Modifier.WrapContentHeight(AndroidX.Compose.Alignment.Vertical! align, bool unbounded = false) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.Modifier.WrapContentHeight(bool unbounded = false) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.Modifier.WrapContentSize(bool unbounded = false) -> AndroidX.Compose.Modifier!
@@ -2294,6 +2318,7 @@ static AndroidX.Compose.ModifierExtensions.Clickable(this AndroidX.Compose.Modif
 static AndroidX.Compose.ModifierExtensions.Clip(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.Dp cornerRadius) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.ModifierExtensions.Clip(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.Shape! shape) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.ModifierExtensions.CombinedClickable(this AndroidX.Compose.Modifier! modifier, System.Action! onClick, System.Action? onLongClick = null, System.Action? onDoubleClick = null) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.ModifierExtensions.ConsumeWindowInsets(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.WindowInsets! insets) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.ModifierExtensions.DefaultMinSize(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.Dp? minWidth = null, AndroidX.Compose.Dp? minHeight = null) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.ModifierExtensions.DetectDragGestures(this AndroidX.Compose.Modifier! modifier, System.Action<AndroidX.Compose.Offset>! onDrag, System.Action<AndroidX.Compose.Offset>? onDragStart = null, System.Action? onDragEnd = null, System.Action? onDragCancel = null, object? key = null) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.ModifierExtensions.DetectTapGestures(this AndroidX.Compose.Modifier! modifier, System.Action<AndroidX.Compose.Offset>? onTap = null, System.Action<AndroidX.Compose.Offset>? onPress = null, System.Action<AndroidX.Compose.Offset>? onLongPress = null, System.Action<AndroidX.Compose.Offset>? onDoubleTap = null, object? key = null) -> AndroidX.Compose.Modifier!
@@ -2359,6 +2384,11 @@ static AndroidX.Compose.ModifierExtensions.WaterfallPadding(this AndroidX.Compos
 static AndroidX.Compose.ModifierExtensions.Weight(this AndroidX.Compose.Modifier! modifier, float weight, bool fill = true) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.ModifierExtensions.Width(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.Dp width) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.ModifierExtensions.WidthIn(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.Dp? min = null, AndroidX.Compose.Dp? max = null) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.ModifierExtensions.WindowInsetsBottomHeight(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.WindowInsets! insets) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.ModifierExtensions.WindowInsetsEndWidth(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.WindowInsets! insets) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.ModifierExtensions.WindowInsetsPadding(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.WindowInsets! insets) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.ModifierExtensions.WindowInsetsStartWidth(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.WindowInsets! insets) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.ModifierExtensions.WindowInsetsTopHeight(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.WindowInsets! insets) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.ModifierExtensions.WrapContentHeight(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.Alignment.Vertical! align, bool unbounded = false) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.ModifierExtensions.WrapContentHeight(this AndroidX.Compose.Modifier! modifier, bool unbounded = false) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.ModifierExtensions.WrapContentSize(this AndroidX.Compose.Modifier! modifier, bool unbounded = false) -> AndroidX.Compose.Modifier!
@@ -2436,6 +2466,19 @@ static AndroidX.Compose.Transitions.SlideInHorizontally(System.Func<int, int>? i
 static AndroidX.Compose.Transitions.SlideInVertically(System.Func<int, int>? initialOffsetY = null, AndroidX.Compose.Animation.Core.IFiniteAnimationSpec? animationSpec = null) -> AndroidX.Compose.Animation.EnterTransition!
 static AndroidX.Compose.Transitions.SlideOutHorizontally(System.Func<int, int>? targetOffsetX = null, AndroidX.Compose.Animation.Core.IFiniteAnimationSpec? animationSpec = null) -> AndroidX.Compose.Animation.ExitTransition!
 static AndroidX.Compose.Transitions.SlideOutVertically(System.Func<int, int>? targetOffsetY = null, AndroidX.Compose.Animation.Core.IFiniteAnimationSpec? animationSpec = null) -> AndroidX.Compose.Animation.ExitTransition!
+static AndroidX.Compose.WindowInsets.CaptionBar(AndroidX.Compose.Runtime.IComposer! composer) -> AndroidX.Compose.WindowInsets!
+static AndroidX.Compose.WindowInsets.DisplayCutout(AndroidX.Compose.Runtime.IComposer! composer) -> AndroidX.Compose.WindowInsets!
+static AndroidX.Compose.WindowInsets.Ime(AndroidX.Compose.Runtime.IComposer! composer) -> AndroidX.Compose.WindowInsets!
+static AndroidX.Compose.WindowInsets.MandatorySystemGestures(AndroidX.Compose.Runtime.IComposer! composer) -> AndroidX.Compose.WindowInsets!
+static AndroidX.Compose.WindowInsets.NavigationBars(AndroidX.Compose.Runtime.IComposer! composer) -> AndroidX.Compose.WindowInsets!
+static AndroidX.Compose.WindowInsets.SafeContent(AndroidX.Compose.Runtime.IComposer! composer) -> AndroidX.Compose.WindowInsets!
+static AndroidX.Compose.WindowInsets.SafeDrawing(AndroidX.Compose.Runtime.IComposer! composer) -> AndroidX.Compose.WindowInsets!
+static AndroidX.Compose.WindowInsets.SafeGestures(AndroidX.Compose.Runtime.IComposer! composer) -> AndroidX.Compose.WindowInsets!
+static AndroidX.Compose.WindowInsets.StatusBars(AndroidX.Compose.Runtime.IComposer! composer) -> AndroidX.Compose.WindowInsets!
+static AndroidX.Compose.WindowInsets.SystemBars(AndroidX.Compose.Runtime.IComposer! composer) -> AndroidX.Compose.WindowInsets!
+static AndroidX.Compose.WindowInsets.SystemGestures(AndroidX.Compose.Runtime.IComposer! composer) -> AndroidX.Compose.WindowInsets!
+static AndroidX.Compose.WindowInsets.TappableElement(AndroidX.Compose.Runtime.IComposer! composer) -> AndroidX.Compose.WindowInsets!
+static AndroidX.Compose.WindowInsets.Waterfall(AndroidX.Compose.Runtime.IComposer! composer) -> AndroidX.Compose.WindowInsets!
 virtual AndroidX.Compose.MutableState<T>.Value.get -> T
 virtual AndroidX.Compose.MutableState<T>.Value.set -> void
 virtual AndroidX.Compose.ViewModel.OnClearedCore() -> void

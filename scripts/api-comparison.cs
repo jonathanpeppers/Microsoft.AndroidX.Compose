@@ -631,9 +631,10 @@ static Match Classify(
         }
     }
 
-    // Method/property fallback — many lowercase Kotlin functions (derivedStateOf,
+    // Method fallback — many lowercase Kotlin functions (derivedStateOf,
     // produceState, rememberCoroutineScope, mutableStateListOf, …) map to a
     // PascalCase static method on Compose.cs rather than a dedicated facade type.
+    // A same-named property is not equivalent to invoking a Kotlin factory.
     if (k.Kind == "fun" && csharpByShort.TryGetValue(k.Name, out var methodHits))
     {
         var hit = methodHits.FirstOrDefault(h =>

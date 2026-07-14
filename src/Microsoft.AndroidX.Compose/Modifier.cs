@@ -39,9 +39,10 @@ namespace AndroidX.Compose;
 /// </summary>
 public sealed class Modifier
 {
-    static readonly Func<IntPtr, IntPtr>[] EmptyOps = [];
+    static readonly Func<IntPtr, IntPtr>?[] EmptyOps = [];
+    static readonly Func<IModifier, IModifier>?[] EmptyBoundOps = [];
     static readonly ModifierOpKey[] EmptyKeys = [];
-    static readonly Modifier _companion = new Modifier(EmptyOps, EmptyKeys);
+    static readonly Modifier _companion = new Modifier(EmptyOps, EmptyBoundOps, EmptyKeys);
 
     /// <summary>
     /// The empty Modifier — entry point for the fluent chain.
@@ -50,12 +51,17 @@ public sealed class Modifier
     /// </summary>
     public static Modifier Companion => _companion;
 
-    readonly Func<IntPtr, IntPtr>[] _ops;
+    readonly Func<IntPtr, IntPtr>?[] _ops;
+    readonly Func<IModifier, IModifier>?[] _boundOps;
     readonly ModifierOpKey[] _keys;
 
-    Modifier(Func<IntPtr, IntPtr>[] ops, ModifierOpKey[] keys)
+    Modifier(
+        Func<IntPtr, IntPtr>?[] ops,
+        Func<IModifier, IModifier>?[] boundOps,
+        ModifierOpKey[] keys)
     {
         _ops = ops;
+        _boundOps = boundOps;
         _keys = keys;
     }
 
@@ -69,7 +75,17 @@ public sealed class Modifier
     /// recompositions and Kotlin can take the skip path.
     /// </summary>
     internal Modifier Append(Func<IntPtr, IntPtr> op, ModifierOpKey key) =>
-        new Modifier([.._ops, op], [.._keys, key]);
+        new Modifier([.._ops, op], [.._boundOps, null], [.._keys, key]);
+
+    /// <summary>
+    /// Append an operation exposed by the official managed binding.
+    /// The materializer keeps the chain managed until a raw bridge is
+    /// encountered, avoiding duplicate JNI bridges for bound APIs.
+    /// </summary>
+    internal Modifier AppendBound(
+        Func<IModifier, IModifier> op,
+        ModifierOpKey key) =>
+        new Modifier([.._ops, null], [.._boundOps, op], [.._keys, key]);
 
     /// <summary>
     /// Append an op without a structural key; the resulting chain
@@ -94,7 +110,10 @@ public sealed class Modifier
         ArgumentNullException.ThrowIfNull(other);
         if (other._ops.Length == 0) return this;
         if (_ops.Length == 0) return other;
-        return new Modifier([.._ops, ..other._ops], [.._keys, ..other._keys]);
+        return new Modifier(
+            [.._ops, ..other._ops],
+            [.._boundOps, ..other._boundOps],
+            [.._keys, ..other._keys]);
     }
 
     /// <summary>
@@ -155,6 +174,30 @@ public sealed class Modifier
 
     /// <inheritdoc cref="ModifierExtensions.SystemBarsPadding()"/>
     public static Modifier SystemBarsPadding() => _companion.SystemBarsPadding();
+
+    /// <inheritdoc cref="ModifierExtensions.WindowInsetsPadding(Modifier, WindowInsets)"/>
+    public static Modifier WindowInsetsPadding(WindowInsets insets) =>
+        _companion.WindowInsetsPadding(insets);
+
+    /// <inheritdoc cref="ModifierExtensions.ConsumeWindowInsets(Modifier, WindowInsets)"/>
+    public static Modifier ConsumeWindowInsets(WindowInsets insets) =>
+        _companion.ConsumeWindowInsets(insets);
+
+    /// <inheritdoc cref="ModifierExtensions.WindowInsetsBottomHeight(Modifier, WindowInsets)"/>
+    public static Modifier WindowInsetsBottomHeight(WindowInsets insets) =>
+        _companion.WindowInsetsBottomHeight(insets);
+
+    /// <inheritdoc cref="ModifierExtensions.WindowInsetsTopHeight(Modifier, WindowInsets)"/>
+    public static Modifier WindowInsetsTopHeight(WindowInsets insets) =>
+        _companion.WindowInsetsTopHeight(insets);
+
+    /// <inheritdoc cref="ModifierExtensions.WindowInsetsStartWidth(Modifier, WindowInsets)"/>
+    public static Modifier WindowInsetsStartWidth(WindowInsets insets) =>
+        _companion.WindowInsetsStartWidth(insets);
+
+    /// <inheritdoc cref="ModifierExtensions.WindowInsetsEndWidth(Modifier, WindowInsets)"/>
+    public static Modifier WindowInsetsEndWidth(WindowInsets insets) =>
+        _companion.WindowInsetsEndWidth(insets);
 
     /// <inheritdoc cref="ModifierExtensions.MinimumInteractiveComponentSize()"/>
     public static Modifier MinimumInteractiveComponentSize() => _companion.MinimumInteractiveComponentSize();
@@ -435,6 +478,7 @@ public sealed class Modifier
         // — the finally deletes whichever local ref is still live so
         // we never leak.
         IntPtr current = IntPtr.Zero;
+        IModifier? managedCurrent = null;
         try
         {
             current = ComposeBridges.ModifierCompanionInstance();
@@ -446,12 +490,45 @@ public sealed class Modifier
             }
             for (int i = 0; i < _ops.Length; i++)
             {
-                IntPtr next = _ops[i](current);
-                JNIEnv.DeleteLocalRef(current);
+                var boundOp = _boundOps[i];
+                if (boundOp is not null)
+                {
+                    if (managedCurrent is null)
+                    {
+                        managedCurrent = Java.Lang.Object.GetObject<IModifier>(
+                            current,
+                            JniHandleOwnership.TransferLocalRef)
+                            ?? throw new InvalidOperationException(
+                                "Unable to wrap the current Modifier JNI handle.");
+                        current = IntPtr.Zero;
+                    }
+
+                    managedCurrent = boundOp(managedCurrent);
+                    continue;
+                }
+
+                var rawOp = _ops[i]
+                    ?? throw new InvalidOperationException(
+                        "Modifier operation has no raw or bound implementation.");
+                IntPtr input = managedCurrent is null
+                    ? current
+                    : ((Java.Lang.Object)managedCurrent).Handle;
+                IntPtr next = rawOp(input);
+                GC.KeepAlive(managedCurrent);
+                managedCurrent = null;
+                if (current != IntPtr.Zero)
+                    JNIEnv.DeleteLocalRef(current);
                 current = next;
             }
 
-            var result = Java.Lang.Object.GetObject<IModifier>(current, JniHandleOwnership.TransferLocalRef)!;
+            if (managedCurrent is not null)
+                return managedCurrent;
+
+            var result = Java.Lang.Object.GetObject<IModifier>(
+                current,
+                JniHandleOwnership.TransferLocalRef)
+                ?? throw new InvalidOperationException(
+                    "Unable to wrap the materialized Modifier JNI handle.");
             current = IntPtr.Zero;
             return result;
         }

@@ -262,7 +262,13 @@ class.
   `DisplayCutoutPadding()`, `WaterfallPadding()`, `SystemGesturesPadding()`,
   `MandatorySystemGesturesPadding()`, `SafeContentPadding()`,
   `SafeGesturesPadding()` round out the existing
-  `SafeDrawingPadding()` / `SystemBarsPadding()` pair.
+  `SafeDrawingPadding()` / `SystemBarsPadding()` pair. The complete
+  `WindowInsets` facade adds live composition-aware inset reads, fixed
+  `Dp` construction, `Add` / `Union` / `Exclude` / `Only` set operations,
+  `AsPaddingValues`, generic `WindowInsetsPadding` / `ConsumeWindowInsets`,
+  and inset-sized width/height modifiers. These call the official runtime
+  bindings directly; `Modifier` can replay managed binding operations
+  alongside generated raw-handle bridges without duplicating JNI surfaces.
 - **`remember(keys, …)` is supported.** Use the keyed overloads
   `Remember(factory, key1)`, `Remember(factory, key1, key2)`,
   `Remember(factory, key1, key2, key3)`, or

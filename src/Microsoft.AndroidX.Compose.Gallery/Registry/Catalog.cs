@@ -166,6 +166,7 @@ public static class Catalog
         D.Modifiers.GraphicsLayerDemo.Demo,
         D.Modifiers.FlowRowScopeDispatchDemo.Demo,
         D.Modifiers.MinimumInteractiveComponentSizeDemo.Demo,
+        D.Modifiers.WindowInsetsDemo.Demo,
 
         // ---- State, effects, animation ----
         D.StateEffectsAnimation.RememberSaveableDemo.Demo,
