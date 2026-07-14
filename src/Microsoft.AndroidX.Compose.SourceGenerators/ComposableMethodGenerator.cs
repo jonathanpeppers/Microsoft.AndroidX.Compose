@@ -133,6 +133,41 @@ public sealed class ComposableMethodGenerator : IIncrementalGenerator
                 Diagnostics.ComposableMissingComposer, loc, method.ToDisplayString()));
             return;
         }
+        if (!IsAccessibleFromGeneratedType(method))
+        {
+            spc.ReportDiagnostic(Diagnostic.Create(
+                Diagnostics.ComposableNotAccessible, loc, method.ToDisplayString()));
+            return;
+        }
+        if (method.IsAsync)
+        {
+            spc.ReportDiagnostic(Diagnostic.Create(
+                Diagnostics.ComposableAsyncUnsupported, loc, method.ToDisplayString()));
+            return;
+        }
+        if (method.IsExtensionMethod)
+        {
+            spc.ReportDiagnostic(Diagnostic.Create(
+                Diagnostics.ComposableExtensionUnsupported, loc, method.ToDisplayString()));
+            return;
+        }
+        if (method.IsGenericMethod)
+        {
+            spc.ReportDiagnostic(Diagnostic.Create(
+                Diagnostics.ComposableGenericUnsupported, loc, method.ToDisplayString()));
+            return;
+        }
+        var byRefParameter = method.Parameters.FirstOrDefault(
+            static p => p.RefKind != RefKind.None);
+        if (byRefParameter is not null)
+        {
+            spc.ReportDiagnostic(Diagnostic.Create(
+                Diagnostics.ComposableByRefUnsupported,
+                loc,
+                method.ToDisplayString(),
+                byRefParameter.Name,
+                byRefParameter.RefKind.ToString().ToLowerInvariant()));
+        }
     }
 
     /// <summary>
@@ -167,13 +202,9 @@ public sealed class ComposableMethodGenerator : IIncrementalGenerator
         if (!HasComposableAttribute(actual))
             return null;
 
-        // Must look intact enough to wrap: void return, IComposer first
-        // arg, static. ValidateComposable already flags violations as
-        // CN500x diagnostics; we just guard the emission path here.
-        if (!target.IsStatic ||
-            target.ReturnType.SpecialType != SpecialType.System_Void ||
-            target.Parameters.Length == 0 ||
-            !IsComposer(target.Parameters[0].Type))
+        // ValidateComposable reports the diagnostic on the declaration;
+        // this guard keeps unsupported targets out of generated code.
+        if (!CanEmitInterceptor(actual))
             return null;
 
         var loc = ctx.SemanticModel.GetInterceptableLocation(invocation, ct);
@@ -199,6 +230,35 @@ public sealed class ComposableMethodGenerator : IIncrementalGenerator
 
     static bool IsComposer(ITypeSymbol type) =>
         type.ToDisplayString() == ComposerFullName;
+
+    static bool CanEmitInterceptor(IMethodSymbol method) =>
+        method.IsStatic &&
+        method.ReturnType.SpecialType == SpecialType.System_Void &&
+        method.Parameters.Length > 0 &&
+        IsComposer(method.Parameters[0].Type) &&
+        IsAccessibleFromGeneratedType(method) &&
+        !method.IsAsync &&
+        !method.IsExtensionMethod &&
+        !method.IsGenericMethod &&
+        !method.Parameters.Any(static p => p.RefKind != RefKind.None);
+
+    static bool IsAccessibleFromGeneratedType(IMethodSymbol method)
+    {
+        if (!IsAssemblyAccessible(method.DeclaredAccessibility))
+            return false;
+
+        for (var type = method.ContainingType; type is not null; type = type.ContainingType)
+        {
+            if (type.IsFileLocal || !IsAssemblyAccessible(type.DeclaredAccessibility))
+                return false;
+        }
+        return true;
+    }
+
+    static bool IsAssemblyAccessible(Accessibility accessibility) =>
+        accessibility is Accessibility.Public
+            or Accessibility.Internal
+            or Accessibility.ProtectedOrInternal;
 
     static void EmitPreamble(StringBuilder sb)
     {

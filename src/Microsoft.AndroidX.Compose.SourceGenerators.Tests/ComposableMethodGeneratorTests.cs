@@ -292,6 +292,144 @@ public class ComposableMethodGeneratorTests
     }
 
     [Fact]
+    public void InaccessibleMethodOrContainingType_ReportsCN5004AndDoesNotEmitInterceptor()
+    {
+        var (_, diags, emitted) = Run("""
+            namespace App
+            {
+                public static class Screens
+                {
+                    [AndroidX.Compose.Composable]
+                    static void Private(AndroidX.Compose.Runtime.IComposer composer) { }
+
+                    private static class Hidden
+                    {
+                        [AndroidX.Compose.Composable]
+                        public static void Nested(AndroidX.Compose.Runtime.IComposer composer) { }
+                    }
+
+                    public static void CallSite(AndroidX.Compose.Runtime.IComposer c)
+                    {
+                        Private(c);
+                        Hidden.Nested(c);
+                    }
+                }
+
+                file static class FileLocalScreens
+                {
+                    [AndroidX.Compose.Composable]
+                    public static void Local(AndroidX.Compose.Runtime.IComposer composer) { }
+
+                    public static void CallSite(AndroidX.Compose.Runtime.IComposer c) => Local(c);
+                }
+            }
+            """);
+
+        Assert.Equal(3, diags.Count(d => d.Id == "CN5004"));
+        Assert.Null(emitted);
+    }
+
+    [Fact]
+    public void AsyncMethod_ReportsCN5005AndDoesNotEmitInterceptor()
+    {
+        var (_, diags, emitted) = Run("""
+            namespace App
+            {
+                public static class Screens
+                {
+                    [AndroidX.Compose.Composable]
+                    public static async void Foo(AndroidX.Compose.Runtime.IComposer composer)
+                    {
+                        await System.Threading.Tasks.Task.Yield();
+                    }
+
+                    public static void CallSite(AndroidX.Compose.Runtime.IComposer c) => Foo(c);
+                }
+            }
+            """);
+
+        Assert.Contains(diags, d => d.Id == "CN5005");
+        Assert.Null(emitted);
+    }
+
+    [Fact]
+    public void ExtensionMethod_ReportsCN5006AndDoesNotEmitInterceptor()
+    {
+        var (_, diags, emitted) = Run("""
+            namespace App
+            {
+                public static class Screens
+                {
+                    [AndroidX.Compose.Composable]
+                    public static void Foo(
+                        this AndroidX.Compose.Runtime.IComposer composer) { }
+
+                    public static void CallSite(AndroidX.Compose.Runtime.IComposer c) => c.Foo();
+                }
+            }
+            """);
+
+        Assert.Contains(diags, d => d.Id == "CN5006");
+        Assert.Null(emitted);
+    }
+
+    [Fact]
+    public void GenericMethod_ReportsCN5007AndDoesNotEmitInterceptor()
+    {
+        var (_, diags, emitted) = Run("""
+            namespace App
+            {
+                public static class Screens
+                {
+                    [AndroidX.Compose.Composable]
+                    public static void Foo<T>(
+                        AndroidX.Compose.Runtime.IComposer composer, T value) { }
+
+                    public static void CallSite(AndroidX.Compose.Runtime.IComposer c) => Foo(c, 1);
+                }
+            }
+            """);
+
+        Assert.Contains(diags, d => d.Id == "CN5007");
+        Assert.Null(emitted);
+    }
+
+    [Fact]
+    public void ByRefParameters_ReportCN5008AndDoNotEmitInterceptors()
+    {
+        var (_, diags, emitted) = Run("""
+            namespace App
+            {
+                public static class Screens
+                {
+                    [AndroidX.Compose.Composable]
+                    public static void WithRef(
+                        AndroidX.Compose.Runtime.IComposer composer, ref int value) { }
+
+                    [AndroidX.Compose.Composable]
+                    public static void WithOut(
+                        AndroidX.Compose.Runtime.IComposer composer, out int value) => value = 0;
+
+                    [AndroidX.Compose.Composable]
+                    public static void WithIn(
+                        AndroidX.Compose.Runtime.IComposer composer, in int value) { }
+
+                    public static void CallSite(AndroidX.Compose.Runtime.IComposer c)
+                    {
+                        int value = 0;
+                        WithRef(c, ref value);
+                        WithOut(c, out value);
+                        WithIn(c, in value);
+                    }
+                }
+            }
+            """);
+
+        Assert.Equal(3, diags.Count(d => d.Id == "CN5008"));
+        Assert.Null(emitted);
+    }
+
+    [Fact]
     public void NoInvocation_NoInterceptorEmitted()
     {
         // A [Composable] method that is never *called* anywhere in user

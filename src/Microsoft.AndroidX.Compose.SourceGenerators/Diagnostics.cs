@@ -291,4 +291,44 @@ internal static class Diagnostics
         category: "AndroidX.Compose",
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);
+
+    public static readonly DiagnosticDescriptor ComposableNotAccessible = new(
+        id: "CN5004",
+        title: "[Composable] method must be accessible to generated interceptors",
+        messageFormat: "Method '{0}' carries [Composable] but it or a containing type is not accessible from the generated interceptor — use public, internal, or protected internal accessibility",
+        category: "AndroidX.Compose",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
+
+    public static readonly DiagnosticDescriptor ComposableAsyncUnsupported = new(
+        id: "CN5005",
+        title: "[Composable] method cannot be async",
+        messageFormat: "Method '{0}' carries [Composable] but is 'async' — a composable cannot resume after its restart group has closed",
+        category: "AndroidX.Compose",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
+
+    public static readonly DiagnosticDescriptor ComposableExtensionUnsupported = new(
+        id: "CN5006",
+        title: "[Composable] extension methods are not supported",
+        messageFormat: "Method '{0}' carries [Composable] but is an extension method — declare a regular static method with IComposer as its first parameter",
+        category: "AndroidX.Compose",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
+
+    public static readonly DiagnosticDescriptor ComposableGenericUnsupported = new(
+        id: "CN5007",
+        title: "[Composable] generic methods are not supported",
+        messageFormat: "Method '{0}' carries [Composable] but is generic — Tier 2 currently requires a non-generic static method",
+        category: "AndroidX.Compose",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
+
+    public static readonly DiagnosticDescriptor ComposableByRefUnsupported = new(
+        id: "CN5008",
+        title: "[Composable] by-reference parameters are not supported",
+        messageFormat: "Method '{0}' carries [Composable] but parameter '{1}' uses '{2}' — Tier 2 currently supports only by-value parameters",
+        category: "AndroidX.Compose",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
 }

@@ -271,6 +271,11 @@ Tier 2; one-shot screens can stay tree-style indefinitely.
 | CN5001 | `[Composable]` method must be `static`.                          |
 | CN5002 | `[Composable]` method must return `void`.                        |
 | CN5003 | `[Composable]` method must take `IComposer` as first parameter.  |
+| CN5004 | Method and containing types must be interceptor-accessible.     |
+| CN5005 | `async` composables are unsupported.                            |
+| CN5006 | Extension-method composables are unsupported.                   |
+| CN5007 | Generic composables are unsupported.                            |
+| CN5008 | `ref`, `out`, and `in` parameters are unsupported.              |
 
 ### Deferred — follow-up issues
 

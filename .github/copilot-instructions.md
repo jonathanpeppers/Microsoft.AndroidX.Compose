@@ -1016,6 +1016,9 @@ Rules:
 
 - `[Composable]` method must be `static` (CN5001) with `IComposer` as
   the **first** parameter (CN5003) and a `void` return (CN5002).
+- It must be accessible from the generated interceptor (CN5004) and
+  cannot be `async` (CN5005), an extension method (CN5006), generic
+  (CN5007), or use `ref`/`out`/`in` parameters (CN5008).
 - The containing type does **not** need to be `partial`. There is no
   `Impl` companion, no `_changed` parameter, no `int _default` slot.
 - Each call site of a `[Composable]` method is rewired by the C#
@@ -1156,6 +1159,11 @@ are generated while compiling the runtime assembly.
 | CN5001 | `[Composable]` method must be `static` (Tier 2 intercepts call sites; intercepted target must be a static method).       |
 | CN5002 | `[Composable]` method must return `void` (Tier 2 currently supports only void composables).                              |
 | CN5003 | `[Composable]` method must take `AndroidX.Compose.Runtime.IComposer` as its first parameter.                             |
+| CN5004 | `[Composable]` method and its containing types must be accessible from the generated interceptor.                       |
+| CN5005 | `[Composable]` method cannot be `async`; continuations would resume after the restart group closes.                     |
+| CN5006 | `[Composable]` extension methods are unsupported; use a regular static method with `IComposer` first.                   |
+| CN5007 | `[Composable]` generic methods are unsupported.                                                                          |
+| CN5008 | `[Composable]` parameters cannot use `ref`, `out`, or `in`.                                                              |
 
 Tests in `ComposableMethodGeneratorTests.cs`. **Add a test for any new
 behaviour.**
