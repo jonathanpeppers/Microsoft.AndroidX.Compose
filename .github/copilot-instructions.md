@@ -1132,26 +1132,22 @@ execution counter stays flat while its sibling's tracks every tap).
 
 ### Wiring the generator into a consuming project
 
-The Tier 2 generator ships inside `Microsoft.AndroidX.Compose.SourceGenerators`.
-Consuming projects that author `[Composable]` methods need an
-`Analyzer` project reference *in addition to* the runtime reference:
+The `Microsoft.AndroidX.Compose` NuGet package ships the generator under
+`analyzers/dotnet/cs/` and imports the required interceptor namespace through
+`buildTransitive/Microsoft.AndroidX.Compose.props`. NuGet consumers need only
+the runtime package reference:
 
 ```xml
-<ProjectReference Include="..\Microsoft.AndroidX.Compose\Microsoft.AndroidX.Compose.csproj" />
-<ProjectReference Include="..\Microsoft.AndroidX.Compose.SourceGenerators\Microsoft.AndroidX.Compose.SourceGenerators.csproj"
-                  OutputItemType="Analyzer"
-                  ReferenceOutputAssembly="false" />
+<PackageReference Include="Microsoft.AndroidX.Compose" Version="..." />
 ```
 
-This is intentional — the `Analyzer` reference inside `Microsoft.AndroidX.Compose`
-itself isn't transitively propagated to ProjectReference consumers.
-(Once `Microsoft.AndroidX.Compose` is shipped as a NuGet package the
-generator will flow through the package's `analyzers/dotnet/cs/`
-folder and the explicit reference becomes unnecessary.)
-
-The consuming project also needs `<InterceptorsPreviewNamespaces>`
-to list `Microsoft.AndroidX.Compose.Generated` — which the repo's
-`Directory.Build.props` already does for every project under `src/`.
+Projects inside this repository consume the runtime through a
+`ProjectReference`, so they also reference
+`Microsoft.AndroidX.Compose.SourceGenerators` with
+`OutputItemType="Analyzer"` and `ReferenceOutputAssembly="false"`.
+Source-generator project references are not transitive. The runtime project
+itself also needs that reference because its bridges, defaults, and facades
+are generated while compiling the runtime assembly.
 
 ### Generator diagnostics
 

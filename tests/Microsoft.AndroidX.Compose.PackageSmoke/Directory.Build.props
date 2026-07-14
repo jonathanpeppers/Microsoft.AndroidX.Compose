@@ -1,0 +1,6 @@
+<Project>
+  <PropertyGroup>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <PackageSmokeVersion Condition="'$(PackageSmokeVersion)' == ''">1.0.0</PackageSmokeVersion>
+  </PropertyGroup>
+</Project>

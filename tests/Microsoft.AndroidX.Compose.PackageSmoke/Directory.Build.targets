@@ -1,0 +1,5 @@
+<Project>
+  <ItemGroup>
+    <PackageReference Update="Microsoft.AndroidX.Compose" Version="$(PackageSmokeVersion)" />
+  </ItemGroup>
+</Project>

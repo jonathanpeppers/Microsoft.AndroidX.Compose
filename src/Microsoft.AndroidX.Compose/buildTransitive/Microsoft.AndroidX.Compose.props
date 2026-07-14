@@ -1,0 +1,5 @@
+<Project>
+  <PropertyGroup>
+    <InterceptorsPreviewNamespaces>$(InterceptorsPreviewNamespaces);Microsoft.AndroidX.Compose.Generated</InterceptorsPreviewNamespaces>
+  </PropertyGroup>
+</Project>

@@ -134,7 +134,10 @@ Kotlin's top-level `@Composable` app function and call it through the
 `Action<IComposer>` `SetContent` overload. See
 [docs/architecture.md → Tier 2](docs/architecture.md) for the emission shape,
 the sibling-skip proof demo, diagnostics (CN5001–CN5003), and remaining
-follow-ups. The two tiers coexist freely.
+follow-ups. The two tiers coexist freely. The
+`Microsoft.AndroidX.Compose` NuGet package includes the Tier 2 source
+generator and its compiler configuration; package consumers need no separate
+generator reference.
 
 ## What's wrapped today
 

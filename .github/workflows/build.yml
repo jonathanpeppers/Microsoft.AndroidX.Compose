@@ -27,6 +27,31 @@ jobs:
       - name: Test source generators
         run: dotnet test src/Microsoft.AndroidX.Compose.SourceGenerators.Tests --no-build --logger "console;verbosity=normal" --logger "trx;LogFileName=test-results.trx"
 
+      - name: Pack
+        run: dotnet pack src/Microsoft.AndroidX.Compose/Microsoft.AndroidX.Compose.csproj --configuration Release --no-restore --output artifacts
+
+      - name: Verify package contents
+        shell: bash
+        run: |
+          package="$(find artifacts -name 'Microsoft.AndroidX.Compose.*.nupkg' -print -quit)"
+          unzip -l "$package" | grep -F 'analyzers/dotnet/cs/Microsoft.AndroidX.Compose.SourceGenerators.dll'
+          unzip -l "$package" | grep -F 'buildTransitive/Microsoft.AndroidX.Compose.props'
+
+      - name: Test package consumer
+        shell: bash
+        run: |
+          version="$(dotnet msbuild src/Microsoft.AndroidX.Compose/Microsoft.AndroidX.Compose.csproj -getProperty:PackageVersion -nologo)"
+          dotnet build tests/Microsoft.AndroidX.Compose.PackageSmoke \
+            --property:PackageSmokeSource="$PWD/artifacts" \
+            --property:PackageSmokeVersion="$version"
+          test -f tests/Microsoft.AndroidX.Compose.PackageSmoke/obj/Generated/Microsoft.AndroidX.Compose.SourceGenerators/AndroidX.Compose.SourceGenerators.ComposableMethodGenerator/Microsoft.AndroidX.Compose.Composable.Interceptors.g.cs
+
+      - name: Upload NuGet package
+        uses: actions/upload-artifact@v4
+        with:
+          name: Microsoft.AndroidX.Compose.nupkg
+          path: artifacts/*.nupkg
+
       - name: Upload binlog
         if: always()
         uses: actions/upload-artifact@v4
