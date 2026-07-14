@@ -1,5 +1,6 @@
 using AndroidX.Compose.Gallery.Registry;
 using AndroidX.Compose.Runtime;
+using static AndroidX.Compose.Composables;
 
 namespace AndroidX.Compose.Gallery.Demos.Tier2;
 
@@ -15,13 +16,9 @@ namespace AndroidX.Compose.Gallery.Demos.Tier2;
 /// <para>
 /// This is the simplest end-to-end exerciser of the Tier 2 pipeline —
 /// it lives alongside the tree-style facade catalog so both styles
-/// can coexist in the same gallery. The body invokes the tree-style
-/// <see cref="Column"/> / <see cref="Text"/> / <see cref="Button"/>
-/// facades for now (until Tier 2 sibling entry points for those
-/// facades land in a follow-up PR), so the on-screen output is
-/// indistinguishable from the equivalent tree-style demo — the
-/// difference is structural: the body only runs when an input
-/// parameter actually changed.
+/// can coexist in the same gallery. Its body calls the generated
+/// Tier 2 <see cref="Column"/> / <see cref="Text"/> /
+/// <see cref="Button"/> entry points directly.
 /// </para>
 /// </remarks>
 public static class Tier2CounterDemo
@@ -51,10 +48,10 @@ public static class Tier2CounterDemo
         // Tier 2 all the way down — every call here is itself an
         // intercepted [Composable] call site with its own restart
         // group + DiffSlot + skip path.
-        Composables.Column(composer, c =>
+        Column(composer, c =>
         {
-            Composables.Text(c, $"Tier 2 count: {count}");
-            Composables.Button(c, onIncrement, cc => Composables.Text(cc, "Tap to increment"));
+            Text(c, $"Tier 2 count: {count}");
+            Button(c, onIncrement, cc => Text(cc, "Tap to increment"));
         });
     }
 }

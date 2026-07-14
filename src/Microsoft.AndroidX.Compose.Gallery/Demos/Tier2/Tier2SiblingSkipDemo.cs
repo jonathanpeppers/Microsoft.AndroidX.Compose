@@ -1,5 +1,6 @@
 using AndroidX.Compose.Gallery.Registry;
 using AndroidX.Compose.Runtime;
+using static AndroidX.Compose.Composables;
 
 namespace AndroidX.Compose.Gallery.Demos.Tier2;
 
@@ -59,7 +60,7 @@ public static class Tier2SiblingSkipDemo
     [Composable]
     public static void Parent(IComposer composer, int tickCount, Action onTick)
     {
-        Composables.Column(composer, c =>
+        Column(composer, c =>
         {
             // The static sibling receives a literal string that never
             // changes from one pass to the next, so its interceptor's
@@ -71,7 +72,7 @@ public static class Tier2SiblingSkipDemo
             // user taps the button, so the body runs every pass.
             Ticking(c, tickCount);
 
-            Composables.Button(c, onTick, cc => Composables.Text(cc, "Tap to tick"));
+            Button(c, onTick, cc => Text(cc, "Tap to tick"));
         });
     }
 
@@ -84,7 +85,7 @@ public static class Tier2SiblingSkipDemo
     public static void Static(IComposer composer, string label)
     {
         s_staticExec++;
-        Composables.Text(composer, $"Static side: \"{label}\" — exec={s_staticExec}");
+        Text(composer, $"Static side: \"{label}\" — exec={s_staticExec}");
     }
 
     /// <summary>
@@ -97,6 +98,6 @@ public static class Tier2SiblingSkipDemo
     public static void Ticking(IComposer composer, int tickCount)
     {
         s_tickingExec++;
-        Composables.Text(composer, $"Ticking side: count={tickCount}, exec={s_tickingExec}");
+        Text(composer, $"Ticking side: count={tickCount}, exec={s_tickingExec}");
     }
 }
