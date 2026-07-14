@@ -25,6 +25,7 @@ public class BridgeGeneratorTests
                 public static unsafe void CallVoidMethod(System.IntPtr inst, System.IntPtr m, global::Android.Runtime.JValue* args) { }
                 public static unsafe System.IntPtr CallStaticObjectMethod(System.IntPtr cls, System.IntPtr m, global::Android.Runtime.JValue* args) => default;
                 public static unsafe System.IntPtr CallObjectMethod(System.IntPtr inst, System.IntPtr m, global::Android.Runtime.JValue* args) => default;
+                public static unsafe long CallLongMethod(System.IntPtr inst, System.IntPtr m, global::Android.Runtime.JValue* args) => default;
                 public static unsafe System.IntPtr NewObject(System.IntPtr cls, System.IntPtr m, global::Android.Runtime.JValue* args) => default;
             }
             public enum JniHandleOwnership { TransferLocalRef = 0 }
@@ -546,6 +547,85 @@ public class BridgeGeneratorTests
 
         var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
         Assert.Empty(errors);
+    }
+
+    [Fact]
+    public void Instance_EmitsCallerReceiverAndTypedVirtualCalls()
+    {
+        var code = """
+            using AndroidX.Compose;
+            using Kotlin.Jvm.Functions;
+
+            namespace AndroidX.Compose
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(
+                        Instance = true,
+                        Class = "androidx/compose/ui/draw/CacheDrawScope",
+                        JvmName = "getSize-NH-jbRc",
+                        Signature = "()J")]
+                    internal static partial long Size(System.IntPtr scope);
+
+                    [ComposeBridge(
+                        Instance = true,
+                        Class = "androidx/compose/ui/draw/CacheDrawScope",
+                        JvmName = "onDrawBehind",
+                        Signature = "(Lkotlin/jvm/functions/Function1;)Ljava/lang/Object;")]
+                    internal static partial System.IntPtr Draw(System.IntPtr scope, IFunction1 draw);
+
+                    [ComposeBridge(
+                        Instance = true,
+                        Class = "x/Y",
+                        JvmName = "tail",
+                        Signature = "(ILjava/lang/Object;)V")]
+                    internal static partial void Tail(
+                        System.IntPtr scope,
+                        int value,
+                        System.IntPtr marker);
+                }
+            }
+            """;
+
+        var (output, diags, emitted) = Run(code);
+        Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+        Assert.Contains("GetMethodID(s_Size_class", emitted);
+        Assert.DoesNotContain("GetStaticMethodID(s_Size_class", emitted);
+        Assert.Contains("stackalloc global::Android.Runtime.JValue[0]", emitted);
+        Assert.Contains("return global::Android.Runtime.JNIEnv.CallLongMethod(scope, s_Size_method, args);", emitted);
+
+        var generated = string.Join("\n", output.SyntaxTrees.Select(tree => tree.GetText().ToString()));
+        Assert.Contains("return global::Android.Runtime.JNIEnv.CallObjectMethod(scope, s_Draw_method, args);", generated);
+        Assert.Contains("global::System.GC.KeepAlive(draw);", generated);
+        Assert.Contains("args[0] = new global::Android.Runtime.JValue(value);", generated);
+        Assert.Contains("args[1] = new global::Android.Runtime.JValue(marker);", generated);
+        Assert.Contains("global::Android.Runtime.JNIEnv.CallVoidMethod(scope, s_Tail_method, args);", generated);
+        Assert.Empty(output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error));
+    }
+
+    [Fact]
+    public void Instance_MissingLeadingReceiver_ReportsCN2011()
+    {
+        var code = """
+            using AndroidX.Compose;
+
+            namespace AndroidX.Compose
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(
+                        Instance = true,
+                        Class = "x/Y",
+                        JvmName = "value",
+                        Signature = "()J")]
+                    internal static partial long Value();
+                }
+            }
+            """;
+
+        var (_, diags, _) = Run(code);
+        Assert.Contains(diags, d => d.Id == "CN2011");
     }
 
     [Fact]

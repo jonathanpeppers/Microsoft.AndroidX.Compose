@@ -29,11 +29,10 @@ public static class TextFieldCursorPlacementDemo
                 {
                     FontWeight = FontWeight.Medium,
                 },
-                new TextField(input)
+                new TextField(input, singleLine: true)
                 {
                     Label       = new Text("Message"),
                     Placeholder = new Text("Type something…"),
-                    SingleLine  = true,
                 },
                 new Row(horizontalArrangement: Arrangement.SpacedBy(8.Dp()))
                 {

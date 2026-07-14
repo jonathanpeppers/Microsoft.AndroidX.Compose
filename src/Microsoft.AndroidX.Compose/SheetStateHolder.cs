@@ -89,6 +89,10 @@ public sealed class SheetStateHolder
     /// <see cref="InvalidOperationException"/> if invoked before the
     /// holder is bound to a live peer.
     /// </summary>
+    /// <param name="cancellationToken">
+    /// Cancels the returned task and stops the underlying Kotlin
+    /// animation at its next cancellable suspend point.
+    /// </param>
     public Task ShowAsync(CancellationToken cancellationToken = default)
     {
         var jvm = RequireJvm(nameof(ShowAsync));
@@ -102,6 +106,10 @@ public sealed class SheetStateHolder
     /// Kotlin <c>SheetState.hide()</c>. See <see cref="ShowAsync"/>
     /// for the binding caveat.
     /// </summary>
+    /// <param name="cancellationToken">
+    /// Cancels the returned task and stops the underlying Kotlin
+    /// animation at its next cancellable suspend point.
+    /// </param>
     public Task HideAsync(CancellationToken cancellationToken = default)
     {
         var jvm = RequireJvm(nameof(HideAsync));
@@ -115,6 +123,10 @@ public sealed class SheetStateHolder
     /// Kotlin <c>SheetState.expand()</c>. See <see cref="ShowAsync"/>
     /// for the binding caveat.
     /// </summary>
+    /// <param name="cancellationToken">
+    /// Cancels the returned task and stops the underlying Kotlin
+    /// animation at its next cancellable suspend point.
+    /// </param>
     public Task ExpandAsync(CancellationToken cancellationToken = default)
     {
         var jvm = RequireJvm(nameof(ExpandAsync));
@@ -130,6 +142,10 @@ public sealed class SheetStateHolder
     /// Kotlin <c>SheetState.partialExpand()</c>. See
     /// <see cref="ShowAsync"/> for the binding caveat.
     /// </summary>
+    /// <param name="cancellationToken">
+    /// Cancels the returned task and stops the underlying Kotlin
+    /// animation at its next cancellable suspend point.
+    /// </param>
     public Task PartialExpandAsync(CancellationToken cancellationToken = default)
     {
         var jvm = RequireJvm(nameof(PartialExpandAsync));

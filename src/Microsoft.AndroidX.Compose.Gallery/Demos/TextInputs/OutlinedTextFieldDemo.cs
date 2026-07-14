@@ -16,13 +16,12 @@ public static class OutlinedTextFieldDemo
             var handle = c.MutableStateOf("");
             return new Column
             {
-                new OutlinedTextField(handle)
+                new OutlinedTextField(handle, singleLine: true)
                 {
                     Label          = new Text("Handle"),
                     Prefix         = new Text("@"),
                     Suffix         = new Text(".dev"),
                     SupportingText = new Text($"len={handle.Value.Length}"),
-                    SingleLine     = true,
                 },
                 new Text($"You'll be @{(string.IsNullOrEmpty(handle.Value) ? "?" : handle.Value)}.dev"),
             };

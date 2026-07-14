@@ -23,11 +23,10 @@ public static class PasswordFieldDemo
             var pwd = c.MutableStateOf("secret");
             return new Column
             {
-                new OutlinedTextField(pwd)
+                new OutlinedTextField(pwd, singleLine: true)
                 {
                     Label                = new Text("Password"),
                     VisualTransformation = new PasswordVisualTransformation('•'),
-                    SingleLine           = true,
                 },
                 new Text($"Buffer length: {pwd.Value.Length}"),
                 new Text($"Echo (proves real chars): \"{pwd.Value}\""),

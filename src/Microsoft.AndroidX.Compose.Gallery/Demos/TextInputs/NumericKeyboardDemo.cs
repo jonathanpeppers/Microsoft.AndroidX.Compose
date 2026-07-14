@@ -37,20 +37,18 @@ public static class NumericKeyboardDemo
             var d       = KeyboardOptionsCompanion.Default;
             return new Column
             {
-                new TextField(phone)
+                new TextField(phone, singleLine: true)
                 {
                     Label           = new Text("Phone (numeric IME)"),
-                    SingleLine      = true,
                     KeyboardOptions = d.Copy(
                         d.Capitalization, d.AutoCorrectEnabled,
                         KeyboardTypeNumber, d.ImeAction,
                         d.PlatformImeOptions, d.ShowKeyboardOnFocus,
                         d.HintLocales),
                 },
-                new TextField(generic)
+                new TextField(generic, singleLine: true)
                 {
-                    Label      = new Text("Generic (text IME)"),
-                    SingleLine = true,
+                    Label = new Text("Generic (text IME)"),
                 },
                 new Text($"Digits typed: {phone.Value.Length}"),
             };

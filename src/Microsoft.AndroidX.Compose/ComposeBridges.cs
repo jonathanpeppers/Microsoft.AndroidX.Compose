@@ -249,48 +249,20 @@ internal static partial class ComposeBridges
         }
     }
 
-    // ---- DrawScope JNI helpers ----
+    // ---- DrawScope helpers ----
     //
-    // The Compose `DrawScope` binding has no usable instance methods —
-    // every drawing primitive on it carries an inline-class param
-    // (Color, Offset, Size, CornerRadius, BlendMode), so the binder
-    // strips the lot and the C# IDrawScope interface is empty. The
-    // canvas-getter chain (`getDrawContext().getCanvas()`) avoids the
-    // mangling — neither method takes an inline class — but the binder
-    // still drops them because `IDrawScope` itself isn't surfaced.
+    // The Compose `DrawScope` binding has no usable drawing primitives —
+    // every primitive on it carries an inline-class param (Color, Offset,
+    // Size, CornerRadius, BlendMode), so the binder strips the lot.
+    // Starting with `Xamarin.AndroidX.Compose.UI.Graphics 1.11.2.2` the
+    // `IDrawScope` interface itself, `IDrawContext`, and the
+    // `AndroidCanvas_androidKt.GetNativeCanvas(ICanvas)` extension are
+    // bound, so `Modifier.drawBehind` callbacks can walk
+    // `drawScope.DrawContext.Canvas` → native canvas via managed code.
     //
-    // Hand-written below: enough JNI to extract the native
-    // `Android.Graphics.Canvas` and the packed `Size` long from a
-    // DrawScope handle, which is everything a `Modifier.drawBehind`
-    // callback needs to draw via directly-bound `Paint` + `Canvas`.
-
-    static IntPtr s_drawScopeClass;
-    static IntPtr s_drawContextClass;
-    static IntPtr s_drawScopeGetSizeMethodId;
-    static IntPtr s_drawScopeGetDrawContextMethodId;
-    static IntPtr s_drawContextGetCanvasMethodId;
-
-    static void EnsureDrawScopeMethodIds()
-    {
-        if (s_drawScopeGetSizeMethodId != IntPtr.Zero)
-            return;
-        s_drawScopeClass   = JNIEnv.FindClass("androidx/compose/ui/graphics/drawscope/DrawScope");
-        s_drawContextClass = JNIEnv.FindClass("androidx/compose/ui/graphics/drawscope/DrawContext");
-        s_drawScopeGetSizeMethodId        = JNIEnv.GetMethodID(s_drawScopeClass, "getSize-NH-jbRc", "()J");
-        s_drawScopeGetDrawContextMethodId = JNIEnv.GetMethodID(s_drawScopeClass, "getDrawContext", "()Landroidx/compose/ui/graphics/drawscope/DrawContext;");
-        s_drawContextGetCanvasMethodId    = JNIEnv.GetMethodID(s_drawContextClass, "getCanvas",     "()Landroidx/compose/ui/graphics/Canvas;");
-    }
-
-    // Read the modifier's bounds out of a DrawScope. The Kotlin
-    // property `DrawScope.size: Size` is mangled because `Size` is a
-    // `@JvmInline value class` over a packed `long`. Returned as the
-    // raw packed value; callers unpack with
-    // <see cref="UnpackSizeWidth"/> / <see cref="UnpackSizeHeight"/>.
-    internal static long DrawScopeGetSize(IntPtr drawScope)
-    {
-        EnsureDrawScopeMethodIds();
-        return JNIEnv.CallLongMethod(drawScope, s_drawScopeGetSizeMethodId);
-    }
+    // The Size unpackers below stay (Size is still an inline `long` and
+    // not surfaced as a bound type) and remain `internal` so the Maui
+    // backend can use them via `InternalsVisibleTo`.
 
     /// <summary>Unpack a Compose <c>Size</c>'s width — high 32 bits as float.</summary>
     internal static float UnpackSizeWidth(long packed) =>
@@ -299,41 +271,6 @@ internal static partial class ComposeBridges
     /// <summary>Unpack a Compose <c>Size</c>'s height — low 32 bits as float.</summary>
     internal static float UnpackSizeHeight(long packed) =>
         BitConverter.Int32BitsToSingle((int)((ulong)packed & 0xFFFFFFFFL));
-
-    // Walk DrawScope → DrawContext → Compose Canvas → native
-    // android.graphics.Canvas. Returns null when the DrawScope handle
-    // is null or the canvas chain yields a null intermediate (defensive
-    // — Compose normally guarantees a non-null canvas inside drawBehind).
-    internal static Android.Graphics.Canvas? DrawScopeGetNativeCanvas(IntPtr drawScope)
-    {
-        if (drawScope == IntPtr.Zero)
-            return null;
-        EnsureDrawScopeMethodIds();
-        IntPtr drawContextLocal = JNIEnv.CallObjectMethod(drawScope, s_drawScopeGetDrawContextMethodId);
-        if (drawContextLocal == IntPtr.Zero)
-            return null;
-        IntPtr composeCanvasLocal = IntPtr.Zero;
-        try
-        {
-            composeCanvasLocal = JNIEnv.CallObjectMethod(drawContextLocal, s_drawContextGetCanvasMethodId);
-            if (composeCanvasLocal == IntPtr.Zero)
-                return null;
-            // GetObject(.., DoNotTransfer) — Mono creates its own
-            // global ref internally; we still own `composeCanvasLocal`
-            // and free it in the outer finally.
-            var composeCanvas = Java.Lang.Object.GetObject<AndroidX.Compose.UI.Graphics.ICanvas>(
-                composeCanvasLocal, JniHandleOwnership.DoNotTransfer);
-            return composeCanvas is null
-                ? null
-                : AndroidX.Compose.UI.Graphics.AndroidCanvas_androidKt.GetNativeCanvas(composeCanvas);
-        }
-        finally
-        {
-            if (composeCanvasLocal != IntPtr.Zero)
-                JNIEnv.DeleteLocalRef(composeCanvasLocal);
-            JNIEnv.DeleteLocalRef(drawContextLocal);
-        }
-    }
 
     // androidx.compose.ui.res.PainterResources_androidKt.painterResource —
     // returns a NEW local Painter ref the caller is responsible for
@@ -468,7 +405,8 @@ internal static partial class ComposeBridges
     public static partial void Button(IFunction0 onClick, IModifier? modifier,
                                       Shape? shape, AndroidX.Compose.Material3.ButtonColors? colors,
                                       PaddingValues? contentPadding,
-                                      IFunction3 content, IComposer composer, int _changed = 0);
+                                      IFunction3 content, [FacadeDefault(true)] bool enabled,
+                                      IComposer composer, int _changed = 0);
 
     // androidx.compose.material3.ButtonKt.OutlinedButton — same Kotlin
     // signature as Button (10 user params with shape/colors/elevation/
@@ -487,7 +425,8 @@ internal static partial class ComposeBridges
     public static partial void OutlinedButton(IFunction0 onClick, IModifier? modifier,
                                               Shape? shape, AndroidX.Compose.Material3.ButtonColors? colors,
                                               PaddingValues? contentPadding,
-                                              IFunction3 content, IComposer composer, int _changed = 0);
+                                              IFunction3 content, [FacadeDefault(true)] bool enabled,
+                                              IComposer composer, int _changed = 0);
 
     // androidx.compose.material3.ButtonKt.TextButton — same shape as Button.
     [ComposeBridge(
@@ -504,7 +443,8 @@ internal static partial class ComposeBridges
     public static partial void TextButton(IFunction0 onClick, IModifier? modifier,
                                           Shape? shape, AndroidX.Compose.Material3.ButtonColors? colors,
                                           PaddingValues? contentPadding,
-                                          IFunction3 content, IComposer composer, int _changed = 0);
+                                          IFunction3 content, [FacadeDefault(true)] bool enabled,
+                                          IComposer composer, int _changed = 0);
 
     // androidx.compose.material3.ButtonKt.ElevatedButton — same shape as Button.
     [ComposeBridge(
@@ -521,7 +461,8 @@ internal static partial class ComposeBridges
     public static partial void ElevatedButton(IFunction0 onClick, IModifier? modifier,
                                               Shape? shape, AndroidX.Compose.Material3.ButtonColors? colors,
                                               PaddingValues? contentPadding,
-                                              IFunction3 content, IComposer composer, int _changed = 0);
+                                              IFunction3 content, [FacadeDefault(true)] bool enabled,
+                                              IComposer composer, int _changed = 0);
 
     // androidx.compose.material3.ButtonKt.FilledTonalButton — same shape as Button.
     [ComposeBridge(
@@ -538,7 +479,8 @@ internal static partial class ComposeBridges
     public static partial void FilledTonalButton(IFunction0 onClick, IModifier? modifier,
                                                  Shape? shape, AndroidX.Compose.Material3.ButtonColors? colors,
                                                  PaddingValues? contentPadding,
-                                                 IFunction3 content, IComposer composer, int _changed = 0);
+                                                 IFunction3 content, [FacadeDefault(true)] bool enabled,
+                                                 IComposer composer, int _changed = 0);
 
     // androidx.compose.material3.IconButtonKt.IconButton
     [ComposeBridge(
@@ -551,7 +493,8 @@ internal static partial class ComposeBridges
         Defaults  = typeof(IconButtonDefault))]
     [ComposeFacade]
     public static partial void IconButton(IFunction0 onClick, IModifier? modifier,
-                                          IFunction2 content, IComposer composer, int _changed = 0);
+                                          IFunction2 content, [FacadeDefault(true)] bool enabled,
+                                          IComposer composer, int _changed = 0);
 
     // androidx.compose.material3.IconButtonKt.FilledIconButton — adds Shape
     // before colors compared to plain IconButton (7 user params).
@@ -567,7 +510,8 @@ internal static partial class ComposeBridges
     [ComposeFacade]
     public static partial void FilledIconButton(IFunction0 onClick, IModifier? modifier,
                                                 Shape? shape,
-                                                IFunction2 content, IComposer composer, int _changed = 0);
+                                                IFunction2 content, [FacadeDefault(true)] bool enabled,
+                                                IComposer composer, int _changed = 0);
 
     // androidx.compose.material3.IconButtonKt.FilledTonalIconButton — same
     // signature as FilledIconButton.
@@ -583,7 +527,8 @@ internal static partial class ComposeBridges
     [ComposeFacade]
     public static partial void FilledTonalIconButton(IFunction0 onClick, IModifier? modifier,
                                                      Shape? shape,
-                                                     IFunction2 content, IComposer composer, int _changed = 0);
+                                                     IFunction2 content, [FacadeDefault(true)] bool enabled,
+                                                     IComposer composer, int _changed = 0);
 
     // androidx.compose.material3.IconButtonKt.OutlinedIconButton — adds
     // BorderStroke between colors and interactionSource (8 user params).
@@ -600,7 +545,8 @@ internal static partial class ComposeBridges
     [ComposeFacade]
     public static partial void OutlinedIconButton(IFunction0 onClick, IModifier? modifier,
                                                   Shape? shape,
-                                                  IFunction2 content, IComposer composer, int _changed = 0);
+                                                  IFunction2 content, [FacadeDefault(true)] bool enabled,
+                                                  IComposer composer, int _changed = 0);
 
     // androidx.compose.material3.IconButtonKt.IconToggleButton — toggle
     // shape: leading boolean checked + Function1 onCheckedChange instead of
@@ -616,6 +562,7 @@ internal static partial class ComposeBridges
     [ComposeFacade]
     public static partial void IconToggleButton(bool @checked, [Callback(typeof(bool))] IFunction1 onCheckedChange,
                                                 IModifier? modifier, IFunction2 content,
+                                                [FacadeDefault(true)] bool enabled,
                                                 IComposer composer, int _changed = 0);
 
     // androidx.compose.material3.IconButtonKt.FilledIconToggleButton — adds
@@ -633,6 +580,7 @@ internal static partial class ComposeBridges
     [ComposeFacade]
     public static partial void FilledIconToggleButton(bool @checked, [Callback(typeof(bool))] IFunction1 onCheckedChange,
                                                       IModifier? modifier, Shape? shape, IFunction2 content,
+                                                      [FacadeDefault(true)] bool enabled,
                                                       IComposer composer, int _changed = 0);
 
     // androidx.compose.material3.IconButtonKt.FilledTonalIconToggleButton —
@@ -649,6 +597,7 @@ internal static partial class ComposeBridges
     [ComposeFacade]
     public static partial void FilledTonalIconToggleButton(bool @checked, [Callback(typeof(bool))] IFunction1 onCheckedChange,
                                                            IModifier? modifier, Shape? shape, IFunction2 content,
+                                                           [FacadeDefault(true)] bool enabled,
                                                            IComposer composer, int _changed = 0);
 
     // androidx.compose.material3.IconButtonKt.OutlinedIconToggleButton —
@@ -666,6 +615,7 @@ internal static partial class ComposeBridges
     [ComposeFacade]
     public static partial void OutlinedIconToggleButton(bool @checked, [Callback(typeof(bool))] IFunction1 onCheckedChange,
                                                         IModifier? modifier, Shape? shape, IFunction2 content,
+                                                        [FacadeDefault(true)] bool enabled,
                                                         IComposer composer, int _changed = 0);
 
     // androidx.compose.material3.FloatingActionButtonKt.FloatingActionButton-X-z6DiA
@@ -1275,6 +1225,7 @@ internal static partial class ComposeBridges
                      StateType = typeof(DatePickerState))]
         IntPtr      state,
         IModifier?  modifier,
+        [FacadeDefault(true)] bool showModeToggle,
         int         defaults,
         IComposer   composer, int _changed = 0);
 
@@ -1331,6 +1282,7 @@ internal static partial class ComposeBridges
                      StateType = typeof(DateRangePickerState))]
         IntPtr      state,
         IModifier?  modifier,
+        [FacadeDefault(true)] bool showModeToggle,
         int         defaults,
         IComposer   composer, int _changed = 0);
 
@@ -1528,6 +1480,7 @@ internal static partial class ComposeBridges
         IFunction2? leadingIcon,
         IFunction2? trailingIcon,
         Shape?      shape,
+        [FacadeDefault(true)] bool enabled,
         int         defaults,
         IComposer   composer, int _changed = 0);
 
@@ -1543,6 +1496,7 @@ internal static partial class ComposeBridges
         IFunction2? leadingIcon,
         IFunction2? trailingIcon,
         Shape?      shape,
+        [FacadeDefault(true)] bool enabled,
         int         defaults,
         IComposer   composer, int _changed = 0);
 
@@ -1571,6 +1525,7 @@ internal static partial class ComposeBridges
         IFunction2? leadingIcon,
         IFunction2? trailingIcon,
         Shape?      shape,
+        [FacadeDefault(true)] bool enabled,
         int         defaults,
         IComposer   composer, int _changed = 0);
 
@@ -1587,6 +1542,7 @@ internal static partial class ComposeBridges
         IFunction2? leadingIcon,
         IFunction2? trailingIcon,
         Shape?      shape,
+        [FacadeDefault(true)] bool enabled,
         int         defaults,
         IComposer   composer, int _changed = 0);
 
@@ -1614,6 +1570,7 @@ internal static partial class ComposeBridges
         IFunction2? avatar,
         IFunction2? trailingIcon,
         Shape?      shape,
+        [FacadeDefault(true)] bool enabled,
         int         defaults,
         IComposer   composer, int _changed = 0);
 
@@ -1638,6 +1595,7 @@ internal static partial class ComposeBridges
         IModifier?  modifier,
         IFunction2? icon,
         Shape?      shape,
+        [FacadeDefault(true)] bool enabled,
         int         defaults,
         IComposer   composer, int _changed = 0);
 
@@ -1652,6 +1610,7 @@ internal static partial class ComposeBridges
         IFunction2  label,
         IFunction2? icon,
         Shape?      shape,
+        [FacadeDefault(true)] bool enabled,
         int         defaults,
         IComposer   composer, int _changed = 0);
 
@@ -1721,6 +1680,8 @@ internal static partial class ComposeBridges
         IFunction2  icon,
         IModifier?  modifier,
         IFunction2? label,
+        [FacadeDefault(true)] bool enabled,
+        [FacadeDefault(true)] bool alwaysShowLabel,
         int         defaults,
         IComposer   composer, int _changed = 0);
 
@@ -2127,6 +2088,33 @@ internal static partial class ComposeBridges
         Signature = "(Landroidx/compose/ui/Modifier;Lkotlin/jvm/functions/Function1;)" +
                     "Landroidx/compose/ui/Modifier;")]
     internal static partial IntPtr ModifierDrawBehind(IntPtr modifier, IFunction1 onDraw);
+
+    [ComposeBridge(
+        Class     = "androidx/compose/ui/draw/DrawModifierKt",
+        JvmName   = "drawWithContent",
+        Signature = "(Landroidx/compose/ui/Modifier;Lkotlin/jvm/functions/Function1;)" +
+                    "Landroidx/compose/ui/Modifier;")]
+    internal static partial IntPtr ModifierDrawWithContent(IntPtr modifier, IFunction1 onDraw);
+
+    [ComposeBridge(
+        Class     = "androidx/compose/ui/draw/DrawModifierKt",
+        JvmName   = "drawWithCache",
+        Signature = "(Landroidx/compose/ui/Modifier;Lkotlin/jvm/functions/Function1;)" +
+                    "Landroidx/compose/ui/Modifier;")]
+    internal static partial IntPtr ModifierDrawWithCache(IntPtr modifier, IFunction1 onBuildDrawCache);
+
+    [ComposeBridge(
+        Class     = "androidx/compose/ui/graphics/drawscope/Stroke",
+        JvmName   = "<init>",
+        Signature = "(FFIILandroidx/compose/ui/graphics/PathEffect;" +
+                    "Lkotlin/jvm/internal/DefaultConstructorMarker;)V")]
+    internal static partial AndroidX.Compose.UI.Graphics.Drawscope.Stroke DrawStroke(
+        float width,
+        float miter,
+        int cap,
+        int join,
+        AndroidX.Compose.UI.Graphics.IPathEffect? pathEffect,
+        IntPtr marker);
 
     // androidx.compose.foundation.ClickableKt.clickable-XHw0xAI$default —
     // (Modifier, Boolean enabled, String onClickLabel, Role role,
@@ -3075,6 +3063,7 @@ internal static partial class ComposeBridges
         IModifier?  modifier,
         IFunction2? text,
         IFunction2? icon,
+        [FacadeDefault(true)] bool enabled,
         int         defaults,
         IComposer   composer, int _changed = 0);
 
@@ -3098,6 +3087,7 @@ internal static partial class ComposeBridges
         IFunction2 text,
         IFunction2 icon,
         IModifier? modifier,
+        [FacadeDefault(true)] bool enabled,
         IComposer  composer, int _changed = 0);
 
     // androidx.compose.material3.SnackbarKt.Snackbar-eQBnUkQ. 10 user
@@ -3117,6 +3107,7 @@ internal static partial class ComposeBridges
         IFunction2? action,
         IFunction2? dismissAction,
         [Slot("Body")] IFunction2 content,
+        [FacadeDefault(false)] bool actionOnNewLine,
         int         defaults,
         IComposer   composer, int _changed = 0);
 
@@ -3696,6 +3687,7 @@ internal static partial class ComposeBridges
         IFunction0 onClick,
         IModifier? modifier,
         IFunction3 content,
+        [FacadeDefault(true)] bool enabled,
         IComposer  composer, int _changed = 0);
 
     // androidx.compose.material3.SnackbarKt.Snackbar-sDKtq54 (SnackbarData
@@ -3727,13 +3719,16 @@ internal static partial class ComposeBridges
     // hand-picked.
 
     [ComposeFacade(Defaults = typeof(BoxDefault), Scope = "Box")]
-    public static partial void Box(IModifier? modifier, IFunction3 content, int defaults, IComposer composer, int _changed = 0);
+    public static partial void Box(IModifier? modifier, IFunction3 content,
+        [FacadeDefault(false)] bool propagateMinConstraints, int defaults,
+        IComposer composer, int _changed = 0);
 
-    public static partial void Box(IModifier? modifier, IFunction3 content, int defaults, IComposer composer, int _changed)
+    public static partial void Box(IModifier? modifier, IFunction3 content,
+        bool propagateMinConstraints, int defaults, IComposer composer, int _changed)
         => BoxKt.Box(
             modifier:                modifier,
             contentAlignment:        null,
-            propagateMinConstraints: false,
+            propagateMinConstraints: propagateMinConstraints,
             content:                 content,
             _composer:               composer,
             p5:                      _changed,
@@ -3907,42 +3902,47 @@ internal static partial class ComposeBridges
 
     // FlowRow / FlowColumn — Phase 8 wrapper-passthrough facades. The
     // simpler 7-Kotlin-param overloads (no FlowRowOverflow / FlowColumnOverflow
-    // slot) are bound directly. The Int params `maxItemsInEachRow` /
-    // `maxLines` (resp. `maxItemsInEachColumn` / `maxLines`) can't be
-    // safely auto-masked from a nullable C# slot, so v1 leaves their
-    // $default bits set and passes 0 — Kotlin substitutes Int.MAX_VALUE.
+    // slot) are bound directly.
     // The binder rename pattern: the C# `p4` param is the actual Kotlin
     // `maxItemsInEachRow`/`maxItemsInEachColumn` Int, and the C# named
     // `maxItemsInEachRow`/`maxItemsInEachColumn` is the Kotlin `maxLines`
     // Int. The `maxLines` slot in C# is the JVM `$changed` int; `_changed`
     // is `$default`.
     [ComposeFacade(Defaults = typeof(FlowRowDefault), Scope = "Row")]
-    public static partial void FlowRow(IModifier? modifier, IFunction3 content, int defaults, IComposer composer, int _changed = 0);
+    public static partial void FlowRow(IModifier? modifier, IFunction3 content,
+        [FacadeDefault(int.MaxValue)] int maxItemsInEachRow,
+        [FacadeDefault(int.MaxValue)] int maxLines,
+        int defaults, IComposer composer, int _changed = 0);
 
-    public static partial void FlowRow(IModifier? modifier, IFunction3 content, int defaults, IComposer composer, int _changed)
+    public static partial void FlowRow(IModifier? modifier, IFunction3 content,
+        int maxItemsInEachRow, int maxLines, int defaults, IComposer composer, int _changed)
         => FlowLayoutKt.FlowRow(
             modifier:              modifier,
             horizontalArrangement: null,
             verticalArrangement:   null,
             itemVerticalAlignment: null,
-            p4:                    0,
-            maxItemsInEachRow:     0,
+            p4:                    maxItemsInEachRow,
+            maxItemsInEachRow:     maxLines,
             content:               content,
             _composer:             composer,
             maxLines:              _changed,
             _changed:              defaults);
 
     [ComposeFacade(Defaults = typeof(FlowColumnDefault), Scope = "Column")]
-    public static partial void FlowColumn(IModifier? modifier, IFunction3 content, int defaults, IComposer composer, int _changed = 0);
+    public static partial void FlowColumn(IModifier? modifier, IFunction3 content,
+        [FacadeDefault(int.MaxValue)] int maxItemsInEachColumn,
+        [FacadeDefault(int.MaxValue)] int maxLines,
+        int defaults, IComposer composer, int _changed = 0);
 
-    public static partial void FlowColumn(IModifier? modifier, IFunction3 content, int defaults, IComposer composer, int _changed)
+    public static partial void FlowColumn(IModifier? modifier, IFunction3 content,
+        int maxItemsInEachColumn, int maxLines, int defaults, IComposer composer, int _changed)
         => FlowLayoutKt.FlowColumn(
             modifier:                modifier,
             verticalArrangement:     null,
             horizontalArrangement:   null,
             itemHorizontalAlignment: null,
-            p4:                      0,
-            maxItemsInEachColumn:    0,
+            p4:                      maxItemsInEachColumn,
+            maxItemsInEachColumn:    maxLines,
             content:                 content,
             _composer:               composer,
             maxLines:                _changed,
@@ -4310,5 +4310,275 @@ internal static partial class ComposeBridges
         IFunction0 onBack,
         bool       enabled,
         IComposer  composer, int _changed = 0);
-}
 
+    // ---------------------------------------------------------------------
+    // Custom Layout primitive — supporting bridges. See Layout.cs.
+    //
+    // The bound interfaces (Measurable, MeasurePolicy, MeasureResult,
+    // MeasureScope) are empty because every abstract member has an
+    // inline-class-mangled JVM name (Constraints is @JvmInline value class).
+    // We hand-bridge the four reachable methods plus the four Constraints
+    // accessors and Collections.emptyMap() (needed for MeasureScope.layout's
+    // alignmentLines argument — null fails Kotlin null-checks).
+    //
+    // The MeasurePolicy interface itself can't be implemented from Java
+    // source (its only abstract method is `measure-3p2s80s`, illegal Java
+    // identifier). MeasurePolicyFactoryCreate routes through a tiny
+    // composenet/compose/MeasurePolicyFactory helper that exploits
+    // MeasurePolicy being a Kotlin `fun interface` — javac resolves the
+    // mangled SAM by MethodType via LambdaMetafactory, so a Java lambda
+    // can target it without ever spelling the illegal identifier. See
+    // Java/MeasurePolicyFactory.java.
+    // ---------------------------------------------------------------------
+
+    // AndroidX.Compose.UI.Unit.Constraints — `@JvmInline value class`
+    // companion accessors. Each takes the packed `long` value and returns
+    // an `int` (or `boolean` for the bounded helpers). Hand-written
+    // because the [ComposeBridge] generator only emits CallStaticObjectMethod,
+    // and these need primitive returns (CallStaticIntMethod /
+    // CallStaticBooleanMethod). One JNI class lookup is shared across all
+    // six accessors via the lazy s_constraintsClass field.
+    static IntPtr s_constraintsClass;
+    static IntPtr s_constraintsGetMinWidthMethodId;
+    static IntPtr s_constraintsGetMaxWidthMethodId;
+    static IntPtr s_constraintsGetMinHeightMethodId;
+    static IntPtr s_constraintsGetMaxHeightMethodId;
+    static IntPtr s_constraintsHasBoundedWidthMethodId;
+    static IntPtr s_constraintsHasBoundedHeightMethodId;
+
+    static IntPtr ConstraintsClass()
+    {
+        if (s_constraintsClass == IntPtr.Zero)
+            s_constraintsClass = Java.Lang.Class.FromType(
+                typeof(AndroidX.Compose.UI.Unit.Constraints)).Handle;
+        return s_constraintsClass;
+    }
+
+    internal static unsafe int ConstraintsGetMinWidth(long value)
+    {
+        if (s_constraintsGetMinWidthMethodId == IntPtr.Zero)
+            s_constraintsGetMinWidthMethodId = JNIEnv.GetStaticMethodID(
+                ConstraintsClass(), "getMinWidth-impl", "(J)I");
+        var args = stackalloc JValue[1]; args[0] = new JValue(value);
+        return JNIEnv.CallStaticIntMethod(ConstraintsClass(), s_constraintsGetMinWidthMethodId, args);
+    }
+
+    internal static unsafe int ConstraintsGetMaxWidth(long value)
+    {
+        if (s_constraintsGetMaxWidthMethodId == IntPtr.Zero)
+            s_constraintsGetMaxWidthMethodId = JNIEnv.GetStaticMethodID(
+                ConstraintsClass(), "getMaxWidth-impl", "(J)I");
+        var args = stackalloc JValue[1]; args[0] = new JValue(value);
+        return JNIEnv.CallStaticIntMethod(ConstraintsClass(), s_constraintsGetMaxWidthMethodId, args);
+    }
+
+    internal static unsafe int ConstraintsGetMinHeight(long value)
+    {
+        if (s_constraintsGetMinHeightMethodId == IntPtr.Zero)
+            s_constraintsGetMinHeightMethodId = JNIEnv.GetStaticMethodID(
+                ConstraintsClass(), "getMinHeight-impl", "(J)I");
+        var args = stackalloc JValue[1]; args[0] = new JValue(value);
+        return JNIEnv.CallStaticIntMethod(ConstraintsClass(), s_constraintsGetMinHeightMethodId, args);
+    }
+
+    internal static unsafe int ConstraintsGetMaxHeight(long value)
+    {
+        if (s_constraintsGetMaxHeightMethodId == IntPtr.Zero)
+            s_constraintsGetMaxHeightMethodId = JNIEnv.GetStaticMethodID(
+                ConstraintsClass(), "getMaxHeight-impl", "(J)I");
+        var args = stackalloc JValue[1]; args[0] = new JValue(value);
+        return JNIEnv.CallStaticIntMethod(ConstraintsClass(), s_constraintsGetMaxHeightMethodId, args);
+    }
+
+    internal static unsafe bool ConstraintsHasBoundedWidth(long value)
+    {
+        if (s_constraintsHasBoundedWidthMethodId == IntPtr.Zero)
+            s_constraintsHasBoundedWidthMethodId = JNIEnv.GetStaticMethodID(
+                ConstraintsClass(), "getHasBoundedWidth-impl", "(J)Z");
+        var args = stackalloc JValue[1]; args[0] = new JValue(value);
+        return JNIEnv.CallStaticBooleanMethod(ConstraintsClass(), s_constraintsHasBoundedWidthMethodId, args);
+    }
+
+    internal static unsafe bool ConstraintsHasBoundedHeight(long value)
+    {
+        if (s_constraintsHasBoundedHeightMethodId == IntPtr.Zero)
+            s_constraintsHasBoundedHeightMethodId = JNIEnv.GetStaticMethodID(
+                ConstraintsClass(), "getHasBoundedHeight-impl", "(J)Z");
+        var args = stackalloc JValue[1]; args[0] = new JValue(value);
+        return JNIEnv.CallStaticBooleanMethod(ConstraintsClass(), s_constraintsHasBoundedHeightMethodId, args);
+    }
+
+    // composenet.compose.MeasurePolicyFactory.create — static factory in
+    // our Java helper that wraps a Function3<MeasureScope, List, Long,
+    // MeasureResult> as an androidx.compose.ui.layout.MeasurePolicy via
+    // a Kotlin `fun interface` SAM lambda. See
+    // Java/MeasurePolicyFactory.java for why.
+    [ComposeBridge(
+        Class     = "composenet/compose/MeasurePolicyFactory",
+        JvmName   = "create",
+        Signature = "(Lkotlin/jvm/functions/Function3;)Landroidx/compose/ui/layout/MeasurePolicy;")]
+    internal static partial IntPtr MeasurePolicyFactoryCreate(IFunction3 block);
+
+    // Cached Collections.emptyMap() peer. MeasureScope.layout's third
+    // argument is the alignmentLines map — Kotlin's bytecode dispatches a
+    // non-null check on it, so we cannot pass IntPtr.Zero. One peer
+    // (carrying its own global ref) is reused across every layout() call.
+    static Android.Runtime.IJavaObject? s_emptyMap;
+
+    internal static IntPtr EmptyMapHandle()
+    {
+        s_emptyMap ??= (Android.Runtime.IJavaObject)Java.Util.Collections.EmptyMap()!;
+        return s_emptyMap.Handle;
+    }
+
+    // androidx.compose.ui.layout.Measurable.measure-BRTryo0(long): Placeable —
+    // the only abstract method on the interface, mangled because Constraints
+    // is an inline value class. Hand-written instance call via interface
+    // JNI dispatch. The returned Placeable is a class (bound), so callers
+    // wrap with Java.Lang.Object.GetObject<Placeable>(handle, TransferLocalRef).
+    static IntPtr s_measurableClass;
+    static IntPtr s_measurableMeasureMethodId;
+
+    internal static unsafe IntPtr MeasurableMeasure(IntPtr measurable, long constraints)
+    {
+        if (s_measurableMeasureMethodId == IntPtr.Zero)
+        {
+            s_measurableClass = Java.Lang.Class.FromType(
+                typeof(AndroidX.Compose.UI.Layout.IMeasurable)).Handle;
+            s_measurableMeasureMethodId = JNIEnv.GetMethodID(
+                s_measurableClass, "measure-BRTryo0",
+                "(J)Landroidx/compose/ui/layout/Placeable;");
+        }
+        var args = stackalloc JValue[1];
+        args[0] = new JValue(constraints);
+        return JNIEnv.CallObjectMethod(measurable, s_measurableMeasureMethodId, args);
+    }
+
+    // androidx.compose.ui.layout.MeasureScope.layout(int, int, Map, Function1):
+    //   MeasureResult — Java 8 default method on the interface, NOT mangled.
+    // Hand-written because [ComposeBridge] doesn't model instance calls; the
+    // Map argument is a cached java.util.Collections.emptyMap() global ref
+    // (Kotlin-checked-non-null per the rubber-duck review).
+    static IntPtr s_measureScopeClass;
+    static IntPtr s_measureScopeLayoutMethodId;
+
+    internal static unsafe IntPtr MeasureScopeLayout(
+        IntPtr measureScope, int width, int height, PlacementBlockLambda placementBlock)
+    {
+        if (s_measureScopeLayoutMethodId == IntPtr.Zero)
+        {
+            s_measureScopeClass = JNIEnv.FindClass("androidx/compose/ui/layout/MeasureScope");
+            s_measureScopeLayoutMethodId = JNIEnv.GetMethodID(
+                s_measureScopeClass, "layout",
+                "(IILjava/util/Map;Lkotlin/jvm/functions/Function1;)" +
+                "Landroidx/compose/ui/layout/MeasureResult;");
+        }
+        try
+        {
+            var args = stackalloc JValue[4];
+            args[0] = new JValue(width);
+            args[1] = new JValue(height);
+            args[2] = new JValue(EmptyMapHandle());
+            args[3] = new JValue(((Java.Lang.Object)placementBlock).Handle);
+            return JNIEnv.CallObjectMethod(measureScope, s_measureScopeLayoutMethodId, args);
+        }
+        finally
+        {
+            GC.KeepAlive(placementBlock);
+        }
+    }
+
+    // androidx.compose.ui.unit.Density.getDensity(): float — inherited
+    // by MeasureScope (MeasureScope : IntrinsicMeasureScope : Density). The
+    // Density interface itself is stripped from the .NET binding because
+    // every Dp-typed method on it gets value-class-mangled, so we look it
+    // up via interface JNI dispatch. Hand-written because [ComposeBridge]
+    // doesn't model instance method calls returning a primitive.
+    static IntPtr s_densityClass;
+    static IntPtr s_densityGetDensityMethodId;
+    static IntPtr s_densityGetFontScaleMethodId;
+
+    internal static unsafe float MeasureScopeGetDensity(IntPtr scope)
+    {
+        if (s_densityGetDensityMethodId == IntPtr.Zero)
+        {
+            s_densityClass = JNIEnv.FindClass("androidx/compose/ui/unit/Density");
+            s_densityGetDensityMethodId = JNIEnv.GetMethodID(
+                s_densityClass, "getDensity", "()F");
+        }
+        return JNIEnv.CallFloatMethod(scope, s_densityGetDensityMethodId);
+    }
+
+    internal static unsafe float MeasureScopeGetFontScale(IntPtr scope)
+    {
+        if (s_densityGetFontScaleMethodId == IntPtr.Zero)
+        {
+            if (s_densityClass == IntPtr.Zero)
+                s_densityClass = JNIEnv.FindClass("androidx/compose/ui/unit/Density");
+            s_densityGetFontScaleMethodId = JNIEnv.GetMethodID(
+                s_densityClass, "getFontScale", "()F");
+        }
+        return JNIEnv.CallFloatMethod(scope, s_densityGetFontScaleMethodId);
+    }
+
+    // AndroidX.Compose.UI.Layout.Placeable$PlacementScope.place(
+    //     Placeable, int x, int y, float zIndex): void — non-mangled
+    // overload (the long-IntOffset variant `place-70tqf50` IS mangled but
+    // we don't need it). Same for placeRelative.
+    static IntPtr s_placementScopeClass;
+    static IntPtr s_placementScopePlaceMethodId;
+    static IntPtr s_placementScopePlaceRelativeMethodId;
+
+    internal static unsafe void PlacementScopePlace(
+        IntPtr placementScope, AndroidX.Compose.UI.Layout.Placeable placeable, int x, int y, float zIndex)
+    {
+        if (s_placementScopePlaceMethodId == IntPtr.Zero)
+        {
+            s_placementScopeClass = JNIEnv.FindClass(
+                "androidx/compose/ui/layout/Placeable$PlacementScope");
+            s_placementScopePlaceMethodId = JNIEnv.GetMethodID(
+                s_placementScopeClass, "place",
+                "(Landroidx/compose/ui/layout/Placeable;IIF)V");
+        }
+        try
+        {
+            var args = stackalloc JValue[4];
+            args[0] = new JValue(placeable.Handle);
+            args[1] = new JValue(x);
+            args[2] = new JValue(y);
+            args[3] = new JValue(zIndex);
+            JNIEnv.CallVoidMethod(placementScope, s_placementScopePlaceMethodId, args);
+        }
+        finally
+        {
+            GC.KeepAlive(placeable);
+        }
+    }
+
+    internal static unsafe void PlacementScopePlaceRelative(
+        IntPtr placementScope, AndroidX.Compose.UI.Layout.Placeable placeable, int x, int y, float zIndex)
+    {
+        if (s_placementScopePlaceRelativeMethodId == IntPtr.Zero)
+        {
+            if (s_placementScopeClass == IntPtr.Zero)
+                s_placementScopeClass = JNIEnv.FindClass(
+                    "androidx/compose/ui/layout/Placeable$PlacementScope");
+            s_placementScopePlaceRelativeMethodId = JNIEnv.GetMethodID(
+                s_placementScopeClass, "placeRelative",
+                "(Landroidx/compose/ui/layout/Placeable;IIF)V");
+        }
+        try
+        {
+            var args = stackalloc JValue[4];
+            args[0] = new JValue(placeable.Handle);
+            args[1] = new JValue(x);
+            args[2] = new JValue(y);
+            args[3] = new JValue(zIndex);
+            JNIEnv.CallVoidMethod(placementScope, s_placementScopePlaceRelativeMethodId, args);
+        }
+        finally
+        {
+            GC.KeepAlive(placeable);
+        }
+    }
+}

@@ -392,7 +392,13 @@ class.
   `DisplayCutoutPadding()`, `WaterfallPadding()`, `SystemGesturesPadding()`,
   `MandatorySystemGesturesPadding()`, `SafeContentPadding()`,
   `SafeGesturesPadding()` round out the existing
-  `SafeDrawingPadding()` / `SystemBarsPadding()` pair.
+  `SafeDrawingPadding()` / `SystemBarsPadding()` pair. The complete
+  `WindowInsets` facade adds live composition-aware inset reads, fixed
+  `Dp` construction, `Add` / `Union` / `Exclude` / `Only` set operations,
+  `AsPaddingValues`, generic `WindowInsetsPadding` / `ConsumeWindowInsets`,
+  and inset-sized width/height modifiers. These call the official runtime
+  bindings directly; `Modifier` can replay managed binding operations
+  alongside generated raw-handle bridges without duplicating JNI surfaces.
 - **`remember(keys, …)` is supported.** Use the keyed overloads
   `Remember(factory, key1)`, `Remember(factory, key1, key2)`,
   `Remember(factory, key1, key2, key3)`, or
@@ -423,22 +429,27 @@ class.
   change / leaving composition just like Kotlin.
 - **Suspend functions.** `SuspendBridge` (PR #97) lets a
   hand-written bridge return Kotlin's `COROUTINE_SUSPENDED` sentinel
-  and complete a `Task<T>` from the eventual resume. Used by
-  `ScrollState.ScrollToAsync` / `LazyListState.AnimateScrollToItemAsync`
-  / `SnackbarHostState.ShowSnackbarAsync` /
-  `DrawerStateHolder.OpenAsync` / `DrawerStateHolder.CloseAsync` (#140)
-  / `DetectTapGestures`. Bottom-sheet `Show()` / `Hide()` suspend
-  bridges aren't surfaced yet — the JCW veto-adapter pattern is in place
-  (Phase 10 `[ConfirmStateChange]`) but the suspend wiring lands next.
+  and complete a `Task<T>` from the eventual resume. Each continuation
+  with a cancellable token owns a bound
+  `kotlinx.coroutines.CompletableJob`, combines it with
+  `AndroidUiDispatcher.Main`, and cancels that job when the token fires,
+  so scroll and animation work stops at the next cancellable suspend
+  point. Used by `ScrollState.ScrollToAsync`,
+  `LazyListState.AnimateScrollToItemAsync`,
+  `DrawerStateHolder.OpenAsync` / `CloseAsync` (#140), and the
+  `SheetStateHolder` animation methods.
 - **Compose Navigation.** `NavHost` / `NavController` /
   `NavBackStackEntry` are bound (#60). Pass route lambdas via
   `NavGraphBuilderLambda`; deep links are not yet exposed.
+- **Drawing.** `Canvas`, managed `DrawScope` / `ContentDrawScope` /
+  `CacheDrawScope` callbacks, `drawBehind` / `drawWithContent` /
+  `drawWithCache`, mutable `Path`, gradient `Brush` factories, and shape
+  factories are exposed (#64). Core drawing calls and path mutation use the
+  current runtime bindings directly; only the binder-omitted
+  `CacheDrawScope` instance methods use a small raw-JNI helper.
 
 ## Still missing (tracked)
 
-- Drawing primitives: `Canvas`, `Modifier.drawBehind`, `Brush`,
-  `Path`, `Shape` factories beyond `RoundedCornerShape` — see
-  [#64](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/64).
 - M3 Expressive newcomers (SplitButton, ButtonGroup,
   LoadingIndicator) — see
   [#54](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/54).
@@ -449,6 +460,3 @@ class.
 - Adaptive `TwoPane` / `NavigableListDetailPaneScaffold` + Jetpack
   `WindowManager` (`WindowLayoutInfo`/`FoldingFeature`) — see
   [#168](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/168).
-- Programmatic bottom-sheet open via `suspend` — the JCW
-  veto-adapter pattern is in place (Phase 10 `[ConfirmStateChange]`)
-  but `Show()`/`Hide()` aren't surfaced yet.

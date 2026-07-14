@@ -101,10 +101,8 @@ public sealed class ScrollState
     /// </summary>
     /// <param name="value">Target pixel offset.</param>
     /// <param name="cancellationToken">
-    /// Cancels the returned task with
-    /// <see cref="OperationCanceledException"/>. See
-    /// <see cref="SuspendBridge"/> remarks for the current (C#-only)
-    /// cancellation semantics.
+    /// Cancels the returned task and the underlying Kotlin scroll
+    /// operation.
     /// </param>
     /// <returns>
     /// A task whose result is the actual delta the scroll covered (the
@@ -130,11 +128,8 @@ public sealed class ScrollState
     /// </summary>
     /// <param name="value">Target pixel offset.</param>
     /// <param name="cancellationToken">
-    /// Cancels the returned task with
-    /// <see cref="OperationCanceledException"/>. Note that
-    /// the underlying Kotlin animation keeps running to its natural
-    /// completion — see <see cref="SuspendBridge"/> remarks for the
-    /// current (C#-only) cancellation semantics.
+    /// Cancels the returned task and stops the underlying Kotlin
+    /// animation at its next cancellable suspend point.
     /// </param>
     public Task AnimateScrollToAsync(int value, CancellationToken cancellationToken = default) =>
         SuspendBridge.Invoke(cont =>

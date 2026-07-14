@@ -10,29 +10,32 @@ public static class BoxAlignmentDemo
         Id:          "containers-box-alignment",
         CategoryId:  "containers",
         Title:       "Box alignment",
-        Description: "Children stack at the same anchor — later children draw above earlier ones.",
-        Build:       _ => new Box
+        Description: "Children stack at one anchor; propagateMinConstraints controls child minimums.",
+        Build:       _ => new Column
         {
-            Modifier
-                .Size(160)
-                .Background(Color.FromRgb(0xB3, 0xE5, 0xFC)),
+            new Text("Default constraints"),
             new Box
             {
                 Modifier
-                    .Size(120)
-                    .Padding(8)
+                    .Size(160)
+                    .Background(Color.FromRgb(0xB3, 0xE5, 0xFC)),
+                new Text("Front")
+                {
+                    Color = Color.Black,
+                    Modifier = Modifier.Padding(28),
+                },
+            },
+            new Text("propagateMinConstraints: true"),
+            new Box(propagateMinConstraints: true)
+            {
+                Modifier
+                    .Size(160)
                     .Background(Color.FromRgb(0x81, 0xD4, 0xFA)),
-            },
-            new Box
-            {
-                Modifier
-                    .Size(80)
-                    .Padding(16)
-                    .Background(Color.FromRgb(0x4F, 0xC3, 0xF7)),
-            },
-            new Text("Front")
-            {
-                Modifier = Modifier.Padding(28),
+                new Box
+                {
+                    Modifier.Background(Color.FromRgb(0x4F, 0xC3, 0xF7)),
+                    new Text("Child receives minimums") { Color = Color.Black },
+                },
             },
         });
 }

@@ -40,6 +40,14 @@ using AndroidX.Compose;
 [assembly: ComposeDefaults("RowDefault", "modifier", "horizontalArrangement", "verticalAlignment", "!content")]
 [assembly: ComposeDefaults("BoxDefault", "modifier", "contentAlignment", "propagateMinConstraints", "!content")]
 
+// androidx.compose.ui.layout.LayoutKt.Layout — the (content, modifier,
+// measurePolicy) overload. content and measurePolicy are required; only
+// modifier is defaultable. `IMeasurePolicy` itself is not @JvmInline so
+// the overload survives the binder; the inline-class issue is only on the
+// internal abstract method (`measure-3p2s80s`), which we route around via
+// a Kotlin `fun interface` SAM lambda in MeasurePolicyFactory.java.
+[assembly: ComposeDefaults("LayoutDefault", "!content", "modifier", "!measurePolicy")]
+
 // androidx.compose.foundation.layout.BoxWithConstraintsKt — same shape
 // as Box, but the content lambda receives a BoxWithConstraintsScope.
 [assembly: ComposeDefaults("BoxWithConstraintsDefault", "modifier", "contentAlignment", "propagateMinConstraints", "!content")]
@@ -52,10 +60,8 @@ using AndroidX.Compose;
 
 // androidx.compose.foundation.layout.FlowLayoutKt — the simpler
 // FlowRow / FlowColumn overloads (no FlowRowOverflow / FlowColumnOverflow
-// slot) lower to 7 user params + content. The trailing `maxItemsInEachRow`
-// / `maxLines` (resp. `maxItemsInEachColumn` / `maxLines`) Ints can't be
-// auto-masked from a nullable C# slot, so the v1 facade leaves both bits
-// set and lets Kotlin substitute Int.MAX_VALUE.
+// slot) lower to 7 user params + content. The facade surfaces the trailing
+// max-item and max-line Int slots with Kotlin's Int.MAX_VALUE defaults.
 [assembly: ComposeDefaults("FlowRowDefault",
     "modifier", "horizontalArrangement", "verticalArrangement",
     "itemVerticalAlignment", "maxItemsInEachRow", "maxLines", "!content")]
