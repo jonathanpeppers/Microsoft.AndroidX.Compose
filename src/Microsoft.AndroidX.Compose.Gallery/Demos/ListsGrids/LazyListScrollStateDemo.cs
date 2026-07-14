@@ -25,6 +25,7 @@ public static class LazyListScrollStateDemo
         Build:       c =>
         {
             var state = c.RememberLazyListState();
+            var scope = c.RememberCoroutineScope();
             return new Column(verticalArrangement: Arrangement.SpacedBy(4.Dp()))
             {
                 Modifier.FillMaxWidth(),
@@ -48,15 +49,18 @@ public static class LazyListScrollStateDemo
                 new Row(horizontalArrangement: Arrangement.SpacedBy(8.Dp()))
                 {
                     Modifier.FillMaxWidth().Padding(horizontal: 12),
-                    new Button(onClick: () => _ = state.ScrollToItemAsync(0))
+                    new Button(onClick: () => _ = scope.Launch(
+                        ct => state.ScrollToItemAsync(0, cancellationToken: ct)))
                     {
                         new Text("Snap to top"),
                     },
-                    new Button(onClick: () => _ = state.AnimateScrollToItemAsync(0))
+                    new Button(onClick: () => _ = scope.Launch(
+                        ct => state.AnimateScrollToItemAsync(0, cancellationToken: ct)))
                     {
                         new Text("Animate to top"),
                     },
-                    new Button(onClick: () => _ = state.AnimateScrollToItemAsync(999))
+                    new Button(onClick: () => _ = scope.Launch(
+                        ct => state.AnimateScrollToItemAsync(999, cancellationToken: ct)))
                     {
                         new Text("Animate to bottom"),
                     },

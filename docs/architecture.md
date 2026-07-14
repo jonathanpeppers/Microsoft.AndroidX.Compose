@@ -427,6 +427,11 @@ class.
   takes a plain `Func<CancellationToken, Task>` and a key list
   (rather than a Kotlin suspend lambda); cancellation happens on key
   change / leaving composition just like Kotlin.
+  `composer.RememberCoroutineScope()` wraps the bound Kotlin
+  `rememberCoroutineScope`; its `scope.Launch(ct => ...)` method starts a
+  real child Kotlin `Job`, projects the managed body to a `Task`, and
+  cancels the token when the call site leaves composition. This is the
+  event-handler path for suspend APIs such as animated scrolling.
 - **Suspend functions.** `SuspendBridge` (PR #97) lets a
   hand-written bridge return Kotlin's `COROUTINE_SUSPENDED` sentinel
   and complete a `Task<T>` from the eventual resume. Each continuation

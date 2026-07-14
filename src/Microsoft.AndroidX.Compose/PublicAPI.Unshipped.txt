@@ -244,6 +244,8 @@ AndroidX.Compose.CornerRadius.CornerRadius(float x, float y) -> void
 AndroidX.Compose.CornerRadius.Equals(AndroidX.Compose.CornerRadius other) -> bool
 AndroidX.Compose.CornerRadius.X.get -> float
 AndroidX.Compose.CornerRadius.Y.get -> float
+AndroidX.Compose.CoroutineScope
+AndroidX.Compose.CoroutineScope.Launch(System.Func<System.Threading.CancellationToken, System.Threading.Tasks.Task!>! body) -> System.Threading.Tasks.Task!
 AndroidX.Compose.Crossfade<T>
 AndroidX.Compose.Crossfade<T>.Crossfade(T targetState, System.Func<T, AndroidX.Compose.ComposableNode!>! content) -> void
 AndroidX.Compose.Crossfade<T>.TargetState.get -> T
@@ -1898,6 +1900,7 @@ static AndroidX.Compose.ComposeExtensions.Remember<T>(this AndroidX.Compose.Runt
 static AndroidX.Compose.ComposeExtensions.Remember<T>(this AndroidX.Compose.Runtime.IComposer! composer, System.Func<T>! factory, object? key1, object? key2, object? key3, int line = 0, string! file = "") -> T
 static AndroidX.Compose.ComposeExtensions.RememberAction(this AndroidX.Compose.Runtime.IComposer! composer, System.Action! action, int line = 0, string! file = "") -> Kotlin.Jvm.Functions.IFunction0!
 static AndroidX.Compose.ComposeExtensions.RememberAction(this AndroidX.Compose.Runtime.IComposer! composer, System.Action<Java.Lang.Object?>! action, int line = 0, string! file = "") -> Kotlin.Jvm.Functions.IFunction1!
+static AndroidX.Compose.ComposeExtensions.RememberCoroutineScope(this AndroidX.Compose.Runtime.IComposer! composer) -> AndroidX.Compose.CoroutineScope!
 static AndroidX.Compose.ComposeExtensions.RememberDraggableState(this AndroidX.Compose.Runtime.IComposer! composer, System.Action<float>! onDelta, int line = 0, string! file = "") -> AndroidX.Compose.DraggableState!
 static AndroidX.Compose.ComposeExtensions.RememberKeyed<T>(this AndroidX.Compose.Runtime.IComposer! composer, System.Func<T>! factory, object?[]! keys, int line = 0, string! file = "") -> T
 static AndroidX.Compose.ComposeExtensions.RememberLazyListState(this AndroidX.Compose.Runtime.IComposer! composer, int initialFirstVisibleItemIndex = 0, int initialFirstVisibleItemScrollOffset = 0, int line = 0, string! file = "") -> AndroidX.Compose.LazyListState!
