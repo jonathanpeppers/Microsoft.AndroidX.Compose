@@ -286,8 +286,8 @@ internal static class Diagnostics
 
     public static readonly DiagnosticDescriptor ComposableMissingComposer = new(
         id: "CN5003",
-        title: "[Composable] method must take IComposer as its first parameter",
-        messageFormat: "Method '{0}' carries [Composable] but its first parameter is not 'AndroidX.Compose.Runtime.IComposer' — Tier 2 threads the composer explicitly through every composable call",
+        title: "[Composable] IComposer parameter must be first",
+        messageFormat: "Method '{0}' carries [Composable] but declares 'AndroidX.Compose.Runtime.IComposer' outside the first parameter — omit the composer for implicit threading or place it first",
         category: "AndroidX.Compose",
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);
@@ -311,7 +311,7 @@ internal static class Diagnostics
     public static readonly DiagnosticDescriptor ComposableExtensionUnsupported = new(
         id: "CN5006",
         title: "[Composable] extension methods are not supported",
-        messageFormat: "Method '{0}' carries [Composable] but is an extension method — declare a regular static method with IComposer as its first parameter",
+        messageFormat: "Method '{0}' carries [Composable] but is an extension method — declare a regular static method instead",
         category: "AndroidX.Compose",
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);

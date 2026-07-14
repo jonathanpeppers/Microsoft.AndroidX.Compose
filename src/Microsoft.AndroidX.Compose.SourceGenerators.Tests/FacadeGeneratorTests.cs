@@ -107,6 +107,10 @@ public class FacadeGeneratorTests
         {
             [System.AttributeUsage(System.AttributeTargets.Method)]
             public sealed class ComposableAttribute : System.Attribute { }
+            public static class ComposableContext
+            {
+                public static global::AndroidX.Compose.Runtime.IComposer Current => throw new System.NotImplementedException();
+            }
             public enum ScopeKind { None, Row, Column, Box, Other }
             public static class RenderContext
             {
@@ -305,6 +309,46 @@ public class FacadeGeneratorTests
 
         var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
         Assert.Empty(errors);
+    }
+
+    [Fact]
+    public void ImplicitComposer_EmitsComposerlessContentOverload()
+    {
+        var code = $$"""
+            using global::AndroidX.Compose.Runtime;
+            using global::AndroidX.Compose.UI;
+            using AndroidX.Compose;
+            using Kotlin.Jvm.Functions;
+
+            {{ButtonAttrs}}
+
+            namespace AndroidX.Compose
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(Class="androidx/compose/material3/ButtonKt", JvmName="Button",
+                                   Signature="{{ButtonSig}}", Defaults=typeof(ButtonDefault))]
+                    [ComposeFacade(ImplicitComposer=true)]
+                    public static partial void Button(IFunction0 onClick, IModifier? modifier,
+                                                      IFunction3 content, IComposer composer);
+                }
+            }
+            """;
+
+        var (output, diags, emitted) = Run(code, "Button");
+
+        Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+        Assert.Contains(
+            "public static void Button(global::System.Action onClick, global::System.Action content",
+            emitted);
+        Assert.Contains(
+            "node.Add(new global::AndroidX.Compose.Tier2InlineContent(_ => content()));",
+            emitted);
+        Assert.Contains(
+            "node.Render(global::AndroidX.Compose.ComposableContext.Current);",
+            emitted);
+        Assert.Empty(output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error));
     }
 
     [Fact]

@@ -60,6 +60,21 @@ public static partial class ComposeExtensions
     }
 
     /// <summary>
+    /// Sets the activity's content to an implicit-composer Tier 2 composition.
+    /// </summary>
+    public static void SetContent(
+        this ComponentActivity activity,
+        Action content)
+    {
+        ArgumentNullException.ThrowIfNull(activity);
+        ArgumentNullException.ThrowIfNull(content);
+        var view = new ComposeView(activity);
+        view.SetContent(content);
+        activity.SetContentView(view);
+        Log.Debug(TAG, "ComponentActivity implicit Tier 2 content set");
+    }
+
+    /// <summary>
     /// Installs <paramref name="content"/> as the composition driving this
     /// <see cref="ComposeView"/> — the View-hierarchy entry point. Use when
     /// you're hosting Compose inside an existing Android <c>View</c> tree
@@ -93,6 +108,26 @@ public static partial class ComposeExtensions
             key:     -1,
             tracked: false,
             block:   new ComposableLambda2(content)));
+    }
+
+    /// <summary>
+    /// Installs an implicit-composer Tier 2 composition as this
+    /// <see cref="ComposeView"/>'s content.
+    /// </summary>
+    public static void SetContent(
+        this ComposeView view,
+        Action content)
+    {
+        ArgumentNullException.ThrowIfNull(view);
+        ArgumentNullException.ThrowIfNull(content);
+        view.SetContent(ComposableLambdaKt.ComposableLambdaInstance(
+            key:     -1,
+            tracked: false,
+            block:   new ComposableLambda2(composer =>
+            {
+                using var scope = ComposableContext.Enter(composer);
+                content();
+            })));
     }
 
     /// <summary>

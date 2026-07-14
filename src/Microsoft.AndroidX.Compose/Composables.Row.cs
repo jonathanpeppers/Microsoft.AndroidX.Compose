@@ -5,7 +5,8 @@ namespace AndroidX.Compose;
 public static partial class Composables
 {
     /// <summary>
-    /// Tier 2 entry point for <see cref="Row"/>. The wrapper skips
+    /// Tier 2 entry point for
+    /// <see cref="global::AndroidX.Compose.Row"/>. The wrapper skips
     /// when <paramref name="content"/> identity is unchanged from the
     /// previous composition.
     /// </summary>

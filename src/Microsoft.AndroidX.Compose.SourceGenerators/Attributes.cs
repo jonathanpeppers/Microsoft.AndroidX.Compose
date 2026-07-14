@@ -172,6 +172,12 @@ internal static class Attributes
                 public string? ClassName { get; set; }
 
                 /// <summary>
+                /// Emits an additional Tier 2 overload that acquires its
+                /// composer from <c>ComposableContext.Current</c>.
+                /// </summary>
+                public bool ImplicitComposer { get; set; }
+
+                /// <summary>
                 /// Optional scope to publish from an <c>IFunction3</c> content
                 /// lambda. <c>"Row"</c> (e.g. <see cref="NavigationBar"/>,
                 /// <see cref="Badge"/>) or <c>"Column"</c>. The lambda

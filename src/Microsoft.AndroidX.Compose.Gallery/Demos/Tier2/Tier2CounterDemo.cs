@@ -1,5 +1,4 @@
 using AndroidX.Compose.Gallery.Registry;
-using AndroidX.Compose.Runtime;
 using static AndroidX.Compose.Composables;
 
 namespace AndroidX.Compose.Gallery.Demos.Tier2;
@@ -8,9 +7,9 @@ namespace AndroidX.Compose.Gallery.Demos.Tier2;
 /// Tier 2 demo: a counter rendered by a <c>[Composable]</c> static
 /// method. The button click flips a <see cref="MutableNumberState{T}"/>
 /// the body reads; the generator-emitted call-site interceptor around
-/// <see cref="Counter"/> runs its <see cref="ComposeExtensions.DiffSlot{T}"/>
-/// diff over each parameter and skips re-running the body when nothing
-/// changed.
+/// <see cref="Counter"/> runs without an explicit composer parameter;
+/// generated interceptors recover the active composer for restart groups
+/// and nested calls.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -28,30 +27,29 @@ public static class Tier2CounterDemo
         Id:          "tier2-counter",
         CategoryId:  "tier2",
         Title:       "[Composable] counter",
-        Description: "A counter rendered by a Tier 2 [Composable] static method — restart group, per-param DiffSlot, skip-on-unchanged.",
-        Build:       static c =>
-        {
-            var count = c.Remember(() => new MutableNumberState<int>(0));
-            return new Tier2Adapter(comp => Counter(comp, count.Value, () => count.Value++));
-        });
+        Description: "A counter rendered by a composerless Tier 2 [Composable] static method.",
+        Build:       static _ => new Tier2Adapter(() => Counter()));
 
     /// <summary>
     /// Tier 2 composable — a single plain static method. Every call
     /// site of <see cref="Counter"/> is intercepted by the source
     /// generator and rewired to a wrapper that opens a restart group,
-    /// diffs each parameter via <see cref="ComposeExtensions.DiffSlot{T}"/>,
-    /// and calls <c>SkipToGroupEnd</c> when nothing changed.
+    /// acquires the active composer and opens a restart group.
     /// </summary>
     [Composable]
-    public static void Counter(IComposer composer, int count, Action onIncrement)
+    public static void Counter()
     {
+        var count = Remember(() => new MutableNumberState<int>(0));
+
         // Tier 2 all the way down — every call here is itself an
         // intercepted [Composable] call site with its own restart
         // group + DiffSlot + skip path.
-        Column(composer, c =>
+        Column(() =>
         {
-            Text(c, $"Tier 2 count: {count}");
-            Button(c, onIncrement, cc => Text(cc, "Tap to increment"));
+            Text($"Tier 2 count: {count.Value}");
+            Button(
+                () => count.Value++,
+                () => Text("Tap to increment"));
         });
     }
 }

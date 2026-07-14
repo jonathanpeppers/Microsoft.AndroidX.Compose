@@ -331,7 +331,7 @@ internal static partial class ComposeBridges
                     "Lkotlin/jvm/functions/Function1;Landroidx/compose/ui/text/TextStyle;" +
                     "Landroidx/compose/runtime/Composer;III)V",
         Defaults  = typeof(TextDefault))]
-    [ComposeFacade]
+    [ComposeFacade(ImplicitComposer = true)]
     public static partial void Text(
         string text,
         IModifier? modifier,
@@ -401,7 +401,7 @@ internal static partial class ComposeBridges
                     "Landroidx/compose/foundation/interaction/MutableInteractionSource;" +
                     "Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;II)V",
         Defaults  = typeof(ButtonDefault))]
-    [ComposeFacade]
+    [ComposeFacade(ImplicitComposer = true)]
     public static partial void Button(IFunction0 onClick, IModifier? modifier,
                                       Shape? shape, AndroidX.Compose.Material3.ButtonColors? colors,
                                       PaddingValues? contentPadding,

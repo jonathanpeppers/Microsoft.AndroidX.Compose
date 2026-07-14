@@ -27,12 +27,12 @@ namespace AndroidX.Compose.SourceGenerators;
 /// </para>
 /// <code>
 /// [Composable]
-/// public static void Greeting(IComposer composer, string name)
+/// public static void Greeting(string name)
 /// {
-///     Composables.Text(composer, $"Hello, {name}");
+///     Composables.Text($"Hello, {name}");
 /// }
 ///
-/// Greeting(composer, "world"); // ← intercepted; wrapped in a restart group
+/// Greeting("world"); // ← intercepted; wrapped in a restart group
 /// </code>
 /// <para>
 /// Mirrors the pattern used by <c>dotnet/maui</c>'s
@@ -127,7 +127,9 @@ public sealed class ComposableMethodGenerator : IIncrementalGenerator
                 Diagnostics.ComposableReturnsNotVoid, loc, method.ToDisplayString()));
             return;
         }
-        if (method.Parameters.Length == 0 || !IsComposer(method.Parameters[0].Type))
+        int composerCount = method.Parameters.Count(static p => IsComposer(p.Type));
+        if (composerCount > 0
+            && (composerCount != 1 || !IsComposer(method.Parameters[0].Type)))
         {
             spc.ReportDiagnostic(Diagnostic.Create(
                 Diagnostics.ComposableMissingComposer, loc, method.ToDisplayString()));
@@ -234,8 +236,9 @@ public sealed class ComposableMethodGenerator : IIncrementalGenerator
     static bool CanEmitInterceptor(IMethodSymbol method) =>
         method.IsStatic &&
         method.ReturnType.SpecialType == SpecialType.System_Void &&
-        method.Parameters.Length > 0 &&
-        IsComposer(method.Parameters[0].Type) &&
+        (method.Parameters.Count(static p => IsComposer(p.Type)) == 0 ||
+            (method.Parameters.Count(static p => IsComposer(p.Type)) == 1 &&
+                IsComposer(method.Parameters[0].Type))) &&
         IsAccessibleFromGeneratedType(method) &&
         !method.IsAsync &&
         !method.IsExtensionMethod &&
@@ -312,13 +315,15 @@ public sealed class ComposableMethodGenerator : IIncrementalGenerator
                 $"Composable method '{method.Name}' has no containing type.");
         var methodFqn = containingType.ToDisplayString() + "." + method.Name;
         int key = FnvHash(methodFqn);
+        bool hasExplicitComposer = method.Parameters.Length > 0
+            && IsComposer(method.Parameters[0].Type);
 
         // Same Kotlin-shape mask/expected pair used by the previous
         // generator revision — `0b001` is the runtime "force" bit, each
         // user param contributes `0b101 << (1+3*i)` to the mask and
         // `0b001 << (1+3*i)` to the expected value. Skip when
         // (__dirty & mask) == expected && composer.Skipping.
-        var userParams = method.Parameters.Skip(1).ToList();
+        var userParams = method.Parameters.Skip(hasExplicitComposer ? 1 : 0).ToList();
         int trackedParamCount = Math.Min(userParams.Count, 10);
         long mask = 0b001;
         long expected = 0;
@@ -356,9 +361,11 @@ public sealed class ComposableMethodGenerator : IIncrementalGenerator
         sb.AppendLine(")");
         sb.AppendLine("        {");
         sb.Append("            ").Append(coreName).Append('(');
+        if (!hasExplicitComposer)
+            sb.Append("global::AndroidX.Compose.ComposableContext.Current");
         for (int i = 0; i < method.Parameters.Length; i++)
         {
-            if (i > 0) sb.Append(", ");
+            if (i > 0 || !hasExplicitComposer) sb.Append(", ");
             sb.Append(method.Parameters[i].Name);
         }
         sb.AppendLine(", 0);");
@@ -366,22 +373,25 @@ public sealed class ComposableMethodGenerator : IIncrementalGenerator
         sb.AppendLine();
 
         sb.Append("        static void ").Append(coreName).Append('(');
+        if (!hasExplicitComposer)
+            sb.Append("global::AndroidX.Compose.Runtime.IComposer __composer");
         for (int i = 0; i < method.Parameters.Length; i++)
         {
-            if (i > 0) sb.Append(", ");
+            if (i > 0 || !hasExplicitComposer) sb.Append(", ");
             var p = method.Parameters[i];
             sb.Append(p.Type.ToDisplayString(ParameterTypeFormat))
               .Append(' ').Append(p.Name);
         }
-        if (method.Parameters.Length > 0) sb.Append(", ");
+        sb.Append(", ");
         sb.AppendLine("int __changed)");
         sb.AppendLine("        {");
 
-        var composerName = method.Parameters[0].Name;
+        var composerName = hasExplicitComposer ? method.Parameters[0].Name : "__composer";
         sb.Append("            var __c = ").Append(composerName)
           .Append(".StartRestartGroup(unchecked((int)0x")
           .Append(key.ToString("X8", CultureInfo.InvariantCulture))
           .AppendLine("));");
+        sb.AppendLine("            using var __composerScope = global::AndroidX.Compose.ComposableContext.Enter(__c);");
 
         sb.AppendLine("            int __dirty = __changed;");
         for (int i = 0; i < trackedParamCount; i++)
@@ -418,9 +428,17 @@ public sealed class ComposableMethodGenerator : IIncrementalGenerator
           .Append(containingType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat))
           .Append('.')
           .Append(method.Name)
-          .Append("(__c");
+          .Append('(');
+        if (hasExplicitComposer)
+            sb.Append("__c");
+        bool hasCallArgument = hasExplicitComposer;
         foreach (var p in userParams)
-            sb.Append(", ").Append(p.Name);
+        {
+            if (hasCallArgument)
+                sb.Append(", ");
+            sb.Append(p.Name);
+            hasCallArgument = true;
+        }
         sb.AppendLine(");");
         sb.AppendLine("            }");
         sb.AppendLine("            else");

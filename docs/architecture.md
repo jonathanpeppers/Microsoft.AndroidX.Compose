@@ -188,12 +188,11 @@ rewiring at the language level.
 public static class Screens
 {
     [Composable]
-    public static void Greeting(IComposer composer, string name)
+    public static void Greeting(string name)
     {
         // Plain static method. No partial, no Impl companion, no
         // _changed parameter. Same shape as a Kotlin @Composable.
-        var node = new Text($"Hello {name}");
-        node.Render(composer);
+        Composables.Text($"Hello {name}");
     }
 }
 ```
@@ -204,24 +203,32 @@ The generator emits a single
 `Microsoft.AndroidX.Compose.Composable.Interceptors.g.cs` file
 containing one wrapper per intercepted call site, plus a `file`-scoped
 `InterceptsLocationAttribute` definition in
-`System.Runtime.CompilerServices`. For each `Greeting(composer, "x")`
+`System.Runtime.CompilerServices`. For each `Greeting("x")`
 call site the generator emits roughly:
 
 ```csharp
 [global::System.Runtime.CompilerServices.InterceptsLocationAttribute(1, @"...base64...")]
 public static void Composable_0_AB12CD34(
-    global::AndroidX.Compose.Runtime.IComposer composer,
     string name)
 {
+    Composable_0_AB12CD34_Core(ComposableContext.Current, name, 0);
+}
+
+static void Composable_0_AB12CD34_Core(
+    IComposer composer,
+    string name,
+    int changed)
+{
     var __c = composer.StartRestartGroup(unchecked((int)0x9A1B2C3D));
+    using var scope = ComposableContext.Enter(__c);
     int __dirty = 0;
     __dirty |= __c.DiffSlot<string>(name, 1);
     if ((__dirty & 0xB) != 0x2 || !__c.Skipping)
-        global::App.Screens.Greeting(__c, name);
+        global::App.Screens.Greeting(name);
     else
         __c.SkipToGroupEnd();
     __c.EndRestartGroup()?.UpdateScope(new global::AndroidX.Compose.ComposableLambda2(
-        __c2 => Composable_0_AB12CD34(__c2, name)));
+        (__c2, force) => Composable_0_AB12CD34_Core(__c2, name, force | 1)));
 }
 ```
 
@@ -270,7 +277,7 @@ Tier 2; one-shot screens can stay tree-style indefinitely.
 |--------|------------------------------------------------------------------|
 | CN5001 | `[Composable]` method must be `static`.                          |
 | CN5002 | `[Composable]` method must return `void`.                        |
-| CN5003 | `[Composable]` method must take `IComposer` as first parameter.  |
+| CN5003 | If `[Composable]` declares `IComposer`, it must be the first and only composer parameter. |
 | CN5004 | Method and containing types must be interceptor-accessible.     |
 | CN5005 | `async` composables are unsupported.                            |
 | CN5006 | Extension-method composables are unsupported.                   |

@@ -305,6 +305,11 @@ helpers, operators.
 - `BranchOn = "Subtitle", AlternateBridge = nameof(AltBridge)` (Phase 9): see
   Phase 9 below.
 - `Container = true` (Phase 8 variant): see Phase 8 below.
+- `ImplicitComposer = true`: emits an additional Tier 2 overload with no
+  `IComposer` parameter. Its body reads `ComposableContext.Current`, and
+  composable content slots surface as `Action` instead of
+  `Action<IComposer>`. Used by the composerless `Text` and `Button`
+  prototype APIs.
 
 ### Parameter-level attributes
 
@@ -994,19 +999,22 @@ language level.
 ### Authoring pattern (canonical)
 
 ```csharp
+using static AndroidX.Compose.Composables;
+
 public static class Screens
 {
     [Composable]
-    public static void Counter(IComposer composer, int count, Action onIncrement)
+    public static void Counter()
     {
-        // Plain method body — no partial, no Impl companion, no
-        // _changed parameter. Same shape as a Kotlin @Composable
-        // function. Any [Composable] call inside this body is itself
-        // intercepted, so Tier 2 composes cleanly all the way down.
-        Composables.Column(composer, c =>
+        var count = Remember(
+            () => new MutableNumberState<int>(0));
+
+        Column(() =>
         {
-            Composables.Text(c, $"Count: {count}");
-            Composables.Button(c, onIncrement, cc => Composables.Text(cc, "Tap"));
+            Text($"Count: {count.Value}");
+            Button(
+                () => count.Value++,
+                () => Text("Tap"));
         });
     }
 }
@@ -1014,8 +1022,9 @@ public static class Screens
 
 Rules:
 
-- `[Composable]` method must be `static` (CN5001) with `IComposer` as
-  the **first** parameter (CN5003) and a `void` return (CN5002).
+- `[Composable]` method must be `static` (CN5001) with a `void` return
+  (CN5002). It may omit `IComposer`; when declared explicitly,
+  `IComposer` must be the **first** parameter (CN5003).
 - It must be accessible from the generated interceptor (CN5004) and
   cannot be `async` (CN5005), an extension method (CN5006), generic
   (CN5007), or use `ref`/`out`/`in` parameters (CN5008).
@@ -1025,32 +1034,31 @@ Rules:
   compiler to a generator-emitted wrapper under
   `Microsoft.AndroidX.Compose.Generated.ComposableInterceptors`.
 
-The generator emits a single `Microsoft.AndroidX.Compose.Composable.Interceptors.g.cs`
-file containing one wrapper per intercepted call site. For the
-`Counter(composer, 1, onTick)` call shown above the emitted wrapper
-looks roughly like:
+The generator emits a single
+`Microsoft.AndroidX.Compose.Composable.Interceptors.g.cs` file containing
+one wrapper per intercepted call site. For a composerless
+`Greeting("world")` call, the emitted wrapper looks roughly like:
 
 ```csharp
 [global::System.Runtime.CompilerServices.InterceptsLocationAttribute(1, @"...base64...")]
-public static void Composable_0_AB12CD34(
-    global::AndroidX.Compose.Runtime.IComposer composer,
-    int count,
-    global::System.Action onIncrement)
+public static void Composable_0_AB12CD34(string name)
+{
+    Composable_0_AB12CD34_Core(ComposableContext.Current, name, 0);
+}
+
+static void Composable_0_AB12CD34_Core(
+    IComposer composer, string name, int changed)
 {
     var __c = composer.StartRestartGroup(unchecked((int)0xKEY));
-    int __dirty = 0;
-    __dirty |= __c.DiffSlot<int>(count, 1);
-    __dirty |= __c.DiffSlot<global::System.Action>(onIncrement, 4);
-    if ((__dirty & 0x5B) != 0x12 || !__c.Skipping)
-    {
-        global::App.Screens.Counter(__c, count, onIncrement);
-    }
+    using var scope = ComposableContext.Enter(__c);
+    int __dirty = changed;
+    __dirty |= __c.DiffSlot<string>(name, 1);
+    if ((__dirty & 0xB) != 0x2 || !__c.Skipping)
+        global::App.Screens.Greeting(name);
     else
-    {
         __c.SkipToGroupEnd();
-    }
     __c.EndRestartGroup()?.UpdateScope(new global::AndroidX.Compose.ComposableLambda2(
-        __c2 => Composable_0_AB12CD34(__c2, count, onIncrement)));
+        (__c2, force) => Composable_0_AB12CD34_Core(__c2, name, force | 1)));
 }
 ```
 
@@ -1158,7 +1166,7 @@ are generated while compiling the runtime assembly.
 |--------|--------------------------------------------------------------------------------------------------------------------------|
 | CN5001 | `[Composable]` method must be `static` (Tier 2 intercepts call sites; intercepted target must be a static method).       |
 | CN5002 | `[Composable]` method must return `void` (Tier 2 currently supports only void composables).                              |
-| CN5003 | `[Composable]` method must take `AndroidX.Compose.Runtime.IComposer` as its first parameter.                             |
+| CN5003 | When present, a `[Composable]` method's `AndroidX.Compose.Runtime.IComposer` must be its first and only composer parameter. |
 | CN5004 | `[Composable]` method and its containing types must be accessible from the generated interceptor.                       |
 | CN5005 | `[Composable]` method cannot be `async`; continuations would resume after the restart group closes.                     |
 | CN5006 | `[Composable]` extension methods are unsupported; use a regular static method with `IComposer` first.                   |

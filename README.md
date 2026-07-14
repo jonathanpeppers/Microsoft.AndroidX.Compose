@@ -125,35 +125,35 @@ public class MainActivity : ComponentActivity
     protected override void OnCreate(Bundle? savedInstanceState)
     {
         base.OnCreate(savedInstanceState);
-        this.SetContent(c => Counter(c));
+        this.SetContent(() => Counter());
     }
 
     [Composable]
-    static void Counter(IComposer composer)
+    static void Counter()
     {
-        var count = composer.Remember(
+        var count = Remember(
             () => new MutableNumberState<int>(0));
 
-        Column(composer, c =>
+        Column(() =>
         {
-            Text(c, "Hello from .NET");
-            Text(c, $"Count: {count.Value}");
+            Text("Hello from .NET");
+            Text($"Count: {count.Value}");
             Button(
-                c,
                 () => count.Value++,
-                cc => Text(cc, "Tap to increment"));
+                () => Text("Tap to increment"));
         });
     }
 }
 ```
 
 `ComposeFacadeGenerator` emits public Tier 2 entry points alongside the
-tree-style facade catalog: buttons, cards, app bars, chips, tabs, drawers,
-pickers, navigation components, and other generated facades can all be called
-as `Composables.X(composer, ...)`. Each entry point is itself `[Composable]`,
-so unchanged calls skip before constructing their tree-style adapter. The
-hand-written holdouts (`Scaffold`, lazy collections, text fields, search, and
-similar custom shapes) remain tree-style for now.
+tree-style facade catalog. The composerless prototype currently covers
+`Text`, `Button`, `Column`, and `Remember`; existing explicit-composer Tier 2
+entry points remain available for the rest of the generated catalog. Each
+entry point is itself `[Composable]`, so unchanged calls skip before
+constructing its tree-style adapter. The hand-written holdouts (`Scaffold`,
+lazy collections, text fields, search, and similar custom shapes) remain
+tree-style for now.
 
 The Jetchat, JetNews, and Reply ports use a Tier 2 root matching upstream
 Kotlin's top-level `@Composable` app function and call it through the
