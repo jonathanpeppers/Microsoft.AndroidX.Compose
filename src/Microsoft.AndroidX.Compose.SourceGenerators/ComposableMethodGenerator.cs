@@ -1,3 +1,4 @@
+using System;
 using System.Globalization;
 using System.Linq;
 using System.Text;
@@ -80,7 +81,9 @@ public sealed class ComposableMethodGenerator : IIncrementalGenerator
                 predicate: static (node, _) => node is InvocationExpressionSyntax,
                 transform: static (ctx, ct) => TryBuildCallSite(ctx, ct))
             .Where(static cs => cs is not null)
-            .Select(static (cs, _) => cs!)
+            .Select(static (cs, _) => cs
+                ?? throw new InvalidOperationException(
+                    "Composable call-site filtering produced a null result."))
             .Collect();
 
         context.RegisterSourceOutput(callSites, static (spc, sites) =>
@@ -244,7 +247,10 @@ public sealed class ComposableMethodGenerator : IIncrementalGenerator
     static void EmitInterceptor(StringBuilder sb, CallSite site, int index)
     {
         var method = site.Target;
-        var methodFqn = method.ContainingType?.ToDisplayString() + "." + method.Name;
+        var containingType = method.ContainingType
+            ?? throw new InvalidOperationException(
+                $"Composable method '{method.Name}' has no containing type.");
+        var methodFqn = containingType.ToDisplayString() + "." + method.Name;
         int key = FnvHash(methodFqn);
 
         // Same Kotlin-shape mask/expected pair used by the previous
@@ -253,9 +259,10 @@ public sealed class ComposableMethodGenerator : IIncrementalGenerator
         // `0b001 << (1+3*i)` to the expected value. Skip when
         // (__dirty & mask) == expected && composer.Skipping.
         var userParams = method.Parameters.Skip(1).ToList();
+        int trackedParamCount = Math.Min(userParams.Count, 10);
         long mask = 0b001;
         long expected = 0;
-        for (int i = 0; i < userParams.Count; i++)
+        for (int i = 0; i < trackedParamCount; i++)
         {
             int shift = 1 + i * 3;
             mask |= 0b101L << shift;
@@ -265,6 +272,7 @@ public sealed class ComposableMethodGenerator : IIncrementalGenerator
         string wrapperName = "Composable_" + index.ToString(CultureInfo.InvariantCulture)
             + "_" + FnvHash(site.LocationData + "|" + site.LocationVersion)
                 .ToString("X8", CultureInfo.InvariantCulture);
+        string coreName = wrapperName + "_Core";
 
         sb.AppendLine();
         sb.Append("        // ").Append(method.ToDisplayString()).AppendLine();
@@ -287,6 +295,27 @@ public sealed class ComposableMethodGenerator : IIncrementalGenerator
         }
         sb.AppendLine(")");
         sb.AppendLine("        {");
+        sb.Append("            ").Append(coreName).Append('(');
+        for (int i = 0; i < method.Parameters.Length; i++)
+        {
+            if (i > 0) sb.Append(", ");
+            sb.Append(method.Parameters[i].Name);
+        }
+        sb.AppendLine(", 0);");
+        sb.AppendLine("        }");
+        sb.AppendLine();
+
+        sb.Append("        static void ").Append(coreName).Append('(');
+        for (int i = 0; i < method.Parameters.Length; i++)
+        {
+            if (i > 0) sb.Append(", ");
+            var p = method.Parameters[i];
+            sb.Append(p.Type.ToDisplayString(ParameterTypeFormat))
+              .Append(' ').Append(p.Name);
+        }
+        if (method.Parameters.Length > 0) sb.Append(", ");
+        sb.AppendLine("int __changed)");
+        sb.AppendLine("        {");
 
         var composerName = method.Parameters[0].Name;
         sb.Append("            var __c = ").Append(composerName)
@@ -294,8 +323,8 @@ public sealed class ComposableMethodGenerator : IIncrementalGenerator
           .Append(key.ToString("X8", CultureInfo.InvariantCulture))
           .AppendLine("));");
 
-        sb.AppendLine("            int __dirty = 0;");
-        for (int i = 0; i < userParams.Count; i++)
+        sb.AppendLine("            int __dirty = __changed;");
+        for (int i = 0; i < trackedParamCount; i++)
         {
             int bitOffset = 1 + i * 3;
             var p = userParams[i];
@@ -305,10 +334,12 @@ public sealed class ComposableMethodGenerator : IIncrementalGenerator
               .Append(bitOffset.ToString(CultureInfo.InvariantCulture))
               .AppendLine(");");
         }
+        if (userParams.Count > trackedParamCount)
+            sb.AppendLine("            __dirty |= 0b1;");
 
         if (userParams.Count == 0)
         {
-            sb.AppendLine("            if (!__c.Skipping)");
+            sb.AppendLine("            if ((__dirty & 0x1) != 0 || !__c.Skipping)");
         }
         else
         {
@@ -324,7 +355,7 @@ public sealed class ComposableMethodGenerator : IIncrementalGenerator
         // it, so it passes through to the user method's body (which is
         // what we want — that's the actual composable's body running).
         sb.Append("                ")
-          .Append(method.ContainingType!.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat))
+          .Append(containingType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat))
           .Append('.')
           .Append(method.Name)
           .Append("(__c");
@@ -340,11 +371,11 @@ public sealed class ComposableMethodGenerator : IIncrementalGenerator
         // Recompose path. The lambda re-enters THIS wrapper (not the
         // user method) so the restart group re-opens, args re-diff,
         // skip-or-call fires the same way.
-        sb.Append("            __c.EndRestartGroup()?.UpdateScope(new global::AndroidX.Compose.ComposableLambda2(__c2 => ")
-          .Append(wrapperName).Append("(__c2");
+        sb.Append("            __c.EndRestartGroup()?.UpdateScope(new global::AndroidX.Compose.ComposableLambda2((__c2, __force) => ")
+          .Append(coreName).Append("(__c2");
         foreach (var p in userParams)
             sb.Append(", ").Append(p.Name);
-        sb.AppendLine(")));");
+        sb.AppendLine(", __force | 0b1)));");
 
         sb.AppendLine("        }");
     }

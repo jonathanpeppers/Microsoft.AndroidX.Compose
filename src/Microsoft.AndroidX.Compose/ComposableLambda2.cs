@@ -56,6 +56,8 @@ public sealed class ComposableLambda2 : Java.Lang.Object, IFunction2
                     "ComposableLambda2 has neither body delegate set.");
             body(composer);
         }
-        return Kotlin.Unit.Instance!;
+        return Kotlin.Unit.Instance
+            ?? throw new InvalidOperationException(
+                "Kotlin.Unit.Instance was unavailable after invoking ComposableLambda2.");
     }
 }

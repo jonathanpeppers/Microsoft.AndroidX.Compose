@@ -100,7 +100,7 @@ public class ComposableMethodGeneratorTests
     }
 
     [Fact]
-    public void NoUserParams_EmitsRestartWrapperWithSkippingOnlyGuard()
+    public void NoUserParams_EmitsRestartWrapperWithForceAwareGuard()
     {
         var (output, diags, emitted) = Run("""
             namespace App
@@ -119,12 +119,13 @@ public class ComposableMethodGeneratorTests
         Assert.NotNull(emitted);
         Assert.Contains("[global::System.Runtime.CompilerServices.InterceptsLocationAttribute(", emitted);
         Assert.Contains("StartRestartGroup", emitted);
-        // No user params → skip prelude collapses to "if (!__c.Skipping)".
-        Assert.Contains("if (!__c.Skipping)", emitted);
+        Assert.Contains("if ((__dirty & 0x1) != 0 || !__c.Skipping)", emitted);
         Assert.Contains("SkipToGroupEnd", emitted);
         Assert.Contains("EndRestartGroup", emitted);
         Assert.Contains("UpdateScope", emitted);
         Assert.Contains("global::AndroidX.Compose.ComposableLambda2", emitted);
+        Assert.Contains("(__c2, __force)", emitted);
+        Assert.Contains("__force | 0b1", emitted);
         // Wrapper invokes the original method by fully-qualified name.
         Assert.Contains("global::App.Screens.Splash(__c)", emitted);
         AssertNoCompileErrors(output);
@@ -182,6 +183,34 @@ public class ComposableMethodGeneratorTests
         // expected = (0b001 << 1) | (0b001 << 4) = 0x2 | 0x10 = 0x12
         Assert.Contains("(__dirty & 0x5B) != 0x12", emitted);
         Assert.Contains("global::App.Screens.Counter(__c, count, label)", emitted);
+        AssertNoCompileErrors(output);
+    }
+
+    [Fact]
+    public void ElevenParams_TracksFirstTenAndForcesExecution()
+    {
+        var (output, diags, emitted) = Run("""
+            namespace App
+            {
+                public static class Screens
+                {
+                    [AndroidX.Compose.Composable]
+                    public static void Wide(
+                        AndroidX.Compose.Runtime.IComposer composer,
+                        int p0, int p1, int p2, int p3, int p4, int p5,
+                        int p6, int p7, int p8, int p9, int p10) { }
+
+                    public static void CallSite(AndroidX.Compose.Runtime.IComposer c) =>
+                        Wide(c, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
+                }
+            }
+            """);
+
+        Assert.Empty(diags);
+        Assert.NotNull(emitted);
+        Assert.Contains("DiffSlot<int>(p9, 28)", emitted);
+        Assert.DoesNotContain("DiffSlot<int>(p10", emitted);
+        Assert.Contains("__dirty |= 0b1;", emitted);
         AssertNoCompileErrors(output);
     }
 
