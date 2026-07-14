@@ -116,6 +116,7 @@ The tree-style facade above is Tier 1.5 — every recomposition allocates a fres
 
 ```csharp
 using Composable = AndroidX.Compose.ComposableAttribute;
+using static AndroidX.Compose.Composables;
 
 [Activity(Label = "@string/app_name", MainLauncher = true,
           Theme = "@android:style/Theme.Material.Light.NoActionBar")]
@@ -133,14 +134,14 @@ public class MainActivity : ComponentActivity
         var count = composer.Remember(
             () => new MutableNumberState<int>(0));
 
-        Composables.Column(composer, c =>
+        Column(composer, c =>
         {
-            Composables.Text(c, "Hello from .NET");
-            Composables.Text(c, $"Count: {count.Value}");
-            Composables.Button(
+            Text(c, "Hello from .NET");
+            Text(c, $"Count: {count.Value}");
+            Button(
                 c,
                 () => count.Value++,
-                cc => Composables.Text(cc, "Tap to increment"));
+                cc => Text(cc, "Tap to increment"));
         });
     }
 }
