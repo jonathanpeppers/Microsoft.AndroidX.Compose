@@ -25,6 +25,14 @@
     <ProjectReference Include="..\Microsoft.AndroidX.Compose.SourceGenerators\Microsoft.AndroidX.Compose.SourceGenerators.csproj"
                       OutputItemType="Analyzer"
                       ReferenceOutputAssembly="false" />
+    <None Include="..\Microsoft.AndroidX.Compose.SourceGenerators\bin\$(Configuration)\netstandard2.0\Microsoft.AndroidX.Compose.SourceGenerators.dll"
+          Pack="true"
+          PackagePath="analyzers\dotnet\cs"
+          Visible="false" />
+    <None Include="buildTransitive\Microsoft.AndroidX.Compose.props"
+          Pack="true"
+          PackagePath="buildTransitive"
+          Visible="false" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" PrivateAssets="All" />

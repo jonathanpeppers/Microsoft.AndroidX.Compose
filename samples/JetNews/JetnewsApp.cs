@@ -1,3 +1,5 @@
+using AndroidX.Compose.Runtime;
+
 namespace AndroidX.Compose.Samples.JetNews;
 
 /// <summary>
@@ -46,7 +48,9 @@ public static class JetnewsApp
     /// from <see cref="MainActivity"/> so the chooser launches with the
     /// activity as its <see cref="Android.Content.Context"/>.
     /// </param>
-    public static ComposableNode Build(
+    [Composable]
+    public static void Content(
+        IComposer composer,
         NavController nav,
         MutableState<string> currentRoute,
         DrawerStateHolder drawerState,
@@ -56,7 +60,8 @@ public static class JetnewsApp
         MutableStateList<string> selectedPublications,
         MutableState<int> interestsTab,
         SnackbarController snackbars,
-        Action<Post>? onShare = null) =>
+        Action<Post>? onShare = null)
+    {
         new MaterialTheme
         {
             new ModalNavigationDrawer(drawerState)
@@ -64,7 +69,8 @@ public static class JetnewsApp
                 Drawer  = JetnewsDrawer.Build(nav, currentRoute, drawerState),
                 Content = BuildNavHost(nav, currentRoute, drawerState, bookmarks, selectedTopics, selectedPeople, selectedPublications, interestsTab, snackbars, onShare),
             },
-        };
+        }.Render(composer);
+    }
 
     static NavHost BuildNavHost(
         NavController nav,

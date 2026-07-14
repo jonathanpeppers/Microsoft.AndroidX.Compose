@@ -483,11 +483,18 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         if (diags.Count > 0)
             return new GenerationResult(null, null, diags);
 
+        bool emitTier2EntryPoint = !HasExistingComposableEntryPoint(c.Compilation, className);
         var source = Emit(className, method.Name, scope, composerParam, slots, hasMultiSlot,
             callerProvidesDefaults, callerProvidesChanged, defaultsParam, defaults, defaultsType?.Name, themeColor, colorSlot,
-            userParams, branchInfo, indexedChildren, secondaryCtorInfo);
+            userParams, branchInfo, indexedChildren, secondaryCtorInfo, emitTier2EntryPoint);
         var hint = $"AndroidX.Compose.Facade.{className}.g.cs";
         return new GenerationResult(source, hint, []);
+    }
+
+    static bool HasExistingComposableEntryPoint(Compilation compilation, string methodName)
+    {
+        var composables = compilation.GetTypeByMetadataName("AndroidX.Compose.Composables");
+        return composables?.GetMembers(methodName).OfType<IMethodSymbol>().Any() == true;
     }
 
     static BranchInfo? BuildBranchInfo(Context c, IMethodSymbol primary,
@@ -1187,7 +1194,8 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         IReadOnlyList<IParameterSymbol> primaryUserParams,
         BranchInfo? branchInfo,
         bool indexedChildren,
-        SecondaryCtorInfo? secondaryCtorInfo)
+        SecondaryCtorInfo? secondaryCtorInfo,
+        bool emitTier2EntryPoint)
     {
         // After classification, only the container's body survives as
         // Content2/3 (multi-slot leafs re-classified to Named/Required).
@@ -1609,9 +1617,149 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
 
         sb.AppendLine("        }");
         sb.AppendLine("    }");
+
+        if (emitTier2EntryPoint)
+            EmitTier2EntryPoint(sb, className, slots, themeColor);
+
         sb.AppendLine("}");
         return sb.ToString();
     }
+
+    static void EmitTier2EntryPoint(StringBuilder sb, string className,
+        IReadOnlyList<FacadeSlot> slots, string? themeColor)
+    {
+        var ctorSlotsAll = slots.Where(IsCtorSlot)
+            .Where(s => !HasFacadeCtorDefault(s))
+            .Concat(slots.Where(s => IsCtorSlot(s) && s.Kind == FacadeSlotKind.StateHolder))
+            .Concat(slots.Where(s => IsCtorSlot(s) && HasFacadeCtorDefault(s) && s.Kind != FacadeSlotKind.StateHolder))
+            .ToArray();
+        var requiredCtorSlots = ctorSlotsAll.Where(s => !HasFacadeCtorDefault(s)).ToArray();
+        var optionalCtorSlots = ctorSlotsAll.Where(HasFacadeCtorDefault).ToArray();
+        var contentSlots = slots.Where(s => s.Kind is FacadeSlotKind.Content2 or FacadeSlotKind.Content3).ToArray();
+        var requiredNamedSlots = slots.Where(s =>
+            s.Kind is FacadeSlotKind.RequiredFunction2 or FacadeSlotKind.RequiredFunction3).ToArray();
+        var optionalNamedSlots = slots.Where(s =>
+            s.Kind is FacadeSlotKind.NamedFunction2 or FacadeSlotKind.NamedFunction3).ToArray();
+        var modifierSlot = slots.FirstOrDefault(s => s.Kind == FacadeSlotKind.Modifier);
+        bool hasModifier = modifierSlot.Param is not null;
+        var optionalValueSlots = slots.Where(s => s.Kind == FacadeSlotKind.OptionalValue).ToArray();
+        var stateConfirmSlots = slots.Where(s => s.Kind == FacadeSlotKind.StateHolder)
+            .SelectMany(s => s.ConfirmStateChanges).ToArray();
+
+        sb.AppendLine();
+        sb.AppendLine("    public static partial class Composables");
+        sb.AppendLine("    {");
+        sb.Append("        /// <summary>Tier 2 entry point for <see cref=\"global::AndroidX.Compose.")
+          .Append(className).AppendLine("\"/>.</summary>");
+        sb.AppendLine("        [global::AndroidX.Compose.Composable]");
+        sb.Append("        public static void ").Append(className)
+          .Append("(global::AndroidX.Compose.Runtime.IComposer composer");
+
+        foreach (var slot in requiredCtorSlots)
+            AppendTier2Parameter(sb, slot, optional: false);
+        foreach (var slot in requiredNamedSlots)
+            AppendTier2ContentParameter(sb, Tier2Identifier(PropertyName(slot)), optional: false);
+        foreach (var slot in contentSlots)
+            AppendTier2ContentParameter(sb, slot.Param.Name, optional: false);
+        foreach (var slot in optionalCtorSlots)
+            AppendTier2Parameter(sb, slot, optional: true);
+        if (hasModifier)
+            sb.Append(", global::AndroidX.Compose.Modifier? modifier = null");
+        foreach (var slot in optionalNamedSlots)
+            AppendTier2ContentParameter(sb, Tier2Identifier(PropertyName(slot)), optional: true);
+        foreach (var slot in optionalValueSlots)
+        {
+            sb.Append(", ").Append(OptionalValueDisplay(slot)).Append(' ')
+              .Append(EscapeIdent(slot.Param.Name)).Append(" = null");
+        }
+        if (themeColor is not null)
+            sb.Append(", global::AndroidX.Compose.Color containerColor = default");
+        foreach (var info in stateConfirmSlots)
+        {
+            var valueType = info.ValueType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat
+                .WithMiscellaneousOptions(SymbolDisplayMiscellaneousOptions.UseSpecialTypes));
+            sb.Append(", global::System.Func<").Append(valueType).Append(", bool>? ")
+              .Append(EscapeIdent(char.ToLowerInvariant(info.PropertyName[0]) + info.PropertyName.Substring(1)))
+              .Append(" = null");
+        }
+        sb.AppendLine(")");
+        sb.AppendLine("        {");
+
+        sb.Append("            var node = new global::AndroidX.Compose.").Append(className);
+        if (ctorSlotsAll.Length > 0)
+        {
+            sb.Append('(');
+            for (int i = 0; i < ctorSlotsAll.Length; i++)
+            {
+                if (i > 0) sb.Append(", ");
+                sb.Append(EscapeIdent(CtorIdentifier(ctorSlotsAll[i])));
+            }
+            sb.Append(')');
+        }
+        sb.AppendLine();
+        sb.AppendLine("            {");
+        if (hasModifier)
+            sb.AppendLine("                Modifier = modifier,");
+        foreach (var slot in requiredNamedSlots)
+        {
+            var name = PropertyName(slot);
+            var id = Tier2Identifier(name);
+            sb.Append("                ").Append(name).Append(" = new global::AndroidX.Compose.Tier2InlineContent(")
+              .Append(EscapeIdent(id)).AppendLine("),");
+        }
+        foreach (var slot in optionalNamedSlots)
+        {
+            var name = PropertyName(slot);
+            var id = EscapeIdent(Tier2Identifier(name));
+            sb.Append("                ").Append(name).Append(" = ").Append(id)
+              .Append(" is null ? null : new global::AndroidX.Compose.Tier2InlineContent(")
+              .Append(id).AppendLine("),");
+        }
+        foreach (var slot in optionalValueSlots)
+        {
+            sb.Append("                ").Append(PropertyName(slot)).Append(" = ")
+              .Append(EscapeIdent(slot.Param.Name)).AppendLine(",");
+        }
+        if (themeColor is not null)
+            sb.AppendLine("                ContainerColor = containerColor,");
+        foreach (var info in stateConfirmSlots)
+        {
+            var id = EscapeIdent(char.ToLowerInvariant(info.PropertyName[0]) + info.PropertyName.Substring(1));
+            sb.Append("                ").Append(info.PropertyName).Append(" = ").Append(id).AppendLine(",");
+        }
+        sb.AppendLine("            };");
+        foreach (var slot in contentSlots)
+        {
+            sb.Append("            node.Add(new global::AndroidX.Compose.Tier2InlineContent(")
+              .Append(EscapeIdent(slot.Param.Name)).AppendLine("));");
+        }
+        sb.AppendLine("            node.Render(composer);");
+        sb.AppendLine("        }");
+        sb.AppendLine("    }");
+    }
+
+    static void AppendTier2Parameter(StringBuilder sb, FacadeSlot slot, bool optional)
+    {
+        sb.Append(", ").Append(CtorParamType(slot)).Append(' ')
+          .Append(EscapeIdent(CtorIdentifier(slot)));
+        if (!optional)
+            return;
+        if (slot.Kind == FacadeSlotKind.StateHolder)
+            sb.Append(" = null");
+        else if (slot.Kind == FacadeSlotKind.Primitive && HasFacadeCtorDefault(slot))
+            sb.Append(" = ").Append(FormatPrimitiveDefaultLiteral(slot.Param));
+    }
+
+    static void AppendTier2ContentParameter(StringBuilder sb, string name, bool optional)
+    {
+        sb.Append(", global::System.Action<global::AndroidX.Compose.Runtime.IComposer>")
+          .Append(optional ? "? " : " ").Append(EscapeIdent(name));
+        if (optional)
+            sb.Append(" = null");
+    }
+
+    static string Tier2Identifier(string name) =>
+        char.ToLowerInvariant(name[0]) + name.Substring(1);
 
     static void EmitBranchedRender(StringBuilder sb, string indent,
         string primaryMethodName, IReadOnlyList<FacadeSlot> slots,

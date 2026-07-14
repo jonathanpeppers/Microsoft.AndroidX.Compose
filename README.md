@@ -12,7 +12,10 @@ Build Android UI with **Jetpack Compose** from a .NET for Android app — pure C
 
 [*Android UI Development is Compose First*](https://android-developers.googleblog.com/2026/05/android-ui-development-is-compose-first.html) (Nick Butcher, May 2026) puts Views, Fragments, RecyclerView, and the View-based tooling into **maintenance mode**. All new Android UI APIs target Compose. .NET for Android needs a story — analogous to UIKit→SwiftUI in 2019.
 
-This repo is **Tier 1**: a C#-only .NET-for-Android app that hosts Compose UI by calling the existing `androidx.compose.*` runtime through the existing Xamarin bindings. No new compiler, no new runtime, no Kotlin source. A potential Tier 2 (a Roslyn source generator that lets you author `[Composable]`-attributed C# methods directly) is out of scope here — see [docs/compose-internals.md](docs/compose-internals.md) for that analysis.
+This repo provides two C# authoring styles over the existing
+`androidx.compose.*` runtime and Xamarin bindings: a tree-style facade and
+Tier 2 `[Composable]` static methods lowered by a Roslyn source generator.
+Both are pure C# with no Kotlin source or custom runtime.
 
 ## Build & run
 
@@ -31,7 +34,7 @@ dotnet test src/Microsoft.AndroidX.Compose.SourceGenerators.Tests
 
 ## What it looks like
 
-Side-by-side Kotlin vs C#. Both render the same screen: a Material 3 themed counter app.
+The same counter flow in Kotlin and both supported C# authoring styles.
 
 ### Kotlin
 
@@ -55,7 +58,7 @@ class MainActivity : ComponentActivity() {
 }
 ```
 
-### C# (this repo)
+### C# tree style (Tier 1.5)
 
 ```csharp
 [Activity(Label = "@string/app_name", MainLauncher = true,
@@ -100,7 +103,67 @@ The translation is mechanical — `new` instead of bare calls, commas instead of
 | `"Count: $count"`                             | `$"Count: {count}"` (via `MutableState<T>.ToString`)            |
 | `if (count > 0) …`                            | `if (count > 0) …` (implicit `MutableState<T>` → `T`)           |
 
-That's an end-to-end Material 3 counter app in ~13 lines of composition — start from this shape when adding a new screen. The actual [`src/Microsoft.AndroidX.Compose.Gallery/MainActivity.cs`](src/Microsoft.AndroidX.Compose.Gallery/MainActivity.cs) in the repo is a much larger **gallery app** that exercises every facade across a navigable catalog with search; for a single-screen real-app example see [`samples/Jetchat`](samples/Jetchat).
+That's an end-to-end Material 3 counter app in ~13 lines of composition.
+Tree style remains available for collection initialization and dynamically
+constructed UI. The actual
+[`src/Microsoft.AndroidX.Compose.Gallery/MainActivity.cs`](src/Microsoft.AndroidX.Compose.Gallery/MainActivity.cs)
+is a larger gallery app that exercises every facade across a navigable
+catalog.
+
+### C# static style (Tier 2)
+
+The tree-style facade above is Tier 1.5 — every recomposition allocates a fresh `ComposableNode` tree. Tier 2 is the C# moral equivalent of Kotlin's compose-compiler plugin: an incremental source generator emits a per-call-site `[InterceptsLocation]` wrapper that opens a Compose restart group, runs per-parameter `DiffSlot` diffing, and skips the underlying call when nothing changed. When the skip path fires the body — and therefore the tree allocation it would have made — never runs. One user method, one shape, same as Kotlin (mirrors `dotnet/maui`'s `BindingSourceGen`).
+
+```csharp
+using Composable = AndroidX.Compose.ComposableAttribute;
+using static AndroidX.Compose.Composables;
+
+[Activity(Label = "@string/app_name", MainLauncher = true,
+          Theme = "@android:style/Theme.Material.Light.NoActionBar")]
+public class MainActivity : ComponentActivity
+{
+    protected override void OnCreate(Bundle? savedInstanceState)
+    {
+        base.OnCreate(savedInstanceState);
+        this.SetContent(c => Counter(c));
+    }
+
+    [Composable]
+    static void Counter(IComposer composer)
+    {
+        var count = composer.Remember(
+            () => new MutableNumberState<int>(0));
+
+        Column(composer, c =>
+        {
+            Text(c, "Hello from .NET");
+            Text(c, $"Count: {count.Value}");
+            Button(
+                c,
+                () => count.Value++,
+                cc => Text(cc, "Tap to increment"));
+        });
+    }
+}
+```
+
+`ComposeFacadeGenerator` emits public Tier 2 entry points alongside the
+tree-style facade catalog: buttons, cards, app bars, chips, tabs, drawers,
+pickers, navigation components, and other generated facades can all be called
+as `Composables.X(composer, ...)`. Each entry point is itself `[Composable]`,
+so unchanged calls skip before constructing their tree-style adapter. The
+hand-written holdouts (`Scaffold`, lazy collections, text fields, search, and
+similar custom shapes) remain tree-style for now.
+
+The Jetchat, JetNews, and Reply ports use a Tier 2 root matching upstream
+Kotlin's top-level `@Composable` app function and call it through the
+`Action<IComposer>` `SetContent` overload. See
+[docs/architecture.md → Tier 2](docs/architecture.md) for the emission shape,
+the sibling-skip proof demo, diagnostics (CN5001–CN5008), and remaining
+follow-ups. The two tiers coexist freely. The
+`Microsoft.AndroidX.Compose` NuGet package includes the Tier 2 source
+generator and its compiler configuration; package consumers need no separate
+generator reference.
 
 ## What's wrapped today
 

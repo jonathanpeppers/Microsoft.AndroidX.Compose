@@ -10,10 +10,33 @@ namespace AndroidX.Compose;
 /// <c>$changed</c>.
 /// </summary>
 [Register("net/compose/ComposableLambda2")]
-internal sealed class ComposableLambda2 : Java.Lang.Object, IFunction2
+public sealed class ComposableLambda2 : Java.Lang.Object, IFunction2
 {
-    readonly Action<IComposer> _body;
-    public ComposableLambda2(Action<IComposer> body) => _body = body;
+    readonly Action<IComposer>? _body;
+    readonly Action<IComposer, int>? _bodyWithChanged;
+
+    /// <summary>
+    /// Body that ignores the runtime's <c>$changed</c> hint. Use for
+    /// scope/content lambdas where the wrapper doesn't need to thread
+    /// the force flag back into a restart.
+    /// </summary>
+    public ComposableLambda2(Action<IComposer> body)
+    {
+        ArgumentNullException.ThrowIfNull(body);
+        _body = body;
+    }
+
+    /// <summary>
+    /// Body that observes the runtime's <c>$changed</c> hint. Used by
+    /// <c>EndRestartGroup().UpdateScope(...)</c> emissions on Tier 2
+    /// composables so the recompose pass can OR the runtime's force
+    /// bit into <c>$changed</c> and propagate it down.
+    /// </summary>
+    public ComposableLambda2(Action<IComposer, int> body)
+    {
+        ArgumentNullException.ThrowIfNull(body);
+        _bodyWithChanged = body;
+    }
 
     // Kotlin Function2<Composer, Int, Unit> contractually returns
     // Unit.INSTANCE. See ComposableLambda0 / issue #43 for the rationale.
@@ -21,7 +44,20 @@ internal sealed class ComposableLambda2 : Java.Lang.Object, IFunction2
     {
         ArgumentNullException.ThrowIfNull(p0);
         var composer = Android.Runtime.Extensions.JavaCast<IComposer>(p0);
-        _body(composer);
-        return Kotlin.Unit.Instance!;
+        if (_bodyWithChanged is not null)
+        {
+            int changed = p1 is Java.Lang.Integer i ? i.IntValue() : 0;
+            _bodyWithChanged(composer, changed);
+        }
+        else
+        {
+            var body = _body
+                ?? throw new InvalidOperationException(
+                    "ComposableLambda2 has neither body delegate set.");
+            body(composer);
+        }
+        return Kotlin.Unit.Instance
+            ?? throw new InvalidOperationException(
+                "Kotlin.Unit.Instance was unavailable after invoking ComposableLambda2.");
     }
 }

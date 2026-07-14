@@ -8,7 +8,7 @@ namespace AndroidX.Compose.Samples.JetNews;
 /// JetNews host activity. Subclasses <see cref="ComponentActivity"/>,
 /// remembers app-wide state (nav controller, current route, bookmark
 /// set, topic/people/publication selections, interests tab index),
-/// then hands off to <see cref="JetnewsApp.Build"/>.
+/// then hands off to <see cref="JetnewsApp.Content"/>.
 /// </summary>
 [Activity(
     Label        = "@string/app_name",
@@ -39,7 +39,8 @@ public class MainActivity : ComponentActivity
             var selectedPublications = c.Remember(() => new MutableStateList<string>());
             var interestsTab         = c.MutableStateOf(0);
             var snackbars            = c.Remember(() => new SnackbarController());
-            return JetnewsApp.Build(
+            JetnewsApp.Content(
+                c,
                 nav,
                 currentRoute,
                 drawerState,

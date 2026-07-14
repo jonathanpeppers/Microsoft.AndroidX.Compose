@@ -1,9 +1,10 @@
 using AndroidX.Compose.UI.Text.Input;
+using AndroidX.Compose.Runtime;
 
 namespace AndroidX.Compose.Samples.Jetchat;
 
 /// <summary>
-/// Top-level Jetchat tree. Wraps the
+/// Top-level Jetchat composition. Wraps the
 /// <see cref="JetchatTheme"/> around a
 /// <see cref="ModalNavigationDrawer"/> whose body is a
 /// <see cref="NavHost"/> with two routes: the conversation and the
@@ -26,8 +27,10 @@ public static class JetchatApp
         public static string Profile(string userId) => $"profile/{userId}";
     }
 
-    /// <summary>Materialize the Jetchat tree for one composition pass.</summary>
-    public static ComposableNode Build(
+    /// <summary>Compose the Jetchat app, matching upstream's <c>JetchatApp</c> composable boundary.</summary>
+    [Composable]
+    public static void Content(
+        IComposer                    composer,
         NavController                nav,
         ConversationUiState          ui,
         MutableState<TextFieldValue> input,
@@ -39,7 +42,8 @@ public static class JetchatApp
         LazyListState                messagesScroll,
         MutableState<bool>           isRecording,
         MutableNumberState<float>    swipeOffset,
-        ProfileViewModel             profileViewModel) =>
+        ProfileViewModel             profileViewModel)
+    {
         JetchatTheme.Build(new Composed(c =>
         {
             var scheme = c.ColorScheme();
@@ -94,7 +98,8 @@ public static class JetchatApp
                     }),
                 },
             };
-        }));
+        })).Render(composer);
+    }
 
     static bool IsOnHome(NavController nav)
     {

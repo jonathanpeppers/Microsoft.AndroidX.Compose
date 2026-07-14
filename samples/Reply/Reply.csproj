@@ -12,6 +12,9 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\Microsoft.AndroidX.Compose\Microsoft.AndroidX.Compose.csproj" />
+    <ProjectReference Include="..\..\src\Microsoft.AndroidX.Compose.SourceGenerators\Microsoft.AndroidX.Compose.SourceGenerators.csproj"
+                      OutputItemType="Analyzer"
+                      ReferenceOutputAssembly="false" />
   </ItemGroup>
   <ItemGroup>
     <!-- ComponentActivity wires up ViewTreeLifecycleOwner / SavedStateRegistryOwner

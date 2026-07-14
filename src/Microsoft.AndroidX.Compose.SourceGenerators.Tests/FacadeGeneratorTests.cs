@@ -105,6 +105,8 @@ public class FacadeGeneratorTests
         }
         namespace AndroidX.Compose
         {
+            [System.AttributeUsage(System.AttributeTargets.Method)]
+            public sealed class ComposableAttribute : System.Attribute { }
             public enum ScopeKind { None, Row, Column, Box, Other }
             public static class RenderContext
             {
@@ -155,17 +157,26 @@ public class FacadeGeneratorTests
             public class PaddingValues : Java.Lang.Object { }
             public class Alignment : Java.Lang.Object { }
             public class ContentScale : Java.Lang.Object { }
+            public sealed class Modifier { }
             public abstract class ComposableNode
             {
+                public Modifier? Modifier { get; set; }
                 public abstract void Render(global::AndroidX.Compose.Runtime.IComposer composer);
                 protected global::AndroidX.Compose.UI.IModifier? BuildModifier() => null;
                 internal object? BuildModifierStructuralKey() => null;
             }
             public abstract class ComposableContainer : ComposableNode
             {
+                public void Add(ComposableNode node) { }
                 protected void RenderChildren(global::AndroidX.Compose.Runtime.IComposer composer) { }
                 private protected void RenderChildrenIndexed(global::AndroidX.Compose.Runtime.IComposer composer) { }
             }
+            internal sealed class Tier2InlineContent : ComposableNode
+            {
+                public Tier2InlineContent(System.Action<global::AndroidX.Compose.Runtime.IComposer> body) { }
+                public override void Render(global::AndroidX.Compose.Runtime.IComposer composer) { }
+            }
+            public static partial class Composables { }
             public sealed class ComposableLambda0 : Kotlin.Jvm.Functions.IFunction0
             {
                 public ComposableLambda0(System.Action body) { }
@@ -284,6 +295,8 @@ public class FacadeGeneratorTests
         Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
         Assert.NotNull(emitted);
         Assert.Contains("public sealed partial class Button : global::AndroidX.Compose.ComposableContainer", emitted);
+        Assert.Contains("public static void Button(global::AndroidX.Compose.Runtime.IComposer composer, global::System.Action onClick, global::System.Action<global::AndroidX.Compose.Runtime.IComposer> content", emitted);
+        Assert.Contains("node.Add(new global::AndroidX.Compose.Tier2InlineContent(content));", emitted);
         Assert.Contains("readonly global::System.Action _onClick;", emitted);
         Assert.Contains("public Button(global::System.Action onClick)", emitted);
         Assert.Contains("var __onClick = new global::AndroidX.Compose.ComposableLambda0(_onClick);", emitted);
@@ -2031,6 +2044,54 @@ public class FacadeGeneratorTests
         Assert.Empty(errors);
     }
 
+    [Fact]
+    public void Tier2_StateHolderBeforeFacadeDefaultPrimitive_EmitsValidOptionalParameters()
+    {
+        var code = $$"""
+            using global::AndroidX.Compose.Runtime;
+            using global::AndroidX.Compose.UI;
+            using AndroidX.Compose;
+            using System;
+
+            [assembly: ComposeDefaults("PickerDefault",
+                "!state", "modifier", "showModeToggle")]
+
+            {{TimePickerStateStubs}}
+
+            namespace AndroidX.Compose
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(Class="x/Picker", JvmName="Picker",
+                                   Signature="(Landroidx/compose/material3/TimePickerState;Landroidx/compose/ui/Modifier;ZLandroidx/compose/runtime/Composer;II)V",
+                                   Defaults=typeof(PickerDefault))]
+                    [ComposeFacade]
+                    public static partial void Picker(
+                        [StateHolder(Remember = nameof(RememberTimePickerState),
+                                     StateType = typeof(TimePickerState))]
+                        IntPtr state,
+                        IModifier? modifier,
+                        [FacadeDefault(true)] bool showModeToggle,
+                        int defaults,
+                        IComposer composer);
+
+                    public static IntPtr RememberTimePickerState(
+                        int initialHour, int initialMinute, bool is24Hour,
+                        IComposer composer) => default;
+                }
+            }
+            """;
+
+        var (output, diags, emitted) = Run(code, "Picker");
+
+        Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+        Assert.Contains(
+            "public static void Picker(global::AndroidX.Compose.Runtime.IComposer composer, global::AndroidX.Compose.TimePickerState? state = null, bool showModeToggle = true, global::AndroidX.Compose.Modifier? modifier = null)",
+            emitted);
+        Assert.Empty(output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error));
+    }
+
     // ─── Phase 4c — shared-state caching (StateHolder.SharedState) ────
 
     [Fact]
@@ -2432,8 +2493,9 @@ public class FacadeGeneratorTests
         Assert.Contains("public global::AndroidX.Compose.Sp? FontSize { get; set; }", emitted);
         // Bridge call passes property through (no ctor slot, no field).
         Assert.Contains("global::AndroidX.Compose.ComposeBridges.Text(_text, BuildModifier(), FontSize, composer);", emitted);
-        // Not a ctor parameter.
-        Assert.DoesNotContain("Sp? fontSize", emitted);
+        // Not a tree-facade ctor parameter; Tier 2 exposes it directly.
+        Assert.Contains("public Text(string text)", emitted);
+        Assert.Contains("global::AndroidX.Compose.Sp? fontSize = null", emitted);
 
         var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
         Assert.Empty(errors);
@@ -2911,10 +2973,12 @@ public class FacadeGeneratorTests
         Assert.Contains("public long? Color { get; set; }", emitted);
         // The bridge call passes the property names through.
         Assert.Contains("global::AndroidX.Compose.ComposeBridges.F(_text, BuildModifier(), SoftWrap, MaxLines, Color, composer);", emitted);
-        // Not surfaced as ctor parameters.
-        Assert.DoesNotContain("bool? softWrap", emitted);
-        Assert.DoesNotContain("int? maxLines", emitted);
-        Assert.DoesNotContain("long? color", emitted);
+        // Not surfaced as tree-facade ctor parameters; Tier 2 exposes
+        // each optional property directly.
+        Assert.Contains("public F(string text)", emitted);
+        Assert.Contains("bool? softWrap = null", emitted);
+        Assert.Contains("int? maxLines = null", emitted);
+        Assert.Contains("long? color = null", emitted);
 
         var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
         Assert.Empty(errors);
