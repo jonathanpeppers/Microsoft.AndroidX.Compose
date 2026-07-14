@@ -16,22 +16,29 @@ public class LazyListCancellationTestActivity : ComponentActivity
 
     internal static LazyListState State { get; private set; } = new();
 
+    internal static CoroutineScope? Scope { get; private set; }
+
     internal static void Reset()
     {
         Current = null;
         State = new LazyListState();
+        Scope = null;
     }
 
     protected override void OnCreate(Bundle? savedInstanceState)
     {
         base.OnCreate(savedInstanceState);
         var state = State;
-        this.SetContent(_ => new LazyColumn<int>(
-            Enumerable.Range(0, 10_000).ToList(),
-            static value => new Text($"Row {value:D5}"))
+        this.SetContent(c =>
         {
-            Modifier = Modifier.FillMaxSize(),
-            State = state,
+            Scope = c.RememberCoroutineScope();
+            return new LazyColumn<int>(
+                Enumerable.Range(0, 10_000).ToList(),
+                static value => new Text($"Row {value:D5}"))
+            {
+                Modifier = Modifier.FillMaxSize(),
+                State = state,
+            };
         });
         Current = this;
     }
@@ -40,6 +47,7 @@ public class LazyListCancellationTestActivity : ComponentActivity
     {
         if (ReferenceEquals(Current, this))
             Current = null;
+        Scope = null;
         base.OnDestroy();
     }
 }
