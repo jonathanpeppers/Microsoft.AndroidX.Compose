@@ -317,6 +317,13 @@ surfaces are modeled.
   equality.
 - **Scaffold:** needs a reusable padding-aware body slot that can expose the
   Kotlin `PaddingValues` argument or forward its borrowed handle into a node.
+- **MaterialTheme:** resolves dynamic/light/dark color schemes from
+  composition-scoped Android state before invoking its synchronous content
+  slot. App-specific wrappers such as Jetchat's theme remain blocked on this
+  root primitive.
+- **NavHost / NavDestination:** need a stable, remembered raw graph-builder
+  callback plus route registration and destination-argument forwarding; this
+  is a navigation DSL rather than a normal composable content slot.
 - **BottomSheetScaffold:** needs two required composable bodies plus
   parameterized remembered state and a stable veto callback in one shape.
 - **TextField / OutlinedTextField:** need constructor-driven dispatch across
