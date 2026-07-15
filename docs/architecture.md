@@ -411,6 +411,12 @@ Timings are directional only because this is an on-device Debug smoke benchmark
 rather than a warmed microbenchmark. Initial results also include lane-order-
 dependent JNI and class initialization.
 
+Direct `$changed` remapping is all-or-nothing. A bridge with more than ten
+Kotlin slots needs multiple changed-mask integers; while the generated bridge
+surface exposes only the first, direct helpers pass `0` (Uncertain) instead of
+forwarding a partial first group. This keeps Compose on its runtime comparison
+path during forced recomposition.
+
 ### Deferred — follow-up issues
 
 - **Tier 2 entry points outside the issue-listed holdouts.** Navigation DSLs

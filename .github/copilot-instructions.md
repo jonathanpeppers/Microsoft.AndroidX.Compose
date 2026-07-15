@@ -794,8 +794,12 @@ bridge declares the trailing `int _changed = 0`. Per-slot contribution table:
 | Value types / primitives / refs   | `DiffSlot<T>` via `EqualityComparer<T>.Default`       |
 
 Bit position: `bit = 1 + paramIndex * 3` over user params **excluding**
-composer/defaults/scope-receiver/_changed. Up to 10 user params per int —
-no current bridge exceeds that.
+composer/defaults/scope-receiver/_changed. Up to 10 user params fit per int.
+Bridges with more than 10 Kotlin slots (for example `Text`) require multiple
+`$changed` ints; until the bridge/helper contract models all groups, direct
+lowering must pass `0` (Uncertain) for the entire changed mask. Never forward
+only the first remapped group: forced recomposition with later groups missing
+can enter an invalid Compose path.
 
 The bridge call switches to **named arguments** (`composer: composer,
 _changed: __changed`) when the bridge has the trailing optional, so the

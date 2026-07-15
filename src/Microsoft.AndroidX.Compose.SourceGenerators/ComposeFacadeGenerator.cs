@@ -1841,7 +1841,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         sb.Append(", ").Append(Tier2FallbackOmittedArguments(
             requiredCtorSlots, optionalCtorSlots, requiredNamedSlots,
             contentSlots, optionalNamedSlots, optionalValueSlots,
-            hasModifier, themeColor, stateConfirmSlots, secondaryCtorInfo, route))
+            hasModifier, themeColor, stateConfirmSlots, route))
           .AppendLine(", 0);");
         sb.AppendLine("        }");
         sb.AppendLine();
@@ -1990,7 +1990,6 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         bool hasModifier,
         string? themeColor,
         IReadOnlyList<ConfirmStateChangeInfo> stateConfirmSlots,
-        SecondaryCtorInfo? secondaryCtorInfo,
         Tier2Route route)
     {
         int index = (route == Tier2Route.Secondary ? 1 : 0)
@@ -2541,6 +2540,10 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             ?? slots.Count(slot => slot.Kind != FacadeSlotKind.ScopeReceiver);
         if (kotlinParameterCount > 10)
         {
+            // The bridge declaration currently exposes only the first
+            // $changed int. Forwarding a partially remapped group while later
+            // groups remain zero is unsafe on forced recomposition; keep the
+            // whole call Uncertain until multi-group changed masks are modeled.
             sb.Append(indent).Append("int ").Append(variable).AppendLine(" = 0;");
             return;
         }
