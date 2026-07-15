@@ -288,18 +288,21 @@ Tier 2; one-shot screens can stay tree-style indefinitely.
 | CN5008 | `ref`, `out`, and `in` parameters are unsupported.              |
 | CN5009 | A composerless API was called outside `[Composable]` code or a `[ComposableContent]` callback. |
 
+### Optional arguments and Kotlin default masks
+
+The interceptor records omitted C#
+  arguments as a surfaced-parameter bitmap, preserving explicit `null`,
+  and `KotlinDefaultMaskPlan` maps that bitmap to route-specific generated
+  default enums (including `Split()` for wide masks). Direct bridge helpers
+  consume this contract before their route-neutral bridge call; adapter
+  facade calls cannot safely infer omission from nullable runtime values.
+
 ### Deferred — follow-up issues
 
 - **Tier 2 entry points for hand-written holdouts.** `Scaffold`, lazy
   collections, text fields, search, and other custom rendering shapes
   are not driven by `[ComposeFacade]` metadata and need dedicated
   generator modelling.
-- **Direct `$default` invocation.** The interceptor records omitted C#
-  arguments as a surfaced-parameter bitmap, preserving explicit `null`,
-  and `KotlinDefaultMaskPlan` maps that bitmap to route-specific generated
-  default enums (including `Split()` for wide masks). Direct bridge helpers
-  consume this contract when emitted by the direct-lowering work; adapter
-  facade calls cannot safely infer omission from nullable runtime values.
 - **`MovableContent` / `key {} ` / `Saver` / `Layout {}` / stability
   inference.** Explicit non-goals in the Tier 2 MVP — each gets its
   own follow-up issue.

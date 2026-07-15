@@ -1756,11 +1756,15 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         Tier2Route route,
         bool implicitComposer)
     {
+        string helperName = className + "_" + route
+            + (implicitComposer ? "_Implicit" : "_Explicit");
         sb.Append("        /// <summary>")
           .Append(implicitComposer ? "Implicit-composer Tier 2" : "Tier 2")
           .Append(" entry point for <see cref=\"global::AndroidX.Compose.")
           .Append(className).AppendLine("\"/>.</summary>");
         sb.AppendLine("        [global::AndroidX.Compose.Composable]");
+        sb.Append("        [global::AndroidX.Compose.ComposableDirectTarget(typeof(global::AndroidX.Compose.Composables), nameof(")
+          .Append(helperName).AppendLine("))]");
         sb.Append("        public static void ").Append(className).Append('(');
         bool hasParameter = false;
         if (!implicitComposer)
@@ -1768,7 +1772,76 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             sb.Append("global::AndroidX.Compose.Runtime.IComposer composer");
             hasParameter = true;
         }
+        AppendTier2UserParameters(sb, requiredCtorSlots, optionalCtorSlots,
+            requiredNamedSlots, contentSlots, optionalNamedSlots, optionalValueSlots,
+            hasModifier, themeColor, stateConfirmSlots, secondaryCtorInfo,
+            route, implicitComposer, ref hasParameter);
+        sb.AppendLine(")");
+        sb.AppendLine("        {");
+        sb.Append("            ").Append(helperName).Append('(')
+          .Append(implicitComposer
+              ? "global::AndroidX.Compose.ComposableContext.Current"
+              : "composer");
+        foreach (var name in Tier2SurfaceParameterNames(requiredCtorSlots,
+            optionalCtorSlots, requiredNamedSlots, contentSlots, optionalNamedSlots,
+            optionalValueSlots, hasModifier, themeColor, stateConfirmSlots,
+            secondaryCtorInfo, route))
+        {
+            sb.Append(", ").Append(EscapeIdent(name));
+        }
+        sb.AppendLine(", 0UL, 0);");
+        sb.AppendLine("        }");
+        sb.AppendLine();
+        sb.AppendLine("        [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]");
+        sb.AppendLine("        [global::System.Diagnostics.CodeAnalysis.SuppressMessage(\"ApiDesign\", \"RS0016\", Justification = \"Generated interceptor target, not public API.\")]");
+        sb.Append("        public static void ").Append(helperName)
+          .Append("(global::AndroidX.Compose.Runtime.IComposer __composer");
+        hasParameter = true;
+        AppendTier2UserParameters(sb, requiredCtorSlots, optionalCtorSlots,
+            requiredNamedSlots, contentSlots, optionalNamedSlots, optionalValueSlots,
+            hasModifier, themeColor, stateConfirmSlots, secondaryCtorInfo,
+            route, implicitComposer, ref hasParameter);
+        sb.AppendLine(", ulong __omittedArguments = 0, int __directChanged = 0)");
+        sb.AppendLine("        {");
+        foreach (var slot in requiredNamedSlots.Concat(contentSlots))
+        {
+            sb.Append("            global::System.ArgumentNullException.ThrowIfNull(")
+              .Append(EscapeIdent(slot.Kind is FacadeSlotKind.RequiredFunction2 or FacadeSlotKind.RequiredFunction3
+                  ? Tier2Identifier(PropertyName(slot))
+                  : slot.Param.Name))
+              .AppendLine(");");
+        }
+        if (route == Tier2Route.PrimaryPainter)
+        {
+            sb.AppendLine("            global::System.ArgumentNullException.ThrowIfNull(painter);");
+        }
+        var surfacedIndices = BuildTier2SurfaceIndices(requiredCtorSlots,
+            optionalCtorSlots, requiredNamedSlots, contentSlots, optionalNamedSlots,
+            optionalValueSlots, hasModifier, themeColor, stateConfirmSlots,
+            secondaryCtorInfo, route, slots);
+        EmitTier2DirectBody(sb, bridgeMethodName, scope, slots,
+            callerProvidesDefaults, callerProvidesChanged, defaults, themeColor,
+            primaryUserParams, branchInfo, indexedChildren, secondaryCtorInfo,
+            route, implicitComposer, surfacedIndices);
+        sb.AppendLine("        }");
+    }
 
+    static void AppendTier2UserParameters(
+        StringBuilder sb,
+        IReadOnlyList<FacadeSlot> requiredCtorSlots,
+        IReadOnlyList<FacadeSlot> optionalCtorSlots,
+        IReadOnlyList<FacadeSlot> requiredNamedSlots,
+        IReadOnlyList<FacadeSlot> contentSlots,
+        IReadOnlyList<FacadeSlot> optionalNamedSlots,
+        IReadOnlyList<FacadeSlot> optionalValueSlots,
+        bool hasModifier,
+        string? themeColor,
+        IReadOnlyList<ConfirmStateChangeInfo> stateConfirmSlots,
+        SecondaryCtorInfo? secondaryCtorInfo,
+        Tier2Route route,
+        bool implicitComposer,
+        ref bool hasParameter)
+    {
         if (route == Tier2Route.Secondary)
         {
             var secondary = secondaryCtorInfo
@@ -1817,30 +1890,88 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
               .Append(EscapeIdent(char.ToLowerInvariant(info.PropertyName[0]) + info.PropertyName.Substring(1)))
               .Append(" = null");
         }
-        sb.AppendLine(")");
-        sb.AppendLine("        {");
-        foreach (var slot in requiredNamedSlots.Concat(contentSlots))
+    }
+
+    static IReadOnlyList<string> Tier2SurfaceParameterNames(
+        IReadOnlyList<FacadeSlot> requiredCtorSlots,
+        IReadOnlyList<FacadeSlot> optionalCtorSlots,
+        IReadOnlyList<FacadeSlot> requiredNamedSlots,
+        IReadOnlyList<FacadeSlot> contentSlots,
+        IReadOnlyList<FacadeSlot> optionalNamedSlots,
+        IReadOnlyList<FacadeSlot> optionalValueSlots,
+        bool hasModifier,
+        string? themeColor,
+        IReadOnlyList<ConfirmStateChangeInfo> stateConfirmSlots,
+        SecondaryCtorInfo? secondaryCtorInfo,
+        Tier2Route route)
+    {
+        var names = new List<string>();
+        if (route == Tier2Route.Secondary)
         {
-            sb.Append("            global::System.ArgumentNullException.ThrowIfNull(")
-              .Append(EscapeIdent(slot.Kind is FacadeSlotKind.RequiredFunction2 or FacadeSlotKind.RequiredFunction3
-                  ? Tier2Identifier(PropertyName(slot))
-                  : slot.Param.Name))
-              .AppendLine(");");
+            names.Add((secondaryCtorInfo
+                ?? throw new InvalidOperationException("Secondary Tier 2 route requires metadata."))
+                .Discriminator.Name);
         }
-        if (route == Tier2Route.PrimaryPainter)
+        names.AddRange(requiredCtorSlots.Select(s =>
+            Tier2SurfaceCtorIdentifier(s, route)));
+        names.AddRange(requiredNamedSlots.Select(s => Tier2Identifier(PropertyName(s))));
+        names.AddRange(contentSlots.Select(s => s.Param.Name));
+        names.AddRange(optionalCtorSlots.Select(s =>
+            Tier2SurfaceCtorIdentifier(s, route)));
+        if (hasModifier) names.Add("modifier");
+        names.AddRange(optionalNamedSlots.Select(s => Tier2Identifier(PropertyName(s))));
+        names.AddRange(optionalValueSlots.Select(s => s.Param.Name));
+        if (themeColor is not null) names.Add("containerColor");
+        names.AddRange(stateConfirmSlots.Select(info =>
+            char.ToLowerInvariant(info.PropertyName[0]) + info.PropertyName.Substring(1)));
+        return names;
+    }
+
+    static string Tier2SurfaceCtorIdentifier(FacadeSlot slot, Tier2Route route) =>
+        slot.Kind == FacadeSlotKind.PainterResource && route == Tier2Route.PrimaryPainter
+            ? "painter"
+            : CtorIdentifier(slot);
+
+    static IReadOnlyDictionary<string, int> BuildTier2SurfaceIndices(
+        IReadOnlyList<FacadeSlot> requiredCtorSlots,
+        IReadOnlyList<FacadeSlot> optionalCtorSlots,
+        IReadOnlyList<FacadeSlot> requiredNamedSlots,
+        IReadOnlyList<FacadeSlot> contentSlots,
+        IReadOnlyList<FacadeSlot> optionalNamedSlots,
+        IReadOnlyList<FacadeSlot> optionalValueSlots,
+        bool hasModifier,
+        string? themeColor,
+        IReadOnlyList<ConfirmStateChangeInfo> stateConfirmSlots,
+        SecondaryCtorInfo? secondaryCtorInfo,
+        Tier2Route route,
+        IReadOnlyList<FacadeSlot> slots)
+    {
+        var indices = new Dictionary<string, int>(StringComparer.Ordinal);
+        int index = 0;
+        if (route == Tier2Route.Secondary)
         {
-            sb.AppendLine("            global::System.ArgumentNullException.ThrowIfNull(painter);");
+            indices.Add((secondaryCtorInfo
+                ?? throw new InvalidOperationException("Secondary Tier 2 route requires metadata."))
+                .Discriminator.Name, index++);
         }
-        sb.Append("            var __composer = ")
-          .Append(implicitComposer
-              ? "global::AndroidX.Compose.ComposableContext.Current"
-              : "composer")
-          .AppendLine(";");
-        EmitTier2DirectBody(sb, bridgeMethodName, scope, slots,
-            callerProvidesDefaults, callerProvidesChanged, defaults, themeColor,
-            primaryUserParams, branchInfo, indexedChildren, secondaryCtorInfo,
-            route, implicitComposer);
-        sb.AppendLine("        }");
+        foreach (var slot in requiredCtorSlots) indices[slot.Param.Name] = index++;
+        foreach (var slot in requiredNamedSlots) indices[slot.Param.Name] = index++;
+        foreach (var slot in contentSlots) indices[slot.Param.Name] = index++;
+        foreach (var slot in optionalCtorSlots) indices[slot.Param.Name] = index++;
+        if (hasModifier)
+        {
+            var modifier = slots.First(s => s.Kind == FacadeSlotKind.Modifier);
+            indices[modifier.Param.Name] = index++;
+        }
+        foreach (var slot in optionalNamedSlots) indices[slot.Param.Name] = index++;
+        foreach (var slot in optionalValueSlots) indices[slot.Param.Name] = index++;
+        if (themeColor is not null)
+        {
+            var color = slots.First(s => s.Kind == FacadeSlotKind.ThemeColor);
+            indices[color.Param.Name] = index++;
+        }
+        index += stateConfirmSlots.Count;
+        return indices;
     }
 
     static void AppendTier2Parameter(
@@ -1902,13 +2033,14 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         IReadOnlyList<IParameterSymbol> primaryUserParams,
         BranchInfo? branchInfo, bool indexedChildren,
         SecondaryCtorInfo? secondaryCtorInfo, Tier2Route route,
-        bool implicitComposer)
+        bool implicitComposer,
+        IReadOnlyDictionary<string, int> surfacedIndices)
     {
         if (route == Tier2Route.Secondary)
         {
             EmitTier2SecondaryBody(sb, slots, secondaryCtorInfo
                 ?? throw new InvalidOperationException("Secondary Tier 2 route requires metadata."),
-                scope, indexedChildren, themeColor, implicitComposer);
+                scope, indexedChildren, themeColor, implicitComposer, surfacedIndices);
             return;
         }
 
@@ -1984,18 +2116,22 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         {
             EmitTier2BranchedCall(sb, primaryMethodName, slots, primaryUserParams,
                 primaryDefaults ?? throw new InvalidOperationException("Branched facade requires primary defaults."),
-                branchInfo, callerProvidesChanged, implicitComposer, route);
+                branchInfo, callerProvidesChanged, implicitComposer, route, surfacedIndices);
             return;
         }
 
+        IReadOnlyList<string> defaultArguments = [];
         if (callerProvidesDefaults && primaryDefaults is { } defaults)
-            EmitTier2DefaultsMask(sb, "            ", defaults, slots);
+        {
+            defaultArguments = EmitTier2DefaultsMask(
+                sb, "            ", defaults, surfacedIndices);
+        }
         if (callerProvidesChanged)
             EmitTier2ChangedMask(sb, "            ", slots, primaryDefaults, route);
 
         var slotByName = slots.ToDictionary(s => s.Param.Name, StringComparer.Ordinal);
         EmitTier2BridgeCallByParams(sb, "            ", primaryMethodName,
-            primaryUserParams, slotByName, callerProvidesDefaults,
+            primaryUserParams, slotByName, defaultArguments,
             callerProvidesChanged, route);
     }
 
@@ -2185,47 +2321,17 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         _ = implicitComposer;
     }
 
-    static void EmitTier2DefaultsMask(StringBuilder sb, string indent,
-        DefaultsInfo defaults, IReadOnlyList<FacadeSlot> slots,
+    static IReadOnlyList<string> EmitTier2DefaultsMask(StringBuilder sb, string indent,
+        DefaultsInfo defaults, IReadOnlyDictionary<string, int> surfacedIndices,
         string variable = "__defaults")
     {
-        sb.Append(indent).Append("int ").Append(variable)
-          .Append(" = (int)global::AndroidX.Compose.").Append(defaults.EnumName).AppendLine(".All;");
-        foreach (var s in slots)
-        {
-            var member = MatchEnumMember(defaults, s);
-            if (member is null) continue;
-            switch (s.Kind)
-            {
-                case FacadeSlotKind.Modifier:
-                    sb.Append(indent).Append("if (__modifier is not null) ").Append(variable)
-                      .Append(" &= ~(int)global::AndroidX.Compose.").Append(defaults.EnumName)
-                      .Append('.').Append(member).AppendLine(";");
-                    break;
-                case FacadeSlotKind.NamedFunction2:
-                case FacadeSlotKind.NamedFunction3:
-                    sb.Append(indent).Append("if (__").Append(s.Param.Name).Append(" is not null) ")
-                      .Append(variable).Append(" &= ~(int)global::AndroidX.Compose.")
-                      .Append(defaults.EnumName).Append('.').Append(member).AppendLine(";");
-                    break;
-                case FacadeSlotKind.OptionalValue:
-                    sb.Append(indent).Append("if (").Append(EscapeIdent(s.Param.Name))
-                      .Append(" is not null) ").Append(variable)
-                      .Append(" &= ~(int)global::AndroidX.Compose.").Append(defaults.EnumName)
-                      .Append('.').Append(member).AppendLine(";");
-                    break;
-                case FacadeSlotKind.RequiredFunction2:
-                case FacadeSlotKind.RequiredFunction3:
-                case FacadeSlotKind.PainterResource:
-                case FacadeSlotKind.Primitive:
-                case FacadeSlotKind.ThemeColor:
-                case FacadeSlotKind.StateHolder:
-                    sb.Append(indent).Append(variable)
-                      .Append(" &= ~(int)global::AndroidX.Compose.").Append(defaults.EnumName)
-                      .Append('.').Append(member).AppendLine(";");
-                    break;
-            }
-        }
+        var bindings = surfacedIndices
+            .Where(pair => defaults.FindByKotlinName(pair.Key) is not null)
+            .Select(pair => new DefaultArgumentBinding(pair.Key, pair.Value))
+            .ToArray();
+        var plan = KotlinDefaultMaskPlan.Create(defaults, bindings);
+        plan.EmitInitialization(sb, indent, "__omittedArguments", variable);
+        return plan.ArgumentExpressions(variable);
     }
 
     static void EmitTier2ChangedMask(StringBuilder sb, string indent,
@@ -2293,7 +2399,8 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         IReadOnlyList<FacadeSlot> slots,
         IReadOnlyList<IParameterSymbol> primaryUserParams,
         DefaultsInfo primaryDefaults, BranchInfo branch,
-        bool callerProvidesChanged, bool implicitComposer, Tier2Route route)
+        bool callerProvidesChanged, bool implicitComposer, Tier2Route route,
+        IReadOnlyDictionary<string, int> surfacedIndices)
     {
         var slotByName = slots.ToDictionary(s => s.Param.Name, StringComparer.Ordinal);
         var branched = branch.BranchedSlot;
@@ -2313,7 +2420,8 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         else
             sb.Append(branchValue);
         sb.AppendLine(");");
-        EmitTier2DefaultsMask(sb, "                ", branch.AlternateDefaults, slots);
+        var alternateDefaultArguments = EmitTier2DefaultsMask(
+            sb, "                ", branch.AlternateDefaults, surfacedIndices);
         if (branch.AlternateProvidesChanged)
         {
             var altSlots = branch.AlternateUserParams
@@ -2323,12 +2431,13 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
                 branch.AlternateDefaults, route);
         }
         EmitTier2BridgeCallByParams(sb, "                ", branch.AlternateMethodName,
-            branch.AlternateUserParams, slotByName, callerProvidesDefaults: true,
+            branch.AlternateUserParams, slotByName, alternateDefaultArguments,
             branch.AlternateProvidesChanged, route);
         sb.AppendLine("            }");
         sb.AppendLine("            else");
         sb.AppendLine("            {");
-        EmitTier2DefaultsMask(sb, "                ", primaryDefaults, slots);
+        var primaryDefaultArguments = EmitTier2DefaultsMask(
+            sb, "                ", primaryDefaults, surfacedIndices);
         if (callerProvidesChanged)
         {
             var directSlots = primaryUserParams
@@ -2338,7 +2447,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
                 primaryDefaults, route);
         }
         EmitTier2BridgeCallByParams(sb, "                ", primaryMethodName,
-            primaryUserParams, slotByName, callerProvidesDefaults: true,
+            primaryUserParams, slotByName, primaryDefaultArguments,
             callerProvidesChanged, route);
         sb.AppendLine("            }");
     }
@@ -2346,7 +2455,8 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
     static void EmitTier2SecondaryBody(StringBuilder sb,
         IReadOnlyList<FacadeSlot> slots, SecondaryCtorInfo info,
         string? scope, bool indexedChildren, string? themeColor,
-        bool implicitComposer)
+        bool implicitComposer,
+        IReadOnlyDictionary<string, int> surfacedIndices)
     {
         bool hasChanged = info.SecondaryProvidesChanged;
         var secondaryNames = new HashSet<string>(
@@ -2400,13 +2510,8 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             sb.AppendLine("                ?? throw new global::System.InvalidOperationException(\"PainterResource returned no Painter peer.\");");
         }
 
-        EmitTier2DefaultsMask(sb, "            ", info.Defaults, secondarySlots);
-        var discBit = info.Defaults.FindByKotlinName(info.Discriminator.Name);
-        if (discBit is { EnumMember: { } member })
-        {
-            sb.Append("            __defaults &= ~(int)global::AndroidX.Compose.")
-              .Append(info.DefaultsEnumName).Append('.').Append(member).AppendLine(";");
-        }
+        var defaultArguments = EmitTier2DefaultsMask(
+            sb, "            ", info.Defaults, surfacedIndices);
 
         if (hasChanged)
         {
@@ -2425,14 +2530,14 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
 
         var slotByName = secondarySlots.ToDictionary(s => s.Param.Name, StringComparer.Ordinal);
         EmitTier2BridgeCallByParams(sb, "            ", info.Method.Name,
-            info.UserParams, slotByName, callerProvidesDefaults: true,
+            info.UserParams, slotByName, defaultArguments,
             hasChanged, Tier2Route.Secondary, info.Discriminator.Name);
     }
 
     static void EmitTier2BridgeCallByParams(StringBuilder sb, string indent,
         string methodName, IReadOnlyList<IParameterSymbol> userParams,
         IReadOnlyDictionary<string, FacadeSlot> slotByName,
-        bool callerProvidesDefaults, bool callerProvidesChanged,
+        IReadOnlyList<string> defaultArguments, bool callerProvidesChanged,
         Tier2Route route, string? discriminatorName = null)
     {
         sb.Append(indent).Append("global::AndroidX.Compose.ComposeBridges.")
@@ -2449,10 +2554,10 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             else
                 sb.Append("default");
         }
-        if (callerProvidesDefaults)
+        foreach (var defaultArgument in defaultArguments)
         {
             if (!first) sb.Append(", ");
-            sb.Append("__defaults");
+            sb.Append(defaultArgument);
             first = false;
         }
         if (!first) sb.Append(", ");
