@@ -168,11 +168,8 @@ the `Action` `SetContent` overload and use implicit `Remember`, `MutableStateOf`
 `ViewModel`, and lazy-list state APIs. The roots retain one
 `ComposableContext.Current` render escape hatch while `MaterialTheme`,
 `Scaffold`, navigation, lazy collections, and text fields remain tree-style.
-The Gallery's real-app benchmark therefore labels this branch's generated
-catalog path **adapter Tier 2**; the direct-lowered lane depends on
-[#302](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/302)
-and stable generated lambdas on
-[#304](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/304).
+The Gallery's real-app benchmark compares equivalent tree, adapter Tier 2,
+and direct-lowered Tier 2 lanes.
 See
 [docs/architecture.md → Tier 2](docs/architecture.md) for the emission shape,
 the sibling-skip proof demo, diagnostics (CN5001-CN5010), and remaining

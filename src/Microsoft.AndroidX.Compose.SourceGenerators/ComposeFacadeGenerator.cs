@@ -2461,8 +2461,9 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         string inputVariable,
         string variable = "__changed")
     {
-        sb.Append(indent).Append("int ").Append(variable).Append(" = ")
-          .Append(inputVariable).AppendLine(" & 0b1;");
+        sb.Append(indent).Append("int ").Append(variable)
+          .Append(" = __omittedArguments == 0 ? ")
+          .Append(inputVariable).AppendLine(" & 0b1 : 0;");
         int fallbackIndex = 0;
         foreach (var slot in slots)
         {
@@ -2912,7 +2913,13 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         bool hasModifier, bool hasPainter,
         string defaultsVar = "__defaults", string modifierVar = "__modifier")
     {
-        sb.Append(indent).Append("int ").Append(defaultsVar).Append(" = (int)global::AndroidX.Compose.").Append(d.EnumName).AppendLine(".All;");
+        sb.Append(indent).Append("int ").Append(defaultsVar).Append(" = ");
+        if (d.Slots.Count == 32)
+            sb.Append("unchecked(");
+        sb.Append("(int)global::AndroidX.Compose.").Append(d.EnumName).Append(".All");
+        if (d.Slots.Count == 32)
+            sb.Append(')');
+        sb.AppendLine(";");
 
         // For each slot the facade DEFINITELY supplies, clear its bit.
         // - Modifier: clear when modifier local != null.
@@ -2925,20 +2932,21 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         {
             string? bitMember = MatchEnumMember(d, s);
             if (bitMember is null) continue;
+            string bitExpression = DefaultsBitExpression(d, bitMember);
             switch (s.Kind)
             {
                 case FacadeSlotKind.Modifier:
-                    sb.Append(indent).Append("if (").Append(modifierVar).Append(" is not null) ").Append(defaultsVar).Append(" &= ~(int)global::AndroidX.Compose.")
-                      .Append(d.EnumName).Append('.').Append(bitMember).AppendLine(";");
+                    sb.Append(indent).Append("if (").Append(modifierVar).Append(" is not null) ").Append(defaultsVar)
+                      .Append(" &= ~").Append(bitExpression).AppendLine(";");
                     break;
                 case FacadeSlotKind.NamedFunction2:
                 case FacadeSlotKind.NamedFunction3:
-                    sb.Append(indent).Append("if (__").Append(s.Param.Name).Append(" is not null) ").Append(defaultsVar).Append(" &= ~(int)global::AndroidX.Compose.")
-                      .Append(d.EnumName).Append('.').Append(bitMember).AppendLine(";");
+                    sb.Append(indent).Append("if (__").Append(s.Param.Name).Append(" is not null) ").Append(defaultsVar)
+                      .Append(" &= ~").Append(bitExpression).AppendLine(";");
                     break;
                 case FacadeSlotKind.OptionalValue:
-                    sb.Append(indent).Append("if (").Append(PropertyName(s)).Append(" is not null) ").Append(defaultsVar).Append(" &= ~(int)global::AndroidX.Compose.")
-                      .Append(d.EnumName).Append('.').Append(bitMember).AppendLine(";");
+                    sb.Append(indent).Append("if (").Append(PropertyName(s)).Append(" is not null) ").Append(defaultsVar)
+                      .Append(" &= ~").Append(bitExpression).AppendLine(";");
                     break;
                 case FacadeSlotKind.RequiredFunction2:
                 case FacadeSlotKind.RequiredFunction3:
@@ -2946,11 +2954,20 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
                 case FacadeSlotKind.Primitive:
                 case FacadeSlotKind.ThemeColor:
                 case FacadeSlotKind.StateHolder:
-                    sb.Append(indent).Append(defaultsVar).Append(" &= ~(int)global::AndroidX.Compose.")
-                      .Append(d.EnumName).Append('.').Append(bitMember).AppendLine(";");
+                    sb.Append(indent).Append(defaultsVar).Append(" &= ~").Append(bitExpression).AppendLine(";");
                     break;
             }
         }
+    }
+
+    static string DefaultsBitExpression(DefaultsInfo defaults, string enumMember)
+    {
+        string expression = "global::AndroidX.Compose." + defaults.EnumName + "." + enumMember;
+        bool requiresUnchecked = defaults.Slots.Any(
+            slot => slot.Bit == 31 && string.Equals(slot.EnumMember, enumMember, StringComparison.Ordinal));
+        return requiresUnchecked
+            ? "unchecked((int)" + expression + ")"
+            : "(int)" + expression;
     }
 
     /// <summary>
@@ -3370,8 +3387,8 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         var discBit = info.Defaults.FindByKotlinName(discName);
         if (discBit is { } discSlot && discSlot.EnumMember is { } discBitMember)
         {
-            sb.Append("                __secDefaults &= ~(int)global::AndroidX.Compose.")
-              .Append(info.DefaultsEnumName).Append('.').Append(discBitMember).AppendLine(";");
+            sb.Append("                __secDefaults &= ~")
+              .Append(DefaultsBitExpression(info.Defaults, discBitMember)).AppendLine(";");
         }
 
         // Build the secondary bridge call. The discriminator slot

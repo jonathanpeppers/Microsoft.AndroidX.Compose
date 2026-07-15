@@ -498,7 +498,7 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
         }
 
         int defaultSlotCount = hasDefaultSlot
-            ? (kotlinNames.Count >= 32 ? 2 : 1)
+            ? (kotlinNames.Count > 32 ? 2 : 1)
             : 0;
         var changedSlots = ChangedSlotCount(sigParams, defaultSlotCount, hasComposerSlot);
         int receiverSlotCount = receiverParam is null ? 0 : 1;
@@ -523,7 +523,7 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
         {
             continuationSlotIdx = isInstanceSuspend
                 ? sigParams.Count - 1
-                : sigParams.Count - 3;
+                : sigParams.Count - defaultSlotCount - 2;
             if (continuationSlotIdx < 0 ||
                 sigParams[continuationSlotIdx].Code != 'L' ||
                 sigParams[continuationSlotIdx].ClassName != "kotlin/coroutines/Continuation" ||
@@ -532,7 +532,7 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
                 return SuspendError(loc, method.Name,
                     isInstanceSuspend
                         ? "JNI signature must end with 'Lkotlin/coroutines/Continuation;)Ljava/lang/Object;' for an instance suspend bridge"
-                        : "JNI signature must place 'Lkotlin/coroutines/Continuation;' immediately before the trailing 'IL<Object>' $default+marker pair");
+                        : "JNI signature must place 'Lkotlin/coroutines/Continuation;' immediately before the trailing $default mask(s) and 'L<Object>' marker");
             }
         }
 
@@ -919,10 +919,16 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
         int defaultSlotCount)
     {
         string variable = defaultSlotCount == 1 ? "defaults" : "__defaults";
+        bool longBackedEnum = kotlinNames.Count > 31;
         if (defaultSlotCount == 1)
         {
-            sb.Append("        int defaults = (int)global::AndroidX.Compose.")
-              .Append(enumName).AppendLine(".All;");
+            sb.Append("        int defaults = ");
+            if (longBackedEnum)
+                sb.Append("unchecked(");
+            sb.Append("(int)global::AndroidX.Compose.").Append(enumName).Append(".All");
+            if (longBackedEnum)
+                sb.Append(')');
+            sb.AppendLine(";");
         }
         else
         {
@@ -949,9 +955,16 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
                 sb.Append("if (").Append(EscapeIdent(p.Name)).Append(" is not null) ");
             sb.Append(variable).Append(" &= ~");
             if (defaultSlotCount == 1)
+            {
+                if (longBackedEnum)
+                    sb.Append("unchecked(");
                 sb.Append("(int)");
+            }
             sb.Append("global::AndroidX.Compose.").Append(enumName).Append('.')
-              .Append(member).AppendLine(";");
+              .Append(member);
+            if (defaultSlotCount == 1 && longBackedEnum)
+                sb.Append(')');
+            sb.AppendLine(";");
         }
 
         if (defaultSlotCount > 1)

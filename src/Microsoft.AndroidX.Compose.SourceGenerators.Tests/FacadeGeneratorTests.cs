@@ -437,9 +437,9 @@ public class FacadeGeneratorTests
     [Fact]
     public void DirectDefaultsMask_WideAutoMaskUsesExplicitTwoMaskEntry()
     {
-        var names = string.Join(", ", Enumerable.Range(0, 32).Select(i => $"\"slot{i}\""));
-        var parameters = string.Join(", ", Enumerable.Range(0, 32).Select(i => $"int? slot{i}"));
-        var signature = new string('I', 32)
+        var names = string.Join(", ", Enumerable.Range(0, 33).Select(i => $"\"slot{i}\""));
+        var parameters = string.Join(", ", Enumerable.Range(0, 33).Select(i => $"int? slot{i}"));
+        var signature = new string('I', 33)
             + "Landroidx/compose/runtime/Composer;"
             + new string('I', 6);
         var code = $$"""
@@ -467,6 +467,7 @@ public class FacadeGeneratorTests
         Assert.NotNull(emitted);
         Assert.Contains("if ((__omittedArguments & 0x1UL) == 0) __defaults &= ~global::AndroidX.Compose.WideDefault.Slot0;", emitted);
         Assert.Contains("if ((__omittedArguments & 0x80000000UL) == 0) __defaults &= ~global::AndroidX.Compose.WideDefault.Slot31;", emitted);
+        Assert.Contains("if ((__omittedArguments & 0x100000000UL) == 0) __defaults &= ~global::AndroidX.Compose.WideDefault.Slot32;", emitted);
         Assert.Contains("var (__defaultsMask0, __defaultsMask1) = __defaults.Split();", emitted);
         Assert.Contains("global::AndroidX.Compose.ComposeBridges.WideExplicitDefaults(", emitted);
         Assert.Contains("__defaultsMask0, __defaultsMask1, __composer);", emitted);
@@ -1874,6 +1875,41 @@ public class FacadeGeneratorTests
         Assert.True(
             emitted!.Contains("WideDefault.Modifier"),
             "Expected emitted facade to reference WideDefault.Modifier (bit 31 slot). Emitted:\n" + emitted);
+    }
+
+    [Fact]
+    public void WrapperFacade_ThirtyTwoSlots_UsesUncheckedSingleMask()
+    {
+        var names = string.Join(", ", Enumerable.Range(0, 32).Select(i => $"\"slot{i}\""));
+        var parameters = string.Join(", ", Enumerable.Range(0, 32).Select(i => $"int slot{i}"));
+        var code = $$"""
+            using global::AndroidX.Compose.Runtime;
+            using AndroidX.Compose;
+
+            [assembly: ComposeDefaults("ThirtyTwoDefault", {{names}})]
+
+            namespace AndroidX.Compose
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeFacade(Defaults = typeof(ThirtyTwoDefault))]
+                    public static partial void ThirtyTwo(
+                        {{parameters}}, int defaults, IComposer composer);
+
+                    public static partial void ThirtyTwo(
+                        {{parameters}}, int defaults, IComposer composer) { }
+                }
+            }
+            """;
+
+        var (output, diags, emitted) = Run(code, "ThirtyTwo");
+
+        Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+        Assert.Contains(
+            "int __defaults = unchecked((int)global::AndroidX.Compose.ThirtyTwoDefault.All);",
+            emitted);
+        Assert.Empty(output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error));
     }
 
     // ─── Phase 4 — [StateHolder] state-holder facades ─────────────────
@@ -4431,6 +4467,7 @@ public class FacadeGeneratorTests
         Assert.Contains("__changed |= composer.DiffSlot(_enabled, global::AndroidX.Compose.ComposeExtensions.DiffSlotShift(2));", emitted);
         Assert.Contains("__changed |= (int)global::AndroidX.Compose.ChangedBits.Static << global::AndroidX.Compose.ComposeExtensions.DiffSlotShift(3);", emitted);
         Assert.Contains("__changed |= __composer.DiffSlot(__modifierKey, 4);", emitted);
+        Assert.Contains("int __changed = __omittedArguments == 0 ? __directChanged & 0b1 : 0;", emitted);
         Assert.Contains("__changed |= ((__directChanged >> 4) & 0b111) << 10;", emitted);
 
         var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();

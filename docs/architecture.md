@@ -371,7 +371,10 @@ The interceptor records omitted C#
   its precomputed mask, so explicit `null` clears the Kotlin bit while an
   omitted argument leaves it set. Wide bridges take the generated
   `Split()` pair directly. No facade or adapter fallback participates in
-  this path.
+  this path. When any C# argument is omitted, the direct helper clears the
+  restart force bit before entering Kotlin while retaining remapped per-slot
+  changed bits. Kotlin can then recompute composition-scoped defaults instead
+  of assuming its own restart lambda captured their resolved values.
 
 ### Real-app migration benchmark
 
@@ -382,28 +385,25 @@ migrated the Jetchat, JetNews, and Reply activity roots to composerless
 `ComposableContext.Current` tree-render escape hatch while the nested screen
 shapes remain blocked on [#301](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/301).
 
-`Tier2RealAppBenchmarkDemo` measures equivalent Reply-style cards on a Pixel 10
-Debug build. Eight fresh-process runs randomized which lane executed first so
-shared facade/JNI initialization did not consistently favor either lane. Each
-run forced ten recompositions:
+`Tier2RealAppBenchmarkDemo` measures equivalent Reply-style cards through
+three paths: direct tree construction, a Tier 2 interceptor whose body builds
+the legacy tree adapter, and a generated catalog entry point lowered directly
+to its Compose bridge. Each run forces ten recompositions and reports initial
+and latest recomposition allocations and elapsed time for every lane.
 
-- Adapter Tier 2 cold initial composition (five adapter-first runs):
-  **19,608 B**; median **18.88 ms**.
-- Tree cold initial composition (three tree-first runs):
-  **4,200 B**; median **23.47 ms**.
-- Adapter Tier 2 recomposition skip (all eight runs):
-  **920 B**; median **3.46 ms**.
-- Tree recomposition (all eight runs):
-  **2,184 B**; median **11.08 ms**.
-- Adapter body executions: **2**; tree body executions: **12**.
+One Pixel 10 / Android 16 Debug smoke run, in tree → adapter → direct order,
+reported:
 
-Allocations and execution counts were stable within each lane order. Timings
-are directional only because this is an on-device Debug smoke benchmark rather
-than a warmed microbenchmark. The third direct-lowered lane is intentionally
-absent until [#302](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/302)
-removes generated facade allocation and
-[#304](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/304)
-provides stable generated lambda adapters.
+- Tree: **4,200 B / 6.76 ms** initial; **2,184 B / 12.90 ms** recomposition;
+  **12** body executions.
+- Adapter Tier 2: **6,728 B / 8.84 ms** initial;
+  **920 B / 1.88 ms** recomposition; **2** body executions.
+- Direct-lowered Tier 2: **16,720 B / 11.44 ms** initial;
+  **928 B / 2.38 ms** recomposition; **2** content executions.
+
+Timings are directional only because this is an on-device Debug smoke benchmark
+rather than a warmed microbenchmark. Initial results also include lane-order-
+dependent JNI and class initialization.
 
 ### Deferred — follow-up issues
 

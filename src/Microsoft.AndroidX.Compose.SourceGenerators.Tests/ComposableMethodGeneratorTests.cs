@@ -452,6 +452,45 @@ public class ComposableMethodGeneratorTests
     }
 
     [Fact]
+    public void DirectTarget_AllTrailingOptionalArguments_SetOmittedBits()
+    {
+        var (output, diags, emitted) = Run("""
+            namespace App
+            {
+                public static class Direct
+                {
+                    public static void Widget(
+                        AndroidX.Compose.Runtime.IComposer composer,
+                        string required,
+                        int p1, int p2, int p3, int p4, int p5,
+                        int p6, int p7, int p8, int p9, int p10,
+                        int p11, int p12, int p13, int p14, int p15,
+                        ulong omittedArguments,
+                        int changed) { }
+                }
+
+                public static class Screens
+                {
+                    [AndroidX.Compose.Composable]
+                    [AndroidX.Compose.ComposableDirectTarget(typeof(Direct), nameof(Direct.Widget))]
+                    public static void Widget(
+                        string required,
+                        int p1 = 0, int p2 = 0, int p3 = 0, int p4 = 0, int p5 = 0,
+                        int p6 = 0, int p7 = 0, int p8 = 0, int p9 = 0, int p10 = 0,
+                        int p11 = 0, int p12 = 0, int p13 = 0, int p14 = 0, int p15 = 0) { }
+
+                    public static void CallSite() => Widget("required");
+                }
+            }
+            """);
+
+        Assert.Empty(diags);
+        Assert.NotNull(emitted);
+        Assert.Contains("0xFFFEUL, __dirty", emitted);
+        AssertNoCompileErrors(output);
+    }
+
+    [Fact]
     public void DirectTarget_NamedSlotOmission_UsesCatalogParameterOrder()
     {
         var (output, diags, emitted) = Run("""

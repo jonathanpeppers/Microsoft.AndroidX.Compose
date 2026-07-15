@@ -249,12 +249,25 @@ public sealed class ComposableMethodGenerator : IIncrementalGenerator
         bool hasExplicitComposer = target.Parameters.Length > 0
             && IsComposer(target.Parameters[0].Type);
         int composerOffset = hasExplicitComposer ? 1 : 0;
-        ulong omitted = 0;
+        var suppliedParameters = new System.Collections.Generic.HashSet<int>();
         foreach (var argument in operation.Arguments)
         {
             if (argument.ArgumentKind != ArgumentKind.DefaultValue
-                || argument.Parameter is not { } parameter)
+                && argument.Parameter is { } parameter)
+            {
+                suppliedParameters.Add(parameter.Ordinal);
+            }
+        }
+
+        ulong omitted = 0;
+        foreach (var parameter in target.Parameters)
+        {
+            if (parameter.Ordinal < composerOffset
+                || !parameter.HasExplicitDefaultValue
+                || suppliedParameters.Contains(parameter.Ordinal))
+            {
                 continue;
+            }
             int userIndex = parameter.Ordinal - composerOffset;
             if ((uint)userIndex < 64)
                 omitted |= 1UL << userIndex;

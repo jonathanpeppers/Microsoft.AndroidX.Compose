@@ -19,7 +19,7 @@ internal sealed class KotlinDefaultMaskPlan
         this.bindings = bindings;
     }
 
-    public bool IsWide => defaults.Slots.Count > 31;
+    public bool IsWide => defaults.Slots.Count > 32;
 
     public static KotlinDefaultMaskPlan Create(
         DefaultsInfo defaults,
@@ -96,5 +96,7 @@ internal sealed class KotlinDefaultMaskPlan
     public IReadOnlyList<string> ArgumentExpressions(string maskVariable) =>
         IsWide
             ? [maskVariable + "Mask0", maskVariable + "Mask1"]
-            : ["(int)" + maskVariable];
+            : [defaults.Slots.Count == 32
+                ? "unchecked((int)" + maskVariable + ")"
+                : "(int)" + maskVariable];
 }

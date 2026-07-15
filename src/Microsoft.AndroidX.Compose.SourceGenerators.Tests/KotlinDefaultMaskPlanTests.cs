@@ -129,6 +129,24 @@ public class KotlinDefaultMaskPlanTests
     }
 
     [Fact]
+    public void ThirtyTwoSlots_UsesSingleJvmMask()
+    {
+        var slots = new List<DefaultsSlot>();
+        for (int i = 0; i < 32; i++)
+            slots.Add(new DefaultsSlot("slot" + i, i, "Slot" + i));
+        var plan = CreatePlan(
+            "ThirtyTwoDefault",
+            slots,
+            [new DefaultArgumentBinding("slot31", 31)]);
+
+        var emitted = Emit(plan);
+
+        Assert.False(plan.IsWide);
+        Assert.DoesNotContain(".Split()", emitted);
+        Assert.Equal(["unchecked((int)__defaults)"], plan.ArgumentExpressions("__defaults"));
+    }
+
+    [Fact]
     public void InvalidBindings_AreRejected()
     {
         var defaults = new DefaultsInfo(
