@@ -1187,8 +1187,11 @@ behaviour.**
   interceptor decides the method must execute.
 - Tier 2 modelling for hand-written facade holdouts (`Scaffold`, lazy
   collections, text fields, search, and other custom shapes).
-- `$default` parameter injection — lower C# default-parameter syntax
-  into Kotlin-style `$default` bitmask.
+- Direct `$default` invocation — call sites already capture omitted C#
+  arguments as a surfaced-parameter bitmap (explicit `null` is not omitted),
+  and `KotlinDefaultMaskPlan` emits route-specific generated enum masks plus
+  `Split()` for wide masks. The direct-lowering helper must consume this
+  contract; do not re-infer omission from nullable runtime values.
 - Analyzer for "non-`[Composable]` calls `[Composable]`" — compile-
   time enforcement of the colour contract.
 - Lambda hoisting via `RememberAction` / `Wrap2` / `Wrap3` inside the

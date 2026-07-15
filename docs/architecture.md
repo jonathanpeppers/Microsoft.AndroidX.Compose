@@ -296,10 +296,12 @@ Tier 2; one-shot screens can stay tree-style indefinitely.
   collections, text fields, search, and other custom rendering shapes
   are not driven by `[ComposeFacade]` metadata and need dedicated
   generator modelling.
-- **`$default` parameter injection.** C# already supports default
-  parameter values syntactically; the wrapper currently treats every
-  declared parameter as required. A future pass will lower C# default
-  values into the same `$default` bitmask Kotlin uses.
+- **Direct `$default` invocation.** The interceptor records omitted C#
+  arguments as a surfaced-parameter bitmap, preserving explicit `null`,
+  and `KotlinDefaultMaskPlan` maps that bitmap to route-specific generated
+  default enums (including `Split()` for wide masks). Direct bridge helpers
+  consume this contract when emitted by the direct-lowering work; adapter
+  facade calls cannot safely infer omission from nullable runtime values.
 - **`MovableContent` / `key {} ` / `Saver` / `Layout {}` / stability
   inference.** Explicit non-goals in the Tier 2 MVP — each gets its
   own follow-up issue.

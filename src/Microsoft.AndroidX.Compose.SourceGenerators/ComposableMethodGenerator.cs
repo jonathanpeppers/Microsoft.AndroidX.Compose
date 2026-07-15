@@ -258,7 +258,8 @@ public sealed class ComposableMethodGenerator : IIncrementalGenerator
         ulong omitted = 0;
         foreach (var argument in operation.Arguments)
         {
-            if (!argument.IsImplicit || argument.Parameter is not { } parameter)
+            if (argument.ArgumentKind != ArgumentKind.DefaultValue
+                || argument.Parameter is not { } parameter)
                 continue;
             int userIndex = parameter.Ordinal - composerOffset;
             if ((uint)userIndex < 64)

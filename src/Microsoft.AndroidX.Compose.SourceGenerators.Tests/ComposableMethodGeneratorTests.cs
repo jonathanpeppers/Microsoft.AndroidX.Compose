@@ -354,8 +354,8 @@ public class ComposableMethodGeneratorTests
                 {
                     public static void Widget(
                         AndroidX.Compose.Runtime.IComposer composer,
-                        string required,
-                        {{parameterType}} optional,
+                        string label,
+                        {{parameterType}} setting,
                         ulong omittedArguments,
                         int changed) { }
                 }
@@ -364,18 +364,21 @@ public class ComposableMethodGeneratorTests
                 {
                     [AndroidX.Compose.Composable]
                     [AndroidX.Compose.ComposableDirectTarget(typeof(Direct), nameof(Direct.Widget))]
-                    public static void Widget(string required, {{parameterType}} optional = {{defaultValue}}) { }
+                    public static void Widget(string label, {{parameterType}} setting = {{defaultValue}}) { }
 
-                    public static void CallSite() => Widget("required");
+                    public static void CallSite() => Widget("label");
                 }
             }
             """);
 
         Assert.Empty(diags);
         Assert.NotNull(emitted);
-        Assert.Contains(
-            "global::App.Direct.Widget(__c, required, optional, 0x2UL, __changed)",
-            emitted);
+        var directCall = System.Text.RegularExpressions.Regex.Match(
+            emitted,
+            @"global::App\.Direct\.Widget\([^\r\n]+").Value;
+        Assert.Equal(
+            "global::App.Direct.Widget(__c, label, setting, 0x2UL, __changed);",
+            directCall);
         AssertNoCompileErrors(output);
     }
 
