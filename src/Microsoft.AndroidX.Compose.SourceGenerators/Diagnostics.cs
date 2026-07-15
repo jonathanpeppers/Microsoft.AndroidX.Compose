@@ -286,8 +286,8 @@ internal static class Diagnostics
 
     public static readonly DiagnosticDescriptor ComposableMissingComposer = new(
         id: "CN5003",
-        title: "[Composable] method must take IComposer as its first parameter",
-        messageFormat: "Method '{0}' carries [Composable] but its first parameter is not 'AndroidX.Compose.Runtime.IComposer' — Tier 2 threads the composer explicitly through every composable call",
+        title: "[Composable] may declare at most one IComposer parameter, first",
+        messageFormat: "Method '{0}' carries [Composable] but does not declare exactly zero composers or one first-parameter 'AndroidX.Compose.Runtime.IComposer' — omit all composer parameters for implicit threading, or declare exactly one as the first parameter",
         category: "AndroidX.Compose",
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);
@@ -311,7 +311,7 @@ internal static class Diagnostics
     public static readonly DiagnosticDescriptor ComposableExtensionUnsupported = new(
         id: "CN5006",
         title: "[Composable] extension methods are not supported",
-        messageFormat: "Method '{0}' carries [Composable] but is an extension method — declare a regular static method with IComposer as its first parameter",
+        messageFormat: "Method '{0}' carries [Composable] but is an extension method — declare a regular static method instead",
         category: "AndroidX.Compose",
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);
@@ -328,6 +328,14 @@ internal static class Diagnostics
         id: "CN5008",
         title: "[Composable] by-reference parameters are not supported",
         messageFormat: "Method '{0}' carries [Composable] but parameter '{1}' uses '{2}' — Tier 2 currently supports only by-value parameters",
+        category: "AndroidX.Compose",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
+
+    public static readonly DiagnosticDescriptor ImplicitComposableOutsideScope = new(
+        id: "CN5009",
+        title: "Implicit composable call requires a composable scope",
+        messageFormat: "Implicit composable API '{0}' is called outside a [Composable] method or [ComposableContent] callback",
         category: "AndroidX.Compose",
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);

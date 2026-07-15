@@ -57,6 +57,17 @@ public class ComposableMethodGeneratorTests
                 public ComposableLambda2(System.Action<AndroidX.Compose.Runtime.IComposer, int> body) { }
             }
 
+            public static class ComposableContext
+            {
+                public static AndroidX.Compose.Runtime.IComposer Current => throw new System.NotImplementedException();
+                public static Scope Enter(AndroidX.Compose.Runtime.IComposer composer) => default;
+
+                public readonly struct Scope : System.IDisposable
+                {
+                    public void Dispose() { }
+                }
+            }
+
             public static class ComposeExtensions
             {
                 public static int DiffSlotShift(int paramIndex) => 1 + paramIndex * 3;
@@ -128,6 +139,84 @@ public class ComposableMethodGeneratorTests
         Assert.Contains("__force | 0b1", emitted);
         // Wrapper invokes the original method by fully-qualified name.
         Assert.Contains("global::App.Screens.Splash(__c)", emitted);
+        AssertNoCompileErrors(output);
+    }
+
+    [Fact]
+    public void ImplicitComposer_EmitsAmbientRestartWrapper()
+    {
+        var (output, diags, emitted) = Run("""
+            namespace App
+            {
+                public static class Screens
+                {
+                    [AndroidX.Compose.Composable]
+                    public static void Greeting(string name) { }
+
+                    public static void CallSite() => Greeting("world");
+                }
+            }
+            """);
+
+        Assert.Empty(diags);
+        Assert.NotNull(emitted);
+        Assert.Contains(
+            "_Core(global::AndroidX.Compose.ComposableContext.Current, name, 0)",
+            emitted);
+        Assert.Contains(
+            "using var __composerScope = global::AndroidX.Compose.ComposableContext.Enter(__c)",
+            emitted);
+        Assert.Contains("global::App.Screens.Greeting(name)", emitted);
+        Assert.Contains("_Core(__c2, name, __force | 0b1)", emitted);
+        AssertNoCompileErrors(output);
+    }
+
+    [Fact]
+    public void ImplicitComposer_NoParameters_EmitsValidCoreSignature()
+    {
+        var (output, diags, emitted) = Run("""
+            namespace App
+            {
+                public static class Screens
+                {
+                    [AndroidX.Compose.Composable]
+                    public static void Splash() { }
+
+                    public static void CallSite() => Splash();
+                }
+            }
+            """);
+
+        Assert.Empty(diags);
+        Assert.NotNull(emitted);
+        Assert.Contains(
+            "global::AndroidX.Compose.Runtime.IComposer __composer, int __changed",
+            emitted);
+        Assert.Contains("global::App.Screens.Splash()", emitted);
+        AssertNoCompileErrors(output);
+    }
+
+    [Fact]
+    public void KeywordParameter_IsEscapedThroughoutInterceptor()
+    {
+        var (output, diags, emitted) = Run("""
+            namespace App
+            {
+                public static class Screens
+                {
+                    [AndroidX.Compose.Composable]
+                    public static void Checkbox(bool @checked) { }
+
+                    public static void CallSite() => Checkbox(true);
+                }
+            }
+            """);
+
+        Assert.Empty(diags);
+        Assert.NotNull(emitted);
+        Assert.Contains("bool @checked", emitted);
+        Assert.Contains("Checkbox(@checked)", emitted);
+        Assert.Contains("DiffSlot<bool>(@checked, 1)", emitted);
         AssertNoCompileErrors(output);
     }
 
@@ -284,6 +373,25 @@ public class ComposableMethodGeneratorTests
                 {
                     [AndroidX.Compose.Composable]
                     public static void Foo(int x, AndroidX.Compose.Runtime.IComposer composer) { }
+                }
+            }
+            """);
+
+        Assert.Contains(diags, d => d.Id == "CN5003");
+    }
+
+    [Fact]
+    public void MultipleComposers_ReportCN5003()
+    {
+        var (_, diags, _) = Run("""
+            namespace App
+            {
+                public static class Screens
+                {
+                    [AndroidX.Compose.Composable]
+                    public static void Foo(
+                        AndroidX.Compose.Runtime.IComposer first,
+                        AndroidX.Compose.Runtime.IComposer second) { }
                 }
             }
             """);

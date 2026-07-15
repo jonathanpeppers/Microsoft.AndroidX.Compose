@@ -28,7 +28,7 @@ public static class CompositionLocal
     /// <summary>
     /// Create a <i>dynamic</i> composition local backed by
     /// <c>structuralEqualityPolicy</c>. Only the composables that
-    /// actually read <see cref="CompositionLocal{T}.Current"/> are
+    /// actually read <see cref="CompositionLocal{T}.Current(IComposer)"/> are
     /// invalidated when the provided value changes (by
     /// <see cref="object.Equals(object?)"/>) — the rest of the
     /// provider's subtree is skipped.
@@ -106,6 +106,11 @@ public sealed class CompositionLocal<T>
         ArgumentNullException.ThrowIfNull(composer);
         return FromJava(_peer.GetCurrent(composer, 0));
     }
+
+    /// <summary>
+    /// Read the local's value from the active implicit composition.
+    /// </summary>
+    public T Current() => Current(ComposableContext.Current);
 
     /// <summary>
     /// Pair this local with <paramref name="value"/> for installation

@@ -32,7 +32,7 @@ public static partial class ComposeExtensions
     /// </summary>
     public static void SetContent(
         this ComponentActivity activity,
-        Func<IComposer, ComposableNode> content)
+        [ComposableContent] Func<IComposer, ComposableNode> content)
     {
         ArgumentNullException.ThrowIfNull(activity);
         ArgumentNullException.ThrowIfNull(content);
@@ -43,13 +43,28 @@ public static partial class ComposeExtensions
     }
 
     /// <summary>
+    /// Sets the activity's content to a tree built from the implicit composition.
+    /// </summary>
+    public static void SetContent(
+        this ComponentActivity activity,
+        [ComposableContent] Func<ComposableNode> content)
+    {
+        ArgumentNullException.ThrowIfNull(activity);
+        ArgumentNullException.ThrowIfNull(content);
+        var view = new ComposeView(activity);
+        view.SetContent(content);
+        activity.SetContentView(view);
+        Log.Debug(TAG, "ComponentActivity implicit tree content set");
+    }
+
+    /// <summary>
     /// Sets the activity's content view to a directly composer-threaded
     /// Tier 2 composition. Use this overload when the root is a
     /// <see cref="ComposableAttribute"/> static method.
     /// </summary>
     public static void SetContent(
         this ComponentActivity activity,
-        Action<IComposer> content)
+        [ComposableContent] Action<IComposer> content)
     {
         ArgumentNullException.ThrowIfNull(activity);
         ArgumentNullException.ThrowIfNull(content);
@@ -57,6 +72,21 @@ public static partial class ComposeExtensions
         view.SetContent(content);
         activity.SetContentView(view);
         Log.Debug(TAG, "ComponentActivity Tier 2 content set");
+    }
+
+    /// <summary>
+    /// Sets the activity's content to an implicit-composer Tier 2 composition.
+    /// </summary>
+    public static void SetContent(
+        this ComponentActivity activity,
+        [ComposableContent] Action content)
+    {
+        ArgumentNullException.ThrowIfNull(activity);
+        ArgumentNullException.ThrowIfNull(content);
+        var view = new ComposeView(activity);
+        view.SetContent(content);
+        activity.SetContentView(view);
+        Log.Debug(TAG, "ComponentActivity implicit Tier 2 content set");
     }
 
     /// <summary>
@@ -69,14 +99,38 @@ public static partial class ComposeExtensions
     /// </summary>
     public static void SetContent(
         this ComposeView view,
-        Func<IComposer, ComposableNode> content)
+        [ComposableContent] Func<IComposer, ComposableNode> content)
     {
         ArgumentNullException.ThrowIfNull(view);
         ArgumentNullException.ThrowIfNull(content);
         view.SetContent(ComposableLambdaKt.ComposableLambdaInstance(
             key:     -1,
             tracked: false,
-            block:   new ComposableLambda2(composer => content(composer).Render(composer))));
+            block:   new ComposableLambda2(composer =>
+            {
+                using var scope = ComposableContext.Enter(composer);
+                content(composer).Render(composer);
+            })));
+    }
+
+    /// <summary>
+    /// Installs a tree built from the implicit composition as this
+    /// <see cref="ComposeView"/>'s content.
+    /// </summary>
+    public static void SetContent(
+        this ComposeView view,
+        [ComposableContent] Func<ComposableNode> content)
+    {
+        ArgumentNullException.ThrowIfNull(view);
+        ArgumentNullException.ThrowIfNull(content);
+        view.SetContent(ComposableLambdaKt.ComposableLambdaInstance(
+            key:     -1,
+            tracked: false,
+            block:   new ComposableLambda2(composer =>
+            {
+                using var scope = ComposableContext.Enter(composer);
+                content().Render(composer);
+            })));
     }
 
     /// <summary>
@@ -85,14 +139,38 @@ public static partial class ComposeExtensions
     /// </summary>
     public static void SetContent(
         this ComposeView view,
-        Action<IComposer> content)
+        [ComposableContent] Action<IComposer> content)
     {
         ArgumentNullException.ThrowIfNull(view);
         ArgumentNullException.ThrowIfNull(content);
         view.SetContent(ComposableLambdaKt.ComposableLambdaInstance(
             key:     -1,
             tracked: false,
-            block:   new ComposableLambda2(content)));
+            block:   new ComposableLambda2(composer =>
+            {
+                using var scope = ComposableContext.Enter(composer);
+                content(composer);
+            })));
+    }
+
+    /// <summary>
+    /// Installs an implicit-composer Tier 2 composition as this
+    /// <see cref="ComposeView"/>'s content.
+    /// </summary>
+    public static void SetContent(
+        this ComposeView view,
+        [ComposableContent] Action content)
+    {
+        ArgumentNullException.ThrowIfNull(view);
+        ArgumentNullException.ThrowIfNull(content);
+        view.SetContent(ComposableLambdaKt.ComposableLambdaInstance(
+            key:     -1,
+            tracked: false,
+            block:   new ComposableLambda2(composer =>
+            {
+                using var scope = ComposableContext.Enter(composer);
+                content();
+            })));
     }
 
     /// <summary>

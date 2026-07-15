@@ -6,13 +6,16 @@ namespace AndroidX.Compose.Gallery.Demos.Tier2;
 /// Adapter <see cref="ComposableNode"/> that delegates its
 /// <c>Render</c> implementation to a callback. Lets a Tier 2
 /// <c>[Composable]</c> static method plug into the gallery's
-/// tree-style demo <c>Build</c> contract.
+/// tree-style demo <c>Build</c> contract, which currently requires
+/// every demo to return a <see cref="ComposableNode"/>. This is gallery
+/// compatibility glue, not part of the Tier 2 runtime model; it can be
+/// removed once the registry accepts direct composable callbacks.
 /// </summary>
 internal sealed class Tier2Adapter : ComposableNode
 {
-    readonly Action<IComposer> _body;
+    readonly Action _body;
 
-    public Tier2Adapter(Action<IComposer> body)
+    public Tier2Adapter([ComposableContent] Action body)
     {
         ArgumentNullException.ThrowIfNull(body);
         _body = body;
@@ -21,6 +24,7 @@ internal sealed class Tier2Adapter : ComposableNode
     public override void Render(IComposer composer)
     {
         ArgumentNullException.ThrowIfNull(composer);
-        _body(composer);
+        using var scope = ComposableContext.Enter(composer);
+        _body();
     }
 }

@@ -36,7 +36,7 @@ public static partial class ComposeExtensions
     /// returns a read-only Compose <see cref="IState{T}"/> that mirrors
     /// the latest value emitted by <paramref name="stateFlow"/> while the
     /// composition's <see cref="ILifecycleOwner"/> (resolved via
-    /// <see cref="LocalLifecycleOwner.Current"/>) is at least at
+    /// <see cref="LocalLifecycleOwner.Current(IComposer)"/>) is at least at
     /// <c>Lifecycle.State.STARTED</c>. Reading the returned state's
     /// <see cref="IState{T}.Value"/> inside a composition subscribes the
     /// surrounding scope so it recomposes when a new value is published.
@@ -93,7 +93,7 @@ public static partial class ComposeExtensions
     /// <paramref name="initialValue"/> that mirrors every value emitted
     /// by <paramref name="flow"/> while the composition's
     /// <see cref="ILifecycleOwner"/> (resolved via
-    /// <see cref="LocalLifecycleOwner.Current"/>) is at least at
+    /// <see cref="LocalLifecycleOwner.Current(IComposer)"/>) is at least at
     /// <c>Lifecycle.State.STARTED</c>.
     /// </summary>
     /// <typeparam name="T">

@@ -20,6 +20,7 @@ internal sealed class Tier2InlineContent : ComposableNode
     public override void Render(IComposer composer)
     {
         ArgumentNullException.ThrowIfNull(composer);
+        using var scope = ComposableContext.Enter(composer);
         _body(composer);
     }
 }

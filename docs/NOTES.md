@@ -402,21 +402,27 @@ recomposition — fine for hello-world, not for production. A Tier 2
 source generator would lower `[Composable]` C# methods to direct
 composer-threading calls (no AST allocation).
 
-### 6. The composer is *explicit* at the implementation layer, just like Kotlin
+### 6. The composer stays explicit internally; Tier 2 can hide it in source
 
-The temptation was to stash the composer in a `[ThreadStatic]` so user
-code never sees it. This silently breaks `SubcomposeLayout`,
-`MovableContent`, parallel composition, and snapshot isolation — all
-of which depend on the composer being a passed parameter, not ambient
-state.
+Explicit overloads pass the composer directly. The composerless surface
+additionally publishes that explicit parameter through a
+dynamically scoped `[ThreadStatic]` while synchronous user code runs.
+Generated interceptor cores, `SetContent` callbacks, and
+`Tier2InlineContent.Render` push and restore the scope; they never replace
+the explicit `IComposer` parameter used by the implementation.
 
 Kotlin's Compose compiler plugin (`ComposerParamTransformer`) rewrites
 every `@Composable fun Foo(x)` to `fun Foo(x, $composer, $changed)`.
 The composer is **always** an explicit parameter. Our facade mirrors
 this honestly: `internal abstract void Render(IComposer composer)` on
 `ComposableNode`, with each container threading its received composer
-into child renders. User code never sees `IComposer`; the
-implementation layer always does.
+into child renders. User code need not see `IComposer`; the implementation layer always does.
+Deferred callbacks invoked after the dynamic scope closes cannot use
+implicit-composer APIs. `[Composable]` methods are synchronous, and parallel
+composition threads have independent ambient slots.
+CN5009 rejects composerless calls outside `[Composable]` methods and delegate
+parameters marked `[ComposableContent]`, catching invalid deferred callbacks
+at compile time.
 
 ### 7. Nested content lambdas can reuse the outer composer reference
 
@@ -543,4 +549,3 @@ is an extension method on `ComponentActivity` (and on `ComposeView`, for
 View-hierarchy interop) that handles ComposeView creation and the
 `ComposableLambdaKt.ComposableLambdaInstance` wrapping which invokes the
 user lambda — passing in the ambient `IComposer` — on every recomposition.
-

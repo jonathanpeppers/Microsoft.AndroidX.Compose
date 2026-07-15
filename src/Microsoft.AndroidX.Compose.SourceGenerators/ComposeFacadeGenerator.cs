@@ -1649,47 +1649,101 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         sb.AppendLine();
         sb.AppendLine("    public static partial class Composables");
         sb.AppendLine("    {");
-        sb.Append("        /// <summary>Tier 2 entry point for <see cref=\"global::AndroidX.Compose.")
+        EmitTier2Overload(sb, className, ctorSlotsAll, requiredCtorSlots, optionalCtorSlots,
+            contentSlots, requiredNamedSlots, optionalNamedSlots, hasModifier,
+            optionalValueSlots, themeColor, stateConfirmSlots, implicitComposer: false);
+        sb.AppendLine();
+        EmitTier2Overload(sb, className, ctorSlotsAll, requiredCtorSlots, optionalCtorSlots,
+            contentSlots, requiredNamedSlots, optionalNamedSlots, hasModifier,
+            optionalValueSlots, themeColor, stateConfirmSlots, implicitComposer: true);
+        sb.AppendLine("    }");
+    }
+
+    static void EmitTier2Overload(
+        StringBuilder sb,
+        string className,
+        IReadOnlyList<FacadeSlot> ctorSlotsAll,
+        IReadOnlyList<FacadeSlot> requiredCtorSlots,
+        IReadOnlyList<FacadeSlot> optionalCtorSlots,
+        IReadOnlyList<FacadeSlot> contentSlots,
+        IReadOnlyList<FacadeSlot> requiredNamedSlots,
+        IReadOnlyList<FacadeSlot> optionalNamedSlots,
+        bool hasModifier,
+        IReadOnlyList<FacadeSlot> optionalValueSlots,
+        string? themeColor,
+        IReadOnlyList<ConfirmStateChangeInfo> stateConfirmSlots,
+        bool implicitComposer)
+    {
+        sb.Append("        /// <summary>")
+          .Append(implicitComposer ? "Implicit-composer Tier 2" : "Tier 2")
+          .Append(" entry point for <see cref=\"global::AndroidX.Compose.")
           .Append(className).AppendLine("\"/>.</summary>");
         sb.AppendLine("        [global::AndroidX.Compose.Composable]");
-        sb.Append("        public static void ").Append(className)
-          .Append("(global::AndroidX.Compose.Runtime.IComposer composer");
+        sb.Append("        public static void ").Append(className).Append('(');
+        bool hasParameter = false;
+        if (!implicitComposer)
+        {
+            sb.Append("global::AndroidX.Compose.Runtime.IComposer composer");
+            hasParameter = true;
+        }
 
         foreach (var slot in requiredCtorSlots)
-            AppendTier2Parameter(sb, slot, optional: false);
+            AppendTier2Parameter(sb, slot, optional: false, ref hasParameter);
         foreach (var slot in requiredNamedSlots)
-            AppendTier2ContentParameter(sb, Tier2Identifier(PropertyName(slot)), optional: false);
+            AppendTier2ContentParameter(sb, Tier2Identifier(PropertyName(slot)), optional: false,
+                implicitComposer, ref hasParameter);
         foreach (var slot in contentSlots)
-            AppendTier2ContentParameter(sb, slot.Param.Name, optional: false);
+            AppendTier2ContentParameter(sb, slot.Param.Name, optional: false,
+                implicitComposer, ref hasParameter);
         foreach (var slot in optionalCtorSlots)
-            AppendTier2Parameter(sb, slot, optional: true);
+            AppendTier2Parameter(sb, slot, optional: true, ref hasParameter);
         if (hasModifier)
-            sb.Append(", global::AndroidX.Compose.Modifier? modifier = null");
+        {
+            AppendTier2Separator(sb, ref hasParameter);
+            sb.Append("global::AndroidX.Compose.Modifier? modifier = null");
+        }
         foreach (var slot in optionalNamedSlots)
-            AppendTier2ContentParameter(sb, Tier2Identifier(PropertyName(slot)), optional: true);
+            AppendTier2ContentParameter(sb, Tier2Identifier(PropertyName(slot)), optional: true,
+                implicitComposer, ref hasParameter);
         foreach (var slot in optionalValueSlots)
         {
-            sb.Append(", ").Append(OptionalValueDisplay(slot)).Append(' ')
+            AppendTier2Separator(sb, ref hasParameter);
+            sb.Append(OptionalValueDisplay(slot)).Append(' ')
               .Append(EscapeIdent(slot.Param.Name)).Append(" = null");
         }
         if (themeColor is not null)
-            sb.Append(", global::AndroidX.Compose.Color containerColor = default");
+        {
+            AppendTier2Separator(sb, ref hasParameter);
+            sb.Append("global::AndroidX.Compose.Color containerColor = default");
+        }
         foreach (var info in stateConfirmSlots)
         {
+            AppendTier2Separator(sb, ref hasParameter);
             var valueType = info.ValueType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat
                 .WithMiscellaneousOptions(SymbolDisplayMiscellaneousOptions.UseSpecialTypes));
-            sb.Append(", global::System.Func<").Append(valueType).Append(", bool>? ")
+            sb.Append("global::System.Func<").Append(valueType).Append(", bool>? ")
               .Append(EscapeIdent(char.ToLowerInvariant(info.PropertyName[0]) + info.PropertyName.Substring(1)))
               .Append(" = null");
         }
         sb.AppendLine(")");
         sb.AppendLine("        {");
+        if (implicitComposer)
+        {
+            foreach (var slot in requiredNamedSlots.Concat(contentSlots))
+            {
+                sb.Append("            global::System.ArgumentNullException.ThrowIfNull(")
+                  .Append(EscapeIdent(slot.Kind is FacadeSlotKind.RequiredFunction2 or FacadeSlotKind.RequiredFunction3
+                      ? Tier2Identifier(PropertyName(slot))
+                      : slot.Param.Name))
+                  .AppendLine(");");
+            }
+        }
 
         sb.Append("            var node = new global::AndroidX.Compose.").Append(className);
-        if (ctorSlotsAll.Length > 0)
+        if (ctorSlotsAll.Count > 0)
         {
             sb.Append('(');
-            for (int i = 0; i < ctorSlotsAll.Length; i++)
+            for (int i = 0; i < ctorSlotsAll.Count; i++)
             {
                 if (i > 0) sb.Append(", ");
                 sb.Append(EscapeIdent(CtorIdentifier(ctorSlotsAll[i])));
@@ -1705,7 +1759,10 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             var name = PropertyName(slot);
             var id = Tier2Identifier(name);
             sb.Append("                ").Append(name).Append(" = new global::AndroidX.Compose.Tier2InlineContent(")
-              .Append(EscapeIdent(id)).AppendLine("),");
+              .Append(implicitComposer ? "_ => " : string.Empty)
+              .Append(EscapeIdent(id))
+              .Append(implicitComposer ? "()" : string.Empty)
+              .AppendLine("),");
         }
         foreach (var slot in optionalNamedSlots)
         {
@@ -1713,7 +1770,10 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             var id = EscapeIdent(Tier2Identifier(name));
             sb.Append("                ").Append(name).Append(" = ").Append(id)
               .Append(" is null ? null : new global::AndroidX.Compose.Tier2InlineContent(")
-              .Append(id).AppendLine("),");
+              .Append(implicitComposer ? "_ => " : string.Empty)
+              .Append(id)
+              .Append(implicitComposer ? "()" : string.Empty)
+              .AppendLine("),");
         }
         foreach (var slot in optionalValueSlots)
         {
@@ -1731,16 +1791,27 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         foreach (var slot in contentSlots)
         {
             sb.Append("            node.Add(new global::AndroidX.Compose.Tier2InlineContent(")
-              .Append(EscapeIdent(slot.Param.Name)).AppendLine("));");
+              .Append(implicitComposer ? "_ => " : string.Empty)
+              .Append(EscapeIdent(slot.Param.Name))
+              .Append(implicitComposer ? "()" : string.Empty)
+              .AppendLine("));");
         }
-        sb.AppendLine("            node.Render(composer);");
+        sb.Append("            node.Render(")
+          .Append(implicitComposer
+              ? "global::AndroidX.Compose.ComposableContext.Current"
+              : "composer")
+          .AppendLine(");");
         sb.AppendLine("        }");
-        sb.AppendLine("    }");
     }
 
-    static void AppendTier2Parameter(StringBuilder sb, FacadeSlot slot, bool optional)
+    static void AppendTier2Parameter(
+        StringBuilder sb,
+        FacadeSlot slot,
+        bool optional,
+        ref bool hasParameter)
     {
-        sb.Append(", ").Append(CtorParamType(slot)).Append(' ')
+        AppendTier2Separator(sb, ref hasParameter);
+        sb.Append(CtorParamType(slot)).Append(' ')
           .Append(EscapeIdent(CtorIdentifier(slot)));
         if (!optional)
             return;
@@ -1750,12 +1821,28 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             sb.Append(" = ").Append(FormatPrimitiveDefaultLiteral(slot.Param));
     }
 
-    static void AppendTier2ContentParameter(StringBuilder sb, string name, bool optional)
+    static void AppendTier2ContentParameter(
+        StringBuilder sb,
+        string name,
+        bool optional,
+        bool implicitComposer,
+        ref bool hasParameter)
     {
-        sb.Append(", global::System.Action<global::AndroidX.Compose.Runtime.IComposer>")
+        AppendTier2Separator(sb, ref hasParameter);
+        sb.Append("[global::AndroidX.Compose.ComposableContentAttribute] ");
+        sb.Append(implicitComposer
+                ? "global::System.Action"
+                : "global::System.Action<global::AndroidX.Compose.Runtime.IComposer>")
           .Append(optional ? "? " : " ").Append(EscapeIdent(name));
         if (optional)
             sb.Append(" = null");
+    }
+
+    static void AppendTier2Separator(StringBuilder sb, ref bool hasParameter)
+    {
+        if (hasParameter)
+            sb.Append(", ");
+        hasParameter = true;
     }
 
     static string Tier2Identifier(string name) =>

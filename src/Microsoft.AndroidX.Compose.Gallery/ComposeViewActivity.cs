@@ -1,6 +1,7 @@
 using Android.Views;
 using AndroidX.Activity;
 using AndroidX.Compose.UI.Platform;
+using static AndroidX.Compose.Composables;
 
 namespace AndroidX.Compose.Gallery;
 
@@ -41,9 +42,9 @@ public class ComposeViewActivity : ComponentActivity
         });
 
         var compose = new ComposeView(this);
-        compose.SetContent(c =>
+        compose.SetContent(() =>
         {
-            var taps = c.MutableStateOf(0);
+            var taps = MutableStateOf(0);
             return new MaterialTheme
             {
                 new Column

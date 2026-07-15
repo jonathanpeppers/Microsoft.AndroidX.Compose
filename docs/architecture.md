@@ -14,11 +14,12 @@ collection-initializer syntax compiles. The tree built by `SetContent`'s
 lambda is a pure value; the host `ComponentActivity` (or `ComposeView`)
 walks it and calls `Render(IComposer)` on each node, threading the
 composer at the implementation layer the same way Kotlin's compiler
-plugin makes `$composer` an explicit IR parameter — except in this repo
-the composer is also an explicit lambda parameter (`SetContent(c => …)`)
-and an explicit receiver on every composition primitive
-(`c.Remember(…)`, `c.LaunchedEffect(…)`), with no `ThreadStatic` or
-ambient state.
+plugin makes `$composer` an explicit IR parameter. Public APIs support both
+explicit composer threading (`SetContent(c => …)`, `c.Remember(…)`) and
+composerless calls (`SetContent(() => …)`, `Remember(…)`). The composerless
+surface uses a dynamically scoped `ThreadStatic` lookup at user-facing call
+boundaries; the implementation still passes `IComposer` explicitly through
+every `Render` and generated interceptor core.
 
 Inside each container's `Render`, JNI bridges declared in
 [`ComposeBridges.cs`](../src/Microsoft.AndroidX.Compose/ComposeBridges.cs) call the
@@ -188,12 +189,11 @@ rewiring at the language level.
 public static class Screens
 {
     [Composable]
-    public static void Greeting(IComposer composer, string name)
+    public static void Greeting(string name)
     {
         // Plain static method. No partial, no Impl companion, no
         // _changed parameter. Same shape as a Kotlin @Composable.
-        var node = new Text($"Hello {name}");
-        node.Render(composer);
+        Composables.Text($"Hello {name}");
     }
 }
 ```
@@ -204,29 +204,37 @@ The generator emits a single
 `Microsoft.AndroidX.Compose.Composable.Interceptors.g.cs` file
 containing one wrapper per intercepted call site, plus a `file`-scoped
 `InterceptsLocationAttribute` definition in
-`System.Runtime.CompilerServices`. For each `Greeting(composer, "x")`
+`System.Runtime.CompilerServices`. For each `Greeting("x")`
 call site the generator emits roughly:
 
 ```csharp
 [global::System.Runtime.CompilerServices.InterceptsLocationAttribute(1, @"...base64...")]
 public static void Composable_0_AB12CD34(
-    global::AndroidX.Compose.Runtime.IComposer composer,
     string name)
 {
+    Composable_0_AB12CD34_Core(ComposableContext.Current, name, 0);
+}
+
+static void Composable_0_AB12CD34_Core(
+    IComposer composer,
+    string name,
+    int changed)
+{
     var __c = composer.StartRestartGroup(unchecked((int)0x9A1B2C3D));
-    int __dirty = 0;
+    using var scope = ComposableContext.Enter(__c);
+    int __dirty = changed;
     __dirty |= __c.DiffSlot<string>(name, 1);
     if ((__dirty & 0xB) != 0x2 || !__c.Skipping)
-        global::App.Screens.Greeting(__c, name);
+        global::App.Screens.Greeting(name);
     else
         __c.SkipToGroupEnd();
     __c.EndRestartGroup()?.UpdateScope(new global::AndroidX.Compose.ComposableLambda2(
-        __c2 => Composable_0_AB12CD34(__c2, name)));
+        (__c2, force) => Composable_0_AB12CD34_Core(__c2, name, force | 1)));
 }
 ```
 
 The C# compiler's interceptors feature rewires each user call site at
-the language level — the user writes `Greeting(composer, "x")` and the
+the language level — the user writes `Greeting("x")` and the
 compiler resolves the invocation to the generator-emitted wrapper.
 The key — `0x9A1B2C3D` — is FNV-1a over the fully-qualified method
 name so it stays stable across processes (matches the
@@ -270,12 +278,13 @@ Tier 2; one-shot screens can stay tree-style indefinitely.
 |--------|------------------------------------------------------------------|
 | CN5001 | `[Composable]` method must be `static`.                          |
 | CN5002 | `[Composable]` method must return `void`.                        |
-| CN5003 | `[Composable]` method must take `IComposer` as first parameter.  |
+| CN5003 | If `[Composable]` declares `IComposer`, it must be the first and only composer parameter. |
 | CN5004 | Method and containing types must be interceptor-accessible.     |
 | CN5005 | `async` composables are unsupported.                            |
 | CN5006 | Extension-method composables are unsupported.                   |
 | CN5007 | Generic composables are unsupported.                            |
 | CN5008 | `ref`, `out`, and `in` parameters are unsupported.              |
+| CN5009 | A composerless API was called outside `[Composable]` code or a `[ComposableContent]` callback. |
 
 ### Deferred — follow-up issues
 
@@ -291,9 +300,6 @@ Tier 2; one-shot screens can stay tree-style indefinitely.
   parameter values syntactically; the wrapper currently treats every
   declared parameter as required. A future pass will lower C# default
   values into the same `$default` bitmask Kotlin uses.
-- **Analyzer for "non-`[Composable]` calls `[Composable]`."** Today
-  that's only enforced at runtime (calling a composable outside a
-  composition throws). The analyzer was scoped out of the MVP.
 - **`MovableContent` / `key {} ` / `Saver` / `Layout {}` / stability
   inference.** Explicit non-goals in the Tier 2 MVP — each gets its
   own follow-up issue.
@@ -314,11 +320,16 @@ this tier-1.5 experiment:
   recomposition is acceptable for hello-world; for real apps a
   Roslyn source generator (Tier 2) that lowers `[Composable]` C#
   methods to direct composer-threading calls is the next step.
-- **Explicitness matches Kotlin.** The composer is an explicit
-  parameter at the implementation layer (`Render(IComposer)`), same
-  honest mirror of `ComposerParamTransformer` that Kotlin uses —
-  not a `[ThreadStatic]` which would silently break
-  `SubcomposeLayout` / `MovableContent` / parallel composition.
+- **Explicitness still matches Kotlin internally.** The composer remains
+  an explicit parameter at the implementation layer (`Render(IComposer)`
+  and generated interceptor cores). The composerless surface uses a
+  `ThreadStatic` only as a synchronous dynamic-scope lookup for user-facing
+  calls; every interceptor, `SetContent` boundary, and
+  `Tier2InlineContent.Render` pushes and restores it. Deferred callbacks
+  invoked after those scopes close must not call implicit-composer APIs;
+  they need an explicit composer-bearing boundary. `[Composable]` methods
+  cannot be `async`, and parallel composition threads get independent
+  ambient slots.
 
 ### What it looked like before the facade
 

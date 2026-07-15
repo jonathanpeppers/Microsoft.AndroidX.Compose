@@ -12,11 +12,16 @@ namespace AndroidX.Compose;
 /// <remarks>
 /// <para>
 /// Recommended usage: <c>using static AndroidX.Compose.Composables;</c>
-/// then call by bare name — <c>Text(c, "Hi")</c>,
-/// <c>Column(c, cc =&gt; { ... })</c>. The static method names match
-/// the tree-style facade type names (<see cref="Text"/>,
-/// <see cref="Button"/>, <see cref="Column"/>, <see cref="Row"/>,
-/// <see cref="Box"/>) so the two styles read symmetrically; C# resolves
+/// then call by bare name — <c>Text("Hi")</c>,
+/// <c>Column(() =&gt; { ... })</c>. Explicit-composer overloads remain
+/// available. The static method names match
+/// the tree-style facade type names
+/// (<see cref="global::AndroidX.Compose.Text"/>,
+/// <see cref="global::AndroidX.Compose.Button"/>,
+/// <see cref="global::AndroidX.Compose.Column"/>,
+/// <see cref="global::AndroidX.Compose.Row"/>,
+/// <see cref="global::AndroidX.Compose.Box"/>) so the two styles read
+/// symmetrically; C# resolves
 /// <c>new X(...)</c> to the type and bare <c>X(...)</c> to the method.
 /// </para>
 /// <para>
