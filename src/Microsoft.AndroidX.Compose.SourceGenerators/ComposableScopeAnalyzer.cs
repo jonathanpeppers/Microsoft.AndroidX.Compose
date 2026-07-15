@@ -228,6 +228,22 @@ public sealed class ComposableScopeAnalyzer : DiagnosticAnalyzer
                 or IConditionalOperation
                 or ICoalesceOperation)
             {
+                if (current.Parent is IConversionOperation
+                    {
+                        OperatorMethod: { Parameters.Length: 1 } conversion
+                    } userDefined)
+                {
+                    if (HasAttribute(
+                            conversion.Parameters[0],
+                            ComposableContentAttributeName))
+                    {
+                        return;
+                    }
+
+                    failures.Add(userDefined.Syntax.GetLocation());
+                    return;
+                }
+
                 current = current.Parent;
             }
 

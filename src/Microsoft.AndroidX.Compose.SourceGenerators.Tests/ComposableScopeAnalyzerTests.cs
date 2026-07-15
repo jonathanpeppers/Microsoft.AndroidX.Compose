@@ -739,4 +739,131 @@ public class ComposableScopeAnalyzerTests
         var diagnostic = Assert.Single(diagnostics);
         Assert.Contains("Text", SourceText(diagnostic));
     }
+
+    [Fact]
+    public void ComposedConstructorBuilder_IsAcceptedWhenMarked()
+    {
+        var diagnostics = ScopeDiagnostics("""
+            sealed class Composed
+            {
+                public Composed(
+                    [AndroidX.Compose.ComposableContent]
+                    System.Func<object, object?> builder) { }
+            }
+
+            static class App
+            {
+                [AndroidX.Compose.Composable]
+                public static void Render() =>
+                    new Composed(_ =>
+                    {
+                        AndroidX.Compose.Composables.Text("builder");
+                        return null;
+                    });
+            }
+            """);
+
+        Assert.Empty(diagnostics);
+    }
+
+    [Fact]
+    public void ComposedBuilder_ForwardedThroughMarkedAdd_IsAccepted()
+    {
+        var diagnostics = ScopeDiagnostics("""
+            static class Container
+            {
+                public static void Add(
+                    [AndroidX.Compose.ComposableContent]
+                    System.Func<object, object?> builder) { }
+            }
+
+            static class App
+            {
+                [AndroidX.Compose.Composable]
+                public static void Render() =>
+                    Container.Add(_ =>
+                    {
+                        AndroidX.Compose.Composables.Text("forwarded builder");
+                        return null;
+                    });
+            }
+            """);
+
+        Assert.Empty(diagnostics);
+    }
+
+    [Fact]
+    public void ComposedConstructorBuilder_IsRejectedWhenUnmarked()
+    {
+        var diagnostics = ScopeDiagnostics("""
+            sealed class Composed
+            {
+                public Composed(System.Func<object, object?> builder) { }
+            }
+
+            static class App
+            {
+                [AndroidX.Compose.Composable]
+                public static void Render() =>
+                    new Composed(_ =>
+                    {
+                        AndroidX.Compose.Composables.Text("unmarked builder");
+                        return null;
+                    });
+            }
+            """);
+
+        var diagnostic = Assert.Single(diagnostics);
+        Assert.Contains("_ =>", SourceText(diagnostic));
+    }
+
+    [Fact]
+    public void UserDefinedConversion_IsAcceptedOnlyWhenMarked()
+    {
+        var marked = ScopeDiagnostics("""
+            sealed class Composed
+            {
+                public static implicit operator Composed(
+                    [AndroidX.Compose.ComposableContent]
+                    System.Func<object, object?> builder) => new();
+            }
+
+            static class App
+            {
+                [AndroidX.Compose.Composable]
+                public static void Render()
+                {
+                    Composed node = _ =>
+                    {
+                        AndroidX.Compose.Composables.Text("conversion");
+                        return null;
+                    };
+                }
+            }
+            """);
+        var unmarked = ScopeDiagnostics("""
+            sealed class Composed
+            {
+                public static implicit operator Composed(
+                    System.Func<object, object?> builder) => new();
+            }
+
+            static class App
+            {
+                [AndroidX.Compose.Composable]
+                public static void Render()
+                {
+                    Composed node = _ =>
+                    {
+                        AndroidX.Compose.Composables.Text("conversion");
+                        return null;
+                    };
+                }
+            }
+            """);
+
+        Assert.Empty(marked);
+        var diagnostic = Assert.Single(unmarked);
+        Assert.Contains("_ =>", SourceText(diagnostic));
+    }
 }
