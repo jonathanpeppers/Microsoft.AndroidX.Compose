@@ -1031,9 +1031,13 @@ Rules:
   `ref`/`out`/`in` parameters (CN5008). Generic methods are supported;
   generated wrappers preserve their type parameters and constraints.
 - Composerless APIs may only be called from a `[Composable]` method or a
-  delegate parameter marked `[ComposableContent]` (CN5009). Mark only
-  callbacks invoked synchronously during composition; event handlers and
-  other deferred callbacks must remain unmarked.
+  delegate that flows synchronously to a parameter marked
+  `[ComposableContent]` (CN5009). Bounded analysis follows local variables,
+  local functions, private returns, argument forwarding, method groups, and
+  conditional/coalescing expressions. Mark only callbacks invoked
+  synchronously during composition; field storage, public/unknown forwarding,
+  event handlers, and other async/deferred callbacks are rejected at their
+  escape site.
 - The containing type does **not** need to be `partial`. There is no
   `Impl` companion, no `_changed` parameter, no `int _default` slot.
 - Each call site of a `[Composable]` method is rewired by the C#
@@ -1180,7 +1184,7 @@ are generated while compiling the runtime assembly.
 | CN5005 | `[Composable]` method cannot be `async`; continuations would resume after the restart group closes.                     |
 | CN5006 | `[Composable]` extension methods are unsupported; use a regular static method.                                          |
 | CN5008 | `[Composable]` parameters cannot use `ref`, `out`, or `in`.                                                              |
-| CN5009 | A composerless API is called outside a `[Composable]` method or `[ComposableContent]` callback.                          |
+| CN5009 | A composerless API may execute outside a `[Composable]` method or `[ComposableContent]` callback; the diagnostic identifies the unsafe delegate escape. |
 
 Tests in `ComposableMethodGeneratorTests.cs`. **Add a test for any new
 behaviour.**

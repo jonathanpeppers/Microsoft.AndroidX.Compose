@@ -349,7 +349,7 @@ surfaces are modeled.
 | CN5005 | `async` composables are unsupported.                            |
 | CN5006 | Extension-method composables are unsupported.                   |
 | CN5008 | `ref`, `out`, and `in` parameters are unsupported.              |
-| CN5009 | A composerless API was called outside `[Composable]` code or a `[ComposableContent]` callback. |
+| CN5009 | A composerless API may execute outside `[Composable]` code or a `[ComposableContent]` callback; the diagnostic points to the unsafe delegate escape. |
 
 ### Optional arguments and Kotlin default masks
 
