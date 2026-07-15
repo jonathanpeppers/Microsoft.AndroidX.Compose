@@ -193,6 +193,11 @@ pattern; see `ComposeBridges.cs` for live examples (`PainterResource`,
   `return CallStaticObjectMethod(...)` inside `try`/`finally`.
 - No-`$default` bridges: user params match JNI slots **positionally**; C#
   parameter order must match Kotlin bytecode order.
+- Auto-mask bridges also receive an internal generated
+  `<MethodName>ExplicitDefaults` sibling. The declared partial method keeps
+  nullable runtime auto-masking for existing callers; Tier 2 direct helpers
+  call the sibling with their omission-aware generated enum mask. At 32+
+  Kotlin slots the sibling accepts the two values returned by `.Split()`.
 
 ### Still hand-written
 
@@ -454,8 +459,9 @@ so `[CallerFilePath]` + `[CallerLineNumber]` slot keys inside
   branched slot. `AlternateBridge` names a sibling `ComposeBridges` method
   whose user params = primary's set + exactly one extra
   `IFunction2`/`IFunction3` slot whose PascalCased name matches `BranchOn`.
-  Both bridges must declare trailing `int defaults` and reference their own
-  `Defaults = typeof(XxxDefault)`. Generator emits a single facade exposing
+  Both bridges must reference their own `Defaults = typeof(XxxDefault)`.
+  They may declare trailing `int defaults`, or rely on the bridge generator's
+  omission-aware `ExplicitDefaults` sibling. Generator emits a single facade exposing
   the extra slot as nullable `ComposableNode?` property; renders
   `if (Subtitle is not null) {…alt…} else {…primary…}`. Shared lambdas and
   `__modifier = BuildModifier()` hoisted ABOVE the if/else; branched slot's
@@ -487,8 +493,10 @@ so `[CallerFilePath]` + `[CallerLineNumber]` slot keys inside
     (renamed locals avoid CS0136 shadowing of the primary path's
     `__modifier` / `__defaults`).
 
-  Both bridges must declare trailing `int defaults`. The secondary's
-  enum bit for the discriminator (if present) is cleared automatically.
+  A hand-written secondary wrapper must declare trailing `int defaults`; a
+  `[ComposeBridge]` secondary may instead use its generated
+  `ExplicitDefaults` sibling. The secondary's enum bit for the discriminator
+  (if present) is cleared automatically.
   Mutually exclusive with `BranchOn` / `AlternateBridge` (CN3012). Used
   for `Icon` (`IconPainter` primary via `[PainterResource]` ctor +
   `IconImageVector` sibling wrapping the bound `IconKt.Icon(ImageVector,…)`
@@ -575,9 +583,9 @@ conflict), CN3007 (color theme bind failed), CN3008 (painter misuse), CN3009
 | CN3007 | `DefaultColorFromTheme` cannot bind to any `long` user param (or `ColorParameter` ambiguous/missing).                                                                                                                                                                                                                                                                                                                                                                                            |
 | CN3008 | `[PainterResource]` annotates a non-`IntPtr` parameter.                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 | CN3009 | `[StateHolder]` invalid: non-`IntPtr` param, combined with `[PainterResource]`, missing/non-identifier `Remember`/`StateType`, named `Remember` not a static `(IComposer) -> IntPtr` on `ComposeBridges`, or `StateType` has no accessible writable instance field named `Jvm`.                                                                                                                                                                                                                  |
-| CN3010 | `BranchOn`/`AlternateBridge` invalid: only one set, primary/alternate missing trailing `int defaults`, named alternate not resolvable/ambiguous on `ComposeBridges`, alternate not a strict superset (missing a primary param or > 1 extra), extra param's PascalCased name doesn't match `BranchOn`, extra param isn't `IFunction2`/`IFunction3`, shared param has incompatible types, branching used on hybrid container shape, or alternate has no resolvable `[ComposeBridge].Defaults` enum. |
+| CN3010 | `BranchOn`/`AlternateBridge` invalid: only one set, primary has no Kotlin defaults metadata, named alternate not resolvable/ambiguous on `ComposeBridges`, alternate not a strict superset (missing a primary param or > 1 extra), extra param's PascalCased name doesn't match `BranchOn`, extra param isn't `IFunction2`/`IFunction3`, shared param has incompatible types, branching used on hybrid container shape, or alternate has no resolvable `[ComposeBridge].Defaults` enum. |
 | CN3011 | `[ConfirmStateChange(typeof(T))]` invalid: not on `IFunction1` param, missing `typeof(T)` ctor arg, convention adapter `Microsoft.AndroidX.Compose.<TName>ConfirmStateChange` missing (override with `AdapterType = typeof(...)`), adapter doesn't implement `Kotlin.Jvm.Functions.IFunction1`, lacks public parameterless ctor, or no writable `Callback` property of type `System.Func<T, bool>?`.                                                                                                              |
-| CN3012 | `SecondaryCtor`/`SecondaryDefaults` invalid: only one set, named secondary not resolvable/ambiguous on `ComposeBridges`, secondary missing trailing `int defaults`, secondary's user params don't share names with the primary, the discriminating extra param is value-type / nullable / not a reference type / there's > 1 unique param / there's none, primary has no slot missing from the secondary (no primary-only discriminator), `SecondaryDefaults` enum unresolvable, or combined with `BranchOn`/`AlternateBridge`.                                                                                                                                                                                                                                                                              |
+| CN3012 | `SecondaryCtor`/`SecondaryDefaults` invalid: only one set, named secondary not resolvable/ambiguous on `ComposeBridges`, a hand-written secondary lacks trailing `int defaults`, secondary's user params don't share names with the primary, the discriminating extra param is value-type / nullable / not a reference type / there's > 1 unique param / there's none, primary has no slot missing from the secondary (no primary-only discriminator), `SecondaryDefaults` enum unresolvable, or combined with `BranchOn`/`AlternateBridge`.                                                                                                                                                                                                                                                                              |
 | CN3013 | Lambda execution mode is ambiguous, conflicting, or invalid. Mark `IFunction1` as `[Callback(typeof(T))]` or `[RawCallback]`; mark `IFunction4` as `[ComposableContent]` or `[DeferredComposableContent]`. |
 
 ### Migration rule

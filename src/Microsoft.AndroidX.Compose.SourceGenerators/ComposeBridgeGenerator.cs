@@ -497,8 +497,10 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
                 return new GenerationResult(null, null, diags.ToArray());
         }
 
-        var changedSlots = ChangedSlotCount(sigParams, hasDefaultSlot, hasComposerSlot);
-        int defaultSlotCount = hasDefaultSlot ? 1 : 0;
+        int defaultSlotCount = hasDefaultSlot
+            ? (kotlinNames.Count >= 32 ? 2 : 1)
+            : 0;
+        var changedSlots = ChangedSlotCount(sigParams, defaultSlotCount, hasComposerSlot);
         int receiverSlotCount = receiverParam is null ? 0 : 1;
         int composerSlotCount = hasComposerSlot ? 1 : 0;
         int markerSlotCount = extensionWithDefault ? 1 : 0;
@@ -560,7 +562,8 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
             return new GenerationResult(null, null, diags.ToArray());
 
         var source = Emit(method, attr, className, jvmName, signature, defaultsEnumName, sigParams,
-            kotlinNames, userParams, userBitOf, receiverParam, callerProvidesDefaults, callerProvidesChanged, hasDefaultSlot,
+            kotlinNames, userParams, userBitOf, receiverParam, callerProvidesDefaults, callerProvidesChanged,
+            hasDefaultSlot, defaultSlotCount,
             hasComposerSlot, extensionWithDefault, instanceField, isConstructor,
             isSuspend, hasCallerInstance, instanceReceiverParam, continuationParam, continuationSlotIdx, jniReturnType);
         var hint = $"AndroidX.Compose.{method.ContainingType.Name}.{method.Name}.g.cs";
@@ -602,18 +605,17 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
     /// Number of trailing <c>I</c> params that represent <c>$changed</c>
     /// slots. <c>$changed</c> only exists in @Composable signatures, so
     /// when <paramref name="hasComposer"/> is <c>false</c> this returns
-    /// <c>0</c>. With <paramref name="hasDefaultSlot"/>=<c>true</c> the
-    /// very last <c>I</c> is the <c>$default</c> bitmask, so this returns
-    /// <c>trailing-1</c>; otherwise every trailing <c>I</c> is part of
-    /// the <c>$changed</c> group(s).
+    /// <c>0</c>. The trailing <paramref name="defaultSlotCount"/> integers
+    /// are Kotlin <c>$default</c> masks; earlier trailing integers are
+    /// <c>$changed</c> groups.
     /// </summary>
-    static int ChangedSlotCount(IReadOnlyList<JniType> sigParams, bool hasDefaultSlot, bool hasComposer)
+    static int ChangedSlotCount(IReadOnlyList<JniType> sigParams, int defaultSlotCount, bool hasComposer)
     {
         if (!hasComposer) return 0;
         int trailingInts = 0;
         for (int i = sigParams.Count - 1; i >= 0 && sigParams[i].Code == 'I' && sigParams[i].ArrayDepth == 0; i--)
             trailingInts++;
-        return hasDefaultSlot ? Math.Max(0, trailingInts - 1) : trailingInts;
+        return Math.Max(0, trailingInts - defaultSlotCount);
     }
 
     static string Emit(
@@ -627,6 +629,7 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
         bool callerProvidesDefaults,
         bool callerProvidesChanged,
         bool hasDefaultSlot,
+        int defaultSlotCount,
         bool hasComposerSlot,
         bool extensionWithDefault,
         string? instanceField,
@@ -665,9 +668,34 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
             sb.Append("    static global::System.IntPtr s_").Append(sym).AppendLine("_instance;");
         sb.AppendLine();
 
-        // Method signature — match the partial declaration.
+        bool emitExplicitDefaultsEntry = hasComposerSlot
+            && hasDefaultSlot
+            && !callerProvidesDefaults;
+
+        // Auto-mask bridges keep their declared partial method as the
+        // compatibility entry point, but delegate JNI dispatch to a generated
+        // sibling that accepts the already-computed mask. Tier 2 direct
+        // helpers call that sibling so explicit null is distinguishable from
+        // an omitted C# optional argument.
         EmitMethodSignature(sb, method);
         sb.AppendLine("    {");
+        if (emitExplicitDefaultsEntry)
+        {
+            EmitAutoDefaults(sb, enumName
+                ?? throw new InvalidOperationException("Defaulted bridge is missing its enum name."),
+                kotlinNames, userParams, userBitOf, defaultSlotCount);
+            EmitExplicitDefaultsForward(sb, method, defaultSlotCount);
+            sb.AppendLine("    }");
+            sb.AppendLine();
+            EmitExplicitDefaultsSignature(sb, method, defaultSlotCount);
+            sb.AppendLine("    {");
+        }
+        else if (hasDefaultSlot && !callerProvidesDefaults)
+        {
+            EmitAutoDefaults(sb, enumName
+                ?? throw new InvalidOperationException("Defaulted bridge is missing its enum name."),
+                kotlinNames, userParams, userBitOf, defaultSlotCount);
+        }
 
         // Lazy init.
         sb.Append("        if (s_").Append(sym).AppendLine("_method == global::System.IntPtr.Zero)");
@@ -698,32 +726,6 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
         }
         sb.AppendLine("        }");
         sb.AppendLine();
-
-        // Defaults computation (only when caller didn't pass one and the
-        // function actually has a $default slot).
-        if (hasDefaultSlot && !callerProvidesDefaults)
-        {
-            sb.Append("        int defaults = (int)global::AndroidX.Compose.").Append(enumName).AppendLine(".All;");
-            foreach (var p in userParams)
-            {
-                if (!userBitOf.TryGetValue(p.Name, out var bit)) continue;
-                // Skip bits whose Kotlin name has '!' prefix — no enum member.
-                if (kotlinNames[bit].StartsWith("!", StringComparison.Ordinal)) continue;
-
-                var member = PascalCase(p.Name);
-                bool nullableValueType = ComposeValueTypes.TryGet(p.Type, out _, out _);
-                if (p.NullableAnnotation == NullableAnnotation.Annotated || p.Type.IsReferenceType || nullableValueType || IsNullableIntPtr(p.Type) || IsNullablePrimitive(p.Type))
-                {
-                    sb.Append("        if (").Append(EscapeIdent(p.Name)).Append(" is not null) defaults &= ~(int)global::AndroidX.Compose.")
-                      .Append(enumName).Append('.').Append(member).AppendLine(";");
-                }
-                else
-                {
-                    sb.Append("        defaults &= ~(int)global::AndroidX.Compose.").Append(enumName).Append('.').Append(member).AppendLine(";");
-                }
-            }
-            sb.AppendLine();
-        }
 
         // String NewString hoist.
         var stringParams = userParams.Where(p => p.Type.SpecialType == SpecialType.System_String).ToList();
@@ -807,7 +809,7 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
         // slot; remaining slots (overflow for >10 user params) stay 0.
         // Without `_changed`, every slot stays 0 (Uncertain — the runtime
         // diffs everything itself, current behaviour).
-        int changedCount = ChangedSlotCount(sigParams, hasDefaultSlot, hasComposerSlot);
+        int changedCount = ChangedSlotCount(sigParams, defaultSlotCount, hasComposerSlot);
         for (int c = 0; c < changedCount; c++, idx++)
         {
             string val = (c == 0 && callerProvidesChanged) ? "_changed" : "0";
@@ -815,10 +817,15 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
               .Append(val).AppendLine(");");
         }
 
-        // $default (only when present in the bytecode signature).
-        if (hasDefaultSlot)
+        // $default masks (one int per 32 Kotlin parameters).
+        for (int d = 0; d < defaultSlotCount; d++)
         {
-            sb.Append("                args[").Append(idx).AppendLine("] = new global::Android.Runtime.JValue(defaults);");
+            string defaultsVariable = defaultSlotCount == 1
+                ? "defaults"
+                : "defaults" + d.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            sb.Append("                args[").Append(idx)
+              .Append("] = new global::Android.Runtime.JValue(")
+              .Append(defaultsVariable).AppendLine(");");
             idx++;
         }
 
@@ -903,6 +910,130 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
         return prefix + suffix + "Method";
     }
 
+    static void EmitAutoDefaults(
+        StringBuilder sb,
+        string enumName,
+        IReadOnlyList<string> kotlinNames,
+        IReadOnlyList<IParameterSymbol> userParams,
+        IReadOnlyDictionary<string, int> userBitOf,
+        int defaultSlotCount)
+    {
+        string variable = defaultSlotCount == 1 ? "defaults" : "__defaults";
+        if (defaultSlotCount == 1)
+        {
+            sb.Append("        int defaults = (int)global::AndroidX.Compose.")
+              .Append(enumName).AppendLine(".All;");
+        }
+        else
+        {
+            sb.Append("        var __defaults = global::AndroidX.Compose.")
+              .Append(enumName).AppendLine(".All;");
+        }
+
+        foreach (var p in userParams)
+        {
+            if (!userBitOf.TryGetValue(p.Name, out var bit))
+                continue;
+            if (kotlinNames[bit].StartsWith("!", StringComparison.Ordinal))
+                continue;
+
+            var member = PascalCase(p.Name);
+            bool nullableValueType = ComposeValueTypes.TryGet(p.Type, out _, out _);
+            bool nullable = p.NullableAnnotation == NullableAnnotation.Annotated
+                || p.Type.IsReferenceType
+                || nullableValueType
+                || IsNullableIntPtr(p.Type)
+                || IsNullablePrimitive(p.Type);
+            sb.Append("        ");
+            if (nullable)
+                sb.Append("if (").Append(EscapeIdent(p.Name)).Append(" is not null) ");
+            sb.Append(variable).Append(" &= ~");
+            if (defaultSlotCount == 1)
+                sb.Append("(int)");
+            sb.Append("global::AndroidX.Compose.").Append(enumName).Append('.')
+              .Append(member).AppendLine(";");
+        }
+
+        if (defaultSlotCount > 1)
+        {
+            sb.Append("        var (");
+            for (int i = 0; i < defaultSlotCount; i++)
+            {
+                if (i > 0)
+                    sb.Append(", ");
+                sb.Append("defaults").Append(i);
+            }
+            sb.AppendLine(") = __defaults.Split();");
+        }
+        sb.AppendLine();
+    }
+
+    static void EmitExplicitDefaultsForward(
+        StringBuilder sb,
+        IMethodSymbol method,
+        int defaultSlotCount)
+    {
+        sb.Append("        ");
+        if (!method.ReturnsVoid)
+            sb.Append("return ");
+        sb.Append(method.Name).Append("ExplicitDefaults(");
+        bool first = true;
+        foreach (var p in method.Parameters)
+        {
+            if (ComposeDefaultsGenerator.IsComposer(p.Type))
+            {
+                for (int i = 0; i < defaultSlotCount; i++)
+                {
+                    if (!first)
+                        sb.Append(", ");
+                    sb.Append(defaultSlotCount == 1 ? "defaults" : "defaults" + i);
+                    first = false;
+                }
+            }
+            if (!first)
+                sb.Append(", ");
+            sb.Append(EscapeIdent(p.Name));
+            first = false;
+        }
+        sb.AppendLine(");");
+    }
+
+    static void EmitExplicitDefaultsSignature(
+        StringBuilder sb,
+        IMethodSymbol method,
+        int defaultSlotCount)
+    {
+        sb.Append("    internal static ")
+          .Append(TypeName(method.ReturnType)).Append(' ')
+          .Append(method.Name).Append("ExplicitDefaults(");
+        bool first = true;
+        foreach (var p in method.Parameters)
+        {
+            if (ComposeDefaultsGenerator.IsComposer(p.Type))
+            {
+                for (int i = 0; i < defaultSlotCount; i++)
+                {
+                    if (!first)
+                        sb.Append(", ");
+                    sb.Append("int ")
+                      .Append(defaultSlotCount == 1 ? "defaults" : "defaults" + i);
+                    first = false;
+                }
+            }
+            if (!first)
+                sb.Append(", ");
+            sb.Append(TypeName(p.Type)).Append(' ').Append(EscapeIdent(p.Name));
+            first = false;
+        }
+        sb.AppendLine(")");
+    }
+
+    static string TypeName(ITypeSymbol type) =>
+        type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat
+            .WithMiscellaneousOptions(SymbolDisplayMiscellaneousOptions.IncludeNullableReferenceTypeModifier
+                | SymbolDisplayMiscellaneousOptions.UseSpecialTypes
+                | SymbolDisplayMiscellaneousOptions.EscapeKeywordIdentifiers));
+
     static void EmitMethodSignature(StringBuilder sb, IMethodSymbol method)
     {
         sb.Append("    ");
@@ -910,19 +1041,13 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
         else if (method.DeclaredAccessibility == Accessibility.Internal) sb.Append("internal ");
         if (method.IsStatic) sb.Append("static ");
         sb.Append("partial ");
-        sb.Append(method.ReturnType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat
-            .WithMiscellaneousOptions(SymbolDisplayMiscellaneousOptions.IncludeNullableReferenceTypeModifier
-                | SymbolDisplayMiscellaneousOptions.UseSpecialTypes
-                | SymbolDisplayMiscellaneousOptions.EscapeKeywordIdentifiers)))
+        sb.Append(TypeName(method.ReturnType))
           .Append(' ').Append(method.Name).Append('(');
         for (int i = 0; i < method.Parameters.Length; i++)
         {
             var p = method.Parameters[i];
             if (i > 0) sb.Append(", ");
-            sb.Append(p.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat
-                .WithMiscellaneousOptions(SymbolDisplayMiscellaneousOptions.IncludeNullableReferenceTypeModifier
-                    | SymbolDisplayMiscellaneousOptions.UseSpecialTypes
-                    | SymbolDisplayMiscellaneousOptions.EscapeKeywordIdentifiers)));
+            sb.Append(TypeName(p.Type));
             sb.Append(' ').Append(EscapeIdent(p.Name));
         }
         sb.AppendLine(")");

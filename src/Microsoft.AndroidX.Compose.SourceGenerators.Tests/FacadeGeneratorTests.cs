@@ -407,7 +407,6 @@ public class FacadeGeneratorTests
                         IFunction2? icon,
                         Dp? fontSize,
                         IFunction2 content,
-                        int defaults,
                         IComposer composer);
                 }
             }
@@ -430,8 +429,47 @@ public class FacadeGeneratorTests
             "if ((__omittedArguments & 0x20UL) == 0) __defaults &= ~global::AndroidX.Compose.WidgetDefault.FontSize;",
             emitted);
         Assert.Contains(
-            "global::AndroidX.Compose.ComposeBridges.Widget(text, __modifier, enabled, __icon, fontSize, __content, (int)__defaults, __composer);",
+            "global::AndroidX.Compose.ComposeBridges.WidgetExplicitDefaults(text, __modifier, enabled, __icon, fontSize, __content, (int)__defaults, __composer);",
             emitted);
+        Assert.Empty(output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error));
+    }
+
+    [Fact]
+    public void DirectDefaultsMask_WideAutoMaskUsesExplicitTwoMaskEntry()
+    {
+        var names = string.Join(", ", Enumerable.Range(0, 32).Select(i => $"\"slot{i}\""));
+        var parameters = string.Join(", ", Enumerable.Range(0, 32).Select(i => $"int? slot{i}"));
+        var signature = new string('I', 32)
+            + "Landroidx/compose/runtime/Composer;"
+            + new string('I', 6);
+        var code = $$"""
+            using global::AndroidX.Compose.Runtime;
+            using AndroidX.Compose;
+
+            [assembly: ComposeDefaults("WideDefault", {{names}})]
+
+            namespace AndroidX.Compose
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(Class="x/WideKt", JvmName="Wide",
+                                   Signature="({{signature}})V",
+                                   Defaults=typeof(WideDefault))]
+                    [ComposeFacade]
+                    public static partial void Wide({{parameters}}, IComposer composer);
+                }
+            }
+            """;
+
+        var (output, diags, emitted) = Run(code, "Wide");
+
+        Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+        Assert.Contains("if ((__omittedArguments & 0x1UL) == 0) __defaults &= ~global::AndroidX.Compose.WideDefault.Slot0;", emitted);
+        Assert.Contains("if ((__omittedArguments & 0x80000000UL) == 0) __defaults &= ~global::AndroidX.Compose.WideDefault.Slot31;", emitted);
+        Assert.Contains("var (__defaultsMask0, __defaultsMask1) = __defaults.Split();", emitted);
+        Assert.Contains("global::AndroidX.Compose.ComposeBridges.WideExplicitDefaults(", emitted);
+        Assert.Contains("__defaultsMask0, __defaultsMask1, __composer);", emitted);
         Assert.Empty(output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error));
     }
 
@@ -1246,7 +1284,7 @@ public class FacadeGeneratorTests
         Assert.Contains("readonly global::System.Action<string> _onValueChange;", emitted);
         Assert.Contains("public TextField(string value, global::System.Action<string> onValueChange)", emitted);
         Assert.Contains("composer.RememberAction(v => _onValueChange(v?.ToString() ?? string.Empty));", emitted);
-        Assert.Contains("global::AndroidX.Compose.ComposeBridges.TextField(value, __onValueChange, __modifier, __composer);", emitted);
+        Assert.Contains("global::AndroidX.Compose.ComposeBridges.TextFieldExplicitDefaults(value, __onValueChange, __modifier, (int)__defaults, __composer);", emitted);
 
         var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
         Assert.Empty(errors);
@@ -1407,7 +1445,7 @@ public class FacadeGeneratorTests
         Assert.Contains("long __color = (long)ContainerColor != 0L ? (long)ContainerColor : global::AndroidX.Compose.Material3.MaterialTheme.Instance.GetColorScheme(composer, 0).SecondaryContainer;", emitted);
         Assert.Contains("global::AndroidX.Compose.ComposeBridges.ModalDrawerSheet(__content, __color, composer);", emitted);
         Assert.Contains("long __color = (long)containerColor != 0L ? (long)containerColor : global::AndroidX.Compose.Material3.MaterialTheme.Instance.GetColorScheme(__composer, 0).SecondaryContainer;", emitted);
-        Assert.Contains("global::AndroidX.Compose.ComposeBridges.ModalDrawerSheet(__content, __color, __composer);", emitted);
+        Assert.Contains("global::AndroidX.Compose.ComposeBridges.ModalDrawerSheetExplicitDefaults(__content, __color, (int)__defaults, __composer);", emitted);
 
         var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
         Assert.Empty(errors);
@@ -3528,7 +3566,6 @@ public class FacadeGeneratorTests
                     IModifier?  modifier,
                     IFunction2? navigationIcon,
                     IFunction3? actions,
-                    int         defaults,
                     IComposer   composer);
 
                 [ComposeBridge(Class="x/Y", JvmName="BarWithSubtitle",
@@ -3540,7 +3577,6 @@ public class FacadeGeneratorTests
                     IModifier?  modifier,
                     IFunction2? navigationIcon,
                     IFunction3? actions,
-                    int         defaults,
                     IComposer   composer);
             }
         }
@@ -3592,10 +3628,10 @@ public class FacadeGeneratorTests
 
         // Alt branch calls the alternate bridge with the alt's actual
         // parameter order (title, subtitle, modifier, nav, actions).
-        Assert.Contains("global::AndroidX.Compose.ComposeBridges.BarWithSubtitle(__title, __subtitle, __modifier, __navigationIcon, __actions, __defaults, composer);", emitted);
+        Assert.Contains("global::AndroidX.Compose.ComposeBridges.BarWithSubtitleExplicitDefaults(__title, __subtitle, __modifier, __navigationIcon, __actions, __defaults, composer);", emitted);
 
         // Primary branch calls the primary bridge (no subtitle).
-        Assert.Contains("global::AndroidX.Compose.ComposeBridges.Bar(__title, __modifier, __navigationIcon, __actions, __defaults, composer);", emitted);
+        Assert.Contains("global::AndroidX.Compose.ComposeBridges.BarExplicitDefaults(__title, __modifier, __navigationIcon, __actions, __defaults, composer);", emitted);
 
         var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
         Assert.Empty(errors);
@@ -3883,7 +3919,7 @@ public class FacadeGeneratorTests
             """;
 
         var (_, diags, _) = Run(code, "Bar");
-        Assert.Contains(diags, d => d.Id == "CN3010" && d.GetMessage().Contains("'int defaults'"));
+        Assert.Contains(diags, d => d.Id == "CN3010" && d.GetMessage().Contains("defaults metadata"));
     }
 
     [Fact]
@@ -3980,13 +4016,15 @@ public class FacadeGeneratorTests
                     int        defaults,
                     IComposer  composer);
 
-                public static void IconImageVector(
+                [ComposeBridge(Class="x/IconKt", JvmName="Icon-vector",
+                               Signature="(Landroidx/compose/ui/graphics/vector/ImageVector;Ljava/lang/String;Landroidx/compose/ui/Modifier;JLandroidx/compose/runtime/Composer;II)V",
+                               Defaults=typeof(IconDefault))]
+                public static partial void IconImageVector(
                     global::AndroidX.Compose.UI.Graphics.Vector.ImageVector imageVector,
                     string?    contentDescription,
                     IModifier? modifier,
                     long       tint,
-                    int        defaults,
-                    IComposer  composer) { }
+                    IComposer  composer);
             }
         }
         """;
@@ -4035,11 +4073,11 @@ public class FacadeGeneratorTests
 
         // The secondary call passes the field (with `!`) and the
         // shared slot expressions in the secondary's parameter order.
-        Assert.Contains("global::AndroidX.Compose.ComposeBridges.IconImageVector(_imageVector!,", emitted);
+        Assert.Contains("global::AndroidX.Compose.ComposeBridges.IconImageVectorExplicitDefaults(_imageVector!,", emitted);
         Assert.Contains(", __secDefaults, composer);", emitted);
         Assert.Contains("public static void Icon(global::AndroidX.Compose.Runtime.IComposer composer, global::AndroidX.Compose.UI.Graphics.Painter.Painter painter,", emitted);
         Assert.Contains("public static void Icon(global::AndroidX.Compose.Runtime.IComposer composer, global::AndroidX.Compose.UI.Graphics.Vector.ImageVector imageVector,", emitted);
-        Assert.Contains("global::AndroidX.Compose.ComposeBridges.IconImageVector(imageVector, contentDescription, __modifier, tint, (int)__defaults, __composer);", emitted);
+        Assert.Contains("global::AndroidX.Compose.ComposeBridges.IconImageVectorExplicitDefaults(imageVector, contentDescription, __modifier, tint, (int)__defaults, __composer);", emitted);
         Assert.DoesNotContain("var node = new global::AndroidX.Compose.Icon", emitted);
 
         // Early return so the primary body doesn't run.

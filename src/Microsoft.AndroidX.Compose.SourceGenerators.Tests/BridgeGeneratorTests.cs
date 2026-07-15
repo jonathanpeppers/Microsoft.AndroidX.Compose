@@ -164,6 +164,9 @@ public class BridgeGeneratorTests
         Assert.Contains("GetStaticMethodID(s_Button_class, \"Button\"", emitted);
         Assert.Contains("(int)global::AndroidX.Compose.ButtonDefault.All", emitted);
         Assert.Contains("if (modifier is not null) defaults &= ~(int)global::AndroidX.Compose.ButtonDefault.Modifier;", emitted);
+        Assert.Contains("internal static void ButtonExplicitDefaults(", emitted);
+        Assert.Contains("int defaults, global::AndroidX.Compose.Runtime.IComposer composer)", emitted);
+        Assert.Contains("ButtonExplicitDefaults(onClick, modifier, content, defaults, composer);", emitted);
         Assert.Contains("ModifierHandle(modifier)", emitted);
         Assert.Contains("global::System.GC.KeepAlive(onClick);", emitted);
         Assert.Contains("global::System.GC.KeepAlive(content);", emitted);
@@ -174,6 +177,46 @@ public class BridgeGeneratorTests
         var compileDiags = output.GetDiagnostics();
         var errors = compileDiags.Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
         Assert.Empty(errors);
+    }
+
+    [Fact]
+    public void WideAutoMask_EmitsTwoMaskExplicitEntry()
+    {
+        var names = string.Join(", ", Enumerable.Range(0, 32).Select(i => $"\"slot{i}\""));
+        var parameters = string.Join(", ", Enumerable.Range(0, 32).Select(i => $"int? slot{i}"));
+        var signature = new string('I', 32)
+            + "Landroidx/compose/runtime/Composer;"
+            + new string('I', 6);
+        var code = $$"""
+            using global::AndroidX.Compose.Runtime;
+            using AndroidX.Compose;
+
+            [assembly: ComposeDefaults("WideDefault", {{names}})]
+
+            namespace AndroidX.Compose
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(
+                        Class = "x/WideKt",
+                        JvmName = "Wide",
+                        Signature = "({{signature}})V",
+                        Defaults = typeof(WideDefault))]
+                    public static partial void Wide({{parameters}}, IComposer composer);
+                }
+            }
+            """;
+
+        var (output, diags, emitted) = Run(code);
+
+        Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+        Assert.Contains("var (defaults0, defaults1) = __defaults.Split();", emitted);
+        Assert.Contains("internal static void WideExplicitDefaults(", emitted);
+        Assert.Contains("int defaults0, int defaults1, global::AndroidX.Compose.Runtime.IComposer composer)", emitted);
+        Assert.Contains("args[37] = new global::Android.Runtime.JValue(defaults0);", emitted);
+        Assert.Contains("args[38] = new global::Android.Runtime.JValue(defaults1);", emitted);
+        Assert.Empty(output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error));
     }
 
     [Fact]

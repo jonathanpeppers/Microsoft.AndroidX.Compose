@@ -429,7 +429,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         if (!string.IsNullOrEmpty(branchOn) || !string.IsNullOrEmpty(alternateBridgeName))
         {
             branchInfo = BuildBranchInfo(c, method, branchOn, alternateBridgeName, loc,
-                userParams, slots, callerProvidesDefaults, isHybridContainer, diags);
+                userParams, slots, defaults is not null, isHybridContainer, diags);
             if (branchInfo is not null)
             {
                 // Append the synthesised slot, force the facade into
@@ -501,7 +501,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         string? branchOn, string? alternateBridgeName, Location loc,
         IReadOnlyList<IParameterSymbol> primaryUserParams,
         IReadOnlyList<FacadeSlot> primarySlots,
-        bool callerProvidesDefaults, bool isHybridContainer,
+        bool primaryHasDefaults, bool isHybridContainer,
         List<Diagnostic> diags)
     {
         // Both required.
@@ -512,11 +512,10 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             return null;
         }
 
-        // Primary must use the caller-managed-defaults shape.
-        if (!callerProvidesDefaults)
+        if (!primaryHasDefaults)
         {
             diags.Add(Diagnostic.Create(Diagnostics.FacadeBranchInvalid, loc, primary.Name,
-                "branching requires the primary bridge to declare a trailing 'int defaults' parameter"));
+                "branching requires the primary bridge to declare Kotlin defaults metadata"));
             return null;
         }
 
@@ -596,13 +595,6 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             altDefaultsParam = altUser[altUser.Length - 1];
             altUser = altUser.Take(altUser.Length - 1).ToArray();
         }
-        if (altDefaultsParam is null)
-        {
-            diags.Add(Diagnostic.Create(Diagnostics.FacadeBranchInvalid, loc, primary.Name,
-                $"alternate bridge 'ComposeBridges.{alternateBridgeName}' must declare a trailing 'int defaults' parameter"));
-            return null;
-        }
-
         // Compute the diff. Alternate's user-param set must be exactly
         // primary's set plus one extra whose Pascal-cased name matches
         // BranchOn.
@@ -697,7 +689,8 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             alternateDefaultsEnumName: altDefaultsType.Name,
             branchedSlot: branchedSlot,
             branchProperty: branchOn!,
-            alternateProvidesChanged: altProvidesChanged);
+            alternateProvidesChanged: altProvidesChanged,
+            alternateProvidesDefaults: altDefaultsParam is not null);
     }
 
     static bool AreCompatibleSharedParams(IParameterSymbol a, IParameterSymbol b)
@@ -715,7 +708,8 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
     {
         public BranchInfo(string alternateMethodName, IReadOnlyList<IParameterSymbol> alternateUserParams,
             DefaultsInfo alternateDefaults, string alternateDefaultsEnumName,
-            FacadeSlot branchedSlot, string branchProperty, bool alternateProvidesChanged)
+            FacadeSlot branchedSlot, string branchProperty, bool alternateProvidesChanged,
+            bool alternateProvidesDefaults)
         {
             AlternateMethodName = alternateMethodName;
             AlternateUserParams = alternateUserParams;
@@ -724,6 +718,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             BranchedSlot = branchedSlot;
             BranchProperty = branchProperty;
             AlternateProvidesChanged = alternateProvidesChanged;
+            AlternateProvidesDefaults = alternateProvidesDefaults;
         }
         public string AlternateMethodName { get; }
         /// <summary>Alternate bridge's user parameters, in declaration order, excluding trailing IComposer, `int _changed`, and `int defaults`.</summary>
@@ -735,6 +730,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         public string BranchProperty { get; }
         /// <summary>True when the alternate bridge declares an `int _changed` parameter (so the facade should pass `__changed`).</summary>
         public bool AlternateProvidesChanged { get; }
+        public bool AlternateProvidesDefaults { get; }
     }
 
     /// <summary>
@@ -750,7 +746,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
     {
         public SecondaryCtorInfo(IMethodSymbol method, IReadOnlyList<IParameterSymbol> userParams,
             IParameterSymbol discriminator, DefaultsInfo defaults, string defaultsEnumName,
-            bool secondaryProvidesChanged)
+            bool secondaryProvidesChanged, bool secondaryProvidesDefaults)
         {
             Method = method;
             UserParams = userParams;
@@ -758,6 +754,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             Defaults = defaults;
             DefaultsEnumName = defaultsEnumName;
             SecondaryProvidesChanged = secondaryProvidesChanged;
+            SecondaryProvidesDefaults = secondaryProvidesDefaults;
         }
         public IMethodSymbol Method { get; }
         /// <summary>Secondary's user parameters in declaration order, excluding trailing IComposer, `int _changed`, and `int defaults`.</summary>
@@ -768,6 +765,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         public string DefaultsEnumName { get; }
         /// <summary>True when the secondary bridge declares an `int _changed` parameter.</summary>
         public bool SecondaryProvidesChanged { get; }
+        public bool SecondaryProvidesDefaults { get; }
     }
 
     static SecondaryCtorInfo? BuildSecondaryCtorInfo(Context c, IMethodSymbol primary,
@@ -777,15 +775,6 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         bool primaryCallerProvidesDefaults,
         List<Diagnostic> diags)
     {
-        // CN3012 — primary must use the caller-managed-defaults shape so
-        // the secondary's per-call mask has somewhere to land.
-        if (!primaryCallerProvidesDefaults)
-        {
-            diags.Add(Diagnostic.Create(Diagnostics.FacadeSecondaryCtorInvalid, loc, primary.Name,
-                "SecondaryCtor requires the primary bridge to declare a trailing 'int defaults' parameter"));
-            return null;
-        }
-
         var bridgesType = c.Compilation.GetTypeByMetadataName("AndroidX.Compose.ComposeBridges");
         if (bridgesType is null)
         {
@@ -833,15 +822,11 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         {
             secUser = secUser.Take(secUser.Length - 1).ToArray();
         }
-        if (secUser.Length == 0 ||
-            secUser[secUser.Length - 1].Type.SpecialType != SpecialType.System_Int32 ||
-            secUser[secUser.Length - 1].Name != "defaults")
-        {
-            diags.Add(Diagnostic.Create(Diagnostics.FacadeSecondaryCtorInvalid, loc, primary.Name,
-                $"secondary 'ComposeBridges.{secondaryName}' must declare a trailing 'int defaults' parameter"));
-            return null;
-        }
-        secUser = secUser.Take(secUser.Length - 1).ToArray();
+        bool secondaryProvidesDefaults = secUser.Length > 0
+            && secUser[secUser.Length - 1].Type.SpecialType == SpecialType.System_Int32
+            && secUser[secUser.Length - 1].Name == "defaults";
+        if (secondaryProvidesDefaults)
+            secUser = secUser.Take(secUser.Length - 1).ToArray();
 
         // Discover the discriminator — the single secondary-unique
         // user param (not present by name in primary). All other
@@ -900,18 +885,25 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         // [ComposeBridge].Defaults; fall back to the primary's
         // [ComposeFacade(SecondaryDefaults=typeof(...))].
         INamedTypeSymbol? defaultsType = null;
+        AttributeData? secondaryBridgeAttribute = null;
         if (c.BridgeAttr is not null)
         {
-            var secBridgeAttr = secondary.GetAttributes()
+            secondaryBridgeAttribute = secondary.GetAttributes()
                 .FirstOrDefault(a => SymbolEqualityComparer.Default.Equals(a.AttributeClass, c.BridgeAttr));
-            if (secBridgeAttr is not null)
-                defaultsType = ReadType(secBridgeAttr, "Defaults");
+            if (secondaryBridgeAttribute is not null)
+                defaultsType = ReadType(secondaryBridgeAttribute, "Defaults");
         }
         defaultsType ??= secondaryDefaultsType;
         if (defaultsType is null)
         {
             diags.Add(Diagnostic.Create(Diagnostics.FacadeSecondaryCtorInvalid, loc, primary.Name,
                 $"secondary 'ComposeBridges.{secondaryName}' has no '[ComposeBridge].Defaults' enum and no 'SecondaryDefaults = typeof(...)' fallback on [ComposeFacade]"));
+            return null;
+        }
+        if (!secondaryProvidesDefaults && secondaryBridgeAttribute is null)
+        {
+            diags.Add(Diagnostic.Create(Diagnostics.FacadeSecondaryCtorInvalid, loc, primary.Name,
+                $"secondary 'ComposeBridges.{secondaryName}' must either declare a trailing 'int defaults' parameter or use [ComposeBridge] so an explicit-mask entry can be generated"));
             return null;
         }
         DefaultsInfo? defaults = null;
@@ -930,7 +922,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             p.Type.SpecialType == SpecialType.System_Int32 && p.Name == "_changed");
 
         return new SecondaryCtorInfo(secondary, secUser, discriminator,
-            defaults.Value, defaultsType.Name, secProvidesChanged);
+            defaults.Value, defaultsType.Name, secProvidesChanged, secondaryProvidesDefaults);
     }
 
     static FacadeSlot? Classify(IParameterSymbol p, Context c, string methodName, Location loc, List<Diagnostic> diags)
@@ -1503,7 +1495,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             // mutates _prepended/_appended/_contentPadding to null. The
             // mask emitter feeds this into DiffSlot for the modifier
             // slot.
-            if (callerProvidesChanged)
+            if (callerProvidesChanged || branchInfo?.AlternateProvidesChanged == true)
                 sb.AppendLine("            var __modifierKey = BuildModifierStructuralKey();");
             sb.AppendLine("            var __modifier = BuildModifier();");
         }
@@ -1625,7 +1617,8 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         if (branchInfo is not null)
         {
             EmitBranchedRender(sb, indent, bridgeMethodName, slots, primaryUserParams,
-                defaults!.Value, defaultsEnumName!, branchInfo, composerName, hoistModifier, callerProvidesChanged);
+                defaults!.Value, defaultsEnumName!, branchInfo, composerName,
+                hoistModifier, callerProvidesDefaults, callerProvidesChanged);
         }
         else
         {
@@ -2174,12 +2167,13 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         {
             EmitTier2BranchedCall(sb, primaryMethodName, slots, primaryUserParams,
                 primaryDefaults ?? throw new InvalidOperationException("Branched facade requires primary defaults."),
-                branchInfo, callerProvidesChanged, implicitComposer, route, surfacedIndices);
+                branchInfo, callerProvidesDefaults, callerProvidesChanged,
+                implicitComposer, route, surfacedIndices);
             return;
         }
 
         IReadOnlyList<string> defaultArguments = [];
-        if (callerProvidesDefaults && primaryDefaults is { } defaults)
+        if (primaryDefaults is { } defaults)
         {
             defaultArguments = EmitTier2DefaultsMask(
                 sb, "            ", defaults, surfacedIndices);
@@ -2191,7 +2185,8 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         }
 
         var slotByName = slots.ToDictionary(s => s.Param.Name, StringComparer.Ordinal);
-        EmitTier2BridgeCallByParams(sb, "            ", primaryMethodName,
+        EmitTier2BridgeCallByParams(sb, "            ",
+            ExplicitDefaultsMethod(primaryMethodName, callerProvidesDefaults, defaultArguments),
             primaryUserParams, slotByName, defaultArguments,
             callerProvidesChanged, route);
     }
@@ -2532,7 +2527,8 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         IReadOnlyList<FacadeSlot> slots,
         IReadOnlyList<IParameterSymbol> primaryUserParams,
         DefaultsInfo primaryDefaults, BranchInfo branch,
-        bool callerProvidesChanged, bool implicitComposer, Tier2Route route,
+        bool callerProvidesDefaults, bool callerProvidesChanged,
+        bool implicitComposer, Tier2Route route,
         IReadOnlyDictionary<string, int> surfacedIndices)
     {
         var slotByName = slots.ToDictionary(s => s.Param.Name, StringComparer.Ordinal);
@@ -2563,7 +2559,9 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             EmitTier2ForwardedChangedMask(sb, "                ", altSlots,
                 branch.AlternateDefaults, surfacedIndices, "__directChanged");
         }
-        EmitTier2BridgeCallByParams(sb, "                ", branch.AlternateMethodName,
+        EmitTier2BridgeCallByParams(sb, "                ",
+            ExplicitDefaultsMethod(branch.AlternateMethodName,
+                branch.AlternateProvidesDefaults, alternateDefaultArguments),
             branch.AlternateUserParams, slotByName, alternateDefaultArguments,
             branch.AlternateProvidesChanged, route);
         sb.AppendLine("            }");
@@ -2579,7 +2577,9 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             EmitTier2ForwardedChangedMask(sb, "                ", directSlots,
                 primaryDefaults, surfacedIndices, "__directChanged");
         }
-        EmitTier2BridgeCallByParams(sb, "                ", primaryMethodName,
+        EmitTier2BridgeCallByParams(sb, "                ",
+            ExplicitDefaultsMethod(primaryMethodName,
+                callerProvidesDefaults, primaryDefaultArguments),
             primaryUserParams, slotByName, primaryDefaultArguments,
             callerProvidesChanged, route);
         sb.AppendLine("            }");
@@ -2663,10 +2663,20 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         }
 
         var slotByName = secondarySlots.ToDictionary(s => s.Param.Name, StringComparer.Ordinal);
-        EmitTier2BridgeCallByParams(sb, "            ", info.Method.Name,
+        EmitTier2BridgeCallByParams(sb, "            ",
+            ExplicitDefaultsMethod(info.Method.Name,
+                info.SecondaryProvidesDefaults, defaultArguments),
             info.UserParams, slotByName, defaultArguments,
             hasChanged, Tier2Route.Secondary, info.Discriminator.Name);
     }
+
+    static string ExplicitDefaultsMethod(
+        string methodName,
+        bool callerProvidesDefaults,
+        IReadOnlyList<string> defaultArguments) =>
+        !callerProvidesDefaults && defaultArguments.Count > 0
+            ? methodName + "ExplicitDefaults"
+            : methodName;
 
     static void EmitTier2BridgeCallByParams(StringBuilder sb, string indent,
         string methodName, IReadOnlyList<IParameterSymbol> userParams,
@@ -2724,7 +2734,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         IReadOnlyList<IParameterSymbol> primaryUserParams,
         DefaultsInfo primaryDefaults, string primaryDefaultsEnumName,
         BranchInfo branch, string composerName, bool hoistModifier,
-        bool callerProvidesChanged)
+        bool callerProvidesDefaults, bool callerProvidesChanged)
     {
         // Lookup table from bridge-param-name to facade slot. Built once
         // and reused for both branches' call emission. Names that only
@@ -2753,7 +2763,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
           .Append(branchPropName).AppendLine("!.Render(c));");
         EmitDefaultsMask(sb, inner, branch.AlternateDefaults, slots, allNamedSlots,
             hasModifier: hoistModifier, hasPainter: false);
-        if (callerProvidesChanged)
+        if (branch.AlternateProvidesChanged)
         {
             // Build the slots used by the alternate bridge. Kotlin bit
             // positions come from its Defaults map, so C# declaration
@@ -2765,8 +2775,11 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             }
             EmitChangedMask(sb, inner, altSlots, composerName, branch.AlternateDefaults);
         }
-        EmitBridgeCallByParams(sb, inner, branch.AlternateMethodName, branch.AlternateUserParams,
-            slotByName, composerName, hoistModifier, callerProvidesChanged);
+        EmitBridgeCallByParams(sb, inner,
+            ExplicitDefaultsMethod(branch.AlternateMethodName,
+                branch.AlternateProvidesDefaults, ["__defaults"]),
+            branch.AlternateUserParams,
+            slotByName, composerName, hoistModifier, branch.AlternateProvidesChanged);
         sb.Append(indent).AppendLine("}");
 
         // Primary branch: branched slot is null.
@@ -2783,7 +2796,10 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             }
             EmitChangedMask(sb, inner, primSlots, composerName, primaryDefaults);
         }
-        EmitBridgeCallByParams(sb, inner, primaryMethodName, primaryUserParams,
+        EmitBridgeCallByParams(sb, inner,
+            ExplicitDefaultsMethod(primaryMethodName,
+                callerProvidesDefaults, ["__defaults"]),
+            primaryUserParams,
             slotByName, composerName, hoistModifier, callerProvidesChanged);
         sb.Append(indent).AppendLine("}");
     }
@@ -3366,7 +3382,11 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         foreach (var s in slots)
             slotByName[s.Param.Name] = s;
 
-        sb.Append("                global::AndroidX.Compose.ComposeBridges.").Append(info.Method.Name).Append('(');
+        sb.Append("                global::AndroidX.Compose.ComposeBridges.")
+          .Append(info.SecondaryProvidesDefaults
+              ? info.Method.Name
+              : info.Method.Name + "ExplicitDefaults")
+          .Append('(');
         for (int i = 0; i < info.UserParams.Count; i++)
         {
             var p = info.UserParams[i];

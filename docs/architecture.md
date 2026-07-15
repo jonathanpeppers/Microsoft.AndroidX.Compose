@@ -357,8 +357,15 @@ The interceptor records omitted C#
   arguments as a surfaced-parameter bitmap, preserving explicit `null`,
   and `KotlinDefaultMaskPlan` maps that bitmap to route-specific generated
   default enums (including `Split()` for wide masks). Direct bridge helpers
-  consume this contract before their route-neutral bridge call; adapter
-  facade calls cannot safely infer omission from nullable runtime values.
+  consume this contract before their route-neutral bridge call.
+  `ComposeBridgeGenerator` emits an internal `<Bridge>ExplicitDefaults`
+  sibling for bridges whose public partial declaration relies on nullable
+  auto-masking. The declared bridge still computes defaults from runtime
+  nullability for existing callers; the direct helper calls the sibling with
+  its precomputed mask, so explicit `null` clears the Kotlin bit while an
+  omitted argument leaves it set. Wide bridges take the generated
+  `Split()` pair directly. No facade or adapter fallback participates in
+  this path.
 
 ### Real-app migration benchmark
 
