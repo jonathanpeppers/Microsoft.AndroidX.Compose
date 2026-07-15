@@ -152,7 +152,10 @@ and common handwritten composition APIs cover layout, state, effects,
 resources, theme reads, and composition locals. Existing explicit-composer
 overloads remain available as low-level escape hatches. The composable facade
 entry points are themselves `[Composable]`, so unchanged calls skip before
-constructing their tree-style adapters. The hand-written holdouts (`Scaffold`,
+their bodies execute; when they do execute, the generator lowers modifier,
+callback, content-slot, state-holder, and default-mask plumbing directly to
+the corresponding Compose bridge without constructing a tree-style adapter.
+The hand-written holdouts (`Scaffold`,
 lazy collections, text fields, search, and similar custom shapes) remain
 tree-style for now.
 

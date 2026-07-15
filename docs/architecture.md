@@ -162,7 +162,7 @@ already supports.
 | Skipping / recomposition optimization   | Per-param `$changed` bitmask computed at Render time via `composer.DiffSlot` / `composer.RememberAction` / `Modifier.StructuralKey`; bridge generator threads it into the JNI `$changed` slot. Modifier slot still emits Uncertain (Kotlin runtime falls back to its own input compare). | Tier 2 mostly delivered ✅ |
 | Slot-table-backed `remember`            | `Remember(() => …)` with `[CallerLineNumber]` keying into an activity-scoped cache; `Remember(factory, key1, …)` (1–3 keys or `RememberKeyed(factory, keys[])`) resets the slot on key change | Lifetime is per call site, not per nested-scope as in Kotlin |
 | `@Composable` type-system enforcement   | None — calling a non-composable from a composable context fails at runtime, not compile-time | Footgun (Tier 2 analyzer is a follow-up) |
-| Per-call-site allocation                | Tree-style facade: every recomposition allocates fresh `ComposableNode` objects. Tier 2 `[Composable]` methods skip the entire body when unchanged, so skipped calls allocate nothing. Generated catalog entry points currently construct the matching facade only when their body executes; direct bridge emission is the remaining optimization. | Resolved on the skip path; execution-path facade allocation remains |
+| Per-call-site allocation                | Tree-style facade: every recomposition allocates fresh `ComposableNode` objects. Tier 2 `[Composable]` methods skip unchanged calls and lower executed generated-catalog calls directly to Compose bridges, so neither path allocates a facade node. | Resolved for generated facades; hand-written holdouts retain their custom allocation behavior |
 
 ## Tier 2 — `[Composable]` C# methods
 
@@ -173,9 +173,11 @@ invocation of a `[Composable]`-marked static method. The wrapper opens
 a Compose restart group, runs per-parameter `DiffSlot` diffing, and
 skips the underlying call when nothing changed. The result is a render-loop shape Compose can skip the same way it
 skips a Kotlin `@Composable`. A skipped method performs no
-`ComposableNode` allocation. Generated catalog entry points currently
-adapt to their matching tree facade when they execute; direct bridge
-emission will remove that execution-path allocation separately.
+`ComposableNode` allocation. Generated catalog entry points also lower
+executed calls directly to their bound API or `[ComposeBridge]`, reusing
+the facade metadata for modifier materialization, callback and content
+wrapping, state holders, `$default`/`$changed` masks, branch routing, and
+painter ownership without constructing the matching tree facade.
 
 Mirrors the design `dotnet/maui` uses for its
 [`BindingSourceGen`](https://github.com/dotnet/maui/blob/main/src/Controls/src/BindingSourceGen):
@@ -288,10 +290,6 @@ Tier 2; one-shot screens can stay tree-style indefinitely.
 
 ### Deferred — follow-up issues
 
-- **Direct bridge bodies for generated facade entry points.** The
-  sibling methods currently instantiate their generated tree facade
-  when they execute. Emitting the same bridge/default-mask plumbing
-  directly will remove that execution-path adapter allocation.
 - **Tier 2 entry points for hand-written holdouts.** `Scaffold`, lazy
   collections, text fields, search, and other custom rendering shapes
   are not driven by `[ComposeFacade]` metadata and need dedicated

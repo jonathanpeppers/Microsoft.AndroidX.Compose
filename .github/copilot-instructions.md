@@ -1125,9 +1125,12 @@ Both styles can call into each other freely:
   `AndroidX.Compose.Composables` for every supported generated facade.
   The method exposes ctor values, modifier, content, named slots,
   optional values, theme color, and state-confirm callbacks as normal
-  parameters, maps them onto the existing facade, and renders it. Do
-  not hand-write a duplicate entry point; extend the facade generator
-  when a generated shape is wrong.
+  parameters and lowers them directly to the bound API or
+  `[ComposeBridge]`. The lowering reuses facade metadata for modifiers,
+  callbacks, content slots, state holders, masks, branch routing,
+  painter resources, and secondary constructors without allocating the
+  tree facade. Do not hand-write a duplicate entry point; extend the
+  facade generator when a generated shape is wrong.
 - `Column` and `Row` remain hand-written entry points because their
   facades are generator holdouts. `Text`, `Box`, and `Button` now use
   the richer catalog-generated methods. The generator detects an
@@ -1182,9 +1185,6 @@ behaviour.**
 
 ### Deferred (follow-up)
 
-- Direct `[ComposeBridge]` calls from generated catalog entry points;
-  they currently allocate the corresponding facade only when the
-  interceptor decides the method must execute.
 - Tier 2 modelling for hand-written facade holdouts (`Scaffold`, lazy
   collections, text fields, search, and other custom shapes).
 - Direct `$default` invocation — call sites already capture omitted C#

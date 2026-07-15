@@ -23,4 +23,42 @@ internal sealed class Tier2InlineContent : ComposableNode
         using var scope = ComposableContext.Enter(composer);
         _body(composer);
     }
+
+    internal static void RenderDirect(IComposer composer, Action<IComposer> body, bool indexed)
+    {
+        ArgumentNullException.ThrowIfNull(composer);
+        ArgumentNullException.ThrowIfNull(body);
+        using var rows = indexed ? RenderContext.PushRow(1) : default;
+        if (indexed)
+            rows.SetIndex(0);
+        composer.StartReplaceableGroup(HashCode.Combine(0, typeof(Tier2InlineContent)));
+        try
+        {
+            using var scope = ComposableContext.Enter(composer);
+            body(composer);
+        }
+        finally
+        {
+            composer.EndReplaceableGroup();
+        }
+    }
+
+    internal static void RenderDirect(IComposer composer, Action body, bool indexed)
+    {
+        ArgumentNullException.ThrowIfNull(composer);
+        ArgumentNullException.ThrowIfNull(body);
+        using var rows = indexed ? RenderContext.PushRow(1) : default;
+        if (indexed)
+            rows.SetIndex(0);
+        composer.StartReplaceableGroup(HashCode.Combine(0, typeof(Tier2InlineContent)));
+        try
+        {
+            using var scope = ComposableContext.Enter(composer);
+            body();
+        }
+        finally
+        {
+            composer.EndReplaceableGroup();
+        }
+    }
 }
