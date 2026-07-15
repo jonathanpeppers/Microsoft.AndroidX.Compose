@@ -1162,6 +1162,18 @@ renders two sibling Tier 2 methods side by side and shows that the
 one whose input never changes has its body skipped (its in-process
 execution counter stays flat while its sibling's tracks every tap).
 
+### Handwritten facade adapters
+
+When a handwritten facade only needs an ambient-composer sibling, write one
+explicit-composer adapter on `Composables` and apply
+`[GenerateImplicitComposable]`. The generator removes parameter zero
+(`IComposer`) and transforms each
+`[ComposableContent] Action<..., IComposer>` into `Action<...>`, preserving
+nullability and optional defaults. The explicit method remains the sole
+rendering implementation and must delegate to the existing facade rather
+than duplicate bridge logic. `MaterialTheme`, `Scaffold`, `SnackbarHost`,
+and `SegmentedButton` are the canonical examples.
+
 ### Wiring the generator into a consuming project
 
 The `Microsoft.AndroidX.Compose` NuGet package ships the generator under
@@ -1193,8 +1205,10 @@ are generated while compiling the runtime assembly.
 | CN5006 | `[Composable]` extension methods are unsupported; use a regular static method.                                          |
 | CN5008 | `[Composable]` parameters cannot use `ref`, `out`, or `in`.                                                              |
 | CN5009 | A composerless API may execute outside a `[Composable]` method or `[ComposableContent]` callback; the diagnostic identifies the unsafe delegate escape. |
+| CN5010 | `[GenerateImplicitComposable]` targets an unsupported explicit-composer adapter shape.                                |
 
-Tests in `ComposableMethodGeneratorTests.cs`. **Add a test for any new
+Tests in `ComposableMethodGeneratorTests.cs` and
+`ImplicitComposableOverloadGeneratorTests.cs`. **Add a test for any new
 behaviour.**
 
 ### Direct `$default` invocation
@@ -1207,10 +1221,11 @@ Call sites capture omitted C#
 
 ### Deferred (follow-up)
 
-- Tier 2 modelling for the remaining hand-written facade holdouts
-  (`Scaffold`, text fields, search, snackbar hosting, segmented buttons,
-  custom layouts, and other custom shapes). Generic lowering covers typed
-  animation, pager, carousel, and lazy collection facades.
+- Tier 2 modelling for the remaining hand-written facade holdouts (text
+  fields, search, bottom-sheet scaffolding, navigation DSLs, custom layouts,
+  and other custom shapes). Generic lowering covers typed animation, pager,
+  carousel, and lazy collection facades; ambient-overload generation covers
+  `MaterialTheme`, `Scaffold`, `SnackbarHost`, and `SegmentedButton`.
 - Analyzer for "non-`[Composable]` calls `[Composable]`" — compile-
   time enforcement of the colour contract.
 - Lambda hoisting via `RememberAction` / `Wrap2` / `Wrap3` inside the

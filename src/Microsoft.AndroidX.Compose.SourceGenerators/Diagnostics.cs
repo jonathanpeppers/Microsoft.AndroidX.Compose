@@ -339,4 +339,12 @@ internal static class Diagnostics
         category: "AndroidX.Compose",
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);
+
+    public static readonly DiagnosticDescriptor ImplicitComposableGenerationInvalid = new(
+        id: "CN5010",
+        title: "Implicit composable overload shape is invalid",
+        messageFormat: "Method '{0}' cannot generate an implicit-composer overload: {1}",
+        category: "AndroidX.Compose",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
 }

@@ -590,6 +590,20 @@ internal static class Attributes
                 public ComposeCompanionGetterAttribute(string getterName) { }
                 public string? ReturnDescriptor { get; set; }
             }
+
+            /// <summary>
+            /// Apply to an explicit-composer <c>[Composable]</c> method on
+            /// <c>AndroidX.Compose.Composables</c> to generate its ambient-
+            /// composer sibling. Parameters marked
+            /// <see cref="ComposableContentAttribute"/> must be
+            /// <c>System.Action&lt;..., IComposer&gt;</c>; the generated
+            /// overload removes the trailing composer from that delegate.
+            /// </summary>
+            [global::System.AttributeUsage(global::System.AttributeTargets.Method,
+                                           AllowMultiple = false)]
+            internal sealed class GenerateImplicitComposableAttribute : global::System.Attribute
+            {
+            }
         }
         """;
 }

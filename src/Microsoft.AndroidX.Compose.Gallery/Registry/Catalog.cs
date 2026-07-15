@@ -208,6 +208,7 @@ public static class Catalog
         // ---- Tier 2 [Composable] ----
         D.Tier2.Tier2CounterDemo.Demo,
         D.Tier2.Tier2GenericContentDemo.Demo,
+        D.Tier2.Tier2HandwrittenHoldoutsDemo.Demo,
         D.Tier2.Tier2LazyCollectionsDemo.Demo,
         D.Tier2.Tier2SiblingSkipDemo.Demo,
         D.Tier2.Tier2RealAppBenchmarkDemo.Demo,

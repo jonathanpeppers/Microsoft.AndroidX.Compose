@@ -314,13 +314,18 @@ surfaces are modeled.
   the ambient composer while rendering the managed node and does not replace
   either Kotlin lambda factory. Collection parameters are treated as unstable
   and force execution so in-place list edits cannot be hidden by reference
-  equality.
-- **Scaffold:** needs a reusable padding-aware body slot that can expose the
-  Kotlin `PaddingValues` argument or forward its borrowed handle into a node.
-- **MaterialTheme:** resolves dynamic/light/dark color schemes from
-  composition-scoped Android state before invoking its synchronous content
-  slot. App-specific wrappers such as Jetchat's theme remain blocked on this
-  root primitive.
+  equality. `MaterialTheme`, `Scaffold`, `SnackbarHost`, and both
+  `SegmentedButton` modes are also complete. Their explicit-composer adapters
+  remain the sole rendering implementation and delegate to the existing
+  handwritten facades. `[GenerateImplicitComposable]` derives the ambient
+  sibling, removing the trailing `IComposer` from each
+  `[ComposableContent] Action<..., IComposer>` while preserving nullable
+  slots and defaults. This keeps Scaffold's borrowed `PaddingValues`,
+  SnackbarHost's `SnackbarData` forwarding, and SegmentedButton's row-index
+  dispatch inside their established facade implementations. Tier 2
+  `SegmentedButton` takes explicit `index`/`count`, matching Kotlin's
+  `itemShape(index, count)` contract; the adapter publishes that position
+  while retaining the enclosing row receiver scope.
 - **NavHost / NavDestination:** need a stable, remembered raw graph-builder
   callback plus route registration and destination-argument forwarding; this
   is a navigation DSL rather than a normal composable content slot.
@@ -331,10 +336,6 @@ surfaces are modeled.
   overloads.
 - **SearchBar / DockedSearchBar / SearchBarInputField:** need coordinated
   search/text state holders and multiple non-null content slots.
-- **SnackbarHost:** needs a body slot whose Kotlin `SnackbarData` argument is
-  forwarded into a sibling `Snackbar` bridge.
-- **SegmentedButton:** needs parent row-index metadata to select and build its
-  shape while dispatching between single- and multi-choice bridges.
 - **Layout:** needs custom measure-delegate lowering, Java SAM creation, and
   composer-keyed policy remembering.
 
@@ -350,6 +351,7 @@ surfaces are modeled.
 | CN5006 | Extension-method composables are unsupported.                   |
 | CN5008 | `ref`, `out`, and `in` parameters are unsupported.              |
 | CN5009 | A composerless API may execute outside `[Composable]` code or a `[ComposableContent]` callback; the diagnostic points to the unsafe delegate escape. |
+| CN5010 | `[GenerateImplicitComposable]` was applied to an unsupported explicit-composer adapter shape. |
 
 ### Optional arguments and Kotlin default masks
 
@@ -401,12 +403,10 @@ provides stable generated lambda adapters.
 
 ### Deferred — follow-up issues
 
-- **Tier 2 entry points for remaining hand-written holdouts.** `Scaffold`,
-  text fields, search, snackbar hosting, segmented buttons, and custom
-  layouts are not driven by `[ComposeFacade]` metadata and need dedicated
-  generator modelling. Generic composable lowering unlocks the typed lazy
-  collection family
-  ([#301](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/301)).
+- **Tier 2 entry points for remaining hand-written holdouts.** Text fields,
+  search, bottom-sheet scaffolding, navigation DSLs, and custom layouts need
+  richer state, bridge-dispatch, deferred/raw callback, or measure-policy
+  modelling beyond ambient-overload generation.
 - **`MovableContent` / `key {} ` / `Saver` / `Layout {}` / stability
   inference.** Explicit non-goals in the Tier 2 MVP — each gets its
   own follow-up issue.

@@ -156,10 +156,11 @@ their bodies execute; when they do execute, the generator lowers modifier,
 callback, content-slot, state-holder, and default-mask plumbing directly to
 the corresponding Compose bridge without constructing a tree-style adapter.
 Generic lowering also exposes typed animation, pager, carousel, and lazy
-collection facades. The remaining
-hand-written holdouts (`Scaffold`, text fields, search, snackbar hosting,
-segmented buttons, custom layout, and similar custom shapes) remain tree-style
-for now.
+collection facades. Generated ambient overloads cover the handwritten
+`MaterialTheme`, `Scaffold`, `SnackbarHost`, and both `SegmentedButton` modes
+without duplicating their rendering logic. The remaining handwritten holdouts
+(text fields, search, bottom-sheet scaffolding, navigation DSLs, custom layout,
+and similar custom shapes) remain tree-style for now.
 
 The Jetchat, JetNews, and Reply ports use composerless Tier 2 roots matching
 upstream Kotlin's top-level `@Composable` app function. Their activities call
@@ -174,7 +175,7 @@ and stable generated lambdas on
 [#304](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/304).
 See
 [docs/architecture.md → Tier 2](docs/architecture.md) for the emission shape,
-the sibling-skip proof demo, diagnostics (CN5001-CN5009), and remaining
+the sibling-skip proof demo, diagnostics (CN5001-CN5010), and remaining
 follow-ups. The two tiers coexist freely. The
 `Microsoft.AndroidX.Compose` NuGet package includes the Tier 2 source
 generator and its compiler configuration; package consumers need no separate
