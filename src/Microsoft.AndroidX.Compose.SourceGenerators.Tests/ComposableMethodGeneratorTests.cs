@@ -176,6 +176,41 @@ public class ComposableMethodGeneratorTests
     }
 
     [Fact]
+    public void ObsoleteComposable_SuppressesGeneratedForwardingWarning()
+    {
+        var (output, diags, emitted) = Run("""
+            namespace App
+            {
+                [System.Obsolete(
+                    "Use Modern instead.",
+                    DiagnosticId = "OLD001")]
+                public static class Screens
+                {
+                    [AndroidX.Compose.Composable]
+                    public static void Legacy() { }
+                }
+
+                public static class Caller
+                {
+                    public static void CallSite()
+                    {
+            #pragma warning disable CS0618
+                        Screens.Legacy();
+            #pragma warning restore CS0618
+                    }
+                }
+            }
+            """);
+
+        Assert.Empty(diags);
+        Assert.NotNull(emitted);
+        Assert.Contains("#pragma warning disable OLD001", emitted);
+        Assert.Contains("global::App.Screens.Legacy()", emitted);
+        Assert.Contains("#pragma warning restore OLD001", emitted);
+        AssertNoCompileErrors(output);
+    }
+
+    [Fact]
     public void ImplicitComposer_NoParameters_EmitsValidCoreSignature()
     {
         var (output, diags, emitted) = Run("""

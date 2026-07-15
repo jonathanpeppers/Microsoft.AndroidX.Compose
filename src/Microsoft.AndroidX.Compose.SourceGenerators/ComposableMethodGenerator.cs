@@ -275,6 +275,32 @@ public sealed class ComposableMethodGenerator : IIncrementalGenerator
     static bool IsComposer(ITypeSymbol type) =>
         type.ToDisplayString() == ComposerFullName;
 
+    static string? GetObsoleteDiagnosticId(ISymbol symbol)
+    {
+        for (ISymbol? current = symbol; current is not null;
+             current = current.ContainingType)
+        {
+            var obsolete = current.GetAttributes().FirstOrDefault(
+                static attribute =>
+                    attribute.AttributeClass?.ToDisplayString()
+                        == "System.ObsoleteAttribute");
+            if (obsolete is not null)
+            {
+                foreach (var named in obsolete.NamedArguments)
+                {
+                    if (named.Key == "DiagnosticId"
+                        && named.Value.Value is string diagnosticId
+                        && diagnosticId.Length > 0)
+                    {
+                        return diagnosticId;
+                    }
+                }
+                return "CS0618";
+            }
+        }
+        return null;
+    }
+
     static bool CanEmitInterceptor(IMethodSymbol method) =>
         method.IsStatic &&
         method.ReturnType.SpecialType == SpecialType.System_Void &&
@@ -363,6 +389,7 @@ public sealed class ComposableMethodGenerator : IIncrementalGenerator
         int key = FnvHash(methodFqn);
         bool hasExplicitComposer = method.Parameters.Length > 0
             && IsComposer(method.Parameters[0].Type);
+        string? obsoleteDiagnosticId = GetObsoleteDiagnosticId(method);
 
         // Same Kotlin-shape mask/expected pair used by the previous
         // generator revision — `0b001` is the runtime "force" bit, each
@@ -488,6 +515,11 @@ public sealed class ComposableMethodGenerator : IIncrementalGenerator
               .AppendLine(" || !__c.Skipping)");
         }
         sb.AppendLine("            {");
+        // Call the user's original method by fully-qualified name. This call
+        // site has no [InterceptsLocation], so it reaches the method body.
+        if (obsoleteDiagnosticId is not null)
+            sb.Append("                #pragma warning disable ")
+              .AppendLine(obsoleteDiagnosticId);
         sb.Append("                ");
         if (site.DirectTarget is not null)
         {
@@ -526,6 +558,9 @@ public sealed class ComposableMethodGenerator : IIncrementalGenerator
               .Append("UL, __dirty");
         }
         sb.AppendLine(");");
+        if (obsoleteDiagnosticId is not null)
+            sb.Append("                #pragma warning restore ")
+              .AppendLine(obsoleteDiagnosticId);
         sb.AppendLine("            }");
         sb.AppendLine("            else");
         sb.AppendLine("            {");

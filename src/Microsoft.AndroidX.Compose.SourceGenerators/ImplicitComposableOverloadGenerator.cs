@@ -183,6 +183,7 @@ public sealed class ImplicitComposableOverloadGenerator : IIncrementalGenerator
         sb.Append("        /// <summary>Ambient-composer overload for <c>")
           .Append(method.Name)
           .AppendLine("</c>.</summary>");
+        EmitObsoleteAttribute(sb, method);
         sb.AppendLine("        [global::AndroidX.Compose.ComposableAttribute]");
         sb.Append("        public static void ")
           .Append(EscapeIdentifier(method.Name))
@@ -216,6 +217,50 @@ public sealed class ImplicitComposableOverloadGenerator : IIncrementalGenerator
             sb.AppendLine(i == model.Parameters.Count - 1 ? ");" : ",");
         }
         sb.AppendLine("        }");
+    }
+
+    static void EmitObsoleteAttribute(StringBuilder sb, IMethodSymbol method)
+    {
+        var obsolete = method.GetAttributes().FirstOrDefault(static attribute =>
+            attribute.AttributeClass?.ToDisplayString()
+                == "System.ObsoleteAttribute");
+        if (obsolete is null)
+            return;
+
+        sb.Append("        [global::System.ObsoleteAttribute(");
+        bool hasArgument = false;
+        if (obsolete.ConstructorArguments.Length > 0)
+        {
+            if (obsolete.ConstructorArguments[0].Value is string message)
+                sb.Append(SymbolDisplay.FormatLiteral(message, quote: true));
+            else
+                sb.Append("null");
+            hasArgument = true;
+        }
+        if (obsolete.ConstructorArguments.Length > 1
+            && obsolete.ConstructorArguments[1].Value is bool error)
+        {
+            if (hasArgument)
+                sb.Append(", ");
+            sb.Append(error ? "true" : "false");
+            hasArgument = true;
+        }
+        foreach (var named in obsolete.NamedArguments)
+        {
+            if (named.Key is not ("DiagnosticId" or "UrlFormat")
+                || named.Value.Value is not string value)
+            {
+                continue;
+            }
+
+            if (hasArgument)
+                sb.Append(", ");
+            sb.Append(named.Key)
+              .Append(" = ")
+              .Append(SymbolDisplay.FormatLiteral(value, quote: true));
+            hasArgument = true;
+        }
+        sb.AppendLine(")]");
     }
 
     static void EmitArgument(StringBuilder sb, ParameterModel parameter)

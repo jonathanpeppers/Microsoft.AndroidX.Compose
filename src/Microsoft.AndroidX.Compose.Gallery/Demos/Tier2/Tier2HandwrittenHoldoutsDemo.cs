@@ -26,6 +26,10 @@ public static class Tier2HandwrittenHoldoutsDemo
         var text = Remember(() => new MutableState<string>("Editable"));
         var selection = Remember(() => new MutableState<AndroidX.Compose.UI.Text.Input.TextFieldValue>(
             ComposeExtensions.NewTextFieldValue("Selection-aware")));
+        var search = Remember(() => new SearchBarState());
+        var searchText = Remember(() => new SearchBarTextFieldState());
+        var topSearch = Remember(() => new SearchBarState());
+        var topSearchText = Remember(() => new SearchBarTextFieldState());
         IReadOnlyList<int> body = [0];
 
         MaterialTheme(() =>
@@ -72,6 +76,48 @@ public static class Tier2HandwrittenHoldoutsDemo
                             selection,
                             singleLine: true,
                             label: () => Text("Outlined TextFieldValue"));
+
+                        SearchBar(
+                            search,
+                            inputField: () => SearchBarInputField(
+                                searchText,
+                                search,
+                                placeholder: () => Text("Docked search")));
+                        ExpandedDockedSearchBar(
+                            search,
+                            inputField: () => SearchBarInputField(
+                                searchText,
+                                search),
+                            content: () => Text("Docked search results"));
+
+                        TopSearchBar(
+                            topSearch,
+                            inputField: () => SearchBarInputField(
+                                topSearchText,
+                                topSearch,
+                                placeholder: () => Text("Top search")));
+                        ExpandedFullScreenSearchBar(
+                            topSearch,
+                            inputField: () => SearchBarInputField(
+                                topSearchText,
+                                topSearch),
+                            content: () => Text("Full-screen search results"));
+
+#pragma warning disable CS0618
+                        DockedSearchBar(
+                            expanded: false,
+                            onExpandedChange: _ => { },
+                            inputField: () => Text("Legacy input field"),
+                            content: () => Text("Legacy boolean results"));
+                        DockedSearchBar(
+                            query: string.Empty,
+                            onQueryChange: _ => { },
+                            onSearch: _ => { },
+                            active: false,
+                            onActiveChange: _ => { },
+                            content: () => Text("Legacy query results"),
+                            placeholder: () => Text("Legacy query search"));
+#pragma warning restore CS0618
 
                         Layout(
                             (scope, measurables, constraints) =>

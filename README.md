@@ -158,8 +158,9 @@ the corresponding Compose bridge without constructing a tree-style adapter.
 Generic lowering also exposes typed animation, pager, carousel, and lazy
 collection facades. Generated ambient overloads cover the handwritten
 `MaterialTheme`, `Scaffold`, `SnackbarHost`, both `SegmentedButton` modes,
-`Layout`, `TextField`, and `OutlinedTextField` without duplicating their
-rendering logic. The remaining handwritten holdouts (search, bottom-sheet
+`Layout`, `TextField`, `OutlinedTextField`, and the complete search family
+without duplicating their rendering logic. The remaining handwritten holdouts
+(bottom-sheet
 scaffolding, navigation DSLs, and similar shared-state shapes) remain
 tree-style for now.
 

@@ -46,17 +46,19 @@ public class ImplicitComposableOverloadGeneratorTests
         ImmutableArray<Diagnostic> Diagnostics,
         string? Emitted) Run(string source)
     {
+        var parseOptions = new CSharpParseOptions(LanguageVersion.Preview);
         var compilation = CSharpCompilation.Create(
             "ImplicitOverloadTest",
             [CSharpSyntaxTree.ParseText(Preamble + "\n" + source,
-                new CSharpParseOptions(LanguageVersion.Preview))],
+                parseOptions)],
             references: Net.Sdk.References,
             options: new CSharpCompilationOptions(
                 OutputKind.DynamicallyLinkedLibrary,
                 nullableContextOptions: NullableContextOptions.Enable));
 
         CSharpGeneratorDriver.Create(
-                [new ImplicitComposableOverloadGenerator().AsSourceGenerator()])
+                [new ImplicitComposableOverloadGenerator().AsSourceGenerator()],
+                parseOptions: parseOptions)
             .RunGeneratorsAndUpdateCompilation(
                 compilation,
                 out var output,
@@ -80,6 +82,10 @@ public class ImplicitComposableOverloadGeneratorTests
             {
                 public static partial class Composables
                 {
+                    [System.Obsolete(
+                        "Use Modern instead.",
+                        DiagnosticId = "OLD001",
+                        UrlFormat = "https://example.test/{0}")]
                     [Composable, GenerateImplicitComposable]
                     public static void Panel(
                         Runtime.IComposer composer,
@@ -100,11 +106,23 @@ public class ImplicitComposableOverloadGeneratorTests
         Assert.Empty(diagnostics);
         Assert.NotNull(emitted);
         Assert.Contains(
-            "global::System.Action header, [global::AndroidX.Compose.ComposableContentAttribute] global::System.Action<string>? body = null, global::System.Boolean enabled = true, global::AndroidX.Compose.Token token = default(global::AndroidX.Compose.Token), global::AndroidX.Compose.Mode mode = (global::AndroidX.Compose.Mode)1",
+            "[global::AndroidX.Compose.ComposableContentAttribute] global::System.Action header",
+            emitted);
+        Assert.Contains(
+            "global::System.Action<string>? body = null",
+            emitted);
+        Assert.Contains(
+            "global::AndroidX.Compose.Token token = default(global::AndroidX.Compose.Token)",
+            emitted);
+        Assert.Contains(
+            "global::AndroidX.Compose.Mode mode = (global::AndroidX.Compose.Mode)1",
             emitted);
         Assert.Contains("(__composer) => header()", emitted);
         Assert.Contains(
             "body is null ? null : (__p0, __composer) => body(__p0)",
+            emitted);
+        Assert.Contains(
+            "[global::System.ObsoleteAttribute(\"Use Modern instead.\", DiagnosticId = \"OLD001\", UrlFormat = \"https://example.test/{0}\")]",
             emitted);
         Assert.DoesNotContain(
             output.GetDiagnostics(),
@@ -137,5 +155,34 @@ public class ImplicitComposableOverloadGeneratorTests
             "must be System.Action<..., IComposer>",
             diagnostic.GetMessage());
         Assert.Null(emitted);
+    }
+
+    [Fact]
+    public void PreservesNullObsoleteMessageAndErrorFlag()
+    {
+        const string source = """
+            namespace AndroidX.Compose
+            {
+                public static partial class Composables
+                {
+                    [System.Obsolete(null, true)]
+                    [Composable, GenerateImplicitComposable]
+                    public static void Legacy(Runtime.IComposer composer)
+                    {
+                    }
+                }
+            }
+            """;
+
+        var (output, diagnostics, emitted) = Run(source);
+
+        Assert.Empty(diagnostics);
+        Assert.NotNull(emitted);
+        Assert.Contains(
+            "[global::System.ObsoleteAttribute(null, true)]",
+            emitted);
+        Assert.DoesNotContain(
+            output.GetDiagnostics(),
+            static diagnostic => diagnostic.Severity == DiagnosticSeverity.Error);
     }
 }
