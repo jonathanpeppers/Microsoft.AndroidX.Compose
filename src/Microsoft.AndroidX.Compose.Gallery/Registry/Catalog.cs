@@ -210,6 +210,7 @@ public static class Catalog
         D.Tier2.Tier2GenericContentDemo.Demo,
         D.Tier2.Tier2LazyCollectionsDemo.Demo,
         D.Tier2.Tier2SiblingSkipDemo.Demo,
+        D.Tier2.Tier2RealAppBenchmarkDemo.Demo,
     ];
 
     /// <summary>

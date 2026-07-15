@@ -366,7 +366,8 @@ The interceptor records omitted C#
   text fields, search, snackbar hosting, segmented buttons, and custom
   layouts are not driven by `[ComposeFacade]` metadata and need dedicated
   generator modelling. Generic composable lowering unlocks the typed lazy
-  collection family.
+  collection family
+  ([#301](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/301)).
 - **`MovableContent` / `key {} ` / `Saver` / `Layout {}` / stability
   inference.** Explicit non-goals in the Tier 2 MVP — each gets its
   own follow-up issue.

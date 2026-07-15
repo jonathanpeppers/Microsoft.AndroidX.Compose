@@ -161,9 +161,13 @@ hand-written holdouts (`Scaffold`, text fields, search, snackbar hosting,
 segmented buttons, custom layout, and similar custom shapes) remain tree-style
 for now.
 
-The Jetchat, JetNews, and Reply ports use a Tier 2 root matching upstream
-Kotlin's top-level `@Composable` app function and call it through the
-`Action<IComposer>` `SetContent` overload. See
+The Jetchat, JetNews, and Reply ports use composerless Tier 2 roots matching
+upstream Kotlin's top-level `@Composable` app function. Their activities call
+the `Action` `SetContent` overload and use implicit `Remember`, `MutableStateOf`,
+`ViewModel`, and lazy-list state APIs. The roots retain one
+`ComposableContext.Current` render escape hatch while `MaterialTheme`,
+`Scaffold`, navigation, lazy collections, and text fields remain tree-style.
+See
 [docs/architecture.md → Tier 2](docs/architecture.md) for the emission shape,
 the sibling-skip proof demo, diagnostics (CN5001-CN5009), and remaining
 follow-ups. The two tiers coexist freely. The
