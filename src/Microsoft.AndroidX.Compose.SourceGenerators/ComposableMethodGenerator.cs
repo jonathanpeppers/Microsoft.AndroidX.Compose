@@ -155,12 +155,6 @@ public sealed class ComposableMethodGenerator : IIncrementalGenerator
                 Diagnostics.ComposableExtensionUnsupported, loc, method.ToDisplayString()));
             return;
         }
-        if (method.IsGenericMethod)
-        {
-            spc.ReportDiagnostic(Diagnostic.Create(
-                Diagnostics.ComposableGenericUnsupported, loc, method.ToDisplayString()));
-            return;
-        }
         var byRefParameter = method.Parameters.FirstOrDefault(
             static p => p.RefKind != RefKind.None);
         if (byRefParameter is not null)
@@ -290,7 +284,6 @@ public sealed class ComposableMethodGenerator : IIncrementalGenerator
         IsAccessibleFromGeneratedType(method) &&
         !method.IsAsync &&
         !method.IsExtensionMethod &&
-        !method.IsGenericMethod &&
         !method.Parameters.Any(static p => p.RefKind != RefKind.None);
 
     static bool IsAccessibleFromGeneratedType(IMethodSymbol method)
@@ -357,7 +350,12 @@ public sealed class ComposableMethodGenerator : IIncrementalGenerator
     /// </summary>
     static void EmitInterceptor(StringBuilder sb, CallSite site, int index)
     {
-        var method = site.Target;
+        // Keep substitutions from a constructed containing type
+        // (e.g. Screens<string>) while reopening only this method's own
+        // generic parameters for the interceptor signature.
+        var method = site.Target.ConstructedFrom;
+        var interceptorTypeParameters = GetInterceptorTypeParameters(method);
+        var typeParameterNames = BuildTypeParameterNames(interceptorTypeParameters);
         var containingType = method.ContainingType
             ?? throw new InvalidOperationException(
                 $"Composable method '{method.Name}' has no containing type.");
@@ -398,17 +396,23 @@ public sealed class ComposableMethodGenerator : IIncrementalGenerator
 
         // Signature mirrors the target verbatim. Use FullyQualifiedFormat
         // so a parameter type from any namespace lands as `global::...`.
-        sb.Append("        public static void ").Append(wrapperName).Append('(');
+        sb.Append("        public static void ").Append(wrapperName);
+        AppendTypeParameters(sb, interceptorTypeParameters, typeParameterNames);
+        sb.Append('(');
         for (int i = 0; i < method.Parameters.Length; i++)
         {
             if (i > 0) sb.Append(", ");
             var p = method.Parameters[i];
-            sb.Append(p.Type.ToDisplayString(ParameterTypeFormat))
+            sb.Append(DisplayType(p.Type, typeParameterNames))
               .Append(' ').Append(EscapeIdentifier(p.Name));
         }
         sb.AppendLine(")");
+        AppendTypeParameterConstraints(
+            sb, interceptorTypeParameters, typeParameterNames, "        ");
         sb.AppendLine("        {");
-        sb.Append("            ").Append(coreName).Append('(');
+        sb.Append("            ").Append(coreName);
+        AppendTypeArguments(sb, interceptorTypeParameters, typeParameterNames);
+        sb.Append('(');
         if (!hasExplicitComposer)
             sb.Append("global::AndroidX.Compose.ComposableContext.Current");
         for (int i = 0; i < method.Parameters.Length; i++)
@@ -420,18 +424,22 @@ public sealed class ComposableMethodGenerator : IIncrementalGenerator
         sb.AppendLine("        }");
         sb.AppendLine();
 
-        sb.Append("        static void ").Append(coreName).Append('(');
+        sb.Append("        static void ").Append(coreName);
+        AppendTypeParameters(sb, interceptorTypeParameters, typeParameterNames);
+        sb.Append('(');
         if (!hasExplicitComposer)
             sb.Append("global::AndroidX.Compose.Runtime.IComposer __composer");
         for (int i = 0; i < method.Parameters.Length; i++)
         {
             if (i > 0 || !hasExplicitComposer) sb.Append(", ");
             var p = method.Parameters[i];
-            sb.Append(p.Type.ToDisplayString(ParameterTypeFormat))
+            sb.Append(DisplayType(p.Type, typeParameterNames))
               .Append(' ').Append(EscapeIdentifier(p.Name));
         }
         sb.Append(", ");
         sb.AppendLine("int __changed)");
+        AppendTypeParameterConstraints(
+            sb, interceptorTypeParameters, typeParameterNames, "        ");
         sb.AppendLine("        {");
 
         var composerName = hasExplicitComposer
@@ -448,11 +456,21 @@ public sealed class ComposableMethodGenerator : IIncrementalGenerator
         {
             int bitOffset = 1 + i * 3;
             var p = userParams[i];
-            sb.Append("            __dirty |= __c.DiffSlot<")
-              .Append(p.Type.ToDisplayString(ParameterTypeFormat))
-              .Append(">(").Append(EscapeIdentifier(p.Name)).Append(", ")
-              .Append(bitOffset.ToString(CultureInfo.InvariantCulture))
-              .AppendLine(");");
+            if (IsUnstableCollection(p.Type))
+            {
+                // Mutable collections commonly preserve reference identity
+                // across in-place edits. Never skip solely because the list
+                // object compares equal to its previous reference.
+                sb.AppendLine("            __dirty |= 0b1;");
+            }
+            else
+            {
+                sb.Append("            __dirty |= __c.DiffSlot<")
+                  .Append(DisplayType(p.Type, typeParameterNames))
+                  .Append(">(").Append(EscapeIdentifier(p.Name)).Append(", ")
+                  .Append(bitOffset.ToString(CultureInfo.InvariantCulture))
+                  .AppendLine(");");
+            }
         }
         if (userParams.Count > trackedParamCount)
             sb.AppendLine("            __dirty |= 0b1;");
@@ -470,12 +488,22 @@ public sealed class ComposableMethodGenerator : IIncrementalGenerator
               .AppendLine(" || !__c.Skipping)");
         }
         sb.AppendLine("            {");
-        sb.Append("                ")
-          .Append(site.DirectTarget?.ContainingType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)
-              ?? containingType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat))
-          .Append('.')
-          .Append(EscapeIdentifier(site.DirectTarget?.MethodName ?? method.Name))
-          .Append('(');
+        sb.Append("                ");
+        if (site.DirectTarget is not null)
+        {
+            sb.Append(site.DirectTarget.ContainingType.ToDisplayString(
+                    SymbolDisplayFormat.FullyQualifiedFormat))
+              .Append('.')
+              .Append(EscapeIdentifier(site.DirectTarget.MethodName));
+        }
+        else
+        {
+            sb.Append(DisplayType(containingType, typeParameterNames))
+              .Append('.')
+              .Append(EscapeIdentifier(method.Name));
+            AppendTypeArguments(sb, method.TypeParameters, typeParameterNames);
+        }
+        sb.Append('(');
         bool hasCallArgument = false;
         if (site.DirectTarget is not null || hasExplicitComposer)
         {
@@ -508,12 +536,211 @@ public sealed class ComposableMethodGenerator : IIncrementalGenerator
         // user method) so the restart group re-opens, args re-diff,
         // skip-or-call fires the same way.
         sb.Append("            __c.EndRestartGroup()?.UpdateScope(new global::AndroidX.Compose.ComposableLambda2((__c2, __force) => ")
-          .Append(coreName).Append("(__c2");
+          .Append(coreName);
+        AppendTypeArguments(sb, interceptorTypeParameters, typeParameterNames);
+        sb.Append("(__c2");
         foreach (var p in userParams)
             sb.Append(", ").Append(EscapeIdentifier(p.Name));
         sb.AppendLine(", __force | 0b1)));");
 
         sb.AppendLine("        }");
+    }
+
+    static System.Collections.Generic.IReadOnlyList<ITypeParameterSymbol>
+        GetInterceptorTypeParameters(IMethodSymbol method)
+    {
+        var result = new System.Collections.Generic.List<ITypeParameterSymbol>();
+        var containingTypes = new System.Collections.Generic.Stack<INamedTypeSymbol>();
+        for (var type = method.ContainingType; type is not null; type = type.ContainingType)
+            containingTypes.Push(type);
+        foreach (var containingType in containingTypes)
+        {
+            foreach (var typeArgument in containingType.TypeArguments)
+                CollectTypeParameters(typeArgument, result);
+        }
+        foreach (var typeParameter in method.TypeParameters)
+            AddTypeParameter(typeParameter, result);
+        for (int i = 0; i < result.Count; i++)
+        {
+            foreach (var constraintType in result[i].ConstraintTypes)
+                CollectTypeParameters(constraintType, result);
+        }
+        return result;
+    }
+
+    static void CollectTypeParameters(
+        ITypeSymbol type,
+        System.Collections.Generic.List<ITypeParameterSymbol> result)
+    {
+        if (type is ITypeParameterSymbol typeParameter)
+        {
+            AddTypeParameter(typeParameter, result);
+            return;
+        }
+
+        if (type is IArrayTypeSymbol array)
+        {
+            CollectTypeParameters(array.ElementType, result);
+            return;
+        }
+
+        if (type is INamedTypeSymbol named)
+        {
+            foreach (var typeArgument in named.TypeArguments)
+                CollectTypeParameters(typeArgument, result);
+        }
+    }
+
+    static void AddTypeParameter(
+        ITypeParameterSymbol typeParameter,
+        System.Collections.Generic.List<ITypeParameterSymbol> result)
+    {
+        if (!result.Any(existing =>
+                SymbolEqualityComparer.Default.Equals(existing, typeParameter)))
+        {
+            result.Add(typeParameter);
+        }
+    }
+
+    static bool IsUnstableCollection(ITypeSymbol type)
+    {
+        if (type.SpecialType == SpecialType.System_String)
+            return false;
+        if (type is ITypeParameterSymbol typeParameter)
+        {
+            // An unconstrained/reference-constrained T can be instantiated
+            // with a mutable collection even when its declaration does not
+            // expose collection interfaces. Value-constrained T is copied
+            // and remains safe for EqualityComparer<T>.Default diffing.
+            return !typeParameter.HasValueTypeConstraint
+                && !typeParameter.HasUnmanagedTypeConstraint;
+        }
+        if (type.SpecialType == SpecialType.System_Collections_IEnumerable)
+            return true;
+        if (type is IArrayTypeSymbol)
+            return true;
+        return type.AllInterfaces.Any(static i =>
+            i.SpecialType == SpecialType.System_Collections_IEnumerable);
+    }
+
+    static System.Collections.Generic.Dictionary<ITypeParameterSymbol, string>
+        BuildTypeParameterNames(
+            System.Collections.Generic.IReadOnlyList<ITypeParameterSymbol> typeParameters)
+    {
+        var result =
+            new System.Collections.Generic.Dictionary<ITypeParameterSymbol, string>(
+                SymbolEqualityComparer.Default);
+        var used = new System.Collections.Generic.HashSet<string>(
+            System.StringComparer.Ordinal);
+        foreach (var typeParameter in typeParameters)
+        {
+            string name = typeParameter.Name;
+            int suffix = 1;
+            while (!used.Add(name))
+            {
+                name = typeParameter.Name + "_"
+                    + suffix.ToString(CultureInfo.InvariantCulture);
+                suffix++;
+            }
+            result.Add(typeParameter, name);
+        }
+        return result;
+    }
+
+    static string DisplayType(
+        ITypeSymbol type,
+        System.Collections.Generic.IReadOnlyDictionary<ITypeParameterSymbol, string>
+            typeParameterNames)
+    {
+        var sb = new StringBuilder();
+        foreach (var part in type.ToDisplayParts(ParameterTypeFormat))
+        {
+            if (part.Kind == SymbolDisplayPartKind.TypeParameterName
+                && part.Symbol is ITypeParameterSymbol typeParameter
+                && typeParameterNames.TryGetValue(typeParameter, out var generatedName))
+            {
+                sb.Append(EscapeIdentifier(generatedName));
+            }
+            else
+            {
+                sb.Append(part.ToString());
+            }
+        }
+        return sb.ToString();
+    }
+
+    static void AppendTypeParameters(
+        StringBuilder sb,
+        System.Collections.Generic.IReadOnlyList<ITypeParameterSymbol> typeParameters,
+        System.Collections.Generic.IReadOnlyDictionary<ITypeParameterSymbol, string>
+            typeParameterNames)
+    {
+        if (typeParameters.Count == 0)
+            return;
+
+        sb.Append('<');
+        for (int i = 0; i < typeParameters.Count; i++)
+        {
+            if (i > 0)
+                sb.Append(", ");
+            sb.Append(EscapeIdentifier(typeParameterNames[typeParameters[i]]));
+        }
+        sb.Append('>');
+    }
+
+    static void AppendTypeArguments(
+        StringBuilder sb,
+        System.Collections.Generic.IReadOnlyList<ITypeParameterSymbol> typeParameters,
+        System.Collections.Generic.IReadOnlyDictionary<ITypeParameterSymbol, string>
+            typeParameterNames) =>
+        AppendTypeParameters(sb, typeParameters, typeParameterNames);
+
+    static void AppendTypeParameterConstraints(
+        StringBuilder sb,
+        System.Collections.Generic.IReadOnlyList<ITypeParameterSymbol> typeParameters,
+        System.Collections.Generic.IReadOnlyDictionary<ITypeParameterSymbol, string>
+            typeParameterNames,
+        string indent)
+    {
+        foreach (var typeParameter in typeParameters)
+        {
+            var constraints = new System.Collections.Generic.List<string>();
+            if (typeParameter.HasUnmanagedTypeConstraint)
+            {
+                constraints.Add("unmanaged");
+            }
+            else if (typeParameter.HasValueTypeConstraint)
+            {
+                constraints.Add("struct");
+            }
+            else if (typeParameter.HasReferenceTypeConstraint)
+            {
+                constraints.Add(
+                    typeParameter.ReferenceTypeConstraintNullableAnnotation
+                        == NullableAnnotation.Annotated
+                            ? "class?"
+                            : "class");
+            }
+            else if (typeParameter.HasNotNullConstraint)
+            {
+                constraints.Add("notnull");
+            }
+
+            foreach (var constraintType in typeParameter.ConstraintTypes)
+                constraints.Add(DisplayType(constraintType, typeParameterNames));
+
+            if (typeParameter.HasConstructorConstraint)
+                constraints.Add("new()");
+
+            if (constraints.Count == 0)
+                continue;
+
+            sb.Append(indent)
+              .Append("    where ")
+              .Append(EscapeIdentifier(typeParameterNames[typeParameter]))
+              .Append(" : ")
+              .AppendLine(string.Join(", ", constraints));
+        }
     }
 
     static int FnvHash(string s)

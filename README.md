@@ -155,9 +155,11 @@ entry points are themselves `[Composable]`, so unchanged calls skip before
 their bodies execute; when they do execute, the generator lowers modifier,
 callback, content-slot, state-holder, and default-mask plumbing directly to
 the corresponding Compose bridge without constructing a tree-style adapter.
-The hand-written holdouts (`Scaffold`,
-lazy collections, text fields, search, and similar custom shapes) remain
-tree-style for now.
+Generic lowering also exposes typed animation, pager, carousel, and lazy
+collection facades. The remaining
+hand-written holdouts (`Scaffold`, text fields, search, snackbar hosting,
+segmented buttons, custom layout, and similar custom shapes) remain tree-style
+for now.
 
 The Jetchat, JetNews, and Reply ports use a Tier 2 root matching upstream
 Kotlin's top-level `@Composable` app function and call it through the

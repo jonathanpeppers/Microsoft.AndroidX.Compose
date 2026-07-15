@@ -296,6 +296,36 @@ shapes are available to direct bridge and hand-written-holdout lowering; the
 tree-facade generator continues to reject them until those public delegate
 surfaces are modeled.
 
+### Hand-written holdout inventory
+
+- **Completed:** `AnimatedContent<T>`, `Crossfade<T>`,
+  `HorizontalPager<T>`, `VerticalPager<T>`,
+  `HorizontalUncontainedCarousel<T>`,
+  `HorizontalMultiBrowseCarousel<T>`,
+  `HorizontalCenteredHeroCarousel<T>`, `LazyColumn<T>`, `LazyRow<T>`,
+  `LazyVerticalGrid<T>`, `LazyHorizontalGrid<T>`,
+  `LazyVerticalStaggeredGrid<T>`, and
+  `LazyHorizontalStaggeredGrid<T>`. Generic interceptor lowering preserves
+  type parameters and constraints; their Tier 2 adapters continue through
+  the existing facades so the facade's existing lambda-identity behavior is
+  retained. Collection parameters are treated as unstable and force execution
+  so in-place list edits cannot be hidden by reference equality.
+- **Scaffold:** needs a reusable padding-aware body slot that can expose the
+  Kotlin `PaddingValues` argument or forward its borrowed handle into a node.
+- **BottomSheetScaffold:** needs two required composable bodies plus
+  parameterized remembered state and a stable veto callback in one shape.
+- **TextField / OutlinedTextField:** need constructor-driven dispatch across
+  string and bound `TextFieldValue` bridges, including state convenience
+  overloads.
+- **SearchBar / DockedSearchBar / SearchBarInputField:** need coordinated
+  search/text state holders and multiple non-null content slots.
+- **SnackbarHost:** needs a body slot whose Kotlin `SnackbarData` argument is
+  forwarded into a sibling `Snackbar` bridge.
+- **SegmentedButton:** needs parent row-index metadata to select and build its
+  shape while dispatching between single- and multi-choice bridges.
+- **Layout:** needs custom measure-delegate lowering, Java SAM creation, and
+  composer-keyed policy remembering.
+
 ### Diagnostics
 
 | ID     | Meaning                                                          |
@@ -306,7 +336,6 @@ surfaces are modeled.
 | CN5004 | Method and containing types must be interceptor-accessible.     |
 | CN5005 | `async` composables are unsupported.                            |
 | CN5006 | Extension-method composables are unsupported.                   |
-| CN5007 | Generic composables are unsupported.                            |
 | CN5008 | `ref`, `out`, and `in` parameters are unsupported.              |
 | CN5009 | A composerless API was called outside `[Composable]` code or a `[ComposableContent]` callback. |
 
@@ -321,10 +350,11 @@ The interceptor records omitted C#
 
 ### Deferred — follow-up issues
 
-- **Tier 2 entry points for hand-written holdouts.** `Scaffold`, lazy
-  collections, text fields, search, and other custom rendering shapes
-  are not driven by `[ComposeFacade]` metadata and need dedicated
-  generator modelling.
+- **Tier 2 entry points for remaining hand-written holdouts.** `Scaffold`,
+  text fields, search, snackbar hosting, segmented buttons, and custom
+  layouts are not driven by `[ComposeFacade]` metadata and need dedicated
+  generator modelling. Generic composable lowering unlocks the typed lazy
+  collection family.
 - **`MovableContent` / `key {} ` / `Saver` / `Layout {}` / stability
   inference.** Explicit non-goals in the Tier 2 MVP — each gets its
   own follow-up issue.

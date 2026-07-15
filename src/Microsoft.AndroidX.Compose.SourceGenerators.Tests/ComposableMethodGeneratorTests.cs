@@ -610,9 +610,9 @@ public class ComposableMethodGeneratorTests
     }
 
     [Fact]
-    public void GenericMethod_ReportsCN5007AndDoesNotEmitInterceptor()
+    public void GenericMethod_EmitsGenericInterceptor()
     {
-        var (_, diags, emitted) = Run("""
+        var (output, diags, emitted) = Run("""
             namespace App
             {
                 public static class Screens
@@ -626,8 +626,279 @@ public class ComposableMethodGeneratorTests
             }
             """);
 
-        Assert.Contains(diags, d => d.Id == "CN5007");
-        Assert.Null(emitted);
+        Assert.Empty(diags);
+        Assert.NotNull(emitted);
+        Assert.Contains("public static void Composable_", emitted);
+        Assert.Contains("<T>(global::AndroidX.Compose.Runtime.IComposer composer, T value)", emitted);
+        Assert.Contains("_Core<T>(composer, value, 0)", emitted);
+        Assert.Contains("global::App.Screens.Foo<T>(__c, value)", emitted);
+        Assert.Contains("_Core<T>(__c2, value, __force | 0b1)", emitted);
+        AssertNoCompileErrors(output);
+    }
+
+    [Fact]
+    public void GenericMethod_PreservesTypeParameterConstraints()
+    {
+        var (output, diags, emitted) = Run("""
+            namespace App
+            {
+                public static class Screens
+                {
+                    [AndroidX.Compose.Composable]
+                    public static void Foo<TValue, TFactory>(TValue value, TFactory factory)
+                        where TValue : class?
+                        where TFactory : System.Collections.Generic.IEnumerable<TValue>, new() { }
+
+                    public static void CallSite() =>
+                        Foo<string?, System.Collections.Generic.List<string?>>(null, new());
+                }
+            }
+            """);
+
+        Assert.Empty(diags);
+        Assert.NotNull(emitted);
+        Assert.Contains("<TValue, TFactory>", emitted);
+        Assert.Contains("where TValue : class?", emitted);
+        Assert.Contains(
+            "where TFactory : global::System.Collections.Generic.IEnumerable<TValue>, new()",
+            emitted);
+        Assert.Contains("global::App.Screens.Foo<TValue, TFactory>(value, factory)", emitted);
+        AssertNoCompileErrors(output);
+    }
+
+    [Fact]
+    public void GenericMethod_PreservesConstructedContainingType()
+    {
+        var (output, diags, emitted) = Run("""
+            namespace App
+            {
+                public static class Screens<TContainer>
+                {
+                    [AndroidX.Compose.Composable]
+                    public static void Foo<TValue>(TContainer container, TValue value) { }
+                }
+
+                public static class Caller
+                {
+                    public static void CallSite() => Screens<string>.Foo("value", 42);
+                }
+            }
+            """);
+
+        Assert.Empty(diags);
+        Assert.NotNull(emitted);
+        Assert.Contains(
+            "<TValue>(string container, TValue value)",
+            emitted);
+        Assert.Contains(
+            "global::App.Screens<string>.Foo<TValue>(container, value)",
+            emitted);
+        AssertNoCompileErrors(output);
+    }
+
+    [Fact]
+    public void GenericMethod_DeclaresOpenContainingTypeParameters()
+    {
+        var (output, diags, emitted) = Run("""
+            namespace App
+            {
+                public static class Screens<TContainer>
+                    where TContainer : class
+                {
+                    [AndroidX.Compose.Composable]
+                    public static void Foo<TValue>(TContainer container, TValue value) { }
+                }
+
+                public static class Caller
+                {
+                    public static void CallSite<TOuter>(TOuter container)
+                        where TOuter : class =>
+                        Screens<TOuter>.Foo(container, 42);
+                }
+            }
+            """);
+
+        Assert.Empty(diags);
+        Assert.NotNull(emitted);
+        Assert.Contains(
+            "<TOuter, TValue>(TOuter container, TValue value)",
+            emitted);
+        Assert.Contains("where TOuter : class", emitted);
+        Assert.Contains(
+            "global::App.Screens<TOuter>.Foo<TValue>(container, value)",
+            emitted);
+        AssertNoCompileErrors(output);
+    }
+
+    [Fact]
+    public void GenericMethod_DeclaresNestedOpenContainingTypeParameters()
+    {
+        var (output, diags, emitted) = Run("""
+            namespace App
+            {
+                public class Outer<TOuter>
+                {
+                    public class Inner<TInner>
+                    {
+                        [AndroidX.Compose.Composable]
+                        public static void Foo<TValue>(
+                            TOuter outer, TInner inner, TValue value) { }
+                    }
+                }
+
+                public static class Caller
+                {
+                    public static void CallSite<TFirst, TSecond>(
+                        TFirst first, TSecond second) =>
+                        Outer<TFirst>.Inner<TSecond>.Foo(first, second, 42);
+                }
+            }
+            """);
+
+        Assert.Empty(diags);
+        Assert.NotNull(emitted);
+        Assert.Contains(
+            "<TFirst, TSecond, TValue>(TFirst outer, TSecond inner, TValue value)",
+            emitted);
+        Assert.Contains(
+            "global::App.Outer<TFirst>.Inner<TSecond>.Foo<TValue>(outer, inner, value)",
+            emitted);
+        AssertNoCompileErrors(output);
+    }
+
+    [Fact]
+    public void CollectionParameter_ForcesExecutionForInPlaceMutation()
+    {
+        var (output, diags, emitted) = Run("""
+            namespace App
+            {
+                public static class Screens
+                {
+                    [AndroidX.Compose.Composable]
+                    public static void Items<T>(
+                        System.Collections.Generic.IReadOnlyList<T> items,
+                        string label) { }
+
+                    public static void CallSite(
+                        System.Collections.Generic.IReadOnlyList<int> items) =>
+                        Items(items, "Items");
+                }
+            }
+            """);
+
+        Assert.Empty(diags);
+        Assert.NotNull(emitted);
+        Assert.Contains("__dirty |= 0b1;", emitted);
+        Assert.DoesNotContain("DiffSlot<global::System.Collections.Generic.IReadOnlyList<T>>", emitted);
+        Assert.Contains("__c.DiffSlot<string>(label, 4)", emitted);
+        AssertNoCompileErrors(output);
+    }
+
+    [Fact]
+    public void GenericMethod_CollectsConstraintTypeParameterDependencies()
+    {
+        var (output, diags, emitted) = Run("""
+            namespace App
+            {
+                public static class Screens<TContainer>
+                {
+                    [AndroidX.Compose.Composable]
+                    public static void Foo(TContainer container) { }
+                }
+
+                public static class Caller
+                {
+                    public static void CallSite<TItem, TElement>(TItem item)
+                        where TItem : System.Collections.Generic.IEnumerable<TElement> =>
+                        Screens<TItem>.Foo(item);
+                }
+            }
+            """);
+
+        Assert.Empty(diags);
+        Assert.NotNull(emitted);
+        Assert.Contains("<TItem, TElement>", emitted);
+        Assert.Contains(
+            "where TItem : global::System.Collections.Generic.IEnumerable<TElement>",
+            emitted);
+        AssertNoCompileErrors(output);
+    }
+
+    [Fact]
+    public void GenericMethod_AliasesCollidingTypeParameterNames()
+    {
+        var (output, diags, emitted) = Run("""
+            #pragma warning disable CS0693
+            namespace App
+            {
+                public static class Screens<T>
+                {
+                    [AndroidX.Compose.Composable]
+                    public static void Foo<T>(T value) { }
+                }
+
+                public static class Caller
+                {
+                    public static void CallSite<T>(T value) =>
+                        Screens<T>.Foo(value);
+                }
+            }
+            """);
+
+        Assert.Empty(diags);
+        Assert.NotNull(emitted);
+        Assert.Contains("<T, T_1>(T_1 value)", emitted);
+        Assert.Contains("global::App.Screens<T>.Foo<T_1>(value)", emitted);
+        AssertNoCompileErrors(output);
+    }
+
+    [Fact]
+    public void NonGenericEnumerableParameter_ForcesExecution()
+    {
+        var (output, diags, emitted) = Run("""
+            namespace App
+            {
+                public static class Screens
+                {
+                    [AndroidX.Compose.Composable]
+                    public static void Items(System.Collections.IEnumerable items) { }
+
+                    public static void CallSite(System.Collections.IEnumerable items) =>
+                        Items(items);
+                }
+            }
+            """);
+
+        Assert.Empty(diags);
+        Assert.NotNull(emitted);
+        Assert.Contains("__dirty |= 0b1;", emitted);
+        Assert.DoesNotContain("DiffSlot<global::System.Collections.IEnumerable>", emitted);
+        AssertNoCompileErrors(output);
+    }
+
+    [Fact]
+    public void UnconstrainedGenericParameter_ForcesExecution()
+    {
+        var (output, diags, emitted) = Run("""
+            namespace App
+            {
+                public static class Screens
+                {
+                    [AndroidX.Compose.Composable]
+                    public static void Value<T>(T value) { }
+
+                    public static void CallSite(
+                        System.Collections.Generic.List<int> items) =>
+                        Value(items);
+                }
+            }
+            """);
+
+        Assert.Empty(diags);
+        Assert.NotNull(emitted);
+        Assert.Contains("__dirty |= 0b1;", emitted);
+        Assert.DoesNotContain("DiffSlot<T>(value", emitted);
+        AssertNoCompileErrors(output);
     }
 
     [Fact]

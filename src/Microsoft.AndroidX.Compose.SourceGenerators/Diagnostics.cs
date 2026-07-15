@@ -324,14 +324,6 @@ internal static class Diagnostics
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);
 
-    public static readonly DiagnosticDescriptor ComposableGenericUnsupported = new(
-        id: "CN5007",
-        title: "[Composable] generic methods are not supported",
-        messageFormat: "Method '{0}' carries [Composable] but is generic — Tier 2 currently requires a non-generic static method",
-        category: "AndroidX.Compose",
-        defaultSeverity: DiagnosticSeverity.Error,
-        isEnabledByDefault: true);
-
     public static readonly DiagnosticDescriptor ComposableByRefUnsupported = new(
         id: "CN5008",
         title: "[Composable] by-reference parameters are not supported",
