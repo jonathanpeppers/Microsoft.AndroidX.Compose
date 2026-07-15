@@ -32,8 +32,6 @@ public sealed class ComposableScopeAnalyzer : DiagnosticAnalyzer
             startContext.RegisterOperationAction(index.AddInvocation, OperationKind.Invocation);
             startContext.RegisterOperationAction(index.AddMethodReference, OperationKind.MethodReference);
             startContext.RegisterOperationAction(index.AddLocalReference, OperationKind.LocalReference);
-            startContext.RegisterOperationAction(index.AddParameterReference, OperationKind.ParameterReference);
-            startContext.RegisterOperationAction(index.AddReturn, OperationKind.Return);
             startContext.RegisterCompilationEndAction(index.Analyze);
         });
     }
@@ -96,7 +94,6 @@ public sealed class ComposableScopeAnalyzer : DiagnosticAnalyzer
         readonly Dictionary<IMethodSymbol, List<IInvocationOperation>> methodInvocations =
             new(SymbolEqualityComparer.Default);
         readonly Dictionary<IInvocationOperation, ISymbol> invocationOwners = [];
-        readonly Dictionary<IReturnOperation, ISymbol> returnOwners = [];
 
         public void AddInvocation(OperationAnalysisContext context)
         {
@@ -127,22 +124,6 @@ public sealed class ComposableScopeAnalyzer : DiagnosticAnalyzer
                 return;
             lock (gate)
                 Add(symbolReferences, reference.Local, reference);
-        }
-
-        public void AddParameterReference(OperationAnalysisContext context)
-        {
-            var reference = (IParameterReferenceOperation)context.Operation;
-            if (IsAssignmentTarget(reference))
-                return;
-            lock (gate)
-                Add(symbolReferences, Canonical(reference.Parameter), reference);
-        }
-
-        public void AddReturn(OperationAnalysisContext context)
-        {
-            var operation = (IReturnOperation)context.Operation;
-            lock (gate)
-                returnOwners[operation] = context.ContainingSymbol;
         }
 
         public void Analyze(CompilationAnalysisContext context)
@@ -253,7 +234,7 @@ public sealed class ComposableScopeAnalyzer : DiagnosticAnalyzer
             switch (current.Parent)
             {
                 case IArgumentOperation argument:
-                    TraceArgument(argument, state, failures, depth + 1);
+                    TraceArgument(argument, failures);
                     return;
                 case IVariableInitializerOperation
                 {
@@ -280,7 +261,7 @@ public sealed class ComposableScopeAnalyzer : DiagnosticAnalyzer
                     TraceAssignment(assignment, state, failures, depth + 1);
                     return;
                 case IReturnOperation returned:
-                    TraceReturn(returned, state, failures, depth + 1);
+                    TraceReturn(returned, failures);
                     return;
                 case IInvocationOperation invocation
                     when invocation.TargetMethod.MethodKind == MethodKind.DelegateInvoke:
@@ -295,9 +276,7 @@ public sealed class ComposableScopeAnalyzer : DiagnosticAnalyzer
 
         void TraceArgument(
             IArgumentOperation argument,
-            TraceState state,
-            List<Location> failures,
-            int depth)
+            List<Location> failures)
         {
             var parameter = argument.Parameter;
             if (parameter is null)
@@ -309,18 +288,7 @@ public sealed class ComposableScopeAnalyzer : DiagnosticAnalyzer
             if (HasAttribute(parameter, ComposableContentAttributeName))
                 return;
 
-            if (parameter.ContainingSymbol is not IMethodSymbol method
-                || method.IsAsync
-                || method.MethodKind != MethodKind.LocalFunction
-                    && method.DeclaredAccessibility != Accessibility.Private
-                || method.DeclaringSyntaxReferences.Length == 0)
-            {
-                failures.Add(argument.Syntax.GetLocation());
-                return;
-            }
-
-            TraceSymbol(Canonical(parameter), argument.Syntax.GetLocation(),
-                state, failures, depth);
+            failures.Add(argument.Syntax.GetLocation());
         }
 
         void TraceAssignment(
@@ -347,30 +315,9 @@ public sealed class ComposableScopeAnalyzer : DiagnosticAnalyzer
 
         void TraceReturn(
             IReturnOperation returned,
-            TraceState state,
-            List<Location> failures,
-            int depth)
+            List<Location> failures)
         {
-            if (!returnOwners.TryGetValue(returned, out var owner)
-                || owner is not IMethodSymbol method
-                || method.MethodKind != MethodKind.LocalFunction
-                    && method.DeclaredAccessibility != Accessibility.Private)
-            {
-                failures.Add(returned.Syntax.GetLocation());
-                return;
-            }
-
-            var canonical = Canonical(method);
-            if (!methodInvocations.TryGetValue(canonical, out var calls)
-                || calls.Count == 0)
-            {
-                failures.Add(returned.Syntax.GetLocation());
-                return;
-            }
-
-            foreach (var call in calls)
-                TraceOperation(call, returned.Syntax.GetLocation(),
-                    state, failures, depth);
+            failures.Add(returned.Syntax.GetLocation());
         }
 
         void TraceSymbol(
@@ -479,17 +426,6 @@ public sealed class ComposableScopeAnalyzer : DiagnosticAnalyzer
         static IMethodSymbol Canonical(IMethodSymbol method) =>
             method.ReducedFrom?.OriginalDefinition
             ?? method.OriginalDefinition;
-
-        static IParameterSymbol Canonical(IParameterSymbol parameter)
-        {
-            if (parameter.ContainingSymbol is not IMethodSymbol method)
-                return parameter;
-
-            var original = Canonical(method);
-            return parameter.Ordinal < original.Parameters.Length
-                ? original.Parameters[parameter.Ordinal]
-                : parameter;
-        }
 
         static bool IsAssignmentTarget(IOperation operation) =>
             operation.Parent is ISimpleAssignmentOperation assignment

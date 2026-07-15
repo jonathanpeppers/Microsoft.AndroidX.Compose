@@ -1033,11 +1033,11 @@ Rules:
 - Composerless APIs may only be called from a `[Composable]` method or a
   delegate that flows synchronously to a parameter marked
   `[ComposableContent]` (CN5009). Bounded analysis follows local variables,
-  local functions, private returns, argument forwarding, method groups, and
+  local functions, method groups, anonymous functions, and
   conditional/coalescing expressions. Mark only callbacks invoked
-  synchronously during composition; field storage, public/unknown forwarding,
-  event handlers, and other async/deferred callbacks are rejected at their
-  escape site.
+  synchronously during composition; returns, field/property storage, unmarked
+  arguments, event handlers, and other async/deferred callbacks are rejected
+  at their escape site.
 - The containing type does **not** need to be `partial`. There is no
   `Impl` companion, no `_changed` parameter, no `int _default` slot.
 - Each call site of a `[Composable]` method is rewired by the C#

@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Immutable;
+using System.IO;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -38,17 +40,42 @@ public class ComposableScopeAnalyzerTests
         }
         """;
 
-    static ImmutableArray<Diagnostic> Analyze(string source)
+    static readonly MetadataReference RuntimeReference =
+        CompileReference("AnalyzerRuntime", Preamble);
+
+    static MetadataReference CompileReference(
+        string assemblyName,
+        string source,
+        params MetadataReference[] additionalReferences)
     {
         var tree = CSharpSyntaxTree.ParseText(
-            Preamble + "\n" + source,
+            source,
+            new CSharpParseOptions(LanguageVersion.Preview));
+        var compilation = CSharpCompilation.Create(
+            assemblyName,
+            [tree],
+            [.. Net.Sdk.References, .. additionalReferences],
+            new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
+        using var stream = new MemoryStream();
+        var result = compilation.Emit(stream);
+        Assert.True(result.Success, string.Join(
+            Environment.NewLine,
+            result.Diagnostics.Select(static diagnostic => diagnostic.ToString())));
+        return MetadataReference.CreateFromImage(stream.ToArray());
+    }
+
+    static ImmutableArray<Diagnostic> Analyze(
+        string source,
+        params MetadataReference[] additionalReferences)
+    {
+        var tree = CSharpSyntaxTree.ParseText(
+            source,
             new CSharpParseOptions(LanguageVersion.Preview));
         var compilation = CSharpCompilation.Create(
             "AnalyzerTest",
             [tree],
-            Net.Sdk.References,
+            [.. Net.Sdk.References, RuntimeReference, .. additionalReferences],
             new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
-
         return compilation
             .WithAnalyzers([new ComposableScopeAnalyzer()])
             .GetAnalyzerDiagnosticsAsync()
@@ -56,8 +83,12 @@ public class ComposableScopeAnalyzerTests
             .GetResult();
     }
 
-    static Diagnostic[] ScopeDiagnostics(string source) =>
-        Analyze(source).Where(d => d.Id == "CN5009").ToArray();
+    static Diagnostic[] ScopeDiagnostics(
+        string source,
+        params MetadataReference[] additionalReferences) =>
+        Analyze(source, additionalReferences)
+            .Where(d => d.Id == "CN5009")
+            .ToArray();
 
     static string SourceText(Diagnostic diagnostic) =>
         diagnostic.Location.SourceTree?.GetText()
@@ -247,7 +278,7 @@ public class ComposableScopeAnalyzerTests
     }
 
     [Fact]
-    public void PrivateReturn_ForwardedToComposableContent_IsAllowed()
+    public void PrivateReturn_ForwardedToComposableContent_IsRejected()
     {
         var diagnostics = ScopeDiagnostics("""
             static class App
@@ -261,11 +292,12 @@ public class ComposableScopeAnalyzerTests
             }
             """);
 
-        Assert.Empty(diagnostics);
+        var diagnostic = Assert.Single(diagnostics);
+        Assert.Contains("=>", SourceText(diagnostic));
     }
 
     [Fact]
-    public void UnmarkedParameter_ForwardedSynchronously_IsAllowed()
+    public void UnmarkedParameter_ForwardedSynchronously_IsRejected()
     {
         var diagnostics = ScopeDiagnostics("""
             static class App
@@ -279,7 +311,8 @@ public class ComposableScopeAnalyzerTests
             }
             """);
 
-        Assert.Empty(diagnostics);
+        var diagnostic = Assert.Single(diagnostics);
+        Assert.Contains("() =>", SourceText(diagnostic));
     }
 
     [Fact]
@@ -435,7 +468,7 @@ public class ComposableScopeAnalyzerTests
             """);
 
         var diagnostic = Assert.Single(diagnostics);
-        Assert.Equal("CreateContent()", SourceText(diagnostic));
+        Assert.Contains("=>", SourceText(diagnostic));
     }
 
     [Fact]
@@ -466,17 +499,18 @@ public class ComposableScopeAnalyzerTests
         var diagnostics = ScopeDiagnostics("""
             static class App
             {
-                static void Forward(System.Action content) =>
-                    System.Threading.Tasks.Task.Run(() => content());
-
                 [AndroidX.Compose.Composable]
-                public static void Render() =>
-                    Forward(() => AndroidX.Compose.Composables.Text("deferred"));
+                public static void Render()
+                {
+                    System.Action content = () =>
+                        AndroidX.Compose.Composables.Text("deferred");
+                    System.Threading.Tasks.Task.Run(content);
+                }
             }
             """);
 
         var diagnostic = Assert.Single(diagnostics);
-        Assert.Equal("() => content()", SourceText(diagnostic));
+        Assert.Equal("content", SourceText(diagnostic));
     }
 
     [Fact]
@@ -507,15 +541,14 @@ public class ComposableScopeAnalyzerTests
             {
                 static System.Action Stored = () => { };
 
-                static void Capture(System.Action content)
+                [AndroidX.Compose.Composable]
+                public static void Render()
                 {
+                    System.Action content = () =>
+                        AndroidX.Compose.Composables.Text("leaked");
                     void Store() => Stored = content;
                     Store();
                 }
-
-                [AndroidX.Compose.Composable]
-                public static void Render() =>
-                    Capture(() => AndroidX.Compose.Composables.Text("leaked"));
             }
             """);
 
@@ -529,19 +562,16 @@ public class ComposableScopeAnalyzerTests
         var diagnostics = ScopeDiagnostics("""
             static class App
             {
-                static void Capture(System.Action content)
+                [AndroidX.Compose.Composable]
+                public static void Render()
                 {
                     async System.Threading.Tasks.Task Deferred()
                     {
                         await System.Threading.Tasks.Task.Yield();
-                        content();
+                        AndroidX.Compose.Composables.Text("late local");
                     }
                     _ = Deferred();
                 }
-
-                [AndroidX.Compose.Composable]
-                public static void Render() =>
-                    Capture(() => AndroidX.Compose.Composables.Text("late local"));
             }
             """);
 
@@ -626,6 +656,83 @@ public class ComposableScopeAnalyzerTests
             {
                 static void NeverCalled() =>
                     AndroidX.Compose.Composables.Text("orphan");
+            }
+            """);
+
+        var diagnostic = Assert.Single(diagnostics);
+        Assert.Contains("Text", SourceText(diagnostic));
+    }
+
+    [Fact]
+    public void MetadataComposableContent_AnonymousFunction_IsAllowed()
+    {
+        var callbacks = CompileReference(
+            "ExternalCallbacks",
+            """
+            public static class ExternalCallbacks
+            {
+                public static void Marked(
+                    [AndroidX.Compose.ComposableContent] System.Action content) =>
+                    content();
+            }
+            """,
+            RuntimeReference);
+
+        var diagnostics = ScopeDiagnostics("""
+            static class App
+            {
+                [AndroidX.Compose.Composable]
+                public static void Render() =>
+                    ExternalCallbacks.Marked(() =>
+                        AndroidX.Compose.Composables.Text("metadata"));
+            }
+            """, callbacks);
+
+        Assert.Empty(diagnostics);
+    }
+
+    [Fact]
+    public void MetadataUnmarkedParameter_MethodGroup_IsRejected()
+    {
+        var callbacks = CompileReference(
+            "ExternalCallbacks",
+            """
+            public static class ExternalCallbacks
+            {
+                public static void Unmarked(System.Action content) =>
+                    content();
+            }
+            """,
+            RuntimeReference);
+
+        var diagnostics = ScopeDiagnostics("""
+            static class App
+            {
+                [AndroidX.Compose.Composable]
+                static void Content() { }
+
+                [AndroidX.Compose.Composable]
+                public static void Render() =>
+                    ExternalCallbacks.Unmarked(Content);
+            }
+            """, callbacks);
+
+        var diagnostic = Assert.Single(diagnostics);
+        Assert.Equal("Content", SourceText(diagnostic));
+        Assert.Contains("synchronous", diagnostic.GetMessage());
+    }
+
+    [Fact]
+    public void PostAwaitCall_IsRejected()
+    {
+        var diagnostics = ScopeDiagnostics("""
+            static class App
+            {
+                static async System.Threading.Tasks.Task Deferred()
+                {
+                    await System.Threading.Tasks.Task.Yield();
+                    AndroidX.Compose.Composables.Text("after await");
+                }
             }
             """);
 
