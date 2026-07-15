@@ -1838,7 +1838,11 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         {
             sb.Append(", ").Append(EscapeIdent(name));
         }
-        sb.AppendLine(", 0UL, 0);");
+        sb.Append(", ").Append(Tier2FallbackOmittedArguments(
+            requiredCtorSlots, optionalCtorSlots, requiredNamedSlots,
+            contentSlots, optionalNamedSlots, optionalValueSlots,
+            hasModifier, themeColor, stateConfirmSlots, secondaryCtorInfo, route))
+          .AppendLine(", 0);");
         sb.AppendLine("        }");
         sb.AppendLine();
         sb.AppendLine("        [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]");
@@ -1974,6 +1978,64 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         names.AddRange(stateConfirmSlots.Select(info =>
             char.ToLowerInvariant(info.PropertyName[0]) + info.PropertyName.Substring(1)));
         return names;
+    }
+
+    static string Tier2FallbackOmittedArguments(
+        IReadOnlyList<FacadeSlot> requiredCtorSlots,
+        IReadOnlyList<FacadeSlot> optionalCtorSlots,
+        IReadOnlyList<FacadeSlot> requiredNamedSlots,
+        IReadOnlyList<FacadeSlot> contentSlots,
+        IReadOnlyList<FacadeSlot> optionalNamedSlots,
+        IReadOnlyList<FacadeSlot> optionalValueSlots,
+        bool hasModifier,
+        string? themeColor,
+        IReadOnlyList<ConfirmStateChangeInfo> stateConfirmSlots,
+        SecondaryCtorInfo? secondaryCtorInfo,
+        Tier2Route route)
+    {
+        int index = (route == Tier2Route.Secondary ? 1 : 0)
+            + requiredCtorSlots.Count
+            + requiredNamedSlots.Count
+            + contentSlots.Count;
+        var terms = new List<string>();
+
+        foreach (var slot in optionalCtorSlots)
+        {
+            string name = EscapeIdent(Tier2SurfaceCtorIdentifier(slot, route));
+            string condition = slot.Kind == FacadeSlotKind.Primitive
+                ? name + " == " + FormatPrimitiveDefaultLiteral(slot.Param)
+                : name + " is null";
+            terms.Add(OmittedBitTerm(condition, index++));
+        }
+        if (hasModifier)
+            terms.Add(OmittedBitTerm("modifier is null", index++));
+        foreach (var slot in optionalNamedSlots)
+        {
+            string name = EscapeIdent(Tier2Identifier(PropertyName(slot)));
+            terms.Add(OmittedBitTerm(name + " is null", index++));
+        }
+        foreach (var slot in optionalValueSlots)
+            terms.Add(OmittedBitTerm(EscapeIdent(slot.Param.Name) + " is null", index++));
+        if (themeColor is not null)
+            terms.Add(OmittedBitTerm("(long)containerColor == 0L", index++));
+        foreach (var info in stateConfirmSlots)
+        {
+            string name = EscapeIdent(char.ToLowerInvariant(info.PropertyName[0])
+                + info.PropertyName.Substring(1));
+            terms.Add(OmittedBitTerm(name + " is null", index++));
+        }
+
+        return terms.Count == 0 ? "0UL" : string.Join(" | ", terms);
+    }
+
+    static string OmittedBitTerm(string condition, int index)
+    {
+        if ((uint)index >= 64)
+            return "0UL";
+        ulong bit = 1UL << index;
+        return "(" + condition + " ? 0x"
+            + bit.ToString("X", System.Globalization.CultureInfo.InvariantCulture)
+            + "UL : 0UL)";
     }
 
     static string Tier2SurfaceCtorIdentifier(FacadeSlot slot, Tier2Route route) =>

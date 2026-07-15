@@ -375,6 +375,12 @@ The interceptor records omitted C#
   restart force bit before entering Kotlin while retaining remapped per-slot
   changed bits. Kotlin can then recompute composition-scoped defaults instead
   of assuming its own restart lambda captured their resolved values.
+  If a generated catalog method is invoked from code that is not intercepted
+  (for example, a synchronous content method reached through delegate-flow
+  lowering), its method body derives a conservative omission bitmap from
+  optional-parameter sentinel values instead of passing zero; nullable
+  defaults therefore remain Kotlin-defaulted rather than being forwarded as
+  explicit nulls.
 
 ### Real-app migration benchmark
 

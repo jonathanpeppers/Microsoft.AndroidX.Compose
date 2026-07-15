@@ -475,6 +475,64 @@ public class FacadeGeneratorTests
     }
 
     [Fact]
+    public void TextCatalogFallback_PreservesNullableDefaultsWithoutInterceptor()
+    {
+        var code = """
+            using global::AndroidX.Compose.Runtime;
+            using global::AndroidX.Compose.UI;
+            using AndroidX.Compose;
+
+            [assembly: ComposeDefaults("TextDefault",
+                "!text", "modifier", "color", "fontSize", "fontStyle",
+                "fontWeight", "fontFamily", "letterSpacing", "decoration", "align",
+                "lineHeight", "overflow", "softWrap", "maxLines", "minLines",
+                "onTextLayout", "style")]
+
+            namespace AndroidX.Compose
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(
+                        Class = "androidx/compose/material3/TextKt",
+                        JvmName = "Text--4IGK_g",
+                        Signature = "(Ljava/lang/String;Landroidx/compose/ui/Modifier;JJLandroidx/compose/ui/text/font/FontStyle;Landroidx/compose/ui/text/font/FontWeight;Landroidx/compose/ui/text/font/FontFamily;JLandroidx/compose/ui/text/style/TextDecoration;Landroidx/compose/ui/text/style/TextAlign;JIZIILkotlin/jvm/functions/Function1;Landroidx/compose/ui/text/TextStyle;Landroidx/compose/runtime/Composer;III)V",
+                        Defaults = typeof(TextDefault))]
+                    [ComposeFacade]
+                    public static partial void Text(
+                        string text,
+                        IModifier? modifier,
+                        Color? color,
+                        Sp? fontSize,
+                        FontStyle? fontStyle,
+                        FontWeight? fontWeight,
+                        FontFamily? fontFamily,
+                        Sp? letterSpacing,
+                        TextDecoration? decoration,
+                        TextAlign? align,
+                        Sp? lineHeight,
+                        TextOverflow? overflow,
+                        bool? softWrap,
+                        int? maxLines,
+                        int? minLines,
+                        IComposer composer);
+                }
+            }
+            """;
+
+        var (output, diags, emitted) = Run(code, "Text");
+
+        Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+        Assert.Contains("(modifier is null ? 0x2UL : 0UL)", emitted);
+        Assert.Contains("(fontStyle is null ? 0x10UL : 0UL)", emitted);
+        Assert.Contains("(minLines is null ? 0x4000UL : 0UL)", emitted);
+        Assert.DoesNotContain("minLines, 0UL, 0);", emitted);
+        Assert.Contains("var __defaults = global::AndroidX.Compose.TextDefault.All;", emitted);
+        Assert.Contains("global::AndroidX.Compose.ComposeBridges.TextExplicitDefaults(", emitted);
+        Assert.Empty(output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error));
+    }
+
+    [Fact]
     public void Card_GeneratesContainerNoCtor()
     {
         var code = """

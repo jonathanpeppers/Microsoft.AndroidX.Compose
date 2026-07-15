@@ -1146,6 +1146,12 @@ Both styles can call into each other freely:
   painter resources, and secondary constructors without allocating the
   tree facade. Do not hand-write a duplicate entry point; extend the
   facade generator when a generated shape is wrong.
+- Generated catalog method bodies must remain safe when a call site is not
+  intercepted (for example, a synchronous content method reached through
+  delegate-flow lowering). Their direct-helper fallback builds a conservative
+  omission bitmap from optional parameter sentinel values; never pass `0UL`,
+  which marks omitted nullable values as explicitly supplied and forwards
+  nulls into Kotlin APIs.
 - `Column` and `Row` remain hand-written entry points because their
   facades are generator holdouts. `Text`, `Box`, and `Button` now use
   the richer catalog-generated methods. The generator detects an
