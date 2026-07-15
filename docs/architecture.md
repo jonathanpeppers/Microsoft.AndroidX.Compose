@@ -308,8 +308,13 @@ surfaces are modeled.
   `LazyHorizontalStaggeredGrid<T>`. Generic interceptor lowering preserves
   type parameters and constraints; their Tier 2 adapters continue through
   the existing facades so the facade's existing lambda-identity behavior is
-  retained. Collection parameters are treated as unstable and force execution
-  so in-place list edits cannot be hidden by reference equality.
+  retained. Lazy facades keep their deferred item bodies on
+  `ComposableLambdas.Instantiate4`; pager, carousel, and animation facades keep
+  synchronous content on `Wrap3`/`Wrap4`. `Tier2InlineContent` only restores
+  the ambient composer while rendering the managed node and does not replace
+  either Kotlin lambda factory. Collection parameters are treated as unstable
+  and force execution so in-place list edits cannot be hidden by reference
+  equality.
 - **Scaffold:** needs a reusable padding-aware body slot that can expose the
   Kotlin `PaddingValues` argument or forward its borrowed handle into a node.
 - **BottomSheetScaffold:** needs two required composable bodies plus
