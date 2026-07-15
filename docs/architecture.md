@@ -272,6 +272,28 @@ There is no migration pressure. Hot composables that recompose often
 (animation, list items, drag handles) are the natural candidates for
 Tier 2; one-shot screens can stay tree-style indefinitely.
 
+### Lambda adapter lowering
+
+Generated rendering uses one shared execution-mode classifier instead of
+inferring behavior from delegate arity alone:
+
+- synchronous `IFunction2`/`IFunction3` content uses composer-owned
+  `ComposableLambdas.Wrap2`/`Wrap3`;
+- synchronous `IFunction4` content must opt in with `[ComposableContent]`
+  and lowers to `Wrap4`;
+- lazy item `IFunction4` content must use
+  `[DeferredComposableContent]` and lowers to composerless `Instantiate4`;
+- events use `RememberAction`, retaining JNI peer identity while rebinding
+  the managed target each composition;
+- non-composable DSL callbacks use `[RawCallback]` and raw
+  `ComposableLambda0`/`ComposableLambda1` adapters.
+
+Unmarked `IFunction1` and `IFunction4` parameters are rejected because their
+execution timing cannot be determined safely from arity. Deferred and raw
+shapes are available to direct bridge and hand-written-holdout lowering; the
+tree-facade generator continues to reject them until those public delegate
+surfaces are modeled.
+
 ### Diagnostics
 
 | ID     | Meaning                                                          |

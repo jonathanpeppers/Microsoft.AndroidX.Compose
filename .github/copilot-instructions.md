@@ -539,7 +539,8 @@ Applying `[ComposeFacade]` to an unsupported bridge emits CN3002 (unsupported
 param), CN3003 (scope misuse), CN3005 (invalid callback type), CN3006 (slot
 conflict), CN3007 (color theme bind failed), CN3008 (painter misuse), CN3009
 (state-holder misuse), CN3010 (branching misuse), CN3011
-(confirmStateChange misuse), or CN3012 (secondary-ctor misuse).
+(confirmStateChange misuse), CN3012 (secondary-ctor misuse), or CN3013
+(ambiguous or invalid lambda execution mode).
 
 ### Adding a new generated facade
 
@@ -554,7 +555,7 @@ conflict), CN3007 (color theme bind failed), CN3008 (painter misuse), CN3009
    `public sealed partial class <ClassName>;` and a `<summary>`. Use
    `Button.cs`/`IconButton.cs`/`Card.cs` as templates. **Do not omit the
    stub** — without it no XML docs.
-4. Build `dotnet build src/Microsoft.AndroidX.Compose.Gallery` to verify. CN3001-CN3012 fire
+4. Build `dotnet build src/Microsoft.AndroidX.Compose.Gallery` to verify. CN3001-CN3013 fire
    on rejection.
 5. If CN3002 fires, add the right marker attribute
    (`[Callback]`/`[Slot]`/`[PainterResource]`) or back out and write by hand.
@@ -577,6 +578,7 @@ conflict), CN3007 (color theme bind failed), CN3008 (painter misuse), CN3009
 | CN3010 | `BranchOn`/`AlternateBridge` invalid: only one set, primary/alternate missing trailing `int defaults`, named alternate not resolvable/ambiguous on `ComposeBridges`, alternate not a strict superset (missing a primary param or > 1 extra), extra param's PascalCased name doesn't match `BranchOn`, extra param isn't `IFunction2`/`IFunction3`, shared param has incompatible types, branching used on hybrid container shape, or alternate has no resolvable `[ComposeBridge].Defaults` enum. |
 | CN3011 | `[ConfirmStateChange(typeof(T))]` invalid: not on `IFunction1` param, missing `typeof(T)` ctor arg, convention adapter `Microsoft.AndroidX.Compose.<TName>ConfirmStateChange` missing (override with `AdapterType = typeof(...)`), adapter doesn't implement `Kotlin.Jvm.Functions.IFunction1`, lacks public parameterless ctor, or no writable `Callback` property of type `System.Func<T, bool>?`.                                                                                                              |
 | CN3012 | `SecondaryCtor`/`SecondaryDefaults` invalid: only one set, named secondary not resolvable/ambiguous on `ComposeBridges`, secondary missing trailing `int defaults`, secondary's user params don't share names with the primary, the discriminating extra param is value-type / nullable / not a reference type / there's > 1 unique param / there's none, primary has no slot missing from the secondary (no primary-only discriminator), `SecondaryDefaults` enum unresolvable, or combined with `BranchOn`/`AlternateBridge`.                                                                                                                                                                                                                                                                              |
+| CN3013 | Lambda execution mode is ambiguous, conflicting, or invalid. Mark `IFunction1` as `[Callback(typeof(T))]` or `[RawCallback]`; mark `IFunction4` as `[ComposableContent]` or `[DeferredComposableContent]`. |
 
 ### Migration rule
 
