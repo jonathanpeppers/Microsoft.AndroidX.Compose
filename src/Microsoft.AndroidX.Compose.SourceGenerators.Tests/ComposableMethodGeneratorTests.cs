@@ -377,7 +377,7 @@ public class ComposableMethodGeneratorTests
             emitted,
             @"global::App\.Direct\.Widget\([^\r\n]+").Value;
         Assert.Equal(
-            "global::App.Direct.Widget(__c, label, setting, 0x2UL, __changed);",
+            "global::App.Direct.Widget(__c, label, setting, 0x2UL, __dirty);",
             directCall);
         AssertNoCompileErrors(output);
     }
@@ -411,7 +411,7 @@ public class ComposableMethodGeneratorTests
         Assert.Empty(diags);
         Assert.NotNull(emitted);
         Assert.Contains(
-            "global::App.Direct.Widget(__c, value, 0x0UL, __changed)",
+            "global::App.Direct.Widget(__c, value, 0x0UL, __dirty)",
             emitted);
         AssertNoCompileErrors(output);
     }
@@ -452,7 +452,7 @@ public class ComposableMethodGeneratorTests
         Assert.Empty(diags);
         Assert.NotNull(emitted);
         Assert.Contains(
-            "global::App.Direct.Dialog(__c, content, icon, title, 0x2UL, __changed)",
+            "global::App.Direct.Dialog(__c, content, icon, title, 0x2UL, __dirty)",
             emitted);
         AssertNoCompileErrors(output);
     }

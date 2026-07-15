@@ -523,7 +523,7 @@ public sealed class ComposableMethodGenerator : IIncrementalGenerator
                 sb.Append(", ");
             sb.Append("0x")
               .Append(site.OmittedArguments.ToString("X", CultureInfo.InvariantCulture))
-              .Append("UL, __changed");
+              .Append("UL, __dirty");
         }
         sb.AppendLine(");");
         sb.AppendLine("            }");

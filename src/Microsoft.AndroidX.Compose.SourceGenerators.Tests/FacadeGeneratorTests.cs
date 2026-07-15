@@ -1414,6 +1414,44 @@ public class FacadeGeneratorTests
     }
 
     [Fact]
+    public void Changed_ThemeColorDiffsResolvedFallback()
+    {
+        var code = """
+            using global::AndroidX.Compose.Runtime;
+            using global::AndroidX.Compose.UI;
+            using AndroidX.Compose;
+            using Kotlin.Jvm.Functions;
+
+            [assembly: ComposeDefaults("DrawerSheetDefault", "!content", "drawerContainerColor")]
+
+            namespace AndroidX.Compose
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(Class="androidx/compose/material3/NavigationDrawerKt",
+                                   JvmName="ModalDrawerSheet-afqeVBk",
+                                   Signature="(Lkotlin/jvm/functions/Function3;JLandroidx/compose/runtime/Composer;II)V",
+                                   Defaults=typeof(DrawerSheetDefault))]
+                    [ComposeFacade(DefaultColorFromTheme = "secondaryContainer")]
+                    public static partial void ModalDrawerSheet(
+                        IFunction3 content,
+                        long drawerContainerColor,
+                        IComposer composer,
+                        int _changed = 0);
+                }
+            }
+            """;
+
+        var (output, diags, emitted) = Run(code, "ModalDrawerSheet");
+
+        Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+        Assert.Contains("__changed |= __composer.DiffSlot(__color, 4);", emitted);
+        Assert.DoesNotContain("__changed |= ((__directChanged >> 4)", emitted);
+        Assert.Empty(output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error));
+    }
+
+    [Fact]
     public void DefaultColorFromTheme_NoLongParamEmitsCN3007()
     {
         var code = """
@@ -4060,7 +4098,7 @@ public class FacadeGeneratorTests
         Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
         Assert.NotNull(emitted);
         Assert.Contains("public static void BranchPainter(global::AndroidX.Compose.Runtime.IComposer composer, global::AndroidX.Compose.UI.Graphics.Painter.Painter painter,", emitted);
-        Assert.Contains("__changed |= __composer.DiffSlot(painter, global::AndroidX.Compose.ComposeExtensions.DiffSlotShift(0));", emitted);
+        Assert.Contains("__changed |= ((__directChanged >> 1) & 0b111) << 1;", emitted);
 
         var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
         Assert.Empty(errors);
@@ -4354,6 +4392,8 @@ public class FacadeGeneratorTests
         Assert.Contains("__changed |= composer.DiffSlot(__modifierKey, global::AndroidX.Compose.ComposeExtensions.DiffSlotShift(1));", emitted);
         Assert.Contains("__changed |= composer.DiffSlot(_enabled, global::AndroidX.Compose.ComposeExtensions.DiffSlotShift(2));", emitted);
         Assert.Contains("__changed |= (int)global::AndroidX.Compose.ChangedBits.Static << global::AndroidX.Compose.ComposeExtensions.DiffSlotShift(3);", emitted);
+        Assert.Contains("__changed |= __composer.DiffSlot(__modifierKey, 4);", emitted);
+        Assert.Contains("__changed |= ((__directChanged >> 4) & 0b111) << 10;", emitted);
 
         var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
         Assert.Empty(errors);
@@ -4558,6 +4598,8 @@ public class FacadeGeneratorTests
         Assert.Contains("__changed |= composer.DiffSlot(__state, global::AndroidX.Compose.ComposeExtensions.DiffSlotShift(0));", emitted);
         // modifier (param 1) → bit 4.
         Assert.Contains("__changed |= composer.DiffSlot(__modifierKey, global::AndroidX.Compose.ComposeExtensions.DiffSlotShift(1));", emitted);
+        Assert.Contains("__changed |= __composer.DiffSlot(__state, 1);", emitted);
+        Assert.Contains("__changed |= __composer.DiffSlot(__modifierKey, 4);", emitted);
         Assert.Contains("composer: composer, _changed: __changed", emitted);
 
         var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();

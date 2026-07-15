@@ -2101,25 +2101,27 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         }
 
         EmitTier2StateHolderPreamble(sb, slots);
+        bool needsChanged = callerProvidesChanged
+            || branchInfo?.AlternateProvidesChanged == true;
 
         foreach (var s in slots.Where(s => s.Kind == FacadeSlotKind.OnClick))
         {
             var input = EscapeIdent(s.Param.Name);
             sb.Append("            var __").Append(s.Param.Name).Append(" = ");
-            if (callerProvidesChanged)
+            if (needsChanged)
                 sb.Append("__composer.RememberAction(").Append(input).AppendLine(");");
             else
                 sb.Append("new global::AndroidX.Compose.ComposableLambda0(").Append(input).AppendLine(");");
         }
 
         foreach (var s in slots.Where(s => s.Kind == FacadeSlotKind.Callback))
-            EmitTier2CallbackWrapper(sb, s, callerProvidesChanged);
+            EmitTier2CallbackWrapper(sb, s, needsChanged);
 
         var modifierSlot = slots.FirstOrDefault(s => s.Kind == FacadeSlotKind.Modifier);
         bool hasModifier = modifierSlot.Param is not null;
         if (hasModifier)
         {
-            if (callerProvidesChanged)
+            if (needsChanged)
                 sb.AppendLine("            var __modifierKey = modifier?.StructuralKey;");
             sb.AppendLine("            var __modifier = modifier?.Build();");
         }
@@ -2183,7 +2185,10 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
                 sb, "            ", defaults, surfacedIndices);
         }
         if (callerProvidesChanged)
-            EmitTier2ChangedMask(sb, "            ", slots, primaryDefaults, route);
+        {
+            EmitTier2ForwardedChangedMask(sb, "            ", slots,
+                primaryDefaults, surfacedIndices, "__directChanged");
+        }
 
         var slotByName = slots.ToDictionary(s => s.Param.Name, StringComparer.Ordinal);
         EmitTier2BridgeCallByParams(sb, "            ", primaryMethodName,
@@ -2449,6 +2454,78 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
                     break;
             }
         }
+
+    }
+
+    static void EmitTier2ForwardedChangedMask(
+        StringBuilder sb,
+        string indent,
+        IReadOnlyList<FacadeSlot> slots,
+        DefaultsInfo? defaults,
+        IReadOnlyDictionary<string, int> surfacedIndices,
+        string inputVariable,
+        string variable = "__changed")
+    {
+        sb.Append(indent).Append("int ").Append(variable).Append(" = ")
+          .Append(inputVariable).AppendLine(" & 0b1;");
+        int fallbackIndex = 0;
+        foreach (var slot in slots)
+        {
+            if (slot.Kind == FacadeSlotKind.ScopeReceiver)
+                continue;
+            int targetIndex = defaults?.FindByKotlinName(slot.Param.Name)?.Bit
+                ?? fallbackIndex;
+            fallbackIndex++;
+            int targetShift = 1 + targetIndex * 3;
+            if (targetShift > 28)
+                continue;
+            switch (slot.Kind)
+            {
+                case FacadeSlotKind.Modifier:
+                    sb.Append(indent).Append(variable)
+                      .Append(" |= __composer.DiffSlot(__modifierKey, ")
+                      .Append(targetShift.ToString(System.Globalization.CultureInfo.InvariantCulture))
+                      .AppendLine(");");
+                    continue;
+                case FacadeSlotKind.ThemeColor:
+                    sb.Append(indent).Append(variable)
+                      .Append(" |= __composer.DiffSlot(__color, ")
+                      .Append(targetShift.ToString(System.Globalization.CultureInfo.InvariantCulture))
+                      .AppendLine(");");
+                    continue;
+                case FacadeSlotKind.StateHolder:
+                    sb.Append(indent).Append(variable)
+                      .Append(" |= __composer.DiffSlot(__").Append(slot.Param.Name)
+                      .Append(", ")
+                      .Append(targetShift.ToString(System.Globalization.CultureInfo.InvariantCulture))
+                      .AppendLine(");");
+                    continue;
+            }
+            if (!surfacedIndices.TryGetValue(slot.Param.Name, out int sourceIndex))
+                continue;
+            EmitTier2ForwardedChangedSlot(
+                sb, indent, inputVariable, sourceIndex, targetIndex, variable);
+        }
+    }
+
+    static void EmitTier2ForwardedChangedSlot(
+        StringBuilder sb,
+        string indent,
+        string inputVariable,
+        int sourceIndex,
+        int targetIndex,
+        string variable = "__changed")
+    {
+        int sourceShift = 1 + sourceIndex * 3;
+        int targetShift = 1 + targetIndex * 3;
+        if (sourceShift > 28 || targetShift > 28)
+            return;
+        sb.Append(indent).Append(variable).Append(" |= ((")
+          .Append(inputVariable).Append(" >> ")
+          .Append(sourceShift.ToString(System.Globalization.CultureInfo.InvariantCulture))
+          .Append(") & 0b111) << ")
+          .Append(targetShift.ToString(System.Globalization.CultureInfo.InvariantCulture))
+          .AppendLine(";");
     }
 
     static void EmitTier2BranchedCall(StringBuilder sb, string primaryMethodName,
@@ -2483,8 +2560,8 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             var altSlots = branch.AlternateUserParams
                 .Where(p => slotByName.ContainsKey(p.Name))
                 .Select(p => slotByName[p.Name]).ToArray();
-            EmitTier2ChangedMask(sb, "                ", altSlots,
-                branch.AlternateDefaults, route);
+            EmitTier2ForwardedChangedMask(sb, "                ", altSlots,
+                branch.AlternateDefaults, surfacedIndices, "__directChanged");
         }
         EmitTier2BridgeCallByParams(sb, "                ", branch.AlternateMethodName,
             branch.AlternateUserParams, slotByName, alternateDefaultArguments,
@@ -2499,8 +2576,8 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             var directSlots = primaryUserParams
                 .Where(p => slotByName.ContainsKey(p.Name))
                 .Select(p => slotByName[p.Name]).ToArray();
-            EmitTier2ChangedMask(sb, "                ", directSlots,
-                primaryDefaults, route);
+            EmitTier2ForwardedChangedMask(sb, "                ", directSlots,
+                primaryDefaults, surfacedIndices, "__directChanged");
         }
         EmitTier2BridgeCallByParams(sb, "                ", primaryMethodName,
             primaryUserParams, slotByName, primaryDefaultArguments,
@@ -2571,16 +2648,17 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
 
         if (hasChanged)
         {
-            EmitTier2ChangedMask(sb, "            ", secondarySlots,
-                info.Defaults, Tier2Route.Secondary);
+            EmitTier2ForwardedChangedMask(sb, "            ", secondarySlots,
+                info.Defaults, surfacedIndices, "__directChanged");
             int index = info.Defaults.FindByKotlinName(info.Discriminator.Name)?.Bit ?? 0;
             if (1 + index * 3 <= 28)
             {
-                sb.Append("            __changed |= __composer.DiffSlot(")
-                  .Append(EscapeIdent(info.Discriminator.Name))
-                  .Append(", global::AndroidX.Compose.ComposeExtensions.DiffSlotShift(")
-                  .Append(index.ToString(System.Globalization.CultureInfo.InvariantCulture))
-                  .AppendLine("));");
+                if (surfacedIndices.TryGetValue(
+                    info.Discriminator.Name, out int surfaceIndex))
+                {
+                    EmitTier2ForwardedChangedSlot(
+                        sb, "            ", "__directChanged", surfaceIndex, index);
+                }
             }
         }
 
