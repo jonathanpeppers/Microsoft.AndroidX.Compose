@@ -356,7 +356,7 @@ public sealed class ComposableMethodGenerator : IIncrementalGenerator
             if (i > 0) sb.Append(", ");
             var p = method.Parameters[i];
             sb.Append(p.Type.ToDisplayString(ParameterTypeFormat))
-              .Append(' ').Append(p.Name);
+              .Append(' ').Append(EscapeIdentifier(p.Name));
         }
         sb.AppendLine(")");
         sb.AppendLine("        {");
@@ -366,7 +366,7 @@ public sealed class ComposableMethodGenerator : IIncrementalGenerator
         for (int i = 0; i < method.Parameters.Length; i++)
         {
             if (i > 0 || !hasExplicitComposer) sb.Append(", ");
-            sb.Append(method.Parameters[i].Name);
+            sb.Append(EscapeIdentifier(method.Parameters[i].Name));
         }
         sb.AppendLine(", 0);");
         sb.AppendLine("        }");
@@ -380,13 +380,15 @@ public sealed class ComposableMethodGenerator : IIncrementalGenerator
             if (i > 0 || !hasExplicitComposer) sb.Append(", ");
             var p = method.Parameters[i];
             sb.Append(p.Type.ToDisplayString(ParameterTypeFormat))
-              .Append(' ').Append(p.Name);
+              .Append(' ').Append(EscapeIdentifier(p.Name));
         }
         sb.Append(", ");
         sb.AppendLine("int __changed)");
         sb.AppendLine("        {");
 
-        var composerName = hasExplicitComposer ? method.Parameters[0].Name : "__composer";
+        var composerName = hasExplicitComposer
+            ? EscapeIdentifier(method.Parameters[0].Name)
+            : "__composer";
         sb.Append("            var __c = ").Append(composerName)
           .Append(".StartRestartGroup(unchecked((int)0x")
           .Append(key.ToString("X8", CultureInfo.InvariantCulture))
@@ -400,7 +402,7 @@ public sealed class ComposableMethodGenerator : IIncrementalGenerator
             var p = userParams[i];
             sb.Append("            __dirty |= __c.DiffSlot<")
               .Append(p.Type.ToDisplayString(ParameterTypeFormat))
-              .Append(">(").Append(p.Name).Append(", ")
+              .Append(">(").Append(EscapeIdentifier(p.Name)).Append(", ")
               .Append(bitOffset.ToString(CultureInfo.InvariantCulture))
               .AppendLine(");");
         }
@@ -427,7 +429,7 @@ public sealed class ComposableMethodGenerator : IIncrementalGenerator
         sb.Append("                ")
           .Append(containingType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat))
           .Append('.')
-          .Append(method.Name)
+          .Append(EscapeIdentifier(method.Name))
           .Append('(');
         if (hasExplicitComposer)
             sb.Append("__c");
@@ -436,7 +438,7 @@ public sealed class ComposableMethodGenerator : IIncrementalGenerator
         {
             if (hasCallArgument)
                 sb.Append(", ");
-            sb.Append(p.Name);
+            sb.Append(EscapeIdentifier(p.Name));
             hasCallArgument = true;
         }
         sb.AppendLine(");");
@@ -452,7 +454,7 @@ public sealed class ComposableMethodGenerator : IIncrementalGenerator
         sb.Append("            __c.EndRestartGroup()?.UpdateScope(new global::AndroidX.Compose.ComposableLambda2((__c2, __force) => ")
           .Append(coreName).Append("(__c2");
         foreach (var p in userParams)
-            sb.Append(", ").Append(p.Name);
+            sb.Append(", ").Append(EscapeIdentifier(p.Name));
         sb.AppendLine(", __force | 0b1)));");
 
         sb.AppendLine("        }");
@@ -468,8 +470,15 @@ public sealed class ComposableMethodGenerator : IIncrementalGenerator
             hash ^= s[i];
             hash *= prime;
         }
+
         return unchecked((int)hash);
     }
+
+    static string EscapeIdentifier(string name) =>
+        SyntaxFacts.GetKeywordKind(name) != SyntaxKind.None
+            || SyntaxFacts.GetContextualKeywordKind(name) != SyntaxKind.None
+            ? "@" + name
+            : name;
 
     /// <summary>
     /// One intercepted call site — the resolved target method plus the

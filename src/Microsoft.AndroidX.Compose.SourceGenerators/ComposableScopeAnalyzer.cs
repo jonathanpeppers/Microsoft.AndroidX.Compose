@@ -25,6 +25,22 @@ public sealed class ComposableScopeAnalyzer : DiagnosticAnalyzer
         context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
         context.EnableConcurrentExecution();
         context.RegisterOperationAction(AnalyzeInvocation, OperationKind.Invocation);
+        context.RegisterOperationAction(AnalyzeMethodReference, OperationKind.MethodReference);
+    }
+
+    static void AnalyzeMethodReference(OperationAnalysisContext context)
+    {
+        var reference = (IMethodReferenceOperation)context.Operation;
+        var method = reference.Method.ReducedFrom
+            ?? reference.Method.OriginalDefinition;
+
+        if (!RequiresImplicitComposer(method) || IsComposableContentDestination(reference))
+            return;
+
+        context.ReportDiagnostic(Diagnostic.Create(
+            Diagnostics.ImplicitComposableOutsideScope,
+            reference.Syntax.GetLocation(),
+            method.Name));
     }
 
     static void AnalyzeInvocation(OperationAnalysisContext context)
@@ -100,10 +116,20 @@ public sealed class ComposableScopeAnalyzer : DiagnosticAnalyzer
 
     static bool IsComposableContent(IAnonymousFunctionOperation anonymous)
     {
-        IOperation current = anonymous;
+        if (anonymous.Symbol.IsAsync)
+            return false;
+
+        return IsComposableContentDestination(anonymous);
+    }
+
+    static bool IsComposableContentDestination(IOperation operation)
+    {
+        IOperation current = operation;
         while (current.Parent is IDelegateCreationOperation
             or IConversionOperation
-            or IParenthesizedOperation)
+            or IParenthesizedOperation
+            or IConditionalOperation
+            or ICoalesceOperation)
         {
             current = current.Parent;
         }

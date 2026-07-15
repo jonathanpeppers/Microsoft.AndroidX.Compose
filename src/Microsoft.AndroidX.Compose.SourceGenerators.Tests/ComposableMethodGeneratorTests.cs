@@ -197,6 +197,30 @@ public class ComposableMethodGeneratorTests
     }
 
     [Fact]
+    public void KeywordParameter_IsEscapedThroughoutInterceptor()
+    {
+        var (output, diags, emitted) = Run("""
+            namespace App
+            {
+                public static class Screens
+                {
+                    [AndroidX.Compose.Composable]
+                    public static void Checkbox(bool @checked) { }
+
+                    public static void CallSite() => Checkbox(true);
+                }
+            }
+            """);
+
+        Assert.Empty(diags);
+        Assert.NotNull(emitted);
+        Assert.Contains("bool @checked", emitted);
+        Assert.Contains("Checkbox(@checked)", emitted);
+        Assert.Contains("DiffSlot<bool>(@checked, 1)", emitted);
+        AssertNoCompileErrors(output);
+    }
+
+    [Fact]
     public void OneParam_EmitsDiffSlotAndSkipMask()
     {
         var (output, diags, emitted) = Run("""

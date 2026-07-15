@@ -33,7 +33,7 @@ public class ComposableScopeAnalyzerTests
 
             public sealed class CompositionLocal<T>
             {
-                public T Current() => default!;
+                public T Current() => throw new System.NotImplementedException();
             }
         }
         """;
@@ -134,5 +134,67 @@ public class ComposableScopeAnalyzerTests
             """);
 
         Assert.DoesNotContain(diagnostics, d => d.Id == "CN5009");
+    }
+
+    [Fact]
+    public void ComposableMethodGroup_OnlyAllowedForComposableContent()
+    {
+        var diagnostics = Analyze("""
+            static class App
+            {
+                [AndroidX.Compose.Composable]
+                public static void Content() { }
+
+                [AndroidX.Compose.Composable]
+                public static void Render() =>
+                    AndroidX.Compose.Composables.Button(Content, Content);
+            }
+            """);
+
+        var scopeDiagnostics = diagnostics.Where(d => d.Id == "CN5009").ToArray();
+        Assert.Single(scopeDiagnostics);
+        Assert.Contains("Content", scopeDiagnostics[0].Location.SourceTree
+            ?.GetText().ToString(scopeDiagnostics[0].Location.SourceSpan));
+    }
+
+    [Fact]
+    public void ConditionalComposableMethodGroup_IsAllowedForComposableContent()
+    {
+        var diagnostics = Analyze("""
+            static class App
+            {
+                [AndroidX.Compose.Composable]
+                public static void Primary() { }
+
+                [AndroidX.Compose.Composable]
+                public static void Alternate() { }
+
+                [AndroidX.Compose.Composable]
+                public static void Render(bool usePrimary) =>
+                    AndroidX.Compose.Composables.Column(
+                        usePrimary ? Primary : Alternate);
+            }
+            """);
+
+        Assert.DoesNotContain(diagnostics, d => d.Id == "CN5009");
+    }
+
+    [Fact]
+    public void AsyncComposableContent_DoesNotInheritScope()
+    {
+        var diagnostics = Analyze("""
+            static class App
+            {
+                [AndroidX.Compose.Composable]
+                public static void Render() =>
+                    AndroidX.Compose.Composables.Column(async () =>
+                    {
+                        await System.Threading.Tasks.Task.Yield();
+                        AndroidX.Compose.Composables.Text("late");
+                    });
+            }
+            """);
+
+        Assert.Contains(diagnostics, d => d.Id == "CN5009");
     }
 }

@@ -15,23 +15,30 @@ namespace AndroidX.Compose;
 /// only when something changed (otherwise <c>SkipToGroupEnd</c>), and
 /// registers an <c>UpdateScope</c> recompose lambda. The interception
 /// happens at the C# compiler level — the user calls
-/// <c>Greeting(c, "world")</c> and the compiler silently rewires it
-/// to <c>ComposableInterceptors.Composable_xxxx(c, "world")</c>.
+/// <c>Greeting("world")</c> and the compiler silently rewires it to a
+/// generated interceptor that supplies the active composer.
 /// </para>
 /// <para>
 /// Pattern (mirrors Kotlin: <em>one</em> function):
 /// </para>
 /// <code>
+/// using static AndroidX.Compose.Composables;
+///
 /// [Composable]
-/// public static void Greeting(IComposer composer, string name)
+/// public static void Greeting(string name)
 /// {
 ///     // Plain method body — no partial, no Impl companion, no
 ///     // _changed parameter. Any [Composable] call inside this body
 ///     // is itself intercepted, so Tier 2 composes cleanly all the
 ///     // way down.
-///     Composables.Text(composer, $"Hello, {name}");
+///     Text($"Hello, {name}");
 /// }
 /// </code>
+/// <para>
+/// A method may instead declare
+/// <see cref="AndroidX.Compose.Runtime.IComposer"/> as its first parameter
+/// when implementing a low-level explicit-composer escape hatch.
+/// </para>
 /// <para>
 /// Tier 2 composables coexist with the tree-style facade catalog —
 /// the existing <see cref="ComposableNode"/>-based composables keep
@@ -44,8 +51,9 @@ namespace AndroidX.Compose;
 /// <list type="bullet">
 ///   <item><description><c>static</c> (CN5001)</description></item>
 ///   <item><description>returns <c>void</c> (CN5002)</description></item>
-///   <item><description>first parameter is
-///     <see cref="AndroidX.Compose.Runtime.IComposer"/> (CN5003)</description></item>
+///   <item><description>when declared,
+///     <see cref="AndroidX.Compose.Runtime.IComposer"/> is the first and only
+///     composer parameter (CN5003)</description></item>
 /// </list>
 /// <para>
 /// Because the generator emits <c>[InterceptsLocation]</c> wrappers,
