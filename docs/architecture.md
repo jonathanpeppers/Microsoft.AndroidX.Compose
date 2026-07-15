@@ -360,6 +360,38 @@ The interceptor records omitted C#
   consume this contract before their route-neutral bridge call; adapter
   facade calls cannot safely infer omission from nullable runtime values.
 
+### Real-app migration benchmark
+
+Issue [#299](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/299)
+migrated the Jetchat, JetNews, and Reply activity roots to composerless
+`SetContent`, state, ViewModel, and lazy-list state APIs. The top-level
+`[Composable]` methods no longer thread `IComposer`; each keeps one
+`ComposableContext.Current` tree-render escape hatch while the nested screen
+shapes remain blocked on [#301](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/301).
+
+`Tier2RealAppBenchmarkDemo` measures equivalent Reply-style cards on a Pixel 10
+Debug build. Eight fresh-process runs randomized which lane executed first so
+shared facade/JNI initialization did not consistently favor either lane. Each
+run forced ten recompositions:
+
+- Adapter Tier 2 cold initial composition (five adapter-first runs):
+  **19,608 B**; median **18.88 ms**.
+- Tree cold initial composition (three tree-first runs):
+  **4,200 B**; median **23.47 ms**.
+- Adapter Tier 2 recomposition skip (all eight runs):
+  **920 B**; median **3.46 ms**.
+- Tree recomposition (all eight runs):
+  **2,184 B**; median **11.08 ms**.
+- Adapter body executions: **2**; tree body executions: **12**.
+
+Allocations and execution counts were stable within each lane order. Timings
+are directional only because this is an on-device Debug smoke benchmark rather
+than a warmed microbenchmark. The third direct-lowered lane is intentionally
+absent until [#302](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/302)
+removes generated facade allocation and
+[#304](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/304)
+provides stable generated lambda adapters.
+
 ### Deferred — follow-up issues
 
 - **Tier 2 entry points for remaining hand-written holdouts.** `Scaffold`,
