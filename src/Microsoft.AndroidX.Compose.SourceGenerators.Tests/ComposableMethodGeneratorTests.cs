@@ -49,6 +49,10 @@ public class ComposableMethodGeneratorTests
             [System.AttributeUsage(System.AttributeTargets.Method)]
             public sealed class ComposableAttribute : System.Attribute { }
 
+            [System.AttributeUsage(System.AttributeTargets.Method)]
+            internal sealed class ComposableDirectTargetAttribute(
+                System.Type containingType, string methodName) : System.Attribute { }
+
             public enum ChangedBits { Uncertain = 0, Same = 1, Different = 2, Static = 4 }
 
             public sealed class ComposableLambda2 : Kotlin.Jvm.Functions.IFunction2
@@ -326,6 +330,127 @@ public class ComposableMethodGeneratorTests
         Assert.NotNull(emitted);
         Assert.Contains("global::System.Action<string>? callback", emitted);
         Assert.Contains("DiffSlot<global::System.Action<string>?>(callback, 1)", emitted);
+        AssertNoCompileErrors(output);
+    }
+
+    [Theory]
+    [InlineData("int", "42")]
+    [InlineData("string?", "null")]
+    [InlineData("System.Action?", "null")]
+    [InlineData("Dp?", "null")]
+    public void DirectTarget_OmittedOptionalArgument_SetsSurfacedParameterBit(
+        string parameterType,
+        string defaultValue)
+    {
+        var (output, diags, emitted) = Run($$"""
+            namespace AndroidX.Compose
+            {
+                public readonly struct Dp { }
+            }
+
+            namespace App
+            {
+                public static class Direct
+                {
+                    public static void Widget(
+                        AndroidX.Compose.Runtime.IComposer composer,
+                        string required,
+                        {{parameterType}} optional,
+                        ulong omittedArguments,
+                        int changed) { }
+                }
+
+                public static class Screens
+                {
+                    [AndroidX.Compose.Composable]
+                    [AndroidX.Compose.ComposableDirectTarget(typeof(Direct), nameof(Direct.Widget))]
+                    public static void Widget(string required, {{parameterType}} optional = {{defaultValue}}) { }
+
+                    public static void CallSite() => Widget("required");
+                }
+            }
+            """);
+
+        Assert.Empty(diags);
+        Assert.NotNull(emitted);
+        Assert.Contains(
+            "global::App.Direct.Widget(__c, required, optional, 0x2UL, __changed)",
+            emitted);
+        AssertNoCompileErrors(output);
+    }
+
+    [Fact]
+    public void DirectTarget_ExplicitNull_DoesNotSetOmittedBit()
+    {
+        var (output, diags, emitted) = Run("""
+            namespace App
+            {
+                public static class Direct
+                {
+                    public static void Widget(
+                        AndroidX.Compose.Runtime.IComposer composer,
+                        string? value,
+                        ulong omittedArguments,
+                        int changed) { }
+                }
+
+                public static class Screens
+                {
+                    [AndroidX.Compose.Composable]
+                    [AndroidX.Compose.ComposableDirectTarget(typeof(Direct), nameof(Direct.Widget))]
+                    public static void Widget(string? value = null) { }
+
+                    public static void CallSite() => Widget(value: null);
+                }
+            }
+            """);
+
+        Assert.Empty(diags);
+        Assert.NotNull(emitted);
+        Assert.Contains(
+            "global::App.Direct.Widget(__c, value, 0x0UL, __changed)",
+            emitted);
+        AssertNoCompileErrors(output);
+    }
+
+    [Fact]
+    public void DirectTarget_NamedSlotOmission_UsesCatalogParameterOrder()
+    {
+        var (output, diags, emitted) = Run("""
+            namespace App
+            {
+                public static class Direct
+                {
+                    public static void Dialog(
+                        AndroidX.Compose.Runtime.IComposer composer,
+                        System.Action content,
+                        System.Action? icon,
+                        System.Action? title,
+                        ulong omittedArguments,
+                        int changed) { }
+                }
+
+                public static class Screens
+                {
+                    [AndroidX.Compose.Composable]
+                    [AndroidX.Compose.ComposableDirectTarget(typeof(Direct), nameof(Direct.Dialog))]
+                    public static void Dialog(
+                        System.Action content,
+                        System.Action? icon = null,
+                        System.Action? title = null) { }
+
+                    public static void CallSite() => Dialog(
+                        content: static () => { },
+                        title: null);
+                }
+            }
+            """);
+
+        Assert.Empty(diags);
+        Assert.NotNull(emitted);
+        Assert.Contains(
+            "global::App.Direct.Dialog(__c, content, icon, title, 0x2UL, __changed)",
+            emitted);
         AssertNoCompileErrors(output);
     }
 

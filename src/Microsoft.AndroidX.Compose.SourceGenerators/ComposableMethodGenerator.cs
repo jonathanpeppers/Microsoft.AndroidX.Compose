@@ -5,6 +5,7 @@ using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.CodeAnalysis.Operations;
 using Microsoft.CodeAnalysis.Text;
 
 #pragma warning disable RSEXPERIMENTAL002 // GetInterceptableLocation — also used by dotnet/maui's BindingSourceGen
@@ -46,6 +47,7 @@ namespace AndroidX.Compose.SourceGenerators;
 public sealed class ComposableMethodGenerator : IIncrementalGenerator
 {
     const string ComposableAttributeMetadataName = "AndroidX.Compose.ComposableAttribute";
+    const string ComposableDirectTargetAttributeMetadataName = "AndroidX.Compose.ComposableDirectTargetAttribute";
     const string ComposerFullName = "AndroidX.Compose.Runtime.IComposer";
     static readonly SymbolDisplayFormat ParameterTypeFormat =
         SymbolDisplayFormat.FullyQualifiedFormat.WithMiscellaneousOptions(
@@ -213,11 +215,56 @@ public sealed class ComposableMethodGenerator : IIncrementalGenerator
         if (loc is null)
             return null;
 
+        var directTarget = TryReadDirectTarget(actual);
+        ulong omittedArguments = directTarget is null
+            ? 0
+            : ReadOmittedArguments(ctx.SemanticModel, invocation, target, ct);
+
         return new CallSite(
             target,
             path ?? string.Empty,
             loc.Version,
-            loc.Data);
+            loc.Data,
+            directTarget,
+            omittedArguments);
+    }
+
+    static DirectTarget? TryReadDirectTarget(IMethodSymbol method)
+    {
+        var attr = method.GetAttributes().FirstOrDefault(static a =>
+            a.AttributeClass?.ToDisplayString() == ComposableDirectTargetAttributeMetadataName);
+        if (attr is null || attr.ConstructorArguments.Length != 2)
+            return null;
+        if (attr.ConstructorArguments[0].Value is not INamedTypeSymbol containingType)
+            return null;
+        if (attr.ConstructorArguments[1].Value is not string methodName
+            || string.IsNullOrWhiteSpace(methodName))
+            return null;
+        return new DirectTarget(containingType, methodName);
+    }
+
+    static ulong ReadOmittedArguments(
+        SemanticModel semanticModel,
+        InvocationExpressionSyntax invocation,
+        IMethodSymbol target,
+        System.Threading.CancellationToken ct)
+    {
+        if (semanticModel.GetOperation(invocation, ct) is not IInvocationOperation operation)
+            return 0;
+
+        bool hasExplicitComposer = target.Parameters.Length > 0
+            && IsComposer(target.Parameters[0].Type);
+        int composerOffset = hasExplicitComposer ? 1 : 0;
+        ulong omitted = 0;
+        foreach (var argument in operation.Arguments)
+        {
+            if (!argument.IsImplicit || argument.Parameter is not { } parameter)
+                continue;
+            int userIndex = parameter.Ordinal - composerOffset;
+            if ((uint)userIndex < 64)
+                omitted |= 1UL << userIndex;
+        }
+        return omitted;
     }
 
     static bool HasComposableAttribute(IMethodSymbol method)
@@ -422,24 +469,32 @@ public sealed class ComposableMethodGenerator : IIncrementalGenerator
               .AppendLine(" || !__c.Skipping)");
         }
         sb.AppendLine("            {");
-        // Call the user's original method by fully-qualified name. This
-        // call site itself doesn't have [InterceptsLocation] pointing at
-        // it, so it passes through to the user method's body (which is
-        // what we want — that's the actual composable's body running).
         sb.Append("                ")
-          .Append(containingType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat))
+          .Append(site.DirectTarget?.ContainingType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)
+              ?? containingType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat))
           .Append('.')
-          .Append(EscapeIdentifier(method.Name))
+          .Append(EscapeIdentifier(site.DirectTarget?.MethodName ?? method.Name))
           .Append('(');
-        if (hasExplicitComposer)
+        bool hasCallArgument = false;
+        if (site.DirectTarget is not null || hasExplicitComposer)
+        {
             sb.Append("__c");
-        bool hasCallArgument = hasExplicitComposer;
+            hasCallArgument = true;
+        }
         foreach (var p in userParams)
         {
             if (hasCallArgument)
                 sb.Append(", ");
             sb.Append(EscapeIdentifier(p.Name));
             hasCallArgument = true;
+        }
+        if (site.DirectTarget is not null)
+        {
+            if (hasCallArgument)
+                sb.Append(", ");
+            sb.Append("0x")
+              .Append(site.OmittedArguments.ToString("X", CultureInfo.InvariantCulture))
+              .Append("UL, __changed");
         }
         sb.AppendLine(");");
         sb.AppendLine("            }");
@@ -487,17 +542,34 @@ public sealed class ComposableMethodGenerator : IIncrementalGenerator
     /// </summary>
     sealed class CallSite
     {
-        public CallSite(IMethodSymbol target, string filePath, int locationVersion, string locationData)
+        public CallSite(IMethodSymbol target, string filePath, int locationVersion, string locationData,
+            DirectTarget? directTarget, ulong omittedArguments)
         {
             Target = target;
             FilePath = filePath;
             LocationVersion = locationVersion;
             LocationData = locationData;
+            DirectTarget = directTarget;
+            OmittedArguments = omittedArguments;
         }
 
         public IMethodSymbol Target { get; }
         public string FilePath { get; }
         public int LocationVersion { get; }
         public string LocationData { get; }
+        public DirectTarget? DirectTarget { get; }
+        public ulong OmittedArguments { get; }
+    }
+
+    sealed class DirectTarget
+    {
+        public DirectTarget(INamedTypeSymbol containingType, string methodName)
+        {
+            ContainingType = containingType;
+            MethodName = methodName;
+        }
+
+        public INamedTypeSymbol ContainingType { get; }
+        public string MethodName { get; }
     }
 }
