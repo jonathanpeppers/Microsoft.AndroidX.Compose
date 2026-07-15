@@ -1382,15 +1382,6 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
           .Append(composerName).AppendLine(")");
         sb.AppendLine("        {");
 
-        // Phase 11 — secondary dispatch. Runs BEFORE any primary-only
-        // preamble (PainterResource resolution etc.) so it can return
-        // early when the caller used the secondary ctor.
-        if (secondaryCtorInfo is not null)
-        {
-            EmitSecondaryDispatch(sb, slots, secondaryCtorInfo, composerName,
-                scope, indexedChildren, themeColor);
-        }
-
         // Required-named-slot null checks.
         foreach (var s in namedSlots.Where(s => s.Kind is FacadeSlotKind.RequiredFunction2 or FacadeSlotKind.RequiredFunction3))
         {
@@ -1398,6 +1389,15 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             sb.Append("            if (").Append(name).AppendLine(" is null)");
             sb.Append("                throw new global::System.InvalidOperationException(\"")
               .Append(className).Append('.').Append(name).AppendLine(" is required (the Kotlin parameter has no default).\");");
+        }
+
+        // Phase 11 — secondary dispatch. Runs before any primary-only
+        // preamble (PainterResource resolution etc.) so it can return
+        // early when the caller used the secondary ctor.
+        if (secondaryCtorInfo is not null)
+        {
+            EmitSecondaryDispatch(sb, slots, secondaryCtorInfo, composerName,
+                scope, indexedChildren, themeColor);
         }
 
         // StateHolder preamble — call RememberXxxState and (optionally)
@@ -2100,15 +2100,18 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         foreach (var s in slots.Where(s => s.Kind == FacadeSlotKind.OnClick))
         {
             var input = EscapeIdent(s.Param.Name);
-            sb.Append("            var __").Append(s.Param.Name).Append(" = ");
-            if (needsChanged)
-                sb.Append("__composer.RememberAction(").Append(input).AppendLine(");");
-            else
-                sb.Append("new global::AndroidX.Compose.ComposableLambda0(").Append(input).AppendLine(");");
+            var adapter = LambdaAdapterLowering.EmitExpression(
+                new LambdaAdapterClassification(
+                    LambdaExecutionMode.Event,
+                    arity: 0),
+                "__composer",
+                input);
+            sb.Append("            var __").Append(s.Param.Name)
+              .Append(" = ").Append(adapter).AppendLine(";");
         }
 
         foreach (var s in slots.Where(s => s.Kind == FacadeSlotKind.Callback))
-            EmitTier2CallbackWrapper(sb, s, needsChanged);
+            EmitTier2CallbackWrapper(sb, s);
 
         var modifierSlot = slots.FirstOrDefault(s => s.Kind == FacadeSlotKind.Modifier);
         bool hasModifier = modifierSlot.Param is not null;
@@ -2310,8 +2313,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         sb.AppendLine("__composer);");
     }
 
-    static void EmitTier2CallbackWrapper(StringBuilder sb, FacadeSlot s,
-        bool stableIdentity)
+    static void EmitTier2CallbackWrapper(StringBuilder sb, FacadeSlot s)
     {
         var t = s.CallbackType
             ?? throw new InvalidOperationException("Callback slot is missing its callback type.");
@@ -2322,32 +2324,35 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             SpecialType.System_String => "v?.ToString() ?? string.Empty",
             _ => "default",
         };
-        sb.Append("            var __").Append(s.Param.Name).Append(" = ");
-        if (stableIdentity)
-            sb.Append("__composer.RememberAction(v => ");
-        else
-            sb.Append("new global::AndroidX.Compose.ComposableLambda1(v => ");
-        sb.Append(EscapeIdent(s.Param.Name)).Append('(').Append(expr).AppendLine("));");
+        var adapter = LambdaAdapterLowering.EmitExpression(
+            new LambdaAdapterClassification(
+                LambdaExecutionMode.Event,
+                arity: 1),
+            "__composer",
+            "v => " + EscapeIdent(s.Param.Name) + "(" + expr + ")");
+        sb.Append("            var __").Append(s.Param.Name)
+          .Append(" = ").Append(adapter).AppendLine(";");
     }
 
     static void EmitTier2NamedSlotWrapper(StringBuilder sb, FacadeSlot s,
         bool implicitComposer, string indent)
     {
         var id = EscapeIdent(Tier2Identifier(PropertyName(s)));
-        string wrap = s.Kind is FacadeSlotKind.NamedFunction3 or FacadeSlotKind.RequiredFunction3
-            ? "Wrap3"
-            : "Wrap2";
+        int arity = s.Kind is FacadeSlotKind.NamedFunction3 or FacadeSlotKind.RequiredFunction3
+            ? 3
+            : 2;
         bool nullable = s.Kind is FacadeSlotKind.NamedFunction2 or FacadeSlotKind.NamedFunction3;
+        string body = implicitComposer ? "_ => " + id + "()" : id;
+        string adapter = LambdaAdapterLowering.EmitExpression(
+            new LambdaAdapterClassification(
+                LambdaExecutionMode.SynchronousComposable,
+                arity),
+            "__composer",
+            body);
         sb.Append(indent).Append("var __").Append(s.Param.Name).Append(" = ");
         if (nullable)
             sb.Append(id).Append(" is null ? null : ");
-        sb.Append("global::AndroidX.Compose.ComposableLambdas.").Append(wrap)
-          .Append("(__composer, ");
-        if (implicitComposer)
-            sb.Append("_ => ").Append(id).Append("()");
-        else
-            sb.Append(id);
-        sb.AppendLine(");");
+        sb.Append(adapter).AppendLine(";");
     }
 
     static void EmitTier2ContentWrapper(StringBuilder sb, FacadeSlot s,
@@ -2355,25 +2360,34 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         string indent)
     {
         var id = EscapeIdent(s.Param.Name);
-        string wrap = s.Kind == FacadeSlotKind.Content3 ? "Wrap3" : "Wrap2";
-        sb.Append(indent).Append("var __").Append(s.Param.Name)
-          .Append(" = global::AndroidX.Compose.ComposableLambdas.").Append(wrap)
-          .Append("(__composer, ");
-        if (s.Kind == FacadeSlotKind.Content3 && !string.IsNullOrEmpty(scope))
+        int arity = s.Kind == FacadeSlotKind.Content3 ? 3 : 2;
+        string body;
+        if (arity == 3 && !string.IsNullOrEmpty(scope))
         {
-            sb.AppendLine("(__scope, c) =>");
-            sb.Append(indent).AppendLine("{");
-            sb.Append(indent).Append("    using var __scopeFrame = global::AndroidX.Compose.RenderContext.PushScope(__scope, global::AndroidX.Compose.ScopeKind.")
-              .Append(scope).AppendLine(");");
-            sb.Append(indent).Append("    global::AndroidX.Compose.Tier2InlineContent.RenderDirect(c, ")
-              .Append(id).Append(", ").Append(indexedChildren ? "true" : "false").AppendLine(");");
-            sb.Append(indent).AppendLine("});");
+            body = "(__scope, c) => { using var __scopeFrame = global::AndroidX.Compose.RenderContext.PushScope(__scope, global::AndroidX.Compose.ScopeKind."
+                + scope
+                + "); global::AndroidX.Compose.Tier2InlineContent.RenderDirect(c, "
+                + id
+                + ", "
+                + (indexedChildren ? "true" : "false")
+                + "); }";
         }
         else
         {
-            sb.Append("c => global::AndroidX.Compose.Tier2InlineContent.RenderDirect(c, ")
-              .Append(id).Append(", ").Append(indexedChildren ? "true" : "false").AppendLine("));");
+            body = "c => global::AndroidX.Compose.Tier2InlineContent.RenderDirect(c, "
+                + id
+                + ", "
+                + (indexedChildren ? "true" : "false")
+                + ")";
         }
+        string adapter = LambdaAdapterLowering.EmitExpression(
+            new LambdaAdapterClassification(
+                LambdaExecutionMode.SynchronousComposable,
+                arity),
+            "__composer",
+            body);
+        sb.Append(indent).Append("var __").Append(s.Param.Name)
+          .Append(" = ").Append(adapter).AppendLine(";");
         _ = implicitComposer;
     }
 
@@ -2541,15 +2555,18 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         sb.Append("                var ").Append(branchValue).Append(" = ").Append(branchId)
           .Append(" ?? throw new global::System.InvalidOperationException(\"")
           .Append(branch.BranchProperty).AppendLine(" branch selected without content.\");");
+        int branchArity = branched.Kind == FacadeSlotKind.NamedFunction3 ? 3 : 2;
+        string branchBody = implicitComposer
+            ? "_ => " + branchValue + "()"
+            : branchValue;
+        string branchAdapter = LambdaAdapterLowering.EmitExpression(
+            new LambdaAdapterClassification(
+                LambdaExecutionMode.SynchronousComposable,
+                branchArity),
+            "__composer",
+            branchBody);
         sb.Append("                var __").Append(branched.Param.Name)
-          .Append(" = global::AndroidX.Compose.ComposableLambdas.")
-          .Append(branched.Kind == FacadeSlotKind.NamedFunction3 ? "Wrap3" : "Wrap2")
-          .Append("(__composer, ");
-        if (implicitComposer)
-            sb.Append("_ => ").Append(branchValue).Append("()");
-        else
-            sb.Append(branchValue);
-        sb.AppendLine(");");
+          .Append(" = ").Append(branchAdapter).AppendLine(";");
         var alternateDefaultArguments = EmitTier2DefaultsMask(
             sb, "                ", branch.AlternateDefaults, surfacedIndices);
         if (branch.AlternateProvidesChanged)
@@ -2600,15 +2617,17 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
 
         foreach (var s in secondarySlots.Where(s => s.Kind == FacadeSlotKind.OnClick))
         {
-            sb.Append("            var __").Append(s.Param.Name).Append(" = ");
-            if (hasChanged)
-                sb.Append("__composer.RememberAction(").Append(EscapeIdent(s.Param.Name)).AppendLine(");");
-            else
-                sb.Append("new global::AndroidX.Compose.ComposableLambda0(")
-                  .Append(EscapeIdent(s.Param.Name)).AppendLine(");");
+            string adapter = LambdaAdapterLowering.EmitExpression(
+                new LambdaAdapterClassification(
+                    LambdaExecutionMode.Event,
+                    arity: 0),
+                "__composer",
+                EscapeIdent(s.Param.Name));
+            sb.Append("            var __").Append(s.Param.Name)
+              .Append(" = ").Append(adapter).AppendLine(";");
         }
         foreach (var s in secondarySlots.Where(s => s.Kind == FacadeSlotKind.Callback))
-            EmitTier2CallbackWrapper(sb, s, hasChanged);
+            EmitTier2CallbackWrapper(sb, s);
 
         if (secondarySlots.Any(s => s.Kind == FacadeSlotKind.Modifier))
         {
@@ -2749,8 +2768,6 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         var branched = branch.BranchedSlot;
         var branchPropName = branch.BranchProperty;
         int arity = branched.Kind == FacadeSlotKind.NamedFunction3 ? 3 : 2;
-        string wrap = arity == 3 ? "Wrap3" : "Wrap2";
-
         var allNamedSlots = slots.Where(s => s.Kind is FacadeSlotKind.NamedFunction2 or FacadeSlotKind.NamedFunction3
             or FacadeSlotKind.RequiredFunction2 or FacadeSlotKind.RequiredFunction3).ToArray();
 
@@ -2758,10 +2775,14 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         sb.Append(indent).Append("if (").Append(branchPropName).AppendLine(" is not null)");
         sb.Append(indent).AppendLine("{");
         var inner = indent + "    ";
+        string branchAdapter = LambdaAdapterLowering.EmitExpression(
+            new LambdaAdapterClassification(
+                LambdaExecutionMode.SynchronousComposable,
+                arity),
+            composerName,
+            "c => " + branchPropName + "!.Render(c)");
         sb.Append(inner).Append("var __").Append(branched.Param.Name)
-          .Append(" = global::AndroidX.Compose.ComposableLambdas.").Append(wrap)
-          .Append('(').Append(composerName).Append(", c => ")
-          .Append(branchPropName).AppendLine("!.Render(c));");
+          .Append(" = ").Append(branchAdapter).AppendLine(";");
         EmitDefaultsMask(sb, inner, branch.AlternateDefaults, slots, allNamedSlots,
             hasModifier: hoistModifier, hasPainter: false);
         if (branch.AlternateProvidesChanged)
@@ -2829,7 +2850,9 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
     static void EmitCallbackWrapper(
         StringBuilder sb,
         FacadeSlot s,
-        string composerName)
+        string composerName,
+        string indent = "            ",
+        string? localName = null)
     {
         var t = s.CallbackType
             ?? throw new InvalidOperationException(
@@ -2847,7 +2870,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
                 arity: 1),
             composerName,
             "v => _" + s.Param.Name + "(" + expr + ")");
-        sb.Append("            var __").Append(s.Param.Name)
+        sb.Append(indent).Append("var ").Append(localName ?? "__" + s.Param.Name)
           .Append(" = ").Append(adapter).AppendLine(";");
     }
 
@@ -2911,7 +2934,8 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
     static void EmitDefaultsMask(StringBuilder sb, string indent, DefaultsInfo d,
         IReadOnlyList<FacadeSlot> slots, IReadOnlyList<FacadeSlot> namedSlots,
         bool hasModifier, bool hasPainter,
-        string defaultsVar = "__defaults", string modifierVar = "__modifier")
+        string defaultsVar = "__defaults", string modifierVar = "__modifier",
+        bool secondaryLocals = false)
     {
         sb.Append(indent).Append("int ").Append(defaultsVar).Append(" = ");
         if (d.Slots.Count == 32)
@@ -2941,7 +2965,10 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
                     break;
                 case FacadeSlotKind.NamedFunction2:
                 case FacadeSlotKind.NamedFunction3:
-                    sb.Append(indent).Append("if (__").Append(s.Param.Name).Append(" is not null) ").Append(defaultsVar)
+                    string namedLocal = secondaryLocals
+                        ? "__sec" + Pascal(s.Param.Name)
+                        : "__" + s.Param.Name;
+                    sb.Append(indent).Append("if (").Append(namedLocal).Append(" is not null) ").Append(defaultsVar)
                       .Append(" &= ~").Append(bitExpression).AppendLine(";");
                     break;
                 case FacadeSlotKind.OptionalValue:
@@ -3325,28 +3352,65 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         var secondaryNames = new HashSet<string>(
             info.UserParams.Select(p => p.Name), StringComparer.Ordinal);
         var secondarySlots = slots.Where(s => secondaryNames.Contains(s.Param.Name)).ToArray();
+        foreach (var s in secondarySlots.Where(s => s.Kind == FacadeSlotKind.OnClick))
+        {
+            string adapter = LambdaAdapterLowering.EmitExpression(
+                new LambdaAdapterClassification(
+                    LambdaExecutionMode.Event,
+                    arity: 0),
+                composerName,
+                "_" + s.Param.Name);
+            sb.Append("                var __sec").Append(Pascal(s.Param.Name))
+              .Append(" = ").Append(adapter).AppendLine(";");
+        }
+        foreach (var s in secondarySlots.Where(s => s.Kind == FacadeSlotKind.Callback))
+        {
+            EmitCallbackWrapper(
+                sb,
+                s,
+                composerName,
+                "                ",
+                "__sec" + Pascal(s.Param.Name));
+        }
+        foreach (var s in secondarySlots.Where(s =>
+            s.Kind is FacadeSlotKind.NamedFunction2 or FacadeSlotKind.NamedFunction3
+                or FacadeSlotKind.RequiredFunction2 or FacadeSlotKind.RequiredFunction3))
+        {
+            string name = PropertyName(s);
+            int arity = s.Kind is FacadeSlotKind.NamedFunction3 or FacadeSlotKind.RequiredFunction3
+                ? 3
+                : 2;
+            bool nullable = s.Kind is FacadeSlotKind.NamedFunction2 or FacadeSlotKind.NamedFunction3;
+            string body = "c => " + name + (nullable ? ".Render(c)" : "!.Render(c)");
+            string adapter = LambdaAdapterLowering.EmitExpression(
+                new LambdaAdapterClassification(
+                    LambdaExecutionMode.SynchronousComposable,
+                    arity),
+                composerName,
+                body);
+            sb.Append("                var __sec").Append(Pascal(s.Param.Name)).Append(" = ");
+            if (nullable)
+                sb.Append(name).Append(" is null ? null : ");
+            sb.Append(adapter).AppendLine(";");
+        }
         var contentSlot = secondarySlots.FirstOrDefault(s =>
             s.Kind is FacadeSlotKind.Content2 or FacadeSlotKind.Content3);
         if (contentSlot.Param is not null)
         {
             string renderChildrenCall = indexedChildren ? "RenderChildrenIndexed(c)" : "RenderChildren(c)";
+            int arity = contentSlot.Kind == FacadeSlotKind.Content3 ? 3 : 2;
+            string body = arity == 3 && !string.IsNullOrEmpty(scope)
+                ? "(__scope, c) => { using var __scopeFrame = global::AndroidX.Compose.RenderContext.PushScope(__scope, global::AndroidX.Compose.ScopeKind."
+                    + scope + "); " + renderChildrenCall + "; }"
+                : "c => " + renderChildrenCall;
+            string adapter = LambdaAdapterLowering.EmitExpression(
+                new LambdaAdapterClassification(
+                    LambdaExecutionMode.SynchronousComposable,
+                    arity),
+                composerName,
+                body);
             sb.Append("                var __sec").Append(Pascal(contentSlot.Param.Name))
-              .Append(" = global::AndroidX.Compose.ComposableLambdas.")
-              .Append(contentSlot.Kind == FacadeSlotKind.Content3 ? "Wrap3" : "Wrap2")
-              .Append('(').Append(composerName).Append(", ");
-            if (contentSlot.Kind == FacadeSlotKind.Content3 && !string.IsNullOrEmpty(scope))
-            {
-                sb.AppendLine("(__scope, c) =>");
-                sb.AppendLine("                {");
-                sb.Append("                    using var __scopeFrame = global::AndroidX.Compose.RenderContext.PushScope(__scope, global::AndroidX.Compose.ScopeKind.")
-                  .Append(scope).AppendLine(");");
-                sb.Append("                    ").Append(renderChildrenCall).AppendLine(";");
-                sb.AppendLine("                });");
-            }
-            else
-            {
-                sb.Append("c => ").Append(renderChildrenCall).AppendLine(");");
-            }
+              .Append(" = ").Append(adapter).AppendLine(";");
         }
 
         if (themeColor is not null)
@@ -3379,7 +3443,8 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             or FacadeSlotKind.RequiredFunction2 or FacadeSlotKind.RequiredFunction3).ToArray();
         EmitDefaultsMask(sb, "                ", info.Defaults, slots, allNamedSlots,
             hasModifier: hasModifier, hasPainter: false,
-            defaultsVar: "__secDefaults", modifierVar: "__secModifier");
+            defaultsVar: "__secDefaults", modifierVar: "__secModifier",
+            secondaryLocals: true);
 
         // The discriminator IS always supplied on this path — clear
         // its own enum bit if the secondary's defaults enum has one
@@ -3418,6 +3483,11 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
                 if (slot.Kind == FacadeSlotKind.Modifier && hasModifier)
                     sb.Append("__secModifier");
                 else if (slot.Kind == FacadeSlotKind.Content2 || slot.Kind == FacadeSlotKind.Content3)
+                    sb.Append("__sec").Append(Pascal(slot.Param.Name));
+                else if (slot.Kind is FacadeSlotKind.NamedFunction2 or FacadeSlotKind.NamedFunction3
+                    or FacadeSlotKind.RequiredFunction2 or FacadeSlotKind.RequiredFunction3)
+                    sb.Append("__sec").Append(Pascal(slot.Param.Name));
+                else if (slot.Kind is FacadeSlotKind.OnClick or FacadeSlotKind.Callback)
                     sb.Append("__sec").Append(Pascal(slot.Param.Name));
                 else if (slot.Kind == FacadeSlotKind.ThemeColor)
                     sb.Append("__secColor");

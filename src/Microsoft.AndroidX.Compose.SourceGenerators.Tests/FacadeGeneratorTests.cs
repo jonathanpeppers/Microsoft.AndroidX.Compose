@@ -3660,6 +3660,12 @@ public class FacadeGeneratorTests
         Assert.Contains("(int)global::AndroidX.Compose.BarDefault.All;", emitted);
         Assert.Contains("if (subtitle is not null)", emitted);
         Assert.Contains("var __subtitleContent = subtitle ?? throw new global::System.InvalidOperationException", emitted);
+        Assert.Contains(
+            "var __subtitle = global::AndroidX.Compose.ComposableLambdas.Wrap2(composer, c => Subtitle!.Render(c));",
+            emitted);
+        Assert.Contains(
+            "var __subtitle = global::AndroidX.Compose.ComposableLambdas.Wrap2(__composer, __subtitleContent);",
+            emitted);
         Assert.DoesNotContain("var node = new global::AndroidX.Compose.Bar", emitted);
 
         // Alt branch calls the alternate bridge with the alt's actual
@@ -4124,6 +4130,72 @@ public class FacadeGeneratorTests
     }
 
     [Fact]
+    public void Secondary_LambdaRoutesUseStableSharedLowering()
+    {
+        var code = """
+            using global::AndroidX.Compose.Runtime;
+            using AndroidX.Compose;
+            using Kotlin.Jvm.Functions;
+
+            [assembly: ComposeDefaults("PrimaryDefault", "!painter", "!onClick", "label", "!content")]
+            [assembly: ComposeDefaults("SecondaryDefault", "imageVector", "!onClick", "label", "!content")]
+
+            namespace AndroidX.Compose
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(
+                        Class="x/IconKt",
+                        JvmName="Icon-painter",
+                        Signature="(Landroidx/compose/ui/graphics/painter/Painter;Lkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;II)V",
+                        Defaults=typeof(PrimaryDefault))]
+                    [ComposeFacade(
+                        ClassName="StableIcon",
+                        Scope="Row",
+                        SecondaryCtor=nameof(IconImageVector),
+                        SecondaryDefaults=typeof(SecondaryDefault))]
+                    public static partial void IconPainter(
+                        [PainterResource] global::AndroidX.Compose.UI.Graphics.Painter.Painter painter,
+                        IFunction0 onClick,
+                        IFunction2? label,
+                        IFunction3 content,
+                        int defaults,
+                        IComposer composer);
+
+                    [ComposeBridge(
+                        Class="x/IconKt",
+                        JvmName="Icon-vector",
+                        Signature="(Landroidx/compose/ui/graphics/vector/ImageVector;Lkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;II)V",
+                        Defaults=typeof(SecondaryDefault))]
+                    public static partial void IconImageVector(
+                        global::AndroidX.Compose.UI.Graphics.Vector.ImageVector imageVector,
+                        IFunction0 onClick,
+                        IFunction2? label,
+                        IFunction3 content,
+                        IComposer composer);
+                }
+            }
+            """;
+
+        var (output, diags, emitted) = Run(code, "StableIcon");
+
+        Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+        Assert.Contains(
+            "var __secLabel = Label is null ? null : global::AndroidX.Compose.ComposableLambdas.Wrap2(composer, c => Label.Render(c));",
+            emitted);
+        Assert.Contains("var __secContent = global::AndroidX.Compose.ComposableLambdas.Wrap3(composer,", emitted);
+        Assert.Contains("var __onClick = __composer.RememberAction(onClick);", emitted);
+        Assert.Contains(
+            "var __label = label is null ? null : global::AndroidX.Compose.ComposableLambdas.Wrap2(__composer, label);",
+            emitted);
+        Assert.Contains(
+            "var __content = global::AndroidX.Compose.ComposableLambdas.Wrap3(__composer,",
+            emitted);
+        Assert.Empty(output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error));
+    }
+
+    [Fact]
     public void Branching_DirectPainterOverloadUsesPainterRouteInBothBranches()
     {
         var code = """
@@ -4506,6 +4578,10 @@ public class FacadeGeneratorTests
         Assert.NotNull(emitted);
         Assert.DoesNotContain("__changed", emitted);
         Assert.Contains("var __onClick = composer.RememberAction(_onClick);", emitted);
+        Assert.Contains("var __onClick = __composer.RememberAction(onClick);", emitted);
+        Assert.Contains(
+            "var __content = global::AndroidX.Compose.ComposableLambdas.Wrap3(__composer, c => global::AndroidX.Compose.Tier2InlineContent.RenderDirect(c, content, false));",
+            emitted);
         Assert.Contains("global::AndroidX.Compose.ComposeBridges.Button(__onClick, BuildModifier(), __content, composer);", emitted);
 
         var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
