@@ -102,6 +102,7 @@ public class FacadeGeneratorTests
             public interface IFunction1 { }
             public interface IFunction2 { }
             public interface IFunction3 { }
+            public interface IFunction4 { }
         }
         namespace AndroidX.Compose
         {
@@ -323,7 +324,7 @@ public class FacadeGeneratorTests
         Assert.DoesNotContain("var node = new global::AndroidX.Compose.Button", emitted);
         Assert.Contains("readonly global::System.Action _onClick;", emitted);
         Assert.Contains("public Button(global::System.Action onClick)", emitted);
-        Assert.Contains("var __onClick = new global::AndroidX.Compose.ComposableLambda0(_onClick);", emitted);
+        Assert.Contains("var __onClick = composer.RememberAction(_onClick);", emitted);
         Assert.Contains("var __content = global::AndroidX.Compose.ComposableLambdas.Wrap3(composer, c => RenderChildren(c));", emitted);
         Assert.Contains("global::AndroidX.Compose.ComposeBridges.Button(__onClick, BuildModifier(), __content, composer);", emitted);
 
@@ -882,7 +883,7 @@ public class FacadeGeneratorTests
     }
 
     [Fact]
-    public void UnsupportedCallback_EmitsCN3002()
+    public void AmbiguousCallback_EmitsCN3013()
     {
         var code = $$"""
             using global::AndroidX.Compose.Runtime;
@@ -907,8 +908,7 @@ public class FacadeGeneratorTests
             """;
 
         var (_, diags, _) = Run(code, "Checkbox");
-        var cn3002 = diags.Where(d => d.Id == "CN3002").ToArray();
-        Assert.NotEmpty(cn3002);
+        Assert.Contains(diags, d => d.Id == "CN3013");
     }
 
     [Fact]
@@ -1208,7 +1208,7 @@ public class FacadeGeneratorTests
         Assert.NotNull(emitted);
         Assert.Contains("readonly global::System.Action<bool> _onCheckedChange;", emitted);
         Assert.Contains("public IconToggleButton(bool @checked, global::System.Action<bool> onCheckedChange)", emitted);
-        Assert.Contains("new global::AndroidX.Compose.ComposableLambda1(v => _onCheckedChange(v is global::Java.Lang.Boolean __b && __b.BooleanValue()));", emitted);
+        Assert.Contains("composer.RememberAction(v => _onCheckedChange(v is global::Java.Lang.Boolean __b && __b.BooleanValue()));", emitted);
 
         var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
         Assert.Empty(errors);
@@ -1245,8 +1245,7 @@ public class FacadeGeneratorTests
         Assert.NotNull(emitted);
         Assert.Contains("readonly global::System.Action<string> _onValueChange;", emitted);
         Assert.Contains("public TextField(string value, global::System.Action<string> onValueChange)", emitted);
-        Assert.Contains("new global::AndroidX.Compose.ComposableLambda1(v => _onValueChange(v?.ToString() ?? string.Empty));", emitted);
-        Assert.Contains("new global::AndroidX.Compose.ComposableLambda1(v => onValueChange(v?.ToString() ?? string.Empty));", emitted);
+        Assert.Contains("composer.RememberAction(v => _onValueChange(v?.ToString() ?? string.Empty));", emitted);
         Assert.Contains("global::AndroidX.Compose.ComposeBridges.TextField(value, __onValueChange, __modifier, __composer);", emitted);
 
         var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
@@ -4363,10 +4362,9 @@ public class FacadeGeneratorTests
     [Fact]
     public void Changed_NoChangedParam_EmitsLegacyPositionalCall()
     {
-        // Back-compat — bridges without the trailing `_changed` param
-        // still emit the legacy positional bridge call (no named-arg
-        // overhead, no RememberAction hoist, no __changed local). This
-        // test guards against accidental regression of the old shape.
+        // Bridges without the trailing `_changed` param still emit the
+        // legacy positional bridge call and no __changed local. Event
+        // callbacks nevertheless retain stable JNI identity.
         var code = $$"""
             using global::AndroidX.Compose.Runtime;
             using global::AndroidX.Compose.UI;
@@ -4392,7 +4390,7 @@ public class FacadeGeneratorTests
         Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
         Assert.NotNull(emitted);
         Assert.DoesNotContain("__changed", emitted);
-        Assert.DoesNotContain("RememberAction", emitted);
+        Assert.Contains("var __onClick = composer.RememberAction(_onClick);", emitted);
         Assert.Contains("global::AndroidX.Compose.ComposeBridges.Button(__onClick, BuildModifier(), __content, composer);", emitted);
 
         var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
@@ -4798,5 +4796,46 @@ public class FacadeGeneratorTests
 
         var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
         Assert.Empty(errors);
+    }
+
+    [Theory]
+    [InlineData("", "IFunction1", "CN3013")]
+    [InlineData("", "IFunction4", "CN3013")]
+    [InlineData("[DeferredComposableContent] ", "IFunction4", "CN3002")]
+    [InlineData("[RawCallback] ", "IFunction1", "CN3002")]
+    [InlineData("[Callback(typeof(string)), RawCallback] ", "IFunction1", "CN3013")]
+    public void LambdaExecutionMode_RejectsAmbiguousOrFacadeUnsupportedShapes(
+        string attribute,
+        string functionType,
+        string expectedDiagnostic)
+    {
+        string signatureType = functionType == "IFunction1"
+            ? "Function1"
+            : "Function4";
+        var code = $$"""
+            using global::AndroidX.Compose.Runtime;
+            using AndroidX.Compose;
+            using Kotlin.Jvm.Functions;
+
+            namespace AndroidX.Compose
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(
+                        Class="x/WidgetKt",
+                        JvmName="Widget",
+                        Signature="(Lkotlin/jvm/functions/{{signatureType}};Landroidx/compose/runtime/Composer;I)V")]
+                    [ComposeFacade]
+                    public static partial void Widget(
+                        {{attribute}}{{functionType}} callback,
+                        IComposer composer);
+                }
+            }
+            """;
+
+        var (_, diags, emitted) = Run(code, "Widget");
+
+        Assert.Contains(diags, d => d.Id == expectedDiagnostic);
+        Assert.Null(emitted);
     }
 }

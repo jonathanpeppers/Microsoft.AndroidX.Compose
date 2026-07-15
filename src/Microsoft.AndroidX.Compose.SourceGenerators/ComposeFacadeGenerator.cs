@@ -15,7 +15,7 @@ namespace AndroidX.Compose.SourceGenerators;
 /// the JNI plumbing; the facade is a thin
 /// <see cref="ComposableNode"/> / <see cref="ComposableContainer"/>
 /// wrapper that builds the bridge's user-controlled args (Action →
-/// <c>ComposableLambda0</c>, modifier → <c>BuildModifier()</c>, content
+/// <c>RememberAction</c>, modifier → <c>BuildModifier()</c>, content
 /// → <c>ComposableLambdas.Wrap2/3</c>) and forwards through.
 ///
 /// Phases supported (see issue #78):
@@ -1126,6 +1126,16 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
                         $"[Callback] on parameter '{p.Name}' requires a Kotlin.Jvm.Functions.IFunction1 parameter type; was '{p.Type.ToDisplayString()}'"));
                     return null;
                 }
+                var lambda = LambdaAdapterLowering.Classify(p);
+                if (!lambda.Success)
+                {
+                    diags.Add(Diagnostic.Create(
+                        Diagnostics.FacadeLambdaExecutionModeInvalid,
+                        loc,
+                        methodName,
+                        lambda.Error));
+                    return null;
+                }
                 var typeArg = cba.ConstructorArguments.Length > 0 ? cba.ConstructorArguments[0].Value as INamedTypeSymbol : null;
                 if (typeArg is null)
                 {
@@ -1154,20 +1164,45 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             return new FacadeSlot(p, FacadeSlotKind.ScopeReceiver);
 
         var funcArity = KotlinFunctionArity(p.Type);
-        if (funcArity == 0)
-            return new FacadeSlot(p, FacadeSlotKind.OnClick);
-
-        if (funcArity == 2 || funcArity == 3)
+        if (funcArity >= 0)
         {
-            string? slotName = ReadSlotAttribute(p, c.SlotAttr);
-            return new FacadeSlot(p, funcArity == 2 ? FacadeSlotKind.Content2 : FacadeSlotKind.Content3,
-                slotPropertyName: slotName);
-        }
+            var lambda = LambdaAdapterLowering.Classify(p);
+            if (!lambda.Success)
+            {
+                diags.Add(Diagnostic.Create(
+                    Diagnostics.FacadeLambdaExecutionModeInvalid,
+                    loc,
+                    methodName,
+                    lambda.Error));
+                return null;
+            }
 
-        if (funcArity > 0)
-        {
-            diags.Add(Diagnostic.Create(Diagnostics.FacadeUnsupportedParameter, loc, methodName, p.Name,
-                $"IFunction{funcArity} (mark with [Callback(typeof(T))] for a typed Action<T> ctor slot)"));
+            var classification = lambda.Classification;
+            if (classification.Mode == LambdaExecutionMode.Event
+                && classification.Arity == 0)
+            {
+                return new FacadeSlot(p, FacadeSlotKind.OnClick);
+            }
+
+            if (classification.Mode
+                    == LambdaExecutionMode.SynchronousComposable
+                && classification.Arity is 2 or 3)
+            {
+                string? slotName = ReadSlotAttribute(p, c.SlotAttr);
+                return new FacadeSlot(
+                    p,
+                    classification.Arity == 2
+                        ? FacadeSlotKind.Content2
+                        : FacadeSlotKind.Content3,
+                    slotPropertyName: slotName);
+            }
+
+            diags.Add(Diagnostic.Create(
+                Diagnostics.FacadeUnsupportedParameter,
+                loc,
+                methodName,
+                p.Name,
+                $"IFunction{classification.Arity} classified as {classification.Mode}; this mode is reserved for direct bridge or holdout lowering"));
             return null;
         }
 
@@ -1435,27 +1470,23 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         }
 
         // OnClick wrappers — one per line so slot-table keys stay distinct.
-        // When _changed plumbing is on, allocate via RememberAction so the
-        // JCW peer's JNI handle stays identity-stable across recompositions
-        // (otherwise its slot reads Different and the runtime never skips).
+        // RememberAction rebinds the target while keeping the JNI peer stable.
         foreach (var s in slots.Where(s => s.Kind == FacadeSlotKind.OnClick))
         {
-            if (callerProvidesChanged)
-            {
-                sb.Append("            var __").Append(s.Param.Name)
-                  .Append(" = ").Append(composerName).Append(".RememberAction(_").Append(s.Param.Name).AppendLine(");");
-            }
-            else
-            {
-                sb.Append("            var __").Append(s.Param.Name)
-                  .Append(" = new global::AndroidX.Compose.ComposableLambda0(_").Append(s.Param.Name).AppendLine(");");
-            }
+            var adapter = LambdaAdapterLowering.EmitExpression(
+                new LambdaAdapterClassification(
+                    LambdaExecutionMode.Event,
+                    arity: 0),
+                composerName,
+                "_" + s.Param.Name);
+            sb.Append("            var __").Append(s.Param.Name)
+              .Append(" = ").Append(adapter).AppendLine(";");
         }
 
         // Callback wrappers (Phase 2).
         foreach (var s in slots.Where(s => s.Kind == FacadeSlotKind.Callback))
         {
-            EmitCallbackWrapper(sb, s, composerName, callerProvidesChanged);
+            EmitCallbackWrapper(sb, s, composerName);
         }
 
         // Modifier evaluation. Only hoist to a local when needed for
@@ -1488,20 +1519,33 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
                 continue;
             }
             var name = PropertyName(s);
-            string wrap = s.Kind is FacadeSlotKind.NamedFunction3 or FacadeSlotKind.RequiredFunction3
-                ? "Wrap3"
-                : "Wrap2";
+            int arity = s.Kind is FacadeSlotKind.NamedFunction3
+                or FacadeSlotKind.RequiredFunction3
+                ? 3
+                : 2;
             bool nullable = s.Kind is FacadeSlotKind.NamedFunction2 or FacadeSlotKind.NamedFunction3;
+            string body = "c => " + name + ".Render(c)";
+            string adapter = LambdaAdapterLowering.EmitExpression(
+                new LambdaAdapterClassification(
+                    LambdaExecutionMode.SynchronousComposable,
+                    arity),
+                composerName,
+                body);
             if (nullable)
             {
                 sb.Append("            var __").Append(s.Param.Name).Append(" = ").Append(name)
-                  .Append(" is null ? null : global::AndroidX.Compose.ComposableLambdas.").Append(wrap)
-                  .Append('(').Append(composerName).Append(", c => ").Append(name).AppendLine(".Render(c));");
+                  .Append(" is null ? null : ").Append(adapter).AppendLine(";");
             }
             else
             {
-                sb.Append("            var __").Append(s.Param.Name).Append(" = global::AndroidX.Compose.ComposableLambdas.")
-                  .Append(wrap).Append('(').Append(composerName).Append(", c => ").Append(name).AppendLine("!.Render(c));");
+                string requiredAdapter = LambdaAdapterLowering.EmitExpression(
+                    new LambdaAdapterClassification(
+                        LambdaExecutionMode.SynchronousComposable,
+                        arity),
+                    composerName,
+                    "c => " + name + "!.Render(c)");
+                sb.Append("            var __").Append(s.Param.Name)
+                  .Append(" = ").Append(requiredAdapter).AppendLine(";");
             }
         }
 
@@ -1511,14 +1555,21 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             string renderChildrenCall = indexedChildren ? "RenderChildrenIndexed(c)" : "RenderChildren(c)";
             var contentSlot = slots.First(s => s.Kind is FacadeSlotKind.Content2 or FacadeSlotKind.Content3);
             int arity = contentSlot.Kind == FacadeSlotKind.Content3 ? 3 : 2;
-            sb.Append("            var __").Append(contentSlot.Param.Name).Append(" = global::AndroidX.Compose.ComposableLambdas.");
+            sb.Append("            var __").Append(contentSlot.Param.Name)
+              .Append(" = ");
             if (arity == 2)
             {
-                sb.Append("Wrap2(").Append(composerName).Append(", c => ").Append(renderChildrenCall).AppendLine(");");
+                sb.Append(LambdaAdapterLowering.EmitExpression(
+                    new LambdaAdapterClassification(
+                        LambdaExecutionMode.SynchronousComposable,
+                        arity),
+                    composerName,
+                    "c => " + renderChildrenCall)).AppendLine(";");
             }
             else if (!string.IsNullOrEmpty(scope))
             {
-                sb.Append("Wrap3(").Append(composerName).AppendLine(", (__scope, c) =>");
+                sb.Append("global::AndroidX.Compose.ComposableLambdas.Wrap3(")
+                  .Append(composerName).AppendLine(", (__scope, c) =>");
                 sb.AppendLine("            {");
                 sb.Append("                using var __scopeFrame = global::AndroidX.Compose.RenderContext.PushScope(__scope, global::AndroidX.Compose.ScopeKind.")
                   .Append(scope).AppendLine(");");
@@ -1527,7 +1578,12 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             }
             else
             {
-                sb.Append("Wrap3(").Append(composerName).Append(", c => ").Append(renderChildrenCall).AppendLine(");");
+                sb.Append(LambdaAdapterLowering.EmitExpression(
+                    new LambdaAdapterClassification(
+                        LambdaExecutionMode.SynchronousComposable,
+                        arity),
+                    composerName,
+                    "c => " + renderChildrenCall)).AppendLine(";");
             }
         }
 
@@ -2675,9 +2731,14 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             sb.Append(composerName).AppendLine(");");
     }
 
-    static void EmitCallbackWrapper(StringBuilder sb, FacadeSlot s, string composerName, bool stableIdentity)
+    static void EmitCallbackWrapper(
+        StringBuilder sb,
+        FacadeSlot s,
+        string composerName)
     {
-        var t = s.CallbackType!;
+        var t = s.CallbackType
+            ?? throw new InvalidOperationException(
+                $"Callback slot '{s.Param.Name}' has no callback type.");
         string expr = t.SpecialType switch
         {
             SpecialType.System_Boolean => "v is global::Java.Lang.Boolean __b && __b.BooleanValue()",
@@ -2685,18 +2746,14 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             SpecialType.System_String  => "v?.ToString() ?? string.Empty",
             _ => "default!",
         };
-        if (stableIdentity)
-        {
-            sb.Append("            var __").Append(s.Param.Name)
-              .Append(" = ").Append(composerName).Append(".RememberAction(v => _")
-              .Append(s.Param.Name).Append('(').Append(expr).AppendLine("));");
-        }
-        else
-        {
-            sb.Append("            var __").Append(s.Param.Name)
-              .Append(" = new global::AndroidX.Compose.ComposableLambda1(v => _")
-              .Append(s.Param.Name).Append('(').Append(expr).AppendLine("));");
-        }
+        var adapter = LambdaAdapterLowering.EmitExpression(
+            new LambdaAdapterClassification(
+                LambdaExecutionMode.Event,
+                arity: 1),
+            composerName,
+            "v => _" + s.Param.Name + "(" + expr + ")");
+        sb.Append("            var __").Append(s.Param.Name)
+          .Append(" = ").Append(adapter).AppendLine(";");
     }
 
     static void EmitStateHolderPreambleShared(StringBuilder sb, FacadeSlot s,
@@ -3377,15 +3434,8 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         n.Name == "Painter" &&
         n.ContainingNamespace?.ToDisplayString() == "AndroidX.Compose.UI.Graphics.Painter";
 
-    static int KotlinFunctionArity(ITypeSymbol type)
-    {
-        if (type is not INamedTypeSymbol n) return -1;
-        if (n.ContainingNamespace?.ToDisplayString() != "Kotlin.Jvm.Functions") return -1;
-        var name = n.Name;
-        if (!name.StartsWith("IFunction", StringComparison.Ordinal)) return -1;
-        var tail = name.Substring("IFunction".Length);
-        return int.TryParse(tail, out var arity) ? arity : -1;
-    }
+    static int KotlinFunctionArity(ITypeSymbol type) =>
+        LambdaAdapterLowering.KotlinFunctionArity(type);
 
     static bool IsPrimitiveCtorType(ITypeSymbol type) =>
         type.TypeKind == TypeKind.Enum ||

@@ -212,6 +212,14 @@ internal static class Diagnostics
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);
 
+    public static readonly DiagnosticDescriptor FacadeLambdaExecutionModeInvalid = new(
+        id: "CN3013",
+        title: "Lambda execution mode is ambiguous or invalid",
+        messageFormat: "Facade for bridge '{0}': {1}",
+        category: "AndroidX.Compose",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
+
     public static readonly DiagnosticDescriptor CompanionNotPartial = new(
         id: "CN4001",
         title: "[ComposeCompanion] target class must be partial",
