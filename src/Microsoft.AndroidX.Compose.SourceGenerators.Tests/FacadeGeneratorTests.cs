@@ -514,7 +514,8 @@ public class FacadeGeneratorTests
                         bool? softWrap,
                         int? maxLines,
                         int? minLines,
-                        IComposer composer);
+                        IComposer composer,
+                        int _changed = 0);
                 }
             }
             """;
@@ -528,6 +529,8 @@ public class FacadeGeneratorTests
         Assert.Contains("(minLines is null ? 0x4000UL : 0UL)", emitted);
         Assert.DoesNotContain("minLines, 0UL, 0);", emitted);
         Assert.Contains("var __defaults = global::AndroidX.Compose.TextDefault.All;", emitted);
+        Assert.Contains("int __changed = 0;", emitted);
+        Assert.DoesNotContain("int __changed = __omittedArguments == 0 ? __directChanged & 0b1 : 0;", emitted);
         Assert.Contains("global::AndroidX.Compose.ComposeBridges.TextExplicitDefaults(", emitted);
         Assert.Empty(output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error));
     }

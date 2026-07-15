@@ -2537,6 +2537,14 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         string inputVariable,
         string variable = "__changed")
     {
+        int kotlinParameterCount = defaults?.Slots.Count
+            ?? slots.Count(slot => slot.Kind != FacadeSlotKind.ScopeReceiver);
+        if (kotlinParameterCount > 10)
+        {
+            sb.Append(indent).Append("int ").Append(variable).AppendLine(" = 0;");
+            return;
+        }
+
         sb.Append(indent).Append("int ").Append(variable)
           .Append(" = __omittedArguments == 0 ? ")
           .Append(inputVariable).AppendLine(" & 0b1 : 0;");
