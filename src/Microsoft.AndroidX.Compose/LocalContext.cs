@@ -26,6 +26,9 @@ public static class LocalContext
     public static Android.Content.Context Current(IComposer composer) =>
         s_instance.Current(composer);
 
+    /// <summary>Read the current value from the implicit composition.</summary>
+    public static Android.Content.Context Current() => s_instance.Current();
+
     /// <summary>
     /// Pair this local with <paramref name="value"/> for installation
     /// by a <see cref="CompositionLocalProvider"/>. Equivalent to

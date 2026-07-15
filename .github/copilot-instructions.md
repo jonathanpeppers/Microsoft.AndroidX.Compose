@@ -305,11 +305,10 @@ helpers, operators.
 - `BranchOn = "Subtitle", AlternateBridge = nameof(AltBridge)` (Phase 9): see
   Phase 9 below.
 - `Container = true` (Phase 8 variant): see Phase 8 below.
-- `ImplicitComposer = true`: emits an additional Tier 2 overload with no
-  `IComposer` parameter. Its body reads `ComposableContext.Current`, and
-  composable content slots surface as `Action` instead of
-  `Action<IComposer>`. Used by the composerless `Text` and `Button`
-  prototype APIs.
+
+Every supported generated facade automatically receives a composerless Tier 2
+overload. Its body reads `ComposableContext.Current`, and composable content
+slots surface as `Action` instead of `Action<IComposer>`.
 
 ### Parameter-level attributes
 
@@ -1028,6 +1027,10 @@ Rules:
 - It must be accessible from the generated interceptor (CN5004) and
   cannot be `async` (CN5005), an extension method (CN5006), generic
   (CN5007), or use `ref`/`out`/`in` parameters (CN5008).
+- Composerless APIs may only be called from a `[Composable]` method or a
+  delegate parameter marked `[ComposableContent]` (CN5009). Mark only
+  callbacks invoked synchronously during composition; event handlers and
+  other deferred callbacks must remain unmarked.
 - The containing type does **not** need to be `partial`. There is no
   `Impl` companion, no `_changed` parameter, no `int _default` slot.
 - Each call site of a `[Composable]` method is rewired by the C#
@@ -1172,6 +1175,7 @@ are generated while compiling the runtime assembly.
 | CN5006 | `[Composable]` extension methods are unsupported; use a regular static method.                                          |
 | CN5007 | `[Composable]` generic methods are unsupported.                                                                          |
 | CN5008 | `[Composable]` parameters cannot use `ref`, `out`, or `in`.                                                              |
+| CN5009 | A composerless API is called outside a `[Composable]` method or `[ComposableContent]` callback.                          |
 
 Tests in `ComposableMethodGeneratorTests.cs`. **Add a test for any new
 behaviour.**

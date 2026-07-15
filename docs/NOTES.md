@@ -404,8 +404,8 @@ composer-threading calls (no AST allocation).
 
 ### 6. The composer stays explicit internally; Tier 2 can hide it in source
 
-The tree API passes the composer explicitly. The Tier 2 composerless
-prototype additionally publishes that explicit parameter through a
+Explicit overloads pass the composer directly. The composerless surface
+additionally publishes that explicit parameter through a
 dynamically scoped `[ThreadStatic]` while synchronous user code runs.
 Generated interceptor cores, `SetContent` callbacks, and
 `Tier2InlineContent.Render` push and restore the scope; they never replace
@@ -420,6 +420,9 @@ into child renders. User code need not see `IComposer`; the implementation layer
 Deferred callbacks invoked after the dynamic scope closes cannot use
 implicit-composer APIs. `[Composable]` methods are synchronous, and parallel
 composition threads have independent ambient slots.
+CN5009 rejects composerless calls outside `[Composable]` methods and delegate
+parameters marked `[ComposableContent]`, catching invalid deferred callbacks
+at compile time.
 
 ### 7. Nested content lambdas can reuse the outer composer reference
 

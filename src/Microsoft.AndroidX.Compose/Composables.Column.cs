@@ -9,7 +9,7 @@ public static partial class Composables
     /// <see cref="global::AndroidX.Compose.Column"/>.
     /// </summary>
     [Composable]
-    public static void Column(Action content)
+    public static void Column([ComposableContent] Action content)
     {
         ArgumentNullException.ThrowIfNull(content);
 
@@ -26,7 +26,9 @@ public static partial class Composables
     /// previous composition.
     /// </summary>
     [Composable]
-    public static void Column(IComposer composer, Action<IComposer> content)
+    public static void Column(
+        IComposer composer,
+        [ComposableContent] Action<IComposer> content)
     {
         ArgumentNullException.ThrowIfNull(content);
 

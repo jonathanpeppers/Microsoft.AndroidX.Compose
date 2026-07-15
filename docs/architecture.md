@@ -14,13 +14,12 @@ collection-initializer syntax compiles. The tree built by `SetContent`'s
 lambda is a pure value; the host `ComponentActivity` (or `ComposeView`)
 walks it and calls `Render(IComposer)` on each node, threading the
 composer at the implementation layer the same way Kotlin's compiler
-plugin makes `$composer` an explicit IR parameter — except in this repo
-the tree API keeps the composer as an explicit lambda parameter
-(`SetContent(c => …)`) and receiver (`c.Remember(…)`,
-`c.LaunchedEffect(…)`). The Tier 2 composerless prototype adds a
-dynamically scoped `ThreadStatic` lookup at user-facing call boundaries;
-the implementation still passes `IComposer` explicitly through every
-`Render` and generated interceptor core.
+plugin makes `$composer` an explicit IR parameter. Public APIs support both
+explicit composer threading (`SetContent(c => …)`, `c.Remember(…)`) and
+composerless calls (`SetContent(() => …)`, `Remember(…)`). The composerless
+surface uses a dynamically scoped `ThreadStatic` lookup at user-facing call
+boundaries; the implementation still passes `IComposer` explicitly through
+every `Render` and generated interceptor core.
 
 Inside each container's `Render`, JNI bridges declared in
 [`ComposeBridges.cs`](../src/Microsoft.AndroidX.Compose/ComposeBridges.cs) call the
@@ -285,6 +284,7 @@ Tier 2; one-shot screens can stay tree-style indefinitely.
 | CN5006 | Extension-method composables are unsupported.                   |
 | CN5007 | Generic composables are unsupported.                            |
 | CN5008 | `ref`, `out`, and `in` parameters are unsupported.              |
+| CN5009 | A composerless API was called outside `[Composable]` code or a `[ComposableContent]` callback. |
 
 ### Deferred — follow-up issues
 
@@ -300,9 +300,6 @@ Tier 2; one-shot screens can stay tree-style indefinitely.
   parameter values syntactically; the wrapper currently treats every
   declared parameter as required. A future pass will lower C# default
   values into the same `$default` bitmask Kotlin uses.
-- **Analyzer for "non-`[Composable]` calls `[Composable]`."** Today
-  that's only enforced at runtime (calling a composable outside a
-  composition throws). The analyzer was scoped out of the MVP.
 - **`MovableContent` / `key {} ` / `Saver` / `Layout {}` / stability
   inference.** Explicit non-goals in the Tier 2 MVP — each gets its
   own follow-up issue.
@@ -325,7 +322,7 @@ this tier-1.5 experiment:
   methods to direct composer-threading calls is the next step.
 - **Explicitness still matches Kotlin internally.** The composer remains
   an explicit parameter at the implementation layer (`Render(IComposer)`
-  and generated interceptor cores). The composerless prototype uses a
+  and generated interceptor cores). The composerless surface uses a
   `ThreadStatic` only as a synchronous dynamic-scope lookup for user-facing
   calls; every interceptor, `SetContent` boundary, and
   `Tier2InlineContent.Render` pushes and restores it. Deferred callbacks

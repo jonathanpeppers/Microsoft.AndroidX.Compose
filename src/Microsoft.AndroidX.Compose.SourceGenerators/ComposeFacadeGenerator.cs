@@ -163,7 +163,6 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         string? colorParameter = ReadString(attr, "ColorParameter");
         bool containerOptIn = ReadBool(attr, "Container");
         bool indexedChildren = ReadBool(attr, "IndexedChildren");
-        bool implicitComposer = ReadBool(attr, "ImplicitComposer");
         string? branchOn = ReadString(attr, "BranchOn");
         string? alternateBridgeName = ReadString(attr, "AlternateBridge");
         string? secondaryCtorName = ReadString(attr, "SecondaryCtor");
@@ -487,7 +486,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         bool emitTier2EntryPoint = !HasExistingComposableEntryPoint(c.Compilation, className);
         var source = Emit(className, method.Name, scope, composerParam, slots, hasMultiSlot,
             callerProvidesDefaults, callerProvidesChanged, defaultsParam, defaults, defaultsType?.Name, themeColor, colorSlot,
-            userParams, branchInfo, indexedChildren, secondaryCtorInfo, emitTier2EntryPoint, implicitComposer);
+            userParams, branchInfo, indexedChildren, secondaryCtorInfo, emitTier2EntryPoint);
         var hint = $"AndroidX.Compose.Facade.{className}.g.cs";
         return new GenerationResult(source, hint, []);
     }
@@ -1196,8 +1195,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         BranchInfo? branchInfo,
         bool indexedChildren,
         SecondaryCtorInfo? secondaryCtorInfo,
-        bool emitTier2EntryPoint,
-        bool implicitComposer)
+        bool emitTier2EntryPoint)
     {
         // After classification, only the container's body survives as
         // Content2/3 (multi-slot leafs re-classified to Named/Required).
@@ -1621,14 +1619,14 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         sb.AppendLine("    }");
 
         if (emitTier2EntryPoint)
-            EmitTier2EntryPoint(sb, className, slots, themeColor, implicitComposer);
+            EmitTier2EntryPoint(sb, className, slots, themeColor);
 
         sb.AppendLine("}");
         return sb.ToString();
     }
 
     static void EmitTier2EntryPoint(StringBuilder sb, string className,
-        IReadOnlyList<FacadeSlot> slots, string? themeColor, bool implicitComposer)
+        IReadOnlyList<FacadeSlot> slots, string? themeColor)
     {
         var ctorSlotsAll = slots.Where(IsCtorSlot)
             .Where(s => !HasFacadeCtorDefault(s))
@@ -1654,13 +1652,10 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         EmitTier2Overload(sb, className, ctorSlotsAll, requiredCtorSlots, optionalCtorSlots,
             contentSlots, requiredNamedSlots, optionalNamedSlots, hasModifier,
             optionalValueSlots, themeColor, stateConfirmSlots, implicitComposer: false);
-        if (implicitComposer)
-        {
-            sb.AppendLine();
-            EmitTier2Overload(sb, className, ctorSlotsAll, requiredCtorSlots, optionalCtorSlots,
-                contentSlots, requiredNamedSlots, optionalNamedSlots, hasModifier,
-                optionalValueSlots, themeColor, stateConfirmSlots, implicitComposer: true);
-        }
+        sb.AppendLine();
+        EmitTier2Overload(sb, className, ctorSlotsAll, requiredCtorSlots, optionalCtorSlots,
+            contentSlots, requiredNamedSlots, optionalNamedSlots, hasModifier,
+            optionalValueSlots, themeColor, stateConfirmSlots, implicitComposer: true);
         sb.AppendLine("    }");
     }
 
@@ -1834,6 +1829,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         ref bool hasParameter)
     {
         AppendTier2Separator(sb, ref hasParameter);
+        sb.Append("[global::AndroidX.Compose.ComposableContentAttribute] ");
         sb.Append(implicitComposer
                 ? "global::System.Action"
                 : "global::System.Action<global::AndroidX.Compose.Runtime.IComposer>")

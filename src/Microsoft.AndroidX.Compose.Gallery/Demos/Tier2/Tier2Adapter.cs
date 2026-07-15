@@ -15,7 +15,7 @@ internal sealed class Tier2Adapter : ComposableNode
 {
     readonly Action _body;
 
-    public Tier2Adapter(Action body)
+    public Tier2Adapter([ComposableContent] Action body)
     {
         ArgumentNullException.ThrowIfNull(body);
         _body = body;

@@ -107,6 +107,8 @@ public class FacadeGeneratorTests
         {
             [System.AttributeUsage(System.AttributeTargets.Method)]
             public sealed class ComposableAttribute : System.Attribute { }
+            [System.AttributeUsage(System.AttributeTargets.Parameter)]
+            public sealed class ComposableContentAttribute : System.Attribute { }
             public static class ComposableContext
             {
                 public static global::AndroidX.Compose.Runtime.IComposer Current => throw new System.NotImplementedException();
@@ -299,7 +301,7 @@ public class FacadeGeneratorTests
         Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
         Assert.NotNull(emitted);
         Assert.Contains("public sealed partial class Button : global::AndroidX.Compose.ComposableContainer", emitted);
-        Assert.Contains("public static void Button(global::AndroidX.Compose.Runtime.IComposer composer, global::System.Action onClick, global::System.Action<global::AndroidX.Compose.Runtime.IComposer> content", emitted);
+        Assert.Contains("public static void Button(global::AndroidX.Compose.Runtime.IComposer composer, global::System.Action onClick, [global::AndroidX.Compose.ComposableContentAttribute] global::System.Action<global::AndroidX.Compose.Runtime.IComposer> content", emitted);
         Assert.Contains("node.Add(new global::AndroidX.Compose.Tier2InlineContent(content));", emitted);
         Assert.Contains("readonly global::System.Action _onClick;", emitted);
         Assert.Contains("public Button(global::System.Action onClick)", emitted);
@@ -328,7 +330,7 @@ public class FacadeGeneratorTests
                 {
                     [ComposeBridge(Class="androidx/compose/material3/ButtonKt", JvmName="Button",
                                    Signature="{{ButtonSig}}", Defaults=typeof(ButtonDefault))]
-                    [ComposeFacade(ImplicitComposer=true)]
+                    [ComposeFacade]
                     public static partial void Button(IFunction0 onClick, IModifier? modifier,
                                                       IFunction3 content, IComposer composer);
                 }
@@ -340,7 +342,10 @@ public class FacadeGeneratorTests
         Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
         Assert.NotNull(emitted);
         Assert.Contains(
-            "public static void Button(global::System.Action onClick, global::System.Action content",
+            "[global::AndroidX.Compose.ComposableContentAttribute] global::System.Action content",
+            emitted);
+        Assert.Contains(
+            "public static void Button(global::System.Action onClick, [global::AndroidX.Compose.ComposableContentAttribute] global::System.Action content",
             emitted);
         Assert.Contains(
             "node.Add(new global::AndroidX.Compose.Tier2InlineContent(_ => content()));",

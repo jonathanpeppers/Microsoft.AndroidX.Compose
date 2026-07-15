@@ -331,4 +331,12 @@ internal static class Diagnostics
         category: "AndroidX.Compose",
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);
+
+    public static readonly DiagnosticDescriptor ImplicitComposableOutsideScope = new(
+        id: "CN5009",
+        title: "Implicit composable call requires a composable scope",
+        messageFormat: "Implicit composable API '{0}' is called outside a [Composable] method or [ComposableContent] callback",
+        category: "AndroidX.Compose",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
 }
