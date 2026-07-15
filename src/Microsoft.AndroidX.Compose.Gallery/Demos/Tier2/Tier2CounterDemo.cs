@@ -33,8 +33,8 @@ public static class Tier2CounterDemo
     /// <summary>
     /// Tier 2 composable — a single plain static method. Every call
     /// site of <see cref="Counter"/> is intercepted by the source
-    /// generator and rewired to a wrapper that opens a restart group,
-    /// acquires the active composer and opens a restart group.
+    /// generator and rewired to a wrapper that acquires the active
+    /// composer and opens a restart group.
     /// </summary>
     [Composable]
     public static void Counter()

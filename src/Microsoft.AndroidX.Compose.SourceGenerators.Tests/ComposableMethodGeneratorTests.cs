@@ -357,6 +357,25 @@ public class ComposableMethodGeneratorTests
     }
 
     [Fact]
+    public void MultipleComposers_ReportCN5003()
+    {
+        var (_, diags, _) = Run("""
+            namespace App
+            {
+                public static class Screens
+                {
+                    [AndroidX.Compose.Composable]
+                    public static void Foo(
+                        AndroidX.Compose.Runtime.IComposer first,
+                        AndroidX.Compose.Runtime.IComposer second) { }
+                }
+            }
+            """);
+
+        Assert.Contains(diags, d => d.Id == "CN5003");
+    }
+
+    [Fact]
     public void InaccessibleMethodOrContainingType_ReportsCN5004AndDoesNotEmitInterceptor()
     {
         var (_, diags, emitted) = Run("""

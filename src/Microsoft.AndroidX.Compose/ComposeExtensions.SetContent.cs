@@ -91,7 +91,11 @@ public static partial class ComposeExtensions
         view.SetContent(ComposableLambdaKt.ComposableLambdaInstance(
             key:     -1,
             tracked: false,
-            block:   new ComposableLambda2(composer => content(composer).Render(composer))));
+            block:   new ComposableLambda2(composer =>
+            {
+                using var scope = ComposableContext.Enter(composer);
+                content(composer).Render(composer);
+            })));
     }
 
     /// <summary>
@@ -107,7 +111,11 @@ public static partial class ComposeExtensions
         view.SetContent(ComposableLambdaKt.ComposableLambdaInstance(
             key:     -1,
             tracked: false,
-            block:   new ComposableLambda2(content)));
+            block:   new ComposableLambda2(composer =>
+            {
+                using var scope = ComposableContext.Enter(composer);
+                content(composer);
+            })));
     }
 
     /// <summary>

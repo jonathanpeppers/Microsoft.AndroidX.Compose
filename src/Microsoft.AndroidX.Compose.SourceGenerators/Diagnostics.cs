@@ -286,8 +286,8 @@ internal static class Diagnostics
 
     public static readonly DiagnosticDescriptor ComposableMissingComposer = new(
         id: "CN5003",
-        title: "[Composable] IComposer parameter must be first",
-        messageFormat: "Method '{0}' carries [Composable] but declares 'AndroidX.Compose.Runtime.IComposer' outside the first parameter — omit the composer for implicit threading or place it first",
+        title: "[Composable] may declare at most one IComposer parameter, first",
+        messageFormat: "Method '{0}' carries [Composable] but does not declare exactly zero composers or one first-parameter 'AndroidX.Compose.Runtime.IComposer' — omit all composer parameters for implicit threading, or declare exactly one as the first parameter",
         category: "AndroidX.Compose",
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);

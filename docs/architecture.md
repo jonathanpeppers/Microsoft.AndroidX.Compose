@@ -15,10 +15,12 @@ lambda is a pure value; the host `ComponentActivity` (or `ComposeView`)
 walks it and calls `Render(IComposer)` on each node, threading the
 composer at the implementation layer the same way Kotlin's compiler
 plugin makes `$composer` an explicit IR parameter — except in this repo
-the composer is also an explicit lambda parameter (`SetContent(c => …)`)
-and an explicit receiver on every composition primitive
-(`c.Remember(…)`, `c.LaunchedEffect(…)`), with no `ThreadStatic` or
-ambient state.
+the tree API keeps the composer as an explicit lambda parameter
+(`SetContent(c => …)`) and receiver (`c.Remember(…)`,
+`c.LaunchedEffect(…)`). The Tier 2 composerless prototype adds a
+dynamically scoped `ThreadStatic` lookup at user-facing call boundaries;
+the implementation still passes `IComposer` explicitly through every
+`Render` and generated interceptor core.
 
 Inside each container's `Render`, JNI bridges declared in
 [`ComposeBridges.cs`](../src/Microsoft.AndroidX.Compose/ComposeBridges.cs) call the
@@ -221,7 +223,7 @@ static void Composable_0_AB12CD34_Core(
 {
     var __c = composer.StartRestartGroup(unchecked((int)0x9A1B2C3D));
     using var scope = ComposableContext.Enter(__c);
-    int __dirty = 0;
+    int __dirty = changed;
     __dirty |= __c.DiffSlot<string>(name, 1);
     if ((__dirty & 0xB) != 0x2 || !__c.Skipping)
         global::App.Screens.Greeting(name);
@@ -233,7 +235,7 @@ static void Composable_0_AB12CD34_Core(
 ```
 
 The C# compiler's interceptors feature rewires each user call site at
-the language level — the user writes `Greeting(composer, "x")` and the
+the language level — the user writes `Greeting("x")` and the
 compiler resolves the invocation to the generator-emitted wrapper.
 The key — `0x9A1B2C3D` — is FNV-1a over the fully-qualified method
 name so it stays stable across processes (matches the
@@ -321,11 +323,16 @@ this tier-1.5 experiment:
   recomposition is acceptable for hello-world; for real apps a
   Roslyn source generator (Tier 2) that lowers `[Composable]` C#
   methods to direct composer-threading calls is the next step.
-- **Explicitness matches Kotlin.** The composer is an explicit
-  parameter at the implementation layer (`Render(IComposer)`), same
-  honest mirror of `ComposerParamTransformer` that Kotlin uses —
-  not a `[ThreadStatic]` which would silently break
-  `SubcomposeLayout` / `MovableContent` / parallel composition.
+- **Explicitness still matches Kotlin internally.** The composer remains
+  an explicit parameter at the implementation layer (`Render(IComposer)`
+  and generated interceptor cores). The composerless prototype uses a
+  `ThreadStatic` only as a synchronous dynamic-scope lookup for user-facing
+  calls; every interceptor, `SetContent` boundary, and
+  `Tier2InlineContent.Render` pushes and restores it. Deferred callbacks
+  invoked after those scopes close must not call implicit-composer APIs;
+  they need an explicit composer-bearing boundary. `[Composable]` methods
+  cannot be `async`, and parallel composition threads get independent
+  ambient slots.
 
 ### What it looked like before the facade
 

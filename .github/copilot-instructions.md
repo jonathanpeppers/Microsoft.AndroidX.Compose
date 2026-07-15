@@ -1169,7 +1169,7 @@ are generated while compiling the runtime assembly.
 | CN5003 | When present, a `[Composable]` method's `AndroidX.Compose.Runtime.IComposer` must be its first and only composer parameter. |
 | CN5004 | `[Composable]` method and its containing types must be accessible from the generated interceptor.                       |
 | CN5005 | `[Composable]` method cannot be `async`; continuations would resume after the restart group closes.                     |
-| CN5006 | `[Composable]` extension methods are unsupported; use a regular static method with `IComposer` first.                   |
+| CN5006 | `[Composable]` extension methods are unsupported; use a regular static method.                                          |
 | CN5007 | `[Composable]` generic methods are unsupported.                                                                          |
 | CN5008 | `[Composable]` parameters cannot use `ref`, `out`, or `in`.                                                              |
 

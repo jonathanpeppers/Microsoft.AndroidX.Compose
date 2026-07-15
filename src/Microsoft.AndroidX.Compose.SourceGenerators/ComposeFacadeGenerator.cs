@@ -1732,6 +1732,17 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         }
         sb.AppendLine(")");
         sb.AppendLine("        {");
+        if (implicitComposer)
+        {
+            foreach (var slot in requiredNamedSlots.Concat(contentSlots))
+            {
+                sb.Append("            global::System.ArgumentNullException.ThrowIfNull(")
+                  .Append(EscapeIdent(slot.Kind is FacadeSlotKind.RequiredFunction2 or FacadeSlotKind.RequiredFunction3
+                      ? Tier2Identifier(PropertyName(slot))
+                      : slot.Param.Name))
+                  .AppendLine(");");
+            }
+        }
 
         sb.Append("            var node = new global::AndroidX.Compose.").Append(className);
         if (ctorSlotsAll.Count > 0)

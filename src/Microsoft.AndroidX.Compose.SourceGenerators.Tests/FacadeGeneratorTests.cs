@@ -346,6 +346,9 @@ public class FacadeGeneratorTests
             "node.Add(new global::AndroidX.Compose.Tier2InlineContent(_ => content()));",
             emitted);
         Assert.Contains(
+            "global::System.ArgumentNullException.ThrowIfNull(content);",
+            emitted);
+        Assert.Contains(
             "node.Render(global::AndroidX.Compose.ComposableContext.Current);",
             emitted);
         Assert.Empty(output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error));

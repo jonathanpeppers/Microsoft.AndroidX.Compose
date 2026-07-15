@@ -149,11 +149,12 @@ public class MainActivity : ComponentActivity
 `ComposeFacadeGenerator` emits public Tier 2 entry points alongside the
 tree-style facade catalog. The composerless prototype currently covers
 `Text`, `Button`, `Column`, and `Remember`; existing explicit-composer Tier 2
-entry points remain available for the rest of the generated catalog. Each
-entry point is itself `[Composable]`, so unchanged calls skip before
-constructing its tree-style adapter. The hand-written holdouts (`Scaffold`,
-lazy collections, text fields, search, and similar custom shapes) remain
-tree-style for now.
+entry points remain available for the rest of the generated catalog. The
+composable facade entry points are themselves `[Composable]`, so unchanged
+calls skip before constructing their tree-style adapters; `Remember` directly
+reads the ambient composer and returns its cached value. The hand-written
+holdouts (`Scaffold`, lazy collections, text fields, search, and similar custom
+shapes) remain tree-style for now.
 
 The Jetchat, JetNews, and Reply ports use a Tier 2 root matching upstream
 Kotlin's top-level `@Composable` app function and call it through the
