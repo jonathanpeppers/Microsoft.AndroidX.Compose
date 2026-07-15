@@ -5,8 +5,9 @@ namespace AndroidX.Compose.Gallery.Demos.Tier2;
 
 /// <summary>
 /// Tier 2 demo: a counter rendered by a <c>[Composable]</c> static
-/// method. The button click flips a <see cref="MutableNumberState{T}"/>
-/// the body reads; the generator-emitted call-site interceptor around
+/// method. The button callback captures the next count on each composition,
+/// proving its remembered JNI adapter rebinds to the latest managed target.
+/// The generator-emitted call-site interceptor around
 /// <see cref="Counter"/> runs without an explicit composer parameter;
 /// generated interceptors recover the active composer for restart groups
 /// and nested calls.
@@ -27,7 +28,7 @@ public static class Tier2CounterDemo
         Id:          "tier2-counter",
         CategoryId:  "tier2",
         Title:       "[Composable] counter",
-        Description: "A counter rendered by a composerless Tier 2 [Composable] static method.",
+        Description: "A Tier 2 counter proving stable content identity and callback target rebinding.",
         Build:       static _ => new Tier2Adapter(() => Counter()));
 
     /// <summary>
@@ -40,6 +41,7 @@ public static class Tier2CounterDemo
     public static void Counter()
     {
         var count = Remember(() => new MutableNumberState<int>(0));
+        int nextCount = count.Value + 1;
 
         // Tier 2 all the way down — every call here is itself an
         // intercepted [Composable] call site with its own restart
@@ -48,7 +50,7 @@ public static class Tier2CounterDemo
         {
             Text($"Tier 2 count: {count.Value}");
             Button(
-                () => count.Value++,
+                () => count.Value = nextCount,
                 () => Text("Tap to increment"));
         });
     }

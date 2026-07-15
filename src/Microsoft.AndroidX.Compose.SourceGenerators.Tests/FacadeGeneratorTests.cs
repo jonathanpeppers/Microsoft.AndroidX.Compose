@@ -102,11 +102,15 @@ public class FacadeGeneratorTests
             public interface IFunction1 { }
             public interface IFunction2 { }
             public interface IFunction3 { }
+            public interface IFunction4 { }
         }
         namespace AndroidX.Compose
         {
             [System.AttributeUsage(System.AttributeTargets.Method)]
             public sealed class ComposableAttribute : System.Attribute { }
+            [System.AttributeUsage(System.AttributeTargets.Method)]
+            internal sealed class ComposableDirectTargetAttribute(
+                System.Type containingType, string methodName) : System.Attribute { }
             [System.AttributeUsage(System.AttributeTargets.Parameter)]
             public sealed class ComposableContentAttribute : System.Attribute { }
             public static class ComposableContext
@@ -163,7 +167,11 @@ public class FacadeGeneratorTests
             public class PaddingValues : Java.Lang.Object { }
             public class Alignment : Java.Lang.Object { }
             public class ContentScale : Java.Lang.Object { }
-            public sealed class Modifier { }
+            public sealed class Modifier
+            {
+                internal object StructuralKey => new();
+                internal global::AndroidX.Compose.UI.IModifier? Build() => null;
+            }
             public abstract class ComposableNode
             {
                 public Modifier? Modifier { get; set; }
@@ -181,6 +189,10 @@ public class FacadeGeneratorTests
             {
                 public Tier2InlineContent(System.Action<global::AndroidX.Compose.Runtime.IComposer> body) { }
                 public override void Render(global::AndroidX.Compose.Runtime.IComposer composer) { }
+                internal static void RenderDirect(global::AndroidX.Compose.Runtime.IComposer composer,
+                    System.Action<global::AndroidX.Compose.Runtime.IComposer> body, bool indexed) { }
+                internal static void RenderDirect(global::AndroidX.Compose.Runtime.IComposer composer,
+                    System.Action body, bool indexed) { }
             }
             public static partial class Composables { }
             public sealed class ComposableLambda0 : Kotlin.Jvm.Functions.IFunction0
@@ -229,6 +241,10 @@ public class FacadeGeneratorTests
                     this global::AndroidX.Compose.Runtime.IComposer composer, System.Action<global::Java.Lang.Object?> action,
                     [System.Runtime.CompilerServices.CallerLineNumber] int line = 0,
                     [System.Runtime.CompilerServices.CallerFilePath] string file = "") => null!;
+                public static T Remember<T>(
+                    this global::AndroidX.Compose.Runtime.IComposer composer, System.Func<T> factory,
+                    [System.Runtime.CompilerServices.CallerLineNumber] int line = 0,
+                    [System.Runtime.CompilerServices.CallerFilePath] string file = "") => factory();
             }
         }
         """;
@@ -302,10 +318,13 @@ public class FacadeGeneratorTests
         Assert.NotNull(emitted);
         Assert.Contains("public sealed partial class Button : global::AndroidX.Compose.ComposableContainer", emitted);
         Assert.Contains("public static void Button(global::AndroidX.Compose.Runtime.IComposer composer, global::System.Action onClick, [global::AndroidX.Compose.ComposableContentAttribute] global::System.Action<global::AndroidX.Compose.Runtime.IComposer> content", emitted);
-        Assert.Contains("node.Add(new global::AndroidX.Compose.Tier2InlineContent(content));", emitted);
+        Assert.Contains(
+            "var __content = global::AndroidX.Compose.ComposableLambdas.Wrap3(__composer, c => global::AndroidX.Compose.Tier2InlineContent.RenderDirect(c, content, false));",
+            emitted);
+        Assert.DoesNotContain("var node = new global::AndroidX.Compose.Button", emitted);
         Assert.Contains("readonly global::System.Action _onClick;", emitted);
         Assert.Contains("public Button(global::System.Action onClick)", emitted);
-        Assert.Contains("var __onClick = new global::AndroidX.Compose.ComposableLambda0(_onClick);", emitted);
+        Assert.Contains("var __onClick = composer.RememberAction(_onClick);", emitted);
         Assert.Contains("var __content = global::AndroidX.Compose.ComposableLambdas.Wrap3(composer, c => RenderChildren(c));", emitted);
         Assert.Contains("global::AndroidX.Compose.ComposeBridges.Button(__onClick, BuildModifier(), __content, composer);", emitted);
 
@@ -348,14 +367,110 @@ public class FacadeGeneratorTests
             "public static void Button(global::System.Action onClick, [global::AndroidX.Compose.ComposableContentAttribute] global::System.Action content",
             emitted);
         Assert.Contains(
-            "node.Add(new global::AndroidX.Compose.Tier2InlineContent(_ => content()));",
+            "var __content = global::AndroidX.Compose.ComposableLambdas.Wrap3(__composer, c => global::AndroidX.Compose.Tier2InlineContent.RenderDirect(c, content, false));",
             emitted);
         Assert.Contains(
             "global::System.ArgumentNullException.ThrowIfNull(content);",
             emitted);
         Assert.Contains(
-            "node.Render(global::AndroidX.Compose.ComposableContext.Current);",
+            "Button_PrimaryResource_Implicit(global::AndroidX.Compose.ComposableContext.Current",
             emitted);
+        Assert.DoesNotContain("var node = new global::AndroidX.Compose.Button", emitted);
+        Assert.DoesNotContain("node.Render(", emitted);
+        Assert.Empty(output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error));
+    }
+
+    [Fact]
+    public void DirectDefaultsMask_UsesSurfacedParameterOrderAcrossSlotKinds()
+    {
+        var code = """
+            using global::AndroidX.Compose.Runtime;
+            using global::AndroidX.Compose.UI;
+            using AndroidX.Compose;
+            using Kotlin.Jvm.Functions;
+
+            [assembly: ComposeDefaults("WidgetDefault",
+                "!text", "modifier", "enabled", "icon", "fontSize", "!content")]
+
+            namespace AndroidX.Compose
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(Class="my/pkg/WidgetKt", JvmName="Widget",
+                                   Signature="(Ljava/lang/String;Landroidx/compose/ui/Modifier;ZLkotlin/jvm/functions/Function2;FLkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;II)V",
+                                   Defaults=typeof(WidgetDefault))]
+                    [ComposeFacade]
+                    public static partial void Widget(
+                        string text,
+                        IModifier? modifier,
+                        [FacadeDefault(true)] bool enabled,
+                        IFunction2? icon,
+                        Dp? fontSize,
+                        IFunction2 content,
+                        IComposer composer);
+                }
+            }
+            """;
+
+        var (output, diags, emitted) = Run(code, "Widget");
+
+        Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+        Assert.Contains(
+            "if ((__omittedArguments & 0x4UL) == 0) __defaults &= ~global::AndroidX.Compose.WidgetDefault.Enabled;",
+            emitted);
+        Assert.Contains(
+            "if ((__omittedArguments & 0x8UL) == 0) __defaults &= ~global::AndroidX.Compose.WidgetDefault.Modifier;",
+            emitted);
+        Assert.Contains(
+            "if ((__omittedArguments & 0x10UL) == 0) __defaults &= ~global::AndroidX.Compose.WidgetDefault.Icon;",
+            emitted);
+        Assert.Contains(
+            "if ((__omittedArguments & 0x20UL) == 0) __defaults &= ~global::AndroidX.Compose.WidgetDefault.FontSize;",
+            emitted);
+        Assert.Contains(
+            "global::AndroidX.Compose.ComposeBridges.WidgetExplicitDefaults(text, __modifier, enabled, __icon, fontSize, __content, (int)__defaults, __composer);",
+            emitted);
+        Assert.Empty(output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error));
+    }
+
+    [Fact]
+    public void DirectDefaultsMask_WideAutoMaskUsesExplicitTwoMaskEntry()
+    {
+        var names = string.Join(", ", Enumerable.Range(0, 33).Select(i => $"\"slot{i}\""));
+        var parameters = string.Join(", ", Enumerable.Range(0, 33).Select(i => $"int? slot{i}"));
+        var signature = new string('I', 33)
+            + "Landroidx/compose/runtime/Composer;"
+            + new string('I', 6);
+        var code = $$"""
+            using global::AndroidX.Compose.Runtime;
+            using AndroidX.Compose;
+
+            [assembly: ComposeDefaults("WideDefault", {{names}})]
+
+            namespace AndroidX.Compose
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(Class="x/WideKt", JvmName="Wide",
+                                   Signature="({{signature}})V",
+                                   Defaults=typeof(WideDefault))]
+                    [ComposeFacade]
+                    public static partial void Wide({{parameters}}, IComposer composer);
+                }
+            }
+            """;
+
+        var (output, diags, emitted) = Run(code, "Wide");
+
+        Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+        Assert.Contains("if ((__omittedArguments & 0x1UL) == 0) __defaults &= ~global::AndroidX.Compose.WideDefault.Slot0;", emitted);
+        Assert.Contains("if ((__omittedArguments & 0x80000000UL) == 0) __defaults &= ~global::AndroidX.Compose.WideDefault.Slot31;", emitted);
+        Assert.Contains("if ((__omittedArguments & 0x100000000UL) == 0) __defaults &= ~global::AndroidX.Compose.WideDefault.Slot32;", emitted);
+        Assert.Contains("var (__defaultsMask0, __defaultsMask1) = __defaults.Split();", emitted);
+        Assert.Contains("global::AndroidX.Compose.ComposeBridges.WideExplicitDefaults(", emitted);
+        Assert.Contains("__defaultsMask0, __defaultsMask1, __composer);", emitted);
         Assert.Empty(output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error));
     }
 
@@ -798,13 +913,16 @@ public class FacadeGeneratorTests
         Assert.NotNull(emitted);
         Assert.Contains("Wrap3(composer, (__scope, c) =>", emitted);
         Assert.Contains("global::AndroidX.Compose.RenderContext.PushScope(__scope, global::AndroidX.Compose.ScopeKind.Row);", emitted);
+        Assert.Contains("Wrap3(__composer, (__scope, c) =>", emitted);
+        Assert.Contains("global::AndroidX.Compose.Tier2InlineContent.RenderDirect(c, content, false);", emitted);
+        Assert.DoesNotContain("var node = new global::AndroidX.Compose.NavigationBar", emitted);
 
         var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
         Assert.Empty(errors);
     }
 
     [Fact]
-    public void UnsupportedCallback_EmitsCN3002()
+    public void AmbiguousCallback_EmitsCN3013()
     {
         var code = $$"""
             using global::AndroidX.Compose.Runtime;
@@ -829,8 +947,7 @@ public class FacadeGeneratorTests
             """;
 
         var (_, diags, _) = Run(code, "Checkbox");
-        var cn3002 = diags.Where(d => d.Id == "CN3002").ToArray();
-        Assert.NotEmpty(cn3002);
+        Assert.Contains(diags, d => d.Id == "CN3013");
     }
 
     [Fact]
@@ -875,6 +992,9 @@ public class FacadeGeneratorTests
         Assert.Contains("int __defaults = (int)global::AndroidX.Compose.AlertDialogDefault.All;", emitted);
         Assert.Contains("if (__modifier is not null) __defaults &= ~(int)global::AndroidX.Compose.AlertDialogDefault.Modifier;", emitted);
         Assert.Contains("if (__dismissButton is not null) __defaults &= ~(int)global::AndroidX.Compose.AlertDialogDefault.DismissButton;", emitted);
+        Assert.Contains("var __confirmButton = global::AndroidX.Compose.ComposableLambdas.Wrap2(__composer, confirmButton);", emitted);
+        Assert.Contains("global::AndroidX.Compose.ComposeBridges.AlertDialog(__onDismissRequest, __confirmButton, __modifier, __dismissButton, __icon, __title, __text, (int)__defaults, __composer);", emitted);
+        Assert.DoesNotContain("var node = new global::AndroidX.Compose.AlertDialog", emitted);
 
         var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
         Assert.Empty(errors);
@@ -973,6 +1093,8 @@ public class FacadeGeneratorTests
         // Per-child indexed loop instead of plain RenderChildren.
         Assert.Contains("RenderChildrenIndexed(c);", emitted);
         Assert.DoesNotContain("RenderChildren(c);", emitted);
+        Assert.Contains("global::AndroidX.Compose.Tier2InlineContent.RenderDirect(c, content, true);", emitted);
+        Assert.DoesNotContain("var node = new global::AndroidX.Compose.SingleChoiceSegmentedButtonRow", emitted);
 
         var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
         Assert.Empty(errors);
@@ -1125,7 +1247,7 @@ public class FacadeGeneratorTests
         Assert.NotNull(emitted);
         Assert.Contains("readonly global::System.Action<bool> _onCheckedChange;", emitted);
         Assert.Contains("public IconToggleButton(bool @checked, global::System.Action<bool> onCheckedChange)", emitted);
-        Assert.Contains("new global::AndroidX.Compose.ComposableLambda1(v => _onCheckedChange(v is global::Java.Lang.Boolean __b && __b.BooleanValue()));", emitted);
+        Assert.Contains("composer.RememberAction(v => _onCheckedChange(v is global::Java.Lang.Boolean __b && __b.BooleanValue()));", emitted);
 
         var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
         Assert.Empty(errors);
@@ -1162,7 +1284,8 @@ public class FacadeGeneratorTests
         Assert.NotNull(emitted);
         Assert.Contains("readonly global::System.Action<string> _onValueChange;", emitted);
         Assert.Contains("public TextField(string value, global::System.Action<string> onValueChange)", emitted);
-        Assert.Contains("new global::AndroidX.Compose.ComposableLambda1(v => _onValueChange(v?.ToString() ?? string.Empty));", emitted);
+        Assert.Contains("composer.RememberAction(v => _onValueChange(v?.ToString() ?? string.Empty));", emitted);
+        Assert.Contains("global::AndroidX.Compose.ComposeBridges.TextFieldExplicitDefaults(value, __onValueChange, __modifier, (int)__defaults, __composer);", emitted);
 
         var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
         Assert.Empty(errors);
@@ -1241,6 +1364,9 @@ public class FacadeGeneratorTests
         Assert.Contains("public global::AndroidX.Compose.ComposableNode? Trailing { get; set; }", emitted);
         Assert.Contains("if (Headline is null)", emitted);
         Assert.Contains("if (__overlineContent is not null) __defaults &= ~(int)global::AndroidX.Compose.ListItemDefault.OverlineContent;", emitted);
+        Assert.Contains("var __headlineContent = global::AndroidX.Compose.ComposableLambdas.Wrap2(__composer, headline);", emitted);
+        Assert.Contains("var __overlineContent = overline is null ? null : global::AndroidX.Compose.ComposableLambdas.Wrap2(__composer, overline);", emitted);
+        Assert.DoesNotContain("var node = new global::AndroidX.Compose.ListItem", emitted);
 
         var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
         Assert.Empty(errors);
@@ -1319,9 +1445,49 @@ public class FacadeGeneratorTests
         Assert.Contains("public global::AndroidX.Compose.Color ContainerColor { get; set; }", emitted);
         Assert.Contains("long __color = (long)ContainerColor != 0L ? (long)ContainerColor : global::AndroidX.Compose.Material3.MaterialTheme.Instance.GetColorScheme(composer, 0).SecondaryContainer;", emitted);
         Assert.Contains("global::AndroidX.Compose.ComposeBridges.ModalDrawerSheet(__content, __color, composer);", emitted);
+        Assert.Contains("long __color = (long)containerColor != 0L ? (long)containerColor : global::AndroidX.Compose.Material3.MaterialTheme.Instance.GetColorScheme(__composer, 0).SecondaryContainer;", emitted);
+        Assert.Contains("global::AndroidX.Compose.ComposeBridges.ModalDrawerSheetExplicitDefaults(__content, __color, (int)__defaults, __composer);", emitted);
 
         var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
         Assert.Empty(errors);
+    }
+
+    [Fact]
+    public void Changed_ThemeColorDiffsResolvedFallback()
+    {
+        var code = """
+            using global::AndroidX.Compose.Runtime;
+            using global::AndroidX.Compose.UI;
+            using AndroidX.Compose;
+            using Kotlin.Jvm.Functions;
+
+            [assembly: ComposeDefaults("DrawerSheetDefault", "!content", "drawerContainerColor")]
+
+            namespace AndroidX.Compose
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(Class="androidx/compose/material3/NavigationDrawerKt",
+                                   JvmName="ModalDrawerSheet-afqeVBk",
+                                   Signature="(Lkotlin/jvm/functions/Function3;JLandroidx/compose/runtime/Composer;II)V",
+                                   Defaults=typeof(DrawerSheetDefault))]
+                    [ComposeFacade(DefaultColorFromTheme = "secondaryContainer")]
+                    public static partial void ModalDrawerSheet(
+                        IFunction3 content,
+                        long drawerContainerColor,
+                        IComposer composer,
+                        int _changed = 0);
+                }
+            }
+            """;
+
+        var (output, diags, emitted) = Run(code, "ModalDrawerSheet");
+
+        Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+        Assert.Contains("__changed |= __composer.DiffSlot(__color, 4);", emitted);
+        Assert.DoesNotContain("__changed |= ((__directChanged >> 4)", emitted);
+        Assert.Empty(output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error));
     }
 
     [Fact]
@@ -1420,6 +1586,10 @@ public class FacadeGeneratorTests
 
         // Bridge call passes typed __painterPeer for the painter arg.
         Assert.Contains("global::AndroidX.Compose.ComposeBridges.Image(__painterPeer", emitted);
+        Assert.Contains("public static void Image(global::AndroidX.Compose.Runtime.IComposer composer, global::AndroidX.Compose.UI.Graphics.Painter.Painter painter", emitted);
+        Assert.Contains("var __painterRef = global::AndroidX.Compose.ComposeBridges.PainterResource(drawableResourceId, __composer);", emitted);
+        Assert.Contains("var __painterPeer = painter;", emitted);
+        Assert.DoesNotContain("var node = new global::AndroidX.Compose.Image", emitted);
 
         var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
         Assert.Empty(errors);
@@ -1705,6 +1875,41 @@ public class FacadeGeneratorTests
         Assert.True(
             emitted!.Contains("WideDefault.Modifier"),
             "Expected emitted facade to reference WideDefault.Modifier (bit 31 slot). Emitted:\n" + emitted);
+    }
+
+    [Fact]
+    public void WrapperFacade_ThirtyTwoSlots_UsesUncheckedSingleMask()
+    {
+        var names = string.Join(", ", Enumerable.Range(0, 32).Select(i => $"\"slot{i}\""));
+        var parameters = string.Join(", ", Enumerable.Range(0, 32).Select(i => $"int slot{i}"));
+        var code = $$"""
+            using global::AndroidX.Compose.Runtime;
+            using AndroidX.Compose;
+
+            [assembly: ComposeDefaults("ThirtyTwoDefault", {{names}})]
+
+            namespace AndroidX.Compose
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeFacade(Defaults = typeof(ThirtyTwoDefault))]
+                    public static partial void ThirtyTwo(
+                        {{parameters}}, int defaults, IComposer composer);
+
+                    public static partial void ThirtyTwo(
+                        {{parameters}}, int defaults, IComposer composer) { }
+                }
+            }
+            """;
+
+        var (output, diags, emitted) = Run(code, "ThirtyTwo");
+
+        Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+        Assert.Contains(
+            "int __defaults = unchecked((int)global::AndroidX.Compose.ThirtyTwoDefault.All);",
+            emitted);
+        Assert.Empty(output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error));
     }
 
     // ─── Phase 4 — [StateHolder] state-holder facades ─────────────────
@@ -3138,6 +3343,13 @@ public class FacadeGeneratorTests
         Assert.Contains(
             "global::AndroidX.Compose.ComposeBridges.RememberDrawerState(_drawerState!.InitialValue, _confirmStateChangeAdapter, composer)",
             emitted);
+        Assert.Contains(
+            "var __confirmStateChangeAdapter = __composer.Remember(static () => new global::AndroidX.Compose.DrawerValueConfirmStateChange());",
+            emitted);
+        Assert.Contains("__confirmStateChangeAdapter.Callback = confirmStateChange;", emitted);
+        Assert.Contains(
+            "global::AndroidX.Compose.ComposeBridges.RememberDrawerState(__drawerStateHolder.InitialValue, __confirmStateChangeAdapter, __composer)",
+            emitted);
 
         var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
         Assert.Empty(errors);
@@ -3390,7 +3602,6 @@ public class FacadeGeneratorTests
                     IModifier?  modifier,
                     IFunction2? navigationIcon,
                     IFunction3? actions,
-                    int         defaults,
                     IComposer   composer);
 
                 [ComposeBridge(Class="x/Y", JvmName="BarWithSubtitle",
@@ -3402,7 +3613,6 @@ public class FacadeGeneratorTests
                     IModifier?  modifier,
                     IFunction2? navigationIcon,
                     IFunction3? actions,
-                    int         defaults,
                     IComposer   composer);
             }
         }
@@ -3448,13 +3658,16 @@ public class FacadeGeneratorTests
         // primary uses BarDefault.
         Assert.Contains("(int)global::AndroidX.Compose.BarSubtitleDefault.All;", emitted);
         Assert.Contains("(int)global::AndroidX.Compose.BarDefault.All;", emitted);
+        Assert.Contains("if (subtitle is not null)", emitted);
+        Assert.Contains("var __subtitleContent = subtitle ?? throw new global::System.InvalidOperationException", emitted);
+        Assert.DoesNotContain("var node = new global::AndroidX.Compose.Bar", emitted);
 
         // Alt branch calls the alternate bridge with the alt's actual
         // parameter order (title, subtitle, modifier, nav, actions).
-        Assert.Contains("global::AndroidX.Compose.ComposeBridges.BarWithSubtitle(__title, __subtitle, __modifier, __navigationIcon, __actions, __defaults, composer);", emitted);
+        Assert.Contains("global::AndroidX.Compose.ComposeBridges.BarWithSubtitleExplicitDefaults(__title, __subtitle, __modifier, __navigationIcon, __actions, __defaults, composer);", emitted);
 
         // Primary branch calls the primary bridge (no subtitle).
-        Assert.Contains("global::AndroidX.Compose.ComposeBridges.Bar(__title, __modifier, __navigationIcon, __actions, __defaults, composer);", emitted);
+        Assert.Contains("global::AndroidX.Compose.ComposeBridges.BarExplicitDefaults(__title, __modifier, __navigationIcon, __actions, __defaults, composer);", emitted);
 
         var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
         Assert.Empty(errors);
@@ -3742,7 +3955,7 @@ public class FacadeGeneratorTests
             """;
 
         var (_, diags, _) = Run(code, "Bar");
-        Assert.Contains(diags, d => d.Id == "CN3010" && d.GetMessage().Contains("'int defaults'"));
+        Assert.Contains(diags, d => d.Id == "CN3010" && d.GetMessage().Contains("defaults metadata"));
     }
 
     [Fact]
@@ -3839,13 +4052,15 @@ public class FacadeGeneratorTests
                     int        defaults,
                     IComposer  composer);
 
-                public static void IconImageVector(
+                [ComposeBridge(Class="x/IconKt", JvmName="Icon-vector",
+                               Signature="(Landroidx/compose/ui/graphics/vector/ImageVector;Ljava/lang/String;Landroidx/compose/ui/Modifier;JLandroidx/compose/runtime/Composer;II)V",
+                               Defaults=typeof(IconDefault))]
+                public static partial void IconImageVector(
                     global::AndroidX.Compose.UI.Graphics.Vector.ImageVector imageVector,
                     string?    contentDescription,
                     IModifier? modifier,
                     long       tint,
-                    int        defaults,
-                    IComposer  composer) { }
+                    IComposer  composer);
             }
         }
         """;
@@ -3894,14 +4109,135 @@ public class FacadeGeneratorTests
 
         // The secondary call passes the field (with `!`) and the
         // shared slot expressions in the secondary's parameter order.
-        Assert.Contains("global::AndroidX.Compose.ComposeBridges.IconImageVector(_imageVector!,", emitted);
+        Assert.Contains("global::AndroidX.Compose.ComposeBridges.IconImageVectorExplicitDefaults(_imageVector!,", emitted);
         Assert.Contains(", __secDefaults, composer);", emitted);
+        Assert.Contains("public static void Icon(global::AndroidX.Compose.Runtime.IComposer composer, global::AndroidX.Compose.UI.Graphics.Painter.Painter painter,", emitted);
+        Assert.Contains("public static void Icon(global::AndroidX.Compose.Runtime.IComposer composer, global::AndroidX.Compose.UI.Graphics.Vector.ImageVector imageVector,", emitted);
+        Assert.Contains("global::AndroidX.Compose.ComposeBridges.IconImageVectorExplicitDefaults(imageVector, contentDescription, __modifier, tint, (int)__defaults, __composer);", emitted);
+        Assert.DoesNotContain("var node = new global::AndroidX.Compose.Icon", emitted);
 
         // Early return so the primary body doesn't run.
         Assert.Contains("return;", emitted);
 
         var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
         Assert.Empty(errors);
+    }
+
+    [Fact]
+    public void Branching_DirectPainterOverloadUsesPainterRouteInBothBranches()
+    {
+        var code = """
+            using global::AndroidX.Compose.Runtime;
+            using global::AndroidX.Compose.UI;
+            using AndroidX.Compose;
+            using Kotlin.Jvm.Functions;
+
+            [assembly: ComposeDefaults("PrimaryDefault",
+                "!painter", "!title", "modifier")]
+            [assembly: ComposeDefaults("AlternateDefault",
+                "!painter", "!title", "!subtitle", "modifier")]
+
+            namespace AndroidX.Compose
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(Class="x/Y", JvmName="Primary",
+                                   Signature="(Landroidx/compose/ui/graphics/painter/Painter;Lkotlin/jvm/functions/Function2;Landroidx/compose/ui/Modifier;Landroidx/compose/runtime/Composer;II)V",
+                                   Defaults=typeof(PrimaryDefault))]
+                    [ComposeFacade(BranchOn="Subtitle", AlternateBridge=nameof(Alternate))]
+                    public static partial void BranchPainter(
+                        [PainterResource] global::AndroidX.Compose.UI.Graphics.Painter.Painter painter,
+                        IFunction2 title,
+                        IModifier? modifier,
+                        int defaults,
+                        IComposer composer,
+                        int _changed = 0);
+
+                    [ComposeBridge(Class="x/Y", JvmName="Alternate",
+                                   Signature="(Landroidx/compose/ui/graphics/painter/Painter;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;Landroidx/compose/ui/Modifier;Landroidx/compose/runtime/Composer;II)V",
+                                   Defaults=typeof(AlternateDefault))]
+                    public static partial void Alternate(
+                        global::AndroidX.Compose.UI.Graphics.Painter.Painter painter,
+                        IFunction2 title,
+                        IFunction2 subtitle,
+                        IModifier? modifier,
+                        int defaults,
+                        IComposer composer,
+                        int _changed = 0);
+                }
+            }
+            """;
+
+        var (output, diags, emitted) = Run(code, "BranchPainter");
+        Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+        Assert.Contains("public static void BranchPainter(global::AndroidX.Compose.Runtime.IComposer composer, global::AndroidX.Compose.UI.Graphics.Painter.Painter painter,", emitted);
+        Assert.Contains("__changed |= ((__directChanged >> 1) & 0b111) << 1;", emitted);
+
+        var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
+        Assert.Empty(errors);
+    }
+
+    [Fact]
+    public void Secondary_DirectLoweringPreservesSharedPainterThemeScopeAndIndexedContent()
+    {
+        var code = """
+            using global::AndroidX.Compose.Runtime;
+            using global::AndroidX.Compose.UI;
+            using global::AndroidX.Compose.UI.Graphics.Painter;
+            using AndroidX.Compose;
+            using Kotlin.Jvm.Functions;
+
+            [assembly: ComposeDefaults("PrimaryDefault",
+                "!painter", "!mode", "!content", "containerColor")]
+            [assembly: ComposeDefaults("SecondaryDefault",
+                "!imageVector", "!painter", "!content", "containerColor")]
+
+            namespace AndroidX.Compose
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(Class="x/Kt", JvmName="Primary",
+                                   Signature="(Landroidx/compose/ui/graphics/painter/Painter;ILkotlin/jvm/functions/Function3;JLandroidx/compose/runtime/Composer;II)V",
+                                   Defaults=typeof(PrimaryDefault))]
+                    [ComposeFacade(
+                        ClassName="Combined",
+                        Scope="Row",
+                        IndexedChildren=true,
+                        DefaultColorFromTheme="secondaryContainer",
+                        SecondaryCtor=nameof(Secondary),
+                        SecondaryDefaults=typeof(SecondaryDefault))]
+                    public static partial void Primary(
+                        [PainterResource] Painter painter,
+                        int mode,
+                        IFunction3 content,
+                        long containerColor,
+                        int defaults,
+                        IComposer composer);
+
+                    public static void Secondary(
+                        global::AndroidX.Compose.UI.Graphics.Vector.ImageVector imageVector,
+                        Painter painter,
+                        IFunction3 content,
+                        long containerColor,
+                        int defaults,
+                        IComposer composer) { }
+                }
+            }
+            """;
+
+        var (output, diags, emitted) = Run(code, "Combined");
+
+        Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+        Assert.Contains("public static void Combined(global::AndroidX.Compose.Runtime.IComposer composer, global::AndroidX.Compose.UI.Graphics.Vector.ImageVector imageVector, int drawableResourceId,", emitted);
+        Assert.Contains("global::AndroidX.Compose.RenderContext.PushScope(__scope, global::AndroidX.Compose.ScopeKind.Row);", emitted);
+        Assert.Contains("global::AndroidX.Compose.Tier2InlineContent.RenderDirect(c, content, true);", emitted);
+        Assert.Contains("long __color = (long)containerColor != 0L ? (long)containerColor", emitted);
+        Assert.Contains("var __painterRef = global::AndroidX.Compose.ComposeBridges.PainterResource(drawableResourceId, __composer);", emitted);
+        Assert.Contains("global::AndroidX.Compose.ComposeBridges.Secondary(imageVector, __painterPeer, __content, __color, (int)__defaults, __composer);", emitted);
+        Assert.DoesNotContain("var node = new global::AndroidX.Compose.Combined", emitted);
+        Assert.Empty(output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error));
     }
 
     [Fact]
@@ -4130,6 +4466,9 @@ public class FacadeGeneratorTests
         Assert.Contains("__changed |= composer.DiffSlot(__modifierKey, global::AndroidX.Compose.ComposeExtensions.DiffSlotShift(1));", emitted);
         Assert.Contains("__changed |= composer.DiffSlot(_enabled, global::AndroidX.Compose.ComposeExtensions.DiffSlotShift(2));", emitted);
         Assert.Contains("__changed |= (int)global::AndroidX.Compose.ChangedBits.Static << global::AndroidX.Compose.ComposeExtensions.DiffSlotShift(3);", emitted);
+        Assert.Contains("__changed |= __composer.DiffSlot(__modifierKey, 4);", emitted);
+        Assert.Contains("int __changed = __omittedArguments == 0 ? __directChanged & 0b1 : 0;", emitted);
+        Assert.Contains("__changed |= ((__directChanged >> 4) & 0b111) << 10;", emitted);
 
         var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
         Assert.Empty(errors);
@@ -4138,10 +4477,9 @@ public class FacadeGeneratorTests
     [Fact]
     public void Changed_NoChangedParam_EmitsLegacyPositionalCall()
     {
-        // Back-compat — bridges without the trailing `_changed` param
-        // still emit the legacy positional bridge call (no named-arg
-        // overhead, no RememberAction hoist, no __changed local). This
-        // test guards against accidental regression of the old shape.
+        // Bridges without the trailing `_changed` param still emit the
+        // legacy positional bridge call and no __changed local. Event
+        // callbacks nevertheless retain stable JNI identity.
         var code = $$"""
             using global::AndroidX.Compose.Runtime;
             using global::AndroidX.Compose.UI;
@@ -4167,7 +4505,7 @@ public class FacadeGeneratorTests
         Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
         Assert.NotNull(emitted);
         Assert.DoesNotContain("__changed", emitted);
-        Assert.DoesNotContain("RememberAction", emitted);
+        Assert.Contains("var __onClick = composer.RememberAction(_onClick);", emitted);
         Assert.Contains("global::AndroidX.Compose.ComposeBridges.Button(__onClick, BuildModifier(), __content, composer);", emitted);
 
         var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
@@ -4335,6 +4673,8 @@ public class FacadeGeneratorTests
         Assert.Contains("__changed |= composer.DiffSlot(__state, global::AndroidX.Compose.ComposeExtensions.DiffSlotShift(0));", emitted);
         // modifier (param 1) → bit 4.
         Assert.Contains("__changed |= composer.DiffSlot(__modifierKey, global::AndroidX.Compose.ComposeExtensions.DiffSlotShift(1));", emitted);
+        Assert.Contains("__changed |= __composer.DiffSlot(__state, 1);", emitted);
+        Assert.Contains("__changed |= __composer.DiffSlot(__modifierKey, 4);", emitted);
         Assert.Contains("composer: composer, _changed: __changed", emitted);
 
         var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
@@ -4573,5 +4913,46 @@ public class FacadeGeneratorTests
 
         var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
         Assert.Empty(errors);
+    }
+
+    [Theory]
+    [InlineData("", "IFunction1", "CN3013")]
+    [InlineData("", "IFunction4", "CN3013")]
+    [InlineData("[DeferredComposableContent] ", "IFunction4", "CN3002")]
+    [InlineData("[RawCallback] ", "IFunction1", "CN3002")]
+    [InlineData("[Callback(typeof(string)), RawCallback] ", "IFunction1", "CN3013")]
+    public void LambdaExecutionMode_RejectsAmbiguousOrFacadeUnsupportedShapes(
+        string attribute,
+        string functionType,
+        string expectedDiagnostic)
+    {
+        string signatureType = functionType == "IFunction1"
+            ? "Function1"
+            : "Function4";
+        var code = $$"""
+            using global::AndroidX.Compose.Runtime;
+            using AndroidX.Compose;
+            using Kotlin.Jvm.Functions;
+
+            namespace AndroidX.Compose
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(
+                        Class="x/WidgetKt",
+                        JvmName="Widget",
+                        Signature="(Lkotlin/jvm/functions/{{signatureType}};Landroidx/compose/runtime/Composer;I)V")]
+                    [ComposeFacade]
+                    public static partial void Widget(
+                        {{attribute}}{{functionType}} callback,
+                        IComposer composer);
+                }
+            }
+            """;
+
+        var (_, diags, emitted) = Run(code, "Widget");
+
+        Assert.Contains(diags, d => d.Id == expectedDiagnostic);
+        Assert.Null(emitted);
     }
 }

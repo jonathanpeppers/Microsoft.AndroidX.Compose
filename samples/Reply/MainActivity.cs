@@ -1,4 +1,5 @@
 using AndroidX.Activity;
+using static AndroidX.Compose.Composables;
 
 namespace AndroidX.Compose.Samples.Reply;
 
@@ -20,13 +21,13 @@ public class MainActivity : ComponentActivity
     {
         base.OnCreate(savedInstanceState);
         this.EnableEdgeToEdge();
-        this.SetContent(c =>
+        this.SetContent(() =>
         {
-            var nav              = c.Remember(() => new NavController());
-            var currentRoute     = c.MutableStateOf(Route.Inbox);
-            var openedEmailId    = c.MutableStateOf(0L);
-            var selectedEmailIds = c.Remember(() => new MutableStateList<long>());
-            ReplyApp.Content(c, nav, currentRoute, openedEmailId, selectedEmailIds);
+            var nav              = Remember(() => new NavController());
+            var currentRoute     = MutableStateOf(Route.Inbox);
+            var openedEmailId    = MutableStateOf(0L);
+            var selectedEmailIds = Remember(() => new MutableStateList<long>());
+            ReplyApp.Content(nav, currentRoute, openedEmailId, selectedEmailIds);
         });
     }
 }

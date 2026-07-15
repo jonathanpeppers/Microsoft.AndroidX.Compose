@@ -152,15 +152,27 @@ and common handwritten composition APIs cover layout, state, effects,
 resources, theme reads, and composition locals. Existing explicit-composer
 overloads remain available as low-level escape hatches. The composable facade
 entry points are themselves `[Composable]`, so unchanged calls skip before
-constructing their tree-style adapters. The hand-written holdouts (`Scaffold`,
-lazy collections, text fields, search, and similar custom shapes) remain
-tree-style for now.
+their bodies execute; when they do execute, the generator lowers modifier,
+callback, content-slot, state-holder, and default-mask plumbing directly to
+the corresponding Compose bridge without constructing a tree-style adapter.
+Generic lowering also exposes typed animation, pager, carousel, and lazy
+collection facades. Generated ambient overloads cover the handwritten
+`MaterialTheme`, `Scaffold`, `SnackbarHost`, both `SegmentedButton` modes,
+`Layout`, `TextField`, `OutlinedTextField`, the complete search family, and
+`BottomSheetScaffold` without duplicating their rendering logic. Navigation
+DSLs and similar deferred graph-building shapes remain tree-style for now.
 
-The Jetchat, JetNews, and Reply ports use a Tier 2 root matching upstream
-Kotlin's top-level `@Composable` app function and call it through the
-`Action<IComposer>` `SetContent` overload. See
+The Jetchat, JetNews, and Reply ports use composerless Tier 2 roots matching
+upstream Kotlin's top-level `@Composable` app function. Their activities call
+the `Action` `SetContent` overload and use implicit `Remember`, `MutableStateOf`,
+`ViewModel`, and lazy-list state APIs. The roots retain one
+`ComposableContext.Current` render escape hatch while `MaterialTheme`,
+`Scaffold`, navigation, lazy collections, and text fields remain tree-style.
+The Gallery's real-app benchmark compares equivalent tree, adapter Tier 2,
+and direct-lowered Tier 2 lanes.
+See
 [docs/architecture.md → Tier 2](docs/architecture.md) for the emission shape,
-the sibling-skip proof demo, diagnostics (CN5001-CN5009), and remaining
+the sibling-skip proof demo, diagnostics (CN5001-CN5010), and remaining
 follow-ups. The two tiers coexist freely. The
 `Microsoft.AndroidX.Compose` NuGet package includes the Tier 2 source
 generator and its compiler configuration; package consumers need no separate
