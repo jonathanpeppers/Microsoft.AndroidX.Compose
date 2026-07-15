@@ -23,6 +23,9 @@ public static class Tier2HandwrittenHoldoutsDemo
         var selected = Remember(() => new MutableNumberState<int>(0));
         var checkedState = Remember(() => new MutableState<bool>(false));
         var snackbarState = Remember(() => new SnackbarHostState());
+        var text = Remember(() => new MutableState<string>("Editable"));
+        var selection = Remember(() => new MutableState<AndroidX.Compose.UI.Text.Input.TextFieldValue>(
+            ComposeExtensions.NewTextFieldValue("Selection-aware")));
         IReadOnlyList<int> body = [0];
 
         MaterialTheme(() =>
@@ -60,6 +63,40 @@ public static class Tier2HandwrittenHoldoutsDemo
                                 icon: () => Text("P")));
 
                         SnackbarHost(snackbarState);
+
+                        TextField(
+                            text,
+                            singleLine: true,
+                            label: () => Text("Filled text field"));
+                        OutlinedTextField(
+                            selection,
+                            singleLine: true,
+                            label: () => Text("Outlined TextFieldValue"));
+
+                        Layout(
+                            (scope, measurables, constraints) =>
+                            {
+                                var placeables = measurables
+                                    .Select(item => item.Measure(constraints))
+                                    .ToArray();
+                                int width = placeables.Max(item => item.Width);
+                                int height = placeables.Sum(item => item.Height);
+                                return scope.Layout(width, height, placement =>
+                                {
+                                    int y = 0;
+                                    foreach (var placeable in placeables)
+                                    {
+                                        placement.PlaceRelative(placeable, 0, y);
+                                        y += placeable.Height;
+                                    }
+                                });
+                            },
+                            () =>
+                            {
+                                Text("Custom Layout child 1");
+                                Text("Custom Layout child 2");
+                            },
+                            modifier: Modifier.FillMaxWidth());
                     },
                     contentPadding: padding),
                 topBar: () => Text("Tier 2 holdouts")));

@@ -1172,7 +1172,8 @@ explicit-composer adapter on `Composables` and apply
 nullability and optional defaults. The explicit method remains the sole
 rendering implementation and must delegate to the existing facade rather
 than duplicate bridge logic. `MaterialTheme`, `Scaffold`, `SnackbarHost`,
-and `SegmentedButton` are the canonical examples.
+`SegmentedButton`, `Layout`, `TextField`, and `OutlinedTextField` are the
+canonical examples.
 
 ### Wiring the generator into a consuming project
 
@@ -1221,11 +1222,12 @@ Call sites capture omitted C#
 
 ### Deferred (follow-up)
 
-- Tier 2 modelling for the remaining hand-written facade holdouts (text
-  fields, search, bottom-sheet scaffolding, navigation DSLs, custom layouts,
-  and other custom shapes). Generic lowering covers typed animation, pager,
-  carousel, and lazy collection facades; ambient-overload generation covers
-  `MaterialTheme`, `Scaffold`, `SnackbarHost`, and `SegmentedButton`.
+- Tier 2 modelling for the remaining hand-written facade holdouts (search,
+  bottom-sheet scaffolding, navigation DSLs, and other shared-state shapes).
+  Generic lowering covers typed animation, pager, carousel, and lazy
+  collection facades; ambient-overload generation covers `MaterialTheme`,
+  `Scaffold`, `SnackbarHost`, `SegmentedButton`, `Layout`, `TextField`, and
+  `OutlinedTextField`.
 - Analyzer for "non-`[Composable]` calls `[Composable]`" — compile-
   time enforcement of the colour contract.
 - Lambda hoisting via `RememberAction` / `Wrap2` / `Wrap3` inside the

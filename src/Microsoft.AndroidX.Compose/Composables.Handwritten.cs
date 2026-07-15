@@ -79,6 +79,29 @@ public static partial class Composables
     }
 
     /// <summary>
+    /// Renders a low-level custom layout with an explicit composer.
+    /// </summary>
+    [Composable, GenerateImplicitComposable]
+    public static void Layout(
+        IComposer composer,
+        Func<MeasureScope, IReadOnlyList<Measurable>, Constraints, MeasureResult>
+            measurePolicy,
+        [ComposableContent] Action<IComposer> content,
+        Modifier? modifier = null)
+    {
+        ArgumentNullException.ThrowIfNull(composer);
+        ArgumentNullException.ThrowIfNull(measurePolicy);
+        ArgumentNullException.ThrowIfNull(content);
+
+        var layout = new global::AndroidX.Compose.Layout(measurePolicy)
+        {
+            Modifier = modifier,
+        };
+        layout.Add(new Tier2InlineContent(content));
+        layout.Render(composer);
+    }
+
+    /// <summary>
     /// Renders a single-choice segmented button at
     /// <paramref name="index"/> within <paramref name="count"/> row items
     /// with an explicit composer.

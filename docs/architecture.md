@@ -325,19 +325,19 @@ surfaces are modeled.
   dispatch inside their established facade implementations. Tier 2
   `SegmentedButton` takes explicit `index`/`count`, matching Kotlin's
   `itemShape(index, count)` contract; the adapter publishes that position
-  while retaining the enclosing row receiver scope.
+  while retaining the enclosing row receiver scope. `Layout`, `TextField`,
+  and `OutlinedTextField` are complete through the same adapter path.
+  Text-field overloads cover string callbacks, `MutableState<string>`, and
+  selection-aware `MutableState<TextFieldValue>` while leaving bridge
+  selection and slot wrapping in the existing facades. `Layout` likewise
+  retains its composer-remembered Java measure-policy peer.
 - **NavHost / NavDestination:** need a stable, remembered raw graph-builder
   callback plus route registration and destination-argument forwarding; this
   is a navigation DSL rather than a normal composable content slot.
 - **BottomSheetScaffold:** needs two required composable bodies plus
   parameterized remembered state and a stable veto callback in one shape.
-- **TextField / OutlinedTextField:** need constructor-driven dispatch across
-  string and bound `TextFieldValue` bridges, including state convenience
-  overloads.
 - **SearchBar / DockedSearchBar / SearchBarInputField:** need coordinated
   search/text state holders and multiple non-null content slots.
-- **Layout:** needs custom measure-delegate lowering, Java SAM creation, and
-  composer-keyed policy remembering.
 
 ### Diagnostics
 
@@ -403,10 +403,10 @@ provides stable generated lambda adapters.
 
 ### Deferred — follow-up issues
 
-- **Tier 2 entry points for remaining hand-written holdouts.** Text fields,
-  search, bottom-sheet scaffolding, navigation DSLs, and custom layouts need
-  richer state, bridge-dispatch, deferred/raw callback, or measure-policy
-  modelling beyond ambient-overload generation.
+- **Tier 2 entry points for remaining hand-written holdouts.** Search,
+  bottom-sheet scaffolding, and navigation DSLs need shared remembered state,
+  deferred/raw callbacks, or durable per-node JNI adapter identity beyond
+  ambient-overload generation.
 - **`MovableContent` / `key {} ` / `Saver` / `Layout {}` / stability
   inference.** Explicit non-goals in the Tier 2 MVP — each gets its
   own follow-up issue.

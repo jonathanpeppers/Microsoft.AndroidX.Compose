@@ -17,6 +17,9 @@ internal sealed class Tier2InlineContent : ComposableNode
         _body = body;
     }
 
+    public static ComposableNode? Create(Action<IComposer>? body) =>
+        body is null ? null : new Tier2InlineContent(body);
+
     public override void Render(IComposer composer)
     {
         ArgumentNullException.ThrowIfNull(composer);
