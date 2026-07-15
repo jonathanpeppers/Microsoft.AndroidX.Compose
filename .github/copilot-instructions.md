@@ -1173,8 +1173,8 @@ nullability and optional defaults. The explicit method remains the sole
 rendering implementation and must delegate to the existing facade rather
 than duplicate bridge logic. `[Obsolete]` metadata is copied to the generated
 sibling. `MaterialTheme`, `Scaffold`, `SnackbarHost`, `SegmentedButton`,
-`Layout`, `TextField`, `OutlinedTextField`, and the search family are the
-canonical examples.
+`Layout`, `TextField`, `OutlinedTextField`, the search family, and the
+remembered-facade `BottomSheetScaffold` adapter are the canonical examples.
 
 ### Wiring the generator into a consuming project
 
@@ -1223,12 +1223,12 @@ Call sites capture omitted C#
 
 ### Deferred (follow-up)
 
-- Tier 2 modelling for the remaining hand-written facade holdouts
-  (bottom-sheet scaffolding, navigation DSLs, and other shared-state shapes).
+- Tier 2 modelling for navigation DSLs and other deferred graph-building
+  shapes outside the issue-listed holdouts.
   Generic lowering covers typed animation, pager, carousel, and lazy
   collection facades; ambient-overload generation covers `MaterialTheme`,
   `Scaffold`, `SnackbarHost`, `SegmentedButton`, `Layout`, `TextField`,
-  `OutlinedTextField`, and the search family.
+  `OutlinedTextField`, the search family, and `BottomSheetScaffold`.
 - Analyzer for "non-`[Composable]` calls `[Composable]`" — compile-
   time enforcement of the colour contract.
 - Lambda hoisting via `RememberAction` / `Wrap2` / `Wrap3` inside the

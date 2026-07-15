@@ -30,6 +30,8 @@ public static class Tier2HandwrittenHoldoutsDemo
         var searchText = Remember(() => new SearchBarTextFieldState());
         var topSearch = Remember(() => new SearchBarState());
         var topSearchText = Remember(() => new SearchBarTextFieldState());
+        var sheet = Remember(() =>
+            new SheetStateHolder(skipPartiallyExpanded: false));
         IReadOnlyList<int> body = [0];
 
         MaterialTheme(() =>
@@ -118,6 +120,15 @@ public static class Tier2HandwrittenHoldoutsDemo
                             content: () => Text("Legacy query results"),
                             placeholder: () => Text("Legacy query search"));
 #pragma warning restore CS0618
+
+                        BottomSheetScaffold(
+                            sheetContent: () => Text("Persistent sheet"),
+                            content: () => Text("Bottom-sheet body"),
+                            sheetState: sheet,
+                            modifier: Modifier.Height(240),
+                            topBar: () => Text("Bottom sheet scaffold"),
+                            confirmValueChange: value =>
+                                value != AndroidX.Compose.Material3.SheetValue.Hidden);
 
                         Layout(
                             (scope, measurables, constraints) =>

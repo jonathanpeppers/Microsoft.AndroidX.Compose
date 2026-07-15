@@ -335,11 +335,13 @@ surfaces are modeled.
   docked/full-screen expanded content, shared-state input fields, and both
   deprecated `DockedSearchBar` variants. Generated ambient siblings preserve
   `[Obsolete]` metadata from their explicit adapters.
+  `BottomSheetScaffold` completes the issue-listed holdouts: its Tier 2
+  adapter remembers the existing facade keyed by `SheetStateHolder`, keeping
+  the per-node veto JCW stable while replacing sheet/body/slot nodes on each
+  executed composition.
 - **NavHost / NavDestination:** need a stable, remembered raw graph-builder
   callback plus route registration and destination-argument forwarding; this
   is a navigation DSL rather than a normal composable content slot.
-- **BottomSheetScaffold:** needs two required composable bodies plus
-  parameterized remembered state and a stable veto callback in one shape.
 
 ### Diagnostics
 
@@ -405,9 +407,9 @@ provides stable generated lambda adapters.
 
 ### Deferred — follow-up issues
 
-- **Tier 2 entry points for remaining hand-written holdouts.** Bottom-sheet
-  scaffolding and navigation DSLs need deferred/raw callbacks or durable
-  per-node JNI adapter identity beyond ambient-overload generation.
+- **Tier 2 entry points outside the issue-listed holdouts.** Navigation DSLs
+  still need stable deferred/raw graph builders and destination-argument
+  forwarding beyond ambient-overload generation.
 - **`MovableContent` / `key {} ` / `Saver` / `Layout {}` / stability
   inference.** Explicit non-goals in the Tier 2 MVP — each gets its
   own follow-up issue.

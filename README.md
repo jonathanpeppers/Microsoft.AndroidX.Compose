@@ -158,11 +158,9 @@ the corresponding Compose bridge without constructing a tree-style adapter.
 Generic lowering also exposes typed animation, pager, carousel, and lazy
 collection facades. Generated ambient overloads cover the handwritten
 `MaterialTheme`, `Scaffold`, `SnackbarHost`, both `SegmentedButton` modes,
-`Layout`, `TextField`, `OutlinedTextField`, and the complete search family
-without duplicating their rendering logic. The remaining handwritten holdouts
-(bottom-sheet
-scaffolding, navigation DSLs, and similar shared-state shapes) remain
-tree-style for now.
+`Layout`, `TextField`, `OutlinedTextField`, the complete search family, and
+`BottomSheetScaffold` without duplicating their rendering logic. Navigation
+DSLs and similar deferred graph-building shapes remain tree-style for now.
 
 The Jetchat, JetNews, and Reply ports use composerless Tier 2 roots matching
 upstream Kotlin's top-level `@Composable` app function. Their activities call
