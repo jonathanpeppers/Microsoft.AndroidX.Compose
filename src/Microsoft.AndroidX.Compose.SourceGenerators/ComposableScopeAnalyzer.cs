@@ -421,6 +421,7 @@ public sealed class ComposableScopeAnalyzer : DiagnosticAnalyzer
             int depth)
         {
             if (owner is not IMethodSymbol method
+                || method.IsAsync
                 || method.MethodKind != MethodKind.LocalFunction
                     && method.DeclaredAccessibility != Accessibility.Private
                 || method.DeclaringSyntaxReferences.Length == 0)

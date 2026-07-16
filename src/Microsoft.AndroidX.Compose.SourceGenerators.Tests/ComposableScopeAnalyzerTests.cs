@@ -616,6 +616,27 @@ public class ComposableScopeAnalyzerTests
     }
 
     [Fact]
+    public void PrivateAsyncHelper_CalledFromComposableScope_IsRejected()
+    {
+        var diagnostics = ScopeDiagnostics("""
+            static class App
+            {
+                static async void Deferred()
+                {
+                    await System.Threading.Tasks.Task.Yield();
+                    AndroidX.Compose.Composables.Text("late helper");
+                }
+
+                [AndroidX.Compose.Composable]
+                public static void Render() => Deferred();
+            }
+            """);
+
+        var diagnostic = Assert.Single(diagnostics);
+        Assert.Contains("Text", SourceText(diagnostic));
+    }
+
+    [Fact]
     public void ImmediateInvocation_OutsideComposableScope_IsRejected()
     {
         var diagnostics = ScopeDiagnostics("""
