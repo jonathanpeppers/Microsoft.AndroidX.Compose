@@ -234,11 +234,11 @@ public class FacadeGeneratorTests
                 public static int DiffSlot<T>(this global::AndroidX.Compose.Runtime.IComposer composer, T value, int bitOffset,
                     [System.Runtime.CompilerServices.CallerLineNumber] int line = 0,
                     [System.Runtime.CompilerServices.CallerFilePath] string file = "") => 0;
-                public static Kotlin.Jvm.Functions.IFunction0 RememberAction(
+                internal static Kotlin.Jvm.Functions.IFunction0 RememberAction(
                     this global::AndroidX.Compose.Runtime.IComposer composer, System.Action action,
                     [System.Runtime.CompilerServices.CallerLineNumber] int line = 0,
                     [System.Runtime.CompilerServices.CallerFilePath] string file = "") => null!;
-                public static Kotlin.Jvm.Functions.IFunction1 RememberAction(
+                internal static Kotlin.Jvm.Functions.IFunction1 RememberAction(
                     this global::AndroidX.Compose.Runtime.IComposer composer, System.Action<global::Java.Lang.Object?> action,
                     [System.Runtime.CompilerServices.CallerLineNumber] int line = 0,
                     [System.Runtime.CompilerServices.CallerFilePath] string file = "") => null!;
@@ -3334,9 +3334,10 @@ public class FacadeGeneratorTests
                 public global::AndroidX.Compose.Material3.DrawerValue InitialValue { get; }
                 public DrawerStateHolder() { }
             }
-            public sealed class DrawerValueConfirmStateChange : Kotlin.Jvm.Functions.IFunction1
+            internal sealed class DrawerValueConfirmStateChange : Kotlin.Jvm.Functions.IFunction1
             {
-                public System.Func<global::AndroidX.Compose.Material3.DrawerValue, bool>? Callback { get; set; }
+                internal DrawerValueConfirmStateChange() { }
+                internal System.Func<global::AndroidX.Compose.Material3.DrawerValue, bool>? Callback { get; set; }
             }
         }
         """;
@@ -3578,9 +3579,10 @@ public class FacadeGeneratorTests
                     public bool SkipPartiallyExpanded { get; }
                     public SheetStateHolder(bool skipPartiallyExpanded = false) { }
                 }
-                public sealed class SheetValueConfirmStateChange : Kotlin.Jvm.Functions.IFunction1
+                internal sealed class SheetValueConfirmStateChange : Kotlin.Jvm.Functions.IFunction1
                 {
-                    public System.Func<global::AndroidX.Compose.Material3.SheetValue, bool>? Callback { get; set; }
+                    internal SheetValueConfirmStateChange() { }
+                    internal System.Func<global::AndroidX.Compose.Material3.SheetValue, bool>? Callback { get; set; }
                 }
             }
 

@@ -24,7 +24,7 @@ public static partial class ComposeExtensions
     /// can rely on the same JNI handle being reused, while still
     /// closing over fresh local state every recomposition.
     /// </remarks>
-    public static IFunction0 RememberAction(
+    internal static IFunction0 RememberAction(
         this IComposer composer,
         Action action,
         [CallerLineNumber] int line = 0,
@@ -59,7 +59,7 @@ public static partial class ComposeExtensions
     /// receives the raw boxed Kotlin arg and is responsible for
     /// unboxing it.
     /// </summary>
-    public static IFunction1 RememberAction(
+    internal static IFunction1 RememberAction(
         this IComposer composer,
         Action<Java.Lang.Object?> action,
         [CallerLineNumber] int line = 0,

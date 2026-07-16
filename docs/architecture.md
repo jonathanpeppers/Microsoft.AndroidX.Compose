@@ -491,7 +491,7 @@ class.
   cooperate:
   - `composer.DiffSlot<T>(value, bitOffset)` — slot-table-backed
     structural diff, returns `Same`/`Different` shifted into place.
-  - `composer.RememberAction(action)` — caches one
+  - the internal `composer.RememberAction(action)` helper — caches one
     `MutableComposableLambda0/1` JCW per call site with a writable
     target, so onClick/onValueChange callbacks have a JNI-handle-stable
     peer; the corresponding param contributes `Static` to the mask.
