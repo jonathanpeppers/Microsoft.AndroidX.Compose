@@ -776,24 +776,138 @@ public class ComposableMethodGeneratorTests
     }
 
     [Fact]
-    public void ExtensionMethod_ReportsCN5006AndDoesNotEmitInterceptor()
+    public void ComposerExtensionMethod_ExtensionAndStaticSyntaxEmitInterceptors()
     {
-        var (_, diags, emitted) = Run("""
+        var (output, diags, emitted) = Run("""
             namespace App
             {
                 public static class Screens
                 {
                     [AndroidX.Compose.Composable]
                     public static void Foo(
-                        this AndroidX.Compose.Runtime.IComposer composer) { }
+                        this AndroidX.Compose.Runtime.IComposer composer,
+                        string value) { }
 
-                    public static void CallSite(AndroidX.Compose.Runtime.IComposer c) => c.Foo();
+                    public static void CallSite(AndroidX.Compose.Runtime.IComposer c)
+                    {
+                        c.Foo("extension");
+                        Screens.Foo(c, "static");
+                    }
                 }
             }
             """);
 
-        Assert.Contains(diags, d => d.Id == "CN5006");
-        Assert.Null(emitted);
+        Assert.Empty(diags);
+        Assert.NotNull(emitted);
+        Assert.Equal(2, emitted.Split("InterceptsLocationAttribute(").Length - 2);
+        Assert.Contains(
+            "global::AndroidX.Compose.Runtime.IComposer composer, string value",
+            emitted);
+        Assert.Contains("__dirty |= __c.DiffSlot<string>(value, 1)", emitted);
+        Assert.Contains("(__dirty & 0xB) != 0x2", emitted);
+        Assert.Contains("global::App.Screens.Foo(__c, value)", emitted);
+        Assert.Contains("_Core(__c2, value, __force | 0b1)", emitted);
+        AssertNoCompileErrors(output);
+    }
+
+    [Fact]
+    public void NonComposerExtensionReceiver_IsDiffedAsFirstUserParameter()
+    {
+        var (output, diags, emitted) = Run("""
+            namespace App
+            {
+                public sealed class Model { }
+
+                public static class Screens
+                {
+                    [AndroidX.Compose.Composable]
+                    public static void Show(this Model model, int value) { }
+
+                    public static void CallSite(Model model) => model.Show(42);
+                }
+            }
+            """);
+
+        Assert.Empty(diags);
+        Assert.NotNull(emitted);
+        Assert.Contains(
+            "global::App.Model model, int value",
+            emitted);
+        Assert.Contains("__dirty |= __c.DiffSlot<global::App.Model>(model, 1)", emitted);
+        Assert.Contains("__dirty |= __c.DiffSlot<int>(value, 4)", emitted);
+        Assert.Contains("global::App.Screens.Show(model, value)", emitted);
+        Assert.Contains("_Core(__c2, model, value, __force | 0b1)", emitted);
+        AssertNoCompileErrors(output);
+    }
+
+    [Fact]
+    public void OverloadedExtensionMethods_BindToResolvedTarget()
+    {
+        var (output, diags, emitted) = Run("""
+            namespace App
+            {
+                public static class Screens
+                {
+                    [AndroidX.Compose.Composable]
+                    public static void Show(
+                        this AndroidX.Compose.Runtime.IComposer composer,
+                        string? value) { }
+
+                    [AndroidX.Compose.Composable]
+                    public static void Show(
+                        this AndroidX.Compose.Runtime.IComposer composer,
+                        int value) { }
+
+                    public static void CallSite(AndroidX.Compose.Runtime.IComposer c)
+                    {
+                        c.Show("text");
+                        c.Show(42);
+                    }
+                }
+            }
+            """);
+
+        Assert.Empty(diags);
+        Assert.NotNull(emitted);
+        Assert.Contains(
+            "global::AndroidX.Compose.Runtime.IComposer composer, string? value",
+            emitted);
+        Assert.Contains(
+            "global::AndroidX.Compose.Runtime.IComposer composer, int value",
+            emitted);
+        Assert.Contains("__c.DiffSlot<string?>(value, 1)", emitted);
+        Assert.Contains("__c.DiffSlot<int>(value, 1)", emitted);
+        AssertNoCompileErrors(output);
+    }
+
+    [Fact]
+    public void GenericExtensionMethod_PreservesInferredTypeArgument()
+    {
+        var (output, diags, emitted) = Run("""
+            namespace App
+            {
+                public static class Screens
+                {
+                    [AndroidX.Compose.Composable]
+                    public static void Show<T>(
+                        this AndroidX.Compose.Runtime.IComposer composer,
+                        T value)
+                        where T : class { }
+
+                    public static void CallSite(AndroidX.Compose.Runtime.IComposer c) =>
+                        c.Show("text");
+                }
+            }
+            """);
+
+        Assert.Empty(diags);
+        Assert.NotNull(emitted);
+        Assert.Contains(
+            "<T>(global::AndroidX.Compose.Runtime.IComposer composer, T value)",
+            emitted);
+        Assert.Contains("where T : class", emitted);
+        Assert.Contains("global::App.Screens.Show<T>(__c, value)", emitted);
+        AssertNoCompileErrors(output);
     }
 
     [Fact]

@@ -149,12 +149,6 @@ public sealed class ComposableMethodGenerator : IIncrementalGenerator
                 Diagnostics.ComposableAsyncUnsupported, loc, method.ToDisplayString()));
             return;
         }
-        if (method.IsExtensionMethod)
-        {
-            spc.ReportDiagnostic(Diagnostic.Create(
-                Diagnostics.ComposableExtensionUnsupported, loc, method.ToDisplayString()));
-            return;
-        }
         var byRefParameter = method.Parameters.FirstOrDefault(
             static p => p.RefKind != RefKind.None);
         if (byRefParameter is not null)
@@ -193,10 +187,11 @@ public sealed class ComposableMethodGenerator : IIncrementalGenerator
         if (symbolInfo.Symbol is not IMethodSymbol target)
             return null;
 
-        // Lookup [Composable] by metadata name on the resolved method.
-        // Reduced (extension-method-style) calls resolve to the reduced
-        // form; the attribute lives on the original definition.
-        var actual = target.ReducedFrom ?? target.OriginalDefinition;
+        // Reduced extension calls omit the receiver from their parameter
+        // list. Reopen the constructed static method so both extension and
+        // explicit-static syntax produce the declaration-shaped interceptor
+        // signature expected by the compiler.
+        var actual = target.ReducedFrom ?? target;
         if (!HasComposableAttribute(actual))
             return null;
 
@@ -215,7 +210,7 @@ public sealed class ComposableMethodGenerator : IIncrementalGenerator
             : ReadOmittedArguments(ctx.SemanticModel, invocation, target, ct);
 
         return new CallSite(
-            target,
+            actual,
             path ?? string.Empty,
             loc.Version,
             loc.Data,
@@ -325,7 +320,6 @@ public sealed class ComposableMethodGenerator : IIncrementalGenerator
                 IsComposer(method.Parameters[0].Type))) &&
         IsAccessibleFromGeneratedType(method) &&
         !method.IsAsync &&
-        !method.IsExtensionMethod &&
         !method.Parameters.Any(static p => p.RefKind != RefKind.None);
 
     static bool IsAccessibleFromGeneratedType(IMethodSymbol method)

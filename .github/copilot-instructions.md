@@ -1039,9 +1039,10 @@ Rules:
   (CN5002). It may omit `IComposer`; when declared explicitly,
   `IComposer` must be the **first** parameter (CN5003).
 - It must be accessible from the generated interceptor (CN5004) and
-  cannot be `async` (CN5005), an extension method (CN5006), or use
-  `ref`/`out`/`in` parameters (CN5008). Generic methods are supported;
-  generated wrappers preserve their type parameters and constraints.
+  cannot be `async` (CN5005) or use `ref`/`out`/`in` parameters (CN5008).
+  Generic and extension methods are supported; generated wrappers preserve
+  their type parameters and constraints. An `IComposer` extension receiver is
+  the composer slot; any other receiver is a diffed user parameter.
 - Composerless APIs may only be called from a `[Composable]` method or a
   delegate that flows synchronously to a parameter marked
   `[ComposableContent]` (CN5009). Bounded analysis follows local variables,
@@ -1214,7 +1215,6 @@ are generated while compiling the runtime assembly.
 | CN5003 | When present, a `[Composable]` method's `AndroidX.Compose.Runtime.IComposer` must be its first and only composer parameter. |
 | CN5004 | `[Composable]` method and its containing types must be accessible from the generated interceptor.                       |
 | CN5005 | `[Composable]` method cannot be `async`; continuations would resume after the restart group closes.                     |
-| CN5006 | `[Composable]` extension methods are unsupported; use a regular static method.                                          |
 | CN5008 | `[Composable]` parameters cannot use `ref`, `out`, or `in`.                                                              |
 | CN5009 | A composerless API may execute outside a `[Composable]` method or `[ComposableContent]` callback; the diagnostic identifies the unsafe delegate escape. |
 | CN5010 | `[GenerateImplicitComposable]` targets an unsupported explicit-composer adapter shape.                                |
