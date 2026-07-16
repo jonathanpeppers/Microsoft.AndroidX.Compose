@@ -27,7 +27,7 @@ public static class HomeScreen
         new Composed(c =>
         {
             var vm = c.ViewModel(() => new HomeViewModel(repository));
-            var state = vm.UiState.CollectAsStateWithLifecycle().Value;
+            var state = vm.UiState.Value;
 
             // Search-bar toggle: tap the magnifier in the action row to swap
             // the wordmark title for an inline OutlinedTextField. The search
