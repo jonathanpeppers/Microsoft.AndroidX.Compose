@@ -58,6 +58,52 @@ public class CarouselDefaultsTests
         AssertNullableDpLayout(omitted, explicitDp);
     }
 
+    [TestMethod]
+    public async Task CarouselState_BindsLiveStateAndReusesPeer()
+    {
+        CarouselTestActivity.Reset(CarouselTestActivity.StateLifecycle);
+        var state = CarouselTestActivity.State
+            ?? throw new InvalidOperationException("Carousel state was not initialized.");
+        Assert.AreEqual(1, state.CurrentItem);
+        Assert.IsFalse(state.IsScrollInProgress);
+        Assert.IsNull(state.Jvm);
+
+        var activity = await StartConfiguredActivity();
+        try
+        {
+            var jvm = await WaitFor(
+                () => state.Jvm,
+                static value => value is not null,
+                TimeSpan.FromSeconds(10),
+                "CarouselState did not bind to a JVM peer.")
+                ?? throw new InvalidOperationException("CarouselState JVM peer was unavailable.");
+            Assert.AreEqual(1, state.CurrentItem);
+
+            await RunOnUiThread(activity, () => state.ScrollToItemAsync(8));
+            await WaitFor(
+                () => state.CurrentItem,
+                static value => value == 8,
+                TimeSpan.FromSeconds(10),
+                "CarouselState did not expose the live snapped item.");
+
+            await SetVisibility(activity, false);
+            await SetVisibility(activity, true);
+            Assert.AreSame(jvm, state.Jvm, "CarouselState replaced its remembered JVM peer.");
+
+            await Task.Delay(250);
+            await RunOnUiThread(activity, () => state.AnimateScrollToItemAsync(0));
+            await WaitFor(
+                () => state.CurrentItem,
+                static value => value == 0,
+                TimeSpan.FromSeconds(10),
+                "CarouselState animation did not reach the requested item.");
+        }
+        finally
+        {
+            await FinishActivity(activity);
+        }
+    }
+
     static async Task<CarouselTestActivity.LayoutSnapshot> MeasureScenario(int scenario)
     {
         var activity = await StartActivity(scenario);
@@ -138,6 +184,14 @@ public class CarouselDefaultsTests
             ?? throw new InvalidOperationException(
                 "Application.Context not set for carousel tests.");
         CarouselTestActivity.Reset(scenario);
+        return await StartConfiguredActivity();
+    }
+
+    static async Task<CarouselTestActivity> StartConfiguredActivity()
+    {
+        var context = global::Android.App.Application.Context
+            ?? throw new InvalidOperationException(
+                "Application.Context not set for carousel tests.");
         using var intent = new global::Android.Content.Intent(
             context,
             typeof(CarouselTestActivity));
@@ -151,6 +205,52 @@ public class CarouselDefaultsTests
             "Carousel test activity did not start.")
             ?? throw new InvalidOperationException(
                 "Carousel test activity was not available.");
+    }
+
+    static async Task SetVisibility(CarouselTestActivity activity, bool visible)
+    {
+        int completedPasses = CarouselTestActivity.CompletedRenderPasses;
+        activity.RunOnUiThread(() =>
+        {
+            var visibility = CarouselTestActivity.Visible
+                ?? throw new InvalidOperationException(
+                    "Visibility state not set on CarouselTestActivity.");
+            visibility.Value = visible;
+        });
+        await WaitFor(
+            static () => CarouselTestActivity.CompletedRenderPasses,
+            value => value > completedPasses,
+            TimeSpan.FromSeconds(10),
+            "Carousel visibility change did not complete a render pass.");
+    }
+
+    static async Task FinishActivity(CarouselTestActivity activity)
+    {
+        activity.RunOnUiThread(activity.Finish);
+        await WaitFor(
+            static () => CarouselTestActivity.Current,
+            current => !ReferenceEquals(current, activity),
+            TimeSpan.FromSeconds(5),
+            "Carousel test activity did not finish.");
+    }
+
+    static Task RunOnUiThread(CarouselTestActivity activity, Func<Task> operation)
+    {
+        var completion = new TaskCompletionSource(
+            TaskCreationOptions.RunContinuationsAsynchronously);
+        activity.RunOnUiThread(async () =>
+        {
+            try
+            {
+                await operation();
+                completion.SetResult();
+            }
+            catch (Exception ex)
+            {
+                completion.SetException(ex);
+            }
+        });
+        return completion.Task;
     }
 
     static async Task<T> WaitFor<T>(

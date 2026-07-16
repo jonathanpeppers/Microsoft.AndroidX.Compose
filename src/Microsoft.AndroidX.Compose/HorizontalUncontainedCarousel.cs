@@ -1,6 +1,8 @@
-using AndroidX.Compose.Material3.Carousel;
 using AndroidX.Compose.Runtime;
 using Kotlin.Jvm.Functions;
+using BoundCarouselState = AndroidX.Compose.Material3.Carousel.CarouselState;
+using CarouselStateKt = AndroidX.Compose.Material3.Carousel.CarouselStateKt;
+using CarouselKt = AndroidX.Compose.Material3.Carousel.CarouselKt;
 
 namespace AndroidX.Compose;
 
@@ -31,11 +33,15 @@ namespace AndroidX.Compose;
 public sealed class HorizontalUncontainedCarousel<T> : ComposableNode
 {
     readonly IReadOnlyList<T> _items;
-    readonly float _itemWidth;
+    readonly Dp _itemWidth;
     readonly Func<T, ComposableNode> _itemContent;
     IFunction0? _itemCountFn;
 
-    public HorizontalUncontainedCarousel(IReadOnlyList<T> items, float itemWidth, Func<T, ComposableNode> itemContent)
+    /// <summary>Creates an uncontained carousel for the supplied items.</summary>
+    /// <param name="items">Items rendered by the carousel.</param>
+    /// <param name="itemWidth">Required fixed width of each item in dp.</param>
+    /// <param name="itemContent">Builds the content for each item.</param>
+    public HorizontalUncontainedCarousel(IReadOnlyList<T> items, Dp itemWidth, Func<T, ComposableNode> itemContent)
     {
         ArgumentNullException.ThrowIfNull(items);
         _items       = items;
@@ -65,25 +71,21 @@ public sealed class HorizontalUncontainedCarousel<T> : ComposableNode
         // pass, so re-allocating per render is wasteful — and
         // unhelpful, since the closure already reads _items.Count
         // lazily.
-        _itemCountFn ??= new ComposableLambda0Int(() => _items.Count);
-
-        // Always call RememberCarouselState — both for slot-table
-        // stability (so the carousel call below sees a consistent
-        // sequence of remember slots across recompositions) and so
-        // the M3 carousel internally picks up the latest itemCount
-        // lambda. Binding parameter names are confusingly mapped:
-        //   p0           = initialItem (the actual int)
-        //   itemCount    = the Function0
-        //   _composer    = composer
-        //   initialItem  = $changed (pass 0)
-        //   _changed     = $default (bit 0 = use Kotlin default for initialItem)
-        var rememberedState = CarouselStateKt.RememberCarouselState(
-            p0:          0,
-            itemCount:   _itemCountFn,
-            _composer:   composer,
-            initialItem: 0,
-            _changed:    1);
-        var state = State ?? rememberedState;
+        BoundCarouselState state;
+        if (State?.Jvm is { } existingState)
+            state = existingState;
+        else
+        {
+            _itemCountFn ??= new ComposableLambda0Int(() => _items.Count);
+            var holder = State;
+            state = CarouselStateKt.RememberCarouselState(
+                p0:          holder?.InitialItem ?? 0,
+                itemCount:   holder?.ItemCount ?? _itemCountFn,
+                _composer:   composer,
+                initialItem: 0,
+                _changed:    holder is null ? 1 : 0);
+            holder?.BindJvm(state);
+        }
 
         // Wrap4 (not Instantiate4): the content lambda is a direct
         // @Composable parameter on the carousel call — its identity
@@ -114,7 +116,7 @@ public sealed class HorizontalUncontainedCarousel<T> : ComposableNode
 
         CarouselKt.HorizontalUncontainedCarousel(
             state:             state,
-            itemWidth:         _itemWidth,
+            itemWidth:         _itemWidth.Value,
             modifier:          modifier,
             itemSpacing:       Dp.Pack(ItemSpacing),
             flingBehavior:     null,

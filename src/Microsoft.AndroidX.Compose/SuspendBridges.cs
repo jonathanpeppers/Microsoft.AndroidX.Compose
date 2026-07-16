@@ -122,6 +122,27 @@ internal static partial class ComposeBridges
     internal static partial IntPtr LazyListStateAnimateScrollToItem(
         IntPtr state, int index, int scrollOffset, IContinuation cont);
 
+    // androidx.compose.material3.carousel.CarouselState
+    //     .scrollToItem(int item, Continuation): Object
+    [ComposeBridge(Suspend = true,
+        Class = "androidx/compose/material3/carousel/CarouselState",
+        JvmName = "scrollToItem",
+        Signature = "(ILkotlin/coroutines/Continuation;)Ljava/lang/Object;")]
+    internal static partial IntPtr CarouselStateScrollToItem(
+        IntPtr state, int item, IContinuation cont);
+
+    // androidx.compose.material3.carousel.CarouselState
+    //     .animateScrollToItem$default(
+    //         CarouselState state, int item, AnimationSpec spec,
+    //         Continuation cont, int $default, Object marker): Object
+    [ComposeBridge(Suspend = true,
+        Class = "androidx/compose/material3/carousel/CarouselState",
+        JvmName = "animateScrollToItem$default",
+        Signature = "(Landroidx/compose/material3/carousel/CarouselState;ILandroidx/compose/animation/core/AnimationSpec;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;",
+        Defaults = typeof(CarouselStateAnimateScrollToItemDefault))]
+    internal static partial IntPtr CarouselStateAnimateScrollToItem(
+        IntPtr state, int item, IntPtr? animationSpec, IContinuation cont);
+
     [ComposeBridge(Suspend = true,
         Class = "androidx/compose/foundation/lazy/grid/LazyGridState",
         JvmName = "scrollToItem",

@@ -14,7 +14,7 @@ public static class HorizontalMultiBrowseCarouselDemo
         Description: "240dp preferred item width; edge items shrink via the keyline strategy.",
         Build:       _ => new HorizontalMultiBrowseCarousel<int>(
             items:              Enumerable.Range(0, 12).ToList(),
-            preferredItemWidth: 240f,
+            preferredItemWidth: new Dp(240),
             itemContent:        i => new Box
             {
                 Modifier
