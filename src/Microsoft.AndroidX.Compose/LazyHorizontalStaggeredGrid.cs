@@ -19,7 +19,7 @@ namespace AndroidX.Compose;
 /// </summary>
 public sealed class LazyHorizontalStaggeredGrid<T> : ComposableNode
 {
-    readonly IStaggeredGridCells _rows;
+    readonly StaggeredGridCells _rows;
     readonly IReadOnlyList<T> _items;
     readonly Func<T, ComposableNode> _itemContent;
 
@@ -28,7 +28,7 @@ public sealed class LazyHorizontalStaggeredGrid<T> : ComposableNode
     /// strategy (<paramref name="rows"/>) over <paramref name="items"/>,
     /// rendering each via <paramref name="itemContent"/>.
     /// </summary>
-    public LazyHorizontalStaggeredGrid(IStaggeredGridCells rows, IReadOnlyList<T> items, Func<T, ComposableNode> itemContent)
+    public LazyHorizontalStaggeredGrid(StaggeredGridCells rows, IReadOnlyList<T> items, Func<T, ComposableNode> itemContent)
     {
         ArgumentNullException.ThrowIfNull(rows);
         _rows        = rows;
@@ -86,9 +86,9 @@ public sealed class LazyHorizontalStaggeredGrid<T> : ComposableNode
         if (ContentPadding is not null) defaults &= ~(int)LazyHorizontalStaggeredGridDefault.ContentPadding;
 
         LazyStaggeredGridDslKt.LazyHorizontalStaggeredGrid(
-            rows:                  _rows,
+            rows:                  _rows.Jvm,
             modifier:              modifier,
-            state:                 State,
+            state:                 State?.Jvm,
             contentPadding:        ContentPadding?.Jvm,
             reverseLayout:         false,
             verticalArrangement:   null,

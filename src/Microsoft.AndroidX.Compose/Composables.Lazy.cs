@@ -1,5 +1,3 @@
-using AndroidX.Compose.Foundation.Lazy.Grid;
-using AndroidX.Compose.Foundation.Lazy.Staggeredgrid;
 using AndroidX.Compose.Runtime;
 using System.Runtime.CompilerServices;
 
@@ -114,7 +112,7 @@ public static partial class Composables
     /// <summary>Renders a typed vertically scrolling lazy grid in the implicit composition.</summary>
     [Composable]
     public static void LazyVerticalGrid<T>(
-        IGridCells columns,
+        GridCells columns,
         IReadOnlyList<T> items,
         [ComposableContent] Action<T> itemContent,
         Modifier? modifier = null,
@@ -144,7 +142,7 @@ public static partial class Composables
     [Composable]
     internal static void LazyVerticalGrid<T>(
         IComposer composer,
-        IGridCells columns,
+        GridCells columns,
         IReadOnlyList<T> items,
         [ComposableContent] Action<T, IComposer> itemContent,
         Modifier? modifier = null,
@@ -174,7 +172,7 @@ public static partial class Composables
     /// <summary>Renders a typed horizontally scrolling lazy grid in the implicit composition.</summary>
     [Composable]
     public static void LazyHorizontalGrid<T>(
-        IGridCells rows,
+        GridCells rows,
         IReadOnlyList<T> items,
         [ComposableContent] Action<T> itemContent,
         Modifier? modifier = null,
@@ -200,7 +198,7 @@ public static partial class Composables
     [Composable]
     internal static void LazyHorizontalGrid<T>(
         IComposer composer,
-        IGridCells rows,
+        GridCells rows,
         IReadOnlyList<T> items,
         [ComposableContent] Action<T, IComposer> itemContent,
         Modifier? modifier = null,
@@ -226,7 +224,7 @@ public static partial class Composables
     /// <summary>Renders a typed vertical lazy staggered grid in the implicit composition.</summary>
     [Composable]
     public static void LazyVerticalStaggeredGrid<T>(
-        IStaggeredGridCells columns,
+        StaggeredGridCells columns,
         IReadOnlyList<T> items,
         [ComposableContent] Action<T> itemContent,
         Modifier? modifier = null,
@@ -252,7 +250,7 @@ public static partial class Composables
     [Composable]
     internal static void LazyVerticalStaggeredGrid<T>(
         IComposer composer,
-        IStaggeredGridCells columns,
+        StaggeredGridCells columns,
         IReadOnlyList<T> items,
         [ComposableContent] Action<T, IComposer> itemContent,
         Modifier? modifier = null,
@@ -278,7 +276,7 @@ public static partial class Composables
     /// <summary>Renders a typed horizontal lazy staggered grid in the implicit composition.</summary>
     [Composable]
     public static void LazyHorizontalStaggeredGrid<T>(
-        IStaggeredGridCells rows,
+        StaggeredGridCells rows,
         IReadOnlyList<T> items,
         [ComposableContent] Action<T> itemContent,
         Modifier? modifier = null,
@@ -304,7 +302,7 @@ public static partial class Composables
     [Composable]
     internal static void LazyHorizontalStaggeredGrid<T>(
         IComposer composer,
-        IStaggeredGridCells rows,
+        StaggeredGridCells rows,
         IReadOnlyList<T> items,
         [ComposableContent] Action<T, IComposer> itemContent,
         Modifier? modifier = null,
@@ -342,6 +340,32 @@ public static partial class Composables
         [CallerLineNumber] int line = 0,
         [CallerFilePath] string file = "") =>
         ComposeExtensions.RememberLazyListState(
+            ComposableContext.Current,
+            initialFirstVisibleItemIndex,
+            initialFirstVisibleItemScrollOffset,
+            line,
+            file);
+
+    /// <summary>Remembers lazy-grid scroll state in the implicit composition.</summary>
+    public static LazyGridState RememberLazyGridState(
+        int initialFirstVisibleItemIndex = 0,
+        int initialFirstVisibleItemScrollOffset = 0,
+        [CallerLineNumber] int line = 0,
+        [CallerFilePath] string file = "") =>
+        ComposeExtensions.RememberLazyGridState(
+            ComposableContext.Current,
+            initialFirstVisibleItemIndex,
+            initialFirstVisibleItemScrollOffset,
+            line,
+            file);
+
+    /// <summary>Remembers lazy staggered-grid scroll state in the implicit composition.</summary>
+    public static LazyStaggeredGridState RememberLazyStaggeredGridState(
+        int initialFirstVisibleItemIndex = 0,
+        int initialFirstVisibleItemScrollOffset = 0,
+        [CallerLineNumber] int line = 0,
+        [CallerFilePath] string file = "") =>
+        ComposeExtensions.RememberLazyStaggeredGridState(
             ComposableContext.Current,
             initialFirstVisibleItemIndex,
             initialFirstVisibleItemScrollOffset,

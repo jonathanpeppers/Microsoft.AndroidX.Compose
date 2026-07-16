@@ -670,17 +670,28 @@ AndroidX.Compose.LazyColumn<T>.State.get -> AndroidX.Compose.LazyListState?
 AndroidX.Compose.LazyColumn<T>.State.set -> void
 AndroidX.Compose.LazyColumn<T>.VerticalArrangement.get -> AndroidX.Compose.Arrangement?
 AndroidX.Compose.LazyColumn<T>.VerticalArrangement.set -> void
+AndroidX.Compose.LazyGridState
+AndroidX.Compose.LazyGridState.AnimateScrollToItemAsync(int index, int scrollOffset = 0, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+AndroidX.Compose.LazyGridState.CanScrollBackward.get -> bool
+AndroidX.Compose.LazyGridState.CanScrollForward.get -> bool
+AndroidX.Compose.LazyGridState.FirstVisibleItemIndex.get -> int
+AndroidX.Compose.LazyGridState.FirstVisibleItemScrollOffset.get -> int
+AndroidX.Compose.LazyGridState.IsScrollInProgress.get -> bool
+AndroidX.Compose.LazyGridState.LastScrolledBackward.get -> bool
+AndroidX.Compose.LazyGridState.LastScrolledForward.get -> bool
+AndroidX.Compose.LazyGridState.LazyGridState(int initialFirstVisibleItemIndex = 0, int initialFirstVisibleItemScrollOffset = 0) -> void
+AndroidX.Compose.LazyGridState.ScrollToItemAsync(int index, int scrollOffset = 0, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
 AndroidX.Compose.LazyHorizontalGrid<T>
 AndroidX.Compose.LazyHorizontalGrid<T>.ContentPadding.get -> AndroidX.Compose.PaddingValues?
 AndroidX.Compose.LazyHorizontalGrid<T>.ContentPadding.set -> void
-AndroidX.Compose.LazyHorizontalGrid<T>.LazyHorizontalGrid(AndroidX.Compose.Foundation.Lazy.Grid.IGridCells! rows, System.Collections.Generic.IReadOnlyList<T>! items, System.Func<T, AndroidX.Compose.ComposableNode!>! itemContent) -> void
-AndroidX.Compose.LazyHorizontalGrid<T>.State.get -> AndroidX.Compose.Foundation.Lazy.Grid.LazyGridState?
+AndroidX.Compose.LazyHorizontalGrid<T>.LazyHorizontalGrid(AndroidX.Compose.GridCells! rows, System.Collections.Generic.IReadOnlyList<T>! items, System.Func<T, AndroidX.Compose.ComposableNode!>! itemContent) -> void
+AndroidX.Compose.LazyHorizontalGrid<T>.State.get -> AndroidX.Compose.LazyGridState?
 AndroidX.Compose.LazyHorizontalGrid<T>.State.set -> void
 AndroidX.Compose.LazyHorizontalStaggeredGrid<T>
 AndroidX.Compose.LazyHorizontalStaggeredGrid<T>.ContentPadding.get -> AndroidX.Compose.PaddingValues?
 AndroidX.Compose.LazyHorizontalStaggeredGrid<T>.ContentPadding.set -> void
-AndroidX.Compose.LazyHorizontalStaggeredGrid<T>.LazyHorizontalStaggeredGrid(AndroidX.Compose.Foundation.Lazy.Staggeredgrid.IStaggeredGridCells! rows, System.Collections.Generic.IReadOnlyList<T>! items, System.Func<T, AndroidX.Compose.ComposableNode!>! itemContent) -> void
-AndroidX.Compose.LazyHorizontalStaggeredGrid<T>.State.get -> AndroidX.Compose.Foundation.Lazy.Staggeredgrid.LazyStaggeredGridState?
+AndroidX.Compose.LazyHorizontalStaggeredGrid<T>.LazyHorizontalStaggeredGrid(AndroidX.Compose.StaggeredGridCells! rows, System.Collections.Generic.IReadOnlyList<T>! items, System.Func<T, AndroidX.Compose.ComposableNode!>! itemContent) -> void
+AndroidX.Compose.LazyHorizontalStaggeredGrid<T>.State.get -> AndroidX.Compose.LazyStaggeredGridState?
 AndroidX.Compose.LazyHorizontalStaggeredGrid<T>.State.set -> void
 AndroidX.Compose.LazyListState
 AndroidX.Compose.LazyListState.AnimateScrollToItemAsync(int index, int scrollOffset = 0, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
@@ -701,21 +712,32 @@ AndroidX.Compose.LazyRow<T>.HorizontalArrangement.set -> void
 AndroidX.Compose.LazyRow<T>.LazyRow(System.Collections.Generic.IReadOnlyList<T>! items, System.Func<T, AndroidX.Compose.ComposableNode!>! itemContent) -> void
 AndroidX.Compose.LazyRow<T>.State.get -> AndroidX.Compose.LazyListState?
 AndroidX.Compose.LazyRow<T>.State.set -> void
+AndroidX.Compose.LazyStaggeredGridState
+AndroidX.Compose.LazyStaggeredGridState.AnimateScrollToItemAsync(int index, int scrollOffset = 0, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+AndroidX.Compose.LazyStaggeredGridState.CanScrollBackward.get -> bool
+AndroidX.Compose.LazyStaggeredGridState.CanScrollForward.get -> bool
+AndroidX.Compose.LazyStaggeredGridState.FirstVisibleItemIndex.get -> int
+AndroidX.Compose.LazyStaggeredGridState.FirstVisibleItemScrollOffset.get -> int
+AndroidX.Compose.LazyStaggeredGridState.IsScrollInProgress.get -> bool
+AndroidX.Compose.LazyStaggeredGridState.LastScrolledBackward.get -> bool
+AndroidX.Compose.LazyStaggeredGridState.LastScrolledForward.get -> bool
+AndroidX.Compose.LazyStaggeredGridState.LazyStaggeredGridState(int initialFirstVisibleItemIndex = 0, int initialFirstVisibleItemScrollOffset = 0) -> void
+AndroidX.Compose.LazyStaggeredGridState.ScrollToItemAsync(int index, int scrollOffset = 0, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
 AndroidX.Compose.LazyVerticalGrid<T>
 AndroidX.Compose.LazyVerticalGrid<T>.ContentPadding.get -> AndroidX.Compose.PaddingValues?
 AndroidX.Compose.LazyVerticalGrid<T>.ContentPadding.set -> void
 AndroidX.Compose.LazyVerticalGrid<T>.HorizontalArrangement.get -> AndroidX.Compose.Arrangement?
 AndroidX.Compose.LazyVerticalGrid<T>.HorizontalArrangement.set -> void
-AndroidX.Compose.LazyVerticalGrid<T>.LazyVerticalGrid(AndroidX.Compose.Foundation.Lazy.Grid.IGridCells! columns, System.Collections.Generic.IReadOnlyList<T>! items, System.Func<T, AndroidX.Compose.ComposableNode!>! itemContent) -> void
-AndroidX.Compose.LazyVerticalGrid<T>.State.get -> AndroidX.Compose.Foundation.Lazy.Grid.LazyGridState?
+AndroidX.Compose.LazyVerticalGrid<T>.LazyVerticalGrid(AndroidX.Compose.GridCells! columns, System.Collections.Generic.IReadOnlyList<T>! items, System.Func<T, AndroidX.Compose.ComposableNode!>! itemContent) -> void
+AndroidX.Compose.LazyVerticalGrid<T>.State.get -> AndroidX.Compose.LazyGridState?
 AndroidX.Compose.LazyVerticalGrid<T>.State.set -> void
 AndroidX.Compose.LazyVerticalGrid<T>.VerticalArrangement.get -> AndroidX.Compose.Arrangement?
 AndroidX.Compose.LazyVerticalGrid<T>.VerticalArrangement.set -> void
 AndroidX.Compose.LazyVerticalStaggeredGrid<T>
 AndroidX.Compose.LazyVerticalStaggeredGrid<T>.ContentPadding.get -> AndroidX.Compose.PaddingValues?
 AndroidX.Compose.LazyVerticalStaggeredGrid<T>.ContentPadding.set -> void
-AndroidX.Compose.LazyVerticalStaggeredGrid<T>.LazyVerticalStaggeredGrid(AndroidX.Compose.Foundation.Lazy.Staggeredgrid.IStaggeredGridCells! columns, System.Collections.Generic.IReadOnlyList<T>! items, System.Func<T, AndroidX.Compose.ComposableNode!>! itemContent) -> void
-AndroidX.Compose.LazyVerticalStaggeredGrid<T>.State.get -> AndroidX.Compose.Foundation.Lazy.Staggeredgrid.LazyStaggeredGridState?
+AndroidX.Compose.LazyVerticalStaggeredGrid<T>.LazyVerticalStaggeredGrid(AndroidX.Compose.StaggeredGridCells! columns, System.Collections.Generic.IReadOnlyList<T>! items, System.Func<T, AndroidX.Compose.ComposableNode!>! itemContent) -> void
+AndroidX.Compose.LazyVerticalStaggeredGrid<T>.State.get -> AndroidX.Compose.LazyStaggeredGridState?
 AndroidX.Compose.LazyVerticalStaggeredGrid<T>.State.set -> void
 AndroidX.Compose.LeadingIconTab
 AndroidX.Compose.LeadingIconTab.Icon.get -> AndroidX.Compose.ComposableNode!
@@ -1844,11 +1866,11 @@ static AndroidX.Compose.Composables.LaunchedEffect(object? key1, object? key2, S
 static AndroidX.Compose.Composables.LaunchedEffect(object? key1, object? key2, object? key3, System.Func<System.Threading.CancellationToken, System.Threading.Tasks.Task!>! body) -> void
 static AndroidX.Compose.Composables.Layout(System.Func<AndroidX.Compose.MeasureScope!, System.Collections.Generic.IReadOnlyList<AndroidX.Compose.Measurable!>!, AndroidX.Compose.Constraints, AndroidX.Compose.MeasureResult!>! measurePolicy, System.Action! content, AndroidX.Compose.Modifier? modifier = null) -> void
 static AndroidX.Compose.Composables.LazyColumn<T>(System.Collections.Generic.IReadOnlyList<T>! items, System.Action<T>! itemContent, AndroidX.Compose.Modifier? modifier = null, AndroidX.Compose.LazyListState? state = null, bool reverseLayout = false, AndroidX.Compose.PaddingValues? contentPadding = null, AndroidX.Compose.Arrangement? verticalArrangement = null) -> void
-static AndroidX.Compose.Composables.LazyHorizontalGrid<T>(AndroidX.Compose.Foundation.Lazy.Grid.IGridCells! rows, System.Collections.Generic.IReadOnlyList<T>! items, System.Action<T>! itemContent, AndroidX.Compose.Modifier? modifier = null, AndroidX.Compose.Foundation.Lazy.Grid.LazyGridState? state = null, AndroidX.Compose.PaddingValues? contentPadding = null) -> void
-static AndroidX.Compose.Composables.LazyHorizontalStaggeredGrid<T>(AndroidX.Compose.Foundation.Lazy.Staggeredgrid.IStaggeredGridCells! rows, System.Collections.Generic.IReadOnlyList<T>! items, System.Action<T>! itemContent, AndroidX.Compose.Modifier? modifier = null, AndroidX.Compose.Foundation.Lazy.Staggeredgrid.LazyStaggeredGridState? state = null, AndroidX.Compose.PaddingValues? contentPadding = null) -> void
+static AndroidX.Compose.Composables.LazyHorizontalGrid<T>(AndroidX.Compose.GridCells! rows, System.Collections.Generic.IReadOnlyList<T>! items, System.Action<T>! itemContent, AndroidX.Compose.Modifier? modifier = null, AndroidX.Compose.LazyGridState? state = null, AndroidX.Compose.PaddingValues? contentPadding = null) -> void
+static AndroidX.Compose.Composables.LazyHorizontalStaggeredGrid<T>(AndroidX.Compose.StaggeredGridCells! rows, System.Collections.Generic.IReadOnlyList<T>! items, System.Action<T>! itemContent, AndroidX.Compose.Modifier? modifier = null, AndroidX.Compose.LazyStaggeredGridState? state = null, AndroidX.Compose.PaddingValues? contentPadding = null) -> void
 static AndroidX.Compose.Composables.LazyRow<T>(System.Collections.Generic.IReadOnlyList<T>! items, System.Action<T>! itemContent, AndroidX.Compose.Modifier? modifier = null, AndroidX.Compose.LazyListState? state = null, AndroidX.Compose.PaddingValues? contentPadding = null, AndroidX.Compose.Arrangement? horizontalArrangement = null) -> void
-static AndroidX.Compose.Composables.LazyVerticalGrid<T>(AndroidX.Compose.Foundation.Lazy.Grid.IGridCells! columns, System.Collections.Generic.IReadOnlyList<T>! items, System.Action<T>! itemContent, AndroidX.Compose.Modifier? modifier = null, AndroidX.Compose.Foundation.Lazy.Grid.LazyGridState? state = null, AndroidX.Compose.PaddingValues? contentPadding = null, AndroidX.Compose.Arrangement? verticalArrangement = null, AndroidX.Compose.Arrangement? horizontalArrangement = null) -> void
-static AndroidX.Compose.Composables.LazyVerticalStaggeredGrid<T>(AndroidX.Compose.Foundation.Lazy.Staggeredgrid.IStaggeredGridCells! columns, System.Collections.Generic.IReadOnlyList<T>! items, System.Action<T>! itemContent, AndroidX.Compose.Modifier? modifier = null, AndroidX.Compose.Foundation.Lazy.Staggeredgrid.LazyStaggeredGridState? state = null, AndroidX.Compose.PaddingValues? contentPadding = null) -> void
+static AndroidX.Compose.Composables.LazyVerticalGrid<T>(AndroidX.Compose.GridCells! columns, System.Collections.Generic.IReadOnlyList<T>! items, System.Action<T>! itemContent, AndroidX.Compose.Modifier? modifier = null, AndroidX.Compose.LazyGridState? state = null, AndroidX.Compose.PaddingValues? contentPadding = null, AndroidX.Compose.Arrangement? verticalArrangement = null, AndroidX.Compose.Arrangement? horizontalArrangement = null) -> void
+static AndroidX.Compose.Composables.LazyVerticalStaggeredGrid<T>(AndroidX.Compose.StaggeredGridCells! columns, System.Collections.Generic.IReadOnlyList<T>! items, System.Action<T>! itemContent, AndroidX.Compose.Modifier? modifier = null, AndroidX.Compose.LazyStaggeredGridState? state = null, AndroidX.Compose.PaddingValues? contentPadding = null) -> void
 static AndroidX.Compose.Composables.LeadingIconTab(bool selected, System.Action! onClick, System.Action! text, System.Action! icon, bool enabled = true, AndroidX.Compose.Modifier? modifier = null) -> void
 static AndroidX.Compose.Composables.ListItem(System.Action! headline, AndroidX.Compose.Modifier? modifier = null, System.Action? overline = null, System.Action? supporting = null, System.Action? leading = null, System.Action? trailing = null) -> void
 static AndroidX.Compose.Composables.MandatorySystemGesturesInsets() -> AndroidX.Compose.WindowInsets!
@@ -1899,7 +1921,9 @@ static AndroidX.Compose.Composables.Remember<T>(System.Func<T>! factory, object?
 static AndroidX.Compose.Composables.RememberCoroutineScope() -> AndroidX.Compose.CoroutineScope!
 static AndroidX.Compose.Composables.RememberDraggableState(System.Action<float>! onDelta, int line = 0, string! file = "") -> AndroidX.Compose.DraggableState!
 static AndroidX.Compose.Composables.RememberKeyed<T>(System.Func<T>! factory, object?[]! keys, int line = 0, string! file = "") -> T
+static AndroidX.Compose.Composables.RememberLazyGridState(int initialFirstVisibleItemIndex = 0, int initialFirstVisibleItemScrollOffset = 0, int line = 0, string! file = "") -> AndroidX.Compose.LazyGridState!
 static AndroidX.Compose.Composables.RememberLazyListState(int initialFirstVisibleItemIndex = 0, int initialFirstVisibleItemScrollOffset = 0, int line = 0, string! file = "") -> AndroidX.Compose.LazyListState!
+static AndroidX.Compose.Composables.RememberLazyStaggeredGridState(int initialFirstVisibleItemIndex = 0, int initialFirstVisibleItemScrollOffset = 0, int line = 0, string! file = "") -> AndroidX.Compose.LazyStaggeredGridState!
 static AndroidX.Compose.Composables.RememberSaveable<T>(System.Func<T>! factory, int line = 0, string! file = "") -> T
 static AndroidX.Compose.Composables.RememberSaveable<T>(System.Func<T>! factory, object? key1, int line = 0, string! file = "") -> T
 static AndroidX.Compose.Composables.RememberSaveable<T>(System.Func<T>! factory, object? key1, object? key2, int line = 0, string! file = "") -> T
@@ -2013,7 +2037,9 @@ static AndroidX.Compose.ComposeExtensions.Remember<T>(this AndroidX.Compose.Runt
 static AndroidX.Compose.ComposeExtensions.RememberCoroutineScope(this AndroidX.Compose.Runtime.IComposer! composer) -> AndroidX.Compose.CoroutineScope!
 static AndroidX.Compose.ComposeExtensions.RememberDraggableState(this AndroidX.Compose.Runtime.IComposer! composer, System.Action<float>! onDelta, int line = 0, string! file = "") -> AndroidX.Compose.DraggableState!
 static AndroidX.Compose.ComposeExtensions.RememberKeyed<T>(this AndroidX.Compose.Runtime.IComposer! composer, System.Func<T>! factory, object?[]! keys, int line = 0, string! file = "") -> T
+static AndroidX.Compose.ComposeExtensions.RememberLazyGridState(this AndroidX.Compose.Runtime.IComposer! composer, int initialFirstVisibleItemIndex = 0, int initialFirstVisibleItemScrollOffset = 0, int line = 0, string! file = "") -> AndroidX.Compose.LazyGridState!
 static AndroidX.Compose.ComposeExtensions.RememberLazyListState(this AndroidX.Compose.Runtime.IComposer! composer, int initialFirstVisibleItemIndex = 0, int initialFirstVisibleItemScrollOffset = 0, int line = 0, string! file = "") -> AndroidX.Compose.LazyListState!
+static AndroidX.Compose.ComposeExtensions.RememberLazyStaggeredGridState(this AndroidX.Compose.Runtime.IComposer! composer, int initialFirstVisibleItemIndex = 0, int initialFirstVisibleItemScrollOffset = 0, int line = 0, string! file = "") -> AndroidX.Compose.LazyStaggeredGridState!
 static AndroidX.Compose.ComposeExtensions.RememberSaveable<T>(this AndroidX.Compose.Runtime.IComposer! composer, System.Func<T>! factory, int line = 0, string! file = "") -> T
 static AndroidX.Compose.ComposeExtensions.RememberSaveable<T>(this AndroidX.Compose.Runtime.IComposer! composer, System.Func<T>! factory, object? key1, int line = 0, string! file = "") -> T
 static AndroidX.Compose.ComposeExtensions.RememberSaveable<T>(this AndroidX.Compose.Runtime.IComposer! composer, System.Func<T>! factory, object? key1, object? key2, int line = 0, string! file = "") -> T
@@ -2104,8 +2130,8 @@ static AndroidX.Compose.FontWeight.Medium.get -> AndroidX.Compose.FontWeight!
 static AndroidX.Compose.FontWeight.Normal.get -> AndroidX.Compose.FontWeight!
 static AndroidX.Compose.FontWeight.SemiBold.get -> AndroidX.Compose.FontWeight!
 static AndroidX.Compose.FontWeight.Thin.get -> AndroidX.Compose.FontWeight!
-static AndroidX.Compose.GridCells.Adaptive(float minSizeDp) -> AndroidX.Compose.Foundation.Lazy.Grid.IGridCells!
-static AndroidX.Compose.GridCells.Fixed(int count) -> AndroidX.Compose.Foundation.Lazy.Grid.IGridCells!
+static AndroidX.Compose.GridCells.Adaptive(AndroidX.Compose.Dp minSize) -> AndroidX.Compose.GridCells!
+static AndroidX.Compose.GridCells.Fixed(int count) -> AndroidX.Compose.GridCells!
 static AndroidX.Compose.Icons.AutoMirrored.Default.ArrowBack.get -> AndroidX.Compose.UI.Graphics.Vector.ImageVector!
 static AndroidX.Compose.Icons.AutoMirrored.Default.ArrowForward.get -> AndroidX.Compose.UI.Graphics.Vector.ImageVector!
 static AndroidX.Compose.Icons.AutoMirrored.Default.ExitToApp.get -> AndroidX.Compose.UI.Graphics.Vector.ImageVector!
@@ -2677,9 +2703,9 @@ static AndroidX.Compose.Spacer.Size(AndroidX.Compose.Dp dp) -> AndroidX.Compose.
 static AndroidX.Compose.Spacer.Size(AndroidX.Compose.Dp width, AndroidX.Compose.Dp height) -> AndroidX.Compose.Spacer!
 static AndroidX.Compose.Spacer.Weight(float weight, bool fill = true) -> AndroidX.Compose.Spacer!
 static AndroidX.Compose.Spacer.Width(AndroidX.Compose.Dp dp) -> AndroidX.Compose.Spacer!
-static AndroidX.Compose.StaggeredGridCells.Adaptive(float minSizeDp) -> AndroidX.Compose.Foundation.Lazy.Staggeredgrid.IStaggeredGridCells!
-static AndroidX.Compose.StaggeredGridCells.Fixed(int count) -> AndroidX.Compose.Foundation.Lazy.Staggeredgrid.IStaggeredGridCells!
-static AndroidX.Compose.StaggeredGridCells.FixedSize(float sizeDp) -> AndroidX.Compose.Foundation.Lazy.Staggeredgrid.IStaggeredGridCells!
+static AndroidX.Compose.StaggeredGridCells.Adaptive(AndroidX.Compose.Dp minSize) -> AndroidX.Compose.StaggeredGridCells!
+static AndroidX.Compose.StaggeredGridCells.Fixed(int count) -> AndroidX.Compose.StaggeredGridCells!
+static AndroidX.Compose.StaggeredGridCells.FixedSize(AndroidX.Compose.Dp size) -> AndroidX.Compose.StaggeredGridCells!
 static AndroidX.Compose.TextAlign.Center.get -> AndroidX.Compose.TextAlign!
 static AndroidX.Compose.TextAlign.End.get -> AndroidX.Compose.TextAlign!
 static AndroidX.Compose.TextAlign.Justify.get -> AndroidX.Compose.TextAlign!

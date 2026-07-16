@@ -19,11 +19,20 @@ namespace AndroidX.Compose;
 /// </summary>
 public sealed class LazyVerticalGrid<T> : ComposableNode
 {
-    readonly IGridCells _columns;
+    readonly GridCells _columns;
     readonly IReadOnlyList<T> _items;
     readonly Func<T, ComposableNode> _itemContent;
 
-    public LazyVerticalGrid(IGridCells columns, IReadOnlyList<T> items, Func<T, ComposableNode> itemContent)
+    /// <summary>
+    /// Creates a vertically scrolling grid using the managed
+    /// <paramref name="columns"/> strategy to size its columns.
+    /// </summary>
+    /// <param name="columns">
+    /// Fixed-count or adaptive column strategy created by <see cref="GridCells"/>.
+    /// </param>
+    /// <param name="items">Items rendered lazily by the grid.</param>
+    /// <param name="itemContent">Builds the composable content for each item.</param>
+    public LazyVerticalGrid(GridCells columns, IReadOnlyList<T> items, Func<T, ComposableNode> itemContent)
     {
         ArgumentNullException.ThrowIfNull(columns);
         _columns     = columns;
@@ -117,9 +126,9 @@ public sealed class LazyVerticalGrid<T> : ComposableNode
         // 11 user params → Compose splits $changed into two ints
         // (p12, _changed) and $default lives in the trailing _changed1.
         LazyGridDslKt.LazyVerticalGrid(
-            columns:               _columns,
+            columns:               _columns.Jvm,
             modifier:              modifier,
-            state:                 State,
+            state:                 State?.Jvm,
             contentPadding:        ContentPadding?.Jvm,
             reverseLayout:         false,
             verticalArrangement:   vertical,
