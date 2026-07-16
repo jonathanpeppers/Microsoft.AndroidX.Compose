@@ -3,6 +3,7 @@ using AndroidX.Compose.Runtime;
 using AndroidX.Compose.UI.Platform;
 using Microsoft.AndroidX.Compose.Maui.Platform;
 using Microsoft.Maui.Handlers;
+using ComposeColor = AndroidX.Compose.Color;
 using ComposePullToRefreshBox = AndroidX.Compose.PullToRefreshBox;
 using MauiRefreshView         = Microsoft.Maui.Controls.RefreshView;
 
@@ -129,11 +130,11 @@ public partial class RefreshViewHandler : ComposeElementHandler<IRefreshView>
         // RefreshColor → spinner glyph tint. null/non-SolidPaint
         // falls through to Material 3's default; non-null swaps in
         // the public PullToRefreshIndicator facade.
-        if (_refreshColor.Value is long packedColor)
+        if (_refreshColor.Value is { } packedColor)
         {
             box.Indicator = new PullToRefreshIndicator(state, isRefreshing)
             {
-                Color = packedColor,
+                Color = ComposeColor.FromPacked(packedColor),
             };
         }
 
@@ -176,7 +177,7 @@ public partial class RefreshViewHandler : ComposeElementHandler<IRefreshView>
     /// glyph color. <c>null</c> (or a non-<see cref="SolidPaint"/>
     /// brush) falls back to Material 3's default theme tint; a
     /// non-null solid color swaps in a
-    /// <see cref="PullToRefreshIndicator"/> with the packed color.
+    /// <see cref="PullToRefreshIndicator"/> with the typed color.
     /// </summary>
     /// <remarks>
     /// <see cref="IRefreshView.RefreshColor"/> is a

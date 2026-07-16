@@ -279,7 +279,7 @@ public sealed class MaterialTheme : ComposableContainer
         for (int i = 0; i < slots.Length; i++)
         {
             if (slots[i] is Color c)
-                colors[i] = c;
+                colors[i] = c.ToPacked();
             else
                 defaults |= (ColorSchemeDefault)(1L << i);
         }

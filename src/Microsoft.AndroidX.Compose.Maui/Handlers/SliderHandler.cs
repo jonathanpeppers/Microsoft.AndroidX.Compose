@@ -6,6 +6,7 @@ using Kotlin.Ranges;
 using Microsoft.AndroidX.Compose.Maui.Loaders;
 using Microsoft.AndroidX.Compose.Maui.Platform;
 using Microsoft.Maui.Handlers;
+using ComposeColor   = AndroidX.Compose.Color;
 using ComposeImage   = AndroidX.Compose.Image;
 using ComposeSlider  = AndroidX.Compose.Slider;
 
@@ -130,9 +131,15 @@ public partial class SliderHandler : ComposeElementHandler<ISlider>
         // populated — otherwise let M3's theme defaults apply.
         if (thumb is not null || minTrack is not null || maxTrack is not null)
             slider.Colors = composer.SliderColors(
-                thumbColor:         thumb,
-                activeTrackColor:   minTrack,
-                inactiveTrackColor: maxTrack);
+                thumbColor: thumb is { } thumbValue
+                    ? ComposeColor.FromPacked(thumbValue)
+                    : null,
+                activeTrackColor: minTrack is { } minTrackValue
+                    ? ComposeColor.FromPacked(minTrackValue)
+                    : null,
+                inactiveTrackColor: maxTrack is { } maxTrackValue
+                    ? ComposeColor.FromPacked(maxTrackValue)
+                    : null);
 
         slider.PrependModifier(Modifier.FillMaxWidth().ApplyGestures(virtualView, MauiContext).ApplySemantics(virtualView));
         return slider;

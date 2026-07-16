@@ -3,6 +3,7 @@ using AndroidX.Compose.Material3;
 using AndroidX.Compose.Runtime;
 using Microsoft.AndroidX.Compose.Maui.Platform;
 using Microsoft.Maui.Handlers;
+using ComposeColor  = AndroidX.Compose.Color;
 using ComposeSwitch = AndroidX.Compose.Switch;
 
 namespace Microsoft.AndroidX.Compose.Maui.Handlers;
@@ -73,10 +74,18 @@ public partial class SwitchHandler : ComposeElementHandler<ISwitch>
                                    onCheckedChange: OnCheckedChanged);
         if (track is not null || thumb is not null)
             sw.Colors = composer.SwitchColors(
-                checkedThumbColor:   thumb,
-                checkedTrackColor:   track,
-                uncheckedThumbColor: thumb,
-                uncheckedTrackColor: track);
+                checkedThumbColor: thumb is { } thumbValue
+                    ? ComposeColor.FromPacked(thumbValue)
+                    : null,
+                checkedTrackColor: track is { } trackValue
+                    ? ComposeColor.FromPacked(trackValue)
+                    : null,
+                uncheckedThumbColor: thumb is { } uncheckedThumbValue
+                    ? ComposeColor.FromPacked(uncheckedThumbValue)
+                    : null,
+                uncheckedTrackColor: track is { } uncheckedTrackValue
+                    ? ComposeColor.FromPacked(uncheckedTrackValue)
+                    : null);
         sw.PrependModifier(Modifier.Companion.ApplyGestures(virtualView, MauiContext).ApplySemantics(virtualView));
         return sw;
     }

@@ -136,9 +136,7 @@ public class FacadeGeneratorTests
             }
             public readonly struct Color
             {
-                public Color(long v) { PackedValue = (ulong)v; }
-                public ulong PackedValue { get; }
-                public static implicit operator long(Color c) => (long)c.PackedValue;
+                public long ToPacked() => default;
             }
             public readonly struct Sp
             {
@@ -1516,9 +1514,9 @@ public class FacadeGeneratorTests
         Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
         Assert.NotNull(emitted);
         Assert.Contains("public global::AndroidX.Compose.Color ContainerColor { get; set; }", emitted);
-        Assert.Contains("long __color = (long)ContainerColor != 0L ? (long)ContainerColor : global::AndroidX.Compose.Material3.MaterialTheme.Instance.GetColorScheme(composer, 0).SecondaryContainer;", emitted);
+        Assert.Contains("long __color = ContainerColor.ToPacked() != 0L ? ContainerColor.ToPacked() : global::AndroidX.Compose.Material3.MaterialTheme.Instance.GetColorScheme(composer, 0).SecondaryContainer;", emitted);
         Assert.Contains("global::AndroidX.Compose.ComposeBridges.ModalDrawerSheet(__content, __color, composer);", emitted);
-        Assert.Contains("long __color = (long)containerColor != 0L ? (long)containerColor : global::AndroidX.Compose.Material3.MaterialTheme.Instance.GetColorScheme(__composer, 0).SecondaryContainer;", emitted);
+        Assert.Contains("long __color = containerColor.ToPacked() != 0L ? containerColor.ToPacked() : global::AndroidX.Compose.Material3.MaterialTheme.Instance.GetColorScheme(__composer, 0).SecondaryContainer;", emitted);
         Assert.Contains("global::AndroidX.Compose.ComposeBridges.ModalDrawerSheetExplicitDefaults(__content, __color, (int)__defaults, __composer);", emitted);
 
         var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
@@ -4384,7 +4382,7 @@ public class FacadeGeneratorTests
         Assert.Contains("public static void Combined(global::AndroidX.Compose.Runtime.IComposer composer, global::AndroidX.Compose.UI.Graphics.Vector.ImageVector imageVector, int drawableResourceId,", emitted);
         Assert.Contains("global::AndroidX.Compose.RenderContext.PushScope(__scope, global::AndroidX.Compose.ScopeKind.Row);", emitted);
         Assert.Contains("global::AndroidX.Compose.ComposableContentNode.RenderDirect(c, content, true);", emitted);
-        Assert.Contains("long __color = (long)containerColor != 0L ? (long)containerColor", emitted);
+        Assert.Contains("long __color = containerColor.ToPacked() != 0L ? containerColor.ToPacked()", emitted);
         Assert.Contains("var __painterRef = global::AndroidX.Compose.ComposeBridges.PainterResource(drawableResourceId, __composer);", emitted);
         Assert.Contains("global::AndroidX.Compose.ComposeBridges.Secondary(imageVector, __painterPeer, __content, __color, (int)__defaults, __composer);", emitted);
         Assert.DoesNotContain("var node = new global::AndroidX.Compose.Combined", emitted);

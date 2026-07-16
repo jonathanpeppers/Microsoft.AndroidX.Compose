@@ -3,6 +3,7 @@ using AndroidX.Compose.Material3;
 using AndroidX.Compose.Runtime;
 using Microsoft.AndroidX.Compose.Maui.Platform;
 using Microsoft.Maui.Handlers;
+using ComposeColor = AndroidX.Compose.Color;
 using ComposeCheckbox = AndroidX.Compose.Checkbox;
 
 namespace Microsoft.AndroidX.Compose.Maui.Handlers;
@@ -50,7 +51,7 @@ public partial class CheckBoxHandler : ComposeElementHandler<ICheckBox>
         new(ViewCommandMapper);
 
     readonly MutableState<bool>  _checked = new(false);
-    readonly MutableState<long?> _color   = new((long?)null);
+    readonly MutableState<long?> _color = new((long?)null);
 
     /// <summary>Construct a handler with the default mappers.</summary>
     public CheckBoxHandler() : base(Mapper, CommandMapper) { }
@@ -68,8 +69,9 @@ public partial class CheckBoxHandler : ComposeElementHandler<ICheckBox>
         var color = _color.Value;
         var box   = new ComposeCheckbox(@checked: _checked.Value,
                                         onCheckedChange: OnCheckedChanged);
-        if (color is not null)
-            box.Colors = composer.CheckboxColors(checkedColor: color);
+        if (color is { } packedColor)
+            box.Colors = composer.CheckboxColors(
+                checkedColor: ComposeColor.FromPacked(packedColor));
         box.PrependModifier(Modifier.Companion.ApplyGestures(virtualView, MauiContext).ApplySemantics(virtualView));
         return box;
     }

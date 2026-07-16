@@ -65,7 +65,7 @@ public sealed class TextStyle
     {
         var d = TextStyleCompanion.Default;
         return d.Copy(
-            color:                  Color is { } c   ? (long)c            : d.Color,
+            color:                  Color is { } c   ? c.ToPacked()       : d.Color,
             fontSize:               FontSize is { } fs ? Sp.Pack(fs)      : d.FontSize,
             fontWeight:             FontWeight is null ? d.FontWeight     : Cast<AndroidX.Compose.UI.Text.Font.FontWeight>(FontWeight),
             fontStyle:              FontStyle is null  ? d.FontStyle      : Cast<AndroidX.Compose.UI.Text.Font.FontStyle>(FontStyle),

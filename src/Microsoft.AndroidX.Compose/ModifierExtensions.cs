@@ -276,18 +276,15 @@ public static class ModifierExtensions
 
     /// <summary>
     /// <c>Modifier.background(color)</c> — paints a flat fill behind the
-    /// composable using a <c>RectangleShape</c>. Takes a packed Compose
-    /// <c>androidx.compose.ui.graphics.Color</c> value (a <c>ULong</c>
-    /// surfaced as a <c>long</c> in the binding because Color is a Kotlin
-    /// <c>@JvmInline value class</c>). Build one via
+    /// composable using a <c>RectangleShape</c>. Build the color via
     /// <see cref="Color.FromRgb(byte, byte, byte)"/>,
     /// <see cref="Color.FromHex(string)"/>, or one of the
     /// named constants on <see cref="Color"/> (e.g.
     /// <see cref="Color.Black"/>).
     /// </summary>
     public static Modifier Background(this Modifier modifier, Color color) =>
-        modifier.Append(curr => ComposeBridges.ModifierBackground(curr, color, null),
-            new ModifierOpKey(nameof(Background), ValueTuple.Create((long)color)));
+        modifier.Append(curr => ComposeBridges.ModifierBackground(curr, color.ToPacked(), null),
+            new ModifierOpKey(nameof(Background), ValueTuple.Create(color.ToPacked())));
 
     /// <summary>
     /// <c>Modifier.background(color, shape)</c> — paints a flat fill
@@ -300,8 +297,8 @@ public static class ModifierExtensions
     /// recompositions.
     /// </summary>
     public static Modifier Background(this Modifier modifier, Color color, Shape? shape) =>
-        modifier.Append(curr => ComposeBridges.ModifierBackground(curr, color, shape?.Handle),
-            new ModifierOpKey("BackgroundShape", ((long)color, (object?)shape)));
+        modifier.Append(curr => ComposeBridges.ModifierBackground(curr, color.ToPacked(), shape?.Handle),
+            new ModifierOpKey("BackgroundShape", (color.ToPacked(), (object?)shape)));
 
     /// <summary>
     /// <c>Modifier.border(width, color)</c> — draws a rectangular stroke
@@ -313,7 +310,7 @@ public static class ModifierExtensions
     public static Modifier Border(this Modifier modifier, Dp width, Color color)
     {
         var w = width.Value;
-        long c = color;
+        long c = color.ToPacked();
         return modifier.Append(curr => ComposeBridges.ModifierBorder(curr, w, c, null),
             new ModifierOpKey(nameof(Border), (w, c)));
     }
@@ -330,7 +327,7 @@ public static class ModifierExtensions
     {
         var w = width.Value;
         var r = cornerRadius.Value;
-        long c = color;
+        long c = color.ToPacked();
         if (r <= 0f)
             return modifier.Append(curr => ComposeBridges.ModifierBorder(curr, w, c, null),
                 new ModifierOpKey(nameof(Border), (w, c)));
@@ -360,7 +357,7 @@ public static class ModifierExtensions
     public static Modifier Border(this Modifier modifier, Dp width, Color color, Shape? shape)
     {
         var w = width.Value;
-        long c = color;
+        long c = color.ToPacked();
         return modifier.Append(curr => ComposeBridges.ModifierBorder(curr, w, c, shape?.Handle),
             new ModifierOpKey("BorderShape", (w, c, (object?)shape)));
     }

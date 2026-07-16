@@ -36,9 +36,9 @@ public sealed class CircularProgressIndicator : ComposableNode
 
         ProgressIndicatorKt.CircularProgressIndicator(
             modifier:    modifier,
-            color:       Color      is { } c ? c : 0L,
+            color:       Color      is { } c ? c.ToPacked() : 0L,
             strokeWidth: StrokeWidthDp   ?? 0f,
-            trackColor:  TrackColor is { } t ? t : 0L,
+            trackColor:  TrackColor is { } t ? t.ToPacked() : 0L,
             p4:          0,
             gapSize:     0f,
             _composer:   composer,

@@ -127,7 +127,7 @@ public partial class ImageButtonHandler : ComposeElementHandler<MauiIImageButton
             modifier = (modifier ?? Modifier.Companion).Clip(new Dp(corner));
         if (stroke.HasValue && width > 0f)
         {
-            var color = new ComposeColor(stroke.Value);
+            var color = ComposeColor.FromPacked(stroke.Value);
             modifier = corner > 0
                 ? (modifier ?? Modifier.Companion).Border(new Dp(width), color, new Dp(corner))
                 : (modifier ?? Modifier.Companion).Border(new Dp(width), color);

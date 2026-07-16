@@ -140,7 +140,7 @@ public partial class LabelHandler : ComposeElementHandler<ILabel>
         ComposeColor? color;
         if (packed.HasValue)
         {
-            color = new ComposeColor(packed.Value);
+            color = ComposeColor.FromPacked(packed.Value);
         }
         else
         {

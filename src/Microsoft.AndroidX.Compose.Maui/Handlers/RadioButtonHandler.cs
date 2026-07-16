@@ -114,10 +114,10 @@ public partial class RadioButtonHandler : ComposeElementHandler<IRadioButton>
         var stroke = _strokeColor.Value;
 
         var radio = new ComposeRadioButton(selected: _checked.Value, onClick: OnSelected);
-        if (stroke is not null)
+        if (stroke is { } strokeColor)
             radio.Colors = composer.RadioButtonColors(
-                selectedColor:   stroke,
-                unselectedColor: stroke);
+                selectedColor:   ComposeColor.FromPacked(strokeColor),
+                unselectedColor: ComposeColor.FromPacked(strokeColor));
         var gestureModifier = Modifier.Companion.ApplyGestures(virtualView, MauiContext).ApplySemantics(virtualView);
         if (string.IsNullOrEmpty(label))
         {
@@ -126,8 +126,8 @@ public partial class RadioButtonHandler : ComposeElementHandler<IRadioButton>
         }
 
         var text = new ComposeText(label);
-        if (packed.HasValue)
-            text.Color = new ComposeColor(packed.Value);
+        if (packed is { } textColor)
+            text.Color = ComposeColor.FromPacked(textColor);
         if (size.HasValue)
             text.FontSize = new Sp(size.Value);
         if (bold)

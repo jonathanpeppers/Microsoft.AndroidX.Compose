@@ -77,7 +77,7 @@ public partial class ContentViewHandler : ComposeElementHandler<IContentView>
 
         Modifier modifier = Modifier.Companion.FillMaxSize();
         if (_backgroundColor.Value is long bg)
-            modifier = modifier.Background(new ComposeColor(bg));
+            modifier = modifier.Background(ComposeColor.FromPacked(bg));
         if (padding != Thickness.Zero)
         {
             modifier = modifier.Padding(

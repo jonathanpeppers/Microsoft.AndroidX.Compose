@@ -29,10 +29,10 @@ public static partial class ComposeExtensions
     /// </summary>
     public static SwitchColors SwitchColors(
         this IComposer composer,
-        long? checkedThumbColor   = null,
-        long? checkedTrackColor   = null,
-        long? uncheckedThumbColor = null,
-        long? uncheckedTrackColor = null,
+        Color? checkedThumbColor   = null,
+        Color? checkedTrackColor   = null,
+        Color? uncheckedThumbColor = null,
+        Color? uncheckedTrackColor = null,
         [CallerLineNumber] int line = 0,
         [CallerFilePath] string file = "")
     {
@@ -53,12 +53,12 @@ public static partial class ComposeExtensions
         try
         {
             return AndroidX.Compose.Material3.SwitchDefaults.Instance.Colors(
-                checkedThumbColor:            checkedThumbColor   ?? 0L,
-                checkedTrackColor:            checkedTrackColor   ?? 0L,
+                checkedThumbColor:            checkedThumbColor?.ToPacked()   ?? 0L,
+                checkedTrackColor:            checkedTrackColor?.ToPacked()   ?? 0L,
                 checkedBorderColor:           0L,
                 checkedIconColor:             0L,
-                uncheckedThumbColor:          uncheckedThumbColor ?? 0L,
-                uncheckedTrackColor:          uncheckedTrackColor ?? 0L,
+                uncheckedThumbColor:          uncheckedThumbColor?.ToPacked() ?? 0L,
+                uncheckedTrackColor:          uncheckedTrackColor?.ToPacked() ?? 0L,
                 uncheckedBorderColor:         0L,
                 uncheckedIconColor:           0L,
                 disabledCheckedThumbColor:    0L,

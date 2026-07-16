@@ -248,7 +248,7 @@ public partial class DatePickerHandler : ComposeElementHandler<IDatePicker>
     {
         var node = new ComposeText(text);
         if (packed.HasValue)
-            node.Color = new ComposeColor(packed.Value);
+            node.Color = ComposeColor.FromPacked(packed.Value);
         if (size.HasValue)
             node.FontSize = new Sp(size.Value);
         if (bold)

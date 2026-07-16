@@ -1582,7 +1582,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         // Phase 6 — theme color resolution.
         if (themeColor is not null && colorSlot is not null)
         {
-            sb.Append("            long __color = (long)ContainerColor != 0L ? (long)ContainerColor : global::AndroidX.Compose.Material3.MaterialTheme.Instance.GetColorScheme(")
+            sb.Append("            long __color = ContainerColor.ToPacked() != 0L ? ContainerColor.ToPacked() : global::AndroidX.Compose.Material3.MaterialTheme.Instance.GetColorScheme(")
               .Append(composerName).Append(", 0).").Append(Pascal(themeColor)).AppendLine(";");
         }
 
@@ -2016,7 +2016,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         foreach (var slot in optionalValueSlots)
             terms.Add(OmittedBitTerm(EscapeIdent(slot.Param.Name) + " is null", index++));
         if (themeColor is not null)
-            terms.Add(OmittedBitTerm("(long)containerColor == 0L", index++));
+            terms.Add(OmittedBitTerm("containerColor.ToPacked() == 0L", index++));
         foreach (var info in stateConfirmSlots)
         {
             string name = EscapeIdent(char.ToLowerInvariant(info.PropertyName[0])
@@ -2206,7 +2206,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
 
         if (themeColor is not null)
         {
-            sb.Append("            long __color = (long)containerColor != 0L ? (long)containerColor : global::AndroidX.Compose.Material3.MaterialTheme.Instance.GetColorScheme(__composer, 0).")
+            sb.Append("            long __color = containerColor.ToPacked() != 0L ? containerColor.ToPacked() : global::AndroidX.Compose.Material3.MaterialTheme.Instance.GetColorScheme(__composer, 0).")
               .Append(Pascal(themeColor)).AppendLine(";");
         }
 
@@ -2756,7 +2756,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
 
         if (themeColor is not null)
         {
-            sb.Append("            long __color = (long)containerColor != 0L ? (long)containerColor : global::AndroidX.Compose.Material3.MaterialTheme.Instance.GetColorScheme(__composer, 0).")
+            sb.Append("            long __color = containerColor.ToPacked() != 0L ? containerColor.ToPacked() : global::AndroidX.Compose.Material3.MaterialTheme.Instance.GetColorScheme(__composer, 0).")
               .Append(Pascal(themeColor)).AppendLine(";");
         }
 
@@ -3537,7 +3537,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
 
         if (themeColor is not null)
         {
-            sb.Append("                long __secColor = (long)ContainerColor != 0L ? (long)ContainerColor : global::AndroidX.Compose.Material3.MaterialTheme.Instance.GetColorScheme(")
+            sb.Append("                long __secColor = ContainerColor.ToPacked() != 0L ? ContainerColor.ToPacked() : global::AndroidX.Compose.Material3.MaterialTheme.Instance.GetColorScheme(")
               .Append(composerName).Append(", 0).").Append(Pascal(themeColor)).AppendLine(";");
         }
 

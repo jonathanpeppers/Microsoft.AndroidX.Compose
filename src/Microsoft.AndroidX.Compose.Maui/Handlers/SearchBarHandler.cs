@@ -140,19 +140,19 @@ public partial class SearchBarHandler : ComposeElementHandler<ISearchBar>
             // via SearchIconColor when set.
             LeadingIcon  = new ComposeText("\U0001F50D")
             {
-                Color = searchIconInk.HasValue ? new ComposeColor(searchIconInk.Value) : null,
+                Color = searchIconInk.HasValue ? ComposeColor.FromPacked(searchIconInk.Value) : null,
             },
         };
         if (!string.IsNullOrEmpty(placeholder))
             field.Placeholder = new ComposeText(placeholder)
             {
-                Color = placeholderInk.HasValue ? new ComposeColor(placeholderInk.Value) : null,
+                Color = placeholderInk.HasValue ? ComposeColor.FromPacked(placeholderInk.Value) : null,
             };
         if (packed.HasValue || size.HasValue || bold || letterSpacing.HasValue
             || hTextAlign != TextAlignment.Start)
             field.TextStyle = new ComposeTextStyle
             {
-                Color         = packed.HasValue ? new ComposeColor(packed.Value) : null,
+                Color         = packed.HasValue ? ComposeColor.FromPacked(packed.Value) : null,
                 FontSize      = size.HasValue   ? new Sp(size.Value) : null,
                 FontWeight    = bold ? ComposeFontWeight.Bold : null,
                 LetterSpacing = letterSpacing.HasValue ? new Sp(1) * letterSpacing.Value : null,
@@ -177,7 +177,7 @@ public partial class SearchBarHandler : ComposeElementHandler<ISearchBar>
             {
                 new ComposeText("\u2715")
                 {
-                    Color = cancelButtonInk.HasValue ? new ComposeColor(cancelButtonInk.Value) : null,
+                    Color = cancelButtonInk.HasValue ? ComposeColor.FromPacked(cancelButtonInk.Value) : null,
                 },
             };
         }

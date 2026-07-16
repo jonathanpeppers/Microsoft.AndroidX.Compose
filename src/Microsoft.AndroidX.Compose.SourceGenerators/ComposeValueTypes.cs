@@ -54,11 +54,10 @@ internal static class ComposeValueTypes
             // managed-side `AndroidX.Compose.Color` is a value-type wrapper
             // over the same packed ULong. The Kotlin
             // `@JvmInline value class Color(val value: ULong)` surfaces
-            // as a packed `long` at the JNI boundary; the implicit
-            // `Color -> long` operator turns the C# struct into the
-            // bridge's actual `long` JNI slot.
+            // as a packed `long` at the JNI boundary. Keep that conversion
+            // explicit so packed values do not leak into user-facing APIs.
             ["AndroidX.Compose.Color"] =
-                ('J', "(long)({0}.GetValueOrDefault())"),
+                ('J', "{0}.GetValueOrDefault().ToPacked()"),
         };
 
     /// <summary>
