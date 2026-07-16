@@ -798,7 +798,7 @@ public sealed class ComposableMethodGenerator : IIncrementalGenerator
         }
     }
 
-    static string GetRestartGroupIdentity(IMethodSymbol method) =>
+    internal static string GetRestartGroupIdentity(IMethodSymbol method) =>
         method.ToDisplayString(ParameterTypeFormat);
 
     static int FnvHash(string s)

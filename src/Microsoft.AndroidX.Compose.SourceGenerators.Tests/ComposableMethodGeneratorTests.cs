@@ -839,10 +839,8 @@ public class ComposableMethodGeneratorTests
 
                     public static void CallSite()
                     {
-                        string? nullable = null;
                         Foo(42);
                         Foo<string>("value");
-                        Foo(nullable);
                         Foo(42, 1);
                     }
                 }
@@ -856,9 +854,44 @@ public class ComposableMethodGeneratorTests
                 @"StartRestartGroup\(unchecked\(\(int\)0x([0-9A-F]{8})\)\)")
             .Select(match => match.Groups[1].Value)
             .ToArray();
-        Assert.Equal(4, keys.Length);
-        Assert.Equal(4, keys.Distinct().Count());
+        Assert.Equal(3, keys.Length);
+        Assert.Equal(3, keys.Distinct().Count());
         AssertNoCompileErrors(output);
+    }
+
+    [Fact]
+    public void GenericMethod_RestartIdentityIncludesNullableTypeArguments()
+    {
+        var src = CSharpSyntaxTree.ParseText(Preamble + """
+            namespace App
+            {
+                public static class Screens
+                {
+                    [AndroidX.Compose.Composable]
+                    public static void Foo<T>(T value) { }
+                }
+            }
+            """, ParseOpts);
+        var compilation = CSharpCompilation.Create(
+            "ComposableMethodTest",
+            [src],
+            references: Net.Sdk.References,
+            options: new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary,
+                nullableContextOptions: NullableContextOptions.Enable));
+        var method = compilation.GetTypeByMetadataName("App.Screens")
+            ?.GetMembers("Foo")
+            .OfType<IMethodSymbol>()
+            .Single()
+            ?? throw new InvalidOperationException("Generic composable method not found.");
+        var stringType = compilation.GetSpecialType(SpecialType.System_String);
+        var nonNullable = method.Construct(
+            stringType.WithNullableAnnotation(NullableAnnotation.NotAnnotated));
+        var nullable = method.Construct(
+            stringType.WithNullableAnnotation(NullableAnnotation.Annotated));
+
+        Assert.NotEqual(
+            ComposableMethodGenerator.GetRestartGroupIdentity(nonNullable),
+            ComposableMethodGenerator.GetRestartGroupIdentity(nullable));
     }
 
     [Fact]
