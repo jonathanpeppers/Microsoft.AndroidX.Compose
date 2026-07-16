@@ -1,4 +1,3 @@
-using AndroidX.Compose.Material3.Carousel;
 using AndroidX.Compose.Runtime;
 
 namespace AndroidX.Compose;
@@ -9,7 +8,7 @@ public static partial class Composables
     [Composable]
     public static void HorizontalUncontainedCarousel<T>(
         IReadOnlyList<T> items,
-        float itemWidth,
+        Dp itemWidth,
         [ComposableContent] Action<T> itemContent,
         Modifier? modifier = null,
         CarouselState? state = null,
@@ -36,7 +35,7 @@ public static partial class Composables
     internal static void HorizontalUncontainedCarousel<T>(
         IComposer composer,
         IReadOnlyList<T> items,
-        float itemWidth,
+        Dp itemWidth,
         [ComposableContent] Action<T, IComposer> itemContent,
         Modifier? modifier = null,
         CarouselState? state = null,
@@ -63,7 +62,7 @@ public static partial class Composables
     [Composable]
     public static void HorizontalMultiBrowseCarousel<T>(
         IReadOnlyList<T> items,
-        float preferredItemWidth,
+        Dp preferredItemWidth,
         [ComposableContent] Action<T> itemContent,
         Modifier? modifier = null,
         CarouselState? state = null,
@@ -90,7 +89,7 @@ public static partial class Composables
     internal static void HorizontalMultiBrowseCarousel<T>(
         IComposer composer,
         IReadOnlyList<T> items,
-        float preferredItemWidth,
+        Dp preferredItemWidth,
         [ComposableContent] Action<T, IComposer> itemContent,
         Modifier? modifier = null,
         CarouselState? state = null,

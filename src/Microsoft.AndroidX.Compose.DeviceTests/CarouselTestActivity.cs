@@ -16,6 +16,7 @@ public class CarouselTestActivity : ComponentActivity
     internal const int TreeExplicit = 2;
     internal const int StaticOmitted = 3;
     internal const int StaticExplicit = 4;
+    internal const int StateLifecycle = 5;
 
     internal const int Uncontained = 1;
     internal const int MultiBrowse = 2;
@@ -25,17 +26,27 @@ public class CarouselTestActivity : ComponentActivity
     internal const int ExplicitMaxItemWidthDp = 160;
 
     static readonly IReadOnlyList<int> Items = [0, 1, 2];
+    static readonly IReadOnlyList<int> StateItems = Enumerable.Range(0, 12).ToList();
     static readonly ConcurrentDictionary<int, ItemBounds> s_measurements = new();
     static int s_scenario;
+    static int s_completedRenderPasses;
 
     internal static CarouselTestActivity? Current { get; private set; }
+    internal static CarouselState? State { get; private set; }
+    internal static MutableState<bool>? Visible { get; private set; }
 
     internal static int MeasurementCount => s_measurements.Count;
+    internal static int CompletedRenderPasses => Volatile.Read(ref s_completedRenderPasses);
 
     internal static void Reset(int scenario)
     {
         Current = null;
+        State = scenario == StateLifecycle
+            ? new CarouselState(() => StateItems.Count, initialItem: 1)
+            : null;
+        Visible = null;
         s_measurements.Clear();
+        Volatile.Write(ref s_completedRenderPasses, 0);
         Volatile.Write(ref s_scenario, scenario);
     }
 
@@ -65,6 +76,10 @@ public class CarouselTestActivity : ComponentActivity
             case StaticExplicit:
                 this.SetContent(RenderStaticExplicit);
                 break;
+            case StateLifecycle:
+                Visible = new MutableState<bool>(true);
+                this.SetContent(_ => new Composed(_ => BuildStateLifecycle()));
+                break;
             default:
                 throw new InvalidOperationException("Carousel test scenario was not configured.");
         }
@@ -76,6 +91,7 @@ public class CarouselTestActivity : ComponentActivity
     {
         if (ReferenceEquals(Current, this))
             Current = null;
+        Visible = null;
         base.OnDestroy();
     }
 
@@ -120,6 +136,31 @@ public class CarouselTestActivity : ComponentActivity
             centeredHero,
         };
     }
+
+    static ComposableNode BuildStateLifecycle()
+    {
+        var visible = Visible
+            ?? throw new InvalidOperationException(
+                "Visibility state not set on CarouselTestActivity.");
+        if (!visible.Value)
+            return new CarouselRenderMarker(null);
+
+        var state = State
+            ?? throw new InvalidOperationException(
+                "Carousel state not set on CarouselTestActivity.");
+        var carousel = new HorizontalUncontainedCarousel<int>(
+            StateItems,
+            itemWidth: new Dp(96),
+            static item => new Text($"State item {item}"))
+        {
+            Modifier = Viewport(),
+            State = state,
+        };
+        return new CarouselRenderMarker(carousel);
+    }
+
+    internal static void MarkRenderCompleted() =>
+        Interlocked.Increment(ref s_completedRenderPasses);
 
     static void RenderStaticOmitted(IComposer composer)
     {

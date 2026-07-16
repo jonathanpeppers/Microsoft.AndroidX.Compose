@@ -135,6 +135,12 @@ AndroidX.Compose.Card
 AndroidX.Compose.Card.Card() -> void
 AndroidX.Compose.Card.Shape.get -> AndroidX.Compose.Shape?
 AndroidX.Compose.Card.Shape.set -> void
+AndroidX.Compose.CarouselState
+AndroidX.Compose.CarouselState.AnimateScrollToItemAsync(int item, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+AndroidX.Compose.CarouselState.CarouselState(System.Func<int>! itemCount, int initialItem = 0) -> void
+AndroidX.Compose.CarouselState.CurrentItem.get -> int
+AndroidX.Compose.CarouselState.IsScrollInProgress.get -> bool
+AndroidX.Compose.CarouselState.ScrollToItemAsync(int item, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
 AndroidX.Compose.CenterAlignedTopAppBar
 AndroidX.Compose.CenterAlignedTopAppBar.Actions.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.CenterAlignedTopAppBar.Actions.set -> void
@@ -541,7 +547,7 @@ AndroidX.Compose.HorizontalCenteredHeroCarousel<T>.ItemSpacing.get -> AndroidX.C
 AndroidX.Compose.HorizontalCenteredHeroCarousel<T>.ItemSpacing.set -> void
 AndroidX.Compose.HorizontalCenteredHeroCarousel<T>.MaxItemWidth.get -> AndroidX.Compose.Dp?
 AndroidX.Compose.HorizontalCenteredHeroCarousel<T>.MaxItemWidth.set -> void
-AndroidX.Compose.HorizontalCenteredHeroCarousel<T>.State.get -> AndroidX.Compose.Material3.Carousel.CarouselState?
+AndroidX.Compose.HorizontalCenteredHeroCarousel<T>.State.get -> AndroidX.Compose.CarouselState?
 AndroidX.Compose.HorizontalCenteredHeroCarousel<T>.State.set -> void
 AndroidX.Compose.HorizontalCenteredHeroCarousel<T>.UserScrollEnabled.get -> bool?
 AndroidX.Compose.HorizontalCenteredHeroCarousel<T>.UserScrollEnabled.set -> void
@@ -552,10 +558,10 @@ AndroidX.Compose.HorizontalDivider.HorizontalDivider() -> void
 AndroidX.Compose.HorizontalDivider.ThicknessDp.get -> float?
 AndroidX.Compose.HorizontalDivider.ThicknessDp.set -> void
 AndroidX.Compose.HorizontalMultiBrowseCarousel<T>
-AndroidX.Compose.HorizontalMultiBrowseCarousel<T>.HorizontalMultiBrowseCarousel(System.Collections.Generic.IReadOnlyList<T>! items, float preferredItemWidth, System.Func<T, AndroidX.Compose.ComposableNode!>! itemContent) -> void
+AndroidX.Compose.HorizontalMultiBrowseCarousel<T>.HorizontalMultiBrowseCarousel(System.Collections.Generic.IReadOnlyList<T>! items, AndroidX.Compose.Dp preferredItemWidth, System.Func<T, AndroidX.Compose.ComposableNode!>! itemContent) -> void
 AndroidX.Compose.HorizontalMultiBrowseCarousel<T>.ItemSpacing.get -> AndroidX.Compose.Dp?
 AndroidX.Compose.HorizontalMultiBrowseCarousel<T>.ItemSpacing.set -> void
-AndroidX.Compose.HorizontalMultiBrowseCarousel<T>.State.get -> AndroidX.Compose.Material3.Carousel.CarouselState?
+AndroidX.Compose.HorizontalMultiBrowseCarousel<T>.State.get -> AndroidX.Compose.CarouselState?
 AndroidX.Compose.HorizontalMultiBrowseCarousel<T>.State.set -> void
 AndroidX.Compose.HorizontalMultiBrowseCarousel<T>.UserScrollEnabled.get -> bool?
 AndroidX.Compose.HorizontalMultiBrowseCarousel<T>.UserScrollEnabled.set -> void
@@ -566,10 +572,10 @@ AndroidX.Compose.HorizontalPager<T>.HorizontalPager(System.Collections.Generic.I
 AndroidX.Compose.HorizontalPager<T>.State.get -> AndroidX.Compose.PagerState?
 AndroidX.Compose.HorizontalPager<T>.State.set -> void
 AndroidX.Compose.HorizontalUncontainedCarousel<T>
-AndroidX.Compose.HorizontalUncontainedCarousel<T>.HorizontalUncontainedCarousel(System.Collections.Generic.IReadOnlyList<T>! items, float itemWidth, System.Func<T, AndroidX.Compose.ComposableNode!>! itemContent) -> void
+AndroidX.Compose.HorizontalUncontainedCarousel<T>.HorizontalUncontainedCarousel(System.Collections.Generic.IReadOnlyList<T>! items, AndroidX.Compose.Dp itemWidth, System.Func<T, AndroidX.Compose.ComposableNode!>! itemContent) -> void
 AndroidX.Compose.HorizontalUncontainedCarousel<T>.ItemSpacing.get -> AndroidX.Compose.Dp?
 AndroidX.Compose.HorizontalUncontainedCarousel<T>.ItemSpacing.set -> void
-AndroidX.Compose.HorizontalUncontainedCarousel<T>.State.get -> AndroidX.Compose.Material3.Carousel.CarouselState?
+AndroidX.Compose.HorizontalUncontainedCarousel<T>.State.get -> AndroidX.Compose.CarouselState?
 AndroidX.Compose.HorizontalUncontainedCarousel<T>.State.set -> void
 AndroidX.Compose.HorizontalUncontainedCarousel<T>.UserScrollEnabled.get -> bool?
 AndroidX.Compose.HorizontalUncontainedCarousel<T>.UserScrollEnabled.set -> void
@@ -1818,10 +1824,10 @@ static AndroidX.Compose.Composables.FlexibleBottomAppBar(System.Action! content,
 static AndroidX.Compose.Composables.FloatingActionButton(System.Action! onClick, System.Action! content, AndroidX.Compose.Modifier? modifier = null, AndroidX.Compose.Shape? shape = null) -> void
 static AndroidX.Compose.Composables.FlowColumn(System.Action! content, int maxItemsInEachColumn = 2147483647, int maxLines = 2147483647, AndroidX.Compose.Modifier? modifier = null) -> void
 static AndroidX.Compose.Composables.FlowRow(System.Action! content, int maxItemsInEachRow = 2147483647, int maxLines = 2147483647, AndroidX.Compose.Modifier? modifier = null) -> void
-static AndroidX.Compose.Composables.HorizontalCenteredHeroCarousel<T>(System.Collections.Generic.IReadOnlyList<T>! items, System.Action<T>! itemContent, AndroidX.Compose.Modifier? modifier = null, AndroidX.Compose.Material3.Carousel.CarouselState? state = null, AndroidX.Compose.Dp? maxItemWidth = null, AndroidX.Compose.Dp? itemSpacing = null, bool? userScrollEnabled = null) -> void
-static AndroidX.Compose.Composables.HorizontalMultiBrowseCarousel<T>(System.Collections.Generic.IReadOnlyList<T>! items, float preferredItemWidth, System.Action<T>! itemContent, AndroidX.Compose.Modifier? modifier = null, AndroidX.Compose.Material3.Carousel.CarouselState? state = null, AndroidX.Compose.Dp? itemSpacing = null, bool? userScrollEnabled = null) -> void
+static AndroidX.Compose.Composables.HorizontalCenteredHeroCarousel<T>(System.Collections.Generic.IReadOnlyList<T>! items, System.Action<T>! itemContent, AndroidX.Compose.Modifier? modifier = null, AndroidX.Compose.CarouselState? state = null, AndroidX.Compose.Dp? maxItemWidth = null, AndroidX.Compose.Dp? itemSpacing = null, bool? userScrollEnabled = null) -> void
+static AndroidX.Compose.Composables.HorizontalMultiBrowseCarousel<T>(System.Collections.Generic.IReadOnlyList<T>! items, AndroidX.Compose.Dp preferredItemWidth, System.Action<T>! itemContent, AndroidX.Compose.Modifier? modifier = null, AndroidX.Compose.CarouselState? state = null, AndroidX.Compose.Dp? itemSpacing = null, bool? userScrollEnabled = null) -> void
 static AndroidX.Compose.Composables.HorizontalPager<T>(System.Collections.Generic.IReadOnlyList<T>! items, System.Action<T>! itemContent, AndroidX.Compose.Modifier? modifier = null, AndroidX.Compose.PagerState? state = null, AndroidX.Compose.PaddingValues? contentPadding = null) -> void
-static AndroidX.Compose.Composables.HorizontalUncontainedCarousel<T>(System.Collections.Generic.IReadOnlyList<T>! items, float itemWidth, System.Action<T>! itemContent, AndroidX.Compose.Modifier? modifier = null, AndroidX.Compose.Material3.Carousel.CarouselState? state = null, AndroidX.Compose.Dp? itemSpacing = null, bool? userScrollEnabled = null) -> void
+static AndroidX.Compose.Composables.HorizontalUncontainedCarousel<T>(System.Collections.Generic.IReadOnlyList<T>! items, AndroidX.Compose.Dp itemWidth, System.Action<T>! itemContent, AndroidX.Compose.Modifier? modifier = null, AndroidX.Compose.CarouselState? state = null, AndroidX.Compose.Dp? itemSpacing = null, bool? userScrollEnabled = null) -> void
 static AndroidX.Compose.Composables.Icon(AndroidX.Compose.UI.Graphics.Painter.Painter! painter, string? contentDescription, AndroidX.Compose.Modifier? modifier = null, AndroidX.Compose.Color? tint = null) -> void
 static AndroidX.Compose.Composables.Icon(AndroidX.Compose.UI.Graphics.Vector.ImageVector! imageVector, string? contentDescription, AndroidX.Compose.Modifier? modifier = null, AndroidX.Compose.Color? tint = null) -> void
 static AndroidX.Compose.Composables.Icon(int drawableResourceId, string? contentDescription, AndroidX.Compose.Modifier? modifier = null, AndroidX.Compose.Color? tint = null) -> void

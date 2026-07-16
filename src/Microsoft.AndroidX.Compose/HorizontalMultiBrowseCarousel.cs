@@ -1,6 +1,8 @@
-using AndroidX.Compose.Material3.Carousel;
 using AndroidX.Compose.Runtime;
 using Kotlin.Jvm.Functions;
+using BoundCarouselState = AndroidX.Compose.Material3.Carousel.CarouselState;
+using CarouselStateKt = AndroidX.Compose.Material3.Carousel.CarouselStateKt;
+using CarouselKt = AndroidX.Compose.Material3.Carousel.CarouselKt;
 
 namespace AndroidX.Compose;
 
@@ -24,11 +26,15 @@ namespace AndroidX.Compose;
 public sealed class HorizontalMultiBrowseCarousel<T> : ComposableNode
 {
     readonly IReadOnlyList<T> _items;
-    readonly float _preferredItemWidth;
+    readonly Dp _preferredItemWidth;
     readonly Func<T, ComposableNode> _itemContent;
     IFunction0? _itemCountFn;
 
-    public HorizontalMultiBrowseCarousel(IReadOnlyList<T> items, float preferredItemWidth, Func<T, ComposableNode> itemContent)
+    /// <summary>Creates a multi-browse carousel for the supplied items.</summary>
+    /// <param name="items">Items rendered by the carousel.</param>
+    /// <param name="preferredItemWidth">Preferred width of the large item in dp.</param>
+    /// <param name="itemContent">Builds the content for each item.</param>
+    public HorizontalMultiBrowseCarousel(IReadOnlyList<T> items, Dp preferredItemWidth, Func<T, ComposableNode> itemContent)
     {
         ArgumentNullException.ThrowIfNull(items);
         _items              = items;
@@ -51,15 +57,21 @@ public sealed class HorizontalMultiBrowseCarousel<T> : ComposableNode
 
     public override void Render(IComposer composer)
     {
-        _itemCountFn ??= new ComposableLambda0Int(() => _items.Count);
-
-        var rememberedState = CarouselStateKt.RememberCarouselState(
-            p0:          0,
-            itemCount:   _itemCountFn,
-            _composer:   composer,
-            initialItem: 0,
-            _changed:    1);
-        var state = State ?? rememberedState;
+        BoundCarouselState state;
+        if (State?.Jvm is { } existingState)
+            state = existingState;
+        else
+        {
+            _itemCountFn ??= new ComposableLambda0Int(() => _items.Count);
+            var holder = State;
+            state = CarouselStateKt.RememberCarouselState(
+                p0:          holder?.InitialItem ?? 0,
+                itemCount:   holder?.ItemCount ?? _itemCountFn,
+                _composer:   composer,
+                initialItem: 0,
+                _changed:    holder is null ? 1 : 0);
+            holder?.BindJvm(state);
+        }
 
         var content = ComposableLambdas.Wrap4(composer,
             (_, indexBoxed, comp) =>
@@ -88,7 +100,7 @@ public sealed class HorizontalMultiBrowseCarousel<T> : ComposableNode
 
         CarouselKt.HorizontalMultiBrowseCarousel(
             state:              state,
-            preferredItemWidth: _preferredItemWidth,
+            preferredItemWidth: _preferredItemWidth.Value,
             modifier:           modifier,
             itemSpacing:        Dp.Pack(ItemSpacing),
             flingBehavior:      null,
