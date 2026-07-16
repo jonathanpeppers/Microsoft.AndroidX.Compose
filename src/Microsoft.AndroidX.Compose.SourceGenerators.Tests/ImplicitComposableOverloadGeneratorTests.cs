@@ -87,7 +87,7 @@ public class ImplicitComposableOverloadGeneratorTests
                         DiagnosticId = "OLD001",
                         UrlFormat = "https://example.test/{0}")]
                     [Composable, GenerateImplicitComposable]
-                    public static void Panel(
+                    internal static void Panel(
                         Runtime.IComposer composer,
                         int count,
                         [ComposableContent] System.Action<Runtime.IComposer> header,
@@ -124,6 +124,33 @@ public class ImplicitComposableOverloadGeneratorTests
         Assert.Contains(
             "[global::System.ObsoleteAttribute(\"Use Modern instead.\", DiagnosticId = \"OLD001\", UrlFormat = \"https://example.test/{0}\")]",
             emitted);
+        Assert.Contains("public static void Panel(", emitted);
+        Assert.DoesNotContain(
+            output.GetDiagnostics(),
+            static diagnostic => diagnostic.Severity == DiagnosticSeverity.Error);
+    }
+
+    [Fact]
+    public void AcceptsPublicImplementationTarget()
+    {
+        const string source = """
+            namespace AndroidX.Compose
+            {
+                public static partial class Composables
+                {
+                    [Composable, GenerateImplicitComposable]
+                    public static void Panel(Runtime.IComposer composer)
+                    {
+                    }
+                }
+            }
+            """;
+
+        var (output, diagnostics, emitted) = Run(source);
+
+        Assert.Empty(diagnostics);
+        Assert.NotNull(emitted);
+        Assert.Contains("public static void Panel()", emitted);
         Assert.DoesNotContain(
             output.GetDiagnostics(),
             static diagnostic => diagnostic.Severity == DiagnosticSeverity.Error);

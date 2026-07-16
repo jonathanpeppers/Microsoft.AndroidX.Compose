@@ -478,7 +478,8 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
         if (diags.Count > 0)
             return new GenerationResult(null, null, diags.ToArray());
 
-        // CN2007: recognized Compose value types (Color/Dp/Sp/Em/TextAlign)
+        // CN2007: recognized Compose value types (Color/Dp/Sp/TextOverflow/
+        // TransformOrigin)
         // rely on the auto-default-mask logic to leave the $default bit
         // set when null. Without a $default slot there's no way to
         // signal "use Kotlin default" to the call, so reject them up
@@ -537,7 +538,8 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
         }
 
         // CN2008: each recognized Compose value type lowers to a specific
-        // JNI primitive slot (Dp -> F, Sp -> J, TextAlign -> I). Validate
+        // JNI primitive slot (Dp -> F, Sp/TransformOrigin -> J,
+        // TextOverflow -> I). Validate
         // that the bridge's JNI signature actually has that slot at the
         // bit's position — otherwise EmitUserArgValue would silently
         // route a packed long / float into the wrong JValue field and
@@ -1146,7 +1148,7 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
             return false;
         if (IsNullableIntPtr(p.Type)) return false;
         if (IsNullablePrimitive(p.Type)) return false;
-        // Recognized Compose value types (Dp/Sp/Em/TextOverflow) lower
+        // Recognized Compose value types lower
         // to JNI primitives — no managed handle to keep alive.
         if (ComposeValueTypes.TryGet(p.Type, out _, out _)) return false;
         return true;

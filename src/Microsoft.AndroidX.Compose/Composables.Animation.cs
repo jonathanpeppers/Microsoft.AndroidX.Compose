@@ -23,7 +23,7 @@ public static partial class Composables
 
     /// <summary>Animates between typed content states with an explicit composer.</summary>
     [Composable]
-    public static void AnimatedContent<T>(
+    internal static void AnimatedContent<T>(
         IComposer composer,
         T targetState,
         [ComposableContent] Action<T, IComposer> content,
@@ -59,7 +59,7 @@ public static partial class Composables
 
     /// <summary>Crossfades between typed content states with an explicit composer.</summary>
     [Composable]
-    public static void Crossfade<T>(
+    internal static void Crossfade<T>(
         IComposer composer,
         T targetState,
         [ComposableContent] Action<T, IComposer> content,

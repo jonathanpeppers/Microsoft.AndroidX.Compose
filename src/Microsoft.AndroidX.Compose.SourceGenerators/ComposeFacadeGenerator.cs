@@ -1814,7 +1814,10 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         sb.AppendLine("        [global::AndroidX.Compose.Composable]");
         sb.Append("        [global::AndroidX.Compose.ComposableDirectTarget(typeof(global::AndroidX.Compose.Composables), nameof(")
           .Append(helperName).AppendLine("))]");
-        sb.Append("        public static void ").Append(className).Append('(');
+        sb.Append(implicitComposer
+                ? "        public static void "
+                : "        internal static void ")
+          .Append(className).Append('(');
         bool hasParameter = false;
         if (!implicitComposer)
         {
@@ -1845,9 +1848,15 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
           .AppendLine(", 0);");
         sb.AppendLine("        }");
         sb.AppendLine();
-        sb.AppendLine("        [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]");
-        sb.AppendLine("        [global::System.Diagnostics.CodeAnalysis.SuppressMessage(\"ApiDesign\", \"RS0016\", Justification = \"Generated interceptor target, not public API.\")]");
-        sb.Append("        public static void ").Append(helperName)
+        if (implicitComposer)
+        {
+            sb.AppendLine("        [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]");
+            sb.AppendLine("        [global::System.Diagnostics.CodeAnalysis.SuppressMessage(\"ApiDesign\", \"RS0016\", Justification = \"Generated interceptor target, not public API.\")]");
+        }
+        sb.Append(implicitComposer
+                ? "        public static void "
+                : "        internal static void ")
+          .Append(helperName)
           .Append("(global::AndroidX.Compose.Runtime.IComposer __composer");
         hasParameter = true;
         AppendComposableMethodUserParameters(sb, requiredCtorSlots, optionalCtorSlots,
@@ -3707,7 +3716,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
 
     /// <summary>
     /// C# type display for an <see cref="FacadeSlotKind.OptionalValue"/>
-    /// property declaration. For value-class types (Dp/Sp/Em/TextAlign)
+    /// property declaration. For recognized value-class types
     /// the param is already <c>Nullable&lt;T&gt;</c> and round-trips
     /// fine with <c>FullyQualifiedFormat</c>. For reference-typed
     /// wrappers (FontWeight/TextDecoration/Shape) we have to append
@@ -3776,8 +3785,8 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
 
     /// <summary>
     /// True for parameters typed as <c>Nullable&lt;T&gt;</c> where <c>T</c>
-    /// is a recognized Compose <c>@JvmInline value class</c> (Dp/Sp/Em/
-    /// TextOverflow), for <em>nullable</em> reference-typed wrappers in
+    /// is a recognized Compose <c>@JvmInline value class</c>, for
+    /// <em>nullable</em> reference-typed wrappers in
     /// <see cref="ComposeReferenceTypes"/> (FontWeight/FontStyle/
     /// FontFamily/TextAlign/TextDecoration/Shape), or for
     /// <c>Nullable&lt;T&gt;</c> where <c>T</c> is a JNI-friendly
@@ -3910,6 +3919,12 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
                 return null;
             }
         }
+        if (!IsSameAssemblyAccessible(adapterType))
+        {
+            diags.Add(Diagnostic.Create(Diagnostics.FacadeConfirmStateChangeInvalid, loc, methodName,
+                $"[ConfirmStateChange] on Remember parameter '{up.Name}': AdapterType '{adapterType.ToDisplayString()}' must be accessible from generated same-assembly code"));
+            return null;
+        }
 
         // (d) AdapterType must implement Kotlin.Jvm.Functions.IFunction1.
         bool implementsIFunction1 = adapterType.AllInterfaces.Any(i =>
@@ -3922,14 +3937,12 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             return null;
         }
 
-        // (e) AdapterType must have a public parameterless ctor.
-        bool hasParameterlessCtor = adapterType.InstanceConstructors.Any(ic =>
-            ic.DeclaredAccessibility == Accessibility.Public &&
-            (ic.Parameters.Length == 0 || ic.Parameters.All(pp => pp.HasExplicitDefaultValue)));
-        if (adapterType.InstanceConstructors.Length > 0 && !hasParameterlessCtor)
+        // (e) AdapterType must have a same-assembly accessible
+        // parameterless construction path.
+        if (!HasAccessibleParameterlessConstructor(adapterType))
         {
             diags.Add(Diagnostic.Create(Diagnostics.FacadeConfirmStateChangeInvalid, loc, methodName,
-                $"[ConfirmStateChange] on Remember parameter '{up.Name}': AdapterType '{adapterType.ToDisplayString()}' must declare a public parameterless constructor"));
+                $"[ConfirmStateChange] on Remember parameter '{up.Name}': AdapterType '{adapterType.ToDisplayString()}' must declare an accessible parameterless constructor"));
             return null;
         }
 
@@ -3944,10 +3957,15 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             callbackProp = t.GetMembers("Callback").OfType<IPropertySymbol>().FirstOrDefault();
             if (callbackProp is not null) break;
         }
-        if (callbackProp is null || callbackProp.SetMethod is null)
+        if (callbackProp is null ||
+            callbackProp.SetMethod is null ||
+            callbackProp.SetMethod.DeclaredAccessibility is not (
+                Accessibility.Public or
+                Accessibility.Internal or
+                Accessibility.ProtectedOrInternal))
         {
             diags.Add(Diagnostic.Create(Diagnostics.FacadeConfirmStateChangeInvalid, loc, methodName,
-                $"[ConfirmStateChange] on Remember parameter '{up.Name}': AdapterType '{adapterType.ToDisplayString()}' must declare a writable instance property 'Callback'"));
+                $"[ConfirmStateChange] on Remember parameter '{up.Name}': AdapterType '{adapterType.ToDisplayString()}' must declare a same-assembly accessible writable instance property 'Callback'"));
             return null;
         }
         if (callbackProp.Type is not INamedTypeSymbol ct ||
@@ -4011,16 +4029,16 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
     }
 
     /// <summary>
-    /// True when <paramref name="stateType"/> exposes an accessible
+    /// True when <paramref name="type"/> exposes an accessible
     /// (public or internal) parameterless construction path —
     /// <c>new T()</c> compiles. Counts an explicit parameterless ctor
     /// as well as an all-defaulted-params ctor (e.g.
     /// <c>TimePickerState(int initialHour = 12, …)</c>). Also accepts
     /// the implicit ctor when no instance ctors are declared.
     /// </summary>
-    static bool HasAccessibleParameterlessConstructor(INamedTypeSymbol stateType)
+    static bool HasAccessibleParameterlessConstructor(INamedTypeSymbol type)
     {
-        var ctors = stateType.InstanceConstructors;
+        var ctors = type.InstanceConstructors;
         if (ctors.Length == 0) return true;
         foreach (var c in ctors)
         {
@@ -4031,6 +4049,22 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             if (c.Parameters.All(p => p.HasExplicitDefaultValue)) return true;
         }
         return false;
+    }
+
+    static bool IsSameAssemblyAccessible(INamedTypeSymbol type)
+    {
+        for (var current = type; current is not null; current = current.ContainingType)
+        {
+            if (current.IsFileLocal ||
+                current.DeclaredAccessibility is not (
+                    Accessibility.Public or
+                    Accessibility.Internal or
+                    Accessibility.ProtectedOrInternal))
+            {
+                return false;
+            }
+        }
+        return true;
     }
 
     static bool HasMethodBody(IMethodSymbol method)

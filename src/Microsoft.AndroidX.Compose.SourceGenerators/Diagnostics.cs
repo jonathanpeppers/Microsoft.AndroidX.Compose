@@ -316,14 +316,6 @@ internal static class Diagnostics
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);
 
-    public static readonly DiagnosticDescriptor ComposableExtensionUnsupported = new(
-        id: "CN5006",
-        title: "[Composable] extension methods are not supported",
-        messageFormat: "Method '{0}' carries [Composable] but is an extension method — declare a regular static method instead",
-        category: "AndroidX.Compose",
-        defaultSeverity: DiagnosticSeverity.Error,
-        isEnabledByDefault: true);
-
     public static readonly DiagnosticDescriptor ComposableByRefUnsupported = new(
         id: "CN5008",
         title: "[Composable] by-reference parameters are not supported",

@@ -373,8 +373,10 @@ slots surface as `Action` instead of `Action<IComposer>`.
   - excludes the slot from main bridge call args and auto-mask.
 
   Adapter class must implement `Kotlin.Jvm.Functions.IFunction1`, have a
-  public parameterless ctor, and declare a writable
-  `public Func<T, bool>? Callback { get; set; }`.
+  same-assembly accessible parameterless ctor, and declare a same-assembly
+  accessible writable `Func<T, bool>? Callback { get; set; }`. Runtime-owned
+  adapters should be `internal`; generated facades are emitted into the same
+  assembly.
 
 Each facade emitted to a unique hint name (`Microsoft.AndroidX.Compose.Facade.<ClassName>.g.cs`)
 so `[CallerFilePath]` + `[CallerLineNumber]` slot keys inside
@@ -584,7 +586,7 @@ conflict), CN3007 (color theme bind failed), CN3008 (painter misuse), CN3009
 | CN3008 | `[PainterResource]` annotates a non-`IntPtr` parameter.                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 | CN3009 | `[StateHolder]` invalid: non-`IntPtr` param, combined with `[PainterResource]`, missing/non-identifier `Remember`/`StateType`, named `Remember` not a static `(IComposer) -> IntPtr` on `ComposeBridges`, or `StateType` has no accessible writable instance field named `Jvm`.                                                                                                                                                                                                                  |
 | CN3010 | `BranchOn`/`AlternateBridge` invalid: only one set, primary has no Kotlin defaults metadata, named alternate not resolvable/ambiguous on `ComposeBridges`, alternate not a strict superset (missing a primary param or > 1 extra), extra param's PascalCased name doesn't match `BranchOn`, extra param isn't `IFunction2`/`IFunction3`, shared param has incompatible types, branching used on hybrid container shape, or alternate has no resolvable `[ComposeBridge].Defaults` enum. |
-| CN3011 | `[ConfirmStateChange(typeof(T))]` invalid: not on `IFunction1` param, missing `typeof(T)` ctor arg, convention adapter `Microsoft.AndroidX.Compose.<TName>ConfirmStateChange` missing (override with `AdapterType = typeof(...)`), adapter doesn't implement `Kotlin.Jvm.Functions.IFunction1`, lacks public parameterless ctor, or no writable `Callback` property of type `System.Func<T, bool>?`.                                                                                                              |
+| CN3011 | `[ConfirmStateChange(typeof(T))]` invalid: not on `IFunction1` param, missing `typeof(T)` ctor arg, convention adapter `Microsoft.AndroidX.Compose.<TName>ConfirmStateChange` missing (override with `AdapterType = typeof(...)`), adapter is inaccessible to generated same-assembly code, doesn't implement `Kotlin.Jvm.Functions.IFunction1`, lacks a same-assembly accessible parameterless ctor, or has no same-assembly accessible writable `Callback` property of type `System.Func<T, bool>?`.                                                                                                              |
 | CN3012 | `SecondaryCtor`/`SecondaryDefaults` invalid: only one set, named secondary not resolvable/ambiguous on `ComposeBridges`, a hand-written secondary lacks trailing `int defaults`, secondary's user params don't share names with the primary, the discriminating extra param is value-type / nullable / not a reference type / there's > 1 unique param / there's none, primary has no slot missing from the secondary (no primary-only discriminator), `SecondaryDefaults` enum unresolvable, or combined with `BranchOn`/`AlternateBridge`.                                                                                                                                                                                                                                                                              |
 | CN3013 | Lambda execution mode is ambiguous, conflicting, or invalid. Mark `IFunction1` as `[Callback(typeof(T))]` or `[RawCallback]`; mark `IFunction4` as `[ComposableContent]` or `[DeferredComposableContent]`. |
 
@@ -1039,9 +1041,10 @@ Rules:
   (CN5002). It may omit `IComposer`; when declared explicitly,
   `IComposer` must be the **first** parameter (CN5003).
 - It must be accessible from the generated interceptor (CN5004) and
-  cannot be `async` (CN5005), an extension method (CN5006), or use
-  `ref`/`out`/`in` parameters (CN5008). Generic methods are supported;
-  generated wrappers preserve their type parameters and constraints.
+  cannot be `async` (CN5005) or use `ref`/`out`/`in` parameters (CN5008).
+  Generic and extension methods are supported; generated wrappers preserve
+  their type parameters and constraints. An `IComposer` extension receiver is
+  the composer slot; any other receiver is a diffed user parameter.
 - Composerless APIs may only be called from a `[Composable]` method or a
   delegate that flows synchronously to a parameter marked
   `[ComposableContent]` (CN5009). Bounded analysis follows local variables,
@@ -1214,7 +1217,6 @@ are generated while compiling the runtime assembly.
 | CN5003 | When present, a `[Composable]` method's `AndroidX.Compose.Runtime.IComposer` must be its first and only composer parameter. |
 | CN5004 | `[Composable]` method and its containing types must be accessible from the generated interceptor.                       |
 | CN5005 | `[Composable]` method cannot be `async`; continuations would resume after the restart group closes.                     |
-| CN5006 | `[Composable]` extension methods are unsupported; use a regular static method.                                          |
 | CN5008 | `[Composable]` parameters cannot use `ref`, `out`, or `in`.                                                              |
 | CN5009 | A composerless API may execute outside a `[Composable]` method or `[ComposableContent]` callback; the diagnostic identifies the unsafe delegate escape. |
 | CN5010 | `[GenerateImplicitComposable]` targets an unsupported explicit-composer adapter shape.                                |
