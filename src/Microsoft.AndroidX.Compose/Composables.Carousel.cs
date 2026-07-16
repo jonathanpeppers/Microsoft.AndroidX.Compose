@@ -13,7 +13,7 @@ public static partial class Composables
         [ComposableContent] Action<T> itemContent,
         Modifier? modifier = null,
         CarouselState? state = null,
-        float? itemSpacing = null,
+        Dp? itemSpacing = null,
         bool? userScrollEnabled = null)
     {
         ArgumentNullException.ThrowIfNull(items);
@@ -26,7 +26,7 @@ public static partial class Composables
         {
             Modifier = modifier,
             State = state,
-            ItemSpacing = itemSpacing ?? float.NaN,
+            ItemSpacing = itemSpacing,
             UserScrollEnabled = userScrollEnabled,
         }.Render();
     }
@@ -40,7 +40,7 @@ public static partial class Composables
         [ComposableContent] Action<T, IComposer> itemContent,
         Modifier? modifier = null,
         CarouselState? state = null,
-        float? itemSpacing = null,
+        Dp? itemSpacing = null,
         bool? userScrollEnabled = null)
     {
         ArgumentNullException.ThrowIfNull(composer);
@@ -54,7 +54,7 @@ public static partial class Composables
         {
             Modifier = modifier,
             State = state,
-            ItemSpacing = itemSpacing ?? float.NaN,
+            ItemSpacing = itemSpacing,
             UserScrollEnabled = userScrollEnabled,
         }.Render(composer);
     }
@@ -67,7 +67,7 @@ public static partial class Composables
         [ComposableContent] Action<T> itemContent,
         Modifier? modifier = null,
         CarouselState? state = null,
-        float? itemSpacing = null,
+        Dp? itemSpacing = null,
         bool? userScrollEnabled = null)
     {
         ArgumentNullException.ThrowIfNull(items);
@@ -80,7 +80,7 @@ public static partial class Composables
         {
             Modifier = modifier,
             State = state,
-            ItemSpacing = itemSpacing ?? float.NaN,
+            ItemSpacing = itemSpacing,
             UserScrollEnabled = userScrollEnabled,
         }.Render();
     }
@@ -94,7 +94,7 @@ public static partial class Composables
         [ComposableContent] Action<T, IComposer> itemContent,
         Modifier? modifier = null,
         CarouselState? state = null,
-        float? itemSpacing = null,
+        Dp? itemSpacing = null,
         bool? userScrollEnabled = null)
     {
         ArgumentNullException.ThrowIfNull(composer);
@@ -108,7 +108,7 @@ public static partial class Composables
         {
             Modifier = modifier,
             State = state,
-            ItemSpacing = itemSpacing ?? float.NaN,
+            ItemSpacing = itemSpacing,
             UserScrollEnabled = userScrollEnabled,
         }.Render(composer);
     }
@@ -120,8 +120,8 @@ public static partial class Composables
         [ComposableContent] Action<T> itemContent,
         Modifier? modifier = null,
         CarouselState? state = null,
-        float? maxItemWidth = null,
-        float? itemSpacing = null,
+        Dp? maxItemWidth = null,
+        Dp? itemSpacing = null,
         bool? userScrollEnabled = null)
     {
         ArgumentNullException.ThrowIfNull(items);
@@ -133,8 +133,8 @@ public static partial class Composables
         {
             Modifier = modifier,
             State = state,
-            MaxItemWidth = maxItemWidth ?? float.NaN,
-            ItemSpacing = itemSpacing ?? float.NaN,
+            MaxItemWidth = maxItemWidth,
+            ItemSpacing = itemSpacing,
             UserScrollEnabled = userScrollEnabled,
         }.Render();
     }
@@ -147,8 +147,8 @@ public static partial class Composables
         [ComposableContent] Action<T, IComposer> itemContent,
         Modifier? modifier = null,
         CarouselState? state = null,
-        float? maxItemWidth = null,
-        float? itemSpacing = null,
+        Dp? maxItemWidth = null,
+        Dp? itemSpacing = null,
         bool? userScrollEnabled = null)
     {
         ArgumentNullException.ThrowIfNull(composer);
@@ -161,8 +161,8 @@ public static partial class Composables
         {
             Modifier = modifier,
             State = state,
-            MaxItemWidth = maxItemWidth ?? float.NaN,
-            ItemSpacing = itemSpacing ?? float.NaN,
+            MaxItemWidth = maxItemWidth,
+            ItemSpacing = itemSpacing,
             UserScrollEnabled = userScrollEnabled,
         }.Render(composer);
     }

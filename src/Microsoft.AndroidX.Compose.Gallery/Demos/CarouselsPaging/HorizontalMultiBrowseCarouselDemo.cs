@@ -25,6 +25,6 @@ public static class HorizontalMultiBrowseCarouselDemo
             })
         {
             Modifier    = Modifier.FillMaxWidth().Height(180),
-            ItemSpacing = 8f,
+            ItemSpacing = 8.Dp(),
         });
 }

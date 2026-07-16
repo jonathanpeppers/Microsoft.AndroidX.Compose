@@ -23,7 +23,8 @@ public static class HorizontalCenteredHeroCarouselDemo
                 new Text($"Hero {i}") { Modifier = Modifier.Padding(16) },
             })
         {
-            Modifier    = Modifier.FillMaxWidth().Height(220),
-            ItemSpacing = 8f,
+            Modifier     = Modifier.FillMaxWidth().Height(220),
+            MaxItemWidth = 280.Dp(),
+            ItemSpacing  = 8.Dp(),
         });
 }
