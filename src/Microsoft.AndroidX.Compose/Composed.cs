@@ -79,6 +79,7 @@ public sealed class Composed : ComposableNode
     /// <inheritdoc />
     public override void Render(IComposer composer)
     {
+        using var scope = ComposableContext.Enter(composer);
         var node = _builder(composer);
         node?.Render(composer);
     }
@@ -99,6 +100,7 @@ public sealed class Composed : ComposableNode
     /// </summary>
     internal override void Render(IComposer composer, IntPtr contentPadding)
     {
+        using var scope = ComposableContext.Enter(composer);
         var node = _builder(composer);
         if (node is null)
             return;
