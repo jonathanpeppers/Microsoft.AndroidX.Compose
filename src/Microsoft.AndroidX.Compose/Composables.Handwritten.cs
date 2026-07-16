@@ -119,14 +119,17 @@ public static partial class Composables
         ArgumentNullException.ThrowIfNull(sheetContent);
         ArgumentNullException.ThrowIfNull(content);
 
+        var rememberedSheetContent = composer.Remember(
+            () => new ComposableContentNode(sheetContent));
+        rememberedSheetContent.Rebind(sheetContent);
+
         var scaffold = composer.Remember(
             () => new global::AndroidX.Compose.BottomSheetScaffold(sheetState)
             {
-                SheetContent = new ComposableContentNode(sheetContent),
+                SheetContent = rememberedSheetContent,
             },
             sheetState);
         scaffold.Modifier = modifier;
-        scaffold.SheetContent = new ComposableContentNode(sheetContent);
         scaffold.ComposableMethodContent = new ComposableContentNode(content);
         scaffold.SheetDragHandle =
             ComposableContentNode.Create(sheetDragHandle);
