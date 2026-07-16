@@ -504,8 +504,10 @@ public sealed class ComposableMethodGenerator : IIncrementalGenerator
             {
                 // Mutable collections commonly preserve reference identity
                 // across in-place edits. Never skip solely because the list
-                // object compares equal to its previous reference.
-                sb.AppendLine("            __forceExecute = true;");
+                // object compares equal to its previous reference. Keep the
+                // force bit in the forwarded mask so direct Kotlin groups
+                // cannot independently skip the mutation.
+                sb.AppendLine("            __dirty |= 0b1;");
             }
             else
             {

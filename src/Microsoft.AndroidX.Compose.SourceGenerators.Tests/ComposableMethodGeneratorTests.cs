@@ -484,6 +484,42 @@ public class ComposableMethodGeneratorTests
     }
 
     [Fact]
+    public void DirectTarget_CollectionParameter_ForwardsForceBit()
+    {
+        var (output, diags, emitted) = Run("""
+            namespace App
+            {
+                public static class Direct
+                {
+                    public static void Items(
+                        AndroidX.Compose.Runtime.IComposer composer,
+                        System.Collections.IEnumerable items,
+                        ulong omittedArguments,
+                        int changed) { }
+                }
+
+                public static class Screens
+                {
+                    [AndroidX.Compose.Composable]
+                    [AndroidX.Compose.ComposableDirectTarget(typeof(Direct), nameof(Direct.Items))]
+                    public static void Items(System.Collections.IEnumerable items) { }
+
+                    public static void CallSite(System.Collections.IEnumerable items) =>
+                        Items(items);
+                }
+            }
+            """);
+
+        Assert.Empty(diags);
+        Assert.NotNull(emitted);
+        Assert.Contains("__dirty |= 0b1;", emitted);
+        Assert.Contains(
+            "global::App.Direct.Items(__c, items, 0x0UL, __dirty)",
+            emitted);
+        AssertNoCompileErrors(output);
+    }
+
+    [Fact]
     public void DirectTarget_AllTrailingOptionalArguments_SetOmittedBits()
     {
         var (output, diags, emitted) = Run("""
@@ -894,8 +930,7 @@ public class ComposableMethodGeneratorTests
 
         Assert.Empty(diags);
         Assert.NotNull(emitted);
-        Assert.Contains("__forceExecute = true;", emitted);
-        Assert.DoesNotContain("__dirty |= 0b1;", emitted);
+        Assert.Contains("__dirty |= 0b1;", emitted);
         Assert.DoesNotContain("DiffSlot<global::System.Collections.Generic.IReadOnlyList<T>>", emitted);
         Assert.Contains("__c.DiffSlot<string>(label, 4)", emitted);
         AssertNoCompileErrors(output);
@@ -978,8 +1013,7 @@ public class ComposableMethodGeneratorTests
 
         Assert.Empty(diags);
         Assert.NotNull(emitted);
-        Assert.Contains("__forceExecute = true;", emitted);
-        Assert.DoesNotContain("__dirty |= 0b1;", emitted);
+        Assert.Contains("__dirty |= 0b1;", emitted);
         Assert.DoesNotContain("DiffSlot<global::System.Collections.IEnumerable>", emitted);
         AssertNoCompileErrors(output);
     }
@@ -1004,8 +1038,7 @@ public class ComposableMethodGeneratorTests
 
         Assert.Empty(diags);
         Assert.NotNull(emitted);
-        Assert.Contains("__forceExecute = true;", emitted);
-        Assert.DoesNotContain("__dirty |= 0b1;", emitted);
+        Assert.Contains("__dirty |= 0b1;", emitted);
         Assert.DoesNotContain("DiffSlot<T>(value", emitted);
         AssertNoCompileErrors(output);
     }
