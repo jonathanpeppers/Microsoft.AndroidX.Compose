@@ -1,10 +1,12 @@
 using AndroidX.Compose.Gallery.Registry;
+using static AndroidX.Compose.Composables;
 
 namespace AndroidX.Compose.Gallery.Demos.Modifiers;
 
 /// <summary>
-/// Exercises live system/IME insets, fixed inset construction, set
-/// operations, generic padding, consumption, and inset-sized spacers.
+/// Exercises ambient platform inset readers, composition-aware padding
+/// conversion, fixed inset construction, set operations, consumption,
+/// and inset-sized spacers.
 /// </summary>
 public static class WindowInsetsDemo
 {
@@ -14,17 +16,33 @@ public static class WindowInsetsDemo
         CategoryId:  "modifiers",
         Title:       "WindowInsets",
         Description: "Generic edge-to-edge padding, consumption, set operations, and IME sizing.",
-        Build:       c =>
+        Build:       _ => new Composed(c =>
         {
             var text = c.MutableStateOf("");
-            var safeDrawing = WindowInsets.SafeDrawing(c);
-            var ime = WindowInsets.Ime(c);
+            var safeDrawing = SafeDrawingInsets();
+            var ime = ImeInsets();
             var safeDrawingWithoutIme = safeDrawing.Exclude(ime);
             var customInsets = c.Remember(
                 () => new WindowInsets(left: 12, top: 8, right: 12, bottom: 8));
             var horizontalInsets = customInsets.Only(WindowInsetsSides.Horizontal);
+            (string Name, WindowInsets Insets)[] platformInsets =
+            [
+                ("Caption bar", CaptionBarInsets()),
+                ("Display cutout", DisplayCutoutInsets()),
+                ("IME", ime),
+                ("Mandatory system gestures", MandatorySystemGesturesInsets()),
+                ("Navigation bars", NavigationBarsInsets()),
+                ("Safe content", SafeContentInsets()),
+                ("Safe drawing", safeDrawing),
+                ("Safe gestures", SafeGesturesInsets()),
+                ("Status bars", StatusBarsInsets()),
+                ("System bars", SystemBarsInsets()),
+                ("System gestures", SystemGesturesInsets()),
+                ("Tappable element", TappableElementInsets()),
+                ("Waterfall", WaterfallInsets()),
+            ];
 
-            return new Column
+            var content = new Column
             {
                 Modifier.WindowInsetsPadding(safeDrawingWithoutIme),
                 new Text("SafeDrawing keeps this content clear of system UI."),
@@ -52,5 +70,14 @@ public static class WindowInsetsDemo
                         .Background(Color.FromHex("#90CAF9")),
                 },
             };
-        });
+
+            foreach (var (name, insets) in platformInsets)
+            {
+                var padding = insets.AsPaddingValues();
+                content.Add(new Text(
+                    $"{name}: top {padding.Top.Value:F0}dp, bottom {padding.Bottom.Value:F0}dp"));
+            }
+
+            return content;
+        }));
 }
