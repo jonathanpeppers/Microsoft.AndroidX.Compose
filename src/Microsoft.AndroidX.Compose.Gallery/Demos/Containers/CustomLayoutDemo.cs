@@ -51,9 +51,9 @@ public static class CustomLayoutDemo
 
             var layout = new Layout(measurePolicy: (scope, measurables, constraints) =>
             {
-                // Bin into N columns by available width. 220 px is the
+                // Bin into N columns by available width. 220 dp is the
                 // minimum desired column width.
-                int min = 220;
+                int min = scope.RoundToPx(220);
                 int max = constraints.HasBoundedWidth
                     ? constraints.MaxWidth
                     : min;
