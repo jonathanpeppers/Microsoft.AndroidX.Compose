@@ -138,15 +138,17 @@ declarative attribute can be swapped one-for-one to the generic form.
 ## Compose value types
 
 The Kotlin `@JvmInline value class` types that surface as primitives
-across JNI (`Color`, `Dp`, `Sp`, `FontWeight`, `TextAlign`) are
+across JNI (`Color`, `Dp`, `Sp`, `TextOverflow`, `TransformOrigin`) are
 mirrored as typed C# structs in
 [`Microsoft.AndroidX.Compose`](../src/Microsoft.AndroidX.Compose). The bridge generator
 keeps a tiny registry in
 [`ComposeValueTypes.cs`](../src/Microsoft.AndroidX.Compose.SourceGenerators/ComposeValueTypes.cs)
-that maps each value type to its JNI slot (`F` / `J` / `I`) and a
-`Pack(T?)` helper, so a bridge can declare `Dp? width` or `Sp? size`
-and the generator emits the correct primitive lowering plus the
-`$default`-bit clear on non-null. `Color` is a 64-bit packed ULong with
+that maps each value type to its JNI slot (`F` / `J` / `I`) and an
+internal lowering expression, so a bridge can declare `Dp? width`,
+`Sp? size`, or `TransformOrigin? origin` and the generator emits the
+correct primitive lowering plus the `$default`-bit clear on non-null.
+The packed representation stays out of the user-facing API. `Color` is
+a 64-bit packed ULong with
 an implicit conversion to `long`, so call sites pass `Color.FromRgb(…)`
 or one of the named constants straight through to bridges and bound
 binding methods that already take a packed color — no per-call

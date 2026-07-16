@@ -1,42 +1,61 @@
 namespace AndroidX.Compose;
 
 /// <summary>
-/// C# mirror of Kotlin's <c>androidx.compose.ui.text.style.TextOverflow</c>
-/// — a <c>@JvmInline value class</c> wrapping an <c>Int</c>. The bridge
-/// generator lowers <c>TextOverflow?</c> to the underlying <c>int</c>
-/// JNI slot.
-///
-/// Values mirror the Kotlin <c>TextOverflow.Companion</c> constants:
-/// <list type="bullet">
-///   <item><see cref="Clip"/> = 1 — truncate at the container edge.</item>
-///   <item><see cref="Ellipsis"/> = 2 — replace overflow with <c>"…"</c>.</item>
-///   <item><see cref="Visible"/> = 3 — render past the container bounds.</item>
-///   <item><see cref="StartEllipsis"/> = 4 — leading ellipsis.</item>
-///   <item><see cref="MiddleEllipsis"/> = 5 — middle ellipsis.</item>
-/// </list>
+/// Controls how text that exceeds its available space is rendered.
 /// </summary>
-public readonly record struct TextOverflow(int Value)
+public readonly struct TextOverflow : IEquatable<TextOverflow>
 {
+    readonly int _value;
+
+    TextOverflow(int value)
+    {
+        _value = value;
+    }
+
     /// <summary>Truncate the text at the edge of the container.</summary>
-    public static TextOverflow Clip => new(1);
+    public static TextOverflow Clip => new(0);
 
     /// <summary>Replace the overflowing text with an ellipsis (default for single-line).</summary>
-    public static TextOverflow Ellipsis => new(2);
+    public static TextOverflow Ellipsis => new(1);
 
     /// <summary>Render the text outside the container bounds (no clipping).</summary>
-    public static TextOverflow Visible => new(3);
+    public static TextOverflow Visible => new(2);
 
     /// <summary>Place the ellipsis at the start of the text.</summary>
-    public static TextOverflow StartEllipsis => new(4);
+    public static TextOverflow StartEllipsis => new(3);
 
     /// <summary>Place the ellipsis in the middle of the text.</summary>
-    public static TextOverflow MiddleEllipsis => new(5);
+    public static TextOverflow MiddleEllipsis => new(4);
 
-    /// <summary>
-    /// Pack a nullable <see cref="TextOverflow"/> into the raw
-    /// <c>int</c> the JNI slot expects. <c>null</c> → <c>0</c>; the
-    /// auto-mask leaves the <c>$default</c> bit set so Kotlin's real
-    /// default applies.
-    /// </summary>
-    public static int Pack(TextOverflow? value) => value?.Value ?? 0;
+    internal static int Pack(TextOverflow? value) =>
+        value is { } overflow ? overflow._value + 1 : 0;
+
+    /// <inheritdoc/>
+    public bool Equals(TextOverflow other) => _value == other._value;
+
+    /// <inheritdoc/>
+    public override bool Equals(object? obj) =>
+        obj is TextOverflow overflow && Equals(overflow);
+
+    /// <inheritdoc/>
+    public override int GetHashCode() => _value;
+
+    /// <summary>Equality operator.</summary>
+    public static bool operator ==(TextOverflow left, TextOverflow right) =>
+        left.Equals(right);
+
+    /// <summary>Inequality operator.</summary>
+    public static bool operator !=(TextOverflow left, TextOverflow right) =>
+        !left.Equals(right);
+
+    /// <inheritdoc/>
+    public override string ToString() => _value switch
+    {
+        0 => nameof(Clip),
+        1 => nameof(Ellipsis),
+        2 => nameof(Visible),
+        3 => nameof(StartEllipsis),
+        4 => nameof(MiddleEllipsis),
+        _ => "Invalid",
+    };
 }

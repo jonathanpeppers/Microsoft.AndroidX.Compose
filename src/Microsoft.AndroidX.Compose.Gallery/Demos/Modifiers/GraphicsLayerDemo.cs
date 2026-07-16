@@ -44,7 +44,7 @@ public static class GraphicsLayerDemo
                             .GraphicsLayer(
                                 rotationZ:       dragX.Value,
                                 alpha:           0.6f + 0.4f * MathF.Min(1f, MathF.Abs(dragX.Value) / 90f),
-                                transformOrigin: TransformOrigin.Pack(0f, 0f))
+                                transformOrigin: new TransformOrigin(0f, 0f))
                             .Background(Color.FromRgb(0xAB, 0x47, 0xBC)),
                         new Text("⟲") { Modifier = Modifier.Padding(20) },
                     },

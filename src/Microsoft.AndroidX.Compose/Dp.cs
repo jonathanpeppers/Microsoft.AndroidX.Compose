@@ -95,11 +95,5 @@ public readonly struct Dp : IEquatable<Dp>, IComparable<Dp>
     /// <inheritdoc/>
     public override string ToString() => $"{Value}.dp";
 
-    /// <summary>
-    /// Pack a nullable <see cref="Dp"/> into the raw <c>float</c> the
-    /// JNI slot expects. <c>null</c> -&gt; <c>0f</c>, which the auto-mask
-    /// in the bridge generator pairs with leaving the matching
-    /// <c>$default</c> bit set so Kotlin substitutes its real default.
-    /// </summary>
-    public static float Pack(Dp? value) => value?.Value ?? 0f;
+    internal static float Pack(Dp? value) => value?.Value ?? 0f;
 }

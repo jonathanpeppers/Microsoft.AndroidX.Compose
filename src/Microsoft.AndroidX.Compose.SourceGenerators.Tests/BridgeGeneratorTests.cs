@@ -72,7 +72,7 @@ public class BridgeGeneratorTests
             }
             public readonly record struct Dp(float Value)
             {
-                public static float Pack(Dp? value) => value?.Value ?? 0f;
+                internal static float Pack(Dp? value) => value?.Value ?? 0f;
             }
             public readonly record struct Color(ulong PackedValue)
             {
@@ -80,7 +80,7 @@ public class BridgeGeneratorTests
             }
             public readonly record struct Sp(float Value)
             {
-                public static long Pack(Sp? value) => default;
+                internal static long Pack(Sp? value) => default;
             }
             public readonly record struct Em(float Value)
             {
@@ -94,7 +94,11 @@ public class BridgeGeneratorTests
             public sealed class TextDecoration : Java.Lang.Object { }
             public readonly record struct TextOverflow(int Value)
             {
-                public static int Pack(TextOverflow? value) => value?.Value ?? 0;
+                internal static int Pack(TextOverflow? value) => value?.Value ?? 0;
+            }
+            public readonly record struct TransformOrigin(float PivotFractionX, float PivotFractionY)
+            {
+                internal static long Pack(TransformOrigin? value) => default;
             }
         }
         """;
@@ -1378,19 +1382,16 @@ public class BridgeGeneratorTests
     }
 
     [Fact]
-    public void ValueType_SpTextOverflow_LowerCorrectly()
+    public void ValueType_SpTextOverflowTransformOrigin_LowerCorrectly()
     {
-        // @Composable bridge: (Sp fontSize, TextOverflow overflow, Composer).
-        // JNI: 2 user slots (J/I) + Composer (L) + 1 $changed (I) + 1 $default (I).
-        // Sp lowers to packed long; TextOverflow lowers to packed int —
-        // both are non-nullable in their real-world Compose @Composable
-        // declarations, so they travel as primitives rather than boxed
-        // references.
+        // @Composable bridge: (Sp fontSize, TextOverflow overflow,
+        // TransformOrigin origin, Composer). JNI: 3 user slots (J/I/J) +
+        // Composer (L) + 1 $changed (I) + 1 $default (I).
         var code = """
             using AndroidX.Compose;
             using global::AndroidX.Compose.Runtime;
 
-            [assembly: ComposeDefaults("FontDefault", "fontSize", "overflow")]
+            [assembly: ComposeDefaults("FontDefault", "fontSize", "overflow", "origin")]
 
             namespace AndroidX.Compose
             {
@@ -1399,9 +1400,13 @@ public class BridgeGeneratorTests
                     [ComposeBridge(
                         Class = "x/Y",
                         JvmName = "f",
-                        Signature = "(JILandroidx/compose/runtime/Composer;II)V",
+                        Signature = "(JIJLandroidx/compose/runtime/Composer;II)V",
                         Defaults = typeof(FontDefault))]
-                    public static partial void F(Sp? fontSize, TextOverflow? overflow, IComposer composer);
+                    public static partial void F(
+                        Sp? fontSize,
+                        TextOverflow? overflow,
+                        TransformOrigin? origin,
+                        IComposer composer);
                 }
             }
             """;
@@ -1411,6 +1416,8 @@ public class BridgeGeneratorTests
         Assert.NotNull(emitted);
         Assert.Contains("global::AndroidX.Compose.Sp.Pack(fontSize)", emitted);
         Assert.Contains("global::AndroidX.Compose.TextOverflow.Pack(overflow)", emitted);
+        Assert.Contains("global::AndroidX.Compose.TransformOrigin.Pack(origin)", emitted);
+        Assert.Contains("if (origin is not null) defaults &= ~(int)global::AndroidX.Compose.FontDefault.Origin", emitted);
     }
 
     [Fact]

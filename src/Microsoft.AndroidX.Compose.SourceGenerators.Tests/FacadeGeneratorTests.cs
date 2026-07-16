@@ -132,7 +132,7 @@ public class FacadeGeneratorTests
             {
                 public Dp(float v) { Value = v; }
                 public float Value { get; }
-                public static float Pack(Dp? d) => d?.Value ?? 0f;
+                internal static float Pack(Dp? d) => d?.Value ?? 0f;
             }
             public readonly struct Color
             {
@@ -144,7 +144,7 @@ public class FacadeGeneratorTests
             {
                 public Sp(float v) { Value = v; }
                 public float Value { get; }
-                public static long Pack(Sp? s) => 0L;
+                internal static long Pack(Sp? s) => 0L;
             }
             public readonly struct Em
             {
@@ -156,7 +156,7 @@ public class FacadeGeneratorTests
             {
                 public TextOverflow(int v) { Value = v; }
                 public int Value { get; }
-                public static int Pack(TextOverflow? a) => 0;
+                internal static int Pack(TextOverflow? a) => 0;
             }
             public class FontWeight : Java.Lang.Object { }
             public class FontStyle : Java.Lang.Object { }

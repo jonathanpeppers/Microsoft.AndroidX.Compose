@@ -2371,7 +2371,7 @@ internal static partial class ComposeBridges
     // F rotationZ, F cameraDistance, J transformOrigin, Shape shape,
     // Z clip). 13 user params, all defaultable. Mangled because
     // `transformOrigin` is `@JvmInline value class TransformOrigin`
-    // packed as a `long`. The C# wrapper uses `float?`/`long?`/
+    // packed as a `long`. The C# wrapper uses `float?`/`TransformOrigin?`/
     // `IntPtr?`/`bool?` so the auto-mask clears each bit when a
     // value is supplied. This is the simplest of the three
     // graphicsLayer overloads — it omits the `RenderEffect`,
@@ -2398,7 +2398,7 @@ internal static partial class ComposeBridges
         float? rotationY,
         float? rotationZ,
         float? cameraDistance,
-        long? transformOrigin,
+        TransformOrigin? transformOrigin,
         IntPtr? shape,
         bool? clip);
 

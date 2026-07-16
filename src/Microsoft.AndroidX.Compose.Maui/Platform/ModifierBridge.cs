@@ -148,8 +148,8 @@ internal static class ModifierBridge
 
         if (needsLayer)
         {
-            long? origin = (Math.Abs(anchorX - 0.5d) > 1e-6 || Math.Abs(anchorY - 0.5d) > 1e-6)
-                ? TransformOrigin.Pack((float)anchorX, (float)anchorY)
+            TransformOrigin? origin = (Math.Abs(anchorX - 0.5d) > 1e-6 || Math.Abs(anchorY - 0.5d) > 1e-6)
+                ? new TransformOrigin((float)anchorX, (float)anchorY)
                 : null;
             modifier = modifier.GraphicsLayer(
                 rotationX:       rotationX != 0d ? (float)rotationX : null,

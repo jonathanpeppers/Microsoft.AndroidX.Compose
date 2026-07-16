@@ -947,7 +947,7 @@ public static class ModifierExtensions
     /// <param name="rotationY">Rotation around the Y axis in degrees.</param>
     /// <param name="rotationZ">Rotation around the Z axis in degrees (clockwise).</param>
     /// <param name="cameraDistance">Distance of the camera from the rotation pivot, in pixels.</param>
-    /// <param name="transformOrigin">Packed <c>TransformOrigin</c> value (use <see cref="TransformOrigin.Pack(float, float)"/>); the default is the center (0.5, 0.5).</param>
+    /// <param name="transformOrigin">Pivot used for scaling and rotation; the default is <see cref="TransformOrigin.Center"/>.</param>
     /// <param name="shape">Clip / shadow outline shape (default = rectangle).</param>
     /// <param name="clip">Whether to clip content to <paramref name="shape"/>.</param>
     public static Modifier GraphicsLayer(this Modifier modifier,
@@ -961,7 +961,7 @@ public static class ModifierExtensions
         float? rotationY = null,
         float? rotationZ = null,
         float? cameraDistance = null,
-        long? transformOrigin = null,
+        TransformOrigin? transformOrigin = null,
         Shape? shape = null,
         bool? clip = null)
     {

@@ -49,6 +49,10 @@ internal static class ComposeValueTypes
             ["AndroidX.Compose.TextOverflow"] =
                 ('I', "global::AndroidX.Compose.TextOverflow.Pack({0})"),
 
+            // androidx.compose.ui.graphics.TransformOrigin → JNI long.
+            ["AndroidX.Compose.TransformOrigin"] =
+                ('J', "global::AndroidX.Compose.TransformOrigin.Pack({0})"),
+
             // androidx.compose.ui.graphics.Color is bound by
             // Xamarin.AndroidX.Compose.UI.Graphics 1.11.2.1, and the
             // managed-side `AndroidX.Compose.Color` is a value-type wrapper
