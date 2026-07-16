@@ -839,9 +839,10 @@ public class ComposableMethodGeneratorTests
 
                     public static void CallSite()
                     {
+                        string? nullable = null;
                         Foo(42);
                         Foo<string>("value");
-                        Foo<string?>(null);
+                        Foo(nullable);
                         Foo(42, 1);
                     }
                 }
