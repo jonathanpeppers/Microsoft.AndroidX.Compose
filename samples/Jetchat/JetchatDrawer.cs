@@ -25,7 +25,10 @@ public static class JetchatDrawer
         Action<string> onChatClicked,
         Action<string> onProfileClicked)
     {
-        var sheet = new ModalDrawerSheet { ContainerColor = scheme.Surface };
+        var sheet = new ModalDrawerSheet
+        {
+            ContainerColor = Color.FromPacked(scheme.Surface),
+        };
         sheet.Add(new Column
         {
             Modifier.FillMaxWidth().VerticalScroll(scroll),
@@ -53,7 +56,7 @@ public static class JetchatDrawer
             {
                 FontSize   = 18,
                 FontWeight = FontWeight.SemiBold,
-                Color      = scheme.OnSurface,
+                Color      = Color.FromPacked(scheme.OnSurface),
             },
         };
 
@@ -72,7 +75,7 @@ public static class JetchatDrawer
             new Text(label)
             {
                 FontSize = 14,
-                Color    = scheme.OnSurfaceVariant,
+                Color    = Color.FromPacked(scheme.OnSurfaceVariant),
                 Modifier = Modifier.Padding(top: 16),
             },
         };
@@ -96,10 +99,12 @@ public static class JetchatDrawer
                 _ = drawerState.CloseAsync();
             });
         if (selected)
-            modifier = modifier.Background(scheme.PrimaryContainer);
+            modifier = modifier.Background(Color.FromPacked(scheme.PrimaryContainer));
 
-        long iconTint  = selected ? scheme.Primary : scheme.OnSurfaceVariant;
-        long textColor = selected ? scheme.Primary : scheme.OnSurface;
+        var iconTint = Color.FromPacked(
+            selected ? scheme.Primary : scheme.OnSurfaceVariant);
+        var textColor = Color.FromPacked(
+            selected ? scheme.Primary : scheme.OnSurface);
 
         return new Row
         {
@@ -140,7 +145,7 @@ public static class JetchatDrawer
                 _ = drawerState.CloseAsync();
             });
         if (selected)
-            modifier = modifier.Background(scheme.PrimaryContainer);
+            modifier = modifier.Background(Color.FromPacked(scheme.PrimaryContainer));
 
         return new Row
         {
@@ -155,7 +160,7 @@ public static class JetchatDrawer
             new Text(name)
             {
                 FontSize = 14,
-                Color    = scheme.OnSurface,
+                Color    = Color.FromPacked(scheme.OnSurface),
                 Modifier = Modifier.Padding(top: 16, bottom: 16, start: 12),
             },
         };

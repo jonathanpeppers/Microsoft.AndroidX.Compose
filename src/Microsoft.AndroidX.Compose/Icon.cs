@@ -23,8 +23,7 @@ namespace AndroidX.Compose;
 /// </list>
 /// </summary>
 /// <remarks>
-/// Set the <c>Tint</c> property to a packed <see cref="Color"/>
-/// (implicit-converted to <c>long</c>) to override the icon color.
+/// Set the <c>Tint</c> property to a <see cref="Color"/> to override the icon color.
 /// Leave it unset (<c>null</c>) to inherit the surrounding Material
 /// content color (Compose's <c>LocalContentColor</c>).
 /// </remarks>

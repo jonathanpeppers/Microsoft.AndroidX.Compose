@@ -19,13 +19,13 @@ namespace AndroidX.Compose;
 /// var state = new PullToRefreshState();
 /// new PullToRefreshBox(isRefreshing, onRefresh, state: state)
 /// {
-///     Indicator = new PullToRefreshIndicator(state, isRefreshing) { Color = 0xFFFF0000L },
+///     Indicator = new PullToRefreshIndicator(state, isRefreshing) { Color = Color.Red },
 /// };
 /// </code>
 /// <para>Material 3's stock indicator picks up colors from the active
 /// <c>ColorScheme</c>; supply <see cref="ContainerColor"/> /
 /// <see cref="Color"/> only to override one (or both) of those slots.
-/// Any color left at <c>0L</c> falls through to the theme default.</para>
+/// Any color left <see langword="null"/> falls through to the theme default.</para>
 /// </remarks>
 public sealed class PullToRefreshIndicator : ComposableNode
 {
@@ -55,16 +55,16 @@ public sealed class PullToRefreshIndicator : ComposableNode
     }
 
     /// <summary>
-    /// ARGB-packed background color (Compose <c>Color</c> long packing).
-    /// <c>0L</c> falls through to <c>ColorScheme.surfaceContainerHighest</c>.
+    /// Optional background color. <see langword="null"/> falls through to
+    /// <c>ColorScheme.surfaceContainerHighest</c>.
     /// </summary>
-    public long ContainerColor { get; set; }
+    public Color? ContainerColor { get; set; }
 
     /// <summary>
-    /// ARGB-packed glyph color (Compose <c>Color</c> long packing).
-    /// <c>0L</c> falls through to <c>ColorScheme.onSurfaceVariant</c>.
+    /// Optional glyph color. <see langword="null"/> falls through to
+    /// <c>ColorScheme.onSurfaceVariant</c>.
     /// </summary>
-    public long Color { get; set; }
+    public Color? Color { get; set; }
 
     /// <summary>
     /// Optional drag-distance threshold in dp. <c>null</c> falls through
@@ -85,8 +85,8 @@ public sealed class PullToRefreshIndicator : ComposableNode
         int mask = 0;
         var modifier = BuildModifier();
         if (modifier is null)         mask |= BitModifier;
-        if (ContainerColor == 0L)     mask |= BitContainerColor;
-        if (Color          == 0L)     mask |= BitColor;
+        if (ContainerColor is null)   mask |= BitContainerColor;
+        if (Color          is null)   mask |= BitColor;
         if (MaxDistance    is null)   mask |= BitMaxDistance;
 
         // $changed bitmask. Bit positions over user params:
@@ -110,8 +110,8 @@ public sealed class PullToRefreshIndicator : ComposableNode
             state:          jvm,
             isRefreshing:   _isRefreshing,
             modifier:       modifier,
-            containerColor: ContainerColor,
-            color:          Color,
+            containerColor: ContainerColor?.ToPacked() ?? 0L,
+            color:          Color?.ToPacked()          ?? 0L,
             maxDistance:    MaxDistance?.Value ?? 0f,
             _composer:      composer,
             p7:             __changed,

@@ -126,13 +126,14 @@ public static partial class ComposeExtensions
     }
 
     /// <summary>
-    /// Load a color resource as a packed Compose <c>Color</c> long. Mirrors
+    /// Load a color resource as a <see cref="Color"/>. Mirrors
     /// Kotlin's <c>colorResource(@ColorRes id: Int): Color</c>.
     /// </summary>
-    public static long ColorResource(this IComposer composer, int id)
+    public static Color ColorResource(this IComposer composer, int id)
     {
         ArgumentNullException.ThrowIfNull(composer);
-        return ColorResources_androidKt.ColorResource(id, composer, _changed: 0);
+        return Color.FromPacked(
+            ColorResources_androidKt.ColorResource(id, composer, _changed: 0));
     }
 
     /// <summary>

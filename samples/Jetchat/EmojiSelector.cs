@@ -80,7 +80,7 @@ public static class EmojiSelector
             {
                 Modifier
                     .FillMaxWidth()
-                    .Background(scheme.SurfaceVariant),
+                    .Background(Color.FromPacked(scheme.SurfaceVariant)),
                 new PrimaryTabRow(selectedTabIndex: selected.Value)
                 {
                     new Tab(selected: selected.Value == 0, onClick: () => selected.Value = 0)
@@ -116,7 +116,7 @@ public static class EmojiSelector
                 rowNode.Add(new Text(emoji)
                 {
                     FontSize = 18,
-                    Color    = scheme.OnSurface,
+                    Color    = Color.FromPacked(scheme.OnSurface),
                     Modifier = Modifier
                         .Clickable(() =>
                         {
@@ -147,7 +147,7 @@ public static class EmojiSelector
             new Text("Stickers not yet implemented in this port.")
             {
                 FontSize = 14,
-                Color    = scheme.OnSurfaceVariant,
+                Color    = Color.FromPacked(scheme.OnSurfaceVariant),
             },
         };
 }

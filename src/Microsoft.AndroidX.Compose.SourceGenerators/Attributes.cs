@@ -187,7 +187,7 @@ internal static class Attributes
                 /// <c>"secondaryContainer"</c>) to use as a runtime fallback
                 /// when the user leaves the bridge's container-color
                 /// parameter at its sentinel <c>0L</c>. The generator
-                /// emits a <c>long ContainerColor { get; set; }</c>
+                /// emits a <c>Color ContainerColor { get; set; }</c>
                 /// property and binds the named bridge param (see
                 /// <see cref="ColorParameter"/>) to
                 /// <c>ContainerColor != 0L ? ContainerColor :

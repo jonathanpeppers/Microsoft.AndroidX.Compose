@@ -41,7 +41,7 @@ public static class Brush
     /// </summary>
     public static BoundBrush SolidColor(Color color) =>
         Java.Lang.Object.GetObject<BoundSolidColor>(
-            ComposeBridges.BrushSolidColor(color),
+            ComposeBridges.BrushSolidColor(color.ToPacked()),
             JniHandleOwnership.TransferLocalRef)!;
 
     /// <summary>

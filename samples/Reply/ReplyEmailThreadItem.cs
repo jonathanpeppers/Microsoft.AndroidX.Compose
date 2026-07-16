@@ -15,7 +15,7 @@ public static class ReplyEmailThreadItem
             {
                 Modifier
                     .Padding(horizontal: 16, vertical: 4)
-                    .Background(scheme.SurfaceVariant),
+                    .Background(Color.FromPacked(scheme.SurfaceVariant)),
                 new Column
                 {
                     Modifier.FillMaxWidth().Padding(20),
@@ -23,13 +23,13 @@ public static class ReplyEmailThreadItem
                     new Text(email.Subject)
                     {
                         FontSize  = 14,
-                        Color     = scheme.Outline,
+                        Color     = Color.FromPacked(scheme.Outline),
                         Modifier  = Modifier.Padding(top: 12, bottom: 8),
                     },
                     new Text(email.Body)
                     {
                         FontSize = 16,
-                        Color    = scheme.OnSurfaceVariant,
+                        Color    = Color.FromPacked(scheme.OnSurfaceVariant),
                     },
                     BuildActionRow(scheme),
                 },
@@ -53,17 +53,17 @@ public static class ReplyEmailThreadItem
                 new Text("20 mins ago")
                 {
                     FontSize = 12,
-                    Color    = scheme.Outline,
+                    Color    = Color.FromPacked(scheme.Outline),
                 },
             },
             new IconButton(onClick: NoOp)
             {
                 Modifier
                     .Clip(Shape.Circle())
-                    .Background(scheme.SurfaceVariant),
+                    .Background(Color.FromPacked(scheme.SurfaceVariant)),
                 new Icon(Resource.Drawable.ic_star_border, "Favorite")
                 {
-                    Tint = scheme.Outline,
+                    Tint = Color.FromPacked(scheme.Outline),
                 },
             },
         };
@@ -79,7 +79,7 @@ public static class ReplyEmailThreadItem
                 Modifier.Weight(1f),
                 new Text("Reply")
                 {
-                    Color = scheme.OnSurface,
+                    Color = Color.FromPacked(scheme.OnSurface),
                 },
             },
             new Button(onClick: NoOp)
@@ -87,7 +87,7 @@ public static class ReplyEmailThreadItem
                 Modifier.Weight(1f),
                 new Text("Reply All")
                 {
-                    Color = scheme.OnSurface,
+                    Color = Color.FromPacked(scheme.OnSurface),
                 },
             },
         };

@@ -16,10 +16,10 @@ public static class ReplyEmailListItem
         new Composed(c =>
         {
             var scheme = c.ColorScheme();
-            long bg =
+            var bg = Color.FromPacked(
                 isSelected ? scheme.PrimaryContainer :
                 isOpened   ? scheme.SecondaryContainer :
-                             scheme.SurfaceVariant;
+                             scheme.SurfaceVariant);
 
             return new Card
             {
@@ -77,10 +77,10 @@ public static class ReplyEmailListItem
             {
                 Modifier
                     .Clip(Shape.Circle())
-                    .Background(scheme.SurfaceVariant),
+                    .Background(Color.FromPacked(scheme.SurfaceVariant)),
                 new Icon(Resource.Drawable.ic_star_border, "Favorite")
                 {
-                    Tint = scheme.Outline,
+                    Tint = Color.FromPacked(scheme.Outline),
                 },
             },
         };

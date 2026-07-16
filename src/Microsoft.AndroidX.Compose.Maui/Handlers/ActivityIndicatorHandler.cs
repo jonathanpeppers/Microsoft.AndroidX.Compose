@@ -70,7 +70,7 @@ public partial class ActivityIndicatorHandler : ComposeElementHandler<IActivityI
         var packed = _color.Value;
         return new ComposeCircularProgressIndicator
         {
-            Color = packed.HasValue ? new ComposeColor(packed.Value) : null,
+            Color = packed.HasValue ? ComposeColor.FromPacked(packed.Value) : null,
             Modifier = gestureModifier,
         };
     }

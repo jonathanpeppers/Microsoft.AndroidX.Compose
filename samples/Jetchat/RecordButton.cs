@@ -61,7 +61,8 @@ public static class RecordButton
                     innerModifier,
                     new Icon(Resource.Drawable.ic_mic, "Record voice message")
                     {
-                        Tint = recording ? scheme.OnPrimary : scheme.OnSurfaceVariant,
+                        Tint = Color.FromPacked(
+                            recording ? scheme.OnPrimary : scheme.OnSurfaceVariant),
                         Modifier = Modifier.FillMaxSize(),
                     },
                 },
@@ -136,7 +137,7 @@ public static class RecordButton
                     Modifier   = Modifier.Align(Alignment.Vertical.CenterVertically),
                     FontSize   = 22,
                     FontWeight = FontWeight.Medium,
-                    Color      = scheme.OnSurface,
+                    Color      = Color.FromPacked(scheme.OnSurface),
                 },
 
                 Spacer.Width(16),
@@ -151,7 +152,7 @@ public static class RecordButton
 
                     new Icon(Resource.Drawable.ic_arrow_back, "Slide to cancel")
                     {
-                        Tint = scheme.OnSurfaceVariant,
+                        Tint = Color.FromPacked(scheme.OnSurfaceVariant),
                         Modifier = Modifier.Align(Alignment.Vertical.CenterVertically).Size(24),
                     },
                     Spacer.Width(8),
@@ -159,7 +160,7 @@ public static class RecordButton
                     {
                         Modifier = Modifier.Align(Alignment.Vertical.CenterVertically),
                         FontSize = 16,
-                        Color    = scheme.OnSurfaceVariant,
+                        Color    = Color.FromPacked(scheme.OnSurfaceVariant),
                     },
                 },
             };

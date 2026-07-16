@@ -85,7 +85,7 @@ internal static partial class ComposeBridges
                 "Gradient must have at least one color stop.", nameof(colors));
         var list = new JavaList<BoundColor>();
         foreach (var c in colors)
-            list.Add(BoxColor(c));
+            list.Add(BoxColor(c.ToPacked()));
         return list;
     }
 

@@ -52,7 +52,7 @@ public class DrawScope
     {
         var origin = topLeft ?? Offset.Zero;
         var extent = size ?? RemainingSize(origin);
-        _jvm.DrawRect(color, origin.Packed, extent.Packed, alpha,
+        _jvm.DrawRect(color.ToPacked(), origin.Packed, extent.Packed, alpha,
             style ?? DrawingStyle.Fill, null, SrcOverBlendMode);
     }
 
@@ -80,7 +80,7 @@ public class DrawScope
         BoundDrawStyle? style = null)
     {
         var extent = Size;
-        _jvm.DrawCircle(color,
+        _jvm.DrawCircle(color.ToPacked(),
             radius ?? MathF.Min(extent.Width, extent.Height) / 2f,
             (center ?? Center).Packed,
             alpha, style ?? DrawingStyle.Fill, null, SrcOverBlendMode);
@@ -110,7 +110,7 @@ public class DrawScope
         float strokeWidth = 0f,
         StrokeCap cap = StrokeCap.Butt,
         float alpha = 1f) =>
-        _jvm.DrawLine(color, start.Packed, end.Packed, strokeWidth, (int)cap,
+        _jvm.DrawLine(color.ToPacked(), start.Packed, end.Packed, strokeWidth, (int)cap,
             null, alpha, null, SrcOverBlendMode);
 
     /// <summary>Draws a line with a brush.</summary>
@@ -136,7 +136,7 @@ public class DrawScope
         BoundDrawStyle? style = null)
     {
         var origin = topLeft ?? Offset.Zero;
-        _jvm.DrawOval(color, origin.Packed, (size ?? RemainingSize(origin)).Packed,
+        _jvm.DrawOval(color.ToPacked(), origin.Packed, (size ?? RemainingSize(origin)).Packed,
             alpha, style ?? DrawingStyle.Fill, null, SrcOverBlendMode);
     }
 
@@ -166,7 +166,7 @@ public class DrawScope
         BoundDrawStyle? style = null)
     {
         var origin = topLeft ?? Offset.Zero;
-        _jvm.DrawArc(color, startAngle, sweepAngle, useCenter, origin.Packed,
+        _jvm.DrawArc(color.ToPacked(), startAngle, sweepAngle, useCenter, origin.Packed,
             (size ?? RemainingSize(origin)).Packed, alpha,
             style ?? DrawingStyle.Fill, null, SrcOverBlendMode);
     }
@@ -199,7 +199,7 @@ public class DrawScope
         BoundDrawStyle? style = null)
     {
         var origin = topLeft ?? Offset.Zero;
-        _jvm.DrawRoundRect(color, origin.Packed,
+        _jvm.DrawRoundRect(color.ToPacked(), origin.Packed,
             (size ?? RemainingSize(origin)).Packed, cornerRadius.Packed,
             style ?? DrawingStyle.Fill, alpha, null, SrcOverBlendMode);
     }
@@ -228,7 +228,7 @@ public class DrawScope
         BoundDrawStyle? style = null)
     {
         ArgumentNullException.ThrowIfNull(path);
-        _jvm.DrawPath(path.Jvm, color, alpha,
+        _jvm.DrawPath(path.Jvm, color.ToPacked(), alpha,
             style ?? DrawingStyle.Fill, null, SrcOverBlendMode);
     }
 
