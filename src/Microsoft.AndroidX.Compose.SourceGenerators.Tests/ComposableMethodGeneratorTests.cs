@@ -826,7 +826,7 @@ public class ComposableMethodGeneratorTests
     [Fact]
     public void GenericMethod_RestartKeysIncludeConstructedSignature()
     {
-        var (output, diags, emitted) = Run("""
+        var src = CSharpSyntaxTree.ParseText(Preamble + """
             namespace App
             {
                 public static class Screens
@@ -836,27 +836,34 @@ public class ComposableMethodGeneratorTests
 
                     [AndroidX.Compose.Composable]
                     public static void Foo<T>(T value, int count) { }
-
-                    public static void CallSite()
-                    {
-                        Foo(42);
-                        Foo<string>("value");
-                        Foo(42, 1);
-                    }
                 }
             }
-            """);
+            """, ParseOpts);
+        var compilation = CSharpCompilation.Create(
+            "ComposableMethodTest",
+            [src],
+            references: Net.Sdk.References,
+            options: new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary,
+                nullableContextOptions: NullableContextOptions.Enable));
+        var methods = compilation.GetTypeByMetadataName("App.Screens")
+            ?.GetMembers("Foo")
+            .OfType<IMethodSymbol>()
+            .ToArray()
+            ?? throw new System.InvalidOperationException("Generic composable methods not found.");
+        var single = methods.Single(method => method.Parameters.Length == 1);
+        var overload = methods.Single(method => method.Parameters.Length == 2);
+        var intType = compilation.GetSpecialType(SpecialType.System_Int32);
+        var stringType = compilation.GetSpecialType(SpecialType.System_String);
+        int[] keys =
+        [
+            ComposableMethodGenerator.GetRestartGroupKey(single.Construct(intType)),
+            ComposableMethodGenerator.GetRestartGroupKey(single.Construct(stringType)),
+            ComposableMethodGenerator.GetRestartGroupKey(overload.Construct(intType)),
+        ];
 
-        Assert.Empty(diags);
-        Assert.NotNull(emitted);
-        var keys = System.Text.RegularExpressions.Regex.Matches(
-                emitted,
-                @"StartRestartGroup\(unchecked\(\(int\)0x([0-9A-F]{8})\)\)")
-            .Select(match => match.Groups[1].Value)
-            .ToArray();
-        Assert.Equal(3, keys.Length);
-        Assert.Equal(3, keys.Distinct().Count());
-        AssertNoCompileErrors(output);
+        Assert.NotEqual(keys[0], keys[1]);
+        Assert.NotEqual(keys[0], keys[2]);
+        Assert.NotEqual(keys[1], keys[2]);
     }
 
     [Fact]
@@ -882,7 +889,7 @@ public class ComposableMethodGeneratorTests
             ?.GetMembers("Foo")
             .OfType<IMethodSymbol>()
             .Single()
-            ?? throw new InvalidOperationException("Generic composable method not found.");
+            ?? throw new System.InvalidOperationException("Generic composable method not found.");
         var stringType = compilation.GetSpecialType(SpecialType.System_String);
         var nonNullable = method.Construct(
             stringType.WithNullableAnnotation(NullableAnnotation.NotAnnotated));

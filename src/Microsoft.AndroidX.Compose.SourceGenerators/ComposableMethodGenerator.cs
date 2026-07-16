@@ -401,7 +401,7 @@ public sealed class ComposableMethodGenerator : IIncrementalGenerator
         var containingType = method.ContainingType
             ?? throw new InvalidOperationException(
                 $"Composable method '{method.Name}' has no containing type.");
-        int key = FnvHash(GetRestartGroupIdentity(site.Target));
+        int key = GetRestartGroupKey(site.Target);
         bool hasExplicitComposer = method.Parameters.Length > 0
             && IsComposer(method.Parameters[0].Type);
         string? obsoleteDiagnosticId = GetObsoleteDiagnosticId(method);
@@ -798,8 +798,35 @@ public sealed class ComposableMethodGenerator : IIncrementalGenerator
         }
     }
 
-    internal static string GetRestartGroupIdentity(IMethodSymbol method) =>
-        method.ToDisplayString(ParameterTypeFormat);
+    internal static string GetRestartGroupIdentity(IMethodSymbol method)
+    {
+        var sb = new StringBuilder();
+        sb.Append(method.ContainingType.ToDisplayString(ParameterTypeFormat))
+          .Append('.')
+          .Append(method.MetadataName);
+        if (method.TypeArguments.Length > 0)
+        {
+            sb.Append('<');
+            for (int i = 0; i < method.TypeArguments.Length; i++)
+            {
+                if (i > 0)
+                    sb.Append(',');
+                sb.Append(method.TypeArguments[i].ToDisplayString(ParameterTypeFormat));
+            }
+            sb.Append('>');
+        }
+        sb.Append('(');
+        for (int i = 0; i < method.Parameters.Length; i++)
+        {
+            if (i > 0)
+                sb.Append(',');
+            sb.Append(method.Parameters[i].Type.ToDisplayString(ParameterTypeFormat));
+        }
+        return sb.Append(')').ToString();
+    }
+
+    internal static int GetRestartGroupKey(IMethodSymbol method) =>
+        FnvHash(GetRestartGroupIdentity(method));
 
     static int FnvHash(string s)
     {
