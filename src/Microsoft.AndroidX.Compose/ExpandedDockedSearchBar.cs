@@ -26,7 +26,7 @@ public sealed class ExpandedDockedSearchBar : ComposableContainer
     public ExpandedDockedSearchBar(SearchBarState state) => _state = state;
 
     /// <summary>Required: composable that renders the search input field inside the popup.</summary>
-    public ComposableNode? InputField { get; set; }
+    public required ComposableNode InputField { get; set; }
 
     public override void Render(IComposer composer)
     {

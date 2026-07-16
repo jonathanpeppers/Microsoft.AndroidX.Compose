@@ -37,4 +37,24 @@ public class ComposeValueTypeTests
         Assert.AreEqual((x << 32) | y, TransformOrigin.Pack(origin));
         Assert.AreEqual(new TransformOrigin(0.5f, 0.5f), TransformOrigin.Center);
     }
+
+    [TestMethod]
+    public void LayoutDimensions_ExposeDpAndPreserveInfinity()
+    {
+        var constraints = new BoxConstraints(1f, float.PositiveInfinity, 2f, 3f);
+        var progress = new CircularProgressIndicator { StrokeWidthDp = 4 };
+        var horizontal = new HorizontalDivider { ThicknessDp = 2 };
+        var vertical = new VerticalDivider { ThicknessDp = 3 };
+
+        Assert.AreEqual(new Dp(1), constraints.MinWidth);
+        Assert.IsTrue(float.IsPositiveInfinity(constraints.MaxWidth.Value));
+        Assert.AreEqual(new Dp(2), constraints.MinHeight);
+        Assert.AreEqual(new Dp(3), constraints.MaxHeight);
+        Assert.AreEqual(new Dp(4), progress.StrokeWidthDp);
+        Assert.AreEqual(new Dp(2), horizontal.ThicknessDp);
+        Assert.AreEqual(new Dp(3), vertical.ThicknessDp);
+        Assert.AreEqual(
+            typeof(Dp),
+            typeof(MeasureScope).GetMethod(nameof(MeasureScope.RoundToPx))?.GetParameters()[0].ParameterType);
+    }
 }

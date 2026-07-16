@@ -59,7 +59,7 @@ public class PublicValueContractTests
         Assert.IsTrue(first == second);
         Assert.IsTrue(first != new BoxConstraints(1, 21, 3, 40));
         Assert.AreEqual(
-            "BoxConstraints(MinWidth=1, MaxWidth=20, MinHeight=3, MaxHeight=40)",
+            "BoxConstraints(MinWidth=1.dp, MaxWidth=20.dp, MinHeight=3.dp, MaxHeight=40.dp)",
             first.ToString());
     }
 

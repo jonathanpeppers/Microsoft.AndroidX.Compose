@@ -14,6 +14,6 @@ public static class CircularProgressIndicatorDemo
         Build:       _ => new Column
         {
             new Text("Indeterminate circular spinner:"),
-            new CircularProgressIndicator(),
+            new CircularProgressIndicator { StrokeWidthDp = 6 },
         });
 }
