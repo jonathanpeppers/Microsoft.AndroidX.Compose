@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Android.Runtime;
 using Kotlin.Coroutines;
 using Kotlin.Coroutines.Intrinsics;
@@ -46,7 +47,7 @@ namespace AndroidX.Compose;
 internal sealed class LaunchedEffectBody : Java.Lang.Object, IFunction2
 {
     readonly Func<CancellationToken, Task> _body;
-    readonly Func<IContinuation, JobCompletionHandler, IDisposableHandle> _registerCancellation;
+    readonly Func<IContinuation, JobCompletionHandler, IDisposable> _registerCancellation;
 
     public LaunchedEffectBody(
         Func<CancellationToken, Task> body)
@@ -56,8 +57,10 @@ internal sealed class LaunchedEffectBody : Java.Lang.Object, IFunction2
 
     internal LaunchedEffectBody(
         Func<CancellationToken, Task> body,
-        Func<IContinuation, JobCompletionHandler, IDisposableHandle> registerCancellation)
+        Func<IContinuation, JobCompletionHandler, IDisposable> registerCancellation)
     {
+        ArgumentNullException.ThrowIfNull(body);
+        ArgumentNullException.ThrowIfNull(registerCancellation);
         _body = body;
         _registerCancellation = registerCancellation;
     }
@@ -96,7 +99,7 @@ internal sealed class LaunchedEffectBody : Java.Lang.Object, IFunction2
         // The IDisposableHandle is held strongly through `state` below
         // so it doesn't get yanked by GC before completion.
         var handler = new JobCompletionHandler(cts);
-        IDisposableHandle? completionRegistration = null;
+        IDisposable? completionRegistration = null;
         Exception? registrationFailure = null;
         try
         {
@@ -178,14 +181,14 @@ internal sealed class LaunchedEffectBody : Java.Lang.Object, IFunction2
         readonly IContinuation _continuation;
         readonly CancellationTokenSource _cts;
         readonly JobCompletionHandler _handler;
-        readonly IDisposableHandle? _completionRegistration;
+        readonly IDisposable? _completionRegistration;
         readonly bool _handlerWasRegistered;
 
         public ResumeContext(
             IContinuation continuation,
             CancellationTokenSource cts,
             JobCompletionHandler handler,
-            IDisposableHandle? completionRegistration,
+            IDisposable? completionRegistration,
             bool handlerWasRegistered)
         {
             _continuation = continuation;
@@ -248,6 +251,11 @@ internal sealed class LaunchedEffectBody : Java.Lang.Object, IFunction2
                 {
                     _continuation.ResumeWith(result);
                 }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine(
+                        "AndroidX.Compose.LaunchedEffect: continuation resume failed: " + ex);
+                }
                 finally
                 {
                     GC.KeepAlive(result);
@@ -271,7 +279,7 @@ internal sealed class LaunchedEffectBody : Java.Lang.Object, IFunction2
                 Java.Lang.Throwable th => th,
                 OperationCanceledException =>
                     new Java.Util.Concurrent.CancellationException(ex.Message ?? "cancelled"),
-                _ => new Java.Lang.RuntimeException(ex.GetType().Name + ": " + ex.Message),
+                _ => new Java.Lang.RuntimeException(ex.ToString()),
             };
     }
 }

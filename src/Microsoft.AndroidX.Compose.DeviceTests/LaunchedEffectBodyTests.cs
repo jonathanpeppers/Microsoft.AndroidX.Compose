@@ -9,6 +9,19 @@ namespace Microsoft.AndroidX.Compose.DeviceTests;
 public class LaunchedEffectBodyTests
 {
     [TestMethod]
+    public void Constructor_RejectsNullDelegates()
+    {
+#pragma warning disable CS8625
+        Assert.ThrowsExactly<ArgumentNullException>(
+            () => new LaunchedEffectBody(null));
+        Assert.ThrowsExactly<ArgumentNullException>(
+            () => new LaunchedEffectBody(
+                static _ => Task.CompletedTask,
+                null));
+#pragma warning restore CS8625
+    }
+
+    [TestMethod]
     public async Task NullTask_ResumesWithClearFailure()
     {
         using var owner = new CancellationTokenSource();
@@ -47,6 +60,7 @@ public class LaunchedEffectBodyTests
         StringAssert.Contains(
             Describe(exception),
             "LaunchedEffect could not observe its Kotlin Job");
+        StringAssert.Contains(Describe(exception), "registration failure");
     }
 
     [TestMethod]
@@ -92,18 +106,26 @@ public class LaunchedEffectBodyTests
     {
         using var owner = new CancellationTokenSource();
         using var continuation = new SuspendContinuation(owner.Token);
-        CancellationToken token = default;
-        using var body = new LaunchedEffectBody(value =>
-        {
-            token = value;
-            return Task.CompletedTask;
-        });
+        using var registration = new CancellationTokenSource();
+        CancellationToken bodyToken = default;
+        var registrationToken = registration.Token;
+        using var body = new LaunchedEffectBody(
+            value =>
+            {
+                bodyToken = value;
+                return Task.CompletedTask;
+            },
+            (_, _) => registration);
 
         _ = body.Invoke(null, continuation);
 
         var exception = await ReadCompletion(continuation);
         Assert.IsNull(exception);
-        Assert.IsFalse(token.IsCancellationRequested);
+        Assert.IsFalse(bodyToken.IsCancellationRequested);
+        Assert.ThrowsExactly<ObjectDisposedException>(
+            () => _ = bodyToken.WaitHandle);
+        Assert.ThrowsExactly<ObjectDisposedException>(
+            () => _ = registrationToken.WaitHandle);
     }
 
     static async Task<Exception?> ReadCompletion(SuspendContinuation continuation)
