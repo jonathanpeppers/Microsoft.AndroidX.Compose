@@ -134,7 +134,7 @@ public class ComposableMethodGeneratorTests
         Assert.NotNull(emitted);
         Assert.Contains("[global::System.Runtime.CompilerServices.InterceptsLocationAttribute(", emitted);
         Assert.Contains("StartRestartGroup", emitted);
-        Assert.Contains("if ((__dirty & 0x1) != 0 || !__c.Skipping)", emitted);
+        Assert.Contains("if (__forceExecute || (__dirty & 0x1) != 0 || !__c.Skipping)", emitted);
         Assert.Contains("SkipToGroupEnd", emitted);
         Assert.Contains("EndRestartGroup", emitted);
         Assert.Contains("UpdateScope", emitted);
@@ -338,7 +338,8 @@ public class ComposableMethodGeneratorTests
         Assert.NotNull(emitted);
         Assert.Contains("DiffSlot<int>(p9, 28)", emitted);
         Assert.DoesNotContain("DiffSlot<int>(p10", emitted);
-        Assert.Contains("__dirty |= 0b1;", emitted);
+        Assert.Contains("__forceExecute = true;", emitted);
+        Assert.DoesNotContain("__dirty |= 0b1;", emitted);
         AssertNoCompileErrors(output);
     }
 
@@ -448,6 +449,37 @@ public class ComposableMethodGeneratorTests
         Assert.Contains(
             "global::App.Direct.Widget(__c, value, 0x0UL, __dirty)",
             emitted);
+        AssertNoCompileErrors(output);
+    }
+
+    [Fact]
+    public void GenericDirectTarget_ForwardsTypeArguments()
+    {
+        var (output, diags, emitted) = Run("""
+            namespace App
+            {
+                public static class Direct
+                {
+                    public static void Widget<T>(
+                        AndroidX.Compose.Runtime.IComposer composer,
+                        ulong omittedArguments,
+                        int changed) { }
+                }
+
+                public static class Screens
+                {
+                    [AndroidX.Compose.Composable]
+                    [AndroidX.Compose.ComposableDirectTarget(typeof(Direct), nameof(Direct.Widget))]
+                    public static void Widget<T>() { }
+
+                    public static void CallSite() => Widget<int>();
+                }
+            }
+            """);
+
+        Assert.Empty(diags);
+        Assert.NotNull(emitted);
+        Assert.Contains("global::App.Direct.Widget<T>(__c, 0x0UL, __dirty)", emitted);
         AssertNoCompileErrors(output);
     }
 
@@ -862,7 +894,8 @@ public class ComposableMethodGeneratorTests
 
         Assert.Empty(diags);
         Assert.NotNull(emitted);
-        Assert.Contains("__dirty |= 0b1;", emitted);
+        Assert.Contains("__forceExecute = true;", emitted);
+        Assert.DoesNotContain("__dirty |= 0b1;", emitted);
         Assert.DoesNotContain("DiffSlot<global::System.Collections.Generic.IReadOnlyList<T>>", emitted);
         Assert.Contains("__c.DiffSlot<string>(label, 4)", emitted);
         AssertNoCompileErrors(output);
@@ -945,7 +978,8 @@ public class ComposableMethodGeneratorTests
 
         Assert.Empty(diags);
         Assert.NotNull(emitted);
-        Assert.Contains("__dirty |= 0b1;", emitted);
+        Assert.Contains("__forceExecute = true;", emitted);
+        Assert.DoesNotContain("__dirty |= 0b1;", emitted);
         Assert.DoesNotContain("DiffSlot<global::System.Collections.IEnumerable>", emitted);
         AssertNoCompileErrors(output);
     }
@@ -970,7 +1004,8 @@ public class ComposableMethodGeneratorTests
 
         Assert.Empty(diags);
         Assert.NotNull(emitted);
-        Assert.Contains("__dirty |= 0b1;", emitted);
+        Assert.Contains("__forceExecute = true;", emitted);
+        Assert.DoesNotContain("__dirty |= 0b1;", emitted);
         Assert.DoesNotContain("DiffSlot<T>(value", emitted);
         AssertNoCompileErrors(output);
     }

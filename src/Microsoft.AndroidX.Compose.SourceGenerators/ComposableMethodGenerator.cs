@@ -234,7 +234,10 @@ public sealed class ComposableMethodGenerator : IIncrementalGenerator
         if (attr.ConstructorArguments[1].Value is not string methodName
             || string.IsNullOrWhiteSpace(methodName))
             return null;
-        return new DirectTarget(containingType, methodName);
+        bool isGeneric = containingType.GetMembers(methodName)
+            .OfType<IMethodSymbol>()
+            .Any(candidate => candidate.Arity == method.Arity && candidate.Arity > 0);
+        return new DirectTarget(containingType, methodName, isGeneric);
     }
 
     static ulong ReadOmittedArguments(
@@ -492,6 +495,7 @@ public sealed class ComposableMethodGenerator : IIncrementalGenerator
         sb.AppendLine("            using var __composerScope = global::AndroidX.Compose.ComposableContext.Enter(__c);");
 
         sb.AppendLine("            int __dirty = __changed;");
+        sb.AppendLine("            bool __forceExecute = false;");
         for (int i = 0; i < trackedParamCount; i++)
         {
             int bitOffset = 1 + i * 3;
@@ -501,7 +505,7 @@ public sealed class ComposableMethodGenerator : IIncrementalGenerator
                 // Mutable collections commonly preserve reference identity
                 // across in-place edits. Never skip solely because the list
                 // object compares equal to its previous reference.
-                sb.AppendLine("            __dirty |= 0b1;");
+                sb.AppendLine("            __forceExecute = true;");
             }
             else
             {
@@ -513,15 +517,15 @@ public sealed class ComposableMethodGenerator : IIncrementalGenerator
             }
         }
         if (userParams.Count > trackedParamCount)
-            sb.AppendLine("            __dirty |= 0b1;");
+            sb.AppendLine("            __forceExecute = true;");
 
         if (userParams.Count == 0)
         {
-            sb.AppendLine("            if ((__dirty & 0x1) != 0 || !__c.Skipping)");
+            sb.AppendLine("            if (__forceExecute || (__dirty & 0x1) != 0 || !__c.Skipping)");
         }
         else
         {
-            sb.Append("            if ((__dirty & 0x")
+            sb.Append("            if (__forceExecute || (__dirty & 0x")
               .Append(mask.ToString("X", CultureInfo.InvariantCulture))
               .Append(") != 0x")
               .Append(expected.ToString("X", CultureInfo.InvariantCulture))
@@ -540,6 +544,8 @@ public sealed class ComposableMethodGenerator : IIncrementalGenerator
                     SymbolDisplayFormat.FullyQualifiedFormat))
               .Append('.')
               .Append(EscapeIdentifier(site.DirectTarget.MethodName));
+            if (site.DirectTarget.IsGeneric)
+                AppendTypeArguments(sb, method.TypeParameters, typeParameterNames);
         }
         else
         {
@@ -839,13 +845,15 @@ public sealed class ComposableMethodGenerator : IIncrementalGenerator
 
     sealed class DirectTarget
     {
-        public DirectTarget(INamedTypeSymbol containingType, string methodName)
+        public DirectTarget(INamedTypeSymbol containingType, string methodName, bool isGeneric)
         {
             ContainingType = containingType;
             MethodName = methodName;
+            IsGeneric = isGeneric;
         }
 
         public INamedTypeSymbol ContainingType { get; }
         public string MethodName { get; }
+        public bool IsGeneric { get; }
     }
 }
