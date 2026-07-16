@@ -9,8 +9,8 @@ namespace AndroidX.Compose;
 /// </summary>
 public sealed class VerticalDivider : ComposableNode
 {
-    /// <summary>Optional explicit thickness in Dp. Leave null to use the Material default.</summary>
-    public float? ThicknessDp { get; set; }
+    /// <summary>Optional explicit thickness. Leave null to use the Material default.</summary>
+    public Dp? ThicknessDp { get; set; }
 
     /// <summary>Optional explicit color. Leave null to use the Material default.</summary>
     public Color? Color { get; set; }
@@ -26,7 +26,7 @@ public sealed class VerticalDivider : ComposableNode
 
         DividerKt.VerticalDivider(
             modifier:  modifier,
-            thickness: ThicknessDp ?? 0f,
+            thickness: Dp.Pack(ThicknessDp),
             color:     Color is { } c ? c.ToPacked() : 0L,
             _composer: composer,
             p4:        0,

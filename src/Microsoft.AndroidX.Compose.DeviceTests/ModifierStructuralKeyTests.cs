@@ -97,4 +97,15 @@ public class ModifierStructuralKeyTests
         Assert.AreEqual(a, b);
         Assert.AreEqual(a.GetHashCode(), b.GetHashCode());
     }
+
+    [TestMethod]
+    public void GraphicsLayer_ShadowElevationUsesDpStructuralValue()
+    {
+        var a = Modifier.GraphicsLayer(shadowElevation: new Dp(8)).StructuralKey;
+        var b = Modifier.GraphicsLayer(shadowElevation: 8).StructuralKey;
+        var c = Modifier.GraphicsLayer(shadowElevation: 12).StructuralKey;
+
+        Assert.AreEqual(a, b);
+        Assert.AreNotEqual(a, c);
+    }
 }

@@ -110,10 +110,10 @@ AndroidX.Compose.Box
 AndroidX.Compose.Box.Box(bool propagateMinConstraints = false) -> void
 AndroidX.Compose.BoxConstraints
 AndroidX.Compose.BoxConstraints.BoxConstraints() -> void
-AndroidX.Compose.BoxConstraints.MaxHeight.get -> float
-AndroidX.Compose.BoxConstraints.MaxWidth.get -> float
-AndroidX.Compose.BoxConstraints.MinHeight.get -> float
-AndroidX.Compose.BoxConstraints.MinWidth.get -> float
+AndroidX.Compose.BoxConstraints.MaxHeight.get -> AndroidX.Compose.Dp
+AndroidX.Compose.BoxConstraints.MaxWidth.get -> AndroidX.Compose.Dp
+AndroidX.Compose.BoxConstraints.MinHeight.get -> AndroidX.Compose.Dp
+AndroidX.Compose.BoxConstraints.MinWidth.get -> AndroidX.Compose.Dp
 AndroidX.Compose.BoxWithConstraints
 AndroidX.Compose.BoxWithConstraints.BoxWithConstraints(System.Func<AndroidX.Compose.BoxConstraints, AndroidX.Compose.ComposableNode!>! content) -> void
 AndroidX.Compose.Brush
@@ -158,7 +158,7 @@ AndroidX.Compose.CircularProgressIndicator
 AndroidX.Compose.CircularProgressIndicator.CircularProgressIndicator() -> void
 AndroidX.Compose.CircularProgressIndicator.Color.get -> AndroidX.Compose.Color?
 AndroidX.Compose.CircularProgressIndicator.Color.set -> void
-AndroidX.Compose.CircularProgressIndicator.StrokeWidthDp.get -> float?
+AndroidX.Compose.CircularProgressIndicator.StrokeWidthDp.get -> AndroidX.Compose.Dp?
 AndroidX.Compose.CircularProgressIndicator.StrokeWidthDp.set -> void
 AndroidX.Compose.CircularProgressIndicator.TrackColor.get -> AndroidX.Compose.Color?
 AndroidX.Compose.CircularProgressIndicator.TrackColor.set -> void
@@ -549,7 +549,7 @@ AndroidX.Compose.HorizontalDivider
 AndroidX.Compose.HorizontalDivider.Color.get -> AndroidX.Compose.Color?
 AndroidX.Compose.HorizontalDivider.Color.set -> void
 AndroidX.Compose.HorizontalDivider.HorizontalDivider() -> void
-AndroidX.Compose.HorizontalDivider.ThicknessDp.get -> float?
+AndroidX.Compose.HorizontalDivider.ThicknessDp.get -> AndroidX.Compose.Dp?
 AndroidX.Compose.HorizontalDivider.ThicknessDp.set -> void
 AndroidX.Compose.HorizontalMultiBrowseCarousel<T>
 AndroidX.Compose.HorizontalMultiBrowseCarousel<T>.HorizontalMultiBrowseCarousel(System.Collections.Generic.IReadOnlyList<T>! items, float preferredItemWidth, System.Func<T, AndroidX.Compose.ComposableNode!>! itemContent) -> void
@@ -769,7 +769,7 @@ AndroidX.Compose.MeasureScope
 AndroidX.Compose.MeasureScope.Density.get -> float
 AndroidX.Compose.MeasureScope.FontScale.get -> float
 AndroidX.Compose.MeasureScope.Layout(int width, int height, System.Action<AndroidX.Compose.PlacementScope!>! placementBlock) -> AndroidX.Compose.MeasureResult!
-AndroidX.Compose.MeasureScope.RoundToPx(float dp) -> int
+AndroidX.Compose.MeasureScope.RoundToPx(AndroidX.Compose.Dp dp) -> int
 AndroidX.Compose.MediumFlexibleTopAppBar
 AndroidX.Compose.MediumFlexibleTopAppBar.Actions.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.MediumFlexibleTopAppBar.Actions.set -> void
@@ -1483,7 +1483,7 @@ AndroidX.Compose.TriStateCheckbox.TriStateCheckbox(AndroidX.Compose.UI.State.Tog
 AndroidX.Compose.VerticalDivider
 AndroidX.Compose.VerticalDivider.Color.get -> AndroidX.Compose.Color?
 AndroidX.Compose.VerticalDivider.Color.set -> void
-AndroidX.Compose.VerticalDivider.ThicknessDp.get -> float?
+AndroidX.Compose.VerticalDivider.ThicknessDp.get -> AndroidX.Compose.Dp?
 AndroidX.Compose.VerticalDivider.ThicknessDp.set -> void
 AndroidX.Compose.VerticalDivider.VerticalDivider() -> void
 AndroidX.Compose.VerticalPager<T>
@@ -2485,7 +2485,7 @@ static AndroidX.Compose.Modifier.FillMaxWidth(float fraction = 1) -> AndroidX.Co
 static AndroidX.Compose.Modifier.FocusGroup() -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.Modifier.FocusRequester(AndroidX.Compose.FocusRequester! requester) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.Modifier.Focusable(bool enabled = true) -> AndroidX.Compose.Modifier!
-static AndroidX.Compose.Modifier.GraphicsLayer(float? scaleX = null, float? scaleY = null, float? alpha = null, float? translationX = null, float? translationY = null, float? shadowElevation = null, float? rotationX = null, float? rotationY = null, float? rotationZ = null, float? cameraDistance = null, AndroidX.Compose.TransformOrigin? transformOrigin = null, AndroidX.Compose.Shape? shape = null, bool? clip = null) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.Modifier.GraphicsLayer(float? scaleX = null, float? scaleY = null, float? alpha = null, float? translationX = null, float? translationY = null, AndroidX.Compose.Dp? shadowElevation = null, float? rotationX = null, float? rotationY = null, float? rotationZ = null, float? cameraDistance = null, AndroidX.Compose.TransformOrigin? transformOrigin = null, AndroidX.Compose.Shape? shape = null, bool? clip = null) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.Modifier.Height(AndroidX.Compose.Dp height) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.Modifier.HeightIn(AndroidX.Compose.Dp? min = null, AndroidX.Compose.Dp? max = null) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.Modifier.HorizontalScroll(AndroidX.Compose.ScrollState! state, bool enabled = true, bool reverseScrolling = false) -> AndroidX.Compose.Modifier!
@@ -2581,7 +2581,7 @@ static AndroidX.Compose.ModifierExtensions.FillMaxWidth(this AndroidX.Compose.Mo
 static AndroidX.Compose.ModifierExtensions.FocusGroup(this AndroidX.Compose.Modifier! modifier) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.ModifierExtensions.FocusRequester(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.FocusRequester! requester) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.ModifierExtensions.Focusable(this AndroidX.Compose.Modifier! modifier, bool enabled = true) -> AndroidX.Compose.Modifier!
-static AndroidX.Compose.ModifierExtensions.GraphicsLayer(this AndroidX.Compose.Modifier! modifier, float? scaleX = null, float? scaleY = null, float? alpha = null, float? translationX = null, float? translationY = null, float? shadowElevation = null, float? rotationX = null, float? rotationY = null, float? rotationZ = null, float? cameraDistance = null, AndroidX.Compose.TransformOrigin? transformOrigin = null, AndroidX.Compose.Shape? shape = null, bool? clip = null) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.ModifierExtensions.GraphicsLayer(this AndroidX.Compose.Modifier! modifier, float? scaleX = null, float? scaleY = null, float? alpha = null, float? translationX = null, float? translationY = null, AndroidX.Compose.Dp? shadowElevation = null, float? rotationX = null, float? rotationY = null, float? rotationZ = null, float? cameraDistance = null, AndroidX.Compose.TransformOrigin? transformOrigin = null, AndroidX.Compose.Shape? shape = null, bool? clip = null) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.ModifierExtensions.Height(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.Dp height) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.ModifierExtensions.HeightIn(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.Dp? min = null, AndroidX.Compose.Dp? max = null) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.ModifierExtensions.HorizontalScroll(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.ScrollState! state, bool enabled = true, bool reverseScrolling = false) -> AndroidX.Compose.Modifier!

@@ -13,7 +13,7 @@ namespace AndroidX.Compose;
 ///
 /// <code>
 /// new BoxWithConstraints(c =&gt;
-///     c.MaxWidth &lt; 600
+///     c.MaxWidth &lt; new Dp(600)
 ///         ? new Column { /* compact */ }
 ///         : new Row    { /* wide   */ })
 /// </code>
@@ -47,7 +47,8 @@ public sealed class BoxWithConstraints : ComposableNode
             // DoNotTransfer so the local ref is freed by Compose, then
             // cast to the typed binding interface.
             var scope = Java.Lang.Object.GetObject<IBoxWithConstraintsScope>(
-                scopeHandle, JniHandleOwnership.DoNotTransfer)!;
+                scopeHandle, JniHandleOwnership.DoNotTransfer)
+                ?? throw new InvalidOperationException("BoxWithConstraints scope was not provided by Compose.");
             var constraints = new BoxConstraints(
                 minWidth:  scope.MinWidth,
                 maxWidth:  scope.MaxWidth,
