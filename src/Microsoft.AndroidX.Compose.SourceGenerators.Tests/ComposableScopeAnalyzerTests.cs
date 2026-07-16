@@ -24,6 +24,7 @@ public class ComposableScopeAnalyzerTests
             public static class Composables
             {
                 public static void Text(string text) { }
+                public static WindowInsets SafeDrawingInsets() => new();
                 public static int DerivedStateOf(System.Func<int> calculation) =>
                     calculation();
                 public static void Column(
@@ -41,6 +42,13 @@ public class ComposableScopeAnalyzerTests
             public sealed class CompositionLocal<T>
             {
                 public T Current() => throw new System.NotImplementedException();
+            }
+
+            public sealed class PaddingValues { }
+
+            public sealed class WindowInsets
+            {
+                public PaddingValues AsPaddingValues() => new();
             }
         }
         """;
@@ -164,6 +172,102 @@ public class ComposableScopeAnalyzerTests
             """);
 
         Assert.Contains(diagnostics, d => d.Id == "CN5009");
+    }
+
+    [Fact]
+    public void ImplicitWindowInsetsReader_InPlainMethod_ReportsCN5009()
+    {
+        var diagnostics = ScopeDiagnostics("""
+            static class App
+            {
+                public static AndroidX.Compose.WindowInsets Read() =>
+                    AndroidX.Compose.Composables.SafeDrawingInsets();
+            }
+            """);
+
+        Assert.Single(diagnostics);
+    }
+
+    [Fact]
+    public void ImplicitWindowInsetsReader_InComposableMethod_IsAllowed()
+    {
+        var diagnostics = ScopeDiagnostics("""
+            static class App
+            {
+                [AndroidX.Compose.Composable]
+                public static AndroidX.Compose.WindowInsets Read() =>
+                    AndroidX.Compose.Composables.SafeDrawingInsets();
+            }
+            """);
+
+        Assert.Empty(diagnostics);
+    }
+
+    [Fact]
+    public void ImplicitWindowInsetsReader_InEscapingCallback_ReportsCN5009()
+    {
+        var diagnostics = ScopeDiagnostics("""
+            static class App
+            {
+                [AndroidX.Compose.Composable]
+                public static void Render() =>
+                    AndroidX.Compose.Composables.Button(
+                        () => AndroidX.Compose.Composables.SafeDrawingInsets(),
+                        () => { });
+            }
+            """);
+
+        var diagnostic = Assert.Single(diagnostics);
+        Assert.Contains("SafeDrawingInsets", SourceText(diagnostic));
+    }
+
+    [Fact]
+    public void ImplicitAsPaddingValues_InPlainMethod_ReportsCN5009()
+    {
+        var diagnostics = ScopeDiagnostics("""
+            static class App
+            {
+                public static AndroidX.Compose.PaddingValues Read(
+                    AndroidX.Compose.WindowInsets insets) =>
+                    insets.AsPaddingValues();
+            }
+            """);
+
+        Assert.Single(diagnostics);
+    }
+
+    [Fact]
+    public void ImplicitAsPaddingValues_InComposableMethod_IsAllowed()
+    {
+        var diagnostics = ScopeDiagnostics("""
+            static class App
+            {
+                [AndroidX.Compose.Composable]
+                public static AndroidX.Compose.PaddingValues Read(
+                    AndroidX.Compose.WindowInsets insets) =>
+                    insets.AsPaddingValues();
+            }
+            """);
+
+        Assert.Empty(diagnostics);
+    }
+
+    [Fact]
+    public void ImplicitAsPaddingValues_InEscapingCallback_ReportsCN5009()
+    {
+        var diagnostics = ScopeDiagnostics("""
+            static class App
+            {
+                [AndroidX.Compose.Composable]
+                public static void Render(AndroidX.Compose.WindowInsets insets) =>
+                    AndroidX.Compose.Composables.Button(
+                        () => insets.AsPaddingValues(),
+                        () => { });
+            }
+            """);
+
+        var diagnostic = Assert.Single(diagnostics);
+        Assert.Contains("AsPaddingValues", SourceText(diagnostic));
     }
 
     [Fact]
