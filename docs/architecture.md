@@ -328,8 +328,8 @@ surfaces are modeled.
   either Kotlin lambda factory. Collection parameters are treated as unstable
   and force execution so in-place list edits cannot be hidden by reference
   equality. `MaterialTheme`, `Scaffold`, `SnackbarHost`, and both
-  `SegmentedButton` modes are also complete. Their explicit-composer adapters
-  remain the sole rendering implementation and delegate to the existing
+  `SegmentedButton` modes are also complete. Their internal explicit-composer
+  adapters remain the sole rendering implementation and delegate to the existing
   handwritten facades. `[GenerateImplicitComposable]` derives the ambient
   sibling, removing the trailing `IComposer` from each
   `[ComposableContent] Action<..., IComposer>` while preserving nullable
@@ -569,7 +569,7 @@ class.
   forwarded to Kotlin's `rememberSaveable(vararg inputs)` array so
   the saveable registry uses the same invalidation semantics.
 - **State primitives.** `MutableStateList<T>`, `MutableStateMap<K,V>`,
-  `composer.DerivedStateOf<T>(Func<T>)`, and
+  `ComposeExtensions.DerivedStateOf<T>(Func<T>)`, and
   `composer.ProduceState<T>(initialValue, [keys…], producer)` are
   available. `ProduceState` is implemented purely in C# via an
   `IRememberObserver` JCW — the producer is a plain

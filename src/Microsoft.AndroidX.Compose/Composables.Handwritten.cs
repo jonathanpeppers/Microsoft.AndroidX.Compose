@@ -7,7 +7,7 @@ public static partial class Composables
 {
     /// <summary>Renders a Material theme with an explicit composer.</summary>
     [Composable, GenerateImplicitComposable]
-    public static void MaterialTheme(
+    internal static void MaterialTheme(
         IComposer composer,
         [ComposableContent] Action<IComposer> content,
         ColorScheme? colorScheme = null,
@@ -32,7 +32,7 @@ public static partial class Composables
     /// explicit composer.
     /// </summary>
     [Composable, GenerateImplicitComposable]
-    public static void Scaffold(
+    internal static void Scaffold(
         IComposer composer,
         [ComposableContent] Action<PaddingValues, IComposer> content,
         Modifier? modifier = null,
@@ -64,7 +64,7 @@ public static partial class Composables
 
     /// <summary>Renders a Material snackbar host with an explicit composer.</summary>
     [Composable, GenerateImplicitComposable]
-    public static void SnackbarHost(
+    internal static void SnackbarHost(
         IComposer composer,
         SnackbarHostState state,
         Modifier? modifier = null)
@@ -82,7 +82,7 @@ public static partial class Composables
     /// Renders a low-level custom layout with an explicit composer.
     /// </summary>
     [Composable, GenerateImplicitComposable]
-    public static void Layout(
+    internal static void Layout(
         IComposer composer,
         Func<MeasureScope, IReadOnlyList<Measurable>, Constraints, MeasureResult>
             measurePolicy,
@@ -105,7 +105,7 @@ public static partial class Composables
     /// Renders a persistent bottom-sheet scaffold with an explicit composer.
     /// </summary>
     [Composable, GenerateImplicitComposable]
-    public static void BottomSheetScaffold(
+    internal static void BottomSheetScaffold(
         IComposer composer,
         [ComposableContent] Action<IComposer> sheetContent,
         [ComposableContent] Action<IComposer> content,
@@ -138,7 +138,7 @@ public static partial class Composables
     /// with an explicit composer.
     /// </summary>
     [Composable, GenerateImplicitComposable]
-    public static void SegmentedButton(
+    internal static void SegmentedButton(
         IComposer composer,
         int index,
         int count,
@@ -175,7 +175,7 @@ public static partial class Composables
     /// with an explicit composer.
     /// </summary>
     [Composable, GenerateImplicitComposable]
-    public static void SegmentedButton(
+    internal static void SegmentedButton(
         IComposer composer,
         int index,
         int count,

@@ -318,7 +318,8 @@ public class FacadeGeneratorTests
         Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
         Assert.NotNull(emitted);
         Assert.Contains("public sealed partial class Button : global::AndroidX.Compose.ComposableContainer", emitted);
-        Assert.Contains("public static void Button(global::AndroidX.Compose.Runtime.IComposer composer, global::System.Action onClick, [global::AndroidX.Compose.ComposableContentAttribute] global::System.Action<global::AndroidX.Compose.Runtime.IComposer> content", emitted);
+        Assert.Contains("internal static void Button(global::AndroidX.Compose.Runtime.IComposer composer, global::System.Action onClick, [global::AndroidX.Compose.ComposableContentAttribute] global::System.Action<global::AndroidX.Compose.Runtime.IComposer> content", emitted);
+        Assert.Contains("internal static void Button_PrimaryResource_Explicit(global::AndroidX.Compose.Runtime.IComposer __composer", emitted);
         Assert.Contains(
             "var __content = global::AndroidX.Compose.ComposableLambdas.Wrap3(__composer, c => global::AndroidX.Compose.ComposableContentNode.RenderDirect(c, content, false));",
             emitted);
@@ -375,6 +376,12 @@ public class FacadeGeneratorTests
             emitted);
         Assert.Contains(
             "Button_PrimaryResource_Implicit(global::AndroidX.Compose.ComposableContext.Current",
+            emitted);
+        Assert.Contains(
+            "[global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]",
+            emitted);
+        Assert.Contains(
+            "public static void Button_PrimaryResource_Implicit(global::AndroidX.Compose.Runtime.IComposer __composer",
             emitted);
         Assert.DoesNotContain("var node = new global::AndroidX.Compose.Button", emitted);
         Assert.DoesNotContain("node.Render(", emitted);
@@ -1659,7 +1666,7 @@ public class FacadeGeneratorTests
 
         // Bridge call passes typed __painterPeer for the painter arg.
         Assert.Contains("global::AndroidX.Compose.ComposeBridges.Image(__painterPeer", emitted);
-        Assert.Contains("public static void Image(global::AndroidX.Compose.Runtime.IComposer composer, global::AndroidX.Compose.UI.Graphics.Painter.Painter painter", emitted);
+        Assert.Contains("internal static void Image(global::AndroidX.Compose.Runtime.IComposer composer, global::AndroidX.Compose.UI.Graphics.Painter.Painter painter", emitted);
         Assert.Contains("var __painterRef = global::AndroidX.Compose.ComposeBridges.PainterResource(drawableResourceId, __composer);", emitted);
         Assert.Contains("var __painterPeer = painter;", emitted);
         Assert.DoesNotContain("var node = new global::AndroidX.Compose.Image", emitted);
@@ -2417,7 +2424,7 @@ public class FacadeGeneratorTests
         Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
         Assert.NotNull(emitted);
         Assert.Contains(
-            "public static void Picker(global::AndroidX.Compose.Runtime.IComposer composer, global::AndroidX.Compose.TimePickerState? state = null, bool showModeToggle = true, global::AndroidX.Compose.Modifier? modifier = null)",
+            "internal static void Picker(global::AndroidX.Compose.Runtime.IComposer composer, global::AndroidX.Compose.TimePickerState? state = null, bool showModeToggle = true, global::AndroidX.Compose.Modifier? modifier = null)",
             emitted);
         Assert.Empty(output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error));
     }
@@ -4192,8 +4199,8 @@ public class FacadeGeneratorTests
         // shared slot expressions in the secondary's parameter order.
         Assert.Contains("global::AndroidX.Compose.ComposeBridges.IconImageVectorExplicitDefaults(_imageVector!,", emitted);
         Assert.Contains(", __secDefaults, composer);", emitted);
-        Assert.Contains("public static void Icon(global::AndroidX.Compose.Runtime.IComposer composer, global::AndroidX.Compose.UI.Graphics.Painter.Painter painter,", emitted);
-        Assert.Contains("public static void Icon(global::AndroidX.Compose.Runtime.IComposer composer, global::AndroidX.Compose.UI.Graphics.Vector.ImageVector imageVector,", emitted);
+        Assert.Contains("internal static void Icon(global::AndroidX.Compose.Runtime.IComposer composer, global::AndroidX.Compose.UI.Graphics.Painter.Painter painter,", emitted);
+        Assert.Contains("internal static void Icon(global::AndroidX.Compose.Runtime.IComposer composer, global::AndroidX.Compose.UI.Graphics.Vector.ImageVector imageVector,", emitted);
         Assert.Contains("global::AndroidX.Compose.ComposeBridges.IconImageVectorExplicitDefaults(imageVector, contentDescription, __modifier, tint, (int)__defaults, __composer);", emitted);
         Assert.DoesNotContain("var node = new global::AndroidX.Compose.Icon", emitted);
 
@@ -4318,7 +4325,7 @@ public class FacadeGeneratorTests
         var (output, diags, emitted) = Run(code, "BranchPainter");
         Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
         Assert.NotNull(emitted);
-        Assert.Contains("public static void BranchPainter(global::AndroidX.Compose.Runtime.IComposer composer, global::AndroidX.Compose.UI.Graphics.Painter.Painter painter,", emitted);
+        Assert.Contains("internal static void BranchPainter(global::AndroidX.Compose.Runtime.IComposer composer, global::AndroidX.Compose.UI.Graphics.Painter.Painter painter,", emitted);
         Assert.Contains("__changed |= ((__directChanged >> 1) & 0b111) << 1;", emitted);
         Assert.Matches(
             @"if \(\(__omittedArguments & 0x4UL\) == 0\)\r?\n\s+__changed \|= __composer\.DiffSlot\(__modifierKey, 10\);",
@@ -4383,7 +4390,7 @@ public class FacadeGeneratorTests
 
         Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
         Assert.NotNull(emitted);
-        Assert.Contains("public static void Combined(global::AndroidX.Compose.Runtime.IComposer composer, global::AndroidX.Compose.UI.Graphics.Vector.ImageVector imageVector, int drawableResourceId,", emitted);
+        Assert.Contains("internal static void Combined(global::AndroidX.Compose.Runtime.IComposer composer, global::AndroidX.Compose.UI.Graphics.Vector.ImageVector imageVector, int drawableResourceId,", emitted);
         Assert.Contains("global::AndroidX.Compose.RenderContext.PushScope(__scope, global::AndroidX.Compose.ScopeKind.Row);", emitted);
         Assert.Contains("global::AndroidX.Compose.ComposableContentNode.RenderDirect(c, content, true);", emitted);
         Assert.Contains("long __color = (long)containerColor != 0L ? (long)containerColor", emitted);

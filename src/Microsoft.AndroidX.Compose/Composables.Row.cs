@@ -26,7 +26,7 @@ public static partial class Composables
     /// previous composition.
     /// </summary>
     [Composable]
-    public static void Row(
+    internal static void Row(
         IComposer composer,
         [ComposableContent] Action<IComposer> content)
     {

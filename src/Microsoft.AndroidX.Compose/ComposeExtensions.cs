@@ -23,12 +23,8 @@ namespace AndroidX.Compose;
 /// of synchronous composable calls. Deferred callbacks outside that scope
 /// must use an explicit composer-bearing boundary.
 ///
-/// Plain statics that don't read a slot (<see cref="NewTextFieldValue(string, long, AndroidX.Compose.UI.Text.TextRange?)"/>,
-/// <see cref="DerivedStateOf{T}(Func{T})"/>, …) also expose <c>this IComposer</c>
-/// convenience overloads so call sites inside a composable can keep the
-/// same <c>composer.X(...)</c> shape. The static form stays callable from
-/// non-composable contexts (button callbacks, ViewModels) — exactly the
-/// way Kotlin's <c>TextFieldValue("")</c> ctor isn't <c>@Composable</c>.
+/// Helpers that don't read composition state remain plain static factories;
+/// they do not expose a misleading <c>this IComposer</c> receiver.
 /// </summary>
 public static partial class ComposeExtensions
 {

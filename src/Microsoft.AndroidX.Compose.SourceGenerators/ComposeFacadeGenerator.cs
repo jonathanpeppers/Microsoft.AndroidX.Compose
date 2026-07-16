@@ -1814,7 +1814,10 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         sb.AppendLine("        [global::AndroidX.Compose.Composable]");
         sb.Append("        [global::AndroidX.Compose.ComposableDirectTarget(typeof(global::AndroidX.Compose.Composables), nameof(")
           .Append(helperName).AppendLine("))]");
-        sb.Append("        public static void ").Append(className).Append('(');
+        sb.Append(implicitComposer
+                ? "        public static void "
+                : "        internal static void ")
+          .Append(className).Append('(');
         bool hasParameter = false;
         if (!implicitComposer)
         {
@@ -1845,9 +1848,15 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
           .AppendLine(", 0);");
         sb.AppendLine("        }");
         sb.AppendLine();
-        sb.AppendLine("        [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]");
-        sb.AppendLine("        [global::System.Diagnostics.CodeAnalysis.SuppressMessage(\"ApiDesign\", \"RS0016\", Justification = \"Generated interceptor target, not public API.\")]");
-        sb.Append("        public static void ").Append(helperName)
+        if (implicitComposer)
+        {
+            sb.AppendLine("        [global::System.ComponentModel.EditorBrowsable(global::System.ComponentModel.EditorBrowsableState.Never)]");
+            sb.AppendLine("        [global::System.Diagnostics.CodeAnalysis.SuppressMessage(\"ApiDesign\", \"RS0016\", Justification = \"Generated interceptor target, not public API.\")]");
+        }
+        sb.Append(implicitComposer
+                ? "        public static void "
+                : "        internal static void ")
+          .Append(helperName)
           .Append("(global::AndroidX.Compose.Runtime.IComposer __composer");
         hasParameter = true;
         AppendComposableMethodUserParameters(sb, requiredCtorSlots, optionalCtorSlots,
