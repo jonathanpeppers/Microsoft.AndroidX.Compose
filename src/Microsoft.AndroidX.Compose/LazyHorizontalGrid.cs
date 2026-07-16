@@ -18,11 +18,11 @@ namespace AndroidX.Compose;
 /// </summary>
 public sealed class LazyHorizontalGrid<T> : ComposableNode
 {
-    readonly IGridCells _rows;
+    readonly GridCells _rows;
     readonly IReadOnlyList<T> _items;
     readonly Func<T, ComposableNode> _itemContent;
 
-    public LazyHorizontalGrid(IGridCells rows, IReadOnlyList<T> items, Func<T, ComposableNode> itemContent)
+    public LazyHorizontalGrid(GridCells rows, IReadOnlyList<T> items, Func<T, ComposableNode> itemContent)
     {
         ArgumentNullException.ThrowIfNull(rows);
         _rows        = rows;
@@ -68,9 +68,9 @@ public sealed class LazyHorizontalGrid<T> : ComposableNode
         if (ContentPadding is not null) defaults &= ~(int)LazyHorizontalGridDefault.ContentPadding;
 
         LazyGridDslKt.LazyHorizontalGrid(
-            rows:                  _rows,
+            rows:                  _rows.Jvm,
             modifier:              modifier,
-            state:                 State,
+            state:                 State?.Jvm,
             contentPadding:        ContentPadding?.Jvm,
             reverseLayout:         false,
             horizontalArrangement: null,

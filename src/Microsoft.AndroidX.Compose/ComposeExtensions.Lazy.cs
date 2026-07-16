@@ -77,4 +77,85 @@ public static partial class ComposeExtensions
             composer.EndReplaceableGroup();
         }
     }
+
+    /// <summary>
+    /// Returns a <see cref="LazyGridState"/> cached at this composition call site.
+    /// </summary>
+    public static LazyGridState RememberLazyGridState(
+        this IComposer composer,
+        int initialFirstVisibleItemIndex = 0,
+        int initialFirstVisibleItemScrollOffset = 0,
+        [CallerLineNumber] int line = 0,
+        [CallerFilePath] string file = "")
+    {
+        ArgumentNullException.ThrowIfNull(composer);
+
+        composer.StartReplaceableGroup(SourceLocationKey.Compute(line, file));
+        try
+        {
+            var jvm = AndroidX.Compose.Foundation.Lazy.Grid.LazyGridStateKt.RememberLazyGridState(
+                p0:                                  0,
+                initialFirstVisibleItemIndex:        initialFirstVisibleItemIndex,
+                _composer:                           composer,
+                initialFirstVisibleItemScrollOffset: initialFirstVisibleItemScrollOffset,
+                _changed:                            0)
+                ?? throw new InvalidOperationException(
+                    "LazyGridStateKt.RememberLazyGridState returned null.");
+            if (composer.RememberedValue() is RememberHolder holder
+                && holder.Value is LazyGridState existing
+                && ReferenceEquals(existing.Jvm, jvm))
+            {
+                return existing;
+            }
+
+            var state = new LazyGridState(jvm);
+            composer.UpdateRememberedValue(new RememberHolder(state));
+            return state;
+        }
+        finally
+        {
+            composer.EndReplaceableGroup();
+        }
+    }
+
+    /// <summary>
+    /// Returns a <see cref="LazyStaggeredGridState"/> cached at this composition call site.
+    /// </summary>
+    public static LazyStaggeredGridState RememberLazyStaggeredGridState(
+        this IComposer composer,
+        int initialFirstVisibleItemIndex = 0,
+        int initialFirstVisibleItemScrollOffset = 0,
+        [CallerLineNumber] int line = 0,
+        [CallerFilePath] string file = "")
+    {
+        ArgumentNullException.ThrowIfNull(composer);
+
+        composer.StartReplaceableGroup(SourceLocationKey.Compute(line, file));
+        try
+        {
+            var jvm = AndroidX.Compose.Foundation.Lazy.Staggeredgrid.LazyStaggeredGridStateKt
+                .RememberLazyStaggeredGridState(
+                    p0:                                  0,
+                    initialFirstVisibleItemIndex:        initialFirstVisibleItemIndex,
+                    _composer:                           composer,
+                    initialFirstVisibleItemScrollOffset: initialFirstVisibleItemScrollOffset,
+                    _changed:                            0)
+                ?? throw new InvalidOperationException(
+                    "LazyStaggeredGridStateKt.RememberLazyStaggeredGridState returned null.");
+            if (composer.RememberedValue() is RememberHolder holder
+                && holder.Value is LazyStaggeredGridState existing
+                && ReferenceEquals(existing.Jvm, jvm))
+            {
+                return existing;
+            }
+
+            var state = new LazyStaggeredGridState(jvm);
+            composer.UpdateRememberedValue(new RememberHolder(state));
+            return state;
+        }
+        finally
+        {
+            composer.EndReplaceableGroup();
+        }
+    }
 }

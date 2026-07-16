@@ -13,14 +13,14 @@ namespace AndroidX.Compose;
 ///
 /// <code>
 /// new LazyVerticalStaggeredGrid&lt;Photo&gt;(
-///     columns:     StaggeredGridCells.Adaptive(120f),
+///     columns:     StaggeredGridCells.Adaptive(120.Dp()),
 ///     items:       photos,
 ///     itemContent: p =&gt; new Image(p.Url))
 /// </code>
 /// </summary>
 public sealed class LazyVerticalStaggeredGrid<T> : ComposableNode
 {
-    readonly IStaggeredGridCells _columns;
+    readonly StaggeredGridCells _columns;
     readonly IReadOnlyList<T> _items;
     readonly Func<T, ComposableNode> _itemContent;
 
@@ -29,7 +29,7 @@ public sealed class LazyVerticalStaggeredGrid<T> : ComposableNode
     /// strategy (<paramref name="columns"/>) over <paramref name="items"/>,
     /// rendering each via <paramref name="itemContent"/>.
     /// </summary>
-    public LazyVerticalStaggeredGrid(IStaggeredGridCells columns, IReadOnlyList<T> items, Func<T, ComposableNode> itemContent)
+    public LazyVerticalStaggeredGrid(StaggeredGridCells columns, IReadOnlyList<T> items, Func<T, ComposableNode> itemContent)
     {
         ArgumentNullException.ThrowIfNull(columns);
         _columns     = columns;
@@ -94,9 +94,9 @@ public sealed class LazyVerticalStaggeredGrid<T> : ComposableNode
         // 11 user params → Compose splits $changed into two ints
         // (p12, _changed) and $default lives in the trailing _changed1.
         LazyStaggeredGridDslKt.LazyVerticalStaggeredGrid(
-            columns:               _columns,
+            columns:               _columns.Jvm,
             modifier:              modifier,
-            state:                 State,
+            state:                 State?.Jvm,
             contentPadding:        ContentPadding?.Jvm,
             reverseLayout:         false,
             verticalItemSpacing:   0f,
