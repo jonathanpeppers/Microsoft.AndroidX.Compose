@@ -74,7 +74,7 @@ public class PublicValueContractTests
 
     [TestMethod]
     [DataRow(-0.5001f)]
-    [DataRow(0.5f)]
+    [DataRow(0.5001f)]
     [DataRow(float.NaN)]
     public void PagerState_RejectsInvalidInitialPageOffsetFraction(float value)
     {
@@ -88,9 +88,7 @@ public class PublicValueContractTests
     public void PagerState_AcceptsInitialPageOffsetFractionBoundaries()
     {
         _ = new PagerState(static () => 1, initialPageOffsetFraction: -0.5f);
-        _ = new PagerState(
-            static () => 1,
-            initialPageOffsetFraction: MathF.BitDecrement(0.5f));
+        _ = new PagerState(static () => 1, initialPageOffsetFraction: 0.5f);
     }
 
     [TestMethod]

@@ -76,7 +76,7 @@ public sealed class PagerState
     /// Index of the page to start on (default <c>0</c>).
     /// </param>
     /// <param name="initialPageOffsetFraction">
-    /// Initial fractional offset in <c>[-0.5, 0.5)</c> (default
+    /// Initial fractional offset in <c>[-0.5, 0.5]</c> (default
     /// <c>0f</c>).
     /// </param>
     public PagerState(Func<int> pageCount, int initialPage = 0, float initialPageOffsetFraction = 0f)
@@ -84,11 +84,11 @@ public sealed class PagerState
         ArgumentNullException.ThrowIfNull(pageCount);
         if (initialPage < 0)
             throw new ArgumentOutOfRangeException(nameof(initialPage), initialPage, "Initial page must be greater than or equal to zero.");
-        if (!(initialPageOffsetFraction >= -0.5f && initialPageOffsetFraction < 0.5f))
+        if (!(initialPageOffsetFraction >= -0.5f && initialPageOffsetFraction <= 0.5f))
             throw new ArgumentOutOfRangeException(
                 nameof(initialPageOffsetFraction),
                 initialPageOffsetFraction,
-                "Initial page offset fraction must be in the range [-0.5, 0.5).");
+                "Initial page offset fraction must be in the range [-0.5, 0.5].");
 
         _pageCountFn = new ComposableLambda0Int(() => ValidatePageCount(pageCount()));
         Jvm = PagerStateKt.PagerState(
@@ -126,7 +126,7 @@ public sealed class PagerState
     public int TargetPage => Jvm.TargetPage;
 
     /// <summary>
-    /// Fractional offset of the current page in <c>[-0.5, 0.5)</c>,
+    /// Fractional offset of the current page in <c>[-0.5, 0.5]</c>,
     /// where <c>0</c> means the page is fully snapped. Mirrors Kotlin's
     /// <c>PagerState.currentPageOffsetFraction</c>.
     /// </summary>
