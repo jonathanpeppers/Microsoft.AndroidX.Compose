@@ -840,6 +840,7 @@ public class ComposableMethodGeneratorTests
                     public static void CallSite()
                     {
                         Foo(42);
+                        Foo<string>("value");
                         Foo<string?>(null);
                         Foo(42, 1);
                     }
@@ -854,8 +855,8 @@ public class ComposableMethodGeneratorTests
                 @"StartRestartGroup\(unchecked\(\(int\)0x([0-9A-F]{8})\)\)")
             .Select(match => match.Groups[1].Value)
             .ToArray();
-        Assert.Equal(3, keys.Length);
-        Assert.Equal(3, keys.Distinct().Count());
+        Assert.Equal(4, keys.Length);
+        Assert.Equal(4, keys.Distinct().Count());
         AssertNoCompileErrors(output);
     }
 
