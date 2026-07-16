@@ -1077,7 +1077,17 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
                             $"[StateHolder] on '{p.Name}': cannot resolve Remember parameter '{up.Name}' on StateType '{stateType.ToDisplayString()}'; expected a readable instance member named '{Pascal(up.Name)}' or 'Initial{Pascal(up.Name)}'"));
                         return null;
                     }
-                    rememberArgExpressions[i] = "_" + p.Name + "!." + resolved;
+                    var resolvedType = resolved is IPropertySymbol property
+                        ? property.Type
+                        : ((IFieldSymbol)resolved).Type;
+                    var conversion = ((CSharpCompilation)c.Compilation).ClassifyConversion(resolvedType, up.Type);
+                    if (!conversion.IsImplicit)
+                    {
+                        diags.Add(Diagnostic.Create(Diagnostics.FacadeStateHolderInvalid, loc, methodName,
+                            $"[StateHolder] on '{p.Name}': StateType member '{resolved.Name}' has type '{resolvedType.ToDisplayString()}', which is not implicitly convertible to Remember parameter '{up.Name}' of type '{up.Type.ToDisplayString()}'"));
+                        return null;
+                    }
+                    rememberArgExpressions[i] = "_" + p.Name + "!." + resolved.Name;
                 }
             }
 
@@ -3998,9 +4008,9 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
     /// Kotlin convention where <c>initialX</c> remember args correspond
     /// to live wrapper property <c>X</c>. Looks at both properties and
     /// fields, accepting any readable, non-static, accessible member.
-    /// Returns the resolved C# identifier or <c>null</c> when no match.
+    /// Returns the resolved symbol or <c>null</c> when no match.
     /// </summary>
-    static string? ResolveStateMember(INamedTypeSymbol stateType, string paramName)
+    static ISymbol? ResolveStateMember(INamedTypeSymbol stateType, string paramName)
     {
         var pascal = Pascal(paramName);
         if (FindReadableMember(stateType, pascal) is { } direct) return direct;
@@ -4008,7 +4018,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         return null;
     }
 
-    static string? FindReadableMember(INamedTypeSymbol stateType, string name)
+    static ISymbol? FindReadableMember(INamedTypeSymbol stateType, string name)
     {
         // Walk the inheritance chain so inherited members count. We stop
         // at the first match — properties and fields share a name space
@@ -4021,8 +4031,8 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
                 if (m.DeclaredAccessibility is not (Accessibility.Public or Accessibility.Internal
                     or Accessibility.ProtectedOrInternal))
                     continue;
-                if (m is IPropertySymbol prop && prop.GetMethod is not null) return prop.Name;
-                if (m is IFieldSymbol f) return f.Name;
+                if (m is IPropertySymbol prop && prop.GetMethod is not null) return prop;
+                if (m is IFieldSymbol f) return f;
             }
         }
         return null;

@@ -1064,13 +1064,11 @@ No facade extensions were needed — `DatePickerDialog`,
   inside `BuildNode`. Subscriptions live and die with `SetVirtualView`
   / `DisconnectHandler` so we never leak a CollectionChanged handler
   past the virtual view.
-- **`DatePickerState.Jvm` is `internal`**, so the MAUI handler can't
-  null-check it before pushing values into the wrapper. The state's
-  setter (`SelectedDateMillis = ms`) is already a silent no-op until
-  Compose binds the JVM peer on the first call to `DatePicker(state)`.
-  We seed the state from `MutableState<long?> _ticks` inside a
-  `LaunchedEffect` *sibling* to the `DatePickerDialog` — by the time
-  the effect runs, `Jvm` is non-null and the assignment lands.
+- **`DatePickerState.Jvm` remains internal**, but callers no longer need
+  to inspect it. `SelectedDateMillis` retains a pending value before
+  binding and updates the live JVM state afterward. The handler can
+  therefore seed from `MutableState<long?> _ticks` in a
+  `LaunchedEffect` sibling whether or not the dialog has mounted yet.
 - **`TimePickerState` is Phase 4b** — the wrapper takes
   `initialHour`, `initialMinute`, `is24Hour` as ctor args. We re-key
   `c.Remember(factory, ticks, is24Hour)` so external `Time` writes
@@ -1827,15 +1825,14 @@ recompose. The same shape unblocks a future
 `DateRangePickerHandler` (Phase 3+) which can reuse
 `DateRangeSelectableDates` to clamp the picker range.
 
-**Phase 4b lift trade-off.** The wrapper-member resolution rules
-(see `.github/copilot-instructions.md`) match by name only, not by
-type — so `DatePickerState.InitialSelectedDateMillis` had to be
-typed `Java.Lang.Long?` (matching the JNI slot) rather than the
-user-friendly `long?`. The conversion happens inside the
-`DatePickerState(long? initialSelectedDateMillis, ...)` ctor; users
-get an ergonomic API while the generator still lowers cleanly. The
-bridge generator can't skip non-trailing slots, so even though only
-three of the five Kotlin slots are MAUI-relevant
+**Phase 4b managed boundary.** Wrapper-member resolution now requires
+name and implicit type compatibility. `DatePickerState` exposes managed
+`long?` values and `DatePickerYearRange?`; a managed
+`RememberDatePickerState` wrapper boxes longs and creates Kotlin's
+`IntRange` immediately before calling the generated JNI bridge. Nulls
+flow through unchanged, so the bridge generator still leaves the
+matching Kotlin `$default` bits set. The bridge generator can't skip
+non-trailing slots, so even though only three of the five Kotlin slots are MAUI-relevant
 (`initialSelectedDateMillis`, `yearRange`, `selectableDates`), the
 bridge surfaces all five — the unused two are left `null` by the
 handler and the auto-default-mask machinery clears their
@@ -1864,9 +1861,9 @@ handler and the auto-default-mask machinery clears their
   so MAUI write-throughs from `dp.Date = picked` survive — they just
   bump `_ticks.Value` and let the adapter's mutable fields drive
   greying.
-- **Wrapper-member resolution matches by name, not type.** Surfaced
-  `Java.Lang.Long?` directly on the wrapper to align with the JNI
-  slot type; ergonomic conversion happens in the wrapper's ctor.
+- **Wrapper-member resolution validates both name and type.** Managed
+  state-holder APIs use a typed wrapper method when JNI boxing or range
+  conversion is required.
 - **MAUI's `DatePicker` clamps `Date` assignments outside the
   Min/Max range.** The Reset button on the `PickersPage` sample had
   to use `DateTime.Today` (within the seeded Today..Today+30 window)

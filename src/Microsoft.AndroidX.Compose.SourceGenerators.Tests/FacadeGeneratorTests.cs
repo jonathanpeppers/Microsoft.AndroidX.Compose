@@ -2688,6 +2688,58 @@ public class FacadeGeneratorTests
     }
 
     [Fact]
+    public void ParameterisedStateHolder_IncompatibleMemberType_FailsCN3009()
+    {
+        var code = $$"""
+            using global::AndroidX.Compose.Runtime;
+            using global::AndroidX.Compose.UI;
+            using AndroidX.Compose;
+            using System;
+
+            [assembly: ComposeDefaults("TimePickerDefault",
+                "!state", "modifier", "colors", "layoutType")]
+
+            namespace AndroidX.Compose.Material3
+            {
+                public interface ITimePickerState { }
+            }
+
+            namespace AndroidX.Compose
+            {
+                public sealed class BadState
+                {
+                    internal global::AndroidX.Compose.Material3.ITimePickerState? Jvm;
+                    public string InitialHour => "12";
+                }
+
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(Class="x/y/TimePickerKt", JvmName="TimePicker-mT9BvqQ",
+                                   Signature="{{TimePickerSig}}",
+                                   Defaults=typeof(TimePickerDefault))]
+                    [ComposeFacade]
+                    public static partial void TimePicker(
+                        [StateHolder(Remember = nameof(RememberTimePickerState),
+                                     StateType = typeof(BadState))]
+                        IntPtr state,
+                        IModifier? modifier,
+                        int defaults,
+                        IComposer composer);
+
+                    public static IntPtr RememberTimePickerState(int initialHour, IComposer composer) => default;
+                }
+            }
+            """;
+
+        var (_, diags, emitted) = Run(code, "TimePicker");
+        Assert.Null(emitted);
+        Assert.Contains(diags, d => d.Id == "CN3009"
+            && d.GetMessage().Contains("member 'InitialHour' has type 'string'")
+            && d.GetMessage().Contains("not implicitly convertible")
+            && d.GetMessage().Contains("parameter 'initialHour' of type 'int'"));
+    }
+
+    [Fact]
     public void ParameterisedStateHolder_NoParameterlessCtor_FailsCN3009()
     {
         // StateType only has an all-required-params ctor, so the

@@ -15,7 +15,16 @@ public static class DateRangePickerDialogDemo
         {
             var open   = c.MutableStateOf(false);
             var picked = c.MutableStateOf("(none)");
-            var state  = c.Remember(() => new DateRangePickerState());
+            var state  = c.Remember(() =>
+            {
+                var today = DateTimeOffset.UtcNow.Date;
+                var start = new DateTimeOffset(today, TimeSpan.Zero).ToUnixTimeMilliseconds();
+                var end = new DateTimeOffset(today.AddDays(3), TimeSpan.Zero).ToUnixTimeMilliseconds();
+                var pending = new DateRangePickerState(
+                    initialYearRange: new DatePickerYearRange(today.Year, today.Year + 1));
+                pending.SetSelection(start, end);
+                return pending;
+            });
             var showModes = c.MutableStateOf(true);
             return new Column
             {

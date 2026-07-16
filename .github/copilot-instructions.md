@@ -337,7 +337,7 @@ slots surface as `Action` instead of `Action<IComposer>`.
 
   Three sub-shapes:
   - **Phase 4** — zero-user-param Remember (`(IComposer) -> IntPtr`, e.g.
-    `RememberDatePickerState`). `_state` stays nullable; `Jvm` populated only
+    `RememberPullToRefreshState`). `_state` stays nullable; `Jvm` populated only
     when caller supplies non-null wrapper.
   - **Phase 4b** — parameterised Remember (`(arg1, …, IComposer) -> IntPtr`,
     e.g. `RememberTimePickerState(int initialHour, int initialMinute, bool
@@ -348,7 +348,11 @@ slots surface as `Action` instead of `Action<IComposer>`.
     guaranteed non-null in `Render`; `Jvm` population unguarded. The
     PascalCase-first rule lets a wrapper's live getter that falls back to its
     initial-value backing field (`Is24Hour => Jvm?.Is24hour() ?? InitialIs24Hour`)
-    be the natural match. Requires `StateType` constructible with no args.
+    be the natural match. The resolved member type must be implicitly
+    convertible to the Remember parameter type; use a managed wrapper method
+    around a generated JNI bridge when conversion is required (for example,
+    `long?` to boxed `Java.Lang.Long?` or `DatePickerYearRange?` to
+    `Kotlin.Ranges.IntRange?`). Requires `StateType` constructible with no args.
   - **Phase 4c** — `SharedState = true` opts in to shared-state caching for
     sibling facades sharing a `StateType` (e.g. `TimePicker` + `TimeInput`).
     Render preamble first checks `_state.Jvm` and reuses the cached JNI handle
