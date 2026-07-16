@@ -1,4 +1,3 @@
-using AndroidX.Compose.UI.Text;
 using AndroidX.Compose.UI.Text.Input;
 using AndroidX.Compose.Gallery.Registry;
 
@@ -22,7 +21,7 @@ public static class TextFieldCursorPlacementDemo
         Description: "TextFieldValue overload — append text and pin the caret to the end.",
         Build:       c =>
         {
-            var input = c.MutableStateOf(c.NewTextFieldValue());
+            var input = c.MutableStateOf(ComposeExtensions.NewTextFieldValue());
             return new Column(verticalArrangement: Arrangement.SpacedBy(12.Dp()))
             {
                 new Text("Tap an emoji — it appends to the field and the caret moves to the end so the next keystroke lands after it.")
@@ -51,11 +50,9 @@ public static class TextFieldCursorPlacementDemo
             {
                 var current = input.Value ?? ComposeExtensions.NewTextFieldValue();
                 var newText = current.Text + emoji;
-                // Copy(text, selection, composition) keeps annotations
-                // intact and lets us pin the caret. TextRangeKt.TextRange
-                // packs (start, end) into the long Compose's selection
-                // field expects.
-                input.Value = current.Copy(newText, TextRangeKt.TextRange(newText.Length), composition: null);
+                input.Value = ComposeExtensions.NewTextFieldValue(
+                    newText,
+                    cursor: newText.Length);
             })
             {
                 new Text(emoji),

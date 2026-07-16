@@ -68,7 +68,7 @@ public static class Transitions
     /// <param name="animationSpec">Optional spec; <see langword="null"/> uses
     /// <c>spring(stiffness = StiffnessMediumLow)</c>.</param>
     public static EnterTransition ScaleIn(float initialScale = 0f, IFiniteAnimationSpec? animationSpec = null) =>
-        EnterExitTransitionKt.ScaleIn(animationSpec ?? DefaultSpec(), initialScale, TransformOrigin.Center);
+        EnterExitTransitionKt.ScaleIn(animationSpec ?? DefaultSpec(), initialScale, TransformOrigin.Center.PackedValue);
 
     /// <summary>
     /// Scales the content out from <c>1f</c> to
@@ -80,7 +80,7 @@ public static class Transitions
     /// <param name="animationSpec">Optional spec; <see langword="null"/> uses
     /// <c>spring(stiffness = StiffnessMediumLow)</c>.</param>
     public static ExitTransition ScaleOut(float targetScale = 0f, IFiniteAnimationSpec? animationSpec = null) =>
-        EnterExitTransitionKt.ScaleOut(animationSpec ?? DefaultSpec(), targetScale, TransformOrigin.Center);
+        EnterExitTransitionKt.ScaleOut(animationSpec ?? DefaultSpec(), targetScale, TransformOrigin.Center.PackedValue);
 
     /// <summary>
     /// Slides the content in horizontally from <paramref name="initialOffsetX"/>

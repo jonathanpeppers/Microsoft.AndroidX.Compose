@@ -169,7 +169,7 @@ public partial class EditorHandler : ComposeElementHandler<IEditor>
         var cursor = Math.Min(editor.CursorPosition, newText.Length);
         if (cursor < 0) cursor = newText.Length;
         handler._tfv.SetWithoutMirror(ComposeExtensions.NewTextFieldValue(
-            newText, TextRangeKt.TextRange(cursor), composition: null));
+            newText, cursor));
     }
 
     /// <summary>Map <see cref="ITextStyle.TextColor"/> to the Compose <c>TextStyle.Color</c> slot.</summary>
@@ -314,7 +314,7 @@ public partial class EditorHandler : ComposeElementHandler<IEditor>
                     var start = Math.Min((int)sel, max);
                     var end = Math.Min((int)(sel >> 32), max);
                     value = ComposeExtensions.NewTextFieldValue(
-                        trunc, TextRangeKt.TextRange(start, end), composition: null);
+                        trunc, start, end);
                 }
                 base.Value = value
                     ?? throw new InvalidOperationException(

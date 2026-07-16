@@ -6,7 +6,7 @@ public static partial class Composables
 {
     /// <summary>Renders a collapsed state-based search bar with an explicit composer.</summary>
     [Composable, GenerateImplicitComposable]
-    public static void SearchBar(
+    internal static void SearchBar(
         IComposer composer,
         SearchBarState state,
         [ComposableContent] Action<IComposer> inputField,
@@ -25,7 +25,7 @@ public static partial class Composables
 
     /// <summary>Renders a state-based top search bar with an explicit composer.</summary>
     [Composable, GenerateImplicitComposable]
-    public static void TopSearchBar(
+    internal static void TopSearchBar(
         IComposer composer,
         SearchBarState state,
         [ComposableContent] Action<IComposer> inputField,
@@ -44,7 +44,7 @@ public static partial class Composables
 
     /// <summary>Renders a docked expanded search popup with an explicit composer.</summary>
     [Composable, GenerateImplicitComposable]
-    public static void ExpandedDockedSearchBar(
+    internal static void ExpandedDockedSearchBar(
         IComposer composer,
         SearchBarState state,
         [ComposableContent] Action<IComposer> inputField,
@@ -67,7 +67,7 @@ public static partial class Composables
 
     /// <summary>Renders a full-screen expanded search popup with an explicit composer.</summary>
     [Composable, GenerateImplicitComposable]
-    public static void ExpandedFullScreenSearchBar(
+    internal static void ExpandedFullScreenSearchBar(
         IComposer composer,
         SearchBarState state,
         [ComposableContent] Action<IComposer> inputField,
@@ -91,7 +91,7 @@ public static partial class Composables
 
     /// <summary>Renders a state-based search input field with an explicit composer.</summary>
     [Composable, GenerateImplicitComposable]
-    public static void SearchBarInputField(
+    internal static void SearchBarInputField(
         IComposer composer,
         SearchBarTextFieldState textState,
         SearchBarState searchState,
@@ -120,7 +120,7 @@ public static partial class Composables
     /// <summary>Renders the deprecated boolean-state docked search bar with an explicit composer.</summary>
     [Obsolete("Use the state-based SearchBar + ExpandedDockedSearchBar pair instead.")]
     [Composable, GenerateImplicitComposable]
-    public static void DockedSearchBar(
+    internal static void DockedSearchBar(
         IComposer composer,
         bool expanded,
         Action<bool> onExpandedChange,
@@ -147,7 +147,7 @@ public static partial class Composables
     /// <summary>Renders the deprecated query-based docked search bar with an explicit composer.</summary>
     [Obsolete("Use the state-based SearchBar + ExpandedDockedSearchBar pair instead.")]
     [Composable, GenerateImplicitComposable]
-    public static void DockedSearchBar(
+    internal static void DockedSearchBar(
         IComposer composer,
         string query,
         Action<string> onQueryChange,

@@ -624,7 +624,7 @@ pokes a view that never paints.
 | `TranslationX/Y`                                                 | `Modifier.Offset(x.dp, y.dp)`                                                                                |
 | `Scale * ScaleX/ScaleY` (multiplied)                             | `Modifier.Scale((float)sx)` (uniform) or `Modifier.Scale(sx, sy)` (asymmetric)                                |
 | `Rotation` only                                                  | `Modifier.Rotate(rotation)` (cheaper, no `GraphicsLayer`)                                                    |
-| `Rotation` + any of `RotationX/Y` / `AnchorX/Y != 0.5`           | `Modifier.GraphicsLayer(rotationX, rotationY, rotationZ, transformOrigin: TransformOrigin.Pack(ax, ay))`     |
+| `Rotation` + any of `RotationX/Y` / `AnchorX/Y != 0.5`           | `Modifier.GraphicsLayer(rotationX, rotationY, rotationZ, transformOrigin: new TransformOrigin(ax, ay))`     |
 | `Clip` is `RoundRectangleGeometry`                               | `Modifier.Clip(new RoundedCornerShape(corner.dp))` (or per-corner `RoundedCornerShape(topStart, …)`)         |
 | `Clip` is `RectangleGeometry`                                    | `Modifier.Clip(Shape.Rectangle)`                                                                             |
 | `Clip` is `EllipseGeometry` (`RadiusX == RadiusY`)               | `Modifier.Clip(Shape.Circle())`                                                                              |

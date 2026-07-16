@@ -35,7 +35,7 @@ public static partial class Composables
 
     /// <summary>Renders a typed vertical lazy list with an explicit composer.</summary>
     [Composable]
-    public static void LazyColumn<T>(
+    internal static void LazyColumn<T>(
         IComposer composer,
         IReadOnlyList<T> items,
         [ComposableContent] Action<T, IComposer> itemContent,
@@ -87,7 +87,7 @@ public static partial class Composables
 
     /// <summary>Renders a typed horizontal lazy list with an explicit composer.</summary>
     [Composable]
-    public static void LazyRow<T>(
+    internal static void LazyRow<T>(
         IComposer composer,
         IReadOnlyList<T> items,
         [ComposableContent] Action<T, IComposer> itemContent,
@@ -142,7 +142,7 @@ public static partial class Composables
 
     /// <summary>Renders a typed vertically scrolling lazy grid with an explicit composer.</summary>
     [Composable]
-    public static void LazyVerticalGrid<T>(
+    internal static void LazyVerticalGrid<T>(
         IComposer composer,
         IGridCells columns,
         IReadOnlyList<T> items,
@@ -198,7 +198,7 @@ public static partial class Composables
 
     /// <summary>Renders a typed horizontally scrolling lazy grid with an explicit composer.</summary>
     [Composable]
-    public static void LazyHorizontalGrid<T>(
+    internal static void LazyHorizontalGrid<T>(
         IComposer composer,
         IGridCells rows,
         IReadOnlyList<T> items,
@@ -250,7 +250,7 @@ public static partial class Composables
 
     /// <summary>Renders a typed vertical lazy staggered grid with an explicit composer.</summary>
     [Composable]
-    public static void LazyVerticalStaggeredGrid<T>(
+    internal static void LazyVerticalStaggeredGrid<T>(
         IComposer composer,
         IStaggeredGridCells columns,
         IReadOnlyList<T> items,
@@ -302,7 +302,7 @@ public static partial class Composables
 
     /// <summary>Renders a typed horizontal lazy staggered grid with an explicit composer.</summary>
     [Composable]
-    public static void LazyHorizontalStaggeredGrid<T>(
+    internal static void LazyHorizontalStaggeredGrid<T>(
         IComposer composer,
         IStaggeredGridCells rows,
         IReadOnlyList<T> items,

@@ -17,7 +17,7 @@ namespace AndroidX.Compose;
 /// uses Kotlin's <c>TextField(TextFieldValue, …)</c> overload so callers
 /// can place the caret explicitly after programmatic edits (e.g. append
 /// an emoji and move the cursor to the end of the buffer). Build values
-/// via <see cref="ComposeExtensions.NewTextFieldValue(string, long, AndroidX.Compose.UI.Text.TextRange?)"/>
+/// via <see cref="ComposeExtensions.NewTextFieldValue(string, int, AndroidX.Compose.UI.Text.TextRange?)"/>
 /// and <c>TextFieldValue.Copy(...)</c>. See issue #204.</item>
 /// </list>
 /// </summary>

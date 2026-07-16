@@ -28,7 +28,7 @@ public static partial class Composables
 
     /// <summary>Renders a typed horizontal pager with an explicit composer.</summary>
     [Composable]
-    public static void HorizontalPager<T>(
+    internal static void HorizontalPager<T>(
         IComposer composer,
         IReadOnlyList<T> items,
         [ComposableContent] Action<T, IComposer> itemContent,
@@ -74,7 +74,7 @@ public static partial class Composables
 
     /// <summary>Renders a typed vertical pager with an explicit composer.</summary>
     [Composable]
-    public static void VerticalPager<T>(
+    internal static void VerticalPager<T>(
         IComposer composer,
         IReadOnlyList<T> items,
         [ComposableContent] Action<T, IComposer> itemContent,

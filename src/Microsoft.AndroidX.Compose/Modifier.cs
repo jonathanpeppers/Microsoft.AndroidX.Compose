@@ -308,8 +308,8 @@ public sealed class Modifier
     /// <inheritdoc cref="ModifierExtensions.Shadow(Dp, Shape?)"/>
     public static Modifier Shadow(Dp elevation, Shape? shape = null) => _companion.Shadow(elevation, shape);
 
-    /// <inheritdoc cref="ModifierExtensions.GraphicsLayer(float?, float?, float?, float?, float?, float?, float?, float?, float?, float?, long?, Shape?, bool?)"/>
-    public static Modifier GraphicsLayer(float? scaleX = null, float? scaleY = null, float? alpha = null, float? translationX = null, float? translationY = null, float? shadowElevation = null, float? rotationX = null, float? rotationY = null, float? rotationZ = null, float? cameraDistance = null, long? transformOrigin = null, Shape? shape = null, bool? clip = null) => _companion.GraphicsLayer(scaleX, scaleY, alpha, translationX, translationY, shadowElevation, rotationX, rotationY, rotationZ, cameraDistance, transformOrigin, shape, clip);
+    /// <inheritdoc cref="ModifierExtensions.GraphicsLayer(float?, float?, float?, float?, float?, float?, float?, float?, float?, float?, TransformOrigin?, Shape?, bool?)"/>
+    public static Modifier GraphicsLayer(float? scaleX = null, float? scaleY = null, float? alpha = null, float? translationX = null, float? translationY = null, float? shadowElevation = null, float? rotationX = null, float? rotationY = null, float? rotationZ = null, float? cameraDistance = null, TransformOrigin? transformOrigin = null, Shape? shape = null, bool? clip = null) => _companion.GraphicsLayer(scaleX, scaleY, alpha, translationX, translationY, shadowElevation, rotationX, rotationY, rotationZ, cameraDistance, transformOrigin, shape, clip);
 
     /// <inheritdoc cref="ModifierExtensions.ImePadding()"/>
     public static Modifier ImePadding() => _companion.ImePadding();

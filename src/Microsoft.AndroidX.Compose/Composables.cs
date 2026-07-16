@@ -13,8 +13,10 @@ namespace AndroidX.Compose;
 /// <para>
 /// Recommended usage: <c>using static AndroidX.Compose.Composables;</c>
 /// then call by bare name — <c>Text("Hi")</c>,
-/// <c>Column(() =&gt; { ... })</c>. Explicit-composer overloads remain
-/// available. The static method names match
+/// <c>Column(() =&gt; { ... })</c>. Explicit-composer catalog adapters stay
+/// internal; low-level custom nodes override
+/// <see cref="ComposableNode.Render(AndroidX.Compose.Runtime.IComposer)"/>.
+/// The static method names match
 /// the tree-style facade type names
 /// (<see cref="global::AndroidX.Compose.Text"/>,
 /// <see cref="global::AndroidX.Compose.Button"/>,

@@ -138,15 +138,17 @@ declarative attribute can be swapped one-for-one to the generic form.
 ## Compose value types
 
 The Kotlin `@JvmInline value class` types that surface as primitives
-across JNI (`Color`, `Dp`, `Sp`, `FontWeight`, `TextAlign`) are
+across JNI (`Color`, `Dp`, `Sp`, `TextOverflow`, `TransformOrigin`) are
 mirrored as typed C# structs in
 [`Microsoft.AndroidX.Compose`](../src/Microsoft.AndroidX.Compose). The bridge generator
 keeps a tiny registry in
 [`ComposeValueTypes.cs`](../src/Microsoft.AndroidX.Compose.SourceGenerators/ComposeValueTypes.cs)
-that maps each value type to its JNI slot (`F` / `J` / `I`) and a
-`Pack(T?)` helper, so a bridge can declare `Dp? width` or `Sp? size`
-and the generator emits the correct primitive lowering plus the
-`$default`-bit clear on non-null. `Color` is a 64-bit packed ULong with
+that maps each value type to its JNI slot (`F` / `J` / `I`) and an
+internal lowering expression, so a bridge can declare `Dp? width`,
+`Sp? size`, or `TransformOrigin? origin` and the generator emits the
+correct primitive lowering plus the `$default`-bit clear on non-null.
+The packed representation stays out of the user-facing API. `Color` is
+a 64-bit packed ULong with
 an implicit conversion to `long`, so call sites pass `Color.FromRgb(…)`
 or one of the named constants straight through to bridges and bound
 binding methods that already take a packed color — no per-call
@@ -198,6 +200,19 @@ public static class Screens
         Composables.Text($"Hello {name}");
     }
 }
+```
+
+Extension composables are supported in both extension and explicit-static
+syntax. An `IComposer` receiver is the composer slot and is excluded from
+argument diffing; any other extension receiver is an ordinary first user
+parameter and is diffed:
+
+```csharp
+[Composable]
+public static void Greeting(this IComposer composer, string name) { }
+
+composer.Greeting("Ada");
+Screens.Greeting(composer, "Ada");
 ```
 
 ### What the generator emits
@@ -315,8 +330,8 @@ surfaces are modeled.
   either Kotlin lambda factory. Collection parameters are treated as unstable
   and force execution so in-place list edits cannot be hidden by reference
   equality. `MaterialTheme`, `Scaffold`, `SnackbarHost`, and both
-  `SegmentedButton` modes are also complete. Their explicit-composer adapters
-  remain the sole rendering implementation and delegate to the existing
+  `SegmentedButton` modes are also complete. Their internal explicit-composer
+  adapters remain the sole rendering implementation and delegate to the existing
   handwritten facades. `[GenerateImplicitComposable]` derives the ambient
   sibling, removing the trailing `IComposer` from each
   `[ComposableContent] Action<..., IComposer>` while preserving nullable
@@ -352,7 +367,6 @@ surfaces are modeled.
 | CN5003 | If `[Composable]` declares `IComposer`, it must be the first and only composer parameter. |
 | CN5004 | Method and containing types must be interceptor-accessible.     |
 | CN5005 | `async` composables are unsupported.                            |
-| CN5006 | Extension-method composables are unsupported.                   |
 | CN5008 | `ref`, `out`, and `in` parameters are unsupported.              |
 | CN5009 | A composerless API may execute outside `[Composable]` code or a `[ComposableContent]` callback; the diagnostic points to the unsafe delegate escape. |
 | CN5010 | `[GenerateImplicitComposable]` was applied to an unsupported explicit-composer adapter shape. |
@@ -491,7 +505,7 @@ class.
   cooperate:
   - `composer.DiffSlot<T>(value, bitOffset)` — slot-table-backed
     structural diff, returns `Same`/`Different` shifted into place.
-  - `composer.RememberAction(action)` — caches one
+  - the internal `composer.RememberAction(action)` helper — caches one
     `MutableComposableLambda0/1` JCW per call site with a writable
     target, so onClick/onValueChange callbacks have a JNI-handle-stable
     peer; the corresponding param contributes `Static` to the mask.
@@ -557,7 +571,7 @@ class.
   forwarded to Kotlin's `rememberSaveable(vararg inputs)` array so
   the saveable registry uses the same invalidation semantics.
 - **State primitives.** `MutableStateList<T>`, `MutableStateMap<K,V>`,
-  `composer.DerivedStateOf<T>(Func<T>)`, and
+  `ComposeExtensions.DerivedStateOf<T>(Func<T>)`, and
   `composer.ProduceState<T>(initialValue, [keys…], producer)` are
   available. `ProduceState` is implemented purely in C# via an
   `IRememberObserver` JCW — the producer is a plain

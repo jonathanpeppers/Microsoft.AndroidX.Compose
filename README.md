@@ -156,9 +156,10 @@ public class MainActivity : ComponentActivity
 `ComposeFacadeGenerator` emits public composable entry points alongside the
 tree-style facade catalog. Every generated facade has a composerless overload,
 and common handwritten composition APIs cover layout, state, effects,
-resources, theme reads, and composition locals. Existing explicit-composer
-overloads remain available as low-level escape hatches. The composable facade
-entry points are themselves `[Composable]`, so unchanged calls skip before
+resources, theme reads, and composition locals. Explicit-composer catalog
+adapters stay internal; custom nodes retain the public `Render(IComposer)`
+contract and composition-aware utilities. The composable facade entry points
+are themselves `[Composable]`, so unchanged calls skip before
 their bodies execute; when they do execute, the generator lowers modifier,
 callback, content-slot, state-holder, and default-mask plumbing directly to
 the corresponding Compose bridge without constructing a tree-style adapter.
