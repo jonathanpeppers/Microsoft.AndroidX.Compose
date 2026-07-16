@@ -975,6 +975,84 @@ public class ComposableMethodGeneratorTests
     }
 
     [Fact]
+    public void GenericMethod_RestartKeysIncludeConstructedSignature()
+    {
+        var src = CSharpSyntaxTree.ParseText(Preamble + """
+            namespace App
+            {
+                public static class Screens
+                {
+                    [AndroidX.Compose.Composable]
+                    public static void Foo<T>(T value) { }
+
+                    [AndroidX.Compose.Composable]
+                    public static void Foo<T>(T value, int count) { }
+                }
+            }
+            """, ParseOpts);
+        var compilation = CSharpCompilation.Create(
+            "ComposableMethodTest",
+            [src],
+            references: Net.Sdk.References,
+            options: new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary,
+                nullableContextOptions: NullableContextOptions.Enable));
+        var methods = compilation.GetTypeByMetadataName("App.Screens")
+            ?.GetMembers("Foo")
+            .OfType<IMethodSymbol>()
+            .ToArray()
+            ?? throw new System.InvalidOperationException("Generic composable methods not found.");
+        var single = methods.Single(method => method.Parameters.Length == 1);
+        var overload = methods.Single(method => method.Parameters.Length == 2);
+        var intType = compilation.GetSpecialType(SpecialType.System_Int32);
+        var stringType = compilation.GetSpecialType(SpecialType.System_String);
+        int[] keys =
+        [
+            ComposableMethodGenerator.GetRestartGroupKey(single.Construct(intType)),
+            ComposableMethodGenerator.GetRestartGroupKey(single.Construct(stringType)),
+            ComposableMethodGenerator.GetRestartGroupKey(overload.Construct(intType)),
+        ];
+
+        Assert.NotEqual(keys[0], keys[1]);
+        Assert.NotEqual(keys[0], keys[2]);
+        Assert.NotEqual(keys[1], keys[2]);
+    }
+
+    [Fact]
+    public void GenericMethod_RestartIdentityIncludesNullableTypeArguments()
+    {
+        var src = CSharpSyntaxTree.ParseText(Preamble + """
+            namespace App
+            {
+                public static class Screens
+                {
+                    [AndroidX.Compose.Composable]
+                    public static void Foo<T>(T value) { }
+                }
+            }
+            """, ParseOpts);
+        var compilation = CSharpCompilation.Create(
+            "ComposableMethodTest",
+            [src],
+            references: Net.Sdk.References,
+            options: new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary,
+                nullableContextOptions: NullableContextOptions.Enable));
+        var method = compilation.GetTypeByMetadataName("App.Screens")
+            ?.GetMembers("Foo")
+            .OfType<IMethodSymbol>()
+            .Single()
+            ?? throw new System.InvalidOperationException("Generic composable method not found.");
+        var stringType = compilation.GetSpecialType(SpecialType.System_String);
+        var nonNullable = method.Construct(
+            stringType.WithNullableAnnotation(NullableAnnotation.NotAnnotated));
+        var nullable = method.Construct(
+            stringType.WithNullableAnnotation(NullableAnnotation.Annotated));
+
+        Assert.NotEqual(
+            ComposableMethodGenerator.GetRestartGroupIdentity(nonNullable),
+            ComposableMethodGenerator.GetRestartGroupIdentity(nullable));
+    }
+
+    [Fact]
     public void GenericMethod_PreservesTypeParameterConstraints()
     {
         var (output, diags, emitted) = Run("""
