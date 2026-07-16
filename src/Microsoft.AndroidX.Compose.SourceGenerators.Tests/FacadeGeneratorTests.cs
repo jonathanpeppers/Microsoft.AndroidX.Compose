@@ -4317,6 +4317,12 @@ public class FacadeGeneratorTests
         Assert.NotNull(emitted);
         Assert.Contains("public static void BranchPainter(global::AndroidX.Compose.Runtime.IComposer composer, global::AndroidX.Compose.UI.Graphics.Painter.Painter painter,", emitted);
         Assert.Contains("__changed |= ((__directChanged >> 1) & 0b111) << 1;", emitted);
+        Assert.Matches(
+            @"if \(\(__omittedArguments & 0x4UL\) == 0\)\r?\n\s+__changed \|= __composer\.DiffSlot\(__modifierKey, 10\);",
+            emitted);
+        Assert.Matches(
+            @"if \(\(__omittedArguments & 0x4UL\) == 0\)\r?\n\s+__changed \|= __composer\.DiffSlot\(__modifierKey, 7\);",
+            emitted);
 
         var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
         Assert.Empty(errors);
@@ -4612,6 +4618,13 @@ public class FacadeGeneratorTests
         Assert.Contains("__changed |= (int)global::AndroidX.Compose.ChangedBits.Static << global::AndroidX.Compose.ComposeExtensions.DiffSlotShift(3);", emitted);
         Assert.Contains("__changed |= __composer.DiffSlot(__modifierKey, 4);", emitted);
         Assert.Contains("int __changed = __omittedArguments == 0 ? __directChanged & 0b1 : 0;", emitted);
+        Assert.Matches(
+            @"if \(\(__omittedArguments & 0x8UL\) == 0\)\r?\n\s+__changed \|= __composer\.DiffSlot\(__modifierKey, 4\);",
+            emitted);
+        Assert.Matches(
+            @"if \(\(__omittedArguments & 0x4UL\) == 0\)\r?\n\s+__changed \|= \(\(__directChanged >> 7\) & 0b111\) << 7;",
+            emitted);
+        Assert.Contains("__changed |= ((__directChanged >> 1) & 0b111) << 1;", emitted);
         Assert.Contains("__changed |= ((__directChanged >> 4) & 0b111) << 10;", emitted);
 
         var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
