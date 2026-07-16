@@ -532,6 +532,17 @@ public class FacadeGeneratorTests
         Assert.Contains("int __changed = 0;", emitted);
         Assert.DoesNotContain("int __changed = __omittedArguments == 0 ? __directChanged & 0b1 : 0;", emitted);
         Assert.Contains("global::AndroidX.Compose.ComposeBridges.TextExplicitDefaults(", emitted);
+
+        var defaultsType = output.GetTypeByMetadataName("AndroidX.Compose.TextDefault");
+        var all = defaultsType?.GetMembers("All").OfType<IFieldSymbol>().Single();
+        Assert.Equal(131070, all?.ConstantValue);
+
+        var bridge = output.SyntaxTrees.Single(tree =>
+            tree.FilePath.EndsWith("ComposeBridges.Text.g.cs", System.StringComparison.Ordinal))
+            .GetText().ToString();
+        Assert.Contains("args[18] = new global::Android.Runtime.JValue(_changed);", bridge);
+        Assert.Contains("args[19] = new global::Android.Runtime.JValue(0);", bridge);
+        Assert.Contains("args[20] = new global::Android.Runtime.JValue(defaults);", bridge);
         Assert.Empty(output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error));
     }
 
