@@ -554,7 +554,9 @@ public class ComposableMethodGeneratorTests
 
         Assert.Empty(diags);
         Assert.NotNull(emitted);
-        Assert.Contains("0xFFFEUL, __dirty", emitted);
+        Assert.Contains("__forceExecute = true;", emitted);
+        Assert.DoesNotContain("__dirty |= 0b1;", emitted);
+        Assert.Contains("0xFFFEUL, __dirty);", emitted);
         AssertNoCompileErrors(output);
     }
 
