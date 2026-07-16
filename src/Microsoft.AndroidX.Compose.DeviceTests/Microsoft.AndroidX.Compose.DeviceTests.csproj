@@ -20,7 +20,8 @@
       Tests cover post-build runtime behaviour we can't assert from source-
       generator unit tests: Modifier.StructuralKey equality, DiffSlot bit
       contributions, RememberAction identity stability, ConfirmStateChange
-      JCW veto, and Offset.Unbox JNI marshalling. Run with:
+      JCW veto, Offset.Unbox JNI marshalling, and Color packing across a
+      bound SolidColor constructor/getter. Run with:
 
         dotnet build src\Microsoft.AndroidX.Compose.DeviceTests -t:Install
         adb shell am instrument -w net.compose.devicetests/net.compose.devicetests.TestInstrumentation
