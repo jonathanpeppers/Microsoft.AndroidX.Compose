@@ -193,6 +193,11 @@ pattern; see `ComposeBridges.cs` for live examples (`PainterResource`,
   `return CallStaticObjectMethod(...)` inside `try`/`finally`.
 - No-`$default` bridges: user params match JNI slots **positionally**; C#
   parameter order must match Kotlin bytecode order.
+- Auto-mask bridges also receive an internal generated
+  `<MethodName>ExplicitDefaults` sibling. The declared partial method keeps
+  nullable runtime auto-masking for existing callers; direct composable helpers
+  call the sibling with their omission-aware generated enum mask. At 32+
+  Kotlin slots the sibling accepts the two values returned by `.Split()`.
 
 ### Still hand-written
 
@@ -306,7 +311,7 @@ helpers, operators.
   Phase 9 below.
 - `Container = true` (Phase 8 variant): see Phase 8 below.
 
-Every supported generated facade automatically receives a composerless Tier 2
+Every supported generated facade automatically receives a composerless `[Composable]`
 overload. Its body reads `ComposableContext.Current`, and composable content
 slots surface as `Action` instead of `Action<IComposer>`.
 
@@ -454,8 +459,9 @@ so `[CallerFilePath]` + `[CallerLineNumber]` slot keys inside
   branched slot. `AlternateBridge` names a sibling `ComposeBridges` method
   whose user params = primary's set + exactly one extra
   `IFunction2`/`IFunction3` slot whose PascalCased name matches `BranchOn`.
-  Both bridges must declare trailing `int defaults` and reference their own
-  `Defaults = typeof(XxxDefault)`. Generator emits a single facade exposing
+  Both bridges must reference their own `Defaults = typeof(XxxDefault)`.
+  They may declare trailing `int defaults`, or rely on the bridge generator's
+  omission-aware `ExplicitDefaults` sibling. Generator emits a single facade exposing
   the extra slot as nullable `ComposableNode?` property; renders
   `if (Subtitle is not null) {…alt…} else {…primary…}`. Shared lambdas and
   `__modifier = BuildModifier()` hoisted ABOVE the if/else; branched slot's
@@ -487,8 +493,10 @@ so `[CallerFilePath]` + `[CallerLineNumber]` slot keys inside
     (renamed locals avoid CS0136 shadowing of the primary path's
     `__modifier` / `__defaults`).
 
-  Both bridges must declare trailing `int defaults`. The secondary's
-  enum bit for the discriminator (if present) is cleared automatically.
+  A hand-written secondary wrapper must declare trailing `int defaults`; a
+  `[ComposeBridge]` secondary may instead use its generated
+  `ExplicitDefaults` sibling. The secondary's enum bit for the discriminator
+  (if present) is cleared automatically.
   Mutually exclusive with `BranchOn` / `AlternateBridge` (CN3012). Used
   for `Icon` (`IconPainter` primary via `[PainterResource]` ctor +
   `IconImageVector` sibling wrapping the bound `IconKt.Icon(ImageVector,…)`
@@ -539,7 +547,8 @@ Applying `[ComposeFacade]` to an unsupported bridge emits CN3002 (unsupported
 param), CN3003 (scope misuse), CN3005 (invalid callback type), CN3006 (slot
 conflict), CN3007 (color theme bind failed), CN3008 (painter misuse), CN3009
 (state-holder misuse), CN3010 (branching misuse), CN3011
-(confirmStateChange misuse), or CN3012 (secondary-ctor misuse).
+(confirmStateChange misuse), CN3012 (secondary-ctor misuse), or CN3013
+(ambiguous or invalid lambda execution mode).
 
 ### Adding a new generated facade
 
@@ -554,7 +563,7 @@ conflict), CN3007 (color theme bind failed), CN3008 (painter misuse), CN3009
    `public sealed partial class <ClassName>;` and a `<summary>`. Use
    `Button.cs`/`IconButton.cs`/`Card.cs` as templates. **Do not omit the
    stub** — without it no XML docs.
-4. Build `dotnet build src/Microsoft.AndroidX.Compose.Gallery` to verify. CN3001-CN3012 fire
+4. Build `dotnet build src/Microsoft.AndroidX.Compose.Gallery` to verify. CN3001-CN3013 fire
    on rejection.
 5. If CN3002 fires, add the right marker attribute
    (`[Callback]`/`[Slot]`/`[PainterResource]`) or back out and write by hand.
@@ -574,9 +583,10 @@ conflict), CN3007 (color theme bind failed), CN3008 (painter misuse), CN3009
 | CN3007 | `DefaultColorFromTheme` cannot bind to any `long` user param (or `ColorParameter` ambiguous/missing).                                                                                                                                                                                                                                                                                                                                                                                            |
 | CN3008 | `[PainterResource]` annotates a non-`IntPtr` parameter.                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 | CN3009 | `[StateHolder]` invalid: non-`IntPtr` param, combined with `[PainterResource]`, missing/non-identifier `Remember`/`StateType`, named `Remember` not a static `(IComposer) -> IntPtr` on `ComposeBridges`, or `StateType` has no accessible writable instance field named `Jvm`.                                                                                                                                                                                                                  |
-| CN3010 | `BranchOn`/`AlternateBridge` invalid: only one set, primary/alternate missing trailing `int defaults`, named alternate not resolvable/ambiguous on `ComposeBridges`, alternate not a strict superset (missing a primary param or > 1 extra), extra param's PascalCased name doesn't match `BranchOn`, extra param isn't `IFunction2`/`IFunction3`, shared param has incompatible types, branching used on hybrid container shape, or alternate has no resolvable `[ComposeBridge].Defaults` enum. |
+| CN3010 | `BranchOn`/`AlternateBridge` invalid: only one set, primary has no Kotlin defaults metadata, named alternate not resolvable/ambiguous on `ComposeBridges`, alternate not a strict superset (missing a primary param or > 1 extra), extra param's PascalCased name doesn't match `BranchOn`, extra param isn't `IFunction2`/`IFunction3`, shared param has incompatible types, branching used on hybrid container shape, or alternate has no resolvable `[ComposeBridge].Defaults` enum. |
 | CN3011 | `[ConfirmStateChange(typeof(T))]` invalid: not on `IFunction1` param, missing `typeof(T)` ctor arg, convention adapter `Microsoft.AndroidX.Compose.<TName>ConfirmStateChange` missing (override with `AdapterType = typeof(...)`), adapter doesn't implement `Kotlin.Jvm.Functions.IFunction1`, lacks public parameterless ctor, or no writable `Callback` property of type `System.Func<T, bool>?`.                                                                                                              |
-| CN3012 | `SecondaryCtor`/`SecondaryDefaults` invalid: only one set, named secondary not resolvable/ambiguous on `ComposeBridges`, secondary missing trailing `int defaults`, secondary's user params don't share names with the primary, the discriminating extra param is value-type / nullable / not a reference type / there's > 1 unique param / there's none, primary has no slot missing from the secondary (no primary-only discriminator), `SecondaryDefaults` enum unresolvable, or combined with `BranchOn`/`AlternateBridge`.                                                                                                                                                                                                                                                                              |
+| CN3012 | `SecondaryCtor`/`SecondaryDefaults` invalid: only one set, named secondary not resolvable/ambiguous on `ComposeBridges`, a hand-written secondary lacks trailing `int defaults`, secondary's user params don't share names with the primary, the discriminating extra param is value-type / nullable / not a reference type / there's > 1 unique param / there's none, primary has no slot missing from the secondary (no primary-only discriminator), `SecondaryDefaults` enum unresolvable, or combined with `BranchOn`/`AlternateBridge`.                                                                                                                                                                                                                                                                              |
+| CN3013 | Lambda execution mode is ambiguous, conflicting, or invalid. Mark `IFunction1` as `[Callback(typeof(T))]` or `[RawCallback]`; mark `IFunction4` as `[ComposableContent]` or `[DeferredComposableContent]`. |
 
 ### Migration rule
 
@@ -784,8 +794,12 @@ bridge declares the trailing `int _changed = 0`. Per-slot contribution table:
 | Value types / primitives / refs   | `DiffSlot<T>` via `EqualityComparer<T>.Default`       |
 
 Bit position: `bit = 1 + paramIndex * 3` over user params **excluding**
-composer/defaults/scope-receiver/_changed. Up to 10 user params per int —
-no current bridge exceeds that.
+composer/defaults/scope-receiver/_changed. Up to 10 user params fit per int.
+Bridges with more than 10 Kotlin slots (for example `Text`) require multiple
+`$changed` ints; until the bridge/helper contract models all groups, direct
+lowering must pass `0` (Uncertain) for the entire changed mask. Never forward
+only the first remapped group: forced recomposition with later groups missing
+can enter an invalid Compose path.
 
 The bridge call switches to **named arguments** (`composer: composer,
 _changed: __changed`) when the bridge has the trailing optional, so the
@@ -984,7 +998,7 @@ helper, and each partial-property body.
 Tests in `CompanionGeneratorTests.cs`. **Add a test for any new
 behaviour.**
 
-## Tier 2 — `[Composable]` static methods
+## Composable methods — `[Composable]` static methods
 
 User-facing surface for the C# compose-compiler equivalent: a Roslyn
 incremental source generator (`ComposableMethodGenerator`) emits a
@@ -1025,12 +1039,17 @@ Rules:
   (CN5002). It may omit `IComposer`; when declared explicitly,
   `IComposer` must be the **first** parameter (CN5003).
 - It must be accessible from the generated interceptor (CN5004) and
-  cannot be `async` (CN5005), an extension method (CN5006), generic
-  (CN5007), or use `ref`/`out`/`in` parameters (CN5008).
+  cannot be `async` (CN5005), an extension method (CN5006), or use
+  `ref`/`out`/`in` parameters (CN5008). Generic methods are supported;
+  generated wrappers preserve their type parameters and constraints.
 - Composerless APIs may only be called from a `[Composable]` method or a
-  delegate parameter marked `[ComposableContent]` (CN5009). Mark only
-  callbacks invoked synchronously during composition; event handlers and
-  other deferred callbacks must remain unmarked.
+  delegate that flows synchronously to a parameter marked
+  `[ComposableContent]` (CN5009). Bounded analysis follows local variables,
+  local functions, method groups, anonymous functions, and
+  conditional/coalescing expressions. Mark only callbacks invoked
+  synchronously during composition; returns, field/property storage, unmarked
+  arguments, event handlers, and other async/deferred callbacks are rejected
+  at their escape site.
 - The containing type does **not** need to be `partial`. There is no
   `Impl` companion, no `_changed` parameter, no `int _default` slot.
 - Each call site of a `[Composable]` method is rewired by the C#
@@ -1116,33 +1135,56 @@ name (not the user method), so it never needs interception.
 Both styles can call into each other freely:
 
 - A tree-style facade `Render` (or `SetContent`'s callback) can invoke
-  a Tier 2 `[Composable]` method directly — each call site is
+  a `[Composable]` method directly — each call site is
   intercepted normally and the wrapper sets up its own restart group
   inside the surrounding tree-style render.
-- A Tier 2 method can construct a tree-style `ComposableNode` and call
+- A `[Composable]` method can construct a tree-style `ComposableNode` and call
   `.Render(composer)` on it.
 - `ComposeFacadeGenerator` emits a sibling `[Composable]` method on
   `AndroidX.Compose.Composables` for every supported generated facade.
   The method exposes ctor values, modifier, content, named slots,
   optional values, theme color, and state-confirm callbacks as normal
-  parameters, maps them onto the existing facade, and renders it. Do
-  not hand-write a duplicate entry point; extend the facade generator
-  when a generated shape is wrong.
+  parameters and lowers them directly to the bound API or
+  `[ComposeBridge]`. The lowering reuses facade metadata for modifiers,
+  callbacks, content slots, state holders, masks, branch routing,
+  painter resources, and secondary constructors without allocating the
+  tree facade. Do not hand-write a duplicate entry point; extend the
+  facade generator when a generated shape is wrong.
+- Generated catalog method bodies must remain safe when a call site is not
+  intercepted (for example, a synchronous content method reached through
+  delegate-flow lowering). Their direct-helper fallback builds a conservative
+  omission bitmap from optional parameter sentinel values; never pass `0UL`,
+  which marks omitted nullable values as explicitly supplied and forwards
+  nulls into Kotlin APIs.
 - `Column` and `Row` remain hand-written entry points because their
   facades are generator holdouts. `Text`, `Box`, and `Button` now use
   the richer catalog-generated methods. The generator detects an
   existing same-name method and does not emit a duplicate.
-- `SetContent(Action<IComposer>)` hosts a Tier 2 root directly.
+- `SetContent(Action<IComposer>)` hosts a `[Composable]` root directly.
   Jetchat, JetNews, and Reply use this overload and expose their
   top-level app boundary as a `[Composable] static void` method.
 
 There is no migration pressure. Hot composables that recompose often
-are the natural candidates for Tier 2; one-shot screens can stay
+are the natural candidates for composable methods; one-shot screens can stay
 tree-style indefinitely. The proof demo
-(`src/Microsoft.AndroidX.Compose.Gallery/Demos/Tier2/Tier2SiblingSkipDemo.cs`)
-renders two sibling Tier 2 methods side by side and shows that the
+(`src/Microsoft.AndroidX.Compose.Gallery/Demos/ComposableMethods/ComposableSiblingSkipDemo.cs`)
+renders two sibling composable methods side by side and shows that the
 one whose input never changes has its body skipped (its in-process
 execution counter stays flat while its sibling's tracks every tap).
+
+### Handwritten facade adapters
+
+When a handwritten facade only needs an ambient-composer sibling, write one
+explicit-composer adapter on `Composables` and apply
+`[GenerateImplicitComposable]`. The generator removes parameter zero
+(`IComposer`) and transforms each
+`[ComposableContent] Action<..., IComposer>` into `Action<...>`, preserving
+nullability and optional defaults. The explicit method remains the sole
+rendering implementation and must delegate to the existing facade rather
+than duplicate bridge logic. `[Obsolete]` metadata is copied to the generated
+sibling. `MaterialTheme`, `Scaffold`, `SnackbarHost`, `SegmentedButton`,
+`Layout`, `TextField`, `OutlinedTextField`, the search family, and the
+remembered-facade `BottomSheetScaffold` adapter are the canonical examples.
 
 ### Wiring the generator into a consuming project
 
@@ -1167,28 +1209,36 @@ are generated while compiling the runtime assembly.
 
 | ID     | Meaning                                                                                                                  |
 |--------|--------------------------------------------------------------------------------------------------------------------------|
-| CN5001 | `[Composable]` method must be `static` (Tier 2 intercepts call sites; intercepted target must be a static method).       |
-| CN5002 | `[Composable]` method must return `void` (Tier 2 currently supports only void composables).                              |
+| CN5001 | `[Composable]` method must be `static` (the generator intercepts call sites; intercepted target must be a static method).       |
+| CN5002 | `[Composable]` method must return `void` (the generator currently supports only void composables).                              |
 | CN5003 | When present, a `[Composable]` method's `AndroidX.Compose.Runtime.IComposer` must be its first and only composer parameter. |
 | CN5004 | `[Composable]` method and its containing types must be accessible from the generated interceptor.                       |
 | CN5005 | `[Composable]` method cannot be `async`; continuations would resume after the restart group closes.                     |
 | CN5006 | `[Composable]` extension methods are unsupported; use a regular static method.                                          |
-| CN5007 | `[Composable]` generic methods are unsupported.                                                                          |
 | CN5008 | `[Composable]` parameters cannot use `ref`, `out`, or `in`.                                                              |
-| CN5009 | A composerless API is called outside a `[Composable]` method or `[ComposableContent]` callback.                          |
+| CN5009 | A composerless API may execute outside a `[Composable]` method or `[ComposableContent]` callback; the diagnostic identifies the unsafe delegate escape. |
+| CN5010 | `[GenerateImplicitComposable]` targets an unsupported explicit-composer adapter shape.                                |
 
-Tests in `ComposableMethodGeneratorTests.cs`. **Add a test for any new
+Tests in `ComposableMethodGeneratorTests.cs` and
+`ImplicitComposableOverloadGeneratorTests.cs`. **Add a test for any new
 behaviour.**
+
+### Direct `$default` invocation
+
+Call sites capture omitted C#
+  arguments as a surfaced-parameter bitmap (explicit `null` is not omitted),
+  and `KotlinDefaultMaskPlan` emits route-specific generated enum masks plus
+  `Split()` for wide masks. The direct-lowering helper consumes this
+  contract; do not re-infer omission from nullable runtime values.
 
 ### Deferred (follow-up)
 
-- Direct `[ComposeBridge]` calls from generated catalog entry points;
-  they currently allocate the corresponding facade only when the
-  interceptor decides the method must execute.
-- Tier 2 modelling for hand-written facade holdouts (`Scaffold`, lazy
-  collections, text fields, search, and other custom shapes).
-- `$default` parameter injection — lower C# default-parameter syntax
-  into Kotlin-style `$default` bitmask.
+- Composable-method modeling for navigation DSLs and other deferred graph-building
+  shapes outside the issue-listed holdouts.
+  Generic lowering covers typed animation, pager, carousel, and lazy
+  collection facades; ambient-overload generation covers `MaterialTheme`,
+  `Scaffold`, `SnackbarHost`, `SegmentedButton`, `Layout`, `TextField`,
+  `OutlinedTextField`, the search family, and `BottomSheetScaffold`.
 - Analyzer for "non-`[Composable]` calls `[Composable]`" — compile-
   time enforcement of the colour contract.
 - Lambda hoisting via `RememberAction` / `Wrap2` / `Wrap3` inside the

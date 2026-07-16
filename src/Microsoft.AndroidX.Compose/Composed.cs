@@ -47,7 +47,8 @@ public sealed class Composed : ComposableNode
     /// <summary>
     /// Create a composer-aware wrapper around <paramref name="builder"/>.
     /// </summary>
-    public Composed(Func<IComposer, ComposableNode?> builder)
+    public Composed(
+        [ComposableContent] Func<IComposer, ComposableNode?> builder)
     {
         ArgumentNullException.ThrowIfNull(builder);
         _builder = builder;
@@ -71,12 +72,14 @@ public sealed class Composed : ComposableNode
     /// <see cref="ComposableContainer.Add(System.Func{AndroidX.Compose.Runtime.IComposer, AndroidX.Compose.ComposableNode?})"/>.
     /// </para>
     /// </summary>
-    public static implicit operator Composed(Func<IComposer, ComposableNode?> builder) =>
+    public static implicit operator Composed(
+        [ComposableContent] Func<IComposer, ComposableNode?> builder) =>
         new(builder);
 
     /// <inheritdoc />
     public override void Render(IComposer composer)
     {
+        using var scope = ComposableContext.Enter(composer);
         var node = _builder(composer);
         node?.Render(composer);
     }
@@ -97,6 +100,7 @@ public sealed class Composed : ComposableNode
     /// </summary>
     internal override void Render(IComposer composer, IntPtr contentPadding)
     {
+        using var scope = ComposableContext.Enter(composer);
         var node = _builder(composer);
         if (node is null)
             return;

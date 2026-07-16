@@ -1,6 +1,7 @@
 using Android.Views;
 using AndroidX.Activity;
 using AndroidX.Compose.Material3;
+using static AndroidX.Compose.Composables;
 
 namespace AndroidX.Compose.Samples.Jetchat;
 
@@ -16,22 +17,21 @@ public class MainActivity : ComponentActivity
     {
         base.OnCreate(savedInstanceState);
         this.EnableEdgeToEdge();
-        this.SetContent(c =>
+        this.SetContent(() =>
         {
-            var ui               = c.Remember(() => new ConversationUiState("#composers", channelMembers: 42, FakeData.InitialMessages()));
-            var input            = c.MutableStateOf(c.NewTextFieldValue());
-            var selectedMenu     = c.MutableStateOf("composers");
-            var drawerScroll     = c.Remember(() => new ScrollState());
-            var drawerState      = c.Remember(() => new DrawerStateHolder(DrawerValue.Closed));
-            var selectedSelector = c.MutableStateOf(0);
-            var popupOpen        = c.MutableStateOf(false);
-            var messagesScroll   = c.RememberLazyListState();
-            var isRecording      = c.MutableStateOf(false);
-            var swipeOffset      = c.MutableStateOf(0f);
-            var nav              = c.Remember(() => new NavController());
-            var profileViewModel = c.Remember(() => new ProfileViewModel());
+            var ui               = Remember(() => new ConversationUiState("#composers", channelMembers: 42, FakeData.InitialMessages()));
+            var input            = MutableStateOf(ComposeExtensions.NewTextFieldValue());
+            var selectedMenu     = MutableStateOf("composers");
+            var drawerScroll     = Remember(() => new ScrollState());
+            var drawerState      = Remember(() => new DrawerStateHolder(DrawerValue.Closed));
+            var selectedSelector = MutableStateOf(0);
+            var popupOpen        = MutableStateOf(false);
+            var messagesScroll   = RememberLazyListState();
+            var isRecording      = MutableStateOf(false);
+            var swipeOffset      = MutableStateOf(0f);
+            var nav              = Remember(() => new NavController());
+            var profileViewModel = Remember(() => new ProfileViewModel());
             JetchatApp.Content(
-                composer:         c,
                 nav:              nav,
                 ui:               ui,
                 input:            input,

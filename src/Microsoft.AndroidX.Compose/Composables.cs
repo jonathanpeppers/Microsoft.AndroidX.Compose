@@ -1,7 +1,7 @@
 namespace AndroidX.Compose;
 
 /// <summary>
-/// Tier 2 static entry points that mirror the tree-style facade
+/// Static composable entry points that mirror the tree-style facade
 /// catalog. <c>ComposeFacadeGenerator</c> emits siblings for generated
 /// facades; generator holdouts remain hand-written. Each method
 /// carries <see cref="ComposableAttribute"/> and its call-site wrapper opens a Compose restart group,

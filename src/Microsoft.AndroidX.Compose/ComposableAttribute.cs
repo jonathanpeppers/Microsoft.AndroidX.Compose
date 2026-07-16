@@ -1,7 +1,7 @@
 namespace AndroidX.Compose;
 
 /// <summary>
-/// Marks a static method as a Tier 2 composable — the C# equivalent
+/// Marks a static method as composable — the C# equivalent
 /// of a Kotlin <c>@Composable</c> function.
 /// </summary>
 /// <remarks>
@@ -29,7 +29,7 @@ namespace AndroidX.Compose;
 /// {
 ///     // Plain method body — no partial, no Impl companion, no
 ///     // _changed parameter. Any [Composable] call inside this body
-///     // is itself intercepted, so Tier 2 composes cleanly all the
+///     // is itself intercepted, so method-style composition works all the
 ///     // way down.
 ///     Text($"Hello, {name}");
 /// }
@@ -40,9 +40,9 @@ namespace AndroidX.Compose;
 /// when implementing a low-level explicit-composer escape hatch.
 /// </para>
 /// <para>
-/// Tier 2 composables coexist with the tree-style facade catalog —
+/// Composable methods coexist with the tree-style facade catalog —
 /// the existing <see cref="ComposableNode"/>-based composables keep
-/// working unchanged, and a Tier 2 method can call into them from
+/// working unchanged, and a composable method can call into them from
 /// inside a <c>SetContent</c> lambda or vice versa.
 /// </para>
 /// <para>

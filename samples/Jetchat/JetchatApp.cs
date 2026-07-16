@@ -1,6 +1,4 @@
 using AndroidX.Compose.UI.Text.Input;
-using AndroidX.Compose.Runtime;
-
 namespace AndroidX.Compose.Samples.Jetchat;
 
 /// <summary>
@@ -30,7 +28,6 @@ public static class JetchatApp
     /// <summary>Compose the Jetchat app, matching upstream's <c>JetchatApp</c> composable boundary.</summary>
     [Composable]
     public static void Content(
-        IComposer                    composer,
         NavController                nav,
         ConversationUiState          ui,
         MutableState<TextFieldValue> input,
@@ -98,7 +95,7 @@ public static class JetchatApp
                     }),
                 },
             };
-        })).Render(composer);
+        })).Render();
     }
 
     static bool IsOnHome(NavController nav)

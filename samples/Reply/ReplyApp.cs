@@ -1,5 +1,3 @@
-using AndroidX.Compose.Runtime;
-
 namespace AndroidX.Compose.Samples.Reply;
 
 /// <summary>
@@ -23,7 +21,6 @@ public static class ReplyApp
     /// <summary>Compose the Reply app at the same top-level boundary as upstream Kotlin.</summary>
     [Composable]
     public static void Content(
-        IComposer              composer,
         NavController        nav,
         MutableState<string> currentRoute,
         MutableState<long>   openedEmailId,
@@ -42,7 +39,7 @@ public static class ReplyApp
                     }),
                 Body = BuildNavHost(nav, currentRoute, openedEmailId, selectedEmailIds),
             },
-        }.Render(composer);
+        }.Render();
     }
 
     static NavHost BuildNavHost(

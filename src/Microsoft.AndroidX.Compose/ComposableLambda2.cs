@@ -28,8 +28,8 @@ public sealed class ComposableLambda2 : Java.Lang.Object, IFunction2
 
     /// <summary>
     /// Body that observes the runtime's <c>$changed</c> hint. Used by
-    /// <c>EndRestartGroup().UpdateScope(...)</c> emissions on Tier 2
-    /// composables so the recompose pass can OR the runtime's force
+    /// <c>EndRestartGroup().UpdateScope(...)</c> emissions on generated
+    /// composable methods so the recompose pass can OR the runtime's force
     /// bit into <c>$changed</c> and propagate it down.
     /// </summary>
     public ComposableLambda2(Action<IComposer, int> body)

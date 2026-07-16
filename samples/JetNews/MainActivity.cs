@@ -1,6 +1,7 @@
 using Android.Content;
 using AndroidX.Activity;
 using AndroidX.Compose.Material3;
+using static AndroidX.Compose.Composables;
 
 namespace AndroidX.Compose.Samples.JetNews;
 
@@ -22,25 +23,24 @@ public class MainActivity : ComponentActivity
     {
         base.OnCreate(savedInstanceState);
         this.EnableEdgeToEdge();
-        this.SetContent(c =>
+        this.SetContent(() =>
         {
-            var nav                  = c.Remember(() => new NavController());
-            var currentRoute         = c.MutableStateOf(Routes.Home);
-            var drawerState          = c.Remember(() => new DrawerStateHolder(DrawerValue.Closed));
+            var nav                  = Remember(() => new NavController());
+            var currentRoute         = MutableStateOf(Routes.Home);
+            var drawerState          = Remember(() => new DrawerStateHolder(DrawerValue.Closed));
             // Acquire bookmarks from the activity's ViewModelStore so
             // the toggled set survives configuration change AND is
-            // shared across nav destinations. c.ViewModel<T>
-            // reads LocalViewModelStoreOwner from the active
+            // shared across nav destinations. ViewModel<T> reads
+            // LocalViewModelStoreOwner from the active
             // composition; the root SetContent body sees the host
             // ComponentActivity, so this VM is activity-scoped.
-            var bookmarks            = c.ViewModel(() => new BookmarksViewModel());
-            var selectedTopics       = c.Remember(() => new MutableStateList<string>());
-            var selectedPeople       = c.Remember(() => new MutableStateList<string>());
-            var selectedPublications = c.Remember(() => new MutableStateList<string>());
-            var interestsTab         = c.MutableStateOf(0);
-            var snackbars            = c.Remember(() => new SnackbarController());
+            var bookmarks            = ViewModel(() => new BookmarksViewModel());
+            var selectedTopics       = Remember(() => new MutableStateList<string>());
+            var selectedPeople       = Remember(() => new MutableStateList<string>());
+            var selectedPublications = Remember(() => new MutableStateList<string>());
+            var interestsTab         = MutableStateOf(0);
+            var snackbars            = Remember(() => new SnackbarController());
             JetnewsApp.Content(
-                c,
                 nav,
                 currentRoute,
                 drawerState,

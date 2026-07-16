@@ -159,23 +159,25 @@ already supports.
 
 | Kotlin                                  | C# today                                                       | Cost |
 | --------------------------------------- | -------------------------------------------------------------- | ---- |
-| Skipping / recomposition optimization   | Per-param `$changed` bitmask computed at Render time via `composer.DiffSlot` / `composer.RememberAction` / `Modifier.StructuralKey`; bridge generator threads it into the JNI `$changed` slot. Modifier slot still emits Uncertain (Kotlin runtime falls back to its own input compare). | Tier 2 mostly delivered ✅ |
+| Skipping / recomposition optimization   | Per-param `$changed` bitmask computed at Render time via `composer.DiffSlot` / `composer.RememberAction` / `Modifier.StructuralKey`; bridge generator threads it into the JNI `$changed` slot. Modifier slot still emits Uncertain (Kotlin runtime falls back to its own input compare). | Composable methods mostly delivered ✅ |
 | Slot-table-backed `remember`            | `Remember(() => …)` with `[CallerLineNumber]` keying into an activity-scoped cache; `Remember(factory, key1, …)` (1–3 keys or `RememberKeyed(factory, keys[])`) resets the slot on key change | Lifetime is per call site, not per nested-scope as in Kotlin |
-| `@Composable` type-system enforcement   | None — calling a non-composable from a composable context fails at runtime, not compile-time | Footgun (Tier 2 analyzer is a follow-up) |
-| Per-call-site allocation                | Tree-style facade: every recomposition allocates fresh `ComposableNode` objects. Tier 2 `[Composable]` methods skip the entire body when unchanged, so skipped calls allocate nothing. Generated catalog entry points currently construct the matching facade only when their body executes; direct bridge emission is the remaining optimization. | Resolved on the skip path; execution-path facade allocation remains |
+| `@Composable` type-system enforcement   | None — calling a non-composable from a composable context fails at runtime, not compile-time | Footgun (the composable-method analyzer is a follow-up) |
+| Per-call-site allocation                | Tree-style facade: every recomposition allocates fresh `ComposableNode` objects. `[Composable]` methods skip unchanged calls and lower executed generated-catalog calls directly to Compose bridges, so neither path allocates a facade node. | Resolved for generated facades; hand-written holdouts retain their custom allocation behavior |
 
-## Tier 2 — `[Composable]` C# methods
+## Composable methods — `[Composable]` C# methods
 
-Tier 2 is the C# moral equivalent of Kotlin's compose-compiler plugin:
+Composable methods are the C# equivalent of Kotlin's compose-compiler plugin:
 a Roslyn incremental source generator (`ComposableMethodGenerator`)
 that emits a per-call-site `[InterceptsLocation]` wrapper for every
 invocation of a `[Composable]`-marked static method. The wrapper opens
 a Compose restart group, runs per-parameter `DiffSlot` diffing, and
 skips the underlying call when nothing changed. The result is a render-loop shape Compose can skip the same way it
 skips a Kotlin `@Composable`. A skipped method performs no
-`ComposableNode` allocation. Generated catalog entry points currently
-adapt to their matching tree facade when they execute; direct bridge
-emission will remove that execution-path allocation separately.
+`ComposableNode` allocation. Generated catalog entry points also lower
+executed calls directly to their bound API or `[ComposeBridge]`, reusing
+the facade metadata for modifier materialization, callback and content
+wrapping, state holders, `$default`/`$changed` masks, branch routing, and
+painter ownership without constructing the matching tree facade.
 
 Mirrors the design `dotnet/maui` uses for its
 [`BindingSourceGen`](https://github.com/dotnet/maui/blob/main/src/Controls/src/BindingSourceGen):
@@ -247,15 +249,15 @@ inlined as a literal. The `UpdateScope` lambda re-enters the wrapper
 (not the user method) so the next composition pass re-opens the same
 restart group, re-diffs, and skips-or-calls the same way.
 
-### Coexistence with Tier 1.5
+### Coexistence with the tree-style facade
 
 Both styles can call into each other freely:
 
 - A tree-style facade's `Render` (or the `SetContent` callback) can
-  invoke a Tier 2 `[Composable]` method directly — each call site is
+  invoke a `[Composable]` method directly — each call site is
   intercepted normally and the wrapper sets up its own restart group
   inside the surrounding tree-style render.
-- A Tier 2 method can construct a tree-style `ComposableNode` and call
+- A `[Composable]` method can construct a tree-style `ComposableNode` and call
   `.Render(composer)` on it.
 - `ComposeFacadeGenerator` emits a sibling method on `Composables` for
   every supported generated facade. It maps constructor values,
@@ -263,14 +265,83 @@ Both styles can call into each other freely:
   callbacks back onto the existing facade, then renders it. The
   interceptor skip path runs before that adapter allocation.
 - `ComponentActivity.SetContent(Action<IComposer>)` and
-  `ComposeView.SetContent(Action<IComposer>)` host a Tier 2 root
+  `ComposeView.SetContent(Action<IComposer>)` host a `[Composable]` root
   directly. Jetchat, JetNews, and Reply use this shape for their
   top-level app composables, matching the corresponding upstream
   Kotlin boundary.
 
 There is no migration pressure. Hot composables that recompose often
 (animation, list items, drag handles) are the natural candidates for
-Tier 2; one-shot screens can stay tree-style indefinitely.
+composable methods; one-shot screens can stay tree-style indefinitely.
+
+### Lambda adapter lowering
+
+Generated rendering uses one shared execution-mode classifier instead of
+inferring behavior from delegate arity alone:
+
+- synchronous `IFunction2`/`IFunction3` content uses composer-owned
+  `ComposableLambdas.Wrap2`/`Wrap3`;
+- synchronous `IFunction4` content must opt in with `[ComposableContent]`
+  and lowers to `Wrap4`;
+- lazy item `IFunction4` content must use
+  `[DeferredComposableContent]` and lowers to composerless `Instantiate4`;
+- events use `RememberAction`, retaining JNI peer identity while rebinding
+  the managed target each composition;
+- non-composable DSL callbacks use `[RawCallback]` and raw
+  `ComposableLambda0`/`ComposableLambda1` adapters.
+
+Unmarked `IFunction1` and `IFunction4` parameters are rejected because their
+execution timing cannot be determined safely from arity. Deferred and raw
+shapes are available to direct bridge and hand-written-holdout lowering; the
+tree-facade generator continues to reject them until those public delegate
+surfaces are modeled.
+
+### Hand-written holdout inventory
+
+- **Completed:** `AnimatedContent<T>`, `Crossfade<T>`,
+  `HorizontalPager<T>`, `VerticalPager<T>`,
+  `HorizontalUncontainedCarousel<T>`,
+  `HorizontalMultiBrowseCarousel<T>`,
+  `HorizontalCenteredHeroCarousel<T>`, `LazyColumn<T>`, `LazyRow<T>`,
+  `LazyVerticalGrid<T>`, `LazyHorizontalGrid<T>`,
+  `LazyVerticalStaggeredGrid<T>`, and
+  `LazyHorizontalStaggeredGrid<T>`. Generic interceptor lowering preserves
+  type parameters and constraints; their composable adapters continue through
+  the existing facades so the facade's existing lambda-identity behavior is
+  retained. Lazy facades keep their deferred item bodies on
+  `ComposableLambdas.Instantiate4`; pager, carousel, and animation facades keep
+  synchronous content on `Wrap3`/`Wrap4`. `ComposableContentNode` only restores
+  the ambient composer while rendering the managed node and does not replace
+  either Kotlin lambda factory. Collection parameters are treated as unstable
+  and force execution so in-place list edits cannot be hidden by reference
+  equality. `MaterialTheme`, `Scaffold`, `SnackbarHost`, and both
+  `SegmentedButton` modes are also complete. Their explicit-composer adapters
+  remain the sole rendering implementation and delegate to the existing
+  handwritten facades. `[GenerateImplicitComposable]` derives the ambient
+  sibling, removing the trailing `IComposer` from each
+  `[ComposableContent] Action<..., IComposer>` while preserving nullable
+  slots and defaults. This keeps Scaffold's borrowed `PaddingValues`,
+  SnackbarHost's `SnackbarData` forwarding, and SegmentedButton's row-index
+  dispatch inside their established facade implementations. The composable
+  `SegmentedButton` takes explicit `index`/`count`, matching Kotlin's
+  `itemShape(index, count)` contract; the adapter publishes that position
+  while retaining the enclosing row receiver scope. `Layout`, `TextField`,
+  and `OutlinedTextField` are complete through the same adapter path.
+  Text-field overloads cover string callbacks, `MutableState<string>`, and
+  selection-aware `MutableState<TextFieldValue>` while leaving bridge
+  selection and slot wrapping in the existing facades. `Layout` likewise
+  retains its composer-remembered Java measure-policy peer. The complete
+  search family is also available: state-based collapsed/top bars,
+  docked/full-screen expanded content, shared-state input fields, and both
+  deprecated `DockedSearchBar` variants. Generated ambient siblings preserve
+  `[Obsolete]` metadata from their explicit adapters.
+  `BottomSheetScaffold` completes the issue-listed holdouts: its composable
+  adapter remembers the existing facade keyed by `SheetStateHolder`, keeping
+  the per-node veto JCW stable while replacing sheet/body/slot nodes on each
+  executed composition.
+- **NavHost / NavDestination:** need a stable, remembered raw graph-builder
+  callback plus route registration and destination-argument forwarding; this
+  is a navigation DSL rather than a normal composable content slot.
 
 ### Diagnostics
 
@@ -282,26 +353,85 @@ Tier 2; one-shot screens can stay tree-style indefinitely.
 | CN5004 | Method and containing types must be interceptor-accessible.     |
 | CN5005 | `async` composables are unsupported.                            |
 | CN5006 | Extension-method composables are unsupported.                   |
-| CN5007 | Generic composables are unsupported.                            |
 | CN5008 | `ref`, `out`, and `in` parameters are unsupported.              |
-| CN5009 | A composerless API was called outside `[Composable]` code or a `[ComposableContent]` callback. |
+| CN5009 | A composerless API may execute outside `[Composable]` code or a `[ComposableContent]` callback; the diagnostic points to the unsafe delegate escape. |
+| CN5010 | `[GenerateImplicitComposable]` was applied to an unsupported explicit-composer adapter shape. |
+
+### Optional arguments and Kotlin default masks
+
+The interceptor records omitted C#
+  arguments as a surfaced-parameter bitmap, preserving explicit `null`,
+  and `KotlinDefaultMaskPlan` maps that bitmap to route-specific generated
+  default enums (including `Split()` for wide masks). Direct bridge helpers
+  consume this contract before their route-neutral bridge call.
+  `ComposeBridgeGenerator` emits an internal `<Bridge>ExplicitDefaults`
+  sibling for bridges whose public partial declaration relies on nullable
+  auto-masking. The declared bridge still computes defaults from runtime
+  nullability for existing callers; the direct helper calls the sibling with
+  its precomputed mask, so explicit `null` clears the Kotlin bit while an
+  omitted argument leaves it set. Wide bridges take the generated
+  `Split()` pair directly. No facade or adapter fallback participates in
+  this path. When any C# argument is omitted, the direct helper clears the
+  restart force bit before entering Kotlin while retaining remapped per-slot
+  changed bits. Kotlin can then recompute composition-scoped defaults instead
+  of assuming its own restart lambda captured their resolved values.
+  If a generated catalog method is invoked from code that is not intercepted
+  (for example, a synchronous content method reached through delegate-flow
+  lowering), its method body derives a conservative omission bitmap from
+  optional-parameter sentinel values instead of passing zero; nullable
+  defaults therefore remain Kotlin-defaulted rather than being forwarded as
+  explicit nulls.
+
+### Real-app migration benchmark
+
+Issue [#299](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/299)
+migrated the Jetchat, JetNews, and Reply activity roots to composerless
+`SetContent`, state, ViewModel, and lazy-list state APIs. The top-level
+`[Composable]` methods no longer thread `IComposer`; each keeps one
+parameterless tree-style `Render()` escape hatch while the nested screen shapes
+remain blocked on [#301](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/301).
+
+`ComposableMethodBenchmarkDemo` measures equivalent Reply-style cards through
+three paths: direct tree construction, a composable-method interceptor whose body builds
+the legacy tree adapter, and a generated catalog entry point lowered directly
+to its Compose bridge. Thirteen fresh-process Pixel 10 / Android 16 Debug runs
+randomized all three lane orders; each lane ran first at least three times and
+every run forced ten recompositions. Cold figures use only runs where that lane
+executed first, while recomposition figures use all runs:
+
+- Adapter method cold initial composition (four adapter-first runs):
+  **7,208 B**; median **9.03 ms**.
+- Direct method cold initial composition (four direct-first runs):
+  **16,512 B**; median **11.52 ms**.
+- Tree cold initial composition (five tree-first runs):
+  **4,200 B**; median **6.01 ms**.
+- Adapter method recomposition skip: **920 B**; median **3.19 ms**.
+- Direct method recomposition skip: **928 B**; median **3.90 ms**.
+- Tree recomposition: **2,184 B**; median **12.90 ms**.
+- Adapter and direct bodies each executed **2** times; the tree body executed
+  **12** times.
+
+The adapter lane deliberately constructs the generated tree facade behind a
+composable-method restart-group skip. The direct lane calls generated catalog methods,
+which the interceptor lowers to the direct helper; the tree lane constructs
+the same facade without a skip wrapper. Direct lowering removes the facade from
+the executing path; its measured skip boundary allocates 928 B versus the
+adapter lane's 920 B. Timings are directional only because this is an
+on-device Debug smoke benchmark rather than a warmed microbenchmark.
+
+Direct `$changed` remapping is all-or-nothing. A bridge with more than ten
+Kotlin slots needs multiple changed-mask integers; while the generated bridge
+surface exposes only the first, direct helpers pass `0` (Uncertain) instead of
+forwarding a partial first group. This keeps Compose on its runtime comparison
+path during forced recomposition.
 
 ### Deferred — follow-up issues
 
-- **Direct bridge bodies for generated facade entry points.** The
-  sibling methods currently instantiate their generated tree facade
-  when they execute. Emitting the same bridge/default-mask plumbing
-  directly will remove that execution-path adapter allocation.
-- **Tier 2 entry points for hand-written holdouts.** `Scaffold`, lazy
-  collections, text fields, search, and other custom rendering shapes
-  are not driven by `[ComposeFacade]` metadata and need dedicated
-  generator modelling.
-- **`$default` parameter injection.** C# already supports default
-  parameter values syntactically; the wrapper currently treats every
-  declared parameter as required. A future pass will lower C# default
-  values into the same `$default` bitmask Kotlin uses.
+- **Composable entry points outside the issue-listed holdouts.** Navigation DSLs
+  still need stable deferred/raw graph builders and destination-argument
+  forwarding beyond ambient-overload generation.
 - **`MovableContent` / `key {} ` / `Saver` / `Layout {}` / stability
-  inference.** Explicit non-goals in the Tier 2 MVP — each gets its
+  inference.** Explicit non-goals for composable methods — each gets its
   own follow-up issue.
 
 ### Why it's like this
@@ -318,14 +448,14 @@ this tier-1.5 experiment:
   project, in a syntax that mirrors Kotlin almost line-for-line.
 - **The facade trades perf for ergonomics.** Tree allocation per
   recomposition is acceptable for hello-world; for real apps a
-  Roslyn source generator (Tier 2) that lowers `[Composable]` C#
+  Roslyn source generator that lowers `[Composable]` C#
   methods to direct composer-threading calls is the next step.
 - **Explicitness still matches Kotlin internally.** The composer remains
   an explicit parameter at the implementation layer (`Render(IComposer)`
   and generated interceptor cores). The composerless surface uses a
   `ThreadStatic` only as a synchronous dynamic-scope lookup for user-facing
   calls; every interceptor, `SetContent` boundary, and
-  `Tier2InlineContent.Render` pushes and restores it. Deferred callbacks
+  `ComposableContentNode.Render` pushes and restores it. Deferred callbacks
   invoked after those scopes close must not call implicit-composer APIs;
   they need an explicit composer-bearing boundary. `[Composable]` methods
   cannot be `async`, and parallel composition threads get independent

@@ -2434,7 +2434,7 @@ the same way the alert overlay does.
 - iOS / catalyst — Jetpack Compose is Android-only. Compose
   Multiplatform exists but isn't what this library wraps.
 - The proposed Roslyn source generator that lets you author
-  `[Composable]`-attributed C# methods directly (Tier 2 from
+  `[Composable]`-attributed C# methods directly (the composable-method API from
   [`architecture.md`](architecture.md)). The Compose MAUI backend uses
   the existing Tier 1 tree facade — not blocked on that.
 - Replacing MAUI's `BindingContext` / XAML loader / hot reload — those

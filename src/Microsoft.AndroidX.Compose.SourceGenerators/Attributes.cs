@@ -336,8 +336,8 @@ internal static class Attributes
             /// Phase 2 — apply to an <c>IFunction1</c> bridge parameter
             /// to mark it as a typed C# callback. The facade gets an
             /// <c>Action&lt;T&gt;</c> ctor parameter; the generated
-            /// <c>Render</c> body wraps it in a <c>ComposableLambda1</c>
-            /// that un-boxes the Kotlin value for <c>T</c>.
+            /// <c>Render</c> body routes it through <c>RememberAction</c>
+            /// and un-boxes the Kotlin value for <c>T</c>.
             /// Supported <c>T</c>: <c>bool</c>, <c>string</c>, <c>float</c>.
             /// </summary>
             [global::System.AttributeUsage(global::System.AttributeTargets.Parameter,
@@ -345,6 +345,33 @@ internal static class Attributes
             internal sealed class CallbackAttribute : global::System.Attribute
             {
                 public CallbackAttribute(global::System.Type valueType) { }
+            }
+
+            /// <summary>
+            /// Marks an <c>IFunction4</c> bridge parameter as deferred
+            /// lazy-item content. Generated lowering uses
+            /// <c>ComposableLambdas.Instantiate4</c> so the adapter never
+            /// captures an outer composer that is stale when measure-time
+            /// item composition runs.
+            /// </summary>
+            [global::System.AttributeUsage(global::System.AttributeTargets.Parameter,
+                                           AllowMultiple = false)]
+            internal sealed class DeferredComposableContentAttribute
+                : global::System.Attribute
+            {
+            }
+
+            /// <summary>
+            /// Marks an <c>IFunction0</c> or <c>IFunction1</c> bridge
+            /// parameter as a raw, non-composable DSL callback. Generated
+            /// lowering constructs the corresponding raw adapter and does
+            /// not use a Compose lambda factory or remember slot.
+            /// </summary>
+            [global::System.AttributeUsage(global::System.AttributeTargets.Parameter,
+                                           AllowMultiple = false)]
+            internal sealed class RawCallbackAttribute
+                : global::System.Attribute
+            {
             }
 
             /// <summary>
@@ -562,6 +589,20 @@ internal static class Attributes
             {
                 public ComposeCompanionGetterAttribute(string getterName) { }
                 public string? ReturnDescriptor { get; set; }
+            }
+
+            /// <summary>
+            /// Apply to an explicit-composer <c>[Composable]</c> method on
+            /// <c>AndroidX.Compose.Composables</c> to generate its ambient-
+            /// composer sibling. Parameters marked
+            /// <see cref="ComposableContentAttribute"/> must be
+            /// <c>System.Action&lt;..., IComposer&gt;</c>; the generated
+            /// overload removes the trailing composer from that delegate.
+            /// </summary>
+            [global::System.AttributeUsage(global::System.AttributeTargets.Method,
+                                           AllowMultiple = false)]
+            internal sealed class GenerateImplicitComposableAttribute : global::System.Attribute
+            {
             }
         }
         """;

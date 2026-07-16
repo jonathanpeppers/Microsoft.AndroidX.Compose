@@ -1,5 +1,3 @@
-using AndroidX.Compose.Runtime;
-
 namespace AndroidX.Compose.Samples.JetNews;
 
 /// <summary>
@@ -50,7 +48,6 @@ public static class JetnewsApp
     /// </param>
     [Composable]
     public static void Content(
-        IComposer composer,
         NavController nav,
         MutableState<string> currentRoute,
         DrawerStateHolder drawerState,
@@ -69,7 +66,7 @@ public static class JetnewsApp
                 Drawer  = JetnewsDrawer.Build(nav, currentRoute, drawerState),
                 Content = BuildNavHost(nav, currentRoute, drawerState, bookmarks, selectedTopics, selectedPeople, selectedPublications, interestsTab, snackbars, onShare),
             },
-        }.Render(composer);
+        }.Render();
     }
 
     static NavHost BuildNavHost(

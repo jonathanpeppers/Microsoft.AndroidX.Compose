@@ -225,7 +225,7 @@ that AAR.
    `HelloComposable.Invoke` forwards the `$changed` int it receives
    straight into `BoxKt.Box(..., changed)`. For nested composables we'd
    have to compute the bitmask correctly per-arg to get skipping right,
-   which is exactly the role of the Tier 2 Roslyn generator. For
+   which is exactly the role of the `[Composable]` method generator. For
    single-call hello-world the forward-through-as-is approach recomposes
    the whole tree on every change, which is correct, just unoptimised.
 
@@ -343,10 +343,10 @@ $bt = "$env:LOCALAPPDATA\Android\Sdk\build-tools\<latest>\dexdump.exe"
 
 ```
 src/
-  Microsoft.AndroidX.Compose.Gallery/                         Tier 1.5 app. Uses Microsoft.AndroidX.Compose facade.
+  Microsoft.AndroidX.Compose.Gallery/                         Gallery app using the Microsoft.AndroidX.Compose facade.
     Microsoft.AndroidX.Compose.Gallery.csproj
     MainActivity.cs                           ~27 lines total, mirrors Kotlin line-for-line.
-  Microsoft.AndroidX.Compose/                         Tier 1.5 runtime facade (no codegen).
+  Microsoft.AndroidX.Compose/                         Tree-style runtime facade.
     Microsoft.AndroidX.Compose.csproj
     ComposableNode.cs                         Abstract AST base.
     Composables.cs                            Text / Column / Button / MaterialTheme nodes
@@ -368,7 +368,7 @@ src/
   Microsoft.AndroidX.Compose.Bindings.Material3/              Binds androidx.compose.material3 1.3.2
 ```
 
-## Tier 1.5 facade: lessons from making the C# look like Kotlin
+## Tree-style facade: lessons from making the C# look like Kotlin
 
 After getting the raw bindings working (Tier 1, ~200-line
 `MainActivity.cs` with five hand-written `IFunctionN` ACWs), we built
@@ -398,17 +398,17 @@ MaterialTheme { Column { Text("Hi"); Button(onClick = { x++ }) { Text("Tap") } }
 ```
 
 The cost is one `ComposableNode` allocation per call site per
-recomposition — fine for hello-world, not for production. A Tier 2
+recomposition — fine for hello-world, not for production. A composable-method
 source generator would lower `[Composable]` C# methods to direct
 composer-threading calls (no AST allocation).
 
-### 6. The composer stays explicit internally; Tier 2 can hide it in source
+### 6. The composer stays explicit internally; generated methods can hide it in source
 
 Explicit overloads pass the composer directly. The composerless surface
 additionally publishes that explicit parameter through a
 dynamically scoped `[ThreadStatic]` while synchronous user code runs.
 Generated interceptor cores, `SetContent` callbacks, and
-`Tier2InlineContent.Render` push and restore the scope; they never replace
+`ComposableContentNode.Render` push and restore the scope; they never replace
 the explicit `IComposer` parameter used by the implementation.
 
 Kotlin's Compose compiler plugin (`ComposerParamTransformer`) rewrites
@@ -420,9 +420,11 @@ into child renders. User code need not see `IComposer`; the implementation layer
 Deferred callbacks invoked after the dynamic scope closes cannot use
 implicit-composer APIs. `[Composable]` methods are synchronous, and parallel
 composition threads have independent ambient slots.
-CN5009 rejects composerless calls outside `[Composable]` methods and delegate
-parameters marked `[ComposableContent]`, catching invalid deferred callbacks
-at compile time.
+CN5009 traces composable delegates through local variables, local functions,
+method groups, anonymous functions, and conditional/coalescing expressions.
+Every path must end at a synchronous `[ComposableContent]` sink or an immediate
+invocation in composable scope; returns, field/property storage, unmarked
+arguments, and async/deferred callbacks are rejected at the escape site.
 
 ### 7. Nested content lambdas can reuse the outer composer reference
 
@@ -445,7 +447,7 @@ hands the content lambda) is the same physical object as the outer
 
 The exception is real subcomposition (`SubcomposeLayout`, `MovableContent`)
 which *do* hand you a different composer — those would need an
-explicit-composer overload. Tier 2 problem.
+explicit-composer overload. This is a composable-method concern.
 
 ### 8. `MutableNumberState<T>` with `operator ++/--` is the killer feature for Kotlin parity
 
@@ -499,7 +501,7 @@ Compose code.
 
 The real `remember { … }` in Kotlin uses Compose's slot table to cache
 values across recompositions, keyed by call-site position in the
-group hierarchy. A Tier 1.5 facade doesn't have access to the slot
+group hierarchy. A tree-style facade doesn't have access to the slot
 table from C#, so we use:
 
 ```csharp
@@ -518,7 +520,7 @@ protected T Remember<T>(Func<T> factory, [CallerLineNumber] int key = 0)
   (rotate-the-device loses state — real fix is `rememberSaveable` +
   `Composer.cache` integration).
 
-Good enough for tier 1.5; tier 2 codegen should map `[Composable]`
+Good enough for the tree-style API; composable-method code generation should map `[Composable]`
 locals to real slot-table reads.
 
 ### 10. `ComponentActivity.SetContent` extension keeps user `OnCreate` looking like Kotlin `onCreate`

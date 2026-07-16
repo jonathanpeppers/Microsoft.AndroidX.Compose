@@ -1,10 +1,10 @@
 using AndroidX.Compose.Gallery.Registry;
 using static AndroidX.Compose.Composables;
 
-namespace AndroidX.Compose.Gallery.Demos.Tier2;
+namespace AndroidX.Compose.Gallery.Demos.ComposableMethods;
 
 /// <summary>
-/// Tier 2 proof demo. Two sibling <c>[Composable]</c> static methods
+/// Recomposition-skip proof demo. Two sibling <c>[Composable]</c> static methods
 /// render side by side. A <see cref="MutableNumberState{T}"/> ticks
 /// on every button tap, and only the <c>Ticking</c> sibling reads
 /// it — the <c>Static</c> sibling's parameter is a constant.
@@ -30,23 +30,23 @@ namespace AndroidX.Compose.Gallery.Demos.Tier2;
 ///   </description></item>
 /// </list>
 /// <para>
-/// That divergence is the runtime proof Tier 2 works — without the
+/// That divergence proves the generated skip path works — without the
 /// generator's restart group + DiffSlot + skip path, both counters
 /// would tick together.
 /// </para>
 /// </remarks>
-public static class Tier2SiblingSkipDemo
+public static class ComposableSiblingSkipDemo
 {
     static int s_tickingExec;
     static int s_staticExec;
 
     /// <summary>Registry entry exposed via <see cref="Catalog.Demos"/>.</summary>
     public static Demo Demo => new(
-        Id:          "tier2-sibling-skip",
-        CategoryId:  "tier2",
+        Id:          "composable-sibling-skip",
+        CategoryId:  "composable-methods",
         Title:       "[Composable] sibling skip",
-        Description: "Two sibling Tier 2 composables side by side; only one reads the ticking state. The other's exec counter stays flat — runtime proof the skip path fires.",
-        Build:       static _ => new Tier2Adapter(() => Parent()));
+        Description: "Two sibling composable methods; only the state-reading sibling executes on each tick.",
+        Build:       static _ => new ComposableDemoAdapter(() => Parent()));
 
     /// <summary>
     /// Parent <c>[Composable]</c> hosting both siblings and the button
@@ -76,7 +76,7 @@ public static class Tier2SiblingSkipDemo
     }
 
     /// <summary>
-    /// Tier 2 sibling whose only parameter is a constant string. Its
+    /// Stable sibling whose only parameter is a constant string. Its
     /// generator-emitted interceptor should detect the unchanged input
     /// and call <c>SkipToGroupEnd</c> instead of running this body.
     /// </summary>
@@ -88,7 +88,7 @@ public static class Tier2SiblingSkipDemo
     }
 
     /// <summary>
-    /// Tier 2 sibling that reads the ticking <see cref="MutableNumberState{T}"/>.
+    /// Sibling that reads the ticking <see cref="MutableNumberState{T}"/>.
     /// Its interceptor's DiffSlot reads <c>Different</c> on every tap
     /// so the body runs every pass and the exec counter tracks the
     /// tap count exactly.

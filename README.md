@@ -14,7 +14,7 @@ Build Android UI with **Jetpack Compose** from a .NET for Android app — pure C
 
 This repo provides two C# authoring styles over the existing
 `androidx.compose.*` runtime and Xamarin bindings: a tree-style facade and
-Tier 2 `[Composable]` static methods lowered by a Roslyn source generator.
+`[Composable]` static methods lowered by a Roslyn source generator.
 Both are pure C# with no Kotlin source or custom runtime.
 
 ## Build & run
@@ -58,7 +58,7 @@ class MainActivity : ComponentActivity() {
 }
 ```
 
-### C# tree style (Tier 1.5)
+### C# tree style
 
 ```csharp
 [Activity(Label = "@string/app_name", MainLauncher = true,
@@ -110,9 +110,16 @@ constructed UI. The actual
 is a larger gallery app that exercises every facade across a navigable
 catalog.
 
-### C# static style (Tier 2)
+### C# composable methods
 
-The tree-style facade above is Tier 1.5 — every recomposition allocates a fresh `ComposableNode` tree. Tier 2 is the C# moral equivalent of Kotlin's compose-compiler plugin: an incremental source generator emits a per-call-site `[InterceptsLocation]` wrapper that opens a Compose restart group, runs per-parameter `DiffSlot` diffing, and skips the underlying call when nothing changed. When the skip path fires the body — and therefore the tree allocation it would have made — never runs. One user method, one shape, same as Kotlin (mirrors `dotnet/maui`'s `BindingSourceGen`).
+The tree-style facade above allocates a fresh `ComposableNode` tree on every
+recomposition. Composable methods are the C# equivalent of Kotlin's
+compose-compiler plugin: an incremental source generator emits a per-call-site
+`[InterceptsLocation]` wrapper that opens a Compose restart group, runs
+per-parameter `DiffSlot` comparisons, and skips the underlying call when
+nothing changed. When the skip path fires, the method body—and therefore any
+tree allocation it would have made—never runs. One user method, one shape,
+matching Kotlin's model (and `dotnet/maui`'s `BindingSourceGen`).
 
 ```csharp
 using Composable = AndroidX.Compose.ComposableAttribute;
@@ -146,23 +153,35 @@ public class MainActivity : ComponentActivity
 }
 ```
 
-`ComposeFacadeGenerator` emits public Tier 2 entry points alongside the
+`ComposeFacadeGenerator` emits public composable entry points alongside the
 tree-style facade catalog. Every generated facade has a composerless overload,
 and common handwritten composition APIs cover layout, state, effects,
 resources, theme reads, and composition locals. Existing explicit-composer
 overloads remain available as low-level escape hatches. The composable facade
 entry points are themselves `[Composable]`, so unchanged calls skip before
-constructing their tree-style adapters. The hand-written holdouts (`Scaffold`,
-lazy collections, text fields, search, and similar custom shapes) remain
-tree-style for now.
+their bodies execute; when they do execute, the generator lowers modifier,
+callback, content-slot, state-holder, and default-mask plumbing directly to
+the corresponding Compose bridge without constructing a tree-style adapter.
+Generic lowering also exposes typed animation, pager, carousel, and lazy
+collection facades. Generated ambient overloads cover the handwritten
+`MaterialTheme`, `Scaffold`, `SnackbarHost`, both `SegmentedButton` modes,
+`Layout`, `TextField`, `OutlinedTextField`, the complete search family, and
+`BottomSheetScaffold` without duplicating their rendering logic. Navigation
+DSLs and similar deferred graph-building shapes remain tree-style for now.
 
-The Jetchat, JetNews, and Reply ports use a Tier 2 root matching upstream
-Kotlin's top-level `@Composable` app function and call it through the
-`Action<IComposer>` `SetContent` overload. See
-[docs/architecture.md → Tier 2](docs/architecture.md) for the emission shape,
-the sibling-skip proof demo, diagnostics (CN5001-CN5009), and remaining
-follow-ups. The two tiers coexist freely. The
-`Microsoft.AndroidX.Compose` NuGet package includes the Tier 2 source
+The Jetchat, JetNews, and Reply ports use composerless `[Composable]` roots matching
+upstream Kotlin's top-level `@Composable` app function. Their activities call
+the `Action` `SetContent` overload and use implicit `Remember`, `MutableStateOf`,
+`ViewModel`, and lazy-list state APIs. The roots retain one parameterless
+tree-style `Render()` escape hatch while `MaterialTheme`, `Scaffold`,
+navigation, lazy collections, and text fields remain tree-style.
+The Gallery's real-app benchmark compares equivalent tree, adapter method,
+and direct-lowered method lanes with randomized fresh-process order.
+See
+[docs/architecture.md → Composable methods](docs/architecture.md) for the emission shape,
+the sibling-skip proof demo, diagnostics (CN5001-CN5010), and remaining
+follow-ups. The two authoring styles coexist freely. The
+`Microsoft.AndroidX.Compose` NuGet package includes the composable-method source
 generator and its compiler configuration; package consumers need no separate
 generator reference.
 

@@ -212,6 +212,14 @@ internal static class Diagnostics
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);
 
+    public static readonly DiagnosticDescriptor FacadeLambdaExecutionModeInvalid = new(
+        id: "CN3013",
+        title: "Lambda execution mode is ambiguous or invalid",
+        messageFormat: "Facade for bridge '{0}': {1}",
+        category: "AndroidX.Compose",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
+
     public static readonly DiagnosticDescriptor CompanionNotPartial = new(
         id: "CN4001",
         title: "[ComposeCompanion] target class must be partial",
@@ -271,7 +279,7 @@ internal static class Diagnostics
     public static readonly DiagnosticDescriptor ComposableNotStatic = new(
         id: "CN5001",
         title: "[Composable] method must be static",
-        messageFormat: "Method '{0}' carries [Composable] but is not declared 'static' — Tier 2 intercepts call sites to a static method",
+        messageFormat: "Method '{0}' carries [Composable] but is not declared 'static' — the generator intercepts call sites to a static method",
         category: "AndroidX.Compose",
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);
@@ -279,7 +287,7 @@ internal static class Diagnostics
     public static readonly DiagnosticDescriptor ComposableReturnsNotVoid = new(
         id: "CN5002",
         title: "[Composable] method must return void",
-        messageFormat: "Method '{0}' carries [Composable] but its return type is not 'void' — Tier 2 currently supports only 'void' composables",
+        messageFormat: "Method '{0}' carries [Composable] but its return type is not 'void' — the generator currently supports only 'void' composables",
         category: "AndroidX.Compose",
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);
@@ -316,18 +324,10 @@ internal static class Diagnostics
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);
 
-    public static readonly DiagnosticDescriptor ComposableGenericUnsupported = new(
-        id: "CN5007",
-        title: "[Composable] generic methods are not supported",
-        messageFormat: "Method '{0}' carries [Composable] but is generic — Tier 2 currently requires a non-generic static method",
-        category: "AndroidX.Compose",
-        defaultSeverity: DiagnosticSeverity.Error,
-        isEnabledByDefault: true);
-
     public static readonly DiagnosticDescriptor ComposableByRefUnsupported = new(
         id: "CN5008",
         title: "[Composable] by-reference parameters are not supported",
-        messageFormat: "Method '{0}' carries [Composable] but parameter '{1}' uses '{2}' — Tier 2 currently supports only by-value parameters",
+        messageFormat: "Method '{0}' carries [Composable] but parameter '{1}' uses '{2}' — the generator currently supports only by-value parameters",
         category: "AndroidX.Compose",
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);
@@ -335,7 +335,15 @@ internal static class Diagnostics
     public static readonly DiagnosticDescriptor ImplicitComposableOutsideScope = new(
         id: "CN5009",
         title: "Implicit composable call requires a composable scope",
-        messageFormat: "Implicit composable API '{0}' is called outside a [Composable] method or [ComposableContent] callback",
+        messageFormat: "Implicit composable API '{0}' requires synchronous [Composable] or [ComposableContent] scope; this call or delegate may escape that scope",
+        category: "AndroidX.Compose",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
+
+    public static readonly DiagnosticDescriptor ImplicitComposableGenerationInvalid = new(
+        id: "CN5010",
+        title: "Implicit composable overload shape is invalid",
+        messageFormat: "Method '{0}' cannot generate an implicit-composer overload: {1}",
         category: "AndroidX.Compose",
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);

@@ -82,7 +82,10 @@ Technically feasible, *very* substantial. The Compose compiler plugin is ~30k li
 
 Realistic path: a **Roslyn source generator + analyzer + interceptors** that emits the rewritten methods as `partial` peers and intercepts call sites. You'd lose: function-typed `@Composable` (no syntactic equivalent in C#), K2-level type-system enforcement, IDE refactorings. You'd gain: pure C# authoring against the same `androidx.compose.runtime` runtime jar.
 
-This is a multi-engineer-year effort and you'd be perpetually chasing Google's plugin (it changes every Kotlin release). The pragmatic middle path is the two-tier strategy: ship Tier 1 today against the existing runtime, evaluate Tier 2 as separate R&D.
+This is a multi-engineer-year effort and you'd be perpetually chasing Google's
+plugin (it changes every Kotlin release). The pragmatic middle path is to ship
+the tree-style facade against the existing runtime and evaluate generated
+`[Composable]` methods separately.
 
 ## What APIs are needed on the C# side — Maven/AAR/NuGet status
 
