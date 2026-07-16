@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using Android.Runtime;
 using Kotlin.Coroutines;
 using Kotlin.Coroutines.Intrinsics;
@@ -39,21 +38,28 @@ namespace AndroidX.Compose;
 /// <c>Func&lt;CancellationToken, Task&gt;</c> with <c>cts.Token</c>.</description></item>
 /// <item><description>Once the resulting Task completes (sync or async),
 /// resume the continuation with <c>Unit</c> on success /
-/// <c>Result.Failure(throwable)</c> on fault. An
-/// <see cref="Interlocked.CompareExchange{T}(ref T, T, T)"/>
-/// once-gate keeps the resume from firing twice if the Job is
-/// cancelled while the ContinueWith is still racing.</description></item>
+/// <c>Result.Failure(throwable)</c> on fault. Contract failures before
+/// the body starts use the same failure-resume path.</description></item>
 /// </list>
 /// </remarks>
 [Register("net/compose/LaunchedEffectBody")]
 internal sealed class LaunchedEffectBody : Java.Lang.Object, IFunction2
 {
     readonly Func<CancellationToken, Task> _body;
+    readonly Func<IContinuation, JobCompletionHandler, IDisposableHandle> _registerCancellation;
 
     public LaunchedEffectBody(
         Func<CancellationToken, Task> body)
+        : this(body, RegisterCancellation)
+    {
+    }
+
+    internal LaunchedEffectBody(
+        Func<CancellationToken, Task> body,
+        Func<IContinuation, JobCompletionHandler, IDisposableHandle> registerCancellation)
     {
         _body = body;
+        _registerCancellation = registerCancellation;
     }
 
     public Java.Lang.Object? Invoke(Java.Lang.Object? p0, Java.Lang.Object? p1)
@@ -85,47 +91,46 @@ internal sealed class LaunchedEffectBody : Java.Lang.Object, IFunction2
         }
 
         var cts = new CancellationTokenSource();
-        var resumed = new ResumeOnceGate();
-
         // Bind the Job's cancellation → our CTS so the user's Task can
         // observe ct.IsCancellationRequested and bail cooperatively.
         // The IDisposableHandle is held strongly through `state` below
         // so it doesn't get yanked by GC before completion.
         var handler = new JobCompletionHandler(cts);
         IDisposableHandle? completionRegistration = null;
+        Exception? registrationFailure = null;
         try
         {
-            var job = JobKt.GetJob(continuation.Context);
-            completionRegistration = job.InvokeOnCompletion(
-                onCancelling: true, invokeImmediately: true, handler);
+            completionRegistration = _registerCancellation(continuation, handler)
+                ?? throw new InvalidOperationException(
+                    "Kotlin Job registration returned no disposal handle.");
         }
         catch (Exception ex)
         {
-            // Without a Job in the context we can't wire cancellation
-            // — but the user's Task can still run. Log and continue.
-            Debug.WriteLine(
-                "AndroidX.Compose.LaunchedEffect: failed to register Job completion handler: " + ex);
+            registrationFailure = new InvalidOperationException(
+                "LaunchedEffect could not observe its Kotlin Job; "
+                + "the managed body was not started because lifecycle cancellation "
+                + "could not be guaranteed.",
+                ex);
         }
 
         Task task;
-        try
+        if (registrationFailure is not null)
         {
-            task = _body(cts.Token) ?? Task.CompletedTask;
+            task = Task.FromException(registrationFailure);
         }
-        catch (Exception ex)
+        else
         {
-            // Synchronous fault from the body (rare — Func<T, Task> bodies
-            // typically wrap their work in async). Throw a Java
-            // RuntimeException; Kotlin's coroutine machinery converts it
-            // into a Result.Failure for any waiting awaiters of the job
-            // and the InvokeOnCompletion hook still fires. Include
-            // ex.ToString() so the original stack trace + type stay
-            // visible in logcat / coroutine debug output.
-            completionRegistration?.Dispose();
-            cts.Dispose();
-            handler.Dispose();
-            throw new Java.Lang.RuntimeException(
-                "LaunchedEffect body threw synchronously: " + ex);
+            try
+            {
+                task = _body(cts.Token)
+                    ?? Task.FromException(
+                        new InvalidOperationException(
+                            "LaunchedEffect body returned a null Task."));
+            }
+            catch (Exception ex)
+            {
+                task = Task.FromException(ex);
+            }
         }
 
         // Always go through ContinueWith so the resume runs on the
@@ -134,11 +139,17 @@ internal sealed class LaunchedEffectBody : Java.Lang.Object, IFunction2
         // simple and matches what Kotlin's own `kotlinx-coroutines`
         // does when handed an external future.
         var ctx = new ResumeContext(
-            continuation, cts, handler, completionRegistration, resumed);
-        task.ContinueWith(
+            continuation,
+            cts,
+            handler,
+            completionRegistration,
+            completionRegistration is not null);
+        _ = task.ContinueWith(
             static (t, state) =>
             {
-                var c = (ResumeContext)state!;
+                var c = state as ResumeContext
+                    ?? throw new InvalidOperationException(
+                        "LaunchedEffect continuation state was invalid.");
                 c.Resume(t);
             },
             ctx,
@@ -149,43 +160,69 @@ internal sealed class LaunchedEffectBody : Java.Lang.Object, IFunction2
         return IntrinsicsKt.COROUTINE_SUSPENDED;
     }
 
-    // Holds everything we need to safely resume the continuation
-    // exactly once and release the JCWs / handler registration after.
+    static IDisposableHandle RegisterCancellation(
+        IContinuation continuation,
+        JobCompletionHandler handler)
+    {
+        var job = JobKt.GetJob(continuation.Context);
+        return job.InvokeOnCompletion(
+            onCancelling: true,
+            invokeImmediately: true,
+            handler);
+    }
+
+    // Holds everything needed to resume the continuation and release
+    // cancellation resources after the managed Task completes.
     sealed class ResumeContext
     {
         readonly IContinuation _continuation;
         readonly CancellationTokenSource _cts;
         readonly JobCompletionHandler _handler;
         readonly IDisposableHandle? _completionRegistration;
-        readonly ResumeOnceGate _gate;
+        readonly bool _handlerWasRegistered;
 
         public ResumeContext(
             IContinuation continuation,
             CancellationTokenSource cts,
             JobCompletionHandler handler,
             IDisposableHandle? completionRegistration,
-            ResumeOnceGate gate)
+            bool handlerWasRegistered)
         {
             _continuation = continuation;
             _cts = cts;
             _handler = handler;
             _completionRegistration = completionRegistration;
-            _gate = gate;
+            _handlerWasRegistered = handlerWasRegistered;
         }
 
         public void Resume(Task t)
         {
-            if (!_gate.TryEnter())
-                return;
-
+            Exception? cleanupFailure = null;
+            Java.Lang.Throwable? throwable = null;
             try
             {
+                try
+                {
+                    _completionRegistration?.Dispose();
+                }
+                catch (Exception ex)
+                {
+                    cleanupFailure = new InvalidOperationException(
+                        "LaunchedEffect failed to detach its Kotlin Job cancellation handler.",
+                        ex);
+                }
+
                 Java.Lang.Object? result;
-                if (t.IsFaulted)
+                if (cleanupFailure is not null)
+                {
+                    throwable = ToThrowable(cleanupFailure);
+                    result = KotlinResult.CreateFailure(throwable);
+                }
+                else if (t.IsFaulted)
                 {
                     var inner = t.Exception?.GetBaseException()
                         ?? new Exception("LaunchedEffect Task faulted with no exception");
-                    var throwable = ToThrowable(inner);
+                    throwable = ToThrowable(inner);
                     result = KotlinResult.CreateFailure(throwable);
                 }
                 else if (t.IsCanceled)
@@ -196,41 +233,39 @@ internal sealed class LaunchedEffectBody : Java.Lang.Object, IFunction2
                     // kotlinx.coroutines.CancellationException is a
                     // typealias for java.util.concurrent.CancellationException
                     // on JVM, so the simpler Java type is fine.
-                    var ce = new Java.Util.Concurrent.CancellationException(
+                    throwable = new Java.Util.Concurrent.CancellationException(
                         "LaunchedEffect Task was cancelled");
-                    result = KotlinResult.CreateFailure(ce);
+                    result = KotlinResult.CreateFailure(throwable);
                 }
                 else
                 {
-                    result = Kotlin.Unit.Instance!;
+                    result = Kotlin.Unit.Instance
+                        ?? throw new InvalidOperationException(
+                            "Kotlin.Unit.Instance was not available.");
                 }
 
                 try
                 {
                     _continuation.ResumeWith(result);
                 }
-                catch (Exception ex)
+                finally
                 {
-                    // ResumeWith on an already-cancelled continuation
-                    // may throw IllegalStateException from Kotlin's
-                    // dispatched continuation impl. Log and swallow —
-                    // there's no caller to surface this to.
-                    Debug.WriteLine(
-                        "AndroidX.Compose.LaunchedEffect: continuation resume failed: " + ex);
+                    GC.KeepAlive(result);
+                    GC.KeepAlive(throwable);
                 }
             }
             finally
             {
-                try { _completionRegistration?.Dispose(); } catch { }
-                try { _cts.Dispose(); } catch { }
-                // Don't dispose _handler — Kotlin's job machinery may
-                // still hold a reference to it briefly. Let GC reclaim
-                // the JCW once Kotlin drops it.
-                GC.KeepAlive(_handler);
+                _cts.Dispose();
+                if (!_handlerWasRegistered)
+                    _handler.Dispose();
+                else
+                    GC.KeepAlive(_handler);
+                GC.KeepAlive(_continuation);
             }
         }
 
-        static Java.Lang.Throwable ToThrowable(Exception ex) =>
+        internal static Java.Lang.Throwable ToThrowable(Exception ex) =>
             ex switch
             {
                 Java.Lang.Throwable th => th,
@@ -238,12 +273,5 @@ internal sealed class LaunchedEffectBody : Java.Lang.Object, IFunction2
                     new Java.Util.Concurrent.CancellationException(ex.Message ?? "cancelled"),
                 _ => new Java.Lang.RuntimeException(ex.GetType().Name + ": " + ex.Message),
             };
-    }
-
-    sealed class ResumeOnceGate
-    {
-        int _state; // 0 = pending, 1 = resumed
-        public bool TryEnter() =>
-            Interlocked.CompareExchange(ref _state, 1, 0) == 0;
     }
 }
