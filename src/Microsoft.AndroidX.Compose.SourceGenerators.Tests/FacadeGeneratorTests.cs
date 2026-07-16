@@ -858,7 +858,7 @@ public class FacadeGeneratorTests
         // No Scope → leaf shape: ComposableNode base, no RenderChildren.
         Assert.Contains(": global::AndroidX.Compose.ComposableNode", emitted);
         Assert.DoesNotContain("RenderChildren", emitted);
-        Assert.Contains("public global::AndroidX.Compose.ComposableNode? Actions { get; set; }", emitted);
+        Assert.Contains("public required global::AndroidX.Compose.ComposableNode Actions { get; set; }", emitted);
         Assert.Contains("public global::AndroidX.Compose.ComposableNode? FloatingActionButton { get; set; }", emitted);
     }
 
@@ -1712,7 +1712,7 @@ public class FacadeGeneratorTests
         // ScopeReceiver is bound to RenderContext.CurrentScope (no ctor slot).
         Assert.Contains("global::AndroidX.Compose.ComposeBridges.NavigationBarItem(global::AndroidX.Compose.RenderContext.CurrentScope,", emitted);
         // Required Function2 (icon) becomes a named property (auto multi-slot).
-        Assert.Contains("public global::AndroidX.Compose.ComposableNode? Icon", emitted);
+        Assert.Contains("public required global::AndroidX.Compose.ComposableNode Icon", emitted);
         // Optional Function2 (label) becomes a named property.
         Assert.Contains("public global::AndroidX.Compose.ComposableNode? Label", emitted);
         // Ctor exposes only selected + onClick (rowScope is auto-bound).
