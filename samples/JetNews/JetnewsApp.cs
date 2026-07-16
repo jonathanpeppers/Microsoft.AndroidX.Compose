@@ -66,7 +66,7 @@ public static class JetnewsApp
                 Drawer  = JetnewsDrawer.Build(nav, currentRoute, drawerState),
                 Content = BuildNavHost(nav, currentRoute, drawerState, bookmarks, selectedTopics, selectedPeople, selectedPublications, interestsTab, snackbars, onShare),
             },
-        }.Render(ComposableContext.Current);
+        }.Render();
     }
 
     static NavHost BuildNavHost(

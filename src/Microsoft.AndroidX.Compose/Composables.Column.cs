@@ -16,7 +16,7 @@ public static partial class Composables
         new global::AndroidX.Compose.Column
         {
             new Tier2InlineContent(_ => content()),
-        }.Render(ComposableContext.Current);
+        }.Render();
     }
 
     /// <summary>

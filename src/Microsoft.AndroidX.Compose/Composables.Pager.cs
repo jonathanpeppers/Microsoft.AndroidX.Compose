@@ -23,7 +23,7 @@ public static partial class Composables
             Modifier = modifier,
             State = state,
             ContentPadding = contentPadding,
-        }.Render(ComposableContext.Current);
+        }.Render();
     }
 
     /// <summary>Renders a typed horizontal pager with an explicit composer.</summary>
@@ -69,7 +69,7 @@ public static partial class Composables
             Modifier = modifier,
             State = state,
             ContentPadding = contentPadding,
-        }.Render(ComposableContext.Current);
+        }.Render();
     }
 
     /// <summary>Renders a typed vertical pager with an explicit composer.</summary>

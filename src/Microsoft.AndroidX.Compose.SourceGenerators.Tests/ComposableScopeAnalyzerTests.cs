@@ -33,6 +33,11 @@ public class ComposableScopeAnalyzerTests
                     [ComposableContent] System.Action content) { }
             }
 
+            public abstract class ComposableNode
+            {
+                public void Render() { }
+            }
+
             public sealed class CompositionLocal<T>
             {
                 public T Current() => throw new System.NotImplementedException();
@@ -159,6 +164,37 @@ public class ComposableScopeAnalyzerTests
             """);
 
         Assert.Contains(diagnostics, d => d.Id == "CN5009");
+    }
+
+    [Fact]
+    public void ImplicitComposableNodeRender_InPlainMethod_ReportsCN5009()
+    {
+        var diagnostics = Analyze("""
+            sealed class Node : AndroidX.Compose.ComposableNode { }
+
+            static class App
+            {
+                public static void Render(Node node) => node.Render();
+            }
+            """);
+
+        Assert.Contains(diagnostics, d => d.Id == "CN5009");
+    }
+
+    [Fact]
+    public void ImplicitComposableNodeRender_InComposableMethod_IsAllowed()
+    {
+        var diagnostics = Analyze("""
+            sealed class Node : AndroidX.Compose.ComposableNode { }
+
+            static class App
+            {
+                [AndroidX.Compose.Composable]
+                public static void Render(Node node) => node.Render();
+            }
+            """);
+
+        Assert.DoesNotContain(diagnostics, d => d.Id == "CN5009");
     }
 
     [Fact]

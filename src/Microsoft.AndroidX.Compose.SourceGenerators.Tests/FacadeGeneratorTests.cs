@@ -176,6 +176,7 @@ public class FacadeGeneratorTests
             {
                 public Modifier? Modifier { get; set; }
                 public abstract void Render(global::AndroidX.Compose.Runtime.IComposer composer);
+                public void Render() { }
                 protected global::AndroidX.Compose.UI.IModifier? BuildModifier() => null;
                 internal object? BuildModifierStructuralKey() => null;
             }

@@ -165,9 +165,9 @@ DSLs and similar deferred graph-building shapes remain tree-style for now.
 The Jetchat, JetNews, and Reply ports use composerless Tier 2 roots matching
 upstream Kotlin's top-level `@Composable` app function. Their activities call
 the `Action` `SetContent` overload and use implicit `Remember`, `MutableStateOf`,
-`ViewModel`, and lazy-list state APIs. The roots retain one
-`ComposableContext.Current` render escape hatch while `MaterialTheme`,
-`Scaffold`, navigation, lazy collections, and text fields remain tree-style.
+`ViewModel`, and lazy-list state APIs. The roots retain one parameterless
+tree-style `Render()` escape hatch while `MaterialTheme`, `Scaffold`,
+navigation, lazy collections, and text fields remain tree-style.
 The Gallery's real-app benchmark compares equivalent tree, adapter Tier 2,
 and direct-lowered Tier 2 lanes with randomized fresh-process order.
 See

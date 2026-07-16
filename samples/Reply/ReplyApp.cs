@@ -39,7 +39,7 @@ public static class ReplyApp
                     }),
                 Body = BuildNavHost(nav, currentRoute, openedEmailId, selectedEmailIds),
             },
-        }.Render(ComposableContext.Current);
+        }.Render();
     }
 
     static NavHost BuildNavHost(

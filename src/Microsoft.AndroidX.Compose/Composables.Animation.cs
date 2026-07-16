@@ -18,7 +18,7 @@ public static partial class Composables
             value => new Tier2InlineContent(_ => content(value)))
         {
             Modifier = modifier,
-        }.Render(ComposableContext.Current);
+        }.Render();
     }
 
     /// <summary>Animates between typed content states with an explicit composer.</summary>
@@ -54,7 +54,7 @@ public static partial class Composables
             value => new Tier2InlineContent(_ => content(value)))
         {
             Modifier = modifier,
-        }.Render(ComposableContext.Current);
+        }.Render();
     }
 
     /// <summary>Crossfades between typed content states with an explicit composer.</summary>

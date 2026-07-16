@@ -166,6 +166,16 @@ public abstract class ComposableNode
     public abstract void Render(IComposer composer);
 
     /// <summary>
+    /// Compose this node using the active implicit composition.
+    /// </summary>
+    /// <remarks>
+    /// Call only from a <see cref="ComposableAttribute"/> method or a
+    /// <see cref="ComposableContentAttribute"/> callback. Calls outside
+    /// composition are diagnosed with <c>CN5009</c>.
+    /// </remarks>
+    public void Render() => Render(ComposableContext.Current);
+
+    /// <summary>
     /// Render this node as the body of a parent layout that supplies a
     /// runtime <c>PaddingValues</c> handle (e.g.
     /// <see cref="Scaffold"/>'s content lambda). The default

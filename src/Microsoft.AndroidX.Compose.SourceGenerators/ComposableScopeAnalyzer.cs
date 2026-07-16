@@ -15,6 +15,7 @@ public sealed class ComposableScopeAnalyzer : DiagnosticAnalyzer
 {
     const string ComposableAttributeName = "AndroidX.Compose.ComposableAttribute";
     const string ComposableContentAttributeName = "AndroidX.Compose.ComposableContentAttribute";
+    const string ComposableNodeTypeName = "AndroidX.Compose.ComposableNode";
     const string ComposablesTypeName = "AndroidX.Compose.Composables";
     const string ComposerTypeName = "AndroidX.Compose.Runtime.IComposer";
 
@@ -52,8 +53,15 @@ public sealed class ComposableScopeAnalyzer : DiagnosticAnalyzer
 
         return method.ContainingType.ToDisplayString() == ComposablesTypeName
             || HasAttribute(method, ComposableAttributeName)
-            || IsImplicitCompositionLocalRead(method);
+            || IsImplicitCompositionLocalRead(method)
+            || IsImplicitComposableNodeRender(method);
     }
+
+    static bool IsImplicitComposableNodeRender(IMethodSymbol method) =>
+        method.Name == "Render"
+        && !method.IsStatic
+        && method.Parameters.Length == 0
+        && method.ContainingType.ToDisplayString() == ComposableNodeTypeName;
 
     static bool IsImplicitCompositionLocalRead(IMethodSymbol method)
     {

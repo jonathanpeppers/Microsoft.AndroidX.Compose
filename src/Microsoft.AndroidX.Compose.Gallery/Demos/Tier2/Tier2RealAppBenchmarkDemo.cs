@@ -161,7 +161,7 @@ public static class Tier2RealAppBenchmarkDemo
     {
         long beforeBytes = GC.GetAllocatedBytesForCurrentThread();
         long started = Stopwatch.GetTimestamp();
-        TreeReplyCard("A practical guide to Compose", executions);
+        BuildTreeReplyCard("A practical guide to Compose", executions).Render();
         RecordMeasurement(
             lane: 0,
             GC.GetAllocatedBytesForCurrentThread() - beforeBytes,
@@ -245,18 +245,18 @@ public static class Tier2RealAppBenchmarkDemo
         new Card
         {
             new Text(subject),
-        }.Render(ComposableContext.Current);
+        }.Render();
     }
 
-    static void TreeReplyCard(
+    static Card BuildTreeReplyCard(
         string subject,
         StrongBox<int[]> executions)
     {
         ExecutionValues(executions)[0]++;
-        new Card
+        return new Card
         {
             new Text(subject),
-        }.Render(ComposableContext.Current);
+        };
     }
 
     static void DirectReplyCardContent()

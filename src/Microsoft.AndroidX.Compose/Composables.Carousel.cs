@@ -28,7 +28,7 @@ public static partial class Composables
             State = state,
             ItemSpacing = itemSpacing ?? float.NaN,
             UserScrollEnabled = userScrollEnabled,
-        }.Render(ComposableContext.Current);
+        }.Render();
     }
 
     /// <summary>Renders a typed uncontained carousel with an explicit composer.</summary>
@@ -82,7 +82,7 @@ public static partial class Composables
             State = state,
             ItemSpacing = itemSpacing ?? float.NaN,
             UserScrollEnabled = userScrollEnabled,
-        }.Render(ComposableContext.Current);
+        }.Render();
     }
 
     /// <summary>Renders a typed multi-browse carousel with an explicit composer.</summary>
@@ -136,7 +136,7 @@ public static partial class Composables
             MaxItemWidth = maxItemWidth ?? float.NaN,
             ItemSpacing = itemSpacing ?? float.NaN,
             UserScrollEnabled = userScrollEnabled,
-        }.Render(ComposableContext.Current);
+        }.Render();
     }
 
     /// <summary>Renders a typed centered-hero carousel with an explicit composer.</summary>

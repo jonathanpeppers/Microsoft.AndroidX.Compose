@@ -388,8 +388,8 @@ Issue [#299](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issue
 migrated the Jetchat, JetNews, and Reply activity roots to composerless
 `SetContent`, state, ViewModel, and lazy-list state APIs. The top-level
 `[Composable]` methods no longer thread `IComposer`; each keeps one
-`ComposableContext.Current` tree-render escape hatch while the nested screen
-shapes remain blocked on [#301](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/301).
+parameterless tree-style `Render()` escape hatch while the nested screen shapes
+remain blocked on [#301](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/301).
 
 `Tier2RealAppBenchmarkDemo` measures equivalent Reply-style cards through
 three paths: direct tree construction, a Tier 2 interceptor whose body builds

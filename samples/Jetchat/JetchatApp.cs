@@ -95,7 +95,7 @@ public static class JetchatApp
                     }),
                 },
             };
-        })).Render(ComposableContext.Current);
+        })).Render();
     }
 
     static bool IsOnHome(NavController nav)

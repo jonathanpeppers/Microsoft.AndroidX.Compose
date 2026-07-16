@@ -30,7 +30,7 @@ public static partial class Composables
             ReverseLayout = reverseLayout,
             ContentPadding = contentPadding,
             VerticalArrangement = verticalArrangement,
-        }.Render(ComposableContext.Current);
+        }.Render();
     }
 
     /// <summary>Renders a typed vertical lazy list with an explicit composer.</summary>
@@ -82,7 +82,7 @@ public static partial class Composables
             State = state,
             ContentPadding = contentPadding,
             HorizontalArrangement = horizontalArrangement,
-        }.Render(ComposableContext.Current);
+        }.Render();
     }
 
     /// <summary>Renders a typed horizontal lazy list with an explicit composer.</summary>
@@ -137,7 +137,7 @@ public static partial class Composables
             ContentPadding = contentPadding,
             VerticalArrangement = verticalArrangement,
             HorizontalArrangement = horizontalArrangement,
-        }.Render(ComposableContext.Current);
+        }.Render();
     }
 
     /// <summary>Renders a typed vertically scrolling lazy grid with an explicit composer.</summary>
@@ -193,7 +193,7 @@ public static partial class Composables
             Modifier = modifier,
             State = state,
             ContentPadding = contentPadding,
-        }.Render(ComposableContext.Current);
+        }.Render();
     }
 
     /// <summary>Renders a typed horizontally scrolling lazy grid with an explicit composer.</summary>
@@ -245,7 +245,7 @@ public static partial class Composables
             Modifier = modifier,
             State = state,
             ContentPadding = contentPadding,
-        }.Render(ComposableContext.Current);
+        }.Render();
     }
 
     /// <summary>Renders a typed vertical lazy staggered grid with an explicit composer.</summary>
@@ -297,7 +297,7 @@ public static partial class Composables
             Modifier = modifier,
             State = state,
             ContentPadding = contentPadding,
-        }.Render(ComposableContext.Current);
+        }.Render();
     }
 
     /// <summary>Renders a typed horizontal lazy staggered grid with an explicit composer.</summary>

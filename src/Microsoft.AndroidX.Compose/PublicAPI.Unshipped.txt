@@ -209,6 +209,7 @@ AndroidX.Compose.ComposableNode.ComposableNode() -> void
 AndroidX.Compose.ComposableNode.Modifier.get -> AndroidX.Compose.Modifier?
 AndroidX.Compose.ComposableNode.Modifier.set -> void
 AndroidX.Compose.ComposableNode.PrependModifier(AndroidX.Compose.Modifier! modifier) -> void
+AndroidX.Compose.ComposableNode.Render() -> void
 AndroidX.Compose.Composables
 AndroidX.Compose.ComposeExtensions
 AndroidX.Compose.Composed
