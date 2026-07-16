@@ -13,6 +13,9 @@ namespace AndroidX.Compose.Gallery.Demos.Tier2;
 public static class Tier2RealAppBenchmarkDemo
 {
     const int AutomaticRecompositions = 10;
+    const int TreeLane = 0;
+    const int AdapterLane = 1;
+    const int DirectLane = 2;
     const string LogTag = "Tier2Benchmark";
     static int s_directContentExecutions;
 
@@ -35,34 +38,48 @@ public static class Tier2RealAppBenchmarkDemo
         var initialNanoseconds = Remember<long[]>(() => [0L, 0L, 0L]);
         var recompositionNanoseconds = Remember<long[]>(() => [0L, 0L, 0L]);
         var completionLogged = Remember<bool[]>(() => [false]);
+        var laneOrder = Remember(CreateRandomLaneOrder);
         int directExecutionBaseline = Remember(
             () => Volatile.Read(ref s_directContentExecutions));
 
         Column(() =>
         {
             var executionValues = ExecutionValues(executions);
-            MeasureTree(
-                tick.Value,
-                executions,
-                initialBytes,
-                recompositionBytes,
-                initialNanoseconds,
-                recompositionNanoseconds);
-            MeasureAdapterTier2(
-                tick.Value,
-                executions,
-                initialBytes,
-                recompositionBytes,
-                initialNanoseconds,
-                recompositionNanoseconds);
-            MeasureDirectTier2(
-                tick.Value,
-                initialBytes,
-                recompositionBytes,
-                initialNanoseconds,
-                recompositionNanoseconds);
+            foreach (int lane in laneOrder)
+            {
+                switch (lane)
+                {
+                    case TreeLane:
+                        MeasureTree(
+                            tick.Value,
+                            executions,
+                            initialBytes,
+                            recompositionBytes,
+                            initialNanoseconds,
+                            recompositionNanoseconds);
+                        break;
+                    case AdapterLane:
+                        MeasureAdapterTier2(
+                            tick.Value,
+                            executions,
+                            initialBytes,
+                            recompositionBytes,
+                            initialNanoseconds,
+                            recompositionNanoseconds);
+                        break;
+                    default:
+                        MeasureDirectTier2(
+                            tick.Value,
+                            initialBytes,
+                            recompositionBytes,
+                            initialNanoseconds,
+                            recompositionNanoseconds);
+                        break;
+                }
+            }
 
             Text($"Forced recompositions: {tick.Value}");
+            Text($"Cold-start order: {FormatLaneOrder(laneOrder)}");
             Text($"Tree initial: {initialBytes[0]:N0} B / {initialNanoseconds[0] / 1_000d:N1} us");
             Text($"Tree recompose: {recompositionBytes[0]:N0} B / {recompositionNanoseconds[0] / 1_000d:N1} us");
             Text($"Adapter Tier 2 initial: {initialBytes[1]:N0} B / {initialNanoseconds[1] / 1_000d:N1} us");
@@ -104,6 +121,7 @@ public static class Tier2RealAppBenchmarkDemo
                 Log.Info(
                     LogTag,
                     $"recompositions={completedRecompositions} " +
+                    $"order={string.Join("-", laneOrder)} " +
                     $"treeInitialBytes={initialBytes[0]} treeInitialNs={initialNanoseconds[0]} " +
                     $"treeRecomposeBytes={recompositionBytes[0]} treeRecomposeNs={recompositionNanoseconds[0]} " +
                     $"treeExecutions={executionValues[0]} " +
@@ -116,6 +134,21 @@ public static class Tier2RealAppBenchmarkDemo
             }
         });
     }
+
+    static int[] CreateRandomLaneOrder()
+    {
+        int[] order = [TreeLane, AdapterLane, DirectLane];
+        Random.Shared.Shuffle(order);
+        return order;
+    }
+
+    static string FormatLaneOrder(int[] lanes) =>
+        string.Join(" then ", lanes.Select(static lane => lane switch
+        {
+            TreeLane => "tree",
+            AdapterLane => "adapter",
+            _ => "direct",
+        }));
 
     [Composable]
     internal static void MeasureTree(

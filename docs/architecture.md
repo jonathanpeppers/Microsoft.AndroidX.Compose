@@ -394,22 +394,30 @@ shapes remain blocked on [#301](https://github.com/jonathanpeppers/Microsoft.And
 `Tier2RealAppBenchmarkDemo` measures equivalent Reply-style cards through
 three paths: direct tree construction, a Tier 2 interceptor whose body builds
 the legacy tree adapter, and a generated catalog entry point lowered directly
-to its Compose bridge. Each run forces ten recompositions and reports initial
-and latest recomposition allocations and elapsed time for every lane.
+to its Compose bridge. Thirteen fresh-process Pixel 10 / Android 16 Debug runs
+randomized all three lane orders; each lane ran first at least three times and
+every run forced ten recompositions. Cold figures use only runs where that lane
+executed first, while recomposition figures use all runs:
 
-One Pixel 10 / Android 16 Debug smoke run, in tree → adapter → direct order,
-reported:
+- Adapter Tier 2 cold initial composition (four adapter-first runs):
+  **7,208 B**; median **9.03 ms**.
+- Direct Tier 2 cold initial composition (four direct-first runs):
+  **16,512 B**; median **11.52 ms**.
+- Tree cold initial composition (five tree-first runs):
+  **4,200 B**; median **6.01 ms**.
+- Adapter Tier 2 recomposition skip: **920 B**; median **3.19 ms**.
+- Direct Tier 2 recomposition skip: **928 B**; median **3.90 ms**.
+- Tree recomposition: **2,184 B**; median **12.90 ms**.
+- Adapter and direct bodies each executed **2** times; the tree body executed
+  **12** times.
 
-- Tree: **4,200 B / 6.76 ms** initial; **2,184 B / 12.90 ms** recomposition;
-  **12** body executions.
-- Adapter Tier 2: **6,728 B / 8.84 ms** initial;
-  **920 B / 1.88 ms** recomposition; **2** body executions.
-- Direct-lowered Tier 2: **16,720 B / 11.44 ms** initial;
-  **928 B / 2.38 ms** recomposition; **2** content executions.
-
-Timings are directional only because this is an on-device Debug smoke benchmark
-rather than a warmed microbenchmark. Initial results also include lane-order-
-dependent JNI and class initialization.
+The adapter lane deliberately constructs the generated tree facade behind a
+Tier 2 restart-group skip. The direct lane calls generated catalog methods,
+which the interceptor lowers to the direct helper; the tree lane constructs
+the same facade without a skip wrapper. Direct lowering removes the facade from
+the executing path; its measured skip boundary allocates 928 B versus the
+adapter lane's 920 B. Timings are directional only because this is an
+on-device Debug smoke benchmark rather than a warmed microbenchmark.
 
 Direct `$changed` remapping is all-or-nothing. A bridge with more than ten
 Kotlin slots needs multiple changed-mask integers; while the generated bridge

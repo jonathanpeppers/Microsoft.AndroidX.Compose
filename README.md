@@ -169,7 +169,7 @@ the `Action` `SetContent` overload and use implicit `Remember`, `MutableStateOf`
 `ComposableContext.Current` render escape hatch while `MaterialTheme`,
 `Scaffold`, navigation, lazy collections, and text fields remain tree-style.
 The Gallery's real-app benchmark compares equivalent tree, adapter Tier 2,
-and direct-lowered Tier 2 lanes.
+and direct-lowered Tier 2 lanes with randomized fresh-process order.
 See
 [docs/architecture.md → Tier 2](docs/architecture.md) for the emission shape,
 the sibling-skip proof demo, diagnostics (CN5001-CN5010), and remaining
