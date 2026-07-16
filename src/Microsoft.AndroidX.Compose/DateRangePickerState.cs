@@ -31,11 +31,19 @@ namespace AndroidX.Compose;
 /// </remarks>
 public sealed class DateRangePickerState
 {
-    long? _initialSelectedStartDateMillis;
-    long? _initialSelectedEndDateMillis;
-    long? _initialDisplayedMonthMillis;
+    readonly long? _initialSelectedStartDateMillis;
+    readonly long? _initialSelectedEndDateMillis;
+    readonly long? _initialDisplayedMonthMillis;
+    long? _selectedStartDateMillis;
+    long? _selectedEndDateMillis;
+    long? _displayedMonthMillis;
+    bool _hasPendingSelection;
+    bool _hasPendingDisplayedMonth;
 
     internal IDateRangePickerState? Jvm;
+    internal long? RememberSelectedStartDateMillis => _selectedStartDateMillis;
+    internal long? RememberSelectedEndDateMillis => _selectedEndDateMillis;
+    internal long? RememberDisplayedMonthMillis => _displayedMonthMillis;
 
     /// <summary>Creates a range-picker state with managed initial values.</summary>
     /// <param name="initialSelectedStartDateMillis">Initial range start as
@@ -62,6 +70,9 @@ public sealed class DateRangePickerState
         _initialSelectedStartDateMillis = initialSelectedStartDateMillis;
         _initialSelectedEndDateMillis = initialSelectedEndDateMillis;
         _initialDisplayedMonthMillis = initialDisplayedMonthMillis;
+        _selectedStartDateMillis = initialSelectedStartDateMillis;
+        _selectedEndDateMillis = initialSelectedEndDateMillis;
+        _displayedMonthMillis = initialDisplayedMonthMillis;
         InitialYearRange = initialYearRange;
         InitialDisplayMode = initialDisplayMode;
         InitialSelectableDates = initialSelectableDates;
@@ -107,7 +118,7 @@ public sealed class DateRangePickerState
     {
         get => Jvm is { } jvm
             ? jvm.SelectedStartDateMillis?.LongValue()
-            : _initialSelectedStartDateMillis;
+            : _selectedStartDateMillis;
         set => SetSelection(value, SelectedEndDateMillis);
     }
 
@@ -121,7 +132,7 @@ public sealed class DateRangePickerState
     {
         get => Jvm is { } jvm
             ? jvm.SelectedEndDateMillis?.LongValue()
-            : _initialSelectedEndDateMillis;
+            : _selectedEndDateMillis;
         set => SetSelection(SelectedStartDateMillis, value);
     }
 
@@ -133,11 +144,14 @@ public sealed class DateRangePickerState
     /// </summary>
     public long DisplayedMonthMillis
     {
-        get => Jvm?.DisplayedMonthMillis ?? _initialDisplayedMonthMillis ?? 0L;
+        get => Jvm?.DisplayedMonthMillis ?? _displayedMonthMillis ?? 0L;
         set
         {
             if (Jvm is null)
-                _initialDisplayedMonthMillis = value;
+            {
+                _displayedMonthMillis = value;
+                _hasPendingDisplayedMonth = true;
+            }
             else
                 Jvm.DisplayedMonthMillis = value;
         }
@@ -154,8 +168,9 @@ public sealed class DateRangePickerState
         ValidateSelection(startDateMillis, endDateMillis);
         if (Jvm is null)
         {
-            _initialSelectedStartDateMillis = startDateMillis;
-            _initialSelectedEndDateMillis = endDateMillis;
+            _selectedStartDateMillis = startDateMillis;
+            _selectedEndDateMillis = endDateMillis;
+            _hasPendingSelection = true;
             return;
         }
 
@@ -170,6 +185,15 @@ public sealed class DateRangePickerState
             start?.Dispose();
             end?.Dispose();
         }
+    }
+
+    internal void BindJvm(IDateRangePickerState jvm)
+    {
+        Jvm = jvm;
+        if (_hasPendingSelection)
+            SetSelection(_selectedStartDateMillis, _selectedEndDateMillis);
+        if (_hasPendingDisplayedMonth && _displayedMonthMillis is long displayedMonthMillis)
+            DisplayedMonthMillis = displayedMonthMillis;
     }
 
     static void ValidateSelection(long? startDateMillis, long? endDateMillis)

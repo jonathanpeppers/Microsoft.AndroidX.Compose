@@ -35,10 +35,16 @@ namespace AndroidX.Compose;
 /// </remarks>
 public sealed class DatePickerState
 {
-    long? _initialSelectedDateMillis;
-    long? _initialDisplayedMonthMillis;
+    readonly long? _initialSelectedDateMillis;
+    readonly long? _initialDisplayedMonthMillis;
+    long? _selectedDateMillis;
+    long? _displayedMonthMillis;
+    bool _hasPendingSelectedDate;
+    bool _hasPendingDisplayedMonth;
 
     internal IDatePickerState? Jvm;
+    internal long? RememberSelectedDateMillis => _selectedDateMillis;
+    internal long? RememberDisplayedMonthMillis => _displayedMonthMillis;
 
     /// <summary>
     /// Constructs a state holder seeded with the supplied initial values.
@@ -68,6 +74,8 @@ public sealed class DatePickerState
     {
         _initialSelectedDateMillis = initialSelectedDateMillis;
         _initialDisplayedMonthMillis = initialDisplayedMonthMillis;
+        _selectedDateMillis = initialSelectedDateMillis;
+        _displayedMonthMillis = initialDisplayedMonthMillis;
         InitialYearRange = initialYearRange;
         InitialDisplayMode = initialDisplayMode;
         InitialSelectableDates = initialSelectableDates;
@@ -128,12 +136,13 @@ public sealed class DatePickerState
     {
         get => Jvm is { } jvm
             ? jvm.SelectedDateMillis?.LongValue()
-            : _initialSelectedDateMillis;
+            : _selectedDateMillis;
         set
         {
             if (Jvm is null)
             {
-                _initialSelectedDateMillis = value;
+                _selectedDateMillis = value;
+                _hasPendingSelectedDate = true;
                 return;
             }
 
@@ -152,13 +161,25 @@ public sealed class DatePickerState
     /// </summary>
     public long DisplayedMonthMillis
     {
-        get => Jvm?.DisplayedMonthMillis ?? _initialDisplayedMonthMillis ?? 0L;
+        get => Jvm?.DisplayedMonthMillis ?? _displayedMonthMillis ?? 0L;
         set
         {
             if (Jvm is null)
-                _initialDisplayedMonthMillis = value;
+            {
+                _displayedMonthMillis = value;
+                _hasPendingDisplayedMonth = true;
+            }
             else
                 Jvm.DisplayedMonthMillis = value;
         }
+    }
+
+    internal void BindJvm(IDatePickerState jvm)
+    {
+        Jvm = jvm;
+        if (_hasPendingSelectedDate)
+            SelectedDateMillis = _selectedDateMillis;
+        if (_hasPendingDisplayedMonth && _displayedMonthMillis is long displayedMonthMillis)
+            DisplayedMonthMillis = displayedMonthMillis;
     }
 }

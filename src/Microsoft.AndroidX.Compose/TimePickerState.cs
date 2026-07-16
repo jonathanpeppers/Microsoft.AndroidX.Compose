@@ -29,14 +29,20 @@ namespace AndroidX.Compose;
 /// </remarks>
 public sealed class TimePickerState
 {
-    int _initialHour;
-    int _initialMinute;
+    readonly int _initialHour;
+    readonly int _initialMinute;
+    int _hour;
+    int _minute;
+    bool _hasPendingHour;
+    bool _hasPendingMinute;
 
     internal ITimePickerState? Jvm;
 
     internal int InitialHour => _initialHour;
     internal int InitialMinute => _initialMinute;
     internal bool InitialIs24Hour { get; }
+    internal int RememberHour => _hour;
+    internal int RememberMinute => _minute;
 
     /// <summary>Creates a time-picker state with constructor-only initial values.</summary>
     /// <param name="initialHour">Initial hour from 0 through 23.</param>
@@ -48,6 +54,8 @@ public sealed class TimePickerState
         ValidateMinute(initialMinute);
         _initialHour = initialHour;
         _initialMinute = initialMinute;
+        _hour = initialHour;
+        _minute = initialMinute;
         InitialIs24Hour = is24Hour;
     }
 
@@ -55,12 +63,15 @@ public sealed class TimePickerState
     /// constructor's <c>initialHour</c> until bound.</summary>
     public int Hour
     {
-        get => Jvm?.Hour ?? _initialHour;
+        get => Jvm?.Hour ?? _hour;
         set
         {
             ValidateHour(value);
             if (Jvm is null)
-                _initialHour = value;
+            {
+                _hour = value;
+                _hasPendingHour = true;
+            }
             else
                 Jvm.Hour = value;
         }
@@ -70,12 +81,15 @@ public sealed class TimePickerState
     /// constructor's <c>initialMinute</c> until bound.</summary>
     public int Minute
     {
-        get => Jvm?.Minute ?? _initialMinute;
+        get => Jvm?.Minute ?? _minute;
         set
         {
             ValidateMinute(value);
             if (Jvm is null)
-                _initialMinute = value;
+            {
+                _minute = value;
+                _hasPendingMinute = true;
+            }
             else
                 Jvm.Minute = value;
         }
@@ -85,6 +99,15 @@ public sealed class TimePickerState
     /// AM/PM). Falls back to the constructor's <c>is24Hour</c> until
     /// bound.</summary>
     public bool Is24Hour => Jvm?.Is24hour() ?? InitialIs24Hour;
+
+    internal void BindJvm(ITimePickerState jvm)
+    {
+        Jvm = jvm;
+        if (_hasPendingHour)
+            Hour = _hour;
+        if (_hasPendingMinute)
+            Minute = _minute;
+    }
 
     static void ValidateHour(int value)
     {

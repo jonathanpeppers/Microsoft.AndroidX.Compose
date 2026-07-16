@@ -334,6 +334,11 @@ slots surface as `Action` instead of `Action<IComposer>`.
   ctor slot `T? state = null`, calls named Remember, populates `state.Jvm` via
   `Java.Lang.Object.GetObject<TJvm>(handle, JniHandleOwnership.DoNotTransfer)`,
   forwards handle to this param.
+  Set `Bind = nameof(T.BindJvm)` when the wrapper must perform work as the
+  peer is attached (for example, flushing live-value writes made before
+  first composition). The named accessible instance method must accept the
+  binding-generated `Jvm` field type and return `void`; the generator calls
+  it instead of assigning `Jvm` directly.
 
   Three sub-shapes:
   - **Phase 4** — zero-user-param Remember (`(IComposer) -> IntPtr`, e.g.

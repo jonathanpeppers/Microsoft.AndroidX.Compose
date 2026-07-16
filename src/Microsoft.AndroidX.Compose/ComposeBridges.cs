@@ -1146,6 +1146,7 @@ internal static partial class ComposeBridges
     public static partial void TimePicker(
         [StateHolder(Remember = nameof(RememberTimePickerState),
                      StateType = typeof(TimePickerState),
+                     Bind = nameof(TimePickerState.BindJvm),
                      SharedState = true)] IntPtr state,
         IModifier? modifier,
         int defaults, IComposer composer, int _changed = 0);
@@ -1161,6 +1162,7 @@ internal static partial class ComposeBridges
     public static partial void TimeInput(
         [StateHolder(Remember = nameof(RememberTimePickerState),
                      StateType = typeof(TimePickerState),
+                     Bind = nameof(TimePickerState.BindJvm),
                      SharedState = true)] IntPtr state,
         IModifier? modifier,
         int defaults, IComposer composer, int _changed = 0);
@@ -1223,6 +1225,7 @@ internal static partial class ComposeBridges
     public static partial void DatePicker(
         [StateHolder(Remember = nameof(RememberDatePickerState),
                      StateType = typeof(DatePickerState),
+                     Bind = nameof(DatePickerState.BindJvm),
                      SharedState = true)]
         IntPtr      state,
         IModifier?  modifier,
@@ -1244,41 +1247,45 @@ internal static partial class ComposeBridges
     // the generated JNI bridge. Nulls remain null so the generated bridge
     // leaves the corresponding Kotlin $default bits set.
     public static IntPtr RememberDatePickerState(
-        long?                initialSelectedDateMillis,
-        long?                initialDisplayedMonthMillis,
+        long?                rememberSelectedDateMillis,
+        long?                rememberDisplayedMonthMillis,
         DatePickerYearRange? initialYearRange,
         int?                 initialDisplayMode,
         AndroidX.Compose.Material3.ISelectableDates? initialSelectableDates,
         IComposer composer)
     {
-        using var selectedDate = initialSelectedDateMillis is long selected
+        using var selectedDate = rememberSelectedDateMillis is long selected
             ? Java.Lang.Long.ValueOf(selected)
             : null;
-        using var displayedMonth = initialDisplayedMonthMillis is long displayed
+        using var displayedMonth = rememberDisplayedMonthMillis is long displayed
             ? Java.Lang.Long.ValueOf(displayed)
             : null;
         using var yearRange = initialYearRange is DatePickerYearRange years
             ? new IntRange(years.StartYear, years.EndYear)
             : null;
-        return RememberDatePickerStateJvm(
-            selectedDate, displayedMonth, yearRange, initialDisplayMode,
-            initialSelectableDates, composer);
-    }
+        var defaults = RememberDatePickerStateDefault.All;
+        if (selectedDate is not null)
+            defaults &= ~RememberDatePickerStateDefault.InitialSelectedDateMillis;
+        if (displayedMonth is not null)
+            defaults &= ~RememberDatePickerStateDefault.InitialDisplayedMonthMillis;
+        if (yearRange is not null)
+            defaults &= ~RememberDatePickerStateDefault.YearRange;
+        if (initialDisplayMode is not null)
+            defaults &= ~RememberDatePickerStateDefault.InitialDisplayMode;
+        if (initialSelectableDates is not null)
+            defaults &= ~RememberDatePickerStateDefault.SelectableDates;
 
-    [ComposeBridge(
-        Class     = "androidx/compose/material3/DatePickerKt",
-        JvmName   = "rememberDatePickerState-EU0dCGE",
-        Signature = "(Ljava/lang/Long;Ljava/lang/Long;Lkotlin/ranges/IntRange;I" +
-                    "Landroidx/compose/material3/SelectableDates;" +
-                    "Landroidx/compose/runtime/Composer;II)Landroidx/compose/material3/DatePickerState;",
-        Defaults  = typeof(RememberDatePickerStateDefault))]
-    internal static partial IntPtr RememberDatePickerStateJvm(
-        Java.Lang.Long?                                  initialSelectedDateMillis,
-        Java.Lang.Long?                                  initialDisplayedMonthMillis,
-        IntRange?                                        yearRange,
-        int?                                             initialDisplayMode,
-        AndroidX.Compose.Material3.ISelectableDates?     selectableDates,
-        IComposer                                        composer);
+        var state = DatePickerKt.RememberDatePickerState(
+            selectedDate,
+            displayedMonth,
+            yearRange,
+            initialDisplayMode.GetValueOrDefault(),
+            initialSelectableDates,
+            composer,
+            0,
+            (int)defaults);
+        return ((Java.Lang.Object)state).Handle;
+    }
 
     // androidx.compose.material3.DateRangePickerKt.DateRangePicker
     [ComposeBridge(
@@ -1295,6 +1302,7 @@ internal static partial class ComposeBridges
     public static partial void DateRangePicker(
         [StateHolder(Remember = nameof(RememberDateRangePickerState),
                      StateType = typeof(DateRangePickerState),
+                     Bind = nameof(DateRangePickerState.BindJvm),
                      SharedState = true)]
         IntPtr      state,
         IModifier?  modifier,
@@ -1304,46 +1312,52 @@ internal static partial class ComposeBridges
 
     // androidx.compose.material3.DateRangePickerKt.rememberDateRangePickerState-IlFM19s
     public static IntPtr RememberDateRangePickerState(
-        long?                initialSelectedStartDateMillis,
-        long?                initialSelectedEndDateMillis,
-        long?                initialDisplayedMonthMillis,
+        long?                rememberSelectedStartDateMillis,
+        long?                rememberSelectedEndDateMillis,
+        long?                rememberDisplayedMonthMillis,
         DatePickerYearRange? initialYearRange,
         int?                 initialDisplayMode,
         AndroidX.Compose.Material3.ISelectableDates? initialSelectableDates,
         IComposer composer)
     {
-        using var selectedStart = initialSelectedStartDateMillis is long start
+        using var selectedStart = rememberSelectedStartDateMillis is long start
             ? Java.Lang.Long.ValueOf(start)
             : null;
-        using var selectedEnd = initialSelectedEndDateMillis is long end
+        using var selectedEnd = rememberSelectedEndDateMillis is long end
             ? Java.Lang.Long.ValueOf(end)
             : null;
-        using var displayedMonth = initialDisplayedMonthMillis is long displayed
+        using var displayedMonth = rememberDisplayedMonthMillis is long displayed
             ? Java.Lang.Long.ValueOf(displayed)
             : null;
         using var yearRange = initialYearRange is DatePickerYearRange years
             ? new IntRange(years.StartYear, years.EndYear)
             : null;
-        return RememberDateRangePickerStateJvm(
-            selectedStart, selectedEnd, displayedMonth, yearRange,
-            initialDisplayMode, initialSelectableDates, composer);
-    }
+        var defaults = RememberDateRangePickerStateDefault.All;
+        if (selectedStart is not null)
+            defaults &= ~RememberDateRangePickerStateDefault.InitialSelectedStartDateMillis;
+        if (selectedEnd is not null)
+            defaults &= ~RememberDateRangePickerStateDefault.InitialSelectedEndDateMillis;
+        if (displayedMonth is not null)
+            defaults &= ~RememberDateRangePickerStateDefault.InitialDisplayedMonthMillis;
+        if (yearRange is not null)
+            defaults &= ~RememberDateRangePickerStateDefault.YearRange;
+        if (initialDisplayMode is not null)
+            defaults &= ~RememberDateRangePickerStateDefault.InitialDisplayMode;
+        if (initialSelectableDates is not null)
+            defaults &= ~RememberDateRangePickerStateDefault.SelectableDates;
 
-    [ComposeBridge(
-        Class     = "androidx/compose/material3/DateRangePickerKt",
-        JvmName   = "rememberDateRangePickerState-IlFM19s",
-        Signature = "(Ljava/lang/Long;Ljava/lang/Long;Ljava/lang/Long;Lkotlin/ranges/IntRange;I" +
-                    "Landroidx/compose/material3/SelectableDates;" +
-                    "Landroidx/compose/runtime/Composer;II)Landroidx/compose/material3/DateRangePickerState;",
-        Defaults  = typeof(RememberDateRangePickerStateDefault))]
-    internal static partial IntPtr RememberDateRangePickerStateJvm(
-        Java.Lang.Long?                              initialSelectedStartDateMillis,
-        Java.Lang.Long?                              initialSelectedEndDateMillis,
-        Java.Lang.Long?                              initialDisplayedMonthMillis,
-        IntRange?                                    yearRange,
-        int?                                         initialDisplayMode,
-        AndroidX.Compose.Material3.ISelectableDates? selectableDates,
-        IComposer                                    composer);
+        var state = DateRangePickerKt.RememberDateRangePickerState(
+            selectedStart,
+            selectedEnd,
+            displayedMonth,
+            yearRange,
+            initialDisplayMode.GetValueOrDefault(),
+            initialSelectableDates,
+            composer,
+            0,
+            (int)defaults);
+        return ((Java.Lang.Object)state).Handle;
+    }
 
     // androidx.compose.material3.TimePickerKt.rememberTimePickerState
     [ComposeBridge(
@@ -1351,8 +1365,12 @@ internal static partial class ComposeBridges
         JvmName   = "rememberTimePickerState",
         Signature = "(IIZLandroidx/compose/runtime/Composer;II)Landroidx/compose/material3/TimePickerState;",
         Defaults  = typeof(RememberTimePickerStateDefault))]
-    public static partial IntPtr RememberTimePickerState(int initialHour, int initialMinute,
-                                                         bool is24Hour, IComposer composer);
+    internal static partial IntPtr RememberTimePickerStateJvm(int initialHour, int initialMinute,
+                                                              bool is24Hour, IComposer composer);
+
+    public static IntPtr RememberTimePickerState(int rememberHour, int rememberMinute,
+                                                 bool is24Hour, IComposer composer) =>
+        RememberTimePickerStateJvm(rememberHour, rememberMinute, is24Hour, composer);
 
     // androidx.compose.material3.NavigationDrawerKt.rememberDrawerState.
     // The Kotlin function is bound natively so we go through it instead

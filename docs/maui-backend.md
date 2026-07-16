@@ -1829,14 +1829,19 @@ recompose. The same shape unblocks a future
 name and implicit type compatibility. `DatePickerState` exposes managed
 `long?` values and `DatePickerYearRange?`; a managed
 `RememberDatePickerState` wrapper boxes longs and creates Kotlin's
-`IntRange` immediately before calling the generated JNI bridge. Nulls
-flow through unchanged, so the bridge generator still leaves the
-matching Kotlin `$default` bits set. The bridge generator can't skip
+`IntRange` immediately before calling the official generated binding. Nulls
+flow through unchanged, and the wrapper preserves the matching Kotlin
+`$default` bits with the generated mask enum. The binding can't skip
 non-trailing slots, so even though only three of the five Kotlin slots are MAUI-relevant
 (`initialSelectedDateMillis`, `yearRange`, `selectableDates`), the
 bridge surfaces all five — the unused two are left `null` by the
 handler and the auto-default-mask machinery clears their
 `$default` bits.
+
+Picker wrappers keep constructor configuration separate from pending live
+values. `[StateHolder(Bind = nameof(...))]` routes first peer attachment
+through `BindJvm`, which flushes only explicit pre-bind writes; ordinary
+constructor values continue through Kotlin's remember/default-mask path.
 
 **Lessons learned (Slice 12):**
 
