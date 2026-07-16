@@ -35,9 +35,9 @@ public static partial class ComposeExtensions
     /// </summary>
     public static CheckboxColors CheckboxColors(
         this IComposer composer,
-        long? checkedColor = null,
-        long? uncheckedColor = null,
-        long? checkmarkColor = null,
+        Color? checkedColor = null,
+        Color? uncheckedColor = null,
+        Color? checkmarkColor = null,
         [CallerLineNumber] int line = 0,
         [CallerFilePath] string file = "")
     {
@@ -51,15 +51,15 @@ public static partial class ComposeExtensions
                 return d;
 
             return d.Copy(
-                checkedCheckmarkColor:            checkmarkColor ?? d.CheckedCheckmarkColor,
+                checkedCheckmarkColor:            checkmarkColor?.ToPacked() ?? d.CheckedCheckmarkColor,
                 uncheckedCheckmarkColor:          d.UncheckedCheckmarkColor,
-                checkedBoxColor:                  checkedColor   ?? d.CheckedBoxColor,
-                uncheckedBoxColor:                uncheckedColor ?? d.UncheckedBoxColor,
+                checkedBoxColor:                  checkedColor?.ToPacked()   ?? d.CheckedBoxColor,
+                uncheckedBoxColor:                uncheckedColor?.ToPacked() ?? d.UncheckedBoxColor,
                 disabledCheckedBoxColor:          d.DisabledCheckedBoxColor,
                 disabledUncheckedBoxColor:        d.DisabledUncheckedBoxColor,
                 disabledIndeterminateBoxColor:    d.DisabledIndeterminateBoxColor,
-                checkedBorderColor:               checkedColor   ?? d.CheckedBorderColor,
-                uncheckedBorderColor:             uncheckedColor ?? d.UncheckedBorderColor,
+                checkedBorderColor:               checkedColor?.ToPacked()   ?? d.CheckedBorderColor,
+                uncheckedBorderColor:             uncheckedColor?.ToPacked() ?? d.UncheckedBorderColor,
                 disabledBorderColor:              d.DisabledBorderColor,
                 disabledUncheckedBorderColor:     d.DisabledUncheckedBorderColor,
                 disabledIndeterminateBorderColor: d.DisabledIndeterminateBorderColor);

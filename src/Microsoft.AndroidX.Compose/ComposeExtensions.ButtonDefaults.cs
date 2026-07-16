@@ -27,19 +27,16 @@ public static partial class ComposeExtensions
     /// <c>ButtonDefaults.buttonColors(containerColor = …, contentColor = …,
     /// disabledContainerColor = …, disabledContentColor = …)</c>.
     ///
-    /// The Compose lowering takes a packed <c>Color</c> (a <c>long</c>)
-    /// per slot plus a <c>$default</c> bitmask flagging which slots the
-    /// caller actually supplied — that's the bridge's <c>p5</c> arg.
-    /// Each non-<c>null</c> argument here clears the corresponding bit
-    /// so Compose adopts your color; <c>null</c> leaves the bit set so
-    /// Kotlin's default (the theme's color-scheme slot) wins.
+    /// Each non-<c>null</c> argument clears the corresponding Kotlin
+    /// <c>$default</c> bit and is packed only when calling the generated
+    /// binding. <c>null</c> leaves the bit set so the theme default wins.
     /// </summary>
     public static ButtonColors ButtonColors(
         this IComposer composer,
-        long? containerColor = null,
-        long? contentColor = null,
-        long? disabledContainerColor = null,
-        long? disabledContentColor = null,
+        Color? containerColor = null,
+        Color? contentColor = null,
+        Color? disabledContainerColor = null,
+        Color? disabledContentColor = null,
         [CallerLineNumber] int line = 0,
         [CallerFilePath] string file = "")
     {
@@ -57,10 +54,10 @@ public static partial class ComposeExtensions
         try
         {
             return AndroidX.Compose.Material3.ButtonDefaults.Instance.ButtonColors(
-                containerColor        ?? 0L,
-                contentColor          ?? 0L,
-                disabledContainerColor ?? 0L,
-                disabledContentColor   ?? 0L,
+                containerColor?.ToPacked()         ?? 0L,
+                contentColor?.ToPacked()           ?? 0L,
+                disabledContainerColor?.ToPacked() ?? 0L,
+                disabledContentColor?.ToPacked()   ?? 0L,
                 composer,
                 defaults,
                 0);

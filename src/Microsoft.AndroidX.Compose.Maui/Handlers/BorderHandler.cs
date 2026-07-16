@@ -138,7 +138,7 @@ public partial class BorderHandler : ComposeElementHandler<MauiBorder>
             modifier = (modifier ?? Modifier.Companion).Clip(shape);
         if (bg.HasValue)
             modifier = (modifier ?? Modifier.Companion)
-                .Background(new ComposeColor(bg.Value), shape);
+                .Background(ComposeColor.FromPacked(bg.Value), shape);
         if (stroke.HasValue && width > 0f)
         {
             // Custom geometry (dashes / non-default cap / join / miter)
@@ -154,7 +154,7 @@ public partial class BorderHandler : ComposeElementHandler<MauiBorder>
             else
             {
                 modifier = (modifier ?? Modifier.Companion)
-                    .Border(new Dp(width), new ComposeColor(stroke.Value), shape);
+                    .Border(new Dp(width), ComposeColor.FromPacked(stroke.Value), shape);
             }
         }
         if (padding != Thickness.Zero)

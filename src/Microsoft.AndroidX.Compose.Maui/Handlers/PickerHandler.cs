@@ -178,14 +178,14 @@ public partial class PickerHandler : ComposeElementHandler<IPicker>
         if (!string.IsNullOrEmpty(title))
         {
             trigger.Label = packedTitleColor.HasValue
-                ? new ComposeText(title) { Color = new ComposeColor(packedTitleColor.Value) }
+                ? new ComposeText(title) { Color = ComposeColor.FromPacked(packedTitleColor.Value) }
                 : new ComposeText(title);
         }
         if (packedTextColor.HasValue || size.HasValue || bold || letterSpacing.HasValue || hAlign != TextAlignment.Start)
         {
             trigger.TextStyle = new ComposeTextStyle
             {
-                Color         = packedTextColor.HasValue ? new ComposeColor(packedTextColor.Value) : null,
+                Color         = packedTextColor.HasValue ? ComposeColor.FromPacked(packedTextColor.Value) : null,
                 FontSize      = size.HasValue   ? new Sp(size.Value) : null,
                 FontWeight    = bold ? ComposeFontWeight.Bold : null,
                 LetterSpacing = letterSpacing.HasValue ? new Sp(1) * letterSpacing.Value : null,

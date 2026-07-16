@@ -28,11 +28,11 @@ public static class ReplyProfileImage
                 Modifier
                     .Size(40)
                     .Clip(Shape.Circle())
-                    .Background(scheme.Primary),
+                    .Background(Color.FromPacked(scheme.Primary)),
                 new Icon(Resource.Drawable.ic_check, null)
                 {
                     Modifier = Modifier.Size(24),
-                    Tint = scheme.OnPrimary,
+                    Tint = Color.FromPacked(scheme.OnPrimary),
                 },
             };
         });

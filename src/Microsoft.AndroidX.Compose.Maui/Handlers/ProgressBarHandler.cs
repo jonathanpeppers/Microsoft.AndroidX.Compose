@@ -67,7 +67,7 @@ public partial class ProgressBarHandler : ComposeElementHandler<IProgress>
         var bar = new ComposeLinearProgressIndicator
         {
             Progress = _progress.Value,
-            Color    = packed.HasValue ? new ComposeColor(packed.Value) : null,
+            Color    = packed.HasValue ? ComposeColor.FromPacked(packed.Value) : null,
         };
         bar.PrependModifier(Modifier.FillMaxWidth().ApplyGestures(virtualView, MauiContext).ApplySemantics(virtualView));
         return bar;

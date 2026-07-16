@@ -133,13 +133,13 @@ public partial class EntryHandler : ComposeElementHandler<IEntry>
         if (!string.IsNullOrEmpty(placeholder))
             field.Placeholder = new ComposeText(placeholder)
             {
-                Color = placeholderInk.HasValue ? new ComposeColor(placeholderInk.Value) : null,
+                Color = placeholderInk.HasValue ? ComposeColor.FromPacked(placeholderInk.Value) : null,
             };
         if (packed.HasValue || size.HasValue || bold || letterSpacing.HasValue
             || hTextAlign != TextAlignment.Start)
             field.TextStyle = new ComposeTextStyle
             {
-                Color         = packed.HasValue ? new ComposeColor(packed.Value) : null,
+                Color         = packed.HasValue ? ComposeColor.FromPacked(packed.Value) : null,
                 FontSize      = size.HasValue   ? new Sp(size.Value) : null,
                 FontWeight    = bold ? ComposeFontWeight.Bold : null,
                 LetterSpacing = letterSpacing.HasValue ? new Sp(1) * letterSpacing.Value : null,

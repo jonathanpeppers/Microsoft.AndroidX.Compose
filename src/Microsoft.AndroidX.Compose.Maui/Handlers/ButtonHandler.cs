@@ -137,8 +137,12 @@ public partial class ButtonHandler : ComposeElementHandler<IButton>
 
         if (container is not null || content is not null)
             button.Colors = composer.ButtonColors(
-                containerColor: container,
-                contentColor:   content);
+                containerColor: container is { } containerValue
+                    ? ComposeColor.FromPacked(containerValue)
+                    : null,
+                contentColor: content is { } contentValue
+                    ? ComposeColor.FromPacked(contentValue)
+                    : null);
         if (cornerRadius >= 0)
             button.Shape = new RoundedCornerShape(new Dp(cornerRadius));
         if (padding != Thickness.Zero)
@@ -150,10 +154,10 @@ public partial class ButtonHandler : ComposeElementHandler<IButton>
         // Optional stroke chain — Compose Button has no built-in border slot.
         // Wrap the outer Modifier with Modifier.Border when a stroke is set.
         var outer = (_fillWidth.Value ? Modifier.FillMaxWidth() : Modifier.Companion);
-        if (strokeColor.HasValue && strokeThickness > 0f)
+        if (strokeColor is { } stroke && strokeThickness > 0f)
             outer = outer.Border(
                 new Dp(strokeThickness),
-                new ComposeColor(strokeColor.Value),
+                ComposeColor.FromPacked(stroke),
                 button.Shape);
         outer = outer
             .ApplyViewProperties(virtualView)

@@ -47,7 +47,7 @@ public static partial class Composables
         ComposeExtensions.DimensionResource(ComposableContext.Current, id);
 
     /// <summary>Loads a color resource.</summary>
-    public static long ColorResource(int id) =>
+    public static Color ColorResource(int id) =>
         ComposeExtensions.ColorResource(ComposableContext.Current, id);
 
     /// <summary>Loads a painter resource.</summary>

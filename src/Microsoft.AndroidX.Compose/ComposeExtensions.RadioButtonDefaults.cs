@@ -32,10 +32,10 @@ public static partial class ComposeExtensions
     /// </summary>
     public static RadioButtonColors RadioButtonColors(
         this IComposer composer,
-        long? selectedColor = null,
-        long? unselectedColor = null,
-        long? disabledSelectedColor = null,
-        long? disabledUnselectedColor = null,
+        Color? selectedColor = null,
+        Color? unselectedColor = null,
+        Color? disabledSelectedColor = null,
+        Color? disabledUnselectedColor = null,
         [CallerLineNumber] int line = 0,
         [CallerFilePath] string file = "")
     {
@@ -50,10 +50,10 @@ public static partial class ComposeExtensions
                 return d;
 
             return d.Copy(
-                selectedColor:           selectedColor           ?? d.SelectedColor,
-                unselectedColor:         unselectedColor         ?? d.UnselectedColor,
-                disabledSelectedColor:   disabledSelectedColor   ?? d.DisabledSelectedColor,
-                disabledUnselectedColor: disabledUnselectedColor ?? d.DisabledUnselectedColor);
+                selectedColor:           selectedColor?.ToPacked()           ?? d.SelectedColor,
+                unselectedColor:         unselectedColor?.ToPacked()         ?? d.UnselectedColor,
+                disabledSelectedColor:   disabledSelectedColor?.ToPacked()   ?? d.DisabledSelectedColor,
+                disabledUnselectedColor: disabledUnselectedColor?.ToPacked() ?? d.DisabledUnselectedColor);
         }
         finally
         {

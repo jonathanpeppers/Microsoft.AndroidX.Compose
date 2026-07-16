@@ -167,7 +167,7 @@ public partial class IndicatorViewHandler : ComposeElementHandler<MauiIndicatorV
                 Modifier = Modifier
                     .Size(new Dp((float)sizeDp))
                     .Clip(shape)
-                    .Background(new ComposeColor(color)),
+                    .Background(ComposeColor.FromPacked(color)),
             });
         }
 

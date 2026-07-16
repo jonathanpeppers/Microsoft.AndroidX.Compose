@@ -10,9 +10,9 @@ namespace AndroidX.Compose;
 /// <remarks>
 /// <para>
 /// Compose's <c>Color</c> is an inline value class around an unsigned 64-bit
-/// integer; the wire representation crossing JNI is just the underlying
-/// <see cref="long"/>. This struct preserves that wire shape while giving
-/// the C# facade a typed, ergonomic surface to express colors in.
+/// integer. This struct keeps that packed representation behind a typed API;
+/// use <see cref="FromPacked(long)"/> and <see cref="ToPacked"/> only at
+/// interop boundaries.
 /// </para>
 /// <para>
 /// For the sRGB color space (the only one in common use) the packed layout
@@ -21,36 +21,12 @@ namespace AndroidX.Compose;
 /// for sRGB). <see cref="FromArgb(byte, byte, byte, byte)"/> and the
 /// named constants follow this layout.
 /// </para>
-/// <para>
-/// An implicit conversion to <see cref="long"/> means every bridge and
-/// binding method that already accepts a packed color value
-/// (<c>Modifier.Background(long)</c>, <c>Text.Color</c>,
-/// <c>ColorSchemeKt.LightColorScheme(...)</c>, etc.) accepts a
-/// <see cref="Color"/> directly without any conversion ceremony at the
-/// call site.
-/// </para>
 /// </remarks>
 public readonly struct Color : IEquatable<Color>
 {
-    /// <summary>The underlying 64-bit packed value (matches Kotlin's <c>ULong</c>).</summary>
-    public ulong PackedValue { get; }
+    readonly ulong _packedValue;
 
-    /// <summary>Construct a <see cref="Color"/> from a raw packed value.</summary>
-    /// <param name="packedValue">
-    /// Packed sRGB layout: <c>0xAARRGGBB_00000000UL</c>. Use the
-    /// <see cref="FromArgb(byte, byte, byte, byte)"/> /
-    /// <see cref="FromHex(string)"/> factories for typical construction.
-    /// </param>
-    public Color(ulong packedValue)
-    {
-        PackedValue = packedValue;
-    }
-
-    /// <summary>Construct a <see cref="Color"/> from the packed value as a signed long.</summary>
-    public Color(long packedValue)
-    {
-        PackedValue = unchecked((ulong)packedValue);
-    }
+    Color(ulong packedValue) => _packedValue = packedValue;
 
     /// <summary>Construct an opaque sRGB color from 8-bit RGB components.</summary>
     public Color(byte red, byte green, byte blue) : this(0xFF, red, green, blue) { }
@@ -59,20 +35,20 @@ public readonly struct Color : IEquatable<Color>
     public Color(byte alpha, byte red, byte green, byte blue)
     {
         uint argb = ((uint)alpha << 24) | ((uint)red << 16) | ((uint)green << 8) | blue;
-        PackedValue = (ulong)argb << 32;
+        _packedValue = (ulong)argb << 32;
     }
 
     /// <summary>The 8-bit alpha channel (0-255).</summary>
-    public byte A => (byte)(PackedValue >> 56);
+    public byte A => (byte)(_packedValue >> 56);
 
     /// <summary>The 8-bit red channel (0-255).</summary>
-    public byte R => (byte)(PackedValue >> 48);
+    public byte R => (byte)(_packedValue >> 48);
 
     /// <summary>The 8-bit green channel (0-255).</summary>
-    public byte G => (byte)(PackedValue >> 40);
+    public byte G => (byte)(_packedValue >> 40);
 
     /// <summary>The 8-bit blue channel (0-255).</summary>
-    public byte B => (byte)(PackedValue >> 32);
+    public byte B => (byte)(_packedValue >> 32);
 
     /// <summary>Construct an sRGB color from 8-bit ARGB components.</summary>
     public static Color FromArgb(byte alpha, byte red, byte green, byte blue)
@@ -84,6 +60,24 @@ public readonly struct Color : IEquatable<Color>
 
     /// <summary>Construct an sRGB color from a packed 32-bit ARGB integer (<c>0xAARRGGBB</c>).</summary>
     public static Color FromArgb(uint argb) => new((ulong)argb << 32);
+
+    /// <summary>
+    /// Construct a color from Compose's signed 64-bit binding representation.
+    /// </summary>
+    /// <remarks>
+    /// Prefer the component and hex factories for application colors. This
+    /// method is intended for values returned by generated Compose bindings.
+    /// </remarks>
+    public static Color FromPacked(long packedValue) =>
+        new(unchecked((ulong)packedValue));
+
+    /// <summary>
+    /// Return Compose's signed 64-bit binding representation for this color.
+    /// </summary>
+    /// <remarks>
+    /// This method is intended for calls into generated Compose bindings.
+    /// </remarks>
+    public long ToPacked() => unchecked((long)_packedValue);
 
     /// <summary>
     /// Parse a CSS-style hex color literal. Accepts <c>#RGB</c>, <c>#RRGGBB</c>,
@@ -147,33 +141,17 @@ public readonly struct Color : IEquatable<Color>
     }
 
     /// <summary>
-    /// Implicit conversion to the packed <see cref="long"/> the Compose
-    /// bridges and bindings accept directly.
-    /// </summary>
-    public static implicit operator long(Color c) => unchecked((long)c.PackedValue);
-
-    /// <summary>
-    /// Implicit conversion from the packed <see cref="long"/> the Compose
-    /// bindings surface (the Kotlin
-    /// <c>@JvmInline value class Color(val value: ULong)</c> lowers to a
-    /// packed long across JNI). Lets callers pass <c>scheme.OnSurface</c>
-    /// directly anywhere a <see cref="Color"/> is expected without
-    /// wrapping in <c>new Color(...)</c>.
-    /// </summary>
-    public static implicit operator Color(long packedValue) => new(packedValue);
-
-    /// <summary>
     /// Whether this color carries a real value. Matches Kotlin's
     /// <c>Color.isSpecified</c> &#8212; useful for "fall back to theme"
     /// branches where <see cref="Unspecified"/> is the sentinel.
     /// </summary>
-    public bool IsSpecified => PackedValue != Unspecified.PackedValue;
+    public bool IsSpecified => _packedValue != Unspecified._packedValue;
 
     /// <summary>
     /// Inverse of <see cref="IsSpecified"/> &#8212; matches Kotlin's
     /// <c>Color.isUnspecified</c>.
     /// </summary>
-    public bool IsUnspecified => PackedValue == Unspecified.PackedValue;
+    public bool IsUnspecified => _packedValue == Unspecified._packedValue;
 
     // ----- Named constants matching androidx.compose.ui.graphics.Color.Companion -----
 
@@ -221,13 +199,13 @@ public readonly struct Color : IEquatable<Color>
     public static Color Unspecified => new(0x10UL);
 
     /// <inheritdoc/>
-    public bool Equals(Color other) => PackedValue == other.PackedValue;
+    public bool Equals(Color other) => _packedValue == other._packedValue;
 
     /// <inheritdoc/>
     public override bool Equals(object? obj) => obj is Color c && Equals(c);
 
     /// <inheritdoc/>
-    public override int GetHashCode() => PackedValue.GetHashCode();
+    public override int GetHashCode() => _packedValue.GetHashCode();
 
     /// <summary>Equality operator.</summary>
     public static bool operator ==(Color left, Color right) => left.Equals(right);
@@ -238,10 +216,10 @@ public readonly struct Color : IEquatable<Color>
     /// <inheritdoc/>
     public override string ToString()
     {
-        if (PackedValue == Unspecified.PackedValue)
+        if (_packedValue == Unspecified._packedValue)
             return "Color.Unspecified";
-        if ((PackedValue & 0xFFFFFFFFUL) != 0)
-            return $"Color(0x{PackedValue:X16})";
+        if ((_packedValue & 0xFFFFFFFFUL) != 0)
+            return $"Color(0x{_packedValue:X16})";
         return $"Color(0x{A:X2}{R:X2}{G:X2}{B:X2})";
     }
 }

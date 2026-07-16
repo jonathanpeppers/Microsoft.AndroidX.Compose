@@ -27,7 +27,7 @@ public sealed class VerticalDivider : ComposableNode
         DividerKt.VerticalDivider(
             modifier:  modifier,
             thickness: ThicknessDp ?? 0f,
-            color:     Color is { } c ? c : 0L,
+            color:     Color is { } c ? c.ToPacked() : 0L,
             _composer: composer,
             p4:        0,
             _changed:  defaults);

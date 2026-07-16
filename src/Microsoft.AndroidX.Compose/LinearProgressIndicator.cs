@@ -53,8 +53,8 @@ public sealed class LinearProgressIndicator : ComposableNode
             ProgressIndicatorKt.LinearProgressIndicator(
                 progress:   progress,
                 modifier:   modifier,
-                color:      Color      is { } pc ? pc : 0L,
-                trackColor: TrackColor is { } pt ? pt : 0L,
+                color:      Color      is { } pc ? pc.ToPacked() : 0L,
+                trackColor: TrackColor is { } pt ? pt.ToPacked() : 0L,
                 p4:         0,
                 _composer:  composer,
                 strokeCap:  0,
@@ -70,8 +70,8 @@ public sealed class LinearProgressIndicator : ComposableNode
 
         ProgressIndicatorKt.LinearProgressIndicator(
             modifier:   modifier,
-            color:      Color      is { } c ? c : 0L,
-            trackColor: TrackColor is { } t ? t : 0L,
+            color:      Color      is { } c ? c.ToPacked() : 0L,
+            trackColor: TrackColor is { } t ? t.ToPacked() : 0L,
             p3:         0,
             gapSize:    0f,
             _composer:  composer,

@@ -170,14 +170,12 @@ AndroidX.Compose.Color.B.get -> byte
 AndroidX.Compose.Color.Color() -> void
 AndroidX.Compose.Color.Color(byte alpha, byte red, byte green, byte blue) -> void
 AndroidX.Compose.Color.Color(byte red, byte green, byte blue) -> void
-AndroidX.Compose.Color.Color(long packedValue) -> void
-AndroidX.Compose.Color.Color(ulong packedValue) -> void
 AndroidX.Compose.Color.Equals(AndroidX.Compose.Color other) -> bool
 AndroidX.Compose.Color.G.get -> byte
 AndroidX.Compose.Color.IsSpecified.get -> bool
 AndroidX.Compose.Color.IsUnspecified.get -> bool
-AndroidX.Compose.Color.PackedValue.get -> ulong
 AndroidX.Compose.Color.R.get -> byte
+AndroidX.Compose.Color.ToPacked() -> long
 AndroidX.Compose.Color.WithAlpha(byte alpha) -> AndroidX.Compose.Color
 AndroidX.Compose.Color.WithOpacity(float opacity) -> AndroidX.Compose.Color
 AndroidX.Compose.Column
@@ -1087,9 +1085,9 @@ AndroidX.Compose.PullToRefreshBox.Indicator.get -> AndroidX.Compose.ComposableNo
 AndroidX.Compose.PullToRefreshBox.Indicator.set -> void
 AndroidX.Compose.PullToRefreshBox.PullToRefreshBox(bool isRefreshing, System.Action! onRefresh, AndroidX.Compose.PullToRefreshState? state = null) -> void
 AndroidX.Compose.PullToRefreshIndicator
-AndroidX.Compose.PullToRefreshIndicator.Color.get -> long
+AndroidX.Compose.PullToRefreshIndicator.Color.get -> AndroidX.Compose.Color?
 AndroidX.Compose.PullToRefreshIndicator.Color.set -> void
-AndroidX.Compose.PullToRefreshIndicator.ContainerColor.get -> long
+AndroidX.Compose.PullToRefreshIndicator.ContainerColor.get -> AndroidX.Compose.Color?
 AndroidX.Compose.PullToRefreshIndicator.ContainerColor.set -> void
 AndroidX.Compose.PullToRefreshIndicator.MaxDistance.get -> AndroidX.Compose.Dp?
 AndroidX.Compose.PullToRefreshIndicator.MaxDistance.set -> void
@@ -1745,6 +1743,7 @@ static AndroidX.Compose.Color.DarkGray.get -> AndroidX.Compose.Color
 static AndroidX.Compose.Color.FromArgb(byte alpha, byte red, byte green, byte blue) -> AndroidX.Compose.Color
 static AndroidX.Compose.Color.FromArgb(uint argb) -> AndroidX.Compose.Color
 static AndroidX.Compose.Color.FromHex(string! hex) -> AndroidX.Compose.Color
+static AndroidX.Compose.Color.FromPacked(long packedValue) -> AndroidX.Compose.Color
 static AndroidX.Compose.Color.FromRgb(byte red, byte green, byte blue) -> AndroidX.Compose.Color
 static AndroidX.Compose.Color.Gray.get -> AndroidX.Compose.Color
 static AndroidX.Compose.Color.Green.get -> AndroidX.Compose.Color
@@ -1755,8 +1754,6 @@ static AndroidX.Compose.Color.Transparent.get -> AndroidX.Compose.Color
 static AndroidX.Compose.Color.Unspecified.get -> AndroidX.Compose.Color
 static AndroidX.Compose.Color.White.get -> AndroidX.Compose.Color
 static AndroidX.Compose.Color.Yellow.get -> AndroidX.Compose.Color
-static AndroidX.Compose.Color.implicit operator AndroidX.Compose.Color(long packedValue) -> AndroidX.Compose.Color
-static AndroidX.Compose.Color.implicit operator long(AndroidX.Compose.Color c) -> long
 static AndroidX.Compose.Color.operator !=(AndroidX.Compose.Color left, AndroidX.Compose.Color right) -> bool
 static AndroidX.Compose.Color.operator ==(AndroidX.Compose.Color left, AndroidX.Compose.Color right) -> bool
 static AndroidX.Compose.ComposableContext.Current.get -> AndroidX.Compose.Runtime.IComposer!
@@ -1777,7 +1774,7 @@ static AndroidX.Compose.Composables.CenterAlignedTopAppBar(System.Action! title,
 static AndroidX.Compose.Composables.Checkbox(bool checked, System.Action<bool>! onCheckedChange, bool enabled = true, AndroidX.Compose.Modifier? modifier = null, AndroidX.Compose.Material3.CheckboxColors? colors = null) -> void
 static AndroidX.Compose.Composables.CollectAsStateWithLifecycle<T>(Xamarin.KotlinX.Coroutines.Flow.IFlow! flow, T initialValue) -> AndroidX.Compose.CollectedState<T>!
 static AndroidX.Compose.Composables.CollectAsStateWithLifecycle<T>(Xamarin.KotlinX.Coroutines.Flow.IStateFlow! stateFlow) -> AndroidX.Compose.CollectedState<T>!
-static AndroidX.Compose.Composables.ColorResource(int id) -> long
+static AndroidX.Compose.Composables.ColorResource(int id) -> AndroidX.Compose.Color
 static AndroidX.Compose.Composables.ColorScheme() -> AndroidX.Compose.Material3.ColorScheme!
 static AndroidX.Compose.Composables.Column(System.Action! content) -> void
 static AndroidX.Compose.Composables.Crossfade<T>(T targetState, System.Action<T>! content, AndroidX.Compose.Modifier? modifier = null) -> void
@@ -1949,11 +1946,11 @@ static AndroidX.Compose.Composables.ViewModelKeyed<T>(System.Func<T!>! factory, 
 static AndroidX.Compose.Composables.WideNavigationRail(System.Action! content, AndroidX.Compose.Modifier? modifier = null) -> void
 static AndroidX.Compose.Composables.WideNavigationRailItem(bool selected, System.Action! onClick, System.Action! icon, bool enabled = true, AndroidX.Compose.Modifier? modifier = null, System.Action? label = null) -> void
 static AndroidX.Compose.ComposeExtensions.BooleanResource(this AndroidX.Compose.Runtime.IComposer! composer, int id) -> bool
-static AndroidX.Compose.ComposeExtensions.ButtonColors(this AndroidX.Compose.Runtime.IComposer! composer, long? containerColor = null, long? contentColor = null, long? disabledContainerColor = null, long? disabledContentColor = null, int line = 0, string! file = "") -> AndroidX.Compose.Material3.ButtonColors!
-static AndroidX.Compose.ComposeExtensions.CheckboxColors(this AndroidX.Compose.Runtime.IComposer! composer, long? checkedColor = null, long? uncheckedColor = null, long? checkmarkColor = null, int line = 0, string! file = "") -> AndroidX.Compose.Material3.CheckboxColors!
+static AndroidX.Compose.ComposeExtensions.ButtonColors(this AndroidX.Compose.Runtime.IComposer! composer, AndroidX.Compose.Color? containerColor = null, AndroidX.Compose.Color? contentColor = null, AndroidX.Compose.Color? disabledContainerColor = null, AndroidX.Compose.Color? disabledContentColor = null, int line = 0, string! file = "") -> AndroidX.Compose.Material3.ButtonColors!
+static AndroidX.Compose.ComposeExtensions.CheckboxColors(this AndroidX.Compose.Runtime.IComposer! composer, AndroidX.Compose.Color? checkedColor = null, AndroidX.Compose.Color? uncheckedColor = null, AndroidX.Compose.Color? checkmarkColor = null, int line = 0, string! file = "") -> AndroidX.Compose.Material3.CheckboxColors!
 static AndroidX.Compose.ComposeExtensions.CollectAsStateWithLifecycle<T>(this Xamarin.KotlinX.Coroutines.Flow.IFlow! flow, T initialValue, AndroidX.Compose.Runtime.IComposer! composer) -> AndroidX.Compose.CollectedState<T>!
 static AndroidX.Compose.ComposeExtensions.CollectAsStateWithLifecycle<T>(this Xamarin.KotlinX.Coroutines.Flow.IStateFlow! stateFlow, AndroidX.Compose.Runtime.IComposer! composer) -> AndroidX.Compose.CollectedState<T>!
-static AndroidX.Compose.ComposeExtensions.ColorResource(this AndroidX.Compose.Runtime.IComposer! composer, int id) -> long
+static AndroidX.Compose.ComposeExtensions.ColorResource(this AndroidX.Compose.Runtime.IComposer! composer, int id) -> AndroidX.Compose.Color
 static AndroidX.Compose.ComposeExtensions.ColorScheme(this AndroidX.Compose.Runtime.IComposer! composer) -> AndroidX.Compose.Material3.ColorScheme!
 static AndroidX.Compose.ComposeExtensions.CurrentWindowAdaptiveInfo(this AndroidX.Compose.Runtime.IComposer! composer, bool supportLargeAndXLargeWidth = false) -> AndroidX.Compose.Material3.Adaptive.WindowAdaptiveInfo!
 static AndroidX.Compose.ComposeExtensions.DerivedStateOf<T>(System.Func<T>! calculation) -> AndroidX.Compose.DerivedState<T>!
@@ -1989,7 +1986,7 @@ static AndroidX.Compose.ComposeExtensions.ProduceState<T>(this AndroidX.Compose.
 static AndroidX.Compose.ComposeExtensions.ProduceState<T>(this AndroidX.Compose.Runtime.IComposer! composer, T initialValue, object? key1, object? key2, System.Func<AndroidX.Compose.MutableState<T>!, System.Threading.CancellationToken, System.Threading.Tasks.Task!>! producer, int line = 0, string! file = "") -> AndroidX.Compose.MutableState<T>!
 static AndroidX.Compose.ComposeExtensions.ProduceState<T>(this AndroidX.Compose.Runtime.IComposer! composer, T initialValue, object? key1, object? key2, object? key3, System.Func<AndroidX.Compose.MutableState<T>!, System.Threading.CancellationToken, System.Threading.Tasks.Task!>! producer, int line = 0, string! file = "") -> AndroidX.Compose.MutableState<T>!
 static AndroidX.Compose.ComposeExtensions.ProduceStateKeyed<T>(this AndroidX.Compose.Runtime.IComposer! composer, T initialValue, object?[]! keys, System.Func<AndroidX.Compose.MutableState<T>!, System.Threading.CancellationToken, System.Threading.Tasks.Task!>! producer, int line = 0, string! file = "") -> AndroidX.Compose.MutableState<T>!
-static AndroidX.Compose.ComposeExtensions.RadioButtonColors(this AndroidX.Compose.Runtime.IComposer! composer, long? selectedColor = null, long? unselectedColor = null, long? disabledSelectedColor = null, long? disabledUnselectedColor = null, int line = 0, string! file = "") -> AndroidX.Compose.Material3.RadioButtonColors!
+static AndroidX.Compose.ComposeExtensions.RadioButtonColors(this AndroidX.Compose.Runtime.IComposer! composer, AndroidX.Compose.Color? selectedColor = null, AndroidX.Compose.Color? unselectedColor = null, AndroidX.Compose.Color? disabledSelectedColor = null, AndroidX.Compose.Color? disabledUnselectedColor = null, int line = 0, string! file = "") -> AndroidX.Compose.Material3.RadioButtonColors!
 static AndroidX.Compose.ComposeExtensions.Remember<T>(this AndroidX.Compose.Runtime.IComposer! composer, System.Func<T>! factory, int line = 0, string! file = "") -> T
 static AndroidX.Compose.ComposeExtensions.Remember<T>(this AndroidX.Compose.Runtime.IComposer! composer, System.Func<T>! factory, object? key1, int line = 0, string! file = "") -> T
 static AndroidX.Compose.ComposeExtensions.Remember<T>(this AndroidX.Compose.Runtime.IComposer! composer, System.Func<T>! factory, object? key1, object? key2, int line = 0, string! file = "") -> T
@@ -2014,12 +2011,12 @@ static AndroidX.Compose.ComposeExtensions.SetContent(this AndroidX.Compose.UI.Pl
 static AndroidX.Compose.ComposeExtensions.SetContent(this AndroidX.Compose.UI.Platform.ComposeView! view, System.Func<AndroidX.Compose.Runtime.IComposer!, AndroidX.Compose.ComposableNode!>! content) -> void
 static AndroidX.Compose.ComposeExtensions.Shapes(this AndroidX.Compose.Runtime.IComposer! composer) -> AndroidX.Compose.Material3.Shapes!
 static AndroidX.Compose.ComposeExtensions.SideEffect(this AndroidX.Compose.Runtime.IComposer! composer, System.Action! effect) -> void
-static AndroidX.Compose.ComposeExtensions.SliderColors(this AndroidX.Compose.Runtime.IComposer! composer, long? thumbColor = null, long? activeTrackColor = null, long? activeTickColor = null, long? inactiveTrackColor = null, long? inactiveTickColor = null, long? disabledThumbColor = null, long? disabledActiveTrackColor = null, long? disabledActiveTickColor = null, long? disabledInactiveTrackColor = null, long? disabledInactiveTickColor = null, int line = 0, string! file = "") -> AndroidX.Compose.Material3.SliderColors!
+static AndroidX.Compose.ComposeExtensions.SliderColors(this AndroidX.Compose.Runtime.IComposer! composer, AndroidX.Compose.Color? thumbColor = null, AndroidX.Compose.Color? activeTrackColor = null, AndroidX.Compose.Color? activeTickColor = null, AndroidX.Compose.Color? inactiveTrackColor = null, AndroidX.Compose.Color? inactiveTickColor = null, AndroidX.Compose.Color? disabledThumbColor = null, AndroidX.Compose.Color? disabledActiveTrackColor = null, AndroidX.Compose.Color? disabledActiveTickColor = null, AndroidX.Compose.Color? disabledInactiveTrackColor = null, AndroidX.Compose.Color? disabledInactiveTickColor = null, int line = 0, string! file = "") -> AndroidX.Compose.Material3.SliderColors!
 static AndroidX.Compose.ComposeExtensions.SnapshotFlow<T>(System.Func<T>! producer) -> System.Collections.Generic.IAsyncEnumerable<T>!
 static AndroidX.Compose.ComposeExtensions.StringArrayResource(this AndroidX.Compose.Runtime.IComposer! composer, int id) -> string![]!
 static AndroidX.Compose.ComposeExtensions.StringResource(this AndroidX.Compose.Runtime.IComposer! composer, int id) -> string!
 static AndroidX.Compose.ComposeExtensions.StringResource(this AndroidX.Compose.Runtime.IComposer! composer, int id, params object?[]! formatArgs) -> string!
-static AndroidX.Compose.ComposeExtensions.SwitchColors(this AndroidX.Compose.Runtime.IComposer! composer, long? checkedThumbColor = null, long? checkedTrackColor = null, long? uncheckedThumbColor = null, long? uncheckedTrackColor = null, int line = 0, string! file = "") -> AndroidX.Compose.Material3.SwitchColors!
+static AndroidX.Compose.ComposeExtensions.SwitchColors(this AndroidX.Compose.Runtime.IComposer! composer, AndroidX.Compose.Color? checkedThumbColor = null, AndroidX.Compose.Color? checkedTrackColor = null, AndroidX.Compose.Color? uncheckedThumbColor = null, AndroidX.Compose.Color? uncheckedTrackColor = null, int line = 0, string! file = "") -> AndroidX.Compose.Material3.SwitchColors!
 static AndroidX.Compose.ComposeExtensions.Typography(this AndroidX.Compose.Runtime.IComposer! composer) -> AndroidX.Compose.Material3.Typography!
 static AndroidX.Compose.ComposeExtensions.ViewModel<T>(this AndroidX.Compose.Runtime.IComposer! composer, System.Func<T!>! factory, int line = 0, string! file = "") -> T!
 static AndroidX.Compose.ComposeExtensions.ViewModel<T>(this AndroidX.Compose.Runtime.IComposer! composer, System.Func<T!>! factory, object? key1, int line = 0, string! file = "") -> T!

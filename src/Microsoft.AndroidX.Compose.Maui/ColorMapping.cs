@@ -5,10 +5,7 @@ namespace Microsoft.AndroidX.Compose.Maui;
 
 /// <summary>
 /// Conversion helpers between MAUI's normalised <c>0..1</c>
-/// <see cref="MauiColor"/> and Compose's packed
-/// <see cref="ComposeColor"/> (an <c>@JvmInline value class</c> over
-/// a <c>ulong</c>, surfaced in C# via the implicit <c>long</c>
-/// conversion accepted by the generated bindings).
+/// <see cref="MauiColor"/> and <see cref="ComposeColor"/>.
 /// </summary>
 /// <remarks>
 /// Shared across every handler that needs to push a colour into a
@@ -34,7 +31,7 @@ internal static class ColorMapping
     /// a null input so a mapper can clear the slot.
     /// </summary>
     public static long? ToPackedLong(MauiColor? c) =>
-        c is null ? null : (long)ToCompose(c);
+        c is null ? null : ToCompose(c).ToPacked();
 
     /// <summary>
     /// Convert a MAUI <see cref="MauiColor"/> to a packed 32-bit

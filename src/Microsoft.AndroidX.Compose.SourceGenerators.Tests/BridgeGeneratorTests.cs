@@ -74,9 +74,9 @@ public class BridgeGeneratorTests
             {
                 internal static float Pack(Dp? value) => value?.Value ?? 0f;
             }
-            public readonly record struct Color(ulong PackedValue)
+            public readonly struct Color
             {
-                public static implicit operator long(Color c) => (long)c.PackedValue;
+                public long ToPacked() => default;
             }
             public readonly record struct Sp(float Value)
             {
@@ -1418,6 +1418,38 @@ public class BridgeGeneratorTests
         Assert.Contains("global::AndroidX.Compose.TextOverflow.Pack(overflow)", emitted);
         Assert.Contains("global::AndroidX.Compose.TransformOrigin.Pack(origin)", emitted);
         Assert.Contains("if (origin is not null) defaults &= ~(int)global::AndroidX.Compose.FontDefault.Origin", emitted);
+    }
+
+    [Fact]
+    public void ValueType_Color_LowersThroughExplicitPackedBoundary()
+    {
+        var code = """
+            using AndroidX.Compose;
+            using global::AndroidX.Compose.Runtime;
+
+            [assembly: ComposeDefaults("TintDefault", "tint")]
+
+            namespace AndroidX.Compose
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(
+                        Class = "x/Y",
+                        JvmName = "f",
+                        Signature = "(JLandroidx/compose/runtime/Composer;II)V",
+                        Defaults = typeof(TintDefault))]
+                    public static partial void F(Color? tint, IComposer composer);
+                }
+            }
+            """;
+
+        var (_, diags, emitted) = Run(code);
+        Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+        Assert.Contains("tint.GetValueOrDefault().ToPacked()", emitted);
+        Assert.Contains(
+            "if (tint is not null) defaults &= ~(int)global::AndroidX.Compose.TintDefault.Tint",
+            emitted);
     }
 
     [Fact]

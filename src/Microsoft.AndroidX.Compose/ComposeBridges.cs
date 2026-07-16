@@ -753,7 +753,7 @@ internal static partial class ComposeBridges
     // SecondaryDefaults pointing at the IconDefault enum.
     //
     // `tint` is `Color?` (a registered Compose value type, lowered to
-    // the JNI `J` slot via the implicit `Color -> long` conversion) so
+    // the JNI `J` slot via `Color.ToPacked()`) so
     // the facade generator classifies it as OptionalValue and only
     // clears the `$default` bit when the caller assigns a non-null
     // Tint — otherwise Kotlin falls back to `LocalContentColor.current`.
@@ -771,7 +771,7 @@ internal static partial class ComposeBridges
             imageVector:        imageVector,
             contentDescription: contentDescription!,
             modifier:           modifier,
-            tint:               tint.GetValueOrDefault(),
+            tint:               tint.GetValueOrDefault().ToPacked(),
             _composer:          composer,
             p5:                 0,
             _changed:           defaults);

@@ -25,25 +25,22 @@ public static partial class ComposeExtensions
     /// Mirrors Kotlin's
     /// <c>SliderDefaults.colors(thumbColor = …, activeTrackColor = …, …)</c>.
     ///
-    /// The Compose lowering takes a packed <c>Color</c> (a <c>long</c>)
-    /// per slot plus a <c>$default</c> bitmask flagging which slots the
-    /// caller actually supplied. Each non-<c>null</c> argument here
-    /// clears the corresponding bit so Compose adopts your color;
-    /// <c>null</c> leaves the bit set so Kotlin's default (the theme's
-    /// color-scheme slot) wins.
+    /// Each non-<c>null</c> argument clears the corresponding Kotlin
+    /// <c>$default</c> bit and is packed only when calling the generated
+    /// binding. <c>null</c> leaves the bit set so the theme default wins.
     /// </summary>
     public static SliderColors SliderColors(
         this IComposer composer,
-        long? thumbColor = null,
-        long? activeTrackColor = null,
-        long? activeTickColor = null,
-        long? inactiveTrackColor = null,
-        long? inactiveTickColor = null,
-        long? disabledThumbColor = null,
-        long? disabledActiveTrackColor = null,
-        long? disabledActiveTickColor = null,
-        long? disabledInactiveTrackColor = null,
-        long? disabledInactiveTickColor = null,
+        Color? thumbColor = null,
+        Color? activeTrackColor = null,
+        Color? activeTickColor = null,
+        Color? inactiveTrackColor = null,
+        Color? inactiveTickColor = null,
+        Color? disabledThumbColor = null,
+        Color? disabledActiveTrackColor = null,
+        Color? disabledActiveTickColor = null,
+        Color? disabledInactiveTrackColor = null,
+        Color? disabledInactiveTickColor = null,
         [CallerLineNumber] int line = 0,
         [CallerFilePath] string file = "")
     {
@@ -78,16 +75,16 @@ public static partial class ComposeExtensions
             // default semantics — so unset slots still pick up the
             // current MaterialTheme color.)
             return AndroidX.Compose.Material3.SliderDefaults.Instance.Colors(
-                thumbColor                 ?? 0L,
-                activeTrackColor           ?? 0L,
-                activeTickColor            ?? 0L,
-                inactiveTrackColor         ?? 0L,
-                inactiveTickColor          ?? 0L,
-                disabledThumbColor         ?? 0L,
-                disabledActiveTrackColor   ?? 0L,
-                disabledActiveTickColor    ?? 0L,
-                disabledInactiveTrackColor ?? 0L,
-                disabledInactiveTickColor  ?? 0L,
+                thumbColor?.ToPacked()                 ?? 0L,
+                activeTrackColor?.ToPacked()           ?? 0L,
+                activeTickColor?.ToPacked()            ?? 0L,
+                inactiveTrackColor?.ToPacked()         ?? 0L,
+                inactiveTickColor?.ToPacked()          ?? 0L,
+                disabledThumbColor?.ToPacked()         ?? 0L,
+                disabledActiveTrackColor?.ToPacked()   ?? 0L,
+                disabledActiveTickColor?.ToPacked()    ?? 0L,
+                disabledInactiveTrackColor?.ToPacked() ?? 0L,
+                disabledInactiveTickColor?.ToPacked()  ?? 0L,
                 composer,
                 p11:       0,
                 _changed:  0,

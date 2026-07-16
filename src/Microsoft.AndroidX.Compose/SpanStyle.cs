@@ -59,7 +59,7 @@ public sealed class SpanStyle
     {
         var d = TextStyleCompanion.DefaultSpan;
         return d.Copy(
-            color:                  Color is { } c ? (long)c : d.Color,
+            color:                  Color is { } c ? c.ToPacked() : d.Color,
             fontSize:               FontSize is { } fs ? Sp.Pack(fs) : d.FontSize,
             fontWeight:             FontWeight is null ? d.FontWeight : Cast<AndroidX.Compose.UI.Text.Font.FontWeight>(FontWeight),
             fontStyle:              FontStyle is null  ? d.FontStyle  : Cast<AndroidX.Compose.UI.Text.Font.FontStyle>(FontStyle),
@@ -70,7 +70,7 @@ public sealed class SpanStyle
             baselineShift:          d.BaselineShift,
             textGeometricTransform: d.TextGeometricTransform,
             localeList:             d.LocaleList,
-            background:             Background is { } bg ? (long)bg : d.Background,
+            background:             Background is { } bg ? bg.ToPacked() : d.Background,
             textDecoration:         Decoration is null ? d.TextDecoration : Cast<AndroidX.Compose.UI.Text.Style.TextDecoration>(Decoration),
             shadow:                 d.Shadow,
             platformStyle:          d.PlatformStyle,
