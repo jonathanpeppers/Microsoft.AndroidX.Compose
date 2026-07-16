@@ -149,12 +149,6 @@ public sealed class ComposableMethodGenerator : IIncrementalGenerator
                 Diagnostics.ComposableAsyncUnsupported, loc, method.ToDisplayString()));
             return;
         }
-        if (method.IsExtensionMethod)
-        {
-            spc.ReportDiagnostic(Diagnostic.Create(
-                Diagnostics.ComposableExtensionUnsupported, loc, method.ToDisplayString()));
-            return;
-        }
         var byRefParameter = method.Parameters.FirstOrDefault(
             static p => p.RefKind != RefKind.None);
         if (byRefParameter is not null)
@@ -193,10 +187,11 @@ public sealed class ComposableMethodGenerator : IIncrementalGenerator
         if (symbolInfo.Symbol is not IMethodSymbol target)
             return null;
 
-        // Lookup [Composable] by metadata name on the resolved method.
-        // Reduced (extension-method-style) calls resolve to the reduced
-        // form; the attribute lives on the original definition.
-        var actual = target.ReducedFrom ?? target.OriginalDefinition;
+        // Reduced extension calls omit the receiver from their parameter
+        // list. Reopen the constructed static method so both extension and
+        // explicit-static syntax produce the declaration-shaped interceptor
+        // signature expected by the compiler.
+        var actual = target.ReducedFrom ?? target;
         if (!HasComposableAttribute(actual))
             return null;
 
@@ -212,10 +207,10 @@ public sealed class ComposableMethodGenerator : IIncrementalGenerator
         var directTarget = TryReadDirectTarget(actual);
         ulong omittedArguments = directTarget is null
             ? 0
-            : ReadOmittedArguments(ctx.SemanticModel, invocation, target, ct);
+            : ReadOmittedArguments(ctx.SemanticModel, invocation, target, actual, ct);
 
         return new CallSite(
-            target,
+            actual,
             path ?? string.Empty,
             loc.Version,
             loc.Data,
@@ -244,33 +239,39 @@ public sealed class ComposableMethodGenerator : IIncrementalGenerator
         SemanticModel semanticModel,
         InvocationExpressionSyntax invocation,
         IMethodSymbol target,
+        IMethodSymbol actual,
         System.Threading.CancellationToken ct)
     {
         if (semanticModel.GetOperation(invocation, ct) is not IInvocationOperation operation)
             return 0;
 
-        bool hasExplicitComposer = target.Parameters.Length > 0
-            && IsComposer(target.Parameters[0].Type);
+        bool hasExplicitComposer = actual.Parameters.Length > 0
+            && IsComposer(actual.Parameters[0].Type);
         int composerOffset = hasExplicitComposer ? 1 : 0;
+        int receiverOffset = target.ReducedFrom is null ? 0 : 1;
         var suppliedParameters = new System.Collections.Generic.HashSet<int>();
+        if (receiverOffset != 0)
+            suppliedParameters.Add(0);
         foreach (var argument in operation.Arguments)
         {
-            if (argument.ArgumentKind != ArgumentKind.DefaultValue
+            if (!argument.IsImplicit
+                && argument.ArgumentKind != ArgumentKind.DefaultValue
                 && argument.Parameter is { } parameter)
             {
-                suppliedParameters.Add(parameter.Ordinal);
+                suppliedParameters.Add(parameter.Ordinal + receiverOffset);
             }
         }
 
         ulong omitted = 0;
-        foreach (var parameter in target.Parameters)
+        foreach (var parameter in actual.Parameters)
         {
             if (parameter.Ordinal < composerOffset
-                || !parameter.HasExplicitDefaultValue
+                || parameter.IsParams
                 || suppliedParameters.Contains(parameter.Ordinal))
             {
                 continue;
             }
+
             int userIndex = parameter.Ordinal - composerOffset;
             if ((uint)userIndex < 64)
                 omitted |= 1UL << userIndex;
@@ -325,7 +326,6 @@ public sealed class ComposableMethodGenerator : IIncrementalGenerator
                 IsComposer(method.Parameters[0].Type))) &&
         IsAccessibleFromGeneratedType(method) &&
         !method.IsAsync &&
-        !method.IsExtensionMethod &&
         !method.Parameters.Any(static p => p.RefKind != RefKind.None);
 
     static bool IsAccessibleFromGeneratedType(IMethodSymbol method)

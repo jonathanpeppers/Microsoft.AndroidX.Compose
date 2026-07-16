@@ -200,6 +200,19 @@ public static class Screens
 }
 ```
 
+Extension composables are supported in both extension and explicit-static
+syntax. An `IComposer` receiver is the composer slot and is excluded from
+argument diffing; any other extension receiver is an ordinary first user
+parameter and is diffed:
+
+```csharp
+[Composable]
+public static void Greeting(this IComposer composer, string name) { }
+
+composer.Greeting("Ada");
+Screens.Greeting(composer, "Ada");
+```
+
 ### What the generator emits
 
 The generator emits a single
@@ -352,7 +365,6 @@ surfaces are modeled.
 | CN5003 | If `[Composable]` declares `IComposer`, it must be the first and only composer parameter. |
 | CN5004 | Method and containing types must be interceptor-accessible.     |
 | CN5005 | `async` composables are unsupported.                            |
-| CN5006 | Extension-method composables are unsupported.                   |
 | CN5008 | `ref`, `out`, and `in` parameters are unsupported.              |
 | CN5009 | A composerless API may execute outside `[Composable]` code or a `[ComposableContent]` callback; the diagnostic points to the unsafe delegate escape. |
 | CN5010 | `[GenerateImplicitComposable]` was applied to an unsupported explicit-composer adapter shape. |
