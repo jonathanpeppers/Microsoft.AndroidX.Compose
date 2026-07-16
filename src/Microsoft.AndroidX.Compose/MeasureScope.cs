@@ -17,8 +17,9 @@ public sealed class MeasureScope
 
     /// <summary>
     /// Pixel-per-dp ratio of the surface this layout is measuring against.
-    /// Multiply a Dp value by <see cref="Density"/> to get pixels; use
-    /// <see cref="RoundToPx(Dp)"/> when you want an <see cref="int"/>.
+    /// Use <see cref="RoundToPx(Dp)"/> for integer pixels, or multiply
+    /// <see cref="Dp.Value"/> by <see cref="Density"/> for a floating-point
+    /// pixel value.
     /// </summary>
     public float Density => ComposeBridges.MeasureScopeGetDensity(Handle);
 

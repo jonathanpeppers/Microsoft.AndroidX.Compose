@@ -14,8 +14,9 @@ namespace AndroidX.Compose;
 /// <para>
 /// <see cref="MaxWidth"/> / <see cref="MaxHeight"/> may be
 /// <see cref="Dp.Value"/> equal to <see cref="float.PositiveInfinity"/>
-/// when the parent imposes no upper bound. Branch on
-/// <see cref="float.IsInfinity(float)"/> before comparing against a fixed threshold.
+/// when the parent imposes no upper bound. Check
+/// <c>float.IsInfinity(MaxWidth.Value)</c> or
+/// <c>float.IsInfinity(MaxHeight.Value)</c> before comparing against a fixed threshold.
 /// </para>
 /// <para>
 /// Constraints are only valid for the call that produced them; do not
