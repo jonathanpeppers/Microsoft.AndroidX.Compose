@@ -824,6 +824,42 @@ public class ComposableMethodGeneratorTests
     }
 
     [Fact]
+    public void GenericMethod_RestartKeysIncludeConstructedSignature()
+    {
+        var (output, diags, emitted) = Run("""
+            namespace App
+            {
+                public static class Screens
+                {
+                    [AndroidX.Compose.Composable]
+                    public static void Foo<T>(T value) { }
+
+                    [AndroidX.Compose.Composable]
+                    public static void Foo<T>(T value, int count) { }
+
+                    public static void CallSite()
+                    {
+                        Foo(42);
+                        Foo<string?>(null);
+                        Foo(42, 1);
+                    }
+                }
+            }
+            """);
+
+        Assert.Empty(diags);
+        Assert.NotNull(emitted);
+        var keys = System.Text.RegularExpressions.Regex.Matches(
+                emitted,
+                @"StartRestartGroup\(unchecked\(\(int\)0x([0-9A-F]{8})\)\)")
+            .Select(match => match.Groups[1].Value)
+            .ToArray();
+        Assert.Equal(3, keys.Length);
+        Assert.Equal(3, keys.Distinct().Count());
+        AssertNoCompileErrors(output);
+    }
+
+    [Fact]
     public void GenericMethod_PreservesTypeParameterConstraints()
     {
         var (output, diags, emitted) = Run("""

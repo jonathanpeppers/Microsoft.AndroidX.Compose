@@ -401,8 +401,7 @@ public sealed class ComposableMethodGenerator : IIncrementalGenerator
         var containingType = method.ContainingType
             ?? throw new InvalidOperationException(
                 $"Composable method '{method.Name}' has no containing type.");
-        var methodFqn = containingType.ToDisplayString() + "." + method.Name;
-        int key = FnvHash(methodFqn);
+        int key = FnvHash(GetRestartGroupIdentity(site.Target));
         bool hasExplicitComposer = method.Parameters.Length > 0
             && IsComposer(method.Parameters[0].Type);
         string? obsoleteDiagnosticId = GetObsoleteDiagnosticId(method);
@@ -798,6 +797,9 @@ public sealed class ComposableMethodGenerator : IIncrementalGenerator
               .AppendLine(string.Join(", ", constraints));
         }
     }
+
+    static string GetRestartGroupIdentity(IMethodSymbol method) =>
+        method.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
 
     static int FnvHash(string s)
     {
