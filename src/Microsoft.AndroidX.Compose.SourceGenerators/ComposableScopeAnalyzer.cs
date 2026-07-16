@@ -18,6 +18,7 @@ public sealed class ComposableScopeAnalyzer : DiagnosticAnalyzer
     const string ComposableNodeTypeName = "AndroidX.Compose.ComposableNode";
     const string ComposablesTypeName = "AndroidX.Compose.Composables";
     const string ComposerTypeName = "AndroidX.Compose.Runtime.IComposer";
+    const string WindowInsetsTypeName = "AndroidX.Compose.WindowInsets";
 
     public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics =>
         ImmutableArray.Create(Diagnostics.ImplicitComposableOutsideScope);
@@ -54,8 +55,15 @@ public sealed class ComposableScopeAnalyzer : DiagnosticAnalyzer
         return method.ContainingType.ToDisplayString() == ComposablesTypeName
             || HasAttribute(method, ComposableAttributeName)
             || IsImplicitCompositionLocalRead(method)
-            || IsImplicitComposableNodeRender(method);
+            || IsImplicitComposableNodeRender(method)
+            || IsImplicitWindowInsetsRead(method);
     }
+
+    static bool IsImplicitWindowInsetsRead(IMethodSymbol method) =>
+        method.Name == "AsPaddingValues"
+        && !method.IsStatic
+        && method.Parameters.Length == 0
+        && method.ContainingType.ToDisplayString() == WindowInsetsTypeName;
 
     static bool IsImplicitComposableNodeRender(IMethodSymbol method) =>
         method.Name == "Render"

@@ -83,13 +83,13 @@ public static class Profile
             BuildProfileFab(state, scrollState, popupOpen, scheme),
         });
 
-    static ComposableNode BuildProfileHeader(ProfileScreenState state, float containerHeight)
+    static ComposableNode BuildProfileHeader(ProfileScreenState state, Dp containerHeight)
     {
         if (state.Photo is null)
             return Spacer.Width(0);
 
-        float heroMax = containerHeight / 2f;
-        if (heroMax < 1f) heroMax = 240f;
+        Dp heroMax = containerHeight / 2f;
+        if (heroMax < 1) heroMax = 240;
         return new Image(state.Photo.Value, "Profile photo")
         {
             Modifier = Modifier
@@ -101,7 +101,7 @@ public static class Profile
         };
     }
 
-    static Column BuildUserInfoFields(ProfileScreenState state, float containerHeight, ColorScheme scheme)
+    static Column BuildUserInfoFields(ProfileScreenState state, Dp containerHeight, ColorScheme scheme)
     {
         var col = new Column
         {
@@ -116,9 +116,9 @@ public static class Profile
 
         // Add a spacer that always shows part (320.dp) of the fields list regardless of
         // the device, in order to always leave some content at the top.
-        float trailing = containerHeight - 320f;
-        if (trailing < 0f) trailing = 0f;
-        col.Add(Spacer.Height((int)trailing));
+        Dp trailing = containerHeight - new Dp(320);
+        if (trailing < 0) trailing = Dp.Zero;
+        col.Add(Spacer.Height(trailing));
         return col;
     }
 

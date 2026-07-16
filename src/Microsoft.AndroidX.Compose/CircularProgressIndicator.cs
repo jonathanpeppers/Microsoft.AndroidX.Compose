@@ -18,8 +18,8 @@ public sealed class CircularProgressIndicator : ComposableNode
     /// <summary>Optional explicit color. Leave null to use the Material default.</summary>
     public Color? Color { get; set; }
 
-    /// <summary>Optional stroke width in Dp. Leave null for the Material default.</summary>
-    public float? StrokeWidthDp { get; set; }
+    /// <summary>Optional stroke width. Leave null for the Material default.</summary>
+    public Dp? StrokeWidthDp { get; set; }
 
     /// <summary>Optional explicit track color. Leave null to use the Material default.</summary>
     public Color? TrackColor { get; set; }
@@ -37,7 +37,7 @@ public sealed class CircularProgressIndicator : ComposableNode
         ProgressIndicatorKt.CircularProgressIndicator(
             modifier:    modifier,
             color:       Color      is { } c ? c.ToPacked() : 0L,
-            strokeWidth: StrokeWidthDp   ?? 0f,
+            strokeWidth: Dp.Pack(StrokeWidthDp),
             trackColor:  TrackColor is { } t ? t.ToPacked() : 0L,
             p4:          0,
             gapSize:     0f,

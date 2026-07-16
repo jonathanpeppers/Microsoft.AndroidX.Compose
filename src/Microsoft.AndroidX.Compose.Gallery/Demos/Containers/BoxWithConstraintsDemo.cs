@@ -12,7 +12,7 @@ public static class BoxWithConstraintsDemo
         Title:       "BoxWithConstraints",
         Description: "Reports MaxWidth / MaxHeight in dp — branch your layout on screen size.",
         Build:       c => new BoxWithConstraints(c => new Text(
-            $"Max width = {c.MaxWidth:0.#} dp, max height = {c.MaxHeight:0.#} dp"))
+            $"Max width = {c.MaxWidth}, max height = {c.MaxHeight}"))
         {
             Modifier = Modifier.FillMaxWidth().Padding(8),
         });

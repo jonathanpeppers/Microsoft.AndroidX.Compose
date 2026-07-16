@@ -143,6 +143,34 @@ internal static partial class ComposeBridges
     internal static partial IntPtr CarouselStateAnimateScrollToItem(
         IntPtr state, int item, IntPtr? animationSpec, IContinuation cont);
 
+    [ComposeBridge(Suspend = true,
+        Class = "androidx/compose/foundation/lazy/grid/LazyGridState",
+        JvmName = "scrollToItem",
+        Signature = "(IILkotlin/coroutines/Continuation;)Ljava/lang/Object;")]
+    internal static partial IntPtr LazyGridStateScrollToItem(
+        IntPtr state, int index, int scrollOffset, IContinuation cont);
+
+    [ComposeBridge(Suspend = true,
+        Class = "androidx/compose/foundation/lazy/grid/LazyGridState",
+        JvmName = "animateScrollToItem",
+        Signature = "(IILkotlin/coroutines/Continuation;)Ljava/lang/Object;")]
+    internal static partial IntPtr LazyGridStateAnimateScrollToItem(
+        IntPtr state, int index, int scrollOffset, IContinuation cont);
+
+    [ComposeBridge(Suspend = true,
+        Class = "androidx/compose/foundation/lazy/staggeredgrid/LazyStaggeredGridState",
+        JvmName = "scrollToItem",
+        Signature = "(IILkotlin/coroutines/Continuation;)Ljava/lang/Object;")]
+    internal static partial IntPtr LazyStaggeredGridStateScrollToItem(
+        IntPtr state, int index, int scrollOffset, IContinuation cont);
+
+    [ComposeBridge(Suspend = true,
+        Class = "androidx/compose/foundation/lazy/staggeredgrid/LazyStaggeredGridState",
+        JvmName = "animateScrollToItem",
+        Signature = "(IILkotlin/coroutines/Continuation;)Ljava/lang/Object;")]
+    internal static partial IntPtr LazyStaggeredGridStateAnimateScrollToItem(
+        IntPtr state, int index, int scrollOffset, IContinuation cont);
+
     // androidx.compose.foundation.gestures.TapGestureDetectorKt
     //     .detectTapGestures$default(
     //         PointerInputScope scope,

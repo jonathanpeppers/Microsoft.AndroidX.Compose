@@ -939,7 +939,7 @@ public static class ModifierExtensions
     /// <param name="alpha">Opacity in [0, 1].</param>
     /// <param name="translationX">Horizontal translation in pixels.</param>
     /// <param name="translationY">Vertical translation in pixels.</param>
-    /// <param name="shadowElevation">Elevation in pixels (use <see cref="Shadow"/> to specify in Dp).</param>
+    /// <param name="shadowElevation">Elevation of the rendered shadow.</param>
     /// <param name="rotationX">Rotation around the X axis in degrees.</param>
     /// <param name="rotationY">Rotation around the Y axis in degrees.</param>
     /// <param name="rotationZ">Rotation around the Z axis in degrees (clockwise).</param>
@@ -953,7 +953,7 @@ public static class ModifierExtensions
         float? alpha = null,
         float? translationX = null,
         float? translationY = null,
-        float? shadowElevation = null,
+        Dp? shadowElevation = null,
         float? rotationX = null,
         float? rotationY = null,
         float? rotationZ = null,

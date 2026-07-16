@@ -17,8 +17,9 @@ public sealed class MeasureScope
 
     /// <summary>
     /// Pixel-per-dp ratio of the surface this layout is measuring against.
-    /// Multiply a Dp value by <see cref="Density"/> to get pixels; use
-    /// <see cref="RoundToPx(float)"/> when you want an <see cref="int"/>.
+    /// Use <see cref="RoundToPx(Dp)"/> for integer pixels, or multiply
+    /// <see cref="Dp.Value"/> by <see cref="Density"/> for a floating-point
+    /// pixel value.
     /// </summary>
     public float Density => ComposeBridges.MeasureScopeGetDensity(Handle);
 
@@ -33,7 +34,8 @@ public sealed class MeasureScope
     /// <see cref="Density"/>, mirroring Kotlin's
     /// <c>Dp.roundToPx()</c> extension.
     /// </summary>
-    public int RoundToPx(float dp) => (int)Math.Round(dp * Density, MidpointRounding.AwayFromZero);
+    public int RoundToPx(Dp dp) =>
+        (int)Math.Round(dp.Value * Density, MidpointRounding.AwayFromZero);
 
     /// <summary>
     /// Declare that this layout is <paramref name="width"/> ×

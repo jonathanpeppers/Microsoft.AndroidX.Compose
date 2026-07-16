@@ -22,27 +22,27 @@ public static class BottomSheetScaffoldDemo
             var sheet = c.Remember(() => new SheetStateHolder(skipPartiallyExpanded: false));
             var scaffold = new BottomSheetScaffold(sheetState: sheet)
             {
-                new Column
+                ConfirmValueChange = v => v != SheetValue.Hidden,
+                SheetContent = new Column
                 {
-                    new Text("Main content"),
-                    new Row
-                    {
-                        new Button(onClick: async () => await sheet.ExpandAsync())
-                            { new Text("Expand") },
-                        new Button(onClick: async () => await sheet.PartialExpandAsync())
-                            { new Text("Peek") },
-                    },
+                    new Text("Persistent bottom sheet"),
+                    new Text("Drag to peek / expand."),
                 },
             };
             // SheetState.Hidden requires skipPartiallyExpanded=true, and our
             // holder didn't set it — so vetoing Hidden has no extra effect,
             // but veto still demonstrates the wiring.
-            scaffold.ConfirmValueChange = v => v != SheetValue.Hidden;
-            scaffold.SheetContent = new Column
+            scaffold.Add(new Column
             {
-                new Text("Persistent bottom sheet"),
-                new Text("Drag to peek / expand."),
-            };
+                new Text("Main content"),
+                new Row
+                {
+                    new Button(onClick: async () => await sheet.ExpandAsync())
+                        { new Text("Expand") },
+                    new Button(onClick: async () => await sheet.PartialExpandAsync())
+                        { new Text("Peek") },
+                },
+            });
             return new Box
             {
                 Modifier.Height(360),
@@ -50,4 +50,3 @@ public static class BottomSheetScaffoldDemo
             };
         });
 }
-
