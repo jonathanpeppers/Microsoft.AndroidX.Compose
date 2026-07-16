@@ -23,7 +23,7 @@ public static partial class Composables
             UseDynamicColor = dynamicColor,
             Dark = darkTheme,
         };
-        theme.Add(new Tier2InlineContent(content));
+        theme.Add(new ComposableContentNode(content));
         theme.Render(composer);
     }
 
@@ -48,17 +48,17 @@ public static partial class Composables
         {
             Modifier = modifier,
             BodyContent = padding =>
-                new Tier2InlineContent(c => content(padding, c)),
-            TopBar = topBar is null ? null : new Tier2InlineContent(topBar),
+                new ComposableContentNode(c => content(padding, c)),
+            TopBar = topBar is null ? null : new ComposableContentNode(topBar),
             BottomBar = bottomBar is null
                 ? null
-                : new Tier2InlineContent(bottomBar),
+                : new ComposableContentNode(bottomBar),
             SnackbarHost = snackbarHost is null
                 ? null
-                : new Tier2InlineContent(snackbarHost),
+                : new ComposableContentNode(snackbarHost),
             FloatingActionButton = floatingActionButton is null
                 ? null
-                : new Tier2InlineContent(floatingActionButton),
+                : new ComposableContentNode(floatingActionButton),
         }.Render(composer);
     }
 
@@ -97,7 +97,7 @@ public static partial class Composables
         {
             Modifier = modifier,
         };
-        layout.Add(new Tier2InlineContent(content));
+        layout.Add(new ComposableContentNode(content));
         layout.Render(composer);
     }
 
@@ -123,11 +123,11 @@ public static partial class Composables
             () => new global::AndroidX.Compose.BottomSheetScaffold(sheetState),
             sheetState);
         scaffold.Modifier = modifier;
-        scaffold.SheetContent = new Tier2InlineContent(sheetContent);
-        scaffold.Tier2Content = new Tier2InlineContent(content);
+        scaffold.SheetContent = new ComposableContentNode(sheetContent);
+        scaffold.ComposableMethodContent = new ComposableContentNode(content);
         scaffold.SheetDragHandle =
-            Tier2InlineContent.Create(sheetDragHandle);
-        scaffold.TopBar = Tier2InlineContent.Create(topBar);
+            ComposableContentNode.Create(sheetDragHandle);
+        scaffold.TopBar = ComposableContentNode.Create(topBar);
         scaffold.ConfirmValueChange = confirmValueChange;
         scaffold.Render(composer);
     }
@@ -161,9 +161,9 @@ public static partial class Composables
             onClick)
         {
             Modifier = modifier,
-            Icon = icon is null ? null : new Tier2InlineContent(icon),
+            Icon = icon is null ? null : new ComposableContentNode(icon),
         };
-        button.Add(new Tier2InlineContent(label));
+        button.Add(new ComposableContentNode(label));
         using var row = RenderContext.PushRow(count);
         row.SetIndex(index);
         button.Render(composer);
@@ -198,9 +198,9 @@ public static partial class Composables
             onCheckedChange)
         {
             Modifier = modifier,
-            Icon = icon is null ? null : new Tier2InlineContent(icon),
+            Icon = icon is null ? null : new ComposableContentNode(icon),
         };
-        button.Add(new Tier2InlineContent(label));
+        button.Add(new ComposableContentNode(label));
         using var row = RenderContext.PushRow(count);
         row.SetIndex(index);
         button.Render(composer);

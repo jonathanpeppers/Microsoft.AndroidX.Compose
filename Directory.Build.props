@@ -14,7 +14,7 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <NoWarn>$(NoWarn);CS1573;CS1574;CS1591</NoWarn>
     <!--
-      Tier 2 source generator emits [InterceptsLocation] attributes
+      Composable method source generator emits [InterceptsLocation] attributes
       to redirect [Composable] call sites to generator-emitted wrappers
       (mirrors dotnet/maui's BindingSourceGen). The `Interceptors`
       feature is still preview in the C# compiler, so we have to

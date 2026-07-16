@@ -13,7 +13,7 @@ using Microsoft.CodeAnalysis.Text;
 namespace AndroidX.Compose.SourceGenerators;
 
 /// <summary>
-/// Tier 2 source generator. Discovers every call site of a method
+/// Source generator for <c>[Composable]</c> methods. Discovers every call site of a method
 /// marked <c>[AndroidX.Compose.Composable]</c> and emits an
 /// <c>[InterceptsLocation]</c>-decorated wrapper that opens a Compose
 /// restart group, diffs each argument via <c>DiffSlot</c>, skips the

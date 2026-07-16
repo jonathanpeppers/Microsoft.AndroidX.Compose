@@ -1,20 +1,20 @@
 using AndroidX.Compose.Gallery.Registry;
 using static AndroidX.Compose.Composables;
 
-namespace AndroidX.Compose.Gallery.Demos.Tier2;
+namespace AndroidX.Compose.Gallery.Demos.ComposableMethods;
 
-/// <summary>Exercises generic Tier 2 lowering for animation, pagers, and carousels.</summary>
-public static class Tier2GenericContentDemo
+/// <summary>Exercises generic composable-method lowering for animation, pagers, and carousels.</summary>
+public static class GenericComposableContentDemo
 {
     /// <summary>Registry entry exposed via <see cref="Catalog.Demos"/>.</summary>
     public static Demo Demo => new(
-        Id:          "tier2-generic-content",
-        CategoryId:  "tier2",
+        Id:          "composable-generic-content",
+        CategoryId:  "composable-methods",
         Title:       "Generic content adapters",
         Description: "Animated content, pagers, and carousels through generic composerless APIs.",
-        Build:       static _ => new Tier2Adapter(() => GenericContent()));
+        Build:       static _ => new ComposableDemoAdapter(() => GenericContent()));
 
-    /// <summary>Renders bounded examples of every non-lazy generic Tier 2 adapter.</summary>
+    /// <summary>Renders bounded examples of every non-lazy generic composable adapter.</summary>
     [Composable]
     public static void GenericContent()
     {

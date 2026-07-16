@@ -1,20 +1,20 @@
 using AndroidX.Compose.Gallery.Registry;
 using static AndroidX.Compose.Composables;
 
-namespace AndroidX.Compose.Gallery.Demos.Tier2;
+namespace AndroidX.Compose.Gallery.Demos.ComposableMethods;
 
 /// <summary>
 /// Exercises generated ambient overloads for handwritten composable facades.
 /// </summary>
-public static class Tier2HandwrittenHoldoutsDemo
+public static class ComposableHandwrittenAdaptersDemo
 {
     /// <summary>Registry entry exposed via <see cref="Catalog.Demos"/>.</summary>
     public static Demo Demo => new(
-        Id:          "tier2-handwritten-holdouts",
-        CategoryId:  "tier2",
+        Id:          "composable-handwritten-holdouts",
+        CategoryId:  "composable-methods",
         Title:       "Handwritten holdouts",
-        Description: "MaterialTheme, Scaffold, SnackbarHost, and segmented buttons through Tier 2 APIs.",
-        Build:       static _ => new Tier2Adapter(() => HandwrittenHoldouts()));
+        Description: "MaterialTheme, Scaffold, SnackbarHost, and segmented buttons through composable methods.",
+        Build:       static _ => new ComposableDemoAdapter(() => HandwrittenHoldouts()));
 
     /// <summary>Renders the handwritten holdouts unlocked by ambient-overload generation.</summary>
     [Composable]
@@ -156,6 +156,6 @@ public static class Tier2HandwrittenHoldoutsDemo
                             modifier: Modifier.FillMaxWidth());
                     },
                     contentPadding: padding),
-                topBar: () => Text("Tier 2 holdouts")));
+                topBar: () => Text("Composable adapters")));
     }
 }

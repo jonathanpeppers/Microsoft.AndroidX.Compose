@@ -483,10 +483,10 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         if (diags.Count > 0)
             return new GenerationResult(null, null, diags);
 
-        bool emitTier2EntryPoint = !HasExistingComposableEntryPoint(c.Compilation, className);
+        bool emitComposableMethodEntryPoint = !HasExistingComposableEntryPoint(c.Compilation, className);
         var source = Emit(className, method.Name, scope, composerParam, slots, hasMultiSlot,
             callerProvidesDefaults, callerProvidesChanged, defaultsParam, defaults, defaultsType?.Name, themeColor, colorSlot,
-            userParams, branchInfo, indexedChildren, secondaryCtorInfo, emitTier2EntryPoint);
+            userParams, branchInfo, indexedChildren, secondaryCtorInfo, emitComposableMethodEntryPoint);
         var hint = $"AndroidX.Compose.Facade.{className}.g.cs";
         return new GenerationResult(source, hint, []);
     }
@@ -1222,7 +1222,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         BranchInfo? branchInfo,
         bool indexedChildren,
         SecondaryCtorInfo? secondaryCtorInfo,
-        bool emitTier2EntryPoint)
+        bool emitComposableMethodEntryPoint)
     {
         // After classification, only the container's body survives as
         // Content2/3 (multi-slot leafs re-classified to Named/Required).
@@ -1668,9 +1668,9 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         sb.AppendLine("        }");
         sb.AppendLine("    }");
 
-        if (emitTier2EntryPoint)
+        if (emitComposableMethodEntryPoint)
         {
-            EmitTier2EntryPoint(sb, className, bridgeMethodName, scope, slots,
+            EmitComposableMethodEntryPoint(sb, className, bridgeMethodName, scope, slots,
                 callerProvidesDefaults, callerProvidesChanged, defaults, themeColor,
                 primaryUserParams, branchInfo, indexedChildren, secondaryCtorInfo);
         }
@@ -1679,14 +1679,14 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         return sb.ToString();
     }
 
-    enum Tier2Route
+    enum ComposableMethodRoute
     {
         PrimaryResource,
         PrimaryPainter,
         Secondary,
     }
 
-    static void EmitTier2EntryPoint(StringBuilder sb, string className,
+    static void EmitComposableMethodEntryPoint(StringBuilder sb, string className,
         string bridgeMethodName, string? scope, IReadOnlyList<FacadeSlot> slots,
         bool callerProvidesDefaults, bool callerProvidesChanged,
         DefaultsInfo? defaults, string? themeColor,
@@ -1715,40 +1715,40 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         sb.AppendLine();
         sb.AppendLine("    public static partial class Composables");
         sb.AppendLine("    {");
-        EmitTier2Overload(sb, className, bridgeMethodName, scope, slots,
+        EmitComposableMethodOverload(sb, className, bridgeMethodName, scope, slots,
             ctorSlotsAll, requiredCtorSlots, optionalCtorSlots,
             contentSlots, requiredNamedSlots, optionalNamedSlots, hasModifier,
             optionalValueSlots, callerProvidesDefaults, callerProvidesChanged,
             defaults, themeColor, stateConfirmSlots, primaryUserParams,
             branchInfo, indexedChildren, secondaryCtorInfo,
-            Tier2Route.PrimaryResource, implicitComposer: false);
+            ComposableMethodRoute.PrimaryResource, implicitComposer: false);
         sb.AppendLine();
-        EmitTier2Overload(sb, className, bridgeMethodName, scope, slots,
+        EmitComposableMethodOverload(sb, className, bridgeMethodName, scope, slots,
             ctorSlotsAll, requiredCtorSlots, optionalCtorSlots,
             contentSlots, requiredNamedSlots, optionalNamedSlots, hasModifier,
             optionalValueSlots, callerProvidesDefaults, callerProvidesChanged,
             defaults, themeColor, stateConfirmSlots, primaryUserParams,
             branchInfo, indexedChildren, secondaryCtorInfo,
-            Tier2Route.PrimaryResource, implicitComposer: true);
+            ComposableMethodRoute.PrimaryResource, implicitComposer: true);
 
         if (slots.Any(s => s.Kind == FacadeSlotKind.PainterResource))
         {
             sb.AppendLine();
-            EmitTier2Overload(sb, className, bridgeMethodName, scope, slots,
+            EmitComposableMethodOverload(sb, className, bridgeMethodName, scope, slots,
                 ctorSlotsAll, requiredCtorSlots, optionalCtorSlots,
                 contentSlots, requiredNamedSlots, optionalNamedSlots, hasModifier,
                 optionalValueSlots, callerProvidesDefaults, callerProvidesChanged,
                 defaults, themeColor, stateConfirmSlots, primaryUserParams,
                 branchInfo, indexedChildren, secondaryCtorInfo,
-                Tier2Route.PrimaryPainter, implicitComposer: false);
+                ComposableMethodRoute.PrimaryPainter, implicitComposer: false);
             sb.AppendLine();
-            EmitTier2Overload(sb, className, bridgeMethodName, scope, slots,
+            EmitComposableMethodOverload(sb, className, bridgeMethodName, scope, slots,
                 ctorSlotsAll, requiredCtorSlots, optionalCtorSlots,
                 contentSlots, requiredNamedSlots, optionalNamedSlots, hasModifier,
                 optionalValueSlots, callerProvidesDefaults, callerProvidesChanged,
                 defaults, themeColor, stateConfirmSlots, primaryUserParams,
                 branchInfo, indexedChildren, secondaryCtorInfo,
-                Tier2Route.PrimaryPainter, implicitComposer: true);
+                ComposableMethodRoute.PrimaryPainter, implicitComposer: true);
         }
 
         if (secondaryCtorInfo is not null)
@@ -1760,26 +1760,26 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             var secondaryRequired = secondaryCtorSlots.Where(s => !HasFacadeCtorDefault(s)).ToArray();
             var secondaryOptional = secondaryCtorSlots.Where(HasFacadeCtorDefault).ToArray();
             sb.AppendLine();
-            EmitTier2Overload(sb, className, bridgeMethodName, scope, slots,
+            EmitComposableMethodOverload(sb, className, bridgeMethodName, scope, slots,
                 secondaryCtorSlots, secondaryRequired, secondaryOptional,
                 contentSlots, requiredNamedSlots, optionalNamedSlots, hasModifier,
                 optionalValueSlots, callerProvidesDefaults, callerProvidesChanged,
                 defaults, themeColor, stateConfirmSlots, primaryUserParams,
                 branchInfo, indexedChildren, secondaryCtorInfo,
-                Tier2Route.Secondary, implicitComposer: false);
+                ComposableMethodRoute.Secondary, implicitComposer: false);
             sb.AppendLine();
-            EmitTier2Overload(sb, className, bridgeMethodName, scope, slots,
+            EmitComposableMethodOverload(sb, className, bridgeMethodName, scope, slots,
                 secondaryCtorSlots, secondaryRequired, secondaryOptional,
                 contentSlots, requiredNamedSlots, optionalNamedSlots, hasModifier,
                 optionalValueSlots, callerProvidesDefaults, callerProvidesChanged,
                 defaults, themeColor, stateConfirmSlots, primaryUserParams,
                 branchInfo, indexedChildren, secondaryCtorInfo,
-                Tier2Route.Secondary, implicitComposer: true);
+                ComposableMethodRoute.Secondary, implicitComposer: true);
         }
         sb.AppendLine("    }");
     }
 
-    static void EmitTier2Overload(
+    static void EmitComposableMethodOverload(
         StringBuilder sb,
         string className,
         string bridgeMethodName,
@@ -1802,13 +1802,13 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         BranchInfo? branchInfo,
         bool indexedChildren,
         SecondaryCtorInfo? secondaryCtorInfo,
-        Tier2Route route,
+        ComposableMethodRoute route,
         bool implicitComposer)
     {
         string helperName = className + "_" + route
             + (implicitComposer ? "_Implicit" : "_Explicit");
         sb.Append("        /// <summary>")
-          .Append(implicitComposer ? "Implicit-composer Tier 2" : "Tier 2")
+          .Append(implicitComposer ? "Implicit-composer" : "[Composable]")
           .Append(" entry point for <see cref=\"global::AndroidX.Compose.")
           .Append(className).AppendLine("\"/>.</summary>");
         sb.AppendLine("        [global::AndroidX.Compose.Composable]");
@@ -1821,7 +1821,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             sb.Append("global::AndroidX.Compose.Runtime.IComposer composer");
             hasParameter = true;
         }
-        AppendTier2UserParameters(sb, requiredCtorSlots, optionalCtorSlots,
+        AppendComposableMethodUserParameters(sb, requiredCtorSlots, optionalCtorSlots,
             requiredNamedSlots, contentSlots, optionalNamedSlots, optionalValueSlots,
             hasModifier, themeColor, stateConfirmSlots, secondaryCtorInfo,
             route, implicitComposer, ref hasParameter);
@@ -1831,14 +1831,14 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
           .Append(implicitComposer
               ? "global::AndroidX.Compose.ComposableContext.Current"
               : "composer");
-        foreach (var name in Tier2SurfaceParameterNames(requiredCtorSlots,
+        foreach (var name in ComposableMethodSurfaceParameterNames(requiredCtorSlots,
             optionalCtorSlots, requiredNamedSlots, contentSlots, optionalNamedSlots,
             optionalValueSlots, hasModifier, themeColor, stateConfirmSlots,
             secondaryCtorInfo, route))
         {
             sb.Append(", ").Append(EscapeIdent(name));
         }
-        sb.Append(", ").Append(Tier2FallbackOmittedArguments(
+        sb.Append(", ").Append(ComposableMethodFallbackOmittedArguments(
             requiredCtorSlots, optionalCtorSlots, requiredNamedSlots,
             contentSlots, optionalNamedSlots, optionalValueSlots,
             hasModifier, themeColor, stateConfirmSlots, route))
@@ -1850,7 +1850,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         sb.Append("        public static void ").Append(helperName)
           .Append("(global::AndroidX.Compose.Runtime.IComposer __composer");
         hasParameter = true;
-        AppendTier2UserParameters(sb, requiredCtorSlots, optionalCtorSlots,
+        AppendComposableMethodUserParameters(sb, requiredCtorSlots, optionalCtorSlots,
             requiredNamedSlots, contentSlots, optionalNamedSlots, optionalValueSlots,
             hasModifier, themeColor, stateConfirmSlots, secondaryCtorInfo,
             route, implicitComposer, ref hasParameter);
@@ -1860,26 +1860,26 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         {
             sb.Append("            global::System.ArgumentNullException.ThrowIfNull(")
               .Append(EscapeIdent(slot.Kind is FacadeSlotKind.RequiredFunction2 or FacadeSlotKind.RequiredFunction3
-                  ? Tier2Identifier(PropertyName(slot))
+                  ? ComposableMethodIdentifier(PropertyName(slot))
                   : slot.Param.Name))
               .AppendLine(");");
         }
-        if (route == Tier2Route.PrimaryPainter)
+        if (route == ComposableMethodRoute.PrimaryPainter)
         {
             sb.AppendLine("            global::System.ArgumentNullException.ThrowIfNull(painter);");
         }
-        var surfacedIndices = BuildTier2SurfaceIndices(requiredCtorSlots,
+        var surfacedIndices = BuildComposableMethodSurfaceIndices(requiredCtorSlots,
             optionalCtorSlots, requiredNamedSlots, contentSlots, optionalNamedSlots,
             optionalValueSlots, hasModifier, themeColor, stateConfirmSlots,
             secondaryCtorInfo, route, slots);
-        EmitTier2DirectBody(sb, bridgeMethodName, scope, slots,
+        EmitComposableMethodDirectBody(sb, bridgeMethodName, scope, slots,
             callerProvidesDefaults, callerProvidesChanged, defaults, themeColor,
             primaryUserParams, branchInfo, indexedChildren, secondaryCtorInfo,
             route, implicitComposer, surfacedIndices);
         sb.AppendLine("        }");
     }
 
-    static void AppendTier2UserParameters(
+    static void AppendComposableMethodUserParameters(
         StringBuilder sb,
         IReadOnlyList<FacadeSlot> requiredCtorSlots,
         IReadOnlyList<FacadeSlot> optionalCtorSlots,
@@ -1891,52 +1891,52 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         string? themeColor,
         IReadOnlyList<ConfirmStateChangeInfo> stateConfirmSlots,
         SecondaryCtorInfo? secondaryCtorInfo,
-        Tier2Route route,
+        ComposableMethodRoute route,
         bool implicitComposer,
         ref bool hasParameter)
     {
-        if (route == Tier2Route.Secondary)
+        if (route == ComposableMethodRoute.Secondary)
         {
             var secondary = secondaryCtorInfo
-                ?? throw new InvalidOperationException("Secondary Tier 2 route requires secondary constructor metadata.");
-            AppendTier2Separator(sb, ref hasParameter);
+                ?? throw new InvalidOperationException("Secondary composable route requires secondary constructor metadata.");
+            AppendComposableMethodSeparator(sb, ref hasParameter);
             var format = SymbolDisplayFormat.FullyQualifiedFormat
                 .WithMiscellaneousOptions(SymbolDisplayMiscellaneousOptions.UseSpecialTypes);
             sb.Append(secondary.Discriminator.Type.ToDisplayString(format)).Append(' ')
               .Append(EscapeIdent(secondary.Discriminator.Name));
         }
         foreach (var slot in requiredCtorSlots)
-            AppendTier2Parameter(sb, slot, optional: false, route, ref hasParameter);
+            AppendComposableMethodParameter(sb, slot, optional: false, route, ref hasParameter);
         foreach (var slot in requiredNamedSlots)
-            AppendTier2ContentParameter(sb, Tier2Identifier(PropertyName(slot)), optional: false,
+            AppendComposableMethodContentParameter(sb, ComposableMethodIdentifier(PropertyName(slot)), optional: false,
                 implicitComposer, ref hasParameter);
         foreach (var slot in contentSlots)
-            AppendTier2ContentParameter(sb, slot.Param.Name, optional: false,
+            AppendComposableMethodContentParameter(sb, slot.Param.Name, optional: false,
                 implicitComposer, ref hasParameter);
         foreach (var slot in optionalCtorSlots)
-            AppendTier2Parameter(sb, slot, optional: true, route, ref hasParameter);
+            AppendComposableMethodParameter(sb, slot, optional: true, route, ref hasParameter);
         if (hasModifier)
         {
-            AppendTier2Separator(sb, ref hasParameter);
+            AppendComposableMethodSeparator(sb, ref hasParameter);
             sb.Append("global::AndroidX.Compose.Modifier? modifier = null");
         }
         foreach (var slot in optionalNamedSlots)
-            AppendTier2ContentParameter(sb, Tier2Identifier(PropertyName(slot)), optional: true,
+            AppendComposableMethodContentParameter(sb, ComposableMethodIdentifier(PropertyName(slot)), optional: true,
                 implicitComposer, ref hasParameter);
         foreach (var slot in optionalValueSlots)
         {
-            AppendTier2Separator(sb, ref hasParameter);
+            AppendComposableMethodSeparator(sb, ref hasParameter);
             sb.Append(OptionalValueDisplay(slot)).Append(' ')
               .Append(EscapeIdent(slot.Param.Name)).Append(" = null");
         }
         if (themeColor is not null)
         {
-            AppendTier2Separator(sb, ref hasParameter);
+            AppendComposableMethodSeparator(sb, ref hasParameter);
             sb.Append("global::AndroidX.Compose.Color containerColor = default");
         }
         foreach (var info in stateConfirmSlots)
         {
-            AppendTier2Separator(sb, ref hasParameter);
+            AppendComposableMethodSeparator(sb, ref hasParameter);
             var valueType = info.ValueType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat
                 .WithMiscellaneousOptions(SymbolDisplayMiscellaneousOptions.UseSpecialTypes));
             sb.Append("global::System.Func<").Append(valueType).Append(", bool>? ")
@@ -1945,7 +1945,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         }
     }
 
-    static IReadOnlyList<string> Tier2SurfaceParameterNames(
+    static IReadOnlyList<string> ComposableMethodSurfaceParameterNames(
         IReadOnlyList<FacadeSlot> requiredCtorSlots,
         IReadOnlyList<FacadeSlot> optionalCtorSlots,
         IReadOnlyList<FacadeSlot> requiredNamedSlots,
@@ -1956,23 +1956,23 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         string? themeColor,
         IReadOnlyList<ConfirmStateChangeInfo> stateConfirmSlots,
         SecondaryCtorInfo? secondaryCtorInfo,
-        Tier2Route route)
+        ComposableMethodRoute route)
     {
         var names = new List<string>();
-        if (route == Tier2Route.Secondary)
+        if (route == ComposableMethodRoute.Secondary)
         {
             names.Add((secondaryCtorInfo
-                ?? throw new InvalidOperationException("Secondary Tier 2 route requires metadata."))
+                ?? throw new InvalidOperationException("Secondary composable route requires metadata."))
                 .Discriminator.Name);
         }
         names.AddRange(requiredCtorSlots.Select(s =>
-            Tier2SurfaceCtorIdentifier(s, route)));
-        names.AddRange(requiredNamedSlots.Select(s => Tier2Identifier(PropertyName(s))));
+            ComposableMethodSurfaceCtorIdentifier(s, route)));
+        names.AddRange(requiredNamedSlots.Select(s => ComposableMethodIdentifier(PropertyName(s))));
         names.AddRange(contentSlots.Select(s => s.Param.Name));
         names.AddRange(optionalCtorSlots.Select(s =>
-            Tier2SurfaceCtorIdentifier(s, route)));
+            ComposableMethodSurfaceCtorIdentifier(s, route)));
         if (hasModifier) names.Add("modifier");
-        names.AddRange(optionalNamedSlots.Select(s => Tier2Identifier(PropertyName(s))));
+        names.AddRange(optionalNamedSlots.Select(s => ComposableMethodIdentifier(PropertyName(s))));
         names.AddRange(optionalValueSlots.Select(s => s.Param.Name));
         if (themeColor is not null) names.Add("containerColor");
         names.AddRange(stateConfirmSlots.Select(info =>
@@ -1980,7 +1980,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         return names;
     }
 
-    static string Tier2FallbackOmittedArguments(
+    static string ComposableMethodFallbackOmittedArguments(
         IReadOnlyList<FacadeSlot> requiredCtorSlots,
         IReadOnlyList<FacadeSlot> optionalCtorSlots,
         IReadOnlyList<FacadeSlot> requiredNamedSlots,
@@ -1990,9 +1990,9 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         bool hasModifier,
         string? themeColor,
         IReadOnlyList<ConfirmStateChangeInfo> stateConfirmSlots,
-        Tier2Route route)
+        ComposableMethodRoute route)
     {
-        int index = (route == Tier2Route.Secondary ? 1 : 0)
+        int index = (route == ComposableMethodRoute.Secondary ? 1 : 0)
             + requiredCtorSlots.Count
             + requiredNamedSlots.Count
             + contentSlots.Count;
@@ -2000,7 +2000,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
 
         foreach (var slot in optionalCtorSlots)
         {
-            string name = EscapeIdent(Tier2SurfaceCtorIdentifier(slot, route));
+            string name = EscapeIdent(ComposableMethodSurfaceCtorIdentifier(slot, route));
             string condition = slot.Kind == FacadeSlotKind.Primitive
                 ? name + " == " + FormatPrimitiveDefaultLiteral(slot.Param)
                 : name + " is null";
@@ -2010,7 +2010,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             terms.Add(OmittedBitTerm("modifier is null", index++));
         foreach (var slot in optionalNamedSlots)
         {
-            string name = EscapeIdent(Tier2Identifier(PropertyName(slot)));
+            string name = EscapeIdent(ComposableMethodIdentifier(PropertyName(slot)));
             terms.Add(OmittedBitTerm(name + " is null", index++));
         }
         foreach (var slot in optionalValueSlots)
@@ -2037,12 +2037,12 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             + "UL : 0UL)";
     }
 
-    static string Tier2SurfaceCtorIdentifier(FacadeSlot slot, Tier2Route route) =>
-        slot.Kind == FacadeSlotKind.PainterResource && route == Tier2Route.PrimaryPainter
+    static string ComposableMethodSurfaceCtorIdentifier(FacadeSlot slot, ComposableMethodRoute route) =>
+        slot.Kind == FacadeSlotKind.PainterResource && route == ComposableMethodRoute.PrimaryPainter
             ? "painter"
             : CtorIdentifier(slot);
 
-    static IReadOnlyDictionary<string, int> BuildTier2SurfaceIndices(
+    static IReadOnlyDictionary<string, int> BuildComposableMethodSurfaceIndices(
         IReadOnlyList<FacadeSlot> requiredCtorSlots,
         IReadOnlyList<FacadeSlot> optionalCtorSlots,
         IReadOnlyList<FacadeSlot> requiredNamedSlots,
@@ -2053,15 +2053,15 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         string? themeColor,
         IReadOnlyList<ConfirmStateChangeInfo> stateConfirmSlots,
         SecondaryCtorInfo? secondaryCtorInfo,
-        Tier2Route route,
+        ComposableMethodRoute route,
         IReadOnlyList<FacadeSlot> slots)
     {
         var indices = new Dictionary<string, int>(StringComparer.Ordinal);
         int index = 0;
-        if (route == Tier2Route.Secondary)
+        if (route == ComposableMethodRoute.Secondary)
         {
             indices.Add((secondaryCtorInfo
-                ?? throw new InvalidOperationException("Secondary Tier 2 route requires metadata."))
+                ?? throw new InvalidOperationException("Secondary composable route requires metadata."))
                 .Discriminator.Name, index++);
         }
         foreach (var slot in requiredCtorSlots) indices[slot.Param.Name] = index++;
@@ -2084,15 +2084,15 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         return indices;
     }
 
-    static void AppendTier2Parameter(
+    static void AppendComposableMethodParameter(
         StringBuilder sb,
         FacadeSlot slot,
         bool optional,
-        Tier2Route route,
+        ComposableMethodRoute route,
         ref bool hasParameter)
     {
-        AppendTier2Separator(sb, ref hasParameter);
-        if (slot.Kind == FacadeSlotKind.PainterResource && route == Tier2Route.PrimaryPainter)
+        AppendComposableMethodSeparator(sb, ref hasParameter);
+        if (slot.Kind == FacadeSlotKind.PainterResource && route == ComposableMethodRoute.PrimaryPainter)
         {
             sb.Append("global::AndroidX.Compose.UI.Graphics.Painter.Painter painter");
         }
@@ -2109,14 +2109,14 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             sb.Append(" = ").Append(FormatPrimitiveDefaultLiteral(slot.Param));
     }
 
-    static void AppendTier2ContentParameter(
+    static void AppendComposableMethodContentParameter(
         StringBuilder sb,
         string name,
         bool optional,
         bool implicitComposer,
         ref bool hasParameter)
     {
-        AppendTier2Separator(sb, ref hasParameter);
+        AppendComposableMethodSeparator(sb, ref hasParameter);
         sb.Append("[global::AndroidX.Compose.ComposableContentAttribute] ");
         sb.Append(implicitComposer
                 ? "global::System.Action"
@@ -2126,35 +2126,35 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             sb.Append(" = null");
     }
 
-    static void AppendTier2Separator(StringBuilder sb, ref bool hasParameter)
+    static void AppendComposableMethodSeparator(StringBuilder sb, ref bool hasParameter)
     {
         if (hasParameter)
             sb.Append(", ");
         hasParameter = true;
     }
 
-    static string Tier2Identifier(string name) =>
+    static string ComposableMethodIdentifier(string name) =>
         char.ToLowerInvariant(name[0]) + name.Substring(1);
 
-    static void EmitTier2DirectBody(StringBuilder sb, string primaryMethodName,
+    static void EmitComposableMethodDirectBody(StringBuilder sb, string primaryMethodName,
         string? scope, IReadOnlyList<FacadeSlot> slots,
         bool callerProvidesDefaults, bool callerProvidesChanged,
         DefaultsInfo? primaryDefaults, string? themeColor,
         IReadOnlyList<IParameterSymbol> primaryUserParams,
         BranchInfo? branchInfo, bool indexedChildren,
-        SecondaryCtorInfo? secondaryCtorInfo, Tier2Route route,
+        SecondaryCtorInfo? secondaryCtorInfo, ComposableMethodRoute route,
         bool implicitComposer,
         IReadOnlyDictionary<string, int> surfacedIndices)
     {
-        if (route == Tier2Route.Secondary)
+        if (route == ComposableMethodRoute.Secondary)
         {
-            EmitTier2SecondaryBody(sb, slots, secondaryCtorInfo
-                ?? throw new InvalidOperationException("Secondary Tier 2 route requires metadata."),
+            EmitComposableMethodSecondaryBody(sb, slots, secondaryCtorInfo
+                ?? throw new InvalidOperationException("Secondary composable route requires metadata."),
                 scope, indexedChildren, themeColor, implicitComposer, surfacedIndices);
             return;
         }
 
-        EmitTier2StateHolderPreamble(sb, slots);
+        EmitComposableMethodStateHolderPreamble(sb, slots);
         bool needsChanged = callerProvidesChanged
             || branchInfo?.AlternateProvidesChanged == true;
 
@@ -2172,7 +2172,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         }
 
         foreach (var s in slots.Where(s => s.Kind == FacadeSlotKind.Callback))
-            EmitTier2CallbackWrapper(sb, s);
+            EmitComposableMethodCallbackWrapper(sb, s);
 
         var modifierSlot = slots.FirstOrDefault(s => s.Kind == FacadeSlotKind.Modifier);
         bool hasModifier = modifierSlot.Param is not null;
@@ -2193,14 +2193,14 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             {
                 continue;
             }
-            EmitTier2NamedSlotWrapper(sb, s, implicitComposer, "            ");
+            EmitComposableMethodNamedSlotWrapper(sb, s, implicitComposer, "            ");
         }
 
         var contentSlot = slots.FirstOrDefault(s =>
             s.Kind is FacadeSlotKind.Content2 or FacadeSlotKind.Content3);
         if (contentSlot.Param is not null)
         {
-            EmitTier2ContentWrapper(sb, contentSlot, scope, indexedChildren,
+            EmitComposableMethodContentWrapper(sb, contentSlot, scope, indexedChildren,
                 implicitComposer, "            ");
         }
 
@@ -2214,7 +2214,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         bool hasPainter = painterSlot.Param is not null;
         if (hasPainter)
         {
-            if (route == Tier2Route.PrimaryPainter)
+            if (route == ComposableMethodRoute.PrimaryPainter)
             {
                 sb.AppendLine("            var __painterPeer = painter;");
             }
@@ -2229,7 +2229,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
 
         if (branchInfo is not null)
         {
-            EmitTier2BranchedCall(sb, primaryMethodName, slots, primaryUserParams,
+            EmitComposableMethodBranchedCall(sb, primaryMethodName, slots, primaryUserParams,
                 primaryDefaults ?? throw new InvalidOperationException("Branched facade requires primary defaults."),
                 branchInfo, callerProvidesDefaults, callerProvidesChanged,
                 implicitComposer, route, surfacedIndices);
@@ -2239,24 +2239,24 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         IReadOnlyList<string> defaultArguments = [];
         if (primaryDefaults is { } defaults)
         {
-            defaultArguments = EmitTier2DefaultsMask(
+            defaultArguments = EmitComposableMethodDefaultsMask(
                 sb, "            ", defaults, surfacedIndices);
         }
         if (callerProvidesChanged)
         {
-            EmitTier2ForwardedChangedMask(sb, "            ", slots,
+            EmitComposableMethodForwardedChangedMask(sb, "            ", slots,
                 primaryDefaults, surfacedIndices, "__directChanged",
                 "__omittedArguments");
         }
 
         var slotByName = slots.ToDictionary(s => s.Param.Name, StringComparer.Ordinal);
-        EmitTier2BridgeCallByParams(sb, "            ",
+        EmitComposableMethodBridgeCallByParams(sb, "            ",
             ExplicitDefaultsMethod(primaryMethodName, callerProvidesDefaults, defaultArguments),
             primaryUserParams, slotByName, defaultArguments,
             callerProvidesChanged, route);
     }
 
-    static void EmitTier2StateHolderPreamble(StringBuilder sb,
+    static void EmitComposableMethodStateHolderPreamble(StringBuilder sb,
         IReadOnlyList<FacadeSlot> slots)
     {
         foreach (var s in slots.Where(s => s.Kind == FacadeSlotKind.StateHolder))
@@ -2306,7 +2306,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
                 sb.AppendLine("            }");
                 sb.AppendLine("            else");
                 sb.AppendLine("            {");
-                EmitTier2RememberCall(sb, s, holder, "                ");
+                EmitComposableMethodRememberCall(sb, s, holder, "                ");
                 if (s.IsParameterisedStateHolder)
                 {
                     sb.Append("                ").Append(holder)
@@ -2330,7 +2330,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             }
             else
             {
-                EmitTier2RememberCall(sb, s, holder, "            ");
+                EmitComposableMethodRememberCall(sb, s, holder, "            ");
                 if (s.IsParameterisedStateHolder)
                 {
                     sb.Append("            if (").Append(holder).AppendLine(".Jvm is null)");
@@ -2356,7 +2356,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         }
     }
 
-    static void EmitTier2RememberCall(StringBuilder sb, FacadeSlot s,
+    static void EmitComposableMethodRememberCall(StringBuilder sb, FacadeSlot s,
         string holder, string indent)
     {
         sb.Append(indent).Append(s.SharedState ? "__" : "var __").Append(s.Param.Name)
@@ -2375,7 +2375,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         sb.AppendLine("__composer);");
     }
 
-    static void EmitTier2CallbackWrapper(StringBuilder sb, FacadeSlot s)
+    static void EmitComposableMethodCallbackWrapper(StringBuilder sb, FacadeSlot s)
     {
         var t = s.CallbackType
             ?? throw new InvalidOperationException("Callback slot is missing its callback type.");
@@ -2396,10 +2396,10 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
           .Append(" = ").Append(adapter).AppendLine(";");
     }
 
-    static void EmitTier2NamedSlotWrapper(StringBuilder sb, FacadeSlot s,
+    static void EmitComposableMethodNamedSlotWrapper(StringBuilder sb, FacadeSlot s,
         bool implicitComposer, string indent)
     {
-        var id = EscapeIdent(Tier2Identifier(PropertyName(s)));
+        var id = EscapeIdent(ComposableMethodIdentifier(PropertyName(s)));
         int arity = s.Kind is FacadeSlotKind.NamedFunction3 or FacadeSlotKind.RequiredFunction3
             ? 3
             : 2;
@@ -2417,7 +2417,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         sb.Append(adapter).AppendLine(";");
     }
 
-    static void EmitTier2ContentWrapper(StringBuilder sb, FacadeSlot s,
+    static void EmitComposableMethodContentWrapper(StringBuilder sb, FacadeSlot s,
         string? scope, bool indexedChildren, bool implicitComposer,
         string indent)
     {
@@ -2428,7 +2428,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         {
             body = "(__scope, c) => { using var __scopeFrame = global::AndroidX.Compose.RenderContext.PushScope(__scope, global::AndroidX.Compose.ScopeKind."
                 + scope
-                + "); global::AndroidX.Compose.Tier2InlineContent.RenderDirect(c, "
+                + "); global::AndroidX.Compose.ComposableContentNode.RenderDirect(c, "
                 + id
                 + ", "
                 + (indexedChildren ? "true" : "false")
@@ -2436,7 +2436,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         }
         else
         {
-            body = "c => global::AndroidX.Compose.Tier2InlineContent.RenderDirect(c, "
+            body = "c => global::AndroidX.Compose.ComposableContentNode.RenderDirect(c, "
                 + id
                 + ", "
                 + (indexedChildren ? "true" : "false")
@@ -2453,7 +2453,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         _ = implicitComposer;
     }
 
-    static IReadOnlyList<string> EmitTier2DefaultsMask(StringBuilder sb, string indent,
+    static IReadOnlyList<string> EmitComposableMethodDefaultsMask(StringBuilder sb, string indent,
         DefaultsInfo defaults, IReadOnlyDictionary<string, int> surfacedIndices,
         string variable = "__defaults")
     {
@@ -2466,9 +2466,9 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         return plan.ArgumentExpressions(variable);
     }
 
-    static void EmitTier2ChangedMask(StringBuilder sb, string indent,
+    static void EmitComposableMethodChangedMask(StringBuilder sb, string indent,
         IReadOnlyList<FacadeSlot> slots, DefaultsInfo? defaults,
-        Tier2Route route, string variable = "__changed")
+        ComposableMethodRoute route, string variable = "__changed")
     {
         sb.Append(indent).Append("int ").Append(variable).AppendLine(" = 0;");
         int fallbackIndex = 0;
@@ -2499,7 +2499,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
                 case FacadeSlotKind.NamedFunction2:
                 case FacadeSlotKind.NamedFunction3:
                     sb.Append(indent).Append(variable).Append(" |= __composer.DiffSlot<object?>(")
-                      .Append(EscapeIdent(Tier2Identifier(PropertyName(s)))).Append(", ")
+                      .Append(EscapeIdent(ComposableMethodIdentifier(PropertyName(s)))).Append(", ")
                       .Append(shift).AppendLine(");");
                     break;
                 case FacadeSlotKind.Primitive:
@@ -2508,7 +2508,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
                     break;
                 case FacadeSlotKind.PainterResource:
                     sb.Append(indent).Append(variable).Append(" |= __composer.DiffSlot(")
-                      .Append(route == Tier2Route.PrimaryPainter ? "painter" : "drawableResourceId")
+                      .Append(route == ComposableMethodRoute.PrimaryPainter ? "painter" : "drawableResourceId")
                       .Append(", ").Append(shift).AppendLine(");");
                     break;
                 case FacadeSlotKind.ThemeColor:
@@ -2528,7 +2528,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
 
     }
 
-    static void EmitTier2ForwardedChangedMask(
+    static void EmitComposableMethodForwardedChangedMask(
         StringBuilder sb,
         string indent,
         IReadOnlyList<FacadeSlot> slots,
@@ -2538,7 +2538,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         string omittedArgumentsVariable,
         string variable = "__changed")
     {
-        int kotlinParameterCount = Tier2KotlinParameterCount(
+        int kotlinParameterCount = ComposableMethodKotlinParameterCount(
             slots.Count(slot => slot.Kind != FacadeSlotKind.ScopeReceiver),
             defaults);
         if (kotlinParameterCount > 10)
@@ -2608,12 +2608,12 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             }
             if (!hasSourceIndex)
                 continue;
-            EmitTier2ForwardedChangedSlot(
+            EmitComposableMethodForwardedChangedSlot(
                 sb, contributionIndent, inputVariable, sourceIndex, targetIndex, variable);
         }
     }
 
-    static void EmitTier2ForwardedChangedSlot(
+    static void EmitComposableMethodForwardedChangedSlot(
         StringBuilder sb,
         string indent,
         string inputVariable,
@@ -2633,7 +2633,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
           .AppendLine(";");
     }
 
-    static int Tier2KotlinParameterCount(int declaredParameterCount, DefaultsInfo? defaults)
+    static int ComposableMethodKotlinParameterCount(int declaredParameterCount, DefaultsInfo? defaults)
     {
         int defaultsParameterCount = defaults is { Slots.Count: > 0 }
             ? defaults.Value.Slots.Max(slot => slot.Bit) + 1
@@ -2641,17 +2641,17 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         return Math.Max(declaredParameterCount, defaultsParameterCount);
     }
 
-    static void EmitTier2BranchedCall(StringBuilder sb, string primaryMethodName,
+    static void EmitComposableMethodBranchedCall(StringBuilder sb, string primaryMethodName,
         IReadOnlyList<FacadeSlot> slots,
         IReadOnlyList<IParameterSymbol> primaryUserParams,
         DefaultsInfo primaryDefaults, BranchInfo branch,
         bool callerProvidesDefaults, bool callerProvidesChanged,
-        bool implicitComposer, Tier2Route route,
+        bool implicitComposer, ComposableMethodRoute route,
         IReadOnlyDictionary<string, int> surfacedIndices)
     {
         var slotByName = slots.ToDictionary(s => s.Param.Name, StringComparer.Ordinal);
         var branched = branch.BranchedSlot;
-        var branchId = EscapeIdent(Tier2Identifier(branch.BranchProperty));
+        var branchId = EscapeIdent(ComposableMethodIdentifier(branch.BranchProperty));
         sb.Append("            if (").Append(branchId).AppendLine(" is not null)");
         sb.AppendLine("            {");
         var branchValue = "__" + branched.Param.Name + "Content";
@@ -2670,18 +2670,18 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             branchBody);
         sb.Append("                var __").Append(branched.Param.Name)
           .Append(" = ").Append(branchAdapter).AppendLine(";");
-        var alternateDefaultArguments = EmitTier2DefaultsMask(
+        var alternateDefaultArguments = EmitComposableMethodDefaultsMask(
             sb, "                ", branch.AlternateDefaults, surfacedIndices);
         if (branch.AlternateProvidesChanged)
         {
             var altSlots = branch.AlternateUserParams
                 .Where(p => slotByName.ContainsKey(p.Name))
                 .Select(p => slotByName[p.Name]).ToArray();
-            EmitTier2ForwardedChangedMask(sb, "                ", altSlots,
+            EmitComposableMethodForwardedChangedMask(sb, "                ", altSlots,
                 branch.AlternateDefaults, surfacedIndices, "__directChanged",
                 "__omittedArguments");
         }
-        EmitTier2BridgeCallByParams(sb, "                ",
+        EmitComposableMethodBridgeCallByParams(sb, "                ",
             ExplicitDefaultsMethod(branch.AlternateMethodName,
                 branch.AlternateProvidesDefaults, alternateDefaultArguments),
             branch.AlternateUserParams, slotByName, alternateDefaultArguments,
@@ -2689,18 +2689,18 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         sb.AppendLine("            }");
         sb.AppendLine("            else");
         sb.AppendLine("            {");
-        var primaryDefaultArguments = EmitTier2DefaultsMask(
+        var primaryDefaultArguments = EmitComposableMethodDefaultsMask(
             sb, "                ", primaryDefaults, surfacedIndices);
         if (callerProvidesChanged)
         {
             var directSlots = primaryUserParams
                 .Where(p => slotByName.ContainsKey(p.Name))
                 .Select(p => slotByName[p.Name]).ToArray();
-            EmitTier2ForwardedChangedMask(sb, "                ", directSlots,
+            EmitComposableMethodForwardedChangedMask(sb, "                ", directSlots,
                 primaryDefaults, surfacedIndices, "__directChanged",
                 "__omittedArguments");
         }
-        EmitTier2BridgeCallByParams(sb, "                ",
+        EmitComposableMethodBridgeCallByParams(sb, "                ",
             ExplicitDefaultsMethod(primaryMethodName,
                 callerProvidesDefaults, primaryDefaultArguments),
             primaryUserParams, slotByName, primaryDefaultArguments,
@@ -2708,7 +2708,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         sb.AppendLine("            }");
     }
 
-    static void EmitTier2SecondaryBody(StringBuilder sb,
+    static void EmitComposableMethodSecondaryBody(StringBuilder sb,
         IReadOnlyList<FacadeSlot> slots, SecondaryCtorInfo info,
         string? scope, bool indexedChildren, string? themeColor,
         bool implicitComposer,
@@ -2718,7 +2718,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         var secondaryNames = new HashSet<string>(
             info.UserParams.Select(p => p.Name), StringComparer.Ordinal);
         var secondarySlots = slots.Where(s => secondaryNames.Contains(s.Param.Name)).ToArray();
-        EmitTier2StateHolderPreamble(sb, secondarySlots);
+        EmitComposableMethodStateHolderPreamble(sb, secondarySlots);
 
         foreach (var s in secondarySlots.Where(s => s.Kind == FacadeSlotKind.OnClick))
         {
@@ -2732,7 +2732,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
               .Append(" = ").Append(adapter).AppendLine(";");
         }
         foreach (var s in secondarySlots.Where(s => s.Kind == FacadeSlotKind.Callback))
-            EmitTier2CallbackWrapper(sb, s);
+            EmitComposableMethodCallbackWrapper(sb, s);
 
         if (secondarySlots.Any(s => s.Kind == FacadeSlotKind.Modifier))
         {
@@ -2745,13 +2745,13 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             or FacadeSlotKind.NamedFunction3 or FacadeSlotKind.RequiredFunction2
             or FacadeSlotKind.RequiredFunction3))
         {
-            EmitTier2NamedSlotWrapper(sb, s, implicitComposer, "            ");
+            EmitComposableMethodNamedSlotWrapper(sb, s, implicitComposer, "            ");
         }
 
         var content = secondarySlots.FirstOrDefault(s =>
             s.Kind is FacadeSlotKind.Content2 or FacadeSlotKind.Content3);
         if (content.Param is not null)
-            EmitTier2ContentWrapper(sb, content, scope, indexedChildren,
+            EmitComposableMethodContentWrapper(sb, content, scope, indexedChildren,
                 implicitComposer, "            ");
 
         if (themeColor is not null)
@@ -2768,18 +2768,18 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             sb.AppendLine("                ?? throw new global::System.InvalidOperationException(\"PainterResource returned no Painter peer.\");");
         }
 
-        var defaultArguments = EmitTier2DefaultsMask(
+        var defaultArguments = EmitComposableMethodDefaultsMask(
             sb, "            ", info.Defaults, surfacedIndices);
 
         if (hasChanged)
         {
-            EmitTier2ForwardedChangedMask(sb, "            ", secondarySlots,
+            EmitComposableMethodForwardedChangedMask(sb, "            ", secondarySlots,
                 info.Defaults, surfacedIndices, "__directChanged",
                 "__omittedArguments");
             int index = info.Defaults.FindByKotlinName(info.Discriminator.Name)?.Bit ?? 0;
             int secondaryParameterCount = secondarySlots.Count(
                 slot => slot.Kind != FacadeSlotKind.ScopeReceiver) + 1;
-            if (Tier2KotlinParameterCount(
+            if (ComposableMethodKotlinParameterCount(
                     secondaryParameterCount, info.Defaults) <= 10 &&
                 surfacedIndices.TryGetValue(
                 info.Discriminator.Name, out int surfaceIndex) &&
@@ -2793,23 +2793,23 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
                       .Append((1UL << surfaceIndex).ToString(
                           "X", System.Globalization.CultureInfo.InvariantCulture))
                       .AppendLine("UL) == 0)");
-                    EmitTier2ForwardedChangedSlot(
+                    EmitComposableMethodForwardedChangedSlot(
                         sb, "                ", "__directChanged", surfaceIndex, index);
                 }
                 else
                 {
-                    EmitTier2ForwardedChangedSlot(
+                    EmitComposableMethodForwardedChangedSlot(
                         sb, "            ", "__directChanged", surfaceIndex, index);
                 }
             }
         }
 
         var slotByName = secondarySlots.ToDictionary(s => s.Param.Name, StringComparer.Ordinal);
-        EmitTier2BridgeCallByParams(sb, "            ",
+        EmitComposableMethodBridgeCallByParams(sb, "            ",
             ExplicitDefaultsMethod(info.Method.Name,
                 info.SecondaryProvidesDefaults, defaultArguments),
             info.UserParams, slotByName, defaultArguments,
-            hasChanged, Tier2Route.Secondary, info.Discriminator.Name);
+            hasChanged, ComposableMethodRoute.Secondary, info.Discriminator.Name);
     }
 
     static string ExplicitDefaultsMethod(
@@ -2820,11 +2820,11 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             ? methodName + "ExplicitDefaults"
             : methodName;
 
-    static void EmitTier2BridgeCallByParams(StringBuilder sb, string indent,
+    static void EmitComposableMethodBridgeCallByParams(StringBuilder sb, string indent,
         string methodName, IReadOnlyList<IParameterSymbol> userParams,
         IReadOnlyDictionary<string, FacadeSlot> slotByName,
         IReadOnlyList<string> defaultArguments, bool callerProvidesChanged,
-        Tier2Route route, string? discriminatorName = null)
+        ComposableMethodRoute route, string? discriminatorName = null)
     {
         sb.Append(indent).Append("global::AndroidX.Compose.ComposeBridges.")
           .Append(methodName).Append('(');
@@ -2836,7 +2836,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             if (p.Name == discriminatorName)
                 sb.Append(EscapeIdent(p.Name));
             else if (slotByName.TryGetValue(p.Name, out var slot))
-                sb.Append(Tier2BridgeArgExpr(slot, route));
+                sb.Append(ComposableMethodBridgeArgExpr(slot, route));
             else
                 sb.Append("default");
         }
@@ -2854,7 +2854,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         sb.AppendLine(");");
     }
 
-    static string Tier2BridgeArgExpr(FacadeSlot s, Tier2Route route) =>
+    static string ComposableMethodBridgeArgExpr(FacadeSlot s, ComposableMethodRoute route) =>
         s.Kind switch
         {
             FacadeSlotKind.Modifier => "__modifier",
@@ -2868,7 +2868,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             FacadeSlotKind.PainterResource => "__painterPeer",
             FacadeSlotKind.ThemeColor => "__color",
             FacadeSlotKind.ScopeReceiver => "global::AndroidX.Compose.RenderContext.CurrentScope",
-            _ => route == Tier2Route.Secondary ? "default" : "default",
+            _ => route == ComposableMethodRoute.Secondary ? "default" : "default",
         };
 
     static void EmitBranchedRender(StringBuilder sb, string indent,

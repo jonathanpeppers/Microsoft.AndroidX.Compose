@@ -59,7 +59,7 @@ public static partial class ComposeExtensions
 
     /// <summary>
     /// Sets the activity's content view to a directly composer-threaded
-    /// Tier 2 composition. Use this overload when the root is a
+    /// composable-method composition. Use this overload when the root is a
     /// <see cref="ComposableAttribute"/> static method.
     /// </summary>
     public static void SetContent(
@@ -71,11 +71,11 @@ public static partial class ComposeExtensions
         var view = new ComposeView(activity);
         view.SetContent(content);
         activity.SetContentView(view);
-        Log.Debug(TAG, "ComponentActivity Tier 2 content set");
+        Log.Debug(TAG, "ComponentActivity composable content set");
     }
 
     /// <summary>
-    /// Sets the activity's content to an implicit-composer Tier 2 composition.
+    /// Sets the activity's content to an implicit-composer composition.
     /// </summary>
     public static void SetContent(
         this ComponentActivity activity,
@@ -86,7 +86,7 @@ public static partial class ComposeExtensions
         var view = new ComposeView(activity);
         view.SetContent(content);
         activity.SetContentView(view);
-        Log.Debug(TAG, "ComponentActivity implicit Tier 2 content set");
+        Log.Debug(TAG, "ComponentActivity implicit composable content set");
     }
 
     /// <summary>
@@ -134,7 +134,7 @@ public static partial class ComposeExtensions
     }
 
     /// <summary>
-    /// Installs a directly composer-threaded Tier 2 composition as this
+    /// Installs a directly composer-threaded composition as this
     /// <see cref="ComposeView"/>'s content.
     /// </summary>
     public static void SetContent(
@@ -154,7 +154,7 @@ public static partial class ComposeExtensions
     }
 
     /// <summary>
-    /// Installs an implicit-composer Tier 2 composition as this
+    /// Installs an implicit-composer composition as this
     /// <see cref="ComposeView"/>'s content.
     /// </summary>
     public static void SetContent(

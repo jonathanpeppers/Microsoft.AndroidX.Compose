@@ -1,20 +1,20 @@
 using AndroidX.Compose.Gallery.Registry;
 using static AndroidX.Compose.Composables;
 
-namespace AndroidX.Compose.Gallery.Demos.Tier2;
+namespace AndroidX.Compose.Gallery.Demos.ComposableMethods;
 
-/// <summary>Exercises generic Tier 2 lowering across every typed lazy container.</summary>
-public static class Tier2LazyCollectionsDemo
+/// <summary>Exercises generic composable-method lowering across every typed lazy container.</summary>
+public static class ComposableLazyCollectionsDemo
 {
     /// <summary>Registry entry exposed via <see cref="Catalog.Demos"/>.</summary>
     public static Demo Demo => new(
-        Id:          "tier2-lazy-collections",
-        CategoryId:  "tier2",
+        Id:          "composable-lazy-collections",
+        CategoryId:  "composable-methods",
         Title:       "Generic lazy collections",
         Description: "All six typed lazy containers rendered through generic composerless APIs.",
-        Build:       static _ => new Tier2Adapter(() => LazyCollections()));
+        Build:       static _ => new ComposableDemoAdapter(() => LazyCollections()));
 
-    /// <summary>Renders bounded examples of every generic lazy Tier 2 entry point.</summary>
+    /// <summary>Renders bounded examples of every generic lazy composable entry point.</summary>
     [Composable]
     public static void LazyCollections()
     {

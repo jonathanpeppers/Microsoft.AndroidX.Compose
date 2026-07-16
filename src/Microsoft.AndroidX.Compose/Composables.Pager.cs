@@ -18,7 +18,7 @@ public static partial class Composables
 
         new global::AndroidX.Compose.HorizontalPager<T>(
             items,
-            item => new Tier2InlineContent(_ => itemContent(item)))
+            item => new ComposableContentNode(_ => itemContent(item)))
         {
             Modifier = modifier,
             State = state,
@@ -42,7 +42,7 @@ public static partial class Composables
 
         new global::AndroidX.Compose.HorizontalPager<T>(
             items,
-            item => new Tier2InlineContent(c => itemContent(item, c)))
+            item => new ComposableContentNode(c => itemContent(item, c)))
         {
             Modifier = modifier,
             State = state,
@@ -64,7 +64,7 @@ public static partial class Composables
 
         new global::AndroidX.Compose.VerticalPager<T>(
             items,
-            item => new Tier2InlineContent(_ => itemContent(item)))
+            item => new ComposableContentNode(_ => itemContent(item)))
         {
             Modifier = modifier,
             State = state,
@@ -88,7 +88,7 @@ public static partial class Composables
 
         new global::AndroidX.Compose.VerticalPager<T>(
             items,
-            item => new Tier2InlineContent(c => itemContent(item, c)))
+            item => new ComposableContentNode(c => itemContent(item, c)))
         {
             Modifier = modifier,
             State = state,

@@ -186,9 +186,9 @@ public class FacadeGeneratorTests
                 protected void RenderChildren(global::AndroidX.Compose.Runtime.IComposer composer) { }
                 private protected void RenderChildrenIndexed(global::AndroidX.Compose.Runtime.IComposer composer) { }
             }
-            internal sealed class Tier2InlineContent : ComposableNode
+            internal sealed class ComposableContentNode : ComposableNode
             {
-                public Tier2InlineContent(System.Action<global::AndroidX.Compose.Runtime.IComposer> body) { }
+                public ComposableContentNode(System.Action<global::AndroidX.Compose.Runtime.IComposer> body) { }
                 public override void Render(global::AndroidX.Compose.Runtime.IComposer composer) { }
                 internal static void RenderDirect(global::AndroidX.Compose.Runtime.IComposer composer,
                     System.Action<global::AndroidX.Compose.Runtime.IComposer> body, bool indexed) { }
@@ -320,7 +320,7 @@ public class FacadeGeneratorTests
         Assert.Contains("public sealed partial class Button : global::AndroidX.Compose.ComposableContainer", emitted);
         Assert.Contains("public static void Button(global::AndroidX.Compose.Runtime.IComposer composer, global::System.Action onClick, [global::AndroidX.Compose.ComposableContentAttribute] global::System.Action<global::AndroidX.Compose.Runtime.IComposer> content", emitted);
         Assert.Contains(
-            "var __content = global::AndroidX.Compose.ComposableLambdas.Wrap3(__composer, c => global::AndroidX.Compose.Tier2InlineContent.RenderDirect(c, content, false));",
+            "var __content = global::AndroidX.Compose.ComposableLambdas.Wrap3(__composer, c => global::AndroidX.Compose.ComposableContentNode.RenderDirect(c, content, false));",
             emitted);
         Assert.DoesNotContain("var node = new global::AndroidX.Compose.Button", emitted);
         Assert.Contains("readonly global::System.Action _onClick;", emitted);
@@ -368,7 +368,7 @@ public class FacadeGeneratorTests
             "public static void Button(global::System.Action onClick, [global::AndroidX.Compose.ComposableContentAttribute] global::System.Action content",
             emitted);
         Assert.Contains(
-            "var __content = global::AndroidX.Compose.ComposableLambdas.Wrap3(__composer, c => global::AndroidX.Compose.Tier2InlineContent.RenderDirect(c, content, false));",
+            "var __content = global::AndroidX.Compose.ComposableLambdas.Wrap3(__composer, c => global::AndroidX.Compose.ComposableContentNode.RenderDirect(c, content, false));",
             emitted);
         Assert.Contains(
             "global::System.ArgumentNullException.ThrowIfNull(content);",
@@ -987,7 +987,7 @@ public class FacadeGeneratorTests
         Assert.Contains("Wrap3(composer, (__scope, c) =>", emitted);
         Assert.Contains("global::AndroidX.Compose.RenderContext.PushScope(__scope, global::AndroidX.Compose.ScopeKind.Row);", emitted);
         Assert.Contains("Wrap3(__composer, (__scope, c) =>", emitted);
-        Assert.Contains("global::AndroidX.Compose.Tier2InlineContent.RenderDirect(c, content, false);", emitted);
+        Assert.Contains("global::AndroidX.Compose.ComposableContentNode.RenderDirect(c, content, false);", emitted);
         Assert.DoesNotContain("var node = new global::AndroidX.Compose.NavigationBar", emitted);
 
         var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
@@ -1166,7 +1166,7 @@ public class FacadeGeneratorTests
         // Per-child indexed loop instead of plain RenderChildren.
         Assert.Contains("RenderChildrenIndexed(c);", emitted);
         Assert.DoesNotContain("RenderChildren(c);", emitted);
-        Assert.Contains("global::AndroidX.Compose.Tier2InlineContent.RenderDirect(c, content, true);", emitted);
+        Assert.Contains("global::AndroidX.Compose.ComposableContentNode.RenderDirect(c, content, true);", emitted);
         Assert.DoesNotContain("var node = new global::AndroidX.Compose.SingleChoiceSegmentedButtonRow", emitted);
 
         var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
@@ -2375,7 +2375,7 @@ public class FacadeGeneratorTests
     }
 
     [Fact]
-    public void Tier2_StateHolderBeforeFacadeDefaultPrimitive_EmitsValidOptionalParameters()
+    public void ComposableMethod_StateHolderBeforeFacadeDefaultPrimitive_EmitsValidOptionalParameters()
     {
         var code = $$"""
             using global::AndroidX.Compose.Runtime;
@@ -2823,7 +2823,7 @@ public class FacadeGeneratorTests
         Assert.Contains("public global::AndroidX.Compose.Sp? FontSize { get; set; }", emitted);
         // Bridge call passes property through (no ctor slot, no field).
         Assert.Contains("global::AndroidX.Compose.ComposeBridges.Text(_text, BuildModifier(), FontSize, composer);", emitted);
-        // Not a tree-facade ctor parameter; Tier 2 exposes it directly.
+        // Not a tree-facade ctor parameter; composable method exposes it directly.
         Assert.Contains("public Text(string text)", emitted);
         Assert.Contains("global::AndroidX.Compose.Sp? fontSize = null", emitted);
 
@@ -3303,7 +3303,7 @@ public class FacadeGeneratorTests
         Assert.Contains("public long? Color { get; set; }", emitted);
         // The bridge call passes the property names through.
         Assert.Contains("global::AndroidX.Compose.ComposeBridges.F(_text, BuildModifier(), SoftWrap, MaxLines, Color, composer);", emitted);
-        // Not surfaced as tree-facade ctor parameters; Tier 2 exposes
+        // Not surfaced as tree-facade ctor parameters; composable method exposes
         // each optional property directly.
         Assert.Contains("public F(string text)", emitted);
         Assert.Contains("bool? softWrap = null", emitted);
@@ -4383,7 +4383,7 @@ public class FacadeGeneratorTests
         Assert.NotNull(emitted);
         Assert.Contains("public static void Combined(global::AndroidX.Compose.Runtime.IComposer composer, global::AndroidX.Compose.UI.Graphics.Vector.ImageVector imageVector, int drawableResourceId,", emitted);
         Assert.Contains("global::AndroidX.Compose.RenderContext.PushScope(__scope, global::AndroidX.Compose.ScopeKind.Row);", emitted);
-        Assert.Contains("global::AndroidX.Compose.Tier2InlineContent.RenderDirect(c, content, true);", emitted);
+        Assert.Contains("global::AndroidX.Compose.ComposableContentNode.RenderDirect(c, content, true);", emitted);
         Assert.Contains("long __color = (long)containerColor != 0L ? (long)containerColor", emitted);
         Assert.Contains("var __painterRef = global::AndroidX.Compose.ComposeBridges.PainterResource(drawableResourceId, __composer);", emitted);
         Assert.Contains("global::AndroidX.Compose.ComposeBridges.Secondary(imageVector, __painterPeer, __content, __color, (int)__defaults, __composer);", emitted);
@@ -4666,7 +4666,7 @@ public class FacadeGeneratorTests
         Assert.Contains("var __onClick = composer.RememberAction(_onClick);", emitted);
         Assert.Contains("var __onClick = __composer.RememberAction(onClick);", emitted);
         Assert.Contains(
-            "var __content = global::AndroidX.Compose.ComposableLambdas.Wrap3(__composer, c => global::AndroidX.Compose.Tier2InlineContent.RenderDirect(c, content, false));",
+            "var __content = global::AndroidX.Compose.ComposableLambdas.Wrap3(__composer, c => global::AndroidX.Compose.ComposableContentNode.RenderDirect(c, content, false));",
             emitted);
         Assert.Contains("global::AndroidX.Compose.ComposeBridges.Button(__onClick, BuildModifier(), __content, composer);", emitted);
 

@@ -674,7 +674,7 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
 
         // Auto-mask bridges keep their declared partial method as the
         // compatibility entry point, but delegate JNI dispatch to a generated
-        // sibling that accepts the already-computed mask. Tier 2 direct
+        // sibling that accepts the already-computed mask. Direct-lowered
         // helpers call that sibling so explicit null is distinguishable from
         // an omitted C# optional argument.
         EmitMethodSignature(sb, method);

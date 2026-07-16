@@ -279,7 +279,7 @@ internal static class Diagnostics
     public static readonly DiagnosticDescriptor ComposableNotStatic = new(
         id: "CN5001",
         title: "[Composable] method must be static",
-        messageFormat: "Method '{0}' carries [Composable] but is not declared 'static' — Tier 2 intercepts call sites to a static method",
+        messageFormat: "Method '{0}' carries [Composable] but is not declared 'static' — the generator intercepts call sites to a static method",
         category: "AndroidX.Compose",
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);
@@ -287,7 +287,7 @@ internal static class Diagnostics
     public static readonly DiagnosticDescriptor ComposableReturnsNotVoid = new(
         id: "CN5002",
         title: "[Composable] method must return void",
-        messageFormat: "Method '{0}' carries [Composable] but its return type is not 'void' — Tier 2 currently supports only 'void' composables",
+        messageFormat: "Method '{0}' carries [Composable] but its return type is not 'void' — the generator currently supports only 'void' composables",
         category: "AndroidX.Compose",
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);
@@ -327,7 +327,7 @@ internal static class Diagnostics
     public static readonly DiagnosticDescriptor ComposableByRefUnsupported = new(
         id: "CN5008",
         title: "[Composable] by-reference parameters are not supported",
-        messageFormat: "Method '{0}' carries [Composable] but parameter '{1}' uses '{2}' — Tier 2 currently supports only by-value parameters",
+        messageFormat: "Method '{0}' carries [Composable] but parameter '{1}' uses '{2}' — the generator currently supports only by-value parameters",
         category: "AndroidX.Compose",
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);

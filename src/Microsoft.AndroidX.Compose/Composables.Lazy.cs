@@ -23,7 +23,7 @@ public static partial class Composables
 
         new global::AndroidX.Compose.LazyColumn<T>(
             items,
-            item => new Tier2InlineContent(_ => itemContent(item)))
+            item => new ComposableContentNode(_ => itemContent(item)))
         {
             Modifier = modifier,
             State = state,
@@ -51,7 +51,7 @@ public static partial class Composables
 
         new global::AndroidX.Compose.LazyColumn<T>(
             items,
-            item => new Tier2InlineContent(c => itemContent(item, c)))
+            item => new ComposableContentNode(c => itemContent(item, c)))
         {
             Modifier = modifier,
             State = state,
@@ -76,7 +76,7 @@ public static partial class Composables
 
         new global::AndroidX.Compose.LazyRow<T>(
             items,
-            item => new Tier2InlineContent(_ => itemContent(item)))
+            item => new ComposableContentNode(_ => itemContent(item)))
         {
             Modifier = modifier,
             State = state,
@@ -102,7 +102,7 @@ public static partial class Composables
 
         new global::AndroidX.Compose.LazyRow<T>(
             items,
-            item => new Tier2InlineContent(c => itemContent(item, c)))
+            item => new ComposableContentNode(c => itemContent(item, c)))
         {
             Modifier = modifier,
             State = state,
@@ -130,7 +130,7 @@ public static partial class Composables
         new global::AndroidX.Compose.LazyVerticalGrid<T>(
             columns,
             items,
-            item => new Tier2InlineContent(_ => itemContent(item)))
+            item => new ComposableContentNode(_ => itemContent(item)))
         {
             Modifier = modifier,
             State = state,
@@ -161,7 +161,7 @@ public static partial class Composables
         new global::AndroidX.Compose.LazyVerticalGrid<T>(
             columns,
             items,
-            item => new Tier2InlineContent(c => itemContent(item, c)))
+            item => new ComposableContentNode(c => itemContent(item, c)))
         {
             Modifier = modifier,
             State = state,
@@ -188,7 +188,7 @@ public static partial class Composables
         new global::AndroidX.Compose.LazyHorizontalGrid<T>(
             rows,
             items,
-            item => new Tier2InlineContent(_ => itemContent(item)))
+            item => new ComposableContentNode(_ => itemContent(item)))
         {
             Modifier = modifier,
             State = state,
@@ -215,7 +215,7 @@ public static partial class Composables
         new global::AndroidX.Compose.LazyHorizontalGrid<T>(
             rows,
             items,
-            item => new Tier2InlineContent(c => itemContent(item, c)))
+            item => new ComposableContentNode(c => itemContent(item, c)))
         {
             Modifier = modifier,
             State = state,
@@ -240,7 +240,7 @@ public static partial class Composables
         new global::AndroidX.Compose.LazyVerticalStaggeredGrid<T>(
             columns,
             items,
-            item => new Tier2InlineContent(_ => itemContent(item)))
+            item => new ComposableContentNode(_ => itemContent(item)))
         {
             Modifier = modifier,
             State = state,
@@ -267,7 +267,7 @@ public static partial class Composables
         new global::AndroidX.Compose.LazyVerticalStaggeredGrid<T>(
             columns,
             items,
-            item => new Tier2InlineContent(c => itemContent(item, c)))
+            item => new ComposableContentNode(c => itemContent(item, c)))
         {
             Modifier = modifier,
             State = state,
@@ -292,7 +292,7 @@ public static partial class Composables
         new global::AndroidX.Compose.LazyHorizontalStaggeredGrid<T>(
             rows,
             items,
-            item => new Tier2InlineContent(_ => itemContent(item)))
+            item => new ComposableContentNode(_ => itemContent(item)))
         {
             Modifier = modifier,
             State = state,
@@ -319,7 +319,7 @@ public static partial class Composables
         new global::AndroidX.Compose.LazyHorizontalStaggeredGrid<T>(
             rows,
             items,
-            item => new Tier2InlineContent(c => itemContent(item, c)))
+            item => new ComposableContentNode(c => itemContent(item, c)))
         {
             Modifier = modifier,
             State = state,

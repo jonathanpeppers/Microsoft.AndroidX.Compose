@@ -19,7 +19,7 @@ public static partial class Composables
         new global::AndroidX.Compose.SearchBar(state)
         {
             Modifier = modifier,
-            InputField = new Tier2InlineContent(inputField),
+            InputField = new ComposableContentNode(inputField),
         }.Render(composer);
     }
 
@@ -38,7 +38,7 @@ public static partial class Composables
         new global::AndroidX.Compose.TopSearchBar(state)
         {
             Modifier = modifier,
-            InputField = new Tier2InlineContent(inputField),
+            InputField = new ComposableContentNode(inputField),
         }.Render(composer);
     }
 
@@ -59,9 +59,9 @@ public static partial class Composables
         var search = new global::AndroidX.Compose.ExpandedDockedSearchBar(state)
         {
             Modifier = modifier,
-            InputField = new Tier2InlineContent(inputField),
+            InputField = new ComposableContentNode(inputField),
         };
-        search.Add(new Tier2InlineContent(content));
+        search.Add(new ComposableContentNode(content));
         search.Render(composer);
     }
 
@@ -83,9 +83,9 @@ public static partial class Composables
             new global::AndroidX.Compose.ExpandedFullScreenSearchBar(state)
             {
                 Modifier = modifier,
-                InputField = new Tier2InlineContent(inputField),
+                InputField = new ComposableContentNode(inputField),
             };
-        search.Add(new Tier2InlineContent(content));
+        search.Add(new ComposableContentNode(content));
         search.Render(composer);
     }
 
@@ -111,9 +111,9 @@ public static partial class Composables
         {
             OnSearch = onSearch,
             Modifier = modifier,
-            Placeholder = Tier2InlineContent.Create(placeholder),
-            LeadingIcon = Tier2InlineContent.Create(leadingIcon),
-            TrailingIcon = Tier2InlineContent.Create(trailingIcon),
+            Placeholder = ComposableContentNode.Create(placeholder),
+            LeadingIcon = ComposableContentNode.Create(leadingIcon),
+            TrailingIcon = ComposableContentNode.Create(trailingIcon),
         }.Render(composer);
     }
 
@@ -138,9 +138,9 @@ public static partial class Composables
             onExpandedChange)
         {
             Modifier = modifier,
-            InputField = new Tier2InlineContent(inputField),
+            InputField = new ComposableContentNode(inputField),
         };
-        search.Add(new Tier2InlineContent(content));
+        search.Add(new ComposableContentNode(content));
         search.Render(composer);
     }
 
@@ -175,11 +175,11 @@ public static partial class Composables
             onActiveChange)
         {
             Modifier = modifier,
-            Placeholder = Tier2InlineContent.Create(placeholder),
-            LeadingIcon = Tier2InlineContent.Create(leadingIcon),
-            TrailingIcon = Tier2InlineContent.Create(trailingIcon),
+            Placeholder = ComposableContentNode.Create(placeholder),
+            LeadingIcon = ComposableContentNode.Create(leadingIcon),
+            TrailingIcon = ComposableContentNode.Create(trailingIcon),
         };
-        search.Add(new Tier2InlineContent(content));
+        search.Add(new ComposableContentNode(content));
         search.Render(composer);
     }
 }

@@ -18,7 +18,7 @@ namespace AndroidX.Compose;
 /// <see cref="ComposableLambda4"/> adapters, by
 /// <see cref="ComposableNode.Render(IComposer)"/> overrides, and by the
 /// <see cref="SetContent(AndroidX.Activity.ComponentActivity, Func{IComposer, ComposableNode})"/>
-/// entry point. Tier 2's composerless prototype additionally exposes that
+/// entry point. Composerless methods additionally expose that
 /// explicit value through <see cref="ComposableContext"/> for the duration
 /// of synchronous composable calls. Deferred callbacks outside that scope
 /// must use an explicit composer-bearing boundary.

@@ -32,7 +32,7 @@ public static class Catalog
         new("state-effects",       "State, effects, anim.",  "Remember, side effects, animation",            "✨"),
         new("locals-misc",         "CompositionLocal & misc","Locals, progress, image, icon",                "🧩"),
         new("theming",             "Theming",                "Custom palette, shapes, typography, icons",    "🎨"),
-        new("tier2",               "Tier 2 [Composable]",    "Zero-alloc static [Composable] methods",       "⚡"),
+        new("composable-methods",  "Composable methods",      "Static [Composable] methods and skipping",     "⚡"),
     ];
 
     /// <summary>
@@ -205,13 +205,13 @@ public static class Catalog
         D.Theming.CustomTypographyDemo.Demo,
         D.Theming.MaterialIconsDemo.Demo,
 
-        // ---- Tier 2 [Composable] ----
-        D.Tier2.Tier2CounterDemo.Demo,
-        D.Tier2.Tier2GenericContentDemo.Demo,
-        D.Tier2.Tier2HandwrittenHoldoutsDemo.Demo,
-        D.Tier2.Tier2LazyCollectionsDemo.Demo,
-        D.Tier2.Tier2SiblingSkipDemo.Demo,
-        D.Tier2.Tier2RealAppBenchmarkDemo.Demo,
+        // ---- Composable methods ----
+        D.ComposableMethods.ComposableCounterDemo.Demo,
+        D.ComposableMethods.GenericComposableContentDemo.Demo,
+        D.ComposableMethods.ComposableHandwrittenAdaptersDemo.Demo,
+        D.ComposableMethods.ComposableLazyCollectionsDemo.Demo,
+        D.ComposableMethods.ComposableSiblingSkipDemo.Demo,
+        D.ComposableMethods.ComposableMethodBenchmarkDemo.Demo,
     ];
 
     /// <summary>

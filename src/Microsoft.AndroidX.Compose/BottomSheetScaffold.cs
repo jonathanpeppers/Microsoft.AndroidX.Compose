@@ -54,7 +54,7 @@ public sealed class BottomSheetScaffold : ComposableContainer
     /// <summary>Required: the persistent bottom-sheet content.</summary>
     public ComposableNode? SheetContent { get; set; }
 
-    internal ComposableNode? Tier2Content { get; set; }
+    internal ComposableNode? ComposableMethodContent { get; set; }
 
     /// <summary>Optional: the sheet's drag handle.</summary>
     public ComposableNode? SheetDragHandle { get; set; }
@@ -110,15 +110,15 @@ public sealed class BottomSheetScaffold : ComposableContainer
         var sheet = ComposableLambdas.Wrap3(
             composer,
             c => SheetContent.Render(c));
-        var tier2Content = Tier2Content;
+        var composableMethodContent = ComposableMethodContent;
         var content = ComposableLambdas.Wrap3(
             composer,
             c =>
             {
-                if (tier2Content is null)
+                if (composableMethodContent is null)
                     RenderChildren(c);
                 else
-                    tier2Content.Render(c);
+                    composableMethodContent.Render(c);
             });
 
         var dragHandle = SheetDragHandle is null ? null

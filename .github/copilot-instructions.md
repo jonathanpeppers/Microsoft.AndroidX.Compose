@@ -195,7 +195,7 @@ pattern; see `ComposeBridges.cs` for live examples (`PainterResource`,
   parameter order must match Kotlin bytecode order.
 - Auto-mask bridges also receive an internal generated
   `<MethodName>ExplicitDefaults` sibling. The declared partial method keeps
-  nullable runtime auto-masking for existing callers; Tier 2 direct helpers
+  nullable runtime auto-masking for existing callers; direct composable helpers
   call the sibling with their omission-aware generated enum mask. At 32+
   Kotlin slots the sibling accepts the two values returned by `.Split()`.
 
@@ -311,7 +311,7 @@ helpers, operators.
   Phase 9 below.
 - `Container = true` (Phase 8 variant): see Phase 8 below.
 
-Every supported generated facade automatically receives a composerless Tier 2
+Every supported generated facade automatically receives a composerless `[Composable]`
 overload. Its body reads `ComposableContext.Current`, and composable content
 slots surface as `Action` instead of `Action<IComposer>`.
 
@@ -998,7 +998,7 @@ helper, and each partial-property body.
 Tests in `CompanionGeneratorTests.cs`. **Add a test for any new
 behaviour.**
 
-## Tier 2 — `[Composable]` static methods
+## Composable methods — `[Composable]` static methods
 
 User-facing surface for the C# compose-compiler equivalent: a Roslyn
 incremental source generator (`ComposableMethodGenerator`) emits a
@@ -1135,10 +1135,10 @@ name (not the user method), so it never needs interception.
 Both styles can call into each other freely:
 
 - A tree-style facade `Render` (or `SetContent`'s callback) can invoke
-  a Tier 2 `[Composable]` method directly — each call site is
+  a `[Composable]` method directly — each call site is
   intercepted normally and the wrapper sets up its own restart group
   inside the surrounding tree-style render.
-- A Tier 2 method can construct a tree-style `ComposableNode` and call
+- A `[Composable]` method can construct a tree-style `ComposableNode` and call
   `.Render(composer)` on it.
 - `ComposeFacadeGenerator` emits a sibling `[Composable]` method on
   `AndroidX.Compose.Composables` for every supported generated facade.
@@ -1160,15 +1160,15 @@ Both styles can call into each other freely:
   facades are generator holdouts. `Text`, `Box`, and `Button` now use
   the richer catalog-generated methods. The generator detects an
   existing same-name method and does not emit a duplicate.
-- `SetContent(Action<IComposer>)` hosts a Tier 2 root directly.
+- `SetContent(Action<IComposer>)` hosts a `[Composable]` root directly.
   Jetchat, JetNews, and Reply use this overload and expose their
   top-level app boundary as a `[Composable] static void` method.
 
 There is no migration pressure. Hot composables that recompose often
-are the natural candidates for Tier 2; one-shot screens can stay
+are the natural candidates for composable methods; one-shot screens can stay
 tree-style indefinitely. The proof demo
-(`src/Microsoft.AndroidX.Compose.Gallery/Demos/Tier2/Tier2SiblingSkipDemo.cs`)
-renders two sibling Tier 2 methods side by side and shows that the
+(`src/Microsoft.AndroidX.Compose.Gallery/Demos/ComposableMethods/ComposableSiblingSkipDemo.cs`)
+renders two sibling composable methods side by side and shows that the
 one whose input never changes has its body skipped (its in-process
 execution counter stays flat while its sibling's tracks every tap).
 
@@ -1209,8 +1209,8 @@ are generated while compiling the runtime assembly.
 
 | ID     | Meaning                                                                                                                  |
 |--------|--------------------------------------------------------------------------------------------------------------------------|
-| CN5001 | `[Composable]` method must be `static` (Tier 2 intercepts call sites; intercepted target must be a static method).       |
-| CN5002 | `[Composable]` method must return `void` (Tier 2 currently supports only void composables).                              |
+| CN5001 | `[Composable]` method must be `static` (the generator intercepts call sites; intercepted target must be a static method).       |
+| CN5002 | `[Composable]` method must return `void` (the generator currently supports only void composables).                              |
 | CN5003 | When present, a `[Composable]` method's `AndroidX.Compose.Runtime.IComposer` must be its first and only composer parameter. |
 | CN5004 | `[Composable]` method and its containing types must be accessible from the generated interceptor.                       |
 | CN5005 | `[Composable]` method cannot be `async`; continuations would resume after the restart group closes.                     |
@@ -1233,7 +1233,7 @@ Call sites capture omitted C#
 
 ### Deferred (follow-up)
 
-- Tier 2 modelling for navigation DSLs and other deferred graph-building
+- Composable-method modeling for navigation DSLs and other deferred graph-building
   shapes outside the issue-listed holdouts.
   Generic lowering covers typed animation, pager, carousel, and lazy
   collection facades; ambient-overload generation covers `MaterialTheme`,

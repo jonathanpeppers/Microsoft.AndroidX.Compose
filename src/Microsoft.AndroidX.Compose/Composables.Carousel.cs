@@ -22,7 +22,7 @@ public static partial class Composables
         new global::AndroidX.Compose.HorizontalUncontainedCarousel<T>(
             items,
             itemWidth,
-            item => new Tier2InlineContent(_ => itemContent(item)))
+            item => new ComposableContentNode(_ => itemContent(item)))
         {
             Modifier = modifier,
             State = state,
@@ -50,7 +50,7 @@ public static partial class Composables
         new global::AndroidX.Compose.HorizontalUncontainedCarousel<T>(
             items,
             itemWidth,
-            item => new Tier2InlineContent(c => itemContent(item, c)))
+            item => new ComposableContentNode(c => itemContent(item, c)))
         {
             Modifier = modifier,
             State = state,
@@ -76,7 +76,7 @@ public static partial class Composables
         new global::AndroidX.Compose.HorizontalMultiBrowseCarousel<T>(
             items,
             preferredItemWidth,
-            item => new Tier2InlineContent(_ => itemContent(item)))
+            item => new ComposableContentNode(_ => itemContent(item)))
         {
             Modifier = modifier,
             State = state,
@@ -104,7 +104,7 @@ public static partial class Composables
         new global::AndroidX.Compose.HorizontalMultiBrowseCarousel<T>(
             items,
             preferredItemWidth,
-            item => new Tier2InlineContent(c => itemContent(item, c)))
+            item => new ComposableContentNode(c => itemContent(item, c)))
         {
             Modifier = modifier,
             State = state,
@@ -129,7 +129,7 @@ public static partial class Composables
 
         new global::AndroidX.Compose.HorizontalCenteredHeroCarousel<T>(
             items,
-            item => new Tier2InlineContent(_ => itemContent(item)))
+            item => new ComposableContentNode(_ => itemContent(item)))
         {
             Modifier = modifier,
             State = state,
@@ -157,7 +157,7 @@ public static partial class Composables
 
         new global::AndroidX.Compose.HorizontalCenteredHeroCarousel<T>(
             items,
-            item => new Tier2InlineContent(c => itemContent(item, c)))
+            item => new ComposableContentNode(c => itemContent(item, c)))
         {
             Modifier = modifier,
             State = state,

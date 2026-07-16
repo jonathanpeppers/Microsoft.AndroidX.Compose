@@ -5,7 +5,7 @@ namespace AndroidX.Compose;
 public static partial class Composables
 {
     /// <summary>
-    /// Implicit-composer Tier 2 entry point for
+    /// Implicit-composer entry point for
     /// <see cref="global::AndroidX.Compose.Row"/>.
     /// </summary>
     [Composable]
@@ -15,12 +15,12 @@ public static partial class Composables
 
         new global::AndroidX.Compose.Row
         {
-            new Tier2InlineContent(_ => content()),
+            new ComposableContentNode(_ => content()),
         }.Render();
     }
 
     /// <summary>
-    /// Tier 2 entry point for
+    /// Explicit-composer entry point for
     /// <see cref="global::AndroidX.Compose.Row"/>. The wrapper skips
     /// when <paramref name="content"/> identity is unchanged from the
     /// previous composition.
@@ -32,6 +32,6 @@ public static partial class Composables
     {
         ArgumentNullException.ThrowIfNull(content);
 
-        new global::AndroidX.Compose.Row { new Tier2InlineContent(content) }.Render(composer);
+        new global::AndroidX.Compose.Row { new ComposableContentNode(content) }.Render(composer);
     }
 }

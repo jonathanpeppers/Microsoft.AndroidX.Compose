@@ -9,7 +9,7 @@ namespace AndroidX.Compose.SourceGenerators.Tests;
 
 /// <summary>
 /// Generator tests for <see cref="ComposableMethodGenerator"/> — synthetic
-/// compilations exercising the Tier 2 interceptor-emission shapes.
+/// compilations exercising the composable method interceptor-emission shapes.
 /// </summary>
 public class ComposableMethodGeneratorTests
 {
@@ -91,7 +91,7 @@ public class ComposableMethodGeneratorTests
     {
         var src = CSharpSyntaxTree.ParseText(Preamble + "\n" + userSource, ParseOpts);
         var compilation = CSharpCompilation.Create(
-            "Tier2Test",
+            "ComposableMethodTest",
             [src],
             references: Net.Sdk.References,
             options: new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary,
@@ -1171,7 +1171,7 @@ public class ComposableMethodGeneratorTests
     {
         // A [Composable] method whose body calls another [Composable]
         // method produces TWO interceptor entries — one per call site.
-        // This is the core property that makes Tier 2 compose all the
+        // This is the core property that makes composable method compose all the
         // way down.
         var (output, diags, emitted) = Run("""
             namespace App

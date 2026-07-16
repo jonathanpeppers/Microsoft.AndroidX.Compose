@@ -341,13 +341,13 @@ public static partial class Composables
         KeyboardOptions? keyboardOptions)
     {
         field.Modifier = modifier;
-        field.Label = Tier2InlineContent.Create(label);
-        field.Placeholder = Tier2InlineContent.Create(placeholder);
-        field.LeadingIcon = Tier2InlineContent.Create(leadingIcon);
-        field.TrailingIcon = Tier2InlineContent.Create(trailingIcon);
-        field.Prefix = Tier2InlineContent.Create(prefix);
-        field.Suffix = Tier2InlineContent.Create(suffix);
-        field.SupportingText = Tier2InlineContent.Create(supportingText);
+        field.Label = ComposableContentNode.Create(label);
+        field.Placeholder = ComposableContentNode.Create(placeholder);
+        field.LeadingIcon = ComposableContentNode.Create(leadingIcon);
+        field.TrailingIcon = ComposableContentNode.Create(trailingIcon);
+        field.Prefix = ComposableContentNode.Create(prefix);
+        field.Suffix = ComposableContentNode.Create(suffix);
+        field.SupportingText = ComposableContentNode.Create(supportingText);
         field.Shape = shape;
         field.TextStyle = textStyle;
         field.VisualTransformation = visualTransformation;
@@ -373,13 +373,13 @@ public static partial class Composables
         KeyboardActions? keyboardActions)
     {
         field.Modifier = modifier;
-        field.Label = Tier2InlineContent.Create(label);
-        field.Placeholder = Tier2InlineContent.Create(placeholder);
-        field.LeadingIcon = Tier2InlineContent.Create(leadingIcon);
-        field.TrailingIcon = Tier2InlineContent.Create(trailingIcon);
-        field.Prefix = Tier2InlineContent.Create(prefix);
-        field.Suffix = Tier2InlineContent.Create(suffix);
-        field.SupportingText = Tier2InlineContent.Create(supportingText);
+        field.Label = ComposableContentNode.Create(label);
+        field.Placeholder = ComposableContentNode.Create(placeholder);
+        field.LeadingIcon = ComposableContentNode.Create(leadingIcon);
+        field.TrailingIcon = ComposableContentNode.Create(trailingIcon);
+        field.Prefix = ComposableContentNode.Create(prefix);
+        field.Suffix = ComposableContentNode.Create(suffix);
+        field.SupportingText = ComposableContentNode.Create(supportingText);
         field.Shape = shape;
         field.TextStyle = textStyle;
         field.VisualTransformation = visualTransformation;

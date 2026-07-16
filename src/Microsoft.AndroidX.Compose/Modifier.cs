@@ -35,7 +35,7 @@ namespace AndroidX.Compose;
 /// declarations) via JNI — see
 /// <see cref="ComposeBridges.ModifierCompanionInstance"/>. Building
 /// cheap modifier chains every recomposition is the per-composition
-/// cost the Tier 1.5 facade pays — Tier 2 codegen would skip it.
+/// cost the tree-style facade pays — composable-method code generation can skip it.
 /// </summary>
 public sealed class Modifier
 {

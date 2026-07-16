@@ -15,7 +15,7 @@ public static partial class Composables
 
         new global::AndroidX.Compose.AnimatedContent<T>(
             targetState,
-            value => new Tier2InlineContent(_ => content(value)))
+            value => new ComposableContentNode(_ => content(value)))
         {
             Modifier = modifier,
         }.Render();
@@ -34,7 +34,7 @@ public static partial class Composables
 
         new global::AndroidX.Compose.AnimatedContent<T>(
             targetState,
-            value => new Tier2InlineContent(c => content(value, c)))
+            value => new ComposableContentNode(c => content(value, c)))
         {
             Modifier = modifier,
         }.Render(composer);
@@ -51,7 +51,7 @@ public static partial class Composables
 
         new global::AndroidX.Compose.Crossfade<T>(
             targetState,
-            value => new Tier2InlineContent(_ => content(value)))
+            value => new ComposableContentNode(_ => content(value)))
         {
             Modifier = modifier,
         }.Render();
@@ -70,7 +70,7 @@ public static partial class Composables
 
         new global::AndroidX.Compose.Crossfade<T>(
             targetState,
-            value => new Tier2InlineContent(c => content(value, c)))
+            value => new ComposableContentNode(c => content(value, c)))
         {
             Modifier = modifier,
         }.Render(composer);

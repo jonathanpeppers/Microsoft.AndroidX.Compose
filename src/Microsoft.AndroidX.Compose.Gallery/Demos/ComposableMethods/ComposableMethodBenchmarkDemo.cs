@@ -4,28 +4,28 @@ using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using static AndroidX.Compose.Composables;
 
-namespace AndroidX.Compose.Gallery.Demos.Tier2;
+namespace AndroidX.Compose.Gallery.Demos.ComposableMethods;
 
 /// <summary>
 /// Compares equivalent Reply-style cards rendered through tree construction,
-/// adapter-based Tier 2, and direct-lowered Tier 2.
+/// adapter-based composable rendering, and direct-lowered composable rendering.
 /// </summary>
-public static class Tier2RealAppBenchmarkDemo
+public static class ComposableMethodBenchmarkDemo
 {
     const int AutomaticRecompositions = 10;
     const int TreeLane = 0;
     const int AdapterLane = 1;
     const int DirectLane = 2;
-    const string LogTag = "Tier2Benchmark";
+    const string LogTag = "ComposableMethodBenchmark";
     static int s_directContentExecutions;
 
     /// <summary>Registry entry exposed via <see cref="Catalog.Demos"/>.</summary>
     public static Demo Demo => new(
-        Id:          "tier2-real-app-benchmark",
-        CategoryId:  "tier2",
+        Id:          "composable-real-app-benchmark",
+        CategoryId:  "composable-methods",
         Title:       "Real-app allocation benchmark",
-        Description: "Reports initial and recomposition costs for tree, adapter Tier 2, and direct-lowered Tier 2 rendering.",
-        Build:       static _ => new Tier2Adapter(() => Benchmark()));
+        Description: "Reports initial and recomposition costs for tree, adapter, and direct-lowered rendering.",
+        Build:       static _ => new ComposableDemoAdapter(() => Benchmark()));
 
     /// <summary>Runs and renders the interactive allocation comparison.</summary>
     [Composable]
@@ -59,7 +59,7 @@ public static class Tier2RealAppBenchmarkDemo
                             recompositionNanoseconds);
                         break;
                     case AdapterLane:
-                        MeasureAdapterTier2(
+                        MeasureAdapterComposableMethod(
                             tick.Value,
                             executions,
                             initialBytes,
@@ -68,7 +68,7 @@ public static class Tier2RealAppBenchmarkDemo
                             recompositionNanoseconds);
                         break;
                     default:
-                        MeasureDirectTier2(
+                        MeasureDirectComposableMethod(
                             tick.Value,
                             initialBytes,
                             recompositionBytes,
@@ -82,10 +82,10 @@ public static class Tier2RealAppBenchmarkDemo
             Text($"Cold-start order: {FormatLaneOrder(laneOrder)}");
             Text($"Tree initial: {initialBytes[0]:N0} B / {initialNanoseconds[0] / 1_000d:N1} us");
             Text($"Tree recompose: {recompositionBytes[0]:N0} B / {recompositionNanoseconds[0] / 1_000d:N1} us");
-            Text($"Adapter Tier 2 initial: {initialBytes[1]:N0} B / {initialNanoseconds[1] / 1_000d:N1} us");
-            Text($"Adapter Tier 2 recompose: {recompositionBytes[1]:N0} B / {recompositionNanoseconds[1] / 1_000d:N1} us");
-            Text($"Direct Tier 2 initial: {initialBytes[2]:N0} B / {initialNanoseconds[2] / 1_000d:N1} us");
-            Text($"Direct Tier 2 recompose: {recompositionBytes[2]:N0} B / {recompositionNanoseconds[2] / 1_000d:N1} us");
+            Text($"Adapter initial: {initialBytes[1]:N0} B / {initialNanoseconds[1] / 1_000d:N1} us");
+            Text($"Adapter recompose: {recompositionBytes[1]:N0} B / {recompositionNanoseconds[1] / 1_000d:N1} us");
+            Text($"Direct initial: {initialBytes[2]:N0} B / {initialNanoseconds[2] / 1_000d:N1} us");
+            Text($"Direct recompose: {recompositionBytes[2]:N0} B / {recompositionNanoseconds[2] / 1_000d:N1} us");
             Text(
                 $"Executions: tree={executionValues[0]}, adapter={executionValues[1]}, " +
                 $"direct={Volatile.Read(ref s_directContentExecutions) - directExecutionBaseline}");
@@ -101,7 +101,7 @@ public static class Tier2RealAppBenchmarkDemo
             }
         });
 
-        LaunchedEffect(nameof(Tier2RealAppBenchmarkDemo), async cancellationToken =>
+        LaunchedEffect(nameof(ComposableMethodBenchmarkDemo), async cancellationToken =>
         {
             for (int i = 0; i < AutomaticRecompositions; i++)
             {
@@ -173,7 +173,7 @@ public static class Tier2RealAppBenchmarkDemo
     }
 
     [Composable]
-    internal static void MeasureAdapterTier2(
+    internal static void MeasureAdapterComposableMethod(
         int recomposition,
         StrongBox<int[]> executions,
         long[] initialBytes,
@@ -183,7 +183,7 @@ public static class Tier2RealAppBenchmarkDemo
     {
         long beforeBytes = GC.GetAllocatedBytesForCurrentThread();
         long started = Stopwatch.GetTimestamp();
-        AdapterTier2ReplyCard("A practical guide to Compose", executions);
+        AdapterComposableMethodReplyCard("A practical guide to Compose", executions);
         RecordMeasurement(
             lane: 1,
             GC.GetAllocatedBytesForCurrentThread() - beforeBytes,
@@ -195,7 +195,7 @@ public static class Tier2RealAppBenchmarkDemo
     }
 
     [Composable]
-    internal static void MeasureDirectTier2(
+    internal static void MeasureDirectComposableMethod(
         int recomposition,
         long[] initialBytes,
         long[] recompositionBytes,
@@ -237,7 +237,7 @@ public static class Tier2RealAppBenchmarkDemo
     }
 
     [Composable]
-    internal static void AdapterTier2ReplyCard(
+    internal static void AdapterComposableMethodReplyCard(
         string subject,
         StrongBox<int[]> executions)
     {
