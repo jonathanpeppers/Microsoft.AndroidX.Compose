@@ -1,7 +1,7 @@
 #nullable enable
 AndroidX.Compose.AlertDialog
 AndroidX.Compose.AlertDialog.AlertDialog(System.Action! onDismissRequest) -> void
-AndroidX.Compose.AlertDialog.ConfirmButton.get -> AndroidX.Compose.ComposableNode?
+AndroidX.Compose.AlertDialog.ConfirmButton.get -> AndroidX.Compose.ComposableNode!
 AndroidX.Compose.AlertDialog.ConfirmButton.set -> void
 AndroidX.Compose.AlertDialog.DismissButton.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.AlertDialog.DismissButton.set -> void
@@ -73,7 +73,7 @@ AndroidX.Compose.AnnotatedText.SoftWrap.set -> void
 AndroidX.Compose.Arrangement
 AndroidX.Compose.AssistChip
 AndroidX.Compose.AssistChip.AssistChip(System.Action! onClick, bool enabled = true) -> void
-AndroidX.Compose.AssistChip.Label.get -> AndroidX.Compose.ComposableNode?
+AndroidX.Compose.AssistChip.Label.get -> AndroidX.Compose.ComposableNode!
 AndroidX.Compose.AssistChip.Label.set -> void
 AndroidX.Compose.AssistChip.LeadingIcon.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.AssistChip.LeadingIcon.set -> void
@@ -87,10 +87,10 @@ AndroidX.Compose.BackHandler.BackHandler(System.Action! onBack, bool enabled) ->
 AndroidX.Compose.Badge
 AndroidX.Compose.Badge.Badge() -> void
 AndroidX.Compose.BadgedBox
-AndroidX.Compose.BadgedBox.Badge.get -> AndroidX.Compose.ComposableNode?
+AndroidX.Compose.BadgedBox.Badge.get -> AndroidX.Compose.ComposableNode!
 AndroidX.Compose.BadgedBox.Badge.set -> void
 AndroidX.Compose.BadgedBox.BadgedBox() -> void
-AndroidX.Compose.BadgedBox.Content.get -> AndroidX.Compose.ComposableNode?
+AndroidX.Compose.BadgedBox.Content.get -> AndroidX.Compose.ComposableNode!
 AndroidX.Compose.BadgedBox.Content.set -> void
 AndroidX.Compose.BottomAppBar
 AndroidX.Compose.BottomAppBar.BottomAppBar() -> void
@@ -100,7 +100,7 @@ AndroidX.Compose.BottomSheetScaffold
 AndroidX.Compose.BottomSheetScaffold.BottomSheetScaffold(AndroidX.Compose.SheetStateHolder? sheetState = null) -> void
 AndroidX.Compose.BottomSheetScaffold.ConfirmValueChange.get -> System.Func<AndroidX.Compose.Material3.SheetValue!, bool>?
 AndroidX.Compose.BottomSheetScaffold.ConfirmValueChange.set -> void
-AndroidX.Compose.BottomSheetScaffold.SheetContent.get -> AndroidX.Compose.ComposableNode?
+AndroidX.Compose.BottomSheetScaffold.SheetContent.get -> AndroidX.Compose.ComposableNode!
 AndroidX.Compose.BottomSheetScaffold.SheetContent.set -> void
 AndroidX.Compose.BottomSheetScaffold.SheetDragHandle.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.BottomSheetScaffold.SheetDragHandle.set -> void
@@ -143,7 +143,7 @@ AndroidX.Compose.CenterAlignedTopAppBar.NavigationIcon.get -> AndroidX.Compose.C
 AndroidX.Compose.CenterAlignedTopAppBar.NavigationIcon.set -> void
 AndroidX.Compose.CenterAlignedTopAppBar.ScrollBehavior.get -> AndroidX.Compose.Material3.ITopAppBarScrollBehavior?
 AndroidX.Compose.CenterAlignedTopAppBar.ScrollBehavior.set -> void
-AndroidX.Compose.CenterAlignedTopAppBar.Title.get -> AndroidX.Compose.ComposableNode?
+AndroidX.Compose.CenterAlignedTopAppBar.Title.get -> AndroidX.Compose.ComposableNode!
 AndroidX.Compose.CenterAlignedTopAppBar.Title.set -> void
 AndroidX.Compose.ChangedBits
 AndroidX.Compose.ChangedBits.Different = 2 -> AndroidX.Compose.ChangedBits
@@ -252,9 +252,9 @@ AndroidX.Compose.CustomTab.CustomTab(bool selected, System.Action! onClick, bool
 AndroidX.Compose.DatePicker
 AndroidX.Compose.DatePicker.DatePicker(AndroidX.Compose.DatePickerState? state = null, bool showModeToggle = true) -> void
 AndroidX.Compose.DatePickerDialog
-AndroidX.Compose.DatePickerDialog.Body.get -> AndroidX.Compose.ComposableNode?
+AndroidX.Compose.DatePickerDialog.Body.get -> AndroidX.Compose.ComposableNode!
 AndroidX.Compose.DatePickerDialog.Body.set -> void
-AndroidX.Compose.DatePickerDialog.ConfirmButton.get -> AndroidX.Compose.ComposableNode?
+AndroidX.Compose.DatePickerDialog.ConfirmButton.get -> AndroidX.Compose.ComposableNode!
 AndroidX.Compose.DatePickerDialog.ConfirmButton.set -> void
 AndroidX.Compose.DatePickerDialog.DatePickerDialog(System.Action! onDismissRequest) -> void
 AndroidX.Compose.DatePickerDialog.DismissButton.get -> AndroidX.Compose.ComposableNode?
@@ -278,9 +278,9 @@ AndroidX.Compose.DatePickerYearRange.StartYear.get -> int
 AndroidX.Compose.DateRangePicker
 AndroidX.Compose.DateRangePicker.DateRangePicker(AndroidX.Compose.DateRangePickerState? state = null, bool showModeToggle = true) -> void
 AndroidX.Compose.DateRangePickerDialog
-AndroidX.Compose.DateRangePickerDialog.Body.get -> AndroidX.Compose.ComposableNode?
+AndroidX.Compose.DateRangePickerDialog.Body.get -> AndroidX.Compose.ComposableNode!
 AndroidX.Compose.DateRangePickerDialog.Body.set -> void
-AndroidX.Compose.DateRangePickerDialog.ConfirmButton.get -> AndroidX.Compose.ComposableNode?
+AndroidX.Compose.DateRangePickerDialog.ConfirmButton.get -> AndroidX.Compose.ComposableNode!
 AndroidX.Compose.DateRangePickerDialog.ConfirmButton.set -> void
 AndroidX.Compose.DateRangePickerDialog.DateRangePickerDialog(System.Action! onDismissRequest) -> void
 AndroidX.Compose.DateRangePickerDialog.DismissButton.get -> AndroidX.Compose.ComposableNode?
@@ -325,10 +325,10 @@ AndroidX.Compose.DismissibleDrawerSheet.Shape.set -> void
 AndroidX.Compose.DismissibleNavigationDrawer
 AndroidX.Compose.DismissibleNavigationDrawer.ConfirmStateChange.get -> System.Func<AndroidX.Compose.Material3.DrawerValue!, bool>?
 AndroidX.Compose.DismissibleNavigationDrawer.ConfirmStateChange.set -> void
-AndroidX.Compose.DismissibleNavigationDrawer.Content.get -> AndroidX.Compose.ComposableNode?
+AndroidX.Compose.DismissibleNavigationDrawer.Content.get -> AndroidX.Compose.ComposableNode!
 AndroidX.Compose.DismissibleNavigationDrawer.Content.set -> void
 AndroidX.Compose.DismissibleNavigationDrawer.DismissibleNavigationDrawer(AndroidX.Compose.DrawerStateHolder? drawerState = null, bool gesturesEnabled = true) -> void
-AndroidX.Compose.DismissibleNavigationDrawer.Drawer.get -> AndroidX.Compose.ComposableNode?
+AndroidX.Compose.DismissibleNavigationDrawer.Drawer.get -> AndroidX.Compose.ComposableNode!
 AndroidX.Compose.DismissibleNavigationDrawer.Drawer.set -> void
 AndroidX.Compose.DismissibleNavigationDrawer.InitialValue.get -> AndroidX.Compose.Material3.DrawerValue?
 AndroidX.Compose.DismissibleNavigationDrawer.InitialValue.init -> void
@@ -418,7 +418,7 @@ AndroidX.Compose.DropdownMenuItem.TrailingIcon.get -> AndroidX.Compose.Composabl
 AndroidX.Compose.DropdownMenuItem.TrailingIcon.set -> void
 AndroidX.Compose.ElevatedAssistChip
 AndroidX.Compose.ElevatedAssistChip.ElevatedAssistChip(System.Action! onClick, bool enabled = true) -> void
-AndroidX.Compose.ElevatedAssistChip.Label.get -> AndroidX.Compose.ComposableNode?
+AndroidX.Compose.ElevatedAssistChip.Label.get -> AndroidX.Compose.ComposableNode!
 AndroidX.Compose.ElevatedAssistChip.Label.set -> void
 AndroidX.Compose.ElevatedAssistChip.LeadingIcon.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.ElevatedAssistChip.LeadingIcon.set -> void
@@ -440,7 +440,7 @@ AndroidX.Compose.ElevatedCard.Shape.get -> AndroidX.Compose.Shape?
 AndroidX.Compose.ElevatedCard.Shape.set -> void
 AndroidX.Compose.ElevatedFilterChip
 AndroidX.Compose.ElevatedFilterChip.ElevatedFilterChip(bool selected, System.Action! onClick, bool enabled = true) -> void
-AndroidX.Compose.ElevatedFilterChip.Label.get -> AndroidX.Compose.ComposableNode?
+AndroidX.Compose.ElevatedFilterChip.Label.get -> AndroidX.Compose.ComposableNode!
 AndroidX.Compose.ElevatedFilterChip.Label.set -> void
 AndroidX.Compose.ElevatedFilterChip.LeadingIcon.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.ElevatedFilterChip.LeadingIcon.set -> void
@@ -452,17 +452,17 @@ AndroidX.Compose.ElevatedSuggestionChip
 AndroidX.Compose.ElevatedSuggestionChip.ElevatedSuggestionChip(System.Action! onClick, bool enabled = true) -> void
 AndroidX.Compose.ElevatedSuggestionChip.Icon.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.ElevatedSuggestionChip.Icon.set -> void
-AndroidX.Compose.ElevatedSuggestionChip.Label.get -> AndroidX.Compose.ComposableNode?
+AndroidX.Compose.ElevatedSuggestionChip.Label.get -> AndroidX.Compose.ComposableNode!
 AndroidX.Compose.ElevatedSuggestionChip.Label.set -> void
 AndroidX.Compose.ElevatedSuggestionChip.Shape.get -> AndroidX.Compose.Shape?
 AndroidX.Compose.ElevatedSuggestionChip.Shape.set -> void
 AndroidX.Compose.ExpandedDockedSearchBar
 AndroidX.Compose.ExpandedDockedSearchBar.ExpandedDockedSearchBar(AndroidX.Compose.SearchBarState! state) -> void
-AndroidX.Compose.ExpandedDockedSearchBar.InputField.get -> AndroidX.Compose.ComposableNode?
+AndroidX.Compose.ExpandedDockedSearchBar.InputField.get -> AndroidX.Compose.ComposableNode!
 AndroidX.Compose.ExpandedDockedSearchBar.InputField.set -> void
 AndroidX.Compose.ExpandedFullScreenSearchBar
 AndroidX.Compose.ExpandedFullScreenSearchBar.ExpandedFullScreenSearchBar(AndroidX.Compose.SearchBarState! state) -> void
-AndroidX.Compose.ExpandedFullScreenSearchBar.InputField.get -> AndroidX.Compose.ComposableNode?
+AndroidX.Compose.ExpandedFullScreenSearchBar.InputField.get -> AndroidX.Compose.ComposableNode!
 AndroidX.Compose.ExpandedFullScreenSearchBar.InputField.set -> void
 AndroidX.Compose.ExposedDropdownMenu
 AndroidX.Compose.ExposedDropdownMenu.ExposedDropdownMenu(bool expanded, System.Action! onDismissRequest) -> void
@@ -470,11 +470,11 @@ AndroidX.Compose.ExposedDropdownMenuBox
 AndroidX.Compose.ExposedDropdownMenuBox.ExposedDropdownMenuBox(bool expanded, System.Action<bool>! onExpandedChange) -> void
 AndroidX.Compose.ExtendedFloatingActionButton
 AndroidX.Compose.ExtendedFloatingActionButton.ExtendedFloatingActionButton(System.Action! onClick, bool expanded) -> void
-AndroidX.Compose.ExtendedFloatingActionButton.Icon.get -> AndroidX.Compose.ComposableNode?
+AndroidX.Compose.ExtendedFloatingActionButton.Icon.get -> AndroidX.Compose.ComposableNode!
 AndroidX.Compose.ExtendedFloatingActionButton.Icon.set -> void
 AndroidX.Compose.ExtendedFloatingActionButton.Shape.get -> AndroidX.Compose.Shape?
 AndroidX.Compose.ExtendedFloatingActionButton.Shape.set -> void
-AndroidX.Compose.ExtendedFloatingActionButton.Text.get -> AndroidX.Compose.ComposableNode?
+AndroidX.Compose.ExtendedFloatingActionButton.Text.get -> AndroidX.Compose.ComposableNode!
 AndroidX.Compose.ExtendedFloatingActionButton.Text.set -> void
 AndroidX.Compose.FilledIconButton
 AndroidX.Compose.FilledIconButton.FilledIconButton(System.Action! onClick, bool enabled = true) -> void
@@ -502,7 +502,7 @@ AndroidX.Compose.FilledTonalIconToggleButton.Shape.get -> AndroidX.Compose.Shape
 AndroidX.Compose.FilledTonalIconToggleButton.Shape.set -> void
 AndroidX.Compose.FilterChip
 AndroidX.Compose.FilterChip.FilterChip(bool selected, System.Action! onClick, bool enabled = true) -> void
-AndroidX.Compose.FilterChip.Label.get -> AndroidX.Compose.ComposableNode?
+AndroidX.Compose.FilterChip.Label.get -> AndroidX.Compose.ComposableNode!
 AndroidX.Compose.FilterChip.Label.set -> void
 AndroidX.Compose.FilterChip.LeadingIcon.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.FilterChip.LeadingIcon.set -> void
@@ -615,7 +615,7 @@ AndroidX.Compose.InputChip
 AndroidX.Compose.InputChip.Avatar.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.InputChip.Avatar.set -> void
 AndroidX.Compose.InputChip.InputChip(bool selected, System.Action! onClick, bool enabled = true) -> void
-AndroidX.Compose.InputChip.Label.get -> AndroidX.Compose.ComposableNode?
+AndroidX.Compose.InputChip.Label.get -> AndroidX.Compose.ComposableNode!
 AndroidX.Compose.InputChip.Label.set -> void
 AndroidX.Compose.InputChip.LeadingIcon.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.InputChip.LeadingIcon.set -> void
@@ -636,7 +636,7 @@ AndroidX.Compose.LargeFlexibleTopAppBar.ScrollBehavior.get -> AndroidX.Compose.M
 AndroidX.Compose.LargeFlexibleTopAppBar.ScrollBehavior.set -> void
 AndroidX.Compose.LargeFlexibleTopAppBar.Subtitle.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.LargeFlexibleTopAppBar.Subtitle.set -> void
-AndroidX.Compose.LargeFlexibleTopAppBar.Title.get -> AndroidX.Compose.ComposableNode?
+AndroidX.Compose.LargeFlexibleTopAppBar.Title.get -> AndroidX.Compose.ComposableNode!
 AndroidX.Compose.LargeFlexibleTopAppBar.Title.set -> void
 AndroidX.Compose.LargeFloatingActionButton
 AndroidX.Compose.LargeFloatingActionButton.LargeFloatingActionButton(System.Action! onClick) -> void
@@ -652,7 +652,7 @@ AndroidX.Compose.LargeTopAppBar.ScrollBehavior.get -> AndroidX.Compose.Material3
 AndroidX.Compose.LargeTopAppBar.ScrollBehavior.set -> void
 AndroidX.Compose.LargeTopAppBar.Subtitle.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.LargeTopAppBar.Subtitle.set -> void
-AndroidX.Compose.LargeTopAppBar.Title.get -> AndroidX.Compose.ComposableNode?
+AndroidX.Compose.LargeTopAppBar.Title.get -> AndroidX.Compose.ComposableNode!
 AndroidX.Compose.LargeTopAppBar.Title.set -> void
 AndroidX.Compose.LaunchedEffect
 AndroidX.Compose.LaunchedEffect.LaunchedEffect(object? key1, System.Func<System.Threading.CancellationToken, System.Threading.Tasks.Task!>! body) -> void
@@ -718,10 +718,10 @@ AndroidX.Compose.LazyVerticalStaggeredGrid<T>.LazyVerticalStaggeredGrid(AndroidX
 AndroidX.Compose.LazyVerticalStaggeredGrid<T>.State.get -> AndroidX.Compose.Foundation.Lazy.Staggeredgrid.LazyStaggeredGridState?
 AndroidX.Compose.LazyVerticalStaggeredGrid<T>.State.set -> void
 AndroidX.Compose.LeadingIconTab
-AndroidX.Compose.LeadingIconTab.Icon.get -> AndroidX.Compose.ComposableNode?
+AndroidX.Compose.LeadingIconTab.Icon.get -> AndroidX.Compose.ComposableNode!
 AndroidX.Compose.LeadingIconTab.Icon.set -> void
 AndroidX.Compose.LeadingIconTab.LeadingIconTab(bool selected, System.Action! onClick, bool enabled = true) -> void
-AndroidX.Compose.LeadingIconTab.Text.get -> AndroidX.Compose.ComposableNode?
+AndroidX.Compose.LeadingIconTab.Text.get -> AndroidX.Compose.ComposableNode!
 AndroidX.Compose.LeadingIconTab.Text.set -> void
 AndroidX.Compose.LinearProgressIndicator
 AndroidX.Compose.LinearProgressIndicator.Color.get -> AndroidX.Compose.Color?
@@ -733,7 +733,7 @@ AndroidX.Compose.LinearProgressIndicator.TrackColor.get -> AndroidX.Compose.Colo
 AndroidX.Compose.LinearProgressIndicator.TrackColor.set -> void
 AndroidX.Compose.LinkAnnotation
 AndroidX.Compose.ListItem
-AndroidX.Compose.ListItem.Headline.get -> AndroidX.Compose.ComposableNode?
+AndroidX.Compose.ListItem.Headline.get -> AndroidX.Compose.ComposableNode!
 AndroidX.Compose.ListItem.Headline.set -> void
 AndroidX.Compose.ListItem.Leading.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.ListItem.Leading.set -> void
@@ -780,7 +780,7 @@ AndroidX.Compose.MediumFlexibleTopAppBar.ScrollBehavior.get -> AndroidX.Compose.
 AndroidX.Compose.MediumFlexibleTopAppBar.ScrollBehavior.set -> void
 AndroidX.Compose.MediumFlexibleTopAppBar.Subtitle.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.MediumFlexibleTopAppBar.Subtitle.set -> void
-AndroidX.Compose.MediumFlexibleTopAppBar.Title.get -> AndroidX.Compose.ComposableNode?
+AndroidX.Compose.MediumFlexibleTopAppBar.Title.get -> AndroidX.Compose.ComposableNode!
 AndroidX.Compose.MediumFlexibleTopAppBar.Title.set -> void
 AndroidX.Compose.MediumTopAppBar
 AndroidX.Compose.MediumTopAppBar.Actions.get -> AndroidX.Compose.ComposableNode?
@@ -792,7 +792,7 @@ AndroidX.Compose.MediumTopAppBar.ScrollBehavior.get -> AndroidX.Compose.Material
 AndroidX.Compose.MediumTopAppBar.ScrollBehavior.set -> void
 AndroidX.Compose.MediumTopAppBar.Subtitle.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.MediumTopAppBar.Subtitle.set -> void
-AndroidX.Compose.MediumTopAppBar.Title.get -> AndroidX.Compose.ComposableNode?
+AndroidX.Compose.MediumTopAppBar.Title.get -> AndroidX.Compose.ComposableNode!
 AndroidX.Compose.MediumTopAppBar.Title.set -> void
 AndroidX.Compose.ModalBottomSheet
 AndroidX.Compose.ModalBottomSheet.ConfirmValueChange.get -> System.Func<AndroidX.Compose.Material3.SheetValue!, bool>?
@@ -811,9 +811,9 @@ AndroidX.Compose.ModalDrawerSheet.Shape.set -> void
 AndroidX.Compose.ModalNavigationDrawer
 AndroidX.Compose.ModalNavigationDrawer.ConfirmStateChange.get -> System.Func<AndroidX.Compose.Material3.DrawerValue!, bool>?
 AndroidX.Compose.ModalNavigationDrawer.ConfirmStateChange.set -> void
-AndroidX.Compose.ModalNavigationDrawer.Content.get -> AndroidX.Compose.ComposableNode?
+AndroidX.Compose.ModalNavigationDrawer.Content.get -> AndroidX.Compose.ComposableNode!
 AndroidX.Compose.ModalNavigationDrawer.Content.set -> void
-AndroidX.Compose.ModalNavigationDrawer.Drawer.get -> AndroidX.Compose.ComposableNode?
+AndroidX.Compose.ModalNavigationDrawer.Drawer.get -> AndroidX.Compose.ComposableNode!
 AndroidX.Compose.ModalNavigationDrawer.Drawer.set -> void
 AndroidX.Compose.ModalNavigationDrawer.InitialValue.get -> AndroidX.Compose.Material3.DrawerValue?
 AndroidX.Compose.ModalNavigationDrawer.InitialValue.init -> void
@@ -911,7 +911,7 @@ AndroidX.Compose.NavOptions.RestoreState.set -> void
 AndroidX.Compose.NavigationBar
 AndroidX.Compose.NavigationBar.NavigationBar() -> void
 AndroidX.Compose.NavigationBarItem
-AndroidX.Compose.NavigationBarItem.Icon.get -> AndroidX.Compose.ComposableNode?
+AndroidX.Compose.NavigationBarItem.Icon.get -> AndroidX.Compose.ComposableNode!
 AndroidX.Compose.NavigationBarItem.Icon.set -> void
 AndroidX.Compose.NavigationBarItem.Label.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.NavigationBarItem.Label.set -> void
@@ -921,13 +921,13 @@ AndroidX.Compose.NavigationDrawerItem.Badge.get -> AndroidX.Compose.ComposableNo
 AndroidX.Compose.NavigationDrawerItem.Badge.set -> void
 AndroidX.Compose.NavigationDrawerItem.Icon.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.NavigationDrawerItem.Icon.set -> void
-AndroidX.Compose.NavigationDrawerItem.Label.get -> AndroidX.Compose.ComposableNode?
+AndroidX.Compose.NavigationDrawerItem.Label.get -> AndroidX.Compose.ComposableNode!
 AndroidX.Compose.NavigationDrawerItem.Label.set -> void
 AndroidX.Compose.NavigationDrawerItem.NavigationDrawerItem(bool selected, System.Action! onClick) -> void
 AndroidX.Compose.NavigationRail
 AndroidX.Compose.NavigationRail.NavigationRail() -> void
 AndroidX.Compose.NavigationRailItem
-AndroidX.Compose.NavigationRailItem.Icon.get -> AndroidX.Compose.ComposableNode?
+AndroidX.Compose.NavigationRailItem.Icon.get -> AndroidX.Compose.ComposableNode!
 AndroidX.Compose.NavigationRailItem.Icon.set -> void
 AndroidX.Compose.NavigationRailItem.Label.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.NavigationRailItem.Label.set -> void
@@ -1071,9 +1071,9 @@ AndroidX.Compose.PermanentDrawerSheet.PermanentDrawerSheet() -> void
 AndroidX.Compose.PermanentDrawerSheet.Shape.get -> AndroidX.Compose.Shape?
 AndroidX.Compose.PermanentDrawerSheet.Shape.set -> void
 AndroidX.Compose.PermanentNavigationDrawer
-AndroidX.Compose.PermanentNavigationDrawer.Content.get -> AndroidX.Compose.ComposableNode?
+AndroidX.Compose.PermanentNavigationDrawer.Content.get -> AndroidX.Compose.ComposableNode!
 AndroidX.Compose.PermanentNavigationDrawer.Content.set -> void
-AndroidX.Compose.PermanentNavigationDrawer.Drawer.get -> AndroidX.Compose.ComposableNode?
+AndroidX.Compose.PermanentNavigationDrawer.Drawer.get -> AndroidX.Compose.ComposableNode!
 AndroidX.Compose.PermanentNavigationDrawer.Drawer.set -> void
 AndroidX.Compose.PermanentNavigationDrawer.PermanentNavigationDrawer() -> void
 AndroidX.Compose.PlacementScope
@@ -1154,7 +1154,7 @@ AndroidX.Compose.ScrollState.ViewportSize.get -> int
 AndroidX.Compose.ScrollableTabRow
 AndroidX.Compose.ScrollableTabRow.ScrollableTabRow(int selectedTabIndex) -> void
 AndroidX.Compose.SearchBar
-AndroidX.Compose.SearchBar.InputField.get -> AndroidX.Compose.ComposableNode?
+AndroidX.Compose.SearchBar.InputField.get -> AndroidX.Compose.ComposableNode!
 AndroidX.Compose.SearchBar.InputField.set -> void
 AndroidX.Compose.SearchBar.SearchBar(AndroidX.Compose.SearchBarState! state) -> void
 AndroidX.Compose.SearchBarInputField
@@ -1263,7 +1263,7 @@ AndroidX.Compose.SmallFloatingActionButton.SmallFloatingActionButton(System.Acti
 AndroidX.Compose.Snackbar
 AndroidX.Compose.Snackbar.Action.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.Snackbar.Action.set -> void
-AndroidX.Compose.Snackbar.Body.get -> AndroidX.Compose.ComposableNode?
+AndroidX.Compose.Snackbar.Body.get -> AndroidX.Compose.ComposableNode!
 AndroidX.Compose.Snackbar.Body.set -> void
 AndroidX.Compose.Snackbar.DismissAction.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.Snackbar.DismissAction.set -> void
@@ -1313,7 +1313,7 @@ AndroidX.Compose.StrokeJoin.Round = 1 -> AndroidX.Compose.StrokeJoin
 AndroidX.Compose.SuggestionChip
 AndroidX.Compose.SuggestionChip.Icon.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.SuggestionChip.Icon.set -> void
-AndroidX.Compose.SuggestionChip.Label.get -> AndroidX.Compose.ComposableNode?
+AndroidX.Compose.SuggestionChip.Label.get -> AndroidX.Compose.ComposableNode!
 AndroidX.Compose.SuggestionChip.Label.set -> void
 AndroidX.Compose.SuggestionChip.Shape.get -> AndroidX.Compose.Shape?
 AndroidX.Compose.SuggestionChip.Shape.set -> void
@@ -1431,11 +1431,11 @@ AndroidX.Compose.TimeInput.TimeInput(AndroidX.Compose.TimePickerState? state = n
 AndroidX.Compose.TimePicker
 AndroidX.Compose.TimePicker.TimePicker(AndroidX.Compose.TimePickerState? state = null) -> void
 AndroidX.Compose.TimePickerDialog
-AndroidX.Compose.TimePickerDialog.Body.get -> AndroidX.Compose.ComposableNode?
+AndroidX.Compose.TimePickerDialog.Body.get -> AndroidX.Compose.ComposableNode!
 AndroidX.Compose.TimePickerDialog.Body.set -> void
-AndroidX.Compose.TimePickerDialog.ConfirmButton.get -> AndroidX.Compose.ComposableNode?
+AndroidX.Compose.TimePickerDialog.ConfirmButton.get -> AndroidX.Compose.ComposableNode!
 AndroidX.Compose.TimePickerDialog.ConfirmButton.set -> void
-AndroidX.Compose.TimePickerDialog.DismissButton.get -> AndroidX.Compose.ComposableNode?
+AndroidX.Compose.TimePickerDialog.DismissButton.get -> AndroidX.Compose.ComposableNode!
 AndroidX.Compose.TimePickerDialog.DismissButton.set -> void
 AndroidX.Compose.TimePickerDialog.ModeToggleButton.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.TimePickerDialog.ModeToggleButton.set -> void
@@ -1450,9 +1450,9 @@ AndroidX.Compose.TimePickerState.Minute.get -> int
 AndroidX.Compose.TimePickerState.Minute.set -> void
 AndroidX.Compose.TimePickerState.TimePickerState(int initialHour = 12, int initialMinute = 0, bool is24Hour = true) -> void
 AndroidX.Compose.Tooltip
-AndroidX.Compose.Tooltip.Anchor.get -> AndroidX.Compose.ComposableNode?
+AndroidX.Compose.Tooltip.Anchor.get -> AndroidX.Compose.ComposableNode!
 AndroidX.Compose.Tooltip.Anchor.set -> void
-AndroidX.Compose.Tooltip.Tip.get -> AndroidX.Compose.ComposableNode?
+AndroidX.Compose.Tooltip.Tip.get -> AndroidX.Compose.ComposableNode!
 AndroidX.Compose.Tooltip.Tip.set -> void
 AndroidX.Compose.Tooltip.Tooltip(bool isPersistent = false) -> void
 AndroidX.Compose.TopAppBar
@@ -1464,11 +1464,11 @@ AndroidX.Compose.TopAppBar.ScrollBehavior.get -> AndroidX.Compose.Material3.ITop
 AndroidX.Compose.TopAppBar.ScrollBehavior.set -> void
 AndroidX.Compose.TopAppBar.Subtitle.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.TopAppBar.Subtitle.set -> void
-AndroidX.Compose.TopAppBar.Title.get -> AndroidX.Compose.ComposableNode?
+AndroidX.Compose.TopAppBar.Title.get -> AndroidX.Compose.ComposableNode!
 AndroidX.Compose.TopAppBar.Title.set -> void
 AndroidX.Compose.TopAppBar.TopAppBar() -> void
 AndroidX.Compose.TopSearchBar
-AndroidX.Compose.TopSearchBar.InputField.get -> AndroidX.Compose.ComposableNode?
+AndroidX.Compose.TopSearchBar.InputField.get -> AndroidX.Compose.ComposableNode!
 AndroidX.Compose.TopSearchBar.InputField.set -> void
 AndroidX.Compose.TopSearchBar.TopSearchBar(AndroidX.Compose.SearchBarState! state) -> void
 AndroidX.Compose.TransformOrigin
@@ -1500,7 +1500,7 @@ AndroidX.Compose.ViewModel.ViewModel() -> void
 AndroidX.Compose.WideNavigationRail
 AndroidX.Compose.WideNavigationRail.WideNavigationRail() -> void
 AndroidX.Compose.WideNavigationRailItem
-AndroidX.Compose.WideNavigationRailItem.Icon.get -> AndroidX.Compose.ComposableNode?
+AndroidX.Compose.WideNavigationRailItem.Icon.get -> AndroidX.Compose.ComposableNode!
 AndroidX.Compose.WideNavigationRailItem.Icon.set -> void
 AndroidX.Compose.WideNavigationRailItem.Label.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.WideNavigationRailItem.Label.set -> void

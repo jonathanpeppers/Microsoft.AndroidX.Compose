@@ -9,9 +9,15 @@ namespace AndroidX.Compose;
 /// </summary>
 internal sealed class ComposableContentNode : ComposableNode
 {
-    readonly Action<IComposer> _body;
+    Action<IComposer> _body;
 
     public ComposableContentNode(Action<IComposer> body)
+    {
+        ArgumentNullException.ThrowIfNull(body);
+        _body = body;
+    }
+
+    internal void Rebind(Action<IComposer> body)
     {
         ArgumentNullException.ThrowIfNull(body);
         _body = body;
