@@ -13,7 +13,7 @@ public static partial class Composables
         [ComposableContent] Action<T> itemContent,
         Modifier? modifier = null,
         CarouselState? state = null,
-        float? itemSpacing = null,
+        Dp? itemSpacing = null,
         bool? userScrollEnabled = null)
     {
         ArgumentNullException.ThrowIfNull(items);
@@ -26,21 +26,21 @@ public static partial class Composables
         {
             Modifier = modifier,
             State = state,
-            ItemSpacing = itemSpacing ?? float.NaN,
+            ItemSpacing = itemSpacing,
             UserScrollEnabled = userScrollEnabled,
         }.Render();
     }
 
     /// <summary>Renders a typed uncontained carousel with an explicit composer.</summary>
     [Composable]
-    public static void HorizontalUncontainedCarousel<T>(
+    internal static void HorizontalUncontainedCarousel<T>(
         IComposer composer,
         IReadOnlyList<T> items,
         float itemWidth,
         [ComposableContent] Action<T, IComposer> itemContent,
         Modifier? modifier = null,
         CarouselState? state = null,
-        float? itemSpacing = null,
+        Dp? itemSpacing = null,
         bool? userScrollEnabled = null)
     {
         ArgumentNullException.ThrowIfNull(composer);
@@ -54,7 +54,7 @@ public static partial class Composables
         {
             Modifier = modifier,
             State = state,
-            ItemSpacing = itemSpacing ?? float.NaN,
+            ItemSpacing = itemSpacing,
             UserScrollEnabled = userScrollEnabled,
         }.Render(composer);
     }
@@ -67,7 +67,7 @@ public static partial class Composables
         [ComposableContent] Action<T> itemContent,
         Modifier? modifier = null,
         CarouselState? state = null,
-        float? itemSpacing = null,
+        Dp? itemSpacing = null,
         bool? userScrollEnabled = null)
     {
         ArgumentNullException.ThrowIfNull(items);
@@ -80,21 +80,21 @@ public static partial class Composables
         {
             Modifier = modifier,
             State = state,
-            ItemSpacing = itemSpacing ?? float.NaN,
+            ItemSpacing = itemSpacing,
             UserScrollEnabled = userScrollEnabled,
         }.Render();
     }
 
     /// <summary>Renders a typed multi-browse carousel with an explicit composer.</summary>
     [Composable]
-    public static void HorizontalMultiBrowseCarousel<T>(
+    internal static void HorizontalMultiBrowseCarousel<T>(
         IComposer composer,
         IReadOnlyList<T> items,
         float preferredItemWidth,
         [ComposableContent] Action<T, IComposer> itemContent,
         Modifier? modifier = null,
         CarouselState? state = null,
-        float? itemSpacing = null,
+        Dp? itemSpacing = null,
         bool? userScrollEnabled = null)
     {
         ArgumentNullException.ThrowIfNull(composer);
@@ -108,7 +108,7 @@ public static partial class Composables
         {
             Modifier = modifier,
             State = state,
-            ItemSpacing = itemSpacing ?? float.NaN,
+            ItemSpacing = itemSpacing,
             UserScrollEnabled = userScrollEnabled,
         }.Render(composer);
     }
@@ -120,8 +120,8 @@ public static partial class Composables
         [ComposableContent] Action<T> itemContent,
         Modifier? modifier = null,
         CarouselState? state = null,
-        float? maxItemWidth = null,
-        float? itemSpacing = null,
+        Dp? maxItemWidth = null,
+        Dp? itemSpacing = null,
         bool? userScrollEnabled = null)
     {
         ArgumentNullException.ThrowIfNull(items);
@@ -133,22 +133,22 @@ public static partial class Composables
         {
             Modifier = modifier,
             State = state,
-            MaxItemWidth = maxItemWidth ?? float.NaN,
-            ItemSpacing = itemSpacing ?? float.NaN,
+            MaxItemWidth = maxItemWidth,
+            ItemSpacing = itemSpacing,
             UserScrollEnabled = userScrollEnabled,
         }.Render();
     }
 
     /// <summary>Renders a typed centered-hero carousel with an explicit composer.</summary>
     [Composable]
-    public static void HorizontalCenteredHeroCarousel<T>(
+    internal static void HorizontalCenteredHeroCarousel<T>(
         IComposer composer,
         IReadOnlyList<T> items,
         [ComposableContent] Action<T, IComposer> itemContent,
         Modifier? modifier = null,
         CarouselState? state = null,
-        float? maxItemWidth = null,
-        float? itemSpacing = null,
+        Dp? maxItemWidth = null,
+        Dp? itemSpacing = null,
         bool? userScrollEnabled = null)
     {
         ArgumentNullException.ThrowIfNull(composer);
@@ -161,8 +161,8 @@ public static partial class Composables
         {
             Modifier = modifier,
             State = state,
-            MaxItemWidth = maxItemWidth ?? float.NaN,
-            ItemSpacing = itemSpacing ?? float.NaN,
+            MaxItemWidth = maxItemWidth,
+            ItemSpacing = itemSpacing,
             UserScrollEnabled = userScrollEnabled,
         }.Render(composer);
     }

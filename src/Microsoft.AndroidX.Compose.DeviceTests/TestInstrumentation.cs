@@ -17,12 +17,15 @@ namespace Microsoft.AndroidX.Compose.DeviceTests;
 [Instrumentation(Name = "net.compose.devicetests.TestInstrumentation")]
 public class TestInstrumentation : Instrumentation
 {
+    string? _filter;
+
     protected TestInstrumentation(IntPtr handle, JniHandleOwnership ownership)
         : base(handle, ownership) { }
 
     public override void OnCreate(Bundle? arguments)
     {
         base.OnCreate(arguments);
+        _filter = arguments?.GetString("filter");
         Start();
     }
 
@@ -38,10 +41,17 @@ public class TestInstrumentation : Instrumentation
                 ?? throw new InvalidOperationException("Application.Context not set on TestInstrumentation.");
             var writeablePath = ctx.GetExternalFilesDir(null)?.AbsolutePath ?? Path.GetTempPath();
             var resultsPath = Path.Combine(writeablePath, "TestResults");
-            var builder = await TestApplication.CreateBuilderAsync([
+            List<string> runnerArguments = [
                 "--results-directory", resultsPath,
                 "--report-trx"
-            ]);
+            ];
+            if (!string.IsNullOrWhiteSpace(_filter))
+            {
+                runnerArguments.Add("--filter");
+                runnerArguments.Add(_filter);
+            }
+
+            var builder = await TestApplication.CreateBuilderAsync([.. runnerArguments]);
             builder.AddMSTest(() => [GetType().Assembly]);
             builder.AddTrxReportProvider();
             builder.TestHost.AddDataConsumer(_ => consumer);

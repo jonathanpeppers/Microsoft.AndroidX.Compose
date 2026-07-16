@@ -52,8 +52,8 @@ public sealed class HorizontalUncontainedCarousel<T> : ComposableNode
     /// </summary>
     public CarouselState? State { get; set; }
 
-    /// <summary>Item spacing in dp. <see cref="float.NaN"/> uses Compose's default (0.dp).</summary>
-    public float ItemSpacing { get; set; } = float.NaN;
+    /// <summary>Item spacing in dp. <c>null</c> uses Compose's default (0.dp).</summary>
+    public Dp? ItemSpacing { get; set; }
 
     /// <summary>User scroll gesture toggle. <c>null</c> uses Compose's default (<c>true</c>).</summary>
     public bool? UserScrollEnabled { get; set; }
@@ -109,14 +109,14 @@ public sealed class HorizontalUncontainedCarousel<T> : ComposableNode
         //   7 = content         (required, never defaulted)
         int defaults = 1 << 4 | 1 << 6;
         if (modifier              is null) defaults |= 1 << 2;
-        if (float.IsNaN(ItemSpacing))      defaults |= 1 << 3;
+        if (ItemSpacing           is null) defaults |= 1 << 3;
         if (UserScrollEnabled     is null) defaults |= 1 << 5;
 
         CarouselKt.HorizontalUncontainedCarousel(
             state:             state,
             itemWidth:         _itemWidth,
             modifier:          modifier,
-            itemSpacing:       float.IsNaN(ItemSpacing) ? 0f : ItemSpacing,
+            itemSpacing:       Dp.Pack(ItemSpacing),
             flingBehavior:     null,
             userScrollEnabled: UserScrollEnabled ?? true,
             contentPadding:    null,

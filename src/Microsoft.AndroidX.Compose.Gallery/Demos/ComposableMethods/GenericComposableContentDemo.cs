@@ -40,20 +40,24 @@ public static class GenericComposableContentDemo
                 items,
                 itemWidth: 96,
                 item => Text($"Item {item}"),
-                modifier: viewport);
+                modifier: viewport,
+                itemSpacing: 8);
 
             Text("HorizontalMultiBrowseCarousel");
             HorizontalMultiBrowseCarousel(
                 items,
                 preferredItemWidth: 120,
                 item => Text($"Item {item}"),
-                modifier: viewport);
+                modifier: viewport,
+                itemSpacing: 8);
 
             Text("HorizontalCenteredHeroCarousel");
             HorizontalCenteredHeroCarousel(
                 items,
                 item => Text($"Hero {item}"),
-                modifier: viewport);
+                modifier: viewport,
+                maxItemWidth: 240,
+                itemSpacing: 8);
         });
     }
 }

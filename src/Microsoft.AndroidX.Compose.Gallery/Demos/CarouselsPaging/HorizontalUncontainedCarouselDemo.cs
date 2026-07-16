@@ -25,6 +25,6 @@ public static class HorizontalUncontainedCarouselDemo
             })
         {
             Modifier    = Modifier.FillMaxWidth().Height(160),
-            ItemSpacing = 8f,
+            ItemSpacing = 8,
         });
 }
