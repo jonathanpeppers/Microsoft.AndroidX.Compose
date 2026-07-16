@@ -22,6 +22,15 @@ public sealed class LazyHorizontalGrid<T> : ComposableNode
     readonly IReadOnlyList<T> _items;
     readonly Func<T, ComposableNode> _itemContent;
 
+    /// <summary>
+    /// Creates a horizontally scrolling grid using the managed
+    /// <paramref name="rows"/> strategy to size its rows.
+    /// </summary>
+    /// <param name="rows">
+    /// Fixed-count or adaptive row strategy created by <see cref="GridCells"/>.
+    /// </param>
+    /// <param name="items">Items rendered lazily by the grid.</param>
+    /// <param name="itemContent">Builds the composable content for each item.</param>
     public LazyHorizontalGrid(GridCells rows, IReadOnlyList<T> items, Func<T, ComposableNode> itemContent)
     {
         ArgumentNullException.ThrowIfNull(rows);

@@ -23,6 +23,15 @@ public sealed class LazyVerticalGrid<T> : ComposableNode
     readonly IReadOnlyList<T> _items;
     readonly Func<T, ComposableNode> _itemContent;
 
+    /// <summary>
+    /// Creates a vertically scrolling grid using the managed
+    /// <paramref name="columns"/> strategy to size its columns.
+    /// </summary>
+    /// <param name="columns">
+    /// Fixed-count or adaptive column strategy created by <see cref="GridCells"/>.
+    /// </param>
+    /// <param name="items">Items rendered lazily by the grid.</param>
+    /// <param name="itemContent">Builds the composable content for each item.</param>
     public LazyVerticalGrid(GridCells columns, IReadOnlyList<T> items, Func<T, ComposableNode> itemContent)
     {
         ArgumentNullException.ThrowIfNull(columns);
