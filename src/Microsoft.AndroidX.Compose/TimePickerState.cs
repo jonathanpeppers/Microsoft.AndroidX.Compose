@@ -50,8 +50,8 @@ public sealed class TimePickerState
     /// <param name="is24Hour">Whether to use 24-hour presentation.</param>
     public TimePickerState(int initialHour = 12, int initialMinute = 0, bool is24Hour = true)
     {
-        ValidateHour(initialHour);
-        ValidateMinute(initialMinute);
+        ValidateHour(initialHour, nameof(initialHour));
+        ValidateMinute(initialMinute, nameof(initialMinute));
         _initialHour = initialHour;
         _initialMinute = initialMinute;
         _hour = initialHour;
@@ -59,14 +59,14 @@ public sealed class TimePickerState
         InitialIs24Hour = is24Hour;
     }
 
-    /// <summary>Currently displayed hour (0–23). Falls back to the
-    /// constructor's <c>initialHour</c> until bound.</summary>
+    /// <summary>Currently displayed hour (0–23). Before binding, returns
+    /// the constructor value or the latest pending write.</summary>
     public int Hour
     {
         get => Jvm?.Hour ?? _hour;
         set
         {
-            ValidateHour(value);
+            ValidateHour(value, nameof(value));
             if (Jvm is null)
             {
                 _hour = value;
@@ -77,14 +77,14 @@ public sealed class TimePickerState
         }
     }
 
-    /// <summary>Currently displayed minute (0–59). Falls back to the
-    /// constructor's <c>initialMinute</c> until bound.</summary>
+    /// <summary>Currently displayed minute (0–59). Before binding, returns
+    /// the constructor value or the latest pending write.</summary>
     public int Minute
     {
         get => Jvm?.Minute ?? _minute;
         set
         {
-            ValidateMinute(value);
+            ValidateMinute(value, nameof(value));
             if (Jvm is null)
             {
                 _minute = value;
@@ -109,15 +109,15 @@ public sealed class TimePickerState
             Minute = _minute;
     }
 
-    static void ValidateHour(int value)
+    static void ValidateHour(int value, string paramName)
     {
         if ((uint)value > 23)
-            throw new ArgumentOutOfRangeException(nameof(value), value, "Hour must be from 0 through 23.");
+            throw new ArgumentOutOfRangeException(paramName, value, "Hour must be from 0 through 23.");
     }
 
-    static void ValidateMinute(int value)
+    static void ValidateMinute(int value, string paramName)
     {
         if ((uint)value > 59)
-            throw new ArgumentOutOfRangeException(nameof(value), value, "Minute must be from 0 through 59.");
+            throw new ArgumentOutOfRangeException(paramName, value, "Minute must be from 0 through 59.");
     }
 }

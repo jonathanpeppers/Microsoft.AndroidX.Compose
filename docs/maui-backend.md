@@ -1835,7 +1835,7 @@ flow through unchanged, and the wrapper preserves the matching Kotlin
 non-trailing slots, so even though only three of the five Kotlin slots are MAUI-relevant
 (`initialSelectedDateMillis`, `yearRange`, `selectableDates`), the
 bridge surfaces all five — the unused two are left `null` by the
-handler and the auto-default-mask machinery clears their
+handler and the generated omission mask keeps their
 `$default` bits.
 
 Picker wrappers keep constructor configuration separate from pending live

@@ -955,7 +955,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             string? remember = ReadString(stateAttr, "Remember");
             string? bind = ReadString(stateAttr, "Bind");
             INamedTypeSymbol? stateType = ReadType(stateAttr, "StateType");
-            if (string.IsNullOrEmpty(remember))
+            if (remember is not { Length: > 0 })
             {
                 diags.Add(Diagnostic.Create(Diagnostics.FacadeStateHolderInvalid, loc, methodName,
                     $"[StateHolder] on '{p.Name}' is missing required property 'Remember'"));
@@ -967,13 +967,13 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
                     $"[StateHolder] on '{p.Name}' is missing required property 'StateType'"));
                 return null;
             }
-            if (!SyntaxFacts.IsValidIdentifier(remember!))
+            if (!SyntaxFacts.IsValidIdentifier(remember))
             {
                 diags.Add(Diagnostic.Create(Diagnostics.FacadeStateHolderInvalid, loc, methodName,
                     $"[StateHolder] on '{p.Name}': Remember value '{remember}' is not a valid C# identifier"));
                 return null;
             }
-            if (!string.IsNullOrEmpty(bind) && !SyntaxFacts.IsValidIdentifier(bind!))
+            if (bind is { Length: > 0 } invalidBind && !SyntaxFacts.IsValidIdentifier(invalidBind))
             {
                 diags.Add(Diagnostic.Create(Diagnostics.FacadeStateHolderInvalid, loc, methodName,
                     $"[StateHolder] on '{p.Name}': Bind value '{bind}' is not a valid C# identifier"));
@@ -991,7 +991,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
                     $"[StateHolder] on '{p.Name}': cannot resolve type 'AndroidX.Compose.ComposeBridges'"));
                 return null;
             }
-            var rememberMethods = bridgesType.GetMembers(remember!).OfType<IMethodSymbol>().ToArray();
+            var rememberMethods = bridgesType.GetMembers(remember).OfType<IMethodSymbol>().ToArray();
             if (rememberMethods.Length == 0)
             {
                 diags.Add(Diagnostic.Create(Diagnostics.FacadeStateHolderInvalid, loc, methodName,
@@ -1029,9 +1029,9 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
                     $"[StateHolder] on '{p.Name}': StateType '{stateType.ToDisplayString()}'.Jvm must be accessible (public or internal)"));
                 return null;
             }
-            if (!string.IsNullOrEmpty(bind))
+            if (bind is { Length: > 0 } bindMethodName)
             {
-                var bindMethod = stateType.GetMembers(bind!).OfType<IMethodSymbol>().FirstOrDefault(m =>
+                var bindMethod = stateType.GetMembers(bindMethodName).OfType<IMethodSymbol>().FirstOrDefault(m =>
                     !m.IsStatic &&
                     m.ReturnsVoid &&
                     m.Parameters.Length == 1 &&
