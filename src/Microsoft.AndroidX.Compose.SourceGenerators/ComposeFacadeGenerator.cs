@@ -3707,7 +3707,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
 
     /// <summary>
     /// C# type display for an <see cref="FacadeSlotKind.OptionalValue"/>
-    /// property declaration. For value-class types (Dp/Sp/Em/TextAlign)
+    /// property declaration. For recognized value-class types
     /// the param is already <c>Nullable&lt;T&gt;</c> and round-trips
     /// fine with <c>FullyQualifiedFormat</c>. For reference-typed
     /// wrappers (FontWeight/TextDecoration/Shape) we have to append
@@ -3776,8 +3776,8 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
 
     /// <summary>
     /// True for parameters typed as <c>Nullable&lt;T&gt;</c> where <c>T</c>
-    /// is a recognized Compose <c>@JvmInline value class</c> (Dp/Sp/Em/
-    /// TextOverflow), for <em>nullable</em> reference-typed wrappers in
+    /// is a recognized Compose <c>@JvmInline value class</c>, for
+    /// <em>nullable</em> reference-typed wrappers in
     /// <see cref="ComposeReferenceTypes"/> (FontWeight/FontStyle/
     /// FontFamily/TextAlign/TextDecoration/Shape), or for
     /// <c>Nullable&lt;T&gt;</c> where <c>T</c> is a JNI-friendly

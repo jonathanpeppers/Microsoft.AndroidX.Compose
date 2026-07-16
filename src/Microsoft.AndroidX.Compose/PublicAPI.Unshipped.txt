@@ -1407,12 +1407,8 @@ AndroidX.Compose.TextField.TrailingIcon.set -> void
 AndroidX.Compose.TextField.VisualTransformation.get -> AndroidX.Compose.UI.Text.Input.IVisualTransformation?
 AndroidX.Compose.TextField.VisualTransformation.set -> void
 AndroidX.Compose.TextOverflow
-AndroidX.Compose.TextOverflow.Deconstruct(out int Value) -> void
 AndroidX.Compose.TextOverflow.Equals(AndroidX.Compose.TextOverflow other) -> bool
 AndroidX.Compose.TextOverflow.TextOverflow() -> void
-AndroidX.Compose.TextOverflow.TextOverflow(int Value) -> void
-AndroidX.Compose.TextOverflow.Value.get -> int
-AndroidX.Compose.TextOverflow.Value.init -> void
 AndroidX.Compose.TextStyle
 AndroidX.Compose.TextStyle.Color.get -> AndroidX.Compose.Color?
 AndroidX.Compose.TextStyle.Color.set -> void
@@ -1484,6 +1480,11 @@ AndroidX.Compose.TopSearchBar.InputField.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.TopSearchBar.InputField.set -> void
 AndroidX.Compose.TopSearchBar.TopSearchBar(AndroidX.Compose.SearchBarState! state) -> void
 AndroidX.Compose.TransformOrigin
+AndroidX.Compose.TransformOrigin.Equals(AndroidX.Compose.TransformOrigin other) -> bool
+AndroidX.Compose.TransformOrigin.PivotFractionX.get -> float
+AndroidX.Compose.TransformOrigin.PivotFractionY.get -> float
+AndroidX.Compose.TransformOrigin.TransformOrigin() -> void
+AndroidX.Compose.TransformOrigin.TransformOrigin(float pivotFractionX, float pivotFractionY) -> void
 AndroidX.Compose.Transitions
 AndroidX.Compose.TriStateCheckbox
 AndroidX.Compose.TriStateCheckbox.TriStateCheckbox(AndroidX.Compose.UI.State.ToggleableState! state, System.Action! onClick, bool enabled = true) -> void
@@ -1692,13 +1693,18 @@ override AndroidX.Compose.TabRow.Render(AndroidX.Compose.Runtime.IComposer! comp
 override AndroidX.Compose.Text.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
 override AndroidX.Compose.TextButton.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
 override AndroidX.Compose.TextField.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override AndroidX.Compose.TextOverflow.Equals(object? obj) -> bool
 override AndroidX.Compose.TextOverflow.GetHashCode() -> int
+override AndroidX.Compose.TextOverflow.ToString() -> string!
 override AndroidX.Compose.TimeInput.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
 override AndroidX.Compose.TimePicker.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
 override AndroidX.Compose.TimePickerDialog.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
 override AndroidX.Compose.Tooltip.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
 override AndroidX.Compose.TopAppBar.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
 override AndroidX.Compose.TopSearchBar.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override AndroidX.Compose.TransformOrigin.Equals(object? obj) -> bool
+override AndroidX.Compose.TransformOrigin.GetHashCode() -> int
+override AndroidX.Compose.TransformOrigin.ToString() -> string!
 override AndroidX.Compose.TriStateCheckbox.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
 override AndroidX.Compose.VerticalDivider.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
 override AndroidX.Compose.VerticalPager<T>.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
@@ -2177,7 +2183,6 @@ static AndroidX.Compose.ContentScale.None.get -> AndroidX.Compose.ContentScale!
 static AndroidX.Compose.CornerRadius.Zero.get -> AndroidX.Compose.CornerRadius
 static AndroidX.Compose.CornerRadius.operator !=(AndroidX.Compose.CornerRadius left, AndroidX.Compose.CornerRadius right) -> bool
 static AndroidX.Compose.CornerRadius.operator ==(AndroidX.Compose.CornerRadius left, AndroidX.Compose.CornerRadius right) -> bool
-static AndroidX.Compose.Dp.Pack(AndroidX.Compose.Dp? value) -> float
 static AndroidX.Compose.Dp.Zero.get -> AndroidX.Compose.Dp
 static AndroidX.Compose.Dp.implicit operator AndroidX.Compose.Dp(float value) -> AndroidX.Compose.Dp
 static AndroidX.Compose.Dp.implicit operator AndroidX.Compose.Dp(int value) -> AndroidX.Compose.Dp
@@ -2595,7 +2600,7 @@ static AndroidX.Compose.Modifier.FillMaxWidth(float fraction = 1) -> AndroidX.Co
 static AndroidX.Compose.Modifier.FocusGroup() -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.Modifier.FocusRequester(AndroidX.Compose.FocusRequester! requester) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.Modifier.Focusable(bool enabled = true) -> AndroidX.Compose.Modifier!
-static AndroidX.Compose.Modifier.GraphicsLayer(float? scaleX = null, float? scaleY = null, float? alpha = null, float? translationX = null, float? translationY = null, float? shadowElevation = null, float? rotationX = null, float? rotationY = null, float? rotationZ = null, float? cameraDistance = null, long? transformOrigin = null, AndroidX.Compose.Shape? shape = null, bool? clip = null) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.Modifier.GraphicsLayer(float? scaleX = null, float? scaleY = null, float? alpha = null, float? translationX = null, float? translationY = null, float? shadowElevation = null, float? rotationX = null, float? rotationY = null, float? rotationZ = null, float? cameraDistance = null, AndroidX.Compose.TransformOrigin? transformOrigin = null, AndroidX.Compose.Shape? shape = null, bool? clip = null) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.Modifier.Height(AndroidX.Compose.Dp height) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.Modifier.HeightIn(AndroidX.Compose.Dp? min = null, AndroidX.Compose.Dp? max = null) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.Modifier.HorizontalScroll(AndroidX.Compose.ScrollState! state, bool enabled = true, bool reverseScrolling = false) -> AndroidX.Compose.Modifier!
@@ -2692,7 +2697,7 @@ static AndroidX.Compose.ModifierExtensions.FillMaxWidth(this AndroidX.Compose.Mo
 static AndroidX.Compose.ModifierExtensions.FocusGroup(this AndroidX.Compose.Modifier! modifier) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.ModifierExtensions.FocusRequester(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.FocusRequester! requester) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.ModifierExtensions.Focusable(this AndroidX.Compose.Modifier! modifier, bool enabled = true) -> AndroidX.Compose.Modifier!
-static AndroidX.Compose.ModifierExtensions.GraphicsLayer(this AndroidX.Compose.Modifier! modifier, float? scaleX = null, float? scaleY = null, float? alpha = null, float? translationX = null, float? translationY = null, float? shadowElevation = null, float? rotationX = null, float? rotationY = null, float? rotationZ = null, float? cameraDistance = null, long? transformOrigin = null, AndroidX.Compose.Shape? shape = null, bool? clip = null) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.ModifierExtensions.GraphicsLayer(this AndroidX.Compose.Modifier! modifier, float? scaleX = null, float? scaleY = null, float? alpha = null, float? translationX = null, float? translationY = null, float? shadowElevation = null, float? rotationX = null, float? rotationY = null, float? rotationZ = null, float? cameraDistance = null, AndroidX.Compose.TransformOrigin? transformOrigin = null, AndroidX.Compose.Shape? shape = null, bool? clip = null) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.ModifierExtensions.Height(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.Dp height) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.ModifierExtensions.HeightIn(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.Dp? min = null, AndroidX.Compose.Dp? max = null) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.ModifierExtensions.HorizontalScroll(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.ScrollState! state, bool enabled = true, bool reverseScrolling = false) -> AndroidX.Compose.Modifier!
@@ -2770,7 +2775,6 @@ static AndroidX.Compose.Shape.RoundedPercent(int percent) -> AndroidX.Compose.Sh
 static AndroidX.Compose.Size.Zero.get -> AndroidX.Compose.Size
 static AndroidX.Compose.Size.operator !=(AndroidX.Compose.Size left, AndroidX.Compose.Size right) -> bool
 static AndroidX.Compose.Size.operator ==(AndroidX.Compose.Size left, AndroidX.Compose.Size right) -> bool
-static AndroidX.Compose.Sp.Pack(AndroidX.Compose.Sp? value) -> long
 static AndroidX.Compose.Sp.Zero.get -> AndroidX.Compose.Sp
 static AndroidX.Compose.Sp.implicit operator AndroidX.Compose.Sp(int value) -> AndroidX.Compose.Sp
 static AndroidX.Compose.Sp.operator !=(AndroidX.Compose.Sp left, AndroidX.Compose.Sp right) -> bool
@@ -2807,13 +2811,13 @@ static AndroidX.Compose.TextDecoration.Underline.get -> AndroidX.Compose.TextDec
 static AndroidX.Compose.TextOverflow.Clip.get -> AndroidX.Compose.TextOverflow
 static AndroidX.Compose.TextOverflow.Ellipsis.get -> AndroidX.Compose.TextOverflow
 static AndroidX.Compose.TextOverflow.MiddleEllipsis.get -> AndroidX.Compose.TextOverflow
-static AndroidX.Compose.TextOverflow.Pack(AndroidX.Compose.TextOverflow? value) -> int
 static AndroidX.Compose.TextOverflow.StartEllipsis.get -> AndroidX.Compose.TextOverflow
 static AndroidX.Compose.TextOverflow.Visible.get -> AndroidX.Compose.TextOverflow
 static AndroidX.Compose.TextOverflow.operator !=(AndroidX.Compose.TextOverflow left, AndroidX.Compose.TextOverflow right) -> bool
 static AndroidX.Compose.TextOverflow.operator ==(AndroidX.Compose.TextOverflow left, AndroidX.Compose.TextOverflow right) -> bool
-static AndroidX.Compose.TransformOrigin.Center.get -> long
-static AndroidX.Compose.TransformOrigin.Pack(float pivotFractionX, float pivotFractionY) -> long
+static AndroidX.Compose.TransformOrigin.Center.get -> AndroidX.Compose.TransformOrigin
+static AndroidX.Compose.TransformOrigin.operator !=(AndroidX.Compose.TransformOrigin left, AndroidX.Compose.TransformOrigin right) -> bool
+static AndroidX.Compose.TransformOrigin.operator ==(AndroidX.Compose.TransformOrigin left, AndroidX.Compose.TransformOrigin right) -> bool
 static AndroidX.Compose.Transitions.FadeIn(float initialAlpha = 0, AndroidX.Compose.Animation.Core.IFiniteAnimationSpec? animationSpec = null) -> AndroidX.Compose.Animation.EnterTransition!
 static AndroidX.Compose.Transitions.FadeOut(float targetAlpha = 0, AndroidX.Compose.Animation.Core.IFiniteAnimationSpec? animationSpec = null) -> AndroidX.Compose.Animation.ExitTransition!
 static AndroidX.Compose.Transitions.ScaleIn(float initialScale = 0, AndroidX.Compose.Animation.Core.IFiniteAnimationSpec? animationSpec = null) -> AndroidX.Compose.Animation.EnterTransition!
@@ -2838,5 +2842,3 @@ static AndroidX.Compose.WindowInsets.Waterfall(AndroidX.Compose.Runtime.ICompose
 virtual AndroidX.Compose.MutableState<T>.Value.get -> T
 virtual AndroidX.Compose.MutableState<T>.Value.set -> void
 virtual AndroidX.Compose.ViewModel.OnClearedCore() -> void
-~override AndroidX.Compose.TextOverflow.Equals(object obj) -> bool
-~override AndroidX.Compose.TextOverflow.ToString() -> string

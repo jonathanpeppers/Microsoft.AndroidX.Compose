@@ -115,13 +115,17 @@ public readonly struct Sp : IEquatable<Sp>, IComparable<Sp>
     public static bool operator >=(Sp a, Sp b) => a.CompareTo(b) >= 0;
 
     /// <inheritdoc/>
-    public override string ToString() => $"Sp(0x{PackedValue:X16})";
+    public override string ToString()
+    {
+        var type = unchecked((uint)(PackedValue >> 32));
+        if (type == 0)
+            return "Unspecified";
+        if (type != 1)
+            return $"InvalidSp(0x{PackedValue:X16})";
 
-    /// <summary>
-    /// Pack a nullable <see cref="Sp"/> into the packed <c>TextUnit</c>
-    /// long the JNI slot expects. <c>null</c> -&gt; <c>0L</c>; the
-    /// auto-mask leaves the matching <c>$default</c> bit set so
-    /// Kotlin's real default applies.
-    /// </summary>
-    public static long Pack(Sp? value) => value?.PackedValue ?? 0L;
+        var value = BitConverter.Int32BitsToSingle(unchecked((int)PackedValue));
+        return $"{value}.sp";
+    }
+
+    internal static long Pack(Sp? value) => value?.PackedValue ?? 0L;
 }

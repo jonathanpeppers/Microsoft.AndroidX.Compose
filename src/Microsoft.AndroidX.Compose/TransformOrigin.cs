@@ -1,41 +1,71 @@
 namespace AndroidX.Compose;
 
 /// <summary>
-/// Mirror of Kotlin's <c>androidx.compose.ui.graphics.TransformOrigin</c> —
-/// the pivot point used by transform-aware modifiers such as
-/// <see cref="Modifier.GraphicsLayer"/> for scale and rotation. Compose
-/// defines it as a <c>@JvmInline value class TransformOrigin(val packedValue: Long)</c>
-/// that packs two <see cref="float"/>s (fractions in <c>[0, 1]</c>)
-/// into a single <see cref="long"/>: <c>x</c> in the upper 32 bits,
-/// <c>y</c> in the lower 32 bits. Because the binding generator
-/// strips inline value-class types, the <see cref="Modifier.GraphicsLayer"/>
-/// API takes the raw packed <see cref="long"/>; <see cref="Pack"/>
-/// builds one from a <c>(x, y)</c> pair and <see cref="Center"/>
-/// supplies the common (0.5, 0.5) default.
+/// Pivot point used by transform-aware modifiers such as
+/// <see cref="Modifier.GraphicsLayer"/> for scale and rotation.
 /// </summary>
-public static class TransformOrigin
+/// <remarks>
+/// Fractions normally range from <c>0</c> to <c>1</c>: <c>0</c> is the
+/// left or top edge, <c>0.5</c> is the center, and <c>1</c> is the right
+/// or bottom edge. Values outside that range are allowed.
+/// </remarks>
+public readonly struct TransformOrigin : IEquatable<TransformOrigin>
 {
     /// <summary>
-    /// Packed <see cref="long"/> equivalent to Compose's
-    /// <c>TransformOrigin.Center</c> — pivot (0.5, 0.5), i.e. the
-    /// geometric center of the composable. This is the default
-    /// pivot Compose uses when none is supplied.
+    /// Creates a transform origin from horizontal and vertical pivot
+    /// fractions.
     /// </summary>
-    public static long Center { get; } = Pack(0.5f, 0.5f);
-
-    /// <summary>
-    /// Pack a (<paramref name="pivotFractionX"/>,
-    /// <paramref name="pivotFractionY"/>) pair into the
-    /// <c>TransformOrigin</c> bit layout expected by
-    /// <see cref="Modifier.GraphicsLayer"/>. Both fractions are
-    /// typically in <c>[0, 1]</c>: <c>0</c> = left/top,
-    /// <c>0.5</c> = center, <c>1</c> = right/bottom. Values outside
-    /// that range are allowed but rarely useful.
-    /// </summary>
-    public static long Pack(float pivotFractionX, float pivotFractionY)
+    /// <param name="pivotFractionX">Horizontal pivot fraction.</param>
+    /// <param name="pivotFractionY">Vertical pivot fraction.</param>
+    public TransformOrigin(float pivotFractionX, float pivotFractionY)
     {
-        long x = unchecked((uint)BitConverter.SingleToInt32Bits(pivotFractionX));
-        long y = unchecked((uint)BitConverter.SingleToInt32Bits(pivotFractionY));
-        return (x << 32) | y;
+        PivotFractionX = pivotFractionX;
+        PivotFractionY = pivotFractionY;
     }
+
+    /// <summary>The horizontal pivot fraction.</summary>
+    public float PivotFractionX { get; }
+
+    /// <summary>The vertical pivot fraction.</summary>
+    public float PivotFractionY { get; }
+
+    /// <summary>The geometric center of the composable.</summary>
+    public static TransformOrigin Center => new(0.5f, 0.5f);
+
+    internal long PackedValue
+    {
+        get
+        {
+            long x = unchecked((uint)BitConverter.SingleToInt32Bits(PivotFractionX));
+            long y = unchecked((uint)BitConverter.SingleToInt32Bits(PivotFractionY));
+            return (x << 32) | y;
+        }
+    }
+
+    internal static long Pack(TransformOrigin? value) => value?.PackedValue ?? 0L;
+
+    /// <inheritdoc/>
+    public bool Equals(TransformOrigin other) =>
+        PivotFractionX.Equals(other.PivotFractionX) &&
+        PivotFractionY.Equals(other.PivotFractionY);
+
+    /// <inheritdoc/>
+    public override bool Equals(object? obj) =>
+        obj is TransformOrigin origin && Equals(origin);
+
+    /// <inheritdoc/>
+    public override int GetHashCode() =>
+        HashCode.Combine(PivotFractionX, PivotFractionY);
+
+    /// <summary>Equality operator.</summary>
+    public static bool operator ==(TransformOrigin left, TransformOrigin right) =>
+        left.Equals(right);
+
+    /// <summary>Inequality operator.</summary>
+    public static bool operator !=(TransformOrigin left, TransformOrigin right) =>
+        !left.Equals(right);
+
+    /// <inheritdoc/>
+    public override string ToString() =>
+        $"TransformOrigin({PivotFractionX}, {PivotFractionY})";
 }
