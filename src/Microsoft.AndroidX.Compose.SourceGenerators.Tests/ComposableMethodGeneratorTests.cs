@@ -491,9 +491,10 @@ public class ComposableMethodGeneratorTests
             {
                 public static class Direct
                 {
-                    public static void Items(
+                    public static void Items<T>(
                         AndroidX.Compose.Runtime.IComposer composer,
-                        System.Collections.IEnumerable items,
+                        System.Collections.Generic.IReadOnlyList<T> items,
+                        string label,
                         ulong omittedArguments,
                         int changed) { }
                 }
@@ -502,10 +503,13 @@ public class ComposableMethodGeneratorTests
                 {
                     [AndroidX.Compose.Composable]
                     [AndroidX.Compose.ComposableDirectTarget(typeof(Direct), nameof(Direct.Items))]
-                    public static void Items(System.Collections.IEnumerable items) { }
+                    public static void Items<T>(
+                        System.Collections.Generic.IReadOnlyList<T> items,
+                        string label) { }
 
-                    public static void CallSite(System.Collections.IEnumerable items) =>
-                        Items(items);
+                    public static void CallSite(
+                        System.Collections.Generic.IReadOnlyList<int> items) =>
+                        Items(items, "Items");
                 }
             }
             """);
@@ -513,8 +517,11 @@ public class ComposableMethodGeneratorTests
         Assert.Empty(diags);
         Assert.NotNull(emitted);
         Assert.Contains("__dirty |= 0b1;", emitted);
+        Assert.DoesNotContain("__forceExecute = true;", emitted);
+        Assert.DoesNotContain("DiffSlot<global::System.Collections.Generic.IReadOnlyList<T>>", emitted);
+        Assert.Contains("__c.DiffSlot<string>(label, 4)", emitted);
         Assert.Contains(
-            "global::App.Direct.Items(__c, items, 0x0UL, __dirty)",
+            "global::App.Direct.Items<T>(__c, items, label, 0x0UL, __dirty)",
             emitted);
         AssertNoCompileErrors(output);
     }
