@@ -185,15 +185,15 @@ public static partial class ComposeExtensions
 
     /// <summary>
     /// Convenience factory for a remembered
-    /// <see cref="MutableStateFlow{T}"/> seeded with
-    /// <paramref name="initialValue"/>. The flow is cached for the
+    /// <see cref="MutableManagedState{T}"/> seeded with
+    /// <paramref name="initialValue"/>. The state is cached for the
     /// life of the composition slot, just like
     /// <see cref="Remember{T}(IComposer, Func{T}, int, string)"/>.
     /// </summary>
-    public static MutableStateFlow<T> MutableStateFlowOf<T>(
+    public static MutableManagedState<T> MutableManagedStateOf<T>(
         this IComposer composer,
         T initialValue,
         [CallerLineNumber] int line = 0,
         [CallerFilePath] string file = "")
-        => composer.Remember(() => new MutableStateFlow<T>(initialValue), line, file);
+        => composer.Remember(() => new MutableManagedState<T>(initialValue), line, file);
 }

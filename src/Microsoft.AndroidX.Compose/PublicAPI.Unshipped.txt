@@ -579,7 +579,6 @@ AndroidX.Compose.HorizontalUncontainedCarousel<T>.UserScrollEnabled.get -> bool?
 AndroidX.Compose.HorizontalUncontainedCarousel<T>.UserScrollEnabled.set -> void
 AndroidX.Compose.IState<T>
 AndroidX.Compose.IState<T>.Value.get -> T
-AndroidX.Compose.IStateFlow<T>
 AndroidX.Compose.Icon
 AndroidX.Compose.Icon.Icon(AndroidX.Compose.UI.Graphics.Painter.Painter! painter, string? contentDescription) -> void
 AndroidX.Compose.Icon.Icon(AndroidX.Compose.UI.Graphics.Vector.ImageVector! imageVector, string? contentDescription) -> void
@@ -832,16 +831,16 @@ AndroidX.Compose.Modifier.Then(AndroidX.Compose.Modifier! other) -> AndroidX.Com
 AndroidX.Compose.ModifierExtensions
 AndroidX.Compose.MultiChoiceSegmentedButtonRow
 AndroidX.Compose.MultiChoiceSegmentedButtonRow.MultiChoiceSegmentedButtonRow() -> void
+AndroidX.Compose.MutableManagedState<T>
+AndroidX.Compose.MutableManagedState<T>.MutableManagedState(T initialValue) -> void
+AndroidX.Compose.MutableManagedState<T>.TrySet(T value) -> bool
+AndroidX.Compose.MutableManagedState<T>.Update(System.Func<T, T>! transform) -> T
+AndroidX.Compose.MutableManagedState<T>.Value.get -> T
+AndroidX.Compose.MutableManagedState<T>.Value.set -> void
 AndroidX.Compose.MutableNumberState<T>
 AndroidX.Compose.MutableNumberState<T>.MutableNumberState(T initial) -> void
 AndroidX.Compose.MutableState<T>
 AndroidX.Compose.MutableState<T>.MutableState(T initial) -> void
-AndroidX.Compose.MutableStateFlow<T>
-AndroidX.Compose.MutableStateFlow<T>.MutableStateFlow(T initialValue) -> void
-AndroidX.Compose.MutableStateFlow<T>.TryEmit(T value) -> bool
-AndroidX.Compose.MutableStateFlow<T>.Update(System.Func<T, T>! transform) -> T
-AndroidX.Compose.MutableStateFlow<T>.Value.get -> T
-AndroidX.Compose.MutableStateFlow<T>.Value.set -> void
 AndroidX.Compose.MutableStateList<T>
 AndroidX.Compose.MutableStateList<T>.Add(T item) -> void
 AndroidX.Compose.MutableStateList<T>.Clear() -> void
@@ -1309,7 +1308,6 @@ AndroidX.Compose.SpanStyle.LetterSpacing.get -> AndroidX.Compose.Sp?
 AndroidX.Compose.SpanStyle.LetterSpacing.set -> void
 AndroidX.Compose.SpanStyle.SpanStyle() -> void
 AndroidX.Compose.StaggeredGridCells
-AndroidX.Compose.StateFlowExtensions
 AndroidX.Compose.StrokeCap
 AndroidX.Compose.StrokeCap.Butt = 0 -> AndroidX.Compose.StrokeCap
 AndroidX.Compose.StrokeCap.Round = 1 -> AndroidX.Compose.StrokeCap
@@ -2103,7 +2101,7 @@ static AndroidX.Compose.ComposeExtensions.IntegerResource(this AndroidX.Compose.
 static AndroidX.Compose.ComposeExtensions.LaunchedEffect(this AndroidX.Compose.Runtime.IComposer! composer, object? key1, System.Func<System.Threading.CancellationToken, System.Threading.Tasks.Task!>! body) -> void
 static AndroidX.Compose.ComposeExtensions.LaunchedEffect(this AndroidX.Compose.Runtime.IComposer! composer, object? key1, object? key2, System.Func<System.Threading.CancellationToken, System.Threading.Tasks.Task!>! body) -> void
 static AndroidX.Compose.ComposeExtensions.LaunchedEffect(this AndroidX.Compose.Runtime.IComposer! composer, object? key1, object? key2, object? key3, System.Func<System.Threading.CancellationToken, System.Threading.Tasks.Task!>! body) -> void
-static AndroidX.Compose.ComposeExtensions.MutableStateFlowOf<T>(this AndroidX.Compose.Runtime.IComposer! composer, T initialValue, int line = 0, string! file = "") -> AndroidX.Compose.MutableStateFlow<T>!
+static AndroidX.Compose.ComposeExtensions.MutableManagedStateOf<T>(this AndroidX.Compose.Runtime.IComposer! composer, T initialValue, int line = 0, string! file = "") -> AndroidX.Compose.MutableManagedState<T>!
 static AndroidX.Compose.ComposeExtensions.MutableStateOf(this AndroidX.Compose.Runtime.IComposer! composer, double initial, int line = 0, string! file = "") -> AndroidX.Compose.MutableNumberState<double>!
 static AndroidX.Compose.ComposeExtensions.MutableStateOf(this AndroidX.Compose.Runtime.IComposer! composer, float initial, int line = 0, string! file = "") -> AndroidX.Compose.MutableNumberState<float>!
 static AndroidX.Compose.ComposeExtensions.MutableStateOf(this AndroidX.Compose.Runtime.IComposer! composer, int initial, int line = 0, string! file = "") -> AndroidX.Compose.MutableNumberState<int>!
@@ -2792,8 +2790,6 @@ static AndroidX.Compose.Spacer.Width(AndroidX.Compose.Dp dp) -> AndroidX.Compose
 static AndroidX.Compose.StaggeredGridCells.Adaptive(float minSizeDp) -> AndroidX.Compose.Foundation.Lazy.Staggeredgrid.IStaggeredGridCells!
 static AndroidX.Compose.StaggeredGridCells.Fixed(int count) -> AndroidX.Compose.Foundation.Lazy.Staggeredgrid.IStaggeredGridCells!
 static AndroidX.Compose.StaggeredGridCells.FixedSize(float sizeDp) -> AndroidX.Compose.Foundation.Lazy.Staggeredgrid.IStaggeredGridCells!
-static AndroidX.Compose.StateFlowExtensions.CollectAsStateWithLifecycle<T>(this AndroidX.Compose.IStateFlow<T>! flow) -> AndroidX.Compose.IState<T>!
-static AndroidX.Compose.StateFlowExtensions.CollectAsStateWithLifecycle<T>(this AndroidX.Compose.IStateFlow<T>! flow, T initialValue) -> AndroidX.Compose.IState<T>!
 static AndroidX.Compose.TextAlign.Center.get -> AndroidX.Compose.TextAlign!
 static AndroidX.Compose.TextAlign.End.get -> AndroidX.Compose.TextAlign!
 static AndroidX.Compose.TextAlign.Justify.get -> AndroidX.Compose.TextAlign!

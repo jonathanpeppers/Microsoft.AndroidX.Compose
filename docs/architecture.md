@@ -556,17 +556,20 @@ class.
   rotation/process-death survival use `RememberSaveable` — keys are
   forwarded to Kotlin's `rememberSaveable(vararg inputs)` array so
   the saveable registry uses the same invalidation semantics.
-- **State primitives.** `MutableStateList<T>`, `MutableStateMap<K,V>`,
+- **State primitives.** `MutableManagedState<T>` provides synchronized
+  managed values that invalidate Compose readers without pretending to be a
+  Kotlin flow. `MutableStateList<T>`, `MutableStateMap<K,V>`,
   `composer.DerivedStateOf<T>(Func<T>)`, and
   `composer.ProduceState<T>(initialValue, [keys…], producer)` are
   available. `ProduceState` is implemented purely in C# via an
   `IRememberObserver` JCW — the producer is a plain
   `Func<MutableState<T>, CancellationToken, Task>`, not a Kotlin
   suspend lambda. `composer.SnapshotFlow<T>(Func<T>)` bridges Compose's
-  `snapshotFlow { producer() }` to `IAsyncEnumerable<T>`, and
-  `IStateFlow<T>.CollectAsStateWithLifecycle()` /
-  `IFlow.CollectAsStateWithLifecycle(initialValue, composer)` wrap the
-  Kotlin lifecycle-aware collectors. Still missing: custom `Saver<T, S>`
+  `snapshotFlow { producer() }` to `IAsyncEnumerable<T>`. The separate real
+  Kotlin `Xamarin.KotlinX.Coroutines.Flow.IStateFlow`
+  `CollectAsStateWithLifecycle<T>(composer)` and `IFlow`
+  `CollectAsStateWithLifecycle<T>(initialValue, composer)` APIs wrap the
+  lifecycle-aware collectors. Still missing: custom `Saver<T, S>`
   (only `autoSaver` is exposed today).
 - **Effects.** `composer.LaunchedEffect`, `composer.DisposableEffect`,
   and `composer.SideEffect` are bound (#57 / #128). `LaunchedEffect`

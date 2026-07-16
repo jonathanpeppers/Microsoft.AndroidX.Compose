@@ -2,19 +2,19 @@ using AndroidX.Compose.Gallery.Registry;
 
 namespace AndroidX.Compose.Gallery.Demos.StateEffectsAnimation;
 
-/// <summary>UDF pattern — ViewModel + MutableStateFlow + collectAsStateWithLifecycle.</summary>
-public static class ViewModelStateFlowDemo
+/// <summary>UDF pattern with thread-safe managed state owned by a view model.</summary>
+public static class ViewModelManagedStateDemo
 {
     /// <summary>Registry entry exposed via <see cref="Catalog.Demos"/>.</summary>
     public static Demo Demo => new(
-        Id:          "state-viewmodel-stateflow",
+        Id:          "state-viewmodel-managed-state",
         CategoryId:  "state-effects",
-        Title:       "ViewModel + StateFlow (UDF)",
-        Description: "A CounterViewModel exposes a MutableStateFlow<int>; the composable collects it and renders the current value. Increment / Reset post mutations through the VM.",
+        Title:       "ViewModel + managed state",
+        Description: "A CounterViewModel exposes read-only IState<int> backed by MutableManagedState<int>. Increment and Reset mutate it through the view model.",
         Build:       c =>
         {
             var vm = c.ViewModel(() => new CounterViewModel());
-            int count = vm.Count.CollectAsStateWithLifecycle().Value;
+            int count = vm.Count.Value;
 
             return new Column
             {
@@ -36,9 +36,9 @@ public static class ViewModelStateFlowDemo
 
     sealed class CounterViewModel : ViewModel
     {
-        readonly MutableStateFlow<int> _count = new(0);
+        readonly MutableManagedState<int> _count = new(0);
 
-        public IStateFlow<int> Count => _count;
+        public IState<int> Count => _count;
 
         public void Increment() => _count.Update(static c => c + 1);
 

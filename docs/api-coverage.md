@@ -2567,7 +2567,6 @@ a Compose API the matcher didn't pair up.
 - `AndroidX.Compose.FlexibleBottomAppBar`
 - `AndroidX.Compose.Icons`
 - `AndroidX.Compose.IState<T>`
-- `AndroidX.Compose.IStateFlow<T>`
 - `AndroidX.Compose.KeyboardActionsHelper`
 - `AndroidX.Compose.KeyboardOptionsCompanion`
 - `AndroidX.Compose.LargeFlexibleTopAppBar`
@@ -2575,8 +2574,8 @@ a Compose API the matcher didn't pair up.
 - `AndroidX.Compose.LocalLifecycleOwner`
 - `AndroidX.Compose.MediumFlexibleTopAppBar`
 - `AndroidX.Compose.ModifierExtensions`
+- `AndroidX.Compose.MutableManagedState<T>`
 - `AndroidX.Compose.MutableNumberState<T>`
-- `AndroidX.Compose.MutableStateFlow<T>`
 - `AndroidX.Compose.MutableStateList<T>`
 - `AndroidX.Compose.MutableStateMap<TKey, TValue>`
 - `AndroidX.Compose.NavBackStackEntry`
@@ -2602,7 +2601,6 @@ a Compose API the matcher didn't pair up.
 - `AndroidX.Compose.SheetValueConfirmStateChange`
 - `AndroidX.Compose.Size`
 - `AndroidX.Compose.SpExtensions`
-- `AndroidX.Compose.StateFlowExtensions`
 - `AndroidX.Compose.Transitions`
 - `AndroidX.Compose.Icons.AutoMirrored.TwoTone`
 - `AndroidX.Compose.Icons.TwoTone`

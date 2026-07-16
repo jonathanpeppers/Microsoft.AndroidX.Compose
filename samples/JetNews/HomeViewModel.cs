@@ -2,7 +2,7 @@ namespace AndroidX.Compose.Samples.JetNews;
 
 /// <summary>
 /// View model for the JetNews home screen. Owns the feed
-/// <see cref="MutableStateFlow{T}"/>, kicks off the initial fetch
+/// <see cref="MutableManagedState{T}"/>, kicks off the initial fetch
 /// from its ctor, and exposes <see cref="RefreshAsync"/> as the
 /// only user-facing command — the canonical UDF surface.
 /// </summary>
@@ -14,10 +14,10 @@ namespace AndroidX.Compose.Samples.JetNews;
 public sealed class HomeViewModel : ViewModel
 {
     readonly IPostsRepository _repo;
-    readonly MutableStateFlow<HomeUiState> _uiState = new(new HomeUiState.Loading());
+    readonly MutableManagedState<HomeUiState> _uiState = new(new HomeUiState.Loading());
 
     /// <summary>The single observable feed state.</summary>
-    public IStateFlow<HomeUiState> UiState => _uiState;
+    public IState<HomeUiState> UiState => _uiState;
 
     /// <summary>
     /// Construct and kick off the initial feed fetch. The
@@ -67,4 +67,3 @@ public sealed class HomeViewModel : ViewModel
         }
     }
 }
-
