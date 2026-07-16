@@ -18,10 +18,10 @@ public sealed class Tooltip : ComposableNode
     public Tooltip(bool isPersistent = false) => _isPersistent = isPersistent;
 
     /// <summary>Required: the popup body shown on long-press / hover.</summary>
-    public ComposableNode? Tip { get; set; }
+    public required ComposableNode Tip { get; set; }
 
     /// <summary>Required: the always-visible anchor the tooltip attaches to.</summary>
-    public ComposableNode? Anchor { get; set; }
+    public required ComposableNode Anchor { get; set; }
 
     public override void Render(IComposer composer)
     {

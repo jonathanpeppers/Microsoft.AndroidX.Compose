@@ -27,7 +27,7 @@ public sealed class ExpandedFullScreenSearchBar : ComposableContainer
     public ExpandedFullScreenSearchBar(SearchBarState state) => _state = state;
 
     /// <summary>Required: composable that renders the search input field inside the popup.</summary>
-    public ComposableNode? InputField { get; set; }
+    public required ComposableNode InputField { get; set; }
 
     public override void Render(IComposer composer)
     {

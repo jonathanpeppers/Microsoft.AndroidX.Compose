@@ -291,7 +291,8 @@ helpers, operators.
 | `IFunction1` + `[Callback(typeof(T))]`                                        | `Action<T>` ctor; `T` ∈ {`bool`, `string`, `float`}                                                                                                                                        |
 | `IFunction2` content (non-nullable, sole content slot)                        | `ComposableLambdas.Wrap2(…)` — container shape                                                                                                                                             |
 | `IFunction3` content (non-nullable, sole content slot)                        | `ComposableLambdas.Wrap3(…)` — container shape                                                                                                                                             |
-| `IFunction2?` / `IFunction3?` (any nullable, OR `[Slot]`, OR >1 content slot) | Named `ComposableNode?` property — multi-slot leaf                                                                                                                                         |
+| `IFunction2` / `IFunction3` named slot (non-nullable, `[Slot]`, or >1 content slot) | Required, non-nullable `ComposableNode` property — multi-slot leaf; generated code retains a Render-time null guard for reflection and older-language callers                                                                                           |
+| `IFunction2?` / `IFunction3?` named slot                                      | Optional `ComposableNode?` property — multi-slot leaf                                                                                                                                       |
 | `IntPtr` with name ending `Scope`                                             | Kotlin extension receiver; auto-bound to `RenderContext.CurrentScope` (no ctor slot)                                                                                                       |
 | `IntPtr` + `[PainterResource]`                                                | Synthetic `int painterResourceId` ctor arg + `PainterResource` resolution + try/finally                                                                                                    |
 | `IntPtr` + `[StateHolder(Remember = …, StateType = typeof(…))]`               | State-holder (Phase 4): exposes wrapper as defaulted ctor slot (`StateType? state = null`), calls `RememberXxxState(composer)` on first render, populates `state.Jvm`, forwards JNI handle |
@@ -397,7 +398,10 @@ so `[CallerFilePath]` + `[CallerLineNumber]` slot keys inside
   `Card`, `Text`, `Column`, `Row`, `Box`).
 - **Phase 2** — `[Callback(typeof(T))]` for `IFunction1` (`TextField`,
   `OutlinedTextField`, `IconToggleButton` family).
-- **Phase 3** — multi-slot leaf with named `ComposableNode?` properties
+- **Phase 3** — multi-slot leaf with named slot properties. Non-nullable
+  Kotlin slots with no default become C# `required ComposableNode` properties;
+  nullable/defaultable slots remain `ComposableNode?`. Required properties keep
+  a Render-time null guard for reflection and older-language callers.
   (`AlertDialog`, `AssistChip`, `ListItem`, `Snackbar`, `BadgedBox`, `Tab`,
   `NavigationBarItem`, top-app-bar family).
 - **Phase 4 / 4b / 4c** — `[StateHolder]` shapes above (`DatePicker`,

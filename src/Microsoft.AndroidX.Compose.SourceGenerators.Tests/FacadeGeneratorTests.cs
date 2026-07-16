@@ -1061,8 +1061,11 @@ public class FacadeGeneratorTests
         Assert.NotNull(emitted);
         // Leaf (not a container): required ConfirmButton property + null-check.
         Assert.Contains("public sealed partial class AlertDialog : global::AndroidX.Compose.ComposableNode", emitted);
-        Assert.Contains("public global::AndroidX.Compose.ComposableNode? ConfirmButton { get; set; }", emitted);
+        Assert.Contains("/// <summary>Required composable slot for Kotlin's <c>confirmButton</c> parameter.</summary>", emitted);
+        Assert.Contains("public required global::AndroidX.Compose.ComposableNode ConfirmButton { get; set; }", emitted);
+        Assert.Contains("/// <summary>Optional composable slot for Kotlin's <c>dismissButton</c> parameter.</summary>", emitted);
         Assert.Contains("public global::AndroidX.Compose.ComposableNode? DismissButton { get; set; }", emitted);
+        Assert.DoesNotContain("public required global::AndroidX.Compose.ComposableNode DismissButton", emitted);
         Assert.Contains("if (ConfirmButton is null)", emitted);
         // OnDismissRequest is a System.Action ctor param.
         Assert.Contains("public AlertDialog(global::System.Action onDismissRequest)", emitted);
@@ -1437,7 +1440,7 @@ public class FacadeGeneratorTests
         var (output, diags, emitted) = Run(code, "ListItem");
         Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
         Assert.NotNull(emitted);
-        Assert.Contains("public global::AndroidX.Compose.ComposableNode? Headline { get; set; }", emitted);
+        Assert.Contains("public required global::AndroidX.Compose.ComposableNode Headline { get; set; }", emitted);
         Assert.Contains("public global::AndroidX.Compose.ComposableNode? Overline { get; set; }", emitted);
         Assert.Contains("public global::AndroidX.Compose.ComposableNode? Trailing { get; set; }", emitted);
         Assert.Contains("if (Headline is null)", emitted);
@@ -1480,8 +1483,8 @@ public class FacadeGeneratorTests
         Assert.NotNull(emitted);
         // Two required Function3 slots → both surface as properties, not RenderChildren.
         Assert.Contains("public sealed partial class BadgedBox : global::AndroidX.Compose.ComposableNode", emitted);
-        Assert.Contains("public global::AndroidX.Compose.ComposableNode? Badge { get; set; }", emitted);
-        Assert.Contains("public global::AndroidX.Compose.ComposableNode? Content { get; set; }", emitted);
+        Assert.Contains("public required global::AndroidX.Compose.ComposableNode Badge { get; set; }", emitted);
+        Assert.Contains("public required global::AndroidX.Compose.ComposableNode Content { get; set; }", emitted);
         Assert.Contains("if (Badge is null)", emitted);
         Assert.Contains("if (Content is null)", emitted);
 
@@ -3778,7 +3781,7 @@ public class FacadeGeneratorTests
         // The facade exposes Subtitle (PascalCased BranchOn) plus the
         // three shared optional slots as nullable ComposableNode?
         // properties — and Title is required.
-        Assert.Contains("public global::AndroidX.Compose.ComposableNode? Title { get; set; }", emitted);
+        Assert.Contains("public required global::AndroidX.Compose.ComposableNode Title { get; set; }", emitted);
         Assert.Contains("public global::AndroidX.Compose.ComposableNode? Subtitle { get; set; }", emitted);
         Assert.Contains("public global::AndroidX.Compose.ComposableNode? NavigationIcon { get; set; }", emitted);
         Assert.Contains("public global::AndroidX.Compose.ComposableNode? Actions { get; set; }", emitted);

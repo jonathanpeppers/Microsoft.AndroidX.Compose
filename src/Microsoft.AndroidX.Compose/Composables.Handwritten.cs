@@ -120,7 +120,10 @@ public static partial class Composables
         ArgumentNullException.ThrowIfNull(content);
 
         var scaffold = composer.Remember(
-            () => new global::AndroidX.Compose.BottomSheetScaffold(sheetState),
+            () => new global::AndroidX.Compose.BottomSheetScaffold(sheetState)
+            {
+                SheetContent = new ComposableContentNode(sheetContent),
+            },
             sheetState);
         scaffold.Modifier = modifier;
         scaffold.SheetContent = new ComposableContentNode(sheetContent);

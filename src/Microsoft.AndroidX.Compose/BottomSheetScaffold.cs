@@ -52,7 +52,7 @@ public sealed class BottomSheetScaffold : ComposableContainer
     }
 
     /// <summary>Required: the persistent bottom-sheet content.</summary>
-    public ComposableNode? SheetContent { get; set; }
+    public required ComposableNode SheetContent { get; set; }
 
     internal ComposableNode? ComposableMethodContent { get; set; }
 

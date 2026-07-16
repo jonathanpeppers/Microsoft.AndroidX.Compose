@@ -1353,7 +1353,20 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         // Phase 3 — named properties.
         foreach (var s in namedSlots)
         {
-            sb.Append("        public global::AndroidX.Compose.ComposableNode? ").Append(PropertyName(s)).AppendLine(" { get; set; }");
+            var propertyName = PropertyName(s);
+            bool isRequired = s.Kind is FacadeSlotKind.RequiredFunction2 or FacadeSlotKind.RequiredFunction3;
+            sb.Append("        /// <summary>")
+              .Append(isRequired ? "Required" : "Optional")
+              .Append(" composable slot for Kotlin's <c>")
+              .Append(s.Param.Name)
+              .AppendLine("</c> parameter.</summary>");
+            sb.Append("        public ");
+            if (isRequired)
+                sb.Append("required ");
+            sb.Append("global::AndroidX.Compose.ComposableNode")
+              .Append(isRequired ? " " : "? ")
+              .Append(propertyName)
+              .AppendLine(" { get; set; }");
         }
 
         // OptionalValue — Compose value-class types (Dp?/Sp?/Em?/
