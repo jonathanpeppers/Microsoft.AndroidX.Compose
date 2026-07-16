@@ -41,7 +41,7 @@ public static class GenericComposableContentDemo
                 itemWidth: 96,
                 item => Text($"Item {item}"),
                 modifier: viewport,
-                itemSpacing: 8.Dp());
+                itemSpacing: 8);
 
             Text("HorizontalMultiBrowseCarousel");
             HorizontalMultiBrowseCarousel(
@@ -49,15 +49,15 @@ public static class GenericComposableContentDemo
                 preferredItemWidth: 120,
                 item => Text($"Item {item}"),
                 modifier: viewport,
-                itemSpacing: 8.Dp());
+                itemSpacing: 8);
 
             Text("HorizontalCenteredHeroCarousel");
             HorizontalCenteredHeroCarousel(
                 items,
                 item => Text($"Hero {item}"),
                 modifier: viewport,
-                maxItemWidth: 240.Dp(),
-                itemSpacing: 8.Dp());
+                maxItemWidth: 240,
+                itemSpacing: 8);
         });
     }
 }

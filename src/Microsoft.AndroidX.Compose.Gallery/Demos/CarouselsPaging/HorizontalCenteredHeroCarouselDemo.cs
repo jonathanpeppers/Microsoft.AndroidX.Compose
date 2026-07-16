@@ -24,7 +24,7 @@ public static class HorizontalCenteredHeroCarouselDemo
             })
         {
             Modifier     = Modifier.FillMaxWidth().Height(220),
-            MaxItemWidth = 280.Dp(),
-            ItemSpacing  = 8.Dp(),
+            MaxItemWidth = 280,
+            ItemSpacing  = 8,
         });
 }
