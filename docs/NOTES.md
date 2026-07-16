@@ -420,9 +420,11 @@ into child renders. User code need not see `IComposer`; the implementation layer
 Deferred callbacks invoked after the dynamic scope closes cannot use
 implicit-composer APIs. `[Composable]` methods are synchronous, and parallel
 composition threads have independent ambient slots.
-CN5009 rejects composerless calls outside `[Composable]` methods and delegate
-parameters marked `[ComposableContent]`, catching invalid deferred callbacks
-at compile time.
+CN5009 traces composable delegates through local variables, local functions,
+method groups, anonymous functions, and conditional/coalescing expressions.
+Every path must end at a synchronous `[ComposableContent]` sink or an immediate
+invocation in composable scope; returns, field/property storage, unmarked
+arguments, and async/deferred callbacks are rejected at the escape site.
 
 ### 7. Nested content lambdas can reuse the outer composer reference
 

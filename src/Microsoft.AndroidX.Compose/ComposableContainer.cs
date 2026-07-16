@@ -36,7 +36,8 @@ public abstract class ComposableContainer : ComposableNode, IEnumerable
     /// type a bare lambda when the call-site parameter is itself a
     /// delegate — the implicit operator is otherwise invisible.
     /// </summary>
-    public void Add(Func<IComposer, ComposableNode?> builder)
+    public void Add(
+        [ComposableContent] Func<IComposer, ComposableNode?> builder)
     {
         ArgumentNullException.ThrowIfNull(builder);
         _children.Add(new Composed(builder));

@@ -54,6 +54,8 @@ public sealed class BottomSheetScaffold : ComposableContainer
     /// <summary>Required: the persistent bottom-sheet content.</summary>
     public ComposableNode? SheetContent { get; set; }
 
+    internal ComposableNode? Tier2Content { get; set; }
+
     /// <summary>Optional: the sheet's drag handle.</summary>
     public ComposableNode? SheetDragHandle { get; set; }
 
@@ -80,31 +82,24 @@ public sealed class BottomSheetScaffold : ComposableContainer
         // every Invoke so the user can mutate ConfirmValueChange.
         _confirmValueChangeAdapter.Callback = ConfirmValueChange;
 
-        SheetState? sheetState = null;
-        if (_sheetState is not null || ConfirmValueChange is not null)
-        {
-            // Always call RememberStandardBottomSheetState on every
-            // recomposition — Kotlin's slot-table-keyed remember{}
-            // returns the same instance, but skipping the call would
-            // shift slot positions for the RememberBottomSheetScaffoldState
-            // call that follows. Cache identity at the wrapper level
-            // (Jvm field) but keep the call shape stable.
-            sheetState = BottomSheetScaffoldKt.RememberStandardBottomSheetState(
-                initialValue:        SheetValue.PartiallyExpanded,
-                confirmValueChange:  _confirmValueChangeAdapter,
-                skipHiddenState:     true,
-                _composer:           composer,
-                p4:                  0,
-                _changed:            0);
-            if (_sheetState is not null)
-                _sheetState.Jvm = sheetState;
-        }
+        // Keep the remember-call shape constant even when
+        // ConfirmValueChange toggles between null and non-null. The stable
+        // adapter treats null as "allow", matching Kotlin's default.
+        var sheetState = BottomSheetScaffoldKt.RememberStandardBottomSheetState(
+            initialValue:        SheetValue.PartiallyExpanded,
+            confirmValueChange:  _confirmValueChangeAdapter,
+            skipHiddenState:     true,
+            _composer:           composer,
+            p4:                  0,
+            _changed:            0);
+        if (_sheetState is not null)
+            _sheetState.Jvm = sheetState;
 
         // Bound C# call — RememberBottomSheetScaffoldState is NOT stripped.
         // _changed (= Kotlin's $default) bit 0 = bottomSheetState defaulted,
-        // bit 1 = snackbarHostState defaulted. We never wire snackbar so
-        // bit 1 stays set; bit 0 clears only when we provided a sheetState.
-        var changed = sheetState is null ? 3 : 2;
+        // bit 1 = snackbarHostState defaulted. We always supply the stable
+        // bottom-sheet state and never wire snackbar, so only bit 1 stays set.
+        const int changed = 2;
         var scaffoldState = BottomSheetScaffoldKt.RememberBottomSheetScaffoldState(
             bottomSheetState:   sheetState,
             snackbarHostState:  null,
@@ -112,8 +107,19 @@ public sealed class BottomSheetScaffold : ComposableContainer
             p3:                 0,
             _changed:           changed);
 
-        var sheet   = ComposableLambdas.Wrap3(composer, c => SheetContent.Render(c));
-        var content = ComposableLambdas.Wrap3(composer, c => RenderChildren(c));
+        var sheet = ComposableLambdas.Wrap3(
+            composer,
+            c => SheetContent.Render(c));
+        var tier2Content = Tier2Content;
+        var content = ComposableLambdas.Wrap3(
+            composer,
+            c =>
+            {
+                if (tier2Content is null)
+                    RenderChildren(c);
+                else
+                    tier2Content.Render(c);
+            });
 
         var dragHandle = SheetDragHandle is null ? null
             : ComposableLambdas.Wrap2(composer, c => SheetDragHandle.Render(c));
