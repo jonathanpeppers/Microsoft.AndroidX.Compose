@@ -476,6 +476,7 @@ internal static class Attributes
                 public StateHolderAttribute() { }
                 public string Remember { get; set; } = "";
                 public global::System.Type StateType { get; set; } = null!;
+                public string Bind { get; set; } = "";
                 public bool SharedState { get; set; }
             }
 

@@ -1,5 +1,4 @@
 using AndroidX.Compose.Material3;
-using Kotlin.Ranges;
 
 namespace AndroidX.Compose;
 
@@ -8,8 +7,8 @@ namespace AndroidX.Compose;
 /// <see cref="DatePickerDialog"/>. The underlying JVM
 /// <c>androidx.compose.material3.DatePickerState</c> is created lazily
 /// the first time a <see cref="DatePicker"/> bound to this state is
-/// rendered; reads/writes to <see cref="SelectedDateMillis"/> before
-/// that point are no-ops/fallbacks.
+/// rendered. Live-value writes made before that point are retained and
+/// seed the JVM state when it is created.
 /// </summary>
 /// <remarks>
 /// Typical usage — <c>Remember</c> a state instance, pass it to a
@@ -31,25 +30,21 @@ namespace AndroidX.Compose;
 /// </code>
 ///
 /// The constructor's optional parameters seed the underlying state on
-/// first composition (via the Phase 4b <c>RememberDatePickerState</c>
-/// bridge). They're read once when the JVM state is first allocated;
-/// mutating <see cref="InitialSelectedDateMillis"/> /
-/// <see cref="InitialYearRange"/> / <see cref="InitialSelectableDates"/>
-/// after binding has no effect unless the host re-keys the surrounding
-/// <c>composer.Remember(...)</c> to force a fresh allocation.
+/// first composition. After binding, live properties read and write the
+/// JVM state directly.
 /// </remarks>
 public sealed class DatePickerState
 {
-    internal IDatePickerState? Jvm;
+    readonly long? _initialSelectedDateMillis;
+    readonly long? _initialDisplayedMonthMillis;
+    long? _selectedDateMillis;
+    long? _displayedMonthMillis;
+    bool _hasPendingSelectedDate;
+    bool _hasPendingDisplayedMonth;
 
-    /// <summary>
-    /// Constructs an empty state holder. The underlying JVM
-    /// <c>DatePickerState</c> is allocated on first <see cref="DatePicker"/>
-    /// render with all values left at Kotlin's defaults.
-    /// </summary>
-    public DatePickerState()
-    {
-    }
+    internal IDatePickerState? Jvm;
+    internal long? RememberSelectedDateMillis => _selectedDateMillis;
+    internal long? RememberDisplayedMonthMillis => _displayedMonthMillis;
 
     /// <summary>
     /// Constructs a state holder seeded with the supplied initial values.
@@ -59,33 +54,41 @@ public sealed class DatePickerState
     /// </summary>
     /// <param name="initialSelectedDateMillis">Initial selection as Unix
     /// epoch milliseconds (UTC), or <c>null</c> for "no initial selection".</param>
-    /// <param name="initialYearRange">Inclusive range of selectable years
+    /// <param name="initialDisplayedMonthMillis">First-of-month milliseconds
+    /// for the initially displayed month, or <c>null</c> to let Kotlin
+    /// derive it from the selected date.</param>
+    /// <param name="initialYearRange">Inclusive managed range of selectable years
     /// shown in the year-grid. <c>null</c> keeps Kotlin's default
     /// (1900–2100).</param>
+    /// <param name="initialDisplayMode">Initial packed Material 3 display
+    /// mode, or <c>null</c> for calendar mode.</param>
     /// <param name="initialSelectableDates">Per-day enable/disable
     /// adapter. <c>null</c> keeps Kotlin's default (every date
     /// selectable).</param>
     public DatePickerState(
-        long?              initialSelectedDateMillis = null,
-        IntRange?          initialYearRange          = null,
-        ISelectableDates?  initialSelectableDates    = null)
+        long?                initialSelectedDateMillis   = null,
+        long?                initialDisplayedMonthMillis = null,
+        DatePickerYearRange? initialYearRange            = null,
+        int?                 initialDisplayMode           = null,
+        ISelectableDates?    initialSelectableDates       = null)
     {
-        if (initialSelectedDateMillis is long ms)
-            InitialSelectedDateMillis = Java.Lang.Long.ValueOf(ms);
-        InitialYearRange       = initialYearRange;
+        _initialSelectedDateMillis = initialSelectedDateMillis;
+        _initialDisplayedMonthMillis = initialDisplayedMonthMillis;
+        _selectedDateMillis = initialSelectedDateMillis;
+        _displayedMonthMillis = initialDisplayedMonthMillis;
+        InitialYearRange = initialYearRange;
+        InitialDisplayMode = initialDisplayMode;
         InitialSelectableDates = initialSelectableDates;
     }
 
     /// <summary>
-    /// Initial selection as a boxed <see cref="Java.Lang.Long"/>
-    /// (Kotlin's <c>Long?</c>). Read by the Phase 4b
-    /// <c>RememberDatePickerState</c> bridge on first composition;
-    /// mutating after binding has no effect (the live value lives in
-    /// <see cref="SelectedDateMillis"/>). Most callers should use the
-    /// <c>long?</c> constructor parameter instead of touching this
-    /// directly.
+    /// Initial selection as Unix epoch milliseconds (UTC). This value can
+    /// only be configured while constructing the holder.
     /// </summary>
-    public Java.Lang.Long? InitialSelectedDateMillis { get; set; }
+    public long? InitialSelectedDateMillis
+    {
+        get => _initialSelectedDateMillis;
+    }
 
     /// <summary>
     /// First-of-month milliseconds for the initial month shown by the
@@ -93,21 +96,22 @@ public sealed class DatePickerState
     /// usually left <c>null</c> so Kotlin defaults to the month
     /// containing <see cref="InitialSelectedDateMillis"/>.
     /// </summary>
-    public Java.Lang.Long? InitialDisplayedMonthMillis { get; set; }
+    public long? InitialDisplayedMonthMillis
+    {
+        get => _initialDisplayedMonthMillis;
+    }
 
     /// <summary>
-    /// Inclusive year range for the year-grid view. Read once by the
-    /// Phase 4b <c>RememberDatePickerState</c> bridge on first
-    /// composition.
+    /// Inclusive managed year range for the year-grid view.
     /// </summary>
-    public IntRange? InitialYearRange { get; set; }
+    public DatePickerYearRange? InitialYearRange { get; }
 
     /// <summary>
     /// Initial display mode (<c>DatePicker</c> or <c>Input</c>). Maps
     /// to Kotlin's <c>DisplayMode</c> packed-int enum. <c>null</c> uses
     /// Kotlin's default (calendar mode).
     /// </summary>
-    public int? InitialDisplayMode { get; set; }
+    public int? InitialDisplayMode { get; }
 
     /// <summary>
     /// Per-day / per-year enable/disable adapter. Read once by the
@@ -120,33 +124,62 @@ public sealed class DatePickerState
     /// as a <c>readonly</c> field, mirroring the Phase 10
     /// <c>ConfirmStateChange</c> pattern).
     /// </summary>
-    public ISelectableDates? InitialSelectableDates { get; set; }
+    public ISelectableDates? InitialSelectableDates { get; }
 
     /// <summary>
     /// The currently selected date as Unix epoch milliseconds (UTC), or
     /// <c>null</c> if no date is selected. Mirrors Kotlin's
-    /// <c>DatePickerState.selectedDateMillis: Long?</c>. Returns
-    /// <c>null</c> until the first <see cref="DatePicker"/> render binds
-    /// this state to the JVM picker.
+    /// <c>DatePickerState.selectedDateMillis: Long?</c>. Before binding,
+    /// reads and writes use the pending value that will seed the JVM state.
     /// </summary>
     public long? SelectedDateMillis
     {
-        get => Jvm?.SelectedDateMillis?.LongValue();
+        get => Jvm is { } jvm
+            ? jvm.SelectedDateMillis?.LongValue()
+            : _selectedDateMillis;
         set
         {
-            if (Jvm is not null)
-                Jvm.SelectedDateMillis = value is long ms ? Java.Lang.Long.ValueOf(ms) : null;
+            if (Jvm is null)
+            {
+                _selectedDateMillis = value;
+                _hasPendingSelectedDate = true;
+                return;
+            }
+
+            using var boxed = value is long milliseconds
+                ? Java.Lang.Long.ValueOf(milliseconds)
+                : null;
+            Jvm.SelectedDateMillis = boxed;
         }
     }
 
     /// <summary>
     /// First-of-month milliseconds for the month currently shown by the
     /// picker. Mirrors Kotlin's <c>DatePickerState.displayedMonthMillis</c>.
-    /// Returns <c>0</c> until the state is bound.
+    /// Before binding, reads and writes use the pending initial month.
+    /// Returns <c>0</c> when no initial month was supplied.
     /// </summary>
     public long DisplayedMonthMillis
     {
-        get => Jvm?.DisplayedMonthMillis ?? 0L;
-        set { if (Jvm is not null) Jvm.DisplayedMonthMillis = value; }
+        get => Jvm?.DisplayedMonthMillis ?? _displayedMonthMillis ?? 0L;
+        set
+        {
+            if (Jvm is null)
+            {
+                _displayedMonthMillis = value;
+                _hasPendingDisplayedMonth = true;
+            }
+            else
+                Jvm.DisplayedMonthMillis = value;
+        }
+    }
+
+    internal void BindJvm(IDatePickerState jvm)
+    {
+        Jvm = jvm;
+        if (_hasPendingSelectedDate)
+            SelectedDateMillis = _selectedDateMillis;
+        if (_hasPendingDisplayedMonth && _displayedMonthMillis is long displayedMonthMillis)
+            DisplayedMonthMillis = displayedMonthMillis;
     }
 }

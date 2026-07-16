@@ -2294,6 +2294,9 @@ public class FacadeGeneratorTests
                 internal int InitialHour { get; }
                 internal int InitialMinute { get; }
                 internal bool InitialIs24Hour { get; }
+                internal int RememberHour => InitialHour;
+                internal int RememberMinute => InitialMinute;
+                internal void BindJvm(global::AndroidX.Compose.Material3.ITimePickerState jvm) => Jvm = jvm;
                 public int Hour => Jvm?.Hour ?? InitialHour;
                 public int Minute => Jvm?.Minute ?? InitialMinute;
                 public bool Is24Hour => Jvm?.Is24hour() ?? InitialIs24Hour;
@@ -2336,7 +2339,7 @@ public class FacadeGeneratorTests
                         int defaults,
                         IComposer composer);
 
-                    public static IntPtr RememberTimePickerState(int initialHour, int initialMinute,
+                    public static IntPtr RememberTimePickerState(int rememberHour, int rememberMinute,
                                                                  bool is24Hour, IComposer composer) => default;
                 }
             }
@@ -2356,12 +2359,12 @@ public class FacadeGeneratorTests
         Assert.Contains("public TimePicker(global::AndroidX.Compose.TimePickerState? state = null)", emitted);
         Assert.Contains("_state = state ?? new global::AndroidX.Compose.TimePickerState();", emitted);
 
-        // Render: Remember called with wrapper-sourced init args.
-        // InitialHour/InitialMinute resolve via Pascal match;
+        // Render: Remember called with wrapper-sourced pending args.
+        // RememberHour/RememberMinute resolve via Pascal match;
         // is24Hour falls back to Is24Hour (live getter), which returns
         // InitialIs24Hour while Jvm is still null on first render.
         Assert.Contains(
-            "var __state = global::AndroidX.Compose.ComposeBridges.RememberTimePickerState(_state!.InitialHour, _state!.InitialMinute, _state!.Is24Hour, composer);",
+            "var __state = global::AndroidX.Compose.ComposeBridges.RememberTimePickerState(_state!.RememberHour, _state!.RememberMinute, _state!.Is24Hour, composer);",
             emitted);
         // Unguarded Jvm population — Phase 4b knows _state is non-null.
         Assert.Contains("if (_state.Jvm is null)", emitted);
@@ -2460,13 +2463,14 @@ public class FacadeGeneratorTests
                     public static partial void TimePicker(
                         [StateHolder(Remember = nameof(RememberTimePickerState),
                                      StateType = typeof(TimePickerState),
+                                     Bind = nameof(TimePickerState.BindJvm),
                                      SharedState = true)]
                         IntPtr state,
                         IModifier? modifier,
                         int defaults,
                         IComposer composer);
 
-                    public static IntPtr RememberTimePickerState(int initialHour, int initialMinute,
+                    public static IntPtr RememberTimePickerState(int rememberHour, int rememberMinute,
                                                                  bool is24Hour, IComposer composer) => default;
                 }
             }
@@ -2488,11 +2492,14 @@ public class FacadeGeneratorTests
         // Cache-miss branch — call Remember, populate Jvm so the next
         // sibling will hit the cached path.
         Assert.Contains(
-            "__state = global::AndroidX.Compose.ComposeBridges.RememberTimePickerState(_state!.InitialHour, _state!.InitialMinute, _state!.Is24Hour, composer);",
+            "__state = global::AndroidX.Compose.ComposeBridges.RememberTimePickerState(_state!.RememberHour, _state!.RememberMinute, _state!.Is24Hour, composer);",
             emitted);
         // Phase 4b assigns unguarded (ctor auto-create guarantees non-null).
         Assert.Contains(
-            "_state.Jvm = global::Java.Lang.Object.GetObject<global::AndroidX.Compose.Material3.ITimePickerState>(__state, global::Android.Runtime.JniHandleOwnership.DoNotTransfer)!;",
+            "_state.BindJvm(",
+            emitted);
+        Assert.Contains(
+            "global::Java.Lang.Object.GetObject<global::AndroidX.Compose.Material3.ITimePickerState>(__state, global::Android.Runtime.JniHandleOwnership.DoNotTransfer)",
             emitted);
 
         // Must NOT emit the non-shared "always call Remember" preamble.
@@ -2685,6 +2692,58 @@ public class FacadeGeneratorTests
         Assert.Contains(diags, d => d.Id == "CN3009"
             && d.GetMessage().Contains("cannot resolve Remember parameter 'mystery'")
             && d.GetMessage().Contains("InitialMystery"));
+    }
+
+    [Fact]
+    public void ParameterisedStateHolder_IncompatibleMemberType_FailsCN3009()
+    {
+        var code = $$"""
+            using global::AndroidX.Compose.Runtime;
+            using global::AndroidX.Compose.UI;
+            using AndroidX.Compose;
+            using System;
+
+            [assembly: ComposeDefaults("TimePickerDefault",
+                "!state", "modifier", "colors", "layoutType")]
+
+            namespace AndroidX.Compose.Material3
+            {
+                public interface ITimePickerState { }
+            }
+
+            namespace AndroidX.Compose
+            {
+                public sealed class BadState
+                {
+                    internal global::AndroidX.Compose.Material3.ITimePickerState? Jvm;
+                    public string InitialHour => "12";
+                }
+
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(Class="x/y/TimePickerKt", JvmName="TimePicker-mT9BvqQ",
+                                   Signature="{{TimePickerSig}}",
+                                   Defaults=typeof(TimePickerDefault))]
+                    [ComposeFacade]
+                    public static partial void TimePicker(
+                        [StateHolder(Remember = nameof(RememberTimePickerState),
+                                     StateType = typeof(BadState))]
+                        IntPtr state,
+                        IModifier? modifier,
+                        int defaults,
+                        IComposer composer);
+
+                    public static IntPtr RememberTimePickerState(int initialHour, IComposer composer) => default;
+                }
+            }
+            """;
+
+        var (_, diags, emitted) = Run(code, "TimePicker");
+        Assert.Null(emitted);
+        Assert.Contains(diags, d => d.Id == "CN3009"
+            && d.GetMessage().Contains("member 'InitialHour' has type 'string'")
+            && d.GetMessage().Contains("not implicitly convertible")
+            && d.GetMessage().Contains("parameter 'initialHour' of type 'int'"));
     }
 
     [Fact]

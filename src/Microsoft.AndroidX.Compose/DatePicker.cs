@@ -10,8 +10,9 @@ namespace AndroidX.Compose;
 /// The generated <c>Render()</c> calls
 /// <c>ComposeBridges.RememberDatePickerState</c> to obtain the JVM
 /// state handle, populates the wrapper's <c>Jvm</c> field on first
-/// render (so subsequent property reads on the wrapper hit the live
-/// state), and forwards the handle into the
+/// render, and reuses that peer when the picker leaves and later
+/// re-enters composition. Subsequent property reads on the wrapper hit
+/// the same live state forwarded into the
 /// <c>androidx.compose.material3.DatePickerKt.DatePicker</c> composable.
 /// </remarks>
 public sealed partial class DatePicker;

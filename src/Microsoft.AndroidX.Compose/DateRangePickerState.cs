@@ -6,10 +6,8 @@ namespace AndroidX.Compose;
 /// Caller-supplied state holder for <see cref="DateRangePicker"/>. The
 /// underlying JVM <c>androidx.compose.material3.DateRangePickerState</c>
 /// is created lazily the first time a <see cref="DateRangePicker"/>
-/// bound to this state is rendered; before that point reads from
-/// <see cref="SelectedStartDateMillis"/> /
-/// <see cref="SelectedEndDateMillis"/> return <c>null</c> and calls to
-/// <see cref="SetSelection"/> are no-ops.
+/// bound to this state is rendered. Before that point, selection and
+/// displayed-month writes are retained and seed the JVM state.
 /// </summary>
 /// <remarks>
 /// Typical usage — <c>Remember</c> a state instance, pass it to a
@@ -33,20 +31,94 @@ namespace AndroidX.Compose;
 /// </remarks>
 public sealed class DateRangePickerState
 {
+    readonly long? _initialSelectedStartDateMillis;
+    readonly long? _initialSelectedEndDateMillis;
+    readonly long? _initialDisplayedMonthMillis;
+    long? _selectedStartDateMillis;
+    long? _selectedEndDateMillis;
+    long? _displayedMonthMillis;
+    bool _hasPendingSelection;
+    bool _hasPendingDisplayedMonth;
+
     internal IDateRangePickerState? Jvm;
+    internal long? RememberSelectedStartDateMillis => _selectedStartDateMillis;
+    internal long? RememberSelectedEndDateMillis => _selectedEndDateMillis;
+    internal long? RememberDisplayedMonthMillis => _displayedMonthMillis;
+
+    /// <summary>Creates a range-picker state with managed initial values.</summary>
+    /// <param name="initialSelectedStartDateMillis">Initial range start as
+    /// Unix epoch milliseconds (UTC).</param>
+    /// <param name="initialSelectedEndDateMillis">Initial range end as
+    /// Unix epoch milliseconds (UTC).</param>
+    /// <param name="initialDisplayedMonthMillis">First-of-month milliseconds
+    /// for the initially displayed month.</param>
+    /// <param name="initialYearRange">Inclusive managed year range, or
+    /// <c>null</c> for Kotlin's default.</param>
+    /// <param name="initialDisplayMode">Initial packed Material 3 display
+    /// mode, or <c>null</c> for calendar mode.</param>
+    /// <param name="initialSelectableDates">Date-selection policy, or
+    /// <c>null</c> to allow every date.</param>
+    public DateRangePickerState(
+        long?                initialSelectedStartDateMillis = null,
+        long?                initialSelectedEndDateMillis   = null,
+        long?                initialDisplayedMonthMillis    = null,
+        DatePickerYearRange? initialYearRange               = null,
+        int?                 initialDisplayMode              = null,
+        ISelectableDates?    initialSelectableDates          = null)
+    {
+        ValidateSelection(initialSelectedStartDateMillis, initialSelectedEndDateMillis);
+        _initialSelectedStartDateMillis = initialSelectedStartDateMillis;
+        _initialSelectedEndDateMillis = initialSelectedEndDateMillis;
+        _initialDisplayedMonthMillis = initialDisplayedMonthMillis;
+        _selectedStartDateMillis = initialSelectedStartDateMillis;
+        _selectedEndDateMillis = initialSelectedEndDateMillis;
+        _displayedMonthMillis = initialDisplayedMonthMillis;
+        InitialYearRange = initialYearRange;
+        InitialDisplayMode = initialDisplayMode;
+        InitialSelectableDates = initialSelectableDates;
+    }
+
+    /// <summary>Initial selected range start as Unix epoch milliseconds.</summary>
+    public long? InitialSelectedStartDateMillis
+    {
+        get => _initialSelectedStartDateMillis;
+    }
+
+    /// <summary>Initial selected range end as Unix epoch milliseconds.</summary>
+    public long? InitialSelectedEndDateMillis
+    {
+        get => _initialSelectedEndDateMillis;
+    }
+
+    /// <summary>Initial displayed month as first-of-month epoch milliseconds.</summary>
+    public long? InitialDisplayedMonthMillis
+    {
+        get => _initialDisplayedMonthMillis;
+    }
+
+    /// <summary>Inclusive managed year range for the year-grid view.</summary>
+    public DatePickerYearRange? InitialYearRange { get; }
+
+    /// <summary>Initial packed Material 3 display mode.</summary>
+    public int? InitialDisplayMode { get; }
+
+    /// <summary>Initial date-selection policy.</summary>
+    public ISelectableDates? InitialSelectableDates { get; }
 
     /// <summary>
     /// The start of the currently selected range as Unix epoch
     /// milliseconds (UTC), or <c>null</c> if no start date is selected.
     /// Mirrors Kotlin's <c>DateRangePickerState.selectedStartDateMillis: Long?</c>.
-    /// Returns <c>null</c> until the first <see cref="DateRangePicker"/>
-    /// render binds this state to the JVM picker. Setting either end of
+    /// Before binding, reads and writes use the pending range that will
+    /// seed the JVM state. Setting either end of
     /// the range goes through the JVM <c>setSelection</c> helper to keep
     /// the start/end pair consistent.
     /// </summary>
     public long? SelectedStartDateMillis
     {
-        get => Jvm?.SelectedStartDateMillis?.LongValue();
+        get => Jvm is { } jvm
+            ? jvm.SelectedStartDateMillis?.LongValue()
+            : _selectedStartDateMillis;
         set => SetSelection(value, SelectedEndDateMillis);
     }
 
@@ -54,23 +126,35 @@ public sealed class DateRangePickerState
     /// The end of the currently selected range as Unix epoch
     /// milliseconds (UTC), or <c>null</c> if no end date is selected.
     /// Mirrors Kotlin's <c>DateRangePickerState.selectedEndDateMillis: Long?</c>.
-    /// Returns <c>null</c> until the state is bound.
+    /// Before binding, reads and writes use the pending range.
     /// </summary>
     public long? SelectedEndDateMillis
     {
-        get => Jvm?.SelectedEndDateMillis?.LongValue();
+        get => Jvm is { } jvm
+            ? jvm.SelectedEndDateMillis?.LongValue()
+            : _selectedEndDateMillis;
         set => SetSelection(SelectedStartDateMillis, value);
     }
 
     /// <summary>
     /// First-of-month milliseconds for the month currently shown by the
     /// picker. Mirrors Kotlin's <c>DateRangePickerState.displayedMonthMillis</c>.
-    /// Returns <c>0</c> until the state is bound.
+    /// Before binding, reads and writes use the pending initial month.
+    /// Returns <c>0</c> when no initial month was supplied.
     /// </summary>
     public long DisplayedMonthMillis
     {
-        get => Jvm?.DisplayedMonthMillis ?? 0L;
-        set { if (Jvm is not null) Jvm.DisplayedMonthMillis = value; }
+        get => Jvm?.DisplayedMonthMillis ?? _displayedMonthMillis ?? 0L;
+        set
+        {
+            if (Jvm is null)
+            {
+                _displayedMonthMillis = value;
+                _hasPendingDisplayedMonth = true;
+            }
+            else
+                Jvm.DisplayedMonthMillis = value;
+        }
     }
 
     /// <summary>
@@ -81,9 +165,44 @@ public sealed class DateRangePickerState
     /// </summary>
     public void SetSelection(long? startDateMillis, long? endDateMillis)
     {
-        if (Jvm is null) return;
+        ValidateSelection(startDateMillis, endDateMillis);
+        if (Jvm is null)
+        {
+            _selectedStartDateMillis = startDateMillis;
+            _selectedEndDateMillis = endDateMillis;
+            _hasPendingSelection = true;
+            return;
+        }
+
         var start = startDateMillis is long s ? Java.Lang.Long.ValueOf(s) : null;
         var end   = endDateMillis   is long e ? Java.Lang.Long.ValueOf(e) : null;
-        Jvm.SetSelection(start, end);
+        try
+        {
+            Jvm.SetSelection(start, end);
+        }
+        finally
+        {
+            start?.Dispose();
+            end?.Dispose();
+        }
+    }
+
+    internal void BindJvm(IDateRangePickerState jvm)
+    {
+        Jvm = jvm;
+        if (_hasPendingSelection)
+            SetSelection(_selectedStartDateMillis, _selectedEndDateMillis);
+        if (_hasPendingDisplayedMonth && _displayedMonthMillis is long displayedMonthMillis)
+            DisplayedMonthMillis = displayedMonthMillis;
+    }
+
+    static void ValidateSelection(long? startDateMillis, long? endDateMillis)
+    {
+        if (endDateMillis is not long end)
+            return;
+        if (startDateMillis is not long start)
+            throw new ArgumentException("An end date requires a start date.", nameof(endDateMillis));
+        if (end < start)
+            throw new ArgumentOutOfRangeException(nameof(endDateMillis), end, "End date must be greater than or equal to start date.");
     }
 }

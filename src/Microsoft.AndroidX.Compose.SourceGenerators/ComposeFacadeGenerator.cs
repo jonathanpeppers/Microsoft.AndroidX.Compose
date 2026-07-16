@@ -953,8 +953,9 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
                 return null;
             }
             string? remember = ReadString(stateAttr, "Remember");
+            string? bind = ReadString(stateAttr, "Bind");
             INamedTypeSymbol? stateType = ReadType(stateAttr, "StateType");
-            if (string.IsNullOrEmpty(remember))
+            if (remember is not { Length: > 0 })
             {
                 diags.Add(Diagnostic.Create(Diagnostics.FacadeStateHolderInvalid, loc, methodName,
                     $"[StateHolder] on '{p.Name}' is missing required property 'Remember'"));
@@ -966,10 +967,16 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
                     $"[StateHolder] on '{p.Name}' is missing required property 'StateType'"));
                 return null;
             }
-            if (!SyntaxFacts.IsValidIdentifier(remember!))
+            if (!SyntaxFacts.IsValidIdentifier(remember))
             {
                 diags.Add(Diagnostic.Create(Diagnostics.FacadeStateHolderInvalid, loc, methodName,
                     $"[StateHolder] on '{p.Name}': Remember value '{remember}' is not a valid C# identifier"));
+                return null;
+            }
+            if (bind is { Length: > 0 } invalidBind && !SyntaxFacts.IsValidIdentifier(invalidBind))
+            {
+                diags.Add(Diagnostic.Create(Diagnostics.FacadeStateHolderInvalid, loc, methodName,
+                    $"[StateHolder] on '{p.Name}': Bind value '{bind}' is not a valid C# identifier"));
                 return null;
             }
 
@@ -984,7 +991,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
                     $"[StateHolder] on '{p.Name}': cannot resolve type 'AndroidX.Compose.ComposeBridges'"));
                 return null;
             }
-            var rememberMethods = bridgesType.GetMembers(remember!).OfType<IMethodSymbol>().ToArray();
+            var rememberMethods = bridgesType.GetMembers(remember).OfType<IMethodSymbol>().ToArray();
             if (rememberMethods.Length == 0)
             {
                 diags.Add(Diagnostic.Create(Diagnostics.FacadeStateHolderInvalid, loc, methodName,
@@ -1021,6 +1028,21 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
                 diags.Add(Diagnostic.Create(Diagnostics.FacadeStateHolderInvalid, loc, methodName,
                     $"[StateHolder] on '{p.Name}': StateType '{stateType.ToDisplayString()}'.Jvm must be accessible (public or internal)"));
                 return null;
+            }
+            if (bind is { Length: > 0 } bindMethodName)
+            {
+                var bindMethod = stateType.GetMembers(bindMethodName).OfType<IMethodSymbol>().FirstOrDefault(m =>
+                    !m.IsStatic &&
+                    m.ReturnsVoid &&
+                    m.Parameters.Length == 1 &&
+                    SymbolEqualityComparer.Default.Equals(m.Parameters[0].Type, jvmMember.Type) &&
+                    m.DeclaredAccessibility is Accessibility.Public or Accessibility.Internal or Accessibility.ProtectedOrInternal);
+                if (bindMethod is null)
+                {
+                    diags.Add(Diagnostic.Create(Diagnostics.FacadeStateHolderInvalid, loc, methodName,
+                        $"[StateHolder] on '{p.Name}': StateType '{stateType.ToDisplayString()}' has no accessible instance method '{bind}' accepting '{jvmMember.Type.ToDisplayString()}' and returning void"));
+                    return null;
+                }
             }
 
             // Phase 4b — Remember has N user params before composer. Each
@@ -1077,7 +1099,17 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
                             $"[StateHolder] on '{p.Name}': cannot resolve Remember parameter '{up.Name}' on StateType '{stateType.ToDisplayString()}'; expected a readable instance member named '{Pascal(up.Name)}' or 'Initial{Pascal(up.Name)}'"));
                         return null;
                     }
-                    rememberArgExpressions[i] = "_" + p.Name + "!." + resolved;
+                    var resolvedType = resolved is IPropertySymbol property
+                        ? property.Type
+                        : ((IFieldSymbol)resolved).Type;
+                    var conversion = ((CSharpCompilation)c.Compilation).ClassifyConversion(resolvedType, up.Type);
+                    if (!conversion.IsImplicit)
+                    {
+                        diags.Add(Diagnostic.Create(Diagnostics.FacadeStateHolderInvalid, loc, methodName,
+                            $"[StateHolder] on '{p.Name}': StateType member '{resolved.Name}' has type '{resolvedType.ToDisplayString()}', which is not implicitly convertible to Remember parameter '{up.Name}' of type '{up.Type.ToDisplayString()}'"));
+                        return null;
+                    }
+                    rememberArgExpressions[i] = "_" + p.Name + "!." + resolved.Name;
                 }
             }
 
@@ -1086,6 +1118,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
                 stateWrapperType: stateType,
                 stateJvmType: jvmMember.Type,
                 rememberArgExpressions: rememberArgExpressions,
+                bindMethodName: string.IsNullOrEmpty(bind) ? null : bind,
                 sharedState: ReadBool(stateAttr, "SharedState"),
                 confirmStateChanges: confirmInfos.ToArray());
         }
@@ -1447,16 +1480,24 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
                 if (s.IsParameterisedStateHolder)
                 {
                     sb.Append("            if (_").Append(id).AppendLine(".Jvm is null)");
-                    sb.Append("                _").Append(id).Append(".Jvm = global::Java.Lang.Object.GetObject<")
-                      .Append(jvmFqn).Append(">(__").Append(s.Param.Name)
-                      .AppendLine(", global::Android.Runtime.JniHandleOwnership.DoNotTransfer)!;");
+                    if (s.BindMethodName is not null)
+                        EmitConfiguredStateHolderBind(sb, s, "                ", "_" + id,
+                            jvmFqn, "__" + s.Param.Name);
+                    else
+                        sb.Append("                _").Append(id).Append(".Jvm = global::Java.Lang.Object.GetObject<")
+                          .Append(jvmFqn).Append(">(__").Append(s.Param.Name)
+                          .AppendLine(", global::Android.Runtime.JniHandleOwnership.DoNotTransfer)!;");
                 }
                 else
                 {
                     sb.Append("            if (_").Append(id).Append(" is not null && _").Append(id).AppendLine(".Jvm is null)");
-                    sb.Append("                _").Append(id).Append(".Jvm = global::Java.Lang.Object.GetObject<")
-                      .Append(jvmFqn).Append(">(__").Append(s.Param.Name)
-                      .AppendLine(", global::Android.Runtime.JniHandleOwnership.DoNotTransfer)!;");
+                    if (s.BindMethodName is not null)
+                        EmitConfiguredStateHolderBind(sb, s, "                ", "_" + id,
+                            jvmFqn, "__" + s.Param.Name);
+                    else
+                        sb.Append("                _").Append(id).Append(".Jvm = global::Java.Lang.Object.GetObject<")
+                          .Append(jvmFqn).Append(">(__").Append(s.Param.Name)
+                          .AppendLine(", global::Android.Runtime.JniHandleOwnership.DoNotTransfer)!;");
                 }
             }
         }
@@ -2318,22 +2359,34 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
                 EmitComposableMethodRememberCall(sb, s, holder, "                ");
                 if (s.IsParameterisedStateHolder)
                 {
-                    sb.Append("                ").Append(holder)
-                      .Append(".Jvm = global::Java.Lang.Object.GetObject<").Append(jvmType)
-                      .Append(">(__").Append(s.Param.Name)
-                      .AppendLine(", global::Android.Runtime.JniHandleOwnership.DoNotTransfer)");
-                    sb.Append("                    ?? throw new global::System.InvalidOperationException(\"")
-                      .Append(stateWrapperType.Name).AppendLine(" Remember bridge returned no state peer.\");");
+                    if (s.BindMethodName is not null)
+                        EmitConfiguredStateHolderBind(sb, s, "                ", holder,
+                            jvmType, "__" + s.Param.Name);
+                    else
+                    {
+                        sb.Append("                ").Append(holder)
+                          .Append(".Jvm = global::Java.Lang.Object.GetObject<").Append(jvmType)
+                          .Append(">(__").Append(s.Param.Name)
+                          .AppendLine(", global::Android.Runtime.JniHandleOwnership.DoNotTransfer)");
+                        sb.Append("                    ?? throw new global::System.InvalidOperationException(\"")
+                          .Append(stateWrapperType.Name).AppendLine(" Remember bridge returned no state peer.\");");
+                    }
                 }
                 else
                 {
                     sb.Append("                if (").Append(holder).AppendLine(" is not null)");
-                    sb.Append("                    ").Append(holder)
-                      .Append(".Jvm = global::Java.Lang.Object.GetObject<").Append(jvmType)
-                      .Append(">(__").Append(s.Param.Name)
-                      .AppendLine(", global::Android.Runtime.JniHandleOwnership.DoNotTransfer)");
-                    sb.Append("                        ?? throw new global::System.InvalidOperationException(\"")
-                      .Append(stateWrapperType.Name).AppendLine(" Remember bridge returned no state peer.\");");
+                    if (s.BindMethodName is not null)
+                        EmitConfiguredStateHolderBind(sb, s, "                    ", holder,
+                            jvmType, "__" + s.Param.Name);
+                    else
+                    {
+                        sb.Append("                    ").Append(holder)
+                          .Append(".Jvm = global::Java.Lang.Object.GetObject<").Append(jvmType)
+                          .Append(">(__").Append(s.Param.Name)
+                          .AppendLine(", global::Android.Runtime.JniHandleOwnership.DoNotTransfer)");
+                        sb.Append("                        ?? throw new global::System.InvalidOperationException(\"")
+                          .Append(stateWrapperType.Name).AppendLine(" Remember bridge returned no state peer.\");");
+                    }
                 }
                 sb.AppendLine("            }");
             }
@@ -2343,23 +2396,35 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
                 if (s.IsParameterisedStateHolder)
                 {
                     sb.Append("            if (").Append(holder).AppendLine(".Jvm is null)");
-                    sb.Append("                ").Append(holder)
-                      .Append(".Jvm = global::Java.Lang.Object.GetObject<").Append(jvmType)
-                      .Append(">(__").Append(s.Param.Name)
-                      .AppendLine(", global::Android.Runtime.JniHandleOwnership.DoNotTransfer)");
-                    sb.Append("                    ?? throw new global::System.InvalidOperationException(\"")
-                      .Append(stateWrapperType.Name).AppendLine(" Remember bridge returned no state peer.\");");
+                    if (s.BindMethodName is not null)
+                        EmitConfiguredStateHolderBind(sb, s, "                ", holder,
+                            jvmType, "__" + s.Param.Name);
+                    else
+                    {
+                        sb.Append("                ").Append(holder)
+                          .Append(".Jvm = global::Java.Lang.Object.GetObject<").Append(jvmType)
+                          .Append(">(__").Append(s.Param.Name)
+                          .AppendLine(", global::Android.Runtime.JniHandleOwnership.DoNotTransfer)");
+                        sb.Append("                    ?? throw new global::System.InvalidOperationException(\"")
+                          .Append(stateWrapperType.Name).AppendLine(" Remember bridge returned no state peer.\");");
+                    }
                 }
                 else
                 {
                     sb.Append("            if (").Append(holder).Append(" is not null && ")
                       .Append(holder).AppendLine(".Jvm is null)");
-                    sb.Append("                ").Append(holder)
-                      .Append(".Jvm = global::Java.Lang.Object.GetObject<").Append(jvmType)
-                      .Append(">(__").Append(s.Param.Name)
-                      .AppendLine(", global::Android.Runtime.JniHandleOwnership.DoNotTransfer)");
-                    sb.Append("                    ?? throw new global::System.InvalidOperationException(\"")
-                      .Append(stateWrapperType.Name).AppendLine(" Remember bridge returned no state peer.\");");
+                    if (s.BindMethodName is not null)
+                        EmitConfiguredStateHolderBind(sb, s, "                ", holder,
+                            jvmType, "__" + s.Param.Name);
+                    else
+                    {
+                        sb.Append("                ").Append(holder)
+                          .Append(".Jvm = global::Java.Lang.Object.GetObject<").Append(jvmType)
+                          .Append(">(__").Append(s.Param.Name)
+                          .AppendLine(", global::Android.Runtime.JniHandleOwnership.DoNotTransfer)");
+                        sb.Append("                    ?? throw new global::System.InvalidOperationException(\"")
+                          .Append(stateWrapperType.Name).AppendLine(" Remember bridge returned no state peer.\");");
+                    }
                 }
             }
         }
@@ -3005,6 +3070,24 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
           .Append(" = ").Append(adapter).AppendLine(";");
     }
 
+    static void EmitConfiguredStateHolderBind(
+        StringBuilder sb,
+        FacadeSlot s,
+        string indent,
+        string holder,
+        string jvmType,
+        string handle)
+    {
+        var stateWrapperType = s.StateWrapperType
+            ?? throw new InvalidOperationException("State-holder slot is missing its wrapper type.");
+        sb.Append(indent).Append(holder).Append('.').Append(s.BindMethodName).AppendLine("(");
+        sb.Append(indent).Append("    global::Java.Lang.Object.GetObject<").Append(jvmType)
+          .Append(">(").Append(handle)
+          .AppendLine(", global::Android.Runtime.JniHandleOwnership.DoNotTransfer)");
+        sb.Append(indent).Append("        ?? throw new global::System.InvalidOperationException(\"")
+          .Append(stateWrapperType.Name).AppendLine(" Remember bridge returned no state peer.\"));");
+    }
+
     static void EmitStateHolderPreambleShared(StringBuilder sb, FacadeSlot s,
         string id, string jvmFqn, string composerName)
     {
@@ -3031,9 +3114,13 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             foreach (var argExpr in s.RememberArgExpressions)
                 sb.Append(argExpr).Append(", ");
             sb.Append(composerName).AppendLine(");");
-            sb.Append("                _").Append(id).Append(".Jvm = global::Java.Lang.Object.GetObject<")
-              .Append(jvmFqn).Append(">(__").Append(s.Param.Name)
-              .AppendLine(", global::Android.Runtime.JniHandleOwnership.DoNotTransfer)!;");
+            if (s.BindMethodName is not null)
+                EmitConfiguredStateHolderBind(sb, s, "                ", "_" + id,
+                    jvmFqn, "__" + s.Param.Name);
+            else
+                sb.Append("                _").Append(id).Append(".Jvm = global::Java.Lang.Object.GetObject<")
+                  .Append(jvmFqn).Append(">(__").Append(s.Param.Name)
+                  .AppendLine(", global::Android.Runtime.JniHandleOwnership.DoNotTransfer)!;");
             sb.AppendLine("            }");
         }
         else
@@ -3055,9 +3142,13 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
                 sb.Append(argExpr).Append(", ");
             sb.Append(composerName).AppendLine(");");
             sb.Append("                if (_").Append(id).AppendLine(" is not null)");
-            sb.Append("                    _").Append(id).Append(".Jvm = global::Java.Lang.Object.GetObject<")
-              .Append(jvmFqn).Append(">(__").Append(s.Param.Name)
-              .AppendLine(", global::Android.Runtime.JniHandleOwnership.DoNotTransfer)!;");
+            if (s.BindMethodName is not null)
+                EmitConfiguredStateHolderBind(sb, s, "                    ", "_" + id,
+                    jvmFqn, "__" + s.Param.Name);
+            else
+                sb.Append("                    _").Append(id).Append(".Jvm = global::Java.Lang.Object.GetObject<")
+                  .Append(jvmFqn).Append(">(__").Append(s.Param.Name)
+                  .AppendLine(", global::Android.Runtime.JniHandleOwnership.DoNotTransfer)!;");
             sb.AppendLine("            }");
         }
     }
@@ -3998,9 +4089,9 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
     /// Kotlin convention where <c>initialX</c> remember args correspond
     /// to live wrapper property <c>X</c>. Looks at both properties and
     /// fields, accepting any readable, non-static, accessible member.
-    /// Returns the resolved C# identifier or <c>null</c> when no match.
+    /// Returns the resolved symbol or <c>null</c> when no match.
     /// </summary>
-    static string? ResolveStateMember(INamedTypeSymbol stateType, string paramName)
+    static ISymbol? ResolveStateMember(INamedTypeSymbol stateType, string paramName)
     {
         var pascal = Pascal(paramName);
         if (FindReadableMember(stateType, pascal) is { } direct) return direct;
@@ -4008,7 +4099,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         return null;
     }
 
-    static string? FindReadableMember(INamedTypeSymbol stateType, string name)
+    static ISymbol? FindReadableMember(INamedTypeSymbol stateType, string name)
     {
         // Walk the inheritance chain so inherited members count. We stop
         // at the first match — properties and fields share a name space
@@ -4021,8 +4112,8 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
                 if (m.DeclaredAccessibility is not (Accessibility.Public or Accessibility.Internal
                     or Accessibility.ProtectedOrInternal))
                     continue;
-                if (m is IPropertySymbol prop && prop.GetMethod is not null) return prop.Name;
-                if (m is IFieldSymbol f) return f.Name;
+                if (m is IPropertySymbol prop && prop.GetMethod is not null) return prop;
+                if (m is IFieldSymbol f) return f;
             }
         }
         return null;
@@ -4171,7 +4262,8 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             ITypeSymbol? callbackType = null, string? slotPropertyName = null,
             string? rememberMethodName = null, INamedTypeSymbol? stateWrapperType = null,
             ITypeSymbol? stateJvmType = null, string[]? rememberArgExpressions = null,
-            bool sharedState = false, ConfirmStateChangeInfo[]? confirmStateChanges = null)
+            string? bindMethodName = null, bool sharedState = false,
+            ConfirmStateChangeInfo[]? confirmStateChanges = null)
         {
             Param = param;
             Kind = kind;
@@ -4181,6 +4273,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             StateWrapperType = stateWrapperType;
             StateJvmType = stateJvmType;
             RememberArgExpressions = rememberArgExpressions ?? [];
+            BindMethodName = bindMethodName;
             SharedState = sharedState;
             ConfirmStateChanges = confirmStateChanges ?? [];
         }
@@ -4191,6 +4284,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         public string? RememberMethodName { get; }
         public INamedTypeSymbol? StateWrapperType { get; }
         public ITypeSymbol? StateJvmType { get; }
+        public string? BindMethodName { get; }
         /// <summary>
         /// Phase 4b — one C# expression per user parameter of the
         /// <c>Remember*State</c> bridge (composer excluded). Each expression
@@ -4225,6 +4319,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
               or FacadeSlotKind.RequiredFunction2 or FacadeSlotKind.RequiredFunction3;
         public FacadeSlot WithKind(FacadeSlotKind newKind) =>
             new(Param, newKind, CallbackType, SlotPropertyName, RememberMethodName,
-                StateWrapperType, StateJvmType, RememberArgExpressions, SharedState, ConfirmStateChanges);
+                StateWrapperType, StateJvmType, RememberArgExpressions, BindMethodName,
+                SharedState, ConfirmStateChanges);
     }
 }

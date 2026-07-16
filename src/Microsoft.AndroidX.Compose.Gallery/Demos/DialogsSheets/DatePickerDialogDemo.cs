@@ -20,11 +20,16 @@ public static class DatePickerDialogDemo
             // of the rememberDatePickerState cache key.
             var bounds    = c.Remember(() => new DateRangeSelectableDates());
             var todayUtc  = DateTimeOffset.UtcNow.Date;
-            bounds.MinUtcMillis = new DateTimeOffset(todayUtc).ToUnixTimeMilliseconds();
-            bounds.MaxUtcMillis = new DateTimeOffset(todayUtc.AddDays(30)).ToUnixTimeMilliseconds();
-            var state     = c.Remember(() => new DatePickerState(
-                initialSelectedDateMillis: bounds.MinUtcMillis,
-                initialSelectableDates:    bounds));
+            bounds.MinUtcMillis = new DateTimeOffset(todayUtc, TimeSpan.Zero).ToUnixTimeMilliseconds();
+            bounds.MaxUtcMillis = new DateTimeOffset(todayUtc.AddDays(30), TimeSpan.Zero).ToUnixTimeMilliseconds();
+            var state     = c.Remember(() =>
+            {
+                var pending = new DatePickerState(
+                    initialYearRange:       new DatePickerYearRange(todayUtc.Year, todayUtc.Year + 1),
+                    initialSelectableDates: bounds);
+                pending.SelectedDateMillis = bounds.MinUtcMillis;
+                return pending;
+            });
             return new Column
             {
                 new Text($"Picked date: {picked}"),

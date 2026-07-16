@@ -201,15 +201,11 @@ public partial class DatePickerHandler : ComposeElementHandler<IDatePicker>
                 }
                 : (ComposableNode?)null;
 
-            // Seed the JVM state from MAUI's current Date once
-            // composition has wired it up. Keyed on _ticks so external
-            // changes to MAUI's Date re-sync; user-driven picks update
-            // SelectedDateMillis directly without re-keying so this
-            // doesn't fight the user. Setting SelectedDateMillis before
-            // the wrapper is bound is a silent no-op, so this runs
-            // unconditionally — once the first dialog opens and the
-            // DatePicker mounts, the next external Date push will
-            // re-fire the LE and the seeding sticks.
+            // Seed the state from MAUI's current Date. Before the dialog
+            // binds the JVM peer this becomes the pending initial value;
+            // afterward it updates the live state. Keying on _ticks keeps
+            // external Date changes synchronized without fighting
+            // user-driven picks.
             var seed = new LaunchedEffect((object?)ticks, ct =>
             {
                 if (ticks is long localTicks)

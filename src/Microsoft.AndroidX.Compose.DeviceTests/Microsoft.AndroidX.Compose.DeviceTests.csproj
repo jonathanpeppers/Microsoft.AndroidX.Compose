@@ -25,10 +25,10 @@
 
         dotnet build src\Microsoft.AndroidX.Compose.DeviceTests -t:Install
         adb shell am instrument -w net.compose.devicetests/net.compose.devicetests.TestInstrumentation
-
         Run one test class with:
 
           adb shell am instrument -w -e filter FullyQualifiedName~CarouselDefaultsTests net.compose.devicetests/net.compose.devicetests.TestInstrumentation
+          adb shell am instrument -w -e filter FullyQualifiedName~StateHolderLifecycleTests net.compose.devicetests/net.compose.devicetests.TestInstrumentation
     -->
   </PropertyGroup>
 
