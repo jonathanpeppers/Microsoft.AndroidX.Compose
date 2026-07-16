@@ -23,7 +23,7 @@ namespace AndroidX.Compose;
 /// store the struct and read it after composition completes.
 /// </para>
 /// </remarks>
-public readonly struct BoxConstraints
+public readonly struct BoxConstraints : IEquatable<BoxConstraints>
 {
     /// <summary>Minimum width the content may take. Always finite.</summary>
     public Dp MinWidth { get; }
@@ -44,4 +44,31 @@ public readonly struct BoxConstraints
         MinHeight = minHeight;
         MaxHeight = maxHeight;
     }
+
+    /// <inheritdoc/>
+    public bool Equals(BoxConstraints other) =>
+        MinWidth.Equals(other.MinWidth) &&
+        MaxWidth.Equals(other.MaxWidth) &&
+        MinHeight.Equals(other.MinHeight) &&
+        MaxHeight.Equals(other.MaxHeight);
+
+    /// <inheritdoc/>
+    public override bool Equals(object? obj) =>
+        obj is BoxConstraints other && Equals(other);
+
+    /// <inheritdoc/>
+    public override int GetHashCode() =>
+        HashCode.Combine(MinWidth, MaxWidth, MinHeight, MaxHeight);
+
+    /// <summary>Compares two constraint snapshots by their four dp bounds.</summary>
+    public static bool operator ==(BoxConstraints left, BoxConstraints right) =>
+        left.Equals(right);
+
+    /// <summary>Compares two constraint snapshots by their four dp bounds.</summary>
+    public static bool operator !=(BoxConstraints left, BoxConstraints right) =>
+        !left.Equals(right);
+
+    /// <inheritdoc/>
+    public override string ToString() =>
+        $"BoxConstraints(MinWidth={MinWidth}, MaxWidth={MaxWidth}, MinHeight={MinHeight}, MaxHeight={MaxHeight})";
 }

@@ -65,7 +65,9 @@ public sealed class PagerState
     /// </summary>
     /// <param name="pageCount">
     /// Lambda invoked by the pager on every measure pass to determine
-    /// the total page count. Must close over a stable source that
+    /// the non-negative total page count. The lambda is not invoked by
+    /// this constructor; its result is validated each time the pager
+    /// requests it. Must close over a stable source that
     /// matches the <see cref="HorizontalPager{T}"/> /
     /// <see cref="VerticalPager{T}"/> items list passed alongside this
     /// state — recomposition-local list rebuilds will be missed.
@@ -74,13 +76,21 @@ public sealed class PagerState
     /// Index of the page to start on (default <c>0</c>).
     /// </param>
     /// <param name="initialPageOffsetFraction">
-    /// Initial fractional offset in <c>[-0.5, 0.5)</c> (default
+    /// Initial fractional offset in <c>[-0.5, 0.5]</c> (default
     /// <c>0f</c>).
     /// </param>
     public PagerState(Func<int> pageCount, int initialPage = 0, float initialPageOffsetFraction = 0f)
     {
         ArgumentNullException.ThrowIfNull(pageCount);
-        _pageCountFn = new ComposableLambda0Int(pageCount);
+        if (initialPage < 0)
+            throw new ArgumentOutOfRangeException(nameof(initialPage), initialPage, "Initial page must be greater than or equal to zero.");
+        if (!(initialPageOffsetFraction >= -0.5f && initialPageOffsetFraction <= 0.5f))
+            throw new ArgumentOutOfRangeException(
+                nameof(initialPageOffsetFraction),
+                initialPageOffsetFraction,
+                "Initial page offset fraction must be in the range [-0.5, 0.5].");
+
+        _pageCountFn = new ComposableLambda0Int(() => ValidatePageCount(pageCount()));
         Jvm = PagerStateKt.PagerState(
             currentPage:               initialPage,
             currentPageOffsetFraction: initialPageOffsetFraction,
@@ -116,7 +126,7 @@ public sealed class PagerState
     public int TargetPage => Jvm.TargetPage;
 
     /// <summary>
-    /// Fractional offset of the current page in <c>[-0.5, 0.5)</c>,
+    /// Fractional offset of the current page in <c>[-0.5, 0.5]</c>,
     /// where <c>0</c> means the page is fully snapped. Mirrors Kotlin's
     /// <c>PagerState.currentPageOffsetFraction</c>.
     /// </summary>
@@ -124,8 +134,17 @@ public sealed class PagerState
 
     /// <summary>
     /// Total number of pages reported by the <c>pageCount</c> lambda
-    /// supplied at construction. Mirrors Kotlin's
+    /// supplied at construction. A negative result throws
+    /// <see cref="ArgumentOutOfRangeException"/> when requested.
+    /// Mirrors Kotlin's
     /// <c>PagerState.pageCount</c>.
     /// </summary>
     public int PageCount => Jvm.PageCount;
+
+    static int ValidatePageCount(int pageCount)
+    {
+        if (pageCount < 0)
+            throw new ArgumentOutOfRangeException(nameof(pageCount), pageCount, "Page count must be greater than or equal to zero.");
+        return pageCount;
+    }
 }

@@ -25,7 +25,7 @@ namespace AndroidX.Compose;
 /// passing it by value through user code is fine.
 /// </para>
 /// </remarks>
-public readonly struct Constraints
+public readonly struct Constraints : IEquatable<Constraints>
 {
     /// <summary>The packed <c>long</c> bit pattern Compose uses internally.</summary>
     internal long Value { get; }
@@ -113,4 +113,26 @@ public readonly struct Constraints
     /// Mirrors Kotlin's <c>Constraints.constrainHeight(value)</c>.
     /// </summary>
     public int ConstrainHeight(int height) => Math.Clamp(height, MinHeight, MaxHeight);
+
+    /// <inheritdoc/>
+    public bool Equals(Constraints other) => Value == other.Value;
+
+    /// <inheritdoc/>
+    public override bool Equals(object? obj) =>
+        obj is Constraints other && Equals(other);
+
+    /// <inheritdoc/>
+    public override int GetHashCode() => Value.GetHashCode();
+
+    /// <summary>Compares two constraint envelopes by their four bounds.</summary>
+    public static bool operator ==(Constraints left, Constraints right) =>
+        left.Equals(right);
+
+    /// <summary>Compares two constraint envelopes by their four bounds.</summary>
+    public static bool operator !=(Constraints left, Constraints right) =>
+        !left.Equals(right);
+
+    /// <inheritdoc/>
+    public override string ToString() =>
+        $"Constraints(MinWidth={MinWidth}, MaxWidth={MaxWidth}, MinHeight={MinHeight}, MaxHeight={MaxHeight})";
 }

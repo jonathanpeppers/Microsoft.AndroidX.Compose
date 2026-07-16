@@ -110,6 +110,7 @@ AndroidX.Compose.Box
 AndroidX.Compose.Box.Box(bool propagateMinConstraints = false) -> void
 AndroidX.Compose.BoxConstraints
 AndroidX.Compose.BoxConstraints.BoxConstraints() -> void
+AndroidX.Compose.BoxConstraints.Equals(AndroidX.Compose.BoxConstraints other) -> bool
 AndroidX.Compose.BoxConstraints.MaxHeight.get -> AndroidX.Compose.Dp
 AndroidX.Compose.BoxConstraints.MaxWidth.get -> AndroidX.Compose.Dp
 AndroidX.Compose.BoxConstraints.MinHeight.get -> AndroidX.Compose.Dp
@@ -224,6 +225,7 @@ AndroidX.Compose.Constraints
 AndroidX.Compose.Constraints.ConstrainHeight(int height) -> int
 AndroidX.Compose.Constraints.ConstrainWidth(int width) -> int
 AndroidX.Compose.Constraints.Constraints() -> void
+AndroidX.Compose.Constraints.Equals(AndroidX.Compose.Constraints other) -> bool
 AndroidX.Compose.Constraints.HasBoundedHeight.get -> bool
 AndroidX.Compose.Constraints.HasBoundedWidth.get -> bool
 AndroidX.Compose.Constraints.MaxHeight.get -> int
@@ -274,6 +276,7 @@ AndroidX.Compose.DatePickerYearRange
 AndroidX.Compose.DatePickerYearRange.DatePickerYearRange() -> void
 AndroidX.Compose.DatePickerYearRange.DatePickerYearRange(int startYear, int endYear) -> void
 AndroidX.Compose.DatePickerYearRange.EndYear.get -> int
+AndroidX.Compose.DatePickerYearRange.Equals(AndroidX.Compose.DatePickerYearRange other) -> bool
 AndroidX.Compose.DatePickerYearRange.StartYear.get -> int
 AndroidX.Compose.DateRangePicker
 AndroidX.Compose.DateRangePicker.DateRangePicker(AndroidX.Compose.DateRangePickerState? state = null, bool showModeToggle = true) -> void
@@ -526,6 +529,7 @@ AndroidX.Compose.FocusRequester.FocusRequester() -> void
 AndroidX.Compose.FocusRequester.FreeFocus() -> bool
 AndroidX.Compose.FocusRequester.RequestFocus() -> void
 AndroidX.Compose.FocusState
+AndroidX.Compose.FocusState.Equals(AndroidX.Compose.FocusState other) -> bool
 AndroidX.Compose.FocusState.FocusState() -> void
 AndroidX.Compose.FocusState.FocusState(bool isFocused, bool hasFocus, bool isCaptured) -> void
 AndroidX.Compose.FocusState.HasFocus.get -> bool
@@ -1564,6 +1568,9 @@ override AndroidX.Compose.BadgedBox.Render(AndroidX.Compose.Runtime.IComposer! c
 override AndroidX.Compose.BottomAppBar.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
 override AndroidX.Compose.BottomSheetScaffold.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
 override AndroidX.Compose.Box.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override AndroidX.Compose.BoxConstraints.Equals(object? obj) -> bool
+override AndroidX.Compose.BoxConstraints.GetHashCode() -> int
+override AndroidX.Compose.BoxConstraints.ToString() -> string!
 override AndroidX.Compose.BoxWithConstraints.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
 override AndroidX.Compose.Button.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
 override AndroidX.Compose.Canvas.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
@@ -1578,6 +1585,9 @@ override AndroidX.Compose.Color.ToString() -> string!
 override AndroidX.Compose.Column.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
 override AndroidX.Compose.Composed.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
 override AndroidX.Compose.CompositionLocalProvider.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override AndroidX.Compose.Constraints.Equals(object? obj) -> bool
+override AndroidX.Compose.Constraints.GetHashCode() -> int
+override AndroidX.Compose.Constraints.ToString() -> string!
 override AndroidX.Compose.CornerRadius.Equals(object? obj) -> bool
 override AndroidX.Compose.CornerRadius.GetHashCode() -> int
 override AndroidX.Compose.CornerRadius.ToString() -> string!
@@ -1585,6 +1595,9 @@ override AndroidX.Compose.Crossfade<T>.Render(AndroidX.Compose.Runtime.IComposer
 override AndroidX.Compose.CustomTab.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
 override AndroidX.Compose.DatePicker.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
 override AndroidX.Compose.DatePickerDialog.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override AndroidX.Compose.DatePickerYearRange.Equals(object? obj) -> bool
+override AndroidX.Compose.DatePickerYearRange.GetHashCode() -> int
+override AndroidX.Compose.DatePickerYearRange.ToString() -> string!
 override AndroidX.Compose.DateRangePicker.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
 override AndroidX.Compose.DateRangePickerDialog.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
 override AndroidX.Compose.DerivedState<T>.ToString() -> string!
@@ -1618,6 +1631,9 @@ override AndroidX.Compose.FlexibleBottomAppBar.Render(AndroidX.Compose.Runtime.I
 override AndroidX.Compose.FloatingActionButton.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
 override AndroidX.Compose.FlowColumn.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
 override AndroidX.Compose.FlowRow.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override AndroidX.Compose.FocusState.Equals(object? obj) -> bool
+override AndroidX.Compose.FocusState.GetHashCode() -> int
+override AndroidX.Compose.FocusState.ToString() -> string!
 override AndroidX.Compose.HorizontalCenteredHeroCarousel<T>.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
 override AndroidX.Compose.HorizontalDivider.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
 override AndroidX.Compose.HorizontalMultiBrowseCarousel<T>.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
@@ -1751,6 +1767,8 @@ static AndroidX.Compose.Arrangement.SpacedBy(AndroidX.Compose.Dp dp) -> AndroidX
 static AndroidX.Compose.Arrangement.SpacedBy(int dp) -> AndroidX.Compose.Arrangement!
 static AndroidX.Compose.Arrangement.Start.get -> AndroidX.Compose.Arrangement!
 static AndroidX.Compose.Arrangement.Top.get -> AndroidX.Compose.Arrangement!
+static AndroidX.Compose.BoxConstraints.operator !=(AndroidX.Compose.BoxConstraints left, AndroidX.Compose.BoxConstraints right) -> bool
+static AndroidX.Compose.BoxConstraints.operator ==(AndroidX.Compose.BoxConstraints left, AndroidX.Compose.BoxConstraints right) -> bool
 static AndroidX.Compose.Brush.HorizontalGradient(AndroidX.Compose.Color[]! colors, float startX = 0, float endX = Infinity, AndroidX.Compose.TileMode tileMode = AndroidX.Compose.TileMode.Clamp) -> AndroidX.Compose.UI.Graphics.Brush!
 static AndroidX.Compose.Brush.HorizontalGradient(params AndroidX.Compose.Color[]! colors) -> AndroidX.Compose.UI.Graphics.Brush!
 static AndroidX.Compose.Brush.LinearGradient(AndroidX.Compose.Color[]! colors, AndroidX.Compose.Offset start, AndroidX.Compose.Offset end, AndroidX.Compose.TileMode tileMode = AndroidX.Compose.TileMode.Clamp) -> AndroidX.Compose.UI.Graphics.Brush!
@@ -2084,6 +2102,8 @@ static AndroidX.Compose.CompositionLocal<T>.StaticOf(System.Func<T>! defaultFact
 static AndroidX.Compose.Constraints.Create(int minWidth, int maxWidth, int minHeight, int maxHeight) -> AndroidX.Compose.Constraints
 static AndroidX.Compose.Constraints.FixedHeight(int height) -> AndroidX.Compose.Constraints
 static AndroidX.Compose.Constraints.FixedWidth(int width) -> AndroidX.Compose.Constraints
+static AndroidX.Compose.Constraints.operator !=(AndroidX.Compose.Constraints left, AndroidX.Compose.Constraints right) -> bool
+static AndroidX.Compose.Constraints.operator ==(AndroidX.Compose.Constraints left, AndroidX.Compose.Constraints right) -> bool
 static AndroidX.Compose.ContentScale.Crop.get -> AndroidX.Compose.ContentScale!
 static AndroidX.Compose.ContentScale.FillBounds.get -> AndroidX.Compose.ContentScale!
 static AndroidX.Compose.ContentScale.FillHeight.get -> AndroidX.Compose.ContentScale!
@@ -2094,6 +2114,8 @@ static AndroidX.Compose.ContentScale.None.get -> AndroidX.Compose.ContentScale!
 static AndroidX.Compose.CornerRadius.Zero.get -> AndroidX.Compose.CornerRadius
 static AndroidX.Compose.CornerRadius.operator !=(AndroidX.Compose.CornerRadius left, AndroidX.Compose.CornerRadius right) -> bool
 static AndroidX.Compose.CornerRadius.operator ==(AndroidX.Compose.CornerRadius left, AndroidX.Compose.CornerRadius right) -> bool
+static AndroidX.Compose.DatePickerYearRange.operator !=(AndroidX.Compose.DatePickerYearRange left, AndroidX.Compose.DatePickerYearRange right) -> bool
+static AndroidX.Compose.DatePickerYearRange.operator ==(AndroidX.Compose.DatePickerYearRange left, AndroidX.Compose.DatePickerYearRange right) -> bool
 static AndroidX.Compose.Dp.Zero.get -> AndroidX.Compose.Dp
 static AndroidX.Compose.Dp.implicit operator AndroidX.Compose.Dp(float value) -> AndroidX.Compose.Dp
 static AndroidX.Compose.Dp.implicit operator AndroidX.Compose.Dp(int value) -> AndroidX.Compose.Dp
@@ -2114,6 +2136,8 @@ static AndroidX.Compose.DpExtensions.Dp(this float value) -> AndroidX.Compose.Dp
 static AndroidX.Compose.DpExtensions.Dp(this int value) -> AndroidX.Compose.Dp
 static AndroidX.Compose.DrawingStyle.Fill.get -> AndroidX.Compose.UI.Graphics.Drawscope.DrawStyle!
 static AndroidX.Compose.DrawingStyle.Stroke(float width, AndroidX.Compose.StrokeCap cap = AndroidX.Compose.StrokeCap.Butt, AndroidX.Compose.StrokeJoin join = AndroidX.Compose.StrokeJoin.Miter, float miter = 4) -> AndroidX.Compose.UI.Graphics.Drawscope.DrawStyle!
+static AndroidX.Compose.FocusState.operator !=(AndroidX.Compose.FocusState left, AndroidX.Compose.FocusState right) -> bool
+static AndroidX.Compose.FocusState.operator ==(AndroidX.Compose.FocusState left, AndroidX.Compose.FocusState right) -> bool
 static AndroidX.Compose.FontFamily.Cursive.get -> AndroidX.Compose.FontFamily!
 static AndroidX.Compose.FontFamily.Default.get -> AndroidX.Compose.FontFamily!
 static AndroidX.Compose.FontFamily.Monospace.get -> AndroidX.Compose.FontFamily!
