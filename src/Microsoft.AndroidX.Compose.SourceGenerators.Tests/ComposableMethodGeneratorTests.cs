@@ -453,6 +453,43 @@ public class ComposableMethodGeneratorTests
     }
 
     [Fact]
+    public void DirectTarget_NonComposerExtensionReceiver_PreservesOmittedBitPosition()
+    {
+        var (output, diags, emitted) = Run("""
+            namespace App
+            {
+                public sealed class Model { }
+
+                public static class Direct
+                {
+                    public static void Widget(
+                        AndroidX.Compose.Runtime.IComposer composer,
+                        Model model,
+                        int setting,
+                        ulong omittedArguments,
+                        int changed) { }
+                }
+
+                public static class Screens
+                {
+                    [AndroidX.Compose.Composable]
+                    [AndroidX.Compose.ComposableDirectTarget(typeof(Direct), nameof(Direct.Widget))]
+                    public static void Widget(this Model model, int setting = 0) { }
+
+                    public static void CallSite(Model model) => model.Widget();
+                }
+            }
+            """);
+
+        Assert.Empty(diags);
+        Assert.NotNull(emitted);
+        Assert.Contains(
+            "global::App.Direct.Widget(__c, model, setting, 0x2UL, __dirty)",
+            emitted);
+        AssertNoCompileErrors(output);
+    }
+
+    [Fact]
     public void GenericDirectTarget_ForwardsTypeArguments()
     {
         var (output, diags, emitted) = Run("""

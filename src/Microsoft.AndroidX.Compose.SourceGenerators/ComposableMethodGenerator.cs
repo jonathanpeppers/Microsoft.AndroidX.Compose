@@ -207,7 +207,7 @@ public sealed class ComposableMethodGenerator : IIncrementalGenerator
         var directTarget = TryReadDirectTarget(actual);
         ulong omittedArguments = directTarget is null
             ? 0
-            : ReadOmittedArguments(ctx.SemanticModel, invocation, target, ct);
+            : ReadOmittedArguments(ctx.SemanticModel, invocation, target, actual, ct);
 
         return new CallSite(
             actual,
@@ -239,33 +239,39 @@ public sealed class ComposableMethodGenerator : IIncrementalGenerator
         SemanticModel semanticModel,
         InvocationExpressionSyntax invocation,
         IMethodSymbol target,
+        IMethodSymbol actual,
         System.Threading.CancellationToken ct)
     {
         if (semanticModel.GetOperation(invocation, ct) is not IInvocationOperation operation)
             return 0;
 
-        bool hasExplicitComposer = target.Parameters.Length > 0
-            && IsComposer(target.Parameters[0].Type);
+        bool hasExplicitComposer = actual.Parameters.Length > 0
+            && IsComposer(actual.Parameters[0].Type);
         int composerOffset = hasExplicitComposer ? 1 : 0;
+        int receiverOffset = target.ReducedFrom is null ? 0 : 1;
         var suppliedParameters = new System.Collections.Generic.HashSet<int>();
+        if (receiverOffset != 0)
+            suppliedParameters.Add(0);
         foreach (var argument in operation.Arguments)
         {
-            if (argument.ArgumentKind != ArgumentKind.DefaultValue
+            if (!argument.IsImplicit
+                && argument.ArgumentKind != ArgumentKind.DefaultValue
                 && argument.Parameter is { } parameter)
             {
-                suppliedParameters.Add(parameter.Ordinal);
+                suppliedParameters.Add(parameter.Ordinal + receiverOffset);
             }
         }
 
         ulong omitted = 0;
-        foreach (var parameter in target.Parameters)
+        foreach (var parameter in actual.Parameters)
         {
             if (parameter.Ordinal < composerOffset
-                || !parameter.HasExplicitDefaultValue
+                || parameter.IsParams
                 || suppliedParameters.Contains(parameter.Ordinal))
             {
                 continue;
             }
+
             int userIndex = parameter.Ordinal - composerOffset;
             if ((uint)userIndex < 64)
                 omitted |= 1UL << userIndex;
