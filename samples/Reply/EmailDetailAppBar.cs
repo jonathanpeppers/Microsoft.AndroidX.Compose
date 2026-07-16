@@ -19,12 +19,12 @@ public static class EmailDetailAppBar
                     new Text(email.Subject)
                     {
                         FontSize = 16,
-                        Color    = scheme.OnSurfaceVariant,
+                        Color    = Color.FromPacked(scheme.OnSurfaceVariant),
                     },
                     new Text($"{email.Threads.Count} Messages")
                     {
                         FontSize = 12,
-                        Color    = scheme.Outline,
+                        Color    = Color.FromPacked(scheme.Outline),
                         Modifier = Modifier.Padding(top: 4),
                     },
                 };
@@ -44,7 +44,7 @@ public static class EmailDetailAppBar
                 {
                     new Icon(Resource.Drawable.ic_more_vert, "More options")
                     {
-                        Tint = scheme.OnSurfaceVariant,
+                        Tint = Color.FromPacked(scheme.OnSurfaceVariant),
                     },
                 };
             }),

@@ -23,19 +23,19 @@ public sealed class ReplySearchBar : ComposableNode
                     .FillMaxWidth()
                     .Padding(horizontal: 16, vertical: 8)
                     .Clip(new RoundedCornerShape(28.Dp()))
-                    .Background(scheme.SurfaceVariant),
+                    .Background(Color.FromPacked(scheme.SurfaceVariant)),
                 new Row
                 {
                     Modifier.FillMaxWidth().Padding(horizontal: 16, vertical: 12),
                     new Icon(Resource.Drawable.ic_search, "Search")
                     {
-                        Tint = scheme.OnSurface,
+                        Tint = Color.FromPacked(scheme.OnSurface),
                         Modifier = Modifier.Align(Alignment.Vertical.CenterVertically),
                     },
                     new Text("Search replies")
                     {
                         FontSize = 14,
-                        Color    = scheme.OnSurface,
+                        Color    = Color.FromPacked(scheme.OnSurface),
                         Modifier = Modifier
                             .Align(Alignment.Vertical.CenterVertically)
                             .Padding(start: 16)

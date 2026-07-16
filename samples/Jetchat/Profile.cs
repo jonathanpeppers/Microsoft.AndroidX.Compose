@@ -46,7 +46,7 @@ public static class Profile
             {
                 new Icon(Resource.Drawable.ic_arrow_back, "Back")
                 {
-                    Tint = scheme.OnSurfaceVariant,
+                    Tint = Color.FromPacked(scheme.OnSurfaceVariant),
                 },
             },
             Title   = new Text(""),
@@ -58,7 +58,7 @@ public static class Profile
                         .Clickable(() => popupOpen.Value = true)
                         .Padding(horizontal: 12, vertical: 16)
                         .Height(24),
-                    Tint = scheme.OnSurfaceVariant,
+                    Tint = Color.FromPacked(scheme.OnSurfaceVariant),
                 },
             },
         };
@@ -130,13 +130,13 @@ public static class Profile
             {
                 FontSize   = 24,
                 FontWeight = FontWeight.Medium,
-                Color      = scheme.OnSurface,
+                Color      = Color.FromPacked(scheme.OnSurface),
                 Modifier   = Modifier.Padding(top: 8),
             },
             new Text(state.Position)
             {
                 FontSize = 16,
-                Color    = scheme.OnSurfaceVariant,
+                Color    = Color.FromPacked(scheme.OnSurfaceVariant),
                 Modifier = Modifier.Padding(top: 4, bottom: 20),
             },
         };
@@ -147,18 +147,19 @@ public static class Profile
             Modifier.Padding(start: 16, end: 16, bottom: 16),
             new HorizontalDivider
             {
-                Color = scheme.OnSurface,
+                Color = Color.FromPacked(scheme.OnSurface),
             },
             new Text(label)
             {
                 FontSize = 12,
-                Color    = scheme.OnSurfaceVariant,
+                Color    = Color.FromPacked(scheme.OnSurfaceVariant),
                 Modifier = Modifier.Padding(top: 8),
             },
             new Text(value)
             {
                 FontSize = 16,
-                Color    = isLink ? scheme.Primary : scheme.OnSurface,
+                Color = Color.FromPacked(
+                    isLink ? scheme.Primary : scheme.OnSurface),
                 Modifier = Modifier.Padding(top: 4),
             },
         };
@@ -186,11 +187,11 @@ public static class Profile
                 .WidthIn(min: 48),
             Icon = new Icon(iconRes, label)
             {
-                Tint = scheme.OnTertiaryContainer,
+                Tint = Color.FromPacked(scheme.OnTertiaryContainer),
             },
             Text = new Text(label)
             {
-                Color = scheme.OnTertiaryContainer,
+                Color = Color.FromPacked(scheme.OnTertiaryContainer),
             },
         };
     }

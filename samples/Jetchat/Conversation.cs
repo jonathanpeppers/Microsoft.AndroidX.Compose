@@ -68,12 +68,12 @@ public static class Conversation
                 {
                     FontSize   = 16,
                     FontWeight = FontWeight.Medium,
-                    Color      = scheme.OnSurface,
+                    Color      = Color.FromPacked(scheme.OnSurface),
                 },
                 new Text($"{ui.ChannelMembers} members")
                 {
                     FontSize = 12,
-                    Color    = scheme.OnSurfaceVariant,
+                    Color    = Color.FromPacked(scheme.OnSurfaceVariant),
                     Modifier = Modifier.Padding(top: 2),
                 },
             },
@@ -85,7 +85,7 @@ public static class Conversation
                         .Clickable(() => popupOpen.Value = true)
                         .Padding(horizontal: 12, vertical: 16)
                         .Height(24),
-                    Tint = scheme.OnSurfaceVariant,
+                    Tint = Color.FromPacked(scheme.OnSurfaceVariant),
                 },
                 new Icon(Resource.Drawable.ic_info, "Information")
                 {
@@ -93,7 +93,7 @@ public static class Conversation
                         .Clickable(() => popupOpen.Value = true)
                         .Padding(horizontal: 12, vertical: 16)
                         .Height(24),
-                    Tint = scheme.OnSurfaceVariant,
+                    Tint = Color.FromPacked(scheme.OnSurfaceVariant),
                 },
             },
         };
@@ -223,19 +223,19 @@ public static class Conversation
             new HorizontalDivider
             {
                 Modifier  = Modifier.Weight(1f),
-                Color = scheme.OnSurface,
+                Color = Color.FromPacked(scheme.OnSurface),
             },
             new Text(label)
             {
                 FontSize   = 11,
                 FontWeight = FontWeight.Medium,
-                Color      = scheme.OnSurfaceVariant,
+                Color      = Color.FromPacked(scheme.OnSurfaceVariant),
                 Modifier   = Modifier.Padding(horizontal: 16),
             },
             new HorizontalDivider
             {
                 Modifier  = Modifier.Weight(1f),
-                Color = scheme.OnSurface,
+                Color = Color.FromPacked(scheme.OnSurface),
             },
         };
 
@@ -258,7 +258,7 @@ public static class Conversation
     static Image BuildAvatar(Message m, ColorScheme scheme, Action<string> onAuthorClicked)
     {
         bool isMe = m.Author == MyName;
-        long accent = isMe ? scheme.Primary : scheme.Tertiary;
+        var accent = Color.FromPacked(isMe ? scheme.Primary : scheme.Tertiary);
         string userId = isMe ? Profiles.MeProfile.UserId : Profiles.ColleagueProfile.UserId;
         return new Image(m.AuthorImage, "Profile photo")
         {
@@ -266,7 +266,7 @@ public static class Conversation
                 .Padding(horizontal: 16)
                 .Size(42)
                 .Border(1.5f, accent,         Shape.Circle())
-                .Border(3,    scheme.Surface, Shape.Circle())
+                .Border(3, Color.FromPacked(scheme.Surface), Shape.Circle())
                 .Clip(21)
                 .Clickable(() => onAuthorClicked(userId)),
         };
@@ -292,14 +292,14 @@ public static class Conversation
             {
                 FontSize   = 16,
                 FontWeight = FontWeight.Medium,
-                Color      = scheme.OnSurface,
+                Color      = Color.FromPacked(scheme.OnSurface),
                 Modifier   = Modifier.Padding(bottom: 8),
             },
             Spacer.Width(8),
             new Text(m.Timestamp)
             {
                 FontSize = 12,
-                Color    = scheme.OnSurfaceVariant,
+                Color    = Color.FromPacked(scheme.OnSurfaceVariant),
                 Modifier = Modifier.Padding(bottom: 8),
             },
         };
@@ -307,8 +307,8 @@ public static class Conversation
     static ComposableNode BuildChatItemBubble(Message m, ColorScheme scheme, MutableState<bool> popupOpen)
     {
         bool isMe = m.Author == MyName;
-        long bg   = isMe ? scheme.Primary : scheme.SurfaceVariant;
-        long fg   = isMe ? scheme.OnPrimary : scheme.OnSurface;
+        var bg = Color.FromPacked(isMe ? scheme.Primary : scheme.SurfaceVariant);
+        var fg = Color.FromPacked(isMe ? scheme.OnPrimary : scheme.OnSurface);
         var formatted = MessageFormatter.Format(m.Content, isMe, scheme, _ => popupOpen.Value = true);
         return new AnnotatedText(formatted)
         {
@@ -409,7 +409,7 @@ public static class Conversation
             new Text("Send")
             {
                 FontWeight = FontWeight.SemiBold,
-                Color      = enabled ? scheme.Primary : scheme.OnSurfaceVariant,
+                Color      = Color.FromPacked(enabled ? scheme.Primary : scheme.OnSurfaceVariant),
             },
         });
         return row;
@@ -428,11 +428,13 @@ public static class Conversation
         {
             new Icon(drawableId, contentDescription)
             {
-                Tint = selected ? scheme.OnSecondary : scheme.OnSurface,
+                Tint = Color.FromPacked(selected ? scheme.OnSecondary : scheme.OnSurface),
             },
         };
         if (selected)
-            button.Modifier = Modifier.Background(scheme.Secondary, new RoundedCornerShape(14.Dp()));
+            button.Modifier = Modifier.Background(
+                Color.FromPacked(scheme.Secondary),
+                new RoundedCornerShape(14.Dp()));
         return button;
     }
 
@@ -448,20 +450,21 @@ public static class Conversation
         string subtitle = "Grab a beverage and check back later!";
         return new Column
         {
-            Modifier.FillMaxWidth().Height(320).Background(scheme.SurfaceVariant),
+            Modifier.FillMaxWidth().Height(320)
+                .Background(Color.FromPacked(scheme.SurfaceVariant)),
             Spacer.Height(96),
             new Text(title)
             {
                 FontSize   = 16,
                 FontWeight = FontWeight.Medium,
-                Color      = scheme.OnSurfaceVariant,
+                Color      = Color.FromPacked(scheme.OnSurfaceVariant),
                 Modifier   = Modifier.Padding(horizontal: 16),
             },
             Spacer.Height(8),
             new Text(subtitle)
             {
                 FontSize = 14,
-                Color    = scheme.OnSurfaceVariant,
+                Color    = Color.FromPacked(scheme.OnSurfaceVariant),
                 Modifier = Modifier.Padding(horizontal: 16),
             },
         };
