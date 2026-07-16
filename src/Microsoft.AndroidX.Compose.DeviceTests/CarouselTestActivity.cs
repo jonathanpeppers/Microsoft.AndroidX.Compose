@@ -2,6 +2,8 @@ using Android.Runtime;
 using AndroidX.Activity;
 using AndroidX.Compose;
 using AndroidX.Compose.Runtime;
+using AndroidX.Compose.UI.Layout;
+using System.Collections.Concurrent;
 
 namespace Microsoft.AndroidX.Compose.DeviceTests;
 
@@ -14,26 +16,36 @@ public class CarouselTestActivity : ComponentActivity
     internal const int TreeExplicit = 2;
     internal const int StaticOmitted = 3;
     internal const int StaticExplicit = 4;
-    internal const int AllCarouselsRendered = 0b111;
 
-    const int UncontainedRendered = 0b001;
-    const int MultiBrowseRendered = 0b010;
-    const int CenteredHeroRendered = 0b100;
+    internal const int Uncontained = 1;
+    internal const int MultiBrowse = 2;
+    internal const int CenteredHero = 3;
+    internal const int ExpectedMeasurements = 6;
+    internal const int ExplicitSpacingDp = 32;
+    internal const int ExplicitMaxItemWidthDp = 160;
 
     static readonly IReadOnlyList<int> Items = [0, 1, 2];
-    static int s_renderedCarousels;
+    static readonly ConcurrentDictionary<int, ItemBounds> s_measurements = new();
     static int s_scenario;
 
     internal static CarouselTestActivity? Current { get; private set; }
 
-    internal static int RenderedCarousels => Volatile.Read(ref s_renderedCarousels);
+    internal static int MeasurementCount => s_measurements.Count;
 
     internal static void Reset(int scenario)
     {
         Current = null;
-        Volatile.Write(ref s_renderedCarousels, 0);
+        s_measurements.Clear();
         Volatile.Write(ref s_scenario, scenario);
     }
+
+    internal static LayoutSnapshot Snapshot() => new(
+        Item(Uncontained, 0),
+        Item(Uncontained, 1),
+        Item(MultiBrowse, 0),
+        Item(MultiBrowse, 1),
+        Item(CenteredHero, 0),
+        Item(CenteredHero, 1));
 
     protected override void OnCreate(Bundle? savedInstanceState)
     {
@@ -73,10 +85,7 @@ public class CarouselTestActivity : ComponentActivity
             Items,
             itemWidth: 96,
             item =>
-            {
-                MarkRendered(UncontainedRendered);
-                return new Text($"Uncontained {item}");
-            })
+                MeasuredText(Uncontained, item, $"Uncontained {item}"))
         {
             Modifier = Viewport(),
         };
@@ -84,30 +93,24 @@ public class CarouselTestActivity : ComponentActivity
             Items,
             preferredItemWidth: 120,
             item =>
-            {
-                MarkRendered(MultiBrowseRendered);
-                return new Text($"Multi-browse {item}");
-            })
+                MeasuredText(MultiBrowse, item, $"Multi-browse {item}"))
         {
             Modifier = Viewport(),
         };
         var centeredHero = new HorizontalCenteredHeroCarousel<int>(
             Items,
             item =>
-            {
-                MarkRendered(CenteredHeroRendered);
-                return new Text($"Hero {item}");
-            })
+                MeasuredText(CenteredHero, item, $"Hero {item}"))
         {
             Modifier = Viewport(),
         };
 
         if (explicitDp)
         {
-            uncontained.ItemSpacing = 8;
-            multiBrowse.ItemSpacing = 8;
-            centeredHero.MaxItemWidth = 240;
-            centeredHero.ItemSpacing = 8;
+            uncontained.ItemSpacing = ExplicitSpacingDp;
+            multiBrowse.ItemSpacing = ExplicitSpacingDp;
+            centeredHero.MaxItemWidth = ExplicitMaxItemWidthDp;
+            centeredHero.ItemSpacing = ExplicitSpacingDp;
         }
 
         return new Column
@@ -127,29 +130,32 @@ public class CarouselTestActivity : ComponentActivity
                 Items,
                 itemWidth: 96,
                 (item, itemComposer) =>
-                {
-                    MarkRendered(UncontainedRendered);
-                    Composables.Text(itemComposer, $"Uncontained {item}");
-                },
+                    RenderMeasuredText(
+                        itemComposer,
+                        Uncontained,
+                        item,
+                        $"Uncontained {item}"),
                 modifier: Viewport());
             Composables.HorizontalMultiBrowseCarousel(
                 c,
                 Items,
                 preferredItemWidth: 120,
                 (item, itemComposer) =>
-                {
-                    MarkRendered(MultiBrowseRendered);
-                    Composables.Text(itemComposer, $"Multi-browse {item}");
-                },
+                    RenderMeasuredText(
+                        itemComposer,
+                        MultiBrowse,
+                        item,
+                        $"Multi-browse {item}"),
                 modifier: Viewport());
             Composables.HorizontalCenteredHeroCarousel(
                 c,
                 Items,
                 (item, itemComposer) =>
-                {
-                    MarkRendered(CenteredHeroRendered);
-                    Composables.Text(itemComposer, $"Hero {item}");
-                },
+                    RenderMeasuredText(
+                        itemComposer,
+                        CenteredHero,
+                        item,
+                        $"Hero {item}"),
                 modifier: Viewport());
         });
     }
@@ -163,38 +169,93 @@ public class CarouselTestActivity : ComponentActivity
                 Items,
                 itemWidth: 96,
                 (item, itemComposer) =>
-                {
-                    MarkRendered(UncontainedRendered);
-                    Composables.Text(itemComposer, $"Uncontained {item}");
-                },
+                    RenderMeasuredText(
+                        itemComposer,
+                        Uncontained,
+                        item,
+                        $"Uncontained {item}"),
                 modifier: Viewport(),
-                itemSpacing: 8);
+                itemSpacing: ExplicitSpacingDp);
             Composables.HorizontalMultiBrowseCarousel(
                 c,
                 Items,
                 preferredItemWidth: 120,
                 (item, itemComposer) =>
-                {
-                    MarkRendered(MultiBrowseRendered);
-                    Composables.Text(itemComposer, $"Multi-browse {item}");
-                },
+                    RenderMeasuredText(
+                        itemComposer,
+                        MultiBrowse,
+                        item,
+                        $"Multi-browse {item}"),
                 modifier: Viewport(),
-                itemSpacing: 8);
+                itemSpacing: ExplicitSpacingDp);
             Composables.HorizontalCenteredHeroCarousel(
                 c,
                 Items,
                 (item, itemComposer) =>
-                {
-                    MarkRendered(CenteredHeroRendered);
-                    Composables.Text(itemComposer, $"Hero {item}");
-                },
+                    RenderMeasuredText(
+                        itemComposer,
+                        CenteredHero,
+                        item,
+                        $"Hero {item}"),
                 modifier: Viewport(),
-                maxItemWidth: 240,
-                itemSpacing: 8);
+                maxItemWidth: ExplicitMaxItemWidthDp,
+                itemSpacing: ExplicitSpacingDp);
         });
     }
 
     static Modifier Viewport() => Modifier.FillMaxWidth().Height(140);
 
-    static void MarkRendered(int carousel) => Interlocked.Or(ref s_renderedCarousels, carousel);
+    static Text MeasuredText(int carousel, int item, string text) =>
+        new(text)
+        {
+            Modifier = MeasureItem(carousel, item),
+        };
+
+    static void RenderMeasuredText(
+        IComposer composer,
+        int carousel,
+        int item,
+        string text) =>
+        Composables.Text(
+            composer,
+            text,
+            modifier: MeasureItem(carousel, item));
+
+    static Modifier MeasureItem(int carousel, int item)
+    {
+        var callback = new ComposableLambda1(arg =>
+        {
+            var coordinates = arg?.JavaCast<ILayoutCoordinates>()
+                ?? throw new InvalidOperationException(
+                    "onGloballyPositioned did not provide LayoutCoordinates.");
+            long position = LayoutCoordinatesKt.PositionInRoot(coordinates);
+            float x = Offset.FromPacked(position).X;
+            int width = (int)((ulong)coordinates.Size >> 32);
+            s_measurements[Key(carousel, item)] = new ItemBounds(x, width);
+        });
+
+        return Modifier.FillMaxSize().AppendBound(
+            modifier => OnGloballyPositionedModifierKt.OnGloballyPositioned(
+                modifier,
+                callback),
+            ModifierOpKey.Opaque);
+    }
+
+    static int Key(int carousel, int item) => carousel * 10 + item;
+
+    static ItemBounds Item(int carousel, int item) =>
+        s_measurements.TryGetValue(Key(carousel, item), out var bounds)
+            ? bounds
+            : throw new InvalidOperationException(
+                $"Carousel {carousel}, item {item} was not measured.");
+
+    internal readonly record struct ItemBounds(float X, int Width);
+
+    internal readonly record struct LayoutSnapshot(
+        ItemBounds Uncontained0,
+        ItemBounds Uncontained1,
+        ItemBounds MultiBrowse0,
+        ItemBounds MultiBrowse1,
+        ItemBounds CenteredHero0,
+        ItemBounds CenteredHero1);
 }

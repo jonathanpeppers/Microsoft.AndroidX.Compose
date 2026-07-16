@@ -41,31 +41,35 @@ public class CarouselDefaultsTests
     }
 
     [TestMethod]
-    public Task TreeCarousels_OmittedDpDefaults_RenderAllItems() =>
-        AssertScenarioRenders(CarouselTestActivity.TreeOmitted);
+    public async Task TreeCarousels_NullAndExplicitDp_ChangeLayout()
+    {
+        var omitted = await MeasureScenario(CarouselTestActivity.TreeOmitted);
+        var explicitDp = await MeasureScenario(CarouselTestActivity.TreeExplicit);
+
+        AssertNullableDpLayout(omitted, explicitDp);
+    }
 
     [TestMethod]
-    public Task TreeCarousels_ExplicitDpValues_RenderAllItems() =>
-        AssertScenarioRenders(CarouselTestActivity.TreeExplicit);
+    public async Task StaticCarousels_NullAndExplicitDp_ChangeLayout()
+    {
+        var omitted = await MeasureScenario(CarouselTestActivity.StaticOmitted);
+        var explicitDp = await MeasureScenario(CarouselTestActivity.StaticExplicit);
 
-    [TestMethod]
-    public Task StaticCarousels_OmittedDpDefaults_RenderAllItems() =>
-        AssertScenarioRenders(CarouselTestActivity.StaticOmitted);
+        AssertNullableDpLayout(omitted, explicitDp);
+    }
 
-    [TestMethod]
-    public Task StaticCarousels_ExplicitDpValues_RenderAllItems() =>
-        AssertScenarioRenders(CarouselTestActivity.StaticExplicit);
-
-    static async Task AssertScenarioRenders(int scenario)
+    static async Task<CarouselTestActivity.LayoutSnapshot> MeasureScenario(int scenario)
     {
         var activity = await StartActivity(scenario);
         try
         {
             await WaitFor(
-                static () => CarouselTestActivity.RenderedCarousels,
-                static value => value == CarouselTestActivity.AllCarouselsRendered,
+                static () => CarouselTestActivity.MeasurementCount,
+                static value => value >= CarouselTestActivity.ExpectedMeasurements,
                 TimeSpan.FromSeconds(10),
-                "Not all carousel item-content lambdas were composed.");
+                "The first two items in each carousel were not measured.");
+            await Task.Delay(100);
+            return CarouselTestActivity.Snapshot();
         }
         finally
         {
@@ -77,6 +81,56 @@ public class CarouselDefaultsTests
                 "Carousel test activity did not finish.");
         }
     }
+
+    static void AssertNullableDpLayout(
+        CarouselTestActivity.LayoutSnapshot omitted,
+        CarouselTestActivity.LayoutSnapshot explicitDp)
+    {
+        float density = global::Android.App.Application.Context?.Resources?.DisplayMetrics?.Density
+            ?? throw new InvalidOperationException(
+                "Display density was not available for carousel tests.");
+        float expectedSpacing = CarouselTestActivity.ExplicitSpacingDp * density;
+        float spacingTolerance = density * 2;
+
+        Assert.AreEqual(
+            expectedSpacing,
+            Gap(explicitDp.Uncontained0, explicitDp.Uncontained1),
+            spacingTolerance,
+            "Explicit uncontained-carousel itemSpacing was not forwarded.");
+        Assert.AreEqual(
+            expectedSpacing,
+            Gap(explicitDp.MultiBrowse0, explicitDp.MultiBrowse1),
+            spacingTolerance,
+            "Explicit multi-browse itemSpacing was not forwarded.");
+        Assert.AreEqual(
+            expectedSpacing,
+            Gap(explicitDp.CenteredHero0, explicitDp.CenteredHero1),
+            spacingTolerance,
+            "Explicit centered-hero itemSpacing was not forwarded.");
+
+        Assert.IsTrue(
+            Gap(omitted.Uncontained0, omitted.Uncontained1) < expectedSpacing / 2,
+            "Omitted uncontained-carousel itemSpacing did not use Kotlin's default.");
+        Assert.IsTrue(
+            Gap(omitted.MultiBrowse0, omitted.MultiBrowse1) < expectedSpacing / 2,
+            "Omitted multi-browse itemSpacing did not use Kotlin's default.");
+        Assert.IsTrue(
+            Gap(omitted.CenteredHero0, omitted.CenteredHero1) < expectedSpacing / 2,
+            "Omitted centered-hero itemSpacing did not use Kotlin's default.");
+
+        float maxWidth = CarouselTestActivity.ExplicitMaxItemWidthDp * density;
+        Assert.IsTrue(
+            explicitDp.CenteredHero0.Width <= maxWidth + density,
+            "Explicit centered-hero maxItemWidth was not forwarded.");
+        Assert.IsTrue(
+            omitted.CenteredHero0.Width > explicitDp.CenteredHero0.Width + density,
+            "Omitted centered-hero maxItemWidth did not use Kotlin's default.");
+    }
+
+    static float Gap(
+        CarouselTestActivity.ItemBounds first,
+        CarouselTestActivity.ItemBounds second) =>
+        second.X - first.X - first.Width;
 
     static async Task<CarouselTestActivity> StartActivity(int scenario)
     {

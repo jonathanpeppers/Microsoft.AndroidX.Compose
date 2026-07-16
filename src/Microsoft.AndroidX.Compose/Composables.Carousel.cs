@@ -33,7 +33,7 @@ public static partial class Composables
 
     /// <summary>Renders a typed uncontained carousel with an explicit composer.</summary>
     [Composable]
-    public static void HorizontalUncontainedCarousel<T>(
+    internal static void HorizontalUncontainedCarousel<T>(
         IComposer composer,
         IReadOnlyList<T> items,
         float itemWidth,
@@ -87,7 +87,7 @@ public static partial class Composables
 
     /// <summary>Renders a typed multi-browse carousel with an explicit composer.</summary>
     [Composable]
-    public static void HorizontalMultiBrowseCarousel<T>(
+    internal static void HorizontalMultiBrowseCarousel<T>(
         IComposer composer,
         IReadOnlyList<T> items,
         float preferredItemWidth,
@@ -141,7 +141,7 @@ public static partial class Composables
 
     /// <summary>Renders a typed centered-hero carousel with an explicit composer.</summary>
     [Composable]
-    public static void HorizontalCenteredHeroCarousel<T>(
+    internal static void HorizontalCenteredHeroCarousel<T>(
         IComposer composer,
         IReadOnlyList<T> items,
         [ComposableContent] Action<T, IComposer> itemContent,
