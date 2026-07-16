@@ -31,9 +31,10 @@ internal sealed class ComposableContentNode : ComposableNode
     {
         ArgumentNullException.ThrowIfNull(composer);
         ArgumentNullException.ThrowIfNull(body);
-        using var rows = indexed ? RenderContext.PushRow(1) : default;
-        if (indexed)
-            rows.SetIndex(0);
+        using var rows = indexed
+            ? RenderContext.PushRow(1)
+            : (RenderContext.RowFrame?)null;
+        rows?.SetIndex(0);
         composer.StartReplaceableGroup(HashCode.Combine(0, typeof(ComposableContentNode)));
         try
         {
@@ -50,9 +51,10 @@ internal sealed class ComposableContentNode : ComposableNode
     {
         ArgumentNullException.ThrowIfNull(composer);
         ArgumentNullException.ThrowIfNull(body);
-        using var rows = indexed ? RenderContext.PushRow(1) : default;
-        if (indexed)
-            rows.SetIndex(0);
+        using var rows = indexed
+            ? RenderContext.PushRow(1)
+            : (RenderContext.RowFrame?)null;
+        rows?.SetIndex(0);
         composer.StartReplaceableGroup(HashCode.Combine(0, typeof(ComposableContentNode)));
         try
         {
