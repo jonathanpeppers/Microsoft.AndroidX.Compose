@@ -1,3 +1,4 @@
+using Android.Runtime;
 using AndroidX.Compose;
 using AndroidX.Compose.Material3;
 
@@ -18,8 +19,9 @@ public class ConfirmStateChangeAdapterTests
     {
         var adapter = new DrawerValueConfirmStateChange();
         Assert.IsNull(adapter.Callback);
-        var result = adapter.Invoke(null);
-        Assert.AreSame(Java.Lang.Boolean.True, result);
+        var result = adapter.Invoke(null) as Java.Lang.Boolean
+            ?? throw new InvalidOperationException("Adapter did not return a Java Boolean.");
+        Assert.IsTrue(result.BooleanValue());
     }
 
     [TestMethod]
@@ -42,9 +44,50 @@ public class ConfirmStateChangeAdapterTests
     }
 
     [TestMethod]
+    public unsafe void Invoke_FromJavaDispatchesToInternalJcw()
+    {
+        var adapter = new DrawerValueConfirmStateChange();
+        var value = DrawerValue.Open
+            ?? throw new InvalidOperationException("DrawerValue.Open was unavailable.");
+        var falseValue = Java.Lang.Boolean.False
+            ?? throw new InvalidOperationException("Java Boolean.FALSE was unavailable.");
+        DrawerValue? received = null;
+        adapter.Callback = candidate =>
+        {
+            received = candidate;
+            return false;
+        };
+
+        var cls = JNIEnv.FindClass("net/compose/DrawerValueConfirmStateChange");
+        var invoke = JNIEnv.GetMethodID(
+            cls,
+            "invoke",
+            "(Ljava/lang/Object;)Ljava/lang/Object;");
+        var args = stackalloc JValue[1];
+        args[0] = new JValue(value.Handle);
+        IntPtr result = IntPtr.Zero;
+        try
+        {
+            result = JNIEnv.CallObjectMethod(adapter.Handle, invoke, args);
+            Assert.AreEqual(value, received);
+            Assert.IsTrue(JNIEnv.IsSameObject(result, falseValue.Handle));
+        }
+        finally
+        {
+            if (result != IntPtr.Zero)
+                JNIEnv.DeleteLocalRef(result);
+            GC.KeepAlive(adapter);
+            GC.KeepAlive(value);
+            GC.KeepAlive(falseValue);
+        }
+    }
+
+    [TestMethod]
     public void Sheet_Invoke_NullCallback_ReturnsTrue()
     {
         var adapter = new SheetValueConfirmStateChange();
-        Assert.AreSame(Java.Lang.Boolean.True, adapter.Invoke(null));
+        var result = adapter.Invoke(null) as Java.Lang.Boolean
+            ?? throw new InvalidOperationException("Adapter did not return a Java Boolean.");
+        Assert.IsTrue(result.BooleanValue());
     }
 }

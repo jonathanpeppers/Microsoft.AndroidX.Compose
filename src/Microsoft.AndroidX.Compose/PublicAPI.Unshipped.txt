@@ -222,11 +222,6 @@ AndroidX.Compose.CompositionLocal<T>.Provides(T value) -> AndroidX.Compose.Provi
 AndroidX.Compose.CompositionLocalProvider
 AndroidX.Compose.CompositionLocalProvider.Add(AndroidX.Compose.ProvidedValue! value) -> void
 AndroidX.Compose.CompositionLocalProvider.CompositionLocalProvider() -> void
-AndroidX.Compose.ConfirmStateChangeAdapter<T>
-AndroidX.Compose.ConfirmStateChangeAdapter<T>.Callback.get -> System.Func<T!, bool>?
-AndroidX.Compose.ConfirmStateChangeAdapter<T>.Callback.set -> void
-AndroidX.Compose.ConfirmStateChangeAdapter<T>.ConfirmStateChangeAdapter() -> void
-AndroidX.Compose.ConfirmStateChangeAdapter<T>.Invoke(Java.Lang.Object? p0) -> Java.Lang.Object?
 AndroidX.Compose.Constraints
 AndroidX.Compose.Constraints.ConstrainHeight(int height) -> int
 AndroidX.Compose.Constraints.ConstrainWidth(int width) -> int
@@ -407,8 +402,6 @@ AndroidX.Compose.DrawerStateHolder.IsClosed.get -> bool
 AndroidX.Compose.DrawerStateHolder.IsOpen.get -> bool
 AndroidX.Compose.DrawerStateHolder.OpenAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
 AndroidX.Compose.DrawerStateHolder.TargetValue.get -> AndroidX.Compose.Material3.DrawerValue!
-AndroidX.Compose.DrawerValueConfirmStateChange
-AndroidX.Compose.DrawerValueConfirmStateChange.DrawerValueConfirmStateChange() -> void
 AndroidX.Compose.DrawingStyle
 AndroidX.Compose.DropdownMenu
 AndroidX.Compose.DropdownMenu.DropdownMenu(bool expanded, System.Action! onDismissRequest) -> void
@@ -1243,8 +1236,6 @@ AndroidX.Compose.SheetStateHolder.SheetStateHolder(bool skipPartiallyExpanded = 
 AndroidX.Compose.SheetStateHolder.ShowAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
 AndroidX.Compose.SheetStateHolder.SkipPartiallyExpanded.get -> bool
 AndroidX.Compose.SheetStateHolder.TargetValue.get -> AndroidX.Compose.Material3.SheetValue!
-AndroidX.Compose.SheetValueConfirmStateChange
-AndroidX.Compose.SheetValueConfirmStateChange.SheetValueConfirmStateChange() -> void
 AndroidX.Compose.SideEffect
 AndroidX.Compose.SideEffect.SideEffect(System.Action! effect) -> void
 AndroidX.Compose.SingleChoiceSegmentedButtonRow
@@ -2125,8 +2116,6 @@ static AndroidX.Compose.ComposeExtensions.Remember<T>(this AndroidX.Compose.Runt
 static AndroidX.Compose.ComposeExtensions.Remember<T>(this AndroidX.Compose.Runtime.IComposer! composer, System.Func<T>! factory, object? key1, int line = 0, string! file = "") -> T
 static AndroidX.Compose.ComposeExtensions.Remember<T>(this AndroidX.Compose.Runtime.IComposer! composer, System.Func<T>! factory, object? key1, object? key2, int line = 0, string! file = "") -> T
 static AndroidX.Compose.ComposeExtensions.Remember<T>(this AndroidX.Compose.Runtime.IComposer! composer, System.Func<T>! factory, object? key1, object? key2, object? key3, int line = 0, string! file = "") -> T
-static AndroidX.Compose.ComposeExtensions.RememberAction(this AndroidX.Compose.Runtime.IComposer! composer, System.Action! action, int line = 0, string! file = "") -> Kotlin.Jvm.Functions.IFunction0!
-static AndroidX.Compose.ComposeExtensions.RememberAction(this AndroidX.Compose.Runtime.IComposer! composer, System.Action<Java.Lang.Object?>! action, int line = 0, string! file = "") -> Kotlin.Jvm.Functions.IFunction1!
 static AndroidX.Compose.ComposeExtensions.RememberCoroutineScope(this AndroidX.Compose.Runtime.IComposer! composer) -> AndroidX.Compose.CoroutineScope!
 static AndroidX.Compose.ComposeExtensions.RememberDraggableState(this AndroidX.Compose.Runtime.IComposer! composer, System.Action<float>! onDelta, int line = 0, string! file = "") -> AndroidX.Compose.DraggableState!
 static AndroidX.Compose.ComposeExtensions.RememberKeyed<T>(this AndroidX.Compose.Runtime.IComposer! composer, System.Func<T>! factory, object?[]! keys, int line = 0, string! file = "") -> T
@@ -2682,7 +2671,6 @@ static AndroidX.Compose.ModifierExtensions.DetectTransformGestures(this AndroidX
 static AndroidX.Compose.ModifierExtensions.DisplayCutoutPadding(this AndroidX.Compose.Modifier! modifier) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.ModifierExtensions.DragAndDropTarget(this AndroidX.Compose.Modifier! modifier, System.Func<AndroidX.Compose.DragAndDropEvent!, bool>! shouldStartDragAndDrop, AndroidX.Compose.DragAndDropTarget! target) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.ModifierExtensions.Draggable(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.DraggableState! state, AndroidX.Compose.Orientation orientation, bool enabled = true) -> AndroidX.Compose.Modifier!
-static AndroidX.Compose.ModifierExtensions.DrawBehind(this AndroidX.Compose.Modifier! modifier, Kotlin.Jvm.Functions.IFunction1! onDraw) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.ModifierExtensions.DrawBehind(this AndroidX.Compose.Modifier! modifier, System.Action<AndroidX.Compose.DrawScope!>! onDraw) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.ModifierExtensions.DrawWithCache(this AndroidX.Compose.Modifier! modifier, System.Action<AndroidX.Compose.CacheDrawScope!>! onBuildDrawCache) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.ModifierExtensions.DrawWithContent(this AndroidX.Compose.Modifier! modifier, System.Action<AndroidX.Compose.ContentDrawScope!>! onDraw) -> AndroidX.Compose.Modifier!

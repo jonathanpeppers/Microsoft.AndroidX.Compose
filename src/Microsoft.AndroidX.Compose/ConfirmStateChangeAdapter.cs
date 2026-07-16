@@ -23,7 +23,6 @@ namespace AndroidX.Compose;
 /// <c>DrawerValue</c>, <c>SheetValue</c>).
 /// </typeparam>
 /// <remarks>
-/// <para>
 /// Concrete subclasses (one per state-holder enum) carry their own
 /// <c>[Register("net/compose/&lt;TName&gt;ConfirmStateChange")]</c>
 /// attribute so each gets a stable JCW class on the Java side, and
@@ -33,16 +32,8 @@ namespace AndroidX.Compose;
 /// bridge parameter resolves to the right adapter automatically. JCW
 /// registration must live on the concrete class — abstract / generic
 /// base classes can't hold <c>[Register]</c>.
-/// </para>
-/// <para>
-/// Public so generated facade classes (which live alongside this
-/// type in <c>AndroidX.Compose</c>) can declare the concrete
-/// subclasses as <c>readonly</c> fields; the type itself is not part
-/// of the developer-facing API and should not be constructed
-/// directly.
-/// </para>
 /// </remarks>
-public abstract class ConfirmStateChangeAdapter<
+internal abstract class ConfirmStateChangeAdapter<
     [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
     T> : Java.Lang.Object, IFunction1
     where T : Java.Lang.Object
@@ -53,7 +44,7 @@ public abstract class ConfirmStateChangeAdapter<
     /// <c>ConfirmStateChange</c>/<c>ConfirmValueChange</c> property.
     /// Treated as <c>{ true }</c> when <c>null</c>.
     /// </summary>
-    public Func<T, bool>? Callback { get; set; }
+    internal Func<T, bool>? Callback { get; set; }
 
     /// <summary>
     /// Kotlin <c>Function1.invoke</c> entry point. Marshals the JNI
@@ -66,9 +57,12 @@ public abstract class ConfirmStateChangeAdapter<
         var cb = Callback;
         if (cb is null)
             return Java.Lang.Boolean.True;
-        var value = Android.Runtime.Extensions.JavaCast<T>(p0!)
+        var peer = p0
             ?? throw new InvalidOperationException(
-                $"Expected a Java peer of type {typeof(T).Name} from Kotlin; got '{p0?.Class?.Name ?? "null"}'.");
+                $"Expected a Java peer of type {typeof(T).Name} from Kotlin; got 'null'.");
+        var value = Android.Runtime.Extensions.JavaCast<T>(peer)
+            ?? throw new InvalidOperationException(
+                $"Expected a Java peer of type {typeof(T).Name} from Kotlin; got '{peer.Class?.Name ?? "unknown"}'.");
         return cb(value) ? Java.Lang.Boolean.True : Java.Lang.Boolean.False;
     }
 }
