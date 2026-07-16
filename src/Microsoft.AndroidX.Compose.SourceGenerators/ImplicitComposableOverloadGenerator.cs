@@ -95,9 +95,10 @@ public sealed class ImplicitComposableOverloadGenerator : IIncrementalGenerator
             error = "the source method must be static and return void";
             return null;
         }
-        if (method.DeclaredAccessibility != Accessibility.Public)
+        if (method.DeclaredAccessibility is not (
+                Accessibility.Public or Accessibility.Internal))
         {
-            error = "the source method must be public";
+            error = "the source method must be public or internal";
             return null;
         }
         if (method.ContainingType.ToDisplayString() != ComposablesMetadataName)

@@ -8,7 +8,7 @@ public static partial class Composables
 {
     /// <summary>Renders a filled string text field with an explicit composer.</summary>
     [Composable, GenerateImplicitComposable]
-    public static void TextField(
+    internal static void TextField(
         IComposer composer,
         string value,
         Action<string> onValueChange,
@@ -62,7 +62,7 @@ public static partial class Composables
 
     /// <summary>Renders a filled state-backed string text field with an explicit composer.</summary>
     [Composable, GenerateImplicitComposable]
-    public static void TextField(
+    internal static void TextField(
         IComposer composer,
         MutableState<string> state,
         Modifier? modifier = null,
@@ -113,7 +113,7 @@ public static partial class Composables
 
     /// <summary>Renders a filled selection-aware text field with an explicit composer.</summary>
     [Composable, GenerateImplicitComposable]
-    public static void TextField(
+    internal static void TextField(
         IComposer composer,
         MutableState<TextFieldValue> state,
         Modifier? modifier = null,
@@ -164,7 +164,7 @@ public static partial class Composables
 
     /// <summary>Renders an outlined string text field with an explicit composer.</summary>
     [Composable, GenerateImplicitComposable]
-    public static void OutlinedTextField(
+    internal static void OutlinedTextField(
         IComposer composer,
         string value,
         Action<string> onValueChange,
@@ -220,7 +220,7 @@ public static partial class Composables
 
     /// <summary>Renders an outlined state-backed string text field with an explicit composer.</summary>
     [Composable, GenerateImplicitComposable]
-    public static void OutlinedTextField(
+    internal static void OutlinedTextField(
         IComposer composer,
         MutableState<string> state,
         Modifier? modifier = null,
@@ -273,7 +273,7 @@ public static partial class Composables
 
     /// <summary>Renders an outlined selection-aware text field with an explicit composer.</summary>
     [Composable, GenerateImplicitComposable]
-    public static void OutlinedTextField(
+    internal static void OutlinedTextField(
         IComposer composer,
         MutableState<TextFieldValue> state,
         Modifier? modifier = null,
