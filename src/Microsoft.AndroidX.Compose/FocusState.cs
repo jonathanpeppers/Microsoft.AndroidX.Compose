@@ -11,7 +11,7 @@ namespace AndroidX.Compose;
 /// once and hand back a value type the caller can keep without worrying
 /// about peer lifetime.
 /// </summary>
-public readonly struct FocusState
+public readonly struct FocusState : IEquatable<FocusState>
 {
     /// <summary>
     /// <c>true</c> if the node owning the modifier currently has focus.
@@ -44,4 +44,30 @@ public readonly struct FocusState
 
     internal static FocusState From(IFocusState state) =>
         new(state.IsFocused, state.HasFocus, state.IsCaptured);
+
+    /// <inheritdoc/>
+    public bool Equals(FocusState other) =>
+        IsFocused == other.IsFocused &&
+        HasFocus == other.HasFocus &&
+        IsCaptured == other.IsCaptured;
+
+    /// <inheritdoc/>
+    public override bool Equals(object? obj) =>
+        obj is FocusState other && Equals(other);
+
+    /// <inheritdoc/>
+    public override int GetHashCode() =>
+        HashCode.Combine(IsFocused, HasFocus, IsCaptured);
+
+    /// <summary>Compares two focus snapshots by their state flags.</summary>
+    public static bool operator ==(FocusState left, FocusState right) =>
+        left.Equals(right);
+
+    /// <summary>Compares two focus snapshots by their state flags.</summary>
+    public static bool operator !=(FocusState left, FocusState right) =>
+        !left.Equals(right);
+
+    /// <inheritdoc/>
+    public override string ToString() =>
+        $"FocusState(IsFocused={IsFocused}, HasFocus={HasFocus}, IsCaptured={IsCaptured})";
 }
