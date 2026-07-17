@@ -131,6 +131,25 @@ public class PublicValueContractTests
     }
 
     [TestMethod]
+    public void PagerState_RejectsNegativeProgrammaticPage()
+    {
+        var state = new PagerState(static () => 3);
+
+        Assert.AreEqual(
+            "page",
+            Assert.ThrowsExactly<ArgumentOutOfRangeException>(
+                () => state.RequestScrollToPage(-1)).ParamName);
+        Assert.AreEqual(
+            "page",
+            Assert.ThrowsExactly<ArgumentOutOfRangeException>(
+                () => state.ScrollToPageAsync(-1)).ParamName);
+        Assert.AreEqual(
+            "page",
+            Assert.ThrowsExactly<ArgumentOutOfRangeException>(
+                () => state.AnimateScrollToPageAsync(-1)).ParamName);
+    }
+
+    [TestMethod]
     public void TextFieldStates_PreservePendingMutationsAndValidateNull()
     {
         var search = new SearchBarTextFieldState("initial");

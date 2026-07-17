@@ -3,8 +3,8 @@ namespace AndroidX.Compose;
 /// <summary>
 /// Caller-supplied state holder for <see cref="SnackbarHost"/>. Wraps
 /// the bound <c>androidx.compose.material3.SnackbarHostState</c> — the
-/// Kotlin class has a public no-arg constructor and is plain enough
-/// for the binder to expose, so no JNI bridge is needed.
+/// Kotlin class has a bound public no-arg constructor; suspending
+/// operations are invoked through generated bridges.
 /// </summary>
 public sealed class SnackbarHostState
 {

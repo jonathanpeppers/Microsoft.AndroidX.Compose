@@ -64,8 +64,9 @@ public sealed class SecureTextFieldState
     /// <summary>
     /// Current text in the secure input. Reads through to the live
     /// JVM <c>TextFieldState.text</c> (a Compose snapshot value), so
-    /// reading inside composition subscribes to recomposition. Returns
-    /// the initial value before the first render binds the peer.
+    /// reading inside composition subscribes to recomposition. Before
+    /// the first render binds the peer, returns the latest pending value
+    /// from construction or a text mutation method.
     /// </summary>
     public string Text => Jvm?.Text ?? _pendingText;
 

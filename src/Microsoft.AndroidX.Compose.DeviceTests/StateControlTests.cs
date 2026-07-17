@@ -114,14 +114,16 @@ public class StateControlTests
             var dismissedTask = await RunOnUiThread(
                 activity,
                 () => Task.FromResult(snackbar.ShowSnackbarAsync(
-                    "Dismiss me",
-                    duration: SnackbarDuration.Indefinite)));
+                    "Dismiss me")));
             var dismissedData = await WaitFor(
                 () => snackbar.Jvm.CurrentSnackbarData,
                 static value => value is not null,
                 "Dismissable snackbar did not enter the host queue.")
                 ?? throw new InvalidOperationException(
                     "Dismissable snackbar data was unavailable.");
+            Assert.AreEqual(
+                global::AndroidX.Compose.Material3.SnackbarDuration.Short,
+                dismissedData.Visuals.Duration);
             activity.RunOnUiThread(dismissedData.Dismiss);
             Assert.AreEqual(SnackbarResult.Dismissed, await dismissedTask);
 
@@ -129,14 +131,16 @@ public class StateControlTests
                 activity,
                 () => Task.FromResult(snackbar.ShowSnackbarAsync(
                     "Act on me",
-                    actionLabel: "Act",
-                    duration: SnackbarDuration.Indefinite)));
+                    actionLabel: "Act")));
             var actionData = await WaitFor(
                 () => snackbar.Jvm.CurrentSnackbarData,
                 static value => value is not null,
                 "Action snackbar did not enter the host queue.")
                 ?? throw new InvalidOperationException(
                     "Action snackbar data was unavailable.");
+            Assert.AreEqual(
+                global::AndroidX.Compose.Material3.SnackbarDuration.Indefinite,
+                actionData.Visuals.Duration);
             activity.RunOnUiThread(actionData.PerformAction);
             Assert.AreEqual(SnackbarResult.ActionPerformed, await actionTask);
 
