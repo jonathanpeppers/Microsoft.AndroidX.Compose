@@ -344,9 +344,9 @@ AndroidX.Compose.DismissibleNavigationDrawer.Drawer.set -> void
 AndroidX.Compose.DismissibleNavigationDrawer.InitialValue.get -> AndroidX.Compose.Material3.DrawerValue?
 AndroidX.Compose.DismissibleNavigationDrawer.InitialValue.init -> void
 AndroidX.Compose.DisposableEffect
-AndroidX.Compose.DisposableEffect.DisposableEffect(object? key1, System.Func<AndroidX.Compose.Runtime.DisposableEffectScope!, System.Action!>! effect) -> void
-AndroidX.Compose.DisposableEffect.DisposableEffect(object? key1, object? key2, System.Func<AndroidX.Compose.Runtime.DisposableEffectScope!, System.Action!>! effect) -> void
-AndroidX.Compose.DisposableEffect.DisposableEffect(object? key1, object? key2, object? key3, System.Func<AndroidX.Compose.Runtime.DisposableEffectScope!, System.Action!>! effect) -> void
+AndroidX.Compose.DisposableEffect.DisposableEffect(object? key1, System.Func<System.Action!>! effect) -> void
+AndroidX.Compose.DisposableEffect.DisposableEffect(object? key1, object? key2, System.Func<System.Action!>! effect) -> void
+AndroidX.Compose.DisposableEffect.DisposableEffect(object? key1, object? key2, object? key3, System.Func<System.Action!>! effect) -> void
 AndroidX.Compose.Dp
 AndroidX.Compose.Dp.CompareTo(AndroidX.Compose.Dp other) -> int
 AndroidX.Compose.Dp.Dp() -> void
@@ -1917,9 +1917,9 @@ static AndroidX.Compose.Composables.DisableSelection(System.Action! content) -> 
 static AndroidX.Compose.Composables.DismissibleDrawerSheet(System.Action! content, AndroidX.Compose.Shape? shape = null, AndroidX.Compose.Color containerColor = default(AndroidX.Compose.Color)) -> void
 static AndroidX.Compose.Composables.DismissibleNavigationDrawer(System.Action! drawer, System.Action! content, AndroidX.Compose.DrawerStateHolder? drawerState = null, bool gesturesEnabled = true, AndroidX.Compose.Modifier? modifier = null, System.Func<AndroidX.Compose.Material3.DrawerValue!, bool>? confirmStateChange = null) -> void
 static AndroidX.Compose.Composables.DisplayCutoutInsets() -> AndroidX.Compose.WindowInsets!
-static AndroidX.Compose.Composables.DisposableEffect(object? key1, System.Func<AndroidX.Compose.Runtime.DisposableEffectScope!, System.Action!>! effect) -> void
-static AndroidX.Compose.Composables.DisposableEffect(object? key1, object? key2, System.Func<AndroidX.Compose.Runtime.DisposableEffectScope!, System.Action!>! effect) -> void
-static AndroidX.Compose.Composables.DisposableEffect(object? key1, object? key2, object? key3, System.Func<AndroidX.Compose.Runtime.DisposableEffectScope!, System.Action!>! effect) -> void
+static AndroidX.Compose.Composables.DisposableEffect(object? key1, System.Func<System.Action!>! effect) -> void
+static AndroidX.Compose.Composables.DisposableEffect(object? key1, object? key2, System.Func<System.Action!>! effect) -> void
+static AndroidX.Compose.Composables.DisposableEffect(object? key1, object? key2, object? key3, System.Func<System.Action!>! effect) -> void
 static AndroidX.Compose.Composables.DropdownMenu(bool expanded, System.Action! onDismissRequest, System.Action! content, AndroidX.Compose.Modifier? modifier = null) -> void
 static AndroidX.Compose.Composables.ElevatedAssistChip(System.Action! onClick, System.Action! label, bool enabled = true, System.Action? leadingIcon = null, System.Action? trailingIcon = null, AndroidX.Compose.Shape? shape = null) -> void
 static AndroidX.Compose.Composables.ElevatedButton(System.Action! onClick, System.Action! content, bool enabled = true, AndroidX.Compose.Modifier? modifier = null, AndroidX.Compose.Shape? shape = null, AndroidX.Compose.Material3.ButtonColors? colors = null, AndroidX.Compose.PaddingValues? contentPadding = null) -> void
@@ -2097,9 +2097,9 @@ static AndroidX.Compose.ComposeExtensions.DiffSlot<T>(this AndroidX.Compose.Runt
 static AndroidX.Compose.ComposeExtensions.DiffSlotShift(int paramIndex) -> int
 static AndroidX.Compose.ComposeExtensions.DimensionResource(this AndroidX.Compose.Runtime.IComposer! composer, int id) -> AndroidX.Compose.Dp
 static AndroidX.Compose.ComposeExtensions.DisplayCutoutInsets(this AndroidX.Compose.Runtime.IComposer! composer) -> AndroidX.Compose.WindowInsets!
-static AndroidX.Compose.ComposeExtensions.DisposableEffect(this AndroidX.Compose.Runtime.IComposer! composer, object? key1, System.Func<AndroidX.Compose.Runtime.DisposableEffectScope!, System.Action!>! effect) -> void
-static AndroidX.Compose.ComposeExtensions.DisposableEffect(this AndroidX.Compose.Runtime.IComposer! composer, object? key1, object? key2, System.Func<AndroidX.Compose.Runtime.DisposableEffectScope!, System.Action!>! effect) -> void
-static AndroidX.Compose.ComposeExtensions.DisposableEffect(this AndroidX.Compose.Runtime.IComposer! composer, object? key1, object? key2, object? key3, System.Func<AndroidX.Compose.Runtime.DisposableEffectScope!, System.Action!>! effect) -> void
+static AndroidX.Compose.ComposeExtensions.DisposableEffect(this AndroidX.Compose.Runtime.IComposer! composer, object? key1, System.Func<System.Action!>! effect) -> void
+static AndroidX.Compose.ComposeExtensions.DisposableEffect(this AndroidX.Compose.Runtime.IComposer! composer, object? key1, object? key2, System.Func<System.Action!>! effect) -> void
+static AndroidX.Compose.ComposeExtensions.DisposableEffect(this AndroidX.Compose.Runtime.IComposer! composer, object? key1, object? key2, object? key3, System.Func<System.Action!>! effect) -> void
 static AndroidX.Compose.ComposeExtensions.EnableEdgeToEdge(this AndroidX.Activity.ComponentActivity! activity) -> void
 static AndroidX.Compose.ComposeExtensions.EnterAlwaysScrollBehavior(this AndroidX.Compose.Runtime.IComposer! composer, AndroidX.Compose.Material3.TopAppBarState! state, int line = 0, string! file = "") -> AndroidX.Compose.Material3.ITopAppBarScrollBehavior!
 static AndroidX.Compose.ComposeExtensions.ExitUntilCollapsedScrollBehavior(this AndroidX.Compose.Runtime.IComposer! composer, AndroidX.Compose.Material3.TopAppBarState! state, int line = 0, string! file = "") -> AndroidX.Compose.Material3.ITopAppBarScrollBehavior!
@@ -2545,7 +2545,6 @@ static AndroidX.Compose.ImeAction.Send.get -> int
 static AndroidX.Compose.ImeAction.Unspecified.get -> int
 static AndroidX.Compose.KeyboardActionsHelper.Create(System.Action? onDone = null, System.Action? onGo = null, System.Action? onNext = null, System.Action? onPrevious = null, System.Action? onSearch = null, System.Action? onSend = null) -> AndroidX.Compose.Foundation.Text.KeyboardActions!
 static AndroidX.Compose.KeyboardOptionsCompanion.Default.get -> AndroidX.Compose.Foundation.Text.KeyboardOptions!
-static AndroidX.Compose.KeyboardOptionsCompanion.Get() -> AndroidX.Compose.Foundation.Text.KeyboardOptions.Companion!
 static AndroidX.Compose.KeyboardType.Ascii.get -> int
 static AndroidX.Compose.KeyboardType.Decimal.get -> int
 static AndroidX.Compose.KeyboardType.Email.get -> int

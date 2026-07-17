@@ -1,5 +1,3 @@
-using AndroidX.Compose.Runtime;
-
 namespace AndroidX.Compose;
 
 public static partial class Composables
@@ -15,26 +13,35 @@ public static partial class Composables
     /// <summary>Registers a one-key disposable effect.</summary>
     public static void DisposableEffect(
         object? key1,
-        Func<DisposableEffectScope, Action> effect) =>
+        Func<Action> effect)
+    {
+        ArgumentNullException.ThrowIfNull(effect);
         ComposeExtensions.DisposableEffect(
             ComposableContext.Current, key1, effect);
+    }
 
     /// <summary>Registers a two-key disposable effect.</summary>
     public static void DisposableEffect(
         object? key1,
         object? key2,
-        Func<DisposableEffectScope, Action> effect) =>
+        Func<Action> effect)
+    {
+        ArgumentNullException.ThrowIfNull(effect);
         ComposeExtensions.DisposableEffect(
             ComposableContext.Current, key1, key2, effect);
+    }
 
     /// <summary>Registers a three-key disposable effect.</summary>
     public static void DisposableEffect(
         object? key1,
         object? key2,
         object? key3,
-        Func<DisposableEffectScope, Action> effect) =>
+        Func<Action> effect)
+    {
+        ArgumentNullException.ThrowIfNull(effect);
         ComposeExtensions.DisposableEffect(
             ComposableContext.Current, key1, key2, key3, effect);
+    }
 
     /// <summary>Registers a one-key launched effect.</summary>
     public static void LaunchedEffect(

@@ -471,10 +471,11 @@ visible input/leaf controls so MAUI sample pages start to look right.
   `IVisualTransformation?`, and `KeyboardOptions?` slots so the new
   password / keyboard / colour-override mappers have somewhere to
   write. Gallery demos in `TextInputs/`.
-- `KeyboardOptionsCompanion` (public) — JNI bootstrap for
-  `KeyboardOptions.Companion` because Mono's binder skips the
-  static `Companion` field accessor on Kotlin `object` companions.
-  Same pattern as `TextStyleCompanion`. Fix-up tracked against
+- `KeyboardOptionsCompanion.Default` (public) — JNI bootstrap for the
+  default `KeyboardOptions` because Mono's binder skips the static
+  `Companion` field accessor on Kotlin `object` companions. The
+  binding-specific `Companion` accessor remains internal. Same pattern
+  as `TextStyleCompanion`. Fix-up tracked against
   `dotnet/android-libraries` Metadata.xml.
 
 [kopts-companion]: ../src/Microsoft.AndroidX.Compose/KeyboardOptionsCompanion.cs

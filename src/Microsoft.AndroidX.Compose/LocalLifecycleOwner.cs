@@ -1,5 +1,5 @@
 using AndroidX.Compose.Runtime;
-using AndroidX.Compose.UI.Platform;
+using Android.Runtime;
 
 namespace AndroidX.Compose;
 
@@ -8,23 +8,21 @@ namespace AndroidX.Compose;
 /// current composition (typically the host activity or fragment). Use
 /// this to scope coroutines / effects to the same lifecycle as the UI
 /// tree. Equivalent to Kotlin's
-/// <c>androidx.compose.ui.platform.LocalLifecycleOwner</c>.
+/// <c>androidx.lifecycle.compose.LocalLifecycleOwner</c>.
 /// </summary>
 /// <remarks>
-/// We bind the legacy
-/// <c>androidx.compose.ui.platform.LocalLifecycleOwner</c> here instead
-/// of the newer <c>androidx.lifecycle.compose.LocalLifecycleOwner</c>
-/// because the lifecycle-runtime-compose binding currently strips that
-/// type. The legacy accessor is marked <c>@Deprecated</c> in Kotlin but
-/// still delegates to the same composition local at runtime — swap once
-/// the upstream binding exposes it.
+/// The lifecycle-runtime-compose binding exposes the JVM
+/// <c>LocalLifecycleOwnerKt</c> class but strips its static getter, so the
+/// composition-local peer is resolved through a generated JNI bridge.
 /// </remarks>
 public static class LocalLifecycleOwner
 {
-#pragma warning disable CS0618 // legacy LocalLifecycleOwner, see <remarks>
     static readonly CompositionLocal<AndroidX.Lifecycle.ILifecycleOwner> s_instance =
-        new(AndroidCompositionLocals_androidKt.LocalLifecycleOwner);
-#pragma warning restore CS0618
+        new(Java.Lang.Object.GetObject<ProvidableCompositionLocal>(
+            ComposeBridges.LocalLifecycleOwner(),
+            JniHandleOwnership.TransferLocalRef)
+            ?? throw new InvalidOperationException(
+                "androidx.lifecycle.compose.LocalLifecycleOwner was unavailable."));
 
     /// <summary>
     /// Read the current value, equivalent to Kotlin's

@@ -20,7 +20,7 @@ public static class DisposableEffectDemo
             {
                 new Text($"Cleanups so far: {cleanups}"),
                 new Text($"Effect key: {key}"),
-                new DisposableEffect(key.Value, scope => () => cleanups.Value++),
+                new DisposableEffect(key.Value, () => () => cleanups.Value++),
                 new Button(onClick: () => key++) { new Text("Change key (triggers cleanup)") },
                 new Button(onClick: () => cleanups.Value = 0) { new Text("Reset counter") },
             };
