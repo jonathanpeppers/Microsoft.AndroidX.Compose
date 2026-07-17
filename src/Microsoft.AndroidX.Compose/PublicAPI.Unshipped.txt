@@ -165,6 +165,8 @@ AndroidX.Compose.CircularProgressIndicator
 AndroidX.Compose.CircularProgressIndicator.CircularProgressIndicator() -> void
 AndroidX.Compose.CircularProgressIndicator.Color.get -> AndroidX.Compose.Color?
 AndroidX.Compose.CircularProgressIndicator.Color.set -> void
+AndroidX.Compose.CircularProgressIndicator.Progress.get -> float?
+AndroidX.Compose.CircularProgressIndicator.Progress.set -> void
 AndroidX.Compose.CircularProgressIndicator.StrokeWidthDp.get -> AndroidX.Compose.Dp?
 AndroidX.Compose.CircularProgressIndicator.StrokeWidthDp.set -> void
 AndroidX.Compose.CircularProgressIndicator.TrackColor.get -> AndroidX.Compose.Color?
