@@ -15,4 +15,5 @@
   <Project Path="src/Microsoft.AndroidX.Compose.Maui/Microsoft.AndroidX.Compose.Maui.csproj" />
   <Project Path="src/Microsoft.AndroidX.Compose.SourceGenerators.Tests/Microsoft.AndroidX.Compose.SourceGenerators.Tests.csproj" />
   <Project Path="src/Microsoft.AndroidX.Compose.SourceGenerators/Microsoft.AndroidX.Compose.SourceGenerators.csproj" />
+  <Project Path="src/Microsoft.AndroidX.Compose.Templates/Microsoft.AndroidX.Compose.Templates.csproj" />
 </Solution>
