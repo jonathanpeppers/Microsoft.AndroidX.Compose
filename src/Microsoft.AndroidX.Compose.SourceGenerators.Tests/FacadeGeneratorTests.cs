@@ -280,6 +280,17 @@ public class FacadeGeneratorTests
         return (output, diags, emitted);
     }
 
+    static string GeneratedMethodBody(string emitted, string methodName)
+    {
+        var method = CSharpSyntaxTree.ParseText(emitted)
+            .GetRoot()
+            .DescendantNodes()
+            .OfType<Microsoft.CodeAnalysis.CSharp.Syntax.MethodDeclarationSyntax>()
+            .Single(m => m.Identifier.ValueText == methodName);
+        return method.Body?.ToFullString()
+            ?? throw new System.InvalidOperationException($"Generated method '{methodName}' has no body.");
+    }
+
     const string ButtonAttrs = """
         [assembly: ComposeDefaults("ButtonDefault",
             "!onClick", "modifier", "enabled", "shape", "colors",
@@ -622,7 +633,8 @@ public class FacadeGeneratorTests
         Assert.Contains(
             "public Text(string text)\n        {\n            global::System.ArgumentNullException.ThrowIfNull(text);",
             emitted.ReplaceLineEndings("\n"));
-        Assert.Contains("global::System.ArgumentNullException.ThrowIfNull(text);", emitted);
+        var helperBody = GeneratedMethodBody(emitted, "Text_PrimaryResource_Implicit");
+        Assert.Contains("global::System.ArgumentNullException.ThrowIfNull(text);", helperBody);
         Assert.Contains("global::AndroidX.Compose.ComposeBridges.Text(_text, BuildModifier(), composer);", emitted);
 
         var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
@@ -672,7 +684,10 @@ public class FacadeGeneratorTests
         if (type == "string")
             Assert.Contains("global::System.ArgumentNullException.ThrowIfNull(value);", emitted);
         else if (type == "string?")
-            Assert.DoesNotContain("global::System.ArgumentNullException.ThrowIfNull(value);", emitted);
+        {
+            var helperBody = GeneratedMethodBody(emitted, "Widget_PrimaryResource_Implicit");
+            Assert.DoesNotContain("global::System.ArgumentNullException.ThrowIfNull(value);", helperBody);
+        }
     }
 
     [Fact]
@@ -1657,6 +1672,12 @@ public class FacadeGeneratorTests
         // Painter ctor null-guards and stores into `_painter`.
         Assert.Contains("global::System.ArgumentNullException.ThrowIfNull(painter);", emitted);
         Assert.Contains("_painter = painter;", emitted);
+        var resourceHelperBody = GeneratedMethodBody(emitted, "Image_PrimaryResource_Implicit");
+        var painterHelperBody = GeneratedMethodBody(emitted, "Image_PrimaryPainter_Implicit");
+        Assert.DoesNotContain("global::System.ArgumentNullException.ThrowIfNull(painter);", resourceHelperBody);
+        Assert.Contains("global::System.ArgumentNullException.ThrowIfNull(painter);", painterHelperBody);
+        Assert.DoesNotContain("global::System.ArgumentNullException.ThrowIfNull(contentDescription);", resourceHelperBody);
+        Assert.DoesNotContain("global::System.ArgumentNullException.ThrowIfNull(contentDescription);", painterHelperBody);
 
         // Render preamble: caller-owned Painter is forwarded directly;
         // resource-id path wraps the local ref into a managed peer via
@@ -4257,6 +4278,9 @@ public class FacadeGeneratorTests
         Assert.Contains("public Icon(int drawableResourceId,", emitted);
         Assert.Contains("public Icon(global::AndroidX.Compose.UI.Graphics.Painter.Painter painter,", emitted);
         Assert.Contains("global::System.ArgumentNullException.ThrowIfNull(imageVector);", emitted);
+        var secondaryHelperBody = GeneratedMethodBody(emitted, "Icon_Secondary_Implicit");
+        Assert.Contains("global::System.ArgumentNullException.ThrowIfNull(imageVector);", secondaryHelperBody);
+        Assert.DoesNotContain("global::System.ArgumentNullException.ThrowIfNull(contentDescription);", secondaryHelperBody);
 
         // Render dispatch: secondary branch runs first, with renamed
         // locals (__secModifier / __secDefaults) to avoid CS0136

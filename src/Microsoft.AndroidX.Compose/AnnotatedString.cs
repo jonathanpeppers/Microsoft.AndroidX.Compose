@@ -53,6 +53,6 @@ public sealed class AnnotatedString : Java.Lang.Object
     {
         ArgumentNullException.ThrowIfNull(text);
         return new AndroidX.Compose.UI.Text.AnnotatedString(
-            text, new List<AndroidX.Compose.UI.Text.AnnotatedString.Range>());
+            text, []);
     }
 }
