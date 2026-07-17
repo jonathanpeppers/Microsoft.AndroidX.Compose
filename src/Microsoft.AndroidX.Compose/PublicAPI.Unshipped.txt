@@ -345,17 +345,6 @@ AndroidX.Compose.DisposableEffect
 AndroidX.Compose.DisposableEffect.DisposableEffect(object? key1, System.Func<AndroidX.Compose.Runtime.DisposableEffectScope!, System.Action!>! effect) -> void
 AndroidX.Compose.DisposableEffect.DisposableEffect(object? key1, object? key2, System.Func<AndroidX.Compose.Runtime.DisposableEffectScope!, System.Action!>! effect) -> void
 AndroidX.Compose.DisposableEffect.DisposableEffect(object? key1, object? key2, object? key3, System.Func<AndroidX.Compose.Runtime.DisposableEffectScope!, System.Action!>! effect) -> void
-AndroidX.Compose.DockedSearchBar
-AndroidX.Compose.DockedSearchBar.DockedSearchBar(bool expanded, System.Action<bool>! onExpandedChange) -> void
-AndroidX.Compose.DockedSearchBar.DockedSearchBar(string! query, System.Action<string!>! onQueryChange, System.Action<string!>! onSearch, bool active, System.Action<bool>! onActiveChange) -> void
-AndroidX.Compose.DockedSearchBar.InputField.get -> AndroidX.Compose.ComposableNode?
-AndroidX.Compose.DockedSearchBar.InputField.set -> void
-AndroidX.Compose.DockedSearchBar.LeadingIcon.get -> AndroidX.Compose.ComposableNode?
-AndroidX.Compose.DockedSearchBar.LeadingIcon.set -> void
-AndroidX.Compose.DockedSearchBar.Placeholder.get -> AndroidX.Compose.ComposableNode?
-AndroidX.Compose.DockedSearchBar.Placeholder.set -> void
-AndroidX.Compose.DockedSearchBar.TrailingIcon.get -> AndroidX.Compose.ComposableNode?
-AndroidX.Compose.DockedSearchBar.TrailingIcon.set -> void
 AndroidX.Compose.Dp
 AndroidX.Compose.Dp.CompareTo(AndroidX.Compose.Dp other) -> int
 AndroidX.Compose.Dp.Dp() -> void
@@ -1611,7 +1600,6 @@ override AndroidX.Compose.DisableSelection.Render(AndroidX.Compose.Runtime.IComp
 override AndroidX.Compose.DismissibleDrawerSheet.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
 override AndroidX.Compose.DismissibleNavigationDrawer.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
 override AndroidX.Compose.DisposableEffect.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
-override AndroidX.Compose.DockedSearchBar.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
 override AndroidX.Compose.Dp.Equals(object? obj) -> bool
 override AndroidX.Compose.Dp.GetHashCode() -> int
 override AndroidX.Compose.Dp.ToString() -> string!
@@ -1844,8 +1832,6 @@ static AndroidX.Compose.Composables.DisplayCutoutInsets() -> AndroidX.Compose.Wi
 static AndroidX.Compose.Composables.DisposableEffect(object? key1, System.Func<AndroidX.Compose.Runtime.DisposableEffectScope!, System.Action!>! effect) -> void
 static AndroidX.Compose.Composables.DisposableEffect(object? key1, object? key2, System.Func<AndroidX.Compose.Runtime.DisposableEffectScope!, System.Action!>! effect) -> void
 static AndroidX.Compose.Composables.DisposableEffect(object? key1, object? key2, object? key3, System.Func<AndroidX.Compose.Runtime.DisposableEffectScope!, System.Action!>! effect) -> void
-static AndroidX.Compose.Composables.DockedSearchBar(bool expanded, System.Action<bool>! onExpandedChange, System.Action! inputField, System.Action! content, AndroidX.Compose.Modifier? modifier = null) -> void
-static AndroidX.Compose.Composables.DockedSearchBar(string! query, System.Action<string!>! onQueryChange, System.Action<string!>! onSearch, bool active, System.Action<bool>! onActiveChange, System.Action! content, AndroidX.Compose.Modifier? modifier = null, System.Action? placeholder = null, System.Action? leadingIcon = null, System.Action? trailingIcon = null) -> void
 static AndroidX.Compose.Composables.DropdownMenu(bool expanded, System.Action! onDismissRequest, System.Action! content, AndroidX.Compose.Modifier? modifier = null) -> void
 static AndroidX.Compose.Composables.ElevatedAssistChip(System.Action! onClick, System.Action! label, bool enabled = true, System.Action? leadingIcon = null, System.Action? trailingIcon = null, AndroidX.Compose.Shape? shape = null) -> void
 static AndroidX.Compose.Composables.ElevatedButton(System.Action! onClick, System.Action! content, bool enabled = true, AndroidX.Compose.Modifier? modifier = null, AndroidX.Compose.Shape? shape = null, AndroidX.Compose.Material3.ButtonColors? colors = null, AndroidX.Compose.PaddingValues? contentPadding = null) -> void

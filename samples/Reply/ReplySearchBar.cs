@@ -4,10 +4,9 @@ namespace AndroidX.Compose.Samples.Reply;
 
 /// <summary>
 /// Simplified top "search" entry used by <see cref="ReplyInboxScreen"/>.
-/// The upstream sample uses
-/// <c>DockedSearchBar</c>, which isn't bound in
-/// <c>Xamarin.AndroidX.Compose.Material3</c>; this is a placeholder row
-/// with the same visual footprint so the inbox list visually matches.
+/// The port currently uses a placeholder row with the same visual footprint
+/// as the upstream interactive search overlay so the inbox list visually
+/// matches.
 /// </summary>
 public sealed class ReplySearchBar : ComposableNode
 {

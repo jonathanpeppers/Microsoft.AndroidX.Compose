@@ -23,7 +23,7 @@ Status legend: ✅ done · 🚧 in progress · ⬜️ not started · ❌ blocked
 |----------------------:|-------------|:------:|-------|
 | Low                   | **Jetchat** | ✅      | Simplified single-channel chat with navigation drawer (`composers` / `droidcon-nyc`), top-bar search/info action icons, distinct-per-author avatars (DiceBear `lorelei`, CC0), and a `LazyColumn`-backed message log. Programmatic drawer open + multi-channel routing still pending. See `Jetchat/README.md`. |
 | Medium                | JetNews     | ✅      | Simplified phone-only single-pane port — three screens (Home / Article / Interests), navigation drawer with two destinations and auto-close on item tap, hamburger top-bar toggle, `PrimaryTabRow` on Interests, per-post bookmark toggle, six condensed seed posts with solid-color hero panels. Adaptive list-detail layout, inline paragraph spans, `nestedScroll` top-bar elevation, and real hero PNGs are all pending. See `JetNews/README.md`. |
-| Medium                | Reply       | ✅      | Simplified phone-only single-pane port — bottom-nav scaffold with 4 destinations, inbox `LazyColumn` of cards with `AnimatedContent`-swapped selected avatar and `CombinedClickable` (tap/long-press) multi-select, email-detail `Scaffold` with thread cards, Articles/DMs/Groups stub screens. The only outstanding facade gap is TwoPane / fold-aware list-detail ([#168](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/168)); `NavigationDrawerItem` (#163), `BackHandler` (#166), `NavOptions` (#169), `DockedSearchBar` (#165), `LazyListState` scroll-direction reads (#164), `semantics { selected }` (#167), `Modifier.nestedScroll` (#142), and adaptive `WindowSizeClass` reads (#143) all shipped — those are deferred port wiring, not facade gaps. See `Reply/README.md`. |
+| Medium                | Reply       | ✅      | Simplified phone-only single-pane port — bottom-nav scaffold with 4 destinations, inbox `LazyColumn` of cards with `AnimatedContent`-swapped selected avatar and `CombinedClickable` (tap/long-press) multi-select, email-detail `Scaffold` with thread cards, Articles/DMs/Groups stub screens. The only outstanding facade gap is TwoPane / fold-aware list-detail ([#168](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/168)); `NavigationDrawerItem` (#163), `BackHandler` (#166), `NavOptions` (#169), the state-based search-bar pair (#165), `LazyListState` scroll-direction reads (#164), `semantics { selected }` (#167), `Modifier.nestedScroll` (#142), and adaptive `WindowSizeClass` reads (#143) all shipped — those are deferred port wiring, not facade gaps. See `Reply/README.md`. |
 | Medium-High           | Jetsnack    | ⬜️     | Heavy custom layouts and animation. |
 | High                  | Jetcaster   | ⬜️     | Coroutines, DataStore, Hilt, media playback. |
 | High                  | JetLagged   | ⬜️     | Custom drawing + heavy animation. |
@@ -63,7 +63,7 @@ Closed gaps that previously appeared here (now usable in samples):
 **#146** `stringResource(id)` lookup,
 **#163** `NavigationDrawerItem` facade,
 **#164** `LazyListState` scroll-direction / visible-item properties,
-**#165** `DockedSearchBar` facade,
+**#165** state-based search-bar pair,
 **#166** `BackHandler {}` from `androidx.activity.compose`,
 **#167** Typed `semantics` properties (`Selected`, `Role`, `OnClick` label, …),
 **#169** `NavOptions` (`popUpTo` + `launchSingleTop` + `restoreState`).

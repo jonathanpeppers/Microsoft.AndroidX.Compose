@@ -346,10 +346,8 @@ surfaces are modeled.
   selection-aware `MutableState<TextFieldValue>` while leaving bridge
   selection and slot wrapping in the existing facades. `Layout` likewise
   retains its composer-remembered Java measure-policy peer. The complete
-  search family is also available: state-based collapsed/top bars,
-  docked/full-screen expanded content, shared-state input fields, and both
-  deprecated `DockedSearchBar` variants. Generated ambient siblings preserve
-  `[Obsolete]` metadata from their explicit adapters.
+  state-based search family is also available: collapsed/top bars,
+  docked/full-screen expanded content, and shared-state input fields.
   `BottomSheetScaffold` completes the issue-listed holdouts: its composable
   adapter remembers the existing facade keyed by `SheetStateHolder`, keeping
   the per-node veto JCW stable while replacing sheet/body/slot nodes on each

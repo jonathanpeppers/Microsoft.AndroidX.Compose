@@ -13,7 +13,7 @@ public static class ComposableHandwrittenAdaptersDemo
         Id:          "composable-handwritten-holdouts",
         CategoryId:  "composable-methods",
         Title:       "Handwritten holdouts",
-        Description: "MaterialTheme, Scaffold, SnackbarHost, and segmented buttons through composable methods.",
+        Description: "Theme, scaffold, search, snackbar, and segmented controls through composable methods.",
         Build:       static _ => new ComposableDemoAdapter(() => HandwrittenHoldouts()));
 
     /// <summary>Renders the handwritten holdouts unlocked by ambient-overload generation.</summary>
@@ -105,23 +105,7 @@ public static class ComposableHandwrittenAdaptersDemo
                                 topSearch),
                             content: () => Text("Full-screen search results"));
 
-#pragma warning disable CS0618
-                        DockedSearchBar(
-                            expanded: false,
-                            onExpandedChange: _ => { },
-                            inputField: () => Text("Legacy input field"),
-                            content: () => Text("Legacy boolean results"));
-                        DockedSearchBar(
-                            query: string.Empty,
-                            onQueryChange: _ => { },
-                            onSearch: _ => { },
-                            active: false,
-                            onActiveChange: _ => { },
-                            content: () => Text("Legacy query results"),
-                            placeholder: () => Text("Legacy query search"));
-#pragma warning restore CS0618
-
-                        BottomSheetScaffold(
+                       BottomSheetScaffold(
                             sheetContent: () => Text("Persistent sheet"),
                             content: () => Text("Bottom-sheet body"),
                             sheetState: sheet,

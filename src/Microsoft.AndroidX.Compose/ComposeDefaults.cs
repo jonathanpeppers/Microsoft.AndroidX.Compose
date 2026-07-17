@@ -1048,25 +1048,6 @@ using AndroidX.Compose;
 [assembly: ComposeDefaults("ExposedDropdownMenuDefault",
     "!expanded", "!onDismissRequest", "modifier", "scrollState", "!content")]
 
-// androidx.compose.material3.SearchBarKt.DockedSearchBar-EQC0FA8 (boolean-
-// state, deprecated): 9 user params; bits 0 (inputField), 1 (expanded),
-// 2 (onExpandedChange), 8 (content) always provided.
-[assembly: ComposeDefaults("DockedSearchBarDefault",
-    "!inputField", "!expanded", "!onExpandedChange", "modifier", "shape",
-    "colors", "tonalElevation", "shadowElevation", "!content")]
-
-// androidx.compose.material3.SearchBarKt.DockedSearchBar-eWTbjVg (query-
-// based, even older / deprecated): 16 user params; bits 0–4 (query,
-// onQueryChange, onSearch, active, onActiveChange) and bit 15 (content)
-// always provided. The unmapped slots (enabled, shape, colors,
-// tonalElevation, shadowElevation, interactionSource) are not exposed on
-// the facade and stay defaulted by Kotlin.
-[assembly: ComposeDefaults("DockedSearchBarWithQueryDefault",
-    "!query", "!onQueryChange", "!onSearch", "!active", "!onActiveChange",
-    "modifier", "enabled", "placeholder", "leadingIcon", "trailingIcon",
-    "shape", "colors", "tonalElevation", "shadowElevation", "interactionSource",
-    "!content")]
-
 // androidx.compose.material3.AppBarKt.TopAppBar-cJHQLPU (subtitle overload):
 // 10 user params; bits 0 (title) and 1 (subtitle) always provided.
 // Optional slot bits 3 (NavigationIcon) and 4 (Actions) are toggled

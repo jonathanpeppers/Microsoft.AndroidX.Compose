@@ -56,7 +56,7 @@ links back to the tracking issues.
 | `NavigationDrawerItem` rows inside `ModalDrawerSheet` | not used (no drawer in single-pane port) | [#163](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/163) |
 | `BackHandler {}` to collapse multi-select / detail | dropped — system back falls through to the navigator | [#166](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/166) |
 | `NavOptions` with `popUpTo` / `launchSingleTop` / `restoreState` for bottom-nav tab semantics | dropped — re-tapping a tab re-navigates | [#169](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/169) |
-| `DockedSearchBar` (overlay + autocomplete + query state) | replaced with a static "search-shaped" row | [#165](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/165) |
+| Search overlay + autocomplete + query state | replaced with a static "search-shaped" row | [#165](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/165) |
 | `Modifier.nestedScroll(scrollBehavior)` + `TopAppBarDefaults.exitUntilCollapsedScrollBehavior()` (top-bar collapse on scroll) | dropped | [#142](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/142) |
 | `LazyListState.lastScrolledBackward` / `canScrollBackward` (drives search-bar lift animation) | dropped | [#164](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/164) |
 | `semantics { selected = isSelected }` on email cards (screen reader announces multi-select state) | dropped | [#167](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/167) |
