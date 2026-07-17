@@ -235,6 +235,36 @@ internal static partial class ComposeBridges
         IContinuation cont);
 
     [ComposeBridge(Suspend = true,
+        Class = "androidx/compose/material3/adaptive/navigationsuite/NavigationSuiteScaffoldState",
+        JvmName = "hide",
+        Signature = "(Lkotlin/coroutines/Continuation;)Ljava/lang/Object;")]
+    internal static partial IntPtr NavigationSuiteScaffoldStateHide(
+        IntPtr state, IContinuation cont);
+
+    [ComposeBridge(Suspend = true,
+        Class = "androidx/compose/material3/adaptive/navigationsuite/NavigationSuiteScaffoldState",
+        JvmName = "show",
+        Signature = "(Lkotlin/coroutines/Continuation;)Ljava/lang/Object;")]
+    internal static partial IntPtr NavigationSuiteScaffoldStateShow(
+        IntPtr state, IContinuation cont);
+
+    [ComposeBridge(Suspend = true,
+        Class = "androidx/compose/material3/adaptive/navigationsuite/NavigationSuiteScaffoldState",
+        JvmName = "toggle",
+        Signature = "(Lkotlin/coroutines/Continuation;)Ljava/lang/Object;")]
+    internal static partial IntPtr NavigationSuiteScaffoldStateToggle(
+        IntPtr state, IContinuation cont);
+
+    [ComposeBridge(Suspend = true,
+        Class = "androidx/compose/material3/adaptive/navigationsuite/NavigationSuiteScaffoldState",
+        JvmName = "snapTo",
+        Signature = "(Landroidx/compose/material3/adaptive/navigationsuite/NavigationSuiteScaffoldValue;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;")]
+    internal static partial IntPtr NavigationSuiteScaffoldStateSnapTo(
+        IntPtr state,
+        AndroidX.Compose.Material3.Adaptive.NavigationSuite.NavigationSuiteScaffoldValue targetValue,
+        IContinuation cont);
+
+    [ComposeBridge(Suspend = true,
         Class = "androidx/compose/material3/SnackbarHostState",
         JvmName = "showSnackbar",
         Signature = "(Ljava/lang/String;Ljava/lang/String;ZLandroidx/compose/material3/SnackbarDuration;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;")]

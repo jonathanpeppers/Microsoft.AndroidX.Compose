@@ -20,55 +20,58 @@
     <PackageReference Update="MSTest" Version="4.3.2" />
 
     <!-- Kotlin / KotlinX -->
-    <PackageReference Update="Xamarin.Kotlin.StdLib" Version="2.3.21" />
+    <PackageReference Update="Xamarin.Kotlin.StdLib" Version="2.4.0.1" />
 
     <!-- AndroidX core / activity / lifecycle -->
-    <PackageReference Update="Xamarin.AndroidX.Activity" Version="1.13.0" />
-    <PackageReference Update="Xamarin.AndroidX.Activity.Compose" Version="1.13.0" />
-    <PackageReference Update="Xamarin.AndroidX.Core" Version="1.19.0" />
-    <PackageReference Update="Xamarin.AndroidX.Core.Core.Ktx" Version="1.19.0" />
-    <PackageReference Update="Xamarin.AndroidX.Lifecycle.Runtime.Compose" Version="2.10.0.2" />
-    <PackageReference Update="Xamarin.AndroidX.Lifecycle.Runtime.Compose.Android" Version="2.10.0.3" />
+    <PackageReference Update="Xamarin.AndroidX.Activity" Version="1.13.0.1" />
+    <PackageReference Update="Xamarin.AndroidX.Activity.Compose" Version="1.13.0.1" />
+    <PackageReference Update="Xamarin.AndroidX.Core" Version="1.19.0.1" />
+    <PackageReference Update="Xamarin.AndroidX.Core.Core.Ktx" Version="1.19.0.1" />
+    <PackageReference Update="Xamarin.AndroidX.Lifecycle.Runtime.Compose" Version="2.11.0.1" />
+    <PackageReference Update="Xamarin.AndroidX.Lifecycle.Runtime.Compose.Android" Version="2.11.0.1" />
 
     <!-- AndroidX Compose -->
-    <PackageReference Update="Xamarin.AndroidX.Compose.Animation" Version="1.11.2" />
-    <PackageReference Update="Xamarin.AndroidX.Compose.Animation.Android" Version="1.11.2.1" />
-    <PackageReference Update="Xamarin.AndroidX.Compose.Animation.Core" Version="1.11.2" />
-    <PackageReference Update="Xamarin.AndroidX.Compose.Animation.Core.Android" Version="1.11.2.1" />
-    <PackageReference Update="Xamarin.AndroidX.Compose.Foundation" Version="1.11.2.2" />
-    <PackageReference Update="Xamarin.AndroidX.Compose.Foundation.Android" Version="1.11.2.2" />
-    <PackageReference Update="Xamarin.AndroidX.Compose.Foundation.Layout" Version="1.11.2" />
-    <PackageReference Update="Xamarin.AndroidX.Compose.Foundation.Layout.Android" Version="1.11.2" />
-    <PackageReference Update="Xamarin.AndroidX.Compose.Material3" Version="1.4.0.2" />
-    <PackageReference Update="Xamarin.AndroidX.Compose.Material3Android" Version="1.4.0.4" />
-    <PackageReference Update="Xamarin.AndroidX.Compose.Material3.Adaptive" Version="1.2.0" />
-    <PackageReference Update="Xamarin.AndroidX.Compose.Material3.AdaptiveAndroid" Version="1.2.0" />
+    <PackageReference Update="Xamarin.AndroidX.Compose.Animation" Version="1.11.3.1" />
+    <PackageReference Update="Xamarin.AndroidX.Compose.Animation.Android" Version="1.11.3.1" />
+    <PackageReference Update="Xamarin.AndroidX.Compose.Animation.Core" Version="1.11.3.1" />
+    <PackageReference Update="Xamarin.AndroidX.Compose.Animation.Core.Android" Version="1.11.3.1" />
+    <PackageReference Update="Xamarin.AndroidX.Compose.Foundation" Version="1.11.3.1" />
+    <PackageReference Update="Xamarin.AndroidX.Compose.Foundation.Android" Version="1.11.3.1" />
+    <PackageReference Update="Xamarin.AndroidX.Compose.Foundation.Layout" Version="1.11.3.1" />
+    <PackageReference Update="Xamarin.AndroidX.Compose.Foundation.Layout.Android" Version="1.11.3.1" />
+    <PackageReference Update="Xamarin.AndroidX.Compose.Material3" Version="1.4.0.3" />
+    <PackageReference Update="Xamarin.AndroidX.Compose.Material3Android" Version="1.4.0.5" />
+    <PackageReference Update="Xamarin.AndroidX.Compose.Material3.Adaptive" Version="1.2.0.1" />
+    <PackageReference Update="Xamarin.AndroidX.Compose.Material3.AdaptiveAndroid" Version="1.2.0.1" />
+    <PackageReference Update="Xamarin.AndroidX.Compose.Material3.Adaptive.NavigationSuite" Version="1.4.0.1" />
+    <PackageReference Update="Xamarin.AndroidX.Compose.Material3.Adaptive.NavigationSuiteAndroid" Version="1.4.0.1" />
     <PackageReference Update="Xamarin.AndroidX.Compose.Material.Icons.Core" Version="1.7.8.6" />
     <PackageReference Update="Xamarin.AndroidX.Compose.Material.Icons.Core.Android" Version="1.7.8.6" />
-    <PackageReference Update="Xamarin.AndroidX.Compose.Runtime" Version="1.11.2.1" />
-    <PackageReference Update="Xamarin.AndroidX.Compose.Runtime.Android" Version="1.11.2.1" />
-    <PackageReference Update="Xamarin.AndroidX.Compose.Runtime.Saveable" Version="1.11.2" />
-    <PackageReference Update="Xamarin.AndroidX.Compose.Runtime.Saveable.Android" Version="1.11.2" />
-    <PackageReference Update="Xamarin.AndroidX.Compose.UI" Version="1.11.2" />
-    <PackageReference Update="Xamarin.AndroidX.Compose.UI.Android" Version="1.11.2" />
-    <PackageReference Update="Xamarin.AndroidX.Compose.UI.Graphics" Version="1.11.2.2" />
-    <PackageReference Update="Xamarin.AndroidX.Compose.UI.Graphics.Android" Version="1.11.2.2" />
-    <PackageReference Update="Xamarin.AndroidX.Compose.UI.Text" Version="1.11.2.1" />
-    <PackageReference Update="Xamarin.AndroidX.Compose.UI.Text.Android" Version="1.11.2.1" />
-    <PackageReference Update="Xamarin.AndroidX.Compose.UI.Unit" Version="1.11.2.1" />
-    <PackageReference Update="Xamarin.AndroidX.Compose.UI.Unit.Android" Version="1.11.2.1" />
+    <PackageReference Update="Xamarin.AndroidX.Compose.Runtime" Version="1.11.3.1" />
+    <PackageReference Update="Xamarin.AndroidX.Compose.Runtime.Android" Version="1.11.3.1" />
+    <PackageReference Update="Xamarin.AndroidX.Compose.Runtime.Saveable" Version="1.11.3.1" />
+    <PackageReference Update="Xamarin.AndroidX.Compose.Runtime.Saveable.Android" Version="1.11.3.1" />
+    <PackageReference Update="Xamarin.AndroidX.Compose.UI" Version="1.11.3.1" />
+    <PackageReference Update="Xamarin.AndroidX.Compose.UI.Android" Version="1.11.3.1" />
+    <PackageReference Update="Xamarin.AndroidX.Compose.UI.Graphics" Version="1.11.3.1" />
+    <PackageReference Update="Xamarin.AndroidX.Compose.UI.Graphics.Android" Version="1.11.3.1" />
+    <PackageReference Update="Xamarin.AndroidX.Compose.UI.Text" Version="1.11.3.1" />
+    <PackageReference Update="Xamarin.AndroidX.Compose.UI.Text.Android" Version="1.11.3.1" />
+    <PackageReference Update="Xamarin.AndroidX.Compose.UI.Unit" Version="1.11.3.1" />
+    <PackageReference Update="Xamarin.AndroidX.Compose.UI.Unit.Android" Version="1.11.3.1" />
 
     <!-- AndroidX Navigation -->
-    <PackageReference Update="Xamarin.AndroidX.Navigation.Common" Version="2.9.8" />
-    <PackageReference Update="Xamarin.AndroidX.Navigation.Runtime" Version="2.9.8" />
-    <PackageReference Update="Xamarin.AndroidX.Navigation.Fragment" Version="2.9.8" />
-    <PackageReference Update="Xamarin.AndroidX.Navigation.UI" Version="2.9.8" />
-    <PackageReference Update="Xamarin.AndroidX.Navigation.Compose" Version="2.9.8" />
-    <PackageReference Update="Xamarin.AndroidX.Navigation.Compose.Android" Version="2.9.8" />
-    <PackageReference Update="Xamarin.AndroidX.Lifecycle.LiveData" Version="2.10.0.2" />
-    <PackageReference Update="Xamarin.AndroidX.Lifecycle.LiveData.Core.Ktx" Version="2.10.0.2" />
-    <PackageReference Update="Xamarin.AndroidX.Fragment.Ktx" Version="1.8.9.2" />
-    <PackageReference Update="Xamarin.AndroidX.Emoji2.ViewsHelper" Version="1.6.0.2" />
+    <PackageReference Update="Xamarin.AndroidX.Navigation.Common" Version="2.9.8.1" />
+    <PackageReference Update="Xamarin.AndroidX.Navigation.Runtime" Version="2.9.8.1" />
+    <PackageReference Update="Xamarin.AndroidX.Navigation.Fragment" Version="2.9.8.1" />
+    <PackageReference Update="Xamarin.AndroidX.Navigation.UI" Version="2.9.8.1" />
+    <PackageReference Update="Xamarin.AndroidX.Navigation.Compose" Version="2.9.8.1" />
+    <PackageReference Update="Xamarin.AndroidX.Navigation.Compose.Android" Version="2.9.8.1" />
+    <PackageReference Update="Xamarin.AndroidX.Lifecycle.LiveData" Version="2.11.0.1" />
+    <PackageReference Update="Xamarin.AndroidX.Lifecycle.LiveData.Core.Ktx" Version="2.11.0.1" />
+    <PackageReference Update="Xamarin.AndroidX.Fragment.Ktx" Version="1.8.9.4" />
+    <PackageReference Update="Xamarin.AndroidX.Emoji2.ViewsHelper" Version="1.6.0.3" />
+    <PackageReference Update="Xamarin.Google.Android.Material" Version="1.14.0.5" />
 
     <!-- .NET MAUI (for Microsoft.AndroidX.Compose.Maui backend) -->
     <!--

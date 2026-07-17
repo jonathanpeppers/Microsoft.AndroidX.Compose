@@ -7,6 +7,7 @@ using AndroidX.Compose.UI;
 using AndroidX.Compose.UI.State;
 using Kotlin.Jvm.Functions;
 using Kotlin.Ranges;
+using NavigationSuiteBindings = AndroidX.Compose.Material3.Adaptive.NavigationSuite;
 using Painter = AndroidX.Compose.UI.Graphics.Painter.Painter;
 
 namespace AndroidX.Compose;
@@ -1716,6 +1717,110 @@ internal static partial class ComposeBridges
         bool        alwaysShowLabel = true,
         int         defaults        = 0,
         IComposer   composer        = null!, int _changed = 0);
+
+    [ComposeFacade(Container = true, Defaults = typeof(NavigationSuiteScaffoldDefault))]
+    public static partial void NavigationSuiteScaffold(
+        IFunction2 navigationItems,
+        IModifier? modifier,
+        NavigationSuiteType? navigationSuiteType,
+        NavigationSuiteBindings.NavigationSuiteColors? navigationSuiteColors,
+        [StateHolder(
+            Remember = nameof(RememberNavigationSuiteScaffoldState),
+            StateType = typeof(NavigationSuiteScaffoldState),
+            SharedState = true)] IntPtr state,
+        [Slot("Content")] IFunction2 content,
+        int defaults,
+        IComposer composer);
+
+    public static partial void NavigationSuiteScaffold(
+        IFunction2 navigationItems,
+        IModifier? modifier,
+        NavigationSuiteType? navigationSuiteType,
+        NavigationSuiteBindings.NavigationSuiteColors? navigationSuiteColors,
+        IntPtr state,
+        IFunction2 content,
+        int defaults,
+        IComposer composer)
+    {
+        var stateObj = Java.Lang.Object.GetObject<NavigationSuiteBindings.INavigationSuiteScaffoldState>(
+            state, JniHandleOwnership.DoNotTransfer)
+            ?? throw new InvalidOperationException(
+                "NavigationSuiteScaffoldState peer was unavailable during render.");
+        NavigationSuiteBindings.NavigationSuiteScaffoldKt.NavigationSuiteScaffold(
+            navigationItems:                        navigationItems,
+            modifier:                               modifier,
+            navigationSuiteType:                    navigationSuiteType?.ToString(),
+            navigationSuiteColors:                  navigationSuiteColors,
+            containerColor:                         0L,
+            contentColor:                           0L,
+            state:                                  stateObj,
+            navigationItemVerticalArrangement:      null,
+            primaryActionContent:                   null,
+            primaryActionContentHorizontalAlignment: null,
+            content:                                content,
+            _composer:                              composer,
+            p12:                                    0,
+            _changed:                               0,
+            _changed1:                              defaults);
+    }
+
+    [ComposeFacade(Defaults = typeof(NavigationSuiteItemDefault))]
+    public static partial void NavigationSuiteItem(
+        bool selected,
+        IFunction0 onClick,
+        IFunction2 icon,
+        IFunction2? label,
+        IModifier? modifier,
+        NavigationSuiteType? navigationSuiteType,
+        [FacadeDefault(true)] bool enabled,
+        IFunction2? badge,
+        AndroidX.Compose.Material3.NavigationItemColors? colors,
+        int defaults,
+        IComposer composer,
+        int _changed = 0);
+
+    public static partial void NavigationSuiteItem(
+        bool selected,
+        IFunction0 onClick,
+        IFunction2 icon,
+        IFunction2? label,
+        IModifier? modifier,
+        NavigationSuiteType? navigationSuiteType,
+        bool enabled,
+        IFunction2? badge,
+        AndroidX.Compose.Material3.NavigationItemColors? colors,
+        int defaults,
+        IComposer composer,
+        int _changed)
+    {
+        NavigationSuiteBindings.NavigationSuiteScaffoldKt.NavigationSuiteItem(
+            selected:            selected,
+            onClick:             onClick,
+            icon:                icon,
+            label:               label,
+            modifier:            modifier,
+            navigationSuiteType: navigationSuiteType?.ToString(),
+            enabled:             enabled,
+            badge:               badge,
+            colors:              colors,
+            interactionSource:   null,
+            _composer:           composer,
+            p11:                 _changed,
+            _changed:            defaults);
+    }
+
+    public static IntPtr RememberNavigationSuiteScaffoldState(
+        NavigationSuiteBindings.NavigationSuiteScaffoldValue initialValue,
+        IComposer composer)
+    {
+        var state = NavigationSuiteBindings.NavigationSuiteScaffoldKt
+            .RememberNavigationSuiteScaffoldState(
+                initialValue: initialValue,
+                _composer:    composer,
+                p2:           0,
+                _changed:     0);
+        return ((Java.Lang.Object)state).Handle;
+    }
 
     // androidx.compose.material3.NavigationRailKt.NavigationRail-qi6gXK8
     [ComposeBridge(

@@ -852,6 +852,39 @@ public class FacadeGeneratorTests
     }
 
     [Fact]
+    public void HybridContainer_ScopeWithAdditionalUnannotatedFn2_EmitsCN3003()
+    {
+        var code = """
+            using global::AndroidX.Compose.Runtime;
+            using global::AndroidX.Compose.UI;
+            using AndroidX.Compose;
+            using Kotlin.Jvm.Functions;
+
+            [assembly: ComposeDefaults("MixedDefault",
+                "!items", "!body", "!requiredSlot")]
+
+            namespace AndroidX.Compose
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(Class="x/y/MixedKt", JvmName="Mixed",
+                                   Signature="(Lkotlin/jvm/functions/Function3;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;II)V",
+                                   Defaults=typeof(MixedDefault))]
+                    [ComposeFacade(Scope = "Row")]
+                    public static partial void Mixed(
+                        IFunction3 items,
+                        IFunction2 body,
+                        [Slot("RequiredSlot")] IFunction2 requiredSlot,
+                        IComposer composer);
+                }
+            }
+            """;
+
+        var (_, diags, _) = Run(code, "Mixed");
+        Assert.Contains(diags, d => d.Id == "CN3003");
+    }
+
+    [Fact]
     public void HybridContainer_WithoutScope_StillBehavesAsLeaf()
     {
         // Same shape as BottomAppBar but without [ComposeFacade(Scope=...)] —
@@ -936,6 +969,54 @@ public class FacadeGeneratorTests
         // ctor primitive.
         Assert.Contains("public global::AndroidX.Compose.ComposableNode? Header { get; set; }", emitted);
         Assert.DoesNotContain("global::System.ArgumentNullException.ThrowIfNull(header);", emitted);
+
+        var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
+        Assert.Empty(errors);
+    }
+
+    [Fact]
+    public void HybridContainer_ContainerTrueWithRequiredSlot_EmitsContainerWithRequiredProperty()
+    {
+        var code = """
+            using global::AndroidX.Compose.Runtime;
+            using global::AndroidX.Compose.UI;
+            using AndroidX.Compose;
+            using Kotlin.Jvm.Functions;
+
+            [assembly: ComposeDefaults("NavigationSuiteScaffoldDefault",
+                "!navigationItems", "modifier", "navigationSuiteType", "!content")]
+
+            namespace AndroidX.Compose
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeFacade(Container = true, Defaults = typeof(NavigationSuiteScaffoldDefault))]
+                    public static partial void NavigationSuiteScaffold(
+                        IFunction2 navigationItems,
+                        IModifier? modifier,
+                        [Slot("Content")] IFunction2 content,
+                        int defaults,
+                        IComposer composer);
+
+                    public static partial void NavigationSuiteScaffold(
+                        IFunction2 navigationItems,
+                        IModifier? modifier,
+                        IFunction2 content,
+                        int defaults,
+                        IComposer composer) { }
+                }
+            }
+            """;
+
+        var (output, diags, emitted) = Run(code, "NavigationSuiteScaffold");
+        Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+        Assert.Contains(": global::AndroidX.Compose.ComposableContainer", emitted);
+        Assert.Contains("Wrap2(composer, c => RenderChildren(c))", emitted);
+        Assert.Contains(
+            "public required global::AndroidX.Compose.ComposableNode Content { get; set; }",
+            emitted);
+        Assert.Contains("if (Content is null)", emitted);
 
         var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
         Assert.Empty(errors);
@@ -3414,6 +3495,56 @@ public class FacadeGeneratorTests
             emitted);
         Assert.Contains(
             "global::AndroidX.Compose.ComposeBridges.Slider(_value, __onValueChange, __modifier, ValueRange, __defaults, composer);",
+            emitted);
+
+        var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
+        Assert.Empty(errors);
+    }
+
+    [Fact]
+    public void OptionalValue_NavigationSuiteTypePreservesOmittedDefaultMask()
+    {
+        var code = """
+            using global::AndroidX.Compose.Runtime;
+            using AndroidX.Compose;
+
+            [assembly: ComposeDefaults("NavigationSuiteDefault",
+                "navigationSuiteType", "!content")]
+
+            namespace AndroidX.Compose
+            {
+                public enum NavigationSuiteType
+                {
+                    NavigationBar,
+                    NavigationRail,
+                }
+
+                public static partial class ComposeBridges
+                {
+                    [ComposeFacade(Defaults = typeof(NavigationSuiteDefault))]
+                    public static partial void NavigationSuite(
+                        NavigationSuiteType? navigationSuiteType,
+                        Kotlin.Jvm.Functions.IFunction2 content,
+                        int defaults,
+                        IComposer composer);
+
+                    public static partial void NavigationSuite(
+                        NavigationSuiteType? navigationSuiteType,
+                        Kotlin.Jvm.Functions.IFunction2 content,
+                        int defaults,
+                        IComposer composer) { }
+                }
+            }
+            """;
+
+        var (output, diags, emitted) = Run(code, "NavigationSuite");
+        Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+        Assert.Contains(
+            "public global::AndroidX.Compose.NavigationSuiteType? NavigationSuiteType { get; set; }",
+            emitted);
+        Assert.Contains(
+            "if (NavigationSuiteType is not null) __defaults &= ~(int)global::AndroidX.Compose.NavigationSuiteDefault.NavigationSuiteType;",
             emitted);
 
         var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();

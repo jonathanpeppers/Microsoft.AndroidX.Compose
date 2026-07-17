@@ -32,6 +32,7 @@
     <PackageReference Include="Xamarin.AndroidX.Navigation.UI" />
     <PackageReference Include="Xamarin.AndroidX.Fragment.Ktx" />
     <PackageReference Include="Xamarin.AndroidX.Emoji2.ViewsHelper" />
+    <PackageReference Include="Xamarin.Google.Android.Material" />
     <!--
       For AndroidX.Core.Graphics.Drawable.DrawableKt.ToBitmap(...), used by
       ImageHandler to wrap the Drawable produced by MAUI's

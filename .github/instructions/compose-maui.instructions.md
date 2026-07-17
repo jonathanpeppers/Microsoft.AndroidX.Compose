@@ -44,12 +44,12 @@ that publishes accessibility info. **Do not bump MAUI past 10.0.20**
 until a MAUI release ships that's compiled against
 `Xamarin.AndroidX.Core 1.18+`.
 
-The csproj also pins **six** AndroidX parent packages to versions that
+The csproj also pins **seven** Android binding parent packages to versions that
 align Compose 1.11.x's chain with MAUI 10.0.20's transitive demands
 (`Lifecycle.LiveData`, `Lifecycle.LiveData.Core.Ktx`,
 `Navigation.Fragment`, `Navigation.UI`, `Fragment.Ktx`,
-`Emoji2.ViewsHelper`). Don't trim them — they're load-bearing for
-NU1107/NU1608.
+`Emoji2.ViewsHelper`, `Google.Android.Material`). Don't trim them —
+they're load-bearing for NU1107/NU1608 and Java interface compatibility.
 
 ## Architecture — one `ComposeView` per page
 

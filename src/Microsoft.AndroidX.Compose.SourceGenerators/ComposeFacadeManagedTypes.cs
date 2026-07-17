@@ -12,6 +12,7 @@ internal static class ComposeFacadeManagedTypes
     static readonly HashSet<string> Recognized =
     [
         "AndroidX.Compose.FloatRange",
+        "AndroidX.Compose.NavigationSuiteType",
     ];
 
     public static bool IsRecognized(ITypeSymbol type)

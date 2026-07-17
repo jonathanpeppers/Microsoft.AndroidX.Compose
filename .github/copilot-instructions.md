@@ -441,21 +441,23 @@ so `[CallerFilePath]` + `[CallerLineNumber]` slot keys inside
   `Java.Lang.Object` subclasses; surface as ctor primitives forwarded to
   bridge — no JNI lowering (see `TriStateCheckbox`).
 
-  **Hybrid container + named slots**: a bridge with exactly one non-nullable
-  `IFunction3` body **plus** one or more nullable `IFunction2?`/`IFunction3?`
-  slots is allowed when facade declares `Scope = "..."`. Non-nullable
-  Function3 stays as container body (`RenderChildren`); nullable Function2/3
-  become named `ComposableNode?` properties; class derives from
-  `ComposableContainer`. Without `Scope`, bridge classifies as multi-slot leaf
-  (preserves `AssistChip`-style where required Function2 is a label). Used for
-  `BottomAppBar`.
+  **Hybrid container + named slots**: a bridge with exactly one non-nullable,
+  unannotated `IFunction2`/`IFunction3` body plus one or more named slots is
+  allowed when the facade declares `Scope = "..."` or `Container = true`.
+  Nullable Function2/3 slots become optional `ComposableNode?` properties;
+  non-nullable siblings explicitly marked `[Slot]` become required
+  `ComposableNode` properties. The unannotated body stays collection-backed
+  (`RenderChildren`) and the class derives from `ComposableContainer`.
+  Without either opt-in, the bridge classifies as a multi-slot leaf (preserves
+  `AssistChip`-style where required Function2 is a label). Used for
+  `BottomAppBar` and `NavigationSuiteScaffold`.
 
   **`Container = true`** — wrapper-passthrough variant of the hybrid-container
   rule, for bridges whose body slot is a non-`@Composable` `IFunction2` rather
   than a scope-providing `IFunction3`. Forces facade to derive from
   `ComposableContainer` and wrap children via
   `Wrap2(composer, c => RenderChildren(c))`. Required by
-  `ModalWideNavigationRail`.
+  `ModalWideNavigationRail` and `NavigationSuiteScaffold`.
 
   **`IndexedChildren = true`** — for container facades whose children read
   their row position (e.g. `SegmentedButton` reads
