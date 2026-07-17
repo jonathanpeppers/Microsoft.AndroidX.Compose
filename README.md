@@ -73,7 +73,9 @@ the template:
 ```pwsh
 $version = "0.1.0-beta.<run-number>"
 
-dotnet workload install android
+# Prerequisite
+# dotnet workload install android
+
 dotnet new install "Microsoft.AndroidX.Compose.Templates@$version"
 dotnet new android-compose `
   --name MyComposeApp `
@@ -81,7 +83,8 @@ dotnet new android-compose `
   --applicationTitle "My Compose App" `
   --composeVersion $version
 
-dotnet build MyComposeApp -t:Run
+cd MyComposeApp
+dotnet run
 ```
 
 The final command requires a running Android emulator or connected device.
