@@ -23,10 +23,11 @@ namespace AndroidX.Compose;
 [Register("net/compose/DisposableEffectBody")]
 internal sealed class DisposableEffectBody : Java.Lang.Object, IFunction1
 {
-    readonly Func<DisposableEffectScope, Action> _body;
+    readonly Func<Action> _body;
 
-    public DisposableEffectBody(Func<DisposableEffectScope, Action> body)
+    public DisposableEffectBody(Func<Action> body)
     {
+        ArgumentNullException.ThrowIfNull(body);
         _body = body;
     }
 
@@ -55,7 +56,7 @@ internal sealed class DisposableEffectBody : Java.Lang.Object, IFunction1
                 + ") as DisposableEffectScope", ex);
         }
 
-        var onDispose = _body(scope)
+        var onDispose = _body()
             ?? throw new InvalidOperationException(
                 "DisposableEffect body returned a null onDispose callback. "
                 + "Return `() => { }` if there's nothing to clean up.");

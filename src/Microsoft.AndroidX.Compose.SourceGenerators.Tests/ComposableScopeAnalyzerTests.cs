@@ -32,6 +32,9 @@ public class ComposableScopeAnalyzerTests
                 public static void Button(
                     System.Action onClick,
                     [ComposableContent] System.Action content) { }
+                public static void DisposableEffect(
+                    object? key,
+                    System.Func<System.Action> effect) { }
             }
 
             public abstract class ComposableNode
@@ -158,6 +161,32 @@ public class ComposableScopeAnalyzerTests
         Assert.Single(scopeDiagnostics);
         Assert.Contains("\"event\"", scopeDiagnostics[0].Location.SourceTree
             ?.GetText().ToString(scopeDiagnostics[0].Location.SourceSpan));
+    }
+
+    [Fact]
+    public void DisposableEffectSetup_DoesNotInheritComposableScope()
+    {
+        var diagnostics = ScopeDiagnostics("""
+            static class App
+            {
+                [AndroidX.Compose.Composable]
+                public static void Render()
+                {
+                    AndroidX.Compose.Composables.DisposableEffect(
+                        "key",
+                        () =>
+                        {
+                            AndroidX.Compose.Composables.Text("setup");
+                            return () => { };
+                        });
+                }
+            }
+            """);
+
+        Assert.Single(diagnostics);
+        Assert.Contains(
+            "AndroidX.Compose.Composables.Text(\"setup\")",
+            SourceText(diagnostics[0]));
     }
 
     [Fact]

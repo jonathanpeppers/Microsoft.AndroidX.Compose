@@ -52,7 +52,7 @@ public static partial class ComposeExtensions
     public static void DisposableEffect(
         this IComposer composer,
         object? key1,
-        Func<DisposableEffectScope, Action> effect)
+        Func<Action> effect)
     {
         ArgumentNullException.ThrowIfNull(composer);
         ArgumentNullException.ThrowIfNull(effect);
@@ -65,13 +65,13 @@ public static partial class ComposeExtensions
 
     /// <summary>
     /// Two-key overload of
-    /// <see cref="DisposableEffect(IComposer, object?, Func{DisposableEffectScope, Action})"/>.
+    /// <see cref="DisposableEffect(IComposer, object?, Func{Action})"/>.
     /// </summary>
     public static void DisposableEffect(
         this IComposer composer,
         object? key1,
         object? key2,
-        Func<DisposableEffectScope, Action> effect)
+        Func<Action> effect)
     {
         ArgumentNullException.ThrowIfNull(composer);
         ArgumentNullException.ThrowIfNull(effect);
@@ -85,14 +85,14 @@ public static partial class ComposeExtensions
 
     /// <summary>
     /// Three-key overload of
-    /// <see cref="DisposableEffect(IComposer, object?, Func{DisposableEffectScope, Action})"/>.
+    /// <see cref="DisposableEffect(IComposer, object?, Func{Action})"/>.
     /// </summary>
     public static void DisposableEffect(
         this IComposer composer,
         object? key1,
         object? key2,
         object? key3,
-        Func<DisposableEffectScope, Action> effect)
+        Func<Action> effect)
     {
         ArgumentNullException.ThrowIfNull(composer);
         ArgumentNullException.ThrowIfNull(effect);

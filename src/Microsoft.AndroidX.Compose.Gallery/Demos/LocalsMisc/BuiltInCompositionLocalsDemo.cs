@@ -10,11 +10,8 @@ namespace AndroidX.Compose.Gallery.Demos.LocalsMisc;
 /// (orientation + screen width), <see cref="LocalView"/> (haptic
 /// feedback), and <see cref="LocalResources"/> (display density).
 ///
-/// <para>The two not exercised here:
-/// <see cref="LocalLifecycleOwner"/> wraps the deprecated
-/// <c>androidx.compose.ui.platform.LocalLifecycleOwner</c> upstream
-/// (modern Kotlin code reads it from <c>androidx.lifecycle.compose</c>);
-/// <see cref="LocalColorScheme"/> is normally accessed through
+/// <para><see cref="LocalColorScheme"/> is not exercised here because it
+/// is normally accessed through
 /// <c>MaterialTheme.ColorScheme</c> / <c>composer.ColorScheme()</c> in
 /// app code, with direct reads mostly useful for theme-aware library
 /// code.</para>
@@ -26,12 +23,17 @@ public static class BuiltInCompositionLocalsDemo
         Id:          "locals-builtin",
         CategoryId:  "locals-misc",
         Title:       "Built-in CompositionLocals",
-        Description: "Reads LocalConfiguration (orientation + screen width), LocalView (haptic feedback), and LocalResources (display density). LocalLifecycleOwner and LocalColorScheme are described but not exercised here — see the demo summary for why.",
+        Description: "Reads LocalConfiguration, LocalView, LocalResources, and the current androidx.lifecycle.compose LocalLifecycleOwner.",
         Build:       _ => new Column
         {
             new Text("LocalConfiguration, LocalView, LocalResources:"),
             new ConfigurationLabel(),
             new ResourcesLabel(),
+            new Composed(c =>
+            {
+                var owner = LocalLifecycleOwner.Current(c);
+                return new Text($"  LocalLifecycleOwner: {owner.Lifecycle.CurrentState}");
+            }),
             new HapticButton(),
         });
 

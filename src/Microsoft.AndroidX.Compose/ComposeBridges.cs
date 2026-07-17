@@ -33,6 +33,12 @@ internal static partial class ComposeBridges
     internal static IntPtr ModifierHandle(IModifier? modifier) =>
         modifier is null ? IntPtr.Zero : ((Java.Lang.Object)modifier).Handle;
 
+    [ComposeBridge(
+        Class = "androidx/lifecycle/compose/LocalLifecycleOwnerKt",
+        JvmName = "getLocalLifecycleOwner",
+        Signature = "()Landroidx/compose/runtime/ProvidableCompositionLocal;")]
+    internal static partial IntPtr LocalLifecycleOwner();
+
     // androidx.compose.ui.Modifier$Companion.$$INSTANCE — the empty
     // Modifier that every chain builds on top of. Cached as a global
     // ref so the chain builder doesn't pay the FindClass +

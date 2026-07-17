@@ -80,7 +80,7 @@ public sealed class GalleryScaffold : ComposableNode
         {
             new NavDestination("home", _ => new Column
             {
-                new DisposableEffect("home", _ => { currentRoute.Value = "home"; return () => { }; }),
+                new DisposableEffect("home", () => { currentRoute.Value = "home"; return () => { }; }),
                 HomeScreen.Build(_nav),
             }),
             new NavDestination("category/{id}", entry =>
@@ -89,7 +89,7 @@ public sealed class GalleryScaffold : ComposableNode
                 var category = Catalog.FindCategory(id);
                 return new Column
                 {
-                    new DisposableEffect($"category/{id}", _ =>
+                    new DisposableEffect($"category/{id}", () =>
                     {
                         currentRoute.Value = $"category/{id}";
                         return () => { };
@@ -105,7 +105,7 @@ public sealed class GalleryScaffold : ComposableNode
                 var demo = Catalog.FindDemo(id);
                 return new Column
                 {
-                    new DisposableEffect($"demo/{id}", _ =>
+                    new DisposableEffect($"demo/{id}", () =>
                     {
                         currentRoute.Value = $"demo/{id}";
                         return () => { };
@@ -117,7 +117,7 @@ public sealed class GalleryScaffold : ComposableNode
             }),
             new NavDestination("search", _ => new Column
             {
-                new DisposableEffect("search", _ => { currentRoute.Value = "search"; return () => { }; }),
+                new DisposableEffect("search", () => { currentRoute.Value = "search"; return () => { }; }),
                 new SearchScreen(_nav),
             }),
         };

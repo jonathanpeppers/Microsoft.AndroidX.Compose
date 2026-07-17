@@ -11,8 +11,9 @@ namespace AndroidX.Compose.Gallery.Demos.TextInputs;
 /// <c>KeyboardOptions.Copy(...)</c>.
 ///
 /// <c>KeyboardOptions.Companion</c> is bound but Mono's binder skips
-/// the static <c>Companion</c> field accessor on the outer class — see
-/// <see cref="KeyboardOptionsCompanion"/> for the JNI bootstrap.
+/// the static <c>Companion</c> field accessor on the outer class.
+/// <see cref="KeyboardOptionsCompanion.Default"/> keeps that
+/// binding-specific companion accessor internal.
 /// </summary>
 public static class NumericKeyboardDemo
 {

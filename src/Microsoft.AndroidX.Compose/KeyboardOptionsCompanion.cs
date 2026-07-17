@@ -20,25 +20,18 @@ namespace AndroidX.Compose;
 /// (<c>Companion.Default</c>, <c>Default.Copy(int keyboardType, …)</c>,
 /// etc.).
 ///
-/// Mirrors <see cref="TextStyleCompanion"/>; intentionally exposed
-/// <c>public</c> (vs. <see cref="TextStyleCompanion"/>'s
-/// <c>internal</c>) so callers building their own
+/// Mirrors <see cref="TextStyleCompanion"/>. Callers building their own
 /// <see cref="AndroidX.Compose.Foundation.Text.KeyboardOptions"/>
 /// (e.g. MAUI <c>EntryHandler</c>, gallery numeric-keyboard demo) can
 /// reach <see cref="Default"/> without re-implementing the JNI dance
-/// or pulling in an <c>InternalsVisibleTo</c> hook.
+/// while the binding-specific <c>Companion</c> type remains internal.
 /// </summary>
 public static class KeyboardOptionsCompanion
 {
     static AndroidX.Compose.Foundation.Text.KeyboardOptions.Companion? s_companion;
     static AndroidX.Compose.Foundation.Text.KeyboardOptions? s_default;
 
-    /// <summary>
-    /// Resolve and cache the <c>KeyboardOptions.Companion</c> singleton.
-    /// First call performs the JNI field lookup; subsequent calls
-    /// return the cached wrapper.
-    /// </summary>
-    public static AndroidX.Compose.Foundation.Text.KeyboardOptions.Companion Get()
+    internal static AndroidX.Compose.Foundation.Text.KeyboardOptions.Companion Get()
     {
         if (s_companion is not null) return s_companion;
         IntPtr local = IntPtr.Zero;
@@ -49,7 +42,9 @@ public static class KeyboardOptionsCompanion
                 "Landroidx/compose/foundation/text/KeyboardOptions$Companion;");
             local = JNIEnv.GetStaticObjectField(cls, fid);
             return s_companion = Java.Lang.Object.GetObject<AndroidX.Compose.Foundation.Text.KeyboardOptions.Companion>(
-                local, JniHandleOwnership.TransferLocalRef)!;
+                local, JniHandleOwnership.TransferLocalRef)
+                ?? throw new InvalidOperationException(
+                    "KeyboardOptions.Companion could not be resolved.");
         }
         finally
         {
