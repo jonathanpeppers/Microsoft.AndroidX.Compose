@@ -23,10 +23,14 @@ public class ProgressIndicatorTestActivity : ComponentActivity
         Progress = new MutableState<float>(0.25f);
         Linear = new LinearProgressIndicator
         {
+            Color = Color.Red,
+            TrackColor = Color.Black,
             Modifier = Modifier.FillMaxWidth(),
         };
         Circular = new CircularProgressIndicator
         {
+            Color = Color.Red,
+            TrackColor = Color.Black,
             StrokeWidthDp = 6,
         };
         Volatile.Write(ref s_completedRenderPasses, 0);
@@ -72,9 +76,15 @@ public class ProgressIndicatorTestActivity : ComponentActivity
             circular,
             new LinearProgressIndicator
             {
+                Color = Color.Blue,
+                TrackColor = Color.Black,
                 Modifier = Modifier.FillMaxWidth(),
             },
-            new CircularProgressIndicator(),
+            new CircularProgressIndicator
+            {
+                Color = Color.Blue,
+                TrackColor = Color.Black,
+            },
         });
     }
 }
