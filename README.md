@@ -122,7 +122,7 @@ tree allocation it would have made—never runs. One user method, one shape,
 matching Kotlin's model (and `dotnet/maui`'s `BindingSourceGen`).
 
 ```csharp
-using Composable = AndroidX.Compose.ComposableAttribute;
+using AndroidX.Compose;
 using static AndroidX.Compose.Composables;
 
 [Activity(Label = "@string/app_name", MainLauncher = true,
