@@ -2,7 +2,7 @@ using AndroidX.Compose.Gallery.Registry;
 
 namespace AndroidX.Compose.Gallery.Demos.Selection;
 
-/// <summary>Two-thumb RangeSlider for selecting a (start, end) interval.</summary>
+/// <summary>Two-thumb RangeSlider using managed FloatRange values.</summary>
 public static class RangeSliderDemo
 {
     /// <summary>Registry entry exposed via <see cref="Catalog.Demos"/>.</summary>
@@ -10,21 +10,24 @@ public static class RangeSliderDemo
         Id:          "selection-range-slider",
         CategoryId:  "selection",
         Title:       "RangeSlider",
-        Description: "Two-thumb slider for a (start, end) interval.",
+        Description: "Two-thumb slider selecting a FloatRange within an overall 0..10 range.",
         Build:       c =>
         {
-            var start = c.MutableStateOf(0.2f);
-            var end   = c.MutableStateOf(0.8f);
+            var start = c.MutableStateOf(2f);
+            var end   = c.MutableStateOf(8f);
             return new Column
             {
                 new RangeSlider(
-                    value: (start.Value, end.Value),
+                    value: new FloatRange(start.Value, end.Value),
                     onValueChange: r =>
                     {
                         start.Value = r.Start;
                         end.Value   = r.End;
-                    }),
-                new Text($"Range: {start.Value:F2} – {end.Value:F2}"),
+                    })
+                {
+                    ValueRange = new FloatRange(0f, 10f),
+                },
+                new Text($"Range: {start.Value:F2} - {end.Value:F2}"),
             };
         });
 }

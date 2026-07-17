@@ -48,7 +48,6 @@ internal static class ComposeReferenceTypes
         "AndroidX.Compose.UI.Text.TextStyle",
         "AndroidX.Compose.UI.Text.Input.IVisualTransformation",
         "AndroidX.Compose.Foundation.Text.KeyboardOptions",
-        "Kotlin.Ranges.IClosedFloatingPointRange",
     };
 
     /// <summary>

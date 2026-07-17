@@ -9,9 +9,9 @@ namespace AndroidX.Compose;
 /// custom <c>track</c> slot and the <c>SliderState</c>-first overload
 /// aren't exposed.
 ///
-/// Optional <c>ValueRange</c> property surfaces Kotlin's
-/// <c>ClosedFloatingPointRange&lt;Float&gt;</c> — build with
-/// <c>Kotlin.Ranges.RangesKt.RangeTo(min, max)</c>. Optional
+/// Optional <c>ValueRange</c> accepts a <see cref="FloatRange"/>. Leaving it
+/// <see langword="null"/> preserves Material 3's default <c>0f..1f</c>.
+/// Optional
 /// <c>Colors</c> property accepts a
 /// <see cref="AndroidX.Compose.Material3.SliderColors"/>; build via
 /// <c>composer.SliderColors(...)</c> to override individual color slots

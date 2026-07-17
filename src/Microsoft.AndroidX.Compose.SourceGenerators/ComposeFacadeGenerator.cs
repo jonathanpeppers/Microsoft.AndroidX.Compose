@@ -1234,10 +1234,11 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         if (IsPrimitiveCtorType(p.Type))
             return new FacadeSlot(p, FacadeSlotKind.Primitive);
 
-        // Compose @JvmInline value-class types (Dp?/Sp?/Em?/TextAlign?)
-        // and reference-typed wrappers (FontWeight?/TextDecoration?/
-        // Shape?). Surfaced as nullable auto-properties; the bridge
-        // generator handles JNI lowering and auto-mask bit clearing.
+        // Compose @JvmInline value-class types (Dp?/Sp?/Em?/TextAlign?),
+        // managed wrapper-passthrough values (FloatRange?), and
+        // reference-typed wrappers (FontWeight?/TextDecoration?/Shape?).
+        // Surfaced as nullable auto-properties; the bridge or handwritten
+        // wrapper owns platform lowering and auto-mask bit clearing.
         if (IsOptionalValueType(p.Type, p.NullableAnnotation))
             return new FacadeSlot(p, FacadeSlotKind.OptionalValue);
 
@@ -1376,6 +1377,9 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         var optionalValueSlots = slots.Where(s => s.Kind == FacadeSlotKind.OptionalValue).ToArray();
         foreach (var s in optionalValueSlots)
         {
+            sb.Append("        /// <summary>Optional value for Kotlin's <c>")
+              .Append(s.Param.Name)
+              .AppendLine("</c> parameter. Leave unset to use its Kotlin default.</summary>");
             sb.Append("        public ").Append(OptionalValueDisplay(s)).Append(' ')
               .Append(PropertyName(s)).AppendLine(" { get; set; }");
         }
@@ -3948,6 +3952,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
     static bool IsOptionalValueType(ITypeSymbol type, NullableAnnotation annotation)
     {
         if (ComposeValueTypes.TryGet(type, out _, out _)) return true;
+        if (ComposeFacadeManagedTypes.IsRecognized(type)) return true;
         // Nullable<primitive>: bool?, int?, long?, float?, double?.
         if (IsNullablePrimitive(type)) return true;
         // Nullable reference-type wrapper: T? where T is recognized.
