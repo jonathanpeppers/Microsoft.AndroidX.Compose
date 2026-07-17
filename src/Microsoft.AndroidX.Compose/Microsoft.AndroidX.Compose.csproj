@@ -87,4 +87,14 @@
       <Bind>false</Bind>
     </AndroidJavaSource>
   </ItemGroup>
+  <Target Name="_ExcludeTransitiveGraphicsPathNativeLibraryFromAar"
+          AfterTargets="_CategorizeAndroidLibraries"
+          BeforeTargets="_CreateAarCache">
+    <!-- The NuGet dependency supplies this native library to applications.
+         https://github.com/dotnet/android-libraries/issues/1503 -->
+    <ItemGroup>
+      <EmbeddedNativeLibrary Remove="@(EmbeddedNativeLibrary)"
+                             Condition="'%(Filename)%(Extension)' == 'libandroidx.graphics.path.so'" />
+    </ItemGroup>
+  </Target>
 </Project>
