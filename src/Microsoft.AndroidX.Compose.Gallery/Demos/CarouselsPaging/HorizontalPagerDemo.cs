@@ -28,6 +28,7 @@ public static class HorizontalPagerDemo
                             .Background(Palette.Pastels[i % Palette.Pastels.Length]),
                         new Text($"Screen {i + 1}")
                         {
+                            Color = Color.Black,
                             Modifier = Modifier.Padding(16),
                         },
                     })
