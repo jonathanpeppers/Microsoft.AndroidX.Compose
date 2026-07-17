@@ -25,8 +25,11 @@ public sealed class AnnotatedStringBuilder
     public int Length => _builder.Length;
 
     /// <summary>Append a plain run of text at the current cursor.</summary>
+    /// <exception cref="ArgumentNullException"><paramref name="text"/> is
+    /// <see langword="null"/>.</exception>
     public AnnotatedStringBuilder Append(string text)
     {
+        ArgumentNullException.ThrowIfNull(text);
         _builder.Append(text);
         return this;
     }
@@ -71,8 +74,14 @@ public sealed class AnnotatedStringBuilder
     /// appended range. Used by clients to look up metadata at tapped
     /// offsets without affecting the displayed text.
     /// </summary>
-    public void AddStringAnnotation(string tag, string annotation, int start, int end) =>
+    /// <exception cref="ArgumentNullException"><paramref name="tag"/> or
+    /// <paramref name="annotation"/> is <see langword="null"/>.</exception>
+    public void AddStringAnnotation(string tag, string annotation, int start, int end)
+    {
+        ArgumentNullException.ThrowIfNull(tag);
+        ArgumentNullException.ThrowIfNull(annotation);
         _builder.AddStringAnnotation(tag, annotation, start, end);
+    }
 
     /// <summary>Apply a <see cref="SpanStyle"/> to a specific range.</summary>
     public void AddStyle(SpanStyle style, int start, int end)

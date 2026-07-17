@@ -33,9 +33,10 @@ public sealed class AnnotatedString : Java.Lang.Object
     /// plain string. Equivalent to <c>AnnotatedString(text)</c> in
     /// Kotlin.
     /// </summary>
+    /// <exception cref="ArgumentNullException"><paramref name="text"/> is
+    /// <see langword="null"/>.</exception>
     public AnnotatedString(string text)
-        : this(new AndroidX.Compose.UI.Text.AnnotatedString(
-            text, new List<AndroidX.Compose.UI.Text.AnnotatedString.Range>()))
+        : this(CreateBinding(text))
     {
     }
 
@@ -47,4 +48,11 @@ public sealed class AnnotatedString : Java.Lang.Object
 
     AndroidX.Compose.UI.Text.AnnotatedString Binding() =>
         Java.Lang.Object.GetObject<AndroidX.Compose.UI.Text.AnnotatedString>(Handle, JniHandleOwnership.DoNotTransfer)!;
+
+    static AndroidX.Compose.UI.Text.AnnotatedString CreateBinding(string text)
+    {
+        ArgumentNullException.ThrowIfNull(text);
+        return new AndroidX.Compose.UI.Text.AnnotatedString(
+            text, new List<AndroidX.Compose.UI.Text.AnnotatedString.Range>());
+    }
 }
