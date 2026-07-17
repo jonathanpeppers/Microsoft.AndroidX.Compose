@@ -280,6 +280,17 @@ public class FacadeGeneratorTests
         return (output, diags, emitted);
     }
 
+    static string GeneratedMethodBody(string emitted, string methodName)
+    {
+        var method = CSharpSyntaxTree.ParseText(emitted)
+            .GetRoot()
+            .DescendantNodes()
+            .OfType<Microsoft.CodeAnalysis.CSharp.Syntax.MethodDeclarationSyntax>()
+            .Single(m => m.Identifier.ValueText == methodName);
+        return method.Body?.ToFullString()
+            ?? throw new System.InvalidOperationException($"Generated method '{methodName}' has no body.");
+    }
+
     const string ButtonAttrs = """
         [assembly: ComposeDefaults("ButtonDefault",
             "!onClick", "modifier", "enabled", "shape", "colors",
@@ -619,6 +630,11 @@ public class FacadeGeneratorTests
         Assert.Contains("public sealed partial class Text : global::AndroidX.Compose.ComposableNode", emitted);
         Assert.Contains("readonly string _text;", emitted);
         Assert.Contains("public Text(string text)", emitted);
+        Assert.Contains(
+            "public Text(string text)\n        {\n            global::System.ArgumentNullException.ThrowIfNull(text);",
+            emitted.ReplaceLineEndings("\n"));
+        var helperBody = GeneratedMethodBody(emitted, "Text_PrimaryResource_Implicit");
+        Assert.Contains("global::System.ArgumentNullException.ThrowIfNull(text);", helperBody);
         Assert.Contains("global::AndroidX.Compose.ComposeBridges.Text(_text, BuildModifier(), composer);", emitted);
 
         var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
@@ -665,6 +681,13 @@ public class FacadeGeneratorTests
         Assert.NotNull(emitted);
         // Ctor surfaces the user param with the propagated default.
         Assert.Contains($"public Widget({type} value = {emittedDefault})", emitted);
+        if (type == "string")
+            Assert.Contains("global::System.ArgumentNullException.ThrowIfNull(value);", emitted);
+        else if (type == "string?")
+        {
+            var helperBody = GeneratedMethodBody(emitted, "Widget_PrimaryResource_Implicit");
+            Assert.DoesNotContain("global::System.ArgumentNullException.ThrowIfNull(value);", helperBody);
+        }
     }
 
     [Fact]
@@ -908,6 +931,7 @@ public class FacadeGeneratorTests
         // Nullable IFunction2? slot surfaces as a named property, not a
         // ctor primitive.
         Assert.Contains("public global::AndroidX.Compose.ComposableNode? Header { get; set; }", emitted);
+        Assert.DoesNotContain("global::System.ArgumentNullException.ThrowIfNull(header);", emitted);
 
         var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
         Assert.Empty(errors);
@@ -951,6 +975,7 @@ public class FacadeGeneratorTests
         // Java enum surfaces as a ctor field + ctor param + bridge arg pass-through.
         Assert.Contains("readonly global::AndroidX.Compose.Demo.FakeToggleableState _state;", emitted);
         Assert.Contains("global::AndroidX.Compose.Demo.FakeToggleableState state", emitted);
+        Assert.Contains("global::System.ArgumentNullException.ThrowIfNull(state);", emitted);
         Assert.Contains("ComposeBridges.TriStateCheckbox(_state,", emitted);
 
         // Sanity-check: the synthetic compilation must actually compile —
@@ -1328,6 +1353,7 @@ public class FacadeGeneratorTests
         Assert.NotNull(emitted);
         Assert.Contains("readonly global::System.Action<bool> _onCheckedChange;", emitted);
         Assert.Contains("public IconToggleButton(bool @checked, global::System.Action<bool> onCheckedChange)", emitted);
+        Assert.Contains("global::System.ArgumentNullException.ThrowIfNull(onCheckedChange);", emitted);
         Assert.Contains("composer.RememberAction(v => _onCheckedChange(v is global::Java.Lang.Boolean __b && __b.BooleanValue()));", emitted);
 
         var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
@@ -1644,7 +1670,14 @@ public class FacadeGeneratorTests
         Assert.Contains("readonly global::AndroidX.Compose.UI.Graphics.Painter.Painter? _painter;", emitted);
 
         // Painter ctor null-guards and stores into `_painter`.
-        Assert.Contains("_painter = painter ?? throw new global::System.ArgumentNullException(nameof(painter));", emitted);
+        Assert.Contains("global::System.ArgumentNullException.ThrowIfNull(painter);", emitted);
+        Assert.Contains("_painter = painter;", emitted);
+        var resourceHelperBody = GeneratedMethodBody(emitted, "Image_PrimaryResource_Implicit");
+        var painterHelperBody = GeneratedMethodBody(emitted, "Image_PrimaryPainter_Implicit");
+        Assert.DoesNotContain("global::System.ArgumentNullException.ThrowIfNull(painter);", resourceHelperBody);
+        Assert.Contains("global::System.ArgumentNullException.ThrowIfNull(painter);", painterHelperBody);
+        Assert.DoesNotContain("global::System.ArgumentNullException.ThrowIfNull(contentDescription);", resourceHelperBody);
+        Assert.DoesNotContain("global::System.ArgumentNullException.ThrowIfNull(contentDescription);", painterHelperBody);
 
         // Render preamble: caller-owned Painter is forwarded directly;
         // resource-id path wraps the local ref into a managed peer via
@@ -4244,6 +4277,10 @@ public class FacadeGeneratorTests
         Assert.Contains("public Icon(global::AndroidX.Compose.UI.Graphics.Vector.ImageVector imageVector,", emitted);
         Assert.Contains("public Icon(int drawableResourceId,", emitted);
         Assert.Contains("public Icon(global::AndroidX.Compose.UI.Graphics.Painter.Painter painter,", emitted);
+        Assert.Contains("global::System.ArgumentNullException.ThrowIfNull(imageVector);", emitted);
+        var secondaryHelperBody = GeneratedMethodBody(emitted, "Icon_Secondary_Implicit");
+        Assert.Contains("global::System.ArgumentNullException.ThrowIfNull(imageVector);", secondaryHelperBody);
+        Assert.DoesNotContain("global::System.ArgumentNullException.ThrowIfNull(contentDescription);", secondaryHelperBody);
 
         // Render dispatch: secondary branch runs first, with renamed
         // locals (__secModifier / __secDefaults) to avoid CS0136

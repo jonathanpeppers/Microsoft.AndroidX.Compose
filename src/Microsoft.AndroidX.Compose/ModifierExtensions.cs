@@ -1275,8 +1275,13 @@ public static class ModifierExtensions
     /// semantics; call the overload taking <c>mergeDescendants</c> for
     /// that.
     /// </summary>
-    public static Modifier Semantics(this Modifier modifier, string contentDescription) =>
-        modifier.Semantics(mergeDescendants: false, contentDescription, role: null);
+    /// <exception cref="ArgumentNullException"><paramref name="contentDescription"/>
+    /// is <see langword="null"/>.</exception>
+    public static Modifier Semantics(this Modifier modifier, string contentDescription)
+    {
+        ArgumentNullException.ThrowIfNull(contentDescription);
+        return modifier.Semantics(mergeDescendants: false, contentDescription, role: null);
+    }
 
     /// <summary>
     /// <c>Modifier.semantics(mergeDescendants) { contentDescription = ... }</c> —
@@ -1284,8 +1289,13 @@ public static class ModifierExtensions
     /// container that should announce itself instead of its children
     /// (e.g. a card with a label and a value).
     /// </summary>
-    public static Modifier Semantics(this Modifier modifier, bool mergeDescendants, string contentDescription) =>
-        modifier.Semantics(mergeDescendants, contentDescription, role: null);
+    /// <exception cref="ArgumentNullException"><paramref name="contentDescription"/>
+    /// is <see langword="null"/>.</exception>
+    public static Modifier Semantics(this Modifier modifier, bool mergeDescendants, string contentDescription)
+    {
+        ArgumentNullException.ThrowIfNull(contentDescription);
+        return modifier.Semantics(mergeDescendants, contentDescription, role: null);
+    }
 
     /// <summary>
     /// <c>Modifier.semantics { role = ... }</c> — tags the node with
@@ -1341,8 +1351,13 @@ public static class ModifierExtensions
     /// should appear as a single accessibility node with a curated
     /// description, hiding implementation details.
     /// </summary>
-    public static Modifier ClearAndSetSemantics(this Modifier modifier, string contentDescription) =>
-        modifier.ClearAndSetSemantics(contentDescription, role: null);
+    /// <exception cref="ArgumentNullException"><paramref name="contentDescription"/>
+    /// is <see langword="null"/>.</exception>
+    public static Modifier ClearAndSetSemantics(this Modifier modifier, string contentDescription)
+    {
+        ArgumentNullException.ThrowIfNull(contentDescription);
+        return modifier.ClearAndSetSemantics(contentDescription, role: null);
+    }
 
     /// <summary>
     /// <c>Modifier.clearAndSetSemantics { contentDescription = ...; role = ... }</c> —

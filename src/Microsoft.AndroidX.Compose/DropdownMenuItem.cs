@@ -22,8 +22,15 @@ public sealed class DropdownMenuItem : ComposableNode
     readonly ComposableNode _text;
     readonly Action _onClick;
 
+    /// <summary>Creates a menu item with required text content and click callback.</summary>
+    /// <param name="text">Composable content displayed by the item.</param>
+    /// <param name="onClick">Callback invoked when the item is selected.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="text"/> or
+    /// <paramref name="onClick"/> is <see langword="null"/>.</exception>
     public DropdownMenuItem(ComposableNode text, Action onClick)
     {
+        ArgumentNullException.ThrowIfNull(text);
+        ArgumentNullException.ThrowIfNull(onClick);
         _text    = text;
         _onClick = onClick;
     }

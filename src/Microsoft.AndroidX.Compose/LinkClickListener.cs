@@ -18,6 +18,8 @@ internal sealed class LinkClickListener : Java.Lang.Object, AndroidX.Compose.UI.
 
     public LinkClickListener(string tag, Action<string> onClick)
     {
+        ArgumentNullException.ThrowIfNull(tag);
+        ArgumentNullException.ThrowIfNull(onClick);
         _tag     = tag;
         _onClick = onClick;
     }

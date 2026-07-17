@@ -1919,17 +1919,32 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             route, implicitComposer, ref hasParameter);
         sb.AppendLine(", ulong __omittedArguments = 0, int __directChanged = 0)");
         sb.AppendLine("        {");
+        if (route == ComposableMethodRoute.Secondary)
+        {
+            var discriminator = secondaryCtorInfo
+                ?? throw new InvalidOperationException("Secondary composable route requires secondary constructor metadata.");
+            EmitNullGuard(sb, "            ", discriminator.Discriminator.Name);
+        }
+        foreach (var slot in ctorSlotsAll)
+        {
+            if (slot.Kind == FacadeSlotKind.PainterResource)
+            {
+                if (route == ComposableMethodRoute.PrimaryPainter)
+                    EmitNullGuard(sb, "            ", "painter");
+            }
+            else if (RequiresCtorNullGuard(slot))
+            {
+                EmitNullGuard(sb, "            ", CtorIdentifier(slot));
+            }
+        }
         foreach (var slot in requiredNamedSlots.Concat(contentSlots))
         {
-            sb.Append("            global::System.ArgumentNullException.ThrowIfNull(")
-              .Append(EscapeIdent(slot.Kind is FacadeSlotKind.RequiredFunction2 or FacadeSlotKind.RequiredFunction3
-                  ? ComposableMethodIdentifier(PropertyName(slot))
-                  : slot.Param.Name))
-              .AppendLine(");");
-        }
-        if (route == ComposableMethodRoute.PrimaryPainter)
-        {
-            sb.AppendLine("            global::System.ArgumentNullException.ThrowIfNull(painter);");
+            EmitNullGuard(
+                sb,
+                "            ",
+                slot.Kind is FacadeSlotKind.RequiredFunction2 or FacadeSlotKind.RequiredFunction3
+                    ? ComposableMethodIdentifier(PropertyName(slot))
+                    : slot.Param.Name);
         }
         var surfacedIndices = BuildComposableMethodSurfaceIndices(requiredCtorSlots,
             optionalCtorSlots, requiredNamedSlots, contentSlots, optionalNamedSlots,
@@ -3527,8 +3542,10 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         }
         sb.AppendLine(")");
         sb.AppendLine("        {");
-        sb.Append("            _").Append(discName).Append(" = ").Append(EscapeIdent(discName))
-          .Append(" ?? throw new global::System.ArgumentNullException(nameof(").Append(EscapeIdent(discName)).AppendLine("));");
+        EmitNullGuard(sb, "            ", discName);
+        foreach (var s in emittedSlots.Where(RequiresCtorNullGuard))
+            EmitNullGuard(sb, "            ", CtorIdentifier(s));
+        sb.Append("            _").Append(discName).Append(" = ").Append(EscapeIdent(discName)).AppendLine(";");
 
         // Store the emitted slots in their fields. Same logic as
         // EmitFacadeCtor's body for non-PainterResource non-stateholder
@@ -3766,6 +3783,18 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         sb.AppendLine("        {");
         foreach (var s in ctorSlots)
         {
+            if (s.Kind == FacadeSlotKind.PainterResource)
+            {
+                if (painterShape == PainterCtorShape.Painter)
+                    EmitNullGuard(sb, "            ", "painter");
+            }
+            else if (RequiresCtorNullGuard(s))
+            {
+                EmitNullGuard(sb, "            ", CtorIdentifier(s));
+            }
+        }
+        foreach (var s in ctorSlots)
+        {
             // Phase 4b — auto-create wrapper instance when the
             // Remember bridge has user params. The Render body
             // reads init values off `_state` to pass into Remember,
@@ -3782,7 +3811,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
                 // Painter ctor: store the wrapper into _painter; leave
                 // _drawableResourceId at default (the sibling ctor sets
                 // it). Render branches on `_painter is not null`.
-                sb.AppendLine("            _painter = painter ?? throw new global::System.ArgumentNullException(nameof(painter));");
+                sb.AppendLine("            _painter = painter;");
             }
             else
             {
@@ -3790,6 +3819,19 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             }
         }
         sb.AppendLine("        }");
+    }
+
+    static bool RequiresCtorNullGuard(FacadeSlot slot) =>
+        slot.Kind is FacadeSlotKind.OnClick or FacadeSlotKind.Callback ||
+        slot.Kind == FacadeSlotKind.Primitive &&
+        slot.Param.Type.IsReferenceType &&
+        slot.Param.NullableAnnotation != NullableAnnotation.Annotated;
+
+    static void EmitNullGuard(StringBuilder sb, string indent, string parameterName)
+    {
+        var escaped = EscapeIdent(parameterName);
+        sb.Append(indent).Append("global::System.ArgumentNullException.ThrowIfNull(")
+          .Append(escaped).AppendLine(");");
     }
 
     static string CtorFieldType(FacadeSlot slot) => CtorParamType(slot);

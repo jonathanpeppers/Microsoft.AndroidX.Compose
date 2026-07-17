@@ -31,8 +31,11 @@ public sealed class LinkAnnotation
     /// <param name="style">Optional default <see cref="SpanStyle"/> to
     /// apply to the linked range; pass <see langword="null"/> to
     /// inherit from the enclosing text styling.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="url"/> is
+    /// <see langword="null"/>.</exception>
     public static LinkAnnotation Url(string url, SpanStyle? style = null)
     {
+        ArgumentNullException.ThrowIfNull(url);
         var styles = style is null ? null : new BindingTextLinkStyles(style.Build(), null, null, null);
         return new LinkAnnotation(new BindingLink.Url(url, styles, null));
     }
@@ -48,8 +51,11 @@ public sealed class LinkAnnotation
     /// <param name="onClick">Callback fired on tap. Receives <paramref name="tag"/>.</param>
     /// <param name="style">Optional default <see cref="SpanStyle"/> for
     /// the linked range.</param>
+    /// <exception cref="ArgumentNullException"><paramref name="tag"/> or
+    /// <paramref name="onClick"/> is <see langword="null"/>.</exception>
     public static LinkAnnotation Clickable(string tag, Action<string> onClick, SpanStyle? style = null)
     {
+        ArgumentNullException.ThrowIfNull(tag);
         ArgumentNullException.ThrowIfNull(onClick);
         var styles   = style is null ? null : new BindingTextLinkStyles(style.Build(), null, null, null);
         var listener = new LinkClickListener(tag, onClick);
