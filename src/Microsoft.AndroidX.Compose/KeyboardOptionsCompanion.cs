@@ -24,13 +24,16 @@ namespace AndroidX.Compose;
 /// <see cref="AndroidX.Compose.Foundation.Text.KeyboardOptions"/>
 /// (e.g. MAUI <c>EntryHandler</c>, gallery numeric-keyboard demo) can
 /// reach <see cref="Default"/> without re-implementing the JNI dance
-/// while the binding-specific <c>Companion</c> type remains internal.
+/// while the JNI bootstrap accessor for the bound <c>Companion</c>
+/// singleton remains internal.
 /// </summary>
 public static class KeyboardOptionsCompanion
 {
     static AndroidX.Compose.Foundation.Text.KeyboardOptions.Companion? s_companion;
     static AndroidX.Compose.Foundation.Text.KeyboardOptions? s_default;
 
+    // Why raw JNI: Kotlin exposes Companion as a static field lookup,
+    // while ComposeBridge models method and constructor invocation.
     internal static AndroidX.Compose.Foundation.Text.KeyboardOptions.Companion Get()
     {
         if (s_companion is not null) return s_companion;

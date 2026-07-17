@@ -34,6 +34,10 @@ public class LocalLifecycleOwnerTests
             Assert.AreNotEqual(IntPtr.Zero, ((Java.Lang.Object)defaultOwner).Handle);
             Assert.AreNotEqual(IntPtr.Zero, ((Java.Lang.Object)providedOwner).Handle);
 
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            GC.Collect();
+
             int priorPass = EffectsAndLifecycleTestActivity.CompletedRenderPasses;
             activity.RunOnUiThread(() =>
             {
@@ -45,11 +49,7 @@ public class LocalLifecycleOwnerTests
             await WaitFor(
                 static () => EffectsAndLifecycleTestActivity.CompletedRenderPasses,
                 value => value > priorPass,
-                "Lifecycle owner locals were not read after recomposition.");
-
-            GC.Collect();
-            GC.WaitForPendingFinalizers();
-            GC.Collect();
+                "Lifecycle owner locals were not read after post-GC recomposition.");
 
             var recomposedDefaultOwner =
                 EffectsAndLifecycleTestActivity.DefaultOwner
