@@ -297,6 +297,7 @@ helpers, operators.
 | `IntPtr` + `[PainterResource]`                                                | Synthetic `int painterResourceId` ctor arg + `PainterResource` resolution + try/finally                                                                                                    |
 | `IntPtr` + `[StateHolder(Remember = …, StateType = typeof(…))]`               | State-holder (Phase 4): exposes wrapper as defaulted ctor slot (`StateType? state = null`), calls `RememberXxxState(composer)` on first render, populates `state.Jvm`, forwards JNI handle |
 | Primitive (`string`/`int`/`long`/`bool`/`float`/`double`)                     | Ctor parameter, stored in `_<name>`                                                                                                                                                        |
+| Registered nullable managed value (`FloatRange?`)                             | Optional property; wrapper-passthrough method converts to the platform type at the binding boundary                                                                                        |
 | Anything else                                                                 | Rejected with CN3002                                                                                                                                                                       |
 
 ### Class-level options

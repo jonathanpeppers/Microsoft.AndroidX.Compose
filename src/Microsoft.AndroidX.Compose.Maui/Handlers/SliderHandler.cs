@@ -2,7 +2,6 @@ using AndroidX.Compose;
 using AndroidX.Compose.Material3;
 using AndroidX.Compose.Runtime;
 using AndroidX.Compose.UI.Platform;
-using Kotlin.Ranges;
 using Microsoft.AndroidX.Compose.Maui.Loaders;
 using Microsoft.AndroidX.Compose.Maui.Platform;
 using Microsoft.Maui.Handlers;
@@ -30,8 +29,7 @@ namespace Microsoft.AndroidX.Compose.Maui.Handlers;
 /// value.</para>
 ///
 /// <para>The MAUI <c>Minimum</c> / <c>Maximum</c> are surfaced through a
-/// Kotlin <see cref="IClosedFloatingPointRange"/> built with
-/// <see cref="RangesKt.RangeTo(float, float)"/>; only constructed when
+/// managed <see cref="FloatRange"/>; only constructed when
 /// the bounds differ from Compose's default <c>[0f, 1f]</c> so a
 /// MAUI Slider with default bounds doesn't allocate a wrapper per
 /// recomposition.</para>
@@ -121,11 +119,9 @@ public partial class SliderHandler : ComposeElementHandler<ISlider>
                 slider.Thumb = new ComposeImage(drawableId) { Modifier = s_thumbSize };
         }
 
-        // Only allocate a Kotlin ClosedFloatingPointRange when the
-        // bounds aren't Compose's stock [0, 1] — RangeTo always
-        // allocates so this is the cheapest skip.
+        // Leave the range unset for Compose's stock [0, 1] default.
         if (min != 0f || max != 1f)
-            slider.ValueRange = RangesKt.RangeTo(min, max);
+            slider.ValueRange = new FloatRange(min, max);
 
         // Build SliderColors only if any of the three MAUI slots are
         // populated — otherwise let M3's theme defaults apply.

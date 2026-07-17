@@ -1317,7 +1317,7 @@ covering MAUI's small-but-essential value/progress family:
 
 - `MauiSlider` → `SliderHandler` over the `Microsoft.AndroidX.Compose.Slider`
   facade. Two-way (`onValueChange` mutates `VirtualView.Value`),
-  honours `Minimum`/`Maximum` via `IClosedFloatingPointRange`, and
+  honours `Minimum`/`Maximum` via the managed `FloatRange`, and
   themes via the `SliderColors` slot
   (`MinimumTrackColor`/`MaximumTrackColor`/`ThumbColor`).
 - `MauiProgressBar` → `ProgressBarHandler` over the determinate
@@ -1490,8 +1490,8 @@ support.
 **Facade extensions landed alongside the handlers:**
 
 - `Microsoft.AndroidX.Compose.Slider` gained
-  `IClosedFloatingPointRange? valueRange` and `SliderColors? colors`
-  ctor parameters via Phase 8 wrapper-passthrough on `ComposeBridges`.
+  `FloatRange? ValueRange` and `SliderColors? Colors` properties via
+  Phase 8 wrapper-passthrough on `ComposeBridges`.
   The `composer.SliderColors(...)` extension (10-slot color factory)
   ships in `ComposeExtensions.SliderDefaults.cs`.
 - `Microsoft.AndroidX.Compose.LinearProgressIndicator` gained a
@@ -1500,9 +1500,9 @@ support.
   current bound determinate path is the deprecated overload — the new
   recommended `LinearProgressIndicator(progress: () -> Float, …)`
   isn't bound yet, tracked separately).
-- `IClosedFloatingPointRange` and `SliderColors` are now in
-  `ComposeReferenceTypes.Recognized`, so generator-emitted bridge
-  bodies pass them as `((Java.Lang.Object)x).Handle` automatically.
+- `SliderColors` is in `ComposeReferenceTypes.Recognized`, while
+  `FloatRange` is in `ComposeFacadeManagedTypes`; the Slider wrapper
+  converts the managed range to Kotlin only at the binding boundary.
 
 **Lessons learned (Slice 4):**
 

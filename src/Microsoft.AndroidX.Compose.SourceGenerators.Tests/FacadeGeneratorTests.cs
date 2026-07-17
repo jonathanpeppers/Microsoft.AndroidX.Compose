@@ -138,6 +138,10 @@ public class FacadeGeneratorTests
             {
                 public long ToPacked() => default;
             }
+            public readonly struct FloatRange
+            {
+                public FloatRange(float start, float end) { }
+            }
             public readonly struct Sp
             {
                 public Sp(float v) { Value = v; }
@@ -3346,6 +3350,7 @@ public class FacadeGeneratorTests
                         Sp? fontSize, FontWeight? fontWeight,
                         int defaults, IComposer composer);
                 }
+
             }
             """;
 
@@ -3358,6 +3363,59 @@ public class FacadeGeneratorTests
         Assert.Contains(
             "if (FontWeight is not null) __defaults &= ~(int)global::AndroidX.Compose.BarDefault.FontWeight;",
             emitted);
+        var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
+        Assert.Empty(errors);
+    }
+
+    [Fact]
+    public void OptionalValue_FloatRangeWrapperPreservesOmittedDefaultMask()
+    {
+        var code = """
+            using global::AndroidX.Compose.Runtime;
+            using global::AndroidX.Compose.UI;
+            using AndroidX.Compose;
+            using Kotlin.Jvm.Functions;
+
+            [assembly: ComposeDefaults("SliderDefault",
+                "!value", "!onValueChange", "modifier", "valueRange")]
+
+            namespace AndroidX.Compose
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeFacade(Defaults = typeof(SliderDefault))]
+                    public static partial void Slider(
+                        float value, [Callback(typeof(float))] IFunction1 onValueChange,
+                        IModifier? modifier, FloatRange? valueRange,
+                        int defaults, IComposer composer);
+
+                    public static partial void Slider(
+                        float value, IFunction1 onValueChange,
+                        IModifier? modifier, FloatRange? valueRange,
+                        int defaults, IComposer composer) { }
+                }
+            }
+            """;
+
+        var (output, diags, emitted) = Run(code, "Slider");
+        Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+        Assert.Contains(
+            "/// <summary>Optional value for Kotlin's <c>valueRange</c> parameter. Leave unset to use its Kotlin default.</summary>",
+            emitted);
+        Assert.Contains(
+            "public global::AndroidX.Compose.FloatRange? ValueRange { get; set; }",
+            emitted);
+        Assert.Contains(
+            "if (ValueRange is not null) __defaults &= ~(int)global::AndroidX.Compose.SliderDefault.ValueRange;",
+            emitted);
+        Assert.Contains(
+            "global::AndroidX.Compose.FloatRange? valueRange = null",
+            emitted);
+        Assert.Contains(
+            "global::AndroidX.Compose.ComposeBridges.Slider(_value, __onValueChange, __modifier, ValueRange, __defaults, composer);",
+            emitted);
+
         var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
         Assert.Empty(errors);
     }

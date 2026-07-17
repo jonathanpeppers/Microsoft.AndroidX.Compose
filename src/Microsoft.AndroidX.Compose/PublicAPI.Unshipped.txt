@@ -512,6 +512,12 @@ AndroidX.Compose.FilterChip.TrailingIcon.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.FilterChip.TrailingIcon.set -> void
 AndroidX.Compose.FlexibleBottomAppBar
 AndroidX.Compose.FlexibleBottomAppBar.FlexibleBottomAppBar() -> void
+AndroidX.Compose.FloatRange
+AndroidX.Compose.FloatRange.End.get -> float
+AndroidX.Compose.FloatRange.Equals(AndroidX.Compose.FloatRange other) -> bool
+AndroidX.Compose.FloatRange.FloatRange() -> void
+AndroidX.Compose.FloatRange.FloatRange(float start, float end) -> void
+AndroidX.Compose.FloatRange.Start.get -> float
 AndroidX.Compose.FloatingActionButton
 AndroidX.Compose.FloatingActionButton.FloatingActionButton(System.Action! onClick) -> void
 AndroidX.Compose.FloatingActionButton.Shape.get -> AndroidX.Compose.Shape?
@@ -1134,7 +1140,9 @@ AndroidX.Compose.RadioButton.Colors.get -> AndroidX.Compose.Material3.RadioButto
 AndroidX.Compose.RadioButton.Colors.set -> void
 AndroidX.Compose.RadioButton.RadioButton(bool selected, System.Action! onClick, bool enabled = true) -> void
 AndroidX.Compose.RangeSlider
-AndroidX.Compose.RangeSlider.RangeSlider((float Start, float End) value, System.Action<(float Start, float End)>! onValueChange) -> void
+AndroidX.Compose.RangeSlider.RangeSlider(AndroidX.Compose.FloatRange value, System.Action<AndroidX.Compose.FloatRange>! onValueChange) -> void
+AndroidX.Compose.RangeSlider.ValueRange.get -> AndroidX.Compose.FloatRange?
+AndroidX.Compose.RangeSlider.ValueRange.set -> void
 AndroidX.Compose.Rect
 AndroidX.Compose.Rect.Bottom.get -> float
 AndroidX.Compose.Rect.Equals(AndroidX.Compose.Rect other) -> bool
@@ -1298,7 +1306,7 @@ AndroidX.Compose.Slider.Colors.set -> void
 AndroidX.Compose.Slider.Slider(float value, System.Action<float>! onValueChange, bool enabled = true, int steps = 0) -> void
 AndroidX.Compose.Slider.Thumb.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.Slider.Thumb.set -> void
-AndroidX.Compose.Slider.ValueRange.get -> Kotlin.Ranges.IClosedFloatingPointRange?
+AndroidX.Compose.Slider.ValueRange.get -> AndroidX.Compose.FloatRange?
 AndroidX.Compose.Slider.ValueRange.set -> void
 AndroidX.Compose.SmallFloatingActionButton
 AndroidX.Compose.SmallFloatingActionButton.Shape.get -> AndroidX.Compose.Shape?
@@ -1658,6 +1666,9 @@ override AndroidX.Compose.FilledTonalIconButton.Render(AndroidX.Compose.Runtime.
 override AndroidX.Compose.FilledTonalIconToggleButton.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
 override AndroidX.Compose.FilterChip.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
 override AndroidX.Compose.FlexibleBottomAppBar.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override AndroidX.Compose.FloatRange.Equals(object? obj) -> bool
+override AndroidX.Compose.FloatRange.GetHashCode() -> int
+override AndroidX.Compose.FloatRange.ToString() -> string!
 override AndroidX.Compose.FloatingActionButton.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
 override AndroidX.Compose.FlowColumn.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
 override AndroidX.Compose.FlowRow.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
@@ -1991,7 +2002,7 @@ static AndroidX.Compose.Composables.SelectionContainer(System.Action! content, A
 static AndroidX.Compose.Composables.Shapes() -> AndroidX.Compose.Material3.Shapes!
 static AndroidX.Compose.Composables.SideEffect(System.Action! effect) -> void
 static AndroidX.Compose.Composables.SingleChoiceSegmentedButtonRow(System.Action! content, AndroidX.Compose.Modifier? modifier = null) -> void
-static AndroidX.Compose.Composables.Slider(float value, System.Action<float>! onValueChange, bool enabled = true, int steps = 0, AndroidX.Compose.Modifier? modifier = null, System.Action? thumb = null, Kotlin.Ranges.IClosedFloatingPointRange? valueRange = null, AndroidX.Compose.Material3.SliderColors? colors = null) -> void
+static AndroidX.Compose.Composables.Slider(float value, System.Action<float>! onValueChange, bool enabled = true, int steps = 0, AndroidX.Compose.Modifier? modifier = null, System.Action? thumb = null, AndroidX.Compose.FloatRange? valueRange = null, AndroidX.Compose.Material3.SliderColors? colors = null) -> void
 static AndroidX.Compose.Composables.SmallFloatingActionButton(System.Action! onClick, System.Action! content, AndroidX.Compose.Modifier? modifier = null, AndroidX.Compose.Shape? shape = null) -> void
 static AndroidX.Compose.Composables.Snackbar(System.Action! body, bool actionOnNewLine = false, AndroidX.Compose.Modifier? modifier = null, System.Action? action = null, System.Action? dismissAction = null) -> void
 static AndroidX.Compose.Composables.SnackbarHost(AndroidX.Compose.SnackbarHostState! state, AndroidX.Compose.Modifier? modifier = null) -> void
@@ -2164,6 +2175,8 @@ static AndroidX.Compose.DpExtensions.Dp(this float value) -> AndroidX.Compose.Dp
 static AndroidX.Compose.DpExtensions.Dp(this int value) -> AndroidX.Compose.Dp
 static AndroidX.Compose.DrawingStyle.Fill.get -> AndroidX.Compose.UI.Graphics.Drawscope.DrawStyle!
 static AndroidX.Compose.DrawingStyle.Stroke(float width, AndroidX.Compose.StrokeCap cap = AndroidX.Compose.StrokeCap.Butt, AndroidX.Compose.StrokeJoin join = AndroidX.Compose.StrokeJoin.Miter, float miter = 4) -> AndroidX.Compose.UI.Graphics.Drawscope.DrawStyle!
+static AndroidX.Compose.FloatRange.operator !=(AndroidX.Compose.FloatRange left, AndroidX.Compose.FloatRange right) -> bool
+static AndroidX.Compose.FloatRange.operator ==(AndroidX.Compose.FloatRange left, AndroidX.Compose.FloatRange right) -> bool
 static AndroidX.Compose.FocusState.operator !=(AndroidX.Compose.FocusState left, AndroidX.Compose.FocusState right) -> bool
 static AndroidX.Compose.FocusState.operator ==(AndroidX.Compose.FocusState left, AndroidX.Compose.FocusState right) -> bool
 static AndroidX.Compose.FontFamily.Cursive.get -> AndroidX.Compose.FontFamily!
