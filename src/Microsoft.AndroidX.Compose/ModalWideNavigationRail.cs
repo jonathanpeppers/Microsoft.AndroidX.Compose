@@ -10,32 +10,33 @@ namespace AndroidX.Compose;
 /// <remarks>
 /// <para>The Kotlin signature has no <c>onDismissRequest</c> callback —
 /// dismissal is driven internally by the rail's
-/// <see cref="WideNavigationRailState"/>. Because the live
-/// <c>expand</c>/<c>collapse</c>/<c>snapTo</c> operations are Kotlin
-/// suspend functions and the facade does not yet have a coroutine-scope
-/// story, the rail is wired with <c>hideOnCollapse = true</c> (its
-/// content visually unmounts on collapse) and the C# facade has no
-/// way to observe the collapse. Drive open/close from a separate
-/// <see cref="MutableState{T}"/>-of-<see cref="bool"/> gate by mirroring
-/// the <see cref="ModalBottomSheet"/> pattern.</para>
+/// <see cref="WideNavigationRailState"/>. The facade is wired with
+/// <c>hideOnCollapse = true</c>, so its content visually unmounts after
+/// collapse. Use <see cref="WideNavigationRailState.ExpandAsync"/>,
+/// <see cref="WideNavigationRailState.CollapseAsync"/>,
+/// <see cref="WideNavigationRailState.ToggleAsync"/>, or
+/// <see cref="WideNavigationRailState.SnapToAsync"/> to control it, and
+/// observe <see cref="WideNavigationRailState.CurrentValue"/>,
+/// <see cref="WideNavigationRailState.TargetValue"/>, and
+/// <see cref="WideNavigationRailState.IsAnimating"/>.</para>
 /// <code>
-/// var show = Remember(() =&gt; new MutableState&lt;bool&gt;(false));
-/// var tab  = Remember(() =&gt; new MutableNumberState&lt;int&gt;(0));
-/// new Row
+/// var rail = Remember(() =&gt; new WideNavigationRailState(
+///     WideNavigationRailValue.Collapsed));
+/// new Column
 /// {
-///     new Button(onClick: () =&gt; show.Value = true) { new Text("Menu") },
-///     show.Value
-///         ? new ModalWideNavigationRail
+///     new Button(onClick: () =&gt; _ = rail.ToggleAsync())
+///     {
+///         new Text("Toggle menu"),
+///     },
+///     new ModalWideNavigationRail(state: rail)
+///     {
+///         Header = new Text("Sections"),
+///         new WideNavigationRailItem(selected: true, onClick: () =&gt; { })
 ///         {
-///             Header = new Text("Sections"),
-///             new WideNavigationRailItem(selected: tab.Value == 0,
-///                 onClick: () =&gt; { tab.Value = 0; show.Value = false; })
-///             {
-///                 Icon  = new Text("🏠"),
-///                 Label = new Text("Home"),
-///             },
-///         }
-///         : null,
+///             Icon = new Text("Home"),
+///             Label = new Text("Home"),
+///         },
+///     },
 /// };
 /// </code>
 /// </remarks>

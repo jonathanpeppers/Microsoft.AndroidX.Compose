@@ -6,22 +6,20 @@ namespace AndroidX.Compose;
 /// <summary>
 /// Material 3 <c>LinearProgressIndicator</c>. Defaults to the
 /// indeterminate animation; set <see cref="Progress"/> to a non-null
-/// 0..1 value to render the determinate (progress-driven) overload:
+/// value to render the determinate (progress-driven) overload:
 /// <code>
 /// new LinearProgressIndicator { Modifier = Modifier.FillMaxWidth() }
 /// new LinearProgressIndicator { Progress = 0.45f }
 /// </code>
-/// The full state-reading <c>() -&gt; Float</c> overload (lambda-driven
-/// progress) isn't wrapped — set <see cref="Progress"/> from a
-/// <c>MutableState</c> in your render and Compose will recompose this
-/// node at the next frame.
 /// </summary>
 public sealed class LinearProgressIndicator : ComposableNode
 {
+    FloatFunction0? _progressFunction;
+
     /// <summary>
-    /// Optional progress in [0, 1]. When non-null, renders the
-    /// determinate overload (filled bar at the given fraction);
-    /// when null, renders the indeterminate animation.
+    /// Optional progress fraction. When non-null, renders the determinate
+    /// overload; when null, renders the indeterminate animation. Compose
+    /// coerces finite values to the 0..1 range.
     /// </summary>
     public float? Progress { get; set; }
 
@@ -37,29 +35,28 @@ public sealed class LinearProgressIndicator : ComposableNode
 
         if (Progress is { } progress)
         {
-            // Determinate overload: (Float, Modifier?, J color, J trackColor,
-            //                        I strokeCap; Composer; I $changed, I $default).
-            // Generated `LinearProgressIndicatorDeterminateDefault` enum
-            // covers slots 1..4 (progress on bit 0 is always provided
-            // and skipped via the `!` prefix in `ComposeDefaults.cs`).
             var defaults = LinearProgressIndicatorDeterminateDefault.All;
             if (modifier is not null)        defaults &= ~LinearProgressIndicatorDeterminateDefault.Modifier;
             if (Color.HasValue)              defaults &= ~LinearProgressIndicatorDeterminateDefault.Color;
             if (TrackColor.HasValue)         defaults &= ~LinearProgressIndicatorDeterminateDefault.TrackColor;
 
-#pragma warning disable CS0618 // Float-progress overload is deprecated in Compose
-                               // 1.7+ in favour of the lambda overload, but the
-                               // lambda variant is not yet wrapped here.
+            var progressFunction = _progressFunction ??=
+                new FloatFunction0(() => Progress ?? 0f);
+            int changed = composer.DiffSlot(
+                progress,
+                ComposeExtensions.DiffSlotShift(0));
+
             ProgressIndicatorKt.LinearProgressIndicator(
-                progress:   progress,
-                modifier:   modifier,
-                color:      Color      is { } pc ? pc.ToPacked() : 0L,
-                trackColor: TrackColor is { } pt ? pt.ToPacked() : 0L,
-                p4:         0,
-                _composer:  composer,
-                strokeCap:  0,
-                _changed:   (int)defaults);
-#pragma warning restore CS0618
+                progress:          progressFunction,
+                modifier:          modifier,
+                color:             Color      is { } pc ? pc.ToPacked() : 0L,
+                trackColor:        TrackColor is { } pt ? pt.ToPacked() : 0L,
+                p4:                0,
+                gapSize:           0f,
+                drawStopIndicator: null,
+                _composer:         composer,
+                strokeCap:         changed,
+                _changed:          (int)defaults);
             return;
         }
 

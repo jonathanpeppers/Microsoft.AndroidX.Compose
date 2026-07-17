@@ -814,17 +814,24 @@ using AndroidX.Compose;
 [assembly: ComposeDefaults("LinearProgressIndicatorDefault",
     "modifier", "color", "trackColor", "strokeCap", "gapSize")]
 
-// androidx.compose.material3.ProgressIndicatorKt.LinearProgressIndicator-2cYBFYY
-// (deprecated determinate float-progress overload). 5 user params:
-// progress is always provided so bit 0 stays cleared via the `!`
-// prefix; modifier/color/trackColor/strokeCap are optional.
+// androidx.compose.material3.ProgressIndicatorKt.LinearProgressIndicator-GJbTh5U
+// (determinate state-reading overload). 7 user params: progress is
+// always provided; all styling and drawing slots use Kotlin defaults.
 [assembly: ComposeDefaults("LinearProgressIndicatorDeterminateDefault",
-    "!progress", "modifier", "color", "trackColor", "strokeCap")]
+    "!progress", "modifier", "color", "trackColor", "strokeCap", "gapSize",
+    "drawStopIndicator")]
 
 // androidx.compose.material3.ProgressIndicatorKt.CircularProgressIndicator-4lLiAd8
 // (indeterminate). 6 user params, all optional.
 [assembly: ComposeDefaults("CircularProgressIndicatorDefault",
     "modifier", "color", "strokeWidth", "trackColor", "strokeCap", "gapSize")]
+
+// androidx.compose.material3.ProgressIndicatorKt.CircularProgressIndicator-IyT6zlY
+// (determinate state-reading overload). 7 user params: progress is
+// always provided; all styling slots use Kotlin defaults.
+[assembly: ComposeDefaults("CircularProgressIndicatorDeterminateDefault",
+    "!progress", "modifier", "color", "strokeWidth", "trackColor", "strokeCap",
+    "gapSize")]
 
 // androidx.compose.material3.CheckboxKt.Checkbox: 6 user params,
 // bit 0 = checked (always provided), bit 1 = onCheckedChange (always
