@@ -141,10 +141,79 @@ public sealed class PagerState
     /// </summary>
     public int PageCount => Jvm.PageCount;
 
+    /// <summary>
+    /// Snaps immediately to a page and waits for the pager to apply the
+    /// requested position.
+    /// </summary>
+    /// <param name="page">Non-negative destination page. Values beyond the current page count are clamped by Compose.</param>
+    /// <param name="pageOffsetFraction">Destination offset in <c>[-0.5, 0.5]</c>.</param>
+    /// <param name="cancellationToken">Cancels the returned task and the underlying Kotlin scroll operation.</param>
+    public Task ScrollToPageAsync(
+        int page,
+        float pageOffsetFraction = 0f,
+        CancellationToken cancellationToken = default)
+    {
+        ValidatePage(page);
+        ValidatePageOffsetFraction(pageOffsetFraction);
+        return SuspendBridge.Invoke(
+            cont => ComposeBridges.PagerStateScrollToPage(
+                Jvm.Handle, page, pageOffsetFraction, cont),
+            cancellationToken);
+    }
+
+    /// <summary>
+    /// Animates to a page using Compose's default spring and completes when
+    /// the pager settles.
+    /// </summary>
+    /// <param name="page">Non-negative destination page. Values beyond the current page count are clamped by Compose.</param>
+    /// <param name="pageOffsetFraction">Destination offset in <c>[-0.5, 0.5]</c>.</param>
+    /// <param name="cancellationToken">Cancels the returned task and stops the Kotlin animation at its next cancellable suspend point.</param>
+    public Task AnimateScrollToPageAsync(
+        int page,
+        float pageOffsetFraction = 0f,
+        CancellationToken cancellationToken = default)
+    {
+        ValidatePage(page);
+        ValidatePageOffsetFraction(pageOffsetFraction);
+        return SuspendBridge.Invoke(
+            cont => ComposeBridges.PagerStateAnimateScrollToPage(
+                Jvm.Handle, page, pageOffsetFraction, null, cont),
+            cancellationToken);
+    }
+
+    /// <summary>
+    /// Requests that a page become the snapped page on the next remeasure.
+    /// Any active scroll is cancelled.
+    /// </summary>
+    /// <param name="page">Non-negative destination page.</param>
+    /// <param name="pageOffsetFraction">Destination offset in <c>[-0.5, 0.5]</c>.</param>
+    public void RequestScrollToPage(int page, float pageOffsetFraction = 0f)
+    {
+        ValidatePage(page);
+        ValidatePageOffsetFraction(pageOffsetFraction);
+        Jvm.RequestScrollToPage(page, pageOffsetFraction);
+    }
+
     static int ValidatePageCount(int pageCount)
     {
         if (pageCount < 0)
             throw new ArgumentOutOfRangeException(nameof(pageCount), pageCount, "Page count must be greater than or equal to zero.");
         return pageCount;
+    }
+
+    static void ValidatePage(int page)
+    {
+        if (page < 0)
+            throw new ArgumentOutOfRangeException(
+                nameof(page), page, "Page must be greater than or equal to zero.");
+    }
+
+    static void ValidatePageOffsetFraction(float pageOffsetFraction)
+    {
+        if (!(pageOffsetFraction >= -0.5f && pageOffsetFraction <= 0.5f))
+            throw new ArgumentOutOfRangeException(
+                nameof(pageOffsetFraction),
+                pageOffsetFraction,
+                "Page offset fraction must be in the range [-0.5, 0.5].");
     }
 }

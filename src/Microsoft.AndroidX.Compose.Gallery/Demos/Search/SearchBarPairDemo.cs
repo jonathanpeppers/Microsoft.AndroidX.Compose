@@ -16,7 +16,7 @@ public static class SearchBarPairDemo
         Id:          "search-searchbar-pair",
         CategoryId:  "search",
         Title:       "SearchBar + ExpandedFullScreenSearchBar",
-        Description: "Both halves share one SearchBarState; Compose toggles the popup based on focus.",
+        Description: "Shared search/text state with programmatic expansion and text selection.",
         Build:       c =>
         {
             var state = c.Remember(() => new SearchBarState());
@@ -44,6 +44,19 @@ public static class SearchBarPairDemo
 
             return new Column
             {
+                new Row(horizontalArrangement: Arrangement.SpacedBy(8.Dp()))
+                {
+                    new Button(() => _ = state.ExpandAsync()) { new Text("Expand") },
+                    new Button(() => _ = state.CollapseAsync()) { new Text("Collapse") },
+                    new Button(() => _ = state.SnapToAsync(0.5f)) { new Text("Half") },
+                },
+                new Row(horizontalArrangement: Arrangement.SpacedBy(8.Dp()))
+                {
+                    new Button(() => input.SetText("berry")) { new Text("Set text") },
+                    new Button(() => input.SetTextAndSelectAll("banana")) { new Text("Select all") },
+                    new Button(input.ClearText) { new Text("Clear") },
+                },
+                new Text($"State: {state.CurrentValue}; target: {state.TargetValue}; progress: {state.Progress:F2}; animating: {state.IsAnimating}"),
                 new Text("Tap the bar, type a query, then press the keyboard's 🔍 Search key to filter."),
                 new Text($"Filter: \"{query}\" — {matches.Length} match{(matches.Length == 1 ? "" : "es")}"),
                 new Box

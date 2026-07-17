@@ -10,7 +10,7 @@ public static class SecureTextFieldDemo
         Id:          "text-secure-textfield",
         CategoryId:  "text-inputs",
         Title:       "SecureTextField",
-        Description: "Filled-style secure (password) input with mask + clear button.",
+        Description: "Secure input with programmatic set, select-all, and clear operations.",
         Build:       c =>
         {
             var pwd = c.Remember(() => new SecureTextFieldState());
@@ -23,6 +23,12 @@ public static class SecureTextFieldDemo
                     SupportingText = new Text("Masked input — length is the only thing the demo can see."),
                 },
                 new Text($"Length: {pwd.Text.Length}"),
+                new Row(horizontalArrangement: Arrangement.SpacedBy(8.Dp()))
+                {
+                    new Button(() => pwd.SetText("secret")) { new Text("Set") },
+                    new Button(() => pwd.SetTextAndSelectAll("replace me")) { new Text("Select all") },
+                    new Button(pwd.ClearText) { new Text("Clear") },
+                },
             };
         });
 }

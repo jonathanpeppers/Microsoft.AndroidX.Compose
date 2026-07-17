@@ -563,10 +563,10 @@ public static class ModifierExtensions
     /// the current offset from).</param>
     /// <param name="enabled">When <c>false</c>, the user can no longer
     /// scroll the content via touch gestures. <see cref="ScrollState"/>
-    /// still updates as the layout changes, but this binding does not
-    /// yet expose programmatic scrolling (Kotlin's
-    /// <c>scrollTo</c> / <c>animateScrollTo</c> are <c>suspend</c>
-    /// functions, not yet wired up).</param>
+    /// still updates as the layout changes. Programmatic scrolling through
+    /// <see cref="ScrollState.ScrollToAsync(int, CancellationToken)"/> and
+    /// <see cref="ScrollState.AnimateScrollToAsync(int, CancellationToken)"/>
+    /// remains available.</param>
     /// <param name="reverseScrolling">When <c>true</c>, flip the
     /// scroll direction so the start of the content sits at the
     /// bottom of the viewport (and dragging up reveals earlier
@@ -592,10 +592,10 @@ public static class ModifierExtensions
     /// the current offset from).</param>
     /// <param name="enabled">When <c>false</c>, the user can no longer
     /// scroll the content via touch gestures. <see cref="ScrollState"/>
-    /// still updates as the layout changes, but this binding does not
-    /// yet expose programmatic scrolling (Kotlin's
-    /// <c>scrollTo</c> / <c>animateScrollTo</c> are <c>suspend</c>
-    /// functions, not yet wired up).</param>
+    /// still updates as the layout changes. Programmatic scrolling through
+    /// <see cref="ScrollState.ScrollToAsync(int, CancellationToken)"/> and
+    /// <see cref="ScrollState.AnimateScrollToAsync(int, CancellationToken)"/>
+    /// remains available.</param>
     /// <param name="reverseScrolling">When <c>true</c>, flip the
     /// scroll direction so the start of the content sits at the end
     /// of the viewport. Defaults to <c>false</c>.</param>

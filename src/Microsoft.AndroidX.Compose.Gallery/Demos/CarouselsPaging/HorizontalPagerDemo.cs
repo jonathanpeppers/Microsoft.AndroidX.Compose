@@ -11,7 +11,7 @@ public static class HorizontalPagerDemo
         Id:          "carousels-horizontal-pager",
         CategoryId:  "carousels-paging",
         Title:       "HorizontalPager",
-        Description: "Three swipeable screens with a shared PagerState driving the indicator below.",
+        Description: "Swipe, snap, animate, or request a page through shared PagerState.",
         Build:       c =>
         {
             var items = new[] { 0, 1, 2 };
@@ -36,6 +36,21 @@ public static class HorizontalPagerDemo
                     Modifier = Modifier.FillMaxWidth().Height(200),
                 },
                 new Text($"Page {state.CurrentPage + 1} of {state.PageCount}"),
+                new Row(horizontalArrangement: Arrangement.SpacedBy(8.Dp()))
+                {
+                    new Button(() => _ = state.ScrollToPageAsync(0))
+                    {
+                        new Text("Snap first"),
+                    },
+                    new Button(() => _ = state.AnimateScrollToPageAsync(items.Length - 1))
+                    {
+                        new Text("Animate last"),
+                    },
+                    new Button(() => state.RequestScrollToPage(1, 0.25f))
+                    {
+                        new Text("Request middle + offset"),
+                    },
+                },
             };
         });
 }

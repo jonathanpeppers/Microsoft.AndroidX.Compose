@@ -10,52 +10,59 @@ public static class ModalWideNavigationRailDemo
         Id:          "navigation-rail-modal",
         CategoryId:  "navigation",
         Title:       "ModalWideNavigationRail",
-        Description: "Overlay rail; tap an item or the Close row to dismiss.",
+        Description: "Overlay rail driven by expandable, collapsible, toggle, and snap state APIs.",
         Build:       c =>
         {
             var idx     = c.MutableStateOf(0);
-            var visible = c.MutableStateOf(false);
+            var collapsed = AndroidX.Compose.Material3.WideNavigationRailValue.Collapsed
+                ?? throw new InvalidOperationException(
+                    "WideNavigationRailValue.Collapsed was unavailable.");
+            var state = c.Remember(() => new WideNavigationRailState(
+                collapsed));
             return new Column
             {
-                new Text($"ModalWideNavigationRail (selected: {idx})"),
-                new Row
+                new Text($"ModalWideNavigationRail (selected: {idx}; target: {state.TargetValue}; animating: {state.IsAnimating})"),
+                new Row(horizontalArrangement: Arrangement.SpacedBy(8.Dp()))
                 {
-                    new Button(onClick: () => visible.Value = !visible.Value)
-                    {
-                        new Text(visible.Value ? "Hide modal rail" : "Open modal rail"),
-                    },
+                    new Button(() => _ = state.ExpandAsync()) { new Text("Expand") },
+                    new Button(() => _ = state.CollapseAsync()) { new Text("Collapse") },
+                    new Button(() => _ = state.ToggleAsync()) { new Text("Toggle") },
                 },
-                visible.Value
-                    ? new ModalWideNavigationRail
+                new Box
+                {
+                    Modifier.FillMaxWidth().Height(320),
+                    new ModalWideNavigationRail(state)
                     {
                         new WideNavigationRailItem(
                             selected: idx.Value == 0,
-                            onClick:  () => { idx.Value = 0; visible.Value = false; })
+                            onClick:  () => idx.Value = 0)
                         {
                             Icon  = new Text("🏠"),
                             Label = new Text("Home"),
                         },
                         new WideNavigationRailItem(
                             selected: idx.Value == 1,
-                            onClick:  () => { idx.Value = 1; visible.Value = false; })
+                            onClick:  () => idx.Value = 1)
                         {
                             Icon  = new Text("🔍"),
                             Label = new Text("Search"),
                         },
                         new WideNavigationRailItem(
                             selected: idx.Value == 2,
-                            onClick:  () => { idx.Value = 2; visible.Value = false; })
+                            onClick:  () => idx.Value = 2)
                         {
                             Icon  = new Text("⚙"),
                             Label = new Text("Settings"),
                         },
-                        new WideNavigationRailItem(selected: false, onClick: () => visible.Value = false)
+                        new WideNavigationRailItem(
+                            selected: false,
+                            onClick: () => _ = state.SnapToAsync(collapsed))
                         {
                             Icon  = new Text("✕"),
                             Label = new Text("Close"),
                         },
-                    }
-                    : (ComposableNode?)null,
+                    },
+                },
             };
         });
 }

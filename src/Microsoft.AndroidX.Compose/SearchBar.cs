@@ -72,8 +72,12 @@ public sealed class SearchBar : ComposableNode
         if (state.Jvm is not null)
             return state.Jvm.Handle;
 
-        var handle = ComposeBridges.RememberSearchBarState(composer);
-        state.Jvm = Java.Lang.Object.GetObject<Java.Lang.Object>(handle, JniHandleOwnership.DoNotTransfer)!;
+        var handle = ComposeBridges.RememberSearchBarState(state.InitialValue, composer);
+        state.Jvm = Java.Lang.Object.GetObject<AndroidX.Compose.Material3.SearchBarState>(
+            handle,
+            JniHandleOwnership.DoNotTransfer)
+            ?? throw new InvalidOperationException(
+                "rememberSearchBarState did not return a SearchBarState peer.");
         return handle;
     }
 }

@@ -1167,6 +1167,13 @@ using AndroidX.Compose;
 [assembly: ComposeDefaults("CarouselStateAnimateScrollToItemDefault",
     "!item", "animationSpec")]
 
+// androidx.compose.foundation.pager.PagerState.animateScrollToPage$default —
+// instance suspend function lowered to a static default helper. The receiver
+// and Continuation are shape parameters; page and pageOffsetFraction are
+// always supplied, while animationSpec uses Compose's default spring.
+[assembly: ComposeDefaults("PagerStateAnimateScrollToPageDefault",
+    "!page", "!pageOffsetFraction", "animationSpec")]
+
 // androidx.compose.foundation.gestures.TapGestureDetectorKt.detectTapGestures$default —
 // suspend extension with four defaultable callback params. All four
 // callbacks are nullable; the auto-default-mask leaves a bit set when

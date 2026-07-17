@@ -3374,7 +3374,7 @@ internal static partial class ComposeBridges
     // androidx.compose.material3.SearchBarKt.rememberSearchBarState —
     // factory @Composable that produces a `SearchBarState`. 3 user params:
     // initialValue (enum), animationSpecForExpand, animationSpecForCollapse.
-    // The wrapper defaults all three (initialValue defaults to Collapsed).
+    // The wrapper supplies initialValue and defaults both animation specs.
     [ComposeBridge(
         Class     = "androidx/compose/material3/SearchBarKt",
         JvmName   = "rememberSearchBarState",
@@ -3384,7 +3384,9 @@ internal static partial class ComposeBridges
                     "Landroidx/compose/runtime/Composer;II)" +
                     "Landroidx/compose/material3/SearchBarState;",
         Defaults  = typeof(RememberSearchBarStateDefault))]
-    public static partial IntPtr RememberSearchBarState(IComposer composer);
+    public static partial IntPtr RememberSearchBarState(
+        AndroidX.Compose.Material3.SearchBarValue? initialValue,
+        IComposer composer);
 
     // androidx.compose.material3.SearchBarKt.SearchBar-nbWgWpA — the
     // state-based collapsed search bar. 7 user params: state, inputField
