@@ -499,6 +499,24 @@ using AndroidX.Compose;
     "!selected", "!onClick", "!icon", "modifier", "enabled", "label",
     "alwaysShowLabel", "colors", "interactionSource")]
 
+// androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffoldKt.
+// The primary overload has 11 Kotlin parameters. NavigationItems, State, and
+// Content are always supplied by the generated facade; all other slots retain
+// their Kotlin defaults unless surfaced by the wrapper.
+[assembly: ComposeDefaults("NavigationSuiteScaffoldDefault",
+    "!navigationItems", "modifier", "navigationSuiteType",
+    "navigationSuiteColors", "containerColor", "contentColor", "!state",
+    "navigationItemVerticalArrangement", "primaryActionContent",
+    "primaryActionContentHorizontalAlignment", "!content")]
+
+// NavigationSuiteItem has 10 Kotlin parameters. Selected, OnClick, and Icon
+// are required. The generated facade surfaces Label, Badge, Enabled, Colors,
+// Modifier, and an optional explicit NavigationSuiteType.
+[assembly: ComposeDefaults("NavigationSuiteItemDefault",
+    "!selected", "!onClick", "!icon", "label", "modifier",
+    "navigationSuiteType", "enabled", "badge", "colors",
+    "interactionSource")]
+
 // androidx.compose.material3.NavigationDrawerKt.NavigationDrawerItem:
 // 9 user params (no extension receiver). Bits 0 = label, 1 = selected,
 // 2 = onClick are required and always provided by the caller; the

@@ -961,6 +961,45 @@ AndroidX.Compose.NavigationRailItem.Icon.set -> void
 AndroidX.Compose.NavigationRailItem.Label.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.NavigationRailItem.Label.set -> void
 AndroidX.Compose.NavigationRailItem.NavigationRailItem(bool selected, System.Action! onClick, bool enabled = true, bool alwaysShowLabel = true) -> void
+AndroidX.Compose.NavigationSuiteItem
+AndroidX.Compose.NavigationSuiteItem.Badge.get -> AndroidX.Compose.ComposableNode?
+AndroidX.Compose.NavigationSuiteItem.Badge.set -> void
+AndroidX.Compose.NavigationSuiteItem.Colors.get -> AndroidX.Compose.Material3.NavigationItemColors?
+AndroidX.Compose.NavigationSuiteItem.Colors.set -> void
+AndroidX.Compose.NavigationSuiteItem.Icon.get -> AndroidX.Compose.ComposableNode!
+AndroidX.Compose.NavigationSuiteItem.Icon.set -> void
+AndroidX.Compose.NavigationSuiteItem.Label.get -> AndroidX.Compose.ComposableNode?
+AndroidX.Compose.NavigationSuiteItem.Label.set -> void
+AndroidX.Compose.NavigationSuiteItem.NavigationSuiteItem(bool selected, System.Action! onClick, bool enabled = true) -> void
+AndroidX.Compose.NavigationSuiteItem.NavigationSuiteType.get -> AndroidX.Compose.NavigationSuiteType?
+AndroidX.Compose.NavigationSuiteItem.NavigationSuiteType.set -> void
+AndroidX.Compose.NavigationSuiteScaffold
+AndroidX.Compose.NavigationSuiteScaffold.Content.get -> AndroidX.Compose.ComposableNode!
+AndroidX.Compose.NavigationSuiteScaffold.Content.set -> void
+AndroidX.Compose.NavigationSuiteScaffold.NavigationSuiteColors.get -> AndroidX.Compose.Material3.Adaptive.NavigationSuite.NavigationSuiteColors?
+AndroidX.Compose.NavigationSuiteScaffold.NavigationSuiteColors.set -> void
+AndroidX.Compose.NavigationSuiteScaffold.NavigationSuiteScaffold(AndroidX.Compose.NavigationSuiteScaffoldState? state = null) -> void
+AndroidX.Compose.NavigationSuiteScaffold.NavigationSuiteType.get -> AndroidX.Compose.NavigationSuiteType?
+AndroidX.Compose.NavigationSuiteScaffold.NavigationSuiteType.set -> void
+AndroidX.Compose.NavigationSuiteScaffoldState
+AndroidX.Compose.NavigationSuiteScaffoldState.CurrentValue.get -> AndroidX.Compose.Material3.Adaptive.NavigationSuite.NavigationSuiteScaffoldValue!
+AndroidX.Compose.NavigationSuiteScaffoldState.HideAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+AndroidX.Compose.NavigationSuiteScaffoldState.InitialValue.get -> AndroidX.Compose.Material3.Adaptive.NavigationSuite.NavigationSuiteScaffoldValue!
+AndroidX.Compose.NavigationSuiteScaffoldState.IsAnimating.get -> bool
+AndroidX.Compose.NavigationSuiteScaffoldState.NavigationSuiteScaffoldState(AndroidX.Compose.Material3.Adaptive.NavigationSuite.NavigationSuiteScaffoldValue? initialValue = null) -> void
+AndroidX.Compose.NavigationSuiteScaffoldState.ShowAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+AndroidX.Compose.NavigationSuiteScaffoldState.SnapToAsync(AndroidX.Compose.Material3.Adaptive.NavigationSuite.NavigationSuiteScaffoldValue! targetValue, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+AndroidX.Compose.NavigationSuiteScaffoldState.TargetValue.get -> AndroidX.Compose.Material3.Adaptive.NavigationSuite.NavigationSuiteScaffoldValue!
+AndroidX.Compose.NavigationSuiteScaffoldState.ToggleAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+AndroidX.Compose.NavigationSuiteType
+AndroidX.Compose.NavigationSuiteType.NavigationBar = 4 -> AndroidX.Compose.NavigationSuiteType
+AndroidX.Compose.NavigationSuiteType.NavigationDrawer = 6 -> AndroidX.Compose.NavigationSuiteType
+AndroidX.Compose.NavigationSuiteType.NavigationRail = 5 -> AndroidX.Compose.NavigationSuiteType
+AndroidX.Compose.NavigationSuiteType.None = 7 -> AndroidX.Compose.NavigationSuiteType
+AndroidX.Compose.NavigationSuiteType.ShortNavigationBarCompact = 0 -> AndroidX.Compose.NavigationSuiteType
+AndroidX.Compose.NavigationSuiteType.ShortNavigationBarMedium = 1 -> AndroidX.Compose.NavigationSuiteType
+AndroidX.Compose.NavigationSuiteType.WideNavigationRailCollapsed = 2 -> AndroidX.Compose.NavigationSuiteType
+AndroidX.Compose.NavigationSuiteType.WideNavigationRailExpanded = 3 -> AndroidX.Compose.NavigationSuiteType
 AndroidX.Compose.Offset
 AndroidX.Compose.Offset.Equals(AndroidX.Compose.Offset other) -> bool
 AndroidX.Compose.Offset.Offset() -> void
@@ -1714,6 +1753,8 @@ override AndroidX.Compose.NavigationBarItem.Render(AndroidX.Compose.Runtime.ICom
 override AndroidX.Compose.NavigationDrawerItem.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
 override AndroidX.Compose.NavigationRail.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
 override AndroidX.Compose.NavigationRailItem.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override AndroidX.Compose.NavigationSuiteItem.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override AndroidX.Compose.NavigationSuiteScaffold.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
 override AndroidX.Compose.Offset.Equals(object? obj) -> bool
 override AndroidX.Compose.Offset.GetHashCode() -> int
 override AndroidX.Compose.Offset.ToString() -> string!
@@ -1950,6 +1991,8 @@ static AndroidX.Compose.Composables.NavigationBarsInsets() -> AndroidX.Compose.W
 static AndroidX.Compose.Composables.NavigationDrawerItem(bool selected, System.Action! onClick, System.Action! label, AndroidX.Compose.Modifier? modifier = null, System.Action? icon = null, System.Action? badge = null) -> void
 static AndroidX.Compose.Composables.NavigationRail(System.Action! content, AndroidX.Compose.Modifier? modifier = null) -> void
 static AndroidX.Compose.Composables.NavigationRailItem(bool selected, System.Action! onClick, System.Action! icon, bool enabled = true, bool alwaysShowLabel = true, AndroidX.Compose.Modifier? modifier = null, System.Action? label = null) -> void
+static AndroidX.Compose.Composables.NavigationSuiteItem(bool selected, System.Action! onClick, System.Action! icon, bool enabled = true, AndroidX.Compose.Modifier? modifier = null, System.Action? label = null, System.Action? badge = null, AndroidX.Compose.NavigationSuiteType? navigationSuiteType = null, AndroidX.Compose.Material3.NavigationItemColors? colors = null) -> void
+static AndroidX.Compose.Composables.NavigationSuiteScaffold(System.Action! content, System.Action! navigationItems, AndroidX.Compose.NavigationSuiteScaffoldState? state = null, AndroidX.Compose.Modifier? modifier = null, AndroidX.Compose.NavigationSuiteType? navigationSuiteType = null, AndroidX.Compose.Material3.Adaptive.NavigationSuite.NavigationSuiteColors? navigationSuiteColors = null) -> void
 static AndroidX.Compose.Composables.OutlinedButton(System.Action! onClick, System.Action! content, bool enabled = true, AndroidX.Compose.Modifier? modifier = null, AndroidX.Compose.Shape? shape = null, AndroidX.Compose.Material3.ButtonColors? colors = null, AndroidX.Compose.PaddingValues? contentPadding = null) -> void
 static AndroidX.Compose.Composables.OutlinedCard(System.Action! content, AndroidX.Compose.Shape? shape = null) -> void
 static AndroidX.Compose.Composables.OutlinedIconButton(System.Action! onClick, System.Action! content, bool enabled = true, AndroidX.Compose.Modifier? modifier = null, AndroidX.Compose.Shape? shape = null) -> void

@@ -70,6 +70,8 @@
     <PackageReference Include="Xamarin.AndroidX.Compose.Material3Android" />
     <PackageReference Include="Xamarin.AndroidX.Compose.Material3.Adaptive" />
     <PackageReference Include="Xamarin.AndroidX.Compose.Material3.AdaptiveAndroid" />
+    <PackageReference Include="Xamarin.AndroidX.Compose.Material3.Adaptive.NavigationSuite" />
+    <PackageReference Include="Xamarin.AndroidX.Compose.Material3.Adaptive.NavigationSuiteAndroid" />
     <PackageReference Include="Xamarin.AndroidX.Compose.Material.Icons.Core" />
     <PackageReference Include="Xamarin.AndroidX.Compose.Material.Icons.Core.Android" />
     <PackageReference Include="Xamarin.AndroidX.Navigation.Common" />

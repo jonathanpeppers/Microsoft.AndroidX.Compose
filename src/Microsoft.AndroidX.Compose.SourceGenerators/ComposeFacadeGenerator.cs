@@ -262,7 +262,8 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         // as a multi-slot LEAF (named properties). Otherwise stick with
         // the Phase 1 "container with children" shape.
         // Hybrid container exception: exactly 1 non-nullable Fn2/Fn3
-        // (without [Slot]) PLUS 1+ nullable Fn2/3 slots, AND either:
+        // (without [Slot]) PLUS 1+ named Fn2/3 slots (nullable or explicitly
+        // marked [Slot]), AND either:
         //   (a) `[ComposeFacade(Scope = "...")]` is set — disambiguates
         //       from leafs that happen to have a required Fn2 label
         //       slot (e.g. AssistChip). Only valid when the body slot
@@ -282,16 +283,16 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
                 s.Kind == FacadeSlotKind.Content2 &&
                 s.Param.NullableAnnotation != NullableAnnotation.Annotated &&
                 !s.HasSlotAttribute).ToArray();
-            var nullableContent = slots.Where(s =>
+            var namedContent = slots.Where(s =>
                 s.Kind is FacadeSlotKind.Content2 or FacadeSlotKind.Content3 &&
-                s.Param.NullableAnnotation == NullableAnnotation.Annotated).ToArray();
+                (s.Param.NullableAnnotation == NullableAnnotation.Annotated ||
+                 s.HasSlotAttribute)).ToArray();
             // Scope path: Fn3 body only.
             if (!string.IsNullOrEmpty(scope))
             {
                 isHybridContainer =
                     nonNullableFn3.Length == 1 &&
-                    nullableContent.Length >= 1 &&
-                    !slots.Any(s => s.HasSlotAttribute);
+                    namedContent.Length >= 1;
             }
             // Container=true path: accept either Fn2 or Fn3 body.
             else if (containerOptIn)
@@ -299,8 +300,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
                 int totalBodies = nonNullableFn3.Length + nonNullableFn2.Length;
                 isHybridContainer =
                     totalBodies == 1 &&
-                    nullableContent.Length >= 1 &&
-                    !slots.Any(s => s.HasSlotAttribute);
+                    namedContent.Length >= 1;
             }
         }
         if (hasMultiSlot)

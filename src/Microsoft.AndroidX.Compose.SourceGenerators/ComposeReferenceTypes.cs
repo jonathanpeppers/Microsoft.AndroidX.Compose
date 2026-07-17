@@ -45,6 +45,8 @@ internal static class ComposeReferenceTypes
         "AndroidX.Compose.Material3.CheckboxColors",
         "AndroidX.Compose.Material3.RadioButtonColors",
         "AndroidX.Compose.Material3.SwitchColors",
+        "AndroidX.Compose.Material3.NavigationItemColors",
+        "AndroidX.Compose.Material3.Adaptive.NavigationSuite.NavigationSuiteColors",
         "AndroidX.Compose.UI.Text.TextStyle",
         "AndroidX.Compose.UI.Text.Input.IVisualTransformation",
         "AndroidX.Compose.Foundation.Text.KeyboardOptions",
