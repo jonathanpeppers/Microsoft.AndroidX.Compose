@@ -51,8 +51,7 @@ public sealed class CarouselState
     /// <summary>Snaps immediately to the requested item.</summary>
     /// <param name="item">Zero-based target item index.</param>
     /// <param name="cancellationToken">
-    /// Cancels the returned task; the Kotlin operation continues to natural
-    /// completion.
+    /// Cancels the returned task and the underlying Kotlin scroll operation.
     /// </param>
     public Task ScrollToItemAsync(
         int item,
@@ -67,8 +66,8 @@ public sealed class CarouselState
     /// </summary>
     /// <param name="item">Zero-based target item index.</param>
     /// <param name="cancellationToken">
-    /// Cancels the returned task; the Kotlin operation continues to natural
-    /// completion.
+    /// Cancels the returned task and stops the Kotlin animation at its next
+    /// cancellable suspend point.
     /// </param>
     public Task AnimateScrollToItemAsync(
         int item,

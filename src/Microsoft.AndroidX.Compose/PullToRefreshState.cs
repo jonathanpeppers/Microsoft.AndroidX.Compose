@@ -58,4 +58,42 @@ public sealed class PullToRefreshState
     /// <c>false</c> until the state is bound.
     /// </summary>
     public bool IsAnimating => Jvm?.IsAnimating ?? false;
+
+    /// <summary>Animates the indicator back to its hidden resting position.</summary>
+    /// <param name="cancellationToken">Cancels the returned task and stops the Kotlin animation at its next cancellable suspend point.</param>
+    public Task AnimateToHiddenAsync(CancellationToken cancellationToken = default) =>
+        SuspendBridge.Invoke(
+            cont => ComposeBridges.PullToRefreshStateAnimateToHidden(
+                ((Java.Lang.Object)RequireJvm()).Handle, cont),
+            cancellationToken);
+
+    /// <summary>Animates the indicator to the refresh threshold.</summary>
+    /// <param name="cancellationToken">Cancels the returned task and stops the Kotlin animation at its next cancellable suspend point.</param>
+    public Task AnimateToThresholdAsync(CancellationToken cancellationToken = default) =>
+        SuspendBridge.Invoke(
+            cont => ComposeBridges.PullToRefreshStateAnimateToThreshold(
+                ((Java.Lang.Object)RequireJvm()).Handle, cont),
+            cancellationToken);
+
+    /// <summary>Snaps the indicator to a non-negative threshold fraction.</summary>
+    /// <param name="targetValue"><c>0</c> hides the indicator, <c>1</c> places it at the threshold, and values greater than <c>1</c> represent overshoot.</param>
+    /// <param name="cancellationToken">Cancels the returned task and the underlying Kotlin operation.</param>
+    public Task SnapToAsync(
+        float targetValue,
+        CancellationToken cancellationToken = default)
+    {
+        if (!(targetValue >= 0f))
+            throw new ArgumentOutOfRangeException(
+                nameof(targetValue),
+                targetValue,
+                "Target value must be greater than or equal to zero.");
+        return SuspendBridge.Invoke(
+            cont => ComposeBridges.PullToRefreshStateSnapTo(
+                ((Java.Lang.Object)RequireJvm()).Handle, targetValue, cont),
+            cancellationToken);
+    }
+
+    IPullToRefreshState RequireJvm() =>
+        Jvm ?? throw new InvalidOperationException(
+            "PullToRefreshState is not bound. Render it with PullToRefreshBox before controlling it.");
 }

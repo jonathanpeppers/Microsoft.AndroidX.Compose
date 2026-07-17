@@ -1035,10 +1035,13 @@ AndroidX.Compose.PaddingValues.PaddingValues(AndroidX.Compose.Dp horizontal, And
 AndroidX.Compose.PaddingValues.PaddingValues(AndroidX.Compose.Dp start = default(AndroidX.Compose.Dp), AndroidX.Compose.Dp top = default(AndroidX.Compose.Dp), AndroidX.Compose.Dp end = default(AndroidX.Compose.Dp), AndroidX.Compose.Dp bottom = default(AndroidX.Compose.Dp)) -> void
 AndroidX.Compose.PaddingValues.Top.get -> AndroidX.Compose.Dp
 AndroidX.Compose.PagerState
+AndroidX.Compose.PagerState.AnimateScrollToPageAsync(int page, float pageOffsetFraction = 0, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
 AndroidX.Compose.PagerState.CurrentPage.get -> int
 AndroidX.Compose.PagerState.CurrentPageOffsetFraction.get -> float
 AndroidX.Compose.PagerState.PageCount.get -> int
 AndroidX.Compose.PagerState.PagerState(System.Func<int>! pageCount, int initialPage = 0, float initialPageOffsetFraction = 0) -> void
+AndroidX.Compose.PagerState.RequestScrollToPage(int page, float pageOffsetFraction = 0) -> void
+AndroidX.Compose.PagerState.ScrollToPageAsync(int page, float pageOffsetFraction = 0, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
 AndroidX.Compose.PagerState.SettledPage.get -> int
 AndroidX.Compose.PagerState.TargetPage.get -> int
 AndroidX.Compose.Path
@@ -1118,9 +1121,12 @@ AndroidX.Compose.PullToRefreshIndicator.MaxDistance.get -> AndroidX.Compose.Dp?
 AndroidX.Compose.PullToRefreshIndicator.MaxDistance.set -> void
 AndroidX.Compose.PullToRefreshIndicator.PullToRefreshIndicator(AndroidX.Compose.PullToRefreshState! state, bool isRefreshing) -> void
 AndroidX.Compose.PullToRefreshState
+AndroidX.Compose.PullToRefreshState.AnimateToHiddenAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+AndroidX.Compose.PullToRefreshState.AnimateToThresholdAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
 AndroidX.Compose.PullToRefreshState.DistanceFraction.get -> float
 AndroidX.Compose.PullToRefreshState.IsAnimating.get -> bool
 AndroidX.Compose.PullToRefreshState.PullToRefreshState() -> void
+AndroidX.Compose.PullToRefreshState.SnapToAsync(float targetValue, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
 AndroidX.Compose.RadioButton
 AndroidX.Compose.RadioButton.Colors.get -> AndroidX.Compose.Material3.RadioButtonColors?
 AndroidX.Compose.RadioButton.Colors.set -> void
@@ -1189,9 +1195,21 @@ AndroidX.Compose.SearchBarInputField.SearchBarInputField(AndroidX.Compose.Search
 AndroidX.Compose.SearchBarInputField.TrailingIcon.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.SearchBarInputField.TrailingIcon.set -> void
 AndroidX.Compose.SearchBarState
+AndroidX.Compose.SearchBarState.CollapseAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+AndroidX.Compose.SearchBarState.CurrentValue.get -> AndroidX.Compose.Material3.SearchBarValue!
+AndroidX.Compose.SearchBarState.ExpandAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+AndroidX.Compose.SearchBarState.InitialValue.get -> AndroidX.Compose.Material3.SearchBarValue!
+AndroidX.Compose.SearchBarState.IsAnimating.get -> bool
+AndroidX.Compose.SearchBarState.Progress.get -> float
 AndroidX.Compose.SearchBarState.SearchBarState() -> void
+AndroidX.Compose.SearchBarState.SearchBarState(AndroidX.Compose.Material3.SearchBarValue! initialValue) -> void
+AndroidX.Compose.SearchBarState.SnapToAsync(float fraction, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
+AndroidX.Compose.SearchBarState.TargetValue.get -> AndroidX.Compose.Material3.SearchBarValue!
 AndroidX.Compose.SearchBarTextFieldState
+AndroidX.Compose.SearchBarTextFieldState.ClearText() -> void
 AndroidX.Compose.SearchBarTextFieldState.SearchBarTextFieldState(string! initialText = "") -> void
+AndroidX.Compose.SearchBarTextFieldState.SetText(string! text) -> void
+AndroidX.Compose.SearchBarTextFieldState.SetTextAndSelectAll(string! text) -> void
 AndroidX.Compose.SearchBarTextFieldState.Text.get -> string!
 AndroidX.Compose.SecondaryScrollableTabRow
 AndroidX.Compose.SecondaryScrollableTabRow.SecondaryScrollableTabRow(int selectedTabIndex) -> void
@@ -1216,7 +1234,10 @@ AndroidX.Compose.SecureTextField.SupportingText.set -> void
 AndroidX.Compose.SecureTextField.TrailingIcon.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.SecureTextField.TrailingIcon.set -> void
 AndroidX.Compose.SecureTextFieldState
+AndroidX.Compose.SecureTextFieldState.ClearText() -> void
 AndroidX.Compose.SecureTextFieldState.SecureTextFieldState(string! initialText = "") -> void
+AndroidX.Compose.SecureTextFieldState.SetText(string! text) -> void
+AndroidX.Compose.SecureTextFieldState.SetTextAndSelectAll(string! text) -> void
 AndroidX.Compose.SecureTextFieldState.Text.get -> string!
 AndroidX.Compose.SegmentedButton
 AndroidX.Compose.SegmentedButton.Icon.get -> AndroidX.Compose.ComposableNode?
@@ -1289,10 +1310,18 @@ AndroidX.Compose.Snackbar.Body.set -> void
 AndroidX.Compose.Snackbar.DismissAction.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.Snackbar.DismissAction.set -> void
 AndroidX.Compose.Snackbar.Snackbar(bool actionOnNewLine = false) -> void
+AndroidX.Compose.SnackbarDuration
+AndroidX.Compose.SnackbarDuration.Indefinite = 2 -> AndroidX.Compose.SnackbarDuration
+AndroidX.Compose.SnackbarDuration.Long = 1 -> AndroidX.Compose.SnackbarDuration
+AndroidX.Compose.SnackbarDuration.Short = 0 -> AndroidX.Compose.SnackbarDuration
 AndroidX.Compose.SnackbarHost
 AndroidX.Compose.SnackbarHost.SnackbarHost(AndroidX.Compose.SnackbarHostState! hostState) -> void
 AndroidX.Compose.SnackbarHostState
+AndroidX.Compose.SnackbarHostState.ShowSnackbarAsync(string! message, string? actionLabel = null, bool withDismissAction = false, AndroidX.Compose.SnackbarDuration? duration = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<AndroidX.Compose.SnackbarResult>!
 AndroidX.Compose.SnackbarHostState.SnackbarHostState() -> void
+AndroidX.Compose.SnackbarResult
+AndroidX.Compose.SnackbarResult.ActionPerformed = 1 -> AndroidX.Compose.SnackbarResult
+AndroidX.Compose.SnackbarResult.Dismissed = 0 -> AndroidX.Compose.SnackbarResult
 AndroidX.Compose.Sp
 AndroidX.Compose.Sp.CompareTo(AndroidX.Compose.Sp other) -> int
 AndroidX.Compose.Sp.Equals(AndroidX.Compose.Sp other) -> bool
@@ -1527,9 +1556,14 @@ AndroidX.Compose.WideNavigationRailItem.Label.get -> AndroidX.Compose.Composable
 AndroidX.Compose.WideNavigationRailItem.Label.set -> void
 AndroidX.Compose.WideNavigationRailItem.WideNavigationRailItem(bool selected, System.Action! onClick, bool enabled = true) -> void
 AndroidX.Compose.WideNavigationRailState
+AndroidX.Compose.WideNavigationRailState.CollapseAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
 AndroidX.Compose.WideNavigationRailState.CurrentValue.get -> AndroidX.Compose.Material3.WideNavigationRailValue!
+AndroidX.Compose.WideNavigationRailState.ExpandAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
 AndroidX.Compose.WideNavigationRailState.InitialValue.get -> AndroidX.Compose.Material3.WideNavigationRailValue!
+AndroidX.Compose.WideNavigationRailState.IsAnimating.get -> bool
+AndroidX.Compose.WideNavigationRailState.SnapToAsync(AndroidX.Compose.Material3.WideNavigationRailValue! targetValue, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
 AndroidX.Compose.WideNavigationRailState.TargetValue.get -> AndroidX.Compose.Material3.WideNavigationRailValue!
+AndroidX.Compose.WideNavigationRailState.ToggleAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task!
 AndroidX.Compose.WideNavigationRailState.WideNavigationRailState(AndroidX.Compose.Material3.WideNavigationRailValue? initialValue = null) -> void
 AndroidX.Compose.WindowInsets
 AndroidX.Compose.WindowInsets.Add(AndroidX.Compose.WindowInsets! insets) -> AndroidX.Compose.WindowInsets!

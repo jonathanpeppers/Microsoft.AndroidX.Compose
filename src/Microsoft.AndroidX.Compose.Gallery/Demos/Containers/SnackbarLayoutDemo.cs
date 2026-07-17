@@ -10,10 +10,12 @@ public static class SnackbarLayoutDemo
         Id:          "containers-snackbar-layout",
         CategoryId:  "containers",
         Title:       "Snackbar action layout",
-        Description: "Toggle whether the action is placed on a new line.",
+        Description: "Static layout plus queued SnackbarHostState messages and results.",
         Build:       c =>
         {
             var newLine = c.MutableStateOf(false);
+            var host = c.Remember(() => new SnackbarHostState());
+            var result = c.MutableStateOf("No snackbar shown");
             return new Column
             {
                 new Row(horizontalArrangement: Arrangement.SpacedBy(8.Dp()),
@@ -27,6 +29,20 @@ public static class SnackbarLayoutDemo
                     Body = new Text("A message with an action"),
                     Action = new Text("UNDO"),
                 },
+                new Button(async () =>
+                {
+                    var value = await host.ShowSnackbarAsync(
+                        "Saved",
+                        actionLabel: "Undo",
+                        withDismissAction: true,
+                        duration: SnackbarDuration.Long);
+                    result.Value = $"Result: {value}";
+                })
+                {
+                    new Text("Show queued snackbar"),
+                },
+                new Text(result.Value),
+                new SnackbarHost(host),
             };
         });
 }

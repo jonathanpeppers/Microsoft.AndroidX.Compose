@@ -48,7 +48,8 @@ namespace AndroidX.Compose;
 /// </remarks>
 public sealed class SearchBarTextFieldState
 {
-    readonly string _initialText;
+    string _pendingText;
+    bool _selectAllPending;
 
     // Bound peer for the JVM androidx.compose.foundation.text.input.TextFieldState.
     // Set on first SearchBarInputField render and reused by every subsequent
@@ -59,16 +60,58 @@ public sealed class SearchBarTextFieldState
     /// Creates a state holder with an optional initial text value
     /// (defaults to the empty string).
     /// </summary>
-    public SearchBarTextFieldState(string initialText = "") =>
-        _initialText = initialText;
+    public SearchBarTextFieldState(string initialText = "")
+    {
+        ArgumentNullException.ThrowIfNull(initialText);
+        _pendingText = initialText;
+    }
 
     /// <summary>
     /// Current text in the search input. Reads through to the live
     /// JVM <c>TextFieldState.text</c> (a Compose snapshot value), so
     /// reading this inside composition subscribes to recomposition.
-    /// Returns the initial value before the first render binds the peer.
+    /// Before the first render binds the peer, returns the latest pending
+    /// value from construction or a text mutation method.
     /// </summary>
-    public string Text => Jvm?.Text ?? _initialText;
+    public string Text => Jvm?.Text ?? _pendingText;
+
+    /// <summary>Replaces the text and places the cursor at the end.</summary>
+    public void SetText(string text)
+    {
+        ArgumentNullException.ThrowIfNull(text);
+        if (Jvm is null)
+        {
+            _pendingText = text;
+            _selectAllPending = false;
+            return;
+        }
+        TextFieldStateKt.SetTextAndPlaceCursorAtEnd(Jvm, text);
+    }
+
+    /// <summary>Replaces the text and selects the complete value.</summary>
+    public void SetTextAndSelectAll(string text)
+    {
+        ArgumentNullException.ThrowIfNull(text);
+        if (Jvm is null)
+        {
+            _pendingText = text;
+            _selectAllPending = true;
+            return;
+        }
+        TextFieldStateKt.SetTextAndSelectAll(Jvm, text);
+    }
+
+    /// <summary>Clears the text and leaves the cursor at the end.</summary>
+    public void ClearText()
+    {
+        if (Jvm is null)
+        {
+            _pendingText = "";
+            _selectAllPending = false;
+            return;
+        }
+        TextFieldStateKt.ClearText(Jvm);
+    }
 
     // Lazy-resolve the bound JVM peer. Multiple SearchBarInputField
     // siblings sharing this state hit the JNI bridge once on the FIRST
@@ -78,9 +121,12 @@ public sealed class SearchBarTextFieldState
         if (Jvm is not null)
             return Jvm;
 
-        // Bit 1 = default initialSelection (Kotlin places the cursor at
-        // the end of initialText). initialText is provided explicitly.
-        Jvm = TextFieldStateKt.RememberTextFieldState(_initialText, 0L, composer, 0, 2);
+        long selection = _selectAllPending
+            ? AndroidX.Compose.UI.Text.TextRangeKt.TextRange(0, _pendingText.Length)
+            : 0L;
+        int defaults = _selectAllPending ? 0 : 2;
+        Jvm = TextFieldStateKt.RememberTextFieldState(
+            _pendingText, selection, composer, 0, defaults);
         return Jvm;
     }
 }

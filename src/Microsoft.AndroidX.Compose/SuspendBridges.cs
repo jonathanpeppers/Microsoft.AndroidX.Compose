@@ -144,6 +144,109 @@ internal static partial class ComposeBridges
         IntPtr state, int item, IntPtr? animationSpec, IContinuation cont);
 
     [ComposeBridge(Suspend = true,
+        Class = "androidx/compose/foundation/pager/PagerState",
+        JvmName = "scrollToPage",
+        Signature = "(IFLkotlin/coroutines/Continuation;)Ljava/lang/Object;")]
+    internal static partial IntPtr PagerStateScrollToPage(
+        IntPtr state, int page, float pageOffsetFraction, IContinuation cont);
+
+    [ComposeBridge(Suspend = true,
+        Class = "androidx/compose/foundation/pager/PagerState",
+        JvmName = "animateScrollToPage$default",
+        Signature = "(Landroidx/compose/foundation/pager/PagerState;IFLandroidx/compose/animation/core/AnimationSpec;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;",
+        Defaults = typeof(PagerStateAnimateScrollToPageDefault))]
+    internal static partial IntPtr PagerStateAnimateScrollToPage(
+        IntPtr state,
+        int page,
+        float pageOffsetFraction,
+        IntPtr? animationSpec,
+        IContinuation cont);
+
+    [ComposeBridge(Suspend = true,
+        Class = "androidx/compose/material3/pulltorefresh/PullToRefreshState",
+        JvmName = "animateToHidden",
+        Signature = "(Lkotlin/coroutines/Continuation;)Ljava/lang/Object;")]
+    internal static partial IntPtr PullToRefreshStateAnimateToHidden(
+        IntPtr state, IContinuation cont);
+
+    [ComposeBridge(Suspend = true,
+        Class = "androidx/compose/material3/pulltorefresh/PullToRefreshState",
+        JvmName = "animateToThreshold",
+        Signature = "(Lkotlin/coroutines/Continuation;)Ljava/lang/Object;")]
+    internal static partial IntPtr PullToRefreshStateAnimateToThreshold(
+        IntPtr state, IContinuation cont);
+
+    [ComposeBridge(Suspend = true,
+        Class = "androidx/compose/material3/pulltorefresh/PullToRefreshState",
+        JvmName = "snapTo",
+        Signature = "(FLkotlin/coroutines/Continuation;)Ljava/lang/Object;")]
+    internal static partial IntPtr PullToRefreshStateSnapTo(
+        IntPtr state, float targetValue, IContinuation cont);
+
+    [ComposeBridge(Suspend = true,
+        Class = "androidx/compose/material3/SearchBarState",
+        JvmName = "animateToExpanded",
+        Signature = "(Lkotlin/coroutines/Continuation;)Ljava/lang/Object;")]
+    internal static partial IntPtr SearchBarStateAnimateToExpanded(
+        IntPtr state, IContinuation cont);
+
+    [ComposeBridge(Suspend = true,
+        Class = "androidx/compose/material3/SearchBarState",
+        JvmName = "animateToCollapsed",
+        Signature = "(Lkotlin/coroutines/Continuation;)Ljava/lang/Object;")]
+    internal static partial IntPtr SearchBarStateAnimateToCollapsed(
+        IntPtr state, IContinuation cont);
+
+    [ComposeBridge(Suspend = true,
+        Class = "androidx/compose/material3/SearchBarState",
+        JvmName = "snapTo",
+        Signature = "(FLkotlin/coroutines/Continuation;)Ljava/lang/Object;")]
+    internal static partial IntPtr SearchBarStateSnapTo(
+        IntPtr state, float fraction, IContinuation cont);
+
+    [ComposeBridge(Suspend = true,
+        Class = "androidx/compose/material3/WideNavigationRailState",
+        JvmName = "expand",
+        Signature = "(Lkotlin/coroutines/Continuation;)Ljava/lang/Object;")]
+    internal static partial IntPtr WideNavigationRailStateExpand(
+        IntPtr state, IContinuation cont);
+
+    [ComposeBridge(Suspend = true,
+        Class = "androidx/compose/material3/WideNavigationRailState",
+        JvmName = "collapse",
+        Signature = "(Lkotlin/coroutines/Continuation;)Ljava/lang/Object;")]
+    internal static partial IntPtr WideNavigationRailStateCollapse(
+        IntPtr state, IContinuation cont);
+
+    [ComposeBridge(Suspend = true,
+        Class = "androidx/compose/material3/WideNavigationRailState",
+        JvmName = "toggle",
+        Signature = "(Lkotlin/coroutines/Continuation;)Ljava/lang/Object;")]
+    internal static partial IntPtr WideNavigationRailStateToggle(
+        IntPtr state, IContinuation cont);
+
+    [ComposeBridge(Suspend = true,
+        Class = "androidx/compose/material3/WideNavigationRailState",
+        JvmName = "snapTo",
+        Signature = "(Landroidx/compose/material3/WideNavigationRailValue;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;")]
+    internal static partial IntPtr WideNavigationRailStateSnapTo(
+        IntPtr state,
+        AndroidX.Compose.Material3.WideNavigationRailValue targetValue,
+        IContinuation cont);
+
+    [ComposeBridge(Suspend = true,
+        Class = "androidx/compose/material3/SnackbarHostState",
+        JvmName = "showSnackbar",
+        Signature = "(Ljava/lang/String;Ljava/lang/String;ZLandroidx/compose/material3/SnackbarDuration;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;")]
+    internal static partial IntPtr SnackbarHostStateShowSnackbar(
+        IntPtr state,
+        string message,
+        string? actionLabel,
+        bool withDismissAction,
+        AndroidX.Compose.Material3.SnackbarDuration duration,
+        IContinuation cont);
+
+    [ComposeBridge(Suspend = true,
         Class = "androidx/compose/foundation/lazy/grid/LazyGridState",
         JvmName = "scrollToItem",
         Signature = "(IILkotlin/coroutines/Continuation;)Ljava/lang/Object;")]

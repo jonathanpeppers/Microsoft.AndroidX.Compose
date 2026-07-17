@@ -107,4 +107,100 @@ public class PublicValueContractTests
         Assert.AreEqual("pageCount", exception.ParamName);
         Assert.AreEqual(1, invocationCount);
     }
+
+    [TestMethod]
+    [DataRow(-0.5001f)]
+    [DataRow(0.5001f)]
+    [DataRow(float.NaN)]
+    public void PagerState_RejectsInvalidProgrammaticPageOffset(float value)
+    {
+        var state = new PagerState(static () => 3);
+
+        Assert.AreEqual(
+            "pageOffsetFraction",
+            Assert.ThrowsExactly<ArgumentOutOfRangeException>(
+                () => state.RequestScrollToPage(0, value)).ParamName);
+        Assert.AreEqual(
+            "pageOffsetFraction",
+            Assert.ThrowsExactly<ArgumentOutOfRangeException>(
+                () => state.ScrollToPageAsync(0, value)).ParamName);
+        Assert.AreEqual(
+            "pageOffsetFraction",
+            Assert.ThrowsExactly<ArgumentOutOfRangeException>(
+                () => state.AnimateScrollToPageAsync(0, value)).ParamName);
+    }
+
+    [TestMethod]
+    public void PagerState_RejectsNegativeProgrammaticPage()
+    {
+        var state = new PagerState(static () => 3);
+
+        Assert.AreEqual(
+            "page",
+            Assert.ThrowsExactly<ArgumentOutOfRangeException>(
+                () => state.RequestScrollToPage(-1)).ParamName);
+        Assert.AreEqual(
+            "page",
+            Assert.ThrowsExactly<ArgumentOutOfRangeException>(
+                () => state.ScrollToPageAsync(-1)).ParamName);
+        Assert.AreEqual(
+            "page",
+            Assert.ThrowsExactly<ArgumentOutOfRangeException>(
+                () => state.AnimateScrollToPageAsync(-1)).ParamName);
+    }
+
+    [TestMethod]
+    public void TextFieldStates_PreservePendingMutationsAndValidateNull()
+    {
+        var search = new SearchBarTextFieldState("initial");
+        search.SetText("end");
+        Assert.AreEqual("end", search.Text);
+        search.SetTextAndSelectAll("selected");
+        Assert.AreEqual("selected", search.Text);
+        search.ClearText();
+        Assert.AreEqual("", search.Text);
+
+        var secure = new SecureTextFieldState("initial");
+        secure.SetTextAndSelectAll("selected");
+        Assert.AreEqual("selected", secure.Text);
+        secure.ClearText();
+        Assert.AreEqual("", secure.Text);
+
+#pragma warning disable CS8625
+        Assert.ThrowsExactly<ArgumentNullException>(
+            () => new SearchBarTextFieldState(null));
+        Assert.ThrowsExactly<ArgumentNullException>(
+            () => new SecureTextFieldState(null));
+        Assert.ThrowsExactly<ArgumentNullException>(
+            () => new SearchBarState(null));
+        Assert.ThrowsExactly<ArgumentNullException>(
+            () => search.SetText(null));
+        Assert.ThrowsExactly<ArgumentNullException>(
+            () => secure.SetTextAndSelectAll(null));
+#pragma warning restore CS8625
+    }
+
+    [TestMethod]
+    public void StateControlFractions_RejectInvalidValuesBeforeBinding()
+    {
+        var pull = new PullToRefreshState();
+        Assert.AreEqual(
+            "targetValue",
+            Assert.ThrowsExactly<ArgumentOutOfRangeException>(
+                () => pull.SnapToAsync(float.NaN)).ParamName);
+        Assert.AreEqual(
+            "targetValue",
+            Assert.ThrowsExactly<ArgumentOutOfRangeException>(
+                () => pull.SnapToAsync(-0.01f)).ParamName);
+
+        var search = new SearchBarState();
+        Assert.AreEqual(
+            "fraction",
+            Assert.ThrowsExactly<ArgumentOutOfRangeException>(
+                () => search.SnapToAsync(float.NaN)).ParamName);
+        Assert.AreEqual(
+            "fraction",
+            Assert.ThrowsExactly<ArgumentOutOfRangeException>(
+                () => search.SnapToAsync(1.01f)).ParamName);
+    }
 }

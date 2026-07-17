@@ -39,7 +39,8 @@ namespace AndroidX.Compose;
 /// </remarks>
 public sealed class SecureTextFieldState
 {
-    readonly string _initialText;
+    string _pendingText;
+    bool _selectAllPending;
 
     // Bound peer for the JVM androidx.compose.foundation.text.input.TextFieldState.
     // Set on first SecureTextField render and reused by every subsequent
@@ -54,16 +55,58 @@ public sealed class SecureTextFieldState
     /// is rendered — once the JVM peer is resolved, mutations to the
     /// passed-in string are ignored.
     /// </summary>
-    public SecureTextFieldState(string initialText = "") =>
-        _initialText = initialText;
+    public SecureTextFieldState(string initialText = "")
+    {
+        ArgumentNullException.ThrowIfNull(initialText);
+        _pendingText = initialText;
+    }
 
     /// <summary>
     /// Current text in the secure input. Reads through to the live
     /// JVM <c>TextFieldState.text</c> (a Compose snapshot value), so
-    /// reading inside composition subscribes to recomposition. Returns
-    /// the initial value before the first render binds the peer.
+    /// reading inside composition subscribes to recomposition. Before
+    /// the first render binds the peer, returns the latest pending value
+    /// from construction or a text mutation method.
     /// </summary>
-    public string Text => Jvm?.Text ?? _initialText;
+    public string Text => Jvm?.Text ?? _pendingText;
+
+    /// <summary>Replaces the text and places the cursor at the end.</summary>
+    public void SetText(string text)
+    {
+        ArgumentNullException.ThrowIfNull(text);
+        if (Jvm is null)
+        {
+            _pendingText = text;
+            _selectAllPending = false;
+            return;
+        }
+        TextFieldStateKt.SetTextAndPlaceCursorAtEnd(Jvm, text);
+    }
+
+    /// <summary>Replaces the text and selects the complete value.</summary>
+    public void SetTextAndSelectAll(string text)
+    {
+        ArgumentNullException.ThrowIfNull(text);
+        if (Jvm is null)
+        {
+            _pendingText = text;
+            _selectAllPending = true;
+            return;
+        }
+        TextFieldStateKt.SetTextAndSelectAll(Jvm, text);
+    }
+
+    /// <summary>Clears the text and leaves the cursor at the end.</summary>
+    public void ClearText()
+    {
+        if (Jvm is null)
+        {
+            _pendingText = "";
+            _selectAllPending = false;
+            return;
+        }
+        TextFieldStateKt.ClearText(Jvm);
+    }
 
     // Lazy-resolve the bound JVM peer. Subsequent SecureTextField renders
     // sharing this state hit the JNI bridge once on the FIRST render and
@@ -73,9 +116,12 @@ public sealed class SecureTextFieldState
         if (Jvm is not null)
             return Jvm;
 
-        // Bit 1 = default initialSelection (Kotlin places the cursor at
-        // the end of initialText). initialText is provided explicitly.
-        Jvm = TextFieldStateKt.RememberTextFieldState(_initialText, 0L, composer, 0, 2);
+        long selection = _selectAllPending
+            ? AndroidX.Compose.UI.Text.TextRangeKt.TextRange(0, _pendingText.Length)
+            : 0L;
+        int defaults = _selectAllPending ? 0 : 2;
+        Jvm = TextFieldStateKt.RememberTextFieldState(
+            _pendingText, selection, composer, 0, defaults);
         return Jvm;
     }
 }
