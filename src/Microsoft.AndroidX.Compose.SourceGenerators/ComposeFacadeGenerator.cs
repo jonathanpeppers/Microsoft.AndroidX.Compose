@@ -292,6 +292,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             {
                 isHybridContainer =
                     nonNullableFn3.Length == 1 &&
+                    nonNullableFn2.Length == 0 &&
                     namedContent.Length >= 1;
             }
             // Container=true path: accept either Fn2 or Fn3 body.

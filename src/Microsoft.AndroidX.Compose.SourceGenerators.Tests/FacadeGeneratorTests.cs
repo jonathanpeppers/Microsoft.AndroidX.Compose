@@ -852,6 +852,39 @@ public class FacadeGeneratorTests
     }
 
     [Fact]
+    public void HybridContainer_ScopeWithAdditionalUnannotatedFn2_EmitsCN3003()
+    {
+        var code = """
+            using global::AndroidX.Compose.Runtime;
+            using global::AndroidX.Compose.UI;
+            using AndroidX.Compose;
+            using Kotlin.Jvm.Functions;
+
+            [assembly: ComposeDefaults("MixedDefault",
+                "!items", "!body", "!requiredSlot")]
+
+            namespace AndroidX.Compose
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(Class="x/y/MixedKt", JvmName="Mixed",
+                                   Signature="(Lkotlin/jvm/functions/Function3;Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;II)V",
+                                   Defaults=typeof(MixedDefault))]
+                    [ComposeFacade(Scope = "Row")]
+                    public static partial void Mixed(
+                        IFunction3 items,
+                        IFunction2 body,
+                        [Slot("RequiredSlot")] IFunction2 requiredSlot,
+                        IComposer composer);
+                }
+            }
+            """;
+
+        var (_, diags, _) = Run(code, "Mixed");
+        Assert.Contains(diags, d => d.Id == "CN3003");
+    }
+
+    [Fact]
     public void HybridContainer_WithoutScope_StillBehavesAsLeaf()
     {
         // Same shape as BottomAppBar but without [ComposeFacade(Scope=...)] —
