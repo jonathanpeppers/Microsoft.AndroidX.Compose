@@ -105,7 +105,7 @@ public static class ComposableHandwrittenAdaptersDemo
                                 topSearch),
                             content: () => Text("Full-screen search results"));
 
-                       BottomSheetScaffold(
+                        BottomSheetScaffold(
                             sheetContent: () => Text("Persistent sheet"),
                             content: () => Text("Bottom-sheet body"),
                             sheetState: sheet,
