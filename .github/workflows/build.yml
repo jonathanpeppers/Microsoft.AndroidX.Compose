@@ -23,7 +23,7 @@ jobs:
           dotnet-version: '10.0.x'
 
       - name: Set package version
-        run: echo "CI_PACKAGE_VERSION=$(dotnet msbuild src/Microsoft.AndroidX.Compose.Templates -getProperty:ComposePackagePrereleasePrefix).${{ github.run_number }}" >> "$GITHUB_ENV"
+        run: echo "CI_PACKAGE_VERSION=$(dotnet msbuild src/Microsoft.AndroidX.Compose.Templates/Microsoft.AndroidX.Compose.Templates.csproj -getProperty:ComposePackagePrereleasePrefix).${{ github.run_number }}" >> "$GITHUB_ENV"
 
       - name: Install maui-android workload
         run: dotnet workload install maui-android
@@ -58,10 +58,12 @@ jobs:
       - name: Publish packages to GitHub Packages
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
-          dotnet nuget push "$RUNNER_TEMP/template-packages/*.nupkg" \
-            --source "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json" \
-            --api-key "$GITHUB_TOKEN" \
-            --skip-duplicate
+          for package in "$RUNNER_TEMP/template-packages/"*.nupkg; do
+            dotnet nuget push "$package" \
+              --source "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json" \
+              --api-key "$GITHUB_TOKEN" \
+              --skip-duplicate
+          done
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
