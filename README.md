@@ -32,6 +32,61 @@ Generator unit tests run without an Android SDK:
 dotnet test src/Microsoft.AndroidX.Compose.SourceGenerators.Tests
 ```
 
+## Install CI builds
+
+Successful `main` builds publish prerelease packages to
+[GitHub Packages](https://github.com/jonathanpeppers?tab=packages&repo_name=Microsoft.AndroidX.Compose)
+as `0.1.0-beta.<GitHub Actions run number>`. These builds are intended for
+testing before packages are published to NuGet.org.
+
+GitHub requires authentication to download from its NuGet registry, including
+public packages. Create a
+[classic personal access token](https://github.com/settings/tokens) with the
+`read:packages` scope, set it for the current shell, and create `NuGet.Config`
+in the directory where the app will be created:
+
+```pwsh
+$env:GITHUB_PACKAGES_USER = "your-github-username"
+$env:GITHUB_PACKAGES_TOKEN = "your-classic-personal-access-token"
+```
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<configuration>
+  <packageSources>
+    <clear />
+    <add key="github" value="https://nuget.pkg.github.com/jonathanpeppers/index.json" />
+    <add key="nuget.org" value="https://api.nuget.org/v3/index.json" />
+  </packageSources>
+  <packageSourceCredentials>
+    <github>
+      <add key="Username" value="%GITHUB_PACKAGES_USER%" />
+      <add key="ClearTextPassword" value="%GITHUB_PACKAGES_TOKEN%" />
+    </github>
+  </packageSourceCredentials>
+</configuration>
+```
+
+Choose a package version from the GitHub Packages page, then install and run
+the template:
+
+```pwsh
+$version = "0.1.0-beta.<run-number>"
+
+dotnet workload install android
+dotnet new install "Microsoft.AndroidX.Compose.Templates@$version"
+dotnet new android-compose `
+  --name MyComposeApp `
+  --applicationId com.example.mycomposeapp `
+  --applicationTitle "My Compose App" `
+  --composeVersion $version
+
+dotnet build MyComposeApp -t:Run
+```
+
+The final command requires a running Android emulator or connected device.
+Keep the token out of `NuGet.Config` and source control.
+
 ## What it looks like
 
 The same counter flow in Kotlin and both supported C# authoring styles.
