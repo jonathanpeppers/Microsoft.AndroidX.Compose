@@ -3860,7 +3860,7 @@ internal static partial class ComposeBridges
         IModifier?                  modifier,
         [Slot("Thumb")]
         IFunction3?                 thumb,
-        IClosedFloatingPointRange?  valueRange,
+        FloatRange?                 valueRange,
         SliderColors?               colors,
         bool                        enabled  = true,
         int                         steps    = 0,
@@ -3878,8 +3878,12 @@ internal static partial class ComposeBridges
     //   C# `steps:` (after `_composer`) = JVM `$changed` int
     //   C# `_changed` = JVM `$changed1`
     //   C# `_changed1` = JVM `$default` ← the bitmask we forward
-    public static partial void Slider(float value, IFunction1 onValueChange, IModifier? modifier, IFunction3? thumb, IClosedFloatingPointRange? valueRange, SliderColors? colors, bool enabled, int steps, int defaults, IComposer composer, int _changed)
-        => SliderKt.Slider(
+    public static partial void Slider(float value, IFunction1 onValueChange, IModifier? modifier, IFunction3? thumb, FloatRange? valueRange, SliderColors? colors, bool enabled, int steps, int defaults, IComposer composer, int _changed)
+    {
+        using var kotlinValueRange = valueRange is { } range
+            ? range.ToKotlin()
+            : null;
+        SliderKt.Slider(
             value:                  value,
             onValueChange:          onValueChange,
             modifier:               modifier,
@@ -3890,11 +3894,12 @@ internal static partial class ComposeBridges
             p7:                     steps,
             thumb:                  thumb,
             track:                  null,
-            valueRange:             valueRange,
+            valueRange:             kotlinValueRange,
             _composer:              composer,
             steps:                  _changed,
             _changed:               0,
             _changed1:              defaults | (int)SliderDefault.Track);
+    }
 
     // FlowRow / FlowColumn — Phase 8 wrapper-passthrough facades. The
     // simpler 7-Kotlin-param overloads (no FlowRowOverflow / FlowColumnOverflow
