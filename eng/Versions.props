@@ -1,0 +1,8 @@
+<Project>
+  <PropertyGroup>
+    <ComposePackageVersionPrefix>0.1.0</ComposePackageVersionPrefix>
+    <ComposePackagePrereleaseLabel>beta</ComposePackagePrereleaseLabel>
+    <ComposePackagePrereleasePrefix>$(ComposePackageVersionPrefix)-$(ComposePackagePrereleaseLabel)</ComposePackagePrereleasePrefix>
+    <PackageVersion Condition="'$(PackageVersion)' == ''">$(ComposePackageVersionPrefix)-dev</PackageVersion>
+  </PropertyGroup>
+</Project>

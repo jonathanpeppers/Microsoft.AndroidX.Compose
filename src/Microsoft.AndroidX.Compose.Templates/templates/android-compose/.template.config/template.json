@@ -1,0 +1,42 @@
+{
+  "$schema": "http://json.schemastore.org/template",
+  "author": "Jonathan Peppers",
+  "classifications": [ "Android", "Mobile", "Compose" ],
+  "identity": "Microsoft.AndroidX.Compose.Templates.Android",
+  "name": ".NET for Android Jetpack Compose App",
+  "description": "A .NET for Android project using Jetpack Compose from C#",
+  "shortName": "android-compose",
+  "tags": {
+    "language": "C#",
+    "type": "project"
+  },
+  "sourceName": "MyApplication",
+  "symbols": {
+    "applicationId": {
+      "type": "parameter",
+      "datatype": "string",
+      "description": "The Android application ID",
+      "defaultValue": "com.companyname.myapplication",
+      "replaces": "com.companyname.myapplication"
+    },
+    "applicationTitle": {
+      "type": "parameter",
+      "datatype": "string",
+      "description": "The application title",
+      "defaultValue": "My Application",
+      "replaces": "My Application"
+    },
+    "composeVersion": {
+      "type": "parameter",
+      "datatype": "string",
+      "description": "The Microsoft.AndroidX.Compose package version",
+      "defaultValue": "0.1.0-beta.*",
+      "replaces": "MicrosoftAndroidXComposeVersion"
+    }
+  },
+  "preferNameDirectory": true,
+  "primaryOutputs": [
+    { "path": "MyApplication.csproj" }
+  ],
+  "defaultName": "MyApplication"
+}

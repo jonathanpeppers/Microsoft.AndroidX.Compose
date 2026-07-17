@@ -7,6 +7,10 @@ on:
     branches: [main]
   workflow_dispatch:
 
+permissions:
+  contents: read
+  packages: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -18,6 +22,9 @@ jobs:
         with:
           dotnet-version: '10.0.x'
 
+      - name: Set package version
+        run: echo "CI_PACKAGE_VERSION=$(dotnet msbuild src/Microsoft.AndroidX.Compose.Templates/Microsoft.AndroidX.Compose.Templates.csproj -getProperty:ComposePackagePrereleasePrefix).${{ github.run_number }}" >> "$GITHUB_ENV"
+
       - name: Install maui-android workload
         run: dotnet workload install maui-android
 
@@ -27,12 +34,61 @@ jobs:
       - name: Test source generators
         run: dotnet test src/Microsoft.AndroidX.Compose.SourceGenerators.Tests --no-build --logger "console;verbosity=normal" --logger "trx;LogFileName=test-results.trx"
 
+      - name: Pack project template
+        run: |
+          mkdir -p "$RUNNER_TEMP/template-packages"
+          dotnet pack src/Microsoft.AndroidX.Compose -c Release -o "$RUNNER_TEMP/template-packages" -p:PackageVersion="$CI_PACKAGE_VERSION"
+          dotnet pack src/Microsoft.AndroidX.Compose.Templates -c Release -o "$RUNNER_TEMP/template-packages" -p:PackageVersion="$CI_PACKAGE_VERSION"
+
+      - name: Install and instantiate project template
+        run: |
+          dotnet new install "$RUNNER_TEMP/template-packages/Microsoft.AndroidX.Compose.Templates.$CI_PACKAGE_VERSION.nupkg"
+          dotnet new android-compose \
+            --name TemplateSmoke \
+            --applicationId net.compose.template.smoke \
+            --applicationTitle "Compose Template Smoke" \
+            --output "$RUNNER_TEMP/template-smoke"
+
+      - name: Build project template
+        run: |
+          dotnet build "$RUNNER_TEMP/template-smoke/TemplateSmoke.csproj" \
+            -p:RestoreAdditionalProjectSources="$RUNNER_TEMP/template-packages" \
+            -bl:"$GITHUB_WORKSPACE/Microsoft.AndroidX.Compose.Template.binlog"
+
+      - name: Publish packages to GitHub Packages
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          for package in "$RUNNER_TEMP/template-packages/"*.nupkg; do
+            dotnet nuget push "$package" \
+              --source "https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json" \
+              --api-key "$GITHUB_TOKEN" \
+              --skip-duplicate
+          done
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Upload binlog
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: Microsoft.AndroidX.Compose.binlog
           path: Microsoft.AndroidX.Compose.binlog
+
+      - name: Upload project template binlog
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Microsoft.AndroidX.Compose.Template.binlog
+          path: Microsoft.AndroidX.Compose.Template.binlog
+          if-no-files-found: warn
+
+      - name: Upload NuGet packages
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: NuGet-packages
+          path: ${{ runner.temp }}/template-packages/*.nupkg
+          if-no-files-found: warn
 
       - name: Upload test results
         if: failure()

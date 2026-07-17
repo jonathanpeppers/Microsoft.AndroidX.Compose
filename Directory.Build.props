@@ -1,5 +1,7 @@
 <Project>
 
+  <Import Project="eng/Versions.props" />
+
   <PropertyGroup>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
