@@ -53,6 +53,8 @@ jobs:
         run: |
           dotnet build "$RUNNER_TEMP/template-smoke/TemplateSmoke.csproj" \
             -p:RestoreAdditionalProjectSources="$RUNNER_TEMP/template-packages" \
+            -p:TreatWarningsAsErrors=true \
+            -warnaserror:XA4301 \
             -bl:"$GITHUB_WORKSPACE/Microsoft.AndroidX.Compose.Template.binlog"
 
       - name: Publish packages to GitHub Packages
