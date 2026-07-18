@@ -13,8 +13,17 @@ public static class RecordButton
     const int PulseFrameDelayMs        = 64;
     const int PulseDurationMs          = 2000;
 
-    static float SwipeToCancelThresholdPx =>
-        SwipeToCancelThresholdDp * Android.Content.Res.Resources.System!.DisplayMetrics!.Density;
+    static float SwipeToCancelThresholdPx
+    {
+        get
+        {
+            var resources = Android.Content.Res.Resources.System
+                ?? throw new InvalidOperationException("Android system resources were unavailable in Jetchat.");
+            var metrics = resources.DisplayMetrics
+                ?? throw new InvalidOperationException("Android display metrics were unavailable in Jetchat.");
+            return SwipeToCancelThresholdDp * metrics.Density;
+        }
+    }
 
     /// <summary>Build the mic button (idle gray icon, or red recording pill).</summary>
     public static ComposableNode BuildButton(
@@ -79,7 +88,11 @@ public static class RecordButton
             var pulse   = c.MutableStateOf(1f);
             var seconds = c.MutableStateOf(0);
 
-            float density   = Android.Content.Res.Resources.System!.DisplayMetrics!.Density;
+            var resources = Android.Content.Res.Resources.System
+                ?? throw new InvalidOperationException("Android system resources were unavailable in Jetchat.");
+            var metrics = resources.DisplayMetrics
+                ?? throw new InvalidOperationException("Android display metrics were unavailable in Jetchat.");
+            float density   = metrics.Density;
             float threshold = SwipeToCancelThresholdDp * density;
             float offset    = swipeOffset.Value;
             float alphaHint = MathF.Max(0f, 1f - MathF.Abs(offset) / threshold);
@@ -150,13 +163,13 @@ public static class RecordButton
                         .Offset(x: offset / 2f / density)
                         .Alpha(alphaHint),
 
-                    new Icon(Resource.Drawable.ic_arrow_back, "Slide to cancel")
+                    new Icon(Resource.Drawable.ic_arrow_back, "Swipe to cancel")
                     {
                         Tint = Color.FromPacked(scheme.OnSurfaceVariant),
                         Modifier = Modifier.Align(Alignment.Vertical.CenterVertically).Size(24),
                     },
                     Spacer.Width(8),
-                    new Text("Slide to cancel")
+                    new Text("Swipe to cancel")
                     {
                         Modifier = Modifier.Align(Alignment.Vertical.CenterVertically),
                         FontSize = 16,

@@ -16,8 +16,10 @@ dotnet build samples/Jetchat -t:Run
 
 ## What's faithful
 
-- `MaterialTheme` wrapping the whole tree — picks up the device
-  wallpaper-derived dynamic color scheme on Android 12+ (Material You).
+- **Jetchat-branded light/dark theme** — `JetchatTheme` selects the
+  upstream blue/yellow palette from `isSystemInDarkTheme()` and supplies
+  it through `MaterialTheme`; on Android 12+ it follows upstream by using
+  the system dynamic light/dark color scheme.
 - **Live `MaterialTheme.colorScheme.*` reads** via the new `Composed`
   composer-aware wrapper. Bubble, drawer-selection, divider, top-bar
   subtitle, timestamp and member-count colors all flow from the active
@@ -28,17 +30,10 @@ dotnet build samples/Jetchat -t:Run
   fires `CloseAsync()`. Both go through new `SuspendBridge` plumbing
   around `DrawerState.open()` / `close()`.
 - **Navigation drawer** — `ModalNavigationDrawer` + `ModalDrawerSheet`
-  with header logo + brand, divider, "Chats" section, divider, "Recent
+  with the upstream vector wordmark, divider, "Chats" section, divider, "Recent
   Profiles" section. The drawer column is wrapped in
   `Modifier.VerticalScroll(rememberedScrollState)` so it scrolls when
   it overflows on small heights.
-- **Drawer "Settings" section (API 26+)** — on
-  `OperatingSystem.IsAndroidVersionAtLeast(26)` an extra section with
-  **Settings** and **Pin Widget to home** rows appears below "Recent
-  Profiles", matching upstream's `JetchatDrawer` API-gated block.
-  Tapping either row closes the drawer and opens the existing
-  `FunctionalityNotAvailable` popup; an actual `requestPinAppWidget`
-  flow is gated behind a future Glance widget (still listed below).
 - **Multi-channel state** — `ConversationUiState` holds a
   `Dictionary<string, ChannelState>` keyed by channel name. Tapping a
   drawer row swaps the active channel; the title, member count, and
@@ -69,9 +64,9 @@ dotnet build samples/Jetchat -t:Run
   messages use `(4, 20, 20, 20)` to flatten the top-left corner
   pointing at the avatar — same shape upstream's `ChatItemBubble`
   draws.
-- A "Today" day-separator row (`HorizontalDivider` + `Text` +
-  `HorizontalDivider`) above the message list, with divider color
-  pulled from the active scheme.
+- **Multiple dated separators** — "Today" and "20 Aug" rows are emitted
+  between the same message groups as upstream. Their divider color uses
+  `onSurface` at 12% alpha.
 - Message bubbles with a 40 dp circular avatar tile (16 dp horizontal
   padding around it, mirroring upstream's 74 dp avatar+padding
   reservation) and a rounded coloured bubble for the message body.
@@ -93,19 +88,20 @@ dotnet build samples/Jetchat -t:Run
   colored bubble. Layout structure (avatar+spacer + author+text
   column) is identical for me vs others — same as upstream's
   `Message`/`AuthorAndTextMessage` row, no right-alignment.
-- A pinned input row at the bottom in a `Surface(tonalElevation=2)`:
-  a `TextField` that grows to fill available width via
-  `Modifier.Weight(1f)`, plus a `Send` `TextButton` whose label
-  color flips to `onSurfaceVariant` when the input is empty (the
-  underlying facade doesn't expose an `Enabled` flag yet, so
-  `Send` is a no-op on empty text via early-return).
+- A pinned input row at the bottom with a single-line message field,
+  "Type a message" placeholder, Send-labeled IME action, and a `Send`
+  `TextButton` that is genuinely disabled while the input is empty.
+  Its filled/outlined enabled and disabled treatment follows upstream.
+  The remaining `BasicTextField` and elevated-`Surface` differences are
+  tracked below.
 - **5 input-selector icons** — emoji, @ mention, image, location,
   video call — same row upstream's `UserInputSelector` provides.
   Each is a toggleable `IconButton` whose background fills with
   `secondaryContainer` and whose tint flips to `onSecondaryContainer`
   when selected, matching upstream's selection visual. Selecting the
-  emoji button opens the real two-tab emoji panel (Emojis/Stickers,
-  10-column tappable grid — see `EmojiSelector.cs`); selecting @ /
+  emoji button opens the upstream-style pill selector with a vertically
+  scrollable 10-column tappable grid. Selecting Stickers opens the
+  upstream unavailable-feature dialog and resets to Emojis; selecting @ /
   image / location / video opens a `FunctionalityNotAvailable` panel —
   the same fallback upstream uses for the unbound selector pages.
 - **IME + navigation-bar safe insets** on the input area via
@@ -117,11 +113,33 @@ dotnet build samples/Jetchat -t:Run
 - **Voice record mic + recording indicator** — when the text field
   is empty the trailing send affordance is joined by a mic
   `IconButton` that swaps the `TextField` for an animated
-  recording overlay (pulsing red dot + MM:SS timer + "Slide to
+  recording overlay (pulsing red dot + MM:SS timer + "Swipe to
   cancel" hint). Tap-to-toggle starts and finishes the recording;
   dragging the mic horizontally past a 200 dp threshold cancels.
   The overlay swap rides on the new generic `AnimatedContent<T>`
-  facade. See *What's still omitted* for the gesture-parity gap.
+  facade. Long-pressing the mic also shows the upstream "Touch and hold
+  to record" tooltip. See *What's still omitted* for the exact gesture
+  and transition-animation gaps.
+- **Expanded-input dismissal** — `BackHandler` collapses any open
+  selector before system back reaches navigation. Exact upstream focus
+  transfer from the editor to the emoji panel requires the focus-target
+  APIs tracked below.
+- **Image attachment bubbles** — the upstream sticker drawable is seeded
+  on the second message and rendered in its own 160 dp rounded bubble
+  through the existing resource-backed `Image` facade.
+- **Jump-to-bottom FAB** — appears after the list moves beyond the
+  upstream 56 dp threshold and calls
+  `LazyListState.AnimateScrollToItemAsync(0)`.
+- **Pinned top-bar scroll behavior** — the conversation scaffold installs
+  `Modifier.NestedScroll(...)` and passes the same remembered behavior to
+  `CenterAlignedTopAppBar`, matching upstream elevation-on-scroll.
+- **Drag-and-drop feedback** — accepted text/image drags add the first
+  payload as a new message; the conversation gets the same red border
+  and translucent red hover background during the drag lifecycle.
+- **Clickable message annotations** — URLs use Compose's platform URI
+  handler and `@aliconors` navigates to the matching profile route.
+- **Accessibility grouping** — author and timestamp share merged
+  semantics so screen readers announce them as one row.
 - Reactive message list via `MutableStateList<Message>` — tapping
   send appends to the active channel and the UI recomposes.
 - Reactive channel selection via `MutableState<string>` — drawer
@@ -138,7 +156,8 @@ dotnet build samples/Jetchat -t:Run
 - **Profile screen** (`Profile.cs`) — `Scaffold` with a
   `CenterAlignedTopAppBar` (back + more-options), a vertically
   scrolling body wrapped in `BoxWithConstraints` so the hero
-  portrait caps at half the available height, name / status /
+  portrait caps at half the available height and moves at half scroll
+  speed for the upstream parallax effect, name / status /
   display-name / position / twitter / timezone / channels rows,
   and an `ExtendedFloatingActionButton` aligned `BottomEnd` that
   expands / collapses based on `scrollState.Value == 0` (the M3
@@ -167,21 +186,23 @@ dotnet build samples/Jetchat -t:Run
 
 ## What's still omitted
 
-These need work upstream of the sample — either a new facade
-feature, a new package reference, or simply more sample plumbing:
+Everything that can be completed with the current facade is wired. The
+remaining differences require missing reusable APIs or an unavailable
+official binding:
 
 | Upstream feature                          | Why it's not here |
 |-------------------------------------------|--------------------|
-| `JumpToBottom` FAB (slides in when scrolled away from bottom) | needs a `LazyListState` facade wrapper plus a suspend bridge over `animateScrollToItem`. `LazyListStateKt.RememberLazyListState` is bindable — confirmed during this port; the wrapper just hasn't been built yet. |
-| `BackHandler` to dismiss the expanded input panel via system back | `androidx.activity.compose.BackHandlerKt` lives in `Xamarin.AndroidX.Activity.Compose` which isn't currently referenced. Adding the NuGet + a `[ComposeBridge]` would unblock it. |
-| Image / sticker / file message attachments inside bubbles | requires a composable image-loader pipeline (e.g. Coil). |
-| App-widget discoverability (`@JetchatAppWidget`) | the **drawer entry point** exists on API 26+ (see *What's faithful*) but the actual `androidx.glance.appwidget`-backed widget + `AppWidgetManager.requestPinAppWidget(...)` flow is still out of scope — needs the `Xamarin.AndroidX.Glance.AppWidget` package and a `GlanceAppWidget` subclass. |
-| Sticky day-headers spanning multiple dates (e.g. "20 Aug" alongside "Today") | needs the `LazyListScope.item { … }` DSL exposed on the `LazyColumn` facade so a per-day header can be emitted between message groups. Only "Today" is rendered. |
-| `Sp(float)` for exact M3 letter-spacing (0.5 / 0.1 sp values) | `Sp` is integer-only; `labelSmall` rounds 0.5 → 1, `titleSmall` rounds 0.1 → 0 (dropped). |
-| `FocusRequester` programmatic focus into the emoji panel | the panel opens correctly but doesn't grab focus on expand. |
-| **Voice record button: press-and-hold + release-to-commit gesture** | upstream's `detectDragGesturesAfterLongPress` (and the press-gesture scope's `awaitRelease`) aren't surfaced by the facade layer yet, so the port collapses the gesture to **tap-to-start / tap-to-finish** plus `Modifier.Draggable` for swipe-to-cancel. Behaviour is functionally equivalent; the input affordance is "tap mic, talk, tap mic again" instead of "hold mic, talk, release". |
-| **`infiniteRepeatable(tween(2000))` / `animateFloatAsState` pulse animation** | the indicator's pulsing red dot is driven manually by a `LaunchedEffect` + `Task.Delay` triangle wave (~16 fps) instead of Compose's `rememberInfiniteTransition` + `animateFloat`, since neither facade is bound yet. Visually identical for the 2-second period. |
-| Full ~80-glyph emoji table | `EmojiSelector.cs` exposes the first 40 glyphs from upstream's `private val emojis = listOf(...)` — the same `EMOJI_COLUMNS × 4` grid Kotlin's `EmojiTable` actually renders. The remaining upstream entries are unused on screen and were dropped. |
+| Press-and-hold record gesture (`pointerInput` / `detectDragGesturesAfterLongPress`) | Missing Compose pointer-input surface; tracked by [#334](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/334). Until it lands, recording remains tap-to-start / tap-to-finish with draggable swipe cancellation. |
+| Record-button `updateTransition` + `animateFloat` / `animateColor` | Missing transition value-animation surface; tracked by [#335](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/335). The port retains its visually equivalent timer-driven pulse. |
+| Fractional `Sp` letter spacing (`0.5.sp`, `0.1.sp`) | `Sp` is integer-only; tracked by [#336](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/336). |
+| Karla / Montserrat resource-backed typography | Custom `Font(resourceId)` / `FontFamily(fonts)` construction is missing; tracked by [#337](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/337). |
+| Foundation text-input structure and IME Send callback | `BasicTextField` and keyboard-action support are missing; tracked by [#339](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/339). The current Material `TextField` preserves editing, placeholder, line, and IME-option behavior. |
+| Emoji-panel focus transfer and IME dismissal | `Modifier.focusTarget`, focus observation, and ambient focus-manager access are missing; tracked by [#340](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/340). |
+| Input/selector tonal elevation and content color | The current `Surface` facade omits color, content-color, elevation, and border slots; tracked by [#341](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/341). |
+| Scaffold inset exclusion | `Scaffold.contentWindowInsets` cannot yet be customized, so the port applies IME/navigation padding directly to the input surface; tracked by [#342](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/342). |
+| Exact baseline spacing and clipped profile parallax | Baseline-relative alignment/padding and `clipToBounds` modifiers are missing; tracked by [#343](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/343). |
+| Profile FAB tertiary container | Material 3 FAB color/elevation slots are omitted by the current facades; tracked by [#344](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/344). The port uses the default primary-container/content pair to preserve contrast. |
+| Glance home-screen widget + `requestPinAppWidget(...)` | No official .NET binding for `androidx.glance:glance-appwidget` is currently published. Upstream only shows the drawer entry when a compatible widget provider can be pinned, so the port omits it until that binding exists. |
 
 ## Facade features added for this port
 
@@ -210,10 +231,9 @@ this completion round added:
   only the single-radius `(Dp)` overload is mangled.)
 - **`Modifier.DragAndDropTarget(...)` + `DragAndDropEvent` +
   `DragAndDropTarget` facades** — wraps
-  `androidx.compose.ui.draganddrop.dragAndDropTarget` so an external
-  drag of an image onto the conversation surface appends a
-  `[image dropped: $uri]` placeholder message. Image rendering inside
-  the bubble is a separate gap (image-loader pipeline).
+  `androidx.compose.ui.draganddrop.dragAndDropTarget`; the sample uses
+  the start/enter/exit/end callbacks for drop-zone feedback and appends the first
+  dropped text or URI as a message.
 - **`AnnotatedString` / `AnnotatedStringBuilder` / `SpanStyle` /
   `LinkAnnotation` / `AnnotatedText`** — facade primitives for
   Compose's rich-text type. `AnnotatedText` is a sibling of the
@@ -266,13 +286,12 @@ author" — so the avatar appears on the chronologically-last
 message of each chain, matching the Slack / iMessage convention
 upstream uses.
 
-### Send is a no-op on empty input (no `TextButton.Enabled`)
+### Send is disabled on empty input
 
-`TextButton`'s facade ctor doesn't expose an `Enabled` flag yet.
-The sample mirrors disabled-state visuals by flipping the label
-color from `Primary` to `OnSurfaceVariant` when the input is
-whitespace, and the `Send` handler early-returns on
-`IsNullOrWhiteSpace`.
+The `TextButton` facade now exposes `Enabled`. The sample disables
+the action for whitespace input, uses the upstream transparent
+disabled container and outline treatment, and retains the
+`IsNullOrWhiteSpace` guard in the Send handler.
 
 ### Drag-and-drop target hoisting
 
@@ -281,10 +300,9 @@ hoisted into `composer.Remember` so the underlying
 `DragAndDropTargetElement` keeps a stable identity across
 recompositions; otherwise Compose rebuilds the modifier element
 every frame and its internal hover/started/ended bookkeeping
-resets. `OnDrop` reads the first `ClipData` item's URI and appends
-a `[image dropped: $uri]` placeholder via `ui.AddMessage` — inline-
-image rendering inside the bubble is a separate gap that needs an
-image-loader pipeline.
+resets. `OnDrop` reads the first `ClipData` item's text or URI and appends it
+through `ui.AddMessage`. `OnStarted` / `OnEntered` / `OnExited` /
+`OnEnded` drive the same border and hover background as upstream.
 
 ### `MessageFormatter` regex behaviour
 
@@ -297,32 +315,12 @@ upstream's behaviour even though regex alternation itself isn't
 "longest-first" — the URL pattern simply wins because it's listed
 first and its character class is greedy.
 
-### `@mention` taps fall back to the popup dialog
+### `@mention` and URL taps use Compose links
 
-Upstream wires `authorClicked(...)` to navigate to a profile
-screen. The port doesn't have a profile screen
-(`NavController` / `NavHost` exist in the facade layer but the nav
-graph isn't wired up), so `BuildChatItemBubble` threads the same
-`popupOpen` `MutableState<bool>` already used by the search / info
-top-bar icons down through `BuildBody` → `BuildMessages` →
-`BuildMessageRow` → `BuildAuthorAndTextMessage` → `BuildChatItemBubble`,
-and tapping a mention flips it to `true` to surface the existing
-"Functionality not available" dialog.
-
-### Drawer "Settings" section is gated on API 26
-
-Upstream's `JetchatDrawer.kt` wraps the **Settings** + **Pin Widget
-to home** rows in `if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)`
-because `AppWidgetManager.requestPinAppWidget(...)` requires API 26.
-The port uses the modern .NET equivalent
-(`OperatingSystem.IsAndroidVersionAtLeast(26)`), which the BCL
-recognises as a platform guard so the rows can call APIs annotated
-`[SupportedOSPlatform("android26.0")]` without an `SYSLIB` warning.
-Both row click handlers fire `drawerState.CloseAsync()` and then the
-existing `FunctionalityNotAvailable` popup — same affordance the
-search and info top-bar icons use. Hooking the **Pin Widget** row to
-a real `requestPinAppWidget` call is blocked on landing the Glance
-widget itself, tracked in *What's still omitted*.
+`MessageFormatter` emits a `LinkAnnotation.Url` for web links, so
+Compose opens them through the platform URI handler. Clickable person
+annotations resolve the handle through `Profiles.GetById(...)` and use
+the same profile-navigation callback as avatar taps.
 
 ### Layout and styling decisions vs upstream
 
@@ -345,10 +343,10 @@ original:
   the fill flips (`primary` ↔ `surfaceVariant`).
 - **Inside-streak gap is 4 dp; between-author gap is 8 dp** —
   matches upstream's per-author `Spacer` heights.
-- **Selector icon highlight.** Upstream paints a 14 dp rounded-
-  square background in `LocalContentColor.current` when an input
-  selector is selected; the port's enclosing `Surface` sets
-  `contentColor = scheme.secondary`, so the highlight matches.
+- **Selector icon highlight.** Upstream paints a rounded selected
+  background in the current content color. The port uses the active
+  scheme's secondary/on-secondary pair directly until `Surface`
+  content-color slots are available.
 - **`FunctionalityNotAvailable` collapse.** Upstream has two
   variants — an `AlertDialog` (DM selector) and a full panel
   ("Functionality currently not available / Grab a beverage and
@@ -360,7 +358,5 @@ original:
   `secondaryContainer`, which in Jetchat's dark palette is a
   saturated blue. The drawer pins to `surface` to match upstream.
 - **Drawer divider alpha.** Upstream tints with
-  `onSurface.copy(alpha = 0.12f)`; the facade layer doesn't model
-  alpha-blended ARGB yet, so the divider falls back to the
-  binding default. Tracked alongside the other parity gaps in
-  *What's still omitted*.
+  `onSurface.copy(alpha = 0.12f)`; the port uses
+  `Color.WithAlpha(31)` for the equivalent ARGB value.
