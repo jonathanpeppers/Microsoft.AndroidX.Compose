@@ -240,8 +240,7 @@ public static class Conversation
                     Modifier = Modifier
                         .Align(Alignment.BottomCenter)
                         .Padding(bottom: 16)
-                        .Height(48)
-                        .Semantics("Jump to latest message"),
+                        .Height(48),
                     Icon = new Icon(Resource.Drawable.ic_arrow_downward, "Jump to latest message")
                     {
                         Tint = Color.FromPacked(scheme.Primary),
@@ -507,7 +506,7 @@ public static class Conversation
                 containerColor: Color.FromPacked(scheme.Primary),
                 contentColor: Color.FromPacked(scheme.OnPrimary),
                 disabledContainerColor: Color.Transparent,
-                disabledContentColor: Color.FromPacked(scheme.OnSurfaceVariant)),
+                disabledContentColor: Color.FromPacked(scheme.OnSurface).WithAlpha(77)),
         };
         sendButton.Add(new Text("Send")
             {

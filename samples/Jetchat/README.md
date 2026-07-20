@@ -90,7 +90,7 @@ dotnet build samples/Jetchat -t:Run
   `Message`/`AuthorAndTextMessage` row, no right-alignment.
 - A pinned input row at the bottom with a single-line message field,
   "Type a message" placeholder, Send-labeled IME action, and a `Send`
-  `TextButton` that is genuinely disabled while the input is empty.
+  `Button` that is genuinely disabled while the input is empty.
   Its filled/outlined enabled and disabled treatment follows upstream.
   The remaining `BasicTextField` and elevated-`Surface` differences are
   tracked below.
@@ -288,7 +288,7 @@ upstream uses.
 
 ### Send is disabled on empty input
 
-The `TextButton` facade now exposes `Enabled`. The sample disables
+The `Button` facade exposes `Enabled`. The sample disables
 the action for whitespace input, uses the upstream transparent
 disabled container and outline treatment, and retains the
 `IsNullOrWhiteSpace` guard in the Send handler.
