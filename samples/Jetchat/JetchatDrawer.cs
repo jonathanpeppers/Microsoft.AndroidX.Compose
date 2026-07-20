@@ -33,7 +33,7 @@ public static class JetchatDrawer
         {
             Modifier.FillMaxWidth().VerticalScroll(scroll),
             new Spacer(Modifier.StatusBarsPadding()),
-            BuildHeader(scheme),
+            BuildHeader(),
             BuildDivider(scheme, sidePadding: 0),
             BuildSectionHeader("Chats", scheme),
             BuildChatItem(selectedMenu, drawerState, "composers",    scheme, onChatClicked),
@@ -46,23 +46,20 @@ public static class JetchatDrawer
         return sheet;
     }
 
-    static Row BuildHeader(ColorScheme scheme) =>
+    static Row BuildHeader() =>
         new()
         {
             Modifier.FillMaxWidth().Padding(16),
-            JetchatIcon.Build(contentDescription: null, sizeDp: 24),
-            Spacer.Width(8),
-            new Text("Jetchat")
+            new Image(Resource.Drawable.jetchat_logo, "Jetchat")
             {
-                FontSize   = 18,
-                FontWeight = FontWeight.SemiBold,
-                Color      = Color.FromPacked(scheme.OnSurface),
+                Modifier = Modifier.Width(87).Height(24),
             },
         };
 
     static HorizontalDivider BuildDivider(ColorScheme scheme, int sidePadding) =>
         new()
         {
+            Color = Color.FromPacked(scheme.OnSurface).WithAlpha(31),
             Modifier = sidePadding > 0
                 ? Modifier.Padding(horizontal: sidePadding)
                 : null,

@@ -21,6 +21,13 @@ public static class Conversation
     const int SelPicture = 3;
     const int SelMap     = 4;
     const int SelPhone   = 5;
+    static readonly Func<DragAndDropEvent, bool> ShouldAcceptDrag = e =>
+    {
+        foreach (var mimeType in e.MimeTypes)
+            if (mimeType == "text/plain" || mimeType.StartsWith("image/", StringComparison.Ordinal))
+                return true;
+        return false;
+    };
 
     /// <summary>Materialize the conversation tree for one composition pass.</summary>
     public static ComposableNode Build(
@@ -36,14 +43,17 @@ public static class Conversation
         Action<string>               onAuthorClicked) =>
         new Composed(c =>
         {
-            var scheme = c.ColorScheme();
-            var root   = new Column
+            var scheme          = c.ColorScheme();
+            var topBarState     = c.RememberTopAppBarState();
+            var scrollBehavior  = c.PinnedScrollBehavior(topBarState);
+            var root = new Column
             {
                 Modifier.FillMaxSize(),
                 new Scaffold
                 {
-                    TopBar = BuildTopBar(ui, scheme, onOpenDrawer, popupOpen),
-                    Body   = BuildBody(ui, input, scheme, selectedSelector, messagesScroll, popupOpen, onAuthorClicked, isRecording, swipeOffset),
+                    Modifier = Modifier.NestedScroll(scrollBehavior.NestedScrollConnection),
+                    TopBar = BuildTopBar(ui, scheme, onOpenDrawer, popupOpen, scrollBehavior),
+                    Body   = BuildBody(ui, input, scheme, selectedSelector, messagesScroll, onAuthorClicked, isRecording, swipeOffset),
                 },
             };
             if (popupOpen.Value)
@@ -55,9 +65,11 @@ public static class Conversation
         ConversationUiState ui,
         ColorScheme         scheme,
         Action              onOpenDrawer,
-        MutableState<bool>  popupOpen) =>
+        MutableState<bool>  popupOpen,
+        AndroidX.Compose.Material3.ITopAppBarScrollBehavior scrollBehavior) =>
         new()
         {
+            ScrollBehavior = scrollBehavior,
             NavigationIcon = new IconButton(onClick: () => onOpenDrawer())
             {
                 JetchatIcon.Build("Open navigation drawer", sizeDp: 32),
@@ -114,34 +126,51 @@ public static class Conversation
         ColorScheme                  scheme,
         MutableState<int>            selectedSelector,
         LazyListState                messagesScroll,
-        MutableState<bool>           popupOpen,
         Action<string>               onAuthorClicked,
         MutableState<bool>           isRecording,
         MutableNumberState<float>    swipeOffset) =>
         new Composed(c =>
         {
-            var dndTarget = c.Remember(() => new DragAndDropTarget(e =>
+            var dragBackground = c.MutableStateOf(Color.Transparent.ToPacked());
+            var dragBorder     = c.MutableStateOf(Color.Transparent.ToPacked());
+            var dndTarget      = c.Remember(() => new DragAndDropTarget());
+
+            dndTarget.OnDrop = e =>
             {
                 var clip = e.AndroidDragEvent.ClipData;
-                var uri  = clip is not null && clip.ItemCount > 0
-                    ? clip.GetItemAt(0)?.Uri?.ToString()
+                var item = clip is not null && clip.ItemCount > 0
+                    ? clip.GetItemAt(0)
                     : null;
-                ui.AddMessage(new Message(MyName, $"[image dropped: {uri ?? "?"}]", "8:30 PM"));
+                var content = item?.Text?.ToString() ?? item?.Uri?.ToString();
+                if (string.IsNullOrWhiteSpace(content))
+                    return false;
+
+                ui.AddMessage(new Message(MyName, content, "now"));
                 _ = messagesScroll.AnimateScrollToItemAsync(0);
                 return true;
-            }));
+            };
+            dndTarget.OnStarted = _ => dragBorder.Value = Color.Red.ToPacked();
+            dndTarget.OnEntered = _ => dragBackground.Value = Color.Red.WithAlpha(77).ToPacked();
+            dndTarget.OnExited  = _ => dragBackground.Value = Color.Transparent.ToPacked();
+            dndTarget.OnEnded   = _ =>
+            {
+                dragBackground.Value = Color.Transparent.ToPacked();
+                dragBorder.Value     = Color.Transparent.ToPacked();
+            };
+
             return new Column
             {
-                Modifier.FillMaxSize().DragAndDropTarget(
-                    shouldStartDragAndDrop: e =>
-                    {
-                        foreach (var m in e.MimeTypes)
-                            if (m.StartsWith("image/", StringComparison.Ordinal))
-                                return true;
-                        return false;
-                    },
+                Modifier
+                    .FillMaxSize()
+                    .Background(Color.FromPacked(dragBackground.Value))
+                    .Border(2, Color.FromPacked(dragBorder.Value))
+                    .DragAndDropTarget(
+                    shouldStartDragAndDrop: ShouldAcceptDrag,
                     target: dndTarget),
-                BuildMessages(ui, scheme, messagesScroll, popupOpen, onAuthorClicked),
+                new BackHandler(
+                    onBack:  () => selectedSelector.Value = 0,
+                    enabled: selectedSelector.Value != 0),
+                BuildMessages(ui, scheme, messagesScroll, onAuthorClicked),
                 BuildInputArea(ui, input, scheme, selectedSelector, messagesScroll, isRecording, swipeOffset),
             };
         });
@@ -153,7 +182,11 @@ public static class Conversation
     sealed record MessageRow(Message Msg, bool IsFirstByAuthor, bool IsLastByAuthor) : ChatRow;
     sealed record HeaderRow(string Label) : ChatRow;
 
-    static ComposableNode BuildMessages(ConversationUiState ui, ColorScheme scheme, LazyListState messagesScroll, MutableState<bool> popupOpen, Action<string> onAuthorClicked)
+    static ComposableNode BuildMessages(
+        ConversationUiState ui,
+        ColorScheme         scheme,
+        LazyListState       messagesScroll,
+        Action<string>      onAuthorClicked)
     {
         var msgs = ui.Messages;
         var rows = new List<ChatRow>(msgs.Count + 2);
@@ -181,7 +214,7 @@ public static class Conversation
                 items:       rows,
                 itemContent: row => row switch
                 {
-                    MessageRow mr => BuildMessageRow(mr.Msg, mr.IsFirstByAuthor, mr.IsLastByAuthor, scheme, popupOpen, onAuthorClicked),
+                    MessageRow mr => BuildMessageRow(mr.Msg, mr.IsFirstByAuthor, mr.IsLastByAuthor, scheme, onAuthorClicked),
                     HeaderRow  hr => BuildDayHeader(hr.Label, scheme),
                     _             => Spacer.Width(0),
                 })
@@ -196,7 +229,7 @@ public static class Conversation
             c =>
             {
                 var visible = messagesScroll.FirstVisibleItemIndex != 0
-                           || messagesScroll.FirstVisibleItemScrollOffset > 0;
+                           || messagesScroll.FirstVisibleItemScrollOffset > DpToPx(56);
                 if (!visible)
                     return null;
 
@@ -206,8 +239,12 @@ public static class Conversation
                 {
                     Modifier = Modifier
                         .Align(Alignment.BottomCenter)
-                        .Padding(bottom: 16),
-                    Icon = new Icon(Resource.Drawable.ic_arrow_downward, "Jump to bottom"),
+                        .Padding(bottom: 16)
+                        .Height(48),
+                    Icon = new Icon(Resource.Drawable.ic_arrow_downward, "Jump to latest message")
+                    {
+                        Tint = Color.FromPacked(scheme.Primary),
+                    },
                     Text = new Text("Jump to bottom"),
                 };
             },
@@ -223,7 +260,7 @@ public static class Conversation
             new HorizontalDivider
             {
                 Modifier  = Modifier.Weight(1f),
-                Color = Color.FromPacked(scheme.OnSurface),
+                Color = Color.FromPacked(scheme.OnSurface).WithAlpha(31),
             },
             new Text(label)
             {
@@ -235,11 +272,16 @@ public static class Conversation
             new HorizontalDivider
             {
                 Modifier  = Modifier.Weight(1f),
-                Color = Color.FromPacked(scheme.OnSurface),
+                Color = Color.FromPacked(scheme.OnSurface).WithAlpha(31),
             },
         };
 
-    static Row BuildMessageRow(Message m, bool isFirstByAuthor, bool isLastByAuthor, ColorScheme scheme, MutableState<bool> popupOpen, Action<string> onAuthorClicked)
+    static Row BuildMessageRow(
+        Message        m,
+        bool           isFirstByAuthor,
+        bool           isLastByAuthor,
+        ColorScheme    scheme,
+        Action<string> onAuthorClicked)
     {
         var row = new Row
         {
@@ -251,7 +293,7 @@ public static class Conversation
         else
             row.Add(Spacer.Width(74));
 
-        row.Add(BuildAuthorAndTextMessage(m, isFirstByAuthor, isLastByAuthor, scheme, popupOpen));
+        row.Add(BuildAuthorAndTextMessage(m, isFirstByAuthor, isLastByAuthor, scheme, onAuthorClicked));
         return row;
     }
 
@@ -272,7 +314,12 @@ public static class Conversation
         };
     }
 
-    static Column BuildAuthorAndTextMessage(Message m, bool isFirstByAuthor, bool isLastByAuthor, ColorScheme scheme, MutableState<bool> popupOpen)
+    static Column BuildAuthorAndTextMessage(
+        Message        m,
+        bool           isFirstByAuthor,
+        bool           isLastByAuthor,
+        ColorScheme    scheme,
+        Action<string> onAuthorClicked)
     {
         var col = new Column
         {
@@ -280,7 +327,7 @@ public static class Conversation
         };
         if (isLastByAuthor)
             col.Add(BuildAuthorNameTimestamp(m, scheme));
-        col.Add(BuildChatItemBubble(m, scheme, popupOpen));
+        col.Add(BuildChatItemBubble(m, scheme, onAuthorClicked));
         col.Add(Spacer.Height(isFirstByAuthor ? 8 : 4));
         return col;
     }
@@ -288,6 +335,7 @@ public static class Conversation
     static Row BuildAuthorNameTimestamp(Message m, ColorScheme scheme) =>
         new()
         {
+            Modifier.Semantics(mergeDescendants: true, properties: _ => { }),
             new Text(m.Author)
             {
                 FontSize   = 16,
@@ -304,19 +352,41 @@ public static class Conversation
             },
         };
 
-    static ComposableNode BuildChatItemBubble(Message m, ColorScheme scheme, MutableState<bool> popupOpen)
+    static ComposableNode BuildChatItemBubble(
+        Message        m,
+        ColorScheme    scheme,
+        Action<string> onAuthorClicked)
     {
         bool isMe = m.Author == MyName;
         var bg = Color.FromPacked(isMe ? scheme.Primary : scheme.SurfaceVariant);
         var fg = Color.FromPacked(isMe ? scheme.OnPrimary : scheme.OnSurface);
-        var formatted = MessageFormatter.Format(m.Content, isMe, scheme, _ => popupOpen.Value = true);
-        return new AnnotatedText(formatted)
+        var formatted = MessageFormatter.Format(
+            m.Content,
+            isMe,
+            scheme,
+            handle => onAuthorClicked(Profiles.GetById(handle).UserId));
+        var content = new Column
         {
-            Color    = fg,
-            Modifier = Modifier
-                .Background(bg, new RoundedCornerShape(4.Dp(), 20.Dp(), 20.Dp(), 20.Dp()))
-                .Padding(horizontal: 16, vertical: 16),
+            new AnnotatedText(formatted)
+            {
+                Color    = fg,
+                Modifier = Modifier
+                    .Background(bg, new RoundedCornerShape(4.Dp(), 20.Dp(), 20.Dp(), 20.Dp()))
+                    .Padding(horizontal: 16, vertical: 16),
+            },
         };
+        if (m.Image is int image)
+        {
+            content.Add(Spacer.Height(4));
+            content.Add(new Image(image, "Attached image")
+            {
+                Modifier = Modifier
+                    .Size(160)
+                    .Background(bg, new RoundedCornerShape(4.Dp(), 20.Dp(), 20.Dp(), 20.Dp()))
+                    .Clip(new RoundedCornerShape(4.Dp(), 20.Dp(), 20.Dp(), 20.Dp())),
+            });
+        }
+        return content;
     }
 
     static Surface BuildInputArea(
@@ -357,29 +427,43 @@ public static class Conversation
                     targetState: isRecording.Value,
                     content: recording => recording
                         ? RecordButton.BuildRecordingIndicator(swipeOffset, scheme)
-                        : new TextField(input)
+                        : new TextField(input, singleLine: true, maxLines: 1)
                           {
-                              Modifier = Modifier.FillMaxWidth(),
+                              Modifier = Modifier
+                                  .FillMaxWidth()
+                                  .Semantics("Message"),
+                              Placeholder = new Text("Type a message"),
+                              KeyboardOptions = CreateMessageKeyboardOptions(),
                           }),
             },
         };
 
         if (textEmpty || isRecording.Value)
         {
-            row.Add(RecordButton.BuildButton(
-                isRecording,
-                swipeOffset,
-                onCommit: () =>
+            row.Add(new Tooltip
+            {
+                Tip = new Surface
                 {
-                    isRecording.Value  = false;
-                    swipeOffset.Value  = 0f;
+                    new Text("Touch and hold to record")
+                    {
+                        Modifier = Modifier.Padding(horizontal: 12, vertical: 8),
+                    },
                 },
-                onCancel: () =>
-                {
-                    isRecording.Value  = false;
-                    swipeOffset.Value  = 0f;
-                },
-                scheme: scheme));
+                Anchor = RecordButton.BuildButton(
+                    isRecording,
+                    swipeOffset,
+                    onCommit: () =>
+                    {
+                        isRecording.Value = false;
+                        swipeOffset.Value = 0f;
+                    },
+                    onCancel: () =>
+                    {
+                        isRecording.Value = false;
+                        swipeOffset.Value = 0f;
+                    },
+                    scheme: scheme),
+            });
         }
         return row;
     }
@@ -393,7 +477,7 @@ public static class Conversation
     {
         var row = new Row(Arrangement.SpaceBetween)
         {
-            Modifier.FillMaxWidth().Padding(horizontal: 4, vertical: 4),
+            Modifier.FillMaxWidth().Height(40).Padding(horizontal: 4),
             new Row
             {
                 InputSelectorButton(Resource.Drawable.ic_mood,            "Show Emoji selector", SelEmoji,   selectedSelector, scheme),
@@ -404,15 +488,45 @@ public static class Conversation
             },
         };
         bool enabled = !string.IsNullOrWhiteSpace(input.Value?.Text);
-        row.Add(new TextButton(onClick: () => Send(ui, input, selectedSelector, messagesScroll))
+        var sendModifier = Modifier.Height(36);
+        if (!enabled)
         {
-            new Text("Send")
+            sendModifier = sendModifier.Border(
+                1,
+                Color.FromPacked(scheme.OnSurface).WithAlpha(77),
+                new RoundedCornerShape(18.Dp()));
+        }
+        var sendButton = new Button(
+            onClick: () => Send(ui, input, selectedSelector, messagesScroll),
+            enabled: enabled)
+        {
+            Modifier = sendModifier,
+            Shape = new RoundedCornerShape(18.Dp()),
+            Colors = ComposableContext.Current.ButtonColors(
+                containerColor: Color.FromPacked(scheme.Primary),
+                contentColor: Color.FromPacked(scheme.OnPrimary),
+                disabledContainerColor: Color.Transparent,
+                disabledContentColor: Color.FromPacked(scheme.OnSurface).WithAlpha(77)),
+        };
+        sendButton.Add(new Text("Send")
             {
                 FontWeight = FontWeight.SemiBold,
-                Color      = Color.FromPacked(enabled ? scheme.Primary : scheme.OnSurfaceVariant),
-            },
-        });
+            });
+        row.Add(sendButton);
         return row;
+    }
+
+    static AndroidX.Compose.Foundation.Text.KeyboardOptions CreateMessageKeyboardOptions()
+    {
+        var defaults = KeyboardOptionsCompanion.Default;
+        return defaults.Copy(
+            defaults.Capitalization,
+            defaults.AutoCorrectEnabled,
+            KeyboardType.Text,
+            AndroidX.Compose.ImeAction.Send,
+            defaults.PlatformImeOptions,
+            defaults.ShowKeyboardOnFocus,
+            defaults.HintLocales);
     }
 
     static IconButton InputSelectorButton(
@@ -420,21 +534,30 @@ public static class Conversation
         string            contentDescription,
         int               selectorId,
         MutableState<int> selectedSelector,
-        ColorScheme       scheme)
+        ColorScheme       scheme,
+        Action?           onSelected = null)
     {
         bool selected = selectedSelector.Value == selectorId;
         var button = new IconButton(onClick: () =>
-            selectedSelector.Value = selected ? 0 : selectorId)
         {
-            new Icon(drawableId, contentDescription)
-            {
-                Tint = Color.FromPacked(selected ? scheme.OnSecondary : scheme.OnSurface),
-            },
+            selectedSelector.Value = selected ? 0 : selectorId;
+            if (!selected)
+                onSelected?.Invoke();
+        })
+        {
+            Modifier = Modifier.Size(40),
         };
+        button.Add(new Icon(drawableId, contentDescription)
+        {
+            Tint = Color.FromPacked(selected ? scheme.OnSecondary : scheme.OnSurface),
+        });
         if (selected)
-            button.Modifier = Modifier.Background(
-                Color.FromPacked(scheme.Secondary),
-                new RoundedCornerShape(14.Dp()));
+            button.Modifier = Modifier
+                .Size(40)
+                .Padding(4)
+                .Background(
+                    Color.FromPacked(scheme.Secondary),
+                    new RoundedCornerShape(16.Dp()));
         return button;
     }
 
@@ -483,5 +606,14 @@ public static class Conversation
         input.Value = ComposeExtensions.NewTextFieldValue();
         selectedSelector.Value = 0;
         _ = messagesScroll.AnimateScrollToItemAsync(0);
+    }
+
+    static int DpToPx(int value)
+    {
+        var resources = Android.Content.Res.Resources.System
+            ?? throw new InvalidOperationException("Android system resources were unavailable in Jetchat.");
+        var metrics = resources.DisplayMetrics
+            ?? throw new InvalidOperationException("Android display metrics were unavailable in Jetchat.");
+        return (int)(value * metrics.Density);
     }
 }

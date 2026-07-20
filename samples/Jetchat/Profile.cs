@@ -76,26 +76,34 @@ public static class Profile
                 new Column
                 {
                     Modifier.FillMaxSize().VerticalScroll(scrollState),
-                    BuildProfileHeader(state, constraints.MaxHeight),
+                    BuildProfileHeader(state, constraints.MaxHeight, scrollState),
                     BuildUserInfoFields(state, constraints.MaxHeight, scheme),
                 },
             },
             BuildProfileFab(state, scrollState, popupOpen, scheme),
         });
 
-    static ComposableNode BuildProfileHeader(ProfileScreenState state, Dp containerHeight)
+    static ComposableNode BuildProfileHeader(
+        ProfileScreenState state,
+        Dp containerHeight,
+        ScrollState scrollState)
     {
         if (state.Photo is null)
             return Spacer.Width(0);
 
+        var resources = Android.Content.Res.Resources.System
+            ?? throw new InvalidOperationException("Android system resources were unavailable in Jetchat.");
+        var metrics = resources.DisplayMetrics
+            ?? throw new InvalidOperationException("Android display metrics were unavailable in Jetchat.");
         Dp heroMax = containerHeight / 2f;
         if (heroMax < 1) heroMax = 240;
+        var parallaxOffset = new Dp(scrollState.Value / metrics.Density / 2f);
         return new Image(state.Photo.Value, "Profile photo")
         {
             Modifier = Modifier
                 .HeightIn(max: heroMax)
                 .FillMaxWidth()
-                .Padding(horizontal: 16, vertical: 16)
+                .Padding(start: 16, top: parallaxOffset, end: 16)
                 .Clip(120),
             ContentScale = ContentScale.Crop,
         };
@@ -144,11 +152,8 @@ public static class Profile
     static Column BuildProfileProperty(string label, string value, ColorScheme scheme, bool isLink = false) =>
         new()
         {
-            Modifier.Padding(start: 16, end: 16, bottom: 16),
-            new HorizontalDivider
-            {
-                Color = Color.FromPacked(scheme.OnSurface),
-            },
+            Modifier.FillMaxWidth().Padding(start: 16, end: 16, bottom: 16),
+            new HorizontalDivider(),
             new Text(label)
             {
                 FontSize = 12,
@@ -187,11 +192,11 @@ public static class Profile
                 .WidthIn(min: 48),
             Icon = new Icon(iconRes, label)
             {
-                Tint = Color.FromPacked(scheme.OnTertiaryContainer),
+                Tint = Color.FromPacked(scheme.OnPrimaryContainer),
             },
             Text = new Text(label)
             {
-                Color = Color.FromPacked(scheme.OnTertiaryContainer),
+                Color = Color.FromPacked(scheme.OnPrimaryContainer),
             },
         };
     }

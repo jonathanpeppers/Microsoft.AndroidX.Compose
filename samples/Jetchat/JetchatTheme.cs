@@ -141,9 +141,14 @@ public static class JetchatTheme
         new Composed(c =>
         {
             bool dark = MaterialTheme.IsSystemInDarkTheme(c);
-            var scheme = c.Remember(
-                () => dark ? BuildDark() : BuildLight(),
-                dark);
+            // Android 12 introduced system-derived Material You color schemes.
+            var scheme = OperatingSystem.IsAndroidVersionAtLeast(31)
+                ? dark
+                    ? MaterialTheme.DynamicDarkColorScheme(Android.App.Application.Context)
+                    : MaterialTheme.DynamicLightColorScheme(Android.App.Application.Context)
+                : c.Remember(
+                    () => dark ? BuildDark() : BuildLight(),
+                    dark);
             var theme = new MaterialTheme
             {
                 ColorScheme = scheme,

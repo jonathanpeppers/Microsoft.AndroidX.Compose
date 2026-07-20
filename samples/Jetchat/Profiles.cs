@@ -10,7 +10,7 @@ public static class Profiles
     /// <summary>Example "me" profile.</summary>
     public static readonly ProfileScreenState MeProfile = new(
         UserId:         "me",
-        Photo:          Resource.Drawable.avatar_ali,
+        Photo:          Resource.Drawable.profile_ali,
         Name:           "Ali Conors",
         Status:         "Online",
         DisplayName:    "aliconors",
@@ -22,7 +22,7 @@ public static class Profiles
     /// <summary>Example colleague profile.</summary>
     public static readonly ProfileScreenState ColleagueProfile = new(
         UserId:         "12345",
-        Photo:          Resource.Drawable.avatar_someone_else,
+        Photo:          Resource.Drawable.profile_someone_else,
         Name:           "Taylor Brooks",
         Status:         "Away",
         DisplayName:    "taylor",

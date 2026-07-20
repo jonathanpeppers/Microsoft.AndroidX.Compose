@@ -1,4 +1,5 @@
 using AndroidX.Compose.Material3;
+using AndroidX.Compose.Runtime;
 using AndroidX.Compose.UI.Text;
 using AndroidX.Compose.UI.Text.Input;
 
@@ -25,8 +26,8 @@ public static class EmojiSelector
     /// <summary>Rows rendered in the grid.</summary>
     public const int EmojiRows = 4;
 
-    static readonly string[] Emojis = new[]
-    {
+    static readonly string[] Emojis =
+    [
         "😀", // Grinning Face
         "😁", // Grinning Face With Smiling Eyes
         "😂", // Face With Tears of Joy
@@ -67,7 +68,7 @@ public static class EmojiSelector
         "😜", // Face With Stuck-Out Tongue and Winking Eye
         "😝", // Face With Stuck-Out Tongue and Tightly-Closed Eyes
         "😒", // Unamused Face
-    };
+    ];
 
     /// <summary>Build the emoji selector panel.</summary>
     /// <param name="input">Shared text-field state; tapped emojis are appended to <c>input.Value.Text</c> and the caret is moved to the end.</param>
@@ -76,27 +77,91 @@ public static class EmojiSelector
         new Composed(c =>
         {
             var selected = c.MutableStateOf(0);
-            return new Column
+            var showStickerDialog = c.MutableStateOf(false);
+            var scroll = c.Remember(() => new ScrollState());
+            var root = new Box
             {
-                Modifier
-                    .FillMaxWidth()
-                    .Background(Color.FromPacked(scheme.SurfaceVariant)),
-                new PrimaryTabRow(selectedTabIndex: selected.Value)
+                new Column
                 {
-                    new Tab(selected: selected.Value == 0, onClick: () => selected.Value = 0)
+                    Modifier
+                        .FillMaxWidth()
+                        .Background(Color.FromPacked(scheme.SurfaceVariant)),
+                    new Row(
+                        Arrangement.SpaceEvenly,
+                        Alignment.Vertical.CenterVertically)
                     {
-                        Text = new Text("Emojis"),
+                        Modifier.FillMaxWidth().Height(48),
+                        BuildSelectorButton(
+                            "Emojis",
+                            selected: true,
+                            onClick: () => selected.Value = 0,
+                            c,
+                            scheme),
+                        BuildSelectorButton(
+                            "Stickers",
+                            selected: false,
+                            onClick: () =>
+                            {
+                                selected.Value = 1;
+                                showStickerDialog.Value = true;
+                            },
+                            c,
+                            scheme),
                     },
-                    new Tab(selected: selected.Value == 1, onClick: () => selected.Value = 1)
+                    new Box
                     {
-                        Text = new Text("Stickers"),
+                        Modifier.FillMaxWidth().Height(168).VerticalScroll(scroll),
+                        BuildEmojiGrid(input, scheme),
                     },
                 },
-                selected.Value == 0
-                    ? BuildEmojiGrid(input, scheme)
-                    : BuildStickerPlaceholder(scheme),
             };
+            if (showStickerDialog.Value)
+            {
+                root.Add(new AlertDialog(onDismissRequest: () =>
+                {
+                    showStickerDialog.Value = false;
+                    selected.Value = 0;
+                })
+                {
+                    Title = new Text("Stickers"),
+                    Text = new Text("Sticker selection is not available yet."),
+                    ConfirmButton = new TextButton(() =>
+                    {
+                        showStickerDialog.Value = false;
+                        selected.Value = 0;
+                    })
+                    {
+                        new Text("OK"),
+                    },
+                });
+            }
+            return root;
         });
+
+    static TextButton BuildSelectorButton(
+        string label,
+        bool selected,
+        Action onClick,
+        IComposer composer,
+        ColorScheme scheme)
+    {
+        var button = new TextButton(onClick)
+        {
+            Modifier = Modifier
+                .Height(36)
+                .Semantics(label),
+            Shape = new RoundedCornerShape(18.Dp()),
+            Colors = composer.ButtonColors(
+                containerColor: selected
+                    ? Color.FromPacked(scheme.SecondaryContainer)
+                    : Color.Transparent,
+                contentColor: selected
+                    ? Color.FromPacked(scheme.OnSecondaryContainer)
+                    : Color.FromPacked(scheme.OnSurfaceVariant)),
+        };
+        button.Add(new Text(label));
+        return button;
+    }
 
     static Column BuildEmojiGrid(MutableState<TextFieldValue> input, ColorScheme scheme)
     {
@@ -113,11 +178,13 @@ public static class EmojiSelector
             for (int col = 0; col < EmojiColumns; col++)
             {
                 string emoji = Emojis[row * EmojiColumns + col];
-                rowNode.Add(new Text(emoji)
+                var emojiButton = new Row(
+                    Arrangement.Center,
+                    Alignment.Vertical.CenterVertically)
                 {
-                    FontSize = 18,
-                    Color    = Color.FromPacked(scheme.OnSurface),
                     Modifier = Modifier
+                        .Size(42)
+                        .Semantics($"Emoji {emoji}")
                         .Clickable(() =>
                         {
                             // Match upstream Jetchat's TextFieldState.addText:
@@ -130,24 +197,18 @@ public static class EmojiSelector
                             var current = input.Value ?? ComposeExtensions.NewTextFieldValue();
                             var newText = current.Text + emoji;
                             input.Value = current.Copy(newText, TextRangeKt.TextRange(newText.Length), composition: null);
-                        })
-                        .SizeIn(minWidth: 42, minHeight: 42)
-                        .Padding(8),
+                        }),
+                };
+                emojiButton.Add(new Text(emoji)
+                {
+                    FontSize = 18,
+                    Color    = Color.FromPacked(scheme.OnSurface),
                 });
+                rowNode.Add(emojiButton);
             }
             grid.Add(rowNode);
         }
         return grid;
     }
 
-    static Column BuildStickerPlaceholder(ColorScheme scheme) =>
-        new()
-        {
-            Modifier.FillMaxWidth().Padding(horizontal: 16, vertical: 48),
-            new Text("Stickers not yet implemented in this port.")
-            {
-                FontSize = 14,
-                Color    = Color.FromPacked(scheme.OnSurfaceVariant),
-            },
-        };
 }

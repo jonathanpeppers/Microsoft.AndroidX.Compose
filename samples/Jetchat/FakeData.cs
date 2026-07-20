@@ -21,10 +21,10 @@ internal static class FakeData
     const string PointRight   = "\uD83D\uDC49";
     const string PinkHeart    = "\uD83E\uDE77";
 
-    public static List<Message> InitialMessages() => new()
-    {
+    public static List<Message> InitialMessages() =>
+    [
         new Message("me",              "Take a look at this!",                                                                                                                                  "8:07 PM"),
-        new Message("me",              $"Appreciate it {PinkHeart}",                                                                                                                            "8:06 PM"),
+        new Message("me",              $"Appreciate it {PinkHeart}",                                                                                                                            "8:06 PM", Resource.Drawable.sticker),
         new Message("Taylor Brooks",   "Everything composable carries over.",                                                                                                                   "8:05 PM"),
         new Message("Taylor Brooks",   "@aliconors give `Flow.collectAsStateWithLifecycle()` a try.",                                                                                           "8:05 PM"),
         new Message("John Glenn",      $"Also fairly new to Compose {Flamingo} — the JetNews sample tracks current releases and shows a clean async-loading pattern. {PointRight} https://goo.gle/jetnews", "8:04 PM"),
@@ -32,5 +32,5 @@ internal static class FakeData
         new Message("Shangeeth Sivan", "Has anyone tried Glance Widgets yet? It's the newer way to build home-screen widgets on Android.",                                                       "8:08 PM"),
         new Message("Taylor Brooks",   "Hadn't heard of them — when did Glance show up in the platform?",                                                                                        "8:10 PM"),
         new Message("John Glenn",      "Pretty recent addition from what I can tell.",                                                                                                          "8:12 PM"),
-    };
+    ];
 }
