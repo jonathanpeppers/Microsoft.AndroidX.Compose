@@ -335,10 +335,23 @@ protocol, as before. Parent-hash collisions inherit native Compose's
 compound-key limits; full lexical strings prevent the allocator from
 introducing an additional integer site-hash collision.
 
-The live pool strongly retains each stateful observer until its lifecycle
-callback, preventing managed GC from replacing it with an empty JNI peer.
-Unexpected peer activation fails explicitly. Empty pools and composition
-entries are removed; the registry does not retain disposed compositions.
+The live pool strongly retains each stateful observer through a
+`ConditionalWeakTable` keyed by the managed `IControlledComposition` peer.
+Native slots keep their observer peers and composition reachable through
+the Java/managed GC bridge; repeated bound composition projections must
+preserve this managed key identity. Unexpected peer activation fails explicitly.
+Normal callbacks remove empty pools and composition entries.
+
+The table must be an ephemeron, not a strong dictionary or an unconditional
+`GCHandle`: native `RememberEventDispatcher.dispatchRememberObservers`
+forgets in reverse order, and an earlier child's throwing cleanup can skip
+the enclosing occurrence's callback. Slot removal precedes dispatch;
+clearing the dispatcher loses that callback, and later composition disposal
+cannot recover an already-removed slot. A device regression reproduced the
+resulting permanent root with the strong dictionary. Ephemeron ownership
+allows the composition/observer cycle to collect when the composition is no
+longer independently reachable, even if cleanup was never delivered.
+It does not suppress the original exception or replay skipped user effects.
 The cost is one managed/JVM observer slot and one inner group per entry,
 with pool work on insertion/removal rather than every invocation.
 The public helper is compiler plumbing, not a new application grouping API.
@@ -392,10 +405,20 @@ while ordinary state resets. The node-order fixture
 uses fixed pixel constraints, avoiding an unrelated cached JNI class-reference
 failure exposed by repeatedly calling the current Constraints getter bridges.
 
-On integrated main `c49b14e`, the consolidated suite passed 23 device cases
-and 336 host tests. The injected slot-publication failure releases the
-uninstalled observer as well as its pool. The Gallery's **Conditional child
-identity** demo also exercises the contract interactively.
+On integrated main `c49b14e`, the final consolidated suite passed 24 device
+cases and 338 host tests. The injected slot-publication failure releases the
+uninstalled observer as well as its pool. The throwing-cleanup regression
+preserves the original exception and verifies that later disposal cannot
+deliver the missing callback. It then observes resurrection-tracking weak
+references to the composition, actual table key, site map, pool, occurrence,
+and captured payload. In the recorded run, the first mixed-GC round cleared
+the key and occurrence but left the map, pool, and payload alive; the second
+cleared all roots and the table count. A key/token-only collection check
+would have ended too early. Active Activity-owned peers survive both GCs
+without the fixture retaining a managed composition, and the bound
+composition projections preserve reference identity.
+The Gallery's **Conditional child identity** demo also exercises the
+contract interactively.
 
 `HundredRowFootprint_RecordsCompositionCosts` compares the old envelope
 and ordinal helper in the same Debug/Mono APK while actually rendering
@@ -404,8 +427,8 @@ including raw per-pass managed allocations and composition-body timings in
 the TRX. The ordinal case retained 104 observer peers versus the baseline's
 4 common surrounding peers; both returned to zero on teardown. Late updates
 in both cases allocated 130,448 managed bytes. Initial samples were 387,512
-versus 395,776 bytes; the last-ten-update median body times were 45.342 versus
-35.954 ms (baseline versus ordinal). These sequential samples still show
+versus 395,776 bytes; the last-ten-update median body times were 44.326 versus
+35.559 ms (baseline versus ordinal). These sequential samples still show
 warmup effects and are **not** evidence of a speedup or a calibrated
 regression bound. They exclude complete frame/startup time and total
 Java/JNI/native memory. The guaranteed additional structure is one observer

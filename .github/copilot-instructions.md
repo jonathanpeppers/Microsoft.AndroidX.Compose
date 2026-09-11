@@ -1137,9 +1137,14 @@ contract, control-flow boundaries, and device regressions.
 slot and an inner ordinal-keyed group. The ordinal is allocated once per
 new envelope from a composition/parent-composite-hash/full-site pool and
 released on forgotten/abandoned or failed slot publication. The pool retains
-the stateful Java peer only until release and removes empty composition
-entries. This distinguishes selectively inserted descendants of repeated
-parents without save-provider overhead or ambient invocation counters.
+the stateful Java peer through a composition-keyed `ConditionalWeakTable`
+and removes empty composition entries. Do not use an unconditional strong
+root: another observer's throwing cleanup can prevent native dispatch from
+delivering this occurrence's callback. Ephemeron key/value cycles must remain
+collectible after composition ownership ends, while native-owned active
+peers must survive both managed and Java GC. This distinguishes selectively
+inserted descendants of repeated parents without save-provider overhead or
+ambient invocation counters.
 Keep both the ordinal group and movable envelope outside restart callbacks.
 The selective-order/nested/re-add regressions are essential: duplicate
 saveable provider registration order alone does not represent FIFO slots.

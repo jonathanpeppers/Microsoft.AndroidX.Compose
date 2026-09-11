@@ -3,12 +3,22 @@ namespace AndroidX.Compose;
 internal sealed class CompositionOccurrenceRegistry<TComposition> where TComposition : class
 {
     readonly object _gate = new();
-    readonly System.Collections.Generic.Dictionary<TComposition,
-        System.Collections.Generic.Dictionary<(long Parent, string Site), CompositionOccurrencePool>> _compositions = [];
+    // Native forgetting can stop at another observer's exception. A value-to-key cycle must not become a permanent root.
+    readonly System.Runtime.CompilerServices.ConditionalWeakTable<TComposition,
+        System.Collections.Generic.Dictionary<(long Parent, string Site), CompositionOccurrencePool>> _compositions = new();
 
     internal int CompositionCount
     {
-        get { lock (_gate) return _compositions.Count; }
+        get
+        {
+            lock (_gate)
+            {
+                int count = 0;
+                foreach (var entry in _compositions)
+                    count++;
+                return count;
+            }
+        }
     }
 
     internal object[] GetOwners()
@@ -16,8 +26,8 @@ internal sealed class CompositionOccurrenceRegistry<TComposition> where TComposi
         lock (_gate)
         {
             System.Collections.Generic.List<object> owners = [];
-            foreach (var sites in _compositions.Values)
-                foreach (var pool in sites.Values)
+            foreach (var entry in _compositions)
+                foreach (var pool in entry.Value.Values)
                     owners.AddRange(pool.Owners);
             return owners.ToArray();
         }
@@ -39,7 +49,8 @@ internal sealed class CompositionOccurrenceRegistry<TComposition> where TComposi
     {
         lock (_gate)
         {
-            var sites = _compositions[composition];
+            if (!_compositions.TryGetValue(composition, out var sites))
+                throw new System.InvalidOperationException("Occurrence composition pool is missing during release.");
             var pool = sites[(parent, site)];
             pool.Release(ordinal);
             if (pool.Count == 0)

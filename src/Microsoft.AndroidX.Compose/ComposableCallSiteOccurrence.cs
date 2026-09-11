@@ -3,7 +3,7 @@ using AndroidX.Compose.Runtime;
 
 namespace AndroidX.Compose;
 
-// The registry retains this stateful peer until the slot's forget/abandon callback releases it.
+// A composition-keyed ephemeron preserves the live peer without permanently rooting a missed lifecycle callback.
 [Register("net/compose/ComposableCallSiteOccurrence")]
 internal sealed class ComposableCallSiteOccurrence : Java.Lang.Object, IRememberObserver
 {

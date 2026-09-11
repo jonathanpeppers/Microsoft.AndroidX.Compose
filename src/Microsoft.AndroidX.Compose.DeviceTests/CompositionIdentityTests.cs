@@ -66,9 +66,20 @@ public class CompositionIdentityTests
         {
             await WaitFor(() => CompositionIdentityTestActivity.ParentPasses > 0,
                 "Initial selective composition did not complete.");
+            // The Activity retains its composition in Kotlin; this fixture holds no managed composition key.
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            Java.Lang.JavaSystem.Gc();
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
             await ChangeStructure(activity, () => CompositionIdentityTestActivity.Phase.Value = firstPhase);
             var existing = initialIndices.ToDictionary(i => i, i => CompositionIdentityTestActivity.Probes[$"loop-{i}"]);
             await Seed(existing.Keys);
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            Java.Lang.JavaSystem.Gc();
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
             await ChangeStructure(activity, () => CompositionIdentityTestActivity.Phase.Value = allPhase);
             foreach (var (index, probe) in existing)
             {

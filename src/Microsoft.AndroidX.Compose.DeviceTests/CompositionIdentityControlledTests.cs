@@ -9,6 +9,95 @@ namespace Microsoft.AndroidX.Compose.DeviceTests;
 [DoNotParallelize]
 public class CompositionIdentityControlledTests
 {
+    static WeakReference? s_disposalPayload;
+
+    [TestMethod]
+    public void ThrowingChildCleanup_DoesNotPermanentlyRootRemovedComposition()
+    {
+        var references = RemoveThrowingSubtree();
+        for (int i = 0; i < 20; i++)
+        {
+            CollectPeers();
+            Console.WriteLine($"GC round {i + 1}: " +
+                string.Join(", ", references.Select(r => $"{r.Name}={r.Reference.IsAlive}")) +
+                $", compositions={ComposableCallSite.Occurrences.CompositionCount}");
+            if (references.All(r => !r.Reference.IsAlive) &&
+                ComposableCallSite.Occurrences.CompositionCount == 0)
+                break;
+        }
+        Assert.IsTrue(references.All(r => !r.Reference.IsAlive),
+            "Skipped observer callbacks must not permanently retain the removed composition, pools, occurrence, or payload.");
+        Assert.AreEqual(0, ComposableCallSite.Occurrences.CompositionCount);
+    }
+
+    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
+    static (string Name, WeakReference Reference)[] RemoveThrowingSubtree()
+    {
+        using var applier = new IdentityTestApplier();
+        using var recomposer = new Recomposer(Kotlin.Coroutines.EmptyCoroutineContext.Instance
+            ?? throw new InvalidOperationException("Empty coroutine context is unavailable."));
+        var composition = CompositionKt.ControlledComposition(applier, recomposer);
+        try
+        {
+            composition.ComposeContent(new ComposableLambda2(c => ThrowingCleanup(c)));
+            composition.ApplyChanges();
+            var owners = ObserveOwners();
+            Assert.AreEqual(1, owners.Length);
+            var roots = ObserveRegistryRoots(composition);
+            composition.ComposeContent(new ComposableLambda2(_ => { }));
+            var error = Assert.ThrowsExactly<Java.Lang.IllegalStateException>(composition.ApplyChanges);
+            StringAssert.Contains(error.Message, "Expected disposal failure.");
+            Assert.AreEqual(1, ComposableCallSite.Occurrences.GetOwners().Length,
+                "Native dispatch should have stopped before the enclosing occurrence's cleanup.");
+            composition.Dispose();
+            Assert.IsTrue(composition.IsDisposed);
+            Assert.AreEqual(1, ComposableCallSite.Occurrences.GetOwners().Length,
+                "Disposing cannot recover a committed occurrence whose slot was already removed.");
+            return [("composition", new WeakReference(composition, trackResurrection: true)),
+                .. roots, ("occurrence", owners[0]),
+                ("payload", s_disposalPayload ?? throw new InvalidOperationException("Disposal payload was not created."))];
+        }
+        finally
+        {
+            if (!composition.IsDisposed)
+                composition.Dispose();
+        }
+    }
+
+    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
+    static (string Name, WeakReference Reference)[] ObserveRegistryRoots(IControlledComposition composition)
+    {
+        var field = typeof(CompositionOccurrenceRegistry<IControlledComposition>).GetField(
+            "_compositions", System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.NonPublic)
+            ?? throw new InvalidOperationException("Occurrence composition table is unavailable.");
+        var table = field.GetValue(ComposableCallSite.Occurrences) as
+            IEnumerable<KeyValuePair<IControlledComposition, Dictionary<(long Parent, string Site), CompositionOccurrencePool>>>
+            ?? throw new InvalidOperationException("Occurrence composition table cannot be observed.");
+        List<(string Name, WeakReference Reference)> roots = [];
+        foreach (var entry in table)
+        {
+            Assert.AreSame(composition, entry.Key,
+                "The native composer's registry key must be the original managed composition peer.");
+            roots.Add(("registry-key", new WeakReference(entry.Key, trackResurrection: true)));
+            roots.Add(("site-map", new WeakReference(entry.Value, trackResurrection: true)));
+            foreach (var pool in entry.Value.Values)
+                roots.Add(("pool", new WeakReference(pool, trackResurrection: true)));
+        }
+        return roots.ToArray();
+    }
+
+    [Composable]
+    internal static void ThrowingCleanup(IComposer composer)
+    {
+        var payload = composer.Remember(static () => new object());
+        s_disposalPayload = new WeakReference(payload, trackResurrection: true);
+        composer.DisposableEffect(0, () => () =>
+        {
+            GC.KeepAlive(payload);
+            throw new Java.Lang.IllegalStateException("Expected disposal failure.");
+        });
+    }
+
     [TestMethod]
     public void FailedSlotPublication_ReleasesTheUninstalledOwner()
     {
@@ -129,7 +218,7 @@ public class CompositionIdentityControlledTests
 
     [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
     static WeakReference[] ObserveOwners() =>
-        ComposableCallSite.Occurrences.GetOwners().Select(owner => new WeakReference(owner)).ToArray();
+        ComposableCallSite.Occurrences.GetOwners().Select(owner => new WeakReference(owner, trackResurrection: true)).ToArray();
 
     static void CollectPeers()
     {
@@ -252,6 +341,9 @@ public class CompositionIdentityControlledTests
     [Composable]
     internal static void Probe(IComposer composer, int index, List<CompositionIdentityProbe> probes, List<long> keys)
     {
+        var composition = composer.Composition;
+        Assert.AreSame(composition, composer.Composition,
+            "Repeated projections must preserve the managed key while its pool is live.");
         var probe = composer.Remember(() => new CompositionIdentityProbe());
         var saved = composer.RememberSaveable(() => new MutableNumberState<int>(index));
         Assert.AreEqual(index, saved.Value, "Missing saveable registry must remain supported.");
