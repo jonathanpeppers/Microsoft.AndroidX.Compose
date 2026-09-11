@@ -139,8 +139,25 @@ that owner alive if state must be saved while all consumers are hidden.
 recreation with a fresh wrapper, plus independently removed/reintroduced
 consumers under a surviving common ancestor. Its native-only control
 distinguishes a missing save provider from a broken recreation harness.
+The omitted direct-consumer case calls `Composables.TimeInput()` without a
+wrapper or ancestor-owner argument, edits its native accessibility fields to
+19:27, repeats three executions, and checks the fields after recreation.
 `StateHolderLifecycleTests` and `SharedStateTransferTests` verify owner loss,
 pending writes, new-peer initialization, and native confirm-callback refresh.
+
+Visual inspection of the hoisted-owner Gallery demo preserves 19:25 in its
+label and both numeric displays while hiding and restoring either or both
+consumers. A separate pinned-native dial defect remains: reintroducing the
+clock while minute selection is active can point its hand at the hour angle
+(19 maps to the 35-minute position), despite retaining minute 25 and native
+selection `Minute`. `DialReentry_RetainsSelectedMinuteAndPeer` compares a raw
+native remembered-state/bridge control with the generated owner/consumer,
+checks unchanged peer, values, and native selection, and saves before/after
+screenshots. Both paths reproduce the same mismatch. The pinned
+`AnalogTimePickerState` constructor initializes its animation from `hourAngle`
+regardless of selection; this is consistent with the observation, not a
+shared-owner state reset. The test's pass result verifies state and selection,
+not dial geometry. No synthetic tab switch is applied to conceal the defect.
 
 ## The `$default` bitmask source generator
 

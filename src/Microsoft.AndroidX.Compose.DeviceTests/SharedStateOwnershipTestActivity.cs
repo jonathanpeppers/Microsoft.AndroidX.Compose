@@ -17,6 +17,24 @@ public class SharedStateOwnershipTestActivity : ComponentActivity
     internal MutableState<bool> ShowSecond { get; } = new(true);
     internal int CompletedPass { get; private set; } = -1;
     internal bool SiblingsSharePeer { get; private set; }
+    internal int NativeSelection
+    {
+        get
+        {
+            var peer = State.Jvm
+                ?? throw new InvalidOperationException("Time state is not bound.");
+            try
+            {
+                var type = JNIEnv.FindClass("androidx/compose/material3/TimePickerState");
+                var getter = JNIEnv.GetMethodID(type, "getSelection-yecRtBI", "()I");
+                return JNIEnv.CallIntMethod(((Java.Lang.Object)peer).Handle, getter);
+            }
+            finally
+            {
+                GC.KeepAlive(peer);
+            }
+        }
+    }
 
     protected override void OnCreate(Bundle? savedInstanceState)
     {
@@ -25,6 +43,20 @@ public class SharedStateOwnershipTestActivity : ComponentActivity
         {
             int pass = Pass.Value;
             string mode = Intent?.GetStringExtra("mode") ?? "tree";
+            if (mode == "native-dial")
+            {
+                var handle = ComposeBridges.RememberTimePickerStateJvm(7, 15, true, composer);
+                try
+                {
+                    State.BindJvm(Java.Lang.Object.GetObject<global::AndroidX.Compose.Material3.ITimePickerState>(
+                        handle, JniHandleOwnership.DoNotTransfer)
+                        ?? throw new InvalidOperationException("Native dial state was not returned."));
+                }
+                finally
+                {
+                    JNIEnv.DeleteLocalRef(handle);
+                }
+            }
             if (mode.StartsWith("owned", StringComparison.Ordinal))
             {
                 var supplied = mode.Contains("omitted", StringComparison.Ordinal) ? null : State;
@@ -37,7 +69,27 @@ public class SharedStateOwnershipTestActivity : ComponentActivity
                     State = composer.RememberTimePickerState(supplied);
             }
             composer.StartReplaceableGroup(354001);
-            if (mode == "native")
+            if (mode.EndsWith("-dial", StringComparison.Ordinal))
+            {
+                if (ShowFirst.Value)
+                {
+                    if (mode == "native-dial")
+                    {
+                        var peer = State.Jvm
+                            ?? throw new InvalidOperationException("Native dial owner has no state.");
+                        ComposeBridges.TimePicker(((Java.Lang.Object)peer).Handle, null,
+                            (int)TimePickerDefault.All, composer);
+                    }
+                    else
+                        new global::AndroidX.Compose.TimePicker(State).Render(composer);
+                }
+            }
+            else if (mode == "omitted-direct")
+            {
+                using var context = ComposableContext.Enter(composer);
+                Composables.TimeInput();
+            }
+            else if (mode == "native")
             {
                 var handle = ComposeBridges.RememberTimePickerStateJvm(7, 15, true, composer);
                 try
@@ -59,7 +111,8 @@ public class SharedStateOwnershipTestActivity : ComponentActivity
             composer.EndReplaceableGroup();
 
             composer.StartReplaceableGroup(354002);
-            if (mode != "native" && ShowSecond.Value)
+            if (mode is not ("native" or "omitted-direct") && !mode.EndsWith("-dial", StringComparison.Ordinal)
+                && ShowSecond.Value)
                 RenderPicker(composer, mode);
             SiblingsSharePeer = !ShowFirst.Value || !ShowSecond.Value || ReferenceEquals(owner, State.Jvm);
             composer.EndReplaceableGroup();

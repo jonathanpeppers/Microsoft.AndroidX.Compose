@@ -17,6 +17,7 @@ namespace Microsoft.AndroidX.Compose.DeviceTests;
 [Instrumentation(Name = "net.compose.devicetests.TestInstrumentation")]
 public class TestInstrumentation : Instrumentation
 {
+    internal static TestInstrumentation? Current { get; private set; }
     string? _filter;
 
     protected TestInstrumentation(IntPtr handle, JniHandleOwnership ownership)
@@ -25,6 +26,7 @@ public class TestInstrumentation : Instrumentation
     public override void OnCreate(Bundle? arguments)
     {
         base.OnCreate(arguments);
+        Current = this;
         _filter = arguments?.GetString("filter");
         Start();
     }
@@ -69,6 +71,10 @@ public class TestInstrumentation : Instrumentation
         {
             bundle.PutString("error", ex.ToString());
             Finish(Result.Canceled, bundle);
+        }
+        finally
+        {
+            Current = null;
         }
     }
 
