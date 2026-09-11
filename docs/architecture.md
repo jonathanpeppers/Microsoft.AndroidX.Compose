@@ -73,6 +73,17 @@ native `RememberXxxState` on every execution of that owner. Siblings sharing
 the wrapper consume the same peer without creating independent native state.
 The same preamble is used by tree facades and direct composable helpers.
 
+Each direct observer keeps its original managed peer alive with a strong
+`GCHandle` from publication until `OnForgotten` or `OnAbandoned`, including
+speculative and non-owning sibling tokens. Failed publication and throwing
+release callbacks also free the handle; retirement clears captured wrappers
+and release delegates even if Java still references the retired token. This
+is a bounded composition resource, not a permanent registry root. The
+JNI activation constructor rejects lost lifetime state rather than inventing
+an empty owner: normal active callbacks and slot reads must use the original
+stateful peer. Device regressions exercise both managed and Java GC, native
+observer callbacks, abandonment, failures, and post-retirement collectibility.
+
 For conditional consumers, hoist the typed owner before the condition:
 
 ```csharp

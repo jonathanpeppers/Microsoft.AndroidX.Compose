@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using Android.Runtime;
 using AndroidX.Compose.Runtime;
 
@@ -9,15 +10,42 @@ namespace AndroidX.Compose;
 internal sealed class SharedStateOwner : Java.Lang.Object, IRememberObserver
 {
     static readonly ConditionalWeakTable<object, SharedStateOwnership> Ownerships = new();
-    readonly object? _wrapper;
-    readonly SharedStateOwnership _ownership;
-    readonly Action _release;
+    object? _wrapper;
+    SharedStateOwnership? _ownership;
+    Action? _release;
+    GCHandle _selfRoot;
 
     SharedStateOwner(object? wrapper, Action release)
     {
         _wrapper = wrapper;
         _ownership = wrapper is null ? new() : Ownerships.GetValue(wrapper, static _ => new());
         _release = release;
+        // Preserve the stateful peer even before OnRemembered. Every token, including
+        // non-owning siblings, releases this root on forgotten/abandoned or failed publication.
+        _selfRoot = GCHandle.Alloc(this);
+    }
+
+    internal SharedStateOwner(IntPtr handle, JniHandleOwnership transfer)
+        : base(handle, transfer)
+    {
+        // A live token is rooted, so activation cannot be its normal GC path.
+        // An empty replacement would lose both arbitration and the release callback.
+        throw new InvalidOperationException("SharedStateOwner activation lost its original managed lifetime state.");
+    }
+
+    internal static SharedStateOwner Publish(object? wrapper, Action release, Action<SharedStateOwner> publish)
+    {
+        var owner = new SharedStateOwner(wrapper, release);
+        try
+        {
+            publish(owner);
+            return owner;
+        }
+        catch
+        {
+            owner.Release();
+            throw;
+        }
     }
 
     internal static SharedStateOwner Remember(IComposer composer, object? wrapper, Action release)
@@ -26,12 +54,11 @@ internal sealed class SharedStateOwner : Java.Lang.Object, IRememberObserver
         try
         {
             if (composer.RememberedValue() is SharedStateOwner existing
+                && existing._ownership is not null
                 && ReferenceEquals(existing._wrapper, wrapper))
                 return existing;
 
-            var owner = new SharedStateOwner(wrapper, release);
-            composer.UpdateRememberedValue(owner);
-            return owner;
+            return Publish(wrapper, release, composer.UpdateRememberedValue);
         }
         finally
         {
@@ -44,9 +71,11 @@ internal sealed class SharedStateOwner : Java.Lang.Object, IRememberObserver
         get
         {
             // Readers must execute again if their owner is forgotten during applyChanges.
-            _ = _ownership.Version.Value;
-            _ownership.Owner ??= this;
-            return ReferenceEquals(_ownership.Owner, this);
+            var ownership = _ownership
+                ?? throw new InvalidOperationException("SharedStateOwner no longer has an active lifetime.");
+            _ = ownership.Version.Value;
+            ownership.Owner ??= this;
+            return ReferenceEquals(ownership.Owner, this);
         }
     }
 
@@ -56,11 +85,30 @@ internal sealed class SharedStateOwner : Java.Lang.Object, IRememberObserver
 
     void Release()
     {
-        if (!ReferenceEquals(_ownership.Owner, this))
-            return;
+        var ownership = _ownership;
+        var release = _release;
+        _wrapper = null;
+        _ownership = null;
+        _release = null;
+        try
+        {
+            if (ownership is null || !ReferenceEquals(ownership.Owner, this))
+                return;
 
-        _release();
-        _ownership.Owner = null;
-        _ownership.Version.Value++;
+            try
+            {
+                (release ?? throw new InvalidOperationException("SharedStateOwner has no release callback."))();
+            }
+            finally
+            {
+                ownership.Owner = null;
+                ownership.Version.Value++;
+            }
+        }
+        finally
+        {
+            if (_selfRoot.IsAllocated)
+                _selfRoot.Free();
+        }
     }
 }

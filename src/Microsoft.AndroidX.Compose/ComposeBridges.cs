@@ -1380,6 +1380,9 @@ internal static partial class ComposeBridges
     internal static partial IntPtr RememberTimePickerStateJvm(int initialHour, int initialMinute,
                                                               bool is24Hour, IComposer composer);
 
+    // Why manual: the generated IntPtr bridge returns an owned JNI local, but state
+    // preambles expect a borrowed cached-peer handle. The generator does not model
+    // that return-ownership conversion; normalize the peer and release the local here.
     public static IntPtr RememberTimePickerState(int rememberHour, int rememberMinute,
                                                  bool is24Hour, IComposer composer)
     {
@@ -1452,6 +1455,9 @@ internal static partial class ComposeBridges
         SheetValue initialValue, bool skipHiddenState,
         float? positionalThreshold, float? velocityThreshold, IComposer composer);
 
+    // Why manual: normalize the generated bridge's owned JNI local to the borrowed
+    // cached-peer handle expected by state preambles, releasing the local in finally.
+    // This return-ownership conversion is not a bridge-generator shape.
     public static IntPtr RememberSheetState(
         bool skipPartiallyExpanded,
         SheetValue rememberValue,

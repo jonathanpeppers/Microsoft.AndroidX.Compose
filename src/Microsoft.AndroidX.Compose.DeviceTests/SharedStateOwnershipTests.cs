@@ -227,6 +227,17 @@ public class SharedStateOwnershipTests
     [DataRow("owned-omitted-tree")]
     [DataRow("owned-omitted-direct")]
     public async Task RepeatedRenderThenRecreation_RestoresSharedTime(string mode)
+        => await VerifyRepeatedRenderThenRecreation(mode, collect: false);
+
+    [TestMethod]
+    [DataRow("tree")]
+    [DataRow("direct")]
+    [DataRow("owned-tree")]
+    [DataRow("owned-direct")]
+    public async Task ForcedGc_RepeatedRenderThenRecreation_RestoresSharedTime(string mode)
+        => await VerifyRepeatedRenderThenRecreation(mode, collect: true);
+
+    static async Task VerifyRepeatedRenderThenRecreation(string mode, bool collect)
     {
         var activity = await StartActivity(mode);
         try
@@ -234,6 +245,8 @@ public class SharedStateOwnershipTests
             var originalState = activity.State;
             for (int pass = 1; pass <= 3; pass++)
             {
+                if (collect)
+                    SharedStateOwnerLifetimeTests.CollectBothRuntimes();
                 int nextPass = pass;
                 await OnUiThread(activity, () =>
                 {
