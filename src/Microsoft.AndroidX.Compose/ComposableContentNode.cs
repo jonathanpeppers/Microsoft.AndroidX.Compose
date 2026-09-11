@@ -41,7 +41,7 @@ internal sealed class ComposableContentNode : ComposableNode
             ? RenderContext.PushRow(1)
             : (RenderContext.RowFrame?)null;
         rows?.SetIndex(0);
-        composer.StartReplaceableGroup(HashCode.Combine(0, typeof(ComposableContentNode)));
+        composer.StartReplaceableGroup(CompositionGroupKey.Compute(0, typeof(ComposableContentNode)));
         try
         {
             using var scope = ComposableContext.Enter(composer);
@@ -61,7 +61,7 @@ internal sealed class ComposableContentNode : ComposableNode
             ? RenderContext.PushRow(1)
             : (RenderContext.RowFrame?)null;
         rows?.SetIndex(0);
-        composer.StartReplaceableGroup(HashCode.Combine(0, typeof(ComposableContentNode)));
+        composer.StartReplaceableGroup(CompositionGroupKey.Compute(0, typeof(ComposableContentNode)));
         try
         {
             using var scope = ComposableContext.Enter(composer);

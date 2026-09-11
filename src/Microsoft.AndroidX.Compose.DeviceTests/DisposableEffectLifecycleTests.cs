@@ -17,7 +17,8 @@ public class DisposableEffectLifecycleTests
             () => new DisposableEffect("key1", "key2", null));
         Assert.ThrowsExactly<ArgumentNullException>(
             () => new DisposableEffect("key1", "key2", "key3", null));
-#pragma warning disable CN5009 // Validate the null guard before any ambient composer is accessed.
+        // This intentionally invalid call tests validation before entering composition.
+#pragma warning disable CN5009
         Assert.ThrowsExactly<ArgumentNullException>(
             () => Composables.DisposableEffect("key", null));
 #pragma warning restore CN5009

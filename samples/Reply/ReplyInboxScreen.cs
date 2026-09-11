@@ -29,6 +29,7 @@ public static class ReplyInboxScreen
                         isSelected:       selectedEmailIds.Contains(email.Id)))
             {
                 Modifier = Modifier.FillMaxWidth().Padding(top: 80),
+                Key = static email => email.Id,
             },
             new ReplySearchBar(),
             new Box

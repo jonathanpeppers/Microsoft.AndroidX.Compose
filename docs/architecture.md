@@ -168,6 +168,11 @@ already supports.
 
 ## Composable methods — `[Composable]` C# methods
 
+Composition ancestry must also remain deterministic across process recreation.
+See [Composition keys and saved task state](saved-state-keys.md) for the runtime
+type/position key contract, upgrade compatibility, and the saved-task regression
+procedure.
+
 Composable methods are the C# equivalent of Kotlin's compose-compiler plugin:
 a Roslyn incremental source generator (`ComposableMethodGenerator`)
 that emits a per-call-site `[InterceptsLocation]` wrapper for every
@@ -696,6 +701,44 @@ class.
 - **Compose Navigation.** `NavHost` / `NavController` /
   `NavBackStackEntry` are bound (#60). Pass route lambdas via
   `NavGraphBuilderLambda`; deep links are not yet exposed.
+  `NavHostGraph` remembers the graph-builder identity separately from
+  destination content (#352). Each registered deferred-composable wrapper
+  reads its own `MutableManagedState<NavDestinationContent?>`; a successful
+  parent render publishes fresh factories/static-child snapshots in
+  `SideEffect`, invalidating visible destinations without subscribing the
+  parent or replacing the graph/back stack. Inactive routes see the latest
+  captures on re-entry. Old managed content is replaced, not accumulated;
+  publication callbacks consume their pending payload after applying it,
+  rather than retaining a render's host/tree through the native adapter.
+  `DisposableEffect` clears registrations on host removal, including when an
+  external controller still retains the graph. Deferred wrappers remain
+  graph-owned and aren't disposed while Kotlin may still reference them.
+  As before, the first render defines the registered routes and their order.
+  Later renders refresh matching route strings regardless of list order;
+  new routes are ignored and omitted routes retain their last published
+  content (still needed by the registered graph). Repeated definitions of a
+  route use the last supplied content, matching Kotlin's last registration.
+  Changing the start destination retains Kotlin's existing graph-replacement
+  semantics using the original topology (not a guarantee of back-stack
+  preservation). Topology changes require removing the host from composition
+  first; no new runtime rejection is imposed on previously accepted updates.
+  Content may switch between factory and static
+  children; same-position, same-type nodes retain their composition state.
+  `NavContentTests` and `NavHostGraphTests` in the device-test project cover
+  render-local replacements, callbacks, active/revisited routes, graph and
+  entry identity, topology changes, and capture release. Run the navigation
+  subset with instrumentation filter `FullyQualifiedName~Nav`.
+  The disposal fixture uses a stable `Box` root and conditional typed child,
+  and checks both enclosing-host and deferred-destination disposal before GC;
+  arbitrary ungrouped C# root conditionals are not repaired by this change.
+  Destination child groups (including a factory's root) use #353's shared
+  `CompositionGroupKey`, and the deferred navigation wrapper uses
+  `SourceLocationKey`. `scripts/test-nav-saveable-process.ps1 -Serial <serial>`
+  independently checks updated static and factory content after real process
+  death: state `0 -> 101`, render-local capture `Account 0 -> Account 1`, then
+  save/background/kill/focus the same Android task without reinstalling.
+  That isolated probe has no other tree-container ancestors; it is not a
+  substitute for #353's broader tree-path restoration suite.
 - **Drawing.** `Canvas`, managed `DrawScope` / `ContentDrawScope` /
   `CacheDrawScope` callbacks, `drawBehind` / `drawWithContent` /
   `drawWithCache`, mutable `Path`, gradient `Brush` factories, and shape
