@@ -1089,10 +1089,10 @@ one wrapper per intercepted call site. For a composerless
 [global::System.Runtime.CompilerServices.InterceptsLocationAttribute(1, @"...base64...")]
 public static void Composable_0_AB12CD34(string name)
 {
-    ComposableContext.Current.StartMovableGroup(callSiteKey,
+    ComposableCallSite.Start(ComposableContext.Current, callSiteKey,
         cachedCallSiteString ??= new Java.Lang.String(callSiteIdentity));
     Composable_0_AB12CD34_Core(ComposableContext.Current, name, 0);
-    ComposableContext.Current.EndMovableGroup();
+    ComposableCallSite.End(ComposableContext.Current);
 }
 
 static void Composable_0_AB12CD34_Core(
@@ -1133,12 +1133,16 @@ Repeated execution of one lexical site matches occurrences in FIFO order
 within its parent, not by business identity. Never open the envelope in
 the restart callback. See `docs/architecture.md` for the pinned runtime
 contract, control-flow boundaries, and device regressions.
-The current protocol still has a release-blocking saveable-ancestry defect:
-selectively inserting descendants of repeated parent occurrences can swap
-their saved values on recreation. FIFO provider lists alone do not solve
-this; the two-order device regression in `CompositionIdentityTests` records
-the failure. Do not treat the original lockstep-loop tests as proof of this
-case or add process-global occurrence counters as a fallback.
+`ComposableCallSite.Start/End` additionally owns a direct `IRememberObserver`
+slot and an inner ordinal-keyed group. The ordinal is allocated once per
+new envelope from a composition/parent-composite-hash/full-site pool and
+released on forgotten/abandoned or failed slot publication. The pool retains
+the stateful Java peer only until release and removes empty composition
+entries. This distinguishes selectively inserted descendants of repeated
+parents without save-provider overhead or ambient invocation counters.
+Keep both the ordinal group and movable envelope outside restart callbacks.
+The selective-order/nested/re-add regressions are essential: duplicate
+saveable provider registration order alone does not represent FIFO slots.
 
 ### How interception is wired in
 

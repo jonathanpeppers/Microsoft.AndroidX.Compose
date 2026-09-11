@@ -234,10 +234,10 @@ call site the generator emits roughly:
 public static void Composable_0_AB12CD34(
     string name)
 {
-    ComposableContext.Current.StartMovableGroup(callSiteKey,
+    ComposableCallSite.Start(ComposableContext.Current, callSiteKey,
         cachedCallSiteString ??= new Java.Lang.String(callSiteIdentity));
     Composable_0_AB12CD34_Core(ComposableContext.Current, name, 0);
-    ComposableContext.Current.EndMovableGroup();
+    ComposableCallSite.End(ComposableContext.Current);
 }
 
 static void Composable_0_AB12CD34_Core(
@@ -282,8 +282,11 @@ state to the second. Giving them different restart keys is also insufficient:
 Compose Runtime 1.11.3's `startRestartGroup` uses `startReplaceGroup`, which
 can replace the unexpected sibling rather than search for a surviving group.
 
-Each intercepted **entry** therefore opens a movable call-site envelope,
-containing exactly one ordinary target-keyed restart core. Its identity is
+Each intercepted **entry** therefore calls the editor-hidden compiler helper
+`ComposableCallSite.Start`, opening a movable call-site envelope with a
+remembered occurrence slot and an inner ordinal-keyed replaceable group.
+That inner group contains exactly one ordinary target-keyed restart core.
+The lexical identity is
 the syntax-tree path, invocation source offset (including same-line
 distinctions), and constructed target signature. The integer key is FNV-1a;
 the non-null data key is a lazily cached JVM string of the full identity.
@@ -302,18 +305,43 @@ Repeated execution of **one lexical call site** is positional among that
 site's occurrences in its current parent. Loop occurrences remain independent
 and match in FIFO order; changing a loop's count cannot consume a following,
 distinct lexical site's state. This is not business-keyed list identity.
-**Known review blocker (#350 / PR #358):** FIFO slot matching does not make
-duplicate saveable-provider keys safe for selectively inserted descendants.
-Two surviving occurrences of a parent call currently have identical
-saveable ancestry. If only the second parent initially has a child, adding
-the first parent's child registers providers in B,A order; recreation visits
-A,B order and swaps their saved values. The device regression
-`RepeatedParents_RestoreSelectiveChildrenByOccurrence` executes both insertion
-orders: A-first passes, while B-first restores `202` into A instead of `101`.
-The original seven passing cases and fresh-process probe change children in
-lockstep and do not establish correctness for this case. The current protocol
-is not ready for release until occurrence-specific saveable ancestry is
-resolved without breaking restarts or supported composer entry paths.
+FIFO alone is insufficient for saveable state. Independent review found
+that repeating the lexical data key collapses descendant compound keys:
+if only B initially has a child, then A's child is inserted, the registry's
+B,A provider-registration order disagrees with A,B restoration traversal.
+The executed pre-ordinal regression restored B's `202` into A instead of
+`101`. The original seven lockstep/trailing-loop cases did not detect this.
+
+The occurrence slot now directly holds an `IRememberObserver` with a
+zero-based ordinal. A pool scoped by the actual `IControlledComposition`,
+the parent's native 64-bit composite hash, and the **full** lexical identity
+assigns the lowest free ordinal only when a new envelope is inserted.
+Retained envelopes keep it: recomposition, skipped bodies, and isolated
+restart callbacks do not allocate or advance a counter. The inner ordinal
+group gives repeated parents different saveable ancestry before any child
+registers state. No save provider, random token, ambient execution frame,
+or process-wide ordinal sequence is introduced.
+
+Runtime FIFO matching retains the used prefix of occurrences for each
+parent/site. New occurrences append; removed occurrences form the unused
+suffix. `OnForgotten` releases them during apply, not while composing.
+New slots abandoned before apply release through `OnAbandoned`; failure
+while publishing the slot also releases the allocation. Thus a later
+composition reconstructs the same ordinal prefix after shrink/grow/re-add.
+Submitting another composition with pending changes is not an alternative
+ordering protocol: callers must follow native `ControlledComposition`'s
+apply/abandon contract. Moving content between parents is outside this
+protocol, as before. Parent-hash collisions inherit native Compose's
+compound-key limits; full lexical strings prevent the allocator from
+introducing an additional integer site-hash collision.
+
+The live pool strongly retains each stateful observer until its lifecycle
+callback, preventing managed GC from replacing it with an empty JNI peer.
+Unexpected peer activation fails explicitly. Empty pools and composition
+entries are removed; the registry does not retain disposed compositions.
+The cost is one managed/JVM observer slot and one inner group per entry,
+with pool work on insertion/removal rather than every invocation.
+The public helper is compiler plumbing, not a new application grouping API.
 
 Extract a `[Composable]` method for a desired per-iteration boundary; an
 ordinary helper or delegate invocation is not automatically a new boundary.
@@ -341,22 +369,47 @@ state, isolated leaf restarts, effect disposal, and applier node order on
 Android. After installing an embedded-assemblies DeviceTests APK, run
 `scripts\composition-identity-process.ps1 -Adb <adb.exe> -Serial <serial>`
 under an exclusive device lease to verify Android saved-task restoration
-after `am kill` in a different PID. The output JSON is observation-only;
+after `am kill` in a different PID. Add `-Scenario selective-nested` to
+insert the earlier child independently under two nested repeated parents
+before saving. The output JSON is observation-only;
 the activity never reads it to seed state. The script verifies the original
 task and saved Bundle provenance, four distinct saved values (including
-duplicate lexical loop sites), and ordinary state resetting to zero.
-The process fixture invokes its children directly at the root to isolate
-interceptor ancestry. Tree-backed adapters such as `Composables.Column`
-also need the deterministic runtime ancestor-key fix in #353; a correct
-call-site envelope cannot repair a randomized key higher in the tree.
+duplicate lexical loop sites), or five values in the nested-selective case,
+and ordinary state resetting to zero. The root uses the bound Kotlin content
+API without a managed ambient frame. Nested callbacks use `Composables.Column`
+and the deterministic runtime ancestor keys from #353; a correct call-site
+envelope cannot repair a randomized key higher in the tree.
 
 Validation on Pixel 7: the audited pre-fix generator failed all seven
 identity cases, including permanent saved value `123` becoming `202`
-from a loop sibling. The fixed generator passed all seven, plus actual
-saved-task restoration from PID `17036` to `17114` with four distinct
-saveable values retained and ordinary values reset. The node-order fixture
+from a loop sibling. The ordinal correction also passes both selective
+insertion orders, removal/re-add, nested repeated parents, leaf-only restart,
+and activity recreation. Controlled-composition tests exercise delayed
+forget, aborted insertion and retry, missing saveable registries, independent
+compositions, and observer survival/collection across managed and Java GC.
+Fresh-process loop and nested-selective probes retain distinct saved values
+while ordinary state resets. The node-order fixture
 uses fixed pixel constraints, avoiding an unrelated cached JNI class-reference
 failure exposed by repeatedly calling the current Constraints getter bridges.
+
+On integrated main `c49b14e`, the consolidated suite passed 23 device cases
+and 336 host tests. The injected slot-publication failure releases the
+uninstalled observer as well as its pool. The Gallery's **Conditional child
+identity** demo also exercises the contract interactively.
+
+`HundredRowFootprint_RecordsCompositionCosts` compares the old envelope
+and ordinal helper in the same Debug/Mono APK while actually rendering
+100 changing `Text` rows. It records one initial composition and 15 updates,
+including raw per-pass managed allocations and composition-body timings in
+the TRX. The ordinal case retained 104 observer peers versus the baseline's
+4 common surrounding peers; both returned to zero on teardown. Late updates
+in both cases allocated 130,448 managed bytes. Initial samples were 387,512
+versus 395,776 bytes; the last-ten-update median body times were 45.342 versus
+35.954 ms (baseline versus ordinal). These sequential samples still show
+warmup effects and are **not** evidence of a speedup or a calibrated
+regression bound. They exclude complete frame/startup time and total
+Java/JNI/native memory. The guaranteed additional structure is one observer
+slot and one group per intercepted entry, not one saveable provider.
 
 ### Coexistence with the tree-style facade
 

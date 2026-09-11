@@ -25,19 +25,22 @@ public class CompositionIdentityTestActivity : ComponentActivity
     internal static bool DirectContent { get; private set; }
     internal static int[] NodeOrder = [];
     internal static Action? Committed;
+    internal static ConcurrentQueue<(long Bytes, long Ticks)> FootprintSamples { get; } = new();
+    static Java.Lang.String? s_footprintKey;
 
     internal static void Reset(string scenario, bool checkNodeOrder = false, bool directContent = false)
     {
         Volatile.Write(ref s_current, null);
         Probes.Clear();
         Phase = new(0);
-        Count = new(3);
+        Count = new(scenario.StartsWith("footprint-", StringComparison.Ordinal) ? 100 : 3);
         Scenario = scenario;
         ParentPasses = 0;
         CheckNodeOrder = checkNodeOrder;
         DirectContent = directContent;
         Volatile.Write(ref NodeOrder, []);
         Committed = null;
+        FootprintSamples.Clear();
     }
 
     protected override void OnCreate(Bundle? savedInstanceState)
@@ -117,6 +120,10 @@ public class CompositionIdentityTestActivity : ComponentActivity
                 case "selective-nested":
                     for (int i = 0; i < 2; i++)
                         RepeatedOuter(c, i, phase);
+                    break;
+                case "footprint-baseline":
+                case "footprint-ordinal":
+                    RenderFootprint(c, count, phase, Scenario == "footprint-ordinal");
                     break;
                 default:
                     throw new InvalidOperationException($"Unknown identity scenario '{Scenario}'.");
@@ -211,6 +218,33 @@ public class CompositionIdentityTestActivity : ComponentActivity
             300 + int.Parse(id.AsSpan(9), System.Globalization.CultureInfo.InvariantCulture),
         _ => throw new InvalidOperationException($"Unknown identity node '{id}'."),
     };
+
+    static void RenderFootprint(IComposer composer, int count, int phase, bool ordinal)
+    {
+        var key = s_footprintKey ??= new Java.Lang.String("identity-footprint-row");
+        long bytes = GC.GetAllocatedBytesForCurrentThread();
+        long ticks = System.Diagnostics.Stopwatch.GetTimestamp();
+        Composables.Column(composer, c =>
+        {
+            for (int i = 0; i < count; i++)
+            {
+                if (ordinal)
+                    ComposableCallSite.Start(c, 350100, key);
+                else
+                    c.StartMovableGroup(350100, key);
+                var child = c.StartRestartGroup(350101);
+                new Text($"Row {i}: {phase}").Render(child);
+                child.EndRestartGroup();
+                if (ordinal)
+                    ComposableCallSite.End(c);
+                else
+                    c.EndMovableGroup();
+            }
+        });
+        bytes = GC.GetAllocatedBytesForCurrentThread() - bytes;
+        ticks = System.Diagnostics.Stopwatch.GetTimestamp() - ticks;
+        composer.SideEffect(() => FootprintSamples.Enqueue((bytes, ticks)));
+    }
 
     static MeasureResult MeasureOrder(MeasureScope scope, IReadOnlyList<Measurable> children,
         Constraints constraints)

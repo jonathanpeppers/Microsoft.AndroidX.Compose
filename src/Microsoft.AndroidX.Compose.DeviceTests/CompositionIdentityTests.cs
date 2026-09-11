@@ -5,6 +5,47 @@ namespace Microsoft.AndroidX.Compose.DeviceTests;
 [DoNotParallelize]
 public class CompositionIdentityTests
 {
+    public TestContext? TestContext { get; set; }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task HundredRowFootprint_RecordsCompositionCosts(bool ordinal)
+    {
+        var activity = await StartActivity(ordinal ? "footprint-ordinal" : "footprint-baseline", directContent: true);
+        try
+        {
+            await WaitFor(() => CompositionIdentityTestActivity.ParentPasses > 0,
+                "Footprint composition did not complete.");
+            for (int pass = 1; pass <= 15; pass++)
+                await ChangeStructure(activity, () => CompositionIdentityTestActivity.Phase.Value = pass);
+            var samples = CompositionIdentityTestActivity.FootprintSamples.ToArray();
+            Assert.AreEqual(16, samples.Length);
+            var steady = samples.Skip(6).ToArray();
+            var context = TestContext
+                ?? throw new InvalidOperationException("Test context must be supplied by the test runner.");
+            int owners = global::AndroidX.Compose.ComposableCallSite.Occurrences.GetOwners().Length;
+            Assert.AreEqual(ordinal ? 104 : 4, owners);
+            context.WriteLine(
+                $"100 rendered Text rows ({(ordinal ? "ordinal" : "baseline")}): " +
+                $"initial {samples[0].Bytes} managed bytes/{Milliseconds(samples[0].Ticks):F3} ms; " +
+                $"steady median {steady.Select(s => s.Bytes).Order().ElementAt(5)} managed bytes/" +
+                $"{Milliseconds(steady.Select(s => s.Ticks).Order().ElementAt(5)):F3} ms; " +
+                $"{owners} retained occurrence peers.");
+            context.WriteLine("Raw managed-bytes/composition-ms samples (initial, then 15 updates): " +
+                string.Join("; ", samples.Select(s => $"{s.Bytes}/{Milliseconds(s.Ticks):F3}")));
+        }
+        finally
+        {
+            await OnUi(activity, activity.Finish);
+            await WaitFor(() => global::AndroidX.Compose.ComposableCallSite.Occurrences.CompositionCount == 0,
+                "Footprint composition was retained after finishing.");
+        }
+
+        static double Milliseconds(long ticks) =>
+            ticks * 1000d / System.Diagnostics.Stopwatch.Frequency;
+    }
+
     [TestMethod]
     [DataRow(0, false, false)]
     [DataRow(1, false, false)]

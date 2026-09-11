@@ -10,6 +10,137 @@ namespace Microsoft.AndroidX.Compose.DeviceTests;
 public class CompositionIdentityControlledTests
 {
     [TestMethod]
+    public void FailedSlotPublication_ReleasesTheUninstalledOwner()
+    {
+        using var applier = new IdentityTestApplier();
+        using var recomposer = new Recomposer(Kotlin.Coroutines.EmptyCoroutineContext.Instance
+            ?? throw new InvalidOperationException("Empty coroutine context is unavailable."));
+        var composition = CompositionKt.ControlledComposition(applier, recomposer);
+        var composer = System.Reflection.DispatchProxy.Create<IComposer, FailingIdentityComposer>();
+        var failure = (FailingIdentityComposer)composer;
+        failure.Composition = composition;
+        try
+        {
+            using var identity = new Java.Lang.String("failed-publication");
+            var error = Assert.ThrowsExactly<InvalidOperationException>(
+                () => ComposableCallSite.Start(composer, 350, identity));
+            Assert.AreEqual("Injected occurrence publication failure.", error.Message);
+            Assert.AreEqual(1, failure.OwnersAtFailure);
+            Assert.AreEqual(0, ComposableCallSite.Occurrences.CompositionCount);
+            var owner = failure.AttemptedOwner
+                ?? throw new InvalidOperationException("Publication was not attempted.");
+            for (int i = 0; i < 10 && owner.IsAlive; i++)
+                CollectPeers();
+            Assert.IsFalse(owner.IsAlive);
+        }
+        finally
+        {
+            composition.Dispose();
+        }
+    }
+
+    [TestMethod]
+    public void SeparateCompositions_UseSeparateOrdinalPools()
+    {
+        using var applier = new IdentityTestApplier();
+        using var secondApplier = new IdentityTestApplier();
+        using var recomposer = new Recomposer(Kotlin.Coroutines.EmptyCoroutineContext.Instance
+            ?? throw new InvalidOperationException("Empty coroutine context is unavailable."));
+        var first = CompositionKt.ControlledComposition(applier, recomposer);
+        var second = CompositionKt.ControlledComposition(secondApplier, recomposer);
+        var probes = new List<CompositionIdentityProbe>();
+        var keys = new List<long>();
+        var content = new ComposableLambda2(c =>
+        {
+            for (int i = 0; i < 2; i++)
+                Probe(c, i, probes, keys);
+        });
+        try
+        {
+            first.ComposeContent(content);
+            first.ApplyChanges();
+            var firstKeys = keys.ToArray();
+            probes.Clear();
+            keys.Clear();
+            second.ComposeContent(content);
+            second.ApplyChanges();
+            CollectionAssert.AreEqual(firstKeys, keys.ToArray());
+            Assert.AreEqual(2, ComposableCallSite.Occurrences.CompositionCount);
+            first.Dispose();
+            Assert.AreEqual(1, ComposableCallSite.Occurrences.CompositionCount);
+            Assert.IsTrue(probes.All(p => p.Disposals == 0));
+        }
+        finally
+        {
+            if (!first.IsDisposed)
+                first.Dispose();
+            second.Dispose();
+        }
+        Assert.AreEqual(0, ComposableCallSite.Occurrences.CompositionCount);
+    }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public void OccurrencePeers_SurviveGcUntilForgottenOrAbandoned(bool abandon)
+    {
+        using var applier = new IdentityTestApplier();
+        using var recomposer = new Recomposer(Kotlin.Coroutines.EmptyCoroutineContext.Instance
+            ?? throw new InvalidOperationException("Empty coroutine context is unavailable."));
+        var composition = CompositionKt.ControlledComposition(applier, recomposer);
+        var probes = new List<CompositionIdentityProbe>();
+        var keys = new List<long>();
+        WeakReference[] owners = [];
+        try
+        {
+            composition.ComposeContent(new ComposableLambda2(c =>
+            {
+                for (int i = 0; i < 10; i++)
+                    Probe(c, i, probes, keys);
+            }));
+            owners = ObserveOwners();
+            Assert.AreEqual(10, owners.Length);
+            CollectPeers();
+            Assert.IsTrue(owners.All(o => o.IsAlive));
+            if (abandon)
+            {
+                composition.AbandonChanges();
+            }
+            else
+            {
+                composition.ApplyChanges();
+                CollectPeers();
+                Assert.IsTrue(owners.All(o => o.IsAlive));
+                composition.ComposeContent(new ComposableLambda2(_ => { }));
+                Assert.IsTrue(owners.All(o => o.IsAlive));
+                composition.ApplyChanges();
+            }
+            Assert.AreEqual(0, ComposableCallSite.Occurrences.CompositionCount);
+        }
+        finally
+        {
+            composition.Dispose();
+        }
+        for (int i = 0; i < 10 && owners.Any(o => o.IsAlive); i++)
+            CollectPeers();
+        Assert.IsTrue(owners.All(o => !o.IsAlive),
+            "Released ordinal ownership must not root a forgotten or abandoned peer.");
+    }
+
+    [System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.NoInlining)]
+    static WeakReference[] ObserveOwners() =>
+        ComposableCallSite.Occurrences.GetOwners().Select(owner => new WeakReference(owner)).ToArray();
+
+    static void CollectPeers()
+    {
+        GC.Collect();
+        GC.WaitForPendingFinalizers();
+        Java.Lang.JavaSystem.Gc();
+        GC.Collect();
+        GC.WaitForPendingFinalizers();
+    }
+
+    [TestMethod]
     public void DelayedForgetAndAbandon_ReconstructTheSameOccurrenceAncestry()
     {
         using var applier = new IdentityTestApplier();
