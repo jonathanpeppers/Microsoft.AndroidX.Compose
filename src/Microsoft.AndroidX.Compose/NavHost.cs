@@ -47,6 +47,23 @@ namespace AndroidX.Compose;
 /// <see cref="ComposeBridges"/>.
 /// </para>
 /// </summary>
+/// <remarks>
+/// Rebuilding a host at the same composition position refreshes destination
+/// factories, captured callbacks, and static children after successful
+/// composition. Visible destinations recompose without replacing the graph,
+/// back-stack entries, or their remembered state. The first render defines
+/// the registered routes and their order. Later renders update content by
+/// exact route string: reordering does not reorder the graph, new routes
+/// are ignored, and omitted routes retain their last published content.
+/// Changing the start destination uses Compose Navigation's graph-replacement
+/// behavior with the original registered routes, not a content refresh.
+/// To change the registered routes, first remove the host from composition.
+/// Leaving composition releases the registered managed content even if a
+/// caller retains the controller. Navigation is supported only while the
+/// host is composed. As with other tree nodes, conditional removal needs a
+/// structural parent boundary, such as a stable <see cref="Box"/> containing
+/// the conditional host child.
+/// </remarks>
 public sealed class NavHost : ComposableNode, IEnumerable
 {
     readonly string _startDestination;
@@ -99,32 +116,20 @@ public sealed class NavHost : ComposableNode, IEnumerable
 
         var modifier = BuildModifier();
 
-        // The Kotlin NavHost does
-        //   remember(route, startDestination, builder) { navController.createGraph(...) }
-        // so the builder's reference identity is part of the graph cache key.
-        // If we allocated a fresh NavGraphBuilderLambda on every recomposition,
-        // Compose would rebuild the entire graph and reset the back stack to
-        // the start destination after every state change. Cache the lambda
-        // in the slot table via ComposeExtensions.Remember so its identity is stable.
-        //
-        // Compose Navigation invokes the builder ONCE (inside createGraph),
-        // so the captured 'this' / '_routes' from the first render are the
-        // ones registered with the graph. Subsequent recompositions don't
-        // re-register routes — that matches Kotlin's behavior where the
-        // trailing graph-builder lambda is also captured once.
-        var self = this;
-        var builder = composer.Remember(() => new NavGraphBuilderLambda(graphBuilder =>
-        {
-            for (int i = 0; i < self._routes.Count; i++)
-                self._routes[i].RegisterInto(graphBuilder);
-        }));
+        // Builder identity is a Kotlin graph-cache key; content identity isn't.
+        var graph = composer.Remember(() => new NavHostGraph(_routes));
+        var content = graph.Capture(_routes);
+        // Don't capture Render's closure in the lifetime effect: it also holds
+        // this render's host/content, which must be releasable after replacement.
+        composer.DisposableEffect(graph.Builder, graph.CreateCleanup);
+        graph.PublishAfterComposition(composer, content);
 
         ComposeBridges.NavHost(
             navController:    controller,
             startDestination: _startDestination,
             modifier:         modifier,
             route:            null,
-            builder:          builder,
+            builder:          graph.Builder,
             composer:         composer);
     }
 }
