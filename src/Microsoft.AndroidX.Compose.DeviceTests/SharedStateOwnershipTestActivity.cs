@@ -41,6 +41,9 @@ public class SharedStateOwnershipTestActivity : ComponentActivity
     protected override void OnCreate(Bundle? savedInstanceState)
     {
         base.OnCreate(savedInstanceState);
+        var window = Window
+            ?? throw new InvalidOperationException("Shared-state test activity window was unavailable.");
+        window.AddFlags(global::Android.Views.WindowManagerFlags.KeepScreenOn);
         this.SetContent((IComposer composer) =>
         {
             int pass = Pass.Value;
