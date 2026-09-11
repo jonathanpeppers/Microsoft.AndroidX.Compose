@@ -48,6 +48,10 @@ public sealed class LazyVerticalGrid<T> : ComposableNode
     /// </summary>
     public LazyGridState? State { get; set; }
 
+    /// <summary>Optional stable, unique, Bundle-saveable item key; null preserves positional identity.</summary>
+    /// <remarks>Return a non-null string, int, or long. See <see cref="LazyColumn{T}.Key"/> for validation and mutation requirements.</remarks>
+    public Func<T, object>? Key { get; set; }
+
     /// <summary>
     /// Optional fixed content padding applied inside the grid (not as a
     /// modifier on the grid frame). Items can scroll behind this area
@@ -75,20 +79,21 @@ public sealed class LazyVerticalGrid<T> : ComposableNode
 
     public override void Render(IComposer composer)
     {
+        var (items, key) = CollectionItemKey.Create(_items, Key);
         var modifier = BuildModifier();
         var content  = new ComposableLambda1(scopeObj =>
         {
             var scope = Android.Runtime.Extensions.JavaCast<ILazyGridScope>(scopeObj!);
             // span: null = 1 cell per item (the Compose default).
             scope.Items(
-                _items.Count,
-                key:         null,
+                items.Count,
+                key:         key,
                 span:        null,
                 contentType: new ComposableLambda1(_ => { }),
                 p4:          ComposableLambdas.Instantiate4((_, indexBoxed, comp) =>
                 {
                     var i = ((Java.Lang.Integer)indexBoxed!).IntValue();
-                    _itemContent(_items[i]).Render(comp);
+                    _itemContent(items[i]).Render(comp);
                 }));
         });
 

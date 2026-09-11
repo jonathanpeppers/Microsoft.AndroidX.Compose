@@ -47,6 +47,14 @@ public sealed class HorizontalPager<T> : ComposableNode
     /// </summary>
     public PagerState? State { get; set; }
 
+    /// <summary>Optional stable, unique, Bundle-saveable page key; null preserves positional identity.</summary>
+    /// <remarks>
+    /// Return a non-null string, int, or long. See <see cref="LazyColumn{T}.Key"/>
+    /// for validation and mutation requirements. Compose keeps the displayed
+    /// record when items before it are inserted, removed, or reordered.
+    /// </remarks>
+    public Func<T, object>? Key { get; set; }
+
     /// <summary>
     /// Optional fixed content padding applied inside the pager.
     /// Useful for letting pages peek (i.e. visible side gutters that
@@ -57,6 +65,7 @@ public sealed class HorizontalPager<T> : ComposableNode
 
     public override void Render(IComposer composer)
     {
+        var (items, key) = CollectionItemKey.Create(_items, Key);
         // When the caller supplies a PagerState wrapper its Jvm is
         // built eagerly in the wrapper's ctor (via the non-@Composable
         // PagerStateKt.PagerState factory), so we just pass it through
@@ -69,15 +78,14 @@ public sealed class HorizontalPager<T> : ComposableNode
         AndroidX.Compose.Foundation.Pager.PagerState jvmState;
         if (State is not null)
         {
+            State.SetRenderedPageCount(key is null ? null : items.Count);
             jvmState = State.Jvm;
         }
         else
         {
-            // Compose's rememberPagerState reads the pageCount lambda
-            // on every measure pass, so the lambda has to close over
-            // the live _items reference (count can change between
-            // recompositions when callers swap in a new list).
-            _pageCountFn ??= new ComposableLambda0Int(() => _items.Count);
+            // Keep the count and deferred item/key callbacks on the same
+            // snapshot. rememberPagerState updates its count callback each render.
+            _pageCountFn = new ComposableLambda0Int(() => items.Count);
             jvmState = PagerStateKt.RememberPagerState(
                 p0:                        0,
                 initialPageOffsetFraction: 0f,
@@ -91,7 +99,7 @@ public sealed class HorizontalPager<T> : ComposableNode
         var content  = ComposableLambdas.Wrap4(composer, (_, indexBoxed, comp) =>
         {
             var i = ((Java.Lang.Integer)indexBoxed!).IntValue();
-            _itemContent(_items[i]).Render(comp);
+            _itemContent(items[i]).Render(comp);
         });
 
         // 14 user-controllable params for HorizontalPager (state and
@@ -101,6 +109,7 @@ public sealed class HorizontalPager<T> : ComposableNode
         int defaults = (int)HorizontalPagerDefault.All;
         if (modifier       is not null) defaults &= ~(int)HorizontalPagerDefault.Modifier;
         if (ContentPadding is not null) defaults &= ~(int)HorizontalPagerDefault.ContentPadding;
+        if (key            is not null) defaults &= ~(int)HorizontalPagerDefault.Key;
 
         PagerKt.HorizontalPager(
             state:                       jvmState,
@@ -113,7 +122,7 @@ public sealed class HorizontalPager<T> : ComposableNode
             flingBehavior:               null,
             userScrollEnabled:           true,
             reverseLayout:               false,
-            key:                         null,
+            key:                         key,
             pageNestedScrollConnection:  null,
             snapPosition:                null,
             overscrollEffect:            null,

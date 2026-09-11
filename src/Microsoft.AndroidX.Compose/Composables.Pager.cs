@@ -5,13 +5,15 @@ namespace AndroidX.Compose;
 public static partial class Composables
 {
     /// <summary>Renders a typed horizontal pager in the implicit composition.</summary>
+    /// <param name="key">Optional stable string/int/long identity; see <see cref="HorizontalPager{T}.Key"/>.</param>
     [Composable]
     public static void HorizontalPager<T>(
         IReadOnlyList<T> items,
         [ComposableContent] Action<T> itemContent,
         Modifier? modifier = null,
         PagerState? state = null,
-        PaddingValues? contentPadding = null)
+        PaddingValues? contentPadding = null,
+        Func<T, object>? key = null)
     {
         ArgumentNullException.ThrowIfNull(items);
         ArgumentNullException.ThrowIfNull(itemContent);
@@ -23,10 +25,12 @@ public static partial class Composables
             Modifier = modifier,
             State = state,
             ContentPadding = contentPadding,
+            Key = key,
         }.Render();
     }
 
     /// <summary>Renders a typed horizontal pager with an explicit composer.</summary>
+    /// <param name="key">Optional stable string/int/long identity; see <see cref="HorizontalPager{T}.Key"/>.</param>
     [Composable]
     internal static void HorizontalPager<T>(
         IComposer composer,
@@ -34,7 +38,8 @@ public static partial class Composables
         [ComposableContent] Action<T, IComposer> itemContent,
         Modifier? modifier = null,
         PagerState? state = null,
-        PaddingValues? contentPadding = null)
+        PaddingValues? contentPadding = null,
+        Func<T, object>? key = null)
     {
         ArgumentNullException.ThrowIfNull(composer);
         ArgumentNullException.ThrowIfNull(items);
@@ -47,17 +52,20 @@ public static partial class Composables
             Modifier = modifier,
             State = state,
             ContentPadding = contentPadding,
+            Key = key,
         }.Render(composer);
     }
 
     /// <summary>Renders a typed vertical pager in the implicit composition.</summary>
+    /// <param name="key">Optional stable string/int/long identity; see <see cref="VerticalPager{T}.Key"/>.</param>
     [Composable]
     public static void VerticalPager<T>(
         IReadOnlyList<T> items,
         [ComposableContent] Action<T> itemContent,
         Modifier? modifier = null,
         PagerState? state = null,
-        PaddingValues? contentPadding = null)
+        PaddingValues? contentPadding = null,
+        Func<T, object>? key = null)
     {
         ArgumentNullException.ThrowIfNull(items);
         ArgumentNullException.ThrowIfNull(itemContent);
@@ -69,10 +77,12 @@ public static partial class Composables
             Modifier = modifier,
             State = state,
             ContentPadding = contentPadding,
+            Key = key,
         }.Render();
     }
 
     /// <summary>Renders a typed vertical pager with an explicit composer.</summary>
+    /// <param name="key">Optional stable string/int/long identity; see <see cref="VerticalPager{T}.Key"/>.</param>
     [Composable]
     internal static void VerticalPager<T>(
         IComposer composer,
@@ -80,7 +90,8 @@ public static partial class Composables
         [ComposableContent] Action<T, IComposer> itemContent,
         Modifier? modifier = null,
         PagerState? state = null,
-        PaddingValues? contentPadding = null)
+        PaddingValues? contentPadding = null,
+        Func<T, object>? key = null)
     {
         ArgumentNullException.ThrowIfNull(composer);
         ArgumentNullException.ThrowIfNull(items);
@@ -93,6 +104,7 @@ public static partial class Composables
             Modifier = modifier,
             State = state,
             ContentPadding = contentPadding,
+            Key = key,
         }.Render(composer);
     }
 }

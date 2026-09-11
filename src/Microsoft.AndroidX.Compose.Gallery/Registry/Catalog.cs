@@ -99,6 +99,7 @@ public static class Catalog
         D.ListsGrids.LazyColumnLongDemo.Demo,
         D.ListsGrids.LazyColumnContentPaddingDemo.Demo,
         D.ListsGrids.LazyListScrollStateDemo.Demo,
+        D.ListsGrids.StableCollectionKeysDemo.Demo,
         D.ListsGrids.LazyRowDemo.Demo,
         D.ListsGrids.LazyVerticalGridFixedDemo.Demo,
         D.ListsGrids.LazyVerticalGridAdaptiveDemo.Demo,

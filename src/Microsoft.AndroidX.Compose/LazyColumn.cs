@@ -57,6 +57,22 @@ public sealed class LazyColumn<T> : ComposableNode
     public LazyListState? State { get; set; }
 
     /// <summary>
+    /// Optional stable item identity. Return a non-null <see cref="string"/>,
+    /// <see cref="int"/>, or <see cref="long"/> that is unique within this
+    /// collection and unchanged when the record moves or its content changes.
+    /// Null preserves positional identity.
+    /// </summary>
+    /// <remarks>
+    /// Keys use Java value equality and support Android Bundle saved state.
+    /// Keyed renders snapshot items and validate all keys in O(n) time;
+    /// null, unsupported, or duplicate results throw <see cref="ArgumentException"/>.
+    /// Publish collection changes through observable state to trigger a render.
+    /// Compose retains item-local state and anchors the visible item by key;
+    /// an explicit scroll request takes precedence over anchoring.
+    /// </remarks>
+    public Func<T, object>? Key { get; set; }
+
+    /// <summary>
     /// When <see langword="true"/>, items are stacked from the bottom up
     /// — the first item rendered sits at the bottom of the viewport and
     /// scroll offset 0 corresponds to the end of the list. Mirrors
@@ -132,25 +148,24 @@ public sealed class LazyColumn<T> : ComposableNode
 
     public override void Render(IComposer composer)
     {
+        var (items, key) = CollectionItemKey.Create(_items, Key);
         var modifier = BuildModifier();
         var content  = new ComposableLambda1(scopeObj =>
         {
             var scope = Android.Runtime.Extensions.JavaCast<ILazyListScope>(scopeObj!);
-            // contentType is non-nullable in Kotlin (defaults to { null }),
-            // so we always provide a stub; key is nullable and we pass null
-            // to keep the Compose-default positional keying.
+            // contentType is non-nullable in Kotlin, so provide a stub.
             // itemContent IS @Composable but runs at measure time inside the
             // lazy list's SubcomposeLayout, so route through Instantiate4
             // (composer-less ComposableLambdaInstance) — Wrap4 would crash
             // because there's no active composer once the DSL builder runs.
             scope.Items(
-                _items.Count,
-                key:         null,
+                items.Count,
+                key:         key,
                 contentType: new ComposableLambda1(_ => { }),
                 itemContent: ComposableLambdas.Instantiate4((_, indexBoxed, comp) =>
                 {
                     var i = ((Java.Lang.Integer)indexBoxed!).IntValue();
-                    _itemContent(_items[i]).Render(comp);
+                    _itemContent(items[i]).Render(comp);
                 }));
         });
 

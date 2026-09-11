@@ -244,6 +244,49 @@ follow-ups. The two authoring styles coexist freely. The
 generator and its compiler configuration; package consumers need no separate
 generator reference.
 
+### Stable lazy collection and pager keys
+
+All six lazy lists/grids and both pagers accept stable business-record identity.
+Tree nodes expose `Key`; the implicit composable APIs and internal explicit
+adapters accept an optional trailing `key` argument. Existing constructors,
+positional arguments, and omitted-key behavior are unchanged:
+
+```csharp
+new LazyColumn<Message>(messages, message => new Text(message.Text))
+{
+    Key = message => message.Id,
+};
+
+// Inside a [Composable] method:
+LazyColumn(messages, message => Text(message.Text), key: message => message.Id);
+HorizontalPager(stories, story => Text(story.Title), key: story => story.Id);
+```
+
+Return a **non-null `string`, `int`, or `long`**, unique within that collection
+and stable across edits, insertion, deletion, and reorder. These map to Java
+String/Integer/Long with value equality and Android Bundle saveability; `42`,
+`42L`, and `"42"` are distinct keys. Do not use position, mutable display text,
+hash codes, or IDs generated during rendering. Null selectors preserve Compose's
+positional default; null results, other result types, and duplicate keys throw
+`ArgumentException` before entering Compose, including offending indices.
+
+Keyed rendering snapshots the items and evaluates every key once per render
+(O(n) time/storage) so deferred measurement uses matching items and keys.
+Publish mutations through observable state to trigger recomposition; selectors
+must be pure and item identity must not change while rendering. Item content
+remains lazy. Kotlin owns item-local `Remember`/`RememberSaveable` identity and
+viewport anchoring; scroll requests override anchoring, and removed items do
+not retain an active composition. A supplied `PagerState` callback must match
+the collection count at each keyed render. Its `PageCount` then reflects the
+last rendered snapshot until the next render, so Kotlin cannot combine a new
+count with old keys. Rendering without keys restores live callback behavior.
+
+This follows the pinned Foundation **1.11.3** `LazyListScope.items`,
+`LazyGridScope.items`, `LazyStaggeredGridScope.items`, and `Pager` contracts,
+verified in the [published source archive](https://dl.google.com/dl/android/maven2/androidx/compose/foundation/foundation-android/1.11.3/foundation-android-1.11.3-sources.jar).
+The **Stable collection keys** Gallery demo exercises all eight surfaces with
+per-record counters and insert/delete/reverse controls.
+
 ## What's wrapped today
 
 The facade [`Microsoft.AndroidX.Compose`](src/Microsoft.AndroidX.Compose) covers the common Material 3 + Foundation surface:

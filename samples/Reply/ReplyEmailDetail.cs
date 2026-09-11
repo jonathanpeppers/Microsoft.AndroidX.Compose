@@ -17,6 +17,7 @@ public static class ReplyEmailDetail
                 itemContent: e => ReplyEmailThreadItem.Build(e))
             {
                 Modifier = Modifier.FillMaxSize(),
+                Key = static email => email.Id,
             },
         };
 }

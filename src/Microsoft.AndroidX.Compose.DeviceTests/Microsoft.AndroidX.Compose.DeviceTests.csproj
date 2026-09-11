@@ -29,6 +29,7 @@
 
           adb shell am instrument -w -e filter FullyQualifiedName~CarouselDefaultsTests net.compose.devicetests/net.compose.devicetests.TestInstrumentation
           adb shell am instrument -w -e filter FullyQualifiedName~StateHolderLifecycleTests net.compose.devicetests/net.compose.devicetests.TestInstrumentation
+          adb shell am instrument -w -e filter FullyQualifiedName~Collection net.compose.devicetests/net.compose.devicetests.TestInstrumentation
     -->
   </PropertyGroup>
 
@@ -42,6 +43,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Microsoft.AndroidX.Compose\Microsoft.AndroidX.Compose.csproj" />
+    <ProjectReference Include="..\Microsoft.AndroidX.Compose.SourceGenerators\Microsoft.AndroidX.Compose.SourceGenerators.csproj"
+                      OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
   </ItemGroup>
 
 </Project>

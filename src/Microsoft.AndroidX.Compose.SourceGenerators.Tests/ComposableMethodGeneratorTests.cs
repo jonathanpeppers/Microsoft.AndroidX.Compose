@@ -1183,6 +1183,46 @@ public class ComposableMethodGeneratorTests
     }
 
     [Fact]
+    public void CollectionKeySelector_PreservesValueReturningDelegateAndOptionalDefault()
+    {
+        var (output, diags, emitted) = Run("""
+            namespace App
+            {
+                public static class Screens
+                {
+                    [AndroidX.Compose.Composable]
+                    public static void Items<T>(
+                        System.Collections.Generic.IReadOnlyList<T> items,
+                        System.Action<T> content,
+                        System.Func<T, object>? key = null) { }
+
+                    [AndroidX.Compose.Composable]
+                    public static void Items<T>(
+                        IComposer composer,
+                        System.Collections.Generic.IReadOnlyList<T> items,
+                        System.Action<T, IComposer> content,
+                        System.Func<T, object>? key = null) { }
+
+                    public static void CallSite(IComposer composer,
+                        System.Collections.Generic.IReadOnlyList<int> items)
+                    {
+                        Items(items, _ => { });
+                        Items(items, _ => { }, key: item => item);
+                        Items(composer, items, (_, _) => { }, key: item => item.ToString());
+                    }
+                }
+            }
+            """);
+
+        Assert.Empty(diags);
+        Assert.NotNull(emitted);
+        Assert.Contains("global::System.Func<T, object>?", emitted);
+        Assert.Contains("global::App.Screens.Items<T>(items, content, key)", emitted);
+        Assert.Contains("global::App.Screens.Items<T>(__c, items, content, key)", emitted);
+        AssertNoCompileErrors(output);
+    }
+
+    [Fact]
     public void CollectionParameter_ForcesExecutionForInPlaceMutation()
     {
         var (output, diags, emitted) = Run("""

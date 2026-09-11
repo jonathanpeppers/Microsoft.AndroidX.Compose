@@ -41,6 +41,24 @@ phone layout** built from the same Material 3 building blocks.
 - `EmptyComingSoon` — placeholder for the Articles / DMs / Groups
   tabs
 
+## Stable list identity
+
+The inbox and email-thread `LazyColumn<Email>` instances use
+`Key = static email => email.Id`, matching both upstream `items(...,
+key = { it.id })` calls in
+[`ReplyListContent.kt`](https://github.com/android/compose-samples/blob/4c1fe7586e2fbf1c934925ef8ab64d3803361423/Reply/app/src/main/java/com/example/reply/ui/ReplyListContent.kt).
+The identity reference is pinned to upstream commit
+`4c1fe7586e2fbf1c934925ef8ab64d3803361423`.
+
+`Email.Id` is the existing `long` business identifier also used for selection
+and navigation, not the email's position, subject, sender, or timestamp.
+Keep it unchanged when updating/reordering an email and unique within each
+list. IDs may repeat between the inbox and a separate thread list; the seed
+data has no repeated IDs within either list. This lets Compose retain an
+email's item state and scroll anchor when other emails move around it.
+The key API accepts non-null `string`, `int`, or `long` values; omitted keys
+retain positional behavior.
+
 ## What's missing (and why)
 
 Upstream Reply is, before anything else, an **adaptive layouts
