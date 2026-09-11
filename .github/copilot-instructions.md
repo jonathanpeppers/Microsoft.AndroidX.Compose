@@ -1128,6 +1128,12 @@ Repeated execution of one lexical site matches occurrences in FIFO order
 within its parent, not by business identity. Never open the envelope in
 the restart callback. See `docs/architecture.md` for the pinned runtime
 contract, control-flow boundaries, and device regressions.
+The current protocol still has a release-blocking saveable-ancestry defect:
+selectively inserting descendants of repeated parent occurrences can swap
+their saved values on recreation. FIFO provider lists alone do not solve
+this; the two-order device regression in `CompositionIdentityTests` records
+the failure. Do not treat the original lockstep-loop tests as proof of this
+case or add process-global occurrence counters as a fallback.
 
 ### How interception is wired in
 

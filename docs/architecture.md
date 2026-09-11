@@ -297,7 +297,19 @@ Repeated execution of **one lexical call site** is positional among that
 site's occurrences in its current parent. Loop occurrences remain independent
 and match in FIFO order; changing a loop's count cannot consume a following,
 distinct lexical site's state. This is not business-keyed list identity.
-Duplicate saveable providers use the pinned registry's ordered value lists.
+**Known review blocker (#350 / PR #358):** FIFO slot matching does not make
+duplicate saveable-provider keys safe for selectively inserted descendants.
+Two surviving occurrences of a parent call currently have identical
+saveable ancestry. If only the second parent initially has a child, adding
+the first parent's child registers providers in B,A order; recreation visits
+A,B order and swaps their saved values. The device regression
+`RepeatedParents_RestoreSelectiveChildrenByOccurrence` executes both insertion
+orders: A-first passes, while B-first restores `202` into A instead of `101`.
+The original seven passing cases and fresh-process probe change children in
+lockstep and do not establish correctness for this case. The current protocol
+is not ready for release until occurrence-specific saveable ancestry is
+resolved without breaking restarts or supported composer entry paths.
+
 Extract a `[Composable]` method for a desired per-iteration boundary; an
 ordinary helper or delegate invocation is not automatically a new boundary.
 Likewise, conditionally executing raw `Remember`/effect APIs is not a C#

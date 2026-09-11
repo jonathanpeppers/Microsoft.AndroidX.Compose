@@ -101,6 +101,10 @@ public class CompositionIdentityTestActivity : ComponentActivity
                     }
                     Counter(c, "permanent");
                     break;
+                case "selective":
+                    for (int i = 0; i < 2; i++)
+                        RepeatedParent(c, i, (phase & (1 << i)) != 0);
+                    break;
                 default:
                     throw new InvalidOperationException($"Unknown identity scenario '{Scenario}'.");
             }
@@ -127,6 +131,14 @@ public class CompositionIdentityTestActivity : ComponentActivity
     /// <summary>Owns the same state shape at a different target method.</summary>
     [Composable]
     public static void AlternateCounter(IComposer composer, string id) => Observe(composer, id);
+
+    /// <summary>Provides an unchanged loop occurrence with a selectively inserted child.</summary>
+    [Composable]
+    public static void RepeatedParent(IComposer composer, int index, bool visible)
+    {
+        if (visible)
+            Counter(composer, $"loop-{index}");
+    }
 
     static void Observe(IComposer composer, string id)
     {

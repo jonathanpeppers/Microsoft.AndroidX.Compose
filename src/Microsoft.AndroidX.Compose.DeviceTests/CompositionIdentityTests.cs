@@ -6,6 +6,47 @@ namespace Microsoft.AndroidX.Compose.DeviceTests;
 public class CompositionIdentityTests
 {
     [TestMethod]
+    [DataRow(0)]
+    [DataRow(1)]
+    public async Task RepeatedParents_RestoreSelectiveChildrenByOccurrence(int first)
+    {
+        var activity = await StartActivity("selective", directContent: true);
+        try
+        {
+            await WaitFor(() => CompositionIdentityTestActivity.ParentPasses > 0,
+                "Initial selective composition did not complete.");
+            await ChangeStructure(activity, () => CompositionIdentityTestActivity.Phase.Value = 1 << first);
+            var existing = CompositionIdentityTestActivity.Probes[$"loop-{first}"];
+            await OnUi(activity, () => Saved(existing).Value = first == 0 ? 101 : 202);
+            await WaitFor(() => existing.ObservedSaved == (first == 0 ? 101 : 202),
+                "Existing child did not observe its saved value.");
+
+            await ChangeStructure(activity, () => CompositionIdentityTestActivity.Phase.Value = 3);
+            Assert.AreSame(existing, CompositionIdentityTestActivity.Probes[$"loop-{first}"]);
+            Assert.AreEqual(0, existing.Disposals);
+            var added = CompositionIdentityTestActivity.Probes[$"loop-{1 - first}"];
+            await OnUi(activity, () => Saved(added).Value = first == 0 ? 202 : 101);
+            await WaitFor(() => added.ObservedSaved == (first == 0 ? 202 : 101),
+                "Added child did not observe its independent saved value.");
+
+            int pass = CompositionIdentityTestActivity.ParentPasses;
+            await OnUi(activity, activity.Recreate);
+            await WaitFor(() => CompositionIdentityTestActivity.Current is { } current &&
+                    !ReferenceEquals(activity, current) &&
+                    CompositionIdentityTestActivity.ParentPasses > pass,
+                "Selective child composition did not recreate.");
+            activity = CompositionIdentityTestActivity.Current
+                ?? throw new InvalidOperationException("Recreated selective identity activity was unavailable.");
+            Assert.AreEqual(101, CompositionIdentityTestActivity.Probes["loop-0"].ObservedSaved);
+            Assert.AreEqual(202, CompositionIdentityTestActivity.Probes["loop-1"].ObservedSaved);
+        }
+        finally
+        {
+            await OnUi(activity, activity.Finish);
+        }
+    }
+
+    [TestMethod]
     [DataRow("same")]
     [DataRow("different")]
     [DataRow("branches")]
@@ -196,10 +237,11 @@ public class CompositionIdentityTests
             $"Applier node order does not match {string.Join(", ", ids)}.");
     }
 
-    static async Task<CompositionIdentityTestActivity> StartActivity(string scenario, bool checkNodeOrder = false)
+    static async Task<CompositionIdentityTestActivity> StartActivity(
+        string scenario, bool checkNodeOrder = false, bool directContent = false)
     {
         var context = global::Android.App.Application.Context;
-        CompositionIdentityTestActivity.Reset(scenario, checkNodeOrder);
+        CompositionIdentityTestActivity.Reset(scenario, checkNodeOrder, directContent);
         using var intent = new global::Android.Content.Intent(context, typeof(CompositionIdentityTestActivity));
         intent.AddFlags(global::Android.Content.ActivityFlags.NewTask);
         context.StartActivity(intent);
