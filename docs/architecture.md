@@ -73,16 +73,23 @@ native `RememberXxxState` on every execution of that owner. Siblings sharing
 the wrapper consume the same peer without creating independent native state.
 The same preamble is used by tree facades and direct composable helpers.
 
-Each direct observer keeps its original managed peer alive with a strong
-`GCHandle` from publication until `OnForgotten` or `OnAbandoned`, including
-speculative and non-owning sibling tokens. Failed publication and throwing
-release callbacks also free the handle; retirement clears captured wrappers
-and release delegates even if Java still references the retired token. This
-is a bounded composition resource, not a permanent registry root. The
-JNI activation constructor rejects lost lifetime state rather than inventing
-an empty owner: normal active callbacks and slot reads must use the original
-stateful peer. Device regressions exercise both managed and Java GC, native
-observer callbacks, abandonment, failures, and post-retirement collectibility.
+**Draft lifetime correction:** a strong `GCHandle` released by `OnForgotten`
+or `OnAbandoned` is not a bounded composition resource. The pinned native
+dispatcher can stop after an earlier observer throws, leaving another owner
+without its retirement callback after its slots have already been removed.
+Tests that make the owner's own release callback throw do not cover this path.
+The skipped-retirement regression uses a public owner followed by a generated
+child with throwing cleanup, then probes collection with resurrection-tracking
+weak references across managed and Java GC.
+
+The replacement must preserve the original active managed peer without a
+self-root and reject obsolete ownership before borrowing its state. Native
+scope validity alone is insufficient for abandoned insertions: their anchors
+can remain valid after their change batch is discarded. Composition phase flags
+also do not identify the batch that created an owner. The native-only reentry
+control, same-composition recovery, unrelated pending-attempt recovery, and
+disjoint provisional sibling-sharing regressions are acceptance gates for the
+correction; no phase-only fallback is considered safe.
 
 For conditional consumers, hoist the typed owner before the condition:
 

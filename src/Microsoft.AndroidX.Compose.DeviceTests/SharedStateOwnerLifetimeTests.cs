@@ -334,6 +334,52 @@ public class SharedStateOwnerLifetimeTests
         }
     }
 
+    [TestMethod]
+    public void CompletedPendingOwner_RemainsSharedUntilItsOwnBatchRetires()
+    {
+        using var applier = new StateOnlyApplier();
+        using var siblingApplier = new StateOnlyApplier();
+        using var recomposer = new Recomposer(Kotlin.Coroutines.EmptyCoroutineContext.Instance
+            ?? throw new InvalidOperationException("Empty coroutine context was unavailable."));
+        var composition = CompositionKt.ControlledComposition(applier, recomposer)
+            ?? throw new InvalidOperationException("Controlled composition was unavailable.");
+        var sibling = CompositionKt.ControlledComposition(siblingApplier, recomposer)
+            ?? throw new InvalidOperationException("Sibling composition was unavailable.");
+        var state = new TimePickerState(7, 10);
+        using var content = new ComposableLambda2(composer => composer.RememberTimePickerState(state));
+        try
+        {
+            composition.ComposeContent(content);
+            Assert.IsTrue(composition.HasPendingChanges);
+            var original = state.Jvm ?? throw new InvalidOperationException("Pending owner has no native peer.");
+            sibling.ComposeContent(content);
+            Assert.AreSame(original, state.Jvm, "A legitimate completed-pending owner must be shared.");
+            Apply(sibling);
+            Assert.AreSame(original, state.Jvm);
+            Apply(composition);
+            Assert.AreSame(original, state.Jvm, "Applying the actual owner must preserve its peer.");
+            composition.Dispose();
+            Assert.IsNull(state.Jvm, "Delivered retirement must release the owning peer.");
+            sibling.ComposeContent(content);
+            Apply(sibling);
+            Assert.IsNotNull(state.Jvm);
+            Assert.AreNotSame(original, state.Jvm, "The surviving sibling must acquire new ownership.");
+        }
+        finally
+        {
+            sibling.Dispose();
+            composition.Dispose();
+            recomposer.Cancel();
+        }
+
+        static void Apply(IControlledComposition target)
+        {
+            target.ApplyChanges();
+            target.ApplyLateChanges();
+            target.ChangesApplied();
+        }
+    }
+
     [MethodImpl(MethodImplOptions.NoInlining)]
     static WeakReference<object> ProbeOwner(object state)
     {
