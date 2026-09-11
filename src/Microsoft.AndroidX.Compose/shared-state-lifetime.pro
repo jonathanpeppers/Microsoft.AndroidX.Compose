@@ -1,16 +1,18 @@
 # The generated JNI bridge and read-only Runtime 1.11.3 compatibility query.
 -keep class composenet.compose.SharedStateLifetime {
-    static boolean isLive(androidx.compose.runtime.CompositionImpl, java.lang.Object, androidx.compose.runtime.RecomposeScopeImpl, androidx.compose.runtime.PausedComposition, androidx.compose.runtime.PausedComposition);
-    static androidx.compose.runtime.PausedComposition pausedOrigin(androidx.compose.runtime.CompositionImpl);
+    static boolean isLive(androidx.compose.runtime.CompositionImpl, java.lang.Object, androidx.compose.runtime.RecomposeScopeImpl, java.util.concurrent.atomic.AtomicReference, java.util.concurrent.atomic.AtomicReference);
+    static java.util.concurrent.atomic.AtomicReference pausedOrigin(androidx.compose.runtime.CompositionImpl);
 }
 -keepnames class androidx.compose.runtime.CompositionImpl
 -keepnames class androidx.compose.runtime.RecomposeScopeImpl
--keepnames interface androidx.compose.runtime.PausedComposition
 -keepclassmembers class androidx.compose.runtime.CompositionImpl {
     java.lang.Object lock;
     androidx.compose.runtime.Changes changes;
     androidx.compose.runtime.Changes lateChanges;
     androidx.compose.runtime.PausedCompositionImpl pendingPausedComposition;
+}
+-keepclassmembers class androidx.compose.runtime.PausedCompositionImpl {
+    java.util.concurrent.atomic.AtomicReference state;
 }
 -keepclassmembers class androidx.compose.runtime.GapComposer {
     *** changeListWriter;

@@ -14,8 +14,8 @@ internal sealed class SharedStateOwner : Java.Lang.Object, IRememberObserver
     Action? _release;
     IControlledComposition? _composition;
     IRecomposeScope? _scope;
-    IPausedComposition? _registrationOrigin;
-    IPausedComposition? _ownershipOrigin;
+    Java.Util.Concurrent.Atomic.AtomicReference? _registrationOrigin;
+    Java.Util.Concurrent.Atomic.AtomicReference? _ownershipOrigin;
 
     SharedStateOwner(object? wrapper, Action release)
     {

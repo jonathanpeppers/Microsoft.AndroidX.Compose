@@ -21,6 +21,69 @@ public class SharedStatePausedLifetimeTests
         SharedStateOwnerLifetimeTests.AssertCollected(
             SharedStateOwnerLifetimeTests.OnRetiredThread(() => ExercisePausedOwner(false)));
 
+    [TestMethod]
+    public void AppliedPausedOrigin_DoesNotRetainReplacedContentWhileOwnerLives()
+    {
+        using var applier = new StateOnlyApplier();
+        using var recomposer = new Recomposer(Kotlin.Coroutines.EmptyCoroutineContext.Instance
+            ?? throw new InvalidOperationException("Empty coroutine context was unavailable."));
+        var composition = CompositionKt.ControlledComposition(applier, recomposer)
+            ?? throw new InvalidOperationException("Controlled composition was unavailable.");
+        var state = new TimePickerState(7, 10);
+        try
+        {
+            var probes = SharedStateOwnerLifetimeTests.OnRetiredThread(
+                () => ReplacePausedContent(composition, state));
+            Assert.IsFalse(composition.IsDisposed, "The content must collect while its composition is still active.");
+            var peer = state.Jvm ?? throw new InvalidOperationException("Active owner lost its peer.");
+            SharedStateOwnerLifetimeTests.AssertCollected(probes);
+            Assert.IsTrue(Owner(state).IsLive, "Collection retired the still-installed owner.");
+            Assert.AreSame(peer, state.Jvm);
+            Assert.AreEqual(19, state.Hour);
+            GC.KeepAlive(composition);
+            GC.KeepAlive(state);
+        }
+        finally
+        {
+            composition.Dispose();
+            recomposer.Cancel();
+        }
+    }
+
+    static WeakReference<object>[] ReplacePausedContent(IControlledComposition composition, TimePickerState state)
+    {
+        var pausable = composition.JavaCast<IPausableComposition>()
+            ?? throw new InvalidOperationException("Composition was not pausable.");
+        using var callback = new NeverPauseCallback();
+        object payload = new();
+        var content = new ComposableLambda2(composer =>
+        {
+            RenderStableOwner(composer, state);
+            GC.KeepAlive(payload);
+        });
+        var paused = pausable.SetPausableContent(content);
+        Assert.IsTrue(paused.Resume(callback));
+        paused.Apply();
+        var peer = state.Jvm ?? throw new InvalidOperationException("Paused owner did not bind.");
+        state.Hour = 19;
+        var replacement = StableContent(state);
+        composition.ComposeContent(replacement);
+        Apply(composition);
+        Assert.AreSame(peer, state.Jvm, "Replacing content must preserve the owner's position and peer.");
+        return
+        [
+            new(payload, trackResurrection: true),
+            new(content, trackResurrection: true),
+            new(paused, trackResurrection: true)
+        ];
+    }
+
+    static ComposableLambda2 StableContent(TimePickerState state) =>
+        new(composer => RenderStableOwner(composer, state));
+
+    static void RenderStableOwner(IComposer composer, TimePickerState state) =>
+        composer.RememberTimePickerState(state);
+
     static WeakReference<object>[] ExercisePausedOwner(bool apply)
     {
         using var applier = new StateOnlyApplier();

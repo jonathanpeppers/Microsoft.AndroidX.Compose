@@ -118,12 +118,15 @@ these distinctions.
 Paused work can install slots before final application. Cancellation first
 discards its registration set, then dispatches abandonment; a thrown callback
 can leave both installed membership and the cancelled transaction reachable.
-Each token therefore captures the actual native paused transaction at
-registration, and separately when it first acquires ownership. The latter also
+Each token therefore captures the native paused transaction's cancellation
+cell at registration, and separately when it first acquires ownership. The latter also
 covers a previously committed borrower acquiring a peer during a later pause.
 Ordinary owning rerenders never overwrite either origin. Every positive
-membership result is qualified by both captured origins' atomic `isCancelled()`
-values. An unchanged committed owner is not rejected merely because unrelated
+membership result is qualified by both captured cells' atomic state values.
+The pinned runtime never replaces these `AtomicReference` cells. Each retains
+only a state enum, unlike the transaction itself, whose final content delegate
+would retain obsolete content for the surviving owner's lifetime. An unchanged
+committed owner is not rejected merely because unrelated
 paused work in its composition was cancelled. The origin bridge normalizes its
 owned JNI local into a managed peer and releases the local in `finally`.
 
@@ -232,7 +235,10 @@ remain in place.
 owner marker and skipped abandonment, preservation of an older committed
 sibling, successful paused application, null-marker borrower registration,
 later acquisition by a committed borrower, and collection of the cancelled
-transaction and owner graph. Both Gap and Link backends are selected explicitly
+transaction and owner graph. A successful-application control replaces the
+content but keeps its owner and composition alive while the old callback,
+captured payload, and paused transaction must collect.
+Both Gap and Link backends are selected explicitly
 through the instrumentation's `composeBackend` argument.
 
 Visual inspection of the hoisted-owner Gallery demo preserves 19:25 in its

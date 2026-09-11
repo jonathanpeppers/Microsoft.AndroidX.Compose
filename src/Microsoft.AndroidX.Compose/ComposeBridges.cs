@@ -43,24 +43,25 @@ internal static partial class ComposeBridges
         Class = "composenet/compose/SharedStateLifetime",
         JvmName = "isLive",
         Signature = "(Landroidx/compose/runtime/CompositionImpl;Ljava/lang/Object;Landroidx/compose/runtime/RecomposeScopeImpl;" +
-                    "Landroidx/compose/runtime/PausedComposition;Landroidx/compose/runtime/PausedComposition;)Z")]
+                    "Ljava/util/concurrent/atomic/AtomicReference;Ljava/util/concurrent/atomic/AtomicReference;)Z")]
     internal static partial bool SharedStateIsLive(IControlledComposition composition, SharedStateOwner owner,
-        IRecomposeScope? scope, IPausedComposition? registrationOrigin = null, IPausedComposition? ownershipOrigin = null);
+        IRecomposeScope? scope, Java.Util.Concurrent.Atomic.AtomicReference? registrationOrigin = null,
+        Java.Util.Concurrent.Atomic.AtomicReference? ownershipOrigin = null);
 
     [ComposeBridge(
         Class = "composenet/compose/SharedStateLifetime",
         JvmName = "pausedOrigin",
-        Signature = "(Landroidx/compose/runtime/CompositionImpl;)Landroidx/compose/runtime/PausedComposition;")]
+        Signature = "(Landroidx/compose/runtime/CompositionImpl;)Ljava/util/concurrent/atomic/AtomicReference;")]
     internal static partial IntPtr SharedStatePausedOriginJvm(IControlledComposition composition);
 
     // Why manual: ordinary object-return bridges expose an owned JNI local.
     // Normalize the optional origin to a managed peer without retaining a local ref.
-    internal static IPausedComposition? SharedStatePausedOrigin(IControlledComposition composition)
+    internal static Java.Util.Concurrent.Atomic.AtomicReference? SharedStatePausedOrigin(IControlledComposition composition)
     {
         var local = SharedStatePausedOriginJvm(composition);
         try
         {
-            return Java.Lang.Object.GetObject<IPausedComposition>(local, JniHandleOwnership.DoNotTransfer);
+            return Java.Lang.Object.GetObject<Java.Util.Concurrent.Atomic.AtomicReference>(local, JniHandleOwnership.DoNotTransfer);
         }
         finally
         {

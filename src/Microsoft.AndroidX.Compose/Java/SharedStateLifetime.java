@@ -4,9 +4,11 @@ import java.lang.reflect.Field;
 import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicReference;
 
 import androidx.compose.runtime.CompositionImpl;
-import androidx.compose.runtime.PausedComposition;
+import androidx.compose.runtime.PausedCompositionImpl;
+import androidx.compose.runtime.PausedCompositionState;
 import androidx.compose.runtime.RecomposeScopeImpl;
 import androidx.compose.runtime.RememberObserverHolder;
 
@@ -21,6 +23,7 @@ final class SharedStateLifetime {
     private static final Field changes = field(CompositionImpl.class, "changes");
     private static final Field lateChanges = field(CompositionImpl.class, "lateChanges");
     private static final Field pendingPausedComposition = field(CompositionImpl.class, "pendingPausedComposition");
+    private static final Field pausedState = field(PausedCompositionImpl.class, "state");
     private static final Field gapWriter = field(androidx.compose.runtime.GapComposer.class, "changeListWriter");
     private static final Field linkWriter = field(androidx.compose.runtime.LinkComposer.class, "changeListWriter");
     private static final Field gapList = field(
@@ -34,10 +37,13 @@ final class SharedStateLifetime {
 
     private SharedStateLifetime() { }
 
-    static PausedComposition pausedOrigin(CompositionImpl composition) {
+    static AtomicReference<?> pausedOrigin(CompositionImpl composition) {
         try {
             synchronized (lock.get(composition)) {
-                return (PausedComposition) pendingPausedComposition.get(composition);
+                Object paused = pendingPausedComposition.get(composition);
+                // The cell is never replaced and retains only an enum value, not
+                // the completed transaction's original content and composition.
+                return paused == null ? null : (AtomicReference<?>) pausedState.get(paused);
             }
         } catch (IllegalAccessException error) {
             throw new IllegalStateException("Cannot capture pinned Compose shared-state origin.", error);
@@ -45,7 +51,7 @@ final class SharedStateLifetime {
     }
 
     static boolean isLive(CompositionImpl composition, Object token, RecomposeScopeImpl scope,
-            PausedComposition registrationOrigin, PausedComposition ownershipOrigin) {
+            AtomicReference<?> registrationOrigin, AtomicReference<?> ownershipOrigin) {
         try {
             synchronized (lock.get(composition)) {
                 // Paused resume installs slots before final apply. Cancellation can
@@ -53,8 +59,8 @@ final class SharedStateLifetime {
                 // Qualify every membership result with the captured origins, not
                 // whichever unrelated transaction the composition currently owns.
                 return !composition.isDisposed() && registered(composition, token, scope)
-                    && (registrationOrigin == null || !registrationOrigin.isCancelled())
-                    && (ownershipOrigin == null || !ownershipOrigin.isCancelled());
+                    && (registrationOrigin == null || registrationOrigin.get() != PausedCompositionState.Cancelled)
+                    && (ownershipOrigin == null || ownershipOrigin.get() != PausedCompositionState.Cancelled);
             }
         } catch (IllegalAccessException error) {
             throw new IllegalStateException("Cannot inspect pinned Compose shared-state lifetime.", error);
