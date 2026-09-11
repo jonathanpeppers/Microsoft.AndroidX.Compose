@@ -193,6 +193,7 @@ AndroidX.Compose.Column.Column(AndroidX.Compose.Arrangement? verticalArrangement
 AndroidX.Compose.Column.Column(AndroidX.Compose.Arrangement? verticalArrangement, AndroidX.Compose.Alignment.Horizontal? horizontalAlignment) -> void
 AndroidX.Compose.ComposableAttribute
 AndroidX.Compose.ComposableAttribute.ComposableAttribute() -> void
+AndroidX.Compose.ComposableCallSite
 AndroidX.Compose.ComposableContainer
 AndroidX.Compose.ComposableContainer.Add(AndroidX.Compose.ComposableNode? child) -> void
 AndroidX.Compose.ComposableContainer.Add(AndroidX.Compose.Modifier! modifier) -> void
@@ -1882,6 +1883,8 @@ static AndroidX.Compose.Color.White.get -> AndroidX.Compose.Color
 static AndroidX.Compose.Color.Yellow.get -> AndroidX.Compose.Color
 static AndroidX.Compose.Color.operator !=(AndroidX.Compose.Color left, AndroidX.Compose.Color right) -> bool
 static AndroidX.Compose.Color.operator ==(AndroidX.Compose.Color left, AndroidX.Compose.Color right) -> bool
+static AndroidX.Compose.ComposableCallSite.End(AndroidX.Compose.Runtime.IComposer! composer) -> void
+static AndroidX.Compose.ComposableCallSite.Start(AndroidX.Compose.Runtime.IComposer! composer, int key, Java.Lang.String! identity) -> void
 static AndroidX.Compose.ComposableContext.Current.get -> AndroidX.Compose.Runtime.IComposer!
 static AndroidX.Compose.ComposableContext.Enter(AndroidX.Compose.Runtime.IComposer! composer) -> AndroidX.Compose.ComposableContextScope
 static AndroidX.Compose.Composables.AlertDialog(System.Action! onDismissRequest, System.Action! confirmButton, AndroidX.Compose.Modifier? modifier = null, System.Action? dismissButton = null, System.Action? icon = null, System.Action? title = null, System.Action? text = null, AndroidX.Compose.Shape? shape = null) -> void

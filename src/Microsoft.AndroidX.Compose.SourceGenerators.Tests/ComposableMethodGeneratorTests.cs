@@ -85,6 +85,12 @@ public class ComposableMethodGeneratorTests
                 public static int DiffSlot<T>(this AndroidX.Compose.Runtime.IComposer composer, T? value, int bitOffset,
                     [CallerLineNumber] int line = 0, [CallerFilePath] string file = "") => 0;
             }
+
+            public static class ComposableCallSite
+            {
+                public static void Start(IComposer composer, int key, Java.Lang.String identity) { }
+                public static void End(IComposer composer) { }
+            }
         }
         """;
 
@@ -155,19 +161,19 @@ public class ComposableMethodGeneratorTests
         {
             string body = entry.Body?.ToString()
                 ?? throw new System.InvalidOperationException("Interceptor entry has no body.");
-            Assert.Contains("StartMovableGroup", body);
-            Assert.Contains("EndMovableGroup", body);
+            Assert.Contains("ComposableCallSite.Start", body);
+            Assert.Contains("ComposableCallSite.End", body);
             Assert.DoesNotContain("StartRestartGroup", body);
             Assert.Collection(entry.Body?.Statements
                     ?? throw new System.InvalidOperationException("Interceptor entry has no statements."),
-                statement => Assert.Contains("StartMovableGroup", statement.ToString()),
+                statement => Assert.Contains("ComposableCallSite.Start", statement.ToString()),
                 statement => Assert.Contains(entry.Identifier.ValueText + "_Core(", statement.ToString()),
-                statement => Assert.Contains("EndMovableGroup", statement.ToString()));
+                statement => Assert.Contains("ComposableCallSite.End", statement.ToString()));
             var start = entry.DescendantNodes()
                 .OfType<InvocationExpressionSyntax>()
-                .Single(i => i.Expression.ToString().EndsWith(".StartMovableGroup",
+                .Single(i => i.Expression.ToString().EndsWith("ComposableCallSite.Start",
                     System.StringComparison.Ordinal));
-            Assert.True(keys.Add(start.ArgumentList.Arguments[0].ToString()),
+            Assert.True(keys.Add(start.ArgumentList.Arguments[1].ToString()),
                 "Separate lexical invocations must not share their structural key.");
             Assert.Contains("_Key ??= new global::Java.Lang.String", start.ToString());
             string core = methods.Single(m => m.Identifier.ValueText ==
@@ -175,6 +181,7 @@ public class ComposableMethodGeneratorTests
             Assert.Contains("StartRestartGroup", core);
             Assert.Contains("EndRestartGroup", core);
             Assert.DoesNotContain("MovableGroup", core);
+            Assert.DoesNotContain("ComposableCallSite.", core);
             Assert.Contains(entry.Identifier.ValueText + "_Core(__c2", core);
         }
         AssertNoCompileErrors(output);
@@ -250,10 +257,10 @@ public class ComposableMethodGeneratorTests
         Assert.NotNull(emitted);
         var starts = CSharpSyntaxTree.ParseText(emitted).GetRoot().DescendantNodes()
             .OfType<InvocationExpressionSyntax>()
-            .Where(node => node.Expression.ToString().EndsWith(".StartMovableGroup",
+            .Where(node => node.Expression.ToString().EndsWith("ComposableCallSite.Start",
                 System.StringComparison.Ordinal)).ToArray();
         Assert.Equal(4, starts.Length);
-        Assert.Equal(4, starts.Select(node => node.ArgumentList.Arguments[0].ToString())
+        Assert.Equal(4, starts.Select(node => node.ArgumentList.Arguments[1].ToString())
             .Distinct().Count());
         AssertNoCompileErrors(output);
     }

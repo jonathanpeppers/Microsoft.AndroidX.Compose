@@ -19,13 +19,14 @@ public class CompositionIdentityProcessActivity : CompositionIdentityTestActivit
     protected override void OnCreate(Bundle? savedInstanceState)
     {
         // Isolate interceptor ancestry from tree-container key behavior covered separately by #353.
-        Reset("loop", directContent: true);
+        Reset(savedInstanceState?.GetString("identity.scenario")
+            ?? Intent?.GetStringExtra("scenario") ?? "loop", directContent: true);
         _restored = savedInstanceState is not null;
         _runId = savedInstanceState?.GetString("identity.run")
             ?? Intent?.GetStringExtra("runId")
             ?? throw new InvalidOperationException("Identity process probe requires a runId.");
         _previousProcessId = savedInstanceState?.GetInt("identity.pid") ?? 0;
-        Phase.Value = savedInstanceState?.GetInt("identity.phase") ?? 0;
+        Phase.Value = savedInstanceState?.GetInt("identity.phase") ?? (Scenario == "loop" ? 0 : 10);
         Committed = WriteSnapshot;
         base.OnCreate(savedInstanceState);
     }
@@ -43,7 +44,18 @@ public class CompositionIdentityProcessActivity : CompositionIdentityTestActivit
                     saved.Value = 1000 + NodeCode(id);
                     probe.Ordinary.Value = 2000 + NodeCode(id);
                 }
-                Phase.Value = 1;
+                Phase.Value = Scenario == "loop" ? 1 : 15;
+                break;
+            case "seed-added":
+                foreach (var (id, probe) in Probes.Where(pair => pair.Value.Disposals == 0))
+                {
+                    var saved = probe.Saved
+                        ?? throw new InvalidOperationException($"Saveable state for '{id}' is unavailable.");
+                    saved.Value = 1000 + NodeCode(id);
+                    probe.Ordinary.Value = 2000 + NodeCode(id);
+                }
+                // Drive a parent side effect after the leaf-only writes have been applied.
+                Count.Value++;
                 break;
             case "finish":
                 FinishAndRemoveTask();
@@ -57,6 +69,7 @@ public class CompositionIdentityProcessActivity : CompositionIdentityTestActivit
         outState.PutString("identity.run", _runId);
         outState.PutInt("identity.pid", global::Android.OS.Process.MyPid());
         outState.PutInt("identity.phase", Phase.Value);
+        outState.PutString("identity.scenario", Scenario);
         _saved = true;
         WriteSnapshot();
     }

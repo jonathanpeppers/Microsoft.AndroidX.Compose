@@ -6,29 +6,61 @@ namespace Microsoft.AndroidX.Compose.DeviceTests;
 public class CompositionIdentityTests
 {
     [TestMethod]
-    [DataRow(0)]
-    [DataRow(1)]
-    public async Task RepeatedParents_RestoreSelectiveChildrenByOccurrence(int first)
+    [DataRow(0, false, false)]
+    [DataRow(1, false, false)]
+    [DataRow(0, true, false)]
+    [DataRow(1, true, false)]
+    [DataRow(0, false, true)]
+    [DataRow(1, false, true)]
+    [DataRow(0, true, true)]
+    [DataRow(1, true, true)]
+    public async Task RepeatedParents_RestoreSelectiveChildrenByOccurrence(int first, bool readd, bool nested)
     {
-        var activity = await StartActivity("selective", directContent: true);
+        var activity = await StartActivity(nested ? "selective-nested" : "selective", directContent: true);
+        int[] initialIndices = nested ? [first, first + 2] : [first];
+        int firstPhase = initialIndices.Sum(i => 1 << i);
+        int allPhase = nested ? 15 : 3;
+        int count = nested ? 4 : 2;
         try
         {
             await WaitFor(() => CompositionIdentityTestActivity.ParentPasses > 0,
                 "Initial selective composition did not complete.");
-            await ChangeStructure(activity, () => CompositionIdentityTestActivity.Phase.Value = 1 << first);
-            var existing = CompositionIdentityTestActivity.Probes[$"loop-{first}"];
-            await OnUi(activity, () => Saved(existing).Value = first == 0 ? 101 : 202);
-            await WaitFor(() => existing.ObservedSaved == (first == 0 ? 101 : 202),
-                "Existing child did not observe its saved value.");
+            await ChangeStructure(activity, () => CompositionIdentityTestActivity.Phase.Value = firstPhase);
+            var existing = initialIndices.ToDictionary(i => i, i => CompositionIdentityTestActivity.Probes[$"loop-{i}"]);
+            await Seed(existing.Keys);
+            await ChangeStructure(activity, () => CompositionIdentityTestActivity.Phase.Value = allPhase);
+            foreach (var (index, probe) in existing)
+            {
+                Assert.AreSame(probe, CompositionIdentityTestActivity.Probes[$"loop-{index}"]);
+                Assert.AreEqual(0, probe.Disposals);
+            }
+            await Seed(Enumerable.Range(0, count));
 
-            await ChangeStructure(activity, () => CompositionIdentityTestActivity.Phase.Value = 3);
-            Assert.AreSame(existing, CompositionIdentityTestActivity.Probes[$"loop-{first}"]);
-            Assert.AreEqual(0, existing.Disposals);
-            var added = CompositionIdentityTestActivity.Probes[$"loop-{1 - first}"];
-            await OnUi(activity, () => Saved(added).Value = first == 0 ? 202 : 101);
-            await WaitFor(() => added.ObservedSaved == (first == 0 ? 202 : 101),
-                "Added child did not observe its independent saved value.");
+            if (readd)
+            {
+                var retained = Enumerable.Range(0, count).Except(initialIndices)
+                    .ToDictionary(i => i, i => CompositionIdentityTestActivity.Probes[$"loop-{i}"]);
+                await ChangeStructure(activity, () => CompositionIdentityTestActivity.Phase.Value = allPhase ^ firstPhase);
+                foreach (var probe in existing.Values)
+                    Assert.AreEqual(1, probe.Disposals);
+                await ChangeStructure(activity, () => CompositionIdentityTestActivity.Phase.Value = allPhase);
+                foreach (var (index, probe) in existing)
+                {
+                    var replacement = CompositionIdentityTestActivity.Probes[$"loop-{index}"];
+                    Assert.AreNotSame(probe, replacement);
+                    Assert.AreEqual(0, replacement.ObservedSaved);
+                    Assert.AreEqual(1, probe.Disposals);
+                }
+                foreach (var (index, probe) in retained)
+                {
+                    Assert.AreSame(probe, CompositionIdentityTestActivity.Probes[$"loop-{index}"]);
+                    Assert.AreEqual(0, probe.Disposals);
+                }
+                await Seed(initialIndices);
+            }
 
+            var beforeRecreate = Enumerable.Range(0, count)
+                .Select(i => CompositionIdentityTestActivity.Probes[$"loop-{i}"]).ToArray();
             int pass = CompositionIdentityTestActivity.ParentPasses;
             await OnUi(activity, activity.Recreate);
             await WaitFor(() => CompositionIdentityTestActivity.Current is { } current &&
@@ -37,12 +69,41 @@ public class CompositionIdentityTests
                 "Selective child composition did not recreate.");
             activity = CompositionIdentityTestActivity.Current
                 ?? throw new InvalidOperationException("Recreated selective identity activity was unavailable.");
-            Assert.AreEqual(101, CompositionIdentityTestActivity.Probes["loop-0"].ObservedSaved);
-            Assert.AreEqual(202, CompositionIdentityTestActivity.Probes["loop-1"].ObservedSaved);
+            for (int i = 0; i < count; i++)
+            {
+                var current = CompositionIdentityTestActivity.Probes[$"loop-{i}"];
+                Assert.AreEqual((i + 1) * 101, current.ObservedSaved);
+                Assert.AreEqual(0, current.Observed);
+                Assert.AreEqual(1, current.Setups);
+                Assert.AreEqual(1, beforeRecreate[i].Disposals);
+            }
         }
         finally
         {
             await OnUi(activity, activity.Finish);
+            await WaitFor(() => global::AndroidX.Compose.ComposableCallSite.Occurrences.CompositionCount == 0,
+                "Occurrence registry retained a finished composition.");
+        }
+
+        async Task Seed(IEnumerable<int> indices)
+        {
+            int[] items = indices.ToArray();
+            int parentPass = CompositionIdentityTestActivity.ParentPasses;
+            await OnUi(activity, () =>
+            {
+                foreach (int i in items)
+                {
+                    var probe = CompositionIdentityTestActivity.Probes[$"loop-{i}"];
+                    Saved(probe).Value = (i + 1) * 101;
+                    probe.Ordinary.Value = (i + 1) * 501;
+                }
+            });
+            await WaitFor(() => items.All(i =>
+                    CompositionIdentityTestActivity.Probes[$"loop-{i}"].ObservedSaved == (i + 1) * 101 &&
+                    CompositionIdentityTestActivity.Probes[$"loop-{i}"].Observed == (i + 1) * 501),
+                "Selective child did not observe its independent values.");
+            Assert.AreEqual(parentPass, CompositionIdentityTestActivity.ParentPasses,
+                "Leaf-only invalidation must not rerun the parent.");
         }
     }
 

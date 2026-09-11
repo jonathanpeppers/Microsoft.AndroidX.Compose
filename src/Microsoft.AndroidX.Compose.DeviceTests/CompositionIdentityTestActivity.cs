@@ -44,7 +44,16 @@ public class CompositionIdentityTestActivity : ComponentActivity
     {
         base.OnCreate(savedInstanceState);
         var view = new global::AndroidX.Compose.UI.Platform.ComposeView(this) { Id = 350001 };
-        view.SetContent(c => Screen(c));
+        if (DirectContent)
+        {
+            // Call through the bound API without a managed ambient-composer root frame.
+            view.SetContent(global::AndroidX.Compose.Runtime.Internal.ComposableLambdaKt.ComposableLambdaInstance(
+                350002, false, new ComposableLambda2(c => Screen(c))));
+        }
+        else
+        {
+            view.SetContent(c => Screen(c));
+        }
         SetContentView(view);
         Volatile.Write(ref s_current, this);
     }
@@ -105,6 +114,10 @@ public class CompositionIdentityTestActivity : ComponentActivity
                     for (int i = 0; i < 2; i++)
                         RepeatedParent(c, i, (phase & (1 << i)) != 0);
                     break;
+                case "selective-nested":
+                    for (int i = 0; i < 2; i++)
+                        RepeatedOuter(c, i, phase);
+                    break;
                 default:
                     throw new InvalidOperationException($"Unknown identity scenario '{Scenario}'.");
             }
@@ -138,6 +151,20 @@ public class CompositionIdentityTestActivity : ComponentActivity
     {
         if (visible)
             Counter(composer, $"loop-{index}");
+    }
+
+    /// <summary>Repeats parents within independently invoked Kotlin content callbacks.</summary>
+    [Composable]
+    public static void RepeatedOuter(IComposer composer, int outer, int phase)
+    {
+        Composables.Column(composer, c =>
+        {
+            for (int i = 0; i < 2; i++)
+            {
+                int index = outer * 2 + i;
+                RepeatedParent(c, index, (phase & (1 << index)) != 0);
+            }
+        });
     }
 
     static void Observe(IComposer composer, string id)

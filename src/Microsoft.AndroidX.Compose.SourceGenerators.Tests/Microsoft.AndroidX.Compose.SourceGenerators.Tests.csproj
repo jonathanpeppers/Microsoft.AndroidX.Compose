@@ -18,5 +18,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Microsoft.AndroidX.Compose.SourceGenerators\Microsoft.AndroidX.Compose.SourceGenerators.csproj" />
+    <Compile Include="..\Microsoft.AndroidX.Compose\CompositionOccurrencePool.cs" Link="Runtime\CompositionOccurrencePool.cs" />
+    <Compile Include="..\Microsoft.AndroidX.Compose\CompositionOccurrenceRegistry.cs" Link="Runtime\CompositionOccurrenceRegistry.cs" />
   </ItemGroup>
 </Project>

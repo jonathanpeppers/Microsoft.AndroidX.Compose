@@ -463,8 +463,8 @@ public sealed class ComposableMethodGenerator : IIncrementalGenerator
         AppendTypeParameterConstraints(
             sb, interceptorTypeParameters, typeParameterNames, "        ");
         sb.AppendLine("        {");
-        sb.Append("            ").Append(composerName)
-          .Append(".StartMovableGroup(unchecked((int)0x")
+        sb.Append("            global::AndroidX.Compose.ComposableCallSite.Start(").Append(composerName)
+          .Append(", unchecked((int)0x")
           .Append(siteKey.ToString("X8", CultureInfo.InvariantCulture))
           .Append("), ").Append(wrapperName)
           .Append("_Key ??= new global::Java.Lang.String(@\"")
@@ -481,7 +481,7 @@ public sealed class ComposableMethodGenerator : IIncrementalGenerator
             sb.Append(EscapeIdentifier(method.Parameters[i].Name));
         }
         sb.AppendLine(", 0);");
-        sb.Append("            ").Append(composerName).AppendLine(".EndMovableGroup();");
+        sb.Append("            global::AndroidX.Compose.ComposableCallSite.End(").Append(composerName).AppendLine(");");
         sb.AppendLine("        }");
         sb.AppendLine();
 
