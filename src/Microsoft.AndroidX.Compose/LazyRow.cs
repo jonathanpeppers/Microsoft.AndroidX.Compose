@@ -32,6 +32,10 @@ public sealed class LazyRow<T> : ComposableNode
     /// </summary>
     public LazyListState? State { get; set; }
 
+    /// <summary>Optional stable, unique, Bundle-saveable item key; null preserves positional identity.</summary>
+    /// <remarks>Return a non-null string, int, or long. See <see cref="LazyColumn{T}.Key"/> for validation and mutation requirements.</remarks>
+    public Func<T, object>? Key { get; set; }
+
     /// <summary>
     /// Optional horizontal arrangement (e.g. <see cref="Arrangement.SpacedBy(int)"/>)
     /// applied between items. Leave <see langword="null"/> to use Compose's
@@ -51,18 +55,19 @@ public sealed class LazyRow<T> : ComposableNode
 
     public override void Render(IComposer composer)
     {
+        var (items, key) = CollectionItemKey.Create(_items, Key);
         var modifier = BuildModifier();
         var content  = new ComposableLambda1(scopeObj =>
         {
             var scope = Android.Runtime.Extensions.JavaCast<ILazyListScope>(scopeObj!);
             scope.Items(
-                _items.Count,
-                key:         null,
+                items.Count,
+                key:         key,
                 contentType: new ComposableLambda1(_ => { }),
                 itemContent: ComposableLambdas.Instantiate4((_, indexBoxed, comp) =>
                 {
                     var i = ((Java.Lang.Integer)indexBoxed!).IntValue();
-                    _itemContent(_items[i]).Render(comp);
+                    _itemContent(items[i]).Render(comp);
                 }));
         });
 
