@@ -212,6 +212,7 @@ public static class Catalog
         D.ComposableMethods.ComposableHandwrittenAdaptersDemo.Demo,
         D.ComposableMethods.ComposableLazyCollectionsDemo.Demo,
         D.ComposableMethods.ComposableSiblingSkipDemo.Demo,
+        D.ComposableMethods.ConditionalIdentityDemo.Demo,
         D.ComposableMethods.ComposableMethodBenchmarkDemo.Demo,
     ];
 
