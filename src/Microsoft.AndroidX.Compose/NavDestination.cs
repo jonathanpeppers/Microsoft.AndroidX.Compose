@@ -1,6 +1,4 @@
 using System.Collections;
-using Android.Runtime;
-using AndroidX.Navigation;
 
 namespace AndroidX.Compose;
 
@@ -17,7 +15,7 @@ namespace AndroidX.Compose;
 /// dynamic content that needs to read route arguments:
 /// </para>
 /// <code>
-/// // Static — same children every time the route is shown
+/// // Static — children from the latest successful host render
 /// new NavDestination("home")
 /// {
 ///     new Text("Home"),
@@ -42,11 +40,22 @@ namespace AndroidX.Compose;
 /// content is composed inside the NavHost's per-route subcomposition,
 /// not the surrounding tree.
 /// </para>
+/// <para>
+/// A host render publishes the latest factory or static children for each
+/// route. Captured values and callbacks can therefore be replaced without
+/// changing the navigation graph. Publication invalidates visible destination
+/// content; inactive destinations use the latest content when revisited.
+/// Changes to static children through <see cref="Add(ComposableNode?)"/> are
+/// published on the next host render, not immediately.
+/// </para>
 /// </summary>
 public sealed class NavDestination : IEnumerable
 {
     readonly List<ComposableNode> _staticChildren = new();
     readonly Func<NavBackStackEntry, ComposableNode>? _factory;
+    NavDestinationContent? _content;
+
+    internal NavDestinationContent Content => _content ??= new(_factory, [.. _staticChildren]);
 
     /// <summary>
     /// Register a destination with a static child tree. Add children
@@ -86,7 +95,10 @@ public sealed class NavDestination : IEnumerable
             throw new InvalidOperationException(
                 "NavDestination was constructed with a dynamic content factory; collection-init children are not supported.");
         if (child is not null)
+        {
             _staticChildren.Add(child);
+            _content = null;
+        }
     }
 
     /// <summary>
@@ -105,49 +117,4 @@ public sealed class NavDestination : IEnumerable
             "or to the surrounding NavHost.");
 
     IEnumerator IEnumerable.GetEnumerator() => _staticChildren.GetEnumerator();
-
-    // Register this route into the surrounding NavHost's NavGraphBuilder.
-    // Called once per NavDestination per NavHost composition pass — Kotlin
-    // composable() runs synchronously inside the builder lambda, so the
-    // outer NavHost composer is still active here. The destination's
-    // content lambda, however, is invoked LATER inside the route's own
-    // subcomposition (every time the user navigates here), so the
-    // content must be wrapped via ComposableLambdaInstance, not
-    // ComposableLambda — see ComposableLambdas.InstantiateNavComposable.
-    internal void RegisterInto(NavGraphBuilder graphBuilder)
-    {
-        var content = ComposableLambdas.InstantiateNavComposable((entryHandle, destComposer) =>
-        {
-            // Render either the dynamic factory's result or the static
-            // children inside the destination's own composer.
-            if (_factory is not null)
-            {
-                var entry = entryHandle == IntPtr.Zero
-                    ? null
-                    : Java.Lang.Object.GetObject<AndroidX.Navigation.NavBackStackEntry>(
-                        entryHandle, JniHandleOwnership.DoNotTransfer);
-                var wrapper = entry is null ? null : new NavBackStackEntry(entry);
-                if (wrapper is null)
-                    throw new InvalidOperationException(
-                        "Compose Navigation invoked a destination with a null back-stack entry; this should never happen.");
-                _factory(wrapper).Render(destComposer);
-            }
-            else
-            {
-                for (int i = 0; i < _staticChildren.Count; i++)
-                {
-                    destComposer.StartReplaceableGroup(i);
-                    try { _staticChildren[i].Render(destComposer); }
-                    finally { destComposer.EndReplaceableGroup(); }
-                }
-            }
-        });
-
-        ComposeBridges.NavGraphBuilderComposable(
-            navGraphBuilder: ((Java.Lang.Object)graphBuilder).Handle,
-            route:           Route,
-            arguments:       null,
-            deepLinks:       null,
-            content:         content);
-    }
 }
