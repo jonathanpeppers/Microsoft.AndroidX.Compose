@@ -192,10 +192,12 @@ public class SharedStateOwnerLifetimeTests
     }
 
     [TestMethod]
-    [DataRow(false, false)]
-    [DataRow(true, false)]
-    [DataRow(true, true)]
-    public void EarlierAbandonFailure_RebindsUncommittedOwnerBeforeGc(bool reuseComposition, bool nativeControl)
+    [DataRow(false, false, false)]
+    [DataRow(true, false, false)]
+    [DataRow(true, true, false)]
+    [DataRow(false, false, true)]
+    public void EarlierAbandonFailure_RebindsUncommittedOwnerBeforeGc(
+        bool reuseComposition, bool nativeControl, bool unrelatedPending)
     {
         using var applier = new StateOnlyApplier();
         using var replacementApplier = new StateOnlyApplier();
@@ -215,6 +217,7 @@ public class SharedStateOwnerLifetimeTests
             RememberState(composer);
         });
         using var successor = new ComposableLambda2(RememberState);
+        using var empty = new ComposableLambda2(_ => { });
         try
         {
             var hash = JNIEnv.GetMethodID(blocker.Class.Handle, "hashCode", "()I");
@@ -232,6 +235,12 @@ public class SharedStateOwnerLifetimeTests
             Assert.AreSame(original, state.Jvm, "Guard: native dispatch must skip the owner's abandonment callback.");
             Assert.IsFalse(composition.IsDisposed);
             Assert.IsFalse(composition.HasPendingChanges);
+            if (unrelatedPending)
+            {
+                composition.ComposeContent(empty);
+                Assert.IsTrue(composition.HasPendingChanges, "The intervening attempt must remain unapplied.");
+                Assert.AreSame(original, state.Jvm, "Guard: the old provisional binding must survive the intervening attempt.");
+            }
             var target = reuseComposition ? composition : replacement;
             target.ComposeContent(successor);
             target.ApplyChanges();
@@ -269,6 +278,59 @@ public class SharedStateOwnerLifetimeTests
             {
                 JNIEnv.DeleteLocalRef(handle);
             }
+        }
+    }
+
+    [TestMethod]
+    public void ProvisionalSiblings_DisjointInsertionsShareOneOwner()
+    {
+        using var applier = new StateOnlyApplier();
+        using var recomposer = new Recomposer(Kotlin.Coroutines.EmptyCoroutineContext.Instance
+            ?? throw new InvalidOperationException("Empty coroutine context was unavailable."));
+        var composition = CompositionKt.ControlledComposition(applier, recomposer)
+            ?? throw new InvalidOperationException("Controlled composition was unavailable.");
+        var state = new TimePickerState(7, 10);
+        bool insert = false;
+        object? firstPeer = null;
+        using var content = new ComposableLambda2(composer =>
+        {
+            for (int i = 0; i < 2; i++)
+            {
+                composer.StartReplaceableGroup(354721 + i);
+                if (insert)
+                {
+                    composer.RememberTimePickerState(state);
+                    Assert.IsNotNull(state.Jvm);
+                    if (i == 0)
+                        firstPeer = state.Jvm;
+                    else
+                        Assert.AreSame(firstPeer, state.Jvm, "Separate insertion regions created competing provisional owners.");
+                }
+                composer.EndReplaceableGroup();
+            }
+        });
+        try
+        {
+            composition.ComposeContent(content);
+            Apply();
+            insert = true;
+            composition.ComposeContent(content);
+            Assert.AreSame(firstPeer, state.Jvm, "Completion lost provisional sibling sharing.");
+            Apply();
+            Assert.IsNotNull(state.Jvm);
+            Assert.AreSame(firstPeer, state.Jvm, "Application replaced the shared provisional state.");
+        }
+        finally
+        {
+            composition.Dispose();
+            recomposer.Cancel();
+        }
+
+        void Apply()
+        {
+            composition.ApplyChanges();
+            composition.ApplyLateChanges();
+            composition.ChangesApplied();
         }
     }
 
