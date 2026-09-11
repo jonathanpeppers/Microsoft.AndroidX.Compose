@@ -56,7 +56,14 @@ public class FacadeGeneratorTests
             public sealed class Float : Object { public float FloatValue() => 0f; }
             public abstract class Enum : Object { }
         }
-        namespace AndroidX.Compose.Runtime { public interface IComposer { } }
+        namespace AndroidX.Compose.Runtime
+        {
+            public interface IComposer
+            {
+                void StartReplaceableGroup(int key);
+                void EndReplaceableGroup();
+            }
+        }
         namespace AndroidX.Compose.UI { public interface IModifier { } }
         namespace AndroidX.Compose.UI.Graphics.Painter
         {
@@ -230,7 +237,17 @@ public class FacadeGeneratorTests
                 public static System.IntPtr PainterResource(int id, global::AndroidX.Compose.Runtime.IComposer composer) => default;
             }
             public enum ChangedBits { Uncertain = 0, Same = 1, Different = 2, Static = 4 }
-            public static class ComposeExtensions
+            internal sealed class SharedStateOwner
+            {
+                internal static SharedStateOwner Remember(global::AndroidX.Compose.Runtime.IComposer composer,
+                    object? wrapper, System.Action release) => new();
+                internal bool IsOwner => true;
+            }
+            internal static class SourceLocationKey
+            {
+                internal static int Compute(int line, string file) => line;
+            }
+            public static partial class ComposeExtensions
             {
                 public static int DiffSlotShift(int paramIndex) => 1 + paramIndex * 3;
                 public static int DiffSlot<T>(this global::AndroidX.Compose.Runtime.IComposer composer, T value, int bitOffset,
@@ -2554,12 +2571,12 @@ public class FacadeGeneratorTests
     // ─── Phase 4c — shared-state caching (StateHolder.SharedState) ────
 
     [Fact]
-    public void SharedState_Phase4b_GeneratesCachedHandleReuse()
+    public void SharedState_Phase4b_KeepsNativeRememberInOwningSlot()
     {
         // TimePicker / TimeInput share the same TimePickerState wrapper
         // across sibling facades. When the first facade renders it
-        // calls Remember and binds Jvm; subsequent siblings must skip
-        // the Remember call and reuse the cached handle.
+        // calls Remember and binds Jvm; that composition slot must keep
+        // calling Remember even after Jvm is populated.
         var code = $$"""
             using global::AndroidX.Compose.Runtime;
             using global::AndroidX.Compose.UI;
@@ -2604,20 +2621,19 @@ public class FacadeGeneratorTests
         // Declares a local IntPtr the bridge will consume.
         Assert.Contains("global::System.IntPtr __state;", emitted);
 
-        // Cache-hit branch — Jvm already bound by a sibling.
-        Assert.Contains("if (_state!.Jvm is not null)", emitted);
-        Assert.Contains(
-            "__state = ((global::Android.Runtime.IJavaObject)_state.Jvm!).Handle;",
-            emitted);
+        Assert.Contains("SharedStateOwner.Remember(composer, __stateHolder", emitted);
+        Assert.Contains("if (__stateOwner.IsOwner)", emitted);
+        Assert.DoesNotContain("if (_state!.Jvm is not null)", emitted);
+        Assert.Contains("__state = ((global::Android.Runtime.IJavaObject)__peer).Handle;", emitted);
 
         // Cache-miss branch — call Remember, populate Jvm so the next
         // sibling will hit the cached path.
         Assert.Contains(
-            "__state = global::AndroidX.Compose.ComposeBridges.RememberTimePickerState(_state!.RememberHour, _state!.RememberMinute, _state!.Is24Hour, composer);",
+            "__state = global::AndroidX.Compose.ComposeBridges.RememberTimePickerState(__stateHolder.RememberHour, __stateHolder.RememberMinute, __stateHolder.Is24Hour, composer);",
             emitted);
         // Phase 4b assigns unguarded (ctor auto-create guarantees non-null).
         Assert.Contains(
-            "_state.BindJvm(",
+            "__stateHolder.BindJvm(__peer)",
             emitted);
         Assert.Contains(
             "global::Java.Lang.Object.GetObject<global::AndroidX.Compose.Material3.ITimePickerState>(__state, global::Android.Runtime.JniHandleOwnership.DoNotTransfer)",
@@ -2628,6 +2644,12 @@ public class FacadeGeneratorTests
             "var __state = global::AndroidX.Compose.ComposeBridges.RememberTimePickerState",
             emitted);
 
+        var direct = GeneratedMethodBody(emitted, "TimePicker_PrimaryResource_Implicit");
+        Assert.Contains("SharedStateOwner.Remember(__composer, __stateHolder", direct);
+        Assert.Contains("if (__stateOwner.IsOwner)", direct);
+        Assert.Contains("__composer.Remember(static () => new global::AndroidX.Compose.TimePickerState())", direct);
+        Assert.Contains("public static global::AndroidX.Compose.TimePickerState RememberTimePickerState(this", emitted);
+        Assert.Contains("composer.StartReplaceableGroup(global::AndroidX.Compose.SourceLocationKey.Compute(line, file))", emitted);
         // Bridge call still uses __state.
         Assert.Contains(
             "global::AndroidX.Compose.ComposeBridges.TimePicker(__state, __modifier, __defaults, composer);",
@@ -2638,12 +2660,11 @@ public class FacadeGeneratorTests
     }
 
     [Fact]
-    public void SharedState_Phase4_GeneratesNullableCachedHandleReuse()
+    public void SharedState_Phase4_OwnsRememberWithoutSuppliedWrapper()
     {
         // Zero-user-param Remember (DatePicker-style). _state is
         // nullable because there's no auto-create. SharedState must
-        // skip Remember when the caller supplied a wrapper with a
-        // populated Jvm field.
+        // own Remember even when the caller omitted the wrapper.
         var code = $$"""
             using global::AndroidX.Compose.Runtime;
             using global::AndroidX.Compose.UI;
@@ -2690,19 +2711,18 @@ public class FacadeGeneratorTests
         Assert.DoesNotContain("readonly global::AndroidX.Compose.DatePickerState? _state;", emitted);
         Assert.DoesNotContain("_state = state ?? new global::AndroidX.Compose.DatePickerState();", emitted);
 
-        // Cache-hit branch — guarded with explicit null check on _state.
-        Assert.Contains("if (_state is not null && _state.Jvm is not null)", emitted);
-        Assert.Contains(
-            "__state = ((global::Android.Runtime.IJavaObject)_state.Jvm).Handle;",
-            emitted);
+        Assert.Contains("SharedStateOwner.Remember(composer, __stateHolder", emitted);
+        Assert.Contains("if (__stateOwner.IsOwner)", emitted);
+        Assert.DoesNotContain("if (_state is not null && _state.Jvm is not null)", emitted);
+        Assert.Contains("__state = ((global::Android.Runtime.IJavaObject)__peer).Handle;", emitted);
 
         // Cache-miss branch — Remember + null-guarded Jvm assignment.
         Assert.Contains(
             "__state = global::AndroidX.Compose.ComposeBridges.RememberDatePickerState(composer);",
             emitted);
-        Assert.Contains("if (_state is not null)", emitted);
+        Assert.Contains("if (__stateHolder is not null", emitted);
         Assert.Contains(
-            "_state.Jvm = global::Java.Lang.Object.GetObject<global::AndroidX.Compose.Material3.IDatePickerState>(__state, global::Android.Runtime.JniHandleOwnership.DoNotTransfer)!;",
+            "__stateHolder.Jvm = __peer;",
             emitted);
 
         // Must NOT emit the non-shared "always call Remember" preamble.
@@ -3014,6 +3034,87 @@ public class FacadeGeneratorTests
 
         var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
         Assert.Empty(errors);
+    }
+
+    [Fact]
+    public void SharedState_SiblingsEmitOneTypedOwnerApiAndConfiguredRelease()
+    {
+        var code = """
+            namespace AndroidX.Compose
+            {
+                public sealed class SharedPeerState
+                {
+                    internal Java.Lang.Object? Jvm;
+                    internal void UnbindJvm() => Jvm = null;
+                }
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(Class="x/Test", JvmName="First",
+                        Signature="(Ljava/lang/Object;Ljava/lang/Object;Landroidx/compose/runtime/Composer;I)V")]
+                    [ComposeFacade]
+                    public static partial void First(
+                        [StateHolder(Remember=nameof(RememberSharedPeer), StateType=typeof(SharedPeerState),
+                            Unbind=nameof(SharedPeerState.UnbindJvm), SharedState=true)] System.IntPtr state,
+                        [StateHolder(Remember=nameof(RememberSharedPeer), StateType=typeof(SharedPeerState),
+                            Unbind=nameof(SharedPeerState.UnbindJvm), SharedState=true)] System.IntPtr secondState,
+                        AndroidX.Compose.Runtime.IComposer composer);
+
+                    [ComposeBridge(Class="x/Test", JvmName="Second",
+                        Signature="(Ljava/lang/Object;Landroidx/compose/runtime/Composer;I)V")]
+                    [ComposeFacade]
+                    public static partial void Second(
+                        [StateHolder(Remember=nameof(RememberSharedPeer), StateType=typeof(SharedPeerState),
+                            Unbind=nameof(SharedPeerState.UnbindJvm), SharedState=true)] System.IntPtr state,
+                        AndroidX.Compose.Runtime.IComposer composer);
+
+                    public static System.IntPtr RememberSharedPeer(AndroidX.Compose.Runtime.IComposer composer) => default;
+                }
+            }
+            """;
+
+        var (output, diags, emitted) = Run(code, "First");
+        Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.Empty(output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+        Assert.Contains("__stateHolder.UnbindJvm();", emitted);
+        var extensionMethods = output.SyntaxTrees.SelectMany(t => t.GetRoot().DescendantNodes())
+            .OfType<Microsoft.CodeAnalysis.CSharp.Syntax.ClassDeclarationSyntax>()
+            .Where(c => c.Identifier.ValueText == "ComposeExtensions")
+            .SelectMany(c => c.Members.OfType<Microsoft.CodeAnalysis.CSharp.Syntax.MethodDeclarationSyntax>())
+            .Where(m => m.Identifier.ValueText == "RememberSharedPeer");
+        Assert.Single(extensionMethods);
+    }
+
+    [Theory]
+    [InlineData("Missing")]
+    [InlineData("WrongShape")]
+    public void SharedState_InvalidUnbindReportsCN3009(string unbind)
+    {
+        var code = $$"""
+            namespace AndroidX.Compose
+            {
+                public sealed class SharedPeerState
+                {
+                    internal Java.Lang.Object? Jvm;
+                    internal void WrongShape(int value) { }
+                }
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(Class="x/Test", JvmName="Test",
+                        Signature="(Ljava/lang/Object;Landroidx/compose/runtime/Composer;I)V")]
+                    [ComposeFacade]
+                    public static partial void Test(
+                        [StateHolder(Remember=nameof(RememberSharedPeer), StateType=typeof(SharedPeerState),
+                            Unbind="{{unbind}}", SharedState=true)] System.IntPtr state,
+                        AndroidX.Compose.Runtime.IComposer composer);
+                    public static System.IntPtr RememberSharedPeer(AndroidX.Compose.Runtime.IComposer composer) => default;
+                }
+            }
+            """;
+
+        var (_, diags, emitted) = Run(code, "Test");
+        Assert.Contains(diags, d => d.Id == "CN3009" && d.GetMessage().Contains(unbind));
+        Assert.Null(emitted);
     }
 
     [Fact]
@@ -3912,9 +4013,9 @@ public class FacadeGeneratorTests
         Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
         Assert.NotNull(emitted);
 
-        // (a) Per-instance veto adapter field allocated once.
+        // (a) Adapter identity belongs to composition, not an ephemeral tree node.
         Assert.Contains(
-            "readonly global::AndroidX.Compose.SheetValueConfirmStateChange _confirmValueChangeAdapter = new global::AndroidX.Compose.SheetValueConfirmStateChange();",
+            "var __confirmValueChangeAdapter = composer.Remember(static () => new global::AndroidX.Compose.SheetValueConfirmStateChange());",
             emitted);
         // (b) PropertyName override surfaces as ConfirmValueChange (not
         //     the default ConfirmStateChange).
@@ -3923,14 +4024,13 @@ public class FacadeGeneratorTests
             emitted);
         Assert.DoesNotContain("public global::System.Func<global::AndroidX.Compose.Material3.SheetValue, bool>? ConfirmStateChange", emitted);
         // (c) Render preamble assigns the user delegate into the adapter.
-        Assert.Contains("_confirmValueChangeAdapter.Callback = ConfirmValueChange;", emitted);
-        // (d) SharedState cache-hit branch — Jvm already bound.
-        Assert.Contains("if (_sheetState!.Jvm is not null)", emitted);
+        Assert.Contains("__confirmValueChangeAdapter.Callback = ConfirmValueChange;", emitted);
+        Assert.Contains("if (__sheetStateOwner.IsOwner)", emitted);
         // (e) Cache-miss branch calls Remember with SkipPartiallyExpanded
         //     resolved from the wrapper member AND the per-instance JCW
         //     adapter forwarded as the IFunction1 slot.
         Assert.Contains(
-            "global::AndroidX.Compose.ComposeBridges.RememberSheetState(_sheetState!.SkipPartiallyExpanded, _confirmValueChangeAdapter, composer)",
+            "global::AndroidX.Compose.ComposeBridges.RememberSheetState(__sheetStateHolder.SkipPartiallyExpanded, __confirmValueChangeAdapter, composer)",
             emitted);
 
         var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();

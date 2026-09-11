@@ -2019,16 +2019,22 @@ static AndroidX.Compose.Composables.Remember<T>(System.Func<T>! factory, object?
 static AndroidX.Compose.Composables.Remember<T>(System.Func<T>! factory, object? key1, object? key2, int line = 0, string! file = "") -> T
 static AndroidX.Compose.Composables.Remember<T>(System.Func<T>! factory, object? key1, object? key2, object? key3, int line = 0, string! file = "") -> T
 static AndroidX.Compose.Composables.RememberCoroutineScope() -> AndroidX.Compose.CoroutineScope!
+static AndroidX.Compose.Composables.RememberDatePickerState(AndroidX.Compose.DatePickerState? state = null, int line = 0, string! file = "") -> AndroidX.Compose.DatePickerState!
+static AndroidX.Compose.Composables.RememberDateRangePickerState(AndroidX.Compose.DateRangePickerState? state = null, int line = 0, string! file = "") -> AndroidX.Compose.DateRangePickerState!
 static AndroidX.Compose.Composables.RememberDraggableState(System.Action<float>! onDelta, int line = 0, string! file = "") -> AndroidX.Compose.DraggableState!
+static AndroidX.Compose.Composables.RememberDrawerState(AndroidX.Compose.DrawerStateHolder? state = null, System.Func<AndroidX.Compose.Material3.DrawerValue!, bool>? confirmStateChange = null, int line = 0, string! file = "") -> AndroidX.Compose.DrawerStateHolder!
 static AndroidX.Compose.Composables.RememberKeyed<T>(System.Func<T>! factory, object?[]! keys, int line = 0, string! file = "") -> T
 static AndroidX.Compose.Composables.RememberLazyGridState(int initialFirstVisibleItemIndex = 0, int initialFirstVisibleItemScrollOffset = 0, int line = 0, string! file = "") -> AndroidX.Compose.LazyGridState!
 static AndroidX.Compose.Composables.RememberLazyListState(int initialFirstVisibleItemIndex = 0, int initialFirstVisibleItemScrollOffset = 0, int line = 0, string! file = "") -> AndroidX.Compose.LazyListState!
 static AndroidX.Compose.Composables.RememberLazyStaggeredGridState(int initialFirstVisibleItemIndex = 0, int initialFirstVisibleItemScrollOffset = 0, int line = 0, string! file = "") -> AndroidX.Compose.LazyStaggeredGridState!
+static AndroidX.Compose.Composables.RememberNavigationSuiteScaffoldState(AndroidX.Compose.NavigationSuiteScaffoldState? state = null, int line = 0, string! file = "") -> AndroidX.Compose.NavigationSuiteScaffoldState!
 static AndroidX.Compose.Composables.RememberSaveable<T>(System.Func<T>! factory, int line = 0, string! file = "") -> T
 static AndroidX.Compose.Composables.RememberSaveable<T>(System.Func<T>! factory, object? key1, int line = 0, string! file = "") -> T
 static AndroidX.Compose.Composables.RememberSaveable<T>(System.Func<T>! factory, object? key1, object? key2, int line = 0, string! file = "") -> T
 static AndroidX.Compose.Composables.RememberSaveable<T>(System.Func<T>! factory, object? key1, object? key2, object? key3, int line = 0, string! file = "") -> T
 static AndroidX.Compose.Composables.RememberSaveableKeyed<T>(System.Func<T>! factory, object?[]! keys, int line = 0, string! file = "") -> T
+static AndroidX.Compose.Composables.RememberSheetState(AndroidX.Compose.SheetStateHolder? state = null, System.Func<AndroidX.Compose.Material3.SheetValue!, bool>? confirmValueChange = null, int line = 0, string! file = "") -> AndroidX.Compose.SheetStateHolder!
+static AndroidX.Compose.Composables.RememberTimePickerState(AndroidX.Compose.TimePickerState? state = null, int line = 0, string! file = "") -> AndroidX.Compose.TimePickerState!
 static AndroidX.Compose.Composables.Row(System.Action! content) -> void
 static AndroidX.Compose.Composables.SafeContentInsets() -> AndroidX.Compose.WindowInsets!
 static AndroidX.Compose.Composables.SafeDrawingInsets() -> AndroidX.Compose.WindowInsets!
@@ -2135,16 +2141,22 @@ static AndroidX.Compose.ComposeExtensions.Remember<T>(this AndroidX.Compose.Runt
 static AndroidX.Compose.ComposeExtensions.Remember<T>(this AndroidX.Compose.Runtime.IComposer! composer, System.Func<T>! factory, object? key1, object? key2, int line = 0, string! file = "") -> T
 static AndroidX.Compose.ComposeExtensions.Remember<T>(this AndroidX.Compose.Runtime.IComposer! composer, System.Func<T>! factory, object? key1, object? key2, object? key3, int line = 0, string! file = "") -> T
 static AndroidX.Compose.ComposeExtensions.RememberCoroutineScope(this AndroidX.Compose.Runtime.IComposer! composer) -> AndroidX.Compose.CoroutineScope!
+static AndroidX.Compose.ComposeExtensions.RememberDatePickerState(this AndroidX.Compose.Runtime.IComposer! composer, AndroidX.Compose.DatePickerState? state = null, int line = 0, string! file = "") -> AndroidX.Compose.DatePickerState!
+static AndroidX.Compose.ComposeExtensions.RememberDateRangePickerState(this AndroidX.Compose.Runtime.IComposer! composer, AndroidX.Compose.DateRangePickerState? state = null, int line = 0, string! file = "") -> AndroidX.Compose.DateRangePickerState!
 static AndroidX.Compose.ComposeExtensions.RememberDraggableState(this AndroidX.Compose.Runtime.IComposer! composer, System.Action<float>! onDelta, int line = 0, string! file = "") -> AndroidX.Compose.DraggableState!
+static AndroidX.Compose.ComposeExtensions.RememberDrawerState(this AndroidX.Compose.Runtime.IComposer! composer, AndroidX.Compose.DrawerStateHolder? state = null, System.Func<AndroidX.Compose.Material3.DrawerValue!, bool>? confirmStateChange = null, int line = 0, string! file = "") -> AndroidX.Compose.DrawerStateHolder!
 static AndroidX.Compose.ComposeExtensions.RememberKeyed<T>(this AndroidX.Compose.Runtime.IComposer! composer, System.Func<T>! factory, object?[]! keys, int line = 0, string! file = "") -> T
 static AndroidX.Compose.ComposeExtensions.RememberLazyGridState(this AndroidX.Compose.Runtime.IComposer! composer, int initialFirstVisibleItemIndex = 0, int initialFirstVisibleItemScrollOffset = 0, int line = 0, string! file = "") -> AndroidX.Compose.LazyGridState!
 static AndroidX.Compose.ComposeExtensions.RememberLazyListState(this AndroidX.Compose.Runtime.IComposer! composer, int initialFirstVisibleItemIndex = 0, int initialFirstVisibleItemScrollOffset = 0, int line = 0, string! file = "") -> AndroidX.Compose.LazyListState!
 static AndroidX.Compose.ComposeExtensions.RememberLazyStaggeredGridState(this AndroidX.Compose.Runtime.IComposer! composer, int initialFirstVisibleItemIndex = 0, int initialFirstVisibleItemScrollOffset = 0, int line = 0, string! file = "") -> AndroidX.Compose.LazyStaggeredGridState!
+static AndroidX.Compose.ComposeExtensions.RememberNavigationSuiteScaffoldState(this AndroidX.Compose.Runtime.IComposer! composer, AndroidX.Compose.NavigationSuiteScaffoldState? state = null, int line = 0, string! file = "") -> AndroidX.Compose.NavigationSuiteScaffoldState!
 static AndroidX.Compose.ComposeExtensions.RememberSaveable<T>(this AndroidX.Compose.Runtime.IComposer! composer, System.Func<T>! factory, int line = 0, string! file = "") -> T
 static AndroidX.Compose.ComposeExtensions.RememberSaveable<T>(this AndroidX.Compose.Runtime.IComposer! composer, System.Func<T>! factory, object? key1, int line = 0, string! file = "") -> T
 static AndroidX.Compose.ComposeExtensions.RememberSaveable<T>(this AndroidX.Compose.Runtime.IComposer! composer, System.Func<T>! factory, object? key1, object? key2, int line = 0, string! file = "") -> T
 static AndroidX.Compose.ComposeExtensions.RememberSaveable<T>(this AndroidX.Compose.Runtime.IComposer! composer, System.Func<T>! factory, object? key1, object? key2, object? key3, int line = 0, string! file = "") -> T
 static AndroidX.Compose.ComposeExtensions.RememberSaveableKeyed<T>(this AndroidX.Compose.Runtime.IComposer! composer, System.Func<T>! factory, object?[]! keys, int line = 0, string! file = "") -> T
+static AndroidX.Compose.ComposeExtensions.RememberSheetState(this AndroidX.Compose.Runtime.IComposer! composer, AndroidX.Compose.SheetStateHolder? state = null, System.Func<AndroidX.Compose.Material3.SheetValue!, bool>? confirmValueChange = null, int line = 0, string! file = "") -> AndroidX.Compose.SheetStateHolder!
+static AndroidX.Compose.ComposeExtensions.RememberTimePickerState(this AndroidX.Compose.Runtime.IComposer! composer, AndroidX.Compose.TimePickerState? state = null, int line = 0, string! file = "") -> AndroidX.Compose.TimePickerState!
 static AndroidX.Compose.ComposeExtensions.RememberTopAppBarState(this AndroidX.Compose.Runtime.IComposer! composer, float initialHeightOffsetLimit = -Infinity, float initialHeightOffset = 0, float initialContentOffset = 0, int line = 0, string! file = "") -> AndroidX.Compose.Material3.TopAppBarState!
 static AndroidX.Compose.ComposeExtensions.SafeContentInsets(this AndroidX.Compose.Runtime.IComposer! composer) -> AndroidX.Compose.WindowInsets!
 static AndroidX.Compose.ComposeExtensions.SafeDrawingInsets(this AndroidX.Compose.Runtime.IComposer! composer) -> AndroidX.Compose.WindowInsets!

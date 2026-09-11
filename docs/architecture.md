@@ -63,6 +63,85 @@ Other `INumber<T>` implementations (`decimal`, `Half`, `BigInteger`,
 `nint`, `nuint`) compile but throw at construction since they have no
 clean Java box.
 
+## Shared state ownership
+
+A managed state wrapper and its native composition owner have different
+lifetimes. Keeping `TimePickerState.Jvm` reachable does not keep Kotlin's
+`rememberSaveable` registration alive. The shared-state generator therefore
+remembers an `IRememberObserver` directly in the owner's slot and calls the
+native `RememberXxxState` on every execution of that owner. Siblings sharing
+the wrapper consume the same peer without creating independent native state.
+The same preamble is used by tree facades and direct composable helpers.
+
+For conditional consumers, hoist the typed owner before the condition:
+
+```csharp
+var state = composer.RememberTimePickerState();
+return new Column
+{
+    new Box { showClock ? new TimePicker(state) : null },
+    new Box { showKeyboard ? new TimeInput(state) : null },
+};
+```
+
+The equivalent composerless helper is `Composables.RememberTimePickerState()`.
+Typed helpers also cover date, date-range, drawer, sheet, and navigation-suite
+state. They accept an optional existing wrapper; when omitted, a wrapper is
+remembered at the owner location. Do not put a typed owner call inside a
+`Remember` factory: it must participate in every owning composition execution.
+Keep it outside the lifetime of any consumer that may disappear. This retains
+the exact native peer and save provider even when all its visual consumers
+are hidden. Saving/recreating the activity uses a fresh managed wrapper and
+the native saver, not a managed reference to the old activity's peer.
+
+Confirm callbacks belong to the owner. Their JNI adapters are remembered in
+composition and rebound to the current delegate, so reconstructing tree nodes
+does not change callback identity or invalidate native state. Configure the
+callback on the typed owner when using one; consumer callbacks do not override
+another location's ownership. Pending picker writes are applied once when a
+peer is first attached, not replayed on every owning execution.
+
+If an implicit owner leaves, its observer captures transferable live values,
+clears the wrapper's binding, and invalidates remaining consumers. A remaining
+consumer then becomes the owner of a **new** native peer. Returning consumers
+share that successor; if all consumers left, later re-entry initializes a new
+peer from the retained wrapper values. This intentionally replaces the old
+hide/show behavior that kept an unregistered native object alive. Imperative
+operations requiring a peer cannot run while the wrapper is unbound.
+
+| Wrapper | Values retained after native ownership ends |
+| --- | --- |
+| Time picker | Hour, minute, 12/24-hour mode |
+| Date picker | Selection, displayed month, display mode, year range, selection policy |
+| Date-range picker | Both selections, displayed month, display mode, year range, selection policy |
+| Drawer | Current settled drawer value |
+| Sheet | Current settled sheet value; construction options remain on the wrapper |
+| Navigation suite | Current settled visibility |
+
+Layout anchors, gesture offsets, and in-flight animation progress belong to the
+disposed native scope and are not transferred. Callback policy belongs to the
+new owner after handoff. `BottomSheetScaffold` participates in the same ownership
+protocol without changing its standard-sheet construction defaults; modal and
+standard sheet owners have different construction constraints. In particular,
+a hidden modal sheet cannot initialize a standard owner with
+`skipHiddenState = true`, and a partially expanded standard sheet cannot
+initialize a modal owner that skips partial expansion. Keep a compatible
+common-ancestor owner alive when switching between these consumer types rather
+than relying on implicit cross-factory handoff.
+
+Native saved-state keys are positional. An implicit owner handoff is **not**
+a movable save-state key: fresh composition may choose a different first
+consumer after ordering/visibility changes. Use the explicit common-ancestor
+owner for save/recreation across conditional or reordered consumers, and keep
+that owner alive if state must be saved while all consumers are hidden.
+
+`SharedStateOwnershipTests` exercises repeated execution followed by activity
+recreation with a fresh wrapper, plus independently removed/reintroduced
+consumers under a surviving common ancestor. Its native-only control
+distinguishes a missing save provider from a broken recreation harness.
+`StateHolderLifecycleTests` and `SharedStateTransferTests` verify owner loss,
+pending writes, new-peer initialization, and native confirm-callback refresh.
+
 ## The `$default` bitmask source generator
 
 Every `@Composable` JVM method takes a trailing `int $default` bitmask

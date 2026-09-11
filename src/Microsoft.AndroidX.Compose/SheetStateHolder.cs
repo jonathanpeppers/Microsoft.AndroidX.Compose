@@ -30,6 +30,19 @@ namespace AndroidX.Compose;
 public sealed class SheetStateHolder
 {
     internal SheetState? Jvm;
+    SheetValue? _rememberValue;
+    internal SheetValue RememberValue => _rememberValue ?? SheetValue.Hidden
+        ?? throw new InvalidOperationException("SheetValue.Hidden was unavailable.");
+    internal SheetValue RememberStandardValue => _rememberValue ?? SheetValue.PartiallyExpanded
+        ?? throw new InvalidOperationException("SheetValue.PartiallyExpanded was unavailable.");
+
+    internal void UnbindJvm()
+    {
+        if (Jvm is not { } jvm)
+            return;
+        _rememberValue = jvm.CurrentValue;
+        Jvm = null;
+    }
 
     /// <summary>
     /// When <c>true</c>, the sheet skips the half-expanded resting
@@ -49,25 +62,25 @@ public sealed class SheetStateHolder
     }
 
     /// <summary>
-    /// The sheet's current <see cref="SheetValue"/>. Returns
-    /// <see cref="SheetValue.Hidden"/> until the holder is bound to a
-    /// live peer (i.e. the first render has happened).
+    /// The sheet's current <see cref="SheetValue"/>. While unbound,
+    /// returns the last settled value, or <see cref="SheetValue.Hidden"/>
+    /// before its first native owner.
     /// </summary>
-    public SheetValue CurrentValue => Jvm?.CurrentValue ?? SheetValue.Hidden!;
+    public SheetValue CurrentValue => Jvm?.CurrentValue ?? RememberValue;
 
     /// <summary>
     /// The sheet's target <see cref="SheetValue"/> during animation,
-    /// or the resting state otherwise. Returns
-    /// <see cref="SheetValue.Hidden"/> until bound.
+    /// or the resting state otherwise. While unbound, returns the last
+    /// settled value, or <see cref="SheetValue.Hidden"/> before first ownership.
     /// </summary>
-    public SheetValue TargetValue => Jvm?.TargetValue ?? SheetValue.Hidden!;
+    public SheetValue TargetValue => Jvm?.TargetValue ?? RememberValue;
 
     /// <summary>
     /// <c>true</c> when the sheet is non-hidden — equivalent to
-    /// <c>CurrentValue != SheetValue.Hidden</c>. Returns <c>false</c>
-    /// until bound.
+    /// <c>CurrentValue != SheetValue.Hidden</c>. While unbound, reflects
+    /// the retained settled value rather than an active layout.
     /// </summary>
-    public bool IsVisible => Jvm?.IsVisible ?? false;
+    public bool IsVisible => Jvm?.IsVisible ?? (RememberValue != SheetValue.Hidden);
 
     /// <summary>
     /// <c>true</c> when the sheet's anchored set includes a fully-
@@ -156,5 +169,5 @@ public sealed class SheetStateHolder
 
     SheetState RequireJvm(string member) =>
         Jvm ?? throw new InvalidOperationException(
-            "SheetStateHolder." + member + " requires the holder to be bound to a live sheet; call it after the first render.");
+            "SheetStateHolder." + member + " requires a live composition owner; remember or render the holder before controlling it.");
 }

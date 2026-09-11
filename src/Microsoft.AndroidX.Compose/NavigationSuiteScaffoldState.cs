@@ -9,6 +9,16 @@ namespace AndroidX.Compose;
 public sealed class NavigationSuiteScaffoldState
 {
     internal NavigationSuiteBindings.INavigationSuiteScaffoldState? Jvm;
+    NavigationSuiteBindings.NavigationSuiteScaffoldValue? _rememberValue;
+    internal NavigationSuiteBindings.NavigationSuiteScaffoldValue RememberValue => _rememberValue ?? InitialValue;
+
+    internal void UnbindJvm()
+    {
+        if (Jvm is not { } jvm)
+            return;
+        _rememberValue = jvm.CurrentValue;
+        Jvm = null;
+    }
 
     /// <summary>Initial visibility remembered during the first composition.</summary>
     public NavigationSuiteBindings.NavigationSuiteScaffoldValue InitialValue { get; }
@@ -29,11 +39,11 @@ public sealed class NavigationSuiteScaffoldState
 
     /// <summary>Current scaffold visibility.</summary>
     public NavigationSuiteBindings.NavigationSuiteScaffoldValue CurrentValue =>
-        Jvm?.CurrentValue ?? InitialValue;
+        Jvm?.CurrentValue ?? RememberValue;
 
     /// <summary>Target visibility during a transition.</summary>
     public NavigationSuiteBindings.NavigationSuiteScaffoldValue TargetValue =>
-        Jvm?.TargetValue ?? InitialValue;
+        Jvm?.TargetValue ?? RememberValue;
 
     /// <summary>Animates the navigation component out of view.</summary>
     /// <param name="cancellationToken">Cancels the returned task and the underlying Kotlin operation.</param>
@@ -75,5 +85,5 @@ public sealed class NavigationSuiteScaffoldState
 
     NavigationSuiteBindings.INavigationSuiteScaffoldState RequireJvm() =>
         Jvm ?? throw new InvalidOperationException(
-            "NavigationSuiteScaffoldState is not bound. Render it with NavigationSuiteScaffold before controlling it.");
+            "NavigationSuiteScaffoldState requires a live composition owner. Remember or render it before controlling it.");
 }

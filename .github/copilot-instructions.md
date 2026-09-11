@@ -360,11 +360,21 @@ slots surface as `Action` instead of `Action<IComposer>`.
     around a generated JNI bridge when conversion is required (for example,
     `long?` to boxed `Java.Lang.Long?` or `DatePickerYearRange?` to
     `Kotlin.Ranges.IntRange?`). Requires `StateType` constructible with no args.
-  - **Phase 4c** — `SharedState = true` opts in to shared-state caching for
+  - **Phase 4c** — `SharedState = true` opts in to composition-owned sharing for
     sibling facades sharing a `StateType` (e.g. `TimePicker` + `TimeInput`).
-    Render preamble first checks `_state.Jvm` and reuses the cached JNI handle
-    when present; only first-render calls `Remember`. Both Phase 4 and 4b
-    honour the flag.
+    A direct `IRememberObserver` slot identifies the owner. Every execution
+    of that location calls the native `Remember`; siblings consume its peer.
+    Never use a non-null `Jvm` as a substitute for native lifecycle ownership.
+    Both tree and direct helpers use this contract. Generated typed helpers
+    such as `composer.RememberTimePickerState()` and
+    `Composables.RememberTimePickerState()` hoist the owner above conditional
+    consumers. Keep that call in composition to preserve exact peer identity
+    and native save registration while consumers leave/re-enter.
+    `Unbind = nameof(T.UnbindJvm)` optionally names an accessible parameterless
+    instance void method that captures live values and clears `Jvm` when the
+    owner is forgotten/abandoned; without it cleanup clears `Jvm` directly.
+    Shared confirm adapters are composition-remembered, not node-instance
+    fields, because a tree node may be reconstructed on each execution.
 
   `StateType` must declare an instance, writable, non-readonly, accessible
   field named `Jvm` whose declared type is the binding-generated state
@@ -600,7 +610,7 @@ conflict), CN3007 (color theme bind failed), CN3008 (painter misuse), CN3009
 | CN3006 | `[Slot]` conflicts with classified shape, `[Callback]` on non-`IFunction1`, multiple `[PainterResource]` on one bridge, `int defaults` declared without resolvable `Defaults` enum, or `IndexedChildren = true` on a facade without a non-nullable IFunction2/IFunction3 container body.                                                                                                                                                                                                       |
 | CN3007 | `DefaultColorFromTheme` cannot bind to any `long` user param (or `ColorParameter` ambiguous/missing).                                                                                                                                                                                                                                                                                                                                                                                            |
 | CN3008 | `[PainterResource]` annotates a non-`IntPtr` parameter.                                                                                                                                                                                                                                                                                                                                                                                                                                          |
-| CN3009 | `[StateHolder]` invalid: non-`IntPtr` param, combined with `[PainterResource]`, missing/non-identifier `Remember`/`StateType`, named `Remember` not a static `(IComposer) -> IntPtr` on `ComposeBridges`, or `StateType` has no accessible writable instance field named `Jvm`.                                                                                                                                                                                                                  |
+| CN3009 | `[StateHolder]` invalid: non-`IntPtr` param, combined with `[PainterResource]`, missing/non-identifier `Remember`/`StateType`, named `Remember` not a static remember bridge, inaccessible writable `Jvm` field, invalid `Bind`, or `Unbind` not an accessible parameterless instance void method. |
 | CN3010 | `BranchOn`/`AlternateBridge` invalid: only one set, primary has no Kotlin defaults metadata, named alternate not resolvable/ambiguous on `ComposeBridges`, alternate not a strict superset (missing a primary param or > 1 extra), extra param's PascalCased name doesn't match `BranchOn`, extra param isn't `IFunction2`/`IFunction3`, shared param has incompatible types, branching used on hybrid container shape, or alternate has no resolvable `[ComposeBridge].Defaults` enum. |
 | CN3011 | `[ConfirmStateChange(typeof(T))]` invalid: not on `IFunction1` param, missing `typeof(T)` ctor arg, convention adapter `Microsoft.AndroidX.Compose.<TName>ConfirmStateChange` missing (override with `AdapterType = typeof(...)`), adapter is inaccessible to generated same-assembly code, doesn't implement `Kotlin.Jvm.Functions.IFunction1`, lacks a same-assembly accessible parameterless ctor, or has no same-assembly accessible writable `Callback` property of type `System.Func<T, bool>?`.                                                                                                              |
 | CN3012 | `SecondaryCtor`/`SecondaryDefaults` invalid: only one set, named secondary not resolvable/ambiguous on `ComposeBridges`, a hand-written secondary lacks trailing `int defaults`, secondary's user params don't share names with the primary, the discriminating extra param is value-type / nullable / not a reference type / there's > 1 unique param / there's none, primary has no slot missing from the secondary (no primary-only discriminator), `SecondaryDefaults` enum unresolvable, or combined with `BranchOn`/`AlternateBridge`.                                                                                                                                                                                                                                                                              |

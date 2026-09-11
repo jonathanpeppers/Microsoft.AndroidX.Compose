@@ -2,14 +2,14 @@ namespace Microsoft.AndroidX.Compose.DeviceTests;
 
 /// <summary>
 /// Verifies picker state-holder pending values, live JVM state, Kotlin
-/// defaults, and peer reuse across composition removal and re-entry.
+/// defaults, and settled-value transfer to a new owner after removal.
 /// </summary>
 [TestClass]
 [DoNotParallelize]
 public class StateHolderLifecycleTests
 {
     [TestMethod]
-    public async Task DatePickerState_PreservesPendingValuesAndPeer()
+    public async Task DatePickerState_PreservesValuesAcrossOwnerLifetimes()
     {
         var activity = await StartActivity(PickerStateLifecycleTestActivity.PickerKind.Date);
         try
@@ -26,16 +26,22 @@ public class StateHolderLifecycleTests
             Assert.AreEqual(1_709_251_200_000L, jvm.DisplayedMonthMillis);
             AssertYearRange(jvm.YearRange, 2020, 2030);
 
-            await HidePicker(activity);
+            activity.RunOnUiThread(() => jvm.DisplayMode = 1);
+            await HidePicker(activity, () => state.Jvm is null);
+            Assert.IsNull(state.Jvm);
             state.SelectedDateMillis = null;
             Assert.IsNull(state.SelectedDateMillis);
-            Assert.IsNull(jvm.SelectedDateMillis);
             state.SelectedDateMillis = 1_712_275_200_000L;
             state.DisplayedMonthMillis = 1_711_929_600_000L;
-            Assert.AreEqual(1_712_275_200_000L, jvm.SelectedDateMillis?.LongValue());
-            Assert.AreEqual(1_711_929_600_000L, jvm.DisplayedMonthMillis);
+            Assert.AreEqual(1_712_275_200_000L, state.SelectedDateMillis);
+            Assert.AreEqual(1_711_929_600_000L, state.DisplayedMonthMillis);
 
-            await ShowPickerAndAssertPeerReused(activity, () => state.Jvm);
+            await ShowPickerAndAssertNewPeer(activity, jvm, () => state.Jvm);
+            var rebound = state.Jvm ?? throw new InvalidOperationException("Date picker did not rebind.");
+            Assert.AreEqual(1_712_275_200_000L, rebound.SelectedDateMillis?.LongValue());
+            Assert.AreEqual(1_711_929_600_000L, rebound.DisplayedMonthMillis);
+            Assert.AreEqual(1, rebound.DisplayMode);
+            AssertYearRange(rebound.YearRange, 2020, 2030);
 
             var defaultState = PickerStateLifecycleTestActivity.DefaultDateState
                 ?? throw new InvalidOperationException("Default date state was not initialized.");
@@ -55,7 +61,7 @@ public class StateHolderLifecycleTests
     }
 
     [TestMethod]
-    public async Task DateRangePickerState_PreservesPendingValuesAndPeer()
+    public async Task DateRangePickerState_PreservesValuesAcrossOwnerLifetimes()
     {
         var activity = await StartActivity(PickerStateLifecycleTestActivity.PickerKind.DateRange);
         try
@@ -73,17 +79,25 @@ public class StateHolderLifecycleTests
             Assert.AreEqual(1_746_057_600_000L, jvm.DisplayedMonthMillis);
             AssertYearRange(jvm.YearRange, 2020, 2030);
 
-            await HidePicker(activity);
+            activity.RunOnUiThread(() => jvm.DisplayMode = 1);
+            await HidePicker(activity, () => state.Jvm is null);
+            Assert.IsNull(state.Jvm);
             state.SetSelection(null, null);
             Assert.IsNull(state.SelectedStartDateMillis);
             Assert.IsNull(state.SelectedEndDateMillis);
             state.SetSelection(1_748_736_000_000L, 1_749_081_600_000L);
             state.DisplayedMonthMillis = 1_748_736_000_000L;
-            Assert.AreEqual(1_748_736_000_000L, jvm.SelectedStartDateMillis?.LongValue());
-            Assert.AreEqual(1_749_081_600_000L, jvm.SelectedEndDateMillis?.LongValue());
-            Assert.AreEqual(1_748_736_000_000L, jvm.DisplayedMonthMillis);
+            Assert.AreEqual(1_748_736_000_000L, state.SelectedStartDateMillis);
+            Assert.AreEqual(1_749_081_600_000L, state.SelectedEndDateMillis);
+            Assert.AreEqual(1_748_736_000_000L, state.DisplayedMonthMillis);
 
-            await ShowPickerAndAssertPeerReused(activity, () => state.Jvm);
+            await ShowPickerAndAssertNewPeer(activity, jvm, () => state.Jvm);
+            var rebound = state.Jvm ?? throw new InvalidOperationException("Date-range picker did not rebind.");
+            Assert.AreEqual(1_748_736_000_000L, rebound.SelectedStartDateMillis?.LongValue());
+            Assert.AreEqual(1_749_081_600_000L, rebound.SelectedEndDateMillis?.LongValue());
+            Assert.AreEqual(1_748_736_000_000L, rebound.DisplayedMonthMillis);
+            Assert.AreEqual(1, rebound.DisplayMode);
+            AssertYearRange(rebound.YearRange, 2020, 2030);
 
             var defaultState = PickerStateLifecycleTestActivity.DefaultDateRangeState
                 ?? throw new InvalidOperationException("Default date-range state was not initialized.");
@@ -104,7 +118,7 @@ public class StateHolderLifecycleTests
     }
 
     [TestMethod]
-    public async Task TimePickerState_PreservesPendingValuesAndPeer()
+    public async Task TimePickerState_PreservesValuesAcrossOwnerLifetimes()
     {
         var activity = await StartActivity(PickerStateLifecycleTestActivity.PickerKind.Time);
         try
@@ -121,13 +135,18 @@ public class StateHolderLifecycleTests
             Assert.AreEqual(46, jvm.Minute);
             Assert.IsFalse(jvm.Is24hour());
 
-            await HidePicker(activity);
+            activity.RunOnUiThread(() => jvm.Set24hour(true));
+            await HidePicker(activity, () => state.Jvm is null);
+            Assert.IsNull(state.Jvm);
             state.Hour = 19;
             state.Minute = 27;
-            Assert.AreEqual(19, jvm.Hour);
-            Assert.AreEqual(27, jvm.Minute);
+            Assert.AreEqual(19, state.Hour);
+            Assert.AreEqual(27, state.Minute);
 
-            await ShowPickerAndAssertPeerReused(activity, () => state.Jvm);
+            await ShowPickerAndAssertNewPeer(activity, jvm, () => state.Jvm);
+            Assert.AreEqual(19, state.Hour);
+            Assert.AreEqual(27, state.Minute);
+            Assert.IsTrue(state.Is24Hour);
         }
         finally
         {
@@ -165,7 +184,7 @@ public class StateHolderLifecycleTests
                 "Picker lifecycle test activity was unavailable.");
     }
 
-    static async Task HidePicker(PickerStateLifecycleTestActivity activity)
+    static async Task HidePicker(PickerStateLifecycleTestActivity activity, Func<bool> isUnbound)
     {
         int hiddenPass = PickerStateLifecycleTestActivity.CompletedRenderPasses;
         activity.RunOnUiThread(() =>
@@ -177,17 +196,16 @@ public class StateHolderLifecycleTests
         });
         await WaitFor(
             static () => PickerStateLifecycleTestActivity.CompletedRenderPasses,
-            value => value > hiddenPass,
+            value => value > hiddenPass && isUnbound(),
             "Picker did not leave composition.");
     }
 
-    static async Task ShowPickerAndAssertPeerReused<TJvm>(
+    static async Task ShowPickerAndAssertNewPeer<TJvm>(
         PickerStateLifecycleTestActivity activity,
+        TJvm before,
         Func<TJvm?> readJvm)
         where TJvm : class, global::Android.Runtime.IJavaObject
     {
-        var before = readJvm()
-            ?? throw new InvalidOperationException("Picker state JVM peer was unavailable before removal.");
         var handle = before.Handle;
 
         int shownPass = PickerStateLifecycleTestActivity.CompletedRenderPasses;
@@ -200,12 +218,12 @@ public class StateHolderLifecycleTests
         });
         await WaitFor(
             static () => PickerStateLifecycleTestActivity.CompletedRenderPasses,
-            value => value > shownPass,
+            value => value > shownPass && readJvm() is not null,
             "Picker did not re-enter composition.");
 
         var after = readJvm()
             ?? throw new InvalidOperationException("Picker state JVM peer was unavailable after re-entry.");
-        Assert.AreEqual(handle, after.Handle);
+        Assert.AreNotEqual(handle, after.Handle, "A forgotten native owner must not reuse an unregistered peer.");
     }
 
     static async Task ShowDefaultPicker(PickerStateLifecycleTestActivity activity)

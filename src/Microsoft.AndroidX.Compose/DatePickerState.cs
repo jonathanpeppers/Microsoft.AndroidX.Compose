@@ -39,12 +39,18 @@ public sealed class DatePickerState
     readonly long? _initialDisplayedMonthMillis;
     long? _selectedDateMillis;
     long? _displayedMonthMillis;
+    int? _displayMode;
+    DatePickerYearRange? _yearRange;
+    ISelectableDates? _selectableDates;
     bool _hasPendingSelectedDate;
     bool _hasPendingDisplayedMonth;
 
     internal IDatePickerState? Jvm;
     internal long? RememberSelectedDateMillis => _selectedDateMillis;
     internal long? RememberDisplayedMonthMillis => _displayedMonthMillis;
+    internal int? RememberDisplayMode => _displayMode;
+    internal DatePickerYearRange? RememberYearRange => _yearRange;
+    internal ISelectableDates? RememberSelectableDates => _selectableDates;
 
     /// <summary>
     /// Constructs a state holder seeded with the supplied initial values.
@@ -79,6 +85,9 @@ public sealed class DatePickerState
         InitialYearRange = initialYearRange;
         InitialDisplayMode = initialDisplayMode;
         InitialSelectableDates = initialSelectableDates;
+        _displayMode = initialDisplayMode;
+        _yearRange = initialYearRange;
+        _selectableDates = initialSelectableDates;
     }
 
     /// <summary>
@@ -181,5 +190,22 @@ public sealed class DatePickerState
             SelectedDateMillis = _selectedDateMillis;
         if (_hasPendingDisplayedMonth && _displayedMonthMillis is long displayedMonthMillis)
             DisplayedMonthMillis = displayedMonthMillis;
+        _hasPendingSelectedDate = false;
+        _hasPendingDisplayedMonth = false;
+    }
+
+    internal void UnbindJvm()
+    {
+        if (Jvm is not { } jvm)
+            return;
+        _selectedDateMillis = jvm.SelectedDateMillis?.LongValue();
+        _displayedMonthMillis = jvm.DisplayedMonthMillis;
+        _displayMode = jvm.DisplayMode;
+        var range = jvm.YearRange;
+        var start = range.Start ?? throw new InvalidOperationException("Date picker year range has no start.");
+        var end = range.EndInclusive ?? throw new InvalidOperationException("Date picker year range has no end.");
+        _yearRange = new DatePickerYearRange(start.IntValue(), end.IntValue());
+        _selectableDates = jvm.SelectableDates;
+        Jvm = null;
     }
 }

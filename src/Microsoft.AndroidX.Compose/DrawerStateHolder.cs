@@ -32,6 +32,16 @@ namespace AndroidX.Compose;
 public sealed class DrawerStateHolder
 {
     internal DrawerState? Jvm;
+    DrawerValue? _rememberValue;
+    internal DrawerValue RememberValue => _rememberValue ?? InitialValue;
+
+    internal void UnbindJvm()
+    {
+        if (Jvm is not { } jvm)
+            return;
+        _rememberValue = jvm.CurrentValue;
+        Jvm = null;
+    }
 
     /// <summary>
     /// Initial <see cref="DrawerValue"/> the drawer remembers on first
@@ -50,29 +60,29 @@ public sealed class DrawerStateHolder
 
     /// <summary>
     /// The drawer's current visual state. Falls back to
-    /// <see cref="InitialValue"/> until the holder is bound to a live
-    /// peer (i.e. the first render has happened).
+    /// the last settled value while unbound, or <see cref="InitialValue"/>
+    /// before its first native owner.
     /// </summary>
-    public DrawerValue CurrentValue => Jvm?.CurrentValue ?? InitialValue;
+    public DrawerValue CurrentValue => Jvm?.CurrentValue ?? RememberValue;
 
     /// <summary>
     /// The drawer's target state during animation, or the resting
-    /// state otherwise. Falls back to <see cref="InitialValue"/> until
-    /// bound.
+    /// state otherwise. While unbound, returns the last settled value
+    /// (or <see cref="InitialValue"/> before first ownership).
     /// </summary>
-    public DrawerValue TargetValue => Jvm?.TargetValue ?? InitialValue;
+    public DrawerValue TargetValue => Jvm?.TargetValue ?? RememberValue;
 
     /// <summary>
     /// <c>true</c> when the drawer is fully open. Equivalent to
     /// <c>CurrentValue == DrawerValue.Open</c>.
     /// </summary>
-    public bool IsOpen => Jvm?.IsOpen ?? (InitialValue == DrawerValue.Open);
+    public bool IsOpen => Jvm?.IsOpen ?? (RememberValue == DrawerValue.Open);
 
     /// <summary>
     /// <c>true</c> when the drawer is fully closed. Equivalent to
     /// <c>CurrentValue == DrawerValue.Closed</c>.
     /// </summary>
-    public bool IsClosed => Jvm?.IsClosed ?? (InitialValue == DrawerValue.Closed);
+    public bool IsClosed => Jvm?.IsClosed ?? (RememberValue == DrawerValue.Closed);
 
     /// <summary>
     /// Slide the drawer open with the default animation. Mirrors
@@ -92,7 +102,7 @@ public sealed class DrawerStateHolder
     {
         var jvm = Jvm
             ?? throw new InvalidOperationException(
-                "DrawerStateHolder.OpenAsync requires the holder to be bound to a live drawer; call it after the first render.");
+                "DrawerStateHolder.OpenAsync requires a live composition owner; remember or render the holder before controlling it.");
         return SuspendBridge.Invoke(cont =>
             ComposeBridges.DrawerStateOpen(((Java.Lang.Object)jvm).Handle, cont),
             cancellationToken);
@@ -111,7 +121,7 @@ public sealed class DrawerStateHolder
     {
         var jvm = Jvm
             ?? throw new InvalidOperationException(
-                "DrawerStateHolder.CloseAsync requires the holder to be bound to a live drawer; call it after the first render.");
+                "DrawerStateHolder.CloseAsync requires a live composition owner; remember or render the holder before controlling it.");
         return SuspendBridge.Invoke(cont =>
             ComposeBridges.DrawerStateClose(((Java.Lang.Object)jvm).Handle, cont),
             cancellationToken);
