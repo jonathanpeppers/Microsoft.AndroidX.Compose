@@ -14,6 +14,31 @@ Run with:
 dotnet build samples/Jetchat -t:Run
 ```
 
+## Message identity
+
+Identity was checked against upstream commit
+`4c1fe7586e2fbf1c934925ef8ab64d3803361423`:
+[`ConversationUiState.kt`](https://github.com/android/compose-samples/blob/4c1fe7586e2fbf1c934925ef8ab64d3803361423/Jetchat/app/src/main/java/com/example/compose/jetchat/conversation/ConversationUiState.kt)
+has no message identifier, and
+[`Conversation.kt`](https://github.com/android/compose-samples/blob/4c1fe7586e2fbf1c934925ef8ab64d3803361423/Jetchat/app/src/main/java/com/example/compose/jetchat/conversation/Conversation.kt)
+uses unkeyed `item` calls for messages and day headers.
+
+The port therefore keeps positional keys rather than pretending that
+author/content/timestamp identifies a message. Sending the same text twice
+or dropping the same attachment twice creates distinct messages with possibly
+identical values; a content hash or concatenation would produce duplicate
+keys. In particular, the sample's send timestamp is fixed and cannot serve
+as an identifier. The flattened row objects are rebuilt during composition,
+so their object identity is not stable either.
+
+Before opting this list into stable keys, a persistent message model must
+provide an immutable, unique ID assigned once when each message is created.
+It must survive insertions, deletions, reordering, and reconstruction of the
+display rows; day-header keys must occupy a separate namespace.
+`LazyColumn<T>.Key` accepts non-null `string`, `int`, or `long` values.
+Until such business identity exists, message-local state and viewport
+anchoring still follow positions, as in the upstream sample.
+
 ## What's faithful
 
 - **Jetchat-branded light/dark theme** — `JetchatTheme` selects the

@@ -17,8 +17,11 @@ public class DisposableEffectLifecycleTests
             () => new DisposableEffect("key1", "key2", null));
         Assert.ThrowsExactly<ArgumentNullException>(
             () => new DisposableEffect("key1", "key2", "key3", null));
+        // This intentionally invalid call tests validation before entering composition.
+#pragma warning disable CN5009
         Assert.ThrowsExactly<ArgumentNullException>(
             () => Composables.DisposableEffect("key", null));
+#pragma warning restore CN5009
         Assert.ThrowsExactly<ArgumentNullException>(
             () => new DisposableEffectBody(null));
 #pragma warning restore CS8625

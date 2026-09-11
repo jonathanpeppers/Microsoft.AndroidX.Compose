@@ -716,7 +716,7 @@ approval.
 - **Sibling `Render()` calls in a loop need per-position slot keys.**
   `ComposableContainer.RenderChildren` and `RenderChildrenIndexed` wrap
   each child in
-  `composer.StartReplaceableGroup(HashCode.Combine(i, child.GetType()))` /
+  `composer.StartReplaceableGroup(CompositionGroupKey.Compute(i, child.GetType()))` /
   `EndReplaceableGroup()`. Custom loops calling `Children[i].Render(c)`
   directly (e.g. `SegmentedButton`'s label slot) must do the same. The
   type component stops a sibling that swaps subclass-at-the-same-
@@ -724,6 +724,11 @@ approval.
   `HorizontalUncontainedCarousel`) from re-entering the prior occupant's group
   — otherwise `ClassCastException` from Compose's `rememberSaveable`. Same-
   typed siblings at the same position keep identity and slot state intact.
+  `CompositionGroupKey` uses deterministic FNV over the assembly-qualified
+  type name (including constructed generic arguments), then the position.
+  Never pass `HashCode.Combine`, `Type.GetHashCode`, or a string hash to
+  Compose as a group/lambda key: randomized ancestor keys break saved-task
+  restoration in a new process. Call-site keys use `SourceLocationKey`.
 
 - The single `ComposableLambdaKt.ComposableLambdaInstance` call in
   `ComposeExtensions.SetContent` is correct there — root content lambda runs

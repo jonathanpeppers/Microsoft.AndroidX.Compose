@@ -138,10 +138,12 @@ Same pattern as Jetchat: each screen is a `public static class` with
 a `Build(…)` method returning `ComposableNode`. `Render(IComposer)`
 is `internal` to the facade assembly so a sample-side subclass
 can't override it. Cost: every recomposition allocates the tree
-inside `JetnewsApp.Content`. NavHost caches the per-destination tree
-via `composer.Remember` (see `NavHost.cs`), so the screen subtrees
-inside `Composable("home") { … }` etc. are walked only on first
-render.
+inside `JetnewsApp.Content`. NavHost remembers the navigation graph,
+not the first per-destination tree (see `NavHost.cs`). Each successful
+host render publishes the current destination content and invalidates
+visible destinations; inactive screens receive the latest content when
+revisited. The first render still defines the registered route topology;
+later content updates do not replace the graph or back stack.
 
 ### State lives at MainActivity scope
 

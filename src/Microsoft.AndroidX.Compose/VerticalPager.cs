@@ -43,6 +43,14 @@ public sealed class VerticalPager<T> : ComposableNode
     /// </summary>
     public PagerState? State { get; set; }
 
+    /// <summary>Optional stable, unique, Bundle-saveable page key; null preserves positional identity.</summary>
+    /// <remarks>
+    /// Return a non-null string, int, or long. See <see cref="LazyColumn{T}.Key"/>
+    /// for validation and mutation requirements. Compose keeps the displayed
+    /// record when items before it are inserted, removed, or reordered.
+    /// </remarks>
+    public Func<T, object>? Key { get; set; }
+
     /// <summary>
     /// Optional fixed content padding applied inside the pager (lets
     /// adjacent pages peek without shrinking the page bounds via
@@ -52,15 +60,17 @@ public sealed class VerticalPager<T> : ComposableNode
 
     public override void Render(IComposer composer)
     {
+        var (items, key) = CollectionItemKey.Create(_items, Key);
         // See HorizontalPager.Render — same eager-vs-remember path.
         AndroidX.Compose.Foundation.Pager.PagerState jvmState;
         if (State is not null)
         {
+            State.SetRenderedPageCount(key is null ? null : items.Count);
             jvmState = State.Jvm;
         }
         else
         {
-            _pageCountFn ??= new ComposableLambda0Int(() => _items.Count);
+            _pageCountFn = new ComposableLambda0Int(() => items.Count);
             jvmState = PagerStateKt.RememberPagerState(
                 p0:                        0,
                 initialPageOffsetFraction: 0f,
@@ -74,12 +84,13 @@ public sealed class VerticalPager<T> : ComposableNode
         var content  = ComposableLambdas.Wrap4(composer, (_, indexBoxed, comp) =>
         {
             var i = ((Java.Lang.Integer)indexBoxed!).IntValue();
-            _itemContent(_items[i]).Render(comp);
+            _itemContent(items[i]).Render(comp);
         });
 
         int defaults = (int)VerticalPagerDefault.All;
         if (modifier       is not null) defaults &= ~(int)VerticalPagerDefault.Modifier;
         if (ContentPadding is not null) defaults &= ~(int)VerticalPagerDefault.ContentPadding;
+        if (key            is not null) defaults &= ~(int)VerticalPagerDefault.Key;
 
         PagerKt.VerticalPager(
             state:                       jvmState,
@@ -92,7 +103,7 @@ public sealed class VerticalPager<T> : ComposableNode
             flingBehavior:               null,
             userScrollEnabled:           true,
             reverseLayout:               false,
-            key:                         null,
+            key:                         key,
             pageNestedScrollConnection:  null,
             snapPosition:                null,
             overscrollEffect:            null,

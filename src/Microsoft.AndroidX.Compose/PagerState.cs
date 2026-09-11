@@ -54,6 +54,8 @@ public sealed class PagerState
     // outlives any temporary parameter slot — matches the pattern
     // other wrappers use for stored callbacks.
     readonly ComposableLambda0Int _pageCountFn;
+    readonly Func<int> _pageCount;
+    readonly MutableNumberState<int> _renderedPageCount = new(-1);
 
     /// <summary>
     /// Create a new <see cref="PagerState"/>. The underlying Kotlin
@@ -90,7 +92,13 @@ public sealed class PagerState
                 initialPageOffsetFraction,
                 "Initial page offset fraction must be in the range [-0.5, 0.5].");
 
-        _pageCountFn = new ComposableLambda0Int(() => ValidatePageCount(pageCount()));
+        _pageCount = pageCount;
+        _pageCountFn = new ComposableLambda0Int(() =>
+        {
+            int liveCount = ValidatePageCount(_pageCount());
+            int renderedCount = _renderedPageCount.Value;
+            return renderedCount < 0 ? liveCount : renderedCount;
+        });
         Jvm = PagerStateKt.PagerState(
             currentPage:               initialPage,
             currentPageOffsetFraction: initialPageOffsetFraction,
@@ -103,6 +111,17 @@ public sealed class PagerState
     /// construction.
     /// </summary>
     internal AndroidX.Compose.Foundation.Pager.PagerState Jvm { get; }
+
+    // A live count may invalidate Kotlin's item provider before recomposition
+    // replaces its key callback. Publish keyed counts in the same composition
+    // snapshot as the keys instead of exposing a new count with old keys.
+    internal void SetRenderedPageCount(int? count)
+    {
+        if (count is int expected && ValidatePageCount(_pageCount()) != expected)
+            throw new InvalidOperationException(
+                "PagerState pageCount must match the keyed pager's items count when rendering.");
+        _renderedPageCount.Value = count ?? -1;
+    }
 
     /// <summary>
     /// Index of the page closest to the snapped position. Mirrors
@@ -136,10 +155,15 @@ public sealed class PagerState
     /// Total number of pages reported by the <c>pageCount</c> lambda
     /// supplied at construction. A negative result throws
     /// <see cref="ArgumentOutOfRangeException"/> when requested.
-    /// Mirrors Kotlin's
-    /// <c>PagerState.pageCount</c>.
+    /// Always reads the live callback, including when the pager is not composed.
     /// </summary>
-    public int PageCount => Jvm.PageCount;
+    /// <remarks>
+    /// The native keyed pager separately uses its last rendered item count
+    /// until the next render, preventing new counts from reaching old key
+    /// snapshots. This public getter stays live so callers can use it to
+    /// conditionally compose a pager when records are added or removed.
+    /// </remarks>
+    public int PageCount => ValidatePageCount(_pageCount());
 
     /// <summary>
     /// Snaps immediately to a page and waits for the pager to apply the
