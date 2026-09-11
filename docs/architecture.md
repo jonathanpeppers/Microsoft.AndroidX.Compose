@@ -95,11 +95,23 @@ are hidden. Saving/recreating the activity uses a fresh managed wrapper and
 the native saver, not a managed reference to the old activity's peer.
 
 Confirm callbacks belong to the owner. Their JNI adapters are remembered in
-composition and rebound to the current delegate, so reconstructing tree nodes
-does not change callback identity or invalidate native state. Configure the
+the owning native group, so reconstructing tree nodes does not change callback
+identity or invalidate native state. A new adapter receives its initial veto
+before native state creation. Updates to an existing adapter capture the
+current delegate and publish it through `SideEffect` after successful
+application; abandoned renders cannot change the committed native policy. Configure the
 callback on the typed owner when using one; consumer callbacks do not override
 another location's ownership. Pending picker writes are applied once when a
 peer is first attached, not replayed on every owning execution.
+
+Replacing a supplied wrapper at the same location replaces its native remember
+subtree, rather than binding the new wrapper to the previous wrapper's peer.
+The generator uses `StartReusableGroup` with a fixed positional key and the
+owner token as auxiliary data. Auxiliary identity invalidates remembered values
+without making the save-state ancestry depend on object hashes, peer handles,
+or process-specific IDs. Omitted parameterized wrappers are remembered in
+composition in both tree and direct paths, so rebuilding an ordinary tree node
+does not look like an explicit wrapper replacement.
 
 If an implicit owner leaves, its observer captures transferable live values,
 clears the wrapper's binding, and invalidates remaining consumers. A remaining
@@ -144,6 +156,10 @@ wrapper or ancestor-owner argument, edits its native accessibility fields to
 19:27, repeats three executions, and checks the fields after recreation.
 `StateHolderLifecycleTests` and `SharedStateTransferTests` verify owner loss,
 pending writes, new-peer initialization, and native confirm-callback refresh.
+Replacement regressions exercise A-to-B-to-A transitions, pending writes,
+surviving siblings, and recreation. `SharedStateTransactionTests` uses native
+controlled compositions to check initial abandonment, abandoned owner
+replacement, initial veto availability, and commit-only callback publication.
 
 Visual inspection of the hoisted-owner Gallery demo preserves 19:25 in its
 label and both numeric displays while hiding and restoring either or both

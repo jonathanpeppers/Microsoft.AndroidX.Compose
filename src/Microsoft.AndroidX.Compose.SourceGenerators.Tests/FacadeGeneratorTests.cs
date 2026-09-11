@@ -62,6 +62,8 @@ public class FacadeGeneratorTests
             {
                 void StartReplaceableGroup(int key);
                 void EndReplaceableGroup();
+                void StartReusableGroup(int key, Java.Lang.Object? dataKey);
+                void EndReusableGroup();
             }
         }
         namespace AndroidX.Compose.UI { public interface IModifier { } }
@@ -237,7 +239,7 @@ public class FacadeGeneratorTests
                 public static System.IntPtr PainterResource(int id, global::AndroidX.Compose.Runtime.IComposer composer) => default;
             }
             public enum ChangedBits { Uncertain = 0, Same = 1, Different = 2, Static = 4 }
-            internal sealed class SharedStateOwner
+            internal sealed class SharedStateOwner : Java.Lang.Object
             {
                 internal static SharedStateOwner Remember(global::AndroidX.Compose.Runtime.IComposer composer,
                     object? wrapper, System.Action release) => new();
@@ -249,6 +251,7 @@ public class FacadeGeneratorTests
             }
             public static partial class ComposeExtensions
             {
+                public static void SideEffect(this global::AndroidX.Compose.Runtime.IComposer composer, System.Action effect) { }
                 public static int DiffSlotShift(int paramIndex) => 1 + paramIndex * 3;
                 public static int DiffSlot<T>(this global::AndroidX.Compose.Runtime.IComposer composer, T value, int bitOffset,
                     [System.Runtime.CompilerServices.CallerLineNumber] int line = 0,
@@ -2622,6 +2625,11 @@ public class FacadeGeneratorTests
         Assert.Contains("global::System.IntPtr __state;", emitted);
 
         Assert.Contains("SharedStateOwner.Remember(composer, __stateHolder", emitted);
+        Assert.Contains("composer.StartReusableGroup(354102, __stateOwner);", emitted);
+        Assert.Contains("composer.EndReusableGroup();", emitted);
+        Assert.Contains("var __stateDefaultHolder = composer.Remember(static () => new global::AndroidX.Compose.TimePickerState());", emitted);
+        Assert.Contains("var __stateHolder = _state ?? __stateDefaultHolder;", emitted);
+        Assert.DoesNotContain("_state = state ?? new global::AndroidX.Compose.TimePickerState();", emitted);
         Assert.Contains("if (__stateOwner.IsOwner)", emitted);
         Assert.DoesNotContain("if (_state!.Jvm is not null)", emitted);
         Assert.Contains("__state = ((global::Android.Runtime.IJavaObject)__peer).Handle;", emitted);
@@ -2647,6 +2655,7 @@ public class FacadeGeneratorTests
         var direct = GeneratedMethodBody(emitted, "TimePicker_PrimaryResource_Implicit");
         Assert.Contains("SharedStateOwner.Remember(__composer, __stateHolder", direct);
         Assert.Contains("if (__stateOwner.IsOwner)", direct);
+        Assert.Contains("__composer.StartReusableGroup(354102, __stateOwner);", direct);
         Assert.Contains("__composer.Remember(static () => new global::AndroidX.Compose.TimePickerState())", direct);
         Assert.Contains("public static global::AndroidX.Compose.TimePickerState RememberTimePickerState(this", emitted);
         Assert.Contains("composer.StartReplaceableGroup(global::AndroidX.Compose.SourceLocationKey.Compute(line, file))", emitted);
@@ -4015,7 +4024,7 @@ public class FacadeGeneratorTests
 
         // (a) Adapter identity belongs to composition, not an ephemeral tree node.
         Assert.Contains(
-            "var __confirmValueChangeAdapter = composer.Remember(static () => new global::AndroidX.Compose.SheetValueConfirmStateChange());",
+            "var __confirmValueChangeAdapter = composer.Remember(() => new global::AndroidX.Compose.SheetValueConfirmStateChange { Callback = __confirmValueChangeAdapterTarget });",
             emitted);
         // (b) PropertyName override surfaces as ConfirmValueChange (not
         //     the default ConfirmStateChange).
@@ -4023,8 +4032,13 @@ public class FacadeGeneratorTests
             "public global::System.Func<global::AndroidX.Compose.Material3.SheetValue, bool>? ConfirmValueChange { get; set; }",
             emitted);
         Assert.DoesNotContain("public global::System.Func<global::AndroidX.Compose.Material3.SheetValue, bool>? ConfirmStateChange", emitted);
-        // (c) Render preamble assigns the user delegate into the adapter.
-        Assert.Contains("__confirmValueChangeAdapter.Callback = ConfirmValueChange;", emitted);
+        // Initial construction sees the current veto; only successful application updates existing peers.
+        Assert.Contains("var __confirmValueChangeAdapterTarget = ConfirmValueChange;", emitted);
+        Assert.Contains("composer.SideEffect(() => __confirmValueChangeAdapter.Callback = __confirmValueChangeAdapterTarget);", emitted);
+        Assert.DoesNotContain("__confirmValueChangeAdapter.Callback = ConfirmValueChange;", emitted);
+        var direct = GeneratedMethodBody(emitted, "ModalBottomSheet_PrimaryResource_Implicit");
+        Assert.Contains("var __confirmValueChangeAdapterTarget = confirmValueChange;", direct);
+        Assert.Contains("__composer.SideEffect(() => __confirmValueChangeAdapter.Callback = __confirmValueChangeAdapterTarget);", direct);
         Assert.Contains("if (__sheetStateOwner.IsOwner)", emitted);
         // (e) Cache-miss branch calls Remember with SkipPartiallyExpanded
         //     resolved from the wrapper member AND the per-instance JCW

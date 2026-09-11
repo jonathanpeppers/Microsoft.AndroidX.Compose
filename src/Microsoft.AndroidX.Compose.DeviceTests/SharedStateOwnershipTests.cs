@@ -8,6 +8,81 @@ namespace Microsoft.AndroidX.Compose.DeviceTests;
 public class SharedStateOwnershipTests
 {
     [TestMethod]
+    [DataRow("replace-owned", false, false)]
+    [DataRow("replace-owned", true, false)]
+    [DataRow("replace-tree", false, false)]
+    [DataRow("replace-tree", true, false)]
+    [DataRow("replace-direct", false, false)]
+    [DataRow("replace-direct", true, false)]
+    [DataRow("replace-owned", true, true)]
+    [DataRow("replace-tree", true, true)]
+    [DataRow("replace-direct", true, true)]
+    public async Task WrapperReplacement_IsolatesNativeStateAndRetainedValues(string mode, bool pending, bool keepOriginalSibling)
+    {
+        var activity = await StartActivity(mode, keepOriginalSibling);
+        try
+        {
+            var originalPeer = activity.State.Jvm;
+            Assert.IsNotNull(originalPeer);
+            await OnUiThread(activity, () =>
+            {
+                activity.State.Hour = 8;
+                activity.State.Minute = 16;
+                if (pending)
+                    activity.ReplacementState.Minute = 42;
+                activity.UseReplacement.Value = true;
+                activity.Pass.Value = 1;
+            });
+            await WaitFor(() => activity.CompletedPass == 1 && (keepOriginalSibling
+                    ? activity.State.Jvm is { } current && !ReferenceEquals(current, originalPeer)
+                    : activity.State.Jvm is null),
+                "Replaced wrapper was not released.");
+            var survivingPeer = activity.State.Jvm;
+            var replacementPeer = activity.ReplacementState.Jvm;
+            Assert.IsNotNull(replacementPeer);
+            Assert.AreNotSame(originalPeer, replacementPeer, "Replacement wrapper reused the previous native state.");
+            Assert.AreEqual(19, activity.ReplacementState.Hour);
+            Assert.AreEqual(pending ? 42 : 27, activity.ReplacementState.Minute);
+            Assert.AreEqual(8, activity.State.Hour, "Replacement contaminated the previous wrapper.");
+            Assert.AreEqual(16, activity.State.Minute, "Pending replacement write contaminated the previous wrapper.");
+
+            await OnUiThread(activity, () =>
+            {
+                activity.ReplacementState.Hour = 20;
+                activity.UseReplacement.Value = false;
+                activity.Pass.Value = 2;
+            });
+            await WaitFor(() => activity.CompletedPass == 2 && activity.ReplacementState.Jvm is null,
+                "Returning original wrapper did not replace the second owner.");
+            Assert.AreNotSame(replacementPeer, activity.State.Jvm);
+            Assert.AreEqual(8, activity.State.Hour);
+            Assert.AreEqual(16, activity.State.Minute);
+            Assert.AreEqual(20, activity.ReplacementState.Hour);
+            Assert.AreEqual(pending ? 42 : 27, activity.ReplacementState.Minute);
+            if (keepOriginalSibling)
+            {
+                Assert.AreSame(survivingPeer, activity.State.Jvm, "Returning consumer replaced the surviving sibling's peer.");
+                return;
+            }
+
+            await OnUiThread(activity, activity.Recreate);
+            await WaitFor(() => SharedStateOwnershipTestActivity.Current is { } current
+                && !ReferenceEquals(current, activity) && current.CompletedPass >= 0,
+                "Replacement activity did not recreate.");
+            activity = SharedStateOwnershipTestActivity.Current
+                ?? throw new InvalidOperationException("Recreated replacement activity was unavailable.");
+            Assert.AreEqual(8, activity.State.Hour, "Replacement grouping destabilized native restore identity.");
+            Assert.AreEqual(16, activity.State.Minute);
+        }
+        finally
+        {
+            await OnUiThread(activity, activity.Finish);
+            await WaitFor(() => !ReferenceEquals(SharedStateOwnershipTestActivity.Current, activity),
+                "Replacement activity did not finish.");
+        }
+    }
+
+    [TestMethod]
     [DataRow("native-dial")]
     [DataRow("owned-dial")]
     public async Task DialReentry_RetainsSelectedMinuteAndPeer(string mode)
@@ -95,11 +170,13 @@ public class SharedStateOwnershipTests
     }
 
     [TestMethod]
-    public async Task OmittedDirectConsumer_RepeatedRenderThenRecreation_RestoresTime()
+    [DataRow("omitted-direct")]
+    [DataRow("omitted-tree")]
+    public async Task OmittedDirectConsumer_RepeatedRenderThenRecreation_RestoresTime(string mode)
     {
         var automation = TestInstrumentation.Current?.UiAutomation
             ?? throw new InvalidOperationException("Instrumentation UI automation is unavailable.");
-        var activity = await StartActivity("omitted-direct");
+        var activity = await StartActivity(mode);
         try
         {
             await WaitFor(() => ReadTimeFields(automation).Count == 2,
@@ -370,11 +447,12 @@ public class SharedStateOwnershipTests
         }
     }
 
-    static async Task<SharedStateOwnershipTestActivity> StartActivity(string mode)
+    static async Task<SharedStateOwnershipTestActivity> StartActivity(string mode, bool keepOriginalSibling = false)
     {
         var context = global::Android.App.Application.Context;
         using var intent = new global::Android.Content.Intent(context, typeof(SharedStateOwnershipTestActivity));
         intent.PutExtra("mode", mode);
+        intent.PutExtra("keep-original-sibling", keepOriginalSibling);
         intent.AddFlags(global::Android.Content.ActivityFlags.NewTask);
         context.StartActivity(intent);
         await WaitFor(() => SharedStateOwnershipTestActivity.Current is { CompletedPass: >= 0 },

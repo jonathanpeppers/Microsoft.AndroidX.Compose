@@ -365,7 +365,12 @@ slots surface as `Action` instead of `Action<IComposer>`.
     A direct `IRememberObserver` slot identifies the owner. Every execution
     of that location calls the native `Remember`; siblings consume its peer.
     Never use a non-null `Jvm` as a substitute for native lifecycle ownership.
-    Both tree and direct helpers use this contract. Generated typed helpers
+    Both tree and direct helpers use this contract. Omitted parameterized
+    wrappers are remembered in composition, including reconstructed tree
+    nodes. A fixed-key reusable group uses the owner as auxiliary data to
+    reset native remembers on supplied-wrapper replacement without adding
+    object hashes, peer handles, or process counters to the save-state key.
+    Generated typed helpers
     such as `composer.RememberTimePickerState()` and
     `Composables.RememberTimePickerState()` hoist the owner above conditional
     consumers. Keep that call in composition to preserve exact peer identity
@@ -373,8 +378,11 @@ slots surface as `Action` instead of `Action<IComposer>`.
     `Unbind = nameof(T.UnbindJvm)` optionally names an accessible parameterless
     instance void method that captures live values and clears `Jvm` when the
     owner is forgotten/abandoned; without it cleanup clears `Jvm` directly.
-    Shared confirm adapters are composition-remembered, not node-instance
-    fields, because a tree node may be reconstructed on each execution.
+    Shared confirm adapters are remembered inside that owning group, not
+    node-instance fields. Their factory receives the current callback
+    immediately; later callback updates are captured and published through
+    `SideEffect` only after successful application, never during a speculative
+    render of a committed peer.
 
   `StateType` must declare an instance, writable, non-readonly, accessible
   field named `Jvm` whose declared type is the binding-generated state
@@ -383,14 +391,16 @@ slots surface as `Action` instead of `Action<IComposer>`.
 - `[ConfirmStateChange(typeof(T))]` (Phase 10) — `IFunction1?` param of a
   `[StateHolder]` Remember bridge. Models per-instance JNI veto adapter for
   Kotlin's `(T) -> Boolean` callback (part of `remember` cache key). Generator:
-  - allocates one `readonly` JCW adapter field per facade instance
-    (`_<camelCase(PropertyName)>Adapter`);
+  - allocates one `readonly` JCW adapter field per non-shared facade instance
+    (`_<camelCase(PropertyName)>Adapter`); shared owners use the
+    composition/commit-time contract above;
   - looks up adapter class by convention `Microsoft.AndroidX.Compose.<TName>ConfirmStateChange`
     or via explicit `AdapterType = typeof(...)`;
   - exposes `Func<T, bool>? ConfirmStateChange { get; set; }` (renameable via
     `PropertyName`);
-  - in Render preamble — **before** Remember — emits
-    `_<adapter>.Callback = ConfirmStateChange;`;
+  - for non-shared facades, in Render preamble — **before** Remember — emits
+    `_<adapter>.Callback = ConfirmStateChange;`; shared factories initialize
+    their callback before Remember but subsequent updates use `SideEffect`;
   - excludes the slot from main bridge call args and auto-mask.
 
   Adapter class must implement `Kotlin.Jvm.Functions.IFunction1`, have a

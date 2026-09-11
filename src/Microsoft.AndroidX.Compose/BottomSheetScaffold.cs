@@ -70,20 +70,19 @@ public sealed class BottomSheetScaffold : ComposableContainer
             throw new InvalidOperationException(
                 "BottomSheetScaffold.SheetContent is required.");
 
-        // Update the JCW callback BEFORE the Remember calls. Compose
-        // captures the IFunction1's JNI peer at first composition; we
-        // keep the peer's identity stable but read Callback fresh on
-        // every Invoke so the user can mutate ConfirmValueChange.
-        var confirmValueChangeAdapter = composer.Remember(static () => new SheetValueConfirmStateChange());
-        confirmValueChangeAdapter.Callback = ConfirmValueChange;
-
         var owner = SharedStateOwner.Remember(composer, _sheetState, () => _sheetState?.UnbindJvm());
         SheetState sheetState;
-        composer.StartReplaceableGroup(354102);
+        composer.StartReusableGroup(354102, owner);
         try
         {
             if (owner.IsOwner)
             {
+                var confirmValueChange = ConfirmValueChange;
+                var confirmValueChangeAdapter = composer.Remember(() => new SheetValueConfirmStateChange
+                {
+                    Callback = confirmValueChange,
+                });
+                composer.SideEffect(() => confirmValueChangeAdapter.Callback = confirmValueChange);
                 sheetState = BottomSheetScaffoldKt.RememberStandardBottomSheetState(
                     initialValue: _sheetState?.RememberStandardValue ?? SheetValue.PartiallyExpanded,
                     confirmValueChange: confirmValueChangeAdapter,
@@ -100,7 +99,7 @@ public sealed class BottomSheetScaffold : ComposableContainer
         }
         finally
         {
-            composer.EndReplaceableGroup();
+            composer.EndReusableGroup();
         }
 
         // Bound C# call — RememberBottomSheetScaffoldState is NOT stripped.

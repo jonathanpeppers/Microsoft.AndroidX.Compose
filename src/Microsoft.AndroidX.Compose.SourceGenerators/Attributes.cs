@@ -462,6 +462,11 @@ internal static class Attributes
             /// <c>ComposeExtensions</c> and <c>Composables</c> so callers can
             /// hoist the owner above conditional consumers. Omitted wrappers
             /// and confirm adapters are remembered at the owning location.
+            /// Wrapper replacement resets the native subtree through a
+            /// fixed-key reusable group; wrapper identity is auxiliary data,
+            /// not a saved-state key. New adapters receive their initial veto
+            /// immediately; existing adapters receive updates after successful
+            /// application via SideEffect, not during speculative rendering.
             /// Defaults to <c>false</c>.</para>
             /// <para><b>Unbind</b>: optional accessible parameterless instance
             /// void method called when the owner is forgotten or abandoned.

@@ -1494,9 +1494,14 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             if (s.SharedState)
             {
                 var holder = "__" + s.Param.Name + "Holder";
+                if (s.IsParameterisedStateHolder)
+                    sb.Append("            var __").Append(s.Param.Name).Append("DefaultHolder = ")
+                      .Append(composerName).Append(".Remember(static () => new ")
+                      .Append(s.StateWrapperType?.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)
+                          ?? throw new InvalidOperationException("Shared state has no wrapper type.")).AppendLine("());");
                 sb.Append("            var ").Append(holder).Append(" = _").Append(id);
                 if (s.IsParameterisedStateHolder)
-                    sb.Append(" ?? throw new global::System.InvalidOperationException(\"State holder was not initialized.\")");
+                    sb.Append(" ?? __").Append(s.Param.Name).Append("DefaultHolder");
                 sb.AppendLine(";");
                 EmitSharedStatePreamble(sb, s, holder, jvmFqn, composerName, false);
                 continue;
@@ -3119,16 +3124,6 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
     static void EmitSharedStatePreamble(StringBuilder sb, FacadeSlot s,
         string holder, string jvmFqn, string composerName, bool direct)
     {
-        foreach (var info in s.ConfirmStateChanges)
-        {
-            var adapterType = info.AdapterType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-            sb.Append("            var __").Append(info.FieldIdentifier).Append(" = ").Append(composerName)
-              .Append(".Remember(static () => new ").Append(adapterType).AppendLine("());");
-            var callback = direct ? EscapeIdent(char.ToLowerInvariant(info.PropertyName[0])
-                + info.PropertyName.Substring(1)) : info.PropertyName;
-            sb.Append("            __").Append(info.FieldIdentifier).Append(".Callback = ").Append(callback).AppendLine(";");
-        }
-
         string local = "__" + s.Param.Name;
         sb.Append("            var ").Append(local).Append("Owner = global::AndroidX.Compose.SharedStateOwner.Remember(")
           .Append(composerName).Append(", ").Append(holder).AppendLine(", () =>");
@@ -3138,11 +3133,24 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             ? "." + unbind + "();" : ".Jvm = null;").AppendLine();
         sb.AppendLine("            });");
         sb.Append("            global::System.IntPtr ").Append(local).AppendLine(";");
-        sb.Append("            ").Append(composerName).AppendLine(".StartReplaceableGroup(354102);");
+        // The data key resets remembered values but is not part of the positional save key.
+        sb.Append("            ").Append(composerName).Append(".StartReusableGroup(354102, ").Append(local).AppendLine("Owner);");
         sb.AppendLine("            try");
         sb.AppendLine("            {");
         sb.Append("                if (").Append(local).AppendLine("Owner.IsOwner)");
         sb.AppendLine("                {");
+        foreach (var info in s.ConfirmStateChanges)
+        {
+            var adapterType = info.AdapterType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+            var callback = direct ? EscapeIdent(char.ToLowerInvariant(info.PropertyName[0])
+                + info.PropertyName.Substring(1)) : info.PropertyName;
+            var target = "__" + info.FieldIdentifier + "Target";
+            sb.Append("                    var ").Append(target).Append(" = ").Append(callback).AppendLine(";");
+            sb.Append("                    var __").Append(info.FieldIdentifier).Append(" = ").Append(composerName)
+              .Append(".Remember(() => new ").Append(adapterType).Append(" { Callback = ").Append(target).AppendLine(" });");
+            sb.Append("                    ").Append(composerName).Append(".SideEffect(() => __").Append(info.FieldIdentifier)
+              .Append(".Callback = ").Append(target).AppendLine(");");
+        }
         sb.Append("                    ").Append(local).Append(" = global::AndroidX.Compose.ComposeBridges.")
           .Append(s.RememberMethodName).Append('(');
         foreach (var arg in s.RememberArgExpressions)
@@ -3170,7 +3178,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         sb.AppendLine("            }");
         sb.AppendLine("            finally");
         sb.AppendLine("            {");
-        sb.Append("                ").Append(composerName).AppendLine(".EndReplaceableGroup();");
+        sb.Append("                ").Append(composerName).AppendLine(".EndReusableGroup();");
         sb.AppendLine("            }");
     }
 
@@ -3607,7 +3615,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         // slots.
         foreach (var s in emittedSlots)
         {
-            if (s.IsParameterisedStateHolder)
+            if (s.IsParameterisedStateHolder && !s.SharedState)
             {
                 var fqType = s.StateWrapperType!.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat
                     .WithMiscellaneousOptions(SymbolDisplayMiscellaneousOptions.UseSpecialTypes));
@@ -3854,7 +3862,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             // Remember bridge has user params. The Render body
             // reads init values off `_state` to pass into Remember,
             // so the field must be non-null on entry.
-            if (s.IsParameterisedStateHolder)
+            if (s.IsParameterisedStateHolder && !s.SharedState)
             {
                 var fqType = s.StateWrapperType!.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat
                     .WithMiscellaneousOptions(SymbolDisplayMiscellaneousOptions.UseSpecialTypes));

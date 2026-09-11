@@ -12,6 +12,8 @@ public class SharedStateOwnershipTestActivity : ComponentActivity
 {
     internal static SharedStateOwnershipTestActivity? Current { get; private set; }
     internal TimePickerState State { get; private set; } = new(initialHour: 7, initialMinute: 15);
+    internal TimePickerState ReplacementState { get; } = new(initialHour: 19, initialMinute: 27);
+    internal MutableState<bool> UseReplacement { get; } = new(false);
     internal MutableState<int> Pass { get; } = new(0);
     internal MutableState<bool> ShowFirst { get; } = new(true);
     internal MutableState<bool> ShowSecond { get; } = new(true);
@@ -43,6 +45,27 @@ public class SharedStateOwnershipTestActivity : ComponentActivity
         {
             int pass = Pass.Value;
             string mode = Intent?.GetStringExtra("mode") ?? "tree";
+            if (mode.StartsWith("replace-", StringComparison.Ordinal))
+            {
+                var selected = UseReplacement.Value ? ReplacementState : State;
+                composer.StartReplaceableGroup(354301);
+                if (mode == "replace-owned")
+                    composer.RememberTimePickerState(selected);
+                else if (mode == "replace-direct")
+                {
+                    using var context = ComposableContext.Enter(composer);
+                    Composables.TimeInput(state: selected);
+                }
+                else
+                    new TimeInput(selected).Render(composer);
+                composer.EndReplaceableGroup();
+                composer.StartReplaceableGroup(354302);
+                if (Intent?.GetBooleanExtra("keep-original-sibling", false) == true)
+                    RenderPicker(composer, mode == "replace-direct" ? "direct" : "tree");
+                composer.EndReplaceableGroup();
+                composer.SideEffect(() => CompletedPass = pass);
+                return;
+            }
             if (mode == "native-dial")
             {
                 var handle = ComposeBridges.RememberTimePickerStateJvm(7, 15, true, composer);
@@ -84,6 +107,8 @@ public class SharedStateOwnershipTestActivity : ComponentActivity
                         new global::AndroidX.Compose.TimePicker(State).Render(composer);
                 }
             }
+            else if (mode == "omitted-tree")
+                new TimeInput().Render(composer);
             else if (mode == "omitted-direct")
             {
                 using var context = ComposableContext.Enter(composer);
@@ -111,7 +136,7 @@ public class SharedStateOwnershipTestActivity : ComponentActivity
             composer.EndReplaceableGroup();
 
             composer.StartReplaceableGroup(354002);
-            if (mode is not ("native" or "omitted-direct") && !mode.EndsWith("-dial", StringComparison.Ordinal)
+            if (mode is not ("native" or "omitted-direct" or "omitted-tree") && !mode.EndsWith("-dial", StringComparison.Ordinal)
                 && ShowSecond.Value)
                 RenderPicker(composer, mode);
             SiblingsSharePeer = !ShowFirst.Value || !ShowSecond.Value || ReferenceEquals(owner, State.Jvm);
