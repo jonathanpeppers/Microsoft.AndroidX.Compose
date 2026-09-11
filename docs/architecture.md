@@ -229,7 +229,10 @@ call site the generator emits roughly:
 public static void Composable_0_AB12CD34(
     string name)
 {
+    ComposableContext.Current.StartMovableGroup(callSiteKey,
+        cachedCallSiteString ??= new Java.Lang.String(callSiteIdentity));
     Composable_0_AB12CD34_Core(ComposableContext.Current, name, 0);
+    ComposableContext.Current.EndMovableGroup();
 }
 
 static void Composable_0_AB12CD34_Core(
@@ -260,9 +263,83 @@ name so it stays stable across processes (matches the
 (`1 + paramIndex * 3`); the Kotlin-shape skip pair
 (`mask = 0b001 | sum(0b101 << (1+3*i))`,
 `expected = sum(0b001 << (1+3*i))`) is computed at generation time and
-inlined as a literal. The `UpdateScope` lambda re-enters the wrapper
-(not the user method) so the next composition pass re-opens the same
-restart group, re-diffs, and skips-or-calls the same way.
+inlined as a literal. The `UpdateScope` lambda re-enters only the restart
+core, not the entry's movable group: Compose has already restored the
+restart anchor **inside** that group. Reopening the envelope from the
+callback would change the anchored subtree.
+
+### Structural call-site identity
+
+The target signature alone is not a structural identity. In
+`if (show) Counter("optional"); Counter("permanent");`, the two restart
+groups previously shared a key; hiding the first call could transfer its
+state to the second. Giving them different restart keys is also insufficient:
+Compose Runtime 1.11.3's `startRestartGroup` uses `startReplaceGroup`, which
+can replace the unexpected sibling rather than search for a surviving group.
+
+Each intercepted **entry** therefore opens a movable call-site envelope,
+containing exactly one ordinary target-keyed restart core. Its identity is
+the syntax-tree path, invocation source offset (including same-line
+distinctions), and constructed target signature. The integer key is FNV-1a;
+the non-null data key is a lazily cached JVM string of the full identity.
+The string disambiguates integer-key collisions and its deterministic JVM
+hash avoids the varying sibling ordinal in saveable compound keys. The
+cache contains only immutable call-site metadata, never remembered state.
+
+Within the current parent, the runtime matches surviving envelopes, orders
+their nodes, inserts new groups, and forgets unused groups and effects.
+This supports conditional calls, both branches, nesting, early exits, and
+repeated calls without rewriting C# bodies. It does not move content between
+parents or retain removed branches offscreen. Re-entering a removed branch
+creates new ordinary state; its disposed effects are not resurrected.
+
+Repeated execution of **one lexical call site** is positional among that
+site's occurrences in its current parent. Loop occurrences remain independent
+and match in FIFO order; changing a loop's count cannot consume a following,
+distinct lexical site's state. This is not business-keyed list identity.
+Duplicate saveable providers use the pinned registry's ordered value lists.
+Extract a `[Composable]` method for a desired per-iteration boundary; an
+ordinary helper or delegate invocation is not automatically a new boundary.
+Likewise, conditionally executing raw `Remember`/effect APIs is not a C#
+control-flow transformation: place branch-owned state inside a composable
+call. Existing delegate-scope diagnostics and omission/default contracts
+remain unchanged. Identity is stable across processes of the same build,
+not promised across source edits or builds at different source paths.
+
+This is an interception-specific protocol, not Kotlin compiler parity:
+Kotlin 2.4.0's `ComposableFunctionBodyTransformer.handleLoop` and `visitWhen`
+can insert enclosing/per-iteration/branch groups into function bodies.
+The pinned runtime sources establish the alternate protocol:
+`GapComposer.start` and `GapPending.getNext` reconcile groups/FIFO duplicate
+keys; `end` removes unused groups and moves node ranges;
+`endRestartGroup` anchors the callback at the restart group;
+`updateCompositeKeyWhenWeEnterGroup` distinguishes null data-key positional
+hashing from non-null data-key hashing.
+Sources: [runtime 1.11.3 source archive](https://dl.google.com/dl/android/maven2/androidx/compose/runtime/runtime/1.11.3/runtime-1.11.3-sources.jar),
+[saveable 1.11.3 source archive](https://dl.google.com/dl/android/maven2/androidx/compose/runtime/runtime-saveable/1.11.3/runtime-saveable-1.11.3-sources.jar),
+[Kotlin 2.4.0 lowering](https://github.com/JetBrains/kotlin/blob/v2.4.0/plugins/compose/compiler-hosted/src/main/java/androidx/compose/compiler/plugins/kotlin/lower/ComposableFunctionBodyTransformer.kt).
+
+`CompositionIdentityTests` exercises real slot-table retention, saveable
+state, isolated leaf restarts, effect disposal, and applier node order on
+Android. After installing an embedded-assemblies DeviceTests APK, run
+`scripts\composition-identity-process.ps1 -Adb <adb.exe> -Serial <serial>`
+under an exclusive device lease to verify Android saved-task restoration
+after `am kill` in a different PID. The output JSON is observation-only;
+the activity never reads it to seed state. The script verifies the original
+task and saved Bundle provenance, four distinct saved values (including
+duplicate lexical loop sites), and ordinary state resetting to zero.
+The process fixture invokes its children directly at the root to isolate
+interceptor ancestry. Tree-backed adapters such as `Composables.Column`
+also need the deterministic runtime ancestor-key fix in #353; a correct
+call-site envelope cannot repair a randomized key higher in the tree.
+
+Validation on Pixel 7: the audited pre-fix generator failed all seven
+identity cases, including permanent saved value `123` becoming `202`
+from a loop sibling. The fixed generator passed all seven, plus actual
+saved-task restoration from PID `17036` to `17114` with four distinct
+saveable values retained and ordinary values reset. The node-order fixture
+uses fixed pixel constraints, avoiding an unrelated cached JNI class-reference
+failure exposed by repeatedly calling the current Constraints getter bridges.
 
 ### Coexistence with the tree-style facade
 

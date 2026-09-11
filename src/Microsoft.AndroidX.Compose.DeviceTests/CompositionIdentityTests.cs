@@ -1,0 +1,240 @@
+namespace Microsoft.AndroidX.Compose.DeviceTests;
+
+/// <summary>Checks state ownership, forgetting, and isolated restart after structural edits.</summary>
+[TestClass]
+[DoNotParallelize]
+public class CompositionIdentityTests
+{
+    [TestMethod]
+    [DataRow("same")]
+    [DataRow("different")]
+    [DataRow("branches")]
+    [DataRow("nested")]
+    [DataRow("loop")]
+    public async Task ConditionalCalls_RetainSurvivorsAndForgetRemovedSubtrees(string scenario)
+    {
+        var activity = await StartActivity(scenario, checkNodeOrder: true);
+        try
+        {
+            await WaitFor(() => CompositionIdentityTestActivity.ParentPasses > 0,
+                "Initial composition did not complete.");
+            var initial = CompositionIdentityTestActivity.Probes.ToDictionary();
+            await AssertNodeOrder(scenario, phase: 0, count: 3);
+            int seed = 10;
+            await OnUi(activity, () =>
+            {
+                foreach (var probe in initial.Values)
+                {
+                    probe.Ordinary.Value = ++seed;
+                    Saved(probe).Value = 100 + seed;
+                }
+            });
+            await WaitFor(() => initial.Values.All(p =>
+                    p.Observed == p.Ordinary.Value && p.ObservedSaved == Saved(p).Value),
+                "Distinct remembered values did not recompose.");
+            var permanent = initial["permanent"];
+            int permanentValue = permanent.Observed;
+            int permanentSaved = permanent.ObservedSaved;
+
+            await ChangeStructure(activity, () => CompositionIdentityTestActivity.Phase.Value = 1);
+            await AssertNodeOrder(scenario, phase: 1, count: 3);
+            Assert.AreSame(permanent, CompositionIdentityTestActivity.Probes["permanent"],
+                "A later sibling inherited another call site's remembered state.");
+            Assert.AreEqual(permanentValue, permanent.Observed);
+            Assert.AreEqual(permanentSaved, permanent.ObservedSaved);
+            foreach (var (id, probe) in initial)
+            {
+                bool survives = id == "permanent" || id.StartsWith("loop-", StringComparison.Ordinal);
+                Assert.AreEqual(survives ? 0 : 1, Volatile.Read(ref probe.Disposals), id);
+                if (survives)
+                    Assert.AreSame(probe, CompositionIdentityTestActivity.Probes[id], id);
+            }
+
+            // Only the leaf reads these states: its UpdateScope must not reopen the caller envelope.
+            int parentPasses = CompositionIdentityTestActivity.ParentPasses;
+            await OnUi(activity, () =>
+            {
+                permanent.Ordinary.Value = 73;
+                Saved(permanent).Value = 173;
+            });
+            await WaitFor(() => permanent.Observed == 73 && permanent.ObservedSaved == 173,
+                "The retained leaf did not restart at its anchored group.");
+            Assert.AreEqual(parentPasses, CompositionIdentityTestActivity.ParentPasses,
+                "A leaf-only invalidation unexpectedly executed its parent.");
+            Assert.AreEqual(1, permanent.Setups);
+            Assert.AreEqual(0, permanent.Disposals);
+
+            await ChangeStructure(activity, () => CompositionIdentityTestActivity.Phase.Value = 0);
+            await AssertNodeOrder(scenario, phase: 0, count: 3);
+            foreach (var (id, probe) in initial)
+            {
+                bool survives = id == "permanent" || id.StartsWith("loop-", StringComparison.Ordinal);
+                var current = CompositionIdentityTestActivity.Probes[id];
+                if (survives)
+                    Assert.AreSame(probe, current, id);
+                else
+                {
+                    Assert.AreNotSame(probe, current, id);
+                    Assert.AreEqual(0, current.Observed, id);
+                    Assert.AreEqual(0, current.ObservedSaved, id);
+                    Assert.AreEqual(1, probe.Disposals, id);
+                }
+            }
+
+            if (scenario == "nested")
+            {
+                var inner = CompositionIdentityTestActivity.Probes["inner-permanent"];
+                var optional = CompositionIdentityTestActivity.Probes["optional"];
+                await ChangeStructure(activity, () => CompositionIdentityTestActivity.Phase.Value = 2);
+                await AssertNodeOrder(scenario, phase: 2, count: 3);
+                Assert.AreSame(inner, CompositionIdentityTestActivity.Probes["inner-permanent"]);
+                Assert.AreEqual(0, inner.Disposals);
+                Assert.AreEqual(1, optional.Disposals);
+            }
+            if (scenario == "loop")
+            {
+                var first = CompositionIdentityTestActivity.Probes["loop-0"];
+                var removed = CompositionIdentityTestActivity.Probes["loop-2"];
+                await ChangeStructure(activity, () => CompositionIdentityTestActivity.Count.Value = 1);
+                await AssertNodeOrder(scenario, phase: 0, count: 1);
+                Assert.AreSame(first, CompositionIdentityTestActivity.Probes["loop-0"]);
+                Assert.AreSame(permanent, CompositionIdentityTestActivity.Probes["permanent"]);
+                Assert.AreEqual(1, removed.Disposals);
+                await ChangeStructure(activity, () => CompositionIdentityTestActivity.Count.Value = 3);
+                await AssertNodeOrder(scenario, phase: 0, count: 3);
+                Assert.AreNotSame(removed, CompositionIdentityTestActivity.Probes["loop-2"]);
+                Assert.AreEqual(0, CompositionIdentityTestActivity.Probes["loop-2"].ObservedSaved);
+            }
+        }
+        finally
+        {
+            await OnUi(activity, activity.Finish);
+        }
+    }
+
+    [TestMethod]
+    [DataRow("same")]
+    [DataRow("loop")]
+    public async Task SaveableState_RestoresAfterPrecedingCallSitesDisappear(string scenario)
+    {
+        var activity = await StartActivity(scenario);
+        try
+        {
+            await WaitFor(() => CompositionIdentityTestActivity.ParentPasses > 0,
+                "Initial composition did not complete.");
+            var initial = CompositionIdentityTestActivity.Probes.ToDictionary();
+            await OnUi(activity, () =>
+            {
+                Saved(initial["permanent"]).Value = 123;
+                if (scenario == "loop")
+                {
+                    Saved(initial["loop-0"]).Value = 201;
+                    Saved(initial["loop-1"]).Value = 202;
+                    Saved(initial["loop-2"]).Value = 203;
+                }
+            });
+            await WaitFor(() => initial["permanent"].ObservedSaved == 123 &&
+                (scenario != "loop" || initial["loop-2"].ObservedSaved == 203),
+                "Saveable state mutations did not complete.");
+            await ChangeStructure(activity, () => CompositionIdentityTestActivity.Phase.Value = 1);
+            int pass = CompositionIdentityTestActivity.ParentPasses;
+            await OnUi(activity, activity.Recreate);
+            await WaitFor(() => CompositionIdentityTestActivity.Current is { } current &&
+                    !ReferenceEquals(activity, current) &&
+                    CompositionIdentityTestActivity.ParentPasses > pass,
+                "Recreated composition did not complete.");
+            activity = CompositionIdentityTestActivity.Current
+                ?? throw new InvalidOperationException("Recreated identity activity was unavailable.");
+            Assert.AreEqual(123, CompositionIdentityTestActivity.Probes["permanent"].ObservedSaved);
+            if (scenario == "loop")
+            {
+                Assert.AreEqual(201, CompositionIdentityTestActivity.Probes["loop-0"].ObservedSaved);
+                Assert.AreEqual(202, CompositionIdentityTestActivity.Probes["loop-1"].ObservedSaved);
+                Assert.AreEqual(203, CompositionIdentityTestActivity.Probes["loop-2"].ObservedSaved);
+            }
+        }
+        finally
+        {
+            await OnUi(activity, activity.Finish);
+        }
+    }
+
+    static global::AndroidX.Compose.MutableNumberState<int> Saved(CompositionIdentityProbe probe) =>
+        probe.Saved ?? throw new InvalidOperationException("Probe saveable state was not composed.");
+
+    static async Task ChangeStructure(CompositionIdentityTestActivity activity, Action update)
+    {
+        int pass = CompositionIdentityTestActivity.ParentPasses;
+        await OnUi(activity, update);
+        await WaitFor(() => CompositionIdentityTestActivity.ParentPasses > pass,
+            "Structural recomposition did not complete.");
+    }
+
+    static async Task AssertNodeOrder(string scenario, int phase, int count)
+    {
+        List<string> ids = [];
+        if (scenario == "loop")
+        {
+            for (int i = 0; i < count; i++)
+            {
+                if (phase != 1) ids.Add($"optional-{i}");
+                ids.Add($"loop-{i}");
+            }
+        }
+        else if (scenario == "branches")
+            ids.Add(phase == 0 ? "optional" : "alternative");
+        else if (phase != 1)
+        {
+            if (phase != 2) ids.Add("optional");
+            if (scenario == "nested") ids.Add("inner-permanent");
+        }
+        ids.Add("permanent");
+        if (phase != 1) ids.Add("trailing");
+        int[] expected = ids.Select(CompositionIdentityTestActivity.NodeCode).ToArray();
+        await WaitFor(() => Volatile.Read(ref CompositionIdentityTestActivity.NodeOrder)
+                .SequenceEqual(expected),
+            $"Applier node order does not match {string.Join(", ", ids)}.");
+    }
+
+    static async Task<CompositionIdentityTestActivity> StartActivity(string scenario, bool checkNodeOrder = false)
+    {
+        var context = global::Android.App.Application.Context;
+        CompositionIdentityTestActivity.Reset(scenario, checkNodeOrder);
+        using var intent = new global::Android.Content.Intent(context, typeof(CompositionIdentityTestActivity));
+        intent.AddFlags(global::Android.Content.ActivityFlags.NewTask);
+        context.StartActivity(intent);
+        await WaitFor(() => CompositionIdentityTestActivity.Current is not null,
+            "Identity test activity did not start.");
+        return CompositionIdentityTestActivity.Current
+            ?? throw new InvalidOperationException("Identity test activity was unavailable.");
+    }
+
+    static Task OnUi(CompositionIdentityTestActivity activity, Action action)
+    {
+        var completion = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        activity.RunOnUiThread(() =>
+        {
+            try
+            {
+                action();
+                completion.SetResult();
+            }
+            catch (Exception ex)
+            {
+                completion.SetException(ex);
+            }
+        });
+        return completion.Task;
+    }
+
+    static async Task WaitFor(Func<bool> predicate, string message)
+    {
+        var deadline = DateTime.UtcNow + TimeSpan.FromSeconds(10);
+        while (!predicate())
+        {
+            if (DateTime.UtcNow >= deadline)
+                Assert.Fail(message);
+            await Task.Delay(20);
+        }
+    }
+}

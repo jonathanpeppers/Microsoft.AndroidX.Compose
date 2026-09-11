@@ -3,6 +3,7 @@ using System.Collections.Immutable;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Xunit;
 
 namespace AndroidX.Compose.SourceGenerators.Tests;
@@ -30,6 +31,8 @@ public class ComposableMethodGeneratorTests
                 void SkipToGroupEnd();
                 void StartReplaceableGroup(int key);
                 void EndReplaceableGroup();
+                void StartMovableGroup(int key, Java.Lang.String dataKey);
+                void EndMovableGroup();
                 object? RememberedValue();
                 void UpdateRememberedValue(object? value);
             }
@@ -43,6 +46,10 @@ public class ComposableMethodGeneratorTests
             public interface IFunction0 { }
             public interface IFunction1 { }
             public interface IFunction2 { }
+        }
+        namespace Java.Lang
+        {
+            public sealed class String(string value) { }
         }
         namespace AndroidX.Compose
         {
@@ -87,9 +94,10 @@ public class ComposableMethodGeneratorTests
                 "InterceptorsPreviewNamespaces",
                 "Microsoft.AndroidX.Compose.Generated")]);
 
-    static (Compilation Output, ImmutableArray<Diagnostic> Diagnostics, string? Emitted) Run(string userSource)
+    static (Compilation Output, ImmutableArray<Diagnostic> Diagnostics, string? Emitted) Run(
+        string userSource, string sourcePath = "")
     {
-        var src = CSharpSyntaxTree.ParseText(Preamble + "\n" + userSource, ParseOpts);
+        var src = CSharpSyntaxTree.ParseText(Preamble + "\n" + userSource, ParseOpts, path: sourcePath);
         var compilation = CSharpCompilation.Create(
             "ComposableMethodTest",
             [src],
@@ -112,6 +120,142 @@ public class ComposableMethodGeneratorTests
             }
         }
         return (output, diags, emitted);
+    }
+
+    [Fact]
+    public void ConditionalSiblings_EmitCallSiteEnvelopeOutsideRestartCore()
+    {
+        var (output, diags, emitted) = Run("""
+            namespace App
+            {
+                public static class Screens
+                {
+                    [Composable]
+                    public static void Counter(IComposer composer, string name) { }
+
+                    public static void Render(IComposer composer, bool show)
+                    {
+                        if (show) Counter(composer, "optional");
+                        Counter(composer, "permanent"); Counter(composer, "same-line");
+                    }
+                }
+            }
+            """);
+        Assert.Empty(diags);
+        Assert.NotNull(emitted);
+        var tree = CSharpSyntaxTree.ParseText(emitted);
+        var methods = tree.GetRoot().DescendantNodes()
+            .OfType<MethodDeclarationSyntax>().ToArray();
+        var entries = methods.Where(m => m.Identifier.ValueText.StartsWith("Composable_",
+            System.StringComparison.Ordinal) && !m.Identifier.ValueText.EndsWith("_Core",
+            System.StringComparison.Ordinal)).ToArray();
+        Assert.Equal(3, entries.Length);
+        var keys = new HashSet<string>();
+        foreach (var entry in entries)
+        {
+            string body = entry.Body?.ToString()
+                ?? throw new System.InvalidOperationException("Interceptor entry has no body.");
+            Assert.Contains("StartMovableGroup", body);
+            Assert.Contains("EndMovableGroup", body);
+            Assert.DoesNotContain("StartRestartGroup", body);
+            Assert.Collection(entry.Body?.Statements
+                    ?? throw new System.InvalidOperationException("Interceptor entry has no statements."),
+                statement => Assert.Contains("StartMovableGroup", statement.ToString()),
+                statement => Assert.Contains(entry.Identifier.ValueText + "_Core(", statement.ToString()),
+                statement => Assert.Contains("EndMovableGroup", statement.ToString()));
+            var start = entry.DescendantNodes()
+                .OfType<InvocationExpressionSyntax>()
+                .Single(i => i.Expression.ToString().EndsWith(".StartMovableGroup",
+                    System.StringComparison.Ordinal));
+            Assert.True(keys.Add(start.ArgumentList.Arguments[0].ToString()),
+                "Separate lexical invocations must not share their structural key.");
+            Assert.Contains("_Key ??= new global::Java.Lang.String", start.ToString());
+            string core = methods.Single(m => m.Identifier.ValueText ==
+                entry.Identifier.ValueText + "_Core").ToString();
+            Assert.Contains("StartRestartGroup", core);
+            Assert.Contains("EndRestartGroup", core);
+            Assert.DoesNotContain("MovableGroup", core);
+            Assert.Contains(entry.Identifier.ValueText + "_Core(__c2", core);
+        }
+        AssertNoCompileErrors(output);
+    }
+
+    [Fact]
+    public void CallSiteIdentity_IsStableAcrossUnrelatedEditsAndDistinguishesFiles()
+    {
+        const string source = """
+            namespace App
+            {
+                public static class Screens
+                {
+                    [Composable]
+                    public static void Counter(IComposer composer) { }
+                    public static void Render(IComposer c) => Counter(c);
+                }
+            }
+            """;
+        var first = Run(source, @"C:\app\Screen.cs");
+        var rebuilt = Run(source, @"C:\app\Screen.cs");
+        var edited = Run(source + "\n// unrelated trailing edit", @"C:\app\Screen.cs");
+        var otherFile = Run(source, @"C:\app\Other.cs");
+        Assert.Equal(first.Emitted, rebuilt.Emitted);
+        Assert.Equal(GroupIdentity(first.Emitted), GroupIdentity(edited.Emitted));
+        Assert.NotEqual(GroupIdentity(first.Emitted), GroupIdentity(otherFile.Emitted));
+        foreach (var result in ImmutableArray.Create(first, rebuilt, edited, otherFile))
+        {
+            Assert.Empty(result.Diagnostics);
+            AssertNoCompileErrors(result.Output);
+        }
+
+        static string GroupIdentity(string? emitted)
+        {
+            Assert.NotNull(emitted);
+            return CSharpSyntaxTree.ParseText(emitted).GetRoot().DescendantNodes()
+                .OfType<ObjectCreationExpressionSyntax>()
+                .Single(node => node.Type.ToString() == "global::Java.Lang.String")
+                .ArgumentList?.Arguments[0].ToString()
+                ?? throw new System.InvalidOperationException("Call-site data key was not emitted.");
+        }
+    }
+
+    [Fact]
+    public void LoopsAndNestedBranches_KeepOneEnvelopePerLexicalInvocation()
+    {
+        var (output, diagnostics, emitted) = Run("""
+            namespace App
+            {
+                public static class Screens
+                {
+                    [Composable]
+                    public static void Counter(IComposer c, int value) { }
+                    [Composable]
+                    public static void Other(IComposer c) { }
+                    public static void Render(IComposer c, int count, bool outer, bool inner)
+                    {
+                        for (int i = 0; i < count; i++)
+                        {
+                            if (outer)
+                            {
+                                if (inner) Counter(c, i);
+                                else Other(c);
+                            }
+                            Counter(c, i);
+                        }
+                        Counter(c, 100);
+                    }
+                }
+            }
+            """);
+        Assert.Empty(diagnostics);
+        Assert.NotNull(emitted);
+        var starts = CSharpSyntaxTree.ParseText(emitted).GetRoot().DescendantNodes()
+            .OfType<InvocationExpressionSyntax>()
+            .Where(node => node.Expression.ToString().EndsWith(".StartMovableGroup",
+                System.StringComparison.Ordinal)).ToArray();
+        Assert.Equal(4, starts.Length);
+        Assert.Equal(4, starts.Select(node => node.ArgumentList.Arguments[0].ToString())
+            .Distinct().Count());
+        AssertNoCompileErrors(output);
     }
 
     [Fact]

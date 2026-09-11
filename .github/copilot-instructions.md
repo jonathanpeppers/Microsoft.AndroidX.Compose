@@ -1084,7 +1084,10 @@ one wrapper per intercepted call site. For a composerless
 [global::System.Runtime.CompilerServices.InterceptsLocationAttribute(1, @"...base64...")]
 public static void Composable_0_AB12CD34(string name)
 {
+    ComposableContext.Current.StartMovableGroup(callSiteKey,
+        cachedCallSiteString ??= new Java.Lang.String(callSiteIdentity));
     Composable_0_AB12CD34_Core(ComposableContext.Current, name, 0);
+    ComposableContext.Current.EndMovableGroup();
 }
 
 static void Composable_0_AB12CD34_Core(
@@ -1109,9 +1112,22 @@ The Kotlin-shape mask/expected pair for N user params is
 `mask = 0b001 | sum(0b101 << (1+3*i))` and
 `expected = sum(0b001 << (1+3*i))`; the wrapper takes the skip path
 when `(__dirty & mask) == expected && composer.Skipping`. The
-`UpdateScope` lambda re-enters the wrapper itself (not the user
-method) so the next composition pass re-opens the same restart group,
-re-diffs, and skips-or-calls the same way.
+`UpdateScope` lambda re-enters only the restart core (not the user method
+or the entry's movable envelope). The runtime restores its anchor inside
+the envelope; reopening that envelope from the callback corrupts the
+anchored subtree.
+
+Each intercepted entry owns a movable call-site envelope keyed by the
+syntax-tree path, invocation offset, and constructed target signature.
+The integer key is FNV-1a; a lazily cached JVM string of the full identity
+is the non-null data key. This separates same-target lexical siblings,
+allows conditional insertion/removal without replacing survivors, and
+keeps saveable compound keys independent of preceding sibling count.
+Keep normal restart groups inside; do not replace them with movable groups.
+Repeated execution of one lexical site matches occurrences in FIFO order
+within its parent, not by business identity. Never open the envelope in
+the restart callback. See `docs/architecture.md` for the pinned runtime
+contract, control-flow boundaries, and device regressions.
 
 ### How interception is wired in
 

@@ -212,6 +212,7 @@ public sealed class ComposableMethodGenerator : IIncrementalGenerator
         return new CallSite(
             actual,
             path ?? string.Empty,
+            invocation.SpanStart,
             loc.Version,
             loc.Data,
             directTarget,
@@ -385,8 +386,8 @@ public sealed class ComposableMethodGenerator : IIncrementalGenerator
     }
 
     /// <summary>
-    /// Emit one wrapper per intercepted call site. The wrapper opens a
-    /// restart group keyed by the target method's FQN, runs per-param
+    /// Emit one wrapper per intercepted call site. The entry reconciles a
+    /// lexical call-site group; its core opens a target-keyed restart group, runs per-param
     /// <c>DiffSlot</c> into <c>__dirty</c>, branches on the canonical
     /// skip check, and registers the recompose lambda.
     /// </summary>
@@ -426,8 +427,18 @@ public sealed class ComposableMethodGenerator : IIncrementalGenerator
             + "_" + FnvHash(site.LocationData + "|" + site.LocationVersion)
                 .ToString("X8", CultureInfo.InvariantCulture);
         string coreName = wrapperName + "_Core";
+        string siteIdentity = site.FilePath + ":" + site.SourceOffset.ToString(CultureInfo.InvariantCulture)
+            + "|" + GetRestartGroupIdentity(site.Target);
+        int siteKey = FnvHash(siteIdentity);
+        string composerName = hasExplicitComposer
+            ? EscapeIdentifier(method.Parameters[0].Name)
+            : "global::AndroidX.Compose.ComposableContext.Current";
 
         sb.AppendLine();
+        // A non-null data key keeps saveable identity independent of preceding siblings.
+        // Retain the full identity as well as the integer key so an FNV collision cannot
+        // make two lexical sites reuse each other's groups.
+        sb.Append("        static global::Java.Lang.String? ").Append(wrapperName).AppendLine("_Key;");
         sb.Append("        // ").Append(method.ToDisplayString()).AppendLine();
         sb.Append("        // site: ").Append(site.FilePath).AppendLine();
         sb.Append("        [global::System.Runtime.CompilerServices.InterceptsLocationAttribute(")
@@ -452,6 +463,13 @@ public sealed class ComposableMethodGenerator : IIncrementalGenerator
         AppendTypeParameterConstraints(
             sb, interceptorTypeParameters, typeParameterNames, "        ");
         sb.AppendLine("        {");
+        sb.Append("            ").Append(composerName)
+          .Append(".StartMovableGroup(unchecked((int)0x")
+          .Append(siteKey.ToString("X8", CultureInfo.InvariantCulture))
+          .Append("), ").Append(wrapperName)
+          .Append("_Key ??= new global::Java.Lang.String(@\"")
+          .Append(siteIdentity.Replace("\"", "\"\""))
+          .AppendLine("\"));");
         sb.Append("            ").Append(coreName);
         AppendTypeArguments(sb, interceptorTypeParameters, typeParameterNames);
         sb.Append('(');
@@ -463,6 +481,7 @@ public sealed class ComposableMethodGenerator : IIncrementalGenerator
             sb.Append(EscapeIdentifier(method.Parameters[i].Name));
         }
         sb.AppendLine(", 0);");
+        sb.Append("            ").Append(composerName).AppendLine(".EndMovableGroup();");
         sb.AppendLine("        }");
         sb.AppendLine();
 
@@ -484,7 +503,7 @@ public sealed class ComposableMethodGenerator : IIncrementalGenerator
             sb, interceptorTypeParameters, typeParameterNames, "        ");
         sb.AppendLine("        {");
 
-        var composerName = hasExplicitComposer
+        composerName = hasExplicitComposer
             ? EscapeIdentifier(method.Parameters[0].Name)
             : "__composer";
         sb.Append("            var __c = ").Append(composerName)
@@ -587,9 +606,8 @@ public sealed class ComposableMethodGenerator : IIncrementalGenerator
         sb.AppendLine("                __c.SkipToGroupEnd();");
         sb.AppendLine("            }");
 
-        // Recompose path. The lambda re-enters THIS wrapper (not the
-        // user method) so the restart group re-opens, args re-diff,
-        // skip-or-call fires the same way.
+        // The runtime restores the anchor inside the call-site envelope. Restart only
+        // the core: reopening the movable group here would change the anchored subtree.
         sb.Append("            __c.EndRestartGroup()?.UpdateScope(new global::AndroidX.Compose.ComposableLambda2((__c2, __force) => ")
           .Append(coreName);
         AppendTypeArguments(sb, interceptorTypeParameters, typeParameterNames);
@@ -855,11 +873,12 @@ public sealed class ComposableMethodGenerator : IIncrementalGenerator
     /// </summary>
     sealed class CallSite
     {
-        public CallSite(IMethodSymbol target, string filePath, int locationVersion, string locationData,
+        public CallSite(IMethodSymbol target, string filePath, int sourceOffset, int locationVersion, string locationData,
             DirectTarget? directTarget, ulong omittedArguments)
         {
             Target = target;
             FilePath = filePath;
+            SourceOffset = sourceOffset;
             LocationVersion = locationVersion;
             LocationData = locationData;
             DirectTarget = directTarget;
@@ -868,6 +887,7 @@ public sealed class ComposableMethodGenerator : IIncrementalGenerator
 
         public IMethodSymbol Target { get; }
         public string FilePath { get; }
+        public int SourceOffset { get; }
         public int LocationVersion { get; }
         public string LocationData { get; }
         public DirectTarget? DirectTarget { get; }
