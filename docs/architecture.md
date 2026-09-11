@@ -234,7 +234,10 @@ call site the generator emits roughly:
 public static void Composable_0_AB12CD34(
     string name)
 {
+    ComposableCallSite.Start(ComposableContext.Current, callSiteKey,
+        cachedCallSiteString ??= new Java.Lang.String(callSiteIdentity));
     Composable_0_AB12CD34_Core(ComposableContext.Current, name, 0);
+    ComposableCallSite.End(ComposableContext.Current);
 }
 
 static void Composable_0_AB12CD34_Core(
@@ -265,9 +268,171 @@ name so it stays stable across processes (matches the
 (`1 + paramIndex * 3`); the Kotlin-shape skip pair
 (`mask = 0b001 | sum(0b101 << (1+3*i))`,
 `expected = sum(0b001 << (1+3*i))`) is computed at generation time and
-inlined as a literal. The `UpdateScope` lambda re-enters the wrapper
-(not the user method) so the next composition pass re-opens the same
-restart group, re-diffs, and skips-or-calls the same way.
+inlined as a literal. The `UpdateScope` lambda re-enters only the restart
+core, not the entry's movable group: Compose has already restored the
+restart anchor **inside** that group. Reopening the envelope from the
+callback would change the anchored subtree.
+
+### Structural call-site identity
+
+The target signature alone is not a structural identity. In
+`if (show) Counter("optional"); Counter("permanent");`, the two restart
+groups previously shared a key; hiding the first call could transfer its
+state to the second. Giving them different restart keys is also insufficient:
+Compose Runtime 1.11.3's `startRestartGroup` uses `startReplaceGroup`, which
+can replace the unexpected sibling rather than search for a surviving group.
+
+Each intercepted **entry** therefore calls the editor-hidden compiler helper
+`ComposableCallSite.Start`, opening a movable call-site envelope with a
+remembered occurrence slot and an inner ordinal-keyed replaceable group.
+That inner group contains exactly one ordinary target-keyed restart core.
+The lexical identity is
+the syntax-tree path, invocation source offset (including same-line
+distinctions), and constructed target signature. The integer key is FNV-1a;
+the non-null data key is a lazily cached JVM string of the full identity.
+The string disambiguates integer-key collisions and its deterministic JVM
+hash avoids the varying sibling ordinal in saveable compound keys. The
+cache contains only immutable call-site metadata, never remembered state.
+
+Within the current parent, the runtime matches surviving envelopes, orders
+their nodes, inserts new groups, and forgets unused groups and effects.
+This supports conditional calls, both branches, nesting, early exits, and
+repeated calls without rewriting C# bodies. It does not move content between
+parents or retain removed branches offscreen. Re-entering a removed branch
+creates new ordinary state; its disposed effects are not resurrected.
+
+Repeated execution of **one lexical call site** is positional among that
+site's occurrences in its current parent. Loop occurrences remain independent
+and match in FIFO order; changing a loop's count cannot consume a following,
+distinct lexical site's state. This is not business-keyed list identity.
+FIFO alone is insufficient for saveable state. Independent review found
+that repeating the lexical data key collapses descendant compound keys:
+if only B initially has a child, then A's child is inserted, the registry's
+B,A provider-registration order disagrees with A,B restoration traversal.
+The executed pre-ordinal regression restored B's `202` into A instead of
+`101`. The original seven lockstep/trailing-loop cases did not detect this.
+
+The occurrence slot now directly holds an `IRememberObserver` with a
+zero-based ordinal. A pool scoped by the actual `IControlledComposition`,
+the parent's native 64-bit composite hash, and the **full** lexical identity
+assigns the lowest free ordinal only when a new envelope is inserted.
+Retained envelopes keep it: recomposition, skipped bodies, and isolated
+restart callbacks do not allocate or advance a counter. The inner ordinal
+group gives repeated parents different saveable ancestry before any child
+registers state. No save provider, random token, ambient execution frame,
+or process-wide ordinal sequence is introduced.
+
+Runtime FIFO matching retains the used prefix of occurrences for each
+parent/site. New occurrences append; removed occurrences form the unused
+suffix. `OnForgotten` releases them during apply, not while composing.
+New slots abandoned before apply release through `OnAbandoned`; failure
+while publishing the slot also releases the allocation. Thus a later
+composition reconstructs the same ordinal prefix after shrink/grow/re-add.
+Submitting another composition with pending changes is not an alternative
+ordering protocol: callers must follow native `ControlledComposition`'s
+apply/abandon contract. Moving content between parents is outside this
+protocol, as before. Parent-hash collisions inherit native Compose's
+compound-key limits; full lexical strings prevent the allocator from
+introducing an additional integer site-hash collision.
+
+The live pool strongly retains each stateful observer through a
+`ConditionalWeakTable` keyed by the managed `IControlledComposition` peer.
+Native slots keep their observer peers and composition reachable through
+the Java/managed GC bridge; repeated bound composition projections must
+preserve this managed key identity. Unexpected peer activation fails explicitly.
+Normal callbacks remove empty pools and composition entries.
+
+The table must be an ephemeron, not a strong dictionary or an unconditional
+`GCHandle`: native `RememberEventDispatcher.dispatchRememberObservers`
+forgets in reverse order, and an earlier child's throwing cleanup can skip
+the enclosing occurrence's callback. Slot removal precedes dispatch;
+clearing the dispatcher loses that callback, and later composition disposal
+cannot recover an already-removed slot. A device regression reproduced the
+resulting permanent root with the strong dictionary. Ephemeron ownership
+allows the composition/observer cycle to collect when the composition is no
+longer independently reachable, even if cleanup was never delivered.
+It does not suppress the original exception or replay skipped user effects.
+The cost is one managed/JVM observer slot and one inner group per entry,
+with pool work on insertion/removal rather than every invocation.
+The public helper is compiler plumbing, not a new application grouping API.
+
+Extract a `[Composable]` method for a desired per-iteration boundary; an
+ordinary helper or delegate invocation is not automatically a new boundary.
+Likewise, conditionally executing raw `Remember`/effect APIs is not a C#
+control-flow transformation: place branch-owned state inside a composable
+call. Existing delegate-scope diagnostics and omission/default contracts
+remain unchanged. Identity is stable across processes of the same build,
+not promised across source edits or builds at different source paths.
+
+This is an interception-specific protocol, not Kotlin compiler parity:
+Kotlin 2.4.0's `ComposableFunctionBodyTransformer.handleLoop` and `visitWhen`
+can insert enclosing/per-iteration/branch groups into function bodies.
+The pinned runtime sources establish the alternate protocol:
+`GapComposer.start` and `GapPending.getNext` reconcile groups/FIFO duplicate
+keys; `end` removes unused groups and moves node ranges;
+`endRestartGroup` anchors the callback at the restart group;
+`updateCompositeKeyWhenWeEnterGroup` distinguishes null data-key positional
+hashing from non-null data-key hashing.
+Sources: [runtime 1.11.3 source archive](https://dl.google.com/dl/android/maven2/androidx/compose/runtime/runtime/1.11.3/runtime-1.11.3-sources.jar),
+[saveable 1.11.3 source archive](https://dl.google.com/dl/android/maven2/androidx/compose/runtime/runtime-saveable/1.11.3/runtime-saveable-1.11.3-sources.jar),
+[Kotlin 2.4.0 lowering](https://github.com/JetBrains/kotlin/blob/v2.4.0/plugins/compose/compiler-hosted/src/main/java/androidx/compose/compiler/plugins/kotlin/lower/ComposableFunctionBodyTransformer.kt).
+
+`CompositionIdentityTests` exercises real slot-table retention, saveable
+state, isolated leaf restarts, effect disposal, and applier node order on
+Android. After installing an embedded-assemblies DeviceTests APK, run
+`scripts\composition-identity-process.ps1 -Adb <adb.exe> -Serial <serial>`
+under an exclusive device lease to verify Android saved-task restoration
+after `am kill` in a different PID. Add `-Scenario selective-nested` to
+insert the earlier child independently under two nested repeated parents
+before saving. The output JSON is observation-only;
+the activity never reads it to seed state. The script verifies the original
+task and saved Bundle provenance, four distinct saved values (including
+duplicate lexical loop sites), or five values in the nested-selective case,
+and ordinary state resetting to zero. The root uses the bound Kotlin content
+API without a managed ambient frame. Nested callbacks use `Composables.Column`
+and the deterministic runtime ancestor keys from #353; a correct call-site
+envelope cannot repair a randomized key higher in the tree.
+
+Validation on Pixel 7: the audited pre-fix generator failed all seven
+identity cases, including permanent saved value `123` becoming `202`
+from a loop sibling. The ordinal correction also passes both selective
+insertion orders, removal/re-add, nested repeated parents, leaf-only restart,
+and activity recreation. Controlled-composition tests exercise delayed
+forget, aborted insertion and retry, missing saveable registries, independent
+compositions, and observer survival/collection across managed and Java GC.
+Fresh-process loop and nested-selective probes retain distinct saved values
+while ordinary state resets. The node-order fixture
+uses fixed pixel constraints, avoiding an unrelated cached JNI class-reference
+failure exposed by repeatedly calling the current Constraints getter bridges.
+
+On integrated main `c49b14e`, the final consolidated suite passed 24 device
+cases and 338 host tests. The injected slot-publication failure releases the
+uninstalled observer as well as its pool. The throwing-cleanup regression
+preserves the original exception and verifies that later disposal cannot
+deliver the missing callback. It then observes resurrection-tracking weak
+references to the composition, actual table key, site map, pool, occurrence,
+and captured payload. In the recorded run, the first mixed-GC round cleared
+the key and occurrence but left the map, pool, and payload alive; the second
+cleared all roots and the table count. A key/token-only collection check
+would have ended too early. Active Activity-owned peers survive both GCs
+without the fixture retaining a managed composition, and the bound
+composition projections preserve reference identity.
+The Gallery's **Conditional child identity** demo also exercises the
+contract interactively.
+
+`HundredRowFootprint_RecordsCompositionCosts` compares the old envelope
+and ordinal helper in the same Debug/Mono APK while actually rendering
+100 changing `Text` rows. It records one initial composition and 15 updates,
+including raw per-pass managed allocations and composition-body timings in
+the TRX. The ordinal case retained 104 observer peers versus the baseline's
+4 common surrounding peers; both returned to zero on teardown. Late updates
+in both cases allocated 130,448 managed bytes. Initial samples were 387,512
+versus 395,776 bytes; the last-ten-update median body times were 44.326 versus
+35.559 ms (baseline versus ordinal). These sequential samples still show
+warmup effects and are **not** evidence of a speedup or a calibrated
+regression bound. They exclude complete frame/startup time and total
+Java/JNI/native memory. The guaranteed additional structure is one observer
+slot and one group per intercepted entry, not one saveable provider.
 
 ### Coexistence with the tree-style facade
 
