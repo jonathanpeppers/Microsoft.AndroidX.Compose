@@ -3139,6 +3139,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         sb.AppendLine("            {");
         sb.Append("                if (").Append(local).AppendLine("Owner.IsOwner)");
         sb.AppendLine("                {");
+        sb.Append("                    ").Append(local).Append("Owner.TrackScope(").Append(composerName).AppendLine(");");
         foreach (var info in s.ConfirmStateChanges)
         {
             var adapterType = info.AdapterType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);

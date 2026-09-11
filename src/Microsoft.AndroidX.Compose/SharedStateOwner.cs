@@ -1,5 +1,4 @@
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
 using Android.Runtime;
 using AndroidX.Compose.Runtime;
 
@@ -13,23 +12,21 @@ internal sealed class SharedStateOwner : Java.Lang.Object, IRememberObserver
     object? _wrapper;
     SharedStateOwnership? _ownership;
     Action? _release;
-    GCHandle _selfRoot;
+    IControlledComposition? _composition;
+    IRecomposeScope? _scope;
 
     SharedStateOwner(object? wrapper, Action release)
     {
         _wrapper = wrapper;
         _ownership = wrapper is null ? new() : Ownerships.GetValue(wrapper, static _ => new());
         _release = release;
-        // Preserve the stateful peer even before OnRemembered. Every token, including
-        // non-owning siblings, releases this root on forgotten/abandoned or failed publication.
-        _selfRoot = GCHandle.Alloc(this);
     }
 
     internal SharedStateOwner(IntPtr handle, JniHandleOwnership transfer)
         : base(handle, transfer)
     {
-        // A live token is rooted, so activation cannot be its normal GC path.
-        // An empty replacement would lose both arbitration and the release callback.
+        // Native slot reachability preserves the original JCW through the GC bridge.
+        // An empty activation would lose arbitration and the release callback.
         throw new InvalidOperationException("SharedStateOwner activation lost its original managed lifetime state.");
     }
 
@@ -56,13 +53,54 @@ internal sealed class SharedStateOwner : Java.Lang.Object, IRememberObserver
             if (composer.RememberedValue() is SharedStateOwner existing
                 && existing._ownership is not null
                 && ReferenceEquals(existing._wrapper, wrapper))
-                return existing;
+            {
+                if (existing.IsLive)
+                    return existing;
+                existing.Release();
+            }
 
-            return Publish(wrapper, release, composer.UpdateRememberedValue);
+            var owner = Publish(wrapper, release, composer.UpdateRememberedValue);
+            owner._composition = composer.Composition;
+            return owner;
         }
         finally
         {
             composer.EndReplaceableGroup();
+        }
+    }
+
+    internal void TrackScope(IComposer composer)
+    {
+        // This keyed group contains only the marker, never native rememberSaveable.
+        composer.StartMovableGroup(354103, this);
+        try
+        {
+            var inner = composer.StartRestartGroup(354104);
+            try
+            {
+                _scope = inner.RecomposeScope
+                    ?? throw new InvalidOperationException("SharedStateOwner lifetime scope was unavailable.");
+                inner.RecordUsed(_scope);
+            }
+            finally
+            {
+                inner.EndRestartGroup();
+            }
+        }
+        finally
+        {
+            composer.EndMovableGroup();
+        }
+    }
+
+    bool IsLive
+    {
+        get
+        {
+            if (_ownership is null || Handle == IntPtr.Zero)
+                return false;
+            return _composition is not { } composition
+                || ComposeBridges.SharedStateIsLive(composition, this, _scope);
         }
     }
 
@@ -74,7 +112,32 @@ internal sealed class SharedStateOwner : Java.Lang.Object, IRememberObserver
             var ownership = _ownership
                 ?? throw new InvalidOperationException("SharedStateOwner no longer has an active lifetime.");
             _ = ownership.Version.Value;
-            ownership.Owner ??= this;
+            var previous = ownership.Owner;
+            if (previous is not null && !previous.IsLive)
+            {
+                previous.Release();
+                if (ReferenceEquals(previous, this))
+                    throw new InvalidOperationException("SharedStateOwner no longer has an active lifetime.");
+                previous = null;
+            }
+            if (previous is null)
+            {
+                if (ownership.HasOwner)
+                {
+                    // The native token died without a callback. The incoming wrapper's
+                    // cleanup captures the last peer values before creating a successor.
+                    try
+                    {
+                        (_release ?? throw new InvalidOperationException("SharedStateOwner has no release callback."))();
+                    }
+                    finally
+                    {
+                        ownership.Owner = null;
+                        ownership.Version.Value++;
+                    }
+                }
+                ownership.Owner = this;
+            }
             return ReferenceEquals(ownership.Owner, this);
         }
     }
@@ -90,25 +153,19 @@ internal sealed class SharedStateOwner : Java.Lang.Object, IRememberObserver
         _wrapper = null;
         _ownership = null;
         _release = null;
+        _scope = null;
+        _composition = null;
+        if (ownership is null || !ReferenceEquals(ownership.Owner, this))
+            return;
+
         try
         {
-            if (ownership is null || !ReferenceEquals(ownership.Owner, this))
-                return;
-
-            try
-            {
-                (release ?? throw new InvalidOperationException("SharedStateOwner has no release callback."))();
-            }
-            finally
-            {
-                ownership.Owner = null;
-                ownership.Version.Value++;
-            }
+            (release ?? throw new InvalidOperationException("SharedStateOwner has no release callback."))();
         }
         finally
         {
-            if (_selfRoot.IsAllocated)
-                _selfRoot.Free();
+            ownership.Owner = null;
+            ownership.Version.Value++;
         }
     }
 }

@@ -28,6 +28,15 @@ public class TestInstrumentation : Instrumentation
         base.OnCreate(arguments);
         Current = this;
         _filter = arguments?.GetString("filter");
+        if (arguments?.GetString("composeBackend") is { } backend)
+        {
+            global::AndroidX.Compose.Runtime.ComposeRuntimeFlags.IsLinkBufferComposerEnabled = backend switch
+            {
+                "gap" => false,
+                "link" => true,
+                _ => throw new ArgumentException("composeBackend must be 'gap' or 'link'.", nameof(arguments))
+            };
+        }
         Start();
     }
 

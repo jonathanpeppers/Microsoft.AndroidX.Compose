@@ -1,5 +1,6 @@
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Runtime.ExceptionServices;
 using Android.Runtime;
 using AndroidX.Compose;
 using AndroidX.Compose.Runtime;
@@ -24,14 +25,14 @@ public class SharedStateOwnerLifetimeTests
     [DataRow(true)]
     public void ForcedGc_NativeObserverRetiresOwnerAndSibling(bool abandon)
     {
-        var retired = ExerciseNativeObservers(abandon);
+        var retired = OnRetiredThread(() => ExerciseNativeObservers(abandon));
         AssertCollected(retired);
     }
 
     [TestMethod]
     public void EarlierCleanupFailure_DoesNotRootPublicOwner()
     {
-        var retired = RemoveThrowingSubtree();
+        var retired = OnRetiredThread(RemoveThrowingSubtree);
         AssertCollected(retired);
     }
 
@@ -346,7 +347,13 @@ public class SharedStateOwnerLifetimeTests
         var sibling = CompositionKt.ControlledComposition(siblingApplier, recomposer)
             ?? throw new InvalidOperationException("Sibling composition was unavailable.");
         var state = new TimePickerState(7, 10);
-        using var content = new ComposableLambda2(composer => composer.RememberTimePickerState(state));
+        using var content = new ComposableLambda2(composer =>
+        {
+            Assert.AreEqual(ComposeRuntimeFlags.IsLinkBufferComposerEnabled
+                ? "androidx.compose.runtime.LinkComposer" : "androidx.compose.runtime.GapComposer",
+                ((Java.Lang.Object)composer).Class.Name);
+            composer.RememberTimePickerState(state);
+        });
         try
         {
             composition.ComposeContent(content);
@@ -482,7 +489,7 @@ public class SharedStateOwnerLifetimeTests
     [TestMethod]
     public void FailedPublication_ReleasesPeerAndCapturedPayload()
     {
-        var retired = FailPublication();
+        var retired = OnRetiredThread(FailPublication);
         AssertCollected(retired);
     }
 
@@ -583,8 +590,36 @@ public class SharedStateOwnerLifetimeTests
                 return;
             Thread.Sleep(50);
         }
-        Assert.Fail("Retired observer or captured payload remained rooted after managed and Java GC.");
+        Assert.Fail("Retired observer or captured payload remained rooted after managed and Java GC: "
+            + string.Join(", ", probes.Select((probe, index) => $"{index}={DescribeProbe(probe)}")));
     }
+
+    static WeakReference<object>[] OnRetiredThread(Func<WeakReference<object>[]> body)
+    {
+        // Let the allocating stack disappear before collection; conservative
+        // stack roots must not be mistaken for native ownership in Release.
+        WeakReference<object>[]? result = null;
+        ExceptionDispatchInfo? failure = null;
+        var thread = new Thread(() =>
+        {
+            try
+            {
+                result = body();
+            }
+            catch (Exception error)
+            {
+                failure = ExceptionDispatchInfo.Capture(error);
+            }
+        });
+        thread.Start();
+        thread.Join();
+        failure?.Throw();
+        return result ?? throw new InvalidOperationException("Lifetime probe thread returned no result.");
+    }
+
+    [MethodImpl(MethodImplOptions.NoInlining)]
+    static string DescribeProbe(WeakReference<object> probe) =>
+        probe.TryGetTarget(out var target) ? target.GetType().FullName ?? "unknown type" : "collected";
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     static bool IsAlive(WeakReference<object> probe) => probe.TryGetTarget(out _);

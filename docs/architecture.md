@@ -73,8 +73,8 @@ native `RememberXxxState` on every execution of that owner. Siblings sharing
 the wrapper consume the same peer without creating independent native state.
 The same preamble is used by tree facades and direct composable helpers.
 
-**Draft lifetime correction:** a strong `GCHandle` released by `OnForgotten`
-or `OnAbandoned` is not a bounded composition resource. The pinned native
+A strong `GCHandle` released by `OnForgotten` or `OnAbandoned` is not a
+bounded composition resource. The pinned native
 dispatcher can stop after an earlier observer throws, leaving another owner
 without its retirement callback after its slots have already been removed.
 Tests that make the owner's own release callback throw do not cover this path.
@@ -82,14 +82,46 @@ The skipped-retirement regression uses a public owner followed by a generated
 child with throwing cleanup, then probes collection with resurrection-tracking
 weak references across managed and Java GC.
 
-The replacement must preserve the original active managed peer without a
-self-root and reject obsolete ownership before borrowing its state. Native
-scope validity alone is insufficient for abandoned insertions: their anchors
-can remain valid after their change batch is discarded. Composition phase flags
-also do not identify the batch that created an owner. The native-only reentry
-control, same-composition recovery, unrelated pending-attempt recovery, and
-disjoint provisional sibling-sharing regressions are acceptance gates for the
-correction; no phase-only fallback is considered safe.
+`SharedStateOwner` has no self-root. The wrapper's conditional weak-table entry
+holds only a resurrection-tracking weak reference to its owner. Active native
+slots preserve the original managed JCW through the runtime GC bridge; an
+attempt to activate an empty replacement throws rather than silently losing
+arbitration and callbacks.
+
+Before borrowing a token, `Java/SharedStateLifetime.java` checks its native
+registration under the owning `CompositionImpl` lock. For an installed owner,
+the token-keyed marker scope must be valid and belong to that composition's
+installed slot storage. The marker is a sibling of the native remember subtree,
+not part of its save-key ancestry. Tokens without a marker use exact installed
+`RememberObserverHolder` membership. For an insertion not yet installed, the
+query searches executable registration operations in the current main, late,
+and writer change lists, following only nested `ApplyChangeList` operations.
+It matches the holder's wrapped token by Java identity, never an arbitrary
+auxiliary-key reference. Native abandonment clears these operation prefixes
+before dispatching callbacks, even if a later callback throws.
+
+This is a read-only compatibility layer for the pinned Compose Runtime 1.11.3
+Gap and Link implementations, not a public Compose lifecycle API. It caches
+reflection metadata, not compositions or queues; it neither installs a tooling
+observer nor mutates native storage. Missing fields or unsupported queue shapes
+throw explicit compatibility errors. Runtime upgrades must re-audit the
+registration operations and rerun both backend regressions. Consumer keep rules
+in `shared-state-lifetime.pro` preserve reflected fields, operation identities,
+and the JNI-only shared time/sheet entry points through R8.
+
+Scope validity alone is insufficient for abandoned insertions: their anchors
+can remain valid after the batch is discarded. `HasPendingChanges` may describe
+an unrelated newer attempt. The native-only reentry, same-composition recovery,
+unrelated pending-attempt recovery, and disjoint provisional sharing tests pin
+these distinctions. **Paused-composition cancellation remains a validation gate
+for this draft correction.**
+
+If a callback was skipped, the next consumer retires the stale token before
+running its native factory. If the weak token has already been collected,
+the incoming wrapper cleanup snapshots and unbinds the orphaned peer before
+claiming ownership. Neither recovery requires finalizer timing; cleanup errors
+propagate. Until another consumer executes, a retained wrapper can still expose
+the orphaned peer, but it cannot keep the absent owner or composition rooted.
 
 For conditional consumers, hoist the typed owner before the condition:
 
@@ -178,6 +210,13 @@ Replacement regressions exercise A-to-B-to-A transitions, pending writes,
 surviving siblings, and recreation. `SharedStateTransactionTests` uses native
 controlled compositions to check initial abandonment, abandoned owner
 replacement, initial veto availability, and commit-only callback publication.
+The lifetime fixture also covers skipped earlier cleanup and abandonment,
+takeover while the obsolete token is still strongly retained, native pending
+sharing, and mixed-GC preservation of active peers. Collection probes use
+resurrection-tracking weak references across both runtimes. Probe factories
+whose Release stack can retain incidental values run on a thread that exits
+before collection; all original exception guards and collection assertions
+remain in place.
 
 Visual inspection of the hoisted-owner Gallery demo preserves 19:25 in its
 label and both numeric displays while hiding and restoring either or both

@@ -365,6 +365,12 @@ slots surface as `Action` instead of `Action<IComposer>`.
     A direct `IRememberObserver` slot identifies the owner. Every execution
     of that location calls the native `Remember`; siblings consume its peer.
     Never use a non-null `Jvm` as a substitute for native lifecycle ownership.
+    Do not self-root the owner until `OnForgotten`/`OnAbandoned`: native callback
+    dispatch can stop before reaching it when an earlier cleanup throws.
+    `SharedStateOwner` uses weak arbitration and the read-only, pinned-runtime
+    registration query in `Java/SharedStateLifetime.java`; preserve its native
+    installed/pending distinction and keep marker scopes outside save ancestry.
+    Runtime upgrades must re-audit that query and its consumer keep rules.
     Both tree and direct helpers use this contract. Omitted parameterized
     wrappers are remembered in composition, including reconstructed tree
     nodes. A fixed-key reusable group uses the owner as auxiliary data to

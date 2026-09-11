@@ -77,6 +77,7 @@ public sealed class BottomSheetScaffold : ComposableContainer
         {
             if (owner.IsOwner)
             {
+                owner.TrackScope(composer);
                 var confirmValueChange = ConfirmValueChange;
                 var confirmValueChangeAdapter = composer.Remember(() => new SheetValueConfirmStateChange
                 {

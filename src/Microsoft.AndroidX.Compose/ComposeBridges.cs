@@ -39,6 +39,12 @@ internal static partial class ComposeBridges
         Signature = "()Landroidx/compose/runtime/ProvidableCompositionLocal;")]
     internal static partial IntPtr LocalLifecycleOwner();
 
+    [ComposeBridge(
+        Class = "composenet/compose/SharedStateLifetime",
+        JvmName = "isLive",
+        Signature = "(Landroidx/compose/runtime/CompositionImpl;Ljava/lang/Object;Landroidx/compose/runtime/RecomposeScopeImpl;)Z")]
+    internal static partial bool SharedStateIsLive(IControlledComposition composition, SharedStateOwner owner, IRecomposeScope? scope);
+
     // androidx.compose.ui.Modifier$Companion.$$INSTANCE — the empty
     // Modifier that every chain builds on top of. Cached as a global
     // ref so the chain builder doesn't pay the FindClass +

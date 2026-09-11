@@ -244,6 +244,7 @@ public class FacadeGeneratorTests
                 internal static SharedStateOwner Remember(global::AndroidX.Compose.Runtime.IComposer composer,
                     object? wrapper, System.Action release) => new();
                 internal bool IsOwner => true;
+                internal void TrackScope(global::AndroidX.Compose.Runtime.IComposer composer) { }
             }
             internal static class SourceLocationKey
             {
@@ -2626,6 +2627,7 @@ public class FacadeGeneratorTests
 
         Assert.Contains("SharedStateOwner.Remember(composer, __stateHolder", emitted);
         Assert.Contains("composer.StartReusableGroup(354102, __stateOwner);", emitted);
+        Assert.Contains("__stateOwner.TrackScope(composer);", emitted);
         Assert.Contains("composer.EndReusableGroup();", emitted);
         Assert.Contains("var __stateDefaultHolder = composer.Remember(static () => new global::AndroidX.Compose.TimePickerState());", emitted);
         Assert.Contains("var __stateHolder = _state ?? __stateDefaultHolder;", emitted);
@@ -2656,6 +2658,7 @@ public class FacadeGeneratorTests
         Assert.Contains("SharedStateOwner.Remember(__composer, __stateHolder", direct);
         Assert.Contains("if (__stateOwner.IsOwner)", direct);
         Assert.Contains("__composer.StartReusableGroup(354102, __stateOwner);", direct);
+        Assert.Contains("__stateOwner.TrackScope(__composer);", direct);
         Assert.Contains("__composer.Remember(static () => new global::AndroidX.Compose.TimePickerState())", direct);
         Assert.Contains("public static global::AndroidX.Compose.TimePickerState RememberTimePickerState(this", emitted);
         Assert.Contains("composer.StartReplaceableGroup(global::AndroidX.Compose.SourceLocationKey.Compute(line, file))", emitted);
