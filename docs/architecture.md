@@ -168,6 +168,11 @@ already supports.
 
 ## Composable methods — `[Composable]` C# methods
 
+Composition ancestry must also remain deterministic across process recreation.
+See [Composition keys and saved task state](saved-state-keys.md) for the runtime
+type/position key contract, upgrade compatibility, and the saved-task regression
+procedure.
+
 Composable methods are the C# equivalent of Kotlin's compose-compiler plugin:
 a Roslyn incremental source generator (`ComposableMethodGenerator`)
 that emits a per-call-site `[InterceptsLocation]` wrapper for every

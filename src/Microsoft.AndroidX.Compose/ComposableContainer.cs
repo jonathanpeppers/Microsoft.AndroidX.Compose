@@ -61,7 +61,8 @@ public abstract class ComposableContainer : ComposableNode, IEnumerable
     /// Renders this container's children sequentially into
     /// <paramref name="composer"/>, wrapping each child in a per-position
     /// <c>StartReplaceableGroup</c> whose key combines the sibling index
-    /// <em>and</em> the child's runtime <see cref="Type"/>. Without per-
+    /// <em>and</em> a deterministic identity for the child's runtime
+    /// <see cref="Type"/>. Without per-
     /// position groups, three sibling <c>SegmentedButton</c>s (same C#
     /// call site → same group key) rely on Compose's positional
     /// disambiguation, which combined with lambda-identity churn
@@ -81,7 +82,7 @@ public abstract class ComposableContainer : ComposableNode, IEnumerable
         for (int i = 0; i < _children.Count; i++)
         {
             var child = _children[i];
-            composer.StartReplaceableGroup(HashCode.Combine(i, child.GetType()));
+            composer.StartReplaceableGroup(CompositionGroupKey.Compute(i, child.GetType()));
             try { child.Render(composer); }
             finally { composer.EndReplaceableGroup(); }
         }
@@ -107,7 +108,7 @@ public abstract class ComposableContainer : ComposableNode, IEnumerable
         {
             rows.SetIndex(i);
             var child = _children[i];
-            composer.StartReplaceableGroup(HashCode.Combine(i, child.GetType()));
+            composer.StartReplaceableGroup(CompositionGroupKey.Compute(i, child.GetType()));
             try { child.Render(composer); }
             finally { composer.EndReplaceableGroup(); }
         }
