@@ -5,6 +5,18 @@ namespace AndroidX.Compose;
 
 public static partial class Composables
 {
+    /// <summary>Renders a positional lazy column using the original binary-compatible signature.</summary>
+    [Composable]
+    public static void LazyColumn<T>(
+        IReadOnlyList<T> items,
+        [ComposableContent] Action<T> itemContent,
+        Modifier? modifier,
+        LazyListState? state,
+        bool reverseLayout,
+        PaddingValues? contentPadding,
+        Arrangement? verticalArrangement) =>
+        LazyColumn(items, itemContent, modifier, state, reverseLayout, contentPadding, verticalArrangement, key: null);
+
     /// <summary>Renders a typed vertical lazy list in the implicit composition.</summary>
     /// <param name="key">Optional stable string/int/long identity; see <see cref="LazyColumn{T}.Key"/>.</param>
     [Composable]
@@ -65,6 +77,17 @@ public static partial class Composables
         }.Render(composer);
     }
 
+    /// <summary>Renders a positional lazy row using the original binary-compatible signature.</summary>
+    [Composable]
+    public static void LazyRow<T>(
+        IReadOnlyList<T> items,
+        [ComposableContent] Action<T> itemContent,
+        Modifier? modifier,
+        LazyListState? state,
+        PaddingValues? contentPadding,
+        Arrangement? horizontalArrangement) =>
+        LazyRow(items, itemContent, modifier, state, contentPadding, horizontalArrangement, key: null);
+
     /// <summary>Renders a typed horizontal lazy list in the implicit composition.</summary>
     /// <param name="key">Optional stable string/int/long identity; see <see cref="LazyColumn{T}.Key"/>.</param>
     [Composable]
@@ -120,6 +143,20 @@ public static partial class Composables
             Key = key,
         }.Render(composer);
     }
+
+    /// <summary>Renders a positional vertical grid using the original binary-compatible signature.</summary>
+    [Composable]
+    public static void LazyVerticalGrid<T>(
+        GridCells columns,
+        IReadOnlyList<T> items,
+        [ComposableContent] Action<T> itemContent,
+        Modifier? modifier,
+        LazyGridState? state,
+        PaddingValues? contentPadding,
+        Arrangement? verticalArrangement,
+        Arrangement? horizontalArrangement) =>
+        LazyVerticalGrid(columns, items, itemContent, modifier, state, contentPadding,
+            verticalArrangement, horizontalArrangement, key: null);
 
     /// <summary>Renders a typed vertically scrolling lazy grid in the implicit composition.</summary>
     /// <param name="key">Optional stable string/int/long identity; see <see cref="LazyColumn{T}.Key"/>.</param>
@@ -187,6 +224,17 @@ public static partial class Composables
         }.Render(composer);
     }
 
+    /// <summary>Renders a positional horizontal grid using the original binary-compatible signature.</summary>
+    [Composable]
+    public static void LazyHorizontalGrid<T>(
+        GridCells rows,
+        IReadOnlyList<T> items,
+        [ComposableContent] Action<T> itemContent,
+        Modifier? modifier,
+        LazyGridState? state,
+        PaddingValues? contentPadding) =>
+        LazyHorizontalGrid(rows, items, itemContent, modifier, state, contentPadding, key: null);
+
     /// <summary>Renders a typed horizontally scrolling lazy grid in the implicit composition.</summary>
     /// <param name="key">Optional stable string/int/long identity; see <see cref="LazyColumn{T}.Key"/>.</param>
     [Composable]
@@ -245,6 +293,17 @@ public static partial class Composables
         }.Render(composer);
     }
 
+    /// <summary>Renders a positional vertical staggered grid using the original binary-compatible signature.</summary>
+    [Composable]
+    public static void LazyVerticalStaggeredGrid<T>(
+        StaggeredGridCells columns,
+        IReadOnlyList<T> items,
+        [ComposableContent] Action<T> itemContent,
+        Modifier? modifier,
+        LazyStaggeredGridState? state,
+        PaddingValues? contentPadding) =>
+        LazyVerticalStaggeredGrid(columns, items, itemContent, modifier, state, contentPadding, key: null);
+
     /// <summary>Renders a typed vertical lazy staggered grid in the implicit composition.</summary>
     /// <param name="key">Optional stable string/int/long identity; see <see cref="LazyColumn{T}.Key"/>.</param>
     [Composable]
@@ -302,6 +361,17 @@ public static partial class Composables
             Key = key,
         }.Render(composer);
     }
+
+    /// <summary>Renders a positional horizontal staggered grid using the original binary-compatible signature.</summary>
+    [Composable]
+    public static void LazyHorizontalStaggeredGrid<T>(
+        StaggeredGridCells rows,
+        IReadOnlyList<T> items,
+        [ComposableContent] Action<T> itemContent,
+        Modifier? modifier,
+        LazyStaggeredGridState? state,
+        PaddingValues? contentPadding) =>
+        LazyHorizontalStaggeredGrid(rows, items, itemContent, modifier, state, contentPadding, key: null);
 
     /// <summary>Renders a typed horizontal lazy staggered grid in the implicit composition.</summary>
     /// <param name="key">Optional stable string/int/long identity; see <see cref="LazyColumn{T}.Key"/>.</param>

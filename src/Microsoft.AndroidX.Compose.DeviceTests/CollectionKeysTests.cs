@@ -36,6 +36,63 @@ public class CollectionKeysTests
     [TestMethod]
     [DataRow(0)] [DataRow(1)] [DataRow(2)] [DataRow(3)]
     [DataRow(4)] [DataRow(5)] [DataRow(6)] [DataRow(7)]
+    public async Task OriginalSignatures_PreservePositionalStateAndViewport(int surface)
+    {
+        await ExerciseMutations(surface, style: 3, keyed: false);
+    }
+
+    [TestMethod]
+    [DataRow(6)] [DataRow(7)]
+    public async Task ConditionalPager_ReappearsAndKeepsLiveCountAcrossKeyTransitions(int surface)
+    {
+        CollectionKeysTestActivity.Reset(surface, style: 0, keyed: true, conditionalPager: true);
+        var context = global::Android.App.Application.Context;
+        using var intent = new global::Android.Content.Intent(context, typeof(CollectionKeysTestActivity));
+        intent.AddFlags(global::Android.Content.ActivityFlags.NewTask);
+        context.StartActivity(intent);
+        await WaitFor(() => CollectionKeysTestActivity.Current is not null, "Activity did not start.");
+        var activity = CollectionKeysTestActivity.Current
+            ?? throw new InvalidOperationException("Collection test activity did not start.");
+        try
+        {
+            await WaitFor(() => CollectionKeysTestActivity.Observed.ContainsKey(21), "Initial page did not render.");
+            // Publishing an empty keyed snapshot is legal even if the next parent pass removes the pager.
+            activity.RunOnUiThread(() =>
+            {
+                CollectionKeysTestActivity.Mutate([]);
+                CollectionKeysTestActivity.PageState.SetRenderedPageCount(0);
+            });
+            await WaitFor(() => CollectionKeysTestActivity.EmptyGeneration == 1, "Pager did not leave composition.");
+            Assert.AreEqual(0, CollectionKeysTestActivity.PageState.PageCount);
+
+            bool[] keyModes = [true, false, true];
+            foreach (bool keyed in keyModes)
+            {
+                int generation = CollectionKeysTestActivity.Generation + 1;
+                activity.RunOnUiThread(() => CollectionKeysTestActivity.Mutate([101]));
+                await WaitFor(() => CollectionKeysTestActivity.Observed.GetValueOrDefault(101).Generation == generation,
+                    "Pager did not return after adding a record.");
+                activity.RunOnUiThread(() => CollectionKeysTestActivity.SetKeyed(keyed));
+                await WaitFor(() => CollectionKeysTestActivity.Observed.GetValueOrDefault(101).Generation == generation + 1,
+                    "Pager did not render after changing key mode.");
+                Assert.AreEqual(1, CollectionKeysTestActivity.PageState.PageCount);
+                Assert.AreEqual(1, CollectionKeysTestActivity.PageState.Jvm.PageCount);
+                activity.RunOnUiThread(() => CollectionKeysTestActivity.Mutate([]));
+                await WaitFor(() => CollectionKeysTestActivity.EmptyGeneration == generation + 2,
+                    "Pager did not return to empty content.");
+                Assert.AreEqual(0, CollectionKeysTestActivity.PageState.PageCount);
+            }
+        }
+        finally
+        {
+            activity.RunOnUiThread(activity.Finish);
+            await WaitFor(() => CollectionKeysTestActivity.Current is null, "Activity did not finish.");
+        }
+    }
+
+    [TestMethod]
+    [DataRow(0)] [DataRow(1)] [DataRow(2)] [DataRow(3)]
+    [DataRow(4)] [DataRow(5)] [DataRow(6)] [DataRow(7)]
     public async Task SaveableState_FollowsKeyAfterScrollingAwayAndInserting(int surface)
     {
         CollectionKeysTestActivity.Reset(surface, style: 0, keyed: true);

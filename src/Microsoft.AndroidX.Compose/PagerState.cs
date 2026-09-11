@@ -155,17 +155,15 @@ public sealed class PagerState
     /// Total number of pages reported by the <c>pageCount</c> lambda
     /// supplied at construction. A negative result throws
     /// <see cref="ArgumentOutOfRangeException"/> when requested.
-    /// Mirrors Kotlin's
-    /// <c>PagerState.pageCount</c>.
+    /// Always reads the live callback, including when the pager is not composed.
     /// </summary>
     /// <remarks>
-    /// After rendering a keyed pager, this reflects its last rendered item
-    /// snapshot until its next render. The supplied callback must match the
-    /// items count at each keyed render. Rendering without keys restores live
-    /// callback behavior. This prevents a new count from reaching Kotlin while
-    /// it still holds the preceding item-key snapshot.
+    /// The native keyed pager separately uses its last rendered item count
+    /// until the next render, preventing new counts from reaching old key
+    /// snapshots. This public getter stays live so callers can use it to
+    /// conditionally compose a pager when records are added or removed.
     /// </remarks>
-    public int PageCount => Jvm.PageCount;
+    public int PageCount => ValidatePageCount(_pageCount());
 
     /// <summary>
     /// Snaps immediately to a page and waits for the pager to apply the

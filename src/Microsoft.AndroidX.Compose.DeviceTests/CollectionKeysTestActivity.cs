@@ -20,9 +20,11 @@ public class CollectionKeysTestActivity : ComponentActivity
     internal static LazyStaggeredGridState StaggeredState { get; private set; } = new();
     internal static PagerState PageState { get; private set; } = new(() => Items.Value.Count);
     internal static int Generation { get; private set; }
+    internal static int EmptyGeneration { get; private set; }
     static int s_surface;
     static int s_style;
     static bool s_keyed;
+    static bool s_conditionalPager;
 
     internal static int FirstIndex => s_surface switch
     {
@@ -40,7 +42,7 @@ public class CollectionKeysTestActivity : ComponentActivity
         _ => PageState.ScrollToPageAsync(index),
     };
 
-    internal static void Reset(int surface, int style, bool keyed)
+    internal static void Reset(int surface, int style, bool keyed, bool conditionalPager = false)
     {
         Current = null;
         Items = new(Enumerable.Range(1, 50).ToArray());
@@ -49,9 +51,11 @@ public class CollectionKeysTestActivity : ComponentActivity
         StaggeredState = new(20);
         PageState = new(() => Items.Value.Count, initialPage: 20);
         Generation = 0;
+        EmptyGeneration = -1;
         s_surface = surface;
         s_style = style;
         s_keyed = keyed;
+        s_conditionalPager = conditionalPager;
         RowStates.Clear();
         Observed.Clear();
     }
@@ -62,11 +66,35 @@ public class CollectionKeysTestActivity : ComponentActivity
         Items.Value = items;
     }
 
+    internal static void SetKeyed(bool keyed)
+    {
+        s_keyed = keyed;
+        Mutate([.. Items.Value]);
+    }
+
     protected override void OnCreate(Bundle? savedInstanceState)
     {
         base.OnCreate(savedInstanceState);
-        this.SetContent(RenderCollection);
+        this.SetContent(RenderRoot);
         Current = this;
+    }
+
+    static void RenderRoot(IComposer composer)
+    {
+        bool showCollection = !s_conditionalPager || PageState.PageCount > 0;
+        // Explicit branch groups isolate this regression from compiler control-flow lowering.
+        composer.StartReplaceableGroup(showCollection ? 351001 : 351002);
+        try
+        {
+            if (showCollection)
+                RenderCollection(composer);
+            else
+                EmptyGeneration = Generation;
+        }
+        finally
+        {
+            composer.EndReplaceableGroup();
+        }
     }
 
     static void RenderCollection(IComposer composer)
@@ -108,9 +136,29 @@ public class CollectionKeysTestActivity : ComponentActivity
                 case 7: Composables.VerticalPager(composer, items, row, modifier, PageState, key: key); break;
             }
         }
+        else if (s_style == 3)
+        {
+            RenderOriginalSignatures(items, generation, modifier);
+        }
         else
         {
             RenderImplicit(items, generation, modifier, key);
+        }
+    }
+
+    [Composable]
+    internal static void RenderOriginalSignatures(IReadOnlyList<int> items, int generation, Modifier modifier)
+    {
+        switch (s_surface)
+        {
+            case 0: Composables.LazyColumn(items, item => RenderRow(item, generation), modifier, ListState, false, null, null); break;
+            case 1: Composables.LazyRow(items, item => RenderRow(item, generation), modifier, ListState, null, null); break;
+            case 2: Composables.LazyVerticalGrid(GridCells.Fixed(1), items, item => RenderRow(item, generation), modifier, GridState, null, null, null); break;
+            case 3: Composables.LazyHorizontalGrid(GridCells.Fixed(1), items, item => RenderRow(item, generation), modifier, GridState, null); break;
+            case 4: Composables.LazyVerticalStaggeredGrid(StaggeredGridCells.Fixed(1), items, item => RenderRow(item, generation), modifier, StaggeredState, null); break;
+            case 5: Composables.LazyHorizontalStaggeredGrid(StaggeredGridCells.Fixed(1), items, item => RenderRow(item, generation), modifier, StaggeredState, null); break;
+            case 6: Composables.HorizontalPager(items, item => RenderRow(item, generation), modifier, PageState, null); break;
+            case 7: Composables.VerticalPager(items, item => RenderRow(item, generation), modifier, PageState, null); break;
         }
     }
 

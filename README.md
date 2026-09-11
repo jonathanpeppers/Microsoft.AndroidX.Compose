@@ -262,6 +262,10 @@ LazyColumn(messages, message => Text(message.Text), key: message => message.Id);
 HorizontalPager(stories, story => Text(story.Title), key: story => story.Id);
 ```
 
+The original public CLR signatures remain as forwarding overloads for compiled
+consumers and method-group conversions. Optional defaults live on the longer
+key-capable overloads, keeping positional, named, and omitted arguments unambiguous.
+
 Return a **non-null `string`, `int`, or `long`**, unique within that collection
 and stable across edits, insertion, deletion, and reorder. These map to Java
 String/Integer/Long with value equality and Android Bundle saveability; `42`,
@@ -277,9 +281,11 @@ must be pure and item identity must not change while rendering. Item content
 remains lazy. Kotlin owns item-local `Remember`/`RememberSaveable` identity and
 viewport anchoring; scroll requests override anchoring, and removed items do
 not retain an active composition. A supplied `PagerState` callback must match
-the collection count at each keyed render. Its `PageCount` then reflects the
-last rendered snapshot until the next render, so Kotlin cannot combine a new
-count with old keys. Rendering without keys restores live callback behavior.
+the collection count at each keyed render. Kotlin receives the last rendered
+count until the next render, so it cannot combine a new count with old keys.
+Public `PagerState.PageCount` always reads the live callback, including while
+the pager is absent, so it can safely drive an empty-state condition.
+Rendering without keys also restores native live-count behavior.
 
 This follows the pinned Foundation **1.11.3** `LazyListScope.items`,
 `LazyGridScope.items`, `LazyStaggeredGridScope.items`, and `Pager` contracts,
