@@ -14,6 +14,8 @@ internal sealed class SharedStateOwner : Java.Lang.Object, IRememberObserver
     Action? _release;
     IControlledComposition? _composition;
     IRecomposeScope? _scope;
+    IPausedComposition? _registrationOrigin;
+    IPausedComposition? _ownershipOrigin;
 
     SharedStateOwner(object? wrapper, Action release)
     {
@@ -59,9 +61,14 @@ internal sealed class SharedStateOwner : Java.Lang.Object, IRememberObserver
                 existing.Release();
             }
 
-            var owner = Publish(wrapper, release, composer.UpdateRememberedValue);
-            owner._composition = composer.Composition;
-            return owner;
+            var composition = composer.Composition;
+            var origin = ComposeBridges.SharedStatePausedOrigin(composition);
+            return Publish(wrapper, release, owner =>
+            {
+                owner._composition = composition;
+                owner._registrationOrigin = origin;
+                composer.UpdateRememberedValue(owner);
+            });
         }
         finally
         {
@@ -93,14 +100,14 @@ internal sealed class SharedStateOwner : Java.Lang.Object, IRememberObserver
         }
     }
 
-    bool IsLive
+    internal bool IsLive
     {
         get
         {
             if (_ownership is null || Handle == IntPtr.Zero)
                 return false;
             return _composition is not { } composition
-                || ComposeBridges.SharedStateIsLive(composition, this, _scope);
+                || ComposeBridges.SharedStateIsLive(composition, this, _scope, _registrationOrigin, _ownershipOrigin);
         }
     }
 
@@ -136,6 +143,11 @@ internal sealed class SharedStateOwner : Java.Lang.Object, IRememberObserver
                         ownership.Version.Value++;
                     }
                 }
+                // A committed borrower can acquire its first peer during paused work.
+                // Ordinary owning rerenders must retain the original acquisition.
+                _ownershipOrigin = _composition is { } composition
+                    ? ComposeBridges.SharedStatePausedOrigin(composition)
+                    : null;
                 ownership.Owner = this;
             }
             return ReferenceEquals(ownership.Owner, this);
@@ -155,6 +167,8 @@ internal sealed class SharedStateOwner : Java.Lang.Object, IRememberObserver
         _release = null;
         _scope = null;
         _composition = null;
+        _registrationOrigin = null;
+        _ownershipOrigin = null;
         if (ownership is null || !ReferenceEquals(ownership.Owner, this))
             return;
 

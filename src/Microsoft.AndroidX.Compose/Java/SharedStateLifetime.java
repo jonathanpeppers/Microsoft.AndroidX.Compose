@@ -6,6 +6,7 @@ import java.util.IdentityHashMap;
 import java.util.Set;
 
 import androidx.compose.runtime.CompositionImpl;
+import androidx.compose.runtime.PausedComposition;
 import androidx.compose.runtime.RecomposeScopeImpl;
 import androidx.compose.runtime.RememberObserverHolder;
 
@@ -19,6 +20,7 @@ final class SharedStateLifetime {
     private static final Field lock = field(CompositionImpl.class, "lock");
     private static final Field changes = field(CompositionImpl.class, "changes");
     private static final Field lateChanges = field(CompositionImpl.class, "lateChanges");
+    private static final Field pendingPausedComposition = field(CompositionImpl.class, "pendingPausedComposition");
     private static final Field gapWriter = field(androidx.compose.runtime.GapComposer.class, "changeListWriter");
     private static final Field linkWriter = field(androidx.compose.runtime.LinkComposer.class, "changeListWriter");
     private static final Field gapList = field(
@@ -32,36 +34,56 @@ final class SharedStateLifetime {
 
     private SharedStateLifetime() { }
 
-    static boolean isLive(CompositionImpl composition, Object token, RecomposeScopeImpl scope) {
+    static PausedComposition pausedOrigin(CompositionImpl composition) {
         try {
             synchronized (lock.get(composition)) {
-                if (composition.isDisposed())
-                    return false;
-                if (scope != null && scope.getValid()
-                        && composition.getSlotStorage$runtime().ownsRecomposeScope(scope))
-                    return true;
-                if (scope == null) {
-                    for (Object value : composition.getSlotStorage$runtime().getSlots()) {
-                        if (value instanceof RememberObserverHolder
-                                && ((RememberObserverHolder) value).getWrapped() == token)
-                            return true;
-                    }
-                }
-                Set<Object> visited = Collections.newSetFromMap(new IdentityHashMap<Object, Boolean>());
-                if (contains(changes.get(composition), token, visited)
-                        || contains(lateChanges.get(composition), token, visited))
-                    return true;
-                Object composer = composition.getComposer$runtime();
-                if (composer instanceof androidx.compose.runtime.GapComposer)
-                    return contains(gapList.get(gapWriter.get(composer)), token, visited);
-                if (composer instanceof androidx.compose.runtime.LinkComposer)
-                    return contains(linkList.get(linkWriter.get(composer)), token, visited);
-                throw new IllegalStateException("Unsupported Compose composer in shared-state lifetime query: "
-                    + composer.getClass().getName());
+                return (PausedComposition) pendingPausedComposition.get(composition);
+            }
+        } catch (IllegalAccessException error) {
+            throw new IllegalStateException("Cannot capture pinned Compose shared-state origin.", error);
+        }
+    }
+
+    static boolean isLive(CompositionImpl composition, Object token, RecomposeScopeImpl scope,
+            PausedComposition registrationOrigin, PausedComposition ownershipOrigin) {
+        try {
+            synchronized (lock.get(composition)) {
+                // Paused resume installs slots before final apply. Cancellation can
+                // discard their registration set and then fail during abandonment.
+                // Qualify every membership result with the captured origins, not
+                // whichever unrelated transaction the composition currently owns.
+                return !composition.isDisposed() && registered(composition, token, scope)
+                    && (registrationOrigin == null || !registrationOrigin.isCancelled())
+                    && (ownershipOrigin == null || !ownershipOrigin.isCancelled());
             }
         } catch (IllegalAccessException error) {
             throw new IllegalStateException("Cannot inspect pinned Compose shared-state lifetime.", error);
         }
+    }
+
+    private static boolean registered(CompositionImpl composition, Object token, RecomposeScopeImpl scope)
+            throws IllegalAccessException {
+        if (scope != null && scope.getValid()
+                && composition.getSlotStorage$runtime().ownsRecomposeScope(scope))
+            return true;
+        if (scope == null) {
+            for (Object value : composition.getSlotStorage$runtime().getSlots()) {
+                if (value instanceof RememberObserverHolder
+                        && ((RememberObserverHolder) value).getWrapped() == token)
+                    return true;
+            }
+        }
+        Set<Object> visited = Collections.newSetFromMap(new IdentityHashMap<Object, Boolean>());
+        if (contains(changes.get(composition), token, visited)
+                || contains(lateChanges.get(composition), token, visited))
+            return true;
+        Object composer = composition.getComposer$runtime();
+        if (composer instanceof androidx.compose.runtime.GapComposer)
+            return contains(gapList.get(gapWriter.get(composer)), token, visited);
+        if (composer instanceof androidx.compose.runtime.LinkComposer)
+            return contains(linkList.get(linkWriter.get(composer)), token, visited);
+        throw new IllegalStateException("Unsupported Compose composer in shared-state lifetime query: "
+            + composer.getClass().getName());
     }
 
     private static boolean contains(Object list, Object token, Set<Object> visited)

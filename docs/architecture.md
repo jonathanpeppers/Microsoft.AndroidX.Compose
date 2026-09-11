@@ -113,8 +113,19 @@ Scope validity alone is insufficient for abandoned insertions: their anchors
 can remain valid after the batch is discarded. `HasPendingChanges` may describe
 an unrelated newer attempt. The native-only reentry, same-composition recovery,
 unrelated pending-attempt recovery, and disjoint provisional sharing tests pin
-these distinctions. **Paused-composition cancellation remains a validation gate
-for this draft correction.**
+these distinctions.
+
+Paused work can install slots before final application. Cancellation first
+discards its registration set, then dispatches abandonment; a thrown callback
+can leave both installed membership and the cancelled transaction reachable.
+Each token therefore captures the actual native paused transaction at
+registration, and separately when it first acquires ownership. The latter also
+covers a previously committed borrower acquiring a peer during a later pause.
+Ordinary owning rerenders never overwrite either origin. Every positive
+membership result is qualified by both captured origins' atomic `isCancelled()`
+values. An unchanged committed owner is not rejected merely because unrelated
+paused work in its composition was cancelled. The origin bridge normalizes its
+owned JNI local into a managed peer and releases the local in `finally`.
 
 If a callback was skipped, the next consumer retires the stale token before
 running its native factory. If the weak token has already been collected,
@@ -217,6 +228,12 @@ resurrection-tracking weak references across both runtimes. Probe factories
 whose Release stack can retain incidental values run on a thread that exits
 before collection; all original exception guards and collection assertions
 remain in place.
+`SharedStatePausedLifetimeTests` verifies failed cancellation with an installed
+owner marker and skipped abandonment, preservation of an older committed
+sibling, successful paused application, null-marker borrower registration,
+later acquisition by a committed borrower, and collection of the cancelled
+transaction and owner graph. Both Gap and Link backends are selected explicitly
+through the instrumentation's `composeBackend` argument.
 
 Visual inspection of the hoisted-owner Gallery demo preserves 19:25 in its
 label and both numeric displays while hiding and restoring either or both

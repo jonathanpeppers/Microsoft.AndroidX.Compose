@@ -388,7 +388,7 @@ public class SharedStateOwnerLifetimeTests
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    static WeakReference<object> ProbeOwner(object state)
+    internal static WeakReference<object> ProbeOwner(object state)
     {
         var field = typeof(SharedStateOwner).GetField("Ownerships", BindingFlags.Static | BindingFlags.NonPublic)
             ?? throw new InvalidOperationException("Shared ownership table was not available.");
@@ -581,7 +581,7 @@ public class SharedStateOwnerLifetimeTests
         GC.WaitForPendingFinalizers();
     }
 
-    static void AssertCollected(WeakReference<object>[] probes)
+    internal static void AssertCollected(WeakReference<object>[] probes)
     {
         for (int attempt = 0; attempt < 20; attempt++)
         {
@@ -594,7 +594,7 @@ public class SharedStateOwnerLifetimeTests
             + string.Join(", ", probes.Select((probe, index) => $"{index}={DescribeProbe(probe)}")));
     }
 
-    static WeakReference<object>[] OnRetiredThread(Func<WeakReference<object>[]> body)
+    internal static WeakReference<object>[] OnRetiredThread(Func<WeakReference<object>[]> body)
     {
         // Let the allocating stack disappear before collection; conservative
         // stack roots must not be mistaken for native ownership in Release.

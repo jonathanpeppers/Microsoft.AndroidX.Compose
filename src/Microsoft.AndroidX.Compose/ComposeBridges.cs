@@ -42,8 +42,31 @@ internal static partial class ComposeBridges
     [ComposeBridge(
         Class = "composenet/compose/SharedStateLifetime",
         JvmName = "isLive",
-        Signature = "(Landroidx/compose/runtime/CompositionImpl;Ljava/lang/Object;Landroidx/compose/runtime/RecomposeScopeImpl;)Z")]
-    internal static partial bool SharedStateIsLive(IControlledComposition composition, SharedStateOwner owner, IRecomposeScope? scope);
+        Signature = "(Landroidx/compose/runtime/CompositionImpl;Ljava/lang/Object;Landroidx/compose/runtime/RecomposeScopeImpl;" +
+                    "Landroidx/compose/runtime/PausedComposition;Landroidx/compose/runtime/PausedComposition;)Z")]
+    internal static partial bool SharedStateIsLive(IControlledComposition composition, SharedStateOwner owner,
+        IRecomposeScope? scope, IPausedComposition? registrationOrigin = null, IPausedComposition? ownershipOrigin = null);
+
+    [ComposeBridge(
+        Class = "composenet/compose/SharedStateLifetime",
+        JvmName = "pausedOrigin",
+        Signature = "(Landroidx/compose/runtime/CompositionImpl;)Landroidx/compose/runtime/PausedComposition;")]
+    internal static partial IntPtr SharedStatePausedOriginJvm(IControlledComposition composition);
+
+    // Why manual: ordinary object-return bridges expose an owned JNI local.
+    // Normalize the optional origin to a managed peer without retaining a local ref.
+    internal static IPausedComposition? SharedStatePausedOrigin(IControlledComposition composition)
+    {
+        var local = SharedStatePausedOriginJvm(composition);
+        try
+        {
+            return Java.Lang.Object.GetObject<IPausedComposition>(local, JniHandleOwnership.DoNotTransfer);
+        }
+        finally
+        {
+            JNIEnv.DeleteLocalRef(local);
+        }
+    }
 
     // androidx.compose.ui.Modifier$Companion.$$INSTANCE — the empty
     // Modifier that every chain builds on top of. Cached as a global

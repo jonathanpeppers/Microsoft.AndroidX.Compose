@@ -7,6 +7,7 @@ namespace Microsoft.AndroidX.Compose.DeviceTests;
 internal sealed class ThrowingAbandonObserver : Java.Lang.Object, IRememberObserver
 {
     internal int AbandonedCalls { get; private set; }
+    internal bool ThrowOnAbandoned { get; set; } = true;
 
     // Inserted first, hash zero selects the first bucket in the pinned ScatterSet.
     public override int GetHashCode() => 0;
@@ -17,6 +18,7 @@ internal sealed class ThrowingAbandonObserver : Java.Lang.Object, IRememberObser
     public void OnAbandoned()
     {
         AbandonedCalls++;
-        throw new Java.Lang.IllegalStateException("Expected earlier abandon failure.");
+        if (ThrowOnAbandoned)
+            throw new Java.Lang.IllegalStateException("Expected earlier abandon failure.");
     }
 }

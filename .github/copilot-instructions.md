@@ -370,6 +370,9 @@ slots surface as `Action` instead of `Action<IComposer>`.
     `SharedStateOwner` uses weak arbitration and the read-only, pinned-runtime
     registration query in `Java/SharedStateLifetime.java`; preserve its native
     installed/pending distinction and keep marker scopes outside save ancestry.
+    Capture native paused origins separately at token registration and ownership
+    acquisition, never on ordinary rerenders; cancelled paused slots can remain
+    installed after a failed callback, while older committed owners stay live.
     Runtime upgrades must re-audit that query and its consumer keep rules.
     Both tree and direct helpers use this contract. Omitted parameterized
     wrappers are remembered in composition, including reconstructed tree
