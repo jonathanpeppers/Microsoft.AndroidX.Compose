@@ -58,7 +58,7 @@ public sealed class SegmentedButton : ComposableContainer
             for (int i = 0; i < Children.Count; i++)
             {
                 var child = Children[i];
-                c.StartReplaceableGroup(HashCode.Combine(i, child.GetType()));
+                c.StartReplaceableGroup(CompositionGroupKey.Compute(i, child.GetType()));
                 try { child.Render(c); }
                 finally { c.EndReplaceableGroup(); }
             }
