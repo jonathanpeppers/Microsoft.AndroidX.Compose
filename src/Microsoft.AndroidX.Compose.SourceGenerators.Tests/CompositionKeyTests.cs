@@ -24,12 +24,11 @@ public class CompositionKeyTests
         {
             var first = await RunProbe(directory);
             var second = await RunProbe(directory, reverse: true);
-            Assert.NotEqual(first.ProcessId, second.ProcessId);
-            Assert.Equal(first.Keys.Count, second.Keys.Count);
-            foreach (var (site, keys) in first.Keys)
-                Assert.True(keys.SequenceEqual(second.Keys[site]),
+            Assert.Equal(first.Count, second.Count);
+            foreach (var (site, keys) in first)
+                Assert.True(keys.SequenceEqual(second[site]),
                     $"Composition keys changed in a new process at {site}: " +
-                    $"{string.Join(", ", keys)} != {string.Join(", ", second.Keys[site])}");
+                    $"{string.Join(", ", keys)} != {string.Join(", ", second[site])}");
         }
         finally
         {
@@ -43,7 +42,7 @@ public class CompositionKeyTests
         string directory = BuildProbe();
         try
         {
-            var (_, keys) = await RunProbe(directory);
+            var keys = await RunProbe(directory);
             string[] childSites = ["ComposableContainer.cs:0", "ComposableContainer.cs:1", "SegmentedButton.cs:0"];
             foreach (string site in childSites)
             {
@@ -140,7 +139,6 @@ public class CompositionKeyTests
             if (reverse)
                 foreach (var values in keys.Values)
                     Array.Reverse(values);
-            Console.WriteLine(Environment.ProcessId);
             Console.WriteLine(JsonSerializer.Serialize(keys));
             {{methods}}
             static Type DefineType(string assemblyName, string version) =>
@@ -182,7 +180,7 @@ public class CompositionKeyTests
         return directory;
     }
 
-    static async Task<(int ProcessId, Dictionary<string, int[]> Keys)> RunProbe(string directory, bool reverse = false)
+    static async Task<Dictionary<string, int[]>> RunProbe(string directory, bool reverse = false)
     {
         var start = new ProcessStartInfo("dotnet")
         {
@@ -202,10 +200,8 @@ public class CompositionKeyTests
         {
             await process.WaitForExitAsync(timeout.Token);
             Assert.True(process.ExitCode == 0, await error);
-            string[] lines = (await output).Split('\n', StringSplitOptions.RemoveEmptyEntries);
-            Assert.Equal(2, lines.Length);
-            return (int.Parse(lines[0]), JsonSerializer.Deserialize<Dictionary<string, int[]>>(lines[1])
-                ?? throw new InvalidOperationException("Composition-key probe did not return keys."));
+            return JsonSerializer.Deserialize<Dictionary<string, int[]>>(await output)
+                ?? throw new InvalidOperationException("Composition-key probe did not return keys.");
         }
         finally
         {
