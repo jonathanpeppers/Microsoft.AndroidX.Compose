@@ -134,6 +134,42 @@ public class BridgeGeneratorTests
         return (output, diags, emitted);
     }
 
+    [Theory]
+    [InlineData(1, false)]
+    [InlineData(10, false)]
+    [InlineData(11, false)]
+    [InlineData(1, true)]
+    [InlineData(10, true)]
+    public void Changed_OnlyCompleteReceiverlessGroupIsForwarded(int count, bool receiver)
+    {
+        int changedCount = (count + (receiver ? 1 : 0) + 9) / 10;
+        string parameters = string.Join(", ", Enumerable.Range(0, count).Select(i => $"int p{i}"));
+        string signature = (receiver ? "Lx/Scope;" : "") + new string('I', count) +
+            "Landroidx/compose/runtime/Composer;" + new string('I', changedCount);
+        var (output, diags, emitted) = Run($$"""
+            namespace AndroidX.Compose
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(Class="x/ProbeKt", JvmName="Probe", Signature="({{signature}})V")]
+                    public static partial void Probe({{(receiver ? "System.IntPtr rowScope, " : "")}}{{parameters}},
+                        AndroidX.Compose.Runtime.IComposer composer, int _changed = 0);
+                }
+            }
+            """);
+        Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.Empty(output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+        for (int group = 0; group < changedCount; group++)
+        {
+            int index = count + (receiver ? 1 : 0) + 1 + group;
+            string value = count <= 10 && !receiver ? "_changed" : "0";
+            Assert.Contains($"args[{index}] = new global::Android.Runtime.JValue({value});", emitted);
+        }
+        if (count > 10 || receiver)
+            Assert.DoesNotContain("JValue(_changed)", emitted);
+    }
+
     [Fact]
     public void Button_GeneratesFullBody()
     {

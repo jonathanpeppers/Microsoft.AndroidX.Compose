@@ -601,11 +601,15 @@ the executing path; its measured skip boundary allocates 928 B versus the
 adapter lane's 920 B. Timings are directional only because this is an
 on-device Debug smoke benchmark rather than a warmed microbenchmark.
 
-Direct `$changed` remapping is all-or-nothing. A bridge with more than ten
+Tree and direct `$changed` remapping is all-or-nothing. A bridge with more than ten
 Kotlin slots needs multiple changed-mask integers; while the generated bridge
 surface exposes only the first, direct helpers pass `0` (Uncertain) instead of
-forwarding a partial first group. This keeps Compose on its runtime comparison
-path during forced recomposition.
+forwarding a partial first group. Unmodelled receiver-bearing calls also
+remain Uncertain. The bridge enforces this for hand-written callers too.
+This keeps Compose on its runtime comparison path during forced recomposition.
+`ChangedBits.Static` is Kotlin's `0b011`, not Unknown (`0b100`); previously
+compiled consumers must rebuild to replace the inlined enum value.
+See [the pinned ABI and skipping-safety evidence](compose-internals.md#pinned-changed-abi-and-static-compatibility).
 
 ### Deferred — follow-up issues
 
@@ -680,13 +684,14 @@ class.
   - `Modifier.StructuralKey` — every op factory in `Modifier.cs` /
     `ModifierExtensions.cs` records a `(string OpName, object? Args)`
     alongside the closure so two semantically equal chains hash equal.
-    Currently consumed only by tests; the modifier slot itself emits
-    Uncertain (the Kotlin runtime still does its own compare).
+    The modifier slot diffs the complete structural snapshot captured before
+    building the modifier and consuming its side channels.
 
-  Hand-written facade holdouts (TextField, BottomSheetScaffold,
-  SnackbarHost, SegmentedButton, SearchBar family) still pass `0`
-  (Uncertain) — back-compat default. Adding `_changed:` named arg to
-  their bridge calls is the next follow-up.
+  Tracked content wrappers contribute Static only because body updates
+  invalidate their readers even beneath skipped parents. Hand-written narrow
+  SnackbarHost/SearchBar masks are supported; partial wide/receiver masks
+  from TextField, BottomSheetScaffold, and SegmentedButton are suppressed at
+  the bridge boundary.
 - **`Modifier.Companion` not bound upstream.** Wrapped by the
   `Modifier` class via a one-time JNI fetch of the `$$INSTANCE` field
   — invisible to callers. See [NOTES.md](NOTES.md) open issue #1 for

@@ -14,7 +14,7 @@ namespace AndroidX.Compose.SourceGenerators.Tests;
 /// </summary>
 public class ComposableMethodGeneratorTests
 {
-    const string Preamble = """
+    static readonly string Preamble = $$"""
         #nullable enable
         using AndroidX.Compose;
         using AndroidX.Compose.Runtime;
@@ -60,7 +60,7 @@ public class ComposableMethodGeneratorTests
             internal sealed class ComposableDirectTargetAttribute(
                 System.Type containingType, string methodName) : System.Attribute { }
 
-            public enum ChangedBits { Uncertain = 0, Same = 1, Different = 2, Static = 4 }
+            public enum ChangedBits { Uncertain = 0, Same = 1, Different = 2, Static = {{(int)ChangedBits.Static}} }
 
             public sealed class ComposableLambda2 : Kotlin.Jvm.Functions.IFunction2
             {
@@ -492,6 +492,44 @@ public class ComposableMethodGeneratorTests
         Assert.Contains("__forceExecute = true;", emitted);
         Assert.DoesNotContain("__dirty |= 0b1;", emitted);
         AssertNoCompileErrors(output);
+    }
+
+    [Theory]
+    [InlineData(1)]
+    [InlineData(2)]
+    [InlineData(3)]
+    [InlineData(4)]
+    [InlineData(5)]
+    [InlineData(6)]
+    [InlineData(7)]
+    [InlineData(8)]
+    [InlineData(9)]
+    [InlineData(10)]
+    public void EmittedSkipPredicate_AcceptsSameAndStaticButNeverRealChangesOrForce(int count)
+    {
+        string parameters = string.Join(", ", Enumerable.Range(0, count).Select(i => $"int p{i}"));
+        string arguments = string.Join(", ", Enumerable.Range(0, count));
+        var (output, diags, emitted) = Run($$"""
+            public static class Screen
+            {
+                [AndroidX.Compose.Composable]
+                public static void Body(AndroidX.Compose.Runtime.IComposer c, {{parameters}}) { }
+                public static void Call(AndroidX.Compose.Runtime.IComposer c) => Body(c, {{arguments}});
+            }
+            """);
+        Assert.Empty(diags);
+        Assert.NotNull(emitted);
+        AssertNoCompileErrors(output);
+        var predicate = System.Text.RegularExpressions.Regex.Match(emitted,
+            @"\(__dirty & 0x([0-9A-F]+)\) != 0x([0-9A-F]+)");
+        Assert.True(predicate.Success);
+        ChangedBitsContractTests.AssertSkipContract(
+            System.Convert.ToInt32(predicate.Groups[1].Value, 16),
+            System.Convert.ToInt32(predicate.Groups[2].Value, 16), count);
+        Assert.Contains("|| !__c.Skipping)", emitted);
+        Assert.Contains("__force | 0b1", emitted);
+        for (int slot = 0; slot < count; slot++)
+            Assert.Contains($"DiffSlot<int>(p{slot}, {1 + slot * 3})", emitted);
     }
 
     [Fact]
