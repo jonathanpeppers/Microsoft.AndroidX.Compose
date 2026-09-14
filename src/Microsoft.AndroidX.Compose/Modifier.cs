@@ -359,6 +359,9 @@ public sealed class Modifier
     /// <inheritdoc cref="ModifierExtensions.Focusable(bool)"/>
     public static Modifier Focusable(bool enabled = true) => _companion.Focusable(enabled);
 
+    /// <inheritdoc cref="ModifierExtensions.FocusTarget(Modifier)"/>
+    public static Modifier FocusTarget() => _companion.FocusTarget();
+
     /// <inheritdoc cref="ModifierExtensions.FocusGroup()"/>
     public static Modifier FocusGroup() => _companion.FocusGroup();
 
