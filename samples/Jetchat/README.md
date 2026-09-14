@@ -14,6 +14,35 @@ Run with:
 dotnet build samples/Jetchat -t:Run
 ```
 
+Debug builds accept `--es test-palette light` or `--es test-palette dark`
+on the activity launch intent for bounded comparisons. This overrides only
+that activity's Compose palette; it does not change Android resource
+configuration, system-bar appearance, or device settings. An omitted extra
+continues to follow the system theme.
+
+## Surface styling validation
+
+A bounded Pixel 7 smoke on 2026-09-14 passed against the embedded, merged
+`b0d9f97` Jetchat APK (SHA-256
+`69956B98CF1759093F843FA2CA22BECB97058BC55E07C4D4320D36FABA0E1A67`).
+The installed hash matched, private override files were absent, and the
+external app directory did not exist. Light, dark, and no-override cold
+launches reached the owned, focused/resumed activity. Native-idle captures
+showed distinct input and nested-selector tonal surfaces, readable content,
+and selected/unselected icon contrast. Emoji selection followed by editor
+focus and typing retained the emoji plus `Surface`, closed the selector,
+showed the IME, and enabled Send. Dark emoji and location-placeholder panels
+also rendered correctly; normal launch followed the system palette.
+
+This smoke includes the merged inset and baseline changes, but is not
+whole-app pixel/font parity or acceptance for other feature work. The
+later focus-target integration from #375 is not in that frozen APK. The
+separate Gallery styling cycle passed on `8a71bb6` (`080E7771...`), and the
+15 strict native Surface transition/identity/pixel/restoration cases passed
+on `9ba2c04` (`582282EE...`), as recorded in
+[`docs/compose-internals.md`](../../docs/compose-internals.md). Those earlier
+APKs are not presented as reruns against this merged Jetchat revision.
+
 ## Message identity
 
 Identity was checked against upstream commit
@@ -77,6 +106,18 @@ same while switching inset modes; its saved tap count must also survive
 
 ## What's faithful
 
+- **Input and selector Surface roles** — pinned
+  [`UserInput.kt`](https://github.com/android/compose-samples/blob/4c1fe7586e2fbf1c934925ef8ab64d3803361423/Jetchat/app/src/main/java/com/example/compose/jetchat/conversation/UserInput.kt)
+  uses 2 dp tonal elevation and `secondary` content color for the input
+  Surface, with a nested 8 dp selector Surface. The selector uses the
+  theme's surface/on-surface pair and cumulative tonal elevation (10 dp);
+  its children no longer paint over that tint with `surfaceVariant`.
+  Unselected input icons use `secondary`; selected icons use `onSecondary`.
+  These changes leave editor focus, fonts, metrics, and inset ownership intact.
+  The merged inset ownership from
+  [#369](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/pull/369)
+  is preserved: the Surface extends behind the bars, and its inner Column
+  owns navigation/IME padding once.
 - **Bundled Karla / Montserrat families** — the six unmodified fallback TTFs
   from upstream revision `4c1fe7586e2fbf1c934925ef8ab64d3803361423` are wired
   into `JetchatFonts`, theme typography and the conversation/drawer/profile
@@ -160,12 +201,11 @@ same while switching inset modes; its saved tap count must also survive
   "Type a message" placeholder, Send-labeled IME action, and a `Send`
   `Button` that is genuinely disabled while the input is empty.
   Its filled/outlined enabled and disabled treatment follows upstream.
-  The remaining `BasicTextField` and elevated-`Surface` differences are
-  tracked below.
+  The remaining `BasicTextField` difference is tracked below.
 - **5 input-selector icons** — emoji, @ mention, image, location,
   video call — same row upstream's `UserInputSelector` provides.
   Each is a toggleable `IconButton` whose background fills with
-  `secondaryContainer` and whose tint flips to `onSecondaryContainer`
+  `secondary` and whose tint flips to `onSecondary`
   when selected, matching upstream's selection visual. Selecting the
   emoji button opens the upstream-style pill selector with a vertically
   scrollable 10-column tappable grid. Selecting Stickers opens the
@@ -366,7 +406,6 @@ layout work, and unavailable official bindings:
 | Record-button `updateTransition` + `animateFloat` / `animateColor` | Missing transition value-animation surface; tracked by [#336](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/336). The port retains its visually equivalent timer-driven pulse. |
 | Google Fonts provider typography | The exact pinned Karla / Montserrat resource fallbacks are bundled. Provider-backed downloads remain outside the resource-font API; no downloaded-font parity is claimed. |
 | Foundation text-input structure and IME Send callback | `BasicTextField` and keyboard-action support are missing; tracked by [#340](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/340). The current Material `TextField` preserves editing, placeholder, line, and IME-option behavior. |
-| Input/selector tonal elevation and content color | The current `Surface` facade omits color, content-color, elevation, and border slots; tracked by [#343](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/343). |
 | Exact profile baseline-height and parallax geometry | Reusable baseline alignment/padding and `ClipToBounds` are available. Profile's existing rounded clip, padding-based motion and host layout remain unchanged; the pinned upstream uses `CircleShape` and separate baseline-height helpers, not a rectangular clip. |
 | Profile FAB tertiary container | Material 3 FAB color/elevation slots are omitted by the current facades; tracked by [#344](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/344). The port uses the default primary-container/content pair to preserve contrast. |
 | Glance home-screen widget + `requestPinAppWidget(...)` | No official .NET binding for `androidx.glance:glance-appwidget` is currently published. Upstream only shows the drawer entry when a compatible widget provider can be pinned, so the port omits it until that binding exists. |
@@ -512,8 +551,8 @@ original:
   matches upstream's per-author `Spacer` heights.
 - **Selector icon highlight.** Upstream paints a rounded selected
   background in the current content color. The port uses the active
-  scheme's secondary/on-secondary pair directly until `Surface`
-  content-color slots are available.
+  scheme's secondary/on-secondary pair directly, matching the input
+  Surface's inherited secondary content role.
 - **`FunctionalityNotAvailable` collapse.** Upstream has two
   variants — an `AlertDialog` (DM selector) and a full panel
   ("Functionality currently not available / Grab a beverage and

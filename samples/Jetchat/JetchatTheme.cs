@@ -139,10 +139,13 @@ public static class JetchatTheme
     /// <see cref="ColorScheme"/> based on the current system theme at
     /// composition time.
     /// </summary>
-    public static ComposableNode Build(ComposableNode content) =>
+    public static ComposableNode Build(ComposableNode content) => Build(content, null);
+
+    internal static ComposableNode Build(ComposableNode content, bool? darkThemeOverride) =>
         new Composed(c =>
         {
-            bool dark = MaterialTheme.IsSystemInDarkTheme(c);
+            bool systemDark = MaterialTheme.IsSystemInDarkTheme(c);
+            bool dark = darkThemeOverride ?? systemDark;
             // Android 12 introduced system-derived Material You color schemes.
             var scheme = OperatingSystem.IsAndroidVersionAtLeast(31)
                 ? dark

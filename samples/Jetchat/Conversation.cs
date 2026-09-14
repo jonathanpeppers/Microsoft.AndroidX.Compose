@@ -412,28 +412,31 @@ public static class Conversation
                     selectorFocus.RequestFocus();
                 return Task.CompletedTask;
             });
-            return new Surface
+            var surface = new Surface
             {
-                Modifier.FillMaxWidth(),
-                new Column
-                {
-                    // Keep the Surface behind the bars; its content owns these insets once.
-                    Modifier.FillMaxWidth().NavigationBarsPadding().ImePadding(),
-                    BuildTextFieldRow(input, scheme, isRecording, swipeOffset, focus =>
-                    {
-                        if (focused.Value == focus.IsFocused)
-                            return;
-                        focused.Value = focus.IsFocused;
-                        if (focus.IsFocused)
-                        {
-                            selectedSelector.Value = 0;
-                            _ = messagesScroll.AnimateScrollToItemAsync(0);
-                        }
-                    }),
-                    BuildSelectorRow(ui, input, scheme, selectedSelector, messagesScroll),
-                    BuildSelectorPanel(input, scheme, selectedSelector, selectorFocus),
-                },
+                TonalElevation = 2,
+                ContentColor = Color.FromPacked(scheme.Secondary),
+                Modifier = Modifier.FillMaxWidth(),
             };
+            surface.Add(new Column
+            {
+                // Keep the Surface behind the bars; its content owns these insets once.
+                Modifier.FillMaxWidth().NavigationBarsPadding().ImePadding(),
+                BuildTextFieldRow(input, scheme, isRecording, swipeOffset, focus =>
+                {
+                    if (focused.Value == focus.IsFocused)
+                        return;
+                    focused.Value = focus.IsFocused;
+                    if (focus.IsFocused)
+                    {
+                        selectedSelector.Value = 0;
+                        _ = messagesScroll.AnimateScrollToItemAsync(0);
+                    }
+                }),
+                BuildSelectorRow(ui, input, scheme, selectedSelector, messagesScroll),
+                BuildSelectorPanel(input, scheme, selectedSelector, selectorFocus),
+            });
+            return surface;
         });
 
     static Row BuildTextFieldRow(
@@ -578,7 +581,7 @@ public static class Conversation
         };
         button.Add(new Icon(drawableId, contentDescription)
         {
-            Tint = Color.FromPacked(selected ? scheme.OnSecondary : scheme.OnSurface),
+            Tint = Color.FromPacked(selected ? scheme.OnSecondary : scheme.Secondary),
         });
         if (selected)
             button.Modifier = Modifier
@@ -598,19 +601,22 @@ public static class Conversation
     {
         int sel = selectedSelector.Value;
         if (sel == 0) return Spacer.Width(0);
-        if (sel == SelEmoji) return EmojiSelector.Build(input, scheme, selectorFocus);
+        var surface = new Surface { TonalElevation = 8 };
+        if (sel == SelEmoji)
+        {
+            surface.Add(EmojiSelector.Build(input, scheme, selectorFocus));
+            return surface;
+        }
         string title    = "Functionality currently not available";
         string subtitle = "Grab a beverage and check back later!";
-        return new Column
+        surface.Add(new Column
         {
-            Modifier.FillMaxWidth().Height(320)
-                .Background(Color.FromPacked(scheme.SurfaceVariant)),
+            Modifier.FillMaxWidth().Height(320),
             Spacer.Height(96),
             new Text(title)
             {
                 FontSize   = 16,
                 FontWeight = FontWeight.Medium,
-                Color      = Color.FromPacked(scheme.OnSurfaceVariant),
                 Modifier   = Modifier.Padding(horizontal: 16),
             },
             new Text(subtitle)
@@ -619,7 +625,8 @@ public static class Conversation
                 Color    = Color.FromPacked(scheme.OnSurfaceVariant),
                 Modifier = Modifier.Padding(horizontal: 16).PaddingFrom(Baselines.FirstBaseline, before: 32),
             },
-        };
+        });
+        return surface;
     }
 
 
