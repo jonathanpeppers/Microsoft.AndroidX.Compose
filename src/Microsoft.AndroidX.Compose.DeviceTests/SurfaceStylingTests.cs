@@ -195,16 +195,25 @@ public class SurfaceStylingTests
             ?? throw new InvalidOperationException("Surface instrumentation unavailable.");
         var automation = instrumentation.UiAutomation
             ?? throw new InvalidOperationException("Native UI automation unavailable.");
-        await Task.Run(() => automation.WaitForIdle(100, 5000));
-        using var bitmap = automation.TakeScreenshot()
+        using var compositor = automation.TakeScreenshot()
             ?? throw new InvalidOperationException("Native Surface screenshot unavailable.");
-        (int X, int Y) background = default, border = default, shadow = default;
+        await activity.AwaitFrame();
+        var committed = await activity.ReadAtIdle();
+        Assert.AreEqual(snapshot.Generation, committed.Generation, "Request changed during native frame capture.");
+        using var bitmap = await SurfacePixelCopy.Capture(activity);
+        (int X, int Y) background = default, border = default, shadow = default, screen = default;
         await activity.OnUi(() =>
         {
             background = activity.Pixel(100, 80);
             border = activity.Pixel(1, 50);
             shadow = activity.Pixel(201, 90);
+            screen = activity.Pixel(100, 80, screen: true);
         });
+        SaveCapture(activity, compositor, style, dark, snapshot, "compositor");
+        SaveCapture(activity, bitmap, style, dark, snapshot, "window");
+        Console.WriteLine($"capture generation={snapshot.Generation} mode={snapshot.Mode} "
+            + $"compositor={compositor.GetPixel(screen.X, screen.Y):X8} "
+            + $"committedWindow={bitmap.GetPixel(background.X, background.Y):X8}");
         var scheme = activity.Scheme ?? throw new InvalidOperationException("Surface theme unavailable.");
         bool zero = snapshot.Mode == 2 || (snapshot.Mode == 3 && style != 0);
         long expected = snapshot.Mode is 1 or 4 or 7 ? SurfaceStylingTestActivity.CustomColor.ToPacked()
@@ -225,15 +234,18 @@ public class SurfaceStylingTests
             Assert.AreEqual(Argb(SurfaceStylingTestActivity.Backdrop.ToPacked()),
                 bitmap.GetPixel(shadow.X, shadow.Y), "Removed shadow still darkened the backdrop.");
 
-        if (snapshot.Mode is 0 or 1 or 5)
-        {
-            string directory = activity.GetExternalFilesDir("surface-styling")?.AbsolutePath
-                ?? throw new InvalidOperationException("Surface screenshot directory unavailable.");
-            string path = System.IO.Path.Combine(directory, $"style-{style}-dark-{dark}-mode-{snapshot.Mode}.png");
-            using var file = File.Create(path);
-            Assert.IsTrue(bitmap.Compress(global::Android.Graphics.Bitmap.CompressFormat.Png
-                ?? throw new InvalidOperationException("PNG format unavailable."), 100, file));
-        }
+    }
+
+    static void SaveCapture(SurfaceStylingTestActivity activity, global::Android.Graphics.Bitmap bitmap,
+        int style, bool dark, SurfaceStylingSnapshot snapshot, string source)
+    {
+        string directory = activity.GetExternalFilesDir("surface-styling")?.AbsolutePath
+            ?? throw new InvalidOperationException("Surface screenshot directory unavailable.");
+        string path = System.IO.Path.Combine(directory,
+            $"style-{style}-dark-{dark}-generation-{snapshot.Generation}-mode-{snapshot.Mode}-{source}.png");
+        using var file = File.Create(path);
+        Assert.IsTrue(bitmap.Compress(global::Android.Graphics.Bitmap.CompressFormat.Png
+            ?? throw new InvalidOperationException("PNG format unavailable."), 100, file));
     }
 
     static int Argb(long packed) => unchecked((int)(packed >> 32));

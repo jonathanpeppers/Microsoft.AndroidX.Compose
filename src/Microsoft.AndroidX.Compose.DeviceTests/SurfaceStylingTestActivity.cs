@@ -45,6 +45,7 @@ public class SurfaceStylingTestActivity : ComponentActivity
     object? _tail;
     MutableNumberState<int>? _outsideCounter;
     SurfaceStylingSnapshot? _snapshot;
+    SurfaceFrameCommit? _frame;
     internal TaskCompletionSource Destroyed { get; } = NewSignal();
     internal ColorScheme? Scheme { get; private set; }
 
@@ -72,6 +73,7 @@ public class SurfaceStylingTestActivity : ComponentActivity
         var observer = view.ViewTreeObserver
             ?? throw new InvalidOperationException("Surface test ViewTreeObserver unavailable.");
         observer.Draw += OnDraw;
+        view.ViewAttachedToWindow += OnAttached;
         view.SetContent(c =>
         {
             bool dark = _dark.Value;
@@ -124,8 +126,12 @@ public class SurfaceStylingTestActivity : ComponentActivity
 
     protected override void OnDestroy()
     {
+        _frame?.Dispose();
+        _frame = null;
         if (_view?.ViewTreeObserver is { IsAlive: true } observer)
             observer.Draw -= OnDraw;
+        if (_view is { } view)
+            view.ViewAttachedToWindow -= OnAttached;
         Surface.ContentObserver = null;
         _content = null;
         _snapshot = null;
@@ -138,6 +144,7 @@ public class SurfaceStylingTestActivity : ComponentActivity
     internal void ExpectEnd() => _ending = true;
     internal int Change(int mode)
     {
+        ArmFrame();
         var next = (_request.Value.Generation + 1, mode);
         _request.Value = next;
         return next.Item1;
@@ -145,8 +152,30 @@ public class SurfaceStylingTestActivity : ComponentActivity
 
     internal int ChangePalette(bool dark)
     {
+        ArmFrame();
         _dark.Value = dark;
-        return Change(_request.Value.Mode);
+        var next = (_request.Value.Generation + 1, _request.Value.Mode);
+        _request.Value = next;
+        return next.Item1;
+    }
+
+    void ArmFrame()
+    {
+        _frame?.Dispose();
+        var view = _view ?? throw new InvalidOperationException("Surface view unavailable for frame capture.");
+        if (!view.IsHardwareAccelerated)
+            throw new InvalidOperationException("Surface frame capture requires hardware rendering.");
+        _frame = new SurfaceFrameCommit(view.ViewTreeObserver
+            ?? throw new InvalidOperationException("Surface frame observer unavailable."));
+    }
+
+    internal async Task AwaitFrame()
+    {
+        Task? committed = null;
+        await OnUi(() => committed = _frame?.Committed
+            ?? throw new InvalidOperationException("Surface frame was not armed before mutation."));
+        await (committed ?? throw new InvalidOperationException("Surface frame task unavailable."))
+            .WaitAsync(TimeSpan.FromSeconds(10));
     }
 
     void ObserveContent(IFunction2 content, int defaults, int nativeDefaults,
@@ -275,7 +304,7 @@ public class SurfaceStylingTestActivity : ComponentActivity
         return new Box
         {
             Modifier.Size(200.Dp(), 100.Dp()),
-            new Text("Surface content") { Modifier = Modifier.Padding(16.Dp()) },
+            new Text($"{generation}:{mode} ({value})") { Modifier = Modifier.Padding(16.Dp()) },
         };
     }
 
@@ -330,16 +359,22 @@ public class SurfaceStylingTestActivity : ComponentActivity
         return completion.Task.WaitAsync(TimeSpan.FromSeconds(10));
     }
 
-    internal (int X, int Y) Pixel(float x, float y)
+    internal (int X, int Y) Pixel(float x, float y, bool screen = false)
     {
         var view = _view ?? throw new InvalidOperationException("Surface view unavailable for capture.");
+        if (_foregroundFailure is not null || _ending || !_resumed || !view.HasWindowFocus)
+            throw new InvalidOperationException("Surface lost foreground admission during pixel capture.");
         int[] location = new int[2];
-        view.GetLocationOnScreen(location);
+        if (screen)
+            view.GetLocationOnScreen(location);
+        else
+            view.GetLocationInWindow(location);
         float density = Resources?.DisplayMetrics?.Density
             ?? throw new InvalidOperationException("Surface display density unavailable.");
         return (location[0] + (int)((24 + x) * density), location[1] + (int)((24 + y) * density));
     }
 
+    void OnAttached(object? sender, EventArgs args) => ArmFrame();
     void OnDraw(object? sender, EventArgs args) => Signal();
     void Signal()
     {
