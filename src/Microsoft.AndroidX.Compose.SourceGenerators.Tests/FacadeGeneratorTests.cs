@@ -3117,6 +3117,152 @@ public class FacadeGeneratorTests
     }
 
     [Theory]
+    [InlineData("")]
+    [InlineData("private SharedPeerState() { }")]
+    public void SharedState_Phase4WithoutDefaultConstructor_RequiresWrapperInOwnerHelpers(string privateConstructor)
+    {
+        var code = $$"""
+            namespace AndroidX.Compose
+            {
+                public sealed class SharedPeerState
+                {
+                    internal Java.Lang.Object? Jvm;
+                    {{privateConstructor}}
+                    public SharedPeerState(int value) { }
+                }
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(Class="x/Test", JvmName="Test",
+                        Signature="(Ljava/lang/Object;Landroidx/compose/runtime/Composer;I)V")]
+                    [ComposeFacade]
+                    public static partial void Test(
+                        [StateHolder(Remember=nameof(RememberSharedPeer), StateType=typeof(SharedPeerState),
+                            SharedState=true)] System.IntPtr state,
+                        AndroidX.Compose.Runtime.IComposer composer);
+                    public static System.IntPtr RememberSharedPeer(AndroidX.Compose.Runtime.IComposer composer) => default;
+                }
+                public static class OwnerCaller
+                {
+                    public static void Call(AndroidX.Compose.Runtime.IComposer composer)
+                    {
+                        var state = new SharedPeerState(42);
+                        ComposeExtensions.RememberSharedPeer(composer, state);
+                        Composables.RememberSharedPeer(state);
+                        new Test().Render(composer);
+                        Composables.Test();
+                    }
+                }
+            }
+            """;
+
+        var (output, diags, emitted) = Run(code, "Test");
+        Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+        Assert.Contains("public static global::AndroidX.Compose.SharedPeerState RememberSharedPeer(this", emitted);
+        Assert.DoesNotContain("new global::AndroidX.Compose.SharedPeerState()", emitted);
+        Assert.Contains("global::System.ArgumentNullException.ThrowIfNull(state);", emitted);
+        (string Type, int Index)[] ownerMethods = [("ComposeExtensions", 1), ("Composables", 0)];
+        foreach (var (type, index) in ownerMethods)
+        {
+            var owner = output.GetTypeByMetadataName("AndroidX.Compose." + type)
+                ?? throw new System.InvalidOperationException("Generated owner class was unavailable.");
+            var method = Assert.Single(owner.GetMembers("RememberSharedPeer").OfType<IMethodSymbol>());
+            Assert.False(method.Parameters[index].IsOptional);
+            Assert.Equal(NullableAnnotation.NotAnnotated, method.Parameters[index].NullableAnnotation);
+        }
+        Assert.Empty(output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error));
+    }
+
+    [Theory]
+    [InlineData("Bind", "", false)]
+    [InlineData("Bind", "", true)]
+    [InlineData("Bind", "OtherBindJvm", false)]
+    [InlineData("Bind", "OtherBindJvm", true)]
+    [InlineData("Unbind", "", false)]
+    [InlineData("Unbind", "", true)]
+    [InlineData("Unbind", "OtherUnbindJvm", false)]
+    [InlineData("Unbind", "OtherUnbindJvm", true)]
+    public void SharedState_ConflictingSiblingMetadataReportsCN3009(
+        string metadata, string otherMethod, bool reverseNames)
+    {
+        string first = reverseNames ? "Zulu" : "Alpha";
+        string second = reverseNames ? "Alpha" : "Zulu";
+        var code = $$"""
+            namespace AndroidX.Compose
+            {
+                public sealed class SharedPeerState
+                {
+                    internal Java.Lang.Object? Jvm;
+                    internal void BindJvm(Java.Lang.Object peer) => Jvm = peer;
+                    internal void OtherBindJvm(Java.Lang.Object peer) => Jvm = peer;
+                    internal void UnbindJvm() => Jvm = null;
+                    internal void OtherUnbindJvm() => Jvm = null;
+                }
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(Class="x/Test", JvmName="First",
+                        Signature="(Ljava/lang/Object;Landroidx/compose/runtime/Composer;I)V")]
+                    [ComposeFacade]
+                    public static partial void {{first}}(
+                        [StateHolder(Remember=nameof(RememberSharedPeer), StateType=typeof(SharedPeerState),
+                            {{metadata}}="{{metadata}}Jvm", SharedState=true)] System.IntPtr state,
+                        AndroidX.Compose.Runtime.IComposer composer);
+                    [ComposeBridge(Class="x/Test", JvmName="Second",
+                        Signature="(Ljava/lang/Object;Landroidx/compose/runtime/Composer;I)V")]
+                    [ComposeFacade]
+                    public static partial void {{second}}(
+                        [StateHolder(Remember=nameof(RememberSharedPeer), StateType=typeof(SharedPeerState),
+                            {{metadata}}="{{otherMethod}}", SharedState=true)] System.IntPtr state,
+                        AndroidX.Compose.Runtime.IComposer composer);
+                    public static System.IntPtr RememberSharedPeer(AndroidX.Compose.Runtime.IComposer composer) => default;
+                }
+            }
+            """;
+
+        var (_, diags, emitted) = Run(code, first);
+        Assert.Equal(2, diags.Count(d => d.Id == "CN3009"
+            && d.GetMessage().Contains("conflicting " + metadata)
+            && d.GetMessage().Contains("RememberSharedPeer")));
+        Assert.Null(emitted);
+    }
+
+    [Theory]
+    [InlineData("Bind")]
+    [InlineData("Unbind")]
+    public void SharedState_ConflictingSlotsInOneFacadeReportCN3009(string metadata)
+    {
+        var code = $$"""
+            namespace AndroidX.Compose
+            {
+                public sealed class SharedPeerState
+                {
+                    internal Java.Lang.Object? Jvm;
+                    internal void BindJvm(Java.Lang.Object peer) => Jvm = peer;
+                    internal void UnbindJvm() => Jvm = null;
+                }
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(Class="x/Test", JvmName="Test",
+                        Signature="(Ljava/lang/Object;Ljava/lang/Object;Landroidx/compose/runtime/Composer;I)V")]
+                    [ComposeFacade]
+                    public static partial void Test(
+                        [StateHolder(Remember=nameof(RememberSharedPeer), StateType=typeof(SharedPeerState),
+                            {{metadata}}="{{metadata}}Jvm", SharedState=true)] System.IntPtr state,
+                        [StateHolder(Remember=nameof(RememberSharedPeer), StateType=typeof(SharedPeerState),
+                            SharedState=true)] System.IntPtr secondState,
+                        AndroidX.Compose.Runtime.IComposer composer);
+                    public static System.IntPtr RememberSharedPeer(AndroidX.Compose.Runtime.IComposer composer) => default;
+                }
+            }
+            """;
+
+        var (_, diags, emitted) = Run(code, "Test");
+        Assert.Equal(2, diags.Count(d => d.Id == "CN3009"
+            && d.GetMessage().Contains("conflicting " + metadata)));
+        Assert.Null(emitted);
+    }
+
+    [Theory]
     [InlineData("Missing")]
     [InlineData("WrongShape")]
     public void SharedState_InvalidUnbindReportsCN3009(string unbind)

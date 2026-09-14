@@ -486,16 +486,8 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
 
         bool emitComposableMethodEntryPoint = !HasExistingComposableEntryPoint(c.Compilation, className);
         var ownerSlots = slots.Where(s => s.SharedState
-            && HasAccessibleParameterlessConstructor(s.StateWrapperType
-                ?? throw new InvalidOperationException("Shared state has no wrapper type."))
-            && method.Name == container.GetMembers().OfType<IMethodSymbol>()
-                .Where(m => m.GetAttributes().Any(a => a.AttributeClass?.ToDisplayString() == FacadeAttributeMetadataName)
-                    && m.Parameters.Any(p => p.GetAttributes().Any(a =>
-                        a.AttributeClass?.ToDisplayString() == StateHolderAttributeMetadataName
-                        && ReadBool(a, "SharedState")
-                        && ReadString(a, "Remember") == s.RememberMethodName
-                        && SymbolEqualityComparer.Default.Equals(ReadType(a, "StateType"), s.StateWrapperType))))
-                .Select(m => m.Name).OrderBy(n => n, StringComparer.Ordinal).First())
+            && method.Name == GetSharedStateDeclarations(container, s.RememberMethodName, s.StateWrapperType)
+                .Select(d => d.Method.Name).OrderBy(n => n, StringComparer.Ordinal).First())
             .GroupBy(s => (s.RememberMethodName, Wrapper: s.StateWrapperType?.ToDisplayString(
                 SymbolDisplayFormat.FullyQualifiedFormat)))
             .Select(g => g.First()).ToArray();
@@ -504,6 +496,27 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             userParams, branchInfo, indexedChildren, secondaryCtorInfo, emitComposableMethodEntryPoint, ownerSlots);
         var hint = $"AndroidX.Compose.Facade.{className}.g.cs";
         return new GenerationResult(source, hint, []);
+    }
+
+    static IEnumerable<(IMethodSymbol Method, IParameterSymbol Parameter, AttributeData Attribute)>
+        GetSharedStateDeclarations(INamedTypeSymbol container, string? remember, INamedTypeSymbol? wrapper)
+    {
+        foreach (var method in container.GetMembers().OfType<IMethodSymbol>())
+        {
+            if (!method.GetAttributes().Any(a => a.AttributeClass?.ToDisplayString() == FacadeAttributeMetadataName))
+                continue;
+            foreach (var parameter in method.Parameters)
+            {
+                foreach (var attribute in parameter.GetAttributes())
+                {
+                    if (attribute.AttributeClass?.ToDisplayString() == StateHolderAttributeMetadataName
+                        && ReadBool(attribute, "SharedState")
+                        && ReadString(attribute, "Remember") == remember
+                        && SymbolEqualityComparer.Default.Equals(ReadType(attribute, "StateType"), wrapper))
+                        yield return (method, parameter, attribute);
+                }
+            }
+        }
     }
 
     static bool HasExistingComposableEntryPoint(Compilation compilation, string methodName)
@@ -1081,6 +1094,24 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
                 diags.Add(Diagnostic.Create(Diagnostics.FacadeStateHolderInvalid, loc, methodName,
                     $"[StateHolder] on '{p.Name}': StateType '{stateType.ToDisplayString()}' has no accessible parameterless instance void method '{unbind}'"));
                 return null;
+            }
+
+            if (ReadBool(stateAttr, "SharedState"))
+            {
+                // Remember and its callback metadata are common to the group.
+                // Bind/Unbind are the ownership choices on each consumer declaration.
+                foreach (var declaration in GetSharedStateDeclarations(bridgesType, remember, stateType))
+                {
+                    string? conflict = (ReadString(declaration.Attribute, "Bind") ?? "") != (bind ?? "")
+                        ? "Bind"
+                        : (ReadString(declaration.Attribute, "Unbind") ?? "") != (unbind ?? "")
+                            ? "Unbind" : null;
+                    if (conflict is null)
+                        continue;
+                    diags.Add(Diagnostic.Create(Diagnostics.FacadeStateHolderInvalid, loc, methodName,
+                        $"[StateHolder] on '{p.Name}': shared owner '{remember}' for '{stateType.ToDisplayString()}' has conflicting {conflict} metadata with '{declaration.Method.Name}.{declaration.Parameter.Name}'"));
+                    return null;
+                }
             }
 
             var rememberUserParams = rememberFit.Parameters
@@ -3202,6 +3233,8 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         var wrapperType = slot.StateWrapperType
             ?? throw new InvalidOperationException("Shared state has no wrapper type.");
         var wrapper = wrapperType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+        bool canCreateWrapper = HasAccessibleParameterlessConstructor(wrapperType);
+        string stateParameter = wrapper + (canCreateWrapper ? "? state = null" : " state");
         var jvm = slot.StateJvmType?.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)
             ?? throw new InvalidOperationException("Shared state has no peer type.");
         var method = slot.RememberMethodName;
@@ -3213,21 +3246,30 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         sb.AppendLine("    {");
         sb.AppendLine("        /// <summary>Owns shared native state at this composition location. Call before its consumers.</summary>");
         sb.AppendLine("        /// <remarks>Keep this call outside conditional consumers to preserve their shared peer and native save registration.");
-        sb.AppendLine("        /// Omitting state remembers a wrapper here. If this owner leaves composition, the wrapper retains settled values,");
+        sb.AppendLine(canCreateWrapper
+            ? "        /// Omitting state remembers a wrapper here. If this owner leaves composition, the wrapper retains settled values,"
+            : "        /// Supply a wrapper constructed by the caller. If this owner leaves composition, the wrapper retains settled values,");
         sb.AppendLine("        /// not the native peer or its positional save key. Confirm callbacks, when present, belong to the owner.</remarks>");
         sb.Append("        public static ").Append(wrapper).Append(' ').Append(method)
-          .Append("(this global::AndroidX.Compose.Runtime.IComposer composer, ").Append(wrapper).Append("? state = null");
+          .Append("(this global::AndroidX.Compose.Runtime.IComposer composer, ").Append(stateParameter);
         foreach (var callback in callbacks)
             sb.Append(", global::System.Func<").Append(callback.Type).Append(", bool>? ").Append(callback.Name).Append(" = null");
         sb.AppendLine(", [global::System.Runtime.CompilerServices.CallerLineNumber] int line = 0,");
         sb.AppendLine("            [global::System.Runtime.CompilerServices.CallerFilePath] string file = \"\")");
         sb.AppendLine("        {");
         sb.AppendLine("            global::System.ArgumentNullException.ThrowIfNull(composer);");
+        if (!canCreateWrapper)
+            sb.AppendLine("            global::System.ArgumentNullException.ThrowIfNull(state);");
         sb.AppendLine("            composer.StartReplaceableGroup(global::AndroidX.Compose.SourceLocationKey.Compute(line, file));");
         sb.AppendLine("            try");
         sb.AppendLine("            {");
-        sb.Append("                var __defaultHolder = composer.Remember(static () => new ").Append(wrapper).AppendLine("());");
-        sb.AppendLine("                var __holder = state ?? __defaultHolder;");
+        if (canCreateWrapper)
+        {
+            sb.Append("                var __defaultHolder = composer.Remember(static () => new ").Append(wrapper).AppendLine("());");
+            sb.AppendLine("                var __holder = state ?? __defaultHolder;");
+        }
+        else
+            sb.AppendLine("                var __holder = state;");
         var body = new StringBuilder();
         EmitSharedStatePreamble(body, slot, "__holder", jvm, "composer", true);
         foreach (var line in body.ToString().TrimEnd('\r', '\n').Split('\n'))
@@ -3246,7 +3288,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         sb.AppendLine("        /// <summary>Owns shared native state at the current composition location, before rendering its consumers.</summary>");
         sb.AppendLine("        /// <remarks>Keep this call outside conditional consumers. Leaving composition releases the native peer and");
         sb.AppendLine("        /// positional save registration; the wrapper retains settled values. Configure confirm callbacks on this owner.</remarks>");
-        sb.Append("        public static ").Append(wrapper).Append(' ').Append(method).Append('(').Append(wrapper).Append("? state = null");
+        sb.Append("        public static ").Append(wrapper).Append(' ').Append(method).Append('(').Append(stateParameter);
         foreach (var callback in callbacks)
             sb.Append(", global::System.Func<").Append(callback.Type).Append(", bool>? ").Append(callback.Name).Append(" = null");
         sb.AppendLine(", [global::System.Runtime.CompilerServices.CallerLineNumber] int line = 0,");

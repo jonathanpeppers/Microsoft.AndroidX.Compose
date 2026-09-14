@@ -92,7 +92,7 @@ public class SharedStateTransferTests
                 completion.SetException(ex);
             }
         });
-        return completion.Task;
+        return completion.Task.WaitAsync(TimeSpan.FromSeconds(15));
     }
 
     static async Task WaitFor(Func<bool> condition, string message)

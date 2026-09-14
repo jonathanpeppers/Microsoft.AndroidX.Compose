@@ -276,6 +276,16 @@ the exact native peer and save provider even when all its visual consumers
 are hidden. Saving/recreating the activity uses a fresh managed wrapper and
 the native saver, not a managed reference to the old activity's peer.
 
+For generator consumers, a zero-argument Remember bridge also supports wrappers
+without an accessible default constructor. Its typed helpers require a supplied,
+non-null wrapper instead of silently omitting the ownership API; the facade's
+existing optional wrapper remains supported. Shared declarations using the same
+Remember bridge and wrapper type must agree on `Bind` and `Unbind`, including
+whether a hook is omitted. Conflicts within one facade or across siblings report
+CN3009 before generation, so renaming a facade cannot select a different cleanup
+or binding policy. Confirm-callback metadata belongs to their common Remember
+bridge, not to the sibling chosen to emit the deduplicated helper.
+
 Confirm callbacks belong to the owner. Their JNI adapters are remembered in
 the owning native group, so reconstructing tree nodes does not change callback
 identity or invalidate native state. A new adapter receives its initial veto

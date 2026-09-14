@@ -462,6 +462,10 @@ internal static class Attributes
             /// <c>ComposeExtensions</c> and <c>Composables</c> so callers can
             /// hoist the owner above conditional consumers. Omitted wrappers
             /// and confirm adapters are remembered at the owning location.
+            /// A zero-argument Remember with no accessible default wrapper
+            /// constructor instead gets helpers requiring a supplied wrapper.
+            /// Declarations sharing Remember and StateType must agree on Bind
+            /// and Unbind; conflicting ownership metadata reports CN3009.
             /// Wrapper replacement resets the native subtree through a
             /// fixed-key reusable group; wrapper identity is auxiliary data,
             /// not a saved-state key. New adapters receive their initial veto
