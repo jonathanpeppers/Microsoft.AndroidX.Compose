@@ -19,5 +19,7 @@ namespace AndroidX.Compose;
 /// </remarks>
 public sealed partial class Surface
 {
+#if DEBUG
     internal static Action<Kotlin.Jvm.Functions.IFunction2, int, int, long, long, int>? ContentObserver { get; set; }
+#endif
 }

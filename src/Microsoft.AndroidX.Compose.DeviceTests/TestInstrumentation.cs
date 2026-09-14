@@ -80,6 +80,10 @@ public class TestInstrumentation : Instrumentation
             bundle.PutString("error", ex.ToString());
             Finish(Result.Canceled, bundle);
         }
+        finally
+        {
+            Current = null;
+        }
     }
 
     class ResultConsumer(Instrumentation instrumentation) : IDataConsumer

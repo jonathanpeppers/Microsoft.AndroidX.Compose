@@ -5,7 +5,9 @@ using AndroidX.Compose.Foundation;
 using AndroidX.Compose.Material3;
 using AndroidX.Compose.Runtime;
 using AndroidX.Compose.UI.Platform;
+#if DEBUG
 using Kotlin.Jvm.Functions;
+#endif
 using Color = AndroidX.Compose.Color;
 using MaterialTheme = AndroidX.Compose.MaterialTheme;
 using Snapshot = AndroidX.Compose.Runtime.Snapshots.Snapshot;
@@ -36,12 +38,14 @@ public class SurfaceStylingTestActivity : ComponentActivity
     bool _admitted;
     string? _foregroundFailure;
     Snapshot.Companion? _snapshots;
+#if DEBUG
     IFunction2? _content;
     int _defaults;
     int _nativeDefaults;
     long _nativeColor;
     long _nativeContentColor;
     int _changed;
+#endif
     object? _tail;
     MutableNumberState<int>? _outsideCounter;
     SurfaceStylingSnapshot? _snapshot;
@@ -65,9 +69,11 @@ public class SurfaceStylingTestActivity : ComponentActivity
         Window?.AddFlags(global::Android.Views.WindowManagerFlags.KeepScreenOn);
         _request.Value = (0, savedInstanceState?.GetInt("surface-mode", 0) ?? 0);
         _dark.Value = savedInstanceState?.GetBoolean("surface-dark", Dark) ?? Dark;
+#if DEBUG
         if (Surface.ContentObserver is not null)
             throw new InvalidOperationException("A Surface observer is already installed.");
         Surface.ContentObserver = ObserveContent;
+#endif
         var view = new ComposeView(this) { Id = 0x34301 };
         _view = view;
         var observer = view.ViewTreeObserver
@@ -132,8 +138,10 @@ public class SurfaceStylingTestActivity : ComponentActivity
             observer.Draw -= OnDraw;
         if (_view is { } view)
             view.ViewAttachedToWindow -= OnAttached;
+#if DEBUG
         Surface.ContentObserver = null;
         _content = null;
+#endif
         _snapshot = null;
         _snapshots = null;
         _view = null;
@@ -178,6 +186,7 @@ public class SurfaceStylingTestActivity : ComponentActivity
             .WaitAsync(TimeSpan.FromSeconds(10));
     }
 
+#if DEBUG
     void ObserveContent(IFunction2 content, int defaults, int nativeDefaults,
         long nativeColor, long nativeContentColor, int changed)
     {
@@ -188,6 +197,7 @@ public class SurfaceStylingTestActivity : ComponentActivity
         _nativeContentColor = nativeContentColor;
         _changed = changed;
     }
+#endif
 
     ComposableNode BuildSurface(IComposer composer)
     {
@@ -214,7 +224,9 @@ public class SurfaceStylingTestActivity : ComponentActivity
                 : explicitZero ? 0L : defaultContent;
             var content = ComposableLambdas.Wrap2(composer, c => Probe(c, generation, mode).Render(c));
             const int nativeDefaults = (int)(SurfaceDefault.Modifier | SurfaceDefault.Shape);
+#if DEBUG
             ObserveContent(content, nativeDefaults, nativeDefaults, resolvedColor, resolvedContent, 0);
+#endif
             SurfaceKt.Surface(null, null, resolvedColor, resolvedContent,
                 elevation?.Value ?? 0, elevation?.Value ?? 0, suppliedBorder, content,
                 composer, 0, nativeDefaults);
@@ -290,15 +302,26 @@ public class SurfaceStylingTestActivity : ComponentActivity
         var counterPeer = ((IMutableStateWrapper)counter).State;
         var outside = _outsideCounter ?? throw new InvalidOperationException("Surface outside counter unavailable.");
         int outsideValue = outside.Value;
+#if DEBUG
         var lambda = _content ?? throw new InvalidOperationException("Surface lambda not observed.");
         int defaults = _defaults, nativeDefaults = _nativeDefaults, changed = _changed;
         long nativeColor = _nativeColor, nativeContentColor = _nativeContentColor;
+#endif
         composer.SideEffect(() =>
         {
             _snapshot = new(generation, mode, packed, elevation, sentinel, counter, counterPeer, value,
                 outside, outsideValue,
-                _tail ?? throw new InvalidOperationException("Surface trailing remember not observed."),
-                lambda, defaults, nativeDefaults, nativeColor, nativeContentColor, changed);
+                _tail ?? throw new InvalidOperationException("Surface trailing remember not observed."))
+            {
+#if DEBUG
+                Content = lambda,
+                Defaults = defaults,
+                NativeDefaults = nativeDefaults,
+                NativeColor = nativeColor,
+                NativeContentColor = nativeContentColor,
+                Changed = changed,
+#endif
+            };
             Signal();
         });
         return new Box

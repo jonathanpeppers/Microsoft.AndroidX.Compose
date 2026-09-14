@@ -148,6 +148,16 @@ captures remain diagnostic evidence, not the pixel oracle. The later
 API-29 admission guard was compiled and reviewed separately; it is not in
 that frozen APK and does not change the tested Pixel 7 path.
 
+The native-argument/content-lambda observer and its runtime call site are
+`DEBUG`-only, matching the Scaffold test-observer convention. Debug device
+tests retain the full mask and native-lambda identity assertions. Release
+device tests still exercise state, native counter identity, composition locals,
+pixels, and restoration without shipping a mutable observer on Surface's
+production render path. A configuration-specific reflection test checks the
+observer's presence/absence; Release assembly inspection also verifies that
+neither the property nor its invocation remains. These later configuration
+checks are separate from the frozen 15-case device result above.
+
 ## Can we "just call" the Kotlin plugin?
 
 **No, not in any practical sense.** The plugin only runs *inside `kotlinc`* — it hooks into Kotlin's FIR/IR APIs (`FirExtensionRegistrar`, `IrGenerationExtension`). It cannot operate on:

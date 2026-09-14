@@ -76,6 +76,13 @@ public static class EmojiSelector
     /// <param name="input">Shared text-field state; tapped emojis are appended to <c>input.Value.Text</c> and the caret is moved to the end.</param>
     /// <param name="scheme">Active Material 3 color scheme, used for tab and emoji colors.</param>
     public static ComposableNode Build(MutableState<TextFieldValue> input, ColorScheme scheme) =>
+        Build(input, scheme, null);
+
+    /// <summary>Builds the panel with an optional composition-owned focus requester.</summary>
+    public static ComposableNode Build(
+        MutableState<TextFieldValue> input,
+        ColorScheme scheme,
+        FocusRequester? focusRequester) =>
         new Composed(c =>
         {
             var selected = c.MutableStateOf(0);
@@ -85,7 +92,11 @@ public static class EmojiSelector
             {
                 new Column
                 {
-                    Modifier.FillMaxWidth(),
+                    (focusRequester is null
+                        ? Modifier.Companion
+                        : Modifier.FocusRequester(focusRequester).FocusTarget())
+                        .Semantics("Emoji selector")
+                        .FillMaxWidth(),
                     new Row(
                         Arrangement.SpaceEvenly,
                         Alignment.Vertical.CenterVertically)

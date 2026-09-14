@@ -1297,6 +1297,21 @@ public static class ModifierExtensions
             new ModifierOpKey(nameof(Focusable), ValueTuple.Create(enabled)));
 
     /// <summary>
+    /// Adds a low-level Compose focus target, without the semantics and
+    /// interaction behavior of <see cref="Focusable(Modifier, bool)"/>.
+    /// Put <see cref="FocusRequester(Modifier, FocusRequester)"/> and
+    /// <see cref="OnFocusChanged(Modifier, Action{FocusState})"/> before this
+    /// operation. Prefer <c>Focusable</c> for user-focusable controls; do not
+    /// add another target to a text field or other already-focusable control.
+    /// </summary>
+    public static Modifier FocusTarget(this Modifier modifier)
+    {
+        ArgumentNullException.ThrowIfNull(modifier);
+        return modifier.AppendBound(UI.Focus.FocusModifierKt.FocusTarget,
+            new ModifierOpKey(nameof(FocusTarget), null));
+    }
+
+    /// <summary>
     /// <c>Modifier.focusGroup()</c> — groups focusable descendants so
     /// two-dimensional focus search treats them as a single unit.
     /// </summary>
@@ -1308,18 +1323,20 @@ public static class ModifierExtensions
     /// <c>Modifier.onFocusChanged { ... }</c> — invokes <paramref name="onFocusChanged"/>
     /// whenever the node gains, loses, or has its focus state mutated
     /// (capture / release). The callback receives an immutable
-    /// <see cref="FocusState"/> snapshot.
+    /// <see cref="FocusState"/> snapshot. Place this before the observed
+    /// focus target (including the target a text field installs internally).
     /// </summary>
     public static Modifier OnFocusChanged(this Modifier modifier, Action<FocusState> onFocusChanged)
     {
         ArgumentNullException.ThrowIfNull(onFocusChanged);
         var f1 = new ComposableLambda1(arg =>
         {
-            if (arg is null) return;
+            if (arg is null)
+                throw new InvalidOperationException("Compose supplied a null focus state to OnFocusChanged.");
             var fs = Android.Runtime.Extensions.JavaCast<AndroidX.Compose.UI.Focus.IFocusState>(arg);
             onFocusChanged(FocusState.From(fs));
         });
-        return modifier.Append(curr => ComposeBridges.ModifierOnFocusChanged(curr, f1),
+        return modifier.AppendBound(curr => UI.Focus.FocusChangedModifierKt.OnFocusChanged(curr, f1),
             new ModifierOpKey(nameof(OnFocusChanged), ValueTuple.Create<object>(onFocusChanged)));
     }
 
@@ -1332,8 +1349,8 @@ public static class ModifierExtensions
     public static Modifier FocusRequester(this Modifier modifier, FocusRequester requester)
     {
         ArgumentNullException.ThrowIfNull(requester);
-        return modifier.Append(curr =>
-            ComposeBridges.ModifierFocusRequester(curr, ((Java.Lang.Object)requester.Java).Handle),
+        return modifier.AppendBound(curr =>
+            UI.Focus.FocusRequesterModifierKt.FocusRequester(curr, requester.Java),
             new ModifierOpKey(nameof(FocusRequester), ValueTuple.Create<object>(requester)));
     }
 

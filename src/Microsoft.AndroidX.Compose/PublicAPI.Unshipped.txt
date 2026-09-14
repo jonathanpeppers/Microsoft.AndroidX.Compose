@@ -527,6 +527,7 @@ AndroidX.Compose.FlowColumn
 AndroidX.Compose.FlowColumn.FlowColumn(int maxItemsInEachColumn = 2147483647, int maxLines = 2147483647) -> void
 AndroidX.Compose.FlowRow
 AndroidX.Compose.FlowRow.FlowRow(int maxItemsInEachRow = 2147483647, int maxLines = 2147483647) -> void
+AndroidX.Compose.FocusManagerExtensions
 AndroidX.Compose.FocusRequester
 AndroidX.Compose.FocusRequester.CaptureFocus() -> bool
 AndroidX.Compose.FocusRequester.FocusRequester() -> void
@@ -796,6 +797,7 @@ AndroidX.Compose.ListItem.Trailing.set -> void
 AndroidX.Compose.LocalColorScheme
 AndroidX.Compose.LocalConfiguration
 AndroidX.Compose.LocalContext
+AndroidX.Compose.LocalFocusManager
 AndroidX.Compose.LocalLifecycleOwner
 AndroidX.Compose.LocalResources
 AndroidX.Compose.LocalView
@@ -2269,6 +2271,7 @@ static AndroidX.Compose.DrawingStyle.Fill.get -> AndroidX.Compose.UI.Graphics.Dr
 static AndroidX.Compose.DrawingStyle.Stroke(float width, AndroidX.Compose.StrokeCap cap = AndroidX.Compose.StrokeCap.Butt, AndroidX.Compose.StrokeJoin join = AndroidX.Compose.StrokeJoin.Miter, float miter = 4) -> AndroidX.Compose.UI.Graphics.Drawscope.DrawStyle!
 static AndroidX.Compose.FloatRange.operator !=(AndroidX.Compose.FloatRange left, AndroidX.Compose.FloatRange right) -> bool
 static AndroidX.Compose.FloatRange.operator ==(AndroidX.Compose.FloatRange left, AndroidX.Compose.FloatRange right) -> bool
+static AndroidX.Compose.FocusManagerExtensions.ClearFocus(this AndroidX.Compose.UI.Focus.IFocusManager! manager, bool force = false) -> void
 static AndroidX.Compose.FocusState.operator !=(AndroidX.Compose.FocusState left, AndroidX.Compose.FocusState right) -> bool
 static AndroidX.Compose.FocusState.operator ==(AndroidX.Compose.FocusState left, AndroidX.Compose.FocusState right) -> bool
 static AndroidX.Compose.Font.Resource(int resourceId, AndroidX.Compose.FontWeight? weight = null, AndroidX.Compose.FontStyle? style = null, AndroidX.Compose.FontLoadingStrategy loadingStrategy = AndroidX.Compose.FontLoadingStrategy.Blocking) -> AndroidX.Compose.UI.Text.Font.IFont!
@@ -2617,6 +2620,9 @@ static AndroidX.Compose.LocalConfiguration.Provides(Android.Content.Res.Configur
 static AndroidX.Compose.LocalContext.Current() -> Android.Content.Context!
 static AndroidX.Compose.LocalContext.Current(AndroidX.Compose.Runtime.IComposer! composer) -> Android.Content.Context!
 static AndroidX.Compose.LocalContext.Provides(Android.Content.Context! value) -> AndroidX.Compose.ProvidedValue!
+static AndroidX.Compose.LocalFocusManager.Current() -> AndroidX.Compose.UI.Focus.IFocusManager!
+static AndroidX.Compose.LocalFocusManager.Current(AndroidX.Compose.Runtime.IComposer! composer) -> AndroidX.Compose.UI.Focus.IFocusManager!
+static AndroidX.Compose.LocalFocusManager.Provides(AndroidX.Compose.UI.Focus.IFocusManager! value) -> AndroidX.Compose.ProvidedValue!
 static AndroidX.Compose.LocalLifecycleOwner.Current() -> AndroidX.Lifecycle.ILifecycleOwner!
 static AndroidX.Compose.LocalLifecycleOwner.Current(AndroidX.Compose.Runtime.IComposer! composer) -> AndroidX.Lifecycle.ILifecycleOwner!
 static AndroidX.Compose.LocalLifecycleOwner.Provides(AndroidX.Lifecycle.ILifecycleOwner! value) -> AndroidX.Compose.ProvidedValue!
@@ -2672,6 +2678,7 @@ static AndroidX.Compose.Modifier.FillMaxSize(float fraction = 1) -> AndroidX.Com
 static AndroidX.Compose.Modifier.FillMaxWidth(float fraction = 1) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.Modifier.FocusGroup() -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.Modifier.FocusRequester(AndroidX.Compose.FocusRequester! requester) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.Modifier.FocusTarget() -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.Modifier.Focusable(bool enabled = true) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.Modifier.GraphicsLayer(float? scaleX = null, float? scaleY = null, float? alpha = null, float? translationX = null, float? translationY = null, AndroidX.Compose.Dp? shadowElevation = null, float? rotationX = null, float? rotationY = null, float? rotationZ = null, float? cameraDistance = null, AndroidX.Compose.TransformOrigin? transformOrigin = null, AndroidX.Compose.Shape? shape = null, bool? clip = null) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.Modifier.Height(AndroidX.Compose.Dp height) -> AndroidX.Compose.Modifier!
@@ -2774,6 +2781,7 @@ static AndroidX.Compose.ModifierExtensions.FillMaxSize(this AndroidX.Compose.Mod
 static AndroidX.Compose.ModifierExtensions.FillMaxWidth(this AndroidX.Compose.Modifier! modifier, float fraction = 1) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.ModifierExtensions.FocusGroup(this AndroidX.Compose.Modifier! modifier) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.ModifierExtensions.FocusRequester(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.FocusRequester! requester) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.ModifierExtensions.FocusTarget(this AndroidX.Compose.Modifier! modifier) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.ModifierExtensions.Focusable(this AndroidX.Compose.Modifier! modifier, bool enabled = true) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.ModifierExtensions.GraphicsLayer(this AndroidX.Compose.Modifier! modifier, float? scaleX = null, float? scaleY = null, float? alpha = null, float? translationX = null, float? translationY = null, AndroidX.Compose.Dp? shadowElevation = null, float? rotationX = null, float? rotationY = null, float? rotationZ = null, float? cameraDistance = null, AndroidX.Compose.TransformOrigin? transformOrigin = null, AndroidX.Compose.Shape? shape = null, bool? clip = null) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.ModifierExtensions.Height(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.Dp height) -> AndroidX.Compose.Modifier!

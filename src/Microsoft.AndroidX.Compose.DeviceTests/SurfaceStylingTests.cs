@@ -11,6 +11,19 @@ namespace Microsoft.AndroidX.Compose.DeviceTests;
 [DoNotParallelize]
 public class SurfaceStylingTests
 {
+    /// <summary>Production Release assemblies must not expose the device-test callback.</summary>
+    [TestMethod]
+    public void SurfaceObserverMatchesBuildConfiguration()
+    {
+        var observer = typeof(Surface).GetProperty("ContentObserver",
+            System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic);
+#if DEBUG
+        Assert.IsNotNull(observer);
+#else
+        Assert.IsNull(observer);
+#endif
+    }
+
     /// <summary>Preserves the original constructor, catalog method groups, and compiled direct target.</summary>
     [TestMethod]
     public void OriginalClrSignaturesRemainAvailable()
@@ -73,19 +86,23 @@ public class SurfaceStylingTests
                 int generation = 0;
                 await activity.OnUi(() => generation = activity.Change(mode));
                 var actual = await activity.ReadAtIdle();
+#if DEBUG
                 bool sameLambda = JNIEnv.IsSameObject(
                     ((Java.Lang.Object)first.Content).Handle, ((Java.Lang.Object)actual.Content).Handle);
+#endif
                 bool sameCounterPeer = JNIEnv.IsSameObject(
                     ((Java.Lang.Object)first.CounterPeer).Handle, ((Java.Lang.Object)actual.CounterPeer).Handle);
                 string trace = $"style={style}, dark={dark}, generation={actual.Generation}, mode={actual.Mode}, "
-                    + $"defaults={actual.Defaults}, nativeDefaults={actual.NativeDefaults}, changed={actual.Changed}, "
-                    + $"nativeColor={actual.NativeColor:X16}, nativeContent={actual.NativeContentColor:X16}, "
                     + $"localContent={actual.ContentColor:X16}, absoluteElevation={actual.AbsoluteElevation}, "
                     + $"sameBody={ReferenceEquals(first.Sentinel, actual.Sentinel)}, "
                     + $"sameTail={ReferenceEquals(first.TailSentinel, actual.TailSentinel)}, "
                     + $"sameCounter={ReferenceEquals(first.Counter, actual.Counter)}, sameCounterPeer={sameCounterPeer}, "
-                    + $"outsideValue={actual.OutsideCounterValue}, sameOutside={ReferenceEquals(first.OutsideCounter, actual.OutsideCounter)}, "
+                    + $"outsideValue={actual.OutsideCounterValue}, sameOutside={ReferenceEquals(first.OutsideCounter, actual.OutsideCounter)}";
+#if DEBUG
+                trace += $", defaults={actual.Defaults}, nativeDefaults={actual.NativeDefaults}, changed={actual.Changed}, "
+                    + $"nativeColor={actual.NativeColor:X16}, nativeContent={actual.NativeContentColor:X16}, "
                     + $"sameLambda={sameLambda}";
+#endif
                 Console.WriteLine(trace);
                 AssertState(activity, actual, style, mode, generation);
                 Assert.AreEqual(37, actual.CounterValue, trace);
@@ -95,7 +112,9 @@ public class SurfaceStylingTests
                 Assert.AreSame(first.Sentinel, actual.Sentinel, "Body remember moved when options changed.");
                 Assert.AreSame(first.TailSentinel, actual.TailSentinel, "A conditional helper DiffSlot shifted the trailing remember.");
                 Assert.AreSame(first.Counter, actual.Counter);
+#if DEBUG
                 Assert.IsTrue(sameLambda, "The tracked Surface content lambda changed native identity.");
+#endif
                 await AssertPixels(activity, actual, style, dark);
             }
             int[] themeModes = [0, 7];
@@ -115,8 +134,10 @@ public class SurfaceStylingTests
                     Assert.AreSame(first.Counter, themed.Counter);
                     Assert.IsTrue(JNIEnv.IsSameObject(
                         ((Java.Lang.Object)first.CounterPeer).Handle, ((Java.Lang.Object)themed.CounterPeer).Handle));
+#if DEBUG
                     Assert.IsTrue(JNIEnv.IsSameObject(
                         ((Java.Lang.Object)first.Content).Handle, ((Java.Lang.Object)themed.Content).Handle));
+#endif
                     await AssertPixels(activity, themed, style, palette);
                 }
             }
@@ -163,6 +184,9 @@ public class SurfaceStylingTests
         bool zero = mode == 2 || (mode == 3 && style != 0);
         long expectedContent = mode is 1 or 6 ? Color.White.ToPacked()
             : mode is 4 or 7 ? scheme.Secondary : zero ? 0 : scheme.OnSurface;
+        Assert.AreEqual(generation, actual.Generation, "An obsolete render was observed at native idle.");
+        Assert.AreEqual(mode, actual.Mode);
+#if DEBUG
         int expectedDefaults = style == 4 ? 3 : mode switch
         {
             1 => 2,
@@ -174,8 +198,6 @@ public class SurfaceStylingTests
             7 => 123,
             _ => 127,
         };
-        Assert.AreEqual(generation, actual.Generation, "An obsolete render was observed at native idle.");
-        Assert.AreEqual(mode, actual.Mode);
         Assert.AreEqual(expectedDefaults, actual.Defaults, "Incorrect Kotlin default bitmask.");
         Assert.AreEqual(expectedDefaults & ~(int)(SurfaceDefault.Color | SurfaceDefault.ContentColor),
             actual.NativeDefaults, "Surface color defaults were not normalized at the bound call.");
@@ -183,6 +205,7 @@ public class SurfaceStylingTests
             : zero ? 0L : scheme.Surface, actual.NativeColor);
         Assert.AreEqual(expectedContent, actual.NativeContentColor);
         Assert.AreEqual(0, actual.Changed, "Resolved theme colors require a conservative native changed mask.");
+#endif
         Assert.AreEqual(expectedContent, actual.ContentColor, "Content color did not inherit the expected Material role.");
         Assert.AreEqual(mode is 1 or 5 ? 10f : 2f, actual.AbsoluteElevation,
             "Nested Surface tonal elevations must accumulate, including explicit zero.");

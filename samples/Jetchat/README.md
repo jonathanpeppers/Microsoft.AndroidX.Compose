@@ -36,6 +36,7 @@ also rendered correctly; normal launch followed the system palette.
 
 This smoke includes the merged inset and baseline changes, but is not
 whole-app pixel/font parity or acceptance for other feature work. The
+later focus-target integration from #375 is not in that frozen APK. The
 separate Gallery styling cycle passed on `8a71bb6` (`080E7771...`), and the
 15 strict native Surface transition/identity/pixel/restoration cases passed
 on `9ba2c04` (`582282EE...`), as recorded in
@@ -79,10 +80,12 @@ column**, not its enclosing `Surface`, applies
 bottom inset rather than adding the navigation bar to the full keyboard height,
 and the Surface remains behind the navigation bar.
 
-Opening an expanded selector moves focus to the input container using the existing
-`FocusRequester`/`Focusable` APIs, ending the editor's IME session. Focusing the
-message field closes the selector again; Back dismisses the selector. This keeps
-the current Material `TextField` while the separate BasicTextField work is pending.
+Opening the emoji selector moves focus to its remembered `FocusRequester` and
+low-level `FocusTarget`, ending the editor's IME session without making the input
+container an extra accessibility focus stop. Exactly one selector-keyed effect
+requests focus only for the attached emoji panel. Focusing the message field
+closes the selector again; Back dismisses the selector. This keeps the current
+Material `TextField` while the separate BasicTextField work is pending.
 Input/selector tonal styling is also separate from this ownership change.
 
 Omitting `ContentWindowInsets` (including in the profile screen) still uses
@@ -227,10 +230,16 @@ same while switching inset modes; its saved tap count must also survive
   to record" tooltip. See *What's still omitted* for the exact gesture
   and transition-animation gaps.
 - **Expanded-input dismissal** — `BackHandler` collapses any open
-  selector before system back reaches navigation. The existing focusable input
-    container takes focus from the editor when a selector opens or changes, not
-    on unrelated recompositions. Exact upstream `focusTarget` APIs remain #342;
-    this sample reuses `Focusable` rather than adding another focus API.
+  selector before system back reaches navigation. A remembered requester
+  targets the emoji column with `FocusTarget`, not the editor or its parent.
+  A selector-keyed effect requests focus only when the emoji target is
+  attached; unrelated recomposition does not steal focus from its children.
+  Editor focus gain closes the panel and resets message scroll. The panel
+  keeps its accessibility description without adding `Focusable` semantics.
+  The pinned `UserInput.kt` at `4c1fe7586e2fbf1c934925ef8ab64d3803361423`
+  does not call `clearFocus` after Send (despite the original #342 motivation).
+  Send therefore retains upstream keyboard behavior; the explicit
+  `LocalFocusManager` clear/force-clear APIs are demonstrated in Gallery.
 - **Image attachment bubbles** — the upstream sticker drawable is seeded
   on the second message and rendered in its own 160 dp rounded bubble
   through the existing resource-backed `Image` facade.
@@ -397,7 +406,6 @@ layout work, and unavailable official bindings:
 | Record-button `updateTransition` + `animateFloat` / `animateColor` | Missing transition value-animation surface; tracked by [#336](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/336). The port retains its visually equivalent timer-driven pulse. |
 | Google Fonts provider typography | The exact pinned Karla / Montserrat resource fallbacks are bundled. Provider-backed downloads remain outside the resource-font API; no downloaded-font parity is claimed. |
 | Foundation text-input structure and IME Send callback | `BasicTextField` and keyboard-action support are missing; tracked by [#340](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/340). The current Material `TextField` preserves editing, placeholder, line, and IME-option behavior. |
-| Exact upstream emoji-panel focus target | Selector focus transfer currently uses the input container's `Focusable` fallback. `Modifier.focusTarget` and ambient focus-manager access remain tracked by [#342](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/342). |
 | Exact profile baseline-height and parallax geometry | Reusable baseline alignment/padding and `ClipToBounds` are available. Profile's existing rounded clip, padding-based motion and host layout remain unchanged; the pinned upstream uses `CircleShape` and separate baseline-height helpers, not a rectangular clip. |
 | Profile FAB tertiary container | Material 3 FAB color/elevation slots are omitted by the current facades; tracked by [#344](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/344). The port uses the default primary-container/content pair to preserve contrast. |
 | Glance home-screen widget + `requestPinAppWidget(...)` | No official .NET binding for `androidx.glance:glance-appwidget` is currently published. Upstream only shows the drawer entry when a compatible widget provider can be pinned, so the port omits it until that binding exists. |
