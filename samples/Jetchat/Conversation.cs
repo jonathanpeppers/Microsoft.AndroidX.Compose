@@ -404,10 +404,11 @@ public static class Conversation
         new Composed(c =>
         {
             var selectorFocus = c.Remember(() => new FocusRequester());
+            var focused = c.MutableStateOf(false);
             int selector = selectedSelector.Value;
             c.LaunchedEffect(selector, _ =>
             {
-                if (selector != 0 && selectedSelector.Value == selector)
+                if (selector == SelEmoji && selectedSelector.Value == selector)
                     selectorFocus.RequestFocus();
                 return Task.CompletedTask;
             });
@@ -417,11 +418,20 @@ public static class Conversation
                 new Column
                 {
                     // Keep the Surface behind the bars; its content owns these insets once.
-                    Modifier.FillMaxWidth().NavigationBarsPadding().ImePadding()
-                        .FocusRequester(selectorFocus).Focusable(),
-                    BuildTextFieldRow(input, scheme, isRecording, swipeOffset, selectedSelector),
+                    Modifier.FillMaxWidth().NavigationBarsPadding().ImePadding(),
+                    BuildTextFieldRow(input, scheme, isRecording, swipeOffset, focus =>
+                    {
+                        if (focused.Value == focus.IsFocused)
+                            return;
+                        focused.Value = focus.IsFocused;
+                        if (focus.IsFocused)
+                        {
+                            selectedSelector.Value = 0;
+                            _ = messagesScroll.AnimateScrollToItemAsync(0);
+                        }
+                    }),
                     BuildSelectorRow(ui, input, scheme, selectedSelector, messagesScroll),
-                    BuildSelectorPanel(input, scheme, selectedSelector),
+                    BuildSelectorPanel(input, scheme, selectedSelector, selectorFocus),
                 },
             };
         });
@@ -431,7 +441,7 @@ public static class Conversation
         ColorScheme                  scheme,
         MutableState<bool>           isRecording,
         MutableNumberState<float>    swipeOffset,
-        MutableState<int>            selectedSelector)
+        Action<FocusState>           onFocusChanged)
     {
         bool textEmpty = string.IsNullOrWhiteSpace(input.Value.Text);
 
@@ -449,11 +459,7 @@ public static class Conversation
                           {
                               Modifier = Modifier
                                   .FillMaxWidth()
-                                  .OnFocusChanged(focus =>
-                                  {
-                                      if (focus.IsFocused)
-                                          selectedSelector.Value = 0;
-                                  })
+                                  .OnFocusChanged(onFocusChanged)
                                   .Semantics("Message"),
                               Placeholder = new Text("Type a message"),
                               KeyboardOptions = CreateMessageKeyboardOptions(),
@@ -587,11 +593,12 @@ public static class Conversation
     static ComposableNode BuildSelectorPanel(
         MutableState<TextFieldValue> input,
         ColorScheme          scheme,
-        MutableState<int>    selectedSelector)
+        MutableState<int>    selectedSelector,
+        FocusRequester      selectorFocus)
     {
         int sel = selectedSelector.Value;
         if (sel == 0) return Spacer.Width(0);
-        if (sel == SelEmoji) return EmojiSelector.Build(input, scheme);
+        if (sel == SelEmoji) return EmojiSelector.Build(input, scheme, selectorFocus);
         string title    = "Functionality currently not available";
         string subtitle = "Grab a beverage and check back later!";
         return new Column

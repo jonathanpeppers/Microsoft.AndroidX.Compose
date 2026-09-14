@@ -2661,25 +2661,6 @@ internal static partial class ComposeBridges
         Signature = "(Landroidx/compose/ui/Modifier;)Landroidx/compose/ui/Modifier;")]
     internal static partial IntPtr ModifierFocusGroup(IntPtr modifier);
 
-    // androidx.compose.ui.focus.FocusChangedModifierKt.onFocusChanged —
-    // (Modifier, Function1<FocusState, Unit>). No defaults — the
-    // listener is always supplied by the caller.
-    [ComposeBridge(
-        Class     = "androidx/compose/ui/focus/FocusChangedModifierKt",
-        JvmName   = "onFocusChanged",
-        Signature = "(Landroidx/compose/ui/Modifier;Lkotlin/jvm/functions/Function1;)" +
-                    "Landroidx/compose/ui/Modifier;")]
-    internal static partial IntPtr ModifierOnFocusChanged(IntPtr modifier, IFunction1 onFocusChanged);
-
-    // androidx.compose.ui.focus.FocusRequesterModifierKt.focusRequester —
-    // (Modifier, FocusRequester). No defaults.
-    [ComposeBridge(
-        Class     = "androidx/compose/ui/focus/FocusRequesterModifierKt",
-        JvmName   = "focusRequester",
-        Signature = "(Landroidx/compose/ui/Modifier;Landroidx/compose/ui/focus/FocusRequester;)" +
-                    "Landroidx/compose/ui/Modifier;")]
-    internal static partial IntPtr ModifierFocusRequester(IntPtr modifier, IntPtr focusRequester);
-
     // androidx.compose.foundation.ClickableKt.combinedClickable-cJG_KMw$default —
     // the no-MutableInteractionSource overload. 7 Kotlin params after
     // the receiver: enabled, onClickLabel, role, onLongClickLabel,
@@ -2924,23 +2905,13 @@ internal static partial class ComposeBridges
     }
 
     // androidx.compose.ui.focus.FocusRequester.requestFocus()V —
-    // the no-arg overload the binding doesn't surface (it only exposed
-    // the parameterised `requestFocus-3ESFkO8(int):Boolean`). Wrapped
-    // hand-written because [ComposeBridge] doesn't support instance
-    // method calls.
-    static IntPtr s_focusRequesterClass;
-    static IntPtr s_focusRequesterRequestFocusMethodId;
-
-    internal static void FocusRequesterRequestFocus(IntPtr focusRequester)
-    {
-        if (s_focusRequesterRequestFocusMethodId == IntPtr.Zero)
-        {
-            s_focusRequesterClass = JNIEnv.FindClass("androidx/compose/ui/focus/FocusRequester");
-            s_focusRequesterRequestFocusMethodId = JNIEnv.GetMethodID(
-                s_focusRequesterClass, "requestFocus", "()V");
-        }
-        JNIEnv.CallVoidMethod(focusRequester, s_focusRequesterRequestFocusMethodId);
-    }
+    // the no-arg overload is not exposed by the runtime binding.
+    [ComposeBridge(
+        Class = "androidx/compose/ui/focus/FocusRequester",
+        JvmName = "requestFocus",
+        Signature = "()V",
+        Instance = true)]
+    internal static partial void FocusRequesterRequestFocus(IntPtr focusRequester);
 
     // androidx.compose.ui.semantics.SemanticsPropertiesKt.setContentDescription(
     //   SemanticsPropertyReceiver, String) — called from inside the
