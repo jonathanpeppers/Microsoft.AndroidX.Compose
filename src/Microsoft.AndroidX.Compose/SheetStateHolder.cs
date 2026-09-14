@@ -3,10 +3,10 @@ using AndroidX.Compose.Material3;
 namespace AndroidX.Compose;
 
 /// <summary>
-/// Caller-supplied state holder for <see cref="ModalBottomSheet"/>.
-/// Wraps Kotlin's <c>SheetState</c> (created via
-/// <c>rememberModalBottomSheetState</c>) so a facade can carry an
-/// initial <see cref="SkipPartiallyExpanded"/> setting across
+/// Caller-supplied state holder for <see cref="ModalBottomSheet"/> or
+/// <see cref="BottomSheetScaffold"/>.
+/// Wraps Kotlin's <c>SheetState</c> so a facade can carry an
+/// initial modal <see cref="SkipPartiallyExpanded"/> setting across
 /// recompositions and expose the live sheet position back to C#.
 /// </summary>
 /// <remarks>
@@ -26,15 +26,41 @@ namespace AndroidX.Compose;
 /// <see cref="ExpandAsync"/> / <see cref="PartialExpandAsync"/>
 /// helpers — the returned <see cref="Task"/> completes when the
 /// animation lands.</para>
+/// <para>After an owner retires, the next factory preserves compatible
+/// settled values. A standard scaffold maps retained <c>Hidden</c> to
+/// <c>PartiallyExpanded</c>, making the sheet visible because that factory
+/// disallows hiding. A modal owner with <see cref="SkipPartiallyExpanded"/>
+/// enabled maps retained <c>PartiallyExpanded</c> to <c>Expanded</c>.
+/// These mappings apply only when initializing the receiving factory;
+/// unbound current/target values and visibility still describe the last
+/// settled state.</para>
 /// </remarks>
 public sealed class SheetStateHolder
 {
     internal SheetState? Jvm;
     SheetValue? _rememberValue;
-    internal SheetValue RememberValue => _rememberValue ?? SheetValue.Hidden
+    SheetValue RetainedValue => _rememberValue ?? SheetValue.Hidden
         ?? throw new InvalidOperationException("SheetValue.Hidden was unavailable.");
-    internal SheetValue RememberStandardValue => _rememberValue ?? SheetValue.PartiallyExpanded
-        ?? throw new InvalidOperationException("SheetValue.PartiallyExpanded was unavailable.");
+    internal SheetValue RememberValue
+    {
+        get
+        {
+            var value = RetainedValue;
+            return SkipPartiallyExpanded && value == SheetValue.PartiallyExpanded
+                ? SheetValue.Expanded ?? throw new InvalidOperationException("SheetValue.Expanded was unavailable.")
+                : value;
+        }
+    }
+    internal SheetValue RememberStandardValue
+    {
+        get
+        {
+            var value = _rememberValue;
+            return value is null || value == SheetValue.Hidden
+                ? SheetValue.PartiallyExpanded ?? throw new InvalidOperationException("SheetValue.PartiallyExpanded was unavailable.")
+                : value;
+        }
+    }
 
     internal void UnbindJvm()
     {
@@ -66,21 +92,21 @@ public sealed class SheetStateHolder
     /// returns the last settled value, or <see cref="SheetValue.Hidden"/>
     /// before its first native owner.
     /// </summary>
-    public SheetValue CurrentValue => Jvm?.CurrentValue ?? RememberValue;
+    public SheetValue CurrentValue => Jvm?.CurrentValue ?? RetainedValue;
 
     /// <summary>
     /// The sheet's target <see cref="SheetValue"/> during animation,
     /// or the resting state otherwise. While unbound, returns the last
     /// settled value, or <see cref="SheetValue.Hidden"/> before first ownership.
     /// </summary>
-    public SheetValue TargetValue => Jvm?.TargetValue ?? RememberValue;
+    public SheetValue TargetValue => Jvm?.TargetValue ?? RetainedValue;
 
     /// <summary>
     /// <c>true</c> when the sheet is non-hidden — equivalent to
     /// <c>CurrentValue != SheetValue.Hidden</c>. While unbound, reflects
     /// the retained settled value rather than an active layout.
     /// </summary>
-    public bool IsVisible => Jvm?.IsVisible ?? (RememberValue != SheetValue.Hidden);
+    public bool IsVisible => Jvm?.IsVisible ?? (RetainedValue != SheetValue.Hidden);
 
     /// <summary>
     /// <c>true</c> when the sheet's anchored set includes a fully-

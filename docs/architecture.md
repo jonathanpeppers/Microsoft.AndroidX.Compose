@@ -316,12 +316,17 @@ Layout anchors, gesture offsets, and in-flight animation progress belong to the
 disposed native scope and are not transferred. Callback policy belongs to the
 new owner after handoff. `BottomSheetScaffold` participates in the same ownership
 protocol without changing its standard-sheet construction defaults; modal and
-standard sheet owners have different construction constraints. In particular,
-a hidden modal sheet cannot initialize a standard owner with
-`skipHiddenState = true`, and a partially expanded standard sheet cannot
-initialize a modal owner that skips partial expansion. Keep a compatible
-common-ancestor owner alive when switching between these consumer types rather
-than relying on implicit cross-factory handoff.
+standard sheet owners have different construction constraints. Cross-family
+sheet handoff is an explicit exception to transferring values without clamping:
+the receiving standard factory maps retained `Hidden` to `PartiallyExpanded`
+because `skipHiddenState = true` disallows hiding. This **makes the sheet
+visible**. The receiving modal factory maps retained `PartiallyExpanded` to
+`Expanded` only when the holder's `SkipPartiallyExpanded` is true. All compatible
+values, including `Expanded`, pass through unchanged. Unbound `CurrentValue`,
+`TargetValue`, and `IsVisible` continue to expose the raw last-settled value;
+normalization is confined to the receiving factory's initial-value argument.
+A live common-ancestor owner still preserves its peer and construction options
+when switching consumers; these mappings do not replace an active shared peer.
 
 Native saved-state keys are positional. An implicit owner handoff is **not**
 a movable save-state key: fresh composition may choose a different first
@@ -338,6 +343,11 @@ wrapper or ancestor-owner argument, edits its native accessibility fields to
 19:27, repeats three executions, and checks the fields after recreation.
 `StateHolderLifecycleTests` and `SharedStateTransferTests` verify owner loss,
 pending writes, new-peer initialization, and native confirm-callback refresh.
+`SheetStateTransferDomainTests` checks the native constructor invariants and
+unbound getter semantics separately from `SheetStateHandoffTests`, which renders
+real modal sheets and standard scaffolds through tree and direct APIs, retires
+each owner, and checks both handoff directions, round trips, repeated renders,
+and compatible expanded-value controls.
 Initial picker readiness, like removal/re-entry, acquires the existing
 `SideEffect` render-completion counter before reading native values. A non-null
 peer alone can still expose an uncommitted snapshot: the same DateRange peer

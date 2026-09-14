@@ -36,9 +36,10 @@ public sealed class BottomSheetScaffold : ComposableContainer
 
     /// <summary>
     /// Construct the scaffold. Pass a <paramref name="sheetState"/>
-    /// to opt into the <c>skipPartiallyExpanded</c> setting and gain
-    /// imperative control via <see cref="SheetStateHolder.ShowAsync"/>
-    /// / <see cref="SheetStateHolder.HideAsync"/>.
+    /// to share state and gain imperative control. A standard owner allows
+    /// partial expansion and disallows hiding, independently of the holder's
+    /// modal <see cref="SheetStateHolder.SkipPartiallyExpanded"/> option.
+    /// A retained hidden value starts partially expanded under this owner.
     /// </summary>
     public BottomSheetScaffold(SheetStateHolder? sheetState = null)
     {
