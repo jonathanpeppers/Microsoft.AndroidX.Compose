@@ -1,6 +1,7 @@
 using AndroidX.Compose.Material3;
 using AndroidX.Compose.Samples.Jetchat.Theme;
 using AndroidX.Compose.UI.Text.Input;
+using Baselines = AndroidX.Compose.UI.Layout.AlignmentLineKt;
 using Typography = AndroidX.Compose.Samples.Jetchat.Theme.Typography;
 
 namespace AndroidX.Compose.Samples.Jetchat;
@@ -611,12 +612,11 @@ public static class Conversation
                 FontWeight = FontWeight.Medium,
                 Modifier   = Modifier.Padding(horizontal: 16),
             },
-            Spacer.Height(8),
             new Text(subtitle)
             {
                 FontSize = 14,
                 Color    = Color.FromPacked(scheme.OnSurfaceVariant),
-                Modifier = Modifier.Padding(horizontal: 16),
+                Modifier = Modifier.Padding(horizontal: 16).PaddingFrom(Baselines.FirstBaseline, before: 32),
             },
         });
         return surface;

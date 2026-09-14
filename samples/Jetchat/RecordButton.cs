@@ -147,7 +147,7 @@ public static class RecordButton
 
                 new Text(timer)
                 {
-                    Modifier   = Modifier.Align(Alignment.Vertical.CenterVertically),
+                    Modifier   = Modifier.AlignByBaseline(),
                     FontSize   = 22,
                     FontWeight = FontWeight.Medium,
                     Color      = Color.FromPacked(scheme.OnSurface),
@@ -155,25 +155,31 @@ public static class RecordButton
 
                 Spacer.Width(16),
 
-                new Row
+                new Box
                 {
                     Modifier
-                        .Align(Alignment.Vertical.CenterVertically)
+                        .AlignByBaseline()
                         .Weight(1f, fill: true)
-                        .Offset(x: offset / 2f / density)
-                        .Alpha(alphaHint),
-
-                    new Icon(Resource.Drawable.ic_arrow_back, "Swipe to cancel")
+                        .FillMaxHeight()
+                        .ClipToBounds(),
+                    new Row
                     {
-                        Tint = Color.FromPacked(scheme.OnSurfaceVariant),
-                        Modifier = Modifier.Align(Alignment.Vertical.CenterVertically).Size(24),
-                    },
-                    Spacer.Width(8),
-                    new Text("Swipe to cancel")
-                    {
-                        Modifier = Modifier.Align(Alignment.Vertical.CenterVertically),
-                        FontSize = 16,
-                        Color    = Color.FromPacked(scheme.OnSurfaceVariant),
+                        Modifier
+                            .Align(Alignment.Center)
+                            .Offset(x: offset / 2f / density)
+                            .Alpha(alphaHint),
+                        new Icon(Resource.Drawable.ic_arrow_back, "Swipe to cancel")
+                        {
+                            Tint = Color.FromPacked(scheme.OnSurfaceVariant),
+                            Modifier = Modifier.Align(Alignment.Vertical.CenterVertically).Size(24),
+                        },
+                        Spacer.Width(8),
+                        new Text("Swipe to cancel")
+                        {
+                            Modifier = Modifier.Align(Alignment.Vertical.CenterVertically),
+                            FontSize = 16,
+                            Color    = Color.FromPacked(scheme.OnSurfaceVariant),
+                        },
                     },
                 },
             };
