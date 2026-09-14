@@ -137,7 +137,11 @@ public class FabStylingTests
         }
         finally
         {
-            instrumentation.RunOnMainSync(activity.Finish);
+            instrumentation.RunOnMainSync(() =>
+            {
+                Console.WriteLine(activity.FrameTrace);
+                activity.Finish();
+            });
             await activity.Destroyed.Task.WaitAsync(TimeSpan.FromSeconds(15));
         }
     }

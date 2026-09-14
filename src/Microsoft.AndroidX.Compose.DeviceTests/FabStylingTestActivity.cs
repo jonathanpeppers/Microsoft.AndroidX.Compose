@@ -50,6 +50,8 @@ public class FabStylingTestActivity : ComponentActivity
     global::Android.Views.ViewTreeObserver? drawObserver;
     readonly object progressLock = new();
     TaskCompletionSource progress = NewCompletion();
+    readonly List<string> frameTrace = [];
+    internal string FrameTrace => string.Join(System.Environment.NewLine, frameTrace);
 
     internal static TaskCompletionSource NewCompletion() =>
         new(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -322,7 +324,21 @@ public class FabStylingTestActivity : ComponentActivity
         Destroyed.TrySetResult();
     }
 
-    void OnDraw(object? sender, EventArgs e) => SignalProgress();
+    void OnDraw(object? sender, EventArgs e)
+    {
+        TraceFrame("draw");
+        SignalProgress();
+    }
+
+    void TraceFrame(string stage)
+    {
+        if (variant != 3 || Phase.Value is < 7 or > 9) return;
+        frameTrace.Add($"FAB frame pid={(global::Android.OS.Process.MyPid())}, t={SystemClock.UptimeMillis()}, " +
+            $"phase={Phase.Value}, stage={stage}, width={(coordinates is { IsAttached: true } current ? (int)((ulong)current.Size >> 32) : -1)}, " +
+            $"composePending={recomposer?.HasPendingWork}, state={recomposer?.CurrentState.Value}, " +
+            $"measurePending={owner?.HasPendingMeasureOrLayout}, viewLayout={view?.IsLayoutRequested}, ownerLayout={owner?.View.IsLayoutRequested}, " +
+            $"snapshotPending={snapshots?.Current.HasPendingChanges}, applyPending={snapshots?.IsApplyObserverNotificationPending}.");
+    }
 
     void SignalProgress()
     {
@@ -386,6 +402,7 @@ public class FabStylingTestActivity : ComponentActivity
                         bounds = ((int)MathF.Round(position.X), (int)MathF.Round(position.Y),
                             (int)((ulong)current.Size >> 32), (int)(current.Size & uint.MaxValue),
                             (int)MathF.Round(windowPosition.X), (int)MathF.Round(windowPosition.Y), [.. content]);
+                        TraceFrame("idle-bounds");
                         idle = true;
                     }
                 }
@@ -437,6 +454,7 @@ public class FabStylingTestActivity : ComponentActivity
                 }
             });
             await committed.Task.WaitAsync(TimeSpan.FromSeconds(15));
+            instrumentation.RunOnMainSync(() => TraceFrame("frame-committed"));
         }
         finally
         {
