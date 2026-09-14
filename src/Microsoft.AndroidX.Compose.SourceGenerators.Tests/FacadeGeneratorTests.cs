@@ -1299,7 +1299,7 @@ public class FacadeGeneratorTests
         Assert.Contains("int __defaults = (int)global::AndroidX.Compose.AlertDialogDefault.All;", emitted);
         Assert.Contains("if (__modifier is not null) __defaults &= ~(int)global::AndroidX.Compose.AlertDialogDefault.Modifier;", emitted);
         Assert.Contains("if (__dismissButton is not null) __defaults &= ~(int)global::AndroidX.Compose.AlertDialogDefault.DismissButton;", emitted);
-        Assert.Contains("var __confirmButton = global::AndroidX.Compose.ComposableLambdas.Wrap2(__composer, confirmButton);", emitted);
+        Assert.Contains("var __confirmButton = global::AndroidX.Compose.ComposableLambdas.Wrap2(__composer, c => global::AndroidX.Compose.ComposableContentNode.RenderDirect(c, confirmButton, false));", emitted);
         Assert.Contains("global::AndroidX.Compose.ComposeBridges.AlertDialog(__onDismissRequest, __confirmButton, __modifier, __dismissButton, __icon, __title, __text, (int)__defaults, __composer);", emitted);
         Assert.DoesNotContain("var node = new global::AndroidX.Compose.AlertDialog", emitted);
 
@@ -1672,8 +1672,8 @@ public class FacadeGeneratorTests
         Assert.Contains("public global::AndroidX.Compose.ComposableNode? Trailing { get; set; }", emitted);
         Assert.Contains("if (Headline is null)", emitted);
         Assert.Contains("if (__overlineContent is not null) __defaults &= ~(int)global::AndroidX.Compose.ListItemDefault.OverlineContent;", emitted);
-        Assert.Contains("var __headlineContent = global::AndroidX.Compose.ComposableLambdas.Wrap2(__composer, headline);", emitted);
-        Assert.Contains("var __overlineContent = overline is null ? null : global::AndroidX.Compose.ComposableLambdas.Wrap2(__composer, overline);", emitted);
+        Assert.Contains("var __headlineContent = global::AndroidX.Compose.ComposableLambdas.Wrap2(__composer, c => global::AndroidX.Compose.ComposableContentNode.RenderDirect(c, headline, false));", emitted);
+        Assert.Contains("var __overlineContent = overline is null ? null : global::AndroidX.Compose.ComposableLambdas.Wrap2(__composer, c => global::AndroidX.Compose.ComposableContentNode.RenderDirect(c, overline, false));", emitted);
         Assert.DoesNotContain("var node = new global::AndroidX.Compose.ListItem", emitted);
 
         var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
@@ -4737,7 +4737,7 @@ public class FacadeGeneratorTests
         Assert.Contains("var __secContent = global::AndroidX.Compose.ComposableLambdas.Wrap3(composer,", emitted);
         Assert.Contains("var __onClick = __composer.RememberAction(onClick);", emitted);
         Assert.Contains(
-            "var __label = label is null ? null : global::AndroidX.Compose.ComposableLambdas.Wrap2(__composer, label);",
+            "var __label = label is null ? null : global::AndroidX.Compose.ComposableLambdas.Wrap2(__composer, c => global::AndroidX.Compose.ComposableContentNode.RenderDirect(c, label, false));",
             emitted);
         Assert.Contains(
             "var __content = global::AndroidX.Compose.ComposableLambdas.Wrap3(__composer,",

@@ -125,6 +125,14 @@ The final bound FAB call supplies every parameter with constant generated
 modifier/shape omission changes from adding or removing native comparers;
 it does not remount the FAB or its children.
 
+Direct catalog named slots enter `ComposableContentNode.RenderDirect` with
+the composer's value supplied to each invocation, just like container
+content. A slot can recompose independently after its original caller has
+returned (for example, an Extended FAB label inside `AnimatedVisibility`).
+Both explicit-composer and composerless delegates need that invocation's
+ambient `ComposableContext`; capturing or relying on the original caller's
+context fails during the independent animation pass.
+
 ## Can we "just call" the Kotlin plugin?
 
 **No, not in any practical sense.** The plugin only runs *inside `kotlinc`* — it hooks into Kotlin's FIR/IR APIs (`FirExtensionRegistrar`, `IrGenerationExtension`). It cannot operate on:
