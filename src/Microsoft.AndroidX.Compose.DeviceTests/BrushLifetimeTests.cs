@@ -24,7 +24,7 @@ public class BrushLifetimeTests
         }
         LogLegacyClassHandle("after GC, before constructor");
         using var brush = Brush.SolidColor(Color.Blue);
-        Assert.IsInstanceOfType<AndroidX.Compose.UI.Graphics.SolidColor>(brush);
+        Assert.IsInstanceOfType<global::AndroidX.Compose.UI.Graphics.SolidColor>(brush);
         Assert.IsFalse(string.IsNullOrEmpty(brush.ToString()));
     }
 
@@ -42,6 +42,6 @@ public class BrushLifetimeTests
         string value = field?.GetValue(null) is IntPtr handle
             ? $"0x{handle.ToInt64():x}"
             : "no legacy raw class cache";
-        Android.Util.Log.Info("BrushLifetime", $"{phase}: SolidColor constructor class={value}");
+        global::Android.Util.Log.Info("BrushLifetime", $"{phase}: SolidColor constructor class={value}");
     }
 }
