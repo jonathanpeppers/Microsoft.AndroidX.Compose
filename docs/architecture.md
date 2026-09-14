@@ -127,6 +127,18 @@ registration operations and rerun both backend regressions. Consumer keep rules
 in `shared-state-lifetime.pro` preserve reflected fields, operation identities,
 and the JNI-only shared time/sheet entry points through R8.
 
+Use a clean Release build for R8 validation on the installed .NET for Android
+Windows SDK 36.1.69.
+Its incremental AAR-import path can omit consumer rules from
+`libraryprojectimports.cache` when an archive's hash is unchanged, even though
+the extracted `proguard.txt` remains present. This removed both
+`SharedStateLifetime` and the JNI-only `TimePickerKt` factories in a reproduced
+incremental build. A clean build restores collection of the existing narrow
+rules; verify the actual R8 `--pg-conf` inputs and final DEX, not just the AAR.
+The library exports its rules, but this work does not fix the SDK's incremental
+cache behavior. Clean-build native coverage does not establish incremental,
+AOT, obfuscated, or full Release UI compatibility.
+
 Concurrent compositions can already hold their own native monitor when
 borrowing another composition's state. The query registers a transient
 consumer-monitor-to-owner-monitor dependency before acquiring a foreign monitor.
