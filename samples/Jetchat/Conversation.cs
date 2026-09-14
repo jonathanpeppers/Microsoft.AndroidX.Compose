@@ -1,6 +1,7 @@
 using AndroidX.Compose.Material3;
 using AndroidX.Compose.Samples.Jetchat.Theme;
 using AndroidX.Compose.UI.Text.Input;
+using Baselines = AndroidX.Compose.UI.Layout.AlignmentLineKt;
 using Typography = AndroidX.Compose.Samples.Jetchat.Theme.Typography;
 
 namespace AndroidX.Compose.Samples.Jetchat;
@@ -409,7 +410,7 @@ public static class Conversation
             int selector = selectedSelector.Value;
             c.LaunchedEffect(selector, _ =>
             {
-                if (selector != 0 && selectedSelector.Value == selector)
+                if (selector == SelEmoji && selectedSelector.Value == selector)
                     selectorFocus.RequestFocus();
                 return Task.CompletedTask;
             });
@@ -419,17 +420,21 @@ public static class Conversation
                 new Column
                 {
                     // Keep the Surface behind the bars; its content owns these insets once.
-                    Modifier.FillMaxWidth().NavigationBarsPadding().ImePadding()
-                        .FocusRequester(selectorFocus).Focusable(),
+                    Modifier.FillMaxWidth().NavigationBarsPadding().ImePadding(),
                     BuildTextFieldRow(input, scheme, isRecording, swipeOffset,
-                        keyboardActions, state =>
+                        keyboardActions, focus =>
                         {
-                            if (state.IsFocused)
+                            if (focused.Value == focus.IsFocused)
+                                return;
+                            focused.Value = focus.IsFocused;
+                            if (focus.IsFocused)
+                            {
                                 selectedSelector.Value = 0;
-                            focused.Value = state.IsFocused;
+                                _ = messagesScroll.AnimateScrollToItemAsync(0);
+                            }
                         }, focused.Value),
                     BuildSelectorRow(ui, input, scheme, selectedSelector, messagesScroll),
-                    BuildSelectorPanel(input, scheme, selectedSelector),
+                    BuildSelectorPanel(input, scheme, selectedSelector, selectorFocus),
                 },
             };
         });
@@ -617,11 +622,12 @@ public static class Conversation
     static ComposableNode BuildSelectorPanel(
         MutableState<TextFieldValue> input,
         ColorScheme          scheme,
-        MutableState<int>    selectedSelector)
+        MutableState<int>    selectedSelector,
+        FocusRequester      selectorFocus)
     {
         int sel = selectedSelector.Value;
         if (sel == 0) return Spacer.Width(0);
-        if (sel == SelEmoji) return EmojiSelector.Build(input, scheme);
+        if (sel == SelEmoji) return EmojiSelector.Build(input, scheme, selectorFocus);
         string title    = "Functionality currently not available";
         string subtitle = "Grab a beverage and check back later!";
         return new Column
@@ -636,12 +642,11 @@ public static class Conversation
                 Color      = Color.FromPacked(scheme.OnSurfaceVariant),
                 Modifier   = Modifier.Padding(horizontal: 16),
             },
-            Spacer.Height(8),
             new Text(subtitle)
             {
                 FontSize = 14,
                 Color    = Color.FromPacked(scheme.OnSurfaceVariant),
-                Modifier = Modifier.Padding(horizontal: 16),
+                Modifier = Modifier.Padding(horizontal: 16).PaddingFrom(Baselines.FirstBaseline, before: 32),
             },
         };
     }

@@ -51,11 +51,13 @@ column**, not its enclosing `Surface`, applies
 bottom inset rather than adding the navigation bar to the full keyboard height,
 and the Surface remains behind the navigation bar.
 
-Opening an expanded selector moves focus to the input container using the existing
-`FocusRequester`/`Focusable` APIs, ending the editor's IME session. Focusing the
-message field closes the selector again; Back dismisses the selector. The
-Foundation `BasicTextField` retains this fallback until the exact panel focus
-target is integrated. Input/selector tonal styling is separate from this change.
+Opening the emoji selector moves focus to its remembered `FocusRequester` and
+low-level `FocusTarget`, ending the editor's IME session without making the input
+container an extra accessibility focus stop. Exactly one selector-keyed effect
+requests focus only for the attached emoji panel. Focusing the message field
+closes the selector again; Back dismisses the selector. The Foundation
+`BasicTextField` shares its focused state and keyboard callbacks with this handoff.
+Input/selector tonal styling is also separate from this ownership change.
 
 Omitting `ContentWindowInsets` (including in the profile screen) still uses
 Kotlin's regular default. Null means default; `new WindowInsets()` means a supplied
@@ -195,10 +197,16 @@ same while switching inset modes; its saved tap count must also survive
   to record" tooltip. See *What's still omitted* for the exact gesture
   and transition-animation gaps.
 - **Expanded-input dismissal** — `BackHandler` collapses any open
-  selector before system back reaches navigation. The existing focusable input
-    container takes focus from the editor when a selector opens or changes, not
-    on unrelated recompositions. Exact upstream `focusTarget` APIs remain #342;
-    this sample reuses `Focusable` rather than adding another focus API.
+  selector before system back reaches navigation. A remembered requester
+  targets the emoji column with `FocusTarget`, not the editor or its parent.
+  A selector-keyed effect requests focus only when the emoji target is
+  attached; unrelated recomposition does not steal focus from its children.
+  Editor focus gain closes the panel and resets message scroll. The panel
+  keeps its accessibility description without adding `Focusable` semantics.
+  The pinned `UserInput.kt` at `4c1fe7586e2fbf1c934925ef8ab64d3803361423`
+  does not call `clearFocus` after Send (despite the original #342 motivation).
+  Send therefore retains upstream keyboard behavior; the explicit
+  `LocalFocusManager` clear/force-clear APIs are demonstrated in Gallery.
 - **Image attachment bubbles** — the upstream sticker drawable is seeded
   on the second message and rendered in its own 160 dp rounded bubble
   through the existing resource-backed `Image` facade.
@@ -333,20 +341,39 @@ host artifact; results are retained in `merge-device-tests.trx`.
 This additional interop check does not add combined-font screenshots or
 establish pixel parity.
 
+## Baseline alignment and clipping
+
+The recording timer and cancellation viewport now use `Modifier.AlignByBaseline()`.
+The moving cancellation content is inside `ClipToBounds()`, rather than moving
+the clipping viewport itself. The unavailable-panel subtitle uses
+`PaddingFrom(AlignmentLineKt.FirstBaseline, before: 32)` instead of a fixed
+8 dp gap. Existing font sizes, family assignments, text metrics and accessibility
+labels are unchanged.
+
+These uses follow
+[`UserInput.kt` at the pinned revision](https://github.com/android/compose-samples/blob/4c1fe7586e2fbf1c934925ef8ab64d3803361423/Jetchat/app/src/main/java/com/example/compose/jetchat/conversation/UserInput.kt).
+The ordinary input editor uses Box center-start alignment upstream, not baseline
+alignment; the baseline group belongs to the recording indicator.
+
+The issue's profile-clipping motivation was broader than that pinned source:
+[`Profile.kt`](https://github.com/android/compose-samples/blob/4c1fe7586e2fbf1c934925ef8ab64d3803361423/Jetchat/app/src/main/java/com/example/compose/jetchat/profile/Profile.kt)
+uses half-scroll top padding and `clip(CircleShape)`, **not** `clipToBounds`.
+This change therefore leaves profile geometry untouched. The port's rounded
+header, host/collapsing-container behavior, and baseline-height helpers still
+differ; adding a rectangular clip would not establish profile parallax parity.
+
 ## What's still omitted
 
-Everything that can be completed with the current facade is wired. The
-remaining differences require missing reusable APIs or an unavailable
-official binding:
+Remaining differences include missing reusable APIs, sample-specific
+layout work, and unavailable official bindings:
 
 | Upstream feature                          | Why it's not here |
 |-------------------------------------------|--------------------|
 | Press-and-hold record gesture (`pointerInput` / `detectDragGesturesAfterLongPress`) | Missing Compose pointer-input surface; tracked by [#337](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/337). Until it lands, recording remains tap-to-start / tap-to-finish with draggable swipe cancellation. |
 | Record-button `updateTransition` + `animateFloat` / `animateColor` | Missing transition value-animation surface; tracked by [#336](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/336). The port retains its visually equivalent timer-driven pulse. |
 | Google Fonts provider typography | The exact pinned Karla / Montserrat resource fallbacks are bundled. Provider-backed downloads remain outside the resource-font API; no downloaded-font parity is claimed. |
-| Exact upstream emoji-panel focus target | Selector focus transfer currently uses the input container's `Focusable` fallback. `Modifier.focusTarget` and ambient focus-manager access remain tracked by [#342](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/342). |
 | Input/selector tonal elevation and content color | The current `Surface` facade omits color, content-color, elevation, and border slots; tracked by [#343](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/343). |
-| Exact baseline spacing and clipped profile parallax | Baseline-relative alignment/padding and `clipToBounds` modifiers are missing; tracked by [#341](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/341). |
+| Exact profile baseline-height and parallax geometry | Reusable baseline alignment/padding and `ClipToBounds` are available. Profile's existing rounded clip, padding-based motion and host layout remain unchanged; the pinned upstream uses `CircleShape` and separate baseline-height helpers, not a rectangular clip. |
 | Profile FAB tertiary container | Material 3 FAB color/elevation slots are omitted by the current facades; tracked by [#344](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/344). The port uses the default primary-container/content pair to preserve contrast. |
 | Glance home-screen widget + `requestPinAppWidget(...)` | No official .NET binding for `androidx.glance:glance-appwidget` is currently published. Upstream only shows the drawer entry when a compatible widget provider can be pinned, so the port omits it until that binding exists. |
 
