@@ -252,6 +252,8 @@ public class SurfaceStylingTests
 
     static async Task<SurfaceStylingTestActivity> Start()
     {
+        if (!OperatingSystem.IsAndroidVersionAtLeast(29))
+            Assert.Inconclusive("Surface frame-commit rendering checks require Android 10 or newer.");
         var instrumentation = TestInstrumentation.Current
             ?? throw new InvalidOperationException("Surface instrumentation unavailable.");
         var launched = await Task.Run(() =>
