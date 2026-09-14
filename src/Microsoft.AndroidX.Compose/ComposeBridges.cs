@@ -705,19 +705,23 @@ internal static partial class ComposeBridges
         Dp? tonalElevation, Dp? shadowElevation, Foundation.BorderStroke? border,
         IFunction2 content, int defaults, IComposer composer, int _changed)
     {
-        global::AndroidX.Compose.Surface.ContentObserver?.Invoke(content, defaults, _changed);
+        var colors = composer.SurfaceColors(color, contentColor, (SurfaceDefault)defaults);
+        int nativeDefaults = defaults & ~(int)(SurfaceDefault.Color | SurfaceDefault.ContentColor);
+        const int nativeChanged = 0;
+        global::AndroidX.Compose.Surface.ContentObserver?.Invoke(
+            content, defaults, nativeDefaults, colors.Color, colors.ContentColor, nativeChanged);
         SurfaceKt.Surface(
             modifier: modifier,
             shape: shape?.JavaCast<UI.Graphics.IShape>(),
-            color: color.GetValueOrDefault().ToPacked(),
-            contentColor: contentColor.GetValueOrDefault().ToPacked(),
+            color: colors.Color,
+            contentColor: colors.ContentColor,
             tonalElevation: Dp.Pack(tonalElevation),
             shadowElevation: Dp.Pack(shadowElevation),
             border: border,
             content: content,
             _composer: composer,
-            p9: _changed,
-            _changed: defaults);
+            p9: nativeChanged,
+            _changed: nativeDefaults);
     }
 
     // androidx.compose.foundation.ImageKt.Image (Painter overload) — all

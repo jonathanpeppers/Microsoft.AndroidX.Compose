@@ -105,6 +105,36 @@ API is introduced. Until all groups/receiver positions are modelled, wide
 and receiver-bearing bridge calls remain entirely Uncertain, never a
 partially forwarded first group.
 
+### Runtime-varying Surface defaults
+
+Kotlin call sites normally have fixed omission masks, while a tree facade's
+nullable properties can change from omitted to supplied at one live position.
+In Material3Android **1.4.0.5**, `Surface-T9BRK9s` conditionally calls
+`contentColorFor` for an omitted content color, then calls
+`rememberComposableLambda` without a separate function group. The pinned
+`contentColorFor-ek8zF_U` opens a replace group. Removing that default call
+therefore changes the group footprint before Surface's inline remembered
+content. The first device regression observed a seeded child counter reset
+from 37 to 0 on this transition, despite correct native colors and elevations.
+Unconditional managed `DiffSlot` calls alone do not fix this native shape.
+
+The generated Surface facade and direct helpers share a bound-wrapper
+normalization in `ComposeExtensions.SurfaceDefaults.cs`. It always opens the
+same caller-keyed group, resolves omitted colors using the actual bound
+`MaterialTheme.colorScheme.surface` and composable `contentColorFor` (including
+ambient content-color fallback), then supplies those colors to the bound
+Surface overload. Only the generated `Color` and `ContentColor` default bits
+are cleared. Resolution reads the generated omission mask, not nullable
+sentinels: an explicitly supplied null still lowers to packed zero. The native
+changed mask is conservatively zero because resolved theme values can change
+while managed nullable inputs remain equal.
+
+The native regression compares tree, explicit/implicit helpers and a direct
+bound control with a fixed default mask. It checks isolated color/content
+changes, theme changes, logical versus native masks, body/counter-peer/content
+identity, an outside counter, drawing, and recreation without remounting the
+Surface or polling for expected results.
+
 ## Can we "just call" the Kotlin plugin?
 
 **No, not in any practical sense.** The plugin only runs *inside `kotlinc`* — it hooks into Kotlin's FIR/IR APIs (`FirExtensionRegistrar`, `IrGenerationExtension`). It cannot operate on:

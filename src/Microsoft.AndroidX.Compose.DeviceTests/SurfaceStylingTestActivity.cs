@@ -29,6 +29,7 @@ public class SurfaceStylingTestActivity : ComponentActivity
     readonly object _progressLock = new();
     TaskCompletionSource _progress = NewSignal();
     readonly MutableManagedState<(int Generation, int Mode)> _request = new((0, 0));
+    readonly MutableManagedState<bool> _dark = new(false);
     ComposeView? _view;
     bool _resumed;
     bool _ending;
@@ -37,8 +38,12 @@ public class SurfaceStylingTestActivity : ComponentActivity
     Snapshot.Companion? _snapshots;
     IFunction2? _content;
     int _defaults;
+    int _nativeDefaults;
+    long _nativeColor;
+    long _nativeContentColor;
     int _changed;
     object? _tail;
+    MutableNumberState<int>? _outsideCounter;
     SurfaceStylingSnapshot? _snapshot;
     internal TaskCompletionSource Destroyed { get; } = NewSignal();
     internal ColorScheme? Scheme { get; private set; }
@@ -58,6 +63,7 @@ public class SurfaceStylingTestActivity : ComponentActivity
         base.OnCreate(savedInstanceState);
         Window?.AddFlags(global::Android.Views.WindowManagerFlags.KeepScreenOn);
         _request.Value = (0, savedInstanceState?.GetInt("surface-mode", 0) ?? 0);
+        _dark.Value = savedInstanceState?.GetBoolean("surface-dark", Dark) ?? Dark;
         if (Surface.ContentObserver is not null)
             throw new InvalidOperationException("A Surface observer is already installed.");
         Surface.ContentObserver = ObserveContent;
@@ -68,7 +74,8 @@ public class SurfaceStylingTestActivity : ComponentActivity
         observer.Draw += OnDraw;
         view.SetContent(c =>
         {
-            Scheme = c.Remember(() => Dark ? MaterialTheme.DarkColorScheme() : MaterialTheme.LightColorScheme());
+            bool dark = _dark.Value;
+            Scheme = c.Remember(() => dark ? MaterialTheme.DarkColorScheme() : MaterialTheme.LightColorScheme(), dark);
             var theme = new MaterialTheme { ColorScheme = Scheme };
             var parent = new Surface { TonalElevation = 2, ContentColor = Color.FromPacked(Scheme.Secondary) };
             parent.Add(new Column
@@ -86,6 +93,7 @@ public class SurfaceStylingTestActivity : ComponentActivity
     protected override void OnSaveInstanceState(Bundle outState)
     {
         outState.PutInt("surface-mode", _request.Value.Mode);
+        outState.PutBoolean("surface-dark", _dark.Value);
         base.OnSaveInstanceState(outState);
     }
 
@@ -135,25 +143,54 @@ public class SurfaceStylingTestActivity : ComponentActivity
         return next.Item1;
     }
 
-    void ObserveContent(IFunction2 content, int defaults, int changed)
+    internal int ChangePalette(bool dark)
+    {
+        _dark.Value = dark;
+        return Change(_request.Value.Mode);
+    }
+
+    void ObserveContent(IFunction2 content, int defaults, int nativeDefaults,
+        long nativeColor, long nativeContentColor, int changed)
     {
         _content = content;
         _defaults = defaults;
+        _nativeDefaults = nativeDefaults;
+        _nativeColor = nativeColor;
+        _nativeContentColor = nativeContentColor;
         _changed = changed;
     }
 
     ComposableNode BuildSurface(IComposer composer)
     {
         var (generation, mode) = _request.Value;
+        _outsideCounter = composer.RememberSaveable(() => new MutableNumberState<int>(0));
         var border = composer.Remember(() => BorderStrokeKt.BorderStroke(2, BorderColor.ToPacked()));
         bool styled = mode is 1 or 4 or 5;
         var modifier = styled ? Modifier.Alpha(1f) : null;
-        Color? color = mode is 1 or 4 ? CustomColor : mode == 2 ? Color.Transparent : null;
-        Color? contentColor = mode == 1 ? Color.White : mode == 2 ? Color.Transparent : null;
+        Color? color = mode is 1 or 4 or 7 ? CustomColor : mode == 2 ? Color.Transparent : null;
+        Color? contentColor = mode is 1 or 6 ? Color.White : mode == 2 ? Color.Transparent : null;
         global::AndroidX.Compose.Dp? elevation = mode is 1 or 5 ? 8 : mode == 2 ? 0 : null;
         var suppliedBorder = mode == 1 ? border : null;
 
-        if (Style == 0)
+        if (Style == 4)
+        {
+            var scheme = Scheme ?? throw new InvalidOperationException("Native control theme unavailable.");
+            bool explicitZero = mode is 2 or 3;
+            long resolvedColor = mode is 1 or 4 or 7 ? CustomColor.ToPacked()
+                : explicitZero ? 0L : scheme.Surface;
+            // A fixed Kotlin call shape: contentColorFor is present even when
+            // the control supplies an explicit content color.
+            long defaultContent = ColorSchemeKt.ContentColorFor(resolvedColor, composer, 0);
+            long resolvedContent = mode is 1 or 6 ? Color.White.ToPacked()
+                : explicitZero ? 0L : defaultContent;
+            var content = ComposableLambdas.Wrap2(composer, c => Probe(c, generation, mode).Render(c));
+            const int nativeDefaults = (int)(SurfaceDefault.Modifier | SurfaceDefault.Shape);
+            ObserveContent(content, nativeDefaults, nativeDefaults, resolvedColor, resolvedContent, 0);
+            SurfaceKt.Surface(null, null, resolvedColor, resolvedContent,
+                elevation?.Value ?? 0, elevation?.Value ?? 0, suppliedBorder, content,
+                composer, 0, nativeDefaults);
+        }
+        else if (Style == 0)
         {
             var surface = new Surface
             {
@@ -183,6 +220,8 @@ public class SurfaceStylingTestActivity : ComponentActivity
                 2 or 3 => 0x6,
                 4 => 0xF4,
                 5 => 0x9C,
+                6 => 0xEE,
+                7 => 0xF6,
                 _ => 0xFE,
             };
             if (Style == 1)
@@ -219,13 +258,18 @@ public class SurfaceStylingTestActivity : ComponentActivity
         long packed = unchecked((long)content.Value);
         float elevation = tonal.Value;
         int value = counter.Value;
+        var counterPeer = ((IMutableStateWrapper)counter).State;
+        var outside = _outsideCounter ?? throw new InvalidOperationException("Surface outside counter unavailable.");
+        int outsideValue = outside.Value;
         var lambda = _content ?? throw new InvalidOperationException("Surface lambda not observed.");
-        int defaults = _defaults, changed = _changed;
+        int defaults = _defaults, nativeDefaults = _nativeDefaults, changed = _changed;
+        long nativeColor = _nativeColor, nativeContentColor = _nativeContentColor;
         composer.SideEffect(() =>
         {
-            _snapshot = new(generation, mode, packed, elevation, sentinel, counter, value,
+            _snapshot = new(generation, mode, packed, elevation, sentinel, counter, counterPeer, value,
+                outside, outsideValue,
                 _tail ?? throw new InvalidOperationException("Surface trailing remember not observed."),
-                lambda, defaults, changed);
+                lambda, defaults, nativeDefaults, nativeColor, nativeContentColor, changed);
             Signal();
         });
         return new Box

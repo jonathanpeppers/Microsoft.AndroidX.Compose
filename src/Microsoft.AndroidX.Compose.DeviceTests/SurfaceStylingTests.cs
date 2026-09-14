@@ -50,6 +50,7 @@ public class SurfaceStylingTests
     [DataRow(0, false)] [DataRow(0, true)]
     [DataRow(1, false)] [DataRow(1, true)]
     [DataRow(2, false)] [DataRow(2, true)]
+    [DataRow(4, false)] [DataRow(4, true)]
     public async Task StylingTransitionsRetainStateAndRestore(int style, bool dark)
     {
         SurfaceStylingTestActivity.Prepare(style, dark);
@@ -58,24 +59,66 @@ public class SurfaceStylingTests
         {
             var first = await activity.ReadAtIdle();
             AssertState(activity, first, style, 0, 0);
-            await activity.OnUi(() => first.Counter.Value = 37);
+            await activity.OnUi(() =>
+            {
+                first.Counter.Value = 37;
+                first.OutsideCounter.Value = 91;
+            });
             var seeded = await activity.ReadAtIdle();
             Assert.AreEqual(37, seeded.CounterValue);
-            int[] modes = [1, 0, 2, 5, 4, 0, 3, 0];
+            Assert.AreEqual(91, seeded.OutsideCounterValue);
+            int[] modes = [7, 0, 6, 0, 1, 0, 2, 5, 4, 0, 3, 0];
             foreach (int mode in modes)
             {
                 int generation = 0;
                 await activity.OnUi(() => generation = activity.Change(mode));
                 var actual = await activity.ReadAtIdle();
+                bool sameLambda = JNIEnv.IsSameObject(
+                    ((Java.Lang.Object)first.Content).Handle, ((Java.Lang.Object)actual.Content).Handle);
+                bool sameCounterPeer = JNIEnv.IsSameObject(
+                    ((Java.Lang.Object)first.CounterPeer).Handle, ((Java.Lang.Object)actual.CounterPeer).Handle);
+                string trace = $"style={style}, dark={dark}, generation={actual.Generation}, mode={actual.Mode}, "
+                    + $"defaults={actual.Defaults}, nativeDefaults={actual.NativeDefaults}, changed={actual.Changed}, "
+                    + $"nativeColor={actual.NativeColor:X16}, nativeContent={actual.NativeContentColor:X16}, "
+                    + $"localContent={actual.ContentColor:X16}, absoluteElevation={actual.AbsoluteElevation}, "
+                    + $"sameBody={ReferenceEquals(first.Sentinel, actual.Sentinel)}, "
+                    + $"sameTail={ReferenceEquals(first.TailSentinel, actual.TailSentinel)}, "
+                    + $"sameCounter={ReferenceEquals(first.Counter, actual.Counter)}, sameCounterPeer={sameCounterPeer}, "
+                    + $"outsideValue={actual.OutsideCounterValue}, sameOutside={ReferenceEquals(first.OutsideCounter, actual.OutsideCounter)}, "
+                    + $"sameLambda={sameLambda}";
+                Console.WriteLine(trace);
                 AssertState(activity, actual, style, mode, generation);
-                Assert.AreEqual(37, actual.CounterValue);
+                Assert.AreEqual(37, actual.CounterValue, trace);
+                Assert.AreEqual(91, actual.OutsideCounterValue, trace);
+                Assert.AreSame(first.OutsideCounter, actual.OutsideCounter, trace);
+                Assert.IsTrue(sameCounterPeer, trace);
                 Assert.AreSame(first.Sentinel, actual.Sentinel, "Body remember moved when options changed.");
                 Assert.AreSame(first.TailSentinel, actual.TailSentinel, "A conditional helper DiffSlot shifted the trailing remember.");
                 Assert.AreSame(first.Counter, actual.Counter);
-                Assert.IsTrue(JNIEnv.IsSameObject(
-                    ((Java.Lang.Object)first.Content).Handle, ((Java.Lang.Object)actual.Content).Handle),
-                    "The tracked Surface content lambda changed native identity.");
+                Assert.IsTrue(sameLambda, "The tracked Surface content lambda changed native identity.");
                 await AssertPixels(activity, actual, style, dark);
+            }
+            int[] themeModes = [0, 7];
+            bool[] palettes = [!dark, dark];
+            foreach (int mode in themeModes)
+            {
+                await activity.OnUi(() => activity.Change(mode));
+                foreach (bool palette in palettes)
+                {
+                    int generation = 0;
+                    await activity.OnUi(() => generation = activity.ChangePalette(palette));
+                    var themed = await activity.ReadAtIdle();
+                    AssertState(activity, themed, style, mode, generation);
+                    Assert.AreEqual(37, themed.CounterValue);
+                    Assert.AreEqual(91, themed.OutsideCounterValue);
+                    Assert.AreSame(first.Sentinel, themed.Sentinel);
+                    Assert.AreSame(first.Counter, themed.Counter);
+                    Assert.IsTrue(JNIEnv.IsSameObject(
+                        ((Java.Lang.Object)first.CounterPeer).Handle, ((Java.Lang.Object)themed.CounterPeer).Handle));
+                    Assert.IsTrue(JNIEnv.IsSameObject(
+                        ((Java.Lang.Object)first.Content).Handle, ((Java.Lang.Object)themed.Content).Handle));
+                    await AssertPixels(activity, themed, style, palette);
+                }
             }
             GC.Collect();
             GC.WaitForPendingFinalizers();
@@ -96,6 +139,7 @@ public class SurfaceStylingTests
             await previous.Destroyed.Task.WaitAsync(TimeSpan.FromSeconds(10));
             var restored = await activity.ReadAtIdle();
             Assert.AreEqual(37, restored.CounterValue, "Surface child saveable value did not restore.");
+            Assert.AreEqual(91, restored.OutsideCounterValue, "Outside Surface saveable value did not restore.");
             Assert.AreNotSame(first.Counter, restored.Counter);
             Assert.AreNotSame(first.Sentinel, restored.Sentinel);
             AssertState(activity, restored, style, 1, 0);
@@ -117,20 +161,28 @@ public class SurfaceStylingTests
     {
         var scheme = activity.Scheme ?? throw new InvalidOperationException("Surface theme unavailable.");
         bool zero = mode == 2 || (mode == 3 && style != 0);
-        long expectedContent = mode == 1 ? Color.White.ToPacked()
-            : mode == 4 ? scheme.Secondary : zero ? 0 : scheme.OnSurface;
-        int expectedDefaults = mode switch
+        long expectedContent = mode is 1 or 6 ? Color.White.ToPacked()
+            : mode is 4 or 7 ? scheme.Secondary : zero ? 0 : scheme.OnSurface;
+        int expectedDefaults = style == 4 ? 3 : mode switch
         {
             1 => 2,
             2 => style == 0 ? 67 : 3,
             3 => style == 0 ? 127 : 3,
             4 => 122,
             5 => 78,
+            6 => 119,
+            7 => 123,
             _ => 127,
         };
         Assert.AreEqual(generation, actual.Generation, "An obsolete render was observed at native idle.");
         Assert.AreEqual(mode, actual.Mode);
         Assert.AreEqual(expectedDefaults, actual.Defaults, "Incorrect Kotlin default bitmask.");
+        Assert.AreEqual(expectedDefaults & ~(int)(SurfaceDefault.Color | SurfaceDefault.ContentColor),
+            actual.NativeDefaults, "Surface color defaults were not normalized at the bound call.");
+        Assert.AreEqual(mode is 1 or 4 or 7 ? SurfaceStylingTestActivity.CustomColor.ToPacked()
+            : zero ? 0L : scheme.Surface, actual.NativeColor);
+        Assert.AreEqual(expectedContent, actual.NativeContentColor);
+        Assert.AreEqual(0, actual.Changed, "Resolved theme colors require a conservative native changed mask.");
         Assert.AreEqual(expectedContent, actual.ContentColor, "Content color did not inherit the expected Material role.");
         Assert.AreEqual(mode is 1 or 5 ? 10f : 2f, actual.AbsoluteElevation,
             "Nested Surface tonal elevations must accumulate, including explicit zero.");
@@ -155,7 +207,7 @@ public class SurfaceStylingTests
         });
         var scheme = activity.Scheme ?? throw new InvalidOperationException("Surface theme unavailable.");
         bool zero = snapshot.Mode == 2 || (snapshot.Mode == 3 && style != 0);
-        long expected = snapshot.Mode is 1 or 4 ? SurfaceStylingTestActivity.CustomColor.ToPacked()
+        long expected = snapshot.Mode is 1 or 4 or 7 ? SurfaceStylingTestActivity.CustomColor.ToPacked()
             : zero ? SurfaceStylingTestActivity.Backdrop.ToPacked()
             : ColorSchemeKt.SurfaceColorAtElevation(scheme, snapshot.AbsoluteElevation);
         Assert.AreEqual(Argb(expected), bitmap.GetPixel(background.X, background.Y),

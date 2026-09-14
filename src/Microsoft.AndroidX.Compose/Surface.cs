@@ -14,8 +14,10 @@ namespace AndroidX.Compose;
 /// The generated composable method distinguishes omitted arguments from
 /// explicit null: a null color/elevation lowers to zero, and a null border
 /// means no border. Tree properties use null to request the Kotlin default.
+/// Color defaults are resolved from the active Kotlin theme in a stable group
+/// before the bound Surface call, preserving child state when omission changes.
 /// </remarks>
 public sealed partial class Surface
 {
-    internal static Action<Kotlin.Jvm.Functions.IFunction2, int, int>? ContentObserver { get; set; }
+    internal static Action<Kotlin.Jvm.Functions.IFunction2, int, int, long, long, int>? ContentObserver { get; set; }
 }
