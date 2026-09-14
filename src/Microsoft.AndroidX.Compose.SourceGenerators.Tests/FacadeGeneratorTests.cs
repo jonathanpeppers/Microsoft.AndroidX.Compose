@@ -4498,6 +4498,72 @@ public class FacadeGeneratorTests
         Assert.Empty(errors);
     }
 
+    [Theory]
+    [InlineData(1, true)]
+    [InlineData(10, true)]
+    [InlineData(11, false)]
+    [InlineData(10, false)]
+    public void Secondary_DiscriminatorRespectsWholeRouteChangedMaskGuard(int parameterCount, bool receiver)
+    {
+        string receiverParameter = receiver ? "System.IntPtr rowScope, " : "";
+        string sharedParameters = string.Concat(Enumerable.Range(0, parameterCount - 1)
+            .Select(i => $"int p{i}, "));
+        string sharedDefaults = string.Concat(Enumerable.Range(0, parameterCount - 1)
+            .Select(i => $", \"!p{i}\""));
+        var code = $$"""
+            using global::AndroidX.Compose.Runtime;
+            using AndroidX.Compose;
+
+            [assembly: ComposeDefaults("PrimaryDefault", "!mode"{{sharedDefaults}})]
+            [assembly: ComposeDefaults("SecondaryDefault", "!imageVector"{{sharedDefaults}})]
+
+            namespace AndroidX.Compose
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeFacade(Defaults=typeof(PrimaryDefault),
+                        SecondaryCtor=nameof(Secondary), SecondaryDefaults=typeof(SecondaryDefault))]
+                    public static partial void Primary({{receiverParameter}}int mode, {{sharedParameters}}
+                        int defaults, IComposer composer, int _changed = 0);
+                    public static partial void Primary({{receiverParameter}}int mode, {{sharedParameters}}
+                        int defaults, IComposer composer, int _changed) { }
+
+                    public static void Secondary({{receiverParameter}}
+                        global::AndroidX.Compose.UI.Graphics.Vector.ImageVector imageVector, {{sharedParameters}}
+                        int defaults, IComposer composer, int _changed = 0) { }
+                }
+            }
+            """;
+
+        var (output, diags, emitted) = Run(code, "Primary");
+        Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.Empty(output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+        var secondaryHelpers = CSharpSyntaxTree.ParseText(emitted).GetRoot()
+            .DescendantNodes().OfType<Microsoft.CodeAnalysis.CSharp.Syntax.MethodDeclarationSyntax>()
+            .Where(method => method.ParameterList.Parameters.Any(p =>
+                p.Identifier.ValueText == "__directChanged") &&
+                method.Body?.ToString().Contains("ComposeBridges.Secondary(") == true)
+            .Select(method => method.Body?.ToString()
+                ?? throw new System.InvalidOperationException("Secondary helper body is missing."))
+            .ToArray();
+        Assert.NotEmpty(secondaryHelpers);
+        foreach (string helper in secondaryHelpers)
+        {
+            Assert.Contains("composer: __composer, _changed: __changed", helper);
+            if (receiver || parameterCount > 10)
+            {
+                Assert.Contains("int __changed = 0;", helper);
+                Assert.DoesNotContain("__changed |=", helper);
+            }
+            else
+            {
+                Assert.Contains("__changed |= ((__directChanged >> 1) & 0b111) << 1;", helper);
+                Assert.Contains("__directChanged & 0b1", helper);
+            }
+        }
+    }
+
     [Fact]
     public void Secondary_LambdaRoutesUseStableSharedLowering()
     {

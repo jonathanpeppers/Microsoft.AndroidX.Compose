@@ -2889,7 +2889,8 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             int index = info.Defaults.FindByKotlinName(info.Discriminator.Name)?.Bit ?? 0;
             int secondaryParameterCount = secondarySlots.Count(
                 slot => slot.Kind != FacadeSlotKind.ScopeReceiver) + 1;
-            if (ComposableMethodKotlinParameterCount(
+            if (CanEmitChangedMask(secondarySlots, info.Defaults) &&
+                ComposableMethodKotlinParameterCount(
                     secondaryParameterCount, info.Defaults) <= 10 &&
                 surfacedIndices.TryGetValue(
                 info.Discriminator.Name, out int surfaceIndex) &&

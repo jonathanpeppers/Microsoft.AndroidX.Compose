@@ -832,6 +832,8 @@ Bridges with more than 10 Kotlin slots (for example `Text`) require multiple
 and direct lowering must pass `0` (Uncertain) for the entire changed mask. Never forward
 only the first remapped group: forced recomposition with later groups missing
 can enter an invalid Compose path.
+Phase 11's secondary-discriminator remap must obey the same whole-route
+receiver/width guard; it must not add bits back after a route was made Uncertain.
 
 The bridge call switches to **named arguments** (`composer: composer,
 _changed: __changed`) when the bridge has the trailing optional, so the
