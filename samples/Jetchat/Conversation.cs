@@ -396,18 +396,23 @@ public static class Conversation
         MutableState<int>            selectedSelector,
         LazyListState                messagesScroll,
         MutableState<bool>           isRecording,
-        MutableNumberState<float>    swipeOffset) =>
-        new()
+        MutableNumberState<float>    swipeOffset)
+    {
+        var surface = new Surface
         {
-            Modifier.FillMaxWidth().NavigationBarsPadding().ImePadding(),
-            new Column
-            {
-                Modifier.FillMaxWidth(),
-                BuildTextFieldRow(input, scheme, isRecording, swipeOffset),
-                BuildSelectorRow(ui, input, scheme, selectedSelector, messagesScroll),
-                BuildSelectorPanel(input, scheme, selectedSelector),
-            },
+            TonalElevation = 2,
+            ContentColor = Color.FromPacked(scheme.Secondary),
+            Modifier = Modifier.FillMaxWidth().NavigationBarsPadding().ImePadding(),
         };
+        surface.Add(new Column
+        {
+            Modifier.FillMaxWidth(),
+            BuildTextFieldRow(input, scheme, isRecording, swipeOffset),
+            BuildSelectorRow(ui, input, scheme, selectedSelector, messagesScroll),
+            BuildSelectorPanel(input, scheme, selectedSelector),
+        });
+        return surface;
+    }
 
     static Row BuildTextFieldRow(
         MutableState<TextFieldValue> input,
@@ -549,7 +554,7 @@ public static class Conversation
         };
         button.Add(new Icon(drawableId, contentDescription)
         {
-            Tint = Color.FromPacked(selected ? scheme.OnSecondary : scheme.OnSurface),
+            Tint = Color.FromPacked(selected ? scheme.OnSecondary : scheme.Secondary),
         });
         if (selected)
             button.Modifier = Modifier
@@ -568,19 +573,22 @@ public static class Conversation
     {
         int sel = selectedSelector.Value;
         if (sel == 0) return Spacer.Width(0);
-        if (sel == SelEmoji) return EmojiSelector.Build(input, scheme);
+        var surface = new Surface { TonalElevation = 8 };
+        if (sel == SelEmoji)
+        {
+            surface.Add(EmojiSelector.Build(input, scheme));
+            return surface;
+        }
         string title    = "Functionality currently not available";
         string subtitle = "Grab a beverage and check back later!";
-        return new Column
+        surface.Add(new Column
         {
-            Modifier.FillMaxWidth().Height(320)
-                .Background(Color.FromPacked(scheme.SurfaceVariant)),
+            Modifier.FillMaxWidth().Height(320),
             Spacer.Height(96),
             new Text(title)
             {
                 FontSize   = 16,
                 FontWeight = FontWeight.Medium,
-                Color      = Color.FromPacked(scheme.OnSurfaceVariant),
                 Modifier   = Modifier.Padding(horizontal: 16),
             },
             Spacer.Height(8),
@@ -590,7 +598,8 @@ public static class Conversation
                 Color    = Color.FromPacked(scheme.OnSurfaceVariant),
                 Modifier = Modifier.Padding(horizontal: 16),
             },
-        };
+        });
+        return surface;
     }
 
 

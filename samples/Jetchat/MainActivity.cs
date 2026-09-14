@@ -15,6 +15,19 @@ public class MainActivity : ComponentActivity
 {
     protected override void OnCreate(Bundle? savedInstanceState)
     {
+#if DEBUG
+        var palette = Intent?.GetStringExtra("test-palette");
+        if (palette is not null)
+        {
+            var night = palette switch
+            {
+                "light" => Android.Content.Res.UiMode.NightNo,
+                "dark" => Android.Content.Res.UiMode.NightYes,
+                _ => throw new InvalidOperationException($"Unknown test palette '{palette}'."),
+            };
+            ApplyOverrideConfiguration(new Android.Content.Res.Configuration { UiMode = night });
+        }
+#endif
         base.OnCreate(savedInstanceState);
         this.EnableEdgeToEdge();
         this.SetContent(() =>

@@ -692,16 +692,33 @@ internal static partial class ComposeBridges
         Shape?     shape,
         IComposer  composer, int _changed = 0);
 
-    // androidx.compose.material3.SurfaceKt.Surface-T9BRK9s (non-interactive)
-    [ComposeBridge(
-        Class     = "androidx/compose/material3/SurfaceKt",
-        JvmName   = "Surface-T9BRK9s",
-        Signature = "(Landroidx/compose/ui/Modifier;Landroidx/compose/ui/graphics/Shape;JJFF" +
-                    "Landroidx/compose/foundation/BorderStroke;" +
-                    "Lkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;II)V",
-        Defaults  = typeof(SurfaceDefault))]
-    [ComposeFacade]
-    public static partial void Surface(IModifier? modifier, Shape? shape, IFunction2 content, IComposer composer, int _changed = 0);
+    [ComposeFacade(Defaults = typeof(SurfaceDefault))]
+    public static partial void Surface(
+        IModifier? modifier, Shape? shape,
+        [FacadeAdded] Color? color, [FacadeAdded] Color? contentColor,
+        [FacadeAdded] Dp? tonalElevation, [FacadeAdded] Dp? shadowElevation,
+        [FacadeAdded] Foundation.BorderStroke? border,
+        IFunction2 content, int defaults, IComposer composer, int _changed = 0);
+
+    public static partial void Surface(
+        IModifier? modifier, Shape? shape, Color? color, Color? contentColor,
+        Dp? tonalElevation, Dp? shadowElevation, Foundation.BorderStroke? border,
+        IFunction2 content, int defaults, IComposer composer, int _changed)
+    {
+        global::AndroidX.Compose.Surface.ContentObserver?.Invoke(content, defaults, _changed);
+        SurfaceKt.Surface(
+            modifier: modifier,
+            shape: shape?.JavaCast<UI.Graphics.IShape>(),
+            color: color.GetValueOrDefault().ToPacked(),
+            contentColor: contentColor.GetValueOrDefault().ToPacked(),
+            tonalElevation: Dp.Pack(tonalElevation),
+            shadowElevation: Dp.Pack(shadowElevation),
+            border: border,
+            content: content,
+            _composer: composer,
+            p9: _changed,
+            _changed: defaults);
+    }
 
     // androidx.compose.foundation.ImageKt.Image (Painter overload) — all
     // four `Image` Kotlin overloads share the JVM name `Image`, so the
