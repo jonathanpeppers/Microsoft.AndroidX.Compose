@@ -137,11 +137,13 @@ public class FabStylingTests
         }
         finally
         {
+            string frameTrace = "";
             instrumentation.RunOnMainSync(() =>
             {
-                Console.WriteLine(activity.FrameTrace);
+                frameTrace = activity.FrameTrace;
                 activity.Finish();
             });
+            Console.WriteLine(frameTrace);
             await activity.Destroyed.Task.WaitAsync(TimeSpan.FromSeconds(15));
         }
     }
