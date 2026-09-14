@@ -95,13 +95,12 @@ anchoring still follow positions, as in the upstream sample.
 - Message bubbles with a 40 dp circular avatar tile (16 dp horizontal
   padding around it, mirroring upstream's 74 dp avatar+padding
   reservation) and a rounded coloured bubble for the message body.
-- **Typography parity via the `Text` styling surface** — author names
-  at 16 sp / `FontWeight.Medium` (M3 `titleMedium`), timestamps at
-  12 sp (`bodySmall`), the "Today" separator at 11 sp / Medium /
-  1 sp letter-spacing (`labelSmall`, rounded from 0.5 sp because
-  `Sp` only takes integers), top-bar channel name at 16 sp / Medium
-  with a 12 sp member-count subtitle, and drawer brand / section /
-  chat labels at the matching M3 sizes.
+- **Pinned text metrics, including fractional spacing** — `JetchatTypography`
+  supplies the upstream font sizes, line heights, weights, and unrounded
+  letter spacing to the theme and the conversation, drawer, profile, and
+  emoji-selector labels. `Sp(float)` / `0.5f.Sp()` preserve the Kotlin
+  `TextUnit` float payload. See the bounded metric comparison below;
+  metric equality alone is not whole-app typography or font parity.
 - **Streak-aware avatars + per-author spacing** — when a sender
   posts multiple messages in a row, only the chronologically-last
   one shows the avatar tile; subsequent messages indent with a 72 dp
@@ -169,7 +168,7 @@ anchoring still follow positions, as in the upstream sample.
   send appends to the active channel and the UI recomposes.
 - Reactive channel selection via `MutableState<string>` — drawer
   taps flow into the title, the member count, the message list, and
-  the bolded selected chat row.
+  the selected chat row's colors.
 - Newly sent messages stamp `"now"` (matching upstream's
   `R.string.now` resource value).
 - **`NavController` / `NavHost` routing** between two destinations:
@@ -209,6 +208,46 @@ anchoring still follow positions, as in the upstream sample.
   `profile/{userId}` entry, so back would return to the previous
   profile rather than the conversation.
 
+## Bounded typography comparison (#334)
+
+The numeric reference is Google's
+[`theme/Typography.kt`](https://github.com/android/compose-samples/blob/4c1fe7586e2fbf1c934925ef8ab64d3803361423/Jetchat/app/src/main/java/com/example/compose/jetchat/theme/Typography.kt)
+at **`4c1fe7586e2fbf1c934925ef8ab64d3803361423`**, not moving `main`.
+`JetchatTypography.Build()` defines all 15 theme slots from that revision.
+The following screen text is explicitly assigned the corresponding metrics;
+buttons and the message editor also consume the theme's type slots.
+
+| Text / bounded screen | Upstream slot | Font size (sp) | Line height (sp) | Letter spacing (sp) | Weight |
+|---|---|---:|---:|---:|---|
+| Conversation channel and author names | titleMedium | 16 | 24 | 0.15 | SemiBold |
+| Member count, timestamps; drawer section headings; profile field labels | bodySmall | 12 | 16 | 0.4 | Bold |
+| Conversation date separator ("Today", "20 Aug") | labelSmall | 11 | 16 | 0.5 | SemiBold |
+| Message body; profile position and field values | bodyLarge | 16 | 24 | 0.15 | Normal |
+| Drawer channel and profile rows (selected and unselected) | bodyMedium | 14 | 20 | 0.25 | Medium |
+| Profile name | headlineSmall | 24 | 32 | 0 | SemiBold |
+| Emoji / sticker selector labels | titleSmall | 14 | 20 | 0.1 | Bold |
+| Send button (theme label) | labelLarge | 14 | 20 | 0.1 | SemiBold |
+
+The pinned sample uses **integer font sizes** in these styles; only letter
+spacing is fractional. The Gallery's **Fractional typography** demo separately
+exercises a 16.25 sp font, 24.75 sp line height, and positive/zero/negative
+tracking. No arbitrary fractional font-size adjustments are applied to Jetchat.
+
+`JetchatTypographyTests` compiles the actual sample metric definitions into
+the device test app and checks every native `Typography` slot's packed font
+size, line height, letter spacing, and weight. `ComposeValueTypeTests` checks
+the float bit payload through bound `GetSp(float)`, `TextStyle`, and `SpanStyle`.
+These are source/interop comparisons, not pixel-equality tests.
+
+The visual checklist is bounded to the initial composers conversation
+(channel/member labels, a visible author/timestamp/message and date separator),
+the open drawer, the colleague profile's name/fields, and the emoji-selector
+labels. Karla/Montserrat resource families are separate work in **#335**;
+fallback font shapes/advances, baseline layout, avatars/sample data, dynamic
+colors, and other recorded layout differences prevent a whole-screen parity
+claim. A matched Kotlin/C# screenshot comparison against this exact revision
+remains pending; no verified pinned Kotlin APK is available in this worktree.
+
 ## What's still omitted
 
 Everything that can be completed with the current facade is wired. The
@@ -219,7 +258,6 @@ official binding:
 |-------------------------------------------|--------------------|
 | Press-and-hold record gesture (`pointerInput` / `detectDragGesturesAfterLongPress`) | Missing Compose pointer-input surface; tracked by [#334](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/334). Until it lands, recording remains tap-to-start / tap-to-finish with draggable swipe cancellation. |
 | Record-button `updateTransition` + `animateFloat` / `animateColor` | Missing transition value-animation surface; tracked by [#335](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/335). The port retains its visually equivalent timer-driven pulse. |
-| Fractional `Sp` letter spacing (`0.5.sp`, `0.1.sp`) | `Sp` is integer-only; tracked by [#336](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/336). |
 | Karla / Montserrat resource-backed typography | Custom `Font(resourceId)` / `FontFamily(fonts)` construction is missing; tracked by [#337](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/337). |
 | Foundation text-input structure and IME Send callback | `BasicTextField` and keyboard-action support are missing; tracked by [#339](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/339). The current Material `TextField` preserves editing, placeholder, line, and IME-option behavior. |
 | Emoji-panel focus transfer and IME dismissal | `Modifier.focusTarget`, focus observation, and ambient focus-manager access are missing; tracked by [#340](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/340). |

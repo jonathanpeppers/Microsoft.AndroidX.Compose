@@ -45,7 +45,6 @@ that needs the same primitive.
 | [#168](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/168) | `TwoPane` / `NavigableListDetailPaneScaffold` + Jetpack `WindowManager` (`WindowLayoutInfo`/`FoldingFeature`) | Adaptive list-detail with fold avoidance in **Reply**. |
 | [#334](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/334) | Long-press pointer-input drag gestures | Exact push-to-talk gesture in **Jetchat**. |
 | [#335](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/335) | Transition float/color value animations | Record-button transitions in **Jetchat**. |
-| [#336](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/336) | Fractional `Sp` | Exact Jetchat typography metrics. |
 | [#337](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/337) | Resource-backed `Font` / custom `FontFamily` | Karla/Montserrat typography in **Jetchat**. |
 | [#339](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/339) | `BasicTextField` + keyboard actions | Exact message-editor structure and IME Send in **Jetchat**. |
 | [#340](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/340) | Focus target/observation/manager APIs | Emoji-panel focus transfer in **Jetchat**. |

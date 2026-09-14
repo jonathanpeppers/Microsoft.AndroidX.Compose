@@ -71,10 +71,9 @@ public static class JetchatDrawer
             Modifier.FillMaxWidth().Height(52).Padding(horizontal: 28),
             new Text(label)
             {
-                FontSize = 14,
                 Color    = Color.FromPacked(scheme.OnSurfaceVariant),
                 Modifier = Modifier.Padding(top: 16),
-            },
+            }.WithTypography(JetchatTypography.BodySmall),
         };
 
     static Row BuildChatItem(
@@ -113,11 +112,9 @@ public static class JetchatDrawer
             },
             new Text(channel)
             {
-                FontSize   = 14,
-                FontWeight = selected ? FontWeight.SemiBold : FontWeight.Normal,
                 Color      = textColor,
                 Modifier   = Modifier.Padding(top: 16, bottom: 16, start: 12),
-            },
+            }.WithTypography(JetchatTypography.BodyMedium),
         };
     }
 
@@ -156,10 +153,9 @@ public static class JetchatDrawer
             },
             new Text(name)
             {
-                FontSize = 14,
                 Color    = Color.FromPacked(scheme.OnSurface),
                 Modifier = Modifier.Padding(top: 16, bottom: 16, start: 12),
-            },
+            }.WithTypography(JetchatTypography.BodyMedium),
         };
     }
 }

@@ -78,16 +78,13 @@ public static class Conversation
             {
                 new Text(ui.ChannelName)
                 {
-                    FontSize   = 16,
-                    FontWeight = FontWeight.Medium,
                     Color      = Color.FromPacked(scheme.OnSurface),
-                },
+                }.WithTypography(JetchatTypography.TitleMedium),
                 new Text($"{ui.ChannelMembers} members")
                 {
-                    FontSize = 12,
                     Color    = Color.FromPacked(scheme.OnSurfaceVariant),
                     Modifier = Modifier.Padding(top: 2),
-                },
+                }.WithTypography(JetchatTypography.BodySmall),
             },
             Actions = new Row
             {
@@ -264,11 +261,9 @@ public static class Conversation
             },
             new Text(label)
             {
-                FontSize   = 11,
-                FontWeight = FontWeight.Medium,
                 Color      = Color.FromPacked(scheme.OnSurfaceVariant),
                 Modifier   = Modifier.Padding(horizontal: 16),
-            },
+            }.WithTypography(JetchatTypography.LabelSmall),
             new HorizontalDivider
             {
                 Modifier  = Modifier.Weight(1f),
@@ -338,18 +333,15 @@ public static class Conversation
             Modifier.Semantics(mergeDescendants: true, properties: _ => { }),
             new Text(m.Author)
             {
-                FontSize   = 16,
-                FontWeight = FontWeight.Medium,
                 Color      = Color.FromPacked(scheme.OnSurface),
                 Modifier   = Modifier.Padding(bottom: 8),
-            },
+            }.WithTypography(JetchatTypography.TitleMedium),
             Spacer.Width(8),
             new Text(m.Timestamp)
             {
-                FontSize = 12,
                 Color    = Color.FromPacked(scheme.OnSurfaceVariant),
                 Modifier = Modifier.Padding(bottom: 8),
-            },
+            }.WithTypography(JetchatTypography.BodySmall),
         };
 
     static ComposableNode BuildChatItemBubble(
@@ -373,7 +365,7 @@ public static class Conversation
                 Modifier = Modifier
                     .Background(bg, new RoundedCornerShape(4.Dp(), 20.Dp(), 20.Dp(), 20.Dp()))
                     .Padding(horizontal: 16, vertical: 16),
-            },
+            }.WithTypography(JetchatTypography.BodyLarge),
         };
         if (m.Image is int image)
         {

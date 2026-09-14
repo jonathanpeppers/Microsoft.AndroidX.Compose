@@ -1391,6 +1391,7 @@ AndroidX.Compose.Sp.CompareTo(AndroidX.Compose.Sp other) -> int
 AndroidX.Compose.Sp.Equals(AndroidX.Compose.Sp other) -> bool
 AndroidX.Compose.Sp.PackedValue.get -> long
 AndroidX.Compose.Sp.Sp() -> void
+AndroidX.Compose.Sp.Sp(float sp) -> void
 AndroidX.Compose.Sp.Sp(int sp) -> void
 AndroidX.Compose.Sp.Sp(long packedValue) -> void
 AndroidX.Compose.SpExtensions
@@ -2831,6 +2832,7 @@ static AndroidX.Compose.Sp.operator <=(AndroidX.Compose.Sp a, AndroidX.Compose.S
 static AndroidX.Compose.Sp.operator ==(AndroidX.Compose.Sp left, AndroidX.Compose.Sp right) -> bool
 static AndroidX.Compose.Sp.operator >(AndroidX.Compose.Sp a, AndroidX.Compose.Sp b) -> bool
 static AndroidX.Compose.Sp.operator >=(AndroidX.Compose.Sp a, AndroidX.Compose.Sp b) -> bool
+static AndroidX.Compose.SpExtensions.Sp(this float value) -> AndroidX.Compose.Sp
 static AndroidX.Compose.SpExtensions.Sp(this int value) -> AndroidX.Compose.Sp
 static AndroidX.Compose.Spacer.Height(AndroidX.Compose.Dp dp) -> AndroidX.Compose.Spacer!
 static AndroidX.Compose.Spacer.Size(AndroidX.Compose.Dp dp) -> AndroidX.Compose.Spacer!

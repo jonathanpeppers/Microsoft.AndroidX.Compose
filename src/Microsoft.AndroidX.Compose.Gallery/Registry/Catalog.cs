@@ -203,6 +203,7 @@ public static class Catalog
         D.Theming.CustomColorSchemeDemo.Demo,
         D.Theming.CustomShapesDemo.Demo,
         D.Theming.CustomTypographyDemo.Demo,
+        D.Theming.FractionalTypographyDemo.Demo,
         D.Theming.MaterialIconsDemo.Demo,
 
         // ---- Composable methods ----
