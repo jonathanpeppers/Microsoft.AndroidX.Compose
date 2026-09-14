@@ -20,6 +20,11 @@ internal static class MessageInput
     {
         int start = (int)(current.Selection >> 32);
         int end = (int)current.Selection;
+#if DEBUG
+        global::Android.Util.Log.Info("JetchatEditor",
+            $"BeforeEmojiInsert peer=0x{current.Handle:x} selection={start}..{end} " +
+            $"composition={current.Composition?.ToString() ?? "null"} textLength={current.Text.Length}");
+#endif
         int min = Math.Min(start, end);
         int max = Math.Max(start, end);
         var updated = string.Concat(current.Text.AsSpan(0, min), text, current.Text.AsSpan(max));

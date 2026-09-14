@@ -167,8 +167,8 @@ same while switching inset modes; its saved tap count must also survive
   Neither action clears editor focus, matching the pinned rapid-entry behavior.
   Emoji insertion replaces the current selection (including reversed
   selections), retains composition as upstream's `copy` does, and moves the
-  cursor to the end of the resulting buffer. Elevated `Surface` and panel
-  focus-transfer differences remain tracked below.
+  cursor to the end of the resulting buffer. Elevated `Surface` styling
+  remains separate.
 - **5 input-selector icons** — emoji, @ mention, image, location,
   video call — same row upstream's `UserInputSelector` provides.
   Each is a toggleable `IconButton` whose background fills with
