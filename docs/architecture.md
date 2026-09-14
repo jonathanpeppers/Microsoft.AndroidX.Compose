@@ -44,6 +44,27 @@ field null; subsequent native Row/Column defaults then crash. Initializing the
 outer interface first avoids the cycle. The cached global reference and
 fresh-local return contract stay unchanged, with local cleanup in `finally`.
 
+### Measured regression evidence
+
+On 2026-09-14, the embedded DeviceTests APK (SHA-256
+`430D6BE336F64A3521F6D20B37A9F0A9DBAC68444CBE5845D6F8AA18A923C014`)
+passed all seven `BaselineModifierTests` cases in one fresh instrumentation
+process on Pixel 7, including rejected cold scope builds before rendering.
+At density 2.625, the native measurements were:
+
+| Contract | Observed result |
+| --- | --- |
+| First / last text baselines | Equal absolute baselines at 78 / 375 px in tree and composerless rows; unchanged after managed and Java GC |
+| Published vertical lines | Column and FlowColumn placed children at X=53 / 0 with lines at 26 / 79 px, both meeting at X=79 |
+| Baseline-relative padding | 32 dp before = 84 px; 24 dp after = 63 px; minimum-constraint null/zero distinction and maximum-height limits passed |
+| Rectangular clipping | Both viewports measured 263x126 px; native PixelCopy found red inside both, red overflow without clipping, and white outside the clipped viewport |
+
+The three Gallery demos also rendered with readable labels. Jetchat recording,
+shifted cancellation content, and the unavailable-selector panel were captured;
+an interior drag clipped the cancellation arrow at the fixed viewport while
+retaining the text label, and a further drag cancelled recording successfully.
+These checks do not establish whole-sample parity or resolve profile parallax.
+
 ## The facade: composables as types
 
 Composables are **types**, not method calls. Each is a
