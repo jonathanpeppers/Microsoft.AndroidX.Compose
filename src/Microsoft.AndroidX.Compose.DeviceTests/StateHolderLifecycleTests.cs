@@ -14,6 +14,7 @@ public class StateHolderLifecycleTests
         var activity = await StartActivity(PickerStateLifecycleTestActivity.PickerKind.Date);
         try
         {
+            await WaitForInitialCommit();
             var state = PickerStateLifecycleTestActivity.DateState
                 ?? throw new InvalidOperationException("Date state was not initialized.");
             var jvm = await WaitFor(
@@ -66,6 +67,7 @@ public class StateHolderLifecycleTests
         var activity = await StartActivity(PickerStateLifecycleTestActivity.PickerKind.DateRange);
         try
         {
+            await WaitForInitialCommit();
             var state = PickerStateLifecycleTestActivity.DateRangeState
                 ?? throw new InvalidOperationException("Date-range state was not initialized.");
             var jvm = await WaitFor(
@@ -123,6 +125,7 @@ public class StateHolderLifecycleTests
         var activity = await StartActivity(PickerStateLifecycleTestActivity.PickerKind.Time);
         try
         {
+            await WaitForInitialCommit();
             var state = PickerStateLifecycleTestActivity.TimeState
                 ?? throw new InvalidOperationException("Time state was not initialized.");
             var jvm = await WaitFor(
@@ -176,20 +179,19 @@ public class StateHolderLifecycleTests
         intent.AddFlags(global::Android.Content.ActivityFlags.NewTask);
         context.StartActivity(intent);
 
-        var activity = await WaitFor(
+        return await WaitFor(
             static () => PickerStateLifecycleTestActivity.Current,
             static value => value is not null,
             "Picker lifecycle test activity did not start.")
             ?? throw new InvalidOperationException(
                 "Picker lifecycle test activity was unavailable.");
-
-        // A published peer can still expose uncommitted native snapshot values.
-        await WaitFor(
-            static () => PickerStateLifecycleTestActivity.CompletedRenderPasses,
-            static value => value > 0,
-            "Initial picker composition did not commit.");
-        return activity;
     }
+
+    // A published peer can still expose uncommitted native snapshot values.
+    static Task WaitForInitialCommit() => WaitFor(
+        static () => PickerStateLifecycleTestActivity.CompletedRenderPasses,
+        static value => value > 0,
+        "Initial picker composition did not commit.");
 
     static async Task HidePicker(PickerStateLifecycleTestActivity activity, Func<bool> isUnbound)
     {
