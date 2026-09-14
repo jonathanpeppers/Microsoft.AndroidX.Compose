@@ -248,6 +248,26 @@ colors, and other recorded layout differences prevent a whole-screen parity
 claim. A matched Kotlin/C# screenshot comparison against this exact revision
 remains pending; no verified pinned Kotlin APK is available in this worktree.
 
+### Device evidence
+
+On 2026-09-14, the embedded Debug build from `a25a8e3` passed **16/16**
+focused device cases (value-type and actual Jetchat typography interop),
+alongside **4/4** host compatibility/bridge-lowering tests. The Gallery
+fractional demo and all four Jetchat checklist states above were captured
+and inspected: text was readable, fractional tracking was visible in the
+Gallery comparison, and conversation/drawer/profile/emoji navigation completed.
+This is C# rendering evidence, not a matched Kotlin visual comparison.
+
+Capture configuration: **Pixel 7**, Android **API 37**,
+**1080 x 2400**, **420 dpi**, font scale **1.0**, system **dark** theme with
+dynamic colors. No device-wide settings were changed. Screenshots, UI
+hierarchies, the TRX, and installed-APK SHA-256 verification were retained
+in the issue execution artifacts (`gallery-fractional-typography.png`,
+`jetchat-conversation.png`, `jetchat-drawer.png`, `jetchat-profile.png`,
+`jetchat-emoji.png`, `sp-device-tests.trx`, `device-evidence.json`).
+Light theme, other display/font scales, and resource-font integration
+are not established by these captures.
+
 ## What's still omitted
 
 Everything that can be completed with the current facade is wired. The
