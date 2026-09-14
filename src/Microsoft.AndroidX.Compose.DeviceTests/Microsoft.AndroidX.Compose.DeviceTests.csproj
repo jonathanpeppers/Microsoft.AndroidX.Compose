@@ -30,6 +30,12 @@
           adb shell am instrument -w -e filter FullyQualifiedName~CarouselDefaultsTests net.compose.devicetests/net.compose.devicetests.TestInstrumentation
           adb shell am instrument -w -e filter FullyQualifiedName~StateHolderLifecycleTests net.compose.devicetests/net.compose.devicetests.TestInstrumentation
           adb shell am instrument -w -e filter FullyQualifiedName~Collection net.compose.devicetests/net.compose.devicetests.TestInstrumentation
+          adb shell am instrument -w -e filter FullyQualifiedName~ScaffoldInsetsTests net.compose.devicetests/net.compose.devicetests.TestInstrumentation
+
+        Scaffold admission controls (2 cases) and full transition/recreation control (1 case):
+
+          adb shell am instrument -w -e filter FullyQualifiedName~ScaffoldInsetsTests.InitialAdmission net.compose.devicetests/net.compose.devicetests.TestInstrumentation
+          adb shell am instrument -w -e filter FullyQualifiedName~ScaffoldInsetsTests.TransitionInitialControl net.compose.devicetests/net.compose.devicetests.TestInstrumentation
     -->
   </PropertyGroup>
 
