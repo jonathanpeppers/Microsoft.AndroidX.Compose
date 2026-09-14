@@ -7,6 +7,11 @@ using ImeAction = Android.Views.InputMethods.ImeAction;
 namespace Microsoft.AndroidX.Compose.DeviceTests;
 
 /// <summary>Exercises Foundation editing through real Android input connections on all authoring surfaces.</summary>
+/// <remarks>
+/// The fixture excludes the system IME from its own window so it cannot finish a
+/// composition concurrently with the test-owned native connection. Live keyboard
+/// acceptance is exercised separately in Jetchat.
+/// </remarks>
 [TestClass]
 [DoNotParallelize]
 public class BasicTextFieldTests

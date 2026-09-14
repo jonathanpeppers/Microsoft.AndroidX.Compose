@@ -5,6 +5,7 @@ using AndroidX.Activity;
 using AndroidX.Compose;
 using AndroidX.Compose.Runtime;
 using AndroidX.Compose.UI.Layout;
+using AndroidX.Compose.UI.Platform;
 using AndroidX.Compose.UI.Text.Input;
 using AndroidX.Compose.Samples.Jetchat;
 using TextLayoutResult = AndroidX.Compose.UI.Text.TextLayoutResult;
@@ -44,12 +45,18 @@ public class BasicTextFieldTestActivity : ComponentActivity
     internal int ResetCount;
     internal int DismissCount;
     internal int EditorHeight;
+    int _editorWidth;
+    Offset _editorPosition;
     internal string Stage { get; private set; } = "launch";
     int _appliedRevision = -1;
     bool _resumed;
     int _route;
     int _tracedRevision = -1;
     IInputConnection? _testConnection;
+    IViewRootForTest? _rootForTest;
+    IControlledComposition? _composition;
+    bool CompositionWorkPending => _composition is null || _composition.IsComposing ||
+        _composition.HasInvalidations || _composition.HasPendingChanges;
     bool IsStringRoute => _route is 3 or 4 or 5 or 7;
     TaskCompletionSource? _frame;
     TaskCompletionSource<BasicTextFieldTestActivity>? _ready;
@@ -58,10 +65,13 @@ public class BasicTextFieldTestActivity : ComponentActivity
     protected override void OnCreate(Bundle? savedInstanceState)
     {
         base.OnCreate(savedInstanceState);
+        var window = Window ?? throw new InvalidOperationException("Editor window missing.");
+        // Only the test-owned connection may edit this buffer; real IME acceptance uses Jetchat.
+        window.SetFlags(WindowManagerFlags.AltFocusableIm, WindowManagerFlags.AltFocusableIm);
         _ready = Ready;
         Created.TrySetResult(this);
         _route = Intent?.GetIntExtra("route", 0) ?? 0;
-        var decor = Window?.DecorView ?? throw new InvalidOperationException("Editor window missing.");
+        var decor = window.DecorView ?? throw new InvalidOperationException("Editor decor missing.");
         var observer = decor.ViewTreeObserver ?? throw new InvalidOperationException("Editor view observer missing.");
         observer.PreDraw += OnPreDraw;
         this.SetContent((IComposer c) => Content(c, this));
@@ -86,11 +96,22 @@ public class BasicTextFieldTestActivity : ComponentActivity
         if (!_resumed || !HasWindowFocus || decor?.RootWindowInsets is null ||
             decor.IsLayoutRequested || _appliedRevision != Revision.Value)
             return;
+        _rootForTest ??= (FindOwner(decor)
+            ?? throw new InvalidOperationException("Compose owner missing at editor pre-draw."))
+            .JavaCast<IViewRootForTest>();
+        if (!_rootForTest.IsLifecycleInResumedState || _rootForTest.HasPendingMeasureOrLayout ||
+            CompositionWorkPending)
+            return;
         // Completion is posted after the actual traversal, never a timer or value poll.
         var frame = _frame;
         var ready = _ready;
         decor.Post(() =>
         {
+            if (!_resumed || !HasWindowFocus || decor.IsLayoutRequested ||
+                _appliedRevision != Revision.Value || _rootForTest is null ||
+                !_rootForTest.IsLifecycleInResumedState || _rootForTest.HasPendingMeasureOrLayout ||
+                CompositionWorkPending)
+                return;
             if (_tracedRevision != _appliedRevision)
             {
                 _tracedRevision = _appliedRevision;
@@ -113,6 +134,8 @@ public class BasicTextFieldTestActivity : ComponentActivity
             _testConnection = null;
         }
         base.OnDestroy();
+        _rootForTest = null;
+        _composition = null;
         Destroyed.TrySetResult();
     }
 
@@ -178,8 +201,17 @@ public class BasicTextFieldTestActivity : ComponentActivity
             insets?.IsVisible(global::Android.Views.WindowInsets.Type.Ime()) == true;
         string native = !includeNative || _testConnection is null ? "no connection snapshot" :
             TextFieldConnectionSnapshot.Read(_testConnection);
+        string metrics = TextLayout is { } result
+            ? $"layoutSize=0x{result.Size:x} firstTop={result.GetLineTop(0):R} firstBottom={result.GetLineBottom(0):R} " +
+              $"font=0x{result.LayoutInput.Style.FontSize:x} lineHeight=0x{result.LayoutInput.Style.LineHeight:x} " +
+              $"density={result.LayoutInput.Density.Density:R} fontScale={result.LayoutInput.Density.FontScale:R} " +
+              $"softWrap={result.LayoutInput.SoftWrap}"
+            : "no layout";
         global::Android.Util.Log.Info("EditorTrace",
             $"route={_route} rev={Revision.Value} focused={Focused} window={HasWindowFocus} ime={imeVisible} " +
+            $"pending={_rootForTest?.HasPendingMeasureOrLayout} compositionPending={CompositionWorkPending} " +
+            $"size={_editorWidth}x{EditorHeight} " +
+            $"position={_editorPosition.X:R},{_editorPosition.Y:R} {metrics}; " +
             $"{message}; stage={Stage}; {native}");
     }
 
@@ -218,6 +250,7 @@ public class BasicTextFieldTestActivity : ComponentActivity
     internal static void Content(IComposer c, BasicTextFieldTestActivity activity)
     {
         int revision = activity.Revision.Value;
+        activity._composition = c.Composition;
         activity.Trace("composition");
         var options = c.Remember(() =>
         {
@@ -231,6 +264,9 @@ public class BasicTextFieldTestActivity : ComponentActivity
             var coordinates = peer?.JavaCast<ILayoutCoordinates>()
                 ?? throw new InvalidOperationException("Editor layout coordinates missing.");
             activity.EditorHeight = (int)coordinates.Size;
+            activity._editorWidth = (int)(coordinates.Size >> 32);
+            activity._editorPosition = Offset.FromPacked(LayoutCoordinatesKt.PositionInWindow(coordinates));
+            activity.Trace("positioned");
         });
         var modifier = Modifier.FillMaxWidth().FocusRequester(activity.Requester)
             .OnFocusChanged(state => activity.Focused = state.IsFocused)

@@ -13,7 +13,8 @@ namespace AndroidX.Compose.Samples.Jetchat;
 /// <c>ExtendedSelectorInnerButton</c> / <c>EmojiTable</c> helpers.
 /// </summary>
 /// <remarks>
-/// Tapping a glyph in the Emojis tab appends it to the shared input
+/// Tapping a glyph in the Emojis tab replaces the selection, or inserts at the caret,
+/// in the shared input
 /// state — same behaviour as upstream's <c>onTextAdded</c> callback
 /// that does <c>textState.addText(it)</c>. The Stickers tab renders a
 /// "not implemented" placeholder, matching upstream's intent (the real
@@ -72,7 +73,7 @@ public static class EmojiSelector
     ];
 
     /// <summary>Build the emoji selector panel.</summary>
-    /// <param name="input">Shared text-field state; tapped emojis are appended to <c>input.Value.Text</c> and the caret is moved to the end.</param>
+    /// <param name="input">Shared text-field state; tapped emojis replace the selection and the caret moves to the end of the resulting text.</param>
     /// <param name="scheme">Active Material 3 color scheme — used for the panel background + tab colors.</param>
     public static ComposableNode Build(MutableState<TextFieldValue> input, ColorScheme scheme) =>
         new Composed(c =>
