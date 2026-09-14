@@ -54,6 +54,9 @@ public static class Conversation
                 new Scaffold
                 {
                     Modifier = Modifier.NestedScroll(scrollBehavior.NestedScrollConnection),
+                    ContentWindowInsets = c.ScaffoldContentWindowInsets()
+                        .Exclude(c.NavigationBarsInsets())
+                        .Exclude(c.ImeInsets()),
                     TopBar = BuildTopBar(ui, scheme, onOpenDrawer, popupOpen, scrollBehavior),
                     Body   = BuildBody(ui, input, scheme, selectedSelector, messagesScroll, onAuthorClicked, isRecording, swipeOffset),
                 },
@@ -389,36 +392,48 @@ public static class Conversation
         return content;
     }
 
-    static Surface BuildInputArea(
+    static ComposableNode BuildInputArea(
         ConversationUiState          ui,
         MutableState<TextFieldValue> input,
         ColorScheme                  scheme,
         MutableState<int>            selectedSelector,
         LazyListState                messagesScroll,
         MutableState<bool>           isRecording,
-        MutableNumberState<float>    swipeOffset)
-    {
-        var surface = new Surface
+        MutableNumberState<float>    swipeOffset) =>
+        new Composed(c =>
         {
-            TonalElevation = 2,
-            ContentColor = Color.FromPacked(scheme.Secondary),
-            Modifier = Modifier.FillMaxWidth().NavigationBarsPadding().ImePadding(),
-        };
-        surface.Add(new Column
-        {
-            Modifier.FillMaxWidth(),
-            BuildTextFieldRow(input, scheme, isRecording, swipeOffset),
-            BuildSelectorRow(ui, input, scheme, selectedSelector, messagesScroll),
-            BuildSelectorPanel(input, scheme, selectedSelector),
+            var selectorFocus = c.Remember(() => new FocusRequester());
+            int selector = selectedSelector.Value;
+            c.LaunchedEffect(selector, _ =>
+            {
+                if (selector != 0 && selectedSelector.Value == selector)
+                    selectorFocus.RequestFocus();
+                return Task.CompletedTask;
+            });
+            var surface = new Surface
+            {
+                TonalElevation = 2,
+                ContentColor = Color.FromPacked(scheme.Secondary),
+                Modifier = Modifier.FillMaxWidth(),
+            };
+            surface.Add(new Column
+            {
+                // Keep the Surface behind the bars; its content owns these insets once.
+                Modifier.FillMaxWidth().NavigationBarsPadding().ImePadding()
+                    .FocusRequester(selectorFocus).Focusable(),
+                BuildTextFieldRow(input, scheme, isRecording, swipeOffset, selectedSelector),
+                BuildSelectorRow(ui, input, scheme, selectedSelector, messagesScroll),
+                BuildSelectorPanel(input, scheme, selectedSelector),
+            });
+            return surface;
         });
-        return surface;
-    }
 
     static Row BuildTextFieldRow(
         MutableState<TextFieldValue> input,
         ColorScheme                  scheme,
         MutableState<bool>           isRecording,
-        MutableNumberState<float>    swipeOffset)
+        MutableNumberState<float>    swipeOffset,
+        MutableState<int>            selectedSelector)
     {
         bool textEmpty = string.IsNullOrWhiteSpace(input.Value.Text);
 
@@ -436,6 +451,11 @@ public static class Conversation
                           {
                               Modifier = Modifier
                                   .FillMaxWidth()
+                                  .OnFocusChanged(focus =>
+                                  {
+                                      if (focus.IsFocused)
+                                          selectedSelector.Value = 0;
+                                  })
                                   .Semantics("Message"),
                               Placeholder = new Text("Type a message"),
                               KeyboardOptions = CreateMessageKeyboardOptions(),

@@ -1230,6 +1230,8 @@ AndroidX.Compose.Scaffold.BodyContent.get -> System.Func<AndroidX.Compose.Paddin
 AndroidX.Compose.Scaffold.BodyContent.set -> void
 AndroidX.Compose.Scaffold.BottomBar.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.Scaffold.BottomBar.set -> void
+AndroidX.Compose.Scaffold.ContentWindowInsets.get -> AndroidX.Compose.WindowInsets?
+AndroidX.Compose.Scaffold.ContentWindowInsets.set -> void
 AndroidX.Compose.Scaffold.FloatingActionButton.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.Scaffold.FloatingActionButton.set -> void
 AndroidX.Compose.Scaffold.Scaffold() -> void
@@ -2075,7 +2077,9 @@ static AndroidX.Compose.Composables.Row(System.Action! content) -> void
 static AndroidX.Compose.Composables.SafeContentInsets() -> AndroidX.Compose.WindowInsets!
 static AndroidX.Compose.Composables.SafeDrawingInsets() -> AndroidX.Compose.WindowInsets!
 static AndroidX.Compose.Composables.SafeGesturesInsets() -> AndroidX.Compose.WindowInsets!
-static AndroidX.Compose.Composables.Scaffold(System.Action<AndroidX.Compose.PaddingValues!>! content, AndroidX.Compose.Modifier? modifier = null, System.Action? topBar = null, System.Action? bottomBar = null, System.Action? snackbarHost = null, System.Action? floatingActionButton = null) -> void
+static AndroidX.Compose.Composables.Scaffold(System.Action<AndroidX.Compose.PaddingValues!>! content, AndroidX.Compose.Modifier? modifier = null, System.Action? topBar = null, System.Action? bottomBar = null, System.Action? snackbarHost = null, System.Action? floatingActionButton = null, AndroidX.Compose.WindowInsets? contentWindowInsets = null) -> void
+static AndroidX.Compose.Composables.Scaffold(System.Action<AndroidX.Compose.PaddingValues!>! content, AndroidX.Compose.Modifier? modifier, System.Action? topBar, System.Action? bottomBar, System.Action? snackbarHost, System.Action? floatingActionButton) -> void
+static AndroidX.Compose.Composables.ScaffoldContentWindowInsets() -> AndroidX.Compose.WindowInsets!
 static AndroidX.Compose.Composables.ScrollableTabRow(int selectedTabIndex, System.Action! tabs, AndroidX.Compose.Modifier? modifier = null) -> void
 static AndroidX.Compose.Composables.SearchBar(AndroidX.Compose.SearchBarState! state, System.Action! inputField, AndroidX.Compose.Modifier? modifier = null) -> void
 static AndroidX.Compose.Composables.SearchBarInputField(AndroidX.Compose.SearchBarTextFieldState! textState, AndroidX.Compose.SearchBarState! searchState, System.Action<string!>? onSearch = null, AndroidX.Compose.Modifier? modifier = null, System.Action? placeholder = null, System.Action? leadingIcon = null, System.Action? trailingIcon = null) -> void
@@ -2193,6 +2197,7 @@ static AndroidX.Compose.ComposeExtensions.RememberTopAppBarState(this AndroidX.C
 static AndroidX.Compose.ComposeExtensions.SafeContentInsets(this AndroidX.Compose.Runtime.IComposer! composer) -> AndroidX.Compose.WindowInsets!
 static AndroidX.Compose.ComposeExtensions.SafeDrawingInsets(this AndroidX.Compose.Runtime.IComposer! composer) -> AndroidX.Compose.WindowInsets!
 static AndroidX.Compose.ComposeExtensions.SafeGesturesInsets(this AndroidX.Compose.Runtime.IComposer! composer) -> AndroidX.Compose.WindowInsets!
+static AndroidX.Compose.ComposeExtensions.ScaffoldContentWindowInsets(this AndroidX.Compose.Runtime.IComposer! composer) -> AndroidX.Compose.WindowInsets!
 static AndroidX.Compose.ComposeExtensions.SetContent(this AndroidX.Activity.ComponentActivity! activity, System.Action! content) -> void
 static AndroidX.Compose.ComposeExtensions.SetContent(this AndroidX.Activity.ComponentActivity! activity, System.Action<AndroidX.Compose.Runtime.IComposer!>! content) -> void
 static AndroidX.Compose.ComposeExtensions.SetContent(this AndroidX.Activity.ComponentActivity! activity, System.Func<AndroidX.Compose.ComposableNode!>! content) -> void

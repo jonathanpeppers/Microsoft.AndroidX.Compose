@@ -43,6 +43,40 @@ display rows; day-header keys must occupy a separate namespace.
 Until such business identity exists, message-local state and viewport
 anchoring still follow positions, as in the upstream sample.
 
+## Conversation inset ownership
+
+The conversation follows `ConversationContent` and `UserInput` at pinned upstream
+commit `4c1fe7586e2fbf1c934925ef8ab64d3803361423`:
+`Scaffold.ContentWindowInsets` is the live Material 3 default with navigation-bar
+and IME insets excluded. Scaffold's remaining padding is forwarded once to the
+body column; the top app bar still owns its status-bar edge. The input's **inner
+column**, not its enclosing `Surface`, applies
+`NavigationBarsPadding().ImePadding()`. These consuming modifiers use the larger
+bottom inset rather than adding the navigation bar to the full keyboard height,
+and the Surface remains behind the navigation bar.
+
+Opening an expanded selector moves focus to the input container using the existing
+`FocusRequester`/`Focusable` APIs, ending the editor's IME session. Focusing the
+message field closes the selector again; Back dismisses the selector. This keeps
+the current Material `TextField` while the separate BasicTextField work is pending.
+Input/selector tonal styling is also separate from this ownership change.
+
+Omitting `ContentWindowInsets` (including in the profile screen) still uses
+Kotlin's regular default. Null means default; `new WindowInsets()` means a supplied
+all-zero value, not omission. The composable `Scaffold(..., contentWindowInsets: ...)`
+adapter supports the same contract and keeps its original CLR signature for
+compiled consumers and method groups.
+
+The Gallery's **Scaffold content insets** demo opens a dedicated edge-to-edge
+activity so the catalog's enclosing Scaffold cannot mask the result. Compare
+Default, Zero, and Input-owned modes, focus the editor, switch to the selector
+and back, dismiss the keyboard, and recreate the activity. Content must stay
+above the navigation bar/IME with no extra bottom strip. Device regressions
+also measure the actual body bounds and forwarded padding for both tree paths
+and both composable adapters. The demo's ordinary body identity must stay the
+same while switching inset modes; its saved tap count must also survive
+**Recreate activity** (a new ordinary identity after recreation is expected).
+
 ## What's faithful
 
 - **Input and selector Surface roles** — pinned
@@ -53,10 +87,10 @@ anchoring still follow positions, as in the upstream sample.
   its children no longer paint over that tint with `surfaceVariant`.
   Unselected input icons use `secondary`; selected icons use `onSecondary`.
   These changes leave editor focus, fonts, metrics, and inset ownership intact.
-  PR [#369](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/pull/369)
-  is a separate pending prerequisite for moving navigation/IME padding from
-  this Surface to its inner Column. The styling change does not import that
-  inset implementation; the combined arrangement needs validation after it lands.
+  The merged inset ownership from
+  [#369](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/pull/369)
+  is preserved: the Surface extends behind the bars, and its inner Column
+  owns navigation/IME padding once.
 - **Bundled Karla / Montserrat families** — the six unmodified fallback TTFs
   from upstream revision `4c1fe7586e2fbf1c934925ef8ab64d3803361423` are wired
   into `JetchatFonts`, theme typography and the conversation/drawer/profile
@@ -151,8 +185,9 @@ anchoring still follow positions, as in the upstream sample.
   upstream unavailable-feature dialog and resets to Emojis; selecting @ /
   image / location / video opens a `FunctionalityNotAvailable` panel —
   the same fallback upstream uses for the unbound selector pages.
-- **IME + navigation-bar safe insets** on the input area via
-  `Modifier.NavigationBarsPadding().ImePadding()` plus
+- **IME + navigation-bar safe insets** owned by the input's inner column via
+  `Modifier.NavigationBarsPadding().ImePadding()`, excluded from Scaffold's
+  content insets, plus
   `WindowSoftInputMode = SoftInput.AdjustResize` on the activity, so
   the keyboard pushes the input row up without obscuring it (and
   without the system's default `adjustUnspecified` behaviour
@@ -168,9 +203,10 @@ anchoring still follow positions, as in the upstream sample.
   to record" tooltip. See *What's still omitted* for the exact gesture
   and transition-animation gaps.
 - **Expanded-input dismissal** — `BackHandler` collapses any open
-  selector before system back reaches navigation. Exact upstream focus
-  transfer from the editor to the emoji panel requires the focus-target
-  APIs tracked below.
+  selector before system back reaches navigation. The existing focusable input
+    container takes focus from the editor when a selector opens or changes, not
+    on unrelated recompositions. Exact upstream `focusTarget` APIs remain #342;
+    this sample reuses `Focusable` rather than adding another focus API.
 - **Image attachment bubbles** — the upstream sticker drawable is seeded
   on the second message and rendered in its own 160 dp rounded bubble
   through the existing resource-backed `Image` facade.
@@ -317,8 +353,7 @@ official binding:
 | Record-button `updateTransition` + `animateFloat` / `animateColor` | Missing transition value-animation surface; tracked by [#336](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/336). The port retains its visually equivalent timer-driven pulse. |
 | Google Fonts provider typography | The exact pinned Karla / Montserrat resource fallbacks are bundled. Provider-backed downloads remain outside the resource-font API; no downloaded-font parity is claimed. |
 | Foundation text-input structure and IME Send callback | `BasicTextField` and keyboard-action support are missing; tracked by [#340](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/340). The current Material `TextField` preserves editing, placeholder, line, and IME-option behavior. |
-| Emoji-panel focus transfer and IME dismissal | `Modifier.focusTarget`, focus observation, and ambient focus-manager access are missing; tracked by [#342](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/342). |
-| Scaffold inset exclusion | `Scaffold.contentWindowInsets` cannot yet be customized, so the port applies IME/navigation padding directly to the input surface; tracked by [#339](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/339). |
+| Exact upstream emoji-panel focus target | Selector focus transfer currently uses the input container's `Focusable` fallback. `Modifier.focusTarget` and ambient focus-manager access remain tracked by [#342](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/342). |
 | Exact baseline spacing and clipped profile parallax | Baseline-relative alignment/padding and `clipToBounds` modifiers are missing; tracked by [#341](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/341). |
 | Profile FAB tertiary container | Material 3 FAB color/elevation slots are omitted by the current facades; tracked by [#344](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/344). The port uses the default primary-container/content pair to preserve contrast. |
 | Glance home-screen widget + `requestPinAppWidget(...)` | No official .NET binding for `androidx.glance:glance-appwidget` is currently published. Upstream only shows the drawer entry when a compatible widget provider can be pinned, so the port omits it until that binding exists. |
