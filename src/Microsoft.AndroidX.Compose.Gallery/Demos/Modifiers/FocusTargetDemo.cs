@@ -20,7 +20,7 @@ public static class FocusTargetDemo
             var expanded = c.MutableStateOf(false);
             var tick = c.MutableStateOf(0);
             var editorFocus = c.MutableStateOf(false);
-            var selectorState = c.MutableStateOf(new FocusState(false, false, false));
+            var selectorState = c.MutableStateOf(new FocusState(false, false, false).ToString());
             bool visible = expanded.Value;
             c.LaunchedEffect(visible, _ =>
             {
@@ -48,7 +48,7 @@ public static class FocusTargetDemo
                 visible ? new Column
                 {
                     Modifier.FocusRequester(selector)
-                        .OnFocusChanged(state => selectorState.Value = state)
+                        .OnFocusChanged(state => selectorState.Value = state.ToString())
                         .FocusTarget().Semantics("Focus demo selector"),
                     new Text("Selector (not an extra accessibility focus stop)"),
                     new Button(() => selector.CaptureFocus()) { new Text("Capture selector focus") },
