@@ -55,6 +55,8 @@ public class FabStylingTestActivity : ComponentActivity
     readonly object progressLock = new();
     TaskCompletionSource progress = NewCompletion();
     readonly List<string> frameTrace = [];
+    readonly Dictionary<string, (IControlledComposition Composition, Kotlin.Coroutines.ICoroutineContext Context,
+        IMonotonicFrameClock Clock, long ObservedAt)> compositionContexts = [];
     internal string FrameTrace => string.Join(System.Environment.NewLine, frameTrace);
 
     internal static TaskCompletionSource NewCompletion() =>
@@ -79,6 +81,7 @@ public class FabStylingTestActivity : ComponentActivity
         view.ViewDetachedFromWindow += (_, _) => DetachDrawObserver();
         view.SetContent((IComposer c) =>
         {
+            ObserveCompositionContext("root", c);
             int phase = Phase.Value;
             bool dark = phase is 4 or 6;
             var light = c.Remember(() => MaterialTheme.LightColorScheme(
@@ -281,21 +284,33 @@ public class FabStylingTestActivity : ComponentActivity
     ComposableNode CreateLabel() => new Composed(c =>
         new Text("Expanded label") { Modifier = MeasureContent(c, label: true) });
 
-    internal Modifier MeasureContent(IComposer composer, bool label) => composer.Remember(() =>
+    internal Modifier MeasureContent(IComposer composer, bool label)
     {
-        var placed = new ComposableLambda1(value =>
+        ObserveCompositionContext(label ? "label" : "icon", composer);
+        return composer.Remember(() =>
         {
-            var current = value?.JavaCast<ILayoutCoordinates>()
-                ?? throw new InvalidOperationException("FAB content placement did not provide native coordinates.");
-            if (label) labelCoordinates = current;
-            else iconCoordinates = current;
-            placementVersion++;
-            SignalProgress();
+            var placed = new ComposableLambda1(value =>
+            {
+                var current = value?.JavaCast<ILayoutCoordinates>()
+                    ?? throw new InvalidOperationException("FAB content placement did not provide native coordinates.");
+                if (label) labelCoordinates = current;
+                else iconCoordinates = current;
+                placementVersion++;
+                SignalProgress();
+            });
+            return Modifier.Companion.AppendBound(
+                bound => OnGloballyPositionedModifierKt.OnGloballyPositioned(bound, placed),
+                ModifierOpKey.Opaque);
         });
-        return Modifier.Companion.AppendBound(
-            bound => OnGloballyPositionedModifierKt.OnGloballyPositioned(bound, placed),
-            ModifierOpKey.Opaque);
-    });
+    }
+
+    void ObserveCompositionContext(string slot, IComposer composer)
+    {
+        if (variant != 3) return;
+        var context = composer.ApplyCoroutineContext;
+        compositionContexts[slot] = (composer.Composition, context,
+            MonotonicFrameClockKt.GetMonotonicFrameClock(context), SystemClock.UptimeMillis());
+    }
 
     protected override void OnResume()
     {
@@ -332,6 +347,7 @@ public class FabStylingTestActivity : ComponentActivity
         coordinates = null;
         iconCoordinates = null;
         labelCoordinates = null;
+        compositionContexts.Clear();
         view = null;
         base.OnDestroy();
         Destroyed.TrySetResult();
@@ -420,8 +436,52 @@ public class FabStylingTestActivity : ComponentActivity
             $"composePending={recomposer?.HasPendingWork}, state={recomposer?.CurrentState.Value}, " +
             $"measurePending={owner?.HasPendingMeasureOrLayout}, viewLayout={view?.IsLayoutRequested}, ownerLayout={owner?.View.IsLayoutRequested}, " +
             $"viewDirty={view?.IsDirty}, ownerDirty={owner?.View.IsDirty}, " +
-            $"snapshotPending={snapshots?.Current.HasPendingChanges}, applyPending={snapshots?.IsApplyObserverNotificationPending}.");
+            $"snapshotPending={snapshots?.Current.HasPendingChanges}, applyPending={snapshots?.IsApplyObserverNotificationPending}, " +
+            DescribeCompositionContexts());
     }
+
+    string DescribeCompositionContexts()
+    {
+        var composeView = view ?? throw new InvalidOperationException("FAB trace ComposeView missing.");
+        var liveContext = WindowRecomposer_androidKt.FindViewTreeCompositionContext(composeView);
+        var liveOwner = owner?.View;
+        var ownerContext = liveOwner is null ? null : WindowRecomposer_androidKt.FindViewTreeCompositionContext(liveOwner);
+        var selected = recomposer;
+        if (selected is null)
+            return $"recomposer=unobserved, liveContext={PeerIdentity(liveContext)}, ownerContext={PeerIdentity(ownerContext)}.";
+
+        // Pinned runtime diagnostics only; these observations never admit a frame.
+        using var pausedField = selected.Class.GetDeclaredField("frameClockPaused")
+            ?? throw new InvalidOperationException("Pinned Recomposer.frameClockPaused diagnostic field missing.");
+        pausedField.Accessible = true;
+        var effectContext = selected.EffectCoroutineContext;
+        var effectClock = MonotonicFrameClockKt.GetMonotonicFrameClock(effectContext);
+        var slots = compositionContexts.Select(pair =>
+            $"{pair.Key}=[observedAt={pair.Value.ObservedAt}, composition={PeerIdentity(pair.Value.Composition)}, context={PeerIdentity(pair.Value.Context)}, " +
+            $"clock={DescribeClock(pair.Value.Clock)}, sameEffectClock={Peer(pair.Value.Clock).Equals(Peer(effectClock))}]");
+        return $"recomposer={PeerIdentity(selected)}, liveContext={PeerIdentity(liveContext)}, " +
+            $"owner={PeerIdentity(liveOwner)}, ownerContext={PeerIdentity(ownerContext)}, " +
+            $"frameClockPaused={pausedField.GetBoolean(selected)}, effectContext={PeerIdentity(effectContext)}, " +
+            $"effectClock={DescribeClock(effectClock)}, {string.Join(", ", slots)}.";
+    }
+
+    static string DescribeClock(IMonotonicFrameClock clock)
+    {
+        var peer = Peer(clock);
+        if (peer.Class.Name != "androidx.compose.runtime.BroadcastFrameClock")
+            return $"{PeerIdentity(peer)} (no pinned awaiter accessor for this clock type)";
+        using var method = peer.Class.GetMethod("getHasAwaiters")
+            ?? throw new InvalidOperationException("Pinned BroadcastFrameClock.getHasAwaiters diagnostic method missing.");
+        var pending = method.Invoke(peer) as Java.Lang.Boolean
+            ?? throw new InvalidOperationException("BroadcastFrameClock.getHasAwaiters did not return a Boolean.");
+        return $"{PeerIdentity(peer)} (hasAwaiters={pending.BooleanValue()})";
+    }
+
+    static Java.Lang.Object Peer(object value) => value as Java.Lang.Object
+        ?? throw new InvalidOperationException($"FAB trace expected a native Java peer for {value.GetType().FullName}.");
+
+    static string PeerIdentity(object? value) => value is null ? "unobserved"
+        : $"{Peer(value).Class.Name}@{Java.Lang.JavaSystem.IdentityHashCode(Peer(value)):X8}";
 
     void SignalProgress()
     {
