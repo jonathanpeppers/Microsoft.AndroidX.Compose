@@ -105,6 +105,26 @@ API is introduced. Until all groups/receiver positions are modelled, wide
 and receiver-bearing bridge calls remain entirely Uncertain, never a
 partially forwarded first group.
 
+### Live FAB defaults
+
+The four Material 3 FAB wrappers distinguish the caller's logical omission
+mask from the mask sent to Kotlin. In Material3Android 1.4.0.5, comparers
+before `startDefaults` depend on default bits; their results also determine
+which comparers run in the private FAB implementation. Changing that slot
+footprint can place a cached `Long` where the private FAB expects its
+remembered semantics `Function1` (`FloatingActionButton.kt:151`).
+
+`FabStyleDefaults` resolves omitted modifier, family-specific shape, colors,
+and elevation through the existing native companion/bound factories.
+Composable default reads occupy always-present, separate caller-owned
+groups. Supplied values, including zero and explicit null, are not replaced
+by defaults. The nullable interaction source passes through unchanged, so
+Kotlin still owns its internal source when none is supplied.
+The final bound FAB call supplies every parameter with constant generated
+`Default.None` and an Uncertain `$changed` mask. This also keeps live
+modifier/shape omission changes from adding or removing native comparers;
+it does not remount the FAB or its children.
+
 ## Can we "just call" the Kotlin plugin?
 
 **No, not in any practical sense.** The plugin only runs *inside `kotlinc`* — it hooks into Kotlin's FIR/IR APIs (`FirExtensionRegistrar`, `IrGenerationExtension`). It cannot operate on:

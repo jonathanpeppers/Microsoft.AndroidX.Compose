@@ -9,6 +9,7 @@ namespace Microsoft.AndroidX.Compose.DeviceTests;
 [DoNotParallelize]
 public class FabStylingTests
 {
+    /// <summary>Exercises live optional styling and remembered content through all four facade routes.</summary>
     [TestMethod]
     [DataRow(0, false)]
     [DataRow(1, false)]
@@ -18,7 +19,14 @@ public class FabStylingTests
     [DataRow(1, true)]
     [DataRow(2, true)]
     [DataRow(3, true)]
-    public async Task StylingTransitionsKeepNativeDefaultsAndRememberedContent(int variant, bool direct)
+    public Task StylingTransitionsKeepNativeDefaultsAndRememberedContent(int variant, bool direct) =>
+        RunCase(variant, direct);
+
+    /// <summary>Runs the same transitions through the official bound API with constant native masks.</summary>
+    [TestMethod]
+    public Task NativeControlKeepsRememberedContent() => RunCase(4, false);
+
+    static async Task RunCase(int variant, bool direct)
     {
         var instrumentation = TestInstrumentation.Current
             ?? throw new InvalidOperationException("FAB tests require the native instrumentation runner.");
@@ -28,7 +36,7 @@ public class FabStylingTests
             ?? throw new InvalidOperationException("Instrumentation target context unavailable.");
         FabStylingTestActivity.Ready = FabStylingTestActivity.NewReady();
         using var intent = new global::Android.Content.Intent(context, typeof(FabStylingTestActivity));
-        intent.AddFlags(global::Android.Content.ActivityFlags.NewTask);
+        intent.AddFlags(global::Android.Content.ActivityFlags.NewTask | global::Android.Content.ActivityFlags.NoAnimation);
         intent.PutExtra("variant", variant);
         intent.PutExtra("direct", direct);
         instrumentation.RunOnMainSync(() => context.StartActivity(intent));
@@ -37,7 +45,7 @@ public class FabStylingTests
         {
             object? identity = null;
             int expandedWidth = 0;
-            for (int phase = 0; phase <= 11; phase++)
+            for (int phase = 0; phase <= 15; phase++)
             {
                 if (phase != 0)
                 {
@@ -54,6 +62,9 @@ public class FabStylingTests
                 using var bounds = new global::Android.Graphics.Rect(
                     measured.Left, measured.Top, measured.Left + measured.Width, measured.Top + measured.Height);
                 Assert.IsTrue(bounds.Width() > 0 && bounds.Height() > 0, "FAB layout must be admitted before pixels are read.");
+                using var windowBounds = new global::Android.Graphics.Rect(
+                    measured.WindowLeft, measured.WindowTop, measured.WindowLeft + measured.Width, measured.WindowTop + measured.Height);
+                using var pixels = await activity.CaptureFabAsync(windowBounds);
                 using var screenshot = automation.TakeScreenshot()
                     ?? throw new InvalidOperationException("Native FAB screenshot unavailable.");
                 var directory = activity.GetExternalFilesDir(null)?.AbsolutePath
@@ -64,8 +75,17 @@ public class FabStylingTests
                         ?? throw new InvalidOperationException("Native PNG encoder unavailable.");
                     Assert.IsTrue(screenshot.Compress(png, 100, file));
                 }
-                int actual = screenshot.GetPixel(bounds.Left + bounds.Width() / 4, bounds.CenterY());
+                int sampleX = pixels.Width / 2;
+                int sampleY = pixels.Height / 8;
+                foreach (var content in measured.Content)
+                    Assert.IsFalse(
+                        measured.WindowLeft + sampleX >= content.Left && measured.WindowLeft + sampleX < content.Right
+                        && measured.WindowTop + sampleY >= content.Top && measured.WindowTop + sampleY < content.Bottom,
+                        "The fixed container sample must not intersect native icon or label layout bounds.");
+                int actual = pixels.GetPixel(sampleX, sampleY);
                 var expectedContainer = Container(phase);
+                Console.WriteLine($"FAB {variant}, direct={direct}, phase={phase}, bounds={bounds}, " +
+                    $"window={windowBounds}, pixel={actual:X8}, content={activity.ContentColor:X16}, elevation={activity.TonalElevation}.");
                 Assert.AreEqual(unchecked((int)(expectedContainer.ToPacked() >> 32)), actual,
                     $"Container pixel for variant {variant}, direct={direct}, phase={phase}.");
                 Assert.AreEqual(Foreground(phase).ToPacked(), activity.ContentColor, $"Native inherited content, phase={phase}.");

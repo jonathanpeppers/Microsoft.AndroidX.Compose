@@ -17,7 +17,7 @@ internal sealed class FabContentProbe(FabStylingTestActivity activity) : Composa
             ?? throw new InvalidOperationException("FAB content did not receive a native tonal elevation.");
         long packed = unchecked((long)color.Value);
         float dp = elevation.Value;
-        new Text("+").Render(composer);
+        new Text("+") { Modifier = activity.MeasureContent(composer, label: false) }.Render(composer);
         composer.SideEffect(() =>
         {
             activity.ContentIdentity = identity;

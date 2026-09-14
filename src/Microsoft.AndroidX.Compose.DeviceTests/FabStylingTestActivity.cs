@@ -1,4 +1,6 @@
+using Android.OS;
 using Android.Runtime;
+using Android.Views;
 using AndroidX.Activity;
 using AndroidX.Compose;
 using AndroidX.Compose.Foundation.Interaction;
@@ -30,6 +32,11 @@ public class FabStylingTestActivity : ComponentActivity
     internal bool Pressed;
     internal int Clicks;
     ILayoutCoordinates? coordinates;
+    ILayoutCoordinates? iconCoordinates;
+    ILayoutCoordinates? labelCoordinates;
+    ViewTreeObserver? frameObserver;
+    Java.Lang.IRunnable? frameCallback;
+    TaskCompletionSource? frameCompletion;
     int committedPhase = -1;
     bool resumed;
     int variant;
@@ -131,17 +138,60 @@ public class FabStylingTestActivity : ComponentActivity
                 bound => OnGloballyPositionedModifierKt.OnGloballyPositioned(bound, placed),
                 ModifierOpKey.Opaque);
         });
+        Modifier? suppliedModifier = phase == 14 ? null : modifier;
+        Shape? shape = phase == 12 ? Shape.Rectangle : null;
+        var logical = FloatingActionButtonDefault.All;
+        if (suppliedModifier is not null) logical &= ~FloatingActionButtonDefault.Modifier;
+        if (shape is not null) logical &= ~FloatingActionButtonDefault.Shape;
+        if (container is not null) logical &= ~FloatingActionButtonDefault.ContainerColor;
+        if (foreground is not null) logical &= ~FloatingActionButtonDefault.ContentColor;
+        if (elevation is not null) logical &= ~FloatingActionButtonDefault.Elevation;
+        if (source is not null) logical &= ~FloatingActionButtonDefault.InteractionSource;
+        int logicalMask = variant == 3
+            ? (int)Enum.Parse<ExtendedFloatingActionButtonDefault>(logical.ToString())
+            : (int)logical;
+        global::Android.Util.Log.Info("FabStyling",
+            $"Before FAB variant={variant}, direct={direct}, phase={phase}, logicalDefault={logicalMask}, " +
+            $"nativeDefault=0, nativeChanged=0, source={(source is null ? "native-owned" : ReferenceEquals(source, sourceA) ? "A" : "B")}");
         Action click = () => Clicks++;
+        if (variant == 4)
+        {
+            // Independent bound control: every native default bit is fixed, with no facade resolver.
+            global::AndroidX.Compose.UI.Graphics.IShape nativeShape;
+            long resolvedContainer, nativeContent;
+            FloatingActionButtonElevation nativeElevation;
+            c.StartReplaceableGroup(CompositionGroupKey.Compute(0, typeof(FabStylingTestActivity)));
+            try
+            {
+                nativeShape = FloatingActionButtonDefaults.Instance.GetShape(c, 0);
+                long nativeContainer = FloatingActionButtonDefaults.Instance.GetContainerColor(c, 0);
+                resolvedContainer = container?.ToPacked() ?? nativeContainer;
+                nativeContent = ColorSchemeKt.ContentColorFor(resolvedContainer, c, 0);
+                nativeElevation = FloatingActionButtonDefaults.Instance.Elevation(0, 0, 0, 0, c,
+                    p5: 0, _changed: (int)FloatingActionButtonElevationDefault.All);
+            }
+            finally
+            {
+                c.EndReplaceableGroup();
+            }
+            var body = ComposableLambdas.Wrap2(c, inner => content.Render(inner));
+            FloatingActionButtonKt.FloatingActionButton(c.RememberAction(click),
+                suppliedModifier?.Build() ?? Modifier.BuildEmpty(),
+                shape?.JavaCast<global::AndroidX.Compose.UI.Graphics.IShape>() ?? nativeShape,
+                resolvedContainer, foreground?.ToPacked() ?? nativeContent, elevation ?? nativeElevation, source,
+                body, c, p9: 0, _changed: (int)FloatingActionButtonDefault.None);
+            return;
+        }
         if (direct)
         {
-            RenderDirect(c, this, click, modifier, container, foreground, elevation, source, phase != 8);
+            RenderDirect(c, this, click, suppliedModifier, shape, container, foreground, elevation, source, phase != 8);
             return;
         }
         if (variant == 3)
         {
             new ExtendedFloatingActionButton(click, phase != 8)
             {
-                Modifier = modifier, Icon = content, Text = new Text("Expanded label"),
+                Modifier = suppliedModifier, Shape = shape, Icon = content, Text = CreateLabel(),
                 ContainerColor = container, ContentColor = foreground, Elevation = elevation, InteractionSource = source,
             }.Render(c);
             return;
@@ -158,16 +208,19 @@ public class FabStylingTestActivity : ComponentActivity
             created.Add(content);
             return created;
         });
-        node.Modifier = modifier;
+        node.Modifier = suppliedModifier;
         switch (node)
         {
             case FloatingActionButton fab:
+                fab.Shape = shape;
                 fab.ContainerColor = container; fab.ContentColor = foreground; fab.Elevation = elevation; fab.InteractionSource = source;
                 break;
             case SmallFloatingActionButton fab:
+                fab.Shape = shape;
                 fab.ContainerColor = container; fab.ContentColor = foreground; fab.Elevation = elevation; fab.InteractionSource = source;
                 break;
             case LargeFloatingActionButton fab:
+                fab.Shape = shape;
                 fab.ContainerColor = container; fab.ContentColor = foreground; fab.Elevation = elevation; fab.InteractionSource = source;
                 break;
         }
@@ -176,13 +229,14 @@ public class FabStylingTestActivity : ComponentActivity
 
     [global::AndroidX.Compose.Composable]
     internal static void RenderDirect(IComposer c, FabStylingTestActivity activity, Action click,
-        Modifier modifier, Color? container, Color? foreground, FloatingActionButtonElevation? elevation,
+        Modifier? modifier, Shape? shape, Color? container, Color? foreground, FloatingActionButtonElevation? elevation,
         IMutableInteractionSource? source, bool expanded)
     {
         var probe = activity.probe ?? throw new InvalidOperationException("Direct FAB content probe missing.");
         // These are surfaced-argument omission bits, not Kotlin default masks.
         // One lexical helper site per variant exercises live omission changes.
-        ulong omitted = 1UL << 3;
+        ulong omitted = shape is null ? 1UL << 3 : 0;
+        if (modifier is null) omitted |= 1UL << 2;
         if (container is null) omitted |= 1UL << 4;
         if (foreground is null) omitted |= 1UL << 5;
         if (elevation is null) omitted |= 1UL << 6;
@@ -191,23 +245,41 @@ public class FabStylingTestActivity : ComponentActivity
         {
             case 0:
                 Composables.FloatingActionButton_PrimaryResource_Implicit_WithAddedSlots(c, click, () => probe.Render(),
-                    modifier, null, container, foreground, elevation, source, omitted);
+                    modifier, shape, container, foreground, elevation, source, omitted);
                 break;
             case 1:
                 Composables.SmallFloatingActionButton_PrimaryResource_Implicit_WithAddedSlots(c, click, () => probe.Render(),
-                    modifier, null, container, foreground, elevation, source, omitted);
+                    modifier, shape, container, foreground, elevation, source, omitted);
                 break;
             case 2:
                 Composables.LargeFloatingActionButton_PrimaryResource_Implicit_WithAddedSlots(c, click, () => probe.Render(),
-                    modifier, null, container, foreground, elevation, source, omitted);
+                    modifier, shape, container, foreground, elevation, source, omitted);
                 break;
             case 3:
                 Composables.ExtendedFloatingActionButton_PrimaryResource_Implicit_WithAddedSlots(c, click, expanded,
-                    () => Composables.Text("Expanded label"), () => probe.Render(),
-                    modifier, null, container, foreground, elevation, source, omitted << 2);
+                    () => activity.CreateLabel().Render(), () => probe.Render(),
+                    modifier, shape, container, foreground, elevation, source, omitted << 2);
                 break;
         }
     }
+
+    ComposableNode CreateLabel() => new Composed(c =>
+        new Text("Expanded label") { Modifier = MeasureContent(c, label: true) });
+
+    internal Modifier MeasureContent(IComposer composer, bool label) => composer.Remember(() =>
+    {
+        var placed = new ComposableLambda1(value =>
+        {
+            var current = value?.JavaCast<ILayoutCoordinates>()
+                ?? throw new InvalidOperationException("FAB content placement did not provide native coordinates.");
+            if (label) labelCoordinates = current;
+            else iconCoordinates = current;
+            SignalProgress();
+        });
+        return Modifier.Companion.AppendBound(
+            bound => OnGloballyPositionedModifierKt.OnGloballyPositioned(bound, placed),
+            ModifierOpKey.Opaque);
+    });
 
     protected override void OnResume()
     {
@@ -233,12 +305,17 @@ public class FabStylingTestActivity : ComponentActivity
 
     protected override void OnDestroy()
     {
+        RemoveFrameCallback();
+        frameCompletion?.TrySetException(new ObjectDisposedException(nameof(FabStylingTestActivity)));
+        frameCompletion = null;
         if (drawObserver is { IsAlive: true }) drawObserver.Draw -= OnDraw;
         drawObserver = null;
         owner = null;
         recomposer = null;
         snapshots = null;
         coordinates = null;
+        iconCoordinates = null;
+        labelCoordinates = null;
         view = null;
         base.OnDestroy();
         Destroyed.TrySetResult();
@@ -255,7 +332,8 @@ public class FabStylingTestActivity : ComponentActivity
         }
     }
 
-    internal async Task<(int Left, int Top, int Width, int Height)> WaitForNativeIdleAsync()
+    internal async Task<(int Left, int Top, int Width, int Height, int WindowLeft, int WindowTop,
+        (float Left, float Top, float Right, float Bottom)[] Content)> WaitForNativeIdleAsync()
     {
         var instrumentation = TestInstrumentation.Current
             ?? throw new InvalidOperationException("FAB instrumentation is not running.");
@@ -266,7 +344,8 @@ public class FabStylingTestActivity : ComponentActivity
             lock (progressLock) changed = progress.Task;
             await Task.Run(instrumentation.WaitForIdleSync).WaitAsync(timeout.Token);
             bool idle = false, pending = false;
-            (int Left, int Top, int Width, int Height) bounds = default;
+            (int Left, int Top, int Width, int Height, int WindowLeft, int WindowTop,
+                (float Left, float Top, float Right, float Bottom)[] Content) bounds = default;
             Exception? failure = null;
             instrumentation.RunOnMainSync(() =>
             {
@@ -287,13 +366,25 @@ public class FabStylingTestActivity : ComponentActivity
                     }
                     pending = owner.HasPendingMeasureOrLayout || recomposer.HasPendingWork
                         || snapshots.Current.HasPendingChanges || snapshots.IsApplyObserverNotificationPending;
-                    if (coordinates is { IsAttached: true } current && composeView.IsAttachedToWindow
+                    if (coordinates is { IsAttached: true } current && iconCoordinates is { IsAttached: true }
+                        && composeView.IsAttachedToWindow
                         && composeView.HasWindowFocus && HasWindowFocus && resumed && owner.IsLifecycleInResumedState
                         && committedPhase == Phase.Value && !pending)
                     {
                         var position = Offset.FromPacked(LayoutCoordinatesKt.PositionOnScreen(current));
+                        var windowPosition = Offset.FromPacked(LayoutCoordinatesKt.PositionInWindow(current));
+                        List<(float Left, float Top, float Right, float Bottom)> content = [];
+                        ILayoutCoordinates?[] items = [iconCoordinates, labelCoordinates];
+                        foreach (var item in items)
+                        {
+                            if (item is not { IsAttached: true }) continue;
+                            var origin = Offset.FromPacked(LayoutCoordinatesKt.PositionInWindow(item));
+                            content.Add((origin.X, origin.Y,
+                                origin.X + (int)((ulong)item.Size >> 32), origin.Y + (int)(item.Size & uint.MaxValue)));
+                        }
                         bounds = ((int)MathF.Round(position.X), (int)MathF.Round(position.Y),
-                            (int)((ulong)current.Size >> 32), (int)(current.Size & uint.MaxValue));
+                            (int)((ulong)current.Size >> 32), (int)(current.Size & uint.MaxValue),
+                            (int)MathF.Round(windowPosition.X), (int)MathF.Round(windowPosition.Y), [.. content]);
                         idle = true;
                     }
                 }
@@ -306,5 +397,86 @@ public class FabStylingTestActivity : ComponentActivity
             if (idle) return bounds;
             if (!pending) await changed.WaitAsync(timeout.Token);
         }
+    }
+
+    internal async Task<global::Android.Graphics.Bitmap> CaptureFabAsync(global::Android.Graphics.Rect bounds)
+    {
+        if (!OperatingSystem.IsAndroidVersionAtLeast(29))
+            throw new PlatformNotSupportedException("FAB pixel assertions require native frame-commit callbacks.");
+        var instrumentation = TestInstrumentation.Current
+            ?? throw new InvalidOperationException("FAB instrumentation is not running.");
+        var committed = NewCompletion();
+        using var frame = new Java.Lang.Runnable(() => committed.TrySetResult());
+        instrumentation.RunOnMainSync(() =>
+        {
+            try
+            {
+                var composeView = view ?? throw new InvalidOperationException("FAB ComposeView missing.");
+                frameObserver = composeView.ViewTreeObserver
+                    ?? throw new InvalidOperationException("FAB draw observer missing.");
+                frameCallback = frame;
+                frameCompletion = committed;
+                if (OperatingSystem.IsAndroidVersionAtLeast(29))
+                    frameObserver.RegisterFrameCommitCallback(frame);
+                composeView.Invalidate();
+            }
+            catch (Exception error)
+            {
+                committed.TrySetException(error);
+            }
+        });
+        try
+        {
+            await committed.Task.WaitAsync(TimeSpan.FromSeconds(15));
+        }
+        finally
+        {
+            instrumentation.RunOnMainSync(() =>
+            {
+                RemoveFrameCallback();
+                frameCompletion = null;
+            });
+        }
+
+        var config = global::Android.Graphics.Bitmap.Config.Argb8888
+            ?? throw new InvalidOperationException("Native ARGB bitmap format unavailable.");
+        var bitmap = global::Android.Graphics.Bitmap.CreateBitmap(bounds.Width(), bounds.Height(), config)
+            ?? throw new InvalidOperationException("Native FAB bitmap allocation failed.");
+        using var listener = new FabPixelCopyListener();
+        using var handler = new Handler(Looper.MainLooper
+            ?? throw new InvalidOperationException("Native main looper unavailable."));
+        try
+        {
+            // Copy the committed window buffer, not an activity-entry animation composited by SurfaceFlinger.
+            instrumentation.RunOnMainSync(() =>
+            {
+                try
+                {
+                    if (OperatingSystem.IsAndroidVersionAtLeast(26))
+                        PixelCopy.Request(Window ?? throw new InvalidOperationException("FAB window unavailable."),
+                            bounds, bitmap, listener, handler);
+                }
+                catch (Exception error)
+                {
+                    listener.Completion.TrySetException(error);
+                }
+            });
+            await listener.Completion.Task.WaitAsync(TimeSpan.FromSeconds(15));
+            return bitmap;
+        }
+        catch
+        {
+            bitmap.Dispose();
+            throw;
+        }
+    }
+
+    void RemoveFrameCallback()
+    {
+        if (OperatingSystem.IsAndroidVersionAtLeast(29)
+            && frameObserver is { IsAlive: true } observer && frameCallback is { } callback)
+            observer.UnregisterFrameCommitCallback(callback);
+        frameObserver = null;
+        frameCallback = null;
     }
 }

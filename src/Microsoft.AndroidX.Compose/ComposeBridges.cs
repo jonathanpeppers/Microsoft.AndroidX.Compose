@@ -628,6 +628,9 @@ internal static partial class ComposeBridges
 
     // The runtime Material3Android companion binds the mangled FAB overloads.
     // Its p9/p11 is Kotlin $changed; the binding's _changed is Kotlin $default.
+    // Resolve live defaults in isolated groups: changing Kotlin's default bits
+    // changes comparer slots before remembered native lambdas. Keep these bits fixed
+    // and native changed masks Uncertain; a null source remains owned by Kotlin.
     [ComposeFacade(Defaults = typeof(FloatingActionButtonDefault))]
     public static partial void FloatingActionButton(
         IFunction0 onClick, IModifier? modifier, Shape? shape,
@@ -640,11 +643,20 @@ internal static partial class ComposeBridges
         IFunction0 onClick, IModifier? modifier, Shape? shape,
         Color? containerColor, Color? contentColor,
         FloatingActionButtonElevation? elevation, IMutableInteractionSource? interactionSource,
-        IFunction2 content, int defaults, IComposer composer, int _changed) =>
-        FloatingActionButtonKt.FloatingActionButton(onClick, modifier,
-            shape?.JavaCast<AndroidX.Compose.UI.Graphics.IShape>(),
-            containerColor?.ToPacked() ?? 0L, contentColor?.ToPacked() ?? 0L, elevation, interactionSource,
-            content, composer, p9: _changed, _changed: defaults);
+        IFunction2 content, int defaults, IComposer composer, int _changed)
+    {
+        var mask = (FloatingActionButtonDefault)defaults;
+        var style = FabStyleDefaults.Resolve(modifier, shape, FloatingActionButtonDefaults.Instance.GetShape,
+            containerColor, contentColor, elevation,
+            (mask & FloatingActionButtonDefault.Modifier) != 0,
+            (mask & FloatingActionButtonDefault.Shape) != 0,
+            (mask & FloatingActionButtonDefault.ContainerColor) != 0,
+            (mask & FloatingActionButtonDefault.ContentColor) != 0,
+            (mask & FloatingActionButtonDefault.Elevation) != 0, composer);
+        FloatingActionButtonKt.FloatingActionButton(onClick, style.Modifier, style.Shape,
+            style.Container, style.Content, style.Elevation, interactionSource,
+            content, composer, p9: 0, _changed: (int)FloatingActionButtonDefault.None);
+    }
 
     [ComposeFacade(Defaults = typeof(SmallFloatingActionButtonDefault))]
     public static partial void SmallFloatingActionButton(
@@ -658,11 +670,20 @@ internal static partial class ComposeBridges
         IFunction0 onClick, IModifier? modifier, Shape? shape,
         Color? containerColor, Color? contentColor,
         FloatingActionButtonElevation? elevation, IMutableInteractionSource? interactionSource,
-        IFunction2 content, int defaults, IComposer composer, int _changed) =>
-        FloatingActionButtonKt.SmallFloatingActionButton(onClick, modifier,
-            shape?.JavaCast<AndroidX.Compose.UI.Graphics.IShape>(),
-            containerColor?.ToPacked() ?? 0L, contentColor?.ToPacked() ?? 0L, elevation, interactionSource,
-            content, composer, p9: _changed, _changed: defaults);
+        IFunction2 content, int defaults, IComposer composer, int _changed)
+    {
+        var mask = (SmallFloatingActionButtonDefault)defaults;
+        var style = FabStyleDefaults.Resolve(modifier, shape, FloatingActionButtonDefaults.Instance.GetSmallShape,
+            containerColor, contentColor, elevation,
+            (mask & SmallFloatingActionButtonDefault.Modifier) != 0,
+            (mask & SmallFloatingActionButtonDefault.Shape) != 0,
+            (mask & SmallFloatingActionButtonDefault.ContainerColor) != 0,
+            (mask & SmallFloatingActionButtonDefault.ContentColor) != 0,
+            (mask & SmallFloatingActionButtonDefault.Elevation) != 0, composer);
+        FloatingActionButtonKt.SmallFloatingActionButton(onClick, style.Modifier, style.Shape,
+            style.Container, style.Content, style.Elevation, interactionSource,
+            content, composer, p9: 0, _changed: (int)SmallFloatingActionButtonDefault.None);
+    }
 
     [ComposeFacade(Defaults = typeof(LargeFloatingActionButtonDefault))]
     public static partial void LargeFloatingActionButton(
@@ -676,11 +697,20 @@ internal static partial class ComposeBridges
         IFunction0 onClick, IModifier? modifier, Shape? shape,
         Color? containerColor, Color? contentColor,
         FloatingActionButtonElevation? elevation, IMutableInteractionSource? interactionSource,
-        IFunction2 content, int defaults, IComposer composer, int _changed) =>
-        FloatingActionButtonKt.LargeFloatingActionButton(onClick, modifier,
-            shape?.JavaCast<AndroidX.Compose.UI.Graphics.IShape>(),
-            containerColor?.ToPacked() ?? 0L, contentColor?.ToPacked() ?? 0L, elevation, interactionSource,
-            content, composer, p9: _changed, _changed: defaults);
+        IFunction2 content, int defaults, IComposer composer, int _changed)
+    {
+        var mask = (LargeFloatingActionButtonDefault)defaults;
+        var style = FabStyleDefaults.Resolve(modifier, shape, FloatingActionButtonDefaults.Instance.GetLargeShape,
+            containerColor, contentColor, elevation,
+            (mask & LargeFloatingActionButtonDefault.Modifier) != 0,
+            (mask & LargeFloatingActionButtonDefault.Shape) != 0,
+            (mask & LargeFloatingActionButtonDefault.ContainerColor) != 0,
+            (mask & LargeFloatingActionButtonDefault.ContentColor) != 0,
+            (mask & LargeFloatingActionButtonDefault.Elevation) != 0, composer);
+        FloatingActionButtonKt.LargeFloatingActionButton(onClick, style.Modifier, style.Shape,
+            style.Container, style.Content, style.Elevation, interactionSource,
+            content, composer, p9: 0, _changed: (int)LargeFloatingActionButtonDefault.None);
+    }
 
     [ComposeFacade(Defaults = typeof(ExtendedFloatingActionButtonDefault))]
     public static partial void ExtendedFloatingActionButton(
@@ -701,11 +731,21 @@ internal static partial class ComposeBridges
         IFunction2 text, IFunction2 icon, IFunction0 onClick, IModifier? modifier,
         bool expanded, Shape? shape, Color? containerColor, Color? contentColor,
         FloatingActionButtonElevation? elevation, IMutableInteractionSource? interactionSource,
-        int defaults, IComposer composer, int _changed) =>
-        FloatingActionButtonKt.ExtendedFloatingActionButton(text, icon, onClick, modifier,
-            expanded, shape?.JavaCast<AndroidX.Compose.UI.Graphics.IShape>(),
-            containerColor?.ToPacked() ?? 0L, contentColor?.ToPacked() ?? 0L, elevation, interactionSource,
-            composer, p11: _changed, _changed: defaults);
+        int defaults, IComposer composer, int _changed)
+    {
+        var mask = (ExtendedFloatingActionButtonDefault)defaults;
+        var style = FabStyleDefaults.Resolve(modifier, shape, FloatingActionButtonDefaults.Instance.GetExtendedFabShape,
+            containerColor, contentColor, elevation,
+            (mask & ExtendedFloatingActionButtonDefault.Modifier) != 0,
+            (mask & ExtendedFloatingActionButtonDefault.Shape) != 0,
+            (mask & ExtendedFloatingActionButtonDefault.ContainerColor) != 0,
+            (mask & ExtendedFloatingActionButtonDefault.ContentColor) != 0,
+            (mask & ExtendedFloatingActionButtonDefault.Elevation) != 0, composer);
+        FloatingActionButtonKt.ExtendedFloatingActionButton(text, icon, onClick, style.Modifier,
+            expanded, style.Shape,
+            style.Container, style.Content, style.Elevation, interactionSource,
+            composer, p11: 0, _changed: (int)ExtendedFloatingActionButtonDefault.None);
+    }
 
     // androidx.compose.material3.SurfaceKt.Surface-T9BRK9s (non-interactive)
     [ComposeBridge(

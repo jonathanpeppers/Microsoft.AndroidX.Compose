@@ -173,6 +173,8 @@ public class FacadeGeneratorTests
             {
                 internal object StructuralKey => new();
                 internal global::AndroidX.Compose.UI.IModifier? Build() => null;
+                internal static global::AndroidX.Compose.UI.IModifier BuildEmpty() => new EmptyModifier();
+                sealed class EmptyModifier : global::AndroidX.Compose.UI.IModifier { }
             }
             public abstract class ComposableNode
             {
