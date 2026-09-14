@@ -16,6 +16,38 @@ namespace Microsoft.AndroidX.Compose.DeviceTests;
 [DoNotParallelize]
 public class BasicTextFieldTests
 {
+    /// <summary>Diagnoses native admission independently of the editing assertions.</summary>
+    [TestMethod]
+    public async Task NativeControl_AdmitsTestOwnedConnection()
+    {
+        BasicTextFieldTestActivity.Ready = BasicTextFieldTestActivity.NewReady();
+        BasicTextFieldTestActivity.Created = BasicTextFieldTestActivity.NewReady();
+        var context = global::Android.App.Application.Context;
+        using var intent = new global::Android.Content.Intent(context, typeof(BasicTextFieldTestActivity));
+        intent.AddFlags(global::Android.Content.ActivityFlags.NewTask);
+        intent.PutExtra("route", 6);
+        context.StartActivity(intent);
+        var activity = await BasicTextFieldTestActivity.Created.Task.WaitAsync(TimeSpan.FromSeconds(20));
+        try
+        {
+            await BasicTextFieldTestActivity.Ready.Task.WaitAsync(TimeSpan.FromSeconds(20));
+            await activity.MutateAsync(activity.Requester.RequestFocus);
+            Assert.IsTrue(activity.Focused);
+            using var info = new EditorInfo();
+            await activity.MutateAsync(() => activity.OpenConnection(info));
+            Assert.IsGreaterThan(0, activity.EditorHeight);
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException(await activity.AdmissionStateAsync(), ex);
+        }
+        finally
+        {
+            activity.RunOnUiThread(activity.Finish);
+            await activity.Destroyed.Task.WaitAsync(TimeSpan.FromSeconds(10));
+        }
+    }
+
     [TestMethod]
     [DataRow(3)]
     [DataRow(4)]
@@ -71,7 +103,9 @@ public class BasicTextFieldTests
         }
         catch (Exception ex)
         {
-            throw new InvalidOperationException($"String route {route}, stage {activity.Stage}, revision {activity.Revision.Value}.", ex);
+            throw new InvalidOperationException(
+                $"String route {route}, stage {activity.Stage}, revision {activity.Revision.Value}. " +
+                await activity.AdmissionStateAsync(), ex);
         }
         finally
         {
@@ -199,7 +233,9 @@ public class BasicTextFieldTests
         }
         catch (Exception ex)
         {
-            throw new InvalidOperationException($"Route {route}, stage {activity.Stage}, revision {activity.Revision.Value}.", ex);
+            throw new InvalidOperationException(
+                $"Route {route}, stage {activity.Stage}, revision {activity.Revision.Value}. " +
+                await activity.AdmissionStateAsync(), ex);
         }
         finally
         {

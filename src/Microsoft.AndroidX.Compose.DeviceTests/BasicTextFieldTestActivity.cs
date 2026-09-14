@@ -52,6 +52,9 @@ public class BasicTextFieldTestActivity : ComponentActivity
     bool _resumed;
     int _route;
     int _tracedRevision = -1;
+    int _preDrawCount;
+    int _postDrawCount;
+    string _lastAdmission = "No pre-draw observed.";
     IInputConnection? _testConnection;
     IViewRootForTest? _rootForTest;
     IControlledComposition? _composition;
@@ -91,14 +94,17 @@ public class BasicTextFieldTestActivity : ComponentActivity
 
     void OnPreDraw(object? sender, ViewTreeObserver.PreDrawEventArgs e)
     {
+        _preDrawCount++;
         e.Handled = true;
         var decor = Window?.DecorView;
+        _lastAdmission = AdmissionFlags("pre-draw Android", _rootForTest);
         if (!_resumed || !HasWindowFocus || decor?.RootWindowInsets is null ||
             decor.IsLayoutRequested || _appliedRevision != Revision.Value)
             return;
         _rootForTest ??= (FindOwner(decor)
             ?? throw new InvalidOperationException("Compose owner missing at editor pre-draw."))
             .JavaCast<IViewRootForTest>();
+        _lastAdmission = AdmissionFlags("pre-draw Compose", _rootForTest);
         if (!_rootForTest.IsLifecycleInResumedState || _rootForTest.HasPendingMeasureOrLayout ||
             CompositionWorkPending)
             return;
@@ -107,6 +113,8 @@ public class BasicTextFieldTestActivity : ComponentActivity
         var ready = _ready;
         decor.Post(() =>
         {
+            _postDrawCount++;
+            _lastAdmission = AdmissionFlags("posted traversal", _rootForTest);
             if (!_resumed || !HasWindowFocus || decor.IsLayoutRequested ||
                 _appliedRevision != Revision.Value || _rootForTest is null ||
                 !_rootForTest.IsLifecycleInResumedState || _rootForTest.HasPendingMeasureOrLayout ||
@@ -120,6 +128,39 @@ public class BasicTextFieldTestActivity : ComponentActivity
             ready?.TrySetResult(this);
             frame?.TrySetResult();
         });
+    }
+
+    string AdmissionFlags(string phase, IViewRootForTest? root)
+    {
+        var decor = Window?.DecorView;
+        int pid = global::Android.OS.Process.MyPid();
+        return $"pid={pid}, activity=0x{Handle.ToInt64():x}, route={_route}, phase={phase}, " +
+            $"resumed={_resumed}, windowFocus={HasWindowFocus}, insets={decor?.RootWindowInsets is not null}, " +
+            $"androidLayout={decor?.IsLayoutRequested}, revision={Revision.Value}, applied={_appliedRevision}, " +
+            $"preDraw={_preDrawCount}, postDraw={_postDrawCount}, root={root is not null}, " +
+            $"rootResumed={root?.IsLifecycleInResumedState}, rootPending={root?.HasPendingMeasureOrLayout}, " +
+            $"composing={_composition?.IsComposing}, invalidations={_composition?.HasInvalidations}, " +
+            $"changes={_composition?.HasPendingChanges}, size={_editorWidth}x{EditorHeight}";
+    }
+
+    internal Task<string> AdmissionStateAsync()
+    {
+        var result = new TaskCompletionSource<string>(TaskCreationOptions.RunContinuationsAsynchronously);
+        RunOnUiThread(() =>
+        {
+            try
+            {
+                var decor = Window?.DecorView;
+                var owner = decor is null ? null : FindOwner(decor);
+                var root = owner?.JavaCast<IViewRootForTest>();
+                result.SetResult($"Last coherent probe: {_lastAdmission}\nCurrent: {AdmissionFlags("failure snapshot", root)}");
+            }
+            catch (Exception ex)
+            {
+                result.SetException(ex);
+            }
+        });
+        return result.Task.WaitAsync(TimeSpan.FromSeconds(3));
     }
 
     protected override void OnDestroy()

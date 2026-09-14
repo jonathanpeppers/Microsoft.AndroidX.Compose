@@ -43,6 +43,9 @@ public class TestInstrumentation : Instrumentation
     {
         base.OnStart();
 
+        var started = new Bundle();
+        started.PutInt("pid", global::Android.OS.Process.MyPid());
+        SendStatus(0, started);
         var consumer = new ResultConsumer(this);
         var bundle = new Bundle();
         try
