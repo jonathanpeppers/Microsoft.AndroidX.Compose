@@ -370,6 +370,15 @@ slots surface as `Action` instead of `Action<IComposer>`.
     `SharedStateOwner` uses weak arbitration and the read-only, pinned-runtime
     registration query in `Java/SharedStateLifetime.java`; preserve its native
     installed/pending distinction and keep marker scopes outside save ancestry.
+    First claims use an atomic per-wrapper registration identity. Publish the
+    initialized peer only after Remember/GetObject/Bind succeeds, and abort only
+    a failed initial claim before native unwind. The native monitor can be
+    released before abandonment callbacks, so membership alone is not proof of
+    completed initialization. Borrowers must use the acquisition's captured
+    peer, not reread `Jvm`; keep the acquisition alive through the component JNI
+    call. Published-peer readiness is not composition commit. Keep native waits,
+    release callbacks, and invalidation outside the arbitration gate, and
+    publish retirement completion before notifying consumers.
     Capture native paused origins separately at token registration and ownership
     acquisition, never on ordinary rerenders; cancelled paused slots can remain
     installed after a failed callback, while older committed owners stay live.

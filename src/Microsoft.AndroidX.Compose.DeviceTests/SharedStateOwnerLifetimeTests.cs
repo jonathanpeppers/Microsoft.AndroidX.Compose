@@ -12,6 +12,15 @@ namespace Microsoft.AndroidX.Compose.DeviceTests;
 [DoNotParallelize]
 public class SharedStateOwnerLifetimeTests
 {
+    // Observer-only controls publish the token as their stand-in native peer.
+    internal static bool Claim(SharedStateOwner owner)
+    {
+        using var acquisition = owner.Acquire();
+        if (acquisition.IsOwner)
+            acquisition.Publish(owner);
+        return acquisition.IsOwner;
+    }
+
     [TestMethod]
     public void OwnerDeclaresActivationContract()
     {
@@ -431,7 +440,7 @@ public class SharedStateOwnerLifetimeTests
                 if (visible)
                 {
                     var owner = SharedStateOwner.Remember(composer, wrapper, () => released++);
-                    Assert.AreEqual(i == 0, owner.IsOwner, "Sibling must not acquire independent ownership.");
+                    Assert.AreEqual(i == 0, Claim(owner), "Sibling must not acquire independent ownership.");
                     if (current[i] is { } previous)
                     {
                         Assert.IsTrue(previous.TryGetTarget(out var original), "Active observer lost its managed peer.");
@@ -546,7 +555,7 @@ public class SharedStateOwnerLifetimeTests
             if (throws)
                 throw new InvalidOperationException("Expected release failure.");
         }, _ => { });
-        Assert.IsTrue(owner.IsOwner);
+        Assert.IsTrue(Claim(owner));
         CollectBothRuntimes();
         var method = JNIEnv.GetMethodID(owner.Class.Handle, "onForgotten", "()V");
         if (throws)
@@ -558,11 +567,11 @@ public class SharedStateOwnerLifetimeTests
             JNIEnv.CallVoidMethod(owner.Handle, method);
 
         // A failed release must still vacate arbitration and retire its own state.
-        Assert.ThrowsExactly<InvalidOperationException>(() => _ = owner.IsOwner);
+        Assert.ThrowsExactly<InvalidOperationException>(() => Claim(owner));
         var successor = SharedStateOwner.Publish(payload, () => { }, _ => { });
         try
         {
-            Assert.IsTrue(successor.IsOwner);
+            Assert.IsTrue(Claim(successor));
         }
         finally
         {

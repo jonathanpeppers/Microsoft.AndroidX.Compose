@@ -71,36 +71,46 @@ public sealed class BottomSheetScaffold : ComposableContainer
                 "BottomSheetScaffold.SheetContent is required.");
 
         var owner = SharedStateOwner.Remember(composer, _sheetState, () => _sheetState?.UnbindJvm());
+        using var acquisition = owner.Acquire();
         SheetState sheetState;
-        composer.StartReusableGroup(354102, owner);
         try
         {
-            if (owner.IsOwner)
+            composer.StartReusableGroup(354102, owner);
+            try
             {
-                owner.TrackScope(composer);
-                var confirmValueChange = ConfirmValueChange;
-                var confirmValueChangeAdapter = composer.Remember(() => new SheetValueConfirmStateChange
+                if (acquisition.IsOwner)
                 {
-                    Callback = confirmValueChange,
-                });
-                composer.SideEffect(() => confirmValueChangeAdapter.Callback = confirmValueChange);
-                sheetState = BottomSheetScaffoldKt.RememberStandardBottomSheetState(
-                    initialValue: _sheetState?.RememberStandardValue ?? SheetValue.PartiallyExpanded,
-                    confirmValueChange: confirmValueChangeAdapter,
-                    skipHiddenState: true,
-                    _composer: composer,
-                    p4: 0,
-                    _changed: 0);
-                if (_sheetState is not null)
-                    _sheetState.Jvm = sheetState;
+                    owner.TrackScope(composer);
+                    var confirmValueChange = ConfirmValueChange;
+                    var confirmValueChangeAdapter = composer.Remember(() => new SheetValueConfirmStateChange
+                    {
+                        Callback = confirmValueChange,
+                    });
+                    composer.SideEffect(() => confirmValueChangeAdapter.Callback = confirmValueChange);
+                    sheetState = BottomSheetScaffoldKt.RememberStandardBottomSheetState(
+                        initialValue: _sheetState?.RememberStandardValue ?? SheetValue.PartiallyExpanded,
+                        confirmValueChange: confirmValueChangeAdapter,
+                        skipHiddenState: true,
+                        _composer: composer,
+                        p4: 0,
+                        _changed: 0);
+                    if (_sheetState is not null)
+                        _sheetState.Jvm = sheetState;
+                    acquisition.Publish(sheetState);
+                }
+                else
+                    sheetState = acquisition.Peer as SheetState
+                        ?? throw new InvalidOperationException("BottomSheetScaffold acquisition has no published SheetState.");
             }
-            else
-                sheetState = _sheetState?.Jvm
-                    ?? throw new InvalidOperationException("BottomSheetScaffold shared owner has no bound peer.");
+            finally
+            {
+                composer.EndReusableGroup();
+            }
         }
-        finally
+        catch (Exception error)
         {
-            composer.EndReusableGroup();
+            acquisition.Abort(error);
+            throw;
         }
 
         // Bound C# call — RememberBottomSheetScaffoldState is NOT stripped.

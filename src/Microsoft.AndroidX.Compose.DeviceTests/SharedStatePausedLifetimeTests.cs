@@ -211,7 +211,7 @@ public class SharedStatePausedLifetimeTests
         using var externalContent = new ComposableLambda2(composer =>
         {
             externalOwner = SharedStateOwner.Remember(composer, wrapper, () => released++);
-            Assert.IsTrue(externalOwner.IsOwner);
+            Assert.IsTrue(SharedStateOwnerLifetimeTests.Claim(externalOwner));
         });
         using var content = new ComposableLambda2(composer =>
         {
@@ -227,8 +227,9 @@ public class SharedStatePausedLifetimeTests
             if (acquire || pause)
             {
                 candidate = SharedStateOwner.Remember(composer, wrapper, () => released++);
-                Assert.AreEqual(acquire && pause, candidate.IsOwner);
-                if (candidate.IsOwner)
+                bool owns = SharedStateOwnerLifetimeTests.Claim(candidate);
+                Assert.AreEqual(acquire && pause, owns);
+                if (owns)
                     candidate.TrackScope(composer);
             }
             composer.EndReplaceableGroup();

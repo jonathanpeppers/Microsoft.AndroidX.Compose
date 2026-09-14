@@ -4,12 +4,13 @@ internal sealed class SharedStateOwnership
 {
     WeakReference<SharedStateOwner>? _owner;
 
-    internal bool HasOwner => _owner is not null;
-    internal SharedStateOwner? Owner
+    internal object Gate { get; } = new();
+    internal WeakReference<SharedStateOwner>? Registration
     {
-        get => _owner?.TryGetTarget(out var owner) == true ? owner : null;
-        set => _owner = value is null ? null : new(value, trackResurrection: true);
+        get => Volatile.Read(ref _owner);
+        set => Volatile.Write(ref _owner, value);
     }
+    internal SharedStateOwner? Owner => Registration?.TryGetTarget(out var owner) == true ? owner : null;
 
     internal MutableState<int> Version { get; } = new(0);
 }

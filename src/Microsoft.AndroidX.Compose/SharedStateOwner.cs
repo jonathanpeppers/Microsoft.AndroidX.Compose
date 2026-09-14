@@ -16,6 +16,9 @@ internal sealed class SharedStateOwner : Java.Lang.Object, IRememberObserver
     IRecomposeScope? _scope;
     Java.Util.Concurrent.Atomic.AtomicReference? _registrationOrigin;
     Java.Util.Concurrent.Atomic.AtomicReference? _ownershipOrigin;
+    bool _releasing;
+    SharedStatePhase _phase;
+    Java.Lang.Object? _peer;
 
     SharedStateOwner(object? wrapper, Action release)
     {
@@ -104,52 +107,176 @@ internal sealed class SharedStateOwner : Java.Lang.Object, IRememberObserver
 
     bool IsLiveFor(IControlledComposition? consumer)
     {
-        if (_ownership is null || Handle == IntPtr.Zero)
+        var ownership = _ownership;
+        if (ownership is null)
             return false;
-        return _composition is not { } composition
-            || ComposeBridges.SharedStateIsLive(composition, this, _scope, _registrationOrigin, _ownershipOrigin, consumer);
+        IControlledComposition? composition;
+        IRecomposeScope? scope;
+        Java.Util.Concurrent.Atomic.AtomicReference? registrationOrigin, ownershipOrigin;
+        lock (ownership.Gate)
+        {
+            if (!ReferenceEquals(_ownership, ownership) || Handle == IntPtr.Zero)
+                return false;
+            composition = _composition;
+            scope = _scope;
+            registrationOrigin = _registrationOrigin;
+            ownershipOrigin = _ownershipOrigin;
+        }
+        var live = composition is null
+            || ComposeBridges.SharedStateIsLive(composition, this, scope, registrationOrigin, ownershipOrigin, consumer);
+        lock (ownership.Gate)
+            return live && ReferenceEquals(_ownership, ownership) && !_releasing;
     }
 
-    internal bool IsOwner
+    internal SharedStateAcquisition Acquire()
     {
-        get
+        // Readers must execute again if their owner is forgotten during applyChanges.
+        var ownership = _ownership
+            ?? throw new InvalidOperationException("SharedStateOwner no longer has an active lifetime.");
+        _ = ownership.Version.Value;
+        while (true)
         {
-            // Readers must execute again if their owner is forgotten during applyChanges.
-            var ownership = _ownership
-                ?? throw new InvalidOperationException("SharedStateOwner no longer has an active lifetime.");
-            _ = ownership.Version.Value;
-            var previous = ownership.Owner;
-            if (previous is not null && !previous.IsLiveFor(_composition))
+            WeakReference<SharedStateOwner>? registration;
+            SharedStateOwner? previous;
+            lock (ownership.Gate)
             {
-                previous.Release();
-                if (ReferenceEquals(previous, this))
+                if (!ReferenceEquals(_ownership, ownership))
                     throw new InvalidOperationException("SharedStateOwner no longer has an active lifetime.");
-                previous = null;
+                registration = ownership.Registration;
+                previous = ownership.Owner;
             }
-            if (previous is null)
+            // The native wait must never hold the managed arbitration gate.
+            var live = previous?.IsLiveFor(_composition) == true;
+            lock (ownership.Gate)
             {
-                if (ownership.HasOwner)
+                if (!ReferenceEquals(registration, ownership.Registration))
+                    continue;
+                if (previous?._releasing == true)
                 {
-                    // The native token died without a callback. The incoming wrapper's
-                    // cleanup captures the last peer values before creating a successor.
+                    Monitor.Wait(ownership.Gate);
+                    continue;
+                }
+                if (live)
+                {
+                    var owns = ReferenceEquals(previous, this);
+                    var current = registration
+                        ?? throw new InvalidOperationException("Shared state owner has no claim registration.");
+                    if (!owns && (previous?._phase != SharedStatePhase.Published || previous._peer is null))
+                        throw new InvalidOperationException("Shared state acquisition reached an owner whose native peer has not finished initializing.");
+                    return new(this, current, owns, owns && _phase == SharedStatePhase.Initializing, previous?._peer);
+                }
+            }
+            if (ReferenceEquals(previous, this))
+            {
+                Release();
+                throw new InvalidOperationException("SharedStateOwner no longer has an active lifetime.");
+            }
+
+            var origin = _composition is { } composition
+                ? ComposeBridges.SharedStatePausedOrigin(composition)
+                : null;
+            var claim = new WeakReference<SharedStateOwner>(this, trackResurrection: true);
+            var acquisition = new SharedStateAcquisition(this, claim, true, true, null);
+            Action? retiredRelease;
+            lock (ownership.Gate)
+            {
+                if (!ReferenceEquals(registration, ownership.Registration))
+                    continue;
+                if (previous?._releasing == true)
+                {
+                    Monitor.Wait(ownership.Gate);
+                    continue;
+                }
+                if (!ReferenceEquals(_ownership, ownership))
+                    throw new InvalidOperationException("SharedStateOwner no longer has an active lifetime.");
+                retiredRelease = registration is null ? null
+                    : (previous is null ? _release : previous._release)
+                        ?? throw new InvalidOperationException("SharedStateOwner has no release callback.");
+                previous?.Detach();
+                _ownershipOrigin = origin;
+                _phase = SharedStatePhase.Initializing;
+                // Publish before cleanup/factory work: foreign borrowers must
+                // wait on this composition until its peer is bound or abandoned.
+                ownership.Registration = claim;
+                Monitor.PulseAll(ownership.Gate);
+            }
+            try
+            {
+                Exception? releaseFailure = null;
+                try
+                {
+                    retiredRelease?.Invoke();
+                }
+                catch (Exception error)
+                {
+                    releaseFailure = error;
+                    throw;
+                }
+                finally
+                {
                     try
                     {
-                        (_release ?? throw new InvalidOperationException("SharedStateOwner has no release callback."))();
+                        if (registration is not null)
+                            ownership.Version.Value++;
                     }
-                    finally
+                    catch (Exception notificationFailure) when (releaseFailure is not null)
                     {
-                        ownership.Owner = null;
-                        ownership.Version.Value++;
+                        throw new AggregateException("Shared state cleanup and invalidation failed.",
+                            releaseFailure, notificationFailure);
                     }
                 }
-                // A committed borrower can acquire its first peer during paused work.
-                // Ordinary owning rerenders must retain the original acquisition.
-                _ownershipOrigin = _composition is { } composition
-                    ? ComposeBridges.SharedStatePausedOrigin(composition)
-                    : null;
-                ownership.Owner = this;
             }
-            return ReferenceEquals(ownership.Owner, this);
+            catch
+            {
+                lock (ownership.Gate)
+                {
+                    if (ReferenceEquals(ownership.Registration, claim))
+                        ownership.Registration = null;
+                    Detach();
+                    Monitor.PulseAll(ownership.Gate);
+                }
+                throw;
+            }
+            return acquisition;
+        }
+    }
+
+    internal void Publish(SharedStateAcquisition acquisition, Java.Lang.Object peer)
+    {
+        ArgumentNullException.ThrowIfNull(peer);
+        var ownership = _ownership
+            ?? throw new InvalidOperationException("Shared state acquisition was already retired.");
+        lock (ownership.Gate)
+        {
+            if (!acquisition.IsOwner || !ReferenceEquals(acquisition.Registration, ownership.Registration)
+                || !ReferenceEquals(ownership.Owner, this) || _releasing
+                || _phase is not (SharedStatePhase.Initializing or SharedStatePhase.Published))
+                throw new InvalidOperationException("Shared state acquisition no longer owns its registration.");
+            _peer = peer;
+            _phase = SharedStatePhase.Published;
+            Monitor.PulseAll(ownership.Gate);
+        }
+    }
+
+    internal void Abort(SharedStateAcquisition acquisition, Exception failure)
+    {
+        var ownership = _ownership;
+        if (ownership is null || !acquisition.IsOwner || !acquisition.Initializes)
+            return;
+        lock (ownership.Gate)
+        {
+            if (!ReferenceEquals(acquisition.Registration, ownership.Registration)
+                || !ReferenceEquals(ownership.Owner, this) || _phase != SharedStatePhase.Initializing)
+                return;
+            _phase = SharedStatePhase.Failed;
+        }
+        try
+        {
+            Release();
+        }
+        catch (Exception cleanupFailure)
+        {
+            throw new AggregateException("Shared state initialization and cleanup failed.", failure, cleanupFailure);
         }
     }
 
@@ -160,7 +287,55 @@ internal sealed class SharedStateOwner : Java.Lang.Object, IRememberObserver
     void Release()
     {
         var ownership = _ownership;
-        var release = _release;
+        if (ownership is null)
+            return;
+        Action? release;
+        lock (ownership.Gate)
+        {
+            if (!ReferenceEquals(_ownership, ownership) || _releasing)
+                return;
+            if (!ReferenceEquals(ownership.Owner, this))
+            {
+                Detach();
+                return;
+            }
+            _releasing = true;
+            release = _release;
+        }
+        Exception? releaseFailure = null;
+        try
+        {
+            (release ?? throw new InvalidOperationException("SharedStateOwner has no release callback."))();
+        }
+        catch (Exception error)
+        {
+            releaseFailure = error;
+            throw;
+        }
+        finally
+        {
+            // Keep the native wait target available until cleanup has finished.
+            lock (ownership.Gate)
+            {
+                if (ReferenceEquals(ownership.Owner, this))
+                    ownership.Registration = null;
+                Detach();
+                Monitor.PulseAll(ownership.Gate);
+            }
+            try
+            {
+                ownership.Version.Value++;
+            }
+            catch (Exception notificationFailure) when (releaseFailure is not null)
+            {
+                throw new AggregateException("Shared state cleanup and invalidation failed.",
+                    releaseFailure, notificationFailure);
+            }
+        }
+    }
+
+    void Detach()
+    {
         _wrapper = null;
         _ownership = null;
         _release = null;
@@ -168,17 +343,8 @@ internal sealed class SharedStateOwner : Java.Lang.Object, IRememberObserver
         _composition = null;
         _registrationOrigin = null;
         _ownershipOrigin = null;
-        if (ownership is null || !ReferenceEquals(ownership.Owner, this))
-            return;
-
-        try
-        {
-            (release ?? throw new InvalidOperationException("SharedStateOwner has no release callback."))();
-        }
-        finally
-        {
-            ownership.Owner = null;
-            ownership.Version.Value++;
-        }
+        _peer = null;
+        if (_phase != SharedStatePhase.Failed)
+            _phase = SharedStatePhase.Retired;
     }
 }

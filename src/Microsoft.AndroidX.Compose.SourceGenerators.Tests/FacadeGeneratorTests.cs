@@ -243,8 +243,16 @@ public class FacadeGeneratorTests
             {
                 internal static SharedStateOwner Remember(global::AndroidX.Compose.Runtime.IComposer composer,
                     object? wrapper, System.Action release) => new();
-                internal bool IsOwner => true;
+                internal SharedStateAcquisition Acquire() => new();
                 internal void TrackScope(global::AndroidX.Compose.Runtime.IComposer composer) { }
+            }
+            internal sealed class SharedStateAcquisition : System.IDisposable
+            {
+                internal bool IsOwner => true;
+                internal Java.Lang.Object? Peer => null;
+                internal void Publish(Java.Lang.Object peer) { }
+                internal void Abort(System.Exception error) { }
+                public void Dispose() { }
             }
             internal static class SourceLocationKey
             {
@@ -2633,9 +2641,16 @@ public class FacadeGeneratorTests
         Assert.Contains("var __stateDefaultHolder = composer.Remember(static () => new global::AndroidX.Compose.TimePickerState());", emitted);
         Assert.Contains("var __stateHolder = _state ?? __stateDefaultHolder;", emitted);
         Assert.DoesNotContain("_state = state ?? new global::AndroidX.Compose.TimePickerState();", emitted);
-        Assert.Contains("if (__stateOwner.IsOwner)", emitted);
+        Assert.Contains("if (__stateAcquisition.IsOwner)", emitted);
         Assert.DoesNotContain("if (_state!.Jvm is not null)", emitted);
-        Assert.Contains("__state = ((global::Android.Runtime.IJavaObject)__peer).Handle;", emitted);
+        Assert.Contains("__state = __peer.Handle;", emitted);
+        Assert.Contains("using var __stateAcquisition = __stateOwner.Acquire();", emitted);
+        Assert.Contains("__stateAcquisition.Publish((global::Java.Lang.Object)__peer);", emitted);
+        Assert.Contains("__stateAcquisition.Abort(__stateError);", emitted);
+        Assert.Contains("var __peer = __stateAcquisition.Peer", emitted);
+        Assert.DoesNotContain("var __peer = __stateHolder?.Jvm", emitted);
+        Assert.True(emitted.IndexOf("__stateHolder.BindJvm(__peer)", System.StringComparison.Ordinal)
+            < emitted.IndexOf("__stateAcquisition.Publish(", System.StringComparison.Ordinal));
 
         // Cache-miss branch — call Remember, populate Jvm so the next
         // sibling will hit the cached path.
@@ -2657,7 +2672,10 @@ public class FacadeGeneratorTests
 
         var direct = GeneratedMethodBody(emitted, "TimePicker_PrimaryResource_Implicit");
         Assert.Contains("SharedStateOwner.Remember(__composer, __stateHolder", direct);
-        Assert.Contains("if (__stateOwner.IsOwner)", direct);
+        Assert.Contains("if (__stateAcquisition.IsOwner)", direct);
+        Assert.Contains("__stateAcquisition.Publish((global::Java.Lang.Object)__peer);", direct);
+        Assert.Contains("__stateAcquisition.Abort(__stateError);", direct);
+        Assert.Contains("var __peer = __stateAcquisition.Peer", direct);
         Assert.Contains("__composer.StartReusableGroup(354102, __stateOwner);", direct);
         Assert.Contains("__stateOwner.TrackScope(__composer);", direct);
         Assert.Contains("__composer.Remember(static () => new global::AndroidX.Compose.TimePickerState())", direct);
@@ -2725,9 +2743,9 @@ public class FacadeGeneratorTests
         Assert.DoesNotContain("_state = state ?? new global::AndroidX.Compose.DatePickerState();", emitted);
 
         Assert.Contains("SharedStateOwner.Remember(composer, __stateHolder", emitted);
-        Assert.Contains("if (__stateOwner.IsOwner)", emitted);
+        Assert.Contains("if (__stateAcquisition.IsOwner)", emitted);
         Assert.DoesNotContain("if (_state is not null && _state.Jvm is not null)", emitted);
-        Assert.Contains("__state = ((global::Android.Runtime.IJavaObject)__peer).Handle;", emitted);
+        Assert.Contains("__state = __peer.Handle;", emitted);
 
         // Cache-miss branch — Remember + null-guarded Jvm assignment.
         Assert.Contains(
@@ -4043,7 +4061,7 @@ public class FacadeGeneratorTests
         var direct = GeneratedMethodBody(emitted, "ModalBottomSheet_PrimaryResource_Implicit");
         Assert.Contains("var __confirmValueChangeAdapterTarget = confirmValueChange;", direct);
         Assert.Contains("__composer.SideEffect(() => __confirmValueChangeAdapter.Callback = __confirmValueChangeAdapterTarget);", direct);
-        Assert.Contains("if (__sheetStateOwner.IsOwner)", emitted);
+        Assert.Contains("if (__sheetStateAcquisition.IsOwner)", emitted);
         // (e) Cache-miss branch calls Remember with SkipPartiallyExpanded
         //     resolved from the wrapper member AND the per-instance JCW
         //     adapter forwarded as the IFunction1 slot.

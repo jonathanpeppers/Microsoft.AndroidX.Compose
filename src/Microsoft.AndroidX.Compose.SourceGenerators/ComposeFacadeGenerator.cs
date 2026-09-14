@@ -3137,26 +3137,29 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             ? "." + unbind + "();" : ".Jvm = null;").AppendLine();
         sb.AppendLine("            });");
         sb.Append("            global::System.IntPtr ").Append(local).AppendLine(";");
+        sb.Append("            using var ").Append(local).Append("Acquisition = ").Append(local).AppendLine("Owner.Acquire();");
         // The data key resets remembered values but is not part of the positional save key.
-        sb.Append("            ").Append(composerName).Append(".StartReusableGroup(354102, ").Append(local).AppendLine("Owner);");
         sb.AppendLine("            try");
         sb.AppendLine("            {");
-        sb.Append("                if (").Append(local).AppendLine("Owner.IsOwner)");
+        sb.Append("                ").Append(composerName).Append(".StartReusableGroup(354102, ").Append(local).AppendLine("Owner);");
+        sb.AppendLine("                try");
         sb.AppendLine("                {");
-        sb.Append("                    ").Append(local).Append("Owner.TrackScope(").Append(composerName).AppendLine(");");
+        sb.Append("                    if (").Append(local).AppendLine("Acquisition.IsOwner)");
+        sb.AppendLine("                    {");
+        sb.Append("                        ").Append(local).Append("Owner.TrackScope(").Append(composerName).AppendLine(");");
         foreach (var info in s.ConfirmStateChanges)
         {
             var adapterType = info.AdapterType.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
             var callback = direct ? EscapeIdent(char.ToLowerInvariant(info.PropertyName[0])
                 + info.PropertyName.Substring(1)) : info.PropertyName;
             var target = "__" + info.FieldIdentifier + "Target";
-            sb.Append("                    var ").Append(target).Append(" = ").Append(callback).AppendLine(";");
-            sb.Append("                    var __").Append(info.FieldIdentifier).Append(" = ").Append(composerName)
+            sb.Append("                        var ").Append(target).Append(" = ").Append(callback).AppendLine(";");
+            sb.Append("                        var __").Append(info.FieldIdentifier).Append(" = ").Append(composerName)
               .Append(".Remember(() => new ").Append(adapterType).Append(" { Callback = ").Append(target).AppendLine(" });");
-            sb.Append("                    ").Append(composerName).Append(".SideEffect(() => __").Append(info.FieldIdentifier)
+            sb.Append("                        ").Append(composerName).Append(".SideEffect(() => __").Append(info.FieldIdentifier)
               .Append(".Callback = ").Append(target).AppendLine(");");
         }
-        sb.Append("                    ").Append(local).Append(" = global::AndroidX.Compose.ComposeBridges.")
+        sb.Append("                        ").Append(local).Append(" = global::AndroidX.Compose.ComposeBridges.")
           .Append(s.RememberMethodName).Append('(');
         foreach (var arg in s.RememberArgExpressions)
         {
@@ -3166,24 +3169,31 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
                 : "_" + arg).Append(", ");
         }
         sb.Append(composerName).AppendLine(");");
-        sb.Append("                    var __peer = global::Java.Lang.Object.GetObject<").Append(jvmFqn)
+        sb.Append("                        var __peer = global::Java.Lang.Object.GetObject<").Append(jvmFqn)
           .Append(">(").Append(local).AppendLine(", global::Android.Runtime.JniHandleOwnership.DoNotTransfer)");
-        sb.AppendLine("                        ?? throw new global::System.InvalidOperationException(\"Shared state Remember bridge returned no peer.\");");
-        sb.Append("                    if (").Append(holder).Append(" is not null && !global::System.Object.ReferenceEquals(")
+        sb.AppendLine("                            ?? throw new global::System.InvalidOperationException(\"Shared state Remember bridge returned no peer.\");");
+        sb.Append("                        if (").Append(holder).Append(" is not null && !global::System.Object.ReferenceEquals(")
           .Append(holder).AppendLine(".Jvm, __peer))");
-        sb.Append("                        ").Append(holder).Append(s.BindMethodName is { } bind
+        sb.Append("                            ").Append(holder).Append(s.BindMethodName is { } bind
             ? "." + bind + "(__peer);" : ".Jvm = __peer;").AppendLine();
+        sb.Append("                        ").Append(local).AppendLine("Acquisition.Publish((global::Java.Lang.Object)__peer);");
+        sb.AppendLine("                    }");
+        sb.AppendLine("                    else");
+        sb.AppendLine("                    {");
+        sb.Append("                        var __peer = ").Append(local).AppendLine("Acquisition.Peer");
+        sb.AppendLine("                            ?? throw new global::System.InvalidOperationException(\"Shared state acquisition has no published peer.\");");
+        sb.Append("                        ").Append(local).AppendLine(" = __peer.Handle;");
+        sb.AppendLine("                    }");
         sb.AppendLine("                }");
-        sb.AppendLine("                else");
+        sb.AppendLine("                finally");
         sb.AppendLine("                {");
-        sb.Append("                    var __peer = ").Append(holder).AppendLine("?.Jvm");
-        sb.AppendLine("                        ?? throw new global::System.InvalidOperationException(\"Shared state owner has no bound peer.\");");
-        sb.Append("                    ").Append(local).AppendLine(" = ((global::Android.Runtime.IJavaObject)__peer).Handle;");
+        sb.Append("                    ").Append(composerName).AppendLine(".EndReusableGroup();");
         sb.AppendLine("                }");
         sb.AppendLine("            }");
-        sb.AppendLine("            finally");
+        sb.Append("            catch (global::System.Exception ").Append(local).AppendLine("Error)");
         sb.AppendLine("            {");
-        sb.Append("                ").Append(composerName).AppendLine(".EndReusableGroup();");
+        sb.Append("                ").Append(local).Append("Acquisition.Abort(").Append(local).AppendLine("Error);");
+        sb.AppendLine("                throw;");
         sb.AppendLine("            }");
     }
 

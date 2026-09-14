@@ -33,7 +33,7 @@ public class SharedStateScopeMarkerTests
             composer.StartReusableGroup(354102, token);
             try
             {
-                Assert.IsTrue(token.IsOwner);
+                Assert.IsTrue(SharedStateOwnerLifetimeTests.Claim(token));
                 long parentHash = composer.CompositeKeyHashCode;
                 composer.StartMovableGroup(354103, token);
                 try
@@ -92,9 +92,9 @@ public class SharedStateScopeMarkerTests
                 {
                     composition.AbandonChanges();
                     Assert.IsTrue(IsValid(original), "Abandonment invalidated the committed marker.");
-                    Assert.IsTrue(originalToken.IsOwner, "Abandonment retired the committed owner.");
+                    Assert.IsTrue(SharedStateOwnerLifetimeTests.Claim(originalToken), "Abandonment retired the committed owner.");
                     Console.WriteLine("Abandoned insertion anchor still valid=" + IsValid(replacement));
-                    Assert.ThrowsExactly<InvalidOperationException>(() => _ = replacementToken.IsOwner);
+                    Assert.ThrowsExactly<InvalidOperationException>(() => SharedStateOwnerLifetimeTests.Claim(replacementToken));
                     key = firstKey;
                     composition.ComposeContent(content);
                     Assert.AreSame(original, marker, "Abandonment replaced the committed marker on reentry.");

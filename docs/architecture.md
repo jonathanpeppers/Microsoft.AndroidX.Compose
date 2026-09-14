@@ -88,6 +88,24 @@ slots preserve the original managed JCW through the runtime GC bridge; an
 attempt to activate an empty replacement throws rather than silently losing
 arbitration and callbacks.
 
+First acquisition is serialized by a per-wrapper managed gate and an exact weak
+claim identity. Native lifetime queries, release callbacks, and invalidation
+notifications run outside that gate. The winner publishes an initializing claim
+before entering its native remember subtree, then acknowledges a published peer
+only after Remember, managed peer conversion, and pending-value binding succeed.
+An exception before that acknowledgement retires only the new initial claim,
+before native unwinding. A later failure of an already-published owner still
+uses native abandonment/forgetting and consumer invalidation.
+
+The native monitor alone is not an initialization acknowledgement: the runtime
+can release it before dispatching abandonment callbacks. Borrowers therefore
+capture the acknowledged peer under the arbitration gate rather than rereading
+the mutable wrapper's `Jvm` field after acquisition. The acquisition keeps that
+peer alive through the component bridge call. This is binding readiness, not
+successful composition application; native snapshot values still require the
+normal commit boundary. Retirement publishes completion before notifying
+consumers, so a waiting claimant does not depend on subsequent invalidation.
+
 Before borrowing a token, `Java/SharedStateLifetime.java` checks its native
 registration under the owning `CompositionImpl` lock. For an installed owner,
 the token-keyed marker scope must be valid and belong to that composition's
@@ -288,6 +306,16 @@ corruption after abandonment and retry; they are not equivalent controls for
 these public helpers. Matched native and managed controls retain the committed
 peer and edited hour through nested failure, successful sequential retry/apply,
 and a subsequent render, without replacing the composition or root lambda.
+
+`SharedStateFirstOwnerTests` coordinates concurrent first claims of one fresh
+wrapper and counts actual native factories across 64 bounded rounds. A separate
+pending-claim control holds the winner before initialization while the loser
+waits on its native monitor, then exercises successful binding and failures
+before/after partial binding. It checks original exceptions, stale callbacks,
+empty monitor graphs, and surviving-peer identity on sequential retry. The
+public typed-helper control distinguishes a failure after initialization has
+returned from a pre-publication failure, and verifies reacquisition after native
+abandonment rather than assuming the native monitor also serializes callbacks.
 
 Visual inspection of the hoisted-owner Gallery demo preserves 19:25 in its
 label and both numeric displays while hiding and restoring either or both
