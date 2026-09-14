@@ -2578,6 +2578,8 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         ComposableMethodRoute route, string variable = "__changed")
     {
         sb.Append(indent).Append("int ").Append(variable).AppendLine(" = 0;");
+        if (!CanEmitChangedMask(slots, defaults))
+            return;
         int fallbackIndex = 0;
         foreach (var s in slots)
         {
@@ -2645,10 +2647,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         string omittedArgumentsVariable,
         string variable = "__changed")
     {
-        int kotlinParameterCount = ComposableMethodKotlinParameterCount(
-            slots.Count(slot => slot.Kind != FacadeSlotKind.ScopeReceiver),
-            defaults);
-        if (kotlinParameterCount > 10)
+        if (!CanEmitChangedMask(slots, defaults))
         {
             // The bridge declaration currently exposes only the first
             // $changed int. Forwarding a partially remapped group while later
@@ -2747,6 +2746,10 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             : 0;
         return Math.Max(declaredParameterCount, defaultsParameterCount);
     }
+
+    static bool CanEmitChangedMask(IReadOnlyList<FacadeSlot> slots, DefaultsInfo? defaults) =>
+        !slots.Any(slot => slot.Kind == FacadeSlotKind.ScopeReceiver) &&
+        ComposableMethodKotlinParameterCount(slots.Count, defaults) <= 10;
 
     static void EmitComposableMethodBranchedCall(StringBuilder sb, string primaryMethodName,
         IReadOnlyList<FacadeSlot> slots,
@@ -3267,6 +3270,8 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
         string changedVar = "__changed")
     {
         sb.Append(indent).Append("int ").Append(changedVar).AppendLine(" = 0;");
+        if (!CanEmitChangedMask(slots, defaults))
+            return;
         int fallbackParamIndex = 0;
         foreach (var s in slots)
         {
@@ -3310,9 +3315,8 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
                 case FacadeSlotKind.Content3:
                 case FacadeSlotKind.RequiredFunction2:
                 case FacadeSlotKind.RequiredFunction3:
-                    // composableLambda(composer, key, ...) hands back an
-                    // identity-stable wrapper for content lambdas; treat
-                    // as Static.
+                    // Wrap2/Wrap3 update a tracked Kotlin wrapper, invalidating
+                    // its readers even when the containing call skips.
                     sb.Append(indent).Append(changedVar).Append(" |= (int)global::AndroidX.Compose.ChangedBits.Static << ")
                       .Append(bitOffset).AppendLine(";");
                     break;

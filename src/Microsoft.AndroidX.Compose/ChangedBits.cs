@@ -17,7 +17,10 @@ namespace AndroidX.Compose;
 /// etc. — 10 user params per <c>$changed</c> int. The compose-compiler
 /// emits additional <c>$changed</c> ints when a function has &gt; 10
 /// defaultable params; the facade generator falls back to <c>0</c>
-/// (Uncertain) for any overflow ints.
+/// (Uncertain) for the entire call when all groups cannot be represented.
+/// Consumers compiled with the former <c>Static = 4</c> constant must
+/// recompile: enum constants are inlined, and replacing the runtime
+/// assembly alone cannot repair those call sites.
 /// </remarks>
 public enum ChangedBits
 {
@@ -41,8 +44,10 @@ public enum ChangedBits
     Different = 2,
 
     /// <summary>
-    /// 0b100 — caller knows this param can never change (compile-time
-    /// constant or guaranteed identity-stable across recompositions).
+    /// 0b011 — caller knows this param can never change. Kotlin's
+    /// Unknown code is 0b100, not Static. Identity-stable event adapters
+    /// must dispatch to their latest target; identity-stable composable
+    /// adapters must invalidate their readers when their bodies change.
     /// </summary>
-    Static = 4,
+    Static = 3,
 }

@@ -15,7 +15,7 @@ namespace AndroidX.Compose.SourceGenerators.Tests;
 /// </summary>
 public class FacadeGeneratorTests
 {
-    const string Stubs = """
+    static readonly string Stubs = $$"""
         namespace Android.Runtime
         {
             public static class JNIEnv
@@ -229,7 +229,7 @@ public class FacadeGeneratorTests
                 public static System.IntPtr ModifierHandle(global::AndroidX.Compose.UI.IModifier? m) => default;
                 public static System.IntPtr PainterResource(int id, global::AndroidX.Compose.Runtime.IComposer composer) => default;
             }
-            public enum ChangedBits { Uncertain = 0, Same = 1, Different = 2, Static = 4 }
+            public enum ChangedBits { Uncertain = 0, Same = 1, Different = 2, Static = {{(int)ChangedBits.Static}} }
             public static class ComposeExtensions
             {
                 public static int DiffSlotShift(int paramIndex) => 1 + paramIndex * 3;
@@ -561,7 +561,8 @@ public class FacadeGeneratorTests
         var bridge = output.SyntaxTrees.Single(tree =>
             tree.FilePath.EndsWith("ComposeBridges.Text.g.cs", System.StringComparison.Ordinal))
             .GetText().ToString();
-        Assert.Contains("args[18] = new global::Android.Runtime.JValue(_changed);", bridge);
+        Assert.DoesNotContain("__changed |=", emitted);
+        Assert.Contains("args[18] = new global::Android.Runtime.JValue(0);", bridge);
         Assert.Contains("args[19] = new global::Android.Runtime.JValue(0);", bridge);
         Assert.Contains("args[20] = new global::Android.Runtime.JValue(defaults);", bridge);
         Assert.Empty(output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error));
@@ -5023,13 +5024,10 @@ public class FacadeGeneratorTests
     }
 
     [Fact]
-    public void Changed_Phase3_MultiSlotNamedSlotsContributeDiffSlot()
+    public void Changed_Phase3_WideMultiSlotCallKeepsEntireMaskUncertain()
     {
-        // Phase 3 — multi-slot leaf (AlertDialog). Required IFunction0
-        // → RememberAction → Static. Required IFunction2 (confirmButton)
-        // → multi-slot promotes it to a NamedFunction2; nullable
-        // IFunction2? slots are NamedFunction2 too. All named slots
-        // diff against their property identity.
+        // Fourteen physical Kotlin slots, even though this C# bridge exposes
+        // only seven. Neither tree nor direct callers can forward a partial group.
         var code = """
             using global::AndroidX.Compose.Runtime;
             using global::AndroidX.Compose.UI;
@@ -5060,20 +5058,9 @@ public class FacadeGeneratorTests
         Assert.NotNull(emitted);
 
         Assert.Contains("int __changed = 0;", emitted);
-        // onDismissRequest (param 0) → Static via RememberAction at bit 1.
-        Assert.Contains("__changed |= (int)global::AndroidX.Compose.ChangedBits.Static << global::AndroidX.Compose.ComposeExtensions.DiffSlotShift(0);", emitted);
-        // confirmButton (param 1, RequiredFunction2 — wrapped via Wrap2 → identity-stable) → Static at bit 4.
-        Assert.Contains("__changed |= (int)global::AndroidX.Compose.ChangedBits.Static << global::AndroidX.Compose.ComposeExtensions.DiffSlotShift(1);", emitted);
-        // modifier (param 2) → DiffSlot on __modifierKey at bit 7.
-        Assert.Contains("__changed |= composer.DiffSlot(__modifierKey, global::AndroidX.Compose.ComposeExtensions.DiffSlotShift(2));", emitted);
-        // dismissButton (param 3, NamedFunction2 nullable) → DiffSlot on the DismissButton property at bit 10.
-        Assert.Contains("__changed |= composer.DiffSlot<object?>(DismissButton, global::AndroidX.Compose.ComposeExtensions.DiffSlotShift(3));", emitted);
-        // icon (param 4) → bit 13.
-        Assert.Contains("__changed |= composer.DiffSlot<object?>(Icon, global::AndroidX.Compose.ComposeExtensions.DiffSlotShift(4));", emitted);
-        // title (param 5) → bit 16.
-        Assert.Contains("__changed |= composer.DiffSlot<object?>(Title, global::AndroidX.Compose.ComposeExtensions.DiffSlotShift(5));", emitted);
-        // text (param 6) → bit 19.
-        Assert.Contains("__changed |= composer.DiffSlot<object?>(Text, global::AndroidX.Compose.ComposeExtensions.DiffSlotShift(6));", emitted);
+        Assert.DoesNotContain("__changed |=", emitted);
+        Assert.Contains("composer.RememberAction", emitted);
+        Assert.Contains("ComposableLambdas.Wrap2", emitted);
         Assert.Contains("composer: composer, _changed: __changed", emitted);
 
         var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();

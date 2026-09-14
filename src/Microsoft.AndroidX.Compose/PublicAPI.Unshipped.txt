@@ -155,7 +155,7 @@ AndroidX.Compose.CenterAlignedTopAppBar.Title.set -> void
 AndroidX.Compose.ChangedBits
 AndroidX.Compose.ChangedBits.Different = 2 -> AndroidX.Compose.ChangedBits
 AndroidX.Compose.ChangedBits.Same = 1 -> AndroidX.Compose.ChangedBits
-AndroidX.Compose.ChangedBits.Static = 4 -> AndroidX.Compose.ChangedBits
+AndroidX.Compose.ChangedBits.Static = 3 -> AndroidX.Compose.ChangedBits
 AndroidX.Compose.ChangedBits.Uncertain = 0 -> AndroidX.Compose.ChangedBits
 AndroidX.Compose.Checkbox
 AndroidX.Compose.Checkbox.Checkbox(bool checked, System.Action<bool>! onCheckedChange, bool enabled = true) -> void
