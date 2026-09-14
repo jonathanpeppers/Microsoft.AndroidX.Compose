@@ -135,6 +135,19 @@ changes, theme changes, logical versus native masks, body/counter-peer/content
 identity, an outside counter, drawing, and recreation without remounting the
 Surface or polling for expected results.
 
+On the shared Pixel 7, all **15/15** Surface cases passed using the embedded
+merged-branch APK from `9ba2c04` (SHA-256
+`582282EE542DB1F64AAD42057ACEB7A3EC8816F8E11CA4C9BD9388F16213598D`).
+The installed hash matched and both private/external override directories
+contained no files. Each transition row retained the inside counter (37),
+outside counter (91), native state peer, remembered sentinels, and content
+lambda across 12 option changes and light/dark theme changes; recreation
+restored the saveable values. Strict fill, border, and shadow assertions use
+Window PixelCopy after a pre-mutation frame-commit callback. Paired compositor
+captures remain diagnostic evidence, not the pixel oracle. The later
+API-29 admission guard was compiled and reviewed separately; it is not in
+that frozen APK and does not change the tested Pixel 7 path.
+
 ## Can we "just call" the Kotlin plugin?
 
 **No, not in any practical sense.** The plugin only runs *inside `kotlinc`* — it hooks into Kotlin's FIR/IR APIs (`FirExtensionRegistrar`, `IrGenerationExtension`). It cannot operate on:
