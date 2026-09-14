@@ -11,9 +11,9 @@ namespace AndroidX.Compose;
 ///
 /// <para>
 /// Holds a Compose <c>FocusRequester</c> instance. The instance must
-/// outlive the composition that wired it — store one
-/// <see cref="FocusRequester"/> per logical focus target on the activity
-/// (or on a state holder) and reuse the same instance across renders.
+/// remain stable for the composition that wired it. Remember one
+/// <see cref="FocusRequester"/> per logical focus target and reuse
+/// the same instance across renders.
 /// Constructing a new instance per recomposition would silently drop
 /// any pending request.
 /// </para>
@@ -34,9 +34,24 @@ public sealed class FocusRequester
     /// requester. Safe to call from event handlers (button clicks,
     /// LaunchedEffect bodies, etc.). The .NET binding does not surface
     /// the no-arg overload, so we call it directly via JNI.
+    /// The target must already be attached; do not request focus during
+    /// composition or after its target has been removed. A selector-keyed
+    /// LaunchedEffect can request once after attachment without stealing
+    /// focus again on unrelated recompositions.
     /// </summary>
-    public void RequestFocus() =>
-        ComposeBridges.FocusRequesterRequestFocus(((Java.Lang.Object)Java).Handle);
+    public void RequestFocus()
+    {
+        var peer = Java;
+        try
+        {
+            ComposeBridges.FocusRequesterRequestFocus(peer.Handle);
+        }
+        finally
+        {
+            // The dispatch receiver is a raw handle, not a bridge-owned peer.
+            GC.KeepAlive(peer);
+        }
+    }
 
     /// <summary>
     /// Captures focus on the node — input is pinned here until

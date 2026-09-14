@@ -426,6 +426,25 @@ boundary; no independent pure-Kotlin reproduction has been run, so a Google
 upstream root cause is not established solely by this comparison.
 No synthetic tab switch is applied to conceal the defect.
 
+## Focus ownership
+
+`Modifier.FocusTarget()` uses the official UI runtime binding. It is the
+low-level target used by Jetchat's emoji panel, not a replacement for
+`Focusable()` on accessible interactive controls. Install `FocusRequester`
+and `OnFocusChanged` before the target, and remember one requester per logical
+target. Request focus after attachment (an event or selector-keyed
+`LaunchedEffect`), never on every render. Existing text fields already own a
+target; do not append another.
+
+`LocalFocusManager.Current(composer)` and `Current()` read the owner at the
+current composition position and return the bound `UI.Focus.IFocusManager`.
+Capture it in composition for later UI callbacks; implicit lookup outside
+composition throws the standard active-composer error and is diagnosed by
+CN5009. `Provides` supports a scoped override. No manager is globally cached.
+`ClearFocus()` defaults to `force: false`; captured focus is retained unless
+the caller passes `true`. Clearing input focus is distinct from moving
+accessibility focus or issuing a keyboard show/hide command.
+
 ## The `$default` bitmask source generator
 
 Every `@Composable` JVM method takes a trailing `int $default` bitmask

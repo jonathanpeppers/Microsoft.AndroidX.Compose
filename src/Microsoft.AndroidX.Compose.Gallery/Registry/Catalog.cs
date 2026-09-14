@@ -161,6 +161,7 @@ public static class Catalog
         D.Modifiers.SemanticsBuilderDemo.Demo,
         D.Modifiers.SemanticsHeadingDemo.Demo,
         D.Modifiers.FocusRequesterDemo.Demo,
+        D.Modifiers.FocusTargetDemo.Demo,
         D.Modifiers.CombinedClickableDemo.Demo,
         D.Modifiers.DetectTapGesturesDemo.Demo,
         D.Modifiers.DetectDragGesturesDemo.Demo,
