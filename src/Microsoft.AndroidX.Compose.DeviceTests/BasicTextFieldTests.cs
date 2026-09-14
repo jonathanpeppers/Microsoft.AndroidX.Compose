@@ -195,18 +195,20 @@ public class BasicTextFieldTests
                 activity.Input.Value = ComposeExtensions.NewTextFieldValue("a");
             });
             Assert.AreEqual(1, activity.TextLayout.LineCount);
-            int singleLineHeight = activity.EditorHeight;
-            Assert.IsGreaterThan(0, singleLineHeight);
+            Assert.IsGreaterThan(0, activity.EditorHeight);
+            Assert.AreEqual((int)Math.Ceiling(activity.TextLayout.GetLineBottom(0)), activity.EditorHeight);
             await activity.MutateAsync(() =>
-            {
-                activity.MinLines = 2;
-                activity.Input.Value = ComposeExtensions.NewTextFieldValue("a\nb\nc");
-            });
+                activity.Input.Value = ComposeExtensions.NewTextFieldValue("a\nb\nc"));
             Assert.AreEqual(3, activity.TextLayout.LineCount, "Hard newlines remain in the full native paragraph layout.");
             Assert.IsFalse(activity.TextLayout.LayoutInput.SoftWrap);
             Assert.AreEqual("a\nb\nc", activity.Input.Value.Text);
+            // Native line-height trimming differs for one-line and multi-line paragraphs.
+            int singleLineHeight = (int)Math.Ceiling(activity.TextLayout.GetLineBottom(0));
             Assert.AreEqual(singleLineHeight, activity.EditorHeight,
-                "singleLine must preserve the one-line viewport despite hard newlines and minLines=2.");
+                "singleLine must constrain the viewport to the native first-line height.");
+            await activity.MutateAsync(() => activity.MinLines = 2);
+            Assert.AreEqual(singleLineHeight, activity.EditorHeight,
+                "singleLine must ignore minLines=2 without changing the same-content viewport.");
             await activity.MutateAsync(() =>
             {
                 activity.SingleLine = false;
