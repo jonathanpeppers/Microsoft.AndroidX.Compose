@@ -128,8 +128,18 @@ public static partial class ComposeExtensions
     /// <summary>
     /// Keyed <c>rememberSaveable(key1) { factory() }</c>: keys flow into
     /// Kotlin's <c>inputs</c> array so Compose's saveable registry
-    /// invalidates the cached value when any key changes.
+    /// invalidates the cached value when any key changes. State wrappers
+    /// also re-run the factory on input changes; equal inputs retain the
+    /// same managed wrapper and its current value.
     /// </summary>
+    /// <remarks>
+    /// Use null, immutable primitive/string keys, or Java peers with matching
+    /// equality. Other managed keys (including arrays passed as one key) retain the legacy <c>ToString()</c>
+    /// conversion for Kotlin inputs; this can disagree with their managed
+    /// equality and is not a general-purpose custom-key contract.
+    /// Inputs are not saved: restoration does not compare them with the
+    /// inputs from the previous activity.
+    /// </remarks>
     public static T RememberSaveable<T>(
         this IComposer composer,
         Func<T> factory,
@@ -161,7 +171,15 @@ public static partial class ComposeExtensions
 
     /// <summary>
     /// Array-form keyed <c>rememberSaveable(vararg inputs) { factory() }</c>.
+    /// The managed wrapper cache snapshots the key array so replacing an
+    /// element in the caller's array is detected on the next composition.
     /// </summary>
+    /// <remarks>
+    /// Key elements have the same equality and restoration limitations as
+    /// <see cref="RememberSaveable{T}(IComposer, Func{T}, object?, int, string)"/>.
+    /// An empty array means no inputs; a null element is one input. A null
+    /// array container is rejected.
+    /// </remarks>
     public static T RememberSaveableKeyed<T>(
         this IComposer composer,
         Func<T> factory,
@@ -217,11 +235,9 @@ public static partial class ComposeExtensions
 
     static T RememberSaveableWrapper<T>(IComposer composer, Func<T> factory, object?[]? keys)
     {
-        // Cache the C# wrapper across recompositions so we don't
-        // allocate a fresh facade + Kotlin IMutableState on every
-        // render. Nested Remember opens its own replaceable group;
-        // nesting is fine — Compose's slot table handles it.
-        var wrapper = composer.Remember(factory)
+        // Invalidate the managed cache with the inputs too, or Kotlin's
+        // initializer would return the previous wrapper's mutable state.
+        var wrapper = composer.RememberKeyed(factory, keys ?? [])
             ?? throw new InvalidOperationException(
                 $"RememberSaveable<{typeof(T).Name}>: factory returned null.");
         var iwrap = (IMutableStateWrapper)wrapper;

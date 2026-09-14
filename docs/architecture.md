@@ -738,6 +738,31 @@ class.
   rotation/process-death survival use `RememberSaveable` — keys are
   forwarded to Kotlin's `rememberSaveable(vararg inputs)` array so
   the saveable registry uses the same invalidation semantics.
+  For `MutableState<T>` and `MutableNumberState<T>`, the managed wrapper
+  cache also uses keyed `Remember`: equal keys retain the wrapper and its
+  current value without invoking the factory; changed keys run the current
+  factory and return a replacement wrapper. The previous wrapper is not
+  rebound to the replacement's state. Key arrays are shallow-snapshotted,
+  so changing an element in the caller's array invalidates the cache;
+  mutating an object used as an individual key is not a deep-value snapshot.
+  For saveable inputs, keyless and empty-array calls both mean no inputs;
+  a single null element is a distinct input vector. The array overload
+  rejects a null array container.
+  Use immutable primitive/string keys, null, or Java peers with appropriate
+  equality. Other managed key objects still use the existing `ToString()`
+  JNI marshalling, not arbitrary managed-object equality on the Kotlin side.
+
+  On activity recreation, the factory constructs a fresh managed wrapper
+  and the saveable holder rebinds it to the restored JVM state. Numeric
+  wrappers must support the default saver's boxed mutable-state peer as
+  well as their initially primitive-specialized peer. As in Kotlin,
+  **inputs are not saved or compared against pre-recreation inputs**:
+  a restored value can be used even when the new activity supplies different
+  keys. Subsequent input changes reset it normally. Scalar saveable values
+  bypass the managed-wrapper cache and restore without running their factory.
+  `RememberSaveableTests` exercises key equality, nulls, key-array mutation,
+  factory counts, and scalar controls against real Compose;
+  `RememberSaveableRestoreTests` covers recreation and post-restore resets.
 - **State primitives.** `MutableManagedState<T>` provides synchronized
   managed values that invalidate Compose readers without pretending to be a
   Kotlin flow. `MutableStateList<T>`, `MutableStateMap<K,V>`,
