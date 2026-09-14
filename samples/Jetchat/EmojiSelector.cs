@@ -161,7 +161,8 @@ public static class EmojiSelector
                     ? Color.FromPacked(scheme.OnSecondaryContainer)
                     : Color.FromPacked(scheme.OnSurfaceVariant)),
         };
-        button.Add(new Text(label).WithTypography(Typography.TitleSmall));
+        button.Add(new Text(label) { FontFamily = JetchatFonts.Karla }
+            .WithTypography(Typography.TitleSmall));
         return button;
     }
 

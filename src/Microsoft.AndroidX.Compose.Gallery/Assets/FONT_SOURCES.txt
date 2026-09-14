@@ -1,0 +1,24 @@
+Unmodified SIL Open Font License 1.1 font assets
+
+karla_regular.ttf (400 upright), karla_bold.ttf (700 upright),
+montserrat_regular.ttf (400 upright):
+https://github.com/android/compose-samples/tree/4c1fe7586e2fbf1c934925ef8ab64d3803361423/Jetchat/app/src/main/res/font
+License text: FONT_LICENSE.txt
+Karla: Copyright (c) 2011-2012, Jonathan Pinhorn
+(jonpinhorn.typedesign@gmail.com), with Reserved Font Names 'Karla'.
+Montserrat: Copyright 2011 The Montserrat Project Authors
+(https://github.com/JulietaUla/Montserrat)
+
+karla_italic.ttf (variable font, default weight 400, italic):
+https://github.com/google/fonts/blob/809e4d8b8d7e9364a914909bb777679606c178b8/ofl/karla/Karla-Italic%5Bwght%5D.ttf
+Renamed for Android resource naming, bytes unchanged.
+Copyright 2019 The Karla Project Authors (https://github.com/googlefonts/karla)
+License text: KARLA_ITALIC_LICENSE.txt
+This newer real italic font is a Gallery/test asset only, not a font from
+the pinned Jetchat sample. Jetchat does not bundle an italic face.
+
+SHA-256:
+karla_regular.ttf b2754c00295b6eb895d8419cb3df993d74a0ed97e143ee98fcd83fdca94f932c
+karla_bold.ttf 7a61886119056f23bfb3ec3efa1d4678769e3794e205e60ca34136cc0f9008e7
+montserrat_regular.ttf 077cdab15161232a9ba7124d2ddd7a9425145750788e9a966c156cc66274f525
+karla_italic.ttf 98c02551288197a43d9c7e62c105f4b6f283a57f0f06d623313ea32d5c701977

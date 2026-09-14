@@ -43,7 +43,6 @@ that needs the same primitive.
 | [#64](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/64)  | Drawing primitives — `Canvas`, `drawBehind`, `Brush`, `Path`, `Shape` factories | Custom visuals in **JetLagged**; asymmetric `RoundedCornerShape(topStart, topEnd, …)` on **Jetchat** bubbles. |
 | [#144](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/144) | Custom `Layout {}` primitive — Measurable / Placeable / MeasureScope | `InterestsAdaptiveContentLayout` in **JetNews**, custom carousels in **Jetsnack**, asymmetric chat bubbles in **Jetchat**. |
 | [#168](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/168) | `TwoPane` / `NavigableListDetailPaneScaffold` + Jetpack `WindowManager` (`WindowLayoutInfo`/`FoldingFeature`) | Adaptive list-detail with fold avoidance in **Reply**. |
-| [#335](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/335) | Resource-backed `Font` / custom `FontFamily` | Karla/Montserrat typography in **Jetchat**. |
 | [#336](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/336) | Transition float/color value animations | Record-button transitions in **Jetchat**. |
 | [#337](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/337) | Long-press pointer-input drag gestures | Exact push-to-talk gesture in **Jetchat**. |
 | [#339](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/339) | `Scaffold.contentWindowInsets` customization | Exact inset ownership in **Jetchat**. |
@@ -75,7 +74,8 @@ Closed gaps that previously appeared here (now usable in samples):
 **#165** state-based search-bar pair,
 **#166** `BackHandler {}` from `androidx.activity.compose`,
 **#167** Typed `semantics` properties (`Selected`, `Role`, `OnClick` label, …),
-**#169** `NavOptions` (`popUpTo` + `launchSingleTop` + `restoreState`).
+**#169** `NavOptions` (`popUpTo` + `launchSingleTop` + `restoreState`),
+**#335** Resource-backed `Font` / custom `FontFamily` (bundled Karla/Montserrat in **Jetchat**).
 
 Per-sample READMEs may still note these features as deferred — closing
 the facade gap unblocks the sample, but each port has to be updated

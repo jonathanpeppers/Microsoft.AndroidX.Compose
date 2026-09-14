@@ -1,7 +1,7 @@
 namespace AndroidX.Compose.Samples.Jetchat.Theme;
 
 // Numeric metrics and weights from compose-samples 4c1fe7586e2fbf1c934925ef8ab64d3803361423,
-// Jetchat/theme/Typography.kt. Resource font families are tracked separately in #335.
+// Jetchat/theme/Typography.kt. Resource families are applied by JetchatFonts.
 internal static class Typography
 {
     internal static readonly TextStyle DisplayLarge = Create(57, 64, 0f, FontWeight.Light);

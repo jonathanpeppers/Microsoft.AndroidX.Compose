@@ -806,15 +806,15 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
             idx++;
         }
 
-        // $changed slots. When the bridge declares an `int _changed`
-        // partial-method param, emit its value into the FIRST $changed
-        // slot; remaining slots (overflow for >10 user params) stay 0.
-        // Without `_changed`, every slot stays 0 (Uncertain — the runtime
-        // diffs everything itself, current behaviour).
+        // Partial groups and unmodelled receiver positions cannot safely
+        // describe Kotlin's inputs. Keep every group Uncertain in those shapes,
+        // including callers that compute masks by hand.
         int changedCount = ChangedSlotCount(sigParams, defaultSlotCount, hasComposerSlot);
+        bool canForwardChanged = callerProvidesChanged && changedCount == 1
+            && receiverParam is null && instanceField is null;
         for (int c = 0; c < changedCount; c++, idx++)
         {
-            string val = (c == 0 && callerProvidesChanged) ? "_changed" : "0";
+            string val = canForwardChanged ? "_changed" : "0";
             sb.Append("                args[").Append(idx).Append("] = new global::Android.Runtime.JValue(")
               .Append(val).AppendLine(");");
         }

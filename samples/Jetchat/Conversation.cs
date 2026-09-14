@@ -80,10 +80,12 @@ public static class Conversation
             {
                 new Text(ui.ChannelName)
                 {
+                    FontFamily = JetchatFonts.Montserrat,
                     Color      = Color.FromPacked(scheme.OnSurface),
                 }.WithTypography(Typography.TitleMedium),
                 new Text($"{ui.ChannelMembers} members")
                 {
+                    FontFamily = JetchatFonts.Karla,
                     Color    = Color.FromPacked(scheme.OnSurfaceVariant),
                     Modifier = Modifier.Padding(top: 2),
                 }.WithTypography(Typography.BodySmall),
@@ -263,6 +265,7 @@ public static class Conversation
             },
             new Text(label)
             {
+                FontFamily = JetchatFonts.Montserrat,
                 Color      = Color.FromPacked(scheme.OnSurfaceVariant),
                 Modifier   = Modifier.Padding(horizontal: 16),
             }.WithTypography(Typography.LabelSmall),
@@ -335,12 +338,14 @@ public static class Conversation
             Modifier.Semantics(mergeDescendants: true, properties: _ => { }),
             new Text(m.Author)
             {
+                FontFamily = JetchatFonts.Montserrat,
                 Color      = Color.FromPacked(scheme.OnSurface),
                 Modifier   = Modifier.Padding(bottom: 8),
             }.WithTypography(Typography.TitleMedium),
             Spacer.Width(8),
             new Text(m.Timestamp)
             {
+                FontFamily = JetchatFonts.Karla,
                 Color    = Color.FromPacked(scheme.OnSurfaceVariant),
                 Modifier = Modifier.Padding(bottom: 8),
             }.WithTypography(Typography.BodySmall),
@@ -363,6 +368,7 @@ public static class Conversation
         {
             new AnnotatedText(formatted)
             {
+                FontFamily = JetchatFonts.Karla,
                 Color    = fg,
                 Modifier = Modifier
                     .Background(bg, new RoundedCornerShape(4.Dp(), 20.Dp(), 20.Dp(), 20.Dp()))

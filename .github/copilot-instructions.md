@@ -764,9 +764,9 @@ can't host a per-node mutable delegate without becoming shared state.
 
 Kotlin's compose-compiler emits an `int $changed` JNI slot alongside `$default`
 on every `@Composable`. Three bits per param (Same=0b001 / Different=0b010 /
-Static=0b100), bit 0 reserved for the runtime "force" flag. When every param's
-bits read **Same** the runtime takes the skip path and re-emits cached output
-nodes.
+Static=0b011; 0b100 is Unknown), bit 0 reserved for the runtime "force" flag.
+Same and Static permit skipping when the composer allows it; Different,
+Uncertain (before runtime comparison), and force do not.
 
 The C# facade computes this mask at Render time. Mechanisms:
 
@@ -781,18 +781,25 @@ The C# facade computes this mask at Render time. Mechanisms:
 - **`Modifier.StructuralKey`** — `Modifier.cs` factories and
   `ModifierExtensions.cs` ops record `(string OpName, object? Args)` alongside
   each closure so two chains with the same semantic ops hash equal even when
-  their captured-locals closures don't. Currently the facade generator leaves
-  the modifier slot at Uncertain (`0`) — the Kotlin runtime still does its
-  own input compare. Capturing the structural key into a slot via DiffSlot
-  is a follow-up (would need to flow `_prepended`/`_appended` side-channels
-  too).
+  their captured-locals closures don't. The facade diffs the complete
+  structural snapshot, including `_prepended`/`_appended`, captured before
+  `BuildModifier` consumes those side channels.
+
+Identity alone is not proof of unchanged content. `RememberAction` is safe
+for event callbacks because invocation reads its latest rebound target.
+`Wrap2`/`Wrap3` are safe only because their **tracked** Kotlin wrapper's
+`update` invalidates previous readers; `SkipToGroupEnd` still recomposes
+those invalidated descendants. Never give an untracked mutable content
+wrapper Static bits. See the pinned ABI evidence and enum-inlining
+compatibility note in `docs/compose-internals.md`.
 
 ### Adding a new `[ComposeBridge]` `@Composable`
 
 Append `int _changed = 0` as the **trailing** partial-method param (after
 `IComposer composer`). The bridge generator writes it into the first JNI
-`$changed` slot in place of literal 0. Without `_changed`, every slot stays
-0 (Uncertain — current pre-bitmask behaviour, never wrong, just slower).
+`$changed` slot only for a fully represented, receiverless single group.
+Wide calls and unmodelled extension/dispatch-receiver calls keep every group
+0 (Uncertain), including masks supplied by hand-written callers.
 
 ```csharp
 [ComposeBridge(/* … */)]
@@ -807,22 +814,26 @@ bridge declares the trailing `int _changed = 0`. Per-slot contribution table:
 
 | Slot kind                         | Contribution                                          |
 |-----------------------------------|-------------------------------------------------------|
-| `IModifier?` (BuildModifier)      | Uncertain (0) — currently deferred                    |
+| `IModifier?` (BuildModifier)      | `DiffSlot` on the complete pre-build structural snapshot |
 | `Action` → `IFunction0`           | `Static << bit` (RememberAction-stable peer)          |
 | `Action<T>` → `IFunction1`        | `Static << bit` (RememberAction-stable peer)          |
-| `IFunction2`/`IFunction3` content | `Static << bit` (Wrap2/Wrap3 are identity-stable)     |
-| `IntPtr` scope receiver           | `Static << bit` (consumed by bridge, not param-id)    |
+| `IFunction2`/`IFunction3` content | `Static << bit` for tracked Wrap2/Wrap3; nullable slots also diff presence/identity |
+| `IntPtr` scope receiver           | Entire mask Uncertain until receiver positions are modelled |
 | `IntPtr` + `[PainterResource]`    | `DiffSlot` on resolved IntPtr                         |
 | `IntPtr` + `[StateHolder]`        | `DiffSlot` on wrapper.Jvm reference                   |
 | Value types / primitives / refs   | `DiffSlot<T>` via `EqualityComparer<T>.Default`       |
 
-Bit position: `bit = 1 + paramIndex * 3` over user params **excluding**
-composer/defaults/scope-receiver/_changed. Up to 10 user params fit per int.
+Bit position: `bit = 1 + paramIndex * 3` over physical Kotlin parameter
+positions, not the shorter/reordered C# bridge parameter list. Kotlin also
+counts implicit receivers, which our generated masks do not yet model.
+Up to 10 slots fit per int.
 Bridges with more than 10 Kotlin slots (for example `Text`) require multiple
-`$changed` ints; until the bridge/helper contract models all groups, direct
-lowering must pass `0` (Uncertain) for the entire changed mask. Never forward
+`$changed` ints; until the bridge/helper contract models all groups, both tree
+and direct lowering must pass `0` (Uncertain) for the entire changed mask. Never forward
 only the first remapped group: forced recomposition with later groups missing
 can enter an invalid Compose path.
+Phase 11's secondary-discriminator remap must obey the same whole-route
+receiver/width guard; it must not add bits back after a route was made Uncertain.
 
 The bridge call switches to **named arguments** (`composer: composer,
 _changed: __changed`) when the bridge has the trailing optional, so the
@@ -831,11 +842,10 @@ positional emission is preserved (back-compat with all existing pin tests).
 
 ### Hand-written facade holdouts
 
-Facades not driven by `[ComposeFacade]` (TextField, BottomSheetScaffold,
-SnackbarHost, SegmentedButton, SearchBar family) currently default
-`_changed: 0` (Uncertain) — back-compat, never incorrect. Opting one in is
-a one-line change: compute a per-param mask in Render via `DiffSlot` /
-`RememberAction`, pass `_changed: __changed` to the bridge.
+Hand-written narrow facades (SnackbarHost and the SearchBar family) compute
+per-param masks. Wide TextField/BottomSheetScaffold and receiver-bearing
+SegmentedButton masks are suppressed at the JNI bridge boundary. Do not
+enable them until every physical Kotlin slot/group can be represented.
 
 ### Don't regress correctness
 

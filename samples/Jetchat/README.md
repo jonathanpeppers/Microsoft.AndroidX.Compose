@@ -41,6 +41,14 @@ anchoring still follow positions, as in the upstream sample.
 
 ## What's faithful
 
+- **Bundled Karla / Montserrat families** — the six unmodified fallback TTFs
+  from upstream revision `4c1fe7586e2fbf1c934925ef8ab64d3803361423` are wired
+  into `JetchatFonts`, theme typography and the conversation/drawer/profile
+  text roles. Font assignment preserves the pinned numeric metrics described below.
+  These are upstream's local fallbacks, not its Google Fonts provider downloads.
+  Jetchat has no bundled italic face, so italic emphasis uses Compose synthesis.
+  See [font sources, weights, copyright and SHA-256](Assets/FONT_SOURCES.txt)
+  and the bundled [SIL Open Font License](Assets/FONT_LICENSE.txt).
 - **Jetchat-branded light/dark theme** — `JetchatTheme` selects the
   upstream blue/yellow palette from `isSystemInDarkTheme()` and supplies
   it through `MaterialTheme`; on Android 12+ it follows upstream by using
@@ -216,7 +224,8 @@ at **`4c1fe7586e2fbf1c934925ef8ab64d3803361423`**, not moving `main`.
 `Theme/Typography.cs` mirrors the upstream file organization. Its
 `Typography.CreateJetchatTypography()` factory constructs the 15 theme slots
 corresponding to Kotlin's top-level `JetchatTypography` value, retaining
-per-composition caching in `JetchatTheme`.
+per-composition caching in `JetchatTheme`. `JetchatFonts.WithFonts(...)` applies
+the bundled Karla/Montserrat families to that baseline without changing its metrics.
 The following screen text is explicitly assigned the corresponding metrics;
 buttons and the message editor also consume the theme's type slots.
 
@@ -236,17 +245,19 @@ spacing is fractional. The Gallery's **Fractional typography** demo separately
 exercises a 16.25 sp font, 24.75 sp line height, and positive/zero/negative
 tracking. No arbitrary fractional font-size adjustments are applied to Jetchat.
 
-`JetchatTypographyTests` compiles the actual sample metric definitions into
-the device test app and checks every native `Typography` slot's packed font
-size, line height, letter spacing, and weight. `ComposeValueTypeTests` checks
+`JetchatTypographyTests` compiles the actual sample metric definitions and
+font-copy helper into the device test app and checks every native `Typography`
+slot's packed font size, line height, letter spacing, and weight, both before
+and after applying the resource families. It also checks family assignments
+and that explicit families survive `WithTypography`. `ComposeValueTypeTests` checks
 the float bit payload through bound `GetSp(float)`, `TextStyle`, and `SpanStyle`.
 These are source/interop comparisons, not pixel-equality tests.
 
 The visual checklist is bounded to the initial composers conversation
 (channel/member labels, a visible author/timestamp/message and date separator),
 the open drawer, the colleague profile's name/fields, and the emoji-selector
-labels. Karla/Montserrat resource families are separate work in **#335**;
-fallback font shapes/advances, baseline layout, avatars/sample data, dynamic
+labels. Karla/Montserrat resource families from **#335** are now combined with
+these metrics. Provider-downloaded font differences, baseline layout, avatars/sample data, dynamic
 colors, and other recorded layout differences prevent a whole-screen parity
 claim. A matched Kotlin/C# screenshot comparison against this exact revision
 remains pending; no verified pinned Kotlin APK is available in this worktree.
@@ -271,6 +282,14 @@ in the issue execution artifacts (`gallery-fractional-typography.png`,
 Light theme, other display/font scales, and resource-font integration
 are not established by these captures.
 
+After integrating the resource-font changes from `5b321e4`, **18/18** focused
+native cases passed on the Pixel 7, including all 15 typography slots with
+and without the bundled families and explicit family retention on `Text`
+and `AnnotatedText`. The embedded test APK's installed SHA-256 matched the
+host artifact; results are retained in `merge-device-tests.trx`.
+This additional interop check does not add combined-font screenshots or
+establish pixel parity.
+
 ## What's still omitted
 
 Everything that can be completed with the current facade is wired. The
@@ -281,7 +300,7 @@ official binding:
 |-------------------------------------------|--------------------|
 | Press-and-hold record gesture (`pointerInput` / `detectDragGesturesAfterLongPress`) | Missing Compose pointer-input surface; tracked by [#337](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/337). Until it lands, recording remains tap-to-start / tap-to-finish with draggable swipe cancellation. |
 | Record-button `updateTransition` + `animateFloat` / `animateColor` | Missing transition value-animation surface; tracked by [#336](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/336). The port retains its visually equivalent timer-driven pulse. |
-| Karla / Montserrat resource-backed typography | Custom `Font(resourceId)` / `FontFamily(fonts)` construction is missing; tracked by [#335](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/335). |
+| Google Fonts provider typography | The exact pinned Karla / Montserrat resource fallbacks are bundled. Provider-backed downloads remain outside the resource-font API; no downloaded-font parity is claimed. |
 | Foundation text-input structure and IME Send callback | `BasicTextField` and keyboard-action support are missing; tracked by [#340](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/340). The current Material `TextField` preserves editing, placeholder, line, and IME-option behavior. |
 | Emoji-panel focus transfer and IME dismissal | `Modifier.focusTarget`, focus observation, and ambient focus-manager access are missing; tracked by [#342](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/342). |
 | Input/selector tonal elevation and content color | The current `Surface` facade omits color, content-color, elevation, and border slots; tracked by [#343](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/343). |

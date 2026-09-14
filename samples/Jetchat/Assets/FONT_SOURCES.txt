@@ -1,0 +1,23 @@
+Unmodified Jetchat fallback fonts
+Source: https://github.com/android/compose-samples/tree/4c1fe7586e2fbf1c934925ef8ab64d3803361423/Jetchat/app/src/main/res/font
+License: SIL Open Font License 1.1; full text in FONT_LICENSE.txt.
+Upstream license: https://github.com/android/compose-samples/blob/4c1fe7586e2fbf1c934925ef8ab64d3803361423/Jetchat/ASSETS_LICENSE
+
+Karla regular (400), bold (700), upright:
+Copyright (c) 2011-2012, Jonathan Pinhorn (jonpinhorn.typedesign@gmail.com),
+with Reserved Font Names 'Karla'.
+
+Montserrat light (300), regular (400), medium (500), semibold (600), upright:
+Copyright 2011 The Montserrat Project Authors (https://github.com/JulietaUla/Montserrat)
+
+SHA-256:
+karla_bold.ttf 7a61886119056f23bfb3ec3efa1d4678769e3794e205e60ca34136cc0f9008e7
+karla_regular.ttf b2754c00295b6eb895d8419cb3df993d74a0ed97e143ee98fcd83fdca94f932c
+montserrat_light.ttf e0feb97ab7fdca79ccdfcc7df7b629f86705e33b7687b7463b388b003ffef865
+montserrat_medium.ttf 421f26b23e2be6b98373d32acd3cb2897b154d4bf0a77d26534ce476e4cbed53
+montserrat_regular.ttf 077cdab15161232a9ba7124d2ddd7a9425145750788e9a966c156cc66274f525
+montserrat_semibold.ttf f227901ef48ac4d1fe4cc6ed0dbce99e6b38969babe5e05da2dfb33521b02944
+
+These are the bundled fallback fonts from the pinned sample, not its
+Google Fonts provider downloads. No downloaded-font provider is configured.
+Weight/style were checked against OS/2 and name-table metadata.

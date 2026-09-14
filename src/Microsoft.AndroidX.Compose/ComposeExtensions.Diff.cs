@@ -49,9 +49,9 @@ public static partial class ComposeExtensions
     /// <c>(int)<see cref="ChangedBits.Same"/> &lt;&lt; bitOffset</c>
     /// when the value matches the previous render, otherwise
     /// <c>(int)<see cref="ChangedBits.Different"/> &lt;&lt; …</c>.
-    /// Caller ORs it into the <c>$changed</c> bitmask; mismatch with
-    /// the runtime's own diff is harmless (Kotlin treats the result
-    /// as a hint).
+    /// Caller ORs it into an initially Uncertain <c>$changed</c> slot.
+    /// Do not OR conflicting Same/Different contributions into one slot:
+    /// their combination is Static and could incorrectly permit skipping.
     /// </returns>
     public static int DiffSlot<T>(
         this IComposer composer,
@@ -92,4 +92,3 @@ public static partial class ComposeExtensions
         }
     }
 }
-
