@@ -37,6 +37,7 @@ public class FabStylingTestActivity : ComponentActivity
     ViewTreeObserver? frameObserver;
     Java.Lang.IRunnable? frameCallback;
     TaskCompletionSource? frameCompletion;
+    TaskCompletionSource? frameNativeCompletion;
     int committedPhase = -1;
     bool resumed;
     int variant;
@@ -406,27 +407,35 @@ public class FabStylingTestActivity : ComponentActivity
         var instrumentation = TestInstrumentation.Current
             ?? throw new InvalidOperationException("FAB instrumentation is not running.");
         var committed = NewCompletion();
-        using var frame = new Java.Lang.Runnable(() => committed.TrySetResult());
-        instrumentation.RunOnMainSync(() =>
+        var nativeFrameFinished = NewCompletion();
+        var frame = new Java.Lang.Runnable(() =>
         {
-            try
-            {
-                var composeView = view ?? throw new InvalidOperationException("FAB ComposeView missing.");
-                frameObserver = composeView.ViewTreeObserver
-                    ?? throw new InvalidOperationException("FAB draw observer missing.");
-                frameCallback = frame;
-                frameCompletion = committed;
-                if (OperatingSystem.IsAndroidVersionAtLeast(29))
-                    frameObserver.RegisterFrameCommitCallback(frame);
-                composeView.Invalidate();
-            }
-            catch (Exception error)
-            {
-                committed.TrySetException(error);
-            }
+            committed.TrySetResult();
+            nativeFrameFinished.TrySetResult();
         });
+        bool registered = false;
         try
         {
+            instrumentation.RunOnMainSync(() =>
+            {
+                try
+                {
+                    var composeView = view ?? throw new InvalidOperationException("FAB ComposeView missing.");
+                    frameObserver = composeView.ViewTreeObserver
+                        ?? throw new InvalidOperationException("FAB draw observer missing.");
+                    frameCallback = frame;
+                    frameCompletion = committed;
+                    frameNativeCompletion = nativeFrameFinished;
+                    if (OperatingSystem.IsAndroidVersionAtLeast(29))
+                        frameObserver.RegisterFrameCommitCallback(frame);
+                    registered = true;
+                    composeView.Invalidate();
+                }
+                catch (Exception error)
+                {
+                    committed.TrySetException(error);
+                }
+            });
             await committed.Task.WaitAsync(TimeSpan.FromSeconds(15));
         }
         finally
@@ -436,15 +445,21 @@ public class FabStylingTestActivity : ComponentActivity
                 RemoveFrameCallback();
                 frameCompletion = null;
             });
+            if (!registered || nativeFrameFinished.Task.IsCompleted)
+                frame.Dispose();
+            else
+                RetireAfterNativeCompletion(nativeFrameFinished.Task, frame.Dispose, "frame commit");
         }
 
         var config = global::Android.Graphics.Bitmap.Config.Argb8888
             ?? throw new InvalidOperationException("Native ARGB bitmap format unavailable.");
         var bitmap = global::Android.Graphics.Bitmap.CreateBitmap(bounds.Width(), bounds.Height(), config)
             ?? throw new InvalidOperationException("Native FAB bitmap allocation failed.");
-        using var listener = new FabPixelCopyListener();
-        using var handler = new Handler(Looper.MainLooper
+        var listener = new FabPixelCopyListener();
+        var handler = new Handler(Looper.MainLooper
             ?? throw new InvalidOperationException("Native main looper unavailable."));
+        bool requested = false;
+        bool transferred = false;
         try
         {
             // Copy the committed window buffer, not an activity-entry animation composited by SurfaceFlinger.
@@ -453,8 +468,11 @@ public class FabStylingTestActivity : ComponentActivity
                 try
                 {
                     if (OperatingSystem.IsAndroidVersionAtLeast(26))
+                    {
                         PixelCopy.Request(Window ?? throw new InvalidOperationException("FAB window unavailable."),
                             bounds, bitmap, listener, handler);
+                        requested = true;
+                    }
                 }
                 catch (Exception error)
                 {
@@ -462,21 +480,57 @@ public class FabStylingTestActivity : ComponentActivity
                 }
             });
             await listener.Completion.Task.WaitAsync(TimeSpan.FromSeconds(15));
+            transferred = true;
             return bitmap;
         }
-        catch
+        finally
         {
-            bitmap.Dispose();
-            throw;
+            if (!requested || listener.Completion.Task.IsCompleted)
+            {
+                if (!transferred) bitmap.Dispose();
+                listener.Dispose();
+                handler.Dispose();
+            }
+            else
+            {
+                RetireAfterNativeCompletion(listener.Completion.Task, () =>
+                {
+                    bitmap.Dispose();
+                    listener.Dispose();
+                    handler.Dispose();
+                }, "PixelCopy");
+            }
         }
     }
 
     void RemoveFrameCallback()
     {
-        if (OperatingSystem.IsAndroidVersionAtLeast(29)
+        if (frameNativeCompletion?.Task.IsCompleted != true
+            && OperatingSystem.IsAndroidVersionAtLeast(29)
             && frameObserver is { IsAlive: true } observer && frameCallback is { } callback)
-            observer.UnregisterFrameCommitCallback(callback);
+        {
+            if (observer.UnregisterFrameCommitCallback(callback))
+                frameNativeCompletion?.TrySetResult();
+        }
         frameObserver = null;
         frameCallback = null;
+        frameNativeCompletion = null;
+    }
+
+    static void RetireAfterNativeCompletion(Task completion, Action release, string operation)
+    {
+        _ = completion.ContinueWith(finished =>
+        {
+            global::Android.Util.Log.Warn("FabStyling",
+                $"Late {operation} completion after the managed waiter ended: {finished.Exception?.ToString() ?? "success"}.");
+            try
+            {
+                release();
+            }
+            catch (Exception error)
+            {
+                global::Android.Util.Log.Error("FabStyling", $"Late {operation} cleanup failed: {error}");
+            }
+        }, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
     }
 }
