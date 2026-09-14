@@ -100,15 +100,14 @@ internal sealed class SharedStateOwner : Java.Lang.Object, IRememberObserver
         }
     }
 
-    internal bool IsLive
+    internal bool IsLive => IsLiveFor(null);
+
+    bool IsLiveFor(IControlledComposition? consumer)
     {
-        get
-        {
-            if (_ownership is null || Handle == IntPtr.Zero)
-                return false;
-            return _composition is not { } composition
-                || ComposeBridges.SharedStateIsLive(composition, this, _scope, _registrationOrigin, _ownershipOrigin);
-        }
+        if (_ownership is null || Handle == IntPtr.Zero)
+            return false;
+        return _composition is not { } composition
+            || ComposeBridges.SharedStateIsLive(composition, this, _scope, _registrationOrigin, _ownershipOrigin, consumer);
     }
 
     internal bool IsOwner
@@ -120,7 +119,7 @@ internal sealed class SharedStateOwner : Java.Lang.Object, IRememberObserver
                 ?? throw new InvalidOperationException("SharedStateOwner no longer has an active lifetime.");
             _ = ownership.Version.Value;
             var previous = ownership.Owner;
-            if (previous is not null && !previous.IsLive)
+            if (previous is not null && !previous.IsLiveFor(_composition))
             {
                 previous.Release();
                 if (ReferenceEquals(previous, this))

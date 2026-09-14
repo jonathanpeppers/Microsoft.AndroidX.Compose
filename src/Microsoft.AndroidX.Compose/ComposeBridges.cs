@@ -43,10 +43,17 @@ internal static partial class ComposeBridges
         Class = "composenet/compose/SharedStateLifetime",
         JvmName = "isLive",
         Signature = "(Landroidx/compose/runtime/CompositionImpl;Ljava/lang/Object;Landroidx/compose/runtime/RecomposeScopeImpl;" +
-                    "Ljava/util/concurrent/atomic/AtomicReference;Ljava/util/concurrent/atomic/AtomicReference;)Z")]
+                    "Ljava/util/concurrent/atomic/AtomicReference;Ljava/util/concurrent/atomic/AtomicReference;" +
+                    "Landroidx/compose/runtime/CompositionImpl;)Z")]
     internal static partial bool SharedStateIsLive(IControlledComposition composition, SharedStateOwner owner,
         IRecomposeScope? scope, Java.Util.Concurrent.Atomic.AtomicReference? registrationOrigin = null,
-        Java.Util.Concurrent.Atomic.AtomicReference? ownershipOrigin = null);
+        Java.Util.Concurrent.Atomic.AtomicReference? ownershipOrigin = null, IControlledComposition? consumer = null);
+
+    [ComposeBridge(
+        Class = "composenet/compose/SharedStateLifetime",
+        JvmName = "dependencyCount",
+        Signature = "()I")]
+    internal static partial int SharedStateDependencyCount();
 
     [ComposeBridge(
         Class = "composenet/compose/SharedStateLifetime",

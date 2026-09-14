@@ -374,6 +374,11 @@ slots surface as `Action` instead of `Action<IComposer>`.
     acquisition, never on ordinary rerenders; cancelled paused slots can remain
     installed after a failed callback, while older committed owners stay live.
     Runtime upgrades must re-audit that query and its consumer keep rules.
+    Foreign-owner queries register transient native-monitor dependencies before
+    blocking. Never acquire a native monitor under the graph gate or interpret
+    contention as owner liveness. Detected sharing cycles throw explicitly so
+    callers can retry sequentially; same-thread reentrancy and acyclic sharing
+    remain supported, and every dependency must be removed on return or throw.
     Both tree and direct helpers use this contract. Omitted parameterized
     wrappers are remembered in composition, including reconstructed tree
     nodes. A fixed-key reusable group uses the owner as auxiliary data to

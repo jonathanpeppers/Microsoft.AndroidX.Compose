@@ -1,6 +1,8 @@
 package composenet.compose;
 
 import java.lang.reflect.Field;
+import java.lang.ref.WeakReference;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.Set;
@@ -34,12 +36,19 @@ final class SharedStateLifetime {
         androidx.compose.runtime.composer.gapbuffer.changelist.ChangeList.class, "operations");
     private static final Field linkOperations = field(
         androidx.compose.runtime.composer.linkbuffer.changelist.ChangeList.class, "operations");
+    private static final Object dependencyGate = new Object();
+    private static final IdentityHashMap<Object, Object> dependencies = new IdentityHashMap<>();
+    private static final ArrayList<WeakReference<Object>> monitors = new ArrayList<>();
 
     private SharedStateLifetime() { }
 
     static AtomicReference<?> pausedOrigin(CompositionImpl composition) {
         try {
-            synchronized (lock.get(composition)) {
+            Object monitor = lock.get(composition);
+            synchronized (dependencyGate) {
+                observeMonitor(monitor);
+            }
+            synchronized (monitor) {
                 Object paused = pendingPausedComposition.get(composition);
                 // The cell is never replaced and retains only an enum value, not
                 // the completed transaction's original content and composition.
@@ -51,19 +60,110 @@ final class SharedStateLifetime {
     }
 
     static boolean isLive(CompositionImpl composition, Object token, RecomposeScopeImpl scope,
-            AtomicReference<?> registrationOrigin, AtomicReference<?> ownershipOrigin) {
+            AtomicReference<?> registrationOrigin, AtomicReference<?> ownershipOrigin, CompositionImpl consumer) {
         try {
-            synchronized (lock.get(composition)) {
-                // Paused resume installs slots before final apply. Cancellation can
-                // discard their registration set and then fail during abandonment.
-                // Qualify every membership result with the captured origins, not
-                // whichever unrelated transaction the composition currently owns.
-                return !composition.isDisposed() && registered(composition, token, scope)
-                    && (registrationOrigin == null || registrationOrigin.get() != PausedCompositionState.Cancelled)
-                    && (ownershipOrigin == null || ownershipOrigin.get() != PausedCompositionState.Cancelled);
+            Object target = lock.get(composition);
+            Object source = consumer == null ? null : lock.get(consumer);
+            ArrayList<Object> tracked = beginDependencies(source, target);
+            try {
+                // Never wait for a native monitor while holding dependencyGate.
+                synchronized (target) {
+                    try {
+                        // Paused cancellation can leave installed slots. Qualify all
+                        // membership results with the captured cancellation cells.
+                        return !composition.isDisposed() && registered(composition, token, scope)
+                            && (registrationOrigin == null || registrationOrigin.get() != PausedCompositionState.Cancelled)
+                            && (ownershipOrigin == null || ownershipOrigin.get() != PausedCompositionState.Cancelled);
+                    } finally {
+                        if (tracked != null) {
+                            endDependencies(tracked);
+                            tracked = null;
+                        }
+                    }
+                }
+            } finally {
+                // Also covers failure before monitor entry. Normally the edge is
+                // removed while target is still held, so it cannot look stale.
+                if (tracked != null)
+                    endDependencies(tracked);
             }
         } catch (IllegalAccessException error) {
             throw new IllegalStateException("Cannot inspect pinned Compose shared-state lifetime.", error);
+        }
+    }
+
+    private static ArrayList<Object> beginDependencies(Object source, Object target) {
+        // Actual Java monitor identity/ownership, not managed peer equality.
+        // An already-held target is reentrant and cannot introduce a wait.
+        synchronized (dependencyGate) {
+            if (!findMonitor(target))
+                throw new IllegalStateException("Shared state owner monitor was not registered before publication.");
+            if (Thread.holdsLock(target))
+                return null;
+            if (source != null)
+                observeMonitor(source);
+            ArrayList<Object> held = new ArrayList<>();
+            // A composition can be nested inside another on this thread. Every
+            // borrowable owner publishes its monitor before its token, so include
+            // ALL known monitors actually held here, not just the inner consumer.
+            for (WeakReference<Object> reference : monitors) {
+                Object monitor = reference.get();
+                if (monitor != null && Thread.holdsLock(monitor))
+                    held.add(monitor);
+            }
+            for (Object monitor : held) {
+                Object next = target;
+                while (next != null) {
+                    if (next == monitor)
+                        throw new IllegalStateException(
+                            "Shared state ownership cycle detected between concurrent compositions. Retry composition sequentially.");
+                    next = dependencies.get(next);
+                }
+                // This native query invokes no user code while holding target.
+                if (dependencies.containsKey(monitor))
+                    throw new IllegalStateException("Shared state monitor already has an active dependency.");
+            }
+            try {
+                for (Object monitor : held)
+                    dependencies.put(monitor, target);
+            } catch (RuntimeException | Error error) {
+                for (Object monitor : held)
+                    dependencies.remove(monitor);
+                throw error;
+            }
+            return held;
+        }
+    }
+
+    private static void endDependencies(ArrayList<Object> sources) {
+        synchronized (dependencyGate) {
+            for (Object source : sources)
+                dependencies.remove(source);
+        }
+    }
+
+    // Called only under dependencyGate. Weak identity entries cannot keep a
+    // native monitor (or its owning composition) alive after ownership ends.
+    private static void observeMonitor(Object monitor) {
+        if (!findMonitor(monitor))
+            monitors.add(new WeakReference<>(monitor));
+    }
+
+    private static boolean findMonitor(Object monitor) {
+        boolean found = false;
+        for (int i = monitors.size() - 1; i >= 0; i--) {
+            Object existing = monitors.get(i).get();
+            if (existing == null)
+                monitors.remove(i);
+            else if (existing == monitor)
+                found = true;
+        }
+        return found;
+    }
+
+    static int dependencyCount() {
+        synchronized (dependencyGate) {
+            return dependencies.size();
         }
     }
 

@@ -109,6 +109,34 @@ registration operations and rerun both backend regressions. Consumer keep rules
 in `shared-state-lifetime.pro` preserve reflected fields, operation identities,
 and the JNI-only shared time/sheet entry points through R8.
 
+Concurrent compositions can already hold their own native monitor when
+borrowing another composition's state. The query registers a transient
+consumer-monitor-to-owner-monitor dependency before acquiring a foreign monitor.
+The dependency graph uses Java object identity and a short gate that never
+encloses native monitor acquisition. Before publishing a new token or newly
+acquired owner, the runtime records its monitor in a weak-identity catalogue.
+A query registers dependencies from every observed native monitor actually
+held by its thread, including enclosing compositions, not just the immediate
+consumer. Every possible foreign owner target must have been catalogued before
+publication; an internal query violating that invariant throws before waiting.
+Unreachable weak entries are pruned, and the catalogue retains neither native
+monitors nor compositions. Actual same-thread monitor ownership recognizes
+reentrant queries, which cannot introduce a wait. Acyclic contention
+waits for the exact locked membership check; contention is never interpreted as
+an absent or live owner.
+
+If a new dependency closes a sharing cycle, the call throws
+`Java.Lang.IllegalStateException` with
+`Shared state ownership cycle detected between concurrent compositions. Retry composition sequentially.`
+The failed composition propagates the error through native abandonment.
+Callers may retry their composition sequentially after the participating
+concurrent calls have returned; there is no automatic retry loop. Existing
+committed peers remain owned. This restriction concerns detected concurrent
+sharing cycles, not all cross-thread sharing. It is not a detector for arbitrary
+application locks or unrelated nested native `ComposeContent` lock acquisitions.
+Edges are removed on return or throw, before releasing an
+acquired target monitor, and the graph retains no completed calls or timers.
+
 Scope validity alone is insufficient for abandoned insertions: their anchors
 can remain valid after the batch is discarded. `HasPendingChanges` may describe
 an unrelated newer attempt. The native-only reentry, same-composition recovery,
@@ -240,6 +268,13 @@ content but keeps its owner and composition alive while the old callback,
 captured payload, and paused transaction must collect.
 Both Gap and Link backends are selected explicitly
 through the instrumentation's `composeBackend` argument.
+`SharedStateConcurrentLifetimeTests` exercises two- and three-composition cycles,
+native abandonment, sequential retry with original peer identity, acyclic
+contention, original callback error propagation, same-thread nested borrowing,
+and empty dependency graphs after completion. Nested crossed borrowing is
+tested in both wait orders, including first publication of the outer owner
+after entering the nested composition. Native weak-reference probes require
+retired monitors to collect independently of their managed composition peers.
 
 Visual inspection of the hoisted-owner Gallery demo preserves 19:25 in its
 label and both numeric displays while hiding and restoring either or both

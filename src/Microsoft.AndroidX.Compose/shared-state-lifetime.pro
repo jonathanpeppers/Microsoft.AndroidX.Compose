@@ -1,6 +1,7 @@
 # The generated JNI bridge and read-only Runtime 1.11.3 compatibility query.
 -keep class composenet.compose.SharedStateLifetime {
-    static boolean isLive(androidx.compose.runtime.CompositionImpl, java.lang.Object, androidx.compose.runtime.RecomposeScopeImpl, java.util.concurrent.atomic.AtomicReference, java.util.concurrent.atomic.AtomicReference);
+    static boolean isLive(androidx.compose.runtime.CompositionImpl, java.lang.Object, androidx.compose.runtime.RecomposeScopeImpl, java.util.concurrent.atomic.AtomicReference, java.util.concurrent.atomic.AtomicReference, androidx.compose.runtime.CompositionImpl);
+    static int dependencyCount();
     static java.util.concurrent.atomic.AtomicReference pausedOrigin(androidx.compose.runtime.CompositionImpl);
 }
 -keepnames class androidx.compose.runtime.CompositionImpl
