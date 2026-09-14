@@ -105,10 +105,9 @@ public class BasicTextFieldTestActivity : ComponentActivity
             ?? throw new InvalidOperationException("Compose owner missing at editor pre-draw."))
             .JavaCast<IViewRootForTest>();
         _lastAdmission = AdmissionFlags("pre-draw Compose", _rootForTest);
-        if (!_rootForTest.IsLifecycleInResumedState || _rootForTest.HasPendingMeasureOrLayout ||
-            CompositionWorkPending)
+        if (!_rootForTest.IsLifecycleInResumedState || CompositionWorkPending)
             return;
-        // Completion is posted after the actual traversal, never a timer or value poll.
+        // AndroidComposeView drains layout in dispatchDraw, after pre-draw. Check pending layout afterward.
         var frame = _frame;
         var ready = _ready;
         decor.Post(() =>
