@@ -228,12 +228,20 @@ static void ScanKotlinFile(string path, string module, List<KotlinSymbol> output
             continue;
 
         // Kotlin also allows annotations on the declaration's own line.
-        var annoMatch = Regex.Match(raw, @"^@(\w+)(?:\([^)]*\))?(?:\s+|$)");
+        var annoMatch = Regex.Match(raw, @"^@(\w+)(?=\(|\s|$)");
         while (annoMatch.Success)
         {
+            var remainder = raw.Substring(annoMatch.Length).TrimStart();
+            if (remainder.StartsWith('('))
+            {
+                var afterArguments = StripBalanced(remainder, '(', ')');
+                if (afterArguments == remainder)
+                    break;
+                remainder = afterArguments;
+            }
             pendingAnnotations.Add(annoMatch.Groups[1].Value);
-            raw = raw.Substring(annoMatch.Length);
-            annoMatch = Regex.Match(raw, @"^@(\w+)(?:\([^)]*\))?(?:\s+|$)");
+            raw = remainder;
+            annoMatch = Regex.Match(raw, @"^@(\w+)(?=\(|\s|$)");
         }
         if (raw.Length == 0)
             continue;
@@ -359,23 +367,34 @@ static void TestKotlinAnnotations()
             @Stable
             fun Modifier.separate(first: Int, second: Int) = first
             @Stable private fun Modifier.hidden() = Unit
+            @Deprecated("old", ReplaceWith("foo()")) public fun Modifier.nested(first: Int, second: Int) = first
+            @Deprecated("old", ReplaceWith("foo()")) @Stable public fun Modifier.nestedMultiple() = Unit
+            @Deprecated("old", ReplaceWith("foo()"))
+            fun Modifier.nestedSeparate(value: Int) = value
+            @Deprecated("old", ReplaceWith("foo()")) private fun Modifier.hiddenNested() = Unit
             """);
         var symbols = new List<KotlinSymbol>();
         ScanKotlinFile(path, "ui", symbols);
-        if (symbols.Count != 3 ||
+        if (symbols.Count != 6 ||
             symbols[0].Name != "clipToBounds" || symbols[0].Receiver != "Modifier" || symbols[0].ParamCount != 0 ||
             !symbols[0].Annotations.SequenceEqual(["Stable"]) ||
             symbols[1].Name != "legacy" || symbols[1].ParamCount != 1 || !symbols[1].IsDeprecated ||
             !symbols[1].Annotations.SequenceEqual(["Deprecated", "Stable"]) ||
             symbols[2].Name != "separate" || symbols[2].ParamCount != 2 ||
-            !symbols[2].Annotations.SequenceEqual(["Stable"]))
+            !symbols[2].Annotations.SequenceEqual(["Stable"]) ||
+            symbols[3].Name != "nested" || symbols[3].Receiver != "Modifier" || symbols[3].ParamCount != 2 ||
+            !symbols[3].IsDeprecated || !symbols[3].Annotations.SequenceEqual(["Deprecated"]) ||
+            symbols[4].Name != "nestedMultiple" || symbols[4].ParamCount != 0 ||
+            !symbols[4].IsDeprecated || !symbols[4].Annotations.SequenceEqual(["Deprecated", "Stable"]) ||
+            symbols[5].Name != "nestedSeparate" || symbols[5].ParamCount != 1 ||
+            !symbols[5].IsDeprecated || !symbols[5].Annotations.SequenceEqual(["Deprecated"]))
             throw new InvalidOperationException("Kotlin inline/standalone annotation parsing regression.");
         Console.WriteLine("Kotlin annotation parser regressions passed.");
     }
     finally { File.Delete(path); }
 }
 
-// Strip a leading <...> balanced clause (returns the rest unchanged if not present).
+// Strip a leading balanced clause (returns unchanged if absent or unterminated).
 static string StripBalanced(string s, char open, char close)
 {
     if (s.Length == 0 || s[0] != open) return s;
