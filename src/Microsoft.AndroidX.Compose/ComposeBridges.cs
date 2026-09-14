@@ -1,4 +1,5 @@
 using Android.Runtime;
+using AndroidX.Compose.Foundation.Interaction;
 using AndroidX.Compose.Foundation.Layout;
 using AndroidX.Compose.Foundation.Lazy.Grid;
 using AndroidX.Compose.Material3;
@@ -625,64 +626,63 @@ internal static partial class ComposeBridges
                                                         [FacadeDefault(true)] bool enabled,
                                                         IComposer composer, int _changed = 0);
 
-    // androidx.compose.material3.FloatingActionButtonKt.FloatingActionButton-X-z6DiA
-    [ComposeBridge(
-        Class     = "androidx/compose/material3/FloatingActionButtonKt",
-        JvmName   = "FloatingActionButton-X-z6DiA",
-        Signature = "(Lkotlin/jvm/functions/Function0;Landroidx/compose/ui/Modifier;" +
-                    "Landroidx/compose/ui/graphics/Shape;JJ" +
-                    "Landroidx/compose/material3/FloatingActionButtonElevation;" +
-                    "Landroidx/compose/foundation/interaction/MutableInteractionSource;" +
-                    "Lkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;II)V",
-        Defaults  = typeof(FloatingActionButtonDefault))]
-    [ComposeFacade]
-    public static partial void FloatingActionButton(IFunction0 onClick, IModifier? modifier,
-                                                    Shape? shape,
-                                                    IFunction2 content, IComposer composer, int _changed = 0);
+    // The runtime Material3Android companion binds the mangled FAB overloads.
+    // Its p9/p11 is Kotlin $changed; the binding's _changed is Kotlin $default.
+    [ComposeFacade(Defaults = typeof(FloatingActionButtonDefault))]
+    public static partial void FloatingActionButton(
+        IFunction0 onClick, IModifier? modifier, Shape? shape,
+        [FacadeAdded] Color? containerColor, [FacadeAdded] Color? contentColor,
+        [FacadeAdded] FloatingActionButtonElevation? elevation,
+        [FacadeAdded] IMutableInteractionSource? interactionSource,
+        IFunction2 content, int defaults, IComposer composer, int _changed = 0);
 
-    // androidx.compose.material3.FloatingActionButtonKt.SmallFloatingActionButton-X-z6DiA
-    [ComposeBridge(
-        Class     = "androidx/compose/material3/FloatingActionButtonKt",
-        JvmName   = "SmallFloatingActionButton-X-z6DiA",
-        Signature = "(Lkotlin/jvm/functions/Function0;Landroidx/compose/ui/Modifier;" +
-                    "Landroidx/compose/ui/graphics/Shape;JJ" +
-                    "Landroidx/compose/material3/FloatingActionButtonElevation;" +
-                    "Landroidx/compose/foundation/interaction/MutableInteractionSource;" +
-                    "Lkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;II)V",
-        Defaults  = typeof(SmallFloatingActionButtonDefault))]
-    [ComposeFacade]
-    public static partial void SmallFloatingActionButton(IFunction0 onClick, IModifier? modifier,
-                                                         Shape? shape,
-                                                         IFunction2 content, IComposer composer, int _changed = 0);
+    public static partial void FloatingActionButton(
+        IFunction0 onClick, IModifier? modifier, Shape? shape,
+        Color? containerColor, Color? contentColor,
+        FloatingActionButtonElevation? elevation, IMutableInteractionSource? interactionSource,
+        IFunction2 content, int defaults, IComposer composer, int _changed) =>
+        FloatingActionButtonKt.FloatingActionButton(onClick, modifier,
+            shape?.JavaCast<AndroidX.Compose.UI.Graphics.IShape>(),
+            containerColor?.ToPacked() ?? 0L, contentColor?.ToPacked() ?? 0L, elevation, interactionSource,
+            content, composer, p9: _changed, _changed: defaults);
 
-    // androidx.compose.material3.FloatingActionButtonKt.LargeFloatingActionButton-X-z6DiA
-    [ComposeBridge(
-        Class     = "androidx/compose/material3/FloatingActionButtonKt",
-        JvmName   = "LargeFloatingActionButton-X-z6DiA",
-        Signature = "(Lkotlin/jvm/functions/Function0;Landroidx/compose/ui/Modifier;" +
-                    "Landroidx/compose/ui/graphics/Shape;JJ" +
-                    "Landroidx/compose/material3/FloatingActionButtonElevation;" +
-                    "Landroidx/compose/foundation/interaction/MutableInteractionSource;" +
-                    "Lkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;II)V",
-        Defaults  = typeof(LargeFloatingActionButtonDefault))]
-    [ComposeFacade]
-    public static partial void LargeFloatingActionButton(IFunction0 onClick, IModifier? modifier,
-                                                         Shape? shape,
-                                                         IFunction2 content, IComposer composer, int _changed = 0);
+    [ComposeFacade(Defaults = typeof(SmallFloatingActionButtonDefault))]
+    public static partial void SmallFloatingActionButton(
+        IFunction0 onClick, IModifier? modifier, Shape? shape,
+        [FacadeAdded] Color? containerColor, [FacadeAdded] Color? contentColor,
+        [FacadeAdded] FloatingActionButtonElevation? elevation,
+        [FacadeAdded] IMutableInteractionSource? interactionSource,
+        IFunction2 content, int defaults, IComposer composer, int _changed = 0);
 
-    // androidx.compose.material3.FloatingActionButtonKt.ExtendedFloatingActionButton-ElI5-7k
-    // (icon + text + expanded multi-slot variant — the canonical animated extended FAB)
-    [ComposeBridge(
-        Class     = "androidx/compose/material3/FloatingActionButtonKt",
-        JvmName   = "ExtendedFloatingActionButton-ElI5-7k",
-        Signature = "(Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;" +
-                    "Lkotlin/jvm/functions/Function0;Landroidx/compose/ui/Modifier;Z" +
-                    "Landroidx/compose/ui/graphics/Shape;JJ" +
-                    "Landroidx/compose/material3/FloatingActionButtonElevation;" +
-                    "Landroidx/compose/foundation/interaction/MutableInteractionSource;" +
-                    "Landroidx/compose/runtime/Composer;II)V",
-        Defaults  = typeof(ExtendedFloatingActionButtonDefault))]
-    [ComposeFacade]
+    public static partial void SmallFloatingActionButton(
+        IFunction0 onClick, IModifier? modifier, Shape? shape,
+        Color? containerColor, Color? contentColor,
+        FloatingActionButtonElevation? elevation, IMutableInteractionSource? interactionSource,
+        IFunction2 content, int defaults, IComposer composer, int _changed) =>
+        FloatingActionButtonKt.SmallFloatingActionButton(onClick, modifier,
+            shape?.JavaCast<AndroidX.Compose.UI.Graphics.IShape>(),
+            containerColor?.ToPacked() ?? 0L, contentColor?.ToPacked() ?? 0L, elevation, interactionSource,
+            content, composer, p9: _changed, _changed: defaults);
+
+    [ComposeFacade(Defaults = typeof(LargeFloatingActionButtonDefault))]
+    public static partial void LargeFloatingActionButton(
+        IFunction0 onClick, IModifier? modifier, Shape? shape,
+        [FacadeAdded] Color? containerColor, [FacadeAdded] Color? contentColor,
+        [FacadeAdded] FloatingActionButtonElevation? elevation,
+        [FacadeAdded] IMutableInteractionSource? interactionSource,
+        IFunction2 content, int defaults, IComposer composer, int _changed = 0);
+
+    public static partial void LargeFloatingActionButton(
+        IFunction0 onClick, IModifier? modifier, Shape? shape,
+        Color? containerColor, Color? contentColor,
+        FloatingActionButtonElevation? elevation, IMutableInteractionSource? interactionSource,
+        IFunction2 content, int defaults, IComposer composer, int _changed) =>
+        FloatingActionButtonKt.LargeFloatingActionButton(onClick, modifier,
+            shape?.JavaCast<AndroidX.Compose.UI.Graphics.IShape>(),
+            containerColor?.ToPacked() ?? 0L, contentColor?.ToPacked() ?? 0L, elevation, interactionSource,
+            content, composer, p9: _changed, _changed: defaults);
+
+    [ComposeFacade(Defaults = typeof(ExtendedFloatingActionButtonDefault))]
     public static partial void ExtendedFloatingActionButton(
         IFunction2 text,
         IFunction2 icon,
@@ -690,7 +690,22 @@ internal static partial class ComposeBridges
         IModifier? modifier,
         bool       expanded,
         Shape?     shape,
+        [FacadeAdded] Color? containerColor,
+        [FacadeAdded] Color? contentColor,
+        [FacadeAdded] FloatingActionButtonElevation? elevation,
+        [FacadeAdded] IMutableInteractionSource? interactionSource,
+        int defaults,
         IComposer  composer, int _changed = 0);
+
+    public static partial void ExtendedFloatingActionButton(
+        IFunction2 text, IFunction2 icon, IFunction0 onClick, IModifier? modifier,
+        bool expanded, Shape? shape, Color? containerColor, Color? contentColor,
+        FloatingActionButtonElevation? elevation, IMutableInteractionSource? interactionSource,
+        int defaults, IComposer composer, int _changed) =>
+        FloatingActionButtonKt.ExtendedFloatingActionButton(text, icon, onClick, modifier,
+            expanded, shape?.JavaCast<AndroidX.Compose.UI.Graphics.IShape>(),
+            containerColor?.ToPacked() ?? 0L, contentColor?.ToPacked() ?? 0L, elevation, interactionSource,
+            composer, p11: _changed, _changed: defaults);
 
     // androidx.compose.material3.SurfaceKt.Surface-T9BRK9s (non-interactive)
     [ComposeBridge(

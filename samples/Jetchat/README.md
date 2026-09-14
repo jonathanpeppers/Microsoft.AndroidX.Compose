@@ -1,5 +1,11 @@
 # Jetchat (Microsoft.AndroidX.Compose port)
 
+The profile FAB reads `tertiaryContainer` from the live color scheme, matching
+Google's pinned `4c1fe7586e2fbf1c934925ef8ab64d3803361423` profile role. Its icon
+and label inherit Material 3's corresponding content color; they do not capture
+the primary-container foreground or a static theme value. The existing extended
+FAB animation and layout approximations are unchanged. (Microsoft.AndroidX.Compose port)
+
 A C# port of the official Compose sample
 [android/compose-samples ▸ Jetchat](https://github.com/android/compose-samples/tree/main/Jetchat).
 The upstream sample is labeled **Low complexity** and is the smallest

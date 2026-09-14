@@ -191,14 +191,9 @@ public static class Profile
                 .NavigationBarsPadding()
                 .Height(48)
                 .WidthIn(min: 48),
-            Icon = new Icon(iconRes, label)
-            {
-                Tint = Color.FromPacked(scheme.OnPrimaryContainer),
-            },
-            Text = new Text(label)
-            {
-                Color = Color.FromPacked(scheme.OnPrimaryContainer),
-            },
+            ContainerColor = Color.FromPacked(scheme.TertiaryContainer),
+            Icon = new Icon(iconRes, label),
+            Text = new Text(label),
         };
     }
 
