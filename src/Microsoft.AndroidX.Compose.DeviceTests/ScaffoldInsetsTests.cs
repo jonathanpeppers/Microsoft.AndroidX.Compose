@@ -15,8 +15,11 @@ public class ScaffoldInsetsTests
 
     /// <summary>Verifies a second native activity can be admitted after the first one is destroyed.</summary>
     [TestMethod]
-    public Task InitialAdmissionTurnoverControl() =>
-        OmittedContentWindowInsets_UsesBoundMaterialDefault(0, true);
+    public async Task InitialAdmissionTurnoverControl()
+    {
+        await OmittedContentWindowInsets_UsesBoundMaterialDefault(0, false);
+        await OmittedContentWindowInsets_UsesBoundMaterialDefault(0, true);
+    }
 
     /// <summary>Runs the existing first transition/recreation row independently of earlier activities.</summary>
     [TestMethod]
