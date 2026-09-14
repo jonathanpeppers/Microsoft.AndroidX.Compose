@@ -43,15 +43,13 @@ that needs the same primitive.
 | [#64](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/64)  | Drawing primitives — `Canvas`, `drawBehind`, `Brush`, `Path`, `Shape` factories | Custom visuals in **JetLagged**; asymmetric `RoundedCornerShape(topStart, topEnd, …)` on **Jetchat** bubbles. |
 | [#144](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/144) | Custom `Layout {}` primitive — Measurable / Placeable / MeasureScope | `InterestsAdaptiveContentLayout` in **JetNews**, custom carousels in **Jetsnack**, asymmetric chat bubbles in **Jetchat**. |
 | [#168](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/168) | `TwoPane` / `NavigableListDetailPaneScaffold` + Jetpack `WindowManager` (`WindowLayoutInfo`/`FoldingFeature`) | Adaptive list-detail with fold avoidance in **Reply**. |
-| [#334](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/334) | Long-press pointer-input drag gestures | Exact push-to-talk gesture in **Jetchat**. |
-| [#335](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/335) | Transition float/color value animations | Record-button transitions in **Jetchat**. |
-| [#336](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/336) | Fractional `Sp` | Exact Jetchat typography metrics. |
-| [#337](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/337) | Resource-backed `Font` / custom `FontFamily` | Karla/Montserrat typography in **Jetchat**. |
-| [#339](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/339) | `BasicTextField` + keyboard actions | Exact message-editor structure and IME Send in **Jetchat**. |
-| [#340](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/340) | Focus target/observation/manager APIs | Emoji-panel focus transfer in **Jetchat**. |
-| [#341](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/341) | Complete Material 3 `Surface` styling slots | Input and selector elevation/content color in **Jetchat**. |
-| [#342](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/342) | `Scaffold.contentWindowInsets` customization | Exact inset ownership in **Jetchat**. |
-| [#343](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/343) | Baseline layout + `clipToBounds` modifiers | Exact input alignment and clipped profile parallax in **Jetchat**. |
+| [#336](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/336) | Transition float/color value animations | Record-button transitions in **Jetchat**. |
+| [#337](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/337) | Long-press pointer-input drag gestures | Exact push-to-talk gesture in **Jetchat**. |
+| [#339](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/339) | `Scaffold.contentWindowInsets` customization | Exact inset ownership in **Jetchat**. |
+| [#340](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/340) | `BasicTextField` + keyboard actions | Exact message-editor structure and IME Send in **Jetchat**. |
+| [#341](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/341) | Baseline layout + `clipToBounds` modifiers | Exact input alignment and clipped profile parallax in **Jetchat**. |
+| [#342](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/342) | Focus target/observation/manager APIs | Emoji-panel focus transfer in **Jetchat**. |
+| [#343](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/343) | Complete Material 3 `Surface` styling slots | Input and selector elevation/content color in **Jetchat**. |
 | [#344](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/344) | Material 3 FAB color/elevation slots | Tertiary profile FAB styling in **Jetchat**. |
 
 Closed gaps that previously appeared here (now usable in samples):
@@ -76,7 +74,8 @@ Closed gaps that previously appeared here (now usable in samples):
 **#165** state-based search-bar pair,
 **#166** `BackHandler {}` from `androidx.activity.compose`,
 **#167** Typed `semantics` properties (`Selected`, `Role`, `OnClick` label, …),
-**#169** `NavOptions` (`popUpTo` + `launchSingleTop` + `restoreState`).
+**#169** `NavOptions` (`popUpTo` + `launchSingleTop` + `restoreState`),
+**#335** Resource-backed `Font` / custom `FontFamily` (bundled Karla/Montserrat in **Jetchat**).
 
 Per-sample READMEs may still note these features as deferred — closing
 the facade gap unblocks the sample, but each port has to be updated

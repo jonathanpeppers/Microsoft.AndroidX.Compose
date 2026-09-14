@@ -54,6 +54,57 @@ fun Greeting(name: String, $composer: Composer, $changed: Int) {
 
 That generated code is what makes recomposition incremental.
 
+### Pinned `$changed` ABI and Static compatibility
+
+`ChangedBits` follows Kotlin's
+[`ParamState` and `bitsForSlot`](https://github.com/JetBrains/kotlin/blob/3286b986762de1ee616fb239d5e1f1fdefeb82e8/plugins/compose/compiler-hosted/src/main/java/androidx/compose/compiler/plugins/kotlin/lower/ComposableFunctionBodyTransformer.kt):
+Uncertain = `0b000`, Same = `0b001`, Different = `0b010`,
+Static = `0b011`. `0b100` is **Unknown**, not Static. Slot *i* starts at
+`1 + 3*i` within a group of ten; bit zero is force.
+For one parameter `(dirty & 0xB) == 0x2` accepts Same (`2`) and Static (`6`)
+but rejects Different (`4`), Uncertain (`0`), Unknown (`8`), and force.
+The generated C# predicates use that contract for every supported slot.
+Do not OR Same and Different into the same slot: that would produce Static.
+
+This was cross-checked against the **actual pinned AARs**, not just a copied
+C# constant: `Xamarin.AndroidX.Compose.Runtime.Android` **1.11.3.1** and
+`Xamarin.AndroidX.Compose.Material3Android` **1.4.0.5** in
+`Directory.Build.targets`. `javap -c -p` on their `classes.jar` shows
+`ButtonKt.Button` using `6` for a static first slot, `2`/`4` for same/different,
+and physical slot 9 for content. That newer compiler output uses
+`Composer.shouldExecute` with the ten-slot low-bit mask `0x12492493` and
+expected `0x12492492`, rather than the older stability-aware `0x5B6DB6DB`
+mask used by our interceptor. Both accept Static and honour force; do not
+assume every compiled Kotlin function uses an identical predicate.
+`SearchBarKt` puts expanded docked content at slot 8 and expanded fullscreen
+content at slot 9 (slot 3 is shape). Implicit receivers also count as Kotlin
+changed slots; `$default` positions exclude receivers.
+
+**Skipping safety:** `RememberAction` peers dispatch event callbacks through
+the latest rebound target even if the owner skips. `ComposableLambdas.Wrap2/3`
+use `tracked: true`: the pinned `ComposableLambdaImpl.update` calls
+`trackWrite`, invalidating scopes registered by `trackRead`. A skipped parent
+must still visit those invalidated descendants. Stable identity without this
+invalidation is not sufficient for mutable content. The device rendering
+regression checks tracked content under a skipped static parent, generated
+tree/direct Button content, retained zero-/one-argument event peers, and
+unchanged versus changed generated siblings. Its bounded execution counts
+are correctness evidence, not a frame-time or CPU speedup measurement.
+On the shared Pixel7, the embedded Debug regression APK passed all 14
+filtered mask/callback/render tests: five input updates produced zero
+additional stable-sibling executions, five changing-sibling executions,
+zero static-parent body executions, and five parent skips. Content updates,
+retained callback targets, and an independently invalidated generated
+restart core were asserted separately. No before/after timing was measured.
+
+**Compatibility:** the public enum previously declared `Static = 4`.
+C# compilers inline enum constants, including generated call sites. Rebuild
+consumers with the corrected runtime **and generator**; replacing a runtime
+DLL alone does not update old compiled masks. No new enum member or public
+API is introduced. Until all groups/receiver positions are modelled, wide
+and receiver-bearing bridge calls remain entirely Uncertain, never a
+partially forwarded first group.
+
 ## Can we "just call" the Kotlin plugin?
 
 **No, not in any practical sense.** The plugin only runs *inside `kotlinc`* — it hooks into Kotlin's FIR/IR APIs (`FirExtensionRegistrar`, `IrGenerationExtension`). It cannot operate on:

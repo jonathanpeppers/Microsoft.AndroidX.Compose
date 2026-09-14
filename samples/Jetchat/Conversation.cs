@@ -1,5 +1,7 @@
 using AndroidX.Compose.Material3;
+using AndroidX.Compose.Samples.Jetchat.Theme;
 using AndroidX.Compose.UI.Text.Input;
+using Typography = AndroidX.Compose.Samples.Jetchat.Theme.Typography;
 
 namespace AndroidX.Compose.Samples.Jetchat;
 
@@ -81,16 +83,15 @@ public static class Conversation
             {
                 new Text(ui.ChannelName)
                 {
-                    FontSize   = 16,
-                    FontWeight = FontWeight.Medium,
+                    FontFamily = JetchatFonts.Montserrat,
                     Color      = Color.FromPacked(scheme.OnSurface),
-                },
+                }.WithTypography(Typography.TitleMedium),
                 new Text($"{ui.ChannelMembers} members")
                 {
-                    FontSize = 12,
+                    FontFamily = JetchatFonts.Karla,
                     Color    = Color.FromPacked(scheme.OnSurfaceVariant),
                     Modifier = Modifier.Padding(top: 2),
-                },
+                }.WithTypography(Typography.BodySmall),
             },
             Actions = new Row
             {
@@ -267,11 +268,10 @@ public static class Conversation
             },
             new Text(label)
             {
-                FontSize   = 11,
-                FontWeight = FontWeight.Medium,
+                FontFamily = JetchatFonts.Montserrat,
                 Color      = Color.FromPacked(scheme.OnSurfaceVariant),
                 Modifier   = Modifier.Padding(horizontal: 16),
-            },
+            }.WithTypography(Typography.LabelSmall),
             new HorizontalDivider
             {
                 Modifier  = Modifier.Weight(1f),
@@ -341,18 +341,17 @@ public static class Conversation
             Modifier.Semantics(mergeDescendants: true, properties: _ => { }),
             new Text(m.Author)
             {
-                FontSize   = 16,
-                FontWeight = FontWeight.Medium,
+                FontFamily = JetchatFonts.Montserrat,
                 Color      = Color.FromPacked(scheme.OnSurface),
                 Modifier   = Modifier.Padding(bottom: 8),
-            },
+            }.WithTypography(Typography.TitleMedium),
             Spacer.Width(8),
             new Text(m.Timestamp)
             {
-                FontSize = 12,
+                FontFamily = JetchatFonts.Karla,
                 Color    = Color.FromPacked(scheme.OnSurfaceVariant),
                 Modifier = Modifier.Padding(bottom: 8),
-            },
+            }.WithTypography(Typography.BodySmall),
         };
 
     static ComposableNode BuildChatItemBubble(
@@ -372,11 +371,12 @@ public static class Conversation
         {
             new AnnotatedText(formatted)
             {
+                FontFamily = JetchatFonts.Karla,
                 Color    = fg,
                 Modifier = Modifier
                     .Background(bg, new RoundedCornerShape(4.Dp(), 20.Dp(), 20.Dp(), 20.Dp()))
                     .Padding(horizontal: 16, vertical: 16),
-            },
+            }.WithTypography(Typography.BodyLarge),
         };
         if (m.Image is int image)
         {
