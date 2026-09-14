@@ -20,6 +20,28 @@ that activity's Compose palette; it does not change Android resource
 configuration, system-bar appearance, or device settings. An omitted extra
 continues to follow the system theme.
 
+## Surface styling validation
+
+A bounded Pixel 7 smoke on 2026-09-14 passed against the embedded, merged
+`b0d9f97` Jetchat APK (SHA-256
+`69956B98CF1759093F843FA2CA22BECB97058BC55E07C4D4320D36FABA0E1A67`).
+The installed hash matched, private override files were absent, and the
+external app directory did not exist. Light, dark, and no-override cold
+launches reached the owned, focused/resumed activity. Native-idle captures
+showed distinct input and nested-selector tonal surfaces, readable content,
+and selected/unselected icon contrast. Emoji selection followed by editor
+focus and typing retained the emoji plus `Surface`, closed the selector,
+showed the IME, and enabled Send. Dark emoji and location-placeholder panels
+also rendered correctly; normal launch followed the system palette.
+
+This smoke includes the merged inset and baseline changes, but is not
+whole-app pixel/font parity or acceptance for other feature work. The
+separate Gallery styling cycle passed on `8a71bb6` (`080E7771...`), and the
+15 strict native Surface transition/identity/pixel/restoration cases passed
+on `9ba2c04` (`582282EE...`), as recorded in
+[`docs/compose-internals.md`](../../docs/compose-internals.md). Those earlier
+APKs are not presented as reruns against this merged Jetchat revision.
+
 ## Message identity
 
 Identity was checked against upstream commit
