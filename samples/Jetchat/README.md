@@ -153,9 +153,16 @@ anchoring still follow positions, as in the upstream sample.
   to record" tooltip. See *What's still omitted* for the exact gesture
   and transition-animation gaps.
 - **Expanded-input dismissal** — `BackHandler` collapses any open
-  selector before system back reaches navigation. Exact upstream focus
-  transfer from the editor to the emoji panel requires the focus-target
-  APIs tracked below.
+  selector before system back reaches navigation. A remembered requester
+  targets the emoji column with `FocusTarget`, not the editor or its parent.
+  A selector-keyed effect requests focus only when the emoji target is
+  attached; unrelated recomposition does not steal focus from its children.
+  Editor focus gain closes the panel and resets message scroll. The panel
+  keeps its accessibility description without adding `Focusable` semantics.
+  The pinned `UserInput.kt` at `4c1fe7586e2fbf1c934925ef8ab64d3803361423`
+  does not call `clearFocus` after Send (despite the original #342 motivation).
+  Send therefore retains upstream keyboard behavior; the explicit
+  `LocalFocusManager` clear/force-clear APIs are demonstrated in Gallery.
 - **Image attachment bubbles** — the upstream sticker drawable is seeded
   on the second message and rendered in its own 160 dp rounded bubble
   through the existing resource-backed `Image` facade.
@@ -302,7 +309,6 @@ official binding:
 | Record-button `updateTransition` + `animateFloat` / `animateColor` | Missing transition value-animation surface; tracked by [#336](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/336). The port retains its visually equivalent timer-driven pulse. |
 | Google Fonts provider typography | The exact pinned Karla / Montserrat resource fallbacks are bundled. Provider-backed downloads remain outside the resource-font API; no downloaded-font parity is claimed. |
 | Foundation text-input structure and IME Send callback | `BasicTextField` and keyboard-action support are missing; tracked by [#340](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/340). The current Material `TextField` preserves editing, placeholder, line, and IME-option behavior. |
-| Emoji-panel focus transfer and IME dismissal | `Modifier.focusTarget`, focus observation, and ambient focus-manager access are missing; tracked by [#342](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/342). |
 | Input/selector tonal elevation and content color | The current `Surface` facade omits color, content-color, elevation, and border slots; tracked by [#343](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/343). |
 | Scaffold inset exclusion | `Scaffold.contentWindowInsets` cannot yet be customized, so the port applies IME/navigation padding directly to the input surface; tracked by [#339](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/339). |
 | Exact baseline spacing and clipped profile parallax | Baseline-relative alignment/padding and `clipToBounds` modifiers are missing; tracked by [#341](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/341). |

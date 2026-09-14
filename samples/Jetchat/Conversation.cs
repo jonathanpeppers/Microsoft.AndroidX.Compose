@@ -389,7 +389,7 @@ public static class Conversation
         return content;
     }
 
-    static Surface BuildInputArea(
+    static ComposableNode BuildInputArea(
         ConversationUiState          ui,
         MutableState<TextFieldValue> input,
         ColorScheme                  scheme,
@@ -397,23 +397,46 @@ public static class Conversation
         LazyListState                messagesScroll,
         MutableState<bool>           isRecording,
         MutableNumberState<float>    swipeOffset) =>
-        new()
+        new Composed(c =>
         {
-            Modifier.FillMaxWidth().NavigationBarsPadding().ImePadding(),
-            new Column
+            var selectorFocus = c.Remember(() => new FocusRequester());
+            var focused = c.MutableStateOf(false);
+            int selector = selectedSelector.Value;
+            c.LaunchedEffect(selector, _ =>
             {
-                Modifier.FillMaxWidth(),
-                BuildTextFieldRow(input, scheme, isRecording, swipeOffset),
-                BuildSelectorRow(ui, input, scheme, selectedSelector, messagesScroll),
-                BuildSelectorPanel(input, scheme, selectedSelector),
-            },
-        };
+                if (selector == SelEmoji && selectedSelector.Value == selector)
+                    selectorFocus.RequestFocus();
+                return Task.CompletedTask;
+            });
+            return new Surface
+            {
+                Modifier.FillMaxWidth().NavigationBarsPadding().ImePadding(),
+                new Column
+                {
+                    Modifier.FillMaxWidth(),
+                    BuildTextFieldRow(input, scheme, isRecording, swipeOffset, focus =>
+                    {
+                        if (focused.Value == focus.IsFocused)
+                            return;
+                        focused.Value = focus.IsFocused;
+                        if (focus.IsFocused)
+                        {
+                            selectedSelector.Value = 0;
+                            _ = messagesScroll.AnimateScrollToItemAsync(0);
+                        }
+                    }),
+                    BuildSelectorRow(ui, input, scheme, selectedSelector, messagesScroll),
+                    BuildSelectorPanel(input, scheme, selectedSelector, selectorFocus),
+                },
+            };
+        });
 
     static Row BuildTextFieldRow(
         MutableState<TextFieldValue> input,
         ColorScheme                  scheme,
         MutableState<bool>           isRecording,
-        MutableNumberState<float>    swipeOffset)
+        MutableNumberState<float>    swipeOffset,
+        Action<FocusState>           onFocusChanged)
     {
         bool textEmpty = string.IsNullOrWhiteSpace(input.Value.Text);
 
@@ -431,6 +454,7 @@ public static class Conversation
                           {
                               Modifier = Modifier
                                   .FillMaxWidth()
+                                  .OnFocusChanged(onFocusChanged)
                                   .Semantics("Message"),
                               Placeholder = new Text("Type a message"),
                               KeyboardOptions = CreateMessageKeyboardOptions(),
@@ -564,11 +588,12 @@ public static class Conversation
     static ComposableNode BuildSelectorPanel(
         MutableState<TextFieldValue> input,
         ColorScheme          scheme,
-        MutableState<int>    selectedSelector)
+        MutableState<int>    selectedSelector,
+        FocusRequester      selectorFocus)
     {
         int sel = selectedSelector.Value;
         if (sel == 0) return Spacer.Width(0);
-        if (sel == SelEmoji) return EmojiSelector.Build(input, scheme);
+        if (sel == SelEmoji) return EmojiSelector.Build(input, scheme, selectorFocus);
         string title    = "Functionality currently not available";
         string subtitle = "Grab a beverage and check back later!";
         return new Column
