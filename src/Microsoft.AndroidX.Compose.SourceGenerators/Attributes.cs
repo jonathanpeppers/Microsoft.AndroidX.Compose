@@ -393,6 +393,18 @@ internal static class Attributes
             }
 
             /// <summary>
+            /// Marks an added optional value on an existing generated facade.
+            /// Retains the catalog's previous CLR signature and direct helper;
+            /// their calls leave this parameter's Kotlin default bit set.
+            /// Apply to every optional value absent from the previous signature.
+            /// </summary>
+            [global::System.AttributeUsage(global::System.AttributeTargets.Parameter,
+                                           AllowMultiple = false)]
+            internal sealed class FacadeAddedAttribute : global::System.Attribute
+            {
+            }
+
+            /// <summary>
             /// Phase 7 — apply to the <c>Painter</c> bridge parameter
             /// that takes the resolved Painter wrapper. The facade
             /// replaces this parameter with a synthetic ctor argument
