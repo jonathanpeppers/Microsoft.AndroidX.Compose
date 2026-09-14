@@ -15,6 +15,7 @@ public class BasicTextFieldTests
     [DataRow(3)]
     [DataRow(4)]
     [DataRow(5)]
+    [DataRow(7)]
     public async Task StringEditor_RetainsNativeSelectionAndCompositionAcrossRenders(int route)
     {
         BasicTextFieldTestActivity.Ready = BasicTextFieldTestActivity.NewReady();
@@ -28,11 +29,12 @@ public class BasicTextFieldTests
         try
         {
             await BasicTextFieldTestActivity.Ready.Task.WaitAsync(TimeSpan.FromSeconds(20));
+            Assert.AreEqual(0, activity.BorrowedFlags.IntValue(), "Decoration must not dispose a caller's shared boxed flags.");
             await activity.MutateAsync(activity.Requester.RequestFocus);
             using var info = new EditorInfo();
             IInputConnection? connection = null;
             await activity.MutateAsync(() => connection = activity.OpenConnection(info));
-            using var input = connection ?? throw new InvalidOperationException("String input connection missing.");
+            var input = connection ?? throw new InvalidOperationException("String input connection missing.");
             Assert.AreEqual((int)ImeAction.Send, (int)info.ImeOptions & (int)ImeAction.ImeMaskAction);
             await activity.MutateAsync(() => Assert.IsTrue(input.CommitText("abcd", 1)));
             await activity.MutateAsync(() => Assert.IsTrue(input.SetSelection(1, 3)));
@@ -40,6 +42,7 @@ public class BasicTextFieldTests
             Assert.AreEqual("aXYd", activity.StringInput.Value);
             for (int i = 0; i < 4; i++)
                 await activity.MutateAsync(() => { });
+            Assert.AreEqual(0, activity.BorrowedFlags.IntValue());
             Assert.AreEqual(activity.Revision.Value, activity.DecorationRevision);
             await activity.MutateAsync(() =>
             {
@@ -76,6 +79,7 @@ public class BasicTextFieldTests
     [DataRow(0)]
     [DataRow(1)]
     [DataRow(2)]
+    [DataRow(6)]
     public async Task Editor_PreservesSelectionCompositionDecorationAndSend(int route)
     {
         BasicTextFieldTestActivity.Ready = BasicTextFieldTestActivity.NewReady();
@@ -89,12 +93,13 @@ public class BasicTextFieldTests
         try
         {
             await BasicTextFieldTestActivity.Ready.Task.WaitAsync(TimeSpan.FromSeconds(20));
+            Assert.AreEqual(0, activity.BorrowedFlags.IntValue(), "Decoration must not dispose a caller's shared boxed flags.");
             await activity.MutateAsync(activity.Requester.RequestFocus);
             Assert.IsTrue(activity.Focused);
             using var info = new EditorInfo();
             IInputConnection? connection = null;
             await activity.MutateAsync(() => connection = activity.OpenConnection(info));
-            using var input = connection ?? throw new InvalidOperationException("Input connection missing.");
+            var input = connection ?? throw new InvalidOperationException("Input connection missing.");
             Assert.AreEqual((int)ImeAction.Send, (int)info.ImeOptions & (int)ImeAction.ImeMaskAction);
             await activity.MutateAsync(() => Assert.IsTrue(input.CommitText(" abcd ", 1)));
             Assert.AreEqual(" abcd ", activity.Input.Value.Text);
@@ -116,6 +121,7 @@ public class BasicTextFieldTests
             Assert.AreEqual(TextRangeKt.TextRange(activity.Input.Value.Text.Length), activity.Input.Value.Selection);
             for (int i = 0; i < 4; i++)
                 await activity.MutateAsync(() => { });
+            Assert.AreEqual(0, activity.BorrowedFlags.IntValue());
             Assert.AreEqual(activity.Revision.Value, activity.DecorationRevision);
             Assert.IsNotNull(activity.TextLayout);
             Assert.AreEqual(Sp.Pack(20.Sp()), activity.TextLayout.LayoutInput.Style.FontSize);
@@ -147,11 +153,21 @@ public class BasicTextFieldTests
             {
                 activity.Decorated = false;
                 activity.SingleLine = true;
-                activity.Input.Value = ComposeExtensions.NewTextFieldValue("a\nb\nc");
+                activity.Input.Value = ComposeExtensions.NewTextFieldValue("a");
             });
             Assert.AreEqual(1, activity.TextLayout.LineCount);
             int singleLineHeight = activity.EditorHeight;
             Assert.IsGreaterThan(0, singleLineHeight);
+            await activity.MutateAsync(() =>
+            {
+                activity.MinLines = 2;
+                activity.Input.Value = ComposeExtensions.NewTextFieldValue("a\nb\nc");
+            });
+            Assert.AreEqual(3, activity.TextLayout.LineCount, "Hard newlines remain in the full native paragraph layout.");
+            Assert.IsFalse(activity.TextLayout.LayoutInput.SoftWrap);
+            Assert.AreEqual("a\nb\nc", activity.Input.Value.Text);
+            Assert.AreEqual(singleLineHeight, activity.EditorHeight,
+                "singleLine must preserve the one-line viewport despite hard newlines and minLines=2.");
             await activity.MutateAsync(() =>
             {
                 activity.SingleLine = false;

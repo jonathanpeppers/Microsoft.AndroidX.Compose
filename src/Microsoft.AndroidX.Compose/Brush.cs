@@ -1,4 +1,3 @@
-using Android.Runtime;
 using BoundBrush = AndroidX.Compose.UI.Graphics.Brush;
 using BoundSolidColor = AndroidX.Compose.UI.Graphics.SolidColor;
 
@@ -40,9 +39,7 @@ public static class Brush
     /// avoids the extra JNI allocation.
     /// </summary>
     public static BoundBrush SolidColor(Color color) =>
-        Java.Lang.Object.GetObject<BoundSolidColor>(
-            ComposeBridges.BrushSolidColor(color.ToPacked()),
-            JniHandleOwnership.TransferLocalRef)!;
+        new BoundSolidColor(color.ToPacked());
 
     /// <summary>
     /// <c>Brush.linearGradient(colors, start, end, tileMode)</c> —

@@ -13,7 +13,8 @@ internal sealed class InnerTextFieldNode(IFunction2 content) : ComposableNode
     public override void Render(IComposer composer)
     {
         ArgumentNullException.ThrowIfNull(composer);
-        using var changed = Java.Lang.Integer.ValueOf(0);
+        // ValueOf can return a shared peer, including the caller's boxed flags.
+        var changed = Java.Lang.Integer.ValueOf(0);
         content.Invoke((Java.Lang.Object)composer, changed);
     }
 }
