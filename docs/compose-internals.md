@@ -133,6 +133,14 @@ Both explicit-composer and composerless delegates need that invocation's
 ambient `ComposableContext`; capturing or relying on the original caller's
 context fails during the independent animation pass.
 
+Native FAB acceptance checks revalidate lifecycle, focus, phase, and pending
+composition/layout work after a committed frame with no intervening FAB,
+icon, or label placement callback. An instantaneous idle reading alone can
+admit intermediate animated geometry. PixelCopy and exact width assertions
+use the post-commit bounds, without sleeps or polling for an expected size.
+The fixture caches naturally committed frames from a pre-draw observer,
+so a quiescent window needs neither a forced invalidation nor an extra draw.
+
 ## Can we "just call" the Kotlin plugin?
 
 **No, not in any practical sense.** The plugin only runs *inside `kotlinc`* — it hooks into Kotlin's FIR/IR APIs (`FirExtensionRegistrar`, `IrGenerationExtension`). It cannot operate on:

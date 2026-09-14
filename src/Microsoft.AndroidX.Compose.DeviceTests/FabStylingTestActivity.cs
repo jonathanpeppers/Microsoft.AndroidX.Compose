@@ -34,10 +34,14 @@ public class FabStylingTestActivity : ComponentActivity
     ILayoutCoordinates? coordinates;
     ILayoutCoordinates? iconCoordinates;
     ILayoutCoordinates? labelCoordinates;
-    ViewTreeObserver? frameObserver;
-    Java.Lang.IRunnable? frameCallback;
-    TaskCompletionSource? frameCompletion;
-    TaskCompletionSource? frameNativeCompletion;
+    int placementVersion;
+    long drawnFrame;
+    long committedFrame;
+    int committedFramePlacement = -1;
+    int committedFramePhase = -1;
+    bool destroyed;
+    Exception? frameFailure;
+    readonly HashSet<FabFrameCommit> pendingFrames = [];
     int committedPhase = -1;
     bool resumed;
     int variant;
@@ -63,9 +67,16 @@ public class FabStylingTestActivity : ComponentActivity
         direct = Intent?.GetBooleanExtra("direct", false) ?? false;
         probe = new FabContentProbe(this);
         view = new ComposeView(this);
-        drawObserver = view.ViewTreeObserver
-            ?? throw new InvalidOperationException("FAB ComposeView has no draw observer.");
-        drawObserver.Draw += OnDraw;
+        view.ViewAttachedToWindow += (_, _) =>
+        {
+            if (destroyed) return;
+            var attachedView = view ?? throw new InvalidOperationException("Attached FAB ComposeView missing.");
+            drawObserver = attachedView.ViewTreeObserver
+                ?? throw new InvalidOperationException("Attached FAB ComposeView has no draw observer.");
+            drawObserver.PreDraw += OnPreDraw;
+            drawObserver.Draw += OnDraw;
+        };
+        view.ViewDetachedFromWindow += (_, _) => DetachDrawObserver();
         view.SetContent((IComposer c) =>
         {
             int phase = Phase.Value;
@@ -135,6 +146,7 @@ public class FabStylingTestActivity : ComponentActivity
             {
                 coordinates = value?.JavaCast<ILayoutCoordinates>()
                     ?? throw new InvalidOperationException("FAB placement did not provide native coordinates.");
+                placementVersion++;
                 SignalProgress();
             });
             return Modifier.TestTag("fab").AppendBound(
@@ -277,6 +289,7 @@ public class FabStylingTestActivity : ComponentActivity
                 ?? throw new InvalidOperationException("FAB content placement did not provide native coordinates.");
             if (label) labelCoordinates = current;
             else iconCoordinates = current;
+            placementVersion++;
             SignalProgress();
         });
         return Modifier.Companion.AppendBound(
@@ -308,11 +321,11 @@ public class FabStylingTestActivity : ComponentActivity
 
     protected override void OnDestroy()
     {
-        RemoveFrameCallback();
-        frameCompletion?.TrySetException(new ObjectDisposedException(nameof(FabStylingTestActivity)));
-        frameCompletion = null;
-        if (drawObserver is { IsAlive: true }) drawObserver.Draw -= OnDraw;
-        drawObserver = null;
+        destroyed = true;
+        DetachDrawObserver();
+        FabFrameCommit[] frames;
+        lock (progressLock) frames = [.. pendingFrames];
+        foreach (var frame in frames) frame.Dispose();
         owner = null;
         recomposer = null;
         snapshots = null;
@@ -322,6 +335,74 @@ public class FabStylingTestActivity : ComponentActivity
         view = null;
         base.OnDestroy();
         Destroyed.TrySetResult();
+        SignalProgress();
+    }
+
+    void DetachDrawObserver()
+    {
+        if (drawObserver is { IsAlive: true })
+        {
+            drawObserver.PreDraw -= OnPreDraw;
+            drawObserver.Draw -= OnDraw;
+        }
+        drawObserver = null;
+        committedFramePlacement = -1;
+        SignalProgress();
+    }
+
+    void OnPreDraw(object? sender, ViewTreeObserver.PreDrawEventArgs e)
+    {
+        e.Handled = true;
+        if (!OperatingSystem.IsAndroidVersionAtLeast(29)) return;
+        var observer = drawObserver ?? throw new InvalidOperationException("FAB frame observer missing.");
+        long sequence = ++drawnFrame;
+        int phase = committedPhase;
+        var frame = new FabFrameCommit(observer, () =>
+        {
+            if (destroyed) return;
+            if (sequence > committedFrame)
+            {
+                committedFrame = sequence;
+                // Compose can place children inside dispatchDraw, after pre-draw.
+                committedFramePlacement = placementVersion;
+                committedFramePhase = phase;
+            }
+            TraceFrame("frame-committed");
+            SignalProgress();
+        });
+        lock (progressLock) pendingFrames.Add(frame);
+        _ = ObserveFrameAsync(frame);
+    }
+
+    async Task ObserveFrameAsync(FabFrameCommit frame)
+    {
+        try
+        {
+            await frame.Completion.ConfigureAwait(false);
+        }
+        catch (System.OperationCanceledException) when (frame.Completion.IsCanceled)
+        {
+            // Successful native unregister during destruction cancels the pending observation.
+        }
+        catch (Exception error)
+        {
+            global::Android.Util.Log.Error("FabStyling", $"Native frame observation failed: {error}");
+            lock (progressLock) frameFailure = error;
+        }
+        finally
+        {
+            lock (progressLock) pendingFrames.Remove(frame);
+            try
+            {
+                frame.Dispose();
+            }
+            catch (Exception error)
+            {
+                global::Android.Util.Log.Error("FabStyling", $"Native frame cleanup failed: {error}");
+                lock (progressLock) frameFailure = error;
+            }
+            SignalProgress();
+        }
     }
 
     void OnDraw(object? sender, EventArgs e)
@@ -334,9 +415,11 @@ public class FabStylingTestActivity : ComponentActivity
     {
         if (variant != 3 || Phase.Value is < 7 or > 9) return;
         frameTrace.Add($"FAB frame pid={(global::Android.OS.Process.MyPid())}, t={SystemClock.UptimeMillis()}, " +
-            $"phase={Phase.Value}, stage={stage}, width={(coordinates is { IsAttached: true } current ? (int)((ulong)current.Size >> 32) : -1)}, " +
+            $"phase={Phase.Value}, stage={stage}, frame={drawnFrame}/{committedFrame}, placement={placementVersion}/{committedFramePlacement}, " +
+            $"width={(coordinates is { IsAttached: true } current ? (int)((ulong)current.Size >> 32) : -1)}, " +
             $"composePending={recomposer?.HasPendingWork}, state={recomposer?.CurrentState.Value}, " +
             $"measurePending={owner?.HasPendingMeasureOrLayout}, viewLayout={view?.IsLayoutRequested}, ownerLayout={owner?.View.IsLayoutRequested}, " +
+            $"viewDirty={view?.IsDirty}, ownerDirty={owner?.View.IsDirty}, " +
             $"snapshotPending={snapshots?.Current.HasPendingChanges}, applyPending={snapshots?.IsApplyObserverNotificationPending}.");
     }
 
@@ -352,13 +435,20 @@ public class FabStylingTestActivity : ComponentActivity
     internal async Task<(int Left, int Top, int Width, int Height, int WindowLeft, int WindowTop,
         (float Left, float Top, float Right, float Bottom)[] Content)> WaitForNativeIdleAsync()
     {
+        if (!OperatingSystem.IsAndroidVersionAtLeast(29))
+            throw new PlatformNotSupportedException("FAB acceptance requires native frame-commit callbacks.");
         var instrumentation = TestInstrumentation.Current
             ?? throw new InvalidOperationException("FAB instrumentation is not running.");
         using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(15));
         while (true)
         {
             Task changed;
-            lock (progressLock) changed = progress.Task;
+            lock (progressLock)
+            {
+                if (frameFailure is not null)
+                    throw new InvalidOperationException("FAB native frame observation failed.", frameFailure);
+                changed = progress.Task;
+            }
             await Task.Run(instrumentation.WaitForIdleSync).WaitAsync(timeout.Token);
             bool idle = false, pending = false;
             (int Left, int Top, int Width, int Height, int WindowLeft, int WindowTop,
@@ -368,6 +458,7 @@ public class FabStylingTestActivity : ComponentActivity
             {
                 try
                 {
+                    if (destroyed) throw new ObjectDisposedException(nameof(FabStylingTestActivity));
                     var composeView = view ?? throw new InvalidOperationException("FAB ComposeView missing.");
                     owner ??= (composeView.GetChildAt(0)
                         ?? throw new InvalidOperationException("FAB native owner missing.")).JavaCast<IViewRootForTest>();
@@ -382,11 +473,15 @@ public class FabStylingTestActivity : ComponentActivity
                         snapshots = singleton.JavaCast<Snapshot.Companion>();
                     }
                     pending = owner.HasPendingMeasureOrLayout || recomposer.HasPendingWork
+                        || composeView.IsLayoutRequested || owner.View.IsLayoutRequested
+                        || composeView.IsDirty || owner.View.IsDirty
                         || snapshots.Current.HasPendingChanges || snapshots.IsApplyObserverNotificationPending;
                     if (coordinates is { IsAttached: true } current && iconCoordinates is { IsAttached: true }
                         && composeView.IsAttachedToWindow
                         && composeView.HasWindowFocus && HasWindowFocus && resumed && owner.IsLifecycleInResumedState
-                        && committedPhase == Phase.Value && !pending)
+                        && committedPhase == Phase.Value && !pending
+                        && committedFrame == drawnFrame && committedFramePhase == Phase.Value
+                        && committedFramePlacement == placementVersion)
                     {
                         var position = Offset.FromPacked(LayoutCoordinatesKt.PositionOnScreen(current));
                         var windowPosition = Offset.FromPacked(LayoutCoordinatesKt.PositionInWindow(current));
@@ -402,7 +497,7 @@ public class FabStylingTestActivity : ComponentActivity
                         bounds = ((int)MathF.Round(position.X), (int)MathF.Round(position.Y),
                             (int)((ulong)current.Size >> 32), (int)(current.Size & uint.MaxValue),
                             (int)MathF.Round(windowPosition.X), (int)MathF.Round(windowPosition.Y), [.. content]);
-                        TraceFrame("idle-bounds");
+                        TraceFrame("accepted-frame-bounds");
                         idle = true;
                     }
                 }
@@ -420,55 +515,9 @@ public class FabStylingTestActivity : ComponentActivity
     internal async Task<global::Android.Graphics.Bitmap> CaptureFabAsync(global::Android.Graphics.Rect bounds)
     {
         if (!OperatingSystem.IsAndroidVersionAtLeast(29))
-            throw new PlatformNotSupportedException("FAB pixel assertions require native frame-commit callbacks.");
+            throw new PlatformNotSupportedException("FAB pixel assertions require committed native frames.");
         var instrumentation = TestInstrumentation.Current
             ?? throw new InvalidOperationException("FAB instrumentation is not running.");
-        var committed = NewCompletion();
-        var nativeFrameFinished = NewCompletion();
-        var frame = new Java.Lang.Runnable(() =>
-        {
-            committed.TrySetResult();
-            nativeFrameFinished.TrySetResult();
-        });
-        bool registered = false;
-        try
-        {
-            instrumentation.RunOnMainSync(() =>
-            {
-                try
-                {
-                    var composeView = view ?? throw new InvalidOperationException("FAB ComposeView missing.");
-                    frameObserver = composeView.ViewTreeObserver
-                        ?? throw new InvalidOperationException("FAB draw observer missing.");
-                    frameCallback = frame;
-                    frameCompletion = committed;
-                    frameNativeCompletion = nativeFrameFinished;
-                    if (OperatingSystem.IsAndroidVersionAtLeast(29))
-                        frameObserver.RegisterFrameCommitCallback(frame);
-                    registered = true;
-                    composeView.Invalidate();
-                }
-                catch (Exception error)
-                {
-                    committed.TrySetException(error);
-                }
-            });
-            await committed.Task.WaitAsync(TimeSpan.FromSeconds(15));
-            instrumentation.RunOnMainSync(() => TraceFrame("frame-committed"));
-        }
-        finally
-        {
-            instrumentation.RunOnMainSync(() =>
-            {
-                RemoveFrameCallback();
-                frameCompletion = null;
-            });
-            if (!registered || nativeFrameFinished.Task.IsCompleted)
-                frame.Dispose();
-            else
-                RetireAfterNativeCompletion(nativeFrameFinished.Task, frame.Dispose, "frame commit");
-        }
-
         var config = global::Android.Graphics.Bitmap.Config.Argb8888
             ?? throw new InvalidOperationException("Native ARGB bitmap format unavailable.");
         var bitmap = global::Android.Graphics.Bitmap.CreateBitmap(bounds.Width(), bounds.Height(), config)
@@ -521,21 +570,7 @@ public class FabStylingTestActivity : ComponentActivity
         }
     }
 
-    void RemoveFrameCallback()
-    {
-        if (frameNativeCompletion?.Task.IsCompleted != true
-            && OperatingSystem.IsAndroidVersionAtLeast(29)
-            && frameObserver is { IsAlive: true } observer && frameCallback is { } callback)
-        {
-            if (observer.UnregisterFrameCommitCallback(callback))
-                frameNativeCompletion?.TrySetResult();
-        }
-        frameObserver = null;
-        frameCallback = null;
-        frameNativeCompletion = null;
-    }
-
-    static void RetireAfterNativeCompletion(Task completion, Action release, string operation)
+    internal static void RetireAfterNativeCompletion(Task completion, Action release, string operation)
     {
         _ = completion.ContinueWith(finished =>
         {
