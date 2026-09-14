@@ -809,6 +809,119 @@ public class FacadeGeneratorTests
         Assert.Empty(errors);
     }
 
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void Surface_StylingMasksExecuteForTreeAndDirectTransitions(bool implicitComposer)
+    {
+        string helper = "Surface_PrimaryResource_" + (implicitComposer ? "Implicit" : "Explicit");
+        string content = implicitComposer ? "() => { }" : "_ => { }";
+        var code = $$"""
+            using System;
+            using AndroidX.Compose;
+            using AndroidX.Compose.Runtime;
+            using AndroidX.Compose.UI;
+            using Kotlin.Jvm.Functions;
+
+            [assembly: ComposeDefaults("SurfaceDefault",
+                "modifier", "shape", "color", "contentColor", "tonalElevation",
+                "shadowElevation", "border", "!content")]
+            namespace AndroidX.Compose.Foundation
+            {
+                public sealed class BorderStroke : Java.Lang.Object { }
+            }
+            namespace AndroidX.Compose
+            {
+                public static partial class ComposeBridges
+                {
+                    public static int LastDefaults;
+                    public static int LastChanged;
+                    [ComposeFacade(Defaults = typeof(SurfaceDefault))]
+                    public static partial void Surface(
+                        IModifier? modifier, Shape? shape, Color? color, Color? contentColor,
+                        Dp? tonalElevation, Dp? shadowElevation, Foundation.BorderStroke? border,
+                        IFunction2 content, int defaults, IComposer composer, int _changed = 0);
+                    public static partial void Surface(
+                        IModifier? modifier, Shape? shape, Color? color, Color? contentColor,
+                        Dp? tonalElevation, Dp? shadowElevation, Foundation.BorderStroke? border,
+                        IFunction2 content, int defaults, IComposer composer, int _changed)
+                    {
+                        LastDefaults = defaults;
+                        LastChanged = _changed;
+                    }
+                }
+                public sealed class TestComposer : IComposer { }
+                public static class SurfaceProbe
+                {
+                    public static int[] Run()
+                    {
+                        var composer = new TestComposer();
+                        var tree = new Surface();
+                        var masks = new System.Collections.Generic.List<int>();
+                        tree.Render(composer);
+                        masks.Add(ComposeBridges.LastDefaults);
+                        tree.Color = new Color();
+                        tree.ContentColor = new Color();
+                        tree.TonalElevation = new Dp(0);
+                        tree.ShadowElevation = new Dp(0);
+                        tree.Border = new Foundation.BorderStroke();
+                        tree.Render(composer);
+                        masks.Add(ComposeBridges.LastDefaults);
+                        tree.Color = null;
+                        tree.ContentColor = null;
+                        tree.TonalElevation = null;
+                        tree.ShadowElevation = null;
+                        tree.Border = null;
+                        tree.Render(composer);
+                        masks.Add(ComposeBridges.LastDefaults);
+                        ulong[] omissions = [0xFE, 0x6, 0xFE, 0x6];
+                        foreach (ulong omitted in omissions)
+                        {
+                            Composables.{{helper}}(composer, {{content}},
+                                color: new Color(), contentColor: new Color(),
+                                tonalElevation: new Dp(0), shadowElevation: new Dp(0), border: null,
+                                __omittedArguments: omitted, __directChanged: int.MaxValue);
+                            masks.Add(ComposeBridges.LastDefaults);
+                        }
+                        return masks.ToArray();
+                    }
+                }
+            }
+            """;
+        var (output, diags, emitted) = Run(code, "Surface");
+        Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+        Assert.Contains("public global::AndroidX.Compose.Foundation.BorderStroke? Border", emitted);
+        Assert.Contains("composer.DiffSlot(Border, global::AndroidX.Compose.ComposeExtensions.DiffSlotShift(6))", emitted);
+        var helperBody = GeneratedMethodBody(emitted, helper);
+        Assert.Contains("if ((__omittedArguments & 0x80UL) == 0) __defaults &= ~global::AndroidX.Compose.SurfaceDefault.Border;", helperBody);
+        Assert.Contains("__changed |= ((__directChanged >> 1) & 0b111) << 22;", helperBody);
+        var syntax = CSharpSyntaxTree.ParseText(emitted).GetRoot();
+        var directDiffs = syntax.DescendantNodes()
+            .OfType<Microsoft.CodeAnalysis.CSharp.Syntax.InvocationExpressionSyntax>()
+            .Where(call => call.Expression.ToString() == "__composer.DiffSlot").ToArray();
+        Assert.Equal(2, directDiffs.Length);
+        Assert.All(directDiffs, call => Assert.DoesNotContain(call.Ancestors(),
+            ancestor => ancestor is Microsoft.CodeAnalysis.CSharp.Syntax.IfStatementSyntax));
+
+        using var stream = new System.IO.MemoryStream();
+        var result = output.Emit(stream);
+        Assert.True(result.Success, string.Join("\n", result.Diagnostics));
+        stream.Position = 0;
+        var context = new System.Runtime.Loader.AssemblyLoadContext("SurfaceProbe", isCollectible: true);
+        try
+        {
+            var run = context.LoadFromStream(stream).GetType("AndroidX.Compose.SurfaceProbe")?.GetMethod("Run")
+                ?? throw new System.InvalidOperationException("Surface probe entry point missing.");
+            int[] expected = [127, 3, 127, 127, 3, 127, 3];
+            Assert.Equal(expected, Assert.IsType<int[]>(run.Invoke(null, null)));
+        }
+        finally
+        {
+            context.Unload();
+        }
+    }
+
     [Fact]
     public void HybridContainer_RequiredFn3PlusNullableFn2_EmitsContainerWithNamedSlot()
     {
@@ -1678,7 +1791,7 @@ public class FacadeGeneratorTests
 
         Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
         Assert.NotNull(emitted);
-        Assert.Contains("__changed |= __composer.DiffSlot(__color, 4);", emitted);
+        Assert.Contains("var __drawerContainerColorChanged = __composer.DiffSlot(__color, 4);", emitted);
         Assert.DoesNotContain("__changed |= ((__directChanged >> 4)", emitted);
         Assert.Empty(output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error));
     }
@@ -4681,10 +4794,10 @@ public class FacadeGeneratorTests
         Assert.Contains("internal static void BranchPainter(global::AndroidX.Compose.Runtime.IComposer composer, global::AndroidX.Compose.UI.Graphics.Painter.Painter painter,", emitted);
         Assert.Contains("__changed |= ((__directChanged >> 1) & 0b111) << 1;", emitted);
         Assert.Matches(
-            @"if \(\(__omittedArguments & 0x4UL\) == 0\)\r?\n\s+__changed \|= __composer\.DiffSlot\(__modifierKey, 10\);",
+            @"var __modifierChanged = __composer\.DiffSlot\(__modifierKey, 10\);\r?\n\s+if \(\(__omittedArguments & 0x4UL\) == 0\)\r?\n\s+__changed \|= __modifierChanged;",
             emitted);
         Assert.Matches(
-            @"if \(\(__omittedArguments & 0x4UL\) == 0\)\r?\n\s+__changed \|= __composer\.DiffSlot\(__modifierKey, 7\);",
+            @"var __modifierChanged = __composer\.DiffSlot\(__modifierKey, 7\);\r?\n\s+if \(\(__omittedArguments & 0x4UL\) == 0\)\r?\n\s+__changed \|= __modifierChanged;",
             emitted);
 
         var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
@@ -4979,10 +5092,10 @@ public class FacadeGeneratorTests
         Assert.Contains("__changed |= composer.DiffSlot(__modifierKey, global::AndroidX.Compose.ComposeExtensions.DiffSlotShift(1));", emitted);
         Assert.Contains("__changed |= composer.DiffSlot(_enabled, global::AndroidX.Compose.ComposeExtensions.DiffSlotShift(2));", emitted);
         Assert.Contains("__changed |= (int)global::AndroidX.Compose.ChangedBits.Static << global::AndroidX.Compose.ComposeExtensions.DiffSlotShift(3);", emitted);
-        Assert.Contains("__changed |= __composer.DiffSlot(__modifierKey, 4);", emitted);
+        Assert.Contains("var __modifierChanged = __composer.DiffSlot(__modifierKey, 4);", emitted);
         Assert.Contains("int __changed = __omittedArguments == 0 ? __directChanged & 0b1 : 0;", emitted);
         Assert.Matches(
-            @"if \(\(__omittedArguments & 0x8UL\) == 0\)\r?\n\s+__changed \|= __composer\.DiffSlot\(__modifierKey, 4\);",
+            @"var __modifierChanged = __composer\.DiffSlot\(__modifierKey, 4\);\r?\n\s+if \(\(__omittedArguments & 0x8UL\) == 0\)\r?\n\s+__changed \|= __modifierChanged;",
             emitted);
         Assert.Matches(
             @"if \(\(__omittedArguments & 0x4UL\) == 0\)\r?\n\s+__changed \|= \(\(__directChanged >> 7\) & 0b111\) << 7;",
@@ -5184,7 +5297,7 @@ public class FacadeGeneratorTests
         // modifier (param 1) → bit 4.
         Assert.Contains("__changed |= composer.DiffSlot(__modifierKey, global::AndroidX.Compose.ComposeExtensions.DiffSlotShift(1));", emitted);
         Assert.Contains("__changed |= __composer.DiffSlot(__state, 1);", emitted);
-        Assert.Contains("__changed |= __composer.DiffSlot(__modifierKey, 4);", emitted);
+        Assert.Contains("var __modifierChanged = __composer.DiffSlot(__modifierKey, 4);", emitted);
         Assert.Contains("composer: composer, _changed: __changed", emitted);
 
         var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();

@@ -823,6 +823,11 @@ bridge declares the trailing `int _changed = 0`. Per-slot contribution table:
 | `IntPtr` + `[StateHolder]`        | `DiffSlot` on wrapper.Jvm reference                   |
 | Value types / primitives / refs   | `DiffSlot<T>` via `EqualityComparer<T>.Default`       |
 
+Direct lowering must execute modifier/theme/state `DiffSlot` calls unconditionally,
+even when the current omission bitmap suppresses their changed-bit contribution.
+Store the diff first, then gate only the bitwise OR. Conditional slot-table reads
+shift later remembered state when a live helper changes supplied/omitted options.
+
 Bit position: `bit = 1 + paramIndex * 3` over physical Kotlin parameter
 positions, not the shorter/reordered C# bridge parameter list. Kotlin also
 counts implicit receivers, which our generated masks do not yet model.

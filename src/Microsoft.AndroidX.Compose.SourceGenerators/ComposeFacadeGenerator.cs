@@ -2681,6 +2681,22 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             bool canBeOmitted = hasSourceIndex &&
                 defaults?.FindByKotlinName(slot.Param.Name)
                     is { EnumMember: not null };
+            string? diffValue = slot.Kind switch
+            {
+                FacadeSlotKind.Modifier => "__modifierKey",
+                FacadeSlotKind.ThemeColor => "__color",
+                FacadeSlotKind.StateHolder => "__" + slot.Param.Name,
+                _ => null,
+            };
+            string diffLocal = "__" + slot.Param.Name + "Changed";
+            if (canBeOmitted && diffValue is not null)
+            {
+                // DiffSlot owns remembered slots even when its contribution is omitted.
+                sb.Append(indent).Append("var ").Append(diffLocal)
+                  .Append(" = __composer.DiffSlot(").Append(diffValue).Append(", ")
+                  .Append(targetShift.ToString(System.Globalization.CultureInfo.InvariantCulture))
+                  .AppendLine(");");
+            }
             string contributionIndent = indent;
             if (canBeOmitted)
             {
@@ -2690,27 +2706,16 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
                   .AppendLine("UL) == 0)");
                 contributionIndent += "    ";
             }
-            switch (slot.Kind)
+            if (diffValue is not null)
             {
-                case FacadeSlotKind.Modifier:
-                    sb.Append(contributionIndent).Append(variable)
-                      .Append(" |= __composer.DiffSlot(__modifierKey, ")
+                sb.Append(contributionIndent).Append(variable).Append(" |= ");
+                if (canBeOmitted)
+                    sb.Append(diffLocal).AppendLine(";");
+                else
+                    sb.Append("__composer.DiffSlot(").Append(diffValue).Append(", ")
                       .Append(targetShift.ToString(System.Globalization.CultureInfo.InvariantCulture))
                       .AppendLine(");");
-                    continue;
-                case FacadeSlotKind.ThemeColor:
-                    sb.Append(contributionIndent).Append(variable)
-                      .Append(" |= __composer.DiffSlot(__color, ")
-                      .Append(targetShift.ToString(System.Globalization.CultureInfo.InvariantCulture))
-                      .AppendLine(");");
-                    continue;
-                case FacadeSlotKind.StateHolder:
-                    sb.Append(contributionIndent).Append(variable)
-                      .Append(" |= __composer.DiffSlot(__").Append(slot.Param.Name)
-                      .Append(", ")
-                      .Append(targetShift.ToString(System.Globalization.CultureInfo.InvariantCulture))
-                      .AppendLine(");");
-                    continue;
+                continue;
             }
             if (!hasSourceIndex)
                 continue;
