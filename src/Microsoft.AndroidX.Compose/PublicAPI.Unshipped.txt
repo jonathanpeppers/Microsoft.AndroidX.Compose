@@ -2640,6 +2640,9 @@ static AndroidX.Compose.Modifier.AbsoluteOffset(AndroidX.Compose.Dp? x = null, A
 static AndroidX.Compose.Modifier.Align(AndroidX.Compose.Alignment! alignment) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.Modifier.Align(AndroidX.Compose.Alignment.Horizontal! alignment) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.Modifier.Align(AndroidX.Compose.Alignment.Vertical! alignment) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.Modifier.AlignBy(AndroidX.Compose.UI.Layout.HorizontalAlignmentLine! alignmentLine) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.Modifier.AlignBy(AndroidX.Compose.UI.Layout.VerticalAlignmentLine! alignmentLine) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.Modifier.AlignByBaseline() -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.Modifier.Alpha(float alpha) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.Modifier.AspectRatio(float ratio, bool matchHeightConstraintsFirst = false) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.Modifier.Background(AndroidX.Compose.Color color) -> AndroidX.Compose.Modifier!
@@ -2654,6 +2657,7 @@ static AndroidX.Compose.Modifier.ClearAndSetSemantics(string? contentDescription
 static AndroidX.Compose.Modifier.Clickable(System.Action! onClick) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.Modifier.Clip(AndroidX.Compose.Dp cornerRadius) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.Modifier.Clip(AndroidX.Compose.Shape! shape) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.Modifier.ClipToBounds() -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.Modifier.CombinedClickable(System.Action! onClick, System.Action? onLongClick = null, System.Action? onDoubleClick = null) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.Modifier.Companion.get -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.Modifier.ConsumeWindowInsets(AndroidX.Compose.WindowInsets! insets) -> AndroidX.Compose.Modifier!
@@ -2686,6 +2690,8 @@ static AndroidX.Compose.Modifier.Padding(AndroidX.Compose.Dp all) -> AndroidX.Co
 static AndroidX.Compose.Modifier.Padding(AndroidX.Compose.Dp horizontal = default(AndroidX.Compose.Dp), AndroidX.Compose.Dp vertical = default(AndroidX.Compose.Dp)) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.Modifier.Padding(AndroidX.Compose.Dp start = default(AndroidX.Compose.Dp), AndroidX.Compose.Dp top = default(AndroidX.Compose.Dp), AndroidX.Compose.Dp end = default(AndroidX.Compose.Dp), AndroidX.Compose.Dp bottom = default(AndroidX.Compose.Dp)) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.Modifier.Padding(AndroidX.Compose.PaddingValues! paddingValues) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.Modifier.PaddingFrom(AndroidX.Compose.UI.Layout.AlignmentLine! alignmentLine, AndroidX.Compose.Dp? before = null, AndroidX.Compose.Dp? after = null) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.Modifier.PaddingFromBaseline(AndroidX.Compose.Dp? top = null, AndroidX.Compose.Dp? bottom = null) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.Modifier.RequiredHeight(AndroidX.Compose.Dp height) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.Modifier.RequiredSize(AndroidX.Compose.Dp size) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.Modifier.RequiredSize(AndroidX.Compose.Dp width, AndroidX.Compose.Dp height) -> AndroidX.Compose.Modifier!
@@ -2732,6 +2738,9 @@ static AndroidX.Compose.ModifierExtensions.AbsoluteOffset(this AndroidX.Compose.
 static AndroidX.Compose.ModifierExtensions.Align(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.Alignment! alignment) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.ModifierExtensions.Align(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.Alignment.Horizontal! alignment) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.ModifierExtensions.Align(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.Alignment.Vertical! alignment) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.ModifierExtensions.AlignBy(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.UI.Layout.HorizontalAlignmentLine! alignmentLine) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.ModifierExtensions.AlignBy(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.UI.Layout.VerticalAlignmentLine! alignmentLine) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.ModifierExtensions.AlignByBaseline(this AndroidX.Compose.Modifier! modifier) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.ModifierExtensions.Alpha(this AndroidX.Compose.Modifier! modifier, float alpha) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.ModifierExtensions.AspectRatio(this AndroidX.Compose.Modifier! modifier, float ratio, bool matchHeightConstraintsFirst = false) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.ModifierExtensions.Background(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.Color color) -> AndroidX.Compose.Modifier!
@@ -2748,6 +2757,7 @@ static AndroidX.Compose.ModifierExtensions.ClearAndSetSemantics(this AndroidX.Co
 static AndroidX.Compose.ModifierExtensions.Clickable(this AndroidX.Compose.Modifier! modifier, System.Action! onClick) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.ModifierExtensions.Clip(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.Dp cornerRadius) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.ModifierExtensions.Clip(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.Shape! shape) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.ModifierExtensions.ClipToBounds(this AndroidX.Compose.Modifier! modifier) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.ModifierExtensions.CombinedClickable(this AndroidX.Compose.Modifier! modifier, System.Action! onClick, System.Action? onLongClick = null, System.Action? onDoubleClick = null) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.ModifierExtensions.ConsumeWindowInsets(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.WindowInsets! insets) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.ModifierExtensions.DefaultMinSize(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.Dp? minWidth = null, AndroidX.Compose.Dp? minHeight = null) -> AndroidX.Compose.Modifier!
@@ -2782,6 +2792,8 @@ static AndroidX.Compose.ModifierExtensions.Padding(this AndroidX.Compose.Modifie
 static AndroidX.Compose.ModifierExtensions.Padding(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.Dp horizontal = default(AndroidX.Compose.Dp), AndroidX.Compose.Dp vertical = default(AndroidX.Compose.Dp)) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.ModifierExtensions.Padding(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.Dp start = default(AndroidX.Compose.Dp), AndroidX.Compose.Dp top = default(AndroidX.Compose.Dp), AndroidX.Compose.Dp end = default(AndroidX.Compose.Dp), AndroidX.Compose.Dp bottom = default(AndroidX.Compose.Dp)) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.ModifierExtensions.Padding(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.PaddingValues! paddingValues) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.ModifierExtensions.PaddingFrom(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.UI.Layout.AlignmentLine! alignmentLine, AndroidX.Compose.Dp? before = null, AndroidX.Compose.Dp? after = null) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.ModifierExtensions.PaddingFromBaseline(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.Dp? top = null, AndroidX.Compose.Dp? bottom = null) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.ModifierExtensions.RequiredHeight(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.Dp height) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.ModifierExtensions.RequiredSize(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.Dp size) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.ModifierExtensions.RequiredSize(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.Dp width, AndroidX.Compose.Dp height) -> AndroidX.Compose.Modifier!

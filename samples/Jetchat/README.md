@@ -326,11 +326,31 @@ host artifact; results are retained in `merge-device-tests.trx`.
 This additional interop check does not add combined-font screenshots or
 establish pixel parity.
 
+## Baseline alignment and clipping
+
+The recording timer and cancellation viewport now use `Modifier.AlignByBaseline()`.
+The moving cancellation content is inside `ClipToBounds()`, rather than moving
+the clipping viewport itself. The unavailable-panel subtitle uses
+`PaddingFrom(AlignmentLineKt.FirstBaseline, before: 32)` instead of a fixed
+8 dp gap. Existing font sizes, family assignments, text metrics and accessibility
+labels are unchanged.
+
+These uses follow
+[`UserInput.kt` at the pinned revision](https://github.com/android/compose-samples/blob/4c1fe7586e2fbf1c934925ef8ab64d3803361423/Jetchat/app/src/main/java/com/example/compose/jetchat/conversation/UserInput.kt).
+The ordinary input editor uses Box center-start alignment upstream, not baseline
+alignment; the baseline group belongs to the recording indicator.
+
+The issue's profile-clipping motivation was broader than that pinned source:
+[`Profile.kt`](https://github.com/android/compose-samples/blob/4c1fe7586e2fbf1c934925ef8ab64d3803361423/Jetchat/app/src/main/java/com/example/compose/jetchat/profile/Profile.kt)
+uses half-scroll top padding and `clip(CircleShape)`, **not** `clipToBounds`.
+This change therefore leaves profile geometry untouched. The port's rounded
+header, host/collapsing-container behavior, and baseline-height helpers still
+differ; adding a rectangular clip would not establish profile parallax parity.
+
 ## What's still omitted
 
-Everything that can be completed with the current facade is wired. The
-remaining differences require missing reusable APIs or an unavailable
-official binding:
+Remaining differences include missing reusable APIs, sample-specific
+layout work, and unavailable official bindings:
 
 | Upstream feature                          | Why it's not here |
 |-------------------------------------------|--------------------|
@@ -340,7 +360,7 @@ official binding:
 | Foundation text-input structure and IME Send callback | `BasicTextField` and keyboard-action support are missing; tracked by [#340](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/340). The current Material `TextField` preserves editing, placeholder, line, and IME-option behavior. |
 | Exact upstream emoji-panel focus target | Selector focus transfer currently uses the input container's `Focusable` fallback. `Modifier.focusTarget` and ambient focus-manager access remain tracked by [#342](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/342). |
 | Input/selector tonal elevation and content color | The current `Surface` facade omits color, content-color, elevation, and border slots; tracked by [#343](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/343). |
-| Exact baseline spacing and clipped profile parallax | Baseline-relative alignment/padding and `clipToBounds` modifiers are missing; tracked by [#341](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/341). |
+| Exact profile baseline-height and parallax geometry | Reusable baseline alignment/padding and `ClipToBounds` are available. Profile's existing rounded clip, padding-based motion and host layout remain unchanged; the pinned upstream uses `CircleShape` and separate baseline-height helpers, not a rectangular clip. |
 | Profile FAB tertiary container | Material 3 FAB color/elevation slots are omitted by the current facades; tracked by [#344](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/344). The port uses the default primary-container/content pair to preserve contrast. |
 | Glance home-screen widget + `requestPinAppWidget(...)` | No official .NET binding for `androidx.glance:glance-appwidget` is currently published. Upstream only shows the drawer entry when a compatible widget provider can be pinned, so the port omits it until that binding exists. |
 

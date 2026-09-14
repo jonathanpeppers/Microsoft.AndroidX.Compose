@@ -76,21 +76,29 @@ internal static partial class ComposeBridges
         }
     }
 
-    // androidx.compose.ui.Modifier$Companion.$$INSTANCE — the empty
-    // Modifier that every chain builds on top of. Cached as a global
-    // ref so the chain builder doesn't pay the FindClass +
-    // GetStaticObjectField cost on every recomposition.
+    // Resolve the outer interface first: initializing Modifier$Companion
+    // directly can leave Modifier.Companion null through the JVM's default-
+    // interface initialization cycle. Kotlin's default arguments use that field.
     static IntPtr s_modifierCompanionInstance;
 
+    // Why raw JNI: the binding does not expose the outer interface's Companion field.
     internal static unsafe IntPtr ModifierCompanionInstance()
     {
         if (s_modifierCompanionInstance == IntPtr.Zero)
         {
-            IntPtr cls = JNIEnv.FindClass("androidx/compose/ui/Modifier$Companion");
-            IntPtr fid = JNIEnv.GetStaticFieldID(cls, "$$INSTANCE", "Landroidx/compose/ui/Modifier$Companion;");
+            IntPtr cls = JNIEnv.FindClass("androidx/compose/ui/Modifier");
+            IntPtr fid = JNIEnv.GetStaticFieldID(cls, "Companion", "Landroidx/compose/ui/Modifier$Companion;");
             IntPtr local = JNIEnv.GetStaticObjectField(cls, fid);
-            s_modifierCompanionInstance = JNIEnv.NewGlobalRef(local);
-            JNIEnv.DeleteLocalRef(local);
+            try
+            {
+                if (local == IntPtr.Zero)
+                    throw new InvalidOperationException("Compose Modifier.Companion was not initialized.");
+                s_modifierCompanionInstance = JNIEnv.NewGlobalRef(local);
+            }
+            finally
+            {
+                JNIEnv.DeleteLocalRef(local);
+            }
         }
         // Returning a NEW local ref each call so callers can DeleteLocalRef
         // it uniformly while walking the op chain.

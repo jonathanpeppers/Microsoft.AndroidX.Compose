@@ -169,6 +169,9 @@ public static class Catalog
         D.Modifiers.DragAndDropTargetDemo.Demo,
         D.Modifiers.GraphicsLayerDemo.Demo,
         D.Modifiers.FlowRowScopeDispatchDemo.Demo,
+        D.Modifiers.BaselineAlignmentDemo.Demo,
+        D.Modifiers.BaselinePaddingDemo.Demo,
+        D.Modifiers.ClipToBoundsDemo.Demo,
         D.Modifiers.MinimumInteractiveComponentSizeDemo.Demo,
         D.Modifiers.WindowInsetsDemo.Demo,
 
