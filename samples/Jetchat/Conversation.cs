@@ -389,7 +389,7 @@ public static class Conversation
         return content;
     }
 
-    static Surface BuildInputArea(
+    static ComposableNode BuildInputArea(
         ConversationUiState          ui,
         MutableState<TextFieldValue> input,
         ColorScheme                  scheme,
@@ -397,23 +397,33 @@ public static class Conversation
         LazyListState                messagesScroll,
         MutableState<bool>           isRecording,
         MutableNumberState<float>    swipeOffset) =>
-        new()
+        new Composed(c =>
         {
-            Modifier.FillMaxWidth().NavigationBarsPadding().ImePadding(),
-            new Column
+            var focused = c.MutableStateOf(false);
+            var keyboardActions = c.Remember(() => KeyboardActionsHelper.Create(
+                onSend: () => Send(ui, input, selectedSelector, messagesScroll)));
+            return new Surface
             {
-                Modifier.FillMaxWidth(),
-                BuildTextFieldRow(input, scheme, isRecording, swipeOffset),
-                BuildSelectorRow(ui, input, scheme, selectedSelector, messagesScroll),
-                BuildSelectorPanel(input, scheme, selectedSelector),
-            },
-        };
+                Modifier.FillMaxWidth().NavigationBarsPadding().ImePadding(),
+                new Column
+                {
+                    Modifier.FillMaxWidth(),
+                    BuildTextFieldRow(input, scheme, isRecording, swipeOffset,
+                        keyboardActions, state => focused.Value = state.IsFocused, focused.Value),
+                    BuildSelectorRow(ui, input, scheme, selectedSelector, messagesScroll),
+                    BuildSelectorPanel(input, scheme, selectedSelector),
+                },
+            };
+        });
 
     static Row BuildTextFieldRow(
         MutableState<TextFieldValue> input,
         ColorScheme                  scheme,
         MutableState<bool>           isRecording,
-        MutableNumberState<float>    swipeOffset)
+        MutableNumberState<float>    swipeOffset,
+        AndroidX.Compose.Foundation.Text.KeyboardActions keyboardActions,
+        Action<FocusState> onFocusChanged,
+        bool focused)
     {
         bool textEmpty = string.IsNullOrWhiteSpace(input.Value.Text);
 
@@ -427,13 +437,38 @@ public static class Conversation
                     targetState: isRecording.Value,
                     content: recording => recording
                         ? RecordButton.BuildRecordingIndicator(swipeOffset, scheme)
-                        : new TextField(input, singleLine: true, maxLines: 1)
+                        : new BasicTextField(input.Value, value => input.Value = value, maxLines: 1)
                           {
                               Modifier = Modifier
                                   .FillMaxWidth()
+                                  .Padding(start: 32)
+                                  .OnFocusChanged(onFocusChanged)
                                   .Semantics("Message"),
-                              Placeholder = new Text("Type a message"),
+                              TextStyle = new TextStyle
+                              {
+                                  FontFamily = JetchatFonts.Karla,
+                                  FontSize = Typography.BodyLarge.FontSize,
+                                  LineHeight = Typography.BodyLarge.LineHeight,
+                                  LetterSpacing = Typography.BodyLarge.LetterSpacing,
+                                  FontWeight = Typography.BodyLarge.FontWeight,
+                                  Color = Color.FromPacked(scheme.Secondary),
+                              },
+                              CursorBrush = Brush.SolidColor(Color.FromPacked(scheme.Secondary)),
+                              DecorationBox = inner => new Box
+                              {
+                                  Modifier.FillMaxWidth().Height(64),
+                                  new Box { Modifier.Align(Alignment.CenterStart), inner },
+                                  input.Value.Text.Length == 0 && !focused
+                                      ? new Text("Message #composers")
+                                      {
+                                          Modifier = Modifier.Align(Alignment.CenterStart),
+                                          FontFamily = JetchatFonts.Karla,
+                                          Color = Color.FromPacked(scheme.OnSurfaceVariant),
+                                      }.WithTypography(Typography.BodyLarge)
+                                      : null,
+                              },
                               KeyboardOptions = CreateMessageKeyboardOptions(),
+                              KeyboardActions = keyboardActions,
                           }),
             },
         };
@@ -600,12 +635,10 @@ public static class Conversation
         MutableState<int>    selectedSelector,
         LazyListState        messagesScroll)
     {
-        var text = input.Value?.Text ?? string.Empty;
-        if (string.IsNullOrWhiteSpace(text)) return;
-        ui.AddMessage(new Message(MyName, text.Trim(), "8:30 PM"));
-        input.Value = ComposeExtensions.NewTextFieldValue();
-        selectedSelector.Value = 0;
-        _ = messagesScroll.AnimateScrollToItemAsync(0);
+        MessageInput.Send(input,
+            text => ui.AddMessage(new Message(MyName, text, "8:30 PM")),
+            () => _ = messagesScroll.AnimateScrollToItemAsync(0),
+            () => selectedSelector.Value = 0);
     }
 
     static int DpToPx(int value)

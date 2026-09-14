@@ -42,6 +42,7 @@
     <Using Include="Microsoft.AndroidX.Compose.DeviceTests.Resource" Alias="Resource" />
     <Compile Include="..\..\samples\Jetchat\JetchatFonts.cs" Link="Samples\JetchatFonts.cs" />
     <Compile Include="..\..\samples\Jetchat\Theme\Typography.cs" Link="Samples\Theme\Typography.cs" />
+    <Compile Include="..\..\samples\Jetchat\MessageInput.cs" Link="Samples\MessageInput.cs" />
   </ItemGroup>
 
   <ItemGroup>

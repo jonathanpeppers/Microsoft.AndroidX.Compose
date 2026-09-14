@@ -120,12 +120,19 @@ anchoring still follow positions, as in the upstream sample.
   colored bubble. Layout structure (avatar+spacer + author+text
   column) is identical for me vs others — same as upstream's
   `Message`/`AuthorAndTextMessage` row, no right-alignment.
-- A pinned input row at the bottom with a single-line message field,
-  "Type a message" placeholder, Send-labeled IME action, and a `Send`
-  `Button` that is genuinely disabled while the input is empty.
-  Its filled/outlined enabled and disabled treatment follows upstream.
-  The remaining `BasicTextField` and elevated-`Surface` differences are
-  tracked below.
+- **Foundation `BasicTextField` input** — the bound `TextFieldValue` editor
+  preserves selection and IME composition without Material field chrome.
+  Its native inner-editor decoration supplies the unfocused, empty
+  "Message #composers" hint, 32 dp start padding, centered 64 dp input row,
+  Karla body-large metrics, secondary-colored text/cursor and `maxLines = 1`.
+  IME Send and the visible Send control use the same callback: ignore blank
+  text, preserve surrounding whitespace on nonblank messages, clear the
+  value/selection/composition, reset the message list and close the selector.
+  Neither action clears editor focus, matching the pinned rapid-entry behavior.
+  Emoji insertion replaces the current selection (including reversed
+  selections), retains composition as upstream's `copy` does, and moves the
+  cursor to the end of the resulting buffer. Elevated `Surface` and panel
+  focus-transfer differences remain tracked below.
 - **5 input-selector icons** — emoji, @ mention, image, location,
   video call — same row upstream's `UserInputSelector` provides.
   Each is a toggleable `IconButton` whose background fills with
@@ -301,7 +308,6 @@ official binding:
 | Press-and-hold record gesture (`pointerInput` / `detectDragGesturesAfterLongPress`) | Missing Compose pointer-input surface; tracked by [#337](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/337). Until it lands, recording remains tap-to-start / tap-to-finish with draggable swipe cancellation. |
 | Record-button `updateTransition` + `animateFloat` / `animateColor` | Missing transition value-animation surface; tracked by [#336](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/336). The port retains its visually equivalent timer-driven pulse. |
 | Google Fonts provider typography | The exact pinned Karla / Montserrat resource fallbacks are bundled. Provider-backed downloads remain outside the resource-font API; no downloaded-font parity is claimed. |
-| Foundation text-input structure and IME Send callback | `BasicTextField` and keyboard-action support are missing; tracked by [#340](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/340). The current Material `TextField` preserves editing, placeholder, line, and IME-option behavior. |
 | Emoji-panel focus transfer and IME dismissal | `Modifier.focusTarget`, focus observation, and ambient focus-manager access are missing; tracked by [#342](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/342). |
 | Input/selector tonal elevation and content color | The current `Surface` facade omits color, content-color, elevation, and border slots; tracked by [#343](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/343). |
 | Scaffold inset exclusion | `Scaffold.contentWindowInsets` cannot yet be customized, so the port applies IME/navigation padding directly to the input surface; tracked by [#339](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/339). |

@@ -380,6 +380,18 @@ using AndroidX.Compose;
     "enableUserInput", "!content")]
 
 // androidx.compose.material3.TextFieldKt.TextField (String overload) AND
+[assembly: ComposeDefaults("BasicTextFieldDefault",
+    "!value", "!onValueChange", "modifier", "enabled", "readOnly",
+    "textStyle", "keyboardOptions", "keyboardActions", "singleLine",
+    "maxLines", "minLines", "visualTransformation", "onTextLayout",
+    "interactionSource", "cursorBrush", "decorationBox")]
+
+[assembly: ComposeDefaults("BasicTextFieldStringDefault",
+    "!text", "!onValueChange", "modifier", "enabled", "readOnly",
+    "textStyle", "keyboardOptions", "keyboardActions", "singleLine",
+    "maxLines", "minLines", "visualTransformation", "onTextLayout",
+    "interactionSource", "cursorBrush", "decorationBox")]
+
 // OutlinedTextFieldKt.OutlinedTextField (String overload): 23 user params,
 // bit 0 = value, bit 1 = onValueChange (both provided).
 [assembly: ComposeDefaults("TextFieldDefault",
