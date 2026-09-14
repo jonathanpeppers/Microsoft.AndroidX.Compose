@@ -16,7 +16,9 @@ dotnet build samples/Jetchat -t:Run
 
 Debug builds accept `--es test-palette light` or `--es test-palette dark`
 on the activity launch intent for bounded comparisons. This overrides only
-that activity's night configuration; it does not change device settings.
+that activity's Compose palette; it does not change Android resource
+configuration, system-bar appearance, or device settings. An omitted extra
+continues to follow the system theme.
 
 ## Message identity
 

@@ -15,18 +15,15 @@ public class MainActivity : ComponentActivity
 {
     protected override void OnCreate(Bundle? savedInstanceState)
     {
+        bool? darkThemeOverride = null;
 #if DEBUG
-        var palette = Intent?.GetStringExtra("test-palette");
-        if (palette is not null)
+        darkThemeOverride = Intent?.GetStringExtra("test-palette") switch
         {
-            var night = palette switch
-            {
-                "light" => Android.Content.Res.UiMode.NightNo,
-                "dark" => Android.Content.Res.UiMode.NightYes,
-                _ => throw new InvalidOperationException($"Unknown test palette '{palette}'."),
-            };
-            ApplyOverrideConfiguration(new Android.Content.Res.Configuration { UiMode = night });
-        }
+            null => null,
+            "light" => false,
+            "dark" => true,
+            var palette => throw new InvalidOperationException($"Unknown test palette '{palette}'."),
+        };
 #endif
         base.OnCreate(savedInstanceState);
         this.EnableEdgeToEdge();
@@ -56,7 +53,8 @@ public class MainActivity : ComponentActivity
                 messagesScroll:   messagesScroll,
                 isRecording:      isRecording,
                 swipeOffset:      swipeOffset,
-                profileViewModel: profileViewModel);
+                profileViewModel: profileViewModel,
+                darkThemeOverride: darkThemeOverride);
         });
     }
 }
