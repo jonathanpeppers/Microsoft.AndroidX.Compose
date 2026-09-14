@@ -1,5 +1,6 @@
 using Android.Runtime;
 using AndroidX.Compose.UI;
+using AndroidX.Compose.UI.Layout;
 
 namespace AndroidX.Compose;
 
@@ -31,8 +32,7 @@ namespace AndroidX.Compose;
 /// At <c>Render</c> time the chain is materialized into an
 /// <c>IModifier</c> by replaying each op against
 /// <c>androidx.compose.ui.Modifier.Companion</c> (resolved via the
-/// <c>$$INSTANCE</c> static field Kotlin emits for <c>object</c>
-/// declarations) via JNI — see
+/// outer interface's <c>Companion</c> static field) via JNI — see
 /// <see cref="ComposeBridges.ModifierCompanionInstance"/>. Building
 /// cheap modifier chains every recomposition is the per-composition
 /// cost the tree-style facade pays — composable-method code generation can skip it.
@@ -148,6 +148,14 @@ public sealed class Modifier
     /// <inheritdoc cref="ModifierExtensions.Padding(PaddingValues)"/>
     public static Modifier Padding(PaddingValues paddingValues) => _companion.Padding(paddingValues);
 
+    /// <inheritdoc cref="ModifierExtensions.PaddingFrom(Modifier, AlignmentLine, Dp?, Dp?)"/>
+    public static Modifier PaddingFrom(AlignmentLine alignmentLine, Dp? before = null, Dp? after = null) =>
+        _companion.PaddingFrom(alignmentLine, before, after);
+
+    /// <inheritdoc cref="ModifierExtensions.PaddingFromBaseline(Modifier, Dp?, Dp?)"/>
+    public static Modifier PaddingFromBaseline(Dp? top = null, Dp? bottom = null) =>
+        _companion.PaddingFromBaseline(top, bottom);
+
     /// <inheritdoc cref="ModifierExtensions.FillMaxWidth(float)"/>
     public static Modifier FillMaxWidth(float fraction = 1f) => _companion.FillMaxWidth(fraction);
 
@@ -222,6 +230,9 @@ public sealed class Modifier
 
     /// <inheritdoc cref="ModifierExtensions.Clip(Shape)"/>
     public static Modifier Clip(Shape shape) => _companion.Clip(shape);
+
+    /// <inheritdoc cref="ModifierExtensions.ClipToBounds(Modifier)"/>
+    public static Modifier ClipToBounds() => _companion.ClipToBounds();
 
     /// <inheritdoc cref="ModifierExtensions.Clickable(Action)"/>
     public static Modifier Clickable(Action onClick) => _companion.Clickable(onClick);
@@ -353,11 +364,23 @@ public sealed class Modifier
     /// <inheritdoc cref="ModifierExtensions.Align(Alignment.Horizontal)"/>
     public static Modifier Align(Alignment.Horizontal alignment) => _companion.Align(alignment);
 
+    /// <inheritdoc cref="ModifierExtensions.AlignBy(Modifier, HorizontalAlignmentLine)"/>
+    public static Modifier AlignBy(HorizontalAlignmentLine alignmentLine) => _companion.AlignBy(alignmentLine);
+
+    /// <inheritdoc cref="ModifierExtensions.AlignBy(Modifier, VerticalAlignmentLine)"/>
+    public static Modifier AlignBy(VerticalAlignmentLine alignmentLine) => _companion.AlignBy(alignmentLine);
+
+    /// <inheritdoc cref="ModifierExtensions.AlignByBaseline(Modifier)"/>
+    public static Modifier AlignByBaseline() => _companion.AlignByBaseline();
+
     /// <inheritdoc cref="ModifierExtensions.MatchParentSize()"/>
     public static Modifier MatchParentSize() => _companion.MatchParentSize();
 
     /// <inheritdoc cref="ModifierExtensions.Focusable(bool)"/>
     public static Modifier Focusable(bool enabled = true) => _companion.Focusable(enabled);
+
+    /// <inheritdoc cref="ModifierExtensions.FocusTarget(Modifier)"/>
+    public static Modifier FocusTarget() => _companion.FocusTarget();
 
     /// <inheritdoc cref="ModifierExtensions.FocusGroup()"/>
     public static Modifier FocusGroup() => _companion.FocusGroup();

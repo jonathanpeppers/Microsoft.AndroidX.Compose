@@ -40,21 +40,29 @@ internal static partial class ComposeBridges
         Signature = "()Landroidx/compose/runtime/ProvidableCompositionLocal;")]
     internal static partial IntPtr LocalLifecycleOwner();
 
-    // androidx.compose.ui.Modifier$Companion.$$INSTANCE — the empty
-    // Modifier that every chain builds on top of. Cached as a global
-    // ref so the chain builder doesn't pay the FindClass +
-    // GetStaticObjectField cost on every recomposition.
+    // Resolve the outer interface first: initializing Modifier$Companion
+    // directly can leave Modifier.Companion null through the JVM's default-
+    // interface initialization cycle. Kotlin's default arguments use that field.
     static IntPtr s_modifierCompanionInstance;
 
+    // Why raw JNI: the binding does not expose the outer interface's Companion field.
     internal static unsafe IntPtr ModifierCompanionInstance()
     {
         if (s_modifierCompanionInstance == IntPtr.Zero)
         {
-            IntPtr cls = JNIEnv.FindClass("androidx/compose/ui/Modifier$Companion");
-            IntPtr fid = JNIEnv.GetStaticFieldID(cls, "$$INSTANCE", "Landroidx/compose/ui/Modifier$Companion;");
+            IntPtr cls = JNIEnv.FindClass("androidx/compose/ui/Modifier");
+            IntPtr fid = JNIEnv.GetStaticFieldID(cls, "Companion", "Landroidx/compose/ui/Modifier$Companion;");
             IntPtr local = JNIEnv.GetStaticObjectField(cls, fid);
-            s_modifierCompanionInstance = JNIEnv.NewGlobalRef(local);
-            JNIEnv.DeleteLocalRef(local);
+            try
+            {
+                if (local == IntPtr.Zero)
+                    throw new InvalidOperationException("Compose Modifier.Companion was not initialized.");
+                s_modifierCompanionInstance = JNIEnv.NewGlobalRef(local);
+            }
+            finally
+            {
+                JNIEnv.DeleteLocalRef(local);
+            }
         }
         // Returning a NEW local ref each call so callers can DeleteLocalRef
         // it uniformly while walking the op chain.
@@ -747,16 +755,39 @@ internal static partial class ComposeBridges
             composer, p11: 0, _changed: (int)ExtendedFloatingActionButtonDefault.None);
     }
 
-    // androidx.compose.material3.SurfaceKt.Surface-T9BRK9s (non-interactive)
-    [ComposeBridge(
-        Class     = "androidx/compose/material3/SurfaceKt",
-        JvmName   = "Surface-T9BRK9s",
-        Signature = "(Landroidx/compose/ui/Modifier;Landroidx/compose/ui/graphics/Shape;JJFF" +
-                    "Landroidx/compose/foundation/BorderStroke;" +
-                    "Lkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;II)V",
-        Defaults  = typeof(SurfaceDefault))]
-    [ComposeFacade]
-    public static partial void Surface(IModifier? modifier, Shape? shape, IFunction2 content, IComposer composer, int _changed = 0);
+    [ComposeFacade(Defaults = typeof(SurfaceDefault))]
+    public static partial void Surface(
+        IModifier? modifier, Shape? shape,
+        [FacadeAdded] Color? color, [FacadeAdded] Color? contentColor,
+        [FacadeAdded] Dp? tonalElevation, [FacadeAdded] Dp? shadowElevation,
+        [FacadeAdded] Foundation.BorderStroke? border,
+        IFunction2 content, int defaults, IComposer composer, int _changed = 0);
+
+    public static partial void Surface(
+        IModifier? modifier, Shape? shape, Color? color, Color? contentColor,
+        Dp? tonalElevation, Dp? shadowElevation, Foundation.BorderStroke? border,
+        IFunction2 content, int defaults, IComposer composer, int _changed)
+    {
+        var colors = composer.SurfaceColors(color, contentColor, (SurfaceDefault)defaults);
+        int nativeDefaults = defaults & ~(int)(SurfaceDefault.Color | SurfaceDefault.ContentColor);
+        const int nativeChanged = 0;
+#if DEBUG
+        global::AndroidX.Compose.Surface.ContentObserver?.Invoke(
+            content, defaults, nativeDefaults, colors.Color, colors.ContentColor, nativeChanged);
+#endif
+        SurfaceKt.Surface(
+            modifier: modifier,
+            shape: shape?.JavaCast<UI.Graphics.IShape>(),
+            color: colors.Color,
+            contentColor: colors.ContentColor,
+            tonalElevation: Dp.Pack(tonalElevation),
+            shadowElevation: Dp.Pack(shadowElevation),
+            border: border,
+            content: content,
+            _composer: composer,
+            p9: nativeChanged,
+            _changed: nativeDefaults);
+    }
 
     // androidx.compose.foundation.ImageKt.Image (Painter overload) — all
     // four `Image` Kotlin overloads share the JVM name `Image`, so the
@@ -1124,28 +1155,6 @@ internal static partial class ComposeBridges
         IFunction2? sheetDragHandle,
         IFunction2? topBar,
         IFunction3? snackbarHost,
-        IFunction3  content,
-        int         defaults,
-        IComposer   composer, int _changed = 0);
-
-    // androidx.compose.material3.ScaffoldKt.Scaffold-TvnljyQ
-    [ComposeBridge(
-        Class     = "androidx/compose/material3/ScaffoldKt",
-        JvmName   = "Scaffold-TvnljyQ",
-        Signature = "(Landroidx/compose/ui/Modifier;" +
-                    "Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;" +
-                    "Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;" +
-                    "IJJ" +
-                    "Landroidx/compose/foundation/layout/WindowInsets;" +
-                    "Lkotlin/jvm/functions/Function3;" +
-                    "Landroidx/compose/runtime/Composer;II)V",
-        Defaults  = typeof(ScaffoldDefault))]
-    public static partial void Scaffold(
-        IModifier?  modifier,
-        IFunction2? topBar,
-        IFunction2? bottomBar,
-        IFunction2? snackbarHost,
-        IFunction2? floatingActionButton,
         IFunction3  content,
         int         defaults,
         IComposer   composer, int _changed = 0);
@@ -2730,25 +2739,6 @@ internal static partial class ComposeBridges
         Signature = "(Landroidx/compose/ui/Modifier;)Landroidx/compose/ui/Modifier;")]
     internal static partial IntPtr ModifierFocusGroup(IntPtr modifier);
 
-    // androidx.compose.ui.focus.FocusChangedModifierKt.onFocusChanged —
-    // (Modifier, Function1<FocusState, Unit>). No defaults — the
-    // listener is always supplied by the caller.
-    [ComposeBridge(
-        Class     = "androidx/compose/ui/focus/FocusChangedModifierKt",
-        JvmName   = "onFocusChanged",
-        Signature = "(Landroidx/compose/ui/Modifier;Lkotlin/jvm/functions/Function1;)" +
-                    "Landroidx/compose/ui/Modifier;")]
-    internal static partial IntPtr ModifierOnFocusChanged(IntPtr modifier, IFunction1 onFocusChanged);
-
-    // androidx.compose.ui.focus.FocusRequesterModifierKt.focusRequester —
-    // (Modifier, FocusRequester). No defaults.
-    [ComposeBridge(
-        Class     = "androidx/compose/ui/focus/FocusRequesterModifierKt",
-        JvmName   = "focusRequester",
-        Signature = "(Landroidx/compose/ui/Modifier;Landroidx/compose/ui/focus/FocusRequester;)" +
-                    "Landroidx/compose/ui/Modifier;")]
-    internal static partial IntPtr ModifierFocusRequester(IntPtr modifier, IntPtr focusRequester);
-
     // androidx.compose.foundation.ClickableKt.combinedClickable-cJG_KMw$default —
     // the no-MutableInteractionSource overload. 7 Kotlin params after
     // the receiver: enabled, onClickLabel, role, onLongClickLabel,
@@ -2993,23 +2983,13 @@ internal static partial class ComposeBridges
     }
 
     // androidx.compose.ui.focus.FocusRequester.requestFocus()V —
-    // the no-arg overload the binding doesn't surface (it only exposed
-    // the parameterised `requestFocus-3ESFkO8(int):Boolean`). Wrapped
-    // hand-written because [ComposeBridge] doesn't support instance
-    // method calls.
-    static IntPtr s_focusRequesterClass;
-    static IntPtr s_focusRequesterRequestFocusMethodId;
-
-    internal static void FocusRequesterRequestFocus(IntPtr focusRequester)
-    {
-        if (s_focusRequesterRequestFocusMethodId == IntPtr.Zero)
-        {
-            s_focusRequesterClass = JNIEnv.FindClass("androidx/compose/ui/focus/FocusRequester");
-            s_focusRequesterRequestFocusMethodId = JNIEnv.GetMethodID(
-                s_focusRequesterClass, "requestFocus", "()V");
-        }
-        JNIEnv.CallVoidMethod(focusRequester, s_focusRequesterRequestFocusMethodId);
-    }
+    // the no-arg overload is not exposed by the runtime binding.
+    [ComposeBridge(
+        Class = "androidx/compose/ui/focus/FocusRequester",
+        JvmName = "requestFocus",
+        Signature = "()V",
+        Instance = true)]
+    internal static partial void FocusRequesterRequestFocus(IntPtr focusRequester);
 
     // androidx.compose.ui.semantics.SemanticsPropertiesKt.setContentDescription(
     //   SemanticsPropertyReceiver, String) — called from inside the

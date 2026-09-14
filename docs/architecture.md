@@ -5,6 +5,66 @@ and its sibling source generators. For the *why* behind the project and a
 tour of how Jetpack Compose itself works under the hood, see
 [compose-internals.md](compose-internals.md).
 
+## Bound baseline modifiers
+
+`Modifier.AlignBy(HorizontalAlignmentLine)` and `AlignByBaseline()` resolve the
+active Row receiver at materialization time; `AlignBy(VerticalAlignmentLine)`
+requires Column. Flow containers use the same published scope kinds. Chains
+can be constructed outside composition and reused; applying one with a missing
+or incompatible scope throws an `InvalidOperationException` naming the operation
+and actual scope. The baseline constants and alignment-line contracts come from
+the official `AndroidX.Compose.UI.Layout` binding (`AlignmentLineKt.FirstBaseline`
+and `LastBaseline`), not a parallel enum or integer selector.
+
+`PaddingFrom(line, before, after)` and `PaddingFromBaseline(top, bottom)` take
+nullable `Dp`: null maps to Kotlin's `Dp.Unspecified` float/NaN representation.
+Zero stays specified, which matters under minimum constraints when Compose chooses
+whether the before or after distance positions the content. Native constraints,
+missing-line fallback and validation are retained. `ClipToBounds()` uses the
+bound rectangular draw clip without changing measurement; place it before a
+child transform to clip overflow rather than moving the viewport.
+
+All these methods call the **runtime companion** bindings (`1.11.3.1`), including
+the Dp-mangled padding overloads. No additional JNI/default masks are needed.
+`AppendBound` retains captured line peers, and the generated binding keeps
+receivers/arguments alive across calls. Their structural keys record line
+identity, nullable distances and chain order; `AlignByBaseline` shares its key
+with `AlignBy(FirstBaseline)`. Callers must not dispose a captured line while a
+chain is in use. Gallery routes `modifiers-baseline-alignment`,
+`modifiers-baseline-padding` and `modifiers-clip-to-bounds` demonstrate the surface.
+`BaselineModifierTests` measures placed text baselines, constrained padding,
+tree/composable/flow scope dispatch and native PixelCopy overflow, rather than
+inferring correctness from a successful build.
+
+The cold scope-failure regression also protects `ModifierCompanionInstance`.
+It reads the **outer** `Modifier.Companion` static field. Initializing
+`Modifier$Companion.$$INSTANCE` first triggers a JVM default-interface
+initialization cycle in the pinned bytecode and can permanently leave the outer
+field null; subsequent native Row/Column defaults then crash. Initializing the
+outer interface first avoids the cycle. The cached global reference and
+fresh-local return contract stay unchanged, with local cleanup in `finally`.
+
+### Measured regression evidence
+
+On 2026-09-14, the embedded DeviceTests APK (SHA-256
+`430D6BE336F64A3521F6D20B37A9F0A9DBAC68444CBE5845D6F8AA18A923C014`)
+passed all seven `BaselineModifierTests` cases in one fresh instrumentation
+process on Pixel 7, including rejected cold scope builds before rendering.
+At density 2.625, the native measurements were:
+
+| Contract | Observed result |
+| --- | --- |
+| First / last text baselines | Equal absolute baselines at 78 / 375 px in tree and composerless rows; unchanged after managed and Java GC |
+| Published vertical lines | Column and FlowColumn placed children at X=53 / 0 with lines at 26 / 79 px, both meeting at X=79 |
+| Baseline-relative padding | 32 dp before = 84 px; 24 dp after = 63 px; minimum-constraint null/zero distinction and maximum-height limits passed |
+| Rectangular clipping | Both viewports measured 263x126 px; native PixelCopy found red inside both, red overflow without clipping, and white outside the clipped viewport |
+
+The three Gallery demos also rendered with readable labels. Jetchat recording,
+shifted cancellation content, and the unavailable-selector panel were captured;
+an interior drag clipped the cancellation arrow at the fixed viewport while
+retaining the text label, and a further drag cancelled recording successfully.
+These checks do not establish whole-sample parity or resolve profile parallax.
+
 ## The facade: composables as types
 
 Composables are **types**, not method calls. Each is a
@@ -39,7 +99,7 @@ attribute stacked on the bridge — see
 shapes the generator covers. Only three outliers stay hand-written at
 the JNI layer: `ModifierHandle` (a managed `IModifier? → IntPtr`
 conversion that none of the bridge shapes fit),
-`ModifierCompanionInstance` (a `$$INSTANCE` static field lookup, not a
+`ModifierCompanionInstance` (a `Companion` static field lookup, not a
 method invocation), and `ModifierClipRoundedCorners` (a two-step
 `RoundedCornerShape` ctor + `ClipKt.clip` with an intermediate `Shape`
 local ref). The user never sees any of this; when
@@ -62,6 +122,25 @@ for C# ones. It works for any built-in numeric primitive
 Other `INumber<T>` implementations (`decimal`, `Half`, `BigInteger`,
 `nint`, `nuint`) compile but throw at construction since they have no
 clean Java box.
+
+## Focus ownership
+
+`Modifier.FocusTarget()` uses the official UI runtime binding. It is the
+low-level target used by Jetchat's emoji panel, not a replacement for
+`Focusable()` on accessible interactive controls. Install `FocusRequester`
+and `OnFocusChanged` before the target, and remember one requester per logical
+target. Request focus after attachment (an event or selector-keyed
+`LaunchedEffect`), never on every render. Existing text fields already own a
+target; do not append another.
+
+`LocalFocusManager.Current(composer)` and `Current()` read the owner at the
+current composition position and return the bound `UI.Focus.IFocusManager`.
+Capture it in composition for later UI callbacks; implicit lookup outside
+composition throws the standard active-composer error and is diagnosed by
+CN5009. `Provides` supports a scoped override. No manager is globally cached.
+`ClearFocus()` defaults to `force: false`; captured focus is retained unless
+the caller passes `true`. Clearing input focus is distinct from moving
+accessibility focus or issuing a keyboard show/hide command.
 
 ## The `$default` bitmask source generator
 
@@ -732,6 +811,40 @@ class.
   and inset-sized width/height modifiers. These call the official runtime
   bindings directly; `Modifier` can replay managed binding operations
   alongside generated raw-handle bridges without duplicating JNI surfaces.
+  `Scaffold.ContentWindowInsets` and both adapters preserve null/omitted Kotlin
+  defaults while forwarding supplied zero or transformed values. The pinned
+  Material3Android 1.4.0.5 binding exposes `Scaffold-TvnljyQ` and
+  `ScaffoldDefaults.GetContentWindowInsets`, so Scaffold uses these bound
+  entry points rather than a duplicate JNI bridge. Its declarative
+  `ScaffoldDefault` enum remains necessary because the binding misnames
+  `FabPosition` and the trailing compiler arguments: the final managed
+  `floatingActionButtonPosition`/`_changed` arguments are JVM `$changed`/`$default`.
+  Kotlin's omission bits are fixed at a compiled call site. Changing its
+  content-insets bit during recomposition changes the number of internal
+  `composer.changed` slots and corrupts the following remembered lambda.
+  Therefore Scaffold resolves the actual bound default getter unconditionally
+  and supplies either that value or the caller's insets with the generated
+  `ContentWindowInsets` bit cleared. Null still means Kotlin's live default;
+  zero remains explicit. This stable native call shape preserves the Scaffold
+  subtree across default/zero/excluded transitions rather than recreating it.
+  Other defaults, padding forwarding and `Wrap2`/`Wrap3` slot identities are unchanged.
+  The device regressions measure body bounds and forwarded padding, retain
+  ordinary and saveable body state across transitions, and exercise activity
+  recreation. In Debug, a scoped internal observer additionally captures the
+  exact content lambda passed to the bound Scaffold call; this diagnostic
+  hook is absent from Release builds and does not replace or wrap the lambda.
+  `ScaffoldInsetsTests` covers 16 native cases across `Body`, `BodyContent`,
+  explicit adapters, and implicit adapters, with and without app bars. Snapshot
+  readiness requires the actual resumed/focused window, platform inset delivery
+  observed on a test-owned parent, matching body/marker placement, and no pending
+  native composition, snapshot, or layout work. `Instrumentation.WaitForIdleSync`
+  runs off the UI thread; live values are then read together on the UI thread.
+  Expected geometry is asserted afterward, never used as a readiness condition.
+  A preserved window after `Activity.Recreate` can remain focused without sending
+  the new activity a positive focus callback, so live `HasWindowFocus` is
+  authoritative. Counter mutations require a new composed observation, and
+  restoration must produce fresh ordinary state while recovering the saved value.
+  Tests keep only their own window awake; they do not change device settings.
 - **`remember(keys, …)` is supported.** Use the keyed overloads
   `Remember(factory, key1)`, `Remember(factory, key1, key2)`,
   `Remember(factory, key1, key2, key3)`, or

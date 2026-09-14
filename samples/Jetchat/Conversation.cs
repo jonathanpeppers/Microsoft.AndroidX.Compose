@@ -1,6 +1,7 @@
 using AndroidX.Compose.Material3;
 using AndroidX.Compose.Samples.Jetchat.Theme;
 using AndroidX.Compose.UI.Text.Input;
+using Baselines = AndroidX.Compose.UI.Layout.AlignmentLineKt;
 using Typography = AndroidX.Compose.Samples.Jetchat.Theme.Typography;
 
 namespace AndroidX.Compose.Samples.Jetchat;
@@ -54,6 +55,9 @@ public static class Conversation
                 new Scaffold
                 {
                     Modifier = Modifier.NestedScroll(scrollBehavior.NestedScrollConnection),
+                    ContentWindowInsets = c.ScaffoldContentWindowInsets()
+                        .Exclude(c.NavigationBarsInsets())
+                        .Exclude(c.ImeInsets()),
                     TopBar = BuildTopBar(ui, scheme, onOpenDrawer, popupOpen, scrollBehavior),
                     Body   = BuildBody(ui, input, scheme, selectedSelector, messagesScroll, onAuthorClicked, isRecording, swipeOffset),
                 },
@@ -389,7 +393,7 @@ public static class Conversation
         return content;
     }
 
-    static Surface BuildInputArea(
+    static ComposableNode BuildInputArea(
         ConversationUiState          ui,
         MutableState<TextFieldValue> input,
         ColorScheme                  scheme,
@@ -397,23 +401,50 @@ public static class Conversation
         LazyListState                messagesScroll,
         MutableState<bool>           isRecording,
         MutableNumberState<float>    swipeOffset) =>
-        new()
+        new Composed(c =>
         {
-            Modifier.FillMaxWidth().NavigationBarsPadding().ImePadding(),
-            new Column
+            var selectorFocus = c.Remember(() => new FocusRequester());
+            var focused = c.MutableStateOf(false);
+            int selector = selectedSelector.Value;
+            c.LaunchedEffect(selector, _ =>
             {
-                Modifier.FillMaxWidth(),
-                BuildTextFieldRow(input, scheme, isRecording, swipeOffset),
+                if (selector == SelEmoji && selectedSelector.Value == selector)
+                    selectorFocus.RequestFocus();
+                return Task.CompletedTask;
+            });
+            var surface = new Surface
+            {
+                TonalElevation = 2,
+                ContentColor = Color.FromPacked(scheme.Secondary),
+                Modifier = Modifier.FillMaxWidth(),
+            };
+            surface.Add(new Column
+            {
+                // Keep the Surface behind the bars; its content owns these insets once.
+                Modifier.FillMaxWidth().NavigationBarsPadding().ImePadding(),
+                BuildTextFieldRow(input, scheme, isRecording, swipeOffset, focus =>
+                {
+                    if (focused.Value == focus.IsFocused)
+                        return;
+                    focused.Value = focus.IsFocused;
+                    if (focus.IsFocused)
+                    {
+                        selectedSelector.Value = 0;
+                        _ = messagesScroll.AnimateScrollToItemAsync(0);
+                    }
+                }),
                 BuildSelectorRow(ui, input, scheme, selectedSelector, messagesScroll),
-                BuildSelectorPanel(input, scheme, selectedSelector),
-            },
-        };
+                BuildSelectorPanel(input, scheme, selectedSelector, selectorFocus),
+            });
+            return surface;
+        });
 
     static Row BuildTextFieldRow(
         MutableState<TextFieldValue> input,
         ColorScheme                  scheme,
         MutableState<bool>           isRecording,
-        MutableNumberState<float>    swipeOffset)
+        MutableNumberState<float>    swipeOffset,
+        Action<FocusState>           onFocusChanged)
     {
         bool textEmpty = string.IsNullOrWhiteSpace(input.Value.Text);
 
@@ -431,6 +462,7 @@ public static class Conversation
                           {
                               Modifier = Modifier
                                   .FillMaxWidth()
+                                  .OnFocusChanged(onFocusChanged)
                                   .Semantics("Message"),
                               Placeholder = new Text("Type a message"),
                               KeyboardOptions = CreateMessageKeyboardOptions(),
@@ -549,7 +581,7 @@ public static class Conversation
         };
         button.Add(new Icon(drawableId, contentDescription)
         {
-            Tint = Color.FromPacked(selected ? scheme.OnSecondary : scheme.OnSurface),
+            Tint = Color.FromPacked(selected ? scheme.OnSecondary : scheme.Secondary),
         });
         if (selected)
             button.Modifier = Modifier
@@ -564,33 +596,37 @@ public static class Conversation
     static ComposableNode BuildSelectorPanel(
         MutableState<TextFieldValue> input,
         ColorScheme          scheme,
-        MutableState<int>    selectedSelector)
+        MutableState<int>    selectedSelector,
+        FocusRequester      selectorFocus)
     {
         int sel = selectedSelector.Value;
         if (sel == 0) return Spacer.Width(0);
-        if (sel == SelEmoji) return EmojiSelector.Build(input, scheme);
+        var surface = new Surface { TonalElevation = 8 };
+        if (sel == SelEmoji)
+        {
+            surface.Add(EmojiSelector.Build(input, scheme, selectorFocus));
+            return surface;
+        }
         string title    = "Functionality currently not available";
         string subtitle = "Grab a beverage and check back later!";
-        return new Column
+        surface.Add(new Column
         {
-            Modifier.FillMaxWidth().Height(320)
-                .Background(Color.FromPacked(scheme.SurfaceVariant)),
+            Modifier.FillMaxWidth().Height(320),
             Spacer.Height(96),
             new Text(title)
             {
                 FontSize   = 16,
                 FontWeight = FontWeight.Medium,
-                Color      = Color.FromPacked(scheme.OnSurfaceVariant),
                 Modifier   = Modifier.Padding(horizontal: 16),
             },
-            Spacer.Height(8),
             new Text(subtitle)
             {
                 FontSize = 14,
                 Color    = Color.FromPacked(scheme.OnSurfaceVariant),
-                Modifier = Modifier.Padding(horizontal: 16),
+                Modifier = Modifier.Padding(horizontal: 16).PaddingFrom(Baselines.FirstBaseline, before: 32),
             },
-        };
+        });
+        return surface;
     }
 
 

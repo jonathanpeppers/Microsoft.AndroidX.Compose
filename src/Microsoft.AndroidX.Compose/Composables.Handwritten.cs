@@ -27,10 +27,28 @@ public static partial class Composables
         theme.Render(composer);
     }
 
+    /// <summary>Renders a scaffold using the original binary-compatible signature.</summary>
+    [Composable, GenerateImplicitComposable]
+    internal static void Scaffold(
+        IComposer composer,
+        [ComposableContent] Action<PaddingValues, IComposer> content,
+        Modifier? modifier,
+        [ComposableContent] Action<IComposer>? topBar,
+        [ComposableContent] Action<IComposer>? bottomBar,
+        [ComposableContent] Action<IComposer>? snackbarHost,
+        [ComposableContent] Action<IComposer>? floatingActionButton) =>
+        Scaffold(composer, content, modifier, topBar, bottomBar, snackbarHost,
+            floatingActionButton, contentWindowInsets: null);
+
     /// <summary>
     /// Renders a Material scaffold with padding-aware body content and an
     /// explicit composer.
     /// </summary>
+    /// <param name="contentWindowInsets">
+    /// Null or omitted uses Kotlin's default. Supply an all-zero value to disable
+    /// content insets, or exclude edges owned by children. See
+    /// <see cref="global::AndroidX.Compose.Scaffold.ContentWindowInsets"/>.
+    /// </param>
     [Composable, GenerateImplicitComposable]
     internal static void Scaffold(
         IComposer composer,
@@ -39,7 +57,8 @@ public static partial class Composables
         [ComposableContent] Action<IComposer>? topBar = null,
         [ComposableContent] Action<IComposer>? bottomBar = null,
         [ComposableContent] Action<IComposer>? snackbarHost = null,
-        [ComposableContent] Action<IComposer>? floatingActionButton = null)
+        [ComposableContent] Action<IComposer>? floatingActionButton = null,
+        WindowInsets? contentWindowInsets = null)
     {
         ArgumentNullException.ThrowIfNull(composer);
         ArgumentNullException.ThrowIfNull(content);
@@ -47,6 +66,7 @@ public static partial class Composables
         new global::AndroidX.Compose.Scaffold
         {
             Modifier = modifier,
+            ContentWindowInsets = contentWindowInsets,
             BodyContent = padding =>
                 new ComposableContentNode(c => content(padding, c)),
             TopBar = topBar is null ? null : new ComposableContentNode(topBar),

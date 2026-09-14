@@ -49,6 +49,11 @@ public class ComposableScopeAnalyzerTests
 
             public sealed class PaddingValues { }
 
+            public static class LocalFocusManager
+            {
+                public static object Current() => new();
+            }
+
             public sealed class WindowInsets
             {
                 public PaddingValues AsPaddingValues() => new();
@@ -201,6 +206,32 @@ public class ComposableScopeAnalyzerTests
             """);
 
         Assert.Contains(diagnostics, d => d.Id == "CN5009");
+    }
+
+    [Fact]
+    public void ImplicitFocusManagerRead_RequiresComposition_NotAnEventCallback()
+    {
+        var diagnostics = ScopeDiagnostics("""
+            static class App
+            {
+                public static object Read() => AndroidX.Compose.LocalFocusManager.Current();
+
+                [AndroidX.Compose.Composable]
+                public static void Render()
+                {
+                    var manager = AndroidX.Compose.LocalFocusManager.Current();
+                    AndroidX.Compose.Composables.Button(
+                        () => AndroidX.Compose.LocalFocusManager.Current(),
+                        () => AndroidX.Compose.LocalFocusManager.Current());
+                }
+            }
+            """);
+
+        Assert.Equal(2, diagnostics.Length);
+        Assert.Contains(diagnostics, d =>
+            SourceText(d) == "AndroidX.Compose.LocalFocusManager.Current()");
+        Assert.Contains(diagnostics, d =>
+            SourceText(d) == "() => AndroidX.Compose.LocalFocusManager.Current()");
     }
 
     [Fact]

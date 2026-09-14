@@ -324,9 +324,8 @@ using AndroidX.Compose;
     "windowInsets", "properties", "!content")]
 
 // androidx.compose.material3.ScaffoldKt.Scaffold-TvnljyQ:
-// 10 user params; bit 9 (content) always provided. Optional slot bits
-// 1 (topBar), 2 (bottomBar), 3 (snackbarHost), 4 (floatingActionButton)
-// are toggled per-call by Scaffold.Render.
+// Keep declarative names: the bound overload misnames the FabPosition and
+// trailing compiler parameters. Scaffold.Render supplies all content lambdas.
 [assembly: ComposeDefaults("ScaffoldDefault",
     "modifier", "topBar", "bottomBar", "snackbarHost", "floatingActionButton",
     "floatingActionButtonPosition", "containerColor", "contentColor",

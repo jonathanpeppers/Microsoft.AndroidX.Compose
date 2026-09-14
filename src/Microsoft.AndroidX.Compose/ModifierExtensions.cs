@@ -1,5 +1,7 @@
 using Android.Runtime;
 using AndroidX.Compose.Foundation.Layout;
+using AndroidX.Compose.UI.Layout;
+using BaselinePaddingKt = AndroidX.Compose.Foundation.Layout.AlignmentLineKt;
 
 namespace AndroidX.Compose;
 
@@ -68,6 +70,51 @@ public static class ModifierExtensions
         var pv = paddingValues;
         return modifier.Append(curr => ComposeBridges.ModifierPaddingValues(curr, ((Java.Lang.Object)pv).Handle),
             new ModifierOpKey("PaddingValues", ValueTuple.Create<object>(pv)));
+    }
+
+    /// <summary>
+    /// Adds padding so the distance before and after <paramref name="alignmentLine"/>
+    /// is at least the requested amount, subject to incoming layout constraints.
+    /// Horizontal lines (including <see cref="AndroidX.Compose.UI.Layout.AlignmentLineKt.FirstBaseline"/>
+    /// and <see cref="AndroidX.Compose.UI.Layout.AlignmentLineKt.LastBaseline"/>) pad top/bottom;
+    /// vertical lines pad start/end, respecting layout direction.
+    /// </summary>
+    /// <remarks>
+    /// Null means Kotlin's <c>Dp.Unspecified</c>, not zero. An explicit zero
+    /// requests zero distance; existing content is never shrunk. Under maximum
+    /// constraints, before takes priority over after. Under minimum constraints,
+    /// a specified before positions the content; otherwise after does. If the child
+    /// has no such line, Compose uses zero as its position. No parent scope
+    /// is required. The bound alignment-line peer is retained by the chain;
+    /// do not dispose it while the chain is in use.
+    /// </remarks>
+    public static Modifier PaddingFrom(this Modifier modifier, AlignmentLine alignmentLine, Dp? before = null, Dp? after = null)
+    {
+        ArgumentNullException.ThrowIfNull(modifier);
+        ArgumentNullException.ThrowIfNull(alignmentLine);
+        return modifier.AppendBound(
+            current => BaselinePaddingKt.PaddingFrom(
+                current, alignmentLine, before?.Value ?? float.NaN, after?.Value ?? float.NaN),
+            new ModifierOpKey(nameof(PaddingFrom), (alignmentLine, before, after)));
+    }
+
+    /// <summary>
+    /// Adds padding to keep the first baseline at least <paramref name="top"/>
+    /// from the top and the last baseline at least <paramref name="bottom"/>
+    /// from the bottom, subject to incoming layout constraints.
+    /// Null leaves that edge unspecified; zero is an explicit distance.
+    /// </summary>
+    /// <remarks>
+    /// Mirrors <c>paddingFromBaseline</c>; no parent scope is required.
+    /// Missing baselines use Compose's zero-position fallback.
+    /// </remarks>
+    public static Modifier PaddingFromBaseline(this Modifier modifier, Dp? top = null, Dp? bottom = null)
+    {
+        ArgumentNullException.ThrowIfNull(modifier);
+        return modifier.AppendBound(
+            current => BaselinePaddingKt.PaddingFromBaseline(
+                current, top?.Value ?? float.NaN, bottom?.Value ?? float.NaN),
+            new ModifierOpKey(nameof(PaddingFromBaseline), (top, bottom)));
     }
 
     /// <summary>
@@ -481,6 +528,18 @@ public static class ModifierExtensions
         ArgumentNullException.ThrowIfNull(shape);
         return modifier.Append(curr => ComposeBridges.ModifierClip(curr, shape.Handle),
             new ModifierOpKey("ClipShape", ValueTuple.Create<object>(shape)));
+    }
+
+    /// <summary>
+    /// Clips drawing to this element's rectangular layout bounds without
+    /// changing measurement. Place before a drawing transform to clip the
+    /// transformed content; modifier order determines which bounds are used.
+    /// </summary>
+    public static Modifier ClipToBounds(this Modifier modifier)
+    {
+        ArgumentNullException.ThrowIfNull(modifier);
+        return modifier.AppendBound(AndroidX.Compose.UI.Draw.ClipKt.ClipToBounds,
+            new ModifierOpKey(nameof(ClipToBounds), null));
     }
 
     /// <summary>
@@ -1145,6 +1204,71 @@ public static class ModifierExtensions
     }
 
     /// <summary>
+    /// Aligns a Row child's horizontal line with sibling alignment lines.
+    /// Use the bound <see cref="AndroidX.Compose.UI.Layout.AlignmentLineKt.FirstBaseline"/>
+    /// or <see cref="AndroidX.Compose.UI.Layout.AlignmentLineKt.LastBaseline"/> for text.
+    /// Also works in containers publishing a Row scope, such as FlowRow.
+    /// </summary>
+    /// <remarks>
+    /// Resolves the current parent scope when materialized, not when the
+    /// immutable chain is constructed. A missing or non-Row scope throws
+    /// <see cref="InvalidOperationException"/>. Participating siblings form
+    /// an alignment group; a lone participant behaves as top-aligned.
+    /// Retains the bound line peer; do not dispose it while the chain is in use.
+    /// </remarks>
+    public static Modifier AlignBy(this Modifier modifier, HorizontalAlignmentLine alignmentLine)
+    {
+        ArgumentNullException.ThrowIfNull(modifier);
+        ArgumentNullException.ThrowIfNull(alignmentLine);
+        return modifier.AppendBound(
+            current => AlignmentScope<IRowScope>(ScopeKind.Row, "AlignBy(HorizontalAlignmentLine)")
+                .AlignBy(current, alignmentLine),
+            new ModifierOpKey("AlignByRow", ValueTuple.Create(alignmentLine)));
+    }
+
+    /// <summary>
+    /// Aligns a Column child's vertical line with sibling alignment lines.
+    /// Text baselines are horizontal and must use the Row overload instead.
+    /// Also works in containers publishing a Column scope, such as FlowColumn.
+    /// </summary>
+    /// <remarks>
+    /// Resolves the current parent scope when materialized. A missing or
+    /// non-Column scope throws <see cref="InvalidOperationException"/>.
+    /// A lone participant behaves as start-aligned.
+    /// Retains the bound line peer; do not dispose it while the chain is in use.
+    /// </remarks>
+    public static Modifier AlignBy(this Modifier modifier, VerticalAlignmentLine alignmentLine)
+    {
+        ArgumentNullException.ThrowIfNull(modifier);
+        ArgumentNullException.ThrowIfNull(alignmentLine);
+        return modifier.AppendBound(
+            current => AlignmentScope<IColumnScope>(ScopeKind.Column, "AlignBy(VerticalAlignmentLine)")
+                .AlignBy(current, alignmentLine),
+            new ModifierOpKey("AlignByColumn", ValueTuple.Create(alignmentLine)));
+    }
+
+    /// <summary>
+    /// Aligns a Row child's first text baseline with participating siblings.
+    /// Equivalent to <c>AlignBy(AlignmentLineKt.FirstBaseline)</c>, including
+    /// its materialization-time Row scope requirement and failure diagnostics.
+    /// </summary>
+    public static Modifier AlignByBaseline(this Modifier modifier) =>
+        modifier.AlignBy(AndroidX.Compose.UI.Layout.AlignmentLineKt.FirstBaseline);
+
+    static T AlignmentScope<T>(ScopeKind expected, string operation) where T : class, IJavaObject
+    {
+        var kind = RenderContext.CurrentScopeKind;
+        var handle = RenderContext.CurrentScope;
+        if (kind != expected || handle == IntPtr.Zero)
+            throw new InvalidOperationException(
+                $"Modifier.{operation} requires an active {expected} scope. " +
+                $"Current scope kind: {kind}; receiver present: {handle != IntPtr.Zero}.");
+        return Java.Lang.Object.GetObject<T>(handle, JniHandleOwnership.DoNotTransfer)
+            ?? throw new InvalidOperationException(
+                $"Modifier.{operation} could not resolve the active {expected} scope receiver.");
+    }
+
+    /// <summary>
     /// <c>Modifier.matchParentSize()</c> — sizes the child to match
     /// the parent <see cref="Box"/>'s measured size without
     /// participating in measurement. Only valid inside a
@@ -1173,6 +1297,21 @@ public static class ModifierExtensions
             new ModifierOpKey(nameof(Focusable), ValueTuple.Create(enabled)));
 
     /// <summary>
+    /// Adds a low-level Compose focus target, without the semantics and
+    /// interaction behavior of <see cref="Focusable(Modifier, bool)"/>.
+    /// Put <see cref="FocusRequester(Modifier, FocusRequester)"/> and
+    /// <see cref="OnFocusChanged(Modifier, Action{FocusState})"/> before this
+    /// operation. Prefer <c>Focusable</c> for user-focusable controls; do not
+    /// add another target to a text field or other already-focusable control.
+    /// </summary>
+    public static Modifier FocusTarget(this Modifier modifier)
+    {
+        ArgumentNullException.ThrowIfNull(modifier);
+        return modifier.AppendBound(UI.Focus.FocusModifierKt.FocusTarget,
+            new ModifierOpKey(nameof(FocusTarget), null));
+    }
+
+    /// <summary>
     /// <c>Modifier.focusGroup()</c> — groups focusable descendants so
     /// two-dimensional focus search treats them as a single unit.
     /// </summary>
@@ -1184,18 +1323,20 @@ public static class ModifierExtensions
     /// <c>Modifier.onFocusChanged { ... }</c> — invokes <paramref name="onFocusChanged"/>
     /// whenever the node gains, loses, or has its focus state mutated
     /// (capture / release). The callback receives an immutable
-    /// <see cref="FocusState"/> snapshot.
+    /// <see cref="FocusState"/> snapshot. Place this before the observed
+    /// focus target (including the target a text field installs internally).
     /// </summary>
     public static Modifier OnFocusChanged(this Modifier modifier, Action<FocusState> onFocusChanged)
     {
         ArgumentNullException.ThrowIfNull(onFocusChanged);
         var f1 = new ComposableLambda1(arg =>
         {
-            if (arg is null) return;
+            if (arg is null)
+                throw new InvalidOperationException("Compose supplied a null focus state to OnFocusChanged.");
             var fs = Android.Runtime.Extensions.JavaCast<AndroidX.Compose.UI.Focus.IFocusState>(arg);
             onFocusChanged(FocusState.From(fs));
         });
-        return modifier.Append(curr => ComposeBridges.ModifierOnFocusChanged(curr, f1),
+        return modifier.AppendBound(curr => UI.Focus.FocusChangedModifierKt.OnFocusChanged(curr, f1),
             new ModifierOpKey(nameof(OnFocusChanged), ValueTuple.Create<object>(onFocusChanged)));
     }
 
@@ -1208,8 +1349,8 @@ public static class ModifierExtensions
     public static Modifier FocusRequester(this Modifier modifier, FocusRequester requester)
     {
         ArgumentNullException.ThrowIfNull(requester);
-        return modifier.Append(curr =>
-            ComposeBridges.ModifierFocusRequester(curr, ((Java.Lang.Object)requester.Java).Handle),
+        return modifier.AppendBound(curr =>
+            UI.Focus.FocusRequesterModifierKt.FocusRequester(curr, requester.Java),
             new ModifierOpKey(nameof(FocusRequester), ValueTuple.Create<object>(requester)));
     }
 

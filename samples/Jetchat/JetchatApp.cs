@@ -39,7 +39,8 @@ public static class JetchatApp
         LazyListState                messagesScroll,
         MutableState<bool>           isRecording,
         MutableNumberState<float>    swipeOffset,
-        ProfileViewModel             profileViewModel)
+        ProfileViewModel             profileViewModel,
+        bool?                        darkThemeOverride = null)
     {
         JetchatTheme.Build(new Composed(c =>
         {
@@ -95,7 +96,7 @@ public static class JetchatApp
                     }),
                 },
             };
-        })).Render();
+        }), darkThemeOverride).Render();
     }
 
     static bool IsOnHome(NavController nav)

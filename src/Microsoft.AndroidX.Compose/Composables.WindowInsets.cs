@@ -2,6 +2,13 @@ namespace AndroidX.Compose;
 
 public static partial class Composables
 {
+    /// <summary>
+    /// Reads Material 3's default Scaffold content insets in the implicit composition.
+    /// Use <see cref="WindowInsets.Exclude"/> to transfer specific edges to a child.
+    /// </summary>
+    public static WindowInsets ScaffoldContentWindowInsets() =>
+        ComposeExtensions.ScaffoldContentWindowInsets(ComposableContext.Current);
+
     /// <summary>Reads the current caption-bar insets.</summary>
     public static WindowInsets CaptionBarInsets() =>
         ComposeExtensions.CaptionBarInsets(ComposableContext.Current);

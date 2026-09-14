@@ -244,6 +244,37 @@ follow-ups. The two authoring styles coexist freely. The
 generator and its compiler configuration; package consumers need no separate
 generator reference.
 
+### Scaffold content insets
+
+`Scaffold.ContentWindowInsets` and the composable adapter's optional
+`contentWindowInsets` parameter accept the existing managed `WindowInsets` type.
+Omission or null preserves Material 3's Kotlin default; `new WindowInsets()`
+explicitly supplies zero on every edge. To transfer navigation-bar/keyboard
+ownership to a pinned editor, use the live default rather than guessing its edges:
+
+```csharp
+new Scaffold
+{
+    ContentWindowInsets = composer.ScaffoldContentWindowInsets()
+        .Exclude(composer.NavigationBarsInsets())
+        .Exclude(composer.ImeInsets()),
+    Body = conversationBody,
+};
+```
+
+The composerless `ScaffoldContentWindowInsets()` reader supports the same
+operations inside a composition. `Body` still receives Scaffold padding
+automatically; `BodyContent` and composable content receive `PaddingValues`
+explicitly and must apply or forward it once. Insets already consumed by an
+ancestor are excluded by Kotlin. The new option does not pad the content twice
+or change the top/bottom bar slots.
+
+Original composable CLR signatures remain as required-argument forwarding
+overloads for compiled consumers and method-group conversions. Optional defaults
+are on the longer inset-capable overloads, preserving unambiguous existing calls.
+See [Jetchat inset ownership](samples/Jetchat/README.md#conversation-inset-ownership)
+and the Gallery's **Scaffold content insets** demo for an edge-to-edge editor.
+
 ### Stable lazy collection and pager keys
 
 All six lazy lists/grids and both pagers accept stable business-record identity.
