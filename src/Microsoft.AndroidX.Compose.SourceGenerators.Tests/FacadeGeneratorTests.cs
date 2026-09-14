@@ -252,7 +252,7 @@ public class FacadeGeneratorTests
         }
         """;
 
-    static (Compilation Output, ImmutableArray<Diagnostic> Diags, string? Emitted) Run(string userCode, string facadeName)
+    internal static (Compilation Output, ImmutableArray<Diagnostic> Diags, string? Emitted) Run(string userCode, string facadeName)
     {
         var stubs = CSharpSyntaxTree.ParseText(Stubs);
         var src = CSharpSyntaxTree.ParseText(userCode);
