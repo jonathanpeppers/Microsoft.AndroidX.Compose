@@ -18,6 +18,7 @@ namespace Microsoft.AndroidX.Compose.DeviceTests;
 public class TestInstrumentation : Instrumentation
 {
     internal static TestInstrumentation? Current { get; private set; }
+
     string? _filter;
 
     protected TestInstrumentation(IntPtr handle, JniHandleOwnership ownership)
@@ -38,6 +39,13 @@ public class TestInstrumentation : Instrumentation
             };
         }
         Start();
+    }
+
+    /// <summary>Releases the current test-host reference when Android destroys the instrumentation.</summary>
+    public override void OnDestroy()
+    {
+        Current = null;
+        base.OnDestroy();
     }
 
     public override async void OnStart()

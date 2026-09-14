@@ -1,5 +1,7 @@
 using AndroidX.Compose.Material3;
+using AndroidX.Compose.Samples.Jetchat.Theme;
 using AndroidX.Compose.UI.Text.Input;
+using Typography = AndroidX.Compose.Samples.Jetchat.Theme.Typography;
 
 namespace AndroidX.Compose.Samples.Jetchat;
 
@@ -52,6 +54,9 @@ public static class Conversation
                 new Scaffold
                 {
                     Modifier = Modifier.NestedScroll(scrollBehavior.NestedScrollConnection),
+                    ContentWindowInsets = c.ScaffoldContentWindowInsets()
+                        .Exclude(c.NavigationBarsInsets())
+                        .Exclude(c.ImeInsets()),
                     TopBar = BuildTopBar(ui, scheme, onOpenDrawer, popupOpen, scrollBehavior),
                     Body   = BuildBody(ui, input, scheme, selectedSelector, messagesScroll, onAuthorClicked, isRecording, swipeOffset),
                 },
@@ -78,16 +83,15 @@ public static class Conversation
             {
                 new Text(ui.ChannelName)
                 {
-                    FontSize   = 16,
-                    FontWeight = FontWeight.Medium,
+                    FontFamily = JetchatFonts.Montserrat,
                     Color      = Color.FromPacked(scheme.OnSurface),
-                },
+                }.WithTypography(Typography.TitleMedium),
                 new Text($"{ui.ChannelMembers} members")
                 {
-                    FontSize = 12,
+                    FontFamily = JetchatFonts.Karla,
                     Color    = Color.FromPacked(scheme.OnSurfaceVariant),
                     Modifier = Modifier.Padding(top: 2),
-                },
+                }.WithTypography(Typography.BodySmall),
             },
             Actions = new Row
             {
@@ -264,11 +268,10 @@ public static class Conversation
             },
             new Text(label)
             {
-                FontSize   = 11,
-                FontWeight = FontWeight.Medium,
+                FontFamily = JetchatFonts.Montserrat,
                 Color      = Color.FromPacked(scheme.OnSurfaceVariant),
                 Modifier   = Modifier.Padding(horizontal: 16),
-            },
+            }.WithTypography(Typography.LabelSmall),
             new HorizontalDivider
             {
                 Modifier  = Modifier.Weight(1f),
@@ -338,18 +341,17 @@ public static class Conversation
             Modifier.Semantics(mergeDescendants: true, properties: _ => { }),
             new Text(m.Author)
             {
-                FontSize   = 16,
-                FontWeight = FontWeight.Medium,
+                FontFamily = JetchatFonts.Montserrat,
                 Color      = Color.FromPacked(scheme.OnSurface),
                 Modifier   = Modifier.Padding(bottom: 8),
-            },
+            }.WithTypography(Typography.TitleMedium),
             Spacer.Width(8),
             new Text(m.Timestamp)
             {
-                FontSize = 12,
+                FontFamily = JetchatFonts.Karla,
                 Color    = Color.FromPacked(scheme.OnSurfaceVariant),
                 Modifier = Modifier.Padding(bottom: 8),
-            },
+            }.WithTypography(Typography.BodySmall),
         };
 
     static ComposableNode BuildChatItemBubble(
@@ -369,11 +371,12 @@ public static class Conversation
         {
             new AnnotatedText(formatted)
             {
+                FontFamily = JetchatFonts.Karla,
                 Color    = fg,
                 Modifier = Modifier
                     .Background(bg, new RoundedCornerShape(4.Dp(), 20.Dp(), 20.Dp(), 20.Dp()))
                     .Padding(horizontal: 16, vertical: 16),
-            },
+            }.WithTypography(Typography.BodyLarge),
         };
         if (m.Image is int image)
         {
@@ -389,7 +392,7 @@ public static class Conversation
         return content;
     }
 
-    static Surface BuildInputArea(
+    static ComposableNode BuildInputArea(
         ConversationUiState          ui,
         MutableState<TextFieldValue> input,
         ColorScheme                  scheme,
@@ -397,23 +400,37 @@ public static class Conversation
         LazyListState                messagesScroll,
         MutableState<bool>           isRecording,
         MutableNumberState<float>    swipeOffset) =>
-        new()
+        new Composed(c =>
         {
-            Modifier.FillMaxWidth().NavigationBarsPadding().ImePadding(),
-            new Column
+            var selectorFocus = c.Remember(() => new FocusRequester());
+            int selector = selectedSelector.Value;
+            c.LaunchedEffect(selector, _ =>
+            {
+                if (selector != 0 && selectedSelector.Value == selector)
+                    selectorFocus.RequestFocus();
+                return Task.CompletedTask;
+            });
+            return new Surface
             {
                 Modifier.FillMaxWidth(),
-                BuildTextFieldRow(input, scheme, isRecording, swipeOffset),
-                BuildSelectorRow(ui, input, scheme, selectedSelector, messagesScroll),
-                BuildSelectorPanel(input, scheme, selectedSelector),
-            },
-        };
+                new Column
+                {
+                    // Keep the Surface behind the bars; its content owns these insets once.
+                    Modifier.FillMaxWidth().NavigationBarsPadding().ImePadding()
+                        .FocusRequester(selectorFocus).Focusable(),
+                    BuildTextFieldRow(input, scheme, isRecording, swipeOffset, selectedSelector),
+                    BuildSelectorRow(ui, input, scheme, selectedSelector, messagesScroll),
+                    BuildSelectorPanel(input, scheme, selectedSelector),
+                },
+            };
+        });
 
     static Row BuildTextFieldRow(
         MutableState<TextFieldValue> input,
         ColorScheme                  scheme,
         MutableState<bool>           isRecording,
-        MutableNumberState<float>    swipeOffset)
+        MutableNumberState<float>    swipeOffset,
+        MutableState<int>            selectedSelector)
     {
         bool textEmpty = string.IsNullOrWhiteSpace(input.Value.Text);
 
@@ -431,6 +448,11 @@ public static class Conversation
                           {
                               Modifier = Modifier
                                   .FillMaxWidth()
+                                  .OnFocusChanged(focus =>
+                                  {
+                                      if (focus.IsFocused)
+                                          selectedSelector.Value = 0;
+                                  })
                                   .Semantics("Message"),
                               Placeholder = new Text("Type a message"),
                               KeyboardOptions = CreateMessageKeyboardOptions(),

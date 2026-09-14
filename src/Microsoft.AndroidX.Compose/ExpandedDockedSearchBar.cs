@@ -42,7 +42,7 @@ public sealed class ExpandedDockedSearchBar : ComposableContainer
         __changed |= composer.DiffSlot(stateHandle, ComposeExtensions.DiffSlotShift(0));
         __changed |= (int)ChangedBits.Static << ComposeExtensions.DiffSlotShift(1);
         __changed |= composer.DiffSlot(__modifierKey, ComposeExtensions.DiffSlotShift(2));
-        __changed |= (int)ChangedBits.Static << ComposeExtensions.DiffSlotShift(3);
+        __changed |= (int)ChangedBits.Static << ComposeExtensions.DiffSlotShift(8);
         ComposeBridges.ExpandedDockedSearchBar(stateHandle, inputField, BuildModifier(), content, composer, _changed: __changed);
     }
 }

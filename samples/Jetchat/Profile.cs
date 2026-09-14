@@ -1,4 +1,6 @@
 using AndroidX.Compose.Material3;
+using AndroidX.Compose.Samples.Jetchat.Theme;
+using Typography = AndroidX.Compose.Samples.Jetchat.Theme.Typography;
 
 namespace AndroidX.Compose.Samples.Jetchat;
 
@@ -136,17 +138,16 @@ public static class Profile
             Modifier.Padding(horizontal: 16),
             new Text(state.Name)
             {
-                FontSize   = 24,
-                FontWeight = FontWeight.Medium,
+                FontFamily = JetchatFonts.Montserrat,
                 Color      = Color.FromPacked(scheme.OnSurface),
                 Modifier   = Modifier.Padding(top: 8),
-            },
+            }.WithTypography(Typography.HeadlineSmall),
             new Text(state.Position)
             {
-                FontSize = 16,
+                FontFamily = JetchatFonts.Karla,
                 Color    = Color.FromPacked(scheme.OnSurfaceVariant),
                 Modifier = Modifier.Padding(top: 4, bottom: 20),
-            },
+            }.WithTypography(Typography.BodyLarge),
         };
 
     static Column BuildProfileProperty(string label, string value, ColorScheme scheme, bool isLink = false) =>
@@ -156,17 +157,17 @@ public static class Profile
             new HorizontalDivider(),
             new Text(label)
             {
-                FontSize = 12,
+                FontFamily = JetchatFonts.Karla,
                 Color    = Color.FromPacked(scheme.OnSurfaceVariant),
                 Modifier = Modifier.Padding(top: 8),
-            },
+            }.WithTypography(Typography.BodySmall),
             new Text(value)
             {
-                FontSize = 16,
+                FontFamily = JetchatFonts.Karla,
                 Color = Color.FromPacked(
                     isLink ? scheme.Primary : scheme.OnSurface),
                 Modifier = Modifier.Padding(top: 4),
-            },
+            }.WithTypography(Typography.BodyLarge),
         };
 
     static ComposableNode BuildProfileFab(

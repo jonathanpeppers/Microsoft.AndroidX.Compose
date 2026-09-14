@@ -43,7 +43,7 @@ public sealed class ExpandedFullScreenSearchBar : ComposableContainer
         __changed |= composer.DiffSlot(stateHandle, ComposeExtensions.DiffSlotShift(0));
         __changed |= (int)ChangedBits.Static << ComposeExtensions.DiffSlotShift(1);
         __changed |= composer.DiffSlot(__modifierKey, ComposeExtensions.DiffSlotShift(2));
-        __changed |= (int)ChangedBits.Static << ComposeExtensions.DiffSlotShift(3);
+        __changed |= (int)ChangedBits.Static << ComposeExtensions.DiffSlotShift(9);
         ComposeBridges.ExpandedFullScreenSearchBar(stateHandle, inputField, BuildModifier(), content, composer, _changed: __changed);
     }
 }

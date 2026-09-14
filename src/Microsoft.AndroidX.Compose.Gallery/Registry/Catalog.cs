@@ -45,6 +45,7 @@ public static class Catalog
         // ---- Text & inputs ----
         D.TextInputs.TextStylingDemo.Demo,
         D.TextInputs.FontWeightStyleFamilyDemo.Demo,
+        D.TextInputs.ResourceFontsDemo.Demo,
         D.TextInputs.ColorAndAlignmentDemo.Demo,
         D.TextInputs.OverflowAndClampingDemo.Demo,
         D.TextInputs.TextFieldSlotsDemo.Demo,
@@ -117,6 +118,7 @@ public static class Catalog
         D.AppBars.MediumFlexibleTopAppBarDemo.Demo,
         D.AppBars.LargeFlexibleTopAppBarDemo.Demo,
         D.AppBars.PinnedScrollBehaviorDemo.Demo,
+        D.AppBars.ScaffoldInsetsDemo.Demo,
         D.AppBars.EnterAlwaysScrollBehaviorDemo.Demo,
         D.AppBars.BottomAppBarActionsDemo.Demo,
         D.AppBars.BottomAppBarWithFabDemo.Demo,
@@ -204,6 +206,7 @@ public static class Catalog
         D.Theming.CustomColorSchemeDemo.Demo,
         D.Theming.CustomShapesDemo.Demo,
         D.Theming.CustomTypographyDemo.Demo,
+        D.Theming.FractionalTypographyDemo.Demo,
         D.Theming.MaterialIconsDemo.Demo,
 
         // ---- Composable methods ----

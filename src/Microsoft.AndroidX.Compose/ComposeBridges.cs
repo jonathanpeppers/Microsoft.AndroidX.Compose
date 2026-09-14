@@ -1111,28 +1111,6 @@ internal static partial class ComposeBridges
         int         defaults,
         IComposer   composer, int _changed = 0);
 
-    // androidx.compose.material3.ScaffoldKt.Scaffold-TvnljyQ
-    [ComposeBridge(
-        Class     = "androidx/compose/material3/ScaffoldKt",
-        JvmName   = "Scaffold-TvnljyQ",
-        Signature = "(Landroidx/compose/ui/Modifier;" +
-                    "Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;" +
-                    "Lkotlin/jvm/functions/Function2;Lkotlin/jvm/functions/Function2;" +
-                    "IJJ" +
-                    "Landroidx/compose/foundation/layout/WindowInsets;" +
-                    "Lkotlin/jvm/functions/Function3;" +
-                    "Landroidx/compose/runtime/Composer;II)V",
-        Defaults  = typeof(ScaffoldDefault))]
-    public static partial void Scaffold(
-        IModifier?  modifier,
-        IFunction2? topBar,
-        IFunction2? bottomBar,
-        IFunction2? snackbarHost,
-        IFunction2? floatingActionButton,
-        IFunction3  content,
-        int         defaults,
-        IComposer   composer, int _changed = 0);
-
     // androidx.compose.material3.DatePickerDialog_androidKt.DatePickerDialog-GmEhDVc
     [ComposeBridge(
         Class     = "androidx/compose/material3/DatePickerDialog_androidKt",

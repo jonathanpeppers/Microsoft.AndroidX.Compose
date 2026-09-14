@@ -15,7 +15,7 @@ namespace AndroidX.Compose.SourceGenerators.Tests;
 /// </summary>
 public class FacadeGeneratorTests
 {
-    const string Stubs = """
+    static readonly string Stubs = $$"""
         namespace Android.Runtime
         {
             public static class JNIEnv
@@ -238,7 +238,7 @@ public class FacadeGeneratorTests
                 public static System.IntPtr ModifierHandle(global::AndroidX.Compose.UI.IModifier? m) => default;
                 public static System.IntPtr PainterResource(int id, global::AndroidX.Compose.Runtime.IComposer composer) => default;
             }
-            public enum ChangedBits { Uncertain = 0, Same = 1, Different = 2, Static = 4 }
+            public enum ChangedBits { Uncertain = 0, Same = 1, Different = 2, Static = {{(int)ChangedBits.Static}} }
             internal sealed class SharedStateOwner : Java.Lang.Object
             {
                 internal static SharedStateOwner Remember(global::AndroidX.Compose.Runtime.IComposer composer,
@@ -582,7 +582,8 @@ public class FacadeGeneratorTests
         var bridge = output.SyntaxTrees.Single(tree =>
             tree.FilePath.EndsWith("ComposeBridges.Text.g.cs", System.StringComparison.Ordinal))
             .GetText().ToString();
-        Assert.Contains("args[18] = new global::Android.Runtime.JValue(_changed);", bridge);
+        Assert.DoesNotContain("__changed |=", emitted);
+        Assert.Contains("args[18] = new global::Android.Runtime.JValue(0);", bridge);
         Assert.Contains("args[19] = new global::Android.Runtime.JValue(0);", bridge);
         Assert.Contains("args[20] = new global::Android.Runtime.JValue(defaults);", bridge);
         Assert.Empty(output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error));
@@ -4614,6 +4615,72 @@ public class FacadeGeneratorTests
         Assert.Empty(errors);
     }
 
+    [Theory]
+    [InlineData(1, true)]
+    [InlineData(10, true)]
+    [InlineData(11, false)]
+    [InlineData(10, false)]
+    public void Secondary_DiscriminatorRespectsWholeRouteChangedMaskGuard(int parameterCount, bool receiver)
+    {
+        string receiverParameter = receiver ? "System.IntPtr rowScope, " : "";
+        string sharedParameters = string.Concat(Enumerable.Range(0, parameterCount - 1)
+            .Select(i => $"int p{i}, "));
+        string sharedDefaults = string.Concat(Enumerable.Range(0, parameterCount - 1)
+            .Select(i => $", \"!p{i}\""));
+        var code = $$"""
+            using global::AndroidX.Compose.Runtime;
+            using AndroidX.Compose;
+
+            [assembly: ComposeDefaults("PrimaryDefault", "!mode"{{sharedDefaults}})]
+            [assembly: ComposeDefaults("SecondaryDefault", "!imageVector"{{sharedDefaults}})]
+
+            namespace AndroidX.Compose
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeFacade(Defaults=typeof(PrimaryDefault),
+                        SecondaryCtor=nameof(Secondary), SecondaryDefaults=typeof(SecondaryDefault))]
+                    public static partial void Primary({{receiverParameter}}int mode, {{sharedParameters}}
+                        int defaults, IComposer composer, int _changed = 0);
+                    public static partial void Primary({{receiverParameter}}int mode, {{sharedParameters}}
+                        int defaults, IComposer composer, int _changed) { }
+
+                    public static void Secondary({{receiverParameter}}
+                        global::AndroidX.Compose.UI.Graphics.Vector.ImageVector imageVector, {{sharedParameters}}
+                        int defaults, IComposer composer, int _changed = 0) { }
+                }
+            }
+            """;
+
+        var (output, diags, emitted) = Run(code, "Primary");
+        Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.Empty(output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+        var secondaryHelpers = CSharpSyntaxTree.ParseText(emitted).GetRoot()
+            .DescendantNodes().OfType<Microsoft.CodeAnalysis.CSharp.Syntax.MethodDeclarationSyntax>()
+            .Where(method => method.ParameterList.Parameters.Any(p =>
+                p.Identifier.ValueText == "__directChanged") &&
+                method.Body?.ToString().Contains("ComposeBridges.Secondary(") == true)
+            .Select(method => method.Body?.ToString()
+                ?? throw new System.InvalidOperationException("Secondary helper body is missing."))
+            .ToArray();
+        Assert.NotEmpty(secondaryHelpers);
+        foreach (string helper in secondaryHelpers)
+        {
+            Assert.Contains("composer: __composer, _changed: __changed", helper);
+            if (receiver || parameterCount > 10)
+            {
+                Assert.Contains("int __changed = 0;", helper);
+                Assert.DoesNotContain("__changed |=", helper);
+            }
+            else
+            {
+                Assert.Contains("__changed |= ((__directChanged >> 1) & 0b111) << 1;", helper);
+                Assert.Contains("__directChanged & 0b1", helper);
+            }
+        }
+    }
+
     [Fact]
     public void Secondary_LambdaRoutesUseStableSharedLowering()
     {
@@ -5140,13 +5207,10 @@ public class FacadeGeneratorTests
     }
 
     [Fact]
-    public void Changed_Phase3_MultiSlotNamedSlotsContributeDiffSlot()
+    public void Changed_Phase3_WideMultiSlotCallKeepsEntireMaskUncertain()
     {
-        // Phase 3 — multi-slot leaf (AlertDialog). Required IFunction0
-        // → RememberAction → Static. Required IFunction2 (confirmButton)
-        // → multi-slot promotes it to a NamedFunction2; nullable
-        // IFunction2? slots are NamedFunction2 too. All named slots
-        // diff against their property identity.
+        // Fourteen physical Kotlin slots, even though this C# bridge exposes
+        // only seven. Neither tree nor direct callers can forward a partial group.
         var code = """
             using global::AndroidX.Compose.Runtime;
             using global::AndroidX.Compose.UI;
@@ -5177,20 +5241,9 @@ public class FacadeGeneratorTests
         Assert.NotNull(emitted);
 
         Assert.Contains("int __changed = 0;", emitted);
-        // onDismissRequest (param 0) → Static via RememberAction at bit 1.
-        Assert.Contains("__changed |= (int)global::AndroidX.Compose.ChangedBits.Static << global::AndroidX.Compose.ComposeExtensions.DiffSlotShift(0);", emitted);
-        // confirmButton (param 1, RequiredFunction2 — wrapped via Wrap2 → identity-stable) → Static at bit 4.
-        Assert.Contains("__changed |= (int)global::AndroidX.Compose.ChangedBits.Static << global::AndroidX.Compose.ComposeExtensions.DiffSlotShift(1);", emitted);
-        // modifier (param 2) → DiffSlot on __modifierKey at bit 7.
-        Assert.Contains("__changed |= composer.DiffSlot(__modifierKey, global::AndroidX.Compose.ComposeExtensions.DiffSlotShift(2));", emitted);
-        // dismissButton (param 3, NamedFunction2 nullable) → DiffSlot on the DismissButton property at bit 10.
-        Assert.Contains("__changed |= composer.DiffSlot<object?>(DismissButton, global::AndroidX.Compose.ComposeExtensions.DiffSlotShift(3));", emitted);
-        // icon (param 4) → bit 13.
-        Assert.Contains("__changed |= composer.DiffSlot<object?>(Icon, global::AndroidX.Compose.ComposeExtensions.DiffSlotShift(4));", emitted);
-        // title (param 5) → bit 16.
-        Assert.Contains("__changed |= composer.DiffSlot<object?>(Title, global::AndroidX.Compose.ComposeExtensions.DiffSlotShift(5));", emitted);
-        // text (param 6) → bit 19.
-        Assert.Contains("__changed |= composer.DiffSlot<object?>(Text, global::AndroidX.Compose.ComposeExtensions.DiffSlotShift(6));", emitted);
+        Assert.DoesNotContain("__changed |=", emitted);
+        Assert.Contains("composer.RememberAction", emitted);
+        Assert.Contains("ComposableLambdas.Wrap2", emitted);
         Assert.Contains("composer: composer, _changed: __changed", emitted);
 
         var errors = output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();

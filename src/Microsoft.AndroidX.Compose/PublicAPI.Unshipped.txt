@@ -155,7 +155,7 @@ AndroidX.Compose.CenterAlignedTopAppBar.Title.set -> void
 AndroidX.Compose.ChangedBits
 AndroidX.Compose.ChangedBits.Different = 2 -> AndroidX.Compose.ChangedBits
 AndroidX.Compose.ChangedBits.Same = 1 -> AndroidX.Compose.ChangedBits
-AndroidX.Compose.ChangedBits.Static = 4 -> AndroidX.Compose.ChangedBits
+AndroidX.Compose.ChangedBits.Static = 3 -> AndroidX.Compose.ChangedBits
 AndroidX.Compose.ChangedBits.Uncertain = 0 -> AndroidX.Compose.ChangedBits
 AndroidX.Compose.Checkbox
 AndroidX.Compose.Checkbox.Checkbox(bool checked, System.Action<bool>! onCheckedChange, bool enabled = true) -> void
@@ -539,7 +539,12 @@ AndroidX.Compose.FocusState.FocusState(bool isFocused, bool hasFocus, bool isCap
 AndroidX.Compose.FocusState.HasFocus.get -> bool
 AndroidX.Compose.FocusState.IsCaptured.get -> bool
 AndroidX.Compose.FocusState.IsFocused.get -> bool
+AndroidX.Compose.Font
 AndroidX.Compose.FontFamily
+AndroidX.Compose.FontLoadingStrategy
+AndroidX.Compose.FontLoadingStrategy.Async = 2 -> AndroidX.Compose.FontLoadingStrategy
+AndroidX.Compose.FontLoadingStrategy.Blocking = 0 -> AndroidX.Compose.FontLoadingStrategy
+AndroidX.Compose.FontLoadingStrategy.OptionalLocal = 1 -> AndroidX.Compose.FontLoadingStrategy
 AndroidX.Compose.FontStyle
 AndroidX.Compose.FontWeight
 AndroidX.Compose.GridCells
@@ -1225,6 +1230,8 @@ AndroidX.Compose.Scaffold.BodyContent.get -> System.Func<AndroidX.Compose.Paddin
 AndroidX.Compose.Scaffold.BodyContent.set -> void
 AndroidX.Compose.Scaffold.BottomBar.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.Scaffold.BottomBar.set -> void
+AndroidX.Compose.Scaffold.ContentWindowInsets.get -> AndroidX.Compose.WindowInsets?
+AndroidX.Compose.Scaffold.ContentWindowInsets.set -> void
 AndroidX.Compose.Scaffold.FloatingActionButton.get -> AndroidX.Compose.ComposableNode?
 AndroidX.Compose.Scaffold.FloatingActionButton.set -> void
 AndroidX.Compose.Scaffold.Scaffold() -> void
@@ -1391,6 +1398,7 @@ AndroidX.Compose.Sp.CompareTo(AndroidX.Compose.Sp other) -> int
 AndroidX.Compose.Sp.Equals(AndroidX.Compose.Sp other) -> bool
 AndroidX.Compose.Sp.PackedValue.get -> long
 AndroidX.Compose.Sp.Sp() -> void
+AndroidX.Compose.Sp.Sp(float sp) -> void
 AndroidX.Compose.Sp.Sp(int sp) -> void
 AndroidX.Compose.Sp.Sp(long packedValue) -> void
 AndroidX.Compose.SpExtensions
@@ -2065,7 +2073,9 @@ static AndroidX.Compose.Composables.Row(System.Action! content) -> void
 static AndroidX.Compose.Composables.SafeContentInsets() -> AndroidX.Compose.WindowInsets!
 static AndroidX.Compose.Composables.SafeDrawingInsets() -> AndroidX.Compose.WindowInsets!
 static AndroidX.Compose.Composables.SafeGesturesInsets() -> AndroidX.Compose.WindowInsets!
-static AndroidX.Compose.Composables.Scaffold(System.Action<AndroidX.Compose.PaddingValues!>! content, AndroidX.Compose.Modifier? modifier = null, System.Action? topBar = null, System.Action? bottomBar = null, System.Action? snackbarHost = null, System.Action? floatingActionButton = null) -> void
+static AndroidX.Compose.Composables.Scaffold(System.Action<AndroidX.Compose.PaddingValues!>! content, AndroidX.Compose.Modifier? modifier = null, System.Action? topBar = null, System.Action? bottomBar = null, System.Action? snackbarHost = null, System.Action? floatingActionButton = null, AndroidX.Compose.WindowInsets? contentWindowInsets = null) -> void
+static AndroidX.Compose.Composables.Scaffold(System.Action<AndroidX.Compose.PaddingValues!>! content, AndroidX.Compose.Modifier? modifier, System.Action? topBar, System.Action? bottomBar, System.Action? snackbarHost, System.Action? floatingActionButton) -> void
+static AndroidX.Compose.Composables.ScaffoldContentWindowInsets() -> AndroidX.Compose.WindowInsets!
 static AndroidX.Compose.Composables.ScrollableTabRow(int selectedTabIndex, System.Action! tabs, AndroidX.Compose.Modifier? modifier = null) -> void
 static AndroidX.Compose.Composables.SearchBar(AndroidX.Compose.SearchBarState! state, System.Action! inputField, AndroidX.Compose.Modifier? modifier = null) -> void
 static AndroidX.Compose.Composables.SearchBarInputField(AndroidX.Compose.SearchBarTextFieldState! textState, AndroidX.Compose.SearchBarState! searchState, System.Action<string!>? onSearch = null, AndroidX.Compose.Modifier? modifier = null, System.Action? placeholder = null, System.Action? leadingIcon = null, System.Action? trailingIcon = null) -> void
@@ -2188,6 +2198,7 @@ static AndroidX.Compose.ComposeExtensions.RememberTopAppBarState(this AndroidX.C
 static AndroidX.Compose.ComposeExtensions.SafeContentInsets(this AndroidX.Compose.Runtime.IComposer! composer) -> AndroidX.Compose.WindowInsets!
 static AndroidX.Compose.ComposeExtensions.SafeDrawingInsets(this AndroidX.Compose.Runtime.IComposer! composer) -> AndroidX.Compose.WindowInsets!
 static AndroidX.Compose.ComposeExtensions.SafeGesturesInsets(this AndroidX.Compose.Runtime.IComposer! composer) -> AndroidX.Compose.WindowInsets!
+static AndroidX.Compose.ComposeExtensions.ScaffoldContentWindowInsets(this AndroidX.Compose.Runtime.IComposer! composer) -> AndroidX.Compose.WindowInsets!
 static AndroidX.Compose.ComposeExtensions.SetContent(this AndroidX.Activity.ComponentActivity! activity, System.Action! content) -> void
 static AndroidX.Compose.ComposeExtensions.SetContent(this AndroidX.Activity.ComponentActivity! activity, System.Action<AndroidX.Compose.Runtime.IComposer!>! content) -> void
 static AndroidX.Compose.ComposeExtensions.SetContent(this AndroidX.Activity.ComponentActivity! activity, System.Func<AndroidX.Compose.ComposableNode!>! content) -> void
@@ -2261,8 +2272,10 @@ static AndroidX.Compose.FloatRange.operator !=(AndroidX.Compose.FloatRange left,
 static AndroidX.Compose.FloatRange.operator ==(AndroidX.Compose.FloatRange left, AndroidX.Compose.FloatRange right) -> bool
 static AndroidX.Compose.FocusState.operator !=(AndroidX.Compose.FocusState left, AndroidX.Compose.FocusState right) -> bool
 static AndroidX.Compose.FocusState.operator ==(AndroidX.Compose.FocusState left, AndroidX.Compose.FocusState right) -> bool
+static AndroidX.Compose.Font.Resource(int resourceId, AndroidX.Compose.FontWeight? weight = null, AndroidX.Compose.FontStyle? style = null, AndroidX.Compose.FontLoadingStrategy loadingStrategy = AndroidX.Compose.FontLoadingStrategy.Blocking) -> AndroidX.Compose.UI.Text.Font.IFont!
 static AndroidX.Compose.FontFamily.Cursive.get -> AndroidX.Compose.FontFamily!
 static AndroidX.Compose.FontFamily.Default.get -> AndroidX.Compose.FontFamily!
+static AndroidX.Compose.FontFamily.FromFonts(params AndroidX.Compose.UI.Text.Font.IFont![]! fonts) -> AndroidX.Compose.FontFamily!
 static AndroidX.Compose.FontFamily.Monospace.get -> AndroidX.Compose.FontFamily!
 static AndroidX.Compose.FontFamily.SansSerif.get -> AndroidX.Compose.FontFamily!
 static AndroidX.Compose.FontFamily.Serif.get -> AndroidX.Compose.FontFamily!
@@ -2843,6 +2856,7 @@ static AndroidX.Compose.Sp.operator <=(AndroidX.Compose.Sp a, AndroidX.Compose.S
 static AndroidX.Compose.Sp.operator ==(AndroidX.Compose.Sp left, AndroidX.Compose.Sp right) -> bool
 static AndroidX.Compose.Sp.operator >(AndroidX.Compose.Sp a, AndroidX.Compose.Sp b) -> bool
 static AndroidX.Compose.Sp.operator >=(AndroidX.Compose.Sp a, AndroidX.Compose.Sp b) -> bool
+static AndroidX.Compose.SpExtensions.Sp(this float value) -> AndroidX.Compose.Sp
 static AndroidX.Compose.SpExtensions.Sp(this int value) -> AndroidX.Compose.Sp
 static AndroidX.Compose.Spacer.Height(AndroidX.Compose.Dp dp) -> AndroidX.Compose.Spacer!
 static AndroidX.Compose.Spacer.Size(AndroidX.Compose.Dp dp) -> AndroidX.Compose.Spacer!
