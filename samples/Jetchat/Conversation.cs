@@ -1,5 +1,7 @@
 using AndroidX.Compose.Material3;
+using AndroidX.Compose.Samples.Jetchat.Theme;
 using AndroidX.Compose.UI.Text.Input;
+using Typography = AndroidX.Compose.Samples.Jetchat.Theme.Typography;
 
 namespace AndroidX.Compose.Samples.Jetchat;
 
@@ -79,12 +81,12 @@ public static class Conversation
                 new Text(ui.ChannelName)
                 {
                     Color      = Color.FromPacked(scheme.OnSurface),
-                }.WithTypography(JetchatTypography.TitleMedium),
+                }.WithTypography(Typography.TitleMedium),
                 new Text($"{ui.ChannelMembers} members")
                 {
                     Color    = Color.FromPacked(scheme.OnSurfaceVariant),
                     Modifier = Modifier.Padding(top: 2),
-                }.WithTypography(JetchatTypography.BodySmall),
+                }.WithTypography(Typography.BodySmall),
             },
             Actions = new Row
             {
@@ -263,7 +265,7 @@ public static class Conversation
             {
                 Color      = Color.FromPacked(scheme.OnSurfaceVariant),
                 Modifier   = Modifier.Padding(horizontal: 16),
-            }.WithTypography(JetchatTypography.LabelSmall),
+            }.WithTypography(Typography.LabelSmall),
             new HorizontalDivider
             {
                 Modifier  = Modifier.Weight(1f),
@@ -335,13 +337,13 @@ public static class Conversation
             {
                 Color      = Color.FromPacked(scheme.OnSurface),
                 Modifier   = Modifier.Padding(bottom: 8),
-            }.WithTypography(JetchatTypography.TitleMedium),
+            }.WithTypography(Typography.TitleMedium),
             Spacer.Width(8),
             new Text(m.Timestamp)
             {
                 Color    = Color.FromPacked(scheme.OnSurfaceVariant),
                 Modifier = Modifier.Padding(bottom: 8),
-            }.WithTypography(JetchatTypography.BodySmall),
+            }.WithTypography(Typography.BodySmall),
         };
 
     static ComposableNode BuildChatItemBubble(
@@ -365,7 +367,7 @@ public static class Conversation
                 Modifier = Modifier
                     .Background(bg, new RoundedCornerShape(4.Dp(), 20.Dp(), 20.Dp(), 20.Dp()))
                     .Padding(horizontal: 16, vertical: 16),
-            }.WithTypography(JetchatTypography.BodyLarge),
+            }.WithTypography(Typography.BodyLarge),
         };
         if (m.Image is int image)
         {

@@ -1,4 +1,6 @@
 using AndroidX.Compose.Material3;
+using AndroidX.Compose.Samples.Jetchat.Theme;
+using Typography = AndroidX.Compose.Samples.Jetchat.Theme.Typography;
 
 namespace AndroidX.Compose.Samples.Jetchat;
 
@@ -73,7 +75,7 @@ public static class JetchatDrawer
             {
                 Color    = Color.FromPacked(scheme.OnSurfaceVariant),
                 Modifier = Modifier.Padding(top: 16),
-            }.WithTypography(JetchatTypography.BodySmall),
+            }.WithTypography(Typography.BodySmall),
         };
 
     static Row BuildChatItem(
@@ -114,7 +116,7 @@ public static class JetchatDrawer
             {
                 Color      = textColor,
                 Modifier   = Modifier.Padding(top: 16, bottom: 16, start: 12),
-            }.WithTypography(JetchatTypography.BodyMedium),
+            }.WithTypography(Typography.BodyMedium),
         };
     }
 
@@ -155,7 +157,7 @@ public static class JetchatDrawer
             {
                 Color    = Color.FromPacked(scheme.OnSurface),
                 Modifier = Modifier.Padding(top: 16, bottom: 16, start: 12),
-            }.WithTypography(JetchatTypography.BodyMedium),
+            }.WithTypography(Typography.BodyMedium),
         };
     }
 }

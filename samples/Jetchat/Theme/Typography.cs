@@ -1,8 +1,8 @@
-namespace AndroidX.Compose.Samples.Jetchat;
+namespace AndroidX.Compose.Samples.Jetchat.Theme;
 
 // Numeric metrics and weights from compose-samples 4c1fe7586e2fbf1c934925ef8ab64d3803361423,
 // Jetchat/theme/Typography.kt. Resource font families are tracked separately in #335.
-internal static class JetchatTypography
+internal static class Typography
 {
     internal static readonly TextStyle DisplayLarge = Create(57, 64, 0f, FontWeight.Light);
     internal static readonly TextStyle DisplayMedium = Create(45, 52, 0f, FontWeight.Light);
@@ -20,7 +20,7 @@ internal static class JetchatTypography
     internal static readonly TextStyle LabelMedium = Create(12, 16, 0.5f, FontWeight.SemiBold);
     internal static readonly TextStyle LabelSmall = Create(11, 16, 0.5f, FontWeight.SemiBold);
 
-    internal static Material3.Typography Build() => MaterialTheme.BuildTypography(
+    internal static Material3.Typography CreateJetchatTypography() => MaterialTheme.BuildTypography(
         displayLarge: DisplayLarge, displayMedium: DisplayMedium, displaySmall: DisplaySmall,
         headlineLarge: HeadlineLarge, headlineMedium: HeadlineMedium, headlineSmall: HeadlineSmall,
         titleLarge: TitleLarge, titleMedium: TitleMedium, titleSmall: TitleSmall,

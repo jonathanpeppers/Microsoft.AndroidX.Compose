@@ -1,7 +1,9 @@
 using AndroidX.Compose.Material3;
 using AndroidX.Compose.Runtime;
+using AndroidX.Compose.Samples.Jetchat.Theme;
 using AndroidX.Compose.UI.Text;
 using AndroidX.Compose.UI.Text.Input;
+using Typography = AndroidX.Compose.Samples.Jetchat.Theme.Typography;
 
 namespace AndroidX.Compose.Samples.Jetchat;
 
@@ -159,7 +161,7 @@ public static class EmojiSelector
                     ? Color.FromPacked(scheme.OnSecondaryContainer)
                     : Color.FromPacked(scheme.OnSurfaceVariant)),
         };
-        button.Add(new Text(label).WithTypography(JetchatTypography.TitleSmall));
+        button.Add(new Text(label).WithTypography(Typography.TitleSmall));
         return button;
     }
 

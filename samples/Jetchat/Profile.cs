@@ -1,4 +1,6 @@
 using AndroidX.Compose.Material3;
+using AndroidX.Compose.Samples.Jetchat.Theme;
+using Typography = AndroidX.Compose.Samples.Jetchat.Theme.Typography;
 
 namespace AndroidX.Compose.Samples.Jetchat;
 
@@ -138,12 +140,12 @@ public static class Profile
             {
                 Color      = Color.FromPacked(scheme.OnSurface),
                 Modifier   = Modifier.Padding(top: 8),
-            }.WithTypography(JetchatTypography.HeadlineSmall),
+            }.WithTypography(Typography.HeadlineSmall),
             new Text(state.Position)
             {
                 Color    = Color.FromPacked(scheme.OnSurfaceVariant),
                 Modifier = Modifier.Padding(top: 4, bottom: 20),
-            }.WithTypography(JetchatTypography.BodyLarge),
+            }.WithTypography(Typography.BodyLarge),
         };
 
     static Column BuildProfileProperty(string label, string value, ColorScheme scheme, bool isLink = false) =>
@@ -155,13 +157,13 @@ public static class Profile
             {
                 Color    = Color.FromPacked(scheme.OnSurfaceVariant),
                 Modifier = Modifier.Padding(top: 8),
-            }.WithTypography(JetchatTypography.BodySmall),
+            }.WithTypography(Typography.BodySmall),
             new Text(value)
             {
                 Color = Color.FromPacked(
                     isLink ? scheme.Primary : scheme.OnSurface),
                 Modifier = Modifier.Padding(top: 4),
-            }.WithTypography(JetchatTypography.BodyLarge),
+            }.WithTypography(Typography.BodyLarge),
         };
 
     static ComposableNode BuildProfileFab(

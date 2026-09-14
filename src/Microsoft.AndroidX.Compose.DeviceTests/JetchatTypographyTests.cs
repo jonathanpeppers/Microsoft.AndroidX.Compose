@@ -1,5 +1,5 @@
 using AndroidX.Compose;
-using AndroidX.Compose.Samples.Jetchat;
+using AndroidX.Compose.Samples.Jetchat.Theme;
 using NativeTextStyle = AndroidX.Compose.UI.Text.TextStyle;
 
 namespace Microsoft.AndroidX.Compose.DeviceTests;
@@ -11,7 +11,7 @@ public class JetchatTypographyTests
     [TestMethod]
     public void ThemeSlotsMatchPinnedJetchatMetrics()
     {
-        using var typography = JetchatTypography.Build();
+        using var typography = Typography.CreateJetchatTypography();
         (NativeTextStyle Style, int Size, int Height, float Spacing, int Weight)[] slots =
         [
             (typography.DisplayLarge, 57, 64, 0f, 300),
@@ -44,7 +44,7 @@ public class JetchatTypographyTests
     {
         var family = FontFamily.Monospace;
         var text = new Text("Today") { Color = Color.Red, FontFamily = family }
-            .WithTypography(JetchatTypography.LabelSmall);
+            .WithTypography(Typography.LabelSmall);
         Assert.AreEqual(11.Sp(), text.FontSize);
         Assert.AreEqual(16.Sp(), text.LineHeight);
         Assert.AreEqual(0.5f.Sp(), text.LetterSpacing);
@@ -54,7 +54,7 @@ public class JetchatTypographyTests
 
         using var value = new AnnotatedString("Message");
         var annotated = new AnnotatedText(value) { Color = Color.Blue, FontFamily = family }
-            .WithTypography(JetchatTypography.BodyLarge);
+            .WithTypography(Typography.BodyLarge);
         Assert.AreEqual(16.Sp(), annotated.FontSize);
         Assert.AreEqual(24.Sp(), annotated.LineHeight);
         Assert.AreEqual(0.15f.Sp(), annotated.LetterSpacing);

@@ -95,7 +95,7 @@ anchoring still follow positions, as in the upstream sample.
 - Message bubbles with a 40 dp circular avatar tile (16 dp horizontal
   padding around it, mirroring upstream's 74 dp avatar+padding
   reservation) and a rounded coloured bubble for the message body.
-- **Pinned text metrics, including fractional spacing** — `JetchatTypography`
+- **Pinned text metrics, including fractional spacing** — `Theme/Typography.cs`
   supplies the upstream font sizes, line heights, weights, and unrounded
   letter spacing to the theme and the conversation, drawer, profile, and
   emoji-selector labels. `Sp(float)` / `0.5f.Sp()` preserve the Kotlin
@@ -213,7 +213,10 @@ anchoring still follow positions, as in the upstream sample.
 The numeric reference is Google's
 [`theme/Typography.kt`](https://github.com/android/compose-samples/blob/4c1fe7586e2fbf1c934925ef8ab64d3803361423/Jetchat/app/src/main/java/com/example/compose/jetchat/theme/Typography.kt)
 at **`4c1fe7586e2fbf1c934925ef8ab64d3803361423`**, not moving `main`.
-`JetchatTypography.Build()` defines all 15 theme slots from that revision.
+`Theme/Typography.cs` mirrors the upstream file organization. Its
+`Typography.CreateJetchatTypography()` factory constructs the 15 theme slots
+corresponding to Kotlin's top-level `JetchatTypography` value, retaining
+per-composition caching in `JetchatTheme`.
 The following screen text is explicitly assigned the corresponding metrics;
 buttons and the message editor also consume the theme's type slots.
 

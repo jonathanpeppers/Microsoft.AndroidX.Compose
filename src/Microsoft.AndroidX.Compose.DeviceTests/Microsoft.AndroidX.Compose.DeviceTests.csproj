@@ -39,7 +39,7 @@
 
   <ItemGroup>
     <Using Include="Microsoft.VisualStudio.TestTools.UnitTesting" />
-    <Compile Include="..\..\samples\Jetchat\JetchatTypography.cs" Link="Samples\JetchatTypography.cs" />
+    <Compile Include="..\..\samples\Jetchat\Theme\Typography.cs" Link="Samples\Theme\Typography.cs" />
   </ItemGroup>
 
   <ItemGroup>
