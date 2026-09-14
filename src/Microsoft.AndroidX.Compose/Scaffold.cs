@@ -8,13 +8,6 @@ namespace AndroidX.Compose;
 /// and floating action button — pinned to their conventional edges of
 /// the screen.
 ///
-/// The Kotlin overload is stripped from the binding because
-/// <c>floatingActionButtonPosition</c> (<c>FabPosition</c>),
-/// <c>containerColor</c> and <c>contentColor</c> (<c>Color</c>) are
-/// <c>@JvmInline value class</c> parameters; we call it through a JNI
-/// bridge in <see cref="ComposeBridges"/> against the mangled name
-/// <c>Scaffold-TvnljyQ</c>.
-///
 /// <code>
 /// new Scaffold
 /// {
@@ -26,6 +19,11 @@ namespace AndroidX.Compose;
 /// </summary>
 public sealed class Scaffold : ComposableNode
 {
+#if DEBUG
+    // Device diagnostics borrow the actual native arguments; observers must not dispose them.
+    internal static Action<Kotlin.Jvm.Functions.IFunction3, Foundation.Layout.IWindowInsets>? ContentLambdaObserver { get; set; }
+#endif
+
     /// <summary>Optional: persistent top app bar slot.</summary>
     public ComposableNode? TopBar { get; set; }
 
@@ -37,6 +35,21 @@ public sealed class Scaffold : ComposableNode
 
     /// <summary>Optional: floating action button slot.</summary>
     public ComposableNode? FloatingActionButton { get; set; }
+
+    /// <summary>
+    /// Insets included in the body padding. Null (the default) uses Material 3's
+    /// <c>ScaffoldDefaults.contentWindowInsets</c>; an all-zero
+    /// <see cref="WindowInsets"/> explicitly disables content insets.
+    /// </summary>
+    /// <remarks>
+    /// Use <see cref="ComposeExtensions.ScaffoldContentWindowInsets"/> and
+    /// <see cref="WindowInsets.Exclude"/> when a child owns specific edges.
+    /// Scaffold excludes insets already consumed by an ancestor. Top and bottom
+    /// bars own their respective edges when supplied. This option changes the
+    /// padding forwarded to <see cref="Body"/> or <see cref="BodyContent"/>;
+    /// it does not apply another padding modifier.
+    /// </remarks>
+    public WindowInsets? ContentWindowInsets { get; set; }
 
     /// <summary>Required: the main body, laid out under the top bar and above the bottom bar.</summary>
     /// <remarks>
@@ -157,15 +170,30 @@ public sealed class Scaffold : ComposableNode
         defaults &= ~(int)ScaffoldDefault.BottomBar;
         defaults &= ~(int)ScaffoldDefault.SnackbarHost;
         defaults &= ~(int)ScaffoldDefault.FloatingActionButton;
+        // Kotlin's omission mask is compile-time metadata: toggling this bit at
+        // one live call changes its internal remembered-slot layout. Resolve the
+        // real default unconditionally and keep the native argument supplied.
+        var defaultInsets = Material3.ScaffoldDefaults.Instance.GetContentWindowInsets(composer, 0);
+        var contentWindowInsets = ContentWindowInsets?.Jvm ?? defaultInsets;
+        defaults &= ~(int)ScaffoldDefault.ContentWindowInsets;
 
-        ComposeBridges.Scaffold(
+#if DEBUG
+        ContentLambdaObserver?.Invoke(content, contentWindowInsets);
+#endif
+        Material3.ScaffoldKt.Scaffold(
             modifier:             modifier,
             topBar:               topBar,
             bottomBar:            bottomBar,
             snackbarHost:         snackbarHost,
             floatingActionButton: fab,
+            p5:                   0,
+            containerColor:       0L,
+            contentColor:         0L,
+            contentWindowInsets:  contentWindowInsets,
             content:              content,
-            defaults:             defaults,
-            composer:             composer);
+            _composer:            composer,
+            // The binding's final two names are shifted: JVM $changed, $default.
+            floatingActionButtonPosition: 0,
+            _changed:             defaults);
     }
 }

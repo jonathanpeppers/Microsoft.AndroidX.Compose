@@ -54,6 +54,9 @@ public static class Conversation
                 new Scaffold
                 {
                     Modifier = Modifier.NestedScroll(scrollBehavior.NestedScrollConnection),
+                    ContentWindowInsets = c.ScaffoldContentWindowInsets()
+                        .Exclude(c.NavigationBarsInsets())
+                        .Exclude(c.ImeInsets()),
                     TopBar = BuildTopBar(ui, scheme, onOpenDrawer, popupOpen, scrollBehavior),
                     Body   = BuildBody(ui, input, scheme, selectedSelector, messagesScroll, onAuthorClicked, isRecording, swipeOffset),
                 },
@@ -410,10 +413,11 @@ public static class Conversation
             });
             return new Surface
             {
-                Modifier.FillMaxWidth().NavigationBarsPadding().ImePadding(),
+                Modifier.FillMaxWidth(),
                 new Column
                 {
-                    Modifier.FillMaxWidth(),
+                    // Keep the Surface behind the bars; its content owns these insets once.
+                    Modifier.FillMaxWidth().NavigationBarsPadding().ImePadding(),
                     BuildTextFieldRow(input, scheme, isRecording, swipeOffset, focus =>
                     {
                         if (focused.Value == focus.IsFocused)

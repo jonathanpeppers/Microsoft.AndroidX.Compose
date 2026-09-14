@@ -6,6 +6,18 @@ namespace AndroidX.Compose;
 
 public static partial class ComposeExtensions
 {
+    /// <summary>
+    /// Reads Material 3's default Scaffold content insets for this composition.
+    /// Transform this value with <see cref="WindowInsets.Exclude"/> when a child
+    /// owns navigation-bar or IME padding.
+    /// </summary>
+    public static WindowInsets ScaffoldContentWindowInsets(this IComposer composer)
+    {
+        ArgumentNullException.ThrowIfNull(composer);
+        return WindowInsets.Wrap(
+            Material3.ScaffoldDefaults.Instance.GetContentWindowInsets(composer, 0));
+    }
+
     /// <summary>Reads the current caption-bar insets.</summary>
     public static WindowInsets CaptionBarInsets(this IComposer composer) =>
         ReadWindowInsets(composer, BindingWindowInsetsAndroid.GetCaptionBar);

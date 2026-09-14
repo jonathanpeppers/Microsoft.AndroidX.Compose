@@ -32,6 +32,13 @@ public class TestInstrumentation : Instrumentation
         Start();
     }
 
+    /// <summary>Releases the current test-host reference when Android destroys the instrumentation.</summary>
+    public override void OnDestroy()
+    {
+        Current = null;
+        base.OnDestroy();
+    }
+
     public override async void OnStart()
     {
         base.OnStart();
