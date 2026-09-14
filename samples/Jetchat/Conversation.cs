@@ -54,6 +54,9 @@ public static class Conversation
                 new Scaffold
                 {
                     Modifier = Modifier.NestedScroll(scrollBehavior.NestedScrollConnection),
+                    ContentWindowInsets = c.ScaffoldContentWindowInsets()
+                        .Exclude(c.NavigationBarsInsets())
+                        .Exclude(c.ImeInsets()),
                     TopBar = BuildTopBar(ui, scheme, onOpenDrawer, popupOpen, scrollBehavior),
                     Body   = BuildBody(ui, input, scheme, selectedSelector, messagesScroll, onAuthorClicked, isRecording, swipeOffset),
                 },
@@ -402,14 +405,29 @@ public static class Conversation
             var focused = c.MutableStateOf(false);
             var keyboardActions = c.Remember(() => KeyboardActionsHelper.Create(
                 onSend: () => Send(ui, input, selectedSelector, messagesScroll)));
+            var selectorFocus = c.Remember(() => new FocusRequester());
+            int selector = selectedSelector.Value;
+            c.LaunchedEffect(selector, _ =>
+            {
+                if (selector != 0 && selectedSelector.Value == selector)
+                    selectorFocus.RequestFocus();
+                return Task.CompletedTask;
+            });
             return new Surface
             {
-                Modifier.FillMaxWidth().NavigationBarsPadding().ImePadding(),
+                Modifier.FillMaxWidth(),
                 new Column
                 {
-                    Modifier.FillMaxWidth(),
+                    // Keep the Surface behind the bars; its content owns these insets once.
+                    Modifier.FillMaxWidth().NavigationBarsPadding().ImePadding()
+                        .FocusRequester(selectorFocus).Focusable(),
                     BuildTextFieldRow(input, scheme, isRecording, swipeOffset,
-                        keyboardActions, state => focused.Value = state.IsFocused, focused.Value),
+                        keyboardActions, state =>
+                        {
+                            if (state.IsFocused)
+                                selectedSelector.Value = 0;
+                            focused.Value = state.IsFocused;
+                        }, focused.Value),
                     BuildSelectorRow(ui, input, scheme, selectedSelector, messagesScroll),
                     BuildSelectorPanel(input, scheme, selectedSelector),
                 },
