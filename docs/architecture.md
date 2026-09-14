@@ -248,6 +248,10 @@ wrapper or ancestor-owner argument, edits its native accessibility fields to
 19:27, repeats three executions, and checks the fields after recreation.
 `StateHolderLifecycleTests` and `SharedStateTransferTests` verify owner loss,
 pending writes, new-peer initialization, and native confirm-callback refresh.
+Initial picker readiness, like removal/re-entry, acquires the existing
+`SideEffect` render-completion counter before reading native values. A non-null
+peer alone can still expose an uncommitted snapshot: the same DateRange peer
+returned null endpoints before commit and the requested range after commit.
 Replacement regressions exercise A-to-B-to-A transitions, pending writes,
 surviving siblings, and recreation. `SharedStateTransactionTests` uses native
 controlled compositions to check initial abandonment, abandoned owner
@@ -275,6 +279,15 @@ and empty dependency graphs after completion. Nested crossed borrowing is
 tested in both wait orders, including first publication of the outer owner
 after entering the nested composition. Native weak-reference probes require
 retired monitors to collect independently of their managed composition peers.
+The controlled concurrency fixtures use one stable native
+`composableLambdaInstance` root per composition, matching the compiler-style
+restart envelope used by `SetContent`. Their native TimePicker control also
+wraps each no-own-group remember factory in a fixed replaceable group. Raw
+`Function2` roots or ungrouped native remembers can produce unrelated Link slot
+corruption after abandonment and retry; they are not equivalent controls for
+these public helpers. Matched native and managed controls retain the committed
+peer and edited hour through nested failure, successful sequential retry/apply,
+and a subsequent render, without replacing the composition or root lambda.
 
 Visual inspection of the hoisted-owner Gallery demo preserves 19:25 in its
 label and both numeric displays while hiding and restoring either or both

@@ -90,7 +90,7 @@ public class SharedStateConcurrentLifetimeTests
             }
         }
 
-        ComposableLambda2 Content(int index) => new(composer =>
+        global::AndroidX.Compose.Runtime.Internal.IComposableLambda Content(int index) => RootContent(354801 + index, composer =>
         {
             composer.RememberTimePickerState(states[index]);
             if (borrow)
@@ -129,7 +129,7 @@ public class SharedStateConcurrentLifetimeTests
         bool contended = false;
         var expected = new InvalidOperationException("Expected content failure after shared-state borrowing.");
         var blocker = new ThrowingAbandonObserver { ThrowOnAbandoned = false };
-        var ownerContent = new ComposableLambda2(composer =>
+        var ownerContent = RootContent(354811, composer =>
         {
             composer.RememberTimePickerState(state);
             if (contended)
@@ -138,7 +138,7 @@ public class SharedStateConcurrentLifetimeTests
                 Assert.IsTrue(release.Wait(TimeSpan.FromSeconds(10)), "The test did not release the owning monitor.");
             }
         });
-        var consumerContent = new ComposableLambda2(composer =>
+        var consumerContent = RootContent(354812, composer =>
         {
             Assert.IsTrue(entered.Wait(TimeSpan.FromSeconds(5)), "Owner did not enter its native monitor.");
             composer.StartReplaceableGroup(354822);
@@ -228,7 +228,7 @@ public class SharedStateConcurrentLifetimeTests
         bool nested = false;
         bool concurrent = false;
         IComposer? outerComposer = null;
-        using var contentB = new ComposableLambda2(composer =>
+        using var contentB = RootContent(354821, composer =>
         {
             if (firstOwnerInsideNested)
             {
@@ -246,7 +246,7 @@ public class SharedStateConcurrentLifetimeTests
             }
             composer.RememberTimePickerState(stateC);
         });
-        using var contentA = new ComposableLambda2(composer =>
+        using var contentA = RootContent(354822, composer =>
         {
             if (!firstOwnerInsideNested)
                 composer.RememberTimePickerState(stateA);
@@ -263,7 +263,7 @@ public class SharedStateConcurrentLifetimeTests
                 }
             }
         });
-        using var contentC = new ComposableLambda2(composer =>
+        using var contentC = RootContent(354823, composer =>
         {
             composer.RememberTimePickerState(stateC);
             if (nested)
@@ -341,6 +341,78 @@ public class SharedStateConcurrentLifetimeTests
     }
 
     [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public void NestedAbandonment_RetainsCommittedNativeState(bool nativeControl)
+    {
+        using var outerApplier = new StateOnlyApplier();
+        using var innerApplier = new StateOnlyApplier();
+        using var recomposer = new Recomposer(Kotlin.Coroutines.EmptyCoroutineContext.Instance
+            ?? throw new InvalidOperationException("Empty coroutine context was unavailable."));
+        var outer = CompositionKt.ControlledComposition(outerApplier, recomposer)
+            ?? throw new InvalidOperationException("Outer composition unavailable.");
+        var inner = CompositionKt.ControlledComposition(innerApplier, recomposer)
+            ?? throw new InvalidOperationException("Inner composition unavailable.");
+        var state = new TimePickerState(7, 10);
+        bool nested = false;
+        bool fail = false;
+        using var innerContent = RootContent(354824, composer =>
+        {
+            if (fail)
+                throw new Java.Lang.IllegalStateException("Expected nested abandonment control.");
+            composer.StartReplaceableGroup(354826);
+            ComposeBridges.RememberTimePickerState(8, 20, true, composer);
+            composer.EndReplaceableGroup();
+        });
+        using var outerContent = RootContent(354825, composer =>
+        {
+            if (nativeControl)
+            {
+                // The native remember factory has no group of its own.
+                composer.StartReplaceableGroup(354827);
+                var handle = ComposeBridges.RememberTimePickerState(7, 10, true, composer);
+                state.Jvm = Java.Lang.Object.GetObject<global::AndroidX.Compose.Material3.ITimePickerState>(
+                    handle, global::Android.Runtime.JniHandleOwnership.DoNotTransfer)
+                    ?? throw new InvalidOperationException("Native remember returned no peer.");
+                composer.EndReplaceableGroup();
+            }
+            else
+                composer.RememberTimePickerState(state);
+            if (nested)
+                inner.ComposeContent(innerContent);
+        });
+        try
+        {
+            outer.ComposeContent(outerContent);
+            Apply(outer);
+            var peer = state.Jvm;
+            state.Hour = 19;
+            nested = fail = true;
+            var error = Assert.ThrowsExactly<Java.Lang.IllegalStateException>(() => outer.ComposeContent(outerContent));
+            StringAssert.Contains(error.Message, "Expected nested abandonment control.");
+            Assert.AreSame(peer, state.Jvm, "Nested failure removed the committed binding.");
+            fail = false;
+            outer.ComposeContent(outerContent);
+            Apply(inner);
+            Apply(outer);
+            Assert.AreSame(peer, state.Jvm, "Native reentry changed the committed peer.");
+            Assert.AreEqual(19, state.Hour);
+            outer.ComposeContent(outerContent);
+            Apply(inner);
+            Apply(outer);
+            Assert.AreSame(peer, state.Jvm, "Rendering again after successful nested retry changed the committed peer.");
+            Assert.AreEqual(19, state.Hour);
+            Assert.AreEqual(0, ComposeBridges.SharedStateDependencyCount());
+        }
+        finally
+        {
+            inner.Dispose();
+            outer.Dispose();
+            recomposer.Cancel();
+        }
+    }
+
+    [TestMethod]
     public void MonitorCatalogue_DoesNotRootRetiredNativeMonitors()
     {
         Java.Lang.Ref.WeakReference? nativeProbe = null;
@@ -352,7 +424,7 @@ public class SharedStateConcurrentLifetimeTests
             var composition = CompositionKt.ControlledComposition(applier, recomposer)
                 ?? throw new InvalidOperationException("Controlled composition was unavailable.");
             var state = new TimePickerState(7, 10);
-            using var content = new ComposableLambda2(composer => composer.RememberTimePickerState(state));
+            using var content = RootContent(354831, composer => composer.RememberTimePickerState(state));
             try
             {
                 composition.ComposeContent(content);
@@ -425,12 +497,12 @@ public class SharedStateConcurrentLifetimeTests
             ?? throw new InvalidOperationException("Inner composition was unavailable.");
         var state = new TimePickerState(7, 10);
         bool nested = false;
-        using var innerContent = new ComposableLambda2(composer =>
+        using var innerContent = RootContent(354841, composer =>
         {
             composer.RememberTimePickerState(state);
             Assert.AreEqual(0, ComposeBridges.SharedStateDependencyCount(), "Reentrant ownership must not add a wait edge.");
         });
-        using var outerContent = new ComposableLambda2(composer =>
+        using var outerContent = RootContent(354842, composer =>
         {
             composer.RememberTimePickerState(state);
             composer.RememberTimePickerState(state);
@@ -465,7 +537,12 @@ public class SharedStateConcurrentLifetimeTests
         return finished;
     }
 
-    static void Run(IControlledComposition composition, ComposableLambda2 content, ref ExceptionDispatchInfo? failure)
+    // Match the compiler-style restart envelope used by SetContent, not a raw Function2 root.
+    static global::AndroidX.Compose.Runtime.Internal.IComposableLambda RootContent(int key, Action<IComposer> body) =>
+        global::AndroidX.Compose.Runtime.Internal.ComposableLambdaKt.ComposableLambdaInstance(
+            key, false, new ComposableLambda2(body));
+
+    static void Run(IControlledComposition composition, Kotlin.Jvm.Functions.IFunction2 content, ref ExceptionDispatchInfo? failure)
     {
         try
         {

@@ -176,12 +176,19 @@ public class StateHolderLifecycleTests
         intent.AddFlags(global::Android.Content.ActivityFlags.NewTask);
         context.StartActivity(intent);
 
-        return await WaitFor(
+        var activity = await WaitFor(
             static () => PickerStateLifecycleTestActivity.Current,
             static value => value is not null,
             "Picker lifecycle test activity did not start.")
             ?? throw new InvalidOperationException(
                 "Picker lifecycle test activity was unavailable.");
+
+        // A published peer can still expose uncommitted native snapshot values.
+        await WaitFor(
+            static () => PickerStateLifecycleTestActivity.CompletedRenderPasses,
+            static value => value > 0,
+            "Initial picker composition did not commit.");
+        return activity;
     }
 
     static async Task HidePicker(PickerStateLifecycleTestActivity activity, Func<bool> isUnbound)
