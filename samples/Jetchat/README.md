@@ -167,8 +167,15 @@ same while switching inset modes; its saved tap count must also survive
   Neither action clears editor focus, matching the pinned rapid-entry behavior.
   Emoji insertion replaces the current selection (including reversed
   selections), retains composition as upstream's `copy` does, and moves the
-  cursor to the end of the resulting buffer. Elevated `Surface` styling
-  remains separate.
+  cursor to the end of the resulting buffer. Opening the emoji panel transfers
+  focus: Foundation 1.11.3's `CoreTextField` calls `deselect()` on focus loss,
+  collapsing a nonempty selection to its maximum offset before insertion.
+  Selecting `b` in `abcd` then opening the panel therefore inserts at `ab|cd`;
+  the facade does not restore the earlier focused selection. Native diagnostics
+  confirm the live value is `2..2` immediately before insertion, even though the
+  closed IME session can still report its cached `1..2` range. Focused-selection
+  replacement remains covered separately. Elevated `Surface` styling remains
+  separate.
 - **5 input-selector icons** — emoji, @ mention, image, location,
   video call — same row upstream's `UserInputSelector` provides.
   Each is a toggleable `IconButton` whose background fills with
