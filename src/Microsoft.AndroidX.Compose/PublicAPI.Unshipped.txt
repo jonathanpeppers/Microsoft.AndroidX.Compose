@@ -1443,9 +1443,19 @@ AndroidX.Compose.SuggestionChip.Shape.get -> AndroidX.Compose.Shape?
 AndroidX.Compose.SuggestionChip.Shape.set -> void
 AndroidX.Compose.SuggestionChip.SuggestionChip(System.Action! onClick, bool enabled = true) -> void
 AndroidX.Compose.Surface
+AndroidX.Compose.Surface.Border.get -> AndroidX.Compose.Foundation.BorderStroke?
+AndroidX.Compose.Surface.Border.set -> void
+AndroidX.Compose.Surface.Color.get -> AndroidX.Compose.Color?
+AndroidX.Compose.Surface.Color.set -> void
+AndroidX.Compose.Surface.ContentColor.get -> AndroidX.Compose.Color?
+AndroidX.Compose.Surface.ContentColor.set -> void
+AndroidX.Compose.Surface.ShadowElevation.get -> AndroidX.Compose.Dp?
+AndroidX.Compose.Surface.ShadowElevation.set -> void
 AndroidX.Compose.Surface.Shape.get -> AndroidX.Compose.Shape?
 AndroidX.Compose.Surface.Shape.set -> void
 AndroidX.Compose.Surface.Surface() -> void
+AndroidX.Compose.Surface.TonalElevation.get -> AndroidX.Compose.Dp?
+AndroidX.Compose.Surface.TonalElevation.set -> void
 AndroidX.Compose.Switch
 AndroidX.Compose.Switch.Colors.get -> AndroidX.Compose.Material3.SwitchColors?
 AndroidX.Compose.Switch.Colors.set -> void
@@ -2093,7 +2103,8 @@ static AndroidX.Compose.Composables.StringArrayResource(int id) -> string![]!
 static AndroidX.Compose.Composables.StringResource(int id) -> string!
 static AndroidX.Compose.Composables.StringResource(int id, params object?[]! formatArgs) -> string!
 static AndroidX.Compose.Composables.SuggestionChip(System.Action! onClick, System.Action! label, bool enabled = true, AndroidX.Compose.Modifier? modifier = null, System.Action? icon = null, AndroidX.Compose.Shape? shape = null) -> void
-static AndroidX.Compose.Composables.Surface(System.Action! content, AndroidX.Compose.Modifier? modifier = null, AndroidX.Compose.Shape? shape = null) -> void
+static AndroidX.Compose.Composables.Surface(System.Action! content, AndroidX.Compose.Modifier? modifier = null, AndroidX.Compose.Shape? shape = null, AndroidX.Compose.Color? color = null, AndroidX.Compose.Color? contentColor = null, AndroidX.Compose.Dp? tonalElevation = null, AndroidX.Compose.Dp? shadowElevation = null, AndroidX.Compose.Foundation.BorderStroke? border = null) -> void
+static AndroidX.Compose.Composables.Surface(System.Action! content, AndroidX.Compose.Modifier? modifier, AndroidX.Compose.Shape? shape) -> void
 static AndroidX.Compose.Composables.Switch(bool checked, System.Action<bool>! onCheckedChange, bool enabled = true, AndroidX.Compose.Modifier? modifier = null, AndroidX.Compose.Material3.SwitchColors? colors = null) -> void
 static AndroidX.Compose.Composables.SystemBarsInsets() -> AndroidX.Compose.WindowInsets!
 static AndroidX.Compose.Composables.SystemGesturesInsets() -> AndroidX.Compose.WindowInsets!

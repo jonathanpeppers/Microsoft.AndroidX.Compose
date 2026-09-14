@@ -328,6 +328,14 @@ slots surface as `Action` instead of `Action<IComposer>`.
   slot a C# default while keeping the bridge parameter and trailing
   `IComposer` required. Use this instead of making bridge parameters optional;
   it avoids `composer = null!` solely for C# optional-parameter ordering.
+- `[FacadeAdded]` — mark each newly exposed optional value when extending an
+  existing catalog signature. Retains the old catalog CLR arity with required
+  arguments (avoiding overload ambiguity), plus its original direct-helper
+  signature and omission metadata. Richer overloads keep optional defaults
+  and use a `_WithAddedSlots` helper. Legacy lowering leaves added Kotlin
+  defaults set and suppresses changed masks; it never supplies explicit null
+  for an added slot. Only defaultable optional values on a primary,
+  non-painter route are supported (CN3014). Constructors are unchanged.
 - `[PainterResource]` — annotate `IntPtr` taking the resolved Painter handle.
   Facade exposes synthetic `int painterResourceId` ctor in its place; emits
   `PainterResource(id, composer)` + try/finally + `DeleteLocalRef` preamble.
@@ -605,6 +613,7 @@ conflict), CN3007 (color theme bind failed), CN3008 (painter misuse), CN3009
 | CN3011 | `[ConfirmStateChange(typeof(T))]` invalid: not on `IFunction1` param, missing `typeof(T)` ctor arg, convention adapter `Microsoft.AndroidX.Compose.<TName>ConfirmStateChange` missing (override with `AdapterType = typeof(...)`), adapter is inaccessible to generated same-assembly code, doesn't implement `Kotlin.Jvm.Functions.IFunction1`, lacks a same-assembly accessible parameterless ctor, or has no same-assembly accessible writable `Callback` property of type `System.Func<T, bool>?`.                                                                                                              |
 | CN3012 | `SecondaryCtor`/`SecondaryDefaults` invalid: only one set, named secondary not resolvable/ambiguous on `ComposeBridges`, a hand-written secondary lacks trailing `int defaults`, secondary's user params don't share names with the primary, the discriminating extra param is value-type / nullable / not a reference type / there's > 1 unique param / there's none, primary has no slot missing from the secondary (no primary-only discriminator), `SecondaryDefaults` enum unresolvable, or combined with `BranchOn`/`AlternateBridge`.                                                                                                                                                                                                                                                                              |
 | CN3013 | Lambda execution mode is ambiguous, conflicting, or invalid. Mark `IFunction1` as `[Callback(typeof(T))]` or `[RawCallback]`; mark `IFunction4` as `[ComposableContent]` or `[DeferredComposableContent]`. |
+| CN3014 | `[FacadeAdded]` does not mark a defaultable optional value, or the facade has alternate/painter routes. |
 
 ### Migration rule
 
@@ -822,6 +831,11 @@ bridge declares the trailing `int _changed = 0`. Per-slot contribution table:
 | `IntPtr` + `[PainterResource]`    | `DiffSlot` on resolved IntPtr                         |
 | `IntPtr` + `[StateHolder]`        | `DiffSlot` on wrapper.Jvm reference                   |
 | Value types / primitives / refs   | `DiffSlot<T>` via `EqualityComparer<T>.Default`       |
+
+Direct lowering must execute modifier/theme/state `DiffSlot` calls unconditionally,
+even when the current omission bitmap suppresses their changed-bit contribution.
+Store the diff first, then gate only the bitwise OR. Conditional slot-table reads
+shift later remembered state when a live helper changes supplied/omitted options.
 
 Bit position: `bit = 1 + paramIndex * 3` over physical Kotlin parameter
 positions, not the shorter/reordered C# bridge parameter list. Kotlin also
