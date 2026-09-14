@@ -5,6 +5,66 @@ and its sibling source generators. For the *why* behind the project and a
 tour of how Jetpack Compose itself works under the hood, see
 [compose-internals.md](compose-internals.md).
 
+## Bound baseline modifiers
+
+`Modifier.AlignBy(HorizontalAlignmentLine)` and `AlignByBaseline()` resolve the
+active Row receiver at materialization time; `AlignBy(VerticalAlignmentLine)`
+requires Column. Flow containers use the same published scope kinds. Chains
+can be constructed outside composition and reused; applying one with a missing
+or incompatible scope throws an `InvalidOperationException` naming the operation
+and actual scope. The baseline constants and alignment-line contracts come from
+the official `AndroidX.Compose.UI.Layout` binding (`AlignmentLineKt.FirstBaseline`
+and `LastBaseline`), not a parallel enum or integer selector.
+
+`PaddingFrom(line, before, after)` and `PaddingFromBaseline(top, bottom)` take
+nullable `Dp`: null maps to Kotlin's `Dp.Unspecified` float/NaN representation.
+Zero stays specified, which matters under minimum constraints when Compose chooses
+whether the before or after distance positions the content. Native constraints,
+missing-line fallback and validation are retained. `ClipToBounds()` uses the
+bound rectangular draw clip without changing measurement; place it before a
+child transform to clip overflow rather than moving the viewport.
+
+All these methods call the **runtime companion** bindings (`1.11.3.1`), including
+the Dp-mangled padding overloads. No additional JNI/default masks are needed.
+`AppendBound` retains captured line peers, and the generated binding keeps
+receivers/arguments alive across calls. Their structural keys record line
+identity, nullable distances and chain order; `AlignByBaseline` shares its key
+with `AlignBy(FirstBaseline)`. Callers must not dispose a captured line while a
+chain is in use. Gallery routes `modifiers-baseline-alignment`,
+`modifiers-baseline-padding` and `modifiers-clip-to-bounds` demonstrate the surface.
+`BaselineModifierTests` measures placed text baselines, constrained padding,
+tree/composable/flow scope dispatch and native PixelCopy overflow, rather than
+inferring correctness from a successful build.
+
+The cold scope-failure regression also protects `ModifierCompanionInstance`.
+It reads the **outer** `Modifier.Companion` static field. Initializing
+`Modifier$Companion.$$INSTANCE` first triggers a JVM default-interface
+initialization cycle in the pinned bytecode and can permanently leave the outer
+field null; subsequent native Row/Column defaults then crash. Initializing the
+outer interface first avoids the cycle. The cached global reference and
+fresh-local return contract stay unchanged, with local cleanup in `finally`.
+
+### Measured regression evidence
+
+On 2026-09-14, the embedded DeviceTests APK (SHA-256
+`430D6BE336F64A3521F6D20B37A9F0A9DBAC68444CBE5845D6F8AA18A923C014`)
+passed all seven `BaselineModifierTests` cases in one fresh instrumentation
+process on Pixel 7, including rejected cold scope builds before rendering.
+At density 2.625, the native measurements were:
+
+| Contract | Observed result |
+| --- | --- |
+| First / last text baselines | Equal absolute baselines at 78 / 375 px in tree and composerless rows; unchanged after managed and Java GC |
+| Published vertical lines | Column and FlowColumn placed children at X=53 / 0 with lines at 26 / 79 px, both meeting at X=79 |
+| Baseline-relative padding | 32 dp before = 84 px; 24 dp after = 63 px; minimum-constraint null/zero distinction and maximum-height limits passed |
+| Rectangular clipping | Both viewports measured 263x126 px; native PixelCopy found red inside both, red overflow without clipping, and white outside the clipped viewport |
+
+The three Gallery demos also rendered with readable labels. Jetchat recording,
+shifted cancellation content, and the unavailable-selector panel were captured;
+an interior drag clipped the cancellation arrow at the fixed viewport while
+retaining the text label, and a further drag cancelled recording successfully.
+These checks do not establish whole-sample parity or resolve profile parallax.
+
 ## The facade: composables as types
 
 Composables are **types**, not method calls. Each is a
@@ -39,7 +99,7 @@ attribute stacked on the bridge — see
 shapes the generator covers. Only three outliers stay hand-written at
 the JNI layer: `ModifierHandle` (a managed `IModifier? → IntPtr`
 conversion that none of the bridge shapes fit),
-`ModifierCompanionInstance` (a `$$INSTANCE` static field lookup, not a
+`ModifierCompanionInstance` (a `Companion` static field lookup, not a
 method invocation), and `ModifierClipRoundedCorners` (a two-step
 `RoundedCornerShape` ctor + `ClipKt.clip` with an intermediate `Shape`
 local ref). The user never sees any of this; when
