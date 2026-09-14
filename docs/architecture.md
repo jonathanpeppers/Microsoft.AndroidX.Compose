@@ -732,6 +732,40 @@ class.
   and inset-sized width/height modifiers. These call the official runtime
   bindings directly; `Modifier` can replay managed binding operations
   alongside generated raw-handle bridges without duplicating JNI surfaces.
+  `Scaffold.ContentWindowInsets` and both adapters preserve null/omitted Kotlin
+  defaults while forwarding supplied zero or transformed values. The pinned
+  Material3Android 1.4.0.5 binding exposes `Scaffold-TvnljyQ` and
+  `ScaffoldDefaults.GetContentWindowInsets`, so Scaffold uses these bound
+  entry points rather than a duplicate JNI bridge. Its declarative
+  `ScaffoldDefault` enum remains necessary because the binding misnames
+  `FabPosition` and the trailing compiler arguments: the final managed
+  `floatingActionButtonPosition`/`_changed` arguments are JVM `$changed`/`$default`.
+  Kotlin's omission bits are fixed at a compiled call site. Changing its
+  content-insets bit during recomposition changes the number of internal
+  `composer.changed` slots and corrupts the following remembered lambda.
+  Therefore Scaffold resolves the actual bound default getter unconditionally
+  and supplies either that value or the caller's insets with the generated
+  `ContentWindowInsets` bit cleared. Null still means Kotlin's live default;
+  zero remains explicit. This stable native call shape preserves the Scaffold
+  subtree across default/zero/excluded transitions rather than recreating it.
+  Other defaults, padding forwarding and `Wrap2`/`Wrap3` slot identities are unchanged.
+  The device regressions measure body bounds and forwarded padding, retain
+  ordinary and saveable body state across transitions, and exercise activity
+  recreation. In Debug, a scoped internal observer additionally captures the
+  exact content lambda passed to the bound Scaffold call; this diagnostic
+  hook is absent from Release builds and does not replace or wrap the lambda.
+  `ScaffoldInsetsTests` covers 16 native cases across `Body`, `BodyContent`,
+  explicit adapters, and implicit adapters, with and without app bars. Snapshot
+  readiness requires the actual resumed/focused window, platform inset delivery
+  observed on a test-owned parent, matching body/marker placement, and no pending
+  native composition, snapshot, or layout work. `Instrumentation.WaitForIdleSync`
+  runs off the UI thread; live values are then read together on the UI thread.
+  Expected geometry is asserted afterward, never used as a readiness condition.
+  A preserved window after `Activity.Recreate` can remain focused without sending
+  the new activity a positive focus callback, so live `HasWindowFocus` is
+  authoritative. Counter mutations require a new composed observation, and
+  restoration must produce fresh ordinary state while recovering the saved value.
+  Tests keep only their own window awake; they do not change device settings.
 - **`remember(keys, …)` is supported.** Use the keyed overloads
   `Remember(factory, key1)`, `Remember(factory, key1, key2)`,
   `Remember(factory, key1, key2, key3)`, or
