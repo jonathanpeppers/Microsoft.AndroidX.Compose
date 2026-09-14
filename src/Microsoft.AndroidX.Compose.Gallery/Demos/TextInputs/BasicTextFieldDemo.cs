@@ -35,7 +35,7 @@ public static class BasicTextFieldDemo
                 new Text("Select text, insert an emoji, then use the keyboard Send action."),
                 new BasicTextField(input.Value, value => input.Value = value, maxLines: 3)
                 {
-                    Modifier = Modifier.FillMaxWidth().Padding(12),
+                    Modifier = Modifier.FillMaxWidth().Padding(12).Semantics("Basic value editor"),
                     TextStyle = new TextStyle { Color = Color.FromPacked(c.ColorScheme().OnSurface), FontSize = 18 },
                     CursorBrush = Brush.SolidColor(Color.FromPacked(c.ColorScheme().Primary)),
                     KeyboardOptions = options,
@@ -59,7 +59,7 @@ public static class BasicTextFieldDemo
                 new Text("String-only state; Foundation retains the cursor and IME composition."),
                 new BasicTextField(text.Value, value => text.Value = value, singleLine: true)
                 {
-                    Modifier = Modifier.FillMaxWidth().Padding(12),
+                    Modifier = Modifier.FillMaxWidth().Padding(12).Semantics("Basic string editor"),
                     TextStyle = new TextStyle { Color = Color.FromPacked(c.ColorScheme().OnSurface), FontSize = 18 },
                     CursorBrush = Brush.SolidColor(Color.FromPacked(c.ColorScheme().Primary)),
                     DecorationBox = inner => new Column { inner, new HorizontalDivider() },
