@@ -136,6 +136,7 @@ public static class Profile
             Modifier.Padding(horizontal: 16),
             new Text(state.Name)
             {
+                FontFamily = JetchatFonts.Montserrat,
                 FontSize   = 24,
                 FontWeight = FontWeight.Medium,
                 Color      = Color.FromPacked(scheme.OnSurface),
@@ -143,6 +144,7 @@ public static class Profile
             },
             new Text(state.Position)
             {
+                FontFamily = JetchatFonts.Karla,
                 FontSize = 16,
                 Color    = Color.FromPacked(scheme.OnSurfaceVariant),
                 Modifier = Modifier.Padding(top: 4, bottom: 20),
@@ -156,12 +158,14 @@ public static class Profile
             new HorizontalDivider(),
             new Text(label)
             {
+                FontFamily = JetchatFonts.Karla,
                 FontSize = 12,
                 Color    = Color.FromPacked(scheme.OnSurfaceVariant),
                 Modifier = Modifier.Padding(top: 8),
             },
             new Text(value)
             {
+                FontFamily = JetchatFonts.Karla,
                 FontSize = 16,
                 Color = Color.FromPacked(
                     isLink ? scheme.Primary : scheme.OnSurface),

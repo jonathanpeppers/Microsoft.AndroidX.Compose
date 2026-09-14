@@ -16,9 +16,9 @@ namespace AndroidX.Compose.Samples.Jetchat;
 /// match upstream's <c>theme/Color.kt</c>.
 /// </para>
 /// <para>
-/// Typography parity (Karla / Montserrat) is deferred — the upstream
-/// <c>JetchatTypography</c> override is not yet ported. The current
-/// build inherits the Material 3 baseline typography.
+/// Typography uses the pinned upstream Karla / Montserrat resource families.
+/// Font assignment preserves the baseline metrics; the separate fractional-Sp
+/// work supplies upstream numeric typography tokens.
 /// </para>
 /// </remarks>
 public static class JetchatTheme
@@ -152,6 +152,7 @@ public static class JetchatTheme
             var theme = new MaterialTheme
             {
                 ColorScheme = scheme,
+                Typography = c.Remember(() => JetchatFonts.WithFonts(MaterialTheme.BuildTypography())),
             };
             theme.Add(content);
             return theme;

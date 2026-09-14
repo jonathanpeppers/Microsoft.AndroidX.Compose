@@ -41,6 +41,14 @@ anchoring still follow positions, as in the upstream sample.
 
 ## What's faithful
 
+- **Bundled Karla / Montserrat families** — the six unmodified fallback TTFs
+  from upstream revision `4c1fe7586e2fbf1c934925ef8ab64d3803361423` are wired
+  into `JetchatFonts`, theme typography and the conversation/drawer/profile
+  text roles. Font assignment preserves metrics; numeric-token work is separate.
+  These are upstream's local fallbacks, not its Google Fonts provider downloads.
+  Jetchat has no bundled italic face, so italic emphasis uses Compose synthesis.
+  See [font sources, weights, copyright and SHA-256](Assets/FONT_SOURCES.txt)
+  and the bundled [SIL Open Font License](Assets/FONT_LICENSE.txt).
 - **Jetchat-branded light/dark theme** — `JetchatTheme` selects the
   upstream blue/yellow palette from `isSystemInDarkTheme()` and supplies
   it through `MaterialTheme`; on Android 12+ it follows upstream by using
@@ -220,7 +228,7 @@ official binding:
 | Press-and-hold record gesture (`pointerInput` / `detectDragGesturesAfterLongPress`) | Missing Compose pointer-input surface; tracked by [#334](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/334). Until it lands, recording remains tap-to-start / tap-to-finish with draggable swipe cancellation. |
 | Record-button `updateTransition` + `animateFloat` / `animateColor` | Missing transition value-animation surface; tracked by [#335](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/335). The port retains its visually equivalent timer-driven pulse. |
 | Fractional `Sp` letter spacing (`0.5.sp`, `0.1.sp`) | `Sp` is integer-only; tracked by [#336](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/336). |
-| Karla / Montserrat resource-backed typography | Custom `Font(resourceId)` / `FontFamily(fonts)` construction is missing; tracked by [#337](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/337). |
+| Google Fonts provider typography | The exact pinned Karla / Montserrat resource fallbacks are bundled. Provider-backed downloads remain outside the resource-font API; no downloaded-font parity is claimed. |
 | Foundation text-input structure and IME Send callback | `BasicTextField` and keyboard-action support are missing; tracked by [#339](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/339). The current Material `TextField` preserves editing, placeholder, line, and IME-option behavior. |
 | Emoji-panel focus transfer and IME dismissal | `Modifier.focusTarget`, focus observation, and ambient focus-manager access are missing; tracked by [#340](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/340). |
 | Input/selector tonal elevation and content color | The current `Surface` facade omits color, content-color, elevation, and border slots; tracked by [#341](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/341). |

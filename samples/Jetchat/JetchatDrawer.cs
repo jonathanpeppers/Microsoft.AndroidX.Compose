@@ -71,6 +71,7 @@ public static class JetchatDrawer
             Modifier.FillMaxWidth().Height(52).Padding(horizontal: 28),
             new Text(label)
             {
+                FontFamily = JetchatFonts.Karla,
                 FontSize = 14,
                 Color    = Color.FromPacked(scheme.OnSurfaceVariant),
                 Modifier = Modifier.Padding(top: 16),
@@ -113,6 +114,7 @@ public static class JetchatDrawer
             },
             new Text(channel)
             {
+                FontFamily = JetchatFonts.Montserrat,
                 FontSize   = 14,
                 FontWeight = selected ? FontWeight.SemiBold : FontWeight.Normal,
                 Color      = textColor,
@@ -156,6 +158,7 @@ public static class JetchatDrawer
             },
             new Text(name)
             {
+                FontFamily = JetchatFonts.Montserrat,
                 FontSize = 14,
                 Color    = Color.FromPacked(scheme.OnSurface),
                 Modifier = Modifier.Padding(top: 16, bottom: 16, start: 12),
