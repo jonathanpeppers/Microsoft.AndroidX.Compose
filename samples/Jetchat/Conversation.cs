@@ -78,12 +78,14 @@ public static class Conversation
             {
                 new Text(ui.ChannelName)
                 {
+                    FontFamily = JetchatFonts.Montserrat,
                     FontSize   = 16,
                     FontWeight = FontWeight.Medium,
                     Color      = Color.FromPacked(scheme.OnSurface),
                 },
                 new Text($"{ui.ChannelMembers} members")
                 {
+                    FontFamily = JetchatFonts.Karla,
                     FontSize = 12,
                     Color    = Color.FromPacked(scheme.OnSurfaceVariant),
                     Modifier = Modifier.Padding(top: 2),
@@ -264,6 +266,7 @@ public static class Conversation
             },
             new Text(label)
             {
+                FontFamily = JetchatFonts.Montserrat,
                 FontSize   = 11,
                 FontWeight = FontWeight.Medium,
                 Color      = Color.FromPacked(scheme.OnSurfaceVariant),
@@ -338,6 +341,7 @@ public static class Conversation
             Modifier.Semantics(mergeDescendants: true, properties: _ => { }),
             new Text(m.Author)
             {
+                FontFamily = JetchatFonts.Montserrat,
                 FontSize   = 16,
                 FontWeight = FontWeight.Medium,
                 Color      = Color.FromPacked(scheme.OnSurface),
@@ -346,6 +350,7 @@ public static class Conversation
             Spacer.Width(8),
             new Text(m.Timestamp)
             {
+                FontFamily = JetchatFonts.Karla,
                 FontSize = 12,
                 Color    = Color.FromPacked(scheme.OnSurfaceVariant),
                 Modifier = Modifier.Padding(bottom: 8),
@@ -369,6 +374,7 @@ public static class Conversation
         {
             new AnnotatedText(formatted)
             {
+                FontFamily = JetchatFonts.Karla,
                 Color    = fg,
                 Modifier = Modifier
                     .Background(bg, new RoundedCornerShape(4.Dp(), 20.Dp(), 20.Dp(), 20.Dp()))

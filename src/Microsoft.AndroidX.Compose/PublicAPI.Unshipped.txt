@@ -539,7 +539,12 @@ AndroidX.Compose.FocusState.FocusState(bool isFocused, bool hasFocus, bool isCap
 AndroidX.Compose.FocusState.HasFocus.get -> bool
 AndroidX.Compose.FocusState.IsCaptured.get -> bool
 AndroidX.Compose.FocusState.IsFocused.get -> bool
+AndroidX.Compose.Font
 AndroidX.Compose.FontFamily
+AndroidX.Compose.FontLoadingStrategy
+AndroidX.Compose.FontLoadingStrategy.Async = 2 -> AndroidX.Compose.FontLoadingStrategy
+AndroidX.Compose.FontLoadingStrategy.Blocking = 0 -> AndroidX.Compose.FontLoadingStrategy
+AndroidX.Compose.FontLoadingStrategy.OptionalLocal = 1 -> AndroidX.Compose.FontLoadingStrategy
 AndroidX.Compose.FontStyle
 AndroidX.Compose.FontWeight
 AndroidX.Compose.GridCells
@@ -2249,8 +2254,10 @@ static AndroidX.Compose.FloatRange.operator !=(AndroidX.Compose.FloatRange left,
 static AndroidX.Compose.FloatRange.operator ==(AndroidX.Compose.FloatRange left, AndroidX.Compose.FloatRange right) -> bool
 static AndroidX.Compose.FocusState.operator !=(AndroidX.Compose.FocusState left, AndroidX.Compose.FocusState right) -> bool
 static AndroidX.Compose.FocusState.operator ==(AndroidX.Compose.FocusState left, AndroidX.Compose.FocusState right) -> bool
+static AndroidX.Compose.Font.Resource(int resourceId, AndroidX.Compose.FontWeight? weight = null, AndroidX.Compose.FontStyle? style = null, AndroidX.Compose.FontLoadingStrategy loadingStrategy = AndroidX.Compose.FontLoadingStrategy.Blocking) -> AndroidX.Compose.UI.Text.Font.IFont!
 static AndroidX.Compose.FontFamily.Cursive.get -> AndroidX.Compose.FontFamily!
 static AndroidX.Compose.FontFamily.Default.get -> AndroidX.Compose.FontFamily!
+static AndroidX.Compose.FontFamily.FromFonts(params AndroidX.Compose.UI.Text.Font.IFont![]! fonts) -> AndroidX.Compose.FontFamily!
 static AndroidX.Compose.FontFamily.Monospace.get -> AndroidX.Compose.FontFamily!
 static AndroidX.Compose.FontFamily.SansSerif.get -> AndroidX.Compose.FontFamily!
 static AndroidX.Compose.FontFamily.Serif.get -> AndroidX.Compose.FontFamily!

@@ -4,31 +4,52 @@ namespace AndroidX.Compose;
 
 /// <summary>
 /// C# wrapper around <c>androidx.compose.ui.text.font.FontFamily</c>.
-/// Compose's <c>FontFamily</c> is a real Kotlin class, but Compose
-/// 1.11.2.1's <c>ui-text-android</c> package is shipped as a
-/// Java-library-only stub with zero exported types — so the .NET
-/// binding doesn't expose it yet. We subclass <see cref="Java.Lang.Object"/>
-/// directly and resolve the Kotlin <c>Companion</c> instances via JNI
-/// (boilerplate emitted by <c>ComposeCompanionGenerator</c>); the bridge
-/// generator's reference-type code path
-/// (<c>x is null ? IntPtr.Zero : x.Handle</c>) passes the handle through
-/// to the JNI <c>L</c> slot.
-///
-/// Note the per-getter <c>ReturnDescriptor</c> overrides — the Kotlin
-/// companion getters return concrete subtypes (<c>SystemFontFamily</c> /
-/// <c>GenericFontFamily</c>), not the base interface, so the JNI
-/// signatures we look up have to match.
-///
-/// Will swap to bound <c>AndroidX.Compose.UI.Text.Font.FontFamily</c>
-/// once <see href="https://github.com/dotnet/android-libraries/pull/1440"/>
-/// ships and we adopt the next <c>Xamarin.AndroidX.Compose.UI.Text.Android</c>
-/// release.
+/// Retains the existing facade type for compatibility with <see cref="Text"/>
+/// and <see cref="TextStyle"/>. Built-in families use generated companion
+/// accessors; custom families use the official bound factory.
 /// </summary>
 [ComposeCompanion("androidx/compose/ui/text/font/FontFamily")]
 public sealed partial class FontFamily : Java.Lang.Object
 {
     FontFamily(IntPtr handle, JniHandleOwnership transfer)
         : base(handle, transfer) { }
+
+    FontFamily(UI.Text.Font.FontFamily family)
+        : this(family.Handle, JniHandleOwnership.DoNotTransfer)
+    {
+        GC.KeepAlive(family);
+    }
+
+    /// <summary>Creates a family from one or more bound Compose font descriptors.</summary>
+    /// <remarks>
+    /// Snapshots the input array before passing it to AndroidX. Order is preserved for
+    /// fallback resolution among fonts matching the requested weight and style.
+    /// No input peer is disposed or owned by this method. The resulting family retains
+    /// its Java fonts independently of the managed descriptors, and owns its own JNI
+    /// reference. Keep the family alive while using it in text or typography; dispose
+    /// it only after those consumers are finished. Do not dispose shared built-in families.
+    /// </remarks>
+    /// <exception cref="ArgumentNullException">The array is null.</exception>
+    /// <exception cref="ArgumentException">The array is empty or contains a null font.</exception>
+    /// <exception cref="ObjectDisposedException">An input font has been disposed.</exception>
+    public static FontFamily FromFonts(params UI.Text.Font.IFont[] fonts)
+    {
+        ArgumentNullException.ThrowIfNull(fonts);
+        UI.Text.Font.IFont[] snapshot = [.. fonts];
+        if (snapshot.Length == 0)
+            throw new ArgumentException("A font family requires at least one font.", nameof(fonts));
+        foreach (var font in snapshot)
+        {
+            if (font is null)
+                throw new ArgumentException("A font family cannot contain a null font.", nameof(fonts));
+            ObjectDisposedException.ThrowIf(font.Handle == IntPtr.Zero, font);
+        }
+
+        // Select the list overload: no copy-back into the caller's array or list.
+        var family = UI.Text.Font.FontFamilyKt.FontFamily((IList<UI.Text.Font.IFont>)snapshot)
+            ?? throw new InvalidOperationException("AndroidX returned no family from FontFamily.FromFonts.");
+        return new FontFamily(family);
+    }
 
     /// <summary>
     /// <c>FontFamily.Default</c> — the platform's system font family.

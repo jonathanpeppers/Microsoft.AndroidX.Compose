@@ -45,6 +45,7 @@ public static class Catalog
         // ---- Text & inputs ----
         D.TextInputs.TextStylingDemo.Demo,
         D.TextInputs.FontWeightStyleFamilyDemo.Demo,
+        D.TextInputs.ResourceFontsDemo.Demo,
         D.TextInputs.ColorAndAlignmentDemo.Demo,
         D.TextInputs.OverflowAndClampingDemo.Demo,
         D.TextInputs.TextFieldSlotsDemo.Demo,

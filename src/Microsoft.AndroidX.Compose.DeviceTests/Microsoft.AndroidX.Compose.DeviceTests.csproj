@@ -42,6 +42,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <AndroidResource Include="..\Microsoft.AndroidX.Compose.Gallery\Resources\font\*.ttf" Link="Resources\font\%(Filename)%(Extension)" />
+    <AndroidAsset Include="..\Microsoft.AndroidX.Compose.Gallery\Assets\*LICENSE.txt" Link="Assets\%(Filename)%(Extension)" />
+    <AndroidAsset Include="..\Microsoft.AndroidX.Compose.Gallery\Assets\FONT_SOURCES.txt" Link="Assets\FONT_SOURCES.txt" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Microsoft.AndroidX.Compose\Microsoft.AndroidX.Compose.csproj" />
     <ProjectReference Include="..\Microsoft.AndroidX.Compose.SourceGenerators\Microsoft.AndroidX.Compose.SourceGenerators.csproj"
                       OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
