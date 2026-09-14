@@ -8,15 +8,19 @@ namespace AndroidX.Compose;
 /// <remarks>
 /// <para>
 /// Compose's <c>TextUnit</c> is an inline value class around a <c>Long</c>;
-/// the long packs a sign bit, a type tag (Sp/Em/Unspecified), and a value.
+/// the high bits carry the type tag (Sp/Em/Unspecified), and the low 32 bits
+/// carry the raw IEEE 754 float value, including its sign.
 /// This struct preserves that wire shape — <see cref="PackedValue"/> is the
-/// exact long that <c>TextUnitKt.GetSp(int)</c> returns — so it crosses
+/// exact long that <c>TextUnitKt.GetSp</c> returns — so it crosses
 /// JNI unchanged.
 /// </para>
 /// <para>
-/// Use <see cref="Sp(int)"/> or the implicit conversion from <see cref="int"/>
-/// (which both delegate to the bound <c>TextUnitKt.GetSp</c> factory) to
-/// construct a typed Sp value.
+/// Use <see cref="Sp(int)"/>, <see cref="Sp(float)"/>, or the implicit
+/// conversion from <see cref="int"/> to construct a typed Sp value via
+/// the bound <c>TextUnitKt.GetSp</c> factory. Fractional amounts can also
+/// be written as <c>0.5f.Sp()</c>. There is no implicit float conversion,
+/// so a packed <see cref="long"/> cannot silently become a pixel count
+/// through a widening numeric conversion.
 /// </para>
 /// </remarks>
 public readonly struct Sp : IEquatable<Sp>, IComparable<Sp>
@@ -29,7 +33,7 @@ public readonly struct Sp : IEquatable<Sp>, IComparable<Sp>
 
     /// <summary>
     /// Construct an Sp from the raw packed <c>TextUnit</c> long. Use the
-    /// other overloads (which take an <see cref="int"/>) for ergonomic
+    /// other overloads (which take an <see cref="int"/> or <see cref="float"/>) for ergonomic
     /// construction; this one is for round-tripping packed values from
     /// existing bound APIs.
     /// </summary>
@@ -43,6 +47,19 @@ public readonly struct Sp : IEquatable<Sp>, IComparable<Sp>
     /// the bound <c>TextUnitKt.GetSp(int)</c> factory.
     /// </summary>
     public Sp(int sp)
+        : this(AndroidX.Compose.UI.Unit.TextUnitKt.GetSp(sp))
+    {
+    }
+
+    /// <summary>
+    /// Construct an Sp from a fractional scale-independent pixel count by
+    /// calling the bound <c>TextUnitKt.GetSp(float)</c> factory without rounding.
+    /// </summary>
+    /// <remarks>
+    /// Preserves Kotlin's handling of negative values, signed zero, infinities,
+    /// and NaN; no additional validation or normalization is performed.
+    /// </remarks>
+    public Sp(float sp)
         : this(AndroidX.Compose.UI.Unit.TextUnitKt.GetSp(sp))
     {
     }
@@ -71,8 +88,9 @@ public readonly struct Sp : IEquatable<Sp>, IComparable<Sp>
     /// <inheritdoc/>
     /// <remarks>
     /// Delegates to Kotlin's <c>TextUnit.compareTo</c>. Defined for same-tag
-    /// values (all <see cref="Sp"/> instances are Sp-tagged, so this is
-    /// always safe between two <see cref="Sp"/> values).
+    /// values. Integer and float constructors produce Sp-tagged values;
+    /// the raw-long constructor and <see langword="default"/> can carry
+    /// other tags. Kotlin rejects unspecified or mismatched tags.
     /// </remarks>
     public int CompareTo(Sp other) =>
         AndroidX.Compose.UI.Unit.TextUnit.CompareTo(PackedValue, other.PackedValue);

@@ -16,9 +16,11 @@ namespace AndroidX.Compose.Samples.Jetchat;
 /// match upstream's <c>theme/Color.kt</c>.
 /// </para>
 /// <para>
-/// Typography uses the pinned upstream Karla / Montserrat resource families.
-/// Font assignment preserves the baseline metrics; the separate fractional-Sp
-/// work supplies upstream numeric typography tokens.
+/// Numeric typography metrics and weights use the pinned upstream
+/// <c>JetchatTypography</c>, including fractional letter spacing.
+/// Karla / Montserrat resource families are applied without changing those
+/// metrics. The bundled fallback fonts do not establish downloaded-font
+/// or pixel-exact typography parity.
 /// </para>
 /// </remarks>
 public static class JetchatTheme
@@ -152,7 +154,7 @@ public static class JetchatTheme
             var theme = new MaterialTheme
             {
                 ColorScheme = scheme,
-                Typography = c.Remember(() => JetchatFonts.WithFonts(MaterialTheme.BuildTypography())),
+                Typography = c.Remember(() => JetchatFonts.WithFonts(Theme.Typography.CreateJetchatTypography())),
             };
             theme.Add(content);
             return theme;

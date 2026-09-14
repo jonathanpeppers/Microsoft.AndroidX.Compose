@@ -1,4 +1,6 @@
 using AndroidX.Compose.Material3;
+using AndroidX.Compose.Samples.Jetchat.Theme;
+using Typography = AndroidX.Compose.Samples.Jetchat.Theme.Typography;
 
 namespace AndroidX.Compose.Samples.Jetchat;
 
@@ -72,10 +74,9 @@ public static class JetchatDrawer
             new Text(label)
             {
                 FontFamily = JetchatFonts.Karla,
-                FontSize = 14,
                 Color    = Color.FromPacked(scheme.OnSurfaceVariant),
                 Modifier = Modifier.Padding(top: 16),
-            },
+            }.WithTypography(Typography.BodySmall),
         };
 
     static Row BuildChatItem(
@@ -115,11 +116,9 @@ public static class JetchatDrawer
             new Text(channel)
             {
                 FontFamily = JetchatFonts.Montserrat,
-                FontSize   = 14,
-                FontWeight = selected ? FontWeight.SemiBold : FontWeight.Normal,
                 Color      = textColor,
                 Modifier   = Modifier.Padding(top: 16, bottom: 16, start: 12),
-            },
+            }.WithTypography(Typography.BodyMedium),
         };
     }
 
@@ -159,10 +158,9 @@ public static class JetchatDrawer
             new Text(name)
             {
                 FontFamily = JetchatFonts.Montserrat,
-                FontSize = 14,
                 Color    = Color.FromPacked(scheme.OnSurface),
                 Modifier = Modifier.Padding(top: 16, bottom: 16, start: 12),
-            },
+            }.WithTypography(Typography.BodyMedium),
         };
     }
 }
