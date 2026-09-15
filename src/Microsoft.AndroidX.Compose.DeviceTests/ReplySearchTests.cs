@@ -13,6 +13,7 @@ public class ReplySearchTests
     static TestInstrumentation Runner => TestInstrumentation.Current
         ?? throw new InvalidOperationException("Reply search tests require native instrumentation.");
 
+    /// <summary>Checks pinned IDs, prefix semantics, ordering, and source object identity.</summary>
     [TestMethod]
     public void Matching_UsesSubjectOrFullNamePrefixAndOriginalOrder()
     {
@@ -38,6 +39,7 @@ public class ReplySearchTests
             ReplySearchSession.FindMatches(LocalEmailsDataProvider.AllEmails, query).Select(e => e.Id).ToArray();
     }
 
+    /// <summary>Exercises input, IME, dismissal, selection, and composition departure/re-entry.</summary>
     [TestMethod]
     public async Task Search_RetainsQueryOnNativeBack_ClearsOnArrow_SelectsEmailAndResetsOnReturn()
     {
@@ -71,9 +73,10 @@ public class ReplySearchTests
             await Click(activity, node => node.Text == "Bonjour", "IME-retained query");
             AssertPresent("Bonjour from Paris");
 
-            ReportStage("System Back collapses expanded search");
+            ReportStage("System Back collapses expanded search", activity);
             Runner.SendKeyDownUpSync(Keycode.Back);
             await Settle(activity);
+            ReportStage("After search Back", activity);
             AssertEditor("Bonjour");
             Assert.IsTrue(activity.InInbox.Value, "Search dismissal must not navigate.");
             using (var result = Find(node => node.Text == "Bonjour from Paris"))
@@ -108,6 +111,45 @@ public class ReplySearchTests
         {
             Runner.RunOnMainSync(activity.Finish);
             await activity.Destroyed.Task.WaitAsync(TimeSpan.FromSeconds(10));
+            Runner.WaitForIdleSync();
+        }
+    }
+
+    /// <summary>Verifies that only expanded search consumes Back, using native window dispatch.</summary>
+    [TestMethod]
+    public async Task NativeBack_DismissesPopupThenReachesUnderlyingActivity()
+    {
+        ReportStage("Starting native Back ownership activity");
+        var activity = await Start();
+        try
+        {
+            await Click(activity, node => node.Text == "Search emails", "Back ownership search");
+            await SetText(activity, "Bonjour");
+            AssertPresent("Bonjour from Paris");
+            ReportStage("Before first native Back: expanded popup", activity);
+            Runner.SendKeyDownUpSync(Keycode.Back);
+            await Settle(activity);
+            ReportStage("After first native Back: collapsed search", activity);
+            AssertEditor("Bonjour");
+            Assert.IsTrue(activity.InInbox.Value);
+            Assert.AreEqual(0, activity.SelectionCalls);
+            using (var result = Find(node => node.Text == "Bonjour from Paris"))
+                Assert.IsNull(result, "First Back must dismiss the search results.");
+
+            ReportStage("Before second native Back: underlying activity", activity);
+            Runner.SendKeyDownUpSync(Keycode.Back);
+            await activity.Destroyed.Task.WaitAsync(TimeSpan.FromSeconds(10));
+            Runner.WaitForIdleSync();
+            ReportStage("After second native Back: activity destroyed", activity);
+            Assert.IsTrue(activity.IsDestroyed, "Collapsed search must not consume the next Back.");
+        }
+        finally
+        {
+            if (!activity.IsDestroyed)
+            {
+                Runner.RunOnMainSync(activity.Finish);
+                await activity.Destroyed.Task.WaitAsync(TimeSpan.FromSeconds(10));
+            }
             Runner.WaitForIdleSync();
         }
     }
@@ -214,11 +256,31 @@ public class ReplySearchTests
     static T Require<T>(T? value) where T : class =>
         value ?? throw new InvalidOperationException($"Reply search test {typeof(T).Name} is unavailable.");
 
-    static void ReportStage(string stage)
+    static void ReportStage(string stage, ReplySearchTestActivity? activity = null)
     {
         using var status = new Bundle();
         status.PutString("searchStage", stage);
         status.PutInt("pid", global::Android.OS.Process.MyPid());
+        if (activity is not null)
+        {
+            bool active = false;
+            Runner.RunOnMainSync(() =>
+            {
+                status.PutBoolean("finishing", activity.IsFinishing);
+                status.PutBoolean("destroyed", activity.IsDestroyed);
+                status.PutBoolean("activityWindowFocused", activity.HasWindowFocus);
+                status.PutBoolean("decorLaidOut", Require(activity.Window?.DecorView).IsLaidOut);
+                active = !activity.IsFinishing && !activity.IsDestroyed;
+            });
+            if (active)
+            {
+                using var root = Require(Runner.UiAutomation).RootInActiveWindow
+                    ?? throw new InvalidOperationException("No owned active window at the Back boundary.");
+                Assert.AreEqual("net.compose.devicetests", root.PackageName);
+                status.PutInt("activeWindowId", root.WindowId);
+                status.PutString("activeWindowClass", root.ClassName);
+            }
+        }
         Runner.SendStatus(0, status);
     }
 }
