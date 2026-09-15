@@ -90,6 +90,35 @@ pending flags, raw awaiter counts, or quiet frames. It is not a frame-by-frame
 visual parity claim against
 [`android/compose-samples` at `4c1fe758`](https://github.com/android/compose-samples/tree/4c1fe7586e2fbf1c934925ef8ab64d3803361423).
 
+### Native acceptance evidence
+
+On 2026-09-15, Pixel 7 passed all **8** `AnimatedScope` cases, with no
+failures or skips, using source `e70f2c1` and embedded DeviceTests APK SHA-256
+`DBFBEEACCD7C0A8DC89ED1C660E0CAA9B8889FD3D537DD20129AADD55B1AE331`.
+The ARM64 app/runtime ELF payload sections matched the built managed DLLs
+byte-for-byte. Both tree and direct routes reported native exit duration
+**800,000,000 ns**, versus the parent's 100 ms effect, while the child was
+still installed; each measured six children across the state change.
+Independent recomposition, nested/outgoing scope identity, disposal/re-entry,
+callback exception restoration, and the full default/explicit argument matrix
+passed.
+
+An earlier run passed 7/8 because the default comparison used managed wrapper
+identity. The correction calls the bound `Java.Lang.Object.Equals(Java.Lang.Object)`
+overload, which dispatches to Kotlin's transition-data equality, with positive
+and negative controls. No runtime/default behavior or timing assertions changed.
+
+Gallery APK SHA-256
+`09C1EB6701FD07AA1319A1D516E0D9C463001DBEBD13E76C9AA483649BFD740C`
+rendered `demo/anim-children` with readable labels. Owned screenshots captured
+shown/hidden content; native UI hierarchies confirmed removal and re-entry
+of both tree and composerless children. A transient adb transport failure
+interrupted further Gallery interaction, so its separate next-state button
+was not exercised. AnimatedContent state changes were covered by the native
+suite instead. Evidence was recovered without restarting the shared adb server,
+both repo-owned apps were stopped, and all device commands ended at
+10:57:44.612 CDT, inside the granted lease.
+
 ## Bound baseline modifiers
 
 `Modifier.AlignBy(HorizontalAlignmentLine)` and `AlignByBaseline()` resolve the
