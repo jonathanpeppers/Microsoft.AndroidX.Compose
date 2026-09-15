@@ -69,6 +69,44 @@ remove/re-add ownership. The Gallery route `transition-values` demonstrates the
 same spring scale and two tweens used by the pinned Jetchat record button.
 Gesture triggers remain separate from the visual derivations.
 
+### Combined recording-input acceptance
+
+Source `530450602798776cde304ed02a0b7239e73a2992` passed **20 distinct native
+cases** on Pixel 7 on 2026-09-15, using the same immutable DeviceTests APK
+throughout. The seven transition cases were retained from their verified run;
+the remaining nine scope and four input cases ran in subsequent, separately
+authorized invocations. Every TRX was captured before the next invocation,
+with zero failures, errors, or skipped cases.
+
+| Suite | Passed | PID | Fresh TRX run ID | UTC start / finish |
+| --- | --- | --- | --- | --- |
+| Transition values | 7 | 18233 | `afbc0cc3-e3dd-4190-b945-22d397d4c700` | 17:45:59.311 / 17:46:16.640 |
+| Animated scopes | 9 | 19528 | `ae3aae2a-168d-40f2-892e-e0e752362cc3` | 18:03:25.642 / 18:03:33.386 |
+| Long-press / linked RecordButton | 4 | 19641 | `19c61be4-46de-4bb3-aaa5-9501a5109a6a` | 18:03:39.972 / 18:03:50.063 |
+
+Installed APK SHA-256 matched
+`E1B7D1FCB931C11E09ACC352CB8BABC0D93CF04EF2EDD9BA56E198B56D208497`,
+with no private/external assembly override files. The embedded arm64 app and
+runtime DLL payloads matched the build outputs; runtime SHA-256 was
+`9C8AFC6386D9CCA31A693A583E45C7B71DFFB2824DB40F2A7E1BE422CBA41F18`.
+
+The earlier combined source `8d98269` exposed an unhandled managed Row-scope
+exception in the linked recording fixture: the tooltip anchor recomposed
+independently, but its inner button tried to apply Row-only vertical alignment.
+The fix moves that alignment to the enclosing Tooltip, the actual Row child,
+without widening scope propagation or bypassing the guard. The original failing
+fixture first passed in isolation (run `86a4785b-2b5b-40d3-b542-5a87bd500e88`);
+that extra confirmation is not counted as a twenty-first distinct case.
+
+The transition run's subsequent unbounded log read timed out after its fresh
+passing TRX had been saved. Later bounded-tail captures returned no owned log
+records; these limitations are explicit, and no complete phase-log archive is
+claimed. Instrumentation PIDs, exact command vectors, hashes and fresh TRXs
+remain available. The original 47-line managed AndroidRuntime exception and
+the isolated regression's 77 owned log lines were preserved separately.
+No successful suite was repeated solely to recover logs. The final test process
+was stopped and all device commands ended at 13:03:55.152 CDT.
+
 ### Verified transition evidence
 
 On 2026-09-15, source `ceb21412b8ce08011cb0da46f7a6d9ccc4236405`
