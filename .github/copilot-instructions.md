@@ -181,7 +181,15 @@ pattern; see `ComposeBridges.cs` for live examples (`PainterResource`,
   bridge has a `$default` slot.**
 - Kotlin extension receivers on `@Composable`: `IntPtr` with name ending
   `Scope` (e.g. `IntPtr rowScope`). Non-`@Composable` `$default` extensions:
-  receiver = first `IntPtr` user param. Plain static extensions: first user
+  receiver = first `IntPtr` user param. Static non-composable, non-suspend
+  `$default` bridges may set `ReceiverCount = N` to explicitly exclude N
+  leading receivers from the default bits (for example, dispatch scope plus
+  extension modifier on `AnimatedVisibilityScope.animateEnterExit$default`).
+  Each receiver must be a non-null bound Java peer or `IntPtr`, and occupy
+  an object JNI slot. Typed receivers use the normal handle lowering and
+  generated `GC.KeepAlive`; default names describe only the remaining
+  parameters. Omitted `ReceiverCount` preserves the single-`IntPtr` convention.
+  Plain static extensions: first user
   param is receiver iff `IntPtr` AND first JNI sigParam is `L`. Receiver lands
   at `args[0]`, excluded from `$default` count.
 - `IModifier?` → `ComposeBridges.ModifierHandle` (`null` → `IntPtr.Zero`).
@@ -221,6 +229,7 @@ fit any `[ComposeBridge]` shape.
 | CN2009 | `[ComposeBridge(Suspend = true)]` configuration is invalid (missing/misplaced `IContinuation`, wrong return, etc.). |
 | CN2010 | `[ComposeBridge]` declares an `int _changed` parameter but the JNI signature has no `$changed` slot (only valid on `@Composable` bridges). |
 | CN2011 | `[ComposeBridge(Instance = true)]` configuration is invalid (missing receiver or incompatible constructor/suspend/singleton/default shape). |
+| CN2012 | Explicit `ReceiverCount` is invalid (nonpositive count, incompatible bridge shape, missing receivers, nullable/non-peer receiver, or non-object JNI receiver slot). |
 
 **When adding a new diagnostic, update this table (and CN1xxx if relevant).
 Source of truth: `src/Microsoft.AndroidX.Compose.SourceGenerators/Diagnostics.cs`.**

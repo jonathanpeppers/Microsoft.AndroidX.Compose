@@ -91,6 +91,18 @@ internal static partial class ComposeBridges
     internal static IntPtr ModifierHandle(IModifier? modifier) =>
         modifier is null ? IntPtr.Zero : ((Java.Lang.Object)modifier).Handle;
 
+    // The regular method is bound; only the two-receiver Kotlin $default entry is missing.
+    [ComposeBridge(
+        Class = "androidx/compose/animation/AnimatedVisibilityScope",
+        JvmName = "animateEnterExit$default",
+        Signature = "(Landroidx/compose/animation/AnimatedVisibilityScope;Landroidx/compose/ui/Modifier;" +
+                    "Landroidx/compose/animation/EnterTransition;Landroidx/compose/animation/ExitTransition;" +
+                    "Ljava/lang/String;ILjava/lang/Object;)Landroidx/compose/ui/Modifier;",
+        Defaults = typeof(AnimateEnterExitDefault), ReceiverCount = 2)]
+    internal static partial IntPtr AnimatedVisibilityScopeAnimateEnterExit(
+        Animation.IAnimatedVisibilityScope scope, IntPtr modifier,
+        Animation.EnterTransition? enter, Animation.ExitTransition? exit, string? label);
+
     [ComposeBridge(
         Class = "androidx/lifecycle/compose/LocalLifecycleOwnerKt",
         JvmName = "getLocalLifecycleOwner",

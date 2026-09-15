@@ -1977,6 +1977,8 @@ static AndroidX.Compose.ComposableContext.Current.get -> AndroidX.Compose.Runtim
 static AndroidX.Compose.ComposableContext.Enter(AndroidX.Compose.Runtime.IComposer! composer) -> AndroidX.Compose.ComposableContextScope
 static AndroidX.Compose.Composables.AlertDialog(System.Action! onDismissRequest, System.Action! confirmButton, AndroidX.Compose.Modifier? modifier = null, System.Action? dismissButton = null, System.Action? icon = null, System.Action? title = null, System.Action? text = null, AndroidX.Compose.Shape? shape = null) -> void
 static AndroidX.Compose.Composables.AnimatedContent<T>(T targetState, System.Action<T>! content, AndroidX.Compose.Modifier? modifier = null) -> void
+static AndroidX.Compose.Composables.AnimatedVisibility(AndroidX.Compose.Runtime.IComposer! composer, bool visible, System.Action<AndroidX.Compose.Runtime.IComposer!>! content, AndroidX.Compose.Modifier? modifier = null, AndroidX.Compose.Animation.EnterTransition? enter = null, AndroidX.Compose.Animation.ExitTransition? exit = null) -> void
+static AndroidX.Compose.Composables.AnimatedVisibility(bool visible, System.Action! content, AndroidX.Compose.Modifier? modifier = null, AndroidX.Compose.Animation.EnterTransition? enter = null, AndroidX.Compose.Animation.ExitTransition? exit = null) -> void
 static AndroidX.Compose.Composables.AssistChip(System.Action! onClick, System.Action! label, bool enabled = true, AndroidX.Compose.Modifier? modifier = null, System.Action? leadingIcon = null, System.Action? trailingIcon = null, AndroidX.Compose.Shape? shape = null) -> void
 static AndroidX.Compose.Composables.BackHandler(System.Action! onBack, bool enabled) -> void
 static AndroidX.Compose.Composables.Badge(System.Action! content, AndroidX.Compose.Modifier? modifier = null) -> void
@@ -2719,6 +2721,7 @@ static AndroidX.Compose.Modifier.AlignBy(AndroidX.Compose.UI.Layout.HorizontalAl
 static AndroidX.Compose.Modifier.AlignBy(AndroidX.Compose.UI.Layout.VerticalAlignmentLine! alignmentLine) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.Modifier.AlignByBaseline() -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.Modifier.Alpha(float alpha) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.Modifier.AnimateEnterExit(AndroidX.Compose.Animation.EnterTransition? enter = null, AndroidX.Compose.Animation.ExitTransition? exit = null, string? label = null) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.Modifier.AspectRatio(float ratio, bool matchHeightConstraintsFirst = false) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.Modifier.Background(AndroidX.Compose.Color color) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.Modifier.Background(AndroidX.Compose.Color color, AndroidX.Compose.Shape? shape) -> AndroidX.Compose.Modifier!
@@ -2818,6 +2821,7 @@ static AndroidX.Compose.ModifierExtensions.AlignBy(this AndroidX.Compose.Modifie
 static AndroidX.Compose.ModifierExtensions.AlignBy(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.UI.Layout.VerticalAlignmentLine! alignmentLine) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.ModifierExtensions.AlignByBaseline(this AndroidX.Compose.Modifier! modifier) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.ModifierExtensions.Alpha(this AndroidX.Compose.Modifier! modifier, float alpha) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.ModifierExtensions.AnimateEnterExit(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.Animation.EnterTransition? enter = null, AndroidX.Compose.Animation.ExitTransition? exit = null, string? label = null) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.ModifierExtensions.AspectRatio(this AndroidX.Compose.Modifier! modifier, float ratio, bool matchHeightConstraintsFirst = false) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.ModifierExtensions.Background(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.Color color) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.ModifierExtensions.Background(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.Color color, AndroidX.Compose.Shape? shape) -> AndroidX.Compose.Modifier!

@@ -83,6 +83,8 @@ using AndroidX.Compose;
 [assembly: ComposeDefaults("AnimatedVisibilityDefault",
     "!visible", "modifier", "enter", "exit", "label", "!content")]
 
+[assembly: ComposeDefaults("AnimateEnterExitDefault", "enter", "exit", "label")]
+
 // androidx.compose.material3.Shapes — synthetic-default constructor,
 // 5 CornerBasedShape slots. Hand-rolled JNI (ShapesBridges.cs) calls
 // the ctor; this enum names the bits so MaterialTheme.BuildShapes can

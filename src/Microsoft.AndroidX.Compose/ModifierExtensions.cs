@@ -16,6 +16,34 @@ namespace AndroidX.Compose;
 public static class ModifierExtensions
 {
     /// <summary>
+    /// Animates a child's entrance and exit using the nearest AnimatedVisibility
+    /// or AnimatedContent content scope. Child effects combine with the parent's.
+    /// Null or omitted enter/exit values use Kotlin's fade-in/fade-out defaults;
+    /// a null label uses Kotlin's <c>animateEnterExit</c> label.
+    /// </summary>
+    /// <remarks>
+    /// Chains may be created outside composition; the scope is resolved when the
+    /// modifier is applied during rendering. Nested layout containers preserve
+    /// the animated scope; nested animated containers replace it for their children.
+    /// Do not dispose supplied transition peers while the chain is in use.
+    /// </remarks>
+    /// <exception cref="InvalidOperationException">
+    /// The chain is applied outside compatible animated content.
+    /// </exception>
+    public static Modifier AnimateEnterExit(this Modifier modifier,
+        Animation.EnterTransition? enter = null, Animation.ExitTransition? exit = null, string? label = null)
+    {
+        ArgumentNullException.ThrowIfNull(modifier);
+        // The effective receiver is dynamic, not part of the chain's supplied values.
+        if (enter is not null && exit is not null && label is not null)
+            return modifier.AppendBound(current =>
+                RenderContext.RequireAnimatedVisibilityScope().AnimateEnterExit(current, enter, exit, label),
+                ModifierOpKey.Opaque);
+        return modifier.Append(current => ComposeBridges.AnimatedVisibilityScopeAnimateEnterExit(
+            RenderContext.RequireAnimatedVisibilityScope(), current, enter, exit, label));
+    }
+
+    /// <summary>
     /// <c>Modifier.padding(all: Dp)</c> — applies <paramref name="all"/>
     /// of padding to every edge.
     /// </summary>
