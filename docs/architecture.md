@@ -5,6 +5,43 @@ and its sibling source generators. For the *why* behind the project and a
 tour of how Jetpack Compose itself works under the hood, see
 [compose-internals.md](compose-internals.md).
 
+## Pointer-input long-press lifecycle
+
+`Modifier.PointerInput(handler, key)` calls the official runtime binding's
+`SuspendingPointerInputFilterKt.PointerInput` with a bound
+`IPointerInputEventHandler`. Callers keep that handler remembered and must not
+dispose it while installed. Managed keys retain `Equals` through `ManagedBox`;
+they are not coerced to strings. Keys should be immutable.
+
+`Modifier.DetectDragGesturesAfterLongPress` adds a native `Modifier.composed`
+factory. Every materialized location remembers a handler and all four callback
+peers, keyed by the explicit pointer-input key. A successful composition's
+`SideEffect` publishes the latest immutable delegate bundle; a speculative
+composition never changes the installed callbacks. Rebuilding/reusing the C#
+chain therefore neither resets a gesture nor shares a handler between locations.
+The factory returns a Modifier rather than Unit, so it has a specialized
+`IFunction3` adapter instead of a Unit-returning content lambda.
+
+The `UI.Android` 1.11.3.1 runtime binding exposes both `PointerInput` and the
+handler's suspend `Invoke`. `Foundation.Android` 1.11.3.1 still omits
+`DetectDragGesturesAfterLongPress`; one generated `$default` suspend bridge
+supplies its callbacks and forwards the **native outer continuation**. There
+is no managed Task or awaiter-only cancellation token. Native key changes,
+density/view-configuration changes, detach and disposal cancel the actual job.
+The detector reports start position, per-event X/Y pixel deltas, end/release and
+cancel, and consumes movement in Kotlin. Its cancellation callback can also run
+while waiting for the next gesture, not only after a recognized long press.
+Temporary JNI result references are released in `finally`, and the coroutine
+suspended singleton uses the existing raw-handle sentinel check.
+
+`LongPressDragTests` injects real native MotionEvents and waits for detector
+callbacks, with bounded frame barriers for recomposition. It checks short taps,
+long press, two-axis deltas, latest callbacks, native handler/callback identities
+across recomposition and GC, key reset, modifier removal, MotionEvent cancellation
+and activity disposal. No synthetic animation-clock helper is involved.
+Gallery routes `modifiers-long-press-drag` and `buttons-tooltips` expose the
+lifecycle and competing-tooltip-input control.
+
 ## Bound baseline modifiers
 
 `Modifier.AlignBy(HorizontalAlignmentLine)` and `AlignByBaseline()` resolve the

@@ -1696,6 +1696,57 @@ public static class ModifierExtensions
         return AppendPointerInput(modifier, key, block);
     }
 
+    /// <summary>
+    /// Installs a bound Kotlin pointer-input handler. Its coroutine is cancelled
+    /// by Compose when the key changes or the modifier leaves the layout.
+    /// </summary>
+    /// <remarks>
+    /// Remember the handler to preserve its JNI identity. Replacing a same-class
+    /// handler without changing the key does not restart the running coroutine.
+    /// Supply immutable keys with stable equality; managed keys retain their
+    /// Equals semantics, rather than being converted to strings. Null is a stable
+    /// key. The caller must not dispose the handler while Compose owns it.
+    /// This is the native suspend contract, not awaiter-only Task cancellation.
+    /// </remarks>
+    public static Modifier PointerInput(this Modifier modifier,
+        AndroidX.Compose.UI.Input.Pointer.IPointerInputEventHandler handler, object? key = null)
+    {
+        ArgumentNullException.ThrowIfNull(modifier);
+        ArgumentNullException.ThrowIfNull(handler);
+        var nativeKey = BoxPointerInputKey(key);
+        return modifier.AppendBound(current =>
+            AndroidX.Compose.UI.Input.Pointer.SuspendingPointerInputFilterKt.PointerInput(current, nativeKey, handler),
+            new ModifierOpKey(nameof(PointerInput), (handler, key)));
+    }
+
+    /// <summary>
+    /// Waits for a native long press, then reports start position, per-event X/Y
+    /// pixel deltas, release, and cancellation. Movement is consumed by Compose.
+    /// </summary>
+    /// <remarks>
+    /// Each applied modifier location remembers its own native handler and callback
+    /// peers, even when a chain is rebuilt or reused. Successful recompositions publish
+    /// the latest callbacks without interrupting a gesture. Changing the immutable
+    /// key or removing the modifier cancels the actual Kotlin pointer-input job.
+    /// No recording, threshold, ripple, or accessibility policy is added.
+    /// </remarks>
+    public static Modifier DetectDragGesturesAfterLongPress(this Modifier modifier,
+        Action<Offset> onDrag, Action<Offset>? onDragStart = null,
+        Action? onDragEnd = null, Action? onDragCancel = null, object? key = null)
+    {
+        ArgumentNullException.ThrowIfNull(modifier);
+        ArgumentNullException.ThrowIfNull(onDrag);
+        var callbacks = new LongPressDragCallbacks(onDrag, onDragStart, onDragEnd, onDragCancel);
+        var factory = new PointerInputModifierFactory(callbacks, key);
+        var inspector = new ComposableLambda1(_ => { });
+        return modifier.AppendBound(current =>
+            AndroidX.Compose.UI.ComposedModifierKt.Composed(current, inspector, factory),
+            new ModifierOpKey(nameof(DetectDragGesturesAfterLongPress), (callbacks, key)));
+    }
+
+    internal static Java.Lang.Object? BoxPointerInputKey(object? key) =>
+        key is null ? null : key as Java.Lang.Object ?? new ManagedBox(key);
+
     // Shared plumbing for DetectTapGestures / DetectDragGestures /
     // DetectTransformGestures: resolve the user-supplied `key` to a
     // Java object (Kotlin uses reference equality for the default-

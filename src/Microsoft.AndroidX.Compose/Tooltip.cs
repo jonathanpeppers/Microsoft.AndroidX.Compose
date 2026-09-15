@@ -23,6 +23,12 @@ public sealed class Tooltip : ComposableNode
     /// <summary>Required: the always-visible anchor the tooltip attaches to.</summary>
     public required ComposableNode Anchor { get; set; }
 
+    /// <summary>
+    /// Whether native long-press and hover gestures show this tooltip. Defaults
+    /// to true. Disable when the anchor owns a competing long-press gesture.
+    /// </summary>
+    public bool EnableUserInput { get; set; } = true;
+
     public override void Render(IComposer composer)
     {
         if (Tip is null || Anchor is null)
@@ -38,6 +44,8 @@ public sealed class Tooltip : ComposableNode
         var modifier = BuildModifier();
         int defaults = (int)TooltipBoxDefault.All;
         if (modifier is not null) defaults &= ~(int)TooltipBoxDefault.Modifier;
+        // The existing generated bridge supplies false for the unrepresented bool slot.
+        if (!EnableUserInput) defaults &= ~(int)TooltipBoxDefault.EnableUserInput;
 
         ComposeBridges.TooltipBox(
             positionProvider: positionProvider,
