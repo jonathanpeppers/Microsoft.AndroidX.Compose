@@ -301,6 +301,9 @@ using AndroidX.Compose;
     "!text", "!icon", "!onClick", "modifier", "!expanded", "shape",
     "containerColor", "contentColor", "elevation", "interactionSource")]
 
+[assembly: ComposeDefaults("FloatingActionButtonElevationDefault",
+    "defaultElevation", "pressedElevation", "focusedElevation", "hoveredElevation")]
+
 // androidx.compose.material3.SurfaceKt.Surface-T9BRK9s (non-interactive):
 // 8 user params, only bit 7 = content provided.
 [assembly: ComposeDefaults("SurfaceDefault",

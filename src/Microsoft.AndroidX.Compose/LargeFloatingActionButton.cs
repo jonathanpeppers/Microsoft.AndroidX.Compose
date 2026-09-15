@@ -13,4 +13,8 @@ namespace AndroidX.Compose;
 /// }
 /// </code>
 /// </summary>
+/// <remarks>
+/// Optional colors, native elevation, and a hoisted interaction source follow
+/// <see cref="FloatingActionButton"/>. Unset properties use Kotlin defaults.
+/// </remarks>
 public sealed partial class LargeFloatingActionButton;

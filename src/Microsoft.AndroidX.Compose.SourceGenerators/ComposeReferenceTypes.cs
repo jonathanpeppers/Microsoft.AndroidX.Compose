@@ -41,6 +41,8 @@ internal static class ComposeReferenceTypes
         "AndroidX.Compose.PaddingValues",
         "AndroidX.Compose.Material3.ITopAppBarScrollBehavior",
         "AndroidX.Compose.Material3.ButtonColors",
+        "AndroidX.Compose.Material3.FloatingActionButtonElevation",
+        "AndroidX.Compose.Foundation.Interaction.IMutableInteractionSource",
         "AndroidX.Compose.Material3.SliderColors",
         "AndroidX.Compose.Material3.CheckboxColors",
         "AndroidX.Compose.Material3.RadioButtonColors",
