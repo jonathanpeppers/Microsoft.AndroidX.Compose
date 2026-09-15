@@ -80,17 +80,25 @@ and [`ReplyHomeViewModel.kt`](https://github.com/android/compose-samples/blob/4c
 The port retains its existing `EmailDetail/{emailId}` route instead of rewriting
 the app to use Kotlin's in-Inbox detail pane. Switching from detail to another
 tab and **tapping Inbox or pressing system Back** restores that saved detail
-route. A Back handler exists only inside the non-Inbox top-level destinations
+route. Navigation 2.9.8's non-inclusive saved pop associates the saved stack
+with the `popUpTo` destination (Inbox) as well as the popped destination
+(EmailDetail); restoring Inbox follows that association. A Back handler
+exists only inside the non-Inbox top-level destinations
 and uses the same Inbox restore action. This preserves Kotlin's still-open
 in-Inbox detail context without changing the existing route architecture.
 Inbox-root Back remains unhandled by the sample and exits normally; detail
 owns its close action, and selection alone never intercepts.
 
-Search integration (#348) uses the inbox's same `Action<long>` for row/result
-opening. Search owns only its local expanded-state dismissal: native Back
-collapses it without clearing the query; leading Back clears and collapses.
-Result selection invokes the detail callback, then clears/collapses search.
-Search does not mutate multi-selection or install an app-wide Back handler.
+### Search integration (planned)
+
+Interactive search is **not implemented by this change**: `ReplySearchBar`
+remains a static placeholder. #348 owns that separate implementation. The
+agreed integration contract is to use the inbox's same `Action<long>` for
+row/result opening. Search will own only its local expanded-state dismissal:
+native Back will collapse it without clearing the query; leading Back will
+clear and collapse. Result selection will invoke the detail callback, then
+clear/collapse search, without mutating multi-selection or installing an
+app-wide Back handler.
 The pinned search uses ordinary `remember`, not saved state; leaving its
 composition resets its query/expansion. The search implementation and paired
 Kotlin search artifacts are tracked separately from navigation.
