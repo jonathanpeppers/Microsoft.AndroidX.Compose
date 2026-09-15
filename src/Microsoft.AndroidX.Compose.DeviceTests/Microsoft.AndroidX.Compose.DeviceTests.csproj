@@ -47,10 +47,14 @@
     <Using Include="Microsoft.VisualStudio.TestTools.UnitTesting" />
     <Using Include="Microsoft.AndroidX.Compose.DeviceTests.Resource" Alias="Resource" />
     <Compile Include="..\..\samples\Jetchat\JetchatFonts.cs" Link="Samples\JetchatFonts.cs" />
+    <Compile Include="..\..\samples\Jetchat\RecordButton.cs" Link="Samples\RecordButton.cs" />
+    <Compile Include="..\..\samples\Jetchat\RecordingGestureState.cs" Link="Samples\RecordingGestureState.cs" />
     <Compile Include="..\..\samples\Jetchat\Theme\Typography.cs" Link="Samples\Theme\Typography.cs" />
   </ItemGroup>
 
   <ItemGroup>
+    <AndroidResource Include="..\..\samples\Jetchat\Resources\drawable\ic_mic.xml" Link="Resources\drawable\ic_mic.xml" />
+    <AndroidResource Include="..\..\samples\Jetchat\Resources\drawable\ic_arrow_back.xml" Link="Resources\drawable\ic_arrow_back.xml" />
     <AndroidResource Include="..\Microsoft.AndroidX.Compose.Gallery\Resources\font\*.ttf" Link="Resources\font\%(Filename)%(Extension)" />
     <AndroidResource Include="..\..\samples\Jetchat\Resources\font\montserrat_light.ttf" Link="Resources\font\montserrat_light.ttf" />
     <AndroidResource Include="..\..\samples\Jetchat\Resources\font\montserrat_medium.ttf" Link="Resources\font\montserrat_medium.ttf" />
