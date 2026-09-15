@@ -22,6 +22,13 @@ tools:
   github:
     toolsets: [actions, pull_requests, repos]
     min-integrity: none
+steps:
+  - name: Setup .NET 10
+    uses: actions/setup-dotnet@v6
+    with:
+      dotnet-version: "10.0.x"
+  - name: Install maui-android workload
+    run: dotnet workload install maui-android
 safe-outputs:
   threat-detection: false
   create-pull-request-review-comment:
