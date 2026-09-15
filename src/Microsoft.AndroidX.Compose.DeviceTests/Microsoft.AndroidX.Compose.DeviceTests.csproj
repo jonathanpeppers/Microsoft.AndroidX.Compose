@@ -51,6 +51,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Include="..\..\samples\Reply\*.cs" Exclude="..\..\samples\Reply\MainActivity.cs" Link="Samples\Reply\%(Filename)%(Extension)" />
+    <AndroidResource Include="..\..\samples\Reply\Resources\drawable\*" Link="Resources\drawable\%(Filename)%(Extension)" />
+    <AndroidResource Include="..\..\samples\Reply\Resources\drawable-nodpi\*" Link="Resources\drawable-nodpi\%(Filename)%(Extension)" />
+  </ItemGroup>
+
+  <ItemGroup>
     <AndroidResource Include="..\Microsoft.AndroidX.Compose.Gallery\Resources\font\*.ttf" Link="Resources\font\%(Filename)%(Extension)" />
     <AndroidResource Include="..\..\samples\Jetchat\Resources\font\montserrat_light.ttf" Link="Resources\font\montserrat_light.ttf" />
     <AndroidResource Include="..\..\samples\Jetchat\Resources\font\montserrat_medium.ttf" Link="Resources\font\montserrat_medium.ttf" />
