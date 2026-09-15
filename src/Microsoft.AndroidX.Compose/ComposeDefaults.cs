@@ -196,6 +196,10 @@ using AndroidX.Compose;
     "!painter", "contentDescription", "modifier", "alignment",
     "contentScale", "alpha", "colorFilter")]
 
+[assembly: ComposeDefaults("RememberSharedSheetStateDefault",
+    "!skipPartiallyExpanded", "!confirmValueChange", "!initialValue",
+    "!skipHiddenState", "positionalThreshold", "velocityThreshold")]
+
 // androidx.compose.material3.IconKt.Icon-ww6aTOc (Painter overload):
 // the Painter and ImageBitmap overloads collide with the bound
 // ImageVector overload (same mangled JVM name `Icon-ww6aTOc`) and are

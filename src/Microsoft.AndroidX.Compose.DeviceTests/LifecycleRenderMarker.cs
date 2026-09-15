@@ -8,6 +8,6 @@ sealed class LifecycleRenderMarker(ComposableNode? child) : ComposableNode
     public override void Render(IComposer composer)
     {
         child?.Render(composer);
-        PickerStateLifecycleTestActivity.MarkRenderCompleted();
+        composer.SideEffect(PickerStateLifecycleTestActivity.MarkRenderCompleted);
     }
 }

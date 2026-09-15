@@ -147,6 +147,7 @@ public static class Catalog
         D.DialogsSheets.DatePickerDialogDemo.Demo,
         D.DialogsSheets.DateRangePickerDialogDemo.Demo,
         D.DialogsSheets.TimePickerDialogDemo.Demo,
+        D.DialogsSheets.SharedTimeStateDemo.Demo,
         D.DialogsSheets.DropdownMenuDemo.Demo,
         D.DialogsSheets.ExposedDropdownMenuBoxDemo.Demo,
 

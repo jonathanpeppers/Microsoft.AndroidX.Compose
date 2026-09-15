@@ -39,6 +39,43 @@ internal static partial class ComposeBridges
         Signature = "()Landroidx/compose/runtime/ProvidableCompositionLocal;")]
     internal static partial IntPtr LocalLifecycleOwner();
 
+    [ComposeBridge(
+        Class = "composenet/compose/SharedStateLifetime",
+        JvmName = "isLive",
+        Signature = "(Landroidx/compose/runtime/CompositionImpl;Ljava/lang/Object;Landroidx/compose/runtime/RecomposeScopeImpl;" +
+                    "Ljava/util/concurrent/atomic/AtomicReference;Ljava/util/concurrent/atomic/AtomicReference;" +
+                    "Landroidx/compose/runtime/CompositionImpl;)Z")]
+    internal static partial bool SharedStateIsLive(IControlledComposition composition, SharedStateOwner owner,
+        IRecomposeScope? scope, Java.Util.Concurrent.Atomic.AtomicReference? registrationOrigin = null,
+        Java.Util.Concurrent.Atomic.AtomicReference? ownershipOrigin = null, IControlledComposition? consumer = null);
+
+    [ComposeBridge(
+        Class = "composenet/compose/SharedStateLifetime",
+        JvmName = "dependencyCount",
+        Signature = "()I")]
+    internal static partial int SharedStateDependencyCount();
+
+    [ComposeBridge(
+        Class = "composenet/compose/SharedStateLifetime",
+        JvmName = "pausedOrigin",
+        Signature = "(Landroidx/compose/runtime/CompositionImpl;)Ljava/util/concurrent/atomic/AtomicReference;")]
+    internal static partial IntPtr SharedStatePausedOriginJvm(IControlledComposition composition);
+
+    // Why manual: ordinary object-return bridges expose an owned JNI local.
+    // Normalize the optional origin to a managed peer without retaining a local ref.
+    internal static Java.Util.Concurrent.Atomic.AtomicReference? SharedStatePausedOrigin(IControlledComposition composition)
+    {
+        var local = SharedStatePausedOriginJvm(composition);
+        try
+        {
+            return Java.Lang.Object.GetObject<Java.Util.Concurrent.Atomic.AtomicReference>(local, JniHandleOwnership.DoNotTransfer);
+        }
+        finally
+        {
+            JNIEnv.DeleteLocalRef(local);
+        }
+    }
+
     // Resolve the outer interface first: initializing Modifier$Companion
     // directly can leave Modifier.Companion null through the JVM's default-
     // interface initialization cycle. Kotlin's default arguments use that field.
@@ -1074,6 +1111,7 @@ internal static partial class ComposeBridges
         IModifier?  modifier,
         [StateHolder(Remember = nameof(RememberSheetState),
                      StateType = typeof(SheetStateHolder),
+                     Unbind = nameof(SheetStateHolder.UnbindJvm),
                      SharedState = true)]
         IntPtr      sheetState,
         IFunction2? dragHandle,
@@ -1163,6 +1201,7 @@ internal static partial class ComposeBridges
         [StateHolder(Remember = nameof(RememberTimePickerState),
                      StateType = typeof(TimePickerState),
                      Bind = nameof(TimePickerState.BindJvm),
+                     Unbind = nameof(TimePickerState.UnbindJvm),
                      SharedState = true)] IntPtr state,
         IModifier? modifier,
         int defaults, IComposer composer, int _changed = 0);
@@ -1179,6 +1218,7 @@ internal static partial class ComposeBridges
         [StateHolder(Remember = nameof(RememberTimePickerState),
                      StateType = typeof(TimePickerState),
                      Bind = nameof(TimePickerState.BindJvm),
+                     Unbind = nameof(TimePickerState.UnbindJvm),
                      SharedState = true)] IntPtr state,
         IModifier? modifier,
         int defaults, IComposer composer, int _changed = 0);
@@ -1242,6 +1282,7 @@ internal static partial class ComposeBridges
         [StateHolder(Remember = nameof(RememberDatePickerState),
                      StateType = typeof(DatePickerState),
                      Bind = nameof(DatePickerState.BindJvm),
+                     Unbind = nameof(DatePickerState.UnbindJvm),
                      SharedState = true)]
         IntPtr      state,
         IModifier?  modifier,
@@ -1265,9 +1306,9 @@ internal static partial class ComposeBridges
     public static IntPtr RememberDatePickerState(
         long?                rememberSelectedDateMillis,
         long?                rememberDisplayedMonthMillis,
-        DatePickerYearRange? initialYearRange,
-        int?                 initialDisplayMode,
-        AndroidX.Compose.Material3.ISelectableDates? initialSelectableDates,
+        DatePickerYearRange? rememberYearRange,
+        int?                 rememberDisplayMode,
+        AndroidX.Compose.Material3.ISelectableDates? rememberSelectableDates,
         IComposer composer)
     {
         using var selectedDate = rememberSelectedDateMillis is long selected
@@ -1276,7 +1317,7 @@ internal static partial class ComposeBridges
         using var displayedMonth = rememberDisplayedMonthMillis is long displayed
             ? Java.Lang.Long.ValueOf(displayed)
             : null;
-        using var yearRange = initialYearRange is DatePickerYearRange years
+        using var yearRange = rememberYearRange is DatePickerYearRange years
             ? new IntRange(years.StartYear, years.EndYear)
             : null;
         var defaults = RememberDatePickerStateDefault.All;
@@ -1286,17 +1327,17 @@ internal static partial class ComposeBridges
             defaults &= ~RememberDatePickerStateDefault.InitialDisplayedMonthMillis;
         if (yearRange is not null)
             defaults &= ~RememberDatePickerStateDefault.YearRange;
-        if (initialDisplayMode is not null)
+        if (rememberDisplayMode is not null)
             defaults &= ~RememberDatePickerStateDefault.InitialDisplayMode;
-        if (initialSelectableDates is not null)
+        if (rememberSelectableDates is not null)
             defaults &= ~RememberDatePickerStateDefault.SelectableDates;
 
         var state = DatePickerKt.RememberDatePickerState(
             selectedDate,
             displayedMonth,
             yearRange,
-            initialDisplayMode.GetValueOrDefault(),
-            initialSelectableDates,
+            rememberDisplayMode.GetValueOrDefault(),
+            rememberSelectableDates,
             composer,
             0,
             (int)defaults);
@@ -1319,6 +1360,7 @@ internal static partial class ComposeBridges
         [StateHolder(Remember = nameof(RememberDateRangePickerState),
                      StateType = typeof(DateRangePickerState),
                      Bind = nameof(DateRangePickerState.BindJvm),
+                     Unbind = nameof(DateRangePickerState.UnbindJvm),
                      SharedState = true)]
         IntPtr      state,
         IModifier?  modifier,
@@ -1331,9 +1373,9 @@ internal static partial class ComposeBridges
         long?                rememberSelectedStartDateMillis,
         long?                rememberSelectedEndDateMillis,
         long?                rememberDisplayedMonthMillis,
-        DatePickerYearRange? initialYearRange,
-        int?                 initialDisplayMode,
-        AndroidX.Compose.Material3.ISelectableDates? initialSelectableDates,
+        DatePickerYearRange? rememberYearRange,
+        int?                 rememberDisplayMode,
+        AndroidX.Compose.Material3.ISelectableDates? rememberSelectableDates,
         IComposer composer)
     {
         using var selectedStart = rememberSelectedStartDateMillis is long start
@@ -1345,7 +1387,7 @@ internal static partial class ComposeBridges
         using var displayedMonth = rememberDisplayedMonthMillis is long displayed
             ? Java.Lang.Long.ValueOf(displayed)
             : null;
-        using var yearRange = initialYearRange is DatePickerYearRange years
+        using var yearRange = rememberYearRange is DatePickerYearRange years
             ? new IntRange(years.StartYear, years.EndYear)
             : null;
         var defaults = RememberDateRangePickerStateDefault.All;
@@ -1357,9 +1399,9 @@ internal static partial class ComposeBridges
             defaults &= ~RememberDateRangePickerStateDefault.InitialDisplayedMonthMillis;
         if (yearRange is not null)
             defaults &= ~RememberDateRangePickerStateDefault.YearRange;
-        if (initialDisplayMode is not null)
+        if (rememberDisplayMode is not null)
             defaults &= ~RememberDateRangePickerStateDefault.InitialDisplayMode;
-        if (initialSelectableDates is not null)
+        if (rememberSelectableDates is not null)
             defaults &= ~RememberDateRangePickerStateDefault.SelectableDates;
 
         var state = DateRangePickerKt.RememberDateRangePickerState(
@@ -1367,8 +1409,8 @@ internal static partial class ComposeBridges
             selectedEnd,
             displayedMonth,
             yearRange,
-            initialDisplayMode.GetValueOrDefault(),
-            initialSelectableDates,
+            rememberDisplayMode.GetValueOrDefault(),
+            rememberSelectableDates,
             composer,
             0,
             (int)defaults);
@@ -1384,9 +1426,26 @@ internal static partial class ComposeBridges
     internal static partial IntPtr RememberTimePickerStateJvm(int initialHour, int initialMinute,
                                                               bool is24Hour, IComposer composer);
 
+    // Why manual: the generated IntPtr bridge returns an owned JNI local, but state
+    // preambles expect a borrowed cached-peer handle. The generator does not model
+    // that return-ownership conversion; normalize the peer and release the local here.
     public static IntPtr RememberTimePickerState(int rememberHour, int rememberMinute,
-                                                 bool is24Hour, IComposer composer) =>
-        RememberTimePickerStateJvm(rememberHour, rememberMinute, is24Hour, composer);
+                                                 bool is24Hour, IComposer composer)
+    {
+        var local = RememberTimePickerStateJvm(rememberHour, rememberMinute, is24Hour, composer);
+        try
+        {
+            // Match the borrowed-peer handle contract of the bound Remember wrappers.
+            var state = Java.Lang.Object.GetObject<AndroidX.Compose.Material3.ITimePickerState>(
+                local, JniHandleOwnership.DoNotTransfer)
+                ?? throw new InvalidOperationException("rememberTimePickerState returned no peer.");
+            return ((IJavaObject)state).Handle;
+        }
+        finally
+        {
+            JNIEnv.DeleteLocalRef(local);
+        }
+    }
 
     // androidx.compose.material3.NavigationDrawerKt.rememberDrawerState.
     // The Kotlin function is bound natively so we go through it instead
@@ -1398,14 +1457,14 @@ internal static partial class ComposeBridges
     // this declaration when resolving the Remember parameter to a
     // per-instance JCW field instead of a state-wrapper member.
     public static IntPtr RememberDrawerState(
-        DrawerValue initialValue,
+        DrawerValue rememberValue,
         [ConfirmStateChange(typeof(DrawerValue),
             AdapterType = typeof(DrawerValueConfirmStateChange))]
         IFunction1 confirmStateChange,
         IComposer composer)
     {
         var state = AndroidX.Compose.Material3.NavigationDrawerKt.RememberDrawerState(
-            initialValue:        initialValue,
+            initialValue:        rememberValue,
             confirmStateChange:  confirmStateChange,
             _composer:           composer,
             p3:                  0,
@@ -1429,29 +1488,43 @@ internal static partial class ComposeBridges
         return ((Java.Lang.Object)state).Handle;
     }
 
-    // androidx.compose.material3.ModalBottomSheetKt.rememberModalBottomSheetState.
-    // Bound binding — wrapper-passthrough only. SkipPartiallyExpanded
-    // comes from the SheetStateHolder wrapper's like-named property
-    // (Phase 4b parameterised Remember). The veto adapter is wired by
-    // the facade generator: it reads [ConfirmStateChange] off this
-    // declaration and allocates a per-instance JCW field whose JNI
-    // identity stays stable across recompositions (so `remember` cache
-    // key holds and the sheet keeps its position).
+    // The bound modal helper hard-codes Hidden. Use its underlying remember
+    // with an initial value so a forgotten owner can transfer settled state.
+    [ComposeBridge(
+        Class = "androidx/compose/material3/SheetDefaultsKt",
+        JvmName = "rememberSheetState-AGcomas",
+        Signature = "(ZLkotlin/jvm/functions/Function1;Landroidx/compose/material3/SheetValue;ZFF" +
+                    "Landroidx/compose/runtime/Composer;II)Landroidx/compose/material3/SheetState;",
+        Defaults = typeof(RememberSharedSheetStateDefault))]
+    internal static partial IntPtr RememberSharedSheetStateJvm(
+        bool skipPartiallyExpanded, IFunction1 confirmValueChange,
+        SheetValue initialValue, bool skipHiddenState,
+        float? positionalThreshold, float? velocityThreshold, IComposer composer);
+
+    // Why manual: normalize the generated bridge's owned JNI local to the borrowed
+    // cached-peer handle expected by state preambles, releasing the local in finally.
+    // This return-ownership conversion is not a bridge-generator shape.
     public static IntPtr RememberSheetState(
         bool skipPartiallyExpanded,
+        SheetValue rememberValue,
         [ConfirmStateChange(typeof(global::AndroidX.Compose.Material3.SheetValue),
             AdapterType = typeof(SheetValueConfirmStateChange),
             PropertyName = "ConfirmValueChange")]
         IFunction1 confirmValueChange,
         IComposer composer)
     {
-        var state = AndroidX.Compose.Material3.ModalBottomSheetKt.RememberModalBottomSheetState(
-            skipPartiallyExpanded: skipPartiallyExpanded,
-            confirmValueChange:    confirmValueChange,
-            _composer:             composer,
-            p3:                    0,
-            _changed:              0);
-        return ((Java.Lang.Object)state).Handle;
+        var local = RememberSharedSheetStateJvm(skipPartiallyExpanded, confirmValueChange,
+            rememberValue, false, null, null, composer);
+        try
+        {
+            var state = Java.Lang.Object.GetObject<SheetState>(local, JniHandleOwnership.DoNotTransfer)
+                ?? throw new InvalidOperationException("rememberSheetState returned no peer.");
+            return state.Handle;
+        }
+        finally
+        {
+            JNIEnv.DeleteLocalRef(local);
+        }
     }
 
     // androidx.compose.material3.TooltipKt.rememberTooltipState
@@ -1742,6 +1815,7 @@ internal static partial class ComposeBridges
         [StateHolder(
             Remember = nameof(RememberNavigationSuiteScaffoldState),
             StateType = typeof(NavigationSuiteScaffoldState),
+            Unbind = nameof(NavigationSuiteScaffoldState.UnbindJvm),
             SharedState = true)] IntPtr state,
         [Slot("Content")] IFunction2 content,
         int defaults,
@@ -1825,12 +1899,12 @@ internal static partial class ComposeBridges
     }
 
     public static IntPtr RememberNavigationSuiteScaffoldState(
-        NavigationSuiteBindings.NavigationSuiteScaffoldValue initialValue,
+        NavigationSuiteBindings.NavigationSuiteScaffoldValue rememberValue,
         IComposer composer)
     {
         var state = NavigationSuiteBindings.NavigationSuiteScaffoldKt
             .RememberNavigationSuiteScaffoldState(
-                initialValue: initialValue,
+                initialValue: rememberValue,
                 _composer:    composer,
                 p2:           0,
                 _changed:     0);
@@ -2117,6 +2191,7 @@ internal static partial class ComposeBridges
         IModifier?        modifier,
         [StateHolder(Remember = nameof(RememberDrawerState),
                      StateType = typeof(DrawerStateHolder),
+                     Unbind = nameof(DrawerStateHolder.UnbindJvm),
                      SharedState = true)] IntPtr drawerState,
         [Slot("Content")] IFunction2 content,
         bool              gesturesEnabled = true,
@@ -2152,6 +2227,7 @@ internal static partial class ComposeBridges
         IModifier?        modifier,
         [StateHolder(Remember = nameof(RememberDrawerState),
                      StateType = typeof(DrawerStateHolder),
+                     Unbind = nameof(DrawerStateHolder.UnbindJvm),
                      SharedState = true)] IntPtr drawerState,
         [Slot("Content")] IFunction2 content,
         bool              gesturesEnabled = true,
