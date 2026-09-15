@@ -227,32 +227,21 @@ public class ReplySearchTests
         ReportStage($"Query request: {text}; previous={editor.Text}; window={editor.WindowId}");
         using var args = new Bundle();
         args.PutCharSequence(AccessibilityNodeInfo.ActionArgumentSetTextCharsequence, text);
-        bool accepted = false;
-        using var command = new Java.Lang.Runnable(() =>
-            accepted = editor.PerformAction(global::Android.Views.Accessibility.Action.SetText, args));
-        using var filter = new ReplySearchTextChangedFilter(text, editor.WindowId);
-        try
-        {
-            using var changed = Require(Runner.UiAutomation).ExecuteAndWaitForEvent(command, filter, 5000)
-                ?? throw new InvalidOperationException("Native query action returned no text-change event.");
-            Assert.IsTrue(accepted, "Native query action was rejected.");
-            ReportStage($"Editor event: requested={text}; accepted={accepted}; type={changed.EventType}; eventTime={changed.EventTime}; window={changed.WindowId}");
-        }
-        catch (Java.Util.Concurrent.TimeoutException)
-        {
-            ReportStage($"Query acknowledgement timed out; accepted={accepted}; expectedWindow={editor.WindowId}; {filter.LastObserved}");
-            CaptureQueryTimeout(text, activity);
-            throw;
-        }
+        bool accepted = editor.PerformAction(global::Android.Views.Accessibility.Action.SetText, args);
+        Assert.IsTrue(accepted, "Native query action was rejected.");
+        ReportStage($"Query action accepted: {text}; window={editor.WindowId}");
         await Settle(activity);
-        AssertEditor(text);
+        AssertEditor(text, activity);
     }
 
-    static void AssertEditor(string text)
+    static void AssertEditor(string text, ReplySearchTestActivity? activity = null)
     {
         using var editor = Find(node => node.Editable)
             ?? throw new InvalidOperationException("Search editor missing.");
-        Assert.AreEqual(text, editor.Text ?? "");
+        string actual = editor.Text ?? "";
+        if (actual != text && activity is not null)
+            CaptureQueryMismatch(text, activity);
+        Assert.AreEqual(text, actual);
         ReportStage($"Fresh editor confirmed: {text}; window={editor.WindowId}");
     }
 
@@ -308,30 +297,30 @@ public class ReplySearchTests
         return root;
     }
 
-    static void CaptureQueryTimeout(string requested, ReplySearchTestActivity activity)
+    static void CaptureQueryMismatch(string requested, ReplySearchTestActivity activity)
     {
         using var root = OwnedRoot();
         using var editor = FindIn(root, node => node.Editable);
-        ReportStage($"Timeout snapshot: requested={requested}; actual={editor?.Text}; window={root.WindowId}", activity);
+        ReportStage($"Mismatch snapshot: requested={requested}; actual={editor?.Text}; window={root.WindowId}", activity);
         var directory = global::Android.App.Application.Context.GetExternalFilesDir(null)?.AbsolutePath
-            ?? throw new InvalidOperationException("Search timeout artifact directory is unavailable.");
-        string prefix = Path.Combine(directory, "search-timeout-" + DateTime.UtcNow.ToString("yyyyMMdd-HHmmss-fff"));
+            ?? throw new InvalidOperationException("Search diagnostic artifact directory is unavailable.");
+        string prefix = Path.Combine(directory, "search-query-failure-" + DateTime.UtcNow.ToString("yyyyMMdd-HHmmss-fff"));
         var text = new StringBuilder().AppendLine($"requested={requested}");
         Describe(root, text, 0);
         File.WriteAllText(prefix + ".txt", text.ToString());
         using var image = Require(Runner.UiAutomation).TakeScreenshot()
-            ?? throw new InvalidOperationException("Owned search timeout screenshot was unavailable.");
+            ?? throw new InvalidOperationException("Owned search mismatch screenshot was unavailable.");
         var format = global::Android.Graphics.Bitmap.CompressFormat.Png
             ?? throw new InvalidOperationException("PNG format was unavailable for the owned search snapshot.");
         using (var output = File.Create(prefix + ".png"))
             Assert.IsTrue(image.Compress(format, 100, output));
-        ReportStage("Owned timeout artifacts: " + prefix);
+        ReportStage("Owned query mismatch artifacts: " + prefix);
     }
 
     static void Describe(AccessibilityNodeInfo node, StringBuilder text, int depth)
     {
         if (!OperatingSystem.IsAndroidVersionAtLeast(34))
-            Assert.IsTrue(node.Refresh(), "Timeout diagnostic node is no longer available.");
+            Assert.IsTrue(node.Refresh(), "Query diagnostic node is no longer available.");
         using var bounds = new global::Android.Graphics.Rect();
         node.GetBoundsInScreen(bounds);
         text.Append(' ', depth).Append(node.ClassName).Append(" text=").Append(node.Text)
