@@ -449,6 +449,11 @@ public sealed class Modifier
     /// <inheritdoc cref="ModifierExtensions.ClearAndSetSemantics(Action{SemanticsScope})"/>
     public static Modifier ClearAndSetSemantics(Action<SemanticsScope> properties) => _companion.ClearAndSetSemantics(properties);
 
+    // Keep the handle path out of Padding overload resolution in friend assemblies.
+    internal Modifier PaddingFromHandle(IntPtr paddingValues) =>
+        Append(curr => ComposeBridges.ModifierPaddingValues(curr, paddingValues),
+            new ModifierOpKey("PaddingValuesIntPtr", paddingValues));
+
     /// <summary>
     /// Materialize the chain into a managed <c>IModifier</c> wrapper.
     /// Returns <c>null</c> when the chain is empty (no ops appended) so
