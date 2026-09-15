@@ -83,6 +83,8 @@ using AndroidX.Compose;
 [assembly: ComposeDefaults("AnimatedVisibilityDefault",
     "!visible", "modifier", "enter", "exit", "label", "!content")]
 
+[assembly: ComposeDefaults("AnimateEnterExitDefault", "enter", "exit", "label")]
+
 // androidx.compose.material3.Shapes — synthetic-default constructor,
 // 5 CornerBasedShape slots. Hand-rolled JNI (ShapesBridges.cs) calls
 // the ctor; this enum names the bits so MaterialTheme.BuildShapes can
@@ -384,6 +386,20 @@ using AndroidX.Compose;
 [assembly: ComposeDefaults("TooltipBoxDefault",
     "!positionProvider", "!tooltip", "!state", "modifier", "focusable",
     "enableUserInput", "!content")]
+
+// androidx.compose.foundation.text.BasicTextFieldKt.BasicTextField (TextFieldValue overload).
+[assembly: ComposeDefaults("BasicTextFieldDefault",
+    "!value", "!onValueChange", "modifier", "enabled", "readOnly",
+    "textStyle", "keyboardOptions", "keyboardActions", "singleLine",
+    "maxLines", "minLines", "visualTransformation", "onTextLayout",
+    "interactionSource", "cursorBrush", "decorationBox")]
+
+// androidx.compose.foundation.text.BasicTextFieldKt.BasicTextField (String overload).
+[assembly: ComposeDefaults("BasicTextFieldStringDefault",
+    "!text", "!onValueChange", "modifier", "enabled", "readOnly",
+    "textStyle", "keyboardOptions", "keyboardActions", "singleLine",
+    "maxLines", "minLines", "visualTransformation", "onTextLayout",
+    "interactionSource", "cursorBrush", "decorationBox")]
 
 // androidx.compose.material3.TextFieldKt.TextField (String overload) AND
 // OutlinedTextFieldKt.OutlinedTextField (String overload): 23 user params,

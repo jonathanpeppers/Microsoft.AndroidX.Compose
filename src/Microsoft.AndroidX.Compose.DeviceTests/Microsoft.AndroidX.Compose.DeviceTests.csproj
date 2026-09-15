@@ -50,6 +50,7 @@
     <Compile Include="..\..\samples\Jetchat\RecordButton.cs" Link="Samples\RecordButton.cs" />
     <Compile Include="..\..\samples\Jetchat\RecordingGestureState.cs" Link="Samples\RecordingGestureState.cs" />
     <Compile Include="..\..\samples\Jetchat\Theme\Typography.cs" Link="Samples\Theme\Typography.cs" />
+    <Compile Include="..\..\samples\Jetchat\MessageInput.cs" Link="Samples\MessageInput.cs" />
   </ItemGroup>
 
   <ItemGroup>

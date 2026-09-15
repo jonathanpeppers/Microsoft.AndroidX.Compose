@@ -116,6 +116,14 @@ internal static class Diagnostics
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);
 
+    public static readonly DiagnosticDescriptor BridgeReceiversInvalid = new(
+        id: "CN2012",
+        title: "[ComposeBridge(ReceiverCount = ...)] configuration is invalid",
+        messageFormat: "Bridge '{0}': {1}",
+        category: "AndroidX.Compose",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
+
     public static readonly DiagnosticDescriptor FacadeWrongContainingType = new(
         id: "CN3001",
         title: "[ComposeFacade] must be applied to a method on ComposeBridges",
@@ -151,7 +159,7 @@ internal static class Diagnostics
     public static readonly DiagnosticDescriptor FacadeCallbackUnsupportedType = new(
         id: "CN3005",
         title: "[Callback] unbox type is not supported",
-        messageFormat: "Facade for bridge '{0}': [Callback] on parameter '{1}' uses unsupported value type '{2}'. Supported types: bool, string, float.",
+        messageFormat: "Facade for bridge '{0}': [Callback] on parameter '{1}' uses unsupported value type '{2}'. Supported types: bool, string, float, Java.Lang.Object-derived peers.",
         category: "AndroidX.Compose",
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);

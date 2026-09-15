@@ -9,11 +9,18 @@ namespace AndroidX.Compose;
 /// theme/scope content. <c>p0</c> is the composer, <c>p1</c> is
 /// <c>$changed</c>.
 /// </summary>
+/// <remarks>
+/// Retains the animated-content receiver active at construction, including
+/// its absence. Invocation installs that receiver and the invocation-time
+/// composer, restoring both on return or failure. This also covers generated
+/// restart callbacks after their parent content callback has returned.
+/// </remarks>
 [Register("net/compose/ComposableLambda2")]
 public sealed class ComposableLambda2 : Java.Lang.Object, IFunction2
 {
     readonly Action<IComposer>? _body;
     readonly Action<IComposer, int>? _bodyWithChanged;
+    readonly Animation.IAnimatedVisibilityScope? _animatedScope = RenderContext.CurrentAnimatedVisibilityScope;
 
     /// <summary>
     /// Body that ignores the runtime's <c>$changed</c> hint. Use for
@@ -44,6 +51,8 @@ public sealed class ComposableLambda2 : Java.Lang.Object, IFunction2
     {
         ArgumentNullException.ThrowIfNull(p0);
         var composer = Android.Runtime.Extensions.JavaCast<IComposer>(p0);
+        using var context = ComposableContext.Enter(composer);
+        using var animation = RenderContext.PushAnimatedVisibilityScope(_animatedScope);
         if (_bodyWithChanged is not null)
         {
             int changed = p1 is Java.Lang.Integer i ? i.IntValue() : 0;

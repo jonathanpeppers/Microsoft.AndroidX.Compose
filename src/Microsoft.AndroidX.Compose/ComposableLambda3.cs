@@ -32,6 +32,7 @@ namespace AndroidX.Compose;
 internal sealed class ComposableLambda3 : Java.Lang.Object, IFunction3
 {
     readonly Action<Java.Lang.Object?, IComposer> _body;
+    readonly Animation.IAnimatedVisibilityScope? _animatedScope = RenderContext.CurrentAnimatedVisibilityScope;
 
     public ComposableLambda3(Action<IComposer> body)
         : this((Java.Lang.Object? _, IComposer c) => body(c)) { }
@@ -47,7 +48,10 @@ internal sealed class ComposableLambda3 : Java.Lang.Object, IFunction3
     {
         ArgumentNullException.ThrowIfNull(p1);
         var composer = Android.Runtime.Extensions.JavaCast<IComposer>(p1);
+        using var context = ComposableContext.Enter(composer);
+        using var animation = RenderContext.PushAnimatedVisibilityScope(_animatedScope);
         _body(p0, composer);
-        return Kotlin.Unit.Instance!;
+        return Kotlin.Unit.Instance
+            ?? throw new InvalidOperationException("Kotlin.Unit.Instance was unavailable after invoking ComposableLambda3.");
     }
 }
