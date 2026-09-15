@@ -22,10 +22,14 @@ uses the active context and is checked by CN5009. Target mappings are
 synchronous `[ComposableContent]` functions: they may read snapshot state or
 composition locals. The callback-time composer is entered and restored.
 `ComposableLambda3` supports value-returning bodies as well as its existing
-Unit-returning constructors. `Wrap3Result` uses Compose's **tracked** lambda
-factory, so wrapper identity is stable while a replacement mapping invalidates
-its readers. The spec callback slot remains present even when switching
-between omitted and supplied specs.
+Unit-returning constructors. Unlike Unit content, `Wrap3Result` remembers and
+rebinds that adapter inside a **replaceable**, not restartable, group. Snapshot
+reads belong to the caller that consumes the returned value. A tracked
+`ComposableLambdaImpl` would restart the mapping by itself and discard its new
+return value, leaving the transition target stale. Native value functions invoke
+these callbacks synchronously; their conservative zero changed masks ensure
+replacement mappings are evaluated. The spec callback slot remains present even
+when switching between omitted and supplied specs.
 
 The 1.11.3.1 **runtime companion DLLs** expose `TransitionKt.UpdateTransition`,
 core `AnimateFloat`, animation `AnimateColor`, the lifecycle properties, and
@@ -56,7 +60,8 @@ quiet frames, nor eventual expected-value polling proves animation completion.
 
 `TransitionValueTests` uses committed running/idle lifecycle signals before
 asserting exact float/color endpoints, spec selection, wrapper/callback/native
-peer identity, target interruption, same-target mapping changes, and
+peer identity, target interruption, same-target mapping changes (including
+dependencies read only inside mappings), and
 remove/re-add ownership. The Gallery route `transition-values` demonstrates the
 same spring scale and two tweens used by the pinned Jetchat record button.
 Gesture triggers remain separate from the visual derivations.

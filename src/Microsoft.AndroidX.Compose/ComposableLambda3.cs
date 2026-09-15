@@ -32,7 +32,7 @@ namespace AndroidX.Compose;
 [Register("net/compose/ComposableLambda3")]
 internal sealed class ComposableLambda3 : Java.Lang.Object, IFunction3
 {
-    readonly Func<Java.Lang.Object?, IComposer, Java.Lang.Object?> _body;
+    Func<Java.Lang.Object?, IComposer, Java.Lang.Object?> _body;
 
     public ComposableLambda3(Action<IComposer> body)
         : this((Java.Lang.Object? _, IComposer c) => body(c)) { }
@@ -49,6 +49,8 @@ internal sealed class ComposableLambda3 : Java.Lang.Object, IFunction3
         }) { }
 
     public ComposableLambda3(Func<Java.Lang.Object?, IComposer, Java.Lang.Object?> body) => _body = body;
+
+    internal void UpdateResult(Func<Java.Lang.Object?, IComposer, Java.Lang.Object?> body) => _body = body;
 
     public Java.Lang.Object? Invoke(Java.Lang.Object? p0, Java.Lang.Object? p1, Java.Lang.Object? p2)
     {

@@ -89,6 +89,28 @@ public class TransitionValueTests
     [TestMethod]
     [DataRow(false)]
     [DataRow(true)]
+    public async Task MappingLocalSnapshotReads_RetargetTheParentTransition(bool direct)
+    {
+        var host = await Start(direct);
+        try
+        {
+            var recording = await Animate(host, 1);
+            AssertValues(recording, TransitionTestState.Recording, 2f, 1f, Color.Red);
+            await OnUi(host, host.ChangeMapping);
+            await host.Started.Task.WaitAsync(TimeSpan.FromSeconds(15));
+            var changed = await host.Settled.Task.WaitAsync(TimeSpan.FromSeconds(15));
+            AssertIdentity(recording, changed);
+            AssertValues(changed, TransitionTestState.Recording, 4f, 1f, Color.Cyan);
+        }
+        finally
+        {
+            await Finish(host);
+        }
+    }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
     public async Task InterruptedAndRemovedTransitions_UseNativeLifecycle(bool direct)
     {
         var host = await Start(direct);

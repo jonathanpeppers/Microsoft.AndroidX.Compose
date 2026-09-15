@@ -47,15 +47,30 @@ namespace AndroidX.Compose;
 /// </summary>
 internal static class ComposableLambdas
 {
-    // Transition mappings/specs are synchronous composable lambdas with a value result, not Unit.
+    // A result-producing callback must invalidate its caller, not restart alone and discard its result.
+    // Native transition value functions invoke these synchronously and receive Uncertain changed masks.
     internal static IFunction3 Wrap3Result(
         IComposer composer,
         Func<Java.Lang.Object?, IComposer, Java.Lang.Object?> body,
         [CallerLineNumber] int line = 0,
         [CallerFilePath] string file = "")
-        => (IFunction3)ComposableLambdaKt.ComposableLambda(
-            composer, SourceLocationKey.Compute(line, file), tracked: true,
-            block: new ComposableLambda3(body));
+    {
+        int key = SourceLocationKey.Compute(line, file);
+        var callback = composer.Remember(() => new ComposableLambda3(body), line: line, file: file);
+        callback.UpdateResult((value, current) =>
+        {
+            current.StartReplaceableGroup(key);
+            try
+            {
+                return body(value, current);
+            }
+            finally
+            {
+                current.EndReplaceableGroup();
+            }
+        });
+        return callback;
+    }
 
     /// <summary>
     /// Wrap an <see cref="Action{IComposer}"/> as an identity-stable

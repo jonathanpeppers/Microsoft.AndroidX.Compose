@@ -16,6 +16,8 @@ public class TransitionValueTestActivity : ComponentActivity
     internal static TaskCompletionSource<TransitionValueTestActivity> Ready { get; set; } =
         new(TaskCreationOptions.RunContinuationsAsynchronously);
     internal readonly MutableNumberState<int> Phase = new(0);
+    internal readonly MutableNumberState<float> MappingScale = new(2f);
+    internal readonly MutableNumberState<int> MappingColor = new(0);
     internal TaskCompletionSource<TransitionValueSnapshot> Committed = NewSnapshot();
     internal TaskCompletionSource<TransitionValueSnapshot> Started = NewSnapshot();
     internal TaskCompletionSource<TransitionValueSnapshot> Settled = NewSnapshot();
@@ -39,12 +41,24 @@ public class TransitionValueTestActivity : ComponentActivity
 
     internal void ChangePhase(int phase)
     {
+        ResetSignals();
+        requestedPhase = phase;
+        Phase.Value = phase;
+    }
+
+    internal void ChangeMapping()
+    {
+        ResetSignals();
+        MappingScale.Value = 4f;
+        MappingColor.Value = 1;
+    }
+
+    void ResetSignals()
+    {
         Committed = NewSnapshot();
         Started = NewSnapshot();
         Settled = NewSnapshot();
         Removed = NewCompletion();
-        requestedPhase = phase;
-        Phase.Value = phase;
     }
 
     [Composable]
@@ -69,11 +83,9 @@ public class TransitionValueTestActivity : ComponentActivity
         IFiniteAnimationSpec? scaleSpec = phase == 4 ? null : phase == 5 ? tween : spring;
         IFiniteAnimationSpec? alphaSpec = phase == 4 ? null : tween;
         IFiniteAnimationSpec? colorSpec = phase == 4 ? null : tint;
-        float recordingScale = phase == 6 ? 3f : 2f;
-        Color recordingColor = phase == 6 ? Color.Green : Color.Red;
         Func<TransitionTestState, float> scaleTarget = value => value switch
         {
-            TransitionTestState.Recording => recordingScale,
+            TransitionTestState.Recording => phase == 6 ? 3f : host.MappingScale.Value,
             TransitionTestState.Cancelled => 0.5f,
             _ => 1f,
         };
@@ -85,7 +97,8 @@ public class TransitionValueTestActivity : ComponentActivity
         };
         Func<TransitionTestState, Color> colorTarget = value => value switch
         {
-            TransitionTestState.Recording => recordingColor,
+            TransitionTestState.Recording => phase == 6 ? Color.Green
+                : host.MappingColor.Value == 0 ? Color.Red : Color.Cyan,
             TransitionTestState.Cancelled => Color.Blue,
             _ => Color.Black,
         };
