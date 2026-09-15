@@ -223,9 +223,25 @@ public class ReplySearchTests
         ReportStage("Set query " + text);
         using var editor = Find(node => node.Editable)
             ?? throw new InvalidOperationException("Expanded search has no native editable field.");
+        ReportStage($"Query request: {text}; previous={editor.Text}; window={editor.WindowId}");
         using var args = new Bundle();
         args.PutCharSequence(AccessibilityNodeInfo.ActionArgumentSetTextCharsequence, text);
-        Assert.IsTrue(editor.PerformAction(global::Android.Views.Accessibility.Action.SetText, args));
+        bool accepted = false;
+        using var command = new Java.Lang.Runnable(() =>
+            accepted = editor.PerformAction(global::Android.Views.Accessibility.Action.SetText, args));
+        using var filter = new ReplySearchTextChangedFilter(text, editor.WindowId);
+        try
+        {
+            using var changed = Require(Runner.UiAutomation).ExecuteAndWaitForEvent(command, filter, 5000)
+                ?? throw new InvalidOperationException("Native query action returned no text-change event.");
+            Assert.IsTrue(accepted, "Native query action was rejected.");
+            ReportStage($"Query acknowledged: {text}; accepted={accepted}; eventTime={changed.EventTime}; window={changed.WindowId}");
+        }
+        catch (Java.Util.Concurrent.TimeoutException)
+        {
+            ReportStage($"Query acknowledgement timed out; accepted={accepted}; expectedWindow={editor.WindowId}; {filter.LastObserved}");
+            throw;
+        }
         await Settle(activity);
         AssertEditor(text);
     }
@@ -261,9 +277,7 @@ public class ReplySearchTests
 
     static void AssertPopupHorizontalBounds((int Left, int Right) collapsed)
     {
-        using var root = Require(Runner.UiAutomation).RootInActiveWindow
-            ?? throw new InvalidOperationException("Expanded search has no native window.");
-        Assert.AreEqual("net.compose.devicetests", root.PackageName);
+        using var root = OwnedRoot();
         using var bounds = new global::Android.Graphics.Rect();
         root.GetBoundsInScreen(bounds);
         Assert.AreEqual(collapsed.Left, bounds.Left, "Popup left edge differs from the collapsed input.");
@@ -272,14 +286,29 @@ public class ReplySearchTests
 
     static AccessibilityNodeInfo? Find(Func<AccessibilityNodeInfo, bool> predicate)
     {
-        using var root = Require(Runner.UiAutomation).RootInActiveWindow
-            ?? throw new InvalidOperationException("Search has no active accessibility root.");
-        Assert.AreEqual("net.compose.devicetests", root.PackageName, "Do not inspect another app.");
+        using var root = OwnedRoot();
         return FindIn(root, predicate);
+    }
+
+    static AccessibilityNodeInfo OwnedRoot()
+    {
+        var automation = Require(Runner.UiAutomation);
+        if (OperatingSystem.IsAndroidVersionAtLeast(34))
+            Assert.IsTrue(automation.ClearCache(), "Native accessibility client cache was not cleared.");
+        var root = automation.RootInActiveWindow
+            ?? throw new InvalidOperationException("Search has no active accessibility root.");
+        if (root.PackageName != "net.compose.devicetests")
+        {
+            root.Dispose();
+            throw new InvalidOperationException("Do not inspect another app's accessibility root.");
+        }
+        return root;
     }
 
     static AccessibilityNodeInfo? FindIn(AccessibilityNodeInfo node, Func<AccessibilityNodeInfo, bool> predicate)
     {
+        if (!OperatingSystem.IsAndroidVersionAtLeast(34))
+            Assert.IsTrue(node.Refresh(), "The native accessibility node is no longer available.");
         if (predicate(node))
             return OperatingSystem.IsAndroidVersionAtLeast(33)
                 ? new AccessibilityNodeInfo(node)
@@ -314,9 +343,7 @@ public class ReplySearchTests
             });
             if (active)
             {
-                using var root = Require(Runner.UiAutomation).RootInActiveWindow
-                    ?? throw new InvalidOperationException("No owned active window at the Back boundary.");
-                Assert.AreEqual("net.compose.devicetests", root.PackageName);
+                using var root = OwnedRoot();
                 status.PutInt("activeWindowId", root.WindowId);
                 status.PutString("activeWindowClass", root.ClassName);
             }
