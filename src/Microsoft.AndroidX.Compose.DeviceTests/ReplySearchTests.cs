@@ -16,29 +16,32 @@ public class ReplySearchTests
     [TestMethod]
     public void Matching_UsesSubjectOrFullNamePrefixAndOriginalOrder()
     {
-        var emails = LocalEmailsDataProvider.AllEmails;
         long[] bonjour = [2];
         long[] ali = [1];
+        long[] allison = [2, 10, 11];
+        long[] google = [0, 7];
         CollectionAssert.AreEqual(bonjour, Match("bOnJoUr"));
         CollectionAssert.AreEqual(ali, Match("Ali "));
+        CollectionAssert.AreEqual(allison, Match("All"));
+        CollectionAssert.AreEqual(google, Match("Google"));
         Assert.AreEqual(0, Match("").Length);
         Assert.AreEqual(0, Match("Paris").Length, "A substring is not a prefix.");
         Assert.AreEqual(0, Match(" Bonjour").Length, "Do not trim the query.");
         Assert.AreEqual(0, Match("Cucumber").Length, "Do not search bodies.");
         Assert.AreEqual(0, Match("no-such-email").Length);
-        var expected = emails.Where(e => e.Subject.StartsWith("Re", StringComparison.OrdinalIgnoreCase) ||
-            e.Sender.FullName.StartsWith("Re", StringComparison.OrdinalIgnoreCase)).ToArray();
-        var actual = ReplySearchSession.FindMatches(emails, "Re");
-        CollectionAssert.AreEqual(expected, actual.ToArray());
-        for (int i = 0; i < expected.Length; i++)
-            Assert.AreSame(expected[i], actual[i], "Selection must use the source email, not a copied/renumbered result.");
+        var actual = ReplySearchSession.FindMatches(LocalEmailsDataProvider.AllEmails, "All");
+        for (int i = 0; i < allison.Length; i++)
+            Assert.AreSame(LocalEmailsDataProvider.Get(allison[i]), actual[i],
+                "Selection must use the source email, not a copied/renumbered result.");
 
-        long[] Match(string query) => ReplySearchSession.FindMatches(emails, query).Select(e => e.Id).ToArray();
+        static long[] Match(string query) =>
+            ReplySearchSession.FindMatches(LocalEmailsDataProvider.AllEmails, query).Select(e => e.Id).ToArray();
     }
 
     [TestMethod]
     public async Task Search_RetainsQueryOnNativeBack_ClearsOnArrow_SelectsEmailAndResetsOnReturn()
     {
+        ReportStage("Starting real search activity");
         var activity = await Start();
         try
         {
@@ -82,6 +85,12 @@ public class ReplySearchTests
             AssertPresent("No search history");
             await SetText(activity, "no-such-email");
             AssertPresent("No item found");
+            Runner.RunOnMainSync(() => activity.InInbox.Value = false);
+            await Settle(activity);
+            Runner.RunOnMainSync(() => activity.InInbox.Value = true);
+            await Settle(activity);
+            await Click(activity, node => node.Text == "Search emails", "search after navigation away/back");
+            AssertPresent("No search history");
             await SetText(activity, "Bonjour");
             await Click(activity, node => node.Text == "Bonjour from Paris", "search result");
             Assert.AreEqual(2L, activity.SelectedId);
@@ -129,6 +138,7 @@ public class ReplySearchTests
 
     static async Task Click(ReplySearchTestActivity activity, Func<AccessibilityNodeInfo, bool> predicate, string name)
     {
+        ReportStage("Click " + name);
         using var node = Find(predicate) ?? throw new InvalidOperationException($"Missing {name}.");
         var target = node;
         try
@@ -152,6 +162,7 @@ public class ReplySearchTests
 
     static async Task SetText(ReplySearchTestActivity activity, string text)
     {
+        ReportStage("Set query " + text);
         using var editor = Find(node => node.Editable)
             ?? throw new InvalidOperationException("Expanded search has no native editable field.");
         using var args = new Bundle();
@@ -199,4 +210,12 @@ public class ReplySearchTests
 
     static T Require<T>(T? value) where T : class =>
         value ?? throw new InvalidOperationException($"Reply search test {typeof(T).Name} is unavailable.");
+
+    static void ReportStage(string stage)
+    {
+        using var status = new Bundle();
+        status.PutString("searchStage", stage);
+        status.PutInt("pid", global::Android.OS.Process.MyPid());
+        Runner.SendStatus(0, status);
+    }
 }
