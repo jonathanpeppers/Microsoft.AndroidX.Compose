@@ -43,6 +43,12 @@ public class ReplySearchTests
     [TestMethod]
     public async Task Search_RetainsQueryOnNativeBack_ClearsOnArrow_SelectsEmailAndResetsOnReturn()
     {
+        if (!OperatingSystem.IsAndroidVersionAtLeast(30))
+        {
+            Assert.Inconclusive("Native search IME regression requires Android 11 or later.");
+            return;
+        }
+
         ReportStage("Starting real search activity");
         var activity = await Start();
         try
@@ -58,8 +64,6 @@ public class ReplySearchTests
             AssertEditor("Bonjour");
             AssertPresent("Bonjour from Paris");
 
-            if (!OperatingSystem.IsAndroidVersionAtLeast(30))
-                throw new PlatformNotSupportedException("Native search IME regression requires Android 11 or later.");
             using (var editor = Find(node => node.Editable)
                 ?? throw new InvalidOperationException("Search editor missing before IME action."))
             {
@@ -68,8 +72,7 @@ public class ReplySearchTests
                 Assert.IsTrue(editor.PerformAction((global::Android.Views.Accessibility.Action)imeAction.Id));
             }
             await Settle(activity);
-            using (var result = Find(node => node.Text == "Bonjour from Paris"))
-                Assert.IsNull(result, "IME Search should collapse, not leave results open.");
+            AssertSearchContentAbsent("IME Search");
             await Click(activity, node => node.Text == "Bonjour", "IME-retained query");
             AssertPresent("Bonjour from Paris");
 
@@ -79,11 +82,11 @@ public class ReplySearchTests
             ReportStage("After search Back", activity);
             AssertEditor("Bonjour");
             Assert.IsTrue(activity.InInbox.Value, "Search dismissal must not navigate.");
-            using (var result = Find(node => node.Text == "Bonjour from Paris"))
-                Assert.IsNull(result, "System Back should collapse the expanded search.");
+            AssertSearchContentAbsent("System Back");
             await Click(activity, node => node.Text == "Bonjour", "retained query");
             AssertEditor("Bonjour");
             await Click(activity, node => node.ContentDescription == "Back", "search Back arrow");
+            AssertSearchContentAbsent("Leading Back arrow");
             await Click(activity, node => node.Text == "Search emails", "cleared search");
             AssertPresent("No search history");
             await SetText(activity, "no-such-email");
@@ -92,6 +95,7 @@ public class ReplySearchTests
             await Settle(activity);
             Runner.RunOnMainSync(() => activity.InInbox.Value = true);
             await Settle(activity);
+            AssertSearchContentAbsent("Navigation return");
             await Click(activity, node => node.Text == "Search emails", "search after navigation away/back");
             AssertPresent("No search history");
             await SetText(activity, "Bonjour");
@@ -103,6 +107,7 @@ public class ReplySearchTests
 
             Runner.RunOnMainSync(() => activity.InInbox.Value = true);
             await Settle(activity);
+            AssertSearchContentAbsent("Return from selected email");
             await Click(activity, node => node.Text == "Search emails", "returned search");
             AssertPresent("No search history");
             AssertEditor("");
@@ -133,8 +138,7 @@ public class ReplySearchTests
             AssertEditor("Bonjour");
             Assert.IsTrue(activity.InInbox.Value);
             Assert.AreEqual(0, activity.SelectionCalls);
-            using (var result = Find(node => node.Text == "Bonjour from Paris"))
-                Assert.IsNull(result, "First Back must dismiss the search results.");
+            AssertSearchContentAbsent("First native Back");
 
             ReportStage("Before second native Back: underlying activity", activity);
             Runner.SendKeyDownUpSync(Keycode.Back);
@@ -228,6 +232,13 @@ public class ReplySearchTests
     {
         using var node = Find(node => node.Text == text);
         Assert.IsNotNull(node, $"Search text '{text}' is missing from the owned native hierarchy.");
+    }
+
+    static void AssertSearchContentAbsent(string action)
+    {
+        using var content = Find(node => node.Text is
+            "Bonjour from Paris" or "No search history" or "No item found");
+        Assert.IsNull(content, $"{action} left expanded search content in the owned native hierarchy.");
     }
 
     static AccessibilityNodeInfo? Find(Func<AccessibilityNodeInfo, bool> predicate)
