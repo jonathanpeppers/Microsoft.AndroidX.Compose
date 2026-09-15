@@ -33,6 +33,8 @@ public class LongPressDragTestActivity : ComponentActivity
     internal View? Owner;
     internal float CenterX, CenterY;
     internal int Passes, StartCount, EndCount, CancelCount, MoveCount, LastVersion;
+    internal int ActiveCancelCount, IdleCancelCount;
+    internal bool GestureActive;
     bool _recordingMode;
     bool _lastRecording;
 
@@ -87,6 +89,7 @@ public class LongPressDragTestActivity : ComponentActivity
             position =>
             {
                 StartCount++;
+                GestureActive = true;
                 LastVersion = version;
                 Record($"start:{version}:{position.X:F1},{position.Y:F1}");
                 Started.TrySetResult();
@@ -94,6 +97,7 @@ public class LongPressDragTestActivity : ComponentActivity
             () =>
             {
                 EndCount++;
+                GestureActive = false;
                 LastVersion = version;
                 Record($"end:{version}");
                 Ended.TrySetResult();
@@ -102,8 +106,18 @@ public class LongPressDragTestActivity : ComponentActivity
             {
                 CancelCount++;
                 LastVersion = version;
-                Record($"cancel:{version}");
-                Cancelled.TrySetResult();
+                if (GestureActive)
+                {
+                    GestureActive = false;
+                    ActiveCancelCount++;
+                    Record($"cancel:{version}:active");
+                    Cancelled.TrySetResult();
+                }
+                else
+                {
+                    IdleCancelCount++;
+                    Record($"cancel:{version}:idle");
+                }
             });
         var highLevel = Modifier.DetectDragGesturesAfterLongPress(
             callbacks.OnDrag, callbacks.OnDragStart, callbacks.OnDragEnd, callbacks.OnDragCancel, key);

@@ -31,6 +31,9 @@ density/view-configuration changes, detach and disposal cancel the actual job.
 The detector reports start position, per-event X/Y pixel deltas, end/release and
 cancel, and consumes movement in Kotlin. Its cancellation callback can also run
 while waiting for the next gesture, not only after a recognized long press.
+Removal can cancel a gesture via a synthetic consumed-up event and then cancel
+the idle coroutine during detach. Tests account for those raw idle notifications
+separately from the single active cancellation required per recognized gesture.
 Temporary JNI result references are released in `finally`, and the coroutine
 suspended singleton uses the existing raw-handle sentinel check.
 

@@ -109,6 +109,7 @@ public class LongPressDragTests
         {
             for (int mode = 0; mode < 4; mode++)
             {
+                Assert.IsFalse(activity.GestureActive);
                 activity.Arm();
                 down = Touch(activity, MotionEventActions.Down);
                 await activity.Started.Task.WaitAsync(TimeSpan.FromSeconds(5));
@@ -136,7 +137,11 @@ public class LongPressDragTests
                     down = 0;
                 }
                 await activity.Cancelled.Task.WaitAsync(TimeSpan.FromSeconds(5));
-                Assert.AreEqual(mode + 1, activity.CancelCount);
+                // Removal can cancel the gesture via a synthetic up, then cancel its idle coroutine on detach.
+                Assert.AreEqual(mode + 1, activity.ActiveCancelCount);
+                Assert.AreEqual(mode + 1, activity.StartCount);
+                Assert.IsFalse(activity.GestureActive);
+                Assert.AreEqual(activity.ActiveCancelCount + activity.IdleCancelCount, activity.CancelCount);
                 Assert.AreEqual(0, activity.EndCount, "Cancellation must not masquerade as release.");
                 if (down != 0)
                 {
@@ -148,6 +153,9 @@ public class LongPressDragTests
                 if (!finished) await Frames(activity);
             }
             Assert.AreEqual(4, activity.StartCount);
+            global::Android.Util.Log.Info("Pointer337",
+                $"cancellation pid={(global::Android.OS.Process.MyPid())} active={activity.ActiveCancelCount} " +
+                $"idle={activity.IdleCancelCount} raw={activity.CancelCount} end={activity.EndCount}");
         }
         finally
         {
