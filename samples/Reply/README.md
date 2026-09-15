@@ -120,9 +120,14 @@ dotnet build src\Microsoft.AndroidX.Compose.DeviceTests
 adb shell am instrument -w -e filter FullyQualifiedName~ReplyNavigationTests net.compose.devicetests/net.compose.devicetests.TestInstrumentation
 ```
 
-Host builds prove compilation, not Android navigation/restoration behavior.
-Native execution evidence is recorded separately; process-death restoration and
-visual parity require their own device evidence, not an inference from recreation.
+Physical-device verification on 2026-09-15 used the linked Reply UI at commit
+`259f694` on a Pixel 7: all three navigation tests passed in separate native
+instrumentation invocations, as did the padding-overload regression control.
+Visible inbox email IDs and pixel offsets matched after tab switches, detail
+Back/Up, and activity recreation; saved-detail restoration also passed.
+Host builds alone are not native proof. These runs do not establish
+process-death restoration or matched Kotlin/C# visual parity, and the separate
+search implementation remains outside this navigation test suite.
 
 ## What's missing (and why)
 
