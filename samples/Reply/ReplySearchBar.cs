@@ -52,48 +52,55 @@ public sealed class ReplySearchBar : ComposableNode
                 },
             };
 
-            var expanded = new ExpandedDockedSearchBar(session.Expansion)
+            return new BoxWithConstraints(bounds =>
             {
-                InputField = Input(),
-            };
-            expanded.Add(new Composed(_ =>
-            {
-                var query = session.Input.Text;
-                var matches = ReplySearchSession.FindMatches(_emails, query);
-                if (matches.Count == 0)
-                    return new Text(query.Length == 0 ? "No search history" : "No item found")
-                    {
-                        Modifier = Modifier.Padding(all: 16),
-                    };
-
-                return new LazyColumn<Email>(matches, email => new ListItem
+                var expanded = new ExpandedDockedSearchBar(session.Expansion)
                 {
-                    Headline = new Text(email.Subject),
-                    Supporting = new Text(email.Sender.FullName),
-                    Leading = new Image(email.Sender.Avatar, "Profile")
-                    {
-                        Modifier = Modifier.Size(32).Clip(Shape.Circle()),
-                    },
-                    Modifier = Modifier.Clickable(
-                        () => Run(scope, ct => session.SelectAsync(email, _onSelected, ct))),
-                })
-                {
-                    Modifier = Modifier.FillMaxWidth(),
-                    ContentPadding = new PaddingValues(16),
-                    VerticalArrangement = Arrangement.SpacedBy(4.Dp()),
-                    Key = static email => email.Id,
-                };
-            }));
-
-            return new Box
-            {
-                Modifier.FillMaxWidth().Padding(16),
-                new SearchBar(session.Expansion)
-                {
-                    Modifier = Modifier.FillMaxWidth(),
+                    Modifier = Modifier.WidthIn(max: bounds.MaxWidth),
                     InputField = Input(),
-                },
-                expanded,
+                };
+                expanded.Add(new Composed(_ =>
+                {
+                    var query = session.Input.Text;
+                    var matches = ReplySearchSession.FindMatches(_emails, query);
+                    if (matches.Count == 0)
+                        return new Text(query.Length == 0 ? "No search history" : "No item found")
+                        {
+                            Modifier = Modifier.Padding(all: 16),
+                        };
+
+                    return new LazyColumn<Email>(matches, email => new ListItem
+                    {
+                        Headline = new Text(email.Subject),
+                        Supporting = new Text(email.Sender.FullName),
+                        Leading = new Image(email.Sender.Avatar, "Profile")
+                        {
+                            Modifier = Modifier.Size(32).Clip(Shape.Circle()),
+                        },
+                        Modifier = Modifier.Clickable(
+                            () => Run(scope, ct => session.SelectAsync(email, _onSelected, ct))),
+                    })
+                    {
+                        Modifier = Modifier.FillMaxWidth(),
+                        ContentPadding = new PaddingValues(16),
+                        VerticalArrangement = Arrangement.SpacedBy(4.Dp()),
+                        Key = static email => email.Id,
+                    };
+                }));
+
+                return new Box
+                {
+                    Modifier.FillMaxWidth(),
+                    new SearchBar(session.Expansion)
+                    {
+                        Modifier = Modifier.FillMaxWidth(),
+                        InputField = Input(),
+                    },
+                    expanded,
+                };
+            })
+            {
+                Modifier = Modifier.FillMaxWidth().Padding(16),
             };
         });
         node.Render(composer);

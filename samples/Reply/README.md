@@ -82,7 +82,9 @@ this port uses the existing state-based `SearchBar`, `SearchBarInputField`,
 and `ExpandedDockedSearchBar` pair. Both resolve native Material 3 1.4.0,
 but the new API uses a **focusable popup**, whereas upstream's older API
 expands an inline surface. Outside taps therefore dismiss this popup rather
-than directly activating the underlying inbox. Popup animation, sizing, and
+than directly activating the underlying inbox. Its width is constrained to
+the measured, padded search host so the popup retains both 16 dp side margins
+instead of overflowing the right edge of the window. Popup animation and
 IME focus details must not be described as pixel-identical without a matched
 device comparison. No JNI or binding
 changes are part of this integration. Search uses native theme typography;

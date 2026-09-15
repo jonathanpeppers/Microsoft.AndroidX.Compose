@@ -53,8 +53,10 @@ public class ReplySearchTests
         var activity = await Start();
         try
         {
+            var collapsedBounds = EditorHorizontalBounds();
             await Click(activity, node => node.Text == "Search emails", "collapsed search");
             AssertPresent("No search history");
+            AssertPopupHorizontalBounds(collapsedBounds);
             await SetText(activity, "Bonjour");
             AssertPresent("Bonjour from Paris");
             int passes = activity.Passes;
@@ -89,6 +91,11 @@ public class ReplySearchTests
             AssertSearchContentAbsent("Leading Back arrow");
             await Click(activity, node => node.Text == "Search emails", "cleared search");
             AssertPresent("No search history");
+            await SetText(activity, "no-such-email");
+            AssertPresent("No item found");
+            await SetText(activity, "Bonjour");
+            AssertPresent("Bonjour from Paris");
+            AssertPopupHorizontalBounds(collapsedBounds);
             await SetText(activity, "no-such-email");
             AssertPresent("No item found");
             Runner.RunOnMainSync(() => activity.InInbox.Value = false);
@@ -128,9 +135,11 @@ public class ReplySearchTests
         var activity = await Start();
         try
         {
+            var collapsedBounds = EditorHorizontalBounds();
             await Click(activity, node => node.Text == "Search emails", "Back ownership search");
             await SetText(activity, "Bonjour");
             AssertPresent("Bonjour from Paris");
+            AssertPopupHorizontalBounds(collapsedBounds);
             ReportStage("Before first native Back: expanded popup", activity);
             Runner.SendKeyDownUpSync(Keycode.Back);
             await Settle(activity);
@@ -239,6 +248,26 @@ public class ReplySearchTests
         using var content = Find(node => node.Text is
             "Bonjour from Paris" or "No search history" or "No item found");
         Assert.IsNull(content, $"{action} left expanded search content in the owned native hierarchy.");
+    }
+
+    static (int Left, int Right) EditorHorizontalBounds()
+    {
+        using var editor = Find(node => node.Editable)
+            ?? throw new InvalidOperationException("Collapsed search editor is missing.");
+        using var bounds = new global::Android.Graphics.Rect();
+        editor.GetBoundsInScreen(bounds);
+        return (bounds.Left, bounds.Right);
+    }
+
+    static void AssertPopupHorizontalBounds((int Left, int Right) collapsed)
+    {
+        using var root = Require(Runner.UiAutomation).RootInActiveWindow
+            ?? throw new InvalidOperationException("Expanded search has no native window.");
+        Assert.AreEqual("net.compose.devicetests", root.PackageName);
+        using var bounds = new global::Android.Graphics.Rect();
+        root.GetBoundsInScreen(bounds);
+        Assert.AreEqual(collapsed.Left, bounds.Left, "Popup left edge differs from the collapsed input.");
+        Assert.AreEqual(collapsed.Right, bounds.Right, "Popup overflows the collapsed input's available width.");
     }
 
     static AccessibilityNodeInfo? Find(Func<AccessibilityNodeInfo, bool> predicate)
