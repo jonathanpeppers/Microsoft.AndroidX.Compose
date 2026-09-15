@@ -297,7 +297,8 @@ helpers, operators.
 |-------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `AndroidX.Compose.UI.IModifier?`                                              | Passed as `BuildModifier()` — no ctor param                                                                                                                                                |
 | `IFunction0` (onClick-style)                                                  | `System.Action` ctor parameter                                                                                                                                                             |
-| `IFunction1` + `[Callback(typeof(T))]`                                        | `Action<T>` ctor; `T` ∈ {`bool`, `string`, `float`}                                                                                                                                        |
+| `IFunction1` + `[Callback(typeof(T))]`                                        | `Action<T>` ctor; `T` is `bool`, `string`, `float`, or a bound `Java.Lang.Object` peer; nullable callbacks become optional properties |
+| `IFunction3?` + `[DecorationBox]`                                           | Native inner-editor decoration callback; preserves the supplied inner composable on tree and direct surfaces |
 | `IFunction2` content (non-nullable, sole content slot)                        | `ComposableLambdas.Wrap2(…)` — container shape                                                                                                                                             |
 | `IFunction3` content (non-nullable, sole content slot)                        | `ComposableLambdas.Wrap3(…)` — container shape                                                                                                                                             |
 | `IFunction2` / `IFunction3` named slot (non-nullable, `[Slot]`, or >1 content slot) | Required, non-nullable `ComposableNode` property — multi-slot leaf; generated code retains a Render-time null guard for reflection and older-language callers                                                                                           |
@@ -332,7 +333,19 @@ slots surface as `Action` instead of `Action<IComposer>`.
   `IFunction2`/`IFunction3` slot. Also forces multi-slot shape with one
   content lambda.
 - `[Callback(typeof(T))]` — surface `IFunction1` as typed `Action<T>` ctor
-  slot. `T` ∈ {`bool`, `string`, `float`}.
+  slot. Supports `bool`, `string`, `float`, and bound `Java.Lang.Object`
+  peers. Nullable `IFunction1?` becomes an optional `Action<T>?` property.
+  Both routes use `RememberAction`; Java peers use `GetObject<T>` with
+  `DoNotTransfer` and explicit missing-peer errors.
+- `[DecorationBox]` — nullable `IFunction3` whose first argument is a native
+  inner-editor composable, not a scope. Tree property is
+  `Func<ComposableNode, ComposableNode>?`; direct methods expose
+  `Action<Action>?` (implicit) or `Action<Action<IComposer>, IComposer>?`
+  (explicit). Render the inner editor exactly once. Lower with
+  `ComposableLambdas.WrapDecoration`, never drop its native callback.
+  Invalid shape reports CN3006; conflicting execution markers report CN3013.
+  Shared decoration slots work on secondary/branched routes; a decoration
+  cannot itself be the `BranchOn` discriminator (CN3010).
 - `[FacadeDefault(value)]` — give a primitive generated-facade constructor
   slot a C# default while keeping the bridge parameter and trailing
   `IComposer` required. Use this instead of making bridge parameters optional;
@@ -587,6 +600,15 @@ so `[CallerFilePath]` + `[CallerLineNumber]` slot keys inside
   `IconImageVector` sibling wrapping the bound `IconKt.Icon(ImageVector,…)`
   overload).
 
+  Shared required callback slots may have different `[Callback(typeof(T))]`
+  payloads on the secondary bridge. The generator emits separate typed nullable
+  fields and route-specific ctor/direct callback signatures, without erasing
+  delegates or converting editor values. Primary-only reference fields are
+  nullable and guarded on their active route. Optional callback properties
+  cannot change type or required/optional shape (CN3012).
+  `BasicTextField` uses this for its bound `TextFieldValue` and string overloads;
+  Foundation, not managed glue, owns the string route's selection/composition.
+
 ### Hand-written holdouts
 
 - Facades calling a bound binding directly with no `[ComposeBridge]` —
@@ -663,14 +685,14 @@ conflict), CN3007 (color theme bind failed), CN3008 (painter misuse), CN3009
 | CN3002 | Bridge parameter type isn't a supported facade slot.                                                                                                                                                                                                                                                                                                                                                                                                                                             |
 | CN3003 | `Scope` is set but bridge has no `IFunction3` content slot.                                                                                                                                                                                                                                                                                                                                                                                                                                      |
 | CN3004 | `[ComposeFacade]` without an accompanying `[ComposeBridge]`.                                                                                                                                                                                                                                                                                                                                                                                                                                     |
-| CN3005 | `[Callback(typeof(T))]` target type unsupported (must be `bool`/`string`/`float`).                                                                                                                                                                                                                                                                                                                                                                                                               |
-| CN3006 | `[Slot]` conflicts with classified shape, `[Callback]` on non-`IFunction1`, multiple `[PainterResource]` on one bridge, `int defaults` declared without resolvable `Defaults` enum, or `IndexedChildren = true` on a facade without a non-nullable IFunction2/IFunction3 container body.                                                                                                                                                                                                       |
+| CN3005 | `[Callback(typeof(T))]` target type unsupported (must be `bool`/`string`/`float` or derive from `Java.Lang.Object`). |
+| CN3006 | `[Slot]` conflicts with classified shape, `[Callback]` on non-`IFunction1`, `[DecorationBox]` on a parameter that is not nullable `IFunction3`, multiple `[PainterResource]` on one bridge, `int defaults` declared without resolvable `Defaults` enum, or `IndexedChildren = true` on a facade without a non-nullable IFunction2/IFunction3 container body. |
 | CN3007 | `DefaultColorFromTheme` cannot bind to any `long` user param (or `ColorParameter` ambiguous/missing).                                                                                                                                                                                                                                                                                                                                                                                            |
 | CN3008 | `[PainterResource]` annotates a non-`IntPtr` parameter.                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 | CN3009 | `[StateHolder]` invalid: non-`IntPtr` param, combined with `[PainterResource]`, missing/non-identifier `Remember`/`StateType`, named `Remember` not a static remember bridge, inaccessible writable `Jvm` field, invalid `Bind`, `Unbind` not an accessible parameterless instance void method, or conflicting `Bind`/`Unbind` among shared declarations with the same `Remember` and `StateType`. |
-| CN3010 | `BranchOn`/`AlternateBridge` invalid: only one set, primary has no Kotlin defaults metadata, named alternate not resolvable/ambiguous on `ComposeBridges`, alternate not a strict superset (missing a primary param or > 1 extra), extra param's PascalCased name doesn't match `BranchOn`, extra param isn't `IFunction2`/`IFunction3`, shared param has incompatible types, branching used on hybrid container shape, or alternate has no resolvable `[ComposeBridge].Defaults` enum. |
+| CN3010 | `BranchOn`/`AlternateBridge` invalid: only one set, primary has no Kotlin defaults metadata, named alternate not resolvable/ambiguous on `ComposeBridges`, alternate not a strict superset (missing a primary param or > 1 extra), extra param's PascalCased name doesn't match `BranchOn`, extra param isn't `IFunction2`/`IFunction3` or is a `[DecorationBox]` callback, shared param has incompatible types, branching used on hybrid container shape, or alternate has no resolvable `[ComposeBridge].Defaults` enum. |
 | CN3011 | `[ConfirmStateChange(typeof(T))]` invalid: not on `IFunction1` param, missing `typeof(T)` ctor arg, convention adapter `Microsoft.AndroidX.Compose.<TName>ConfirmStateChange` missing (override with `AdapterType = typeof(...)`), adapter is inaccessible to generated same-assembly code, doesn't implement `Kotlin.Jvm.Functions.IFunction1`, lacks a same-assembly accessible parameterless ctor, or has no same-assembly accessible writable `Callback` property of type `System.Func<T, bool>?`.                                                                                                              |
-| CN3012 | `SecondaryCtor`/`SecondaryDefaults` invalid: only one set, named secondary not resolvable/ambiguous on `ComposeBridges`, a hand-written secondary lacks trailing `int defaults`, secondary's user params don't share names with the primary, the discriminating extra param is value-type / nullable / not a reference type / there's > 1 unique param / there's none, primary has no slot missing from the secondary (no primary-only discriminator), `SecondaryDefaults` enum unresolvable, or combined with `BranchOn`/`AlternateBridge`.                                                                                                                                                                                                                                                                              |
+| CN3012 | `SecondaryCtor`/`SecondaryDefaults` invalid: only one set, named secondary not resolvable/ambiguous, missing defaults metadata/entry, incompatible shared parameters, discriminator not a single non-null reference type, no primary-only discriminator, callback required/optional shape changes, optional callback property payload type changes, or combined with `BranchOn`/`AlternateBridge`. |
 | CN3013 | Lambda execution mode is ambiguous, conflicting, or invalid. Mark `IFunction1` as `[Callback(typeof(T))]` or `[RawCallback]`; mark `IFunction4` as `[ComposableContent]` or `[DeferredComposableContent]`. |
 | CN3014 | `[FacadeAdded]` does not mark a defaultable optional value, or the facade has alternate/painter routes. |
 

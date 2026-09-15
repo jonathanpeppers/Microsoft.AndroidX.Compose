@@ -52,6 +52,9 @@ internal static class ComposeReferenceTypes
         "AndroidX.Compose.UI.Text.TextStyle",
         "AndroidX.Compose.UI.Text.Input.IVisualTransformation",
         "AndroidX.Compose.Foundation.Text.KeyboardOptions",
+        "AndroidX.Compose.Foundation.Text.KeyboardActions",
+        "AndroidX.Compose.UI.Graphics.Brush",
+        "AndroidX.Compose.TextStyle",
         "AndroidX.Compose.Foundation.BorderStroke",
     };
 

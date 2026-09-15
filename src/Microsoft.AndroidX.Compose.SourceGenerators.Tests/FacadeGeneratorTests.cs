@@ -100,6 +100,7 @@ public class FacadeGeneratorTests
         namespace AndroidX.Compose.UI.Text.Input
         {
             public interface IVisualTransformation { }
+            public sealed class TextFieldValue : Java.Lang.Object { }
         }
         namespace AndroidX.Compose.Foundation.Text
         {
@@ -226,6 +227,16 @@ public class FacadeGeneratorTests
             }
             public static class ComposableLambdas
             {
+                public static Kotlin.Jvm.Functions.IFunction3 WrapDecoration(
+                    global::AndroidX.Compose.Runtime.IComposer composer,
+                    System.Func<ComposableNode, ComposableNode> body) => throw new System.NotImplementedException();
+                public static Kotlin.Jvm.Functions.IFunction3 WrapDecoration(
+                    global::AndroidX.Compose.Runtime.IComposer composer,
+                    System.Action<System.Action> body) => throw new System.NotImplementedException();
+                public static Kotlin.Jvm.Functions.IFunction3 WrapDecoration(
+                    global::AndroidX.Compose.Runtime.IComposer composer,
+                    System.Action<System.Action<global::AndroidX.Compose.Runtime.IComposer>, global::AndroidX.Compose.Runtime.IComposer> body)
+                    => throw new System.NotImplementedException();
                 public static Kotlin.Jvm.Functions.IFunction2 Wrap2(
                     global::AndroidX.Compose.Runtime.IComposer composer,
                     System.Action<global::AndroidX.Compose.Runtime.IComposer> body,
@@ -320,6 +331,244 @@ public class FacadeGeneratorTests
             }
         }
         return (output, diags, emitted);
+    }
+
+    [Fact]
+    public void BasicTextField_DecorationAndPeerCallback_AreGeneratedForEverySurface()
+    {
+        const string code = """
+            using AndroidX.Compose;
+            using AndroidX.Compose.Runtime;
+            using AndroidX.Compose.UI.Text.Input;
+            using Kotlin.Jvm.Functions;
+            [assembly: ComposeDefaults("EditorDefault", "!value", "!onValueChange", "decorationBox", "onTextLayout")]
+            namespace AndroidX.Compose
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeFacade(Defaults = typeof(EditorDefault))]
+                    public static partial void Editor(TextFieldValue value,
+                        [Callback(typeof(TextFieldValue))] IFunction1 onValueChange,
+                        [DecorationBox] IFunction3? decorationBox,
+                        [Callback(typeof(TextFieldValue))] IFunction1? onTextLayout,
+                        int defaults, IComposer composer);
+                    public static partial void Editor(TextFieldValue value, IFunction1 onValueChange,
+                        IFunction3? decorationBox, IFunction1? onTextLayout, int defaults, IComposer composer) { }
+                }
+            }
+            """;
+        var (output, diagnostics, source) = Run(code, "Editor");
+        Assert.Empty(diagnostics.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.Empty(output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(source);
+        Assert.Contains("Func<global::AndroidX.Compose.ComposableNode, global::AndroidX.Compose.ComposableNode>? DecorationBox", source);
+        Assert.Contains("System.Action<global::System.Action>", source);
+        Assert.Contains("WrapDecoration(composer, DecorationBox)", source);
+        Assert.Contains("WrapDecoration(__composer, decorationBox)", source);
+        Assert.Contains("composer.RememberAction(", source);
+        Assert.Contains("__composer.RememberAction(", source);
+        Assert.Contains("GetObject<global::AndroidX.Compose.UI.Text.Input.TextFieldValue>", source);
+        Assert.Contains("JniHandleOwnership.DoNotTransfer", source);
+        Assert.Contains("if (__decorationBox is not null)", source);
+        Assert.Contains("__onTextLayoutCallback is null ? null : composer.RememberAction", source);
+        Assert.Contains("onTextLayout is null ? null : __composer.RememberAction", source);
+        Assert.Contains("if (OnTextLayout is not null)", source);
+        Assert.DoesNotContain("new global::AndroidX.Compose.ComposableLambda3", source);
+    }
+
+    [Theory]
+    [InlineData("IFunction2?")]
+    [InlineData("IFunction3")]
+    [InlineData("string")]
+    public void DecorationBox_InvalidShape_IsDiagnosed(string parameterType)
+    {
+        string code = $$"""
+            using AndroidX.Compose;
+            using AndroidX.Compose.Runtime;
+            using Kotlin.Jvm.Functions;
+            namespace AndroidX.Compose
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeFacade]
+                    public static partial void Editor([DecorationBox] {{parameterType}} decorationBox, IComposer composer);
+                    public static partial void Editor({{parameterType}} decorationBox, IComposer composer) { }
+                }
+            }
+            """;
+        var (_, diagnostics, _) = Run(code, "Editor");
+        Assert.Contains(diagnostics, d => d.Id == "CN3006");
+    }
+
+    [Fact]
+    public void DecorationBox_ConflictingExecutionMode_IsDiagnosed()
+    {
+        const string code = """
+            using AndroidX.Compose;
+            using AndroidX.Compose.Runtime;
+            using Kotlin.Jvm.Functions;
+            namespace AndroidX.Compose
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeFacade]
+                    public static partial void Editor([DecorationBox, RawCallback] IFunction3? decorationBox, IComposer composer);
+                    public static partial void Editor(IFunction3? decorationBox, IComposer composer) { }
+                }
+            }
+            """;
+        var (_, diagnostics, _) = Run(code, "Editor");
+        Assert.Contains(diagnostics, d => d.Id == "CN3013");
+    }
+
+    [Fact]
+    public void SecondaryCtor_DecorationAndOptionalPeerCallback_CompileOnEverySurface()
+    {
+        const string code = """
+            using AndroidX.Compose;
+            using AndroidX.Compose.Runtime;
+            using AndroidX.Compose.UI.Text.Input;
+            using Kotlin.Jvm.Functions;
+            [assembly: ComposeDefaults("EditorDefault", "!seed", "decorationBox", "onTextLayout")]
+            [assembly: ComposeDefaults("EditorValueDefault", "!value", "decorationBox", "onTextLayout")]
+            namespace AndroidX.Compose
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeFacade(Defaults = typeof(EditorDefault),
+                        SecondaryCtor = nameof(EditorValue), SecondaryDefaults = typeof(EditorValueDefault))]
+                    public static partial void Editor(int seed,
+                        [DecorationBox] IFunction3? decorationBox,
+                        [Callback(typeof(TextFieldValue))] IFunction1? onTextLayout,
+                        int defaults, IComposer composer);
+                    public static partial void Editor(int seed, IFunction3? decorationBox,
+                        IFunction1? onTextLayout, int defaults, IComposer composer) { }
+                    public static void EditorValue(TextFieldValue value,
+                        [DecorationBox] IFunction3? decorationBox,
+                        [Callback(typeof(TextFieldValue))] IFunction1? onTextLayout,
+                        int defaults, IComposer composer) { }
+                }
+            }
+            """;
+        var (output, diagnostics, source) = Run(code, "Editor");
+        Assert.Empty(diagnostics.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.Empty(output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(source);
+        Assert.Contains("var __secDecorationBox = DecorationBox is null ? null : global::AndroidX.Compose.ComposableLambdas.WrapDecoration(composer, DecorationBox)", source);
+        Assert.Contains("var __secOnTextLayout = __secOnTextLayoutCallback is null ? null : composer.RememberAction", source);
+        Assert.Contains("EditorValue((_value ?? throw new global::System.InvalidOperationException(\"Missing value for the selected facade overload.\")), __secDecorationBox, __secOnTextLayout, __secDefaults, composer)", source);
+        Assert.DoesNotContain(CSharpSyntaxTree.ParseText(source).GetRoot().DescendantNodes(),
+            node => node.IsKind(SyntaxKind.SuppressNullableWarningExpression));
+        Assert.Contains("WrapDecoration(__composer, decorationBox)", GeneratedMethodBody(source, "Editor_Secondary_Implicit"));
+        Assert.Contains("onTextLayout is null ? null : __composer.RememberAction", GeneratedMethodBody(source, "Editor_Secondary_Explicit"));
+    }
+
+    [Fact]
+    public void DecorationBox_AsBranchDiscriminator_IsDiagnosed()
+    {
+        const string code = """
+            using AndroidX.Compose;
+            using AndroidX.Compose.Runtime;
+            using Kotlin.Jvm.Functions;
+            [assembly: ComposeDefaults("EditorDefault", "!value")]
+            [assembly: ComposeDefaults("DecoratedEditorDefault", "!value", "decorationBox")]
+            namespace AndroidX.Compose
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(Class="test/Editor", JvmName="Editor",
+                        Signature="(ILandroidx/compose/runtime/Composer;II)V", Defaults=typeof(EditorDefault))]
+                    [ComposeFacade(BranchOn="DecorationBox", AlternateBridge=nameof(DecoratedEditor))]
+                    public static partial void Editor(int value, IComposer composer);
+                    [ComposeBridge(Class="test/Editor", JvmName="DecoratedEditor",
+                        Signature="(ILkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;II)V",
+                        Defaults=typeof(DecoratedEditorDefault))]
+                    public static partial void DecoratedEditor(int value,
+                        [DecorationBox] IFunction3? decorationBox, IComposer composer);
+                }
+            }
+            """;
+        var (_, diagnostics, _) = Run(code, "Editor");
+        Assert.Contains(diagnostics, d => d.Id == "CN3010");
+    }
+
+    [Fact]
+    public void SecondaryCtor_ChangesRequiredCallbackPayloadWithoutTypeErasure()
+    {
+        const string code = """
+            using AndroidX.Compose;
+            using AndroidX.Compose.Runtime;
+            using AndroidX.Compose.UI.Text.Input;
+            using Kotlin.Jvm.Functions;
+            [assembly: ComposeDefaults("EditorDefault", "!value", "!onValueChange", "decorationBox")]
+            [assembly: ComposeDefaults("EditorStringDefault", "!text", "!onValueChange", "decorationBox")]
+            namespace AndroidX.Compose
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeFacade(Defaults = typeof(EditorDefault),
+                        SecondaryCtor = nameof(EditorString), SecondaryDefaults = typeof(EditorStringDefault))]
+                    public static partial void Editor(TextFieldValue value,
+                        [Callback(typeof(TextFieldValue))] IFunction1 onValueChange,
+                        [DecorationBox] IFunction3? decorationBox, int defaults, IComposer composer);
+                    public static partial void Editor(TextFieldValue value, IFunction1 onValueChange,
+                        IFunction3? decorationBox, int defaults, IComposer composer) { }
+                    public static void EditorString(string text,
+                        [Callback(typeof(string))] IFunction1 onValueChange,
+                        [DecorationBox] IFunction3? decorationBox, int defaults, IComposer composer) { }
+                }
+            }
+            """;
+        var (output, diagnostics, source) = Run(code, "Editor");
+        Assert.Empty(diagnostics.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.Empty(output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error ||
+            d.Severity == DiagnosticSeverity.Warning && d.Id != "CS9113"));
+        Assert.NotNull(source);
+        Assert.Contains("readonly global::System.Action<string>? _secondaryOnValueChange;", source);
+        Assert.Contains("public Editor(string text, global::System.Action<string> onValueChange)", source);
+        Assert.Contains("_secondaryOnValueChange = onValueChange;", source);
+        Assert.Contains("Missing onValueChange for the selected facade overload.", source);
+        Assert.Contains("public static void Editor(string text, global::System.Action<string> onValueChange", source);
+        Assert.Contains("v?.ToString() ?? string.Empty", GeneratedMethodBody(source, "Editor_Secondary_Implicit"));
+        Assert.Contains("GetObject<global::AndroidX.Compose.UI.Text.Input.TextFieldValue>", GeneratedMethodBody(source, "Editor_PrimaryResource_Implicit"));
+        Assert.Contains("WrapDecoration(__composer, decorationBox)", GeneratedMethodBody(source, "Editor_Secondary_Explicit"));
+        Assert.Contains("EditorString((_text ?? throw new global::System.InvalidOperationException(\"Missing text for the selected facade overload.\"))", source);
+        Assert.DoesNotContain(CSharpSyntaxTree.ParseText(source).GetRoot().DescendantNodes(),
+            node => node.IsKind(SyntaxKind.SuppressNullableWarningExpression));
+        Assert.DoesNotContain("DynamicInvoke", source);
+        Assert.DoesNotContain("System.Delegate", source);
+    }
+
+    [Theory]
+    [InlineData("IFunction1?", "string", "IFunction1?", "bool")]
+    [InlineData("IFunction1", "string", "IFunction1?", "string")]
+    public void SecondaryCtor_RejectsIncompatibleOptionalCallbackProperties(
+        string primaryType, string primaryPayload, string secondaryType, string secondaryPayload)
+    {
+        string code = $$"""
+            using AndroidX.Compose;
+            using AndroidX.Compose.Runtime;
+            using Kotlin.Jvm.Functions;
+            [assembly: ComposeDefaults("EditorDefault", "!seed", "callback")]
+            [assembly: ComposeDefaults("EditorStringDefault", "!text", "callback")]
+            namespace AndroidX.Compose
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeFacade(Defaults = typeof(EditorDefault),
+                        SecondaryCtor = nameof(EditorString), SecondaryDefaults = typeof(EditorStringDefault))]
+                    public static partial void Editor(int seed,
+                        [Callback(typeof({{primaryPayload}}))] {{primaryType}} callback,
+                        int defaults, IComposer composer);
+                    public static partial void Editor(int seed, {{primaryType}} callback, int defaults, IComposer composer) { }
+                    public static void EditorString(string text,
+                        [Callback(typeof({{secondaryPayload}}))] {{secondaryType}} callback,
+                        int defaults, IComposer composer) { }
+                }
+            }
+            """;
+        var (_, diagnostics, _) = Run(code, "Editor");
+        Assert.Contains(diagnostics, d => d.Id == "CN3012");
     }
 
     static string GeneratedMethodBody(string emitted, string methodName)
@@ -4884,9 +5133,13 @@ public class FacadeGeneratorTests
         // The discriminator's own enum bit is cleared.
         Assert.Contains("__secDefaults &= ~(int)global::AndroidX.Compose.IconDefault.ImageVector;", emitted);
 
-        // The secondary call passes the field (with `!`) and the
-        // shared slot expressions in the secondary's parameter order.
-        Assert.Contains("global::AndroidX.Compose.ComposeBridges.IconImageVectorExplicitDefaults(_imageVector!,", emitted);
+        // Preserve the discriminator guard and secondary parameter order.
+        Assert.Contains("global::AndroidX.Compose.ComposeBridges.IconImageVectorExplicitDefaults((_imageVector ?? throw new global::System.InvalidOperationException(\"Missing imageVector for the selected facade overload.\")),", emitted);
+        var secondaryDispatch = CSharpSyntaxTree.ParseText(emitted).GetRoot().DescendantNodes()
+            .OfType<Microsoft.CodeAnalysis.CSharp.Syntax.IfStatementSyntax>()
+            .Single(node => node.Condition.ToString() == "_imageVector is not null");
+        Assert.DoesNotContain(secondaryDispatch.DescendantNodes(),
+            node => node.IsKind(SyntaxKind.SuppressNullableWarningExpression));
         Assert.Contains(", __secDefaults, composer);", emitted);
         Assert.Contains("internal static void Icon(global::AndroidX.Compose.Runtime.IComposer composer, global::AndroidX.Compose.UI.Graphics.Painter.Painter painter,", emitted);
         Assert.Contains("internal static void Icon(global::AndroidX.Compose.Runtime.IComposer composer, global::AndroidX.Compose.UI.Graphics.Vector.ImageVector imageVector,", emitted);

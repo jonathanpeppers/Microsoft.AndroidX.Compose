@@ -340,6 +340,10 @@ internal static class Attributes
                 public SlotAttribute(string propertyName) { }
             }
 
+            /// <summary>A Function3 decoration slot receiving the native inner editor.</summary>
+            [global::System.AttributeUsage(global::System.AttributeTargets.Parameter)]
+            internal sealed class DecorationBoxAttribute : global::System.Attribute { }
+
             /// <summary>
             /// Phase 2 — apply to an <c>IFunction1</c> bridge parameter
             /// to mark it as a typed C# callback. The facade gets an

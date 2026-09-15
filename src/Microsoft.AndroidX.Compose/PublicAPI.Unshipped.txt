@@ -92,6 +92,25 @@ AndroidX.Compose.BadgedBox.Badge.set -> void
 AndroidX.Compose.BadgedBox.BadgedBox() -> void
 AndroidX.Compose.BadgedBox.Content.get -> AndroidX.Compose.ComposableNode!
 AndroidX.Compose.BadgedBox.Content.set -> void
+AndroidX.Compose.BasicTextField
+AndroidX.Compose.BasicTextField.BasicTextField(AndroidX.Compose.UI.Text.Input.TextFieldValue! value, System.Action<AndroidX.Compose.UI.Text.Input.TextFieldValue!>! onValueChange, bool enabled = true, bool readOnly = false, bool singleLine = false, int maxLines = 2147483647, int minLines = 1) -> void
+AndroidX.Compose.BasicTextField.BasicTextField(string! text, System.Action<string!>! onValueChange, bool enabled = true, bool readOnly = false, bool singleLine = false, int maxLines = 2147483647, int minLines = 1) -> void
+AndroidX.Compose.BasicTextField.CursorBrush.get -> AndroidX.Compose.UI.Graphics.Brush?
+AndroidX.Compose.BasicTextField.CursorBrush.set -> void
+AndroidX.Compose.BasicTextField.DecorationBox.get -> System.Func<AndroidX.Compose.ComposableNode!, AndroidX.Compose.ComposableNode!>?
+AndroidX.Compose.BasicTextField.DecorationBox.set -> void
+AndroidX.Compose.BasicTextField.InteractionSource.get -> AndroidX.Compose.Foundation.Interaction.IMutableInteractionSource?
+AndroidX.Compose.BasicTextField.InteractionSource.set -> void
+AndroidX.Compose.BasicTextField.KeyboardActions.get -> AndroidX.Compose.Foundation.Text.KeyboardActions?
+AndroidX.Compose.BasicTextField.KeyboardActions.set -> void
+AndroidX.Compose.BasicTextField.KeyboardOptions.get -> AndroidX.Compose.Foundation.Text.KeyboardOptions?
+AndroidX.Compose.BasicTextField.KeyboardOptions.set -> void
+AndroidX.Compose.BasicTextField.OnTextLayout.get -> System.Action<AndroidX.Compose.UI.Text.TextLayoutResult!>?
+AndroidX.Compose.BasicTextField.OnTextLayout.set -> void
+AndroidX.Compose.BasicTextField.TextStyle.get -> AndroidX.Compose.TextStyle?
+AndroidX.Compose.BasicTextField.TextStyle.set -> void
+AndroidX.Compose.BasicTextField.VisualTransformation.get -> AndroidX.Compose.UI.Text.Input.IVisualTransformation?
+AndroidX.Compose.BasicTextField.VisualTransformation.set -> void
 AndroidX.Compose.BottomAppBar
 AndroidX.Compose.BottomAppBar.BottomAppBar() -> void
 AndroidX.Compose.BottomAppBar.FloatingActionButton.get -> AndroidX.Compose.ComposableNode?
@@ -1712,6 +1731,7 @@ override AndroidX.Compose.AssistChip.Render(AndroidX.Compose.Runtime.IComposer! 
 override AndroidX.Compose.BackHandler.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
 override AndroidX.Compose.Badge.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
 override AndroidX.Compose.BadgedBox.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
+override AndroidX.Compose.BasicTextField.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
 override AndroidX.Compose.BottomAppBar.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
 override AndroidX.Compose.BottomSheetScaffold.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
 override AndroidX.Compose.Box.Render(AndroidX.Compose.Runtime.IComposer! composer) -> void
@@ -1963,6 +1983,8 @@ static AndroidX.Compose.Composables.AssistChip(System.Action! onClick, System.Ac
 static AndroidX.Compose.Composables.BackHandler(System.Action! onBack, bool enabled) -> void
 static AndroidX.Compose.Composables.Badge(System.Action! content, AndroidX.Compose.Modifier? modifier = null) -> void
 static AndroidX.Compose.Composables.BadgedBox(System.Action! badge, System.Action! content, AndroidX.Compose.Modifier? modifier = null) -> void
+static AndroidX.Compose.Composables.BasicTextField(AndroidX.Compose.UI.Text.Input.TextFieldValue! value, System.Action<AndroidX.Compose.UI.Text.Input.TextFieldValue!>! onValueChange, bool enabled = true, bool readOnly = false, bool singleLine = false, int maxLines = 2147483647, int minLines = 1, AndroidX.Compose.Modifier? modifier = null, System.Action<System.Action!>? decorationBox = null, AndroidX.Compose.TextStyle? textStyle = null, AndroidX.Compose.Foundation.Text.KeyboardOptions? keyboardOptions = null, AndroidX.Compose.Foundation.Text.KeyboardActions? keyboardActions = null, AndroidX.Compose.UI.Text.Input.IVisualTransformation? visualTransformation = null, System.Action<AndroidX.Compose.UI.Text.TextLayoutResult!>? onTextLayout = null, AndroidX.Compose.Foundation.Interaction.IMutableInteractionSource? interactionSource = null, AndroidX.Compose.UI.Graphics.Brush? cursorBrush = null) -> void
+static AndroidX.Compose.Composables.BasicTextField(string! text, System.Action<string!>! onValueChange, bool enabled = true, bool readOnly = false, bool singleLine = false, int maxLines = 2147483647, int minLines = 1, AndroidX.Compose.Modifier? modifier = null, System.Action<System.Action!>? decorationBox = null, AndroidX.Compose.TextStyle? textStyle = null, AndroidX.Compose.Foundation.Text.KeyboardOptions? keyboardOptions = null, AndroidX.Compose.Foundation.Text.KeyboardActions? keyboardActions = null, AndroidX.Compose.UI.Text.Input.IVisualTransformation? visualTransformation = null, System.Action<AndroidX.Compose.UI.Text.TextLayoutResult!>? onTextLayout = null, AndroidX.Compose.Foundation.Interaction.IMutableInteractionSource? interactionSource = null, AndroidX.Compose.UI.Graphics.Brush? cursorBrush = null) -> void
 static AndroidX.Compose.Composables.BooleanResource(int id) -> bool
 static AndroidX.Compose.Composables.BottomAppBar(System.Action! actions, AndroidX.Compose.Modifier? modifier = null, System.Action? floatingActionButton = null) -> void
 static AndroidX.Compose.Composables.BottomSheetScaffold(System.Action! sheetContent, System.Action! content, AndroidX.Compose.SheetStateHolder? sheetState = null, AndroidX.Compose.Modifier? modifier = null, System.Action? sheetDragHandle = null, System.Action? topBar = null, System.Func<AndroidX.Compose.Material3.SheetValue!, bool>? confirmValueChange = null) -> void
