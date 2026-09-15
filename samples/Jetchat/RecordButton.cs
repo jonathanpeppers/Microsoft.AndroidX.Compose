@@ -35,28 +35,13 @@ public static class RecordButton
         new Composed(c =>
         {
             bool recording = isRecording.Value;
-            float threshold = SwipeToCancelThresholdPx;
-            var dragState  = c.RememberDraggableState(delta =>
-            {
-                if (!isRecording.Value) return;
-                swipeOffset.Value += delta;
-                if (swipeOffset.Value <= -threshold)
-                    onCancel();
-            });
-
-            Action onClick = () =>
-            {
-                if (isRecording.Value)
-                    onCommit();
-                else
-                    isRecording.Value = true;
-            };
+            float density = SwipeToCancelThresholdPx / SwipeToCancelThresholdDp;
+            var gesture = c.Remember(() => new RecordingGestureState());
 
             var innerModifier = Modifier.FillMaxSize();
             if (recording)
                 innerModifier = innerModifier
-                    .Background(Color.Red, new RoundedCornerShape(28.Dp()))
-                    .Draggable(dragState, Orientation.Horizontal);
+                    .Background(Color.Red, new RoundedCornerShape(28.Dp()));
             innerModifier = innerModifier.Padding(16);
 
             return new Box
@@ -64,7 +49,28 @@ public static class RecordButton
                 Modifier
                     .Align(Alignment.Vertical.CenterVertically)
                     .Size(56)
-                    .Clickable(onClick),
+                    .DetectDragGesturesAfterLongPress(
+                        onDragStart: _ =>
+                        {
+                            gesture.Start();
+                            swipeOffset.Value = 0;
+                            isRecording.Value = true;
+                        },
+                        onDrag: delta =>
+                        {
+                            if (!gesture.Dragging) return;
+                            bool cancelled = gesture.Move(delta.X, delta.Y, density);
+                            swipeOffset.Value = gesture.Horizontal;
+                            if (cancelled) onCancel();
+                        },
+                        onDragEnd: () =>
+                        {
+                            if (gesture.End()) onCommit();
+                        },
+                        onDragCancel: () =>
+                        {
+                            if (gesture.End()) onCancel();
+                        }),
                 new Box
                 {
                     innerModifier,

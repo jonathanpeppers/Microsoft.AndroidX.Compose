@@ -1,5 +1,6 @@
 using Android.Runtime;
 using Kotlin.Coroutines;
+using Kotlin.Jvm.Functions;
 
 namespace AndroidX.Compose;
 
@@ -362,6 +363,20 @@ internal static partial class ComposeBridges
         IntPtr? onDragEnd,
         IntPtr? onDragCancel,
         IntPtr  onDrag,
+        IContinuation cont);
+
+    // The detector is stripped in Foundation.Android 1.11.3.1 (unlike pointerInput itself).
+    [ComposeBridge(Suspend = true,
+        Class = "androidx/compose/foundation/gestures/DragGestureDetectorKt",
+        JvmName = "detectDragGesturesAfterLongPress$default",
+        Signature = "(Landroidx/compose/ui/input/pointer/PointerInputScope;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;",
+        Defaults = typeof(DetectDragGesturesAfterLongPressDefault))]
+    internal static partial IntPtr DetectDragGesturesAfterLongPress(
+        IntPtr scope,
+        IFunction1? onDragStart,
+        IFunction0? onDragEnd,
+        IFunction0? onDragCancel,
+        IFunction2 onDrag,
         IContinuation cont);
 
     // androidx.compose.foundation.gestures.TransformGestureDetectorKt

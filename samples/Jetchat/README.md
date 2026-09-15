@@ -90,8 +90,8 @@ Opening the emoji selector moves focus to its remembered `FocusRequester` and
 low-level `FocusTarget`, ending the editor's IME session without making the input
 container an extra accessibility focus stop. Exactly one selector-keyed effect
 requests focus only for the attached emoji panel. Focusing the message field
-closes the selector again; Back dismisses the selector. This keeps the current
-Material `TextField` while the separate BasicTextField work is pending.
+closes the selector again; Back dismisses the selector. The Foundation
+`BasicTextField` shares its focused state and keyboard callbacks with this handoff.
 Input/selector tonal styling is also separate from this ownership change.
 
 Omitting `ContentWindowInsets` (including in the profile screen) still uses
@@ -203,11 +203,26 @@ same while switching inset modes; its saved tap count must also survive
   colored bubble. Layout structure (avatar+spacer + author+text
   column) is identical for me vs others — same as upstream's
   `Message`/`AuthorAndTextMessage` row, no right-alignment.
-- A pinned input row at the bottom with a single-line message field,
-  "Type a message" placeholder, Send-labeled IME action, and a `Send`
-  `Button` that is genuinely disabled while the input is empty.
-  Its filled/outlined enabled and disabled treatment follows upstream.
-  The remaining `BasicTextField` difference is tracked below.
+- **Foundation `BasicTextField` input** — the bound `TextFieldValue` editor
+  preserves selection and IME composition without Material field chrome.
+  Its native inner-editor decoration supplies the unfocused, empty
+  "Message #composers" hint, 32 dp start padding, centered 64 dp input row,
+  Karla body-large metrics, secondary-colored text/cursor and `maxLines = 1`.
+  IME Send and the visible Send control use the same callback: ignore blank
+  text, preserve surrounding whitespace on nonblank messages, clear the
+  value/selection/composition, reset the message list and close the selector.
+  Neither action clears editor focus, matching the pinned rapid-entry behavior.
+  Emoji insertion replaces the current selection (including reversed
+  selections), retains composition as upstream's `copy` does, and moves the
+  cursor to the end of the resulting buffer. Opening the emoji panel transfers
+  focus: Foundation 1.11.3's `CoreTextField` calls `deselect()` on focus loss,
+  collapsing a nonempty selection to its maximum offset before insertion.
+  Selecting `b` in `abcd` then opening the panel therefore inserts at `ab|cd`;
+  the facade does not restore the earlier focused selection. Native diagnostics
+  confirm the live value is `2..2` immediately before insertion, even though the
+  closed IME session can still report its cached `1..2` range. Focused-selection
+  replacement remains covered separately. The Send button's filled/outlined
+  enabled and disabled treatment follows upstream.
 - **5 input-selector icons** — emoji, @ mention, image, location,
   video call — same row upstream's `UserInputSelector` provides.
   Each is a toggleable `IconButton` whose background fills with
@@ -229,12 +244,21 @@ same while switching inset modes; its saved tap count must also survive
   is empty the trailing send affordance is joined by a mic
   `IconButton` that swaps the `TextField` for an animated
   recording overlay (pulsing red dot + MM:SS timer + "Swipe to
-  cancel" hint). Tap-to-toggle starts and finishes the recording;
-  dragging the mic horizontally past a 200 dp threshold cancels.
+  cancel" hint). A native long press starts the UI-only recording;
+  release finishes it. Per-event X/Y pixel movement accumulates, and a left
+  swipe of at least 200 dp cancels only while the vertical displacement
+  is at most 80 dp in either direction. Returning inside that vertical
+  corridor after crossing the horizontal threshold also cancels, matching
+  pinned `voiceRecordingGesture`. A cancelled gesture cannot later commit.
+  Native coroutine cancellation is forwarded to the recording callback only
+  while a recording gesture is active: disposing an idle detector or an
+  already-cancelled gesture must not emit another recording cancellation.
   The overlay swap rides on the new generic `AnimatedContent<T>`
-  facade. Long-pressing the mic also shows the upstream "Touch and hold
-  to record" tooltip. See *What's still omitted* for the exact gesture
-  and transition-animation gaps.
+  facade. Callback updates during recomposition retain the active native
+  handler; removing the control cancels its Kotlin pointer-input job.
+  The surrounding tooltip disables automatic input so it cannot compete
+  for the same long press. See *What's still omitted* for short-tap tooltip
+  and transition-animation gaps. No audio recording or permissions are added.
 - **Expanded-input dismissal** — `BackHandler` collapses any open
   selector before system back reaches navigation. A remembered requester
   targets the emoji column with `FocusTarget`, not the editor or its parent.
@@ -408,10 +432,9 @@ layout work, and unavailable official bindings:
 
 | Upstream feature                          | Why it's not here |
 |-------------------------------------------|--------------------|
-| Press-and-hold record gesture (`pointerInput` / `detectDragGesturesAfterLongPress`) | Missing Compose pointer-input surface; tracked by [#337](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/337). Until it lands, recording remains tap-to-start / tap-to-finish with draggable swipe cancellation. |
+| Short-tap recording tooltip | The recording wrapper sets `Tooltip.EnableUserInput=false`, as pinned upstream does, to avoid stealing the native long press. Programmatically showing "Touch and hold to record" on a short tap still needs tooltip-state control; this is not full recording-UX parity. Short taps do not start or finish recording. |
 | Record-button `updateTransition` + `animateFloat` / `animateColor` | Missing transition value-animation surface; tracked by [#336](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/336). The port retains its visually equivalent timer-driven pulse. |
 | Google Fonts provider typography | The exact pinned Karla / Montserrat resource fallbacks are bundled. Provider-backed downloads remain outside the resource-font API; no downloaded-font parity is claimed. |
-| Foundation text-input structure and IME Send callback | `BasicTextField` and keyboard-action support are missing; tracked by [#340](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/340). The current Material `TextField` preserves editing, placeholder, line, and IME-option behavior. |
 | Exact profile baseline-height and parallax geometry | Reusable baseline alignment/padding and `ClipToBounds` are available. Profile's existing rounded clip, padding-based motion and host layout remain unchanged; the pinned upstream uses `CircleShape` and separate baseline-height helpers, not a rectangular clip. |
 | Profile FAB tertiary container | Material 3 FAB color/elevation slots are omitted by the current facades; tracked by [#344](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/344). The port uses the default primary-container/content pair to preserve contrast. |
 | Glance home-screen widget + `requestPinAppWidget(...)` | No official .NET binding for `androidx.glance:glance-appwidget` is currently published. Upstream only shows the drawer entry when a compatible widget provider can be pinned, so the port omits it until that binding exists. |

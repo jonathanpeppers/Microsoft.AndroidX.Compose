@@ -16,6 +16,34 @@ namespace AndroidX.Compose;
 public static class ModifierExtensions
 {
     /// <summary>
+    /// Animates a child's entrance and exit using the nearest AnimatedVisibility
+    /// or AnimatedContent content scope. Child effects combine with the parent's.
+    /// Null or omitted enter/exit values use Kotlin's fade-in/fade-out defaults;
+    /// a null label uses Kotlin's <c>animateEnterExit</c> label.
+    /// </summary>
+    /// <remarks>
+    /// Chains may be created outside composition; the scope is resolved when the
+    /// modifier is applied during rendering. Nested layout containers preserve
+    /// the animated scope; nested animated containers replace it for their children.
+    /// Do not dispose supplied transition peers while the chain is in use.
+    /// </remarks>
+    /// <exception cref="InvalidOperationException">
+    /// The chain is applied outside compatible animated content.
+    /// </exception>
+    public static Modifier AnimateEnterExit(this Modifier modifier,
+        Animation.EnterTransition? enter = null, Animation.ExitTransition? exit = null, string? label = null)
+    {
+        ArgumentNullException.ThrowIfNull(modifier);
+        // The effective receiver is dynamic, not part of the chain's supplied values.
+        if (enter is not null && exit is not null && label is not null)
+            return modifier.AppendBound(current =>
+                RenderContext.RequireAnimatedVisibilityScope().AnimateEnterExit(current, enter, exit, label),
+                ModifierOpKey.Opaque);
+        return modifier.Append(current => ComposeBridges.AnimatedVisibilityScopeAnimateEnterExit(
+            RenderContext.RequireAnimatedVisibilityScope(), current, enter, exit, label));
+    }
+
+    /// <summary>
     /// <c>Modifier.padding(all: Dp)</c> — applies <paramref name="all"/>
     /// of padding to every edge.
     /// </summary>
@@ -1695,6 +1723,57 @@ public static class ModifierExtensions
         var block = new TransformGestureBlock(panZoomLock, gestureCb);
         return AppendPointerInput(modifier, key, block);
     }
+
+    /// <summary>
+    /// Installs a bound Kotlin pointer-input handler. Its coroutine is cancelled
+    /// by Compose when the key changes or the modifier leaves the layout.
+    /// </summary>
+    /// <remarks>
+    /// Remember the handler to preserve its JNI identity. Replacing a same-class
+    /// handler without changing the key does not restart the running coroutine.
+    /// Supply immutable keys with stable equality; managed keys retain their
+    /// Equals semantics, rather than being converted to strings. Null is a stable
+    /// key. The caller must not dispose the handler while Compose owns it.
+    /// This is the native suspend contract, not awaiter-only Task cancellation.
+    /// </remarks>
+    public static Modifier PointerInput(this Modifier modifier,
+        AndroidX.Compose.UI.Input.Pointer.IPointerInputEventHandler handler, object? key = null)
+    {
+        ArgumentNullException.ThrowIfNull(modifier);
+        ArgumentNullException.ThrowIfNull(handler);
+        var nativeKey = BoxPointerInputKey(key);
+        return modifier.AppendBound(current =>
+            AndroidX.Compose.UI.Input.Pointer.SuspendingPointerInputFilterKt.PointerInput(current, nativeKey, handler),
+            new ModifierOpKey(nameof(PointerInput), (handler, key)));
+    }
+
+    /// <summary>
+    /// Waits for a native long press, then reports start position, per-event X/Y
+    /// pixel deltas, release, and cancellation. Movement is consumed by Compose.
+    /// </summary>
+    /// <remarks>
+    /// Each applied modifier location remembers its own native handler and callback
+    /// peers, even when a chain is rebuilt or reused. Successful recompositions publish
+    /// the latest callbacks without interrupting a gesture. Changing the immutable
+    /// key or removing the modifier cancels the actual Kotlin pointer-input job.
+    /// No recording, threshold, ripple, or accessibility policy is added.
+    /// </remarks>
+    public static Modifier DetectDragGesturesAfterLongPress(this Modifier modifier,
+        Action<Offset> onDrag, Action<Offset>? onDragStart = null,
+        Action? onDragEnd = null, Action? onDragCancel = null, object? key = null)
+    {
+        ArgumentNullException.ThrowIfNull(modifier);
+        ArgumentNullException.ThrowIfNull(onDrag);
+        var callbacks = new LongPressDragCallbacks(onDrag, onDragStart, onDragEnd, onDragCancel);
+        var factory = new PointerInputModifierFactory(callbacks, key);
+        var inspector = new ComposableLambda1(_ => { });
+        return modifier.AppendBound(current =>
+            AndroidX.Compose.UI.ComposedModifierKt.Composed(current, inspector, factory),
+            new ModifierOpKey(nameof(DetectDragGesturesAfterLongPress), (callbacks, key)));
+    }
+
+    internal static Java.Lang.Object? BoxPointerInputKey(object? key) =>
+        key is null ? null : key as Java.Lang.Object ?? new ManagedBox(key);
 
     // Shared plumbing for DetectTapGestures / DetectDragGestures /
     // DetectTransformGestures: resolve the user-supplied `key` to a

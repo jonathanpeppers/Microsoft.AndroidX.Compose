@@ -8,24 +8,43 @@ namespace AndroidX.Compose.Samples.Reply;
 /// <remarks>
 /// Upstream uses <c>NavOptions</c> with <c>popUpTo(graph.startDestinationId)</c>
 /// + <c>launchSingleTop</c> + <c>restoreState</c> to make the bottom
-/// nav behave like a tab strip (re-tapping a destination doesn't push
-/// it onto the back stack). Those <c>NavOptions</c> APIs aren't yet
-/// surfaced on the C# <see cref="NavController"/>, so this port uses
-/// the simpler <see cref="NavController.Navigate(string)"/> overload —
-/// re-tapping a tab still navigates, which Compose Navigation will
-/// dedupe at the destination level. Documented as a gap in the
-/// sample's README.
+/// nav behave like a tab strip. This graph has a flat, fixed Inbox start
+/// destination, so its route is the equivalent pop target.
 /// </remarks>
 public sealed class ReplyNavigationActions
 {
     readonly NavController _nav;
 
+    /// <summary>Creates actions for the app's remembered navigation controller.</summary>
     public ReplyNavigationActions(NavController nav)
     {
-        _nav = nav ?? throw new ArgumentNullException(nameof(nav));
+        ArgumentNullException.ThrowIfNull(nav);
+        _nav = nav;
     }
 
     /// <summary>Navigate to a top-level destination.</summary>
-    public void NavigateTo(ReplyTopLevelDestination destination) =>
-        _nav.Navigate(destination.Route);
+    public void NavigateTo(ReplyTopLevelDestination destination)
+    {
+        ArgumentNullException.ThrowIfNull(destination);
+        _nav.Navigate(destination.Route, new NavOptions
+        {
+            PopUpToRoute = Route.Inbox,
+            PopUpToSaveState = true,
+            LaunchSingleTop = true,
+            RestoreState = true,
+        });
+    }
+
+    /// <summary>Opens an email from the inbox or a search result without duplicating it.</summary>
+    public void OpenEmail(long emailId) =>
+        _nav.Navigate(Route.EmailDetail(emailId), new NavOptions { LaunchSingleTop = true });
+
+    /// <summary>Closes detail through the same action for system Back and the app-bar Up button.</summary>
+    public void CloseEmail(ReplyState state)
+    {
+        ArgumentNullException.ThrowIfNull(state);
+        if (!_nav.PopBackStack())
+            throw new InvalidOperationException("Reply email detail has no inbox to return to.");
+        state.OpenedEmailId.Value = 0L;
+    }
 }

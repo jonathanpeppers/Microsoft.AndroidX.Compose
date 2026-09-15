@@ -135,6 +135,88 @@ public class BridgeGeneratorTests
     }
 
     [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void ExplicitReceivers_ExcludeBothFromDefaultsAndKeepPeersAlive(bool callerDefaults)
+    {
+        var (output, diags, emitted) = Run($$"""
+            using AndroidX.Compose;
+            [assembly: ComposeDefaults("ChildDefault", "enter", "exit", "label")]
+            namespace AndroidX.Compose
+            {
+                public sealed class Scope : Java.Lang.Object { }
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(Class="x/Scope", JvmName="animateEnterExit$default",
+                        Signature="(Lx/Scope;Lx/Modifier;Lx/Enter;Lx/Exit;Ljava/lang/String;ILjava/lang/Object;)Lx/Modifier;",
+                        Defaults=typeof(ChildDefault), ReceiverCount=2)]
+                    public static partial System.IntPtr Child(Scope scope, System.IntPtr modifier,
+                        Java.Lang.Object? enter, Java.Lang.Object? exit, string? label{{(callerDefaults ? ", int defaults" : "")}});
+                }
+            }
+            """);
+        Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.Empty(output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+        Assert.Contains("args[0] = new global::Android.Runtime.JValue(((global::Java.Lang.Object)scope).Handle);", emitted);
+        Assert.Contains("args[1] = new global::Android.Runtime.JValue(modifier);", emitted);
+        Assert.Contains("args[2] = new global::Android.Runtime.JValue(enter is null ?", emitted);
+        Assert.Contains("args[3] = new global::Android.Runtime.JValue(exit is null ?", emitted);
+        Assert.Contains("args[4] = new global::Android.Runtime.JValue(__ref_label);", emitted);
+        Assert.Contains("args[5] = new global::Android.Runtime.JValue(defaults);", emitted);
+        Assert.Contains("args[6] = new global::Android.Runtime.JValue(global::System.IntPtr.Zero);", emitted);
+        Assert.Contains("global::System.GC.KeepAlive(scope);", emitted);
+        Assert.Contains("global::System.GC.KeepAlive(enter);", emitted);
+        Assert.Contains("global::System.GC.KeepAlive(exit);", emitted);
+        Assert.Contains("finally", emitted);
+        Assert.Contains("DeleteLocalRef(__ref_label)", emitted);
+        if (callerDefaults)
+            Assert.DoesNotContain("int defaults =", emitted);
+        else
+        {
+            Assert.Contains("int defaults = (int)global::AndroidX.Compose.ChildDefault.All;", emitted);
+            Assert.Contains("if (enter is not null) defaults &= ~(int)global::AndroidX.Compose.ChildDefault.Enter;", emitted);
+            Assert.Contains("if (exit is not null) defaults &= ~(int)global::AndroidX.Compose.ChildDefault.Exit;", emitted);
+            Assert.Contains("if (label is not null) defaults &= ~(int)global::AndroidX.Compose.ChildDefault.Label;", emitted);
+        }
+        string defaultsSource = output.SyntaxTrees.Single(t => t.FilePath.EndsWith("ChildDefault.g.cs",
+            System.StringComparison.Ordinal)).ToString();
+        Assert.Matches(@"Enter\s+= 1 << 0", defaultsSource);
+        Assert.Matches(@"Exit\s+= 1 << 1", defaultsSource);
+        Assert.Matches(@"Label\s+= 1 << 2", defaultsSource);
+    }
+
+    [Theory]
+    [InlineData(0, "System.IntPtr", "Lx/Scope;", true)]
+    [InlineData(-1, "System.IntPtr", "Lx/Scope;", true)]
+    [InlineData(4, "System.IntPtr", "Lx/Scope;", true)]
+    [InlineData(1, "Java.Lang.Object?", "Lx/Scope;", true)]
+    [InlineData(1, "string", "Lx/Scope;", true)]
+    [InlineData(1, "int", "I", true)]
+    [InlineData(1, "System.IntPtr", "I", true)]
+    [InlineData(1, "System.IntPtr", "[Lx/Scope;", true)]
+    [InlineData(1, "System.IntPtr", "Lx/Scope;", false)]
+    public void ExplicitReceivers_RejectInvalidShapes(int count, string type, string slot, bool hasDefaults)
+    {
+        var (_, diags, emitted) = Run($$"""
+            using AndroidX.Compose;
+            [assembly: ComposeDefaults("ChildDefault", "enter")]
+            namespace AndroidX.Compose
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(Class="x/Scope", JvmName="child",
+                        Signature="({{slot}}Lx/Enter;{{(hasDefaults ? "ILjava/lang/Object;" : "")}})V",
+                        {{(hasDefaults ? "Defaults=typeof(ChildDefault), " : "")}}ReceiverCount={{count}})]
+                    public static partial void Child({{type}} scope, Java.Lang.Object? enter);
+                }
+            }
+            """);
+        Assert.Contains(diags, d => d.Id == "CN2012");
+        Assert.Null(emitted);
+    }
+
+    [Theory]
     [InlineData(1, false)]
     [InlineData(10, false)]
     [InlineData(11, false)]
@@ -1787,6 +1869,44 @@ public class BridgeGeneratorTests
 
         var compileDiags = output.GetDiagnostics();
         Assert.Empty(compileDiags.Where(d => d.Severity == DiagnosticSeverity.Error));
+    }
+
+    [Fact]
+    public void Suspend_LongPressDrag_KeepsTypedCallbacksAliveAndForwardsOuterContinuation()
+    {
+        var code = """
+            using AndroidX.Compose;
+            using Kotlin.Coroutines;
+            using Kotlin.Jvm.Functions;
+            [assembly: ComposeDefaults("LongPressDefault", "onDragStart", "onDragEnd", "onDragCancel", "!onDrag")]
+            namespace AndroidX.Compose
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(Suspend = true,
+                        Class = "androidx/compose/foundation/gestures/DragGestureDetectorKt",
+                        JvmName = "detectDragGesturesAfterLongPress$default",
+                        Signature = "(Landroidx/compose/ui/input/pointer/PointerInputScope;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;",
+                        Defaults = typeof(LongPressDefault))]
+                    internal static partial System.IntPtr DoIt(System.IntPtr scope,
+                        IFunction1? onDragStart, IFunction0? onDragEnd, IFunction0? onDragCancel,
+                        IFunction2 onDrag, IContinuation cont);
+                }
+            }
+            """;
+        var (output, diags, emitted) = Run(code);
+        Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+        Assert.Contains("detectDragGesturesAfterLongPress$default", emitted);
+        Assert.Contains("args[0] = new global::Android.Runtime.JValue(scope);", emitted);
+        Assert.Contains("args[5] = new global::Android.Runtime.JValue(((global::Java.Lang.Object)cont).Handle);", emitted);
+        Assert.Contains("args[6] = new global::Android.Runtime.JValue(defaults);", emitted);
+        Assert.Contains("args[7] = new global::Android.Runtime.JValue(global::System.IntPtr.Zero);", emitted);
+        foreach (var name in (string[])["onDragStart", "onDragEnd", "onDragCancel", "onDrag", "cont"])
+            Assert.Contains($"global::System.GC.KeepAlive({name});", emitted);
+        Assert.Contains("LongPressDefault.OnDragCancel", emitted);
+        Assert.DoesNotContain("LongPressDefault.OnDrag;", emitted);
+        Assert.Empty(output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error));
     }
 
     [Fact]

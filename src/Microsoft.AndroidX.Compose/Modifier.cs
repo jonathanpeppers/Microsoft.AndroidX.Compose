@@ -136,6 +136,11 @@ public sealed class Modifier
     // write `Modifier.X(...)` to start a chain and `.Y(...)` to
     // continue it, matching Kotlin's `Modifier.x(...).y(...)` 1:1.
 
+    /// <inheritdoc cref="ModifierExtensions.AnimateEnterExit"/>
+    public static Modifier AnimateEnterExit(
+        Animation.EnterTransition? enter = null, Animation.ExitTransition? exit = null, string? label = null) =>
+        _companion.AnimateEnterExit(enter, exit, label);
+
     /// <inheritdoc cref="ModifierExtensions.Padding(Dp)"/>
     public static Modifier Padding(Dp all) => _companion.Padding(all);
 
@@ -426,6 +431,16 @@ public sealed class Modifier
 
     /// <inheritdoc cref="ModifierExtensions.DetectDragGestures(Modifier, Action{Offset}, Action{Offset}?, Action?, Action?, object?)"/>
     public static Modifier DetectDragGestures(Action<Offset> onDrag, Action<Offset>? onDragStart = null, Action? onDragEnd = null, Action? onDragCancel = null, object? key = null) => _companion.DetectDragGestures(onDrag, onDragStart, onDragEnd, onDragCancel, key);
+
+    /// <inheritdoc cref="ModifierExtensions.PointerInput"/>
+    public static Modifier PointerInput(AndroidX.Compose.UI.Input.Pointer.IPointerInputEventHandler handler, object? key = null) =>
+        _companion.PointerInput(handler, key);
+
+    /// <inheritdoc cref="ModifierExtensions.DetectDragGesturesAfterLongPress"/>
+    public static Modifier DetectDragGesturesAfterLongPress(Action<Offset> onDrag,
+        Action<Offset>? onDragStart = null, Action? onDragEnd = null,
+        Action? onDragCancel = null, object? key = null) =>
+        _companion.DetectDragGesturesAfterLongPress(onDrag, onDragStart, onDragEnd, onDragCancel, key);
 
     /// <inheritdoc cref="ModifierExtensions.DetectTransformGestures(Modifier, Action{Offset, Offset, float, float}, bool, object?)"/>
     public static Modifier DetectTransformGestures(Action<Offset, Offset, float, float> onGesture, bool panZoomLock = false, object? key = null) => _companion.DetectTransformGestures(onGesture, panZoomLock, key);

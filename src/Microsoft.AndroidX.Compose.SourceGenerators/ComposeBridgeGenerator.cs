@@ -76,6 +76,10 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
         var defaultsType = ReadType(attr, "Defaults");
         bool isInstance = ReadBool(attr, "Instance");
         bool isSuspend = ReadBool(attr, "Suspend");
+        int? explicitReceiverCount = attr.NamedArguments
+            .Where(a => a.Key == "ReceiverCount")
+            .Select(a => a.Value.Value as int?)
+            .FirstOrDefault();
 
         if (className is null || jvmName is null || signature is null)
         {
@@ -234,6 +238,14 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
         }
 
         bool hasDefaultSlot = signatureHasDefault;
+
+        if (explicitReceiverCount is not null &&
+            (explicitReceiverCount <= 0 || !extensionWithDefault || isInstance ||
+             isConstructor || isSuspend || instanceField is not null))
+        {
+            return ReceiversError(loc, method.Name,
+                "ReceiverCount must be positive and is only supported on static, non-composable, non-suspend $default bridges");
+        }
 
         if (isInstance)
         {
@@ -394,11 +406,29 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
         // track it separately and exclude it from JNI slot accounting.
         // Suspend instance methods infer this shape from Suspend=true with
         // no $default marker; synchronous methods opt in via Instance=true.
-        IParameterSymbol? receiverParam = null;
+        IParameterSymbol[] receiverParams = [];
         IParameterSymbol? instanceReceiverParam = null;
         bool isInstanceSuspend = isSuspend && !extensionWithDefault;
         bool hasCallerInstance = isInstance || isInstanceSuspend;
-        if (hasCallerInstance)
+        if (explicitReceiverCount is int count)
+        {
+            if (count > userParams.Length || count > sigParams.Count - 2)
+                return ReceiversError(loc, method.Name, "ReceiverCount exceeds the available receiver slots");
+            receiverParams = userParams.Take(count).ToArray();
+            for (int i = 0; i < count; i++)
+            {
+                var receiver = receiverParams[i];
+                if (sigParams[i].Code != 'L' || sigParams[i].ArrayDepth != 0 ||
+                    receiver.NullableAnnotation == NullableAnnotation.Annotated ||
+                    (receiver.Type.SpecialType != SpecialType.System_IntPtr && !IsJavaPeer(receiver.Type)))
+                {
+                    return ReceiversError(loc, method.Name,
+                        $"receiver '{receiver.Name}' must be a non-null Java peer or IntPtr occupying an object JNI slot");
+                }
+            }
+            userParams = userParams.Skip(count).ToArray();
+        }
+        else if (hasCallerInstance)
         {
             if (userParams.Length == 0 ||
                 userParams[0].Type.SpecialType != SpecialType.System_IntPtr)
@@ -421,7 +451,7 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
                     Diagnostic.Create(Diagnostics.MalformedAttribute, loc, method.Name)
                 });
             }
-            receiverParam = userParams[0];
+            receiverParams = [userParams[0]];
             userParams = userParams.Skip(1).ToArray();
         }
         else if (hasComposerSlot &&
@@ -429,7 +459,7 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
                  userParams[0].Type.SpecialType == SpecialType.System_IntPtr &&
                  userParams[0].Name.EndsWith("Scope", StringComparison.Ordinal))
         {
-            receiverParam = userParams[0];
+            receiverParams = [userParams[0]];
             userParams = userParams.Skip(1).ToArray();
         }
         else if (!hasComposerSlot && !extensionWithDefault && !isConstructor &&
@@ -437,7 +467,7 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
                  userParams[0].Type.SpecialType == SpecialType.System_IntPtr &&
                  sigParams[0].Code == 'L' && sigParams[0].ArrayDepth == 0)
         {
-            receiverParam = userParams[0];
+            receiverParams = [userParams[0]];
             userParams = userParams.Skip(1).ToArray();
         }
 
@@ -502,7 +532,7 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
             ? (kotlinNames.Count > 32 ? 2 : 1)
             : 0;
         var changedSlots = ChangedSlotCount(sigParams, defaultSlotCount, hasComposerSlot);
-        int receiverSlotCount = receiverParam is null ? 0 : 1;
+        int receiverSlotCount = receiverParams.Length;
         int composerSlotCount = hasComposerSlot ? 1 : 0;
         int markerSlotCount = extensionWithDefault ? 1 : 0;
         int continuationSlotCount = isSuspend ? 1 : 0;
@@ -564,7 +594,7 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
             return new GenerationResult(null, null, diags.ToArray());
 
         var source = Emit(method, attr, className, jvmName, signature, defaultsEnumName, sigParams,
-            kotlinNames, userParams, userBitOf, receiverParam, callerProvidesDefaults, callerProvidesChanged,
+            kotlinNames, userParams, userBitOf, receiverParams, callerProvidesDefaults, callerProvidesChanged,
             hasDefaultSlot, defaultSlotCount,
             hasComposerSlot, extensionWithDefault, instanceField, isConstructor,
             isSuspend, hasCallerInstance, instanceReceiverParam, continuationParam, continuationSlotIdx, jniReturnType);
@@ -586,6 +616,23 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
         new(null, null, new[] {
             Diagnostic.Create(Diagnostics.BridgeInstanceInvalid, loc, methodName, message)
         });
+
+    static GenerationResult ReceiversError(Location loc, string methodName, string message) =>
+        new(null, null, [
+            Diagnostic.Create(Diagnostics.BridgeReceiversInvalid, loc, methodName, message)
+        ]);
+
+    static bool IsJavaPeer(ITypeSymbol type)
+    {
+        if (type.AllInterfaces.Any(i => i.ToDisplayString() is
+            "Android.Runtime.IJavaObject" or "Java.Interop.IJavaPeerable"))
+            return true;
+        for (ITypeSymbol? current = type; current is not null; current = current.BaseType)
+            if (current.ToDisplayString() is "Java.Lang.Object" or
+                "Android.Runtime.IJavaObject" or "Java.Interop.IJavaPeerable")
+                return true;
+        return false;
+    }
 
     // Recognises Kotlin.Coroutines.IContinuation itself or any type that
     // implements it (covers the runtime's SuspendContinuation JCW).
@@ -627,7 +674,7 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
         IReadOnlyList<string> kotlinNames,
         IParameterSymbol[] userParams,
         Dictionary<string, int> userBitOf,
-        IParameterSymbol? receiverParam,
+        IParameterSymbol[] receiverParams,
         bool callerProvidesDefaults,
         bool callerProvidesChanged,
         bool hasDefaultSlot,
@@ -748,9 +795,11 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
         // Walk sigParams positions and emit assignments.
         // Layout: receiver? + kotlin params + composer + $changed* + $default.
         int idx = 0;
-        if (receiverParam is not null)
+        foreach (var receiver in receiverParams)
         {
-            sb.Append("                args[").Append(idx).Append("] = new global::Android.Runtime.JValue(").Append(EscapeIdent(receiverParam.Name)).AppendLine(");");
+            sb.Append("                args[").Append(idx).Append("] = new global::Android.Runtime.JValue(");
+            EmitUserArgValue(sb, receiver, sigParams[idx]);
+            sb.AppendLine(");");
             idx++;
         }
 
@@ -811,7 +860,7 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
         // including callers that compute masks by hand.
         int changedCount = ChangedSlotCount(sigParams, defaultSlotCount, hasComposerSlot);
         bool canForwardChanged = callerProvidesChanged && changedCount == 1
-            && receiverParam is null && instanceField is null;
+            && receiverParams.Length == 0 && instanceField is null;
         for (int c = 0; c < changedCount; c++, idx++)
         {
             string val = canForwardChanged ? "_changed" : "0";
@@ -876,7 +925,7 @@ public sealed class ComposeBridgeGenerator : IIncrementalGenerator
         sb.AppendLine("        {");
         foreach (var sp in stringParams)
             sb.Append("            global::Android.Runtime.JNIEnv.DeleteLocalRef(__ref_").Append(sp.Name).AppendLine(");");
-        foreach (var p in userParams)
+        foreach (var p in receiverParams.Concat(userParams))
         {
             if (NeedsKeepAlive(p))
                 sb.Append("            global::System.GC.KeepAlive(").Append(EscapeIdent(p.Name)).AppendLine(");");

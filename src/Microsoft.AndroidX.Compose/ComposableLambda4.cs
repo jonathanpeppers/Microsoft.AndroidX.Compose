@@ -17,6 +17,7 @@ namespace AndroidX.Compose;
 internal sealed class ComposableLambda4 : Java.Lang.Object, IFunction4
 {
     readonly Action<IntPtr, Java.Lang.Object?, IComposer> _body;
+    readonly Animation.IAnimatedVisibilityScope? _animatedScope = RenderContext.CurrentAnimatedVisibilityScope;
 
     public ComposableLambda4(Action<IntPtr, Java.Lang.Object?, IComposer> body) => _body = body;
 
@@ -24,7 +25,10 @@ internal sealed class ComposableLambda4 : Java.Lang.Object, IFunction4
     {
         ArgumentNullException.ThrowIfNull(p2);
         var composer = Android.Runtime.Extensions.JavaCast<IComposer>(p2);
+        using var context = ComposableContext.Enter(composer);
+        using var animation = RenderContext.PushAnimatedVisibilityScope(_animatedScope);
         _body(p0?.Handle ?? IntPtr.Zero, p1, composer);
-        return Kotlin.Unit.Instance!;
+        return Kotlin.Unit.Instance
+            ?? throw new InvalidOperationException("Kotlin.Unit.Instance was unavailable after invoking ComposableLambda4.");
     }
 }

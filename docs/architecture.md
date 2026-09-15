@@ -5,6 +5,164 @@ and its sibling source generators. For the *why* behind the project and a
 tour of how Jetpack Compose itself works under the hood, see
 [compose-internals.md](compose-internals.md).
 
+## Pointer-input long-press lifecycle
+
+`Modifier.PointerInput(handler, key)` calls the official runtime binding's
+`SuspendingPointerInputFilterKt.PointerInput` with a bound
+`IPointerInputEventHandler`. Callers keep that handler remembered and must not
+dispose it while installed. Managed keys retain `Equals` through `ManagedBox`;
+they are not coerced to strings. Keys should be immutable.
+
+`Modifier.DetectDragGesturesAfterLongPress` adds a native `Modifier.composed`
+factory. Every materialized location remembers a handler and all four callback
+peers, keyed by the explicit pointer-input key. A successful composition's
+`SideEffect` publishes the latest immutable delegate bundle; a speculative
+composition never changes the installed callbacks. Rebuilding/reusing the C#
+chain therefore neither resets a gesture nor shares a handler between locations.
+The factory returns a Modifier rather than Unit, so it has a specialized
+`IFunction3` adapter instead of a Unit-returning content lambda.
+
+The `UI.Android` 1.11.3.1 runtime binding exposes both `PointerInput` and the
+handler's suspend `Invoke`. `Foundation.Android` 1.11.3.1 still omits
+`DetectDragGesturesAfterLongPress`; one generated `$default` suspend bridge
+supplies its callbacks and forwards the **native outer continuation**. There
+is no managed Task or awaiter-only cancellation token. Native key changes,
+density/view-configuration changes, detach and disposal cancel the actual job.
+The detector reports start position, per-event X/Y pixel deltas, end/release and
+cancel, and consumes movement in Kotlin. Its cancellation callback can also run
+while waiting for the next gesture, not only after a recognized long press.
+Removal can cancel a gesture via a synthetic consumed-up event and then cancel
+the idle coroutine during detach. Tests account for those raw idle notifications
+separately from the single active cancellation required per recognized gesture.
+They also retain phase-specific raw counts and Java call stacks: the first
+removal callback must originate in `onCancelPointerInput`, and the subsequent
+idle callback in `onDetach` / `resetPointerInputHandler`. This verifies the native
+cause and ordering rather than simply labeling every duplicate as idle.
+Temporary JNI result references are released in `finally`, and the coroutine
+suspended singleton uses the existing raw-handle sentinel check.
+
+`LongPressDragTests` injects real native MotionEvents and waits for detector
+callbacks, with bounded frame barriers for recomposition. It checks short taps,
+long press, two-axis deltas, latest callbacks, native handler/callback identities
+across recomposition and GC, key reset, modifier removal, MotionEvent cancellation
+and activity disposal. No synthetic animation-clock helper is involved.
+Gallery routes `modifiers-long-press-drag` and `buttons-tooltips` expose the
+lifecycle and competing-tooltip-input control.
+
+## Animated child transitions
+
+`Modifier.AnimateEnterExit(enter: ..., exit: ..., label: ...)` adds child
+transitions inside `AnimatedVisibility` or `AnimatedContent<T>`. It can start
+a chain or extend one. Null and omission both mean Kotlin's defaults:
+`fadeIn()`, `fadeOut()`, and `"animateEnterExit"`; an explicit transition
+(including the bound `None` singleton) or empty label remains explicit.
+These effects combine with the parent's transitions rather than replacing
+them. `Composables.AnimatedVisibility` supports both an explicit composer and
+a generated composerless overload; existing tree constructors and
+`AnimatedContent` signatures are unchanged.
+
+```csharp
+// Inside a [Composable] method:
+Composables.AnimatedVisibility(visible, () =>
+    Composables.Column(() =>
+        Composables.Text("Independent child",
+            modifier: Modifier.AnimateEnterExit(
+                enter: Transitions.ScaleIn(0.2f),
+                exit: Transitions.ScaleOut(0.2f)))));
+```
+
+Tree-style children use the same modifier:
+`new AnimatedVisibility(visible) { new Text("Child") { Modifier = Modifier.AnimateEnterExit() } }`.
+Chains can be constructed before composition and reused; the receiver is resolved
+when the chain is materialized, not when its managed description is built.
+Materializing outside compatible animated content throws a managed
+`InvalidOperationException`. Applying the modifier to a top-level animated
+container itself does not make that container its own child.
+
+The native callbacks publish their actual `IAnimatedVisibilityScope` in a
+separate `RenderContext` channel. `IAnimatedContentScope` inherits that
+interface, so outgoing and incoming values each publish their own native
+receiver. Row/Column/Box scopes do not hide this channel. Nested animated
+callbacks replace it only for their children, with disposable frames restoring
+the previous receiver even on failure.
+
+Every composable arity-2/3/4 adapter captures the **typed peer**, not a borrowed
+JNI handle, when created. Its invocation reinstalls that lexical animated
+receiver (including null) and the **callback-time composer**, never the outer
+composer. This covers independently invoked nested content, tracked named
+slots, and generated `UpdateScope` restart callbacks. It does not grant event
+handlers composable scope: raw non-composable arity-0/1 adapters do not capture
+it. The receiver lives with the composition-owned callback; no global cache or
+self-rooting GC handle is added. Modifier diff keys are deliberately opaque
+because the effective receiver is dynamic, so equal supplied arguments cannot
+incorrectly suppress a receiver change.
+
+The runtime binding `Xamarin.AndroidX.Compose.Animation.Android` **1.11.3.1**
+exposes `IAnimatedVisibilityScope.AnimateEnterExit` and `Transition`, but not
+the synthetic `animateEnterExit$default` method (nor does its bound
+`AnimatedVisibilityScopeDefaultImpls` expose that default dispatcher).
+All-explicit modifier calls use the bound instance method. Any omitted value
+uses a generated bridge to the synthetic entry. Its **two** receivers
+(dispatch scope and extension modifier) precede the user arguments and consume
+no default bits: enter = 1, exit = 2, label = 4. The new
+`ComposeBridge.ReceiverCount` option models this without a handwritten JNI body
+or hand-rolled enum. Typed receivers participate in generated `GC.KeepAlive`.
+The missing synthetic entry is recorded in this repo's #333. This is distinct
+from Kotlin inline-class name mangling tracked by dotnet/java-interop#1440.
+
+Pinned evidence: Google Maven's
+[`animation-1.11.3-sources.jar`](https://dl.google.com/dl/android/maven2/androidx/compose/animation/animation/1.11.3/animation-1.11.3-sources.jar)
+(SHA-256 `A75C099FF3E786FD3E0A55A016B32AC5E6CB11638DF5E3BCC3A34FF6C2E2EDB6`),
+`AnimatedVisibility.kt`, `AnimatedVisibilityScope.animateEnterExit` and
+`AnimatedVisibilityImpl`/`AnimatedEnterExitImpl`; the actual runtime
+`classes.jar` SHA-256 is
+`9BE622AA1D57383B482F00FD3BFEACC0411FFF77476AAFEEBD76C3C3CB9F6A94`.
+`javap -p -c -s` confirms the two-receiver descriptor and bits above.
+Upstream waits for the associated transition's exit before disposing content,
+including child `animateEnterExit` animations; unrelated independent animations
+are not covered by that guarantee.
+
+Gallery route `anim-children` shows a quick parent fade and slower child scale,
+default child fades in composerless content, and child transitions per
+`AnimatedContent` state. `AnimatedScopeTests` checks Kotlin-dispatched defaults,
+explicit arguments, scope rejection, and later callback/exception restoration.
+`AnimatedScopeRenderingTests` checks actual child placement, independent
+recomposition, outgoing/incoming and recursive scope identity, exit disposal
+and re-entry. Its completion evidence is native transition lifecycle and
+`DisposableEffect` disposal, **not** sleeps, expected-pixel polling, recomposer
+pending flags, raw awaiter counts, or quiet frames. It is not a frame-by-frame
+visual parity claim against
+[`android/compose-samples` at `4c1fe758`](https://github.com/android/compose-samples/tree/4c1fe7586e2fbf1c934925ef8ab64d3803361423).
+
+### Native acceptance evidence
+
+On 2026-09-15, Pixel 7 passed all **8** `AnimatedScope` cases, with no
+failures or skips, using source `e70f2c1` and embedded DeviceTests APK SHA-256
+`DBFBEEACCD7C0A8DC89ED1C660E0CAA9B8889FD3D537DD20129AADD55B1AE331`.
+The ARM64 app/runtime ELF payload sections matched the built managed DLLs
+byte-for-byte. Both tree and direct routes reported native exit duration
+**800,000,000 ns**, versus the parent's 100 ms effect, while the child was
+still installed; each measured six children across the state change.
+Independent recomposition, nested/outgoing scope identity, disposal/re-entry,
+callback exception restoration, and the full default/explicit argument matrix
+passed.
+
+An earlier run passed 7/8 because the default comparison used managed wrapper
+identity. The correction calls the bound `Java.Lang.Object.Equals(Java.Lang.Object)`
+overload, which dispatches to Kotlin's transition-data equality, with positive
+and negative controls. No runtime/default behavior or timing assertions changed.
+
+Gallery APK SHA-256
+`09C1EB6701FD07AA1319A1D516E0D9C463001DBEBD13E76C9AA483649BFD740C`
+rendered `demo/anim-children` with readable labels. Owned screenshots captured
+shown/hidden content; native UI hierarchies confirmed removal and re-entry
+of both tree and composerless children. A transient adb transport failure
+interrupted further Gallery interaction, so its separate next-state button
+was not exercised. AnimatedContent state changes were covered by the native
+suite instead. Evidence was recovered without restarting the shared adb server,
+both repo-owned apps were stopped, and all device commands ended at
+10:57:44.612 CDT, inside the granted lease.
+
 ## Bound baseline modifiers
 
 `Modifier.AlignBy(HorizontalAlignmentLine)` and `AlignByBaseline()` resolve the
@@ -516,6 +674,36 @@ all of these declarations — every composable in the facade gets its
 [`Microsoft.AndroidX.Compose.SourceGenerators.Tests`](../src/Microsoft.AndroidX.Compose.SourceGenerators.Tests)
 pin the emitted output. When the upstream binder fix lands, each
 declarative attribute can be swapped one-for-one to the generic form.
+
+## Foundation editor decoration
+
+`BasicTextField` uses the **bound** Foundation Android companion overloads
+for `TextFieldValue` and `string`; no JNI bridge or Material field substitution
+is involved. The string route leaves selection/composition state with Foundation,
+not a managed adapter reconstructing `TextFieldValue` on every render.
+The facade generator supports `[Callback(typeof(T))]` for bound
+`Java.Lang.Object` types. It resolves the real callback peer without taking
+ownership, preserving text selection/composition rather than converting the
+value to a string. Nullable callbacks become optional properties (for example,
+`OnTextLayout`) and still use identity-stable `RememberAction` adapters.
+
+`[DecorationBox] IFunction3?` receives the native `Function2<Composer, Int, Unit>`
+inner editor, unlike an ordinary slot or scope receiver. Tree callers supply
+`Func<ComposableNode, ComposableNode>`; explicit-composer callers receive
+`Action<IComposer>` plus the decoration composer; ambient callers receive
+`Action`. Render that inner editor exactly once and do not retain it outside
+the decoration. All routes use tracked `Wrap3WithValue` identity and the
+composer active at inner-editor invocation, including nested containers and
+restarts. Null tree properties select Kotlin defaults; direct calls retain
+the generated omission-aware mask contract. The two native changed groups
+remain zero (Uncertain).
+
+`SecondaryCtor` can replace a required callback's managed payload type when the
+alternate bridge annotates that shared parameter with `[Callback(typeof(T))]`.
+The generator maintains separate nullable, strongly typed callback fields, emits
+route-specific constructor/direct signatures, and guards access to the selected
+route's fields. An optional property's callback type cannot change across routes
+(CN3012), because both constructors share that public property.
 
 ## Compose value types
 

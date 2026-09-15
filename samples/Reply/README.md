@@ -26,7 +26,8 @@ phone layout** built from the same Material 3 building blocks.
   `Route` sealed interface; `EmailDetail` is added for the single-pane
   port since upstream uses pane navigation, not a `NavHost` route, for
   the detail view)
-- Top-level destinations + `ReplyNavigationActions` wrapper
+- Top-level destinations + `ReplyNavigationActions` wrapper using native
+  pop-to-Inbox, save/restore-state and single-top navigation
 - `ReplyBottomNavigationBar` — 4 `NavigationBarItem`s
 - `ReplyInboxScreen` — `LazyColumn` of `ReplyEmailListItem`s with a
   functioning docked search bar pinned to the top and an
@@ -113,12 +114,80 @@ email's item state and scroll anchor when other emails move around it.
 The key API accepts non-null `string`, `int`, or `long` values; omitted keys
 retain positional behavior.
 
+## Navigation and Back contract
+
+Behavior is compared with **android/compose-samples
+`4c1fe7586e2fbf1c934925ef8ab64d3803361423`**, not a moving `main`:
+[`ReplyNavigationActions.kt`](https://github.com/android/compose-samples/blob/4c1fe7586e2fbf1c934925ef8ab64d3803361423/Reply/app/src/main/java/com/example/reply/ui/navigation/ReplyNavigationActions.kt),
+[`ReplyListContent.kt`](https://github.com/android/compose-samples/blob/4c1fe7586e2fbf1c934925ef8ab64d3803361423/Reply/app/src/main/java/com/example/reply/ui/ReplyListContent.kt),
+and [`ReplyHomeViewModel.kt`](https://github.com/android/compose-samples/blob/4c1fe7586e2fbf1c934925ef8ab64d3803361423/Reply/app/src/main/java/com/example/reply/ui/ReplyHomeViewModel.kt).
+
+| Flow | Pinned Kotlin behavior / C# contract |
+|------|------------------------------------|
+| Tap the current top-level tab repeatedly | Pop to the graph start without removing it, save popped entries, launch single-top, restore saved state. No duplicate current-tab entries. C# uses `PopUpToRoute = Route.Inbox` because its graph has a flat, fixed start route. |
+| Switch tabs and return to Inbox | Restore the destination's native saved state, including the inbox's default Kotlin `rememberLazyListState()`. Do not replace it with a new managed `LazyListState`. |
+| Open an email; system Back or app-bar Up | Return to the retained inbox context and reset the opened-email highlight to the first email. The same close action handles both paths. |
+| Multi-selection | Long-press toggles a selected email. Selection persists through detail/tab navigation; **selection alone does not consume Back**. The pinned source has no selection Back handler. |
+| Selected bottom-navigation item | Derived from the rendered destination, including Inbox for the port's detail route, rather than a separate click-updated route variable. Native Back and restoration cannot leave a stale selected tab. |
+| Activity recreation | Compose saves the navigation stack and each destination's list state. `ReplyState` saves opened-email and selected IDs in the activity Bundle. Kotlin's ViewModel retains these on configuration changes; this port also saves them for Android saved-task restoration. |
+
+The port retains its existing `EmailDetail/{emailId}` route instead of rewriting
+the app to use Kotlin's in-Inbox detail pane. Switching from detail to another
+tab and **tapping Inbox or pressing system Back** restores that saved detail
+route. Navigation 2.9.8's non-inclusive saved pop associates the saved stack
+with the `popUpTo` destination (Inbox) as well as the popped destination
+(EmailDetail); restoring Inbox follows that association. A Back handler
+exists only inside the non-Inbox top-level destinations
+and uses the same Inbox restore action. This preserves Kotlin's still-open
+in-Inbox detail context without changing the existing route architecture.
+Inbox-root Back remains unhandled by the sample and exits normally; detail
+owns its close action, and selection alone never intercepts.
+
+### Search integration
+
+The interactive `ReplySearchBar` uses the inbox's same `Action<long>` for
+row/result opening. Search owns only its local expanded-state dismissal:
+native Back collapses it without clearing the query; leading Back clears
+and collapses. Result selection invokes the detail callback, then
+clears/collapses search, without mutating multi-selection or installing an
+app-wide Back handler. See [Docked search](#docked-search) for the interaction
+and popup-width contracts.
+The pinned search uses ordinary `remember`, not saved state; leaving its
+composition resets its query/expansion. The search implementation and paired
+Kotlin search artifacts are tracked separately from navigation.
+
+### Regression coverage
+
+`ReplyNavigationTests` in `Microsoft.AndroidX.Compose.DeviceTests` links the
+actual sample source and resources, rather than a second navigation model.
+The focused native cases cover repeated tab taps and Back, exact visible email
+IDs/pixel offsets after tabs and detail Back/Up, retained selection, root Back
+fallthrough, saved detail, and activity recreation on a tab, detail, and Inbox.
+Assertions run after native lifecycle/transition, recomposer, snapshot, and
+layout readiness; they do not poll for expected route/scroll values.
+
+```pwsh
+dotnet build samples\Reply
+dotnet build src\Microsoft.AndroidX.Compose.DeviceTests
+# On a separately authorized device:
+adb shell am instrument -w -e filter FullyQualifiedName~ReplyNavigationTests net.compose.devicetests/net.compose.devicetests.TestInstrumentation
+```
+
+Physical-device verification on 2026-09-15 used the linked Reply UI at commit
+`259f694` on a Pixel 7: all three navigation tests passed in separate native
+instrumentation invocations, as did the padding-overload regression control.
+Visible inbox email IDs and pixel offsets matched after tab switches, detail
+Back/Up, and activity recreation; saved-detail restoration also passed.
+Host builds alone are not native proof. These runs do not establish
+process-death restoration or matched Kotlin/C# visual parity, and the separate
+search implementation remains outside this navigation test suite.
+
 ## What's missing (and why)
 
 Upstream Reply is, before anything else, an **adaptive layouts
-showcase**. The C# facade doesn't yet bind the primitives that
-adaptation relies on, so the port consciously omits them — with
-links back to the tracking issues.
+showcase**. This port remains single-pane; adaptive/fold-aware integration is
+separate from the completed top-level navigation work. Entries below describe
+sample omissions, not proof that the current library lacks the corresponding API.
 
 | Upstream feature | Status | Tracking issue |
 |------------------|--------|----------------|
@@ -126,16 +195,13 @@ links back to the tracking issues.
 | `NavigationRail` / `PermanentNavigationDrawer` / `ModalNavigationDrawer` content for medium and expanded sizes | dropped — bottom nav only | [#163](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/163) (drawer-row facade) — branching on `WindowSizeClass` is unblocked by [#143](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/143). |
 | `accompanist.adaptive.TwoPane` + `WindowLayoutInfo`/`FoldingFeature` (list-detail with fold avoidance) | dropped — single-pane | [#168](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/168) |
 | `NavigationDrawerItem` rows inside `ModalDrawerSheet` | not used (no drawer in single-pane port) | [#163](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/163) |
-| `BackHandler {}` to collapse multi-select / detail | dropped — system back falls through to the navigator | [#166](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/166) |
-| `NavOptions` with `popUpTo` / `launchSingleTop` / `restoreState` for bottom-nav tab semantics | dropped — re-tapping a tab re-navigates | [#169](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/169) |
 | `Modifier.nestedScroll(scrollBehavior)` + `TopAppBarDefaults.exitUntilCollapsedScrollBehavior()` (top-bar collapse on scroll) | dropped | [#142](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/142) |
 | `LazyListState.lastScrolledBackward` / `canScrollBackward` (drives search-bar lift animation) | dropped | [#164](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/164) |
 | `semantics { selected = isSelected }` on email cards (screen reader announces multi-select state) | dropped | [#167](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/167) |
 | `Modifier.windowInsetsPadding(WindowInsets.statusBars)` on bars | dropped | [#69](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/69) |
 | `MaterialTheme.typography.*` per-style reads (titleLarge / bodyMedium / labelMedium / …) | dropped — `FontSize` literals inline | [#61](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/61) |
 | `stringResource(R.string.…)` lookups | dropped — strings inlined | [#146](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/146) |
-| Per-tab back-stack state retention (each tab keeps its scroll position when switched) | dropped (needs NavOptions) | [#169](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/169) |
-| `ReplyHomeViewModel` + `StateFlow` + `collectAsStateWithLifecycle` (one source of truth) | replaced with `MutableState` / `MutableStateList` remembered at `MainActivity` scope | [#160](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/160) |
+| `ReplyHomeViewModel` + `StateFlow` + `collectAsStateWithLifecycle` (one source of truth) | replaced with activity-owned `ReplyState` (`MutableState` / `MutableStateList`) and native navigation state | [#160](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/160) |
 
 The reply / reply-all buttons, star icon, more-options menu, and
 account avatar in the search bar are all wired as no-ops —
