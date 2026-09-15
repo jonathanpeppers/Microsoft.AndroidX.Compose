@@ -5,6 +5,62 @@ and its sibling source generators. For the *why* behind the project and a
 tour of how Jetpack Compose itself works under the hood, see
 [compose-internals.md](compose-internals.md).
 
+## Typed transition values
+
+`composer.UpdateTransition<T>(targetState)` and
+`Composables.UpdateTransition<T>(targetState)` remember one native transition
+and update it on **every** composition pass. They must not be put inside a
+`Remember` factory. Targets are non-null immutable values (including bools,
+enums and records), boxed through the existing non-generic `ManagedBox` JCW
+with managed `object.Equals` equality. Native snapshot state holds both targets;
+no separate managed target field can get ahead of a speculative composition.
+
+Each `transition.AnimateFloat(...)` / `AnimateColor(...)` call owns a stable
+call-site group and returns a remembered `IState<float>` / `IState<Color>`.
+The explicit overload takes an `IComposer` first; the composerless overload
+uses the active context and is checked by CN5009. Target mappings are
+synchronous `[ComposableContent]` functions: they may read snapshot state or
+composition locals. The callback-time composer is entered and restored.
+`ComposableLambda3` supports value-returning bodies as well as its existing
+Unit-returning constructors. `Wrap3Result` uses Compose's **tracked** lambda
+factory, so wrapper identity is stable while a replacement mapping invalidates
+its readers. The spec callback slot remains present even when switching
+between omitted and supplied specs.
+
+The 1.11.3.1 **runtime companion DLLs** expose `TransitionKt.UpdateTransition`,
+core `AnimateFloat`, animation `AnimateColor`, the lifecycle properties, and
+`AnimationSpecKt.Spring` / `Tween`; these are bound calls, not new JNI bridges.
+Generated `UpdateTransitionDefault` / `TransitionAnimationDefault` enums carry
+defaults (animation extension receivers do not consume default bits).
+All changed masks remain conservative zero. The existing stripped
+`Color.box-impl` call now uses a generated bridge; the bound `Color.Value`
+unboxes without new JNI. Color interpolation remains native and color-space
+aware, never integer interpolation of the packed representation.
+
+`AnimationSpecs.Spring(dampingRatio, stiffness)` and
+`AnimationSpecs.Tween(durationMillis, delayMillis, easing)` create bound finite
+specs usable for floats and colors. Remember supplied specs when constructing
+them in composition; null uses each native animation's default spring.
+The public signatures also accept bound `IFiniteAnimationSpec` values.
+Kotlin generic type erasure still applies to externally constructed specs:
+their visibility thresholds must match the animated value type.
+
+`CurrentState`, `TargetState`, `IsRunning`, and `IsIdle` are snapshot-observable
+native lifecycle reads. Idle means not running with equal current/target
+states. For completion evidence, observe a committed running transition and
+then idle for the same request while its animations remain in composition.
+A same-target mapping update can schedule an animation before `IsRunning`
+becomes true; removal calls native `onDisposed`/`onTransitionEnd` and is **not**
+successful value completion. Neither recomposer idle, frame awaiters, placement,
+quiet frames, nor eventual expected-value polling proves animation completion.
+
+`TransitionValueTests` uses committed running/idle lifecycle signals before
+asserting exact float/color endpoints, spec selection, wrapper/callback/native
+peer identity, target interruption, same-target mapping changes, and
+remove/re-add ownership. The Gallery route `transition-values` demonstrates the
+same spring scale and two tweens used by the pinned Jetchat record button.
+Gesture triggers remain separate from the visual derivations.
+
 ## Bound baseline modifiers
 
 `Modifier.AlignBy(HorizontalAlignmentLine)` and `AlignByBaseline()` resolve the

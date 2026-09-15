@@ -5,11 +5,12 @@ using Kotlin.Jvm.Functions;
 namespace AndroidX.Compose;
 
 /// <summary>
-/// Function3&lt;Scope, Composer, Integer, Unit&gt; — Column/Row/Box/Button
-/// content. <c>p0</c> is the receiver scope (RowScope/ColumnScope),
+/// Function3&lt;ScopeOrValue, Composer, Integer, Result&gt; — content and
+/// transition value mappings. <c>p0</c> is the receiver scope or typed state,
 /// <c>p1</c> is the composer, <c>p2</c> is <c>$changed</c>.
 ///
-/// Three ctors:
+/// Action constructors return Kotlin Unit; the Func constructor preserves its result.
+/// Content constructor shapes:
 /// <list type="bullet">
 ///   <item><description><c>Action&lt;IComposer&gt;</c> discards the scope —
 ///     used wherever children don't need to know it (Column, Box,
@@ -31,7 +32,7 @@ namespace AndroidX.Compose;
 [Register("net/compose/ComposableLambda3")]
 internal sealed class ComposableLambda3 : Java.Lang.Object, IFunction3
 {
-    readonly Action<Java.Lang.Object?, IComposer> _body;
+    readonly Func<Java.Lang.Object?, IComposer, Java.Lang.Object?> _body;
 
     public ComposableLambda3(Action<IComposer> body)
         : this((Java.Lang.Object? _, IComposer c) => body(c)) { }
@@ -39,15 +40,21 @@ internal sealed class ComposableLambda3 : Java.Lang.Object, IFunction3
     public ComposableLambda3(Action<IntPtr, IComposer> body)
         : this((Java.Lang.Object? p0, IComposer c) => body(p0?.Handle ?? IntPtr.Zero, c)) { }
 
-    public ComposableLambda3(Action<Java.Lang.Object?, IComposer> body) => _body = body;
+    public ComposableLambda3(Action<Java.Lang.Object?, IComposer> body)
+        : this((value, composer) =>
+        {
+            body(value, composer);
+            return Kotlin.Unit.Instance
+                ?? throw new InvalidOperationException("Kotlin Unit was unavailable in ComposableLambda3.");
+        }) { }
 
-    // Kotlin Function3<Scope, Composer, Int, Unit> contractually returns
-    // Unit.INSTANCE. See ComposableLambda0 / issue #43 for the rationale.
-    public Java.Lang.Object Invoke(Java.Lang.Object? p0, Java.Lang.Object? p1, Java.Lang.Object? p2)
+    public ComposableLambda3(Func<Java.Lang.Object?, IComposer, Java.Lang.Object?> body) => _body = body;
+
+    public Java.Lang.Object? Invoke(Java.Lang.Object? p0, Java.Lang.Object? p1, Java.Lang.Object? p2)
     {
         ArgumentNullException.ThrowIfNull(p1);
         var composer = Android.Runtime.Extensions.JavaCast<IComposer>(p1);
-        _body(p0, composer);
-        return Kotlin.Unit.Instance!;
+        using var scope = ComposableContext.Enter(composer);
+        return _body(p0, composer);
     }
 }

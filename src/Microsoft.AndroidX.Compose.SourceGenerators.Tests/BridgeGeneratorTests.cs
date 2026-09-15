@@ -1214,6 +1214,30 @@ public class BridgeGeneratorTests
     }
 
     [Fact]
+    public void ColorBoxing_UsesGeneratedStaticCallWithPackedLong()
+    {
+        var (output, diagnostics, emitted) = Run("""
+            using AndroidX.Compose;
+            namespace AndroidX.Compose
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(Class = "androidx/compose/ui/graphics/Color",
+                        JvmName = "box-impl", Signature = "(J)Landroidx/compose/ui/graphics/Color;")]
+                    internal static partial System.IntPtr BoxColorCore(long packed);
+                }
+            }
+            """);
+        Assert.Empty(diagnostics.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+        Assert.Contains("\"box-impl\"", emitted);
+        Assert.Contains("args[0] = new global::Android.Runtime.JValue(packed)", emitted);
+        Assert.Contains("return global::Android.Runtime.JNIEnv.CallStaticObjectMethod(", emitted);
+        Assert.DoesNotContain("args[1]", emitted);
+        Assert.Empty(output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error));
+    }
+
+    [Fact]
     public void PlainStatic_DefaultsSpecified_ReportsCN2005()
     {
         // Plain-static shape rejects Defaults via the existing CN2005

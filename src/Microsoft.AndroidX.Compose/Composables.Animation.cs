@@ -1,9 +1,18 @@
 using AndroidX.Compose.Runtime;
+using System.Runtime.CompilerServices;
 
 namespace AndroidX.Compose;
 
 public static partial class Composables
 {
+    /// <summary>Remembers a native typed transition and updates its target in the implicit composition.</summary>
+    public static Transition<T> UpdateTransition<T>(
+        T targetState,
+        string? label = null,
+        [CallerLineNumber] int line = 0,
+        [CallerFilePath] string file = "") where T : notnull =>
+        ComposeExtensions.UpdateTransition(ComposableContext.Current, targetState, label, line, file);
+
     /// <summary>Animates between typed content states in the implicit composition.</summary>
     [Composable]
     public static void AnimatedContent<T>(

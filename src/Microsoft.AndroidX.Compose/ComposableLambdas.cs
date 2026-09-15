@@ -47,6 +47,16 @@ namespace AndroidX.Compose;
 /// </summary>
 internal static class ComposableLambdas
 {
+    // Transition mappings/specs are synchronous composable lambdas with a value result, not Unit.
+    internal static IFunction3 Wrap3Result(
+        IComposer composer,
+        Func<Java.Lang.Object?, IComposer, Java.Lang.Object?> body,
+        [CallerLineNumber] int line = 0,
+        [CallerFilePath] string file = "")
+        => (IFunction3)ComposableLambdaKt.ComposableLambda(
+            composer, SourceLocationKey.Compute(line, file), tracked: true,
+            block: new ComposableLambda3(body));
+
     /// <summary>
     /// Wrap an <see cref="Action{IComposer}"/> as an identity-stable
     /// <see cref="IFunction2"/> (the Function2&lt;Composer, Int, Unit&gt;
