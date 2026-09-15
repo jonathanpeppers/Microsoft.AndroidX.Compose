@@ -139,7 +139,7 @@ public class AnimatedScopeTestActivity : ComponentActivity
                 }
             }
         });
-        var modifier = Modifier.AnimateEnterExit(activity.ChildEnter, activity.ChildExit, id).Padding(8);
+        var modifier = Modifier.AnimateEnterExit(activity.ChildEnter, activity.ChildExit, id).Padding(new Dp(8));
         modifier = modifier.AppendBound(current => OnGloballyPositionedModifierKt.OnGloballyPositioned(
             current, new ComposableLambda1(boxed =>
             {

@@ -26,7 +26,7 @@ public class AnimatedScopeTests
                 EnterTransition? enter = (supplied & 1) != 0 ? explicitEnter : null;
                 ExitTransition? exit = (supplied & 2) != 0 ? explicitExit : null;
                 string? label = (supplied & 4) != 0 ? "" : null;
-                var chain = Modifier.Padding(4).AnimateEnterExit(enter, exit, label).Padding(2);
+                var chain = Modifier.Padding(4).AnimateEnterExit(enter, exit, label).Padding(new Dp(2));
                 _ = chain.Build();
                 Assert.AreEqual(supplied + 1, recorder.Calls);
                 Assert.AreEqual(enter ?? defaultEnter, recorder.Enter, $"enter, supplied={supplied}");
