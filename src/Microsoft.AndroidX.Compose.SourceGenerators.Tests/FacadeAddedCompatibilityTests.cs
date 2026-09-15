@@ -148,6 +148,48 @@ public class FacadeAddedCompatibilityTests
         }
     }
 
+    [Fact]
+    public void AddedSlotsPreserveNativeDecorationInLegacyAndRichSignatures()
+    {
+        const string code = """
+            using AndroidX.Compose;
+            using AndroidX.Compose.Runtime;
+            using AndroidX.Compose.UI.Text.Input;
+            using Kotlin.Jvm.Functions;
+            [assembly: ComposeDefaults("EditorDefault", "!value", "!onValueChange", "decorationBox", "color")]
+            namespace AndroidX.Compose
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeFacade(Defaults = typeof(EditorDefault))]
+                    public static partial void Editor(TextFieldValue value,
+                        [Callback(typeof(TextFieldValue))] IFunction1 onValueChange,
+                        [DecorationBox] IFunction3? decorationBox,
+                        [FacadeAdded] Color? color, int defaults, IComposer composer);
+                    public static partial void Editor(TextFieldValue value, IFunction1 onValueChange,
+                        IFunction3? decorationBox, Color? color, int defaults, IComposer composer) { }
+                }
+            }
+            """;
+        var (output, diagnostics, emitted) = FacadeGeneratorTests.Run(code, "Editor");
+        Assert.Empty(diagnostics.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.Empty(output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+        var methods = CSharpSyntaxTree.ParseText(emitted).GetRoot().DescendantNodes()
+            .OfType<MethodDeclarationSyntax>().Where(m => m.Identifier.ValueText == "Editor").ToArray();
+        Assert.Equal(4, methods.Length);
+        foreach (var method in methods)
+        {
+            var parameters = method.ParameterList.Parameters;
+            var decoration = parameters.Single(p => p.Identifier.ValueText == "decorationBox");
+            Assert.Contains("System.Action<global::System.Action", decoration.Type?.ToString());
+            if (parameters.Any(p => p.Identifier.ValueText == "color"))
+                Assert.NotNull(decoration.Default);
+            else
+                Assert.Null(decoration.Default);
+        }
+    }
+
     static CSharpCompilation Consumer(string source, byte[] contract, string name) =>
         CSharpCompilation.Create(name, [CSharpSyntaxTree.ParseText(source)],
             Net.Sdk.References.Concat([MetadataReference.CreateFromImage(contract)]),
