@@ -97,6 +97,32 @@ API acceptance run and bounded startup smoke, **not** screenshot/visual parity
 or post-integration evidence for #333's animated scopes or #337's gestures.
 All owned app processes were stopped and the device lease released.
 
+### Post-merge transition and scope acceptance
+
+After merging main's animated scopes and BasicTextField changes, source
+`c7467bb4ac915bff76cbe8a0d5b5489feacce2b7` passed **16/16 native cases**
+on Pixel 7 on 2026-09-15. Two separate instrumentation invocations ran
+`TransitionValueTests` (7/7) and then `AnimatedScope` (9/9), with zero failures
+or skips. The latter includes the new result-callback regression for refreshed
+first/second/null lexical scopes, preserved return values, and restoration on
+exceptions.
+
+| Suite | PID | Fresh TRX run ID | UTC start / finish |
+| --- | --- | --- | --- |
+| Transition values | 14787 | `be93502f-75ee-4b85-ba71-58edd31e525d` | 16:31:47.567 / 16:32:04.789 |
+| Animated scopes | 14911 | `067e684c-6a64-4609-9258-0057387323ac` | 16:32:43.603 / 16:32:51.325 |
+
+Each TRX was captured before the next invocation could replace it, alongside
+current-PID logs. Installed DeviceTests APK SHA-256 matched
+`B45D9050121D996A9B1027117B1E6B90F957050A4E741FD9A839EDFB94BEF534`;
+private/external assembly override files were absent. The frozen arm64 ELF
+payloads matched the build outputs, including runtime DLL SHA-256
+`9A22F2A0C25F8A5785D1ED4DABC6A3736F23376E08161830626290036ACC0CD2`.
+The post-merge host suite passed 442 tests and all required builds passed.
+This lease was tests-only: Gallery/Jetchat smoke evidence above remains
+pre-merge. The test process was stopped and all device commands ended at
+11:33:21.346 CDT, before the lease deadline.
+
 ## Animated child transitions
 
 `Modifier.AnimateEnterExit(enter: ..., exit: ..., label: ...)` adds child
