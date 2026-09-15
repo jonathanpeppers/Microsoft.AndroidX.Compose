@@ -432,6 +432,16 @@ public sealed class Modifier
     /// <inheritdoc cref="ModifierExtensions.DetectDragGestures(Modifier, Action{Offset}, Action{Offset}?, Action?, Action?, object?)"/>
     public static Modifier DetectDragGestures(Action<Offset> onDrag, Action<Offset>? onDragStart = null, Action? onDragEnd = null, Action? onDragCancel = null, object? key = null) => _companion.DetectDragGestures(onDrag, onDragStart, onDragEnd, onDragCancel, key);
 
+    /// <inheritdoc cref="ModifierExtensions.PointerInput"/>
+    public static Modifier PointerInput(AndroidX.Compose.UI.Input.Pointer.IPointerInputEventHandler handler, object? key = null) =>
+        _companion.PointerInput(handler, key);
+
+    /// <inheritdoc cref="ModifierExtensions.DetectDragGesturesAfterLongPress"/>
+    public static Modifier DetectDragGesturesAfterLongPress(Action<Offset> onDrag,
+        Action<Offset>? onDragStart = null, Action? onDragEnd = null,
+        Action? onDragCancel = null, object? key = null) =>
+        _companion.DetectDragGesturesAfterLongPress(onDrag, onDragStart, onDragEnd, onDragCancel, key);
+
     /// <inheritdoc cref="ModifierExtensions.DetectTransformGestures(Modifier, Action{Offset, Offset, float, float}, bool, object?)"/>
     public static Modifier DetectTransformGestures(Action<Offset, Offset, float, float> onGesture, bool panZoomLock = false, object? key = null) => _companion.DetectTransformGestures(onGesture, panZoomLock, key);
 
@@ -444,13 +454,8 @@ public sealed class Modifier
     /// <inheritdoc cref="ModifierExtensions.ClearAndSetSemantics(Action{SemanticsScope})"/>
     public static Modifier ClearAndSetSemantics(Action<SemanticsScope> properties) => _companion.ClearAndSetSemantics(properties);
 
-    /// <summary>
-    /// <c>Modifier.padding(paddingValues)</c> — pads using the
-    /// <c>PaddingValues</c> handle a layout (e.g. <see cref="Scaffold"/>)
-    /// passes to its content lambda. Internal: only Scaffold-shaped
-    /// composables that receive a runtime <c>PaddingValues</c> need it.
-    /// </summary>
-    internal Modifier Padding(IntPtr paddingValues) =>
+    // Keep the handle path out of Padding overload resolution in friend assemblies.
+    internal Modifier PaddingFromHandle(IntPtr paddingValues) =>
         Append(curr => ComposeBridges.ModifierPaddingValues(curr, paddingValues),
             new ModifierOpKey("PaddingValuesIntPtr", paddingValues));
 

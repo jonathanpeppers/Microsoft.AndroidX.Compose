@@ -1637,6 +1637,8 @@ AndroidX.Compose.TimePickerState.TimePickerState(int initialHour = 12, int initi
 AndroidX.Compose.Tooltip
 AndroidX.Compose.Tooltip.Anchor.get -> AndroidX.Compose.ComposableNode!
 AndroidX.Compose.Tooltip.Anchor.set -> void
+AndroidX.Compose.Tooltip.EnableUserInput.get -> bool
+AndroidX.Compose.Tooltip.EnableUserInput.set -> void
 AndroidX.Compose.Tooltip.Tip.get -> AndroidX.Compose.ComposableNode!
 AndroidX.Compose.Tooltip.Tip.set -> void
 AndroidX.Compose.Tooltip.Tooltip(bool isPersistent = false) -> void
@@ -2741,6 +2743,7 @@ static AndroidX.Compose.Modifier.Companion.get -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.Modifier.ConsumeWindowInsets(AndroidX.Compose.WindowInsets! insets) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.Modifier.DefaultMinSize(AndroidX.Compose.Dp? minWidth = null, AndroidX.Compose.Dp? minHeight = null) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.Modifier.DetectDragGestures(System.Action<AndroidX.Compose.Offset>! onDrag, System.Action<AndroidX.Compose.Offset>? onDragStart = null, System.Action? onDragEnd = null, System.Action? onDragCancel = null, object? key = null) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.Modifier.DetectDragGesturesAfterLongPress(System.Action<AndroidX.Compose.Offset>! onDrag, System.Action<AndroidX.Compose.Offset>? onDragStart = null, System.Action? onDragEnd = null, System.Action? onDragCancel = null, object? key = null) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.Modifier.DetectTapGestures(System.Action<AndroidX.Compose.Offset>? onTap = null, System.Action<AndroidX.Compose.Offset>? onPress = null, System.Action<AndroidX.Compose.Offset>? onLongPress = null, System.Action<AndroidX.Compose.Offset>? onDoubleTap = null, object? key = null) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.Modifier.DetectTransformGestures(System.Action<AndroidX.Compose.Offset, AndroidX.Compose.Offset, float, float>! onGesture, bool panZoomLock = false, object? key = null) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.Modifier.DisplayCutoutPadding() -> AndroidX.Compose.Modifier!
@@ -2771,6 +2774,7 @@ static AndroidX.Compose.Modifier.Padding(AndroidX.Compose.Dp start = default(And
 static AndroidX.Compose.Modifier.Padding(AndroidX.Compose.PaddingValues! paddingValues) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.Modifier.PaddingFrom(AndroidX.Compose.UI.Layout.AlignmentLine! alignmentLine, AndroidX.Compose.Dp? before = null, AndroidX.Compose.Dp? after = null) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.Modifier.PaddingFromBaseline(AndroidX.Compose.Dp? top = null, AndroidX.Compose.Dp? bottom = null) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.Modifier.PointerInput(AndroidX.Compose.UI.Input.Pointer.IPointerInputEventHandler! handler, object? key = null) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.Modifier.RequiredHeight(AndroidX.Compose.Dp height) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.Modifier.RequiredSize(AndroidX.Compose.Dp size) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.Modifier.RequiredSize(AndroidX.Compose.Dp width, AndroidX.Compose.Dp height) -> AndroidX.Compose.Modifier!
@@ -2842,6 +2846,7 @@ static AndroidX.Compose.ModifierExtensions.CombinedClickable(this AndroidX.Compo
 static AndroidX.Compose.ModifierExtensions.ConsumeWindowInsets(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.WindowInsets! insets) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.ModifierExtensions.DefaultMinSize(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.Dp? minWidth = null, AndroidX.Compose.Dp? minHeight = null) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.ModifierExtensions.DetectDragGestures(this AndroidX.Compose.Modifier! modifier, System.Action<AndroidX.Compose.Offset>! onDrag, System.Action<AndroidX.Compose.Offset>? onDragStart = null, System.Action? onDragEnd = null, System.Action? onDragCancel = null, object? key = null) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.ModifierExtensions.DetectDragGesturesAfterLongPress(this AndroidX.Compose.Modifier! modifier, System.Action<AndroidX.Compose.Offset>! onDrag, System.Action<AndroidX.Compose.Offset>? onDragStart = null, System.Action? onDragEnd = null, System.Action? onDragCancel = null, object? key = null) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.ModifierExtensions.DetectTapGestures(this AndroidX.Compose.Modifier! modifier, System.Action<AndroidX.Compose.Offset>? onTap = null, System.Action<AndroidX.Compose.Offset>? onPress = null, System.Action<AndroidX.Compose.Offset>? onLongPress = null, System.Action<AndroidX.Compose.Offset>? onDoubleTap = null, object? key = null) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.ModifierExtensions.DetectTransformGestures(this AndroidX.Compose.Modifier! modifier, System.Action<AndroidX.Compose.Offset, AndroidX.Compose.Offset, float, float>! onGesture, bool panZoomLock = false, object? key = null) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.ModifierExtensions.DisplayCutoutPadding(this AndroidX.Compose.Modifier! modifier) -> AndroidX.Compose.Modifier!
@@ -2875,6 +2880,7 @@ static AndroidX.Compose.ModifierExtensions.Padding(this AndroidX.Compose.Modifie
 static AndroidX.Compose.ModifierExtensions.Padding(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.PaddingValues! paddingValues) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.ModifierExtensions.PaddingFrom(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.UI.Layout.AlignmentLine! alignmentLine, AndroidX.Compose.Dp? before = null, AndroidX.Compose.Dp? after = null) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.ModifierExtensions.PaddingFromBaseline(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.Dp? top = null, AndroidX.Compose.Dp? bottom = null) -> AndroidX.Compose.Modifier!
+static AndroidX.Compose.ModifierExtensions.PointerInput(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.UI.Input.Pointer.IPointerInputEventHandler! handler, object? key = null) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.ModifierExtensions.RequiredHeight(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.Dp height) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.ModifierExtensions.RequiredSize(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.Dp size) -> AndroidX.Compose.Modifier!
 static AndroidX.Compose.ModifierExtensions.RequiredSize(this AndroidX.Compose.Modifier! modifier, AndroidX.Compose.Dp width, AndroidX.Compose.Dp height) -> AndroidX.Compose.Modifier!

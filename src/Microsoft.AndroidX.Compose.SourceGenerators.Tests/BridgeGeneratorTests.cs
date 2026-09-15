@@ -1872,6 +1872,44 @@ public class BridgeGeneratorTests
     }
 
     [Fact]
+    public void Suspend_LongPressDrag_KeepsTypedCallbacksAliveAndForwardsOuterContinuation()
+    {
+        var code = """
+            using AndroidX.Compose;
+            using Kotlin.Coroutines;
+            using Kotlin.Jvm.Functions;
+            [assembly: ComposeDefaults("LongPressDefault", "onDragStart", "onDragEnd", "onDragCancel", "!onDrag")]
+            namespace AndroidX.Compose
+            {
+                public static partial class ComposeBridges
+                {
+                    [ComposeBridge(Suspend = true,
+                        Class = "androidx/compose/foundation/gestures/DragGestureDetectorKt",
+                        JvmName = "detectDragGesturesAfterLongPress$default",
+                        Signature = "(Landroidx/compose/ui/input/pointer/PointerInputScope;Lkotlin/jvm/functions/Function1;Lkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function0;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;",
+                        Defaults = typeof(LongPressDefault))]
+                    internal static partial System.IntPtr DoIt(System.IntPtr scope,
+                        IFunction1? onDragStart, IFunction0? onDragEnd, IFunction0? onDragCancel,
+                        IFunction2 onDrag, IContinuation cont);
+                }
+            }
+            """;
+        var (output, diags, emitted) = Run(code);
+        Assert.Empty(diags.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+        Assert.Contains("detectDragGesturesAfterLongPress$default", emitted);
+        Assert.Contains("args[0] = new global::Android.Runtime.JValue(scope);", emitted);
+        Assert.Contains("args[5] = new global::Android.Runtime.JValue(((global::Java.Lang.Object)cont).Handle);", emitted);
+        Assert.Contains("args[6] = new global::Android.Runtime.JValue(defaults);", emitted);
+        Assert.Contains("args[7] = new global::Android.Runtime.JValue(global::System.IntPtr.Zero);", emitted);
+        foreach (var name in (string[])["onDragStart", "onDragEnd", "onDragCancel", "onDrag", "cont"])
+            Assert.Contains($"global::System.GC.KeepAlive({name});", emitted);
+        Assert.Contains("LongPressDefault.OnDragCancel", emitted);
+        Assert.DoesNotContain("LongPressDefault.OnDrag;", emitted);
+        Assert.Empty(output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error));
+    }
+
+    [Fact]
     public void Suspend_WideStaticDefaultShape_PlacesContinuationBeforeBothMasks()
     {
         var names = string.Join(", ", Enumerable.Range(0, 33).Select(i => $"\"slot{i}\""));

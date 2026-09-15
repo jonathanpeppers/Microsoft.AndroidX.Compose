@@ -34,7 +34,6 @@ public class ResourceFontTestActivity : ComponentActivity
                 };
                 theme.Add(new Column
                 {
-                    // This friend assembly can see Padding(IntPtr); an integer would bind as a JNI handle.
                     Modifier.FillMaxSize().Background(dark ? Color.Black : Color.White).Padding(24.Dp()),
                     new Text("Karla regular: AVW 123") { Color = dark ? Color.White : Color.Black },
                     new Text("Karla bold: AVW 123") { FontFamily = family, FontWeight = FontWeight.Bold, FontSize = 24, Color = dark ? Color.White : Color.Black },

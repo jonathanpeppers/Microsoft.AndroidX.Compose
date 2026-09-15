@@ -47,6 +47,14 @@ public class ModifierStructuralKeyTests
     }
 
     [TestMethod]
+    public void ChainedIntegerPadding_UsesDpEvenInFriendAssemblies()
+    {
+        var actual = Modifier.FillMaxWidth().Padding(16).StructuralKey;
+        var expected = Modifier.FillMaxWidth().Then(Modifier.Padding(16.Dp())).StructuralKey;
+        Assert.AreEqual(expected, actual);
+    }
+
+    [TestMethod]
     public void FillMaxWidth_SameFractionCompareEqual()
     {
         var a = Modifier.FillMaxWidth().StructuralKey;

@@ -244,12 +244,21 @@ same while switching inset modes; its saved tap count must also survive
   is empty the trailing send affordance is joined by a mic
   `IconButton` that swaps the `TextField` for an animated
   recording overlay (pulsing red dot + MM:SS timer + "Swipe to
-  cancel" hint). Tap-to-toggle starts and finishes the recording;
-  dragging the mic horizontally past a 200 dp threshold cancels.
+  cancel" hint). A native long press starts the UI-only recording;
+  release finishes it. Per-event X/Y pixel movement accumulates, and a left
+  swipe of at least 200 dp cancels only while the vertical displacement
+  is at most 80 dp in either direction. Returning inside that vertical
+  corridor after crossing the horizontal threshold also cancels, matching
+  pinned `voiceRecordingGesture`. A cancelled gesture cannot later commit.
+  Native coroutine cancellation is forwarded to the recording callback only
+  while a recording gesture is active: disposing an idle detector or an
+  already-cancelled gesture must not emit another recording cancellation.
   The overlay swap rides on the new generic `AnimatedContent<T>`
-  facade. Long-pressing the mic also shows the upstream "Touch and hold
-  to record" tooltip. See *What's still omitted* for the exact gesture
-  and transition-animation gaps.
+  facade. Callback updates during recomposition retain the active native
+  handler; removing the control cancels its Kotlin pointer-input job.
+  The surrounding tooltip disables automatic input so it cannot compete
+  for the same long press. See *What's still omitted* for short-tap tooltip
+  and transition-animation gaps. No audio recording or permissions are added.
 - **Expanded-input dismissal** — `BackHandler` collapses any open
   selector before system back reaches navigation. A remembered requester
   targets the emoji column with `FocusTarget`, not the editor or its parent.
@@ -423,7 +432,7 @@ layout work, and unavailable official bindings:
 
 | Upstream feature                          | Why it's not here |
 |-------------------------------------------|--------------------|
-| Press-and-hold record gesture (`pointerInput` / `detectDragGesturesAfterLongPress`) | Missing Compose pointer-input surface; tracked by [#337](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/337). Until it lands, recording remains tap-to-start / tap-to-finish with draggable swipe cancellation. |
+| Short-tap recording tooltip | The recording wrapper sets `Tooltip.EnableUserInput=false`, as pinned upstream does, to avoid stealing the native long press. Programmatically showing "Touch and hold to record" on a short tap still needs tooltip-state control; this is not full recording-UX parity. Short taps do not start or finish recording. |
 | Record-button `updateTransition` + `animateFloat` / `animateColor` | Missing transition value-animation surface; tracked by [#336](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/336). The port retains its visually equivalent timer-driven pulse. |
 | Google Fonts provider typography | The exact pinned Karla / Montserrat resource fallbacks are bundled. Provider-backed downloads remain outside the resource-font API; no downloaded-font parity is claimed. |
 | Exact profile baseline-height and parallax geometry | Reusable baseline alignment/padding and `ClipToBounds` are available. Profile's existing rounded clip, padding-based motion and host layout remain unchanged; the pinned upstream uses `CircleShape` and separate baseline-height helpers, not a rectangular clip. |
