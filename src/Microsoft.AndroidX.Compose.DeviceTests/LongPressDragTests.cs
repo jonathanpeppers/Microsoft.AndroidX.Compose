@@ -110,6 +110,7 @@ public class LongPressDragTests
             for (int mode = 0; mode < 4; mode++)
             {
                 Assert.IsFalse(activity.GestureActive);
+                activity.CancellationPhase = mode;
                 activity.Arm();
                 down = Touch(activity, MotionEventActions.Down);
                 await activity.Started.Task.WaitAsync(TimeSpan.FromSeconds(5));
@@ -143,6 +144,7 @@ public class LongPressDragTests
                 Assert.IsFalse(activity.GestureActive);
                 Assert.AreEqual(activity.ActiveCancelCount + activity.IdleCancelCount, activity.CancelCount);
                 Assert.AreEqual(0, activity.EndCount, "Cancellation must not masquerade as release.");
+                AssertCancellationPhase(activity, mode);
                 if (down != 0)
                 {
                     Touch(activity, MotionEventActions.Up, down);
@@ -166,6 +168,34 @@ public class LongPressDragTests
             }
         }
     }
+
+    static void AssertCancellationPhase(LongPressDragTestActivity activity, int phase)
+    {
+        var raw = activity.Cancellations.Where(c => c.Phase == phase).ToArray();
+        string evidence = string.Join("\n", raw.Select(c =>
+            $"phase={c.Phase} active={c.WasActive}\n" + string.Join("\n", c.NativeFrames)));
+        int expected = phase is 1 or 3 ? 2 : 1;
+        Assert.AreEqual(expected, raw.Length, evidence);
+        Assert.IsTrue(raw[0].WasActive, evidence);
+        AssertNativePath(raw[0], phase == 0 ? "resetPointerInputHandler" : "onCancelPointerInput", evidence);
+        if (expected == 2)
+        {
+            Assert.IsFalse(raw[1].WasActive, evidence);
+            AssertNativePath(raw[1], "resetPointerInputHandler", evidence);
+            AssertNativePath(raw[1], "onDetach", evidence);
+            Assert.IsFalse(HasNativePath(raw[0], "onDetach"), evidence);
+            Assert.IsFalse(HasNativePath(raw[1], "onCancelPointerInput"), evidence);
+        }
+        global::Android.Util.Log.Info("Pointer337", $"verified-cancellation-phase:{phase}:raw={raw.Length}");
+    }
+
+    static void AssertNativePath(PointerCancellationObservation observation, string method, string evidence) =>
+        Assert.IsTrue(HasNativePath(observation, method), $"Expected native {method} path.\n{evidence}");
+
+    static bool HasNativePath(PointerCancellationObservation observation, string method) =>
+        observation.NativeFrames.Contains(
+            "androidx.compose.ui.input.pointer.SuspendingPointerInputModifierNodeImpl." + method,
+            StringComparer.Ordinal);
 
     [TestMethod]
     public async Task JetchatRecordButton_PinnedThresholdsAndReleaseUseRealNativeInput()

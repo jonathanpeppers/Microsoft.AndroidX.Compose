@@ -28,6 +28,7 @@ public class LongPressDragTestActivity : ComponentActivity
     internal readonly MutableState<bool> Recording = new(false);
     internal readonly MutableNumberState<float> Swipe = new(0);
     internal readonly List<string> Events = [];
+    internal readonly List<PointerCancellationObservation> Cancellations = [];
     internal LongPressDragGestureBlock? Handler;
     internal LongPressDragGestureBlock? LowLevelHandler;
     internal View? Owner;
@@ -35,6 +36,7 @@ public class LongPressDragTestActivity : ComponentActivity
     internal int Passes, StartCount, EndCount, CancelCount, MoveCount, LastVersion;
     internal int ActiveCancelCount, IdleCancelCount;
     internal bool GestureActive;
+    internal int CancellationPhase = -1;
     bool _recordingMode;
     bool _lastRecording;
 
@@ -106,6 +108,12 @@ public class LongPressDragTestActivity : ComponentActivity
             {
                 CancelCount++;
                 LastVersion = version;
+                var observation = new PointerCancellationObservation(
+                    CancellationPhase, GestureActive, CaptureNativeFrames());
+                Cancellations.Add(observation);
+                Record($"cancel-observation:{Cancellations.Count}:phase={CancellationPhase}:active={GestureActive}");
+                foreach (var frame in observation.NativeFrames)
+                    Record($"cancel-frame:{Cancellations.Count}:{frame}");
                 if (GestureActive)
                 {
                     GestureActive = false;
@@ -234,6 +242,22 @@ public class LongPressDragTestActivity : ComponentActivity
                 },
             },
         };
+    }
+
+    static string[] CaptureNativeFrames()
+    {
+        using var trace = new Java.Lang.Throwable();
+        var frames = trace.GetStackTrace()
+            ?? throw new InvalidOperationException("Native cancellation had no Java stack trace.");
+        try
+        {
+            return frames.Select(frame => $"{frame.ClassName}.{frame.MethodName}").ToArray();
+        }
+        finally
+        {
+            foreach (var frame in frames)
+                frame.Dispose();
+        }
     }
 
     void Record(string message)

@@ -34,6 +34,10 @@ while waiting for the next gesture, not only after a recognized long press.
 Removal can cancel a gesture via a synthetic consumed-up event and then cancel
 the idle coroutine during detach. Tests account for those raw idle notifications
 separately from the single active cancellation required per recognized gesture.
+They also retain phase-specific raw counts and Java call stacks: the first
+removal callback must originate in `onCancelPointerInput`, and the subsequent
+idle callback in `onDetach` / `resetPointerInputHandler`. This verifies the native
+cause and ordering rather than simply labeling every duplicate as idle.
 Temporary JNI result references are released in `finally`, and the coroutine
 suspended singleton uses the existing raw-handle sentinel check.
 
