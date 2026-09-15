@@ -19,6 +19,10 @@ public class AnimatedScopeTests
         var defaultSpec = AnimationSpecKt.Spring(Spring.DampingRatioNoBouncy, Spring.StiffnessMediumLow, null);
         var defaultEnter = EnterExitTransitionKt.FadeIn(defaultSpec, 0f);
         var defaultExit = EnterExitTransitionKt.FadeOut(defaultSpec, 0f);
+        Assert.IsTrue(defaultEnter.Equals(EnterExitTransitionKt.FadeIn(defaultSpec, 0f)));
+        Assert.IsTrue(defaultExit.Equals(EnterExitTransitionKt.FadeOut(defaultSpec, 0f)));
+        Assert.IsFalse(defaultEnter.Equals(explicitEnter));
+        Assert.IsFalse(defaultExit.Equals(explicitExit));
         using (RenderContext.PushAnimatedVisibilityScope(recorder))
         {
             for (int supplied = 0; supplied < 8; supplied++)
@@ -29,8 +33,9 @@ public class AnimatedScopeTests
                 var chain = Modifier.Padding(4).AnimateEnterExit(enter, exit, label).Padding(new Dp(2));
                 _ = chain.Build();
                 Assert.AreEqual(supplied + 1, recorder.Calls);
-                Assert.AreEqual(enter ?? defaultEnter, recorder.Enter, $"enter, supplied={supplied}");
-                Assert.AreEqual(exit ?? defaultExit, recorder.Exit, $"exit, supplied={supplied}");
+                // Kotlin transition value equality is the bound Java overload, not managed peer identity.
+                Assert.IsTrue((enter ?? defaultEnter).Equals(recorder.Enter), $"enter, supplied={supplied}");
+                Assert.IsTrue((exit ?? defaultExit).Equals(recorder.Exit), $"exit, supplied={supplied}");
                 Assert.AreEqual(label ?? "animateEnterExit", recorder.Label);
             }
         }
