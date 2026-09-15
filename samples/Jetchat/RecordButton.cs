@@ -26,6 +26,7 @@ public static class RecordButton
     }
 
     /// <summary>Build the mic button with theme-derived icon tint and an animated recording background.</summary>
+    /// <remarks>The enclosing tooltip owns parent-layout alignment; this anchor recomposes independently.</remarks>
     public static ComposableNode BuildButton(
         MutableState<bool>          isRecording,
         MutableNumberState<float>   swipeOffset,
@@ -44,7 +45,6 @@ public static class RecordButton
             return new Box
             {
                 Modifier
-                    .Align(Alignment.Vertical.CenterVertically)
                     .Size(56)
                     .DetectDragGesturesAfterLongPress(
                         onDragStart: _ =>

@@ -263,6 +263,8 @@ same while switching inset modes; its saved tap count must also survive
   native `Transition<bool>`, matching pinned `RecordButton.kt` at
   `4c1fe7586e2fbf1c934925ef8ab64d3803361423`. Background and foreground derive
   from the live `LocalContentColor`/`contentColorFor` roles, with circle clipping.
+  Row alignment belongs to the enclosing Tooltip, not its recording anchor:
+  animation-driven anchor recomposition can run without the parent Row scope.
   The independent recording-indicator timer and repeating pulse remain unchanged.
   No audio recording or permissions are added.
 - **Expanded-input dismissal** — `BackHandler` collapses any open

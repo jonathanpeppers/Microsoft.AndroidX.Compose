@@ -112,8 +112,10 @@ exceptions.
 | Transition values | 14787 | `be93502f-75ee-4b85-ba71-58edd31e525d` | 16:31:47.567 / 16:32:04.789 |
 | Animated scopes | 14911 | `067e684c-6a64-4609-9258-0057387323ac` | 16:32:43.603 / 16:32:51.325 |
 
-Each TRX was captured before the next invocation could replace it, alongside
-current-PID logs. Installed DeviceTests APK SHA-256 matched
+Each TRX was captured before the next invocation could replace it, and the
+instrumentation output preserves each PID. The attempted per-PID logcat captures
+were empty and are not log evidence for this run. Installed DeviceTests APK
+SHA-256 matched
 `B45D9050121D996A9B1027117B1E6B90F957050A4E741FD9A839EDFB94BEF534`;
 private/external assembly override files were absent. The frozen arm64 ELF
 payloads matched the build outputs, including runtime DLL SHA-256
