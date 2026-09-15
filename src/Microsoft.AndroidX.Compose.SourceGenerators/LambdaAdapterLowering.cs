@@ -73,10 +73,12 @@ internal static class LambdaAdapterLowering
             parameter,
             DeferredComposableContentAttributeMetadataName);
         bool raw = HasAttribute(parameter, RawCallbackAttributeMetadataName);
+        bool decoration = HasAttribute(parameter, "AndroidX.Compose.DecorationBoxAttribute");
         int markerCount = (callback ? 1 : 0)
             + (synchronous ? 1 : 0)
             + (deferred ? 1 : 0)
-            + (raw ? 1 : 0);
+            + (raw ? 1 : 0)
+            + (decoration ? 1 : 0);
 
         if (markerCount > 1)
         {
@@ -91,6 +93,11 @@ internal static class LambdaAdapterLowering
                 : LambdaClassificationResult.Invalid(
                     $"[Callback] parameter '{parameter.Name}' must be IFunction1, not IFunction{arity}");
         }
+
+        if (decoration)
+            return arity == 3
+                ? LambdaClassificationResult.Valid(LambdaExecutionMode.SynchronousComposable, arity)
+                : LambdaClassificationResult.Invalid("[DecorationBox] requires IFunction3.");
 
         if (synchronous)
         {

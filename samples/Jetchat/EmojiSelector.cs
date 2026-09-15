@@ -1,7 +1,6 @@
 using AndroidX.Compose.Material3;
 using AndroidX.Compose.Runtime;
 using AndroidX.Compose.Samples.Jetchat.Theme;
-using AndroidX.Compose.UI.Text;
 using AndroidX.Compose.UI.Text.Input;
 using Typography = AndroidX.Compose.Samples.Jetchat.Theme.Typography;
 
@@ -14,7 +13,8 @@ namespace AndroidX.Compose.Samples.Jetchat;
 /// <c>ExtendedSelectorInnerButton</c> / <c>EmojiTable</c> helpers.
 /// </summary>
 /// <remarks>
-/// Tapping a glyph in the Emojis tab appends it to the shared input
+/// Tapping a glyph in the Emojis tab replaces the selection, or inserts at the caret,
+/// in the shared input
 /// state — same behaviour as upstream's <c>onTextAdded</c> callback
 /// that does <c>textState.addText(it)</c>. The Stickers tab renders a
 /// "not implemented" placeholder, matching upstream's intent (the real
@@ -73,7 +73,7 @@ public static class EmojiSelector
     ];
 
     /// <summary>Build the emoji selector panel.</summary>
-    /// <param name="input">Shared text-field state; tapped emojis are appended to <c>input.Value.Text</c> and the caret is moved to the end.</param>
+    /// <param name="input">Shared text-field state; tapped emojis replace the selection and the caret moves to the end of the resulting text.</param>
     /// <param name="scheme">Active Material 3 color scheme, used for tab and emoji colors.</param>
     public static ComposableNode Build(MutableState<TextFieldValue> input, ColorScheme scheme) =>
         Build(input, scheme, null);
@@ -199,16 +199,7 @@ public static class EmojiSelector
                         .Semantics($"Emoji {emoji}")
                         .Clickable(() =>
                         {
-                            // Match upstream Jetchat's TextFieldState.addText:
-                            // append the glyph and move the cursor to the
-                            // end of the new buffer so the next keystroke
-                            // lands after the emoji. Use the bound
-                            // TextFieldValue.Copy(string, long, TextRange?)
-                            // overload so onValueChange round-trips a real
-                            // Compose peer.
-                            var current = input.Value ?? ComposeExtensions.NewTextFieldValue();
-                            var newText = current.Text + emoji;
-                            input.Value = current.Copy(newText, TextRangeKt.TextRange(newText.Length), composition: null);
+                            input.Value = MessageInput.Insert(input.Value, emoji);
                         }),
                 };
                 emojiButton.Add(new Text(emoji)

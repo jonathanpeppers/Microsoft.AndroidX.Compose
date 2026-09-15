@@ -27,6 +27,63 @@ namespace AndroidX.Compose;
 // (a static field lookup, not a method invocation).
 internal static partial class ComposeBridges
 {
+    [ComposeFacade(Defaults = typeof(BasicTextFieldDefault),
+        SecondaryCtor = nameof(BasicTextFieldString), SecondaryDefaults = typeof(BasicTextFieldStringDefault))]
+    public static partial void BasicTextField(
+        AndroidX.Compose.UI.Text.Input.TextFieldValue value,
+        [Callback(typeof(AndroidX.Compose.UI.Text.Input.TextFieldValue))] IFunction1 onValueChange,
+        IModifier? modifier,
+        [FacadeDefault(true)] bool enabled,
+        [FacadeDefault(false)] bool readOnly,
+        TextStyle? textStyle,
+        AndroidX.Compose.Foundation.Text.KeyboardOptions? keyboardOptions,
+        AndroidX.Compose.Foundation.Text.KeyboardActions? keyboardActions,
+        [FacadeDefault(false)] bool singleLine,
+        [FacadeDefault(int.MaxValue)] int maxLines,
+        [FacadeDefault(1)] int minLines,
+        AndroidX.Compose.UI.Text.Input.IVisualTransformation? visualTransformation,
+        [Callback(typeof(AndroidX.Compose.UI.Text.TextLayoutResult))] IFunction1? onTextLayout,
+        AndroidX.Compose.Foundation.Interaction.IMutableInteractionSource? interactionSource,
+        AndroidX.Compose.UI.Graphics.Brush? cursorBrush,
+        [DecorationBox] IFunction3? decorationBox,
+        int defaults, IComposer composer);
+
+    public static partial void BasicTextField(
+        AndroidX.Compose.UI.Text.Input.TextFieldValue value, IFunction1 onValueChange,
+        IModifier? modifier, bool enabled, bool readOnly, TextStyle? textStyle,
+        AndroidX.Compose.Foundation.Text.KeyboardOptions? keyboardOptions,
+        AndroidX.Compose.Foundation.Text.KeyboardActions? keyboardActions,
+        bool singleLine, int maxLines, int minLines,
+        AndroidX.Compose.UI.Text.Input.IVisualTransformation? visualTransformation,
+        IFunction1? onTextLayout,
+        AndroidX.Compose.Foundation.Interaction.IMutableInteractionSource? interactionSource,
+        AndroidX.Compose.UI.Graphics.Brush? cursorBrush, IFunction3? decorationBox,
+        int defaults, IComposer composer) =>
+        // Binding names after singleLine are shifted: p9=maxLines, maxLines=minLines,
+        // minLines=$changed, _changed=$changed1, _changed1=$default.
+        AndroidX.Compose.Foundation.Text.BasicTextFieldKt.BasicTextField(
+            value, onValueChange, modifier, enabled, readOnly, textStyle?.Build(),
+            keyboardOptions, keyboardActions, singleLine, maxLines, minLines,
+            visualTransformation, onTextLayout, interactionSource, cursorBrush, decorationBox,
+            composer, 0, 0, defaults);
+
+    public static void BasicTextFieldString(
+        string text, [Callback(typeof(string))] IFunction1 onValueChange,
+        IModifier? modifier, bool enabled, bool readOnly, TextStyle? textStyle,
+        AndroidX.Compose.Foundation.Text.KeyboardOptions? keyboardOptions,
+        AndroidX.Compose.Foundation.Text.KeyboardActions? keyboardActions,
+        bool singleLine, int maxLines, int minLines,
+        AndroidX.Compose.UI.Text.Input.IVisualTransformation? visualTransformation,
+        [Callback(typeof(AndroidX.Compose.UI.Text.TextLayoutResult))] IFunction1? onTextLayout,
+        AndroidX.Compose.Foundation.Interaction.IMutableInteractionSource? interactionSource,
+        AndroidX.Compose.UI.Graphics.Brush? cursorBrush, [DecorationBox] IFunction3? decorationBox,
+        int defaults, IComposer composer) =>
+        AndroidX.Compose.Foundation.Text.BasicTextFieldKt.BasicTextField(
+            text, onValueChange, modifier, enabled, readOnly, textStyle?.Build(),
+            keyboardOptions, keyboardActions, singleLine, maxLines, minLines,
+            visualTransformation, onTextLayout, interactionSource, cursorBrush, decorationBox,
+            composer, 0, 0, defaults);
+
     // Convert a managed Modifier wrapper (from `Modifier.Build()`) to a
     // raw JNI handle, or IntPtr.Zero when null. Each bridge that takes
     // a modifier param uses this + KeepAlive's the wrapper across the

@@ -517,6 +517,36 @@ all of these declarations — every composable in the facade gets its
 pin the emitted output. When the upstream binder fix lands, each
 declarative attribute can be swapped one-for-one to the generic form.
 
+## Foundation editor decoration
+
+`BasicTextField` uses the **bound** Foundation Android companion overloads
+for `TextFieldValue` and `string`; no JNI bridge or Material field substitution
+is involved. The string route leaves selection/composition state with Foundation,
+not a managed adapter reconstructing `TextFieldValue` on every render.
+The facade generator supports `[Callback(typeof(T))]` for bound
+`Java.Lang.Object` types. It resolves the real callback peer without taking
+ownership, preserving text selection/composition rather than converting the
+value to a string. Nullable callbacks become optional properties (for example,
+`OnTextLayout`) and still use identity-stable `RememberAction` adapters.
+
+`[DecorationBox] IFunction3?` receives the native `Function2<Composer, Int, Unit>`
+inner editor, unlike an ordinary slot or scope receiver. Tree callers supply
+`Func<ComposableNode, ComposableNode>`; explicit-composer callers receive
+`Action<IComposer>` plus the decoration composer; ambient callers receive
+`Action`. Render that inner editor exactly once and do not retain it outside
+the decoration. All routes use tracked `Wrap3WithValue` identity and the
+composer active at inner-editor invocation, including nested containers and
+restarts. Null tree properties select Kotlin defaults; direct calls retain
+the generated omission-aware mask contract. The two native changed groups
+remain zero (Uncertain).
+
+`SecondaryCtor` can replace a required callback's managed payload type when the
+alternate bridge annotates that shared parameter with `[Callback(typeof(T))]`.
+The generator maintains separate nullable, strongly typed callback fields, emits
+route-specific constructor/direct signatures, and guards access to the selected
+route's fields. An optional property's callback type cannot change across routes
+(CN3012), because both constructors share that public property.
+
 ## Compose value types
 
 The Kotlin `@JvmInline value class` types that surface as primitives
