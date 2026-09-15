@@ -66,6 +66,34 @@ remove/re-add ownership. The Gallery route `transition-values` demonstrates the
 same spring scale and two tweens used by the pinned Jetchat record button.
 Gesture triggers remain separate from the visual derivations.
 
+### Verified transition evidence
+
+On 2026-09-15, source `ceb21412b8ce08011cb0da46f7a6d9ccc4236405`
+passed all **7 `TransitionValueTests` cases** on Pixel 7: one finite-spec
+contract case, plus explicit/composerless pairs for synchronized
+values/specs/identity, mapping-local snapshot dependencies, and
+interruption/removal/re-addition. The fresh TRX ran from
+15:33:30.087 to 15:33:47.321 UTC with zero failures or skips. Current-process
+`TransitionValues` logs (PID 10005) preserve the committed running/idle
+transitions and exact final float/color values. Completion assertions used
+the native lifecycle, not elapsed delays or idle-frame heuristics.
+
+| Frozen APK | SHA-256 |
+| --- | --- |
+| DeviceTests | `3BFE1F025E71B52CFFBA8B5CD10520CE5904BFE0E2C3F7F3BA767C2660B3BF3B` |
+| Gallery | `739A5C93A6257DE7884D949E1F3AECEB1BD7A7E1EA9A08191A4AD6B906DE23D9` |
+| Jetchat | `B13013D2CC0E26B7443A43D307D16AF73FF898863D0F3BD4C06307D302E7D185` |
+
+Installed APK hashes matched and no private/external assembly override files
+were present. Embedded arm64 app/runtime DLL ELF payloads matched their build
+outputs; the common runtime DLL SHA-256 was
+`7EC4AB45F60575017C61E37788158FF63C66B73435ED5F22904C8CA53CDE50B0`.
+Gallery's `demo/transition-values` route and Jetchat cold-launched into resumed
+activities without current-PID AndroidRuntime fatal errors. This is a native
+API acceptance run and bounded startup smoke, **not** screenshot/visual parity
+or post-integration evidence for #333's animated scopes or #337's gestures.
+All owned app processes were stopped and the device lease released.
+
 ## Bound baseline modifiers
 
 `Modifier.AlignBy(HorizontalAlignmentLine)` and `AlignByBaseline()` resolve the
