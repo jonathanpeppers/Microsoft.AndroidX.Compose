@@ -63,7 +63,7 @@ multi-selection set.
 | Tap the input | retained | expands and focuses the editor |
 | Leading Back arrow | cleared | collapses |
 | Keyboard Search action | retained | collapses |
-| System Back after the IME handles Back | retained | collapses without navigating |
+| System Back while search is expanded | retained | collapses without navigating |
 | Tap outside the state-based popup | retained | dismisses the popup |
 | Leave the inbox search composition, then return | reset to empty | collapsed |
 
@@ -73,6 +73,9 @@ state. Ordinary recomposition preserves them; tab/detail departure and
 activity recreation reset them, matching upstream's `remember` (not
 `rememberSaveable`) ownership. The native expanded popup handles dismissal;
 there is no competing app-wide search `BackHandler`.
+On the tested Pixel, one system Back dismissed both the expanded popup and
+its IME. A second Back would reach the underlying activity/navigation; the
+test must not assume an extra IME-only Back is always required.
 
 API adaptation: upstream uses the older query/expanded `DockedSearchBar`;
 this port uses the existing state-based `SearchBar`, `SearchBarInputField`,

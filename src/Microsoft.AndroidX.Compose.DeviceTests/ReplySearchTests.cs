@@ -71,13 +71,13 @@ public class ReplySearchTests
             await Click(activity, node => node.Text == "Bonjour", "IME-retained query");
             AssertPresent("Bonjour from Paris");
 
-            // With the IME visible, the first Back is owned by the keyboard.
+            ReportStage("System Back collapses expanded search");
             Runner.SendKeyDownUpSync(Keycode.Back);
             await Settle(activity);
             AssertEditor("Bonjour");
-            Runner.SendKeyDownUpSync(Keycode.Back);
-            await Settle(activity);
             Assert.IsTrue(activity.InInbox.Value, "Search dismissal must not navigate.");
+            using (var result = Find(node => node.Text == "Bonjour from Paris"))
+                Assert.IsNull(result, "System Back should collapse the expanded search.");
             await Click(activity, node => node.Text == "Bonjour", "retained query");
             AssertEditor("Bonjour");
             await Click(activity, node => node.ContentDescription == "Back", "search Back arrow");
@@ -133,7 +133,10 @@ public class ReplySearchTests
         await frame.Task.WaitAsync(TimeSpan.FromSeconds(10));
         Runner.WaitForIdleSync();
         Require(Runner.UiAutomation).WaitForIdle(200, 5000);
-        Assert.IsTrue(Require(activity.Window?.DecorView).IsLaidOut);
+        Assert.IsFalse(activity.IsFinishing || activity.IsDestroyed,
+            "The search activity left its lifecycle during an operation that should not navigate.");
+        Assert.IsTrue(Require(activity.Window?.DecorView).IsLaidOut,
+            "The owned search activity no longer has a laid-out decor.");
     }
 
     static async Task Click(ReplySearchTestActivity activity, Func<AccessibilityNodeInfo, bool> predicate, string name)
