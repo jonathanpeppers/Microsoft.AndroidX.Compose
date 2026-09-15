@@ -1,5 +1,6 @@
 using Android.Content;
 using Android.Graphics;
+using Android.OS;
 using Android.Views;
 using Android.Views.Accessibility;
 using AndroidX.Compose.Samples.Reply;
@@ -200,16 +201,45 @@ public class ReplyNavigationTests
 
     static async Task Back(ReplyNavigationTestActivity activity)
     {
+        await activity.AtNativeIdle();
         Runner.SendKeyDownUpSync(Keycode.Back);
         await activity.AtNativeIdle();
     }
 
     static async Task Tap(ReplyNavigationTestActivity activity, string description)
     {
+        await activity.AtNativeIdle();
         using var root = Root(activity);
-        using var label = Find(root, n => n.ContentDescription == description)
+        using var label = Find(root, n => n.VisibleToUser && n.ContentDescription == description)
             ?? throw new InvalidOperationException($"Reply '{description}' node was not present.");
-        PerformClick(label, longClick: false);
+        using var bounds = new Rect();
+        using var window = new Rect();
+        label.GetBoundsInScreen(bounds);
+        root.GetBoundsInScreen(window);
+        Assert.IsTrue(bounds.Width() > 0 && bounds.Height() > 0 &&
+            window.Contains(bounds.CenterX(), bounds.CenterY()), "Reply tap target is outside its owned window.");
+        Console.WriteLine($"Reply tap '{description}', window={root.WindowId}, bounds={bounds}");
+        Runner.RunOnMainSync(() => Assert.IsTrue(activity.View.HasWindowFocus));
+
+        // Selected tabs omit redundant accessibility click actions; exercise a real re-tap.
+        long downTime = SystemClock.UptimeMillis();
+        using var down = MotionEvent.Obtain(downTime, downTime, MotionEventActions.Down,
+            bounds.CenterX(), bounds.CenterY(), 0)
+            ?? throw new InvalidOperationException("Could not create the Reply pointer down.");
+        down.SetSource(InputSourceType.Touchscreen);
+        Runner.SendPointerSync(down);
+        try
+        {
+            Runner.WaitForIdleSync();
+        }
+        finally
+        {
+            using var up = MotionEvent.Obtain(downTime, SystemClock.UptimeMillis(), MotionEventActions.Up,
+                bounds.CenterX(), bounds.CenterY(), 0)
+                ?? throw new InvalidOperationException("Could not create the Reply pointer up.");
+            up.SetSource(InputSourceType.Touchscreen);
+            Runner.SendPointerSync(up);
+        }
         await activity.AtNativeIdle();
     }
 
