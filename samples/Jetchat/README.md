@@ -234,7 +234,12 @@ same while switching inset modes; its saved tap count must also survive
   The overlay swap rides on the new generic `AnimatedContent<T>`
   facade. Long-pressing the mic also shows the upstream "Touch and hold
   to record" tooltip. See *What's still omitted* for the exact gesture
-  and transition-animation gaps.
+  gaps. The button background scale (spring with medium-bouncy damping and low
+  stiffness), alpha (2000 ms tween), and icon tint (200 ms tween) now share one
+  native `Transition<bool>`, matching pinned `RecordButton.kt` at
+  `4c1fe7586e2fbf1c934925ef8ab64d3803361423`. Background and foreground derive
+  from the live `LocalContentColor`/`contentColorFor` roles, with circle clipping.
+  The independent recording-indicator timer and repeating pulse remain unchanged.
 - **Expanded-input dismissal** — `BackHandler` collapses any open
   selector before system back reaches navigation. A remembered requester
   targets the emoji column with `FocusTarget`, not the editor or its parent.
@@ -409,7 +414,7 @@ layout work, and unavailable official bindings:
 | Upstream feature                          | Why it's not here |
 |-------------------------------------------|--------------------|
 | Press-and-hold record gesture (`pointerInput` / `detectDragGesturesAfterLongPress`) | Missing Compose pointer-input surface; tracked by [#337](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/337). Until it lands, recording remains tap-to-start / tap-to-finish with draggable swipe cancellation. |
-| Record-button `updateTransition` + `animateFloat` / `animateColor` | Missing transition value-animation surface; tracked by [#336](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/336). The port retains its visually equivalent timer-driven pulse. |
+| Recording-indicator infinite pulse | Still timer-driven; distinct from the record button's native finite scale/alpha/color transition. No audio-recording subsystem is implemented. |
 | Google Fonts provider typography | The exact pinned Karla / Montserrat resource fallbacks are bundled. Provider-backed downloads remain outside the resource-font API; no downloaded-font parity is claimed. |
 | Foundation text-input structure and IME Send callback | `BasicTextField` and keyboard-action support are missing; tracked by [#340](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/340). The current Material `TextField` preserves editing, placeholder, line, and IME-option behavior. |
 | Exact profile baseline-height and parallax geometry | Reusable baseline alignment/padding and `ClipToBounds` are available. Profile's existing rounded clip, padding-based motion and host layout remain unchanged; the pinned upstream uses `CircleShape` and separate baseline-height helpers, not a rectangular clip. |

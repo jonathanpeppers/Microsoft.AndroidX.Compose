@@ -52,12 +52,12 @@ public static class RecordButton
                     isRecording.Value = true;
             };
 
+            var visuals = RecordButtonVisuals.Read(c, recording);
             var innerModifier = Modifier.FillMaxSize();
             if (recording)
                 innerModifier = innerModifier
-                    .Background(Color.Red, new RoundedCornerShape(28.Dp()))
                     .Draggable(dragState, Orientation.Horizontal);
-            innerModifier = innerModifier.Padding(16);
+            innerModifier = innerModifier.Padding(18);
 
             return new Box
             {
@@ -65,13 +65,13 @@ public static class RecordButton
                     .Align(Alignment.Vertical.CenterVertically)
                     .Size(56)
                     .Clickable(onClick),
+                visuals.Background,
                 new Box
                 {
                     innerModifier,
                     new Icon(Resource.Drawable.ic_mic, "Record voice message")
                     {
-                        Tint = Color.FromPacked(
-                            recording ? scheme.OnPrimary : scheme.OnSurfaceVariant),
+                        Tint = visuals.IconColor,
                         Modifier = Modifier.FillMaxSize(),
                     },
                 },
