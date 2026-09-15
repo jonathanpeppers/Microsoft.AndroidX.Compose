@@ -2,6 +2,7 @@ using Android.Content;
 using Android.Views;
 using Android.Views.Accessibility;
 using AndroidX.Compose.Samples.Reply;
+using System.Text;
 
 namespace Microsoft.AndroidX.Compose.DeviceTests;
 
@@ -240,6 +241,7 @@ public class ReplySearchTests
         catch (Java.Util.Concurrent.TimeoutException)
         {
             ReportStage($"Query acknowledgement timed out; accepted={accepted}; expectedWindow={editor.WindowId}; {filter.LastObserved}");
+            CaptureQueryTimeout(text, activity);
             throw;
         }
         await Settle(activity);
@@ -304,6 +306,46 @@ public class ReplySearchTests
             throw new InvalidOperationException("Do not inspect another app's accessibility root.");
         }
         return root;
+    }
+
+    static void CaptureQueryTimeout(string requested, ReplySearchTestActivity activity)
+    {
+        using var root = OwnedRoot();
+        using var editor = FindIn(root, node => node.Editable);
+        ReportStage($"Timeout snapshot: requested={requested}; actual={editor?.Text}; window={root.WindowId}", activity);
+        var directory = global::Android.App.Application.Context.GetExternalFilesDir(null)?.AbsolutePath
+            ?? throw new InvalidOperationException("Search timeout artifact directory is unavailable.");
+        string prefix = Path.Combine(directory, "search-timeout-" + DateTime.UtcNow.ToString("yyyyMMdd-HHmmss-fff"));
+        var text = new StringBuilder().AppendLine($"requested={requested}");
+        Describe(root, text, 0);
+        File.WriteAllText(prefix + ".txt", text.ToString());
+        using var image = Require(Runner.UiAutomation).TakeScreenshot()
+            ?? throw new InvalidOperationException("Owned search timeout screenshot was unavailable.");
+        var format = global::Android.Graphics.Bitmap.CompressFormat.Png
+            ?? throw new InvalidOperationException("PNG format was unavailable for the owned search snapshot.");
+        using (var output = File.Create(prefix + ".png"))
+            Assert.IsTrue(image.Compress(format, 100, output));
+        ReportStage("Owned timeout artifacts: " + prefix);
+    }
+
+    static void Describe(AccessibilityNodeInfo node, StringBuilder text, int depth)
+    {
+        if (!OperatingSystem.IsAndroidVersionAtLeast(34))
+            Assert.IsTrue(node.Refresh(), "Timeout diagnostic node is no longer available.");
+        using var bounds = new global::Android.Graphics.Rect();
+        node.GetBoundsInScreen(bounds);
+        text.Append(' ', depth).Append(node.ClassName).Append(" text=").Append(node.Text)
+            .Append(" description=").Append(node.ContentDescription).Append(" editable=").Append(node.Editable)
+            .Append(" focused=").Append(node.Focused).Append(" window=").Append(node.WindowId)
+            .Append(" resourceId=").Append(node.ViewIdResourceName)
+            .Append(" uniqueId=").Append(OperatingSystem.IsAndroidVersionAtLeast(33) ? node.UniqueId : null)
+            .Append(" bounds=").Append(bounds).AppendLine();
+        for (int i = 0; i < node.ChildCount; i++)
+        {
+            using var child = node.GetChild(i);
+            if (child is not null)
+                Describe(child, text, depth + 1);
+        }
     }
 
     static AccessibilityNodeInfo? FindIn(AccessibilityNodeInfo node, Func<AccessibilityNodeInfo, bool> predicate)
