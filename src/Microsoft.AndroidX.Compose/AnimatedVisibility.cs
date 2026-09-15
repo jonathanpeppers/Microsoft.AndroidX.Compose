@@ -15,8 +15,10 @@ namespace AndroidX.Compose;
 /// </summary>
 /// <remarks>
 /// Children are rendered through Compose's <c>AnimatedVisibilityScope</c>
-/// receiver. The scope's helpers (<c>Modifier.animateEnterExit</c>) are
-/// not exposed in v1 — children render with the discarded scope.
+/// receiver. Apply <see cref="Modifier.AnimateEnterExit"/> to children for
+/// independent transitions combined with the parent's enter/exit effects.
+/// The nearest animated receiver is preserved across nested layout containers
+/// and independently recomposed content.
 /// Mirror of the bound
 /// <see cref="AnimatedVisibilityKt.AnimatedVisibility(bool, AndroidX.Compose.UI.IModifier?, EnterTransition?, ExitTransition?, string?, Kotlin.Jvm.Functions.IFunction3, IComposer?, int, int)"/>
 /// overload — no JNI bridge. Enter and exit must be ctor parameters
@@ -53,7 +55,11 @@ public sealed class AnimatedVisibility : ComposableContainer
     public override void Render(IComposer composer)
     {
         var modifier = BuildModifier();
-        var content  = ComposableLambdas.Wrap3(composer, RenderChildren);
+        var content  = ComposableLambdas.Wrap3(composer, (scope, c) =>
+        {
+            using var animation = RenderContext.EnterAnimatedVisibilityScope(scope);
+            RenderChildren(c);
+        });
 
         // We never pass `label`, so it always stays set.
         var defaults = AnimatedVisibilityDefault.Label;

@@ -136,6 +136,11 @@ public sealed class Modifier
     // write `Modifier.X(...)` to start a chain and `.Y(...)` to
     // continue it, matching Kotlin's `Modifier.x(...).y(...)` 1:1.
 
+    /// <inheritdoc cref="ModifierExtensions.AnimateEnterExit"/>
+    public static Modifier AnimateEnterExit(
+        Animation.EnterTransition? enter = null, Animation.ExitTransition? exit = null, string? label = null) =>
+        _companion.AnimateEnterExit(enter, exit, label);
+
     /// <inheritdoc cref="ModifierExtensions.Padding(Dp)"/>
     public static Modifier Padding(Dp all) => _companion.Padding(all);
 

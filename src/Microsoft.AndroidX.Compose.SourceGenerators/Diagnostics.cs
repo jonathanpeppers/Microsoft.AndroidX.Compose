@@ -116,6 +116,14 @@ internal static class Diagnostics
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);
 
+    public static readonly DiagnosticDescriptor BridgeReceiversInvalid = new(
+        id: "CN2012",
+        title: "[ComposeBridge(ReceiverCount = ...)] configuration is invalid",
+        messageFormat: "Bridge '{0}': {1}",
+        category: "AndroidX.Compose",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
+
     public static readonly DiagnosticDescriptor FacadeWrongContainingType = new(
         id: "CN3001",
         title: "[ComposeFacade] must be applied to a method on ComposeBridges",
