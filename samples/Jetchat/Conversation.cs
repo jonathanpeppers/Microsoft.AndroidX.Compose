@@ -506,6 +506,7 @@ public static class Conversation
         {
             row.Add(new Tooltip
             {
+                EnableUserInput = false,
                 Tip = new Surface
                 {
                     new Text("Touch and hold to record")

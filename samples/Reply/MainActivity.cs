@@ -5,8 +5,7 @@ namespace AndroidX.Compose.Samples.Reply;
 
 /// <summary>
 /// Reply host activity. Subclasses <see cref="ComponentActivity"/>,
-/// remembers app-wide state (nav controller, current route, opened
-/// email id, multi-select set), then hands off to
+/// remembers the nav controller and restores email context, then hands off to
 /// <see cref="ReplyApp.Content"/>.
 /// </summary>
 [Activity(
@@ -16,18 +15,27 @@ namespace AndroidX.Compose.Samples.Reply;
 [Android.Runtime.Register("net/compose/samples/reply/MainActivity")]
 public class MainActivity : ComponentActivity
 {
+    ReplyState? _state;
+
     /// <summary>Build the root composition.</summary>
     protected override void OnCreate(Bundle? savedInstanceState)
     {
         base.OnCreate(savedInstanceState);
         this.EnableEdgeToEdge();
+        var state = new ReplyState(savedInstanceState);
+        _state = state;
         this.SetContent(() =>
         {
-            var nav              = Remember(() => new NavController());
-            var currentRoute     = MutableStateOf(Route.Inbox);
-            var openedEmailId    = MutableStateOf(0L);
-            var selectedEmailIds = Remember(() => new MutableStateList<long>());
-            ReplyApp.Content(nav, currentRoute, openedEmailId, selectedEmailIds);
+            var nav = Remember(() => new NavController());
+            ReplyApp.Content(nav, state);
         });
+    }
+
+    /// <summary>Preserves email context without duplicating the navigator's saved back stack.</summary>
+    protected override void OnSaveInstanceState(Bundle outState)
+    {
+        var state = _state ?? throw new InvalidOperationException("Reply state was not initialized.");
+        state.Save(outState);
+        base.OnSaveInstanceState(outState);
     }
 }

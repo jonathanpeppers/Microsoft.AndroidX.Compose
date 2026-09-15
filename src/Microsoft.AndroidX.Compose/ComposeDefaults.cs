@@ -1243,6 +1243,9 @@ using AndroidX.Compose;
 [assembly: ComposeDefaults("DetectDragGesturesDefault",
     "onDragStart", "onDragEnd", "onDragCancel", "!onDrag")]
 
+[assembly: ComposeDefaults("DetectDragGesturesAfterLongPressDefault",
+    "onDragStart", "onDragEnd", "onDragCancel", "!onDrag")]
+
 // androidx.compose.foundation.gestures.TransformGestureDetectorKt.detectTransformGestures$default —
 // only `panZoomLock` is defaultable (false), but it's a primitive
 // boolean (auto-mask can't flip its bit because primitives are

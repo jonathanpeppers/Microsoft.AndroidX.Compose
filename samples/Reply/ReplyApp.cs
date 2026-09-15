@@ -2,91 +2,90 @@ namespace AndroidX.Compose.Samples.Reply;
 
 /// <summary>
 /// Builds the Reply root composition: a <see cref="MaterialTheme"/>
-/// wrapping a <see cref="Scaffold"/> with a bottom <c>NavigationBar</c>
-/// and a <see cref="NavHost"/> body.
+/// wrapping a <see cref="NavHost"/> whose destinations own their
+/// <see cref="Scaffold"/> and selected bottom-navigation item.
 /// </summary>
 /// <remarks>
 /// Upstream Reply uses <c>NavigationSuiteScaffoldLayout</c> +
 /// <c>WindowSizeClass</c> to pick between bottom nav (compact), nav
-/// rail (medium), and permanent drawer (expanded). The
-/// <c>WindowSizeClass</c> read itself is now available (issue #143 —
-/// see <c>composer.CurrentWindowAdaptiveInfo()</c>), but
-/// <c>NavigationSuiteScaffold</c> lives in the
-/// <c>Xamarin.AndroidX.Compose.Material3.Adaptive.NavigationSuite</c>
-/// package which isn't referenced yet, so this port still pins to
-/// bottom nav.
+/// rail (medium), and permanent drawer (expanded).
+/// The adaptive APIs are available, but this port deliberately keeps
+/// the single-pane, bottom-navigation layout; fold-aware integration is separate.
 /// </remarks>
 public static class ReplyApp
 {
     /// <summary>Compose the Reply app at the same top-level boundary as upstream Kotlin.</summary>
     [Composable]
     public static void Content(
-        NavController        nav,
-        MutableState<string> currentRoute,
-        MutableState<long>   openedEmailId,
-        MutableStateList<long> selectedEmailIds)
+        NavController nav,
+        ReplyState state)
     {
+        var actions = new ReplyNavigationActions(nav);
         new MaterialTheme
         {
-            new Scaffold
-            {
-                BottomBar = ReplyBottomNavigationBar.Build(
-                    currentRoute: currentRoute.Value,
-                    onNavigate:   destination =>
-                    {
-                        currentRoute.Value = destination.Route;
-                        new ReplyNavigationActions(nav).NavigateTo(destination);
-                    }),
-                Body = BuildNavHost(nav, currentRoute, openedEmailId, selectedEmailIds),
-            },
+            BuildNavHost(nav, actions, state),
         }.Render();
     }
 
     static NavHost BuildNavHost(
-        NavController          nav,
-        MutableState<string>   currentRoute,
-        MutableState<long>     openedEmailId,
-        MutableStateList<long> selectedEmailIds)
+        NavController nav,
+        ReplyNavigationActions actions,
+        ReplyState state)
     {
         return new NavHost(startDestination: Route.Inbox, navController: nav)
         {
             new NavDestination(Route.Inbox)
             {
-                ReplyInboxScreen.Build(
+                BuildScaffold(Route.Inbox, actions, ReplyInboxScreen.Build(
                     emails:           LocalEmailsDataProvider.AllEmails,
-                    openedEmailId:    openedEmailId.Value,
-                    selectedEmailIds: selectedEmailIds,
+                    openedEmailId:    state.OpenedEmailId.Value,
+                    selectedEmailIds: state.SelectedEmailIds,
                     navigateToDetail: id =>
                     {
-                        openedEmailId.Value = id;
-                        nav.Navigate(Route.EmailDetail(id));
+                        actions.OpenEmail(id);
+                        state.OpenedEmailId.Value = id;
                     },
                     toggleSelection: id =>
                     {
-                        if (selectedEmailIds.Contains(id))
-                            selectedEmailIds.Remove(id);
+                        if (state.SelectedEmailIds.Contains(id))
+                            state.SelectedEmailIds.Remove(id);
                         else
-                            selectedEmailIds.Add(id);
-                    }),
+                            state.SelectedEmailIds.Add(id);
+                    })),
             },
-            new NavDestination(Route.Articles)   { EmptyComingSoon.Build() },
-            new NavDestination(Route.DirectMessages) { EmptyComingSoon.Build() },
-            new NavDestination(Route.Groups)     { EmptyComingSoon.Build() },
+            new NavDestination(Route.Articles)
+                { BuildScaffold(Route.Articles, actions, EmptyComingSoon.Build()) },
+            new NavDestination(Route.DirectMessages)
+                { BuildScaffold(Route.DirectMessages, actions, EmptyComingSoon.Build()) },
+            new NavDestination(Route.Groups)
+                { BuildScaffold(Route.Groups, actions, EmptyComingSoon.Build()) },
             new NavDestination(Route.EmailDetailPattern, entry =>
             {
-                var idStr = entry.Arguments?.GetString("emailId") ?? "0";
+                var idStr = entry.Arguments?.GetString("emailId");
                 if (!long.TryParse(idStr, out var id))
-                    id = 0;
+                    throw new InvalidOperationException($"Invalid Reply email route argument '{idStr}'.");
                 var email = LocalEmailsDataProvider.Get(id)
-                            ?? LocalEmailsDataProvider.AllEmails[0];
-                return ReplyEmailDetail.Build(
-                    email:         email,
-                    onBackPressed: () =>
-                    {
-                        openedEmailId.Value = 0L;
-                        nav.NavigateUp();
-                    });
+                    ?? throw new InvalidOperationException($"Reply email {id} was not found.");
+                Action close = () => actions.CloseEmail(state);
+                return BuildScaffold(Route.Inbox, actions, new Box
+                {
+                    new BackHandler(close),
+                    ReplyEmailDetail.Build(email: email, onBackPressed: close),
+                });
             }),
         };
     }
+
+    static Scaffold BuildScaffold(
+        string route, ReplyNavigationActions actions, ComposableNode body) => new()
+    {
+        BottomBar = ReplyBottomNavigationBar.Build(route, actions.NavigateTo),
+        // Kotlin keeps detail inside Inbox. Restore that tab's saved route on
+        // top-level Back too, rather than popping directly to the bare list.
+        Body = route == Route.Inbox ? body : new Box
+        {
+            new BackHandler(() => actions.NavigateTo(TopLevelDestinations.All[0])),
+            body,
+        },
+    };
 }

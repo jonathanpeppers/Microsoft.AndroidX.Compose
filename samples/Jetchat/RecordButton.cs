@@ -35,36 +35,39 @@ public static class RecordButton
         new Composed(c =>
         {
             bool recording = isRecording.Value;
-            float threshold = SwipeToCancelThresholdPx;
-            var dragState  = c.RememberDraggableState(delta =>
-            {
-                if (!isRecording.Value) return;
-                swipeOffset.Value += delta;
-                if (swipeOffset.Value <= -threshold)
-                    onCancel();
-            });
-
-            Action onClick = () =>
-            {
-                if (isRecording.Value)
-                    onCommit();
-                else
-                    isRecording.Value = true;
-            };
+            float density = SwipeToCancelThresholdPx / SwipeToCancelThresholdDp;
+            var gesture = c.Remember(() => new RecordingGestureState());
 
             var visuals = RecordButtonVisuals.Read(c, recording);
-            var innerModifier = Modifier.FillMaxSize();
-            if (recording)
-                innerModifier = innerModifier
-                    .Draggable(dragState, Orientation.Horizontal);
-            innerModifier = innerModifier.Padding(18);
+            var innerModifier = Modifier.FillMaxSize().Padding(18);
 
             return new Box
             {
                 Modifier
                     .Align(Alignment.Vertical.CenterVertically)
                     .Size(56)
-                    .Clickable(onClick),
+                    .DetectDragGesturesAfterLongPress(
+                        onDragStart: _ =>
+                        {
+                            gesture.Start();
+                            swipeOffset.Value = 0;
+                            isRecording.Value = true;
+                        },
+                        onDrag: delta =>
+                        {
+                            if (!gesture.Dragging) return;
+                            bool cancelled = gesture.Move(delta.X, delta.Y, density);
+                            swipeOffset.Value = gesture.Horizontal;
+                            if (cancelled) onCancel();
+                        },
+                        onDragEnd: () =>
+                        {
+                            if (gesture.End()) onCommit();
+                        },
+                        onDragCancel: () =>
+                        {
+                            if (gesture.End()) onCancel();
+                        }),
                 visuals.Background,
                 new Box
                 {

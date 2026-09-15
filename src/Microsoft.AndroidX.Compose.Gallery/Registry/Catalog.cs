@@ -167,6 +167,7 @@ public static class Catalog
         D.Modifiers.CombinedClickableDemo.Demo,
         D.Modifiers.DetectTapGesturesDemo.Demo,
         D.Modifiers.DetectDragGesturesDemo.Demo,
+        D.Modifiers.LongPressDragDemo.Demo,
         D.Modifiers.DetectTransformGesturesDemo.Demo,
         D.Modifiers.DraggableOffsetDemo.Demo,
         D.Modifiers.DragAndDropTargetDemo.Demo,
