@@ -92,43 +92,77 @@ public class ReplyNavigationTestActivity : ComponentActivity
         using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(15));
         var runner = TestInstrumentation.Current
             ?? throw new InvalidOperationException("Reply test instrumentation is not running.");
-        while (true)
+        using var frame = new Java.Lang.Runnable(Signal);
+        string status = "No native readiness observation.";
+        int observations = 0;
+        try
         {
-            Task progress;
-            lock (_progressLock) progress = _progress.Task;
-            await Task.Run(runner.WaitForIdleSync).WaitAsync(timeout.Token);
-            bool idle = false;
-            await OnUi(() =>
+            while (true)
             {
-                if (_admissionFailure is { } failure)
-                    throw new InvalidOperationException(failure);
-                if (_ending)
-                    throw new InvalidOperationException("Reply test activity is ending.");
-                if (View.GetChildAt(0) is not { } child)
-                    return;
-                var owner = child.JavaCast<IViewRootForTest>();
-                if (WindowRecomposer_androidKt.FindViewTreeCompositionContext(View) is not Recomposer recomposer)
-                    return;
-                if (_snapshots is null)
+                Task progress;
+                lock (_progressLock) progress = _progress.Task;
+                await Task.Run(runner.WaitForIdleSync).WaitAsync(timeout.Token);
+                bool idle = false;
+                await OnUi(() =>
                 {
-                    using var field = Java.Lang.Class.FromType(typeof(Snapshot)).GetField("Companion")
-                        ?? throw new InvalidOperationException("Snapshot.Companion field is unavailable.");
-                    _snapshots = field.Get(null)?.JavaCast<Snapshot.Companion>()
-                        ?? throw new InvalidOperationException("Snapshot.Companion is unavailable.");
-                }
-                bool resumed = _resumed && View.HasWindowFocus && View.IsAttachedToWindow &&
-                    View.IsLaidOut && owner.IsLifecycleInResumedState;
-                if (resumed) _admitted = true;
-                // A navigation entry is RESUMED only after its native transition completes.
-                bool destinationResumed = Controller.Jvm?.CurrentBackStackEntry?.Lifecycle.CurrentState ==
-                    global::AndroidX.Lifecycle.Lifecycle.State.Resumed;
-                idle = resumed && destinationResumed && !owner.HasPendingMeasureOrLayout &&
-                    !recomposer.HasPendingWork && !_snapshots.Current.HasPendingChanges &&
-                    !_snapshots.IsApplyObserverNotificationPending;
-            }).WaitAsync(timeout.Token);
-            if (idle)
-                return;
-            await progress.WaitAsync(timeout.Token);
+                    observations++;
+                    if (_admissionFailure is { } failure)
+                        throw new InvalidOperationException(failure);
+                    if (_ending)
+                        throw new InvalidOperationException("Reply test activity is ending.");
+                    status = "Compose owner child unavailable.";
+                    if (View.GetChildAt(0) is not { } child)
+                        return;
+                    var owner = child.JavaCast<IViewRootForTest>();
+                    status = "Window recomposer unavailable.";
+                    if (WindowRecomposer_androidKt.FindViewTreeCompositionContext(View) is not Recomposer recomposer)
+                        return;
+                    if (_snapshots is null)
+                    {
+                        using var field = Java.Lang.Class.FromType(typeof(Snapshot)).GetField("Companion")
+                            ?? throw new InvalidOperationException("Snapshot.Companion field is unavailable.");
+                        _snapshots = field.Get(null)?.JavaCast<Snapshot.Companion>()
+                            ?? throw new InvalidOperationException("Snapshot.Companion is unavailable.");
+                    }
+                    bool resumed = _resumed && View.HasWindowFocus && View.IsAttachedToWindow &&
+                        View.IsLaidOut && owner.IsLifecycleInResumedState;
+                    if (resumed) _admitted = true;
+                    var entry = Controller.Jvm?.CurrentBackStackEntry;
+                    var lifecycle = entry?.Lifecycle.CurrentState;
+                    // A navigation entry is RESUMED only after its native transition completes.
+                    bool destinationResumed = lifecycle == global::AndroidX.Lifecycle.Lifecycle.State.Resumed;
+                    bool measurePending = owner.HasPendingMeasureOrLayout;
+                    bool compositionPending = recomposer.HasPendingWork;
+                    bool snapshotPending = _snapshots.Current.HasPendingChanges;
+                    bool notificationPending = _snapshots.IsApplyObserverNotificationPending;
+                    status = $"observations={observations}, activityResumed={_resumed}, focus={View.HasWindowFocus}, " +
+                        $"attached={View.IsAttachedToWindow}, laidOut={View.IsLaidOut}, " +
+                        $"ownerResumed={owner.IsLifecycleInResumedState}, route={entry?.Destination.Route}, " +
+                        $"entryLifecycle={lifecycle}, measurePending={measurePending}, " +
+                        $"compositionPending={compositionPending}, snapshotPending={snapshotPending}, " +
+                        $"notificationPending={notificationPending}";
+                    idle = resumed && destinationResumed && !measurePending && !compositionPending &&
+                        !snapshotPending && !notificationPending;
+                }).WaitAsync(timeout.Token);
+                if (idle)
+                    return;
+                // Transition lifecycle changes need not draw. Recheck on a real platform frame
+                // as well as draw/window events, without changing any readiness condition.
+                await OnUi(() =>
+                {
+                    View.RemoveCallbacks(frame);
+                    View.PostOnAnimation(frame);
+                }).WaitAsync(timeout.Token);
+                await progress.WaitAsync(timeout.Token);
+            }
+        }
+        catch (OperationCanceledException error) when (timeout.IsCancellationRequested)
+        {
+            throw new TimeoutException($"Reply native readiness timed out: {status}", error);
+        }
+        finally
+        {
+            await OnUi(() => View.RemoveCallbacks(frame));
         }
     }
 
