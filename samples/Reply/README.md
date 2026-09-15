@@ -96,6 +96,25 @@ empty/no-match results, recomposition, native Back, leading-arrow clearing,
 result selection, and removal/re-entry using the real search component and
 linked sample data.
 
+### Device validation
+
+On 2026-09-15, source `8da2c4f` passed all four focused checks on the attached
+Pixel 7: the numeric-padding regression and all three `ReplySearchTests`
+(zero failures or skips). This includes no-result-to-match recovery, exact
+popup bounds, IME Search, leading/system Back, both Back owners, selected
+email ID, and composition departure/re-entry.
+
+The real C# Reply activity also completed collapsed, empty, matching,
+no-result, and selected-email capture flows in both light and dark mode.
+The debug-only capture harness verified the activity's actual night
+configuration; it did not change global settings.
+
+**Paired Kotlin/C# visual parity remains unverified.** The pinned Kotlin
+reference builds, but Android rejected its APK installation with
+`INSTALL_FAILED_VERIFICATION_FAILURE` (`Install not allowed`). No verifier
+or security-setting bypass was attempted. C# captures alone are not a
+matched reference comparison.
+
 ## Stable list identity
 
 The inbox and email-thread `LazyColumn<Email>` instances use
