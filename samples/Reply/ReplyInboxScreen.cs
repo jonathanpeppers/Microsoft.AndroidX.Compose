@@ -4,7 +4,7 @@ namespace AndroidX.Compose.Samples.Reply;
 /// Inbox screen — a <see cref="LazyColumn{T}"/> of
 /// <see cref="ReplyEmailListItem"/>s. Port of upstream's
 /// <c>ReplyEmailListPane</c> for the single-pane layout, with the
-/// docked search bar simplified to a plain top-row entry.
+/// interactive docked search bar above the inbox.
 /// </summary>
 public static class ReplyInboxScreen
 {
@@ -31,7 +31,7 @@ public static class ReplyInboxScreen
                 Modifier = Modifier.FillMaxWidth().Padding(top: 80),
                 Key = static email => email.Id,
             },
-            new ReplySearchBar(),
+            new ReplySearchBar(emails, navigateToDetail),
             new Box
             {
                 Modifier

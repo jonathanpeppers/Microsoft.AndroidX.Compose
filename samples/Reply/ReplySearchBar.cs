@@ -3,53 +3,118 @@ using AndroidX.Compose.Runtime;
 namespace AndroidX.Compose.Samples.Reply;
 
 /// <summary>
-/// Simplified top "search" entry used by <see cref="ReplyInboxScreen"/>.
-/// The port currently uses a placeholder row with the same visual footprint
-/// as the upstream interactive search overlay so the inbox list visually
-/// matches.
+/// Docked email search, following the pinned Kotlin ReplyDockedSearchBar.
 /// </summary>
 public sealed class ReplySearchBar : ComposableNode
 {
+    readonly IReadOnlyList<Email> _emails;
+    readonly Action<long> _onSelected;
+
+    /// <summary>Creates a standalone search bar without a navigation callback.</summary>
+    public ReplySearchBar() : this(LocalEmailsDataProvider.AllEmails, static _ => { }) { }
+
+    /// <summary>Searches the supplied inbox and opens the selected email by its stable ID.</summary>
+    public ReplySearchBar(IReadOnlyList<Email> emails, Action<long> onSelected)
+    {
+        ArgumentNullException.ThrowIfNull(emails);
+        ArgumentNullException.ThrowIfNull(onSelected);
+        _emails = emails;
+        _onSelected = onSelected;
+    }
+
     /// <inheritdoc />
     public override void Render(IComposer composer)
     {
         var node = new Composed(c =>
         {
-            var scheme = c.ColorScheme();
-            return new Box
+            var session = c.Remember(() => new ReplySearchSession());
+            var scope = c.RememberCoroutineScope();
+
+            ComposableNode Input() => new SearchBarInputField(session.Input, session.Expansion)
             {
-                Modifier
-                    .FillMaxWidth()
-                    .Padding(horizontal: 16, vertical: 8)
-                    .Clip(new RoundedCornerShape(28.Dp()))
-                    .Background(Color.FromPacked(scheme.SurfaceVariant)),
-                new Row
+                Modifier = Modifier.FillMaxWidth(),
+                Placeholder = new Text("Search emails"),
+                OnSearch = _ => Run(scope, ct => session.DismissAsync(clearQuery: false, ct)),
+                LeadingIcon = new Composed(_ =>
+                    session.Expansion.TargetValue.Equals(Material3.SearchBarValue.Expanded)
+                        ? new Icon(Resource.Drawable.ic_arrow_back, "Back")
+                        {
+                            Modifier = Modifier.Padding(start: 16).Clickable(
+                                () => Run(scope, ct => session.DismissAsync(clearQuery: true, ct))),
+                        }
+                        : new Icon(Resource.Drawable.ic_search, "Search")
+                        {
+                            Modifier = Modifier.Padding(start: 16),
+                        }),
+                TrailingIcon = new Image(Resource.Drawable.avatar_6, "Profile")
                 {
-                    Modifier.FillMaxWidth().Padding(horizontal: 16, vertical: 12),
-                    new Icon(Resource.Drawable.ic_search, "Search")
-                    {
-                        Tint = Color.FromPacked(scheme.OnSurface),
-                        Modifier = Modifier.Align(Alignment.Vertical.CenterVertically),
-                    },
-                    new Text("Search replies")
-                    {
-                        FontSize = 14,
-                        Color    = Color.FromPacked(scheme.OnSurface),
-                        Modifier = Modifier
-                            .Align(Alignment.Vertical.CenterVertically)
-                            .Padding(start: 16)
-                            .Weight(1f),
-                    },
-                    new Box
-                    {
-                        Modifier.Align(Alignment.Vertical.CenterVertically),
-                        ReplyProfileImage.Build(
-                            drawableResource: Resource.Drawable.avatar_6,
-                            description:      "Profile"),
-                    },
+                    Modifier = Modifier.Padding(all: 12).Size(32).Clip(Shape.Circle()),
                 },
+            };
+
+            return new BoxWithConstraints(bounds =>
+            {
+                var expanded = new ExpandedDockedSearchBar(session.Expansion)
+                {
+                    Modifier = Modifier.WidthIn(max: bounds.MaxWidth),
+                    InputField = Input(),
+                };
+                expanded.Add(new Composed(_ =>
+                {
+                    var query = session.Input.Text;
+                    var matches = ReplySearchSession.FindMatches(_emails, query);
+                    if (matches.Count == 0)
+                        return new Text(query.Length == 0 ? "No search history" : "No item found")
+                        {
+                            Modifier = Modifier.Padding(all: 16),
+                        };
+
+                    return new LazyColumn<Email>(matches, email => new ListItem
+                    {
+                        Headline = new Text(email.Subject),
+                        Supporting = new Text(email.Sender.FullName),
+                        Leading = new Image(email.Sender.Avatar, "Profile")
+                        {
+                            Modifier = Modifier.Size(32).Clip(Shape.Circle()),
+                        },
+                        Modifier = Modifier.Clickable(
+                            () => Run(scope, ct => session.SelectAsync(email, _onSelected, ct))),
+                    })
+                    {
+                        Modifier = Modifier.FillMaxWidth(),
+                        ContentPadding = new PaddingValues(16),
+                        VerticalArrangement = Arrangement.SpacedBy(4.Dp()),
+                        Key = static email => email.Id,
+                    };
+                }));
+
+                return new Box
+                {
+                    Modifier.FillMaxWidth(),
+                    new SearchBar(session.Expansion)
+                    {
+                        Modifier = Modifier.FillMaxWidth(),
+                        InputField = Input(),
+                    },
+                    expanded,
+                };
+            })
+            {
+                Modifier = Modifier.FillMaxWidth().Padding(16),
             };
         });
         node.Render(composer);
+    }
+
+    static async void Run(CoroutineScope scope, Func<CancellationToken, Task> action)
+    {
+        try
+        {
+            await scope.Launch(action);
+        }
+        catch (OperationCanceledException)
+        {
+            // Leaving the search composition cancels its in-flight animation.
+        }
     }
 }
