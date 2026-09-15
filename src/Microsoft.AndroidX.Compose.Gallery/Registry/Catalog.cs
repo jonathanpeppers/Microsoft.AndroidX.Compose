@@ -67,6 +67,7 @@ public static class Catalog
         D.Buttons.IconToggleButtonsDemo.Demo,
         D.Buttons.ChipsDemo.Demo,
         D.Buttons.FloatingActionButtonsDemo.Demo,
+        D.Buttons.FabStylingDemo.Demo,
         D.Buttons.TooltipsDemo.Demo,
 
         // ---- Selection ----

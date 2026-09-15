@@ -645,8 +645,8 @@ Applying `[ComposeFacade]` to an unsupported bridge emits CN3002 (unsupported
 param), CN3003 (scope misuse), CN3005 (invalid callback type), CN3006 (slot
 conflict), CN3007 (color theme bind failed), CN3008 (painter misuse), CN3009
 (state-holder misuse), CN3010 (branching misuse), CN3011
-(confirmStateChange misuse), CN3012 (secondary-ctor misuse), or CN3013
-(ambiguous or invalid lambda execution mode).
+(confirmStateChange misuse), CN3012 (secondary-ctor misuse), CN3013
+(ambiguous or invalid lambda execution mode), or CN3014 (invalid added optional slot).
 
 ### Adding a new generated facade
 
@@ -661,7 +661,7 @@ conflict), CN3007 (color theme bind failed), CN3008 (painter misuse), CN3009
    `public sealed partial class <ClassName>;` and a `<summary>`. Use
    `Button.cs`/`IconButton.cs`/`Card.cs` as templates. **Do not omit the
    stub** — without it no XML docs.
-4. Build `dotnet build src/Microsoft.AndroidX.Compose.Gallery` to verify. CN3001-CN3013 fire
+4. Build `dotnet build src/Microsoft.AndroidX.Compose.Gallery` to verify. CN3001-CN3014 fire
    on rejection.
 5. If CN3002 fires, add the right marker attribute
    (`[Callback]`/`[Slot]`/`[PainterResource]`) or back out and write by hand.

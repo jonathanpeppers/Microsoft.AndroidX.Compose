@@ -489,9 +489,17 @@ AndroidX.Compose.ExposedDropdownMenu.ExposedDropdownMenu(bool expanded, System.A
 AndroidX.Compose.ExposedDropdownMenuBox
 AndroidX.Compose.ExposedDropdownMenuBox.ExposedDropdownMenuBox(bool expanded, System.Action<bool>! onExpandedChange) -> void
 AndroidX.Compose.ExtendedFloatingActionButton
+AndroidX.Compose.ExtendedFloatingActionButton.ContainerColor.get -> AndroidX.Compose.Color?
+AndroidX.Compose.ExtendedFloatingActionButton.ContainerColor.set -> void
+AndroidX.Compose.ExtendedFloatingActionButton.ContentColor.get -> AndroidX.Compose.Color?
+AndroidX.Compose.ExtendedFloatingActionButton.ContentColor.set -> void
+AndroidX.Compose.ExtendedFloatingActionButton.Elevation.get -> AndroidX.Compose.Material3.FloatingActionButtonElevation?
+AndroidX.Compose.ExtendedFloatingActionButton.Elevation.set -> void
 AndroidX.Compose.ExtendedFloatingActionButton.ExtendedFloatingActionButton(System.Action! onClick, bool expanded) -> void
 AndroidX.Compose.ExtendedFloatingActionButton.Icon.get -> AndroidX.Compose.ComposableNode!
 AndroidX.Compose.ExtendedFloatingActionButton.Icon.set -> void
+AndroidX.Compose.ExtendedFloatingActionButton.InteractionSource.get -> AndroidX.Compose.Foundation.Interaction.IMutableInteractionSource?
+AndroidX.Compose.ExtendedFloatingActionButton.InteractionSource.set -> void
 AndroidX.Compose.ExtendedFloatingActionButton.Shape.get -> AndroidX.Compose.Shape?
 AndroidX.Compose.ExtendedFloatingActionButton.Shape.set -> void
 AndroidX.Compose.ExtendedFloatingActionButton.Text.get -> AndroidX.Compose.ComposableNode!
@@ -539,7 +547,15 @@ AndroidX.Compose.FloatRange.FloatRange() -> void
 AndroidX.Compose.FloatRange.FloatRange(float start, float end) -> void
 AndroidX.Compose.FloatRange.Start.get -> float
 AndroidX.Compose.FloatingActionButton
+AndroidX.Compose.FloatingActionButton.ContainerColor.get -> AndroidX.Compose.Color?
+AndroidX.Compose.FloatingActionButton.ContainerColor.set -> void
+AndroidX.Compose.FloatingActionButton.ContentColor.get -> AndroidX.Compose.Color?
+AndroidX.Compose.FloatingActionButton.ContentColor.set -> void
+AndroidX.Compose.FloatingActionButton.Elevation.get -> AndroidX.Compose.Material3.FloatingActionButtonElevation?
+AndroidX.Compose.FloatingActionButton.Elevation.set -> void
 AndroidX.Compose.FloatingActionButton.FloatingActionButton(System.Action! onClick) -> void
+AndroidX.Compose.FloatingActionButton.InteractionSource.get -> AndroidX.Compose.Foundation.Interaction.IMutableInteractionSource?
+AndroidX.Compose.FloatingActionButton.InteractionSource.set -> void
 AndroidX.Compose.FloatingActionButton.Shape.get -> AndroidX.Compose.Shape?
 AndroidX.Compose.FloatingActionButton.Shape.set -> void
 AndroidX.Compose.FlowColumn
@@ -674,6 +690,14 @@ AndroidX.Compose.LargeFlexibleTopAppBar.Subtitle.set -> void
 AndroidX.Compose.LargeFlexibleTopAppBar.Title.get -> AndroidX.Compose.ComposableNode!
 AndroidX.Compose.LargeFlexibleTopAppBar.Title.set -> void
 AndroidX.Compose.LargeFloatingActionButton
+AndroidX.Compose.LargeFloatingActionButton.ContainerColor.get -> AndroidX.Compose.Color?
+AndroidX.Compose.LargeFloatingActionButton.ContainerColor.set -> void
+AndroidX.Compose.LargeFloatingActionButton.ContentColor.get -> AndroidX.Compose.Color?
+AndroidX.Compose.LargeFloatingActionButton.ContentColor.set -> void
+AndroidX.Compose.LargeFloatingActionButton.Elevation.get -> AndroidX.Compose.Material3.FloatingActionButtonElevation?
+AndroidX.Compose.LargeFloatingActionButton.Elevation.set -> void
+AndroidX.Compose.LargeFloatingActionButton.InteractionSource.get -> AndroidX.Compose.Foundation.Interaction.IMutableInteractionSource?
+AndroidX.Compose.LargeFloatingActionButton.InteractionSource.set -> void
 AndroidX.Compose.LargeFloatingActionButton.LargeFloatingActionButton(System.Action! onClick) -> void
 AndroidX.Compose.LargeFloatingActionButton.Shape.get -> AndroidX.Compose.Shape?
 AndroidX.Compose.LargeFloatingActionButton.Shape.set -> void
@@ -1391,6 +1415,14 @@ AndroidX.Compose.Slider.Thumb.set -> void
 AndroidX.Compose.Slider.ValueRange.get -> AndroidX.Compose.FloatRange?
 AndroidX.Compose.Slider.ValueRange.set -> void
 AndroidX.Compose.SmallFloatingActionButton
+AndroidX.Compose.SmallFloatingActionButton.ContainerColor.get -> AndroidX.Compose.Color?
+AndroidX.Compose.SmallFloatingActionButton.ContainerColor.set -> void
+AndroidX.Compose.SmallFloatingActionButton.ContentColor.get -> AndroidX.Compose.Color?
+AndroidX.Compose.SmallFloatingActionButton.ContentColor.set -> void
+AndroidX.Compose.SmallFloatingActionButton.Elevation.get -> AndroidX.Compose.Material3.FloatingActionButtonElevation?
+AndroidX.Compose.SmallFloatingActionButton.Elevation.set -> void
+AndroidX.Compose.SmallFloatingActionButton.InteractionSource.get -> AndroidX.Compose.Foundation.Interaction.IMutableInteractionSource?
+AndroidX.Compose.SmallFloatingActionButton.InteractionSource.set -> void
 AndroidX.Compose.SmallFloatingActionButton.Shape.get -> AndroidX.Compose.Shape?
 AndroidX.Compose.SmallFloatingActionButton.Shape.set -> void
 AndroidX.Compose.SmallFloatingActionButton.SmallFloatingActionButton(System.Action! onClick) -> void
@@ -1991,7 +2023,8 @@ static AndroidX.Compose.Composables.ExpandedDockedSearchBar(AndroidX.Compose.Sea
 static AndroidX.Compose.Composables.ExpandedFullScreenSearchBar(AndroidX.Compose.SearchBarState! state, System.Action! inputField, System.Action! content, AndroidX.Compose.Modifier? modifier = null) -> void
 static AndroidX.Compose.Composables.ExposedDropdownMenu(bool expanded, System.Action! onDismissRequest, System.Action! content, AndroidX.Compose.Modifier? modifier = null) -> void
 static AndroidX.Compose.Composables.ExposedDropdownMenuBox(bool expanded, System.Action<bool>! onExpandedChange, System.Action! content, AndroidX.Compose.Modifier? modifier = null) -> void
-static AndroidX.Compose.Composables.ExtendedFloatingActionButton(System.Action! onClick, bool expanded, System.Action! text, System.Action! icon, AndroidX.Compose.Modifier? modifier = null, AndroidX.Compose.Shape? shape = null) -> void
+static AndroidX.Compose.Composables.ExtendedFloatingActionButton(System.Action! onClick, bool expanded, System.Action! text, System.Action! icon, AndroidX.Compose.Modifier? modifier = null, AndroidX.Compose.Shape? shape = null, AndroidX.Compose.Color? containerColor = null, AndroidX.Compose.Color? contentColor = null, AndroidX.Compose.Material3.FloatingActionButtonElevation? elevation = null, AndroidX.Compose.Foundation.Interaction.IMutableInteractionSource? interactionSource = null) -> void
+static AndroidX.Compose.Composables.ExtendedFloatingActionButton(System.Action! onClick, bool expanded, System.Action! text, System.Action! icon, AndroidX.Compose.Modifier? modifier, AndroidX.Compose.Shape? shape) -> void
 static AndroidX.Compose.Composables.FilledIconButton(System.Action! onClick, System.Action! content, bool enabled = true, AndroidX.Compose.Modifier? modifier = null, AndroidX.Compose.Shape? shape = null) -> void
 static AndroidX.Compose.Composables.FilledIconToggleButton(bool checked, System.Action<bool>! onCheckedChange, System.Action! content, bool enabled = true, AndroidX.Compose.Modifier? modifier = null, AndroidX.Compose.Shape? shape = null) -> void
 static AndroidX.Compose.Composables.FilledTonalButton(System.Action! onClick, System.Action! content, bool enabled = true, AndroidX.Compose.Modifier? modifier = null, AndroidX.Compose.Shape? shape = null, AndroidX.Compose.Material3.ButtonColors? colors = null, AndroidX.Compose.PaddingValues? contentPadding = null) -> void
@@ -1999,7 +2032,8 @@ static AndroidX.Compose.Composables.FilledTonalIconButton(System.Action! onClick
 static AndroidX.Compose.Composables.FilledTonalIconToggleButton(bool checked, System.Action<bool>! onCheckedChange, System.Action! content, bool enabled = true, AndroidX.Compose.Modifier? modifier = null, AndroidX.Compose.Shape? shape = null) -> void
 static AndroidX.Compose.Composables.FilterChip(bool selected, System.Action! onClick, System.Action! label, bool enabled = true, AndroidX.Compose.Modifier? modifier = null, System.Action? leadingIcon = null, System.Action? trailingIcon = null, AndroidX.Compose.Shape? shape = null) -> void
 static AndroidX.Compose.Composables.FlexibleBottomAppBar(System.Action! content, AndroidX.Compose.Modifier? modifier = null) -> void
-static AndroidX.Compose.Composables.FloatingActionButton(System.Action! onClick, System.Action! content, AndroidX.Compose.Modifier? modifier = null, AndroidX.Compose.Shape? shape = null) -> void
+static AndroidX.Compose.Composables.FloatingActionButton(System.Action! onClick, System.Action! content, AndroidX.Compose.Modifier? modifier = null, AndroidX.Compose.Shape? shape = null, AndroidX.Compose.Color? containerColor = null, AndroidX.Compose.Color? contentColor = null, AndroidX.Compose.Material3.FloatingActionButtonElevation? elevation = null, AndroidX.Compose.Foundation.Interaction.IMutableInteractionSource? interactionSource = null) -> void
+static AndroidX.Compose.Composables.FloatingActionButton(System.Action! onClick, System.Action! content, AndroidX.Compose.Modifier? modifier, AndroidX.Compose.Shape? shape) -> void
 static AndroidX.Compose.Composables.FlowColumn(System.Action! content, int maxItemsInEachColumn = 2147483647, int maxLines = 2147483647, AndroidX.Compose.Modifier? modifier = null) -> void
 static AndroidX.Compose.Composables.FlowRow(System.Action! content, int maxItemsInEachRow = 2147483647, int maxLines = 2147483647, AndroidX.Compose.Modifier? modifier = null) -> void
 static AndroidX.Compose.Composables.HorizontalCenteredHeroCarousel<T>(System.Collections.Generic.IReadOnlyList<T>! items, System.Action<T>! itemContent, AndroidX.Compose.Modifier? modifier = null, AndroidX.Compose.CarouselState? state = null, AndroidX.Compose.Dp? maxItemWidth = null, AndroidX.Compose.Dp? itemSpacing = null, bool? userScrollEnabled = null) -> void
@@ -2019,7 +2053,8 @@ static AndroidX.Compose.Composables.InputChip(bool selected, System.Action! onCl
 static AndroidX.Compose.Composables.IntegerArrayResource(int id) -> int[]!
 static AndroidX.Compose.Composables.IntegerResource(int id) -> int
 static AndroidX.Compose.Composables.LargeFlexibleTopAppBar(System.Action! title, AndroidX.Compose.Modifier? modifier = null, System.Action? subtitle = null, System.Action? navigationIcon = null, System.Action? actions = null, AndroidX.Compose.Material3.ITopAppBarScrollBehavior? scrollBehavior = null) -> void
-static AndroidX.Compose.Composables.LargeFloatingActionButton(System.Action! onClick, System.Action! content, AndroidX.Compose.Modifier? modifier = null, AndroidX.Compose.Shape? shape = null) -> void
+static AndroidX.Compose.Composables.LargeFloatingActionButton(System.Action! onClick, System.Action! content, AndroidX.Compose.Modifier? modifier = null, AndroidX.Compose.Shape? shape = null, AndroidX.Compose.Color? containerColor = null, AndroidX.Compose.Color? contentColor = null, AndroidX.Compose.Material3.FloatingActionButtonElevation? elevation = null, AndroidX.Compose.Foundation.Interaction.IMutableInteractionSource? interactionSource = null) -> void
+static AndroidX.Compose.Composables.LargeFloatingActionButton(System.Action! onClick, System.Action! content, AndroidX.Compose.Modifier? modifier, AndroidX.Compose.Shape? shape) -> void
 static AndroidX.Compose.Composables.LargeTopAppBar(System.Action! title, AndroidX.Compose.Modifier? modifier = null, System.Action? navigationIcon = null, System.Action? actions = null, System.Action? subtitle = null, AndroidX.Compose.Material3.ITopAppBarScrollBehavior? scrollBehavior = null) -> void
 static AndroidX.Compose.Composables.LaunchedEffect(object? key1, System.Func<System.Threading.CancellationToken, System.Threading.Tasks.Task!>! body) -> void
 static AndroidX.Compose.Composables.LaunchedEffect(object? key1, object? key2, System.Func<System.Threading.CancellationToken, System.Threading.Tasks.Task!>! body) -> void
@@ -2122,7 +2157,8 @@ static AndroidX.Compose.Composables.Shapes() -> AndroidX.Compose.Material3.Shape
 static AndroidX.Compose.Composables.SideEffect(System.Action! effect) -> void
 static AndroidX.Compose.Composables.SingleChoiceSegmentedButtonRow(System.Action! content, AndroidX.Compose.Modifier? modifier = null) -> void
 static AndroidX.Compose.Composables.Slider(float value, System.Action<float>! onValueChange, bool enabled = true, int steps = 0, AndroidX.Compose.Modifier? modifier = null, System.Action? thumb = null, AndroidX.Compose.FloatRange? valueRange = null, AndroidX.Compose.Material3.SliderColors? colors = null) -> void
-static AndroidX.Compose.Composables.SmallFloatingActionButton(System.Action! onClick, System.Action! content, AndroidX.Compose.Modifier? modifier = null, AndroidX.Compose.Shape? shape = null) -> void
+static AndroidX.Compose.Composables.SmallFloatingActionButton(System.Action! onClick, System.Action! content, AndroidX.Compose.Modifier? modifier = null, AndroidX.Compose.Shape? shape = null, AndroidX.Compose.Color? containerColor = null, AndroidX.Compose.Color? contentColor = null, AndroidX.Compose.Material3.FloatingActionButtonElevation? elevation = null, AndroidX.Compose.Foundation.Interaction.IMutableInteractionSource? interactionSource = null) -> void
+static AndroidX.Compose.Composables.SmallFloatingActionButton(System.Action! onClick, System.Action! content, AndroidX.Compose.Modifier? modifier, AndroidX.Compose.Shape? shape) -> void
 static AndroidX.Compose.Composables.Snackbar(System.Action! body, bool actionOnNewLine = false, AndroidX.Compose.Modifier? modifier = null, System.Action? action = null, System.Action? dismissAction = null) -> void
 static AndroidX.Compose.Composables.SnackbarHost(AndroidX.Compose.SnackbarHostState! state, AndroidX.Compose.Modifier? modifier = null) -> void
 static AndroidX.Compose.Composables.Spacer(AndroidX.Compose.Modifier? modifier = null) -> void

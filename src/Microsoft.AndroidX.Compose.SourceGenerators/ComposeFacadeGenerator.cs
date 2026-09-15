@@ -2464,7 +2464,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             {
                 continue;
             }
-            EmitComposableMethodNamedSlotWrapper(sb, s, implicitComposer, "            ");
+            EmitComposableMethodNamedSlotWrapper(sb, s, "            ");
         }
 
         var contentSlot = slots.FirstOrDefault(s =>
@@ -2668,7 +2668,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
     }
 
     static void EmitComposableMethodNamedSlotWrapper(StringBuilder sb, FacadeSlot s,
-        bool implicitComposer, string indent)
+        string indent)
     {
         var id = EscapeIdent(ComposableMethodIdentifier(PropertyName(s)));
         if (s.IsDecoration)
@@ -2682,7 +2682,8 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             ? 3
             : 2;
         bool nullable = s.Kind is FacadeSlotKind.NamedFunction2 or FacadeSlotKind.NamedFunction3;
-        string body = implicitComposer ? "_ => " + id + "()" : id;
+        string body = "c => global::AndroidX.Compose.ComposableContentNode.RenderDirect(c, "
+            + id + ", false)";
         string adapter = LambdaAdapterLowering.EmitExpression(
             new LambdaAdapterClassification(
                 LambdaExecutionMode.SynchronousComposable,
@@ -3032,7 +3033,7 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             or FacadeSlotKind.NamedFunction3 or FacadeSlotKind.RequiredFunction2
             or FacadeSlotKind.RequiredFunction3))
         {
-            EmitComposableMethodNamedSlotWrapper(sb, s, implicitComposer, "            ");
+            EmitComposableMethodNamedSlotWrapper(sb, s, "            ");
         }
 
         var content = secondarySlots.FirstOrDefault(s =>
