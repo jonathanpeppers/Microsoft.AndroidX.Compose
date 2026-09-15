@@ -4,25 +4,20 @@ using BoundColor = AndroidX.Compose.UI.Graphics.Color;
 
 namespace AndroidX.Compose;
 
-// Interop for two Compose-graphics symbols the Mono.Android binder strips:
+// Interop for the Compose-graphics boxing factory:
 //
 //   - `androidx.compose.ui.graphics.Color.box-impl(J)Color` — the
 //     Kotlin-synthetic boxing factory that turns a packed `long` into
 //     a `Color` object. The `Color` class itself is bound, but its
 //     ctor and `box-impl` static are skipped (value-class lowering).
 //     The invocation is source-generated; BoxColor owns the returned local.
-//   - `androidx.compose.ui.graphics.SolidColor.<init>(J)V` — same
-//     reason; the ctor takes a value-class `Color`.
 //
-// Everything else (`Brush.Companion`'s gradient factories,
+// Everything else (the bound SolidColor constructor, Brush.Companion's gradient factories,
 // `RectangleShapeKt.RectangleShape`) is bound and called directly
 // from `Brush` / `Shape`.
 internal static partial class ComposeBridges
 {
     static BoundBrush.Companion? s_brushCompanion;
-
-    static IntPtr s_solidColor_class;
-    static IntPtr s_solidColor_ctor;
 
     // Lazy access to the `androidx.compose.ui.graphics.Brush$Companion`
     // singleton — the binder exposes the type but not a public C# accessor
@@ -89,20 +84,5 @@ internal static partial class ComposeBridges
         foreach (var c in colors)
             list.Add(BoxColor(c.ToPacked()));
         return list;
-    }
-
-    // `new androidx.compose.ui.graphics.SolidColor(Color)` — the ctor
-    // is stripped because its parameter is a value-class `Color`.
-    internal static unsafe IntPtr BrushSolidColor(long color)
-    {
-        if (s_solidColor_ctor == IntPtr.Zero)
-        {
-            s_solidColor_class = Java.Lang.Class.FromType(
-                typeof(AndroidX.Compose.UI.Graphics.SolidColor)).Handle;
-            s_solidColor_ctor = JNIEnv.GetMethodID(s_solidColor_class, "<init>", "(J)V");
-        }
-        var args = stackalloc JValue[1];
-        args[0] = new JValue(color);
-        return JNIEnv.NewObject(s_solidColor_class, s_solidColor_ctor, args);
     }
 }

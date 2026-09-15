@@ -24,8 +24,8 @@ namespace AndroidX.Compose;
 /// value Compose is currently rendering — during a transition both
 /// the previous and new values are rendered simultaneously while one
 /// animates out and the other animates in. The
-/// <c>AnimatedContentScope</c> receiver (which exposes
-/// <c>Modifier.animateEnterExit</c>) is not surfaced in v1.</para>
+/// <c>AnimatedContentScope</c> receiver supplies the compatible scope for
+/// <see cref="Modifier.AnimateEnterExit"/> on that state's children.</para>
 /// </remarks>
 /// <example>
 /// <code>
@@ -60,10 +60,9 @@ public sealed class AnimatedContent<T> : ComposableNode
 
         // The Function4<AnimatedContentScope, T, Composer, Int, Unit>
         // content slot delivers (scope, boxedState, composer, $changed).
-        // We discard the scope (animateEnterExit not surfaced in v1)
-        // and unbox the second arg back to T.
         var content = ComposableLambdas.Wrap4(composer, (scope, p1, c) =>
         {
+            using var animation = RenderContext.EnterAnimatedVisibilityScope(scope);
             T value = MutableState<T>.FromJava(p1);
             _content(value).Render(c);
         });

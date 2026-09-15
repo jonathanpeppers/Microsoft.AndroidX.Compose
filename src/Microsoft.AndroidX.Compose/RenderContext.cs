@@ -1,8 +1,12 @@
+using Android.Runtime;
+using AndroidX.Compose.Animation;
+
 namespace AndroidX.Compose;
 
 /// <summary>
 /// Thread-static stash of the current Compose receiver scope (RowScope /
-/// ColumnScope) handle. Set by container composables that consume a
+/// ColumnScope) handle, plus a separate typed animated-content receiver.
+/// Set by container composables that consume a
 /// scope-receiver Function3 content lambda; read by *Item composables
 /// whose underlying Kotlin static method takes the scope as its first
 /// argument. Composition runs synchronously on a single thread, so a
@@ -18,12 +22,37 @@ internal static class RenderContext
     static ScopeKind s_scopeKind;
 
     [ThreadStatic]
+    static IAnimatedVisibilityScope? s_animatedVisibilityScope;
+
+    [ThreadStatic]
     static int s_rowChildIndex;
 
     [ThreadStatic]
     static int s_rowChildCount;
 
     public static IntPtr CurrentScope => s_scope;
+
+    internal static IAnimatedVisibilityScope? CurrentAnimatedVisibilityScope => s_animatedVisibilityScope;
+
+    internal static IAnimatedVisibilityScope RequireAnimatedVisibilityScope() =>
+        s_animatedVisibilityScope
+        ?? throw new InvalidOperationException(
+            "Modifier.AnimateEnterExit requires an active AnimatedVisibility or AnimatedContent content scope. " +
+            "Apply the modifier to a child while rendering that content, not to the animated container itself.");
+
+    internal static AnimatedVisibilityFrame EnterAnimatedVisibilityScope(IntPtr handle)
+    {
+        var scope = Java.Lang.Object.GetObject<IAnimatedVisibilityScope>(handle, JniHandleOwnership.DoNotTransfer)
+            ?? throw new InvalidOperationException("The animated content callback did not supply an AnimatedVisibilityScope.");
+        return PushAnimatedVisibilityScope(scope);
+    }
+
+    internal static AnimatedVisibilityFrame PushAnimatedVisibilityScope(IAnimatedVisibilityScope? scope)
+    {
+        var previous = s_animatedVisibilityScope;
+        s_animatedVisibilityScope = scope;
+        return new AnimatedVisibilityFrame(previous);
+    }
 
     /// <summary>
     /// Kind of the currently-active scope receiver, or
@@ -65,6 +94,11 @@ internal static class RenderContext
         s_rowChildCount = count;
         s_rowChildIndex = 0;
         return new RowFrame(prevIndex, prevCount);
+    }
+
+    internal readonly struct AnimatedVisibilityFrame(IAnimatedVisibilityScope? previous) : IDisposable
+    {
+        public void Dispose() => s_animatedVisibilityScope = previous;
     }
 
     internal readonly struct ScopeFrame : IDisposable

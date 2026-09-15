@@ -125,6 +125,14 @@ internal static class Attributes
                 public string? InstanceField { get; set; }
                 public bool Instance { get; set; }
                 public bool Suspend { get; set; }
+
+                /// <summary>
+                /// Explicit number of leading receivers on a static, non-composable
+                /// Kotlin $default bridge. Receivers occupy JNI slots but no default
+                /// bits. Supports non-null Java peers and IntPtr; omitted preserves
+                /// the legacy single-IntPtr receiver convention.
+                /// </summary>
+                public int ReceiverCount { get; set; }
             }
 
             /// <summary>
@@ -331,6 +339,10 @@ internal static class Attributes
             {
                 public SlotAttribute(string propertyName) { }
             }
+
+            /// <summary>A Function3 decoration slot receiving the native inner editor.</summary>
+            [global::System.AttributeUsage(global::System.AttributeTargets.Parameter)]
+            internal sealed class DecorationBoxAttribute : global::System.Attribute { }
 
             /// <summary>
             /// Phase 2 — apply to an <c>IFunction1</c> bridge parameter

@@ -13,6 +13,30 @@ public static partial class Composables
         [CallerFilePath] string file = "") where T : notnull =>
         ComposeExtensions.UpdateTransition(ComposableContext.Current, targetState, label, line, file);
 
+    /// <summary>
+    /// Animates visibility with an explicit composer. Children may use
+    /// <see cref="Modifier.AnimateEnterExit"/> for independent transitions.
+    /// Null enter/exit values preserve the parent's Kotlin defaults.
+    /// </summary>
+    [Composable, GenerateImplicitComposable]
+    public static void AnimatedVisibility(
+        IComposer composer,
+        bool visible,
+        [ComposableContent] Action<IComposer> content,
+        Modifier? modifier = null,
+        Animation.EnterTransition? enter = null,
+        Animation.ExitTransition? exit = null)
+    {
+        ArgumentNullException.ThrowIfNull(composer);
+        ArgumentNullException.ThrowIfNull(content);
+        var node = new global::AndroidX.Compose.AnimatedVisibility(visible, enter, exit)
+        {
+            Modifier = modifier,
+        };
+        node.Add(new ComposableContentNode(content));
+        node.Render(composer);
+    }
+
     /// <summary>Animates between typed content states in the implicit composition.</summary>
     [Composable]
     public static void AnimatedContent<T>(

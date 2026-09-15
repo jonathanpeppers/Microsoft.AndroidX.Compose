@@ -72,6 +72,36 @@ internal static class ComposableLambdas
         return callback;
     }
 
+    internal static IFunction3 WrapDecoration(
+        IComposer composer, Func<ComposableNode, ComposableNode> decoration,
+        [CallerLineNumber] int line = 0, [CallerFilePath] string file = "") =>
+        Wrap3WithValue(composer, (peer, c) =>
+        {
+            using var scope = ComposableContext.Enter(c);
+            var decorated = decoration(InnerTextFieldNode.FromPeer(peer))
+                ?? throw new InvalidOperationException("BasicTextField decoration returned no content.");
+            decorated.Render(c);
+        }, line, file);
+
+    internal static IFunction3 WrapDecoration(
+        IComposer composer, Action<Action<IComposer>, IComposer> decoration,
+        [CallerLineNumber] int line = 0, [CallerFilePath] string file = "") =>
+        Wrap3WithValue(composer, (peer, c) =>
+        {
+            using var scope = ComposableContext.Enter(c);
+            decoration(InnerTextFieldNode.FromPeer(peer).Render, c);
+        }, line, file);
+
+    internal static IFunction3 WrapDecoration(
+        IComposer composer, Action<Action> decoration,
+        [CallerLineNumber] int line = 0, [CallerFilePath] string file = "") =>
+        Wrap3WithValue(composer, (peer, c) =>
+        {
+            using var scope = ComposableContext.Enter(c);
+            var inner = InnerTextFieldNode.FromPeer(peer);
+            decoration(() => inner.Render(ComposableContext.Current));
+        }, line, file);
+
     /// <summary>
     /// Wrap an <see cref="Action{IComposer}"/> as an identity-stable
     /// <see cref="IFunction2"/> (the Function2&lt;Composer, Int, Unit&gt;
