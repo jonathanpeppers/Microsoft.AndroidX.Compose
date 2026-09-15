@@ -25,7 +25,7 @@ public static class RecordButton
         }
     }
 
-    /// <summary>Build the mic button (idle gray icon, or red recording pill).</summary>
+    /// <summary>Build the mic button with theme-derived icon tint and an animated recording background.</summary>
     public static ComposableNode BuildButton(
         MutableState<bool>          isRecording,
         MutableNumberState<float>   swipeOffset,

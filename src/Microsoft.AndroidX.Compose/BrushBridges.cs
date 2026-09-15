@@ -60,6 +60,8 @@ internal static partial class ComposeBridges
                    Signature = "(J)Landroidx/compose/ui/graphics/Color;")]
     internal static partial IntPtr BoxColorCore(long packed);
 
+    // Why raw JNI: BoxColorCore returns a local reference that DoNotTransfer does not consume.
+    // Release it in finally even if creating the managed Color peer throws.
     internal static BoundColor BoxColor(long packed)
     {
         IntPtr handle = BoxColorCore(packed);
