@@ -51,6 +51,9 @@
     <Compile Include="..\..\samples\Jetchat\RecordingGestureState.cs" Link="Samples\RecordingGestureState.cs" />
     <Compile Include="..\..\samples\Jetchat\Theme\Typography.cs" Link="Samples\Theme\Typography.cs" />
     <Compile Include="..\..\samples\Jetchat\MessageInput.cs" Link="Samples\MessageInput.cs" />
+    <Compile Include="..\..\samples\Reply\*.cs"
+             Exclude="..\..\samples\Reply\MainActivity.cs"
+             Link="Samples\Reply\%(Filename)%(Extension)" />
   </ItemGroup>
 
   <ItemGroup>
@@ -60,6 +63,10 @@
     <AndroidResource Include="..\..\samples\Jetchat\Resources\font\montserrat_light.ttf" Link="Resources\font\montserrat_light.ttf" />
     <AndroidResource Include="..\..\samples\Jetchat\Resources\font\montserrat_medium.ttf" Link="Resources\font\montserrat_medium.ttf" />
     <AndroidResource Include="..\..\samples\Jetchat\Resources\font\montserrat_semibold.ttf" Link="Resources\font\montserrat_semibold.ttf" />
+    <AndroidResource Include="..\..\samples\Reply\Resources\drawable\*"
+                     Link="Resources\drawable\%(Filename)%(Extension)" />
+    <AndroidResource Include="..\..\samples\Reply\Resources\drawable-nodpi\*"
+                     Link="Resources\drawable-nodpi\%(Filename)%(Extension)" />
     <AndroidAsset Include="..\Microsoft.AndroidX.Compose.Gallery\Assets\*LICENSE.txt" Link="Assets\%(Filename)%(Extension)" />
     <AndroidAsset Include="..\Microsoft.AndroidX.Compose.Gallery\Assets\FONT_SOURCES.txt" Link="Assets\FONT_SOURCES.txt" />
   </ItemGroup>
