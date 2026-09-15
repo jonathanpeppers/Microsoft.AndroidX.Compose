@@ -6,6 +6,12 @@ Upstream is labelled **Medium complexity**; this port targets the
 phone-only single-pane flow and leans on the same data-shape ideas
 without copying any Kotlin source.
 
+Documentation reconciled against C# revision
+`b8c93a68579a2430a54cbe3271730047516edec9` for
+[#349](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/349).
+JetNews is a source/documentation check only in the
+[sample parity baseline](../parity-baseline.md), not a matched-device comparison.
+
 <img src="../docs/jetnews.png" alt="JetNews running on an Android device" width="320" />
 
 Run with:
@@ -39,6 +45,10 @@ dotnet build samples/JetNews -t:Run
   Caption / Header / Subhead / Text / CodeBlock / Quote / Bullet) —
   the same eight styles upstream's `Paragraph` enum defines.
   `BottomAppBar` hosts the bookmark toggle and a share button.
+- **Article assets and markup**: home cards and the article reader use
+  bundled hero/thumbnail PNGs. Paragraphs with markup use `AnnotatedText`
+  and `SpanStyle` for bold, italic, underlined link text, and monospace
+  code; quotes are italic. Link styling does not make a URL clickable.
 - **Interests** screen: `PrimaryTabRow` with Topics / People /
   Publications tabs (driven by a remembered `MutableState<int>`),
   per-tab toggleable lists backed by three `MutableStateList<string>`
@@ -50,6 +60,10 @@ dotnet build samples/JetNews -t:Run
   the article bottom bar use the same component.
 - **Theme**: `MaterialTheme` wraps the whole tree, so the device's
   Material You dynamic color scheme drives surface / primary / etc.
+- **Feed state and feedback**: destination-scoped `HomeViewModel` exposes
+  loading, content, error/retry, and refresh state. `PullToRefreshBox` and
+  the toolbar refresh action invoke `RefreshAsync`; bookmark actions show
+  sample-managed snackbar feedback.
 - **Resource-backed icons** via the Phase 7 `[PainterResource]`
   `Icon` facade (menu, search, back, bookmark, bookmark-filled,
   share, home, interests, check, add, logo) — twelve vector drawables
@@ -57,21 +71,18 @@ dotnet build samples/JetNews -t:Run
 
 ## What's omitted
 
-Each row links to the upstream issue tracking the missing facade
-feature.
+These are remaining sample differences, not a list of missing bindings.
+Closed API issues identify delivered prerequisites; sample-side follow-up
+is tracked in [#159](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/159).
 
 | Upstream feature                                                | Tracking issue |
 |-----------------------------------------------------------------|----------------|
-| Adaptive list-detail two-pane layout on wider devices            | `SharedTransitionLayout` / `ListDetailScene` binding (the `WindowSizeClass` read itself shipped in [#143](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/143) — see `composer.CurrentWindowAdaptiveInfo()`) |
-| Real hero PNGs in card / article (currently a solid `Box` filled with a per-post `HeroColor`) | [#145](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/145) — `ContentScale.Crop` on the `Image` facade; without it small vector hero images letterbox |
-| Inline-run paragraph styling (Link / Bold / Italic / Code spans inside one paragraph) | [#141](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/141) — `AnnotatedString` + `SpanStyle` |
-| Top-bar elevation / collapse on scroll (`pinnedScrollBehavior`, `enterAlwaysScrollBehavior`) | [#142](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/142) — `Modifier.nestedScroll` + `TopAppBarDefaults` |
-| Adaptive Topics two-column layout (`InterestsAdaptiveContentLayout`) — port renders one column | [#144](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/144) — custom `Layout {}` primitive |
-| `stringResource(R.string.x)` — port uses inline string literals      | [#146](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/146) |
-| `CompositionLocal` reads (`LocalContext`, `LocalDensity`, …)         | [#59](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/59) |
-| `MaterialTheme.colorScheme.*` / `typography.*` reads (port hard-codes hex colors and sp/weight values) | [#58](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/58) / [#61](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/61) — facade lands but JetNews not migrated yet |
-| Snackbar-based error / refresh, search-while-typing, deep links, share intents | not facade gaps — out of scope for the port |
-| ViewModel / Hilt / `kotlinx.coroutines` / `kotlinx.serialization` data layer | replaced by a static `PostsRepo` returning six condensed posts |
+| Adaptive list-detail two-pane layout on wider devices | Not investigated in this documentation pass; #159 tracks the navigation/shared-transition design and exact remaining APIs. The size-class read shipped in [#143](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/143). |
+| Top-bar elevation / collapse on scroll (`pinnedScrollBehavior`, `enterAlwaysScrollBehavior`) | Sample integration: [#142](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/142) delivered `Modifier.nestedScroll` and scroll behaviors; this sample does not use them. Follow-up: #159. |
+| Adaptive Topics two-column layout (`InterestsAdaptiveContentLayout`) — port renders one column | Sample integration: the custom `Layout` primitive shipped in [#144](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/144). Follow-up: #159. |
+| Resource-localized strings, theme typography and replacement of fixed paragraph colors | Sample integration: [#146](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/146), [#59](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/59), [#58](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/58), and [#61](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/61) are delivered prerequisites, not open binding blockers. Follow-up: #159. |
+| Search filtering, clickable article links, deep links and upstream error/snackbar behavior | Remaining behavior to investigate/integrate in #159. Search accepts text but does not filter; link spans are decorative. Refresh, retry, bookmark feedback and a share chooser already exist. |
+| Hilt / Kotlin Flow / serialization-backed repository | Intentional C# adaptation: `HomeViewModel`, `BookmarksViewModel`, `IPostsRepository` and `PostsRepository` over six original seed articles; not an absence of ViewModel support. |
 
 ## Implementation notes
 
@@ -83,27 +94,25 @@ navigation, state holders, …). This sidesteps reproducing
 upstream's Android-team Kotlin blog posts and keeps the sample
 self-documenting.
 
-### Hero images are solid color blocks, not bitmaps
+### Hero images use bundled bitmaps
 
-Each `Post` carries a `HeroColor` (a `Color.FromHex(…)` value) and
-the home / article hero region is just a
-`Box { Modifier.Height(180).FillMaxWidth().Background(HeroColor) }`.
-This avoids two awkward things at once: bundling several real PNGs
-with copyright / attribution implications, **and** the
-ContentScale-Fit-letterbox look that small vector hero images get
-without [#145](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/145).
-Different colors per post still distinguish the rows visually.
+`HomeCards.cs` and `PostScreen.cs` pass `Post.HeroId` / `Post.ThumbId`
+to `Image`. Hero regions use the source image's `992 / 296` aspect
+ratio; thumbnails are sized separately. The twelve PNGs come from the
+upstream sample under Apache 2.0; see the [asset attribution](../README.md#attribution).
+Image support from [#145](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/145)
+is no longer an implementation blocker. This is not a claim that every
+crop, inset or color matches upstream.
 
-### Paragraph runs are uniform per paragraph
+### Paragraphs preserve styled runs, not link actions
 
-Each `Paragraph` carries a single `Type` plus a single `Text` string.
-The upstream `Markup` data class lets one paragraph mix Link /
-Code / Bold / Italic spans inline; without `AnnotatedString`
-([#141](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/141)) the
-port renders each paragraph in a uniform style and silently drops
-the runs. `Quote` skips italic too — `FontStyle.Italic` is
-available, but `Italic` runs *inside* an otherwise-upright paragraph
-still need AnnotatedString.
+`Paragraph.Markups` contains ranges passed by `PostBody.BuildAnnotated`
+to `AnnotatedStringBuilder.AddStyle`. Bold, italic, underlined links and
+monospace code are rendered using the API delivered in
+[#141](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/141).
+Code has fixed light-background/dark-foreground colors; quote paragraphs
+use `FontStyle.Italic`. `Markup.Href` is not consumed by this renderer:
+an underlined URL is not an implemented navigation action.
 
 ### Drawer items auto-close on tap
 
@@ -116,29 +125,32 @@ Home / Interests fires `OpenAsync()` to slide it back open. Both
 go through the `SuspendBridge` plumbing wired up in
 [#140](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/140).
 
-### Search / share icons are visual-only
+### Search accepts input; share opens a chooser
 
-The top-bar search icon and the article bottom-bar share button
-both wire to no-op `Action` callbacks. The icons read as real
-affordances but don't trigger anything — same shape as upstream's
-placeholder handlers.
+The home search icon toggles an `OutlinedTextField` with a remembered
+query and a close/reset action, but does not filter the feed.
+The article share button opens a confirmation dialog; its "Share anyway"
+action invokes `MainActivity.SharePost`, which launches an Android
+`ACTION_SEND` chooser with the article title and a synthetic URL.
+No share target produces a snackbar, not a silent no-op. The synthetic
+URL is not evidence of working inbound deep links.
 
 ### Interests is a single column
 
 Upstream's `InterestsAdaptiveContentLayout` is a custom `Layout {}`
 that splits topics into multiple columns based on available width.
-Without bound `Layout` primitives
-([#144](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/144))
-the port renders the Topics tab as a flat single-column list with
-section headers.
+The port still renders the Topics tab as a flat single-column list with
+section headers. The `Layout` primitive is available
+([#144](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/144));
+the adaptive algorithm has not been integrated.
 
 ### Static builders, not `ComposableNode` subclasses
 
-Same pattern as Jetchat: each screen is a `public static class` with
-a `Build(…)` method returning `ComposableNode`. `Render(IComposer)`
-is `internal` to the facade assembly so a sample-side subclass
-can't override it. Cost: every recomposition allocates the tree
-inside `JetnewsApp.Content`. NavHost remembers the navigation graph,
+Each screen uses a static `Build(…)` method returning `ComposableNode`.
+This is a sample authoring choice: `ComposableNode.Render(IComposer)` is
+public and can be overridden by a sample-side subclass. The builders
+construct trees when their composable paths execute; that observation is
+not a measured allocation or performance result. NavHost remembers the navigation graph,
 not the first per-destination tree (see `NavHost.cs`). Each successful
 host render publishes the current destination content and invalidates
 visible destinations; inactive screens receive the latest content when
