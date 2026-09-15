@@ -440,16 +440,6 @@ public sealed class Modifier
     public static Modifier ClearAndSetSemantics(Action<SemanticsScope> properties) => _companion.ClearAndSetSemantics(properties);
 
     /// <summary>
-    /// <c>Modifier.padding(paddingValues)</c> — pads using the
-    /// <c>PaddingValues</c> handle a layout (e.g. <see cref="Scaffold"/>)
-    /// passes to its content lambda. Internal: only Scaffold-shaped
-    /// composables that receive a runtime <c>PaddingValues</c> need it.
-    /// </summary>
-    internal Modifier Padding(IntPtr paddingValues) =>
-        Append(curr => ComposeBridges.ModifierPaddingValues(curr, paddingValues),
-            new ModifierOpKey("PaddingValuesIntPtr", paddingValues));
-
-    /// <summary>
     /// Materialize the chain into a managed <c>IModifier</c> wrapper.
     /// Returns <c>null</c> when the chain is empty (no ops appended) so
     /// callers can keep the Kotlin <c>$default</c> bit set and let
