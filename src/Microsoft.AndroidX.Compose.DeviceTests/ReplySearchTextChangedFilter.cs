@@ -13,9 +13,12 @@ internal sealed class ReplySearchTextChangedFilter(string expectedText, int expe
             return false;
 
         string[] text = e.Text?.Select(value => value?.ToString() ?? "").ToArray() ?? [];
-        LastObserved = $"type={e.EventType}; window={e.WindowId}; text={string.Join(" | ", text)}";
-        return e.EventType == EventTypes.ViewTextChanged &&
-            e.WindowId == expectedWindowId &&
-            text.Contains(expectedText, StringComparer.Ordinal);
+        LastObserved = $"type={e.EventType}; changes={e.ContentChangeTypes}; window={e.WindowId}; text={string.Join(" | ", text)}";
+        // Compose emits text/subtree semantics changes without a ViewTextChanged payload.
+        bool semanticsChanged = e.EventType == EventTypes.WindowContentChanged &&
+            (e.ContentChangeTypes & (ContentChangeTypes.Text | ContentChangeTypes.Subtree)) != 0;
+        return e.WindowId == expectedWindowId &&
+            (semanticsChanged ||
+             e.EventType == EventTypes.ViewTextChanged && text.Contains(expectedText, StringComparer.Ordinal));
     }
 }

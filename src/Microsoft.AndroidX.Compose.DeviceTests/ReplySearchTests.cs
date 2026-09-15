@@ -235,7 +235,7 @@ public class ReplySearchTests
             using var changed = Require(Runner.UiAutomation).ExecuteAndWaitForEvent(command, filter, 5000)
                 ?? throw new InvalidOperationException("Native query action returned no text-change event.");
             Assert.IsTrue(accepted, "Native query action was rejected.");
-            ReportStage($"Query acknowledged: {text}; accepted={accepted}; eventTime={changed.EventTime}; window={changed.WindowId}");
+            ReportStage($"Editor event: requested={text}; accepted={accepted}; type={changed.EventType}; eventTime={changed.EventTime}; window={changed.WindowId}");
         }
         catch (Java.Util.Concurrent.TimeoutException)
         {
@@ -251,6 +251,7 @@ public class ReplySearchTests
         using var editor = Find(node => node.Editable)
             ?? throw new InvalidOperationException("Search editor missing.");
         Assert.AreEqual(text, editor.Text ?? "");
+        ReportStage($"Fresh editor confirmed: {text}; window={editor.WindowId}");
     }
 
     static void AssertPresent(string text)
