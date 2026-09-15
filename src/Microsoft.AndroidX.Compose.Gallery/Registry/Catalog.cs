@@ -193,6 +193,7 @@ public static class Catalog
         D.StateEffectsAnimation.AnimatedVisibilityDemo.Demo,
         D.StateEffectsAnimation.AnimatedChildrenDemo.Demo,
         D.StateEffectsAnimation.EnterExitTransitionsDemo.Demo,
+        D.StateEffectsAnimation.TransitionValuesDemo.Demo,
         D.StateEffectsAnimation.CrossfadeDemo.Demo,
         D.StateEffectsAnimation.AnimatedContentDemo.Demo,
         D.StateEffectsAnimation.ViewModelManagedStateDemo.Demo,

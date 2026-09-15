@@ -5,6 +5,7 @@ using AndroidX.Compose;
 using AndroidX.Compose.Runtime;
 using AndroidX.Compose.UI;
 using AndroidX.Compose.UI.Layout;
+using Alignment = AndroidX.Compose.Alignment;
 using Modifier = AndroidX.Compose.Modifier;
 
 namespace Microsoft.AndroidX.Compose.DeviceTests;
@@ -217,6 +218,7 @@ public class LongPressDragTestActivity : ComponentActivity
                             OnGloballyPositionedModifierKt.OnGloballyPositioned(current, bounds), ModifierOpKey.Opaque),
                         new Tooltip
                         {
+                            Modifier = Modifier.Align(Alignment.Vertical.CenterVertically),
                             EnableUserInput = false,
                             Tip = new Text("Touch and hold to record"),
                             Anchor = global::AndroidX.Compose.Samples.Jetchat.RecordButton.BuildButton(

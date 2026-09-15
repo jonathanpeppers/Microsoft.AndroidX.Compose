@@ -31,6 +31,10 @@ using AndroidX.Compose.Foundation.Lazy.Grid;
 using AndroidX.Compose.Material3;
 using AndroidX.Compose;
 
+[assembly: ComposeDefaults<AndroidX.Compose.Animation.Core.TransitionKt>("UpdateTransition", "UpdateTransitionDefault")]
+// Extension receivers are excluded from Kotlin's default-bit positions.
+[assembly: ComposeDefaults("TransitionAnimationDefault", "transitionSpec", "label", "!targetValueByState")]
+
 // Hand-rolled declarative form (instead of generic form) so the
 // ComposeFacadeGenerator can see the bit names — generic-form enums
 // are emitted by another source generator in the same pass and aren't

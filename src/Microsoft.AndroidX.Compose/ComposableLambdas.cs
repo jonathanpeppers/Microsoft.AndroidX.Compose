@@ -47,6 +47,31 @@ namespace AndroidX.Compose;
 /// </summary>
 internal static class ComposableLambdas
 {
+    // A result-producing callback must invalidate its caller, not restart alone and discard its result.
+    // Native transition value functions invoke these synchronously and receive Uncertain changed masks.
+    internal static IFunction3 Wrap3Result(
+        IComposer composer,
+        Func<Java.Lang.Object?, IComposer, Java.Lang.Object?> body,
+        [CallerLineNumber] int line = 0,
+        [CallerFilePath] string file = "")
+    {
+        int key = SourceLocationKey.Compute(line, file);
+        var callback = composer.Remember(() => new ComposableLambda3(body), line: line, file: file);
+        callback.UpdateResult((value, current) =>
+        {
+            current.StartReplaceableGroup(key);
+            try
+            {
+                return body(value, current);
+            }
+            finally
+            {
+                current.EndReplaceableGroup();
+            }
+        });
+        return callback;
+    }
+
     internal static IFunction3 WrapDecoration(
         IComposer composer, Func<ComposableNode, ComposableNode> decoration,
         [CallerLineNumber] int line = 0, [CallerFilePath] string file = "") =>

@@ -58,6 +58,12 @@ public class ComposableScopeAnalyzerTests
             {
                 public PaddingValues AsPaddingValues() => new();
             }
+
+            public sealed class Transition<T>
+            {
+                public float AnimateFloat([ComposableContent] System.Func<T, float> target) => default;
+                public object AnimateColor([ComposableContent] System.Func<T, object> target) => new();
+            }
         }
         """;
 
@@ -115,6 +121,38 @@ public class ComposableScopeAnalyzerTests
         diagnostic.Location.SourceTree?.GetText()
             .ToString(diagnostic.Location.SourceSpan)
         ?? string.Empty;
+
+    [Theory]
+    [InlineData("AnimateFloat", "1f")]
+    [InlineData("AnimateColor", "new object()")]
+    public void TransitionAnimation_RequiresComposition(string method, string value)
+    {
+        var source = $$"""
+            class Screen
+            {
+                static void Plain(AndroidX.Compose.Transition<bool> transition)
+                {
+                    transition.{{method}}(state => {{value}});
+                }
+            }
+            """;
+        Assert.Single(ScopeDiagnostics(source));
+    }
+
+    [Fact]
+    public void TransitionMapping_MayReadImplicitCompositionLocal()
+    {
+        Assert.Empty(ScopeDiagnostics("""
+            class Screen
+            {
+                [AndroidX.Compose.Composable]
+                public static void Content(AndroidX.Compose.Transition<bool> transition)
+                {
+                    transition.AnimateColor(state => AndroidX.Compose.LocalFocusManager.Current());
+                }
+            }
+            """));
+    }
 
     [Fact]
     public void ImplicitCall_InPlainMethod_ReportsCN5009()

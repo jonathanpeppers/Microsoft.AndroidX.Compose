@@ -506,6 +506,7 @@ public static class Conversation
         {
             row.Add(new Tooltip
             {
+                Modifier = Modifier.Align(Alignment.Vertical.CenterVertically),
                 EnableUserInput = false,
                 Tip = new Surface
                 {

@@ -54,6 +54,23 @@ public class GeneratorTests
     }
 
     [Fact]
+    public void TransitionAnimationDefaults_ExcludeExtensionReceiverAndRequiredMapping()
+    {
+        var (output, diagnostics, emitted) = RunGenerator(
+            """[assembly: AndroidX.Compose.ComposeDefaults("TransitionAnimationDefault", "transitionSpec", "label", "!targetValueByState")]""",
+            "");
+        Assert.Empty(diagnostics.Where(d => d.Severity == DiagnosticSeverity.Error));
+        Assert.NotNull(emitted);
+        var type = output.GetTypeByMetadataName("AndroidX.Compose.TransitionAnimationDefault");
+        Assert.NotNull(type);
+        Assert.Equal(1, type.GetMembers("TransitionSpec").OfType<IFieldSymbol>().Single().ConstantValue);
+        Assert.Equal(2, type.GetMembers("Label").OfType<IFieldSymbol>().Single().ConstantValue);
+        Assert.DoesNotContain("TargetValueByState =", emitted);
+        Assert.Equal(3, type.GetMembers("All").OfType<IFieldSymbol>().Single().ConstantValue);
+        Assert.Empty(output.GetDiagnostics().Where(d => d.Severity == DiagnosticSeverity.Error));
+    }
+
+    [Fact]
     public void HappyPath_EmitsNamedBitsAndAll()
     {
         var bindings = """

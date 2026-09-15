@@ -5,6 +5,164 @@ and its sibling source generators. For the *why* behind the project and a
 tour of how Jetpack Compose itself works under the hood, see
 [compose-internals.md](compose-internals.md).
 
+## Typed transition values
+
+`composer.UpdateTransition<T>(targetState)` and
+`Composables.UpdateTransition<T>(targetState)` remember one native transition
+and update it on **every** composition pass. They must not be put inside a
+`Remember` factory. Targets are non-null immutable values (including bools,
+enums and records), boxed through the existing non-generic `ManagedBox` JCW
+with managed `object.Equals` equality. Native snapshot state holds both targets;
+no separate managed target field can get ahead of a speculative composition.
+
+Each `transition.AnimateFloat(...)` / `AnimateColor(...)` call owns a stable
+call-site group and returns a remembered `IState<float>` / `IState<Color>`.
+The explicit overload takes an `IComposer` first; the composerless overload
+uses the active context and is checked by CN5009. Target mappings are
+synchronous `[ComposableContent]` functions: they may read snapshot state or
+composition locals. The callback-time composer is entered and restored.
+`ComposableLambda3` supports value-returning bodies as well as its existing
+Unit-returning constructors. Unlike Unit content, `Wrap3Result` remembers and
+rebinds that adapter inside a **replaceable**, not restartable, group. Snapshot
+reads belong to the caller that consumes the returned value. A tracked
+`ComposableLambdaImpl` would restart the mapping by itself and discard its new
+return value, leaving the transition target stale. Native value functions invoke
+these callbacks synchronously; their conservative zero changed masks ensure
+replacement mappings are evaluated. The spec callback slot remains present even
+when switching between omitted and supplied specs.
+Rebinding a result callback also refreshes its captured animated visibility
+scope, including null, so its returned values use the current lexical receiver.
+Invocation restores both the callback-time composer and the prior animated scope.
+
+The 1.11.3.1 **runtime companion DLLs** expose `TransitionKt.UpdateTransition`,
+core `AnimateFloat`, animation `AnimateColor`, the lifecycle properties, and
+`AnimationSpecKt.Spring` / `Tween`; these are bound calls, not new JNI bridges.
+Generated `UpdateTransitionDefault` / `TransitionAnimationDefault` enums carry
+defaults (animation extension receivers do not consume default bits).
+All changed masks remain conservative zero. The existing stripped
+`Color.box-impl` call now uses a generated bridge; the bound `Color.Value`
+unboxes without new JNI. Color interpolation remains native and color-space
+aware, never integer interpolation of the packed representation.
+
+`AnimationSpecs.Spring(dampingRatio, stiffness)` and
+`AnimationSpecs.Tween(durationMillis, delayMillis, easing)` create bound finite
+specs usable for floats and colors. Remember supplied specs when constructing
+them in composition; null uses each native animation's default spring.
+The public signatures also accept bound `IFiniteAnimationSpec` values.
+Kotlin generic type erasure still applies to externally constructed specs:
+their visibility thresholds must match the animated value type.
+
+`CurrentState`, `TargetState`, `IsRunning`, and `IsIdle` are snapshot-observable
+native lifecycle reads. Idle means not running with equal current/target
+states. For completion evidence, observe a committed running transition and
+then idle for the same request while its animations remain in composition.
+A same-target mapping update can schedule an animation before `IsRunning`
+becomes true; removal calls native `onDisposed`/`onTransitionEnd` and is **not**
+successful value completion. Neither recomposer idle, frame awaiters, placement,
+quiet frames, nor eventual expected-value polling proves animation completion.
+
+`TransitionValueTests` uses committed running/idle lifecycle signals before
+asserting exact float/color endpoints, spec selection, wrapper/callback/native
+peer identity, target interruption, same-target mapping changes (including
+dependencies read only inside mappings), and
+remove/re-add ownership. The Gallery route `transition-values` demonstrates the
+same spring scale and two tweens used by the pinned Jetchat record button.
+Gesture triggers remain separate from the visual derivations.
+
+### Combined recording-input acceptance
+
+Source `530450602798776cde304ed02a0b7239e73a2992` passed **20 distinct native
+cases** on Pixel 7 on 2026-09-15, using the same immutable DeviceTests APK
+throughout. The seven transition cases were retained from their verified run;
+the remaining nine scope and four input cases ran in subsequent, separately
+authorized invocations. Every TRX was captured before the next invocation,
+with zero failures, errors, or skipped cases.
+
+| Suite | Passed | PID | Fresh TRX run ID | UTC start / finish |
+| --- | --- | --- | --- | --- |
+| Transition values | 7 | 18233 | `afbc0cc3-e3dd-4190-b945-22d397d4c700` | 17:45:59.311 / 17:46:16.640 |
+| Animated scopes | 9 | 19528 | `ae3aae2a-168d-40f2-892e-e0e752362cc3` | 18:03:25.642 / 18:03:33.386 |
+| Long-press / linked RecordButton | 4 | 19641 | `19c61be4-46de-4bb3-aaa5-9501a5109a6a` | 18:03:39.972 / 18:03:50.063 |
+
+Installed APK SHA-256 matched
+`E1B7D1FCB931C11E09ACC352CB8BABC0D93CF04EF2EDD9BA56E198B56D208497`,
+with no private/external assembly override files. The embedded arm64 app and
+runtime DLL payloads matched the build outputs; runtime SHA-256 was
+`9C8AFC6386D9CCA31A693A583E45C7B71DFFB2824DB40F2A7E1BE422CBA41F18`.
+
+The earlier combined source `8d98269` exposed an unhandled managed Row-scope
+exception in the linked recording fixture: the tooltip anchor recomposed
+independently, but its inner button tried to apply Row-only vertical alignment.
+The fix moves that alignment to the enclosing Tooltip, the actual Row child,
+without widening scope propagation or bypassing the guard. The original failing
+fixture first passed in isolation (run `86a4785b-2b5b-40d3-b542-5a87bd500e88`);
+that extra confirmation is not counted as a twenty-first distinct case.
+
+The transition run's subsequent unbounded log read timed out after its fresh
+passing TRX had been saved. Later bounded-tail captures returned no owned log
+records; these limitations are explicit, and no complete phase-log archive is
+claimed. Instrumentation PIDs, exact command vectors, hashes and fresh TRXs
+remain available. The original 47-line managed AndroidRuntime exception and
+the isolated regression's 77 owned log lines were preserved separately.
+No successful suite was repeated solely to recover logs. The final test process
+was stopped and all device commands ended at 13:03:55.152 CDT.
+
+### Verified transition evidence
+
+On 2026-09-15, source `ceb21412b8ce08011cb0da46f7a6d9ccc4236405`
+passed all **7 `TransitionValueTests` cases** on Pixel 7: one finite-spec
+contract case, plus explicit/composerless pairs for synchronized
+values/specs/identity, mapping-local snapshot dependencies, and
+interruption/removal/re-addition. The fresh TRX ran from
+15:33:30.087 to 15:33:47.321 UTC with zero failures or skips. Current-process
+`TransitionValues` logs (PID 10005) preserve the committed running/idle
+transitions and exact final float/color values. Completion assertions used
+the native lifecycle, not elapsed delays or idle-frame heuristics.
+
+| Frozen APK | SHA-256 |
+| --- | --- |
+| DeviceTests | `3BFE1F025E71B52CFFBA8B5CD10520CE5904BFE0E2C3F7F3BA767C2660B3BF3B` |
+| Gallery | `739A5C93A6257DE7884D949E1F3AECEB1BD7A7E1EA9A08191A4AD6B906DE23D9` |
+| Jetchat | `B13013D2CC0E26B7443A43D307D16AF73FF898863D0F3BD4C06307D302E7D185` |
+
+Installed APK hashes matched and no private/external assembly override files
+were present. Embedded arm64 app/runtime DLL ELF payloads matched their build
+outputs; the common runtime DLL SHA-256 was
+`7EC4AB45F60575017C61E37788158FF63C66B73435ED5F22904C8CA53CDE50B0`.
+Gallery's `demo/transition-values` route and Jetchat cold-launched into resumed
+activities without current-PID AndroidRuntime fatal errors. This is a native
+API acceptance run and bounded startup smoke, **not** screenshot/visual parity
+or post-integration evidence for #333's animated scopes or #337's gestures.
+All owned app processes were stopped and the device lease released.
+
+### Post-merge transition and scope acceptance
+
+After merging main's animated scopes and BasicTextField changes, source
+`c7467bb4ac915bff76cbe8a0d5b5489feacce2b7` passed **16/16 native cases**
+on Pixel 7 on 2026-09-15. Two separate instrumentation invocations ran
+`TransitionValueTests` (7/7) and then `AnimatedScope` (9/9), with zero failures
+or skips. The latter includes the new result-callback regression for refreshed
+first/second/null lexical scopes, preserved return values, and restoration on
+exceptions.
+
+| Suite | PID | Fresh TRX run ID | UTC start / finish |
+| --- | --- | --- | --- |
+| Transition values | 14787 | `be93502f-75ee-4b85-ba71-58edd31e525d` | 16:31:47.567 / 16:32:04.789 |
+| Animated scopes | 14911 | `067e684c-6a64-4609-9258-0057387323ac` | 16:32:43.603 / 16:32:51.325 |
+
+Each TRX was captured before the next invocation could replace it, and the
+instrumentation output preserves each PID. The attempted per-PID logcat captures
+were empty and are not log evidence for this run. Installed DeviceTests APK
+SHA-256 matched
+`B45D9050121D996A9B1027117B1E6B90F957050A4E741FD9A839EDFB94BEF534`;
+private/external assembly override files were absent. The frozen arm64 ELF
+payloads matched the build outputs, including runtime DLL SHA-256
+`9A22F2A0C25F8A5785D1ED4DABC6A3736F23376E08161830626290036ACC0CD2`.
+The post-merge host suite passed 442 tests and all required builds passed.
+This lease was tests-only: Gallery/Jetchat smoke evidence above remains
+pre-merge. The test process was stopped and all device commands ended at
+11:33:21.346 CDT, before the lease deadline.
+
 ## Pointer-input long-press lifecycle
 
 `Modifier.PointerInput(handler, key)` calls the official runtime binding's

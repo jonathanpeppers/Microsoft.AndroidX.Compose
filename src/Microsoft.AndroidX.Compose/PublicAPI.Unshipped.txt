@@ -26,6 +26,7 @@ AndroidX.Compose.AnimatedVisibility.AnimatedVisibility(bool visible, AndroidX.Co
 AndroidX.Compose.AnimatedVisibility.Enter.get -> AndroidX.Compose.Animation.EnterTransition?
 AndroidX.Compose.AnimatedVisibility.Exit.get -> AndroidX.Compose.Animation.ExitTransition?
 AndroidX.Compose.AnimatedVisibility.Visible.get -> bool
+AndroidX.Compose.AnimationSpecs
 AndroidX.Compose.AnnotatedString
 AndroidX.Compose.AnnotatedString.AnnotatedString(string! text) -> void
 AndroidX.Compose.AnnotatedString.Length.get -> int
@@ -1664,6 +1665,15 @@ AndroidX.Compose.TransformOrigin.PivotFractionX.get -> float
 AndroidX.Compose.TransformOrigin.PivotFractionY.get -> float
 AndroidX.Compose.TransformOrigin.TransformOrigin() -> void
 AndroidX.Compose.TransformOrigin.TransformOrigin(float pivotFractionX, float pivotFractionY) -> void
+AndroidX.Compose.Transition<T>
+AndroidX.Compose.Transition<T>.AnimateColor(AndroidX.Compose.Runtime.IComposer! composer, System.Func<T, AndroidX.Compose.Color>! targetValueByState, AndroidX.Compose.Animation.Core.IFiniteAnimationSpec? animationSpec = null, string? label = null, int line = 0, string! file = "") -> AndroidX.Compose.IState<AndroidX.Compose.Color>!
+AndroidX.Compose.Transition<T>.AnimateColor(System.Func<T, AndroidX.Compose.Color>! targetValueByState, AndroidX.Compose.Animation.Core.IFiniteAnimationSpec? animationSpec = null, string? label = null, int line = 0, string! file = "") -> AndroidX.Compose.IState<AndroidX.Compose.Color>!
+AndroidX.Compose.Transition<T>.AnimateFloat(AndroidX.Compose.Runtime.IComposer! composer, System.Func<T, float>! targetValueByState, AndroidX.Compose.Animation.Core.IFiniteAnimationSpec? animationSpec = null, string? label = null, int line = 0, string! file = "") -> AndroidX.Compose.IState<float>!
+AndroidX.Compose.Transition<T>.AnimateFloat(System.Func<T, float>! targetValueByState, AndroidX.Compose.Animation.Core.IFiniteAnimationSpec? animationSpec = null, string? label = null, int line = 0, string! file = "") -> AndroidX.Compose.IState<float>!
+AndroidX.Compose.Transition<T>.CurrentState.get -> T
+AndroidX.Compose.Transition<T>.IsIdle.get -> bool
+AndroidX.Compose.Transition<T>.IsRunning.get -> bool
+AndroidX.Compose.Transition<T>.TargetState.get -> T
 AndroidX.Compose.Transitions
 AndroidX.Compose.TriStateCheckbox
 AndroidX.Compose.TriStateCheckbox.TriStateCheckbox(AndroidX.Compose.UI.State.ToggleableState! state, System.Action! onClick, bool enabled = true) -> void
@@ -1930,6 +1940,8 @@ static AndroidX.Compose.Alignment.TopStart.get -> AndroidX.Compose.Alignment!
 static AndroidX.Compose.Alignment.Vertical.Bottom.get -> AndroidX.Compose.Alignment.Vertical!
 static AndroidX.Compose.Alignment.Vertical.CenterVertically.get -> AndroidX.Compose.Alignment.Vertical!
 static AndroidX.Compose.Alignment.Vertical.Top.get -> AndroidX.Compose.Alignment.Vertical!
+static AndroidX.Compose.AnimationSpecs.Spring(float dampingRatio = 1, float stiffness = 1500) -> AndroidX.Compose.Animation.Core.SpringSpec!
+static AndroidX.Compose.AnimationSpecs.Tween(int durationMillis = 300, int delayMillis = 0, AndroidX.Compose.Animation.Core.IEasing? easing = null) -> AndroidX.Compose.Animation.Core.TweenSpec!
 static AndroidX.Compose.Arrangement.Bottom.get -> AndroidX.Compose.Arrangement!
 static AndroidX.Compose.Arrangement.Center.get -> AndroidX.Compose.Arrangement!
 static AndroidX.Compose.Arrangement.End.get -> AndroidX.Compose.Arrangement!
@@ -2191,6 +2203,7 @@ static AndroidX.Compose.Composables.TopAppBar(System.Action! title, AndroidX.Com
 static AndroidX.Compose.Composables.TopSearchBar(AndroidX.Compose.SearchBarState! state, System.Action! inputField, AndroidX.Compose.Modifier? modifier = null) -> void
 static AndroidX.Compose.Composables.TriStateCheckbox(AndroidX.Compose.UI.State.ToggleableState! state, System.Action! onClick, bool enabled = true, AndroidX.Compose.Modifier? modifier = null) -> void
 static AndroidX.Compose.Composables.Typography() -> AndroidX.Compose.Material3.Typography!
+static AndroidX.Compose.Composables.UpdateTransition<T>(T targetState, string? label = null, int line = 0, string! file = "") -> AndroidX.Compose.Transition<T>!
 static AndroidX.Compose.Composables.VerticalPager<T>(System.Collections.Generic.IReadOnlyList<T>! items, System.Action<T>! itemContent, AndroidX.Compose.Modifier? modifier = null, AndroidX.Compose.PagerState? state = null, AndroidX.Compose.PaddingValues? contentPadding = null, System.Func<T, object!>? key = null) -> void
 static AndroidX.Compose.Composables.VerticalPager<T>(System.Collections.Generic.IReadOnlyList<T>! items, System.Action<T>! itemContent, AndroidX.Compose.Modifier? modifier, AndroidX.Compose.PagerState? state, AndroidX.Compose.PaddingValues? contentPadding) -> void
 static AndroidX.Compose.Composables.ViewModel<T>(System.Func<T!>! factory, int line = 0, string! file = "") -> T!
@@ -2295,6 +2308,7 @@ static AndroidX.Compose.ComposeExtensions.SystemBarsInsets(this AndroidX.Compose
 static AndroidX.Compose.ComposeExtensions.SystemGesturesInsets(this AndroidX.Compose.Runtime.IComposer! composer) -> AndroidX.Compose.WindowInsets!
 static AndroidX.Compose.ComposeExtensions.TappableElementInsets(this AndroidX.Compose.Runtime.IComposer! composer) -> AndroidX.Compose.WindowInsets!
 static AndroidX.Compose.ComposeExtensions.Typography(this AndroidX.Compose.Runtime.IComposer! composer) -> AndroidX.Compose.Material3.Typography!
+static AndroidX.Compose.ComposeExtensions.UpdateTransition<T>(this AndroidX.Compose.Runtime.IComposer! composer, T targetState, string? label = null, int line = 0, string! file = "") -> AndroidX.Compose.Transition<T>!
 static AndroidX.Compose.ComposeExtensions.ViewModel<T>(this AndroidX.Compose.Runtime.IComposer! composer, System.Func<T!>! factory, int line = 0, string! file = "") -> T!
 static AndroidX.Compose.ComposeExtensions.ViewModel<T>(this AndroidX.Compose.Runtime.IComposer! composer, System.Func<T!>! factory, object? key1, int line = 0, string! file = "") -> T!
 static AndroidX.Compose.ComposeExtensions.ViewModel<T>(this AndroidX.Compose.Runtime.IComposer! composer, System.Func<T!>! factory, object? key1, object? key2, int line = 0, string! file = "") -> T!

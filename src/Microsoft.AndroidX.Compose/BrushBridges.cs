@@ -4,21 +4,20 @@ using BoundColor = AndroidX.Compose.UI.Graphics.Color;
 
 namespace AndroidX.Compose;
 
-// Hand-written JNI for the Compose-graphics boxing factory:
+// Interop for the Compose-graphics boxing factory:
 //
 //   - `androidx.compose.ui.graphics.Color.box-impl(J)Color` — the
 //     Kotlin-synthetic boxing factory that turns a packed `long` into
 //     a `Color` object. The `Color` class itself is bound, but its
 //     ctor and `box-impl` static are skipped (value-class lowering).
+//     The invocation is source-generated; BoxColor owns the returned local.
+//
 // Everything else (the bound SolidColor constructor, Brush.Companion's gradient factories,
 // `RectangleShapeKt.RectangleShape`) is bound and called directly
 // from `Brush` / `Shape`.
 internal static partial class ComposeBridges
 {
     static BoundBrush.Companion? s_brushCompanion;
-
-    static IntPtr s_color_class;
-    static IntPtr s_color_boxImpl;
 
     // Lazy access to the `androidx.compose.ui.graphics.Brush$Companion`
     // singleton — the binder exposes the type but not a public C# accessor
@@ -51,20 +50,25 @@ internal static partial class ComposeBridges
     // `BoundBrush.Companion.LinearGradient_mHitzGk(IList<Color>, ...)`
     // (and every other gradient factory) takes a List of *boxed* Color
     // objects — packed longs alone aren't acceptable.
-    internal static unsafe BoundColor BoxColor(long packed)
+    [ComposeBridge(Class = "androidx/compose/ui/graphics/Color",
+                   JvmName = "box-impl",
+                   Signature = "(J)Landroidx/compose/ui/graphics/Color;")]
+    internal static partial IntPtr BoxColorCore(long packed);
+
+    // Why raw JNI: BoxColorCore returns a local reference that DoNotTransfer does not consume.
+    // Release it in finally even if creating the managed Color peer throws.
+    internal static BoundColor BoxColor(long packed)
     {
-        if (s_color_boxImpl == IntPtr.Zero)
+        IntPtr handle = BoxColorCore(packed);
+        try
         {
-            s_color_class = Java.Lang.Class.FromType(typeof(BoundColor)).Handle;
-            s_color_boxImpl = JNIEnv.GetStaticMethodID(
-                s_color_class, "box-impl", "(J)Landroidx/compose/ui/graphics/Color;");
+            return Java.Lang.Object.GetObject<BoundColor>(handle, JniHandleOwnership.DoNotTransfer)
+                ?? throw new InvalidOperationException("Color.box-impl did not return a Color.");
         }
-        var args = stackalloc JValue[1];
-        args[0] = new JValue(packed);
-        IntPtr handle = JNIEnv.CallStaticObjectMethod(
-            s_color_class, s_color_boxImpl, args);
-        return Java.Lang.Object.GetObject<BoundColor>(
-            handle, JniHandleOwnership.TransferLocalRef)!;
+        finally
+        {
+            JNIEnv.DeleteLocalRef(handle);
+        }
     }
 
     // Build an `IList<BoundColor>` from a managed `Color[]` for the

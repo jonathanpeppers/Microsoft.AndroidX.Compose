@@ -25,7 +25,8 @@ public static class RecordButton
         }
     }
 
-    /// <summary>Build the mic button (idle gray icon, or red recording pill).</summary>
+    /// <summary>Build the mic button with theme-derived icon tint and an animated recording background.</summary>
+    /// <remarks>The enclosing tooltip owns parent-layout alignment; this anchor recomposes independently.</remarks>
     public static ComposableNode BuildButton(
         MutableState<bool>          isRecording,
         MutableNumberState<float>   swipeOffset,
@@ -38,16 +39,12 @@ public static class RecordButton
             float density = SwipeToCancelThresholdPx / SwipeToCancelThresholdDp;
             var gesture = c.Remember(() => new RecordingGestureState());
 
-            var innerModifier = Modifier.FillMaxSize();
-            if (recording)
-                innerModifier = innerModifier
-                    .Background(Color.Red, new RoundedCornerShape(28.Dp()));
-            innerModifier = innerModifier.Padding(16);
+            var visuals = RecordButtonVisuals.Read(c, recording);
+            var innerModifier = Modifier.FillMaxSize().Padding(18);
 
             return new Box
             {
                 Modifier
-                    .Align(Alignment.Vertical.CenterVertically)
                     .Size(56)
                     .DetectDragGesturesAfterLongPress(
                         onDragStart: _ =>
@@ -71,13 +68,13 @@ public static class RecordButton
                         {
                             if (gesture.End()) onCancel();
                         }),
+                visuals.Background,
                 new Box
                 {
                     innerModifier,
                     new Icon(Resource.Drawable.ic_mic, "Record voice message")
                     {
-                        Tint = Color.FromPacked(
-                            recording ? scheme.OnPrimary : scheme.OnSurfaceVariant),
+                        Tint = visuals.IconColor,
                         Modifier = Modifier.FillMaxSize(),
                     },
                 },

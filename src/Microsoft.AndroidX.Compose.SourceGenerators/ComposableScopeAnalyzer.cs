@@ -56,8 +56,14 @@ public sealed class ComposableScopeAnalyzer : DiagnosticAnalyzer
             || HasAttribute(method, ComposableAttributeName)
             || IsImplicitCompositionLocalRead(method)
             || IsImplicitComposableNodeRender(method)
-            || IsImplicitWindowInsetsRead(method);
+            || IsImplicitWindowInsetsRead(method)
+            || IsImplicitTransitionAnimation(method);
     }
+
+    static bool IsImplicitTransitionAnimation(IMethodSymbol method) =>
+        !method.IsStatic
+        && method.Name is "AnimateFloat" or "AnimateColor"
+        && method.ContainingType.OriginalDefinition.ToDisplayString() == "AndroidX.Compose.Transition<T>";
 
     static bool IsImplicitWindowInsetsRead(IMethodSymbol method) =>
         method.Name == "AsPaddingValues"

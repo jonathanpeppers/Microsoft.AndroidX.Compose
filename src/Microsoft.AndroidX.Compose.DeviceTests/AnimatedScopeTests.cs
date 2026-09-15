@@ -157,6 +157,66 @@ public class AnimatedScopeTests
     }
 
     [TestMethod]
+    public void ResultCallbacks_RefreshLexicalScopeAndRestoreAmbientState()
+    {
+        using var applier = new IdentityTestApplier();
+        using var recomposer = new Recomposer(Kotlin.Coroutines.EmptyCoroutineContext.Instance
+            ?? throw new InvalidOperationException("Empty coroutine context unavailable."));
+        var composition = CompositionKt.ControlledComposition(applier, recomposer);
+        try
+        {
+            IComposer? captured = null;
+            composition.ComposeContent(new ComposableLambda2(c => captured = c));
+            composition.ApplyChanges();
+            var composer = captured ?? throw new InvalidOperationException("Native composer was not captured.");
+            using var first = new AnimatedScopeRecorder();
+            using var second = new AnimatedScopeRecorder();
+            using var foreign = new AnimatedScopeRecorder();
+            using var value = new Java.Lang.String("result");
+            IAnimatedVisibilityScope? expected = first;
+            bool shouldThrow = false;
+            Java.Lang.Object? Body(Java.Lang.Object? input, IComposer current)
+            {
+                Assert.AreSame(composer, current);
+                Assert.AreSame(current, ComposableContext.Current);
+                Assert.AreSame(expected, RenderContext.CurrentAnimatedVisibilityScope);
+                if (shouldThrow) throw new InvalidOperationException("deliberate result failure");
+                return input;
+            }
+            ComposableLambda3 callback;
+            using (RenderContext.PushAnimatedVisibilityScope(first))
+                callback = new ComposableLambda3(Body);
+            using (callback)
+            using (RenderContext.PushAnimatedVisibilityScope(foreign))
+            using (ComposableContext.Enter(composer))
+            {
+                void Invoke()
+                {
+                    Assert.AreSame(value, callback.Invoke(value, (Java.Lang.Object)composer, null));
+                    Assert.AreSame(foreign, RenderContext.CurrentAnimatedVisibilityScope);
+                    Assert.AreSame(composer, ComposableContext.Current);
+                }
+                Invoke();
+                expected = second;
+                using (RenderContext.PushAnimatedVisibilityScope(second))
+                    callback.UpdateResult(Body);
+                Invoke();
+                expected = null;
+                using (RenderContext.PushAnimatedVisibilityScope(null))
+                    callback.UpdateResult(Body);
+                Invoke();
+                shouldThrow = true;
+                StringAssert.Contains(Assert.ThrowsExactly<InvalidOperationException>(Invoke).Message, "deliberate");
+                Assert.AreSame(foreign, RenderContext.CurrentAnimatedVisibilityScope);
+                Assert.AreSame(composer, ComposableContext.Current);
+            }
+        }
+        finally { composition.Dispose(); }
+        Assert.IsNull(RenderContext.CurrentAnimatedVisibilityScope);
+        Assert.ThrowsExactly<InvalidOperationException>(() => _ = ComposableContext.Current);
+    }
+
+    [TestMethod]
     public void CallbackWithoutLexicalScope_DoesNotBorrowInvocationScope()
     {
         using var applier = new IdentityTestApplier();

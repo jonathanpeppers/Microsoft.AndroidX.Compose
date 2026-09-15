@@ -257,8 +257,16 @@ same while switching inset modes; its saved tap count must also survive
   facade. Callback updates during recomposition retain the active native
   handler; removing the control cancels its Kotlin pointer-input job.
   The surrounding tooltip disables automatic input so it cannot compete
-  for the same long press. See *What's still omitted* for short-tap tooltip
-  and transition-animation gaps. No audio recording or permissions are added.
+  for the same long press. See *What's still omitted* for the short-tap tooltip gap.
+  The button background scale (spring with medium-bouncy damping and low
+  stiffness), alpha (2000 ms tween), and icon tint (200 ms tween) now share one
+  native `Transition<bool>`, matching pinned `RecordButton.kt` at
+  `4c1fe7586e2fbf1c934925ef8ab64d3803361423`. Background and foreground derive
+  from the live `LocalContentColor`/`contentColorFor` roles, with circle clipping.
+  Row alignment belongs to the enclosing Tooltip, not its recording anchor:
+  animation-driven anchor recomposition can run without the parent Row scope.
+  The independent recording-indicator timer and repeating pulse remain unchanged.
+  No audio recording or permissions are added.
 - **Expanded-input dismissal** — `BackHandler` collapses any open
   selector before system back reaches navigation. A remembered requester
   targets the emoji column with `FocusTarget`, not the editor or its parent.
@@ -433,7 +441,7 @@ layout work, and unavailable official bindings:
 | Upstream feature                          | Why it's not here |
 |-------------------------------------------|--------------------|
 | Short-tap recording tooltip | The recording wrapper sets `Tooltip.EnableUserInput=false`, as pinned upstream does, to avoid stealing the native long press. Programmatically showing "Touch and hold to record" on a short tap still needs tooltip-state control; this is not full recording-UX parity. Short taps do not start or finish recording. |
-| Record-button `updateTransition` + `animateFloat` / `animateColor` | Missing transition value-animation surface; tracked by [#336](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/336). The port retains its visually equivalent timer-driven pulse. |
+| Recording-indicator infinite pulse | Still timer-driven; distinct from the record button's native finite scale/alpha/color transition. No audio-recording subsystem is implemented. |
 | Google Fonts provider typography | The exact pinned Karla / Montserrat resource fallbacks are bundled. Provider-backed downloads remain outside the resource-font API; no downloaded-font parity is claimed. |
 | Exact profile baseline-height and parallax geometry | Reusable baseline alignment/padding and `ClipToBounds` are available. Profile's existing rounded clip, padding-based motion and host layout remain unchanged; the pinned upstream uses `CircleShape` and separate baseline-height helpers, not a rectangular clip. |
 | Profile FAB tertiary container | Material 3 FAB color/elevation slots are omitted by the current facades; tracked by [#344](https://github.com/jonathanpeppers/Microsoft.AndroidX.Compose/issues/344). The port uses the default primary-container/content pair to preserve contrast. |
