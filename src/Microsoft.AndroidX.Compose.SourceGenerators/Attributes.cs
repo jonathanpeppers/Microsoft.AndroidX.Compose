@@ -397,6 +397,18 @@ internal static class Attributes
             }
 
             /// <summary>
+            /// Marks an added optional value on an existing generated facade.
+            /// Retains the catalog's previous CLR signature and direct helper;
+            /// their calls leave this parameter's Kotlin default bit set.
+            /// Apply to every optional value absent from the previous signature.
+            /// </summary>
+            [global::System.AttributeUsage(global::System.AttributeTargets.Parameter,
+                                           AllowMultiple = false)]
+            internal sealed class FacadeAddedAttribute : global::System.Attribute
+            {
+            }
+
+            /// <summary>
             /// Phase 7 — apply to the <c>Painter</c> bridge parameter
             /// that takes the resolved Painter wrapper. The facade
             /// replaces this parameter with a synthetic ctor argument
@@ -459,19 +471,27 @@ internal static class Attributes
             /// all-defaulted-params ctor) so the facade can auto-create
             /// a default wrapper when the caller passes <c>null</c>.</para>
             /// <para><b>SharedState</b> (Phase 4c): when <c>true</c>,
-            /// the generated <c>Render</c> preamble checks whether
-            /// <c>_state.Jvm</c> is already populated (from an earlier
-            /// sibling render that received the same wrapper instance)
-            /// and skips the <c>RememberXxxState</c> call in that case,
-            /// reusing the cached JNI handle directly. This lets two or
-            /// more sibling facades share the same state-holder peer
-            /// (e.g. a <see cref="TimePicker"/> and a
-            /// <see cref="TimeInput"/> driven by the same
-            /// <see cref="TimePickerState"/>). Defaults to <c>false</c>
-            /// — every render calls Remember and Compose's slot-table
-            /// caches per-call-site. Opt in only when the facade is
-            /// designed to be paired with at least one sibling that
-            /// uses the same <see cref="StateType"/>.</para>
+            /// a composition-slot owner executes the native Remember on
+            /// every owning render. Siblings consume that owner's peer;
+            /// a populated <c>Jvm</c> is not evidence of lifecycle ownership.
+            /// The generator also emits typed Remember helpers on
+            /// <c>ComposeExtensions</c> and <c>Composables</c> so callers can
+            /// hoist the owner above conditional consumers. Omitted wrappers
+            /// and confirm adapters are remembered at the owning location.
+            /// A zero-argument Remember with no accessible default wrapper
+            /// constructor instead gets helpers requiring a supplied wrapper.
+            /// Declarations sharing Remember and StateType must agree on Bind
+            /// and Unbind; conflicting ownership metadata reports CN3009.
+            /// Wrapper replacement resets the native subtree through a
+            /// fixed-key reusable group; wrapper identity is auxiliary data,
+            /// not a saved-state key. New adapters receive their initial veto
+            /// immediately; existing adapters receive updates after successful
+            /// application via SideEffect, not during speculative rendering.
+            /// Defaults to <c>false</c>.</para>
+            /// <para><b>Unbind</b>: optional accessible parameterless instance
+            /// void method called when the owner is forgotten or abandoned.
+            /// It captures transferable live values and clears <c>Jvm</c>.
+            /// Without it, ownership cleanup only clears <c>Jvm</c>.</para>
             /// </remarks>
             [global::System.AttributeUsage(global::System.AttributeTargets.Parameter,
                                            AllowMultiple = false)]
@@ -481,6 +501,7 @@ internal static class Attributes
                 public string Remember { get; set; } = "";
                 public global::System.Type StateType { get; set; } = null!;
                 public string Bind { get; set; } = "";
+                public string Unbind { get; set; } = "";
                 public bool SharedState { get; set; }
             }
 

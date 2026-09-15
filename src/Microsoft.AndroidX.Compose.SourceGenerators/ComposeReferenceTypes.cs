@@ -54,6 +54,7 @@ internal static class ComposeReferenceTypes
         "AndroidX.Compose.Foundation.Interaction.IMutableInteractionSource",
         "AndroidX.Compose.UI.Graphics.Brush",
         "AndroidX.Compose.TextStyle",
+        "AndroidX.Compose.Foundation.BorderStroke",
     };
 
     /// <summary>

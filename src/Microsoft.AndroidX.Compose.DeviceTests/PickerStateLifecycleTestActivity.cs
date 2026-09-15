@@ -138,11 +138,9 @@ public class PickerStateLifecycleTestActivity : ComponentActivity
         var showDefault = ShowDefault
             ?? throw new InvalidOperationException("Picker variant not set on PickerStateLifecycleTestActivity.");
         if (showDefault.Value)
-            return new Box { new DateRangeStateBinder(defaultState) };
+            return new Box { new DateRangePicker(defaultState) };
 
-        return state.Jvm is null
-            ? new Column { new DateRangeStateBinder(state) }
-            : new Column { new DateRangePicker(state) };
+        return new Column { new DateRangePicker(state) };
     }
 
     static ComposableNode BuildTimePickers()

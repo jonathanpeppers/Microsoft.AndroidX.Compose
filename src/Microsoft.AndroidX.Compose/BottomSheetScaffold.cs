@@ -34,17 +34,12 @@ public sealed class BottomSheetScaffold : ComposableContainer
 {
     readonly SheetStateHolder? _sheetState;
 
-    // One JCW per scaffold instance — its JNI identity is part of the
-    // Kotlin `remember` cache key, so allocating fresh each render
-    // would invalidate the cached state holder. Callback is read on
-    // every Invoke, so callers can mutate ConfirmValueChange freely.
-    readonly SheetValueConfirmStateChange _confirmValueChangeAdapter = new();
-
     /// <summary>
     /// Construct the scaffold. Pass a <paramref name="sheetState"/>
-    /// to opt into the <c>skipPartiallyExpanded</c> setting and gain
-    /// imperative control via <see cref="SheetStateHolder.ShowAsync"/>
-    /// / <see cref="SheetStateHolder.HideAsync"/>.
+    /// to share state and gain imperative control. A standard owner allows
+    /// partial expansion and disallows hiding, independently of the holder's
+    /// modal <see cref="SheetStateHolder.SkipPartiallyExpanded"/> option.
+    /// A retained hidden value starts partially expanded under this owner.
     /// </summary>
     public BottomSheetScaffold(SheetStateHolder? sheetState = null)
     {
@@ -76,24 +71,48 @@ public sealed class BottomSheetScaffold : ComposableContainer
             throw new InvalidOperationException(
                 "BottomSheetScaffold.SheetContent is required.");
 
-        // Update the JCW callback BEFORE the Remember calls. Compose
-        // captures the IFunction1's JNI peer at first composition; we
-        // keep the peer's identity stable but read Callback fresh on
-        // every Invoke so the user can mutate ConfirmValueChange.
-        _confirmValueChangeAdapter.Callback = ConfirmValueChange;
-
-        // Keep the remember-call shape constant even when
-        // ConfirmValueChange toggles between null and non-null. The stable
-        // adapter treats null as "allow", matching Kotlin's default.
-        var sheetState = BottomSheetScaffoldKt.RememberStandardBottomSheetState(
-            initialValue:        SheetValue.PartiallyExpanded,
-            confirmValueChange:  _confirmValueChangeAdapter,
-            skipHiddenState:     true,
-            _composer:           composer,
-            p4:                  0,
-            _changed:            0);
-        if (_sheetState is not null)
-            _sheetState.Jvm = sheetState;
+        var owner = SharedStateOwner.Remember(composer, _sheetState, () => _sheetState?.UnbindJvm());
+        using var acquisition = owner.Acquire();
+        SheetState sheetState;
+        try
+        {
+            composer.StartReusableGroup(354102, owner);
+            try
+            {
+                if (acquisition.IsOwner)
+                {
+                    owner.TrackScope(composer);
+                    var confirmValueChange = ConfirmValueChange;
+                    var confirmValueChangeAdapter = composer.Remember(() => new SheetValueConfirmStateChange
+                    {
+                        Callback = confirmValueChange,
+                    });
+                    composer.SideEffect(() => confirmValueChangeAdapter.Callback = confirmValueChange);
+                    sheetState = BottomSheetScaffoldKt.RememberStandardBottomSheetState(
+                        initialValue: _sheetState?.RememberStandardValue ?? SheetValue.PartiallyExpanded,
+                        confirmValueChange: confirmValueChangeAdapter,
+                        skipHiddenState: true,
+                        _composer: composer,
+                        p4: 0,
+                        _changed: 0);
+                    if (_sheetState is not null)
+                        _sheetState.Jvm = sheetState;
+                    acquisition.Publish(sheetState);
+                }
+                else
+                    sheetState = acquisition.Peer as SheetState
+                        ?? throw new InvalidOperationException("BottomSheetScaffold acquisition has no published SheetState.");
+            }
+            finally
+            {
+                composer.EndReusableGroup();
+            }
+        }
+        catch (Exception error)
+        {
+            acquisition.Abort(error);
+            throw;
+        }
 
         // Bound C# call — RememberBottomSheetScaffoldState is NOT stripped.
         // _changed (= Kotlin's $default) bit 0 = bottomSheetState defaulted,

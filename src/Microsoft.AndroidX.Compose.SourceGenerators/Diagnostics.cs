@@ -220,6 +220,14 @@ internal static class Diagnostics
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);
 
+    public static readonly DiagnosticDescriptor FacadeAddedInvalid = new(
+        id: "CN3014",
+        title: "[FacadeAdded] requires a defaultable optional value",
+        messageFormat: "Facade for bridge '{0}': {1}",
+        category: "AndroidX.Compose",
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
+
     public static readonly DiagnosticDescriptor CompanionNotPartial = new(
         id: "CN4001",
         title: "[ComposeCompanion] target class must be partial",

@@ -15,6 +15,16 @@ public class MainActivity : ComponentActivity
 {
     protected override void OnCreate(Bundle? savedInstanceState)
     {
+        bool? darkThemeOverride = null;
+#if DEBUG
+        darkThemeOverride = Intent?.GetStringExtra("test-palette") switch
+        {
+            null => null,
+            "light" => false,
+            "dark" => true,
+            var palette => throw new InvalidOperationException($"Unknown test palette '{palette}'."),
+        };
+#endif
         base.OnCreate(savedInstanceState);
         this.EnableEdgeToEdge();
         this.SetContent(() =>
@@ -43,7 +53,8 @@ public class MainActivity : ComponentActivity
                 messagesScroll:   messagesScroll,
                 isRecording:      isRecording,
                 swipeOffset:      swipeOffset,
-                profileViewModel: profileViewModel);
+                profileViewModel: profileViewModel,
+                darkThemeOverride: darkThemeOverride);
         });
     }
 }

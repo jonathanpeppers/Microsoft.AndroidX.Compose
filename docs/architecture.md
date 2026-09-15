@@ -123,6 +123,309 @@ Other `INumber<T>` implementations (`decimal`, `Half`, `BigInteger`,
 `nint`, `nuint`) compile but throw at construction since they have no
 clean Java box.
 
+## Shared state ownership
+
+A managed state wrapper and its native composition owner have different
+lifetimes. Keeping `TimePickerState.Jvm` reachable does not keep Kotlin's
+`rememberSaveable` registration alive. The shared-state generator therefore
+remembers an `IRememberObserver` directly in the owner's slot and calls the
+native `RememberXxxState` on every execution of that owner. Siblings sharing
+the wrapper consume the same peer without creating independent native state.
+The same preamble is used by tree facades and direct composable helpers.
+
+A strong `GCHandle` released by `OnForgotten` or `OnAbandoned` is not a
+bounded composition resource. The pinned native
+dispatcher can stop after an earlier observer throws, leaving another owner
+without its retirement callback after its slots have already been removed.
+Tests that make the owner's own release callback throw do not cover this path.
+The skipped-retirement regression uses a public owner followed by a generated
+child with throwing cleanup, then probes collection with resurrection-tracking
+weak references across managed and Java GC.
+
+`SharedStateOwner` has no self-root. The wrapper's conditional weak-table entry
+holds only a resurrection-tracking weak reference to its owner. Active native
+slots preserve the original managed JCW through the runtime GC bridge; an
+attempt to activate an empty replacement throws rather than silently losing
+arbitration and callbacks.
+
+First acquisition is serialized by a per-wrapper managed gate and an exact weak
+claim identity. Native lifetime queries, release callbacks, and invalidation
+notifications run outside that gate. The winner publishes an initializing claim
+before entering its native remember subtree, then acknowledges a published peer
+only after Remember, managed peer conversion, and pending-value binding succeed.
+An exception before that acknowledgement retires only the new initial claim,
+before native unwinding. A later failure of an already-published owner still
+uses native abandonment/forgetting and consumer invalidation.
+
+The native monitor alone is not an initialization acknowledgement: the runtime
+can release it before dispatching abandonment callbacks. Borrowers therefore
+capture the acknowledged peer under the arbitration gate rather than rereading
+the mutable wrapper's `Jvm` field after acquisition. The acquisition keeps that
+peer alive through the component bridge call. This is binding readiness, not
+successful composition application; native snapshot values still require the
+normal commit boundary. Retirement publishes completion before notifying
+consumers, so a waiting claimant does not depend on subsequent invalidation.
+
+Before borrowing a token, `Java/SharedStateLifetime.java` checks its native
+registration under the owning `CompositionImpl` lock. For an installed owner,
+the token-keyed marker scope must be valid and belong to that composition's
+installed slot storage. The marker is a sibling of the native remember subtree,
+not part of its save-key ancestry. Tokens without a marker use exact installed
+`RememberObserverHolder` membership. For an insertion not yet installed, the
+query searches executable registration operations in the current main, late,
+and writer change lists, following only nested `ApplyChangeList` operations.
+It matches the holder's wrapped token by Java identity, never an arbitrary
+auxiliary-key reference. Native abandonment clears these operation prefixes
+before dispatching callbacks, even if a later callback throws.
+
+This is a read-only compatibility layer for the pinned Compose Runtime 1.11.3
+Gap and Link implementations, not a public Compose lifecycle API. It caches
+reflection metadata, not compositions or queues; it neither installs a tooling
+observer nor mutates native storage. Missing fields or unsupported queue shapes
+throw explicit compatibility errors. Runtime upgrades must re-audit the
+registration operations and rerun both backend regressions. Consumer keep rules
+in `shared-state-lifetime.pro` preserve reflected fields, operation identities,
+and the JNI-only shared time/sheet entry points through R8.
+
+Use a clean Release build for R8 validation on the installed .NET for Android
+Windows SDK 36.1.69.
+Its incremental AAR-import path can omit consumer rules from
+`libraryprojectimports.cache` when an archive's hash is unchanged, even though
+the extracted `proguard.txt` remains present. This removed both
+`SharedStateLifetime` and the JNI-only `TimePickerKt` factories in a reproduced
+incremental build. A clean build restores collection of the existing narrow
+rules; verify the actual R8 `--pg-conf` inputs and final DEX, not just the AAR.
+The library exports its rules, but this work does not fix the SDK's incremental
+cache behavior. Clean-build native coverage does not establish incremental,
+AOT, obfuscated, or full Release UI compatibility.
+
+Concurrent compositions can already hold their own native monitor when
+borrowing another composition's state. The query registers a transient
+consumer-monitor-to-owner-monitor dependency before acquiring a foreign monitor.
+The dependency graph uses Java object identity and a short gate that never
+encloses native monitor acquisition. Before publishing a new token or newly
+acquired owner, the runtime records its monitor in a weak-identity catalogue.
+A query registers dependencies from every observed native monitor actually
+held by its thread, including enclosing compositions, not just the immediate
+consumer. Every possible foreign owner target must have been catalogued before
+publication; an internal query violating that invariant throws before waiting.
+Unreachable weak entries are pruned, and the catalogue retains neither native
+monitors nor compositions. Actual same-thread monitor ownership recognizes
+reentrant queries, which cannot introduce a wait. Acyclic contention
+waits for the exact locked membership check; contention is never interpreted as
+an absent or live owner.
+
+If a new dependency closes a sharing cycle, the call throws
+`Java.Lang.IllegalStateException` with
+`Shared state ownership cycle detected between concurrent compositions. Retry composition sequentially.`
+The failed composition propagates the error through native abandonment.
+Callers may retry their composition sequentially after the participating
+concurrent calls have returned; there is no automatic retry loop. Existing
+committed peers remain owned. This restriction concerns detected concurrent
+sharing cycles, not all cross-thread sharing. It is not a detector for arbitrary
+application locks or unrelated nested native `ComposeContent` lock acquisitions.
+Edges are removed on return or throw, before releasing an
+acquired target monitor, and the graph retains no completed calls or timers.
+
+Scope validity alone is insufficient for abandoned insertions: their anchors
+can remain valid after the batch is discarded. `HasPendingChanges` may describe
+an unrelated newer attempt. The native-only reentry, same-composition recovery,
+unrelated pending-attempt recovery, and disjoint provisional sharing tests pin
+these distinctions.
+
+Paused work can install slots before final application. Cancellation first
+discards its registration set, then dispatches abandonment; a thrown callback
+can leave both installed membership and the cancelled transaction reachable.
+Each token therefore captures the native paused transaction's cancellation
+cell at registration, and separately when it first acquires ownership. The latter also
+covers a previously committed borrower acquiring a peer during a later pause.
+Ordinary owning rerenders never overwrite either origin. Every positive
+membership result is qualified by both captured cells' atomic state values.
+The pinned runtime never replaces these `AtomicReference` cells. Each retains
+only a state enum, unlike the transaction itself, whose final content delegate
+would retain obsolete content for the surviving owner's lifetime. An unchanged
+committed owner is not rejected merely because unrelated
+paused work in its composition was cancelled. The origin bridge normalizes its
+owned JNI local into a managed peer and releases the local in `finally`.
+
+If a callback was skipped, the next consumer retires the stale token before
+running its native factory. If the weak token has already been collected,
+the incoming wrapper cleanup snapshots and unbinds the orphaned peer before
+claiming ownership. Neither recovery requires finalizer timing; cleanup errors
+propagate. Until another consumer executes, a retained wrapper can still expose
+the orphaned peer, but it cannot keep the absent owner or composition rooted.
+
+For conditional consumers, hoist the typed owner before the condition:
+
+```csharp
+var state = composer.RememberTimePickerState();
+return new Column
+{
+    new Box { showClock ? new TimePicker(state) : null },
+    new Box { showKeyboard ? new TimeInput(state) : null },
+};
+```
+
+The equivalent composerless helper is `Composables.RememberTimePickerState()`.
+Typed helpers also cover date, date-range, drawer, sheet, and navigation-suite
+state. They accept an optional existing wrapper; when omitted, a wrapper is
+remembered at the owner location. Do not put a typed owner call inside a
+`Remember` factory: it must participate in every owning composition execution.
+Keep it outside the lifetime of any consumer that may disappear. This retains
+the exact native peer and save provider even when all its visual consumers
+are hidden. Saving/recreating the activity uses a fresh managed wrapper and
+the native saver, not a managed reference to the old activity's peer.
+
+For generator consumers, a zero-argument Remember bridge also supports wrappers
+without an accessible default constructor. Its typed helpers require a supplied,
+non-null wrapper instead of silently omitting the ownership API; the facade's
+existing optional wrapper remains supported. Shared declarations using the same
+Remember bridge and wrapper type must agree on `Bind` and `Unbind`, including
+whether a hook is omitted. Conflicts within one facade or across siblings report
+CN3009 before generation, so renaming a facade cannot select a different cleanup
+or binding policy. Confirm-callback metadata belongs to their common Remember
+bridge, not to the sibling chosen to emit the deduplicated helper.
+
+Confirm callbacks belong to the owner. Their JNI adapters are remembered in
+the owning native group, so reconstructing tree nodes does not change callback
+identity or invalidate native state. A new adapter receives its initial veto
+before native state creation. Updates to an existing adapter capture the
+current delegate and publish it through `SideEffect` after successful
+application; abandoned renders cannot change the committed native policy. Configure the
+callback on the typed owner when using one; consumer callbacks do not override
+another location's ownership. Pending picker writes are applied once when a
+peer is first attached, not replayed on every owning execution.
+
+Replacing a supplied wrapper at the same location replaces its native remember
+subtree, rather than binding the new wrapper to the previous wrapper's peer.
+The generator uses `StartReusableGroup` with a fixed positional key and the
+owner token as auxiliary data. Auxiliary identity invalidates remembered values
+without making the save-state ancestry depend on object hashes, peer handles,
+or process-specific IDs. Omitted parameterized wrappers are remembered in
+composition in both tree and direct paths, so rebuilding an ordinary tree node
+does not look like an explicit wrapper replacement.
+
+If an implicit owner leaves, its observer captures transferable live values,
+clears the wrapper's binding, and invalidates remaining consumers. A remaining
+consumer then becomes the owner of a **new** native peer. Returning consumers
+share that successor; if all consumers left, later re-entry initializes a new
+peer from the retained wrapper values. This intentionally replaces the old
+hide/show behavior that kept an unregistered native object alive. Imperative
+operations requiring a peer cannot run while the wrapper is unbound.
+
+| Wrapper | Values retained after native ownership ends |
+| --- | --- |
+| Time picker | Hour, minute, 12/24-hour mode |
+| Date picker | Selection, displayed month, display mode, year range, selection policy |
+| Date-range picker | Both selections, displayed month, display mode, year range, selection policy |
+| Drawer | Current settled drawer value |
+| Sheet | Current settled sheet value; construction options remain on the wrapper |
+| Navigation suite | Current settled visibility |
+
+Layout anchors, gesture offsets, and in-flight animation progress belong to the
+disposed native scope and are not transferred. Callback policy belongs to the
+new owner after handoff. `BottomSheetScaffold` participates in the same ownership
+protocol without changing its standard-sheet construction defaults; modal and
+standard sheet owners have different construction constraints. Cross-family
+sheet handoff is an explicit exception to transferring values without clamping:
+the receiving standard factory maps retained `Hidden` to `PartiallyExpanded`
+because `skipHiddenState = true` disallows hiding. This **makes the sheet
+visible**. The receiving modal factory maps retained `PartiallyExpanded` to
+`Expanded` only when the holder's `SkipPartiallyExpanded` is true. All compatible
+values, including `Expanded`, pass through unchanged. Unbound `CurrentValue`,
+`TargetValue`, and `IsVisible` continue to expose the raw last-settled value;
+normalization is confined to the receiving factory's initial-value argument.
+A live common-ancestor owner still preserves its peer and construction options
+when switching consumers; these mappings do not replace an active shared peer.
+
+Native saved-state keys are positional. An implicit owner handoff is **not**
+a movable save-state key: fresh composition may choose a different first
+consumer after ordering/visibility changes. Use the explicit common-ancestor
+owner for save/recreation across conditional or reordered consumers, and keep
+that owner alive if state must be saved while all consumers are hidden.
+
+`SharedStateOwnershipTests` exercises repeated execution followed by activity
+recreation with a fresh wrapper, plus independently removed/reintroduced
+consumers under a surviving common ancestor. Its native-only control
+distinguishes a missing save provider from a broken recreation harness.
+The omitted direct-consumer case calls `Composables.TimeInput()` without a
+wrapper or ancestor-owner argument, edits its native accessibility fields to
+19:27, repeats three executions, and checks the fields after recreation.
+`StateHolderLifecycleTests` and `SharedStateTransferTests` verify owner loss,
+pending writes, new-peer initialization, and native confirm-callback refresh.
+`SheetStateTransferDomainTests` checks the native constructor invariants and
+unbound getter semantics separately from `SheetStateHandoffTests`, which renders
+real modal sheets and standard scaffolds through tree and direct APIs, retires
+each owner, and checks both handoff directions, round trips, repeated renders,
+and compatible expanded-value controls.
+Initial picker readiness, like removal/re-entry, acquires the existing
+`SideEffect` render-completion counter before reading native values. A non-null
+peer alone can still expose an uncommitted snapshot: the same DateRange peer
+returned null endpoints before commit and the requested range after commit.
+Replacement regressions exercise A-to-B-to-A transitions, pending writes,
+surviving siblings, and recreation. `SharedStateTransactionTests` uses native
+controlled compositions to check initial abandonment, abandoned owner
+replacement, initial veto availability, and commit-only callback publication.
+The lifetime fixture also covers skipped earlier cleanup and abandonment,
+takeover while the obsolete token is still strongly retained, native pending
+sharing, and mixed-GC preservation of active peers. Collection probes use
+resurrection-tracking weak references across both runtimes. Probe factories
+whose Release stack can retain incidental values run on a thread that exits
+before collection; all original exception guards and collection assertions
+remain in place.
+`SharedStatePausedLifetimeTests` verifies failed cancellation with an installed
+owner marker and skipped abandonment, preservation of an older committed
+sibling, successful paused application, null-marker borrower registration,
+later acquisition by a committed borrower, and collection of the cancelled
+transaction and owner graph. A successful-application control replaces the
+content but keeps its owner and composition alive while the old callback,
+captured payload, and paused transaction must collect.
+Both Gap and Link backends are selected explicitly
+through the instrumentation's `composeBackend` argument.
+`SharedStateConcurrentLifetimeTests` exercises two- and three-composition cycles,
+native abandonment, sequential retry with original peer identity, acyclic
+contention, original callback error propagation, same-thread nested borrowing,
+and empty dependency graphs after completion. Nested crossed borrowing is
+tested in both wait orders, including first publication of the outer owner
+after entering the nested composition. Native weak-reference probes require
+retired monitors to collect independently of their managed composition peers.
+The controlled concurrency fixtures use one stable native
+`composableLambdaInstance` root per composition, matching the compiler-style
+restart envelope used by `SetContent`. Their native TimePicker control also
+wraps each no-own-group remember factory in a fixed replaceable group. Raw
+`Function2` roots or ungrouped native remembers can produce unrelated Link slot
+corruption after abandonment and retry; they are not equivalent controls for
+these public helpers. Matched native and managed controls retain the committed
+peer and edited hour through nested failure, successful sequential retry/apply,
+and a subsequent render, without replacing the composition or root lambda.
+
+`SharedStateFirstOwnerTests` coordinates concurrent first claims of one fresh
+wrapper and counts actual native factories across 64 bounded rounds. A separate
+pending-claim control holds the winner before initialization while the loser
+waits on its native monitor, then exercises successful binding and failures
+before/after partial binding. It checks original exceptions, stale callbacks,
+empty monitor graphs, and surviving-peer identity on sequential retry. The
+public typed-helper control distinguishes a failure after initialization has
+returned from a pre-publication failure, and verifies reacquisition after native
+abandonment rather than assuming the native monitor also serializes callbacks.
+
+Visual inspection of the hoisted-owner Gallery demo preserves 19:25 in its
+label and both numeric displays while hiding and restoring either or both
+consumers. A separate dial mismatch in the pinned native-call path remains: reintroducing the
+clock while minute selection is active can point its hand at the hour angle
+(19 maps to the 35-minute position), despite retaining minute 25 and native
+selection `Minute`. `DialReentry_RetainsSelectedMinuteAndPeer` compares a raw
+native remembered-state/bridge control with the generated owner/consumer,
+checks unchanged peer, values, and native selection, and saves before/after
+screenshots. Both paths reproduce the same mismatch. The pinned
+`AnalogTimePickerState` constructor initializes its animation from `hourAngle`
+regardless of selection; this is consistent with the observation, not a
+shared-owner state reset. The test's pass result verifies state and selection,
+not dial geometry. Both controls share the C# bridge/runtime invocation
+boundary; no independent pure-Kotlin reproduction has been run, so a Google
+upstream root cause is not established solely by this comparison.
+No synthetic tab switch is applied to conceal the defect.
+
 ## Focus ownership
 
 `Modifier.FocusTarget()` uses the official UI runtime binding. It is the
