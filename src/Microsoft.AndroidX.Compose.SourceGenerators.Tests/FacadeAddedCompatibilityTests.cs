@@ -21,7 +21,6 @@ public class FacadeAddedCompatibilityTests
             "containerColor", "contentColor", "!content")]
         namespace AndroidX.Compose
         {
-            public sealed class TestComposer : IComposer { }
             public static partial class ComposeBridges
             {
                 public static int LastDefaults;

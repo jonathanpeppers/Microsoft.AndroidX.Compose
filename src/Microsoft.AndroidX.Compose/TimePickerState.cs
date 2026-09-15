@@ -26,6 +26,9 @@ namespace AndroidX.Compose;
 ///     Body          = new TimePicker(pickerState),
 /// }
 /// </code>
+/// <para>For conditional consumers, hoist <c>composer.RememberTimePickerState(pickerState)</c>
+/// outside their condition to retain native save registration. After all native
+/// ownership ends, the wrapper retains the selected time for a new owner.</para>
 /// </remarks>
 public sealed class TimePickerState
 {
@@ -33,6 +36,7 @@ public sealed class TimePickerState
     readonly int _initialMinute;
     int _hour;
     int _minute;
+    bool _is24Hour;
     bool _hasPendingHour;
     bool _hasPendingMinute;
 
@@ -57,10 +61,11 @@ public sealed class TimePickerState
         _hour = initialHour;
         _minute = initialMinute;
         InitialIs24Hour = is24Hour;
+        _is24Hour = is24Hour;
     }
 
     /// <summary>Currently displayed hour (0–23). Before binding, returns
-    /// the constructor value or the latest pending write.</summary>
+    /// the constructor value, last owned value, or latest pending write.</summary>
     public int Hour
     {
         get => Jvm?.Hour ?? _hour;
@@ -78,7 +83,7 @@ public sealed class TimePickerState
     }
 
     /// <summary>Currently displayed minute (0–59). Before binding, returns
-    /// the constructor value or the latest pending write.</summary>
+    /// the constructor value, last owned value, or latest pending write.</summary>
     public int Minute
     {
         get => Jvm?.Minute ?? _minute;
@@ -96,9 +101,9 @@ public sealed class TimePickerState
     }
 
     /// <summary>Whether the picker is in 24-hour mode (vs. 12-hour with
-    /// AM/PM). Falls back to the constructor's <c>is24Hour</c> until
-    /// bound.</summary>
-    public bool Is24Hour => Jvm?.Is24hour() ?? InitialIs24Hour;
+    /// AM/PM). While unbound, returns the last owned mode, or the
+    /// constructor's <c>is24Hour</c> before first ownership.</summary>
+    public bool Is24Hour => Jvm?.Is24hour() ?? _is24Hour;
 
     internal void BindJvm(ITimePickerState jvm)
     {
@@ -107,6 +112,18 @@ public sealed class TimePickerState
             Hour = _hour;
         if (_hasPendingMinute)
             Minute = _minute;
+        _hasPendingHour = false;
+        _hasPendingMinute = false;
+    }
+
+    internal void UnbindJvm()
+    {
+        if (Jvm is not { } jvm)
+            return;
+        _hour = jvm.Hour;
+        _minute = jvm.Minute;
+        _is24Hour = jvm.Is24hour();
+        Jvm = null;
     }
 
     static void ValidateHour(int value, string paramName)

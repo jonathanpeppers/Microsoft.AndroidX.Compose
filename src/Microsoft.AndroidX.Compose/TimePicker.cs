@@ -9,12 +9,12 @@ namespace AndroidX.Compose;
 /// from a button callback Just Works without manual <c>remember</c> plumbing.
 /// </summary>
 /// <remarks>
-/// Opts in to <c>StateHolder.SharedState</c> so a caller-supplied
-/// <see cref="TimePickerState"/> can be passed to a sibling
-/// <see cref="TimeInput"/> facade without triggering a duplicate
-/// <c>rememberTimePickerState</c> call — both facades reuse the same
-/// Kotlin peer and stay in sync as the user toggles between clock and
-/// keyboard entry.
+/// A caller-supplied <see cref="TimePickerState"/> can be shared with
+/// <see cref="TimeInput"/>. The first composition location owns the native
+/// remember call and continues executing it on recomposition; siblings
+/// consume the same peer. For conditional clock/keyboard layouts, call
+/// <c>composer.RememberTimePickerState()</c> at their common ancestor and
+/// pass its result to both. Keeping that owner outside the condition
+/// preserves the peer and native save registration when either picker leaves.
 /// </remarks>
 public sealed partial class TimePicker;
-

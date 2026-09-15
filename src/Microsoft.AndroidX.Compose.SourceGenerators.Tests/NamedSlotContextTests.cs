@@ -110,17 +110,16 @@ public class NamedSlotContextTests
             public sealed class ProbeComposer : Java.Lang.Object, IComposer
             {
                 public int GroupDepth;
+                public void StartReplaceableGroup(int key) => GroupDepth++;
+                public void EndReplaceableGroup() => GroupDepth--;
+                public void StartReusableGroup(int key, Java.Lang.Object? dataKey) =>
+                    throw new InvalidOperationException("Named slots must not open a reusable group.");
+                public void EndReusableGroup() =>
+                    throw new InvalidOperationException("Named slots must not close a reusable group.");
             }
             internal static class CompositionGroupKey
             {
                 public static int Compute(int position, Type type) => 1;
-            }
-            public static class ProbeGroups
-            {
-                public static void StartReplaceableGroup(this IComposer composer, int key) =>
-                    ((ProbeComposer)composer).GroupDepth++;
-                public static void EndReplaceableGroup(this IComposer composer) =>
-                    ((ProbeComposer)composer).GroupDepth--;
             }
             public sealed class CapturedSlot(Action<IComposer> body) : Java.Lang.Object,
                 Kotlin.Jvm.Functions.IFunction2, Kotlin.Jvm.Functions.IFunction3

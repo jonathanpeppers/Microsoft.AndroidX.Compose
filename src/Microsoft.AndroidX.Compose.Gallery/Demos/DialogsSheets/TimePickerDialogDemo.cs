@@ -15,12 +15,8 @@ public static class TimePickerDialogDemo
         {
             var open   = c.MutableStateOf(false);
             var picked = c.MutableStateOf("(none)");
-            var state  = c.Remember(() =>
-            {
-                var pending = new TimePickerState(initialHour: 9);
-                pending.Minute = 30;
-                return pending;
-            });
+            var state = c.RememberTimePickerState(c.Remember(() =>
+                new TimePickerState(initialHour: 9) { Minute = 30 }));
             return new Column
             {
                 new Text($"Picked time: {picked}"),

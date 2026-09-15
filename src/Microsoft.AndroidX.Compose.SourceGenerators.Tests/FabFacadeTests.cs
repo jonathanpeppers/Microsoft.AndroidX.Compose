@@ -52,6 +52,10 @@ public class FabFacadeTests
                 ?? throw new InvalidOperationException("Factory capture missing.");
             var shapeFactories = assembly.GetType("AndroidX.Compose.FabStyleDefaults")?.GetField("LastShapeFactory")
                 ?? throw new InvalidOperationException("Shape selector capture missing.");
+            var composerType = assembly.GetType("AndroidX.Compose.GroupCapture")
+                ?? throw new InvalidOperationException("Group-capturing composer missing.");
+            var composer = Activator.CreateInstance(composerType)
+                ?? throw new InvalidOperationException("Group-capturing composer could not be created.");
             Assert.Equal(all, Convert.ToInt32(Enum.Parse(
                 assembly.GetType("AndroidX.Compose." + name + "Default")
                     ?? throw new InvalidOperationException("FAB default enum missing."), "All")));
@@ -61,11 +65,13 @@ public class FabFacadeTests
                 "expanded" => true,
                 "__omittedArguments" => extended ? 0x3F0UL : 0xFCUL,
                 "__directChanged" => 0,
+                "__composer" => composer,
                 _ => null,
             }).ToArray();
             helper.Invoke(null, arguments);
             Assert.Equal(0, defaults.GetValue(null));
             Assert.Equal(15, requests.GetValue(null));
+            Assert.Equal(4, composerType.GetField("StartedGroups")?.GetValue(composer));
             Assert.Equal(15, capture.GetField("ElevationDefaults")?.GetValue(null));
             Assert.Equal(0, capture.GetField("LastChanged")?.GetValue(null));
             Assert.Equal(11L, capture.GetField("LastContainer")?.GetValue(null));
@@ -140,7 +146,7 @@ public class FabFacadeTests
             arguments[omissionPosition] = (extended ? 0x3F0UL : 0xFCUL) & ~(1UL << (modifierPosition - 1));
             helper.Invoke(null, arguments);
             Assert.Null(capture.GetField("LastModifier")?.GetValue(null));
-            Assert.Equal(0, assembly.GetType("AndroidX.Compose.GroupCapture")?.GetField("Depth")?.GetValue(null));
+            Assert.Equal(0, composerType.GetField("Depth")?.GetValue(composer));
             Assert.Same(shapeFactory, shapeFactories.GetValue(null));
 
             var facade = assembly.GetType("AndroidX.Compose." + name)
@@ -272,11 +278,15 @@ public class FabFacadeTests
                 {
                     public static int Compute(int position, System.Type type) => position;
                 }
-                public static class GroupCapture
+                public sealed class GroupCapture : Java.Lang.Object, IComposer
                 {
-                    public static int Depth;
-                    public static void StartReplaceableGroup(this IComposer composer, int key) => Depth++;
-                    public static void EndReplaceableGroup(this IComposer composer) => Depth--;
+                    public int Depth, StartedGroups;
+                    public void StartReplaceableGroup(int key) { Depth++; StartedGroups++; }
+                    public void EndReplaceableGroup() => Depth--;
+                    public void StartReusableGroup(int key, Java.Lang.Object? dataKey) =>
+                        throw new System.InvalidOperationException("FAB defaults must not open a reusable group.");
+                    public void EndReusableGroup() =>
+                        throw new System.InvalidOperationException("FAB defaults must not close a reusable group.");
                 }
                 {{resolver}}
                 public static partial class ComposeBridges

@@ -37,6 +37,9 @@ public sealed class DateRangePickerState
     long? _selectedStartDateMillis;
     long? _selectedEndDateMillis;
     long? _displayedMonthMillis;
+    int? _displayMode;
+    DatePickerYearRange? _yearRange;
+    ISelectableDates? _selectableDates;
     bool _hasPendingSelection;
     bool _hasPendingDisplayedMonth;
 
@@ -44,6 +47,9 @@ public sealed class DateRangePickerState
     internal long? RememberSelectedStartDateMillis => _selectedStartDateMillis;
     internal long? RememberSelectedEndDateMillis => _selectedEndDateMillis;
     internal long? RememberDisplayedMonthMillis => _displayedMonthMillis;
+    internal int? RememberDisplayMode => _displayMode;
+    internal DatePickerYearRange? RememberYearRange => _yearRange;
+    internal ISelectableDates? RememberSelectableDates => _selectableDates;
 
     /// <summary>Creates a range-picker state with managed initial values.</summary>
     /// <param name="initialSelectedStartDateMillis">Initial range start as
@@ -76,6 +82,9 @@ public sealed class DateRangePickerState
         InitialYearRange = initialYearRange;
         InitialDisplayMode = initialDisplayMode;
         InitialSelectableDates = initialSelectableDates;
+        _displayMode = initialDisplayMode;
+        _yearRange = initialYearRange;
+        _selectableDates = initialSelectableDates;
     }
 
     /// <summary>Initial selected range start as Unix epoch milliseconds.</summary>
@@ -194,6 +203,24 @@ public sealed class DateRangePickerState
             SetSelection(_selectedStartDateMillis, _selectedEndDateMillis);
         if (_hasPendingDisplayedMonth && _displayedMonthMillis is long displayedMonthMillis)
             DisplayedMonthMillis = displayedMonthMillis;
+        _hasPendingSelection = false;
+        _hasPendingDisplayedMonth = false;
+    }
+
+    internal void UnbindJvm()
+    {
+        if (Jvm is not { } jvm)
+            return;
+        _selectedStartDateMillis = jvm.SelectedStartDateMillis?.LongValue();
+        _selectedEndDateMillis = jvm.SelectedEndDateMillis?.LongValue();
+        _displayedMonthMillis = jvm.DisplayedMonthMillis;
+        _displayMode = jvm.DisplayMode;
+        var range = jvm.YearRange;
+        var start = range.Start ?? throw new InvalidOperationException("Date-range picker year range has no start.");
+        var end = range.EndInclusive ?? throw new InvalidOperationException("Date-range picker year range has no end.");
+        _yearRange = new DatePickerYearRange(start.IntValue(), end.IntValue());
+        _selectableDates = jvm.SelectableDates;
+        Jvm = null;
     }
 
     static void ValidateSelection(long? startDateMillis, long? endDateMillis)

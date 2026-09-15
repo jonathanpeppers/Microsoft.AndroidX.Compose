@@ -368,11 +368,59 @@ slots surface as `Action` instead of `Action<IComposer>`.
     around a generated JNI bridge when conversion is required (for example,
     `long?` to boxed `Java.Lang.Long?` or `DatePickerYearRange?` to
     `Kotlin.Ranges.IntRange?`). Requires `StateType` constructible with no args.
-  - **Phase 4c** — `SharedState = true` opts in to shared-state caching for
+  - **Phase 4c** — `SharedState = true` opts in to composition-owned sharing for
     sibling facades sharing a `StateType` (e.g. `TimePicker` + `TimeInput`).
-    Render preamble first checks `_state.Jvm` and reuses the cached JNI handle
-    when present; only first-render calls `Remember`. Both Phase 4 and 4b
-    honour the flag.
+    A direct `IRememberObserver` slot identifies the owner. Every execution
+    of that location calls the native `Remember`; siblings consume its peer.
+    Never use a non-null `Jvm` as a substitute for native lifecycle ownership.
+    Do not self-root the owner until `OnForgotten`/`OnAbandoned`: native callback
+    dispatch can stop before reaching it when an earlier cleanup throws.
+    `SharedStateOwner` uses weak arbitration and the read-only, pinned-runtime
+    registration query in `Java/SharedStateLifetime.java`; preserve its native
+    installed/pending distinction and keep marker scopes outside save ancestry.
+    First claims use an atomic per-wrapper registration identity. Publish the
+    initialized peer only after Remember/GetObject/Bind succeeds, and abort only
+    a failed initial claim before native unwind. The native monitor can be
+    released before abandonment callbacks, so membership alone is not proof of
+    completed initialization. Borrowers must use the acquisition's captured
+    peer, not reread `Jvm`; keep the acquisition alive through the component JNI
+    call. Published-peer readiness is not composition commit. Keep native waits,
+    release callbacks, and invalidation outside the arbitration gate, and
+    publish retirement completion before notifying consumers.
+    Capture native paused origins separately at token registration and ownership
+    acquisition, never on ordinary rerenders; cancelled paused slots can remain
+    installed after a failed callback, while older committed owners stay live.
+    Runtime upgrades must re-audit that query and its consumer keep rules.
+    Foreign-owner queries register transient native-monitor dependencies before
+    blocking. Never acquire a native monitor under the graph gate or interpret
+    contention as owner liveness. Detected sharing cycles throw explicitly so
+    callers can retry sequentially; same-thread reentrancy and acyclic sharing
+    remain supported, and every dependency must be removed on return or throw.
+    Both tree and direct helpers use this contract. Omitted parameterized
+    wrappers are remembered in composition, including reconstructed tree
+    nodes. A fixed-key reusable group uses the owner as auxiliary data to
+    reset native remembers on supplied-wrapper replacement without adding
+    object hashes, peer handles, or process counters to the save-state key.
+    Generated typed helpers
+    such as `composer.RememberTimePickerState()` and
+    `Composables.RememberTimePickerState()` hoist the owner above conditional
+    consumers. Keep that call in composition to preserve exact peer identity
+    and native save registration while consumers leave/re-enter.
+    A Phase 4 wrapper without an accessible default constructor still gets
+    both typed helpers, but their wrapper argument is required and non-null;
+    existing optional-wrapper helpers and consumer signatures stay unchanged.
+    Shared declarations with the same `Remember` and `StateType` must agree
+    on `Bind` and `Unbind`, including omitted hooks. Conflicts emit CN3009
+    rather than allowing facade-name ordering to select ownership behavior.
+    Callback metadata comes from the common Remember bridge.
+    `Unbind = nameof(T.UnbindJvm)` optionally names an accessible parameterless
+    instance void method that captures live values and clears `Jvm` when the
+    owner is forgotten/abandoned; without it cleanup clears `Jvm` directly.
+    Shared confirm adapters are remembered inside that owning group, not
+    node-instance fields. Their factory receives the current callback
+    immediately; later callback updates are captured and published through
+    `SideEffect` only after successful application, never during a speculative
+    render of a committed peer.
 
   `StateType` must declare an instance, writable, non-readonly, accessible
   field named `Jvm` whose declared type is the binding-generated state
@@ -381,14 +429,16 @@ slots surface as `Action` instead of `Action<IComposer>`.
 - `[ConfirmStateChange(typeof(T))]` (Phase 10) — `IFunction1?` param of a
   `[StateHolder]` Remember bridge. Models per-instance JNI veto adapter for
   Kotlin's `(T) -> Boolean` callback (part of `remember` cache key). Generator:
-  - allocates one `readonly` JCW adapter field per facade instance
-    (`_<camelCase(PropertyName)>Adapter`);
+  - allocates one `readonly` JCW adapter field per non-shared facade instance
+    (`_<camelCase(PropertyName)>Adapter`); shared owners use the
+    composition/commit-time contract above;
   - looks up adapter class by convention `Microsoft.AndroidX.Compose.<TName>ConfirmStateChange`
     or via explicit `AdapterType = typeof(...)`;
   - exposes `Func<T, bool>? ConfirmStateChange { get; set; }` (renameable via
     `PropertyName`);
-  - in Render preamble — **before** Remember — emits
-    `_<adapter>.Callback = ConfirmStateChange;`;
+  - for non-shared facades, in Render preamble — **before** Remember — emits
+    `_<adapter>.Callback = ConfirmStateChange;`; shared factories initialize
+    their callback before Remember but subsequent updates use `SideEffect`;
   - excludes the slot from main bridge call args and auto-mask.
 
   Adapter class must implement `Kotlin.Jvm.Functions.IFunction1`, have a
@@ -608,7 +658,7 @@ conflict), CN3007 (color theme bind failed), CN3008 (painter misuse), CN3009
 | CN3006 | `[Slot]` conflicts with classified shape, `[Callback]` on non-`IFunction1`, multiple `[PainterResource]` on one bridge, `int defaults` declared without resolvable `Defaults` enum, or `IndexedChildren = true` on a facade without a non-nullable IFunction2/IFunction3 container body.                                                                                                                                                                                                       |
 | CN3007 | `DefaultColorFromTheme` cannot bind to any `long` user param (or `ColorParameter` ambiguous/missing).                                                                                                                                                                                                                                                                                                                                                                                            |
 | CN3008 | `[PainterResource]` annotates a non-`IntPtr` parameter.                                                                                                                                                                                                                                                                                                                                                                                                                                          |
-| CN3009 | `[StateHolder]` invalid: non-`IntPtr` param, combined with `[PainterResource]`, missing/non-identifier `Remember`/`StateType`, named `Remember` not a static `(IComposer) -> IntPtr` on `ComposeBridges`, or `StateType` has no accessible writable instance field named `Jvm`.                                                                                                                                                                                                                  |
+| CN3009 | `[StateHolder]` invalid: non-`IntPtr` param, combined with `[PainterResource]`, missing/non-identifier `Remember`/`StateType`, named `Remember` not a static remember bridge, inaccessible writable `Jvm` field, invalid `Bind`, `Unbind` not an accessible parameterless instance void method, or conflicting `Bind`/`Unbind` among shared declarations with the same `Remember` and `StateType`. |
 | CN3010 | `BranchOn`/`AlternateBridge` invalid: only one set, primary has no Kotlin defaults metadata, named alternate not resolvable/ambiguous on `ComposeBridges`, alternate not a strict superset (missing a primary param or > 1 extra), extra param's PascalCased name doesn't match `BranchOn`, extra param isn't `IFunction2`/`IFunction3`, shared param has incompatible types, branching used on hybrid container shape, or alternate has no resolvable `[ComposeBridge].Defaults` enum. |
 | CN3011 | `[ConfirmStateChange(typeof(T))]` invalid: not on `IFunction1` param, missing `typeof(T)` ctor arg, convention adapter `Microsoft.AndroidX.Compose.<TName>ConfirmStateChange` missing (override with `AdapterType = typeof(...)`), adapter is inaccessible to generated same-assembly code, doesn't implement `Kotlin.Jvm.Functions.IFunction1`, lacks a same-assembly accessible parameterless ctor, or has no same-assembly accessible writable `Callback` property of type `System.Func<T, bool>?`.                                                                                                              |
 | CN3012 | `SecondaryCtor`/`SecondaryDefaults` invalid: only one set, named secondary not resolvable/ambiguous on `ComposeBridges`, a hand-written secondary lacks trailing `int defaults`, secondary's user params don't share names with the primary, the discriminating extra param is value-type / nullable / not a reference type / there's > 1 unique param / there's none, primary has no slot missing from the secondary (no primary-only discriminator), `SecondaryDefaults` enum unresolvable, or combined with `BranchOn`/`AlternateBridge`.                                                                                                                                                                                                                                                                              |
