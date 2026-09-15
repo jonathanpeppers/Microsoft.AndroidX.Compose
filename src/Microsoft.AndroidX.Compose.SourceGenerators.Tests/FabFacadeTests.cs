@@ -50,6 +50,8 @@ public class FabFacadeTests
                 ?? throw new InvalidOperationException("Default capture missing.");
             var requests = capture.GetField("FactoryRequests")
                 ?? throw new InvalidOperationException("Factory capture missing.");
+            var shapeFactories = assembly.GetType("AndroidX.Compose.FabStyleDefaults")?.GetField("LastShapeFactory")
+                ?? throw new InvalidOperationException("Shape selector capture missing.");
             Assert.Equal(all, Convert.ToInt32(Enum.Parse(
                 assembly.GetType("AndroidX.Compose." + name + "Default")
                     ?? throw new InvalidOperationException("FAB default enum missing."), "All")));
@@ -76,6 +78,11 @@ public class FabFacadeTests
                 "ExtendedFloatingActionButton" => "GetExtendedFabShape",
                 _ => "GetShape",
             }, capture.GetField("ShapeFactory")?.GetValue(null));
+            var shapeFactory = Assert.IsAssignableFrom<Delegate>(shapeFactories.GetValue(null));
+            var initialShape = capture.GetField("LastShape")?.GetValue(null);
+            helper.Invoke(null, arguments);
+            Assert.Same(shapeFactory, shapeFactories.GetValue(null));
+            Assert.NotSame(initialShape, capture.GetField("LastShape")?.GetValue(null));
 
             string[] styling = ["containerColor", "contentColor", "elevation", "interactionSource"];
             for (int i = 0; i < styling.Length; i++)
@@ -134,6 +141,7 @@ public class FabFacadeTests
             helper.Invoke(null, arguments);
             Assert.Null(capture.GetField("LastModifier")?.GetValue(null));
             Assert.Equal(0, assembly.GetType("AndroidX.Compose.GroupCapture")?.GetField("Depth")?.GetValue(null));
+            Assert.Same(shapeFactory, shapeFactories.GetValue(null));
 
             var facade = assembly.GetType("AndroidX.Compose." + name)
                 ?? throw new InvalidOperationException("Facade missing.");
@@ -162,6 +170,13 @@ public class FabFacadeTests
             .GetCompilationUnitRoot().AttributeLists.Single(a => a.ToString().Contains("\"FloatingActionButtonElevationDefault\""));
         var resolver = CSharpSyntaxTree.ParseText(File.ReadAllText(System.IO.Path.Combine(runtime, "FabStyleDefaults.cs")))
             .GetRoot().DescendantNodes().OfType<ClassDeclarationSyntax>().Single();
+        var resolve = resolver.Members.OfType<MethodDeclarationSyntax>().Single(m => m.Identifier.ValueText == "Resolve");
+        var resolveBody = resolve.Body ?? throw new InvalidOperationException("FAB resolver body missing.");
+        // Instrument the compiled source copy, not the production resolver.
+        resolver = resolver.ReplaceNode(resolve, resolve.WithBody(resolveBody.WithStatements(
+            resolveBody.Statements.Insert(0, SyntaxFactory.ParseStatement("LastShapeFactory = shapeFactory;")))));
+        resolver = resolver.AddMembers(SyntaxFactory.ParseMemberDeclaration("public static object? LastShapeFactory;")
+            ?? throw new InvalidOperationException("Shape selector capture declaration missing."));
         string parameters = extended
             ? "IFunction2 text, IFunction2 icon, IFunction0 onClick, IModifier? modifier, bool expanded, IShape? shape, long containerColor, long contentColor, FloatingActionButtonElevation? elevation, IMutableInteractionSource? interactionSource, IComposer? composer, int p11, int _changed"
             : "IFunction0 onClick, IModifier? modifier, IShape? shape, long containerColor, long contentColor, FloatingActionButtonElevation? elevation, IMutableInteractionSource? interactionSource, IFunction2 content, IComposer? composer, int p9, int _changed";

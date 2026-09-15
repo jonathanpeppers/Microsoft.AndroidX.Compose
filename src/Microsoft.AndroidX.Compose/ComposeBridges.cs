@@ -654,7 +654,7 @@ internal static partial class ComposeBridges
         IFunction2 content, int defaults, IComposer composer, int _changed)
     {
         var mask = (FloatingActionButtonDefault)defaults;
-        var style = FabStyleDefaults.Resolve(modifier, shape, FloatingActionButtonDefaults.Instance.GetShape,
+        var style = FabStyleDefaults.Resolve(modifier, shape, static (c, changed) => FloatingActionButtonDefaults.Instance.GetShape(c, changed),
             containerColor, contentColor, elevation,
             (mask & FloatingActionButtonDefault.Modifier) != 0,
             (mask & FloatingActionButtonDefault.Shape) != 0,
@@ -681,7 +681,7 @@ internal static partial class ComposeBridges
         IFunction2 content, int defaults, IComposer composer, int _changed)
     {
         var mask = (SmallFloatingActionButtonDefault)defaults;
-        var style = FabStyleDefaults.Resolve(modifier, shape, FloatingActionButtonDefaults.Instance.GetSmallShape,
+        var style = FabStyleDefaults.Resolve(modifier, shape, static (c, changed) => FloatingActionButtonDefaults.Instance.GetSmallShape(c, changed),
             containerColor, contentColor, elevation,
             (mask & SmallFloatingActionButtonDefault.Modifier) != 0,
             (mask & SmallFloatingActionButtonDefault.Shape) != 0,
@@ -708,7 +708,7 @@ internal static partial class ComposeBridges
         IFunction2 content, int defaults, IComposer composer, int _changed)
     {
         var mask = (LargeFloatingActionButtonDefault)defaults;
-        var style = FabStyleDefaults.Resolve(modifier, shape, FloatingActionButtonDefaults.Instance.GetLargeShape,
+        var style = FabStyleDefaults.Resolve(modifier, shape, static (c, changed) => FloatingActionButtonDefaults.Instance.GetLargeShape(c, changed),
             containerColor, contentColor, elevation,
             (mask & LargeFloatingActionButtonDefault.Modifier) != 0,
             (mask & LargeFloatingActionButtonDefault.Shape) != 0,
@@ -742,7 +742,7 @@ internal static partial class ComposeBridges
         int defaults, IComposer composer, int _changed)
     {
         var mask = (ExtendedFloatingActionButtonDefault)defaults;
-        var style = FabStyleDefaults.Resolve(modifier, shape, FloatingActionButtonDefaults.Instance.GetExtendedFabShape,
+        var style = FabStyleDefaults.Resolve(modifier, shape, static (c, changed) => FloatingActionButtonDefaults.Instance.GetExtendedFabShape(c, changed),
             containerColor, contentColor, elevation,
             (mask & ExtendedFloatingActionButtonDefault.Modifier) != 0,
             (mask & ExtendedFloatingActionButtonDefault.Shape) != 0,

@@ -28,6 +28,8 @@ public class FabStylingTests
 
     static async Task RunCase(int variant, bool direct)
     {
+        if (!OperatingSystem.IsAndroidVersionAtLeast(29))
+            Assert.Inconclusive("FAB frame-commit rendering checks require Android 10 or newer.");
         var instrumentation = TestInstrumentation.Current
             ?? throw new InvalidOperationException("FAB tests require the native instrumentation runner.");
         var automation = instrumentation.UiAutomation
