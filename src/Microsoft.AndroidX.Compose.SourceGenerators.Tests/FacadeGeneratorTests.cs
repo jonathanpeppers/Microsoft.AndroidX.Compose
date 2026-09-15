@@ -454,7 +454,9 @@ public class FacadeGeneratorTests
         Assert.NotNull(source);
         Assert.Contains("var __secDecorationBox = DecorationBox is null ? null : global::AndroidX.Compose.ComposableLambdas.WrapDecoration(composer, DecorationBox)", source);
         Assert.Contains("var __secOnTextLayout = __secOnTextLayoutCallback is null ? null : composer.RememberAction", source);
-        Assert.Contains("EditorValue(_value!, __secDecorationBox, __secOnTextLayout, __secDefaults, composer)", source);
+        Assert.Contains("EditorValue((_value ?? throw new global::System.InvalidOperationException(\"Missing value for the selected facade overload.\")), __secDecorationBox, __secOnTextLayout, __secDefaults, composer)", source);
+        Assert.DoesNotContain(CSharpSyntaxTree.ParseText(source).GetRoot().DescendantNodes(),
+            node => node.IsKind(SyntaxKind.SuppressNullableWarningExpression));
         Assert.Contains("WrapDecoration(__composer, decorationBox)", GeneratedMethodBody(source, "Editor_Secondary_Implicit"));
         Assert.Contains("onTextLayout is null ? null : __composer.RememberAction", GeneratedMethodBody(source, "Editor_Secondary_Explicit"));
     }
@@ -528,6 +530,9 @@ public class FacadeGeneratorTests
         Assert.Contains("v?.ToString() ?? string.Empty", GeneratedMethodBody(source, "Editor_Secondary_Implicit"));
         Assert.Contains("GetObject<global::AndroidX.Compose.UI.Text.Input.TextFieldValue>", GeneratedMethodBody(source, "Editor_PrimaryResource_Implicit"));
         Assert.Contains("WrapDecoration(__composer, decorationBox)", GeneratedMethodBody(source, "Editor_Secondary_Explicit"));
+        Assert.Contains("EditorString((_text ?? throw new global::System.InvalidOperationException(\"Missing text for the selected facade overload.\"))", source);
+        Assert.DoesNotContain(CSharpSyntaxTree.ParseText(source).GetRoot().DescendantNodes(),
+            node => node.IsKind(SyntaxKind.SuppressNullableWarningExpression));
         Assert.DoesNotContain("DynamicInvoke", source);
         Assert.DoesNotContain("System.Delegate", source);
     }
@@ -5126,9 +5131,13 @@ public class FacadeGeneratorTests
         // The discriminator's own enum bit is cleared.
         Assert.Contains("__secDefaults &= ~(int)global::AndroidX.Compose.IconDefault.ImageVector;", emitted);
 
-        // The secondary call passes the field (with `!`) and the
-        // shared slot expressions in the secondary's parameter order.
-        Assert.Contains("global::AndroidX.Compose.ComposeBridges.IconImageVectorExplicitDefaults(_imageVector!,", emitted);
+        // Preserve the discriminator guard and secondary parameter order.
+        Assert.Contains("global::AndroidX.Compose.ComposeBridges.IconImageVectorExplicitDefaults((_imageVector ?? throw new global::System.InvalidOperationException(\"Missing imageVector for the selected facade overload.\")),", emitted);
+        var secondaryDispatch = CSharpSyntaxTree.ParseText(emitted).GetRoot().DescendantNodes()
+            .OfType<Microsoft.CodeAnalysis.CSharp.Syntax.IfStatementSyntax>()
+            .Single(node => node.Condition.ToString() == "_imageVector is not null");
+        Assert.DoesNotContain(secondaryDispatch.DescendantNodes(),
+            node => node.IsKind(SyntaxKind.SuppressNullableWarningExpression));
         Assert.Contains(", __secDefaults, composer);", emitted);
         Assert.Contains("internal static void Icon(global::AndroidX.Compose.Runtime.IComposer composer, global::AndroidX.Compose.UI.Graphics.Painter.Painter painter,", emitted);
         Assert.Contains("internal static void Icon(global::AndroidX.Compose.Runtime.IComposer composer, global::AndroidX.Compose.UI.Graphics.Vector.ImageVector imageVector,", emitted);

@@ -48,6 +48,7 @@ public class BasicTextFieldTests
         }
     }
 
+    /// <summary>Verifies native string-route selection and IME composition survive recomposition.</summary>
     [TestMethod]
     [DataRow(3)]
     [DataRow(4)]
@@ -114,6 +115,7 @@ public class BasicTextFieldTests
         }
     }
 
+    /// <summary>Verifies TFV editing, decoration, Send, keyboard settings and native line limits.</summary>
     [TestMethod]
     [DataRow(0)]
     [DataRow(1)]
@@ -166,7 +168,8 @@ public class BasicTextFieldTests
             Assert.AreEqual(Sp.Pack(20.Sp()), activity.TextLayout.LayoutInput.Style.FontSize);
 
             await activity.MutateAsync(() => Assert.IsTrue(input.PerformEditorAction(ImeAction.Send)));
-            CollectionAssert.AreEqual(new List<string> { " a\U0001F680d " }, activity.Sent);
+            string[] expectedMessages = [" a\U0001F680d "];
+            CollectionAssert.AreEqual(expectedMessages, activity.Sent);
             Assert.AreEqual("", activity.Input.Value.Text);
             Assert.AreEqual(0L, activity.Input.Value.Selection);
             Assert.IsNull(activity.Input.Value.Composition);

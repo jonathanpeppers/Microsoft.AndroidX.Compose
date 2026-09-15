@@ -4016,10 +4016,8 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
               .Append(DefaultsBitExpression(info.Defaults, discBitMember)).AppendLine(";");
         }
 
-        // Build the secondary bridge call. The discriminator slot
-        // uses the `_<discName>` field (with `!` since we just
-        // null-checked it); shared params map to the primary's slot
-        // expressions via slotByName.
+        // Guard the secondary-only field just like other constructor-exclusive slots.
+        // Shared params map to the primary's slot expressions via slotByName.
         var slotByName = new Dictionary<string, FacadeSlot>(StringComparer.Ordinal);
         foreach (var s in slots)
             slotByName[s.Param.Name] = s;
@@ -4035,7 +4033,8 @@ public sealed class ComposeFacadeGenerator : IIncrementalGenerator
             if (i > 0) sb.Append(", ");
             if (p.Name == discName)
             {
-                sb.Append("_").Append(discName).Append('!');
+                sb.Append(CtorFieldExpression(
+                    new FacadeSlot(info.Discriminator, FacadeSlotKind.Primitive).WithExclusiveField()));
             }
             else if (slotByName.TryGetValue(p.Name, out var slot))
             {

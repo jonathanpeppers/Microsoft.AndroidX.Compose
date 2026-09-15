@@ -382,19 +382,21 @@ using AndroidX.Compose;
     "!positionProvider", "!tooltip", "!state", "modifier", "focusable",
     "enableUserInput", "!content")]
 
-// androidx.compose.material3.TextFieldKt.TextField (String overload) AND
+// androidx.compose.foundation.text.BasicTextFieldKt.BasicTextField (TextFieldValue overload).
 [assembly: ComposeDefaults("BasicTextFieldDefault",
     "!value", "!onValueChange", "modifier", "enabled", "readOnly",
     "textStyle", "keyboardOptions", "keyboardActions", "singleLine",
     "maxLines", "minLines", "visualTransformation", "onTextLayout",
     "interactionSource", "cursorBrush", "decorationBox")]
 
+// androidx.compose.foundation.text.BasicTextFieldKt.BasicTextField (String overload).
 [assembly: ComposeDefaults("BasicTextFieldStringDefault",
     "!text", "!onValueChange", "modifier", "enabled", "readOnly",
     "textStyle", "keyboardOptions", "keyboardActions", "singleLine",
     "maxLines", "minLines", "visualTransformation", "onTextLayout",
     "interactionSource", "cursorBrush", "decorationBox")]
 
+// androidx.compose.material3.TextFieldKt.TextField (String overload) AND
 // OutlinedTextFieldKt.OutlinedTextField (String overload): 23 user params,
 // bit 0 = value, bit 1 = onValueChange (both provided).
 [assembly: ComposeDefaults("TextFieldDefault",

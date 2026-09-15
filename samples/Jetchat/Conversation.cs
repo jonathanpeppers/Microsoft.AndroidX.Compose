@@ -404,6 +404,9 @@ public static class Conversation
         new Composed(c =>
         {
             var focused = c.MutableStateOf(false);
+            long cursorColor = scheme.Secondary;
+            var cursorBrush = c.Remember(
+                () => Brush.SolidColor(Color.FromPacked(cursorColor)), key1: cursorColor);
             var keyboardActions = c.Remember(() => KeyboardActionsHelper.Create(
                 onSend: () => Send(ui, input, selectedSelector, messagesScroll)));
             var selectorFocus = c.Remember(() => new FocusRequester());
@@ -424,7 +427,7 @@ public static class Conversation
             {
                 // Keep the Surface behind the bars; its content owns these insets once.
                 Modifier.FillMaxWidth().NavigationBarsPadding().ImePadding(),
-                BuildTextFieldRow(input, scheme, isRecording, swipeOffset, keyboardActions, focus =>
+                BuildTextFieldRow(input, scheme, isRecording, swipeOffset, cursorBrush, keyboardActions, focus =>
                 {
                     if (focused.Value == focus.IsFocused)
                         return;
@@ -446,6 +449,7 @@ public static class Conversation
         ColorScheme                  scheme,
         MutableState<bool>           isRecording,
         MutableNumberState<float>    swipeOffset,
+        AndroidX.Compose.UI.Graphics.Brush cursorBrush,
         AndroidX.Compose.Foundation.Text.KeyboardActions keyboardActions,
         Action<FocusState> onFocusChanged,
         bool focused)
@@ -478,7 +482,7 @@ public static class Conversation
                                   FontWeight = Typography.BodyLarge.FontWeight,
                                   Color = Color.FromPacked(scheme.Secondary),
                               },
-                              CursorBrush = Brush.SolidColor(Color.FromPacked(scheme.Secondary)),
+                              CursorBrush = cursorBrush,
                               DecorationBox = inner => new Box
                               {
                                   Modifier.FillMaxWidth().Height(64),
