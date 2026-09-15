@@ -82,6 +82,13 @@ var rxIssueRef = new Regex(
     @"(?<repo>(?:dotnet/[\w\-]+))#(?<num>\d+)|(?<bare>#\d+)",
     RegexOptions.Compiled);
 
+if (args.Contains("--self-test", StringComparer.Ordinal))
+{
+    TestJcwDeclarations(rxRegister, rxClassDecl);
+    Console.WriteLine("PASS: ordinary, primary-constructor, and multiline JCW declarations.");
+    return 0;
+}
+
 // --- Walk the source tree ---------------------------------------------------
 
 if (!Directory.Exists(SourceRoot))
@@ -397,7 +404,7 @@ static List<JcwClass> FindJcwClasses(string[] lines, Regex rxRegister, Regex rxC
             if (t.StartsWith("//")) continue;             // covers `///`
             if (t.StartsWith("/*") || t.StartsWith("*"))  continue;
             if (t.StartsWith("["))  continue;             // another attribute
-            var m = rxClassDecl.Match(lines[j]);
+            var m = rxClassDecl.Match(ReadClassDeclaration(lines, j));
             if (!m.Success) break;                        // unexpected: lost the JCW
             var name = m.Groups[1].Value;
             var bases = m.Groups[2].Success ? m.Groups[2].Value.Trim().TrimEnd('{').Trim() : "";
@@ -417,6 +424,55 @@ static List<JcwClass> FindJcwClasses(string[] lines, Regex rxRegister, Regex rxC
         }
     }
     return output;
+}
+
+static string ReadClassDeclaration(string[] lines, int start)
+{
+    var declaration = new StringBuilder();
+    int parentheses = 0;
+    for (int i = start; i < lines.Length; i++)
+    {
+        foreach (char c in MaskStringsAndChars(StripLineComment(lines[i])))
+        {
+            if (c == '(')
+                parentheses++;
+            else if (c == ')')
+                parentheses--;
+            else if (parentheses == 0)
+            {
+                declaration.Append(c);
+                if (c is '{' or ';')
+                    return declaration.ToString();
+            }
+        }
+        declaration.Append(' ');
+    }
+    return declaration.ToString();
+}
+
+static void TestJcwDeclarations(Regex rxRegister, Regex rxClassDecl)
+{
+    string[] declarations = [
+        "internal sealed class Callback : Java.Lang.Object, IFunction3",
+        "internal sealed class Callback(Action<int> body) : Java.Lang.Object, IFunction3",
+        """
+        internal sealed class Callback(
+            Action<(int X, int Y)> body,
+            string label = "not : a base {")
+            : Java.Lang.Object, IFunction3
+        """,
+    ];
+    foreach (string declaration in declarations)
+    {
+        var lines = ("[Register(\"net/compose/Callback\")]\n" + declaration + "\n{\n}\n").Split('\n');
+        var result = FindJcwClasses(lines, rxRegister, rxClassDecl);
+        if (result.Count != 1 || result[0].ClassName != "Callback"
+            || result[0].Implements != "IFunction3"
+            || result[0].StartLine != 2 || result[0].EndLine != lines.Length - 1)
+        {
+            throw new InvalidOperationException($"Incorrect JCW declaration scan: {declaration}");
+        }
+    }
 }
 
 static string ExtractImplements(string bases)

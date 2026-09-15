@@ -235,6 +235,9 @@ same while switching inset modes; its saved tap count must also survive
   is at most 80 dp in either direction. Returning inside that vertical
   corridor after crossing the horizontal threshold also cancels, matching
   pinned `voiceRecordingGesture`. A cancelled gesture cannot later commit.
+  Native coroutine cancellation is forwarded to the recording callback only
+  while a recording gesture is active: disposing an idle detector or an
+  already-cancelled gesture must not emit another recording cancellation.
   The overlay swap rides on the new generic `AnimatedContent<T>`
   facade. Callback updates during recomposition retain the active native
   handler; removing the control cancels its Kotlin pointer-input job.

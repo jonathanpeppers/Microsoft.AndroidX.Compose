@@ -164,6 +164,7 @@ public class LongPressDragTests
     {
         var activity = await Start(recording: true);
         long down = 0;
+        bool finished = false;
         try
         {
             float density = (global::Android.Content.Res.Resources.System?.DisplayMetrics
@@ -174,6 +175,12 @@ public class LongPressDragTests
             await Frames(activity);
             Assert.IsFalse(activity.Recording.Value);
             Assert.AreEqual(0, activity.StartCount);
+            await Finish(activity);
+            finished = true;
+            Assert.AreEqual(0, activity.CancelCount, "Disposing an idle detector must not cancel a recording that never started.");
+
+            activity = await Start(recording: true);
+            finished = false;
             down = Touch(activity, MotionEventActions.Down);
             await activity.Started.Task.WaitAsync(TimeSpan.FromSeconds(5));
             Assert.IsTrue(activity.Recording.Value);
@@ -203,11 +210,17 @@ public class LongPressDragTests
             Assert.IsFalse(activity.Recording.Value);
             Assert.AreEqual(1, activity.CancelCount);
             Assert.AreEqual(1, activity.EndCount, "Release after threshold cancellation must not commit.");
+            await Finish(activity);
+            finished = true;
+            Assert.AreEqual(1, activity.CancelCount, "Disposal must not repeat a prior threshold cancellation.");
         }
         finally
         {
-            if (down != 0) Touch(activity, MotionEventActions.Cancel, down);
-            await Finish(activity);
+            if (!finished)
+            {
+                if (down != 0) Touch(activity, MotionEventActions.Cancel, down);
+                await Finish(activity);
+            }
         }
     }
 

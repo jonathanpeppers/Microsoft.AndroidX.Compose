@@ -69,8 +69,7 @@ public static class RecordButton
                         },
                         onDragCancel: () =>
                         {
-                            gesture.End();
-                            onCancel();
+                            if (gesture.End()) onCancel();
                         }),
                 new Box
                 {

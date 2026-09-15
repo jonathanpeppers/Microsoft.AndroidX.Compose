@@ -22,6 +22,20 @@ public class RecordingGestureStateTests
     }
 
     [Fact]
+    public void Cancellation_EndsOnlyAnActiveRecordingOnce()
+    {
+        var state = new RecordingGestureState();
+        Assert.False(state.End());
+        state.Start();
+        Assert.True(state.End());
+        Assert.False(state.End());
+        state.Start();
+        Assert.True(state.Move(-200, 0, 1));
+        Assert.False(state.End());
+        Assert.False(state.End());
+    }
+
+    [Fact]
     public void MovementAccumulates_AndCancelledGestureCannotCommit()
     {
         var state = new RecordingGestureState();
