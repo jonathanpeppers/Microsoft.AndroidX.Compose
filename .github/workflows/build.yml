@@ -49,16 +49,26 @@ jobs:
             --applicationTitle "Compose Template Smoke" \
             --output "$RUNNER_TEMP/template-smoke"
 
-      - name: Build project template
+      - name: Build project template (CoreCLR)
         run: |
-          # The RC 1 Android workload otherwise requests an unpublished 11.0.0-rc.1.26428.117 pack.
           dotnet build "$RUNNER_TEMP/template-smoke/TemplateSmoke.csproj" -c Release \
             -p:RestoreAdditionalProjectSources="$RUNNER_TEMP/template-packages" \
-            -p:MicrosoftNETCoreAppRefPackageVersion=11.0.0-rc.1.26425.128 \
+            -p:BaseOutputPath="$RUNNER_TEMP/template-smoke-output/coreclr/bin/" \
+            -p:BaseIntermediateOutputPath="$RUNNER_TEMP/template-smoke-output/coreclr/obj/" \
+            -p:TreatWarningsAsErrors=true \
+            -warnaserror:XA4301 \
+            -bl:"$GITHUB_WORKSPACE/Microsoft.AndroidX.Compose.Template.CoreCLR.binlog"
+
+      - name: Build project template (NativeAOT)
+        run: |
+          dotnet build "$RUNNER_TEMP/template-smoke/TemplateSmoke.csproj" -c Release \
+            -p:RestoreAdditionalProjectSources="$RUNNER_TEMP/template-packages" \
+            -p:BaseOutputPath="$RUNNER_TEMP/template-smoke-output/nativeaot/bin/" \
+            -p:BaseIntermediateOutputPath="$RUNNER_TEMP/template-smoke-output/nativeaot/obj/" \
             -p:PublishAot=true \
             -p:TreatWarningsAsErrors=true \
             -warnaserror:XA4301 \
-            -bl:"$GITHUB_WORKSPACE/Microsoft.AndroidX.Compose.Template.binlog"
+            -bl:"$GITHUB_WORKSPACE/Microsoft.AndroidX.Compose.Template.NativeAOT.binlog"
 
       - name: Publish packages to GitHub Packages
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -79,20 +89,36 @@ jobs:
           name: Microsoft.AndroidX.Compose.binlog
           path: Microsoft.AndroidX.Compose.binlog
 
-      - name: Upload project template binlog
+      - name: Upload project template CoreCLR binlog
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: Microsoft.AndroidX.Compose.Template.binlog
-          path: Microsoft.AndroidX.Compose.Template.binlog
+          name: Microsoft.AndroidX.Compose.Template.CoreCLR.binlog
+          path: Microsoft.AndroidX.Compose.Template.CoreCLR.binlog
           if-no-files-found: warn
 
-      - name: Upload project template APK
+      - name: Upload project template NativeAOT binlog
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: Microsoft.AndroidX.Compose.Template.apk
-          path: ${{ runner.temp }}/template-smoke/bin/Release/net11.0-android/*.apk
+          name: Microsoft.AndroidX.Compose.Template.NativeAOT.binlog
+          path: Microsoft.AndroidX.Compose.Template.NativeAOT.binlog
+          if-no-files-found: warn
+
+      - name: Upload project template CoreCLR APK
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Microsoft.AndroidX.Compose.Template.CoreCLR.apk
+          path: ${{ runner.temp }}/template-smoke-output/coreclr/bin/Release/net11.0-android/*.apk
+          if-no-files-found: warn
+
+      - name: Upload project template NativeAOT APK
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Microsoft.AndroidX.Compose.Template.NativeAOT.apk
+          path: ${{ runner.temp }}/template-smoke-output/nativeaot/bin/Release/net11.0-android/*.apk
           if-no-files-found: warn
 
       - name: Upload NuGet packages

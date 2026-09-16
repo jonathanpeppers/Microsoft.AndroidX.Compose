@@ -10,6 +10,9 @@
     <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
     <TrimMode>full</TrimMode>
   </PropertyGroup>
+  <PropertyGroup Condition=" '$(BundledNETCoreAppPackageVersion)' == '11.0.0-rc.1.26425.128' ">
+    <MicrosoftNETCoreAppRefPackageVersion>$(BundledNETCoreAppPackageVersion)</MicrosoftNETCoreAppRefPackageVersion>
+  </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.AndroidX.Compose" Version="MicrosoftAndroidXComposeVersion" />
   </ItemGroup>
