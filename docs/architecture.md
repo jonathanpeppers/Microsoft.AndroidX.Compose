@@ -77,6 +77,43 @@ remembered state; the cached total of eight is not described as fresh.
 The earlier strict-freshness failure evidence remains valid for its original
 source/APK and is not relabeled as a passing run.
 
+### Verified native parity
+
+On 2026-09-16, source tree `6f7da91d07a06781b5e13a7c8fdc09b9f57dc091`
+passed both native characterization cases and all 16 managed cases on Pixel 7
+using one immutable target-36, arm64 APK. This verifies the explicitly approved
+native-compatible contract, not a repair of Kotlin's cached scope counts.
+
+| Suite | Passed | Native PID | TRX run ID | Device UTC start / finish |
+| --- | --- | --- | --- | --- |
+| Pinned native characterization | 2 | 5039 | `21160f6d-862a-4646-82ef-e68d45ca6295` | 22:12:00.0599967 / 22:12:03.6251421 |
+| Managed tree/composerless parity, expand-only and clip | 16 | 5230 | `3559e12a-84a8-45fb-a49e-f0959380c1e7` | 22:12:06.2446093 / 22:12:19.7608739 |
+
+Both runs had zero failed, error or skipped cases. All four managed
+direction/style combinations recorded requested item count five with cached
+native scope `8/2`, then `5/5` after changing `maxLines`. They also verified the
+five-item composition, retained item and indicator state, native accessibility
+clicks, nested opposite-direction `4/1` counts, premature-read errors and
+GC/indicator-only recomposition. The eight clip cases and four expand-only
+cases passed without altering their original assertions.
+
+The installed base APK was pulled and reverified before each invocation:
+SHA-256 `28602343DB428CE405A79F6F3A5F8A686B1832CE8AB785343BC12DD159813F7D`.
+Embedded app and runtime DLL payloads matched the build outputs exactly:
+`E15CC3CCAE3B7E3EA8B7B80C858032A55163F919A93939405F03D65A38A49917`
+and `C65D43EB5C3C63B15A472B62E38BB603FF4644F5342AC8208FACC8CEE36E1A50`.
+No assembly overrides were present. Each test process was stopped and its PID
+absence verified; all device commands ended at host time
+`2026-09-16T22:12:22.2866745Z`.
+
+The native and managed TRX SHA-256 values are respectively
+`0EB3A9FEEB9C76A0FCDE1774F67CD02BB36339354791B737F61FA8DDD1923A14`
+and `523EB861948BB513F3A21DB4719AF94594C71507D6A92E5D56F944D322AA6B1E`.
+Raw TRXs, serial-specific command records, installed-payload proofs and scoped
+logs are retained in the session's `flow-parity-native-171131` evidence folder.
+The earlier failed device runs and rejected host-JVM observer prototype remain
+historical evidence under their original source identities.
+
 ## Typed transition values
 
 `composer.UpdateTransition<T>(targetState)` and
