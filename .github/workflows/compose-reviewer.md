@@ -1,4 +1,5 @@
 ---
+timeout-minutes: 30
 on:
   slash_command:
     name: review
