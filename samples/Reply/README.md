@@ -1,7 +1,7 @@
 # Reply (C# port)
 
 A simplified C# port of Google's
-[`Reply`](https://github.com/android/compose-samples/tree/main/Reply)
+[`Reply`](https://github.com/android/compose-samples/tree/4c1fe7586e2fbf1c934925ef8ab64d3803361423/Reply)
 Material 3 adaptive design study, rebuilt on the `Microsoft.AndroidX.Compose`
 facade. Upstream Reply is a polished email client demonstrating
 adaptive layouts (compact / medium / expanded), foldable awareness,
@@ -273,8 +273,8 @@ dotnet build samples/Reply -t:Run    # deploy + run on connected device
 
 The data-layer string content (email subjects/bodies/account names),
 icon vectors, and avatar / photo bitmaps are copied from
-[android/compose-samples](https://github.com/android/compose-samples/tree/main/Reply)
+[android/compose-samples](https://github.com/android/compose-samples/tree/4c1fe7586e2fbf1c934925ef8ab64d3803361423/Reply)
 under the
-[Apache License 2.0](https://github.com/android/compose-samples/blob/main/LICENSE).
+[Apache License 2.0](https://github.com/android/compose-samples/blob/4c1fe7586e2fbf1c934925ef8ab64d3803361423/LICENSE).
 The C# UI code is original to this repo and built against the
 `Microsoft.AndroidX.Compose` facade.

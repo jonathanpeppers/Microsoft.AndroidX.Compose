@@ -50,9 +50,13 @@ with a fresh launch at `#composers`, 42 members, drawer/selector/dialog closed,
 empty unfocused input, IME hidden, and the list at its newest message. Record
 device/API, window size/density, font scale, IME, theme/dynamic-color inputs,
 network/media fixture, and exact APK identities in the shared baseline.
-For the visual subset J01, J02, J04, J08, and J09, capture both light/dark palettes
-in a compact portrait and a landscape window; use identical settings for each
-Kotlin/C# pair. Do not substitute the Debug palette extra for a system-theme change.
+Use the shared [environment and size matrix](../parity-baseline.md#environment-and-size-matrix)
+for exact viewports and font scales. The recorded short-window Jetchat subset
+is J01/J04/J07/J09; medium and expanded windows cover J01/J09, in both themes.
+The checklist does not imply every case was captured at every size; consult
+the [per-case results](../parity-baseline.md#jetchat) for outcomes and limits.
+Use identical settings for each Kotlin/C# pair. Do not substitute the Debug
+palette extra for a system-theme change.
 
 | Case | Initial state and actions | Expected result / known comparison boundary |
 |---|---|---|

@@ -1,7 +1,7 @@
 # JetNews (Microsoft.AndroidX.Compose port)
 
 A simplified C# port of
-[android/compose-samples ▸ JetNews](https://github.com/android/compose-samples/tree/main/JetNews).
+[android/compose-samples ▸ JetNews](https://github.com/android/compose-samples/tree/4c1fe7586e2fbf1c934925ef8ab64d3803361423/JetNews).
 Upstream is labelled **Medium complexity**; this port targets the
 phone-only single-pane flow and leans on the same data-shape ideas
 without copying any Kotlin source.
@@ -66,8 +66,9 @@ dotnet build samples/JetNews -t:Run
   sample-managed snackbar feedback.
 - **Resource-backed icons** via the Phase 7 `[PainterResource]`
   `Icon` facade (menu, search, back, bookmark, bookmark-filled,
-  share, home, interests, check, add, logo) — twelve vector drawables
-  under `Resources/drawable/`.
+  share, home, interests, check, add, close, refresh, JetNews logo,
+  and JetNews wordmark) — fourteen vector drawables under
+  `Resources/drawable/`.
 
 ## What's omitted
 
