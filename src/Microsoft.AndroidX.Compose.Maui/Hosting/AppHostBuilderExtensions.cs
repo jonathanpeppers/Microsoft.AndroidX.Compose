@@ -27,6 +27,9 @@ using MauiSearchBar = Microsoft.Maui.Controls.SearchBar;
 using MauiSlider = Microsoft.Maui.Controls.Slider;
 using MauiStepper = Microsoft.Maui.Controls.Stepper;
 using MauiSwitch = Microsoft.Maui.Controls.Switch;
+using MauiSwipeItem = Microsoft.Maui.Controls.SwipeItem;
+using MauiSwipeItemView = Microsoft.Maui.Controls.SwipeItemView;
+using MauiSwipeView = Microsoft.Maui.Controls.SwipeView;
 using MauiTimePicker = Microsoft.Maui.Controls.TimePicker;
 using MauiVerticalStackLayout = Microsoft.Maui.Controls.VerticalStackLayout;
 using MauiWebView = Microsoft.Maui.Controls.WebView;
@@ -201,6 +204,9 @@ public static class AppHostBuilderExtensions
             // (dispatched by ItemsLayout) instead of the stock
             // per-cell ComposeView island.
             handlers.AddHandler<MauiCollectionView,         CollectionViewHandler>();
+            handlers.AddHandler<MauiSwipeView,              SwipeViewHandler>();
+            handlers.AddHandler<MauiSwipeItemView,          SwipeItemViewHandler>();
+            handlers.AddHandler<MauiSwipeItem,              SwipeItemMenuItemHandler>();
 
             // Phase 4 Slice 1 — stack navigation. Replaces stock
             // NavigationViewHandler (which hosts pushed pages in

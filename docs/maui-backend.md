@@ -1965,7 +1965,7 @@ theme + snapshot state directly.
   affordances (checkmark, ripple emphasis). The handler already
   wires the data path for Single + Multiple selection, but the
   visual state is a follow-up.
-- `ScrollTo(int)` / `ScrollTo(item)` / `Scrolled` event
+- `ScrollTo(int)` / `ScrollTo(item)`
   (`LazyListState.AnimateScrollToItemAsync` already exists; wiring
   MAUI's `ScrollToRequested` is mechanical).
 - `ItemsUpdatingScrollMode` (`KeepItemsInView` /
@@ -1979,8 +1979,50 @@ theme + snapshot state directly.
 - `CarouselView` two-way `Position` ↔ `IndicatorView.Position`
   (separate slice — needs `PagerState` Phase-4b state-holder with a
   parameterised `pageCount` Remember).
-- `SwipeView` (`SwipeToDismissBox` doesn't match SwipeView's
-  left/right action panels; needs more bridge work).
+
+#### Phase 3 Slice 2 — `SwipeViewHandler` ✅ shipped
+
+`SwipeView`, `SwipeItemView`, and `SwipeItem` now stay inside the page
+composition instead of falling back to MAUI's AppCompat
+`MauiSwipeView`/button surfaces:
+
+- `SwipeViewHandler` measures four action panels and the resting content
+  with Compose's low-level `Layout` facade. Left/right/top/bottom
+  collections are selected from the sign and axis of the drag.
+- Two axis-specific `Modifier.draggable` instances preserve Compose's
+  touch-slop arbitration. Horizontal SwipeViews inside a vertical
+  `CollectionView` do not consume vertical list motion.
+- `SwipeTransitionMode.Reveal` keeps the selected panel fixed behind the
+  translated content. `SwipeTransitionMode.Drag` translates that panel
+  in from the corresponding edge.
+- `SwipeItems.Mode=Reveal` exposes independently clickable actions.
+  `Mode=Execute` invokes every visible enabled action after the same 60%
+  threshold used by stock MAUI. `SwipeBehaviorOnInvoked` controls whether
+  the row closes.
+- `SwipeItemMenuItemHandler` maps text, icon source, background, text
+  contrast, font, spacing, enabled state, and visibility into a Compose
+  action tile. `SwipeItemViewHandler` walks arbitrary custom content
+  through `ComposeWalker`.
+- User gestures forward `SwipeStarted`, per-frame `SwipeChanging` offsets
+  in dp, and `SwipeEnded`. `Open(...)`/`Close(...)` command requests use
+  the requested side and animation flag without synthesizing user events.
+- Linear `CollectionViewHandler` paths now publish real `Scrolled` events
+  from `LazyListLayoutInfo`. Deltas match an item visible in consecutive
+  snapshots, which handles variable row sizes and index transitions and
+  lets MAUI's existing SwipeView parent-scroll subscription close open
+  rows after more than 10dp.
+
+The scroll monitor deliberately emits no delta for an instantaneous
+programmatic jump whose before/after viewports share no visible item.
+Compose exposes no absolute list distance for that discontinuity; inventing
+one from item indices would be wrong for variable-size rows. Animated
+programmatic scrolling and user scrolling produce intermediate snapshots
+and are covered normally.
+
+`SwipeViewsPage` exercises every direction, both transition modes,
+execute mode, icon/text and custom-content items, runtime collection and
+property changes, programmatic open/close, lifecycle events, and nested
+CollectionView rows.
 
 **Lessons learned.**
 
@@ -2065,8 +2107,7 @@ theme + snapshot state directly.
 `CollectionView` → `LazyColumn<T>` / `LazyRow<T>` / `LazyVerticalGrid<T>`
 chosen by `ItemsLayout`. `ListView` → same. `CarouselView` →
 `HorizontalPager` (+ PagerState). `TableView` → grouped `LazyColumn`.
-`SwipeView` → `Modifier.Swipeable` (or `SwipeToDismissBox` if/when
-wrapped).
+`SwipeView` → custom `Layout` + axis-specific `Modifier.draggable`.
 
 This phase is also where lazy-list scaling lands. With the Phase 2
 single-ComposeView-per-page model in place, `CollectionViewHandler`

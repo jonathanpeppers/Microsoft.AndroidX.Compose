@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:local="clr-namespace:Microsoft.AndroidX.Compose.Maui.Sample.Pages"
+             x:Class="Microsoft.AndroidX.Compose.Maui.Sample.Pages.SwipeViewsPage"
+             x:DataType="local:SwipeViewsPage"
+             x:Name="Self"
+             Title="Swipe views">
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="16">
+            <Label Text="SwipeView"
+                   Style="{StaticResource Headline}" />
+            <Label Text="Swipe the first card from every edge. Reveal and Drag modes, executable actions, custom content, runtime updates, and nested CollectionView rows are all Compose-backed." />
+            <Label x:Name="StatusLabel"
+                   Text="Ready"
+                   FontAttributes="Bold" />
+
+            <HorizontalStackLayout Spacing="8">
+                <Button Text="Open left" Clicked="OnOpenLeft" />
+                <Button Text="Open bottom" Clicked="OnOpenBottom" />
+                <Button Text="Close" Clicked="OnClose" />
+            </HorizontalStackLayout>
+
+            <HorizontalStackLayout Spacing="8">
+                <Button Text="Add left item" Clicked="OnAddLeftItem" />
+                <Button Text="Toggle item" Clicked="OnToggleItem" />
+            </HorizontalStackLayout>
+
+            <Label Text="Reveal: all four directions"
+                   FontAttributes="Bold" />
+            <SwipeView x:Name="FourDirectionSwipe"
+                       HeightRequest="120"
+                       Threshold="100"
+                       SwipeStarted="OnSwipeStarted"
+                       SwipeChanging="OnSwipeChanging"
+                       SwipeEnded="OnSwipeEnded">
+                <SwipeView.LeftItems>
+                    <SwipeItems Mode="Reveal" SwipeBehaviorOnInvoked="Close">
+                        <SwipeItem x:Name="DynamicItem"
+                                   Text="Archive"
+                                   BackgroundColor="#1565C0"
+                                   IconImageSource="dotnet_bot.png"
+                                   Invoked="OnItemInvoked" />
+                        <SwipeItemView Invoked="OnCustomItemInvoked">
+                            <Border BackgroundColor="#00897B" Padding="14">
+                                <Label Text="Custom"
+                                       TextColor="White"
+                                       VerticalOptions="Center" />
+                            </Border>
+                        </SwipeItemView>
+                    </SwipeItems>
+                </SwipeView.LeftItems>
+                <SwipeView.RightItems>
+                    <SwipeItems Mode="Reveal" SwipeBehaviorOnInvoked="RemainOpen">
+                        <SwipeItem Text="Delete"
+                                   BackgroundColor="#C62828"
+                                   Invoked="OnItemInvoked" />
+                    </SwipeItems>
+                </SwipeView.RightItems>
+                <SwipeView.TopItems>
+                    <SwipeItems Mode="Reveal" SwipeBehaviorOnInvoked="Close">
+                        <SwipeItem Text="Pin"
+                                   BackgroundColor="#6A1B9A"
+                                   Invoked="OnItemInvoked" />
+                    </SwipeItems>
+                </SwipeView.TopItems>
+                <SwipeView.BottomItems>
+                    <SwipeItems Mode="Reveal" SwipeBehaviorOnInvoked="Close">
+                        <SwipeItem Text="More"
+                                   BackgroundColor="#EF6C00"
+                                   Invoked="OnItemInvoked" />
+                    </SwipeItems>
+                </SwipeView.BottomItems>
+                <Border BackgroundColor="#E8EAF6" Stroke="#3F51B5" Padding="18">
+                    <VerticalStackLayout>
+                        <Label Text="Four-direction reveal" FontAttributes="Bold" TextColor="#1A237E" />
+                        <Label Text="Right/left reveal actions; down/up reveal top/bottom actions."
+                               TextColor="#1A237E" />
+                    </VerticalStackLayout>
+                </Border>
+            </SwipeView>
+
+            <Label Text="Drag transition"
+                   FontAttributes="Bold" />
+            <SwipeView x:Name="DragSwipe"
+                       HeightRequest="96"
+                       SwipeStarted="OnSwipeStarted"
+                       SwipeChanging="OnSwipeChanging"
+                       SwipeEnded="OnSwipeEnded">
+                <SwipeView.LeftItems>
+                    <SwipeItems Mode="Reveal">
+                        <SwipeItem Text="Read"
+                                   BackgroundColor="#2E7D32"
+                                   Invoked="OnItemInvoked" />
+                    </SwipeItems>
+                </SwipeView.LeftItems>
+                <SwipeView.RightItems>
+                    <SwipeItems Mode="Reveal">
+                        <SwipeItem Text="Later"
+                                   BackgroundColor="#5D4037"
+                                   Invoked="OnItemInvoked" />
+                    </SwipeItems>
+                </SwipeView.RightItems>
+                <Border BackgroundColor="#E8F5E9" Stroke="#2E7D32" Padding="18">
+                    <Label Text="Actions drag in with the content"
+                           TextColor="#1B5E20"
+                           VerticalOptions="Center" />
+                </Border>
+            </SwipeView>
+
+            <Label Text="Execute mode"
+                   FontAttributes="Bold" />
+            <SwipeView x:Name="ExecuteSwipe"
+                       HeightRequest="88"
+                       SwipeStarted="OnSwipeStarted"
+                       SwipeChanging="OnSwipeChanging"
+                       SwipeEnded="OnSwipeEnded">
+                <SwipeView.LeftItems>
+                    <SwipeItems Mode="Execute" SwipeBehaviorOnInvoked="Auto">
+                        <SwipeItem Text="Done"
+                                   BackgroundColor="#4527A0"
+                                   Invoked="OnExecuteInvoked" />
+                    </SwipeItems>
+                </SwipeView.LeftItems>
+                <Border BackgroundColor="#EDE7F6" Stroke="#4527A0" Padding="18">
+                    <Label Text="Swipe right past 60% to execute automatically"
+                           TextColor="#311B92" />
+                </Border>
+            </SwipeView>
+
+            <Label Text="Nested vertical CollectionView"
+                   FontAttributes="Bold" />
+            <Label Text="Vertical scrolling must win over each row's horizontal swipe. Scrolling more than 10dp closes an open row." />
+            <CollectionView ItemsSource="{Binding Rows, Source={x:Reference Self}, x:DataType=local:SwipeViewsPage}"
+                            HeightRequest="320">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="local:SwipeRow">
+                        <SwipeView HeightRequest="76"
+                                   SwipeStarted="OnSwipeStarted"
+                                   SwipeEnded="OnSwipeEnded">
+                            <SwipeView.LeftItems>
+                                <SwipeItems Mode="Reveal">
+                                    <SwipeItem Text="Flag"
+                                               BackgroundColor="#0277BD"
+                                               Invoked="OnItemInvoked" />
+                                </SwipeItems>
+                            </SwipeView.LeftItems>
+                            <SwipeView.RightItems>
+                                <SwipeItems Mode="Reveal">
+                                    <SwipeItem Text="Delete"
+                                               BackgroundColor="#C62828"
+                                               Invoked="OnItemInvoked" />
+                                </SwipeItems>
+                            </SwipeView.RightItems>
+                            <Border BackgroundColor="#FAFAFA" Stroke="#BDBDBD" Padding="12,8">
+                                <VerticalStackLayout Spacing="2">
+                                    <Label Text="{Binding Title}" FontAttributes="Bold" TextColor="#212121" />
+                                    <Label Text="{Binding Detail}" FontSize="12" TextColor="#424242" />
+                                </VerticalStackLayout>
+                            </Border>
+                        </SwipeView>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

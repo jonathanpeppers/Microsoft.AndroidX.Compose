@@ -70,6 +70,15 @@ namespace Microsoft.AndroidX.Compose.Maui.Handlers;
 /// <see cref="BuildNode(IComposer)"/> and re-snapshots the source into
 /// an <see cref="IReadOnlyList{T}"/> the lazy facades index into.</para>
 ///
+/// <para><b>Scroll events.</b> Linear lists install a remembered
+/// <see cref="LazyListState"/> and publish MAUI
+/// <see cref="Microsoft.Maui.Controls.ItemsView.Scrolled"/> events from
+/// Compose layout snapshots. Deltas are derived from the actual offset
+/// of an item visible in consecutive snapshots, so variable-size rows
+/// and first-visible-index transitions remain accurate. An instantaneous
+/// jump with no shared visible item emits no event rather than inventing
+/// a distance Compose cannot report.</para>
+///
 /// <para><b>Empty view.</b> When the source is null or empty and
 /// <see cref="MauiCollectionView.EmptyView"/> is set, the handler renders
 /// the empty-view content instead of the list. A <see cref="string"/> is
@@ -85,9 +94,7 @@ namespace Microsoft.AndroidX.Compose.Maui.Handlers;
 /// <see cref="Microsoft.Maui.Controls.SelectableItemsView.SelectedItems"/>
 /// so <see cref="Microsoft.Maui.Controls.SelectableItemsView.SelectionChanged"/>
 /// fires — but the selected row is not yet visually emphasised);
-/// <see cref="Microsoft.Maui.Controls.ItemsView.ScrollTo(int, int, Microsoft.Maui.Controls.ScrollToPosition, bool)"/>
-/// /
-/// <see cref="Microsoft.Maui.Controls.ItemsView.Scrolled"/> event;
+/// <see cref="Microsoft.Maui.Controls.ItemsView.ScrollTo(int, int, Microsoft.Maui.Controls.ScrollToPosition, bool)"/>;
 /// <see cref="Microsoft.Maui.Controls.ItemsView.ItemsUpdatingScrollMode"/>
 /// stability;
 /// <see cref="Microsoft.Maui.Controls.ItemsView.RemainingItemsThreshold"/>
@@ -127,6 +134,7 @@ public partial class CollectionViewHandler : ComposeElementHandler<MauiCollectio
     // off the top of BuildNode so a single Compose dependency edge fans
     // out to the whole list subtree.
     readonly MutableState<int> _itemsVersion = new(0);
+    readonly LazyListState _linearListState = new();
 
     // Tracks the currently-subscribed INotifyCollectionChanged source so
     // we can unsubscribe before swapping to a new source or disposing
@@ -196,6 +204,7 @@ public partial class CollectionViewHandler : ComposeElementHandler<MauiCollectio
         // Read the layout live — it's a BindableObject the consumer can
         // swap at runtime, and the mapper bumped _itemsVersion if so.
         var layout = view.ItemsLayout;
+        ConfigureScrollMonitoring(composer, view, layout, context);
         return BuildList(view, layout, items, itemContent, context);
     }
 
@@ -240,7 +249,7 @@ public partial class CollectionViewHandler : ComposeElementHandler<MauiCollectio
         };
     }
 
-    static ComposableNode BuildLazyColumn(
+    ComposableNode BuildLazyColumn(
         IReadOnlyList<object> items,
         Func<object, ComposableNode> itemContent,
         Arrangement? spacing,
@@ -249,11 +258,12 @@ public partial class CollectionViewHandler : ComposeElementHandler<MauiCollectio
         return new LazyColumn<object>(items, itemContent)
         {
             Modifier            = outer,
+            State               = _linearListState,
             VerticalArrangement = spacing,
         };
     }
 
-    static ComposableNode BuildLazyRow(
+    ComposableNode BuildLazyRow(
         IReadOnlyList<object> items,
         Func<object, ComposableNode> itemContent,
         Arrangement? spacing,
@@ -262,8 +272,73 @@ public partial class CollectionViewHandler : ComposeElementHandler<MauiCollectio
         return new LazyRow<object>(items, itemContent)
         {
             Modifier              = outer,
+            State                 = _linearListState,
             HorizontalArrangement = spacing,
         };
+    }
+
+    void ConfigureScrollMonitoring(
+        IComposer composer,
+        MauiCollectionView view,
+        MauiItemsLayout? layout,
+        IMauiContext context)
+    {
+        bool? horizontal = layout switch
+        {
+            MauiGridItemsLayout => null,
+            MauiLinearItemsLayout linear =>
+                linear.Orientation == MauiItemsLayoutOrient.Horizontal,
+            _ => false,
+        };
+        if (!horizontal.HasValue)
+            return;
+
+        float density =
+            context.Context?.Resources?.DisplayMetrics?.Density ?? 1f;
+        var dispatcher = view.Dispatcher
+            ?? throw new InvalidOperationException(
+                "Dispatcher not set on CollectionView.");
+        composer.LaunchedEffect(
+            _linearListState,
+            horizontal.Value,
+            async cancellationToken =>
+            {
+                var tracker = new CollectionScrollTracker(horizontal.Value);
+                await foreach (var snapshot in ComposeExtensions
+                    .SnapshotFlow(CaptureLinearScrollSnapshot)
+                    .WithCancellation(cancellationToken))
+                {
+                    if (tracker.TryObserve(snapshot, density, out var args) &&
+                        args is not null)
+                    {
+                        cancellationToken.ThrowIfCancellationRequested();
+                        await dispatcher.DispatchAsync(() =>
+                        {
+                            if (ReferenceEquals(VirtualView, view))
+                                view.SendScrolled(args);
+                        }).ConfigureAwait(false);
+                    }
+                }
+            });
+    }
+
+    LazyListScrollSnapshot CaptureLinearScrollSnapshot()
+    {
+        var layoutInfo = _linearListState.Jvm.LayoutInfo;
+        var visible = layoutInfo.VisibleItemsInfo;
+        var snapshot = new LazyListVisibleItemSnapshot[visible.Count];
+        for (int i = 0; i < visible.Count; i++)
+        {
+            var item = visible[i];
+            snapshot[i] = new LazyListVisibleItemSnapshot(
+                item.Index,
+                item.Offset,
+                item.Size);
+        }
+        return new LazyListScrollSnapshot(
+            snapshot,
+            layoutInfo.ViewportStartOffset,
+            layoutInfo.ViewportEndOffset);
     }
 
     static ComposableNode BuildVerticalGrid(
