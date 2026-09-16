@@ -1,3 +1,4 @@
+using AndroidX.Compose.Animation.Core;
 using AndroidX.Compose.Material3;
 using AndroidX.Compose.Samples.Jetchat.Theme;
 using Baselines = AndroidX.Compose.UI.Layout.AlignmentLineKt;
@@ -184,8 +185,20 @@ public static class Profile
             bool expanded  = scrollState.Value == 0;
             string label   = isMe ? "Edit profile" : "Message";
             int iconRes    = isMe ? Resource.Drawable.ic_create : Resource.Drawable.ic_chat;
-            var fadeInSpec = c.Remember(() => AnimationSpecs.Tween(83, 67));
-            var fadeOutSpec = c.Remember(() => AnimationSpecs.Tween(83));
+            var transition = c.UpdateTransition(expanded, "Profile FAB");
+            var fadeInSpec = c.Remember(() => AnimationSpecs.Tween(83, 67, EasingKt.LinearEasing));
+            var fadeOutSpec = c.Remember(() => AnimationSpecs.Tween(83, easing: EasingKt.LinearEasing));
+            var widthSpec = c.Remember(() => AnimationSpecs.Tween(200));
+            var opacity = transition.AnimateFloat(
+                c,
+                value => value ? 1f : 0f,
+                expanded ? fadeInSpec : fadeOutSpec,
+                "Profile FAB text opacity");
+            var widthFactor = transition.AnimateFloat(
+                c,
+                value => value ? 1f : 0f,
+                widthSpec,
+                "Profile FAB width");
 
             var fab = new FloatingActionButton(onClick: () => popupOpen.Value = true)
             {
@@ -197,29 +210,44 @@ public static class Profile
                     .WidthIn(min: 48),
                 ContainerColor = Color.FromPacked(scheme.TertiaryContainer),
             };
-            fab.Add(new Row(
-                horizontalArrangement: Arrangement.Center,
-                verticalAlignment: Alignment.Vertical.CenterVertically)
+            var content = new Layout((scope, measurables, constraints) =>
+            {
+                if (measurables.Count != 2)
+                    throw new InvalidOperationException("Profile FAB content requires exactly one icon and one label.");
+
+                var icon = measurables[0].Measure(constraints);
+                var text = measurables[1].Measure(constraints);
+                int height = constraints.HasBoundedHeight
+                    ? constraints.MaxHeight
+                    : Math.Max(icon.Height, text.Height);
+                float iconPadding = (height - icon.Width) / 2f;
+                float expandedWidth = icon.Width + text.Width + iconPadding * 3f;
+                int width = constraints.ConstrainWidth((int)MathF.Round(
+                    height + (expandedWidth - height) * widthFactor.Value));
+
+                return scope.Layout(width, constraints.ConstrainHeight(height), placement =>
+                {
+                    placement.PlaceRelative(
+                        icon,
+                        (int)MathF.Round(iconPadding),
+                        height / 2 - icon.Height / 2);
+                    placement.PlaceRelative(
+                        text,
+                        (int)MathF.Round(icon.Width + iconPadding * 2f),
+                        height / 2 - text.Height / 2);
+                });
+            })
             {
                 new Icon(iconRes, label)
                 {
                     Modifier = Modifier.Size(24),
                 },
-                new AnimatedVisibility(
-                    expanded,
-                    enter: Transitions.FadeIn(animationSpec: fadeInSpec),
-                    exit: Transitions.FadeOut(animationSpec: fadeOutSpec))
+                new Text(label)
                 {
-                    new Text(label)
-                    {
-                        Modifier = Modifier
-                            .AnimateEnterExit(
-                                enter: Transitions.SlideInHorizontally(width => -width),
-                                exit: Transitions.SlideOutHorizontally(width => -width))
-                            .Padding(start: 12, end: 16),
-                    },
+                    Modifier = Modifier.Alpha(opacity.Value),
                 },
-            });
+            };
+            fab.Add(content);
             return fab;
         });
 
