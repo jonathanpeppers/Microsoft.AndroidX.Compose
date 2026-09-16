@@ -27,6 +27,7 @@ public class FlowOverflowTestActivity : ComponentActivity
     internal MutableState<int> Tick { get; } = new(0);
     internal FlowOverflowSnapshot? Last;
     internal readonly Dictionary<int, HashSet<int>> DrawnItems = [];
+    internal readonly Dictionary<int, Dictionary<int, object>> ComposedItems = [];
     internal readonly Dictionary<string, (int Total, int Shown)> NestedCounts = [];
     internal readonly Dictionary<string, ScopeKind> ScopeChecks = [];
     internal bool PrematureReadRejected;
@@ -161,17 +162,23 @@ public class FlowOverflowTestActivity : ComponentActivity
         }
     }
 
-    ComposableNode Item(int index, int generation) => new Box
+    ComposableNode Item(int index, int generation) => new Composed(composer =>
     {
-        Modifier.Size(48).Background(Color.LightGray).DrawWithContent(draw =>
+        if (!ComposedItems.TryGetValue(generation, out var items))
+            ComposedItems[generation] = items = [];
+        items[index] = composer.Remember(() => new object());
+        return new Box
         {
-            draw.DrawContent();
-            if (!DrawnItems.TryGetValue(generation, out var items))
-                DrawnItems[generation] = items = [];
-            items.Add(index);
-        }),
-        new Text(index.ToString()) { Color = Color.Black },
-    };
+            Modifier.Size(48).Background(Color.LightGray).DrawWithContent(draw =>
+            {
+                draw.DrawContent();
+                if (!DrawnItems.TryGetValue(generation, out var drawn))
+                    DrawnItems[generation] = drawn = [];
+                drawn.Add(index);
+            }),
+            new Text(index.ToString()) { Color = Color.Black },
+        };
+    });
 
     ComposableNode Indicator(FlowOverflowScope scope, int generation, bool expand) =>
         Indicator(() => scope.TotalItemCount, () => scope.ShownItemCount, generation, expand);

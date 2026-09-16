@@ -30,7 +30,7 @@ public static class FlowOverflowDemo
         var count = Composables.Remember(() => new MutableState<int>(8));
         Composables.Column(() =>
         {
-            Composables.Text("Counts below are read during drawing, not composition.");
+            Composables.Text("Native scope snapshots, read during drawing. Item-only changes may retain old counts.");
             Composables.Button(() => count.Value = count.Value == 8 ? 5 : 8,
                 () => Composables.Text($"Toggle items (now {count.Value})"));
             Composables.Text("Row: three cells per row");

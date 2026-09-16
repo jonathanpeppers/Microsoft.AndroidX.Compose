@@ -35,6 +35,11 @@ measurement; total count may not yet be initialized. Kotlin lazily caches
 each scope's first count read, so scopes are invocation-local and must not be
 saved across indicator invocations. No managed eager snapshot, zero fallback,
 or promise of snapshot-observable live state is added.
+Even a new managed callback invocation can receive the same cached native scope.
+Changing regular content from eight items to five at an unchanged line limit can
+therefore retain a native total of eight. Changing `maxLines` recreates the native
+indicator scope and exposes the new total. This is an explicit pinned-native
+compatibility limitation, not a freshness guarantee supplied by the C# facade.
 
 The flow facades remain generated. An explicit managed-reference registry
 allows nullable wrapper-passthrough options without classifying arbitrary
@@ -65,6 +70,12 @@ activity instance with a resumed, attached, laid-out and focused native window
 and process. Clicks reacquire the package/window-owned accessibility root and
 require one actionable target. Draw snapshots carry the fixture/process identity
 and generation; count assertions are not substituted with host focus polling.
+The native characterization and managed parity cases assert the observed
+`8/2 -> 8/8 -> 8/2 -> 8/2 -> 5/5` scope sequence. At the fourth step they
+separately verify that five regular items actually composed and retained their
+remembered state; the cached total of eight is not described as fresh.
+The earlier strict-freshness failure evidence remains valid for its original
+source/APK and is not relabeled as a passing run.
 
 ## Typed transition values
 

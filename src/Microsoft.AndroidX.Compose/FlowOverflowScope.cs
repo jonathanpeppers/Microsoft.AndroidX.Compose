@@ -6,6 +6,10 @@ namespace AndroidX.Compose;
 /// Read them in the indicator's drawing or post-layout callback, never while
 /// constructing its content. Kotlin caches the first read on each native scope;
 /// do not retain a scope across indicator invocations.
+/// A new managed callback invocation can still receive a previously cached native
+/// scope. These getters are native snapshots, not live item-source counts:
+/// content-only changes at an unchanged line limit can retain the old total until
+/// the native scope is recreated. The facade preserves this pinned Kotlin behavior.
 /// Counts exclude the overflow indicator itself.
 /// </remarks>
 public sealed class FlowOverflowScope
@@ -19,9 +23,9 @@ public sealed class FlowOverflowScope
         _shown = shown;
     }
 
-    /// <summary>Total regular items, including hidden items. Read after layout.</summary>
+    /// <summary>Native scope's cached total of regular items, including hidden items. Read after layout.</summary>
     public int TotalItemCount => _total();
 
-    /// <summary>Regular items shown by the layout. Reading before measurement throws.</summary>
+    /// <summary>Native scope's cached shown-item count. Reading before measurement throws.</summary>
     public int ShownItemCount => _shown();
 }

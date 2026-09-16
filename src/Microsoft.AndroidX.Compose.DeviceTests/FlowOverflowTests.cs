@@ -3,7 +3,7 @@ using AndroidX.Compose;
 
 namespace Microsoft.AndroidX.Compose.DeviceTests;
 
-/// <summary>Exact native count, clipping, interaction, scope and recomposition regressions.</summary>
+/// <summary>Exact pinned-native parity, clipping, interaction, scope and recomposition regressions.</summary>
 [TestClass]
 [DoNotParallelize]
 public class FlowOverflowTests
@@ -14,13 +14,13 @@ public class FlowOverflowTests
     [TestMethod]
     [DataRow(true)]
     [DataRow(false)]
-    public Task NativeControl_CountsFollowInteractiveLayout(bool horizontal) =>
+    public Task NativeControl_CharacterizesPinnedCountLifetime(bool horizontal) =>
         Exercise(2, horizontal, 3);
 
     [TestMethod]
     [DataRow(0, true)] [DataRow(0, false)]
     [DataRow(1, true)] [DataRow(1, false)]
-    public Task Managed_CountsFollowInteractiveLayout(int style, bool horizontal) =>
+    public Task Managed_MatchesPinnedNativeCountLifetime(int style, bool horizontal) =>
         Exercise(style, horizontal, 3);
 
     [TestMethod]
@@ -72,6 +72,8 @@ public class FlowOverflowTests
         try
         {
             var first = await Expect(activity, 0, 8, 2, true, horizontal);
+            object? firstItemState = null;
+            FlowTestAdmission.OnUi(() => firstItemState = activity.ComposedItems[0][0]);
             Assert.AreEqual(0, first.Counter);
             Assert.IsTrue(activity.PrematureReadRejected, "Shown count must preserve the native pre-measure failure.");
             await Click(activity, "flow-expand");
@@ -85,7 +87,15 @@ public class FlowOverflowTests
                 activity.Total.Value = 5;
                 activity.Generation.Value++;
             });
-            await Expect(activity, 3, 5, 2, true, horizontal);
+            // Foundation 1.11.3 retains this native scope until maxLines changes.
+            // The list really contains five items; the scope's cached total is still eight.
+            await Expect(activity, 3, 8, 2, true, horizontal);
+            FlowTestAdmission.OnUi(() =>
+            {
+                Assert.AreEqual(5, activity.Total.Value);
+                Assert.AreEqual(5, activity.ComposedItems[3].Count, "The updated item content did not compose.");
+                Assert.AreSame(firstItemState, activity.ComposedItems[3][0], "Item remember was reset by a content update.");
+            });
             await Click(activity, "flow-expand");
             await Expect(activity, 4, 5, 5, false, horizontal);
             int rootPasses = activity.RootPasses;
@@ -119,11 +129,12 @@ public class FlowOverflowTests
                 snapshot = activity.Last ?? throw new InvalidOperationException("No flow draw snapshot.");
                 trace = $"FLOW pid={snapshot.NativePid} direction={(horizontal ? "row" : "column")} " +
                     $"instance={snapshot.InstanceId} window={activity.Admission.WindowId} " +
-                    $"generation={generation} actual={snapshot.Total}/{snapshot.Shown} expected={total}/{shown} expand={snapshot.Expand}";
+                    $"generation={generation} requestedItems={activity.Total.Value} " +
+                    $"nativeScope={snapshot.Total}/{snapshot.Shown} expectedPinnedScope={total}/{shown} expand={snapshot.Expand}";
                 Assert.AreEqual(activity.Admission.InstanceId, snapshot.InstanceId, "Snapshot belongs to a different fixture.");
                 Assert.AreEqual(activity.Admission.NativePid, snapshot.NativePid, "Snapshot belongs to a different native process.");
-                Assert.AreEqual(total, snapshot.Total, "Total count is stale.");
-                Assert.AreEqual(shown, snapshot.Shown, "Shown count is stale.");
+                Assert.AreEqual(total, snapshot.Total, "Total count differs from the pinned native scope contract.");
+                Assert.AreEqual(shown, snapshot.Shown, "Shown count differs from the pinned native scope contract.");
                 Assert.AreEqual(horizontal ? ScopeKind.Row : ScopeKind.Column, snapshot.Kind);
                 Assert.IsTrue(activity.OuterRestored);
                 string key = expand ? "expand" : "collapse";
