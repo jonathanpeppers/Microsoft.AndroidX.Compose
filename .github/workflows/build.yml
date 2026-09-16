@@ -47,6 +47,7 @@ jobs:
             --name TemplateSmoke \
             --applicationId net.compose.template.smoke \
             --applicationTitle "Compose Template Smoke" \
+            --framework net11.0 \
             --output "$RUNNER_TEMP/template-smoke"
 
       - name: Build project template (CoreCLR)
