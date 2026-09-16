@@ -139,9 +139,20 @@ public static partial class ComposeExtensions
     /// </summary>
     /// <remarks>
     /// Use null, immutable primitive/string keys, or Java peers with matching
-    /// equality. Other managed keys (including arrays passed as one key) retain the legacy <c>ToString()</c>
-    /// conversion for Kotlin inputs; this can disagree with their managed
-    /// equality and is not a general-purpose custom-key contract.
+    /// equality. Primitive equality follows the Java boxed values supplied to
+    /// Compose: compatible widened CLR integers can compare equal,
+    /// floating-point signed zeroes compare unequal, and NaN values compare
+    /// equal. Other managed keys are snapshotted through
+    /// <see cref="object.ToString"/> and that string controls both managed
+    /// and Kotlin invalidation. Their <see cref="object.Equals(object?)"/>
+    /// implementation is not used. An array passed as one key therefore uses
+    /// its type-name string, not deep-array equality; use
+    /// <see cref="RememberSaveableKeyed{T}(IComposer, Func{T}, object?[], int, string)"/>
+    /// to pass an array as the input-key vector instead.
+    /// This consistent string contract changes observable wrapper identity
+    /// and factory counts from earlier versions when managed
+    /// <see cref="object.Equals(object?, object?)"/> disagreed with the
+    /// marshalled string.
     /// Inputs are not saved: restoration does not compare them with the
     /// inputs from the previous activity.
     /// </remarks>
@@ -180,7 +191,7 @@ public static partial class ComposeExtensions
     /// element in the caller's array is detected on the next composition.
     /// </summary>
     /// <remarks>
-    /// Key elements have the same equality and restoration limitations as
+    /// Key elements have the same equality and restoration semantics as
     /// <see cref="RememberSaveable{T}(IComposer, Func{T}, object?, int, string)"/>.
     /// An empty array means no inputs; a null element is one input. A null
     /// array container is rejected.
@@ -197,14 +208,15 @@ public static partial class ComposeExtensions
     {
         ArgumentNullException.ThrowIfNull(composer);
         ArgumentNullException.ThrowIfNull(factory);
+        var normalizedKeys = ComposeBridges.NormalizeSaveableKeys(keys);
 
         composer.StartReplaceableGroup(SourceLocationKey.Compute(line, file));
         try
         {
             if (typeof(IMutableStateWrapper).IsAssignableFrom(typeof(T)))
-                return RememberSaveableWrapper(composer, factory, keys);
+                return RememberSaveableWrapper(composer, factory, normalizedKeys);
 
-            return RememberSaveableScalar(composer, factory, keys);
+            return RememberSaveableScalar(composer, factory, normalizedKeys);
         }
         finally
         {
@@ -212,9 +224,9 @@ public static partial class ComposeExtensions
         }
     }
 
-    static T RememberSaveableScalar<T>(IComposer composer, Func<T> factory, object?[]? keys)
+    static T RememberSaveableScalar<T>(IComposer composer, Func<T> factory, object?[]? normalizedKeys)
     {
-        var inputs = ComposeBridges.BuildKeysArray(keys, out var ownsInputs);
+        var inputs = ComposeBridges.BuildKeysArray(normalizedKeys, out var ownsInputs);
         var jcw = new ObjectFunction0(() => MutableState<T>.ToJava(factory()));
         var handle = ComposeBridges.RememberSaveableSimple(
             inputs,
@@ -238,11 +250,11 @@ public static partial class ComposeExtensions
         }
     }
 
-    static T RememberSaveableWrapper<T>(IComposer composer, Func<T> factory, object?[]? keys)
+    static T RememberSaveableWrapper<T>(IComposer composer, Func<T> factory, object?[]? normalizedKeys)
     {
         // Invalidate the managed cache with the inputs too, or Kotlin's
         // initializer would return the previous wrapper's mutable state.
-        var wrapper = composer.RememberKeyed(factory, keys ?? [])
+        var wrapper = composer.RememberKeyed(factory, normalizedKeys ?? [])
             ?? throw new InvalidOperationException(
                 $"RememberSaveable<{typeof(T).Name}>: factory returned null.");
         var iwrap = (IMutableStateWrapper)wrapper;
@@ -250,7 +262,7 @@ public static partial class ComposeExtensions
         var stateSaver = wrapper is MutableState<AndroidX.Compose.UI.Text.Input.TextFieldValue>
             ? TextFieldValueSaver.Instance.Handle
             : ComposeBridges.SaverAutoSaver();
-        var inputs = ComposeBridges.BuildKeysArray(keys, out var ownsInputs);
+        var inputs = ComposeBridges.BuildKeysArray(normalizedKeys, out var ownsInputs);
         var jcw = new ObjectFunction0(() => (Java.Lang.Object)iwrap.State);
         var handle = ComposeBridges.RememberSaveableMutableState(
             inputs,

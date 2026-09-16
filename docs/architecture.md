@@ -1509,18 +1509,35 @@ class.
   forwarded to Kotlin's `rememberSaveable(vararg inputs)` array so
   the saveable registry uses the same invalidation semantics.
   For `MutableState<T>` and `MutableNumberState<T>`, the managed wrapper
-  cache also uses keyed `Remember`: equal keys retain the wrapper and its
-  current value without invoking the factory; changed keys run the current
-  factory and return a replacement wrapper. The previous wrapper is not
-  rebound to the replacement's state. Key arrays are shallow-snapshotted,
-  so changing an element in the caller's array invalidates the cache;
-  mutating an object used as an individual key is not a deep-value snapshot.
+  cache also uses keyed `Remember` over the exact values marshalled to
+  Kotlin: equal keys retain the wrapper and its current value without invoking
+  the factory; changed keys run the current factory and return a replacement
+  wrapper. The previous wrapper is not rebound to the replacement's state.
+  Key vectors are shallow-snapshotted, so changing an element in the caller's
+  array invalidates the cache according to that element's key semantics.
   For saveable inputs, keyless and empty-array calls both mean no inputs;
   a single null element is a distinct input vector. The array overload
   rejects a null array container.
-  Use immutable primitive/string keys, null, or Java peers with appropriate
-  equality. Other managed key objects still use the existing `ToString()`
-  JNI marshalling, not arbitrary managed-object equality on the Kotlin side.
+  Null, immutable primitive/string keys, and Java peers retain their natural
+  Kotlin equality. Managed comparison tokens mirror the existing Java boxing:
+  `byte`/`short`, `ushort`/`int`, and `uint`/`long`/`ulong` values compare in
+  their shared Java numeric class; floating-point signed zeroes are distinct
+  and NaN payloads compare equal. Caller-owned Java peers use their virtual
+  Java `equals` and are never disposed by key lowering. Other managed key
+  objects preserve the legacy `ToString()` JNI marshalling, and the resulting
+  string snapshot now also controls the managed wrapper cache. `ToString()` is
+  evaluated once per key per `RememberSaveable` invocation, so mutating a
+  custom key's string between compositions invalidates against the previous
+  frozen snapshot. Their managed `Equals` implementation is not used:
+  distinct objects with the same string are equal saveable inputs, while
+  `Equals`-equal objects with different strings invalidate. This deliberately
+  does not invent deep-array equality. An array supplied as one key falls back
+  to its type-name string; an array supplied to `RememberSaveableKeyed` is the
+  key vector, whose elements are independently snapshotted and compared.
+  This is an intentional behavior correction: compared with versions whose
+  managed cache used `object.Equals`, same-string custom replacements now keep
+  the managed wrapper and do not run its factory, while different-string
+  replacements invalidate even when their managed objects compare equal.
 
   On activity recreation, the factory constructs a fresh managed wrapper
   and the saveable holder rebinds it to the restored JVM state. Numeric

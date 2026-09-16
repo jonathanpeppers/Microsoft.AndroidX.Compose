@@ -40,7 +40,7 @@ public class RememberSaveableTests
         VerifyKeys(i => i, null, value => value, mode);
 
     [TestMethod]
-    public void UnsupportedArrayValuedKey_DocumentsLegacyMarshallingConstraint()
+    public void ArrayValuedKey_UsesFallbackStringEquality()
     {
         using var applier = new IdentityTestApplier();
         using var recomposer = new Recomposer(Kotlin.Coroutines.EmptyCoroutineContext.Instance
@@ -80,20 +80,160 @@ public class RememberSaveableTests
             key = replacementKey;
             var replacement = Compose();
             var context = TestContext ?? throw new InvalidOperationException("Test context was not supplied.");
-            context.WriteLine($"Unsupported array-valued key: calls={calls}, wrapperSame={ReferenceEquals(first, replacement)}, " +
+            context.WriteLine($"Array-valued key: calls={calls}, wrapperSame={ReferenceEquals(first, replacement)}, " +
                 $"value={replacement.Value}, scalarCalls={scalarCalls}, scalar={scalar}.");
-            // An array used as ONE key is not the key-array overload. Its legacy
-            // ToString() marshalling loses element identity; this is not a supported reset contract.
+            // An array used as ONE key is not the key-array overload. Both
+            // managed and native invalidation use its fallback string snapshot.
             Assert.AreEqual(900, replacement.Value);
             Assert.AreEqual(10, scalar);
             Assert.AreEqual(1, scalarCalls);
-            Assert.AreEqual(2, calls, "Managed equality still detects the distinct key objects.");
+            Assert.AreEqual(1, calls);
+            Assert.AreSame(first, replacement);
+        }
+        finally
+        {
+            composition.Dispose();
+        }
+    }
+
+    [TestMethod]
+    [DataRow(false, true, false)]
+    [DataRow(true, false, true)]
+    public void CustomKey_UsesFallbackStringEquality(
+        bool keysEqual, bool stringsEqual, bool expectsReset)
+    {
+        using var applier = new IdentityTestApplier();
+        using var recomposer = new Recomposer(Kotlin.Coroutines.EmptyCoroutineContext.Instance
+            ?? throw new InvalidOperationException("Empty coroutine context is unavailable."));
+        var composition = CompositionKt.ControlledComposition(applier, recomposer);
+        int calls = 0, scalarCalls = 0, initial = 10;
+        var key = new SaveableCustomKey(1, "A");
+        MutableNumberState<int>? observed = null;
+        int scalar = 0;
+        try
+        {
+            MutableNumberState<int> Compose()
+            {
+                composition.ComposeContent(new ComposableLambda2(c =>
+                {
+                    observed = c.RememberSaveable(() =>
+                    {
+                        calls++;
+                        return new MutableNumberState<int>(initial);
+                    }, key1: key);
+                    scalar = c.RememberSaveable(() =>
+                    {
+                        scalarCalls++;
+                        return initial;
+                    }, key1: key);
+                }));
+                composition.ApplyChanges();
+                return observed ?? throw new InvalidOperationException("Custom-key state was not composed.");
+            }
+
+            var first = Compose();
+            first.Value = 900;
+            initial = 20;
+            var replacementKey = new SaveableCustomKey(keysEqual ? 1 : 2, stringsEqual ? "A" : "B");
+            Assert.AreEqual(keysEqual, Equals(key, replacementKey));
+            key = replacementKey;
+            var replacement = Compose();
+
+            Assert.AreEqual(expectsReset ? 20 : 900, replacement.Value);
+            Assert.AreEqual(expectsReset ? 20 : 10, scalar);
+            Assert.AreEqual(expectsReset ? 2 : 1, calls);
+            Assert.AreEqual(expectsReset ? 2 : 1, scalarCalls);
+            if (expectsReset)
+                Assert.AreNotSame(first, replacement);
+            else
+                Assert.AreSame(first, replacement);
+        }
+        finally
+        {
+            composition.Dispose();
+        }
+    }
+
+    [TestMethod]
+    public void MutableCustomKey_SnapshotsToStringOncePerInvocation()
+    {
+        using var applier = new IdentityTestApplier();
+        using var recomposer = new Recomposer(Kotlin.Coroutines.EmptyCoroutineContext.Instance
+            ?? throw new InvalidOperationException("Empty coroutine context is unavailable."));
+        var composition = CompositionKt.ControlledComposition(applier, recomposer);
+        var key = new SaveableCustomKey(1, "A");
+        int calls = 0, initial = 10;
+        MutableNumberState<int>? observed = null;
+        try
+        {
+            MutableNumberState<int> Compose()
+            {
+                composition.ComposeContent(new ComposableLambda2(c =>
+                {
+                    observed = c.RememberSaveable(() =>
+                    {
+                        calls++;
+                        return new MutableNumberState<int>(initial);
+                    }, key1: key);
+                }));
+                composition.ApplyChanges();
+                return observed ?? throw new InvalidOperationException("Mutable custom-key state was not composed.");
+            }
+
+            var first = Compose();
+            Assert.AreEqual(1, key.ToStringCalls);
+            first.Value = 900;
+            initial = 20;
+            key.MarshalledValue = "B";
+            var replacement = Compose();
+            Assert.AreEqual(2, key.ToStringCalls);
+            Assert.AreEqual(2, calls);
+            Assert.AreEqual(20, replacement.Value);
             Assert.AreNotSame(first, replacement);
         }
         finally
         {
             composition.Dispose();
         }
+    }
+
+    [TestMethod]
+    public void FloatKeys_MatchJavaEquality()
+    {
+        VerifyKeyPair(0f, -0f, equal: false);
+        VerifyKeyPair(float.NaN, BitConverter.Int32BitsToSingle(unchecked((int)0x7fa00001)), equal: true);
+    }
+
+    [TestMethod]
+    public void DoubleKeys_MatchJavaEquality()
+    {
+        VerifyKeyPair(0d, -0d, equal: false);
+        VerifyKeyPair(double.NaN, BitConverter.Int64BitsToDouble(unchecked((long)0x7ff0000000000001)), equal: true);
+    }
+
+    [TestMethod]
+    public void PrimitiveKeys_PreserveJavaBoxingEquality()
+    {
+        VerifyKeyPair(true, true, equal: true);
+        VerifyKeyPair('A', 'A', equal: true);
+        VerifyKeyPair((sbyte)1, (sbyte)1, equal: true);
+        VerifyKeyPair((byte)1, (short)1, equal: true);
+        VerifyKeyPair((ushort)1, 1, equal: true);
+        VerifyKeyPair((uint)1, 1L, equal: true);
+        VerifyKeyPair(ulong.MaxValue, -1L, equal: true);
+        VerifyKeyPair((sbyte)1, (short)1, equal: false);
+        VerifyKeyPair("A", new string(['A']), equal: true);
+    }
+
+    [TestMethod]
+    public void JavaPeerKeys_UseJavaEqualityWithoutDisposal()
+    {
+        using var first = new Java.Lang.String("A");
+        using var second = new Java.Lang.String("A");
+        Assert.IsFalse(Equals(first, second), "Managed object equality compares peer identity.");
+        VerifyKeyPair(first, second, equal: true);
+        Assert.AreNotEqual(IntPtr.Zero, first.Handle);
+        Assert.AreNotEqual(IntPtr.Zero, second.Handle);
     }
 
     [TestMethod]
@@ -176,6 +316,56 @@ public class RememberSaveableTests
             Assert.AreEqual(3, read(keyless));
             if (!typeof(T).IsValueType)
                 Assert.AreSame(empty, keyless);
+        }
+        finally
+        {
+            composition.Dispose();
+        }
+    }
+
+    static void VerifyKeyPair(object firstKey, object secondKey, bool equal)
+    {
+        using var applier = new IdentityTestApplier();
+        using var recomposer = new Recomposer(Kotlin.Coroutines.EmptyCoroutineContext.Instance
+            ?? throw new InvalidOperationException("Empty coroutine context is unavailable."));
+        var composition = CompositionKt.ControlledComposition(applier, recomposer);
+        object key = firstKey;
+        int calls = 0, scalarCalls = 0, initial = 10, scalar = 0;
+        MutableNumberState<int>? observed = null;
+        try
+        {
+            MutableNumberState<int> Compose()
+            {
+                composition.ComposeContent(new ComposableLambda2(c =>
+                {
+                    observed = c.RememberSaveable(() =>
+                    {
+                        calls++;
+                        return new MutableNumberState<int>(initial);
+                    }, key1: key);
+                    scalar = c.RememberSaveable(() =>
+                    {
+                        scalarCalls++;
+                        return initial;
+                    }, key1: key);
+                }));
+                composition.ApplyChanges();
+                return observed ?? throw new InvalidOperationException("Key-pair state was not composed.");
+            }
+
+            var first = Compose();
+            first.Value = 900;
+            initial = 20;
+            key = secondKey;
+            var second = Compose();
+            Assert.AreEqual(equal ? 900 : 20, second.Value);
+            Assert.AreEqual(equal ? 10 : 20, scalar);
+            Assert.AreEqual(equal ? 1 : 2, calls);
+            Assert.AreEqual(equal ? 1 : 2, scalarCalls);
+            if (equal)
+                Assert.AreSame(first, second);
+            else
+                Assert.AreNotSame(first, second);
         }
         finally
         {
