@@ -2,7 +2,7 @@ using AndroidX.Compose.Gallery.Registry;
 
 namespace AndroidX.Compose.Gallery.Demos.Buttons;
 
-/// <summary>Long-press tooltip anchored to a button.</summary>
+/// <summary>Automatic and programmatically controlled tooltips.</summary>
 public static class TooltipsDemo
 {
     /// <summary>Registry entry exposed via <see cref="Catalog.Demos"/>.</summary>
@@ -10,10 +10,11 @@ public static class TooltipsDemo
         Id:          "buttons-tooltips",
         CategoryId:  "buttons",
         Title:       "Tooltips",
-        Description: "Tooltip wraps an Anchor; the Tip pops on long-press.",
+        Description: "Long-press, show, and dismiss Tooltip state.",
         Build:       c =>
         {
             var count = c.MutableStateOf(0);
+            var state = c.Remember(() => new TooltipStateHolder(isPersistent: true));
             var dragStatus = c.MutableStateOf("Hold the second anchor, then release");
             return new Column
             {
@@ -22,6 +23,17 @@ public static class TooltipsDemo
                 {
                     Tip    = new Surface { new Text("Helpful hint") },
                     Anchor = new Button(onClick: () => count++) { new Text("Long-press me") },
+                },
+                new Row
+                {
+                    new Button(onClick: () => _ = state.ShowAsync()) { new Text("Show tip") },
+                    new Button(onClick: state.Dismiss) { new Text("Dismiss tip") },
+                },
+                new Tooltip(state)
+                {
+                    EnableUserInput = false,
+                    Tip = new Surface { new Text("Controlled by TooltipStateHolder") },
+                    Anchor = new Text("Programmatic tip anchor"),
                 },
                 new Text(dragStatus.Value),
                 new Tooltip

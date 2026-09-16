@@ -101,6 +101,16 @@ internal static partial class ComposeBridges
         Signature = "(Lkotlin/coroutines/Continuation;)Ljava/lang/Object;")]
     internal static partial IntPtr SheetStatePartialExpand(IntPtr state, IContinuation cont);
 
+    // TooltipState.show is bound, but raw JNI preserves the suspend sentinel
+    // as an IntPtr for SuspendBridge rather than wrapping it as a managed peer.
+    [ComposeBridge(Suspend = true,
+        Class = "androidx/compose/material3/TooltipState",
+        JvmName = "show$default",
+        Signature = "(Landroidx/compose/material3/TooltipState;Landroidx/compose/foundation/MutatePriority;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;",
+        Defaults = typeof(TooltipStateShowDefault))]
+    internal static partial IntPtr TooltipStateShow(
+        IntPtr state, IntPtr? mutatePriority, IContinuation cont);
+
     // androidx.compose.foundation.lazy.LazyListState
     //     .scrollToItem(int index, int scrollOffset, Continuation): Object
     [ComposeBridge(Suspend = true,

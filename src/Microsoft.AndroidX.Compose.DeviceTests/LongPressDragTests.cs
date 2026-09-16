@@ -213,6 +213,13 @@ public class LongPressDragTests
             await Frames(activity);
             Assert.IsFalse(activity.Recording.Value);
             Assert.AreEqual(0, activity.StartCount);
+            Assert.IsTrue(activity.RecordingTooltip.IsVisible,
+                "A short tap must show the recording tooltip.");
+            activity.RecordingTooltip.Dismiss();
+            await Frames(activity);
+            Assert.IsFalse(activity.RecordingTooltip.IsVisible);
+            await (activity.TooltipShowTask
+                ?? throw new InvalidOperationException("Short tap did not start Tooltip.ShowAsync."));
             await Finish(activity);
             finished = true;
             Assert.AreEqual(0, activity.CancelCount, "Disposing an idle detector must not cancel a recording that never started.");

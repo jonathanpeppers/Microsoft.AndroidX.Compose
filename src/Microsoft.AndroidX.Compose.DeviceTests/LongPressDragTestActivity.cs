@@ -28,6 +28,8 @@ public class LongPressDragTestActivity : ComponentActivity
     internal readonly MutableState<float> Y = new(0);
     internal readonly MutableState<bool> Recording = new(false);
     internal readonly MutableNumberState<float> Swipe = new(0);
+    internal readonly TooltipStateHolder RecordingTooltip = new();
+    internal Task? TooltipShowTask;
     internal readonly List<string> Events = [];
     internal readonly List<PointerCancellationObservation> Cancellations = [];
     internal LongPressDragGestureBlock? Handler;
@@ -216,13 +218,14 @@ public class LongPressDragTestActivity : ComponentActivity
                     {
                         Modifier.Size(56).AppendBound(current =>
                             OnGloballyPositionedModifierKt.OnGloballyPositioned(current, bounds), ModifierOpKey.Opaque),
-                        new Tooltip
+                        new Tooltip(RecordingTooltip)
                         {
                             Modifier = Modifier.Align(Alignment.Vertical.CenterVertically),
                             EnableUserInput = false,
                             Tip = new Text("Touch and hold to record"),
                             Anchor = global::AndroidX.Compose.Samples.Jetchat.RecordButton.BuildButton(
                                 Recording, Swipe,
+                                onClick: () => TooltipShowTask = RecordingTooltip.ShowAsync(),
                                 onCommit: () =>
                                 {
                                     EndCount++;

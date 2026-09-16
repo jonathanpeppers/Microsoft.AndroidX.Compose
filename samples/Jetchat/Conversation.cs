@@ -415,6 +415,7 @@ public static class Conversation
         new Composed(c =>
         {
             var focused = c.MutableStateOf(false);
+            var recordingTooltip = c.Remember(() => new TooltipStateHolder());
             long cursorColor = scheme.Secondary;
             var cursorBrush = c.Remember(
                 () => Brush.SolidColor(Color.FromPacked(cursorColor)), key1: cursorColor);
@@ -439,7 +440,7 @@ public static class Conversation
             {
                 // Keep the Surface behind the bars; its content owns these insets once.
                 Modifier.FillMaxWidth().NavigationBarsPadding().ImePadding(),
-                BuildTextFieldRow(input, scheme, isRecording, swipeOffset, cursorBrush, keyboardActions, focus =>
+                BuildTextFieldRow(input, scheme, isRecording, swipeOffset, recordingTooltip, cursorBrush, keyboardActions, focus =>
                 {
                     if (focused.Value == focus.IsFocused)
                         return;
@@ -461,6 +462,7 @@ public static class Conversation
         ColorScheme                  scheme,
         MutableState<bool>           isRecording,
         MutableNumberState<float>    swipeOffset,
+        TooltipStateHolder           recordingTooltip,
         AndroidX.Compose.UI.Graphics.Brush cursorBrush,
         AndroidX.Compose.Foundation.Text.KeyboardActions keyboardActions,
         Action<FocusState> onFocusChanged,
@@ -516,7 +518,7 @@ public static class Conversation
 
         if (textEmpty || isRecording.Value)
         {
-            row.Add(new Tooltip
+            row.Add(new Tooltip(recordingTooltip)
             {
                 Modifier = Modifier.Align(Alignment.Vertical.CenterVertically),
                 EnableUserInput = false,
@@ -530,6 +532,7 @@ public static class Conversation
                 Anchor = RecordButton.BuildButton(
                     isRecording,
                     swipeOffset,
+                    onClick: () => _ = recordingTooltip.ShowAsync(),
                     onCommit: () =>
                     {
                         isRecording.Value = false;
